@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useReducer, useMemo } from 'react';
+import { Cloud, WifiOff } from 'lucide-react';
 import { onSnapshot, doc, collection, query, orderBy, limit, getDocs, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 
