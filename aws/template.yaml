@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Aetheria RPG v4.0 Serverless Backend
+  Includes AI Proxy and Analytics functions protected by API Gateway
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: nodejs18.x
+    Environment:
+      Variables:
+        FIREBASE_PROJECT_ID: !Ref FirebaseProjectId
+        GEMINI_API_KEY: !Ref GeminiApiKey
+
+Parameters:
+  FirebaseProjectId:
+    Type: String
+    Description: Firebase Project ID for Auth and Firestore access
+  GeminiApiKey:
+    Type: String
+    Description: Google Gemini API Key (Secret)
+
+Resources:
+  # API Gateway
+  AetheriaApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'OPTIONS,POST,GET'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  # AI Proxy Lambda
+  AiProxyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/ai-proxy/
+      Handler: index.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AetheriaApi
+            Path: /game/story
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource: "*"
+
+  # Analytics Lambda
+  AnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/analytics/
+      Handler: index.handler
+      MemorySize: 256 # Higher memory for data processing
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref AetheriaApi
+            Path: /admin/analytics
+            Method: GET
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${AetheriaApi}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+  AiProxyFunction:
+    Description: "AI Proxy Lambda Function ARN"
+    Value: !GetAtt AiProxyFunction.Arn

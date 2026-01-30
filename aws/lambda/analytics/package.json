@@ -1,0 +1,9 @@
+{
+    "name": "analytics",
+    "version": "1.0.0",
+    "description": "AWS Lambda Analytics Engine",
+    "main": "index.js",
+    "dependencies": {
+        "firebase-admin": "^11.5.0"
+    }
+}

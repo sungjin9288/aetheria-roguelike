@@ -1,0 +1,10 @@
+{
+    "name": "ai-proxy",
+    "version": "1.0.0",
+    "description": "AWS Lambda AI Proxy",
+    "main": "index.js",
+    "dependencies": {
+        "firebase-admin": "^11.5.0",
+        "undici": "^5.20.0"
+    }
+}

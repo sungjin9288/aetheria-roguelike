@@ -4,6 +4,242 @@
 
 /* 검은 배경을 기본으로 설정하여 게임 분위기 조성 */
 body {
-  background-color: #020617; /* slate-950 */
-  color: #e2e8f0; /* slate-200 */
+  background-color: #020617;
+  /* slate-950 */
+  color: #e2e8f0;
+  /* slate-200 */
+}
+
+/* ============================================
+   PHASE 3: VISUAL EFFECTS & ANIMATIONS
+   ============================================ */
+
+/* 데미지 팝업 애니메이션 */
+@keyframes damagePopup {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(-20px) scale(1.3);
+  }
+
+  100% {
+    transform: translateY(-40px) scale(1);
+    opacity: 0;
+  }
+}
+
+.animate-damage {
+  animation: damagePopup 0.8s ease-out forwards;
+}
+
+/* 레벨업 글로우 효과 */
+@keyframes levelUpGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px #fbbf24;
+  }
+
+  50% {
+    box-shadow: 0 0 30px #fbbf24, 0 0 60px #f59e0b;
+  }
+}
+
+.animate-levelup {
+  animation: levelUpGlow 1.5s ease-in-out 3;
+}
+
+/* 전투 시작 페이드인 */
+@keyframes combatStart {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-combat-start {
+  animation: combatStart 0.5s ease-out;
+}
+
+/* 원소별 글로우 */
+@keyframes fireGlow {
+
+  0%,
+  100% {
+    text-shadow: 0 0 5px #f97316;
+  }
+
+  50% {
+    text-shadow: 0 0 20px #f97316, 0 0 30px #dc2626;
+  }
+}
+
+@keyframes iceGlow {
+
+  0%,
+  100% {
+    text-shadow: 0 0 5px #22d3ee;
+  }
+
+  50% {
+    text-shadow: 0 0 20px #22d3ee, 0 0 30px #3b82f6;
+  }
+}
+
+@keyframes darkGlow {
+
+  0%,
+  100% {
+    text-shadow: 0 0 5px #a855f7;
+  }
+
+  50% {
+    text-shadow: 0 0 20px #a855f7, 0 0 30px #7c3aed;
+  }
+}
+
+@keyframes lightGlow {
+
+  0%,
+  100% {
+    text-shadow: 0 0 5px #fde047;
+  }
+
+  50% {
+    text-shadow: 0 0 20px #fde047, 0 0 30px #facc15;
+  }
+}
+
+.glow-fire {
+  animation: fireGlow 1s ease-in-out infinite;
+}
+
+.glow-ice {
+  animation: iceGlow 1s ease-in-out infinite;
+}
+
+.glow-dark {
+  animation: darkGlow 1s ease-in-out infinite;
+}
+
+.glow-light {
+  animation: lightGlow 1s ease-in-out infinite;
+}
+
+/* 치명타 효과 */
+@keyframes criticalHit {
+  0% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.5);
+    color: #ef4444;
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-critical {
+  animation: criticalHit 0.4s ease-out;
+}
+
+/* 흔들림 효과 (피격) */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+/* 펄스 글로우 (버프 활성) */
+@keyframes buffActive {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 15px #22c55e;
+  }
+}
+
+.animate-buff {
+  animation: buffActive 2s ease-in-out infinite;
+}
+
+/* ============================================
+   MOBILE OPTIMIZATION (Phase 3.3)
+   ============================================ */
+
+/* 터치 친화적 버튼 크기 */
+@media (max-width: 768px) {
+  .touch-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 사이드 패널 숨김 (모바일) */
+  .mobile-hide {
+    display: none;
+  }
+
+  /* 전체 화면 사용 */
+  .mobile-full {
+    width: 100%;
+  }
+}
+
+/* 스크롤바 스타일 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  background: #1e293b;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+/* 호버 효과 (데스크톱) */
+@media (hover: hover) {
+  .hover-glow:hover {
+    box-shadow: 0 0 10px rgba(var(--tw-shadow-color), 0.5);
+  }
 }
