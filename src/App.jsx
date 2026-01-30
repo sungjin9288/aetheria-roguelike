@@ -41,7 +41,7 @@ const RemoteConfigLoader = {
     if (!CONSTANTS.REMOTE_CONFIG_ENABLED) return null;
 
     try {
-      const configDoc = await getDoc(doc(dbFirestore, 'public', 'data', 'game_config'));
+      const configDoc = await getDoc(doc(db, 'system', 'game_config'));
       if (configDoc.exists()) {
         this.cache = configDoc.data();
         console.log('✅ Remote game config loaded (v' + (this.cache.version || '?') + ')');
