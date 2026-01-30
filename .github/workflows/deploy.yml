@@ -53,7 +53,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
-    environment: development
+    environment:
+      name: development
+      # If your IDE flags 'development' as invalid, ensure this environment exists in your GitHub Repository Settings.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -77,7 +79,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment: production
+    environment:
+      name: production
     steps:
       - name: Checkout
         uses: actions/checkout@v4

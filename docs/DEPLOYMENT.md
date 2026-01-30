@@ -75,6 +75,13 @@ VITE_AI_PROXY_URL=/api/ai-proxy
 | `FIREBASE_PROJECT_ID_PROD` | Production | e.g., `aetheria-prod` |
 | `GEMINI_API_KEY` | Production | Gemini API key (server-side only) |
 
+### Important: GitHub Environment Setup
+To avoid "Value 'development' is not valid" (or 'production') errors in your workflows and IDE:
+1. Go to **Settings** > **Environments** in your GitHub repository.
+2. Click **New environment**.
+3. Create two environments: `development` and `production`.
+4. (Optional) Add environment-specific secrets here instead of repository secrets if preferred.
+
 ## Deployment Flow
 
 ### Development

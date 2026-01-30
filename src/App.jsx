@@ -920,7 +920,7 @@ const useGameEngine = () => {
 
   // --- LIVE CONFIG (Remote Config) ---
   useEffect(() => {
-    const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'config');
+    const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
     const unsubscribe = onSnapshot(configDocRef, (docSnap) => {
       if (docSnap.exists()) {
         dispatch({ type: 'SET_LIVE_CONFIG', payload: docSnap.data() });
