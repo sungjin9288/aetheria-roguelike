@@ -120,7 +120,7 @@ const gameReducer = (state, action) => {
 // --- CORE ENGINE HOOK ---
 const useGameEngine = () => {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
-  const { player, gameState, logs, enemy, grave, isAiThinking, currentEvent, visualEffect, syncStatus, uid, bootStage, liveConfig, leaderboard } = state;
+  const { player, gameState, logs, enemy, grave, isAiThinking, currentEvent, visualEffect, syncStatus, uid, bootStage, liveConfig, leaderboard, sideTab } = state;
 
   // 1. BOOTSTRAP: Auth
   useEffect(() => {
