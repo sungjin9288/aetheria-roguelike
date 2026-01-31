@@ -25,24 +25,34 @@ export const checkMilestones = (killRegistry, lastKillName, player) => {
 // Data Migration Utility
 export const migrateData = (savedData) => {
     if (!savedData) return null;
-    // Version 2.7 Migration
+
+    // Target the specific player object if clear structure exists
+    // If savedData IS the player (old flat format?), use it.
+    // But in this app, usually savedData matches App state structure.
+    let target = savedData.player || savedData;
+
+    // Version Limit
     if (!savedData.version || savedData.version < 2.7) {
         savedData.version = 2.7;
-        savedData.mp = savedData.mp ?? 50;
-        savedData.maxMp = savedData.maxMp ?? 50;
-        savedData.history = savedData.history || [];
-        savedData.archivedHistory = savedData.archivedHistory || [];
+
+        target.mp = target.mp ?? 50;
+        target.maxMp = target.maxMp ?? 50;
+        target.history = target.history || [];
+        target.archivedHistory = target.archivedHistory || []; // Ensure archivedHistory exists
+
         // New stats for v3.1
-        savedData.stats = savedData.stats || { kills: 0, total_gold: 0, deaths: 0 };
-        savedData.stats.killRegistry = savedData.stats.killRegistry || {};
-        savedData.stats.bossKills = savedData.stats.bossKills || 0;
+        target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0 };
+        target.stats.killRegistry = target.stats.killRegistry || {};
+        target.stats.bossKills = target.stats.bossKills || 0;
     }
+
     // Ensure equip is object not string (Old version compatibility)
-    if (typeof savedData.equip?.weapon === 'string') {
-        savedData.equip.weapon = ITEMS.weapons.find(w => w.name === savedData.equip.weapon) || ITEMS.weapons[0];
+    if (typeof target.equip?.weapon === 'string') {
+        target.equip.weapon = ITEMS.weapons.find(w => w.name === target.equip.weapon) || ITEMS.weapons[0];
     }
-    if (typeof savedData.equip?.armor === 'string') {
-        savedData.equip.armor = ITEMS.armors.find(a => a.name === savedData.equip.armor) || ITEMS.armors[0];
+    if (typeof target.equip?.armor === 'string') {
+        target.equip.armor = ITEMS.armors.find(a => a.name === target.equip.armor) || ITEMS.armors[0];
     }
+
     return savedData;
 };

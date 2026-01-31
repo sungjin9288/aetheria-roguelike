@@ -148,6 +148,20 @@ const useGameEngine = () => {
             dispatch({ type: 'INIT_PLAYER', payload: activeData.player });
             if (activeData.gameState) dispatch({ type: 'SET_GAME_STATE', payload: activeData.gameState });
             if (activeData.enemy) dispatch({ type: 'SET_ENEMY', payload: activeData.enemy });
+
+            // Validate Loc
+            if (!activeData.player.loc || typeof activeData.player.loc !== 'string') {
+              dispatch({ type: 'SET_PLAYER', payload: { loc: '시작의 마을' } });
+            }
+
+            // Force Log Update to ensure Terminal works
+            dispatch({ type: 'ADD_LOG', payload: { type: 'system', text: '시스템이 준비되었습니다.' } });
+
+            // Validate Loc
+            if (!activeData.player.loc || typeof activeData.player.loc !== 'string') {
+              console.warn("Invalid Loc detected, resetting to Start");
+              dispatch({ type: 'SET_PLAYER', payload: { loc: '시작의 마을' } });
+            }
           }
         }
 
@@ -599,7 +613,7 @@ function App() {
   const engine = useGameEngine();
 
   // Intro UI
-  if (!engine.player.name || engine.player.name === '방랑자') {
+  if (!engine.player.name || !engine.player.name.trim() || engine.player.name === '방랑자') {
     return (
       <MainLayout visualEffect={null}>
         <div className="flex flex-col items-center justify-center h-full space-y-4">
@@ -611,6 +625,7 @@ function App() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') engine.actions.start(e.target.value);
             }}
+            autoFocus
           />
         </div>
       </MainLayout>
