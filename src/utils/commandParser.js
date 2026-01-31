@@ -3,7 +3,7 @@ import { DB } from '../data/db';
 export const parseCommand = (input, gameState, player, actions) => {
     if (!input || !input.trim()) return;
 
-    const tokens = input.trim().split(' ');
+    const tokens = input.trim().replace(/^\//, '').split(' ');
     const command = tokens[0].toLowerCase();
     const args = tokens.slice(1).join(' ');
 

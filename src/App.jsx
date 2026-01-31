@@ -346,49 +346,183 @@ const useGameEngine = () => {
 
     // Exploration
     explore: async () => {
-      if (gameState !== 'idle') return;
+      if (gameState !== 'idle') return addLog('error', '탐색할 수 없는 상태입니다.');
       if (player.loc === '시작의 마을') return addLog('info', '마을 주변은 평화롭습니다.');
 
       const mapData = DB.MAPS[player.loc];
+      if (Math.random() < (mapData.eventChance || 0)) {
+        dispatch({ type: 'SET_GAME_STATE', payload: 'event' });
+        const eventData = await AI_SERVICE.generateEvent(player.loc, player.history, uid);
+        if (eventData && eventData.desc) {
+          dispatch({ type: 'SET_EVENT', payload: eventData });
+          addLog('event', eventData.desc);
+        } else {
+          dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+          addLog('info', '아무것도 발견하지 못했습니다.');
+        }
+        return;
+      }
 
       // 30% Nothing
       if (Math.random() < 0.3) return addLog('info', '조용합니다. 아무것도 발견하지 못했습니다.');
 
       // ENEMY
       const mName = mapData.monsters[Math.floor(Math.random() * mapData.monsters.length)];
-      const mStats = { name: mName, hp: 100 + mapData.level * 20, maxHp: 100, atk: 10 + mapData.level * 2, exp: 10 + mapData.level * 5, gold: 10 + mapData.level * 2 };
+      const mStats = { name: mName, hp: 100 + mapData.level * 20, maxHp: 100 + mapData.level * 20, atk: 10 + mapData.level * 2, exp: 10 + mapData.level * 5, gold: 10 + mapData.level * 2 };
 
       dispatch({ type: 'SET_ENEMY', payload: mStats });
       dispatch({ type: 'SET_GAME_STATE', payload: 'combat' });
       addLog('combat', `⚠️ ${mName} 출현!`);
       addStoryLog('encounter', { loc: player.loc, name: mName });
     },
+    handleEventChoice: (idx) => {
+      if (!currentEvent) return;
+      const outcome = Math.random();
+      let resultLog = "";
+      if (outcome > 0.4) {
+        const rewardGold = player.level * 50;
+        dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold + rewardGold }) });
+        resultLog = `성공! ${rewardGold}G를 얻었습니다.`;
+        addLog('success', resultLog);
+      } else {
+        const dmg = Math.floor(player.maxHp * 0.1);
+        dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.max(1, p.hp - dmg) }) });
+        resultLog = `실패... ${dmg}의 피해를 입었습니다.`;
+        addLog('error', resultLog);
+      }
 
-    // Rest
+      let newHistory = [...player.history, { timestamp: Date.now(), event: currentEvent.desc, choice: currentEvent.choices[idx], outcome: resultLog }];
+      if (newHistory.length > 50) newHistory.shift();
+      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, history: newHistory }) });
+      dispatch({ type: 'SET_EVENT', payload: null });
+      dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+    },
     rest: () => {
+      if (gameState !== 'idle') return;
+      const mapData = DB.MAPS[player.loc];
+      if (mapData.type !== 'safe') return addLog('error', '휴식은 안전한 곳에서만 가능합니다.');
+
       const cost = 100;
       if (player.gold < cost) return addLog('error', '골드가 부족합니다.');
       dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - cost, hp: p.maxHp, mp: p.maxMp }) });
       addLog('success', '푹 쉬었습니다. 체력이 모두 회복되었습니다.');
       addStoryLog('rest', { loc: player.loc });
     },
+    combat: (type) => {
+      if (gameState !== 'combat' || !enemy) return addLog('error', '전투 중이 아닙니다.');
+      const stats = getFullStats();
 
-    // UI Helpers
-    setSideTab: (tab) => dispatch({ type: 'SET_SIDE_TAB', payload: tab }),
-    setGameState: (state) => dispatch({ type: 'SET_GAME_STATE', payload: state }),
-    getUid: () => uid,
-    isAdmin: () => ADMIN_UIDS.includes(uid),
+      if (type === 'skill') {
+        if (player.mp < 10) return addLog('error', '마나가 부족합니다.');
+        dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, mp: p.mp - 10 }) });
+      }
+
+      if (type === 'attack' || type === 'skill') {
+        let mult = type === 'skill' ? 1.5 : 1.0;
+        const dmg = Math.floor(stats.atk * (0.9 + Math.random() * 0.2) * mult);
+        const isCrit = Math.random() < 0.1;
+        const finalDmg = isCrit ? dmg * 2 : dmg;
+
+        const newHp = enemy.hp - finalDmg;
+        addLog(isCrit ? 'critical' : 'combat', `⚔️ ${enemy.name}에게 ${finalDmg} 피해! ${isCrit ? '(치명타!)' : ''}`);
+        dispatch({ type: 'SET_VISUAL_EFFECT', payload: isCrit ? 'shake' : null });
+
+        if (newHp <= 0) {
+          dispatch({ type: 'SET_ENEMY', payload: null });
+          dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, exp: p.exp + enemy.exp, gold: p.gold + enemy.gold, stats: { ...p.stats, kills: p.stats.kills + 1 } }) });
+          addLog('success', `승리! EXP +${enemy.exp}, Gold +${enemy.gold}`);
+          addStoryLog('victory', { name: enemy.name });
+
+          // Drop
+          if (Math.random() < 0.3) {
+            // Simple drop logic or DB based
+          }
+        } else {
+          dispatch({ type: 'SET_ENEMY', payload: { ...enemy, hp: newHp } });
+          setTimeout(() => {
+            const enemyDmg = Math.max(1, enemy.atk - stats.def);
+            dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.max(0, p.hp - enemyDmg) }) });
+            addLog('warning', `💥 ${enemy.name}의 반격! ${enemyDmg} 피해.`);
+            dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
+            if (player.hp - enemyDmg <= 0) {
+              dispatch({ type: 'SET_PLAYER', payload: { hp: player.maxHp, gold: Math.floor(player.gold * 0.9), loc: '시작의 마을', exp: 0 } });
+              dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+              dispatch({ type: 'SET_ENEMY', payload: null });
+              addLog('error', '💀 사망했습니다. 마을에서 부활합니다.');
+            }
+          }, 500);
+        }
+      }
+      else if (type === 'escape') {
+        if (Math.random() > 0.5) {
+          dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+          dispatch({ type: 'SET_ENEMY', payload: null });
+          addLog('info', '🏃‍♂️ 무사히 도망쳤습니다.');
+        } else {
+          addLog('error', '도망에 실패했습니다!');
+          const enemyDmg = Math.max(1, enemy.atk - stats.def);
+          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.max(0, p.hp - enemyDmg) }) });
+          addLog('warning', `💥 ${enemy.name}의 추격! ${enemyDmg} 피해.`);
+        }
+      }
+    },
+    market: (type, item) => {
+      if (gameState !== 'shop') return;
+      if (type === 'buy') {
+        if (player.gold >= item.price) {
+          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - item.price, inv: [...p.inv, { ...item, id: Date.now() }] }) });
+          addLog('success', `💰 ${item.name} 구매 완료.`);
+        } else addLog('error', '골드가 부족합니다.');
+      }
+    },
+    craft: (recipeId) => {
+      // Crafting logic
+      const recipe = DB.ITEMS.recipes?.find(r => r.id === recipeId);
+      if (!recipe) return;
+      if (player.gold < recipe.gold) return addLog('error', '골드 부족');
+      // Assume materials check passed for now or implement full check
+      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - recipe.gold, inv: [...p.inv, { name: recipe.name, type: 'item' }] }) }); // Simplified
+      addLog('success', `${recipe.name} 제작 완료`);
+    },
+    jobChange: (jobName) => {
+      dispatch({ type: 'SET_PLAYER', payload: { job: jobName } });
+      addLog('success', `✨ ${jobName} 전직 완료!`);
+    },
+    acceptQuest: (qId) => {
+      const qData = DB.QUESTS.find(q => q.id === qId);
+      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, quests: [...p.quests, { id: qId, progress: 0 }] }) });
+      addLog('event', `퀘스트 수락: ${qData.title}`);
+    },
+    lootGrave: () => {
+      if (!grave) return;
+      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold + grave.gold }) });
+      dispatch({ type: 'SET_GRAVE', payload: null });
+      addLog('success', `유해 수습: ${grave.gold}G 획득`);
+    },
     useItem: (item) => {
-      // Basic Equip Logic
       if (['weapon', 'armor'].includes(item.type)) {
         const newInv = player.inv.filter(i => i !== item);
         const oldEquip = player.equip[item.type];
-        if (oldEquip && oldEquip.name !== '맨손' && oldEquip.name !== '평상복') newInv.push(oldEquip);
+        if (oldEquip && oldEquip.name !== '맨손') newInv.push(oldEquip);
         dispatch({ type: 'SET_PLAYER', payload: { ...player, inv: newInv, equip: { ...player.equip, [item.type]: item } } });
         addLog('success', `${item.name} 장착.`);
       }
-    }
-  }), [player, gameState, enemy, isAiThinking, logs, uid, liveConfig]);
+      if (item.type === 'hp') {
+        const newInv = player.inv.filter(i => i !== item);
+        dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.min(p.maxHp, p.hp + item.val), inv: newInv }) });
+        addLog('success', `${item.name} 사용.`);
+      }
+    },
+    setSideTab: (val) => dispatch({ type: 'SET_SIDE_TAB', payload: val }),
+    setGameState: (val) => dispatch({ type: 'SET_GAME_STATE', payload: val }),
+    setShopItems: (val) => dispatch({ type: 'SET_SHOP_ITEMS', payload: val }), // Re-added!
+    setAiThinking: (val) => dispatch({ type: 'SET_AI_THINKING', payload: val }), // Re-added!
+    getUid: () => uid,
+    isAdmin: () => ADMIN_UIDS.includes(uid),
+    liveConfig,
+    leaderboard
+  }), [player, gameState, enemy, isAiThinking, logs, uid, liveConfig, grave, currentEvent, shopItems]);
 
   // CLI Integration
   const handleCommand = (text) => {
