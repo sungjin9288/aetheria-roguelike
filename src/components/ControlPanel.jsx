@@ -66,7 +66,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
 
         // Trade Logic
         const buyItems = shopItems.filter(i => (i.tier || 1) <= maxTier);
-        const sellItems = player.inv.filter(i => !i.id?.startsWith('starter_')); // Prevent selling starters
+        const sellItems = player.inv.filter(i => !String(i.id).startsWith('starter_')); // Prevent selling starters, safe ID check
 
         return (
             <div className="absolute inset-x-4 bottom-4 top-20 md:w-2/3 bg-slate-900/95 z-20 p-4 rounded border border-slate-700 flex flex-col">

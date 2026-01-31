@@ -481,7 +481,7 @@ const useGameEngine = () => {
       if (gameState !== 'shop') return;
       if (type === 'buy') {
         if (player.gold >= item.price) {
-          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - item.price, inv: [...p.inv, { ...item, id: Date.now() }] }) });
+          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - item.price, inv: [...p.inv, { ...item, id: Date.now().toString() }] }) });
           addLog('success', `💰 ${item.name} 구매 완료.`);
         } else addLog('error', '골드가 부족합니다.');
       }
@@ -522,7 +522,7 @@ const useGameEngine = () => {
       let updates = { gold: player.gold + grave.gold };
 
       if (grave.item) {
-        updates.inv = [...player.inv, { ...grave.item, id: Date.now() }];
+        updates.inv = [...player.inv, { ...grave.item, id: Date.now().toString() }]; // Fixed: String ID
         logMsg += `, ${grave.item.name} 획득`;
       }
 
