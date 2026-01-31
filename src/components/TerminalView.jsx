@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Bot } from 'lucide-react';
 
-const TerminalView = ({ logs, gameState }) => {
+const TerminalView = ({ logs, gameState, onCommand }) => {
     const endRef = useRef(null);
     useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [logs]);
 
@@ -35,6 +35,26 @@ const TerminalView = ({ logs, gameState }) => {
             })}
             {logs.length > 0 && logs[logs.length - 1].type === 'loading' && <div className="text-xs text-slate-600 animate-pulse mt-2">에테르니아의 의지가 운명을 기록 중입니다...</div>}
             <div ref={endRef} />
+
+            {/* CLI INPUT AREA */}
+            <div className="mt-2 border-t border-slate-800 pt-2 flex gap-2">
+                <span className="text-emerald-500 font-bold">{'>'}</span>
+                <input
+                    type="text"
+                    className="bg-transparent border-none outline-none text-emerald-400 font-mono w-full placeholder-slate-700"
+                    placeholder="명령어를 입력하세요 (예: 이동 숲, 공격, 탐험, 도움말)"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            const val = e.target.value;
+                            if (val.trim()) {
+                                if (onCommand) onCommand(val);
+                                e.target.value = '';
+                            }
+                        }
+                    }}
+                    autoFocus
+                />
+            </div>
         </div>
     );
 };

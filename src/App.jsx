@@ -10,6 +10,7 @@ import { TokenQuotaManager } from './systems/TokenQuotaManager';
 import { LatencyTracker } from './systems/LatencyTracker'; // Used implicitly if needed, or by AI_SERVICE
 import { AI_SERVICE } from './services/aiService';
 import { checkMilestones, migrateData } from './utils/gameUtils';
+import { parseCommand } from './utils/commandParser'; // CLI Support
 import MainLayout from './components/MainLayout';
 import TerminalView from './components/TerminalView';
 import Dashboard from './components/Dashboard';
@@ -582,6 +583,13 @@ const useGameEngine = () => {
     liveConfig
   }), [player, gameState, logs, enemy, grave, shopItems, sideTab, isAiThinking, currentEvent, visualEffect, syncStatus, uid, leaderboard, liveConfig]);
 
+  // CLI Handler
+  const handleCommand = (text) => {
+    const result = parseCommand(text, gameState, player, actions);
+    if (result) addLog('system', result);
+  };
+
+
   return {
     player, gameState, logs, enemy, actions, getFullStats, sideTab, grave, shopItems, isAiThinking, currentEvent, visualEffect, syncStatus, leaderboard, liveConfig, uid
   };
@@ -626,7 +634,7 @@ function App() {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 overflow-hidden flex gap-4">
         {/* LEFT: TERMINAL */}
-        <TerminalView logs={engine.logs} gameState={engine.gameState} />
+        <TerminalView logs={engine.logs} gameState={engine.gameState} onCommand={engine.handleCommand} />
 
         {/* RIGHT: DASHBOARD (Inventory/Stats) */}
         <Dashboard
