@@ -25,7 +25,7 @@ const INITIAL_STATE = {
   // Game Data
   player: {
     name: '', job: '모험가', level: 1, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5, exp: 0, nextExp: 100, gold: 500, loc: '시작의 마을',
-    inv: [], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0] },
+    inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0] },
     quests: [], achievements: [], stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 },
     tempBuff: { atk: 0, turn: 0 }, status: [],
     history: [], archivedHistory: []
@@ -97,6 +97,8 @@ const gameReducer = (state, action) => {
       return { ...state, visualEffect: action.payload };
     case 'SET_SIDE_TAB':
       return { ...state, sideTab: action.payload };
+    case 'SET_SHOP_ITEMS':
+      return { ...state, shopItems: action.payload };
 
     // Logs (Pure)
     case 'ADD_LOG':
@@ -277,6 +279,12 @@ const useGameEngine = () => {
       console.log('Action: MOVE', loc, { gameState, isAiThinking, loc: player.loc });
       if (isAiThinking) return;
       if (gameState === 'combat') return addLog('error', '전투 중에는 이동할 수 없습니다!');
+      if (gameState === 'shop') return addLog('error', '상점을 먼저 나가주세요.'); // Double check
+
+      const targetMap = DB.MAPS[loc];
+      if (!targetMap) return addLog('error', '존재하지 않는 지역입니다.');
+      if (player.level < targetMap.minLv) return addLog('error', `레벨 ${targetMap.minLv} 이상이어야 이동할 수 있습니다.`);
+
       if (!DB.MAPS[player.loc].exits.includes(loc) && loc !== '시작의 마을') return addLog('error', '갈 수 없는 곳입니다.');
 
       dispatch({ type: 'SET_PLAYER', payload: { loc } });
@@ -310,14 +318,28 @@ const useGameEngine = () => {
           // Victory
           dispatch({ type: 'SET_ENEMY', payload: null });
           dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
-          dispatch({
-            type: 'SET_PLAYER', payload: p => ({
-              ...p,
-              exp: p.exp + enemy.exp,
-              gold: p.gold + enemy.gold,
-              stats: { ...p.stats, kills: p.stats.kills + 1 }
-            })
-          });
+
+          // Level Up Logic
+          let p = { ...player };
+          p.exp += enemy.exp;
+          p.gold += enemy.gold;
+          p.stats.kills += 1;
+
+          if (p.exp >= p.nextExp) {
+            p.level++;
+            p.exp -= p.nextExp;
+            p.nextExp = Math.floor(p.nextExp * 1.5);
+            p.maxHp += 20;
+            p.maxMp += 10;
+            p.hp = p.maxHp;
+            p.mp = p.maxMp;
+            p.atk += 2;
+            p.def += 1;
+            addLog('system', `✨ LEVEL UP! Lv.${p.level} 달성! (HP/MP/Stats 증가)`);
+            dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'levelUp' });
+          }
+
+          dispatch({ type: 'SET_PLAYER', payload: p });
           addLog('success', `승리! EXP +${enemy.exp}, Gold +${enemy.gold}`);
           addStoryLog('victory', { name: enemy.name });
         } else {
@@ -432,7 +454,28 @@ const useGameEngine = () => {
         if (newHp <= 0) {
           dispatch({ type: 'SET_ENEMY', payload: null });
           dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
-          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, exp: p.exp + enemy.exp, gold: p.gold + enemy.gold, stats: { ...p.stats, kills: p.stats.kills + 1 } }) });
+
+          // Level Up Logic
+          let p = { ...player };
+          p.exp += enemy.exp;
+          p.gold += enemy.gold;
+          p.stats.kills += 1;
+
+          if (p.exp >= p.nextExp) {
+            p.level++;
+            p.exp -= p.nextExp;
+            p.nextExp = Math.floor(p.nextExp * 1.5);
+            p.maxHp += 20;
+            p.maxMp += 10;
+            p.hp = p.maxHp;
+            p.mp = p.maxMp;
+            p.atk += 2;
+            p.def += 1;
+            addLog('system', `✨ LEVEL UP! Lv.${p.level} 달성! (HP/MP/Stats 증가)`);
+            dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'levelUp' });
+          }
+
+          dispatch({ type: 'SET_PLAYER', payload: p });
           addLog('success', `승리! EXP +${enemy.exp}, Gold +${enemy.gold}`);
           addStoryLog('victory', { name: enemy.name });
 

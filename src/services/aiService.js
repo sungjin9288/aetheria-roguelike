@@ -61,7 +61,13 @@ export const AI_SERVICE = {
                 console.warn('AI proxy unavailable:', e.message);
             }
         }
-        return null;
+        // Offline Fallback Events
+        const fallbacks = [
+            { desc: "오래된 석상이 덩굴에 감겨 있습니다.", choices: ["살펴본다", "지나친다"] },
+            { desc: "버려진 야영지 흔적을 발견했습니다.", choices: ["뒤져본다", "휴식한다"] },
+            { desc: "반짝이는 무언가가 풀숲에 있습니다.", choices: ["줍는다", "무시한다"] }
+        ];
+        return fallbacks[Math.floor(Math.random() * fallbacks.length)];
     },
 
     generateStory: async (type, data, uid = 'anonymous') => {
