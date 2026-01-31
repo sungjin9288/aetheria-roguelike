@@ -18,21 +18,21 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
             <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-lg">
                 <h3 className="text-emerald-400 font-bold mb-3 text-sm flex items-center gap-2"><User size={16} /> STATUS</h3>
                 <div className="space-y-2 text-xs text-slate-300">
-                    <div className="flex justify-between"><span>Lv.{player.level} {player.job}</span> <span className="text-yellow-400">{player.gold} G</span></div>
+                    <div className="flex justify-between"><span>Lv.{player?.level} {player?.job}</span> <span className="text-yellow-400">{player?.gold} G</span></div>
                     <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
-                        <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(player.hp / player.maxHp) * 100}%` }}></div>
+                        <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(player?.hp / player?.maxHp) * 100}%` }}></div>
                     </div>
-                    <div className="text-center text-[10px] text-slate-500">{player.hp} / {player.maxHp} HP</div>
+                    <div className="text-center text-[10px] text-slate-500">{player?.hp} / {player?.maxHp} HP</div>
                     <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
-                        <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player.mp / player.maxMp) * 100}%` }}></div>
+                        <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player?.mp / player?.maxMp) * 100}%` }}></div>
                     </div>
-                    <div className="text-center text-[10px] text-slate-500">{player.mp} / {player.maxMp} MP</div>
+                    <div className="text-center text-[10px] text-slate-500">{player?.mp} / {player?.maxMp} MP</div>
                     <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-800">
-                        <div><div className="text-slate-500">ATK</div><div className="text-white">{stats.atk} <span className="text-[10px] text-slate-400">({stats.elem})</span></div></div>
-                        <div><div className="text-slate-500">DEF</div><div className="text-white">{stats.def}</div></div>
+                        <div><div className="text-slate-500">ATK</div><div className="text-white">{stats?.atk} <span className="text-[10px] text-slate-400">({stats?.elem})</span></div></div>
+                        <div><div className="text-slate-500">DEF</div><div className="text-white">{stats?.def}</div></div>
                     </div>
-                    <div className="mt-2 text-[10px] text-slate-400 truncate">W: {player.equip.weapon.name}</div>
-                    <div className="text-[10px] text-slate-400 truncate">A: {player.equip.armor.name}</div>
+                    <div className="mt-2 text-[10px] text-slate-400 truncate">W: {player?.equip?.weapon?.name || '맨손'}</div>
+                    <div className="text-[10px] text-slate-400 truncate">A: {player?.equip?.armor?.name || '평상복'}</div>
                 </div>
             </div>
 
@@ -45,7 +45,8 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                 </div>
                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
                     {sideTab === 'inventory' && Object.entries(groupedInv).map(([name, count], i) => {
-                        const item = player.inv.find(it => it.name === name);
+                        const item = player?.inv?.find(it => it.name === name);
+                        if (!item) return null;
                         return (
                             <div key={i} className="bg-slate-800/50 p-2 rounded border border-slate-700/50 flex justify-between items-center group">
                                 <span className={`text-sm ${item.tier >= 2 ? 'text-purple-300' : 'text-slate-300'}`}>{name} x{count}</span>
@@ -53,21 +54,21 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                             </div>
                         );
                     })}
-                    {sideTab === 'quest' && player.quests.length === 0 && <div className="text-slate-500 text-center py-4">진행 중인 의뢰가 없습니다.</div>}
+                    {sideTab === 'quest' && player?.quests?.length === 0 && <div className="text-slate-500 text-center py-4">진행 중인 의뢰가 없습니다.</div>}
 
                     {sideTab === 'system' && (
                         <div className="space-y-4 p-2">
                             <div className="text-xs text-slate-400 mb-2">
                                 <p>Session ID: {Date.now().toString(36).toUpperCase()}</p>
                                 <p>User ID: {actions.getUid()}</p>
-                                <p>Client Ver: v3.1 (Global Ranking)</p>
+                                <p>Client Ver: v3.5 (Stable)</p>
                             </div>
 
                             {/* HONOR OF FAME */}
                             <div className="bg-slate-900/80 p-3 rounded border border-yellow-900/30 mb-2">
                                 <div className="text-xs font-bold text-yellow-500 mb-2 flex items-center gap-2"><Crown size={12} /> 명예의 전당 (Top 10)</div>
                                 <div className="space-y-1">
-                                    {actions.leaderboard && actions.leaderboard.length > 0 ? actions.leaderboard.map((ranker, i) => (
+                                    {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker, i) => (
                                         <div key={i} className="flex justify-between text-[10px] text-slate-300 border-b border-slate-800/50 pb-1 last:border-0 hover:bg-slate-800/50 p-1 rounded transition-colors">
                                             <span className="flex gap-2">
                                                 <span className={`w-3 text-center font-bold ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-slate-600'}`}>{i + 1}</span>
@@ -75,7 +76,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                                             </span>
                                             <span className="flex gap-2 items-center">
                                                 <span className="text-red-400 flex items-center gap-0.5"><Skull size={8} /> {ranker.totalKills}</span>
-                                                <span className="text-yellow-500 flex items-center gap-0.5"><Crown size={8} /> {ranker.bossKills || 0}</span>
+                                                <span className="text-yellow-500 flex items-center gap-0.5"><Crown size={8} /> {ranker?.bossKills || 0}</span>
                                             </span>
                                         </div>
                                     )) : <div className="text-[10px] text-slate-600 text-center">랭킹 정보 불러오는 중...</div>}
