@@ -241,7 +241,7 @@ const useGameEngine = () => {
       }
     };
 
-    const timer = setTimeout(saveData, 1500); // 1.5s Debounce
+    const timer = setTimeout(saveData, 500); // 0.5s Debounce for faster persistence
     return () => clearTimeout(timer);
   }, [player, gameState, enemy, grave, currentEvent, syncStatus, uid]);
 
@@ -434,7 +434,7 @@ const useGameEngine = () => {
             if (player.hp - enemyDmg <= 0) {
               // DEATH PENALTY (Full Reset)
               const starterState = { ...INITIAL_STATE.player };
-              starterState.name = player.name; // Keep name
+              starterState.name = ''; // TRIGGER INTRO (Reset Identity)
               starterState.gold = 400; // Requested 400G
               starterState.inv = [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }]; // 2 Potions
 
@@ -478,6 +478,7 @@ const useGameEngine = () => {
       dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - recipe.gold, inv: [...p.inv, { name: recipe.name, type: 'item' }] }) }); // Simplified
       addLog('success', `${recipe.name} 제작 완료`);
     },
+
     jobChange: (jobName) => {
       dispatch({ type: 'SET_PLAYER', payload: { job: jobName } });
       addLog('success', `✨ ${jobName} 전직 완료!`);
