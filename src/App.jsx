@@ -307,74 +307,7 @@ const useGameEngine = () => {
       addLog('system', `환영합니다, ${name}님.`);
     },
 
-    // Combat
-    combat: (type) => {
-      if (gameState !== 'combat' || !enemy) return;
-      const stats = getFullStats();
 
-      if (type === 'attack') {
-        // Simple Attack Logic
-        const dmg = Math.floor(stats.atk * (0.9 + Math.random() * 0.2));
-        const isCrit = Math.random() < 0.1;
-        const finalDmg = isCrit ? dmg * 2 : dmg;
-
-        const newHp = enemy.hp - finalDmg;
-        addLog(isCrit ? 'critical' : 'combat', `⚔️ ${enemy.name}에게 ${finalDmg} 피해! ${isCrit ? '(치명타!)' : ''}`);
-        dispatch({ type: 'SET_VISUAL_EFFECT', payload: isCrit ? 'shake' : null });
-
-        if (newHp <= 0) {
-          // Victory
-          dispatch({ type: 'SET_ENEMY', payload: null });
-          dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
-
-          // Level Up Logic
-          let p = { ...player };
-          p.exp += enemy.exp;
-          p.gold += enemy.gold;
-          p.stats.kills += 1;
-
-          if (p.exp >= p.nextExp) {
-            p.level++;
-            p.exp -= p.nextExp;
-            p.nextExp = Math.floor(p.nextExp * 1.5);
-            p.maxHp += 20;
-            p.maxMp += 10;
-            p.hp = p.maxHp;
-            p.mp = p.maxMp;
-            p.atk += 2;
-            p.def += 1;
-            addLog('system', `✨ LEVEL UP! Lv.${p.level} 달성! (HP/MP/Stats 증가)`);
-            dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'levelUp' });
-          }
-
-          dispatch({ type: 'SET_PLAYER', payload: p });
-          addLog('success', `승리! EXP +${enemy.exp}, Gold +${enemy.gold}`);
-          addStoryLog('victory', { name: enemy.name });
-        } else {
-          // Enemy Turn
-          dispatch({ type: 'SET_ENEMY', payload: { ...enemy, hp: newHp } });
-          setTimeout(() => {
-            const enemyDmg = Math.max(1, enemy.atk - stats.def);
-            dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.max(0, p.hp - enemyDmg) }) });
-            addLog('warning', `💥 ${enemy.name}의 반격! ${enemyDmg} 피해.`);
-            dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
-          }, 500);
-        }
-      }
-      else if (type === 'escape') {
-        if (Math.random() > 0.5) {
-          dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
-          dispatch({ type: 'SET_ENEMY', payload: null });
-          addLog('info', '🏃‍♂️ 무사히 도망쳤습니다.');
-        } else {
-          addLog('error', '도망에 실패했습니다!');
-          // Penalty
-          const enemyDmg = Math.max(1, enemy.atk - stats.def);
-          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.max(0, p.hp - enemyDmg) }) });
-          addLog('warning', `💥 ${enemy.name}의 추격! ${enemyDmg} 피해.`);
-        }
-      }
-    },
 
     // Exploration
     explore: async () => {
@@ -400,7 +333,7 @@ const useGameEngine = () => {
 
       // ENEMY
       const mName = mapData.monsters[Math.floor(Math.random() * mapData.monsters.length)];
-      const mStats = { name: mName, hp: 100 + mapData.level * 20, maxHp: 100 + mapData.level * 20, atk: 10 + mapData.level * 2, exp: 10 + mapData.level * 5, gold: 10 + mapData.level * 2 };
+      const mStats = { name: mName, hp: 120 + mapData.level * 30, maxHp: 120 + mapData.level * 30, atk: 15 + mapData.level * 4, exp: 10 + mapData.level * 5, gold: 10 + mapData.level * 2 };
 
       dispatch({ type: 'SET_ENEMY', payload: mStats });
       dispatch({ type: 'SET_GAME_STATE', payload: 'combat' });
@@ -499,20 +432,16 @@ const useGameEngine = () => {
             addLog('warning', `💥 ${enemy.name}의 반격! ${enemyDmg} 피해.`);
             dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
             if (player.hp - enemyDmg <= 0) {
-              // DEATH PENALTY
-              dispatch({
-                type: 'SET_PLAYER', payload: {
-                  hp: player.maxHp,
-                  mp: player.maxMp,
-                  gold: 0,
-                  loc: '시작의 마을',
-                  exp: 0,
-                  inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }] // Minimum starter
-                }
-              });
+              // DEATH PENALTY (Full Reset)
+              const starterState = { ...INITIAL_STATE.player };
+              starterState.name = player.name; // Keep name
+              starterState.gold = 400; // Requested 400G
+              starterState.inv = [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }]; // 2 Potions
+
+              dispatch({ type: 'SET_PLAYER', payload: starterState });
               dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
               dispatch({ type: 'SET_ENEMY', payload: null });
-              addLog('error', '💀 사망했습니다. 소지품과 골드를 잃고 마을에서 부활합니다.');
+              addLog('error', '💀 사망했습니다. 레벨과 장비가 초기화되었습니다. (전생)');
               addStoryLog('death', { loc: player.loc });
             }
           }, 500);
