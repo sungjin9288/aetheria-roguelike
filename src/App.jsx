@@ -80,6 +80,7 @@ const gameReducer = (state, action) => {
     case 'SET_SYNC_STATUS':
       return { ...state, syncStatus: action.payload };
     case 'SET_GAME_STATE':
+      console.log('Reducer: SET_GAME_STATE', action.payload);
       return { ...state, gameState: action.payload, syncStatus: 'syncing' };
     case 'SET_PLAYER':
       const nextPlayer = typeof action.payload === 'function' ? action.payload(state.player) : action.payload;
@@ -273,8 +274,9 @@ const useGameEngine = () => {
   const actions = useMemo(() => ({
     // Navigation
     move: (loc) => {
+      console.log('Action: MOVE', loc, { gameState, isAiThinking, loc: player.loc });
       if (isAiThinking) return;
-      if (gameState !== 'idle') return addLog('error', '이동할 수 없는 상태입니다.');
+      if (gameState === 'combat') return addLog('error', '전투 중에는 이동할 수 없습니다!');
       if (!DB.MAPS[player.loc].exits.includes(loc) && loc !== '시작의 마을') return addLog('error', '갈 수 없는 곳입니다.');
 
       dispatch({ type: 'SET_PLAYER', payload: { loc } });
