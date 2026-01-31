@@ -8,6 +8,22 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
     if (gameState === 'combat') {
         return (
             <div className="grid grid-cols-3 gap-2 mt-4">
+                <div className="col-span-3 bg-slate-900 border border-red-900/50 p-2 rounded text-center mb-2">
+                    <div className="text-red-400 font-bold">{player.enemy?.name || 'Enemy'}</div>
+                    <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden mt-1 relative">
+                        <div className="bg-red-600 h-full transition-all duration-300" style={{ width: `${(player.enemy?.hp / player.enemy?.maxHp) * 100}%` }}></div>
+                    </div>
+                    <div className="text-xs text-slate-500">{player.enemy?.hp} / {player.enemy?.maxHp} HP</div>
+                    <div className="text-center text-[10px] text-slate-500">{player?.hp} / {player?.maxHp} HP</div>
+                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
+                        <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player?.mp / player?.maxMp) * 100}%` }}></div>
+                    </div>
+                    <div className="text-center text-[10px] text-slate-500">{player?.mp} / {player?.maxMp} MP</div>
+                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
+                        <div className="bg-purple-500 h-full transition-all duration-300" style={{ width: `${(player?.exp / player?.nextExp) * 100}%` }}></div>
+                    </div>
+                    <div className="text-center text-[10px] text-slate-500">{player?.exp} / {player?.nextExp} EXP</div>
+                </div>
                 <button disabled={isAiThinking} onClick={() => actions.combat('attack')} className="bg-red-900/40 hover:bg-red-800 border border-red-700 p-4 rounded text-red-200 font-bold flex flex-col items-center disabled:opacity-50"><Sword /> 공격</button>
                 <button disabled={isAiThinking} onClick={() => actions.combat('skill')} className="bg-blue-900/40 hover:bg-blue-800 border border-blue-700 p-4 rounded text-blue-200 font-bold flex flex-col items-center disabled:opacity-50"><Zap /> 기술 (10MP)</button>
                 <button disabled={isAiThinking} onClick={() => actions.combat('escape')} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 p-4 rounded text-slate-300 font-bold flex flex-col items-center disabled:opacity-50"><ArrowRight /> 도망</button>
@@ -41,17 +57,20 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
     // SHOP MODE
     if (gameState === 'shop') {
         return (
-            <div className="absolute inset-x-4 bottom-4 top-20 bg-slate-900/95 z-20 p-4 rounded border border-slate-700 flex flex-col">
+            <div className="absolute inset-x-4 bottom-4 top-20 md:w-2/3 bg-slate-900/95 z-20 p-4 rounded border border-slate-700 flex flex-col">
                 <h2 className="text-xl text-yellow-500 font-bold mb-4">🛒 상점</h2>
-                <div className="flex-1 overflow-y-auto grid grid-cols-1 gap-2">
+                <div className="flex-1 overflow-y-auto grid grid-cols-1 gap-2 custom-scrollbar">
                     {shopItems.map((item, i) => (
-                        <button key={i} onClick={() => actions.market('buy', item)} className="flex justify-between p-3 bg-slate-800 rounded border border-slate-600 hover:bg-slate-700">
-                            <span className="font-bold">{item.name}</span>
-                            <span className="text-yellow-400">{item.price}G</span>
+                        <button key={i} onClick={() => actions.market('buy', item)} className="flex justify-between items-center p-3 bg-slate-800 rounded border border-slate-600 hover:bg-slate-700 group">
+                            <div className="text-left">
+                                <div className="font-bold group-hover:text-yellow-200 transaction-colors">{item.name}</div>
+                                <div className="text-xs text-slate-400">{item.desc_stat || item.desc}</div>
+                            </div>
+                            <span className="text-yellow-400 font-mono">{item.price}G</span>
                         </button>
                     ))}
                 </div>
-                <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-slate-700 py-3 rounded">나가기</button>
+                <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-slate-700 py-3 rounded hover:bg-slate-600">나가기</button>
             </div>
         );
     }

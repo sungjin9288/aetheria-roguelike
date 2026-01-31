@@ -27,6 +27,10 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                         <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player?.mp / player?.maxMp) * 100}%` }}></div>
                     </div>
                     <div className="text-center text-[10px] text-slate-500">{player?.mp} / {player?.maxMp} MP</div>
+                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
+                        <div className="bg-purple-500 h-full transition-all duration-300" style={{ width: `${(player?.exp / player?.nextExp) * 100}%` }}></div>
+                    </div>
+                    <div className="text-center text-[10px] text-slate-500">{player?.exp} / {player?.nextExp} EXP</div>
                     <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-800">
                         <div><div className="text-slate-500">ATK</div><div className="text-white">{stats?.atk} <span className="text-[10px] text-slate-400">({stats?.elem})</span></div></div>
                         <div><div className="text-slate-500">DEF</div><div className="text-white">{stats?.def}</div></div>

@@ -278,8 +278,14 @@ const useGameEngine = () => {
     move: (loc) => {
       console.log('Action: MOVE', loc, { gameState, isAiThinking, loc: player.loc });
       if (isAiThinking) return;
+      // Guidance if no arg
+      if (!loc) {
+        const exits = DB.MAPS[player.loc].exits.join(', ');
+        return addLog('info', `이동 가능한 지역: ${exits}`);
+      }
+
       if (gameState === 'combat') return addLog('error', '전투 중에는 이동할 수 없습니다!');
-      if (gameState === 'shop') return addLog('error', '상점을 먼저 나가주세요.'); // Double check
+      if (gameState === 'shop') return addLog('error', '상점을 먼저 나가주세요.');
 
       const targetMap = DB.MAPS[loc];
       if (!targetMap) return addLog('error', '존재하지 않는 지역입니다.');
@@ -288,8 +294,10 @@ const useGameEngine = () => {
       if (!DB.MAPS[player.loc].exits.includes(loc) && loc !== '시작의 마을') return addLog('error', '갈 수 없는 곳입니다.');
 
       dispatch({ type: 'SET_PLAYER', payload: { loc } });
+      dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
       addLog('success', `👣 ${loc}로 이동했습니다.`);
-      addLog('system', DB.MAPS[loc].desc);
+      addLog('system', targetMap.desc);
+      if (grave && grave.loc === loc) addLog('event', '⚰️ 유해가 발견되었습니다.');
     },
 
     // Start Game
@@ -491,10 +499,21 @@ const useGameEngine = () => {
             addLog('warning', `💥 ${enemy.name}의 반격! ${enemyDmg} 피해.`);
             dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
             if (player.hp - enemyDmg <= 0) {
-              dispatch({ type: 'SET_PLAYER', payload: { hp: player.maxHp, gold: Math.floor(player.gold * 0.9), loc: '시작의 마을', exp: 0 } });
+              // DEATH PENALTY
+              dispatch({
+                type: 'SET_PLAYER', payload: {
+                  hp: player.maxHp,
+                  mp: player.maxMp,
+                  gold: 0,
+                  loc: '시작의 마을',
+                  exp: 0,
+                  inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }] // Minimum starter
+                }
+              });
               dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
               dispatch({ type: 'SET_ENEMY', payload: null });
-              addLog('error', '💀 사망했습니다. 마을에서 부활합니다.');
+              addLog('error', '💀 사망했습니다. 소지품과 골드를 잃고 마을에서 부활합니다.');
+              addStoryLog('death', { loc: player.loc });
             }
           }, 500);
         }
