@@ -479,6 +479,11 @@ const useGameEngine = () => {
       addLog('success', `${recipe.name} 제작 완료`);
     },
 
+    reset: () => {
+      if (window.confirm('모든 데이터를 삭제하고 초기화하시겠습니까?')) {
+        dispatch({ type: 'RESET_GAME' });
+      }
+    },
     jobChange: (jobName) => {
       dispatch({ type: 'SET_PLAYER', payload: { job: jobName } });
       addLog('success', `✨ ${jobName} 전직 완료!`);
