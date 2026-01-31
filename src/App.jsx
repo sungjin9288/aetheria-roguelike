@@ -432,11 +432,28 @@ const useGameEngine = () => {
             addLog('warning', `💥 ${enemy.name}의 반격! ${enemyDmg} 피해.`);
             dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
             if (player.hp - enemyDmg <= 0) {
-              // DEATH PENALTY (Full Reset)
+              // GRAVE DROP LOGIC
+              let droppedItem = null;
+              if (player.inv.length > 0) {
+                const tradableItems = player.inv.filter(i => !i.id?.startsWith('starter_'));
+                if (tradableItems.length > 0) {
+                  droppedItem = tradableItems[Math.floor(Math.random() * tradableItems.length)];
+                }
+              }
+              const graveData = {
+                loc: player.loc,
+                gold: Math.floor(player.gold / 2),
+                item: droppedItem,
+                timestamp: Date.now()
+              };
+              dispatch({ type: 'SET_GRAVE', payload: graveData });
+
+              // DEATH PENALTY (Hardcore Reset)
               const starterState = { ...INITIAL_STATE.player };
               starterState.name = ''; // TRIGGER INTRO (Reset Identity)
-              starterState.gold = 400; // Requested 400G
-              starterState.inv = [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }]; // 2 Potions
+              starterState.gold = 400;
+              starterState.inv = [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }];
+
 
               dispatch({ type: 'SET_PLAYER', payload: starterState });
               dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
@@ -468,6 +485,12 @@ const useGameEngine = () => {
           addLog('success', `💰 ${item.name} 구매 완료.`);
         } else addLog('error', '골드가 부족합니다.');
       }
+      else if (type === 'sell') {
+        const sellPrice = Math.floor(item.price * 0.5);
+        const newInv = player.inv.filter(i => i.id !== item.id);
+        dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold + sellPrice, inv: newInv }) });
+        addLog('success', `💰 ${item.name} 판매 완료 (+${sellPrice}G)`);
+      }
     },
     craft: (recipeId) => {
       // Crafting logic
@@ -495,9 +518,17 @@ const useGameEngine = () => {
     },
     lootGrave: () => {
       if (!grave) return;
-      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold + grave.gold }) });
+      let logMsg = `유해 수습: ${grave.gold}G 획득`;
+      let updates = { gold: player.gold + grave.gold };
+
+      if (grave.item) {
+        updates.inv = [...player.inv, { ...grave.item, id: Date.now() }];
+        logMsg += `, ${grave.item.name} 획득`;
+      }
+
+      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, ...updates }) });
       dispatch({ type: 'SET_GRAVE', payload: null });
-      addLog('success', `유해 수습: ${grave.gold}G 획득`);
+      addLog('success', logMsg);
     },
     useItem: (item) => {
       if (['weapon', 'armor'].includes(item.type)) {

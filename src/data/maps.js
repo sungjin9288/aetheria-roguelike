@@ -19,8 +19,9 @@ export const MAPS = {
     '피라미드': { level: 20, type: 'dungeon', exits: ['사막 오아시스'], monsters: ['미라', '사막도적', '스핑크스', '아누비스 수호자'], desc: '고대 왕이 잠든 거대한 피라미드입니다.', eventChance: 0.45, boss: true },
 
     // 얼음 지역 (Lv 20-35)
-    '얼음 성채': { level: 20, type: 'dungeon', exits: ['잊혀진 폐허', '빙하 심연'], monsters: ['프로스트 위치', '얼음 거인', '스노우 울프', '아이스 골렘'], desc: '영원히 얼어붙은 고대 성채입니다.', eventChance: 0.4 },
+    '얼음 성채': { level: 20, type: 'dungeon', exits: ['잊혀진 폐허', '빙하 심연', '북부 요새'], monsters: ['프로스트 위치', '얼음 거인', '스노우 울프', '아이스 골렘'], desc: '영원히 얼어붙은 고대 성채입니다.', eventChance: 0.4 },
     '빙하 심연': { level: 30, type: 'dungeon', exits: ['얼음 성채'], monsters: ['아이스 드래곤', '빙결의 마녀', '서리 정령'], desc: '깊은 빙하 속에 숨겨진 심연입니다.', eventChance: 0.5, boss: true },
+    '북부 요새': { level: 30, type: 'safe', exits: ['얼음 성채'], monsters: [], desc: '북쪽 끝 설원에 위치한 전방 요새입니다. (Tier 3 상점)', eventChance: 0 },
 
     // 최종 지역 (Lv 30-50)
     '암흑 성': { level: 30, type: 'dungeon', exits: ['어둠의 동굴', '마왕성'], monsters: ['데스나이트', '리치', '뱀파이어', '암흑 사제'], desc: '어둠의 세력이 지배하는 성입니다.', eventChance: 0.45 },

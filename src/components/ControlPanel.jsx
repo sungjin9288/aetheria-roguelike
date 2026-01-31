@@ -56,19 +56,54 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
 
     // SHOP MODE
     if (gameState === 'shop') {
+        const [shopMode, setShopMode] = React.useState('buy');
+        const loc = player.loc;
+
+        // Tier Logic
+        let maxTier = 1;
+        if (loc === '사막 오아시스') maxTier = 2;
+        if (loc === '북부 요새') maxTier = 4; // High Tier
+
+        // Trade Logic
+        const buyItems = shopItems.filter(i => (i.tier || 1) <= maxTier);
+        const sellItems = player.inv.filter(i => !i.id?.startsWith('starter_')); // Prevent selling starters
+
         return (
             <div className="absolute inset-x-4 bottom-4 top-20 md:w-2/3 bg-slate-900/95 z-20 p-4 rounded border border-slate-700 flex flex-col">
-                <h2 className="text-xl text-yellow-500 font-bold mb-4">🛒 상점</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl text-yellow-500 font-bold">🛒 상점 <span className="text-xs text-slate-500">({loc} - Tier {maxTier})</span></h2>
+                    <div className="flex bg-slate-800 rounded p-1">
+                        <button onClick={() => setShopMode('buy')} className={`px-3 py-1 text-xs rounded ${shopMode === 'buy' ? 'bg-yellow-600 text-white' : 'text-slate-400'}`}>구매</button>
+                        <button onClick={() => setShopMode('sell')} className={`px-3 py-1 text-xs rounded ${shopMode === 'sell' ? 'bg-red-600 text-white' : 'text-slate-400'}`}>판매</button>
+                    </div>
+                </div>
+
                 <div className="flex-1 overflow-y-auto grid grid-cols-1 gap-2 custom-scrollbar">
-                    {shopItems.map((item, i) => (
-                        <button key={i} onClick={() => actions.market('buy', item)} className="flex justify-between items-center p-3 bg-slate-800 rounded border border-slate-600 hover:bg-slate-700 group">
-                            <div className="text-left">
-                                <div className="font-bold group-hover:text-yellow-200 transaction-colors">{item.name}</div>
-                                <div className="text-xs text-slate-400">{item.desc_stat || item.desc}</div>
-                            </div>
-                            <span className="text-yellow-400 font-mono">{item.price}G</span>
-                        </button>
-                    ))}
+                    {shopMode === 'buy' ? (
+                        buyItems.map((item, i) => (
+                            <button key={i} onClick={() => actions.market('buy', item)} className="flex justify-between items-center p-3 bg-slate-800 rounded border border-slate-600 hover:bg-slate-700 group">
+                                <div className="text-left">
+                                    <div className="font-bold group-hover:text-yellow-200 transaction-colors">{item.name}</div>
+                                    <div className="text-xs text-slate-400">{item.desc_stat || item.desc}</div>
+                                </div>
+                                <span className="text-yellow-400 font-mono">{item.price}G</span>
+                            </button>
+                        ))
+                    ) : (
+                        sellItems.length > 0 ? (
+                            sellItems.map((item, i) => (
+                                <button key={i} onClick={() => actions.market('sell', item)} className="flex justify-between items-center p-3 bg-slate-800 rounded border border-slate-600 hover:bg-slate-700 group">
+                                    <div className="text-left">
+                                        <div className="font-bold text-red-300 group-hover:text-red-200">{item.name}</div>
+                                        <div className="text-xs text-slate-400">{item.desc_stat || item.desc}</div>
+                                    </div>
+                                    <span className="text-yellow-400 font-mono">+{Math.floor(item.price * 0.5)}G</span>
+                                </button>
+                            ))
+                        ) : (
+                            <div className="text-center text-slate-500 py-4">판매할 아이템이 없습니다.</div>
+                        )
+                    )}
                 </div>
                 <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-slate-700 py-3 rounded hover:bg-slate-600">나가기</button>
             </div>
