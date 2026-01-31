@@ -151,14 +151,6 @@ const useGameEngine = () => {
 
             // Validate Loc
             if (!activeData.player.loc || typeof activeData.player.loc !== 'string') {
-              dispatch({ type: 'SET_PLAYER', payload: { loc: '시작의 마을' } });
-            }
-
-            // Force Log Update to ensure Terminal works
-            dispatch({ type: 'ADD_LOG', payload: { type: 'system', text: '시스템이 준비되었습니다.' } });
-
-            // Validate Loc
-            if (!activeData.player.loc || typeof activeData.player.loc !== 'string') {
               console.warn("Invalid Loc detected, resetting to Start");
               dispatch({ type: 'SET_PLAYER', payload: { loc: '시작의 마을' } });
             }
