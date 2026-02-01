@@ -216,13 +216,19 @@ const useGameEngine = () => {
       const mapData = DB.MAPS[player.loc];
       if (Math.random() < (mapData.eventChance || 0)) {
         dispatch({ type: 'SET_GAME_STATE', payload: 'event' });
-        const eventData = await AI_SERVICE.generateEvent(player.loc, player.history, uid);
-        if (eventData && eventData.desc) {
-          dispatch({ type: 'SET_EVENT', payload: eventData });
-          addLog('event', eventData.desc);
-        } else {
-          dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
-          addLog('info', '아무것도 발견하지 못했습니다.');
+        dispatch({ type: 'SET_AI_THINKING', payload: true }); // Start Loading
+
+        try {
+          const eventData = await AI_SERVICE.generateEvent(player.loc, player.history, uid);
+          if (eventData && eventData.desc) {
+            dispatch({ type: 'SET_EVENT', payload: eventData });
+            addLog('event', eventData.desc);
+          } else {
+            dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+            addLog('info', '아무것도 발견하지 못했습니다.');
+          }
+        } finally {
+          dispatch({ type: 'SET_AI_THINKING', payload: false }); // End Loading
         }
         return;
       }
