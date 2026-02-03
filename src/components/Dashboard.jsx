@@ -33,10 +33,11 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                     </div>
                     <div className="text-center text-[10px] text-slate-500">{player?.exp} / {player?.nextExp} EXP</div>
                     <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-800">
-                        <div><div className="text-slate-500">ATK</div><div className="text-white">{stats?.atk} <span className="text-[10px] text-slate-400">({stats?.elem})</span></div></div>
+                        <div><div className="text-slate-500">{stats?.isMagic ? 'M.ATK' : 'ATK'}</div><div className="text-white">{stats?.atk} <span className="text-[10px] text-slate-400">({stats?.elem})</span></div></div>
                         <div><div className="text-slate-500">DEF</div><div className="text-white">{stats?.def}</div></div>
                     </div>
-                    <div className="mt-2 text-[10px] text-slate-400 truncate">W: {player?.equip?.weapon?.name || '맨손'}</div>
+                    <div className="mt-2 text-[10px] text-slate-400 truncate">W: {player?.equip?.weapon?.name || '맨손'} {stats?.weaponHands === 2 ? '(2H)' : ''}</div>
+                    <div className="text-[10px] text-slate-400 truncate">O: {player?.equip?.offhand?.name || '---'}</div>
                     <div className="text-[10px] text-slate-400 truncate">A: {player?.equip?.armor?.name || '평상복'}</div>
                 </div>
             </div>

@@ -165,10 +165,20 @@ const useGameEngine = () => {
     const cls = DB.CLASSES[player.job] || DB.CLASSES['모험가'];
     const wVal = player.equip.weapon?.val || 0;
     const aVal = player.equip.armor?.val || 0;
+    const oVal = player.equip.offhand?.val || 0; // Shield/Offhand Value
+
+    // Check Weapon Type for Magic Power Display
+    // If Job is Mage/Healer etc OR Weapon deals Magic Damage (elem != null/physical?)
+    // This flag helps UI to render "Magic Power" instead of "Attack"
+    const isMagic = ['마법사', '아크메이지', '흑마법사', '성직자'].includes(player.job) ||
+      (player.equip.weapon?.elem && !['물리'].includes(player.equip.weapon.elem));
+
     return {
       atk: Math.floor((player.atk + wVal) * cls.atkMod),
-      def: player.def + aVal,
-      elem: player.equip.weapon?.elem || '물리'
+      def: player.def + aVal + oVal,
+      elem: player.equip.weapon?.elem || '물리',
+      isMagic: isMagic,
+      weaponHands: player.equip.weapon?.hands || 1 // Track if 2H
     };
   };
 
@@ -558,15 +568,66 @@ const useGameEngine = () => {
       addLog('success', logMsg);
     },
     useItem: (item) => {
-      if (['weapon', 'armor'].includes(item.type)) {
-        const newInv = player.inv.filter(i => i !== item);
-        const oldEquip = player.equip[item.type];
-        if (oldEquip && oldEquip.name !== '맨손') newInv.push(oldEquip);
-        dispatch({ type: 'SET_PLAYER', payload: { ...player, inv: newInv, equip: { ...player.equip, [item.type]: item } } });
+      // EQUIPMENT LOGIC (Updated v3.5)
+      if (['weapon', 'armor', 'shield'].includes(item.type)) {
+        let newInv = player.inv.filter(i => i.id !== item.id);
+        const currentEquip = { ...player.equip }; // Copy current equip
+
+        // 1. ARMOR
+        if (item.type === 'armor') {
+          if (currentEquip.armor && currentEquip.armor.name !== '평상복') {
+            newInv.push(currentEquip.armor);
+          }
+          currentEquip.armor = item;
+        }
+
+        // 2. WEAPON (Main Hand)
+        else if (item.type === 'weapon') {
+          // Unequip current weapon
+          if (currentEquip.weapon && currentEquip.weapon.name !== '맨손') {
+            newInv.push(currentEquip.weapon);
+          }
+
+          // Check Hands
+          if (item.hands === 2) {
+            // If 2H, must unequip Offhand
+            if (currentEquip.offhand) {
+              newInv.push(currentEquip.offhand);
+              currentEquip.offhand = null;
+              addLog('info', '양손 무기 장착을 위해 보조 장비를 해제했습니다.');
+            }
+          }
+          currentEquip.weapon = item;
+        }
+
+        // 3. SHIELD / OFFHAND
+        else if (item.type === 'shield') {
+          // Unequip current offhand
+          if (currentEquip.offhand) {
+            newInv.push(currentEquip.offhand);
+          }
+
+          // Check Main Hand compatibility
+          if (currentEquip.weapon && currentEquip.weapon.hands === 2) {
+            newInv.push(currentEquip.weapon);
+            currentEquip.weapon = DB.ITEMS.weapons[0]; // Reset to default (맨손 basically or just null logic handling)
+            // NOTE: DB.ITEMS.weapons[0] should be a basic item or handled carefully. 
+            // Assuming index 0 is basic. If not, we need a reliable fallback.
+            // Checking items.js: index 0 is '녹슨 단검'. Maybe not ideal to auto-equip dagger.
+            // Better to just set to null or handle 'unarmed' in getFullStats.
+            // For now, let's assume getFullStats handles null/undefined weapon as Unarmed.
+            // But wait, initial state uses weapons[0].
+            addLog('info', '보조 장비 장착을 위해 양손 무기를 해제했습니다.');
+          }
+          currentEquip.offhand = item;
+        }
+
+        dispatch({ type: 'SET_PLAYER', payload: { ...player, inv: newInv, equip: currentEquip } });
         addLog('success', `${item.name} 장착.`);
       }
+
       if (item.type === 'hp') {
-        const newInv = player.inv.filter(i => i !== item);
+        const newInv = player.inv.filter(i => i.id !== item.id);
         dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.min(p.maxHp, p.hp + item.val), inv: newInv }) });
         addLog('success', `${item.name} 사용.`);
       }

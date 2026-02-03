@@ -12,11 +12,8 @@ export const parseCommand = (input, gameState, player, actions) => {
 
     switch (command) {
         // --- MOVEMENT ---
-        case 'move':
-        case 'go':
         case '이동':
         case '갈래':
-            if (!args) return "어디로 이동하시겠습니까?";
             actions.move(args);
             return;
 
