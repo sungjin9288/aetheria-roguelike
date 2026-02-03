@@ -83,7 +83,12 @@ export const gameReducer = (state, action) => {
         case 'SET_SHOP_ITEMS':
             return { ...state, shopItems: action.payload };
         case 'ADD_LOG':
-            return { ...state, logs: [action.payload, ...state.logs].slice(0, 50) };
+            return { ...state, logs: [...state.logs, action.payload].slice(-50) };
+        case 'UPDATE_LOG':
+            return {
+                ...state,
+                logs: state.logs.map(log => log.id === action.payload.id ? action.payload.log : log)
+            };
         case 'RESET_GAME':
             return { ...INITIAL_STATE, bootStage: 'ready', uid: state.uid, syncStatus: 'syncing' };
         default:

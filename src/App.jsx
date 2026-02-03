@@ -6,6 +6,7 @@ import { signInAnonymously } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { CONSTANTS, APP_ID, ADMIN_UIDS } from './data/constants';
 import { DB } from './data/db';
+import { LOOT_TABLE } from './data/loot';
 import { TokenQuotaManager } from './systems/TokenQuotaManager';
 import { LatencyTracker } from './systems/LatencyTracker';
 import { AI_SERVICE } from './services/aiService';
@@ -326,8 +327,18 @@ const useGameEngine = () => {
           addStoryLog('victory', { name: enemy.name });
 
           // Drop
-          if (Math.random() < 0.3) {
-            // Simple drop logic or DB based
+          const lootList = LOOT_TABLE[enemy.name];
+          if (lootList && lootList.length > 0) {
+            lootList.forEach(itemName => {
+              if (Math.random() < 0.4) {
+                const itemData = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors].find(i => i.name === itemName);
+                if (itemData) {
+                  const newItem = { ...itemData, id: Date.now() + Math.random().toString() };
+                  dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, inv: [...p.inv, newItem] }) });
+                  addLog('success', `📦 ${itemName} 획득!`);
+                }
+              }
+            });
           }
         } else {
           dispatch({ type: 'SET_ENEMY', payload: { ...enemy, hp: newHp } });
