@@ -82,7 +82,7 @@ export const gameReducer = (state, action) => {
             return { ...state, sideTab: action.payload };
         case 'SET_SHOP_ITEMS':
             return { ...state, shopItems: action.payload };
-        case 'LOG':
+        case 'ADD_LOG':
             return { ...state, logs: [action.payload, ...state.logs].slice(0, 50) };
         case 'RESET_GAME':
             return { ...INITIAL_STATE, bootStage: 'ready', uid: state.uid, syncStatus: 'syncing' };
