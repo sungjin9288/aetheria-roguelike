@@ -433,7 +433,7 @@ const useGameEngine = () => {
               // DEATH PENALTY (Hardcore Reset)
               const starterState = { ...INITIAL_STATE.player };
               starterState.name = ''; // TRIGGER INTRO (Reset Identity)
-              starterState.gold = 400;
+              starterState.gold = 50;
               starterState.inv = [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }];
 
 

@@ -12,6 +12,8 @@ export const parseCommand = (input, gameState, player, actions) => {
 
     switch (command) {
         // --- MOVEMENT ---
+        case 'move':
+        case 'go':
         case '이동':
         case '갈래':
             actions.move(args);
