@@ -23,6 +23,7 @@ export default async function handler(req, res) {
         const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
+            console.error('Missing GEMINI_API_KEY environment variable');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
@@ -59,7 +60,7 @@ JSON 형식: {"lore": "로어 텍스트"}`;
 
         // Call Gemini API
         const geminiResponse = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -98,6 +99,9 @@ JSON 형식: {"lore": "로어 텍스트"}`;
 
     } catch (error) {
         console.error('Proxy error:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({
+            error: 'Internal server error',
+            details: error.message
+        });
     }
 }
