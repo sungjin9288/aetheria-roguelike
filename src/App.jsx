@@ -238,12 +238,24 @@ const useGameEngine = () => {
       if (Math.random() < 0.3) return addLog('info', '조용합니다. 아무것도 발견하지 못했습니다.');
 
       // ENEMY
-      const mName = mapData.monsters[Math.floor(Math.random() * mapData.monsters.length)];
-      const mStats = { name: mName, hp: 120 + mapData.level * 30, maxHp: 120 + mapData.level * 30, atk: 15 + mapData.level * 4, exp: 10 + mapData.level * 5, gold: 10 + mapData.level * 2 };
+      let mName = mapData.monsters[Math.floor(Math.random() * mapData.monsters.length)];
+      let mStats = { name: mName, hp: 120 + mapData.level * 30, maxHp: 120 + mapData.level * 30, atk: 15 + mapData.level * 4, exp: 10 + mapData.level * 5, gold: 10 + mapData.level * 2 };
+
+      // Monster Prefix Logic (20% Chance)
+      if (Math.random() < 0.2 && CONSTANTS.MONSTER_PREFIXES) {
+        const prefix = CONSTANTS.MONSTER_PREFIXES[Math.floor(Math.random() * CONSTANTS.MONSTER_PREFIXES.length)];
+        mStats.name = `${prefix.name} ${mName}`;
+        mStats.hp = Math.floor(mStats.hp * prefix.mod);
+        mStats.maxHp = Math.floor(mStats.maxHp * prefix.mod);
+        mStats.atk = Math.floor(mStats.atk * prefix.mod);
+        mStats.exp = Math.floor(mStats.exp * prefix.expMod);
+        mStats.gold = Math.floor(mStats.gold * prefix.expMod); // Gold scales with difficulty too
+        addLog('warning', `⚠️ 강적인 [${prefix.name}] 몬스터가 나타났습니다!`);
+      }
 
       dispatch({ type: 'SET_ENEMY', payload: mStats });
       dispatch({ type: 'SET_GAME_STATE', payload: 'combat' });
-      addLog('combat', `⚠️ ${mName} 출현!`);
+      addLog('combat', `⚠️ ${mStats.name} 출현!`);
       addStoryLog('encounter', { loc: player.loc, name: mName });
     },
     handleEventChoice: (idx) => {
@@ -333,9 +345,27 @@ const useGameEngine = () => {
               if (Math.random() < 0.4) {
                 const itemData = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors].find(i => i.name === itemName);
                 if (itemData) {
-                  const newItem = { ...itemData, id: Date.now() + Math.random().toString() };
+                  let newItem = { ...itemData, id: Date.now() + Math.random().toString() };
+
+                  // Item Prefix Logic (20% chance for Gear)
+                  if (['weapon', 'armor'].includes(newItem.type) && Math.random() < 0.2) {
+                    const possiblePrefixes = DB.ITEMS.prefixes.filter(p => p.type === 'all' || p.type === newItem.type);
+                    if (possiblePrefixes.length > 0) {
+                      const prefix = possiblePrefixes[Math.floor(Math.random() * possiblePrefixes.length)];
+                      newItem.name = `${prefix.name} ${newItem.name}`;
+                      newItem.price = Math.floor(newItem.price * prefix.price);
+                      if (prefix.stat === 'atk') newItem.val += prefix.val;
+                      if (prefix.stat === 'def') newItem.val += prefix.val;
+                      if (prefix.stat === 'hp') newItem.hpBoost = (newItem.hpBoost || 0) + prefix.val; // HP Boost logic needs support in getFullStats but good to store
+                      if (prefix.stat === 'all') { newItem.val += 5; } // Simplified all stats
+                      if (prefix.elem) newItem.elem = prefix.elem;
+
+                      addLog('event', `✨ 접두사가 붙은 희귀 아이템 발견! (${prefix.name})`);
+                    }
+                  }
+
                   dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, inv: [...p.inv, newItem] }) });
-                  addLog('success', `📦 ${itemName} 획득!`);
+                  addLog('success', `📦 ${newItem.name} 획득!`);
                 }
               }
             });
