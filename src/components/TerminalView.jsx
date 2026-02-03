@@ -12,6 +12,12 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
 
     return (
         <div className={`flex-1 ${bgClass} border rounded-lg p-4 relative shadow-2xl overflow-y-auto custom-scrollbar font-mono transition-colors duration-1000`}>
+            {logs.length === 0 && (
+                <div className="text-slate-500 text-center mt-10 italic">
+                    시스템 초기화 중...<br />
+                    (로그가 보이지 않으면 새로고침 해주세요)
+                </div>
+            )}
             {logs.map((log) => {
                 let logStyle = "text-slate-300";
                 let bgStyle = "transparent";
