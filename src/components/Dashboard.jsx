@@ -2,6 +2,7 @@ import React from 'react';
 import { User, Crown, Skull, Save } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import { DB } from '../data/db';
 import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
 
@@ -58,7 +59,32 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                             </div>
                         );
                     })}
-                    {sideTab === 'quest' && player?.quests?.length === 0 && <div className="text-slate-500 text-center py-4">진행 중인 의뢰가 없습니다.</div>}
+                    {sideTab === 'quest' && (
+                        player?.quests?.length > 0 ? (
+                            player.quests.map((pq, i) => {
+                                const qData = DB.QUESTS.find(q => q.id === pq.id);
+                                if (!qData) return null;
+                                const isComplete = pq.progress >= qData.goal;
+                                return (
+                                    <div key={i} className={`p-3 rounded border mb-2 ${isComplete ? 'bg-indigo-900/40 border-indigo-500' : 'bg-slate-800 border-slate-700'}`}>
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className={`font-bold text-sm ${isComplete ? 'text-indigo-300' : 'text-slate-300'}`}>{qData.title}</div>
+                                                <div className="text-[10px] text-slate-400 mt-1">{qData.desc}</div>
+                                            </div>
+                                            {isComplete ? (
+                                                <button onClick={() => actions.completeQuest(pq.id)} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded animate-pulse">완료</button>
+                                            ) : (
+                                                <div className="text-xs text-slate-500">{pq.progress} / {qData.goal}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })
+                        ) : (
+                            <div className="text-slate-500 text-center py-4">진행 중인 의뢰가 없습니다.</div>
+                        )
+                    )}
 
                     {sideTab === 'system' && (
                         <div className="space-y-4 p-2">

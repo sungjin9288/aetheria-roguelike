@@ -8,22 +8,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
     if (gameState === 'combat') {
         return (
             <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="col-span-3 bg-slate-900 border border-red-900/50 p-2 rounded text-center mb-2">
-                    <div className="text-red-400 font-bold">{player.enemy?.name || 'Enemy'}</div>
-                    <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden mt-1 relative">
-                        <div className="bg-red-600 h-full transition-all duration-300" style={{ width: `${(player.enemy?.hp / player.enemy?.maxHp) * 100}%` }}></div>
-                    </div>
-                    <div className="text-xs text-slate-500">{player.enemy?.hp} / {player.enemy?.maxHp} HP</div>
-                    <div className="text-center text-[10px] text-slate-500">{player?.hp} / {player?.maxHp} HP</div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
-                        <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player?.mp / player?.maxMp) * 100}%` }}></div>
-                    </div>
-                    <div className="text-center text-[10px] text-slate-500">{player?.mp} / {player?.maxMp} MP</div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
-                        <div className="bg-purple-500 h-full transition-all duration-300" style={{ width: `${(player?.exp / player?.nextExp) * 100}%` }}></div>
-                    </div>
-                    <div className="text-center text-[10px] text-slate-500">{player?.exp} / {player?.nextExp} EXP</div>
-                </div>
+
                 <button disabled={isAiThinking} onClick={() => actions.combat('attack')} className="bg-red-900/40 hover:bg-red-800 border border-red-700 p-4 rounded text-red-200 font-bold flex flex-col items-center disabled:opacity-50"><Sword /> 공격</button>
                 <button disabled={isAiThinking} onClick={() => actions.combat('skill')} className="bg-blue-900/40 hover:bg-blue-800 border border-blue-700 p-4 rounded text-blue-200 font-bold flex flex-col items-center disabled:opacity-50"><Zap /> 기술 (10MP)</button>
                 <button disabled={isAiThinking} onClick={() => actions.combat('escape')} className="bg-slate-800 hover:bg-slate-700 border border-slate-600 p-4 rounded text-slate-300 font-bold flex flex-col items-center disabled:opacity-50"><ArrowRight /> 도망</button>

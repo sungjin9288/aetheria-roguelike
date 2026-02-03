@@ -334,6 +334,32 @@ const useGameEngine = () => {
             dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'levelUp' });
           }
 
+
+          // Quest Progress Check
+          if (p.quests.length > 0) {
+            p.quests = p.quests.map(q => {
+              const qData = DB.QUESTS.find(dbQ => dbQ.id === q.id);
+              if (qData) {
+                if (qData.target === enemy.name) {
+                  return { ...q, progress: Math.min(qData.goal, q.progress + 1) };
+                }
+                if (qData.target === 'Level') { // Level Quest Update
+                  return { ...q, progress: p.level };
+                }
+              }
+              return q;
+            });
+
+            // Verify completions
+            const completed = p.quests.filter(q => {
+              const qData = DB.QUESTS.find(dbQ => dbQ.id === q.id);
+              return qData && q.progress >= qData.goal;
+            });
+            if (completed.length > 0) {
+              addLog('system', `💡 퀘스트 조건 달성! (${completed.length}건) -> [의뢰] 탭에서 완료하세요.`);
+            }
+          }
+
           dispatch({ type: 'SET_PLAYER', payload: p });
           addLog('success', `승리! EXP +${enemy.exp}, Gold +${enemy.gold}`);
           addStoryLog('victory', { name: enemy.name });
@@ -447,9 +473,59 @@ const useGameEngine = () => {
       const recipe = DB.ITEMS.recipes?.find(r => r.id === recipeId);
       if (!recipe) return;
       if (player.gold < recipe.gold) return addLog('error', '골드 부족');
-      // Assume materials check passed for now or implement full check
-      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - recipe.gold, inv: [...p.inv, { name: recipe.name, type: 'item', id: Date.now().toString() + Math.random().toString().slice(2, 5) }] }) });
+
+      // Check materials
+      for (const input of recipe.inputs) {
+        const count = player.inv.filter(i => i.name === input.name).length;
+        if (count < input.qty) return addLog('error', `재료 부족: ${input.name}`);
+      }
+
+      // Consume materials & Gold
+      let newInv = [...player.inv];
+      for (const input of recipe.inputs) {
+        let removed = 0;
+        newInv = newInv.filter(item => {
+          if (item.name === input.name && removed < input.qty) {
+            removed++;
+            return false;
+          }
+          return true;
+        });
+      }
+
+      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - recipe.gold, inv: [...newInv, { name: recipe.name, type: 'item', id: Date.now().toString() + Math.random().toString().slice(2, 5) }] }) });
       addLog('success', `${recipe.name} 제작 완료`);
+    },
+
+    completeQuest: (qId) => {
+      const qData = DB.QUESTS.find(q => q.id === qId);
+      if (!qData) return;
+
+      const pQuest = player.quests.find(q => q.id === qId);
+      if (!pQuest || pQuest.progress < qData.goal) return addLog('error', '아직 완료할 수 없습니다.');
+
+      // Reward
+      let updates = {
+        gold: player.gold + (qData.reward.gold || 0),
+        exp: player.exp + (qData.reward.exp || 0),
+        quests: player.quests.filter(q => q.id !== qId) // Remove quest
+      };
+
+      if (qData.reward.item) {
+        const itemData = [...DB.ITEMS.weapons, ...DB.ITEMS.armors, ...DB.ITEMS.consumables, ...DB.ITEMS.materials].find(i => i.name === qData.reward.item);
+        if (itemData) {
+          updates.inv = [...player.inv, { ...itemData, id: Date.now().toString() }];
+          addLog('success', `보상 아이템: ${itemData.name}`);
+        }
+      }
+
+      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, ...updates }) });
+      addLog('success', `퀘스트 완료! ${qData.title} (EXP +${qData.reward.exp}, Gold +${qData.reward.gold})`);
+
+      // Level Up Check
+      if (player.exp + (qData.reward.exp || 0) >= player.nextExp) {
+        // Let next action handle it or trigger sync, but for now simple add
+      }
     },
 
     reset: () => {
@@ -462,6 +538,7 @@ const useGameEngine = () => {
       addLog('success', `✨ ${jobName} 전직 완료!`);
     },
     acceptQuest: (qId) => {
+      if (player.quests.some(q => q.id === qId)) return addLog('error', '이미 수락한 의뢰입니다.');
       const qData = DB.QUESTS.find(q => q.id === qId);
       dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, quests: [...p.quests, { id: qId, progress: 0 }] }) });
       addLog('event', `퀘스트 수락: ${qData.title}`);
