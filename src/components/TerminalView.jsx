@@ -3,7 +3,11 @@ import { Bot } from 'lucide-react';
 
 const TerminalView = ({ logs, gameState, onCommand }) => {
     const endRef = useRef(null);
-    useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [logs]);
+    useEffect(() => {
+        if (endRef.current) {
+            endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+    }, [logs]);
 
     // Contextual Background Transition
     const bgClass = gameState === 'event'

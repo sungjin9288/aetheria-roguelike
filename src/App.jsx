@@ -294,7 +294,7 @@ const useGameEngine = () => {
         const finalDmg = isCrit ? dmg * 2 : dmg;
 
         const newHp = enemy.hp - finalDmg;
-        addLog(isCrit ? 'critical' : 'combat', `⚔️ ${enemy.name}에게 ${finalDmg} 피해! ${isCrit ? '(치명타!)' : ''}`);
+        addLog(isCrit ? 'critical' : 'combat', `⚔️ ${enemy.name}에게 ${finalDmg} 피해! ${isCrit ? '(치명타!)' : ''} (남은 체력: ${Math.max(0, newHp)}/${enemy.maxHp})`);
         dispatch({ type: 'SET_VISUAL_EFFECT', payload: isCrit ? 'shake' : null });
 
         if (newHp <= 0) {
@@ -392,9 +392,13 @@ const useGameEngine = () => {
       }
       else if (type === 'sell') {
         const sellPrice = Math.floor(item.price * 0.5);
-        const newInv = player.inv.filter(i => i.id !== item.id);
-        dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold + sellPrice, inv: newInv }) });
-        addLog('success', `💰 ${item.name} 판매 완료 (+${sellPrice}G)`);
+        const idx = player.inv.findIndex(i => i.id === item.id);
+        if (idx > -1) {
+          const newInv = [...player.inv];
+          newInv.splice(idx, 1);
+          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold + sellPrice, inv: newInv }) });
+          addLog('success', `💰 ${item.name} 판매 완료 (+${sellPrice}G)`);
+        }
       }
     },
     craft: (recipeId) => {
@@ -403,7 +407,7 @@ const useGameEngine = () => {
       if (!recipe) return;
       if (player.gold < recipe.gold) return addLog('error', '골드 부족');
       // Assume materials check passed for now or implement full check
-      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - recipe.gold, inv: [...p.inv, { name: recipe.name, type: 'item' }] }) }); // Simplified
+      dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - recipe.gold, inv: [...p.inv, { name: recipe.name, type: 'item', id: Date.now().toString() + Math.random().toString().slice(2, 5) }] }) });
       addLog('success', `${recipe.name} 제작 완료`);
     },
 
