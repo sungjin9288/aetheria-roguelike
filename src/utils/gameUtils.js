@@ -1,7 +1,7 @@
 import { ITEMS } from '../data/items';
 
 // Milestone Utility
-export const checkMilestones = (killRegistry, lastKillName, player) => {
+export const checkMilestones = (killRegistry, lastKillName) => {
     const rewards = [];
     const count = killRegistry[lastKillName] || 0;
 

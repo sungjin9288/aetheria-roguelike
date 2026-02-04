@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef, useReducer, useMemo } from 'react';
+import { useEffect, useReducer, useMemo } from 'react';
 import { Cloud, WifiOff, Terminal as TerminalIcon } from 'lucide-react';
 import { onSnapshot, doc, collection, query, orderBy, limit, getDocs, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 
 import { auth, db } from './firebase';
-import { CONSTANTS, APP_ID, ADMIN_UIDS } from './data/constants';
+import { CONSTANTS, APP_ID, ADMIN_UIDS, BALANCE } from './data/constants';
 import { DB } from './data/db';
 import { LOOT_TABLE } from './data/loot';
 import { TokenQuotaManager } from './systems/TokenQuotaManager';
 import { LatencyTracker } from './systems/LatencyTracker';
 import { AI_SERVICE } from './services/aiService';
-import { checkMilestones, migrateData } from './utils/gameUtils';
+import { migrateData } from './utils/gameUtils';
 import { parseCommand } from './utils/commandParser';
 import MainLayout from './components/MainLayout';
 import TerminalView from './components/TerminalView';
@@ -295,7 +295,7 @@ const useGameEngine = () => {
       const mapData = DB.MAPS[player.loc];
       if (mapData.type !== 'safe') return addLog('error', '휴식은 안전한 곳에서만 가능합니다.');
 
-      const cost = 100;
+      const cost = BALANCE.REST_COST;
       if (player.gold < cost) return addLog('error', '골드가 부족합니다.');
       dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, gold: p.gold - cost, hp: p.maxHp, mp: p.maxMp }) });
       addLog('success', '푹 쉬었습니다. 체력이 모두 회복되었습니다.');
@@ -748,6 +748,7 @@ function App() {
         shopItems={engine.shopItems}
         grave={engine.grave}
         isAiThinking={engine.isAiThinking}
+        currentEvent={engine.currentEvent}
       />
     </MainLayout>
   );

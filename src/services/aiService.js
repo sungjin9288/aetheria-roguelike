@@ -3,15 +3,7 @@ import { CONSTANTS } from '../data/constants';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 import { LatencyTracker } from '../systems/LatencyTracker';
 
-// --- AI SERVICE (v3.5) ---
-// Helper for Vercel Env (v3.5)
-const getSecret = (key) => {
-    // In VITE, envs are exposed on import.meta.env
-    // We check for VITE_ prefix or direct access if supported
-    return import.meta.env[`VITE_${key}`] || import.meta.env[key];
-};
-
-// --- AI SERVICE (v3.5) ---
+// --- AI SERVICE (v3.6) ---
 export const AI_SERVICE = {
     getFallback: (type, data) => {
         const templates = {

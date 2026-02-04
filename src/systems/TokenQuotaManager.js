@@ -1,9 +1,10 @@
 import { setDoc, doc } from 'firebase/firestore';
+import { BALANCE } from '../data/constants';
 
-// --- TOKEN QUOTA MANAGER (v3.5) ---
+// --- TOKEN QUOTA MANAGER (v3.6) ---
 // Limits AI calls per user per day to control costs
 export const TokenQuotaManager = {
-    DAILY_LIMIT: 50, // AI calls per day per user
+    get DAILY_LIMIT() { return BALANCE.DAILY_AI_LIMIT; },
     QUOTA_KEY: 'aetheria_ai_quota',
 
     getQuotaData() {

@@ -10,8 +10,8 @@ export const CONSTANTS = {
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 500,
-    SAVE_KEY: 'aetheria_save_v3_4', // Versioning 3.4
-    DATA_VERSION: 3.4,
+    SAVE_KEY: 'aetheria_save_v3_6',
+    DATA_VERSION: 3.6,
     REMOTE_CONFIG_ENABLED: import.meta.env.VITE_REMOTE_CONFIG === 'true' || false,
     MONSTER_PREFIXES: [
         { name: '허약한', mod: 0.7, expMod: 0.7 },
@@ -24,4 +24,20 @@ export const CONSTANTS = {
     ]
 };
 
+// Game Balance Constants - Centralized magic numbers
+export const BALANCE = {
+    REST_COST: 100,
+    SKILL_MP_COST: 10,
+    CRIT_CHANCE: 0.1,
+    DROP_CHANCE: 0.4,
+    ESCAPE_CHANCE: 0.5,
+    DAILY_AI_LIMIT: 50,
+    EVENT_CHANCE_NOTHING: 0.3,
+    PREFIX_CHANCE: 0.2,
+    DEBOUNCE_SAVE_MS: 500,
+    LOG_MAX_SIZE: 50
+};
+
 Object.freeze(CONSTANTS);
+Object.freeze(BALANCE);
+

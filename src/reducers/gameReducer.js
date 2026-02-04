@@ -8,7 +8,7 @@ export const INITIAL_STATE = {
 
     // Game Data
     player: {
-        name: '', job: '모험가', level: 1, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5, exp: 0, nextExp: 100, gold: 50, loc: '시작의 마을',
+        name: '', job: '모험가', level: 1, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5, exp: 0, nextExp: 100, gold: 200, loc: '시작의 마을',
         inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0], offhand: null },
         quests: [], achievements: [], stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 },
         tempBuff: { atk: 0, turn: 0 }, status: [],
@@ -65,9 +65,10 @@ export const gameReducer = (state, action) => {
             return { ...state, syncStatus: action.payload };
         case 'SET_GAME_STATE':
             return { ...state, gameState: action.payload, syncStatus: 'syncing' };
-        case 'SET_PLAYER':
+        case 'SET_PLAYER': {
             const nextPlayer = typeof action.payload === 'function' ? action.payload(state.player) : action.payload;
             return { ...state, player: { ...state.player, ...nextPlayer }, syncStatus: 'syncing' };
+        }
         case 'SET_EVENT':
             return { ...state, currentEvent: action.payload, syncStatus: 'syncing' };
         case 'SET_ENEMY':
