@@ -94,7 +94,7 @@ src/
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 3.6 | 2026-02-04 | Technical debt clearance, CombatEngine extraction, Hooks fix |
+| 3.6 | 2026-02-04 | Technical debt clearance, CombatEngine extraction, Hooks fix, CLI Enhancement, Balance Adjustment |
 | 3.5 | 2026-01-30 | AWS Lambda integration, error hardening |
 | 3.4 | 2026-01-29 | Live-ops module, admin panel |
 

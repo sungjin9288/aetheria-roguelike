@@ -43,7 +43,7 @@ export const CombatEngine = {
     /**
      * Process skill usage
      */
-    useSkill(player, enemy, stats) {
+    performSkill(player, enemy, stats) {
         if (player.mp < BALANCE.SKILL_MP_COST) {
             return {
                 success: false,

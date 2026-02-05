@@ -6,8 +6,8 @@ import { signInAnonymously } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { CONSTANTS, APP_ID, ADMIN_UIDS, BALANCE } from './data/constants';
 import { DB } from './data/db';
-import { LOOT_TABLE } from './data/loot';
 import { TokenQuotaManager } from './systems/TokenQuotaManager';
+import { CombatEngine } from './systems/CombatEngine';
 import { LatencyTracker } from './systems/LatencyTracker';
 import { AI_SERVICE } from './services/aiService';
 import { migrateData } from './utils/gameUtils';
@@ -305,157 +305,88 @@ const useGameEngine = () => {
       if (gameState !== 'combat' || !enemy) return addLog('error', '전투 중이 아닙니다.');
       const stats = getFullStats();
 
-      if (type === 'skill') {
-        if (player.mp < 10) return addLog('error', '마나가 부족합니다.');
-        dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, mp: p.mp - 10 }) });
-      }
-
+      // === ATTACK or SKILL ===
       if (type === 'attack' || type === 'skill') {
-        let mult = type === 'skill' ? 1.5 : 1.0;
-        const dmg = Math.floor(stats.atk * (0.9 + Math.random() * 0.2) * mult);
-        const isCrit = Math.random() < 0.1;
-        const finalDmg = isCrit ? dmg * 2 : dmg;
+        let result;
 
-        const newHp = enemy.hp - finalDmg;
-        addLog(isCrit ? 'critical' : 'combat', `⚔️ ${enemy.name}에게 ${finalDmg} 피해! ${isCrit ? '(치명타!)' : ''} (남은 체력: ${Math.max(0, newHp)}/${enemy.maxHp})`);
-        dispatch({ type: 'SET_VISUAL_EFFECT', payload: isCrit ? 'shake' : null });
+        if (type === 'skill') {
+          result = CombatEngine.performSkill(player, enemy, stats);
+          if (!result.success) {
+            return addLog('error', result.logs[0].text);
+          }
+          dispatch({ type: 'SET_PLAYER', payload: result.updatedPlayer });
+        } else {
+          result = CombatEngine.attack(player, enemy, stats);
+        }
 
-        if (newHp <= 0) {
+        // Log the attack result
+        result.logs.forEach(log => addLog(log.type, log.text));
+        dispatch({ type: 'SET_VISUAL_EFFECT', payload: result.isCrit ? 'shake' : null });
+
+        // === VICTORY ===
+        if (result.isVictory) {
           dispatch({ type: 'SET_ENEMY', payload: null });
           dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
 
-          // Level Up Logic
-          let p = { ...player };
-          p.exp += enemy.exp;
-          p.gold += enemy.gold;
-          p.stats.kills += 1;
+          // Process victory rewards
+          const victoryResult = CombatEngine.handleVictory(player, enemy);
+          let updatedPlayer = victoryResult.updatedPlayer;
 
-          if (p.exp >= p.nextExp) {
-            p.level++;
-            p.exp -= p.nextExp;
-            p.nextExp = Math.floor(p.nextExp * 1.5);
-            p.maxHp += 20;
-            p.maxMp += 10;
-            p.hp = p.maxHp;
-            p.mp = p.maxMp;
-            p.atk += 2;
-            p.def += 1;
-            addLog('system', `✨ LEVEL UP! Lv.${p.level} 달성! (HP/MP/Stats 증가)`);
-            dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'levelUp' });
+          victoryResult.logs.forEach(log => addLog(log.type, log.text));
+          if (victoryResult.visualEffect) {
+            dispatch({ type: 'SET_VISUAL_EFFECT', payload: victoryResult.visualEffect });
           }
 
-
-          // Quest Progress Check
-          if (p.quests.length > 0) {
-            p.quests = p.quests.map(q => {
-              const qData = DB.QUESTS.find(dbQ => dbQ.id === q.id);
-              if (qData) {
-                if (qData.target === enemy.name) {
-                  return { ...q, progress: Math.min(qData.goal, q.progress + 1) };
-                }
-                if (qData.target === 'Level') { // Level Quest Update
-                  return { ...q, progress: p.level };
-                }
-              }
-              return q;
-            });
-
-            // Verify completions
-            const completed = p.quests.filter(q => {
-              const qData = DB.QUESTS.find(dbQ => dbQ.id === q.id);
-              return qData && q.progress >= qData.goal;
-            });
-            if (completed.length > 0) {
-              addLog('system', `💡 퀘스트 조건 달성! (${completed.length}건) -> [의뢰] 탭에서 완료하세요.`);
-            }
+          // Quest Progress
+          const questResult = CombatEngine.updateQuestProgress(updatedPlayer, enemy.name);
+          updatedPlayer.quests = questResult.updatedQuests;
+          if (questResult.completedCount > 0) {
+            addLog('system', `💡 퀘스트 조건 달성! (${questResult.completedCount}건) -> [의뢰] 탭에서 완료하세요.`);
           }
 
-          dispatch({ type: 'SET_PLAYER', payload: p });
-          addLog('success', `승리! EXP +${enemy.exp}, Gold +${enemy.gold}`);
+          dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
           addStoryLog('victory', { name: enemy.name });
 
-          // Drop
-          const lootList = LOOT_TABLE[enemy.name];
-          if (lootList && lootList.length > 0) {
-            lootList.forEach(itemName => {
-              if (Math.random() < 0.4) {
-                const itemData = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors].find(i => i.name === itemName);
-                if (itemData) {
-                  let newItem = { ...itemData, id: Date.now() + Math.random().toString() };
-
-                  // Item Prefix Logic (20% chance for Gear)
-                  if (['weapon', 'armor'].includes(newItem.type) && Math.random() < 0.2) {
-                    const possiblePrefixes = DB.ITEMS.prefixes.filter(p => p.type === 'all' || p.type === newItem.type);
-                    if (possiblePrefixes.length > 0) {
-                      const prefix = possiblePrefixes[Math.floor(Math.random() * possiblePrefixes.length)];
-                      newItem.name = `${prefix.name} ${newItem.name}`;
-                      newItem.price = Math.floor(newItem.price * prefix.price);
-                      if (prefix.stat === 'atk') newItem.val += prefix.val;
-                      if (prefix.stat === 'def') newItem.val += prefix.val;
-                      if (prefix.stat === 'hp') newItem.hpBoost = (newItem.hpBoost || 0) + prefix.val; // HP Boost logic needs support in getFullStats but good to store
-                      if (prefix.stat === 'all') { newItem.val += 5; } // Simplified all stats
-                      if (prefix.elem) newItem.elem = prefix.elem;
-
-                      addLog('event', `✨ 접두사가 붙은 희귀 아이템 발견! (${prefix.name})`);
-                    }
-                  }
-
-                  dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, inv: [...p.inv, newItem] }) });
-                  addLog('success', `📦 ${newItem.name} 획득!`);
-                }
-              }
-            });
+          // Loot Drop (using CombatEngine)
+          const lootResult = CombatEngine.processLoot(enemy);
+          lootResult.logs.forEach(log => addLog(log.type, log.text));
+          if (lootResult.items.length > 0) {
+            dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, inv: [...p.inv, ...lootResult.items] }) });
           }
-        } else {
-          dispatch({ type: 'SET_ENEMY', payload: { ...enemy, hp: newHp } });
+        }
+        // === ENEMY COUNTER-ATTACK ===
+        else {
+          dispatch({ type: 'SET_ENEMY', payload: result.updatedEnemy });
+
           setTimeout(() => {
-            const enemyDmg = Math.max(1, enemy.atk - stats.def);
-            dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.max(0, p.hp - enemyDmg) }) });
-            addLog('warning', `💥 ${enemy.name}의 반격! ${enemyDmg} 피해.`);
+            const counterResult = CombatEngine.enemyAttack(player, enemy, stats);
+            counterResult.logs.forEach(log => addLog(log.type, log.text));
+            dispatch({ type: 'SET_PLAYER', payload: counterResult.updatedPlayer });
             dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
-            if (player.hp - enemyDmg <= 0) {
-              // GRAVE DROP LOGIC
-              let droppedItem = null;
-              if (player.inv.length > 0) {
-                const tradableItems = player.inv.filter(i => !i.id?.startsWith('starter_'));
-                if (tradableItems.length > 0) {
-                  droppedItem = tradableItems[Math.floor(Math.random() * tradableItems.length)];
-                }
-              }
-              const graveData = {
-                loc: player.loc,
-                gold: Math.floor(player.gold / 2),
-                item: droppedItem,
-                timestamp: Date.now()
-              };
-              dispatch({ type: 'SET_GRAVE', payload: graveData });
 
-              // DEATH PENALTY (Hardcore Reset)
-              const starterState = { ...INITIAL_STATE.player };
-              starterState.name = ''; // TRIGGER INTRO (Reset Identity)
-              starterState.gold = 50;
-              starterState.inv = [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }];
-
-
-              dispatch({ type: 'SET_PLAYER', payload: starterState });
+            // === PLAYER DEATH ===
+            if (counterResult.isDead) {
+              const defeatResult = CombatEngine.handleDefeat(player, INITIAL_STATE.player);
+              dispatch({ type: 'SET_GRAVE', payload: defeatResult.graveData });
+              dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
               dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
               dispatch({ type: 'SET_ENEMY', payload: null });
-              addLog('error', '💀 사망했습니다. 레벨과 장비가 초기화되었습니다. (전생)');
+              defeatResult.logs.forEach(log => addLog(log.type, log.text));
               addStoryLog('death', { loc: player.loc });
             }
           }, 500);
         }
       }
+      // === ESCAPE ===
       else if (type === 'escape') {
-        if (Math.random() > 0.5) {
+        const escapeResult = CombatEngine.attemptEscape(enemy, stats);
+        escapeResult.logs.forEach(log => addLog(log.type, log.text));
+
+        if (escapeResult.success) {
           dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
           dispatch({ type: 'SET_ENEMY', payload: null });
-          addLog('info', '🏃‍♂️ 무사히 도망쳤습니다.');
         } else {
-          addLog('error', '도망에 실패했습니다!');
-          const enemyDmg = Math.max(1, enemy.atk - stats.def);
-          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.max(0, p.hp - enemyDmg) }) });
-          addLog('warning', `💥 ${enemy.name}의 추격! ${enemyDmg} 피해.`);
+          dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, hp: Math.max(0, p.hp - escapeResult.damage) }) });
         }
       }
     },
