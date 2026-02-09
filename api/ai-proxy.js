@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         }
 
         // Rate limiting check
-        const clientId = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+        const _clientId = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
 
         // Build prompt based on request type
         let prompt = '';

@@ -14,55 +14,17 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { Bar, Pie, Doughnut } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import { fetchAnalyticsData } from '../services/analyticsService';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
-
-// Analytics data fetcher (Hybrid: Serverless Compute)
-export const fetchAnalyticsData = async (token) => {
-    // Determine Base URL from AI Proxy URL
-    const proxyUrl = import.meta.env.VITE_AI_PROXY_URL || '';
-    let baseUrl = proxyUrl;
-
-    // Extract base URL (remove specific endpoint path)
-    if (proxyUrl.includes('/game/story')) {
-        baseUrl = proxyUrl.split('/game/story')[0];
-    }
-
-    // AWS Lambda Endpoint for Analytics
-    const url = `${baseUrl}/admin/analytics`;
-
-    console.log('Fetching analytics from:', url);
-
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Analytics API Error: ${response.status}`);
-        }
-
-        const json = await response.json();
-        return json.success ? json.data : null;
-
-    } catch (e) {
-        console.error('Analytics fetch error:', e);
-        return null;
-    }
-};
 
 // Admin Dashboard Component
 export const AdminDashboard = ({ isAdmin }) => {
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
-    const auth = getAuth();
 
     useEffect(() => {
         if (!isAdmin) return;
@@ -70,7 +32,7 @@ export const AdminDashboard = ({ isAdmin }) => {
         const loadData = async () => {
             setLoading(true);
             try {
-                const token = await auth.currentUser?.getIdToken();
+                const token = await getAuth().currentUser?.getIdToken();
                 if (token) {
                     const data = await fetchAnalyticsData(token);
                     setAnalytics(data);

@@ -28,7 +28,7 @@ exports.handler = async (event) => {
             return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
         }
         const idToken = authHeader.split('Bearer ')[1];
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const _decodedToken = await admin.auth().verifyIdToken(idToken);
 
         // Check custom claim for admin (Optional enhancement)
         // if (!decodedToken.admin) return { statusCode: 403, body: 'Forbidden' };

@@ -1,5 +1,4 @@
 const admin = require('firebase-admin');
-const { fetch } = require('undici'); // Node 18+ has fetch, but good for compatibility
 
 // Initialize Firebase Admin (Singleton)
 if (!admin.apps.length) {

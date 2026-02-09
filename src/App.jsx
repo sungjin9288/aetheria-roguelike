@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useMemo } from 'react';
+import { useEffect, useReducer, useMemo, useRef, useCallback } from 'react';
 import { Cloud, WifiOff, Terminal as TerminalIcon } from 'lucide-react';
 import { onSnapshot, doc, collection, query, orderBy, limit, getDocs, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
@@ -6,9 +6,7 @@ import { signInAnonymously } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { CONSTANTS, APP_ID, ADMIN_UIDS, BALANCE } from './data/constants';
 import { DB } from './data/db';
-import { TokenQuotaManager } from './systems/TokenQuotaManager';
 import { CombatEngine } from './systems/CombatEngine';
-import { LatencyTracker } from './systems/LatencyTracker';
 import { AI_SERVICE } from './services/aiService';
 import { migrateData } from './utils/gameUtils';
 import { parseCommand } from './utils/commandParser';
@@ -24,6 +22,8 @@ import { gameReducer, INITIAL_STATE } from './reducers/gameReducer';
 const useGameEngine = () => {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
   const { player, gameState, logs, enemy, grave, shopItems, isAiThinking, currentEvent, visualEffect, syncStatus, uid, bootStage, liveConfig, leaderboard, sideTab } = state;
+  const lastLoadedTimestampRef = useRef(state.lastLoadedTimestamp);
+  const hasBootLogRef = useRef(state.logs.length > 0);
 
   // 1. BOOTSTRAP: Auth
   useEffect(() => {
@@ -36,6 +36,14 @@ const useGameEngine = () => {
       // Retry or Fallback? For now, nothing works without Auth.
     });
   }, []);
+
+  useEffect(() => {
+    lastLoadedTimestampRef.current = state.lastLoadedTimestamp;
+  }, [state.lastLoadedTimestamp]);
+
+  useEffect(() => {
+    hasBootLogRef.current = state.logs.length > 0;
+  }, [state.logs.length]);
 
   // 2. BOOTSTRAP: Config & Leaderboard (Parallel)
   useEffect(() => {
@@ -84,7 +92,7 @@ const useGameEngine = () => {
 
         // EQUALITY CHECK: Avoid re-loading if timestamps match (approximately)
         // or if we are the ones who just saved it (relies on pendingWrites check mostly)
-        if (state.lastLoadedTimestamp && remoteData.lastActive?.toMillis() === state.lastLoadedTimestamp) {
+        if (lastLoadedTimestampRef.current && remoteData.lastActive?.toMillis() === lastLoadedTimestampRef.current) {
           return;
         }
 
@@ -95,8 +103,10 @@ const useGameEngine = () => {
           if (!activeData.player.loc) activeData.player.loc = '시작의 마을';
 
           dispatch({ type: 'LOAD_DATA', payload: activeData });
+          lastLoadedTimestampRef.current = remoteData.lastActive?.toMillis() || Date.now();
           // Only add log on FIRST load to avoid spam
-          if (state.logs.length === 0) {
+          if (!hasBootLogRef.current) {
+            hasBootLogRef.current = true;
             dispatch({ type: 'ADD_LOG', payload: { type: 'system', text: '시스템에 연결되었습니다.' } });
           }
         }
@@ -111,13 +121,14 @@ const useGameEngine = () => {
 
   // 4. PERSISTENCE (Debounced Save)
   useEffect(() => {
-    if (state.syncStatus !== 'syncing' || !uid) return;
+    if (syncStatus !== 'syncing' || !uid) return;
 
     const saveData = async () => {
       try {
         const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
+        const playerPayload = { ...player, archivedHistory: [] };
         const payload = {
-          player: player,
+          player: playerPayload,
           gameState: gameState,
           enemy: enemy,
           grave: grave,
@@ -130,7 +141,6 @@ const useGameEngine = () => {
         if (player.archivedHistory && player.archivedHistory.length > 0) {
           const historyCol = collection(userDocRef, 'history');
           await Promise.all(player.archivedHistory.map(h => addDoc(historyCol, h)));
-          payload.player.archivedHistory = [];
         }
 
         await setDoc(userDocRef, payload, { merge: true });
@@ -141,7 +151,7 @@ const useGameEngine = () => {
       }
     };
 
-    const timer = setTimeout(saveData, 500); // 0.5s Debounce for faster persistence
+    const timer = setTimeout(saveData, BALANCE.DEBOUNCE_SAVE_MS);
     return () => clearTimeout(timer);
   }, [player, gameState, enemy, grave, currentEvent, syncStatus, uid]);
 
@@ -149,7 +159,7 @@ const useGameEngine = () => {
   // Helper to safely add logs
   const addLog = (type, text) => dispatch({ type: 'ADD_LOG', payload: { type, text } });
 
-  const addStoryLog = async (type, data) => {
+  const addStoryLog = useCallback(async (type, data) => {
     dispatch({ type: 'SET_AI_THINKING', payload: true });
     const tempId = Date.now();
     dispatch({ type: 'ADD_LOG', payload: { type: 'loading', text: '...', id: tempId } });
@@ -159,9 +169,9 @@ const useGameEngine = () => {
 
     dispatch({ type: 'UPDATE_LOG', payload: { id: tempId, log: { id: tempId, type: 'story', text: narrative } } });
     dispatch({ type: 'SET_AI_THINKING', payload: false });
-  };
+  }, [player.history, uid]);
 
-  const getFullStats = () => {
+  const getFullStats = useCallback(() => {
     const cls = DB.CLASSES[player.job] || DB.CLASSES['모험가'];
     const wVal = player.equip.weapon?.val || 0;
     const aVal = player.equip.armor?.val || 0;
@@ -180,7 +190,7 @@ const useGameEngine = () => {
       isMagic: isMagic,
       weaponHands: player.equip.weapon?.hands || 1 // Track if 2H
     };
-  };
+  }, [player]);
 
   // Memoized Actions for Components
   const actions = useMemo(() => ({
@@ -199,7 +209,8 @@ const useGameEngine = () => {
 
       const targetMap = DB.MAPS[loc];
       if (!targetMap) return addLog('error', '존재하지 않는 지역입니다.');
-      if (player.level < targetMap.minLv) return addLog('error', `레벨 ${targetMap.minLv} 이상이어야 이동할 수 있습니다.`);
+      const requiredLevel = targetMap.minLv ?? targetMap.level ?? 1;
+      if (player.level < requiredLevel) return addLog('error', `레벨 ${requiredLevel} 이상이어야 이동할 수 있습니다.`);
 
       if (!DB.MAPS[player.loc].exits.includes(loc) && loc !== '시작의 마을') return addLog('error', '갈 수 없는 곳입니다.');
 
@@ -304,19 +315,23 @@ const useGameEngine = () => {
     combat: (type) => {
       if (gameState !== 'combat' || !enemy) return addLog('error', '전투 중이 아닙니다.');
       const stats = getFullStats();
+      const playerAtActionStart = player;
+      const enemyAtActionStart = enemy;
 
       // === ATTACK or SKILL ===
       if (type === 'attack' || type === 'skill') {
         let result;
+        let playerAfterAction = playerAtActionStart;
 
         if (type === 'skill') {
-          result = CombatEngine.performSkill(player, enemy, stats);
+          result = CombatEngine.performSkill(playerAtActionStart, enemyAtActionStart, stats);
           if (!result.success) {
             return addLog('error', result.logs[0].text);
           }
+          playerAfterAction = result.updatedPlayer;
           dispatch({ type: 'SET_PLAYER', payload: result.updatedPlayer });
         } else {
-          result = CombatEngine.attack(player, enemy, stats);
+          result = CombatEngine.attack(playerAtActionStart, enemyAtActionStart, stats);
         }
 
         // Log the attack result
@@ -329,7 +344,7 @@ const useGameEngine = () => {
           dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
 
           // Process victory rewards
-          const victoryResult = CombatEngine.handleVictory(player, enemy);
+          const victoryResult = CombatEngine.handleVictory(playerAfterAction, enemyAtActionStart);
           let updatedPlayer = victoryResult.updatedPlayer;
 
           victoryResult.logs.forEach(log => addLog(log.type, log.text));
@@ -338,17 +353,17 @@ const useGameEngine = () => {
           }
 
           // Quest Progress
-          const questResult = CombatEngine.updateQuestProgress(updatedPlayer, enemy.name);
+          const questResult = CombatEngine.updateQuestProgress(updatedPlayer, enemyAtActionStart.name);
           updatedPlayer.quests = questResult.updatedQuests;
           if (questResult.completedCount > 0) {
             addLog('system', `💡 퀘스트 조건 달성! (${questResult.completedCount}건) -> [의뢰] 탭에서 완료하세요.`);
           }
 
           dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
-          addStoryLog('victory', { name: enemy.name });
+          addStoryLog('victory', { name: enemyAtActionStart.name });
 
           // Loot Drop (using CombatEngine)
-          const lootResult = CombatEngine.processLoot(enemy);
+          const lootResult = CombatEngine.processLoot(enemyAtActionStart);
           lootResult.logs.forEach(log => addLog(log.type, log.text));
           if (lootResult.items.length > 0) {
             dispatch({ type: 'SET_PLAYER', payload: p => ({ ...p, inv: [...p.inv, ...lootResult.items] }) });
@@ -359,20 +374,20 @@ const useGameEngine = () => {
           dispatch({ type: 'SET_ENEMY', payload: result.updatedEnemy });
 
           setTimeout(() => {
-            const counterResult = CombatEngine.enemyAttack(player, enemy, stats);
+            const counterResult = CombatEngine.enemyAttack(playerAfterAction, result.updatedEnemy, stats);
             counterResult.logs.forEach(log => addLog(log.type, log.text));
             dispatch({ type: 'SET_PLAYER', payload: counterResult.updatedPlayer });
             dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
 
             // === PLAYER DEATH ===
             if (counterResult.isDead) {
-              const defeatResult = CombatEngine.handleDefeat(player, INITIAL_STATE.player);
+              const defeatResult = CombatEngine.handleDefeat(playerAfterAction, INITIAL_STATE.player);
               dispatch({ type: 'SET_GRAVE', payload: defeatResult.graveData });
               dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
               dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
               dispatch({ type: 'SET_ENEMY', payload: null });
               defeatResult.logs.forEach(log => addLog(log.type, log.text));
-              addStoryLog('death', { loc: player.loc });
+              addStoryLog('death', { loc: playerAfterAction.loc });
             }
           }, 500);
         }
@@ -571,7 +586,7 @@ const useGameEngine = () => {
     isAdmin: () => ADMIN_UIDS.includes(uid),
     liveConfig,
     leaderboard
-  }), [player, gameState, enemy, isAiThinking, logs, uid, liveConfig, grave, currentEvent, shopItems]);
+  }), [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addStoryLog, getFullStats, leaderboard]);
 
   // CLI Integration
   const handleCommand = (text) => {

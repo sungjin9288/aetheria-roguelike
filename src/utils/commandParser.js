@@ -33,7 +33,7 @@ export const parseCommand = (input, gameState, player, actions) => {
         case '이동':
         case '갈래':
         case '가자':
-            const dest = locationMap[args.toLowerCase()] || args;
+            var dest = locationMap[args.toLowerCase()] || args;
             actions.move(dest);
             return;
 
@@ -117,18 +117,18 @@ export const parseCommand = (input, gameState, player, actions) => {
         case 'quests':
         case '퀘스트':
         case '의뢰':
-            actions.setSideTab('quests');
+            actions.setSideTab('quest');
             return `[퀘스트] ${player.quests.length}개 진행 중`;
 
         case 'equip':
         case '장비':
-            actions.setSideTab('equip');
+            actions.setSideTab('inventory');
             return '장비 탭을 열었습니다.';
 
         case 'map':
         case '지도':
         case '맵':
-            const mapData = DB.MAPS[player.loc];
+            var mapData = DB.MAPS[player.loc];
             return `[현재 위치: ${player.loc}] 이동 가능: ${mapData.exits.join(', ')}`;
 
         case 'help':

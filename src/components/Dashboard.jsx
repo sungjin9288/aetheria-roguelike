@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { DB } from '../data/db';
 import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
+import { FeedbackValidator } from '../systems/FeedbackValidator';
 
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
     // Inventory Grouping
@@ -155,8 +156,8 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                                                         alert('⚠️ 배율은 1~5 사이여야 합니다.');
                                                         return;
                                                     }
-                                                    const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'config');
-                                                    await setDoc(configRef, { eventMultiplier: val }, { merge: true });
+                                                    const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
+                                                    await setDoc(configRef, { config: { eventMultiplier: val } }, { merge: true });
                                                 }
                                             }}
                                             className="w-full bg-red-900 hover:bg-red-800 py-1 rounded text-white"
@@ -171,8 +172,8 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                                                         alert('⚠️ 공지는 100자 이하로 작성해주세요.');
                                                         return;
                                                     }
-                                                    const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'config');
-                                                    await setDoc(configRef, { announcement: newAnn }, { merge: true });
+                                                    const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
+                                                    await setDoc(configRef, { config: { announcement: newAnn } }, { merge: true });
                                                 }
                                             }}
                                             className="w-full bg-red-900 hover:bg-red-800 py-1 rounded text-white"
@@ -195,6 +196,9 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                                 <button
                                     onClick={async () => {
                                         const input = document.getElementById('feedbackInput');
+                                        const validationInput = input?.value?.trim() || '';
+                                        const validation = FeedbackValidator.validate(validationInput);
+                                        if (!validation.valid) return alert(validation.error);
                                         const msg = input?.value?.trim();
                                         if (!msg) return alert('내용을 입력해주세요.');
                                         try {
@@ -206,6 +210,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
                                                 statsSummary: { level: player.level, job: player.job, kills: player.stats?.kills || 0 },
                                                 timestamp: serverTimestamp()
                                             });
+                                            FeedbackValidator.markSubmitted();
                                             input.value = '';
                                             alert('✅ 제출 완료! 감사합니다.');
                                         } catch {
