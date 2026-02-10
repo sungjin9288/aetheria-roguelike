@@ -12,6 +12,8 @@ export const INITIAL_STATE = {
         inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0], offhand: null },
         quests: [], achievements: [], stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 },
         tempBuff: { atk: 0, turn: 0 }, status: [],
+        skillLoadout: { selected: 0, cooldowns: {} },
+        meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
         history: [], archivedHistory: []
     },
 

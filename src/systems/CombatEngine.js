@@ -4,98 +4,225 @@ import { BALANCE } from '../data/constants';
 
 /**
  * CombatEngine - Pure functions for combat calculations
- * All functions return new state without side effects
+ * All functions return new state without side effects.
  */
 export const CombatEngine = {
+    DEFAULT_SKILL_LOADOUT: { selected: 0, cooldowns: {} },
+    DEFAULT_META: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
+
+    resolveEnemyBaseName(enemy) {
+        if (!enemy) return '';
+        if (enemy.baseName) return enemy.baseName;
+        if (LOOT_TABLE[enemy.name]) return enemy.name;
+        const parts = String(enemy.name || '').split(' ');
+        return parts.length > 1 ? parts.slice(1).join(' ') : (enemy.name || '');
+    },
+
+    getElementMultiplier(elem, enemy) {
+        if (!elem || elem === 'physical' || elem === 'none') return 1;
+        if (enemy?.weakness && enemy.weakness === elem) return 1.25;
+        if (enemy?.resistance && enemy.resistance === elem) return 0.75;
+        return 1;
+    },
+
     /**
-     * Calculate damage with critical hit chance
+     * Calculate damage with crit / element / guard modifiers.
      */
-    calculateDamage(stats, type = 'attack') {
-        const mult = type === 'skill' ? 1.5 : 1.0;
-        const baseDamage = Math.floor(stats.atk * (0.9 + Math.random() * 0.2) * mult);
-        const isCrit = Math.random() < BALANCE.CRIT_CHANCE;
+    calculateDamage(stats, options = {}) {
+        const {
+            mult = 1,
+            guarding = false,
+            elementMultiplier = 1,
+            critChance = BALANCE.CRIT_CHANCE
+        } = options;
+        const guardMult = guarding ? 0.65 : 1;
+        const baseDamage = Math.floor(stats.atk * (0.9 + Math.random() * 0.2) * mult * guardMult * elementMultiplier);
+        const isCrit = Math.random() < critChance;
         return {
-            damage: isCrit ? baseDamage * 2 : baseDamage,
+            damage: Math.max(1, isCrit ? baseDamage * 2 : baseDamage),
             isCrit
         };
     },
 
-    /**
-     * Process player attack on enemy
-     */
+    tickCombatState(player) {
+        const logs = [];
+        const updated = { ...player };
+        const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
+        const nextCooldowns = { ...(loadout.cooldowns || {}) };
+
+        Object.keys(nextCooldowns).forEach((key) => {
+            if (nextCooldowns[key] > 0) nextCooldowns[key] -= 1;
+        });
+
+        updated.skillLoadout = {
+            selected: Number.isInteger(loadout.selected) ? loadout.selected : 0,
+            cooldowns: nextCooldowns
+        };
+
+        const buff = { atk: 0, def: 0, turn: 0, name: null, ...(updated.tempBuff || {}) };
+        if (buff.turn > 0) {
+            buff.turn -= 1;
+            if (buff.turn <= 0) {
+                updated.tempBuff = { atk: 0, def: 0, turn: 0, name: null };
+                logs.push({ type: 'info', text: 'Buff effect expired.' });
+            } else {
+                updated.tempBuff = buff;
+            }
+        } else {
+            updated.tempBuff = { atk: 0, def: 0, turn: 0, name: null };
+        }
+
+        updated.status = Array.isArray(updated.status) ? updated.status : [];
+        return { updatedPlayer: updated, logs };
+    },
+
     attack(_player, enemy, stats) {
-        const { damage, isCrit } = this.calculateDamage(stats, 'attack');
+        const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
+        const { damage, isCrit } = this.calculateDamage(stats, {
+            mult: 1,
+            guarding: !!enemy.guarding,
+            elementMultiplier
+        });
         const newEnemyHp = enemy.hp - damage;
+        const tags = [];
+        if (enemy.guarding) tags.push('GuardBreak');
+        if (elementMultiplier > 1) tags.push('Weakness');
+        if (elementMultiplier < 1) tags.push('Resist');
 
         const logs = [{
             type: isCrit ? 'critical' : 'combat',
-            text: `⚔️ ${enemy.name}에게 ${damage} 피해! ${isCrit ? '(치명타!)' : ''} (남은 체력: ${Math.max(0, newEnemyHp)}/${enemy.maxHp})`
+            text: `${enemy.name} took ${damage} damage ${tags.length ? `[${tags.join(', ')}]` : ''}. (${Math.max(0, newEnemyHp)}/${enemy.maxHp})`
         }];
 
         return {
-            updatedEnemy: { ...enemy, hp: newEnemyHp },
+            updatedEnemy: { ...enemy, hp: newEnemyHp, guarding: false },
             logs,
             isCrit,
             isVictory: newEnemyHp <= 0
         };
     },
 
-    /**
-     * Process skill usage
-     */
-    performSkill(player, enemy, stats) {
-        if (player.mp < BALANCE.SKILL_MP_COST) {
-            return {
-                success: false,
-                logs: [{ type: 'error', text: '마나가 부족합니다.' }]
-            };
+    performSkill(player, enemy, stats, skill) {
+        if (!skill) {
+            return { success: false, logs: [{ type: 'error', text: 'No skill available.' }] };
         }
 
-        const { damage, isCrit } = this.calculateDamage(stats, 'skill');
-        const newEnemyHp = enemy.hp - damage;
-        const newPlayerMp = player.mp - BALANCE.SKILL_MP_COST;
+        const mpCost = skill.mp || BALANCE.SKILL_MP_COST;
+        const loadout = player.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
+        const cooldowns = { ...(loadout.cooldowns || {}) };
+        const cooldown = cooldowns[skill.name] || 0;
+
+        if (cooldown > 0) {
+            return { success: false, logs: [{ type: 'error', text: `${skill.name} cooldown: ${cooldown}` }] };
+        }
+        if (player.mp < mpCost) {
+            return { success: false, logs: [{ type: 'error', text: 'Not enough MP.' }] };
+        }
+
+        const skillElem = skill.type || stats.elem;
+        const elementMultiplier = this.getElementMultiplier(skillElem, enemy);
+        const { damage, isCrit } = this.calculateDamage(stats, {
+            mult: skill.mult || 1.5,
+            guarding: !!enemy.guarding,
+            elementMultiplier
+        });
+
+        const extraDamage = ['burn', 'poison', 'bleed'].includes(skill.effect) ? Math.floor(damage * 0.2) : 0;
+        const totalDamage = damage + extraDamage;
+        const newEnemyHp = enemy.hp - totalDamage;
+
+        const updatedEnemy = { ...enemy, hp: newEnemyHp, guarding: false };
+        if (skill.effect === 'stun' || skill.effect === 'freeze') {
+            updatedEnemy.stunnedTurns = Math.max(1, updatedEnemy.stunnedTurns || 0);
+        }
+
+        const updatedPlayer = {
+            ...player,
+            mp: player.mp - mpCost,
+            skillLoadout: { selected: loadout.selected || 0, cooldowns: { ...cooldowns } }
+        };
+        updatedPlayer.skillLoadout.cooldowns[skill.name] = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
+
+        if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk'].includes(skill.effect)) {
+            const buff = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
+            if (skill.effect === 'atk_up') buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
+            if (skill.effect === 'def_up') buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
+            if (skill.effect === 'all_up') {
+                buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
+                buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
+            }
+            if (skill.effect === 'berserk') {
+                buff.atk = Math.max(0.2, (skill.val || 2.0) - 1);
+                buff.def = -0.2;
+            }
+            updatedPlayer.tempBuff = buff;
+        }
 
         const logs = [{
             type: isCrit ? 'critical' : 'combat',
-            text: `⚔️ ${enemy.name}에게 ${damage} 피해! ${isCrit ? '(치명타!)' : ''} (남은 체력: ${Math.max(0, newEnemyHp)}/${enemy.maxHp})`
+            text: `${skill.name}: ${totalDamage} damage to ${enemy.name}${isCrit ? ' (CRIT)' : ''}. (${Math.max(0, newEnemyHp)}/${enemy.maxHp})`
         }];
+        if (elementMultiplier > 1) logs.push({ type: 'success', text: 'Element weakness hit.' });
+        if (elementMultiplier < 1) logs.push({ type: 'warning', text: 'Enemy resisted the element.' });
+        if (extraDamage > 0) logs.push({ type: 'event', text: `${skill.effect} bonus damage +${extraDamage}` });
+        if (updatedPlayer.tempBuff?.name === skill.name) logs.push({ type: 'system', text: `${skill.name} buff active (${updatedPlayer.tempBuff.turn} turns).` });
 
         return {
             success: true,
-            updatedPlayer: { ...player, mp: newPlayerMp },
-            updatedEnemy: { ...enemy, hp: newEnemyHp },
+            updatedPlayer,
+            updatedEnemy,
             logs,
             isCrit,
             isVictory: newEnemyHp <= 0
         };
     },
 
-    /**
-     * Process enemy counter-attack
-     */
     enemyAttack(player, enemy, stats) {
-        const enemyDmg = Math.max(1, enemy.atk - stats.def);
+        const updatedEnemy = { ...enemy };
+        if ((updatedEnemy.stunnedTurns || 0) > 0) {
+            updatedEnemy.stunnedTurns -= 1;
+            return {
+                updatedPlayer: { ...player },
+                updatedEnemy,
+                damage: 0,
+                isDead: false,
+                logs: [{ type: 'info', text: `${enemy.name} is stunned and loses a turn.` }]
+            };
+        }
+
+        const pattern = updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 };
+        const roll = Math.random();
+        if (roll < pattern.guardChance) {
+            return {
+                updatedPlayer: { ...player },
+                updatedEnemy: { ...updatedEnemy, guarding: true },
+                damage: 0,
+                isDead: false,
+                logs: [{ type: 'warning', text: `${enemy.name} braces for impact.` }]
+            };
+        }
+
+        const heavy = roll < pattern.guardChance + pattern.heavyChance;
+        const mult = heavy ? 1.4 : 1;
+        const enemyDmg = Math.max(1, Math.floor((enemy.atk * mult) - stats.def));
         const newPlayerHp = Math.max(0, player.hp - enemyDmg);
 
         return {
             updatedPlayer: { ...player, hp: newPlayerHp },
+            updatedEnemy: { ...updatedEnemy, guarding: false },
             damage: enemyDmg,
             isDead: newPlayerHp <= 0,
-            logs: [{ type: 'warning', text: `💥 ${enemy.name}의 반격! ${enemyDmg} 피해.` }]
+            logs: [{
+                type: heavy ? 'critical' : 'warning',
+                text: `${enemy.name} ${heavy ? 'heavy-hit' : 'hit'} for ${enemyDmg} damage.`
+            }]
         };
     },
 
-    /**
-     * Process escape attempt
-     */
     attemptEscape(enemy, stats) {
         const success = Math.random() > BALANCE.ESCAPE_CHANCE;
-
         if (success) {
-            return {
-                success: true,
-                logs: [{ type: 'info', text: '🏃‍♂️ 무사히 도망쳤습니다.' }]
-            };
+            return { success: true, logs: [{ type: 'info', text: 'You escaped safely.' }] };
         }
 
         const enemyDmg = Math.max(1, enemy.atk - stats.def);
@@ -103,28 +230,52 @@ export const CombatEngine = {
             success: false,
             damage: enemyDmg,
             logs: [
-                { type: 'error', text: '도망에 실패했습니다!' },
-                { type: 'warning', text: `💥 ${enemy.name}의 추격! ${enemyDmg} 피해.` }
+                { type: 'error', text: 'Escape failed.' },
+                { type: 'warning', text: `${enemy.name} chased and dealt ${enemyDmg} damage.` }
             ]
         };
     },
 
-    /**
-     * Process victory rewards and level up
-     */
     handleVictory(player, enemy) {
-        let p = { ...player };
+        const p = { ...player };
         p.exp += enemy.exp;
         p.gold += enemy.gold;
-        p.stats = { ...p.stats, kills: p.stats.kills + 1 };
 
-        const logs = [{ type: 'success', text: `승리! EXP +${enemy.exp}, Gold +${enemy.gold}` }];
+        const baseName = this.resolveEnemyBaseName(enemy);
+        const prevStats = p.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 };
+        p.stats = {
+            ...prevStats,
+            kills: (prevStats.kills || 0) + 1,
+            total_gold: (prevStats.total_gold || 0) + enemy.gold,
+            killRegistry: {
+                ...(prevStats.killRegistry || {}),
+                [baseName]: ((prevStats.killRegistry || {})[baseName] || 0) + 1
+            }
+        };
+        if (enemy.isBoss) p.stats.bossKills = (p.stats.bossKills || 0) + 1;
+
+        const logs = [{ type: 'success', text: `Victory! EXP +${enemy.exp}, Gold +${enemy.gold}` }];
         let leveledUp = false;
         let visualEffect = null;
 
-        // Level up check
+        const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
+        const essenceGain = Math.max(1, Math.floor(enemy.exp / 8));
+        meta.essence += essenceGain;
+        logs.push({ type: 'event', text: `Legacy essence +${essenceGain}` });
+
+        const nextRank = Math.floor(meta.essence / 150);
+        if (nextRank > meta.rank) {
+            const gain = nextRank - meta.rank;
+            meta.rank = nextRank;
+            meta.bonusAtk += gain;
+            meta.bonusHp += gain * 5;
+            meta.bonusMp += gain * 3;
+            logs.push({ type: 'system', text: `Legacy rank ${meta.rank} reached.` });
+        }
+        p.meta = meta;
+
         if (p.exp >= p.nextExp) {
-            p.level++;
+            p.level += 1;
             p.exp -= p.nextExp;
             p.nextExp = Math.floor(p.nextExp * 1.5);
             p.maxHp += 20;
@@ -135,98 +286,67 @@ export const CombatEngine = {
             p.def += 1;
             leveledUp = true;
             visualEffect = 'levelUp';
-            logs.push({ type: 'system', text: `✨ LEVEL UP! Lv.${p.level} 달성! (HP/MP/Stats 증가)` });
+            logs.push({ type: 'system', text: `LEVEL UP! Lv.${p.level}` });
         }
 
-        return {
-            updatedPlayer: p,
-            logs,
-            leveledUp,
-            visualEffect
-        };
+        return { updatedPlayer: p, logs, leveledUp, visualEffect };
     },
 
-    /**
-     * Update quest progress after kill
-     */
     updateQuestProgress(player, enemyName) {
-        if (player.quests.length === 0) return { updatedQuests: player.quests, completedCount: 0 };
+        if (!player.quests?.length) return { updatedQuests: player.quests || [], completedCount: 0 };
+        const normalizedEnemyName = enemyName || '';
 
-        const updatedQuests = player.quests.map(q => {
-            const qData = DB.QUESTS.find(dbQ => dbQ.id === q.id);
-            if (qData) {
-                if (qData.target === enemyName) {
-                    return { ...q, progress: Math.min(qData.goal, q.progress + 1) };
-                }
-                if (qData.target === 'Level') {
-                    return { ...q, progress: player.level };
-                }
+        const updatedQuests = player.quests.map((q) => {
+            const qData = DB.QUESTS.find((dbQ) => dbQ.id === q.id);
+            if (!qData) return q;
+
+            const exactMatch = qData.target === normalizedEnemyName;
+            const prefixedMatch = normalizedEnemyName.includes(qData.target) || qData.target.includes(normalizedEnemyName);
+            if (exactMatch || prefixedMatch) {
+                return { ...q, progress: Math.min(qData.goal, q.progress + 1) };
+            }
+            if (qData.target === 'Level') {
+                return { ...q, progress: player.level };
             }
             return q;
         });
 
-        const completedCount = updatedQuests.filter(q => {
-            const qData = DB.QUESTS.find(dbQ => dbQ.id === q.id);
+        const completedCount = updatedQuests.filter((q) => {
+            const qData = DB.QUESTS.find((dbQ) => dbQ.id === q.id);
             return qData && q.progress >= qData.goal;
         }).length;
 
         return { updatedQuests, completedCount };
     },
 
-    /**
-     * Process loot drops
-     */
     processLoot(enemy) {
         const items = [];
         const logs = [];
-        const lootList = LOOT_TABLE[enemy.name];
+        const lootKey = this.resolveEnemyBaseName(enemy) || enemy.name;
+        const lootList = LOOT_TABLE[lootKey] || LOOT_TABLE[enemy.name];
 
         if (!lootList || lootList.length === 0) return { items: [], logs: [] };
 
-        lootList.forEach(itemName => {
+        lootList.forEach((itemName) => {
             if (Math.random() < BALANCE.DROP_CHANCE) {
                 const itemData = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]
-                    .find(i => i.name === itemName);
+                    .find((i) => i.name === itemName);
+                if (!itemData) return;
 
-                if (itemData) {
-                    let newItem = { ...itemData, id: Date.now() + Math.random().toString() };
-
-                    // Item prefix logic (20% for gear)
-                    if (['weapon', 'armor'].includes(newItem.type) && Math.random() < 0.2) {
-                        const possiblePrefixes = DB.ITEMS.prefixes.filter(p => p.type === 'all' || p.type === newItem.type);
-                        if (possiblePrefixes.length > 0) {
-                            const prefix = possiblePrefixes[Math.floor(Math.random() * possiblePrefixes.length)];
-                            newItem.name = `${prefix.name} ${newItem.name}`;
-                            newItem.price = Math.floor(newItem.price * prefix.price);
-                            if (prefix.stat === 'atk') newItem.val += prefix.val;
-                            if (prefix.stat === 'def') newItem.val += prefix.val;
-                            if (prefix.stat === 'hp') newItem.hpBoost = (newItem.hpBoost || 0) + prefix.val;
-                            if (prefix.stat === 'all') newItem.val += 5;
-                            if (prefix.elem) newItem.elem = prefix.elem;
-                            logs.push({ type: 'event', text: `✨ 접두사가 붙은 희귀 아이템 발견! (${prefix.name})` });
-                        }
-                    }
-
-                    items.push(newItem);
-                    logs.push({ type: 'success', text: `📦 ${newItem.name} 획득!` });
-                }
+                const newItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
+                items.push(newItem);
+                logs.push({ type: 'success', text: `Loot: ${newItem.name}` });
             }
         });
 
         return { items, logs };
     },
 
-    /**
-     * Handle player death and create grave
-     */
     handleDefeat(player, INITIAL_PLAYER) {
-        // Create grave with dropped items
         let droppedItem = null;
-        if (player.inv.length > 0) {
-            const tradableItems = player.inv.filter(i => !i.id?.startsWith('starter_'));
-            if (tradableItems.length > 0) {
-                droppedItem = tradableItems[Math.floor(Math.random() * tradableItems.length)];
-            }
+        if (player.inv?.length > 0) {
+            const tradableItems = player.inv.filter((i) => !i.id?.startsWith('starter_'));
+            if (tradableItems.length > 0) droppedItem = tradableItems[Math.floor(Math.random() * tradableItems.length)];
         }
 
         const graveData = {
@@ -236,10 +356,25 @@ export const CombatEngine = {
             timestamp: Date.now()
         };
 
-        // Reset to starter state
         const starterState = { ...INITIAL_PLAYER };
+        const meta = { ...this.DEFAULT_META, ...(player.meta || {}) };
+        const prevStats = player.stats || starterState.stats || {};
+
+        starterState.stats = {
+            ...starterState.stats,
+            ...prevStats,
+            deaths: (prevStats.deaths || 0) + 1
+        };
+        starterState.meta = meta;
+        starterState.achievements = Array.isArray(player.achievements) ? [...player.achievements] : [];
+        starterState.skillLoadout = { selected: 0, cooldowns: {} };
         starterState.name = '';
         starterState.gold = 50;
+        starterState.atk = (starterState.atk || 10) + (meta.bonusAtk || 0);
+        starterState.maxHp = (starterState.maxHp || 150) + (meta.bonusHp || 0);
+        starterState.maxMp = (starterState.maxMp || 50) + (meta.bonusMp || 0);
+        starterState.hp = starterState.maxHp;
+        starterState.mp = starterState.maxMp;
         starterState.inv = [
             { ...DB.ITEMS.consumables[0], id: 'starter_1' },
             { ...DB.ITEMS.consumables[0], id: 'starter_2' }
@@ -248,7 +383,7 @@ export const CombatEngine = {
         return {
             updatedPlayer: starterState,
             graveData,
-            logs: [{ type: 'error', text: '💀 사망했습니다. 레벨과 장비가 초기화되었습니다. (전생)' }]
+            logs: [{ type: 'error', text: 'You were defeated. Core progression persists via legacy bonuses.' }]
         };
     }
 };

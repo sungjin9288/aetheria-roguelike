@@ -1,157 +1,119 @@
 import { DB } from '../data/db';
 
-/**
- * Command Parser - CLI command handling
- * v3.6: Enhanced Korean command support
- */
 export const parseCommand = (input, gameState, player, actions) => {
-    if (!input || !input.trim()) return;
+  if (!input || !input.trim()) return;
 
-    const tokens = input.trim().replace(/^\//, '').split(' ');
-    const command = tokens[0].toLowerCase();
-    const args = tokens.slice(1).join(' ');
+  const tokens = input.trim().replace(/^\//, '').split(' ');
+  const command = (tokens[0] || '').toLowerCase();
+  const args = tokens.slice(1).join(' ');
 
-    // --- Movement shortcuts: Direct location names ---
-    const locationMap = {
-        '마을': '시작의 마을',
-        '숲': '북부 숲',
-        '북부숲': '북부 숲',
-        '동굴': '버려진 동굴',
-        '사막': '사막 오아시스',
-        '요새': '북부 요새',
-        'town': '시작의 마을',
-        'forest': '북부 숲',
-        'cave': '버려진 동굴',
-        'desert': '사막 오아시스',
-        'fortress': '북부 요새'
-    };
+  const locationMap = {
+    town: '시작의 마을',
+    forest: '고요한 숲',
+    cave: '버려진 동굴',
+    desert: '모래 오아시스',
+    fortress: '북부 요새',
+    마을: '시작의 마을',
+    숲: '고요한 숲',
+    동굴: '버려진 동굴'
+  };
 
-    switch (command) {
-        // --- MOVEMENT ---
-        case 'move':
-        case 'go':
-        case '이동':
-        case '갈래':
-        case '가자':
-            var dest = locationMap[args.toLowerCase()] || args;
-            actions.move(dest);
-            return;
+  if (gameState === 'event' && (command === '1' || command === '2' || command === '3')) {
+    actions.handleEventChoice(Number(command) - 1);
+    return;
+  }
 
-        // --- ACTIONS ---
-        case 'explore':
-        case 'look':
-        case '탐험':
-        case '탐색':
-        case '조사':
-        case '보기':
-            actions.explore();
-            return;
+  switch (command) {
+    case 'move':
+    case 'go':
+    case '이동':
+    case '가':
+      actions.move(locationMap[args.toLowerCase()] || args);
+      return;
 
-        case 'rest':
-        case 'sleep':
-        case '휴식':
-        case '쉬기':
-        case '자기':
-            actions.rest();
-            return;
+    case 'explore':
+    case 'look':
+    case '탐색':
+      actions.explore();
+      return;
 
-        // --- COMBAT ---
-        case 'attack':
-        case 'hit':
-        case '공격':
-        case '때리기':
-        case 'a':
-            actions.combat('attack');
-            return;
+    case 'rest':
+    case 'sleep':
+    case '휴식':
+      actions.rest();
+      return;
 
-        case 'skill':
-        case 'use':
-        case '스킬':
-        case '기술':
-        case 's':
-            actions.combat('skill');
-            return;
+    case 'attack':
+    case 'a':
+    case '공격':
+      actions.combat('attack');
+      return;
 
-        case 'run':
-        case 'escape':
-        case 'flee':
-        case '도망':
-        case '도망가기':
-        case '튀어':
-        case 'r':
-            actions.combat('escape');
-            return;
+    case 'skill':
+    case 's':
+    case '스킬':
+      actions.combat('skill');
+      return;
 
-        // --- SHOP ---
-        case 'shop':
-        case '상점':
-        case '가게':
-            if (DB.MAPS[player.loc]?.type === 'safe') {
-                actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
-                actions.setGameState('shop');
-                return '상점에 입장했습니다.';
-            }
-            return '상점은 마을에서만 이용 가능합니다.';
+    case 'nextskill':
+    case 'skillnext':
+    case 'sn':
+    case '스킬변경':
+      actions.cycleSkill?.(1);
+      return '스킬 슬롯을 전환했습니다.';
 
-        case 'buy':
-        case '구매':
-        case '사기':
-            return "상점 이용은 클릭을 권장합니다. 또는 '상점' 명령어로 입장하세요.";
+    case 'run':
+    case 'escape':
+    case 'r':
+    case '도주':
+      actions.combat('escape');
+      return;
 
-        // --- INFO ---
-        case 'status':
-        case 'stat':
-        case '상태':
-        case '정보':
-        case 'i':
-            return `[상태] Lv.${player.level} ${player.name} (${player.job}) | HP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | Gold: ${player.gold}G | 위치: ${player.loc}`;
+    case 'shop':
+    case '상점':
+      if (DB.MAPS[player.loc]?.type === 'safe') {
+        actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
+        actions.setGameState('shop');
+        return '상점에 입장했습니다.';
+      }
+      return '상점은 안전 지역에서만 이용할 수 있습니다.';
 
-        case 'inventory':
-        case 'inv':
-        case '인벤':
-        case '가방':
-            actions.setSideTab('inventory');
-            return `[인벤토리] ${player.inv.length}개 아이템 소지 중`;
+    case 'status':
+    case 'stat':
+    case '상태':
+    case 'i':
+      return `[상태] Lv.${player.level} ${player.name} (${player.job}) | HP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | Gold: ${player.gold}G | 위치: ${player.loc}`;
 
-        case 'quest':
-        case 'quests':
-        case '퀘스트':
-        case '의뢰':
-            actions.setSideTab('quest');
-            return `[퀘스트] ${player.quests.length}개 진행 중`;
+    case 'inventory':
+    case 'inv':
+    case '인벤':
+      actions.setSideTab('inventory');
+      return `[인벤토리] ${player.inv.length}개 아이템`;
 
-        case 'equip':
-        case '장비':
-            actions.setSideTab('inventory');
-            return '장비 탭을 열었습니다.';
+    case 'quest':
+    case 'quests':
+    case '퀘스트':
+      actions.setSideTab('quest');
+      return `[퀘스트] ${player.quests.length}개 진행 중`;
 
-        case 'map':
-        case '지도':
-        case '맵':
-            var mapData = DB.MAPS[player.loc];
-            return `[현재 위치: ${player.loc}] 이동 가능: ${mapData.exits.join(', ')}`;
+    case 'map':
+    case '지도':
+      return `[현재 위치: ${player.loc}] 이동 가능: ${(DB.MAPS[player.loc]?.exits || []).join(', ')}`;
 
-        case 'help':
-        case '도움말':
-        case '도움':
-        case '?':
-        case 'h':
-            return `▶ 이동: 이동 [장소] (마을/숲/동굴)
-▶ 행동: 탐색, 휴식, 상점
-▶ 전투: 공격(a), 스킬(s), 도망(r)
-▶ 정보: 상태(i), 인벤, 퀘스트, 지도`;
+    case 'help':
+    case 'h':
+    case '?':
+      return `이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map`;
 
-        default:
-            // Try direct location match
-            if (locationMap[command]) {
-                actions.move(locationMap[command]);
-                return;
-            }
-            // Check if it's a valid map location
-            if (DB.MAPS[command]) {
-                actions.move(command);
-                return;
-            }
-            return `알 수 없는 명령어: ${command} ('도움말' 입력)`;
-    }
+    default:
+      if (locationMap[command]) {
+        actions.move(locationMap[command]);
+        return;
+      }
+      if (DB.MAPS[command]) {
+        actions.move(command);
+        return;
+      }
+      return `알 수 없는 명령어: ${command} (/help)`;
+  }
 };

@@ -54,5 +54,21 @@ export const migrateData = (savedData) => {
         target.equip.armor = ITEMS.armors.find(a => a.name === target.equip.armor) || ITEMS.armors[0];
     }
 
+    // Modern runtime fields (safe defaults for older saves)
+    target.tempBuff = target.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
+    target.tempBuff.atk = target.tempBuff.atk || 0;
+    target.tempBuff.def = target.tempBuff.def || 0;
+    target.tempBuff.turn = target.tempBuff.turn || 0;
+    target.status = Array.isArray(target.status) ? target.status : [];
+    target.skillLoadout = target.skillLoadout || { selected: 0, cooldowns: {} };
+    target.skillLoadout.selected = Number.isInteger(target.skillLoadout.selected) ? target.skillLoadout.selected : 0;
+    target.skillLoadout.cooldowns = target.skillLoadout.cooldowns || {};
+    target.meta = target.meta || { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 };
+    target.meta.essence = target.meta.essence || 0;
+    target.meta.rank = target.meta.rank || 0;
+    target.meta.bonusAtk = target.meta.bonusAtk || 0;
+    target.meta.bonusHp = target.meta.bonusHp || 0;
+    target.meta.bonusMp = target.meta.bonusMp || 0;
+
     return savedData;
 };
