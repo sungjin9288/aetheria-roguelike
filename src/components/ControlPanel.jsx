@@ -4,7 +4,6 @@ import {
   Zap,
   ArrowRight,
   Map as MapIcon,
-  Home,
   ShoppingBag,
   Moon,
   GraduationCap,
@@ -195,15 +194,6 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
               <MapIcon size={14} /> {exit}
             </button>
           ))}
-          {player.loc !== '시작의 마을' && (
-            <button
-              disabled={isAiThinking}
-              onClick={() => actions.move('시작의 마을')}
-              className="px-4 py-3 bg-yellow-900/40 border border-yellow-700 rounded text-yellow-200 disabled:opacity-50"
-            >
-              <Home size={14} /> 마을로
-            </button>
-          )}
           <button onClick={() => setGameState('idle')} className="px-4 py-3 bg-slate-800 rounded">
             취소
           </button>

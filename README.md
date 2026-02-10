@@ -1,16 +1,43 @@
-# React + Vite
+# Aetheria RPG
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A terminal-style fantasy RPG built with React + Vite.
 
-Currently, two official plugins are available:
+## Local Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## Build
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm run build
+npm run preview
+```
 
-## Expanding the ESLint configuration
+## Mobile App (PWA)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+This project now supports installable mobile usage via PWA.
+
+1. Build and deploy the app over HTTPS.
+2. Open on mobile browser.
+3. Use **Add to Home Screen** (Android) or **Share > Add to Home Screen** (iOS).
+
+PWA assets:
+- `public/manifest.webmanifest`
+- `public/sw.js`
+- `src/pwa/registerServiceWorker.js`
+
+## Gameplay Notes
+
+- Movement is now map-path based only.
+- Direct jump to town has been removed.
+
+## Useful PowerShell Tip
+
+If numbered `Get-Content` commands hang due to quote collisions, use this safe form:
+
+```powershell
+$i=0; Get-Content README.md | ForEach-Object { $i++; "{0,4}: {1}" -f $i, $_ }
+```

@@ -242,7 +242,7 @@ const useGameEngine = () => {
         if (!targetMap) return addLog('error', '존재하지 않는 지역입니다.');
         const requiredLevel = targetMap.minLv ?? targetMap.level ?? 1;
         if (player.level < requiredLevel) return addLog('error', `레벨 ${requiredLevel} 이상이어야 이동 가능합니다.`);
-        if (!DB.MAPS[player.loc].exits.includes(loc) && loc !== '시작의 마을') return addLog('error', '갈 수 없는 곳입니다.');
+        if (!DB.MAPS[player.loc].exits.includes(loc)) return addLog('error', '갈 수 없는 곳입니다.');
 
         dispatch({ type: 'SET_PLAYER', payload: { loc } });
         dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
