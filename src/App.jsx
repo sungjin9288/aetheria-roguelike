@@ -798,6 +798,15 @@ function App() {
         />
       </div>
 
+      <Dashboard
+        mobile
+        player={engine.player}
+        sideTab={engine.sideTab}
+        setSideTab={engine.actions.setSideTab}
+        actions={engine.actions}
+        stats={engine.getFullStats()}
+      />
+
       <ControlPanel
         gameState={engine.gameState}
         player={engine.player}

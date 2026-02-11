@@ -7,12 +7,122 @@ import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
 import { FeedbackValidator } from '../systems/FeedbackValidator';
 
-const Dashboard = ({ player, sideTab, setSideTab, actions, stats }) => {
+const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
     // Inventory Grouping
     const groupedInv = player.inv.reduce((acc, item) => {
         acc[item.name] = (acc[item.name] || 0) + 1;
         return acc;
     }, {});
+
+    if (mobile) {
+        return (
+            <div className="md:hidden mt-3 bg-slate-900/70 border border-slate-800 rounded-lg p-3 space-y-3">
+                <div>
+                    <h3 className="text-emerald-400 font-bold text-xs mb-2 flex items-center gap-2">
+                        <User size={14} /> STATUS
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+                        <div>Lv.{player?.level} {player?.job}</div>
+                        <div className="text-right text-yellow-400">{player?.gold} G</div>
+                    </div>
+                    <div className="mt-2 space-y-1">
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(player?.hp / player?.maxHp) * 100}%` }}></div>
+                        </div>
+                        <div className="text-[10px] text-slate-500">{player?.hp} / {player?.maxHp} HP</div>
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player?.mp / player?.maxMp) * 100}%` }}></div>
+                        </div>
+                        <div className="text-[10px] text-slate-500">{player?.mp} / {player?.maxMp} MP</div>
+                    </div>
+                </div>
+
+                <div className="border-t border-slate-800 pt-3">
+                    <div className="flex gap-2 mb-3">
+                        {['inventory', 'quest', 'system'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setSideTab(tab)}
+                                className={`text-[11px] px-2 py-1 rounded border ${sideTab === tab ? 'text-indigo-300 border-indigo-500 bg-indigo-900/30' : 'text-slate-400 border-slate-700'}`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="max-h-44 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                        {sideTab === 'inventory' && Object.entries(groupedInv).map(([name, count], i) => {
+                            const item = player?.inv?.find(it => it.name === name);
+                            if (!item) return null;
+                            return (
+                                <div key={i} className="bg-slate-800/60 p-2 rounded border border-slate-700/60 flex justify-between items-center">
+                                    <span className={`text-xs ${item.tier >= 2 ? 'text-purple-300' : 'text-slate-300'}`}>{name} x{count}</span>
+                                    <button onClick={() => actions.useItem(item)} className="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">use</button>
+                                </div>
+                            );
+                        })}
+
+                        {sideTab === 'quest' && (
+                            player?.quests?.length > 0 ? (
+                                player.quests.map((pq, i) => {
+                                    const qData = DB.QUESTS.find(q => q.id === pq.id);
+                                    if (!qData) return null;
+                                    const isComplete = pq.progress >= qData.goal;
+                                    return (
+                                        <div key={i} className={`p-2 rounded border ${isComplete ? 'bg-indigo-900/40 border-indigo-500' : 'bg-slate-800 border-slate-700'}`}>
+                                            <div className="flex justify-between items-start gap-2">
+                                                <div>
+                                                    <div className={`font-bold text-xs ${isComplete ? 'text-indigo-300' : 'text-slate-300'}`}>{qData.title}</div>
+                                                    <div className="text-[10px] text-slate-400 mt-1">{qData.desc}</div>
+                                                </div>
+                                                {isComplete ? (
+                                                    <button onClick={() => actions.completeQuest(pq.id)} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] rounded">done</button>
+                                                ) : (
+                                                    <div className="text-[10px] text-slate-500 whitespace-nowrap">{pq.progress} / {qData.goal}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="text-slate-500 text-center py-3 text-xs">No active quests.</div>
+                            )
+                        )}
+
+                        {sideTab === 'system' && (
+                            <div className="space-y-2">
+                                <div className="text-[10px] text-slate-400">
+                                    <p>User ID: {actions.getUid()}</p>
+                                    <p>Client Ver: v3.5 (Mobile)</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        const exportData = {
+                                            timestamp: new Date().toISOString(),
+                                            summary: {
+                                                name: player.name,
+                                                level: player.level,
+                                                job: player.job,
+                                                gold: player.gold,
+                                                playtime: "N/A"
+                                            },
+                                            stats: stats,
+                                            equipment: player.equip,
+                                            history: [...(player.archivedHistory || []), ...player.history]
+                                        };
+                                        exportToJson(`aetheria_log_${Date.now()}.json`, exportData);
+                                    }}
+                                    className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded border border-slate-600 flex items-center justify-center gap-2 text-xs"
+                                >
+                                    <Save size={14} /> Download battle log
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <aside className="w-1/3 min-w-[300px] hidden md:flex flex-col gap-4">
