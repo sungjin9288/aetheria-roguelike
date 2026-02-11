@@ -5,7 +5,8 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
     const endRef = useRef(null);
     useEffect(() => {
         if (endRef.current) {
-            endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            // Force instant scroll to bottom on every log update
+            endRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
         }
     }, [logs]);
 

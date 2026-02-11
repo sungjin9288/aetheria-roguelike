@@ -1,5 +1,5 @@
-import React from 'react';
-import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword, X } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DB } from '../data/db';
@@ -7,7 +7,35 @@ import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
 import { FeedbackValidator } from '../systems/FeedbackValidator';
 
+const AvatarDisplay = ({ player }) => (
+    <div className="relative w-full aspect-square bg-cyber-dark/50 rounded-lg border border-cyber-blue/30 overflow-hidden shadow-[0_0_20px_rgba(0,204,255,0.1)] group">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
+        <img
+            src={`/assets/avatar_${player?.gender || 'male'}.svg`}
+            alt="Avatar"
+            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
+        />
+        {/* Scanline overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyber-blue/5 to-transparent animate-scanline pointer-events-none"></div>
+
+        {/* Equipment Overlay (Simple Icons for now) */}
+        <div className="absolute bottom-2 right-2 flex gap-1">
+            {player?.equip?.weapon && (
+                <div className="p-1 bg-black/60 rounded border border-cyber-green/50" title={player.equip.weapon.name}>
+                    <Sword size={12} className="text-cyber-green" />
+                </div>
+            )}
+            {player?.equip?.armor && (
+                <div className="p-1 bg-black/60 rounded border border-cyber-purple/50" title={player.equip.armor.name}>
+                    <Shield size={12} className="text-cyber-purple" />
+                </div>
+            )}
+        </div>
+    </div>
+);
+
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
+    const [showAvatar, setShowAvatar] = useState(false);
     // Inventory Grouping
     const groupedInv = player.inv.reduce((acc, item) => {
         acc[item.name] = (acc[item.name] || 0) + 1;
@@ -31,20 +59,48 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
     if (mobile) {
         return (
-            <div className="md:hidden mt-3 bg-cyber-black/80 backdrop-blur-md border border-cyber-blue/30 rounded-lg p-3 space-y-3 shadow-neon-blue/20">
-                <div>
-                    <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-2 flex items-center gap-2 tracking-widest">
-                        <User size={14} /> AGENT: {player?.name}
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2 text-xs font-fira text-cyber-blue/80 mb-2">
-                        <div><span className="text-cyber-purple">{player?.job}</span> <span className="text-slate-500">Lv.{player?.level}</span></div>
-                        <div className="text-right text-yellow-400 font-bold">{player?.gold} CR</div>
+            <div className="md:hidden mt-3 bg-cyber-black/80 backdrop-blur-md border border-cyber-blue/30 rounded-lg p-3 space-y-3 shadow-neon-blue/20 relative">
+                {/* Mobile Header with Avatar Toggle */}
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-2 flex items-center gap-2 tracking-widest">
+                            <button onClick={() => setShowAvatar(true)} className="hover:text-cyber-blue transition-colors">
+                                <User size={14} />
+                            </button>
+                            AGENT: {player?.name}
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2 text-xs font-fira text-cyber-blue/80 mb-2">
+                            <div><span className="text-cyber-purple">{player?.job}</span> <span className="text-slate-500">Lv.{player?.level}</span></div>
+                            <div className="text-right text-yellow-400 font-bold">{player?.gold} CR</div>
+                        </div>
                     </div>
-                    <div className="space-y-3">
-                        <ProgressBar value={player?.hp} max={player?.maxHp} color="red-500" label="VIT (HP)" />
-                        <ProgressBar value={player?.mp} max={player?.maxMp} color="blue-500" label="NRG (MP)" />
-                    </div>
+                    <button onClick={() => setShowAvatar(true)} className="p-2 border border-cyber-blue/30 rounded bg-cyber-blue/10 text-cyber-blue animate-pulse hover:bg-cyber-blue/30">
+                        <User size={16} />
+                    </button>
                 </div>
+
+                <div className="space-y-3">
+                    <ProgressBar value={player?.hp} max={player?.maxHp} color="red-500" label="VIT (HP)" />
+                    <ProgressBar value={player?.mp} max={player?.maxMp} color="blue-500" label="NRG (MP)" />
+                </div>
+
+                {/* Avatar Modal */}
+                {showAvatar && (
+                    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8" onClick={() => setShowAvatar(false)}>
+                        <div className="w-full max-w-sm bg-cyber-black border border-cyber-blue/50 rounded-lg p-4 relative shadow-[0_0_50px_rgba(0,204,255,0.3)]" onClick={e => e.stopPropagation()}>
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-blue to-transparent animate-scanline"></div>
+                            <div className="flex justify-between items-center mb-4 border-b border-cyber-blue/20 pb-2">
+                                <h3 className="text-xl font-rajdhani font-bold text-cyber-blue tracking-widest">AGENT ID</h3>
+                                <button onClick={() => setShowAvatar(false)} className="text-red-500 hover:text-red-400"><X /></button>
+                            </div>
+                            <AvatarDisplay player={player} />
+                            <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-fira text-cyber-blue/60">
+                                <div className="bg-cyber-dark/50 p-2 rounded">WPN: <span className="text-white">{player?.equip?.weapon?.name || 'N/A'}</span></div>
+                                <div className="bg-cyber-dark/50 p-2 rounded">ARM: <span className="text-white">{player?.equip?.armor?.name || 'N/A'}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="border-t border-cyber-blue/20 pt-3">
                     <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
@@ -159,30 +215,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     </div>
 
                     {/* AVATAR DISPLAY */}
-                    <div className="relative w-full aspect-square bg-cyber-dark/50 rounded-lg border border-cyber-blue/30 overflow-hidden shadow-[0_0_20px_rgba(0,204,255,0.1)] group">
-                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
-                        <img
-                            src={`/assets/avatar_${player?.gender || 'male'}.svg`}
-                            alt="Avatar"
-                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
-                        />
-                        {/* Scanline overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyber-blue/5 to-transparent animate-scanline pointer-events-none"></div>
-
-                        {/* Equipment Overlay (Simple Icons for now) */}
-                        <div className="absolute bottom-2 right-2 flex gap-1">
-                            {player?.equip?.weapon && (
-                                <div className="p-1 bg-black/60 rounded border border-cyber-green/50" title={player.equip.weapon.name}>
-                                    <Sword size={12} className="text-cyber-green" />
-                                </div>
-                            )}
-                            {player?.equip?.armor && (
-                                <div className="p-1 bg-black/60 rounded border border-cyber-purple/50" title={player.equip.armor.name}>
-                                    <Shield size={12} className="text-cyber-purple" />
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <AvatarDisplay player={player} />
 
                     <div className="flex items-center gap-2 bg-cyber-dark/80 p-2 rounded border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
                         <div className="w-2 h-2 bg-yellow-400 rotate-45"></div>
