@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Crown, Skull, Save } from 'lucide-react';
+import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DB } from '../data/db';
@@ -14,36 +14,48 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
         return acc;
     }, {});
 
+    const ProgressBar = ({ value, max, color, label }) => (
+        <div className="relative w-full">
+            <div className="flex justify-between text-[10px] uppercase font-bold mb-0.5 text-cyber-blue/70">
+                <span>{label}</span>
+                <span>{value}/{max}</span>
+            </div>
+            <div className={`w-full h-2 bg-cyber-dark/50 rounded-sm overflow-hidden border border-${color}/30 relative`}>
+                <div
+                    className={`h-full transition-all duration-500 ease-out bg-gradient-to-r from-${color}/50 to-${color} shadow-[0_0_10px_rgba(var(--color-${color}),0.5)]`}
+                    style={{ width: `${Math.min(100, (value / max) * 100)}%` }}
+                ></div>
+            </div>
+        </div>
+    );
+
     if (mobile) {
         return (
-            <div className="md:hidden mt-3 bg-slate-900/70 border border-slate-800 rounded-lg p-3 space-y-3">
+            <div className="md:hidden mt-3 bg-cyber-black/80 backdrop-blur-md border border-cyber-blue/30 rounded-lg p-3 space-y-3 shadow-neon-blue/20">
                 <div>
-                    <h3 className="text-emerald-400 font-bold text-xs mb-2 flex items-center gap-2">
-                        <User size={14} /> STATUS
+                    <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-2 flex items-center gap-2 tracking-widest">
+                        <User size={14} /> AGENT STATUS
                     </h3>
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
-                        <div>Lv.{player?.level} {player?.job}</div>
-                        <div className="text-right text-yellow-400">{player?.gold} G</div>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-fira text-cyber-blue/80 mb-2">
+                        <div>Lv.{player?.level} <span className="text-cyber-purple">{player?.job}</span></div>
+                        <div className="text-right text-yellow-400 font-bold">{player?.gold} CR</div>
                     </div>
-                    <div className="mt-2 space-y-1">
-                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                            <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(player?.hp / player?.maxHp) * 100}%` }}></div>
-                        </div>
-                        <div className="text-[10px] text-slate-500">{player?.hp} / {player?.maxHp} HP</div>
-                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                            <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player?.mp / player?.maxMp) * 100}%` }}></div>
-                        </div>
-                        <div className="text-[10px] text-slate-500">{player?.mp} / {player?.maxMp} MP</div>
+                    <div className="space-y-2">
+                        <ProgressBar value={player?.hp} max={player?.maxHp} color="red-500" label="VIT (HP)" />
+                        <ProgressBar value={player?.mp} max={player?.maxMp} color="blue-500" label="NRG (MP)" />
                     </div>
                 </div>
 
-                <div className="border-t border-slate-800 pt-3">
-                    <div className="flex gap-2 mb-3">
+                <div className="border-t border-cyber-blue/20 pt-3">
+                    <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
                         {['inventory', 'quest', 'system'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setSideTab(tab)}
-                                className={`text-[11px] px-2 py-1 rounded border ${sideTab === tab ? 'text-indigo-300 border-indigo-500 bg-indigo-900/30' : 'text-slate-400 border-slate-700'}`}
+                                className={`text-[10px] px-3 py-1 rounded-sm border uppercase font-bold tracking-wider transition-all
+                                    ${sideTab === tab
+                                        ? 'text-cyber-black bg-cyber-blue border-cyber-blue shadow-neon-blue'
+                                        : 'text-cyber-blue/50 border-cyber-blue/30 hover:border-cyber-blue/70'}`}
                             >
                                 {tab}
                             </button>
@@ -55,9 +67,9 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             const item = player?.inv?.find(it => it.name === name);
                             if (!item) return null;
                             return (
-                                <div key={i} className="bg-slate-800/60 p-2 rounded border border-slate-700/60 flex justify-between items-center">
-                                    <span className={`text-xs ${item.tier >= 2 ? 'text-purple-300' : 'text-slate-300'}`}>{name} x{count}</span>
-                                    <button onClick={() => actions.useItem(item)} className="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">use</button>
+                                <div key={i} className="bg-cyber-dark/40 p-2 rounded-sm border border-cyber-blue/10 flex justify-between items-center group hover:border-cyber-green/50 transition-colors">
+                                    <span className={`text-xs font-fira ${item.tier >= 2 ? 'text-cyber-purple' : 'text-cyber-blue/80'}`}>{name} x{count}</span>
+                                    <button onClick={() => actions.useItem(item)} className="text-[10px] bg-cyber-blue/10 hover:bg-cyber-blue/30 text-cyber-blue px-2 py-1 rounded border border-cyber-blue/30">USE</button>
                                 </div>
                             );
                         })}
@@ -69,31 +81,31 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                     if (!qData) return null;
                                     const isComplete = pq.progress >= qData.goal;
                                     return (
-                                        <div key={i} className={`p-2 rounded border ${isComplete ? 'bg-indigo-900/40 border-indigo-500' : 'bg-slate-800 border-slate-700'}`}>
+                                        <div key={i} className={`p-2 rounded-sm border ${isComplete ? 'bg-cyber-green/10 border-cyber-green/50' : 'bg-cyber-dark/40 border-cyber-blue/10'}`}>
                                             <div className="flex justify-between items-start gap-2">
                                                 <div>
-                                                    <div className={`font-bold text-xs ${isComplete ? 'text-indigo-300' : 'text-slate-300'}`}>{qData.title}</div>
-                                                    <div className="text-[10px] text-slate-400 mt-1">{qData.desc}</div>
+                                                    <div className={`font-bold text-xs ${isComplete ? 'text-cyber-green' : 'text-cyber-blue'}`}>{qData.title}</div>
+                                                    <div className="text-[10px] text-cyber-blue/50 mt-1">{qData.desc}</div>
                                                 </div>
                                                 {isComplete ? (
-                                                    <button onClick={() => actions.completeQuest(pq.id)} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] rounded">done</button>
+                                                    <button onClick={() => actions.completeQuest(pq.id)} className="px-2 py-1 bg-cyber-green hover:bg-emerald-400 text-cyber-black font-bold text-[10px] rounded animate-pulse">CLAIM</button>
                                                 ) : (
-                                                    <div className="text-[10px] text-slate-500 whitespace-nowrap">{pq.progress} / {qData.goal}</div>
+                                                    <div className="text-[10px] text-cyber-blue/50 font-fira">{pq.progress} / {qData.goal}</div>
                                                 )}
                                             </div>
                                         </div>
                                     );
                                 })
                             ) : (
-                                <div className="text-slate-500 text-center py-3 text-xs">No active quests.</div>
+                                <div className="text-cyber-blue/30 text-center py-3 text-xs font-rajdhani">NO ACTIVE MISSIONS</div>
                             )
                         )}
 
                         {sideTab === 'system' && (
                             <div className="space-y-2">
-                                <div className="text-[10px] text-slate-400">
-                                    <p>User ID: {actions.getUid()}</p>
-                                    <p>Client Ver: v3.5 (Mobile)</p>
+                                <div className="text-[10px] text-cyber-blue/50 font-fira border-l-2 border-cyber-blue/20 pl-2">
+                                    <p>ID: {actions.getUid()?.slice(0, 8)}...</p>
+                                    <p>VER: v3.5 (MOBILE)</p>
                                 </div>
                                 <button
                                     onClick={() => {
@@ -112,9 +124,9 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                         };
                                         exportToJson(`aetheria_log_${Date.now()}.json`, exportData);
                                     }}
-                                    className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded border border-slate-600 flex items-center justify-center gap-2 text-xs"
+                                    className="w-full bg-cyber-blue/10 hover:bg-cyber-blue/20 text-cyber-blue py-2 rounded-sm border border-cyber-blue/30 flex items-center justify-center gap-2 text-xs font-rajdhani font-bold"
                                 >
-                                    <Save size={14} /> Download battle log
+                                    <Save size={14} /> DOWNLOAD LOGS
                                 </button>
                             </div>
                         )}
@@ -125,52 +137,84 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
     }
 
     return (
-        <aside className="w-1/3 min-w-[300px] hidden md:flex flex-col gap-4">
+        <aside className="w-80 min-w-[320px] hidden md:flex flex-col gap-4 h-full">
             {/* STATUS PANEL */}
-            <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-lg">
-                <h3 className="text-emerald-400 font-bold mb-3 text-sm flex items-center gap-2"><User size={16} /> STATUS</h3>
-                <div className="space-y-2 text-xs text-slate-300">
-                    <div className="flex justify-between"><span>Lv.{player?.level} {player?.job}</span> <span className="text-yellow-400">{player?.gold} G</span></div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
-                        <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(player?.hp / player?.maxHp) * 100}%` }}></div>
+            <div className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-5 rounded-lg shadow-[0_0_15px_rgba(0,204,255,0.1)] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-2 opacity-20">
+                    <User size={64} className="text-cyber-blue" />
+                </div>
+
+                <h3 className="text-cyber-green font-rajdhani font-bold text-lg mb-4 flex items-center gap-2 tracking-[0.2em] border-b border-cyber-green/20 pb-2">
+                    <span className="w-2 h-2 bg-cyber-green rounded-full animate-pulse"></span>
+                    AGENT STATUS
+                </h3>
+
+                <div className="space-y-3">
+                    <div className="flex justify-between items-end font-rajdhani">
+                        <span className="text-xl text-white font-bold">{player?.job}</span>
+                        <span className="text-sm text-cyber-blue">Lv.{player?.level}</span>
                     </div>
-                    <div className="text-center text-[10px] text-slate-500">{player?.hp} / {player?.maxHp} HP</div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
-                        <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${(player?.mp / player?.maxMp) * 100}%` }}></div>
+
+                    <div className="flex items-center gap-2 bg-cyber-dark/50 p-2 rounded border border-yellow-500/20">
+                        <div className="w-2 h-2 bg-yellow-400 rotate-45"></div>
+                        <span className="font-fira text-yellow-400 font-bold">{player?.gold} CR</span>
                     </div>
-                    <div className="text-center text-[10px] text-slate-500">{player?.mp} / {player?.maxMp} MP</div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1 relative">
-                        <div className="bg-purple-500 h-full transition-all duration-300" style={{ width: `${(player?.exp / player?.nextExp) * 100}%` }}></div>
+
+                    <div className="space-y-3 mt-4">
+                        <ProgressBar value={player?.hp} max={player?.maxHp} color="red-500" label="VITALITY" />
+                        <ProgressBar value={player?.mp} max={player?.maxMp} color="blue-500" label="ENERGY" />
+                        <ProgressBar value={player?.exp} max={player?.nextExp} color="purple-500" label="EXPERIENCE" />
                     </div>
-                    <div className="text-center text-[10px] text-slate-500">{player?.exp} / {player?.nextExp} EXP</div>
-                    <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-800">
-                        <div><div className="text-slate-500">{stats?.isMagic ? 'M.ATK' : 'ATK'}</div><div className="text-white">{stats?.atk} <span className="text-[10px] text-slate-400">({stats?.elem})</span></div></div>
-                        <div><div className="text-slate-500">DEF</div><div className="text-white">{stats?.def}</div></div>
+
+                    <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-cyber-blue/10">
+                        <div className="bg-cyber-dark/30 p-2 rounded border border-cyber-blue/10">
+                            <div className="text-[10px] text-cyber-blue/50 font-bold uppercase mb-1 flex items-center gap-1"><Sword size={10} /> {stats?.isMagic ? 'M.ATK' : 'ATK'}</div>
+                            <div className="text-white font-fira font-bold text-lg">{stats?.atk} <span className="text-[10px] text-cyber-purple font-normal">({stats?.elem})</span></div>
+                        </div>
+                        <div className="bg-cyber-dark/30 p-2 rounded border border-cyber-blue/10">
+                            <div className="text-[10px] text-cyber-blue/50 font-bold uppercase mb-1 flex items-center gap-1"><Shield size={10} /> DEF</div>
+                            <div className="text-white font-fira font-bold text-lg">{stats?.def}</div>
+                        </div>
                     </div>
-                    <div className="mt-2 text-[10px] text-slate-400 truncate">W: {player?.equip?.weapon?.name || '맨손'} {stats?.weaponHands === 2 ? '(2H)' : ''}</div>
-                    <div className="text-[10px] text-slate-400 truncate">O: {player?.equip?.offhand?.name || '---'}</div>
-                    <div className="text-[10px] text-slate-400 truncate">A: {player?.equip?.armor?.name || '평상복'}</div>
+
+                    <div className="mt-4 space-y-1 text-xs font-fira text-cyber-blue/60 border-t border-cyber-blue/10 pt-2">
+                        <div className="flex justify-between"><span>WPN:</span> <span className="text-white">{player?.equip?.weapon?.name || 'UNARMED'} {stats?.weaponHands === 2 ? '(2H)' : ''}</span></div>
+                        <div className="flex justify-between"><span>SUB:</span> <span className="text-white">{player?.equip?.offhand?.name || '---'}</span></div>
+                        <div className="flex justify-between"><span>ARM:</span> <span className="text-white">{player?.equip?.armor?.name || 'CIVILIAN'}</span></div>
+                    </div>
                 </div>
             </div>
 
             {/* TABS */}
-            <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-lg flex-1 overflow-hidden flex flex-col">
-                <div className="flex gap-4 mb-3 border-b border-slate-700 pb-2">
-                    {['inventory', 'quest', 'system'].map(tab => (
-                        <button key={tab} onClick={() => setSideTab(tab)} className={`text-xs font-bold uppercase ${sideTab === tab ? 'text-indigo-400' : 'text-slate-500'}`}>{tab}</button>
+            <div className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 overflow-hidden flex flex-col shadow-neon-blue/10">
+                <div className="flex gap-2 mb-4 border-b border-cyber-blue/20 pb-2">
+                    {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'system', icon: Zap }].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setSideTab(tab.id)}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold font-rajdhani uppercase tracking-wider rounded-sm transition-all
+                                ${sideTab === tab.id
+                                    ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/50 shadow-[0_0_10px_rgba(0,204,255,0.2)]'
+                                    : 'text-cyber-blue/30 hover:text-cyber-blue/70 hover:bg-cyber-blue/5'}`}
+                        >
+                            <tab.icon size={14} />
+                            {tab.id}
+                        </button>
                     ))}
                 </div>
+
                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
                     {sideTab === 'inventory' && Object.entries(groupedInv).map(([name, count], i) => {
                         const item = player?.inv?.find(it => it.name === name);
                         if (!item) return null;
                         return (
-                            <div key={i} className="bg-slate-800/50 p-2 rounded border border-slate-700/50 flex justify-between items-center group">
-                                <span className={`text-sm ${item.tier >= 2 ? 'text-purple-300' : 'text-slate-300'}`}>{name} x{count}</span>
-                                <button onClick={() => actions.useItem(item)} className="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">사용</button>
+                            <div key={i} className="bg-cyber-dark/40 p-3 rounded-sm border border-cyber-blue/10 flex justify-between items-center group hover:border-cyber-green/50 hover:bg-cyber-green/5 transition-all cursor-pointer">
+                                <span className={`text-sm font-fira ${item.tier >= 2 ? 'text-cyber-purple drop-shadow-sm' : 'text-cyber-blue/80'}`}>{name} <span className="text-cyber-blue/30 text-xs">x{count}</span></span>
+                                <button onClick={() => actions.useItem(item)} className="text-[10px] bg-cyber-blue/10 hover:bg-cyber-blue/30 text-cyber-blue px-3 py-1.5 rounded-sm border border-cyber-blue/30 font-bold tracking-wider">USE</button>
                             </div>
                         );
                     })}
+
                     {sideTab === 'quest' && (
                         player?.quests?.length > 0 ? (
                             player.quests.map((pq, i) => {
@@ -178,50 +222,52 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 if (!qData) return null;
                                 const isComplete = pq.progress >= qData.goal;
                                 return (
-                                    <div key={i} className={`p-3 rounded border mb-2 ${isComplete ? 'bg-indigo-900/40 border-indigo-500' : 'bg-slate-800 border-slate-700'}`}>
+                                    <div key={i} className={`p-3 rounded-sm border mb-2 transition-all ${isComplete ? 'bg-cyber-green/10 border-cyber-green/50 shadow-[0_0_10px_rgba(0,255,157,0.1)]' : 'bg-cyber-dark/40 border-cyber-blue/10'}`}>
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <div className={`font-bold text-sm ${isComplete ? 'text-indigo-300' : 'text-slate-300'}`}>{qData.title}</div>
-                                                <div className="text-[10px] text-slate-400 mt-1">{qData.desc}</div>
+                                                <div className={`font-bold text-sm font-rajdhani ${isComplete ? 'text-cyber-green' : 'text-cyber-blue'}`}>{qData.title}</div>
+                                                <div className="text-[10px] text-cyber-blue/50 mt-1">{qData.desc}</div>
                                             </div>
                                             {isComplete ? (
-                                                <button onClick={() => actions.completeQuest(pq.id)} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded animate-pulse">완료</button>
+                                                <button onClick={() => actions.completeQuest(pq.id)} className="px-3 py-1 bg-cyber-green hover:bg-emerald-400 text-cyber-black font-bold text-xs rounded-sm animate-pulse shadow-neon-green">CLAIM REWARD</button>
                                             ) : (
-                                                <div className="text-xs text-slate-500">{pq.progress} / {qData.goal}</div>
+                                                <div className="text-xs text-cyber-blue/50 font-fira bg-cyber-black/50 px-2 py-0.5 rounded border border-cyber-blue/10">{pq.progress} / {qData.goal}</div>
                                             )}
                                         </div>
                                     </div>
                                 )
                             })
                         ) : (
-                            <div className="text-slate-500 text-center py-4">진행 중인 의뢰가 없습니다.</div>
+                            <div className="text-cyber-blue/30 text-center py-10 flex flex-col items-center gap-2">
+                                <Scroll size={24} className="opacity-20" />
+                                <span className="text-xs font-rajdhani tracking-widest">NO ACTIVE MISSIONS</span>
+                            </div>
                         )
                     )}
 
                     {sideTab === 'system' && (
                         <div className="space-y-4 p-2">
-                            <div className="text-xs text-slate-400 mb-2">
-                                <p>Session ID: {Date.now().toString(36).toUpperCase()}</p>
-                                <p>User ID: {actions.getUid()}</p>
-                                <p>Client Ver: v3.5 (Stable)</p>
+                            <div className="text-xs text-cyber-blue/40 mb-2 font-fira border-l-2 border-cyber-blue/10 pl-3">
+                                <p>SESSION: {Date.now().toString(36).toUpperCase()}</p>
+                                <p>UID: {actions.getUid()}</p>
+                                <p>BUILD: v3.5.0 (STABLE)</p>
                             </div>
 
                             {/* HONOR OF FAME */}
-                            <div className="bg-slate-900/80 p-3 rounded border border-yellow-900/30 mb-2">
-                                <div className="text-xs font-bold text-yellow-500 mb-2 flex items-center gap-2"><Crown size={12} /> 명예의 전당 (Top 10)</div>
-                                <div className="space-y-1">
+                            <div className="bg-cyber-black/40 p-3 rounded border border-yellow-500/20 mb-2 relative overflow-hidden">
+                                <div className="text-xs font-bold text-yellow-500 mb-3 flex items-center gap-2 font-rajdhani tracking-wider"><Crown size={12} /> HALL OF FAME</div>
+                                <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
                                     {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker, i) => (
-                                        <div key={i} className="flex justify-between text-[10px] text-slate-300 border-b border-slate-800/50 pb-1 last:border-0 hover:bg-slate-800/50 p-1 rounded transition-colors">
+                                        <div key={i} className="flex justify-between text-[10px] text-cyber-blue/70 border-b border-cyber-blue/5 pb-1 last:border-0 hover:bg-cyber-blue/5 p-1 rounded transition-colors font-fira">
                                             <span className="flex gap-2">
-                                                <span className={`w-3 text-center font-bold ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-slate-600'}`}>{i + 1}</span>
-                                                <span>{ranker.nickname} (Lv.{ranker.level})</span>
+                                                <span className={`w-4 text-center font-bold ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-slate-600'}`}>{i + 1}</span>
+                                                <span className="text-white">{ranker.nickname}</span>
                                             </span>
-                                            <span className="flex gap-2 items-center">
-                                                <span className="text-red-400 flex items-center gap-0.5"><Skull size={8} /> {ranker.totalKills}</span>
-                                                <span className="text-yellow-500 flex items-center gap-0.5"><Crown size={8} /> {ranker?.bossKills || 0}</span>
+                                            <span className="flex gap-3 items-center">
+                                                <span className="text-red-400 flex items-center gap-1"><Skull size={8} /> {ranker.totalKills}</span>
                                             </span>
                                         </div>
-                                    )) : <div className="text-[10px] text-slate-600 text-center">랭킹 정보 불러오는 중...</div>}
+                                    )) : <div className="text-xs text-cyber-blue/30 text-center font-fira animate-pulse">SYNCING NETWORK...</div>}
                                 </div>
                             </div>
 
@@ -242,65 +288,60 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                     };
                                     exportToJson(`aetheria_log_${Date.now()}.json`, exportData);
                                 }}
-                                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-3 rounded border border-slate-600 flex items-center justify-center gap-2"
+                                className="w-full bg-cyber-blue/10 hover:bg-cyber-blue/20 text-cyber-blue py-3 rounded-sm border border-cyber-blue/30 flex items-center justify-center gap-2 font-rajdhani font-bold tracking-wider transition-all hover:shadow-neon-blue"
                             >
-                                <Save size={16} /> <span>전투 기록 다운로드 (JSON)</span>
+                                <Save size={16} /> DATA DUMP (JSON)
                             </button>
-                            <div className="bg-slate-900 p-2 rounded text-[10px] text-slate-500">
-                                * 기록 다운로드는 현재 세션의 모든 이벤트와 선택, 전투 결과를 포함합니다. 클라우드 분석을 위해 주기적으로 백업하세요.
+                            <div className="bg-cyber-blue/5 p-2 rounded text-[10px] text-cyber-blue/40 border-l-2 border-cyber-blue/20">
+                                CAUTION: Data export includes sensitive mission logs. Use secure channels for transmission.
                             </div>
 
                             {/* ADMIN PANEL (Hidden) */}
                             {actions.isAdmin() && (
-                                <div className="bg-red-950/30 p-3 rounded border border-red-800/50 mt-4">
-                                    <div className="text-xs font-bold text-red-400 mb-2">🔐 운영자 패널</div>
-                                    <div className="text-[10px] text-slate-400 space-y-2">
+                                <div className="bg-red-950/20 p-3 rounded border border-red-500/30 mt-4">
+                                    <div className="text-xs font-bold text-red-400 mb-2 font-rajdhani flex items-center gap-2"><Shield size={12} /> ADMIN CONTROLS</div>
+                                    <div className="text-[10px] text-red-200/50 space-y-2 font-fira">
                                         <p>UID: {actions.getUid()}</p>
-                                        <p>Event Multiplier: {actions.liveConfig?.eventMultiplier || 1}x</p>
-                                        <button
-                                            onClick={async () => {
-                                                const newMult = prompt('새 경험치 배율 (1~5):', '1');
-                                                if (newMult) {
-                                                    const val = parseFloat(newMult);
-                                                    if (isNaN(val) || val < 1 || val > 5) {
-                                                        alert('⚠️ 배율은 1~5 사이여야 합니다.');
-                                                        return;
+                                        <p>Multiplier: {actions.liveConfig?.eventMultiplier || 1}x</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={async () => {
+                                                    const newMult = prompt('EXP Multiplier (1-5):', '1');
+                                                    if (newMult) {
+                                                        const val = parseFloat(newMult);
+                                                        if (isNaN(val) || val < 1 || val > 5) return;
+                                                        const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
+                                                        await setDoc(configRef, { config: { eventMultiplier: val } }, { merge: true });
                                                     }
-                                                    const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
-                                                    await setDoc(configRef, { config: { eventMultiplier: val } }, { merge: true });
-                                                }
-                                            }}
-                                            className="w-full bg-red-900 hover:bg-red-800 py-1 rounded text-white"
-                                        >
-                                            배율 변경
-                                        </button>
-                                        <button
-                                            onClick={async () => {
-                                                const newAnn = prompt('공지사항 (최대 100자):');
-                                                if (newAnn !== null) {
-                                                    if (newAnn.length > 100) {
-                                                        alert('⚠️ 공지는 100자 이하로 작성해주세요.');
-                                                        return;
+                                                }}
+                                                className="bg-red-900/50 hover:bg-red-800/50 py-1 rounded text-white border border-red-500/30"
+                                            >
+                                                SET MULTIPLIER
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    const newAnn = prompt('Announcement (Max 100 chars):');
+                                                    if (newAnn) {
+                                                        const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
+                                                        await setDoc(configRef, { config: { announcement: newAnn } }, { merge: true });
                                                     }
-                                                    const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
-                                                    await setDoc(configRef, { config: { announcement: newAnn } }, { merge: true });
-                                                }
-                                            }}
-                                            className="w-full bg-red-900 hover:bg-red-800 py-1 rounded text-white"
-                                        >
-                                            공지 설정
-                                        </button>
+                                                }}
+                                                className="bg-red-900/50 hover:bg-red-800/50 py-1 rounded text-white border border-red-500/30"
+                                            >
+                                                BROADCAST
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
                             {/* FEEDBACK FORM */}
-                            <div className="bg-slate-900/80 p-3 rounded border border-slate-700 mt-4">
-                                <div className="text-xs font-bold text-slate-400 mb-2">📨 신고/제안</div>
+                            <div className="bg-cyber-black/40 p-3 rounded border border-cyber-green/20 mt-4">
+                                <div className="text-xs font-bold text-cyber-green/70 mb-2 font-rajdhani">System Feedback</div>
                                 <textarea
                                     id="feedbackInput"
-                                    placeholder="버그 신고, 기능 제안 등을 작성해주세요..."
-                                    className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-slate-300 h-20 resize-none focus:outline-none focus:border-indigo-500"
+                                    placeholder="Report anomalies or suggest upgrades..."
+                                    className="w-full bg-cyber-black/80 border border-cyber-green/20 rounded p-2 text-xs text-cyber-blue/80 h-20 resize-none focus:outline-none focus:border-cyber-green/50 placeholder:text-cyber-green/20 font-fira"
                                     maxLength={500}
                                 />
                                 <button
@@ -310,7 +351,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                         const validation = FeedbackValidator.validate(validationInput);
                                         if (!validation.valid) return alert(validation.error);
                                         const msg = input?.value?.trim();
-                                        if (!msg) return alert('내용을 입력해주세요.');
+                                        if (!msg) return alert('Input required.');
                                         try {
                                             const feedbackCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'feedback');
                                             await addDoc(feedbackCol, {
@@ -322,14 +363,14 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                             });
                                             FeedbackValidator.markSubmitted();
                                             input.value = '';
-                                            alert('✅ 제출 완료! 감사합니다.');
+                                            alert('Access granted. Transmission complete.');
                                         } catch {
-                                            alert('❌ 제출 실패. 다시 시도해주세요.');
+                                            alert('Access denied. Transmission failed.');
                                         }
                                     }}
-                                    className="w-full mt-2 bg-indigo-800 hover:bg-indigo-700 py-2 rounded text-white text-xs"
+                                    className="w-full mt-2 bg-cyber-green/10 hover:bg-cyber-green/20 py-2 rounded text-cyber-green text-xs border border-cyber-green/30 font-bold tracking-wider"
                                 >
-                                    제출하기
+                                    TRANSMIT
                                 </button>
                             </div>
                         </div>

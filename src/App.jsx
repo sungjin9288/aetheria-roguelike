@@ -730,10 +730,15 @@ function App() {
 
   if (engine.bootStage !== 'ready') {
     return (
-      <div className="flex h-screen w-full bg-slate-950 items-center justify-center text-slate-400">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600 mb-4">AETHERIA</h1>
-          <p className="animate-pulse">초기화 중... ({engine.bootStage})</p>
+      <div className="flex h-screen w-full bg-cyber-black items-center justify-center text-cyber-blue font-rajdhani relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-cyber-black via-transparent to-cyber-black pointer-events-none"></div>
+        <div className="text-center z-10 p-8 border border-cyber-blue/30 bg-cyber-slate/50 backdrop-blur-md rounded-lg shadow-neon-blue">
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue to-cyber-purple mb-4 animate-pulse">AETHERIA</h1>
+          <div className="flex items-center gap-2 text-cyber-green">
+            <span className="w-2 h-2 bg-cyber-green rounded-full animate-ping"></span>
+            <p className="tracking-widest text-sm">SYSTEM INITIALIZING... ({engine.bootStage})</p>
+          </div>
         </div>
       </div>
     );
@@ -742,17 +747,26 @@ function App() {
   if (!engine.player.name || engine.player.name === '방랑자' || !engine.player.name.trim()) {
     return (
       <MainLayout visualEffect={null}>
-        <div className="flex flex-col items-center justify-center h-full space-y-4">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">AETHERIA</h1>
-          <p className="text-slate-400">당신의 이름을 입력하세요</p>
-          <input
-            type="text"
-            className="bg-slate-800 border border-slate-600 p-2 rounded text-white text-center"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') engine.actions.start(e.target.value);
-            }}
-            autoFocus
-          />
+        <div className="flex flex-col items-center justify-center h-full space-y-6 relative z-10">
+          <div className="p-10 border border-cyber-purple/30 bg-cyber-slate/80 backdrop-blur-xl rounded-xl shadow-neon-purple max-w-md w-full text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-purple to-transparent animate-scanline"></div>
+            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyber-blue via-cyber-purple to-cyber-pink mb-2 font-rajdhani">AETHERIA</h1>
+            <p className="text-cyber-blue/70 mb-8 font-fira text-xs tracking-[0.2em]">NEURAL LINK ESTABLISHED</p>
+
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="ENTER AGENT NAME"
+                className="w-full bg-cyber-dark/50 border border-cyber-blue/50 p-4 rounded text-cyber-green text-center font-rajdhani text-xl focus:outline-none focus:border-cyber-pink focus:shadow-neon-pink transition-all placeholder:text-cyber-blue/30"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') engine.actions.start(e.target.value);
+                }}
+                autoFocus
+              />
+              <div className="absolute inset-0 border border-transparent group-hover:border-cyber-blue/20 rounded pointer-events-none transition-all"></div>
+            </div>
+            <p className="text-cyber-green/50 text-[10px] mt-4 font-fira animate-pulse">PRESS ENTER TO CONNECT</p>
+          </div>
         </div>
       </MainLayout>
     );
@@ -760,17 +774,17 @@ function App() {
 
   return (
     <MainLayout visualEffect={engine.visualEffect}>
-      <header className="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+      <header className="flex justify-between items-center mb-4 pb-2 border-b border-cyber-blue/20 bg-cyber-slate/30 backdrop-blur-sm px-4 -mx-4 pt-2 supports-[backdrop-filter]:bg-cyber-slate/10">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
-            AETHERIA <span className="text-xs text-slate-500 font-normal">v{CONSTANTS.DATA_VERSION}</span>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-cyber-green to-cyber-blue bg-clip-text text-transparent flex items-center gap-2 font-rajdhani">
+            AETHERIA <span className="text-xs text-cyber-blue/50 font-normal border border-cyber-blue/30 px-1 rounded">v{CONSTANTS.DATA_VERSION}</span>
           </h1>
-          <div className="hidden md:flex items-center bg-slate-900 border border-slate-700 rounded px-2 py-1 gap-2 w-64">
-            <TerminalIcon size={12} className="text-slate-500" />
+          <div className="hidden md:flex items-center bg-cyber-dark/80 border border-cyber-blue/30 rounded px-3 py-1 gap-2 w-80 shadow-inner group focus-within:border-cyber-green/50 focus-within:shadow-neon-green transition-all">
+            <TerminalIcon size={14} className="text-cyber-green group-focus-within:animate-pulse" />
             <input
               type="text"
-              placeholder="CLI command (/help)"
-              className="bg-transparent text-xs text-slate-300 focus:outline-none w-full font-mono"
+              placeholder="ENTER COMMAND (/help)"
+              className="bg-transparent text-sm text-cyber-green focus:outline-none w-full font-fira placeholder:text-cyber-green/30"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   engine.handleCommand(e.target.value);
@@ -781,13 +795,17 @@ function App() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {engine.syncStatus === 'synced' && <Cloud size={14} className="text-emerald-500" />}
-          {engine.syncStatus === 'syncing' && <Cloud size={14} className="text-yellow-500 animate-pulse" />}
-          {engine.syncStatus === 'offline' && <WifiOff size={14} className="text-red-500" />}
+          <div className="flex items-center gap-2 text-xs font-fira text-cyber-blue/70 bg-cyber-dark/50 px-2 py-1 rounded border border-cyber-blue/10">
+            <span className={`w-2 h-2 rounded-full ${engine.syncStatus === 'synced' ? 'bg-cyber-green shadow-neon-green' : engine.syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500 shadow-neon-pink'}`}></span>
+            {engine.syncStatus === 'synced' ? 'ONLINE' : engine.syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE'}
+          </div>
         </div>
       </header>
 
-      <div className="flex-1 overflow-hidden flex gap-4">
+      {/* Grid overlay for aesthetic */}
+      <div className="fixed inset-0 pointer-events-none z-0" style={{ backgroundImage: 'linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 157, 0.03) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+
+      <div className="flex-1 overflow-hidden flex gap-4 relative z-10">
         <TerminalView logs={engine.logs} gameState={engine.gameState} onCommand={engine.handleCommand} />
         <Dashboard
           player={engine.player}

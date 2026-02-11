@@ -2,12 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 검은 배경을 기본으로 설정하여 게임 분위기 조성 */
-body {
-  background-color: #020617;
-  /* slate-950 */
-  color: #e2e8f0;
-  /* slate-200 */
+@layer base {
+  body {
+    @apply bg-cyber-black text-slate-200 font-rajdhani overflow-hidden selection:bg-cyber-pink selection:text-white;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-wider uppercase;
+  }
+  code, pre, .font-mono {
+    @apply font-fira;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-cyber-dark;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-cyber-slate rounded;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-cyber-purple;
 }
 
 /* ============================================

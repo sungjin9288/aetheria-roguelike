@@ -24,44 +24,44 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
 
   if (gameState === 'combat') {
     return (
-      <div className="space-y-2 mt-4">
-        <div className="text-xs text-slate-400">
+      <div className="space-y-3 mt-4">
+        <div className="text-xs text-cyber-blue/60 font-fira text-center uppercase tracking-widest">
           {selectedSkill ? (
             <span>
-              Skill: <span className="text-blue-300">{selectedSkill.name}</span> / MP {selectedSkill.mp || 0} / CD {skillCooldown}
+              Skill: <span className="text-cyber-purple font-bold">{selectedSkill.name}</span> / MP {selectedSkill.mp || 0} / CD {skillCooldown}
             </span>
           ) : (
-            <span className="text-slate-500">No skill</span>
+            <span className="text-slate-500">NO SKILL SELECTED</span>
           )}
         </div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-3">
           <button
             disabled={isAiThinking}
             onClick={() => actions.combat('attack')}
-            className="bg-red-900/40 hover:bg-red-800 border border-red-700 p-4 rounded text-red-200 font-bold flex flex-col items-center disabled:opacity-50"
+            className="bg-red-900/20 hover:bg-red-900/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] border border-red-500/50 p-4 rounded-sm text-red-400 font-bold flex flex-col items-center disabled:opacity-50 transition-all group"
           >
-            <Sword /> 공격
+            <Sword className="group-hover:scale-110 transition-transform" /> <span className="font-rajdhani mt-1">ATTACK</span>
           </button>
           <button
             disabled={isAiThinking || !selectedSkill}
             onClick={() => actions.combat('skill')}
-            className="bg-blue-900/40 hover:bg-blue-800 border border-blue-700 p-4 rounded text-blue-200 font-bold flex flex-col items-center disabled:opacity-50"
+            className="bg-cyber-blue/20 hover:bg-cyber-blue/40 hover:shadow-neon-blue border border-cyber-blue/50 p-4 rounded-sm text-cyber-blue font-bold flex flex-col items-center disabled:opacity-50 transition-all group"
           >
-            <Zap /> 스킬
+            <Zap className="group-hover:scale-110 transition-transform" /> <span className="font-rajdhani mt-1">SKILL</span>
           </button>
           <button
             disabled={isAiThinking || !selectedSkill}
             onClick={() => actions.cycleSkill(1)}
-            className="bg-indigo-900/40 hover:bg-indigo-800 border border-indigo-700 p-4 rounded text-indigo-200 font-bold flex flex-col items-center disabled:opacity-50"
+            className="bg-cyber-purple/20 hover:bg-cyber-purple/40 hover:shadow-neon-purple border border-cyber-purple/50 p-4 rounded-sm text-cyber-purple font-bold flex flex-col items-center disabled:opacity-50 transition-all group"
           >
-            <RotateCw /> 변경
+            <RotateCw className="group-hover:rotate-180 transition-transform duration-500" /> <span className="font-rajdhani mt-1">SWAP</span>
           </button>
           <button
             disabled={isAiThinking}
             onClick={() => actions.combat('escape')}
-            className="bg-slate-800 hover:bg-slate-700 border border-slate-600 p-4 rounded text-slate-300 font-bold flex flex-col items-center disabled:opacity-50"
+            className="bg-cyber-dark/60 hover:bg-cyber-dark/80 border border-cyber-green/30 p-4 rounded-sm text-cyber-green/70 font-bold flex flex-col items-center disabled:opacity-50 transition-all group"
           >
-            <ArrowRight /> 도주
+            <ArrowRight className="group-hover:translate-x-1 transition-transform" /> <span className="font-rajdhani mt-1">ESCAPE</span>
           </button>
         </div>
       </div>
@@ -70,8 +70,8 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
 
   if (gameState === 'event' && isAiThinking) {
     return (
-      <div className="mt-4 p-4 border border-slate-700 rounded bg-slate-900 text-center animate-pulse text-purple-400">
-        이벤트를 생성하고 있습니다...
+      <div className="mt-4 p-6 border border-cyber-purple/50 rounded-lg bg-cyber-black/80 text-center animate-pulse text-cyber-purple font-rajdhani tracking-widest shadow-neon-purple">
+        NEURAL LINK ACTIVE... PROCESSING SCENARIO...
       </div>
     );
   }
@@ -88,24 +88,24 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
     const current = DB.CLASSES[player.job];
     const avail = current.next || [];
     return (
-      <div className="absolute inset-x-4 bottom-4 top-20 bg-slate-900/95 z-20 p-4 rounded border border-slate-700 flex flex-col items-center justify-center">
-        <h2 className="text-2xl text-purple-400 font-bold mb-4">전직 선택</h2>
-        <div className="flex gap-2 flex-wrap justify-center">
+      <div className="absolute inset-x-4 bottom-4 top-20 bg-cyber-black/95 z-20 p-6 rounded-lg border border-cyber-purple/50 flex flex-col items-center justify-center shadow-neon-purple backdrop-blur-xl">
+        <h2 className="text-3xl text-cyber-purple font-bold mb-6 font-rajdhani uppercase tracking-[0.2em] drop-shadow-md">Class Advancement</h2>
+        <div className="flex gap-4 flex-wrap justify-center">
           {avail.map((job) => (
             <button
               key={job}
               onClick={() => actions.jobChange(job)}
               disabled={player.level < DB.CLASSES[job].reqLv}
-              className="p-4 bg-slate-800 border border-purple-500 rounded hover:bg-slate-700 disabled:opacity-50"
+              className="p-6 bg-cyber-dark/80 border border-cyber-purple/30 rounded-sm hover:bg-cyber-purple/10 hover:border-cyber-purple hover:shadow-neon-purple disabled:opacity-30 disabled:hover:shadow-none transition-all w-48 group"
             >
-              <div className="text-lg font-bold">{job}</div>
-              <div className="text-xs">Lv.{DB.CLASSES[job].reqLv} 필요</div>
+              <div className="text-xl font-bold text-white group-hover:text-cyber-purple transition-colors">{job}</div>
+              <div className="text-xs text-cyber-blue font-fira mt-2">REQ: Lv.{DB.CLASSES[job].reqLv}</div>
             </button>
           ))}
-          {avail.length === 0 && <div className="text-slate-500">더 이상 전직할 수 없습니다.</div>}
+          {avail.length === 0 && <div className="text-cyber-blue/50 font-rajdhani">MAXIMUM POTENTIAL REACHED</div>}
         </div>
-        <button onClick={() => setGameState('idle')} className="mt-4 text-slate-400">
-          돌아가기
+        <button onClick={() => setGameState('idle')} className="mt-8 text-cyber-blue/50 hover:text-cyber-blue font-fira text-xs uppercase tracking-widest hover:underline">
+          [ ABORT SEQUENCE ]
         </button>
       </div>
     );
@@ -113,29 +113,31 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
 
   if (gameState === 'quest_board') {
     return (
-      <div className="absolute inset-x-4 bottom-4 top-20 bg-slate-900/95 z-20 p-4 rounded border border-slate-700 flex flex-col">
-        <h2 className="text-xl text-indigo-400 font-bold mb-4">퀘스트 게시판</h2>
-        <div className="flex-1 overflow-y-auto space-y-2">
+      <div className="absolute inset-x-4 bottom-4 top-20 bg-cyber-black/95 z-20 p-4 rounded-lg border border-cyber-blue/50 flex flex-col shadow-neon-blue backdrop-blur-xl">
+        <h2 className="text-2xl text-cyber-blue font-bold mb-4 font-rajdhani uppercase tracking-wider flex items-center gap-2">
+          <ScrollText /> Mission Terminal
+        </h2>
+        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-2">
           {DB.QUESTS.map((q) => (
-            <div key={q.id} className="bg-slate-800 p-3 rounded flex justify-between items-center">
+            <div key={q.id} className="bg-cyber-dark/50 p-4 rounded-sm border border-cyber-blue/20 flex justify-between items-center group hover:border-cyber-blue/50 transition-colors">
               <div>
-                <div className="font-bold">
-                  {q.title} <span className="text-xs text-slate-500">Lv.{q.minLv}+</span>
+                <div className="font-bold text-white font-rajdhani text-lg group-hover:text-cyber-blue transition-colors">
+                  {q.title} <span className="text-xs text-cyber-purple font-fira ml-2">Lv.{q.minLv}+</span>
                 </div>
-                <div className="text-xs text-slate-400">{q.desc}</div>
+                <div className="text-xs text-cyber-blue/60 font-fira">{q.desc}</div>
               </div>
               <button
                 onClick={() => actions.acceptQuest(q.id)}
                 disabled={player.quests.some((pq) => pq.id === q.id)}
-                className="px-3 py-1 bg-indigo-600 rounded disabled:bg-slate-700 text-xs"
+                className="px-4 py-2 bg-cyber-blue/20 border border-cyber-blue/50 rounded-sm disabled:opacity-30 disabled:border-slate-700 text-cyber-blue text-xs font-bold hover:bg-cyber-blue/40 hover:shadow-neon-blue transition-all"
               >
-                {player.quests.some((pq) => pq.id === q.id) ? '수락됨' : '수락'}
+                {player.quests.some((pq) => pq.id === q.id) ? 'ACCEPTED' : 'ACCEPT'}
               </button>
             </div>
           ))}
         </div>
-        <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-slate-700 py-3 rounded">
-          돌아가기
+        <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-cyber-dark text-cyber-blue/50 hover:text-cyber-blue py-3 rounded-sm border border-cyber-blue/20 hover:border-cyber-blue/50 font-rajdhani font-bold tracking-widest transition-all">
+          EXIT TERMINAL
         </button>
       </div>
     );
@@ -144,37 +146,39 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
   if (gameState === 'crafting') {
     const recipes = DB.ITEMS.recipes || [];
     return (
-      <div className="absolute inset-x-4 bottom-4 top-20 bg-slate-900/95 z-20 p-4 rounded border border-amber-700 flex flex-col">
-        <h2 className="text-xl text-amber-400 font-bold mb-4">제작</h2>
-        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
+      <div className="absolute inset-x-4 bottom-4 top-20 bg-cyber-black/95 z-20 p-4 rounded-lg border border-orange-500/50 flex flex-col shadow-[0_0_20px_rgba(249,115,22,0.2)] backdrop-blur-xl">
+        <h2 className="text-2xl text-orange-500 font-bold mb-4 font-rajdhani uppercase tracking-wider flex items-center gap-2">
+          <Hammer /> Fabrication Unit
+        </h2>
+        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-2">
           {recipes.map((recipe) => {
             const canCraft =
               player.gold >= recipe.gold &&
               recipe.inputs.every((input) => player.inv.filter((i) => i.name === input.name).length >= input.qty);
             return (
-              <div key={recipe.id} className={`bg-slate-800 p-3 rounded border ${canCraft ? 'border-amber-500' : 'border-slate-700'}`}>
+              <div key={recipe.id} className={`bg-cyber-dark/50 p-4 rounded-sm border ${canCraft ? 'border-orange-500/50' : 'border-slate-800'} transition-colors`}>
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="font-bold text-amber-200">{recipe.name}</div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      재료: {recipe.inputs.map((i) => `${i.name} x${i.qty}`).join(', ')} | {recipe.gold}G
+                    <div className={`font-bold font-rajdhani text-lg ${canCraft ? 'text-orange-200' : 'text-slate-500'}`}>{recipe.name}</div>
+                    <div className="text-xs text-cyber-blue/50 mt-1 font-fira">
+                      REQ: {recipe.inputs.map((i) => `${i.name} x${i.qty}`).join(', ')} | COST: <span className="text-yellow-500">{recipe.gold} CR</span>
                     </div>
                   </div>
                   <button
                     onClick={() => actions.craft(recipe.id)}
                     disabled={!canCraft}
-                    className="px-4 py-2 bg-amber-600 rounded disabled:bg-slate-700 disabled:text-slate-500 text-sm font-bold hover:bg-amber-500"
+                    className="px-6 py-2 bg-orange-900/40 border border-orange-600 rounded-sm disabled:opacity-30 disabled:border-slate-700 text-sm font-bold text-orange-500 hover:bg-orange-800/50 hover:shadow-[0_0_10px_rgba(249,115,22,0.4)] transition-all uppercase tracking-wider"
                   >
-                    제작
+                    FABRICATE
                   </button>
                 </div>
               </div>
             );
           })}
-          {recipes.length === 0 && <div className="text-slate-500 text-center py-4">레시피가 없습니다.</div>}
+          {recipes.length === 0 && <div className="text-cyber-blue/30 text-center py-4 font-rajdhani">NO BLUEPRINTS AVAILABLE</div>}
         </div>
-        <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-slate-700 py-3 rounded">
-          돌아가기
+        <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-cyber-dark text-orange-500/50 hover:text-orange-500 py-3 rounded-sm border border-orange-500/20 hover:border-orange-500/50 font-rajdhani font-bold tracking-widest transition-all">
+          DISCONNECT
         </button>
       </div>
     );
@@ -189,30 +193,30 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
               key={exit}
               disabled={isAiThinking}
               onClick={() => actions.move(exit)}
-              className="px-4 py-3 bg-emerald-900/40 border border-emerald-700 rounded text-emerald-200 flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-4 bg-cyber-dark/80 border border-cyber-green/50 rounded-sm text-cyber-green hover:bg-cyber-green/10 hover:shadow-neon-green flex items-center gap-2 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all"
             >
-              <MapIcon size={14} /> {exit}
+              <MapIcon size={16} /> {exit}
             </button>
           ))}
-          <button onClick={() => setGameState('idle')} className="px-4 py-3 bg-slate-800 rounded">
-            취소
+          <button onClick={() => setGameState('idle')} className="px-6 py-4 bg-red-900/20 border border-red-500/30 text-red-400 rounded-sm hover:bg-red-900/40 font-bold uppercase transition-all">
+            CANCEL
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-3">
           <button
             disabled={isAiThinking}
             onClick={actions.explore}
-            className="bg-slate-800 hover:bg-slate-700 border border-slate-600 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+            className="bg-cyber-dark/60 hover:bg-cyber-blue/10 border border-cyber-blue/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 hover:shadow-neon-blue transition-all group"
           >
-            <MapIcon size={16} /> <span className="text-[10px]">탐색</span>
+            <MapIcon size={20} className="text-cyber-blue group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-cyber-blue/80">EXPLORE</span>
           </button>
           <button
             disabled={isAiThinking}
             onClick={() => setGameState('moving')}
-            className="bg-slate-800 hover:bg-slate-700 border border-slate-600 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+            className="bg-cyber-dark/60 hover:bg-cyber-green/10 border border-cyber-green/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 hover:shadow-neon-green transition-all group"
           >
-            <ArrowRight size={16} /> <span className="text-[10px]">이동</span>
+            <ArrowRight size={20} className="text-cyber-green group-hover:translate-x-1 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-cyber-green/80">MOVE</span>
           </button>
           {mapData.type === 'safe' && (
             <>
@@ -222,37 +226,37 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
                   actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
                   actions.setGameState('shop');
                 }}
-                className="bg-yellow-900/30 hover:bg-yellow-800 border border-yellow-700 text-yellow-200 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+                className="bg-cyber-dark/60 hover:bg-yellow-900/20 border border-yellow-500/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 transition-all group"
               >
-                <ShoppingBag size={16} /> <span className="text-[10px]">상점</span>
+                <ShoppingBag size={20} className="text-yellow-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-yellow-500/80">MARKET</span>
               </button>
               <button
                 disabled={isAiThinking}
                 onClick={actions.rest}
-                className="bg-emerald-900/30 hover:bg-emerald-800 border border-emerald-700 text-emerald-200 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+                className="bg-cyber-dark/60 hover:bg-emerald-900/20 border border-emerald-500/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 transition-all group"
               >
-                <Moon size={16} /> <span className="text-[10px]">휴식</span>
+                <Moon size={20} className="text-emerald-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-emerald-500/80">REST</span>
               </button>
               <button
                 disabled={isAiThinking}
                 onClick={() => setGameState('job_change')}
-                className="bg-purple-900/40 hover:bg-purple-800 border border-purple-700 text-purple-200 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+                className="bg-cyber-dark/60 hover:bg-purple-900/20 border border-purple-500/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 transition-all group"
               >
-                <GraduationCap size={16} /> <span className="text-[10px]">전직</span>
+                <GraduationCap size={20} className="text-purple-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-purple-500/80">CLASS</span>
               </button>
               <button
                 disabled={isAiThinking}
                 onClick={() => setGameState('quest_board')}
-                className="bg-indigo-900/40 hover:bg-indigo-800 border border-indigo-700 text-indigo-200 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+                className="bg-cyber-dark/60 hover:bg-indigo-900/20 border border-indigo-500/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 transition-all group"
               >
-                <ScrollText size={16} /> <span className="text-[10px]">퀘스트</span>
+                <ScrollText size={20} className="text-indigo-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-indigo-500/80">QUESTS</span>
               </button>
               <button
                 disabled={isAiThinking}
                 onClick={() => setGameState('crafting')}
-                className="bg-amber-900/40 hover:bg-amber-800 border border-amber-700 text-amber-200 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+                className="bg-cyber-dark/60 hover:bg-orange-900/20 border border-orange-500/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 transition-all group"
               >
-                <Hammer size={16} /> <span className="text-[10px]">제작</span>
+                <Hammer size={20} className="text-orange-500 group-hover:rotate-12 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-orange-500/80">CRAFT</span>
               </button>
             </>
           )}
@@ -260,17 +264,17 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
             <button
               disabled={isAiThinking}
               onClick={actions.lootGrave}
-              className="bg-slate-700 text-slate-300 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+              className="bg-slate-800/60 hover:bg-slate-700 border border-slate-500/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 transition-all group"
             >
-              <Ghost size={16} /> <span className="text-[10px]">유해 회수</span>
+              <Ghost size={20} className="text-slate-400 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-slate-400">RECOVER</span>
             </button>
           )}
           <button
             disabled={isAiThinking}
             onClick={actions.reset}
-            className="col-start-4 bg-red-950/30 text-red-500 p-2 rounded flex flex-col items-center gap-1 disabled:opacity-50"
+            className="col-start-4 bg-red-950/20 hover:bg-red-900/40 border border-red-800/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 transition-all group"
           >
-            <X size={16} /> <span className="text-[10px]">초기화</span>
+            <X size={20} className="text-red-600 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-red-600/80">RESET</span>
           </button>
         </div>
       )}
