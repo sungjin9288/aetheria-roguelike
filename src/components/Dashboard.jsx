@@ -34,13 +34,13 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
             <div className="md:hidden mt-3 bg-cyber-black/80 backdrop-blur-md border border-cyber-blue/30 rounded-lg p-3 space-y-3 shadow-neon-blue/20">
                 <div>
                     <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-2 flex items-center gap-2 tracking-widest">
-                        <User size={14} /> AGENT STATUS
+                        <User size={14} /> AGENT: {player?.name}
                     </h3>
                     <div className="grid grid-cols-2 gap-2 text-xs font-fira text-cyber-blue/80 mb-2">
-                        <div>Lv.{player?.level} <span className="text-cyber-purple">{player?.job}</span></div>
+                        <div><span className="text-cyber-purple">{player?.job}</span> <span className="text-slate-500">Lv.{player?.level}</span></div>
                         <div className="text-right text-yellow-400 font-bold">{player?.gold} CR</div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <ProgressBar value={player?.hp} max={player?.maxHp} color="red-500" label="VIT (HP)" />
                         <ProgressBar value={player?.mp} max={player?.maxMp} color="blue-500" label="NRG (MP)" />
                     </div>
@@ -149,18 +149,47 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     AGENT STATUS
                 </h3>
 
-                <div className="space-y-3">
-                    <div className="flex justify-between items-end font-rajdhani">
-                        <span className="text-xl text-white font-bold">{player?.job}</span>
-                        <span className="text-sm text-cyber-blue">Lv.{player?.level}</span>
+                <div className="space-y-4">
+                    <div className="flex flex-col font-rajdhani">
+                        <span className="text-2xl text-white font-bold tracking-wider">{player?.name}</span>
+                        <div className="flex justify-between items-center text-xs mt-1">
+                            <span className="text-cyber-purple font-fira uppercase bg-cyber-purple/10 px-2 py-0.5 rounded border border-cyber-purple/30">{player?.job}</span>
+                            <span className="text-cyber-blue">LEVEL {player?.level}</span>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-cyber-dark/50 p-2 rounded border border-yellow-500/20">
+                    {/* AVATAR DISPLAY */}
+                    <div className="relative w-full aspect-square bg-cyber-dark/50 rounded-lg border border-cyber-blue/30 overflow-hidden shadow-[0_0_20px_rgba(0,204,255,0.1)] group">
+                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
+                        <img
+                            src={`/assets/avatar_${player?.gender || 'male'}.svg`}
+                            alt="Avatar"
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
+                        />
+                        {/* Scanline overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyber-blue/5 to-transparent animate-scanline pointer-events-none"></div>
+
+                        {/* Equipment Overlay (Simple Icons for now) */}
+                        <div className="absolute bottom-2 right-2 flex gap-1">
+                            {player?.equip?.weapon && (
+                                <div className="p-1 bg-black/60 rounded border border-cyber-green/50" title={player.equip.weapon.name}>
+                                    <Sword size={12} className="text-cyber-green" />
+                                </div>
+                            )}
+                            {player?.equip?.armor && (
+                                <div className="p-1 bg-black/60 rounded border border-cyber-purple/50" title={player.equip.armor.name}>
+                                    <Shield size={12} className="text-cyber-purple" />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-cyber-dark/80 p-2 rounded border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
                         <div className="w-2 h-2 bg-yellow-400 rotate-45"></div>
-                        <span className="font-fira text-yellow-400 font-bold">{player?.gold} CR</span>
+                        <span className="font-fira text-yellow-400 font-bold tracking-wider">{player?.gold} CR</span>
                     </div>
 
-                    <div className="space-y-3 mt-4">
+                    <div className="space-y-4 mt-2">
                         <ProgressBar value={player?.hp} max={player?.maxHp} color="red-500" label="VITALITY" />
                         <ProgressBar value={player?.mp} max={player?.maxMp} color="blue-500" label="ENERGY" />
                         <ProgressBar value={player?.exp} max={player?.nextExp} color="purple-500" label="EXPERIENCE" />

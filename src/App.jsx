@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useReducer, useMemo, useRef, useCallback, useState } from 'react';
 import { Cloud, WifiOff, Terminal as TerminalIcon } from 'lucide-react';
 import {
   onSnapshot,
@@ -251,9 +251,9 @@ const useGameEngine = () => {
         if (grave && grave.loc === loc) addLog('event', '근처에서 당신의 유해를 발견했습니다.');
       },
 
-      start: (name) => {
+      start: (name, gender = 'male') => {
         if (!name.trim()) return;
-        dispatch({ type: 'SET_PLAYER', payload: { name: name.trim() } });
+        dispatch({ type: 'SET_PLAYER', payload: { name: name.trim(), gender } });
         addLog('system', `환영합니다, ${name}!`);
       },
 
@@ -725,6 +725,63 @@ const useGameEngine = () => {
   };
 };
 
+const IntroScreen = ({ onStart }) => {
+  const [name, setName] = useState('');
+  const [gender, setGender] = useState('male');
+
+  const handleSubmit = () => {
+    if (name.trim()) onStart(name, gender);
+  };
+
+  return (
+    <div className="p-10 border border-cyber-purple/30 bg-cyber-slate/80 backdrop-blur-xl rounded-xl shadow-neon-purple max-w-md w-full text-center relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-purple to-transparent animate-scanline"></div>
+      <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyber-blue via-cyber-purple to-cyber-pink mb-2 font-rajdhani">AETHERIA</h1>
+      <p className="text-cyber-blue/70 mb-8 font-fira text-xs tracking-[0.2em] relative z-10">NEURAL LINK ESTABLISHED</p>
+
+      <div className="space-y-6 relative z-10">
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={() => setGender('male')}
+            className={`px-6 py-2 rounded-lg font-rajdhani font-bold border ${gender === 'male' ? 'bg-cyber-blue/20 border-cyber-blue text-cyber-blue shadow-neon-blue' : 'bg-transparent border-slate-700 text-slate-500 hover:border-slate-500'}`}
+          >
+            MALE
+          </button>
+          <button
+            onClick={() => setGender('female')}
+            className={`px-6 py-2 rounded-lg font-rajdhani font-bold border ${gender === 'female' ? 'bg-cyber-pink/20 border-cyber-pink text-cyber-pink shadow-neon-pink' : 'bg-transparent border-slate-700 text-slate-500 hover:border-slate-500'}`}
+          >
+            FEMALE
+          </button>
+        </div>
+
+        <div className="relative group">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="ENTER AGENT NAME"
+            className="w-full bg-cyber-dark/50 border border-cyber-blue/50 p-4 rounded text-cyber-green text-center font-rajdhani text-xl focus:outline-none focus:border-cyber-pink focus:shadow-neon-pink transition-all placeholder:text-cyber-blue/30"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSubmit();
+            }}
+            autoFocus
+          />
+          <div className="absolute inset-0 border border-transparent group-hover:border-cyber-blue/20 rounded pointer-events-none transition-all"></div>
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={!name.trim()}
+          className="w-full py-3 bg-cyber-blue/10 border border-cyber-blue/50 text-cyber-blue font-rajdhani font-bold hover:bg-cyber-blue/20 hover:shadow-neon-blue disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          INITIALIZE CONNECTION
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const engine = useGameEngine();
 
@@ -748,25 +805,7 @@ function App() {
     return (
       <MainLayout visualEffect={null}>
         <div className="flex flex-col items-center justify-center h-full space-y-6 relative z-10">
-          <div className="p-10 border border-cyber-purple/30 bg-cyber-slate/80 backdrop-blur-xl rounded-xl shadow-neon-purple max-w-md w-full text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-purple to-transparent animate-scanline"></div>
-            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyber-blue via-cyber-purple to-cyber-pink mb-2 font-rajdhani">AETHERIA</h1>
-            <p className="text-cyber-blue/70 mb-8 font-fira text-xs tracking-[0.2em]">NEURAL LINK ESTABLISHED</p>
-
-            <div className="relative group">
-              <input
-                type="text"
-                placeholder="ENTER AGENT NAME"
-                className="w-full bg-cyber-dark/50 border border-cyber-blue/50 p-4 rounded text-cyber-green text-center font-rajdhani text-xl focus:outline-none focus:border-cyber-pink focus:shadow-neon-pink transition-all placeholder:text-cyber-blue/30"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') engine.actions.start(e.target.value);
-                }}
-                autoFocus
-              />
-              <div className="absolute inset-0 border border-transparent group-hover:border-cyber-blue/20 rounded pointer-events-none transition-all"></div>
-            </div>
-            <p className="text-cyber-green/50 text-[10px] mt-4 font-fira animate-pulse">PRESS ENTER TO CONNECT</p>
-          </div>
+          <IntroScreen onStart={engine.actions.start} />
         </div>
       </MainLayout>
     );
