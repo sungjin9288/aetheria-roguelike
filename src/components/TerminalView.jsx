@@ -39,9 +39,9 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
                         icon = <AlertTriangle size={12} className="inline mr-2" />;
                     }
                     if (log.type === 'critical') {
-                        logStyle = "text-red-500 font-bold text-lg drop-shadow-md";
+                        logStyle = "text-red-500 font-bold text-lg drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]";
                         bgStyle = "bg-red-950/40 border-l-4 border-red-500 pl-2";
-                        anim = "animate-ping";
+                        anim = ""; // Removed repetitive animation
                     }
                     if (log.type === 'story') {
                         logStyle = "text-cyber-blue italic";
