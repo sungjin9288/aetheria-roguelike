@@ -1,38 +1,12 @@
 import React, { useState } from 'react';
 import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword, X } from 'lucide-react';
+import AvatarDisplay from './AvatarDisplay';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DB } from '../data/db';
 import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
 import { FeedbackValidator } from '../systems/FeedbackValidator';
-
-const AvatarDisplay = ({ player }) => (
-    <div className="relative w-full aspect-square bg-cyber-dark/50 rounded-lg border border-cyber-blue/30 overflow-hidden shadow-[0_0_20px_rgba(0,204,255,0.1)] group">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
-        <img
-            src={`/assets/avatar_${player?.gender || 'male'}.svg`}
-            alt="Avatar"
-            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
-        />
-        {/* Scanline overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyber-blue/5 to-transparent animate-scanline pointer-events-none"></div>
-
-        {/* Equipment Overlay (Simple Icons for now) */}
-        <div className="absolute bottom-2 right-2 flex gap-1">
-            {player?.equip?.weapon && (
-                <div className="p-1 bg-black/60 rounded border border-cyber-green/50" title={player.equip.weapon.name}>
-                    <Sword size={12} className="text-cyber-green" />
-                </div>
-            )}
-            {player?.equip?.armor && (
-                <div className="p-1 bg-black/60 rounded border border-cyber-purple/50" title={player.equip.armor.name}>
-                    <Shield size={12} className="text-cyber-purple" />
-                </div>
-            )}
-        </div>
-    </div>
-);
 
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
     const [showAvatar, setShowAvatar] = useState(false);
