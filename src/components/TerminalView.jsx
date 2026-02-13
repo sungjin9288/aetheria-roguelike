@@ -16,7 +16,7 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
         : "bg-cyber-black/90 border-cyber-green/30 shadow-neon-green";
 
     return (
-        <div className={`flex-1 ${bgClass} border rounded-lg p-4 relative overflow-y-auto custom-scrollbar font-fira transition-all duration-1000 flex flex-col`}>
+        <div className={`flex-1 min-w-0 ${bgClass} border rounded-lg p-4 relative overflow-y-auto custom-scrollbar font-fira transition-all duration-1000 flex flex-col`}>
             {/* Scanline overlay */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none sticky top-0 h-full w-full"></div>
 

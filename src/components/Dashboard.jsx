@@ -167,7 +167,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
     }
 
     return (
-        <aside className="w-80 min-w-[320px] hidden md:flex flex-col gap-4 h-full">
+        <aside className="hidden md:flex flex-col gap-4 h-full w-[30%] min-w-[240px] max-w-sm transition-all duration-300">
             {/* STATUS PANEL */}
             <div className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-5 rounded-lg shadow-[0_0_15px_rgba(0,204,255,0.1)] relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-2 opacity-20">
