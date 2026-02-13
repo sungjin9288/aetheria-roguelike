@@ -1,16 +1,66 @@
 import React, { useRef, useEffect } from 'react';
 import { Bot, AlertTriangle, CheckCircle, Terminal } from 'lucide-react';
 
+// 로그 타입별 스타일 매핑 (연쇄 if문 제거)
+const LOG_STYLES = {
+    combat: {
+        text: 'text-cyber-pink',
+        bg: 'bg-cyber-pink/5 border-l-2 border-cyber-pink pl-2',
+        icon: AlertTriangle,
+    },
+    critical: {
+        text: 'text-red-500 font-bold text-lg drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]',
+        bg: 'bg-red-950/40 border-l-4 border-red-500 pl-2',
+        icon: null,
+        noAnim: true,
+    },
+    story: {
+        text: 'text-cyber-blue italic',
+        bg: 'bg-cyber-blue/5 border-l-2 border-cyber-blue pl-2',
+        icon: Bot,
+    },
+    system: {
+        text: 'text-cyber-green font-bold',
+        bg: 'bg-cyber-green/5',
+        icon: Terminal,
+    },
+    error: {
+        text: 'text-red-400 font-bold',
+        bg: 'bg-red-950/30 border border-red-500/30',
+        icon: null,
+    },
+    success: {
+        text: 'text-yellow-300',
+        bg: 'transparent',
+        icon: CheckCircle,
+    },
+    event: {
+        text: 'text-cyber-purple font-rajdhani text-lg',
+        bg: 'transparent',
+        icon: null,
+    },
+    loading: {
+        text: 'text-cyber-blue/50 animate-pulse',
+        bg: 'transparent',
+        icon: null,
+    },
+    warning: {
+        text: 'text-orange-400',
+        bg: 'transparent',
+        icon: null,
+    },
+};
+
+const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
+
 const TerminalView = ({ logs, gameState, onCommand }) => {
     const endRef = useRef(null);
     useEffect(() => {
         if (endRef.current) {
-            // Force instant scroll to bottom on every log update
             endRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
         }
     }, [logs]);
 
-    // Contextual Background Transition
     const bgClass = gameState === 'event'
         ? "bg-cyber-purple/10 border-cyber-purple/50 shadow-neon-purple"
         : "bg-cyber-black/90 border-cyber-green/30 shadow-neon-green";
@@ -29,46 +79,13 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
                     </div>
                 )}
                 {logs.map((log) => {
-                    let logStyle = "text-slate-300";
-                    let bgStyle = "transparent";
-                    let anim = "animate-fade-in"; // Need to define this or rely on default
-                    let icon = null;
-
-                    if (log.type === 'combat') {
-                        logStyle = "text-cyber-pink";
-                        bgStyle = "bg-cyber-pink/5 border-l-2 border-cyber-pink pl-2";
-                        icon = <AlertTriangle size={12} className="inline mr-2" />;
-                    }
-                    if (log.type === 'critical') {
-                        logStyle = "text-red-500 font-bold text-lg drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]";
-                        bgStyle = "bg-red-950/40 border-l-4 border-red-500 pl-2";
-                        anim = ""; // Removed repetitive animation
-                    }
-                    if (log.type === 'story') {
-                        logStyle = "text-cyber-blue italic";
-                        bgStyle = "bg-cyber-blue/5 border-l-2 border-cyber-blue pl-2";
-                        icon = <Bot size={12} className="inline mr-2" />;
-                    }
-                    if (log.type === 'system') {
-                        logStyle = "text-cyber-green font-bold";
-                        bgStyle = "bg-cyber-green/5";
-                        icon = <Terminal size={12} className="inline mr-2" />;
-                    }
-                    if (log.type === 'error') {
-                        logStyle = "text-red-400 font-bold";
-                        bgStyle = "bg-red-950/30 border border-red-500/30";
-                    }
-                    if (log.type === 'success') {
-                        logStyle = "text-yellow-300";
-                        icon = <CheckCircle size={12} className="inline mr-2" />;
-                    }
-                    if (log.type === 'event') logStyle = "text-cyber-purple font-rajdhani text-lg";
-                    if (log.type === 'loading') logStyle = "text-cyber-blue/50 animate-pulse";
-                    if (log.type === 'warning') logStyle = "text-orange-400";
+                    const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
+                    const IconComp = style.icon;
+                    const anim = style.noAnim ? '' : 'animate-fade-in';
 
                     return (
-                        <div key={log.id} className={`text-sm py-1 px-2 rounded-sm ${logStyle} ${bgStyle} ${anim} transition-all break-words whitespace-pre-wrap`}>
-                            {icon}
+                        <div key={log.id} className={`text-sm py-1 px-2 rounded-sm ${style.text} ${style.bg} ${anim} transition-all break-words whitespace-pre-wrap`}>
+                            {IconComp && <IconComp size={12} className="inline mr-2" />}
                             {log.text}
                         </div>
                     );

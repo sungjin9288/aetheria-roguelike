@@ -8,6 +8,22 @@ import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
 import { FeedbackValidator } from '../systems/FeedbackValidator';
 
+// ProgressBar를 Dashboard 외부에 정의하여 리렌더링 시 재생성 방지
+const ProgressBar = ({ value, max, color, label }) => (
+    <div className="relative w-full">
+        <div className="flex justify-between text-[10px] uppercase font-bold mb-0.5 text-cyber-blue/70">
+            <span>{label}</span>
+            <span>{value}/{max}</span>
+        </div>
+        <div className={`w-full h-2 bg-cyber-dark/50 rounded-sm overflow-hidden border border-${color}/30 relative`}>
+            <div
+                className={`h-full transition-all duration-500 ease-out bg-gradient-to-r from-${color}/50 to-${color} shadow-[0_0_10px_rgba(var(--color-${color}),0.5)]`}
+                style={{ width: `${Math.min(100, (value / max) * 100)}%` }}
+            ></div>
+        </div>
+    </div>
+);
+
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
     const [showAvatar, setShowAvatar] = useState(false);
     // Inventory Grouping
@@ -15,21 +31,6 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
         acc[item.name] = (acc[item.name] || 0) + 1;
         return acc;
     }, {});
-
-    const ProgressBar = ({ value, max, color, label }) => (
-        <div className="relative w-full">
-            <div className="flex justify-between text-[10px] uppercase font-bold mb-0.5 text-cyber-blue/70">
-                <span>{label}</span>
-                <span>{value}/{max}</span>
-            </div>
-            <div className={`w-full h-2 bg-cyber-dark/50 rounded-sm overflow-hidden border border-${color}/30 relative`}>
-                <div
-                    className={`h-full transition-all duration-500 ease-out bg-gradient-to-r from-${color}/50 to-${color} shadow-[0_0_10px_rgba(var(--color-${color}),0.5)]`}
-                    style={{ width: `${Math.min(100, (value / max) * 100)}%` }}
-                ></div>
-            </div>
-        </div>
-    );
 
     if (mobile) {
         return (

@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useMemo, useRef, useCallback, useState } from 'react';
-import { Cloud, WifiOff, Terminal as TerminalIcon } from 'lucide-react';
+import { Cloud, WifiOff, Terminal as TerminalIcon, Volume2 } from 'lucide-react';
 import {
   onSnapshot,
   doc,
@@ -200,7 +200,7 @@ const useGameEngine = () => {
     return () => clearTimeout(timer);
   }, [player, gameState, enemy, grave, currentEvent, syncStatus, uid]);
 
-  const addLog = (type, text) => dispatch({ type: 'ADD_LOG', payload: { type, text } });
+  const addLog = (type, text) => dispatch({ type: 'ADD_LOG', payload: { type, text, id: Date.now() + Math.random() } });
 
   const addStoryLog = useCallback(
     async (type, data) => {
@@ -844,6 +844,17 @@ function App() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              const nowMuted = soundManager.toggleMute();
+              // Force re-render by dispatching a no-op visual effect
+              document.querySelector('[data-mute-icon]')?.setAttribute('data-muted', nowMuted);
+            }}
+            className="text-cyber-blue/50 hover:text-cyber-blue transition-colors p-1"
+            title="Toggle Sound"
+          >
+            <Volume2 size={16} className="mute-off" />
+          </button>
           <div className="flex items-center gap-2 text-xs font-fira text-cyber-blue/70 bg-cyber-dark/50 px-2 py-1 rounded border border-cyber-blue/10">
             <span className={`w-2 h-2 rounded-full ${engine.syncStatus === 'synced' ? 'bg-cyber-green shadow-neon-green' : engine.syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500 shadow-neon-pink'}`}></span>
             {engine.syncStatus === 'synced' ? 'ONLINE' : engine.syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE'}

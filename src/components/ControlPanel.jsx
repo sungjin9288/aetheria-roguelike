@@ -16,6 +16,7 @@ import {
 import { DB } from '../data/db';
 import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
+import { soundManager } from '../systems/SoundManager';
 
 const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, grave, isAiThinking, currentEvent }) => {
   const mapData = DB.MAPS[player.loc];
@@ -37,7 +38,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
         <div className="grid grid-cols-4 gap-3">
           <button
             disabled={isAiThinking}
-            onClick={() => actions.combat('attack')}
+            onClick={() => { soundManager.play('attack'); actions.combat('attack'); }}
             className="bg-red-900/20 hover:bg-red-900/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] border border-red-500/50 p-4 rounded-sm text-red-400 font-bold flex flex-col items-center disabled:opacity-50 transition-all group"
           >
             <Sword className="group-hover:scale-110 transition-transform" /> <span className="font-rajdhani mt-1">ATTACK</span>
@@ -206,7 +207,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
         <div className="grid grid-cols-4 gap-3">
           <button
             disabled={isAiThinking}
-            onClick={actions.explore}
+            onClick={() => { soundManager.play('click'); actions.explore(); }}
             className="bg-cyber-dark/60 hover:bg-cyber-blue/10 border border-cyber-blue/30 p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 hover:shadow-neon-blue transition-all group"
           >
             <MapIcon size={20} className="text-cyber-blue group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-cyber-blue/80">EXPLORE</span>

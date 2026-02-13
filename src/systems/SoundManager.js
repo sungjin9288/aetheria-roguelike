@@ -1,3 +1,7 @@
+/**
+ * SoundManager - Web Audio API 기반 사운드 엔진
+ * 오실레이터를 이용한 레트로 효과음 생성 (외부 파일 불필요)
+ */
 class SoundManager {
     constructor() {
         this.ctx = null;
@@ -12,7 +16,7 @@ class SoundManager {
             this.ctx = new AudioContext();
             this.initialized = true;
         } catch {
-            console.error('Web Audio API not supported');
+            console.warn('Web Audio API not supported');
         }
     }
 
@@ -21,29 +25,27 @@ class SoundManager {
         return this.muted;
     }
 
-    play(type) {
-        if (this.muted || !this.initialized) {
-            // Try to init on first interaction if not already
-            if (!this.initialized && !this.muted) this.init();
-            if (this.muted) return;
-        }
-        if (!this.ctx) return;
+    _ensureReady() {
+        if (!this.initialized) this.init();
+        if (this.muted || !this.ctx) return false;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        return true;
+    }
 
-        // Resume context if suspended (browser policy)
-        if (this.ctx.state === 'suspended') {
-            this.ctx.resume();
-        }
-
+    _createNodes() {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.connect(gain);
         gain.connect(this.ctx.destination);
+        return { osc, gain, now: this.ctx.currentTime };
+    }
 
-        const now = this.ctx.currentTime;
+    play(type) {
+        if (!this._ensureReady()) return;
 
         switch (type) {
-            case 'hover':
-                // High pitch sine blip
+            case 'hover': {
+                const { osc, gain, now } = this._createNodes();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, now);
                 osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
@@ -52,9 +54,10 @@ class SoundManager {
                 osc.start(now);
                 osc.stop(now + 0.05);
                 break;
+            }
 
-            case 'click':
-                // Square wave select tone
+            case 'click': {
+                const { osc, gain, now } = this._createNodes();
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(400, now);
                 osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
@@ -63,9 +66,10 @@ class SoundManager {
                 osc.start(now);
                 osc.stop(now + 0.1);
                 break;
+            }
 
-            case 'error':
-                // Low sawtooth buzz
+            case 'error': {
+                const { osc, gain, now } = this._createNodes();
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(150, now);
                 osc.frequency.linearRampToValueAtTime(100, now + 0.2);
@@ -74,10 +78,10 @@ class SoundManager {
                 osc.start(now);
                 osc.stop(now + 0.2);
                 break;
+            }
 
-            case 'attack':
-                // Noise burst simulation using erratic frequency modulation on sawtooth
-                // (Real white noise requires buffer, keeping it simple with oscillators for now)
+            case 'attack': {
+                const { osc, gain, now } = this._createNodes();
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(100, now);
                 osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
@@ -86,17 +90,18 @@ class SoundManager {
                 osc.start(now);
                 osc.stop(now + 0.1);
                 break;
+            }
 
             case 'levelUp':
-                // Simple Arpeggio
-                this.playTone(523.25, 0.1, 0);       // C5
-                this.playTone(659.25, 0.1, 0.1);     // E5
-                this.playTone(783.99, 0.1, 0.2);     // G5
-                this.playTone(1046.50, 0.3, 0.3);    // C6
+                // Arpeggio (별도 오실레이터 생성하지 않음)
+                this._playTone(523.25, 0.1, 0);       // C5
+                this._playTone(659.25, 0.1, 0.1);     // E5
+                this._playTone(783.99, 0.1, 0.2);     // G5
+                this._playTone(1046.50, 0.3, 0.3);    // C6
                 break;
 
-            case 'item':
-                // High chime
+            case 'item': {
+                const { osc, gain, now } = this._createNodes();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(1200, now);
                 osc.frequency.exponentialRampToValueAtTime(2000, now + 0.2);
@@ -105,26 +110,23 @@ class SoundManager {
                 osc.start(now);
                 osc.stop(now + 0.2);
                 break;
+            }
 
             default:
                 break;
         }
     }
 
-    playTone(freq, dur, delay) {
+    _playTone(freq, dur, delay) {
         if (this.muted || !this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        const now = this.ctx.currentTime + delay;
+        const { osc, gain } = this._createNodes();
+        const startAt = this.ctx.currentTime + delay;
         osc.type = 'square';
-        osc.frequency.setValueAtTime(freq, now);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-        osc.start(now);
-        osc.stop(now + dur);
+        osc.frequency.setValueAtTime(freq, startAt);
+        gain.gain.setValueAtTime(0.05, startAt);
+        gain.gain.exponentialRampToValueAtTime(0.001, startAt + dur);
+        osc.start(startAt);
+        osc.stop(startAt + dur);
     }
 }
 
