@@ -67,7 +67,7 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
                     if (log.type === 'warning') logStyle = "text-orange-400";
 
                     return (
-                        <div key={log.id} className={`text-sm py-1 px-2 rounded-sm ${logStyle} ${bgStyle} ${anim} transition-all`}>
+                        <div key={log.id} className={`text-sm py-1 px-2 rounded-sm ${logStyle} ${bgStyle} ${anim} transition-all break-words whitespace-pre-wrap`}>
                             {icon}
                             {log.text}
                         </div>

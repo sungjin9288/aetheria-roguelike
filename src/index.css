@@ -6,10 +6,19 @@
   body {
     @apply bg-cyber-black text-slate-200 font-rajdhani overflow-hidden selection:bg-cyber-pink selection:text-white;
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-bold tracking-wider uppercase;
   }
-  code, pre, .font-mono {
+
+  code,
+  pre,
+  .font-mono {
     @apply font-fira;
   }
 }
@@ -19,12 +28,15 @@
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   @apply bg-cyber-dark;
 }
+
 ::-webkit-scrollbar-thumb {
   @apply bg-cyber-slate rounded;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-cyber-purple;
 }
@@ -221,6 +233,45 @@
 
 .animate-buff {
   animation: buffActive 2s ease-in-out infinite;
+}
+
+/* ============================================
+   PHASE 6: AVATAR ANIMATIONS
+   ============================================ */
+
+@keyframes breathe {
+
+  0%,
+  100% {
+    transform: scaleY(1) translateY(0);
+  }
+
+  50% {
+    transform: scaleY(1.02) translateY(-1px);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes blink {
+
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+.animate-blink {
+  animation: blink 4s infinite;
+  transform-origin: center;
 }
 
 /* ============================================
