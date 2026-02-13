@@ -18,6 +18,7 @@ import { auth, db } from './firebase';
 import { CONSTANTS, APP_ID, ADMIN_UIDS, BALANCE } from './data/constants';
 import { DB } from './data/db';
 import { CombatEngine } from './systems/CombatEngine';
+import { soundManager } from './systems/SoundManager';
 import { AI_SERVICE } from './services/aiService';
 import { migrateData } from './utils/gameUtils';
 import { parseCommand } from './utils/commandParser';
@@ -93,7 +94,16 @@ const useGameEngine = () => {
 
   useEffect(() => {
     hasBootLogRef.current = state.logs.length > 0;
-  }, [state.logs.length]);
+
+    // SOUND INTEGRATION
+    const lastLog = state.logs[state.logs.length - 1];
+    if (lastLog) {
+      if (lastLog.type === 'combat') soundManager.play('attack');
+      if (lastLog.type === 'levelUp') soundManager.play('levelUp');
+      if (lastLog.type === 'error') soundManager.play('error');
+      if (lastLog.type === 'item') soundManager.play('item');
+    }
+  }, [state.logs]);
 
   useEffect(() => {
     if (bootStage !== 'config') return;
