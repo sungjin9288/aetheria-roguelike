@@ -1,6 +1,7 @@
 import { DB } from '../data/db';
 import { LOOT_TABLE } from '../data/loot';
 import { BALANCE } from '../data/constants';
+import { applyItemPrefix } from '../utils/itemPrefixUtils';
 
 /**
  * CombatEngine - Pure functions for combat calculations
@@ -333,9 +334,13 @@ export const CombatEngine = {
                     .find((i) => i.name === itemName);
                 if (!itemData) return;
 
-                const newItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
+                const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
+                const newItem = applyItemPrefix(baseItem);
                 items.push(newItem);
                 logs.push({ type: 'success', text: `Loot: ${newItem.name}` });
+                if (newItem.prefixed) {
+                    logs.push({ type: 'event', text: `접두사 부여: ${newItem.prefixName}` });
+                }
             }
         });
 

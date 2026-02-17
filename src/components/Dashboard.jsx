@@ -48,7 +48,7 @@ const ProgressBar = ({ value, max, variant = 'hp', label }) => {
     );
 };
 
-const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
+const Dashboard = ({ player, sideTab, setSideTab, actions, stats, gameState = 'idle', mobile = false }) => {
     const [showAvatar, setShowAvatar] = useState(false);
     // Inventory Grouping
     const groupedInv = player.inv.reduce((acc, item) => {
@@ -92,7 +92,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 <h3 className="text-xl font-rajdhani font-bold text-cyber-blue tracking-widest">AGENT ID</h3>
                                 <button onClick={() => setShowAvatar(false)} className="text-red-500 hover:text-red-400"><X /></button>
                             </div>
-                            <AvatarDisplay player={player} />
+                            <AvatarDisplay player={player} gameState={gameState} />
                             <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-fira text-cyber-blue/60">
                                 <div className="bg-cyber-dark/50 p-2 rounded">WPN: <span className="text-white">{player?.equip?.weapon?.name || 'N/A'}</span></div>
                                 <div className="bg-cyber-dark/50 p-2 rounded">ARM: <span className="text-white">{player?.equip?.armor?.name || 'N/A'}</span></div>
@@ -214,7 +214,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     </div>
 
                     {/* AVATAR DISPLAY */}
-                    <AvatarDisplay player={player} />
+                    <AvatarDisplay player={player} gameState={gameState} />
 
                     <div className="flex items-center gap-2 bg-cyber-dark/80 p-2 rounded border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
                         <div className="w-2 h-2 bg-yellow-400 rotate-45"></div>

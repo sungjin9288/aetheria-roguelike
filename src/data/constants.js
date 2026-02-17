@@ -34,10 +34,10 @@ export const BALANCE = {
     DAILY_AI_LIMIT: 50,
     EVENT_CHANCE_NOTHING: 0.3,
     PREFIX_CHANCE: 0.2,
+    ITEM_PREFIX_CHANCE: 0.12,
     DEBOUNCE_SAVE_MS: 500,
     LOG_MAX_SIZE: 50
 };
 
 Object.freeze(CONSTANTS);
 Object.freeze(BALANCE);
-

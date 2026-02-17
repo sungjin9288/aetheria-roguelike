@@ -303,6 +303,7 @@ function App() {
           setSideTab={engine.actions.setSideTab}
           actions={engine.actions}
           stats={engine.getFullStats()}
+          gameState={engine.gameState}
         />
       </div>
 
@@ -313,6 +314,7 @@ function App() {
         setSideTab={engine.actions.setSideTab}
         actions={engine.actions}
         stats={engine.getFullStats()}
+        gameState={engine.gameState}
       />
 
       <ControlPanel
