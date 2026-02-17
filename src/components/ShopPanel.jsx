@@ -8,6 +8,7 @@ import { DB } from '../data/db';
 const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
     const [shopMode, setShopMode] = useState('buy');
     const loc = player.loc;
+    const overlayPanelClass = 'fixed inset-x-2 top-[4.5rem] bottom-2 md:absolute md:inset-x-4 md:bottom-4 md:top-20';
 
     // Tier Logic based on location
     let maxTier = 1;
@@ -19,7 +20,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
     const sellItems = player.inv.filter(i => !String(i.id).startsWith('starter_'));
 
     return (
-        <div className="absolute inset-x-4 bottom-4 top-20 md:w-2/3 bg-slate-900/95 z-20 p-4 rounded border border-slate-700 flex flex-col">
+        <div className={`${overlayPanelClass} md:w-2/3 bg-slate-900/95 z-20 p-3 md:p-4 rounded border border-slate-700 flex flex-col`}>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl text-yellow-500 font-bold">
                     🛒 상점 <span className="text-xs text-slate-500">({loc} - Tier {maxTier})</span>

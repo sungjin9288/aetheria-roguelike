@@ -1,4 +1,5 @@
 import { DB } from '../data/db'; // Adjust path if needed
+import { CONSTANTS } from '../data/constants';
 
 // --- INITIAL STATE ---
 export const INITIAL_STATE = {
@@ -8,7 +9,7 @@ export const INITIAL_STATE = {
 
     // Game Data
     player: {
-        name: '', job: '모험가', gender: 'male', level: 1, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5, exp: 0, nextExp: 100, gold: 200, loc: '시작의 마을',
+        name: '', job: '모험가', gender: 'male', level: 1, hp: CONSTANTS.START_HP, maxHp: CONSTANTS.START_HP, mp: CONSTANTS.START_MP, maxMp: CONSTANTS.START_MP, atk: 10, def: 5, exp: 0, nextExp: 100, gold: CONSTANTS.START_GOLD, loc: '시작의 마을',
         inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0], offhand: null },
         quests: [], achievements: [], stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 },
         tempBuff: { atk: 0, turn: 0 }, status: [],
@@ -18,7 +19,8 @@ export const INITIAL_STATE = {
     },
 
     // Runtime State
-    version: 2.7,
+    version: CONSTANTS.DATA_VERSION,
+
     gameState: 'idle',
     logs: [],
     enemy: null,

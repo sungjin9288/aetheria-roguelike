@@ -3,6 +3,25 @@ import { CONSTANTS } from '../data/constants';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 import { LatencyTracker } from '../systems/LatencyTracker';
 
+const normalizeEventResponse = (payload) => {
+    const raw = payload?.data || payload;
+    if (!raw || typeof raw !== 'object') return null;
+
+    const desc = raw.desc || raw.text || raw.event || raw.message;
+    const choices = Array.isArray(raw.choices)
+        ? raw.choices.map((choice, idx) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`))
+        : [];
+    const outcomes = Array.isArray(raw.outcomes) ? raw.outcomes : [];
+
+    if (!desc) return null;
+    return {
+        ...raw,
+        desc,
+        choices: choices.slice(0, 3),
+        outcomes
+    };
+};
+
 // --- AI SERVICE (v3.6) ---
 export const AI_SERVICE = {
     getFallback: (type, data) => {
@@ -47,7 +66,8 @@ export const AI_SERVICE = {
 
                 if (result?.success) {
                     TokenQuotaManager.recordCall();
-                    return result.data;
+                    const normalized = normalizeEventResponse(result.data);
+                    return normalized || result.data;
                 }
             } catch (e) {
                 console.warn('AI proxy unavailable:', e.message);

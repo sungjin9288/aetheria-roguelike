@@ -1,0 +1,126 @@
+import { DB } from '../data/db';
+import { BALANCE } from '../data/constants';
+import { CombatEngine } from '../systems/CombatEngine';
+import { INITIAL_STATE } from '../reducers/gameReducer';
+
+const toArray = (v) => (Array.isArray(v) ? v : []);
+
+const getJobSkills = (player) => toArray(DB.CLASSES[player.job]?.skills);
+
+const getSelectedSkill = (player) => {
+    const skills = getJobSkills(player);
+    if (!skills.length) return null;
+    const selected = Number.isInteger(player.skillLoadout?.selected) ? player.skillLoadout.selected : 0;
+    const index = ((selected % skills.length) + skills.length) % skills.length;
+    return { skill: skills[index], index, total: skills.length };
+};
+
+/**
+ * createCombatActions — 전투 로직 (공격, 스킬, 도주)
+ */
+export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog, addStoryLog, getFullStats }) => ({
+
+    combat: (type) => {
+        if (gameState !== 'combat' || !enemy) return addLog('error', '전투 상태가 아닙니다.');
+        const stats = getFullStats();
+        const playerAtActionStart = player;
+        const enemyAtActionStart = enemy;
+
+        if (type === 'attack' || type === 'skill') {
+            let result;
+            let playerAfterAction = playerAtActionStart;
+
+            if (type === 'skill') {
+                const selected = getSelectedSkill(playerAtActionStart);
+                result = CombatEngine.performSkill(playerAtActionStart, enemyAtActionStart, stats, selected?.skill);
+                if (!result.success) return addLog('error', result.logs[0]?.text || '스킬 사용 실패');
+                playerAfterAction = result.updatedPlayer;
+                dispatch({ type: 'SET_PLAYER', payload: result.updatedPlayer });
+            } else {
+                result = CombatEngine.attack(playerAtActionStart, enemyAtActionStart, stats);
+            }
+
+            result.logs.forEach((log) => addLog(log.type, log.text));
+            dispatch({ type: 'SET_VISUAL_EFFECT', payload: result.isCrit ? 'shake' : null });
+
+            if (result.isVictory) {
+                dispatch({ type: 'SET_ENEMY', payload: null });
+                dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+
+                const victoryResult = CombatEngine.handleVictory(playerAfterAction, enemyAtActionStart);
+                let updatedPlayer = victoryResult.updatedPlayer;
+                victoryResult.logs.forEach((log) => addLog(log.type, log.text));
+                if (victoryResult.visualEffect) dispatch({ type: 'SET_VISUAL_EFFECT', payload: victoryResult.visualEffect });
+
+                const questResult = CombatEngine.updateQuestProgress(updatedPlayer, enemyAtActionStart.baseName || enemyAtActionStart.name);
+                updatedPlayer = { ...updatedPlayer, quests: questResult.updatedQuests };
+                if (questResult.completedCount > 0) {
+                    addLog('system', `퀘스트 조건 달성: ${questResult.completedCount}개`);
+                }
+
+                const lootResult = CombatEngine.processLoot(enemyAtActionStart);
+                lootResult.logs.forEach((log) => addLog(log.type, log.text));
+                if (lootResult.items.length > 0) {
+                    updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
+                }
+
+                dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+                addStoryLog('victory', { name: enemyAtActionStart.name });
+                return;
+            }
+
+            dispatch({ type: 'SET_ENEMY', payload: result.updatedEnemy });
+
+            setTimeout(() => {
+                const turnTick = CombatEngine.tickCombatState(playerAfterAction);
+                turnTick.logs.forEach((log) => addLog(log.type, log.text));
+                const playerForEnemyTurn = turnTick.updatedPlayer;
+                dispatch({ type: 'SET_PLAYER', payload: playerForEnemyTurn });
+
+                const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, result.updatedEnemy, stats);
+                counterResult.logs.forEach((log) => addLog(log.type, log.text));
+                dispatch({ type: 'SET_ENEMY', payload: counterResult.updatedEnemy });
+                dispatch({ type: 'SET_PLAYER', payload: counterResult.updatedPlayer });
+                dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
+
+                if (counterResult.isDead) {
+                    const defeatResult = CombatEngine.handleDefeat(counterResult.updatedPlayer, INITIAL_STATE.player);
+                    dispatch({ type: 'SET_GRAVE', payload: defeatResult.graveData });
+                    dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
+                    dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+                    dispatch({ type: 'SET_ENEMY', payload: null });
+                    defeatResult.logs.forEach((log) => addLog(log.type, log.text));
+                    addStoryLog('death', { loc: playerForEnemyTurn.loc });
+                }
+            }, 450);
+            return;
+        }
+
+        if (type === 'escape') {
+            const escapeResult = CombatEngine.attemptEscape(enemy, stats);
+            escapeResult.logs.forEach((log) => addLog(log.type, log.text));
+            if (escapeResult.success) {
+                dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+                dispatch({ type: 'SET_ENEMY', payload: null });
+            } else {
+                const escapedHp = Math.max(0, player.hp - (escapeResult.damage || 0));
+                if (escapedHp <= 0) {
+                    const defeatResult = CombatEngine.handleDefeat({ ...player, hp: escapedHp }, INITIAL_STATE.player);
+                    dispatch({ type: 'SET_GRAVE', payload: defeatResult.graveData });
+                    dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
+                    dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+                    dispatch({ type: 'SET_ENEMY', payload: null });
+                    defeatResult.logs.forEach((log) => addLog(log.type, log.text));
+                    addStoryLog('death', { loc: player.loc });
+                } else {
+                    dispatch({
+                        type: 'SET_PLAYER',
+                        payload: (p) => ({ ...p, hp: escapedHp })
+                    });
+                }
+            }
+        }
+    },
+
+    getSelectedSkill: () => getSelectedSkill(player)?.skill || null
+});

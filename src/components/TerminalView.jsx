@@ -53,7 +53,7 @@ const LOG_STYLES = {
 
 const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
 
-const TerminalView = ({ logs, gameState, onCommand }) => {
+const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobile = false }) => {
     const endRef = useRef(null);
     useEffect(() => {
         if (endRef.current) {
@@ -66,7 +66,7 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
         : "bg-cyber-black/90 border-cyber-green/30 shadow-neon-green";
 
     return (
-        <div className={`flex-1 min-w-0 ${bgClass} border rounded-lg p-4 relative overflow-y-auto custom-scrollbar font-fira transition-all duration-1000 flex flex-col`}>
+        <div className={`min-w-0 ${mobile ? 'h-[44dvh]' : 'flex-1'} md:flex-1 md:h-auto ${bgClass} border rounded-lg p-3 md:p-4 relative overflow-y-auto custom-scrollbar font-fira transition-all duration-1000 flex flex-col`}>
             {/* Scanline overlay */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none sticky top-0 h-full w-full"></div>
 
@@ -99,7 +99,7 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
             </div>
 
             {/* CLI INPUT AREA */}
-            <div className="mt-4 border-t border-cyber-green/20 pt-2 flex gap-2 items-center bg-cyber-black/90 sticky bottom-0 z-20">
+            <div className="mt-4 border-t border-cyber-green/20 pt-2 flex gap-2 items-center bg-cyber-black/90 sticky bottom-0 z-20 pb-[env(safe-area-inset-bottom)]">
                 <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
                 <input
                     type="text"
@@ -114,7 +114,7 @@ const TerminalView = ({ logs, gameState, onCommand }) => {
                             }
                         }
                     }}
-                    autoFocus
+                    autoFocus={autoFocusInput}
                 />
             </div>
         </div>

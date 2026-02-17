@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-cyber-black text-slate-200 font-rajdhani overflow-hidden selection:bg-cyber-pink selection:text-white;
+    @apply bg-cyber-black text-slate-200 font-rajdhani overflow-x-hidden selection:bg-cyber-pink selection:text-white;
   }
 
   h1,

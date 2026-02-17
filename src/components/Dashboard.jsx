@@ -8,21 +8,45 @@ import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
 import { FeedbackValidator } from '../systems/FeedbackValidator';
 
+const BAR_THEMES = {
+    hp: {
+        border: 'border-red-500/30',
+        fill: 'bg-gradient-to-r from-red-500/50 to-red-500',
+        shadow: 'shadow-[0_0_10px_rgba(239,68,68,0.5)]'
+    },
+    mp: {
+        border: 'border-blue-500/30',
+        fill: 'bg-gradient-to-r from-blue-500/50 to-blue-500',
+        shadow: 'shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+    },
+    exp: {
+        border: 'border-purple-500/30',
+        fill: 'bg-gradient-to-r from-purple-500/50 to-purple-500',
+        shadow: 'shadow-[0_0_10px_rgba(168,85,247,0.5)]'
+    }
+};
+
 // ProgressBar를 Dashboard 외부에 정의하여 리렌더링 시 재생성 방지
-const ProgressBar = ({ value, max, color, label }) => (
-    <div className="relative w-full">
-        <div className="flex justify-between text-[10px] uppercase font-bold mb-0.5 text-cyber-blue/70">
-            <span>{label}</span>
-            <span>{value}/{max}</span>
+const ProgressBar = ({ value, max, variant = 'hp', label }) => {
+    const theme = BAR_THEMES[variant] || BAR_THEMES.hp;
+    const safeMax = Math.max(1, max || 1);
+    const safeValue = Math.max(0, value || 0);
+
+    return (
+        <div className="relative w-full">
+            <div className="flex justify-between text-[10px] uppercase font-bold mb-0.5 text-cyber-blue/70">
+                <span>{label}</span>
+                <span>{safeValue}/{safeMax}</span>
+            </div>
+            <div className={`w-full h-2 bg-cyber-dark/50 rounded-sm overflow-hidden border ${theme.border} relative`}>
+                <div
+                    className={`h-full transition-all duration-500 ease-out ${theme.fill} ${theme.shadow}`}
+                    style={{ width: `${Math.min(100, (safeValue / safeMax) * 100)}%` }}
+                ></div>
+            </div>
         </div>
-        <div className={`w-full h-2 bg-cyber-dark/50 rounded-sm overflow-hidden border border-${color}/30 relative`}>
-            <div
-                className={`h-full transition-all duration-500 ease-out bg-gradient-to-r from-${color}/50 to-${color} shadow-[0_0_10px_rgba(var(--color-${color}),0.5)]`}
-                style={{ width: `${Math.min(100, (value / max) * 100)}%` }}
-            ></div>
-        </div>
-    </div>
-);
+    );
+};
 
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
     const [showAvatar, setShowAvatar] = useState(false);
@@ -34,7 +58,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
     if (mobile) {
         return (
-            <div className="md:hidden mt-3 bg-cyber-black/80 backdrop-blur-md border border-cyber-blue/30 rounded-lg p-3 space-y-3 shadow-neon-blue/20 relative">
+            <div className="md:hidden mt-2 bg-cyber-black/80 backdrop-blur-md border border-cyber-blue/30 rounded-lg p-3 space-y-3 shadow-neon-blue/20 relative">
                 {/* Mobile Header with Avatar Toggle */}
                 <div className="flex justify-between items-start">
                     <div>
@@ -55,13 +79,13 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 </div>
 
                 <div className="space-y-3">
-                    <ProgressBar value={player?.hp} max={player?.maxHp} color="red-500" label="VIT (HP)" />
-                    <ProgressBar value={player?.mp} max={player?.maxMp} color="blue-500" label="NRG (MP)" />
+                    <ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="VIT (HP)" />
+                    <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="NRG (MP)" />
                 </div>
 
                 {/* Avatar Modal */}
                 {showAvatar && (
-                    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8" onClick={() => setShowAvatar(false)}>
+                    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8" onClick={() => setShowAvatar(false)}>
                         <div className="w-full max-w-sm bg-cyber-black border border-cyber-blue/50 rounded-lg p-4 relative shadow-[0_0_50px_rgba(0,204,255,0.3)]" onClick={e => e.stopPropagation()}>
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-blue to-transparent animate-scanline"></div>
                             <div className="flex justify-between items-center mb-4 border-b border-cyber-blue/20 pb-2">
@@ -93,7 +117,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                         ))}
                     </div>
 
-                    <div className="max-h-44 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                    <div className="max-h-[38dvh] overflow-y-auto custom-scrollbar space-y-2 pr-1">
                         {sideTab === 'inventory' && Object.entries(groupedInv).map(([name, count], i) => {
                             const item = player?.inv?.find(it => it.name === name);
                             if (!item) return null;
@@ -198,9 +222,9 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     </div>
 
                     <div className="space-y-4 mt-2">
-                        <ProgressBar value={player?.hp} max={player?.maxHp} color="red-500" label="VITALITY" />
-                        <ProgressBar value={player?.mp} max={player?.maxMp} color="blue-500" label="ENERGY" />
-                        <ProgressBar value={player?.exp} max={player?.nextExp} color="purple-500" label="EXPERIENCE" />
+                        <ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="VITALITY" />
+                        <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="ENERGY" />
+                        <ProgressBar value={player?.exp} max={player?.nextExp} variant="exp" label="EXPERIENCE" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-cyber-blue/10">

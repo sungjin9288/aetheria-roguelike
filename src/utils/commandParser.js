@@ -10,12 +10,15 @@ export const parseCommand = (input, gameState, player, actions) => {
   const locationMap = {
     town: '시작의 마을',
     forest: '고요한 숲',
-    cave: '버려진 동굴',
-    desert: '모래 오아시스',
+    cave: '어둠의 동굴',
+    desert: '사막 오아시스',
+    oasis: '사막 오아시스',
     fortress: '북부 요새',
+    '버려진 동굴': '어둠의 동굴',
+    '모래 오아시스': '사막 오아시스',
     마을: '시작의 마을',
     숲: '고요한 숲',
-    동굴: '버려진 동굴'
+    동굴: '어둠의 동굴'
   };
 
   if (gameState === 'event' && (command === '1' || command === '2' || command === '3')) {

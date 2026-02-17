@@ -26,3 +26,10 @@ dist-ssr
 .vercel
 .env
 .env*.local
+
+# Build logs (Windows 잔여물 방지)
+build_*.txt
+
+# ⚠️ SECURITY: .env.local에 API 키가 포함되어 있습니다.
+# 절대 .env.local을 git에 커밋하지 마세요.
+# 테스트 완료 후 API 키를 반드시 로테이션하세요.
