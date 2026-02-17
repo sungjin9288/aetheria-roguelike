@@ -41,16 +41,16 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3 custom-scrollbar p-1">
+            <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 auto-rows-[120px] content-start gap-3 custom-scrollbar p-1">
                 {shopMode === 'buy' ? (
                     buyItems.map((item, i) => (
                         <button
                             key={i}
                             onClick={() => actions.market('buy', item)}
-                            className="flex flex-col justify-between p-3 bg-slate-800/80 rounded border border-slate-600 hover:bg-slate-700 hover:border-yellow-500/50 hover:shadow-lg transition-all group h-full"
+                            className="flex h-full flex-col justify-between p-3 bg-slate-800/80 rounded border border-slate-600 hover:bg-slate-700 hover:border-yellow-500/50 hover:shadow-lg transition-all group"
                         >
-                            <div className="text-left w-full mb-2">
-                                <div className="font-bold text-slate-200 group-hover:text-yellow-300 transition-colors font-rajdhani">{item.name}</div>
+                            <div className="text-left w-full min-h-0 mb-2">
+                                <div className="font-bold text-slate-200 group-hover:text-yellow-300 transition-colors font-rajdhani truncate">{item.name}</div>
                                 <div className="text-xs text-slate-400 font-fira line-clamp-2 h-8">{item.desc_stat || item.desc}</div>
                             </div>
                             <div className="w-full flex justify-end border-t border-slate-700/50 pt-2">
@@ -64,10 +64,10 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
                             <button
                                 key={i}
                                 onClick={() => actions.market('sell', item)}
-                                className="flex flex-col justify-between p-3 bg-slate-800/80 rounded border border-slate-600 hover:bg-slate-700 hover:border-red-500/50 hover:shadow-lg transition-all group h-full"
+                                className="flex h-full flex-col justify-between p-3 bg-slate-800/80 rounded border border-slate-600 hover:bg-slate-700 hover:border-red-500/50 hover:shadow-lg transition-all group"
                             >
-                                <div className="text-left w-full mb-2">
-                                    <div className="font-bold text-red-300 group-hover:text-red-200 font-rajdhani">{item.name}</div>
+                                <div className="text-left w-full min-h-0 mb-2">
+                                    <div className="font-bold text-red-300 group-hover:text-red-200 font-rajdhani truncate">{item.name}</div>
                                     <div className="text-xs text-slate-400 font-fira line-clamp-2 h-8">{item.desc_stat || item.desc}</div>
                                 </div>
                                 <div className="w-full flex justify-end border-t border-slate-700/50 pt-2">

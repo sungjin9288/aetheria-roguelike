@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword, X } from 'lucide-react';
-import AvatarDisplay from './AvatarDisplay';
+import React from 'react';
+import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { DB } from '../data/db';
@@ -48,8 +47,7 @@ const ProgressBar = ({ value, max, variant = 'hp', label }) => {
     );
 };
 
-const Dashboard = ({ player, sideTab, setSideTab, actions, stats, gameState = 'idle', mobile = false }) => {
-    const [showAvatar, setShowAvatar] = useState(false);
+const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
     // Inventory Grouping
     const groupedInv = player.inv.reduce((acc, item) => {
         acc[item.name] = (acc[item.name] || 0) + 1;
@@ -59,13 +57,11 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, gameState = 'i
     if (mobile) {
         return (
             <div className="md:hidden mt-2 bg-cyber-black/80 backdrop-blur-md border border-cyber-blue/30 rounded-lg p-3 space-y-3 shadow-neon-blue/20 relative">
-                {/* Mobile Header with Avatar Toggle */}
+                {/* Mobile Header */}
                 <div className="flex justify-between items-start">
                     <div>
                         <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-2 flex items-center gap-2 tracking-widest">
-                            <button onClick={() => setShowAvatar(true)} className="hover:text-cyber-blue transition-colors">
-                                <User size={14} />
-                            </button>
+                            <User size={14} />
                             AGENT: {player?.name}
                         </h3>
                         <div className="grid grid-cols-2 gap-2 text-xs font-fira text-cyber-blue/80 mb-2">
@@ -73,33 +69,15 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, gameState = 'i
                             <div className="text-right text-yellow-400 font-bold">{player?.gold} CR</div>
                         </div>
                     </div>
-                    <button onClick={() => setShowAvatar(true)} className="p-2 border border-cyber-blue/30 rounded bg-cyber-blue/10 text-cyber-blue animate-pulse hover:bg-cyber-blue/30">
-                        <User size={16} />
-                    </button>
+                    <div className="text-[10px] text-cyber-blue/60 font-fira bg-cyber-dark/40 border border-cyber-blue/20 rounded px-2 py-1">
+                        STARTER PROFILE
+                    </div>
                 </div>
 
                 <div className="space-y-3">
                     <ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="VIT (HP)" />
                     <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="NRG (MP)" />
                 </div>
-
-                {/* Avatar Modal */}
-                {showAvatar && (
-                    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8" onClick={() => setShowAvatar(false)}>
-                        <div className="w-full max-w-sm bg-cyber-black border border-cyber-blue/50 rounded-lg p-4 relative shadow-[0_0_50px_rgba(0,204,255,0.3)]" onClick={e => e.stopPropagation()}>
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-blue to-transparent animate-scanline"></div>
-                            <div className="flex justify-between items-center mb-4 border-b border-cyber-blue/20 pb-2">
-                                <h3 className="text-xl font-rajdhani font-bold text-cyber-blue tracking-widest">AGENT ID</h3>
-                                <button onClick={() => setShowAvatar(false)} className="text-red-500 hover:text-red-400"><X /></button>
-                            </div>
-                            <AvatarDisplay player={player} gameState={gameState} />
-                            <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-fira text-cyber-blue/60">
-                                <div className="bg-cyber-dark/50 p-2 rounded">WPN: <span className="text-white">{player?.equip?.weapon?.name || 'N/A'}</span></div>
-                                <div className="bg-cyber-dark/50 p-2 rounded">ARM: <span className="text-white">{player?.equip?.armor?.name || 'N/A'}</span></div>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 <div className="border-t border-cyber-blue/20 pt-3">
                     <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
@@ -212,9 +190,6 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, gameState = 'i
                             <span className="text-cyber-blue">LEVEL {player?.level}</span>
                         </div>
                     </div>
-
-                    {/* AVATAR DISPLAY */}
-                    <AvatarDisplay player={player} gameState={gameState} />
 
                     <div className="flex items-center gap-2 bg-cyber-dark/80 p-2 rounded border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
                         <div className="w-2 h-2 bg-yellow-400 rotate-45"></div>

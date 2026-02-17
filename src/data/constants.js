@@ -9,7 +9,7 @@ export const CONSTANTS = {
     MAX_LEVEL: 99,
     START_HP: 150,
     START_MP: 50,
-    START_GOLD: 500,
+    START_GOLD: 200,
     SAVE_KEY: 'aetheria_save_v3_6',
     DATA_VERSION: 3.6,
     REMOTE_CONFIG_ENABLED: import.meta.env.VITE_REMOTE_CONFIG === 'true' || false,

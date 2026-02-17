@@ -1,6 +1,6 @@
 import { DB } from '../data/db';
 import { LOOT_TABLE } from '../data/loot';
-import { BALANCE } from '../data/constants';
+import { BALANCE, CONSTANTS } from '../data/constants';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
 
 /**
@@ -374,7 +374,7 @@ export const CombatEngine = {
         starterState.achievements = Array.isArray(player.achievements) ? [...player.achievements] : [];
         starterState.skillLoadout = { selected: 0, cooldowns: {} };
         starterState.name = '';
-        starterState.gold = 50;
+        starterState.gold = CONSTANTS.START_GOLD;
         starterState.atk = (starterState.atk || 10) + (meta.bonusAtk || 0);
         starterState.maxHp = (starterState.maxHp || 150) + (meta.bonusHp || 0);
         starterState.maxMp = (starterState.maxMp || 50) + (meta.bonusMp || 0);

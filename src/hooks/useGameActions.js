@@ -203,8 +203,9 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     },
 
     reset: () => {
-        if (window.confirm('모든 데이터를 초기화하시겠습니까?')) {
+        if (window.confirm('초기 시작 설정으로 되돌리시겠습니까? 진행 중 데이터는 초기화됩니다.')) {
             dispatch({ type: 'RESET_GAME' });
+            addLog('system', '초기 시작 설정이 적용되었습니다. 새 에이전트 정보를 입력해 주세요.');
         }
     },
 

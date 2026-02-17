@@ -276,7 +276,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
             onClick={actions.reset}
             className="sm:col-start-4 bg-red-950/20 hover:bg-red-900/40 border border-red-800/30 p-3 sm:p-4 rounded-sm flex flex-col items-center gap-2 disabled:opacity-50 transition-all group"
           >
-            <X size={20} className="text-red-600 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-red-600/80">RESET</span>
+            <X size={20} className="text-red-600 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold text-red-600/80">INITIAL START</span>
           </button>
         </div>
       )}
