@@ -1,18 +1,17 @@
 import React, { useRef, useEffect } from 'react';
 import { Bot, AlertTriangle, CheckCircle, Terminal } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// 로그 타입별 스타일 매핑 (연쇄 if문 제거)
 const LOG_STYLES = {
     combat: {
-        text: 'text-cyber-pink',
+        text: 'text-cyber-pink shadow-[0_0_10px_rgba(255,0,255,0.4)]',
         bg: 'bg-cyber-pink/5 border-l-2 border-cyber-pink pl-2',
         icon: AlertTriangle,
     },
     critical: {
-        text: 'text-red-500 font-bold text-lg drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]',
+        text: 'text-red-500 font-bold text-lg drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]',
         bg: 'bg-red-950/40 border-l-4 border-red-500 pl-2',
         icon: null,
-        noAnim: true,
     },
     story: {
         text: 'text-cyber-blue italic',
@@ -30,22 +29,22 @@ const LOG_STYLES = {
         icon: null,
     },
     success: {
-        text: 'text-yellow-300',
+        text: 'text-yellow-300 drop-shadow-[0_0_8px_rgba(253,224,71,0.5)]',
         bg: 'transparent',
         icon: CheckCircle,
     },
     event: {
-        text: 'text-cyber-purple font-rajdhani text-lg',
+        text: 'text-cyber-purple font-rajdhani text-lg drop-shadow-[0_0_5px_rgba(188,19,254,0.5)]',
         bg: 'transparent',
         icon: null,
     },
     loading: {
-        text: 'text-cyber-blue/50 animate-pulse',
+        text: 'text-cyber-blue/50',
         bg: 'transparent',
         icon: null,
     },
     warning: {
-        text: 'text-orange-400',
+        text: 'text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]',
         bg: 'transparent',
         icon: null,
     },
@@ -57,53 +56,76 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
     const endRef = useRef(null);
     useEffect(() => {
         if (endRef.current) {
-            endRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+            endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
     }, [logs]);
 
     const bgClass = gameState === 'event'
-        ? "bg-cyber-purple/10 border-cyber-purple/50 shadow-neon-purple"
-        : "bg-cyber-black/90 border-cyber-green/30 shadow-neon-green";
+        ? "bg-cyber-purple/10 border-cyber-purple/50 shadow-[0_0_20px_rgba(188,19,254,0.15)]"
+        : "bg-cyber-black/90 border-cyber-green/30 shadow-[0_0_15px_rgba(0,255,157,0.1)]";
 
     return (
-        <div className={`min-w-0 ${mobile ? 'h-[44dvh]' : 'flex-1'} md:flex-1 md:h-auto ${bgClass} border rounded-lg p-3 md:p-4 relative overflow-y-auto custom-scrollbar font-fira transition-all duration-1000 flex flex-col`}>
+        <div className={`min-w-0 ${mobile ? 'h-[44dvh]' : 'flex-1'} md:flex-1 md:h-auto ${bgClass} border rounded-lg p-3 md:p-4 md:px-5 relative overflow-y-auto custom-scrollbar font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
             {/* Scanline overlay */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none sticky top-0 h-full w-full"></div>
 
-            <div className="flex-1 space-y-1 relative z-10">
+            <div className="flex-1 space-y-1.5 relative z-10 w-full overflow-x-hidden">
                 {logs.length === 0 && (
-                    <div className="text-cyber-blue/50 text-center mt-20 font-rajdhani tracking-widest animate-pulse">
-                        <Terminal size={48} className="mx-auto mb-4 opacity-50" />
+                    <motion.div
+                        className="text-cyber-blue/50 text-center mt-20 font-rajdhani tracking-widest flex flex-col items-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0.3, 0.8, 0.3] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                        <Terminal size={48} className="mx-auto mb-4 opacity-50 text-cyber-blue" />
                         SYSTEM INITIALIZED<br />
                         WAITING FOR INPUT...
-                    </div>
+                    </motion.div>
                 )}
-                {logs.map((log) => {
-                    const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
-                    const IconComp = style.icon;
-                    const anim = style.noAnim ? '' : 'animate-fade-in';
 
-                    return (
-                        <div key={log.id} className={`text-sm py-1 px-2 rounded-sm ${style.text} ${style.bg} ${anim} transition-all break-words whitespace-pre-wrap`}>
-                            {IconComp && <IconComp size={12} className="inline mr-2" />}
-                            {log.text}
-                        </div>
-                    );
-                })}
-                {logs.length > 0 && logs[logs.length - 1].type === 'loading' && (
-                    <div className="text-xs text-cyber-blue/40 animate-pulse mt-2 pl-2 border-l-2 border-cyber-blue/20">
-                        PROCESSING NARRATIVE...
-                    </div>
-                )}
+                <AnimatePresence initial={false}>
+                    {logs.map((log) => {
+                        const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
+                        const IconComp = style.icon;
+
+                        return (
+                            <motion.div
+                                key={log.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className={`text-sm py-1.5 px-3 rounded-sm ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
+                            >
+                                {IconComp && <IconComp size={14} className="inline mr-2 -mt-1 opacity-80" />}
+                                {log.text}
+                            </motion.div>
+                        );
+                    })}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {logs.length > 0 && logs[logs.length - 1].type === 'loading' && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="text-xs text-cyber-blue/40 font-rajdhani tracking-widest flex items-center gap-2 mt-4 pl-3"
+                        >
+                            <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                            <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                            <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                            <span className="ml-2">PROCESSING NARRATIVE...</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <div ref={endRef} />
             </div>
 
             {/* CLI INPUT AREA */}
-            <div className="mt-4 border-t border-cyber-green/20 pt-2 flex gap-2 items-center bg-cyber-black/90 sticky bottom-0 z-20 pb-[env(safe-area-inset-bottom)]">
+            <div className="mt-4 border-t border-cyber-blue/20 pt-3 md:pb-1 flex gap-2 items-center bg-transparent sticky bottom-0 z-20 focus-within:border-cyber-blue/50 transition-colors">
                 <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
                 <input
                     type="text"
-                    className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder-cyber-green/30"
+                    className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder:text-cyber-blue/30 focus:placeholder:text-cyber-blue/10 transition-all text-sm md:text-base"
                     placeholder="ENTER COMMAND..."
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') {

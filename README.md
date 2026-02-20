@@ -1,43 +1,67 @@
-# Aetheria RPG
+# Aetheria Roguelike (Project Aetheria)
 
-A terminal-style fantasy RPG built with React + Vite.
+A text-based, terminal-style fantasy RPG built with modern web technologies. Optimized for mobile PWA and desktop play.
 
-## Local Development
+## 🛠 Tech Stack
 
-```bash
-npm install
-npm run dev
+- **Framework**: React 19 + Vite
+- **Styling**: TailwindCSS + Custom Cyberpunk Theme
+- **Backend**: Firebase (Authentication, Firestore) for cloud save & leaderboard
+- **State Management**: `useReducer` + Custom Hooks (Hooks-based architecture)
+- **Audio**: Web Audio API (No external assets required)
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js v18.0.0 or higher (Developed on v24.13.1)
+- npm
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd aetheria-roguelike
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure Environment:
+   - Copy `.env.example` to `.env` (if available) or set up your keys.
+   - **Important**: This project uses `.env.local` for local API keys. See `SECURITY.md`.
+
+4. Run Development Server:
+   ```bash
+   npm run dev
+   ```
+
+## 📂 Project Structure
+
+```
+src/
+├── components/   # UI Components (Terminal, Dashboard, etc.)
+├── hooks/        # Game Logic Hooks (Core Engine, Combat, Inventory)
+├── systems/      # Logic Systems (CombatEngine, SoundManager)
+├── services/     # External Services (AI, Analytics)
+├── data/         # Game Data (Items, Mobs, Maps)
+└── reducers/     # Game State Reducer
 ```
 
-## Build
+## 🔒 Security
 
-```bash
-npm run build
-npm run preview
-```
+Please refer to `SECURITY.md` for guidelines on managing API keys and secrets. **Do not commit `.env.local`**.
 
-## Mobile App (PWA)
+## 📱 Features
 
-This project now supports installable mobile usage via PWA.
+- **PWA Support**: Installable on iOS/Android.
+- **Auto-Save**: Cloud synchronization via Firebase.
+- **Text-Based Interface**: Retro terminal aesthetic with modern UX.
+- **AI Integration**: (Optional) generative storytelling features.
 
-1. Build and deploy the app over HTTPS.
-2. Open on mobile browser.
-3. Use **Add to Home Screen** (Android) or **Share > Add to Home Screen** (iOS).
+## 📝 License
 
-PWA assets:
-- `public/manifest.webmanifest`
-- `public/sw.js`
-- `src/pwa/registerServiceWorker.js`
-
-## Gameplay Notes
-
-- Movement is now map-path based only.
-- Direct jump to town has been removed.
-
-## Useful PowerShell Tip
-
-If numbered `Get-Content` commands hang due to quote collisions, use this safe form:
-
-```powershell
-$i=0; Get-Content README.md | ForEach-Object { $i++; "{0,4}: {1}" -f $i, $_ }
-```
+Private Personal Project.
