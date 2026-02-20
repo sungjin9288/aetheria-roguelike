@@ -1,4 +1,29 @@
 import { ITEMS } from '../data/items';
+import { DB } from '../data/db';
+
+// --- 공유 유틸리티 (Shared Utilities) ---
+/** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
+export const toArray = (v) => (Array.isArray(v) ? v : []);
+
+/** 플레이어의 직업 스킬 목록을 반환 */
+export const getJobSkills = (player) => toArray(DB.CLASSES[player.job]?.skills);
+
+/** 아이템 인스턴스 생성 (고유 ID 부여) */
+export const makeItem = (template) => ({
+    ...template,
+    id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
+});
+
+/** 전체 DB 아이템 목록을 하나의 배열로 반환 */
+export const getAllItems = () => [
+    ...toArray(DB.ITEMS?.consumables),
+    ...toArray(DB.ITEMS?.weapons),
+    ...toArray(DB.ITEMS?.armors),
+    ...toArray(DB.ITEMS?.materials)
+];
+
+/** 이름으로 아이템을 찾아 반환 */
+export const findItemByName = (name) => getAllItems().find((i) => i.name === name);
 
 // Milestone Utility
 export const checkMilestones = (killRegistry, lastKillName) => {

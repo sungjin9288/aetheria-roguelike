@@ -1,20 +1,5 @@
 import { DB } from '../data/db';
-
-const toArray = (v) => (Array.isArray(v) ? v : []);
-
-const allItems = [
-    ...toArray(DB.ITEMS?.consumables),
-    ...toArray(DB.ITEMS?.weapons),
-    ...toArray(DB.ITEMS?.armors),
-    ...toArray(DB.ITEMS?.materials)
-];
-
-const findItemByName = (name) => allItems.find((i) => i.name === name);
-
-const makeItem = (template) => ({
-    ...template,
-    id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
-});
+import { toArray, makeItem, findItemByName } from '../utils/gameUtils';
 
 /**
  * createInventoryActions — 아이템 사용, 장비, 마켓, 제작, 퀘스트 완료

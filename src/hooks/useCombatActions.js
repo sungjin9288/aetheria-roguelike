@@ -2,10 +2,8 @@ import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { CombatEngine } from '../systems/CombatEngine';
 import { INITIAL_STATE } from '../reducers/gameReducer';
-
-const toArray = (v) => (Array.isArray(v) ? v : []);
-
-const getJobSkills = (player) => toArray(DB.CLASSES[player.job]?.skills);
+import { getJobSkills, makeItem, findItemByName } from '../utils/gameUtils';
+import { checkMilestones } from '../utils/gameUtils';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -64,6 +62,24 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
                 }
 
+                // 마일스톤 보상 처리 (checkMilestones 연결)
+                const baseName = CombatEngine.resolveEnemyBaseName(enemyAtActionStart);
+                const milestoneRewards = checkMilestones(
+                    updatedPlayer.stats?.killRegistry || {},
+                    baseName
+                );
+                if (milestoneRewards.length > 0) {
+                    milestoneRewards.forEach((reward) => {
+                        addLog('event', reward.msg);
+                        if (reward.type === 'gold') {
+                            updatedPlayer = { ...updatedPlayer, gold: updatedPlayer.gold + reward.val };
+                        } else if (reward.type === 'item') {
+                            const itemDef = findItemByName(reward.val);
+                            if (itemDef) updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemDef)] };
+                        }
+                    });
+                }
+
                 dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
                 addStoryLog('victory', { name: enemyAtActionStart.name });
                 return;
@@ -92,7 +108,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     defeatResult.logs.forEach((log) => addLog(log.type, log.text));
                     addStoryLog('death', { loc: playerForEnemyTurn.loc });
                 }
-            }, 450);
+            }, BALANCE.ENEMY_TURN_DELAY_MS);
             return;
         }
 

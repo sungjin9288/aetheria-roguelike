@@ -2,10 +2,12 @@ import { DB } from '../data/db';
 import { LOOT_TABLE } from '../data/loot';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
+import { MSG } from '../data/messages';
 
 /**
  * CombatEngine - Pure functions for combat calculations
  * All functions return new state without side effects.
+ * 모든 로그 메시지는 한국어로 통일합니다 (messages.js 사용).
  */
 export const CombatEngine = {
     DEFAULT_SKILL_LOADOUT: { selected: 0, cooldowns: {} },
@@ -26,9 +28,6 @@ export const CombatEngine = {
         return 1;
     },
 
-    /**
-     * Calculate damage with crit / element / guard modifiers.
-     */
     calculateDamage(stats, options = {}) {
         const {
             mult = 1,
@@ -65,7 +64,7 @@ export const CombatEngine = {
             buff.turn -= 1;
             if (buff.turn <= 0) {
                 updated.tempBuff = { atk: 0, def: 0, turn: 0, name: null };
-                logs.push({ type: 'info', text: 'Buff effect expired.' });
+                logs.push({ type: 'info', text: MSG.BUFF_EXPIRED });
             } else {
                 updated.tempBuff = buff;
             }
@@ -86,14 +85,17 @@ export const CombatEngine = {
         });
         const newEnemyHp = enemy.hp - damage;
         const tags = [];
-        if (enemy.guarding) tags.push('GuardBreak');
-        if (elementMultiplier > 1) tags.push('Weakness');
-        if (elementMultiplier < 1) tags.push('Resist');
+        if (enemy.guarding) tags.push('방어 격파');
+        if (elementMultiplier > 1) tags.push('속성 약점');
+        if (elementMultiplier < 1) tags.push('속성 저항');
 
         const logs = [{
             type: isCrit ? 'critical' : 'combat',
-            text: `${enemy.name} took ${damage} damage ${tags.length ? `[${tags.join(', ')}]` : ''}. (${Math.max(0, newEnemyHp)}/${enemy.maxHp})`
+            text: MSG.COMBAT_ATTACK_DETAIL(enemy.name, damage, Math.max(0, newEnemyHp), enemy.maxHp, tags)
         }];
+        if (isCrit) logs.push({ type: 'critical', text: MSG.COMBAT_CRIT });
+        if (elementMultiplier > 1) logs.push({ type: 'success', text: MSG.COMBAT_WEAKNESS });
+        if (elementMultiplier < 1) logs.push({ type: 'warning', text: MSG.COMBAT_RESIST });
 
         return {
             updatedEnemy: { ...enemy, hp: newEnemyHp, guarding: false },
@@ -105,7 +107,7 @@ export const CombatEngine = {
 
     performSkill(player, enemy, stats, skill) {
         if (!skill) {
-            return { success: false, logs: [{ type: 'error', text: 'No skill available.' }] };
+            return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
 
         const mpCost = skill.mp || BALANCE.SKILL_MP_COST;
@@ -114,10 +116,10 @@ export const CombatEngine = {
         const cooldown = cooldowns[skill.name] || 0;
 
         if (cooldown > 0) {
-            return { success: false, logs: [{ type: 'error', text: `${skill.name} cooldown: ${cooldown}` }] };
+            return { success: false, logs: [{ type: 'error', text: MSG.SKILL_ON_COOLDOWN(skill.name, cooldown) }] };
         }
         if (player.mp < mpCost) {
-            return { success: false, logs: [{ type: 'error', text: 'Not enough MP.' }] };
+            return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
         }
 
         const skillElem = skill.type || stats.elem;
@@ -161,12 +163,14 @@ export const CombatEngine = {
 
         const logs = [{
             type: isCrit ? 'critical' : 'combat',
-            text: `${skill.name}: ${totalDamage} damage to ${enemy.name}${isCrit ? ' (CRIT)' : ''}. (${Math.max(0, newEnemyHp)}/${enemy.maxHp})`
+            text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp)
         }];
-        if (elementMultiplier > 1) logs.push({ type: 'success', text: 'Element weakness hit.' });
-        if (elementMultiplier < 1) logs.push({ type: 'warning', text: 'Enemy resisted the element.' });
-        if (extraDamage > 0) logs.push({ type: 'event', text: `${skill.effect} bonus damage +${extraDamage}` });
-        if (updatedPlayer.tempBuff?.name === skill.name) logs.push({ type: 'system', text: `${skill.name} buff active (${updatedPlayer.tempBuff.turn} turns).` });
+        if (elementMultiplier > 1) logs.push({ type: 'success', text: MSG.COMBAT_WEAKNESS });
+        if (elementMultiplier < 1) logs.push({ type: 'warning', text: MSG.COMBAT_RESIST });
+        if (extraDamage > 0) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(skill.effect, extraDamage) });
+        if (updatedPlayer.tempBuff?.name === skill.name) {
+            logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(skill.name, updatedPlayer.tempBuff.turn) });
+        }
 
         return {
             success: true,
@@ -187,7 +191,7 @@ export const CombatEngine = {
                 updatedEnemy,
                 damage: 0,
                 isDead: false,
-                logs: [{ type: 'info', text: `${enemy.name} is stunned and loses a turn.` }]
+                logs: [{ type: 'info', text: MSG.COMBAT_ENEMY_STUNNED(enemy.name) }]
             };
         }
 
@@ -199,7 +203,7 @@ export const CombatEngine = {
                 updatedEnemy: { ...updatedEnemy, guarding: true },
                 damage: 0,
                 isDead: false,
-                logs: [{ type: 'warning', text: `${enemy.name} braces for impact.` }]
+                logs: [{ type: 'warning', text: MSG.COMBAT_ENEMY_GUARD(enemy.name) }]
             };
         }
 
@@ -215,7 +219,7 @@ export const CombatEngine = {
             isDead: newPlayerHp <= 0,
             logs: [{
                 type: heavy ? 'critical' : 'warning',
-                text: `${enemy.name} ${heavy ? 'heavy-hit' : 'hit'} for ${enemyDmg} damage.`
+                text: heavy ? MSG.COMBAT_ENEMY_HEAVY_HIT(enemy.name, enemyDmg) : MSG.COMBAT_ENEMY_HIT(enemy.name, enemyDmg)
             }]
         };
     },
@@ -223,7 +227,7 @@ export const CombatEngine = {
     attemptEscape(enemy, stats) {
         const success = Math.random() > BALANCE.ESCAPE_CHANCE;
         if (success) {
-            return { success: true, logs: [{ type: 'info', text: 'You escaped safely.' }] };
+            return { success: true, logs: [{ type: 'info', text: MSG.ESCAPE_SUCCESS }] };
         }
 
         const enemyDmg = Math.max(1, enemy.atk - stats.def);
@@ -231,8 +235,8 @@ export const CombatEngine = {
             success: false,
             damage: enemyDmg,
             logs: [
-                { type: 'error', text: 'Escape failed.' },
-                { type: 'warning', text: `${enemy.name} chased and dealt ${enemyDmg} damage.` }
+                { type: 'error', text: MSG.ESCAPE_FAIL },
+                { type: 'warning', text: MSG.ESCAPE_FAIL_DMG(enemy.name, enemyDmg) }
             ]
         };
     },
@@ -255,14 +259,14 @@ export const CombatEngine = {
         };
         if (enemy.isBoss) p.stats.bossKills = (p.stats.bossKills || 0) + 1;
 
-        const logs = [{ type: 'success', text: `Victory! EXP +${enemy.exp}, Gold +${enemy.gold}` }];
+        const logs = [{ type: 'success', text: MSG.VICTORY(enemy.exp, enemy.gold) }];
         let leveledUp = false;
         let visualEffect = null;
 
         const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
         const essenceGain = Math.max(1, Math.floor(enemy.exp / 8));
         meta.essence += essenceGain;
-        logs.push({ type: 'event', text: `Legacy essence +${essenceGain}` });
+        logs.push({ type: 'event', text: MSG.LEGACY_ESSENCE(essenceGain) });
 
         const nextRank = Math.floor(meta.essence / 150);
         if (nextRank > meta.rank) {
@@ -271,7 +275,7 @@ export const CombatEngine = {
             meta.bonusAtk += gain;
             meta.bonusHp += gain * 5;
             meta.bonusMp += gain * 3;
-            logs.push({ type: 'system', text: `Legacy rank ${meta.rank} reached.` });
+            logs.push({ type: 'system', text: MSG.LEGACY_RANK(meta.rank) });
         }
         p.meta = meta;
 
@@ -287,7 +291,7 @@ export const CombatEngine = {
             p.def += 1;
             leveledUp = true;
             visualEffect = 'levelUp';
-            logs.push({ type: 'system', text: `LEVEL UP! Lv.${p.level}` });
+            logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level) });
         }
 
         return { updatedPlayer: p, logs, leveledUp, visualEffect };
@@ -337,9 +341,9 @@ export const CombatEngine = {
                 const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
                 const newItem = applyItemPrefix(baseItem);
                 items.push(newItem);
-                logs.push({ type: 'success', text: `Loot: ${newItem.name}` });
+                logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
                 if (newItem.prefixed) {
-                    logs.push({ type: 'event', text: `접두사 부여: ${newItem.prefixName}` });
+                    logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
                 }
             }
         });
@@ -388,7 +392,7 @@ export const CombatEngine = {
         return {
             updatedPlayer: starterState,
             graveData,
-            logs: [{ type: 'error', text: 'You were defeated. Core progression persists via legacy bonuses.' }]
+            logs: [{ type: 'error', text: MSG.DEFEAT }]
         };
     }
 };

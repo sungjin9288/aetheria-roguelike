@@ -36,7 +36,9 @@ export const BALANCE = {
     PREFIX_CHANCE: 0.2,
     ITEM_PREFIX_CHANCE: 0.12,
     DEBOUNCE_SAVE_MS: 500,
-    LOG_MAX_SIZE: 50
+    LOG_MAX_SIZE: 50,
+    ENEMY_TURN_DELAY_MS: 450,   // 적 반격 딜레이 (ms)
+    MILESTONE_KILLS: [10, 50, 100], // 킬 마일스톤 기준
 };
 
 Object.freeze(CONSTANTS);

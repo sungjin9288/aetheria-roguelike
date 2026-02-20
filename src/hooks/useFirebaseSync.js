@@ -17,6 +17,7 @@ import { auth, db } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { migrateData } from '../utils/gameUtils';
 import { INITIAL_STATE } from '../reducers/gameReducer';
+import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 
 /**
  * useFirebaseSync — Firebase 인증, 실시간 동기화, 리더보드, 자동 저장
@@ -41,8 +42,11 @@ export const useFirebaseSync = (state, dispatch) => {
         dispatch({ type: 'SET_BOOT_STAGE', payload: 'auth' });
         signInAnonymously(auth)
             .then((cred) => {
-                dispatch({ type: 'SET_UID', payload: cred.user.uid });
+                const uid = cred.user.uid;
+                dispatch({ type: 'SET_UID', payload: uid });
                 dispatch({ type: 'SET_BOOT_STAGE', payload: 'config' });
+                // 크로스 디바이스 쿼터 동기화 (Dead Code → 활성화)
+                TokenQuotaManager.syncToFirestore(uid, db);
             })
             .catch((e) => {
                 console.error('Auth Failed', e);

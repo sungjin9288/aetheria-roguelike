@@ -1,10 +1,7 @@
 import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { AI_SERVICE } from '../services/aiService';
-
-const toArray = (v) => (Array.isArray(v) ? v : []);
-
-const getJobSkills = (player) => toArray(DB.CLASSES[player.job]?.skills);
+import { toArray, getJobSkills } from '../utils/gameUtils';
 
 /**
  * useGameActions — 이동, 탐색, 휴식, 이벤트, 직업, 퀘스트 수락, 시작, 리셋
