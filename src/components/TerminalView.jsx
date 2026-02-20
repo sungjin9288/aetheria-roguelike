@@ -65,11 +65,11 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
         : "bg-cyber-black/90 border-cyber-green/30 shadow-[0_0_15px_rgba(0,255,157,0.1)]";
 
     return (
-        <div className={`min-w-0 ${mobile ? 'h-[44dvh]' : 'flex-1'} md:flex-1 md:h-auto ${bgClass} border rounded-lg p-3 md:p-4 md:px-5 relative overflow-y-auto custom-scrollbar font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
+        <div className={`min-w-0 ${mobile ? 'h-[clamp(16rem,42dvh,30rem)] min-h-[16rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border rounded-lg p-3 md:p-4 md:px-5 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
             {/* Scanline overlay */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none sticky top-0 h-full w-full"></div>
+            <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none"></div>
 
-            <div className="flex-1 space-y-1.5 relative z-10 w-full overflow-x-hidden">
+            <div className="flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
                 {logs.length === 0 && (
                     <Motion.div
                         className="text-cyber-blue/50 text-center mt-20 font-rajdhani tracking-widest flex flex-col items-center"
@@ -121,7 +121,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
             </div>
 
             {/* CLI INPUT AREA */}
-            <div className="mt-4 border-t border-cyber-blue/20 pt-3 md:pb-1 flex gap-2 items-center bg-transparent sticky bottom-0 z-20 focus-within:border-cyber-blue/50 transition-colors">
+            <div className="mt-4 border-t border-cyber-blue/20 pt-3 md:pb-1 flex gap-2 items-center bg-transparent shrink-0 z-20 focus-within:border-cyber-blue/50 transition-colors">
                 <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
                 <input
                     type="text"

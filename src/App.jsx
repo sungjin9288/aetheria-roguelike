@@ -59,7 +59,7 @@ function App() {
 
   return (
     <MainLayout visualEffect={engine.visualEffect}>
-      <header className="flex flex-wrap justify-between items-center gap-2 mb-3 md:mb-4 pb-2 border-b border-cyber-blue/20 bg-cyber-slate/30 backdrop-blur-md px-3 md:px-4 -mx-2 md:-mx-4 pt-2 supports-[backdrop-filter]:bg-cyber-slate/10 z-20">
+      <header className="sticky top-[env(safe-area-inset-top)] flex flex-wrap justify-between items-center gap-2 mb-3 md:mb-4 pb-2 border-b border-cyber-blue/20 bg-cyber-slate/30 backdrop-blur-md px-3 md:px-4 -mx-2 md:-mx-4 pt-2 supports-[backdrop-filter]:bg-cyber-slate/10 z-30">
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
           <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyber-green to-cyber-blue bg-clip-text text-transparent flex items-center gap-2 font-rajdhani min-w-0 drop-shadow-sm">
             AETHERIA <span className="text-xs text-cyber-blue/50 font-normal border border-cyber-blue/30 px-1 rounded backdrop-blur-sm">v{CONSTANTS.DATA_VERSION}</span>
@@ -105,7 +105,7 @@ function App() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex-1 min-h-0 overflow-hidden flex flex-col md:flex-row gap-2 md:gap-4 relative z-10 w-full"
+        className="relative z-10 w-full grid grid-cols-1 gap-2 md:gap-4 md:grid-cols-[minmax(0,1fr)_clamp(18rem,30vw,24rem)] md:flex-1 md:min-h-0 md:overflow-hidden"
       >
         <TerminalView
           logs={engine.logs}
@@ -114,14 +114,15 @@ function App() {
           autoFocusInput={!isMobileViewport}
           mobile={isMobileViewport}
         />
-        <Dashboard
-          player={engine.player}
-          sideTab={engine.sideTab}
-          setSideTab={engine.actions.setSideTab}
-          actions={engine.actions}
-          stats={engine.getFullStats()}
-          mobile={false} // force standard rendering for desktop ref, though mobile might hide it
-        />
+        {!isMobileViewport && (
+          <Dashboard
+            player={engine.player}
+            sideTab={engine.sideTab}
+            setSideTab={engine.actions.setSideTab}
+            actions={engine.actions}
+            stats={engine.getFullStats()}
+          />
+        )}
       </Motion.div>
 
       {isMobileViewport && (

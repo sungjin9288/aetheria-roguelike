@@ -343,12 +343,12 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
     // Desktop
     return (
-        <aside className="hidden md:flex flex-col gap-4 h-full w-[30%] min-w-[280px] max-w-sm transition-all duration-300">
+        <aside className="hidden md:flex flex-col gap-4 h-full min-h-0 w-full transition-all duration-300">
             {/* STATUS PANEL */}
             <Motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-5 rounded-lg shadow-[0_0_20px_rgba(0,204,255,0.15)] relative overflow-hidden group"
+                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-5 rounded-lg shadow-[0_0_20px_rgba(0,204,255,0.15)] relative overflow-x-hidden overflow-y-auto custom-scrollbar group max-h-[clamp(20rem,52dvh,36rem)]"
             >
                 <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
                     <User size={80} className="text-cyber-blue" />
@@ -403,7 +403,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 overflow-hidden flex flex-col shadow-[0_0_20px_rgba(0,204,255,0.1)]"
+                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 min-h-0 overflow-hidden flex flex-col shadow-[0_0_20px_rgba(0,204,255,0.1)]"
             >
                 <div className="flex gap-2 mb-4 border-b border-cyber-blue/20 pb-3">
                     {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'system', icon: Zap }].map(tab => (

@@ -23,7 +23,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
   const mapData = DB.MAPS[player.loc];
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
-  const overlayPanelClass = 'fixed inset-x-2 top-[4.5rem] bottom-2 md:absolute md:inset-x-4 md:bottom-4 md:top-20';
+  const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
 
   if (gameState === 'combat') {
     return (
