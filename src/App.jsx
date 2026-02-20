@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Terminal as TerminalIcon, Volume2, VolumeX } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 import { CONSTANTS } from './data/constants';
 import { soundManager } from './systems/SoundManager';
@@ -31,7 +31,7 @@ function App() {
       <div className="flex h-screen w-full bg-cyber-black items-center justify-center text-cyber-blue font-rajdhani relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-cyber-black via-transparent to-cyber-black pointer-events-none"></div>
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
@@ -42,7 +42,7 @@ function App() {
             <span className="w-2 h-2 bg-cyber-green rounded-full animate-ping shadow-[0_0_10px_#00ff9d]"></span>
             <p className="tracking-widest text-sm">SYSTEM INITIALIZING... ({engine.bootStage})</p>
           </div>
-        </motion.div>
+        </Motion.div>
       </div>
     );
   }
@@ -101,7 +101,7 @@ function App() {
       {/* Grid overlay for aesthetic */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen" style={{ backgroundImage: 'linear-gradient(rgba(0, 204, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 204, 255, 0.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -122,7 +122,7 @@ function App() {
           stats={engine.getFullStats()}
           mobile={false} // force standard rendering for desktop ref, though mobile might hide it
         />
-      </motion.div>
+      </Motion.div>
 
       {isMobileViewport && (
         <Dashboard

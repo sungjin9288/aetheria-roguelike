@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Bot, AlertTriangle, CheckCircle, Terminal } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 const LOG_STYLES = {
     combat: {
@@ -71,7 +71,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
 
             <div className="flex-1 space-y-1.5 relative z-10 w-full overflow-x-hidden">
                 {logs.length === 0 && (
-                    <motion.div
+                    <Motion.div
                         className="text-cyber-blue/50 text-center mt-20 font-rajdhani tracking-widest flex flex-col items-center"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: [0.3, 0.8, 0.3] }}
@@ -80,7 +80,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                         <Terminal size={48} className="mx-auto mb-4 opacity-50 text-cyber-blue" />
                         SYSTEM INITIALIZED<br />
                         WAITING FOR INPUT...
-                    </motion.div>
+                    </Motion.div>
                 )}
 
                 <AnimatePresence initial={false}>
@@ -89,7 +89,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                         const IconComp = style.icon;
 
                         return (
-                            <motion.div
+                            <Motion.div
                                 key={log.id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -97,14 +97,14 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                             >
                                 {IconComp && <IconComp size={14} className="inline mr-2 -mt-1 opacity-80" />}
                                 {log.text}
-                            </motion.div>
+                            </Motion.div>
                         );
                     })}
                 </AnimatePresence>
 
                 <AnimatePresence>
                     {logs.length > 0 && logs[logs.length - 1].type === 'loading' && (
-                        <motion.div
+                        <Motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -114,7 +114,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                             <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                             <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                             <span className="ml-2">PROCESSING NARRATIVE...</span>
-                        </motion.div>
+                        </Motion.div>
                     )}
                 </AnimatePresence>
                 <div ref={endRef} />

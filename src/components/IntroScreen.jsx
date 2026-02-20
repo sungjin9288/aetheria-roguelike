@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 const IntroScreen = ({ onStart }) => {
     const [name, setName] = useState('');
@@ -10,31 +10,31 @@ const IntroScreen = ({ onStart }) => {
     };
 
     return (
-        <motion.div
+        <Motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="p-10 border border-cyber-purple/30 bg-cyber-slate/80 backdrop-blur-xl rounded-xl shadow-[0_0_30px_rgba(168,85,247,0.2)] max-w-md w-full text-center relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(168,85,247,0.4)]"
         >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-purple to-transparent animate-scanline"></div>
-            <motion.h1
+            <Motion.h1
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.8 }}
                 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyber-blue via-cyber-purple to-cyber-pink mb-2 font-rajdhani drop-shadow-lg"
             >
                 AETHERIA
-            </motion.h1>
-            <motion.p
+            </Motion.h1>
+            <Motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8, duration: 1 }}
                 className="text-cyber-blue/70 mb-8 font-fira text-xs tracking-[0.2em] relative z-10"
             >
                 NEURAL LINK ESTABLISHED
-            </motion.p>
+            </Motion.p>
 
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2, duration: 0.8 }}
@@ -70,7 +70,7 @@ const IntroScreen = ({ onStart }) => {
                     <div className="absolute inset-0 border border-transparent group-hover:border-cyber-blue/20 rounded pointer-events-none transition-all"></div>
                 </div>
 
-                <motion.button
+                <Motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleSubmit}
@@ -78,9 +78,9 @@ const IntroScreen = ({ onStart }) => {
                     className="w-full py-3 bg-cyber-blue/10 border border-cyber-blue/50 text-cyber-blue font-rajdhani font-bold hover:bg-cyber-blue/20 hover:shadow-[0_0_20px_rgba(0,204,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                     INITIALIZE CONNECTION
-                </motion.button>
-            </motion.div>
-        </motion.div>
+                </Motion.button>
+            </Motion.div>
+        </Motion.div>
     );
 };
 

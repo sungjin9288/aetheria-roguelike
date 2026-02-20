@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
 import { DB } from '../data/db';
 import { APP_ID } from '../data/constants';
@@ -39,12 +39,12 @@ const ProgressBar = ({ value, max, variant = 'hp', label }) => {
                 <span>{safeValue}/{safeMax}</span>
             </div>
             <div className={`w-full h-2 bg-cyber-dark/50 rounded-sm overflow-hidden border ${theme.border} relative`}>
-                <motion.div
+                <Motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
                     className={`h-full ${theme.fill} ${theme.shadow}`}
-                ></motion.div>
+                ></Motion.div>
             </div>
         </div>
     );
@@ -58,10 +58,88 @@ const tabVariants = {
 };
 
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
+    const [feedbackText, setFeedbackText] = useState('');
+    const [feedbackStatus, setFeedbackStatus] = useState(null);
+
     const groupedInv = player.inv.reduce((acc, item) => {
         acc[item.name] = (acc[item.name] || 0) + 1;
         return acc;
     }, {});
+
+    const sessionId = useMemo(() => Date.now().toString(36).toUpperCase(), []);
+
+    const updateLiveConfig = useCallback(async (partialConfig) => {
+        const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
+        await setDoc(configRef, { config: partialConfig }, { merge: true });
+    }, []);
+
+    const handleSetMultiplier = useCallback(async () => {
+        const raw = window.prompt('EXP Multiplier (1-5):', String(actions.liveConfig?.eventMultiplier || 1));
+        if (raw === null) return;
+
+        const value = Number.parseFloat(raw);
+        if (!Number.isFinite(value) || value < 1 || value > 5) {
+            setFeedbackStatus({ type: 'error', text: 'Multiplier must be between 1 and 5.' });
+            return;
+        }
+
+        try {
+            await updateLiveConfig({ eventMultiplier: value });
+            setFeedbackStatus({ type: 'success', text: `Multiplier updated to x${value}.` });
+        } catch {
+            setFeedbackStatus({ type: 'error', text: 'Failed to update multiplier.' });
+        }
+    }, [actions.liveConfig, updateLiveConfig]);
+
+    const handleBroadcast = useCallback(async () => {
+        const raw = window.prompt('Announcement (max 100 chars):', actions.liveConfig?.announcement || '');
+        if (raw === null) return;
+
+        const text = raw.trim();
+        if (!text) {
+            setFeedbackStatus({ type: 'error', text: 'Announcement cannot be empty.' });
+            return;
+        }
+
+        try {
+            await updateLiveConfig({ announcement: text.slice(0, 100) });
+            setFeedbackStatus({ type: 'success', text: 'Broadcast updated.' });
+        } catch {
+            setFeedbackStatus({ type: 'error', text: 'Failed to update broadcast.' });
+        }
+    }, [actions.liveConfig, updateLiveConfig]);
+
+    const submitFeedback = useCallback(async () => {
+        const validation = FeedbackValidator.validate(feedbackText);
+        if (!validation.valid) {
+            setFeedbackStatus({ type: 'error', text: validation.error });
+            return;
+        }
+
+        try {
+            const feedbackCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'feedback');
+            await addDoc(feedbackCol, {
+                uid: actions.getUid(),
+                nickname: player.name,
+                message: feedbackText.trim(),
+                statsSummary: {
+                    level: player.level,
+                    job: player.job,
+                    kills: player.stats?.kills || 0
+                },
+                timestamp: serverTimestamp()
+            });
+            FeedbackValidator.markSubmitted();
+            setFeedbackText('');
+            setFeedbackStatus({ type: 'success', text: 'Transmission complete.' });
+        } catch {
+            setFeedbackStatus({ type: 'error', text: 'Transmission failed.' });
+        }
+    }, [actions, feedbackText, player.job, player.level, player.name, player.stats]);
+
+    const feedbackStatusClass = feedbackStatus?.type === 'error'
+        ? 'text-red-400 border-red-500/30 bg-red-950/20'
+        : 'text-cyber-green border-cyber-green/30 bg-cyber-green/10';
 
     const renderTabContent = (isMobile) => {
         const btnClass = isMobile
@@ -70,7 +148,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
         return (
             <AnimatePresence mode="wait">
-                <motion.div
+                <Motion.div
                     key={sideTab}
                     variants={tabVariants}
                     initial="hidden"
@@ -82,14 +160,14 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                         const item = player?.inv?.find(it => it.name === name);
                         if (!item) return null;
                         return (
-                            <motion.div
+                            <Motion.div
                                 initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                                 key={i}
                                 className="bg-cyber-dark/40 p-3 rounded-sm border border-cyber-blue/10 flex justify-between items-center group hover:border-cyber-green/50 hover:bg-cyber-green/5 transition-all cursor-pointer min-h-[50px]"
                             >
                                 <span className={`text-sm font-fira ${item.tier >= 2 ? 'text-cyber-purple drop-shadow-sm' : 'text-cyber-blue/80'}`}>{name} <span className="text-cyber-blue/30 text-xs">x{count}</span></span>
-                                <motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.useItem(item)} className={btnClass}>USE</motion.button>
-                            </motion.div>
+                                <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.useItem(item)} className={btnClass}>USE</Motion.button>
+                            </Motion.div>
                         );
                     })}
 
@@ -100,7 +178,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 if (!qData) return null;
                                 const isComplete = pq.progress >= qData.goal;
                                 return (
-                                    <motion.div
+                                    <Motion.div
                                         initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                                         key={i}
                                         className={`p-3 rounded-sm border mb-2 transition-all ${isComplete ? 'bg-cyber-green/10 border-cyber-green/50 shadow-[0_0_10px_rgba(0,255,157,0.1)]' : 'bg-cyber-dark/40 border-cyber-blue/10'}`}
@@ -111,26 +189,26 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                                 <div className="text-xs text-cyber-blue/50 mt-1">{qData.desc}</div>
                                             </div>
                                             {isComplete ? (
-                                                <motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(pq.id)} className={`px-4 py-2 bg-cyber-green hover:bg-emerald-400 text-cyber-black font-bold text-xs rounded-sm animate-pulse shadow-neon-green min-h-[44px]`}>CLAIM REWARD</motion.button>
+                                                <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(pq.id)} className={`px-4 py-2 bg-cyber-green hover:bg-emerald-400 text-cyber-black font-bold text-xs rounded-sm animate-pulse shadow-neon-green min-h-[44px]`}>CLAIM REWARD</Motion.button>
                                             ) : (
                                                 <div className="text-xs text-cyber-blue/50 font-fira bg-cyber-black/50 px-2 py-1 rounded border border-cyber-blue/10">{pq.progress} / {qData.goal}</div>
                                             )}
                                         </div>
-                                    </motion.div>
+                                    </Motion.div>
                                 );
                             })
                         ) : (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-cyber-blue/30 text-center py-10 flex flex-col items-center gap-2">
+                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-cyber-blue/30 text-center py-10 flex flex-col items-center gap-2">
                                 <Scroll size={24} className="opacity-20" />
                                 <span className="text-sm font-rajdhani tracking-widest">NO ACTIVE MISSIONS</span>
-                            </motion.div>
+                            </Motion.div>
                         )
                     )}
 
                     {sideTab === 'system' && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 p-2">
+                        <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 p-2">
                             <div className="text-xs text-cyber-blue/40 mb-2 font-fira border-l-2 border-cyber-blue/10 pl-3">
-                                <p>SESSION: {Date.now().toString(36).toUpperCase()}</p>
+                                <p>SESSION: {sessionId}</p>
                                 <p>UID: {actions.getUid()}</p>
                                 <p>BUILD: v3.5.1 (STABLE)</p>
                             </div>
@@ -155,7 +233,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 </div>
                             )}
 
-                            <motion.button
+                            <Motion.button
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => {
                                     const exportData = {
@@ -170,14 +248,14 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 className="w-full bg-cyber-blue/10 hover:bg-cyber-blue/20 text-cyber-blue py-3 rounded-sm border border-cyber-blue/30 flex items-center justify-center gap-2 font-rajdhani font-bold tracking-wider transition-all hover:shadow-[0_0_15px_rgba(0,204,255,0.3)] min-h-[44px]"
                             >
                                 <Save size={16} /> DOWNLOAD LOGS
-                            </motion.button>
+                            </Motion.button>
 
                             {actions.isAdmin() && (
                                 <div className="bg-red-950/20 p-3 rounded border border-red-500/30 mt-4">
                                     <div className="text-xs font-bold text-red-400 mb-2 font-rajdhani flex items-center gap-2"><Shield size={12} /> ADMIN CONTROLS</div>
                                     <div className="grid grid-cols-2 gap-2">
-                                        <button onClick={async () => {/*...Omitted for brevity...*/ }} className="min-h-[44px] bg-red-900/50 hover:bg-red-800/50 py-2 rounded text-white border border-red-500/30 text-xs">SET MULTIPLIER</button>
-                                        <button onClick={async () => {/*...*/ }} className="min-h-[44px] bg-red-900/50 hover:bg-red-800/50 py-2 rounded text-white border border-red-500/30 text-xs">BROADCAST</button>
+                                        <button onClick={handleSetMultiplier} className="min-h-[44px] bg-red-900/50 hover:bg-red-800/50 py-2 rounded text-white border border-red-500/30 text-xs">SET MULTIPLIER</button>
+                                        <button onClick={handleBroadcast} className="min-h-[44px] bg-red-900/50 hover:bg-red-800/50 py-2 rounded text-white border border-red-500/30 text-xs">BROADCAST</button>
                                     </div>
                                 </div>
                             )}
@@ -185,44 +263,36 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             {/* FEEDBACK FORM */}
                             <div className="bg-cyber-black/40 p-3 rounded border border-cyber-green/20 mt-4">
                                 <div className="text-xs font-bold text-cyber-green/70 mb-2 font-rajdhani">System Feedback</div>
+                                {feedbackStatus && (
+                                    <div className={`text-xs mb-2 px-2 py-1 rounded border ${feedbackStatusClass}`}>
+                                        {feedbackStatus.text}
+                                    </div>
+                                )}
                                 <textarea
-                                    id={`feedbackInput${isMobile ? 'Mobile' : 'Desktop'}`}
                                     placeholder="Report anomalies..."
                                     className="w-full bg-cyber-black/80 border border-cyber-green/20 rounded p-2 text-sm text-cyber-blue/80 h-24 resize-none focus:outline-none focus:border-cyber-green/50 placeholder:text-cyber-green/20 font-fira"
+                                    value={feedbackText}
+                                    onChange={(e) => setFeedbackText(e.target.value)}
                                     maxLength={500}
                                 />
-                                <motion.button
+                                <Motion.button
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={async () => {
-                                        const input = document.getElementById(`feedbackInput${isMobile ? 'Mobile' : 'Desktop'}`);
-                                        const msg = input?.value?.trim();
-                                        if (!msg) return alert('Input required.');
-                                        try {
-                                            const feedbackCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'feedback');
-                                            await addDoc(feedbackCol, {
-                                                uid: actions.getUid(), nickname: player.name, message: msg, timestamp: serverTimestamp()
-                                            });
-                                            input.value = '';
-                                            alert('Transmission complete.');
-                                        } catch {
-                                            alert('Transmission failed.');
-                                        }
-                                    }}
+                                    onClick={submitFeedback}
                                     className="w-full mt-2 min-h-[44px] bg-cyber-green/10 hover:bg-cyber-green/20 py-2 rounded text-cyber-green text-sm border border-cyber-green/30 font-bold tracking-wider"
                                 >
                                     TRANSMIT
-                                </motion.button>
+                                </Motion.button>
                             </div>
-                        </motion.div>
+                        </Motion.div>
                     )}
-                </motion.div>
+                </Motion.div>
             </AnimatePresence>
         );
     };
 
     if (mobile) {
         return (
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="md:hidden mt-2 bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg p-4 space-y-4 shadow-[0_0_20px_rgba(0,204,255,0.15)] relative z-10"
@@ -249,7 +319,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 <div className="border-t border-cyber-blue/20 pt-4">
                     <div className="flex gap-2 mb-4 overflow-x-auto pb-1 no-scrollbar">
                         {['inventory', 'quest', 'system'].map(tab => (
-                            <motion.button
+                            <Motion.button
                                 whileTap={{ scale: 0.95 }}
                                 key={tab}
                                 onClick={() => setSideTab(tab)}
@@ -259,7 +329,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                         : 'text-cyber-blue/50 border-cyber-blue/30 hover:border-cyber-blue/70 bg-cyber-dark/40'}`}
                             >
                                 {tab}
-                            </motion.button>
+                            </Motion.button>
                         ))}
                     </div>
 
@@ -267,7 +337,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                         {renderTabContent(true)}
                     </div>
                 </div>
-            </motion.div>
+            </Motion.div>
         );
     }
 
@@ -275,7 +345,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
     return (
         <aside className="hidden md:flex flex-col gap-4 h-full w-[30%] min-w-[280px] max-w-sm transition-all duration-300">
             {/* STATUS PANEL */}
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-5 rounded-lg shadow-[0_0_20px_rgba(0,204,255,0.15)] relative overflow-hidden group"
@@ -326,10 +396,10 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                         <div className="flex justify-between"><span>ARM:</span> <span className="text-white">{player?.equip?.armor?.name || 'CIVILIAN'}</span></div>
                     </div>
                 </div>
-            </motion.div>
+            </Motion.div>
 
             {/* TABS */}
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
@@ -354,7 +424,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                     {renderTabContent(false)}
                 </div>
-            </motion.div>
+            </Motion.div>
         </aside>
     );
 };
