@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
@@ -7,6 +7,11 @@ import { DB } from '../data/db';
 import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
 import { FeedbackValidator } from '../systems/FeedbackValidator';
+import SmartInventory from './SmartInventory';
+import AchievementPanel from './AchievementPanel';
+import SkillTreePreview from './SkillTreePreview';
+import MapNavigator from './MapNavigator';
+import { QuickSlotAssigner } from './QuickSlot';
 
 const BAR_THEMES = {
     hp: {
@@ -57,16 +62,20 @@ const tabVariants = {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
+const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
+
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState(null);
 
+    // groupedInv kept for potential custom rendering outside SmartInventory
+    // eslint-disable-next-line no-unused-vars
     const groupedInv = player.inv.reduce((acc, item) => {
         acc[item.name] = (acc[item.name] || 0) + 1;
         return acc;
     }, {});
 
-    const sessionId = useMemo(() => Date.now().toString(36).toUpperCase(), []);
+    const sessionId = _SESSION_ID;
 
     const updateLiveConfig = useCallback(async (partialConfig) => {
         const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
@@ -142,7 +151,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
         : 'text-cyber-green border-cyber-green/30 bg-cyber-green/10';
 
     const renderTabContent = (isMobile) => {
-        const btnClass = isMobile
+        const _btnClass = isMobile
             ? "text-xs bg-cyber-blue/10 hover:bg-cyber-blue/30 text-cyber-blue px-4 py-3 rounded border border-cyber-blue/30 font-bold min-h-[44px]"
             : "text-[10px] bg-cyber-blue/10 hover:bg-cyber-blue/30 text-cyber-blue px-3 py-1.5 rounded-sm border border-cyber-blue/30 font-bold tracking-wider";
 
@@ -156,20 +165,9 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     exit="exit"
                     className="space-y-2 pr-1"
                 >
-                    {sideTab === 'inventory' && Object.entries(groupedInv).map(([name, count], i) => {
-                        const item = player?.inv?.find(it => it.name === name);
-                        if (!item) return null;
-                        return (
-                            <Motion.div
-                                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                                key={i}
-                                className="bg-cyber-dark/40 p-3 rounded-sm border border-cyber-blue/10 flex justify-between items-center group hover:border-cyber-green/50 hover:bg-cyber-green/5 transition-all cursor-pointer min-h-[50px]"
-                            >
-                                <span className={`text-sm font-fira ${item.tier >= 2 ? 'text-cyber-purple drop-shadow-sm' : 'text-cyber-blue/80'}`}>{name} <span className="text-cyber-blue/30 text-xs">x{count}</span></span>
-                                <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.useItem(item)} className={btnClass}>USE</Motion.button>
-                            </Motion.div>
-                        );
-                    })}
+                    {sideTab === 'inventory' && (
+                        <SmartInventory player={player} actions={actions} />
+                    )}
 
                     {sideTab === 'quest' && (
                         player?.quests?.length > 0 ? (
@@ -203,6 +201,22 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 <span className="text-sm font-rajdhani tracking-widest">NO ACTIVE MISSIONS</span>
                             </Motion.div>
                         )
+                    )}
+
+                    {sideTab === 'achievements' && (
+                        <AchievementPanel player={player} />
+                    )}
+
+                    {sideTab === 'skills' && (
+                        <SkillTreePreview player={player} />
+                    )}
+
+                    {sideTab === 'map' && (
+                        <MapNavigator
+                            player={player}
+                            onMove={(loc) => actions.move(loc)}
+                            isAiThinking={false}
+                        />
                     )}
 
                     {sideTab === 'system' && (
@@ -406,17 +420,17 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 min-h-0 overflow-hidden flex flex-col shadow-[0_0_20px_rgba(0,204,255,0.1)]"
             >
                 <div className="flex gap-2 mb-4 border-b border-cyber-blue/20 pb-3">
-                    {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'system', icon: Zap }].map(tab => (
+                    {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'system', icon: Zap }].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setSideTab(tab.id)}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold font-rajdhani uppercase tracking-wider rounded-sm transition-all
+                            className={`flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold font-rajdhani uppercase tracking-wider rounded-sm transition-all min-h-[36px]
                                 ${sideTab === tab.id
                                     ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/50 shadow-[0_0_10px_rgba(0,204,255,0.3)]'
                                     : 'text-cyber-blue/30 hover:text-cyber-blue/70 hover:bg-cyber-blue/5'}`}
                         >
-                            <tab.icon size={14} />
-                            {tab.id}
+                            <tab.icon size={12} />
+                            <span className="hidden xl:inline">{tab.id}</span>
                         </button>
                     ))}
                 </div>

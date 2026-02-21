@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Terminal as TerminalIcon, Volume2, VolumeX } from 'lucide-react';
+import { Terminal as TerminalIcon, Volume2, VolumeX, Play, Square } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 
 import { CONSTANTS } from './data/constants';
@@ -9,14 +9,37 @@ import TerminalView from './components/TerminalView';
 import Dashboard from './components/Dashboard';
 import ControlPanel from './components/ControlPanel';
 import IntroScreen from './components/IntroScreen';
+import PostCombatCard from './components/PostCombatCard';
+import OnboardingGuide from './components/OnboardingGuide';
 import { useGameEngine } from './hooks/useGameEngine';
+import { useAutoExplore } from './hooks/useAutoExplore';
 
 function App() {
   const engine = useGameEngine();
-  const [isMuted, setIsMuted] = useState(soundManager.muted);
+  const [isMuted, setIsMuted] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(() => (
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
   ));
+  const [showOnboarding, setShowOnboarding] = useState(true);
+
+  // Auto-Explore hook
+  const autoExplore = useAutoExplore({
+    player: engine.player,
+    gameState: engine.gameState,
+    isAiThinking: engine.isAiThinking,
+    actions: engine.actions,
+  });
+
+  // QuickSlot use handler
+  const handleQuickSlotUse = (item) => {
+    engine.actions.useItem(item);
+  };
+
+  // Dismiss onboarding when user explicitly dismisses or after first combat survive
+  const handleDismissOnboarding = () => {
+    setShowOnboarding(false);
+    engine.actions.dismissOnboarding?.();
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -92,7 +115,7 @@ function App() {
             {isMuted ? <VolumeX size={16} data-mute-icon /> : <Volume2 size={16} data-mute-icon />}
           </button>
           <div className="flex items-center gap-2 text-xs font-fira text-cyber-blue/70 bg-cyber-dark/50 px-2.5 py-1.5 rounded-md border border-cyber-blue/20 backdrop-blur-sm shadow-inner">
-            <span className={`w-2 h-2 rounded-full ${engine.syncStatus === 'synced' ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]' : engine.syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500 shadow-[0_0_8px_#ff00ff]'}`}></span>
+            <span className={`w - 2 h - 2 rounded - full ${engine.syncStatus === 'synced' ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]' : engine.syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500 shadow-[0_0_8px_#ff00ff]'} `}></span>
             {engine.syncStatus === 'synced' ? 'ONLINE' : engine.syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE'}
           </div>
         </div>
@@ -100,6 +123,14 @@ function App() {
 
       {/* Grid overlay for aesthetic */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen" style={{ backgroundImage: 'linear-gradient(rgba(0, 204, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 204, 255, 0.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+
+      {!isMobileViewport && showOnboarding && !engine.onboardingDismissed && (
+        <OnboardingGuide
+          player={engine.player}
+          gameState={engine.gameState}
+          onDismiss={handleDismissOnboarding}
+        />
+      )}
 
       <Motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -113,6 +144,9 @@ function App() {
           onCommand={engine.handleCommand}
           autoFocusInput={!isMobileViewport}
           mobile={isMobileViewport}
+          player={engine.player}
+          quickSlots={engine.quickSlots}
+          onQuickSlotUse={handleQuickSlotUse}
         />
         {!isMobileViewport && (
           <Dashboard
@@ -121,6 +155,7 @@ function App() {
             setSideTab={engine.actions.setSideTab}
             actions={engine.actions}
             stats={engine.getFullStats()}
+            quickSlots={engine.quickSlots}
           />
         )}
       </Motion.div>
@@ -133,6 +168,7 @@ function App() {
           setSideTab={engine.actions.setSideTab}
           actions={engine.actions}
           stats={engine.getFullStats()}
+          quickSlots={engine.quickSlots}
         />
       )}
 
@@ -146,6 +182,39 @@ function App() {
         isAiThinking={engine.isAiThinking}
         currentEvent={engine.currentEvent}
       />
+
+      {/* Post-Combat Result Card */}
+      <PostCombatCard
+        result={engine.postCombatResult}
+        onClose={() => engine.actions.clearPostCombat?.()}
+        onRest={() => engine.actions.rest?.()}
+        onSell={() => engine.actions.setSideTab?.('inventory')}
+      />
+
+      {/* Auto-Explore Floating Button */}
+      {engine.gameState === 'idle' && (
+        <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
+          {autoExplore.autoLog && (
+            <div className="text-xs font-fira text-cyber-blue/70 bg-cyber-black/80 border border-cyber-blue/20 px-2 py-1 rounded backdrop-blur-md max-w-[180px] text-right">
+              {autoExplore.autoLog}
+            </div>
+          )}
+          <Motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => autoExplore.isAutoRunning ? autoExplore.stop('수동 정지') : autoExplore.start(10)}
+            disabled={engine.isAiThinking}
+            className={`flex items - center gap - 2 px - 4 py - 2.5 rounded - full border font - rajdhani font - bold text - xs tracking - wider shadow - lg transition - all
+              ${autoExplore.isAutoRunning
+                ? 'bg-red-950/80 border-red-500/50 text-red-400 hover:bg-red-900/80'
+                : 'bg-cyber-green/10 border-cyber-green/40 text-cyber-green hover:bg-cyber-green/20'
+              } backdrop - blur - md`}
+          >
+            {autoExplore.isAutoRunning
+              ? <><Square size={14} /> STOP ({autoExplore.runsLeft}회 남음)</>
+              : <><Play size={14} /> AUTO EXPLORE</>}
+          </Motion.button>
+        </div>
+      )}
     </MainLayout>
   );
 }

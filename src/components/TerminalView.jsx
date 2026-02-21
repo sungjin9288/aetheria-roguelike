@@ -1,6 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Bot, AlertTriangle, CheckCircle, Terminal } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import CommandAutocomplete from './CommandAutocomplete';
+import QuickSlot from './QuickSlot';
 
 const LOG_STYLES = {
     combat: {
@@ -52,8 +54,9 @@ const LOG_STYLES = {
 
 const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
 
-const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobile = false }) => {
+const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobile = false, player, quickSlots, onQuickSlotUse }) => {
     const endRef = useRef(null);
+    const [inputValue, setInputValue] = useState('');
     useEffect(() => {
         if (endRef.current) {
             endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -121,23 +124,47 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
             </div>
 
             {/* CLI INPUT AREA */}
-            <div className="mt-4 border-t border-cyber-blue/20 pt-3 md:pb-1 flex gap-2 items-center bg-transparent shrink-0 z-20 focus-within:border-cyber-blue/50 transition-colors">
-                <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
-                <input
-                    type="text"
-                    className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder:text-cyber-blue/30 focus:placeholder:text-cyber-blue/10 transition-all text-sm md:text-base"
-                    placeholder="ENTER COMMAND..."
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            const val = e.target.value;
-                            if (val.trim()) {
-                                if (onCommand) onCommand(val);
-                                e.target.value = '';
+            <div className="mt-4 border-t border-cyber-blue/20 pt-3 md:pb-1 flex flex-col gap-2 bg-transparent shrink-0 z-20">
+                {/* QuickSlot row */}
+                {player && quickSlots && (
+                    <QuickSlot
+                        slots={quickSlots}
+                        onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
+                        gameState={gameState}
+                    />
+                )}
+                {/* Command input + autocomplete */}
+                <div className="relative flex gap-2 items-center focus-within:border-cyber-blue/50 transition-colors">
+                    {player && (
+                        <CommandAutocomplete
+                            input={inputValue}
+                            gameState={gameState}
+                            player={player}
+                            onSelect={(cmd) => {
+                                setInputValue(cmd);
+                                onCommand?.(cmd);
+                                setInputValue('');
+                            }}
+                        />
+                    )}
+                    <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder:text-cyber-blue/30 focus:placeholder:text-cyber-blue/10 transition-all text-sm md:text-base"
+                        placeholder="ENTER COMMAND..."
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                if (inputValue.trim()) {
+                                    onCommand?.(inputValue);
+                                    setInputValue('');
+                                }
                             }
-                        }
-                    }}
-                    autoFocus={autoFocusInput}
-                />
+                        }}
+                        autoFocus={autoFocusInput}
+                    />
+                </div>
             </div>
         </div>
     );

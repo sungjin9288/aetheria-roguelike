@@ -28,7 +28,10 @@ export const useGameEngine = () => {
         bootStage,
         liveConfig,
         leaderboard,
-        sideTab
+        sideTab,
+        quickSlots,
+        postCombatResult,
+        onboardingDismissed,
     } = state;
 
     // --- Firebase Sync ---
@@ -104,6 +107,12 @@ export const useGameEngine = () => {
                 setGameState: (val) => dispatch({ type: 'SET_GAME_STATE', payload: val }),
                 setShopItems: (val) => dispatch({ type: 'SET_SHOP_ITEMS', payload: val }),
                 setAiThinking: (val) => dispatch({ type: 'SET_AI_THINKING', payload: val }),
+
+                // Feature Actions
+                setQuickSlot: (index, item) => dispatch({ type: 'SET_QUICK_SLOT', payload: { index, item } }),
+                clearPostCombat: () => dispatch({ type: 'SET_POST_COMBAT_RESULT', payload: null }),
+                dismissOnboarding: () => dispatch({ type: 'SET_ONBOARDING_DISMISSED' }),
+
                 getUid: () => uid,
                 isAdmin: () => ADMIN_UIDS.includes(uid),
                 liveConfig,
@@ -135,6 +144,11 @@ export const useGameEngine = () => {
         leaderboard,
         liveConfig,
         bootStage,
-        handleCommand
+        handleCommand,
+        // Feature additions
+        quickSlots,
+        postCombatResult,
+        onboardingDismissed,
+        dispatch,
     };
 };

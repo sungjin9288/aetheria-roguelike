@@ -38,7 +38,12 @@ export const INITIAL_STATE = {
     liveConfig: { eventMultiplier: 1, announcement: '' },
 
     // Sync Guard
-    lastLoadedTimestamp: 0
+    lastLoadedTimestamp: 0,
+
+    // Feature Additions
+    quickSlots: [null, null, null],   // 퀵슬롯 3개
+    postCombatResult: null,            // 전투 결과 요약 카드
+    onboardingDismissed: false,        // 온보딩 안내 숨김 여부
 };
 
 // --- REDUCER (Atomic Logic) ---
@@ -92,6 +97,15 @@ export const gameReducer = (state, action) => {
                 ...state,
                 logs: state.logs.map(log => log.id === action.payload.id ? action.payload.log : log)
             };
+        case AT.SET_QUICK_SLOT: {
+            const next = [...state.quickSlots];
+            next[action.payload.index] = action.payload.item;
+            return { ...state, quickSlots: next };
+        }
+        case AT.SET_POST_COMBAT_RESULT:
+            return { ...state, postCombatResult: action.payload };
+        case AT.SET_ONBOARDING_DISMISSED:
+            return { ...state, onboardingDismissed: true };
         case AT.RESET_GAME:
             return { ...INITIAL_STATE, bootStage: 'ready', uid: state.uid, syncStatus: 'syncing' };
         default:
