@@ -115,7 +115,7 @@ function App() {
             {isMuted ? <VolumeX size={16} data-mute-icon /> : <Volume2 size={16} data-mute-icon />}
           </button>
           <div className="flex items-center gap-2 text-xs font-fira text-cyber-blue/70 bg-cyber-dark/50 px-2.5 py-1.5 rounded-md border border-cyber-blue/20 backdrop-blur-sm shadow-inner">
-            <span className={`w - 2 h - 2 rounded - full ${engine.syncStatus === 'synced' ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]' : engine.syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500 shadow-[0_0_8px_#ff00ff]'} `}></span>
+            <span className={`w-2 h-2 rounded-full ${engine.syncStatus === 'synced' ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]' : engine.syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500 shadow-[0_0_8px_#ff00ff]'}`}></span>
             {engine.syncStatus === 'synced' ? 'ONLINE' : engine.syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE'}
           </div>
         </div>

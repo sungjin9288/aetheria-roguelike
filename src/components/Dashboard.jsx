@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
@@ -67,6 +68,7 @@ const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState(null);
+    const [statusCollapsed, setStatusCollapsed] = useState(false);
 
     // groupedInv kept for potential custom rendering outside SmartInventory
     // eslint-disable-next-line no-unused-vars
@@ -331,18 +333,19 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 </div>
 
                 <div className="border-t border-cyber-blue/20 pt-4">
-                    <div className="flex gap-2 mb-4 overflow-x-auto pb-1 no-scrollbar">
-                        {['inventory', 'quest', 'system'].map(tab => (
+                    <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
+                        {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'system', icon: Zap }].map(tab => (
                             <Motion.button
                                 whileTap={{ scale: 0.95 }}
-                                key={tab}
-                                onClick={() => setSideTab(tab)}
-                                className={`min-h-[44px] flex-1 text-xs px-2 py-2 rounded border uppercase font-bold tracking-wider transition-all
-                                    ${sideTab === tab
+                                key={tab.id}
+                                onClick={() => setSideTab(tab.id)}
+                                className={`min-h-[44px] min-w-[60px] flex-shrink-0 flex-1 text-[10px] px-2 py-2 rounded border uppercase font-bold tracking-wider transition-all flex flex-col items-center justify-center gap-0.5
+                                    ${sideTab === tab.id
                                         ? 'text-cyber-black bg-cyber-blue border-cyber-blue shadow-[0_0_10px_rgba(0,204,255,0.4)]'
                                         : 'text-cyber-blue/50 border-cyber-blue/30 hover:border-cyber-blue/70 bg-cyber-dark/40'}`}
                             >
-                                {tab}
+                                <tab.icon size={14} />
+                                {tab.id.slice(0, 4)}
                             </Motion.button>
                         ))}
                     </div>
@@ -357,59 +360,86 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
     // Desktop
     return (
-        <aside className="hidden md:flex flex-col gap-4 h-full min-h-0 w-full transition-all duration-300">
-            {/* STATUS PANEL */}
+        <aside className="hidden md:flex flex-col gap-3 h-full min-h-0 w-full transition-all duration-300">
+            {/* STATUS PANEL — Collapsible */}
             <Motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-5 rounded-lg shadow-[0_0_20px_rgba(0,204,255,0.15)] relative overflow-x-hidden overflow-y-auto custom-scrollbar group max-h-[clamp(20rem,52dvh,36rem)]"
+                className={`bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg shadow-[0_0_20px_rgba(0,204,255,0.15)] relative overflow-hidden transition-all duration-300 shrink-0 ${statusCollapsed ? 'p-3' : 'p-4 max-h-[clamp(10rem,35dvh,22rem)] overflow-y-auto custom-scrollbar'
+                    }`}
             >
-                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
-                    <User size={80} className="text-cyber-blue" />
-                </div>
+                {/* Collapse toggle */}
+                <button
+                    onClick={() => setStatusCollapsed(prev => !prev)}
+                    className="absolute top-2 right-2 z-10 text-cyber-blue/40 hover:text-cyber-blue transition-colors p-1 rounded hover:bg-cyber-blue/10"
+                    title={statusCollapsed ? '펼치기' : '접기'}
+                >
+                    {statusCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                </button>
 
-                <h3 className="text-cyber-green font-rajdhani font-bold text-lg mb-4 flex items-center gap-2 tracking-[0.2em] border-b border-cyber-green/20 pb-2">
-                    <span className="w-2 h-2 bg-cyber-green rounded-full animate-pulse shadow-[0_0_10px_#00ff9d]"></span>
-                    AGENT STATUS
-                </h3>
-
-                <div className="space-y-4">
-                    <div className="flex flex-col font-rajdhani">
-                        <span className="text-2xl text-white font-bold tracking-wider drop-shadow-md">{player?.name}</span>
-                        <div className="flex justify-between items-center text-xs mt-1">
-                            <span className="text-cyber-purple font-fira uppercase bg-cyber-purple/10 px-2 py-0.5 rounded border border-cyber-purple/30 drop-shadow-sm">{player?.job}</span>
-                            <span className="text-cyber-blue">LEVEL {player?.level}</span>
+                {statusCollapsed ? (
+                    /* Compact: name + HP bar only */
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 font-rajdhani">
+                                <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse"></span>
+                                <span className="text-white font-bold text-sm truncate">{player?.name}</span>
+                                <span className="text-cyber-purple text-[10px] font-fira">{player?.job} Lv.{player?.level}</span>
+                                <span className="text-yellow-400 text-[10px] font-fira ml-auto">{player?.gold}G</span>
+                            </div>
+                            <div className="mt-1.5 flex gap-2">
+                                <div className="flex-1"><ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="HP" /></div>
+                                <div className="flex-1"><ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="MP" /></div>
+                            </div>
                         </div>
                     </div>
+                ) : (
+                    /* Full status panel */
+                    <>
+                        <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-3 flex items-center gap-2 tracking-[0.2em] border-b border-cyber-green/20 pb-2">
+                            <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse shadow-[0_0_10px_#00ff9d]"></span>
+                            AGENT STATUS
+                        </h3>
 
-                    <div className="flex items-center gap-2 bg-cyber-dark/80 p-2 rounded border border-yellow-500/30 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
-                        <div className="w-2 h-2 bg-yellow-400 rotate-45 animate-pulse"></div>
-                        <span className="font-fira text-yellow-400 font-bold tracking-wider">{player?.gold} CR</span>
-                    </div>
+                        <div className="space-y-3">
+                            <div className="flex flex-col font-rajdhani">
+                                <span className="text-xl text-white font-bold tracking-wider">{player?.name}</span>
+                                <div className="flex justify-between items-center text-xs mt-1">
+                                    <span className="text-cyber-purple font-fira uppercase bg-cyber-purple/10 px-2 py-0.5 rounded border border-cyber-purple/30">{player?.job}</span>
+                                    <span className="text-cyber-blue">LEVEL {player?.level}</span>
+                                </div>
+                            </div>
 
-                    <div className="space-y-4 mt-2">
-                        <ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="VITALITY" />
-                        <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="ENERGY" />
-                        <ProgressBar value={player?.exp} max={player?.nextExp} variant="exp" label="EXPERIENCE" />
-                    </div>
+                            <div className="flex items-center gap-2 bg-cyber-dark/80 p-1.5 rounded border border-yellow-500/30">
+                                <div className="w-1.5 h-1.5 bg-yellow-400 rotate-45 animate-pulse"></div>
+                                <span className="font-fira text-yellow-400 font-bold tracking-wider text-sm">{player?.gold} CR</span>
+                            </div>
 
-                    <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-cyber-blue/10">
-                        <div className="bg-cyber-dark/30 p-2 rounded border border-cyber-blue/10 hover:border-cyber-blue/30 transition-colors">
-                            <div className="text-[10px] text-cyber-blue/50 font-bold uppercase mb-1 flex items-center gap-1"><Sword size={10} /> {stats?.isMagic ? 'M.ATK' : 'ATK'}</div>
-                            <div className="text-white font-fira font-bold text-lg">{stats?.atk} <span className="text-[10px] text-cyber-purple font-normal">({stats?.elem})</span></div>
+                            <div className="space-y-3">
+                                <ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="VITALITY" />
+                                <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="ENERGY" />
+                                <ProgressBar value={player?.exp} max={player?.nextExp} variant="exp" label="EXPERIENCE" />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-cyber-blue/10">
+                                <div className="bg-cyber-dark/30 p-1.5 rounded border border-cyber-blue/10">
+                                    <div className="text-[10px] text-cyber-blue/50 font-bold uppercase mb-0.5 flex items-center gap-1"><Sword size={9} /> {stats?.isMagic ? 'M.ATK' : 'ATK'}</div>
+                                    <div className="text-white font-fira font-bold">{stats?.atk} <span className="text-[10px] text-cyber-purple font-normal">({stats?.elem})</span></div>
+                                </div>
+                                <div className="bg-cyber-dark/30 p-1.5 rounded border border-cyber-blue/10">
+                                    <div className="text-[10px] text-cyber-blue/50 font-bold uppercase mb-0.5 flex items-center gap-1"><Shield size={9} /> DEF</div>
+                                    <div className="text-white font-fira font-bold">{stats?.def}</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1 text-[10px] font-fira text-cyber-blue/60 border-t border-cyber-blue/10 pt-2">
+                                <div className="flex justify-between"><span>WPN:</span> <span className="text-white">{player?.equip?.weapon?.name || 'UNARMED'} {stats?.weaponHands === 2 ? '(2H)' : ''}</span></div>
+                                <div className="flex justify-between"><span>SUB:</span> <span className="text-white">{player?.equip?.offhand?.name || '---'}</span></div>
+                                <div className="flex justify-between"><span>ARM:</span> <span className="text-white">{player?.equip?.armor?.name || 'CIVILIAN'}</span></div>
+                            </div>
                         </div>
-                        <div className="bg-cyber-dark/30 p-2 rounded border border-cyber-blue/10 hover:border-cyber-blue/30 transition-colors">
-                            <div className="text-[10px] text-cyber-blue/50 font-bold uppercase mb-1 flex items-center gap-1"><Shield size={10} /> DEF</div>
-                            <div className="text-white font-fira font-bold text-lg">{stats?.def}</div>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 space-y-1.5 text-xs font-fira text-cyber-blue/60 border-t border-cyber-blue/10 pt-3">
-                        <div className="flex justify-between"><span>WPN:</span> <span className="text-white">{player?.equip?.weapon?.name || 'UNARMED'} {stats?.weaponHands === 2 ? '(2H)' : ''}</span></div>
-                        <div className="flex justify-between"><span>SUB:</span> <span className="text-white">{player?.equip?.offhand?.name || '---'}</span></div>
-                        <div className="flex justify-between"><span>ARM:</span> <span className="text-white">{player?.equip?.armor?.name || 'CIVILIAN'}</span></div>
-                    </div>
-                </div>
+                    </>
+                )}
             </Motion.div>
 
             {/* TABS */}
@@ -417,7 +447,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 min-h-0 overflow-hidden flex flex-col shadow-[0_0_20px_rgba(0,204,255,0.1)]"
+                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 min-h-[200px] overflow-hidden flex flex-col shadow-[0_0_20px_rgba(0,204,255,0.1)]"
             >
                 <div className="flex gap-2 mb-4 border-b border-cyber-blue/20 pb-3">
                     {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'system', icon: Zap }].map(tab => (
