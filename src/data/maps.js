@@ -25,5 +25,6 @@ export const MAPS = {
 
     // 최종 지역 (Lv 30-50)
     '암흑 성': { level: 30, type: 'dungeon', exits: ['어둠의 동굴', '마왕성'], monsters: ['데스나이트', '리치', '뱀파이어', '암흑 사제'], desc: '어둠의 세력이 지배하는 성입니다.', eventChance: 0.45 },
-    '마왕성': { level: 40, type: 'dungeon', exits: ['암흑 성'], monsters: ['마왕의 사도', '지옥의 문지기', '타락한 천사', '마왕'], desc: '마왕이 군림하는 최종 목적지입니다.', eventChance: 0.5, boss: true }
+    '마왕성': { level: 40, type: 'dungeon', exits: ['암흑 성', '혼돈의 심연'], monsters: ['마왕의 사도', '지옥의 문지기', '타락한 천사', '마왕'], desc: '마왕이 군림하는 최종 목적지입니다.', eventChance: 0.5, boss: true },
+    '혼돈의 심연': { level: 'infinite', type: 'dungeon', exits: ['마왕성'], monsters: ['혼돈의 추종자', '타락한 용사', '심연의 수호자', '공허의 짐승'], desc: '끝이 없는 심연입니다. 층을 거듭할수록 끝없이 강해지는 적들이 기다립니다.', eventChance: 0.3 }
 };

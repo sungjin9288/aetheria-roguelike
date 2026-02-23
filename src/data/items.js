@@ -182,13 +182,33 @@ export const ITEMS = {
         { name: '축복받은', type: 'all', stat: 'hp', val: 20, price: 2.0 },
         { name: '고대의', type: 'all', stat: 'all', val: 10, price: 2.5 }
     ],
-    // 제작 레시피 (Phase 2.2 준비)
+    // 제작 레시피
     recipes: [
+        // T1: 기본 제작
         { id: 'r1', name: '강철 롱소드', inputs: [{ name: '철광석', qty: 5 }], gold: 100 },
         { id: 'r2', name: '사슬 갑옷', inputs: [{ name: '철광석', qty: 8 }], gold: 200 },
-        { id: 'r3', name: '화염의 지팡이', inputs: [{ name: '나무지팡이', qty: 1 }, { name: '화염의 결정', qty: 3 }], gold: 300 },
-        { id: 'r4', name: '미스릴검', inputs: [{ name: '미스릴 원석', qty: 3 }, { name: '철광석', qty: 5 }], gold: 500 },
         { id: 'r5', name: '중급 체력 물약', inputs: [{ name: '슬라임 젤리', qty: 5 }], gold: 30 },
-        { id: 'r6', name: '해독제', inputs: [{ name: '자연의 결정', qty: 1 }], gold: 20 }
+        { id: 'r6', name: '해독제', inputs: [{ name: '자연의 결정', qty: 1 }], gold: 20 },
+        { id: 'r7', name: '가죽 갑옷', inputs: [{ name: '멧돼지 가죽', qty: 5 }], gold: 80 },
+        { id: 'r8', name: '하급 마나 물약', inputs: [{ name: '마나 결정', qty: 1 }], gold: 20 },
+        // T2: 원소 무기
+        { id: 'r3', name: '화염의 지팡이', inputs: [{ name: '나무지팡이', qty: 1 }, { name: '화염의 결정', qty: 3 }], gold: 300 },
+        { id: 'r9', name: '얼음 지팡이', inputs: [{ name: '나무지팡이', qty: 1 }, { name: '냉기의 결정', qty: 3 }], gold: 300 },
+        { id: 'r10', name: '마녀의 지팡이', inputs: [{ name: '마법봉', qty: 1 }, { name: '어둠의 정수', qty: 3 }], gold: 350 },
+        { id: 'r11', name: '번개 지팡이', inputs: [{ name: '마법봉', qty: 1 }, { name: '빛의 결정', qty: 3 }], gold: 350 },
+        { id: 'r12', name: '화염 방어복', inputs: [{ name: '사슬 갑옷', qty: 1 }, { name: '화염의 결정', qty: 2 }], gold: 250 },
+        { id: 'r13', name: '냉기 방어복', inputs: [{ name: '사슬 갑옷', qty: 1 }, { name: '냉기의 결정', qty: 2 }], gold: 250 },
+        // T3: 상급 장비
+        { id: 'r4', name: '미스릴검', inputs: [{ name: '미스릴 원석', qty: 3 }, { name: '철광석', qty: 5 }], gold: 500 },
+        { id: 'r14', name: '미스릴 갑옷', inputs: [{ name: '미스릴 원석', qty: 5 }, { name: '사슬 갑옷', qty: 1 }], gold: 700 },
+        { id: 'r15', name: '정령의 지팡이', inputs: [{ name: '정령의 핵', qty: 2 }, { name: '자연의 결정', qty: 3 }], gold: 800 },
+        { id: 'r16', name: '독사의 송곳니', inputs: [{ name: '트롤의 피', qty: 2 }, { name: '자연의 결정', qty: 2 }], gold: 600 },
+        { id: 'r17', name: '대지의 메이스', inputs: [{ name: '오리할콘', qty: 2 }, { name: '철광석', qty: 5 }], gold: 800 },
+        // 소모품 고급
+        { id: 'r18', name: '상급 체력 물약', inputs: [{ name: '중급 체력 물약', qty: 2 }, { name: '트롤의 피', qty: 1 }], gold: 150 },
+        { id: 'r19', name: '상급 마나 물약', inputs: [{ name: '중급 마나 물약', qty: 2 }, { name: '마나 결정', qty: 2 }], gold: 180 },
+        { id: 'r20', name: '분노의 물약', inputs: [{ name: '화염의 결정', qty: 2 }, { name: '트롤의 피', qty: 1 }], gold: 120 },
+        { id: 'r21', name: '수호의 물약', inputs: [{ name: '냉기의 결정', qty: 2 }, { name: '오리할콘', qty: 1 }], gold: 120 },
+        { id: 'r22', name: '영웅의 물약', inputs: [{ name: '용의 심장', qty: 1 }, { name: '엘프의 눈물', qty: 1 }], gold: 500 },
     ]
 };

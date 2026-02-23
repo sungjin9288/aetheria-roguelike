@@ -80,8 +80,33 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     });
                 }
 
+                if (updatedPlayer.loc === '혼돈의 심연') {
+                    const currentDepth = updatedPlayer.stats?.abyssFloor || 1;
+                    updatedPlayer = {
+                        ...updatedPlayer,
+                        stats: {
+                            ...(updatedPlayer.stats || {}),
+                            abyssFloor: currentDepth + 1
+                        }
+                    };
+                    addLog('system', `심연의 더 깊은 곳으로 진입했습니다. (현재: ${currentDepth + 1}층)`);
+                }
+
                 dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
                 addStoryLog('victory', { name: enemyAtActionStart.name });
+
+                // PostCombatCard 데이터 전달
+                dispatch({
+                    type: 'SET_POST_COMBAT_RESULT', payload: {
+                        enemy: enemyAtActionStart.name,
+                        exp: victoryResult.expGained || 0,
+                        gold: victoryResult.goldGained || 0,
+                        loot: lootResult.items.map(i => i.name),
+                        playerHp: updatedPlayer.hp,
+                        playerMaxHp: updatedPlayer.maxHp,
+                        playerInvCount: updatedPlayer.inv.length,
+                    }
+                });
                 return;
             }
 

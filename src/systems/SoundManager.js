@@ -112,6 +112,53 @@ class SoundManager {
                 break;
             }
 
+            case 'heal':
+                this._playTone(523.25, 0.12, 0);    // C5
+                this._playTone(659.25, 0.12, 0.1);  // E5
+                this._playTone(783.99, 0.2, 0.2);   // G5
+                break;
+
+            case 'death':
+                this._playTone(400, 0.15, 0);
+                this._playTone(300, 0.15, 0.12);
+                this._playTone(200, 0.15, 0.24);
+                this._playTone(100, 0.4, 0.36);
+                break;
+
+            case 'skill': {
+                const { osc, gain, now } = this._createNodes();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(1800, now + 0.15);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.3);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+                break;
+            }
+
+            case 'explore': {
+                const { osc, gain, now } = this._createNodes();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.16);
+                gain.gain.setValueAtTime(0.04, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                osc.start(now);
+                osc.stop(now + 0.16);
+                break;
+            }
+
+            case 'victory':
+                this._playTone(523.25, 0.1, 0);     // C5
+                this._playTone(659.25, 0.1, 0.08);  // E5
+                this._playTone(783.99, 0.1, 0.16);  // G5
+                this._playTone(1046.50, 0.15, 0.24); // C6
+                this._playTone(1318.51, 0.3, 0.36);  // E6
+                break;
+
             default:
                 break;
         }

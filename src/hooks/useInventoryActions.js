@@ -165,5 +165,31 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog }) 
 
         dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, ...updates }) });
         addLog('success', `퀘스트 완료: ${qData.title}`);
+    },
+
+    claimAchievement: (achId) => {
+        const achData = DB.ACHIEVEMENTS.find((a) => a.id === achId);
+        if (!achData) return;
+
+        const claimed = player.stats?.claimedAchievements || [];
+        if (claimed.includes(achId)) return addLog('info', '이미 수령한 업적입니다.');
+
+        const updates = {
+            stats: {
+                ...player.stats,
+                claimedAchievements: [...claimed, achId]
+            }
+        };
+        if (achData.reward.gold) updates.gold = player.gold + achData.reward.gold;
+        if (achData.reward.item) {
+            const itemData = findItemByName(achData.reward.item);
+            if (itemData) {
+                updates.inv = [...player.inv, makeItem(itemData)];
+                addLog('success', `업적 보상 아이템: ${itemData.name}`);
+            }
+        }
+
+        dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, ...updates }) });
+        addLog('success', `업적 달성: ${achData.title}`);
     }
 });

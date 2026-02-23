@@ -294,7 +294,7 @@ export const CombatEngine = {
             logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level) });
         }
 
-        return { updatedPlayer: p, logs, leveledUp, visualEffect };
+        return { updatedPlayer: p, logs, leveledUp, visualEffect, expGained: enemy.exp, goldGained: enemy.gold };
     },
 
     updateQuestProgress(player, enemyName) {

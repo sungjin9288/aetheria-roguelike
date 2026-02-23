@@ -89,18 +89,27 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (Math.random() < BALANCE.EVENT_CHANCE_NOTHING) return addLog('info', '주변이 조용합니다.');
 
         const baseName = mapData.monsters[Math.floor(Math.random() * mapData.monsters.length)];
-        const level = mapData.level || 1;
+        let level = mapData.level || 1;
+        let isInfinite = false;
+        let depth = 0;
+
+        if (level === 'infinite') {
+            isInfinite = true;
+            depth = player.stats?.abyssFloor || 1;
+            level = 45 + Math.floor(depth / 2);
+        }
+
         const mStats = {
-            name: baseName,
+            name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
             baseName,
-            hp: 120 + level * 30,
-            maxHp: 120 + level * 30,
-            atk: 15 + level * 4,
-            exp: 10 + level * 5,
-            gold: 10 + level * 2,
+            hp: 120 + level * 30 + (depth * 25),
+            maxHp: 120 + level * 30 + (depth * 25),
+            atk: 15 + level * 4 + (depth * 3),
+            exp: 10 + level * 5 + (depth * 4),
+            gold: 10 + level * 2 + (depth * 3),
             pattern: {
-                guardChance: Math.min(0.35, 0.12 + level * 0.01),
-                heavyChance: Math.min(0.4, 0.15 + level * 0.01)
+                guardChance: Math.min(0.4, 0.12 + level * 0.01 + (depth * 0.005)),
+                heavyChance: Math.min(0.45, 0.15 + level * 0.01 + (depth * 0.005))
             }
         };
 

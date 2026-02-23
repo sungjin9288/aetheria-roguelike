@@ -63,6 +63,37 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
         }
     }, [logs]);
 
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Skip if typing in input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // Combat shortcuts: 1=Attack, 2=Skill, 3=Escape
+            if (gameState === 'combat') {
+                if (e.key === '1') { e.preventDefault(); onCommand('attack'); }
+                if (e.key === '2') { e.preventDefault(); onCommand('skill'); }
+                if (e.key === '3') { e.preventDefault(); onCommand('escape'); }
+            }
+
+            // Quick slot shortcuts: Q, W, E
+            if (quickSlots && onQuickSlotUse) {
+                if (e.key === 'q' || e.key === 'Q') { e.preventDefault(); if (quickSlots[0]) onQuickSlotUse(quickSlots[0]); }
+                if (e.key === 'w' || e.key === 'W') { e.preventDefault(); if (quickSlots[1]) onQuickSlotUse(quickSlots[1]); }
+                if (e.key === 'e' || e.key === 'E') { e.preventDefault(); if (quickSlots[2]) onQuickSlotUse(quickSlots[2]); }
+            }
+
+            // Focus terminal input: /
+            if (e.key === '/') {
+                e.preventDefault();
+                const input = document.querySelector('[data-terminal-input]');
+                if (input) input.focus();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [gameState, quickSlots, onQuickSlotUse, onCommand]);
+
     const bgClass = gameState === 'event'
         ? "bg-cyber-purple/10 border-cyber-purple/50 shadow-[0_0_20px_rgba(188,19,254,0.15)]"
         : "bg-cyber-black/90 border-cyber-green/30 shadow-[0_0_15px_rgba(0,255,157,0.1)]";

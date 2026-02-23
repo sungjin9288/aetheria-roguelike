@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen } from 'lucide-react';
+import { User, Crown, Skull, Save, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen, BarChart3, Eye } from 'lucide-react';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
@@ -12,6 +12,8 @@ import SmartInventory from './SmartInventory';
 import AchievementPanel from './AchievementPanel';
 import SkillTreePreview from './SkillTreePreview';
 import MapNavigator from './MapNavigator';
+import StatsPanel from './StatsPanel';
+import Bestiary from './Bestiary';
 import { QuickSlotAssigner } from './QuickSlot';
 
 const BAR_THEMES = {
@@ -206,7 +208,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     )}
 
                     {sideTab === 'achievements' && (
-                        <AchievementPanel player={player} />
+                        <AchievementPanel player={player} actions={actions} />
                     )}
 
                     {sideTab === 'skills' && (
@@ -219,6 +221,14 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             onMove={(loc) => actions.move(loc)}
                             isAiThinking={false}
                         />
+                    )}
+
+                    {sideTab === 'stats' && (
+                        <StatsPanel player={player} />
+                    )}
+
+                    {sideTab === 'bestiary' && (
+                        <Bestiary player={player} />
                     )}
 
                     {sideTab === 'system' && (
@@ -334,7 +344,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
                 <div className="border-t border-cyber-blue/20 pt-4">
                     <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
-                        {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'system', icon: Zap }].map(tab => (
+                        {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'stats', icon: BarChart3 }, { id: 'bestiary', icon: Eye }, { id: 'system', icon: Zap }].map(tab => (
                             <Motion.button
                                 whileTap={{ scale: 0.95 }}
                                 key={tab.id}

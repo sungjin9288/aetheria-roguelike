@@ -13,6 +13,7 @@ import PostCombatCard from './components/PostCombatCard';
 import OnboardingGuide from './components/OnboardingGuide';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useAutoExplore } from './hooks/useAutoExplore';
+import { useDamageFlash, DamageNumber } from './hooks/useDamageFlash.jsx';
 
 function App() {
   const engine = useGameEngine();
@@ -29,6 +30,9 @@ function App() {
     isAiThinking: engine.isAiThinking,
     actions: engine.actions,
   });
+
+  // Damage Flash hook
+  const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
 
   // QuickSlot use handler
   const handleQuickSlotUse = (item) => {
@@ -136,7 +140,7 @@ function App() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 w-full grid grid-cols-1 gap-2 md:gap-4 md:grid-cols-[minmax(0,1fr)_clamp(18rem,30vw,24rem)] md:flex-1 md:min-h-0 md:overflow-hidden"
+        className={`relative z-10 w-full grid grid-cols-1 gap-2 md:gap-4 md:grid-cols-[minmax(0,1fr)_clamp(18rem,30vw,24rem)] md:flex-1 md:min-h-0 md:overflow-hidden transition-all duration-150 ${damageFlash ? 'ring-2 ring-red-500/40' : ''} ${healFlash ? 'ring-2 ring-green-500/40' : ''}`}
       >
         <TerminalView
           logs={engine.logs}
@@ -148,6 +152,8 @@ function App() {
           quickSlots={engine.quickSlots}
           onQuickSlotUse={handleQuickSlotUse}
         />
+        {/* Floating Damage/Heal Number */}
+        {damageAmount && <DamageNumber amount={damageAmount} />}
         {!isMobileViewport && (
           <Dashboard
             player={engine.player}
@@ -203,11 +209,11 @@ function App() {
             whileTap={{ scale: 0.95 }}
             onClick={() => autoExplore.isAutoRunning ? autoExplore.stop('수동 정지') : autoExplore.start(10)}
             disabled={engine.isAiThinking}
-            className={`flex items - center gap - 2 px - 4 py - 2.5 rounded - full border font - rajdhani font - bold text - xs tracking - wider shadow - lg transition - all
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-full border font-rajdhani font-bold text-xs tracking-wider shadow-lg transition-all backdrop-blur-md
               ${autoExplore.isAutoRunning
                 ? 'bg-red-950/80 border-red-500/50 text-red-400 hover:bg-red-900/80'
                 : 'bg-cyber-green/10 border-cyber-green/40 text-cyber-green hover:bg-cyber-green/20'
-              } backdrop - blur - md`}
+              }`}
           >
             {autoExplore.isAutoRunning
               ? <><Square size={14} /> STOP ({autoExplore.runsLeft}회 남음)</>
