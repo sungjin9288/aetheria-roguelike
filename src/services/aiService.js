@@ -24,7 +24,7 @@ const normalizeEventResponse = (payload) => {
  * @param {number} timeoutMs - 타임아웃 (ms)
  * @returns {Promise<object|null>}
  */
-const callProxy = async (body, trackLabel = 'ai-call', timeoutMs = 12000) => {
+const callProxy = async (body, trackLabel = 'ai-call', timeoutMs = 9500) => {
     try {
         const token = await auth.currentUser?.getIdToken();
         const headers = {
@@ -77,7 +77,7 @@ export const AI_SERVICE = {
             const result = await callProxy(
                 { type: 'event', data: { location: loc, history, uid } },
                 'ai-event',
-                10000
+                9500
             );
             if (result?.success) {
                 TokenQuotaManager.recordCall();
@@ -99,7 +99,7 @@ export const AI_SERVICE = {
             const result = await callProxy(
                 { type: 'story', data: { storyType: type, ...data, uid } },
                 'ai-story',
-                15000
+                9500
             );
             if (result?.success && result.data?.narrative) {
                 TokenQuotaManager.recordCall();

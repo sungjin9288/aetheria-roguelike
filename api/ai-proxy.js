@@ -79,16 +79,7 @@ const verifyFirebaseToken = async (idToken) => {
     };
 };
 
-const extractJsonCandidate = (text) => {
-    if (typeof text !== 'string') return null;
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    try {
-        return JSON.parse(match[0]);
-    } catch {
-        return null;
-    }
-};
+// extractJsonCandidate 함수 제거 (Structured Output 사용하므로 불필요)
 
 const normalizeEventData = (raw) => {
     if (!raw || typeof raw !== 'object') return null;
@@ -120,43 +111,84 @@ const normalizeEventData = (raw) => {
     };
 };
 
-const buildPrompt = (type, data, uid) => {
-    if (type === 'event') {
-        return `당신은 '에테리아(Aetheria)' 판타지 RPG의 게임 마스터입니다.
-아래 위치와 플레이 히스토리를 참고해 짧은 랜덤 이벤트를 한국어로 생성하세요.
-- 분량: 1~2문장
-- 선택지: 2~3개
-- JSON만 출력
+const buildGeminiPayload = (type, data, uid) => {
+    let systemInstruction = "";
+    let prompt = "";
+    let schema = null;
 
-현재 위치: ${data.location || '알 수 없음'}
+    if (type === 'event') {
+        systemInstruction = "당신은 '에테리아(Aetheria)' 판타지 RPG의 게임 마스터입니다. 상황에 맞는 짧은(1~2문장) 흥미로운 무작위 이벤트를 한국어로 생성하세요. 선택지는 2~3개 제공하세요.";
+        prompt = `현재 위치: ${data.location || '알 수 없음'}
 플레이 기록: ${JSON.stringify(data.history || []).slice(0, 800)}
 UID: ${uid}
+상황과 선택지, 결과를 생성해주세요.`;
 
-반드시 아래 형식만 사용:
-{"desc":"상황 설명","choices":["선택지1","선택지2","선택지3"],"outcomes":[{"choiceIndex":0,"log":"결과 로그","gold":10}]}`;
-    }
-
-    if (type === 'story') {
+        schema = {
+            type: "OBJECT",
+            properties: {
+                desc: { type: "STRING", description: "이벤트의 흥미로운 묘사 (1~2문장)" },
+                choices: {
+                    type: "ARRAY",
+                    items: { type: "STRING" },
+                    description: "유저가 선택할 수 있는 2~3개의 행동 옵션"
+                },
+                outcomes: {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            choiceIndex: { type: "INTEGER", description: "선택지 인덱스 (0부터 시작)" },
+                            log: { type: "STRING", description: "해당 선택시 나타날 짧은 결과 메시지" },
+                            gold: { type: "INTEGER", description: "획득/잃을 골드량 (없으면 0)" }
+                        },
+                        required: ["choiceIndex", "log", "gold"]
+                    }
+                }
+            },
+            required: ["desc", "choices", "outcomes"]
+        };
+    } else if (type === 'story') {
         const context = data.storyType === 'encounter'
             ? `${data.loc}에서 ${data.name} 몬스터와 조우`
             : (data.storyType || data.context || '모험');
 
-        return `당신은 판타지 RPG 내레이터입니다.
-아래 상황을 한국어 1~2문장으로 묘사하세요.
-JSON만 출력하세요.
+        systemInstruction = "당신은 판타지 RPG 내레이터입니다. 주어진 상황을 한국어 1~2문장으로 실감나게 묘사하세요.";
+        prompt = `상황: ${context}
+UID: ${uid}`;
 
-상황: ${context}
-UID: ${uid}
-
-형식: {"narrative":"내러티브 텍스트"}`;
+        schema = {
+            type: "OBJECT",
+            properties: {
+                narrative: { type: "STRING", description: "상황에 대한 게임 내러티브 묘사" }
+            },
+            required: ["narrative"]
+        };
     }
 
-    return null;
+    if (!prompt) return null;
+
+    return { systemInstruction, prompt, schema };
 };
 
-const callGemini = async (prompt, apiKey) => {
+const callGemini = async (payloadConfig, apiKey) => {
+    const { systemInstruction, prompt, schema } = payloadConfig;
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12_000);
+    // Vercel Serverless 10s 제한 호환: 8.5초 타임아웃
+    const timeoutId = setTimeout(() => controller.abort(), 8_500);
+
+    const requestBody = {
+        system_instruction: {
+            parts: [{ text: systemInstruction }]
+        },
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 500,
+            responseMimeType: "application/json",
+            responseSchema: schema
+        }
+    };
 
     try {
         const response = await fetch(
@@ -165,13 +197,7 @@ const callGemini = async (prompt, apiKey) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 signal: controller.signal,
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.8,
-                        maxOutputTokens: 500
-                    }
-                })
+                body: JSON.stringify(requestBody)
             }
         );
 
@@ -181,7 +207,10 @@ const callGemini = async (prompt, apiKey) => {
         }
 
         const geminiData = await response.json();
-        return geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const textContent = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (!textContent) return null;
+
+        return JSON.parse(textContent); // responseMimeType이 application/json이므로 100% JSON 문자열 반환을 신뢰
     } finally {
         clearTimeout(timeoutId);
     }
@@ -238,23 +267,25 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'API key not configured' });
         }
 
-        const prompt = buildPrompt(type, data, authUser.uid);
-        if (!prompt) {
+        const payloadConfig = buildGeminiPayload(type, data, authUser.uid);
+        if (!payloadConfig) {
             return res.status(400).json({ error: 'Invalid request type' });
         }
 
-        const textContent = await callGemini(prompt, apiKey);
-        const parsed = extractJsonCandidate(textContent);
+        const parsedJson = await callGemini(payloadConfig, apiKey);
+        if (!parsedJson) {
+            return res.status(502).json({ error: 'Empty AI response' });
+        }
 
         if (type === 'event') {
-            const normalizedEvent = normalizeEventData(parsed || { desc: textContent, choices: [] });
+            const normalizedEvent = normalizeEventData(parsedJson);
             if (!normalizedEvent) {
                 return res.status(502).json({ error: 'Invalid AI event response' });
             }
             return res.status(200).json({ success: true, data: normalizedEvent });
         }
 
-        const narrative = parsed?.narrative || textContent;
+        const narrative = parsedJson?.narrative || '신비로운 기운이 느껴집니다.';
         return res.status(200).json({ success: true, data: { narrative } });
     } catch (error) {
         console.error('Proxy error:', error);
