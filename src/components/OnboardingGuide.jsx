@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Circle, ChevronRight } from 'lucide-react';
 
@@ -10,21 +10,11 @@ import { CheckCircle, Circle, ChevronRight } from 'lucide-react';
 const STEPS = [
     { id: 'explore', label: '① EXPLORE', desc: '탐색으로 첫 전투 시작', color: 'cyber-blue', done: (s) => s.kills > 0 },
     { id: 'move', label: '② MOVE', desc: '다른 지역으로 이동해보세요', color: 'cyber-green', done: (s, loc) => loc !== '시작의 마을' },
-    { id: 'rest', label: '③ REST', desc: '안전 지역에서 회복하기', color: 'yellow-400', done: (s) => s.deaths >= 0 && s.kills >= 1 },
+    { id: 'rest', label: '③ REST', desc: '안전 지역에서 회복하기', color: 'yellow-400', done: (s) => (s.rests || 0) > 0 },
 ];
 
-const OnboardingGuide = ({ player, gameState, onDismiss }) => {
-    const dismissedRef = useRef(false);
-
-    // 이미 kills가 있다면 튜토리얼 완료로 간주 
+const OnboardingGuide = ({ player, onDismiss }) => {
     const isNewPlayer = player.stats?.kills === 0 && player.level === 1;
-
-    // 자동 해제: 마지막 스텝 완료 시
-    useEffect(() => {
-        if (!isNewPlayer && !dismissedRef.current) {
-            dismissedRef.current = true;
-        }
-    }, [isNewPlayer]);
 
     const activeStep = STEPS.findIndex(s => !s.done(player.stats || {}, player.loc));
 

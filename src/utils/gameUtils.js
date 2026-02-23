@@ -69,6 +69,7 @@ export const migrateData = (savedData) => {
         target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0 };
         target.stats.killRegistry = target.stats.killRegistry || {};
         target.stats.bossKills = target.stats.bossKills || 0;
+        target.stats.rests = target.stats.rests || 0;
     }
 
     // Ensure equip is object not string (Old version compatibility)
@@ -94,6 +95,16 @@ export const migrateData = (savedData) => {
     target.meta.bonusAtk = target.meta.bonusAtk || 0;
     target.meta.bonusHp = target.meta.bonusHp || 0;
     target.meta.bonusMp = target.meta.bonusMp || 0;
+    target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0 };
+    target.stats.rests = target.stats.rests || 0;
+
+    if (!Array.isArray(savedData.quickSlots)) {
+        savedData.quickSlots = [null, null, null];
+    } else {
+        savedData.quickSlots = savedData.quickSlots.slice(0, 3);
+        while (savedData.quickSlots.length < 3) savedData.quickSlots.push(null);
+    }
+    savedData.onboardingDismissed = Boolean(savedData.onboardingDismissed);
 
     return savedData;
 };

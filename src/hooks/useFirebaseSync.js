@@ -29,6 +29,8 @@ export const useFirebaseSync = (state, dispatch) => {
         enemy,
         grave,
         currentEvent,
+        quickSlots,
+        onboardingDismissed,
         syncStatus,
         uid,
         bootStage
@@ -134,6 +136,8 @@ export const useFirebaseSync = (state, dispatch) => {
                     enemy,
                     grave,
                     currentEvent,
+                    quickSlots,
+                    onboardingDismissed,
                     version: CONSTANTS.DATA_VERSION,
                     lastActive: serverTimestamp()
                 };
@@ -153,7 +157,7 @@ export const useFirebaseSync = (state, dispatch) => {
 
         const timer = setTimeout(saveData, BALANCE.DEBOUNCE_SAVE_MS);
         return () => clearTimeout(timer);
-    }, [player, gameState, enemy, grave, currentEvent, syncStatus, uid, dispatch]);
+    }, [player, gameState, enemy, grave, currentEvent, quickSlots, onboardingDismissed, syncStatus, uid, dispatch]);
 
     // Update boot log ref
     useEffect(() => {

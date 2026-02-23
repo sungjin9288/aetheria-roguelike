@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Sword, Star, Package, Heart, Zap, ChevronRight, X } from 'lucide-react';
 
@@ -11,26 +11,43 @@ import { Sword, Star, Package, Heart, Zap, ChevronRight, X } from 'lucide-react'
  *   onSell: () => void
  */
 const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-        if (result) {
-            const t = setTimeout(() => setVisible(true), 200);
-            return () => clearTimeout(t);
-        }
-        setVisible(false);
-    }, [result]);
+    const [isClosing, setIsClosing] = useState(false);
 
     if (!result) return null;
 
+    const droppedItems = Array.isArray(result.items)
+        ? result.items
+        : Array.isArray(result.loot)
+            ? result.loot
+            : [];
+    const hasLevelUp = Boolean(result.leveledUp);
+    const hpLow = typeof result.hpLow === 'boolean'
+        ? result.hpLow
+        : typeof result.playerHp === 'number' && typeof result.playerMaxHp === 'number'
+            ? result.playerHp / Math.max(1, result.playerMaxHp) <= 0.35
+            : false;
+    const mpLow = typeof result.mpLow === 'boolean'
+        ? result.mpLow
+        : typeof result.playerMp === 'number' && typeof result.playerMaxMp === 'number'
+            ? result.playerMp / Math.max(1, result.playerMaxMp) <= 0.3
+            : false;
+    const invFull = typeof result.invFull === 'boolean'
+        ? result.invFull
+        : typeof result.playerInvCount === 'number'
+            ? result.playerInvCount >= 20
+            : false;
+
     const handleClose = () => {
-        setVisible(false);
-        setTimeout(onClose, 300);
+        if (isClosing) return;
+        setIsClosing(true);
+        setTimeout(() => {
+            onClose?.();
+        }, 280);
     };
 
     return (
         <AnimatePresence>
-            {visible && (
+            {!isClosing && (
                 <Motion.div
                     initial={{ opacity: 0, y: 30, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -53,7 +70,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
 
                     {/* Rewards */}
                     <div className="px-4 py-3 space-y-2">
-                        {result.leveledUp && (
+                        {hasLevelUp && (
                             <div className="flex items-center gap-2 text-yellow-400 font-rajdhani font-bold text-sm animate-pulse">
                                 <Star size={16} className="text-yellow-300" />
                                 LEVEL UP!
@@ -71,13 +88,13 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
                             </div>
                         </div>
 
-                        {result.items?.length > 0 && (
+                        {droppedItems.length > 0 && (
                             <div className="bg-cyber-dark/40 rounded px-3 py-2 border border-cyber-purple/20">
                                 <div className="text-cyber-purple/60 text-xs font-fira mb-1 flex items-center gap-1">
                                     <Package size={12} /> LOOT
                                 </div>
                                 <div className="flex flex-wrap gap-1">
-                                    {result.items.map((item, i) => (
+                                    {droppedItems.map((item, i) => (
                                         <span key={i} className="text-xs bg-cyber-purple/10 border border-cyber-purple/30 text-cyber-purple px-2 py-0.5 rounded font-fira">
                                             {item}
                                         </span>
@@ -88,8 +105,8 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
 
                         {/* Smart Suggestions */}
                         <div className="space-y-1.5 pt-1">
-                            {result.hpLow && (
-                                <motion.button
+                            {hpLow && (
+                                <Motion.button
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => { onRest?.(); handleClose(); }}
                                     className="w-full flex items-center justify-between min-h-[44px] px-3 py-2 bg-red-950/30 border border-red-500/30 rounded text-red-400 hover:bg-red-900/40 transition-all font-rajdhani font-bold text-xs tracking-wider"
@@ -99,15 +116,15 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
                                         HP가 낮습니다 — 휴식 또는 회복 아이템 사용 추천
                                     </div>
                                     <ChevronRight size={14} />
-                                </motion.button>
+                                </Motion.button>
                             )}
-                            {result.mpLow && !result.hpLow && (
+                            {mpLow && !hpLow && (
                                 <div className="flex items-center gap-2 text-blue-400/70 text-xs font-fira px-1">
                                     <Zap size={12} /> MP가 낮습니다. 다음 전투 전 회복 아이템을 사용하세요.
                                 </div>
                             )}
-                            {result.invFull && (
-                                <motion.button
+                            {invFull && (
+                                <Motion.button
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => { onSell?.(); handleClose(); }}
                                     className="w-full flex items-center justify-between min-h-[44px] px-3 py-2 bg-cyber-dark/50 border border-cyber-blue/20 rounded text-cyber-blue/70 hover:bg-cyber-blue/10 transition-all font-rajdhani font-bold text-xs tracking-wider"
@@ -117,20 +134,20 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
                                         인벤토리 과밀 — 저가 재료 일괄 정리
                                     </div>
                                     <ChevronRight size={14} />
-                                </motion.button>
+                                </Motion.button>
                             )}
                         </div>
                     </div>
 
                     {/* Close CTA */}
                     <div className="border-t border-cyber-blue/10 px-4 py-2">
-                        <motion.button
+                        <Motion.button
                             whileTap={{ scale: 0.97 }}
                             onClick={handleClose}
                             className="w-full min-h-[40px] text-cyber-blue/60 hover:text-cyber-blue text-xs font-rajdhani tracking-widest transition-colors"
                         >
                             계속하기 [ CONTINUE ]
-                        </motion.button>
+                        </Motion.button>
                     </div>
                 </Motion.div>
             )}

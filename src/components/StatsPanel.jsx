@@ -43,14 +43,16 @@ const StatsPanel = ({ player }) => {
                     { label: 'K/D RATIO', value: kd, icon: Shield, color: 'text-cyber-green' },
                     { label: 'TOTAL GOLD', value: stats.totalGold.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
                     { label: 'LEVEL', value: player?.level || 1, icon: Clock, color: 'text-cyber-blue' },
-                ].map(({ label, value, icon: ItemIcon, color }) => (
-                    <div key={label} className="bg-cyber-dark/40 border border-cyber-blue/10 rounded p-2">
+                ].map((entry) => {
+                    const Icon = entry.icon;
+                    return (
+                    <div key={entry.label} className="bg-cyber-dark/40 border border-cyber-blue/10 rounded p-2">
                         <div className="text-[10px] text-cyber-blue/40 font-fira uppercase flex items-center gap-1 mb-0.5">
-                            <ItemIcon size={9} /> {label}
+                            <Icon size={9} /> {entry.label}
                         </div>
-                        <div className={`font-fira font-bold text-sm ${color}`}>{value}</div>
+                        <div className={`font-fira font-bold text-sm ${entry.color}`}>{entry.value}</div>
                     </div>
-                ))}
+                )})}
             </div>
 
             {/* Kill Distribution */}

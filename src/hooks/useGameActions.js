@@ -202,7 +202,16 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
 
         dispatch({
             type: 'SET_PLAYER',
-            payload: (p) => ({ ...p, gold: p.gold - BALANCE.REST_COST, hp: p.maxHp, mp: p.maxMp })
+            payload: (p) => ({
+                ...p,
+                gold: p.gold - BALANCE.REST_COST,
+                hp: p.maxHp,
+                mp: p.maxMp,
+                stats: {
+                    ...(p.stats || {}),
+                    rests: (p.stats?.rests || 0) + 1
+                }
+            })
         });
         addLog('success', '휴식 완료. HP/MP가 회복되었습니다.');
         addStoryLog('rest', { loc: player.loc });

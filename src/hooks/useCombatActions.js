@@ -96,14 +96,25 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 addStoryLog('victory', { name: enemyAtActionStart.name });
 
                 // PostCombatCard 데이터 전달
+                const droppedItems = lootResult.items.map((item) => item.name);
+                const hpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
+                const mpRatio = (updatedPlayer.mp || 0) / Math.max(1, updatedPlayer.maxMp || 1);
+
                 dispatch({
                     type: 'SET_POST_COMBAT_RESULT', payload: {
                         enemy: enemyAtActionStart.name,
                         exp: victoryResult.expGained || 0,
                         gold: victoryResult.goldGained || 0,
-                        loot: lootResult.items.map(i => i.name),
+                        items: droppedItems,
+                        loot: droppedItems,
+                        leveledUp: Boolean(victoryResult.leveledUp),
+                        hpLow: hpRatio <= 0.35,
+                        mpLow: mpRatio <= 0.3,
+                        invFull: updatedPlayer.inv.length >= 20,
                         playerHp: updatedPlayer.hp,
                         playerMaxHp: updatedPlayer.maxHp,
+                        playerMp: updatedPlayer.mp,
+                        playerMaxMp: updatedPlayer.maxMp,
                         playerInvCount: updatedPlayer.inv.length,
                     }
                 });

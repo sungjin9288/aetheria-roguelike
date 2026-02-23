@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star } from 'lucide-react';
+import { QuickSlotAssigner } from './QuickSlot';
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -39,7 +40,7 @@ const ITEM_TYPE_TO_FILTER = {
     mat: 'material',
 };
 
-const SmartInventory = ({ player, actions }) => {
+const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot }) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState(null);
 
@@ -171,6 +172,13 @@ const SmartInventory = ({ player, actions }) => {
                                 )}
                                 {item.desc_stat && (
                                     <div className="text-cyber-blue/30 text-xs font-fira mt-0.5 truncate">{item.desc_stat}</div>
+                                )}
+                                {onAssignQuickSlot && (
+                                    <QuickSlotAssigner
+                                        item={item}
+                                        currentSlots={quickSlots}
+                                        onAssign={onAssignQuickSlot}
+                                    />
                                 )}
                             </div>
                             <Motion.button

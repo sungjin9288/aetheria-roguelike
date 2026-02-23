@@ -14,7 +14,6 @@ import SkillTreePreview from './SkillTreePreview';
 import MapNavigator from './MapNavigator';
 import StatsPanel from './StatsPanel';
 import Bestiary from './Bestiary';
-import { QuickSlotAssigner } from './QuickSlot';
 
 const BAR_THEMES = {
     hp: {
@@ -67,7 +66,7 @@ const tabVariants = {
 
 const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 
-const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false }) => {
+const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false, quickSlots = [null, null, null] }) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState(null);
     const [statusCollapsed, setStatusCollapsed] = useState(false);
@@ -170,7 +169,12 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     className="space-y-2 pr-1"
                 >
                     {sideTab === 'inventory' && (
-                        <SmartInventory player={player} actions={actions} />
+                        <SmartInventory
+                            player={player}
+                            actions={actions}
+                            quickSlots={quickSlots}
+                            onAssignQuickSlot={(index, item) => actions.setQuickSlot?.(index, item)}
+                        />
                     )}
 
                     {sideTab === 'quest' && (
@@ -460,7 +464,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 min-h-[200px] overflow-hidden flex flex-col shadow-[0_0_20px_rgba(0,204,255,0.1)]"
             >
                 <div className="flex gap-2 mb-4 border-b border-cyber-blue/20 pb-3">
-                    {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'system', icon: Zap }].map(tab => (
+                    {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'stats', icon: BarChart3 }, { id: 'bestiary', icon: Eye }, { id: 'system', icon: Zap }].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setSideTab(tab.id)}

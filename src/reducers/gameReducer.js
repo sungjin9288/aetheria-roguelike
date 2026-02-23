@@ -12,7 +12,7 @@ export const INITIAL_STATE = {
     player: {
         name: '', job: '모험가', gender: 'male', level: 1, hp: CONSTANTS.START_HP, maxHp: CONSTANTS.START_HP, mp: CONSTANTS.START_MP, maxMp: CONSTANTS.START_MP, atk: 10, def: 5, exp: 0, nextExp: 100, gold: CONSTANTS.START_GOLD, loc: '시작의 마을',
         inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0], offhand: null },
-        quests: [], achievements: [], stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 },
+        quests: [], achievements: [], stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0 },
         tempBuff: { atk: 0, turn: 0 }, status: [],
         skillLoadout: { selected: 0, cooldowns: {} },
         meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
@@ -59,6 +59,8 @@ export const gameReducer = (state, action) => {
                 player: { ...state.player, ...action.payload.player },
                 gameState: action.payload.gameState || 'idle',
                 enemy: action.payload.enemy || null,
+                quickSlots: Array.isArray(action.payload.quickSlots) ? action.payload.quickSlots.slice(0, 3) : state.quickSlots,
+                onboardingDismissed: action.payload.onboardingDismissed ?? state.onboardingDismissed,
                 bootStage: 'ready',
                 syncStatus: 'synced',
                 lastLoadedTimestamp: action.payload.lastActive?.toMillis() || Date.now()
@@ -100,7 +102,7 @@ export const gameReducer = (state, action) => {
         case AT.SET_QUICK_SLOT: {
             const next = [...state.quickSlots];
             next[action.payload.index] = action.payload.item;
-            return { ...state, quickSlots: next };
+            return { ...state, quickSlots: next, syncStatus: 'syncing' };
         }
         case AT.SET_POST_COMBAT_RESULT:
             return { ...state, postCombatResult: action.payload };

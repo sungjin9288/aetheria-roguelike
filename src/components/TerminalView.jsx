@@ -56,6 +56,7 @@ const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
 
 const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobile = false, player, quickSlots, onQuickSlotUse }) => {
     const endRef = useRef(null);
+    const inputRef = useRef(null);
     const [inputValue, setInputValue] = useState('');
     useEffect(() => {
         if (endRef.current) {
@@ -86,8 +87,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
             // Focus terminal input: /
             if (e.key === '/') {
                 e.preventDefault();
-                const input = document.querySelector('[data-terminal-input]');
-                if (input) input.focus();
+                inputRef.current?.focus();
             }
         };
         document.addEventListener('keydown', handleKeyDown);
@@ -180,6 +180,8 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                     )}
                     <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
                     <input
+                        data-terminal-input
+                        ref={inputRef}
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}

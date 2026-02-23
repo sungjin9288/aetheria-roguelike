@@ -11,9 +11,10 @@ import ControlPanel from './components/ControlPanel';
 import IntroScreen from './components/IntroScreen';
 import PostCombatCard from './components/PostCombatCard';
 import OnboardingGuide from './components/OnboardingGuide';
+import DamageNumber from './components/DamageNumber';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useAutoExplore } from './hooks/useAutoExplore';
-import { useDamageFlash, DamageNumber } from './hooks/useDamageFlash.jsx';
+import { useDamageFlash } from './hooks/useDamageFlash';
 
 function App() {
   const engine = useGameEngine();
@@ -131,7 +132,6 @@ function App() {
       {!isMobileViewport && showOnboarding && !engine.onboardingDismissed && (
         <OnboardingGuide
           player={engine.player}
-          gameState={engine.gameState}
           onDismiss={handleDismissOnboarding}
         />
       )}
