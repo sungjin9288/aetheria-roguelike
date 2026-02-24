@@ -23,14 +23,24 @@ export const QUESTS = [
     // 최종 퀘스트 (Lv 40+)
     { id: 40, title: '마왕의 사도 척결', desc: '마왕의 사도 10마리 처치', target: '마왕의 사도', goal: 10, reward: { exp: 8000, gold: 15000 }, minLv: 40 },
     { id: 41, title: '타락한 천사', desc: '타락한 천사 처치', target: '타락한 천사', goal: 1, reward: { exp: 10000, gold: 20000, item: '천상의갑주' }, minLv: 45 },
+    { id: 50, title: '기계 폐도 봉쇄', desc: '강철 자동인형 12마리 처치', target: '강철 자동인형', goal: 12, reward: { exp: 12000, gold: 18000, item: '기계 코어' }, minLv: 30 },
+    { id: 51, title: '천공의 균열', desc: '성운 감시자 8마리 처치', target: '성운 감시자', goal: 8, reward: { exp: 15000, gold: 22000, item: '천공 결정' }, minLv: 36 },
+    { id: 52, title: '심해 추락자', desc: '심연 크라켄 처치', target: '심연 크라켄', goal: 1, reward: { exp: 18000, gold: 26000, item: '청해 단검' }, minLv: 42 },
+    { id: 53, title: '에테르 붕괴 저지', desc: '차원 파쇄자 처치', target: '차원 파쇄자', goal: 1, reward: { exp: 22000, gold: 32000, item: '심연 파쇄창' }, minLv: 50 },
+    { id: 54, title: '영겁의 문', desc: '영겁의 수문장 처치', target: '영겁의 수문장', goal: 1, reward: { exp: 24000, gold: 35000, item: '성광 방벽' }, minLv: 52 },
+    { id: 55, title: '천공의 계승자', desc: '에테르 드래곤 처치', target: '에테르 드래곤', goal: 1, reward: { exp: 30000, gold: 42000, item: '에테르 세이버' }, minLv: 55 },
     { id: 99, title: '마왕 토벌', desc: '최종 보스 마왕 처치', target: '마왕', goal: 1, reward: { exp: 50000, gold: 99999, item: '성검 에테르니아' }, minLv: 50 }
 ];
 
 export const ACHIEVEMENTS = [
+    { id: 'ach_first_blood', title: '첫 번째 피', desc: '첫 전투 승리', target: 'kills', goal: 1, reward: { gold: 50 } },
     { id: 'ach_kill_10', title: '초보 사냥꾼', desc: '몬스터 10마리 처치', target: 'kills', goal: 10, reward: { gold: 200 } },
-    { id: 'ach_kill_100', title: '학살자', desc: '몬스터 100마리 처치', target: 'kills', goal: 100, reward: { gold: 2000, item: '중급 체력 물약' } },
+    { id: 'ach_kill_50', title: '학살자', desc: '몬스터 50마리 처치', target: 'kills', goal: 50, reward: { gold: 500 } },
+    { id: 'ach_kill_100', title: '전장의 신', desc: '몬스터 100마리 처치', target: 'kills', goal: 100, reward: { gold: 2000, item: '중급 체력 물약' } },
+    { id: 'ach_boss_first', title: '용사의 증명', desc: '보스 몬스터 첫 처치', target: 'bossKills', goal: 1, reward: { gold: 1000 } },
     { id: 'ach_gold_1000', title: '저축왕', desc: '누적 골드 1000G 달성', target: 'total_gold', goal: 1000, reward: { item: '하급 체력 물약' } },
     { id: 'ach_gold_10000', title: '갑부', desc: '누적 골드 10000G 달성', target: 'total_gold', goal: 10000, reward: { item: '엘릭서' } },
     { id: 'ach_lv_10', title: '성장의 기쁨', desc: '레벨 10 달성', target: 'level', goal: 10, reward: { item: '강철 롱소드' } },
-    { id: 'ach_die_1', title: '죽음은 또 다른 시작', desc: '최초 사망 달성', target: 'deaths', goal: 1, reward: { gold: 100 } }
+    { id: 'ach_die_1', title: '죽음은 또 다른 시작', desc: '최초 사망 달성', target: 'deaths', goal: 1, reward: { gold: 100 } },
+    { id: 'ach_die_10', title: '불사조의 환생', desc: '10번 사망 후 재기', target: 'deaths', goal: 10, reward: { gold: 300 } }
 ];

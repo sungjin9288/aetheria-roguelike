@@ -1,34 +1,81 @@
 import { DB } from '../data/db';
 import { toArray, makeItem, findItemByName } from '../utils/gameUtils';
+import { isShield, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 
 /**
  * createInventoryActions — 아이템 사용, 장비, 마켓, 제작, 퀘스트 완료
  */
-export const createInventoryActions = ({ player, gameState, dispatch, addLog }) => ({
+export const createInventoryActions = ({ player, gameState, dispatch, addLog, getFullStats }) => ({
 
     useItem: (item) => {
         if (['weapon', 'armor', 'shield'].includes(item.type)) {
             let newInv = player.inv.filter((i) => i.id !== item.id);
             const currentEquip = { ...player.equip };
+            const pushBackToInventory = (equippedItem) => {
+                if (!equippedItem) return;
+                if (equippedItem.id && equippedItem.id === item.id) return;
+                if (equippedItem.name === '맨손' || equippedItem.name === '천옷') return;
+                newInv.push(equippedItem.id ? equippedItem : makeItem(equippedItem));
+            };
 
             if (item.type === 'armor') {
-                if (currentEquip.armor && currentEquip.armor.name !== '천옷') newInv.push(currentEquip.armor);
+                pushBackToInventory(currentEquip.armor);
                 currentEquip.armor = item;
             } else if (item.type === 'weapon') {
-                if (currentEquip.weapon && currentEquip.weapon.name !== '맨손') newInv.push(currentEquip.weapon);
-                if (item.hands === 2 && currentEquip.offhand) {
-                    newInv.push(currentEquip.offhand);
+                const currentMain = currentEquip.weapon;
+                const currentOffhand = currentEquip.offhand;
+
+                if (isTwoHandWeapon(item)) {
+                    pushBackToInventory(currentMain);
+                    pushBackToInventory(currentOffhand);
+                    currentEquip.weapon = item;
                     currentEquip.offhand = null;
-                    addLog('info', '양손 무기 장착으로 보조 장비를 해제했습니다.');
+                    if (currentOffhand) addLog('info', '양손 무기로 전환되어 보조 손 장비가 해제되었습니다.');
+                } else {
+                    if (!isWeapon(currentMain)) {
+                        currentEquip.weapon = item;
+                    } else if (isTwoHandWeapon(currentMain)) {
+                        pushBackToInventory(currentMain);
+                        currentEquip.weapon = item;
+                        addLog('info', '양손 무기를 해제하고 한손 무기를 장착했습니다.');
+                    } else if (!currentOffhand) {
+                        if ((item.val || 0) > (currentMain?.val || 0)) {
+                            currentEquip.weapon = item;
+                            currentEquip.offhand = currentMain.id ? currentMain : makeItem(currentMain);
+                            addLog('info', '더 강한 한손 무기를 주손으로 장착하고 기존 무기를 보조손으로 이동했습니다.');
+                        } else {
+                            currentEquip.offhand = item;
+                            addLog('info', '보조 손에 한손 무기를 장착했습니다.');
+                        }
+                    } else if (isShield(currentOffhand)) {
+                        pushBackToInventory(currentMain);
+                        currentEquip.weapon = item;
+                    } else if (isWeapon(currentOffhand)) {
+                        const mainVal = currentMain?.val || 0;
+                        const offhandVal = currentOffhand?.val || 0;
+                        if ((item.val || 0) >= Math.min(mainVal, offhandVal)) {
+                            if (mainVal <= offhandVal) {
+                                pushBackToInventory(currentMain);
+                                currentEquip.weapon = item;
+                            } else {
+                                pushBackToInventory(currentOffhand);
+                                currentEquip.offhand = item;
+                            }
+                        } else {
+                            pushBackToInventory(currentOffhand);
+                            currentEquip.offhand = item;
+                        }
+                    } else {
+                        pushBackToInventory(currentOffhand);
+                        currentEquip.offhand = item;
+                    }
                 }
-                currentEquip.weapon = item;
             } else if (item.type === 'shield') {
-                if (currentEquip.offhand) newInv.push(currentEquip.offhand);
-                if (currentEquip.weapon?.hands === 2) {
-                    newInv.push(currentEquip.weapon);
-                    currentEquip.weapon = DB.ITEMS.weapons[0];
-                    addLog('info', '방패 장착으로 양손 무기를 해제했습니다.');
+                if (isTwoHandWeapon(currentEquip.weapon)) {
+                    addLog('error', '양손 무기 사용 중에는 방패를 장착할 수 없습니다.');
+                    return;
                 }
+                pushBackToInventory(currentEquip.offhand);
                 currentEquip.offhand = item;
             }
 
@@ -41,7 +88,10 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog }) 
         if (item.type === 'hp') {
             dispatch({
                 type: 'SET_PLAYER',
-                payload: (p) => ({ ...p, hp: Math.min(p.maxHp, p.hp + (item.val || 0)), inv: removeOne() })
+                payload: (p) => {
+                    const stats = getFullStats();
+                    return { ...p, hp: Math.min(stats.maxHp, p.hp + (item.val || 0)), inv: removeOne() };
+                }
             });
             addLog('success', `${item.name} 사용.`);
             return;
@@ -143,19 +193,27 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog }) 
     },
 
     completeQuest: (qId) => {
-        const qData = DB.QUESTS.find((q) => q.id === qId);
+        const pQuest = player.quests.find((q) => q.id === qId);
+        if (!pQuest) return;
+
+        const qData = pQuest.isBounty ? pQuest : DB.QUESTS.find((q) => q.id === qId);
         if (!qData) return;
 
-        const pQuest = player.quests.find((q) => q.id === qId);
-        if (!pQuest || pQuest.progress < qData.goal) return addLog('error', '아직 완료 조건을 만족하지 못했습니다.');
+        if (pQuest.progress < qData.goal) return addLog('error', '아직 완료 조건을 만족하지 못했습니다.');
 
         const updates = {
-            gold: player.gold + (qData.reward.gold || 0),
-            exp: player.exp + (qData.reward.exp || 0),
+            gold: player.gold + (qData.reward?.gold || 0),
+            exp: player.exp + (qData.reward?.exp || 0),
             quests: player.quests.filter((q) => q.id !== qId)
         };
+        if (pQuest.isBounty) {
+            updates.stats = {
+                ...(player.stats || {}),
+                bountiesCompleted: (player.stats?.bountiesCompleted || 0) + 1
+            };
+        }
 
-        if (qData.reward.item) {
+        if (qData.reward?.item) {
             const itemData = findItemByName(qData.reward.item);
             if (itemData) {
                 updates.inv = [...player.inv, makeItem(itemData)];

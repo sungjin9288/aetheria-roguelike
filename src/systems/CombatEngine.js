@@ -302,7 +302,7 @@ export const CombatEngine = {
         const normalizedEnemyName = enemyName || '';
 
         const updatedQuests = player.quests.map((q) => {
-            const qData = DB.QUESTS.find((dbQ) => dbQ.id === q.id);
+            const qData = q.isBounty ? q : DB.QUESTS.find((dbQ) => dbQ.id === q.id);
             if (!qData) return q;
 
             const exactMatch = qData.target === normalizedEnemyName;
@@ -317,8 +317,8 @@ export const CombatEngine = {
         });
 
         const completedCount = updatedQuests.filter((q) => {
-            const qData = DB.QUESTS.find((dbQ) => dbQ.id === q.id);
-            return qData && q.progress >= qData.goal;
+            const qData = q.isBounty ? q : DB.QUESTS.find((dbQ) => dbQ.id === q.id);
+            return qData && q.progress >= qData.goal && player.quests.find(pq => pq.id === q.id)?.progress < qData.goal;
         }).length;
 
         return { updatedQuests, completedCount };
@@ -333,7 +333,8 @@ export const CombatEngine = {
         if (!lootList || lootList.length === 0) return { items: [], logs: [] };
 
         lootList.forEach((itemName) => {
-            if (Math.random() < BALANCE.DROP_CHANCE) {
+            const chance = BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0);
+            if (Math.random() < chance) {
                 const itemData = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]
                     .find((i) => i.name === itemName);
                 if (!itemData) return;

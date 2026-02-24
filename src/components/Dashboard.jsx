@@ -178,37 +178,48 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     )}
 
                     {sideTab === 'quest' && (
-                        player?.quests?.length > 0 ? (
-                            player.quests.map((pq, i) => {
-                                const qData = DB.QUESTS.find(q => q.id === pq.id);
-                                if (!qData) return null;
-                                const isComplete = pq.progress >= qData.goal;
-                                return (
-                                    <Motion.div
-                                        initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                                        key={i}
-                                        className={`p-3 rounded-sm border mb-2 transition-all ${isComplete ? 'bg-cyber-green/10 border-cyber-green/50 shadow-[0_0_10px_rgba(0,255,157,0.1)]' : 'bg-cyber-dark/40 border-cyber-blue/10'}`}
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className={`font-bold text-sm font-rajdhani ${isComplete ? 'text-cyber-green' : 'text-cyber-blue'}`}>{qData.title}</div>
-                                                <div className="text-xs text-cyber-blue/50 mt-1">{qData.desc}</div>
-                                            </div>
-                                            {isComplete ? (
-                                                <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(pq.id)} className={`px-4 py-2 bg-cyber-green hover:bg-emerald-400 text-cyber-black font-bold text-xs rounded-sm animate-pulse shadow-neon-green min-h-[44px]`}>CLAIM REWARD</Motion.button>
-                                            ) : (
-                                                <div className="text-xs text-cyber-blue/50 font-fira bg-cyber-black/50 px-2 py-1 rounded border border-cyber-blue/10">{pq.progress} / {qData.goal}</div>
-                                            )}
-                                        </div>
+                        <div className="flex flex-col h-full">
+                            <Motion.button
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => actions.requestBounty()}
+                                className="w-full text-xs font-rajdhani font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30 py-2 rounded mb-3 hover:bg-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)] flex items-center justify-center gap-1 min-h-[44px] shrink-0"
+                            >
+                                <Sword size={14} /> REQUEST DAILY BOUNTY
+                            </Motion.button>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+                                {player?.quests?.length > 0 ? (
+                                    player.quests.map((pq, i) => {
+                                        const qData = pq.isBounty ? pq : DB.QUESTS.find(q => q.id === pq.id);
+                                        if (!qData) return null;
+                                        const isComplete = pq.progress >= qData.goal;
+                                        return (
+                                            <Motion.div
+                                                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                                                key={i}
+                                                className={`p-3 rounded-sm border mb-2 transition-all ${isComplete ? 'bg-cyber-green/10 border-cyber-green/50 shadow-[0_0_10px_rgba(0,255,157,0.1)]' : 'bg-cyber-dark/40 border-cyber-blue/10'}`}
+                                            >
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <div className={`font-bold text-sm font-rajdhani ${isComplete ? 'text-cyber-green' : 'text-cyber-blue'}`}>{qData.title}</div>
+                                                        <div className="text-xs text-cyber-blue/50 mt-1">{qData.desc}</div>
+                                                    </div>
+                                                    {isComplete ? (
+                                                        <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(pq.id)} className={`px-4 py-2 bg-cyber-green hover:bg-emerald-400 text-cyber-black font-bold text-xs rounded-sm animate-pulse shadow-neon-green min-h-[44px]`}>CLAIM REWARD</Motion.button>
+                                                    ) : (
+                                                        <div className="text-xs text-cyber-blue/50 font-fira bg-cyber-black/50 px-2 py-1 rounded border border-cyber-blue/10">{pq.progress} / {qData.goal}</div>
+                                                    )}
+                                                </div>
+                                            </Motion.div>
+                                        );
+                                    })
+                                ) : (
+                                    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-cyber-blue/30 text-center py-10 flex flex-col items-center gap-2">
+                                        <Scroll size={24} className="opacity-20" />
+                                        <span className="text-sm font-rajdhani tracking-widest">NO ACTIVE MISSIONS</span>
                                     </Motion.div>
-                                );
-                            })
-                        ) : (
-                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-cyber-blue/30 text-center py-10 flex flex-col items-center gap-2">
-                                <Scroll size={24} className="opacity-20" />
-                                <span className="text-sm font-rajdhani tracking-widest">NO ACTIVE MISSIONS</span>
-                            </Motion.div>
-                        )
+                                )}
+                            </div>
+                        </div>
                     )}
 
                     {sideTab === 'achievements' && (
@@ -342,7 +353,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 </div>
 
                 <div className="space-y-3">
-                    <ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="VIT (HP)" />
+                    <ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="VIT (HP)" />
                     <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="NRG (MP)" />
                 </div>
 
@@ -402,7 +413,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 <span className="text-yellow-400 text-[10px] font-fira ml-auto">{player?.gold}G</span>
                             </div>
                             <div className="mt-1.5 flex gap-2">
-                                <div className="flex-1"><ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="HP" /></div>
+                                <div className="flex-1"><ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="HP" /></div>
                                 <div className="flex-1"><ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="MP" /></div>
                             </div>
                         </div>
@@ -430,7 +441,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             </div>
 
                             <div className="space-y-3">
-                                <ProgressBar value={player?.hp} max={player?.maxHp} variant="hp" label="VITALITY" />
+                                <ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="VITALITY" />
                                 <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="ENERGY" />
                                 <ProgressBar value={player?.exp} max={player?.nextExp} variant="exp" label="EXPERIENCE" />
                             </div>
@@ -447,9 +458,14 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             </div>
 
                             <div className="space-y-1 text-[10px] font-fira text-cyber-blue/60 border-t border-cyber-blue/10 pt-2">
-                                <div className="flex justify-between"><span>WPN:</span> <span className="text-white">{player?.equip?.weapon?.name || 'UNARMED'} {stats?.weaponHands === 2 ? '(2H)' : ''}</span></div>
-                                <div className="flex justify-between"><span>SUB:</span> <span className="text-white">{player?.equip?.offhand?.name || '---'}</span></div>
+                                <div className="flex justify-between"><span>R-HAND:</span> <span className="text-white">{player?.equip?.weapon?.name || 'UNARMED'} {stats?.weaponHands === 2 ? '(2H)' : '(1H)'}</span></div>
+                                <div className="flex justify-between"><span>L-HAND:</span> <span className="text-white">{player?.equip?.offhand?.name || '---'}{player?.equip?.offhand?.type === 'weapon' ? ' (1H)' : player?.equip?.offhand?.type === 'shield' ? ' (SHD)' : ''}</span></div>
                                 <div className="flex justify-between"><span>ARM:</span> <span className="text-white">{player?.equip?.armor?.name || 'CIVILIAN'}</span></div>
+                                {stats?.activeSet && (
+                                    <div className="mt-2 p-1.5 bg-cyber-green/10 border border-cyber-green/30 rounded text-cyber-green text-center">
+                                        <span className="font-bold">{stats.activeSet.desc}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </>

@@ -14,6 +14,7 @@ const StatsPanel = ({ player }) => {
             deaths: s.deaths || 0,
             totalGold: s.total_gold || 0,
             bossKills: s.bossKills || 0,
+            bountiesCompleted: s.bountiesCompleted || 0,
             killRegistry: s.killRegistry || {},
         };
     }, [player]);
@@ -40,6 +41,7 @@ const StatsPanel = ({ player }) => {
                     { label: 'TOTAL KILLS', value: stats.kills, icon: Sword, color: 'text-red-400' },
                     { label: 'DEATHS', value: stats.deaths, icon: Skull, color: 'text-cyber-blue/60' },
                     { label: 'BOSS KILLS', value: stats.bossKills, icon: Target, color: 'text-cyber-purple' },
+                    { label: 'BOUNTIES', value: stats.bountiesCompleted, icon: Target, color: 'text-cyber-blue' },
                     { label: 'K/D RATIO', value: kd, icon: Shield, color: 'text-cyber-green' },
                     { label: 'TOTAL GOLD', value: stats.totalGold.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
                     { label: 'LEVEL', value: player?.level || 1, icon: Clock, color: 'text-cyber-blue' },

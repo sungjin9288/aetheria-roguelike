@@ -17,16 +17,24 @@ const Bestiary = ({ player }) => {
         Object.values(DB.MAPS).forEach(map => {
             (map.monsters || []).forEach(m => monstersSet.add(m));
         });
-        return Array.from(monstersSet).map(name => ({
-            name,
-            kills: registry[name] || 0,
-            encountered: (registry[name] || 0) > 0,
-            drops: LOOT_TABLE[name] || [],
-            location: Object.entries(DB.MAPS)
-                .filter(([, map]) => (map.monsters || []).includes(name))
-                .map(([loc]) => loc)
-                .join(', '),
-        }));
+        return Array.from(monstersSet).map(name => {
+            const kills = registry[name] || 0;
+            return {
+                name,
+                kills,
+                encountered: kills > 0,
+                drops: LOOT_TABLE[name] || [],
+                location: Object.entries(DB.MAPS)
+                    .filter(([, map]) => (map.monsters || []).includes(name))
+                    .map(([loc]) => loc)
+                    .join(', '),
+                bonuses: {
+                    hp: kills >= 10 ? 5 : 0,
+                    def: kills >= 50 ? 1 : 0,
+                    atk: kills >= 100 ? 1 : 0
+                }
+            };
+        });
     }, [player]);
 
     const encountered = allMonsters.filter(m => m.encountered);
@@ -51,6 +59,14 @@ const Bestiary = ({ player }) => {
                     transition={{ duration: 0.8, ease: 'easeOut' }}
                     className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full"
                 />
+            </div>
+
+            {/* Codex Total Bonuses */}
+            <div className="flex gap-2 text-[10px] font-fira text-cyber-blue/70 bg-cyber-dark/30 p-1.5 rounded border border-cyber-blue/10">
+                <span className="font-bold text-cyber-blue">총 보너스:</span>
+                <span>HP +{allMonsters.reduce((acc, m) => acc + m.bonuses.hp, 0)}</span>
+                <span>ATK +{allMonsters.reduce((acc, m) => acc + m.bonuses.atk, 0)}</span>
+                <span>DEF +{allMonsters.reduce((acc, m) => acc + m.bonuses.def, 0)}</span>
             </div>
 
             {/* Monster List */}
@@ -106,6 +122,12 @@ const Bestiary = ({ player }) => {
                                 ))}
                             </div>
                         )}
+                        <div className="pt-2 border-t border-red-500/20">
+                            <div className="text-[10px] text-cyber-blue/50 font-fira mb-1">연구 보너스 (10/50/100킬):</div>
+                            <div className={`text-[10px] font-fira ${m.kills >= 10 ? 'text-cyber-green' : 'text-cyber-blue/30'}`}>• [10체] MaxHP +5 {m.kills >= 10 && '(달성)'}</div>
+                            <div className={`text-[10px] font-fira ${m.kills >= 50 ? 'text-cyber-green' : 'text-cyber-blue/30'}`}>• [50체] DEF +1 {m.kills >= 50 && '(달성)'}</div>
+                            <div className={`text-[10px] font-fira ${m.kills >= 100 ? 'text-cyber-green' : 'text-cyber-blue/30'}`}>• [100체] ATK +1 {m.kills >= 100 && '(달성)'}</div>
+                        </div>
                     </Motion.div>
                 );
             })()}

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
+import { BALANCE } from '../data/constants';
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -78,8 +79,26 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     const getCompareDiff = (item) => {
         if (!item) return null;
         if (item.type === 'weapon') {
-            const cur = player.equip?.weapon?.val || 0;
-            return { atk: (item.val || 0) - cur, def: 0 };
+            const main = player.equip?.weapon;
+            const off = player.equip?.offhand;
+            const offhandWeaponBonus = off?.type === 'weapon' ? Math.floor((off.val || 0) * BALANCE.OFFHAND_WEAPON_RATIO) : 0;
+            const currentAtkContribution = (main?.val || 0) + offhandWeaponBonus;
+
+            if ((item.hands || 1) >= 2) {
+                const newContribution = Math.floor((item.val || 0) * BALANCE.TWO_HAND_ATK_BONUS);
+                const shieldLoss = off?.type === 'shield' ? -(off.val || 0) : 0;
+                return { atk: newContribution - currentAtkContribution, def: shieldLoss };
+            }
+
+            const mainIsTwoHand = (main?.hands || 1) >= 2;
+            if (mainIsTwoHand) {
+                const newContribution = (item.val || 0);
+                return { atk: newContribution - currentAtkContribution, def: 0 };
+            }
+
+            const weakerHand = Math.min(main?.val || 0, off?.type === 'weapon' ? (off.val || 0) : Number.POSITIVE_INFINITY);
+            const baseline = Number.isFinite(weakerHand) ? weakerHand : (main?.val || 0);
+            return { atk: (item.val || 0) - baseline, def: 0 };
         }
         if (item.type === 'armor') {
             const cur = player.equip?.armor?.val || 0;

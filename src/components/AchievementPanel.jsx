@@ -9,7 +9,7 @@ import { Trophy, Star, Skull, Swords, Crown, Gift } from 'lucide-react';
 
 const ACHIEVEMENTS = [
     {
-        id: 'first_blood', dbId: null,
+        id: 'first_blood', dbId: 'ach_first_blood',
         title: '첫 번째 피', desc: '첫 전투 승리',
         icon: Swords, color: 'text-red-400', border: 'border-red-500/30', bg: 'bg-red-950/20',
         check: (stats) => (stats.kills || 0) >= 1,
@@ -23,7 +23,7 @@ const ACHIEVEMENTS = [
         reward: { gold: 200 },
     },
     {
-        id: 'kills_50', dbId: null,
+        id: 'kills_50', dbId: 'ach_kill_50',
         title: '학살자', desc: '총 50마리 처치',
         icon: Skull, color: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-950/20',
         check: (stats) => (stats.kills || 0) >= 50,
@@ -37,7 +37,7 @@ const ACHIEVEMENTS = [
         reward: { gold: 2000, item: '중급 체력 물약' },
     },
     {
-        id: 'boss_first', dbId: null,
+        id: 'boss_first', dbId: 'ach_boss_first',
         title: '용사의 증명', desc: '보스 몬스터 첫 처치',
         icon: Trophy, color: 'text-cyber-purple', border: 'border-cyber-purple/30', bg: 'bg-cyber-purple/5',
         check: (stats) => (stats.bossKills || 0) >= 1,
@@ -51,7 +51,7 @@ const ACHIEVEMENTS = [
         reward: { gold: 100 },
     },
     {
-        id: 'death_10', dbId: null,
+        id: 'death_10', dbId: 'ach_die_10',
         title: '불사조의 환생', desc: '10번 부활',
         icon: Star, color: 'text-cyber-green', border: 'border-cyber-green/30', bg: 'bg-cyber-green/5',
         check: (stats) => (stats.deaths || 0) >= 10,

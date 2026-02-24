@@ -12,19 +12,28 @@ export const MAPS = {
 
     // 화염 지역 (Lv 15-30)
     '화염의 협곡': { level: 15, type: 'dungeon', exits: ['서쪽 평원', '용의 둥지'], monsters: ['화염 정령', '용암 골렘', '파이어뱃', '화염 도마뱀'], desc: '뜨거운 용암이 흐르는 위험한 협곡입니다.', eventChance: 0.4 },
-    '용의 둥지': { level: 25, type: 'dungeon', exits: ['화염의 협곡'], monsters: ['화염의 군주', '레드 드래곤', '화염 와이번', '드래곤 나이트'], desc: '용들이 거주하는 전설의 장소입니다.', eventChance: 0.5, boss: true },
+    '용의 둥지': { level: 25, type: 'dungeon', exits: ['화염의 협곡'], monsters: ['화염의 군주', '레드 드래곤', '화염 와이번', '드래곤 나이트'], bossMonsters: ['화염의 군주', '레드 드래곤'], desc: '용들이 거주하는 전설의 장소입니다.', eventChance: 0.5, boss: true },
 
     // 사막 지역 (Lv 15-25)
     '사막 오아시스': { level: 15, type: 'safe', exits: ['서쪽 평원', '피라미드'], monsters: [], desc: '사막 한가운데 있는 오아시스 마을입니다.', eventChance: 0 },
-    '피라미드': { level: 20, type: 'dungeon', exits: ['사막 오아시스'], monsters: ['미라', '사막도적', '스핑크스', '아누비스 수호자'], desc: '고대 왕이 잠든 거대한 피라미드입니다.', eventChance: 0.45, boss: true },
+    '피라미드': { level: 20, type: 'dungeon', exits: ['사막 오아시스'], monsters: ['미라', '사막도적', '스핑크스', '아누비스 수호자'], bossMonsters: ['스핑크스', '아누비스 수호자'], desc: '고대 왕이 잠든 거대한 피라미드입니다.', eventChance: 0.45, boss: true },
 
     // 얼음 지역 (Lv 20-35)
     '얼음 성채': { level: 20, type: 'dungeon', exits: ['잊혀진 폐허', '빙하 심연', '북부 요새'], monsters: ['프로스트 위치', '얼음 거인', '스노우 울프', '아이스 골렘'], desc: '영원히 얼어붙은 고대 성채입니다.', eventChance: 0.4 },
-    '빙하 심연': { level: 30, type: 'dungeon', exits: ['얼음 성채'], monsters: ['아이스 드래곤', '빙결의 마녀', '서리 정령'], desc: '깊은 빙하 속에 숨겨진 심연입니다.', eventChance: 0.5, boss: true },
-    '북부 요새': { level: 30, type: 'safe', exits: ['얼음 성채'], monsters: [], desc: '북쪽 끝 설원에 위치한 전방 요새입니다. (Tier 3 상점)', eventChance: 0 },
+    '빙하 심연': { level: 30, type: 'dungeon', exits: ['얼음 성채'], monsters: ['아이스 드래곤', '빙결의 마녀', '서리 정령'], bossMonsters: ['아이스 드래곤', '빙결의 마녀'], desc: '깊은 빙하 속에 숨겨진 심연입니다.', eventChance: 0.5, boss: true },
+    '북부 요새': { level: 30, type: 'safe', exits: ['얼음 성채', '기계 폐도'], monsters: [], desc: '북쪽 끝 설원에 위치한 전방 요새입니다. (Tier 3 상점)', eventChance: 0 },
+
+    // 확장 지역 (Lv 28-55)
+    '기계 폐도': { level: 28, type: 'dungeon', exits: ['북부 요새', '천공 정원'], monsters: ['강철 자동인형', '전류 추적자', '증기 골렘', '폐회로 마도병'], desc: '고대 문명 자동 병기가 멈추지 않고 순찰하는 폐허 지구입니다.', eventChance: 0.45 },
+    '천공 정원': { level: 35, type: 'dungeon', exits: ['기계 폐도', '심해 회랑'], monsters: ['천공 수호조', '빛결 수정체', '폭풍 세이렌', '성운 감시자'], desc: '구름 위에 떠 있는 잔해 정원. 빛과 폭풍의 마력이 교차합니다.', eventChance: 0.5 },
+    '심해 회랑': { level: 42, type: 'dungeon', exits: ['천공 정원', '에테르 관문'], monsters: ['심해 기도사', '심연 크라켄', '해류 파수꾼', '망각의 나가'], desc: '심해의 균열을 따라 이어진 회랑. 고요하지만 치명적인 장소입니다.', eventChance: 0.55 },
+    '에테르 관문': { level: 50, type: 'dungeon', exits: ['심해 회랑', '혼돈의 심연'], monsters: ['차원 파쇄자', '영겁의 수문장', '에테르 드래곤'], bossMonsters: ['차원 파쇄자', '영겁의 수문장', '에테르 드래곤'], desc: '차원 사이에 열린 최상위 전장. 끝없는 전투의 관문입니다.', eventChance: 0.6, boss: true },
 
     // 최종 지역 (Lv 30-50)
     '암흑 성': { level: 30, type: 'dungeon', exits: ['어둠의 동굴', '마왕성'], monsters: ['데스나이트', '리치', '뱀파이어', '암흑 사제'], desc: '어둠의 세력이 지배하는 성입니다.', eventChance: 0.45 },
-    '마왕성': { level: 40, type: 'dungeon', exits: ['암흑 성', '혼돈의 심연'], monsters: ['마왕의 사도', '지옥의 문지기', '타락한 천사', '마왕'], desc: '마왕이 군림하는 최종 목적지입니다.', eventChance: 0.5, boss: true },
-    '혼돈의 심연': { level: 'infinite', type: 'dungeon', exits: ['마왕성'], monsters: ['혼돈의 추종자', '타락한 용사', '심연의 수호자', '공허의 짐승'], desc: '끝이 없는 심연입니다. 층을 거듭할수록 끝없이 강해지는 적들이 기다립니다.', eventChance: 0.3 }
+    '마왕성': { level: 40, type: 'dungeon', exits: ['암흑 성', '혼돈의 심연'], monsters: ['마왕의 사도', '지옥의 문지기', '타락한 천사', '마왕'], bossMonsters: ['마왕'], desc: '마왕이 군림하는 최종 목적지입니다.', eventChance: 0.5, boss: true },
+    '혼돈의 심연': { level: 'infinite', type: 'dungeon', exits: ['마왕성'], monsters: ['혼돈의 추종자', '타락한 용사', '심연의 수호자', '공허의 짐승'], desc: '끝이 없는 심연입니다. 층을 거듭할수록 끝없이 강해지는 적들이 기다립니다.', eventChance: 0.3 },
+
+    // 시크릿 맵
+    '고대 보물고': { level: 25, type: 'dungeon', exits: ['시작의 마을'], monsters: ['황금 골렘', '보물사냥꾼', '미믹'], desc: '잊혀진 열쇠로 열린 비밀의 보물고입니다. 황금이 넘쳐나는 위험한 곳입니다.', eventChance: 0.8, boss: false }
 };

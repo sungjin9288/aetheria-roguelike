@@ -64,7 +64,15 @@ export const ITEMS = {
         { name: '그림자 절단기', type: 'weapon', val: 190, tier: 5, price: 29000, elem: '어둠', jobs: ['어쌔신'], desc: '존재 자체가 전설.', desc_stat: 'ATK+190(암)' },
         { name: '라그나로크', type: 'weapon', val: 210, tier: 5, price: 32000, elem: '화염', jobs: ['버서커'], desc: '세계를 태우는 검.', desc_stat: 'ATK+210(화)' },
         { name: '빙결의 왕관검', type: 'weapon', val: 185, tier: 5, price: 28500, elem: '냉기', jobs: ['나이트'], desc: '얼음 왕의 검.', desc_stat: 'ATK+185(냉)' },
-        { name: '세계수의 지팡이', type: 'weapon', val: 175, tier: 5, price: 27500, elem: '자연', jobs: ['아크메이지', '흑마법사'], desc: '세계수의 가지.', desc_stat: 'ATK+175(자)' }
+        { name: '세계수의 지팡이', type: 'weapon', val: 175, tier: 5, price: 27500, elem: '자연', jobs: ['아크메이지', '흑마법사'], desc: '세계수의 가지.', desc_stat: 'ATK+175(자)' },
+        // 확장 무기
+        { name: '기계식 레이피어', type: 'weapon', val: 46, tier: 3, price: 1450, jobs: ['도적', '레인저', '모험가'], desc: '정교한 기계식 검.', desc_stat: 'ATK+46' },
+        { name: '유성 완드', type: 'weapon', val: 49, tier: 3, price: 1500, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '별빛이 응축된 완드.', desc_stat: 'ATK+49(빛)' },
+        { name: '폭풍 스태프', type: 'weapon', hands: 2, val: 56, tier: 3, price: 1620, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '번개를 부르는 장지팡이.', desc_stat: 'ATK+56(빛)' },
+        { name: '청해 단검', type: 'weapon', val: 90, tier: 4, price: 5900, elem: '냉기', jobs: ['도적', '어쌔신'], desc: '심해의 냉기가 깃든 단검.', desc_stat: 'ATK+90(냉)' },
+        { name: '심연 파쇄창', type: 'weapon', hands: 2, val: 102, tier: 4, price: 7200, elem: '어둠', jobs: ['전사', '나이트', '버서커'], desc: '심연을 찢는 중창.', desc_stat: 'ATK+102(암)' },
+        { name: '에테르 세이버', type: 'weapon', val: 205, tier: 5, price: 31500, elem: '빛', jobs: ['전사', '나이트', '모험가'], desc: '차원 에너지로 단련된 검.', desc_stat: 'ATK+205(빛)' },
+        { name: '성운 지팡이', type: 'weapon', hands: 2, val: 195, tier: 5, price: 30500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '별무리의 공명을 담은 지팡이.', desc_stat: 'ATK+195(빛)' }
     ],
     armors: [
         // Tier 1 - 초급 (12개)
@@ -104,6 +112,7 @@ export const ITEMS = {
         { name: '암살자 장갑', type: 'armor', val: 22, tier: 3, price: 800, jobs: ['도적', '어쌔신'], desc: '손재주를 높여준다.', desc_stat: 'DEF+22' },
         { name: '엘프의 갑옷', type: 'armor', val: 26, tier: 3, price: 900, jobs: ['레인저', '도적'], desc: '엘프가 만든 가벼운 갑옷.', desc_stat: 'DEF+26' },
         { name: '화염술사 로브', type: 'armor', val: 23, tier: 3, price: 880, elem: '화염', jobs: ['마법사', '아크메이지'], desc: '화염에 강한 로브.', desc_stat: 'DEF+23(화)' },
+        { name: '수호자의 방패', type: 'shield', val: 24, tier: 3, price: 980, jobs: ['전사', '나이트', '모험가'], desc: '전장을 지키는 철벽 방패.', desc_stat: 'DEF+24' },
         // Tier 4 - 영웅급 (8개)
         { name: '용비늘갑옷', type: 'armor', val: 60, tier: 4, price: 5000, jobs: ['전사', '모험가', '버서커'], desc: '용의 비늘로 만든 갑옷.', desc_stat: 'DEF+60' },
         { name: '대마법사로브', type: 'armor', val: 45, tier: 4, price: 4500, jobs: ['아크메이지', '흑마법사'], desc: '대마법사의 상징.', desc_stat: 'DEF+45' },
@@ -113,6 +122,7 @@ export const ITEMS = {
         { name: '불사조 흉갑', type: 'armor', val: 65, tier: 4, price: 5200, elem: '화염', jobs: ['전사', '버서커'], desc: '불사조의 깃털로 만든 갑옷.', desc_stat: 'DEF+65(화)' },
         { name: '빙결의 갑주', type: 'armor', val: 62, tier: 4, price: 5100, elem: '냉기', jobs: ['나이트'], desc: '얼음으로 보호받는 갑옷.', desc_stat: 'DEF+62(냉)' },
         { name: '어둠의 망토', type: 'armor', val: 52, tier: 4, price: 4900, elem: '어둠', jobs: ['흑마법사', '어쌔신'], desc: '어둠에 녹아드는 망토.', desc_stat: 'DEF+52(암)' },
+        { name: '성광 방벽', type: 'shield', val: 40, tier: 4, price: 5600, elem: '빛', jobs: ['나이트', '전사'], desc: '신성한 장막을 펼치는 방패.', desc_stat: 'DEF+40(빛)' },
         // Tier 5 - 전설급 (8개)
         { name: '천상의갑주', type: 'armor', val: 100, tier: 5, price: 15000, jobs: ['전사', '나이트'], desc: '천계의 금속으로 만듬.', desc_stat: 'DEF+100' },
         { name: '현자의 예복', type: 'armor', val: 80, tier: 5, price: 14000, jobs: ['아크메이지'], desc: '현자들의 지혜.', desc_stat: 'DEF+80' },
@@ -121,7 +131,8 @@ export const ITEMS = {
         { name: '광기의 갑주', type: 'armor', val: 90, tier: 5, price: 15000, jobs: ['버서커'], desc: '광기가 깃든 저주받은 갑옷.', desc_stat: 'DEF+90' },
         { name: '드래곤로드 갑주', type: 'armor', val: 110, tier: 5, price: 18000, jobs: ['전사', '나이트', '버서커'], desc: '용왕의 비늘로 만든 갑옷.', desc_stat: 'DEF+110' },
         { name: '세계수의 로브', type: 'armor', val: 78, tier: 5, price: 14200, elem: '자연', jobs: ['아크메이지'], desc: '세계수의 잎으로 만든 로브.', desc_stat: 'DEF+78(자)' },
-        { name: '어둠의 왕 갑주', type: 'armor', val: 95, tier: 5, price: 16000, elem: '어둠', jobs: ['흑마법사', '버서커'], desc: '어둠의 왕이 입었던 갑주.', desc_stat: 'DEF+95(암)' }
+        { name: '어둠의 왕 갑주', type: 'armor', val: 95, tier: 5, price: 16000, elem: '어둠', jobs: ['흑마법사', '버서커'], desc: '어둠의 왕이 입었던 갑주.', desc_stat: 'DEF+95(암)' },
+        { name: '심해의 수호복', type: 'armor', val: 103, tier: 5, price: 17200, elem: '냉기', jobs: ['전사', '나이트', '레인저'], desc: '심해 압력에서도 버티는 갑주.', desc_stat: 'DEF+103(냉)' }
     ],
     consumables: [
         // 체력물약
@@ -151,6 +162,7 @@ export const ITEMS = {
         { name: '마나 결정', type: 'mat', price: 100, desc: '마력이 응축된 결정', desc_stat: '재료' },
         { name: '용의 비늘', type: 'mat', price: 500, desc: '매우 단단한 비늘', desc_stat: '재료' },
         { name: '어둠의 정수', type: 'mat', price: 300, desc: '불길한 기운', desc_stat: '재료' },
+        { name: '잊혀진 열쇠', type: 'mat', price: 1000, desc: '비밀의 장소를 여는 열쇠', desc_stat: '재료' },
         { name: '멧돼지 가죽', type: 'mat', price: 20, desc: '질긴 가죽', desc_stat: '재료' },
         { name: '박쥐 날개', type: 'mat', price: 15, desc: '연금술 재료', desc_stat: '재료' },
         { name: '화염의 결정', type: 'mat', price: 100, desc: '뜨거운 열기', desc_stat: '재료' },
@@ -167,20 +179,34 @@ export const ITEMS = {
         { name: '마왕의 혼', type: 'mat', price: 5000, desc: '최강의 재료', desc_stat: '재료' },
         { name: '미스릴 원석', type: 'mat', price: 500, desc: '가공되지 않은 미스릴', desc_stat: '재료' },
         { name: '오리할콘', type: 'mat', price: 1000, desc: '전설의 금속', desc_stat: '재료' },
-        { name: '정령의 핵', type: 'mat', price: 800, desc: '원소 정령의 핵심', desc_stat: '재료' }
+        { name: '정령의 핵', type: 'mat', price: 800, desc: '원소 정령의 핵심', desc_stat: '재료' },
+        { name: '기계 코어', type: 'mat', price: 420, desc: '고대 자동 병기의 동력핵', desc_stat: '재료' },
+        { name: '천공 결정', type: 'mat', price: 520, desc: '천공 정원에서 채집한 마력 결정', desc_stat: '재료' },
+        { name: '심해 진주', type: 'mat', price: 620, desc: '심해 균열에서만 생성되는 진주', desc_stat: '재료' },
+        { name: '고대 각인석', type: 'mat', price: 950, desc: '잊힌 문명의 각인이 남은 돌', desc_stat: '재료' }
     ],
     prefixes: [
         { name: '날카로운', type: 'weapon', stat: 'atk', val: 3, price: 1.2 },
         { name: '묵직한', type: 'weapon', stat: 'atk', val: 5, price: 1.3 },
-        { name: '불타는', type: 'weapon', stat: 'atk', val: 5, elem: '화염', price: 1.5 },
-        { name: '얼어붙은', type: 'weapon', stat: 'atk', val: 5, elem: '냉기', price: 1.5 },
-        { name: '맹독의', type: 'weapon', stat: 'atk', val: 4, elem: '자연', price: 1.4 },
-        { name: '신성한', type: 'weapon', stat: 'atk', val: 7, elem: '빛', price: 1.8 },
-        { name: '저주받은', type: 'weapon', stat: 'atk', val: 8, elem: '어둠', price: 1.9 },
+        { name: '불타는', type: 'all', stat: 'all', val: 5, elem: '화염', price: 1.5 },
+        { name: '얼어붙은', type: 'all', stat: 'all', val: 5, elem: '냉기', price: 1.5 },
+        { name: '맹독의', type: 'all', stat: 'all', val: 4, elem: '자연', price: 1.4 },
+        { name: '신성한', type: 'all', stat: 'all', val: 7, elem: '빛', price: 1.8 },
+        { name: '저주받은', type: 'all', stat: 'all', val: 8, elem: '어둠', price: 1.9 },
         { name: '단단한', type: 'armor', stat: 'def', val: 2, price: 1.2 },
         { name: '수호의', type: 'armor', stat: 'def', val: 5, price: 1.4 },
         { name: '축복받은', type: 'all', stat: 'hp', val: 20, price: 2.0 },
         { name: '고대의', type: 'all', stat: 'all', val: 10, price: 2.5 }
+    ],
+    // 세트 효과 정의
+    sets: [
+        { prefix: '불타는', setBonus: { atkMult: 1.1 }, desc: '화염의 결속 (2세트): ATK 10% 증가' },
+        { prefix: '얼어붙은', setBonus: { defMult: 1.15 }, desc: '혹한의 방벽 (2세트): DEF 15% 증가' },
+        { prefix: '맹독의', setBonus: { hpMult: 1.1 }, desc: '독사의 생명력 (2세트): 최대 HP 10% 증가' },
+        { prefix: '신성한', setBonus: { atkMult: 1.15, defMult: 1.15, hpMult: 1.15 }, desc: '신의 축복 (2세트): 전 스탯 15% 증가' },
+        { prefix: '저주받은', setBonus: { atkMult: 1.3, defMult: 0.8 }, desc: '어둠의 계약 (2세트): ATK 30% 증가, DEF 20% 감소' },
+        { prefix: '고대의', setBonus: { atkMult: 1.2, defMult: 1.2, hpMult: 1.2 }, desc: '고대인의 지혜 (2세트): 전 스탯 20% 증가' },
+        { prefix: '수호의', setBonus: { defMult: 1.25 }, desc: '수호자의 결의 (2세트): DEF 25% 증가' }
     ],
     // 제작 레시피
     recipes: [
@@ -210,5 +236,11 @@ export const ITEMS = {
         { id: 'r20', name: '분노의 물약', inputs: [{ name: '화염의 결정', qty: 2 }, { name: '트롤의 피', qty: 1 }], gold: 120 },
         { id: 'r21', name: '수호의 물약', inputs: [{ name: '냉기의 결정', qty: 2 }, { name: '오리할콘', qty: 1 }], gold: 120 },
         { id: 'r22', name: '영웅의 물약', inputs: [{ name: '용의 심장', qty: 1 }, { name: '엘프의 눈물', qty: 1 }], gold: 500 },
+        // T4~T5 확장 제작
+        { id: 'r23', name: '기계식 레이피어', inputs: [{ name: '기계 코어', qty: 2 }, { name: '미스릴 원석', qty: 2 }], gold: 900 },
+        { id: 'r24', name: '폭풍 스태프', inputs: [{ name: '천공 결정', qty: 3 }, { name: '빛의 결정', qty: 2 }], gold: 1200 },
+        { id: 'r25', name: '심연 파쇄창', inputs: [{ name: '심해 진주', qty: 2 }, { name: '어둠의 정수', qty: 3 }], gold: 2400 },
+        { id: 'r26', name: '성광 방벽', inputs: [{ name: '빛의 결정', qty: 5 }, { name: '오리할콘', qty: 2 }], gold: 2100 },
+        { id: 'r27', name: '에테르 세이버', inputs: [{ name: '고대 각인석', qty: 2 }, { name: '마왕의 혼', qty: 1 }], gold: 4800 },
     ]
 };

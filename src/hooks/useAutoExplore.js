@@ -41,8 +41,9 @@ export const useAutoExplore = ({ player, gameState, isAiThinking, actions }) => 
         if (gameState !== 'idle' || isAiThinking) return;
 
         // HP guard — use a ref-read for stability, schedule stop via setTimeout
-        if (player.hp / player.maxHp <= HP_STOP_THRESHOLD) {
-            const msg = `HP 위험 — 자동 탐색 정지 (${player.hp}/${player.maxHp})`;
+        const maxHp = actions.getFullStats().maxHp;
+        if (player.hp / maxHp <= HP_STOP_THRESHOLD) {
+            const msg = `HP 위험 — 자동 탐색 정지 (${player.hp}/${maxHp})`;
             const t = setTimeout(() => stop(msg), 0);
             return () => clearTimeout(t);
         }
@@ -54,7 +55,8 @@ export const useAutoExplore = ({ player, gameState, isAiThinking, actions }) => 
 
         clearInterval(timerRef.current);
         timerRef.current = setInterval(() => {
-            const hpRatio = player.hp / player.maxHp;
+            const maxHp = actions.getFullStats().maxHp;
+            const hpRatio = player.hp / maxHp;
             if (runsRef.current <= 0 || hpRatio <= HP_STOP_THRESHOLD) {
                 const reason = runsRef.current <= 0 ? '자동 탐색 완료' : `HP 위험 — 정지 (${Math.round(hpRatio * 100)}%)`;
                 clearInterval(timerRef.current);

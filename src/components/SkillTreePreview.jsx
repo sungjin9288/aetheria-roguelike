@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Zap, Shield, ChevronDown, ChevronRight } from 'lucide-react';
 import { DB } from '../data/db';
+import { getJobSkills } from '../utils/gameUtils';
 
 /**
  * SkillTreePreview — 현재 직업 스킬 목록 시각화 + 직업 선택 전 스킬 미리보기 (Feature #4)
@@ -42,6 +43,7 @@ const SkillCard = ({ skill, cooldown = 0, selected = false }) => {
                             {elem} {skill.name}
                         </span>
                         {selected && <span className="text-[10px] text-cyber-green border border-cyber-green/30 px-1 rounded">선택됨</span>}
+                        {skill.fromWeapon && <span className="text-[10px] text-cyber-purple border border-cyber-purple/30 px-1 rounded">무기 생성</span>}
                         {isOnCooldown && <span className="text-[10px] text-red-400 font-fira">쿨타임 {cooldown}턴</span>}
                     </div>
                     <div className="text-cyber-blue/50 text-xs font-fira mt-0.5">{skill.desc}</div>
@@ -61,6 +63,7 @@ const SkillCard = ({ skill, cooldown = 0, selected = false }) => {
 const SkillTreePreview = ({ player }) => {
     const [expandedJob, setExpandedJob] = useState(null);
     const currentClass = DB.CLASSES[player.job];
+    const allCurrentSkills = getJobSkills(player);
     const selectedIndex = player.skillLoadout?.selected ?? 0;
     const cooldowns = player.skillLoadout?.cooldowns || {};
 
@@ -76,11 +79,11 @@ const SkillTreePreview = ({ player }) => {
                     <Shield size={12} /> 현재 직업 스킬 — {player.job}
                 </div>
                 <div className="space-y-2">
-                    {currentClass.skills?.map((skill, i) => (
+                    {allCurrentSkills?.map((skill, i) => (
                         <SkillCard
                             key={skill.name}
                             skill={skill}
-                            selected={i === selectedIndex % currentClass.skills.length}
+                            selected={i === (selectedIndex % Math.max(1, allCurrentSkills.length))}
                             cooldown={cooldowns[skill.name] || 0}
                         />
                     ))}

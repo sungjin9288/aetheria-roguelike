@@ -1,12 +1,18 @@
 import { ITEMS } from '../data/items';
 import { DB } from '../data/db';
+import { BOSS_MONSTERS } from '../data/monsters';
+import { getWeaponMagicSkills, isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils';
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
 export const toArray = (v) => (Array.isArray(v) ? v : []);
 
 /** 플레이어의 직업 스킬 목록을 반환 */
-export const getJobSkills = (player) => toArray(DB.CLASSES[player.job]?.skills);
+export const getJobSkills = (player) => {
+    const classSkills = toArray(DB.CLASSES[player?.job]?.skills);
+    const weaponSkills = getWeaponMagicSkills(player?.equip);
+    return [...classSkills, ...weaponSkills];
+};
 
 /** 아이템 인스턴스 생성 (고유 ID 부여) */
 export const makeItem = (template) => ({
@@ -38,7 +44,7 @@ export const checkMilestones = (killRegistry, lastKillName) => {
     // 2. Boss Milestones
     // Simple check: if name is in a boss list (manual for now, or based on stats)
     // Let's assume high EXP (>200) monsters are bosses for simplicity in this MVP logic or use manual list
-    const bosses = ['화염의 군주', '마왕', '다크 엘프', '동굴 트롤', '맹독히드라'];
+    const bosses = BOSS_MONSTERS;
     if (bosses.includes(lastKillName)) {
         if (count === 1) rewards.push({ type: 'title', val: `[${lastKillName}] 처치자`, msg: `👑 [${lastKillName}] 최초 처치!` });
         if (count === 5) rewards.push({ type: 'gold', val: 5000, msg: `👑 [${lastKillName}] 숙련자 (5회 처치)` });
@@ -73,11 +79,29 @@ export const migrateData = (savedData) => {
     }
 
     // Ensure equip is object not string (Old version compatibility)
+    target.equip = target.equip || {};
     if (typeof target.equip?.weapon === 'string') {
         target.equip.weapon = ITEMS.weapons.find(w => w.name === target.equip.weapon) || ITEMS.weapons[0];
     }
     if (typeof target.equip?.armor === 'string') {
         target.equip.armor = ITEMS.armors.find(a => a.name === target.equip.armor) || ITEMS.armors[0];
+    }
+    if (typeof target.equip?.offhand === 'string') {
+        const shield = ITEMS.armors.find(a => a.type === 'shield' && a.name === target.equip.offhand);
+        const weapon = ITEMS.weapons.find(w => w.name === target.equip.offhand);
+        target.equip.offhand = shield || weapon || null;
+    }
+    if (!target.equip.weapon || !isWeapon(target.equip.weapon)) {
+        target.equip.weapon = ITEMS.weapons[0];
+    }
+    if (!target.equip.armor || target.equip.armor.type !== 'armor') {
+        target.equip.armor = ITEMS.armors.find(a => a.type === 'armor') || ITEMS.armors[0];
+    }
+    if (target.equip.offhand && !isShield(target.equip.offhand) && !isWeapon(target.equip.offhand)) {
+        target.equip.offhand = null;
+    }
+    if (isTwoHandWeapon(target.equip.weapon)) {
+        target.equip.offhand = null;
     }
 
     // Modern runtime fields (safe defaults for older saves)
@@ -97,6 +121,9 @@ export const migrateData = (savedData) => {
     target.meta.bonusMp = target.meta.bonusMp || 0;
     target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0 };
     target.stats.rests = target.stats.rests || 0;
+    target.stats.bountyDate = target.stats.bountyDate || null;
+    target.stats.bountyIssued = Boolean(target.stats.bountyIssued);
+    target.stats.bountiesCompleted = target.stats.bountiesCompleted || 0;
 
     if (!Array.isArray(savedData.quickSlots)) {
         savedData.quickSlots = [null, null, null];

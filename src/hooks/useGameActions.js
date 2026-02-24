@@ -2,11 +2,12 @@ import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { AI_SERVICE } from '../services/aiService';
 import { toArray, getJobSkills } from '../utils/gameUtils';
+import { BOSS_MONSTERS } from '../data/monsters';
 
 /**
  * useGameActions — 이동, 탐색, 휴식, 이벤트, 직업, 퀘스트 수락, 시작, 리셋
  */
-export const createGameActions = ({ player, gameState, uid, grave, currentEvent, isAiThinking, dispatch, addLog, addStoryLog }) => ({
+export const createGameActions = ({ player, gameState, uid, grave, currentEvent, isAiThinking, dispatch, addLog, addStoryLog, getFullStats }) => ({
 
     move: (loc) => {
         if (isAiThinking) return;
@@ -86,7 +87,39 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             return;
         }
 
-        if (Math.random() < BALANCE.EVENT_CHANCE_NOTHING) return addLog('info', '주변이 조용합니다.');
+        if (Math.random() < BALANCE.EVENT_CHANCE_NOTHING) {
+            const hasKey = player.inv.some(i => i.name === '잊혀진 열쇠');
+            if (hasKey && mapData.level >= 10 && Math.random() < 0.2) {
+                dispatch({
+                    type: 'SET_PLAYER',
+                    payload: (p) => {
+                        const keyIdx = p.inv.findIndex(i => i.name === '잊혀진 열쇠');
+                        const newInv = [...p.inv];
+                        if (keyIdx > -1) newInv.splice(keyIdx, 1);
+                        return { ...p, inv: newInv, loc: '고대 보물고' };
+                    }
+                });
+                return addLog('event', '💎 [잊혀진 열쇠]가 빛나며 숨겨진 <고대 보물고> 입구가 열립니다!');
+            }
+
+            if (Math.random() < 0.2 && player.loc !== '고대 보물고') {
+                const anomalies = [
+                    { effect: 'poison', desc: '자욱한 독안개가 밀려옵니다! (중독)' },
+                    { effect: 'mana_regen', desc: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)' },
+                    { effect: 'burn', desc: '피부를 찌르는 산성비가 내립니다. (화상)' }
+                ];
+                const anomaly = anomalies[Math.floor(Math.random() * anomalies.length)];
+                addLog('warning', `[기상 이변] ${anomaly.desc}`);
+                if (anomaly.effect === 'mana_regen') {
+                    dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, mp: Math.min(p.maxMp, p.mp + Math.floor(p.maxMp * 0.3)) }) });
+                } else {
+                    dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])] }) });
+                }
+                return;
+            }
+
+            return addLog('info', '주변이 조용합니다.');
+        }
 
         const baseName = mapData.monsters[Math.floor(Math.random() * mapData.monsters.length)];
         let level = mapData.level || 1;
@@ -112,6 +145,34 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 heavyChance: Math.min(0.45, 0.15 + level * 0.01 + (depth * 0.005))
             }
         };
+        const profile = DB.MONSTERS?.[baseName];
+        if (profile) {
+            const hpMult = profile.hpMult || 1;
+            const atkMult = profile.atkMult || 1;
+            const expMult = profile.expMult || 1;
+            const goldMult = profile.goldMult || 1;
+            mStats.hp = Math.floor(mStats.hp * hpMult);
+            mStats.maxHp = Math.floor(mStats.maxHp * hpMult);
+            mStats.atk = Math.floor(mStats.atk * atkMult);
+            mStats.exp = Math.floor(mStats.exp * expMult);
+            mStats.gold = Math.floor(mStats.gold * goldMult);
+            if (profile.dropMod) mStats.dropMod = profile.dropMod;
+            if (profile.weakness) mStats.weakness = profile.weakness;
+            if (profile.resistance) mStats.resistance = profile.resistance;
+            if (profile.pattern) {
+                mStats.pattern = {
+                    ...mStats.pattern,
+                    ...profile.pattern
+                };
+            }
+        }
+        const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
+        mStats.isBoss = Boolean(
+            profile?.isBoss
+            || mapBossMonsters.includes(baseName)
+            || (mapData.boss && mapBossMonsters.length === 0)
+            || BOSS_MONSTERS.includes(baseName)
+        );
 
         if (Math.random() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES) {
             const prefix = CONSTANTS.MONSTER_PREFIXES[Math.floor(Math.random() * CONSTANTS.MONSTER_PREFIXES.length)];
@@ -121,7 +182,14 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             mStats.atk = Math.floor(mStats.atk * prefix.mod);
             mStats.exp = Math.floor(mStats.exp * prefix.expMod);
             mStats.gold = Math.floor(mStats.gold * prefix.expMod);
-            addLog('warning', `[${prefix.name}] 개체가 나타났습니다.`);
+            mStats.dropMod = (mStats.dropMod || 1.0) * (prefix.dropMod || 1.0);
+            mStats.isElite = !!prefix.isElite;
+
+            if (mStats.isElite) {
+                addLog('critical', `⚠️ 엘리트 몬스터 [${prefix.name}] 개체가 등장했습니다!`);
+            } else if (prefix.name !== '일반적인') {
+                addLog('warning', `[${prefix.name}] 개체가 나타났습니다.`);
+            }
         }
 
         dispatch({ type: 'SET_ENEMY', payload: mStats });
@@ -153,10 +221,11 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             dispatch({
                 type: 'SET_PLAYER',
                 payload: (p) => {
+                    const stats = getFullStats();
                     const next = { ...p };
                     if (selectedOutcome.gold) next.gold += selectedOutcome.gold;
                     if (selectedOutcome.exp) next.exp += selectedOutcome.exp;
-                    if (selectedOutcome.hp) next.hp = Math.max(1, Math.min(next.maxHp, next.hp + selectedOutcome.hp));
+                    if (selectedOutcome.hp) next.hp = Math.max(1, Math.min(stats.maxHp, next.hp + selectedOutcome.hp));
                     if (selectedOutcome.mp) next.mp = Math.max(0, Math.min(next.maxMp, next.mp + selectedOutcome.mp));
                     if (selectedOutcome.item) {
                         const itemDef = findItemByName(selectedOutcome.item);
@@ -173,7 +242,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             resultText = `성공! ${rewardGold}G를 획득했습니다.`;
             addLog('success', resultText);
         } else {
-            const dmg = Math.floor(player.maxHp * 0.1);
+            const stats = getFullStats();
+            const dmg = Math.floor(stats.maxHp * 0.1);
             dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, hp: Math.max(1, p.hp - dmg) }) });
             resultText = `실패... ${dmg} 피해를 입었습니다.`;
             addLog('error', resultText);
@@ -200,12 +270,13 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (mapData.type !== 'safe') return addLog('error', '휴식은 안전한 지역에서만 가능합니다.');
         if (player.gold < BALANCE.REST_COST) return addLog('error', '골드가 부족합니다.');
 
+        const stats = getFullStats();
         dispatch({
             type: 'SET_PLAYER',
             payload: (p) => ({
                 ...p,
                 gold: p.gold - BALANCE.REST_COST,
-                hp: p.maxHp,
+                hp: stats.maxHp,
                 mp: p.maxMp,
                 stats: {
                     ...(p.stats || {}),
@@ -252,5 +323,49 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, ...updates }) });
         dispatch({ type: 'SET_GRAVE', payload: null });
         addLog('success', logMsg);
+    },
+
+    requestBounty: () => {
+        if (player.quests.some(q => q.isBounty)) return addLog('error', '이미 진행 중인 현상수배가 있습니다. (퀘스트 완료 후 수주 가능)');
+        const today = new Date().toISOString().slice(0, 10);
+        if (player.stats?.bountyDate === today && player.stats?.bountyIssued) {
+            return addLog('error', '오늘 현상수배는 이미 발급되었습니다. 내일 다시 요청하세요.');
+        }
+
+        const validMonsters = [];
+        Object.values(DB.MAPS).forEach(m => {
+            if (m.level !== 'infinite' && m.level <= player.level + 5 && m.level >= Math.max(1, player.level - 10) && !m.boss) {
+                validMonsters.push(...(m.monsters || []));
+            }
+        });
+        if (!validMonsters.length) validMonsters.push('슬라임');
+        const target = validMonsters[Math.floor(Math.random() * validMonsters.length)];
+        const count = 5 + Math.floor(Math.random() * 6); // 5~10
+        const bId = `bounty_${Date.now()}`;
+
+        const newBounty = {
+            id: bId,
+            title: `[현상수배] ${target} 토벌`,
+            desc: `${target} ${count}마리를 처치하라.`,
+            target,
+            goal: count,
+            progress: 0,
+            isBounty: true,
+            reward: { exp: count * 40, gold: count * 50 }
+        };
+
+        dispatch({
+            type: 'SET_PLAYER',
+            payload: (p) => ({
+                ...p,
+                quests: [...p.quests, newBounty],
+                stats: {
+                    ...(p.stats || {}),
+                    bountyDate: today,
+                    bountyIssued: true
+                }
+            })
+        });
+        addLog('event', `새로운 현상수배 수락: ${target} ${count}마리`);
     }
 });

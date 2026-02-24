@@ -10,17 +10,18 @@ export const CONSTANTS = {
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 200,
-    SAVE_KEY: 'aetheria_save_v3_6',
-    DATA_VERSION: 3.6,
+    SAVE_KEY: 'aetheria_save_v4_0',
+    DATA_VERSION: 4.0,
     REMOTE_CONFIG_ENABLED: import.meta.env.VITE_REMOTE_CONFIG === 'true' || false,
     MONSTER_PREFIXES: [
-        { name: '허약한', mod: 0.7, expMod: 0.7 },
-        { name: '일반적인', mod: 1.0, expMod: 1.0 },
-        { name: '날렵한', mod: 1.1, expMod: 1.1 },
-        { name: '단단한', mod: 1.2, expMod: 1.2 },
-        { name: '광폭한', mod: 1.3, expMod: 1.4 },
-        { name: '거대', mod: 1.5, expMod: 1.6 },
-        { name: '고대', mod: 1.8, expMod: 2.0 },
+        { name: '허약한', mod: 0.7, expMod: 0.7, dropMod: 0.8 },
+        { name: '일반적인', mod: 1.0, expMod: 1.0, dropMod: 1.0 },
+        { name: '날렵한', mod: 1.1, expMod: 1.1, dropMod: 1.2 },
+        { name: '단단한', mod: 1.2, expMod: 1.2, dropMod: 1.2 },
+        { name: '광폭한', mod: 1.3, expMod: 1.4, dropMod: 1.5 },
+        { name: '거대', mod: 1.5, expMod: 1.6, dropMod: 2.0 },
+        { name: '고대', mod: 1.8, expMod: 2.0, dropMod: 3.0, isElite: true },
+        { name: '재앙의', mod: 2.5, expMod: 3.0, dropMod: 5.0, isElite: true },
     ]
 };
 
@@ -35,6 +36,10 @@ export const BALANCE = {
     EVENT_CHANCE_NOTHING: 0.3,
     PREFIX_CHANCE: 0.2,
     ITEM_PREFIX_CHANCE: 0.12,
+    OFFHAND_WEAPON_RATIO: 0.7,
+    TWO_HAND_ATK_BONUS: 1.15,
+    DUAL_WIELD_ATK_BONUS: 1.06,
+    DUAL_WIELD_DEF_MULT: 0.94,
     DEBOUNCE_SAVE_MS: 500,
     LOG_MAX_SIZE: 50,
     ENEMY_TURN_DELAY_MS: 450,   // 적 반격 딜레이 (ms)
