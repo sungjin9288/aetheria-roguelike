@@ -357,6 +357,30 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="NRG (MP)" />
                 </div>
 
+                <div className="border border-cyber-blue/20 rounded-md p-3 bg-cyber-dark/30 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-fira text-cyber-blue/60 uppercase tracking-wider">
+                        <span className="flex items-center gap-1"><Sword size={10} /> 장비 상태</span>
+                        <span>ATK {stats?.atk} / DEF {stats?.def}</span>
+                    </div>
+                    <div className="space-y-1 text-xs font-fira text-cyber-blue/80">
+                        <div className="flex justify-between gap-3">
+                            <span className="text-cyber-blue/50 shrink-0">R-HAND</span>
+                            <span className="text-white text-right truncate">{player?.equip?.weapon?.name || 'UNARMED'} {stats?.weaponHands === 2 ? '(2H)' : '(1H)'}</span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                            <span className="text-cyber-blue/50 shrink-0">L-HAND</span>
+                            <span className="text-white text-right truncate">
+                                {player?.equip?.offhand?.name || '---'}
+                                {player?.equip?.offhand?.type === 'weapon' ? ' (1H)' : player?.equip?.offhand?.type === 'shield' ? ' (SHD)' : ''}
+                            </span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                            <span className="text-cyber-blue/50 shrink-0">ARMOR</span>
+                            <span className="text-white text-right truncate">{player?.equip?.armor?.name || 'CIVILIAN'}</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="border-t border-cyber-blue/20 pt-4">
                     <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
                         {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'stats', icon: BarChart3 }, { id: 'bestiary', icon: Eye }, { id: 'system', icon: Zap }].map(tab => (
