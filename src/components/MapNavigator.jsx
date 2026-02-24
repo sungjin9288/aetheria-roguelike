@@ -12,6 +12,7 @@ const MapNavigator = ({ player, onMove, isAiThinking }) => {
     if (!currentMap) return null;
 
     const exits = currentMap.exits || [];
+    const gridColsClass = exits.length <= 1 ? 'grid-cols-1' : 'grid-cols-2';
 
     return (
         <div className="bg-cyber-black/60 border border-cyber-blue/20 rounded-lg p-3 backdrop-blur-md">
@@ -39,7 +40,7 @@ const MapNavigator = ({ player, onMove, isAiThinking }) => {
             </div>
 
             {/* Exit Nodes */}
-            <div className={`grid gap-2 ${exits.length <= 2 ? 'grid-cols-' + exits.length : 'grid-cols-2'}`}>
+            <div className={`grid gap-2 ${gridColsClass}`}>
                 {exits.map((exit) => {
                     const exitMap = DB.MAPS[exit];
                     if (!exitMap) return null;
