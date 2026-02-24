@@ -20,6 +20,7 @@ import { INITIAL_STATE } from '../reducers/gameReducer';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
+const AUTH_TIMEOUT_MS = 8000;
 const makeLogPayload = (type, text) => ({ type, text, id: `${Date.now()}_${Math.random()}` });
 
 /**
@@ -45,20 +46,32 @@ export const useFirebaseSync = (state, dispatch) => {
     // --- Auth ---
     useEffect(() => {
         dispatch({ type: 'SET_BOOT_STAGE', payload: 'auth' });
+        let authResolved = false;
+
+        const fallbackAuthOffline = (message) => {
+            if (authResolved) return;
+            authResolved = true;
+            dispatch({ type: 'LOAD_DATA', payload: { player: INITIAL_STATE.player } });
+            dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
+            dispatch({ type: 'ADD_LOG', payload: makeLogPayload('warning', message) });
+        };
+
+        const authTimer = setTimeout(() => {
+            fallbackAuthOffline('인증 지연으로 오프라인 모드로 시작했습니다.');
+        }, AUTH_TIMEOUT_MS);
 
         if (!hasFirebaseConfig) {
             console.warn('[FIREBASE] Missing required config. Booting in offline mode.');
-            dispatch({ type: 'LOAD_DATA', payload: { player: INITIAL_STATE.player } });
-            dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
-            dispatch({
-                type: 'ADD_LOG',
-                payload: makeLogPayload('warning', '클라우드 설정을 찾을 수 없어 오프라인 모드로 시작했습니다.')
-            });
-            return;
+            clearTimeout(authTimer);
+            fallbackAuthOffline('클라우드 설정을 찾을 수 없어 오프라인 모드로 시작했습니다.');
+            return () => clearTimeout(authTimer);
         }
 
         signInAnonymously(auth)
             .then((cred) => {
+                if (authResolved) return;
+                authResolved = true;
+                clearTimeout(authTimer);
                 const uid = cred.user.uid;
                 dispatch({ type: 'SET_UID', payload: uid });
                 dispatch({ type: 'SET_BOOT_STAGE', payload: 'config' });
@@ -69,13 +82,10 @@ export const useFirebaseSync = (state, dispatch) => {
             })
             .catch((e) => {
                 console.error('Auth Failed', e);
-                dispatch({ type: 'LOAD_DATA', payload: { player: INITIAL_STATE.player } });
-                dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
-                dispatch({
-                    type: 'ADD_LOG',
-                    payload: makeLogPayload('warning', '클라우드 인증 실패로 오프라인 모드로 시작했습니다.')
-                });
+                clearTimeout(authTimer);
+                fallbackAuthOffline('클라우드 인증 실패로 오프라인 모드로 시작했습니다.');
             });
+        return () => clearTimeout(authTimer);
     }, [dispatch]);
 
     useEffect(() => {
