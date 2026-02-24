@@ -21,11 +21,16 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
 
     return (
         <div className={`${overlayPanelClass} md:w-[min(42rem,70%)] lg:w-2/3 bg-slate-900/95 z-20 p-3 md:p-4 rounded border border-slate-700 flex flex-col`}>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl text-yellow-500 font-bold">
-                    🛒 상점 <span className="text-xs text-slate-500">({loc} - Tier {maxTier})</span>
-                </h2>
-                <div className="flex bg-slate-800 rounded p-1">
+            <div className="flex justify-between items-start gap-2 mb-4">
+                <div>
+                    <h2 className="text-xl text-yellow-500 font-bold">
+                        🛒 상점 <span className="text-xs text-slate-500">({loc} - Tier {maxTier})</span>
+                    </h2>
+                    <div className="text-xs text-yellow-300/90 font-fira mt-1">
+                        보유 골드: <span className="font-bold text-yellow-400">{player.gold} CR</span>
+                    </div>
+                </div>
+                <div className="flex bg-slate-800 rounded p-1 shrink-0">
                     <button
                         onClick={() => setShopMode('buy')}
                         className={`px-3 py-1 text-xs rounded ${shopMode === 'buy' ? 'bg-yellow-600 text-white' : 'text-slate-400'}`}

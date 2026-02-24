@@ -90,7 +90,7 @@ function App() {
 
   return (
     <MainLayout visualEffect={engine.visualEffect}>
-      <header className="sticky top-[env(safe-area-inset-top)] flex flex-wrap justify-between items-center gap-2 mb-3 md:mb-4 pb-2 border-b border-cyber-blue/20 bg-cyber-slate/30 backdrop-blur-md px-3 md:px-4 -mx-2 md:-mx-4 pt-2 supports-[backdrop-filter]:bg-cyber-slate/10 z-30">
+      <header className="flex flex-wrap justify-between items-center gap-2 mb-3 md:mb-4 pb-2 border-b border-cyber-blue/20 bg-cyber-slate/30 backdrop-blur-md px-3 md:px-4 -mx-2 md:-mx-4 pt-2 supports-[backdrop-filter]:bg-cyber-slate/10">
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
           <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyber-green to-cyber-blue bg-clip-text text-transparent flex items-center gap-2 font-rajdhani min-w-0 drop-shadow-sm">
             AETHERIA <span className="text-xs text-cyber-blue/50 font-normal border border-cyber-blue/30 px-1 rounded backdrop-blur-sm">v{CONSTANTS.DATA_VERSION}</span>
@@ -170,6 +170,19 @@ function App() {
       </Motion.div>
 
       {isMobileViewport && (
+        <ControlPanel
+          gameState={engine.gameState}
+          player={engine.player}
+          actions={engine.actions}
+          setGameState={engine.actions.setGameState}
+          shopItems={engine.shopItems}
+          grave={engine.grave}
+          isAiThinking={engine.isAiThinking}
+          currentEvent={engine.currentEvent}
+        />
+      )}
+
+      {isMobileViewport && (
         <Dashboard
           mobile
           player={engine.player}
@@ -181,24 +194,28 @@ function App() {
         />
       )}
 
-      <ControlPanel
-        gameState={engine.gameState}
-        player={engine.player}
-        actions={engine.actions}
-        setGameState={engine.actions.setGameState}
-        shopItems={engine.shopItems}
-        grave={engine.grave}
-        isAiThinking={engine.isAiThinking}
-        currentEvent={engine.currentEvent}
-      />
+      {!isMobileViewport && (
+        <ControlPanel
+          gameState={engine.gameState}
+          player={engine.player}
+          actions={engine.actions}
+          setGameState={engine.actions.setGameState}
+          shopItems={engine.shopItems}
+          grave={engine.grave}
+          isAiThinking={engine.isAiThinking}
+          currentEvent={engine.currentEvent}
+        />
+      )}
 
       {/* Post-Combat Result Card */}
-      <PostCombatCard
-        result={engine.postCombatResult}
-        onClose={() => engine.actions.clearPostCombat?.()}
-        onRest={() => engine.actions.rest?.()}
-        onSell={() => engine.actions.setSideTab?.('inventory')}
-      />
+      {!isMobileViewport && (
+        <PostCombatCard
+          result={engine.postCombatResult}
+          onClose={() => engine.actions.clearPostCombat?.()}
+          onRest={() => engine.actions.rest?.()}
+          onSell={() => engine.actions.setSideTab?.('inventory')}
+        />
+      )}
 
       {/* Auto-Explore Floating Button */}
       {engine.gameState === 'idle' && (
