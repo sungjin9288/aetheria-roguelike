@@ -101,7 +101,10 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
     return (
         <div className={`min-w-0 ${mobile ? 'h-[clamp(16rem,42dvh,30rem)] min-h-[16rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border rounded-lg p-3 md:p-4 md:px-5 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
             {/* Scanline overlay */}
-            <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none"></div>
+            <div
+                className="absolute inset-0 z-0 opacity-10 pointer-events-none"
+                style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 0.6px, transparent 0.6px)', backgroundSize: '3px 3px' }}
+            ></div>
 
             <div className="flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
                 {logs.length === 0 && (

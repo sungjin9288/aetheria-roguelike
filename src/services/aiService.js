@@ -26,7 +26,7 @@ const normalizeEventResponse = (payload) => {
  */
 const callProxy = async (body, trackLabel = 'ai-call', timeoutMs = 9500) => {
     try {
-        const token = await auth.currentUser?.getIdToken();
+        const token = await auth?.currentUser?.getIdToken?.();
         const headers = {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
