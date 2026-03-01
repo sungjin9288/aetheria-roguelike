@@ -3,6 +3,7 @@ import { Terminal as TerminalIcon, Volume2, VolumeX, Play, Square } from 'lucide
 import { motion as Motion } from 'framer-motion';
 
 import { CONSTANTS } from './data/constants';
+import { PRESTIGE_TITLES } from './data/titles';
 import { soundManager } from './systems/SoundManager';
 import MainLayout from './components/MainLayout';
 import TerminalView from './components/TerminalView';
@@ -14,6 +15,7 @@ import OnboardingGuide from './components/OnboardingGuide';
 import DamageNumber from './components/DamageNumber';
 import RelicChoicePanel from './components/RelicChoicePanel';
 import AscensionScreen from './components/AscensionScreen';
+import RunSummaryCard from './components/RunSummaryCard';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useAutoExplore } from './hooks/useAutoExplore';
 import { useDamageFlash } from './hooks/useDamageFlash';
@@ -97,6 +99,26 @@ function App() {
           <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyber-green to-cyber-blue bg-clip-text text-transparent flex items-center gap-2 font-rajdhani min-w-0 drop-shadow-sm">
             AETHERIA <span className="text-xs text-cyber-blue/50 font-normal border border-cyber-blue/30 px-1 rounded backdrop-blur-sm">v{CONSTANTS.DATA_VERSION}</span>
           </h1>
+          {/* v5.0: 프레스티지 칭호 뱃지 */}
+          {engine.player.meta?.prestigeRank > 0 && (
+            <span className="hidden md:flex items-center gap-1 text-xs text-cyber-purple font-rajdhani border border-cyber-purple/30 px-2 py-0.5 rounded bg-cyber-purple/10 font-bold">
+              ⚡ {PRESTIGE_TITLES[Math.min(engine.player.meta.prestigeRank - 1, 9)]}
+            </span>
+          )}
+          {/* v5.0: 일일 프로토콜 진행 뱃지 */}
+          {(() => {
+            const dp = engine.player.stats?.dailyProtocol;
+            const today = new Date().toISOString().slice(0, 10);
+            if (!dp || dp.date !== today) return null;
+            const done = dp.missions.filter(m => m.done).length;
+            const total = dp.missions.length;
+            return (
+              <span className={`hidden md:flex items-center gap-1 text-xs font-rajdhani border px-2 py-0.5 rounded font-bold
+                ${done === total ? 'text-cyber-green border-cyber-green/30 bg-cyber-green/10' : 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10'}`}>
+                📅 {done}/{total}
+              </span>
+            );
+          })()}
           <div className="hidden md:flex items-center bg-cyber-dark/80 border border-cyber-blue/30 rounded-md px-3 py-1.5 gap-2 w-80 shadow-inner group focus-within:border-cyber-green/50 focus-within:shadow-[0_0_15px_rgba(0,255,157,0.2)] transition-all">
             <TerminalIcon size={14} className="text-cyber-green group-focus-within:animate-pulse" />
             <input
@@ -222,6 +244,17 @@ function App() {
         <AscensionScreen
           player={engine.player}
           actions={engine.actions}
+        />
+      )}
+
+      {/* v5.0: 런 요약 / 사망 화면 */}
+      {engine.gameState === 'dead' && engine.runSummary && (
+        <RunSummaryCard
+          runSummary={engine.runSummary}
+          onRestart={() => {
+            engine.dispatch({ type: 'SET_RUN_SUMMARY', payload: null });
+            engine.dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+          }}
         />
       )}
 

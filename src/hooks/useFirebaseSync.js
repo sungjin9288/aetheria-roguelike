@@ -207,6 +207,22 @@ export const useFirebaseSync = (state, dispatch) => {
                 }
 
                 await setDoc(userDocRef, payload, { merge: true });
+
+                // v5.0: 리더보드 entry 업데이트 (kills > 0 일 때만)
+                if (player.name && (player.stats?.kills || 0) > 0) {
+                    const lbDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard', uid);
+                    await setDoc(lbDocRef, {
+                        nickname:     player.name,
+                        totalKills:   player.stats?.kills || 0,
+                        prestigeRank: player.meta?.prestigeRank || 0,
+                        activeTitle:  player.activeTitle || null,
+                        level:        player.level || 1,
+                        bossKills:    player.stats?.bossKills || 0,
+                        job:          player.job || '모험가',
+                        updatedAt:    serverTimestamp(),
+                    }, { merge: true });
+                }
+
                 dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
             } catch (e) {
                 console.error('Save Failed', e);

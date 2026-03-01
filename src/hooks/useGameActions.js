@@ -1,5 +1,6 @@
 import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
+import { CLASSES } from '../data/classes';
 import { AI_SERVICE } from '../services/aiService';
 import { toArray, getJobSkills, makeItem, findItemByName, checkTitles } from '../utils/gameUtils';
 import { BOSS_MONSTERS } from '../data/monsters';
@@ -34,10 +35,21 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (grave && grave.loc === loc) addLog('event', '근처에서 당신의 유해를 발견했습니다.');
     },
 
-    start: (name, gender = 'male') => {
+    start: (name, gender = 'male', jobId = '전사') => {
         if (!name.trim()) return;
-        dispatch({ type: 'SET_PLAYER', payload: { name: name.trim(), gender } });
-        addLog('system', `환영합니다, ${name}!`);
+        const cls = CLASSES[jobId] || CLASSES['전사'];
+        const BASE_HP = 150, BASE_MP = 50;
+        dispatch({ type: 'SET_PLAYER', payload: {
+            name: name.trim(),
+            gender,
+            job: jobId,
+            maxHp: Math.floor(BASE_HP * cls.hpMod),
+            hp:    Math.floor(BASE_HP * cls.hpMod),
+            maxMp: Math.floor(BASE_MP * cls.mpMod),
+            mp:    Math.floor(BASE_MP * cls.mpMod),
+        }});
+        addLog('system', `[${jobId}] ${name.trim()} 에이전트 — 에테리아 접속 완료.`);
+        addLog('event', `직업 "${jobId}" 선택됨. 첫 스킬: ${cls.skills[0]?.name || '강타'}`);
     },
 
     cycleSkill: (dir = 1) => {

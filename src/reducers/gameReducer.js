@@ -47,6 +47,7 @@ export const INITIAL_STATE = {
     postCombatResult: null,            // 전투 결과 요약 카드
     onboardingDismissed: false,        // 온보딩 안내 숨김 여부
     pendingRelics: null,               // v4.0: 유물 3지선다 후보 배열
+    runSummary: null,                  // v5.0: 런 종료 요약 (사망 시)
 };
 
 // --- REDUCER (Atomic Logic) ---
@@ -113,6 +114,10 @@ export const gameReducer = (state, action) => {
             return { ...state, onboardingDismissed: true };
         case AT.RESET_GAME:
             return { ...INITIAL_STATE, bootStage: 'ready', uid: state.uid, syncStatus: 'syncing' };
+
+        // ── v5.0: Run Summary ───────────────────────────────────────────────
+        case 'SET_RUN_SUMMARY':
+            return { ...state, runSummary: action.payload };
 
         // ── v4.0: Relic System ──────────────────────────────────────────────
         case AT.SET_PENDING_RELICS:

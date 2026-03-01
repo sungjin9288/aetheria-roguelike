@@ -345,25 +345,32 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 );
                             })()}
 
-                            {/* HONOR OF FAME */}
-                            {!isMobile && (
-                                <div className="bg-cyber-black/40 p-3 rounded border border-yellow-500/20 mb-2 relative overflow-hidden">
-                                    <div className="text-xs font-bold text-yellow-500 mb-3 flex items-center gap-2 font-rajdhani tracking-wider"><Crown size={12} /> HALL OF FAME</div>
-                                    <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
-                                        {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker, i) => (
-                                            <div key={i} className="flex justify-between text-[10px] text-cyber-blue/70 border-b border-cyber-blue/5 pb-1 last:border-0 hover:bg-cyber-blue/5 p-1 rounded transition-colors font-fira">
-                                                <span className="flex gap-2">
-                                                    <span className={`w-4 text-center font-bold ${i === 0 ? 'text-yellow-400 drop-shadow-md' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-slate-600'}`}>{i + 1}</span>
-                                                    <span className="text-white">{ranker.nickname}</span>
+                            {/* HONOR OF FAME — v5.0: 모바일 포함, 프레스티지/칭호 표시, "YOU" 마킹 */}
+                            <div className="bg-cyber-black/40 p-3 rounded border border-yellow-500/20 mb-2 relative overflow-hidden">
+                                <div className="text-xs font-bold text-yellow-500 mb-3 flex items-center gap-2 font-rajdhani tracking-wider"><Crown size={12} /> HALL OF FAME</div>
+                                <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                                    {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker, i) => {
+                                        const isMe = ranker.nickname === player.name;
+                                        return (
+                                            <div key={i} className={`flex justify-between text-[10px] border-b border-cyber-blue/5 pb-1 last:border-0 p-1 rounded transition-colors font-fira
+                                                ${isMe ? 'bg-cyber-green/10 border-l-2 border-l-cyber-green pl-2' : 'hover:bg-cyber-blue/5 text-cyber-blue/70'}`}>
+                                                <span className="flex gap-2 items-center min-w-0">
+                                                    <span className={`w-4 text-center font-bold shrink-0 ${i === 0 ? 'text-yellow-400 drop-shadow-md' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-slate-600'}`}>{i + 1}</span>
+                                                    <span className={`truncate ${isMe ? 'text-cyber-green font-bold' : 'text-white'}`}>
+                                                        {ranker.nickname}
+                                                        {ranker.activeTitle && <span className="text-cyber-purple/70 ml-1">[{ranker.activeTitle}]</span>}
+                                                        {isMe && <span className="text-cyber-green ml-1">◀</span>}
+                                                    </span>
                                                 </span>
-                                                <span className="flex gap-3 items-center">
-                                                    <span className="text-red-400 flex items-center gap-1"><Skull size={8} /> {ranker.totalKills}</span>
+                                                <span className="flex gap-2 items-center shrink-0 ml-1">
+                                                    {ranker.prestigeRank > 0 && <span className="text-cyber-purple text-[9px]">⚡{ranker.prestigeRank}</span>}
+                                                    <span className="text-red-400 flex items-center gap-1"><Skull size={8} /> {(ranker.totalKills || 0).toLocaleString()}</span>
                                                 </span>
                                             </div>
-                                        )) : <div className="text-xs text-cyber-blue/30 text-center font-fira animate-pulse">SYNCING NETWORK...</div>}
-                                    </div>
+                                        );
+                                    }) : <div className="text-xs text-cyber-blue/30 text-center font-fira animate-pulse">SYNCING NETWORK...</div>}
                                 </div>
-                            )}
+                            </div>
 
                             <Motion.button
                                 whileTap={{ scale: 0.98 }}

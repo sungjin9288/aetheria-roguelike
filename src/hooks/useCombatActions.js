@@ -158,10 +158,23 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
 
                 if (counterResult.isDead) {
-                    const defeatResult = CombatEngine.handleDefeat(counterResult.updatedPlayer, INITIAL_STATE.player);
+                    const deadPlayer = counterResult.updatedPlayer;
+                    const runSummary = {
+                        level:        deadPlayer.level,
+                        job:          deadPlayer.job || '모험가',
+                        kills:        deadPlayer.stats?.kills || 0,
+                        bossKills:    deadPlayer.stats?.bossKills || 0,
+                        relicsFound:  deadPlayer.relics?.length || 0,
+                        activeTitle:  deadPlayer.activeTitle || null,
+                        loc:          playerForEnemyTurn.loc || '???',
+                        prestigeRank: deadPlayer.meta?.prestigeRank || 0,
+                        totalGold:    deadPlayer.stats?.total_gold || 0,
+                    };
+                    const defeatResult = CombatEngine.handleDefeat(deadPlayer, INITIAL_STATE.player);
+                    dispatch({ type: 'SET_RUN_SUMMARY', payload: runSummary });
                     dispatch({ type: 'SET_GRAVE', payload: defeatResult.graveData });
                     dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
-                    dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+                    dispatch({ type: 'SET_GAME_STATE', payload: 'dead' });
                     dispatch({ type: 'SET_ENEMY', payload: null });
                     defeatResult.logs.forEach((log) => addLog(log.type, log.text));
                     addStoryLog('death', { loc: playerForEnemyTurn.loc });
@@ -179,10 +192,23 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
             } else {
                 const escapedHp = Math.max(0, player.hp - (escapeResult.damage || 0));
                 if (escapedHp <= 0) {
-                    const defeatResult = CombatEngine.handleDefeat({ ...player, hp: escapedHp }, INITIAL_STATE.player);
+                    const deadPlayer = { ...player, hp: escapedHp };
+                    const runSummary = {
+                        level:        deadPlayer.level,
+                        job:          deadPlayer.job || '모험가',
+                        kills:        deadPlayer.stats?.kills || 0,
+                        bossKills:    deadPlayer.stats?.bossKills || 0,
+                        relicsFound:  deadPlayer.relics?.length || 0,
+                        activeTitle:  deadPlayer.activeTitle || null,
+                        loc:          deadPlayer.loc || '???',
+                        prestigeRank: deadPlayer.meta?.prestigeRank || 0,
+                        totalGold:    deadPlayer.stats?.total_gold || 0,
+                    };
+                    const defeatResult = CombatEngine.handleDefeat(deadPlayer, INITIAL_STATE.player);
+                    dispatch({ type: 'SET_RUN_SUMMARY', payload: runSummary });
                     dispatch({ type: 'SET_GRAVE', payload: defeatResult.graveData });
                     dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
-                    dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+                    dispatch({ type: 'SET_GAME_STATE', payload: 'dead' });
                     dispatch({ type: 'SET_ENEMY', payload: null });
                     defeatResult.logs.forEach((log) => addLog(log.type, log.text));
                     addStoryLog('death', { loc: player.loc });

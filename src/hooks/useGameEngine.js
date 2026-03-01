@@ -34,6 +34,7 @@ export const useGameEngine = () => {
         postCombatResult,
         onboardingDismissed,
         pendingRelics,
+        runSummary,
     } = state;
 
     // --- Firebase Sync ---
@@ -240,6 +241,7 @@ export const useGameEngine = () => {
         postCombatResult,
         onboardingDismissed,
         pendingRelics,
+        runSummary,
         dispatch,
     };
 };
