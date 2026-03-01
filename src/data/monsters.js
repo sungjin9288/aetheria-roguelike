@@ -22,6 +22,7 @@ export const MONSTERS = {
         atkMult: 1.2,
         expMult: 1.35,
         goldMult: 1.35,
+        phase2: { name: '분노한 화염의 군주', atkBonus: 0.35, pattern: { guardChance: 0.0, heavyChance: 0.55 }, log: '화염의 군주가 핵심 불꽃을 해방했습니다! 모든 것이 불타오릅니다!', statusEffect: 'burn' },
     },
     '레드 드래곤': {
         isBoss: true,
@@ -31,6 +32,7 @@ export const MONSTERS = {
         atkMult: 1.25,
         expMult: 1.45,
         goldMult: 1.4,
+        phase2: { name: '격노한 레드 드래곤', atkBonus: 0.4, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '레드 드래곤이 진정한 화염의 분노를 해방했습니다! 대기가 불꽃으로 가득 찹니다!', statusEffect: 'burn' },
     },
     스핑크스: {
         isBoss: true,
@@ -40,6 +42,7 @@ export const MONSTERS = {
         atkMult: 1.2,
         expMult: 1.32,
         goldMult: 1.3,
+        phase2: { name: '각성한 스핑크스', atkBonus: 0.35, pattern: { guardChance: 0.15, heavyChance: 0.45 }, log: '스핑크스가 태고의 수수께끼를 풀어냈습니다! 공간이 뒤틀립니다!', statusEffect: 'poison' },
     },
     '아누비스 수호자': {
         isBoss: true,
@@ -49,6 +52,7 @@ export const MONSTERS = {
         atkMult: 1.2,
         expMult: 1.34,
         goldMult: 1.34,
+        phase2: { name: '심판하는 아누비스', atkBonus: 0.38, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '아누비스가 저승의 심판을 내립니다! 영혼의 울부짖음이 들립니다!', statusEffect: 'poison' },
     },
     '아이스 드래곤': {
         isBoss: true,
@@ -58,6 +62,7 @@ export const MONSTERS = {
         atkMult: 1.22,
         expMult: 1.45,
         goldMult: 1.4,
+        phase2: { name: '빙하기의 아이스 드래곤', atkBonus: 0.38, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '아이스 드래곤이 절대 영도의 냉기를 해방했습니다! 모든 것이 얼어붙습니다!' },
     },
     '빙결의 마녀': {
         isBoss: true,
@@ -67,6 +72,7 @@ export const MONSTERS = {
         atkMult: 1.2,
         expMult: 1.3,
         goldMult: 1.3,
+        phase2: { name: '저주받은 빙결의 마녀', atkBonus: 0.42, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '빙결의 마녀가 저주의 힘을 해방했습니다! 마법 에너지가 폭주합니다!', statusEffect: 'poison' },
     },
     데스나이트: { weakness: '빛', resistance: '어둠', hpMult: 1.12, atkMult: 1.08 },
     리치: { weakness: '빛', resistance: '어둠', hpMult: 1.2, atkMult: 1.12 },
@@ -79,6 +85,7 @@ export const MONSTERS = {
         expMult: 1.8,
         goldMult: 1.8,
         dropMod: 2.2,
+        phase2: { name: '분노한 마왕', atkBonus: 0.3, pattern: { guardChance: 0.0, heavyChance: 0.5 }, log: '마왕이 절망의 심연을 해방했습니다! 세계가 어둠에 잠깁니다...', statusEffect: 'burn' },
     },
     '심연의 수호자': { weakness: '빛', resistance: '어둠', hpMult: 1.25, atkMult: 1.15 },
     '공허의 짐승': { weakness: '빛', resistance: '어둠', hpMult: 1.2, atkMult: 1.1 },
@@ -107,6 +114,7 @@ export const MONSTERS = {
         expMult: 1.6,
         goldMult: 1.55,
         dropMod: 2.0,
+        phase2: { name: '완전 개방된 차원 파쇄자', atkBonus: 0.5, pattern: { guardChance: 0.3, heavyChance: 0.3 }, log: '차원의 균열이 극대화됩니다! 현실과 허상의 경계가 무너집니다!' },
     },
     '영겁의 수문장': {
         isBoss: true,
@@ -117,6 +125,7 @@ export const MONSTERS = {
         expMult: 1.55,
         goldMult: 1.5,
         dropMod: 1.9,
+        phase2: { name: '해방된 영겁의 수문장', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '영겁의 수문장이 시간의 족쇄를 끊었습니다! 모든 시간이 멈춥니다!', statusEffect: 'poison' },
     },
     '에테르 드래곤': {
         isBoss: true,
@@ -127,6 +136,7 @@ export const MONSTERS = {
         expMult: 1.75,
         goldMult: 1.7,
         dropMod: 2.3,
+        phase2: { name: '해방된 에테르 드래곤', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '에테르의 흐름이 역전됩니다! 용이 에테르의 근원에 닿았습니다!', statusEffect: 'poison' },
     },
 };
 

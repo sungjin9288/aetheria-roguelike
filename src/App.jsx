@@ -12,6 +12,8 @@ import IntroScreen from './components/IntroScreen';
 import PostCombatCard from './components/PostCombatCard';
 import OnboardingGuide from './components/OnboardingGuide';
 import DamageNumber from './components/DamageNumber';
+import RelicChoicePanel from './components/RelicChoicePanel';
+import AscensionScreen from './components/AscensionScreen';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useAutoExplore } from './hooks/useAutoExplore';
 import { useDamageFlash } from './hooks/useDamageFlash';
@@ -204,6 +206,22 @@ function App() {
           grave={engine.grave}
           isAiThinking={engine.isAiThinking}
           currentEvent={engine.currentEvent}
+        />
+      )}
+
+      {/* v4.0: 유물 3지선다 오버레이 */}
+      {engine.pendingRelics && (
+        <RelicChoicePanel
+          pendingRelics={engine.pendingRelics}
+          dispatch={engine.dispatch}
+        />
+      )}
+
+      {/* v4.0: 에테르 환생 풀스크린 */}
+      {engine.gameState === 'ascension' && (
+        <AscensionScreen
+          player={engine.player}
+          actions={engine.actions}
         />
       )}
 

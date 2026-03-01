@@ -2,8 +2,8 @@ import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { CombatEngine } from '../systems/CombatEngine';
 import { INITIAL_STATE } from '../reducers/gameReducer';
-import { getJobSkills, makeItem, findItemByName } from '../utils/gameUtils';
-import { checkMilestones } from '../utils/gameUtils';
+import { AT } from '../reducers/actionTypes';
+import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles } from '../utils/gameUtils';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -16,9 +16,13 @@ const getSelectedSkill = (player) => {
 /**
  * createCombatActions — 전투 로직 (공격, 스킬, 도주)
  */
-export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog, addStoryLog, getFullStats }) => ({
+export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog, addStoryLog, getFullStats }) => {
+    let pendingEnemyTurn = null;
+
+    return {
 
     combat: (type) => {
+        if (pendingEnemyTurn) { clearTimeout(pendingEnemyTurn); pendingEnemyTurn = null; }
         if (gameState !== 'combat' || !enemy) return addLog('error', '전투 상태가 아닙니다.');
         const stats = getFullStats();
         const playerAtActionStart = player;
@@ -92,7 +96,25 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     addLog('system', `심연의 더 깊은 곳으로 진입했습니다. (현재: ${currentDepth + 1}층)`);
                 }
 
+                // 일일 프로토콜 — 킬 카운트 업데이트
+                dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills' } });
+
+                // 칭호 체크
+                const newTitles = checkTitles(updatedPlayer);
+                if (newTitles.length > 0) {
+                    dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
+                    newTitles.forEach(id => addLog('system', `🏆 칭호 획득: [${id}]`));
+                }
+
                 dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+
+                // 마왕 처치 → 에테르 환생
+                if (victoryResult.isDemonKingSlain) {
+                    dispatch({ type: 'SET_GAME_STATE', payload: 'ascension' });
+                    addLog('system', '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...');
+                    return;
+                }
+
                 addStoryLog('victory', { name: enemyAtActionStart.name });
 
                 // PostCombatCard 데이터 전달
@@ -106,11 +128,10 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                         exp: victoryResult.expGained || 0,
                         gold: victoryResult.goldGained || 0,
                         items: droppedItems,
-                        loot: droppedItems,
                         leveledUp: Boolean(victoryResult.leveledUp),
                         hpLow: hpRatio <= 0.35,
                         mpLow: mpRatio <= 0.3,
-                        invFull: updatedPlayer.inv.length >= 20,
+                        invFull: updatedPlayer.inv.length >= BALANCE.INV_MAX_SIZE,
                         playerHp: updatedPlayer.hp,
                         playerMaxHp: updatedPlayer.maxHp,
                         playerMp: updatedPlayer.mp,
@@ -123,7 +144,8 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
 
             dispatch({ type: 'SET_ENEMY', payload: result.updatedEnemy });
 
-            setTimeout(() => {
+            pendingEnemyTurn = setTimeout(() => {
+                pendingEnemyTurn = null;
                 const turnTick = CombatEngine.tickCombatState(playerAfterAction);
                 turnTick.logs.forEach((log) => addLog(log.type, log.text));
                 const playerForEnemyTurn = turnTick.updatedPlayer;
@@ -175,4 +197,5 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
     },
 
     getSelectedSkill: () => getSelectedSkill(player)?.skill || null
-});
+    };
+};

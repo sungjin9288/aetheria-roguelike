@@ -2,6 +2,7 @@ import { ITEMS } from '../data/items';
 import { DB } from '../data/db';
 import { BOSS_MONSTERS } from '../data/monsters';
 import { getWeaponMagicSkills, isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils';
+import { TITLES } from '../data/titles';
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
@@ -54,8 +55,10 @@ export const checkMilestones = (killRegistry, lastKillName) => {
 };
 
 // Data Migration Utility
-export const migrateData = (savedData) => {
-    if (!savedData) return null;
+export const migrateData = (rawData) => {
+    if (!rawData) return null;
+    // Deep clone to avoid mutating the Firestore snapshot directly
+    const savedData = JSON.parse(JSON.stringify(rawData));
 
     // Target the specific player object if clear structure exists
     // If savedData IS the player (old flat format?), use it.
@@ -133,5 +136,49 @@ export const migrateData = (savedData) => {
     }
     savedData.onboardingDismissed = Boolean(savedData.onboardingDismissed);
 
+    // v4.0 — 신규 필드 기본값 (기존 세이브 호환)
+    target.relics = Array.isArray(target.relics) ? target.relics : [];
+    target.titles = Array.isArray(target.titles) ? target.titles : [];
+    target.activeTitle = target.activeTitle || null;
+    target.meta.prestigeRank    = target.meta.prestigeRank    || 0;
+    target.meta.totalPrestigeAtk = target.meta.totalPrestigeAtk || 0;
+    target.meta.totalPrestigeHp  = target.meta.totalPrestigeHp  || 0;
+    target.meta.totalPrestigeMp  = target.meta.totalPrestigeMp  || 0;
+    target.stats.relicCount      = target.stats.relicCount      || 0;
+    target.stats.comboCount      = target.stats.comboCount      || 0;
+    target.stats.crafts          = target.stats.crafts          || 0;
+    target.stats.abyssFloor      = target.stats.abyssFloor      || 0;
+    target.stats.demonKingSlain  = target.stats.demonKingSlain  || 0;
+    target.stats.dailyProtocol   = target.stats.dailyProtocol   || null;
+    // pendingRelics는 런타임 전용 — 저장 불필요, 로드 시 null로 초기화
+    savedData.pendingRelics = null;
+
     return savedData;
+};
+
+/**
+ * 달성 칭호 체크 — 현재 player 상태를 기반으로 새로 획득한 칭호 ID 배열 반환
+ * @param {object} player
+ * @returns {string[]} 새로 해금된 칭호 ID 목록
+ */
+export const checkTitles = (player) => {
+    const existing = new Set(player.titles || []);
+    return TITLES.filter(t => {
+        if (existing.has(t.id)) return false;
+        const { type, val } = t.cond;
+        if (type === 'kills')          return (player.stats?.kills         || 0) >= val;
+        if (type === 'bossKills')      return (player.stats?.bossKills     || 0) >= val;
+        if (type === 'level')          return player.level >= val;
+        if (type === 'deaths')         return (player.stats?.deaths        || 0) >= val;
+        if (type === 'total_gold')     return (player.stats?.total_gold    || 0) >= val;
+        if (type === 'rests')          return (player.stats?.rests         || 0) >= val;
+        if (type === 'relicCount')     return (player.stats?.relicCount    || 0) >= val;
+        if (type === 'prestige')       return (player.meta?.prestigeRank   || 0) >= val;
+        if (type === 'abyssFloor')     return (player.stats?.abyssFloor    || 0) >= val;
+        if (type === 'bountyDone')     return (player.stats?.bountiesCompleted || 0) >= val;
+        if (type === 'crafts')         return (player.stats?.crafts        || 0) >= val;
+        if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
+        if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
+        return false;
+    }).map(t => t.id);
 };

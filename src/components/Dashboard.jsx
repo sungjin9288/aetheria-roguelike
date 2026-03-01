@@ -7,6 +7,7 @@ import { db } from '../firebase';
 import { DB } from '../data/db';
 import { APP_ID } from '../data/constants';
 import { exportToJson } from '../utils/fileUtils';
+import { TITLES, RARITY_COLORS } from '../data/titles';
 import { FeedbackValidator } from '../systems/FeedbackValidator';
 import SmartInventory from './SmartInventory';
 import AchievementPanel from './AchievementPanel';
@@ -251,8 +252,98 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             <div className="text-xs text-cyber-blue/40 mb-2 font-fira border-l-2 border-cyber-blue/10 pl-3">
                                 <p>SESSION: {sessionId}</p>
                                 <p>UID: {actions.getUid()}</p>
-                                <p>BUILD: v3.5.1 (STABLE)</p>
+                                <p>BUILD: v4.0 (STABLE)</p>
+                                {(player.meta?.prestigeRank || 0) > 0 && (
+                                    <p className="text-purple-400 mt-1">PRESTIGE: {player.meta.prestigeRank}회 환생 완료</p>
+                                )}
                             </div>
+
+                            {/* v4.0: 현재 런 유물 */}
+                            {(player.relics || []).length > 0 && (
+                                <div className="bg-purple-950/30 border border-purple-700/30 rounded-lg p-3">
+                                    <div className="text-xs font-bold text-purple-400 mb-2 flex items-center gap-2">
+                                        ✦ 보유 유물 ({player.relics.length}/5)
+                                    </div>
+                                    <div className="space-y-1">
+                                        {player.relics.map((r) => (
+                                            <div key={r.id} className="flex items-start gap-2 text-xs">
+                                                <span className={`font-bold shrink-0 ${RARITY_COLORS[r.rarity] || 'text-slate-300'}`}>{r.name}</span>
+                                                <span className="text-gray-400">{r.desc}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* v4.0: 칭호 시스템 */}
+                            {(player.titles || []).length > 0 && (
+                                <div className="bg-cyber-dark/40 border border-yellow-700/30 rounded-lg p-3">
+                                    <div className="text-xs font-bold text-yellow-500 mb-2 flex items-center gap-2">
+                                        🏆 보유 칭호 ({player.titles.length})
+                                    </div>
+                                    <div className="space-y-1 max-h-28 overflow-y-auto custom-scrollbar">
+                                        {player.titles.map((id) => {
+                                            const t = TITLES.find(t => t.id === id);
+                                            if (!t) return null;
+                                            const isActive = player.activeTitle === id;
+                                            return (
+                                                <button
+                                                    key={id}
+                                                    onClick={() => actions.setPlayer?.({ activeTitle: isActive ? null : id })}
+                                                    className={`w-full text-left text-xs px-2 py-1 rounded transition-colors ${isActive ? 'bg-yellow-900/40 border border-yellow-600/50' : 'hover:bg-gray-800/50'}`}
+                                                >
+                                                    <span className={`font-bold ${t.color}`}>[{t.name}]</span>
+                                                    {isActive && <span className="text-yellow-500 text-[10px] ml-2">활성</span>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* v4.0: 일일 프로토콜 */}
+                            {(() => {
+                                const dp = player.stats?.dailyProtocol;
+                                if (!dp || !dp.missions?.length) return null;
+                                const today = new Date().toISOString().slice(0, 10);
+                                if (dp.date !== today) return null;
+                                return (
+                                    <div className="bg-cyan-950/30 border border-cyan-700/30 rounded-lg p-3">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="text-xs font-bold text-cyan-400">
+                                                📋 일일 프로토콜
+                                            </div>
+                                            {dp.relicShards > 0 && (
+                                                <span className="text-xs text-purple-400">{dp.relicShards}/5 조각</span>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            {dp.missions.map((m) => {
+                                                const pct = Math.min(100, ((m.progress || 0) / Math.max(1, m.goal)) * 100);
+                                                const rewardText = m.reward.essence
+                                                    ? `에센스 ${m.reward.essence}`
+                                                    : m.reward.item || (m.reward.relicShard ? '유물 조각' : '');
+                                                return (
+                                                    <div key={m.id}>
+                                                        <div className="flex justify-between text-[10px] mb-0.5">
+                                                            <span className={m.done ? 'text-cyan-400 line-through' : 'text-gray-300'}>
+                                                                {m.type === 'kills' ? `처치 ${m.goal}` : m.type === 'explores' ? `탐색 ${m.goal}` : `골드 지출 ${m.goal}`}
+                                                            </span>
+                                                            <span className="text-gray-500">{m.progress}/{m.goal} → {rewardText}</span>
+                                                        </div>
+                                                        <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all ${m.done ? 'bg-cyan-400' : 'bg-cyan-700'}`}
+                                                                style={{ width: `${pct}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             {/* HONOR OF FAME */}
                             {!isMobile && (

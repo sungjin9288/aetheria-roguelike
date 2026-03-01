@@ -1,5 +1,6 @@
 export const APP_ID = 'aetheria-rpg';
-export const ADMIN_UIDS = ['YOUR_ADMIN_UID_HERE']; // Replace with actual developer UID
+// Admin UIDs — 환경변수에서 쉼표 구분으로 주입 (VITE_ADMIN_UIDS=uid1,uid2)
+export const ADMIN_UIDS = (import.meta.env.VITE_ADMIN_UIDS || '').split(',').map(s => s.trim()).filter(Boolean);
 
 export const CONSTANTS = {
     // Note: GEMINI_API_KEY moved to server-side (api/ai-proxy.js)
@@ -42,8 +43,22 @@ export const BALANCE = {
     DUAL_WIELD_DEF_MULT: 0.94,
     DEBOUNCE_SAVE_MS: 500,
     LOG_MAX_SIZE: 50,
-    ENEMY_TURN_DELAY_MS: 450,   // 적 반격 딜레이 (ms)
+    ENEMY_TURN_DELAY_MS: 450,       // 적 반격 딜레이 (ms)
     MILESTONE_KILLS: [10, 50, 100], // 킬 마일스톤 기준
+    INV_MAX_SIZE: 20,               // 인벤토리 최대 슬롯 수
+    AUTO_EXPLORE_HP_THRESHOLD: 0.3, // 자동 탐색 HP 정지 임계값 (30%)
+    AUTO_EXPLORE_INTERVAL_MS: 1400, // 자동 탐색 인터벌 (ms)
+    STATUS_DOT_RATIO: 0.04,         // 상태이상 DoT 피해 비율 (maxHp 기준 4%)
+    // v4.0 — 신규 시스템 상수
+    EXP_SCALE_RATE: 1.2,            // EXP 곡선 완화 (기존 1.5 → 1.2)
+    EXP_LEVEL_CAP_50: 800000,       // Lv50+ EXP 하한선
+    RELIC_FIND_CHANCE: 0.08,        // 탐색 시 유물 발견 확률 (8%)
+    PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
+    PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가
+    PRESTIGE_MP_BONUS: 15,          // 환생당 영구 MP 증가
+    BOSS_PHASE2_THRESHOLD: 0.5,     // 보스 HP 50% 이하 → 패턴 전환
+    BOUNTY_EXP_MULT: 2.0,           // 현상수배 EXP = 킬수 × 레벨 × 2.0
+    BOUNTY_GOLD_MULT: 2.5,          // 현상수배 골드 = 킬수 × 레벨 × 2.5
 };
 
 Object.freeze(CONSTANTS);

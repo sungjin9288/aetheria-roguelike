@@ -1,8 +1,11 @@
 import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { AI_SERVICE } from '../services/aiService';
-import { toArray, getJobSkills } from '../utils/gameUtils';
+import { toArray, getJobSkills, makeItem, findItemByName, checkTitles } from '../utils/gameUtils';
 import { BOSS_MONSTERS } from '../data/monsters';
+import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics';
+import { PRESTIGE_TITLES } from '../data/titles';
+import { AT } from '../reducers/actionTypes';
 
 /**
  * useGameActions — 이동, 탐색, 휴식, 이벤트, 직업, 퀘스트 수락, 시작, 리셋
@@ -87,6 +90,21 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             return;
         }
 
+        // v4.0: 일일 프로토콜 리셋 체크
+        const today = new Date().toISOString().slice(0, 10);
+        const dp = player.stats?.dailyProtocol;
+        if (!dp || dp.date !== today) {
+            const lvl = player.level;
+            const missions = [
+                { id: 'kill_n',    type: 'kills',    goal: Math.max(10, lvl * 2),    reward: { essence: Math.floor(lvl * 5) }, progress: 0, done: false },
+                { id: 'explore_n', type: 'explores', goal: 10,                        reward: { item: '중급 체력 물약' },          progress: 0, done: false },
+                { id: 'gold_n',    type: 'goldSpend', goal: Math.max(300, lvl * 20), reward: { relicShard: 1 },                  progress: 0, done: false },
+            ];
+            dispatch({ type: AT.SET_DAILY_PROTOCOL, payload: { date: today, missions, relicShards: dp?.relicShards || 0 } });
+        }
+        // 일일 프로토콜 — 탐색 카운트 업데이트
+        dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
+
         if (Math.random() < BALANCE.EVENT_CHANCE_NOTHING) {
             const hasKey = player.inv.some(i => i.name === '잊혀진 열쇠');
             if (hasKey && mapData.level >= 10 && Math.random() < 0.2) {
@@ -118,7 +136,31 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 return;
             }
 
+            // v4.0: 유물 발견 (조용한 탐색 중 8% 확률)
+            const currentRelics = player.relics || [];
+            if (currentRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE) {
+                const available = RELICS.filter(r => !currentRelics.some(pr => pr.id === r.id));
+                if (available.length > 0) {
+                    const candidates = pickWeightedRelics(available, 3);
+                    dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
+                    addLog('event', '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.');
+                    return;
+                }
+            }
+
             return addLog('info', '주변이 조용합니다.');
+        }
+
+        // v4.0: 유물 발견 (전투 직전에도 기회)
+        const currentRelicsBeforeCombat = player.relics || [];
+        if (currentRelicsBeforeCombat.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
+            const available = RELICS.filter(r => !currentRelicsBeforeCombat.some(pr => pr.id === r.id));
+            if (available.length > 0) {
+                const candidates = pickWeightedRelics(available, 3);
+                dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
+                addLog('event', '✨ [유물 발견] 전투 직전, 고대의 유물이 눈에 들어옵니다!');
+                return;
+            }
         }
 
         const baseName = mapData.monsters[Math.floor(Math.random() * mapData.monsters.length)];
@@ -165,6 +207,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                     ...profile.pattern
                 };
             }
+            // v4.0: 보스 Phase2 데이터 전달
+            if (profile.phase2) mStats.phase2 = profile.phase2;
         }
         const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
         mStats.isBoss = Boolean(
@@ -200,18 +244,6 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
 
     handleEventChoice: (idx) => {
         if (!currentEvent) return;
-
-        const allItems = [
-            ...toArray(DB.ITEMS?.consumables),
-            ...toArray(DB.ITEMS?.weapons),
-            ...toArray(DB.ITEMS?.armors),
-            ...toArray(DB.ITEMS?.materials)
-        ];
-        const findItemByName = (name) => allItems.find((i) => i.name === name);
-        const makeItem = (template) => ({
-            ...template,
-            id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
-        });
 
         let resultText = '';
         const selectedOutcome = toArray(currentEvent.outcomes).find((o) => o.choiceIndex === idx) || null;
@@ -288,11 +320,10 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         addStoryLog('rest', { loc: player.loc });
     },
 
+    // ControlPanel에서 확인 UI를 거친 뒤 호출됩니다 (window.confirm 제거)
     reset: () => {
-        if (window.confirm('초기 시작 설정으로 되돌리시겠습니까? 진행 중 데이터는 초기화됩니다.')) {
-            dispatch({ type: 'RESET_GAME' });
-            addLog('system', '초기 시작 설정이 적용되었습니다. 새 에이전트 정보를 입력해 주세요.');
-        }
+        dispatch({ type: 'RESET_GAME' });
+        addLog('system', '초기 시작 설정이 적용되었습니다. 새 에이전트 정보를 입력해 주세요.');
     },
 
     jobChange: (jobName) => {
@@ -310,10 +341,6 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
 
     lootGrave: () => {
         if (!grave) return;
-        const makeItem = (template) => ({
-            ...template,
-            id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
-        });
         let logMsg = `유해 회수: ${grave.gold}G 획득`;
         const updates = { gold: player.gold + grave.gold };
         if (grave.item) {
@@ -351,7 +378,11 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             goal: count,
             progress: 0,
             isBounty: true,
-            reward: { exp: count * 40, gold: count * 50 }
+            // v4.0: 레벨 스케일 보상
+            reward: {
+                exp: Math.floor(count * player.level * BALANCE.BOUNTY_EXP_MULT),
+                gold: Math.floor(count * player.level * BALANCE.BOUNTY_GOLD_MULT),
+            }
         };
 
         dispatch({
@@ -367,5 +398,31 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             })
         });
         addLog('event', `새로운 현상수배 수락: ${target} ${count}마리`);
-    }
+    },
+
+    // v4.0: 에테르 환생 확인
+    confirmAscension: () => {
+        const meta = player.meta || {};
+        const rank = (meta.prestigeRank || 0) + 1;
+        const newMeta = {
+            ...meta,
+            prestigeRank: rank,
+            essence: (meta.essence || 0) + 200,
+            bonusAtk:  (meta.bonusAtk  || 0) + BALANCE.PRESTIGE_ATK_BONUS,
+            bonusHp:   (meta.bonusHp   || 0) + BALANCE.PRESTIGE_HP_BONUS,
+            bonusMp:   (meta.bonusMp   || 0) + BALANCE.PRESTIGE_MP_BONUS,
+            totalPrestigeAtk: (meta.totalPrestigeAtk || 0) + BALANCE.PRESTIGE_ATK_BONUS,
+            totalPrestigeHp:  (meta.totalPrestigeHp  || 0) + BALANCE.PRESTIGE_HP_BONUS,
+            totalPrestigeMp:  (meta.totalPrestigeMp  || 0) + BALANCE.PRESTIGE_MP_BONUS,
+        };
+        const title = PRESTIGE_TITLES[Math.min(rank - 1, PRESTIGE_TITLES.length - 1)];
+        dispatch({ type: AT.ASCEND, payload: { meta: newMeta, newTitle: title } });
+        addLog('system', `⚡ [에테르 환생 ${rank}회] ${title} 칭호 획득! 영구 보너스 적용됨.`);
+    },
+
+    // v4.0: 환생 취소 — idle 복귀
+    cancelAscension: () => {
+        dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+        addLog('info', '환생을 취소했습니다. 여정을 계속합니다.');
+    },
 });

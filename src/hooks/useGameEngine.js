@@ -33,6 +33,7 @@ export const useGameEngine = () => {
         quickSlots,
         postCombatResult,
         onboardingDismissed,
+        pendingRelics,
     } = state;
 
     // --- Firebase Sync ---
@@ -127,14 +128,54 @@ export const useGameEngine = () => {
             if (kills >= 100) codexAtk += 1;
         });
 
+        // v4.0 — 유물 스탯 배율 계산
+        const relics = player.relics || [];
+        const ra = relics.reduce((acc, r) => {
+            if (r.effect === 'glass_cannon')  return acc + r.val.atk;
+            if (r.effect === 'ancient_power') return acc + r.val.atk;
+            if (r.effect === 'omega')         return acc + r.val;
+            if (r.effect === 'cursed_power')  return acc + r.val.atk;
+            if (r.effect === 'low_hp_atk' && player.hp / Math.max(1, player.maxHp) < r.val.threshold) return acc + r.val.bonus;
+            return acc;
+        }, 0);
+        const rd = relics.reduce((acc, r) => {
+            if (r.effect === 'glass_cannon') return acc + r.val.def; // 음수
+            if (r.effect === 'stone_skin')   return acc + r.val;
+            if (r.effect === 'fortress')     return acc + r.val.def;
+            if (r.effect === 'omega')        return acc + r.val;
+            return acc;
+        }, 0);
+        const rhp = 1 + relics.reduce((acc, r) => {
+            if (r.effect === 'fortress') return acc + r.val.hp;
+            if (r.effect === 'omega')    return acc + r.val;
+            return acc;
+        }, 0);
+        const rmp = 1 + relics.reduce((acc, r) => {
+            if (r.effect === 'mp_mult') return acc + r.val;
+            if (r.effect === 'omega')   return acc + r.val;
+            return acc;
+        }, 0);
+        const relicCritBonus = relics.reduce((acc, r) => {
+            if (r.effect === 'ancient_power') return acc + r.val.crit;
+            if (r.effect === 'omega')         return acc + r.val;
+            return acc;
+        }, 0);
+
+        const baseAtk = (player.atk + mainWeaponVal + offhandWeaponVal + codexAtk + (meta.bonusAtk || 0)) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * twoHandMult * dualWieldMult;
+        const baseDef = (player.def + aVal + shieldVal + codexDef) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
+        const baseMaxHp = (player.maxHp + codexHp) * hpMultBonus;
+
         return {
-            atk: Math.floor((player.atk + mainWeaponVal + offhandWeaponVal + codexAtk + (meta.bonusAtk || 0)) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * twoHandMult * dualWieldMult),
-            def: Math.floor((player.def + aVal + shieldVal + codexDef) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult),
-            maxHp: Math.floor((player.maxHp + codexHp) * hpMultBonus),
+            atk: Math.floor(baseAtk * (1 + ra)),
+            def: Math.floor(baseDef * (1 + rd)),
+            maxHp: Math.floor(baseMaxHp * rhp),
+            maxMp: Math.floor((player.maxMp || 50) * rmp),
             elem: mainWeapon?.elem || offhandWeapon?.elem || '물리',
             isMagic: isMagic || isMagicWeapon(mainWeapon) || isMagicWeapon(offhandWeapon),
             weaponHands: mainWeapon?.hands || 1,
-            activeSet
+            activeSet,
+            relics,
+            critChance: Math.min(0.5, BALANCE.CRIT_CHANCE + relicCritBonus),
         };
     }, [player]);
 
@@ -171,10 +212,10 @@ export const useGameEngine = () => {
         [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard]
     );
 
-    const handleCommand = (text) => {
+    const handleCommand = useCallback((text) => {
         const result = parseCommand(text, gameState, player, actions);
         if (typeof result === 'string') addLog('system', result);
-    };
+    }, [gameState, player, actions, addLog]);
 
     return {
         player,
@@ -198,6 +239,7 @@ export const useGameEngine = () => {
         quickSlots,
         postCombatResult,
         onboardingDismissed,
+        pendingRelics,
         dispatch,
     };
 };
