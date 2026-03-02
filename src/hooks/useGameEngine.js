@@ -207,7 +207,8 @@ export const useGameEngine = () => {
                 getUid: () => uid,
                 isAdmin: () => ADMIN_UIDS.includes(uid),
                 liveConfig,
-                leaderboard
+                leaderboard,
+                getFullStats,
             };
         },
         [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard]

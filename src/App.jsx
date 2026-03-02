@@ -82,6 +82,22 @@ function App() {
     );
   }
 
+  // v5.0: 런 요약(사망) 화면 — IntroScreen보다 먼저 체크해야 함
+  // handleDefeat가 player.name을 ''로 리셋하므로 IntroScreen 조건에 걸리기 전에 처리
+  if (engine.gameState === 'dead' && engine.runSummary) {
+    return (
+      <MainLayout visualEffect={null}>
+        <RunSummaryCard
+          runSummary={engine.runSummary}
+          onRestart={() => {
+            engine.dispatch({ type: 'SET_RUN_SUMMARY', payload: null });
+            engine.dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+          }}
+        />
+      </MainLayout>
+    );
+  }
+
   if (!engine.player.name || engine.player.name === '방랑자' || !engine.player.name.trim()) {
     return (
       <MainLayout visualEffect={null}>
@@ -244,17 +260,6 @@ function App() {
         <AscensionScreen
           player={engine.player}
           actions={engine.actions}
-        />
-      )}
-
-      {/* v5.0: 런 요약 / 사망 화면 */}
-      {engine.gameState === 'dead' && engine.runSummary && (
-        <RunSummaryCard
-          runSummary={engine.runSummary}
-          onRestart={() => {
-            engine.dispatch({ type: 'SET_RUN_SUMMARY', payload: null });
-            engine.dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
-          }}
         />
       )}
 
