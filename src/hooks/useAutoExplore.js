@@ -1,4 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { BALANCE } from '../data/constants';
+
+// Module-level constants derived from BALANCE — stable across renders
+const HP_STOP_THRESHOLD = BALANCE.AUTO_EXPLORE_HP_THRESHOLD;
+const INTERVAL_MS = BALANCE.AUTO_EXPLORE_INTERVAL_MS;
 
 /**
  * useAutoExplore — 자동 탐색 훅 (Feature #7)
@@ -11,9 +16,6 @@ export const useAutoExplore = ({ player, gameState, isAiThinking, actions }) => 
     const timerRef = useRef(null);
     const runsRef = useRef(0);
     const stopReasonRef = useRef('');
-
-    const HP_STOP_THRESHOLD = 0.3;
-    const INTERVAL_MS = 1400;
 
     const stop = useCallback((reason = '') => {
         clearInterval(timerRef.current);

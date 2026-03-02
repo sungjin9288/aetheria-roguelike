@@ -1,21 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Terminal as TerminalIcon, Volume2, VolumeX, Play, Square } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 
 import { CONSTANTS } from './data/constants';
 import { PRESTIGE_TITLES } from './data/titles';
 import { soundManager } from './systems/SoundManager';
+
+// 항상 즉시 필요한 컴포넌트 — eager import
 import MainLayout from './components/MainLayout';
 import TerminalView from './components/TerminalView';
 import Dashboard from './components/Dashboard';
 import ControlPanel from './components/ControlPanel';
 import IntroScreen from './components/IntroScreen';
-import PostCombatCard from './components/PostCombatCard';
-import OnboardingGuide from './components/OnboardingGuide';
 import DamageNumber from './components/DamageNumber';
-import RelicChoicePanel from './components/RelicChoicePanel';
-import AscensionScreen from './components/AscensionScreen';
-import RunSummaryCard from './components/RunSummaryCard';
+
+// 조건부로만 렌더되는 무거운 컴포넌트 — lazy import (청크 분리)
+const PostCombatCard   = lazy(() => import('./components/PostCombatCard'));
+const OnboardingGuide  = lazy(() => import('./components/OnboardingGuide'));
+const RelicChoicePanel = lazy(() => import('./components/RelicChoicePanel'));
+const AscensionScreen  = lazy(() => import('./components/AscensionScreen'));
+const RunSummaryCard   = lazy(() => import('./components/RunSummaryCard'));
+
 import { useGameEngine } from './hooks/useGameEngine';
 import { useAutoExplore } from './hooks/useAutoExplore';
 import { useDamageFlash } from './hooks/useDamageFlash';
@@ -87,13 +92,15 @@ function App() {
   if (engine.gameState === 'dead' && engine.runSummary) {
     return (
       <MainLayout visualEffect={null}>
-        <RunSummaryCard
-          runSummary={engine.runSummary}
-          onRestart={() => {
-            engine.dispatch({ type: 'SET_RUN_SUMMARY', payload: null });
-            engine.dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
-          }}
-        />
+        <Suspense fallback={null}>
+          <RunSummaryCard
+            runSummary={engine.runSummary}
+            onRestart={() => {
+              engine.dispatch({ type: 'SET_RUN_SUMMARY', payload: null });
+              engine.dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+            }}
+          />
+        </Suspense>
       </MainLayout>
     );
   }
@@ -173,10 +180,12 @@ function App() {
       <div className="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen" style={{ backgroundImage: 'linear-gradient(rgba(0, 204, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 204, 255, 0.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
       {!isMobileViewport && showOnboarding && !engine.onboardingDismissed && (
-        <OnboardingGuide
-          player={engine.player}
-          onDismiss={handleDismissOnboarding}
-        />
+        <Suspense fallback={null}>
+          <OnboardingGuide
+            player={engine.player}
+            onDismiss={handleDismissOnboarding}
+          />
+        </Suspense>
       )}
 
       <Motion.div
@@ -249,28 +258,34 @@ function App() {
 
       {/* v4.0: 유물 3지선다 오버레이 */}
       {engine.pendingRelics && (
-        <RelicChoicePanel
-          pendingRelics={engine.pendingRelics}
-          dispatch={engine.dispatch}
-        />
+        <Suspense fallback={null}>
+          <RelicChoicePanel
+            pendingRelics={engine.pendingRelics}
+            dispatch={engine.dispatch}
+          />
+        </Suspense>
       )}
 
       {/* v4.0: 에테르 환생 풀스크린 */}
       {engine.gameState === 'ascension' && (
-        <AscensionScreen
-          player={engine.player}
-          actions={engine.actions}
-        />
+        <Suspense fallback={null}>
+          <AscensionScreen
+            player={engine.player}
+            actions={engine.actions}
+          />
+        </Suspense>
       )}
 
       {/* Post-Combat Result Card */}
       {!isMobileViewport && (
-        <PostCombatCard
-          result={engine.postCombatResult}
-          onClose={() => engine.actions.clearPostCombat?.()}
-          onRest={() => engine.actions.rest?.()}
-          onSell={() => engine.actions.setSideTab?.('inventory')}
-        />
+        <Suspense fallback={null}>
+          <PostCombatCard
+            result={engine.postCombatResult}
+            onClose={() => engine.actions.clearPostCombat?.()}
+            onRest={() => engine.actions.rest?.()}
+            onSell={() => engine.actions.setSideTab?.('inventory')}
+          />
+        </Suspense>
       )}
 
       {/* Auto-Explore Floating Button */}

@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Zap, Shield, Skull } from 'lucide-react';
 
+// 직업별 정보 — 스킬 전체 목록 + 패시브 특성 포함
 const STARTER_CLASSES = [
     {
         id: '전사',
         icon: '⚔️',
         name: '전사',
         flavor: '강인한 체력과 근접 전투의 달인',
-        tags: ['HP ×1.4', 'ATK ×1.3', '출혈베기'],
+        passive: { icon: '🛡️', label: '전투 본능', desc: 'HP ×1.4 / 방어력 우위' },
+        statTags: ['HP ×1.4', 'ATK ×1.3'],
+        skills: [
+            { name: '파워배시', mp: 15, desc: '강력한 내려찍기 (×2.0)' },
+            { name: '광폭화', mp: 30, desc: 'ATK +50% 버프 3턴' },
+            { name: '출혈베기', mp: 25, desc: '지속 출혈 피해 부여' },
+        ],
         border: 'border-orange-500/60',
         bg: 'bg-orange-500/10',
         glow: 'hover:shadow-[0_0_20px_rgba(249,115,22,0.35)]',
@@ -16,13 +23,20 @@ const STARTER_CLASSES = [
         selectedBorder: 'border-orange-400',
         accent: 'text-orange-400',
         tagColor: 'bg-orange-900/40 text-orange-300',
+        skillColor: 'text-orange-300 border-orange-500/30 bg-orange-500/5',
     },
     {
         id: '마법사',
         icon: '✨',
         name: '마법사',
         flavor: '고위력 마법으로 적을 소멸시키는 원소술사',
-        tags: ['MP ×1.8', 'ATK ×1.6', '화염구/썬더볼트'],
+        passive: { icon: '💎', label: '마나 친화', desc: 'MP ×1.8 / 원소 속성 강화' },
+        statTags: ['MP ×1.8', 'ATK ×1.6'],
+        skills: [
+            { name: '화염구', mp: 20, desc: '화상 부여 (×2.2)' },
+            { name: '썬더볼트', mp: 45, desc: '기절 부여 (×3.5)' },
+            { name: '아이스볼트', mp: 25, desc: '빙결 부여 (×2.0)' },
+        ],
         border: 'border-cyber-blue/60',
         bg: 'bg-cyber-blue/10',
         glow: 'hover:shadow-[0_0_20px_rgba(0,204,255,0.35)]',
@@ -30,13 +44,20 @@ const STARTER_CLASSES = [
         selectedBorder: 'border-cyber-blue',
         accent: 'text-cyber-blue',
         tagColor: 'bg-cyan-900/40 text-cyan-300',
+        skillColor: 'text-cyan-300 border-cyan-500/30 bg-cyan-500/5',
     },
     {
         id: '도적',
         icon: '🗡️',
         name: '도적',
         flavor: '치명타와 속도로 적의 급소를 노리는 암살자',
-        tags: ['크리티컬 +50%', 'ATK ×1.4', '독바르기'],
+        passive: { icon: '⚡', label: '선제 타격', desc: '치명타율 +50% 기본 적용' },
+        statTags: ['크리티컬 +50%', 'ATK ×1.4'],
+        skills: [
+            { name: '급소찌르기', mp: 15, desc: '50% 치명타 확률 (×1.8)' },
+            { name: '독바르기', mp: 25, desc: '강력한 독 부여 (×1.5)' },
+            { name: '연막탄', mp: 20, desc: '적 명중률 감소 2턴' },
+        ],
         border: 'border-cyber-green/60',
         bg: 'bg-cyber-green/10',
         glow: 'hover:shadow-[0_0_20px_rgba(0,255,157,0.35)]',
@@ -44,6 +65,7 @@ const STARTER_CLASSES = [
         selectedBorder: 'border-cyber-green',
         accent: 'text-cyber-green',
         tagColor: 'bg-emerald-900/40 text-emerald-300',
+        skillColor: 'text-emerald-300 border-emerald-500/30 bg-emerald-500/5',
     },
 ];
 
@@ -76,7 +98,7 @@ const IntroScreen = ({ onStart }) => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="p-8 border border-cyber-purple/30 bg-cyber-slate/80 backdrop-blur-xl rounded-xl shadow-[0_0_30px_rgba(168,85,247,0.2)] w-full max-w-lg text-center relative overflow-hidden"
+            className="p-6 md:p-8 border border-cyber-purple/30 bg-cyber-slate/80 backdrop-blur-xl rounded-xl shadow-[0_0_30px_rgba(168,85,247,0.2)] w-full max-w-2xl text-center relative overflow-hidden"
         >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyber-purple to-transparent animate-scanline" />
 
@@ -182,22 +204,58 @@ const IntroScreen = ({ onStart }) => {
                         className="space-y-3"
                     >
                         <p className="text-slate-400 text-sm font-fira">시작 직업을 선택하세요</p>
-                        <div className="grid grid-cols-3 gap-2">
+                        {/* 직업 카드 그리드 — 넓은 카드로 스킬 전체 표시 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
                             {STARTER_CLASSES.map((cls) => {
                                 const selected = jobId === cls.id;
                                 return (
                                     <button
                                         key={cls.id}
                                         onClick={() => setJobId(cls.id)}
-                                        className={`p-3 rounded-lg border text-left transition-all
-                                            ${cls.bg} ${selected ? `${cls.selectedBorder} ${cls.selectedGlow}` : `${cls.border} ${cls.glow}`}`}
+                                        className={`p-3 rounded-lg border transition-all text-left
+                                            ${cls.bg} ${selected
+                                                ? `${cls.selectedBorder} ${cls.selectedGlow} ring-1 ring-inset ${cls.selectedBorder}`
+                                                : `${cls.border} ${cls.glow} opacity-80 hover:opacity-100`}`}
                                     >
-                                        <div className="text-2xl mb-1">{cls.icon}</div>
-                                        <div className={`font-rajdhani font-bold text-sm ${cls.accent}`}>{cls.name}</div>
-                                        <div className="text-[10px] text-slate-400 font-fira mt-1 leading-tight">{cls.flavor}</div>
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                            {cls.tags.map(t => (
-                                                <span key={t} className={`text-[9px] px-1.5 py-0.5 rounded font-fira ${cls.tagColor}`}>{t}</span>
+                                        {/* 아이콘 + 직업명 */}
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <span className="text-xl">{cls.icon}</span>
+                                            <span className={`font-rajdhani font-bold text-base ${cls.accent}`}>{cls.name}</span>
+                                            {selected && (
+                                                <span className={`ml-auto text-[9px] font-rajdhani font-bold px-1.5 py-0.5 rounded ${cls.tagColor}`}>
+                                                    SELECTED
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* 플레이버 텍스트 */}
+                                        <p className="text-[10px] text-slate-400 font-fira leading-tight mb-2">{cls.flavor}</p>
+
+                                        {/* 스탯 태그 */}
+                                        <div className="flex flex-wrap gap-1 mb-2">
+                                            {cls.statTags.map(t => (
+                                                <span key={t} className={`text-[9px] px-1.5 py-0.5 rounded font-fira font-bold ${cls.tagColor}`}>{t}</span>
+                                            ))}
+                                        </div>
+
+                                        {/* 패시브 특성 */}
+                                        <div className={`flex items-center gap-1 text-[9px] font-fira border rounded px-1.5 py-1 mb-2 ${cls.skillColor}`}>
+                                            <span>{cls.passive.icon}</span>
+                                            <span className="font-bold">{cls.passive.label}:</span>
+                                            <span className="text-slate-400">{cls.passive.desc}</span>
+                                        </div>
+
+                                        {/* 스킬 목록 */}
+                                        <div className="space-y-1">
+                                            <p className={`text-[9px] font-fira font-bold uppercase tracking-wider ${cls.accent} opacity-70`}>
+                                                <Zap size={8} className="inline mr-0.5" />Skills
+                                            </p>
+                                            {cls.skills.map(sk => (
+                                                <div key={sk.name} className={`flex items-center justify-between text-[9px] font-fira border rounded px-1.5 py-0.5 ${cls.skillColor}`}>
+                                                    <span className="font-bold">{sk.name}</span>
+                                                    <span className="text-slate-500 ml-1 truncate text-right">{sk.desc}</span>
+                                                    <span className="ml-1 shrink-0 opacity-60">MP {sk.mp}</span>
+                                                </div>
                                             ))}
                                         </div>
                                     </button>

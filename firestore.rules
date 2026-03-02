@@ -1,0 +1,38 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // Aetheria RPG — Firestore 보안 규칙
+    // APP_ID: aetheria-rpg
+    // ============================================================
+
+    // 최상위 artifacts/{appId} 하위 경로 전체를 관리
+    match /artifacts/{appId} {
+
+      // ── 유저 개인 데이터: 본인만 읽기/쓰기 ──────────────────────
+      match /users/{uid} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+
+        // 기록 히스토리 서브컬렉션도 동일 조건
+        match /history/{docId} {
+          allow read, write: if request.auth != null && request.auth.uid == uid;
+        }
+      }
+
+      // ── 공개 설정 (live config): 모든 인증 유저 읽기, 쓰기 불가 ──
+      match /public/data {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      // ── 리더보드: 모두 읽기, 본인 entry만 쓰기 ──────────────────
+      // 경로: artifacts/{appId}/public/data/leaderboard/{uid}
+      match /public/data/leaderboard/{uid} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

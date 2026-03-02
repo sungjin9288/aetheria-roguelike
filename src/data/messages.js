@@ -42,6 +42,12 @@ export const MSG = {
     BUFF_EXPIRED: '버프 효과가 만료되었습니다.',
     DEFEAT: '전투에서 패배했습니다. 레거시 보너스는 유지됩니다.',
 
+    // --- 상태이상 (Status Effects) ---
+    STATUS_DOT: (effect, dmg) => {
+        const label = effect === 'poison' ? '중독' : effect === 'burn' ? '화상' : effect;
+        return `[${label}] 상태이상 피해 ${dmg}`;
+    },
+
     // --- 마일스톤 (Milestone) ---
     MILESTONE_KILLS_10: (name) => `🥉 [${name}] 사냥꾼 칭호 획득! (10마리 처치)`,
     MILESTONE_KILLS_50: (name) => `🥈 [${name}] 학살자 칭호 획득! (50마리 처치)`,

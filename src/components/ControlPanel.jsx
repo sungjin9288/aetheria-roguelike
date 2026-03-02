@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Sword,
   Zap,
@@ -20,6 +20,7 @@ import EventPanel from './EventPanel';
 import { soundManager } from '../systems/SoundManager';
 
 const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, grave, isAiThinking, currentEvent }) => {
+  const [confirmReset, setConfirmReset] = useState(false);
   const mapData = DB.MAPS[player.loc];
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
@@ -252,14 +253,34 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
               <Ghost size={22} className="text-slate-400 group-hover:animate-bounce mb-1" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-slate-300">RECOVER</span>
             </Motion.button>
           )}
-          <Motion.button
-            whileTap={{ scale: 0.95 }}
-            disabled={isAiThinking}
-            onClick={actions.reset}
-            className="min-h-[70px] sm:col-start-4 bg-red-950/20 hover:bg-red-900/40 border border-red-800/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:border-red-600/50 transition-all group backdrop-blur-sm"
-          >
-            <X size={20} className="text-red-500/70 group-hover:text-red-500 group-hover:scale-110 transition-all" /> <span className="text-[10px] sm:text-xs font-rajdhani tracking-widest text-red-600/70 group-hover:text-red-500">FORMAT DRIVE</span>
-          </Motion.button>
+          {!confirmReset ? (
+            <Motion.button
+              whileTap={{ scale: 0.95 }}
+              disabled={isAiThinking}
+              onClick={() => setConfirmReset(true)}
+              className="min-h-[70px] sm:col-start-4 bg-red-950/20 hover:bg-red-900/40 border border-red-800/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:border-red-600/50 transition-all group backdrop-blur-sm"
+            >
+              <X size={20} className="text-red-500/70 group-hover:text-red-500 group-hover:scale-110 transition-all" />
+              <span className="text-[10px] sm:text-xs font-rajdhani tracking-widest text-red-600/70 group-hover:text-red-500">FORMAT DRIVE</span>
+            </Motion.button>
+          ) : (
+            <div className="sm:col-start-4 flex flex-col gap-1.5 min-h-[70px] justify-center">
+              <Motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { actions.reset(); setConfirmReset(false); }}
+                className="flex-1 bg-red-900/60 border border-red-500/70 rounded-sm text-red-300 text-[10px] font-rajdhani font-bold tracking-widest hover:bg-red-700/60 transition-all py-1.5"
+              >
+                CONFIRM RESET
+              </Motion.button>
+              <Motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setConfirmReset(false)}
+                className="flex-1 bg-cyber-dark/60 border border-slate-600/50 rounded-sm text-slate-400 text-[10px] font-rajdhani font-bold tracking-widest hover:bg-slate-700/40 transition-all py-1.5"
+              >
+                CANCEL
+              </Motion.button>
+            </div>
+          )}
         </div>
       )}
     </Motion.div>
