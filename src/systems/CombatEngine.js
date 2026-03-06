@@ -332,6 +332,41 @@ export const CombatEngine = {
         };
     },
 
+    applyExpGain(player, expGained = 0) {
+        const p = { ...player, exp: (player.exp || 0) + expGained };
+        const logs = [];
+        let levelUps = 0;
+        let visualEffect = null;
+
+        while (p.level < CONSTANTS.MAX_LEVEL && p.exp >= p.nextExp) {
+            p.exp -= p.nextExp;
+            p.level += 1;
+            p.nextExp = Math.floor(p.nextExp * BALANCE.EXP_SCALE_RATE);
+            if (p.level >= 50) p.nextExp = Math.max(p.nextExp, BALANCE.EXP_LEVEL_CAP_50);
+            p.maxHp += 20;
+            p.maxMp += 10;
+            p.hp = p.maxHp;
+            p.mp = p.maxMp;
+            p.atk += 2;
+            p.def += 1;
+            levelUps += 1;
+            visualEffect = 'levelUp';
+            logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level) });
+        }
+
+        if (p.level >= CONSTANTS.MAX_LEVEL) {
+            p.exp = Math.min(p.exp, Math.max(0, p.nextExp - 1));
+        }
+
+        return {
+            updatedPlayer: p,
+            logs,
+            leveledUp: levelUps > 0,
+            levelUps,
+            visualEffect
+        };
+    },
+
     handleVictory(player, enemy) {
         const p = { ...player };
         const relics = p.relics || [];
@@ -342,7 +377,6 @@ export const CombatEngine = {
         const expGained = Math.floor(enemy.exp * expMult);
         const goldGained = Math.floor(enemy.gold * goldMult);
 
-        p.exp += expGained;
         p.gold += goldGained;
 
         const baseName = this.resolveEnemyBaseName(enemy);
@@ -387,24 +421,12 @@ export const CombatEngine = {
             logs.push({ type: 'heal', text: `[피의 서약] +${heal} HP` });
         }
 
-        if (p.exp >= p.nextExp) {
-            p.level += 1;
-            p.exp -= p.nextExp;
-            // v4.0: EXP 스케일 완화 (1.5 → BALANCE.EXP_SCALE_RATE 1.2)
-            p.nextExp = Math.floor(p.nextExp * BALANCE.EXP_SCALE_RATE);
-            if (p.level >= 50) p.nextExp = Math.max(p.nextExp, BALANCE.EXP_LEVEL_CAP_50);
-            p.maxHp += 20;
-            p.maxMp += 10;
-            p.hp = p.maxHp;
-            p.mp = p.maxMp;
-            p.atk += 2;
-            p.def += 1;
-            leveledUp = true;
-            visualEffect = 'levelUp';
-            logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level) });
-        }
+        const expResult = this.applyExpGain(p, expGained);
+        expResult.logs.forEach((log) => logs.push(log));
+        leveledUp = expResult.leveledUp;
+        visualEffect = expResult.visualEffect;
 
-        return { updatedPlayer: p, logs, leveledUp, visualEffect, expGained, goldGained, isDemonKingSlain };
+        return { updatedPlayer: expResult.updatedPlayer, logs, leveledUp, visualEffect, expGained, goldGained, isDemonKingSlain };
     },
 
     updateQuestProgress(player, enemyName) {

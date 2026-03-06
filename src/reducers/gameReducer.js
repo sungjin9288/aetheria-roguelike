@@ -1,6 +1,81 @@
 import { DB } from '../data/db';
 import { CONSTANTS, BALANCE } from '../data/constants';
 import { AT } from './actionTypes';
+import { findItemByName, makeItem } from '../utils/gameUtils';
+
+const sanitizeQuickSlots = (slots = [], inventory = []) => {
+    const ids = new Set((inventory || []).map((item) => item?.id).filter(Boolean));
+    const normalized = Array.isArray(slots) ? slots.slice(0, 3) : [];
+    while (normalized.length < 3) normalized.push(null);
+    return normalized.map((slot) => (slot?.id && ids.has(slot.id) ? slot : null));
+};
+
+const applyDailyProtocolProgress = (player, type, amount = 1) => {
+    const dp = player.stats?.dailyProtocol;
+    if (!dp) return player;
+
+    let essenceGain = 0;
+    let newShards = dp.relicShards || 0;
+    const itemRewards = [];
+
+    const updatedMissions = dp.missions.map((mission) => {
+        if (mission.type !== type || mission.done) return mission;
+
+        const progress = Math.min(mission.goal, (mission.progress || 0) + amount);
+        const justDone = progress >= mission.goal && !mission.done;
+        if (justDone) {
+            if (mission.reward?.essence) essenceGain += mission.reward.essence;
+            if (mission.reward?.item) itemRewards.push(mission.reward.item);
+            if (mission.reward?.relicShard) newShards += mission.reward.relicShard;
+        }
+
+        return { ...mission, progress, done: progress >= mission.goal };
+    });
+
+    const nextPlayer = {
+        ...player,
+        stats: {
+            ...player.stats,
+            dailyProtocol: {
+                ...dp,
+                missions: updatedMissions,
+                relicShards: newShards,
+            }
+        }
+    };
+
+    if (essenceGain > 0) {
+        const nextMeta = {
+            ...(nextPlayer.meta || {}),
+            essence: (nextPlayer.meta?.essence || 0) + essenceGain,
+            rank: nextPlayer.meta?.rank || 0,
+            bonusAtk: nextPlayer.meta?.bonusAtk || 0,
+            bonusHp: nextPlayer.meta?.bonusHp || 0,
+            bonusMp: nextPlayer.meta?.bonusMp || 0,
+        };
+        const nextRank = Math.floor(nextMeta.essence / 150);
+        if (nextRank > nextMeta.rank) {
+            const gain = nextRank - nextMeta.rank;
+            nextMeta.rank = nextRank;
+            nextMeta.bonusAtk += gain;
+            nextMeta.bonusHp += gain * 5;
+            nextMeta.bonusMp += gain * 3;
+        }
+        nextPlayer.meta = nextMeta;
+    }
+
+    if (itemRewards.length > 0) {
+        const rewardedItems = itemRewards
+            .map((name) => findItemByName(name))
+            .filter(Boolean)
+            .map((item) => makeItem(item));
+        if (rewardedItems.length > 0) {
+            nextPlayer.inv = [...(nextPlayer.inv || []), ...rewardedItems];
+        }
+    }
+
+    return nextPlayer;
+};
 
 // --- INITIAL STATE ---
 export const INITIAL_STATE = {
@@ -58,17 +133,20 @@ export const gameReducer = (state, action) => {
         case AT.SET_UID:
             return { ...state, uid: action.payload };
         case AT.LOAD_DATA:
-            return {
-                ...state,
-                player: { ...state.player, ...action.payload.player },
-                gameState: action.payload.gameState || 'idle',
-                enemy: action.payload.enemy || null,
-                quickSlots: Array.isArray(action.payload.quickSlots) ? action.payload.quickSlots.slice(0, 3) : state.quickSlots,
-                onboardingDismissed: action.payload.onboardingDismissed ?? state.onboardingDismissed,
-                bootStage: 'ready',
-                syncStatus: 'synced',
-                lastLoadedTimestamp: action.payload.lastActive?.toMillis() || Date.now()
-            };
+            {
+                const loadedPlayer = { ...state.player, ...action.payload.player };
+                return {
+                    ...state,
+                    player: loadedPlayer,
+                    gameState: action.payload.gameState || 'idle',
+                    enemy: action.payload.enemy || null,
+                    quickSlots: sanitizeQuickSlots(action.payload.quickSlots, loadedPlayer.inv),
+                    onboardingDismissed: action.payload.onboardingDismissed ?? state.onboardingDismissed,
+                    bootStage: 'ready',
+                    syncStatus: 'synced',
+                    lastLoadedTimestamp: action.payload.lastActive?.toMillis() || Date.now()
+                };
+            }
         case AT.SET_LIVE_CONFIG:
             return { ...state, liveConfig: { ...state.liveConfig, ...action.payload } };
         case AT.SET_LEADERBOARD:
@@ -80,7 +158,13 @@ export const gameReducer = (state, action) => {
             return { ...state, gameState: action.payload, syncStatus: 'syncing' };
         case AT.SET_PLAYER: {
             const nextPlayer = typeof action.payload === 'function' ? action.payload(state.player) : action.payload;
-            return { ...state, player: { ...state.player, ...nextPlayer }, syncStatus: 'syncing' };
+            const mergedPlayer = { ...state.player, ...nextPlayer };
+            return {
+                ...state,
+                player: mergedPlayer,
+                quickSlots: sanitizeQuickSlots(state.quickSlots, mergedPlayer.inv),
+                syncStatus: 'syncing'
+            };
         }
         case AT.SET_EVENT:
             return { ...state, currentEvent: action.payload, syncStatus: 'syncing' };
@@ -104,8 +188,12 @@ export const gameReducer = (state, action) => {
                 logs: state.logs.map(log => log.id === action.payload.id ? action.payload.log : log)
             };
         case AT.SET_QUICK_SLOT: {
+            const candidate = action.payload.item;
+            if (candidate && !state.player.inv.some((item) => item.id === candidate.id)) {
+                return state;
+            }
             const next = [...state.quickSlots];
-            next[action.payload.index] = action.payload.item;
+            next[action.payload.index] = candidate || null;
             return { ...state, quickSlots: next, syncStatus: 'syncing' };
         }
         case AT.SET_POST_COMBAT_RESULT:
@@ -200,22 +288,10 @@ export const gameReducer = (state, action) => {
             };
         case AT.UPDATE_DAILY_PROTOCOL: {
             const { type: dpType, amount = 1 } = action.payload;
-            const dp = state.player.stats?.dailyProtocol;
-            if (!dp) return state;
-            let newShards = dp.relicShards || 0;
-            const updatedMissions = dp.missions.map(m => {
-                if (m.type !== dpType || m.done) return m;
-                const prog = Math.min(m.goal, (m.progress || 0) + amount);
-                const justDone = prog >= m.goal && !m.done;
-                if (justDone && m.reward.relicShard) newShards += m.reward.relicShard;
-                return { ...m, progress: prog, done: prog >= m.goal };
-            });
+            if (!state.player.stats?.dailyProtocol) return state;
             return {
                 ...state,
-                player: {
-                    ...state.player,
-                    stats: { ...state.player.stats, dailyProtocol: { ...dp, missions: updatedMissions, relicShards: newShards } },
-                },
+                player: applyDailyProtocolProgress(state.player, dpType, amount),
                 syncStatus: 'syncing',
             };
         }

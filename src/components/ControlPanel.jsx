@@ -25,6 +25,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
   const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
+  const getItemCount = (name) => player.inv.filter((item) => item.name === name).length;
 
   if (gameState === 'combat') {
     return (
@@ -121,9 +122,6 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
     );
   }
 
-  // Omitted other popup panels like Quest, Crafting to keep this file reasonable, they will work fine.
-  // Ideally they should also be updated with framer-motion popup later if needed.
-
   if (gameState === 'quest_board') {
     return (
       <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`${overlayPanelClass} bg-cyber-black/95 z-30 p-4 md:p-6 rounded-lg border border-cyber-blue/50 flex flex-col shadow-[0_0_30px_rgba(0,204,255,0.2)] backdrop-blur-xl`}>
@@ -142,16 +140,66 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
               <Motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => actions.acceptQuest(q.id)}
-                disabled={player.quests.some((pq) => pq.id === q.id)}
+                disabled={player.quests.some((pq) => pq.id === q.id) || player.level < q.minLv}
                 className="w-full md:w-auto px-6 py-3 bg-cyber-blue/10 border border-cyber-blue/50 rounded-sm disabled:opacity-30 disabled:border-slate-700 text-cyber-blue text-xs font-bold hover:bg-cyber-blue/30 hover:shadow-[0_0_15px_rgba(0,204,255,0.4)] transition-all whitespace-nowrap tracking-wider min-h-[44px]"
               >
-                {player.quests.some((pq) => pq.id === q.id) ? 'ACCEPTED' : 'ACCEPT MISSION'}
+                {player.quests.some((pq) => pq.id === q.id) ? 'ACCEPTED' : player.level < q.minLv ? `LOCKED Lv.${q.minLv}` : 'ACCEPT MISSION'}
               </Motion.button>
             </div>
           ))}
         </div>
         <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-cyber-dark text-cyber-blue/60 hover:text-cyber-blue py-4 rounded-sm border border-cyber-blue/20 hover:border-cyber-blue/50 font-rajdhani text-lg font-bold tracking-[0.2em] transition-all hover:bg-cyber-blue/5 min-h-[44px]">
           EXIT TERMINAL
+        </button>
+      </Motion.div>
+    );
+  }
+
+  if (gameState === 'crafting') {
+    const recipes = DB.ITEMS.recipes || [];
+    return (
+      <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`${overlayPanelClass} bg-cyber-black/95 z-30 p-4 md:p-6 rounded-lg border border-orange-500/40 flex flex-col shadow-[0_0_30px_rgba(249,115,22,0.2)] backdrop-blur-xl`}>
+        <h2 className="text-2xl text-orange-400 font-bold mb-4 font-rajdhani uppercase tracking-wider flex items-center gap-2 drop-shadow-sm">
+          <Hammer /> Forge Matrix
+        </h2>
+        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
+          {recipes.map((recipe) => {
+            const hasGold = player.gold >= recipe.gold;
+            const hasMaterials = recipe.inputs.every((input) => getItemCount(input.name) >= input.qty);
+            const canCraft = hasGold && hasMaterials;
+            return (
+              <div key={recipe.id} className="bg-cyber-dark/60 p-4 rounded-md border border-orange-500/20 flex flex-col gap-3 hover:border-orange-500/40 transition-colors">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-white font-rajdhani text-lg">{recipe.name}</div>
+                    <div className="text-xs text-orange-300/70 font-fira mt-1">비용: {recipe.gold}G</div>
+                  </div>
+                  <Motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => actions.craft(recipe.id)}
+                    disabled={!canCraft}
+                    className="px-5 py-3 bg-orange-500/10 border border-orange-500/50 rounded-sm disabled:opacity-30 disabled:border-slate-700 text-orange-300 text-xs font-bold hover:bg-orange-500/20 hover:shadow-[0_0_15px_rgba(249,115,22,0.25)] transition-all whitespace-nowrap tracking-wider min-h-[44px]"
+                  >
+                    {canCraft ? 'CRAFT' : 'LOCKED'}
+                  </Motion.button>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-fira">
+                  {recipe.inputs.map((input) => {
+                    const owned = getItemCount(input.name);
+                    const enough = owned >= input.qty;
+                    return (
+                      <span key={`${recipe.id}_${input.name}`} className={`px-2 py-1 rounded border ${enough ? 'border-cyber-green/30 text-cyber-green bg-cyber-green/10' : 'border-red-500/30 text-red-400 bg-red-950/20'}`}>
+                        {input.name} {owned}/{input.qty}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-cyber-dark text-orange-300/70 hover:text-orange-300 py-4 rounded-sm border border-orange-500/20 hover:border-orange-500/50 font-rajdhani text-lg font-bold tracking-[0.2em] transition-all hover:bg-orange-500/5 min-h-[44px]">
+          EXIT FORGE
         </button>
       </Motion.div>
     );

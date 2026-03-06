@@ -41,6 +41,8 @@ const ITEM_TYPE_TO_FILTER = {
     mat: 'material',
 };
 
+const canEquipItem = (item, job) => !Array.isArray(item.jobs) || item.jobs.includes(job);
+
 const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot }) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState(null);
@@ -65,15 +67,15 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     // 추천 장착 계산 (최고 val 기준)
     const bestWeapon = useMemo(() =>
         player.inv
-            .filter(i => i.type === 'weapon')
+            .filter(i => i.type === 'weapon' && canEquipItem(i, player.job))
             .sort((a, b) => (b.val || 0) - (a.val || 0))[0],
-        [player.inv]
+        [player.inv, player.job]
     );
     const bestArmor = useMemo(() =>
         player.inv
-            .filter(i => i.type === 'armor')
+            .filter(i => i.type === 'armor' && canEquipItem(i, player.job))
             .sort((a, b) => (b.val || 0) - (a.val || 0))[0],
-        [player.inv]
+        [player.inv, player.job]
     );
 
     const getCompareDiff = (item) => {
@@ -156,6 +158,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 )}
                 {filtered.map(({ item, count }, i) => {
                     const diff = getCompareDiff(item);
+                    const canEquip = !['weapon', 'armor', 'shield'].includes(item.type) || canEquipItem(item, player.job);
                     const isCurrentEquip =
                         player.equip?.weapon?.name === item.name ||
                         player.equip?.armor?.name === item.name ||
@@ -179,6 +182,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     </span>
                                     {count > 1 && <span className="text-cyber-blue/30 text-xs">x{count}</span>}
                                     {isCurrentEquip && <span className="text-cyber-green text-xs border border-cyber-green/30 px-1 rounded font-fira">장착 중</span>}
+                                    {!canEquip && <span className="text-red-400 text-xs border border-red-500/30 px-1 rounded font-fira">직업 제한</span>}
                                 </div>
 
                                 {/* Compare diff (on hover or always for equip items) */}
@@ -202,10 +206,11 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                             </div>
                             <Motion.button
                                 whileTap={{ scale: 0.95 }}
+                                disabled={!canEquip}
                                 onClick={() => actions.useItem(item)}
-                                className="text-xs bg-cyber-blue/10 hover:bg-cyber-blue/30 text-cyber-blue px-3 py-2 rounded border border-cyber-blue/30 font-bold min-h-[40px] ml-2 shrink-0"
+                                className="text-xs bg-cyber-blue/10 hover:bg-cyber-blue/30 disabled:opacity-30 disabled:hover:bg-cyber-blue/10 text-cyber-blue px-3 py-2 rounded border border-cyber-blue/30 font-bold min-h-[40px] ml-2 shrink-0"
                             >
-                                {['weapon', 'armor', 'shield'].includes(item.type) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
+                                {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
                             </Motion.button>
                         </Motion.div>
                     );

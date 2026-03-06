@@ -20,7 +20,7 @@
 | State | `useReducer` + Custom Hooks (Hooks-based architecture) |
 | Audio | Web Audio API (외부 에셋 불필요) |
 | AI | Optional Proxy (Gemini / GPT — 이벤트 생성) |
-| Mobile | Capacitor 8 (iOS PWA 패키징) |
+| Mobile | Capacitor 8 (iOS + Android 네이티브 래핑) |
 
 ---
 
@@ -129,6 +129,7 @@ App.jsx
 
 - Node.js v18+ (개발 환경: v24.13.1)
 - npm
+- Native builds: Xcode, Java 21, Android command-line tools or Android Studio
 
 ### Installation
 
@@ -146,7 +147,13 @@ cp .env.example .env.local   # (파일이 있는 경우)
 
 # 4. 개발 서버 실행
 npm run dev
+
+# 5. 네이티브 앱 동기화
+npm run ios:sync
+npm run android:sync
 ```
+
+네이티브 빌드 상세 절차는 `docs/MOBILE_SETUP.md`, 스토어 배포 절차는 `docs/MOBILE_RELEASE.md` 참고.
 
 ### Environment Variables
 

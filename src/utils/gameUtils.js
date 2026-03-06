@@ -32,6 +32,38 @@ export const getAllItems = () => [
 /** 이름으로 아이템을 찾아 반환 */
 export const findItemByName = (name) => getAllItems().find((i) => i.name === name);
 
+/** 일일 프로토콜 진행으로 이번 액션에서 막 완료될 미션 목록 반환 */
+export const getDailyProtocolCompletions = (player, type, amount = 1) => {
+    const missions = toArray(player?.stats?.dailyProtocol?.missions);
+    return missions.filter((mission) => (
+        mission?.type === type
+        && !mission.done
+        && ((mission.progress || 0) + amount) >= mission.goal
+    ));
+};
+
+/** 일일 프로토콜 보상 텍스트 포맷 */
+export const formatDailyProtocolReward = (reward = {}) => {
+    if (reward.essence) return `에센스 ${reward.essence}`;
+    if (reward.item) return reward.item;
+    if (reward.relicShard) return `유물 조각 ${reward.relicShard}`;
+    return '보상';
+};
+
+/** 골드 획득을 누적 통계와 함께 반영 */
+export const grantGold = (player, amount = 0) => {
+    if (!amount) return player;
+    const stats = player.stats || {};
+    return {
+        ...player,
+        gold: (player.gold || 0) + amount,
+        stats: {
+            ...stats,
+            total_gold: (stats.total_gold || 0) + Math.max(0, amount),
+        }
+    };
+};
+
 // Milestone Utility
 export const checkMilestones = (killRegistry, lastKillName) => {
     const rewards = [];

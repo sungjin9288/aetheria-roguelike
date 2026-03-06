@@ -284,15 +284,16 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                     <div className="space-y-1 max-h-28 overflow-y-auto custom-scrollbar">
                                         {player.titles.map((id) => {
                                             const t = TITLES.find(t => t.id === id);
-                                            if (!t) return null;
                                             const isActive = player.activeTitle === id;
+                                            const titleLabel = t?.name || String(id);
+                                            const titleColor = t?.color || 'text-cyber-purple';
                                             return (
                                                 <button
                                                     key={id}
-                                                    onClick={() => actions.setPlayer?.({ activeTitle: isActive ? null : id })}
+                                                    onClick={() => actions.setActiveTitle?.(isActive ? null : id)}
                                                     className={`w-full text-left text-xs px-2 py-1 rounded transition-colors ${isActive ? 'bg-yellow-900/40 border border-yellow-600/50' : 'hover:bg-gray-800/50'}`}
                                                 >
-                                                    <span className={`font-bold ${t.color}`}>[{t.name}]</span>
+                                                    <span className={`font-bold ${titleColor}`}>[{titleLabel}]</span>
                                                     {isActive && <span className="text-yellow-500 text-[10px] ml-2">활성</span>}
                                                 </button>
                                             );
@@ -452,7 +453,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
                 <div className="space-y-3">
                     <ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="VIT (HP)" />
-                    <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="NRG (MP)" />
+                    <ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="NRG (MP)" />
                 </div>
 
                 <div className="border border-cyber-blue/20 rounded-md p-3 bg-cyber-dark/30 space-y-2">
@@ -536,7 +537,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             </div>
                             <div className="mt-1.5 flex gap-2">
                                 <div className="flex-1"><ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="HP" /></div>
-                                <div className="flex-1"><ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="MP" /></div>
+                                <div className="flex-1"><ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="MP" /></div>
                             </div>
                         </div>
                     </div>
@@ -564,7 +565,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
                             <div className="space-y-3">
                                 <ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="VITALITY" />
-                                <ProgressBar value={player?.mp} max={player?.maxMp} variant="mp" label="ENERGY" />
+                                <ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="ENERGY" />
                                 <ProgressBar value={player?.exp} max={player?.nextExp} variant="exp" label="EXPERIENCE" />
                             </div>
 

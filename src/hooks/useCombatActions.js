@@ -3,7 +3,7 @@ import { BALANCE } from '../data/constants';
 import { CombatEngine } from '../systems/CombatEngine';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
-import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles } from '../utils/gameUtils';
+import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold } from '../utils/gameUtils';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -18,6 +18,19 @@ const getSelectedSkill = (player) => {
  */
 export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog, addStoryLog, getFullStats }) => {
     let pendingEnemyTurn = null;
+    const emitDailyProtocolLogs = (type, amount = 1) => {
+        const completed = getDailyProtocolCompletions(player, type, amount);
+        completed.forEach((mission) => {
+            addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);
+        });
+    };
+    const emitUnlockedTitles = (updatedPlayer) => {
+        const newTitles = checkTitles(updatedPlayer);
+        if (newTitles.length > 0) {
+            dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
+            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${id}]`));
+        }
+    };
 
     return {
 
@@ -76,10 +89,15 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     milestoneRewards.forEach((reward) => {
                         addLog('event', reward.msg);
                         if (reward.type === 'gold') {
-                            updatedPlayer = { ...updatedPlayer, gold: updatedPlayer.gold + reward.val };
+                            updatedPlayer = grantGold(updatedPlayer, reward.val);
                         } else if (reward.type === 'item') {
                             const itemDef = findItemByName(reward.val);
                             if (itemDef) updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemDef)] };
+                        } else if (reward.type === 'title') {
+                            updatedPlayer = {
+                                ...updatedPlayer,
+                                titles: [...new Set([...(updatedPlayer.titles || []), reward.val])]
+                            };
                         }
                     });
                 }
@@ -96,17 +114,10 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     addLog('system', `심연의 더 깊은 곳으로 진입했습니다. (현재: ${currentDepth + 1}층)`);
                 }
 
-                // 일일 프로토콜 — 킬 카운트 업데이트
-                dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills' } });
-
-                // 칭호 체크
-                const newTitles = checkTitles(updatedPlayer);
-                if (newTitles.length > 0) {
-                    dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-                    newTitles.forEach(id => addLog('system', `🏆 칭호 획득: [${id}]`));
-                }
-
                 dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+                dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
+                emitDailyProtocolLogs('kills', 1);
+                emitUnlockedTitles(updatedPlayer);
 
                 // 마왕 처치 → 에테르 환생
                 if (victoryResult.isDemonKingSlain) {
@@ -176,6 +187,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
                     dispatch({ type: 'SET_GAME_STATE', payload: 'dead' });
                     dispatch({ type: 'SET_ENEMY', payload: null });
+                    emitUnlockedTitles(defeatResult.updatedPlayer);
                     defeatResult.logs.forEach((log) => addLog(log.type, log.text));
                     addStoryLog('death', { loc: playerForEnemyTurn.loc });
                 }
@@ -210,6 +222,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
                     dispatch({ type: 'SET_GAME_STATE', payload: 'dead' });
                     dispatch({ type: 'SET_ENEMY', payload: null });
+                    emitUnlockedTitles(defeatResult.updatedPlayer);
                     defeatResult.logs.forEach((log) => addLog(log.type, log.text));
                     addStoryLog('death', { loc: player.loc });
                 } else {

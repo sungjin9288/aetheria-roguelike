@@ -45,7 +45,11 @@ function App() {
   const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
 
   // QuickSlot use handler
-  const handleQuickSlotUse = (item) => {
+  const handleQuickSlotUse = (item, index) => {
+    if (!engine.player.inv.some((entry) => entry.id === item?.id)) {
+      if (typeof index === 'number') engine.actions.setQuickSlot?.(index, null);
+      return;
+    }
     engine.actions.useItem(item);
   };
 
@@ -277,16 +281,14 @@ function App() {
       )}
 
       {/* Post-Combat Result Card */}
-      {!isMobileViewport && (
-        <Suspense fallback={null}>
-          <PostCombatCard
-            result={engine.postCombatResult}
-            onClose={() => engine.actions.clearPostCombat?.()}
-            onRest={() => engine.actions.rest?.()}
-            onSell={() => engine.actions.setSideTab?.('inventory')}
-          />
-        </Suspense>
-      )}
+      <Suspense fallback={null}>
+        <PostCombatCard
+          result={engine.postCombatResult}
+          onClose={() => engine.actions.clearPostCombat?.()}
+          onRest={() => engine.actions.rest?.()}
+          onSell={() => engine.actions.setSideTab?.('inventory')}
+        />
+      </Suspense>
 
       {/* Auto-Explore Floating Button */}
       {engine.gameState === 'idle' && (

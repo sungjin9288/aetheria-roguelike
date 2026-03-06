@@ -26,6 +26,11 @@ dist-ssr
 .vercel
 .env
 .env*.local
+*.jks
+*.keystore
+android/key.properties
+build/ios
+build/android
 
 # Build logs (Windows 잔여물 방지)
 build_*.txt

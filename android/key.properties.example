@@ -1,0 +1,4 @@
+storeFile=/absolute/path/to/aetheria-release.jks
+storePassword=change-me
+keyAlias=aetheria
+keyPassword=change-me

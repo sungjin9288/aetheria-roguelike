@@ -2,16 +2,41 @@ import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { CLASSES } from '../data/classes';
 import { AI_SERVICE } from '../services/aiService';
-import { toArray, getJobSkills, makeItem, findItemByName, checkTitles } from '../utils/gameUtils';
+import { toArray, getJobSkills, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold } from '../utils/gameUtils';
 import { BOSS_MONSTERS } from '../data/monsters';
 import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics';
 import { PRESTIGE_TITLES } from '../data/titles';
 import { AT } from '../reducers/actionTypes';
+import { INITIAL_STATE } from '../reducers/gameReducer';
+import { CombatEngine } from '../systems/CombatEngine';
+
+const buildClassVitals = (level, jobId, meta = {}) => {
+    const cls = CLASSES[jobId] || CLASSES['전사'] || CLASSES['모험가'];
+    const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod) + Math.max(0, level - 1) * 20 + (meta.bonusHp || 0);
+    const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod) + Math.max(0, level - 1) * 10 + (meta.bonusMp || 0);
+    return { maxHp, maxMp };
+};
 
 /**
  * useGameActions — 이동, 탐색, 휴식, 이벤트, 직업, 퀘스트 수락, 시작, 리셋
  */
-export const createGameActions = ({ player, gameState, uid, grave, currentEvent, isAiThinking, dispatch, addLog, addStoryLog, getFullStats }) => ({
+export const createGameActions = ({ player, gameState, uid, grave, currentEvent, isAiThinking, dispatch, addLog, addStoryLog, getFullStats }) => {
+    const emitUnlockedTitles = (updatedPlayer) => {
+        const newTitles = checkTitles(updatedPlayer);
+        if (newTitles.length > 0) {
+            dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
+            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${id}]`));
+        }
+    };
+
+    const emitDailyProtocolLogs = (type, amount = 1) => {
+        const completed = getDailyProtocolCompletions(player, type, amount);
+        completed.forEach((mission) => {
+            addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);
+        });
+    };
+
+    return ({
 
     move: (loc) => {
         if (isAiThinking) return;
@@ -19,8 +44,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             const exits = DB.MAPS[player.loc].exits.join(', ');
             return addLog('info', `이동 가능한 지역: ${exits}`);
         }
-        if (gameState === 'combat') return addLog('error', '전투 중에는 이동할 수 없습니다.');
-        if (gameState === 'shop') return addLog('error', '상점을 닫고 이동하세요.');
+        if (!['idle', 'moving'].includes(gameState)) return addLog('error', '지금은 이동할 수 없는 상태입니다.');
 
         const targetMap = DB.MAPS[loc];
         if (!targetMap) return addLog('error', '존재하지 않는 지역입니다.');
@@ -38,15 +62,15 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     start: (name, gender = 'male', jobId = '전사') => {
         if (!name.trim()) return;
         const cls = CLASSES[jobId] || CLASSES['전사'];
-        const BASE_HP = 150, BASE_MP = 50;
+        const vitals = buildClassVitals(player.level || 1, jobId, player.meta || {});
         dispatch({ type: 'SET_PLAYER', payload: {
             name: name.trim(),
             gender,
             job: jobId,
-            maxHp: Math.floor(BASE_HP * cls.hpMod),
-            hp:    Math.floor(BASE_HP * cls.hpMod),
-            maxMp: Math.floor(BASE_MP * cls.mpMod),
-            mp:    Math.floor(BASE_MP * cls.mpMod),
+            maxHp: vitals.maxHp,
+            hp: vitals.maxHp,
+            maxMp: vitals.maxMp,
+            mp: vitals.maxMp,
         }});
         addLog('system', `[${jobId}] ${name.trim()} 에이전트 — 에테리아 접속 완료.`);
         addLog('event', `직업 "${jobId}" 선택됨. 첫 스킬: ${cls.skills[0]?.name || '강타'}`);
@@ -116,6 +140,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         }
         // 일일 프로토콜 — 탐색 카운트 업데이트
         dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
+        emitDailyProtocolLogs('explores', 1);
 
         if (Math.random() < BALANCE.EVENT_CHANCE_NOTHING) {
             const hasKey = player.inv.some(i => i.name === '잊혀진 열쇠');
@@ -141,7 +166,11 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 const anomaly = anomalies[Math.floor(Math.random() * anomalies.length)];
                 addLog('warning', `[기상 이변] ${anomaly.desc}`);
                 if (anomaly.effect === 'mana_regen') {
-                    dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, mp: Math.min(p.maxMp, p.mp + Math.floor(p.maxMp * 0.3)) }) });
+                    const stats = getFullStats();
+                    dispatch({
+                        type: 'SET_PLAYER',
+                        payload: (p) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * 0.3)) })
+                    });
                 } else {
                     dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])] }) });
                 }
@@ -260,41 +289,51 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         let resultText = '';
         const selectedOutcome = toArray(currentEvent.outcomes).find((o) => o.choiceIndex === idx) || null;
         const roll = Math.random();
+        let updatedPlayer = player;
 
         if (selectedOutcome) {
-            dispatch({
-                type: 'SET_PLAYER',
-                payload: (p) => {
-                    const stats = getFullStats();
-                    const next = { ...p };
-                    if (selectedOutcome.gold) next.gold += selectedOutcome.gold;
-                    if (selectedOutcome.exp) next.exp += selectedOutcome.exp;
-                    if (selectedOutcome.hp) next.hp = Math.max(1, Math.min(stats.maxHp, next.hp + selectedOutcome.hp));
-                    if (selectedOutcome.mp) next.mp = Math.max(0, Math.min(next.maxMp, next.mp + selectedOutcome.mp));
-                    if (selectedOutcome.item) {
-                        const itemDef = findItemByName(selectedOutcome.item);
-                        if (itemDef) next.inv = [...next.inv, makeItem(itemDef)];
-                    }
-                    return next;
-                }
-            });
+            if (selectedOutcome.gold) updatedPlayer = grantGold(updatedPlayer, selectedOutcome.gold);
+            if (selectedOutcome.exp) {
+                const expResult = CombatEngine.applyExpGain(updatedPlayer, selectedOutcome.exp);
+                updatedPlayer = expResult.updatedPlayer;
+                expResult.logs.forEach((log) => addLog(log.type, log.text));
+                if (expResult.visualEffect) dispatch({ type: 'SET_VISUAL_EFFECT', payload: expResult.visualEffect });
+            }
+            if (selectedOutcome.hp) {
+                updatedPlayer = {
+                    ...updatedPlayer,
+                    hp: Math.max(1, Math.min(updatedPlayer.maxHp, updatedPlayer.hp + selectedOutcome.hp))
+                };
+            }
+            if (selectedOutcome.mp) {
+                updatedPlayer = {
+                    ...updatedPlayer,
+                    mp: Math.max(0, Math.min(updatedPlayer.maxMp, updatedPlayer.mp + selectedOutcome.mp))
+                };
+            }
+            if (selectedOutcome.item) {
+                const itemDef = findItemByName(selectedOutcome.item);
+                if (itemDef) updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemDef)] };
+            }
             resultText = selectedOutcome.log || '선택의 결과가 반영되었습니다.';
             addLog('event', resultText);
         } else if (roll > 0.4) {
             const rewardGold = player.level * 50;
-            dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, gold: p.gold + rewardGold }) });
+            updatedPlayer = grantGold(updatedPlayer, rewardGold);
             resultText = `성공! ${rewardGold}G를 획득했습니다.`;
             addLog('success', resultText);
         } else {
-            const stats = getFullStats();
-            const dmg = Math.floor(stats.maxHp * 0.1);
-            dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, hp: Math.max(1, p.hp - dmg) }) });
+            const dmg = Math.floor(Math.max(1, updatedPlayer.maxHp) * 0.1);
+            updatedPlayer = { ...updatedPlayer, hp: Math.max(1, updatedPlayer.hp - dmg) };
             resultText = `실패... ${dmg} 피해를 입었습니다.`;
             addLog('error', resultText);
         }
 
+        const levelQuestSync = CombatEngine.updateQuestProgress(updatedPlayer, '');
+        updatedPlayer = { ...updatedPlayer, quests: levelQuestSync.updatedQuests };
+
         const newHistory = [
-            ...player.history,
+            ...updatedPlayer.history,
             {
                 timestamp: Date.now(),
                 event: currentEvent.desc,
@@ -303,7 +342,9 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             }
         ].slice(-50);
 
-        dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, history: newHistory }) });
+        updatedPlayer = { ...updatedPlayer, history: newHistory };
+        dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+        emitUnlockedTitles(updatedPlayer);
         dispatch({ type: 'SET_EVENT', payload: null });
         dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
     },
@@ -315,19 +356,23 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (player.gold < BALANCE.REST_COST) return addLog('error', '골드가 부족합니다.');
 
         const stats = getFullStats();
+        const updatedPlayer = {
+            ...player,
+            gold: player.gold - BALANCE.REST_COST,
+            hp: stats.maxHp,
+            mp: stats.maxMp,
+            stats: {
+                ...(player.stats || {}),
+                rests: (player.stats?.rests || 0) + 1
+            }
+        };
         dispatch({
             type: 'SET_PLAYER',
-            payload: (p) => ({
-                ...p,
-                gold: p.gold - BALANCE.REST_COST,
-                hp: stats.maxHp,
-                mp: p.maxMp,
-                stats: {
-                    ...(p.stats || {}),
-                    rests: (p.stats?.rests || 0) + 1
-                }
-            })
+            payload: updatedPlayer
         });
+        dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: BALANCE.REST_COST } });
+        emitDailyProtocolLogs('goldSpend', BALANCE.REST_COST);
+        emitUnlockedTitles(updatedPlayer);
         addLog('success', '휴식 완료. HP/MP가 회복되었습니다.');
         addStoryLog('rest', { loc: player.loc });
     },
@@ -339,7 +384,23 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     },
 
     jobChange: (jobName) => {
-        dispatch({ type: 'SET_PLAYER', payload: { job: jobName } });
+        const current = DB.CLASSES[player.job];
+        if (!current?.next?.includes(jobName)) return addLog('error', '전직 가능한 직업이 아닙니다.');
+        if (player.level < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', '전직 레벨이 부족합니다.');
+
+        const vitals = buildClassVitals(player.level, jobName, player.meta || {});
+        dispatch({
+            type: 'SET_PLAYER',
+            payload: {
+                job: jobName,
+                maxHp: vitals.maxHp,
+                hp: vitals.maxHp,
+                maxMp: vitals.maxMp,
+                mp: vitals.maxMp,
+                skillLoadout: { selected: 0, cooldowns: {} }
+            }
+        });
+        dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
         addLog('success', `${jobName} 전직 완료!`);
     },
 
@@ -347,19 +408,27 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (player.quests.some((q) => q.id === qId)) return addLog('error', '이미 수락한 퀘스트입니다.');
         const qData = DB.QUESTS.find((q) => q.id === qId);
         if (!qData) return;
-        dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, quests: [...p.quests, { id: qId, progress: 0 }] }) });
+        if (player.level < (qData.minLv || 1)) return addLog('error', `레벨 ${qData.minLv} 이상이어야 수락 가능합니다.`);
+        dispatch({
+            type: 'SET_PLAYER',
+            payload: (p) => ({
+                ...p,
+                quests: [...p.quests, { id: qId, progress: qData.target === 'Level' ? p.level : 0 }]
+            })
+        });
         addLog('event', `퀘스트 수락: ${qData.title}`);
     },
 
     lootGrave: () => {
         if (!grave) return;
         let logMsg = `유해 회수: ${grave.gold}G 획득`;
-        const updates = { gold: player.gold + grave.gold };
+        let updatedPlayer = grantGold(player, grave.gold);
         if (grave.item) {
-            updates.inv = [...player.inv, makeItem(grave.item)];
+            updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(grave.item)] };
             logMsg += `, ${grave.item.name} 획득`;
         }
-        dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, ...updates }) });
+        dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+        emitUnlockedTitles(updatedPlayer);
         dispatch({ type: 'SET_GRAVE', payload: null });
         addLog('success', logMsg);
     },
@@ -428,7 +497,32 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             totalPrestigeMp:  (meta.totalPrestigeMp  || 0) + BALANCE.PRESTIGE_MP_BONUS,
         };
         const title = PRESTIGE_TITLES[Math.min(rank - 1, PRESTIGE_TITLES.length - 1)];
+        const projectedPlayer = {
+            ...INITIAL_STATE.player,
+            name: player.name,
+            gender: player.gender,
+            meta: newMeta,
+            titles: [...new Set([...(player.titles || []), title])],
+            activeTitle: title,
+            stats: {
+                ...INITIAL_STATE.player.stats,
+                kills: player.stats.kills,
+                bossKills: player.stats.bossKills,
+                deaths: player.stats.deaths,
+                total_gold: player.stats.total_gold,
+                relicCount: player.stats.relicCount,
+                abyssFloor: player.stats.abyssFloor,
+                demonKingSlain: (player.stats.demonKingSlain || 0) + 1,
+                bountiesCompleted: player.stats.bountiesCompleted,
+                crafts: player.stats.crafts,
+            }
+        };
+        const ascensionTitles = checkTitles(projectedPlayer);
         dispatch({ type: AT.ASCEND, payload: { meta: newMeta, newTitle: title } });
+        if (ascensionTitles.length > 0) {
+            dispatch({ type: AT.UNLOCK_TITLES, payload: ascensionTitles });
+            ascensionTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${id}]`));
+        }
         addLog('system', `⚡ [에테르 환생 ${rank}회] ${title} 칭호 획득! 영구 보너스 적용됨.`);
     },
 
@@ -437,4 +531,5 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
         addLog('info', '환생을 취소했습니다. 여정을 계속합니다.');
     },
-});
+    });
+};

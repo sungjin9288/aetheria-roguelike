@@ -198,6 +198,7 @@ export const useGameEngine = () => {
                 setGameState: (val) => dispatch({ type: 'SET_GAME_STATE', payload: val }),
                 setShopItems: (val) => dispatch({ type: 'SET_SHOP_ITEMS', payload: val }),
                 setAiThinking: (val) => dispatch({ type: 'SET_AI_THINKING', payload: val }),
+                setActiveTitle: (val) => dispatch({ type: 'SET_PLAYER', payload: { activeTitle: val } }),
 
                 // Feature Actions
                 setQuickSlot: (index, item) => dispatch({ type: 'SET_QUICK_SLOT', payload: { index, item } }),
