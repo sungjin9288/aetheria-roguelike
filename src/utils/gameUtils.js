@@ -50,6 +50,29 @@ export const formatDailyProtocolReward = (reward = {}) => {
     return '보상';
 };
 
+/** 일반 보상 텍스트 배열 포맷 */
+export const formatRewardParts = (reward = {}) => {
+    const parts = [];
+    if (reward.exp) parts.push(`EXP ${reward.exp}`);
+    if (reward.gold) parts.push(`${reward.gold}G`);
+    if (reward.item) parts.push(reward.item);
+    if (reward.essence) parts.push(`에센스 ${reward.essence}`);
+    if (reward.relicShard) parts.push(`유물 조각 ${reward.relicShard}`);
+    return parts;
+};
+
+/** 칭호 메타데이터 조회 */
+export const getTitleDefinition = (token) => TITLES.find((title) => title.id === token) || null;
+
+/** 칭호 표시 이름 반환 (ID 또는 문자열 모두 지원) */
+export const getTitleLabel = (token) => {
+    if (!token) return '';
+    return getTitleDefinition(token)?.name || String(token);
+};
+
+/** 칭호 색상 반환 */
+export const getTitleColor = (token) => getTitleDefinition(token)?.color || 'text-cyber-purple';
+
 /** 골드 획득을 누적 통계와 함께 반영 */
 export const grantGold = (player, amount = 0) => {
     if (!amount) return player;
@@ -63,6 +86,40 @@ export const grantGold = (player, amount = 0) => {
         }
     };
 };
+
+/** 플레이어의 활성 퀘스트를 화면 렌더링용으로 정규화 */
+export const getActiveQuestEntries = (player) => (
+    toArray(player?.quests)
+        .map((questState) => {
+            const quest = questState?.isBounty
+                ? questState
+                : DB.QUESTS.find((entry) => entry.id === questState?.id);
+            if (!quest) return null;
+
+            const progress = questState?.progress || 0;
+            return {
+                id: questState.id,
+                quest,
+                progress,
+                isBounty: Boolean(questState?.isBounty),
+                isComplete: progress >= (quest.goal || 0),
+            };
+        })
+        .filter(Boolean)
+);
+
+/** 업적 진행값 계산 */
+export const getAchievementCurrentValue = (achievement, player) => {
+    const stats = player?.stats || {};
+    const target = achievement?.target;
+    if (target === 'level') return player?.level || 0;
+    return stats?.[target] || 0;
+};
+
+/** 업적 달성 여부 */
+export const isAchievementUnlocked = (achievement, player) => (
+    getAchievementCurrentValue(achievement, player) >= (achievement?.goal || 0)
+);
 
 // Milestone Utility
 export const checkMilestones = (killRegistry, lastKillName) => {
@@ -159,6 +216,7 @@ export const migrateData = (rawData) => {
     target.stats.bountyDate = target.stats.bountyDate || null;
     target.stats.bountyIssued = Boolean(target.stats.bountyIssued);
     target.stats.bountiesCompleted = target.stats.bountiesCompleted || 0;
+    target.stats.claimedAchievements = Array.isArray(target.stats.claimedAchievements) ? target.stats.claimedAchievements : [];
 
     if (!Array.isArray(savedData.quickSlots)) {
         savedData.quickSlots = [null, null, null];
@@ -172,6 +230,12 @@ export const migrateData = (rawData) => {
     target.relics = Array.isArray(target.relics) ? target.relics : [];
     target.titles = Array.isArray(target.titles) ? target.titles : [];
     target.activeTitle = target.activeTitle || null;
+    target.combatFlags = {
+        comboCount: 0,
+        deathSaveUsed: false,
+        voidHeartUsed: Boolean(target.combatFlags?.voidHeartUsed),
+        voidHeartArmed: Boolean(target.combatFlags?.voidHeartArmed),
+    };
     target.meta.prestigeRank    = target.meta.prestigeRank    || 0;
     target.meta.totalPrestigeAtk = target.meta.totalPrestigeAtk || 0;
     target.meta.totalPrestigeHp  = target.meta.totalPrestigeHp  || 0;

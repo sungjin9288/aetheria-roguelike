@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap } from 'lucide-react';
+import { getTitleLabel } from '../utils/gameUtils';
 
 const SHARE_TEXT = (s) =>
 `⚔️ AETHERIA RUN ENDED
 ─────────────────────
-${s.activeTitle ? `[${s.activeTitle}] ` : ''}${s.job} Lv.${s.level}
+${s.activeTitle ? `[${getTitleLabel(s.activeTitle)}] ` : ''}${s.job} Lv.${s.level}
 📍 ${s.loc}에서 전사
 
 🗡️ 처치: ${s.kills.toLocaleString()}마리 (보스 ${s.bossKills}회)
@@ -63,7 +64,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                     </Motion.div>
                     <div className="text-2xl font-bold text-white font-rajdhani">
                         {s.activeTitle
-                            ? <><span className="text-cyber-purple">[{s.activeTitle}]</span> {s.job}</>
+                            ? <><span className="text-cyber-purple">[{getTitleLabel(s.activeTitle)}]</span> {s.job}</>
                             : s.job
                         }
                     </div>

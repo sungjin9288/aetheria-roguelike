@@ -2,7 +2,7 @@ import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { CLASSES } from '../data/classes';
 import { AI_SERVICE } from '../services/aiService';
-import { toArray, getJobSkills, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold } from '../utils/gameUtils';
+import { toArray, getJobSkills, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel } from '../utils/gameUtils';
 import { BOSS_MONSTERS } from '../data/monsters';
 import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics';
 import { PRESTIGE_TITLES } from '../data/titles';
@@ -11,7 +11,7 @@ import { INITIAL_STATE } from '../reducers/gameReducer';
 import { CombatEngine } from '../systems/CombatEngine';
 
 const buildClassVitals = (level, jobId, meta = {}) => {
-    const cls = CLASSES[jobId] || CLASSES['전사'] || CLASSES['모험가'];
+    const cls = CLASSES[jobId] || CLASSES['모험가'];
     const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod) + Math.max(0, level - 1) * 20 + (meta.bonusHp || 0);
     const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod) + Math.max(0, level - 1) * 10 + (meta.bonusMp || 0);
     return { maxHp, maxMp };
@@ -25,7 +25,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         const newTitles = checkTitles(updatedPlayer);
         if (newTitles.length > 0) {
             dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${id}]`));
+            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
         }
     };
 
@@ -59,9 +59,9 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (grave && grave.loc === loc) addLog('event', '근처에서 당신의 유해를 발견했습니다.');
     },
 
-    start: (name, gender = 'male', jobId = '전사') => {
+    start: (name, gender = 'male', jobId = '모험가') => {
         if (!name.trim()) return;
-        const cls = CLASSES[jobId] || CLASSES['전사'];
+        const cls = CLASSES[jobId] || CLASSES['모험가'];
         const vitals = buildClassVitals(player.level || 1, jobId, player.meta || {});
         dispatch({ type: 'SET_PLAYER', payload: {
             name: name.trim(),
@@ -97,7 +97,12 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (player.loc === '시작의 마을') return addLog('info', '마을 주변은 평화롭습니다.');
 
         const mapData = DB.MAPS[player.loc];
-        if (Math.random() < (mapData.eventChance || 0)) {
+        const playerRelics = player.relics || [];
+        const eventChanceBonus = playerRelics.reduce((acc, relic) => (
+            relic.effect === 'event_chance' ? acc + relic.val : acc
+        ), 0);
+        const effectiveEventChance = Math.min(0.95, (mapData.eventChance || 0) * (1 + eventChanceBonus));
+        if (Math.random() < effectiveEventChance) {
             dispatch({ type: 'SET_GAME_STATE', payload: 'event' });
             dispatch({ type: 'SET_AI_THINKING', payload: true });
             try {
@@ -178,9 +183,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             }
 
             // v4.0: 유물 발견 (조용한 탐색 중 8% 확률)
-            const currentRelics = player.relics || [];
-            if (currentRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE) {
-                const available = RELICS.filter(r => !currentRelics.some(pr => pr.id === r.id));
+            if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE) {
+                const available = RELICS.filter(r => !playerRelics.some(pr => pr.id === r.id));
                 if (available.length > 0) {
                     const candidates = pickWeightedRelics(available, 3);
                     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
@@ -193,9 +197,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         }
 
         // v4.0: 유물 발견 (전투 직전에도 기회)
-        const currentRelicsBeforeCombat = player.relics || [];
-        if (currentRelicsBeforeCombat.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
-            const available = RELICS.filter(r => !currentRelicsBeforeCombat.some(pr => pr.id === r.id));
+        if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
+            const available = RELICS.filter(r => !playerRelics.some(pr => pr.id === r.id));
             if (available.length > 0) {
                 const candidates = pickWeightedRelics(available, 3);
                 dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
@@ -204,7 +207,16 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             }
         }
 
-        const baseName = mapData.monsters[Math.floor(Math.random() * mapData.monsters.length)];
+        const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
+        let encounterPool = [...(mapData.monsters || [])];
+        const bossHunterRelic = playerRelics.find((relic) => relic.effect === 'boss_hunter');
+        if (bossHunterRelic && mapBossMonsters.length > 0) {
+            for (let i = 1; i < Math.max(1, Math.floor(bossHunterRelic.val.spawn || 1)); i += 1) {
+                encounterPool = [...encounterPool, ...mapBossMonsters];
+            }
+        }
+
+        const baseName = encounterPool[Math.floor(Math.random() * encounterPool.length)];
         let level = mapData.level || 1;
         let isInfinite = false;
         let depth = 0;
@@ -251,7 +263,6 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             // v4.0: 보스 Phase2 데이터 전달
             if (profile.phase2) mStats.phase2 = profile.phase2;
         }
-        const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
         mStats.isBoss = Boolean(
             profile?.isBoss
             || mapBossMonsters.includes(baseName)
@@ -277,6 +288,47 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             }
         }
 
+        const fullStats = getFullStats();
+        let combatStartPlayer = {
+            ...player,
+            combatFlags: {
+                comboCount: 0,
+                deathSaveUsed: false,
+                voidHeartUsed: Boolean(player.combatFlags?.voidHeartUsed),
+                voidHeartArmed: Boolean(player.combatFlags?.voidHeartArmed),
+            }
+        };
+
+        const startHealRelic = playerRelics.find((relic) => relic.effect === 'battle_start_heal');
+        if (startHealRelic) {
+            const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * startHealRelic.val));
+            combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
+            addLog('heal', `[재생 코어] 전투 시작 회복 +${heal} HP`);
+        }
+
+        const cursedPowerRelic = playerRelics.find((relic) => relic.effect === 'cursed_power');
+        if (cursedPowerRelic) {
+            const selfDamage = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * cursedPowerRelic.val.hp_cost));
+            combatStartPlayer.hp = Math.max(1, (combatStartPlayer.hp || 1) - selfDamage);
+            addLog('warning', `[저주받은 반지] 전투 시작 대가 -${selfDamage} HP`);
+        }
+
+        const chaosBuffRelic = playerRelics.find((relic) => relic.effect === 'chaos_buff');
+        if (chaosBuffRelic) {
+            const existingBuff = { atk: 0, def: 0, turn: 0, name: null, ...(combatStartPlayer.tempBuff || {}) };
+            const rollAtk = Math.random() < 0.5;
+            const baseAtk = existingBuff.name === '혼돈의 보석' ? 0 : existingBuff.atk;
+            const baseDef = existingBuff.name === '혼돈의 보석' ? 0 : existingBuff.def;
+            combatStartPlayer.tempBuff = {
+                atk: baseAtk + (rollAtk ? chaosBuffRelic.val : 0),
+                def: baseDef + (rollAtk ? 0 : chaosBuffRelic.val),
+                turn: Math.max(existingBuff.turn || 0, 3),
+                name: '혼돈의 보석'
+            };
+            addLog('event', `[혼돈의 보석] ${rollAtk ? 'ATK' : 'DEF'} +${Math.round(chaosBuffRelic.val * 100)}% 버프`);
+        }
+
+        dispatch({ type: 'SET_PLAYER', payload: combatStartPlayer });
         dispatch({ type: 'SET_ENEMY', payload: mStats });
         dispatch({ type: 'SET_GAME_STATE', payload: 'combat' });
         addLog('combat', `${mStats.name} 등장!`);
@@ -521,7 +573,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         dispatch({ type: AT.ASCEND, payload: { meta: newMeta, newTitle: title } });
         if (ascensionTitles.length > 0) {
             dispatch({ type: AT.UNLOCK_TITLES, payload: ascensionTitles });
-            ascensionTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${id}]`));
+            ascensionTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
         }
         addLog('system', `⚡ [에테르 환생 ${rank}회] ${title} 칭호 획득! 영구 보너스 적용됨.`);
     },

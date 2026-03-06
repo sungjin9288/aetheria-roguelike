@@ -12,6 +12,7 @@ import { MSG } from '../data/messages';
 export const CombatEngine = {
     DEFAULT_SKILL_LOADOUT: { selected: 0, cooldowns: {} },
     DEFAULT_META: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
+    DEFAULT_COMBAT_FLAGS: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
 
     resolveEnemyBaseName(enemy) {
         if (!enemy) return '';
@@ -44,9 +45,61 @@ export const CombatEngine = {
         };
     },
 
+    getCombatFlags(player) {
+        return { ...this.DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
+    },
+
+    getEffectiveMaxMp(player, relics = []) {
+        const rmp = 1 + relics.reduce((acc, relic) => {
+            if (relic.effect === 'mp_mult') return acc + relic.val;
+            if (relic.effect === 'omega') return acc + relic.val;
+            return acc;
+        }, 0);
+        return Math.floor((player?.maxMp || 50) * rmp);
+    },
+
+    applyCritMpRestore(player, relics = [], logs = []) {
+        const critMpRelic = relics.find((relic) => relic.effect === 'crit_mp_regen');
+        if (!critMpRelic) return player;
+
+        const nextMp = Math.min(this.getEffectiveMaxMp(player, relics), (player.mp || 0) + critMpRelic.val);
+        if (nextMp > (player.mp || 0)) {
+            logs.push({ type: 'event', text: `[피의 갈증] +${nextMp - (player.mp || 0)} MP` });
+        }
+        return { ...player, mp: nextMp };
+    },
+
+    applyFatalProtection(player, relics = [], incomingDamage = 0, logs = []) {
+        const flags = this.getCombatFlags(player);
+        let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
+
+        if (nextHp <= 0) {
+            const deathSaveRelic = relics.find((relic) => relic.effect === 'death_save');
+            if (deathSaveRelic && !flags.deathSaveUsed) {
+                nextHp = 1;
+                flags.deathSaveUsed = true;
+                logs.push({ type: 'event', text: '[불사의 의지] 치명상을 버텼습니다!' });
+            } else {
+                const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
+                if (voidHeartRelic && !flags.voidHeartUsed) {
+                    nextHp = 1;
+                    flags.voidHeartUsed = true;
+                    flags.voidHeartArmed = true;
+                    logs.push({ type: 'event', text: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!' });
+                }
+            }
+        }
+
+        return {
+            updatedPlayer: { ...player, hp: nextHp, combatFlags: flags },
+            isDead: nextHp <= 0
+        };
+    },
+
     tickCombatState(player) {
         const logs = [];
         const updated = { ...player };
+        const relics = updated.relics || [];
         const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const nextCooldowns = { ...(loadout.cooldowns || {}) };
 
@@ -82,12 +135,24 @@ export const CombatEngine = {
             logs.push({ type: 'warning', text: MSG.STATUS_DOT(s, dmg) });
         });
 
+        const mpRegenRelic = relics.find((relic) => relic.effect === 'mp_regen_turn');
+        if (mpRegenRelic) {
+            const nextMp = Math.min(this.getEffectiveMaxMp(updated, relics), (updated.mp || 0) + mpRegenRelic.val);
+            if (nextMp > (updated.mp || 0)) {
+                updated.mp = nextMp;
+                logs.push({ type: 'event', text: `[비전 서지] +${mpRegenRelic.val} MP` });
+            }
+        }
+
         return { updatedPlayer: updated, logs };
     },
 
-    attack(_player, enemy, stats) {
+    attack(player, enemy, stats) {
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
+        const logs = [];
+        let updatedPlayer = { ...player, combatFlags: this.getCombatFlags(player) };
+        const flags = this.getCombatFlags(player);
 
         // 유물: 방어 무시 (armor_pen)
         const apRelic = relics.find(r => r.effect === 'armor_pen');
@@ -107,9 +172,30 @@ export const CombatEngine = {
 
         // 유물: 처형자의 날 (execute_bonus) — 적 HP 25% 미만 시 추가 피해
         const exRelic = relics.find(r => r.effect === 'execute_bonus');
-        const finalDamage = (exRelic && enemy.hp / (enemy.maxHp || 1) < exRelic.val.threshold)
+        const executeTriggered = Boolean(exRelic && enemy.hp / (enemy.maxHp || 1) < exRelic.val.threshold);
+        let finalDamage = executeTriggered
             ? Math.floor(damage * (1 + exRelic.val.mult))
             : damage;
+
+        const comboRelic = relics.find((relic) => relic.effect === 'combo_stack');
+        let comboTriggered = false;
+        if (comboRelic) {
+            if ((flags.comboCount || 0) >= comboRelic.val.stack) {
+                finalDamage = Math.floor(finalDamage * (1 + comboRelic.val.bonus));
+                flags.comboCount = 0;
+                comboTriggered = true;
+            } else {
+                flags.comboCount = (flags.comboCount || 0) + 1;
+            }
+        }
+
+        const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
+        let voidHeartTriggered = false;
+        if (voidHeartRelic && flags.voidHeartArmed) {
+            finalDamage = Math.floor(finalDamage * voidHeartRelic.val.dmg_mult);
+            flags.voidHeartArmed = false;
+            voidHeartTriggered = true;
+        }
 
         const newEnemyHp = enemy.hp - finalDamage;
         const tags = [];
@@ -118,18 +204,28 @@ export const CombatEngine = {
         if (elementMultiplier < 1) tags.push('속성 저항');
         if (dsRelic) tags.push('연격');
         if (apRelic) tags.push('방어 무시');
+        if (comboTriggered) tags.push('연속 베기');
+        if (voidHeartTriggered) tags.push('허공 각성');
 
-        const logs = [{
+        updatedPlayer = { ...updatedPlayer, combatFlags: flags };
+        if (isCrit) {
+            updatedPlayer = this.applyCritMpRestore(updatedPlayer, relics, logs);
+        }
+
+        logs.unshift({
             type: isCrit ? 'critical' : 'combat',
             text: MSG.COMBAT_ATTACK_DETAIL(enemy.name, finalDamage, Math.max(0, newEnemyHp), enemy.maxHp, tags)
-        }];
+        });
         if (isCrit) logs.push({ type: 'critical', text: MSG.COMBAT_CRIT });
         if (elementMultiplier > 1) logs.push({ type: 'success', text: MSG.COMBAT_WEAKNESS });
         if (elementMultiplier < 1) logs.push({ type: 'warning', text: MSG.COMBAT_RESIST });
         if (dsRelic && secondHit > 0) logs.push({ type: 'event', text: `[쌍검 각인] 연격! +${secondHit}` });
-        if (exRelic && finalDamage > damage) logs.push({ type: 'event', text: `[처형자의 날] 처형 피해!` });
+        if (executeTriggered) logs.push({ type: 'event', text: `[처형자의 날] 처형 피해!` });
+        if (comboTriggered) logs.push({ type: 'event', text: '[연격의 반지] 축적된 연격이 폭발했습니다!' });
+        if (voidHeartTriggered) logs.push({ type: 'event', text: '[허공의 심장] 허공 각성 일격!' });
 
         return {
+            updatedPlayer,
             updatedEnemy: { ...enemy, hp: newEnemyHp, guarding: false },
             logs,
             isCrit,
@@ -167,7 +263,11 @@ export const CombatEngine = {
             elementMultiplier
         });
 
-        const extraDamage = ['burn', 'poison', 'bleed'].includes(skill.effect) ? Math.floor(damage * 0.2) : 0;
+        const dotRelic = relics.find((relic) => relic.effect === 'dot_mult');
+        const dotMult = dotRelic ? dotRelic.val : 1;
+        const extraDamage = ['burn', 'poison', 'bleed'].includes(skill.effect)
+            ? Math.floor(damage * 0.2 * dotMult)
+            : 0;
 
         // 유물: 정신 연소 (skill_mult) — 스킬 피해 70% 증가
         const smRelic = relics.find(r => r.effect === 'skill_mult');
@@ -183,15 +283,29 @@ export const CombatEngine = {
         const updatedPlayer = {
             ...player,
             mp: player.mp - actualMpCost,
-            skillLoadout: { selected: loadout.selected || 0, cooldowns: { ...cooldowns } }
+            skillLoadout: { selected: loadout.selected || 0, cooldowns: { ...cooldowns } },
+            combatFlags: {
+                ...this.getCombatFlags(player),
+                comboCount: 0
+            }
         };
         updatedPlayer.skillLoadout.cooldowns[skill.name] = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
+        const logs = [{
+            type: isCrit ? 'critical' : 'combat',
+            text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp)
+        }];
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
         const slRelic = relics.find(r => r.effect === 'skill_lifesteal');
         if (slRelic) {
             const heal = Math.floor(totalDamage * slRelic.val);
             updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + heal);
+        }
+        if (isCrit) {
+            const critLogs = [];
+            const restoredPlayer = this.applyCritMpRestore(updatedPlayer, relics, critLogs);
+            updatedPlayer.mp = restoredPlayer.mp;
+            critLogs.forEach((entry) => logs.push(entry));
         }
 
         if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk'].includes(skill.effect)) {
@@ -209,10 +323,6 @@ export const CombatEngine = {
             updatedPlayer.tempBuff = buff;
         }
 
-        const logs = [{
-            type: isCrit ? 'critical' : 'combat',
-            text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp)
-        }];
         if (elementMultiplier > 1) logs.push({ type: 'success', text: MSG.COMBAT_WEAKNESS });
         if (elementMultiplier < 1) logs.push({ type: 'warning', text: MSG.COMBAT_RESIST });
         if (extraDamage > 0) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(skill.effect, extraDamage) });
@@ -225,6 +335,7 @@ export const CombatEngine = {
             if (healAmt > 0) logs.push({ type: 'heal', text: `[영혼 흡수] +${healAmt} HP` });
         }
         if (smRelic && smRelic.val > 0) logs.push({ type: 'event', text: `[정신 연소] 스킬 피해 강화!` });
+        if (dotRelic && extraDamage > 0) logs.push({ type: 'event', text: '[죽음의 낙인] 지속 피해가 증폭됩니다!' });
 
         return {
             success: true,
@@ -288,10 +399,16 @@ export const CombatEngine = {
         }
 
         const heavy = roll < pattern.guardChance + pattern.heavyChance;
-        const mult = heavy ? 1.4 : 1;
+        const relics = stats.relics || [];
+        let mult = heavy ? 1.4 : 1;
+        const critBlockRelic = relics.find((relic) => relic.effect === 'crit_block');
+        if (heavy && critBlockRelic && Math.random() < critBlockRelic.val) {
+            mult = 1;
+            logs.push({ type: 'event', text: '[강철 의지] 강타를 흘려냈습니다!' });
+        }
+        const heavyResolved = heavy && mult > 1;
 
         // 유물: 가시 갑옷 (reflect) — 피격 시 적에게 반사
-        const relics = stats.relics || [];
         const reflectRelic = relics.find(r => r.effect === 'reflect');
         const reflectDmg = reflectRelic ? Math.floor(stats.def * reflectRelic.val) : 0;
         const enemyHpAfterReflect = reflectDmg > 0 ? Math.max(0, updatedEnemy.hp - reflectDmg) : updatedEnemy.hp;
@@ -301,16 +418,16 @@ export const CombatEngine = {
         }
 
         const enemyDmg = Math.max(1, Math.floor((updatedEnemy.atk * mult) - stats.def));
-        const newPlayerHp = Math.max(0, updatedPlayer.hp - enemyDmg);
+        const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs);
 
         return {
-            updatedPlayer: { ...updatedPlayer, hp: newPlayerHp },
+            updatedPlayer: protectedResult.updatedPlayer,
             updatedEnemy: { ...updatedEnemy, guarding: false },
             damage: enemyDmg,
-            isDead: newPlayerHp <= 0,
+            isDead: protectedResult.isDead,
             logs: [...logs, {
-                type: heavy ? 'critical' : 'warning',
-                text: heavy ? MSG.COMBAT_ENEMY_HEAVY_HIT(updatedEnemy.name, enemyDmg) : MSG.COMBAT_ENEMY_HIT(updatedEnemy.name, enemyDmg)
+                type: heavyResolved ? 'critical' : 'warning',
+                text: heavyResolved ? MSG.COMBAT_ENEMY_HEAVY_HIT(updatedEnemy.name, enemyDmg) : MSG.COMBAT_ENEMY_HIT(updatedEnemy.name, enemyDmg)
             }]
         };
     },
@@ -426,7 +543,22 @@ export const CombatEngine = {
         leveledUp = expResult.leveledUp;
         visualEffect = expResult.visualEffect;
 
-        return { updatedPlayer: expResult.updatedPlayer, logs, leveledUp, visualEffect, expGained, goldGained, isDemonKingSlain };
+        return {
+            updatedPlayer: {
+                ...expResult.updatedPlayer,
+                combatFlags: {
+                    ...this.getCombatFlags(expResult.updatedPlayer),
+                    comboCount: 0,
+                    deathSaveUsed: false
+                }
+            },
+            logs,
+            leveledUp,
+            visualEffect,
+            expGained,
+            goldGained,
+            isDemonKingSlain
+        };
     },
 
     updateQuestProgress(player, enemyName) {
@@ -458,16 +590,19 @@ export const CombatEngine = {
         return { updatedQuests, completedCount };
     },
 
-    processLoot(enemy) {
+    processLoot(enemy, player = null) {
         const items = [];
         const logs = [];
         const lootKey = this.resolveEnemyBaseName(enemy) || enemy.name;
         const lootList = LOOT_TABLE[lootKey] || LOOT_TABLE[enemy.name];
+        const relics = player?.relics || [];
+        const dropRateMult = 1 + (relics.find((relic) => relic.effect === 'drop_rate')?.val || 0);
+        const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
 
         if (!lootList || lootList.length === 0) return { items: [], logs: [] };
 
         lootList.forEach((itemName) => {
-            const chance = BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0);
+            const chance = Math.min(1, BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
             if (Math.random() < chance) {
                 const itemData = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]
                     .find((i) => i.name === itemName);

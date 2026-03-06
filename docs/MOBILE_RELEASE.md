@@ -2,6 +2,8 @@
 
 스토어 배포 직전 단계에서 반복 실행할 수 있는 릴리즈 절차를 정리한 문서입니다.
 
+Xcode, TestFlight, Play Console 화면 기준의 상세 순서는 `docs/STORE_SUBMISSION_GUIDE.md`를 참고합니다.
+
 ## 1. 공통 사전 점검
 
 ```bash

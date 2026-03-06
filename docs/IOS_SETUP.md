@@ -56,6 +56,8 @@ npm run ios:sync
 6. TestFlight 내부 테스터 배포 후 실제 플레이 검증
 7. 문제 없으면 App Store 심사 제출
 
+CLI와 App Store Connect를 포함한 전체 순서는 `docs/STORE_SUBMISSION_GUIDE.md` 참고
+
 ## 7) 배포 반복 루틴
 
 1. 코드 수정

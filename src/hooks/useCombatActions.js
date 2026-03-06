@@ -3,7 +3,7 @@ import { BALANCE } from '../data/constants';
 import { CombatEngine } from '../systems/CombatEngine';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
-import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold } from '../utils/gameUtils';
+import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel } from '../utils/gameUtils';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -28,7 +28,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
         const newTitles = checkTitles(updatedPlayer);
         if (newTitles.length > 0) {
             dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${id}]`));
+            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
         }
     };
 
@@ -53,6 +53,8 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 dispatch({ type: 'SET_PLAYER', payload: result.updatedPlayer });
             } else {
                 result = CombatEngine.attack(playerAtActionStart, enemyAtActionStart, stats);
+                playerAfterAction = result.updatedPlayer;
+                dispatch({ type: 'SET_PLAYER', payload: result.updatedPlayer });
             }
 
             result.logs.forEach((log) => addLog(log.type, log.text));
@@ -73,7 +75,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     addLog('system', `퀘스트 조건 달성: ${questResult.completedCount}개`);
                 }
 
-                const lootResult = CombatEngine.processLoot(enemyAtActionStart);
+                const lootResult = CombatEngine.processLoot(enemyAtActionStart, updatedPlayer);
                 lootResult.logs.forEach((log) => addLog(log.type, log.text));
                 if (lootResult.items.length > 0) {
                     updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
@@ -96,7 +98,8 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                         } else if (reward.type === 'title') {
                             updatedPlayer = {
                                 ...updatedPlayer,
-                                titles: [...new Set([...(updatedPlayer.titles || []), reward.val])]
+                                titles: [...new Set([...(updatedPlayer.titles || []), reward.val])],
+                                activeTitle: updatedPlayer.activeTitle || reward.val
                             };
                         }
                     });
@@ -202,9 +205,11 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
                 dispatch({ type: 'SET_ENEMY', payload: null });
             } else {
-                const escapedHp = Math.max(0, player.hp - (escapeResult.damage || 0));
-                if (escapedHp <= 0) {
-                    const deadPlayer = { ...player, hp: escapedHp };
+                const protectionLogs = [];
+                const protectedResult = CombatEngine.applyFatalProtection(player, stats.relics || [], escapeResult.damage || 0, protectionLogs);
+                protectionLogs.forEach((log) => addLog(log.type, log.text));
+                if (protectedResult.isDead) {
+                    const deadPlayer = protectedResult.updatedPlayer;
                     const runSummary = {
                         level:        deadPlayer.level,
                         job:          deadPlayer.job || '모험가',
@@ -228,7 +233,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 } else {
                     dispatch({
                         type: 'SET_PLAYER',
-                        payload: (p) => ({ ...p, hp: escapedHp })
+                        payload: protectedResult.updatedPlayer
                     });
                 }
             }

@@ -7,7 +7,7 @@ export const QUESTS = [
     { id: 5, title: '호수의 수호자', desc: '물의 정령 5마리 처치', target: '물의 정령', goal: 5, reward: { exp: 350, gold: 400, item: '마나 결정' }, minLv: 5 },
     { id: 6, title: '폐허 탐험', desc: '해골 병사 10마리 처치', target: '해골 병사', goal: 10, reward: { exp: 500, gold: 600 }, minLv: 5 },
     { id: 7, title: '광산 정화', desc: '광석골렘 5마리 처치', target: '광석골렘', goal: 5, reward: { exp: 600, gold: 700, item: '미스릴 원석' }, minLv: 8 },
-    { id: 10, title: '전직의 자격 (1차)', desc: '1차 전직을 위해 레벨 10 달성', target: 'Level', goal: 10, reward: { exp: 0, gold: 1000 }, minLv: 9 },
+    { id: 10, title: '전직의 자격 (1차)', desc: '1차 전직을 위해 레벨 5 달성', target: 'Level', goal: 5, reward: { exp: 0, gold: 1000 }, minLv: 4 },
     // 중반 퀘스트 (Lv 10-25)
     { id: 11, title: '동굴 트롤 토벌', desc: '동굴 트롤 5마리 처치', target: '동굴 트롤', goal: 5, reward: { exp: 800, gold: 1000, item: '전투도끼' }, minLv: 10 },
     { id: 12, title: '사막의 무법자', desc: '사막도적 10마리 처치', target: '사막도적', goal: 10, reward: { exp: 1000, gold: 1500, item: '암살자의 단검' }, minLv: 15 },

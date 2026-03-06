@@ -7,7 +7,7 @@ export const CLASSES = {
         next: ['전사', '마법사', '도적']
     },
     '전사': {
-        tier: 1, reqLv: 10, desc: '체력/공격 특화', hpMod: 1.4, mpMod: 0.6, atkMod: 1.3,
+        tier: 1, reqLv: 5, desc: '체력/공격 특화', hpMod: 1.4, mpMod: 0.6, atkMod: 1.3,
         skills: [
             { name: '파워배시', mp: 15, mult: 2.0, desc: '강력한 내려찍기' },
             { name: '광폭화', mp: 30, type: 'buff', effect: 'atk_up', val: 1.5, turn: 3, desc: 'ATK 50% 상승 3턴' },
@@ -16,7 +16,7 @@ export const CLASSES = {
         next: ['나이트', '버서커']
     },
     '마법사': {
-        tier: 1, reqLv: 10, desc: '마법 공격 특화', hpMod: 0.7, mpMod: 1.8, atkMod: 1.6,
+        tier: 1, reqLv: 5, desc: '마법 공격 특화', hpMod: 0.7, mpMod: 1.8, atkMod: 1.6,
         skills: [
             { name: '화염구', mp: 20, type: '화염', mult: 2.2, effect: 'burn', desc: '화상 부여' },
             { name: '썬더볼트', mp: 45, type: '빛', mult: 3.5, effect: 'stun', desc: '기절 부여' },
@@ -25,7 +25,7 @@ export const CLASSES = {
         next: ['아크메이지', '흑마법사']
     },
     '도적': {
-        tier: 1, reqLv: 10, desc: '치명타/속도', hpMod: 1.0, mpMod: 1.0, atkMod: 1.4,
+        tier: 1, reqLv: 5, desc: '치명타/속도', hpMod: 1.0, mpMod: 1.0, atkMod: 1.4,
         skills: [
             { name: '급소찌르기', mp: 15, mult: 1.8, crit: 0.5, desc: '50% 치명타 확률' },
             { name: '독바르기', mp: 25, type: '자연', mult: 1.5, effect: 'poison', desc: '독 부여' },

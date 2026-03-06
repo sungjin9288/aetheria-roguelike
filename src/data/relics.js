@@ -85,7 +85,7 @@ export const RELICS = [
         name: '암석 피부',
         rarity: 'common',
         desc: 'DEF 25% 증가',
-        effect: 'def_mult',
+        effect: 'stone_skin',
         val: 0.25,
     },
     {

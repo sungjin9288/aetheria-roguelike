@@ -33,6 +33,7 @@ Done (Mobile):
 - Added mobile release automation scripts: `mobile:doctor`, `android:debug`, `android:release`, `android:release:apk`, `ios:build:device`, `ios:archive`.
 - Added `scripts/android-gradle.sh`, `scripts/ios-build-device.sh`, `scripts/ios-archive.sh`, and `android/key.properties.example`.
 - Added `docs/MOBILE_RELEASE.md` and `ios/ExportOptions/AppStore.plist.example` for repeatable store submission prep.
+- Added `docs/STORE_SUBMISSION_GUIDE.md` with step-by-step Xcode/TestFlight/Play Console submission flow and failure interpretation.
 - Added mobile release automation scripts: `mobile:doctor`, `android:debug`, `android:release`, `android:release:apk`, `ios:build:device`, `ios:archive`.
 - Added `scripts/android-gradle.sh`, `scripts/ios-build-device.sh`, `scripts/ios-archive.sh`, and `android/key.properties.example`.
 - Added `docs/MOBILE_RELEASE.md` and `ios/ExportOptions/AppStore.plist.example` for repeatable store submission prep.

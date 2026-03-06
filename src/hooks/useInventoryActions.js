@@ -1,5 +1,6 @@
 import { DB } from '../data/db';
-import { toArray, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold } from '../utils/gameUtils';
+import { BALANCE } from '../data/constants';
+import { toArray, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, isAchievementUnlocked } from '../utils/gameUtils';
 import { isShield, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
@@ -12,7 +13,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         const newTitles = checkTitles(updatedPlayer);
         if (newTitles.length > 0) {
             dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${id}]`));
+            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
         }
     };
 
@@ -174,15 +175,21 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         market: (type, item) => {
             if (gameState !== 'shop') return;
             if (type === 'buy') {
-                if (player.gold >= item.price) {
-                    const updatedPlayer = { ...player, gold: player.gold - item.price, inv: [...player.inv, makeItem(item)] };
-                    dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
-                    dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: item.price } });
-                    emitDailyProtocolLogs('goldSpend', item.price);
-                    addLog('success', `${item.name} 구매 완료.`);
-                } else {
-                    addLog('error', '골드가 부족합니다.');
+                if (player.gold < item.price) return addLog('error', '골드가 부족합니다.');
+                if ((player.inv?.length || 0) >= BALANCE.INV_MAX_SIZE) return addLog('error', '인벤토리가 가득 찼습니다.');
+                if (
+                    ['weapon', 'armor', 'shield'].includes(item.type)
+                    && Array.isArray(item.jobs)
+                    && !item.jobs.includes(player.job)
+                ) {
+                    return addLog('error', `${player.job}은(는) ${item.name}을(를) 장착할 수 없습니다.`);
                 }
+
+                const updatedPlayer = { ...player, gold: player.gold - item.price, inv: [...player.inv, makeItem(item)] };
+                dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+                dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: item.price } });
+                emitDailyProtocolLogs('goldSpend', item.price);
+                addLog('success', `${item.name} 구매 완료.`);
             } else if (type === 'sell') {
                 const sellPrice = Math.floor(item.price * 0.5);
                 const idx = player.inv.findIndex((entry) => entry.id === item.id);
@@ -288,6 +295,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         claimAchievement: (achId) => {
             const achData = DB.ACHIEVEMENTS.find((achievement) => achievement.id === achId);
             if (!achData) return;
+            if (!isAchievementUnlocked(achData, player)) return addLog('error', '아직 달성하지 못한 업적입니다.');
 
             const claimed = player.stats?.claimedAchievements || [];
             if (claimed.includes(achId)) return addLog('info', '이미 수령한 업적입니다.');

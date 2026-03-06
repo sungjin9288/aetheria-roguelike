@@ -141,7 +141,7 @@ export const useGameEngine = () => {
         }, 0);
         const rd = relics.reduce((acc, r) => {
             if (r.effect === 'glass_cannon') return acc + r.val.def; // 음수
-            if (r.effect === 'stone_skin')   return acc + r.val;
+            if (r.effect === 'stone_skin' || r.effect === 'def_mult') return acc + r.val;
             if (r.effect === 'fortress')     return acc + r.val.def;
             if (r.effect === 'omega')        return acc + r.val;
             return acc;

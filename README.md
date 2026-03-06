@@ -153,7 +153,7 @@ npm run ios:sync
 npm run android:sync
 ```
 
-네이티브 빌드 상세 절차는 `docs/MOBILE_SETUP.md`, 스토어 배포 절차는 `docs/MOBILE_RELEASE.md` 참고.
+네이티브 빌드 상세 절차는 `docs/MOBILE_SETUP.md`, 릴리즈 명령 요약은 `docs/MOBILE_RELEASE.md`, 스토어 제출 단계별 가이드는 `docs/STORE_SUBMISSION_GUIDE.md`, 플레이 검증 순서는 `docs/PLAYTEST_CHECKLIST.md` 참고.
 
 ### Environment Variables
 

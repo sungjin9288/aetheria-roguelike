@@ -1,97 +1,309 @@
 import React, { useState } from 'react';
-import { DB } from '../data/db';
+import { BALANCE } from '../data/constants';
+import { isShield, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 
-/**
- * ShopPanel - Separated from ControlPanel to fix React hooks violation
- * Each component manages its own state properly
- */
+const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
+
+const isEquipmentItem = (item) => ['weapon', 'armor', 'shield'].includes(item?.type);
+
+const signedDelta = (value = 0, suffix = '') => `${value >= 0 ? '+' : ''}${value}${suffix}`;
+
+const getComparisonMeta = (item, equip = {}) => {
+    if (!item) return null;
+
+    if (item.type === 'armor') {
+        const current = equip.armor;
+        const delta = (item.val || 0) - (current?.val || 0);
+        return {
+            text: current ? `현재 갑옷 대비 ${signedDelta(delta, ' DEF')}` : `방어력 ${signedDelta(item.val || 0, '')}`,
+            tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
+        };
+    }
+
+    if (item.type === 'shield') {
+        if (isTwoHandWeapon(equip.weapon)) {
+            return { text: '양손 무기 사용 중', tone: 'negative' };
+        }
+        const currentShield = isShield(equip.offhand) ? equip.offhand : null;
+        const delta = (item.val || 0) - (currentShield?.val || 0);
+        return {
+            text: currentShield ? `현재 방패 대비 ${signedDelta(delta, ' DEF')}` : `보조손 DEF ${signedDelta(item.val || 0, '')}`,
+            tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
+        };
+    }
+
+    if (item.type === 'weapon') {
+        const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
+        const offhandWeapon = isWeapon(equip.offhand) ? equip.offhand : null;
+
+        if (isTwoHandWeapon(item)) {
+            const delta = (item.val || 0) - (mainWeapon?.val || 0);
+            return {
+                text: `${mainWeapon ? `주무기 대비 ${signedDelta(delta, ' ATK')}` : `ATK ${signedDelta(item.val || 0, '')}`}${offhandWeapon || isShield(equip.offhand) ? ' / 보조손 해제' : ''}`,
+                tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
+            };
+        }
+
+        if (isTwoHandWeapon(mainWeapon)) {
+            const delta = (item.val || 0) - (mainWeapon?.val || 0);
+            return {
+                text: `양손 무기 해제 후 ${signedDelta(delta, ' ATK')}`,
+                tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
+            };
+        }
+
+        if (!mainWeapon) {
+            return { text: `주무기 ATK ${signedDelta(item.val || 0, '')}`, tone: 'positive' };
+        }
+
+        if (!equip.offhand) {
+            if ((item.val || 0) > (mainWeapon.val || 0)) {
+                return {
+                    text: `주무기 ${signedDelta((item.val || 0) - (mainWeapon.val || 0), ' ATK')} / 기존 무기 보조손 이동`,
+                    tone: 'positive',
+                };
+            }
+            return { text: `빈 보조손에 ATK ${signedDelta(item.val || 0, '')}`, tone: 'positive' };
+        }
+
+        if (isShield(equip.offhand)) {
+            const delta = (item.val || 0) - (mainWeapon.val || 0);
+            return {
+                text: `주무기 대비 ${signedDelta(delta, ' ATK')}`,
+                tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
+            };
+        }
+
+        const weakerWeaponVal = Math.min(mainWeapon.val || 0, offhandWeapon?.val || 0);
+        const delta = (item.val || 0) - weakerWeaponVal;
+        return {
+            text: `약한 손 무기 대비 ${signedDelta(delta, ' ATK')}`,
+            tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
+        };
+    }
+
+    if (item.type === 'hp') return { text: `HP ${item.val || 0} 회복`, tone: 'positive' };
+    if (item.type === 'mp') return { text: `MP ${item.val || 0} 회복`, tone: 'positive' };
+    if (item.type === 'cure') return { text: `${item.effect || '상태이상'} 해제`, tone: 'neutral' };
+    if (item.type === 'buff') return { text: `${item.turn || 0}턴 버프`, tone: 'positive' };
+
+    return null;
+};
+
+const getToneClass = (tone) => {
+    if (tone === 'positive') return 'text-cyber-green border-cyber-green/30 bg-cyber-green/10';
+    if (tone === 'negative') return 'text-red-400 border-red-500/30 bg-red-950/20';
+    return 'text-cyber-blue/80 border-cyber-blue/20 bg-cyber-blue/5';
+};
+
 const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
     const [shopMode, setShopMode] = useState('buy');
+    const [sellConfirmId, setSellConfirmId] = useState(null);
     const loc = player.loc;
-    const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
 
-    // Tier Logic based on location
     let maxTier = 1;
     if (loc === '사막 오아시스') maxTier = 2;
     if (loc === '북부 요새') maxTier = 4;
 
-    // Filter items by tier
-    const buyItems = shopItems.filter(i => (i.tier || 1) <= maxTier);
-    const sellItems = player.inv.filter(i => !String(i.id).startsWith('starter_'));
+    const countOwned = (name) => player.inv.filter((entry) => entry.name === name).length;
+    const canEquipNow = (item) => !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job);
+
+    const buyItems = [...shopItems]
+        .filter((item) => (item.tier || 1) <= maxTier)
+        .sort((a, b) => {
+            const score = (item) => {
+                const affordable = player.gold >= item.price ? 0 : 1;
+                const usable = canEquipNow(item) ? 0 : 2;
+                return affordable + usable;
+            };
+            return score(a) - score(b) || (a.price || 0) - (b.price || 0);
+        });
+
+    const sellItems = [...player.inv]
+        .filter((item) => !String(item.id).startsWith('starter_'))
+        .sort((a, b) => (a.price || 0) - (b.price || 0));
 
     return (
-        <div className={`${overlayPanelClass} md:w-[min(42rem,70%)] lg:w-2/3 bg-slate-900/95 z-20 p-3 md:p-4 rounded border border-slate-700 flex flex-col`}>
-            <div className="flex justify-between items-start gap-2 mb-4">
+        <div className={`${overlayPanelClass} md:w-[min(48rem,78%)] lg:w-[min(58rem,74%)] bg-slate-900/95 z-20 p-3 md:p-5 rounded-xl border border-slate-700 flex flex-col shadow-[0_0_24px_rgba(15,23,42,0.45)] backdrop-blur-xl`}>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
                 <div>
-                    <h2 className="text-xl text-yellow-500 font-bold">
-                        🛒 상점 <span className="text-xs text-slate-500">({loc} - Tier {maxTier})</span>
+                    <h2 className="text-xl md:text-2xl text-yellow-500 font-bold font-rajdhani tracking-wider">
+                        MARKET NODE
                     </h2>
-                    <div className="text-xs text-yellow-300/90 font-fira mt-1">
-                        보유 골드: <span className="font-bold text-yellow-400">{player.gold} CR</span>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[11px] font-fira">
+                        <span className="px-2 py-1 rounded border border-yellow-500/20 bg-yellow-500/10 text-yellow-300">
+                            위치: {loc}
+                        </span>
+                        <span className="px-2 py-1 rounded border border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue">
+                            상점 등급 T{maxTier}
+                        </span>
+                        <span className="px-2 py-1 rounded border border-cyber-green/20 bg-cyber-green/10 text-cyber-green">
+                            골드 {player.gold} CR
+                        </span>
+                        <span className="px-2 py-1 rounded border border-slate-600/60 bg-slate-800/80 text-slate-300">
+                            인벤 {player.inv.length}/{BALANCE.INV_MAX_SIZE}
+                        </span>
                     </div>
+                    <p className="text-xs text-slate-400 font-fira mt-2">
+                        구매 전에 직업 제한, 장비 비교, 보유 수량을 먼저 확인하세요. 판매는 두 번 눌러 확정됩니다.
+                    </p>
                 </div>
-                <div className="flex bg-slate-800 rounded p-1 shrink-0">
+                <div className="flex bg-slate-800 rounded-lg p-1 shrink-0 self-start">
                     <button
-                        onClick={() => setShopMode('buy')}
-                        className={`px-3 py-1 text-xs rounded ${shopMode === 'buy' ? 'bg-yellow-600 text-white' : 'text-slate-400'}`}
+                        onClick={() => {
+                            setShopMode('buy');
+                            setSellConfirmId(null);
+                        }}
+                        className={`px-4 py-2 text-xs rounded-md font-bold transition-colors ${shopMode === 'buy' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}
                     >
                         구매
                     </button>
                     <button
-                        onClick={() => setShopMode('sell')}
-                        className={`px-3 py-1 text-xs rounded ${shopMode === 'sell' ? 'bg-red-600 text-white' : 'text-slate-400'}`}
+                        onClick={() => {
+                            setShopMode('sell');
+                            setSellConfirmId(null);
+                        }}
+                        className={`px-4 py-2 text-xs rounded-md font-bold transition-colors ${shopMode === 'sell' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'}`}
                     >
                         판매
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 auto-rows-[120px] content-start gap-3 custom-scrollbar p-1">
+            <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 auto-rows-[minmax(15rem,auto)] content-start gap-3 custom-scrollbar pr-1">
                 {shopMode === 'buy' ? (
-                    buyItems.map((item, i) => (
-                        <button
-                            key={i}
-                            onClick={() => actions.market('buy', item)}
-                            className="flex h-full flex-col justify-between p-3 bg-slate-800/80 rounded border border-slate-600 hover:bg-slate-700 hover:border-yellow-500/50 hover:shadow-lg transition-all group"
-                        >
-                            <div className="text-left w-full min-h-0 mb-2">
-                                <div className="font-bold text-slate-200 group-hover:text-yellow-300 transition-colors font-rajdhani truncate">{item.name}</div>
-                                <div className="text-xs text-slate-400 font-fira line-clamp-2 h-8">{item.desc_stat || item.desc}</div>
-                            </div>
-                            <div className="w-full flex justify-end border-t border-slate-700/50 pt-2">
-                                <span className="text-yellow-400 font-fira font-bold">{item.price} CR</span>
-                            </div>
-                        </button>
-                    ))
+                    buyItems.length > 0 ? (
+                        buyItems.map((item) => {
+                            const affordable = player.gold >= item.price;
+                            const equipable = canEquipNow(item);
+                            const canBuy = affordable && equipable;
+                            const ownedCount = countOwned(item.name);
+                            const comparison = getComparisonMeta(item, player.equip);
+
+                            return (
+                                <div
+                                    key={item.name}
+                                    className={`flex flex-col rounded-xl border p-4 transition-all ${canBuy ? 'bg-slate-800/80 border-slate-600 hover:border-yellow-500/50 hover:shadow-[0_0_18px_rgba(234,179,8,0.12)]' : 'bg-slate-900/70 border-slate-700/80'}`}
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <div className="font-bold text-slate-100 font-rajdhani text-lg truncate">{item.name}</div>
+                                            <div className="text-xs text-slate-400 font-fira mt-1 leading-relaxed">{item.desc_stat || item.desc}</div>
+                                        </div>
+                                        <span className="shrink-0 text-yellow-400 font-fira font-bold text-sm">{item.price} CR</span>
+                                    </div>
+
+                                    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-fira">
+                                        <span className="px-2 py-1 rounded border border-slate-600/70 bg-slate-900/80 text-slate-300">T{item.tier || 1}</span>
+                                        {ownedCount > 0 && (
+                                            <span className="px-2 py-1 rounded border border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue">보유 {ownedCount}</span>
+                                        )}
+                                        {isEquipmentItem(item) && (
+                                            <span className={`px-2 py-1 rounded border ${equipable ? 'border-cyber-green/20 bg-cyber-green/10 text-cyber-green' : 'border-red-500/30 bg-red-950/20 text-red-400'}`}>
+                                                {equipable ? '현재 직업 사용 가능' : `${player.job} 장착 불가`}
+                                            </span>
+                                        )}
+                                        {item.hands === 2 && (
+                                            <span className="px-2 py-1 rounded border border-purple-500/20 bg-purple-500/10 text-purple-300">2H</span>
+                                        )}
+                                        {item.elem && (
+                                            <span className="px-2 py-1 rounded border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">{item.elem}</span>
+                                        )}
+                                    </div>
+
+                                    {comparison && (
+                                        <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] font-fira ${getToneClass(comparison.tone)}`}>
+                                            {comparison.text}
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-3">
+                                        <div className="text-[11px] font-fira text-slate-400">
+                                            {!affordable ? '골드가 부족합니다.' : !equipable && isEquipmentItem(item) ? '현재 직업으로는 장착할 수 없습니다.' : '즉시 구매 가능'}
+                                        </div>
+                                        <button
+                                            onClick={() => actions.market('buy', item)}
+                                            disabled={!canBuy}
+                                            className="min-h-[44px] rounded-lg border px-4 py-2 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-40 border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/10 hover:border-yellow-400"
+                                        >
+                                            {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className="col-span-full text-center text-slate-500 py-10 font-rajdhani border border-dashed border-slate-700 rounded-xl">
+                            현재 지역에서 판매 중인 아이템이 없습니다.
+                        </div>
+                    )
                 ) : (
                     sellItems.length > 0 ? (
-                        sellItems.map((item, i) => (
-                            <button
-                                key={i}
-                                onClick={() => actions.market('sell', item)}
-                                className="flex h-full flex-col justify-between p-3 bg-slate-800/80 rounded border border-slate-600 hover:bg-slate-700 hover:border-red-500/50 hover:shadow-lg transition-all group"
-                            >
-                                <div className="text-left w-full min-h-0 mb-2">
-                                    <div className="font-bold text-red-300 group-hover:text-red-200 font-rajdhani truncate">{item.name}</div>
-                                    <div className="text-xs text-slate-400 font-fira line-clamp-2 h-8">{item.desc_stat || item.desc}</div>
+                        sellItems.map((item) => {
+                            const isConfirming = sellConfirmId === item.id;
+                            const sellPrice = Math.floor((item.price || 0) * 0.5);
+                            const comparison = getComparisonMeta(item, player.equip);
+
+                            return (
+                                <div
+                                    key={item.id}
+                                    className={`flex flex-col rounded-xl border p-4 transition-all ${isConfirming ? 'bg-red-950/30 border-red-500/50 shadow-[0_0_16px_rgba(239,68,68,0.12)]' : 'bg-slate-800/80 border-slate-600 hover:border-red-500/40'}`}
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <div className="font-bold text-red-300 font-rajdhani text-lg truncate">{item.name}</div>
+                                            <div className="text-xs text-slate-400 font-fira mt-1 leading-relaxed">{item.desc_stat || item.desc}</div>
+                                        </div>
+                                        <span className="shrink-0 text-yellow-400 font-fira font-bold text-sm">+{sellPrice} CR</span>
+                                    </div>
+
+                                    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-fira">
+                                        <span className="px-2 py-1 rounded border border-slate-600/70 bg-slate-900/80 text-slate-300">T{item.tier || 1}</span>
+                                        <span className="px-2 py-1 rounded border border-red-500/20 bg-red-950/20 text-red-300">
+                                            판매가 {sellPrice} CR
+                                        </span>
+                                    </div>
+
+                                    {comparison && (
+                                        <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] font-fira ${getToneClass(comparison.tone)}`}>
+                                            {comparison.text}
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-3">
+                                        <div className="text-[11px] font-fira text-slate-400">
+                                            {isConfirming ? '다시 누르면 판매가 확정됩니다.' : '판매는 돌이킬 수 없습니다.'}
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                if (isConfirming) {
+                                                    actions.market('sell', item);
+                                                    setSellConfirmId(null);
+                                                    return;
+                                                }
+                                                setSellConfirmId(item.id);
+                                            }}
+                                            className={`min-h-[44px] rounded-lg border px-4 py-2 text-xs font-bold transition-all ${isConfirming ? 'border-red-400 bg-red-600/20 text-red-200 hover:bg-red-600/30' : 'border-red-500/40 text-red-300 hover:bg-red-500/10 hover:border-red-400'}`}
+                                        >
+                                            {isConfirming ? '정말 판매' : '판매'}
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="w-full flex justify-end border-t border-slate-700/50 pt-2">
-                                    <span className="text-yellow-400 font-fira font-bold">+{Math.floor(item.price * 0.5)} CR</span>
-                                </div>
-                            </button>
-                        ))
+                            );
+                        })
                     ) : (
-                        <div className="col-span-full text-center text-slate-500 py-10 font-rajdhani border border-dashed border-slate-700 rounded">
-                            NO ITEMS TO SELL
+                        <div className="col-span-full text-center text-slate-500 py-10 font-rajdhani border border-dashed border-slate-700 rounded-xl">
+                            판매할 수 있는 아이템이 없습니다.
                         </div>
                     )
                 )}
             </div>
+
             <button
                 onClick={() => setGameState('idle')}
-                className="mt-4 w-full bg-slate-700 py-3 rounded hover:bg-slate-600"
+                className="mt-4 w-full min-h-[44px] rounded-lg border border-slate-600 bg-slate-800 py-3 text-sm font-bold text-slate-200 transition-colors hover:bg-slate-700"
             >
-                나가기
+                상점 닫기
             </button>
         </div>
     );
