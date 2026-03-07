@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Bot, AlertTriangle, CheckCircle, Terminal } from 'lucide-react';
+import { Bot, AlertTriangle, CheckCircle, Terminal, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
@@ -54,10 +54,20 @@ const LOG_STYLES = {
 
 const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
 
+const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system']);
+const SUMMARY_LOG_COUNT = 6; // 요약 모드에서 표시할 최근 로그 수
+
 const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobile = false, player, quickSlots, onQuickSlotUse }) => {
     const endRef = useRef(null);
     const inputRef = useRef(null);
     const [inputValue, setInputValue] = useState('');
+    const [logExpanded, setLogExpanded] = useState(false); // #10: 전투 로그 요약/전체 토글
+
+    // 전투 모드 전환 시 요약 모드로 초기화
+    useEffect(() => {
+        if (gameState === 'combat') setLogExpanded(false);
+    }, [gameState]);
+
     useEffect(() => {
         if (endRef.current) {
             endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -98,6 +108,15 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
         ? "bg-cyber-purple/10 border-cyber-purple/50 shadow-[0_0_20px_rgba(188,19,254,0.15)]"
         : "bg-cyber-black/90 border-cyber-green/30 shadow-[0_0_15px_rgba(0,255,157,0.1)]";
 
+    // #10: 전투 중 로그 필터링 — 요약 모드에서는 전투 관련 최근 N개만 표시
+    const isCombat = gameState === 'combat';
+    const displayLogs = isCombat && !logExpanded
+        ? logs.filter(l => COMBAT_LOG_TYPES.has(l.type)).slice(-SUMMARY_LOG_COUNT)
+        : logs;
+    const hiddenCount = isCombat && !logExpanded
+        ? Math.max(0, logs.length - displayLogs.length)
+        : 0;
+
     return (
         <div className={`min-w-0 ${mobile ? 'h-[clamp(16rem,42dvh,30rem)] min-h-[16rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border rounded-lg p-3 md:p-4 md:px-5 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
             {/* Scanline overlay */}
@@ -105,6 +124,21 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                 className="absolute inset-0 z-0 opacity-10 pointer-events-none"
                 style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 0.6px, transparent 0.6px)', backgroundSize: '3px 3px' }}
             ></div>
+
+            {/* #10: 전투 로그 모드 토글 버튼 */}
+            {isCombat && (
+                <div className="flex items-center justify-between mb-1.5 shrink-0 z-10">
+                    <span className="text-[10px] text-cyber-blue/40 font-fira flex items-center gap-1">
+                        <Filter size={10} /> COMBAT LOG {logExpanded ? '(전체)' : `(최근 ${SUMMARY_LOG_COUNT})`}
+                    </span>
+                    <button
+                        onClick={() => setLogExpanded(v => !v)}
+                        className="text-[10px] flex items-center gap-1 text-cyber-blue/50 hover:text-cyber-blue px-2 py-0.5 rounded border border-cyber-blue/20 hover:border-cyber-blue/40 transition-all"
+                    >
+                        {logExpanded ? <><ChevronUp size={10} /> 요약</> : <><ChevronDown size={10} /> 전체 {hiddenCount > 0 ? `(+${hiddenCount})` : ''}</>}
+                    </button>
+                </div>
+            )}
 
             <div className="flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
                 {logs.length === 0 && (
@@ -121,7 +155,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                 )}
 
                 <AnimatePresence initial={false}>
-                    {logs.map((log) => {
+                    {displayLogs.map((log) => {
                         const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
                         const IconComp = style.icon;
 

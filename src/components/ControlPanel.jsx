@@ -76,6 +76,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
   if (gameState === 'combat') {
     return (
       <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 mt-3 md:mt-4 relative z-10 w-full">
+        {/* 스킬 상태 표시 바 */}
         <div className="text-xs text-cyber-blue/60 font-fira text-center uppercase tracking-widest bg-cyber-black/50 py-1.5 rounded border border-cyber-blue/10 backdrop-blur-sm">
           {selectedSkill ? (
             <span>
@@ -85,7 +86,54 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
             <span className="text-slate-500">NO SKILL SELECTED</span>
           )}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+
+        {/* #11 모바일: 2행 레이아웃 (PC: 4열 가로) */}
+        {/* 모바일에서 ATTACK / ESCAPE 는 위 행, SKILL / SWAP은 아래 행 */}
+        <div className="grid grid-cols-2 gap-2 md:hidden">
+          <Motion.button
+            whileTap={{ scale: 0.95 }}
+            disabled={isAiThinking}
+            onClick={() => { soundManager.play('attack'); actions.combat('attack'); }}
+            className="min-h-[72px] bg-red-900/20 hover:bg-red-900/40 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] border border-red-500/50 p-4 rounded-lg text-red-400 font-bold flex flex-col items-center justify-center disabled:opacity-50 transition-all group backdrop-blur-md"
+          >
+            <Sword className="group-hover:scale-110 transition-transform mb-1.5" size={24} />
+            <span className="font-rajdhani tracking-wider text-base">ATTACK</span>
+            <span className="text-[10px] text-red-500/50 font-fira mt-0.5">[1]</span>
+          </Motion.button>
+          <Motion.button
+            whileTap={{ scale: 0.95 }}
+            disabled={isAiThinking}
+            onClick={() => actions.combat('escape')}
+            className="min-h-[72px] bg-cyber-dark/60 hover:bg-cyber-green/20 border border-cyber-green/40 p-4 rounded-lg text-cyber-green/80 hover:text-cyber-green font-bold flex flex-col items-center justify-center disabled:opacity-50 transition-all group backdrop-blur-md"
+          >
+            <ArrowRight className="group-hover:translate-x-2 transition-transform mb-1.5" size={24} />
+            <span className="font-rajdhani tracking-wider text-base">ESCAPE</span>
+            <span className="text-[10px] text-cyber-green/30 font-fira mt-0.5">[3]</span>
+          </Motion.button>
+        </div>
+        <div className="grid grid-cols-2 gap-2 md:hidden">
+          <Motion.button
+            whileTap={{ scale: 0.95 }}
+            disabled={isAiThinking || !selectedSkill}
+            onClick={() => actions.combat('skill')}
+            className="min-h-[56px] bg-cyber-blue/20 hover:bg-cyber-blue/40 hover:shadow-[0_0_20px_rgba(0,204,255,0.4)] border border-cyber-blue/50 p-3 rounded-lg text-cyber-blue font-bold flex flex-row items-center justify-center gap-2 disabled:opacity-50 transition-all group backdrop-blur-md"
+          >
+            <Zap className="group-hover:scale-110 transition-transform" size={18} />
+            <span className="font-rajdhani tracking-wider">SKILL <span className="text-[10px] text-cyber-blue/40 font-fira">[2]</span></span>
+          </Motion.button>
+          <Motion.button
+            whileTap={{ scale: 0.95 }}
+            disabled={isAiThinking || !selectedSkill}
+            onClick={() => actions.cycleSkill(1)}
+            className="min-h-[56px] bg-cyber-purple/20 hover:bg-cyber-purple/40 hover:shadow-[0_0_20px_rgba(188,19,254,0.4)] border border-cyber-purple/50 p-3 rounded-lg text-cyber-purple font-bold flex flex-row items-center justify-center gap-2 disabled:opacity-50 transition-all group backdrop-blur-md"
+          >
+            <RotateCw className="group-hover:rotate-180 transition-transform duration-500" size={18} />
+            <span className="font-rajdhani tracking-wider">SWAP SKILL</span>
+          </Motion.button>
+        </div>
+
+        {/* PC: 기존 4열 가로 배치 */}
+        <div className="hidden md:grid grid-cols-4 gap-3">
           <Motion.button
             whileTap={{ scale: 0.95 }}
             disabled={isAiThinking}
@@ -122,6 +170,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
       </Motion.div>
     );
   }
+
 
   if (gameState === 'event' && isAiThinking) {
     return (
@@ -388,17 +437,17 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
             whileTap={{ scale: 0.95 }}
             disabled={isAiThinking}
             onClick={() => { soundManager.play('click'); actions.explore(); }}
-            className="min-h-[70px] bg-cyber-dark/60 hover:bg-cyber-blue/10 border border-cyber-blue/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(0,204,255,0.2)] hover:border-cyber-blue/50 transition-all group backdrop-blur-sm"
+            className="min-h-[56px] bg-cyber-dark/60 hover:bg-cyber-blue/10 border border-cyber-blue/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(0,204,255,0.2)] hover:border-cyber-blue/50 transition-all group backdrop-blur-sm"
           >
-            <MapIcon size={22} className="text-cyber-blue group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-cyber-blue/90">EXPLORE</span>
+            <MapIcon size={18} className="text-cyber-blue group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-cyber-blue/90">EXPLORE</span>
           </Motion.button>
           <Motion.button
             whileTap={{ scale: 0.95 }}
             disabled={isAiThinking}
             onClick={() => setGameState('moving')}
-            className="min-h-[70px] bg-cyber-dark/60 hover:bg-cyber-green/10 border border-cyber-green/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(0,255,157,0.2)] hover:border-cyber-green/50 transition-all group backdrop-blur-sm"
+            className="min-h-[56px] bg-cyber-dark/60 hover:bg-cyber-green/10 border border-cyber-green/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(0,255,157,0.2)] hover:border-cyber-green/50 transition-all group backdrop-blur-sm"
           >
-            <ArrowRight size={22} className="text-cyber-green group-hover:translate-x-2 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-cyber-green/90">MOVE</span>
+            <ArrowRight size={18} className="text-cyber-green group-hover:translate-x-2 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-cyber-green/90">MOVE</span>
           </Motion.button>
           {mapData.type === 'safe' && (
             <>
@@ -409,33 +458,33 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
                   actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
                   actions.setGameState('shop');
                 }}
-                className="min-h-[70px] bg-cyber-dark/60 hover:bg-yellow-900/20 border border-yellow-500/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:border-yellow-500/50 transition-all group backdrop-blur-sm"
+                className="min-h-[56px] bg-cyber-dark/60 hover:bg-yellow-900/20 border border-yellow-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:border-yellow-500/50 transition-all group backdrop-blur-sm"
               >
-                <ShoppingBag size={22} className="text-yellow-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-yellow-500/90">MARKET</span>
+                <ShoppingBag size={18} className="text-yellow-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-yellow-500/90">MARKET</span>
               </Motion.button>
               <Motion.button
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={actions.rest}
-                className="min-h-[70px] bg-cyber-dark/60 hover:bg-emerald-900/20 border border-emerald-500/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/50 transition-all group backdrop-blur-sm"
+                className="min-h-[56px] bg-cyber-dark/60 hover:bg-emerald-900/20 border border-emerald-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/50 transition-all group backdrop-blur-sm"
               >
-                <Moon size={22} className="text-emerald-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-emerald-500/90">REST</span>
+                <Moon size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-emerald-500/90">REST</span>
               </Motion.button>
               <Motion.button
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState('job_change')}
-                className="min-h-[70px] bg-cyber-dark/60 hover:bg-purple-900/20 border border-purple-500/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:border-purple-500/50 transition-all group backdrop-blur-sm"
+                className="min-h-[56px] bg-cyber-dark/60 hover:bg-purple-900/20 border border-purple-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:border-purple-500/50 transition-all group backdrop-blur-sm"
               >
-                <GraduationCap size={22} className="text-purple-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-purple-500/90">CLASS</span>
+                <GraduationCap size={18} className="text-purple-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-purple-500/90">CLASS</span>
               </Motion.button>
               <Motion.button
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState('quest_board')}
-                className="min-h-[70px] bg-cyber-dark/60 hover:bg-indigo-900/20 border border-indigo-500/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:border-indigo-500/50 transition-all group backdrop-blur-sm"
+                className="min-h-[56px] bg-cyber-dark/60 hover:bg-indigo-900/20 border border-indigo-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:border-indigo-500/50 transition-all group backdrop-blur-sm"
               >
-                <ScrollText size={22} className="text-indigo-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-indigo-500/90">QUESTS</span>
+                <ScrollText size={18} className="text-indigo-500 group-hover:scale-110 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-indigo-500/90">QUESTS</span>
               </Motion.button>
 
               {/* Omitted Crafting Panel to keep concise, but button remains */}
@@ -443,9 +492,9 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState('crafting')}
-                className="min-h-[70px] bg-cyber-dark/60 hover:bg-orange-900/20 border border-orange-500/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(249,115,22,0.2)] hover:border-orange-500/50 transition-all group backdrop-blur-sm"
+                className="min-h-[56px] bg-cyber-dark/60 hover:bg-orange-900/20 border border-orange-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(249,115,22,0.2)] hover:border-orange-500/50 transition-all group backdrop-blur-sm"
               >
-                <Hammer size={22} className="text-orange-500 group-hover:rotate-12 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-orange-500/90">CRAFT</span>
+                <Hammer size={18} className="text-orange-500 group-hover:rotate-12 transition-transform" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-orange-500/90">CRAFT</span>
               </Motion.button>
             </>
           )}
@@ -454,9 +503,9 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
               whileTap={{ scale: 0.95 }}
               disabled={isAiThinking}
               onClick={actions.lootGrave}
-              className="min-h-[70px] bg-slate-800/60 hover:bg-slate-700/80 border border-slate-500/50 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(148,163,184,0.3)] transition-all group backdrop-blur-sm"
+              className="min-h-[56px] bg-slate-800/60 hover:bg-slate-700/80 border border-slate-500/50 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(148,163,184,0.3)] transition-all group backdrop-blur-sm"
             >
-              <Ghost size={22} className="text-slate-400 group-hover:animate-bounce mb-1" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-slate-300">RECOVER</span>
+              <Ghost size={18} className="text-slate-400 group-hover:animate-bounce" /> <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-slate-300">RECOVER</span>
             </Motion.button>
           )}
           {!confirmReset ? (
@@ -464,9 +513,9 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
               whileTap={{ scale: 0.95 }}
               disabled={isAiThinking}
               onClick={() => setConfirmReset(true)}
-              className="min-h-[70px] sm:col-start-4 bg-red-950/20 hover:bg-red-900/40 border border-red-800/30 p-3 sm:p-4 rounded-lg flex flex-col items-center justify-center gap-2 disabled:opacity-50 hover:border-red-600/50 transition-all group backdrop-blur-sm"
+              className="min-h-[56px] sm:col-start-4 bg-red-950/20 hover:bg-red-900/40 border border-red-800/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:border-red-600/50 transition-all group backdrop-blur-sm"
             >
-              <X size={20} className="text-red-500/70 group-hover:text-red-500 group-hover:scale-110 transition-all" />
+              <X size={18} className="text-red-500/70 group-hover:text-red-500 group-hover:scale-110 transition-all" />
               <span className="text-[10px] sm:text-xs font-rajdhani tracking-widest text-red-600/70 group-hover:text-red-500">FORMAT DRIVE</span>
             </Motion.button>
           ) : (

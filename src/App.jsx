@@ -183,20 +183,13 @@ function App() {
       {/* Grid overlay for aesthetic */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen" style={{ backgroundImage: 'linear-gradient(rgba(0, 204, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 204, 255, 0.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
-      {!isMobileViewport && showOnboarding && !engine.onboardingDismissed && (
-        <Suspense fallback={null}>
-          <OnboardingGuide
-            player={engine.player}
-            onDismiss={handleDismissOnboarding}
-          />
-        </Suspense>
-      )}
+      {/* OnboardingGuide removed by user request */}
 
       <Motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`relative z-10 w-full grid grid-cols-1 gap-2 md:gap-4 md:grid-cols-[minmax(0,1fr)_clamp(18rem,30vw,24rem)] md:flex-1 md:min-h-0 md:overflow-hidden transition-all duration-150 ${damageFlash ? 'ring-2 ring-red-500/40' : ''} ${healFlash ? 'ring-2 ring-green-500/40' : ''}`}
+        className={`relative z-10 w-full grid grid-cols-1 gap-2 md:gap-4 md:grid-cols-[minmax(0,1fr)_clamp(20rem,40vw,28rem)] md:flex-1 md:min-h-0 md:overflow-hidden transition-all duration-150 ${damageFlash ? 'ring-2 ring-red-500/40' : ''} ${healFlash ? 'ring-2 ring-green-500/40' : ''}`}
       >
         <TerminalView
           logs={engine.logs}

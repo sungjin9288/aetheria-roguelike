@@ -278,3 +278,22 @@ export const checkTitles = (player) => {
         return false;
     }).map(t => t.id);
 };
+
+/**
+ * 런 종료 요약(RunSummary) 데이터를 생성 (#1 — 중복 코드 제거)
+ * useCombatActions의 전투 패배 / 도주 실패 사망 두 경로에서 공통으로 사용.
+ * @param {object} player - 최종 플레이어 상태
+ * @param {string} loc - 사망 위치 (player.loc).
+ */
+export const buildRunSummary = (player, loc) => ({
+    level:        player.level,
+    job:          player.job || '모험가',
+    kills:        player.stats?.kills || 0,
+    bossKills:    player.stats?.bossKills || 0,
+    relicsFound:  player.relics?.length || 0,
+    activeTitle:  player.activeTitle || null,
+    loc:          loc || player.loc || '???',
+    prestigeRank: player.meta?.prestigeRank || 0,
+    totalGold:    player.stats?.total_gold || 0,
+});
+

@@ -36,7 +36,7 @@ const StatsPanel = ({ player }) => {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
                 {[
                     { label: 'TOTAL KILLS', value: stats.kills, icon: Sword, color: 'text-red-400' },
                     { label: 'DEATHS', value: stats.deaths, icon: Skull, color: 'text-cyber-blue/60' },
@@ -48,11 +48,11 @@ const StatsPanel = ({ player }) => {
                 ].map((entry) => {
                     const Icon = entry.icon;
                     return (
-                    <div key={entry.label} className="bg-cyber-dark/40 border border-cyber-blue/10 rounded p-2">
-                        <div className="text-[10px] text-cyber-blue/40 font-fira uppercase flex items-center gap-1 mb-0.5">
+                    <div key={entry.label} className="bg-cyber-dark/40 border border-cyber-blue/10 rounded p-1.5">
+                        <div className="text-[9px] text-cyber-blue/40 font-fira uppercase flex items-center gap-1 mb-0.5">
                             <Icon size={9} /> {entry.label}
                         </div>
-                        <div className={`font-fira font-bold text-sm ${entry.color}`}>{entry.value}</div>
+                        <div className={`font-fira font-bold text-xs ${entry.color}`}>{entry.value}</div>
                     </div>
                 )})}
             </div>

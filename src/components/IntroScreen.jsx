@@ -1,30 +1,19 @@
 import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
-
-const STEP_LABELS = ['이름', '성별'];
 
 const IntroScreen = ({ onStart }) => {
-    const [step, setStep] = useState(1);
     const [name, setName] = useState('');
-    const [gender, setGender] = useState('male');
 
-    const canNext = () => {
-        if (step === 1) return name.trim().length > 0;
-        if (step === 2) return true;
-        return false;
-    };
+    const canStart = name.trim().length > 0;
 
-    const handleNext = () => {
-        if (step < 2) {
-            setStep((s) => s + 1);
-            return;
+    const handleStart = () => {
+        if (canStart) {
+            onStart(name, 'male', '모험가'); // 기본값으로 'male' 전달 (내부 처리용)
         }
-        onStart(name, gender, '모험가');
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && canNext()) handleNext();
+        if (e.key === 'Enter' && canStart) handleStart();
     };
 
     return (
@@ -48,44 +37,21 @@ const IntroScreen = ({ onStart }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8, duration: 1 }}
-                className="text-cyber-blue/70 mb-6 font-fira text-xs tracking-[0.2em]"
+                className="text-cyber-blue/70 mb-8 font-fira text-xs tracking-[0.2em]"
             >
                 NEURAL LINK ESTABLISHED
             </Motion.p>
 
-            <div className="flex items-center justify-center gap-2 mb-6">
-                {STEP_LABELS.map((label, i) => {
-                    const s = i + 1;
-                    const active = s === step;
-                    const done = s < step;
-                    return (
-                        <React.Fragment key={s}>
-                            <div className={`flex items-center gap-1.5 text-xs font-rajdhani font-bold transition-all
-                                ${active ? 'text-cyber-purple' : done ? 'text-cyber-green' : 'text-slate-600'}`}>
-                                <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] transition-all
-                                    ${active ? 'border-cyber-purple bg-cyber-purple/20' : done ? 'border-cyber-green bg-cyber-green/20' : 'border-slate-700'}`}>
-                                    {done ? '✓' : s}
-                                </span>
-                                {label}
-                            </div>
-                            {i < STEP_LABELS.length - 1 && (
-                                <div className={`w-6 h-px transition-all ${s < step ? 'bg-cyber-green' : 'bg-slate-700'}`} />
-                            )}
-                        </React.Fragment>
-                    );
-                })}
-            </div>
-
             <AnimatePresence mode="wait">
-                {step === 1 && (
-                    <Motion.div
-                        key="step1"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25 }}
-                        className="space-y-4"
-                    >
+                <Motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-6"
+                >
+                    <div className="space-y-2">
                         <p className="text-slate-400 text-sm font-fira">에이전트 코드명을 입력하세요</p>
                         <input
                             type="text"
@@ -97,69 +63,29 @@ const IntroScreen = ({ onStart }) => {
                             autoFocus
                             maxLength={16}
                         />
-                    </Motion.div>
-                )}
+                    </div>
 
-                {step === 2 && (
-                    <Motion.div
-                        key="step2"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25 }}
-                        className="space-y-4"
-                    >
-                        <p className="text-slate-400 text-sm font-fira">에이전트 성별을 선택하세요</p>
-                        <div className="flex justify-center gap-4">
-                            <button
-                                onClick={() => setGender('male')}
-                                className={`px-8 py-3 rounded-lg font-rajdhani font-bold border transition-all text-lg ${gender === 'male' ? 'bg-cyber-blue/20 border-cyber-blue text-cyber-blue shadow-[0_0_15px_rgba(0,204,255,0.4)]' : 'bg-transparent border-slate-700 text-slate-500 hover:border-slate-500'}`}
-                            >
-                                ♂ MALE
-                            </button>
-                            <button
-                                onClick={() => setGender('female')}
-                                className={`px-8 py-3 rounded-lg font-rajdhani font-bold border transition-all text-lg ${gender === 'female' ? 'bg-cyber-pink/20 border-cyber-pink text-cyber-pink shadow-[0_0_15px_rgba(255,0,255,0.4)]' : 'bg-transparent border-slate-700 text-slate-500 hover:border-slate-500'}`}
-                            >
-                                ♀ FEMALE
-                            </button>
+                    <div className="rounded-lg border border-cyber-blue/30 bg-cyber-dark/50 p-4 text-left shadow-inner">
+                        <div className="text-cyber-blue font-rajdhani font-bold tracking-wider text-sm mb-1">
+                            STARTING CLASS: 모험가
                         </div>
-                        <div className="rounded-lg border border-cyber-blue/30 bg-cyber-dark/50 p-4 text-left shadow-inner">
-                            <div className="text-cyber-blue font-rajdhani font-bold tracking-wider text-sm mb-1">
-                                STARTING CLASS: 모험가
-                            </div>
-                            <p className="text-xs text-slate-400 font-fira leading-relaxed">
-                                게임은 기본 직업 <span className="text-cyber-green">모험가</span>로 시작합니다.
-                                레벨 5를 달성하면 <span className="text-cyber-purple">전사 / 마법사 / 도적</span>으로 전직할 수 있습니다.
-                            </p>
-                        </div>
-                    </Motion.div>
-                )}
+                        <p className="text-xs text-slate-400 font-fira leading-relaxed">
+                            게임은 기본 직업 <span className="text-cyber-green">모험가</span>로 시작합니다.
+                            레벨 5를 달성하면 <span className="text-cyber-purple">전사 / 마법사 / 도적</span>으로 전직할 수 있습니다.
+                        </p>
+                    </div>
+                </Motion.div>
             </AnimatePresence>
 
-            <div className="flex gap-3 mt-6">
-                {step > 1 && (
-                    <Motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => setStep((s) => s - 1)}
-                        className="flex items-center gap-1 px-4 py-3 bg-transparent border border-slate-700 text-slate-400 font-rajdhani font-bold hover:border-slate-500 transition-all rounded"
-                    >
-                        <ChevronLeft size={16} /> BACK
-                    </Motion.button>
-                )}
+            <div className="flex mt-8">
                 <Motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={handleNext}
-                    disabled={!canNext()}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-cyber-blue/10 border border-cyber-blue/50 text-cyber-blue font-rajdhani font-bold hover:bg-cyber-blue/20 hover:shadow-[0_0_20px_rgba(0,204,255,0.4)] disabled:opacity-40 disabled:cursor-not-allowed transition-all rounded"
+                    onClick={handleStart}
+                    disabled={!canStart}
+                    className="flex-1 py-4 bg-cyber-blue/10 border border-cyber-blue/50 text-cyber-blue font-rajdhani font-bold hover:bg-cyber-blue/20 hover:shadow-[0_0_20px_rgba(0,204,255,0.4)] disabled:opacity-40 disabled:cursor-not-allowed transition-all rounded"
                 >
-                    {step < 2 ? (
-                        <>{name.trim() || '다음'} <ChevronRight size={16} /></>
-                    ) : (
-                        '⚡ START AS ADVENTURER'
-                    )}
+                    ⚡ START AS ADVENTURER
                 </Motion.button>
             </div>
         </Motion.div>

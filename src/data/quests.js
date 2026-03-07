@@ -29,8 +29,19 @@ export const QUESTS = [
     { id: 53, title: '에테르 붕괴 저지', desc: '차원 파쇄자 처치', target: '차원 파쇄자', goal: 1, reward: { exp: 22000, gold: 32000, item: '심연 파쇄창' }, minLv: 50 },
     { id: 54, title: '영겁의 문', desc: '영겁의 수문장 처치', target: '영겁의 수문장', goal: 1, reward: { exp: 24000, gold: 35000, item: '성광 방벽' }, minLv: 52 },
     { id: 55, title: '천공의 계승자', desc: '에테르 드래곤 처치', target: '에테르 드래곤', goal: 1, reward: { exp: 30000, gold: 42000, item: '에테르 세이버' }, minLv: 55 },
-    { id: 99, title: '마왕 토벌', desc: '최종 보스 마왕 처치', target: '마왕', goal: 1, reward: { exp: 50000, gold: 99999, item: '성검 에테르니아' }, minLv: 50 }
+    { id: 99, title: '마왕 토벌', desc: '최종 보스 마왕 처치', target: '마왕', goal: 1, reward: { exp: 50000, gold: 99999, item: '성검 에테르니아' }, minLv: 50 },
+
+    // ── 신규 퀘스트 타입: craft / explore_count / survive_low_hp (#7) ──────
+    { id: 60, title: '대장장이의 의뢰', type: 'craft', desc: '아이템 3개 제작', target: 'crafts', goal: 3, reward: { exp: 3000, gold: 5000, item: '강화 재료' }, minLv: 10 },
+    { id: 61, title: '탐험가의 기록', type: 'explore_count', desc: '20번 탐색', target: 'explores', goal: 20, reward: { exp: 5000, gold: 3000 }, minLv: 5 },
+    { id: 62, title: '생존의 의지', type: 'survive_low_hp', desc: 'HP 20% 이하에서 전투 승리 5회', target: 'lowHpWins', goal: 5, reward: { exp: 8000, gold: 6000, item: '생존자의 반지' }, minLv: 15 },
+    { id: 63, title: '맨몸의 용사', type: 'survive_low_hp', desc: 'HP 10% 이하에서 전투 승리 3회', target: 'lowHpWins', goal: 3, reward: { exp: 12000, gold: 10000, item: '투사의 증표' }, minLv: 25 },
+    { id: 64, title: '황금 수집가', type: 'explore_count', desc: '50번 탐색 (탐험가 달인)', target: 'explores', goal: 50, reward: { exp: 10000, gold: 15000 }, minLv: 20 },
+    { id: 65, title: '장인의 길', type: 'craft', desc: '아이템 10개 제작', target: 'crafts', goal: 10, reward: { exp: 15000, gold: 20000, item: '장인의 도구' }, minLv: 25 },
+    { id: 66, title: '현상금 사냥꾼', type: 'bounty_count', desc: '현상수배 5건 완료', target: 'bountiesCompleted', goal: 5, reward: { exp: 10000, gold: 15000 }, minLv: 10 },
+    { id: 67, title: '전설의 사냥꾼', type: 'bounty_count', desc: '현상수배 15건 완료', target: 'bountiesCompleted', goal: 15, reward: { exp: 25000, gold: 40000, item: '현상금 사냥꾼의 망토' }, minLv: 25 },
 ];
+
 
 export const ACHIEVEMENTS = [
     { id: 'ach_first_blood', title: '첫 번째 피', desc: '첫 전투 승리', target: 'kills', goal: 1, reward: { gold: 50 } },

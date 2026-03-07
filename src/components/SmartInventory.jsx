@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { ArrowUp, ArrowDown, Minus, Star } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
 import { BALANCE } from '../data/constants';
 
@@ -118,6 +118,14 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
         if (bestArmor && bestArmor.val > (player.equip?.armor?.val || 0)) actions.useItem(bestArmor);
     };
 
+    // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
+    const INV_FULL_THRESHOLD = 18;
+    const isInvNearFull = player.inv.length >= INV_FULL_THRESHOLD;
+    const sellableMatCount = useMemo(() =>
+        player.inv.filter(i => i.type === 'mat' && (i.price || 0) <= 30).length,
+        [player.inv]
+    );
+
     return (
         <div className="space-y-3">
             {/* Filter Bar */}
@@ -148,6 +156,27 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     </Motion.button>
                 )}
             </div>
+
+            {/* 시나리오 2: 인벤토리 과밀 배너 + 일괄 판매 */}
+            {isInvNearFull && sellableMatCount > 0 && (
+                <Motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center justify-between bg-orange-950/30 border border-orange-500/30 rounded px-3 py-2"
+                >
+                    <div className="flex items-center gap-2 text-orange-400 text-xs font-fira">
+                        <AlertCircle size={13} className="shrink-0 animate-pulse" />
+                        <span>인벤토리 {player.inv.length}/20 — 저가 재료 {sellableMatCount}개 정리 가능</span>
+                    </div>
+                    <Motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => actions.autoSell?.()}
+                        className="text-xs flex items-center gap-1 font-rajdhani font-bold text-orange-400 bg-orange-900/40 hover:bg-orange-800/50 border border-orange-500/40 px-2.5 py-1 rounded min-h-[32px] transition-all shrink-0 ml-2"
+                    >
+                        <Package size={11} /> 일괄 정리
+                    </Motion.button>
+                </Motion.div>
+            )}
 
             {/* Item List */}
             <div className="space-y-1.5">

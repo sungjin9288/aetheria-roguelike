@@ -146,6 +146,12 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         // 일일 프로토콜 — 탐색 카운트 업데이트
         dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
         emitDailyProtocolLogs('explores', 1);
+        // 탐색 횟수 통계 추적 (퀘스트 타입 explore_count용)
+        dispatch({ type: 'SET_PLAYER', payload: (p) => ({
+            ...p,
+            stats: { ...p.stats, explores: (p.stats?.explores || 0) + 1 }
+        }) });
+
 
         if (Math.random() < BALANCE.EVENT_CHANCE_NOTHING) {
             const hasKey = player.inv.some(i => i.name === '잊혀진 열쇠');

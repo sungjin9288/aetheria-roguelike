@@ -7,8 +7,8 @@ export const MAPS = {
 
     // 중반 지역 (Lv 5-20)
     '잊혀진 폐허': { level: 5, type: 'dungeon', exits: ['고요한 숲', '어둠의 동굴', '버려진 광산'], monsters: ['해골 병사', '고블린', '석상 가디언', '유령 기사'], desc: '오래된 문명의 흔적이 남아있는 폐허입니다.', eventChance: 0.3 },
-    '버려진 광산': { level: 8, type: 'dungeon', exits: ['잊혀진 폐허'], monsters: ['광석골렘', '코볼트 광부', '광산 박쥐', '거대 지렁이'], desc: '금맥을 찾아 파헤쳐진 버려진 광산입니다.', eventChance: 0.35 },
-    '어둠의 동굴': { level: 10, type: 'dungeon', exits: ['잊혀진 폐허', '암흑 성'], monsters: ['동굴 트롤', '박쥐 떼', '다크 엘프', '거대 지네', '암흑 마법사'], desc: '빛이 들지 않는 깊고 어두운 동굴입니다.', eventChance: 0.4 },
+    '버려진 광산': { level: 8, type: 'dungeon', exits: ['잊혀진 폐허', '어둠의 동굴'], monsters: ['광석골렘', '코볼트 광부', '광산 박쥐', '거대 지렁이'], desc: '금맥을 찾아 파헤쳐진 버려진 광산입니다.', eventChance: 0.35 },
+    '어둠의 동굴': { level: 10, type: 'dungeon', exits: ['잊혀진 폐허', '버려진 광산', '암흑 성'], monsters: ['동굴 트롤', '박쥐 떼', '다크 엘프', '거대 지네', '암흑 마법사'], desc: '빛이 들지 않는 깊고 어두운 동굴입니다.', eventChance: 0.4 },
 
     // 화염 지역 (Lv 15-30)
     '화염의 협곡': { level: 15, type: 'dungeon', exits: ['서쪽 평원', '용의 둥지'], monsters: ['화염 정령', '용암 골렘', '파이어뱃', '화염 도마뱀'], desc: '뜨거운 용암이 흐르는 위험한 협곡입니다.', eventChance: 0.4 },

@@ -3,7 +3,7 @@ import { BALANCE } from '../data/constants';
 import { CombatEngine } from '../systems/CombatEngine';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
-import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel } from '../utils/gameUtils';
+import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary } from '../utils/gameUtils';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -122,6 +122,16 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 emitDailyProtocolLogs('kills', 1);
                 emitUnlockedTitles(updatedPlayer);
 
+                // survive_low_hp 퀘스트 통계 추적 (HP 20% 이하에서 승리)
+                const hpRatioAtVictory = (playerAfterAction.hp || 0) / Math.max(1, playerAfterAction.maxHp || 1);
+                if (hpRatioAtVictory <= 0.20) {
+                    dispatch({ type: 'SET_PLAYER', payload: {
+                        ...updatedPlayer,
+                        stats: { ...updatedPlayer.stats, lowHpWins: (updatedPlayer.stats?.lowHpWins || 0) + 1 }
+                    } });
+                }
+
+
                 // 마왕 처치 → 에테르 환생
                 if (victoryResult.isDemonKingSlain) {
                     dispatch({ type: 'SET_GAME_STATE', payload: 'ascension' });
@@ -169,27 +179,28 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 counterResult.logs.forEach((log) => addLog(log.type, log.text));
                 dispatch({ type: 'SET_ENEMY', payload: counterResult.updatedEnemy });
                 dispatch({ type: 'SET_PLAYER', payload: counterResult.updatedPlayer });
-                dispatch({ type: 'SET_VISUAL_EFFECT', payload: 'shake' });
+                dispatch({ type: 'SET_VISUAL_EFFECT', payload: counterResult.isDead ? 'shake' : null });
+
+                // DoT로 적이 사망한 경우 → 전투 승리 처리
+                if (counterResult.isEnemyDead) {
+                    dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+                    dispatch({ type: 'SET_ENEMY', payload: null });
+                    addLog('success', `[지속 피해] ${result.updatedEnemy.name}이(가) 쓰러졌습니다!`);
+                    const victoryResult = CombatEngine.handleVictory(counterResult.updatedPlayer, result.updatedEnemy);
+                    victoryResult.logs.forEach((log) => addLog(log.type, log.text));
+                    dispatch({ type: 'SET_PLAYER', payload: victoryResult.updatedPlayer });
+                    dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
+                    return;
+                }
 
                 if (counterResult.isDead) {
                     const deadPlayer = counterResult.updatedPlayer;
-                    const runSummary = {
-                        level:        deadPlayer.level,
-                        job:          deadPlayer.job || '모험가',
-                        kills:        deadPlayer.stats?.kills || 0,
-                        bossKills:    deadPlayer.stats?.bossKills || 0,
-                        relicsFound:  deadPlayer.relics?.length || 0,
-                        activeTitle:  deadPlayer.activeTitle || null,
-                        loc:          playerForEnemyTurn.loc || '???',
-                        prestigeRank: deadPlayer.meta?.prestigeRank || 0,
-                        totalGold:    deadPlayer.stats?.total_gold || 0,
-                    };
                     const defeatResult = CombatEngine.handleDefeat(deadPlayer, INITIAL_STATE.player);
-                    dispatch({ type: 'SET_RUN_SUMMARY', payload: runSummary });
-                    dispatch({ type: 'SET_GRAVE', payload: defeatResult.graveData });
-                    dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
-                    dispatch({ type: 'SET_GAME_STATE', payload: 'dead' });
-                    dispatch({ type: 'SET_ENEMY', payload: null });
+                    dispatch({ type: AT.SET_RUN_SUMMARY, payload: buildRunSummary(deadPlayer, playerForEnemyTurn.loc) });
+                    dispatch({ type: AT.SET_GRAVE, payload: defeatResult.graveData });
+                    dispatch({ type: AT.SET_PLAYER, payload: defeatResult.updatedPlayer });
+                    dispatch({ type: AT.SET_GAME_STATE, payload: 'dead' });
+                    dispatch({ type: AT.SET_ENEMY, payload: null });
                     emitUnlockedTitles(defeatResult.updatedPlayer);
                     defeatResult.logs.forEach((log) => addLog(log.type, log.text));
                     addStoryLog('death', { loc: playerForEnemyTurn.loc });
@@ -210,23 +221,12 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 protectionLogs.forEach((log) => addLog(log.type, log.text));
                 if (protectedResult.isDead) {
                     const deadPlayer = protectedResult.updatedPlayer;
-                    const runSummary = {
-                        level:        deadPlayer.level,
-                        job:          deadPlayer.job || '모험가',
-                        kills:        deadPlayer.stats?.kills || 0,
-                        bossKills:    deadPlayer.stats?.bossKills || 0,
-                        relicsFound:  deadPlayer.relics?.length || 0,
-                        activeTitle:  deadPlayer.activeTitle || null,
-                        loc:          deadPlayer.loc || '???',
-                        prestigeRank: deadPlayer.meta?.prestigeRank || 0,
-                        totalGold:    deadPlayer.stats?.total_gold || 0,
-                    };
                     const defeatResult = CombatEngine.handleDefeat(deadPlayer, INITIAL_STATE.player);
-                    dispatch({ type: 'SET_RUN_SUMMARY', payload: runSummary });
-                    dispatch({ type: 'SET_GRAVE', payload: defeatResult.graveData });
-                    dispatch({ type: 'SET_PLAYER', payload: defeatResult.updatedPlayer });
-                    dispatch({ type: 'SET_GAME_STATE', payload: 'dead' });
-                    dispatch({ type: 'SET_ENEMY', payload: null });
+                    dispatch({ type: AT.SET_RUN_SUMMARY, payload: buildRunSummary(deadPlayer, deadPlayer.loc) });
+                    dispatch({ type: AT.SET_GRAVE, payload: defeatResult.graveData });
+                    dispatch({ type: AT.SET_PLAYER, payload: defeatResult.updatedPlayer });
+                    dispatch({ type: AT.SET_GAME_STATE, payload: 'dead' });
+                    dispatch({ type: AT.SET_ENEMY, payload: null });
                     emitUnlockedTitles(defeatResult.updatedPlayer);
                     defeatResult.logs.forEach((log) => addLog(log.type, log.text));
                     addStoryLog('death', { loc: player.loc });

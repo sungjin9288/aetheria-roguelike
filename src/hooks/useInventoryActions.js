@@ -320,6 +320,26 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);
             addLog('success', `업적 달성: ${achData.title}`);
-        }
+        },
+
+        // 시나리오 2: 저가 재료 일괄 판매 (#autoSell)
+        // 단가 30G 이하 재료(mat) 타입 아이템을 모두 50% 가격에 일괄 판매
+        autoSell: () => {
+            const SELL_PRICE_THRESHOLD = 30;
+            const sellTargets = player.inv.filter(
+                (item) => item.type === 'mat' && (item.price || 0) <= SELL_PRICE_THRESHOLD
+            );
+            if (sellTargets.length === 0) {
+                addLog('info', '판매할 저가 재료가 없습니다.');
+                return;
+            }
+            const sellIds = new Set(sellTargets.map((item) => item.id));
+            const totalGold = sellTargets.reduce((acc, item) => acc + Math.floor((item.price || 0) * 0.5), 0);
+            const newInv = player.inv.filter((item) => !sellIds.has(item.id));
+            const updatedPlayer = grantGold({ ...player, inv: newInv }, totalGold);
+            dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+            emitUnlockedTitles(updatedPlayer);
+            addLog('success', `재료 ${sellTargets.length}개 일괄 판매 (+${totalGold}G)`);
+        },
     });
 };

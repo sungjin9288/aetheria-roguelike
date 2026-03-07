@@ -96,6 +96,81 @@ export const CombatEngine = {
         };
     },
 
+    // ── 스킬 효과 → 적 상태 적용 (#5) ─────────────────────────────────────
+    /**
+     * 스킬 effect 값을 적 오브젝트에 상태이상으로 적용합니다.
+     * blind / fear / curse / taunt / stun / freeze / poison / burn / bleed 처리.
+     */
+    applyStatusEffectToEnemy(enemy, effect) {
+        if (!effect) return enemy;
+        switch (effect) {
+            case 'blind':
+                return { ...enemy, blindTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, 0.65) };
+            case 'fear':
+                return { ...enemy, fearTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, 0.70) };
+            case 'curse':
+                return { ...enemy, cursedTurns: 3, atkMult: Math.min(enemy.atkMult ?? 1, 0.80), cursed: true };
+            case 'taunt':
+                return { ...enemy, taunted: true, tauntTurns: 1 };
+            case 'stun':
+            case 'freeze':
+                return { ...enemy, stunnedTurns: Math.max(enemy.stunnedTurns ?? 0, 1) };
+            case 'poison':
+            case 'burn':
+            case 'bleed': {
+                const existingDots = Array.isArray(enemy.dots) ? enemy.dots : [];
+                if (!existingDots.includes(effect)) {
+                    return { ...enemy, dots: [...existingDots, effect] };
+                }
+                return enemy;
+            }
+            default:
+                return enemy;
+        }
+    },
+
+    /**
+     * 적의 상태이상 틱을 처리합니다. 매 적 행동 전에 호출하세요.
+     * DoT 피해, 상태 턴 감소, 만료 처리를 수행합니다.
+     */
+    tickEnemyStatus(enemy, logs = []) {
+        let updated = { ...enemy };
+
+        // DoT (burn / poison / bleed)
+        (updated.dots || []).forEach(dot => {
+            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * 0.05));
+            updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
+            const dotKor = dot === 'burn' ? '화상' : dot === 'poison' ? '독' : '출혈';
+            logs.push({ type: 'event', text: `[${dotKor}] ${updated.name}에게 ${dmg} 지속 피해!` });
+        });
+        // 저주 DoT
+        if (updated.cursed) {
+            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * 0.03));
+            updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
+            logs.push({ type: 'event', text: `[저주] ${updated.name}에게 ${dmg} 저주 피해!` });
+        }
+
+        // 상태 턴 감소 & 만료
+        if ((updated.blindTurns ?? 0) > 0) {
+            updated.blindTurns -= 1;
+            if (updated.blindTurns <= 0) { delete updated.blindTurns; delete updated.atkMult; }
+        }
+        if ((updated.fearTurns ?? 0) > 0) {
+            updated.fearTurns -= 1;
+            if (updated.fearTurns <= 0) { delete updated.fearTurns; delete updated.atkMult; }
+        }
+        if ((updated.cursedTurns ?? 0) > 0) {
+            updated.cursedTurns -= 1;
+            if (updated.cursedTurns <= 0) { delete updated.cursedTurns; updated.cursed = false; delete updated.atkMult; }
+        }
+        if ((updated.tauntTurns ?? 0) > 0) {
+            updated.tauntTurns -= 1;
+            if (updated.tauntTurns <= 0) { delete updated.tauntTurns; updated.taunted = false; }
+        }
+
+        return { updatedEnemy: updated, logs };
+    },
+
     tickCombatState(player) {
         const logs = [];
         const updated = { ...player };
@@ -275,10 +350,18 @@ export const CombatEngine = {
         const totalDamage = Math.floor((damage + extraDamage) * smMult);
         const newEnemyHp = enemy.hp - totalDamage;
 
-        const updatedEnemy = { ...enemy, hp: newEnemyHp, guarding: false };
-        if (skill.effect === 'stun' || skill.effect === 'freeze') {
-            updatedEnemy.stunnedTurns = Math.max(1, updatedEnemy.stunnedTurns || 0);
+        // 적에게 상태이상 부여 (#5)
+        // stun/freeze/poison/burn/bleed/blind/fear/curse/taunt 통합 처리
+        const STATUS_EFFECTS_TO_ENEMY = ['stun', 'freeze', 'poison', 'burn', 'bleed', 'blind', 'fear', 'curse', 'taunt'];
+        let postEffectEnemy = { ...enemy, hp: newEnemyHp, guarding: false };
+        if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect)) {
+            postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
+            const effectLabels = { stun: '기절', freeze: '빙결', poison: '독', burn: '화상', bleed: '출혈', blind: '실명', fear: '공포', curse: '저주', taunt: '도발' };
+            if (effectLabels[skill.effect]) {
+                logs.push({ type: 'event', text: `[${skill.name}] ${enemy.name}에게 [${effectLabels[skill.effect]}] 부여!` });
+            }
         }
+        const updatedEnemy = postEffectEnemy;
 
         const updatedPlayer = {
             ...player,
@@ -323,6 +406,29 @@ export const CombatEngine = {
             updatedPlayer.tempBuff = buff;
         }
 
+        // drain: 스킬 피해의 25% HP 흡수 (#5)
+        if (skill.effect === 'drain') {
+            const drainHeal = Math.floor(totalDamage * 0.25);
+            updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + drainHeal);
+            logs.push({ type: 'heal', text: `[생명흡수] +${drainHeal} HP 흡수!` });
+        }
+
+        // purify: 플레이어 상태이상 전부 제거 + 로그 (#5)
+        if (skill.effect === 'purify') {
+            const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
+            if (currentStatus.length > 0) {
+                updatedPlayer.status = [];
+                logs.push({ type: 'success', text: `[${skill.name}] 상태이상이 정화되었습니다!` });
+            }
+        }
+
+        // stealth: 다음 적 공격 1회 회피 플래그 설정 (#5)
+        if (skill.effect === 'stealth') {
+            updatedPlayer.nextHitEvaded = true;
+            logs.push({ type: 'event', text: `[${skill.name}] 다음 적 공격을 회피합니다!` });
+        }
+
+
         if (elementMultiplier > 1) logs.push({ type: 'success', text: MSG.COMBAT_WEAKNESS });
         if (elementMultiplier < 1) logs.push({ type: 'warning', text: MSG.COMBAT_RESIST });
         if (extraDamage > 0) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(skill.effect, extraDamage) });
@@ -351,6 +457,24 @@ export const CombatEngine = {
         let updatedEnemy = { ...enemy };
         let updatedPlayer = { ...player };
         const logs = [];
+
+        // ── 적 상태이상 틱 처리 (#5) ──────────────────────────────────────
+        const enemyTickResult = this.tickEnemyStatus(updatedEnemy, []);
+        updatedEnemy = enemyTickResult.updatedEnemy;
+        enemyTickResult.logs.forEach(l => logs.push(l));
+        // DoT로 인해 이미 사망한 경우
+        if (updatedEnemy.hp <= 0) {
+            return { updatedPlayer, updatedEnemy, damage: 0, isDead: false, isEnemyDead: true, logs };
+        }
+
+        // ── stealth 회피 처리 (#5) ────────────────────────────────────────
+        if (updatedPlayer.nextHitEvaded) {
+            updatedPlayer = { ...updatedPlayer, nextHitEvaded: false };
+            return {
+                updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                logs: [...logs, { type: 'success', text: `[은신] ${enemy.name}의 공격을 회피했습니다!` }]
+            };
+        }
 
         // ── 보스 Phase 2 전환 체크 ─────────────────────────────────────────
         if (updatedEnemy.isBoss && !updatedEnemy.phase2Triggered && updatedEnemy.phase2) {
@@ -386,7 +510,12 @@ export const CombatEngine = {
             };
         }
 
-        const pattern = updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 };
+        // taunt: 적이 반드시 강타만 사용 (#5)
+        const effectivePattern = updatedEnemy.taunted
+            ? { guardChance: 0, heavyChance: 1.0 }
+            : (updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
+
+        const pattern = effectivePattern;
         const roll = Math.random();
         if (roll < pattern.guardChance) {
             return {
@@ -417,8 +546,15 @@ export const CombatEngine = {
             logs.push({ type: 'event', text: `[가시 갑옷] 반사 피해 ${reflectDmg}!` });
         }
 
-        const enemyDmg = Math.max(1, Math.floor((updatedEnemy.atk * mult) - stats.def));
+        // atkMult: blind / fear / curse에 의한 적 공격력 감소 (#5)
+        const enemyAtkMult = updatedEnemy.atkMult ?? 1;
+        const enemyDmg = Math.max(1, Math.floor((updatedEnemy.atk * mult * enemyAtkMult) - stats.def));
+        if (enemyAtkMult < 1 && (updatedEnemy.blindTurns > 0 || updatedEnemy.fearTurns > 0 || updatedEnemy.cursedTurns > 0)) {
+            const statusName = updatedEnemy.blindTurns > 0 ? '실명' : updatedEnemy.fearTurns > 0 ? '공포' : '저주';
+            logs.push({ type: 'info', text: `[${statusName}] ${updatedEnemy.name}의 공격력이 감소합니다!` });
+        }
         const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs);
+
 
         return {
             updatedPlayer: protectedResult.updatedPlayer,
@@ -561,7 +697,7 @@ export const CombatEngine = {
         };
     },
 
-    updateQuestProgress(player, enemyName) {
+    updateQuestProgress(player, enemyName, options = {}) {
         if (!player.quests?.length) return { updatedQuests: player.quests || [], completedCount: 0 };
         const normalizedEnemyName = enemyName || '';
 
@@ -569,8 +705,29 @@ export const CombatEngine = {
             const qData = q.isBounty ? q : DB.QUESTS.find((dbQ) => dbQ.id === q.id);
             if (!qData) return q;
 
+            // ─ 통계 기반 퀘스트 타입 (#7) ────────────────────────────────
+            // explore_count: 탐색 횟수 동기화
+            if (qData.type === 'explore_count' && qData.target === 'explores') {
+                const current = player.stats?.explores || 0;
+                return { ...q, progress: Math.min(qData.goal, current) };
+            }
+            // craft: 제작 횟수 동기화
+            if (qData.type === 'craft' && qData.target === 'crafts') {
+                const current = player.stats?.crafts || 0;
+                return { ...q, progress: Math.min(qData.goal, current) };
+            }
+            // survive_low_hp: 저체력 킬 횟수
+            if (qData.type === 'survive_low_hp' && qData.target === 'lowHpWins') {
+                const current = player.stats?.lowHpWins || 0;
+                return { ...q, progress: Math.min(qData.goal, current) };
+            }
+            // bounty_count: 현상수배 완료 횟수
+            if (qData.type === 'bounty_count' && qData.target === 'bountiesCompleted') {
+                const current = player.stats?.bountiesCompleted || 0;
+                return { ...q, progress: Math.min(qData.goal, current) };
+            }
+
             // 정확히 일치하거나, 적 이름이 퀘스트 목표를 포함(엘리트 접두어 처리)하는 경우만 허용
-            // 반대 방향(qData.target이 enemyName을 포함)은 false positive를 유발하므로 제외
             const exactMatch = qData.target === normalizedEnemyName;
             const prefixedMatch = normalizedEnemyName.includes(qData.target);
             if (exactMatch || prefixedMatch) {

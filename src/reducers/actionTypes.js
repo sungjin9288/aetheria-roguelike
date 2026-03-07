@@ -48,4 +48,24 @@ export const AT = Object.freeze({
     UNLOCK_TITLES: 'UNLOCK_TITLES',
     SET_DAILY_PROTOCOL: 'SET_DAILY_PROTOCOL',
     UPDATE_DAILY_PROTOCOL: 'UPDATE_DAILY_PROTOCOL',
+
+    // v5.0
+    SET_RUN_SUMMARY: 'SET_RUN_SUMMARY',
+});
+
+/**
+ * 게임 상태(gameState) 문자열 상수 — 오타 방지 및 중앙화 (#3)
+ * 모든 게임 상태는 이 객체를 사용하세요.
+ */
+export const GS = Object.freeze({
+    IDLE:       'idle',
+    COMBAT:     'combat',
+    EVENT:      'event',
+    DEAD:       'dead',
+    ASCENSION:  'ascension',
+    MOVING:     'moving',
+    SHOP:       'shop',
+    JOB_CHANGE: 'job_change',
+    QUEST_BOARD: 'quest_board',
+    CRAFTING:   'crafting',
 });
