@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
-import { BALANCE } from '../data/constants';
+import { getEquipmentProfile, getNextEquipmentState, isFocusOffhand, isWeapon } from '../utils/equipmentUtils';
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -43,6 +43,16 @@ const ITEM_TYPE_TO_FILTER = {
 
 const canEquipItem = (item, job) => !Array.isArray(item.jobs) || item.jobs.includes(job);
 
+const getItemTags = (item) => {
+    const tags = [];
+    if (isWeapon(item)) tags.push(item.hands === 2 ? '2H 강공' : '1H 치명');
+    if (isFocusOffhand(item)) tags.push('주문서');
+    else if (item?.type === 'shield') tags.push('방패');
+    if (typeof item?.crit === 'number' && item.crit > 0) tags.push(`CRIT +${Math.round(item.crit * 100)}%`);
+    if (typeof item?.mp === 'number' && item.mp > 0) tags.push(`MP +${item.mp}`);
+    return tags;
+};
+
 const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot }) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState(null);
@@ -65,11 +75,25 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     }, [grouped, activeFilter]);
 
     // 추천 장착 계산 (최고 val 기준)
+    const getEquipPreview = useCallback((item) => {
+        const currentProfile = getEquipmentProfile(player.equip);
+        const nextEquip = getNextEquipmentState(player.equip, item);
+        const nextProfile = getEquipmentProfile(nextEquip);
+
+        return {
+            atk: (nextProfile.mainAttack + nextProfile.offhandAttack) - (currentProfile.mainAttack + currentProfile.offhandAttack),
+            def: ((nextEquip.armor?.val || 0) + nextProfile.shieldDef) - ((player.equip?.armor?.val || 0) + currentProfile.shieldDef),
+            crit: Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100),
+            mp: nextProfile.mpBonus - currentProfile.mpBonus,
+            score: (nextProfile.mainAttack + nextProfile.offhandAttack) + (nextProfile.critBonus * 120) + (nextProfile.mpBonus * 0.3),
+        };
+    }, [player.equip]);
+
     const bestWeapon = useMemo(() =>
         player.inv
             .filter(i => i.type === 'weapon' && canEquipItem(i, player.job))
-            .sort((a, b) => (b.val || 0) - (a.val || 0))[0],
-        [player.inv, player.job]
+            .sort((a, b) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
+        [player.inv, player.job, getEquipPreview]
     );
     const bestArmor = useMemo(() =>
         player.inv
@@ -80,36 +104,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
 
     const getCompareDiff = (item) => {
         if (!item) return null;
-        if (item.type === 'weapon') {
-            const main = player.equip?.weapon;
-            const off = player.equip?.offhand;
-            const offhandWeaponBonus = off?.type === 'weapon' ? Math.floor((off.val || 0) * BALANCE.OFFHAND_WEAPON_RATIO) : 0;
-            const currentAtkContribution = (main?.val || 0) + offhandWeaponBonus;
-
-            if ((item.hands || 1) >= 2) {
-                const newContribution = Math.floor((item.val || 0) * BALANCE.TWO_HAND_ATK_BONUS);
-                const shieldLoss = off?.type === 'shield' ? -(off.val || 0) : 0;
-                return { atk: newContribution - currentAtkContribution, def: shieldLoss };
-            }
-
-            const mainIsTwoHand = (main?.hands || 1) >= 2;
-            if (mainIsTwoHand) {
-                const newContribution = (item.val || 0);
-                return { atk: newContribution - currentAtkContribution, def: 0 };
-            }
-
-            const weakerHand = Math.min(main?.val || 0, off?.type === 'weapon' ? (off.val || 0) : Number.POSITIVE_INFINITY);
-            const baseline = Number.isFinite(weakerHand) ? weakerHand : (main?.val || 0);
-            return { atk: (item.val || 0) - baseline, def: 0 };
-        }
-        if (item.type === 'armor') {
-            const cur = player.equip?.armor?.val || 0;
-            return { atk: 0, def: (item.val || 0) - cur };
-        }
-        if (item.type === 'shield') {
-            const cur = player.equip?.offhand?.val || 0;
-            return { atk: 0, def: (item.val || 0) - cur };
-        }
+        if (['weapon', 'armor', 'shield'].includes(item.type)) return getEquipPreview(item);
         return null;
     };
 
@@ -219,11 +214,22 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     <div className="flex gap-2 mt-1">
                                         {diff.atk !== 0 && <StatDiff val={diff.atk} label="ATK" />}
                                         {diff.def !== 0 && <StatDiff val={diff.def} label="DEF" />}
-                                        {diff.atk === 0 && diff.def === 0 && <Minus size={11} className="text-cyber-blue/30" />}
+                                        {diff.crit !== 0 && <StatDiff val={diff.crit} label="CRIT%" />}
+                                        {diff.mp !== 0 && <StatDiff val={diff.mp} label="MP" />}
+                                        {diff.atk === 0 && diff.def === 0 && diff.crit === 0 && diff.mp === 0 && <Minus size={11} className="text-cyber-blue/30" />}
                                     </div>
                                 )}
                                 {item.desc_stat && (
                                     <div className="text-cyber-blue/30 text-xs font-fira mt-0.5 truncate">{item.desc_stat}</div>
+                                )}
+                                {getItemTags(item).length > 0 && (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {getItemTags(item).map((tag) => (
+                                            <span key={`${item.name}_${tag}`} className="text-[10px] text-slate-300 border border-slate-600/50 bg-slate-900/60 px-1.5 py-0.5 rounded">
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
                                 )}
                                 {onAssignQuickSlot && (
                                     <QuickSlotAssigner

@@ -72,6 +72,20 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
     .sort((a, b) => (a.minLv || 1) - (b.minLv || 1))
     .slice(0, 6);
   const claimableQuestCount = activeQuestEntries.filter((entry) => entry.isComplete).length;
+  const today = new Date().toISOString().slice(0, 10);
+  const hasActiveBounty = activeQuestEntries.some((entry) => entry.isBounty);
+  const bountyIssuedToday = player?.stats?.bountyDate === today && player?.stats?.bountyIssued;
+  const canRequestBounty = !hasActiveBounty && !bountyIssuedToday;
+  const bountyButtonLabel = hasActiveBounty
+    ? 'DAILY BOUNTY ACTIVE'
+    : bountyIssuedToday
+      ? 'BOUNTY CLAIMED TODAY'
+      : 'REQUEST DAILY BOUNTY';
+  const bountyHelperText = hasActiveBounty
+    ? '진행 중인 현상수배를 완료해야 다음 수배를 받을 수 있습니다.'
+    : bountyIssuedToday
+      ? '오늘 현상수배는 이미 발급되었습니다. 다음 초기화 후 다시 수주하세요.'
+      : '현재 레벨 기준 토벌 의뢰를 즉시 발급합니다.';
 
   if (gameState === 'combat') {
     return (
@@ -228,6 +242,22 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
           <span className="text-cyber-green">진행 중 {activeQuestEntries.length}</span>
           <span className="text-cyber-purple">수락 가능 {availableQuestEntries.length}</span>
           <span className="text-amber-400">보상 대기 {claimableQuestCount}</span>
+        </div>
+        <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="text-sm font-bold text-amber-300 font-rajdhani tracking-[0.16em]">현상수배 게시판</div>
+              <div className="mt-1 text-[11px] text-slate-400 font-fira">{bountyHelperText}</div>
+            </div>
+            <Motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => actions.requestBounty()}
+              disabled={!canRequestBounty}
+              className="min-h-[44px] shrink-0 rounded-lg border border-amber-500/30 bg-amber-500/10 px-5 py-3 text-xs font-bold text-amber-300 transition-all hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {bountyButtonLabel}
+            </Motion.button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-2">
           <section className="space-y-3">

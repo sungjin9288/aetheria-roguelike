@@ -1,3 +1,5 @@
+import { BALANCE } from '../data/constants';
+
 const MAGIC_WEAPON_KEYWORDS = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
 
 const WEAPON_SKILL_BY_ELEM = {
@@ -14,11 +16,132 @@ export const isWeapon = (item) => item?.type === 'weapon';
 
 export const isShield = (item) => item?.type === 'shield';
 
+export const isFocusOffhand = (item) => isShield(item) && item?.subtype === 'focus';
+
 export const getWeaponHands = (weapon) => Math.max(1, Number(weapon?.hands) || 1);
 
 export const isTwoHandWeapon = (weapon) => isWeapon(weapon) && getWeaponHands(weapon) >= 2;
 
 export const isOneHandWeapon = (weapon) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
+
+export const getWeaponAttackValue = (weapon, slot = 'main') => {
+    if (!isWeapon(weapon)) return 0;
+    const baseVal = weapon.val || 0;
+
+    if (isTwoHandWeapon(weapon)) {
+        return Math.floor(baseVal * BALANCE.TWO_HAND_ATK_BONUS);
+    }
+
+    if (slot === 'offhand') {
+        return Math.floor(baseVal * BALANCE.OFFHAND_WEAPON_RATIO);
+    }
+
+    return Math.floor(baseVal * BALANCE.ONE_HAND_ATK_RATIO);
+};
+
+export const getWeaponCritBonus = (weapon, slot = 'main') => {
+    if (!isOneHandWeapon(weapon)) return 0;
+    if (typeof weapon?.crit === 'number') return weapon.crit;
+    return slot === 'offhand' ? BALANCE.OFFHAND_ONE_HAND_CRIT_BONUS : BALANCE.ONE_HAND_CRIT_BONUS;
+};
+
+export const getOffhandCritBonus = (item) => {
+    if (!item) return 0;
+    if (isWeapon(item)) return getWeaponCritBonus(item, 'offhand');
+    if (isShield(item)) return item.crit || 0;
+    return 0;
+};
+
+export const getOffhandMpBonus = (item) => (isShield(item) ? item.mp || 0 : 0);
+
+export const getEquipmentProfile = (equip = {}) => {
+    const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
+    const offhandItem = equip.offhand || null;
+    const offhandWeapon = isWeapon(offhandItem) ? offhandItem : null;
+    const offhandShield = isShield(offhandItem) ? offhandItem : null;
+
+    return {
+        mainWeapon,
+        offhandItem,
+        offhandWeapon,
+        offhandShield,
+        mainAttack: getWeaponAttackValue(mainWeapon, 'main'),
+        offhandAttack: getWeaponAttackValue(offhandWeapon, 'offhand'),
+        shieldDef: offhandShield?.val || 0,
+        critBonus: getWeaponCritBonus(mainWeapon, 'main') + getOffhandCritBonus(offhandItem),
+        mpBonus: getOffhandMpBonus(offhandItem),
+    };
+};
+
+export const getNextEquipmentState = (equip = {}, item) => {
+    if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return { ...equip };
+
+    const nextEquip = { ...equip };
+
+    if (item.type === 'armor') {
+        nextEquip.armor = item;
+        return nextEquip;
+    }
+
+    if (item.type === 'shield') {
+        if (isTwoHandWeapon(nextEquip.weapon)) return nextEquip;
+        nextEquip.offhand = item;
+        return nextEquip;
+    }
+
+    const currentMain = nextEquip.weapon;
+    const currentOffhand = nextEquip.offhand;
+
+    if (isTwoHandWeapon(item)) {
+        nextEquip.weapon = item;
+        nextEquip.offhand = null;
+        return nextEquip;
+    }
+
+    if (!isWeapon(currentMain)) {
+        nextEquip.weapon = item;
+        return nextEquip;
+    }
+
+    if (isTwoHandWeapon(currentMain)) {
+        nextEquip.weapon = item;
+        return nextEquip;
+    }
+
+    if (!currentOffhand) {
+        if ((item.val || 0) > (currentMain?.val || 0)) {
+            nextEquip.weapon = item;
+            nextEquip.offhand = currentMain;
+        } else {
+            nextEquip.offhand = item;
+        }
+        return nextEquip;
+    }
+
+    if (isShield(currentOffhand)) {
+        nextEquip.weapon = item;
+        return nextEquip;
+    }
+
+    if (isWeapon(currentOffhand)) {
+        const mainVal = currentMain?.val || 0;
+        const offhandVal = currentOffhand?.val || 0;
+
+        if ((item.val || 0) >= Math.min(mainVal, offhandVal)) {
+            if (mainVal <= offhandVal) {
+                nextEquip.weapon = item;
+            } else {
+                nextEquip.offhand = item;
+            }
+        } else {
+            nextEquip.offhand = item;
+        }
+        return nextEquip;
+    }
+
+    nextEquip.offhand = item;
+    return nextEquip;
+};
 
 export const isMagicWeapon = (weapon) => {
     if (!isWeapon(weapon)) return false;

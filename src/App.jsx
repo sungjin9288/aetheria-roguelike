@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Terminal as TerminalIcon, Volume2, VolumeX, Play, Square } from 'lucide-react';
+import { Volume2, VolumeX, Play, Square } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 
 import { CONSTANTS } from './data/constants';
@@ -16,7 +16,6 @@ import DamageNumber from './components/DamageNumber';
 
 // 조건부로만 렌더되는 무거운 컴포넌트 — lazy import (청크 분리)
 const PostCombatCard   = lazy(() => import('./components/PostCombatCard'));
-const OnboardingGuide  = lazy(() => import('./components/OnboardingGuide'));
 const RelicChoicePanel = lazy(() => import('./components/RelicChoicePanel'));
 const AscensionScreen  = lazy(() => import('./components/AscensionScreen'));
 const RunSummaryCard   = lazy(() => import('./components/RunSummaryCard'));
@@ -31,7 +30,6 @@ function App() {
   const [isMobileViewport, setIsMobileViewport] = useState(() => (
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
   ));
-  const [showOnboarding, setShowOnboarding] = useState(true);
 
   // Auto-Explore hook
   const autoExplore = useAutoExplore({
@@ -51,12 +49,6 @@ function App() {
       return;
     }
     engine.actions.useItem(item);
-  };
-
-  // Dismiss onboarding when user explicitly dismisses or after first combat survive
-  const handleDismissOnboarding = () => {
-    setShowOnboarding(false);
-    engine.actions.dismissOnboarding?.();
   };
 
   useEffect(() => {
@@ -121,9 +113,9 @@ function App() {
 
   return (
     <MainLayout visualEffect={engine.visualEffect}>
-      <header className="flex flex-wrap justify-between items-center gap-2 mb-3 md:mb-4 pb-2 border-b border-cyber-blue/20 bg-cyber-slate/30 backdrop-blur-md px-3 md:px-4 -mx-2 md:-mx-4 pt-2 supports-[backdrop-filter]:bg-cyber-slate/10">
-        <div className="flex items-center gap-2 md:gap-4 min-w-0">
-          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyber-green to-cyber-blue bg-clip-text text-transparent flex items-center gap-2 font-rajdhani min-w-0 drop-shadow-sm">
+      <header className="flex flex-wrap justify-between items-center gap-1.5 md:gap-2 mb-2 pb-1.5 border-b border-cyber-blue/20 bg-cyber-slate/30 backdrop-blur-md px-3 md:px-4 -mx-2 md:-mx-4 pt-1.5 supports-[backdrop-filter]:bg-cyber-slate/10">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+          <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-cyber-green to-cyber-blue bg-clip-text text-transparent flex items-center gap-2 font-rajdhani min-w-0 drop-shadow-sm">
             AETHERIA <span className="text-xs text-cyber-blue/50 font-normal border border-cyber-blue/30 px-1 rounded backdrop-blur-sm">v{CONSTANTS.DATA_VERSION}</span>
           </h1>
           {/* v5.0: 프레스티지 칭호 뱃지 */}
@@ -146,34 +138,20 @@ function App() {
               </span>
             );
           })()}
-          <div className="hidden md:flex items-center bg-cyber-dark/80 border border-cyber-blue/30 rounded-md px-3 py-1.5 gap-2 w-80 shadow-inner group focus-within:border-cyber-green/50 focus-within:shadow-[0_0_15px_rgba(0,255,157,0.2)] transition-all">
-            <TerminalIcon size={14} className="text-cyber-green group-focus-within:animate-pulse" />
-            <input
-              type="text"
-              placeholder="ENTER COMMAND (/help)"
-              className="bg-transparent text-sm text-cyber-green focus:outline-none w-full font-fira placeholder:text-cyber-green/30"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  engine.handleCommand(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-            />
-          </div>
         </div>
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-3">
           <button
             onClick={() => {
               const nowMuted = soundManager.toggleMute();
               setIsMuted(nowMuted);
             }}
-            className="text-cyber-blue/50 hover:text-cyber-blue transition-all p-1.5 md:p-2 border border-cyber-blue/20 rounded-md hover:bg-cyber-blue/10 hover:shadow-[0_0_10px_rgba(0,204,255,0.2)]"
+            className="text-cyber-blue/50 hover:text-cyber-blue transition-all p-1.5 border border-cyber-blue/20 rounded-md hover:bg-cyber-blue/10 hover:shadow-[0_0_10px_rgba(0,204,255,0.2)]"
             title="Toggle Sound"
             aria-label="Toggle Sound"
           >
             {isMuted ? <VolumeX size={16} data-mute-icon /> : <Volume2 size={16} data-mute-icon />}
           </button>
-          <div className="flex items-center gap-2 text-xs font-fira text-cyber-blue/70 bg-cyber-dark/50 px-2.5 py-1.5 rounded-md border border-cyber-blue/20 backdrop-blur-sm shadow-inner">
+          <div className="flex items-center gap-2 text-[11px] font-fira text-cyber-blue/70 bg-cyber-dark/50 px-2 py-1 rounded-md border border-cyber-blue/20 backdrop-blur-sm shadow-inner">
             <span className={`w-2 h-2 rounded-full ${engine.syncStatus === 'synced' ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]' : engine.syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500 shadow-[0_0_8px_#ff00ff]'}`}></span>
             {engine.syncStatus === 'synced' ? 'ONLINE' : engine.syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE'}
           </div>

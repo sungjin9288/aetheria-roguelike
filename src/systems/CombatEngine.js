@@ -697,7 +697,7 @@ export const CombatEngine = {
         };
     },
 
-    updateQuestProgress(player, enemyName, options = {}) {
+    updateQuestProgress(player, enemyName) {
         if (!player.quests?.length) return { updatedQuests: player.quests || [], completedCount: 0 };
         const normalizedEnemyName = enemyName || '';
 

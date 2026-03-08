@@ -116,8 +116,11 @@ export const parseCommand = (input, gameState, player, actions) => {
       return `[퀘스트] ${player.quests.length}개 진행 중`;
 
     case 'map':
-    case '지도':
-      return `[현재 위치: ${player.loc}] 이동 가능: ${(DB.MAPS[player.loc]?.exits || []).join(', ')}`;
+    case '지도': {
+      const visitedCount = new Set([...(player.stats?.visitedMaps || []), player.loc]).size;
+      const totalCount = Object.keys(DB.MAPS).length;
+      return `[월드맵] 탐험 ${visitedCount}/${totalCount} | 현재 위치: ${player.loc} | 이동은 move <지역> 명령으로 진행`;
+    }
 
     case 'help':
     case 'h':

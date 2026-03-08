@@ -5,7 +5,7 @@ import { soundManager } from '../systems/SoundManager';
 import { AI_SERVICE } from '../services/aiService';
 import { parseCommand } from '../utils/commandParser';
 import { gameReducer, INITIAL_STATE } from '../reducers/gameReducer';
-import { isWeapon, isShield, isTwoHandWeapon, isMagicWeapon } from '../utils/equipmentUtils';
+import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from '../utils/equipmentUtils';
 
 import { useFirebaseSync } from './useFirebaseSync';
 import { createGameActions } from './useGameActions';
@@ -73,19 +73,21 @@ export const useGameEngine = () => {
 
     const getFullStats = useCallback(() => {
         const cls = DB.CLASSES[player.job] || DB.CLASSES['모험가'];
-        const mainWeapon = isWeapon(player.equip.weapon) ? player.equip.weapon : null;
-        const offhandItem = player.equip.offhand || null;
-        const offhandWeapon = isWeapon(offhandItem) ? offhandItem : null;
-        const offhandShield = isShield(offhandItem) ? offhandItem : null;
-
-        const mainWeaponVal = mainWeapon?.val || 0;
-        const offhandWeaponVal = offhandWeapon ? Math.floor((offhandWeapon.val || 0) * BALANCE.OFFHAND_WEAPON_RATIO) : 0;
-        const twoHandMult = isTwoHandWeapon(mainWeapon) ? BALANCE.TWO_HAND_ATK_BONUS : 1;
+        const equipProfile = getEquipmentProfile(player.equip);
+        const {
+            mainWeapon,
+            offhandWeapon,
+            offhandShield,
+            mainAttack,
+            offhandAttack,
+            shieldDef,
+            critBonus: equipmentCritBonus,
+            mpBonus: equipmentMpBonus,
+        } = equipProfile;
         const dualWieldMult = offhandWeapon ? BALANCE.DUAL_WIELD_ATK_BONUS : 1;
         const dualWieldDefMult = offhandWeapon ? BALANCE.DUAL_WIELD_DEF_MULT : 1;
 
         const aVal = player.equip.armor?.val || 0;
-        const shieldVal = offhandShield?.val || 0;
         const buff = player.tempBuff || {};
         const meta = player.meta || {};
 
@@ -162,21 +164,21 @@ export const useGameEngine = () => {
             return acc;
         }, 0);
 
-        const baseAtk = (player.atk + mainWeaponVal + offhandWeaponVal + codexAtk + (meta.bonusAtk || 0)) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * twoHandMult * dualWieldMult;
-        const baseDef = (player.def + aVal + shieldVal + codexDef) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
+        const baseAtk = (player.atk + mainAttack + offhandAttack + codexAtk + (meta.bonusAtk || 0)) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * dualWieldMult;
+        const baseDef = (player.def + aVal + shieldDef + codexDef) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
         const baseMaxHp = (player.maxHp + codexHp) * hpMultBonus;
 
         return {
             atk: Math.floor(baseAtk * (1 + ra)),
             def: Math.floor(baseDef * (1 + rd)),
             maxHp: Math.floor(baseMaxHp * rhp),
-            maxMp: Math.floor((player.maxMp || 50) * rmp),
+            maxMp: Math.floor(((player.maxMp || 50) + equipmentMpBonus) * rmp),
             elem: mainWeapon?.elem || offhandWeapon?.elem || '물리',
-            isMagic: isMagic || isMagicWeapon(mainWeapon) || isMagicWeapon(offhandWeapon),
-            weaponHands: mainWeapon?.hands || 1,
+            isMagic: isMagic || isMagicWeapon(mainWeapon) || isMagicWeapon(offhandWeapon) || Boolean(offhandShield?.elem && offhandShield?.elem !== '물리'),
+            weaponHands: getWeaponHands(mainWeapon),
             activeSet,
             relics,
-            critChance: Math.min(0.5, BALANCE.CRIT_CHANCE + relicCritBonus),
+            critChance: Math.min(0.5, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus),
         };
     }, [player]);
 

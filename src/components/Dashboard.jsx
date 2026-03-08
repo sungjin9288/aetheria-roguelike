@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { User, Crown, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen, BarChart3, Eye } from 'lucide-react';
+import { User, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen, BarChart3, Eye } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { DB } from '../data/db';
-import { formatRewardParts, getActiveQuestEntries } from '../utils/gameUtils';
+import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import SmartInventory from './SmartInventory';
 import AchievementPanel from './AchievementPanel';
 import SkillTreePreview from './SkillTreePreview';
@@ -31,7 +31,7 @@ const BAR_THEMES = {
     }
 };
 
-const ProgressBar = ({ value, max, variant = 'hp', label }) => {
+const ProgressBar = ({ value, max, variant = 'hp', label, showMeta = true }) => {
     const theme = BAR_THEMES[variant] || BAR_THEMES.hp;
     const safeMax = Math.max(1, max || 1);
     const safeValue = Math.max(0, value || 0);
@@ -39,11 +39,13 @@ const ProgressBar = ({ value, max, variant = 'hp', label }) => {
 
     return (
         <div className="relative w-full">
-            <div className="flex justify-between text-[10px] uppercase font-bold mb-0.5 text-cyber-blue/70">
-                <span>{label}</span>
-                <span>{safeValue}/{safeMax}</span>
-            </div>
-            <div className={`w-full h-2 bg-cyber-dark/50 rounded-sm overflow-hidden border ${theme.border} relative`}>
+            {showMeta && (
+                <div className="flex justify-between text-[10px] uppercase font-bold mb-0.5 text-cyber-blue/70">
+                    <span>{label}</span>
+                    <span>{safeValue}/{safeMax}</span>
+                </div>
+            )}
+            <div className={`w-full ${showMeta ? 'h-2' : 'h-1.5'} bg-cyber-dark/50 rounded-sm overflow-hidden border ${theme.border} relative`}>
                 <Motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
@@ -55,6 +57,41 @@ const ProgressBar = ({ value, max, variant = 'hp', label }) => {
     );
 };
 
+const InlineMetric = ({ label, value, max, variant }) => (
+    <div className="flex items-center gap-2 min-w-[8.5rem]">
+        <span className="w-9 shrink-0 text-[10px] text-cyber-blue/45 uppercase tracking-widest text-right">
+            {label}
+        </span>
+        <div className="flex-1 min-w-[4.5rem]">
+            <ProgressBar value={value} max={max} variant={variant} label={label} showMeta={false} />
+        </div>
+        <span className="w-16 shrink-0 text-[10px] text-cyber-blue font-bold text-right">
+            {value || 0}/{Math.max(1, max || 1)}
+        </span>
+    </div>
+);
+
+const getEquipmentTag = (item, slot = 'main') => {
+    if (!item) return slot === 'armor' ? '빈 슬롯' : '미장착';
+    if (slot === 'armor') return 'ARM';
+    if (isWeapon(item)) return isTwoHandWeapon(item) ? '2H' : '1H';
+    if (isFocusOffhand(item)) return 'SCROLL';
+    if (isShield(item)) return 'SHD';
+    return 'EQ';
+};
+
+const EquipmentSlot = ({ label, item, slot = 'main', fallback }) => (
+    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5 min-w-0">
+        <div className="flex items-center justify-between gap-2 text-[10px] font-fira">
+            <span className="text-cyber-blue/45 uppercase tracking-widest">{label}</span>
+            <span className="text-cyber-purple">{getEquipmentTag(item, slot)}</span>
+        </div>
+        <div className="mt-1 truncate text-[11px] font-fira text-white">
+            {item?.name || fallback}
+        </div>
+    </div>
+);
+
 // Animation variants for tab content
 const tabVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -62,52 +99,11 @@ const tabVariants = {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
-const getQuestObjectiveText = (quest) => (
-    quest?.target === 'Level'
-        ? `레벨 ${quest.goal} 달성`
-        : `${quest.target} ${quest.goal}회 달성`
-);
-
-const getQuestProgressText = (quest, progress = 0) => (
-    quest?.target === 'Level'
-        ? `레벨 ${progress}/${quest.goal}`
-        : `${progress}/${quest.goal}`
-);
-
-const getQuestProgressPercent = (progress = 0, goal = 1) => Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
-
-const QuestRewardChips = ({ reward, accent = 'blue' }) => {
-    const rewards = formatRewardParts(reward);
-    if (!rewards.length) return null;
-
-    const accentClass = accent === 'green'
-        ? 'border-cyber-green/30 bg-cyber-green/10 text-cyber-green'
-        : accent === 'amber'
-            ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
-            : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue';
-
-    return (
-        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-fira">
-            {rewards.map((entry) => (
-                <span key={`${accent}_${entry}`} className={`rounded border px-2 py-1 ${accentClass}`}>
-                    {entry}
-                </span>
-            ))}
-        </div>
-    );
-};
-
-const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
-
 const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false, quickSlots = [null, null, null] }) => {
     const [statusCollapsed, setStatusCollapsed] = useState(false);
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
 
-    const renderTabContent = (isMobile) => {
-        const _btnClass = isMobile
-            ? "text-xs bg-cyber-blue/10 hover:bg-cyber-blue/30 text-cyber-blue px-4 py-3 rounded border border-cyber-blue/30 font-bold min-h-[44px]"
-            : "text-[10px] bg-cyber-blue/10 hover:bg-cyber-blue/30 text-cyber-blue px-3 py-1.5 rounded-sm border border-cyber-blue/30 font-bold tracking-wider";
-
+    const renderTabContent = () => {
         return (
             <AnimatePresence mode="wait">
                 <Motion.div
@@ -142,8 +138,6 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     {sideTab === 'map' && (
                         <MapNavigator
                             player={player}
-                            onMove={(loc) => actions.move(loc)}
-                            isAiThinking={false}
                         />
                     )}
 
@@ -175,7 +169,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     <div>
                         <h3 className="text-cyber-green font-rajdhani font-bold text-base mb-1 flex items-center gap-2 tracking-widest drop-shadow-[0_0_5px_rgba(0,255,157,0.5)]">
                             <User size={16} />
-                            AGENT: {player?.name}
+                            {player?.name}
                         </h3>
                         <div className="flex gap-4 text-sm font-fira text-cyber-blue/80">
                             <div><span className="text-cyber-purple drop-shadow-sm">{player?.job}</span> <span className="text-slate-500">Lv.{player?.level}</span></div>
@@ -232,7 +226,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     </div>
 
                     <div className="max-h-[40dvh] overflow-y-auto custom-scrollbar">
-                        {renderTabContent(true)}
+                        {renderTabContent()}
                     </div>
                 </div>
             </Motion.div>
@@ -246,7 +240,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
             <Motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg shadow-[0_0_20px_rgba(0,204,255,0.15)] relative overflow-hidden transition-all duration-300 shrink-0 ${statusCollapsed ? 'p-3' : 'p-4 max-h-[clamp(10rem,35dvh,22rem)] overflow-y-auto custom-scrollbar'
+                className={`bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg shadow-[0_0_20px_rgba(0,204,255,0.15)] relative overflow-hidden transition-all duration-300 shrink-0 ${statusCollapsed ? 'p-3' : 'p-3 max-h-[clamp(7.25rem,19dvh,11.75rem)] overflow-y-auto custom-scrollbar'
                     }`}
             >
                 {/* Collapse toggle */}
@@ -259,70 +253,98 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 </button>
 
                 {statusCollapsed ? (
-                    /* Compact: name + HP bar only */
-                    <div className="flex items-center gap-3">
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 font-rajdhani">
-                                <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse"></span>
+                    <div className="space-y-2">
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-2 font-rajdhani min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse shrink-0"></span>
                                 <span className="text-white font-bold text-sm truncate">{player?.name}</span>
-                                <span className="text-cyber-purple text-[10px] font-fira">{player?.job} Lv.{player?.level}</span>
-                                <span className="text-yellow-400 text-[10px] font-fira ml-auto">{player?.gold}G</span>
                             </div>
-                            <div className="mt-1.5 flex gap-2">
-                                <div className="flex-1"><ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="HP" /></div>
-                                <div className="flex-1"><ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="MP" /></div>
-                            </div>
+                            <span className="text-cyber-purple text-[10px] font-fira uppercase bg-cyber-purple/10 px-1.5 py-0.5 rounded border border-cyber-purple/30">
+                                {player?.job}
+                            </span>
+                            <span className="text-cyber-blue text-[10px] font-fira uppercase">Lv.{player?.level}</span>
+                            <span className="text-yellow-400 text-[10px] font-fira font-bold">{player?.gold} CR</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            <ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="HP" showMeta={false} />
+                            <ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="ENERGY" showMeta={false} />
+                            <ProgressBar value={player?.exp} max={player?.nextExp} variant="exp" label="EXP" showMeta={false} />
                         </div>
                     </div>
                 ) : (
-                    /* Full status panel */
                     <>
-                        <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-3 flex items-center gap-2 tracking-[0.2em] border-b border-cyber-green/20 pb-2">
+                        <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-2 flex items-center gap-2 tracking-[0.2em] border-b border-cyber-green/20 pb-2">
                             <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse shadow-[0_0_10px_#00ff9d]"></span>
-                            AGENT STATUS
+                            STATUS
                         </h3>
 
-                        <div className="space-y-3">
-                            <div className="flex flex-col font-rajdhani">
-                                <span className="text-xl text-white font-bold tracking-wider">{player?.name}</span>
-                                <div className="flex justify-between items-center text-xs mt-1">
-                                    <span className="text-cyber-purple font-fira uppercase bg-cyber-purple/10 px-2 py-0.5 rounded border border-cyber-purple/30">{player?.job}</span>
-                                    <span className="text-cyber-blue">LEVEL {player?.level}</span>
+                        <div className="space-y-2">
+                            <div className="grid grid-cols-[auto_minmax(0,1fr)_minmax(9rem,11.5rem)] items-center gap-x-3 gap-y-1.5 text-[11px] font-fira">
+                                <span className="text-cyber-blue/45 uppercase tracking-widest">닉네임</span>
+                                <span className="text-white font-rajdhani text-lg font-bold truncate">{player?.name}</span>
+                                <InlineMetric label="HP" value={player?.hp} max={stats?.maxHp} variant="hp" />
+
+                                <span className="text-cyber-blue/45 uppercase tracking-widest">직업</span>
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-cyber-purple uppercase bg-cyber-purple/10 px-2 py-0.5 rounded border border-cyber-purple/30 truncate">
+                                        {player?.job}
+                                    </span>
+                                    <span className="text-cyber-blue uppercase shrink-0">Lv.{player?.level}</span>
+                                </div>
+                                <InlineMetric label="NRG" value={player?.mp} max={stats?.maxMp} variant="mp" />
+
+                                <span className="text-cyber-blue/45 uppercase tracking-widest">Gold</span>
+                                <span className="text-yellow-400 font-bold tracking-wide">{player?.gold} CR</span>
+                                <InlineMetric label="EXP" value={player?.exp} max={player?.nextExp} variant="exp" />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3 pt-2 border-t border-cyber-blue/10 text-[10px] font-fira">
+                                <div className="flex items-center gap-1.5 min-w-0 rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1">
+                                    <span className="text-cyber-blue/50 font-bold uppercase flex items-center gap-1">
+                                        <Sword size={9} /> {stats?.isMagic ? 'M.ATK' : 'ATK'}
+                                    </span>
+                                    <span className="text-white font-bold">
+                                        {stats?.atk} <span className="text-cyber-purple font-normal">({stats?.elem})</span>
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 min-w-0 rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1">
+                                    <span className="text-cyber-blue/50 font-bold uppercase flex items-center gap-1">
+                                        <Shield size={9} /> DEF
+                                    </span>
+                                    <span className="text-white font-bold">{stats?.def}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 min-w-0 rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1">
+                                    <span className="text-cyber-blue/50 font-bold uppercase">CRIT</span>
+                                    <span className="text-white font-bold">{Math.round((stats?.critChance || 0) * 100)}%</span>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-cyber-dark/80 p-1.5 rounded border border-yellow-500/30">
-                                <div className="w-1.5 h-1.5 bg-yellow-400 rotate-45 animate-pulse"></div>
-                                <span className="font-fira text-yellow-400 font-bold tracking-wider text-sm">{player?.gold} CR</span>
+                            <div className="grid grid-cols-3 gap-2 text-[10px] font-fira">
+                                <EquipmentSlot
+                                    label="Main"
+                                    item={player?.equip?.weapon}
+                                    slot="main"
+                                    fallback="UNARMED"
+                                />
+                                <EquipmentSlot
+                                    label="Off"
+                                    item={player?.equip?.offhand}
+                                    slot="offhand"
+                                    fallback="EMPTY"
+                                />
+                                <EquipmentSlot
+                                    label="Armor"
+                                    item={player?.equip?.armor}
+                                    slot="armor"
+                                    fallback="CIVILIAN"
+                                />
                             </div>
 
-                            <div className="space-y-3">
-                                <ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="VITALITY" />
-                                <ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="ENERGY" />
-                                <ProgressBar value={player?.exp} max={player?.nextExp} variant="exp" label="EXPERIENCE" />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-cyber-blue/10">
-                                <div className="bg-cyber-dark/30 p-1.5 rounded border border-cyber-blue/10">
-                                    <div className="text-[10px] text-cyber-blue/50 font-bold uppercase mb-0.5 flex items-center gap-1"><Sword size={9} /> {stats?.isMagic ? 'M.ATK' : 'ATK'}</div>
-                                    <div className="text-white font-fira font-bold">{stats?.atk} <span className="text-[10px] text-cyber-purple font-normal">({stats?.elem})</span></div>
+                            {stats?.activeSet && (
+                                <div className="p-1.5 bg-cyber-green/10 border border-cyber-green/30 rounded text-cyber-green text-center text-[10px] font-fira">
+                                    <span className="font-bold">{stats.activeSet.desc}</span>
                                 </div>
-                                <div className="bg-cyber-dark/30 p-1.5 rounded border border-cyber-blue/10">
-                                    <div className="text-[10px] text-cyber-blue/50 font-bold uppercase mb-0.5 flex items-center gap-1"><Shield size={9} /> DEF</div>
-                                    <div className="text-white font-fira font-bold">{stats?.def}</div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-1 text-[10px] font-fira text-cyber-blue/60 border-t border-cyber-blue/10 pt-2">
-                                <div className="flex justify-between"><span>R-HAND:</span> <span className="text-white">{player?.equip?.weapon?.name || 'UNARMED'} {stats?.weaponHands === 2 ? '(2H)' : '(1H)'}</span></div>
-                                <div className="flex justify-between"><span>L-HAND:</span> <span className="text-white">{player?.equip?.offhand?.name || '---'}{player?.equip?.offhand?.type === 'weapon' ? ' (1H)' : player?.equip?.offhand?.type === 'shield' ? ' (SHD)' : ''}</span></div>
-                                <div className="flex justify-between"><span>ARM:</span> <span className="text-white">{player?.equip?.armor?.name || 'CIVILIAN'}</span></div>
-                                {stats?.activeSet && (
-                                    <div className="mt-2 p-1.5 bg-cyber-green/10 border border-cyber-green/30 rounded text-cyber-green text-center">
-                                        <span className="font-bold">{stats.activeSet.desc}</span>
-                                    </div>
-                                )}
-                            </div>
+                            )}
                         </div>
                     </>
                 )}
@@ -352,7 +374,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    {renderTabContent(false)}
+                    {renderTabContent()}
                 </div>
             </Motion.div>
         </aside>

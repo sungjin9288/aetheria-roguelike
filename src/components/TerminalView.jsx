@@ -65,7 +65,9 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
 
     // 전투 모드 전환 시 요약 모드로 초기화
     useEffect(() => {
-        if (gameState === 'combat') setLogExpanded(false);
+        if (gameState !== 'combat') return undefined;
+        const resetTimer = window.setTimeout(() => setLogExpanded(false), 0);
+        return () => window.clearTimeout(resetTimer);
     }, [gameState]);
 
     useEffect(() => {

@@ -217,6 +217,10 @@ export const migrateData = (rawData) => {
     target.stats.bountyIssued = Boolean(target.stats.bountyIssued);
     target.stats.bountiesCompleted = target.stats.bountiesCompleted || 0;
     target.stats.claimedAchievements = Array.isArray(target.stats.claimedAchievements) ? target.stats.claimedAchievements : [];
+    target.stats.visitedMaps = Array.isArray(target.stats.visitedMaps) ? target.stats.visitedMaps : [];
+    if (target.loc && !target.stats.visitedMaps.includes(target.loc)) {
+        target.stats.visitedMaps.push(target.loc);
+    }
 
     if (!Array.isArray(savedData.quickSlots)) {
         savedData.quickSlots = [null, null, null];
@@ -296,4 +300,3 @@ export const buildRunSummary = (player, loc) => ({
     prestigeRank: player.meta?.prestigeRank || 0,
     totalGold:    player.stats?.total_gold || 0,
 });
-

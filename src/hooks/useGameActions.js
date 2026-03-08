@@ -51,10 +51,21 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         const requiredLevel = targetMap.minLv ?? targetMap.level ?? 1;
         if (player.level < requiredLevel) return addLog('error', `레벨 ${requiredLevel} 이상이어야 이동 가능합니다.`);
         if (!DB.MAPS[player.loc].exits.includes(loc)) return addLog('error', '갈 수 없는 곳입니다.');
-
-        dispatch({ type: 'SET_PLAYER', payload: { loc } });
+        const firstVisit = !(player.stats?.visitedMaps || []).includes(loc);
+        dispatch({
+            type: 'SET_PLAYER',
+            payload: (p) => ({
+                ...p,
+                loc,
+                stats: {
+                    ...(p.stats || {}),
+                    visitedMaps: Array.from(new Set([...(p.stats?.visitedMaps || []), loc]))
+                }
+            })
+        });
         dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
         addLog('success', `${loc}로 이동했습니다.`);
+        if (firstVisit) addLog('event', `🗺️ 새 지역 발견: ${loc}`);
         addLog('system', targetMap.desc);
         if (grave && grave.loc === loc) addLog('event', '근처에서 당신의 유해를 발견했습니다.');
     },
@@ -71,6 +82,10 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             hp: vitals.maxHp,
             maxMp: vitals.maxMp,
             mp: vitals.maxMp,
+            stats: {
+                ...(player.stats || {}),
+                visitedMaps: ['시작의 마을']
+            }
         }});
         addLog('system', `[${jobId}] ${name.trim()} 에이전트 — 에테리아 접속 완료.`);
         addLog('event', `직업 "${jobId}" 선택됨. 첫 스킬: ${cls.skills[0]?.name || '강타'}`);
@@ -463,6 +478,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     },
 
     acceptQuest: (qId) => {
+        if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', '퀘스트 수락은 마을 게시판에서만 가능합니다.');
         if (player.quests.some((q) => q.id === qId)) return addLog('error', '이미 수락한 퀘스트입니다.');
         const qData = DB.QUESTS.find((q) => q.id === qId);
         if (!qData) return;
@@ -492,6 +508,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     },
 
     requestBounty: () => {
+        if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', '현상수배 수주는 마을 게시판에서만 가능합니다.');
         if (player.quests.some(q => q.isBounty)) return addLog('error', '이미 진행 중인 현상수배가 있습니다. (퀘스트 완료 후 수주 가능)');
         const today = new Date().toISOString().slice(0, 10);
         if (player.stats?.bountyDate === today && player.stats?.bountyIssued) {

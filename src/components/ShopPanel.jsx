@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BALANCE } from '../data/constants';
-import { isShield, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentProfile, getNextEquipmentState, isFocusOffhand, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 
 const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
 
@@ -8,77 +8,42 @@ const isEquipmentItem = (item) => ['weapon', 'armor', 'shield'].includes(item?.t
 
 const signedDelta = (value = 0, suffix = '') => `${value >= 0 ? '+' : ''}${value}${suffix}`;
 
+const formatPercent = (value = 0) => `${value >= 0 ? '+' : ''}${value}%`;
+
+const getItemTags = (item) => {
+    const tags = [];
+    if (isWeapon(item)) tags.push(item.hands === 2 ? '2H 강공' : '1H 치명');
+    if (isFocusOffhand(item)) tags.push('주문서');
+    else if (item?.type === 'shield') tags.push('방패');
+    if (typeof item?.crit === 'number' && item.crit > 0) tags.push(`CRIT +${Math.round(item.crit * 100)}%`);
+    if (typeof item?.mp === 'number' && item.mp > 0) tags.push(`MP +${item.mp}`);
+    return tags;
+};
+
 const getComparisonMeta = (item, equip = {}) => {
     if (!item) return null;
+    const currentProfile = getEquipmentProfile(equip);
+    const nextEquip = getNextEquipmentState(equip, item);
+    const nextProfile = getEquipmentProfile(nextEquip);
+    const atkDelta = (nextProfile.mainAttack + nextProfile.offhandAttack) - (currentProfile.mainAttack + currentProfile.offhandAttack);
+    const defDelta = ((nextEquip.armor?.val || 0) + nextProfile.shieldDef) - ((equip.armor?.val || 0) + currentProfile.shieldDef);
+    const critDelta = Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100);
+    const mpDelta = nextProfile.mpBonus - currentProfile.mpBonus;
 
-    if (item.type === 'armor') {
-        const current = equip.armor;
-        const delta = (item.val || 0) - (current?.val || 0);
+    if (item.type === 'armor' || item.type === 'shield' || item.type === 'weapon') {
+        const deltas = [];
+        if (atkDelta !== 0) deltas.push(`ATK ${signedDelta(atkDelta)}`);
+        if (defDelta !== 0) deltas.push(`DEF ${signedDelta(defDelta)}`);
+        if (critDelta !== 0) deltas.push(`CRIT ${formatPercent(critDelta)}`);
+        if (mpDelta !== 0) deltas.push(`MP ${signedDelta(mpDelta)}`);
+        if (!deltas.length) deltas.push('현재 장비와 동일한 효율');
+
+        const score = atkDelta + defDelta + (critDelta * 2) + Math.floor(mpDelta / 5);
+        const replacedOffhand = item.type === 'weapon' && isTwoHandWeapon(item) && equip.offhand;
+
         return {
-            text: current ? `현재 갑옷 대비 ${signedDelta(delta, ' DEF')}` : `방어력 ${signedDelta(item.val || 0, '')}`,
-            tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
-        };
-    }
-
-    if (item.type === 'shield') {
-        if (isTwoHandWeapon(equip.weapon)) {
-            return { text: '양손 무기 사용 중', tone: 'negative' };
-        }
-        const currentShield = isShield(equip.offhand) ? equip.offhand : null;
-        const delta = (item.val || 0) - (currentShield?.val || 0);
-        return {
-            text: currentShield ? `현재 방패 대비 ${signedDelta(delta, ' DEF')}` : `보조손 DEF ${signedDelta(item.val || 0, '')}`,
-            tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
-        };
-    }
-
-    if (item.type === 'weapon') {
-        const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
-        const offhandWeapon = isWeapon(equip.offhand) ? equip.offhand : null;
-
-        if (isTwoHandWeapon(item)) {
-            const delta = (item.val || 0) - (mainWeapon?.val || 0);
-            return {
-                text: `${mainWeapon ? `주무기 대비 ${signedDelta(delta, ' ATK')}` : `ATK ${signedDelta(item.val || 0, '')}`}${offhandWeapon || isShield(equip.offhand) ? ' / 보조손 해제' : ''}`,
-                tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
-            };
-        }
-
-        if (isTwoHandWeapon(mainWeapon)) {
-            const delta = (item.val || 0) - (mainWeapon?.val || 0);
-            return {
-                text: `양손 무기 해제 후 ${signedDelta(delta, ' ATK')}`,
-                tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
-            };
-        }
-
-        if (!mainWeapon) {
-            return { text: `주무기 ATK ${signedDelta(item.val || 0, '')}`, tone: 'positive' };
-        }
-
-        if (!equip.offhand) {
-            if ((item.val || 0) > (mainWeapon.val || 0)) {
-                return {
-                    text: `주무기 ${signedDelta((item.val || 0) - (mainWeapon.val || 0), ' ATK')} / 기존 무기 보조손 이동`,
-                    tone: 'positive',
-                };
-            }
-            return { text: `빈 보조손에 ATK ${signedDelta(item.val || 0, '')}`, tone: 'positive' };
-        }
-
-        if (isShield(equip.offhand)) {
-            const delta = (item.val || 0) - (mainWeapon.val || 0);
-            return {
-                text: `주무기 대비 ${signedDelta(delta, ' ATK')}`,
-                tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
-            };
-        }
-
-        const weakerWeaponVal = Math.min(mainWeapon.val || 0, offhandWeapon?.val || 0);
-        const delta = (item.val || 0) - weakerWeaponVal;
-        return {
-            text: `약한 손 무기 대비 ${signedDelta(delta, ' ATK')}`,
-            tone: delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral',
+            text: `${deltas.join(' / ')}${replacedOffhand ? ' / 보조손 해제' : ''}`,
+            tone: score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral',
         };
     }
 
@@ -203,9 +168,11 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
                                                 {equipable ? '현재 직업 사용 가능' : `${player.job} 장착 불가`}
                                             </span>
                                         )}
-                                        {item.hands === 2 && (
-                                            <span className="px-2 py-1 rounded border border-purple-500/20 bg-purple-500/10 text-purple-300">2H</span>
-                                        )}
+                                        {getItemTags(item).map((tag) => (
+                                            <span key={`${item.name}_${tag}`} className="px-2 py-1 rounded border border-slate-600/60 bg-slate-900/70 text-slate-300">
+                                                {tag}
+                                            </span>
+                                        ))}
                                         {item.elem && (
                                             <span className="px-2 py-1 rounded border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">{item.elem}</span>
                                         )}
