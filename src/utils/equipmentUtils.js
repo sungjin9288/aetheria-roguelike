@@ -24,6 +24,11 @@ export const isTwoHandWeapon = (weapon) => isWeapon(weapon) && getWeaponHands(we
 
 export const isOneHandWeapon = (weapon) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
 
+export const getEquipmentIdentity = (item) => {
+    if (!item) return null;
+    return item.id || `${item.type}:${item.name}`;
+};
+
 export const getWeaponAttackValue = (weapon, slot = 'main') => {
     if (!isWeapon(weapon)) return 0;
     const baseVal = weapon.val || 0;
@@ -44,6 +49,10 @@ export const getWeaponCritBonus = (weapon, slot = 'main') => {
     if (typeof weapon?.crit === 'number') return weapon.crit;
     return slot === 'offhand' ? BALANCE.OFFHAND_ONE_HAND_CRIT_BONUS : BALANCE.ONE_HAND_CRIT_BONUS;
 };
+
+export const getWeaponEquipScore = (weapon, slot = 'main') => (
+    getWeaponAttackValue(weapon, slot) + Math.round(getWeaponCritBonus(weapon, slot) * 100)
+);
 
 export const getOffhandCritBonus = (item) => {
     if (!item) return 0;
@@ -71,6 +80,30 @@ export const getEquipmentProfile = (equip = {}) => {
         critBonus: getWeaponCritBonus(mainWeapon, 'main') + getOffhandCritBonus(offhandItem),
         mpBonus: getOffhandMpBonus(offhandItem),
     };
+};
+
+const pickBestOneHandPair = (weapons = [], requiredWeapon = null) => {
+    const candidates = weapons.filter((weapon) => isOneHandWeapon(weapon));
+    if (!candidates.length) return { mainWeapon: null, offhandWeapon: null };
+    if (candidates.length === 1) return { mainWeapon: candidates[0], offhandWeapon: null };
+
+    let bestPair = { mainWeapon: candidates[0], offhandWeapon: candidates[1] };
+    let bestScore = Number.NEGATIVE_INFINITY;
+
+    candidates.forEach((mainWeapon) => {
+        candidates.forEach((offhandWeapon) => {
+            if (mainWeapon === offhandWeapon) return;
+            if (requiredWeapon && mainWeapon !== requiredWeapon && offhandWeapon !== requiredWeapon) return;
+
+            const score = getWeaponEquipScore(mainWeapon, 'main') + getWeaponEquipScore(offhandWeapon, 'offhand');
+            if (score > bestScore) {
+                bestPair = { mainWeapon, offhandWeapon };
+                bestScore = score;
+            }
+        });
+    });
+
+    return bestPair;
 };
 
 export const getNextEquipmentState = (equip = {}, item) => {
@@ -108,38 +141,17 @@ export const getNextEquipmentState = (equip = {}, item) => {
         return nextEquip;
     }
 
-    if (!currentOffhand) {
-        if ((item.val || 0) > (currentMain?.val || 0)) {
-            nextEquip.weapon = item;
-            nextEquip.offhand = currentMain;
-        } else {
-            nextEquip.offhand = item;
-        }
-        return nextEquip;
-    }
-
     if (isShield(currentOffhand)) {
         nextEquip.weapon = item;
         return nextEquip;
     }
 
-    if (isWeapon(currentOffhand)) {
-        const mainVal = currentMain?.val || 0;
-        const offhandVal = currentOffhand?.val || 0;
-
-        if ((item.val || 0) >= Math.min(mainVal, offhandVal)) {
-            if (mainVal <= offhandVal) {
-                nextEquip.weapon = item;
-            } else {
-                nextEquip.offhand = item;
-            }
-        } else {
-            nextEquip.offhand = item;
-        }
-        return nextEquip;
-    }
-
-    nextEquip.offhand = item;
+    const { mainWeapon, offhandWeapon } = pickBestOneHandPair(
+        [currentMain, isWeapon(currentOffhand) ? currentOffhand : null, item].filter(Boolean),
+        item
+    );
+    nextEquip.weapon = mainWeapon || item;
+    nextEquip.offhand = offhandWeapon || null;
     return nextEquip;
 };
 
@@ -193,4 +205,32 @@ export const getWeaponMagicSkills = (equip = {}) => {
     });
 
     return skills;
+};
+
+export const getItemStatText = (item) => {
+    if (!item) return '';
+
+    const elemSuffix = item.elem ? `(${item.elem})` : '';
+
+    if (isWeapon(item)) {
+        if (isTwoHandWeapon(item)) {
+            return `ATK+${getWeaponAttackValue(item, 'main')}${elemSuffix} / 2H`;
+        }
+
+        return `ATK+${getWeaponAttackValue(item, 'main')}${elemSuffix} / CRIT+${Math.round(getWeaponCritBonus(item, 'main') * 100)}% / 1H`;
+    }
+
+    if (isShield(item)) {
+        const parts = [`DEF+${item.val || 0}${elemSuffix}`];
+        if (typeof item.mp === 'number' && item.mp > 0) parts.push(`MP+${item.mp}`);
+        if (typeof item.crit === 'number' && item.crit > 0) parts.push(`CRIT+${Math.round(item.crit * 100)}%`);
+        parts.push(isFocusOffhand(item) ? '주문서' : '보조');
+        return parts.join(' / ');
+    }
+
+    if (item.type === 'armor') return `DEF+${item.val || 0}${elemSuffix}`;
+    if (item.type === 'hp') return `HP+${item.val || 0}`;
+    if (item.type === 'mp') return `MP+${item.val || 0}`;
+
+    return item.desc_stat || item.desc || '';
 };

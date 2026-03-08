@@ -1,5 +1,6 @@
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
+import { getItemStatText } from './equipmentUtils';
 
 const normalizeItemType = (type) => {
     if (type === 'shield') return 'armor';
@@ -15,9 +16,7 @@ const supportsPrefixStat = (normalizedType, prefixStat) => {
 };
 
 const formatStatText = (item, normalizedType) => {
-    const elemSuffix = item.elem ? `(${item.elem})` : '';
-    if (normalizedType === 'weapon') return `ATK+${item.val}${elemSuffix}`;
-    if (normalizedType === 'armor') return `DEF+${item.val}${elemSuffix}`;
+    if (normalizedType === 'weapon' || normalizedType === 'armor') return getItemStatText(item);
     if (normalizedType === 'hp') return `HP+${item.val}`;
     if (normalizedType === 'mp') return `MP+${item.val}`;
     return item.desc_stat || '';

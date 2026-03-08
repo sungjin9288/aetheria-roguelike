@@ -3,7 +3,7 @@ export const ITEMS = {
         // Tier 1 - 초급 (15개)
         { name: '녹슨 단검', type: 'weapon', val: 5, tier: 1, price: 50, jobs: ['모험가', '도적', '마법사', '어쌔신', '레인저'], desc: '기본 단검', desc_stat: 'ATK+5' },
         { name: '롱소드', type: 'weapon', val: 15, tier: 1, price: 150, jobs: ['전사', '모험가', '나이트', '버서커'], desc: '표준적인 검.', desc_stat: 'ATK+15' },
-        { name: '나무지팡이', type: 'weapon', hands: 2, val: 8, tier: 1, price: 80, jobs: ['마법사', '모험가'], desc: '마법 입문자의 지팡이.', desc_stat: 'ATK+8 / 2H' },
+        { name: '나무지팡이', type: 'weapon', hands: 2, val: 12, tier: 1, price: 80, jobs: ['마법사', '모험가'], desc: '마법 입문자의 지팡이.', desc_stat: 'ATK+12 / 2H' },
         { name: '단궁', type: 'weapon', hands: 2, val: 12, tier: 1, price: 120, jobs: ['도적', '레인저', '모험가'], desc: '가벼운 단궁.', desc_stat: 'ATK+12 / 2H' },
         { name: '나무곤봉', type: 'weapon', val: 10, tier: 1, price: 60, jobs: ['전사', '모험가', '버서커'], desc: '무거운 나무 곤봉.', desc_stat: 'ATK+10' },
         { name: '수련생의 검', type: 'weapon', val: 12, tier: 1, price: 100, jobs: ['전사', '모험가', '나이트'], desc: '검술 수련용 검.', desc_stat: 'ATK+12' },
@@ -35,7 +35,7 @@ export const ITEMS = {
         // Tier 3 - 상급 (12개)
         { name: '미스릴검', type: 'weapon', val: 45, tier: 3, price: 1200, jobs: ['전사', '모험가', '나이트'], desc: '가볍고 강한 미스릴 검.', desc_stat: 'ATK+45' },
         { name: '흑요석단검', type: 'weapon', val: 40, tier: 3, price: 1000, jobs: ['도적', '어쌔신'], desc: '날카로운 흑요석 단검.', desc_stat: 'ATK+40' },
-        { name: '엘프의활', type: 'weapon', hands: 2, val: 35, tier: 3, price: 1100, jobs: ['도적', '모험가', '레인저'], desc: '엘프가 만든 활.', desc_stat: 'ATK+35 / 2H' },
+        { name: '엘프의활', type: 'weapon', hands: 2, val: 42, tier: 3, price: 1100, jobs: ['도적', '모험가', '레인저'], desc: '엘프가 만든 활.', desc_stat: 'ATK+42 / 2H' },
         { name: '대지의 메이스', type: 'weapon', val: 50, tier: 3, price: 1300, elem: '대지', jobs: ['전사', '나이트'], desc: '대지의 힘이 깃든 메이스.', desc_stat: 'ATK+50(지)' },
         { name: '독사의 송곳니', type: 'weapon', val: 48, tier: 3, price: 1250, elem: '자연', jobs: ['도적', '어쌔신'], desc: '맹독이 스며든 단검.', desc_stat: 'ATK+48(독)' },
         { name: '정령의 지팡이', type: 'weapon', hands: 2, val: 55, tier: 3, price: 1500, elem: '자연', jobs: ['마법사', '아크메이지', '흑마법사'], desc: '정령의 가호.', desc_stat: 'ATK+55(자) / 2H' },
@@ -46,7 +46,7 @@ export const ITEMS = {
         { name: '혼돈의 로드', type: 'weapon', val: 58, tier: 3, price: 1550, elem: '어둠', jobs: ['흑마법사'], desc: '어둠의 마력이 흐르는 로드.', desc_stat: 'ATK+58(암)' },
         { name: '용아 단검', type: 'weapon', val: 52, tier: 3, price: 1350, jobs: ['도적', '어쌔신'], desc: '용 이빨로 만든 단검.', desc_stat: 'ATK+52' },
         // Tier 4 - 영웅급 (10개)
-        { name: '용살자의창', type: 'weapon', val: 80, tier: 4, price: 5000, jobs: ['전사', '나이트'], desc: '용을 잡는 창.', desc_stat: 'ATK+80' },
+        { name: '용살자의창', type: 'weapon', hands: 2, val: 80, tier: 4, price: 5000, jobs: ['전사', '나이트'], desc: '용을 잡는 창.', desc_stat: 'ATK+80 / 2H' },
         { name: '아크스태프', type: 'weapon', hands: 2, val: 90, tier: 4, price: 6000, jobs: ['마법사', '아크메이지'], desc: '대마법사의 지팡이.', desc_stat: 'ATK+90 / 2H' },
         { name: '암흑의 대검', type: 'weapon', hands: 2, val: 95, tier: 4, price: 6500, elem: '어둠', jobs: ['버서커', '흑마법사'], desc: '암흑에서 태어난 검.', desc_stat: 'ATK+95(암) / 2H' },
         { name: '불사조의 활', type: 'weapon', hands: 2, val: 85, tier: 4, price: 5500, elem: '화염', jobs: ['레인저'], desc: '불사조 깃털로 만든 활.', desc_stat: 'ATK+85(화) / 2H' },
@@ -55,7 +55,7 @@ export const ITEMS = {
         { name: '혼돈의 지팡이', type: 'weapon', hands: 2, val: 92, tier: 4, price: 6200, elem: '어둠', jobs: ['흑마법사'], desc: '혼돈의 마력.', desc_stat: 'ATK+92(암) / 2H' },
         { name: '타이탄 해머', type: 'weapon', hands: 2, val: 98, tier: 4, price: 6800, elem: '대지', jobs: ['버서커'], desc: '거인의 망치.', desc_stat: 'ATK+98(지) / 2H' },
         { name: '세이지 로드', type: 'weapon', val: 88, tier: 4, price: 5700, jobs: ['아크메이지'], desc: '현자의 지팡이.', desc_stat: 'ATK+88' },
-        { name: '죽음의 낫', type: 'weapon', val: 93, tier: 4, price: 6300, elem: '어둠', jobs: ['흑마법사', '어쌔신'], desc: '사신의 무기.', desc_stat: 'ATK+93(암)' },
+        { name: '죽음의 낫', type: 'weapon', hands: 2, val: 93, tier: 4, price: 6300, elem: '어둠', jobs: ['흑마법사', '어쌔신'], desc: '사신의 무기.', desc_stat: 'ATK+93(암) / 2H' },
         // Tier 5 - 전설급 (8개)
         { name: '성검 에테르니아', type: 'weapon', val: 200, tier: 5, price: 30000, elem: '빛', jobs: ['전사', '모험가', '나이트'], desc: '전설 속 영웅이 사용하던 검.', desc_stat: 'ATK+200(빛)' },
         { name: '천벌의 지팡이', type: 'weapon', hands: 2, val: 180, tier: 5, price: 28000, elem: '빛', jobs: ['아크메이지'], desc: '신들의 심판.', desc_stat: 'ATK+180(빛) / 2H' },
@@ -64,15 +64,15 @@ export const ITEMS = {
         { name: '그림자 절단기', type: 'weapon', val: 190, tier: 5, price: 29000, elem: '어둠', jobs: ['어쌔신'], desc: '존재 자체가 전설.', desc_stat: 'ATK+190(암)' },
         { name: '라그나로크', type: 'weapon', hands: 2, val: 210, tier: 5, price: 32000, elem: '화염', jobs: ['버서커'], desc: '세계를 태우는 검.', desc_stat: 'ATK+210(화) / 2H' },
         { name: '빙결의 왕관검', type: 'weapon', val: 185, tier: 5, price: 28500, elem: '냉기', jobs: ['나이트'], desc: '얼음 왕의 검.', desc_stat: 'ATK+185(냉)' },
-        { name: '세계수의 지팡이', type: 'weapon', val: 175, tier: 5, price: 27500, elem: '자연', jobs: ['아크메이지', '흑마법사'], desc: '세계수의 가지.', desc_stat: 'ATK+175(자)' },
+        { name: '세계수의 지팡이', type: 'weapon', hands: 2, val: 175, tier: 5, price: 27500, elem: '자연', jobs: ['아크메이지', '흑마법사'], desc: '세계수의 가지.', desc_stat: 'ATK+175(자) / 2H' },
         // 확장 무기
         { name: '기계식 레이피어', type: 'weapon', val: 46, tier: 3, price: 1450, jobs: ['도적', '레인저', '모험가'], desc: '정교한 기계식 검.', desc_stat: 'ATK+46' },
         { name: '유성 완드', type: 'weapon', val: 49, tier: 3, price: 1500, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '별빛이 응축된 완드.', desc_stat: 'ATK+49(빛)' },
         { name: '폭풍 스태프', type: 'weapon', hands: 2, val: 56, tier: 3, price: 1620, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '번개를 부르는 장지팡이.', desc_stat: 'ATK+56(빛) / 2H' },
         { name: '청해 단검', type: 'weapon', val: 90, tier: 4, price: 5900, elem: '냉기', jobs: ['도적', '어쌔신'], desc: '심해의 냉기가 깃든 단검.', desc_stat: 'ATK+90(냉)' },
-        { name: '심연 파쇄창', type: 'weapon', hands: 2, val: 102, tier: 4, price: 7200, elem: '어둠', jobs: ['전사', '나이트', '버서커'], desc: '심연을 찢는 중창.', desc_stat: 'ATK+102(암)' },
+        { name: '심연 파쇄창', type: 'weapon', hands: 2, val: 102, tier: 4, price: 7200, elem: '어둠', jobs: ['전사', '나이트', '버서커'], desc: '심연을 찢는 중창.', desc_stat: 'ATK+102(암) / 2H' },
         { name: '에테르 세이버', type: 'weapon', val: 205, tier: 5, price: 31500, elem: '빛', jobs: ['전사', '나이트', '모험가'], desc: '차원 에너지로 단련된 검.', desc_stat: 'ATK+205(빛)' },
-        { name: '성운 지팡이', type: 'weapon', hands: 2, val: 195, tier: 5, price: 30500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '별무리의 공명을 담은 지팡이.', desc_stat: 'ATK+195(빛)' }
+        { name: '성운 지팡이', type: 'weapon', hands: 2, val: 195, tier: 5, price: 30500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '별무리의 공명을 담은 지팡이.', desc_stat: 'ATK+195(빛) / 2H' }
     ],
     armors: [
         // Tier 1 - 초급 (12개)

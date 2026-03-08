@@ -1,7 +1,7 @@
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { toArray, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, isAchievementUnlocked } from '../utils/gameUtils';
-import { isShield, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentIdentity, getNextEquipmentState, isTwoHandWeapon } from '../utils/equipmentUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 
@@ -42,6 +42,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
 
                 let newInv = player.inv.filter((entry) => entry.id !== inventoryItem.id);
                 const currentEquip = { ...player.equip };
+                const inventoryItemKey = getEquipmentIdentity(inventoryItem);
                 const pushBackToInventory = (equippedItem) => {
                     if (!equippedItem) return;
                     if (equippedItem.id && equippedItem.id === inventoryItem.id) return;
@@ -49,66 +50,45 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     newInv.push(equippedItem.id ? equippedItem : makeItem(equippedItem));
                 };
 
-                if (inventoryItem.type === 'armor') {
-                    pushBackToInventory(currentEquip.armor);
-                    currentEquip.armor = inventoryItem;
-                } else if (inventoryItem.type === 'weapon') {
-                    const currentMain = currentEquip.weapon;
-                    const currentOffhand = currentEquip.offhand;
-
-                    if (isTwoHandWeapon(inventoryItem)) {
-                        pushBackToInventory(currentMain);
-                        pushBackToInventory(currentOffhand);
-                        currentEquip.weapon = inventoryItem;
-                        currentEquip.offhand = null;
-                        if (currentOffhand) addLog('info', '양손 무기로 전환되어 보조 손 장비가 해제되었습니다.');
-                    } else if (!isWeapon(currentMain)) {
-                        currentEquip.weapon = inventoryItem;
-                    } else if (isTwoHandWeapon(currentMain)) {
-                        pushBackToInventory(currentMain);
-                        currentEquip.weapon = inventoryItem;
-                        addLog('info', '양손 무기를 해제하고 한손 무기를 장착했습니다.');
-                    } else if (!currentOffhand) {
-                        if ((inventoryItem.val || 0) > (currentMain?.val || 0)) {
-                            currentEquip.weapon = inventoryItem;
-                            currentEquip.offhand = currentMain.id ? currentMain : makeItem(currentMain);
-                            addLog('info', '더 강한 한손 무기를 주손으로 장착하고 기존 무기를 보조손으로 이동했습니다.');
-                        } else {
-                            currentEquip.offhand = inventoryItem;
-                            addLog('info', '보조 손에 한손 무기를 장착했습니다.');
-                        }
-                    } else if (isShield(currentOffhand)) {
-                        pushBackToInventory(currentMain);
-                        currentEquip.weapon = inventoryItem;
-                    } else if (isWeapon(currentOffhand)) {
-                        const mainVal = currentMain?.val || 0;
-                        const offhandVal = currentOffhand?.val || 0;
-                        if ((inventoryItem.val || 0) >= Math.min(mainVal, offhandVal)) {
-                            if (mainVal <= offhandVal) {
-                                pushBackToInventory(currentMain);
-                                currentEquip.weapon = inventoryItem;
-                            } else {
-                                pushBackToInventory(currentOffhand);
-                                currentEquip.offhand = inventoryItem;
-                            }
-                        } else {
-                            pushBackToInventory(currentOffhand);
-                            currentEquip.offhand = inventoryItem;
-                        }
-                    } else {
-                        pushBackToInventory(currentOffhand);
-                        currentEquip.offhand = inventoryItem;
-                    }
-                } else if (inventoryItem.type === 'shield') {
-                    if (isTwoHandWeapon(currentEquip.weapon)) {
-                        addLog('error', '양손 무기 사용 중에는 방패를 장착할 수 없습니다.');
-                        return;
-                    }
-                    pushBackToInventory(currentEquip.offhand);
-                    currentEquip.offhand = inventoryItem;
+                if (inventoryItem.type === 'shield' && isTwoHandWeapon(currentEquip.weapon)) {
+                    addLog('error', '양손 무기 사용 중에는 방패를 장착할 수 없습니다.');
+                    return;
                 }
 
-                dispatch({ type: 'SET_PLAYER', payload: { ...player, inv: newInv, equip: currentEquip } });
+                const nextEquip = getNextEquipmentState(currentEquip, inventoryItem);
+                const preservedKeys = new Set(
+                    [nextEquip.weapon, nextEquip.offhand, nextEquip.armor]
+                        .filter(Boolean)
+                        .map((equippedItem) => getEquipmentIdentity(equippedItem))
+                );
+
+                [currentEquip.weapon, currentEquip.offhand, currentEquip.armor].forEach((equippedItem) => {
+                    const equippedKey = getEquipmentIdentity(equippedItem);
+                    if (!equippedItem || equippedKey === inventoryItemKey) return;
+                    if (!preservedKeys.has(equippedKey)) pushBackToInventory(equippedItem);
+                });
+
+                if (inventoryItem.type === 'weapon') {
+                    if (isTwoHandWeapon(inventoryItem) && currentEquip.offhand) {
+                        addLog('info', '양손 무기로 전환되어 보조 손 장비가 해제되었습니다.');
+                    } else if (!isTwoHandWeapon(inventoryItem) && isTwoHandWeapon(currentEquip.weapon)) {
+                        addLog('info', '양손 무기를 해제하고 한손 무기 체계로 전환했습니다.');
+                    } else if (getEquipmentIdentity(nextEquip.offhand) === inventoryItemKey) {
+                        addLog('info', '보조 손에 한손 무기를 장착했습니다.');
+                    } else if (
+                        getEquipmentIdentity(nextEquip.weapon) === inventoryItemKey &&
+                        getEquipmentIdentity(nextEquip.offhand) === getEquipmentIdentity(currentEquip.weapon) &&
+                        getEquipmentIdentity(currentEquip.weapon) !== inventoryItemKey
+                    ) {
+                        addLog('info', '새 무기를 주손에 장착하고 기존 무기를 보조손으로 이동했습니다.');
+                    } else if (getEquipmentIdentity(nextEquip.weapon) === inventoryItemKey) {
+                        addLog('info', '주손 무기를 교체했습니다.');
+                    }
+                } else if (inventoryItem.type === 'shield' && currentEquip.offhand) {
+                    addLog('info', '보조 손 장비를 교체했습니다.');
+                }
+
+                dispatch({ type: 'SET_PLAYER', payload: { ...player, inv: newInv, equip: nextEquip } });
                 addLog('success', `${inventoryItem.name} 장착.`);
                 return;
             }

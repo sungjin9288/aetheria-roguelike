@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BALANCE } from '../data/constants';
-import { getEquipmentProfile, getNextEquipmentState, isFocusOffhand, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isFocusOffhand, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 
 const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
 
@@ -12,11 +12,9 @@ const formatPercent = (value = 0) => `${value >= 0 ? '+' : ''}${value}%`;
 
 const getItemTags = (item) => {
     const tags = [];
-    if (isWeapon(item)) tags.push(item.hands === 2 ? '2H 강공' : '1H 치명');
+    if (isWeapon(item)) tags.push(item.hands === 2 ? '2H' : '1H');
     if (isFocusOffhand(item)) tags.push('주문서');
     else if (item?.type === 'shield') tags.push('방패');
-    if (typeof item?.crit === 'number' && item.crit > 0) tags.push(`CRIT +${Math.round(item.crit * 100)}%`);
-    if (typeof item?.mp === 'number' && item.mp > 0) tags.push(`MP +${item.mp}`);
     return tags;
 };
 
@@ -147,13 +145,13 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
 
                             return (
                                 <div
-                                    key={item.name}
+                                            key={item.name}
                                     className={`flex flex-col rounded-xl border p-4 transition-all ${canBuy ? 'bg-slate-800/80 border-slate-600 hover:border-yellow-500/50 hover:shadow-[0_0_18px_rgba(234,179,8,0.12)]' : 'bg-slate-900/70 border-slate-700/80'}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <div className="font-bold text-slate-100 font-rajdhani text-lg truncate">{item.name}</div>
-                                            <div className="text-xs text-slate-400 font-fira mt-1 leading-relaxed">{item.desc_stat || item.desc}</div>
+                                            <div className="text-xs text-slate-400 font-fira mt-1 leading-relaxed">{getItemStatText(item) || item.desc}</div>
                                         </div>
                                         <span className="shrink-0 text-yellow-400 font-fira font-bold text-sm">{item.price} CR</span>
                                     </div>
@@ -219,7 +217,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <div className="font-bold text-red-300 font-rajdhani text-lg truncate">{item.name}</div>
-                                            <div className="text-xs text-slate-400 font-fira mt-1 leading-relaxed">{item.desc_stat || item.desc}</div>
+                                            <div className="text-xs text-slate-400 font-fira mt-1 leading-relaxed">{getItemStatText(item) || item.desc}</div>
                                         </div>
                                         <span className="shrink-0 text-yellow-400 font-fira font-bold text-sm">+{sellPrice} CR</span>
                                     </div>

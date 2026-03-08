@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
-import { getEquipmentProfile, getNextEquipmentState, isFocusOffhand, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isFocusOffhand, isWeapon } from '../utils/equipmentUtils';
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -45,11 +45,9 @@ const canEquipItem = (item, job) => !Array.isArray(item.jobs) || item.jobs.inclu
 
 const getItemTags = (item) => {
     const tags = [];
-    if (isWeapon(item)) tags.push(item.hands === 2 ? '2H 강공' : '1H 치명');
+    if (isWeapon(item)) tags.push(item.hands === 2 ? '2H' : '1H');
     if (isFocusOffhand(item)) tags.push('주문서');
     else if (item?.type === 'shield') tags.push('방패');
-    if (typeof item?.crit === 'number' && item.crit > 0) tags.push(`CRIT +${Math.round(item.crit * 100)}%`);
-    if (typeof item?.mp === 'number' && item.mp > 0) tags.push(`MP +${item.mp}`);
     return tags;
 };
 
@@ -102,15 +100,21 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
         [player.inv, player.job]
     );
 
-    const getCompareDiff = (item) => {
+    const getCompareDiff = useCallback((item) => {
         if (!item) return null;
         if (['weapon', 'armor', 'shield'].includes(item.type)) return getEquipPreview(item);
         return null;
-    };
+    }, [getEquipPreview]);
+
+    const isEquipUpgrade = useCallback((item) => {
+        const diff = getCompareDiff(item);
+        if (!diff) return false;
+        return (diff.atk + diff.def + (diff.crit * 2) + Math.floor(diff.mp / 5)) > 0;
+    }, [getCompareDiff]);
 
     const handleSmartEquip = () => {
-        if (bestWeapon && bestWeapon.val > (player.equip?.weapon?.val || 0)) actions.useItem(bestWeapon);
-        if (bestArmor && bestArmor.val > (player.equip?.armor?.val || 0)) actions.useItem(bestArmor);
+        if (bestWeapon && isEquipUpgrade(bestWeapon)) actions.useItem(bestWeapon);
+        if (bestArmor && isEquipUpgrade(bestArmor)) actions.useItem(bestArmor);
     };
 
     // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
@@ -219,8 +223,8 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                         {diff.atk === 0 && diff.def === 0 && diff.crit === 0 && diff.mp === 0 && <Minus size={11} className="text-cyber-blue/30" />}
                                     </div>
                                 )}
-                                {item.desc_stat && (
-                                    <div className="text-cyber-blue/30 text-xs font-fira mt-0.5 truncate">{item.desc_stat}</div>
+                                {(getItemStatText(item) || item.desc_stat) && (
+                                    <div className="text-cyber-blue/30 text-xs font-fira mt-0.5 truncate">{getItemStatText(item) || item.desc_stat}</div>
                                 )}
                                 {getItemTags(item).length > 0 && (
                                     <div className="mt-1 flex flex-wrap gap-1">
