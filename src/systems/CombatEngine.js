@@ -561,6 +561,7 @@ export const CombatEngine = {
             updatedEnemy: { ...updatedEnemy, guarding: false },
             damage: enemyDmg,
             isDead: protectedResult.isDead,
+            isCrit: heavyResolved,
             logs: [...logs, {
                 type: heavyResolved ? 'critical' : 'warning',
                 text: heavyResolved ? MSG.COMBAT_ENEMY_HEAVY_HIT(updatedEnemy.name, enemyDmg) : MSG.COMBAT_ENEMY_HIT(updatedEnemy.name, enemyDmg)

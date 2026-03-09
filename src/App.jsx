@@ -94,9 +94,7 @@ function App() {
           <RunSummaryCard
             runSummary={engine.runSummary}
             onRestart={() => {
-              engine.dispatch({ type: AT.SET_RUN_SUMMARY, payload: null });
-              engine.dispatch({ type: AT.CLEAR_LOGS });
-              engine.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+              engine.dispatch({ type: AT.RESET_RUNTIME_UI });
             }}
           />
         </Suspense>

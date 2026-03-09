@@ -30,6 +30,7 @@ export const AT = Object.freeze({
     SET_VISUAL_EFFECT: 'SET_VISUAL_EFFECT',
     SET_SIDE_TAB: 'SET_SIDE_TAB',
     SET_SHOP_ITEMS: 'SET_SHOP_ITEMS',
+    RESET_RUNTIME_UI: 'RESET_RUNTIME_UI',
 
     // Logs
     ADD_LOG: 'ADD_LOG',

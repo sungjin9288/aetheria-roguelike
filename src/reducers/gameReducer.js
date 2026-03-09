@@ -183,6 +183,23 @@ export const gameReducer = (state, action) => {
             return { ...state, sideTab: action.payload };
         case AT.SET_SHOP_ITEMS:
             return { ...state, shopItems: action.payload };
+        case AT.RESET_RUNTIME_UI:
+            return {
+                ...state,
+                gameState: 'idle',
+                logs: [],
+                enemy: null,
+                currentEvent: null,
+                shopItems: [],
+                sideTab: 'inventory',
+                isAiThinking: false,
+                visualEffect: null,
+                quickSlots: [null, null, null],
+                postCombatResult: null,
+                pendingRelics: null,
+                runSummary: null,
+                syncStatus: 'syncing'
+            };
         case AT.ADD_LOG:
             return { ...state, logs: [...state.logs, action.payload].slice(-BALANCE.LOG_MAX_SIZE) };
         case AT.UPDATE_LOG:

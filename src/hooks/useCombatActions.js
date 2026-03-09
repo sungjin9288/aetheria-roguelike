@@ -60,7 +60,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
             }
 
             result.logs.forEach((log) => addLog(log.type, log.text));
-            dispatch({ type: 'SET_VISUAL_EFFECT', payload: result.isCrit ? 'shake' : null });
+            dispatch({ type: 'SET_VISUAL_EFFECT', payload: null });
 
             if (result.isVictory) {
                 dispatch({ type: 'SET_ENEMY', payload: null });
@@ -181,7 +181,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 counterResult.logs.forEach((log) => addLog(log.type, log.text));
                 dispatch({ type: 'SET_ENEMY', payload: counterResult.updatedEnemy });
                 dispatch({ type: 'SET_PLAYER', payload: counterResult.updatedPlayer });
-                dispatch({ type: 'SET_VISUAL_EFFECT', payload: counterResult.isDead ? 'shake' : null });
+                dispatch({ type: 'SET_VISUAL_EFFECT', payload: counterResult.isCrit ? 'shake' : null });
 
                 // DoT로 적이 사망한 경우 → 전투 승리 처리
                 if (counterResult.isEnemyDead) {

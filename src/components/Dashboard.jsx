@@ -118,6 +118,43 @@ const EquipmentSlot = ({ label, item, slot = 'main', fallback, icon }) => {
     );
 };
 
+const EquipmentPanel = ({ player, stats, compact = false }) => (
+    <div className={`border border-cyber-blue/20 rounded-md bg-cyber-dark/30 ${compact ? 'p-3' : 'p-3.5'} space-y-2`}>
+        <div className="flex items-center justify-between gap-3 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.2em]">
+            <span className="flex items-center gap-1.5">
+                <Sword size={10} className="text-cyber-blue/70" />
+                Equipped
+            </span>
+            <span className="text-cyber-blue/45">
+                ATK {stats?.atk} / DEF {stats?.def}
+            </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-[10px] font-fira">
+            <EquipmentSlot
+                label="Main"
+                item={player?.equip?.weapon}
+                slot="main"
+                fallback="UNARMED"
+                icon={Sword}
+            />
+            <EquipmentSlot
+                label="Off"
+                item={player?.equip?.offhand}
+                slot="offhand"
+                fallback="EMPTY"
+                icon={Shield}
+            />
+            <EquipmentSlot
+                label="Armor"
+                item={player?.equip?.armor}
+                slot="armor"
+                fallback="CIVILIAN"
+                icon={User}
+            />
+        </div>
+    </div>
+);
+
 // Animation variants for tab content
 const tabVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -209,29 +246,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     <ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="NRG (MP)" />
                 </div>
 
-                <div className="border border-cyber-blue/20 rounded-md p-3 bg-cyber-dark/30 space-y-2">
-                    <div className="flex items-center justify-between text-[10px] font-fira text-cyber-blue/60 uppercase tracking-wider">
-                        <span className="flex items-center gap-1"><Sword size={10} /> 장비 상태</span>
-                        <span>ATK {stats?.atk} / DEF {stats?.def}</span>
-                    </div>
-                    <div className="space-y-1 text-xs font-fira text-cyber-blue/80">
-                        <div className="flex justify-between gap-3">
-                            <span className="text-cyber-blue/50 shrink-0">R-HAND</span>
-                            <span className="text-white text-right truncate">{player?.equip?.weapon?.name || 'UNARMED'} {stats?.weaponHands === 2 ? '(2H)' : '(1H)'}</span>
-                        </div>
-                        <div className="flex justify-between gap-3">
-                            <span className="text-cyber-blue/50 shrink-0">L-HAND</span>
-                            <span className="text-white text-right truncate">
-                                {player?.equip?.offhand?.name || '---'}
-                                {player?.equip?.offhand?.type === 'weapon' ? ' (1H)' : player?.equip?.offhand?.type === 'shield' ? ' (SHD)' : ''}
-                            </span>
-                        </div>
-                        <div className="flex justify-between gap-3">
-                            <span className="text-cyber-blue/50 shrink-0">ARMOR</span>
-                            <span className="text-white text-right truncate">{player?.equip?.armor?.name || 'CIVILIAN'}</span>
-                        </div>
-                    </div>
-                </div>
+                <EquipmentPanel player={player} stats={stats} compact />
 
                 <div className="border-t border-cyber-blue/20 pt-4">
                     <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
@@ -346,36 +361,6 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5 pt-1">
-                                <div className="flex items-center gap-2 text-[10px] font-fira text-cyber-blue/45 uppercase tracking-[0.24em]">
-                                    <Sword size={10} className="text-cyber-blue/60" />
-                                    Equipped
-                                </div>
-                                <div className="grid grid-cols-3 gap-2 text-[10px] font-fira">
-                                    <EquipmentSlot
-                                        label="Main"
-                                        item={player?.equip?.weapon}
-                                        slot="main"
-                                        fallback="UNARMED"
-                                        icon={Sword}
-                                    />
-                                    <EquipmentSlot
-                                        label="Off"
-                                        item={player?.equip?.offhand}
-                                        slot="offhand"
-                                        fallback="EMPTY"
-                                        icon={Shield}
-                                    />
-                                    <EquipmentSlot
-                                        label="Armor"
-                                        item={player?.equip?.armor}
-                                        slot="armor"
-                                        fallback="CIVILIAN"
-                                        icon={User}
-                                    />
-                                </div>
-                            </div>
-
                             {stats?.activeSet && (
                                 <div className="p-1.5 bg-cyber-green/10 border border-cyber-green/30 rounded text-cyber-green text-center text-[10px] font-fira">
                                     <span className="font-bold">{stats.activeSet.desc}</span>
@@ -384,6 +369,15 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                         </div>
                     </>
                 )}
+            </Motion.div>
+
+            <Motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 }}
+                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg p-3 shadow-[0_0_20px_rgba(0,204,255,0.1)] shrink-0"
+            >
+                <EquipmentPanel player={player} stats={stats} />
             </Motion.div>
 
             {/* TABS */}
