@@ -330,8 +330,13 @@ export const pickFallbackEvent = (loc, history = [], context = {}) => {
     const poolKey = explicit ? loc : getPoolKeyByLocation(loc);
     const pool = explicit || FALLBACK_EVENT_POOL[poolKey] || FALLBACK_EVENT_POOL.default;
     const recentEvents = getRecentEventSet(history);
+    const lastEvent = normalizeText((Array.isArray(history) ? history[history.length - 1] : null)?.event);
     const filteredPool = pool.filter((event) => !recentEvents.has(normalizeText(event?.desc)));
-    const candidates = filteredPool.length > 0 ? filteredPool : pool;
+    const withoutImmediateRepeat = (filteredPool.length > 0 ? filteredPool : pool)
+        .filter((event) => normalizeText(event?.desc) !== lastEvent);
+    const candidates = withoutImmediateRepeat.length > 0
+        ? withoutImmediateRepeat
+        : (filteredPool.length > 0 ? filteredPool : pool);
     const picked = candidates[Math.floor(Math.random() * candidates.length)];
     return buildEventPackage(
         { ...picked, source: 'fallback' },

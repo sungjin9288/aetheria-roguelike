@@ -66,3 +66,23 @@ test('pickFallbackEvent avoids immediately repeating recent event descriptions',
     assert.ok(event.choices.length >= 2);
     assert.equal(event.outcomes.length, event.choices.length);
 });
+
+test('pickFallbackEvent does not immediately repeat the previous event when alternatives exist', () => {
+    let history = [];
+    let previous = null;
+
+    for (let i = 0; i < 12; i += 1) {
+        const event = pickFallbackEvent('잊혀진 폐허', history, {
+            playerSnapshot: { level: 12, maxHp: 220, maxMp: 120 },
+            mapSnapshot: { level: 5 }
+        });
+
+        assert.ok(event);
+        if (previous) {
+            assert.notEqual(event.desc, previous);
+        }
+
+        previous = event.desc;
+        history = [...history, { event: event.desc, choice: event.choices[0], outcome: event.outcomes[0].log }];
+    }
+});
