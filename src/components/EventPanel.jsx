@@ -12,6 +12,9 @@ const EventPanel = ({ currentEvent, actions }) => {
     return (
         <div className={`${overlayPanelClass} bg-slate-900/95 z-20 p-3 md:p-4 rounded border border-slate-700 flex flex-col`}>
             <h2 className="text-xl text-purple-500 font-bold mb-4">🔮 운명의 선택</h2>
+            <div className="mb-4 rounded border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-200 leading-relaxed">
+                {currentEvent.desc}
+            </div>
             <div className="flex-1 flex flex-col justify-center gap-4">
                 {choices.length > 0 ? choices.map((choice, idx) => (
                     <button

@@ -124,11 +124,37 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             dispatch({ type: 'SET_GAME_STATE', payload: 'event' });
             dispatch({ type: 'SET_AI_THINKING', payload: true });
             try {
-                const eventData = await AI_SERVICE.generateEvent(player.loc, player.history, uid);
+                const fullStats = getFullStats();
+                const eventData = await AI_SERVICE.generateEvent(player.loc, player.history, uid, {
+                    playerSnapshot: {
+                        name: player.name,
+                        job: player.job,
+                        level: player.level,
+                        hp: player.hp,
+                        maxHp: fullStats.maxHp,
+                        mp: player.mp,
+                        maxMp: fullStats.maxMp,
+                        gold: player.gold,
+                        title: player.activeTitle || null,
+                        relicCount: (player.relics || []).length,
+                        status: toArray(player.status).slice(0, 4),
+                        activeQuests: toArray(player.quests).filter((quest) => !quest.done).slice(0, 3).map((quest) => quest.title)
+                    },
+                    mapSnapshot: {
+                        name: player.loc,
+                        type: mapData.type,
+                        level: mapData.level,
+                        exits: toArray(mapData.exits).slice(0, 3),
+                        boss: Boolean(mapData.boss)
+                    }
+                });
                 if (eventData?.exhausted) {
                     dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
                     addLog('warning', eventData.message || '오늘 AI 호출 한도에 도달했습니다.');
                 } else if (eventData && eventData.desc) {
+                    if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) {
+                        addLog('info', eventData.fallbackMessage);
+                    }
                     const normalizedChoices = toArray(eventData.choices)
                         .map((choice, idx) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`))
                         .slice(0, 3);
@@ -366,6 +392,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         const selectedOutcome = toArray(currentEvent.outcomes).find((o) => o.choiceIndex === idx) || null;
         const roll = Math.random();
         let updatedPlayer = player;
+        const fullStats = getFullStats();
 
         if (selectedOutcome) {
             if (selectedOutcome.gold) updatedPlayer = grantGold(updatedPlayer, selectedOutcome.gold);
@@ -378,13 +405,13 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             if (selectedOutcome.hp) {
                 updatedPlayer = {
                     ...updatedPlayer,
-                    hp: Math.max(1, Math.min(updatedPlayer.maxHp, updatedPlayer.hp + selectedOutcome.hp))
+                    hp: Math.max(1, Math.min(fullStats.maxHp, updatedPlayer.hp + selectedOutcome.hp))
                 };
             }
             if (selectedOutcome.mp) {
                 updatedPlayer = {
                     ...updatedPlayer,
-                    mp: Math.max(0, Math.min(updatedPlayer.maxMp, updatedPlayer.mp + selectedOutcome.mp))
+                    mp: Math.max(0, Math.min(fullStats.maxMp, updatedPlayer.mp + selectedOutcome.mp))
                 };
             }
             if (selectedOutcome.item) {

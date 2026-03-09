@@ -63,12 +63,27 @@ export const useGameEngine = () => {
             const tempId = Date.now();
             dispatch({ type: 'ADD_LOG', payload: { type: 'loading', text: '...', id: tempId } });
 
-            const narrative = await AI_SERVICE.generateStory(type, { ...data, history: player.history }, uid);
+            const narrative = await AI_SERVICE.generateStory(type, {
+                ...data,
+                history: player.history,
+                location: player.loc,
+                playerSnapshot: {
+                    name: player.name,
+                    job: player.job,
+                    level: player.level,
+                    hp: player.hp,
+                    maxHp: player.maxHp,
+                    mp: player.mp,
+                    maxMp: player.maxMp,
+                    title: player.activeTitle || null,
+                    relicCount: (player.relics || []).length
+                }
+            }, uid);
 
             dispatch({ type: 'UPDATE_LOG', payload: { id: tempId, log: { id: tempId, type: 'story', text: narrative } } });
             dispatch({ type: 'SET_AI_THINKING', payload: false });
         },
-        [player.history, uid]
+        [player, uid]
     );
 
     const getFullStats = useCallback(() => {

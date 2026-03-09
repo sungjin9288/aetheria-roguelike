@@ -107,8 +107,21 @@ const normalizeEventData = (raw) => {
     return {
         desc,
         choices: choices.slice(0, 3),
-        outcomes
+        outcomes: outcomes.map((outcome, idx) => ({
+            choiceIndex: Number.isFinite(Number(outcome?.choiceIndex)) ? Number(outcome.choiceIndex) : idx,
+            log: String(outcome?.log || outcome?.text || '선택의 결과가 반영되었습니다.'),
+            gold: Number.isFinite(Number(outcome?.gold)) ? Number(outcome.gold) : 0,
+            ...(Number.isFinite(Number(outcome?.exp)) ? { exp: Number(outcome.exp) } : {}),
+            ...(Number.isFinite(Number(outcome?.hp)) ? { hp: Number(outcome.hp) } : {}),
+            ...(Number.isFinite(Number(outcome?.mp)) ? { mp: Number(outcome.mp) } : {}),
+            ...(typeof outcome?.item === 'string' && outcome.item.trim() ? { item: outcome.item.trim() } : {})
+        }))
     };
+};
+
+const stringifyCompact = (value, limit = 700) => {
+    const text = typeof value === 'string' ? value : JSON.stringify(value || {});
+    return text.length > limit ? `${text.slice(0, limit)}...` : text;
 };
 
 const buildGeminiPayload = (type, data, uid) => {
@@ -117,10 +130,17 @@ const buildGeminiPayload = (type, data, uid) => {
     let schema = null;
 
     if (type === 'event') {
-        systemInstruction = "당신은 '에테리아(Aetheria)' 판타지 RPG의 게임 마스터입니다. 상황에 맞는 짧은(1~2문장) 흥미로운 무작위 이벤트를 한국어로 생성하세요. 선택지는 2~3개 제공하세요.";
+        systemInstruction = "당신은 '에테리아(Aetheria)' 판타지 RPG의 게임 마스터입니다. 한국어로 1~2문장 분량의 짧고 선명한 현장 이벤트를 만드세요. 최근 사건과 같은 소재를 반복하지 말고, 선택지는 반드시 서로 다르게 2~3개 제시하세요. 각 선택지에는 즉시 적용 가능한 결과를 붙이세요.";
         prompt = `현재 위치: ${data.location || '알 수 없음'}
-플레이 기록: ${JSON.stringify(data.history || []).slice(0, 800)}
+지역 정보: ${stringifyCompact(data.mapSnapshot || {}, 500)}
+플레이어 정보: ${stringifyCompact(data.playerSnapshot || {}, 500)}
+최근 사건 요약: ${stringifyCompact(data.history || [], 900)}
 UID: ${uid}
+주의사항:
+- 최근 사건과 동일한 연출, 동일한 보상 패턴은 피할 것
+- 선택지 2~3개는 성격이 달라야 함 (신중/공격적/회피 등)
+- outcomes 길이는 choices 길이와 같아야 함
+- outcome의 gold/exp/hp/mp는 정수, item은 실제 보상 아이템명일 때만 기입
 상황과 선택지, 결과를 생성해주세요.`;
 
         schema = {
@@ -139,7 +159,11 @@ UID: ${uid}
                         properties: {
                             choiceIndex: { type: "INTEGER", description: "선택지 인덱스 (0부터 시작)" },
                             log: { type: "STRING", description: "해당 선택시 나타날 짧은 결과 메시지" },
-                            gold: { type: "INTEGER", description: "획득/잃을 골드량 (없으면 0)" }
+                            gold: { type: "INTEGER", description: "획득/잃을 골드량 (없으면 0)" },
+                            exp: { type: "INTEGER", description: "획득 경험치 (없으면 0 또는 생략)" },
+                            hp: { type: "INTEGER", description: "HP 변화량. 회복은 양수, 피해는 음수" },
+                            mp: { type: "INTEGER", description: "MP 변화량. 회복은 양수, 소모/혼란은 음수" },
+                            item: { type: "STRING", description: "획득 아이템명. 없으면 생략" }
                         },
                         required: ["choiceIndex", "log", "gold"]
                     }
@@ -152,8 +176,11 @@ UID: ${uid}
             ? `${data.loc}에서 ${data.name} 몬스터와 조우`
             : (data.storyType || data.context || '모험');
 
-        systemInstruction = "당신은 판타지 RPG 내레이터입니다. 주어진 상황을 한국어 1~2문장으로 실감나게 묘사하세요.";
+        systemInstruction = "당신은 판타지 RPG 내레이터입니다. 주어진 상황을 한국어 1~2문장으로 묘사하되, 최근 사건과 어조를 반복하지 말고 현장감 있게 서술하세요.";
         prompt = `상황: ${context}
+현재 위치: ${data.location || data.loc || '알 수 없음'}
+플레이어 정보: ${stringifyCompact(data.playerSnapshot || {}, 400)}
+최근 사건 요약: ${stringifyCompact(data.history || [], 700)}
 UID: ${uid}`;
 
         schema = {

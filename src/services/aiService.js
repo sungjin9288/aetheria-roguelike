@@ -3,18 +3,256 @@ import { CONSTANTS } from '../data/constants';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 import { LatencyTracker } from '../systems/LatencyTracker';
 
-const normalizeEventResponse = (payload) => {
+const RECENT_HISTORY_LIMIT = 6;
+const RECENT_EVENT_LIMIT = 8;
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const toInt = (value, fallback = 0) => (Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback);
+const normalizeText = (value, fallback = '') => String(value || fallback).replace(/\s+/g, ' ').trim();
+
+const normalizeChoiceText = (choice, idx) => {
+    const raw = typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`;
+    return normalizeText(raw.replace(/^\d+\s*[.)-]?\s*/, ''), `선택지 ${idx + 1}`);
+};
+
+const dedupeChoices = (choices = []) => {
+    const seen = new Set();
+    return choices.filter((choice) => {
+        const key = normalizeText(choice).toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+};
+
+const summarizeHistory = (history = [], limit = RECENT_HISTORY_LIMIT) => (
+    Array.isArray(history)
+        ? history.slice(-limit).map((entry) => {
+            if (!entry || typeof entry !== 'object') return null;
+            const event = normalizeText(entry.event || entry.desc || entry.text);
+            const choice = normalizeText(entry.choice);
+            const outcome = normalizeText(entry.outcome || entry.result);
+            return [event, choice && `선택:${choice}`, outcome && `결과:${outcome}`].filter(Boolean).join(' / ');
+        }).filter(Boolean)
+        : []
+);
+
+const getRecentEventSet = (history = [], limit = RECENT_EVENT_LIMIT) => (
+    new Set(
+        (Array.isArray(history) ? history : [])
+            .slice(-limit)
+            .map((entry) => normalizeText(entry?.event || entry?.desc || entry?.text))
+            .filter(Boolean)
+    )
+);
+
+const hashString = (value = '') => {
+    let hash = 0;
+    for (let i = 0; i < value.length; i += 1) {
+        hash = ((hash << 5) - hash) + value.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash);
+};
+
+const getPoolKeyByLocation = (loc) => {
+    const keyByKeyword = [
+        { key: 'forest', words: ['숲'] },
+        { key: 'ruins', words: ['폐허', '광산', '신전'] },
+        { key: 'cave', words: ['동굴', '협곡'] },
+        { key: 'desert', words: ['사막', '피라미드'] },
+        { key: 'ice', words: ['얼음', '빙하', '설원'] },
+        { key: 'dark', words: ['암흑', '마왕'] },
+        { key: 'abyss', words: ['심연'] },
+        { key: 'treasure', words: ['보물고'] },
+        { key: 'machina', words: ['기계'] },
+        { key: 'sky', words: ['천공'] },
+        { key: 'deepsea', words: ['심해'] },
+        { key: 'gate', words: ['에테르', '관문'] },
+    ].find((entry) => entry.words.some((word) => String(loc || '').includes(word)));
+
+    return keyByKeyword?.key || 'default';
+};
+
+const FALLBACK_CHOICE_SETS = {
+    default: ['조사한다', '경계한다', '지나친다'],
+    forest: ['살펴본다', '경계한다', '돌아선다'],
+    ruins: ['해독한다', '조심히 접근한다', '지나친다'],
+    cave: ['조사한다', '경계한다', '후퇴한다'],
+    desert: ['추적한다', '우회한다', '무시한다'],
+    ice: ['분석한다', '조심히 접근한다', '철수한다'],
+    dark: ['조사한다', '봉인한다', '후퇴한다'],
+    abyss: ['기록한다', '전투 준비', '철수한다'],
+    treasure: ['해제한다', '확인한다', '포기한다'],
+    machina: ['해독한다', '차단한다', '우회한다'],
+    sky: ['채집한다', '분석한다', '기다린다'],
+    deepsea: ['조사한다', '은폐한다', '철수한다'],
+    gate: ['동조한다', '봉인한다', '후퇴한다'],
+};
+
+const ITEM_REWARD_BY_POOL = {
+    default: ['하급 체력 물약', '하급 마나 물약'],
+    forest: ['하급 체력 물약', '해독제'],
+    ruins: ['중급 체력 물약', '저주해제 주문서'],
+    cave: ['하급 체력 물약', '하급 마나 물약'],
+    desert: ['중급 체력 물약', '하급 마나 물약'],
+    ice: ['해빙제', '중급 체력 물약'],
+    dark: ['저주해제 주문서', '중급 마나 물약'],
+    abyss: ['영웅의 물약', '엘릭서'],
+    treasure: ['엘릭서', '중급 체력 물약'],
+    machina: ['하급 마나 물약', '중급 마나 물약'],
+    sky: ['중급 마나 물약', '수호의 물약'],
+    deepsea: ['중급 마나 물약', '해독제'],
+    gate: ['영웅의 물약', '상급 마나 물약'],
+};
+
+const SAFE_KEYWORDS = ['관찰', '해독', '조심', '우회', '분석', '기록', '표식', '표시', '점검', '봉인', '확인', '읽', '해제', '가림막', '거리 유지', '은폐', '경계'];
+const RETREAT_KEYWORDS = ['돌아', '되돌아', '후퇴', '철수', '포기', '무시', '지나친', '대기', '기다린다', '눈을 감는다', '도망'];
+const RISKY_KEYWORDS = ['만진다', '달린다', '강제로', '뛰어내', '기습', '정면 돌파', '직접 진입', '접촉', '전투 준비', '파괴', '돌파', '재가동', '강제 해제', '연다', '추적', '공명 강화'];
+
+const classifyChoice = (choiceText = '') => {
+    const choice = normalizeText(choiceText);
+    if (RETREAT_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'retreat';
+    if (RISKY_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'risky';
+    if (SAFE_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'safe';
+    return 'balanced';
+};
+
+const pickRewardItem = (poolKey, seed, level) => {
+    const pool = ITEM_REWARD_BY_POOL[poolKey] || ITEM_REWARD_BY_POOL.default;
+    if (!pool || pool.length === 0) return null;
+    const threshold = level >= 25 ? 3 : level >= 10 ? 4 : 5;
+    if ((seed % threshold) !== 0) return null;
+    return pool[seed % pool.length];
+};
+
+const buildProceduralOutcome = ({ desc, choice, choiceIndex, context = {} }) => {
+    const seed = hashString(`${context.location || ''}|${desc}|${choice}|${choiceIndex}`);
+    const style = classifyChoice(choice);
+    const level = Math.max(1, toInt(context?.playerSnapshot?.level || context?.mapSnapshot?.level || 1, 1));
+    const maxHp = Math.max(80, toInt(context?.playerSnapshot?.maxHp || 120, 120));
+    const maxMp = Math.max(50, toInt(context?.playerSnapshot?.maxMp || 60, 60));
+    const poolKey = getPoolKeyByLocation(context.location);
+    const baseReward = 10 + (level * 8);
+
+    if (style === 'retreat') {
+        const hpRecovery = Math.max(6, Math.floor(maxHp * 0.05));
+        const mpRecovery = Math.max(8, Math.floor(maxMp * 0.08));
+        const recoverHp = seed % 2 === 0;
+        return {
+            choiceIndex,
+            gold: 0,
+            exp: Math.max(6, Math.floor(baseReward * 0.35)),
+            hp: recoverHp ? hpRecovery : 0,
+            mp: recoverHp ? 0 : mpRecovery,
+            log: recoverHp
+                ? '위험을 피하며 호흡을 가다듬었습니다. 작은 상처가 아물었습니다.'
+                : '충돌을 피하고 전열을 정비했습니다. 정신력이 안정됩니다.'
+        };
+    }
+
+    if (style === 'safe') {
+        const item = pickRewardItem(poolKey, seed, level);
+        return {
+            choiceIndex,
+            gold: Math.max(12, Math.floor(baseReward * 0.7)),
+            exp: Math.max(10, Math.floor(baseReward * 0.9)),
+            hp: 0,
+            mp: Math.max(6, Math.floor(maxMp * 0.05)),
+            ...(item ? { item } : {}),
+            log: item
+                ? `신중한 대응이 통했습니다. 단서를 따라 [${item}]까지 확보했습니다.`
+                : '신중한 대응이 통했습니다. 큰 위험 없이 성과를 챙겼습니다.'
+        };
+    }
+
+    if (style === 'risky') {
+        const backlash = Math.max(8, Math.floor(maxHp * (seed % 2 === 0 ? 0.08 : 0.12)));
+        const jackpot = seed % 3 !== 0;
+        const item = jackpot ? pickRewardItem(poolKey, seed + 7, level + 5) : null;
+        return {
+            choiceIndex,
+            gold: jackpot ? Math.max(20, Math.floor(baseReward * 1.45)) : Math.max(0, Math.floor(baseReward * 0.35)),
+            exp: jackpot ? Math.max(18, Math.floor(baseReward * 1.2)) : Math.max(10, Math.floor(baseReward * 0.55)),
+            hp: jackpot ? 0 : -backlash,
+            mp: jackpot ? 0 : Math.max(0, Math.floor(maxMp * 0.04)),
+            ...(jackpot && item ? { item } : {}),
+            log: jackpot
+                ? `대담한 선택이 적중했습니다. 위험을 감수한 만큼 큰 성과를 얻었습니다${item ? ` [${item}]도 손에 넣었습니다.` : '.'}`
+                : `무리한 판단이 화를 불렀습니다. 대가를 치렀지만 약간의 실마리는 남겼습니다.`
+        };
+    }
+
+    const balancedGain = seed % 2 === 0;
+    return {
+        choiceIndex,
+        gold: balancedGain ? Math.max(14, Math.floor(baseReward * 0.85)) : Math.max(8, Math.floor(baseReward * 0.45)),
+        exp: balancedGain ? Math.max(14, Math.floor(baseReward)) : Math.max(10, Math.floor(baseReward * 0.65)),
+        hp: balancedGain ? 0 : -Math.max(6, Math.floor(maxHp * 0.05)),
+        mp: balancedGain ? Math.max(5, Math.floor(maxMp * 0.05)) : 0,
+        log: balancedGain
+            ? '균형 잡힌 판단으로 안정적인 성과를 거두었습니다.'
+            : '성과는 있었지만 완벽하진 않았습니다. 약간의 대가를 치렀습니다.'
+    };
+};
+
+const normalizeOutcomes = (rawOutcomes = [], choices = [], context = {}) => {
+    const normalized = new Map();
+
+    if (Array.isArray(rawOutcomes)) {
+        rawOutcomes.forEach((outcome, idx) => {
+            if (!outcome || typeof outcome !== 'object') return;
+            const choiceIndex = clamp(toInt(outcome.choiceIndex, idx), 0, Math.max(0, choices.length - 1));
+            if (!choices[choiceIndex] || normalized.has(choiceIndex)) return;
+
+            normalized.set(choiceIndex, {
+                choiceIndex,
+                log: normalizeText(outcome.log || outcome.result || outcome.text, '선택의 결과가 반영되었습니다.'),
+                gold: toInt(outcome.gold, 0),
+                exp: toInt(outcome.exp, 0),
+                hp: toInt(outcome.hp, 0),
+                mp: toInt(outcome.mp, 0),
+                ...(normalizeText(outcome.item) ? { item: normalizeText(outcome.item) } : {}),
+            });
+        });
+    }
+
+    choices.forEach((choice, idx) => {
+        if (normalized.has(idx)) return;
+        normalized.set(idx, buildProceduralOutcome({
+            desc: context.desc || '',
+            choice,
+            choiceIndex: idx,
+            context
+        }));
+    });
+
+    return [...normalized.values()].sort((a, b) => a.choiceIndex - b.choiceIndex);
+};
+
+const buildEventPackage = (payload, context = {}) => {
     const raw = payload?.data || payload;
     if (!raw || typeof raw !== 'object') return null;
 
-    const desc = raw.desc || raw.text || raw.event || raw.message;
-    const choices = Array.isArray(raw.choices)
-        ? raw.choices.map((choice, idx) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`))
-        : [];
-    const outcomes = Array.isArray(raw.outcomes) ? raw.outcomes : [];
-
+    const desc = normalizeText(raw.desc || raw.text || raw.event || raw.message);
     if (!desc) return null;
-    return { ...raw, desc, choices: choices.slice(0, 3), outcomes };
+
+    const poolKey = getPoolKeyByLocation(context.location);
+    const fallbackChoices = FALLBACK_CHOICE_SETS[poolKey] || FALLBACK_CHOICE_SETS.default;
+    const rawChoices = Array.isArray(raw.choices)
+        ? raw.choices.map((choice, idx) => normalizeChoiceText(choice, idx))
+        : [];
+    const choices = dedupeChoices([...rawChoices, ...fallbackChoices]).slice(0, 3);
+
+    if (choices.length < 2) return null;
+
+    return {
+        ...raw,
+        source: raw.source || context.source || 'ai',
+        desc,
+        choices,
+        outcomes: normalizeOutcomes(raw.outcomes, choices, { ...context, desc })
+    };
 };
 
 /**
@@ -68,26 +306,44 @@ export const AI_SERVICE = {
         return templates[type] || '운명의 수레바퀴가 돌기 시작합니다.';
     },
 
-    generateEvent: async (loc, history = [], uid = 'anonymous') => {
+    generateEvent: async (loc, history = [], uid = 'anonymous', context = {}) => {
         if (!TokenQuotaManager.canMakeAICall()) {
-            return { exhausted: true, message: TokenQuotaManager.getExhaustedMessage() };
+            return {
+                ...AI_SERVICE._pickFallbackEvent(loc, history, context),
+                fallbackReason: 'quota',
+                fallbackMessage: TokenQuotaManager.getExhaustedMessage()
+            };
         }
+
+        const recentHistory = summarizeHistory(history);
+        const recentEvents = getRecentEventSet(history);
 
         if (CONSTANTS.USE_AI_PROXY) {
             const result = await callProxy(
-                { type: 'event', data: { location: loc, history, uid } },
+                {
+                    type: 'event',
+                    data: {
+                        location: loc,
+                        history: recentHistory,
+                        playerSnapshot: context.playerSnapshot || {},
+                        mapSnapshot: context.mapSnapshot || {},
+                        uid
+                    }
+                },
                 'ai-event',
                 9500
             );
             if (result?.success) {
                 TokenQuotaManager.recordCall();
-                const normalized = normalizeEventResponse(result.data);
-                return normalized || result.data;
+                const normalized = buildEventPackage(result.data, { ...context, location: loc, source: 'ai' });
+                if (normalized && !recentEvents.has(normalized.desc)) {
+                    return normalized;
+                }
             }
         }
 
         // Fallback: 오프라인 이벤트 풀 사용
-        return AI_SERVICE._pickFallbackEvent(loc);
+        return AI_SERVICE._pickFallbackEvent(loc, history, context);
     },
 
     generateStory: async (type, data, uid = 'anonymous') => {
@@ -95,9 +351,19 @@ export const AI_SERVICE = {
             return AI_SERVICE.getFallback(type, data);
         }
 
+        const compactHistory = summarizeHistory(data?.history);
+
         if (CONSTANTS.USE_AI_PROXY) {
             const result = await callProxy(
-                { type: 'story', data: { storyType: type, ...data, uid } },
+                {
+                    type: 'story',
+                    data: {
+                        storyType: type,
+                        ...data,
+                        history: compactHistory,
+                        uid
+                    }
+                },
                 'ai-story',
                 9500
             );
@@ -113,30 +379,18 @@ export const AI_SERVICE = {
     /**
      * 맵 타입에 따른 오프라인 이벤트 풀 선택
      */
-    _pickFallbackEvent: (loc) => {
+    _pickFallbackEvent: (loc, history = [], context = {}) => {
         const explicit = AI_SERVICE._fallbackEventPool[loc];
-        if (explicit) {
-            return explicit[Math.floor(Math.random() * explicit.length)];
-        }
-
-        const keyByKeyword = [
-            { key: 'forest', words: ['숲'] },
-            { key: 'ruins', words: ['폐허', '광산', '신전'] },
-            { key: 'cave', words: ['동굴', '협곡'] },
-            { key: 'desert', words: ['사막', '피라미드'] },
-            { key: 'ice', words: ['얼음', '빙하', '설원'] },
-            { key: 'dark', words: ['암흑', '마왕'] },
-            { key: 'abyss', words: ['심연'] },
-            { key: 'treasure', words: ['보물고'] },
-            { key: 'machina', words: ['기계'] },
-            { key: 'sky', words: ['천공'] },
-            { key: 'deepsea', words: ['심해'] },
-            { key: 'gate', words: ['에테르', '관문'] },
-        ].find((entry) => entry.words.some((word) => String(loc || '').includes(word)));
-
-        const poolKey = keyByKeyword?.key || 'default';
-        const pool = AI_SERVICE._fallbackEventPool[poolKey] || AI_SERVICE._fallbackEventPool.default;
-        return pool[Math.floor(Math.random() * pool.length)];
+        const poolKey = explicit ? loc : getPoolKeyByLocation(loc);
+        const pool = explicit || AI_SERVICE._fallbackEventPool[poolKey] || AI_SERVICE._fallbackEventPool.default;
+        const recentEvents = getRecentEventSet(history);
+        const filteredPool = pool.filter((event) => !recentEvents.has(normalizeText(event?.desc)));
+        const candidates = filteredPool.length > 0 ? filteredPool : pool;
+        const picked = candidates[Math.floor(Math.random() * candidates.length)];
+        return buildEventPackage(
+            { ...picked, source: 'fallback' },
+            { ...context, location: loc, source: 'fallback' }
+        );
     },
 
     _fallbackEventPool: {
