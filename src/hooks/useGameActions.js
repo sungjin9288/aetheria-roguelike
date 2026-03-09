@@ -116,7 +116,10 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         const eventChanceBonus = playerRelics.reduce((acc, relic) => (
             relic.effect === 'event_chance' ? acc + relic.val : acc
         ), 0);
-        const effectiveEventChance = Math.min(0.95, (mapData.eventChance || 0) * (1 + eventChanceBonus));
+        const effectiveEventChance = Math.min(
+            BALANCE.SPECIAL_EVENT_MAX_CHANCE,
+            (mapData.eventChance || 0) * BALANCE.SPECIAL_EVENT_BASE_MULT * (1 + eventChanceBonus)
+        );
         if (Math.random() < effectiveEventChance) {
             dispatch({ type: 'SET_GAME_STATE', payload: 'event' });
             dispatch({ type: 'SET_AI_THINKING', payload: true });

@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
-import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isFocusOffhand, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentIdentity, getEquipmentProfile, getItemStatText, getNextEquipmentState, isFocusOffhand, isWeapon } from '../utils/equipmentUtils';
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -187,10 +187,11 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 {filtered.map(({ item, count }, i) => {
                     const diff = getCompareDiff(item);
                     const canEquip = !['weapon', 'armor', 'shield'].includes(item.type) || canEquipItem(item, player.job);
+                    const itemIdentity = getEquipmentIdentity(item);
                     const isCurrentEquip =
-                        player.equip?.weapon?.name === item.name ||
-                        player.equip?.armor?.name === item.name ||
-                        player.equip?.offhand?.name === item.name;
+                        getEquipmentIdentity(player.equip?.weapon) === itemIdentity ||
+                        getEquipmentIdentity(player.equip?.armor) === itemIdentity ||
+                        getEquipmentIdentity(player.equip?.offhand) === itemIdentity;
 
                     return (
                         <Motion.div

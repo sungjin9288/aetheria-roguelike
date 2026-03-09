@@ -34,6 +34,7 @@ export const AT = Object.freeze({
     // Logs
     ADD_LOG: 'ADD_LOG',
     UPDATE_LOG: 'UPDATE_LOG',
+    CLEAR_LOGS: 'CLEAR_LOGS',
 
     // Feature Additions
     SET_QUICK_SLOT: 'SET_QUICK_SLOT',

@@ -190,6 +190,8 @@ export const gameReducer = (state, action) => {
                 ...state,
                 logs: state.logs.map(log => log.id === action.payload.id ? action.payload.log : log)
             };
+        case AT.CLEAR_LOGS:
+            return { ...state, logs: [], syncStatus: 'syncing' };
         case AT.SET_QUICK_SLOT: {
             const candidate = action.payload.item;
             if (candidate && !state.player.inv.some((item) => item.id === candidate.id)) {

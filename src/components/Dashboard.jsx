@@ -31,6 +31,17 @@ const BAR_THEMES = {
     }
 };
 
+const TAB_ITEMS = [
+    { id: 'inventory', icon: Package, label: 'Inventory' },
+    { id: 'quest', icon: Scroll, label: 'Quest' },
+    { id: 'achievements', icon: Trophy, label: 'Achievements' },
+    { id: 'skills', icon: BookOpen, label: 'Skills' },
+    { id: 'map', icon: Map, label: 'Map' },
+    { id: 'stats', icon: BarChart3, label: 'Stats' },
+    { id: 'bestiary', icon: Eye, label: 'Bestiary' },
+    { id: 'system', icon: Zap, label: 'System' }
+];
+
 const ProgressBar = ({ value, max, variant = 'hp', label, showMeta = true }) => {
     const theme = BAR_THEMES[variant] || BAR_THEMES.hp;
     const safeMax = Math.max(1, max || 1);
@@ -80,17 +91,32 @@ const getEquipmentTag = (item, slot = 'main') => {
     return 'EQ';
 };
 
-const EquipmentSlot = ({ label, item, slot = 'main', fallback }) => (
-    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5 min-w-0">
-        <div className="flex items-center justify-between gap-2 text-[10px] font-fira">
-            <span className="text-cyber-blue/45 uppercase tracking-widest">{label}</span>
-            <span className="text-cyber-purple">{getEquipmentTag(item, slot)}</span>
+const EquipmentSlot = ({ label, item, slot = 'main', fallback, icon }) => {
+    const SlotIcon = icon;
+
+    return (
+        <div className="rounded-md border border-cyber-blue/15 bg-cyber-dark/35 px-2 py-2 min-w-0 shadow-[inset_0_0_14px_rgba(0,204,255,0.03)]">
+            <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2 min-w-0">
+                    <div className="w-7 h-7 shrink-0 rounded border border-cyber-blue/20 bg-cyber-black/70 flex items-center justify-center text-cyber-blue/70">
+                        <SlotIcon size={13} />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="text-[9px] font-fira text-cyber-blue/45 uppercase tracking-[0.2em]">
+                            {label}
+                        </div>
+                        <div className="truncate text-[11px] font-fira text-white mt-0.5">
+                            {item?.name || fallback}
+                        </div>
+                    </div>
+                </div>
+                <span className="shrink-0 text-[10px] font-fira text-cyber-purple">
+                    {getEquipmentTag(item, slot)}
+                </span>
+            </div>
         </div>
-        <div className="mt-1 truncate text-[11px] font-fira text-white">
-            {item?.name || fallback}
-        </div>
-    </div>
-);
+    );
+};
 
 // Animation variants for tab content
 const tabVariants = {
@@ -209,18 +235,19 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
 
                 <div className="border-t border-cyber-blue/20 pt-4">
                     <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
-                        {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'stats', icon: BarChart3 }, { id: 'bestiary', icon: Eye }, { id: 'system', icon: Zap }].map(tab => (
+                        {TAB_ITEMS.map(tab => (
                             <Motion.button
                                 whileTap={{ scale: 0.95 }}
                                 key={tab.id}
                                 onClick={() => setSideTab(tab.id)}
-                                className={`min-h-[44px] min-w-[60px] flex-shrink-0 flex-1 text-[10px] px-2 py-2 rounded border uppercase font-bold tracking-wider transition-all flex flex-col items-center justify-center gap-0.5
+                                title={tab.label}
+                                aria-label={tab.label}
+                                className={`min-h-[44px] min-w-[44px] flex-shrink-0 px-2 py-2 rounded border transition-all flex items-center justify-center
                                     ${sideTab === tab.id
                                         ? 'text-cyber-black bg-cyber-blue border-cyber-blue shadow-[0_0_10px_rgba(0,204,255,0.4)]'
                                         : 'text-cyber-blue/50 border-cyber-blue/30 hover:border-cyber-blue/70 bg-cyber-dark/40'}`}
                             >
                                 <tab.icon size={14} />
-                                {tab.id.slice(0, 4)}
                             </Motion.button>
                         ))}
                     </div>
@@ -270,7 +297,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             <ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="ENERGY" showMeta={false} />
                             <ProgressBar value={player?.exp} max={player?.nextExp} variant="exp" label="EXP" showMeta={false} />
                         </div>
-                    </div>
+                        </div>
                 ) : (
                     <>
                         <h3 className="text-cyber-green font-rajdhani font-bold text-sm mb-2 flex items-center gap-2 tracking-[0.2em] border-b border-cyber-green/20 pb-2">
@@ -319,25 +346,34 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-2 text-[10px] font-fira">
-                                <EquipmentSlot
-                                    label="Main"
-                                    item={player?.equip?.weapon}
-                                    slot="main"
-                                    fallback="UNARMED"
-                                />
-                                <EquipmentSlot
-                                    label="Off"
-                                    item={player?.equip?.offhand}
-                                    slot="offhand"
-                                    fallback="EMPTY"
-                                />
-                                <EquipmentSlot
-                                    label="Armor"
-                                    item={player?.equip?.armor}
-                                    slot="armor"
-                                    fallback="CIVILIAN"
-                                />
+                            <div className="space-y-1.5 pt-1">
+                                <div className="flex items-center gap-2 text-[10px] font-fira text-cyber-blue/45 uppercase tracking-[0.24em]">
+                                    <Sword size={10} className="text-cyber-blue/60" />
+                                    Equipped
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 text-[10px] font-fira">
+                                    <EquipmentSlot
+                                        label="Main"
+                                        item={player?.equip?.weapon}
+                                        slot="main"
+                                        fallback="UNARMED"
+                                        icon={Sword}
+                                    />
+                                    <EquipmentSlot
+                                        label="Off"
+                                        item={player?.equip?.offhand}
+                                        slot="offhand"
+                                        fallback="EMPTY"
+                                        icon={Shield}
+                                    />
+                                    <EquipmentSlot
+                                        label="Armor"
+                                        item={player?.equip?.armor}
+                                        slot="armor"
+                                        fallback="CIVILIAN"
+                                        icon={User}
+                                    />
+                                </div>
                             </div>
 
                             {stats?.activeSet && (
@@ -358,17 +394,18 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 min-h-[200px] overflow-hidden flex flex-col shadow-[0_0_20px_rgba(0,204,255,0.1)]"
             >
                 <div className="flex gap-2 mb-4 border-b border-cyber-blue/20 pb-3">
-                    {[{ id: 'inventory', icon: Package }, { id: 'quest', icon: Scroll }, { id: 'achievements', icon: Trophy }, { id: 'skills', icon: BookOpen }, { id: 'map', icon: Map }, { id: 'stats', icon: BarChart3 }, { id: 'bestiary', icon: Eye }, { id: 'system', icon: Zap }].map(tab => (
+                    {TAB_ITEMS.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setSideTab(tab.id)}
-                            className={`flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold font-rajdhani uppercase tracking-wider rounded-sm transition-all min-h-[36px]
+                            title={tab.label}
+                            aria-label={tab.label}
+                            className={`h-10 flex-1 flex items-center justify-center rounded-sm transition-all min-h-[36px]
                                 ${sideTab === tab.id
                                     ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/50 shadow-[0_0_10px_rgba(0,204,255,0.3)]'
                                     : 'text-cyber-blue/30 hover:text-cyber-blue/70 hover:bg-cyber-blue/5'}`}
                         >
                             <tab.icon size={12} />
-                            <span className="hidden xl:inline">{tab.id}</span>
                         </button>
                     ))}
                 </div>

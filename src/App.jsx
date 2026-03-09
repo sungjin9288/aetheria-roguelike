@@ -4,6 +4,7 @@ import { motion as Motion } from 'framer-motion';
 
 import { CONSTANTS } from './data/constants';
 import { PRESTIGE_TITLES } from './data/titles';
+import { AT } from './reducers/actionTypes';
 import { soundManager } from './systems/SoundManager';
 
 // 항상 즉시 필요한 컴포넌트 — eager import
@@ -92,8 +93,9 @@ function App() {
           <RunSummaryCard
             runSummary={engine.runSummary}
             onRestart={() => {
-              engine.dispatch({ type: 'SET_RUN_SUMMARY', payload: null });
-              engine.dispatch({ type: 'SET_GAME_STATE', payload: 'idle' });
+              engine.dispatch({ type: AT.SET_RUN_SUMMARY, payload: null });
+              engine.dispatch({ type: AT.CLEAR_LOGS });
+              engine.dispatch({ type: AT.SET_GAME_STATE, payload: 'idle' });
             }}
           />
         </Suspense>
