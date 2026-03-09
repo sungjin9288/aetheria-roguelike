@@ -5,6 +5,7 @@ import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { GS } from '../reducers/gameStates';
 import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary } from '../utils/gameUtils';
+import { pushBattleRecord, makeBattleRecord } from '../systems/DifficultyManager';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -123,15 +124,15 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 emitDailyProtocolLogs('kills', 1);
                 emitUnlockedTitles(updatedPlayer);
 
-                // survive_low_hp 퀘스트 통계 추적 (HP 20% 이하에서 승리)
-                const hpRatioAtVictory = (playerAfterAction.hp || 0) / Math.max(1, playerAfterAction.maxHp || 1);
-                if (hpRatioAtVictory <= 0.20) {
-                    dispatch({ type: 'SET_PLAYER', payload: {
-                        ...updatedPlayer,
-                        stats: { ...updatedPlayer.stats, lowHpWins: (updatedPlayer.stats?.lowHpWins || 0) + 1 }
-                    } });
-                }
-
+                // Stage 3: 승리 전투 결과 기록
+                const winHpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
+                dispatch({
+                    type: 'SET_PLAYER',
+                    payload: (p) => ({
+                        ...p,
+                        stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio))
+                    })
+                });
 
                 // 마왕 처치 → 에테르 환생
                 if (victoryResult.isDemonKingSlain) {
@@ -197,12 +198,14 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 if (counterResult.isDead) {
                     const deadPlayer = counterResult.updatedPlayer;
                     const defeatResult = CombatEngine.handleDefeat(deadPlayer, INITIAL_STATE.player);
+                    // Stage 3: 적 반격 사망 전투 결과 기록
+                    const deathRecordPlayer = { ...defeatResult.updatedPlayer, stats: pushBattleRecord(defeatResult.updatedPlayer.stats, makeBattleRecord('death', 0)) };
                     dispatch({ type: AT.SET_RUN_SUMMARY, payload: buildRunSummary(deadPlayer, playerForEnemyTurn.loc) });
                     dispatch({ type: AT.SET_GRAVE, payload: defeatResult.graveData });
-                    dispatch({ type: AT.SET_PLAYER, payload: defeatResult.updatedPlayer });
+                    dispatch({ type: AT.SET_PLAYER, payload: deathRecordPlayer });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                     dispatch({ type: AT.SET_ENEMY, payload: null });
-                    emitUnlockedTitles(defeatResult.updatedPlayer);
+                    emitUnlockedTitles(deathRecordPlayer);
                     defeatResult.logs.forEach((log) => addLog(log.type, log.text));
                     addStoryLog('death', { loc: playerForEnemyTurn.loc });
                 }
@@ -214,6 +217,15 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
             const escapeResult = CombatEngine.attemptEscape(enemy, stats);
             escapeResult.logs.forEach((log) => addLog(log.type, log.text));
             if (escapeResult.success) {
+                // Stage 3: 도주 성공 전투 결과 기록
+                const escHpRatio = (player.hp || 0) / Math.max(1, player.maxHp || 1);
+                dispatch({
+                    type: 'SET_PLAYER',
+                    payload: (p) => ({
+                        ...p,
+                        stats: pushBattleRecord(p.stats, makeBattleRecord('escape', escHpRatio))
+                    })
+                });
                 dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
                 dispatch({ type: 'SET_ENEMY', payload: null });
             } else {

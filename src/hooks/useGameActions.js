@@ -4,6 +4,7 @@ import { CLASSES } from '../data/classes';
 import { AI_SERVICE } from '../services/aiService';
 import { toArray, getJobSkills, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel } from '../utils/gameUtils';
 import { resetDailyProtocolIfNeeded, rollExplorationEvent, spawnEnemy, applyBattleStartRelics, getFirstVisitReward } from '../utils/exploreUtils';
+import { applyDynamicDifficulty, enrichSnapshotWithDifficulty } from '../systems/DifficultyManager';
 import { BOSS_MONSTERS } from '../data/monsters';
 // RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN — 동적 import로 exploreUtils.js에서 사용
 import { PRESTIGE_TITLES } from '../data/titles';
@@ -144,15 +145,18 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             dispatch({ type: 'SET_AI_THINKING', payload: true });
             try {
                 const fullStats = getFullStats();
+                const baseSnapshot = {
+                    name: player.name, job: player.job, level: player.level,
+                    hp: player.hp, maxHp: fullStats.maxHp, mp: player.mp, maxMp: fullStats.maxMp,
+                    gold: player.gold, title: player.activeTitle || null,
+                    relicCount: playerRelics.length,
+                    status: toArray(player.status).slice(0, 4),
+                    activeQuests: toArray(player.quests).filter(q => !q.done).slice(0, 3).map(q => q.title)
+                };
+                // Stage 3: AI 이벤트에 동적 난이도 정보 주입
+                const playerSnapshot = enrichSnapshotWithDifficulty(baseSnapshot, player);
                 const eventData = await AI_SERVICE.generateEvent(player.loc, player.history, uid, {
-                    playerSnapshot: {
-                        name: player.name, job: player.job, level: player.level,
-                        hp: player.hp, maxHp: fullStats.maxHp, mp: player.mp, maxMp: fullStats.maxMp,
-                        gold: player.gold, title: player.activeTitle || null,
-                        relicCount: playerRelics.length,
-                        status: toArray(player.status).slice(0, 4),
-                        activeQuests: toArray(player.quests).filter(q => !q.done).slice(0, 3).map(q => q.title)
-                    },
+                    playerSnapshot,
                     mapSnapshot: {
                         name: player.loc, type: mapData.type, level: mapData.level,
                         exits: toArray(mapData.exits).slice(0, 3), boss: Boolean(mapData.boss)
@@ -209,7 +213,10 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         }
 
         // 몬스터 생성 (Phase 1-B)
-        const { mStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog });
+        const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog });
+
+        // Stage 3: 동적 난이도 조절 적용
+        const { mStats } = applyDynamicDifficulty(rawStats, player, addLog);
 
         // 전투 시작 유물 효과 적용 (Phase 1-B)
         const fullStats = getFullStats();
