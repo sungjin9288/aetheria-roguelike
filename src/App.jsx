@@ -5,6 +5,7 @@ import { motion as Motion } from 'framer-motion';
 import { CONSTANTS } from './data/constants';
 import { PRESTIGE_TITLES } from './data/titles';
 import { AT } from './reducers/actionTypes';
+import { GS } from './reducers/gameStates';
 import { soundManager } from './systems/SoundManager';
 
 // 항상 즉시 필요한 컴포넌트 — eager import
@@ -86,7 +87,7 @@ function App() {
 
   // v5.0: 런 요약(사망) 화면 — IntroScreen보다 먼저 체크해야 함
   // handleDefeat가 player.name을 ''로 리셋하므로 IntroScreen 조건에 걸리기 전에 처리
-  if (engine.gameState === 'dead' && engine.runSummary) {
+  if (engine.gameState === GS.DEAD && engine.runSummary) {
     return (
       <MainLayout visualEffect={null}>
         <Suspense fallback={null}>
@@ -95,7 +96,7 @@ function App() {
             onRestart={() => {
               engine.dispatch({ type: AT.SET_RUN_SUMMARY, payload: null });
               engine.dispatch({ type: AT.CLEAR_LOGS });
-              engine.dispatch({ type: AT.SET_GAME_STATE, payload: 'idle' });
+              engine.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             }}
           />
         </Suspense>
@@ -244,7 +245,7 @@ function App() {
       )}
 
       {/* v4.0: 에테르 환생 풀스크린 */}
-      {engine.gameState === 'ascension' && (
+      {engine.gameState === GS.ASCENSION && (
         <Suspense fallback={null}>
           <AscensionScreen
             player={engine.player}
@@ -264,7 +265,7 @@ function App() {
       </Suspense>
 
       {/* Auto-Explore Floating Button */}
-      {engine.gameState === 'idle' && (
+      {engine.gameState === GS.IDLE && (
         <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
           {autoExplore.autoLog && (
             <div className="text-xs font-fira text-cyber-blue/70 bg-cyber-black/80 border border-cyber-blue/20 px-2 py-1 rounded backdrop-blur-md max-w-[180px] text-right">

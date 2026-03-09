@@ -1,4 +1,5 @@
 import { DB } from '../data/db';
+import { GS } from '../reducers/gameStates';
 
 /**
  * getAvailableCommands — 현재 상황에서 사용 가능한 커맨드 목록
@@ -15,7 +16,7 @@ export const getAvailableCommands = (gameState, player) => {
         { cmd: 'map', desc: '현재 위치/출구' },
     ];
 
-    if (gameState === 'idle') {
+    if (gameState === GS.IDLE) {
         base.push({ cmd: 'explore', desc: '주변 탐색' });
         base.push({ cmd: 'move', desc: '이동 (move <지역명>)' });
         if (isSafe) {
@@ -24,7 +25,7 @@ export const getAvailableCommands = (gameState, player) => {
         }
     }
 
-    if (gameState === 'combat') {
+    if (gameState === GS.COMBAT) {
         base.push(
             { cmd: 'attack', desc: '공격 (a)' },
             { cmd: 'skill', desc: '스킬 사용 (s)' },
@@ -33,7 +34,7 @@ export const getAvailableCommands = (gameState, player) => {
         );
     }
 
-    if (gameState === 'event') {
+    if (gameState === GS.EVENT) {
         base.push(
             { cmd: '1', desc: '이벤트 선택지 1' },
             { cmd: '2', desc: '이벤트 선택지 2' },

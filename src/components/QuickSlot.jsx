@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Zap, X } from 'lucide-react';
+import { GS } from '../reducers/gameStates';
 
 /**
  * QuickSlot — 빠른 소모품 슬롯 (Feature #8)
@@ -12,7 +13,7 @@ import { Zap, X } from 'lucide-react';
  *   gameState: string
  */
 const QuickSlot = ({ slots = [null, null, null], onUse, gameState }) => {
-    const canUse = gameState === 'combat' || gameState === 'idle';
+    const canUse = gameState === GS.COMBAT || gameState === GS.IDLE;
 
     return (
         <div className="flex items-center gap-1.5">

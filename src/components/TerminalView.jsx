@@ -3,6 +3,7 @@ import { Bot, AlertTriangle, CheckCircle, Terminal, ChevronDown, ChevronUp, Filt
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
+import { GS } from '../reducers/gameStates';
 
 const LOG_STYLES = {
     combat: {
@@ -65,7 +66,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
 
     // 전투 모드 전환 시 요약 모드로 초기화
     useEffect(() => {
-        if (gameState !== 'combat') return undefined;
+        if (gameState !== GS.COMBAT) return undefined;
         const resetTimer = window.setTimeout(() => setLogExpanded(false), 0);
         return () => window.clearTimeout(resetTimer);
     }, [gameState]);
@@ -83,7 +84,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
             // Combat shortcuts: 1=Attack, 2=Skill, 3=Escape
-            if (gameState === 'combat') {
+            if (gameState === GS.COMBAT) {
                 if (e.key === '1') { e.preventDefault(); onCommand('attack'); }
                 if (e.key === '2') { e.preventDefault(); onCommand('skill'); }
                 if (e.key === '3') { e.preventDefault(); onCommand('escape'); }
@@ -106,12 +107,12 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [gameState, quickSlots, onQuickSlotUse, onCommand]);
 
-    const bgClass = gameState === 'event'
+    const bgClass = gameState === GS.EVENT
         ? "bg-cyber-purple/10 border-cyber-purple/50 shadow-[0_0_20px_rgba(188,19,254,0.15)]"
         : "bg-cyber-black/90 border-cyber-green/30 shadow-[0_0_15px_rgba(0,255,157,0.1)]";
 
     // #10: 전투 중 로그 필터링 — 요약 모드에서는 전투 관련 최근 N개만 표시
-    const isCombat = gameState === 'combat';
+    const isCombat = gameState === GS.COMBAT;
     const displayLogs = isCombat && !logExpanded
         ? logs.filter(l => COMBAT_LOG_TYPES.has(l.type)).slice(-SUMMARY_LOG_COUNT)
         : logs;

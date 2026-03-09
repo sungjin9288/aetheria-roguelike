@@ -172,15 +172,20 @@ UID: ${uid}
             required: ["desc", "choices", "outcomes"]
         };
     } else if (type === 'story') {
-        const context = data.storyType === 'encounter'
-            ? `${data.loc}에서 ${data.name} 몬스터와 조우`
-            : (data.storyType || data.context || '모험');
+        const storyTypeLabels = {
+            encounter: '조우', victory: '승리', death: '전사',
+            levelUp: '레벨업', rest: '휴식',
+            bossPhase2: '보스 Phase 2 전환',
+            questComplete: '퀴스트 완료',
+            ruinRecap: '사망 후회고',
+        };
+        const label = storyTypeLabels[data.storyType] || data.storyType || '모험';
+        const context = data.context || `${data.location || data.loc || '알 수 없음'}에서 ${label}`;
 
-        systemInstruction = "당신은 판타지 RPG 내레이터입니다. 주어진 상황을 한국어 1~2문장으로 묘사하되, 최근 사건과 어조를 반복하지 말고 현장감 있게 서술하세요.";
+        systemInstruction = "당신은 판타지 RPG 내레이터입니다. 주어진 상황을 한국어 1~2문장으로 묘사하되, 최근 사건과 어조를 반복하지 말고 현장감 있게 서술하세요. 보스 전환은 듀라운, 퀴스트 완료는 성취감, 사망 후회고는 비장미로 서술하세요.";
         prompt = `상황: ${context}
-현재 위치: ${data.location || data.loc || '알 수 없음'}
+예전 사건 요약: ${stringifyCompact(data.history || [], 700)}
 플레이어 정보: ${stringifyCompact(data.playerSnapshot || {}, 400)}
-최근 사건 요약: ${stringifyCompact(data.history || [], 700)}
 UID: ${uid}`;
 
         schema = {
