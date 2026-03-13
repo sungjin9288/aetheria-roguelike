@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { BarChart3, Sword, Skull, Clock, Coins, Target, Shield } from 'lucide-react';
+import { Activity, BarChart3, Coins, Compass, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
+import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 
 /**
- * StatsPanel — 플레이 통계 대시보드
- * player.stats 기반 킬/사망/골드/보스 통계 + 직업별 킬 분포
+ * StatsPanel — 플레이 통계 + 성향 요약
  */
-const StatsPanel = ({ player }) => {
-    const stats = useMemo(() => {
+const StatsPanel = ({ player, stats }) => {
+    const overview = useMemo(() => {
         const s = player?.stats || {};
         return {
             kills: s.kills || 0,
@@ -19,15 +19,17 @@ const StatsPanel = ({ player }) => {
         };
     }, [player]);
 
-    const topKills = useMemo(() => {
-        return Object.entries(stats.killRegistry)
+    const trait = useMemo(() => stats?.traitProfile || getTraitProfile(player, stats), [player, stats]);
+    const passiveParts = useMemo(() => getTraitPassiveParts(trait), [trait]);
+
+    const topKills = useMemo(() => (
+        Object.entries(overview.killRegistry)
             .sort(([, a], [, b]) => b - a)
-            .slice(0, 8);
-    }, [stats.killRegistry]);
+            .slice(0, 8)
+    ), [overview.killRegistry]);
 
     const maxKill = topKills.length > 0 ? topKills[0][1] : 1;
-
-    const kd = stats.deaths > 0 ? (stats.kills / stats.deaths).toFixed(1) : stats.kills > 0 ? '∞' : '0';
+    const kd = overview.deaths > 0 ? (overview.kills / overview.deaths).toFixed(1) : overview.kills > 0 ? '∞' : '0';
 
     return (
         <div className="space-y-4">
@@ -35,29 +37,72 @@ const StatsPanel = ({ player }) => {
                 <BarChart3 size={12} /> ▸ STATISTICS
             </div>
 
-            {/* Summary Cards */}
+            <div className="rounded border border-cyber-blue/15 bg-cyber-dark/35 p-2.5 space-y-2">
+                <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/60">
+                    <span className="flex items-center gap-1.5">
+                        <Sparkles size={10} />
+                        성향
+                    </span>
+                    <span className={trait.accent}>{trait.title}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                    <div className="rounded border border-cyber-blue/10 bg-cyber-black/40 px-2 py-1.5">
+                        <div className="text-[9px] text-cyber-blue/40 font-fira uppercase flex items-center gap-1 mb-0.5">
+                            <Sparkles size={9} /> 현재 성향
+                        </div>
+                        <div className={`font-fira font-bold text-xs ${trait.accent}`}>{trait.name}</div>
+                    </div>
+                    <div className="rounded border border-cyber-blue/10 bg-cyber-black/40 px-2 py-1.5">
+                        <div className="text-[9px] text-cyber-blue/40 font-fira uppercase flex items-center gap-1 mb-0.5">
+                            <Zap size={9} /> 전용 스킬
+                        </div>
+                        <div className="font-fira font-bold text-xs text-cyber-green">{trait.skill?.name || '없음'}</div>
+                    </div>
+                    <div className="rounded border border-cyber-blue/10 bg-cyber-black/40 px-2 py-1.5 col-span-2">
+                        <div className="text-[9px] text-cyber-blue/40 font-fira uppercase flex items-center gap-1 mb-0.5">
+                            <Shield size={9} /> 패시브
+                        </div>
+                        <div className="font-fira font-bold text-xs text-cyber-blue">
+                            {passiveParts.length > 0 ? passiveParts.join(' / ') : trait.passiveLabel}
+                        </div>
+                    </div>
+                </div>
+                <div className="text-[10px] font-fira text-cyber-blue/55">
+                    {trait.desc}
+                </div>
+                <div className="text-[10px] font-fira text-cyber-blue/45">
+                    성향 판단: {trait.reasons.join(' · ')}
+                </div>
+                <div className="space-y-1 pt-1 border-t border-cyber-blue/10 text-[10px] font-fira text-cyber-blue/70">
+                    <div>→ {trait.unlockHint}</div>
+                    {trait.skill?.desc && <div>→ {trait.skill.desc}</div>}
+                </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-1.5">
                 {[
-                    { label: 'TOTAL KILLS', value: stats.kills, icon: Sword, color: 'text-red-400' },
-                    { label: 'DEATHS', value: stats.deaths, icon: Skull, color: 'text-cyber-blue/60' },
-                    { label: 'BOSS KILLS', value: stats.bossKills, icon: Target, color: 'text-cyber-purple' },
-                    { label: 'BOUNTIES', value: stats.bountiesCompleted, icon: Target, color: 'text-cyber-blue' },
+                    { label: 'TOTAL KILLS', value: overview.kills, icon: Sword, color: 'text-red-400' },
+                    { label: 'DEATHS', value: overview.deaths, icon: Skull, color: 'text-cyber-blue/60' },
+                    { label: 'BOSS KILLS', value: overview.bossKills, icon: Target, color: 'text-cyber-purple' },
+                    { label: 'BOUNTIES', value: overview.bountiesCompleted, icon: Target, color: 'text-cyber-blue' },
                     { label: 'K/D RATIO', value: kd, icon: Shield, color: 'text-cyber-green' },
-                    { label: 'TOTAL GOLD', value: stats.totalGold.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
-                    { label: 'LEVEL', value: player?.level || 1, icon: Clock, color: 'text-cyber-blue' },
+                    { label: 'TOTAL GOLD', value: overview.totalGold.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
+                    { label: 'LEVEL', value: player?.level || 1, icon: Activity, color: 'text-cyber-blue' },
+                    { label: 'EXPLORES', value: player?.stats?.explores || 0, icon: Compass, color: 'text-teal-300' },
+                    { label: 'RESTS', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
                 ].map((entry) => {
                     const Icon = entry.icon;
                     return (
-                    <div key={entry.label} className="bg-cyber-dark/40 border border-cyber-blue/10 rounded p-1.5">
-                        <div className="text-[9px] text-cyber-blue/40 font-fira uppercase flex items-center gap-1 mb-0.5">
-                            <Icon size={9} /> {entry.label}
+                        <div key={entry.label} className="bg-cyber-dark/40 border border-cyber-blue/10 rounded p-1.5">
+                            <div className="text-[9px] text-cyber-blue/40 font-fira uppercase flex items-center gap-1 mb-0.5">
+                                <Icon size={9} /> {entry.label}
+                            </div>
+                            <div className={`font-fira font-bold text-xs ${entry.color}`}>{entry.value}</div>
                         </div>
-                        <div className={`font-fira font-bold text-xs ${entry.color}`}>{entry.value}</div>
-                    </div>
-                )})}
+                    );
+                })}
             </div>
 
-            {/* Kill Distribution */}
             {topKills.length > 0 && (
                 <div className="space-y-2">
                     <div className="text-[10px] text-cyber-blue/40 font-fira uppercase">처치 분포 (TOP 8)</div>
@@ -84,7 +129,6 @@ const StatsPanel = ({ player }) => {
                 </div>
             )}
 
-            {/* Playtime / Meta */}
             {player?.meta && (
                 <div className="border-t border-cyber-blue/10 pt-2 space-y-1 text-[10px] font-fira text-cyber-blue/40">
                     <div className="flex justify-between"><span>LEGACY ESSENCE:</span><span className="text-cyber-purple">{player.meta.essence || 0}</span></div>

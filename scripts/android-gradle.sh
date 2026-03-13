@@ -28,7 +28,22 @@ if [[ -z "${JAVA_HOME:-}" || ! -x "$JAVA_HOME/bin/java" ]]; then
 fi
 
 export PATH="$JAVA_HOME/bin:$PATH"
-export GRADLE_USER_HOME="${GRADLE_USER_HOME:-/tmp/aetheria-gradle}"
+DEFAULT_GRADLE_USER_HOME="/tmp/aetheria-gradle"
+export GRADLE_USER_HOME="${GRADLE_USER_HOME:-$DEFAULT_GRADLE_USER_HOME}"
 
 cd "$ROOT_DIR/android"
-./gradlew "$TASK" "$@"
+GRADLE_ARGS=("$TASK" "$@")
+
+run_gradle() {
+  ./gradlew "${GRADLE_ARGS[@]}"
+}
+
+if ! run_gradle; then
+  if [[ "$GRADLE_USER_HOME" != "$DEFAULT_GRADLE_USER_HOME" ]]; then
+    exit 1
+  fi
+
+  export GRADLE_USER_HOME="$(mktemp -d /tmp/aetheria-gradle-retry.XXXXXX)"
+  printf 'Primary Gradle cache failed; retrying with a clean cache at %s\n' "$GRADLE_USER_HOME" >&2
+  run_gradle
+fi

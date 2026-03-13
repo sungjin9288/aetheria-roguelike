@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BALANCE } from '../data/constants';
-import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isFocusOffhand, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentProfile, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 
 const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
 
@@ -12,9 +12,7 @@ const formatPercent = (value = 0) => `${value >= 0 ? '+' : ''}${value}%`;
 
 const getItemTags = (item) => {
     const tags = [];
-    if (isWeapon(item)) tags.push(item.hands === 2 ? '2H' : '1H');
-    if (isFocusOffhand(item)) tags.push('주문서');
-    else if (item?.type === 'shield') tags.push('방패');
+    if (isWeapon(item) || item?.type === 'shield') tags.push(getWeaponStyleLabel(item));
     return tags;
 };
 

@@ -44,6 +44,7 @@ const SkillCard = ({ skill, cooldown = 0, selected = false }) => {
                         </span>
                         {selected && <span className="text-[10px] text-cyber-green border border-cyber-green/30 px-1 rounded">선택됨</span>}
                         {skill.fromWeapon && <span className="text-[10px] text-cyber-purple border border-cyber-purple/30 px-1 rounded">무기 생성</span>}
+                        {skill.fromTrait && <span className="text-[10px] text-amber-300 border border-amber-500/30 px-1 rounded">성향</span>}
                         {isOnCooldown && <span className="text-[10px] text-red-400 font-fira">쿨타임 {cooldown}턴</span>}
                     </div>
                     <div className="text-cyber-blue/50 text-xs font-fira mt-0.5">{skill.desc}</div>

@@ -1,4 +1,4 @@
-import { BALANCE } from '../data/constants';
+import { BALANCE } from '../data/constants.js';
 
 const MAGIC_WEAPON_KEYWORDS = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
 
@@ -23,6 +23,15 @@ export const getWeaponHands = (weapon) => Math.max(1, Number(weapon?.hands) || 1
 export const isTwoHandWeapon = (weapon) => isWeapon(weapon) && getWeaponHands(weapon) >= 2;
 
 export const isOneHandWeapon = (weapon) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
+
+export const getWeaponStyleLabel = (item) => {
+    if (!item) return '미장착';
+    if (isWeapon(item)) return isTwoHandWeapon(item) ? '파쇄 2H' : '연계 1H';
+    if (isFocusOffhand(item)) return '비전 보조';
+    if (isShield(item)) return '방벽 보조';
+    if (item.type === 'armor') return '방어구';
+    return '장비';
+};
 
 export const getEquipmentIdentity = (item) => {
     if (!item) return null;
@@ -214,17 +223,17 @@ export const getItemStatText = (item) => {
 
     if (isWeapon(item)) {
         if (isTwoHandWeapon(item)) {
-            return `ATK+${getWeaponAttackValue(item, 'main')}${elemSuffix} / 2H`;
+            return `파쇄 2H / ATK+${getWeaponAttackValue(item, 'main')}${elemSuffix} / 치명 대신 강타`;
         }
 
-        return `ATK+${getWeaponAttackValue(item, 'main')}${elemSuffix} / CRIT+${Math.round(getWeaponCritBonus(item, 'main') * 100)}% / 1H`;
+        return `연계 1H / ATK+${getWeaponAttackValue(item, 'main')}${elemSuffix} / CRIT+${Math.round(getWeaponCritBonus(item, 'main') * 100)}%`;
     }
 
     if (isShield(item)) {
         const parts = [`DEF+${item.val || 0}${elemSuffix}`];
         if (typeof item.mp === 'number' && item.mp > 0) parts.push(`MP+${item.mp}`);
         if (typeof item.crit === 'number' && item.crit > 0) parts.push(`CRIT+${Math.round(item.crit * 100)}%`);
-        parts.push(isFocusOffhand(item) ? '주문서' : '보조');
+        parts.push(isFocusOffhand(item) ? '비전 보조' : '방벽 보조');
         return parts.join(' / ');
     }
 

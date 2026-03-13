@@ -1,19 +1,20 @@
 export const APP_ID = 'aetheria-rpg';
+const ENV = import.meta.env || {};
 // Admin UIDs — 환경변수에서 쉼표 구분으로 주입 (VITE_ADMIN_UIDS=uid1,uid2)
-export const ADMIN_UIDS = (import.meta.env.VITE_ADMIN_UIDS || '').split(',').map(s => s.trim()).filter(Boolean);
+export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map(s => s.trim()).filter(Boolean);
 
 export const CONSTANTS = {
     // Note: GEMINI_API_KEY moved to server-side (api/ai-proxy.js)
     // Client no longer needs this key directly
-    USE_AI_PROXY: import.meta.env.VITE_USE_AI_PROXY === 'true' || false,
-    AI_PROXY_URL: import.meta.env.VITE_AI_PROXY_URL || '/api/ai-proxy',
+    USE_AI_PROXY: ENV.VITE_USE_AI_PROXY === 'true' || false,
+    AI_PROXY_URL: ENV.VITE_AI_PROXY_URL || '/api/ai-proxy',
     MAX_LEVEL: 99,
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 200,
     SAVE_KEY: 'aetheria_save_v4_0',
     DATA_VERSION: 4.0,
-    REMOTE_CONFIG_ENABLED: import.meta.env.VITE_REMOTE_CONFIG === 'true' || false,
+    REMOTE_CONFIG_ENABLED: ENV.VITE_REMOTE_CONFIG === 'true' || false,
     MONSTER_PREFIXES: [
         { name: '허약한', mod: 0.7, expMod: 0.7, dropMod: 0.8 },
         { name: '일반적인', mod: 1.0, expMod: 1.0, dropMod: 1.0 },
@@ -39,13 +40,14 @@ export const BALANCE = {
     ITEM_PREFIX_CHANCE: 0.12,
     SPECIAL_EVENT_BASE_MULT: 0.25,
     SPECIAL_EVENT_MAX_CHANCE: 0.14,
-    ONE_HAND_ATK_RATIO: 0.48,
-    OFFHAND_WEAPON_RATIO: 0.42,
-    TWO_HAND_ATK_BONUS: 1.35,
-    DUAL_WIELD_ATK_BONUS: 1.08,
+    SPECIAL_EVENT_PITY_PER_EXPLORE: 0.015,
+    ONE_HAND_ATK_RATIO: 0.44,
+    OFFHAND_WEAPON_RATIO: 0.34,
+    TWO_HAND_ATK_BONUS: 1.55,
+    DUAL_WIELD_ATK_BONUS: 1.05,
     DUAL_WIELD_DEF_MULT: 0.92,
-    ONE_HAND_CRIT_BONUS: 0.06,
-    OFFHAND_ONE_HAND_CRIT_BONUS: 0.04,
+    ONE_HAND_CRIT_BONUS: 0.08,
+    OFFHAND_ONE_HAND_CRIT_BONUS: 0.05,
     DEBOUNCE_SAVE_MS: 500,
     LOG_MAX_SIZE: 50,
     ENEMY_TURN_DELAY_MS: 450,       // 적 반격 딜레이 (ms)
@@ -54,6 +56,15 @@ export const BALANCE = {
     AUTO_EXPLORE_HP_THRESHOLD: 0.3, // 자동 탐색 HP 정지 임계값 (30%)
     AUTO_EXPLORE_INTERVAL_MS: 1400, // 자동 탐색 인터벌 (ms)
     STATUS_DOT_RATIO: 0.04,         // 상태이상 DoT 피해 비율 (maxHp 기준 4%)
+    MIN_NOTHING_CHANCE: 0.12,
+    QUIET_STREAK_NOTHING_REDUCTION: 0.05,
+    RELIC_PITY_PER_EXPLORE: 0.01,
+    RELIC_FIND_MAX_CHANCE: 0.18,
+    ANOMALY_BASE_CHANCE: 0.12,
+    ANOMALY_PITY_PER_EXPLORE: 0.03,
+    ANOMALY_MAX_CHANCE: 0.3,
+    KEY_EVENT_PITY_PER_EXPLORE: 0.04,
+    KEY_EVENT_MAX_CHANCE: 0.35,
     // v4.0 — 신규 시스템 상수
     EXP_SCALE_RATE: 1.2,            // EXP 곡선 완화 (기존 1.5 → 1.2)
     EXP_LEVEL_CAP_50: 800000,       // Lv50+ EXP 하한선

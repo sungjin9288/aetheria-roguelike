@@ -2,7 +2,10 @@ import { ITEMS } from '../data/items';
 import { DB } from '../data/db';
 import { BOSS_MONSTERS } from '../data/monsters';
 import { getWeaponMagicSkills, isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils';
-import { TITLES } from '../data/titles';
+import { DEFAULT_EXPLORE_STATE } from './explorationPacing';
+import { TITLES, TITLE_PASSIVES } from '../data/titles';
+import { getRunBuildProfile, getTraitSkill } from './runProfileUtils';
+import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager';
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
@@ -12,7 +15,8 @@ export const toArray = (v) => (Array.isArray(v) ? v : []);
 export const getJobSkills = (player) => {
     const classSkills = toArray(DB.CLASSES[player?.job]?.skills);
     const weaponSkills = getWeaponMagicSkills(player?.equip);
-    return [...classSkills, ...weaponSkills];
+    const traitSkill = getTraitSkill(player);
+    return [...classSkills, ...weaponSkills, ...(traitSkill ? [traitSkill] : [])];
 };
 
 /** 아이템 인스턴스 생성 (고유 ID 부여) */
@@ -72,6 +76,18 @@ export const getTitleLabel = (token) => {
 
 /** 칭호 색상 반환 */
 export const getTitleColor = (token) => getTitleDefinition(token)?.color || 'text-cyber-purple';
+
+/** 칭호 패시브 메타 조회 */
+export const getTitlePassive = (token) => {
+    if (!token) return null;
+    return TITLE_PASSIVES[token] || null;
+};
+
+/** 칭호 패시브 표시 문구 */
+export const getTitlePassiveLabel = (token) => {
+    const passive = getTitlePassive(token);
+    return passive?.label || '패시브 없음';
+};
 
 /** 골드 획득을 누적 통계와 함께 반영 */
 export const grantGold = (player, amount = 0) => {
@@ -218,6 +234,7 @@ export const migrateData = (rawData) => {
     target.stats.bountiesCompleted = target.stats.bountiesCompleted || 0;
     target.stats.claimedAchievements = Array.isArray(target.stats.claimedAchievements) ? target.stats.claimedAchievements : [];
     target.stats.visitedMaps = Array.isArray(target.stats.visitedMaps) ? target.stats.visitedMaps : [];
+    target.stats.exploreState = { ...DEFAULT_EXPLORE_STATE, ...(target.stats.exploreState || {}) };
     if (target.loc && !target.stats.visitedMaps.includes(target.loc)) {
         target.stats.visitedMaps.push(target.loc);
     }
@@ -289,14 +306,25 @@ export const checkTitles = (player) => {
  * @param {object} player - 최종 플레이어 상태
  * @param {string} loc - 사망 위치 (player.loc).
  */
-export const buildRunSummary = (player, loc) => ({
-    level:        player.level,
-    job:          player.job || '모험가',
-    kills:        player.stats?.kills || 0,
-    bossKills:    player.stats?.bossKills || 0,
-    relicsFound:  player.relics?.length || 0,
-    activeTitle:  player.activeTitle || null,
-    loc:          loc || player.loc || '???',
-    prestigeRank: player.meta?.prestigeRank || 0,
-    totalGold:    player.stats?.total_gold || 0,
-});
+export const buildRunSummary = (player, loc) => {
+    const buildProfile = getRunBuildProfile(player, { maxHp: player.maxHp });
+    const recentBattles = (player.stats?.recentBattles || []).slice(-20);
+
+    return {
+        level:        player.level,
+        job:          player.job || '모험가',
+        kills:        player.stats?.kills || 0,
+        bossKills:    player.stats?.bossKills || 0,
+        relicsFound:  player.relics?.length || 0,
+        activeTitle:  player.activeTitle || null,
+        loc:          loc || player.loc || '???',
+        prestigeRank: player.meta?.prestigeRank || 0,
+        totalGold:    player.stats?.total_gold || 0,
+        primaryBuild: buildProfile.primary.name,
+        buildTags:    buildProfile.tags.map((tag) => tag.name).slice(0, 4),
+        difficultyLabel: getDifficultyMults(calcPerformanceScore(player)).label,
+        recentWinRate: recentBattles.length > 0
+            ? Math.round((recentBattles.filter((battle) => battle.result === 'win').length / recentBattles.length) * 100)
+            : null,
+    };
+};

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
+import { getAdventureGuidance, getMoveRecommendations } from '../utils/adventureGuide';
 import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
 import { soundManager } from '../systems/SoundManager';
@@ -27,13 +28,40 @@ import CraftingPanel from './tabs/CraftingPanel';
  * ControlPanel — 게임 상태별 패널 라우터 (Phase 1-C 리팩토링)
  * 각 상태에 해당하는 서브 컴포넌트로 렌더링을 위임합니다.
  */
-const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, grave, isAiThinking, currentEvent }) => {
+const ACTION_KIND_TO_BUTTON = {
+  explore: 'explore',
+  open_move: 'move',
+  rest: 'rest',
+  open_class: 'class',
+  open_quest_board: 'quests',
+  open_shop: 'market',
+  claim_quest: 'quests',
+};
+
+const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopItems, grave, isAiThinking, currentEvent, stats = null, mobile = false }) => {
   const [confirmReset, setConfirmReset] = useState(false);
   const mapData = DB.MAPS[player.loc];
+  const guidance = getAdventureGuidance(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, gameState);
+  const moveRecommendations = getMoveRecommendations(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, DB.MAPS);
+  const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind] || null;
+  const actionGridClass = mobile
+    ? 'grid grid-cols-4 gap-2'
+    : 'grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-2 sm:gap-3';
+  const actionButtonBase = mobile
+    ? 'relative min-h-[52px] px-1.5 py-2 rounded-2xl flex flex-col items-center justify-center gap-1 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+    : 'relative min-h-[56px] p-2 sm:p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]';
+  const actionLabelClass = mobile
+    ? 'text-[8px] font-rajdhani font-bold tracking-[0.18em]'
+    : 'text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest';
+  const getRecommendedClass = (buttonKey) => (
+    recommendedButton === buttonKey
+      ? 'ring-1 ring-cyan-300/45 shadow-[0_0_18px_rgba(34,211,238,0.18)]'
+      : ''
+  );
 
   // ── 전투 패널
   if (gameState === GS.COMBAT) {
-    return <CombatPanel player={player} actions={actions} isAiThinking={isAiThinking} />;
+    return <CombatPanel player={player} enemy={enemy} actions={actions} isAiThinking={isAiThinking} />;
   }
 
   // ── AI 이벤트 로딩 중
@@ -75,102 +103,151 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
 
   // ── 기본 Idle / 이동 패널
   return (
-    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 md:mt-4 relative z-10 w-full">
+    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`mt-3 md:mt-4 relative z-10 w-full ${mobile ? 'space-y-2' : ''}`}>
       {gameState === GS.MOVING ? (
-        <div className="flex flex-wrap gap-2 md:gap-3">
-          {mapData.exits.map((exit) => (
+        <div className={`gap-2 md:gap-3 ${mobile ? 'grid grid-cols-2' : 'flex flex-wrap'}`}>
+          {moveRecommendations.map((route) => (
             <Motion.button
               whileTap={{ scale: 0.95 }}
-              key={exit}
+              key={route.name}
               disabled={isAiThinking}
-              onClick={() => actions.move(exit)}
-              className="flex-1 min-w-[120px] min-h-[50px] px-4 md:px-6 py-3 md:py-4 bg-cyber-dark/80 border border-cyber-green/50 rounded-md text-cyber-green hover:bg-cyber-green/10 hover:shadow-[0_0_15px_rgba(0,255,157,0.3)] flex items-center justify-center gap-2 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all backdrop-blur-md"
+              onClick={() => actions.move(route.name)}
+              className={`${mobile ? 'min-h-[86px] px-3 py-2 text-xs' : 'flex-1 min-w-[150px] min-h-[92px] px-4 py-3'} ${
+                route.isRecommended
+                  ? 'border-cyber-green/55 bg-cyber-green/10 shadow-[0_0_18px_rgba(0,255,157,0.16)]'
+                  : 'border-cyber-blue/25 bg-cyber-dark/75'
+              } rounded-md text-left hover:bg-cyber-green/10 hover:shadow-[0_0_15px_rgba(0,255,157,0.18)] flex flex-col items-start justify-between gap-2 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all backdrop-blur-md`}
             >
-              <MapIcon size={16} /> {exit}
+              <div className="flex w-full items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 text-cyber-green">
+                    <MapIcon size={16} />
+                    <span className="truncate">{route.name}</span>
+                  </div>
+                  <div className="mt-1 text-[10px] font-fira text-cyber-blue/50">
+                    {route.levelLabel}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`rounded border px-1.5 py-0.5 text-[9px] font-fira ${
+                    route.isRecommended
+                      ? 'border-cyber-green/35 bg-cyber-green/10 text-cyber-green'
+                      : 'border-cyber-blue/20 bg-cyber-black/50 text-cyber-blue/70'
+                  }`}>
+                    {route.isRecommended ? '추천' : route.badge}
+                  </span>
+                </div>
+              </div>
+              <div className="text-[10px] font-fira text-cyber-blue/70 leading-snug">
+                {route.reason}
+              </div>
             </Motion.button>
           ))}
           <Motion.button
+            data-testid="control-move-cancel"
             whileTap={{ scale: 0.95 }}
             onClick={() => setGameState(GS.IDLE)}
-            className="flex-1 min-w-[120px] min-h-[50px] px-4 md:px-6 py-3 md:py-4 bg-red-900/20 border border-red-500/30 text-red-400 rounded-md hover:bg-red-900/40 font-bold tracking-wider transition-all"
+            className={`${mobile ? 'col-span-2 min-h-[44px] px-3 py-2 text-xs' : 'flex-1 min-w-[120px] min-h-[50px] px-4 md:px-6 py-3 md:py-4'} bg-red-900/20 border border-red-500/30 text-red-400 rounded-md hover:bg-red-900/40 font-bold tracking-wider transition-all`}
           >
             CANCEL
           </Motion.button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-2 sm:gap-3">
+        <>
+          <div className={`mb-2 rounded-xl border border-cyber-blue/15 bg-cyber-black/55 px-3 py-2 ${mobile ? '' : 'max-w-md'}`}>
+            <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/55">
+              <span>추천 행동</span>
+              <span className="text-cyber-green">{guidance.emphasis}</span>
+            </div>
+            <div className="mt-1 text-sm font-rajdhani font-bold text-white">{guidance.title}</div>
+            <div className="mt-0.5 text-[11px] font-fira text-cyber-blue/65">{guidance.detail}</div>
+          </div>
+        <div className={actionGridClass}>
           {/* EXPLORE */}
           <Motion.button
+            data-testid="control-explore"
             whileTap={{ scale: 0.95 }}
             disabled={isAiThinking}
             onClick={() => { soundManager.play('click'); actions.explore(); }}
-            className="min-h-[56px] bg-cyber-dark/60 hover:bg-cyber-blue/10 border border-cyber-blue/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(0,204,255,0.2)] hover:border-cyber-blue/50 transition-all group backdrop-blur-sm"
+            className={`${actionButtonBase} ${getRecommendedClass('explore')} bg-slate-950/80 hover:bg-cyan-500/10 border border-cyan-400/20 hover:shadow-[0_0_18px_rgba(34,211,238,0.14)] hover:border-cyan-300/40`}
           >
+            {recommendedButton === 'explore' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
             <MapIcon size={18} className="text-cyber-blue group-hover:scale-110 transition-transform" />
-            <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-cyber-blue/90">EXPLORE</span>
+            <span className={`${actionLabelClass} text-cyber-blue/90`}>EXPLORE</span>
           </Motion.button>
 
           {/* MOVE */}
           <Motion.button
+            data-testid="control-move"
             whileTap={{ scale: 0.95 }}
             disabled={isAiThinking}
             onClick={() => setGameState(GS.MOVING)}
-            className="min-h-[56px] bg-cyber-dark/60 hover:bg-cyber-green/10 border border-cyber-green/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(0,255,157,0.2)] hover:border-cyber-green/50 transition-all group backdrop-blur-sm"
+            className={`${actionButtonBase} ${getRecommendedClass('move')} bg-slate-950/80 hover:bg-emerald-400/10 border border-emerald-400/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.14)] hover:border-emerald-300/40`}
           >
+            {recommendedButton === 'move' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
             <ArrowRight size={18} className="text-cyber-green group-hover:translate-x-2 transition-transform" />
-            <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-cyber-green/90">MOVE</span>
+            <span className={`${actionLabelClass} text-cyber-green/90`}>MOVE</span>
           </Motion.button>
 
           {/* 안전 지역 전용 버튼 */}
           {mapData.type === 'safe' && (
             <>
               <Motion.button
+                data-testid="control-market"
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => {
                   actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
                   actions.setGameState(GS.SHOP);
                 }}
-                className="min-h-[56px] bg-cyber-dark/60 hover:bg-yellow-900/20 border border-yellow-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:border-yellow-500/50 transition-all group backdrop-blur-sm"
+                className={`${actionButtonBase} ${getRecommendedClass('market')} bg-slate-950/80 hover:bg-yellow-500/10 border border-yellow-500/20 hover:shadow-[0_0_18px_rgba(234,179,8,0.14)] hover:border-yellow-400/40`}
               >
+                {recommendedButton === 'market' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
                 <ShoppingBag size={18} className="text-yellow-500 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-yellow-500/90">MARKET</span>
+                <span className={`${actionLabelClass} text-yellow-500/90`}>{mobile ? 'SHOP' : 'MARKET'}</span>
               </Motion.button>
               <Motion.button
+                data-testid="control-rest"
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={actions.rest}
-                className="min-h-[56px] bg-cyber-dark/60 hover:bg-emerald-900/20 border border-emerald-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:border-emerald-500/50 transition-all group backdrop-blur-sm"
+                className={`${actionButtonBase} ${getRecommendedClass('rest')} bg-slate-950/80 hover:bg-emerald-500/10 border border-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.14)] hover:border-emerald-400/40`}
               >
+                {recommendedButton === 'rest' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
                 <Moon size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-emerald-500/90">REST</span>
+                <span className={`${actionLabelClass} text-emerald-500/90`}>REST</span>
               </Motion.button>
               <Motion.button
+                data-testid="control-class"
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState(GS.JOB_CHANGE)}
-                className="min-h-[56px] bg-cyber-dark/60 hover:bg-purple-900/20 border border-purple-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:border-purple-500/50 transition-all group backdrop-blur-sm"
+                className={`${actionButtonBase} ${getRecommendedClass('class')} bg-slate-950/80 hover:bg-violet-500/10 border border-violet-500/20 hover:shadow-[0_0_18px_rgba(168,85,247,0.14)] hover:border-violet-400/40`}
               >
+                {recommendedButton === 'class' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
                 <GraduationCap size={18} className="text-purple-500 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-purple-500/90">CLASS</span>
+                <span className={`${actionLabelClass} text-purple-500/90`}>CLASS</span>
               </Motion.button>
               <Motion.button
+                data-testid="control-quests"
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState(GS.QUEST_BOARD)}
-                className="min-h-[56px] bg-cyber-dark/60 hover:bg-indigo-900/20 border border-indigo-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:border-indigo-500/50 transition-all group backdrop-blur-sm"
+                className={`${actionButtonBase} ${getRecommendedClass('quests')} bg-slate-950/80 hover:bg-indigo-500/10 border border-indigo-500/20 hover:shadow-[0_0_18px_rgba(99,102,241,0.14)] hover:border-indigo-400/40`}
               >
+                {recommendedButton === 'quests' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
                 <ScrollText size={18} className="text-indigo-500 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-indigo-500/90">QUESTS</span>
+                <span className={`${actionLabelClass} text-indigo-500/90`}>{mobile ? 'QUEST' : 'QUESTS'}</span>
               </Motion.button>
               <Motion.button
+                data-testid="control-craft"
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState(GS.CRAFTING)}
-                className="min-h-[56px] bg-cyber-dark/60 hover:bg-orange-900/20 border border-orange-500/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(249,115,22,0.2)] hover:border-orange-500/50 transition-all group backdrop-blur-sm"
+                className={`${actionButtonBase} bg-slate-950/80 hover:bg-orange-500/10 border border-orange-500/20 hover:shadow-[0_0_18px_rgba(249,115,22,0.14)] hover:border-orange-400/40`}
               >
                 <Hammer size={18} className="text-orange-500 group-hover:rotate-12 transition-transform" />
-                <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-orange-500/90">CRAFT</span>
+                <span className={`${actionLabelClass} text-orange-500/90`}>CRAFT</span>
               </Motion.button>
             </>
           )}
@@ -178,13 +255,14 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
           {/* 묘지 회수 */}
           {grave && grave.loc === player.loc && (
             <Motion.button
+              data-testid="control-reset"
               whileTap={{ scale: 0.95 }}
               disabled={isAiThinking}
               onClick={actions.lootGrave}
-              className="min-h-[56px] bg-slate-800/60 hover:bg-slate-700/80 border border-slate-500/50 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-[0_0_15px_rgba(148,163,184,0.3)] transition-all group backdrop-blur-sm"
+              className={`${actionButtonBase} bg-slate-900/80 hover:bg-slate-800/80 border border-slate-500/35 hover:shadow-[0_0_18px_rgba(148,163,184,0.18)]`}
             >
               <Ghost size={18} className="text-slate-400 group-hover:animate-bounce" />
-              <span className="text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest text-slate-300">RECOVER</span>
+              <span className={`${actionLabelClass} text-slate-300`}>{mobile ? 'LOOT' : 'RECOVER'}</span>
             </Motion.button>
           )}
 
@@ -194,14 +272,15 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
               whileTap={{ scale: 0.95 }}
               disabled={isAiThinking}
               onClick={() => setConfirmReset(true)}
-              className="min-h-[56px] sm:col-start-4 bg-red-950/20 hover:bg-red-900/40 border border-red-800/30 p-2 sm:p-3 rounded-lg flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 hover:border-red-600/50 transition-all group backdrop-blur-sm"
+              className={`${actionButtonBase} ${mobile ? 'col-span-4' : 'sm:col-start-4'} bg-red-950/25 hover:bg-red-900/40 border border-red-800/30 hover:border-red-600/50`}
             >
               <X size={18} className="text-red-500/70 group-hover:text-red-500 group-hover:scale-110 transition-all" />
-              <span className="text-[10px] sm:text-xs font-rajdhani tracking-widest text-red-600/70 group-hover:text-red-500">FORMAT DRIVE</span>
+              <span className={`${actionLabelClass} text-red-600/70 group-hover:text-red-500`}>{mobile ? 'RESET' : 'FORMAT DRIVE'}</span>
             </Motion.button>
           ) : (
-            <div className="sm:col-start-4 flex flex-col gap-1.5 min-h-[70px] justify-center">
+            <div className={`${mobile ? 'col-span-4' : 'sm:col-start-4'} flex flex-col gap-1.5 min-h-[70px] justify-center`}>
               <Motion.button
+                data-testid="control-reset-confirm"
                 whileTap={{ scale: 0.95 }}
                 onClick={() => { actions.reset(); setConfirmReset(false); }}
                 className="flex-1 bg-red-900/60 border border-red-500/70 rounded-sm text-red-300 text-[10px] font-rajdhani font-bold tracking-widest hover:bg-red-700/60 transition-all py-1.5"
@@ -209,6 +288,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
                 CONFIRM RESET
               </Motion.button>
               <Motion.button
+                data-testid="control-reset-cancel"
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setConfirmReset(false)}
                 className="flex-1 bg-cyber-dark/60 border border-slate-600/50 rounded-sm text-slate-400 text-[10px] font-rajdhani font-bold tracking-widest hover:bg-slate-700/40 transition-all py-1.5"
@@ -218,6 +298,7 @@ const ControlPanel = ({ gameState, player, actions, setGameState, shopItems, gra
             </div>
           )}
         </div>
+        </>
       )}
     </Motion.div>
   );

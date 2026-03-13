@@ -31,6 +31,7 @@ dist-ssr
 android/key.properties
 build/ios
 build/android
+playtest-artifacts/
 
 # Build logs (Windows 잔여물 방지)
 build_*.txt

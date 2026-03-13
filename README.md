@@ -27,11 +27,12 @@
 ## 🎮 Features
 
 ### 핵심 게임플레이
-- **터미널 커맨드 UI** — `explore`, `move`, `attack`, `skill`, `rest`, `shop` 등
+- **듀얼 조작 UI** — 데스크톱은 터미널 커맨드, 모바일은 버튼 중심 진행
 - **10가지 직업 클래스** — 각기 다른 스킬셋 + 전직 트리
 - **22개 지역** — 레벨 요건 기반 잠금, 보스/심연/확장 구역 포함
 - **퀘스트 & 업적 시스템** — 킬/탐색/골드 기반 미션
 - **AI 이벤트 생성** — 위치별 맥락형 스토리 이벤트 (오프라인 폴백 포함)
+- **성향 시스템** — 플레이 방식에 따라 전용 스킬과 패시브 보너스 변화
 
 ### ✨ 신규 확장 콘텐츠 (v4.0) — 로그라이크 & 프레스티지 시스템
 
@@ -60,7 +61,7 @@
 ### 🛠 UI / UX 기능 (v3.8)
 | 기능 | 설명 |
 |------|------|
-| ⚔️ **PostCombatCard** | 전투 종료 시 EXP/골드/전리품 요약 팝업 + HP/인벤 스마트 제안 |
+| ⚔️ **PostCombatCard** | 전투 종료 시 데스크톱은 상세 카드, 모바일은 소형 결과 카드 + 핵심 제안 |
 | 🎒 **SmartInventory** | 카테고리 탭 필터 + 장비 ATK/DEF 증감 미리보기 + 추천 장착 |
 | 🧭 **OnboardingGuide** | 신규 유저 3단계 행동 가이드 (자동 완료 인식) |
 | 🗺️ **MapNavigator** | 현재 위치 + 연결 지역 노드 맵 (레벨 잠금 표시) |
@@ -70,6 +71,8 @@
 | 🏆 **AchievementPanel** | 8개 업적 (킬/사망/골드/보스 기반) + 진행도 바 |
 | 🤖 **Auto Explore** | HP 감시 자동 탐색 (최대 10회, 위험 시 자동 정지) |
 | 💥 **Damage Flash** | HP 변화 시 색상 플래시 + 플로팅 데미지 숫자 |
+| 📱 **모바일 무입력 모드** | 터치 버튼과 로그만으로 진행, 키보드 없이 핵심 루프 가능 |
+| 🎯 **목표 가이드 HUD** | 현재 목표, 퀘스트 진행, 탐험 예보, 추천 행동을 HUD에서 즉시 확인 |
 
 ### 기타
 - **PWA 지원** — iOS/Android 홈 화면 설치 가능
@@ -155,6 +158,14 @@ npm run android:sync
 
 네이티브 빌드 상세 절차는 `docs/MOBILE_SETUP.md`, 릴리즈 명령 요약은 `docs/MOBILE_RELEASE.md`, 스토어 제출 단계별 가이드는 `docs/STORE_SUBMISSION_GUIDE.md`, 플레이 검증 순서는 `docs/PLAYTEST_CHECKLIST.md` 참고.
 
+빠른 회귀 확인은 아래 순서로 돌릴 수 있습니다.
+
+```bash
+npm run test:unit
+npm run test:smoke
+./scripts/local-playtest.sh
+```
+
 ### Environment Variables
 
 | 변수 | 용도 |
@@ -171,8 +182,8 @@ npm run android:sync
 ```
 src/
 ├── components/          # UI 컴포넌트
-│   ├── Dashboard.jsx    # 사이드 패널 (6 탭: 인벤/퀘스트/업적/스킬/지도/시스템)
-│   ├── TerminalView.jsx # 메인 로그 + 커맨드 입력 + 자동완성 + 퀵슬롯
+│   ├── Dashboard.jsx    # 상태/HUD + 인벤/퀘스트/업적/스킬/지도/시스템 탭
+│   ├── TerminalView.jsx # 메인 로그 + 데스크톱 입력 / 모바일 로그 패널 + 퀵슬롯
 │   ├── ControlPanel.jsx # 전투/이벤트/상점 컨트롤 (인라인 RESET 확인 UI 포함)
 │   ├── PostCombatCard.jsx
 │   ├── SmartInventory.jsx

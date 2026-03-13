@@ -5,7 +5,9 @@ import { soundManager } from '../systems/SoundManager';
 import { AI_SERVICE } from '../services/aiService';
 import { parseCommand } from '../utils/commandParser';
 import { gameReducer, INITIAL_STATE } from '../reducers/gameReducer';
+import { getTitlePassive } from '../utils/gameUtils';
 import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from '../utils/equipmentUtils';
+import { getRunBuildProfile, getTraitBonus, getTraitProfile } from '../utils/runProfileUtils';
 
 import { useFirebaseSync } from './useFirebaseSync';
 import { createGameActions } from './useGameActions';
@@ -57,35 +59,6 @@ export const useGameEngine = () => {
         []
     );
 
-    const addStoryLog = useCallback(
-        async (type, data) => {
-            dispatch({ type: 'SET_AI_THINKING', payload: true });
-            const tempId = Date.now();
-            dispatch({ type: 'ADD_LOG', payload: { type: 'loading', text: '...', id: tempId } });
-
-            const narrative = await AI_SERVICE.generateStory(type, {
-                ...data,
-                history: player.history,
-                location: player.loc,
-                playerSnapshot: {
-                    name: player.name,
-                    job: player.job,
-                    level: player.level,
-                    hp: player.hp,
-                    maxHp: player.maxHp,
-                    mp: player.mp,
-                    maxMp: player.maxMp,
-                    title: player.activeTitle || null,
-                    relicCount: (player.relics || []).length
-                }
-            }, uid);
-
-            dispatch({ type: 'UPDATE_LOG', payload: { id: tempId, log: { id: tempId, type: 'story', text: narrative } } });
-            dispatch({ type: 'SET_AI_THINKING', payload: false });
-        },
-        [player, uid]
-    );
-
     const getFullStats = useCallback(() => {
         const cls = DB.CLASSES[player.job] || DB.CLASSES['모험가'];
         const equipProfile = getEquipmentProfile(player.equip);
@@ -105,6 +78,7 @@ export const useGameEngine = () => {
         const aVal = player.equip.armor?.val || 0;
         const buff = player.tempBuff || {};
         const meta = player.meta || {};
+        const titlePassive = getTitlePassive(player.activeTitle) || {};
 
         // === Set Bonus ===
         let atkMultBonus = 1;
@@ -182,20 +156,78 @@ export const useGameEngine = () => {
         const baseAtk = (player.atk + mainAttack + offhandAttack + codexAtk + (meta.bonusAtk || 0)) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * dualWieldMult;
         const baseDef = (player.def + aVal + shieldDef + codexDef) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
         const baseMaxHp = (player.maxHp + codexHp) * hpMultBonus;
-
-        return {
-            atk: Math.floor(baseAtk * (1 + ra)),
-            def: Math.floor(baseDef * (1 + rd)),
-            maxHp: Math.floor(baseMaxHp * rhp),
-            maxMp: Math.floor(((player.maxMp || 50) + equipmentMpBonus) * rmp),
+        const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus) * rmp;
+        const baseCritChance = Math.min(0.75, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus + (titlePassive.crit || 0));
+        const preBuildStats = {
+            atk: Math.floor(baseAtk * (1 + ra) + (titlePassive.atk || 0)),
+            def: Math.floor(baseDef * (1 + rd) + (titlePassive.def || 0)),
+            maxHp: Math.floor(baseMaxHp * rhp) + (titlePassive.hp || 0),
+            maxMp: Math.floor(baseMaxMp) + (titlePassive.mp || 0),
             elem: mainWeapon?.elem || offhandWeapon?.elem || '물리',
             isMagic: isMagic || isMagicWeapon(mainWeapon) || isMagicWeapon(offhandWeapon) || Boolean(offhandShield?.elem && offhandShield?.elem !== '물리'),
             weaponHands: getWeaponHands(mainWeapon),
             activeSet,
             relics,
-            critChance: Math.min(0.5, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus),
+            critChance: baseCritChance,
+        };
+        const buildProfile = getRunBuildProfile(player, preBuildStats);
+        const traitProfile = getTraitProfile(player, preBuildStats);
+        const traitBonus = getTraitBonus(player, preBuildStats);
+        const finalAtk = Math.floor(preBuildStats.atk * (traitBonus.atkMult || 1));
+        const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1));
+        const finalMaxHp = preBuildStats.maxHp;
+        const finalMaxMp = preBuildStats.maxMp + (traitBonus.mpFlat || 0);
+        const finalCritChance = Math.min(0.75, preBuildStats.critChance + (traitBonus.critBonus || 0));
+
+        return {
+            atk: finalAtk,
+            def: finalDef,
+            maxHp: finalMaxHp,
+            maxMp: finalMaxMp,
+            elem: preBuildStats.elem,
+            isMagic: preBuildStats.isMagic,
+            weaponHands: preBuildStats.weaponHands,
+            activeSet,
+            relics,
+            critChance: finalCritChance,
+            buildProfile,
+            traitProfile,
+            traitBonus,
+            titlePassive,
         };
     }, [player]);
+
+    const addStoryLog = useCallback(
+        async (type, data) => {
+            dispatch({ type: 'SET_AI_THINKING', payload: true });
+            const tempId = Date.now();
+            dispatch({ type: 'ADD_LOG', payload: { type: 'loading', text: '...', id: tempId } });
+            const fullStats = getFullStats();
+            const buildProfile = getRunBuildProfile(player, fullStats);
+
+            const narrative = await AI_SERVICE.generateStory(type, {
+                ...data,
+                history: player.history,
+                location: player.loc,
+                playerSnapshot: {
+                    name: player.name,
+                    job: player.job,
+                    level: player.level,
+                    hp: player.hp,
+                    maxHp: player.maxHp,
+                    mp: player.mp,
+                    maxMp: player.maxMp,
+                    title: player.activeTitle || null,
+                    relicCount: (player.relics || []).length,
+                    buildProfile: buildProfile.tags.map((tag) => tag.name).slice(0, 4)
+                }
+            }, uid);
+
+            dispatch({ type: 'UPDATE_LOG', payload: { id: tempId, log: { id: tempId, type: 'story', text: narrative } } });
+            dispatch({ type: 'SET_AI_THINKING', payload: false });
+        },
+        [player, uid, getFullStats]
+    );
 
     // --- Compose Actions from Extracted Hooks ---
     const actions = useMemo(

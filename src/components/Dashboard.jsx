@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { User, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen, BarChart3, Eye } from 'lucide-react';
+import { User, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen, BarChart3, Eye, Sparkles, Crosshair, Compass } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { DB } from '../data/db';
 import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
+import { getAdventureGuidance, getExplorationForecast, getQuestTracker } from '../utils/adventureGuide';
+import { GS } from '../reducers/gameStates';
 import SmartInventory from './SmartInventory';
 import AchievementPanel from './AchievementPanel';
 import SkillTreePreview from './SkillTreePreview';
@@ -82,17 +85,32 @@ const InlineMetric = ({ label, value, max, variant }) => (
     </div>
 );
 
-const getEquipmentTag = (item, slot = 'main') => {
-    if (!item) return slot === 'armor' ? '빈 슬롯' : '미장착';
-    if (slot === 'armor') return 'ARM';
-    if (isWeapon(item)) return isTwoHandWeapon(item) ? '2H' : '1H';
-    if (isFocusOffhand(item)) return 'SCROLL';
-    if (isShield(item)) return 'SHD';
-    return 'EQ';
+const getEquipmentTagMeta = (item, slot = 'main') => {
+    if (!item) {
+        return {
+            label: slot === 'armor' ? 'ARM' : 'EMPTY',
+            className: 'text-slate-500',
+        };
+    }
+
+    if (slot === 'armor') {
+        return { label: 'ARM', className: 'text-cyan-300' };
+    }
+
+    if (isWeapon(item)) {
+        return isTwoHandWeapon(item)
+            ? { label: '2H · 파쇄', className: 'text-amber-300' }
+            : { label: '1H · 연계', className: 'text-cyan-300' };
+    }
+
+    if (isFocusOffhand(item)) return { label: 'FOCUS', className: 'text-violet-300' };
+    if (isShield(item)) return { label: 'SHD', className: 'text-emerald-300' };
+    return { label: 'EQ', className: 'text-slate-300' };
 };
 
 const EquipmentSlot = ({ label, item, slot = 'main', fallback, icon }) => {
     const SlotIcon = icon;
+    const tag = getEquipmentTagMeta(item, slot);
 
     return (
         <div className="rounded-md border border-cyber-blue/15 bg-cyber-dark/35 px-2 py-2 min-w-0 shadow-[inset_0_0_14px_rgba(0,204,255,0.03)]">
@@ -110,8 +128,8 @@ const EquipmentSlot = ({ label, item, slot = 'main', fallback, icon }) => {
                         </div>
                     </div>
                 </div>
-                <span className="shrink-0 text-[10px] font-fira text-cyber-purple">
-                    {getEquipmentTag(item, slot)}
+                <span className={`shrink-0 text-[10px] font-fira ${tag.className}`}>
+                    {tag.label}
                 </span>
             </div>
         </div>
@@ -155,6 +173,252 @@ const EquipmentPanel = ({ player, stats, compact = false }) => (
     </div>
 );
 
+const TraitStrip = ({ player, stats }) => {
+    const trait = stats?.traitProfile || getTraitProfile(player, stats);
+    const passiveParts = getTraitPassiveParts(trait);
+
+    return (
+        <div className="border border-cyber-blue/20 rounded-md bg-cyber-dark/30 px-3 py-2.5 space-y-2">
+            <div className="flex items-center justify-between gap-2 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.18em]">
+                <span className="flex items-center gap-1.5">
+                    <Sparkles size={10} className="text-cyber-blue/70" />
+                    성향
+                </span>
+                <span className={`truncate max-w-[10rem] text-right ${trait.accent}`}>
+                    {trait.name}
+                </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px] font-fira">
+                <span className={`rounded border px-2 py-1 ${trait.chipClass}`}>
+                    {trait.title}
+                </span>
+                {passiveParts.slice(0, 2).map((part) => (
+                    <span key={part} className="rounded border border-cyber-blue/15 bg-cyber-black/60 px-2 py-1 text-cyber-blue/75">
+                        {part}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const TraitPanel = ({ player, stats, compact = false }) => {
+    const trait = stats?.traitProfile || getTraitProfile(player, stats);
+    const passiveParts = getTraitPassiveParts(trait);
+
+    return (
+        <div className={`border border-cyber-blue/20 rounded-md bg-cyber-dark/30 ${compact ? 'p-3' : 'p-3.5'} space-y-2`}>
+            <div className="flex items-center justify-between gap-3 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.2em]">
+                <span className="flex items-center gap-1.5">
+                    <Sparkles size={10} className="text-cyber-blue/70" />
+                    성향
+                </span>
+                <span className={trait.accent}>
+                    {trait.name}
+                </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 text-[10px] font-fira">
+                <span className={`rounded border px-2 py-1 ${trait.chipClass}`}>
+                    {trait.title}
+                </span>
+                <span className="rounded border border-cyber-blue/15 bg-cyber-black/60 px-2 py-1 text-cyber-blue/80">
+                    {player?.job}
+                </span>
+            </div>
+            <p className="text-[11px] font-fira text-cyber-blue/60">
+                {trait.desc}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+                {passiveParts.length > 0 ? passiveParts.slice(0, compact ? 2 : 4).map((tag) => (
+                    <span
+                        key={tag}
+                        className="rounded border border-cyber-blue/15 bg-cyber-black/60 px-2 py-1 text-[10px] font-fira text-cyber-blue/80"
+                    >
+                        {tag}
+                    </span>
+                )) : (
+                    <span className="rounded border border-cyber-blue/15 bg-cyber-black/60 px-2 py-1 text-[10px] font-fira text-cyber-blue/50">
+                        아직 성향 보너스가 없습니다.
+                    </span>
+                )}
+            </div>
+            <div className="text-[10px] font-fira text-cyber-blue/45">
+                성향 판단: {trait.reasons.join(' · ')}
+            </div>
+            <div className="text-[10px] font-fira text-cyber-blue/50">
+                전용 스킬: {trait.skillLabel}
+            </div>
+            <div className="rounded border border-cyber-purple/20 bg-cyber-purple/10 px-2 py-1.5 text-[10px] font-fira text-cyber-purple/90">
+                {trait.unlockHint}
+            </div>
+        </div>
+    );
+};
+
+const FocusPanel = ({ player, stats, runtime, actions, setSideTab, mobile = false, onMobileOpenDetails }) => {
+    const [detailsOpen, setDetailsOpen] = useState(!mobile);
+    const mapData = DB.MAPS[player?.loc];
+    const guidance = useMemo(
+        () => getAdventureGuidance(player, stats, mapData, runtime?.gameState || GS.IDLE),
+        [mapData, player, runtime?.gameState, stats]
+    );
+    const forecast = useMemo(
+        () => getExplorationForecast(player, mapData),
+        [mapData, player]
+    );
+    const questTracker = useMemo(
+        () => getQuestTracker(player),
+        [player]
+    );
+
+    const runAction = (action) => {
+        if (!action) return;
+
+        switch (action.kind) {
+            case 'claim_quest':
+                actions.completeQuest?.(action.questId);
+                break;
+            case 'rest':
+                actions.rest?.();
+                break;
+            case 'open_class':
+                actions.setGameState?.(GS.JOB_CHANGE);
+                break;
+            case 'open_quest_board':
+                actions.setGameState?.(GS.QUEST_BOARD);
+                break;
+            case 'open_move':
+                actions.setGameState?.(GS.MOVING);
+                break;
+            case 'explore':
+                actions.explore?.();
+                break;
+            case 'open_inventory':
+                setSideTab('inventory');
+                onMobileOpenDetails?.();
+                break;
+            case 'open_shop':
+                actions.setShopItems?.([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
+                actions.setGameState?.(GS.SHOP);
+                break;
+            case 'open_quest':
+                setSideTab('quest');
+                onMobileOpenDetails?.();
+                break;
+            default:
+                break;
+        }
+    };
+
+    const buttonClass = mobile
+        ? 'min-h-[38px] rounded-xl border px-3 py-2 text-[11px] font-rajdhani font-bold tracking-[0.16em]'
+        : 'min-h-[36px] rounded-lg border px-3 py-2 text-[10px] font-rajdhani font-bold tracking-[0.16em]';
+
+    return (
+        <div className={`border border-cyber-blue/20 rounded-md bg-cyber-dark/30 ${mobile ? 'p-3 space-y-2.5' : 'p-3.5 space-y-3'}`}>
+            <div className="flex items-center justify-between gap-3 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.2em]">
+                <span className="flex items-center gap-1.5">
+                    <Crosshair size={10} className="text-cyber-blue/70" />
+                    현재 목표
+                </span>
+                <div className="flex items-center gap-2">
+                    <span className={`rounded border px-2 py-1 ${
+                    guidance.emphasis === '위험'
+                        ? 'border-red-500/25 bg-red-950/25 text-red-300'
+                        : guidance.emphasis === '즉시 이득'
+                            ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300'
+                            : 'border-cyber-blue/15 bg-cyber-black/60 text-cyber-blue/80'
+                }`}>
+                        {guidance.emphasis}
+                    </span>
+                    {mobile && (
+                        <button
+                            onClick={() => setDetailsOpen((open) => !open)}
+                            className="rounded border border-cyber-blue/15 bg-cyber-black/55 px-2 py-1 text-cyber-blue/70"
+                            aria-label={detailsOpen ? '목표 상세 닫기' : '목표 상세 열기'}
+                        >
+                            {detailsOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="space-y-1">
+                <div className="text-sm font-rajdhani font-bold text-white">{guidance.title}</div>
+                <div className="text-[11px] font-fira text-cyber-blue/60">{guidance.detail}</div>
+            </div>
+
+            {(guidance.primaryAction || guidance.secondaryAction) && (
+                <div className="grid grid-cols-2 gap-2">
+                    {guidance.primaryAction ? (
+                        <button
+                            onClick={() => runAction(guidance.primaryAction)}
+                            className={`${buttonClass} border-cyber-green/30 bg-cyber-green/10 text-cyber-green hover:bg-cyber-green/15`}
+                        >
+                            {guidance.primaryAction.label}
+                        </button>
+                    ) : (
+                        <div />
+                    )}
+                    {guidance.secondaryAction ? (
+                        <button
+                            onClick={() => runAction(guidance.secondaryAction)}
+                            className={`${buttonClass} border-cyber-blue/20 bg-cyber-black/60 text-cyber-blue/80 hover:bg-cyber-blue/10`}
+                        >
+                            {guidance.secondaryAction.label}
+                        </button>
+                    ) : (
+                        <div />
+                    )}
+                </div>
+            )}
+
+            <AnimatePresence initial={false}>
+                {detailsOpen && (
+                    <Motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden space-y-3"
+                    >
+                        {questTracker && (
+                            <div className="rounded border border-cyber-blue/15 bg-cyber-black/55 px-3 py-2">
+                                <div className="flex items-center justify-between gap-2 text-[10px] font-fira">
+                                    <span className="text-cyber-blue/50 uppercase tracking-[0.16em]">Quest Pulse</span>
+                                    <span className={`${
+                                        questTracker.kind === 'claimable' ? 'text-cyber-green' : questTracker.kind === 'bounty' ? 'text-amber-300' : 'text-cyber-purple'
+                                    }`}>
+                                        {questTracker.progressLabel}
+                                    </span>
+                                </div>
+                                <div className="mt-1 text-[11px] font-fira text-slate-200">{questTracker.title}</div>
+                            </div>
+                        )}
+
+                        <div className="rounded border border-cyber-blue/15 bg-cyber-black/55 px-3 py-2">
+                            <div className="flex items-center justify-between gap-2 text-[10px] font-fira">
+                                <span className="flex items-center gap-1 text-cyber-blue/50 uppercase tracking-[0.16em]">
+                                    <Compass size={10} />
+                                    탐험 예보
+                                </span>
+                                <span className="text-cyber-green">{forecast.mood}</span>
+                            </div>
+                            <div className="mt-1 text-[11px] font-fira text-cyber-blue/65">{forecast.description}</div>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                {forecast.chips.map((chip) => (
+                                    <span key={`${chip.label}_${chip.value}`} className="rounded border border-cyber-blue/15 bg-cyber-dark/35 px-2 py-1 text-[10px] font-fira text-cyber-blue/80">
+                                        {chip.label} {chip.value}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </Motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
 // Animation variants for tab content
 const tabVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -162,9 +426,15 @@ const tabVariants = {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
-const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false, quickSlots = [null, null, null] }) => {
+const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false, quickSlots = [null, null, null], runtime = null }) => {
     const [statusCollapsed, setStatusCollapsed] = useState(false);
+    const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
+
+    const handleTabSelect = (tabId) => {
+        setSideTab(tabId);
+        if (mobile) setMobileDetailsOpen(true);
+    };
 
     const renderTabContent = () => {
         return (
@@ -201,11 +471,12 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     {sideTab === 'map' && (
                         <MapNavigator
                             player={player}
+                            stats={stats}
                         />
                     )}
 
                     {sideTab === 'stats' && (
-                        <StatsPanel player={player} />
+                        <StatsPanel player={player} stats={stats} />
                     )}
 
                     {sideTab === 'bestiary' && (
@@ -213,7 +484,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     )}
 
                     {sideTab === 'system' && (
-                        <SystemTab player={player} actions={actions} stats={stats} />
+                        <SystemTab player={player} actions={actions} stats={stats} runtime={runtime} />
                     )}
                 </Motion.div>
             </AnimatePresence>
@@ -225,39 +496,68 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
             <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="md:hidden mt-2 bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg p-4 space-y-4 shadow-[0_0_20px_rgba(0,204,255,0.15)] relative z-10"
+                className="md:hidden mt-2 space-y-3 rounded-[1.5rem] border border-cyan-400/20 bg-slate-950/85 p-3 backdrop-blur-2xl shadow-[0_24px_60px_rgba(2,8,20,0.45)] relative z-10"
             >
-                {/* Mobile Header */}
-                <div className="flex justify-between items-start">
-                    <div>
-                        <h3 className="text-cyber-green font-rajdhani font-bold text-base mb-1 flex items-center gap-2 tracking-widest drop-shadow-[0_0_5px_rgba(0,255,157,0.5)]">
-                            <User size={16} />
-                            {player?.name}
-                        </h3>
-                        <div className="flex gap-4 text-sm font-fira text-cyber-blue/80">
-                            <div><span className="text-cyber-purple drop-shadow-sm">{player?.job}</span> <span className="text-slate-500">Lv.{player?.level}</span></div>
-                            <div className="text-yellow-400 font-bold drop-shadow-sm">{player?.gold} CR</div>
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2 text-emerald-300 font-rajdhani font-bold text-sm tracking-[0.24em] uppercase">
+                            <User size={14} />
+                            <span className="truncate">{player?.name}</span>
                         </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-fira text-cyber-blue/75">
+                            <span className="text-cyber-purple">{player?.job}</span>
+                            <span>Lv.{player?.level}</span>
+                            <span className="text-cyber-blue/40">•</span>
+                            <span className="truncate max-w-[8.5rem]">{player?.loc}</span>
+                        </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">Gold</div>
+                        <div className="text-yellow-400 font-rajdhani text-lg font-bold leading-none">{player?.gold}</div>
                     </div>
                 </div>
 
-                <div className="space-y-3">
-                    <ProgressBar value={player?.hp} max={stats?.maxHp} variant="hp" label="VIT (HP)" />
-                    <ProgressBar value={player?.mp} max={stats?.maxMp} variant="mp" label="NRG (MP)" />
+                <div className="grid grid-cols-1 gap-2">
+                    <InlineMetric label="HP" value={player?.hp} max={stats?.maxHp} variant="hp" />
+                    <InlineMetric label="NRG" value={player?.mp} max={stats?.maxMp} variant="mp" />
+                    <InlineMetric label="EXP" value={player?.exp} max={player?.nextExp} variant="exp" />
                 </div>
 
-                <EquipmentPanel player={player} stats={stats} compact />
+                <FocusPanel
+                    player={player}
+                    stats={stats}
+                    runtime={runtime}
+                    actions={actions}
+                    setSideTab={setSideTab}
+                    mobile
+                    onMobileOpenDetails={() => setMobileDetailsOpen(true)}
+                />
 
-                <div className="border-t border-cyber-blue/20 pt-4">
-                    <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
+                <EquipmentPanel player={player} stats={stats} compact />
+                <TraitStrip player={player} stats={stats} />
+
+                <div className="border-t border-cyber-blue/20 pt-3 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/50">
+                            Archive
+                        </div>
+                        <button
+                            onClick={() => setMobileDetailsOpen((open) => !open)}
+                            className="min-h-[36px] rounded border border-cyber-blue/25 bg-cyber-dark/40 px-3 text-[11px] font-fira text-cyber-blue/75"
+                        >
+                            {mobileDetailsOpen ? '상세 닫기' : '상세 열기'}
+                        </button>
+                    </div>
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
                         {TAB_ITEMS.map(tab => (
                             <Motion.button
                                 whileTap={{ scale: 0.95 }}
                                 key={tab.id}
-                                onClick={() => setSideTab(tab.id)}
+                                onClick={() => handleTabSelect(tab.id)}
                                 title={tab.label}
                                 aria-label={tab.label}
-                                className={`min-h-[44px] min-w-[44px] flex-shrink-0 px-2 py-2 rounded border transition-all flex items-center justify-center
+                                data-testid={`dashboard-tab-${tab.id}`}
+                                className={`min-h-[42px] min-w-[42px] flex-shrink-0 px-2 py-2 rounded border transition-all flex items-center justify-center
                                     ${sideTab === tab.id
                                         ? 'text-cyber-black bg-cyber-blue border-cyber-blue shadow-[0_0_10px_rgba(0,204,255,0.4)]'
                                         : 'text-cyber-blue/50 border-cyber-blue/30 hover:border-cyber-blue/70 bg-cyber-dark/40'}`}
@@ -267,9 +567,20 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                         ))}
                     </div>
 
-                    <div className="max-h-[40dvh] overflow-y-auto custom-scrollbar">
-                        {renderTabContent()}
-                    </div>
+                    <AnimatePresence initial={false}>
+                        {mobileDetailsOpen && (
+                            <Motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="max-h-[34dvh] overflow-y-auto custom-scrollbar pr-1">
+                                    {renderTabContent()}
+                                </div>
+                            </Motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </Motion.div>
         );
@@ -377,23 +688,48 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 transition={{ delay: 0.05 }}
                 className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg p-3 shadow-[0_0_20px_rgba(0,204,255,0.1)] shrink-0"
             >
+                <FocusPanel
+                    player={player}
+                    stats={stats}
+                    runtime={runtime}
+                    actions={actions}
+                    setSideTab={setSideTab}
+                />
+            </Motion.div>
+
+            <Motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 }}
+                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg p-3 shadow-[0_0_20px_rgba(0,204,255,0.1)] shrink-0"
+            >
                 <EquipmentPanel player={player} stats={stats} />
+            </Motion.div>
+
+            <Motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.08 }}
+                className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg p-3 shadow-[0_0_20px_rgba(0,204,255,0.1)] shrink-0"
+            >
+                <TraitPanel player={player} stats={stats} />
             </Motion.div>
 
             {/* TABS */}
             <Motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.12 }}
                 className="bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 p-4 rounded-lg flex-1 min-h-[200px] overflow-hidden flex flex-col shadow-[0_0_20px_rgba(0,204,255,0.1)]"
             >
                 <div className="flex gap-2 mb-4 border-b border-cyber-blue/20 pb-3">
                     {TAB_ITEMS.map(tab => (
                         <button
                             key={tab.id}
-                            onClick={() => setSideTab(tab.id)}
+                            onClick={() => handleTabSelect(tab.id)}
                             title={tab.label}
                             aria-label={tab.label}
+                            data-testid={`dashboard-tab-${tab.id}`}
                             className={`h-10 flex-1 flex items-center justify-center rounded-sm transition-all min-h-[36px]
                                 ${sideTab === tab.id
                                     ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/50 shadow-[0_0_10px_rgba(0,204,255,0.3)]'

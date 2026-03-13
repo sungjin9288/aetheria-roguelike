@@ -7,6 +7,7 @@ import { BALANCE, CONSTANTS } from '../data/constants';
 import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics';
 import { BOSS_MONSTERS } from '../data/monsters';
 import { AT } from '../reducers/actionTypes';
+import { getDiscoveryOdds } from './explorationPacing';
 
 // ─────────────────────────────────────────────────────────────────────────
 // 1. 일일 프로토콜 리셋 & 카운트 업 (Phase 1-B)
@@ -30,8 +31,9 @@ export const resetDailyProtocolIfNeeded = (player, dispatch) => {
 // 반환값: 'event_triggered' | 'relic_found' | 'anomaly' | 'nothing' | null (계속 진행)
 // ─────────────────────────────────────────────────────────────────────────
 export const rollExplorationEvent = (player, mapData, playerRelics, { dispatch, addLog, getFullStats }) => {
+    const discoveryOdds = getDiscoveryOdds(player, mapData);
     const hasKey = player.inv.some(i => i.name === '잊혀진 열쇠');
-    if (hasKey && mapData.level >= 10 && Math.random() < 0.2) {
+    if (hasKey && mapData.level >= 10 && Math.random() < discoveryOdds.keyEventChance) {
         dispatch({
             type: 'SET_PLAYER',
             payload: (p) => {
@@ -45,7 +47,7 @@ export const rollExplorationEvent = (player, mapData, playerRelics, { dispatch, 
         return 'key_event';
     }
 
-    if (Math.random() < 0.2 && player.loc !== '고대 보물고') {
+    if (Math.random() < discoveryOdds.anomalyChance && player.loc !== '고대 보물고') {
         const anomalies = [
             { effect: 'poison',    desc: '자욱한 독안개가 밀려옵니다! (중독)' },
             { effect: 'mana_regen', desc: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)' },
@@ -63,7 +65,7 @@ export const rollExplorationEvent = (player, mapData, playerRelics, { dispatch, 
     }
 
     // 유물 발견
-    if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE) {
+    if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < discoveryOdds.relicChance) {
         const available = RELICS.filter(r => !playerRelics.some(pr => pr.id === r.id));
         if (available.length > 0) {
             const candidates = pickWeightedRelics(available, 3);

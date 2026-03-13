@@ -64,3 +64,165 @@ Verification:
 External note:
 - Playwright loop with `$WEB_GAME_CLIENT` was not executed in this workspace because that client/env is not configured here.
 - Native IDE open (`npm run ios:open`, `npm run android:open`) was not executed here because GUI launch is outside this terminal session.
+
+Done (Quality Pass 1~4):
+- Added run diagnostics (`current build`, `class fit`, `recent win rate`, `avg exit HP`, `pacing`, `difficulty`) to `src/components/StatsPanel.jsx` via `getRunDiagnostics`.
+- Added class build identities/synergies in `src/utils/runProfileUtils.js` and applied active class bonuses in `src/hooks/useGameEngine.js`.
+- Enhanced `Build Direction` panel in `src/components/Dashboard.jsx` to show class fit and active class synergy.
+- Added boss-specific tactical briefings (`signature`, `counter hint`, `phase hint`, `recommended builds`) via `src/data/monsters.js` + `src/components/tabs/CombatPanel.jsx`.
+- Added title passive bonuses in `src/data/titles.js`, helper accessors in `src/utils/gameUtils.js`, applied them in `src/hooks/useGameEngine.js`, and surfaced them in `src/components/tabs/SystemTab.jsx`.
+- Added regression coverage for class/build compatibility, boss briefings, and run diagnostics in `tests/run-profile-utils.test.js`.
+
+Verification (Quality Pass 1~4):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+
+Blocked / Not Verified:
+- Tried to run the `develop-web-game` Playwright client directly from `/Users/sungjin/.codex/skills/develop-web-game/scripts/web_game_playwright_client.js`, but this machine does not currently have the `playwright` package installed, so browser-loop validation could not run in this workspace.
+
+Done (QA / Release Readiness 1~5):
+- Added browser smoke harness hooks in `src/App.jsx`, `src/components/IntroScreen.jsx`, `src/components/ControlPanel.jsx`, `src/components/Dashboard.jsx`, `src/components/RelicChoicePanel.jsx`, `src/components/PostCombatCard.jsx`, and `src/components/RunSummaryCard.jsx`.
+- Fixed run-summary restart to trigger a full game reset instead of only clearing the modal/UI shell.
+- Added local smoke scripts: `scripts/smoke-gameplay.mjs` and `scripts/local-playtest.sh`.
+- Added smoke command references to `README.md` and automated smoke guidance to `docs/PLAYTEST_CHECKLIST.md`.
+- Hardened `scripts/android-gradle.sh` to retry once with a fresh temporary `GRADLE_USER_HOME` when the shared cache under `/tmp/aetheria-gradle` is corrupted.
+
+Verification (QA / Release Readiness 1~5):
+- `npm run test:unit`
+- `npm run lint`
+- `./scripts/local-playtest.sh`
+- `npm run mobile:doctor`
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+
+Artifacts:
+- Desktop smoke artifacts: `playtest-artifacts/desktop`
+- Mobile smoke artifacts: `playtest-artifacts/mobile`
+- Android debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
+- iOS Release device app: `/tmp/aetheria-ios-device-build/Build/Products/Release-iphoneos/App.app`
+
+Blocked / Not Verified (QA / Release Readiness 1~5):
+- True manual play-feel validation is still pending; current coverage is browser smoke + native build verification, not human balance judgment.
+- Real-device touch/OS lifecycle QA on physical iPhone/Android hardware was not executed from this terminal session.
+- Android release signing is still not configured on this machine (`mobile:doctor` reports `Android release signing: no`).
+
+Done (Mobile-First UX Pass):
+- Compacted the mobile header in `src/App.jsx`, kept it sticky, and reduced non-essential sync text on small screens.
+- Reworked the mobile dashboard in `src/components/Dashboard.jsx` into a quick HUD (`name/job/loc/gold`, HP/NRG/EXP, equipment, build strip) plus a collapsible detail panel with icon tabs.
+- Tightened the mobile terminal in `src/components/TerminalView.jsx` by reducing terminal height/padding and shrinking empty/log presentation on small screens.
+- Rebalanced the mobile action grid in `src/components/ControlPanel.jsx` to use a denser 3-column layout, shorter labels, and more compact move/reset flows.
+
+Verification (Mobile-First UX Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh` (first run flaked on a random core-loop branch; second run passed with `[smoke:desktop] ok` and `[smoke:mobile] ok`)
+
+Done (Mobile-First UX Pass 2):
+- Reduced mobile terminal height again in `src/components/TerminalView.jsx` to expose more of the HUD/action surface above the fold.
+- Switched the mobile action grid in `src/components/ControlPanel.jsx` from 3 columns to 4 columns and shortened button labels for denser touch-first access.
+- Changed the mobile dashboard detail panel in `src/components/Dashboard.jsx` to start collapsed, keeping the first screen focused on core status/equipment.
+- Moved mobile `AUTO EXPLORE` out of the floating overlay in `src/App.jsx` into the normal document flow to avoid covering HUD/equipment content.
+
+Verification (Mobile-First UX Pass 2):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh` (`[smoke:desktop] ok`, `[smoke:mobile] ok`)
+- Reviewed regenerated mobile smoke screenshots: `playtest-artifacts/mobile/01-after-start.png`, `playtest-artifacts/mobile/07-core-loop-complete.png`
+
+Done (Real-Device QA Prep):
+- Re-synced the latest mobile-optimized bundle into both native shells with `npm run cap:sync`.
+- Rebuilt Android debug with `npm run android:debug` (cache-retry path still works).
+- Rebuilt iOS device Release shell with `npm run ios:build:device`.
+- Expanded `docs/PLAYTEST_CHECKLIST.md` with concrete mobile-first checks for first-fold visibility, auto-explore overlay removal, collapsed detail panel behavior, 4-column action grid taps, keyboard overlap, and platform-specific iPhone/Android touch issues.
+
+Verification (Real-Device QA Prep):
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+
+Done (Real-Device QA Runbook):
+- Added a 5-minute iPhone/Android quick-run section to `docs/PLAYTEST_CHECKLIST.md`.
+- Added a short failure-capture list so device findings come back with enough detail to fix quickly.
+- Updated `tasks/todo.md` to track the next concrete step as actual device execution, not more prep.
+
+Done (QA Readout Support):
+- Added runtime QA readout data to `src/components/tabs/SystemTab.jsx` and replaced the stale hardcoded build string with `CONSTANTS.DATA_VERSION`.
+- Threaded runtime state (`viewport`, `gameState`, `syncStatus`, `isAiThinking`) from `src/App.jsx` through `src/components/Dashboard.jsx` into the system tab.
+- Updated the device quick-run in `docs/PLAYTEST_CHECKLIST.md` so testers always capture the `QA READOUT` before reporting issues.
+
+Verification (QA Readout Support):
+- `npm run lint`
+- `npm run build`
+
+Done (QA Snapshot Export):
+- Added `EXPORT` alongside `COPY` in `src/components/tabs/SystemTab.jsx` to download a reproducible QA snapshot JSON containing runtime, combat stats, equipment, relics, titles, inventory counts, and meta state.
+- Updated `docs/PLAYTEST_CHECKLIST.md` to ask for the exported QA snapshot file when a device issue is reported.
+
+Verification (QA Snapshot Export):
+- `npm run lint`
+- `npm run build`
+
+Done (Mobile Trait / Combat UX Pass):
+- Removed the mobile terminal command input by wiring `showInput={false}` in `src/App.jsx` and turning `src/components/TerminalView.jsx` into a button-first log panel on small screens.
+- Reworked `src/components/IntroScreen.jsx` for mobile quick-start naming so new runs can begin without keyboard input.
+- Replaced the player-facing `Run diagnostics` view with a simpler `성향` system in `src/utils/runProfileUtils.js`, `src/components/Dashboard.jsx`, `src/components/StatsPanel.jsx`, `src/utils/gameUtils.js`, and `src/components/SkillTreePreview.jsx`.
+- Connected trait-based passive bonuses and a trait skill into active stat calculation and skill loadout via `src/hooks/useGameEngine.js` and `src/utils/gameUtils.js`.
+- Compactified the mobile `PostCombatCard` in `src/components/PostCombatCard.jsx` so rewards, loot, and the next recommendation fit within one viewport.
+- Strengthened 1H/2H readability and balance direction through `src/data/constants.js`, `src/utils/equipmentUtils.js`, `src/components/SmartInventory.jsx`, `src/components/ShopPanel.jsx`, and `src/components/Dashboard.jsx`.
+- Applied a broader mobile-first visual pass across `src/App.jsx`, `src/components/ControlPanel.jsx`, `src/components/MainLayout.jsx`, `src/index.css`, and `src/components/RunSummaryCard.jsx` to establish a darker archive-like app identity.
+
+Verification (Mobile Trait / Combat UX Pass):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+
+Done (Convenience / Fun Pass):
+- Added a `FocusPanel` to `src/components/Dashboard.jsx` that surfaces the current objective, quest pulse, exploration forecast, and one-tap recommended actions.
+- Added `src/utils/adventureGuide.js` to derive player-facing guidance from HP/MP state, town readiness, quests, inventory pressure, and exploration pacing.
+- Kept the guidance buttons wired into existing actions so players can immediately rest, claim rewards, open the quest board, inspect inventory, open movement, or continue exploring.
+- Added regression coverage for the new guidance and forecast behavior in `tests/adventure-guide.test.js`.
+
+Verification (Convenience / Fun Pass):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh` (desktop and mobile smoke both reached `ok`)
+
+Done (Convenience / Fun Pass 2):
+- Made the mobile `FocusPanel` in `src/components/Dashboard.jsx` start in a condensed state so the first fold stays readable while still exposing the current objective and one-tap next action.
+- Added expandable quest/forecast detail inside the same panel so players can opt into more context instead of paying the information cost up front.
+- Enhanced `src/utils/outcomeAnalysis.js` and `src/components/PostCombatCard.jsx` with a reward mood (`보스 돌파`, `풍성한 전리품`, `위험한 승리` 등) and compact reward highlight chips to make victories feel more distinct.
+- Added regression coverage for the new reward mood output in `tests/outcome-analysis.test.js`.
+
+Verification (Convenience / Fun Pass 2):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+
+Done (Convenience / Fun Pass 3):
+- Added contextual recommendation highlighting to `src/components/ControlPanel.jsx` so the primary suggested action is surfaced directly on the actual action button row instead of only in the HUD.
+- Passed effective runtime stats into `src/components/ControlPanel.jsx` from `src/App.jsx` so recommendation logic uses the same HP/MP context the HUD uses.
+- Added loot upgrade detection in `src/hooks/useCombatActions.js` and surfaced it in `src/components/PostCombatCard.jsx`, so players can immediately tell when a dropped equipment piece is a real upgrade.
+
+Verification (Convenience / Fun Pass 3):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+
+Done (Convenience / Fun Pass 4):
+- Added `getMoveRecommendations` to `src/utils/adventureGuide.js` so exits are scored by HP/MP readiness, inventory pressure, current level fit, boss risk, and unexplored-route value.
+- Upgraded the `MOVE` state in `src/components/ControlPanel.jsx` from plain exit buttons into recommendation cards with `추천/정비/개척/보스/경계` context and a short reason line.
+- Added a read-only `추천 이동` summary to `src/components/MapNavigator.jsx` and threaded runtime stats from `src/components/Dashboard.jsx` so the world map and move panel use the same route heuristic.
+- Added regression coverage for low-HP safe-route recommendation and stable-run level-fit route recommendation in `tests/adventure-guide.test.js`.
+
+Verification (Convenience / Fun Pass 4):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+- Reviewed `playtest-artifacts/mobile/09-final-state.png` for mobile HUD/action readability after the pass

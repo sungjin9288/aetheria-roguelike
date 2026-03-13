@@ -5,7 +5,9 @@ import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { GS } from '../reducers/gameStates';
 import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary } from '../utils/gameUtils';
+import { getEquipmentProfile, getNextEquipmentState } from '../utils/equipmentUtils';
 import { pushBattleRecord, makeBattleRecord } from '../systems/DifficultyManager';
+import { getRunBuildProfile } from '../utils/runProfileUtils';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -13,6 +15,49 @@ const getSelectedSkill = (player) => {
     const selected = Number.isInteger(player.skillLoadout?.selected) ? player.skillLoadout.selected : 0;
     const index = ((selected % skills.length) + skills.length) % skills.length;
     return { skill: skills[index], index, total: skills.length };
+};
+
+const getLootUpgradeHint = (equip = {}, lootItems = []) => {
+    const equipmentDrops = (lootItems || []).filter((item) => ['weapon', 'armor', 'shield'].includes(item?.type));
+    if (!equipmentDrops.length) return null;
+
+    const currentProfile = getEquipmentProfile(equip);
+    const currentAtk = currentProfile.mainAttack + currentProfile.offhandAttack;
+    const currentDef = (equip.armor?.val || 0) + currentProfile.shieldDef;
+
+    let bestHint = null;
+
+    equipmentDrops.forEach((item) => {
+        const nextEquip = getNextEquipmentState(equip, item);
+        const nextProfile = getEquipmentProfile(nextEquip);
+        const nextAtk = nextProfile.mainAttack + nextProfile.offhandAttack;
+        const nextDef = (nextEquip.armor?.val || 0) + nextProfile.shieldDef;
+        const critDelta = Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100);
+        const mpDelta = nextProfile.mpBonus - currentProfile.mpBonus;
+        const atkDelta = nextAtk - currentAtk;
+        const defDelta = nextDef - currentDef;
+        const score = atkDelta + defDelta + (critDelta * 2) + Math.floor(mpDelta / 5);
+
+        if (score <= 0) return;
+
+        const summaryParts = [];
+        if (atkDelta > 0) summaryParts.push(`ATK +${atkDelta}`);
+        if (defDelta > 0) summaryParts.push(`DEF +${defDelta}`);
+        if (critDelta > 0) summaryParts.push(`CRIT +${critDelta}%`);
+        if (mpDelta > 0) summaryParts.push(`MP +${mpDelta}`);
+
+        const candidate = {
+            name: item.name,
+            score,
+            summary: summaryParts.join(' / ') || '장비 효율 상승',
+        };
+
+        if (!bestHint || candidate.score > bestHint.score) {
+            bestHint = candidate;
+        }
+    });
+
+    return bestHint;
 };
 
 /**
@@ -147,6 +192,12 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 const droppedItems = lootResult.items.map((item) => item.name);
                 const hpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
                 const mpRatio = (updatedPlayer.mp || 0) / Math.max(1, updatedPlayer.maxMp || 1);
+                const buildProfile = getRunBuildProfile(updatedPlayer, {
+                    ...stats,
+                    maxHp: updatedPlayer.maxHp,
+                    maxMp: updatedPlayer.maxMp,
+                });
+                const lootUpgradeHint = getLootUpgradeHint(updatedPlayer.equip, lootResult.items);
 
                 dispatch({
                     type: 'SET_POST_COMBAT_RESULT', payload: {
@@ -163,6 +214,13 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                         playerMp: updatedPlayer.mp,
                         playerMaxMp: updatedPlayer.maxMp,
                         playerInvCount: updatedPlayer.inv.length,
+                        enemyTier: enemyAtActionStart.isBoss ? 'BOSS' : enemyAtActionStart.isElite ? 'ELITE' : 'NORMAL',
+                        enemyWeakness: enemyAtActionStart.weakness || null,
+                        enemyResistance: enemyAtActionStart.resistance || null,
+                        difficultyLabel: enemyAtActionStart._diffLabel || null,
+                        primaryBuild: buildProfile.primary.name,
+                        buildTags: buildProfile.tags.map((tag) => tag.name).slice(0, 4),
+                        upgradeHint: lootUpgradeHint,
                     }
                 });
                 return;

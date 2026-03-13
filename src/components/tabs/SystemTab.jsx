@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react';
-import { Crown, Skull, Shield, Save } from 'lucide-react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Copy, Crown, Skull, Shield, Save } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { APP_ID } from '../../data/constants';
+import { APP_ID, CONSTANTS } from '../../data/constants';
 import { exportToJson } from '../../utils/fileUtils';
-import { getTitleColor, getTitleLabel } from '../../utils/gameUtils';
+import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/gameUtils';
 import { RARITY_COLORS } from '../../data/titles';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 
@@ -15,9 +15,111 @@ const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
  * SystemTab — Dashboard의 system 탭 콘텐츠 (#4 분리)
  * props: player, actions, stats
  */
-const SystemTab = ({ player, actions, stats }) => {
+const SystemTab = ({ player, actions, stats, runtime = null }) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState(null);
+
+    const qaContext = useMemo(() => {
+        const platform = typeof navigator !== 'undefined'
+            ? (navigator.userAgentData?.platform || navigator.platform || 'unknown')
+            : 'unknown';
+        const viewportSize = typeof window !== 'undefined'
+            ? `${window.innerWidth}x${window.innerHeight}`
+            : 'unknown';
+        return {
+            build: `v${CONSTANTS.DATA_VERSION}`,
+            viewport: runtime?.viewport || 'unknown',
+            state: runtime?.gameState || 'unknown',
+            sync: runtime?.syncStatus || 'unknown',
+            ai: runtime?.isAiThinking ? 'thinking' : 'idle',
+            platform,
+            screen: viewportSize,
+            player: player.name,
+            job: player.job,
+            level: player.level,
+            loc: player.loc,
+            session: _SESSION_ID,
+        };
+    }, [player.job, player.level, player.loc, player.name, runtime]);
+
+    const qaReadout = useMemo(() => {
+        return [
+            `BUILD=${qaContext.build}`,
+            `VIEWPORT=${qaContext.viewport}`,
+            `STATE=${qaContext.state}`,
+            `SYNC=${qaContext.sync}`,
+            `AI=${qaContext.ai}`,
+            `PLATFORM=${qaContext.platform}`,
+            `SCREEN=${qaContext.screen}`,
+            `PLAYER=${qaContext.player}`,
+            `JOB=${qaContext.job}`,
+            `LV=${qaContext.level}`,
+            `LOC=${qaContext.loc}`,
+            `SESSION=${qaContext.session}`,
+        ].join('\n');
+    }, [qaContext]);
+
+    const qaSnapshot = useMemo(() => {
+        const inventoryCounts = player.inv.reduce((acc, item) => {
+            acc[item.name] = (acc[item.name] || 0) + 1;
+            return acc;
+        }, {});
+
+        return {
+            exportedAt: new Date().toISOString(),
+            qa: qaContext,
+            summary: {
+                name: player.name,
+                level: player.level,
+                job: player.job,
+                gold: player.gold,
+                hp: player.hp,
+                mp: player.mp,
+                loc: player.loc,
+                activeTitle: player.activeTitle || null,
+            },
+            runtime: runtime || null,
+            combatStats: stats
+                ? {
+                    atk: stats.atk,
+                    def: stats.def,
+                    maxHp: stats.maxHp,
+                    maxMp: stats.maxMp,
+                    critChance: stats.critChance,
+                    elem: stats.elem,
+                    isMagic: stats.isMagic,
+                }
+                : null,
+            equipment: {
+                weapon: player.equip?.weapon?.name || null,
+                offhand: player.equip?.offhand?.name || null,
+                armor: player.equip?.armor?.name || null,
+            },
+            relics: (player.relics || []).map((relic) => ({
+                id: relic.id,
+                name: relic.name,
+                rarity: relic.rarity,
+            })),
+            titles: player.titles || [],
+            inventoryCounts,
+            meta: player.meta || null,
+            dailyProtocol: player.stats?.dailyProtocol || null,
+        };
+    }, [player, qaContext, runtime, stats]);
+
+    const copyQaReadout = useCallback(async () => {
+        try {
+            await navigator.clipboard.writeText(qaReadout);
+            setFeedbackStatus({ type: 'success', text: 'QA readout copied.' });
+        } catch {
+            setFeedbackStatus({ type: 'error', text: 'Failed to copy QA readout.' });
+        }
+    }, [qaReadout]);
+
+    const exportQaSnapshot = useCallback(() => {
+        exportToJson(`aetheria_qa_snapshot_${Date.now()}.json`, qaSnapshot);
+        setFeedbackStatus({ type: 'success', text: 'QA snapshot exported.' });
+    }, [qaSnapshot]);
 
     const updateLiveConfig = useCallback(async (partialConfig) => {
         const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
@@ -77,10 +179,41 @@ const SystemTab = ({ player, actions, stats }) => {
             <div className="text-xs text-cyber-blue/40 mb-2 font-fira border-l-2 border-cyber-blue/10 pl-3">
                 <p>SESSION: {_SESSION_ID}</p>
                 <p>UID: {actions.getUid()}</p>
-                <p>BUILD: v5.0 (STABLE)</p>
+                <p>BUILD: v{CONSTANTS.DATA_VERSION}</p>
                 {(player.meta?.prestigeRank || 0) > 0 && (
                     <p className="text-purple-400 mt-1">PRESTIGE: {player.meta.prestigeRank}회 환생 완료</p>
                 )}
+            </div>
+
+            <div className="bg-cyber-black/40 p-3 rounded border border-cyber-blue/20">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="text-xs font-bold text-cyber-blue/70 font-rajdhani tracking-wider">QA READOUT</div>
+                    <div className="flex items-center gap-2">
+                        <Motion.button
+                            whileTap={{ scale: 0.98 }}
+                            onClick={copyQaReadout}
+                            className="min-h-[36px] px-3 rounded border border-cyber-blue/30 bg-cyber-blue/10 text-cyber-blue text-[11px] font-fira flex items-center gap-1.5"
+                        >
+                            <Copy size={12} /> COPY
+                        </Motion.button>
+                        <Motion.button
+                            whileTap={{ scale: 0.98 }}
+                            onClick={exportQaSnapshot}
+                            className="min-h-[36px] px-3 rounded border border-cyber-blue/30 bg-cyber-blue/10 text-cyber-blue text-[11px] font-fira flex items-center gap-1.5"
+                        >
+                            <Save size={12} /> EXPORT
+                        </Motion.button>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 text-[10px] font-fira text-cyber-blue/70 mb-2">
+                    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5">VIEWPORT: {runtime?.viewport || 'unknown'}</div>
+                    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5">STATE: {runtime?.gameState || 'unknown'}</div>
+                    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5">SYNC: {runtime?.syncStatus || 'unknown'}</div>
+                    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5">AI: {runtime?.isAiThinking ? 'thinking' : 'idle'}</div>
+                </div>
+                <pre className="whitespace-pre-wrap break-all rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2.5 py-2 text-[10px] font-fira text-cyber-blue/55">
+                    {qaReadout}
+                </pre>
             </div>
 
             {/* 유물 */}
@@ -104,6 +237,12 @@ const SystemTab = ({ player, actions, stats }) => {
             {(player.titles || []).length > 0 && (
                 <div className="bg-cyber-dark/40 border border-yellow-700/30 rounded-lg p-3">
                     <div className="text-xs font-bold text-yellow-500 mb-2 flex items-center gap-2">🏆 보유 칭호 ({player.titles.length})</div>
+                    {player.activeTitle && (
+                        <div className="mb-2 rounded border border-yellow-500/20 bg-yellow-500/10 px-2.5 py-2 text-[10px] font-fira">
+                            <div className="text-yellow-400 font-bold">활성 칭호: [{getTitleLabel(player.activeTitle)}]</div>
+                            <div className="text-cyber-blue/70 mt-1">패시브: {getTitlePassiveLabel(player.activeTitle)}</div>
+                        </div>
+                    )}
                     <div className="space-y-1 max-h-28 overflow-y-auto custom-scrollbar">
                         {player.titles.map((id) => {
                             const isActive = player.activeTitle === id;
@@ -115,6 +254,7 @@ const SystemTab = ({ player, actions, stats }) => {
                                 >
                                     <span className={`font-bold ${getTitleColor(id)}`}>[{getTitleLabel(id)}]</span>
                                     {isActive && <span className="text-yellow-500 text-[10px] ml-2">활성</span>}
+                                    <div className="text-cyber-blue/45 text-[10px] mt-0.5">{getTitlePassiveLabel(id)}</div>
                                 </button>
                             );
                         })}

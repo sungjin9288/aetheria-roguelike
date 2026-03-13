@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
-import { getEquipmentIdentity, getEquipmentProfile, getItemStatText, getNextEquipmentState, isFocusOffhand, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentIdentity, getEquipmentProfile, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -45,9 +45,7 @@ const canEquipItem = (item, job) => !Array.isArray(item.jobs) || item.jobs.inclu
 
 const getItemTags = (item) => {
     const tags = [];
-    if (isWeapon(item)) tags.push(item.hands === 2 ? '2H' : '1H');
-    if (isFocusOffhand(item)) tags.push('주문서');
-    else if (item?.type === 'shield') tags.push('방패');
+    if (isWeapon(item) || item?.type === 'shield') tags.push(getWeaponStyleLabel(item));
     return tags;
 };
 

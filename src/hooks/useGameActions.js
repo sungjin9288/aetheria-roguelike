@@ -4,8 +4,9 @@ import { CLASSES } from '../data/classes';
 import { AI_SERVICE } from '../services/aiService';
 import { toArray, getJobSkills, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel } from '../utils/gameUtils';
 import { resetDailyProtocolIfNeeded, rollExplorationEvent, spawnEnemy, applyBattleStartRelics, getFirstVisitReward } from '../utils/exploreUtils';
+import { advanceExploreState, getNarrativeEventChance, getQuietExplorationChance } from '../utils/explorationPacing';
+import { getRunBuildProfile } from '../utils/runProfileUtils';
 import { applyDynamicDifficulty, enrichSnapshotWithDifficulty } from '../systems/DifficultyManager';
-import { BOSS_MONSTERS } from '../data/monsters';
 // RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN — 동적 import로 exploreUtils.js에서 사용
 import { PRESTIGE_TITLES } from '../data/titles';
 import { AT } from '../reducers/actionTypes';
@@ -36,6 +37,29 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         const completed = getDailyProtocolCompletions(player, type, amount);
         completed.forEach((mission) => {
             addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);
+        });
+    };
+
+    const commitExploreOutcome = (outcome, transformPlayer = null) => {
+        resetDailyProtocolIfNeeded(player, dispatch);
+        dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
+        emitDailyProtocolLogs('explores', 1);
+        dispatch({
+            type: 'SET_PLAYER',
+            payload: (currentPlayer) => {
+                let nextPlayer = {
+                    ...currentPlayer,
+                    stats: {
+                        ...(currentPlayer.stats || {}),
+                        explores: (currentPlayer.stats?.explores || 0) + 1,
+                        exploreState: advanceExploreState(currentPlayer.stats, outcome),
+                    }
+                };
+                if (typeof transformPlayer === 'function') {
+                    nextPlayer = transformPlayer(nextPlayer) || nextPlayer;
+                }
+                return nextPlayer;
+            }
         });
     };
 
@@ -105,7 +129,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 visitedMaps: ['시작의 마을']
             }
         }});
-        addLog('system', `[${jobId}] ${name.trim()} 에이전트 — 에테리아 접속 완료.`);
+        addLog('system', `[${jobId}] ${name.trim()} — 에테리아 기록이 열렸습니다.`);
         addLog('event', `직업 "${jobId}" 선택됨. 첫 스킬: ${cls.skills[0]?.name || '강타'}`);
     },
 
@@ -134,10 +158,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         const eventChanceBonus = playerRelics.reduce((acc, relic) => (
             relic.effect === 'event_chance' ? acc + relic.val : acc
         ), 0);
-        const effectiveEventChance = Math.min(
-            BALANCE.SPECIAL_EVENT_MAX_CHANCE,
-            (mapData.eventChance || 0) * BALANCE.SPECIAL_EVENT_BASE_MULT * (1 + eventChanceBonus)
-        );
+        const effectiveEventChance = getNarrativeEventChance(mapData.eventChance || 0, eventChanceBonus, player.stats);
+        const quietChance = getQuietExplorationChance(player.stats);
 
         // AI 랜덤 이벤트 체크
         if (Math.random() < effectiveEventChance) {
@@ -151,7 +173,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                     gold: player.gold, title: player.activeTitle || null,
                     relicCount: playerRelics.length,
                     status: toArray(player.status).slice(0, 4),
-                    activeQuests: toArray(player.quests).filter(q => !q.done).slice(0, 3).map(q => q.title)
+                    activeQuests: toArray(player.quests).filter(q => !q.done).slice(0, 3).map(q => q.title),
+                    buildProfile: getRunBuildProfile(player, fullStats).tags.map((tag) => tag.name).slice(0, 4)
                 };
                 // Stage 3: AI 이벤트에 동적 난이도 정보 주입
                 const playerSnapshot = enrichSnapshotWithDifficulty(baseSnapshot, player);
@@ -163,9 +186,11 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                     }
                 });
                 if (eventData?.exhausted) {
+                    commitExploreOutcome('nothing');
                     dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
                     addLog('warning', eventData.message || '오늘 AI 호출 한도에 도달했습니다.');
                 } else if (eventData && eventData.desc) {
+                    commitExploreOutcome('narrative_event');
                     if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
                     const normalizedChoices = toArray(eventData.choices)
                         .map((choice, idx) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`))
@@ -174,6 +199,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                     dispatch({ type: 'SET_EVENT', payload: normalized });
                     addLog('event', normalized.desc);
                 } else {
+                    commitExploreOutcome('nothing');
                     dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
                     addLog('info', '아무 일도 일어나지 않았습니다.');
                 }
@@ -183,19 +209,14 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             return;
         }
 
-        // 일일 프로토콜 리셋 + 탐색 카운트 업 (Phase 1-B)
-        resetDailyProtocolIfNeeded(player, dispatch);
-        dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
-        emitDailyProtocolLogs('explores', 1);
-        dispatch({ type: 'SET_PLAYER', payload: (p) => ({
-            ...p,
-            stats: { ...p.stats, explores: (p.stats?.explores || 0) + 1 }
-        }) });
-
-        if (Math.random() < BALANCE.EVENT_CHANCE_NOTHING) {
+        if (Math.random() < quietChance) {
             // 조용한 탐색: 아노말리/유물 발견 처리 (Phase 1-B)
             const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats });
-            if (quietResult !== 'nothing') return;
+            if (quietResult !== 'nothing') {
+                commitExploreOutcome(quietResult);
+                return;
+            }
+            commitExploreOutcome('nothing');
             return addLog('info', '주변이 조용합니다.');
         }
 
@@ -205,6 +226,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             const { RELICS: relicList, pickWeightedRelics: pick } = await import('../data/relics');
             const available = relicList.filter(r => !playerRelics.some(pr => pr.id === r.id));
             if (available.length > 0) {
+                commitExploreOutcome('relic_found');
                 const candidates = pick(available, 3);
                 dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
                 addLog('event', '✨ [유물 발견] 전투 직전, 고대의 유물이 눈에 들어옵니다!');
@@ -220,9 +242,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
 
         // 전투 시작 유물 효과 적용 (Phase 1-B)
         const fullStats = getFullStats();
-        const combatStartPlayer = applyBattleStartRelics(player, playerRelics, fullStats, { addLog });
-
-        dispatch({ type: 'SET_PLAYER', payload: combatStartPlayer });
+        commitExploreOutcome('combat', (nextPlayer) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }));
         dispatch({ type: 'SET_ENEMY', payload: mStats });
         dispatch({ type: 'SET_GAME_STATE', payload: GS.COMBAT });
         addLog('combat', `${mStats.name} 등장!`);
@@ -327,7 +347,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     // ControlPanel에서 확인 UI를 거친 뒤 호출됩니다 (window.confirm 제거)
     reset: () => {
         dispatch({ type: 'RESET_GAME' });
-        addLog('system', '초기 시작 설정이 적용되었습니다. 새 에이전트 정보를 입력해 주세요.');
+        addLog('system', '초기 기록이 적용되었습니다. 이름을 정하고 다시 시작해 주세요.');
     },
 
     jobChange: (jobName) => {

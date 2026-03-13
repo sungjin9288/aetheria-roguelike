@@ -58,7 +58,7 @@ const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system']);
 const SUMMARY_LOG_COUNT = 6; // 요약 모드에서 표시할 최근 로그 수
 
-const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobile = false, player, quickSlots, onQuickSlotUse }) => {
+const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobile = false, player, quickSlots, onQuickSlotUse, showInput = true }) => {
     const endRef = useRef(null);
     const inputRef = useRef(null);
     const [inputValue, setInputValue] = useState('');
@@ -98,14 +98,14 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
             }
 
             // Focus terminal input: /
-            if (e.key === '/') {
+            if (showInput && e.key === '/') {
                 e.preventDefault();
                 inputRef.current?.focus();
             }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [gameState, quickSlots, onQuickSlotUse, onCommand]);
+    }, [gameState, quickSlots, onQuickSlotUse, onCommand, showInput]);
 
     const bgClass = gameState === GS.EVENT
         ? "bg-cyber-purple/10 border-cyber-purple/50 shadow-[0_0_20px_rgba(188,19,254,0.15)]"
@@ -121,7 +121,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
         : 0;
 
     return (
-        <div className={`min-w-0 ${mobile ? 'h-[clamp(16rem,42dvh,30rem)] min-h-[16rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border rounded-lg p-3 md:p-4 md:px-5 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
+        <div className={`min-w-0 ${mobile ? 'min-h-[10rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border ${mobile ? 'rounded-[1.5rem]' : 'rounded-lg'} ${mobile ? 'p-2.5' : 'p-3 md:p-4 md:px-5'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
             {/* Scanline overlay */}
             <div
                 className="absolute inset-0 z-0 opacity-10 pointer-events-none"
@@ -143,17 +143,28 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                 </div>
             )}
 
-            <div className="flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
+            <div className={`flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 ${mobile ? 'max-h-[11rem]' : ''}`}>
                 {logs.length === 0 && (
                     <Motion.div
-                        className="text-cyber-blue/50 text-center mt-20 font-rajdhani tracking-widest flex flex-col items-center"
+                        className={`text-cyber-blue/50 text-center ${mobile ? 'mt-6 text-xs' : 'mt-20'} font-rajdhani tracking-widest flex flex-col items-center`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: [0.3, 0.8, 0.3] }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <Terminal size={48} className="mx-auto mb-4 opacity-50 text-cyber-blue" />
-                        SYSTEM INITIALIZED<br />
-                        WAITING FOR INPUT...
+                        <Terminal size={mobile ? 34 : 48} className="mx-auto mb-3 md:mb-4 opacity-50 text-cyber-blue" />
+                        {mobile ? (
+                            <>
+                                기록창 준비 완료
+                                <br />
+                                아래 버튼으로 탐험을 시작하세요
+                            </>
+                        ) : (
+                            <>
+                                SYSTEM INITIALIZED
+                                <br />
+                                WAITING FOR INPUT...
+                            </>
+                        )}
                     </Motion.div>
                 )}
 
@@ -167,7 +178,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                                 key={log.id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className={`text-sm py-1.5 px-3 rounded-sm ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
+                                className={`${mobile ? 'text-xs py-1 px-2.5' : 'text-sm py-1.5 px-3'} rounded-sm ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
                             >
                                 {IconComp && <IconComp size={14} className="inline mr-2 -mt-1 opacity-80" />}
                                 {log.text}
@@ -195,7 +206,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
             </div>
 
             {/* CLI INPUT AREA */}
-            <div className="mt-4 border-t border-cyber-blue/20 pt-3 md:pb-1 flex flex-col gap-2 bg-transparent shrink-0 z-20">
+            <div className={`${mobile ? 'mt-2 pt-2' : 'mt-4 pt-3 md:pb-1'} border-t border-cyber-blue/20 flex flex-col gap-2 bg-transparent shrink-0 z-20`}>
                 {/* QuickSlot row */}
                 {player && quickSlots && (
                     <QuickSlot
@@ -204,40 +215,45 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                         gameState={gameState}
                     />
                 )}
-                {/* Command input + autocomplete */}
-                <div className="relative flex gap-2 items-center focus-within:border-cyber-blue/50 transition-colors">
-                    {player && (
-                        <CommandAutocomplete
-                            input={inputValue}
-                            gameState={gameState}
-                            player={player}
-                            onSelect={(cmd) => {
-                                setInputValue(cmd);
-                                onCommand?.(cmd);
-                                setInputValue('');
-                            }}
-                        />
-                    )}
-                    <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
-                    <input
-                        data-terminal-input
-                        ref={inputRef}
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder:text-cyber-blue/30 focus:placeholder:text-cyber-blue/10 transition-all text-sm md:text-base"
-                        placeholder="ENTER COMMAND..."
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                if (inputValue.trim()) {
-                                    onCommand?.(inputValue);
+                {showInput ? (
+                    <div className="relative flex gap-2 items-center focus-within:border-cyber-blue/50 transition-colors">
+                        {player && (
+                            <CommandAutocomplete
+                                input={inputValue}
+                                gameState={gameState}
+                                player={player}
+                                onSelect={(cmd) => {
+                                    setInputValue(cmd);
+                                    onCommand?.(cmd);
                                     setInputValue('');
+                                }}
+                            />
+                        )}
+                        <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
+                        <input
+                            data-terminal-input
+                            ref={inputRef}
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder:text-cyber-blue/30 focus:placeholder:text-cyber-blue/10 transition-all text-sm md:text-base"
+                            placeholder="ENTER COMMAND..."
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    if (inputValue.trim()) {
+                                        onCommand?.(inputValue);
+                                        setInputValue('');
+                                    }
                                 }
-                            }
-                        }}
-                        autoFocus={autoFocusInput}
-                    />
-                </div>
+                            }}
+                            autoFocus={autoFocusInput}
+                        />
+                    </div>
+                ) : (
+                    <div className="rounded-xl border border-cyan-400/15 bg-slate-950/75 px-3 py-2 text-[11px] font-fira text-cyan-100/60">
+                        입력 없이 진행됩니다. 탐험, 이동, 전투는 버튼으로만 조작합니다.
+                    </div>
+                )}
             </div>
         </div>
     );

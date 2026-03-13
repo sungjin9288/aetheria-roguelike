@@ -140,6 +140,69 @@ export const MONSTERS = {
     },
 };
 
+export const BOSS_BRIEFS = Object.freeze({
+    '화염의 군주': {
+        signature: '광역 화상과 강타 연사',
+        counterHint: '냉기 속성과 회복 루틴을 준비하면 화상 누적을 버티기 쉽습니다.',
+        phaseHint: 'HP 50% 이하부터 강타 비중이 크게 늘어납니다. 회복과 방어를 아껴두세요.',
+        recommendedBuilds: ['방패 요새', '비전 공명']
+    },
+    '레드 드래곤': {
+        signature: '고화력 브레스와 연속 강타',
+        counterHint: '냉기 속성과 방패 조합이 브레스 패턴을 안정적으로 받아냅니다.',
+        phaseHint: '격노 이후에는 화상과 강타가 겹치므로 단기 화력으로 빠르게 넘기는 편이 낫습니다.',
+        recommendedBuilds: ['양손 파쇄', '방패 요새']
+    },
+    스핑크스: {
+        signature: '교전 조절과 수수께끼 독패턴',
+        counterHint: '어둠 약점에 맞춰 순간 화력을 준비하고, 긴 교전을 피하는 편이 좋습니다.',
+        phaseHint: '각성 후 가드와 독이 섞이므로 큰 스킬은 가드가 빠진 턴에 몰아야 합니다.',
+        recommendedBuilds: ['비전 공명', '광전 도박']
+    },
+    '아누비스 수호자': {
+        signature: '저주성 압박과 심판 강타',
+        counterHint: '빛 속성과 안정적인 회복 루틴이 길어진 심판 턴을 버티는 핵심입니다.',
+        phaseHint: '2페이즈에서는 강타와 독성 압박이 동시에 들어오므로 방어형 빌드가 유리합니다.',
+        recommendedBuilds: ['방패 요새', '비전 공명']
+    },
+    '아이스 드래곤': {
+        signature: '빙결 누적과 강한 카운터',
+        counterHint: '화염 속성과 빠른 마무리 화력이 얼음 장기전을 끊는 데 유리합니다.',
+        phaseHint: '절대 영도 이후에는 강타 주기가 짧아집니다. 회복보다 마무리 타이밍이 더 중요합니다.',
+        recommendedBuilds: ['양손 파쇄', '광전 도박']
+    },
+    '빙결의 마녀': {
+        signature: '빙결 저주와 지속 압박',
+        counterHint: '화염 속성과 MP 유지가 중요합니다. 제어가 길어져도 스킬 루프가 끊기지 않아야 합니다.',
+        phaseHint: '저주 페이즈에 들어가면 상태이상이 겹칩니다. 정화 수단이나 단기 화력을 챙기세요.',
+        recommendedBuilds: ['비전 공명', '상태이상 집행자']
+    },
+    마왕: {
+        signature: '전영역 압박과 절망 페이즈',
+        counterHint: '빛 속성과 안정적인 회복, 그리고 보스전 전용 마무리 화력이 모두 필요합니다.',
+        phaseHint: '분노한 마왕은 강타와 화상을 동시에 밀어 넣습니다. 50% 전까지 리소스를 비축하세요.',
+        recommendedBuilds: ['방패 요새', '양손 파쇄']
+    },
+    '차원 파쇄자': {
+        signature: '현실 붕괴 패턴과 가드 변조',
+        counterHint: '빛 속성이나 단기 폭딜이 좋고, 긴 교전은 차원 왜곡 때문에 손해가 커집니다.',
+        phaseHint: '완전 개방 후 가드 빈도가 높아집니다. 큰 기술은 빈틈에 맞춰야 합니다.',
+        recommendedBuilds: ['양손 파쇄', '비전 공명']
+    },
+    '영겁의 수문장': {
+        signature: '시간 지연과 중장기 소모전',
+        counterHint: '자연 약점 대응과 높은 방어력이 중요합니다. 회복 타이밍을 미리 잡는 편이 좋습니다.',
+        phaseHint: '해방 후 강타와 제어가 섞여 들어오니 방패나 높은 HP가 체감됩니다.',
+        recommendedBuilds: ['방패 요새', '탐험 수집가']
+    },
+    '에테르 드래곤': {
+        signature: '에테르 역류와 최고난도 화력 체크',
+        counterHint: '어둠 약점 대응과 단기 폭딜, 그리고 MP 회전이 모두 갖춰져야 합니다.',
+        phaseHint: '해방 이후 공격 패턴이 고르게 강합니다. 한 가지 대응만 준비하면 무너집니다.',
+        recommendedBuilds: ['비전 공명', '양손 파쇄']
+    }
+});
+
 export const BOSS_MONSTERS = Object.entries(MONSTERS)
     .filter(([, data]) => Boolean(data?.isBoss))
     .map(([name]) => name);

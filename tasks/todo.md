@@ -1,6 +1,6 @@
 # Aetheria RPG - Task Board
 
-**Last Updated:** 2026-02-05  
+**Last Updated:** 2026-03-13  
 **Engineer:** Aetheria Staff Engineer (Architectural Specialist)
 
 ---
@@ -21,13 +21,27 @@
 ## 📋 Current Sprint
 
 ### 🎯 Pending Tasks
-_PM의 업무 부여 대기 중_
+- 실기기 수동 QA 결과 반영
+- iOS 배포 서명 및 TestFlight 업로드
+- Android 실제 release keystore 기준 최종 번들 검증
 
 ### 🔄 In Progress
-_현재 진행 중인 작업 없음_
+- 출시 후보 빌드 회귀 검증 및 문서 정리
+- iPhone / Android 실기기 5분 빠른 루틴 수행 및 이슈 수집
+- 모바일 전용 UI 리팩토링 후 실기기 터치 감각 검증
+- 모바일 첫 화면 HUD 밀도와 전투 보상 체감 실기기 기준 튜닝
+- 추천 행동 강조와 전리품 업그레이드 힌트의 실기기 체감 확인
+- 이동 추천 카드와 월드맵 추천 경로의 실기기 체감 확인
 
 ### ✅ Completed
-_완료된 작업 없음_
+- 게임 품질 개선 1차: 클래스 빌드 적합도, 보스 브리핑, 칭호 패시브, 런 진단
+- 브라우저 smoke 자동화: `scripts/smoke-gameplay.mjs`, `scripts/local-playtest.sh`
+- 네이티브 재검증: `mobile:doctor`, `cap:sync`, `android:debug`, `ios:build:device`
+- 모바일 입력창 제거 및 버튼 중심 진행 흐름 적용
+- `Run diagnostics` 제거 후 `성향` 기반 패시브/전용 스킬 UI 적용
+- 모바일 전투 결과 카드 소형화 및 1H/2H 장비 표기 강화
+- 목표 가이드 HUD 추가: 현재 목표, 퀘스트 펄스, 탐험 예보, 추천 행동 바로가기
+- 이동 추천 UX 추가: `MOVE` 패널 추천 카드, 월드맵 추천 경로 요약
 
 ---
 

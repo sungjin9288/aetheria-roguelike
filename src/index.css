@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-cyber-black text-slate-200 font-rajdhani overflow-x-hidden selection:bg-cyber-pink selection:text-white;
+    @apply bg-cyber-black text-slate-200 font-rajdhani overflow-x-hidden selection:bg-cyan-400/40 selection:text-white;
   }
 
   h1,
@@ -21,6 +21,15 @@
   .font-mono {
     @apply font-fira;
   }
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom Scrollbar */

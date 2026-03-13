@@ -51,9 +51,10 @@ const RelicChoicePanel = ({ pendingRelics, dispatch }) => {
 
                 {/* 유물 카드 3장 */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    {pendingRelics.map((relic) => (
+                    {pendingRelics.map((relic, index) => (
                         <button
                             key={relic.id}
+                            data-testid={`relic-choice-${index}`}
                             onClick={() => handleSelect(relic)}
                             className={`
                                 flex flex-col items-center text-center p-4 rounded-lg border-2 cursor-pointer
@@ -82,6 +83,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch }) => {
                 {/* 건너뛰기 */}
                 <div className="text-center">
                     <button
+                        data-testid="relic-choice-skip"
                         onClick={handleDecline}
                         className="text-xs text-gray-500 hover:text-gray-300 transition-colors underline"
                     >

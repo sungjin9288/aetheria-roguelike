@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap } from 'lucide-react';
+import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar } from 'lucide-react';
 import { getTitleLabel } from '../utils/gameUtils';
+import { getRunSummaryAnalysis } from '../utils/outcomeAnalysis';
 
 const SHARE_TEXT = (s) =>
 `⚔️ AETHERIA RUN ENDED
@@ -18,6 +19,7 @@ ${s.activeTitle ? `[${getTitleLabel(s.activeTitle)}] ` : ''}${s.job} Lv.${s.leve
 
 const RunSummaryCard = ({ runSummary: s, onRestart }) => {
     const [copied, setCopied] = useState(false);
+    const analysis = getRunSummaryAnalysis(s);
 
     const handleShare = async () => {
         try {
@@ -60,7 +62,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                         transition={{ duration: 1.2, repeat: Infinity }}
                         className="text-red-500 text-xs font-fira tracking-[0.4em] mb-2"
                     >
-                        ■ AGENT TERMINATED ■
+                        ■ RUN ENDED ■
                     </Motion.div>
                     <div className="text-2xl font-bold text-white font-rajdhani">
                         {s.activeTitle
@@ -90,17 +92,37 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                 </div>
 
                 {/* 메시지 */}
-                <div className="px-6 py-4 text-center">
+                <div className="px-6 py-4 text-center space-y-4">
                     <p className="text-xs text-slate-400 font-fira leading-relaxed">
                         에테르가 흩어졌습니다. 하지만 기억은 남습니다.
                         <br />
                         <span className="text-cyber-blue">다시 접속하여 더 강해지세요.</span>
                     </p>
+                    <div className="rounded-lg border border-cyber-blue/15 bg-cyber-dark/50 px-4 py-3 text-left">
+                        <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/60">
+                            <span className="flex items-center gap-1.5">
+                                <Radar size={11} />
+                                Run Readout
+                            </span>
+                            <span className="text-cyber-purple">{analysis.headline}</span>
+                        </div>
+                        <div className="mt-2 space-y-1 text-[11px] font-fira text-slate-300">
+                            {analysis.notes.map((note) => (
+                                <div key={note}>• {note}</div>
+                            ))}
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-cyber-blue/10 space-y-1 text-[11px] font-fira text-cyber-blue/75">
+                            {analysis.focus.map((focus) => (
+                                <div key={focus}>→ {focus}</div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 {/* 버튼 */}
                 <div className="px-6 pb-6 grid grid-cols-2 gap-3">
                     <Motion.button
+                        data-testid="run-summary-share"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={handleShare}
@@ -115,6 +137,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                     </Motion.button>
 
                     <Motion.button
+                        data-testid="run-summary-restart"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={onRestart}
