@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Sword, Star, Package, Heart, Zap, ChevronRight, X, Radar } from 'lucide-react';
 import { getPostCombatAnalysis } from '../utils/outcomeAnalysis';
+import SignalBadge from './SignalBadge';
 
 /**
  * PostCombatCard — 전투 종료 후 결과 요약 카드
@@ -63,15 +64,18 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                     initial={{ opacity: 0, y: 30, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-                    className={`fixed z-50 bg-cyber-black/95 border border-cyber-green/40 backdrop-blur-xl overflow-hidden ${
+                    transition={mobile
+                        ? { duration: 0.18, ease: 'easeOut' }
+                        : { type: 'spring', stiffness: 260, damping: 22 }}
+                    className={`panel-noise fixed z-50 bg-cyber-black/95 border border-cyber-green/40 backdrop-blur-xl overflow-hidden ${
                         mobile
-                            ? 'inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] rounded-[1.4rem] shadow-[0_22px_60px_rgba(0,255,157,0.12)]'
+                            ? 'inset-x-2.5 bottom-[calc(env(safe-area-inset-bottom)+1rem)] rounded-[1.4rem] shadow-[0_22px_60px_rgba(0,255,157,0.12)]'
                             : 'bottom-24 left-1/2 -translate-x-1/2 w-[clamp(17rem,90vw,26rem)] rounded-xl shadow-[0_0_30px_rgba(0,255,157,0.2)]'
                     }`}
                 >
                     {mobile ? (
                         <div className="px-4 py-3 space-y-3">
+                            <div className="mx-auto h-1.5 w-12 rounded-full bg-cyber-green/20" />
                             <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2 text-cyber-green font-rajdhani font-bold tracking-[0.18em] text-sm uppercase">
@@ -97,15 +101,13 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                             )}
 
                             <div className="flex items-center justify-between gap-2">
-                                <span className="rounded-full border border-cyber-green/25 bg-cyber-green/10 px-2.5 py-1 text-[11px] font-rajdhani font-bold text-cyber-green">
+                                <SignalBadge tone="success" size="lg" className="font-rajdhani font-bold normal-case tracking-[0.08em]">
                                     {analysis.rewardMood}
-                                </span>
+                                </SignalBadge>
                                 {analysis.rewardHighlights.length > 0 && (
                                     <div className="flex flex-wrap justify-end gap-1">
                                         {analysis.rewardHighlights.map((entry) => (
-                                            <span key={entry} className="rounded-full border border-cyber-blue/15 bg-cyber-black/70 px-2 py-1 text-[10px] font-fira text-cyber-blue/80">
-                                                {entry}
-                                            </span>
+                                            <SignalBadge key={entry} tone="neutral" size="sm">{entry}</SignalBadge>
                                         ))}
                                     </div>
                                 )}
@@ -125,14 +127,10 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                             {droppedItems.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
                                     {droppedItems.slice(0, 3).map((item, i) => (
-                                        <span key={i} className="rounded-full border border-cyber-purple/25 bg-cyber-purple/10 px-2.5 py-1 text-[11px] font-fira text-cyber-purple">
-                                            {item}
-                                        </span>
+                                        <SignalBadge key={i} tone="resonance" size="md">{item}</SignalBadge>
                                     ))}
                                     {droppedItems.length > 3 && (
-                                        <span className="rounded-full border border-slate-700 bg-slate-900/70 px-2.5 py-1 text-[11px] font-fira text-slate-300">
-                                            +{droppedItems.length - 3}
-                                        </span>
+                                        <SignalBadge tone="neutral" size="md">+{droppedItems.length - 3}</SignalBadge>
                                     )}
                                 </div>
                             )}
@@ -153,10 +151,10 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                                 }`}
                                             >
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <span className={`text-[10px] font-fira uppercase tracking-[0.16em] ${
-                                                        signal.tone === 'amber' ? 'text-amber-200/65' : 'text-cyber-purple/70'
-                                                    }`}>
+                                                    <span>
+                                                        <SignalBadge tone={signal.tone === 'amber' ? 'upgrade' : 'resonance'} size="sm">
                                                         {signal.title}
+                                                        </SignalBadge>
                                                     </span>
                                                     <span className={`text-[10px] font-fira ${
                                                         signal.tone === 'amber' ? 'text-amber-200/75' : 'text-cyber-purple/75'
@@ -183,7 +181,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                             <div className="rounded-xl border border-cyber-blue/15 bg-cyber-dark/40 px-3 py-2.5 space-y-1.5">
                                 <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.18em]">
                                     <span className="flex items-center gap-1 text-cyber-blue/60">
-                                        <Radar size={11} /> Readout
+                                        <Radar size={11} /> 전술 메모
                                     </span>
                                     <span className="text-cyber-green font-bold">{analysis.grade}</span>
                                 </div>

@@ -3,6 +3,7 @@ import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
 import { getEquipmentIdentity, getEquipmentProfile, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
+import SignalBadge from './SignalBadge';
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -127,6 +128,37 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
 
     return (
         <div className="space-y-3">
+            {spotlightNames.length > 0 && (
+                <Motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    data-testid="inventory-spotlight-detail"
+                    className="flex items-start justify-between gap-3 rounded border border-cyber-purple/25 bg-cyber-purple/10 px-3 py-2.5"
+                >
+                    <div className="min-w-0">
+                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-purple/75">
+                            {spotlight?.title || '전리품 주목'}
+                        </div>
+                        <div className="mt-1 text-[11px] font-fira text-cyber-purple/90 leading-snug">
+                            {spotlight?.detail || '이번 전투 보상과 관련된 장비를 먼저 확인하세요.'}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                            {spotlightNames.slice(0, 3).map((name) => (
+                                <SignalBadge key={`spotlight_${name}`} tone="spotlight" size="sm">{name}</SignalBadge>
+                            ))}
+                        </div>
+                    </div>
+                    {onClearSpotlight && (
+                        <button
+                            onClick={() => onClearSpotlight()}
+                            className="shrink-0 rounded border border-cyber-purple/20 bg-cyber-black/40 px-2 py-1 text-[10px] font-fira text-cyber-purple/75 hover:bg-cyber-purple/10"
+                        >
+                            닫기
+                        </button>
+                    )}
+                </Motion.div>
+            )}
+
             {/* Filter Bar */}
             <div className="flex gap-1 flex-wrap">
                 {FILTERS.map(f => (
@@ -177,39 +209,6 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 </Motion.div>
             )}
 
-            {spotlightNames.length > 0 && (
-                <Motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    data-testid="inventory-spotlight"
-                    className="flex items-start justify-between gap-3 rounded border border-cyber-purple/25 bg-cyber-purple/10 px-3 py-2.5"
-                >
-                    <div className="min-w-0">
-                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-purple/75">
-                            {spotlight?.title || '전리품 주목'}
-                        </div>
-                        <div className="mt-1 text-[11px] font-fira text-cyber-purple/90 leading-snug">
-                            {spotlight?.detail || '이번 전투 보상과 관련된 장비를 먼저 확인하세요.'}
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-1">
-                            {spotlightNames.slice(0, 3).map((name) => (
-                                <span key={`spotlight_${name}`} className="rounded border border-cyber-purple/20 bg-cyber-black/50 px-2 py-1 text-[10px] font-fira text-cyber-purple">
-                                    {name}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                    {onClearSpotlight && (
-                        <button
-                            onClick={() => onClearSpotlight()}
-                            className="shrink-0 rounded border border-cyber-purple/20 bg-cyber-black/40 px-2 py-1 text-[10px] font-fira text-cyber-purple/75 hover:bg-cyber-purple/10"
-                        >
-                            닫기
-                        </button>
-                    )}
-                </Motion.div>
-            )}
-
             {/* Item List */}
             <div className="space-y-1.5">
                 {filtered.length === 0 && (
@@ -248,9 +247,9 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                         {item.name}
                                     </span>
                                     {count > 1 && <span className="text-cyber-blue/30 text-xs">x{count}</span>}
-                                    {isSpotlighted && <span className="text-cyber-purple text-xs border border-cyber-purple/30 px-1 rounded font-fira">주목</span>}
-                                    {isCurrentEquip && <span className="text-cyber-green text-xs border border-cyber-green/30 px-1 rounded font-fira">장착 중</span>}
-                                    {!canEquip && <span className="text-red-400 text-xs border border-red-500/30 px-1 rounded font-fira">직업 제한</span>}
+                                    {isSpotlighted && <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>}
+                                    {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
+                                    {!canEquip && <SignalBadge tone="danger" size="sm">직업 제한</SignalBadge>}
                                 </div>
 
                                 {/* Compare diff (on hover or always for equip items) */}
@@ -269,9 +268,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                 {getItemTags(item).length > 0 && (
                                     <div className="mt-1 flex flex-wrap gap-1">
                                         {getItemTags(item).map((tag) => (
-                                            <span key={`${item.name}_${tag}`} className="text-[10px] text-slate-300 border border-slate-600/50 bg-slate-900/60 px-1.5 py-0.5 rounded">
-                                                {tag}
-                                            </span>
+                                            <SignalBadge key={`${item.name}_${tag}`} tone="neutral" size="sm">{tag}</SignalBadge>
                                         ))}
                                     </div>
                                 )}

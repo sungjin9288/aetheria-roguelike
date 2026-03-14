@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import AetherMark from './AetherMark';
 
 const MOBILE_NAME_POOL = ['진', '리아', '카일', '세나', '루카', '시아', '하린', '레온'];
 const randomMobileName = () => MOBILE_NAME_POOL[Math.floor(Math.random() * MOBILE_NAME_POOL.length)];
 
 const IntroScreen = ({ onStart, mobile = false }) => {
     const [name, setName] = useState(() => (mobile ? randomMobileName() : ''));
+    const mobileSuggestions = useMemo(() => MOBILE_NAME_POOL.slice(0, 4), []);
 
     const canStart = name.trim().length > 0;
     const selectedName = useMemo(() => name.trim(), [name]);
@@ -25,7 +27,7 @@ const IntroScreen = ({ onStart, mobile = false }) => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className={`w-full text-center relative overflow-hidden rounded-[1.75rem] border backdrop-blur-2xl shadow-[0_28px_90px_rgba(4,10,24,0.55)] ${
+            className={`panel-noise w-full text-center relative overflow-hidden rounded-[1.75rem] border backdrop-blur-2xl shadow-[0_28px_90px_rgba(4,10,24,0.55)] ${
                 mobile
                     ? 'max-w-xl border-cyan-500/20 bg-slate-950/90 px-5 py-6'
                     : 'max-w-2xl border-cyber-purple/25 bg-cyber-slate/80 p-6 md:p-8'
@@ -37,22 +39,35 @@ const IntroScreen = ({ onStart, mobile = false }) => {
             </div>
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-scanline" />
 
-            <Motion.h1
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-                className={`${mobile ? 'text-4xl' : 'text-5xl'} font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-emerald-300 to-cyan-500 mb-1 font-rajdhani drop-shadow-lg tracking-[0.18em]`}
-            >
-                AETHERIA
-            </Motion.h1>
-            <Motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8, duration: 1 }}
-                className="mb-6 font-fira text-[11px] tracking-[0.26em] text-cyan-200/70"
-            >
-                DUSK ARCHIVE INITIALIZED
-            </Motion.p>
+            <div className="relative z-10 mb-6 flex flex-col items-center gap-3">
+                <AetherMark size={mobile ? 'md' : 'lg'} />
+                <div>
+                    <Motion.h1
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.8 }}
+                        className={`${mobile ? 'text-4xl' : 'text-5xl'} font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-emerald-300 to-cyan-500 mb-1 font-rajdhani drop-shadow-lg tracking-[0.18em]`}
+                    >
+                        AETHERIA
+                    </Motion.h1>
+                    <Motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8, duration: 1 }}
+                        className="font-fira text-[11px] tracking-[0.26em] text-cyan-200/70"
+                    >
+                        DUSK ARCHIVE INITIALIZED
+                    </Motion.p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    <span className="rounded-full border border-cyan-400/16 bg-slate-950/72 px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/60">
+                        Archive Field Client
+                    </span>
+                    <span className="rounded-full border border-emerald-400/16 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.18em] text-emerald-200/80">
+                        Mobile-Ready
+                    </span>
+                </div>
+            </div>
 
             <AnimatePresence mode="wait">
                 <Motion.div
@@ -65,33 +80,40 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                 >
                     {mobile ? (
                         <div className="space-y-3">
-                            <p className="text-slate-400 text-sm font-fira">이름을 고르고 바로 여정을 시작하세요</p>
-                            <div className="rounded-2xl border border-cyan-400/20 bg-slate-950/80 px-4 py-5">
-                                <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/45 font-fira">현재 이름</div>
+                            <p className="text-slate-400 text-sm font-fira">콜사인을 고르고 바로 여정을 시작하세요</p>
+                            <div className="rounded-[1.35rem] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,16,28,0.92)_0%,rgba(5,9,18,0.96)_100%)] px-4 py-5 shadow-[0_18px_48px_rgba(2,8,20,0.3)]">
+                                <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/45 font-fira">Current Codename</div>
                                 <div data-testid="intro-mobile-name" className="mt-2 text-3xl font-rajdhani font-bold text-cyan-100">
                                     {selectedName}
                                 </div>
-                                <div className="mt-4 flex gap-2">
+                                <div className="mt-4 grid grid-cols-2 gap-2">
+                                    {mobileSuggestions.map((option) => (
+                                        <button
+                                            key={option}
+                                            type="button"
+                                            onClick={() => setName(option)}
+                                            className={`rounded-xl border px-3 py-3 text-sm font-rajdhani font-bold ${
+                                                selectedName === option
+                                                    ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-200'
+                                                    : 'border-slate-700 bg-slate-900/70 text-slate-300'
+                                            }`}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="mt-3 flex gap-2">
                                     <button
                                         type="button"
                                         data-testid="intro-reroll-name"
                                         onClick={() => setName(randomMobileName())}
                                         className="flex-1 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-3 py-3 text-sm font-rajdhani font-bold text-cyan-200"
                                     >
-                                        다른 이름
+                                        랜덤 생성
                                     </button>
-                                    <button
-                                        type="button"
-                                        data-testid="intro-name-jin"
-                                        onClick={() => setName('진')}
-                                        className={`rounded-xl border px-3 py-3 text-sm font-rajdhani font-bold ${
-                                            selectedName === '진'
-                                                ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-200'
-                                                : 'border-slate-700 bg-slate-900/70 text-slate-300'
-                                        }`}
-                                    >
-                                        진
-                                    </button>
+                                    <div className="flex items-center rounded-xl border border-cyan-400/15 bg-slate-950/75 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/55">
+                                        Mobile Quick Start
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -120,6 +142,14 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                             시작 직업은 <span className="text-emerald-300">모험가</span>입니다.
                             레벨 5에 도달하면 <span className="text-violet-300">전사 / 마법사 / 도적</span>으로 전직할 수 있습니다.
                         </p>
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                            <span className="rounded-full border border-cyan-400/14 bg-slate-950/75 px-2 py-1 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/60">
+                                Field Start
+                            </span>
+                            <span className="rounded-full border border-violet-400/14 bg-violet-500/10 px-2 py-1 text-[10px] font-fira uppercase tracking-[0.16em] text-violet-200/80">
+                                Class Branch Lv.5
+                            </span>
+                        </div>
                     </div>
                 </Motion.div>
             </AnimatePresence>

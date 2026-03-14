@@ -2,6 +2,7 @@ import React from 'react';
 import { Check, Lock, MapPin } from 'lucide-react';
 import { DB } from '../data/db';
 import { getMoveRecommendations } from '../utils/adventureGuide';
+import SignalBadge from './SignalBadge';
 
 const MAP_ORDER = Object.entries(DB.MAPS)
     .map(([name, map]) => ({ name, ...map }))
@@ -59,8 +60,10 @@ const MapNavigator = ({ player, stats }) => {
                             >
                                 <div className="flex items-center justify-between gap-2 text-[10px] font-fira">
                                     <span className="text-slate-100">{route.name}</span>
-                                    <span className={route.isRecommended ? 'text-cyber-green' : 'text-cyber-blue/70'}>
+                                    <span>
+                                        <SignalBadge tone={route.isRecommended ? 'recommended' : 'neutral'} size="sm">
                                         {route.isRecommended ? '추천' : route.badge}
+                                        </SignalBadge>
                                     </span>
                                 </div>
                                 <div className="mt-1 text-[10px] font-fira text-cyber-blue/55">

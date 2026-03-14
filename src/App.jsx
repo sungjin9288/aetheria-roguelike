@@ -15,6 +15,7 @@ import Dashboard from './components/Dashboard';
 import ControlPanel from './components/ControlPanel';
 import IntroScreen from './components/IntroScreen';
 import DamageNumber from './components/DamageNumber';
+import AetherMark from './components/AetherMark';
 
 // 조건부로만 렌더되는 무거운 컴포넌트 — lazy import (청크 분리)
 const PostCombatCard   = lazy(() => import('./components/PostCombatCard'));
@@ -75,6 +76,12 @@ function App() {
         || '이번 전투에서 획득한 장비와 보상을 먼저 확인하세요.',
       names: [...new Set(spotlightNames)].slice(0, 4),
     });
+    engine.actions.clearPostCombat?.();
+    if (typeof window !== 'undefined' && isMobileViewport) {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      });
+    }
   };
 
   useEffect(() => {
@@ -128,6 +135,13 @@ function App() {
             exp: engine.postCombatResult.exp,
             gold: engine.postCombatResult.gold,
             items: engine.postCombatResult.items || [],
+          }
+        : null,
+      inventorySpotlight: inventorySpotlight
+        ? {
+            token: inventorySpotlight.token,
+            title: inventorySpotlight.title,
+            names: inventorySpotlight.names || [],
           }
         : null,
       runSummary: engine.runSummary
@@ -203,6 +217,7 @@ function App() {
     engine.currentEvent,
     engine.pendingRelics,
     engine.postCombatResult,
+    inventorySpotlight,
     engine.runSummary,
     engine.sideTab,
     engine.logs,
@@ -222,8 +237,11 @@ function App() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="text-center z-10 p-8 border border-cyber-blue/30 bg-cyber-slate/50 backdrop-blur-md rounded-lg shadow-[0_0_30px_rgba(0,204,255,0.2)]"
+          className="panel-noise text-center z-10 p-8 border border-cyber-blue/30 bg-cyber-slate/50 backdrop-blur-md rounded-lg shadow-[0_0_30px_rgba(0,204,255,0.2)]"
         >
+          <div className="mb-4 flex justify-center">
+            <AetherMark size="lg" />
+          </div>
           <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue to-cyber-purple mb-4 animate-pulse">AETHERIA</h1>
           <div className="flex items-center gap-2 text-cyber-green justify-center">
             <span className="w-2 h-2 bg-cyber-green rounded-full animate-ping shadow-[0_0_10px_#00ff9d]"></span>
@@ -262,18 +280,29 @@ function App() {
   return (
     <MainLayout visualEffect={engine.visualEffect}>
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.18),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_28%),linear-gradient(180deg,#040813_0%,#03060f_48%,#050912_100%)]" />
+        <div className="absolute inset-0 animate-aurora bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.18),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_28%),linear-gradient(180deg,#040813_0%,#03060f_48%,#050912_100%)]" />
         <div className="absolute inset-0 opacity-35" style={{ backgroundImage: 'linear-gradient(rgba(14,165,233,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.08) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-cyan-400/8 to-transparent" />
+        <div className="absolute -left-10 top-28 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl animate-float-slow" />
+        <div className="absolute -right-10 bottom-24 h-52 w-52 rounded-full bg-emerald-400/8 blur-3xl animate-float-slow" style={{ animationDelay: '-2.7s' }} />
       </div>
 
-      <header className={`flex flex-wrap justify-between items-center gap-1.5 md:gap-2 mb-2 pb-1.5 border-b border-cyan-400/15 bg-slate-950/70 backdrop-blur-xl px-3 md:px-4 -mx-2 md:-mx-4 pt-2 shadow-[0_18px_32px_rgba(2,8,20,0.35)] ${isMobileViewport ? 'sticky top-0 z-30' : ''}`}>
+      <header className={`panel-noise flex flex-wrap justify-between items-center gap-1.5 md:gap-2 mb-2 relative overflow-hidden ${isMobileViewport ? 'rounded-[1.45rem] border border-cyan-400/14 bg-[linear-gradient(180deg,rgba(8,13,25,0.94)_0%,rgba(5,10,18,0.95)_100%)] px-3.5 py-3 shadow-[0_24px_48px_rgba(2,8,20,0.42)]' : 'pb-1.5 border-b border-cyan-400/15 bg-slate-950/70 px-3 md:px-4 -mx-2 md:-mx-4 pt-2 shadow-[0_18px_32px_rgba(2,8,20,0.35)]'} backdrop-blur-xl ${isMobileViewport ? 'sticky top-0 z-30' : ''}`}>
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          <h1 className="text-base md:text-xl font-bold bg-gradient-to-r from-emerald-300 via-cyan-300 to-cyan-500 bg-clip-text text-transparent flex items-center gap-1.5 md:gap-2 font-rajdhani min-w-0 drop-shadow-sm tracking-[0.16em] md:tracking-normal">
-            AETHERIA
-            <span className="text-[10px] md:text-xs text-cyan-100/50 font-normal border border-cyan-400/20 px-1 rounded backdrop-blur-sm">
-              v{CONSTANTS.DATA_VERSION}
-            </span>
-          </h1>
+          <AetherMark size={isMobileViewport ? 'sm' : 'md'} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
+              <h1 className="text-base md:text-xl font-bold bg-gradient-to-r from-emerald-300 via-cyan-300 to-cyan-500 bg-clip-text text-transparent flex items-center gap-1.5 md:gap-2 font-rajdhani min-w-0 drop-shadow-sm tracking-[0.16em] md:tracking-normal">
+                AETHERIA
+                <span className="text-[10px] md:text-xs text-cyan-100/50 font-normal border border-cyan-400/20 px-1 rounded backdrop-blur-sm">
+                  v{CONSTANTS.DATA_VERSION}
+                </span>
+              </h1>
+            </div>
+            <div className="mt-0.5 text-[9px] font-fira uppercase tracking-[0.26em] text-cyan-200/42">
+              Archive Field Client
+            </div>
+          </div>
           {/* v5.0: 프레스티지 칭호 뱃지 */}
           {engine.player.meta?.prestigeRank > 0 && (
             <span className="hidden md:flex items-center gap-1 text-xs text-cyber-purple font-rajdhani border border-cyber-purple/30 px-2 py-0.5 rounded bg-cyber-purple/10 font-bold">

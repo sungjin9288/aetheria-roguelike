@@ -17,6 +17,7 @@ import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
 import { soundManager } from '../systems/SoundManager';
 import { GS } from '../reducers/gameStates';
+import SignalBadge from './SignalBadge';
 
 // 상태별 분리 패널 컴포넌트
 import CombatPanel from './tabs/CombatPanel';
@@ -48,7 +49,7 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
     ? 'grid grid-cols-4 gap-2'
     : 'grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-2 sm:gap-3';
   const actionButtonBase = mobile
-    ? 'relative min-h-[52px] px-1.5 py-2 rounded-2xl flex flex-col items-center justify-center gap-1 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+    ? 'relative min-h-[58px] px-1.5 py-2.5 rounded-[1.2rem] flex flex-col items-center justify-center gap-1 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
     : 'relative min-h-[56px] p-2 sm:p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]';
   const actionLabelClass = mobile
     ? 'text-[8px] font-rajdhani font-bold tracking-[0.18em]'
@@ -69,7 +70,7 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
     return (
       <Motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        className="mt-4 p-6 border border-cyber-purple/50 rounded-lg bg-cyber-black/80 text-center animate-pulse text-cyber-purple font-rajdhani tracking-widest shadow-neon-purple backdrop-blur-md z-10 relative"
+        className="panel-noise mt-4 p-6 border border-cyber-purple/50 rounded-lg bg-cyber-black/80 text-center animate-pulse text-cyber-purple font-rajdhani tracking-widest shadow-neon-purple backdrop-blur-md z-10 relative"
       >
         NEURAL LINK ACTIVE... PROCESSING SCENARIO...
       </Motion.div>
@@ -103,7 +104,18 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
 
   // ── 기본 Idle / 이동 패널
   return (
-    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`mt-3 md:mt-4 relative z-10 w-full ${mobile ? 'space-y-2' : ''}`}>
+    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`mt-3 md:mt-4 relative z-10 w-full ${mobile ? 'panel-noise space-y-2 rounded-[1.7rem] border border-cyan-400/16 bg-[linear-gradient(180deg,rgba(8,13,25,0.95)_0%,rgba(5,10,18,0.96)_100%)] p-3.5 shadow-[0_24px_60px_rgba(2,8,20,0.4)] backdrop-blur-2xl' : ''}`}>
+      {mobile && (
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-cyber-blue/45">Field Actions</div>
+            <div className="mt-1 text-sm font-rajdhani font-bold text-white">현장 조작 패널</div>
+          </div>
+          <div className="rounded-full border border-cyan-400/18 bg-cyber-black/45 px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70">
+            {gameState === GS.MOVING ? 'Route Select' : 'Idle'}
+          </div>
+        </div>
+      )}
       {gameState === GS.MOVING ? (
         <div className={`gap-2 md:gap-3 ${mobile ? 'grid grid-cols-2' : 'flex flex-wrap'}`}>
           {moveRecommendations.map((route) => (
@@ -129,13 +141,9 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <span className={`rounded border px-1.5 py-0.5 text-[9px] font-fira ${
-                    route.isRecommended
-                      ? 'border-cyber-green/35 bg-cyber-green/10 text-cyber-green'
-                      : 'border-cyber-blue/20 bg-cyber-black/50 text-cyber-blue/70'
-                  }`}>
+                  <SignalBadge tone={route.isRecommended ? 'recommended' : 'neutral'} size="sm">
                     {route.isRecommended ? '추천' : route.badge}
-                  </span>
+                  </SignalBadge>
                 </div>
               </div>
               <div className="text-[10px] font-fira text-cyber-blue/70 leading-snug">
@@ -169,9 +177,9 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
             whileTap={{ scale: 0.95 }}
             disabled={isAiThinking}
             onClick={() => { soundManager.play('click'); actions.explore(); }}
-            className={`${actionButtonBase} ${getRecommendedClass('explore')} bg-slate-950/80 hover:bg-cyan-500/10 border border-cyan-400/20 hover:shadow-[0_0_18px_rgba(34,211,238,0.14)] hover:border-cyan-300/40`}
+            className={`${actionButtonBase} ${getRecommendedClass('explore')} bg-[linear-gradient(180deg,rgba(8,20,32,0.86)_0%,rgba(5,11,21,0.96)_100%)] hover:bg-cyan-500/10 border border-cyan-400/20 hover:shadow-[0_0_18px_rgba(34,211,238,0.14)] hover:border-cyan-300/40`}
           >
-            {recommendedButton === 'explore' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
+            {recommendedButton === 'explore' && <div className="absolute top-1.5 right-1.5"><SignalBadge tone="recommended" size="sm">추천</SignalBadge></div>}
             <MapIcon size={18} className="text-cyber-blue group-hover:scale-110 transition-transform" />
             <span className={`${actionLabelClass} text-cyber-blue/90`}>EXPLORE</span>
           </Motion.button>
@@ -182,9 +190,9 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
             whileTap={{ scale: 0.95 }}
             disabled={isAiThinking}
             onClick={() => setGameState(GS.MOVING)}
-            className={`${actionButtonBase} ${getRecommendedClass('move')} bg-slate-950/80 hover:bg-emerald-400/10 border border-emerald-400/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.14)] hover:border-emerald-300/40`}
+            className={`${actionButtonBase} ${getRecommendedClass('move')} bg-[linear-gradient(180deg,rgba(10,24,26,0.86)_0%,rgba(5,11,17,0.96)_100%)] hover:bg-emerald-400/10 border border-emerald-400/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.14)] hover:border-emerald-300/40`}
           >
-            {recommendedButton === 'move' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
+            {recommendedButton === 'move' && <div className="absolute top-1.5 right-1.5"><SignalBadge tone="recommended" size="sm">추천</SignalBadge></div>}
             <ArrowRight size={18} className="text-cyber-green group-hover:translate-x-2 transition-transform" />
             <span className={`${actionLabelClass} text-cyber-green/90`}>MOVE</span>
           </Motion.button>
@@ -200,9 +208,9 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
                   actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
                   actions.setGameState(GS.SHOP);
                 }}
-                className={`${actionButtonBase} ${getRecommendedClass('market')} bg-slate-950/80 hover:bg-yellow-500/10 border border-yellow-500/20 hover:shadow-[0_0_18px_rgba(234,179,8,0.14)] hover:border-yellow-400/40`}
+                className={`${actionButtonBase} ${getRecommendedClass('market')} bg-[linear-gradient(180deg,rgba(30,22,8,0.82)_0%,rgba(15,12,6,0.96)_100%)] hover:bg-yellow-500/10 border border-yellow-500/20 hover:shadow-[0_0_18px_rgba(234,179,8,0.14)] hover:border-yellow-400/40`}
               >
-                {recommendedButton === 'market' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
+                {recommendedButton === 'market' && <div className="absolute top-1.5 right-1.5"><SignalBadge tone="recommended" size="sm">추천</SignalBadge></div>}
                 <ShoppingBag size={18} className="text-yellow-500 group-hover:scale-110 transition-transform" />
                 <span className={`${actionLabelClass} text-yellow-500/90`}>{mobile ? 'SHOP' : 'MARKET'}</span>
               </Motion.button>
@@ -211,9 +219,9 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={actions.rest}
-                className={`${actionButtonBase} ${getRecommendedClass('rest')} bg-slate-950/80 hover:bg-emerald-500/10 border border-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.14)] hover:border-emerald-400/40`}
+                className={`${actionButtonBase} ${getRecommendedClass('rest')} bg-[linear-gradient(180deg,rgba(12,23,19,0.82)_0%,rgba(7,11,10,0.96)_100%)] hover:bg-emerald-500/10 border border-emerald-500/20 hover:shadow-[0_0_18px_rgba(16,185,129,0.14)] hover:border-emerald-400/40`}
               >
-                {recommendedButton === 'rest' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
+                {recommendedButton === 'rest' && <div className="absolute top-1.5 right-1.5"><SignalBadge tone="recommended" size="sm">추천</SignalBadge></div>}
                 <Moon size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" />
                 <span className={`${actionLabelClass} text-emerald-500/90`}>REST</span>
               </Motion.button>
@@ -222,9 +230,9 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState(GS.JOB_CHANGE)}
-                className={`${actionButtonBase} ${getRecommendedClass('class')} bg-slate-950/80 hover:bg-violet-500/10 border border-violet-500/20 hover:shadow-[0_0_18px_rgba(168,85,247,0.14)] hover:border-violet-400/40`}
+                className={`${actionButtonBase} ${getRecommendedClass('class')} bg-[linear-gradient(180deg,rgba(22,12,32,0.82)_0%,rgba(10,7,17,0.96)_100%)] hover:bg-violet-500/10 border border-violet-500/20 hover:shadow-[0_0_18px_rgba(168,85,247,0.14)] hover:border-violet-400/40`}
               >
-                {recommendedButton === 'class' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
+                {recommendedButton === 'class' && <div className="absolute top-1.5 right-1.5"><SignalBadge tone="recommended" size="sm">추천</SignalBadge></div>}
                 <GraduationCap size={18} className="text-purple-500 group-hover:scale-110 transition-transform" />
                 <span className={`${actionLabelClass} text-purple-500/90`}>CLASS</span>
               </Motion.button>
@@ -233,9 +241,9 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState(GS.QUEST_BOARD)}
-                className={`${actionButtonBase} ${getRecommendedClass('quests')} bg-slate-950/80 hover:bg-indigo-500/10 border border-indigo-500/20 hover:shadow-[0_0_18px_rgba(99,102,241,0.14)] hover:border-indigo-400/40`}
+                className={`${actionButtonBase} ${getRecommendedClass('quests')} bg-[linear-gradient(180deg,rgba(14,18,34,0.82)_0%,rgba(7,9,18,0.96)_100%)] hover:bg-indigo-500/10 border border-indigo-500/20 hover:shadow-[0_0_18px_rgba(99,102,241,0.14)] hover:border-indigo-400/40`}
               >
-                {recommendedButton === 'quests' && <span className="absolute top-1.5 right-1.5 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-1.5 py-0.5 text-[8px] font-fira text-cyan-200">추천</span>}
+                {recommendedButton === 'quests' && <div className="absolute top-1.5 right-1.5"><SignalBadge tone="recommended" size="sm">추천</SignalBadge></div>}
                 <ScrollText size={18} className="text-indigo-500 group-hover:scale-110 transition-transform" />
                 <span className={`${actionLabelClass} text-indigo-500/90`}>{mobile ? 'QUEST' : 'QUESTS'}</span>
               </Motion.button>
@@ -244,7 +252,7 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
                 whileTap={{ scale: 0.95 }}
                 disabled={isAiThinking}
                 onClick={() => setGameState(GS.CRAFTING)}
-                className={`${actionButtonBase} bg-slate-950/80 hover:bg-orange-500/10 border border-orange-500/20 hover:shadow-[0_0_18px_rgba(249,115,22,0.14)] hover:border-orange-400/40`}
+                className={`${actionButtonBase} bg-[linear-gradient(180deg,rgba(32,17,8,0.82)_0%,rgba(16,10,7,0.96)_100%)] hover:bg-orange-500/10 border border-orange-500/20 hover:shadow-[0_0_18px_rgba(249,115,22,0.14)] hover:border-orange-400/40`}
               >
                 <Hammer size={18} className="text-orange-500 group-hover:rotate-12 transition-transform" />
                 <span className={`${actionLabelClass} text-orange-500/90`}>CRAFT</span>
@@ -259,7 +267,7 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
               whileTap={{ scale: 0.95 }}
               disabled={isAiThinking}
               onClick={actions.lootGrave}
-              className={`${actionButtonBase} bg-slate-900/80 hover:bg-slate-800/80 border border-slate-500/35 hover:shadow-[0_0_18px_rgba(148,163,184,0.18)]`}
+              className={`${actionButtonBase} bg-[linear-gradient(180deg,rgba(25,30,40,0.85)_0%,rgba(11,15,22,0.96)_100%)] hover:bg-slate-800/80 border border-slate-500/35 hover:shadow-[0_0_18px_rgba(148,163,184,0.18)]`}
             >
               <Ghost size={18} className="text-slate-400 group-hover:animate-bounce" />
               <span className={`${actionLabelClass} text-slate-300`}>{mobile ? 'LOOT' : 'RECOVER'}</span>
@@ -272,7 +280,7 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
               whileTap={{ scale: 0.95 }}
               disabled={isAiThinking}
               onClick={() => setConfirmReset(true)}
-              className={`${actionButtonBase} ${mobile ? 'col-span-4' : 'sm:col-start-4'} bg-red-950/25 hover:bg-red-900/40 border border-red-800/30 hover:border-red-600/50`}
+              className={`${actionButtonBase} ${mobile ? 'col-span-4' : 'sm:col-start-4'} bg-[linear-gradient(180deg,rgba(40,10,14,0.84)_0%,rgba(18,8,10,0.96)_100%)] hover:bg-red-900/40 border border-red-800/30 hover:border-red-600/50`}
             >
               <X size={18} className="text-red-500/70 group-hover:text-red-500 group-hover:scale-110 transition-all" />
               <span className={`${actionLabelClass} text-red-600/70 group-hover:text-red-500`}>{mobile ? 'RESET' : 'FORMAT DRIVE'}</span>

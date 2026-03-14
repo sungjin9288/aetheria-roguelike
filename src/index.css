@@ -244,6 +244,107 @@
   animation: buffActive 2s ease-in-out infinite;
 }
 
+@keyframes aetherOrbit {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes aetherPulse {
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1);
+    box-shadow: 0 0 14px rgba(34, 211, 238, 0.18);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(45deg) scale(1.08);
+    box-shadow: 0 0 22px rgba(16, 185, 129, 0.28);
+  }
+}
+
+@keyframes auroraShift {
+  0% {
+    transform: translate3d(-2%, 0, 0) scale(1);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: translate3d(2%, -1%, 0) scale(1.04);
+    opacity: 0.92;
+  }
+
+  100% {
+    transform: translate3d(-2%, 0, 0) scale(1);
+    opacity: 0.72;
+  }
+}
+
+@keyframes floatSlow {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-aether-orbit {
+  animation: aetherOrbit 8s linear infinite;
+}
+
+.animate-aether-pulse {
+  animation: aetherPulse 3s ease-in-out infinite;
+}
+
+.animate-aurora {
+  animation: auroraShift 16s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floatSlow 5.4s ease-in-out infinite;
+}
+
+.panel-noise {
+  position: relative;
+  isolation: isolate;
+}
+
+.panel-noise>* {
+  position: relative;
+  z-index: 1;
+}
+
+.panel-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 0.45px, transparent 0.45px);
+  background-size: 4px 4px;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.panel-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%, transparent 82%, rgba(34, 211, 238, 0.05));
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* ============================================
    MOBILE OPTIMIZATION (Phase 3.3)
    ============================================ */

@@ -218,6 +218,40 @@ Done (Convenience / Fun Pass 4):
 - Added `getMoveRecommendations` to `src/utils/adventureGuide.js` so exits are scored by HP/MP readiness, inventory pressure, current level fit, boss risk, and unexplored-route value.
 - Upgraded the `MOVE` state in `src/components/ControlPanel.jsx` from plain exit buttons into recommendation cards with `추천/정비/개척/보스/경계` context and a short reason line.
 - Added a read-only `추천 이동` summary to `src/components/MapNavigator.jsx` and threaded runtime stats from `src/components/Dashboard.jsx` so the world map and move panel use the same route heuristic.
+
+Done (Visual Identity Finish Pass):
+- Added a reusable branded `AetherMark` glyph in `src/components/AetherMark.jsx` and threaded it through the app shell, boot screen, intro screen, and mobile field log.
+- Added shared animated visual primitives in `src/index.css` (`aetherOrbit`, `aetherPulse`, `auroraShift`, `floatSlow`) plus a reusable `panel-noise` surface treatment for core panels.
+- Reworked `src/App.jsx` and `src/components/MainLayout.jsx` to strengthen the archive-style app shell with aurora background layers, branded top strip, and safer mobile bottom spacing.
+- Polished `src/components/IntroScreen.jsx`, `src/components/TerminalView.jsx`, `src/components/Dashboard.jsx`, `src/components/ControlPanel.jsx`, `src/components/PostCombatCard.jsx`, and `src/components/ShopPanel.jsx` so the intro, HUD, action board, overlays, and field log share the same card language.
+- Compressed the mobile first fold further by turning `Loadout Snapshot` into stat badges + short trait markers and surfacing inventory spotlight messaging in the `Archive Dock` header.
+- Adjusted `handleLootReview` in `src/App.jsx` so `장비 보기` closes the combat result card and returns the user to the inventory review flow instead of leaving the overlay stacked above it.
+- Updated `src/components/SmartInventory.jsx` and `scripts/smoke-gameplay.mjs` so spotlight-first review flow reflects the current visual layout (dock summary on mobile, detail banner on desktop/inventory).
+
+Verification (Visual Identity Finish Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh` now reaches `[smoke:desktop] ok` and `[smoke:mobile] ok` after stabilizing the mobile loot-review and post-combat interaction path in `scripts/smoke-gameplay.mjs`.
+
+Blocked / Not Verified (Visual Identity Finish Pass):
+- Real-device iPhone/Android visual polish is still pending; only browser/build validation was performed here.
+
+Done (Verification Closure Pass):
+- Exposed `inventorySpotlight` in the browser test harness from `src/App.jsx` so smoke validation can assert the loot-review handoff directly.
+- Reworked `scripts/smoke-gameplay.mjs` to use DOM-level clicks for fixed mobile post-combat buttons and added a deterministic synthetic post-combat fallback when the random forest combat path does not naturally resolve to victory in time.
+- Surfaced the current loot spotlight in the mobile `Archive Dock` header inside `src/components/Dashboard.jsx`, and moved the detailed spotlight banner in `src/components/SmartInventory.jsx` to the top of the inventory stack.
+- Re-synced the latest UI into Capacitor shells and rebuilt Android/iOS native artifacts after the smoke stabilization changes.
+
+Verification (Verification Closure Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+
+Blocked / Not Verified (Verification Closure Pass):
+- Physical-device QA on actual iPhone/Android hardware is still pending and cannot be completed from this terminal session.
 - Added regression coverage for low-HP safe-route recommendation and stable-run level-fit route recommendation in `tests/adventure-guide.test.js`.
 
 Verification (Convenience / Fun Pass 4):
@@ -271,3 +305,71 @@ Verification (Loot Review Spotlight Pass):
 
 Blocked / Not Verified:
 - The new inventory spotlight flow is browser-smoke verified, but it has not been touched on a physical iPhone/Android device yet.
+
+Done (Mobile Design Polish Pass):
+- Refined the mobile app shell in `src/App.jsx` and `src/components/MainLayout.jsx` so the header reads as an in-app command bar instead of a desktop toolbar, while preserving safe-area behavior.
+- Reworked the mobile HUD in `src/components/Dashboard.jsx` into clearer app-style layers: `Status Core`, `Mission Focus`, `Loadout`, `성향`, and `Field Archive`, with compact stat tiles replacing the previous stacked bar rows.
+- Restyled the mobile action board in `src/components/ControlPanel.jsx` into a single `Field Actions` surface with stronger per-action color identity and a clearer idle/route-select state label.
+- Tightened the mobile field log in `src/components/TerminalView.jsx`, added a lightweight header, and kept the no-input mobile interaction model intact.
+- Polished the mobile start sheet in `src/components/IntroScreen.jsx` with codename suggestions and a more intentional quick-start presentation.
+- Updated the mobile shop and post-combat card styling in `src/components/ShopPanel.jsx` and `src/components/PostCombatCard.jsx` so overlays share the same rounded app-card language as the HUD.
+- Added `data-app-shell` in `src/components/MainLayout.jsx` and updated `scripts/smoke-gameplay.mjs` to scroll the real shell container before top-of-run captures, fixing misleading mobile first-fold screenshots.
+
+Verification (Mobile Design Polish Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+- Reviewed regenerated mobile smoke screenshots:
+  - `playtest-artifacts/mobile/01-after-start.png`
+  - `playtest-artifacts/mobile/06-post-combat-1.png`
+
+Blocked / Not Verified:
+- This pass is browser-smoke verified and screenshot-reviewed, but real-device touch feel, thumb reach, and OS safe-area behavior are still not closed without iPhone/Android manual QA.
+
+Done (Post-Polish Native Refresh):
+- Re-synced the latest mobile design polish into the Capacitor shells with `npm run cap:sync`.
+- Rebuilt Android debug via `npm run android:debug` after the design pass; the cache-retry path still works when the shared Gradle cache is broken.
+- Rebuilt the iOS device Release shell via `npm run ios:build:device` after the design pass.
+- Re-verified the corrected mobile first-fold smoke artifact after fixing shell-container scrolling:
+  - `playtest-artifacts/mobile/01-after-start.png`
+
+Verification (Post-Polish Native Refresh):
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+- `./scripts/local-playtest.sh`
+
+Artifacts:
+- Android debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
+- iOS Release device app: `/tmp/aetheria-ios-device-build/Build/Products/Release-iphoneos/App.app`
+
+Done (Mobile Design System Pass):
+- Compressed the mobile first fold in `src/components/Dashboard.jsx` by replacing the separate `Loadout` and `성향` cards with a single `Loadout Snapshot` and by turning `Field Archive` into a bottom-dock style archive tray.
+- Added a shared `src/components/SignalBadge.jsx` so recommendation, resonance, upgrade, spotlight, and status badges now use one visual language across `Dashboard`, `ControlPanel`, `MapNavigator`, `ShopPanel`, `SmartInventory`, and `PostCombatCard`.
+- Simplified mobile archive access with primary tabs (`INV`, `QUEST`, `MAP`, `STAT`) plus a secondary `More` row, keeping full archive access while removing the previous wide scroll strip from the first fold.
+- Tightened safe-area spacing in `src/components/MainLayout.jsx`, `src/components/ShopPanel.jsx`, and `src/components/PostCombatCard.jsx` to give the mobile shell more bottom breathing room and reduce edge-clinging overlays.
+
+Verification (Mobile Design System Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+  - first rerun failed due the existing random core-loop smoke not observing event/relic states
+  - second rerun reached `[smoke:desktop] ok` and `[smoke:mobile] ok`
+
+Blocked / Not Verified:
+- Real-device thumb reach, actual touch comfort, and OS-level safe-area behavior for the new `Archive Dock` and badge density are still pending until iPhone/Android manual QA.
+
+Done (Post-Design-System Native Refresh):
+- Re-synced the latest `Loadout Snapshot`, `Archive Dock`, and `SignalBadge` UI changes into the Capacitor shells with `npm run cap:sync`.
+- Rebuilt Android debug with `npm run android:debug`; the retry path recovered once from the known temporary Gradle cache corruption and completed successfully.
+- Rebuilt the iOS Release device shell with `npm run ios:build:device`.
+- Updated `docs/PLAYTEST_CHECKLIST.md` so the mobile QA wording now matches the latest mobile structure (`Loadout Snapshot`, `Archive Dock`, unified signal badges).
+
+Verification (Post-Design-System Native Refresh):
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+
+Artifacts:
+- Android debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
+- iOS Release device app: `/tmp/aetheria-ios-device-build/Build/Products/Release-iphoneos/App.app`

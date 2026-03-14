@@ -4,6 +4,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
 import { GS } from '../reducers/gameStates';
+import AetherMark from './AetherMark';
 
 const LOG_STYLES = {
     combat: {
@@ -121,12 +122,27 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
         : 0;
 
     return (
-        <div className={`min-w-0 ${mobile ? 'min-h-[10rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border ${mobile ? 'rounded-[1.5rem]' : 'rounded-lg'} ${mobile ? 'p-2.5' : 'p-3 md:p-4 md:px-5'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
+        <div className={`panel-noise min-w-0 ${mobile ? 'min-h-[10rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border ${mobile ? 'rounded-[1.6rem]' : 'rounded-lg'} ${mobile ? 'p-2.5' : 'p-3 md:p-4 md:px-5'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
             {/* Scanline overlay */}
             <div
                 className="absolute inset-0 z-0 opacity-10 pointer-events-none"
                 style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 0.6px, transparent 0.6px)', backgroundSize: '3px 3px' }}
             ></div>
+
+            {mobile && (
+                <div className="mb-2 flex items-center justify-between gap-3 rounded-[1rem] border border-cyan-400/14 bg-slate-950/68 px-3 py-2 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                    <span className="flex items-center gap-2 text-cyber-blue/70">
+                        <AetherMark size="sm" className="scale-[0.72]" />
+                        <span className="flex items-center gap-1.5">
+                            <Terminal size={11} />
+                            Field Log
+                        </span>
+                    </span>
+                    <span className="text-cyber-green/80">
+                        {gameState === GS.COMBAT ? 'Combat' : gameState === GS.EVENT ? 'Event' : 'Idle'}
+                    </span>
+                </div>
+            )}
 
             {/* #10: 전투 로그 모드 토글 버튼 */}
             {isCombat && (
@@ -151,12 +167,13 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                         animate={{ opacity: [0.3, 0.8, 0.3] }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <Terminal size={mobile ? 34 : 48} className="mx-auto mb-3 md:mb-4 opacity-50 text-cyber-blue" />
+                        <AetherMark size={mobile ? 'md' : 'lg'} className="mb-3 md:mb-4" />
+                        <Terminal size={mobile ? 24 : 32} className="mx-auto mb-3 opacity-45 text-cyber-blue" />
                         {mobile ? (
                             <>
-                                기록창 준비 완료
+                                field log ready
                                 <br />
-                                아래 버튼으로 탐험을 시작하세요
+                                아래 액션으로 탐험을 시작하세요
                             </>
                         ) : (
                             <>
