@@ -226,3 +226,48 @@ Verification (Convenience / Fun Pass 4):
 - `npm run build`
 - `./scripts/local-playtest.sh`
 - Reviewed `playtest-artifacts/mobile/09-final-state.png` for mobile HUD/action readability after the pass
+
+Done (Trait Reward Pass):
+- Added `getTraitItemResonance`, `getTraitFeaturedItems`, and `getTraitLootHint` to `src/utils/runProfileUtils.js` so current trait identity can score shop stock and battle rewards without changing item data.
+- Updated `src/components/ShopPanel.jsx` to sort buy items by trait resonance after affordability/usability, show a `성향 공명` market summary, and badge matching items with short resonance reasons.
+- Passed runtime stats into the shop route from `src/components/ControlPanel.jsx` so the market uses the same effective trait context as the HUD and stats panels.
+- Extended `src/hooks/useCombatActions.js` and `src/components/PostCombatCard.jsx` so battle rewards can surface a trait-resonant loot hint alongside the existing upgrade hint.
+- Added regression coverage for trait item resonance and trait loot hint selection in `tests/run-profile-utils.test.js`.
+
+Verification (Trait Reward Pass):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+
+Blocked / Not Verified:
+- Shop-specific visual tuning for the new resonance badges was not manually inspected on a real device yet; current verification is automated plus unit coverage.
+
+Done (Trait Reward Pass 2):
+- Compacted the resonance presentation in `src/components/ShopPanel.jsx` so trait-fit hints stay readable on mobile cards without dominating the vertical space.
+- Added `data-testid="shop-close"` and extended `scripts/smoke-gameplay.mjs` to open and close the market from the actual action bar, capturing dedicated shop screenshots in both desktop/mobile smoke artifacts.
+- Consolidated mobile reward hints in `src/components/PostCombatCard.jsx` into a single `획득 포인트` section so upgrade and trait-resonance messages do not overgrow the victory card.
+- Reviewed the new mobile captures `playtest-artifacts/mobile/02a-shop-open.png` and `playtest-artifacts/mobile/06-post-combat-1.png` for first-pass readability.
+
+Verification (Trait Reward Pass 2):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+
+Blocked / Not Verified:
+- Real-device touch readability for the new market resonance block and compact reward-signal block is still pending; current validation is browser smoke plus screenshot review.
+
+Done (Loot Review Spotlight Pass):
+- Added a post-combat loot review handoff in `src/App.jsx` that routes upgrade/trait-highlighted rewards straight into the inventory tab with a focused spotlight payload.
+- Updated `src/components/Dashboard.jsx` and `src/components/SmartInventory.jsx` so mobile detail panels auto-expose the inventory view when a spotlight is active and visually mark the highlighted drops with a dismissible banner.
+- Added a synthetic post-combat injection hook in `src/App.jsx` and extended `scripts/smoke-gameplay.mjs` to verify `post-combat -> review loot -> inventory spotlight` before the core explore loop.
+- Hardened combat-resolution detection in `scripts/smoke-gameplay.mjs` so smoke marks victory from either the result card or the victory log, removing random timing failures from the core-loop assertion.
+
+Verification (Loot Review Spotlight Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+
+Blocked / Not Verified:
+- The new inventory spotlight flow is browser-smoke verified, but it has not been touched on a physical iPhone/Android device yet.

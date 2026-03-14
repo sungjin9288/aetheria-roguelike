@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { advanceExploreState, getNarrativeEventChance, getQuietExplorationChance } from '../src/utils/explorationPacing.js';
-import { getRunBuildProfile, getClassBuildCompatibility, getClassBuildBonus, getEnemyTacticalProfile, getRunDiagnostics, getTraitProfile, getTraitSkill } from '../src/utils/runProfileUtils.js';
+import { getRunBuildProfile, getClassBuildCompatibility, getClassBuildBonus, getEnemyTacticalProfile, getRunDiagnostics, getTraitFeaturedItems, getTraitItemResonance, getTraitLootHint, getTraitProfile, getTraitSkill } from '../src/utils/runProfileUtils.js';
 
 test('exploration pacing increases narrative chance after long dry streaks and reduces repeated quiet turns', () => {
     const dryStats = {
@@ -180,4 +180,58 @@ test('trait profile simplifies build identity into a readable passive + skill pa
     assert.ok(trait.passiveLabel.includes('CRIT'));
     assert.equal(skill.fromTrait, true);
     assert.equal(skill.effect, 'bleed');
+});
+
+test('trait item resonance strongly prefers arcane items for arcane trait', () => {
+    const player = {
+        job: '마법사',
+        hp: 140,
+        maxHp: 140,
+        equip: {
+            weapon: { type: 'weapon', name: '나무지팡이', val: 12, hands: 2, elem: '물리' },
+            offhand: { type: 'shield', subtype: 'focus', name: '견습 주문서', val: 2, mp: 10 },
+        },
+        relics: [{ effect: 'mp_mult' }, { effect: 'skill_mult' }],
+    };
+    const trait = getTraitProfile(player, { maxHp: 140, isMagic: true });
+
+    const focusResonance = getTraitItemResonance(
+        { type: 'shield', subtype: 'focus', name: '룬 마도서', val: 4, mp: 20, jobs: ['마법사'] },
+        trait,
+        player
+    );
+    const bladeResonance = getTraitItemResonance(
+        { type: 'weapon', name: '양손검', val: 18, hands: 2, jobs: ['전사'] },
+        trait,
+        player
+    );
+
+    assert.ok(focusResonance.score > bladeResonance.score);
+    assert.equal(focusResonance.label, '성향 공명');
+});
+
+test('trait loot hint picks the highest resonance reward', () => {
+    const player = {
+        job: '도적',
+        hp: 150,
+        maxHp: 150,
+        equip: {
+            weapon: { type: 'weapon', name: '롱소드', val: 18, hands: 1, elem: '물리' },
+            offhand: { type: 'weapon', name: '은단검', val: 12, hands: 1, elem: '물리' },
+        },
+        relics: [{ effect: 'combo_stack' }, { effect: 'double_strike' }],
+        stats: {},
+    };
+    const trait = getTraitProfile(player, { maxHp: 150, isMagic: false });
+    const loot = [
+        { type: 'weapon', name: '암살자의 단검', val: 28, jobs: ['도적', '어쌔신'] },
+        { type: 'weapon', name: '양손검', val: 18, hands: 2, jobs: ['전사'] },
+        { type: 'hp', name: '하급 체력 물약', val: 50 },
+    ];
+
+    const hint = getTraitLootHint(loot, trait, player);
+    const featured = getTraitFeaturedItems(loot, trait, player, 2);
+
+    assert.equal(hint.name, '암살자의 단검');
+    assert.equal(featured[0].item.name, '암살자의 단검');
 });

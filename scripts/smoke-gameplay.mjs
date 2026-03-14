@@ -118,6 +118,58 @@ async function verifyTerminalStatus(page) {
   await writeStateArtifact('02-status-command', state, page);
 }
 
+async function verifyShopFlow(page) {
+  const marketButton = page.locator('[data-testid="control-market"]');
+  if (!await marketButton.count()) return;
+
+  await marketButton.click();
+  const openState = await waitForState(
+    page,
+    (nextState) => nextState.gameState === 'shop',
+    'shop panel to open'
+  );
+  await writeStateArtifact('02a-shop-open', openState, page);
+
+  const closeButton = page.locator('[data-testid="shop-close"]');
+  await closeButton.click();
+  await waitForState(
+    page,
+    (nextState) => nextState.gameState === 'idle',
+    'shop panel to close'
+  );
+}
+
+async function verifyLootReviewFlow(page) {
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectPostCombatResult?.());
+  const postCombatState = await waitForState(
+    page,
+    (nextState) => Boolean(nextState.postCombatResult),
+    'synthetic post-combat result to appear'
+  );
+  await writeStateArtifact('02b-post-combat-review', postCombatState, page);
+
+  const reviewButton = page.locator('[data-testid="post-combat-review-loot"]');
+  if (await reviewButton.count()) {
+    await reviewButton.click();
+  }
+
+  await waitForState(
+    page,
+    (nextState) => nextState.sideTab === 'inventory',
+    'inventory tab after loot review'
+  );
+  await page.locator('[data-testid="inventory-spotlight"]').waitFor({ state: 'visible', timeout: 10000 });
+  const inventoryState = await readState(page);
+  await writeStateArtifact('02c-inventory-spotlight', inventoryState, page);
+
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.clearPostCombat?.());
+  await waitForState(
+    page,
+    (nextState) => !nextState.postCombatResult,
+    'synthetic post-combat result to clear'
+  );
+}
+
 async function moveToForest(page) {
   if (isMobile) {
     await sendGameCommand(page, 'move 고요한 숲');
@@ -168,15 +220,19 @@ async function resolveCombat(page, observations) {
 }
 
 async function closePostCombat(page, observations) {
+  observations.victory = true;
   const continueButton = page.locator('[data-testid="post-combat-continue"]');
   if (await continueButton.count()) {
-    observations.victory = true;
     await continueButton.click();
     await waitForState(page, (state) => !state.postCombatResult, 'post-combat card to close');
   } else {
     await page.evaluate(() => window.__AETHERIA_TEST_API__?.clearPostCombat?.());
     await waitForState(page, (state) => !state.postCombatResult, 'post-combat state clear');
   }
+}
+
+function hasVictorySignal(state) {
+  return state.logTail?.some((entry) => typeof entry.text === 'string' && entry.text.includes('승리!'));
 }
 
 async function driveExploreLoop(page) {
@@ -211,13 +267,22 @@ async function driveExploreLoop(page) {
     if (state.gameState === 'combat' && state.enemy) {
       await writeStateArtifact(`05-combat-${attempt + 1}`, state, page);
       await resolveCombat(page, observations);
-      state = await readState(page);
+      state = await waitForState(
+        page,
+        (nextState) =>
+          Boolean(nextState.postCombatResult) ||
+          (nextState.gameState !== 'combat' && !nextState.enemy && !nextState.isAiThinking) ||
+          hasVictorySignal(nextState),
+        'combat resolution to settle'
+      );
     }
 
     if (state.postCombatResult) {
       await writeStateArtifact(`06-post-combat-${attempt + 1}`, state, page);
       await closePostCombat(page, observations);
       state = await readState(page);
+    } else if (hasVictorySignal(state)) {
+      observations.victory = true;
     }
 
     if (observations.combat && observations.victory && !observations.event) {
@@ -299,8 +364,10 @@ async function main() {
     await page.waitForFunction(() => typeof window.render_game_to_text === 'function', undefined, { timeout: 25000 });
     await waitForState(page, (state) => state.bootStage === 'ready', 'boot stage ready', 25000);
 
-    await startNewRun(page);
-    await verifyTerminalStatus(page);
+  await startNewRun(page);
+  await verifyShopFlow(page);
+  await verifyLootReviewFlow(page);
+  await verifyTerminalStatus(page);
     await moveToForest(page);
     const observations = await driveExploreLoop(page);
     await verifyTabs(page);

@@ -83,7 +83,7 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
 
   // ── 상점 패널
   if (gameState === GS.SHOP) {
-    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} />;
+    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} />;
   }
 
   // ── 전직 패널

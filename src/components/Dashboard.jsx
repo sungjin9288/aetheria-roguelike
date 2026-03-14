@@ -426,10 +426,11 @@ const tabVariants = {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
-const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false, quickSlots = [null, null, null], runtime = null }) => {
+const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false, quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null }) => {
     const [statusCollapsed, setStatusCollapsed] = useState(false);
     const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
+    const showMobileDetails = mobileDetailsOpen || (mobile && sideTab === 'inventory' && Boolean(inventorySpotlight?.token));
 
     const handleTabSelect = (tabId) => {
         setSideTab(tabId);
@@ -453,6 +454,8 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             actions={actions}
                             quickSlots={quickSlots}
                             onAssignQuickSlot={(index, item) => actions.setQuickSlot?.(index, item)}
+                            spotlight={inventorySpotlight}
+                            onClearSpotlight={onClearInventorySpotlight}
                         />
                     )}
 
@@ -542,10 +545,17 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             Archive
                         </div>
                         <button
-                            onClick={() => setMobileDetailsOpen((open) => !open)}
+                            onClick={() => {
+                                if (showMobileDetails) {
+                                    setMobileDetailsOpen(false);
+                                    onClearInventorySpotlight?.();
+                                } else {
+                                    setMobileDetailsOpen(true);
+                                }
+                            }}
                             className="min-h-[36px] rounded border border-cyber-blue/25 bg-cyber-dark/40 px-3 text-[11px] font-fira text-cyber-blue/75"
                         >
-                            {mobileDetailsOpen ? '상세 닫기' : '상세 열기'}
+                            {showMobileDetails ? '상세 닫기' : '상세 열기'}
                         </button>
                     </div>
                     <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
@@ -568,7 +578,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     </div>
 
                     <AnimatePresence initial={false}>
-                        {mobileDetailsOpen && (
+                        {showMobileDetails && (
                             <Motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}

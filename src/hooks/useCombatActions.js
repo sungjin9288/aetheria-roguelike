@@ -7,7 +7,7 @@ import { GS } from '../reducers/gameStates';
 import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary } from '../utils/gameUtils';
 import { getEquipmentProfile, getNextEquipmentState } from '../utils/equipmentUtils';
 import { pushBattleRecord, makeBattleRecord } from '../systems/DifficultyManager';
-import { getRunBuildProfile } from '../utils/runProfileUtils';
+import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../utils/runProfileUtils';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -197,7 +197,13 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     maxHp: updatedPlayer.maxHp,
                     maxMp: updatedPlayer.maxMp,
                 });
+                const traitProfile = getTraitProfile(updatedPlayer, {
+                    ...stats,
+                    maxHp: updatedPlayer.maxHp,
+                    maxMp: updatedPlayer.maxMp,
+                });
                 const lootUpgradeHint = getLootUpgradeHint(updatedPlayer.equip, lootResult.items);
+                const traitLootHint = getTraitLootHint(lootResult.items, traitProfile, updatedPlayer);
 
                 dispatch({
                     type: 'SET_POST_COMBAT_RESULT', payload: {
@@ -221,6 +227,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                         primaryBuild: buildProfile.primary.name,
                         buildTags: buildProfile.tags.map((tag) => tag.name).slice(0, 4),
                         upgradeHint: lootUpgradeHint,
+                        traitHint: traitLootHint,
                     }
                 });
                 return;

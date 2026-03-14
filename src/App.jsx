@@ -29,6 +29,7 @@ import { useDamageFlash } from './hooks/useDamageFlash';
 function App() {
   const engine = useGameEngine();
   const [isMuted, setIsMuted] = useState(false);
+  const [inventorySpotlight, setInventorySpotlight] = useState(null);
   const [isMobileViewport, setIsMobileViewport] = useState(() => (
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
   ));
@@ -51,6 +52,29 @@ function App() {
       return;
     }
     engine.actions.useItem(item);
+  };
+
+  const handleLootReview = () => {
+    const result = engine.postCombatResult;
+    const spotlightNames = [
+      result?.upgradeHint?.name || null,
+      result?.traitHint?.name || null,
+      ...(Array.isArray(result?.items) ? result.items.slice(0, 2) : []),
+    ].filter(Boolean);
+
+    engine.actions.setSideTab?.('inventory');
+    setInventorySpotlight({
+      token: Date.now(),
+      title: result?.upgradeHint?.name
+        ? '장비 갱신 후보'
+        : result?.traitHint?.name
+          ? '성향 공명 전리품'
+          : '이번 전리품',
+      detail: result?.upgradeHint?.summary
+        || result?.traitHint?.summary
+        || '이번 전투에서 획득한 장비와 보상을 먼저 확인하세요.',
+      names: [...new Set(spotlightNames)].slice(0, 4),
+    });
   };
 
   useEffect(() => {
@@ -124,6 +148,29 @@ function App() {
       sendCommand: (command) => engine.handleCommand(command),
       clearPostCombat: () => engine.actions.clearPostCombat?.(),
       setSideTab: (tab) => engine.actions.setSideTab?.(tab),
+      injectPostCombatResult: () => {
+        engine.dispatch({
+          type: 'SET_POST_COMBAT_RESULT',
+          payload: {
+            enemy: '테스트 골렘',
+            exp: 22,
+            gold: 18,
+            items: ['룬 마도서', '강철 롱소드'],
+            leveledUp: false,
+            hpLow: false,
+            mpLow: false,
+            invFull: false,
+            upgradeHint: {
+              name: '강철 롱소드',
+              summary: 'ATK +4 / DEF +1',
+            },
+            traitHint: {
+              name: '룬 마도서',
+              summary: '비전 성향과 잘 맞는 전리품입니다.',
+            },
+          }
+        });
+      },
       injectEvent: () => {
         engine.dispatch({
           type: 'SET_EVENT',
@@ -283,6 +330,8 @@ function App() {
             actions={engine.actions}
             stats={engine.getFullStats()}
             quickSlots={engine.quickSlots}
+            inventorySpotlight={inventorySpotlight}
+            onClearInventorySpotlight={() => setInventorySpotlight(null)}
             runtime={{
               syncStatus: engine.syncStatus,
               gameState: engine.gameState,
@@ -342,6 +391,8 @@ function App() {
                 actions={engine.actions}
                 stats={engine.getFullStats()}
                 quickSlots={engine.quickSlots}
+                inventorySpotlight={inventorySpotlight}
+                onClearInventorySpotlight={() => setInventorySpotlight(null)}
                 runtime={{
                   syncStatus: engine.syncStatus,
                   gameState: engine.gameState,
@@ -396,7 +447,7 @@ function App() {
           result={engine.postCombatResult}
           onClose={() => engine.actions.clearPostCombat?.()}
           onRest={() => engine.actions.rest?.()}
-          onSell={() => engine.actions.setSideTab?.('inventory')}
+          onSell={handleLootReview}
           mobile={isMobileViewport}
         />
       </Suspense>

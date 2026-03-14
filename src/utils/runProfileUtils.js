@@ -282,6 +282,9 @@ const relicEffectsOf = (player) => new Set((player?.relics || []).map((relic) =>
 const hasProfileTag = (profile, id) => profile?.primary?.id === id || (profile?.tags || []).some((tag) => tag.id === id);
 const labelTag = (id) => ARCHETYPE_LABELS[id] || id;
 const toPercent = (value = 0) => `${Math.round(value * 100)}%`;
+const hasAnyJob = (item, jobs = []) => Array.isArray(item?.jobs) && jobs.some((job) => item.jobs.includes(job));
+const isConsumableType = (item) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type);
+const hasElement = (item) => Boolean(item?.elem && item.elem !== '물리');
 
 export const getClassBuildIdentity = (job = '모험가') => (
     CLASS_BUILD_IDENTITIES[job] || CLASS_BUILD_IDENTITIES['모험가']
@@ -509,6 +512,103 @@ export const getTraitPassiveParts = (traitProfile) => {
     if ((bonus.critBonus || 0) > 0) parts.push(`CRIT +${toPercent(bonus.critBonus || 0)}`);
     if ((bonus.mpFlat || 0) > 0) parts.push(`MP +${bonus.mpFlat}`);
     return parts;
+};
+
+export const getTraitItemResonance = (item, traitProfile, player = null) => {
+    if (!item) return { score: 0, label: null, reasons: [], summary: null };
+
+    const traitId = traitProfile?.id || 'balanced';
+    const reasons = [];
+    let score = 0;
+
+    switch (traitId) {
+        case 'crusher':
+            if (isWeapon(item) && isTwoHandWeapon(item)) { score += 6; reasons.push('양손 파쇄 무기'); }
+            if (hasAnyJob(item, ['전사', '버서커', '나이트'])) { score += 2; reasons.push('전열 클래스 장비'); }
+            if (item?.elem === '화염' || item?.elem === '대지') { score += 1; reasons.push('강타 속성'); }
+            if (item?.type === 'buff' && (item?.effect === 'atk_up' || item?.effect === 'all_up')) { score += 3; reasons.push('화력 강화 소모품'); }
+            break;
+        case 'dual':
+            if (isWeapon(item) && !isTwoHandWeapon(item)) { score += 6; reasons.push('한손 연계 무기'); }
+            if (String(item?.name || '').includes('단검') || String(item?.name || '').includes('표창')) { score += 2; reasons.push('쌍수 급소 장비'); }
+            if (hasAnyJob(item, ['도적', '어쌔신'])) { score += 2; reasons.push('연계 클래스 장비'); }
+            if (item?.type === 'buff' && item?.effect === 'atk_up') { score += 2; reasons.push('순간 화력 보조'); }
+            break;
+        case 'fortress':
+            if (isShield(item)) { score += 6; reasons.push(isFocusOffhand(item) ? '보조 촉매' : '방패 장비'); }
+            if (item?.type === 'armor') { score += 4; reasons.push('방어구'); }
+            if (item?.type === 'buff' && (item?.effect === 'def_up' || item?.effect === 'all_up')) { score += 3; reasons.push('생존 강화 소모품'); }
+            if (hasAnyJob(item, ['전사', '나이트', '팔라딘'])) { score += 1; reasons.push('수호 클래스 장비'); }
+            break;
+        case 'arcane':
+            if (isMagicWeapon(item)) { score += 6; reasons.push('비전 무기'); }
+            if (isFocusOffhand(item)) { score += 6; reasons.push('마도서/집중 촉매'); }
+            if (item?.type === 'mp') { score += 4; reasons.push('마나 회복'); }
+            if (hasElement(item)) { score += 2; reasons.push('속성 공명'); }
+            if (hasAnyJob(item, ['마법사', '아크메이지', '흑마법사', '성직자'])) { score += 2; reasons.push('비전 클래스 장비'); }
+            break;
+        case 'explorer':
+            if (isConsumableType(item)) { score += 3; reasons.push('탐험 보급'); }
+            if (String(item?.name || '').includes('활') || String(item?.name || '').includes('궁')) { score += 4; reasons.push('원거리 개척 장비'); }
+            if (hasAnyJob(item, ['레인저', '모험가'])) { score += 2; reasons.push('개척 클래스 장비'); }
+            if (String(item?.name || '').includes('외투') || String(item?.name || '').includes('망토')) { score += 1; reasons.push('기동 장비'); }
+            break;
+        case 'risk':
+            if (isWeapon(item) && (isTwoHandWeapon(item) || item?.elem === '화염' || item?.elem === '어둠')) { score += 5; reasons.push('고위험 화력 장비'); }
+            if (item?.type === 'buff' && (item?.effect === 'atk_up' || item?.effect === 'all_up')) { score += 4; reasons.push('폭발력 증폭'); }
+            if (hasAnyJob(item, ['버서커', '흑마법사', '어쌔신'])) { score += 2; reasons.push('리스크 클래스 장비'); }
+            break;
+        case 'status':
+            if (hasElement(item)) { score += 5; reasons.push('속성/상태 장비'); }
+            if (isMagicWeapon(item)) { score += 3; reasons.push('주문 연계'); }
+            if (hasAnyJob(item, ['레인저', '마법사', '흑마법사', '어쌔신'])) { score += 2; reasons.push('상태 집행 클래스 장비'); }
+            if (item?.type === 'cure' || (item?.type === 'buff' && item?.effect === 'all_up')) { score += 1; reasons.push('상태 관리 보조'); }
+            break;
+        case 'balanced':
+        default:
+            if (isConsumableType(item)) { score += 2; reasons.push('범용 보급'); }
+            if (['weapon', 'armor', 'shield'].includes(item?.type)) { score += 1; reasons.push('범용 장비'); }
+            if (hasAnyJob(item, ['모험가'])) { score += 1; reasons.push('모험가 장비'); }
+            break;
+    }
+
+    if (player?.job && Array.isArray(item?.jobs) && item.jobs.includes(player.job)) {
+        score += 1;
+        reasons.push('현재 직업 장착 가능');
+    }
+
+    const label = score >= 6 ? '성향 공명' : score >= 3 ? '호응' : null;
+
+    return {
+        score,
+        label,
+        reasons,
+        summary: reasons.slice(0, 2).join(' · ') || null,
+    };
+};
+
+export const getTraitFeaturedItems = (items = [], traitProfile, player = null, limit = 3) => (
+    (items || [])
+        .map((item) => ({
+            item,
+            resonance: getTraitItemResonance(item, traitProfile, player),
+        }))
+        .filter((entry) => entry.resonance.score >= 3)
+        .sort((left, right) => right.resonance.score - left.resonance.score || (left.item.price || 0) - (right.item.price || 0))
+        .slice(0, limit)
+);
+
+export const getTraitLootHint = (items = [], traitProfile, player = null) => {
+    const [best] = getTraitFeaturedItems(items, traitProfile, player, 1);
+    if (!best) return null;
+
+    return {
+        name: best.item.name,
+        score: best.resonance.score,
+        label: best.resonance.label,
+        summary: best.resonance.summary || `${traitProfile?.name || '현재 성향'}과 잘 맞는 전리품입니다.`,
+        traitName: traitProfile?.name || null,
+    };
 };
 
 export const getRunDiagnostics = (player, stats = {}) => {

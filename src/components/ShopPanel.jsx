@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
 import { getEquipmentProfile, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getTraitFeaturedItems, getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 
 const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
 
@@ -57,7 +58,13 @@ const getToneClass = (tone) => {
     return 'text-cyber-blue/80 border-cyber-blue/20 bg-cyber-blue/5';
 };
 
-const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
+const getResonanceClass = (score = 0) => (
+    score >= 6
+        ? 'border-cyber-purple/25 bg-cyber-purple/10 text-cyber-purple'
+        : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue'
+);
+
+const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState(null);
     const loc = player.loc;
@@ -66,8 +73,14 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
     if (loc === '사막 오아시스') maxTier = 2;
     if (loc === '북부 요새') maxTier = 4;
 
+    const traitProfile = useMemo(
+        () => getTraitProfile(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }),
+        [player, stats]
+    );
+
     const countOwned = (name) => player.inv.filter((entry) => entry.name === name).length;
     const canEquipNow = (item) => !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job);
+    const getResonance = (item) => getTraitItemResonance(item, traitProfile, player);
 
     const buyItems = [...shopItems]
         .filter((item) => (item.tier || 1) <= maxTier)
@@ -77,8 +90,16 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
                 const usable = canEquipNow(item) ? 0 : 2;
                 return affordable + usable;
             };
-            return score(a) - score(b) || (a.price || 0) - (b.price || 0);
+            return score(a) - score(b)
+                || (getResonance(b).score - getResonance(a).score)
+                || (a.price || 0) - (b.price || 0);
         });
+    const featuredItems = getTraitFeaturedItems(
+        buyItems.filter((item) => canEquipNow(item)),
+        traitProfile,
+        player,
+        3
+    );
 
     const sellItems = [...player.inv]
         .filter((item) => !String(item.id).startsWith('starter_'))
@@ -108,6 +129,24 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
                     <p className="text-xs text-slate-400 font-fira mt-2">
                         구매 전에 직업 제한, 장비 비교, 보유 수량을 먼저 확인하세요. 판매는 두 번 눌러 확정됩니다.
                     </p>
+                    <div className="mt-3 rounded-lg border border-cyber-purple/20 bg-cyber-purple/10 px-3 py-2 text-[11px] font-fira">
+                        <div className="flex items-center justify-between gap-3">
+                            <span className="text-cyber-blue/60 uppercase tracking-[0.16em]">성향 공명</span>
+                            <span className={traitProfile.accent}>{traitProfile.title}</span>
+                        </div>
+                        <div className="mt-1 text-cyber-purple/90 leading-snug">
+                            현재 상점은 성향과 맞는 장비를 위로 정렬합니다.
+                        </div>
+                        {featuredItems.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                {featuredItems.map(({ item, resonance }) => (
+                                    <span key={`feature_${item.name}`} className="rounded border border-cyber-purple/25 bg-cyber-black/50 px-2 py-1 text-[10px] text-cyber-purple">
+                                        {item.name} · {resonance.label}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <div className="flex bg-slate-800 rounded-lg p-1 shrink-0 self-start">
                     <button
@@ -140,6 +179,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
                             const canBuy = affordable && equipable;
                             const ownedCount = countOwned(item.name);
                             const comparison = getComparisonMeta(item, player.equip);
+                            const resonance = getResonance(item);
 
                             return (
                                 <div
@@ -172,7 +212,28 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
                                         {item.elem && (
                                             <span className="px-2 py-1 rounded border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">{item.elem}</span>
                                         )}
+                                        {resonance.label && (
+                                            <span className="px-2 py-1 rounded border border-cyber-purple/25 bg-cyber-purple/10 text-cyber-purple">
+                                                {resonance.label}
+                                            </span>
+                                        )}
                                     </div>
+
+                                    {resonance.summary && (
+                                        <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] font-fira ${getResonanceClass(resonance.score)}`}>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="uppercase tracking-[0.14em] text-[10px] opacity-80">
+                                                    {resonance.label}
+                                                </span>
+                                                <span className="text-[10px] opacity-70">
+                                                    {traitProfile.name}
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 leading-snug">
+                                                {resonance.summary}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {comparison && (
                                         <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] font-fira ${getToneClass(comparison.tone)}`}>
@@ -263,6 +324,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState }) => {
             </div>
 
             <button
+                data-testid="shop-close"
                 onClick={() => setGameState('idle')}
                 className="mt-4 w-full min-h-[44px] rounded-lg border border-slate-600 bg-slate-800 py-3 text-sm font-bold text-slate-200 transition-colors hover:bg-slate-700"
             >

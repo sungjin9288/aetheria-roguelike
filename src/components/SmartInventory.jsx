@@ -49,9 +49,11 @@ const getItemTags = (item) => {
     return tags;
 };
 
-const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot }) => {
+const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null }) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState(null);
+    const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
+    const spotlightSet = useMemo(() => new Set(spotlightNames), [spotlightNames]);
 
     const grouped = useMemo(() => {
         const map = {};
@@ -175,6 +177,39 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 </Motion.div>
             )}
 
+            {spotlightNames.length > 0 && (
+                <Motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    data-testid="inventory-spotlight"
+                    className="flex items-start justify-between gap-3 rounded border border-cyber-purple/25 bg-cyber-purple/10 px-3 py-2.5"
+                >
+                    <div className="min-w-0">
+                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-purple/75">
+                            {spotlight?.title || '전리품 주목'}
+                        </div>
+                        <div className="mt-1 text-[11px] font-fira text-cyber-purple/90 leading-snug">
+                            {spotlight?.detail || '이번 전투 보상과 관련된 장비를 먼저 확인하세요.'}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                            {spotlightNames.slice(0, 3).map((name) => (
+                                <span key={`spotlight_${name}`} className="rounded border border-cyber-purple/20 bg-cyber-black/50 px-2 py-1 text-[10px] font-fira text-cyber-purple">
+                                    {name}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    {onClearSpotlight && (
+                        <button
+                            onClick={() => onClearSpotlight()}
+                            className="shrink-0 rounded border border-cyber-purple/20 bg-cyber-black/40 px-2 py-1 text-[10px] font-fira text-cyber-purple/75 hover:bg-cyber-purple/10"
+                        >
+                            닫기
+                        </button>
+                    )}
+                </Motion.div>
+            )}
+
             {/* Item List */}
             <div className="space-y-1.5">
                 {filtered.length === 0 && (
@@ -190,6 +225,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                         getEquipmentIdentity(player.equip?.weapon) === itemIdentity ||
                         getEquipmentIdentity(player.equip?.armor) === itemIdentity ||
                         getEquipmentIdentity(player.equip?.offhand) === itemIdentity;
+                    const isSpotlighted = spotlightSet.has(item.name);
 
                     return (
                         <Motion.div
@@ -200,7 +236,11 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                             onMouseEnter={() => setHoveredItem(item.name)}
                             onMouseLeave={() => setHoveredItem(null)}
                             className={`bg-cyber-dark/40 p-3 rounded-sm border flex justify-between items-center group transition-all cursor-pointer min-h-[50px]
-                                ${isCurrentEquip ? 'border-cyber-green/40 bg-cyber-green/5' : 'border-cyber-blue/10 hover:border-cyber-green/50 hover:bg-cyber-green/5'}`}
+                                ${isSpotlighted
+                                    ? 'border-cyber-purple/45 bg-cyber-purple/10 shadow-[0_0_16px_rgba(168,85,247,0.12)]'
+                                    : isCurrentEquip
+                                        ? 'border-cyber-green/40 bg-cyber-green/5'
+                                        : 'border-cyber-blue/10 hover:border-cyber-green/50 hover:bg-cyber-green/5'}`}
                         >
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -208,6 +248,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                         {item.name}
                                     </span>
                                     {count > 1 && <span className="text-cyber-blue/30 text-xs">x{count}</span>}
+                                    {isSpotlighted && <span className="text-cyber-purple text-xs border border-cyber-purple/30 px-1 rounded font-fira">주목</span>}
                                     {isCurrentEquip && <span className="text-cyber-green text-xs border border-cyber-green/30 px-1 rounded font-fira">장착 중</span>}
                                     {!canEquip && <span className="text-red-400 text-xs border border-red-500/30 px-1 rounded font-fira">직업 제한</span>}
                                 </div>

@@ -50,6 +50,11 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
     const compactNote = analysis.notes[0] || `${result.enemy || '적'} 전투를 정리했습니다.`;
     const compactAction = analysis.actions[0] || '다음 탐험 전 장비와 체력을 점검하세요.';
     const upgradeHint = result.upgradeHint || null;
+    const traitHint = result.traitHint || null;
+    const rewardSignals = [
+        upgradeHint ? { title: '장비 갱신', name: upgradeHint.name, summary: upgradeHint.summary, tone: 'amber' } : null,
+        traitHint ? { title: '성향 공명', name: traitHint.name, summary: traitHint.summary, tone: 'purple' } : null,
+    ].filter(Boolean);
 
     return (
         <AnimatePresence>
@@ -132,16 +137,45 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                 </div>
                             )}
 
-                            {upgradeHint && (
-                                <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2">
-                                    <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-amber-200/65">
-                                        장비 갱신 가능
+                            {rewardSignals.length > 0 && (
+                                <div className="rounded-xl border border-cyber-blue/15 bg-cyber-dark/35 px-3 py-2.5 space-y-2">
+                                    <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/55">
+                                        획득 포인트
                                     </div>
-                                    <div className="mt-1 text-[12px] font-fira text-amber-100">
-                                        {upgradeHint.name}
-                                    </div>
-                                    <div className="mt-1 text-[11px] font-fira text-amber-200/80">
-                                        {upgradeHint.summary}
+                                    <div className="space-y-2">
+                                        {rewardSignals.map((signal) => (
+                                            <div
+                                                key={`${signal.title}_${signal.name}`}
+                                                className={`rounded-lg border px-2.5 py-2 ${
+                                                    signal.tone === 'amber'
+                                                        ? 'border-amber-400/20 bg-amber-500/10'
+                                                        : 'border-cyber-purple/20 bg-cyber-purple/10'
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className={`text-[10px] font-fira uppercase tracking-[0.16em] ${
+                                                        signal.tone === 'amber' ? 'text-amber-200/65' : 'text-cyber-purple/70'
+                                                    }`}>
+                                                        {signal.title}
+                                                    </span>
+                                                    <span className={`text-[10px] font-fira ${
+                                                        signal.tone === 'amber' ? 'text-amber-200/75' : 'text-cyber-purple/75'
+                                                    }`}>
+                                                        {signal.tone === 'amber' ? '전투 효율' : '빌드 방향'}
+                                                    </span>
+                                                </div>
+                                                <div className={`mt-1 text-[12px] font-fira ${
+                                                    signal.tone === 'amber' ? 'text-amber-100' : 'text-cyber-purple'
+                                                }`}>
+                                                    {signal.name}
+                                                </div>
+                                                <div className={`mt-1 text-[11px] font-fira leading-snug ${
+                                                    signal.tone === 'amber' ? 'text-amber-200/80' : 'text-cyber-purple/85'
+                                                }`}>
+                                                    {signal.summary}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -181,11 +215,21 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                     </Motion.button>
                                 ) : upgradeHint ? (
                                     <Motion.button
+                                        data-testid="post-combat-review-loot"
                                         whileTap={{ scale: 0.97 }}
                                         onClick={() => onSell?.()}
                                         className="min-h-[42px] rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-[11px] font-rajdhani font-bold text-amber-200"
                                     >
                                         장비 보기
+                                    </Motion.button>
+                                ) : traitHint ? (
+                                    <Motion.button
+                                        data-testid="post-combat-review-loot"
+                                        whileTap={{ scale: 0.97 }}
+                                        onClick={() => onSell?.()}
+                                        className="min-h-[42px] rounded-xl border border-cyber-purple/25 bg-cyber-purple/10 px-3 py-2 text-[11px] font-rajdhani font-bold text-cyber-purple"
+                                    >
+                                        공명 장비 보기
                                     </Motion.button>
                                 ) : (
                                     <div className="min-h-[42px] rounded-xl border border-cyber-green/20 bg-cyber-green/5 px-3 py-2 text-[11px] font-fira text-cyber-green/70 flex items-center">
@@ -252,6 +296,20 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                     </div>
                                 )}
 
+                                {traitHint && (
+                                    <div className="bg-cyber-dark/40 rounded px-3 py-2 border border-cyber-purple/20">
+                                        <div className="text-cyber-purple/60 text-xs font-fira mb-1 flex items-center gap-1">
+                                            <Star size={12} /> TRAIT RESONANCE
+                                        </div>
+                                        <div className="text-[11px] font-fira text-cyber-purple">
+                                            {traitHint.name}
+                                        </div>
+                                        <div className="mt-1 text-[11px] font-fira text-cyber-purple/75">
+                                            {traitHint.summary}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="bg-cyber-dark/40 rounded px-3 py-2 border border-cyber-blue/15 space-y-2">
                                     <div className="flex items-center justify-between gap-2 text-xs font-fira">
                                         <div className="text-cyber-blue/60 flex items-center gap-1">
@@ -285,6 +343,24 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                             <ChevronRight size={14} />
                                         </Motion.button>
                                     )}
+                                    {!invFull && (upgradeHint || traitHint) && (
+                                        <Motion.button
+                                            data-testid="post-combat-review-loot"
+                                            whileTap={{ scale: 0.97 }}
+                                            onClick={() => { onSell?.(); handleClose(); }}
+                                            className={`w-full flex items-center justify-between min-h-[44px] px-3 py-2 rounded text-xs font-rajdhani font-bold tracking-wider transition-all ${
+                                                upgradeHint
+                                                    ? 'bg-amber-950/25 border border-amber-400/30 text-amber-200 hover:bg-amber-900/35'
+                                                    : 'bg-cyber-purple/10 border border-cyber-purple/30 text-cyber-purple hover:bg-cyber-purple/20'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Package size={14} />
+                                                {upgradeHint ? '장비 갱신 후보 확인' : '성향 공명 전리품 확인'}
+                                            </div>
+                                            <ChevronRight size={14} />
+                                        </Motion.button>
+                                    )}
                                     {mpLow && !hpLow && (
                                         <div className="flex items-center gap-2 text-blue-400/70 text-xs font-fira px-1">
                                             <Zap size={12} /> MP가 낮습니다. 다음 전투 전 회복 아이템을 사용하세요.
@@ -292,6 +368,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                     )}
                                     {invFull && (
                                         <Motion.button
+                                            data-testid="post-combat-review-loot"
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() => { onSell?.(); handleClose(); }}
                                             className="w-full flex items-center justify-between min-h-[44px] px-3 py-2 bg-cyber-dark/50 border border-cyber-blue/20 rounded text-cyber-blue/70 hover:bg-cyber-blue/10 transition-all font-rajdhani font-bold text-xs tracking-wider"
