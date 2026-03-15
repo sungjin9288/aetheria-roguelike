@@ -219,6 +219,58 @@ Done (Convenience / Fun Pass 4):
 - Upgraded the `MOVE` state in `src/components/ControlPanel.jsx` from plain exit buttons into recommendation cards with `추천/정비/개척/보스/경계` context and a short reason line.
 - Added a read-only `추천 이동` summary to `src/components/MapNavigator.jsx` and threaded runtime stats from `src/components/Dashboard.jsx` so the world map and move panel use the same route heuristic.
 
+Done (Progress Visibility Recovery):
+- Added a persistent `Run Progress` card to `src/components/Dashboard.jsx` for both mobile and desktop so core run progression is always visible again.
+- The new panel surfaces active quest state, growth milestone (`Lv.5` class change or next level), explored-map count, and current run record/forecast without requiring archive expansion.
+- Kept the existing action guidance in `Mission Focus`, but separated it from progression visibility so the two no longer compete for the same space.
+- Compressed `Loadout Snapshot` on mobile so the restored progress card does not bloat the first screen.
+
+Verification (Progress Visibility Recovery):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+- Reviewed regenerated mobile first-fold screenshot: `playtest-artifacts/mobile/01-after-start.png`
+
+Done (Mobile Density Simplification):
+- Simplified the mobile first fold in `src/components/Dashboard.jsx` to a 3-block structure: `Status`, `Progress`, and `Next`.
+- Removed the separate mobile `Loadout Snapshot` card and replaced it with a compact in-card `Loadout` strip inside the status block.
+- Compressed mobile `Run Progress` to two primary tiles (`Quest`, `Growth`) plus lightweight frontier/record chips instead of four full cards.
+- Simplified mobile `Mission Focus` to a single primary action by default; the secondary action now stays behind the detail toggle.
+- Shortened mobile copy (`Status`, `Progress`, `Next`, `Archive`) to reduce visual noise.
+- Simplified the mobile recommendation banner in `src/components/ControlPanel.jsx` from a full text card to a compact single-line hint.
+
+Verification (Mobile Density Simplification):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+- Reviewed regenerated mobile first-fold screenshot: `playtest-artifacts/mobile/01-after-start.png`
+
+Done (Scroll Fatigue Reduction):
+- Further reduced mobile first-fold complexity in `src/components/Dashboard.jsx` by merging the most important progression info into the main status card.
+- Replaced the separate mobile progress card with a compact in-card `Progress` summary (`Quest`, `Growth`, explored area, current route state).
+- Kept the mobile archive collapsed to a near-single-line opener so `Field Actions` surfaces earlier on screen.
+- Reduced `src/components/TerminalView.jsx` mobile logs to a compact recent-log view by default, with manual expansion for the full history.
+
+Verification (Scroll Fatigue Reduction):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+- Reviewed regenerated mobile first-fold screenshot: `playtest-artifacts/mobile/01-after-start.png`
+
+Done (Latest Native QA Prep):
+- Re-synced the latest mobile HUD/scroll-fatigue reduction pass into Capacitor shells with `npm run cap:sync`.
+- Rebuilt Android debug with `npm run android:debug`.
+- Rebuilt iOS device Release shell with `npm run ios:build:device`.
+- Confirmed a physical iPhone is currently connected via `xcrun xctrace list devices`.
+- Confirmed no Android hardware is currently attached via `adb devices`.
+
+Verification (Latest Native QA Prep):
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+- `xcrun xctrace list devices`
+- `"$HOME/Library/Android/sdk/platform-tools/adb" devices`
+
 Done (Visual Identity Finish Pass):
 - Added a reusable branded `AetherMark` glyph in `src/components/AetherMark.jsx` and threaded it through the app shell, boot screen, intro screen, and mobile field log.
 - Added shared animated visual primitives in `src/index.css` (`aetherOrbit`, `aetherPulse`, `auroraShift`, `floatSlow`) plus a reusable `panel-noise` surface treatment for core panels.

@@ -163,12 +163,24 @@ const ControlPanel = ({ gameState, player, enemy, actions, setGameState, shopIte
       ) : (
         <>
           <div className={`mb-2 rounded-xl border border-cyber-blue/15 bg-cyber-black/55 px-3 py-2 ${mobile ? '' : 'max-w-md'}`}>
-            <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/55">
-              <span>추천 행동</span>
-              <span className="text-cyber-green">{guidance.emphasis}</span>
-            </div>
-            <div className="mt-1 text-sm font-rajdhani font-bold text-white">{guidance.title}</div>
-            <div className="mt-0.5 text-[11px] font-fira text-cyber-blue/65">{guidance.detail}</div>
+            {mobile ? (
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">추천 행동</div>
+                  <div className="mt-1 truncate text-[12px] font-rajdhani font-bold text-white">{guidance.title}</div>
+                </div>
+                <SignalBadge tone="recommended" size="sm">{guidance.emphasis}</SignalBadge>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/55">
+                  <span>추천 행동</span>
+                  <span className="text-cyber-green">{guidance.emphasis}</span>
+                </div>
+                <div className="mt-1 text-sm font-rajdhani font-bold text-white">{guidance.title}</div>
+                <div className="mt-0.5 text-[11px] font-fira text-cyber-blue/65">{guidance.detail}</div>
+              </>
+            )}
           </div>
         <div className={actionGridClass}>
           {/* EXPLORE */}

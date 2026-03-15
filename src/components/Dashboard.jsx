@@ -164,6 +164,89 @@ const EquipmentSlot = ({ label, item, slot = 'main', fallback, icon, compact = f
     );
 };
 
+const CompactLoadoutStrip = ({ player }) => {
+    const entries = [
+        { label: 'Main', item: player?.equip?.weapon, slot: 'main', fallback: 'UNARMED' },
+        { label: 'Off', item: player?.equip?.offhand, slot: 'offhand', fallback: 'EMPTY' },
+        { label: 'Armor', item: player?.equip?.armor, slot: 'armor', fallback: 'CIVILIAN' },
+    ];
+
+    return (
+        <div className="mt-3 rounded-[1rem] border border-cyan-400/12 bg-cyber-black/40 px-3 py-2.5">
+            <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">Loadout</div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+                {entries.map((entry) => {
+                    const tag = getEquipmentTagMeta(entry.item, entry.slot);
+                    return (
+                        <div key={entry.label} className="min-w-0 rounded-full border border-cyan-400/12 bg-slate-950/70 px-2.5 py-1">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/45">
+                                    {entry.label}
+                                </span>
+                                <span className="max-w-[5.5rem] truncate text-[10px] font-fira text-white">
+                                    {entry.item?.name || entry.fallback}
+                                </span>
+                                <span className={`text-[8px] font-fira ${tag.className}`}>
+                                    {tag.label}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+const CompactProgressSummary = ({ player }) => {
+    const mapData = DB.MAPS[player?.loc];
+    const questTracker = getQuestTracker(player);
+    const nextLevelExp = Math.max(0, (player?.nextExp || 0) - (player?.exp || 0));
+    const visitedMaps = Array.isArray(player?.stats?.visitedMaps) ? player.stats.visitedMaps : [];
+    const visitedCount = new Set(visitedMaps).size;
+    const totalMaps = Object.keys(DB.MAPS || {}).length;
+    const growthTitle = player?.job === '모험가'
+        ? ((player?.level || 0) >= 5 ? '전직 가능' : `전직까지 Lv.${Math.max(0, 5 - (player?.level || 0))}`)
+        : `다음 Lv까지 EXP ${nextLevelExp}`;
+    const growthTone = player?.job === '모험가' && (player?.level || 0) >= 5 ? 'success' : 'resonance';
+
+    return (
+        <div className="mt-3 rounded-[1rem] border border-cyan-400/12 bg-cyber-black/40 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">Progress</span>
+                <div className="flex flex-wrap gap-1.5">
+                    <SignalBadge tone="neutral" size="sm">{visitedCount}/{totalMaps} 구역</SignalBadge>
+                    <SignalBadge tone={mapData?.boss ? 'danger' : 'neutral'} size="sm">
+                        {mapData?.boss ? '보스 권역' : '탐험 중'}
+                    </SignalBadge>
+                </div>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="rounded-[0.9rem] border border-cyan-400/12 bg-slate-950/70 px-2.5 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/45">Quest</span>
+                        <SignalBadge tone={questTracker?.kind === 'claimable' ? 'success' : 'neutral'} size="sm">
+                            {questTracker?.kind === 'claimable' ? '보상' : '대기'}
+                        </SignalBadge>
+                    </div>
+                    <div className="mt-1 text-[10px] font-fira text-white leading-snug">
+                        {questTracker?.title || '진행 중 임무 없음'}
+                    </div>
+                </div>
+                <div className="rounded-[0.9rem] border border-cyan-400/12 bg-slate-950/70 px-2.5 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/45">Growth</span>
+                        <SignalBadge tone={growthTone} size="sm">성장</SignalBadge>
+                    </div>
+                    <div className="mt-1 text-[10px] font-fira text-white leading-snug">
+                        {growthTitle}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const EquipmentPanel = ({ player, stats, compact = false }) => (
     <div className={`panel-noise border ${compact ? 'border-cyan-400/18 rounded-[1.2rem] bg-slate-950/72 shadow-[0_16px_36px_rgba(2,8,20,0.28)]' : 'border-cyber-blue/20 rounded-md bg-cyber-dark/30'} ${compact ? 'p-3' : 'p-3.5'} space-y-2`}>
         <div className="flex items-center justify-between gap-3 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.2em]">
@@ -204,7 +287,139 @@ const EquipmentPanel = ({ player, stats, compact = false }) => (
     </div>
 );
 
-const LoadoutSummary = ({ player, stats }) => {
+const RunProgressPanel = ({ player, mobile = false }) => {
+    const mapData = DB.MAPS[player?.loc];
+    const questTracker = getQuestTracker(player);
+    const forecast = getExplorationForecast(player, mapData);
+    const visitedMaps = Array.isArray(player?.stats?.visitedMaps) ? player.stats.visitedMaps : [];
+    const visitedCount = new Set(visitedMaps).size;
+    const totalMaps = Object.keys(DB.MAPS || {}).length;
+    const nextLevelExp = Math.max(0, (player?.nextExp || 0) - (player?.exp || 0));
+    const kills = player?.stats?.kills || 0;
+    const relicCount = player?.relics?.length || 0;
+
+    let growthTitle = `다음 Lv까지 EXP ${nextLevelExp}`;
+    let growthDetail = `현재 레벨 ${player?.level || 1}`;
+    let growthTone = 'recommended';
+
+    if (player?.job === '모험가') {
+        if ((player?.level || 0) >= 5) {
+            growthTitle = '1차 전직 가능';
+            growthDetail = 'CLASS에서 전직을 진행할 수 있습니다.';
+            growthTone = 'success';
+        } else {
+            growthTitle = `전직까지 Lv.${Math.max(0, 5 - (player?.level || 0))}`;
+            growthDetail = `목표 레벨 5 / 현재 ${player?.level || 1}`;
+            growthTone = 'resonance';
+        }
+    }
+
+    const progressItems = [
+        {
+            label: 'Quest',
+            title: questTracker?.title || '진행 중 임무 없음',
+            detail: questTracker?.progressLabel || '마을 QUEST에서 새 임무를 받을 수 있습니다.',
+            tone: questTracker?.kind === 'claimable' ? 'success' : questTracker?.kind === 'bounty' ? 'upgrade' : 'neutral',
+            badge: questTracker?.kind === 'claimable' ? '보상' : questTracker?.progressLabel || '대기',
+        },
+        {
+            label: 'Growth',
+            title: growthTitle,
+            detail: growthDetail,
+            tone: growthTone,
+            badge: player?.job === '모험가' && (player?.level || 0) >= 5 ? '전직' : '성장',
+        },
+        {
+            label: 'Frontier',
+            title: `${visitedCount}/${totalMaps} 구역 개척`,
+            detail: `${mapData?.boss ? '보스 권역' : mapData?.type === 'safe' ? '안전 지대' : '탐험 구역'} · 적정 Lv.${mapData?.level === 'infinite' ? '∞' : mapData?.level || 1}`,
+            tone: mapData?.boss ? 'danger' : 'neutral',
+            badge: mapData?.boss ? '보스' : '개척',
+        },
+        {
+            label: 'Record',
+            title: `처치 ${kills} · 유물 ${relicCount}`,
+            detail: `${forecast.mood} · ${forecast.description}`,
+            tone: forecast.mood === '보스 권역' ? 'danger' : forecast.mood === '발견 상승' ? 'success' : 'neutral',
+            badge: forecast.mood,
+        },
+    ];
+
+    if (mobile) {
+        return (
+            <div className="panel-noise border border-cyan-400/18 rounded-[1.2rem] bg-slate-950/72 shadow-[0_16px_36px_rgba(2,8,20,0.25)] px-3 py-3 space-y-2.5">
+                <div className="flex items-center justify-between gap-3">
+                    <div>
+                        <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/45">Progress</div>
+                        <div className="mt-1 text-[12px] font-rajdhani font-bold text-white">이번 런 진행</div>
+                    </div>
+                    <SignalBadge tone="neutral" size="sm">{player?.loc}</SignalBadge>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                    {progressItems.slice(0, 2).map((item) => (
+                        <div key={item.label} className="rounded-[1rem] border border-cyan-400/14 bg-cyber-black/45 px-3 py-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">
+                                    {item.label}
+                                </span>
+                                <SignalBadge tone={item.tone} size="sm">{item.badge}</SignalBadge>
+                            </div>
+                            <div className="mt-1 text-[11px] font-fira text-white leading-snug">
+                                {item.title}
+                            </div>
+                            <div className="mt-1 text-[10px] font-fira text-cyber-blue/58 leading-snug">
+                                {item.label === 'Quest' ? (questTracker?.kind === 'claimable' ? '보상 수령 가능' : item.detail) : item.detail}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                    <SignalBadge tone={progressItems[2].tone} size="sm">{progressItems[2].title}</SignalBadge>
+                    <SignalBadge tone={progressItems[3].tone} size="sm">{progressItems[3].title}</SignalBadge>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={`panel-noise border ${mobile ? 'border-cyan-400/18 rounded-[1.2rem] bg-slate-950/72 shadow-[0_16px_36px_rgba(2,8,20,0.25)] px-3 py-3' : 'border-cyber-blue/20 rounded-md bg-cyber-dark/30 p-3.5'} space-y-2.5`}>
+            <div className="flex items-center justify-between gap-3">
+                <div>
+                    <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/45">진행상황</div>
+                    <div className="mt-1 text-[12px] font-rajdhani font-bold text-white">
+                        이번 런의 흐름을 항상 확인합니다.
+                    </div>
+                </div>
+                <SignalBadge tone="neutral" size="sm">
+                    {player?.loc}
+                </SignalBadge>
+            </div>
+
+            <div className={`grid ${mobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 gap-2.5'}`}>
+                {progressItems.map((item) => (
+                    <div key={item.label} className="rounded-[1rem] border border-cyan-400/14 bg-cyber-black/45 px-3 py-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">
+                                {item.label}
+                            </span>
+                            <SignalBadge tone={item.tone} size="sm">
+                                {item.badge}
+                            </SignalBadge>
+                        </div>
+                        <div className="mt-1 text-[11px] font-fira text-white leading-snug">
+                            {item.title}
+                        </div>
+                        <div className="mt-1 text-[10px] font-fira text-cyber-blue/58 leading-snug">
+                            {item.label === 'Quest' ? (questTracker?.kind === 'claimable' ? '보상 수령 가능' : item.detail) : item.detail}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const LoadoutSummary = ({ player, stats, condensed = false }) => {
     const trait = stats?.traitProfile || getTraitProfile(player, stats);
     const passiveParts = getTraitPassiveParts(trait);
 
@@ -216,7 +431,9 @@ const LoadoutSummary = ({ player, stats }) => {
                     <div className="mt-1 flex flex-wrap gap-1.5">
                         <SignalBadge tone="neutral" size="sm">ATK {stats?.atk}</SignalBadge>
                         <SignalBadge tone="neutral" size="sm">DEF {stats?.def}</SignalBadge>
-                        <SignalBadge tone="neutral" size="sm">CRIT {Math.round((stats?.critChance || 0) * 100)}%</SignalBadge>
+                        {!condensed && (
+                            <SignalBadge tone="neutral" size="sm">CRIT {Math.round((stats?.critChance || 0) * 100)}%</SignalBadge>
+                        )}
                     </div>
                 </div>
                 <SignalBadge tone="resonance" size="md">{trait.title}</SignalBadge>
@@ -227,14 +444,16 @@ const LoadoutSummary = ({ player, stats }) => {
                 <EquipmentSlot label="Armor" item={player?.equip?.armor} slot="armor" fallback="CIVILIAN" icon={User} compact />
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-                {passiveParts.slice(0, 2).map((part) => (
+                {passiveParts.slice(0, condensed ? 1 : 2).map((part) => (
                     <SignalBadge key={part} tone="neutral" size="sm">{part}</SignalBadge>
                 ))}
                 <SignalBadge tone="recommended" size="sm">{trait.skillLabel}</SignalBadge>
             </div>
-            <div className="text-[10px] font-fira text-cyber-blue/55 truncate">
-                {trait.unlockHint}
-            </div>
+            {!condensed && (
+                <div className="text-[10px] font-fira text-cyber-blue/55 truncate">
+                    {trait.unlockHint}
+                </div>
+            )}
         </div>
     );
 };
@@ -367,7 +586,7 @@ const FocusPanel = ({ player, stats, runtime, actions, setSideTab, mobile = fals
             <div className="flex items-center justify-between gap-3 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.2em]">
                 <span className="flex items-center gap-1.5">
                     <Crosshair size={10} className="text-cyber-blue/70" />
-                    {mobile ? 'Mission Focus' : '현재 목표'}
+                    {mobile ? 'Next' : '현재 목표'}
                 </span>
                 <div className="flex items-center gap-2">
                     <SignalBadge
@@ -400,28 +619,49 @@ const FocusPanel = ({ player, stats, runtime, actions, setSideTab, mobile = fals
             </div>
 
             {(guidance.primaryAction || guidance.secondaryAction) && (
-                <div className="grid grid-cols-2 gap-2">
-                    {guidance.primaryAction ? (
-                        <button
-                            onClick={() => runAction(guidance.primaryAction)}
-                            className={`${buttonClass} border-cyber-green/30 bg-cyber-green/10 text-cyber-green hover:bg-cyber-green/15`}
-                        >
-                            {guidance.primaryAction.label}
-                        </button>
-                    ) : (
-                        <div />
-                    )}
-                    {guidance.secondaryAction ? (
-                        <button
-                            onClick={() => runAction(guidance.secondaryAction)}
-                            className={`${buttonClass} border-cyber-blue/20 bg-cyber-black/60 text-cyber-blue/80 hover:bg-cyber-blue/10`}
-                        >
-                            {guidance.secondaryAction.label}
-                        </button>
-                    ) : (
-                        <div />
-                    )}
-                </div>
+                mobile ? (
+                    <div className="space-y-2">
+                        {guidance.primaryAction && (
+                            <button
+                                onClick={() => runAction(guidance.primaryAction)}
+                                className={`${buttonClass} w-full border-cyber-green/30 bg-cyber-green/10 text-cyber-green hover:bg-cyber-green/15`}
+                            >
+                                {guidance.primaryAction.label}
+                            </button>
+                        )}
+                        {guidance.secondaryAction && detailsOpen && (
+                            <button
+                                onClick={() => runAction(guidance.secondaryAction)}
+                                className={`${buttonClass} w-full border-cyber-blue/20 bg-cyber-black/60 text-cyber-blue/80 hover:bg-cyber-blue/10`}
+                            >
+                                {guidance.secondaryAction.label}
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                        {guidance.primaryAction ? (
+                            <button
+                                onClick={() => runAction(guidance.primaryAction)}
+                                className={`${buttonClass} border-cyber-green/30 bg-cyber-green/10 text-cyber-green hover:bg-cyber-green/15`}
+                            >
+                                {guidance.primaryAction.label}
+                            </button>
+                        ) : (
+                            <div />
+                        )}
+                        {guidance.secondaryAction ? (
+                            <button
+                                onClick={() => runAction(guidance.secondaryAction)}
+                                className={`${buttonClass} border-cyber-blue/20 bg-cyber-black/60 text-cyber-blue/80 hover:bg-cyber-blue/10`}
+                            >
+                                {guidance.secondaryAction.label}
+                            </button>
+                        ) : (
+                            <div />
+                        )}
+                    </div>
+                )
             )}
 
             <AnimatePresence initial={false}>
@@ -487,10 +727,10 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
     const hasInventorySpotlight = Boolean(inventorySpotlight?.token) && sideTab === 'inventory';
     const showMobileDetails = mobileDetailsOpen || hasInventorySpotlight;
+    const archiveOpen = showMobileDetails || mobileArchiveExpanded;
     const primaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_PRIMARY_TABS.includes(tab.id));
     const secondaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_SECONDARY_TABS.includes(tab.id));
     const activeMobileTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
-    const showSecondaryMobileTabs = mobileArchiveExpanded || MOBILE_SECONDARY_TABS.includes(sideTab) || hasInventorySpotlight;
 
     const handleTabSelect = (tabId) => {
         setSideTab(tabId);
@@ -570,7 +810,7 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 <div className="panel-noise relative rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/75 px-3.5 py-3.5 shadow-[0_16px_40px_rgba(2,8,20,0.3)]">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-cyber-blue/45">Status Core</div>
+                            <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-cyber-blue/45">Status</div>
                             <div className="mt-1 flex items-center gap-2 text-emerald-300 font-rajdhani font-bold text-sm tracking-[0.24em] uppercase">
                                 <User size={14} />
                                 <span className="truncate">{player?.name}</span>
@@ -593,39 +833,33 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                         <MetricTile label="NRG" value={player?.mp} max={stats?.maxMp} variant="mp" />
                         <MetricTile label="EXP" value={player?.exp} max={player?.nextExp} variant="exp" />
                     </div>
+
+                    <CompactLoadoutStrip player={player} />
+                    <CompactProgressSummary player={player} />
                 </div>
 
-                <FocusPanel
-                    player={player}
-                    stats={stats}
-                    runtime={runtime}
-                    actions={actions}
-                    setSideTab={setSideTab}
-                    mobile
-                    onMobileOpenDetails={() => setMobileDetailsOpen(true)}
-                />
-
-                <LoadoutSummary player={player} stats={stats} />
-
-                <div className="border-t border-cyan-400/12 pt-3">
-                    <div className="panel-noise rounded-[1.25rem] border border-cyan-400/14 bg-slate-950/72 px-3 py-3 shadow-[0_18px_42px_rgba(2,8,20,0.25)]">
+                <div className="border-t border-cyan-400/12 pt-2">
+                    <div className={`panel-noise rounded-[1.15rem] border border-cyan-400/14 bg-slate-950/72 shadow-[0_18px_42px_rgba(2,8,20,0.25)] ${archiveOpen ? 'px-3 py-3' : 'px-3 py-2.5'}`}>
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/50">
-                                    Archive Dock
+                                    Archive
                                 </div>
                                 <div className="mt-1 text-[12px] font-rajdhani font-bold text-white">
                                     {activeMobileTab.label}
                                 </div>
-                                <div className="mt-1 text-[10px] font-fira text-cyber-blue/55">
-                                    필요한 기록만 펼쳐서 확인합니다.
-                                </div>
+                                {archiveOpen && (
+                                    <div className="mt-1 text-[10px] font-fira text-cyber-blue/55">
+                                        필요한 기록만 펼쳐서 확인합니다.
+                                    </div>
+                                )}
                             </div>
                             <div className="flex items-center gap-1.5">
-                                {showMobileDetails && (
+                                {archiveOpen && (
                                     <button
                                         onClick={() => {
                                             setMobileDetailsOpen(false);
+                                            setMobileArchiveExpanded(false);
                                             onClearInventorySpotlight?.();
                                         }}
                                         className="min-h-[36px] rounded-full border border-cyan-400/16 bg-slate-950/80 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70"
@@ -634,15 +868,23 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => setMobileArchiveExpanded((open) => !open)}
+                                    onClick={() => {
+                                        if (archiveOpen) {
+                                            setMobileDetailsOpen(false);
+                                            setMobileArchiveExpanded(false);
+                                            onClearInventorySpotlight?.();
+                                            return;
+                                        }
+                                        setMobileDetailsOpen(true);
+                                    }}
                                     className="min-h-[36px] rounded-full border border-cyan-400/16 bg-slate-950/80 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70"
                                 >
-                                    {showSecondaryMobileTabs ? '기본' : '더 보기'}
+                                    {archiveOpen ? '접기' : '열기'}
                                 </button>
                             </div>
                         </div>
 
-                        {hasInventorySpotlight && (
+                        {archiveOpen && hasInventorySpotlight && (
                             <div
                                 data-testid="inventory-spotlight"
                                 className="mt-3 rounded-[1rem] border border-cyber-purple/22 bg-cyber-purple/10 px-3 py-2.5"
@@ -659,33 +901,27 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                             </div>
                         )}
 
-                        <div className="mt-3 grid grid-cols-5 gap-1.5">
-                            {primaryMobileTabs.map((tab) => (
-                                <ArchiveTabButton
-                                    key={tab.id}
-                                    icon={tab.icon}
-                                    label={tab.mobileLabel || tab.label}
-                                    active={sideTab === tab.id}
-                                    onClick={() => handleTabSelect(tab.id)}
-                                    testId={`dashboard-tab-${tab.id}`}
-                                />
-                            ))}
-                            <ArchiveTabButton
-                                icon={showSecondaryMobileTabs ? ChevronUp : ChevronDown}
-                                label={showSecondaryMobileTabs ? 'Core' : 'More'}
-                                active={showSecondaryMobileTabs && MOBILE_SECONDARY_TABS.includes(sideTab)}
-                                onClick={() => setMobileArchiveExpanded((open) => !open)}
-                            />
-                        </div>
-
                         <AnimatePresence initial={false}>
-                            {showSecondaryMobileTabs && (
+                            {archiveOpen && (
                                 <Motion.div
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 'auto' }}
                                     exit={{ opacity: 0, height: 0 }}
                                     className="overflow-hidden"
                                 >
+                                    <div className="mt-3 grid grid-cols-4 gap-1.5">
+                                        {primaryMobileTabs.map((tab) => (
+                                            <ArchiveTabButton
+                                                key={tab.id}
+                                                icon={tab.icon}
+                                                label={tab.mobileLabel || tab.label}
+                                                active={sideTab === tab.id}
+                                                onClick={() => handleTabSelect(tab.id)}
+                                                compact
+                                                testId={`dashboard-tab-${tab.id}`}
+                                            />
+                                        ))}
+                                    </div>
                                     <div className="mt-2 grid grid-cols-4 gap-1.5">
                                         {secondaryMobileTabs.map((tab) => (
                                             <ArchiveTabButton
@@ -832,6 +1068,15 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                     actions={actions}
                     setSideTab={setSideTab}
                 />
+            </Motion.div>
+
+            <Motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 }}
+                className="panel-noise bg-cyber-black/80 backdrop-blur-xl border border-cyber-blue/30 rounded-lg p-3 shadow-[0_0_20px_rgba(0,204,255,0.1)] shrink-0"
+            >
+                <RunProgressPanel player={player} />
             </Motion.div>
 
             <Motion.div

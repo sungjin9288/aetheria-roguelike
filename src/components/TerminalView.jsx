@@ -114,12 +114,18 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
 
     // #10: 전투 중 로그 필터링 — 요약 모드에서는 전투 관련 최근 N개만 표시
     const isCombat = gameState === GS.COMBAT;
+    const compactMobileLogCount = 3;
+    const shouldCompactMobileLogs = mobile && !logExpanded && !isCombat;
     const displayLogs = isCombat && !logExpanded
         ? logs.filter(l => COMBAT_LOG_TYPES.has(l.type)).slice(-SUMMARY_LOG_COUNT)
-        : logs;
+        : shouldCompactMobileLogs
+            ? logs.slice(-compactMobileLogCount)
+            : logs;
     const hiddenCount = isCombat && !logExpanded
         ? Math.max(0, logs.length - displayLogs.length)
-        : 0;
+        : shouldCompactMobileLogs
+            ? Math.max(0, logs.length - displayLogs.length)
+            : 0;
 
     return (
         <div className={`panel-noise min-w-0 ${mobile ? 'min-h-[10rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border ${mobile ? 'rounded-[1.6rem]' : 'rounded-lg'} ${mobile ? 'p-2.5' : 'p-3 md:p-4 md:px-5'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
@@ -141,6 +147,14 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                     <span className="text-cyber-green/80">
                         {gameState === GS.COMBAT ? 'Combat' : gameState === GS.EVENT ? 'Event' : 'Idle'}
                     </span>
+                    {logs.length > compactMobileLogCount && (
+                        <button
+                            onClick={() => setLogExpanded((open) => !open)}
+                            className="rounded-full border border-cyan-400/16 bg-slate-950/80 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70"
+                        >
+                            {logExpanded ? '접기' : `전체 +${hiddenCount}`}
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -159,7 +173,7 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                 </div>
             )}
 
-            <div className={`flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 ${mobile ? 'max-h-[11rem]' : ''}`}>
+            <div className={`flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 ${mobile ? (logExpanded ? 'max-h-[11rem]' : 'max-h-[6.5rem]') : ''}`}>
                 {logs.length === 0 && (
                     <Motion.div
                         className={`text-cyber-blue/50 text-center ${mobile ? 'mt-6 text-xs' : 'mt-20'} font-rajdhani tracking-widest flex flex-col items-center`}
