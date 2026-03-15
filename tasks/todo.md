@@ -21,6 +21,7 @@
 ## 📋 Current Sprint
 
 ### 🎯 Pending Tasks
+- iPhone 실기기 5분 빠른 루틴 수행 및 이슈 수집
 - 실기기 수동 QA 결과 반영
 - iOS 배포 서명 및 TestFlight 업로드
 - Android 실제 release keystore 기준 최종 번들 검증
@@ -28,7 +29,6 @@
 
 ### 🔄 In Progress
 - 출시 후보 빌드 회귀 검증 및 문서 정리
-- iPhone 실기기 5분 빠른 루틴 수행 및 이슈 수집
 - 모바일 아카이브 도크와 공통 배지 시스템의 실기기 가독성 확인
 - 상점/전투 결과/인벤토리 공통 시그널(`추천`, `공명`, `업그레이드`, `주목`)의 실기기 판독성 확인
 - 모바일 첫 화면 HUD 밀도와 새 `Loadout Snapshot` 구조의 실기기 체감 확인
@@ -55,6 +55,7 @@
 - 진행상황 복구 패스: 모바일/데스크톱 `Run Progress` 카드 추가로 퀘스트, 성장, 개척, 기록 상태를 상시 노출
 - 모바일 밀도 단순화 패스: 첫 화면을 `Status / Progress / Next` 중심으로 재압축하고 장비/추천 안내를 요약형으로 정리
 - 스크롤 피로도 저감 패스: 진행 요약을 상태 카드에 통합하고 아카이브/로그를 기본 접힘으로 축소해 첫 화면에 `Field Actions`가 더 빨리 보이도록 조정
+- iOS signed archive 및 실제 iPhone 설치/런치 확인: `npm run ios:archive` 성공 후 `xcrun devicectl`로 `com.aetheria.roguelike`를 연결된 iPhone에 설치하고 실행 확인
 
 ---
 

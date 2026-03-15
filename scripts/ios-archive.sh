@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ARCHIVE_PATH="${AETHERIA_IOS_ARCHIVE_PATH:-$ROOT_DIR/build/ios/Aetheria.xcarchive}"
 EXPORT_PATH="${AETHERIA_IOS_EXPORT_PATH:-$ROOT_DIR/build/ios/export}"
 DERIVED_DATA_PATH="${AETHERIA_IOS_DERIVED_DATA_PATH:-/tmp/aetheria-ios-archive-build}"
-XCODE_HOME="${AETHERIA_IOS_HOME:-/tmp/aetheria-home}"
+XCODE_HOME="${AETHERIA_IOS_HOME:-$HOME}"
 CLANG_MODULE_CACHE_PATH="${AETHERIA_IOS_CLANG_MODULE_CACHE_PATH:-/tmp/aetheria-clang-module-cache}"
 CONFIGURATION="${AETHERIA_IOS_CONFIGURATION:-Release}"
 PROJECT_TEAM_ID="$(sed -n 's/.*DEVELOPMENT_TEAM = \(.*\);/\1/p' "$ROOT_DIR/ios/App/App.xcodeproj/project.pbxproj" | head -n1)"
@@ -20,7 +20,7 @@ if [[ -z "$TEAM_ID" ]]; then
   exit 1
 fi
 
-mkdir -p "$XCODE_HOME" "$CLANG_MODULE_CACHE_PATH" "$(dirname "$ARCHIVE_PATH")"
+mkdir -p "$CLANG_MODULE_CACHE_PATH" "$(dirname "$ARCHIVE_PATH")"
 
 archive_cmd=(
   xcodebuild

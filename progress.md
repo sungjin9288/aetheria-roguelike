@@ -395,6 +395,26 @@ Artifacts:
 - Android debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 - iOS Release device app: `/tmp/aetheria-ios-device-build/Build/Products/Release-iphoneos/App.app`
 
+Done (Signed iPhone Install / Launch Verification):
+- Fixed `scripts/ios-archive.sh` to use the real macOS home directory by default instead of `/tmp/aetheria-home`, allowing `xcodebuild archive` to see the logged-in Xcode account and login keychain for signing.
+- Confirmed the latest signed archive app exists at `build/ios/Aetheria.xcarchive/Products/Applications/App.app`.
+- Verified the connected physical iPhone through `xcrun devicectl list devices`:
+  - `성진` / `iPhone 14 Pro Max` / `FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B`
+- Successfully created a signed iOS archive with `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive`.
+- Installed the archived app onto the connected iPhone with `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B build/ios/Aetheria.xcarchive/Products/Applications/App.app`.
+- Launched the installed app on-device with `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B com.aetheria.roguelike`.
+
+Verification (Signed iPhone Install / Launch Verification):
+- `find build/ios/Aetheria.xcarchive -name App.app -type d`
+- `xcrun devicectl list devices`
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive`
+- `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B build/ios/Aetheria.xcarchive/Products/Applications/App.app`
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B com.aetheria.roguelike`
+
+Blocked / Not Verified:
+- Manual in-app 5-minute touch QA on the physical iPhone still requires a person on the device; this terminal session only verified install and launch.
+- Android physical-device QA is still blocked because no Android handset is currently attached (`adb devices` showed none).
+
 Done (Mobile Design System Pass):
 - Compressed the mobile first fold in `src/components/Dashboard.jsx` by replacing the separate `Loadout` and `성향` cards with a single `Loadout Snapshot` and by turning `Field Archive` into a bottom-dock style archive tray.
 - Added a shared `src/components/SignalBadge.jsx` so recommendation, resonance, upgrade, spotlight, and status badges now use one visual language across `Dashboard`, `ControlPanel`, `MapNavigator`, `ShopPanel`, `SmartInventory`, and `PostCombatCard`.
