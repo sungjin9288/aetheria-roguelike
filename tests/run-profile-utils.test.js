@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { advanceExploreState, getNarrativeEventChance, getQuietExplorationChance } from '../src/utils/explorationPacing.js';
-import { getRunBuildProfile, getClassBuildCompatibility, getClassBuildBonus, getEnemyTacticalProfile, getRunDiagnostics, getTraitFeaturedItems, getTraitItemResonance, getTraitLootHint, getTraitProfile, getTraitSkill } from '../src/utils/runProfileUtils.js';
+import { getRunBuildProfile, getClassBuildCompatibility, getClassBuildBonus, getEnemyTacticalProfile, getRunDiagnostics, getTraitFeaturedItems, getTraitItemResonance, getTraitLootHint, getTraitProfile, getTraitQuestResonance, getTraitSkill } from '../src/utils/runProfileUtils.js';
 
 test('exploration pacing increases narrative chance after long dry streaks and reduces repeated quiet turns', () => {
     const dryStats = {
@@ -119,8 +119,11 @@ test('enemy tactical profile includes boss briefing and phase hint', () => {
 
     assert.equal(profile.tier, 'BOSS');
     assert.ok(profile.signature?.includes('브레스'));
+    assert.ok(profile.entryHint?.includes('냉기'));
     assert.ok(profile.counterHint?.includes('냉기'));
     assert.ok(profile.phaseHint?.includes('50%'));
+    assert.ok(profile.rewardHint?.includes('초회'));
+    assert.ok(profile.warningChips.includes('브레스'));
 });
 
 test('run diagnostics summarizes pacing and class fit', () => {
@@ -210,6 +213,32 @@ test('trait item resonance strongly prefers arcane items for arcane trait', () =
     assert.equal(focusResonance.label, '성향 공명');
 });
 
+test('risk trait uses recent low-hp wins even when legacy lowHpWins counter is zero', () => {
+    const player = {
+        job: '버서커',
+        hp: 42,
+        maxHp: 180,
+        stats: {
+            lowHpWins: 0,
+            recentBattles: [
+                { result: 'win', hpRatio: 0.18 },
+                { result: 'win', hpRatio: 0.12 },
+                { result: 'win', hpRatio: 0.61 },
+            ],
+        },
+        relics: [],
+        equip: {
+            weapon: { type: 'weapon', name: '양손검', val: 30, hands: 2, elem: '물리' },
+            offhand: null,
+        },
+    };
+
+    const trait = getTraitProfile(player, { maxHp: 180, isMagic: false });
+
+    assert.equal(trait.id, 'risk');
+    assert.ok(trait.reasons.some((reason) => reason.includes('저체력 승리 2회')));
+});
+
 test('trait loot hint picks the highest resonance reward', () => {
     const player = {
         job: '도적',
@@ -234,4 +263,26 @@ test('trait loot hint picks the highest resonance reward', () => {
 
     assert.equal(hint.name, '암살자의 단검');
     assert.equal(featured[0].item.name, '암살자의 단검');
+});
+
+test('trait quest resonance prioritizes matching build-guiding quests', () => {
+    const player = {
+        job: '전사',
+        hp: 180,
+        maxHp: 180,
+        equip: {
+            weapon: { type: 'weapon', name: '양손검', val: 22, hands: 2, elem: '물리' },
+            offhand: null,
+        },
+        relics: [{ effect: 'execute_bonus' }],
+        stats: {},
+    };
+
+    const trait = getTraitProfile(player, { maxHp: 180, isMagic: false });
+    const matching = getTraitQuestResonance({ type: 'build_victory', target: 'crusher', buildTag: 'crusher' }, trait);
+    const offBuild = getTraitQuestResonance({ type: 'build_victory', target: 'arcane', buildTag: 'arcane' }, trait);
+
+    assert.equal(trait.id, 'crusher');
+    assert.ok(matching.score > offBuild.score);
+    assert.equal(matching.label, '성향 추천');
 });

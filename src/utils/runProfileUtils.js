@@ -1,5 +1,5 @@
 import { BOSS_BRIEFS } from '../data/monsters.js';
-import { getDifficultyMults, calcPerformanceScore } from '../systems/DifficultyManager.js';
+import { getDifficultyMults, calcPerformanceScore, countLowHpWins } from '../systems/DifficultyManager.js';
 import { getExploreState } from './explorationPacing.js';
 import { isFocusOffhand, isMagicWeapon, isShield, isTwoHandWeapon, isWeapon } from './equipmentUtils.js';
 
@@ -24,6 +24,9 @@ const TRAIT_DEFINITIONS = Object.freeze({
         desc: '어느 쪽에도 치우치지 않은 기본 전투 감각입니다.',
         passiveLabel: 'ATK +3% / DEF +3% / CRIT +1%',
         unlockHint: '모든 무기군을 무난하게 다룰 수 있습니다.',
+        rewardFocus: '범용 장비와 생존 자원을 고르게 소화합니다.',
+        questFocus: '기본 성장, 제작, 범용 사냥 퀘스트와 잘 맞습니다.',
+        bossDirective: '안정적인 준비 후 상위 보스를 노리는 기본형 런입니다.',
         bonus: { atkMult: 1.03, defMult: 1.03, critBonus: 0.01 },
         skill: { name: '전환 태세', type: 'buff', effect: 'all_up', val: 1.18, turn: 2, mp: 16, cooldown: 3, desc: '짧은 시간 공격과 방어를 함께 끌어올립니다.' },
     },
@@ -36,6 +39,9 @@ const TRAIT_DEFINITIONS = Object.freeze({
         desc: '무거운 한 방으로 전열을 무너뜨리는 성향입니다.',
         passiveLabel: 'ATK +10% / CRIT +1%',
         unlockHint: '양손 무기에서 성향 스킬 효율이 가장 높습니다.',
+        rewardFocus: '양손 무기, 강타형 전리품, 큰 한 방 강화 보상을 선호합니다.',
+        questFocus: '양손 승리, 보스 돌파, 전열 붕괴형 임무와 잘 맞습니다.',
+        bossDirective: '보스전에서 짧은 폭딜 창을 열어 마무리하는 방향이 좋습니다.',
         bonus: { atkMult: 1.1, critBonus: 0.01 },
         skill: { name: '파쇄 강타', type: '물리', effect: 'stun', mult: 3.15, mp: 20, cooldown: 3, desc: '강한 단일 일격으로 적을 흔듭니다.' },
     },
@@ -48,6 +54,9 @@ const TRAIT_DEFINITIONS = Object.freeze({
         desc: '치명타와 연속 타격으로 흐름을 잡는 성향입니다.',
         passiveLabel: 'ATK +5% / CRIT +6%',
         unlockHint: '한손 + 한손, 한손 + 보조 세팅에서 가장 안정적입니다.',
+        rewardFocus: '쌍수 무기, 급소 보정, 연계형 드롭과 잘 맞습니다.',
+        questFocus: '쌍수 승리, 짧은 교전, 연속 마무리 퀘스트를 권장합니다.',
+        bossDirective: '보스전에서는 빈틈 턴을 노린 연속 타격으로 빠르게 밀어야 합니다.',
         bonus: { atkMult: 1.05, critBonus: 0.06 },
         skill: { name: '연쇄 베기', type: '물리', effect: 'bleed', mult: 2.25, mp: 18, cooldown: 2, desc: '재빠른 연속 베기로 출혈을 노립니다.' },
     },
@@ -60,6 +69,9 @@ const TRAIT_DEFINITIONS = Object.freeze({
         desc: '방패, 반격, 버티기에 강한 안정형 성향입니다.',
         passiveLabel: 'DEF +10% / CRIT BLOCK 강화',
         unlockHint: '방패와 중갑, 장기전 운영에 유리합니다.',
+        rewardFocus: '방패, 방어구, 장기전 보조 전리품과 높은 효율을 냅니다.',
+        questFocus: '방패 승리, 생존형 토벌, 보스 수비전 퀘스트와 잘 맞습니다.',
+        bossDirective: '보스 강타와 페이즈 전환을 받아내며 안정적으로 끌고 가는 방향입니다.',
         bonus: { defMult: 1.1 },
         skill: { name: '수호 방벽', type: 'buff', effect: 'def_up', val: 1.35, turn: 3, mp: 16, cooldown: 3, desc: '짧은 시간 방어력을 크게 높입니다.' },
     },
@@ -72,6 +84,9 @@ const TRAIT_DEFINITIONS = Object.freeze({
         desc: '마나 순환과 속성 스킬 활용에 특화된 성향입니다.',
         passiveLabel: 'ATK +6% / MP +10 / CRIT +2%',
         unlockHint: '주문서·지팡이·속성 무기에서 추가 스킬이 활성화됩니다.',
+        rewardFocus: '마도서, 지팡이, 속성 전리품과 MP 회전 보상을 우선합니다.',
+        questFocus: '비전 공명 승리, 속성 운영, 마나 기반 전술 퀘스트를 권장합니다.',
+        bossDirective: '보스전에서는 MP를 비축한 뒤 공명 폭딜 창을 여는 편이 좋습니다.',
         bonus: { atkMult: 1.06, mpFlat: 10, critBonus: 0.02 },
         skill: { name: '비전 파동', type: '빛', effect: 'stun', mult: 2.7, mp: 22, cooldown: 2, desc: '속성 공명을 터뜨려 적을 흔듭니다.' },
     },
@@ -84,6 +99,9 @@ const TRAIT_DEFINITIONS = Object.freeze({
         desc: '탐험과 발견, 리듬 운영을 중시하는 성향입니다.',
         passiveLabel: 'ATK +4% / DEF +4%',
         unlockHint: '탐험 루프와 보스 진입 타이밍이 더 안정적입니다.',
+        rewardFocus: '발견 보상, 지도 진척, 이벤트/유물형 전리품과 궁합이 좋습니다.',
+        questFocus: '탐험, 발견, 개척형 퀘스트를 우선 수주하는 편이 좋습니다.',
+        bossDirective: '보스 진입 전 리듬과 발견 보너스를 챙겨 안정적으로 준비하는 성향입니다.',
         bonus: { atkMult: 1.04, defMult: 1.04 },
         skill: { name: '개척자의 호흡', type: 'buff', effect: 'all_up', val: 1.15, turn: 2, mp: 14, cooldown: 3, desc: '짧은 전술 정비로 전열을 가다듬습니다.' },
     },
@@ -96,6 +114,9 @@ const TRAIT_DEFINITIONS = Object.freeze({
         desc: '위험을 감수하고 순간 화력을 극대화하는 성향입니다.',
         passiveLabel: 'ATK +8% / CRIT +4%',
         unlockHint: '체력 관리가 어렵지만 폭발력이 가장 큽니다.',
+        rewardFocus: '고위험 고화력 무기와 폭딜 소모품에서 가장 큰 효율을 냅니다.',
+        questFocus: '저체력 승리, 빠른 마무리, 고위험 토벌 퀘스트에 적합합니다.',
+        bossDirective: '보스전에서 위험한 창을 버티고 한 번에 절단하는 방향이 핵심입니다.',
         bonus: { atkMult: 1.08, critBonus: 0.04 },
         skill: { name: '혈로 돌파', type: 'buff', effect: 'berserk', val: 1.55, turn: 2, mp: 15, cooldown: 3, desc: '방어를 낮추는 대신 폭발적인 화력을 끌어냅니다.' },
     },
@@ -108,6 +129,9 @@ const TRAIT_DEFINITIONS = Object.freeze({
         desc: '속성과 상태이상 누적으로 적을 압박하는 성향입니다.',
         passiveLabel: 'ATK +5% / CRIT +2%',
         unlockHint: '속성 무기와 디버프 운영에 가장 잘 맞습니다.',
+        rewardFocus: '속성 무기와 상태 누적 전리품, 지속 피해 강화 보상을 선호합니다.',
+        questFocus: '속성 운영, 상태이상 마무리, 제어형 전투 퀘스트와 잘 맞습니다.',
+        bossDirective: '보스전에서는 누적 상태를 유지한 뒤 폭발 타이밍을 여는 운영이 핵심입니다.',
         bonus: { atkMult: 1.05, critBonus: 0.02 },
         skill: { name: '집행 각인', type: '어둠', effect: 'curse', mult: 2.45, mp: 20, cooldown: 2, desc: '적에게 속성 저주를 새겨 누적 압박을 만듭니다.' },
     },
@@ -431,13 +455,14 @@ export const getRunBuildProfile = (player, stats = {}) => {
 const pickTraitId = (player, buildProfile) => {
     const relicEffects = relicEffectsOf(player);
     const primaryId = buildProfile.primary.id;
-    if (primaryId === 'risk') {
-        const hasRealRiskBuild = relicEffects.has('glass_cannon')
-            || relicEffects.has('cursed_power')
-            || relicEffects.has('low_hp_atk')
-            || (player?.stats?.lowHpWins || 0) >= 2;
-        return hasRealRiskBuild ? 'risk' : 'balanced';
-    }
+    const lowHpWins = countLowHpWins(player?.stats, 0.2);
+    const hasRealRiskBuild = relicEffects.has('glass_cannon')
+        || relicEffects.has('cursed_power')
+        || relicEffects.has('low_hp_atk')
+        || lowHpWins >= 2;
+
+    if (hasRealRiskBuild) return 'risk';
+    if (primaryId === 'risk') return 'balanced';
     return TRAIT_DEFINITIONS[primaryId] ? primaryId : 'balanced';
 };
 
@@ -476,12 +501,13 @@ export const getTraitProfile = (player, stats = {}) => {
     const traitId = pickTraitId(player, buildProfile);
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
     const behaviorStats = player?.stats || {};
+    const lowHpWins = countLowHpWins(behaviorStats, 0.2);
     const reasons = [...buildProfile.primary.reasons.slice(0, 2)];
 
     if (traitId === 'explorer' && (behaviorStats.explores || 0) > 0) reasons.push(`탐험 ${behaviorStats.explores}회`);
     if (traitId === 'fortress' && (behaviorStats.rests || 0) > 0) reasons.push(`휴식 ${behaviorStats.rests}회`);
     if (traitId === 'balanced' && (behaviorStats.crafts || 0) > 0) reasons.push(`제작 ${behaviorStats.crafts}회`);
-    if (traitId === 'risk' && (behaviorStats.lowHpWins || 0) > 0) reasons.push(`저체력 승리 ${behaviorStats.lowHpWins}회`);
+    if (traitId === 'risk' && lowHpWins > 0) reasons.push(`저체력 승리 ${lowHpWins}회`);
 
     const skill = buildTraitSkill(traitId, player, stats);
 
@@ -497,6 +523,9 @@ export const getTraitProfile = (player, stats = {}) => {
         },
         skill,
         skillLabel: skill ? `${skill.name} · MP ${skill.mp}` : '특수 스킬 없음',
+        rewardFocus: definition.rewardFocus,
+        questFocus: definition.questFocus,
+        bossDirective: definition.bossDirective,
     };
 };
 
@@ -611,6 +640,50 @@ export const getTraitLootHint = (items = [], traitProfile, player = null) => {
     };
 };
 
+export const getTraitQuestResonance = (quest, traitProfile) => {
+    if (!quest) return { score: 0, label: null, summary: null };
+
+    const buildTags = new Set([
+        traitProfile?.id,
+        traitProfile?.buildProfile?.primary?.id,
+        ...((traitProfile?.buildProfile?.tags || []).map((tag) => tag.id))
+    ].filter(Boolean));
+
+    let score = 0;
+    const reasons = [];
+
+    if (quest.buildTag && buildTags.has(quest.buildTag)) {
+        score += 6;
+        reasons.push(`${labelTag(quest.buildTag)} 축과 일치`);
+    }
+
+    if (quest.type === 'discovery_count' && buildTags.has('explorer')) {
+        score += 5;
+        reasons.push('탐험 성향과 맞는 발견형 임무');
+    }
+
+    if (quest.type === 'build_victory' && buildTags.has(quest.target)) {
+        score += 4;
+        reasons.push('현재 성향 승리 루프와 직접 연결');
+    }
+
+    if (quest.type === 'survive_low_hp' && buildTags.has('risk')) {
+        score += 3;
+        reasons.push('고위험 런과 궁합');
+    }
+
+    if (quest.type === 'bounty_count' && buildTags.has('explorer')) {
+        score += 2;
+        reasons.push('개척/추적 루프와 호응');
+    }
+
+    return {
+        score,
+        label: score >= 6 ? '성향 추천' : score >= 3 ? '호응' : null,
+        summary: reasons.slice(0, 2).join(' · ') || null,
+    };
+};
+
 export const getRunDiagnostics = (player, stats = {}) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const classIdentity = getClassBuildIdentity(player?.job);
@@ -696,9 +769,12 @@ export const getEnemyTacticalProfile = (enemy, stats = {}) => {
         weakness: enemy.weakness || null,
         resistance: enemy.resistance || null,
         hint,
+        entryHint: bossBrief?.entryHint || null,
         signature: bossBrief?.signature || null,
         counterHint: bossBrief?.counterHint || null,
         phaseHint,
+        rewardHint: bossBrief?.rewardHint || null,
+        warningChips: bossBrief?.warningChips || [],
         recommendedBuilds: bossBrief?.recommendedBuilds || [],
         phaseTriggered: Boolean(enemy.phase2Triggered),
     };

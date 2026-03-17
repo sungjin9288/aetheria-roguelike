@@ -219,6 +219,41 @@ Done (Convenience / Fun Pass 4):
 - Upgraded the `MOVE` state in `src/components/ControlPanel.jsx` from plain exit buttons into recommendation cards with `추천/정비/개척/보스/경계` context and a short reason line.
 - Added a read-only `추천 이동` summary to `src/components/MapNavigator.jsx` and threaded runtime stats from `src/components/Dashboard.jsx` so the world map and move panel use the same route heuristic.
 
+Done (Log-First UI Pass):
+- Removed the top in-run `AETHERIA v4` header from `src/App.jsx` and tightened `src/components/MainLayout.jsx` so the field log gets more vertical room immediately on entry.
+- Expanded `src/components/TerminalView.jsx` into a larger log-first panel, moved sound/sync controls into the log header, increased visible mobile log rows, and removed the extra empty footer when no input/quickslots are present.
+- Replaced the old enemy detail-heavy `src/components/tabs/CombatPanel.jsx` with a compact action strip so combat no longer burns space on separate monster analysis cards.
+- Simplified mobile `src/components/ControlPanel.jsx` by removing the `Field Actions` / `Idle` labels and stacking `REST` over `RESET` for a denser action block.
+- Simplified `src/components/ShopPanel.jsx` by removing the guidance sentence, renaming the header to `SHOP`, compressing item cards, and shortening buy/sell comparison copy.
+- Expanded `src/components/Bestiary.jsx` so weakness/resistance and boss briefing details now live in the codex instead of the combat surface.
+
+Verification (Log-First UI Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh` (`[smoke:desktop] ok`, `[smoke:mobile] ok`)
+- Reviewed generated screenshots:
+  - `playtest-artifacts/mobile/01-after-start.png`
+  - `playtest-artifacts/mobile/02a-shop-open.png`
+  - `playtest-artifacts/desktop/05-combat-1.png`
+
+Blocked / Not Verified (Log-First UI Pass):
+- The `develop-web-game` skill client at `/Users/sungjin/.codex/skills/develop-web-game/scripts/web_game_playwright_client.js` still fails in this environment because its own module resolution cannot find the `playwright` package from the skill directory (`ERR_MODULE_NOT_FOUND`). The local project smoke (`scripts/smoke-gameplay.mjs`) succeeded instead.
+
+Done (Log-First UI Pass 2):
+- Hid the mobile archive dock outside the core field states by threading `mobileArchiveDockVisible` from `src/App.jsx` into `src/components/Dashboard.jsx`, so shop/quest/crafting/job-change and other overlays no longer get covered by the dock.
+- Compressed the mobile `Status Strip` in `src/components/Dashboard.jsx` with tighter gold/metric spacing and slot-by-slot loadout chips instead of a long text block.
+- Tightened the log header in `src/components/TerminalView.jsx`, raised compact mobile log history to 6 lines, and removed extra decorative chrome so the field log shows more entries.
+- Refactored `src/components/ControlPanel.jsx` into a cleaner button-schema flow with a single reset renderer and a dedicated mobile `REST -> RESET` stack.
+- Simplified mobile `src/components/ShopPanel.jsx` further by removing the bottom buy tray and moving purchase directly into the selected item card.
+
+Verification (Log-First UI Pass 2):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh` (`[smoke:desktop] ok`, `[smoke:mobile] ok`)
+- Reviewed regenerated screenshots:
+  - `playtest-artifacts/mobile/01-after-start.png`
+  - `playtest-artifacts/mobile/02a-shop-open.png`
+
 Done (Progress Visibility Recovery):
 - Added a persistent `Run Progress` card to `src/components/Dashboard.jsx` for both mobile and desktop so core run progression is always visible again.
 - The new panel surfaces active quest state, growth milestone (`Lv.5` class change or next level), explored-map count, and current run record/forecast without requiring archive expansion.
@@ -395,6 +430,215 @@ Artifacts:
 - Android debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 - iOS Release device app: `/tmp/aetheria-ios-device-build/Build/Products/Release-iphoneos/App.app`
 
+Done (Mobile Log + Grave Recovery Pass):
+- Expanded the mobile field shell in `src/App.jsx` and `src/components/TerminalView.jsx` so `Field Log` consumes spare first-fold height instead of leaving a large dead gap above the fixed archive dock.
+- Increased the compact mobile log window from 10 to 12 lines and switched the mobile terminal panel to a viewport-scaled minimum height so short action decks no longer leave the screen visually under-filled.
+- Restored grave persistence in `src/reducers/gameReducer.js` by keeping `grave` across `RESET_GAME` and by hydrating `grave/currentEvent` from `LOAD_DATA`, fixing the regression where corpse recovery disappeared after death/restart or reload.
+- Extracted grave logic into `src/utils/graveUtils.js` and wired `src/systems/CombatEngine.js` plus `src/hooks/useGameActions.js` through it so death now reliably stores half gold and 1–2 random non-starter items, while recovery supports both new `grave.items` and legacy single `grave.item` saves.
+- Added `tests/grave-recovery.test.js` to lock grave creation and recovery behavior with node unit tests.
+
+Verification (Mobile Log + Grave Recovery Pass):
+- `node --test tests/grave-recovery.test.js`
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+  - reached `[smoke:desktop] ok`, `[smoke:mobile] ok`, `[local-playtest] done`
+- `npm run cap:sync`
+- `npm run ios:archive`
+- `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B build/ios/Aetheria.xcarchive/Products/Applications/App.app`
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B com.aetheria.roguelike`
+
+Done (iPhone QA Prep Refresh):
+- Re-synced the latest `run profile` / `dashboard cleanup` changes into the native shells with `npm run cap:sync`.
+- Rebuilt the signed iOS archive with `npm run ios:archive` after confirming the unsigned `ios:build:device` output could not be installed on-device due to missing code signing.
+- Installed `/Users/sungjin/dev/personal/aetheria-roguelike/build/ios/Aetheria.xcarchive/Products/Applications/App.app` onto the paired `iPhone 14 Pro Max` via `xcrun devicectl` and launched `com.aetheria.roguelike`.
+
+Verification (iPhone QA Prep Refresh):
+- `npm run cap:sync`
+- `npm run ios:archive`
+- `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B .../Aetheria.xcarchive/Products/Applications/App.app`
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B com.aetheria.roguelike`
+
+Done (Mobile Density Follow-up Pass):
+- Reworked the mobile `Status` loadout strip so equipped items now sit in a single horizontal `LEFT / RIGHT / ARMOR` row instead of a taller stacked list, reducing wasted vertical space in `src/components/Dashboard.jsx`.
+- Removed the in-app `AUTO EXPLORE` control path from `src/App.jsx` and increased the mobile `Field Log` height / visible log count in `src/components/TerminalView.jsx`.
+- Swapped the separate post-combat popup flow for a compact log digest by adding `전투 정리:` summary logs in `src/hooks/useCombatActions.js` and removing the live `PostCombatCard` render path from `src/App.jsx`.
+- Compressed mobile shop cards in `src/components/ShopPanel.jsx` so buy items render with tighter rows, inline `구매`, and one-line comparison chips without the previous empty card space.
+- Updated `scripts/smoke-gameplay.mjs` and `docs/PLAYTEST_CHECKLIST.md` so browser smoke and QA wording now match the log-first combat summary and removed `AUTO EXPLORE` UI.
+- Re-synced the new mobile UI with `npm run cap:sync`, rebuilt the signed iOS archive with `npm run ios:archive`, and reinstalled / relaunched `com.aetheria.roguelike` on the paired `iPhone 14 Pro Max`.
+
+Verification (Mobile Density Follow-up Pass):
+- `npm run lint`
+- `npm run build`
+- `npm run test:unit`
+- `./scripts/local-playtest.sh`
+  - run completed with `[smoke:desktop] ok`, `[smoke:mobile] ok`, `[local-playtest] done`
+- `npm run cap:sync`
+- `npm run ios:archive`
+- `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B .../Aetheria.xcarchive/Products/Applications/App.app`
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B com.aetheria.roguelike`
+
+Done (Run Profile / Dashboard Cleanup Pass):
+- Created `implementation_plan.md` to capture the requested P0/P1/P2 scope, verified findings, touched files, and verification steps because the file did not previously exist in the repo.
+- Restored low-HP win tracking by adding `countLowHpWins()` in `src/systems/DifficultyManager.js` and wiring `src/utils/questProgress.js` / `src/utils/runProfileUtils.js` to derive survival progress and `risk` trait selection from `recentBattles.hpRatio` instead of the stale legacy counter alone.
+- Added explicit thresholds to the low-HP survival quests in `src/data/quests.js`, so the same battle history now cleanly feeds both the 20% and 10% quest variants.
+- Extracted reusable guidance action handling into `src/utils/adventureGuideActions.js` and connected `src/components/ControlPanel.jsx` recommendation UI to real CTA buttons that execute the suggested action instead of only highlighting it.
+- Split the oversized `src/components/Dashboard.jsx` into `src/components/dashboard/DashboardPanels.jsx` and `src/components/dashboard/FocusPanel.jsx`, reducing `Dashboard.jsx` itself to 501 lines while keeping equipment, progress, trait, and guidance surfaces isolated.
+- Added optional build-resonance UI in `src/components/SmartInventory.jsx` and a one-line boss tactical briefing in `src/components/tabs/CombatPanel.jsx` to complete the scoped P2 follow-ups.
+- Expanded regression coverage in `tests/run-profile-utils.test.js` and `tests/quest-progress.test.js` for derived low-HP wins and the `risk` trait fallback path.
+
+Verification (Run Profile / Dashboard Cleanup Pass):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+  - run completed with `[smoke:desktop] ok`, `[smoke:mobile] ok`, `[local-playtest] done`
+
+Done (Mobile UI Cleanup Pass):
+- Reworked `src/components/IntroScreen.jsx` so mobile intro now accepts direct callsign input, keeps suggestion chips as optional shortcuts, and removes the fixed `모험가` explainer card from the first screen.
+- Updated `src/App.jsx` and `src/hooks/useGameActions.js` so intro routing depends on blank names only, starter-name validation is enforced at action time, and the opening logs no longer restate the fixed adventurer path.
+- Compressed the mobile HUD in `src/components/Dashboard.jsx`, `src/components/ControlPanel.jsx`, `src/components/tabs/CombatPanel.jsx`, and `src/components/TerminalView.jsx` by dropping redundant section titles, shortening equipped-slot labels to `RIGHT / LEFT / ARMOR`, switching field actions to a 4-column grid with inline `RESET`, and giving the log a slightly taller default window.
+- Simplified `src/components/ShopPanel.jsx` and `src/components/PostCombatCard.jsx` so shop cards show a single `1H / 2H` hint plus one-line deltas without `구매 가능` / `장착 가능` copy, and the mobile combat-result overlay is now a compact summary instead of a tall sheet.
+
+Verification (Mobile UI Cleanup Pass):
+- `npm run build`
+  - succeeded
+- `./scripts/local-playtest.sh`
+  - `desktop` smoke reached `[smoke:desktop] ok`
+  - `mobile` smoke failed with `Smoke ended outside the main game loop`; captured state shows a random run death pushed the smoke back to intro before final assertions
+- `node scripts/smoke-gameplay.mjs --url http://127.0.0.1:4173/ --mobile`
+  - failed in this environment because the Playwright Chrome instance closed immediately (`Target page, context or browser has been closed`)
+- `npm run lint`
+  - did not return a result in this environment before the session was abandoned
+
+Done (Smoke Resilience Pass):
+- Updated `src/App.jsx` test-state serialization so dead runs report `run_summary` before falling through to intro, matching the actual render order.
+- Hardened `scripts/smoke-gameplay.mjs` with `isRunOver()` detection and automatic restart/re-entry to `고요한 숲` when a random death ends the run mid-smoke.
+- Added run-over recovery before tab verification and the final assertion so the mobile smoke no longer depends on a single lucky combat sequence.
+
+Verification (Smoke Resilience Pass):
+- `node --check scripts/smoke-gameplay.mjs`
+  - succeeded
+- `npm run build`
+  - succeeded
+- `./scripts/local-playtest.sh`
+  - still did not produce a final success/failure line in this environment after the smoke artifacts and preview server were generated, so end-to-end smoke remains unverified here
+
+Done (Local Playtest Visibility Pass):
+- Added explicit phase logs to `scripts/local-playtest.sh` for `build`, `preview:start`, `preview:ready`, `smoke:desktop`, `smoke:mobile`, and `done` so the long serial smoke run is visible while it executes.
+- Added lightweight checkpoint logs to `scripts/smoke-gameplay.mjs` for `start`, `boot ready`, `field ready`, `core loop`, `tab verification`, plus restart notices when a run dies mid-smoke.
+- Re-ran the full serial smoke and confirmed the earlier “no final line” concern was a visibility issue during the long mobile pass rather than a stuck preview cleanup path.
+
+Verification (Local Playtest Visibility Pass):
+- `node --check scripts/smoke-gameplay.mjs`
+  - succeeded
+- `npm run build`
+  - succeeded
+- `./scripts/local-playtest.sh`
+  - reached `[local-playtest] smoke:desktop` -> `[smoke:desktop] ok`
+  - reached `[local-playtest] smoke:mobile` -> `[smoke:mobile] ok`
+  - printed `[local-playtest] done` and `Local playtest smoke completed: http://127.0.0.1:4173/`
+
+Done (HUD / Shop Compression Pass):
+- Compressed the mobile status loadout in `src/components/Dashboard.jsx` from three separate item tiles into one compact three-line strip: `RIGHT`, `LEFT`, `ARMOR` plus the equipped item name on the same row.
+- Simplified `src/components/ShopPanel.jsx` buy cards so they now emphasize only the item name, `1H / 2H` when relevant, the item stat line, and the current-equipment comparison line; removed the extra tag stack that was wasting vertical space.
+- Slightly expanded the mobile terminal in `src/components/TerminalView.jsx` so the tighter HUD immediately turns into more visible log history.
+
+Verification (HUD / Shop Compression Pass):
+- `npm run build`
+  - succeeded
+- `./scripts/local-playtest.sh`
+  - `[smoke:desktop] ok`
+  - `[smoke:mobile] ok`
+  - `[local-playtest] done`
+
+Done (RC-1 Reverification / Device Entry):
+- Re-ran the release-candidate baseline on the current branch:
+  - `npm run test:unit`
+  - `npm run lint`
+  - `npm run build`
+  - `./scripts/local-playtest.sh`
+  - `npm run mobile:doctor`
+  - `npm run cap:sync`
+  - `npm run android:debug`
+- Confirmed the current iOS signing environment is usable for archive builds on this machine:
+  - `AETHERIA_IOS_HOME=/Users/sungjin AETHERIA_IOS_DERIVED_DATA_PATH=/tmp/aetheria-ios-device-build-rc3 npm run ios:build:device`
+  - `AETHERIA_IOS_HOME=/Users/sungjin AETHERIA_IOS_DERIVED_DATA_PATH=/tmp/aetheria-ios-archive-build-rc1 AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive`
+- Verified the signed archive artifact at `build/ios/Aetheria.xcarchive/Products/Applications/App.app`.
+- Verified a physical iPhone is connected and reachable through `xcrun devicectl`:
+  - `성진` / `iPhone 14 Pro Max` / `FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B`
+- Installed and launched the archived app on the connected device:
+  - `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B build/ios/Aetheria.xcarchive/Products/Applications/App.app`
+  - `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B com.aetheria.roguelike`
+
+Blocked / Not Verified:
+- Manual in-app 5-minute touch QA on the physical iPhone still requires a person on the device; this terminal session verified install and launch only.
+- Android physical-device QA is still blocked because `adb` is not available in this terminal environment and no Android handset is attached.
+- Android release signing is still not configured; `npm run mobile:doctor` reported release signing `no`, so signed Android release artifacts are still pending real keystore credentials.
+
+Done (Log-First Completion Pass):
+- Added explicit smoke/test hooks for the latest mobile shell:
+  - `src/components/Dashboard.jsx`: `mobile-archive-dock`, `mobile-archive-open`, `mobile-archive-sheet`
+  - `src/components/ShopPanel.jsx`: `shop-buy-item`, `shop-buy-inline`
+  - `src/components/ControlPanel.jsx`: dedicated `control-reset` test id, grave recovery renamed to `control-recover`
+  - `src/components/TerminalView.jsx`: `terminal-panel`
+- Tightened the archive overlay copy in `src/components/Dashboard.jsx` by removing the leftover helper sentence so the bottom sheet stays denser.
+- Updated `scripts/smoke-gameplay.mjs` to cover the current mobile-first UX instead of the old structure:
+  - verify first-fold visibility for `Field Log`, `Archive Dock`, `REST`, and `RESET`
+  - verify the archive dock hides while the mobile shop overlay is open
+  - verify the mobile shop uses inline card purchase (`바로 구매`) and no desktop footer control
+  - verify the archive dock returns after closing the shop
+- Updated `docs/PLAYTEST_CHECKLIST.md` so the manual QA wording now matches the current UI:
+  - removed stale `헤더` / `4열 그리드` wording
+  - added `REST / RESET` stack checks
+  - added archive-dock hidden-on-overlay checks
+  - added inline shop purchase / no bottom buy bar checks
+- Re-ran native refresh on the latest bundle after the smoke/doc updates.
+
+Verification (Log-First Completion Pass):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+  - `[smoke:desktop] ok`
+  - `[smoke:mobile] ok`
+- Reviewed updated smoke captures:
+  - `playtest-artifacts/mobile/01-after-start.png`
+  - `playtest-artifacts/mobile/02a-shop-open.png`
+- `npm run cap:sync`
+- `npm run mobile:doctor`
+- `npm run android:debug`
+- `npm run ios:build:device`
+
+Current device/tooling state:
+- Connected iPhone detected earlier via `xcrun devicectl list devices`: `성진` / `iPhone 14 Pro Max` / `FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B`
+- Android SDK / Java are healthy, but Android release signing is still intentionally unconfigured in this workspace.
+
+Blocked / Not Verified:
+- Manual iPhone 5-minute touch QA is still pending for this exact post-fix bundle; this pass verified browser smoke and native builds, not physical taps.
+- Android physical-device QA is still pending; `adb` is not available in this terminal environment and no Android handset is attached.
+- The official `develop-web-game` Playwright client was not used for this app flow; the project's `scripts/smoke-gameplay.mjs` remains the reliable browser-loop verifier here.
+
+Done (RC-1 Release Planning Pass):
+- Updated `docs/MOBILE_RELEASE.md` with an explicit `RC-1` operating model:
+  - freeze new feature work
+  - run the 8-command baseline verification before device QA
+  - execute iPhone -> Android QA in order
+  - classify findings as `P0 / P1 / P2`
+  - ship only after the new `Go / No-Go Gate` is satisfied
+- Updated `docs/PLAYTEST_CHECKLIST.md` with a matching `RC-1` rules section so the device checklist now doubles as the release-candidate QA protocol.
+- Updated `tasks/todo.md` so the active sprint reflects the new mode: release candidate freeze, real-device QA, and signed-build / store-submission prep.
+
+Verification (RC-1 Release Planning Pass):
+- Re-read the updated sections in:
+  - `docs/MOBILE_RELEASE.md`
+  - `docs/PLAYTEST_CHECKLIST.md`
+  - `tasks/todo.md`
+
+Next recommended action:
+- Run the iPhone 5-minute quick routine first, capture `QA READOUT`, and log any `P0 / P1` findings before touching release signing or store upload.
+
 Done (Signed iPhone Install / Launch Verification):
 - Fixed `scripts/ios-archive.sh` to use the real macOS home directory by default instead of `/tmp/aetheria-home`, allowing `xcodebuild archive` to see the logged-in Xcode account and login keychain for signing.
 - Confirmed the latest signed archive app exists at `build/ios/Aetheria.xcarchive/Products/Applications/App.app`.
@@ -414,6 +658,99 @@ Verification (Signed iPhone Install / Launch Verification):
 Blocked / Not Verified:
 - Manual in-app 5-minute touch QA on the physical iPhone still requires a person on the device; this terminal session only verified install and launch.
 - Android physical-device QA is still blocked because no Android handset is currently attached (`adb devices` showed none).
+
+Done (Gameplay Depth Pass: Steps 1-5):
+- Strengthened boss identity in `src/data/monsters.js`, `src/utils/runProfileUtils.js`, `src/components/tabs/CombatPanel.jsx`, `src/systems/CombatEngine.js`, and `src/components/PostCombatCard.jsx`:
+  - Added boss entry memos, reward hints, warning chips, and first-clear gold bonus flow
+  - Surfaced boss reward context directly in combat and post-combat UI
+- Expanded the trait system in `src/utils/runProfileUtils.js`, `src/components/StatsPanel.jsx`, `src/hooks/useInventoryActions.js`, `src/components/tabs/QuestBoardPanel.jsx`, and `src/components/tabs/QuestTab.jsx`:
+  - Added `rewardFocus`, `questFocus`, and `bossDirective`
+  - Added trait-to-quest resonance scoring and bonus gold on matching quest turn-ins
+- Added build-guiding quests in `src/data/quests.js` and synced them through runtime stats:
+  - Added `build_victory` quests for crusher / dual / fortress / arcane loops
+  - Added `discovery_count` quest for exploration discovery runs
+  - Added `discoveries` and `buildWins` stat tracking in `src/reducers/gameReducer.js`, `src/utils/gameUtils.js`, `src/hooks/useGameActions.js`, and `src/hooks/useCombatActions.js`
+- Added exploration pacing phase 2 in `src/utils/explorationPacing.js`, `src/utils/adventureGuide.js`, and `src/hooks/useGameActions.js`:
+  - Introduced map tempo profiles (`safe`, `frontier`, `volatile`, `hostile`, `boss`)
+  - Added `TEMPO` exploration forecast chips and stronger boss/volatile region mood cues
+- Extracted quest progress syncing into `src/utils/questProgress.js` so build/discovery quest progress can be unit-tested without importing the full combat runtime.
+
+Verification (Gameplay Depth Pass: Steps 1-5):
+- `npm run test:unit`
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive`
+- `xcrun devicectl list devices`
+- `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B build/ios/Aetheria.xcarchive/Products/Applications/App.app`
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B com.aetheria.roguelike`
+
+Blocked / Not Verified:
+- iPhone manual 5-minute touch QA is still pending; this session verified install and launch but did not perform on-device taps/scrolls.
+- Android physical-device QA is still pending; `adb` is not available in this terminal environment and no Android handset is currently attached.
+
+Done (Quest / Shop Simplification Pass):
+- Simplified the mission board in `src/components/tabs/QuestBoardPanel.jsx`:
+  - Added a top-right close button so the mission terminal can be exited without scrolling to the bottom
+  - Removed the trait recommendation banner
+  - Reduced quest cards to title + requirement + single objective line + rewards + action, removing duplicate desc/objective blocks and the extra `Lv.X 더 필요` footer box
+- Simplified the mobile status/actions first fold:
+  - Removed the extra quest/growth chip row from the mobile `Status Strip` in `src/components/Dashboard.jsx`
+  - Compressed equipped gear into a single-line `Loadout` summary
+  - Removed the large mobile “recommended action” card in `src/components/ControlPanel.jsx`, keeping the action grid as the main focus
+  - Tightened the mobile `Field Log` header in `src/components/TerminalView.jsx`
+- Simplified the shop in `src/components/ShopPanel.jsx`:
+  - Removed the top trait resonance panel and per-item resonance explanation blocks
+  - Moved mobile purchasing to an explicit `select item -> bottom purchase bar` flow so the chosen item is unambiguous
+  - Kept pricing and buy-state messaging in one place instead of floating over the card
+
+Verification (Quest / Shop Simplification Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+  - first rerun hit the known random early-death mobile smoke branch and ended in `intro`
+  - immediate rerun reached `[smoke:desktop] ok` and `[smoke:mobile] ok`
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+
+Blocked / Not Verified:
+- Real-device confirmation is still pending for the new mobile shop purchase flow and mission-board close button.
+
+Done (Mobile Main-Loop Simplification Pass):
+- Reordered the mobile app shell in `src/App.jsx` so the first-fold flow is now `Field Log -> Status Strip -> Field Actions`, with the archive layer moved out of the main reading flow.
+- Reworked the mobile `Dashboard` in `src/components/Dashboard.jsx` into two focused surfaces:
+  - `summary`: a compact `Status Strip` with HP/NRG/EXP, location, gold, quest/growth chips, and a single-line loadout summary
+  - `archive`: a fixed `Archive Dock` that opens a bottom sheet for inventory, quests, map, stats, codex, and system tabs
+- Updated `src/components/MainLayout.jsx` bottom safe-area spacing so the fixed archive dock does not sit directly on top of interactive content.
+- Updated `src/components/ShopPanel.jsx` and `src/components/ControlPanel.jsx` so the shop now behaves like a mobile bottom sheet with a top-level close button, fixing the previous “scroll to the bottom to close” issue.
+- Tightened the mobile action header copy in `src/components/ControlPanel.jsx` so the main action deck reads more like a simple command surface than a stacked dashboard.
+
+Verification (Mobile Main-Loop Simplification Pass):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+- `npm run cap:sync`
+- `npm run android:debug`
+- `npm run ios:build:device`
+
+Notes:
+- The first `./scripts/local-playtest.sh` rerun ended in the existing random early-death branch (`mode: intro` with a run summary still present), but the immediate rerun reached `[smoke:desktop] ok` and `[smoke:mobile] ok`.
+
+Done (Mobile First-Fold Final Compression):
+- Removed the empty quick-slot row from the mobile field log when no slots are assigned in `src/components/TerminalView.jsx`, so the first screen does not spend vertical space on inactive controls.
+- Removed the extra mobile “buttons only” helper card from the field log footer in `src/components/TerminalView.jsx`; the mobile command model is now implied by the action dock instead of restated as another card.
+- Tightened the `Status Strip` loadout summary in `src/components/Dashboard.jsx` so equipped items read as shorter signal chips instead of a bulkier multiline equipment block.
+- Re-verified the updated first-fold capture at `playtest-artifacts/mobile/01-after-start.png`; the latest smoke artifact now shows log -> status -> actions without the previous empty quick-slot strip.
+
+Verification (Mobile First-Fold Final Compression):
+- `npm run lint`
+- `npm run build`
+- `./scripts/local-playtest.sh`
+  - latest run reached `[smoke:desktop] ok` and `[smoke:mobile] ok`
 
 Done (Mobile Design System Pass):
 - Compressed the mobile first fold in `src/components/Dashboard.jsx` by replacing the separate `Loadout` and `성향` cards with a single `Loadout Snapshot` and by turning `Field Archive` into a bottom-dock style archive tray.

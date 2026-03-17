@@ -141,6 +141,18 @@ export const pushBattleRecord = (stats, record) => {
     };
 };
 
+export const countLowHpWins = (stats, threshold = 0.2) => {
+    const recentBattles = stats?.recentBattles || [];
+    if (recentBattles.length > 0) {
+        return recentBattles.filter((battle) => (
+            battle?.result === 'win'
+            && Number.isFinite(battle?.hpRatio)
+            && battle.hpRatio <= threshold
+        )).length;
+    }
+    return stats?.lowHpWins || 0;
+};
+
 // ─────────────────────────────────────────────────────────────────────────
 // 5. AI 이벤트 컨텍스트에 난이도 정보 주입
 // ─────────────────────────────────────────────────────────────────────────

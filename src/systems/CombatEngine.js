@@ -1,8 +1,11 @@
-import { DB } from '../data/db';
-import { LOOT_TABLE } from '../data/loot';
-import { BALANCE, CONSTANTS } from '../data/constants';
+import { DB } from '../data/db.js';
+import { LOOT_TABLE } from '../data/loot.js';
+import { BALANCE, CONSTANTS } from '../data/constants.js';
+import { BOSS_BRIEFS } from '../data/monsters.js';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
-import { MSG } from '../data/messages';
+import { syncQuestProgress } from '../utils/questProgress.js';
+import { buildGraveData } from '../utils/graveUtils.js';
+import { MSG } from '../data/messages.js';
 
 /**
  * CombatEngine - Pure functions for combat calculations
@@ -624,6 +627,9 @@ export const CombatEngine = {
     handleVictory(player, enemy) {
         const p = { ...player };
         const relics = p.relics || [];
+        const baseName = this.resolveEnemyBaseName(enemy);
+        const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
+        const bossBrief = enemy.isBoss ? BOSS_BRIEFS[baseName] : null;
 
         // 유물: EXP/골드 배율
         const expMult = 1 + (relics.find(r => r.effect === 'exp_mult')?.val || 0);
@@ -633,7 +639,6 @@ export const CombatEngine = {
 
         p.gold += goldGained;
 
-        const baseName = this.resolveEnemyBaseName(enemy);
         const isDemonKingSlain = baseName === '마왕' || baseName.includes('마왕');
         const prevStats = p.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 };
         p.stats = {
@@ -650,6 +655,18 @@ export const CombatEngine = {
         const logs = [{ type: 'success', text: MSG.VICTORY(expGained, goldGained) }];
         let leveledUp = false;
         let visualEffect = null;
+        let bossClearBonus = null;
+
+        if (enemy.isBoss && previousBossClears === 0) {
+            const bonusGold = Math.max(120, Math.floor(goldGained * 0.35));
+            p.gold += bonusGold;
+            p.stats.total_gold = (p.stats.total_gold || 0) + bonusGold;
+            bossClearBonus = {
+                goldBonus: bonusGold,
+                rewardHint: bossBrief?.rewardHint || '초회 토벌 보너스를 확보했습니다.'
+            };
+            logs.push({ type: 'event', text: `🏁 초회 보스 토벌 보너스 +${bonusGold}G` });
+        }
 
         const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
         const essenceGain = Math.max(1, Math.floor(enemy.exp / 8));
@@ -694,58 +711,13 @@ export const CombatEngine = {
             visualEffect,
             expGained,
             goldGained,
-            isDemonKingSlain
+            isDemonKingSlain,
+            bossClearBonus
         };
     },
 
     updateQuestProgress(player, enemyName) {
-        if (!player.quests?.length) return { updatedQuests: player.quests || [], completedCount: 0 };
-        const normalizedEnemyName = enemyName || '';
-
-        const updatedQuests = player.quests.map((q) => {
-            const qData = q.isBounty ? q : DB.QUESTS.find((dbQ) => dbQ.id === q.id);
-            if (!qData) return q;
-
-            // ─ 통계 기반 퀘스트 타입 (#7) ────────────────────────────────
-            // explore_count: 탐색 횟수 동기화
-            if (qData.type === 'explore_count' && qData.target === 'explores') {
-                const current = player.stats?.explores || 0;
-                return { ...q, progress: Math.min(qData.goal, current) };
-            }
-            // craft: 제작 횟수 동기화
-            if (qData.type === 'craft' && qData.target === 'crafts') {
-                const current = player.stats?.crafts || 0;
-                return { ...q, progress: Math.min(qData.goal, current) };
-            }
-            // survive_low_hp: 저체력 킬 횟수
-            if (qData.type === 'survive_low_hp' && qData.target === 'lowHpWins') {
-                const current = player.stats?.lowHpWins || 0;
-                return { ...q, progress: Math.min(qData.goal, current) };
-            }
-            // bounty_count: 현상수배 완료 횟수
-            if (qData.type === 'bounty_count' && qData.target === 'bountiesCompleted') {
-                const current = player.stats?.bountiesCompleted || 0;
-                return { ...q, progress: Math.min(qData.goal, current) };
-            }
-
-            // 정확히 일치하거나, 적 이름이 퀘스트 목표를 포함(엘리트 접두어 처리)하는 경우만 허용
-            const exactMatch = qData.target === normalizedEnemyName;
-            const prefixedMatch = normalizedEnemyName.includes(qData.target);
-            if (exactMatch || prefixedMatch) {
-                return { ...q, progress: Math.min(qData.goal, q.progress + 1) };
-            }
-            if (qData.target === 'Level') {
-                return { ...q, progress: player.level };
-            }
-            return q;
-        });
-
-        const completedCount = updatedQuests.filter((q) => {
-            const qData = q.isBounty ? q : DB.QUESTS.find((dbQ) => dbQ.id === q.id);
-            return qData && q.progress >= qData.goal && player.quests.find(pq => pq.id === q.id)?.progress < qData.goal;
-        }).length;
-
-        return { updatedQuests, completedCount };
+        return syncQuestProgress(player, enemyName, DB.QUESTS);
     },
 
     processLoot(enemy, player = null) {
@@ -780,18 +752,7 @@ export const CombatEngine = {
     },
 
     handleDefeat(player, INITIAL_PLAYER) {
-        let droppedItem = null;
-        if (player.inv?.length > 0) {
-            const tradableItems = player.inv.filter((i) => !i.id?.startsWith('starter_'));
-            if (tradableItems.length > 0) droppedItem = tradableItems[Math.floor(Math.random() * tradableItems.length)];
-        }
-
-        const graveData = {
-            loc: player.loc,
-            gold: Math.floor(player.gold / 2),
-            item: droppedItem,
-            timestamp: Date.now()
-        };
+        const graveData = buildGraveData(player);
 
         const starterState = { ...INITIAL_PLAYER };
         const meta = { ...this.DEFAULT_META, ...(player.meta || {}) };

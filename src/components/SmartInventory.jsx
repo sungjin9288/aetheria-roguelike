@@ -3,6 +3,7 @@ import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
 import { getEquipmentIdentity, getEquipmentProfile, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
+import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import SignalBadge from './SignalBadge';
 
 /**
@@ -55,6 +56,10 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     const [hoveredItem, setHoveredItem] = React.useState(null);
     const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
     const spotlightSet = useMemo(() => new Set(spotlightNames), [spotlightNames]);
+    const traitProfile = useMemo(
+        () => getTraitProfile(player, { maxHp: player.maxHp, maxMp: player.maxMp }),
+        [player]
+    );
 
     const grouped = useMemo(() => {
         const map = {};
@@ -225,6 +230,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                         getEquipmentIdentity(player.equip?.armor) === itemIdentity ||
                         getEquipmentIdentity(player.equip?.offhand) === itemIdentity;
                     const isSpotlighted = spotlightSet.has(item.name);
+                    const resonance = getTraitItemResonance(item, traitProfile, player);
 
                     return (
                         <Motion.div
@@ -249,6 +255,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     {count > 1 && <span className="text-cyber-blue/30 text-xs">x{count}</span>}
                                     {isSpotlighted && <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
+                                    {resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
                                     {!canEquip && <SignalBadge tone="danger" size="sm">직업 제한</SignalBadge>}
                                 </div>
 

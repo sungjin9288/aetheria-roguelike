@@ -89,7 +89,7 @@ export const INITIAL_STATE = {
         name: '', job: '모험가', gender: 'male', level: 1, hp: CONSTANTS.START_HP, maxHp: CONSTANTS.START_HP, mp: CONSTANTS.START_MP, maxMp: CONSTANTS.START_MP, atk: 10, def: 5, exp: 0, nextExp: 100, gold: CONSTANTS.START_GOLD, loc: '시작의 마을',
         inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0], offhand: null },
         quests: [], achievements: [],
-        stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0, bountyDate: null, bountyIssued: false, bountiesCompleted: 0, relicCount: 0, comboCount: 0, crafts: 0, abyssFloor: 0, demonKingSlain: 0, dailyProtocol: null, claimedAchievements: [], explores: 0, lowHpWins: 0, visitedMaps: ['시작의 마을'], exploreState: { ...DEFAULT_EXPLORE_STATE } },
+        stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0, bountyDate: null, bountyIssued: false, bountiesCompleted: 0, relicCount: 0, comboCount: 0, crafts: 0, abyssFloor: 0, demonKingSlain: 0, dailyProtocol: null, claimedAchievements: [], explores: 0, lowHpWins: 0, discoveries: 0, buildWins: {}, visitedMaps: ['시작의 마을'], exploreState: { ...DEFAULT_EXPLORE_STATE } },
         tempBuff: { atk: 0, turn: 0 }, status: [],
         skillLoadout: { selected: 0, cooldowns: {} },
         meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0, prestigeRank: 0, totalPrestigeAtk: 0, totalPrestigeHp: 0, totalPrestigeMp: 0 },
@@ -142,6 +142,8 @@ export const gameReducer = (state, action) => {
                     player: loadedPlayer,
                     gameState: action.payload.gameState || 'idle',
                     enemy: action.payload.enemy || null,
+                    grave: action.payload.grave || null,
+                    currentEvent: action.payload.currentEvent || null,
                     quickSlots: sanitizeQuickSlots(action.payload.quickSlots, loadedPlayer.inv),
                     onboardingDismissed: action.payload.onboardingDismissed ?? state.onboardingDismissed,
                     bootStage: 'ready',
@@ -224,7 +226,13 @@ export const gameReducer = (state, action) => {
         case AT.SET_ONBOARDING_DISMISSED:
             return { ...state, onboardingDismissed: true };
         case AT.RESET_GAME:
-            return { ...INITIAL_STATE, bootStage: 'ready', uid: state.uid, syncStatus: 'syncing' };
+            return {
+                ...INITIAL_STATE,
+                grave: state.grave,
+                bootStage: 'ready',
+                uid: state.uid,
+                syncStatus: 'syncing'
+            };
 
         // ── v5.0: Run Summary ───────────────────────────────────────────────
         case 'SET_RUN_SUMMARY':

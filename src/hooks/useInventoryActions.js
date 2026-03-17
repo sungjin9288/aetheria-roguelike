@@ -2,6 +2,7 @@ import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { toArray, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, isAchievementUnlocked } from '../utils/gameUtils';
 import { getEquipmentIdentity, getNextEquipmentState, isTwoHandWeapon } from '../utils/equipmentUtils';
+import { getTraitProfile, getTraitQuestResonance } from '../utils/runProfileUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 
@@ -263,6 +264,21 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 if (itemData) {
                     updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemData)] };
                     addLog('success', `보상 아이템: ${itemData.name}`);
+                }
+            }
+
+            if (qData.buildTag) {
+                const currentStats = getFullStats();
+                const traitProfile = getTraitProfile(updatedPlayer, {
+                    ...currentStats,
+                    maxHp: updatedPlayer.maxHp,
+                    maxMp: updatedPlayer.maxMp,
+                });
+                const resonance = getTraitQuestResonance(qData, traitProfile);
+                if (resonance.score >= 6 && qData.reward?.gold) {
+                    const bonusGold = Math.max(100, Math.floor(qData.reward.gold * 0.15));
+                    updatedPlayer = grantGold(updatedPlayer, bonusGold);
+                    addLog('event', `[${traitProfile.title}] 공명 보상 +${bonusGold}G`);
                 }
             }
 

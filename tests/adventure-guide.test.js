@@ -59,8 +59,9 @@ test('exploration forecast marks boss zones clearly', () => {
         boss: true,
     });
 
-    assert.equal(forecast.mood, '보스 권역');
+    assert.equal(forecast.mood, '보스 전조');
     assert.ok(forecast.chips.some((chip) => chip.label === 'EVENT'));
+    assert.ok(forecast.chips.some((chip) => chip.label === 'TEMPO'));
 });
 
 test('move recommendations prioritize safe exits when hp is low', () => {

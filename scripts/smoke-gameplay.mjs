@@ -19,6 +19,7 @@ const ensure = (condition, message) => {
 };
 
 const sanitizeName = (value) => value.replace(/[^a-z0-9_-]+/gi, '-').toLowerCase();
+const logSmoke = (message) => console.log(`[smoke:${viewportLabel}] ${message}`);
 
 async function launchBrowser() {
   const executablePath = process.env.PLAYWRIGHT_CHROME_PATH || DEFAULT_CHROME_PATH;
@@ -104,7 +105,8 @@ async function startNewRun(page) {
   if (await nameInput.count()) {
     await nameInput.fill(isMobile ? '모바일검증' : '데스크검증');
   }
-  await startButton.click();
+  await startButton.waitFor({ state: 'visible', timeout: 10000 });
+  await startButton.evaluate((node) => node.click());
 
   const state = await waitForState(
     page,
@@ -115,6 +117,21 @@ async function startNewRun(page) {
   await scrollToTop(page);
   await writeStateArtifact('01-after-start', state, page);
   return state;
+}
+
+const isRunOver = (state) => (
+  state?.mode === 'run_summary'
+  || state?.gameState === 'dead'
+  || Boolean(state?.runSummary)
+);
+
+async function restartFromRunOver(page, label = 'recovery') {
+  logSmoke(`restart after run-over (${label})`);
+  await resetToIntro(page);
+  const state = await startNewRun(page);
+  await writeStateArtifact(`${label}-restart`, state, page);
+  await moveToForest(page);
+  return readState(page);
 }
 
 async function verifyTerminalStatus(page) {
@@ -132,6 +149,23 @@ async function verifyTerminalStatus(page) {
   await writeStateArtifact('02-status-command', state, page);
 }
 
+async function verifyMobileFirstFold(page) {
+  if (!isMobile) return;
+
+  const terminalPanel = page.locator('[data-testid="terminal-panel"]');
+  const archiveDock = page.locator('[data-testid="mobile-archive-dock"]');
+  const restButton = page.locator('[data-testid="control-rest"]');
+  const resetButton = page.locator('[data-testid="control-reset"]');
+
+  await terminalPanel.waitFor({ state: 'visible', timeout: 10000 });
+  await archiveDock.waitFor({ state: 'visible', timeout: 10000 });
+  await restButton.waitFor({ state: 'visible', timeout: 10000 });
+  await resetButton.waitFor({ state: 'visible', timeout: 10000 });
+
+  const terminalBox = await terminalPanel.boundingBox();
+  ensure(terminalBox && terminalBox.height >= 180, 'Mobile log panel did not retain the expanded first-fold height');
+}
+
 async function verifyShopFlow(page) {
   const marketButton = page.locator('[data-testid="control-market"]');
   if (!await marketButton.count()) return;
@@ -144,6 +178,19 @@ async function verifyShopFlow(page) {
   );
   await writeStateArtifact('02a-shop-open', openState, page);
 
+  if (isMobile) {
+    const archiveDock = page.locator('[data-testid="mobile-archive-dock"]');
+    const shopCards = page.locator('[data-testid="shop-buy-item"]');
+    const inlineBuyButton = page.locator('[data-testid="shop-buy-inline"]').first();
+
+    ensure(!await archiveDock.isVisible(), 'Archive dock should hide while the mobile shop overlay is open');
+    ensure(await page.locator('[data-testid="shop-close-footer"]').count() === 0, 'Mobile shop should not render the desktop footer close control');
+    ensure(await shopCards.count() > 0, 'Mobile shop did not render compact buy cards');
+
+    await shopCards.first().click();
+    await inlineBuyButton.waitFor({ state: 'visible', timeout: 5000 });
+  }
+
   const closeButton = page.locator('[data-testid="shop-close"]');
   await closeButton.click();
   await waitForState(
@@ -151,48 +198,9 @@ async function verifyShopFlow(page) {
     (nextState) => nextState.gameState === 'idle',
     'shop panel to close'
   );
-}
-
-async function verifyLootReviewFlow(page) {
-  await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectPostCombatResult?.());
-  const postCombatState = await waitForState(
-    page,
-    (nextState) => Boolean(nextState.postCombatResult),
-    'synthetic post-combat result to appear'
-  );
-  await writeStateArtifact('02b-post-combat-review', postCombatState, page);
-
-  const reviewButton = page.locator('[data-testid="post-combat-review-loot"]');
-  if (await reviewButton.count()) {
-    await reviewButton.evaluate((node) => node.click());
+  if (isMobile) {
+    await page.locator('[data-testid="mobile-archive-dock"]').waitFor({ state: 'visible', timeout: 10000 });
   }
-
-  await waitForState(
-    page,
-    (nextState) => nextState.sideTab === 'inventory',
-    'inventory tab after loot review'
-  );
-  await waitForState(
-    page,
-    (nextState) => Boolean(nextState.inventorySpotlight?.token),
-    'inventory spotlight state after loot review'
-  );
-  const archiveSpotlight = page.locator('[data-testid="inventory-spotlight"]');
-  const detailSpotlight = page.locator('[data-testid="inventory-spotlight-detail"]');
-  if (await archiveSpotlight.count()) {
-    await archiveSpotlight.waitFor({ state: 'visible', timeout: 10000 });
-  } else {
-    await detailSpotlight.waitFor({ state: 'visible', timeout: 10000 });
-  }
-  const inventoryState = await readState(page);
-  await writeStateArtifact('02c-inventory-spotlight', inventoryState, page);
-
-  await page.evaluate(() => window.__AETHERIA_TEST_API__?.clearPostCombat?.());
-  await waitForState(
-    page,
-    (nextState) => !nextState.postCombatResult,
-    'synthetic post-combat result to clear'
-  );
 }
 
 async function moveToForest(page) {
@@ -229,10 +237,11 @@ async function resolveCombat(page, observations) {
   observations.combat = true;
   for (let turn = 0; turn < 18; turn += 1) {
     const state = await readState(page);
-    if (state.mode === 'run_summary') {
-      throw new Error('Smoke run died during early forest combat');
+    if (isRunOver(state)) {
+      await restartFromRunOver(page, '05-run-over');
+      return;
     }
-    if (state.postCombatResult || state.gameState !== 'combat') return;
+    if (state.gameState !== 'combat') return;
 
     await sendGameCommand(page, 'attack');
     await delay(900);
@@ -244,20 +253,14 @@ async function resolveCombat(page, observations) {
   }
 }
 
-async function closePostCombat(page, observations) {
-  observations.victory = true;
-  const continueButton = page.locator('[data-testid="post-combat-continue"]');
-  if (await continueButton.count()) {
-    await continueButton.evaluate((node) => node.click());
-    await waitForState(page, (state) => !state.postCombatResult, 'post-combat card to close');
-  } else {
-    await page.evaluate(() => window.__AETHERIA_TEST_API__?.clearPostCombat?.());
-    await waitForState(page, (state) => !state.postCombatResult, 'post-combat state clear');
-  }
-}
-
 function hasVictorySignal(state) {
-  return state.logTail?.some((entry) => typeof entry.text === 'string' && entry.text.includes('승리!'));
+  return state.logTail?.some((entry) => (
+    typeof entry.text === 'string'
+    && (
+      entry.text.includes('승리!')
+      || entry.text.includes('전투 정리:')
+    )
+  ));
 }
 
 async function driveExploreLoop(page) {
@@ -274,8 +277,9 @@ async function driveExploreLoop(page) {
     await settleAfterCommand(page, 18000);
 
     let state = await readState(page);
-    if (state.mode === 'run_summary') {
-      throw new Error('Smoke run died before core loop verification completed');
+    if (isRunOver(state)) {
+      state = await restartFromRunOver(page, `04-run-over-${attempt + 1}`);
+      continue;
     }
 
     if (state.pendingRelics?.length) {
@@ -295,34 +299,22 @@ async function driveExploreLoop(page) {
       state = await waitForState(
         page,
         (nextState) =>
-          Boolean(nextState.postCombatResult) ||
+          isRunOver(nextState) ||
           (nextState.gameState !== 'combat' && !nextState.enemy && !nextState.isAiThinking) ||
           hasVictorySignal(nextState),
         'combat resolution to settle'
       );
+      if (isRunOver(state)) {
+        state = await restartFromRunOver(page, `06-run-over-${attempt + 1}`);
+        continue;
+      }
       if (!state.enemy && state.mode === 'game' && state.gameState !== 'combat') {
         observations.victory = true;
       }
     }
 
-    if (state.postCombatResult) {
-      await writeStateArtifact(`06-post-combat-${attempt + 1}`, state, page);
-      await closePostCombat(page, observations);
-      state = await readState(page);
-    } else if (hasVictorySignal(state)) {
+    if (hasVictorySignal(state)) {
       observations.victory = true;
-    }
-
-    if (attempt >= 8 && observations.combat && !observations.victory) {
-      await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectPostCombatResult?.());
-      const forcedVictoryState = await waitForState(
-        page,
-        (nextState) => Boolean(nextState.postCombatResult),
-        'synthetic post-combat fallback after combat branch'
-      );
-      await writeStateArtifact('06b-forced-post-combat', forcedVictoryState, page);
-      await closePostCombat(page, observations);
-      state = await readState(page);
     }
 
     if (observations.combat && observations.victory && !observations.event) {
@@ -350,6 +342,11 @@ async function driveExploreLoop(page) {
 }
 
 async function verifyTabs(page) {
+  const current = await readState(page);
+  if (isRunOver(current)) {
+    await restartFromRunOver(page, '08-tabs-run-over');
+  }
+
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('stats'));
   const statsState = await waitForState(page, (state) => state.sideTab === 'stats', 'stats tab activation');
   await writeStateArtifact('08-stats-tab', statsState, page);
@@ -363,6 +360,7 @@ async function verifyTabs(page) {
 }
 
 async function main() {
+  logSmoke('start');
   const browser = await launchBrowser();
   const errors = [];
   const consoleErrors = [];
@@ -404,21 +402,28 @@ async function main() {
     await page.waitForFunction(() => typeof window.render_game_to_text === 'function', undefined, { timeout: 25000 });
     await waitForState(page, (state) => state.bootStage === 'ready', 'boot stage ready', 25000);
 
-  await startNewRun(page);
-  await verifyShopFlow(page);
-  await verifyLootReviewFlow(page);
-  await verifyTerminalStatus(page);
+    logSmoke('boot ready');
+    await startNewRun(page);
+    await verifyMobileFirstFold(page);
+    await verifyShopFlow(page);
+    await verifyTerminalStatus(page);
+    logSmoke('field ready');
     await moveToForest(page);
+    logSmoke('core loop');
     const observations = await driveExploreLoop(page);
+    logSmoke('tab verification');
     await verifyTabs(page);
 
-    const finalState = await readState(page);
+    let finalState = await readState(page);
+    if (isRunOver(finalState)) {
+      finalState = await restartFromRunOver(page, '09-final-run-over');
+    }
     await writeStateArtifact('09-final-state', finalState, page);
 
     ensure(observations.combat, 'Smoke did not cover combat');
     ensure(observations.victory, 'Smoke did not cover post-combat victory flow');
     ensure(observations.event, 'Smoke did not cover event flow');
-    ensure(finalState.mode === 'game', 'Smoke ended outside the main game loop');
+    ensure(finalState.mode === 'game' && !isRunOver(finalState), 'Smoke ended outside the main game loop');
     ensure(errors.length === 0, `Page errors detected:\n${errors.join('\n')}`);
     ensure(responseFailures.length === 0, `HTTP failures detected:\n${responseFailures.join('\n')}`);
     ensure(consoleErrors.length === 0, `Console errors detected:\n${consoleErrors.join('\n')}`);

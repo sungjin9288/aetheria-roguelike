@@ -2,12 +2,18 @@ import React from 'react';
 import { Scroll } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils';
+import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
+import SignalBadge from '../SignalBadge';
 
 // ── 유틸 ──────────────────────────────────────────────
 const getQuestObjectiveText = (quest) => (
+    quest?.objective
+        ? quest.objective
+        : (
     quest?.target === 'Level'
         ? `레벨 ${quest.goal} 달성`
         : `${quest.target} ${quest.goal}회 달성`
+        )
 );
 
 const getQuestProgressText = (quest, progress = 0) => (
@@ -44,6 +50,7 @@ export const QuestRewardChips = ({ reward, accent = 'blue' }) => {
 const QuestTab = ({ player, actions, isInSafeZone }) => {
     const activeQuestEntries = getActiveQuestEntries(player);
     const claimableQuestCount = activeQuestEntries.filter((e) => e.isComplete).length;
+    const traitProfile = getTraitProfile(player, { maxHp: player.maxHp, maxMp: player.maxMp });
 
     return (
         <div className="flex flex-col h-full">
@@ -79,9 +86,24 @@ const QuestTab = ({ player, actions, isInSafeZone }) => {
                                             {entry.quest.title}
                                         </div>
                                         {entry.isBounty && <span className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-fira text-amber-300">현상수배</span>}
+                                        {entry.quest.buildTag && (
+                                            <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
+                                        )}
+                                        {(() => {
+                                            const resonance = getTraitQuestResonance(entry.quest, traitProfile);
+                                            return resonance.label ? (
+                                                <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>
+                                            ) : null;
+                                        })()}
                                     </div>
                                     <div className="text-xs text-cyber-blue/50 mt-1">{entry.quest.desc}</div>
                                     <div className="mt-2 text-[11px] text-slate-300 font-fira">목표: {getQuestObjectiveText(entry.quest)}</div>
+                                    {(() => {
+                                        const resonance = getTraitQuestResonance(entry.quest, traitProfile);
+                                        return resonance.summary ? (
+                                            <div className="mt-2 text-[11px] font-fira text-cyber-purple/75">{resonance.summary}</div>
+                                        ) : null;
+                                    })()}
                                     <QuestRewardChips reward={entry.quest.reward} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} />
                                     <div className="mt-3">
                                         <div className="mb-1 flex justify-between text-[10px] font-fira">

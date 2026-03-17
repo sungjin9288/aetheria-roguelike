@@ -264,6 +264,8 @@ export const migrateData = (rawData) => {
     target.stats.relicCount      = target.stats.relicCount      || 0;
     target.stats.comboCount      = target.stats.comboCount      || 0;
     target.stats.crafts          = target.stats.crafts          || 0;
+    target.stats.discoveries     = target.stats.discoveries     || 0;
+    target.stats.buildWins       = target.stats.buildWins && typeof target.stats.buildWins === 'object' ? target.stats.buildWins : {};
     target.stats.abyssFloor      = target.stats.abyssFloor      || 0;
     target.stats.demonKingSlain  = target.stats.demonKingSlain  || 0;
     target.stats.dailyProtocol   = target.stats.dailyProtocol   || null;

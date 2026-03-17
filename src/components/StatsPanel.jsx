@@ -75,6 +75,9 @@ const StatsPanel = ({ player, stats }) => {
                 </div>
                 <div className="space-y-1 pt-1 border-t border-cyber-blue/10 text-[10px] font-fira text-cyber-blue/70">
                     <div>→ {trait.unlockHint}</div>
+                    <div>→ 보상 포커스: {trait.rewardFocus}</div>
+                    <div>→ 권장 임무: {trait.questFocus}</div>
+                    <div>→ 보스 운영: {trait.bossDirective}</div>
                     {trait.skill?.desc && <div>→ {trait.skill.desc}</div>}
                 </div>
             </div>
@@ -89,6 +92,7 @@ const StatsPanel = ({ player, stats }) => {
                     { label: 'TOTAL GOLD', value: overview.totalGold.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
                     { label: 'LEVEL', value: player?.level || 1, icon: Activity, color: 'text-cyber-blue' },
                     { label: 'EXPLORES', value: player?.stats?.explores || 0, icon: Compass, color: 'text-teal-300' },
+                    { label: 'DISCOVERIES', value: player?.stats?.discoveries || 0, icon: Sparkles, color: 'text-fuchsia-300' },
                     { label: 'RESTS', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
                 ].map((entry) => {
                     const Icon = entry.icon;

@@ -4,6 +4,47 @@
 
 Xcode, TestFlight, Play Console 화면 기준의 상세 순서는 `docs/STORE_SUBMISSION_GUIDE.md`를 참고합니다.
 
+## 0. RC-1 고정 운영
+
+현재 저장소 상태는 기능 개발을 더 늘리는 단계가 아니라 `RC-1` 후보를 고정하고 실기기 QA 결과만 반영하는 단계로 봅니다.
+
+원칙:
+
+- 새 기능 추가 금지
+- UI 구조 변경 금지
+- 실기기 QA에서 나온 `P0 / P1`만 수정
+- 수정 후에는 브라우저 + 네이티브 검증을 다시 실행
+
+### 0-1. RC-1 기준 검증
+
+실기기 투입 전 아래 검증이 모두 통과해야 합니다.
+
+```bash
+npm run test:unit
+npm run lint
+npm run build
+./scripts/local-playtest.sh
+npm run cap:sync
+npm run mobile:doctor
+npm run android:debug
+npm run ios:build:device
+```
+
+### 0-2. 실기기 QA 실행 순서
+
+1. iPhone에서 `docs/PLAYTEST_CHECKLIST.md`의 5분 루틴 수행
+2. Android 실기기 연결 후 같은 체크리스트 수행
+3. 이슈를 `P0 / P1 / P2`로 분류
+4. `P0 / P1`만 수정
+5. 위 기준 검증 8개를 다시 실행
+6. signed build를 생성하고 내부 배포(TestFlight / Internal testing) 진행
+
+이슈 분류 기준:
+
+- `P0`: 크래시, 저장 꼬임, 버튼 미동작, 오버레이 겹침, 제출 차단 이슈
+- `P1`: 가독성, hit area, 스크롤 튐, 작은 레이아웃 어긋남
+- `P2`: 출시 후 처리 가능한 연출/톤 조정
+
 ## 1. 공통 사전 점검
 
 ```bash
@@ -130,3 +171,17 @@ build/ios/export
 - 스토어 설명/스크린샷/개인정보 문구 최신화
 - Firebase/AI 프록시 등 운영 환경 변수 재확인
 - 실제 기기에서 세이브/전투/이벤트/앱 재실행 저장 흐름 점검
+
+## 5. Go / No-Go Gate
+
+아래 항목이 모두 충족되면 출시 진행, 하나라도 빠지면 `No-Go`입니다.
+
+- iPhone 실기기 5분 루틴 통과
+- Android 실기기 5분 루틴 통과
+- `P0` 이슈 0건
+- `P1` 이슈 반영 후 재검증 완료
+- iOS signed archive 성공
+- Android signed AAB 성공
+- TestFlight 업로드 성공
+- Play Console internal testing 업로드 성공
+- 스토어 메타데이터, 스크린샷, 개인정보 처리방침 URL 입력 완료

@@ -60,6 +60,41 @@ const getLootUpgradeHint = (equip = {}, lootItems = []) => {
     return bestHint;
 };
 
+const addCombatDigestLogs = ({
+    addLog,
+    enemyName,
+    victoryResult,
+    droppedItems = [],
+    upgradeHint = null,
+    traitHint = null,
+    bossRewardHint = null,
+    bossClearBonus = 0,
+}) => {
+    const summaryParts = [
+        `${enemyName} 처치`,
+        `EXP +${victoryResult.expGained || 0}`,
+        `Gold +${victoryResult.goldGained || 0}`,
+    ];
+    if (droppedItems.length > 0) {
+        summaryParts.push(`전리품 ${droppedItems.slice(0, 2).join(' · ')}${droppedItems.length > 2 ? ` 외 ${droppedItems.length - 2}` : ''}`);
+    }
+    addLog('system', `전투 정리: ${summaryParts.join(' · ')}`);
+
+    if (bossRewardHint) {
+        addLog('info', `보스 보상: ${bossClearBonus > 0 ? `초회 토벌 +${bossClearBonus}G` : '보스 전리품'} · ${bossRewardHint}`);
+        return;
+    }
+
+    if (upgradeHint) {
+        addLog('info', `장비 갱신: ${upgradeHint.name} · ${upgradeHint.summary}`);
+        return;
+    }
+
+    if (traitHint) {
+        addLog('info', `성향 공명: ${traitHint.name} · ${traitHint.summary}`);
+    }
+};
+
 /**
  * createCombatActions — 전투 로직 (공격, 스킬, 도주)
  */
@@ -115,6 +150,23 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 let updatedPlayer = victoryResult.updatedPlayer;
                 victoryResult.logs.forEach((log) => addLog(log.type, log.text));
                 if (victoryResult.visualEffect) dispatch({ type: 'SET_VISUAL_EFFECT', payload: victoryResult.visualEffect });
+
+                const victoryStats = {
+                    ...stats,
+                    maxHp: updatedPlayer.maxHp,
+                    maxMp: updatedPlayer.maxMp,
+                };
+                const buildProfileForProgress = getRunBuildProfile(updatedPlayer, victoryStats);
+                updatedPlayer = {
+                    ...updatedPlayer,
+                    stats: {
+                        ...(updatedPlayer.stats || {}),
+                        buildWins: {
+                            ...((updatedPlayer.stats || {}).buildWins || {}),
+                            [buildProfileForProgress.primary.id]: (((updatedPlayer.stats || {}).buildWins || {})[buildProfileForProgress.primary.id] || 0) + 1
+                        }
+                    }
+                };
 
                 const questResult = CombatEngine.updateQuestProgress(updatedPlayer, enemyAtActionStart.baseName || enemyAtActionStart.name);
                 updatedPlayer = { ...updatedPlayer, quests: questResult.updatedQuests };
@@ -190,13 +242,6 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
 
                 // PostCombatCard 데이터 전달
                 const droppedItems = lootResult.items.map((item) => item.name);
-                const hpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
-                const mpRatio = (updatedPlayer.mp || 0) / Math.max(1, updatedPlayer.maxMp || 1);
-                const buildProfile = getRunBuildProfile(updatedPlayer, {
-                    ...stats,
-                    maxHp: updatedPlayer.maxHp,
-                    maxMp: updatedPlayer.maxMp,
-                });
                 const traitProfile = getTraitProfile(updatedPlayer, {
                     ...stats,
                     maxHp: updatedPlayer.maxHp,
@@ -204,32 +249,17 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                 });
                 const lootUpgradeHint = getLootUpgradeHint(updatedPlayer.equip, lootResult.items);
                 const traitLootHint = getTraitLootHint(lootResult.items, traitProfile, updatedPlayer);
-
-                dispatch({
-                    type: 'SET_POST_COMBAT_RESULT', payload: {
-                        enemy: enemyAtActionStart.name,
-                        exp: victoryResult.expGained || 0,
-                        gold: victoryResult.goldGained || 0,
-                        items: droppedItems,
-                        leveledUp: Boolean(victoryResult.leveledUp),
-                        hpLow: hpRatio <= 0.35,
-                        mpLow: mpRatio <= 0.3,
-                        invFull: updatedPlayer.inv.length >= BALANCE.INV_MAX_SIZE,
-                        playerHp: updatedPlayer.hp,
-                        playerMaxHp: updatedPlayer.maxHp,
-                        playerMp: updatedPlayer.mp,
-                        playerMaxMp: updatedPlayer.maxMp,
-                        playerInvCount: updatedPlayer.inv.length,
-                        enemyTier: enemyAtActionStart.isBoss ? 'BOSS' : enemyAtActionStart.isElite ? 'ELITE' : 'NORMAL',
-                        enemyWeakness: enemyAtActionStart.weakness || null,
-                        enemyResistance: enemyAtActionStart.resistance || null,
-                        difficultyLabel: enemyAtActionStart._diffLabel || null,
-                        primaryBuild: buildProfile.primary.name,
-                        buildTags: buildProfile.tags.map((tag) => tag.name).slice(0, 4),
-                        upgradeHint: lootUpgradeHint,
-                        traitHint: traitLootHint,
-                    }
+                addCombatDigestLogs({
+                    addLog,
+                    enemyName: enemyAtActionStart.name,
+                    victoryResult,
+                    droppedItems,
+                    upgradeHint: lootUpgradeHint,
+                    traitHint: traitLootHint,
+                    bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
+                    bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
                 });
+                dispatch({ type: 'SET_POST_COMBAT_RESULT', payload: null });
                 return;
             }
 
@@ -254,9 +284,58 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     dispatch({ type: 'SET_ENEMY', payload: null });
                     addLog('success', `[지속 피해] ${result.updatedEnemy.name}이(가) 쓰러졌습니다!`);
                     const victoryResult = CombatEngine.handleVictory(counterResult.updatedPlayer, result.updatedEnemy);
+                    let updatedPlayer = victoryResult.updatedPlayer;
                     victoryResult.logs.forEach((log) => addLog(log.type, log.text));
-                    dispatch({ type: 'SET_PLAYER', payload: victoryResult.updatedPlayer });
+
+                    const dotVictoryStats = {
+                        ...stats,
+                        maxHp: updatedPlayer.maxHp,
+                        maxMp: updatedPlayer.maxMp,
+                    };
+                    const buildProfileForProgress = getRunBuildProfile(updatedPlayer, dotVictoryStats);
+                    updatedPlayer = {
+                        ...updatedPlayer,
+                        stats: {
+                            ...(updatedPlayer.stats || {}),
+                            buildWins: {
+                                ...((updatedPlayer.stats || {}).buildWins || {}),
+                                [buildProfileForProgress.primary.id]: (((updatedPlayer.stats || {}).buildWins || {})[buildProfileForProgress.primary.id] || 0) + 1
+                            }
+                        }
+                    };
+
+                    const questResult = CombatEngine.updateQuestProgress(updatedPlayer, result.updatedEnemy.baseName || result.updatedEnemy.name);
+                    updatedPlayer = { ...updatedPlayer, quests: questResult.updatedQuests };
+                    if (questResult.completedCount > 0) {
+                        addLog('system', `퀘스트 조건 달성: ${questResult.completedCount}개`);
+                    }
+
+                    const lootResult = CombatEngine.processLoot(result.updatedEnemy, updatedPlayer);
+                    lootResult.logs.forEach((log) => addLog(log.type, log.text));
+                    if (lootResult.items.length > 0) {
+                        updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
+                    }
+
+                    dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
                     dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
+                    emitDailyProtocolLogs('kills', 1);
+                    emitUnlockedTitles(updatedPlayer);
+
+                    const droppedItems = lootResult.items.map((item) => item.name);
+                    const traitProfile = getTraitProfile(updatedPlayer, dotVictoryStats);
+                    const lootUpgradeHint = getLootUpgradeHint(updatedPlayer.equip, lootResult.items);
+                    const traitLootHint = getTraitLootHint(lootResult.items, traitProfile, updatedPlayer);
+                    addCombatDigestLogs({
+                        addLog,
+                        enemyName: result.updatedEnemy.name,
+                        victoryResult,
+                        droppedItems,
+                        upgradeHint: lootUpgradeHint,
+                        traitHint: traitLootHint,
+                        bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
+                        bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
+                    });
+                    dispatch({ type: 'SET_POST_COMBAT_RESULT', payload: null });
                     return;
                 }
 

@@ -1,10 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
-import { getEquipmentProfile, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
-import { getTraitFeaturedItems, getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
-import SignalBadge from './SignalBadge';
+import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 
-const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.35rem)] bottom-[calc(env(safe-area-inset-bottom)+0.9rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
+const getOverlayPanelClass = (mobile) => (
+    mobile
+        ? 'fixed inset-x-0 bottom-0 top-auto h-[min(76dvh,42rem)] rounded-t-[1.75rem] rounded-b-none border-t'
+        : 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+0.8rem)] bottom-[calc(env(safe-area-inset-bottom)+0.9rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-4'
+);
 
 const isEquipmentItem = (item) => ['weapon', 'armor', 'shield'].includes(item?.type);
 
@@ -14,7 +17,7 @@ const formatPercent = (value = 0) => `${value >= 0 ? '+' : ''}${value}%`;
 
 const getItemTags = (item) => {
     const tags = [];
-    if (isWeapon(item) || item?.type === 'shield') tags.push(getWeaponStyleLabel(item));
+    if (isWeapon(item)) tags.push(isTwoHandWeapon(item) ? '2H' : '1H');
     return tags;
 };
 
@@ -59,13 +62,19 @@ const getToneClass = (tone) => {
     return 'text-cyber-blue/80 border-cyber-blue/20 bg-cyber-blue/5';
 };
 
-const getResonanceClass = (score = 0) => (
-    score >= 6
-        ? 'border-cyber-purple/25 bg-cyber-purple/10 text-cyber-purple'
-        : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue'
+const getCompactText = (value = '') => value.replaceAll(' / ', ' · ');
+
+const getCompactComparisonText = (comparison) => (
+    getCompactText(comparison?.text || '').replace('현재 장비와 동일한 효율', '변화 없음')
 );
 
-const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) => {
+const getCompactItemSummary = (item) => {
+    const summary = getCompactText(getItemStatText(item) || item.desc || '');
+    if (!isWeapon(item)) return summary;
+    return summary.replace(/^(연계|파쇄)\s[12]H\s·\s/, '');
+};
+
+const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobile = false }) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState(null);
     const loc = player.loc;
@@ -79,7 +88,6 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) =
         [player, stats]
     );
 
-    const countOwned = (name) => player.inv.filter((entry) => entry.name === name).length;
     const canEquipNow = (item) => !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job);
     const getResonance = (item) => getTraitItemResonance(item, traitProfile, player);
 
@@ -95,23 +103,16 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) =
                 || (getResonance(b).score - getResonance(a).score)
                 || (a.price || 0) - (b.price || 0);
         });
-    const featuredItems = getTraitFeaturedItems(
-        buyItems.filter((item) => canEquipNow(item)),
-        traitProfile,
-        player,
-        3
-    );
-
     const sellItems = [...player.inv]
         .filter((item) => !String(item.id).startsWith('starter_'))
         .sort((a, b) => (a.price || 0) - (b.price || 0));
 
     return (
-        <div className={`${overlayPanelClass} panel-noise md:w-[min(48rem,78%)] lg:w-[min(58rem,74%)] bg-[linear-gradient(180deg,rgba(7,13,25,0.97)_0%,rgba(4,9,18,0.98)_100%)] z-20 p-3 md:p-5 rounded-[1.6rem] border border-cyan-400/16 flex flex-col shadow-[0_28px_70px_rgba(2,8,20,0.5)] backdrop-blur-2xl`}>
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+        <div className={`${getOverlayPanelClass(mobile)} panel-noise ${mobile ? '' : 'md:w-[min(48rem,78%)] lg:w-[min(58rem,74%)] rounded-[1.6rem]'} bg-[linear-gradient(180deg,rgba(7,13,25,0.97)_0%,rgba(4,9,18,0.98)_100%)] z-20 p-3 md:p-5 border border-cyan-400/16 flex flex-col shadow-[0_28px_70px_rgba(2,8,20,0.5)] backdrop-blur-2xl`}>
+            <div className={`flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4 ${mobile ? 'sticky top-0 z-10 -mx-3 px-3 pb-3 pt-1 bg-[linear-gradient(180deg,rgba(7,13,25,0.99)_0%,rgba(7,13,25,0.96)_100%)] border-b border-cyan-400/12' : ''}`}>
                 <div>
                     <h2 className="text-xl md:text-2xl text-yellow-500 font-bold font-rajdhani tracking-wider">
-                        MARKET NODE
+                        SHOP
                     </h2>
                     <div className="mt-1 flex flex-wrap gap-2 text-[11px] font-fira">
                         <span className="px-2 py-1 rounded border border-yellow-500/20 bg-yellow-500/10 text-yellow-300">
@@ -127,130 +128,107 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) =
                             인벤 {player.inv.length}/{BALANCE.INV_MAX_SIZE}
                         </span>
                     </div>
-                    <p className="text-xs text-slate-400 font-fira mt-2">
-                        구매 전에 직업 제한, 장비 비교, 보유 수량을 먼저 확인하세요. 판매는 두 번 눌러 확정됩니다.
-                    </p>
-                    <div className="mt-3 rounded-[1rem] border border-cyber-purple/20 bg-cyber-purple/10 px-3 py-2 text-[11px] font-fira shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="text-cyber-blue/60 uppercase tracking-[0.16em]">성향 공명</span>
-                            <span className={traitProfile.accent}>{traitProfile.title}</span>
-                        </div>
-                        <div className="mt-1 text-cyber-purple/90 leading-snug">
-                            현재 상점은 성향과 맞는 장비를 위로 정렬합니다.
-                        </div>
-                        {featuredItems.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                                {featuredItems.map(({ item, resonance }) => (
-                                    <span key={`feature_${item.name}`}>
-                                        <SignalBadge tone="resonance" size="sm">
-                                        {item.name} · {resonance.label}
-                                        </SignalBadge>
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-                    </div>
                 </div>
-                <div className="flex bg-slate-800 rounded-lg p-1 shrink-0 self-start">
+                <div className="flex items-center gap-2 self-start">
+                    <div className="flex bg-slate-800 rounded-lg p-1 shrink-0">
+                        <button
+                            onClick={() => {
+                                setShopMode('buy');
+                                setSellConfirmId(null);
+                            }}
+                            className={`px-4 py-2 text-xs rounded-md font-bold transition-colors ${shopMode === 'buy' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            구매
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShopMode('sell');
+                                setSellConfirmId(null);
+                            }}
+                            className={`px-4 py-2 text-xs rounded-md font-bold transition-colors ${shopMode === 'sell' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            판매
+                        </button>
+                    </div>
                     <button
-                        onClick={() => {
-                            setShopMode('buy');
-                            setSellConfirmId(null);
-                        }}
-                        className={`px-4 py-2 text-xs rounded-md font-bold transition-colors ${shopMode === 'buy' ? 'bg-yellow-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                        data-testid="shop-close"
+                        onClick={() => setGameState('idle')}
+                        className="min-h-[40px] rounded-full border border-slate-600 bg-slate-800/90 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-slate-700"
                     >
-                        구매
-                    </button>
-                    <button
-                        onClick={() => {
-                            setShopMode('sell');
-                            setSellConfirmId(null);
-                        }}
-                        className={`px-4 py-2 text-xs rounded-md font-bold transition-colors ${shopMode === 'sell' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                    >
-                        판매
+                        닫기
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 auto-rows-[minmax(15rem,auto)] content-start gap-3 custom-scrollbar pr-1">
+            <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 auto-rows-[minmax(6.15rem,auto)] content-start gap-2.5 custom-scrollbar pr-1">
                 {shopMode === 'buy' ? (
                     buyItems.length > 0 ? (
                         buyItems.map((item) => {
                             const affordable = player.gold >= item.price;
                             const equipable = canEquipNow(item);
                             const canBuy = affordable && equipable;
-                            const ownedCount = countOwned(item.name);
                             const comparison = getComparisonMeta(item, player.equip);
-                            const resonance = getResonance(item);
+                            const typeTag = getItemTags(item)[0];
+                            const summary = getCompactItemSummary(item);
+                            const comparisonText = getCompactComparisonText(comparison);
 
                             return (
                                 <div
-                                            key={item.name}
-                                    className={`flex flex-col rounded-xl border p-4 transition-all ${canBuy ? 'bg-slate-800/80 border-slate-600 hover:border-yellow-500/50 hover:shadow-[0_0_18px_rgba(234,179,8,0.12)]' : 'bg-slate-900/70 border-slate-700/80'}`}
+                                    key={item.name}
+                                    data-testid="shop-buy-item"
+                                    className={`flex flex-col rounded-xl border px-3 py-2 transition-all ${canBuy ? 'bg-slate-800/80 hover:border-yellow-500/50 hover:shadow-[0_0_18px_rgba(234,179,8,0.12)]' : 'bg-slate-900/70 border-slate-700/80'} border-slate-600`}
                                 >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <div className="font-bold text-slate-100 font-rajdhani text-lg truncate">{item.name}</div>
-                                            <div className="text-xs text-slate-400 font-fira mt-1 leading-relaxed">{getItemStatText(item) || item.desc}</div>
-                                        </div>
-                                        <span className="shrink-0 text-yellow-400 font-fira font-bold text-sm">{item.price} CR</span>
-                                    </div>
-
-                                    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-fira">
-                                        <SignalBadge tone="neutral" size="sm">T{item.tier || 1}</SignalBadge>
-                                        {ownedCount > 0 && (
-                                            <SignalBadge tone="neutral" size="sm">보유 {ownedCount}</SignalBadge>
-                                        )}
-                                        {isEquipmentItem(item) && (
-                                            <SignalBadge tone={equipable ? 'success' : 'danger'} size="sm">
-                                                {equipable ? '현재 직업 사용 가능' : `${player.job} 장착 불가`}
-                                            </SignalBadge>
-                                        )}
-                                        {getItemTags(item).map((tag) => (
-                                            <SignalBadge key={`${item.name}_${tag}`} tone="neutral" size="sm">{tag}</SignalBadge>
-                                        ))}
-                                        {item.elem && (
-                                            <SignalBadge tone="recommended" size="sm">{item.elem}</SignalBadge>
-                                        )}
-                                        {resonance.label && (
-                                            <SignalBadge tone="resonance" size="sm">{resonance.label}</SignalBadge>
-                                        )}
-                                    </div>
-
-                                    {resonance.summary && (
-                                        <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] font-fira ${getResonanceClass(resonance.score)}`}>
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="uppercase tracking-[0.14em] text-[10px] opacity-80">
-                                                    {resonance.label}
-                                                </span>
-                                                <span className="text-[10px] opacity-70">
-                                                    {traitProfile.name}
-                                                </span>
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="truncate font-bold text-slate-100 font-rajdhani text-[1.05rem] leading-none">{item.name}</div>
+                                                {typeTag && (
+                                                    <span className="shrink-0 rounded border border-cyan-400/16 bg-cyan-400/8 px-1.5 py-0.5 text-[9px] font-fira text-cyan-200">
+                                                        {typeTag}
+                                                    </span>
+                                                )}
                                             </div>
-                                            <div className="mt-1 leading-snug">
-                                                {resonance.summary}
+                                            <div className="mt-1 truncate text-[10px] leading-none text-slate-400 font-fira">
+                                                {summary}
                                             </div>
                                         </div>
-                                    )}
+                                        <div className="shrink-0 flex items-center gap-2">
+                                            <div className="text-[11px] font-fira font-bold text-yellow-300">{item.price} CR</div>
+                                            {mobile && (
+                                                <button
+                                                    data-testid="shop-buy-inline"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (!canBuy) return;
+                                                        actions.market('buy', item);
+                                                    }}
+                                                    disabled={!canBuy}
+                                                    className="min-h-[32px] rounded-md border border-yellow-500/40 px-2.5 py-1 text-[10px] font-bold text-yellow-300 transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:bg-yellow-500/10 hover:border-yellow-400"
+                                                >
+                                                    {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
 
                                     {comparison && (
-                                        <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] font-fira ${getToneClass(comparison.tone)}`}>
-                                            {comparison.text}
+                                        <div className={`mt-1.5 rounded-md border px-2 py-1 text-[10px] font-fira leading-none ${getToneClass(comparison.tone)}`}>
+                                            <div className="truncate">
+                                                대비 {comparisonText}
+                                            </div>
                                         </div>
                                     )}
 
-                                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-3">
-                                        <div className="text-[11px] font-fira text-slate-400">
-                                            {!affordable ? '골드가 부족합니다.' : !equipable && isEquipmentItem(item) ? '현재 직업으로는 장착할 수 없습니다.' : '즉시 구매 가능'}
-                                        </div>
-                                        <button
-                                            onClick={() => actions.market('buy', item)}
-                                            disabled={!canBuy}
-                                            className="min-h-[44px] rounded-lg border px-4 py-2 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-40 border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/10 hover:border-yellow-400"
-                                        >
-                                            {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
-                                        </button>
+                                    <div className="mt-1.5 flex items-center justify-end gap-3">
+                                        {!mobile && (
+                                            <button
+                                                onClick={() => actions.market('buy', item)}
+                                                disabled={!canBuy}
+                                                className="min-h-[40px] rounded-lg border px-3 py-2 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-40 border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/10 hover:border-yellow-400"
+                                            >
+                                                {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             );
@@ -266,21 +244,23 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) =
                             const isConfirming = sellConfirmId === item.id;
                             const sellPrice = Math.floor((item.price || 0) * 0.5);
                             const comparison = getComparisonMeta(item, player.equip);
+                            const summary = getCompactItemSummary(item);
+                            const comparisonText = comparison ? getCompactText(comparison.text) : '';
 
                             return (
                                 <div
                                     key={item.id}
-                                    className={`flex flex-col rounded-xl border p-4 transition-all ${isConfirming ? 'bg-red-950/30 border-red-500/50 shadow-[0_0_16px_rgba(239,68,68,0.12)]' : 'bg-slate-800/80 border-slate-600 hover:border-red-500/40'}`}
+                                    className={`flex flex-col rounded-xl border px-3 py-3 transition-all ${isConfirming ? 'bg-red-950/30 border-red-500/50 shadow-[0_0_16px_rgba(239,68,68,0.12)]' : 'bg-slate-800/80 border-slate-600 hover:border-red-500/40'}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
-                                            <div className="font-bold text-red-300 font-rajdhani text-lg truncate">{item.name}</div>
-                                            <div className="text-xs text-slate-400 font-fira mt-1 leading-relaxed">{getItemStatText(item) || item.desc}</div>
+                                            <div className="font-bold text-red-300 font-rajdhani text-base truncate">{item.name}</div>
+                                            <div className="mt-1 text-[11px] text-slate-400 font-fira truncate">{summary}</div>
                                         </div>
                                         <span className="shrink-0 text-yellow-400 font-fira font-bold text-sm">+{sellPrice} CR</span>
                                     </div>
 
-                                    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-fira">
+                                    <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-fira">
                                         <span className="px-2 py-1 rounded border border-slate-600/70 bg-slate-900/80 text-slate-300">T{item.tier || 1}</span>
                                         <span className="px-2 py-1 rounded border border-red-500/20 bg-red-950/20 text-red-300">
                                             판매가 {sellPrice} CR
@@ -288,14 +268,14 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) =
                                     </div>
 
                                     {comparison && (
-                                        <div className={`mt-3 rounded-lg border px-3 py-2 text-[11px] font-fira ${getToneClass(comparison.tone)}`}>
-                                            {comparison.text}
+                                        <div className={`mt-2 rounded-lg border px-2.5 py-2 text-[10px] font-fira ${getToneClass(comparison.tone)}`}>
+                                            {comparisonText}
                                         </div>
                                     )}
 
-                                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-3">
-                                        <div className="text-[11px] font-fira text-slate-400">
-                                            {isConfirming ? '다시 누르면 판매가 확정됩니다.' : '판매는 돌이킬 수 없습니다.'}
+                                    <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-2.5">
+                                        <div className="text-[10px] font-fira text-slate-400">
+                                            {isConfirming ? '한 번 더 누르면 판매됩니다.' : '판매 대기'}
                                         </div>
                                         <button
                                             onClick={() => {
@@ -306,7 +286,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) =
                                                 }
                                                 setSellConfirmId(item.id);
                                             }}
-                                            className={`min-h-[44px] rounded-lg border px-4 py-2 text-xs font-bold transition-all ${isConfirming ? 'border-red-400 bg-red-600/20 text-red-200 hover:bg-red-600/30' : 'border-red-500/40 text-red-300 hover:bg-red-500/10 hover:border-red-400'}`}
+                                            className={`min-h-[40px] rounded-lg border px-3 py-2 text-xs font-bold transition-all ${isConfirming ? 'border-red-400 bg-red-600/20 text-red-200 hover:bg-red-600/30' : 'border-red-500/40 text-red-300 hover:bg-red-500/10 hover:border-red-400'}`}
                                         >
                                             {isConfirming ? '정말 판매' : '판매'}
                                         </button>
@@ -322,13 +302,15 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null }) =
                 )}
             </div>
 
-            <button
-                data-testid="shop-close"
-                onClick={() => setGameState('idle')}
-                className="mt-4 w-full min-h-[44px] rounded-lg border border-slate-600 bg-slate-800 py-3 text-sm font-bold text-slate-200 transition-colors hover:bg-slate-700"
-            >
-                상점 닫기
-            </button>
+            {!mobile && (
+                <button
+                    data-testid="shop-close-footer"
+                    onClick={() => setGameState('idle')}
+                    className="mt-4 w-full min-h-[44px] rounded-lg border border-slate-600 bg-slate-800 py-3 text-sm font-bold text-slate-200 transition-colors hover:bg-slate-700"
+                >
+                    상점 닫기
+                </button>
+            )}
         </div>
     );
 };

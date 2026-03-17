@@ -4,8 +4,9 @@ import { CLASSES } from '../data/classes';
 import { AI_SERVICE } from '../services/aiService';
 import { toArray, getJobSkills, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel } from '../utils/gameUtils';
 import { resetDailyProtocolIfNeeded, rollExplorationEvent, spawnEnemy, applyBattleStartRelics, getFirstVisitReward } from '../utils/exploreUtils';
-import { advanceExploreState, getNarrativeEventChance, getQuietExplorationChance } from '../utils/explorationPacing';
+import { advanceExploreState, getMapPacingProfile, getNarrativeEventChance, getQuietExplorationChance } from '../utils/explorationPacing';
 import { getRunBuildProfile } from '../utils/runProfileUtils';
+import { resolveGraveRecovery } from '../utils/graveUtils.js';
 import { applyDynamicDifficulty, enrichSnapshotWithDifficulty } from '../systems/DifficultyManager';
 // RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN — 동적 import로 exploreUtils.js에서 사용
 import { PRESTIGE_TITLES } from '../data/titles';
@@ -52,6 +53,9 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                     stats: {
                         ...(currentPlayer.stats || {}),
                         explores: (currentPlayer.stats?.explores || 0) + 1,
+                        discoveries: ['narrative_event', 'relic_found', 'anomaly', 'key_event'].includes(outcome)
+                            ? (currentPlayer.stats?.discoveries || 0) + 1
+                            : (currentPlayer.stats?.discoveries || 0),
                         exploreState: advanceExploreState(currentPlayer.stats, outcome),
                     }
                 };
@@ -113,11 +117,12 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     },
 
     start: (name, gender = 'male', jobId = '모험가') => {
-        if (!name.trim()) return;
+        const trimmedName = String(name || '').trim().slice(0, 16);
+        if (!trimmedName) return;
         const cls = CLASSES[jobId] || CLASSES['모험가'];
         const vitals = buildClassVitals(player.level || 1, jobId, player.meta || {});
         dispatch({ type: 'SET_PLAYER', payload: {
-            name: name.trim(),
+            name: trimmedName,
             gender,
             job: jobId,
             maxHp: vitals.maxHp,
@@ -129,8 +134,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 visitedMaps: ['시작의 마을']
             }
         }});
-        addLog('system', `[${jobId}] ${name.trim()} — 에테리아 기록이 열렸습니다.`);
-        addLog('event', `직업 "${jobId}" 선택됨. 첫 스킬: ${cls.skills[0]?.name || '강타'}`);
+        addLog('system', `[콜사인] ${trimmedName} — 에테리아 기록이 열렸습니다.`);
+        addLog('event', `초기 스킬: ${cls.skills[0]?.name || '강타'}`);
     },
 
     cycleSkill: (dir = 1) => {
@@ -158,8 +163,9 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         const eventChanceBonus = playerRelics.reduce((acc, relic) => (
             relic.effect === 'event_chance' ? acc + relic.val : acc
         ), 0);
-        const effectiveEventChance = getNarrativeEventChance(mapData.eventChance || 0, eventChanceBonus, player.stats);
-        const quietChance = getQuietExplorationChance(player.stats);
+        const pacingProfile = getMapPacingProfile(mapData);
+        const effectiveEventChance = getNarrativeEventChance(mapData.eventChance || 0, eventChanceBonus, player.stats, mapData);
+        const quietChance = getQuietExplorationChance(player.stats, mapData);
 
         // AI 랜덤 이벤트 체크
         if (Math.random() < effectiveEventChance) {
@@ -182,7 +188,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                     playerSnapshot,
                     mapSnapshot: {
                         name: player.loc, type: mapData.type, level: mapData.level,
-                        exits: toArray(mapData.exits).slice(0, 3), boss: Boolean(mapData.boss)
+                        exits: toArray(mapData.exits).slice(0, 3), boss: Boolean(mapData.boss),
+                        rhythm: pacingProfile.label
                     }
                 });
                 if (eventData?.exhausted) {
@@ -389,12 +396,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
 
     lootGrave: () => {
         if (!grave) return;
-        let logMsg = `유해 회수: ${grave.gold}G 획득`;
-        let updatedPlayer = grantGold(player, grave.gold);
-        if (grave.item) {
-            updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(grave.item)] };
-            logMsg += `, ${grave.item.name} 획득`;
-        }
+        const { updatedPlayer, logMsg } = resolveGraveRecovery(player, grave);
         dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
         emitUnlockedTitles(updatedPlayer);
         dispatch({ type: 'SET_GRAVE', payload: null });

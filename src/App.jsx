@@ -1,10 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Volume2, VolumeX, Play, Square } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 
-import { CONSTANTS } from './data/constants';
-import { PRESTIGE_TITLES } from './data/titles';
-import { AT } from './reducers/actionTypes';
 import { GS } from './reducers/gameStates';
 import { soundManager } from './systems/SoundManager';
 
@@ -18,33 +14,28 @@ import DamageNumber from './components/DamageNumber';
 import AetherMark from './components/AetherMark';
 
 // 조건부로만 렌더되는 무거운 컴포넌트 — lazy import (청크 분리)
-const PostCombatCard   = lazy(() => import('./components/PostCombatCard'));
 const RelicChoicePanel = lazy(() => import('./components/RelicChoicePanel'));
 const AscensionScreen  = lazy(() => import('./components/AscensionScreen'));
 const RunSummaryCard   = lazy(() => import('./components/RunSummaryCard'));
 
 import { useGameEngine } from './hooks/useGameEngine';
-import { useAutoExplore } from './hooks/useAutoExplore';
 import { useDamageFlash } from './hooks/useDamageFlash';
 
 function App() {
   const engine = useGameEngine();
   const [isMuted, setIsMuted] = useState(false);
-  const [inventorySpotlight, setInventorySpotlight] = useState(null);
+  const [inventorySpotlight] = useState(null);
   const [isMobileViewport, setIsMobileViewport] = useState(() => (
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
   ));
 
-  // Auto-Explore hook
-  const autoExplore = useAutoExplore({
-    player: engine.player,
-    gameState: engine.gameState,
-    isAiThinking: engine.isAiThinking,
-    actions: engine.actions,
-  });
-
   // Damage Flash hook
   const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
+  const mobileArchiveDockVisible = (
+    [GS.IDLE, GS.MOVING].includes(engine.gameState)
+    && !engine.pendingRelics
+    && engine.gameState !== GS.ASCENSION
+  );
 
   // QuickSlot use handler
   const handleQuickSlotUse = (item, index) => {
@@ -53,35 +44,6 @@ function App() {
       return;
     }
     engine.actions.useItem(item);
-  };
-
-  const handleLootReview = () => {
-    const result = engine.postCombatResult;
-    const spotlightNames = [
-      result?.upgradeHint?.name || null,
-      result?.traitHint?.name || null,
-      ...(Array.isArray(result?.items) ? result.items.slice(0, 2) : []),
-    ].filter(Boolean);
-
-    engine.actions.setSideTab?.('inventory');
-    setInventorySpotlight({
-      token: Date.now(),
-      title: result?.upgradeHint?.name
-        ? '장비 갱신 후보'
-        : result?.traitHint?.name
-          ? '성향 공명 전리품'
-          : '이번 전리품',
-      detail: result?.upgradeHint?.summary
-        || result?.traitHint?.summary
-        || '이번 전투에서 획득한 장비와 보상을 먼저 확인하세요.',
-      names: [...new Set(spotlightNames)].slice(0, 4),
-    });
-    engine.actions.clearPostCombat?.();
-    if (typeof window !== 'undefined' && isMobileViewport) {
-      window.requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-      });
-    }
   };
 
   useEffect(() => {
@@ -97,7 +59,11 @@ function App() {
 
     window.render_game_to_text = () => JSON.stringify({
       bootStage: engine.bootStage,
-      mode: !engine.player.name ? 'intro' : engine.gameState === GS.DEAD && engine.runSummary ? 'run_summary' : 'game',
+      mode: engine.gameState === GS.DEAD && engine.runSummary
+        ? 'run_summary'
+        : !engine.player.name
+          ? 'intro'
+          : 'game',
       gameState: engine.gameState,
       isAiThinking: engine.isAiThinking,
       syncStatus: engine.syncStatus,
@@ -267,7 +233,7 @@ function App() {
     );
   }
 
-  if (!engine.player.name || engine.player.name === '방랑자' || !engine.player.name.trim()) {
+  if (!String(engine.player.name || '').trim()) {
     return (
       <MainLayout visualEffect={null}>
         <div className="flex flex-col items-center justify-center h-full space-y-6 relative z-10">
@@ -286,101 +252,13 @@ function App() {
         <div className="absolute -left-10 top-28 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl animate-float-slow" />
         <div className="absolute -right-10 bottom-24 h-52 w-52 rounded-full bg-emerald-400/8 blur-3xl animate-float-slow" style={{ animationDelay: '-2.7s' }} />
       </div>
-
-      <header className={`panel-noise flex flex-wrap justify-between items-center gap-1.5 md:gap-2 mb-2 relative overflow-hidden ${isMobileViewport ? 'rounded-[1.45rem] border border-cyan-400/14 bg-[linear-gradient(180deg,rgba(8,13,25,0.94)_0%,rgba(5,10,18,0.95)_100%)] px-3.5 py-3 shadow-[0_24px_48px_rgba(2,8,20,0.42)]' : 'pb-1.5 border-b border-cyan-400/15 bg-slate-950/70 px-3 md:px-4 -mx-2 md:-mx-4 pt-2 shadow-[0_18px_32px_rgba(2,8,20,0.35)]'} backdrop-blur-xl ${isMobileViewport ? 'sticky top-0 z-30' : ''}`}>
-        <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          <AetherMark size={isMobileViewport ? 'sm' : 'md'} />
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
-              <h1 className="text-base md:text-xl font-bold bg-gradient-to-r from-emerald-300 via-cyan-300 to-cyan-500 bg-clip-text text-transparent flex items-center gap-1.5 md:gap-2 font-rajdhani min-w-0 drop-shadow-sm tracking-[0.16em] md:tracking-normal">
-                AETHERIA
-                <span className="text-[10px] md:text-xs text-cyan-100/50 font-normal border border-cyan-400/20 px-1 rounded backdrop-blur-sm">
-                  v{CONSTANTS.DATA_VERSION}
-                </span>
-              </h1>
-            </div>
-            <div className="mt-0.5 text-[9px] font-fira uppercase tracking-[0.26em] text-cyan-200/42">
-              Archive Field Client
-            </div>
-          </div>
-          {/* v5.0: 프레스티지 칭호 뱃지 */}
-          {engine.player.meta?.prestigeRank > 0 && (
-            <span className="hidden md:flex items-center gap-1 text-xs text-cyber-purple font-rajdhani border border-cyber-purple/30 px-2 py-0.5 rounded bg-cyber-purple/10 font-bold">
-              ⚡ {PRESTIGE_TITLES[Math.min(engine.player.meta.prestigeRank - 1, 9)]}
-            </span>
-          )}
-          {/* v5.0: 일일 프로토콜 진행 뱃지 */}
-          {(() => {
-            const dp = engine.player.stats?.dailyProtocol;
-            const today = new Date().toISOString().slice(0, 10);
-            if (!dp || dp.date !== today) return null;
-            const done = dp.missions.filter(m => m.done).length;
-            const total = dp.missions.length;
-            return (
-              <span className={`hidden md:flex items-center gap-1 text-xs font-rajdhani border px-2 py-0.5 rounded font-bold
-                ${done === total ? 'text-cyber-green border-cyber-green/30 bg-cyber-green/10' : 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10'}`}>
-                📅 {done}/{total}
-              </span>
-            );
-          })()}
-        </div>
-        <div className="flex items-center gap-2 md:gap-3">
-          <button
-            onClick={() => {
-              const nowMuted = soundManager.toggleMute();
-              setIsMuted(nowMuted);
-            }}
-            className="text-cyber-blue/50 hover:text-cyber-blue transition-all p-1.5 border border-cyber-blue/20 rounded-md hover:bg-cyber-blue/10 hover:shadow-[0_0_10px_rgba(0,204,255,0.2)]"
-            title="Toggle Sound"
-            aria-label="Toggle Sound"
-          >
-            {isMuted ? <VolumeX size={16} data-mute-icon /> : <Volume2 size={16} data-mute-icon />}
-          </button>
-          <div className="flex items-center gap-2 text-[10px] md:text-[11px] font-fira text-cyber-blue/70 bg-cyber-dark/50 px-2 py-1 rounded-md border border-cyber-blue/20 backdrop-blur-sm shadow-inner">
-            <span className={`w-2 h-2 rounded-full ${engine.syncStatus === 'synced' ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]' : engine.syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' : 'bg-red-500 shadow-[0_0_8px_#ff00ff]'}`}></span>
-            <span className={isMobileViewport ? 'sr-only' : ''}>
-              {engine.syncStatus === 'synced' ? 'ONLINE' : engine.syncStatus === 'syncing' ? 'SYNCING...' : 'OFFLINE'}
-            </span>
-          </div>
-        </div>
-      </header>
       {isMobileViewport ? (
         <Motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`relative z-10 w-full space-y-2 ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
+          className={`relative z-10 flex min-h-0 flex-1 w-full flex-col gap-2 ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
         >
-          <Dashboard
-            mobile
-            player={engine.player}
-            sideTab={engine.sideTab}
-            setSideTab={engine.actions.setSideTab}
-            actions={engine.actions}
-            stats={engine.getFullStats()}
-            quickSlots={engine.quickSlots}
-            inventorySpotlight={inventorySpotlight}
-            onClearInventorySpotlight={() => setInventorySpotlight(null)}
-            runtime={{
-              syncStatus: engine.syncStatus,
-              gameState: engine.gameState,
-              isAiThinking: engine.isAiThinking,
-              viewport: 'mobile',
-            }}
-          />
-          <ControlPanel
-            gameState={engine.gameState}
-            player={engine.player}
-            enemy={engine.enemy}
-            actions={engine.actions}
-            setGameState={engine.actions.setGameState}
-            shopItems={engine.shopItems}
-            grave={engine.grave}
-            isAiThinking={engine.isAiThinking}
-            currentEvent={engine.currentEvent}
-            stats={engine.getFullStats()}
-            mobile
-          />
           <TerminalView
             logs={engine.logs}
             gameState={engine.gameState}
@@ -391,7 +269,61 @@ function App() {
             quickSlots={engine.quickSlots}
             onQuickSlotUse={handleQuickSlotUse}
             showInput={false}
+            syncStatus={engine.syncStatus}
+            isMuted={isMuted}
+            onToggleMute={() => setIsMuted(soundManager.toggleMute())}
           />
+          <Dashboard
+            mobile
+            mobileSection="summary"
+            player={engine.player}
+            sideTab={engine.sideTab}
+            setSideTab={engine.actions.setSideTab}
+            actions={engine.actions}
+            stats={engine.getFullStats()}
+            quickSlots={engine.quickSlots}
+            inventorySpotlight={inventorySpotlight}
+            runtime={{
+              syncStatus: engine.syncStatus,
+              gameState: engine.gameState,
+              isAiThinking: engine.isAiThinking,
+              viewport: 'mobile',
+              mobileArchiveDockVisible,
+            }}
+          />
+          <ControlPanel
+            gameState={engine.gameState}
+            player={engine.player}
+            enemy={engine.enemy}
+            actions={engine.actions}
+            setSideTab={engine.actions.setSideTab}
+            setGameState={engine.actions.setGameState}
+            shopItems={engine.shopItems}
+            grave={engine.grave}
+            isAiThinking={engine.isAiThinking}
+            currentEvent={engine.currentEvent}
+            stats={engine.getFullStats()}
+            mobile
+          />
+          <Dashboard
+            mobile
+            mobileSection="archive"
+            player={engine.player}
+            sideTab={engine.sideTab}
+            setSideTab={engine.actions.setSideTab}
+            actions={engine.actions}
+            stats={engine.getFullStats()}
+            quickSlots={engine.quickSlots}
+            inventorySpotlight={inventorySpotlight}
+            runtime={{
+              syncStatus: engine.syncStatus,
+              gameState: engine.gameState,
+              isAiThinking: engine.isAiThinking,
+              viewport: 'mobile',
+              mobileArchiveDockVisible,
+            }}
+          />
+          {mobileArchiveDockVisible && <div className="h-[5.25rem] shrink-0 md:hidden" aria-hidden="true" />}
         </Motion.div>
       ) : (
         <>
@@ -399,7 +331,7 @@ function App() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className={`relative z-10 w-full grid grid-cols-1 gap-2 md:gap-4 md:grid-cols-[minmax(0,1fr)_clamp(20rem,40vw,28rem)] md:flex-1 md:min-h-0 md:overflow-hidden transition-all duration-150 ${damageFlash ? 'ring-2 ring-red-500/40' : ''} ${healFlash ? 'ring-2 ring-green-500/40' : ''}`}
+            className={`relative z-10 w-full grid grid-cols-1 gap-2 md:gap-3 md:grid-cols-[minmax(0,1fr)_clamp(17rem,31vw,22rem)] md:flex-1 md:min-h-0 md:overflow-hidden transition-all duration-150 ${damageFlash ? 'ring-2 ring-red-500/40' : ''} ${healFlash ? 'ring-2 ring-green-500/40' : ''}`}
           >
             <TerminalView
               logs={engine.logs}
@@ -411,6 +343,9 @@ function App() {
               quickSlots={engine.quickSlots}
               onQuickSlotUse={handleQuickSlotUse}
               showInput
+              syncStatus={engine.syncStatus}
+              isMuted={isMuted}
+              onToggleMute={() => setIsMuted(soundManager.toggleMute())}
             />
             {!isMobileViewport && (
               <Dashboard
@@ -421,7 +356,6 @@ function App() {
                 stats={engine.getFullStats()}
                 quickSlots={engine.quickSlots}
                 inventorySpotlight={inventorySpotlight}
-                onClearInventorySpotlight={() => setInventorySpotlight(null)}
                 runtime={{
                   syncStatus: engine.syncStatus,
                   gameState: engine.gameState,
@@ -437,6 +371,7 @@ function App() {
             player={engine.player}
             enemy={engine.enemy}
             actions={engine.actions}
+            setSideTab={engine.actions.setSideTab}
             setGameState={engine.actions.setGameState}
             shopItems={engine.shopItems}
             grave={engine.grave}
@@ -470,65 +405,6 @@ function App() {
         </Suspense>
       )}
 
-      {/* Post-Combat Result Card */}
-      <Suspense fallback={null}>
-        <PostCombatCard
-          result={engine.postCombatResult}
-          onClose={() => engine.actions.clearPostCombat?.()}
-          onRest={() => engine.actions.rest?.()}
-          onSell={handleLootReview}
-          mobile={isMobileViewport}
-        />
-      </Suspense>
-
-      {/* Auto-Explore */}
-      {engine.gameState === GS.IDLE && (
-        isMobileViewport ? (
-          <div className="relative z-20 mt-2 flex flex-col gap-2">
-            {autoExplore.autoLog && (
-              <div className="text-[11px] font-fira text-cyber-blue/70 bg-cyber-black/80 border border-cyber-blue/20 px-2.5 py-1.5 rounded backdrop-blur-md">
-                {autoExplore.autoLog}
-              </div>
-            )}
-            <Motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => autoExplore.isAutoRunning ? autoExplore.stop('수동 정지') : autoExplore.start(10)}
-              disabled={engine.isAiThinking}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border font-rajdhani font-bold text-xs tracking-[0.2em] shadow-lg transition-all backdrop-blur-md
-                ${autoExplore.isAutoRunning
-                  ? 'bg-red-950/80 border-red-500/50 text-red-400 hover:bg-red-900/80'
-                  : 'bg-cyber-green/10 border-cyber-green/40 text-cyber-green hover:bg-cyber-green/20'
-                }`}
-            >
-              {autoExplore.isAutoRunning
-                ? <><Square size={14} /> STOP ({autoExplore.runsLeft}회 남음)</>
-                : <><Play size={14} /> AUTO EXPLORE</>}
-            </Motion.button>
-          </div>
-        ) : (
-          <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
-            {autoExplore.autoLog && (
-              <div className="text-xs font-fira text-cyber-blue/70 bg-cyber-black/80 border border-cyber-blue/20 px-2 py-1 rounded backdrop-blur-md max-w-[180px] text-right">
-                {autoExplore.autoLog}
-              </div>
-            )}
-            <Motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => autoExplore.isAutoRunning ? autoExplore.stop('수동 정지') : autoExplore.start(10)}
-              disabled={engine.isAiThinking}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full border font-rajdhani font-bold text-xs tracking-wider shadow-lg transition-all backdrop-blur-md
-                ${autoExplore.isAutoRunning
-                  ? 'bg-red-950/80 border-red-500/50 text-red-400 hover:bg-red-900/80'
-                  : 'bg-cyber-green/10 border-cyber-green/40 text-cyber-green hover:bg-cyber-green/20'
-                }`}
-            >
-              {autoExplore.isAutoRunning
-                ? <><Square size={14} /> STOP ({autoExplore.runsLeft}회 남음)</>
-                : <><Play size={14} /> AUTO EXPLORE</>}
-            </Motion.button>
-          </div>
-        )
-      )}
     </MainLayout>
   );
 }

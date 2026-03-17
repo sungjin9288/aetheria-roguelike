@@ -4,7 +4,7 @@ import { soundManager } from '../systems/SoundManager';
 const MainLayout = ({ children, visualEffect }) => (
   <div
     data-app-shell
-    className={`flex flex-col h-[100dvh] w-full bg-[#040813] text-slate-200 font-mono p-2 md:p-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+1.4rem)] md:pb-[calc(env(safe-area-inset-bottom)+0.5rem)] overflow-x-hidden overflow-y-auto md:overflow-y-hidden relative ${visualEffect === 'shake' ? 'animate-shake' : ''}`}
+    className={`flex flex-col h-[100dvh] w-full bg-[#040813] text-slate-200 font-mono p-2 md:p-3 pt-[calc(env(safe-area-inset-top)+0.35rem)] pb-[calc(env(safe-area-inset-bottom)+6.25rem)] md:pb-[calc(env(safe-area-inset-bottom)+0.5rem)] overflow-x-hidden overflow-y-auto md:overflow-y-hidden relative ${visualEffect === 'shake' ? 'animate-shake' : ''}`}
     onClick={(e) => {
       // 첫 클릭 시 AudioContext 초기화 (브라우저 정책)
       soundManager.init();

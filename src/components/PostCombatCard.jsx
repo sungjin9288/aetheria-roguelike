@@ -52,10 +52,17 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
     const compactAction = analysis.actions[0] || '다음 탐험 전 장비와 체력을 점검하세요.';
     const upgradeHint = result.upgradeHint || null;
     const traitHint = result.traitHint || null;
+    const bossRewardHint = result.bossRewardHint || null;
+    const bossClearBonus = result.bossClearBonus || 0;
     const rewardSignals = [
+        bossRewardHint ? { title: '보스 보상', name: bossClearBonus > 0 ? `초회 토벌 +${bossClearBonus}G` : '보스 전리품', summary: bossRewardHint, tone: 'success' } : null,
         upgradeHint ? { title: '장비 갱신', name: upgradeHint.name, summary: upgradeHint.summary, tone: 'amber' } : null,
         traitHint ? { title: '성향 공명', name: traitHint.name, summary: traitHint.summary, tone: 'purple' } : null,
     ].filter(Boolean);
+    const primarySignal = rewardSignals[0] || null;
+    const lootSummary = droppedItems.length > 0
+        ? `${droppedItems.slice(0, 2).join(' · ')}${droppedItems.length > 2 ? ` 외 ${droppedItems.length - 2}` : ''}`
+        : null;
 
     return (
         <AnimatePresence>
@@ -69,20 +76,20 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                         : { type: 'spring', stiffness: 260, damping: 22 }}
                     className={`panel-noise fixed z-50 bg-cyber-black/95 border border-cyber-green/40 backdrop-blur-xl overflow-hidden ${
                         mobile
-                            ? 'inset-x-2.5 bottom-[calc(env(safe-area-inset-bottom)+1rem)] rounded-[1.4rem] shadow-[0_22px_60px_rgba(0,255,157,0.12)]'
+                            ? 'inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.8rem)] rounded-[1.2rem] shadow-[0_20px_48px_rgba(0,255,157,0.1)]'
                             : 'bottom-24 left-1/2 -translate-x-1/2 w-[clamp(17rem,90vw,26rem)] rounded-xl shadow-[0_0_30px_rgba(0,255,157,0.2)]'
                     }`}
                 >
                     {mobile ? (
-                        <div className="px-4 py-3 space-y-3">
-                            <div className="mx-auto h-1.5 w-12 rounded-full bg-cyber-green/20" />
+                        <div className="px-3.5 py-3 space-y-2.5">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0">
-                                    <div className="flex items-center gap-2 text-cyber-green font-rajdhani font-bold tracking-[0.18em] text-sm uppercase">
-                                        <Sword size={15} /> 전투 결과
+                                    <div className="flex items-center gap-2 text-cyber-green font-rajdhani font-bold tracking-[0.16em] text-[11px] uppercase">
+                                        <Sword size={14} /> 전투 정리
+                                        {hasLevelUp && <SignalBadge tone="upgrade" size="sm">LEVEL UP</SignalBadge>}
                                     </div>
                                     <div className="mt-1 text-[11px] font-fira text-cyber-blue/60 truncate">
-                                        {result.enemy || '적'} 처치 완료
+                                        {result.enemy || '적'} 처치 · {analysis.rewardMood}
                                     </div>
                                 </div>
                                 <button
@@ -92,25 +99,6 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                 >
                                     <X size={16} />
                                 </button>
-                            </div>
-
-                            {hasLevelUp && (
-                                <div className="flex items-center gap-2 rounded-xl border border-yellow-500/25 bg-yellow-500/10 px-3 py-2 text-yellow-300 text-sm font-rajdhani font-bold">
-                                    <Star size={14} /> LEVEL UP
-                                </div>
-                            )}
-
-                            <div className="flex items-center justify-between gap-2">
-                                <SignalBadge tone="success" size="lg" className="font-rajdhani font-bold normal-case tracking-[0.08em]">
-                                    {analysis.rewardMood}
-                                </SignalBadge>
-                                {analysis.rewardHighlights.length > 0 && (
-                                    <div className="flex flex-wrap justify-end gap-1">
-                                        {analysis.rewardHighlights.map((entry) => (
-                                            <SignalBadge key={entry} tone="neutral" size="sm">{entry}</SignalBadge>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
@@ -124,69 +112,36 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                 </div>
                             </div>
 
-                            {droppedItems.length > 0 && (
+                            <div className="rounded-xl border border-cyber-blue/15 bg-cyber-dark/40 px-3 py-2 space-y-1.5">
+                                {lootSummary && (
+                                    <div className="text-[11px] font-fira text-slate-200">
+                                        <span className="text-cyber-purple/75">전리품</span>
+                                        <span className="text-cyber-blue/35"> · </span>
+                                        {lootSummary}
+                                    </div>
+                                )}
+                                {primarySignal && (
+                                    <div className="text-[10px] font-fira leading-snug">
+                                        <span className={primarySignal.tone === 'amber' ? 'text-amber-200/85' : primarySignal.tone === 'success' ? 'text-cyber-green/85' : 'text-cyber-purple/85'}>
+                                            {primarySignal.title}
+                                        </span>
+                                        <span className="text-cyber-blue/35"> · </span>
+                                        <span className="text-slate-200">{primarySignal.name}</span>
+                                        {primarySignal.summary && (
+                                            <>
+                                                <span className="text-cyber-blue/35"> · </span>
+                                                <span className="text-cyber-blue/72">{primarySignal.summary}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                <div className="text-[10px] font-fira text-cyber-blue/72">{compactNote}</div>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {droppedItems.slice(0, 3).map((item, i) => (
-                                        <SignalBadge key={i} tone="resonance" size="md">{item}</SignalBadge>
+                                    {analysis.rewardHighlights.slice(0, 2).map((entry) => (
+                                        <SignalBadge key={entry} tone="neutral" size="sm">{entry}</SignalBadge>
                                     ))}
-                                    {droppedItems.length > 3 && (
-                                        <SignalBadge tone="neutral" size="md">+{droppedItems.length - 3}</SignalBadge>
-                                    )}
+                                    {compactAction && <SignalBadge tone="recommended" size="sm">{compactAction}</SignalBadge>}
                                 </div>
-                            )}
-
-                            {rewardSignals.length > 0 && (
-                                <div className="rounded-xl border border-cyber-blue/15 bg-cyber-dark/35 px-3 py-2.5 space-y-2">
-                                    <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/55">
-                                        획득 포인트
-                                    </div>
-                                    <div className="space-y-2">
-                                        {rewardSignals.map((signal) => (
-                                            <div
-                                                key={`${signal.title}_${signal.name}`}
-                                                className={`rounded-lg border px-2.5 py-2 ${
-                                                    signal.tone === 'amber'
-                                                        ? 'border-amber-400/20 bg-amber-500/10'
-                                                        : 'border-cyber-purple/20 bg-cyber-purple/10'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <span>
-                                                        <SignalBadge tone={signal.tone === 'amber' ? 'upgrade' : 'resonance'} size="sm">
-                                                        {signal.title}
-                                                        </SignalBadge>
-                                                    </span>
-                                                    <span className={`text-[10px] font-fira ${
-                                                        signal.tone === 'amber' ? 'text-amber-200/75' : 'text-cyber-purple/75'
-                                                    }`}>
-                                                        {signal.tone === 'amber' ? '전투 효율' : '빌드 방향'}
-                                                    </span>
-                                                </div>
-                                                <div className={`mt-1 text-[12px] font-fira ${
-                                                    signal.tone === 'amber' ? 'text-amber-100' : 'text-cyber-purple'
-                                                }`}>
-                                                    {signal.name}
-                                                </div>
-                                                <div className={`mt-1 text-[11px] font-fira leading-snug ${
-                                                    signal.tone === 'amber' ? 'text-amber-200/80' : 'text-cyber-purple/85'
-                                                }`}>
-                                                    {signal.summary}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="rounded-xl border border-cyber-blue/15 bg-cyber-dark/40 px-3 py-2.5 space-y-1.5">
-                                <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.18em]">
-                                    <span className="flex items-center gap-1 text-cyber-blue/60">
-                                        <Radar size={11} /> 전술 메모
-                                    </span>
-                                    <span className="text-cyber-green font-bold">{analysis.grade}</span>
-                                </div>
-                                <div className="text-[12px] font-fira text-slate-200">{compactNote}</div>
-                                <div className="text-[11px] font-fira text-cyber-blue/70">→ {compactAction}</div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
@@ -218,7 +173,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                         onClick={() => onSell?.()}
                                         className="min-h-[42px] rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-[11px] font-rajdhani font-bold text-amber-200"
                                     >
-                                        장비 보기
+                                        장비 확인
                                     </Motion.button>
                                 ) : traitHint ? (
                                     <Motion.button
@@ -227,11 +182,11 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                         onClick={() => onSell?.()}
                                         className="min-h-[42px] rounded-xl border border-cyber-purple/25 bg-cyber-purple/10 px-3 py-2 text-[11px] font-rajdhani font-bold text-cyber-purple"
                                     >
-                                        공명 장비 보기
+                                        공명 확인
                                     </Motion.button>
                                 ) : (
                                     <div className="min-h-[42px] rounded-xl border border-cyber-green/20 bg-cyber-green/5 px-3 py-2 text-[11px] font-fira text-cyber-green/70 flex items-center">
-                                        전리품 확인 완료
+                                        로그에서 세부 전투를 확인하세요
                                     </div>
                                 )}
                             </div>
@@ -290,6 +245,20 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                                     {item}
                                                 </span>
                                             ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {bossRewardHint && (
+                                    <div className="bg-cyber-dark/40 rounded px-3 py-2 border border-cyber-green/20">
+                                        <div className="text-cyber-green/70 text-xs font-fira mb-1 flex items-center gap-1">
+                                            <Star size={12} /> BOSS CACHE
+                                        </div>
+                                        <div className="text-[11px] font-fira text-cyber-green">
+                                            {bossClearBonus > 0 ? `초회 토벌 +${bossClearBonus}G` : '보스 전리품 확보'}
+                                        </div>
+                                        <div className="mt-1 text-[11px] font-fira text-cyber-green/75">
+                                            {bossRewardHint}
                                         </div>
                                     </div>
                                 )}

@@ -1,10 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Bot, AlertTriangle, CheckCircle, Terminal, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Bot, AlertTriangle, CheckCircle, Terminal, ChevronDown, ChevronUp, Filter, Volume2, VolumeX } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
 import { GS } from '../reducers/gameStates';
-import AetherMark from './AetherMark';
 
 const LOG_STYLES = {
     combat: {
@@ -57,9 +56,22 @@ const LOG_STYLES = {
 const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
 
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system']);
-const SUMMARY_LOG_COUNT = 6; // 요약 모드에서 표시할 최근 로그 수
+const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
 
-const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobile = false, player, quickSlots, onQuickSlotUse, showInput = true }) => {
+const TerminalView = ({
+    logs,
+    gameState,
+    onCommand,
+    autoFocusInput = true,
+    mobile = false,
+    player,
+    quickSlots,
+    onQuickSlotUse,
+    showInput = true,
+    syncStatus = 'offline',
+    isMuted = false,
+    onToggleMute,
+}) => {
     const endRef = useRef(null);
     const inputRef = useRef(null);
     const [inputValue, setInputValue] = useState('');
@@ -114,7 +126,8 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
 
     // #10: 전투 중 로그 필터링 — 요약 모드에서는 전투 관련 최근 N개만 표시
     const isCombat = gameState === GS.COMBAT;
-    const compactMobileLogCount = 3;
+    const compactMobileLogCount = 12;
+    const hasAnyQuickSlot = Array.isArray(quickSlots) && quickSlots.some(Boolean);
     const shouldCompactMobileLogs = mobile && !logExpanded && !isCombat;
     const displayLogs = isCombat && !logExpanded
         ? logs.filter(l => COMBAT_LOG_TYPES.has(l.type)).slice(-SUMMARY_LOG_COUNT)
@@ -126,54 +139,67 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
         : shouldCompactMobileLogs
             ? Math.max(0, logs.length - displayLogs.length)
             : 0;
+    const stateLabel = isCombat ? 'Combat' : gameState === GS.EVENT ? 'Event' : 'Field';
+    const syncDotClass = syncStatus === 'synced'
+        ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]'
+        : syncStatus === 'syncing'
+            ? 'bg-yellow-400 animate-pulse'
+            : 'bg-red-500 shadow-[0_0_8px_#ff00ff]';
+    const syncLabel = syncStatus === 'synced' ? 'ONLINE' : syncStatus === 'syncing' ? 'SYNCING' : 'OFFLINE';
+    const showFooter = Boolean(showInput || (player && quickSlots && (!mobile || hasAnyQuickSlot)));
+    const showExpandToggle = isCombat || (mobile && logs.length > compactMobileLogCount);
 
     return (
-        <div className={`panel-noise min-w-0 ${mobile ? 'min-h-[10rem]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border ${mobile ? 'rounded-[1.6rem]' : 'rounded-lg'} ${mobile ? 'p-2.5' : 'p-3 md:p-4 md:px-5'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}>
+        <div
+            data-testid="terminal-panel"
+            className={`panel-noise min-w-0 ${mobile ? 'flex-1 min-h-[clamp(24rem,46dvh,36rem)]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border ${mobile ? 'rounded-[1.6rem]' : 'rounded-lg'} ${mobile ? 'p-2.5' : 'p-3 md:p-4 md:px-5'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}
+        >
             {/* Scanline overlay */}
             <div
                 className="absolute inset-0 z-0 opacity-10 pointer-events-none"
                 style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 0.6px, transparent 0.6px)', backgroundSize: '3px 3px' }}
             ></div>
 
-            {mobile && (
-                <div className="mb-2 flex items-center justify-between gap-3 rounded-[1rem] border border-cyan-400/14 bg-slate-950/68 px-3 py-2 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                    <span className="flex items-center gap-2 text-cyber-blue/70">
-                        <AetherMark size="sm" className="scale-[0.72]" />
-                        <span className="flex items-center gap-1.5">
-                            <Terminal size={11} />
-                            Field Log
-                        </span>
+            <div className={`mb-1.5 flex items-center justify-between gap-2 shrink-0 z-10 ${mobile ? 'rounded-[0.9rem] border border-cyan-400/10 bg-slate-950/62 px-2 py-1 text-[8px]' : 'rounded-md border border-cyan-400/10 bg-slate-950/52 px-3 py-2 text-[10px]'} font-fira uppercase tracking-[0.16em] text-cyber-blue/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]`}>
+                <div className="min-w-0 flex items-center gap-1.5 text-cyber-blue/68">
+                    <span className="flex items-center gap-1">
+                        <Terminal size={mobile ? 9 : 12} />
+                        <span>{mobile ? 'LOG' : 'Field Log'}</span>
                     </span>
-                    <span className="text-cyber-green/80">
-                        {gameState === GS.COMBAT ? 'Combat' : gameState === GS.EVENT ? 'Event' : 'Idle'}
+                    <span className={`rounded-full border px-1.5 py-0.5 ${isCombat ? 'border-cyber-pink/30 text-cyber-pink' : gameState === GS.EVENT ? 'border-cyber-purple/30 text-cyber-purple' : 'border-cyan-400/16 text-cyber-green/80'}`}>
+                        {stateLabel}
                     </span>
-                    {logs.length > compactMobileLogCount && (
+                </div>
+                <div className="flex items-center gap-1.5">
+                    {showExpandToggle && (
                         <button
                             onClick={() => setLogExpanded((open) => !open)}
-                            className="rounded-full border border-cyan-400/16 bg-slate-950/80 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70"
+                            className="rounded-full border border-cyan-400/14 bg-slate-950/78 px-1.5 py-0.5 text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70"
                         >
-                            {logExpanded ? '접기' : `전체 +${hiddenCount}`}
+                            {isCombat
+                                ? (logExpanded
+                                    ? <span className="inline-flex items-center gap-1"><ChevronUp size={10} /> 요약</span>
+                                    : <span className="inline-flex items-center gap-1"><Filter size={10} /> 전체 {hiddenCount > 0 ? `+${hiddenCount}` : ''}</span>)
+                                : (logExpanded ? '접기' : `전체 +${hiddenCount}`)}
                         </button>
                     )}
-                </div>
-            )}
-
-            {/* #10: 전투 로그 모드 토글 버튼 */}
-            {isCombat && (
-                <div className="flex items-center justify-between mb-1.5 shrink-0 z-10">
-                    <span className="text-[10px] text-cyber-blue/40 font-fira flex items-center gap-1">
-                        <Filter size={10} /> COMBAT LOG {logExpanded ? '(전체)' : `(최근 ${SUMMARY_LOG_COUNT})`}
-                    </span>
                     <button
-                        onClick={() => setLogExpanded(v => !v)}
-                        className="text-[10px] flex items-center gap-1 text-cyber-blue/50 hover:text-cyber-blue px-2 py-0.5 rounded border border-cyber-blue/20 hover:border-cyber-blue/40 transition-all"
+                        onClick={onToggleMute}
+                        disabled={!onToggleMute}
+                        className="rounded-full border border-cyan-400/14 bg-slate-950/78 p-1 text-cyber-blue/70 transition-colors hover:text-cyber-blue disabled:opacity-50"
+                        aria-label="Toggle Sound"
+                        title="Toggle Sound"
                     >
-                        {logExpanded ? <><ChevronUp size={10} /> 요약</> : <><ChevronDown size={10} /> 전체 {hiddenCount > 0 ? `(+${hiddenCount})` : ''}</>}
+                        {isMuted ? <VolumeX size={mobile ? 11 : 13} data-mute-icon /> : <Volume2 size={mobile ? 11 : 13} data-mute-icon />}
                     </button>
+                    <div className="flex items-center gap-1 rounded-full border border-cyan-400/10 bg-slate-950/74 px-1.5 py-0.5 text-[8px] text-cyber-blue/70">
+                        <span className={`h-1.5 w-1.5 rounded-full ${syncDotClass}`}></span>
+                        <span className={mobile ? 'sr-only' : ''}>{syncLabel}</span>
+                    </div>
                 </div>
-            )}
+            </div>
 
-            <div className={`flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 ${mobile ? (logExpanded ? 'max-h-[11rem]' : 'max-h-[6.5rem]') : ''}`}>
+            <div className={`flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 ${mobile ? 'min-h-0' : ''}`}>
                 {logs.length === 0 && (
                     <Motion.div
                         className={`text-cyber-blue/50 text-center ${mobile ? 'mt-6 text-xs' : 'mt-20'} font-rajdhani tracking-widest flex flex-col items-center`}
@@ -181,7 +207,6 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
                         animate={{ opacity: [0.3, 0.8, 0.3] }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <AetherMark size={mobile ? 'md' : 'lg'} className="mb-3 md:mb-4" />
                         <Terminal size={mobile ? 24 : 32} className="mx-auto mb-3 opacity-45 text-cyber-blue" />
                         {mobile ? (
                             <>
@@ -237,55 +262,53 @@ const TerminalView = ({ logs, gameState, onCommand, autoFocusInput = true, mobil
             </div>
 
             {/* CLI INPUT AREA */}
-            <div className={`${mobile ? 'mt-2 pt-2' : 'mt-4 pt-3 md:pb-1'} border-t border-cyber-blue/20 flex flex-col gap-2 bg-transparent shrink-0 z-20`}>
-                {/* QuickSlot row */}
-                {player && quickSlots && (
-                    <QuickSlot
-                        slots={quickSlots}
-                        onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
-                        gameState={gameState}
-                    />
-                )}
-                {showInput ? (
-                    <div className="relative flex gap-2 items-center focus-within:border-cyber-blue/50 transition-colors">
-                        {player && (
-                            <CommandAutocomplete
-                                input={inputValue}
-                                gameState={gameState}
-                                player={player}
-                                onSelect={(cmd) => {
-                                    setInputValue(cmd);
-                                    onCommand?.(cmd);
-                                    setInputValue('');
-                                }}
-                            />
-                        )}
-                        <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
-                        <input
-                            data-terminal-input
-                            ref={inputRef}
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder:text-cyber-blue/30 focus:placeholder:text-cyber-blue/10 transition-all text-sm md:text-base"
-                            placeholder="ENTER COMMAND..."
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    if (inputValue.trim()) {
-                                        onCommand?.(inputValue);
-                                        setInputValue('');
-                                    }
-                                }
-                            }}
-                            autoFocus={autoFocusInput}
+            {showFooter && (
+                <div className={`${mobile ? 'mt-2 pt-2' : 'mt-4 pt-3 md:pb-1'} border-t border-cyber-blue/20 flex flex-col gap-2 bg-transparent shrink-0 z-20`}>
+                    {/* QuickSlot row */}
+                    {player && quickSlots && (!mobile || hasAnyQuickSlot) && (
+                        <QuickSlot
+                            slots={quickSlots}
+                            onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
+                            gameState={gameState}
                         />
-                    </div>
-                ) : (
-                    <div className="rounded-xl border border-cyan-400/15 bg-slate-950/75 px-3 py-2 text-[11px] font-fira text-cyan-100/60">
-                        입력 없이 진행됩니다. 탐험, 이동, 전투는 버튼으로만 조작합니다.
-                    </div>
-                )}
-            </div>
+                    )}
+                    {showInput ? (
+                        <div className="relative flex gap-2 items-center focus-within:border-cyber-blue/50 transition-colors">
+                            {player && (
+                                <CommandAutocomplete
+                                    input={inputValue}
+                                    gameState={gameState}
+                                    player={player}
+                                    onSelect={(cmd) => {
+                                        setInputValue(cmd);
+                                        onCommand?.(cmd);
+                                        setInputValue('');
+                                    }}
+                                />
+                            )}
+                            <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
+                            <input
+                                data-terminal-input
+                                ref={inputRef}
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder:text-cyber-blue/30 focus:placeholder:text-cyber-blue/10 transition-all text-sm md:text-base"
+                                placeholder="ENTER COMMAND..."
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        if (inputValue.trim()) {
+                                            onCommand?.(inputValue);
+                                            setInputValue('');
+                                        }
+                                    }
+                                }}
+                                autoFocus={autoFocusInput}
+                            />
+                        </div>
+                    ) : null}
+                </div>
+            )}
         </div>
     );
 };

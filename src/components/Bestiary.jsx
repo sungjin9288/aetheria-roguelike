@@ -3,6 +3,7 @@ import { motion as Motion } from 'framer-motion';
 import { BookOpen, Lock, Eye } from 'lucide-react';
 import { DB } from '../data/db';
 import { LOOT_TABLE } from '../data/loot';
+import { BOSS_BRIEFS, MONSTERS } from '../data/monsters';
 
 /**
  * Bestiary — 몬스터 도감
@@ -19,6 +20,8 @@ const Bestiary = ({ player }) => {
         });
         return Array.from(monstersSet).map(name => {
             const kills = registry[name] || 0;
+            const monsterMeta = MONSTERS[name] || {};
+            const bossBrief = BOSS_BRIEFS[name] || null;
             return {
                 name,
                 kills,
@@ -32,7 +35,10 @@ const Bestiary = ({ player }) => {
                     hp: kills >= 10 ? 5 : 0,
                     def: kills >= 50 ? 1 : 0,
                     atk: kills >= 100 ? 1 : 0
-                }
+                },
+                weakness: monsterMeta.weakness || null,
+                resistance: monsterMeta.resistance || null,
+                bossBrief,
             };
         });
     }, [player]);
@@ -114,12 +120,48 @@ const Bestiary = ({ player }) => {
                         <div className="text-sm font-rajdhani font-bold text-red-400">{m.name}</div>
                         <div className="text-[10px] text-cyber-blue/40 font-fira">처치: {m.kills}회</div>
                         <div className="text-[10px] text-cyber-blue/40 font-fira">출현: {m.location || '불명'}</div>
+                        {(m.weakness || m.resistance) && (
+                            <div className="flex flex-wrap gap-1.5 text-[10px] font-fira">
+                                {m.weakness && (
+                                    <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-emerald-300">
+                                        약점 {m.weakness}
+                                    </span>
+                                )}
+                                {m.resistance && (
+                                    <span className="rounded border border-orange-500/25 bg-orange-500/10 px-2 py-0.5 text-orange-300">
+                                        내성 {m.resistance}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                         {m.drops.length > 0 && (
                             <div className="space-y-0.5">
                                 <div className="text-[10px] text-cyber-blue/50 font-fira">드롭 아이템:</div>
                                 {m.drops.map(d => (
                                     <div key={d} className="text-[10px] text-yellow-400/60 font-fira pl-2">• {d}</div>
                                 ))}
+                            </div>
+                        )}
+                        {m.bossBrief && (
+                            <div className="rounded border border-red-500/18 bg-red-950/18 px-2.5 py-2 text-[10px] font-fira text-slate-300 space-y-1.5">
+                                {m.bossBrief.signature && (
+                                    <div>
+                                        <span className="text-red-300 font-bold">기믹</span>
+                                        <span className="text-slate-400"> · {m.bossBrief.signature}</span>
+                                    </div>
+                                )}
+                                {m.bossBrief.counterHint && (
+                                    <div>
+                                        <span className="text-cyber-blue font-bold">대응</span>
+                                        <span className="text-slate-400"> · {m.bossBrief.counterHint}</span>
+                                    </div>
+                                )}
+                                {m.bossBrief.phaseHint && (
+                                    <div>
+                                        <span className="text-cyber-purple font-bold">페이즈</span>
+                                        <span className="text-slate-400"> · {m.bossBrief.phaseHint}</span>
+                                    </div>
+                                )}
                             </div>
                         )}
                         <div className="pt-2 border-t border-red-500/20">

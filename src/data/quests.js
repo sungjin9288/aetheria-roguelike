@@ -34,12 +34,17 @@ export const QUESTS = [
     // ── 신규 퀘스트 타입: craft / explore_count / survive_low_hp (#7) ──────
     { id: 60, title: '대장장이의 의뢰', type: 'craft', desc: '아이템 3개 제작', target: 'crafts', goal: 3, reward: { exp: 3000, gold: 5000, item: '강화 재료' }, minLv: 10 },
     { id: 61, title: '탐험가의 기록', type: 'explore_count', desc: '20번 탐색', target: 'explores', goal: 20, reward: { exp: 5000, gold: 3000 }, minLv: 5 },
-    { id: 62, title: '생존의 의지', type: 'survive_low_hp', desc: 'HP 20% 이하에서 전투 승리 5회', target: 'lowHpWins', goal: 5, reward: { exp: 8000, gold: 6000, item: '생존자의 반지' }, minLv: 15 },
-    { id: 63, title: '맨몸의 용사', type: 'survive_low_hp', desc: 'HP 10% 이하에서 전투 승리 3회', target: 'lowHpWins', goal: 3, reward: { exp: 12000, gold: 10000, item: '투사의 증표' }, minLv: 25 },
+    { id: 62, title: '생존의 의지', type: 'survive_low_hp', desc: 'HP 20% 이하에서 전투 승리 5회', target: 'lowHpWins', threshold: 0.2, goal: 5, reward: { exp: 8000, gold: 6000, item: '생존자의 반지' }, minLv: 15 },
+    { id: 63, title: '맨몸의 용사', type: 'survive_low_hp', desc: 'HP 10% 이하에서 전투 승리 3회', target: 'lowHpWins', threshold: 0.1, goal: 3, reward: { exp: 12000, gold: 10000, item: '투사의 증표' }, minLv: 25 },
     { id: 64, title: '황금 수집가', type: 'explore_count', desc: '50번 탐색 (탐험가 달인)', target: 'explores', goal: 50, reward: { exp: 10000, gold: 15000 }, minLv: 20 },
     { id: 65, title: '장인의 길', type: 'craft', desc: '아이템 10개 제작', target: 'crafts', goal: 10, reward: { exp: 15000, gold: 20000, item: '장인의 도구' }, minLv: 25 },
     { id: 66, title: '현상금 사냥꾼', type: 'bounty_count', desc: '현상수배 5건 완료', target: 'bountiesCompleted', goal: 5, reward: { exp: 10000, gold: 15000 }, minLv: 10 },
     { id: 67, title: '전설의 사냥꾼', type: 'bounty_count', desc: '현상수배 15건 완료', target: 'bountiesCompleted', goal: 15, reward: { exp: 25000, gold: 40000, item: '현상금 사냥꾼의 망토' }, minLv: 25 },
+    { id: 68, title: '파쇄 전술 훈련', type: 'build_victory', buildTag: 'crusher', buildLabel: '양손 파쇄', desc: '양손 파쇄 운영으로 전투 4회 승리', objective: '양손 파쇄 축으로 전투 승리 4회', target: 'crusher', goal: 4, reward: { exp: 7000, gold: 8500 }, minLv: 8 },
+    { id: 69, title: '연계 추격 실습', type: 'build_victory', buildTag: 'dual', buildLabel: '쌍수 연격', desc: '쌍수 연격 운영으로 전투 5회 승리', objective: '쌍수 연격 축으로 전투 승리 5회', target: 'dual', goal: 5, reward: { exp: 8500, gold: 9000 }, minLv: 10 },
+    { id: 70, title: '방벽 유지 규율', type: 'build_victory', buildTag: 'fortress', buildLabel: '방패 요새', desc: '방패 요새 운영으로 전투 4회 승리', objective: '방패 요새 축으로 전투 승리 4회', target: 'fortress', goal: 4, reward: { exp: 9000, gold: 9500 }, minLv: 12 },
+    { id: 71, title: '비전 공명 관측', type: 'build_victory', buildTag: 'arcane', buildLabel: '비전 공명', desc: '비전 공명 운영으로 전투 4회 승리', objective: '비전 공명 축으로 전투 승리 4회', target: 'arcane', goal: 4, reward: { exp: 9500, gold: 10000 }, minLv: 12 },
+    { id: 72, title: '개척자의 현장 기록', type: 'discovery_count', buildTag: 'explorer', buildLabel: '탐험 수집가', desc: '탐험 중 의미 있는 발견 6회 달성', objective: '탐험 발견 6회 달성', target: 'discoveries', goal: 6, reward: { exp: 10000, gold: 11000 }, minLv: 10 },
 ];
 
 

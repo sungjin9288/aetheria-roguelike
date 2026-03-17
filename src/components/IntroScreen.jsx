@@ -6,15 +6,15 @@ const MOBILE_NAME_POOL = ['진', '리아', '카일', '세나', '루카', '시아
 const randomMobileName = () => MOBILE_NAME_POOL[Math.floor(Math.random() * MOBILE_NAME_POOL.length)];
 
 const IntroScreen = ({ onStart, mobile = false }) => {
-    const [name, setName] = useState(() => (mobile ? randomMobileName() : ''));
-    const mobileSuggestions = useMemo(() => MOBILE_NAME_POOL.slice(0, 4), []);
+    const [name, setName] = useState('');
+    const mobileSuggestions = useMemo(() => MOBILE_NAME_POOL, []);
 
     const canStart = name.trim().length > 0;
     const selectedName = useMemo(() => name.trim(), [name]);
 
     const handleStart = () => {
         if (canStart) {
-            onStart(name, 'male', '모험가'); // 기본값으로 'male' 전달 (내부 처리용)
+            onStart(selectedName, 'male', '모험가');
         }
     };
 
@@ -80,19 +80,31 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                 >
                     {mobile ? (
                         <div className="space-y-3">
-                            <p className="text-slate-400 text-sm font-fira">콜사인을 고르고 바로 여정을 시작하세요</p>
-                            <div className="rounded-[1.35rem] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,16,28,0.92)_0%,rgba(5,9,18,0.96)_100%)] px-4 py-5 shadow-[0_18px_48px_rgba(2,8,20,0.3)]">
-                                <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/45 font-fira">Current Codename</div>
-                                <div data-testid="intro-mobile-name" className="mt-2 text-3xl font-rajdhani font-bold text-cyan-100">
-                                    {selectedName}
+                            <p className="text-slate-400 text-sm font-fira">콜사인을 직접 정하거나 추천안을 고른 뒤 바로 시작하세요</p>
+                            <div className="rounded-[1.35rem] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,16,28,0.92)_0%,rgba(5,9,18,0.96)_100%)] px-4 py-4 shadow-[0_18px_48px_rgba(2,8,20,0.3)]">
+                                <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/45 font-fira">Callsign</div>
+                                <input
+                                    data-testid="intro-name-input"
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="콜사인 입력"
+                                    className="mt-2 w-full rounded-[1rem] border border-cyan-400/18 bg-slate-950/82 px-3 py-3 text-center font-rajdhani text-xl text-cyan-100 transition-all placeholder:text-cyan-200/25 focus:border-emerald-300 focus:outline-none focus:shadow-[0_0_28px_rgba(34,211,238,0.15)]"
+                                    maxLength={16}
+                                />
+                                <div className="mt-1 flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
+                                    <span className="text-cyber-blue/45">{selectedName ? '기록 준비 완료' : '콜사인을 입력하세요'}</span>
+                                    <span data-testid="intro-mobile-name" className="text-cyan-200/65">{selectedName || 'EMPTY'}</span>
                                 </div>
-                                <div className="mt-4 grid grid-cols-2 gap-2">
+                                <div className="mt-3 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">추천 콜사인</div>
+                                <div className="mt-2 grid grid-cols-4 gap-2">
                                     {mobileSuggestions.map((option) => (
                                         <button
                                             key={option}
                                             type="button"
                                             onClick={() => setName(option)}
-                                            className={`rounded-xl border px-3 py-3 text-sm font-rajdhani font-bold ${
+                                            className={`rounded-xl border px-2 py-2.5 text-sm font-rajdhani font-bold ${
                                                 selectedName === option
                                                     ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-200'
                                                     : 'border-slate-700 bg-slate-900/70 text-slate-300'
@@ -111,9 +123,13 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                                     >
                                         랜덤 생성
                                     </button>
-                                    <div className="flex items-center rounded-xl border border-cyan-400/15 bg-slate-950/75 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/55">
-                                        Mobile Quick Start
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setName('')}
+                                        className="rounded-xl border border-slate-700 bg-slate-950/75 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/65"
+                                    >
+                                        지우기
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -133,24 +149,6 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                             />
                         </div>
                     )}
-
-                    <div className="rounded-2xl border border-cyan-400/15 bg-slate-950/70 p-4 text-left shadow-inner">
-                        <div className="mb-1 text-sm font-rajdhani font-bold tracking-[0.16em] text-cyan-200">
-                            STARTING PATH: 모험가
-                        </div>
-                        <p className="text-xs text-slate-400 font-fira leading-relaxed">
-                            시작 직업은 <span className="text-emerald-300">모험가</span>입니다.
-                            레벨 5에 도달하면 <span className="text-violet-300">전사 / 마법사 / 도적</span>으로 전직할 수 있습니다.
-                        </p>
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                            <span className="rounded-full border border-cyan-400/14 bg-slate-950/75 px-2 py-1 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/60">
-                                Field Start
-                            </span>
-                            <span className="rounded-full border border-violet-400/14 bg-violet-500/10 px-2 py-1 text-[10px] font-fira uppercase tracking-[0.16em] text-violet-200/80">
-                                Class Branch Lv.5
-                            </span>
-                        </div>
-                    </div>
                 </Motion.div>
             </AnimatePresence>
 
@@ -163,7 +161,7 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                     disabled={!canStart}
                     className="flex-1 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 py-4 font-rajdhani font-bold text-emerald-200 transition-all hover:bg-emerald-400/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    {mobile ? '여정 시작' : '모험가로 시작'}
+                    {mobile ? '여정 시작' : '기록 시작'}
                 </Motion.button>
             </div>
         </Motion.div>

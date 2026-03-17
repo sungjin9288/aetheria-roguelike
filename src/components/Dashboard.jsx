@@ -1,12 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { User, Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen, BarChart3, Eye, Sparkles, Crosshair, Compass } from 'lucide-react';
+import { Package, Scroll, Shield, Zap, Sword, Map, Trophy, BookOpen, BarChart3, Eye } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { DB } from '../data/db';
-import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
-import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
-import { getAdventureGuidance, getExplorationForecast, getQuestTracker } from '../utils/adventureGuide';
-import { GS } from '../reducers/gameStates';
 import SmartInventory from './SmartInventory';
 import AchievementPanel from './AchievementPanel';
 import SkillTreePreview from './SkillTreePreview';
@@ -16,24 +12,8 @@ import Bestiary from './Bestiary';
 import QuestTab from './tabs/QuestTab';
 import SystemTab from './tabs/SystemTab';
 import SignalBadge from './SignalBadge';
-
-const BAR_THEMES = {
-    hp: {
-        border: 'border-red-500/30',
-        fill: 'bg-gradient-to-r from-red-500/50 to-red-500',
-        shadow: 'shadow-[0_0_10px_rgba(239,68,68,0.5)]'
-    },
-    mp: {
-        border: 'border-blue-500/30',
-        fill: 'bg-gradient-to-r from-blue-500/50 to-blue-500',
-        shadow: 'shadow-[0_0_10px_rgba(59,130,246,0.5)]'
-    },
-    exp: {
-        border: 'border-purple-500/30',
-        fill: 'bg-gradient-to-r from-purple-500/50 to-purple-500',
-        shadow: 'shadow-[0_0_10px_rgba(168,85,247,0.5)]'
-    }
-};
+import FocusPanel from './dashboard/FocusPanel';
+import { EquipmentPanel, InlineMetric, MetricTile, ProgressBar, RunProgressPanel, TraitPanel } from './dashboard/DashboardPanels';
 
 const TAB_ITEMS = [
     { id: 'inventory', icon: Package, label: 'Inventory', mobileLabel: 'INV' },
@@ -48,416 +28,6 @@ const TAB_ITEMS = [
 
 const MOBILE_PRIMARY_TABS = ['inventory', 'quest', 'map', 'stats'];
 const MOBILE_SECONDARY_TABS = ['achievements', 'skills', 'bestiary', 'system'];
-
-const ProgressBar = ({ value, max, variant = 'hp', label, showMeta = true }) => {
-    const theme = BAR_THEMES[variant] || BAR_THEMES.hp;
-    const safeMax = Math.max(1, max || 1);
-    const safeValue = Math.max(0, value || 0);
-    const percentage = Math.min(100, (safeValue / safeMax) * 100);
-
-    return (
-        <div className="relative w-full">
-            {showMeta && (
-                <div className="flex justify-between text-[10px] uppercase font-bold mb-0.5 text-cyber-blue/70">
-                    <span>{label}</span>
-                    <span>{safeValue}/{safeMax}</span>
-                </div>
-            )}
-            <div className={`w-full ${showMeta ? 'h-2' : 'h-1.5'} bg-cyber-dark/50 rounded-sm overflow-hidden border ${theme.border} relative`}>
-                <Motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className={`h-full ${theme.fill} ${theme.shadow}`}
-                ></Motion.div>
-            </div>
-        </div>
-    );
-};
-
-const InlineMetric = ({ label, value, max, variant }) => (
-    <div className="flex items-center gap-2 min-w-[8.5rem]">
-        <span className="w-9 shrink-0 text-[10px] text-cyber-blue/45 uppercase tracking-widest text-right">
-            {label}
-        </span>
-        <div className="flex-1 min-w-[4.5rem]">
-            <ProgressBar value={value} max={max} variant={variant} label={label} showMeta={false} />
-        </div>
-        <span className="w-16 shrink-0 text-[10px] text-cyber-blue font-bold text-right">
-            {value || 0}/{Math.max(1, max || 1)}
-        </span>
-    </div>
-);
-
-const MetricTile = ({ label, value, max, variant }) => {
-    const theme = BAR_THEMES[variant] || BAR_THEMES.hp;
-    const safeMax = Math.max(1, max || 1);
-    const safeValue = Math.max(0, value || 0);
-    const percentage = Math.min(100, (safeValue / safeMax) * 100);
-
-    return (
-        <div className="rounded-[1rem] border border-cyan-400/15 bg-slate-950/72 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-            <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.18em]">
-                <span className="text-cyber-blue/50">{label}</span>
-                <span className="text-cyber-blue/80">{safeValue}/{safeMax}</span>
-            </div>
-            <div className={`mt-2 h-1.5 overflow-hidden rounded-full border ${theme.border} bg-cyber-dark/60`}>
-                <Motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                    className={`h-full rounded-full ${theme.fill} ${theme.shadow}`}
-                />
-            </div>
-        </div>
-    );
-};
-
-const getEquipmentTagMeta = (item, slot = 'main') => {
-    if (!item) {
-        return {
-            label: slot === 'armor' ? 'ARM' : 'EMPTY',
-            className: 'text-slate-500',
-        };
-    }
-
-    if (slot === 'armor') {
-        return { label: 'ARM', className: 'text-cyan-300' };
-    }
-
-    if (isWeapon(item)) {
-        return isTwoHandWeapon(item)
-            ? { label: '2H · 파쇄', className: 'text-amber-300' }
-            : { label: '1H · 연계', className: 'text-cyan-300' };
-    }
-
-    if (isFocusOffhand(item)) return { label: 'FOCUS', className: 'text-violet-300' };
-    if (isShield(item)) return { label: 'SHD', className: 'text-emerald-300' };
-    return { label: 'EQ', className: 'text-slate-300' };
-};
-
-const EquipmentSlot = ({ label, item, slot = 'main', fallback, icon, compact = false }) => {
-    const SlotIcon = icon;
-    const tag = getEquipmentTagMeta(item, slot);
-
-    return (
-        <div className={`min-w-0 rounded-xl border border-cyber-blue/15 bg-cyber-dark/35 shadow-[inset_0_0_14px_rgba(0,204,255,0.03)] ${compact ? 'px-2 py-1.5' : 'px-2 py-2'}`}>
-            <div className="flex items-start justify-between gap-2">
-                <div className="flex items-start gap-2 min-w-0">
-                    <div className={`${compact ? 'w-6 h-6' : 'w-7 h-7'} shrink-0 rounded border border-cyber-blue/20 bg-cyber-black/70 flex items-center justify-center text-cyber-blue/70`}>
-                        <SlotIcon size={compact ? 11 : 13} />
-                    </div>
-                    <div className="min-w-0">
-                        <div className={`${compact ? 'text-[8px]' : 'text-[9px]'} font-fira text-cyber-blue/45 uppercase tracking-[0.2em]`}>
-                            {label}
-                        </div>
-                        <div className={`truncate ${compact ? 'text-[10px]' : 'text-[11px]'} font-fira text-white mt-0.5`}>
-                            {item?.name || fallback}
-                        </div>
-                    </div>
-                </div>
-                <span className={`shrink-0 ${compact ? 'text-[9px]' : 'text-[10px]'} font-fira ${tag.className}`}>
-                    {tag.label}
-                </span>
-            </div>
-        </div>
-    );
-};
-
-const CompactLoadoutStrip = ({ player }) => {
-    const entries = [
-        { label: 'Main', item: player?.equip?.weapon, slot: 'main', fallback: 'UNARMED' },
-        { label: 'Off', item: player?.equip?.offhand, slot: 'offhand', fallback: 'EMPTY' },
-        { label: 'Armor', item: player?.equip?.armor, slot: 'armor', fallback: 'CIVILIAN' },
-    ];
-
-    return (
-        <div className="mt-3 rounded-[1rem] border border-cyan-400/12 bg-cyber-black/40 px-3 py-2.5">
-            <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">Loadout</div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-                {entries.map((entry) => {
-                    const tag = getEquipmentTagMeta(entry.item, entry.slot);
-                    return (
-                        <div key={entry.label} className="min-w-0 rounded-full border border-cyan-400/12 bg-slate-950/70 px-2.5 py-1">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/45">
-                                    {entry.label}
-                                </span>
-                                <span className="max-w-[5.5rem] truncate text-[10px] font-fira text-white">
-                                    {entry.item?.name || entry.fallback}
-                                </span>
-                                <span className={`text-[8px] font-fira ${tag.className}`}>
-                                    {tag.label}
-                                </span>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-};
-
-const CompactProgressSummary = ({ player }) => {
-    const mapData = DB.MAPS[player?.loc];
-    const questTracker = getQuestTracker(player);
-    const nextLevelExp = Math.max(0, (player?.nextExp || 0) - (player?.exp || 0));
-    const visitedMaps = Array.isArray(player?.stats?.visitedMaps) ? player.stats.visitedMaps : [];
-    const visitedCount = new Set(visitedMaps).size;
-    const totalMaps = Object.keys(DB.MAPS || {}).length;
-    const growthTitle = player?.job === '모험가'
-        ? ((player?.level || 0) >= 5 ? '전직 가능' : `전직까지 Lv.${Math.max(0, 5 - (player?.level || 0))}`)
-        : `다음 Lv까지 EXP ${nextLevelExp}`;
-    const growthTone = player?.job === '모험가' && (player?.level || 0) >= 5 ? 'success' : 'resonance';
-
-    return (
-        <div className="mt-3 rounded-[1rem] border border-cyan-400/12 bg-cyber-black/40 px-3 py-2.5">
-            <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">Progress</span>
-                <div className="flex flex-wrap gap-1.5">
-                    <SignalBadge tone="neutral" size="sm">{visitedCount}/{totalMaps} 구역</SignalBadge>
-                    <SignalBadge tone={mapData?.boss ? 'danger' : 'neutral'} size="sm">
-                        {mapData?.boss ? '보스 권역' : '탐험 중'}
-                    </SignalBadge>
-                </div>
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-                <div className="rounded-[0.9rem] border border-cyan-400/12 bg-slate-950/70 px-2.5 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/45">Quest</span>
-                        <SignalBadge tone={questTracker?.kind === 'claimable' ? 'success' : 'neutral'} size="sm">
-                            {questTracker?.kind === 'claimable' ? '보상' : '대기'}
-                        </SignalBadge>
-                    </div>
-                    <div className="mt-1 text-[10px] font-fira text-white leading-snug">
-                        {questTracker?.title || '진행 중 임무 없음'}
-                    </div>
-                </div>
-                <div className="rounded-[0.9rem] border border-cyan-400/12 bg-slate-950/70 px-2.5 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/45">Growth</span>
-                        <SignalBadge tone={growthTone} size="sm">성장</SignalBadge>
-                    </div>
-                    <div className="mt-1 text-[10px] font-fira text-white leading-snug">
-                        {growthTitle}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const EquipmentPanel = ({ player, stats, compact = false }) => (
-    <div className={`panel-noise border ${compact ? 'border-cyan-400/18 rounded-[1.2rem] bg-slate-950/72 shadow-[0_16px_36px_rgba(2,8,20,0.28)]' : 'border-cyber-blue/20 rounded-md bg-cyber-dark/30'} ${compact ? 'p-3' : 'p-3.5'} space-y-2`}>
-        <div className="flex items-center justify-between gap-3 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.2em]">
-            <span className="flex items-center gap-1.5">
-                <Sword size={10} className="text-cyber-blue/70" />
-                {compact ? 'Loadout' : 'Equipped'}
-            </span>
-            <span className="text-cyber-blue/45">
-                ATK {stats?.atk} / DEF {stats?.def}
-            </span>
-        </div>
-        <div className="grid grid-cols-3 gap-2 text-[10px] font-fira">
-            <EquipmentSlot
-                label="Main"
-                item={player?.equip?.weapon}
-                slot="main"
-                fallback="UNARMED"
-                icon={Sword}
-                compact={compact}
-            />
-            <EquipmentSlot
-                label="Off"
-                item={player?.equip?.offhand}
-                slot="offhand"
-                fallback="EMPTY"
-                icon={Shield}
-                compact={compact}
-            />
-            <EquipmentSlot
-                label="Armor"
-                item={player?.equip?.armor}
-                slot="armor"
-                fallback="CIVILIAN"
-                icon={User}
-                compact={compact}
-            />
-        </div>
-    </div>
-);
-
-const RunProgressPanel = ({ player, mobile = false }) => {
-    const mapData = DB.MAPS[player?.loc];
-    const questTracker = getQuestTracker(player);
-    const forecast = getExplorationForecast(player, mapData);
-    const visitedMaps = Array.isArray(player?.stats?.visitedMaps) ? player.stats.visitedMaps : [];
-    const visitedCount = new Set(visitedMaps).size;
-    const totalMaps = Object.keys(DB.MAPS || {}).length;
-    const nextLevelExp = Math.max(0, (player?.nextExp || 0) - (player?.exp || 0));
-    const kills = player?.stats?.kills || 0;
-    const relicCount = player?.relics?.length || 0;
-
-    let growthTitle = `다음 Lv까지 EXP ${nextLevelExp}`;
-    let growthDetail = `현재 레벨 ${player?.level || 1}`;
-    let growthTone = 'recommended';
-
-    if (player?.job === '모험가') {
-        if ((player?.level || 0) >= 5) {
-            growthTitle = '1차 전직 가능';
-            growthDetail = 'CLASS에서 전직을 진행할 수 있습니다.';
-            growthTone = 'success';
-        } else {
-            growthTitle = `전직까지 Lv.${Math.max(0, 5 - (player?.level || 0))}`;
-            growthDetail = `목표 레벨 5 / 현재 ${player?.level || 1}`;
-            growthTone = 'resonance';
-        }
-    }
-
-    const progressItems = [
-        {
-            label: 'Quest',
-            title: questTracker?.title || '진행 중 임무 없음',
-            detail: questTracker?.progressLabel || '마을 QUEST에서 새 임무를 받을 수 있습니다.',
-            tone: questTracker?.kind === 'claimable' ? 'success' : questTracker?.kind === 'bounty' ? 'upgrade' : 'neutral',
-            badge: questTracker?.kind === 'claimable' ? '보상' : questTracker?.progressLabel || '대기',
-        },
-        {
-            label: 'Growth',
-            title: growthTitle,
-            detail: growthDetail,
-            tone: growthTone,
-            badge: player?.job === '모험가' && (player?.level || 0) >= 5 ? '전직' : '성장',
-        },
-        {
-            label: 'Frontier',
-            title: `${visitedCount}/${totalMaps} 구역 개척`,
-            detail: `${mapData?.boss ? '보스 권역' : mapData?.type === 'safe' ? '안전 지대' : '탐험 구역'} · 적정 Lv.${mapData?.level === 'infinite' ? '∞' : mapData?.level || 1}`,
-            tone: mapData?.boss ? 'danger' : 'neutral',
-            badge: mapData?.boss ? '보스' : '개척',
-        },
-        {
-            label: 'Record',
-            title: `처치 ${kills} · 유물 ${relicCount}`,
-            detail: `${forecast.mood} · ${forecast.description}`,
-            tone: forecast.mood === '보스 권역' ? 'danger' : forecast.mood === '발견 상승' ? 'success' : 'neutral',
-            badge: forecast.mood,
-        },
-    ];
-
-    if (mobile) {
-        return (
-            <div className="panel-noise border border-cyan-400/18 rounded-[1.2rem] bg-slate-950/72 shadow-[0_16px_36px_rgba(2,8,20,0.25)] px-3 py-3 space-y-2.5">
-                <div className="flex items-center justify-between gap-3">
-                    <div>
-                        <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/45">Progress</div>
-                        <div className="mt-1 text-[12px] font-rajdhani font-bold text-white">이번 런 진행</div>
-                    </div>
-                    <SignalBadge tone="neutral" size="sm">{player?.loc}</SignalBadge>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    {progressItems.slice(0, 2).map((item) => (
-                        <div key={item.label} className="rounded-[1rem] border border-cyan-400/14 bg-cyber-black/45 px-3 py-2.5">
-                            <div className="flex items-center justify-between gap-2">
-                                <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">
-                                    {item.label}
-                                </span>
-                                <SignalBadge tone={item.tone} size="sm">{item.badge}</SignalBadge>
-                            </div>
-                            <div className="mt-1 text-[11px] font-fira text-white leading-snug">
-                                {item.title}
-                            </div>
-                            <div className="mt-1 text-[10px] font-fira text-cyber-blue/58 leading-snug">
-                                {item.label === 'Quest' ? (questTracker?.kind === 'claimable' ? '보상 수령 가능' : item.detail) : item.detail}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                    <SignalBadge tone={progressItems[2].tone} size="sm">{progressItems[2].title}</SignalBadge>
-                    <SignalBadge tone={progressItems[3].tone} size="sm">{progressItems[3].title}</SignalBadge>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className={`panel-noise border ${mobile ? 'border-cyan-400/18 rounded-[1.2rem] bg-slate-950/72 shadow-[0_16px_36px_rgba(2,8,20,0.25)] px-3 py-3' : 'border-cyber-blue/20 rounded-md bg-cyber-dark/30 p-3.5'} space-y-2.5`}>
-            <div className="flex items-center justify-between gap-3">
-                <div>
-                    <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/45">진행상황</div>
-                    <div className="mt-1 text-[12px] font-rajdhani font-bold text-white">
-                        이번 런의 흐름을 항상 확인합니다.
-                    </div>
-                </div>
-                <SignalBadge tone="neutral" size="sm">
-                    {player?.loc}
-                </SignalBadge>
-            </div>
-
-            <div className={`grid ${mobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 gap-2.5'}`}>
-                {progressItems.map((item) => (
-                    <div key={item.label} className="rounded-[1rem] border border-cyan-400/14 bg-cyber-black/45 px-3 py-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">
-                                {item.label}
-                            </span>
-                            <SignalBadge tone={item.tone} size="sm">
-                                {item.badge}
-                            </SignalBadge>
-                        </div>
-                        <div className="mt-1 text-[11px] font-fira text-white leading-snug">
-                            {item.title}
-                        </div>
-                        <div className="mt-1 text-[10px] font-fira text-cyber-blue/58 leading-snug">
-                            {item.label === 'Quest' ? (questTracker?.kind === 'claimable' ? '보상 수령 가능' : item.detail) : item.detail}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
-
-const LoadoutSummary = ({ player, stats, condensed = false }) => {
-    const trait = stats?.traitProfile || getTraitProfile(player, stats);
-    const passiveParts = getTraitPassiveParts(trait);
-
-    return (
-        <div className="panel-noise rounded-[1.2rem] border border-cyan-400/18 bg-slate-950/72 px-3 py-3 space-y-2.5 shadow-[0_16px_36px_rgba(2,8,20,0.25)]">
-            <div className="flex items-center justify-between gap-3">
-                <div>
-                    <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/45">Loadout Snapshot</div>
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                        <SignalBadge tone="neutral" size="sm">ATK {stats?.atk}</SignalBadge>
-                        <SignalBadge tone="neutral" size="sm">DEF {stats?.def}</SignalBadge>
-                        {!condensed && (
-                            <SignalBadge tone="neutral" size="sm">CRIT {Math.round((stats?.critChance || 0) * 100)}%</SignalBadge>
-                        )}
-                    </div>
-                </div>
-                <SignalBadge tone="resonance" size="md">{trait.title}</SignalBadge>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-                <EquipmentSlot label="Main" item={player?.equip?.weapon} slot="main" fallback="UNARMED" icon={Sword} compact />
-                <EquipmentSlot label="Off" item={player?.equip?.offhand} slot="offhand" fallback="EMPTY" icon={Shield} compact />
-                <EquipmentSlot label="Armor" item={player?.equip?.armor} slot="armor" fallback="CIVILIAN" icon={User} compact />
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-                {passiveParts.slice(0, condensed ? 1 : 2).map((part) => (
-                    <SignalBadge key={part} tone="neutral" size="sm">{part}</SignalBadge>
-                ))}
-                <SignalBadge tone="recommended" size="sm">{trait.skillLabel}</SignalBadge>
-            </div>
-            {!condensed && (
-                <div className="text-[10px] font-fira text-cyber-blue/55 truncate">
-                    {trait.unlockHint}
-                </div>
-            )}
-        </div>
-    );
-};
-
 const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = false, testId = null }) => {
     const Icon = icon;
 
@@ -480,239 +50,6 @@ const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = fals
     );
 };
 
-const TraitPanel = ({ player, stats, compact = false }) => {
-    const trait = stats?.traitProfile || getTraitProfile(player, stats);
-    const passiveParts = getTraitPassiveParts(trait);
-
-    return (
-        <div className={`panel-noise border border-cyber-blue/20 rounded-md bg-cyber-dark/30 ${compact ? 'p-3' : 'p-3.5'} space-y-2`}>
-            <div className="flex items-center justify-between gap-3 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.2em]">
-                <span className="flex items-center gap-1.5">
-                    <Sparkles size={10} className="text-cyber-blue/70" />
-                    성향
-                </span>
-                <span className={trait.accent}>
-                    {trait.name}
-                </span>
-            </div>
-            <div className="flex flex-wrap gap-1.5 text-[10px] font-fira">
-                <SignalBadge tone="resonance" size="md">{trait.title}</SignalBadge>
-                <SignalBadge tone="neutral" size="md">{player?.job}</SignalBadge>
-            </div>
-            <p className="text-[11px] font-fira text-cyber-blue/60">
-                {trait.desc}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-                {passiveParts.length > 0 ? passiveParts.slice(0, compact ? 2 : 4).map((tag) => (
-                    <SignalBadge key={tag} tone="neutral" size="sm">{tag}</SignalBadge>
-                )) : (
-                    <SignalBadge tone="neutral" size="sm">아직 성향 보너스가 없습니다.</SignalBadge>
-                )}
-            </div>
-            <div className="text-[10px] font-fira text-cyber-blue/45">
-                성향 판단: {trait.reasons.join(' · ')}
-            </div>
-            <div className="text-[10px] font-fira text-cyber-blue/50">
-                전용 스킬: {trait.skillLabel}
-            </div>
-            <div className="rounded border border-cyber-purple/20 bg-cyber-purple/10 px-2 py-1.5 text-[10px] font-fira text-cyber-purple/90">
-                {trait.unlockHint}
-            </div>
-        </div>
-    );
-};
-
-const FocusPanel = ({ player, stats, runtime, actions, setSideTab, mobile = false, onMobileOpenDetails }) => {
-    const [detailsOpen, setDetailsOpen] = useState(!mobile);
-    const mapData = DB.MAPS[player?.loc];
-    const guidance = useMemo(
-        () => getAdventureGuidance(player, stats, mapData, runtime?.gameState || GS.IDLE),
-        [mapData, player, runtime?.gameState, stats]
-    );
-    const forecast = useMemo(
-        () => getExplorationForecast(player, mapData),
-        [mapData, player]
-    );
-    const questTracker = useMemo(
-        () => getQuestTracker(player),
-        [player]
-    );
-
-    const runAction = (action) => {
-        if (!action) return;
-
-        switch (action.kind) {
-            case 'claim_quest':
-                actions.completeQuest?.(action.questId);
-                break;
-            case 'rest':
-                actions.rest?.();
-                break;
-            case 'open_class':
-                actions.setGameState?.(GS.JOB_CHANGE);
-                break;
-            case 'open_quest_board':
-                actions.setGameState?.(GS.QUEST_BOARD);
-                break;
-            case 'open_move':
-                actions.setGameState?.(GS.MOVING);
-                break;
-            case 'explore':
-                actions.explore?.();
-                break;
-            case 'open_inventory':
-                setSideTab('inventory');
-                onMobileOpenDetails?.();
-                break;
-            case 'open_shop':
-                actions.setShopItems?.([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
-                actions.setGameState?.(GS.SHOP);
-                break;
-            case 'open_quest':
-                setSideTab('quest');
-                onMobileOpenDetails?.();
-                break;
-            default:
-                break;
-        }
-    };
-
-    const buttonClass = mobile
-        ? 'min-h-[40px] rounded-[1rem] border px-3 py-2 text-[11px] font-rajdhani font-bold tracking-[0.16em]'
-        : 'min-h-[36px] rounded-lg border px-3 py-2 text-[10px] font-rajdhani font-bold tracking-[0.16em]';
-
-    return (
-        <div className={`panel-noise border ${mobile ? 'border-cyan-400/18 rounded-[1.2rem] bg-slate-950/72 shadow-[0_16px_36px_rgba(2,8,20,0.25)]' : 'border-cyber-blue/20 rounded-md bg-cyber-dark/30'} ${mobile ? 'p-3 space-y-2.5' : 'p-3.5 space-y-3'}`}>
-            <div className="flex items-center justify-between gap-3 text-[10px] font-fira text-cyber-blue/60 uppercase tracking-[0.2em]">
-                <span className="flex items-center gap-1.5">
-                    <Crosshair size={10} className="text-cyber-blue/70" />
-                    {mobile ? 'Next' : '현재 목표'}
-                </span>
-                <div className="flex items-center gap-2">
-                    <SignalBadge
-                        tone={
-                            guidance.emphasis === '위험'
-                                ? 'danger'
-                                : guidance.emphasis === '즉시 이득'
-                                    ? 'success'
-                                    : 'neutral'
-                        }
-                        size="md"
-                    >
-                        {guidance.emphasis}
-                    </SignalBadge>
-                    {mobile && (
-                        <button
-                            onClick={() => setDetailsOpen((open) => !open)}
-                            className="rounded border border-cyber-blue/15 bg-cyber-black/55 px-2 py-1 text-cyber-blue/70"
-                            aria-label={detailsOpen ? '목표 상세 닫기' : '목표 상세 열기'}
-                        >
-                            {detailsOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            <div className="space-y-1">
-                <div className={`${mobile ? 'text-[15px]' : 'text-sm'} font-rajdhani font-bold text-white`}>{guidance.title}</div>
-                <div className="text-[11px] font-fira text-cyber-blue/60">{guidance.detail}</div>
-            </div>
-
-            {(guidance.primaryAction || guidance.secondaryAction) && (
-                mobile ? (
-                    <div className="space-y-2">
-                        {guidance.primaryAction && (
-                            <button
-                                onClick={() => runAction(guidance.primaryAction)}
-                                className={`${buttonClass} w-full border-cyber-green/30 bg-cyber-green/10 text-cyber-green hover:bg-cyber-green/15`}
-                            >
-                                {guidance.primaryAction.label}
-                            </button>
-                        )}
-                        {guidance.secondaryAction && detailsOpen && (
-                            <button
-                                onClick={() => runAction(guidance.secondaryAction)}
-                                className={`${buttonClass} w-full border-cyber-blue/20 bg-cyber-black/60 text-cyber-blue/80 hover:bg-cyber-blue/10`}
-                            >
-                                {guidance.secondaryAction.label}
-                            </button>
-                        )}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                        {guidance.primaryAction ? (
-                            <button
-                                onClick={() => runAction(guidance.primaryAction)}
-                                className={`${buttonClass} border-cyber-green/30 bg-cyber-green/10 text-cyber-green hover:bg-cyber-green/15`}
-                            >
-                                {guidance.primaryAction.label}
-                            </button>
-                        ) : (
-                            <div />
-                        )}
-                        {guidance.secondaryAction ? (
-                            <button
-                                onClick={() => runAction(guidance.secondaryAction)}
-                                className={`${buttonClass} border-cyber-blue/20 bg-cyber-black/60 text-cyber-blue/80 hover:bg-cyber-blue/10`}
-                            >
-                                {guidance.secondaryAction.label}
-                            </button>
-                        ) : (
-                            <div />
-                        )}
-                    </div>
-                )
-            )}
-
-            <AnimatePresence initial={false}>
-                {detailsOpen && (
-                    <Motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden space-y-3"
-                    >
-                        {questTracker && (
-                            <div className="rounded border border-cyber-blue/15 bg-cyber-black/55 px-3 py-2">
-                                <div className="flex items-center justify-between gap-2 text-[10px] font-fira">
-                                    <span className="text-cyber-blue/50 uppercase tracking-[0.16em]">Quest Pulse</span>
-                                    <span>
-                                        <SignalBadge
-                                            tone={questTracker.kind === 'claimable' ? 'success' : questTracker.kind === 'bounty' ? 'upgrade' : 'resonance'}
-                                            size="sm"
-                                        >
-                                        {questTracker.progressLabel}
-                                        </SignalBadge>
-                                    </span>
-                                </div>
-                                <div className="mt-1 text-[11px] font-fira text-slate-200">{questTracker.title}</div>
-                            </div>
-                        )}
-
-                        <div className="rounded border border-cyber-blue/15 bg-cyber-black/55 px-3 py-2">
-                            <div className="flex items-center justify-between gap-2 text-[10px] font-fira">
-                                <span className="flex items-center gap-1 text-cyber-blue/50 uppercase tracking-[0.16em]">
-                                    <Compass size={10} />
-                                    탐험 예보
-                                </span>
-                                <SignalBadge tone="success" size="sm">{forecast.mood}</SignalBadge>
-                            </div>
-                            <div className="mt-1 text-[11px] font-fira text-cyber-blue/65">{forecast.description}</div>
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                                {forecast.chips.map((chip) => (
-                                    <SignalBadge key={`${chip.label}_${chip.value}`} tone="neutral" size="sm">
-                                        {chip.label} {chip.value}
-                                    </SignalBadge>
-                                ))}
-                            </div>
-                        </div>
-                    </Motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-};
-
 // Animation variants for tab content
 const tabVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -720,23 +57,32 @@ const tabVariants = {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
-const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false, quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null }) => {
+const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null }) => {
     const [statusCollapsed, setStatusCollapsed] = useState(false);
-    const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
     const [mobileArchiveExpanded, setMobileArchiveExpanded] = useState(false);
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
     const hasInventorySpotlight = Boolean(inventorySpotlight?.token) && sideTab === 'inventory';
-    const showMobileDetails = mobileDetailsOpen || hasInventorySpotlight;
-    const archiveOpen = showMobileDetails || mobileArchiveExpanded;
+    const showArchiveDock = runtime?.mobileArchiveDockVisible ?? true;
+    const archiveOpen = showArchiveDock && (hasInventorySpotlight || mobileArchiveExpanded);
     const primaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_PRIMARY_TABS.includes(tab.id));
     const secondaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_SECONDARY_TABS.includes(tab.id));
     const activeMobileTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
-
+    const mapData = DB.MAPS[player?.loc];
+    const loadoutEntries = [
+        { label: 'LEFT', item: player?.equip?.offhand, slot: 'offhand', fallback: 'EMPTY' },
+        { label: 'RIGHT', item: player?.equip?.weapon, slot: 'main', fallback: 'EMPTY' },
+        { label: 'ARMOR', item: player?.equip?.armor, slot: 'armor', fallback: 'EMPTY' },
+    ];
     const handleTabSelect = (tabId) => {
         setSideTab(tabId);
-        if (mobile) setMobileDetailsOpen(true);
-        if (mobile && MOBILE_SECONDARY_TABS.includes(tabId)) setMobileArchiveExpanded(true);
+        if (mobile) setMobileArchiveExpanded(true);
     };
+
+    useEffect(() => {
+        if (showArchiveDock) return;
+        const closeTimer = window.requestAnimationFrame(() => setMobileArchiveExpanded(false));
+        return () => window.cancelAnimationFrame(closeTimer);
+    }, [showArchiveDock]);
 
     const renderTabContent = () => {
         return (
@@ -796,166 +142,187 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
     };
 
     if (mobile) {
-        return (
-            <Motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="panel-noise md:hidden mt-2 space-y-3 rounded-[1.75rem] border border-cyan-400/18 bg-[linear-gradient(180deg,rgba(8,14,28,0.96)_0%,rgba(4,9,18,0.96)_100%)] p-3.5 backdrop-blur-2xl shadow-[0_28px_80px_rgba(2,8,20,0.52)] relative z-10 overflow-hidden"
-            >
-                <div className="pointer-events-none absolute inset-0 opacity-80">
-                    <div className="absolute -top-16 left-6 h-28 w-28 rounded-full bg-cyan-400/10 blur-3xl" />
-                    <div className="absolute -right-10 top-14 h-24 w-24 rounded-full bg-emerald-400/10 blur-3xl" />
-                </div>
-
-                <div className="panel-noise relative rounded-[1.35rem] border border-cyan-400/18 bg-slate-950/75 px-3.5 py-3.5 shadow-[0_16px_40px_rgba(2,8,20,0.3)]">
+        if (mobileSection === 'summary') {
+            return (
+                <Motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="md:hidden panel-noise rounded-[1.5rem] border border-cyan-400/16 bg-[linear-gradient(180deg,rgba(7,13,25,0.95)_0%,rgba(4,9,18,0.96)_100%)] px-3 py-2.5 shadow-[0_18px_42px_rgba(2,8,20,0.3)] backdrop-blur-2xl"
+                >
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-cyber-blue/45">Status</div>
-                            <div className="mt-1 flex items-center gap-2 text-emerald-300 font-rajdhani font-bold text-sm tracking-[0.24em] uppercase">
-                                <User size={14} />
-                                <span className="truncate">{player?.name}</span>
+                            <div className="flex items-center gap-1.5 text-white">
+                                <span className="truncate text-[14px] font-rajdhani font-bold">{player?.name}</span>
+                                <SignalBadge tone="neutral" size="sm">{player?.job}</SignalBadge>
+                                <SignalBadge tone="resonance" size="sm">Lv.{player?.level}</SignalBadge>
                             </div>
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-fira text-cyber-blue/75">
-                                <span className="text-cyber-purple">{player?.job}</span>
-                                <span>Lv.{player?.level}</span>
-                                <span className="text-cyber-blue/40">•</span>
-                                <span className="truncate max-w-[8.5rem]">{player?.loc}</span>
+                            <div className="mt-1 text-[10px] font-fira text-cyber-blue/68 truncate">
+                                {player?.loc} · {mapData?.boss ? '보스 권역' : mapData?.type === 'safe' ? '안전 지대' : '탐험 구역'}
                             </div>
                         </div>
-                        <div className="shrink-0 rounded-[1rem] border border-yellow-500/18 bg-yellow-500/10 px-3 py-2 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">Gold</div>
-                            <div className="text-yellow-400 font-rajdhani text-lg font-bold leading-none">{player?.gold}</div>
+                        <div className="shrink-0 rounded-[0.95rem] border border-yellow-500/18 bg-yellow-500/10 px-2.5 py-1.5 text-right">
+                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-cyber-blue/45">Gold</div>
+                            <div className="text-[15px] font-rajdhani font-bold leading-none text-yellow-300">{player?.gold}</div>
                         </div>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="mt-2.5 grid grid-cols-3 gap-1.5">
                         <MetricTile label="HP" value={player?.hp} max={stats?.maxHp} variant="hp" />
                         <MetricTile label="NRG" value={player?.mp} max={stats?.maxMp} variant="mp" />
                         <MetricTile label="EXP" value={player?.exp} max={player?.nextExp} variant="exp" />
                     </div>
 
-                    <CompactLoadoutStrip player={player} />
-                    <CompactProgressSummary player={player} />
-                </div>
-
-                <div className="border-t border-cyan-400/12 pt-2">
-                    <div className={`panel-noise rounded-[1.15rem] border border-cyan-400/14 bg-slate-950/72 shadow-[0_18px_42px_rgba(2,8,20,0.25)] ${archiveOpen ? 'px-3 py-3' : 'px-3 py-2.5'}`}>
-                        <div className="flex items-center justify-between gap-3">
-                            <div>
-                                <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/50">
-                                    Archive
+                    <div className="mt-2 grid grid-cols-3 gap-1.5 rounded-[0.95rem] border border-cyan-400/10 bg-slate-950/52 px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                        {loadoutEntries.map((entry) => (
+                            <div
+                                key={entry.label}
+                                className="min-w-0 rounded-[0.8rem] border border-cyan-400/10 bg-cyber-black/34 px-2 py-1.5"
+                            >
+                                <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/40">
+                                    {entry.label}
                                 </div>
-                                <div className="mt-1 text-[12px] font-rajdhani font-bold text-white">
-                                    {activeMobileTab.label}
+                                <div className="mt-1 truncate text-[10px] font-fira leading-none text-slate-200">
+                                    {entry.item?.name || entry.fallback}
                                 </div>
-                                {archiveOpen && (
-                                    <div className="mt-1 text-[10px] font-fira text-cyber-blue/55">
-                                        필요한 기록만 펼쳐서 확인합니다.
-                                    </div>
-                                )}
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                {archiveOpen && (
+                        ))}
+                    </div>
+                </Motion.div>
+            );
+        }
+
+        if (!showArchiveDock && !archiveOpen) {
+            return null;
+        }
+
+        return (
+            <>
+                {showArchiveDock && (
+                    <div
+                        data-testid="mobile-archive-dock"
+                        className="md:hidden fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.85rem)] z-30"
+                    >
+                        <div className="panel-noise rounded-[1.2rem] border border-cyan-400/16 bg-[linear-gradient(180deg,rgba(7,13,25,0.96)_0%,rgba(4,9,18,0.98)_100%)] px-3 py-2 shadow-[0_24px_60px_rgba(2,8,20,0.45)] backdrop-blur-2xl">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">Archive</div>
+                                    <div className="mt-0.5 text-[12px] font-rajdhani font-bold text-white truncate">
+                                        {hasInventorySpotlight
+                                            ? (inventorySpotlight?.title || '전리품 검토')
+                                            : activeMobileTab.label}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {hasInventorySpotlight && (
+                                        <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>
+                                    )}
+                                    <button
+                                        data-testid="mobile-archive-open"
+                                        onClick={() => setMobileArchiveExpanded(true)}
+                                        className="min-h-[34px] rounded-full border border-cyan-400/18 bg-slate-950/78 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/78"
+                                    >
+                                        열기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <AnimatePresence initial={false}>
+                    {archiveOpen && (
+                        <Motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="md:hidden fixed inset-0 z-40 bg-cyber-black/70 backdrop-blur-sm"
+                            onClick={() => {
+                                setMobileArchiveExpanded(false);
+                                onClearInventorySpotlight?.();
+                            }}
+                        >
+                            <Motion.div
+                                data-testid="mobile-archive-sheet"
+                                initial={{ y: '100%' }}
+                                animate={{ y: 0 }}
+                                exit={{ y: '100%' }}
+                                transition={{ duration: 0.22, ease: 'easeOut' }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="panel-noise absolute inset-x-0 bottom-0 max-h-[72dvh] rounded-t-[1.75rem] border-t border-cyan-400/18 bg-[linear-gradient(180deg,rgba(8,14,28,0.98)_0%,rgba(4,9,18,0.99)_100%)] px-3.5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[0_-20px_60px_rgba(2,8,20,0.45)]"
+                            >
+                                <div className="mx-auto h-1.5 w-12 rounded-full bg-cyber-blue/20" />
+                                <div className="mt-3 flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">Archive</div>
+                                        <div className="mt-1 text-[15px] font-rajdhani font-bold text-white">
+                                            {hasInventorySpotlight
+                                                ? (inventorySpotlight?.title || '전리품 검토')
+                                                : activeMobileTab.label}
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={() => {
-                                            setMobileDetailsOpen(false);
                                             setMobileArchiveExpanded(false);
                                             onClearInventorySpotlight?.();
                                         }}
-                                        className="min-h-[36px] rounded-full border border-cyan-400/16 bg-slate-950/80 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70"
+                                        className="min-h-[38px] rounded-full border border-cyan-400/18 bg-slate-950/78 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/78"
                                     >
                                         닫기
                                     </button>
+                                </div>
+
+                                {hasInventorySpotlight && (
+                                    <div
+                                        data-testid="inventory-spotlight"
+                                        className="mt-3 rounded-[1rem] border border-cyber-purple/22 bg-cyber-purple/10 px-3 py-2.5"
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-purple/75">
+                                                {inventorySpotlight?.title || '전리품 주목'}
+                                            </span>
+                                            <SignalBadge tone="spotlight" size="sm">검토</SignalBadge>
+                                        </div>
+                                        <div className="mt-1 text-[11px] font-fira text-cyber-purple/90 leading-snug">
+                                            {inventorySpotlight?.detail || '이번 전투에서 얻은 장비를 우선 확인하세요.'}
+                                        </div>
+                                    </div>
                                 )}
-                                <button
-                                    onClick={() => {
-                                        if (archiveOpen) {
-                                            setMobileDetailsOpen(false);
-                                            setMobileArchiveExpanded(false);
-                                            onClearInventorySpotlight?.();
-                                            return;
-                                        }
-                                        setMobileDetailsOpen(true);
-                                    }}
-                                    className="min-h-[36px] rounded-full border border-cyan-400/16 bg-slate-950/80 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70"
-                                >
-                                    {archiveOpen ? '접기' : '열기'}
-                                </button>
-                            </div>
-                        </div>
 
-                        {archiveOpen && hasInventorySpotlight && (
-                            <div
-                                data-testid="inventory-spotlight"
-                                className="mt-3 rounded-[1rem] border border-cyber-purple/22 bg-cyber-purple/10 px-3 py-2.5"
-                            >
-                                <div className="flex items-center justify-between gap-2">
-                                    <span className="text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-purple/75">
-                                        {inventorySpotlight?.title || '전리품 주목'}
-                                    </span>
-                                    <SignalBadge tone="spotlight" size="sm">검토</SignalBadge>
+                                <div className="mt-3 grid grid-cols-4 gap-1.5">
+                                    {primaryMobileTabs.map((tab) => (
+                                        <ArchiveTabButton
+                                            key={tab.id}
+                                            icon={tab.icon}
+                                            label={tab.mobileLabel || tab.label}
+                                            active={sideTab === tab.id}
+                                            onClick={() => handleTabSelect(tab.id)}
+                                            compact
+                                            testId={`dashboard-tab-${tab.id}`}
+                                        />
+                                    ))}
                                 </div>
-                                <div className="mt-1 text-[11px] font-fira text-cyber-purple/90 leading-snug">
-                                    {inventorySpotlight?.detail || '이번 전투에서 얻은 장비를 우선 확인하세요.'}
+                                <div className="mt-2 grid grid-cols-4 gap-1.5">
+                                    {secondaryMobileTabs.map((tab) => (
+                                        <ArchiveTabButton
+                                            key={tab.id}
+                                            icon={tab.icon}
+                                            label={tab.mobileLabel || tab.label}
+                                            active={sideTab === tab.id}
+                                            onClick={() => handleTabSelect(tab.id)}
+                                            compact
+                                            testId={`dashboard-tab-${tab.id}`}
+                                        />
+                                    ))}
                                 </div>
-                            </div>
-                        )}
 
-                        <AnimatePresence initial={false}>
-                            {archiveOpen && (
-                                <Motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="mt-3 grid grid-cols-4 gap-1.5">
-                                        {primaryMobileTabs.map((tab) => (
-                                            <ArchiveTabButton
-                                                key={tab.id}
-                                                icon={tab.icon}
-                                                label={tab.mobileLabel || tab.label}
-                                                active={sideTab === tab.id}
-                                                onClick={() => handleTabSelect(tab.id)}
-                                                compact
-                                                testId={`dashboard-tab-${tab.id}`}
-                                            />
-                                        ))}
-                                    </div>
-                                    <div className="mt-2 grid grid-cols-4 gap-1.5">
-                                        {secondaryMobileTabs.map((tab) => (
-                                            <ArchiveTabButton
-                                                key={tab.id}
-                                                icon={tab.icon}
-                                                label={tab.mobileLabel || tab.label}
-                                                active={sideTab === tab.id}
-                                                onClick={() => handleTabSelect(tab.id)}
-                                                compact
-                                                testId={`dashboard-tab-${tab.id}`}
-                                            />
-                                        ))}
-                                    </div>
-                                </Motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        <AnimatePresence initial={false}>
-                            {showMobileDetails && (
-                                <Motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="mt-3 max-h-[32dvh] overflow-y-auto custom-scrollbar pr-1 rounded-[1.1rem] border border-cyan-400/12 bg-slate-950/52 px-1 py-1">
-                                        {renderTabContent()}
-                                    </div>
-                                </Motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-            </Motion.div>
+                                <div className="mt-3 max-h-[42dvh] overflow-y-auto custom-scrollbar pr-1 rounded-[1.1rem] border border-cyan-400/12 bg-slate-950/52 px-1 py-1">
+                                    {renderTabContent()}
+                                </div>
+                            </Motion.div>
+                        </Motion.div>
+                    )}
+                </AnimatePresence>
+            </>
         );
     }
 
@@ -1064,8 +431,9 @@ const Dashboard = ({ player, sideTab, setSideTab, actions, stats, mobile = false
                 <FocusPanel
                     player={player}
                     stats={stats}
-                    runtime={runtime}
+                    runtime={{ ...(runtime || {}), mapData }}
                     actions={actions}
+                    setGameState={actions.setGameState}
                     setSideTab={setSideTab}
                 />
             </Motion.div>

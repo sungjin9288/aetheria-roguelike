@@ -8,6 +8,10 @@ URL="http://${HOST}:${PORT}/"
 PREVIEW_LOG="${AETHERIA_PREVIEW_LOG:-/tmp/aetheria-preview.log}"
 PREVIEW_PID=""
 
+log_step() {
+  printf '[local-playtest] %s\n' "$1"
+}
+
 cleanup() {
   if [[ -n "${PREVIEW_PID}" ]] && kill -0 "${PREVIEW_PID}" >/dev/null 2>&1; then
     kill "${PREVIEW_PID}" >/dev/null 2>&1 || true
@@ -19,7 +23,9 @@ trap cleanup EXIT
 
 cd "${ROOT_DIR}"
 
+log_step "build"
 npm run build
+log_step "preview:start (${URL})"
 npm run preview -- --host "${HOST}" --port "${PORT}" >"${PREVIEW_LOG}" 2>&1 &
 PREVIEW_PID=$!
 
@@ -36,7 +42,11 @@ if ! curl -I "${URL}" >/dev/null 2>&1; then
   exit 1
 fi
 
+log_step "preview:ready"
+log_step "smoke:desktop"
 node scripts/smoke-gameplay.mjs --url "${URL}"
+log_step "smoke:mobile"
 node scripts/smoke-gameplay.mjs --url "${URL}" --mobile
 
+log_step "done"
 echo "Local playtest smoke completed: ${URL}"

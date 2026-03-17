@@ -1,14 +1,18 @@
 import React from 'react';
 import { motion as Motion } from 'framer-motion';
-import { ScrollText } from 'lucide-react';
+import { ScrollText, X } from 'lucide-react';
 import { DB } from '../../data/db';
 import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils';
+import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
+import SignalBadge from '../SignalBadge';
 
-const getQuestObjectiveText = (quest) => (
-  quest?.target === 'Level'
+const getQuestObjectiveText = (quest) => {
+  if (quest?.objective) return quest.objective;
+  if (quest?.desc) return quest.desc;
+  return quest?.target === 'Level'
     ? `레벨 ${quest.goal} 달성`
-    : `${quest.target} ${quest.goal}회 달성`
-);
+    : `${quest.target} ${quest.goal}회 달성`;
+};
 
 const getQuestProgressText = (quest, progress = 0) => (
   quest?.target === 'Level'
@@ -40,11 +44,16 @@ const RewardChips = ({ reward, accent = 'blue' }) => {
  */
 const QuestBoardPanel = ({ player, actions, setGameState }) => {
   const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
+  const traitProfile = getTraitProfile(player, { maxHp: player.maxHp, maxMp: player.maxMp });
   const activeQuestEntries = getActiveQuestEntries(player);
   const activeRegularQuestIds = new Set(activeQuestEntries.filter((e) => !e.isBounty).map((e) => e.id));
   const availableQuestEntries = DB.QUESTS
     .filter((q) => !activeRegularQuestIds.has(q.id) && player.level >= (q.minLv || 1))
-    .sort((a, b) => Math.abs((a.minLv || 1) - player.level) - Math.abs((b.minLv || 1) - player.level));
+    .sort((a, b) => {
+      const resonanceGap = getTraitQuestResonance(b, traitProfile).score - getTraitQuestResonance(a, traitProfile).score;
+      if (resonanceGap !== 0) return resonanceGap;
+      return Math.abs((a.minLv || 1) - player.level) - Math.abs((b.minLv || 1) - player.level);
+    });
   const lockedQuestEntries = DB.QUESTS
     .filter((q) => !activeRegularQuestIds.has(q.id) && player.level < (q.minLv || 1))
     .sort((a, b) => (a.minLv || 1) - (b.minLv || 1))
@@ -67,9 +76,21 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       className={`${overlayPanelClass} bg-cyber-black/95 z-30 p-4 md:p-6 rounded-lg border border-cyber-blue/50 flex flex-col shadow-[0_0_30px_rgba(0,204,255,0.2)] backdrop-blur-xl`}
     >
-      <h2 className="text-2xl text-cyber-blue font-bold mb-4 font-rajdhani uppercase tracking-wider flex items-center gap-2 drop-shadow-sm">
-        <ScrollText /> Mission Terminal
-      </h2>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-2xl text-cyber-blue font-bold font-rajdhani uppercase tracking-wider flex items-center gap-2 drop-shadow-sm">
+          <ScrollText /> Mission Terminal
+        </h2>
+        <button
+          onClick={() => setGameState('idle')}
+          className="min-h-[40px] rounded-full border border-cyber-blue/20 bg-cyber-black/60 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/75 transition-colors hover:border-cyber-blue/45 hover:text-cyber-blue"
+          aria-label="미션 터미널 닫기"
+        >
+          <span className="flex items-center gap-1.5">
+            <X size={12} />
+            닫기
+          </span>
+        </button>
+      </div>
       {/* 통계 헤더 */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-cyber-blue/20 bg-cyber-dark/40 px-3 py-2 text-[11px] font-fira">
         <span className="text-cyber-blue/80">현재 레벨 Lv.{player.level}</span>
@@ -109,9 +130,17 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
                     <div className={`font-bold font-rajdhani text-lg ${entry.isComplete ? 'text-cyber-green' : 'text-white'}`}>{entry.quest.title}</div>
                     {entry.isBounty && <span className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-fira text-amber-300">현상수배</span>}
                     {entry.isComplete && <span className="rounded border border-cyber-green/30 bg-cyber-green/10 px-2 py-0.5 text-[10px] font-fira text-cyber-green">보상 수령 가능</span>}
+                    {entry.quest.buildTag && (
+                      <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
+                    )}
+                    {(() => {
+                      const resonance = getTraitQuestResonance(entry.quest, traitProfile);
+                      return resonance.label ? (
+                        <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>
+                      ) : null;
+                    })()}
                   </div>
-                  <div className="mt-1 text-xs text-cyber-blue/60 font-fira leading-relaxed">{entry.quest.desc}</div>
-                  <div className="mt-2 text-[11px] text-slate-300 font-fira">목표: {getQuestObjectiveText(entry.quest)}</div>
+                  <div className="mt-2 text-[12px] text-slate-300 font-fira">{getQuestObjectiveText(entry.quest)}</div>
                   <RewardChips reward={entry.quest.reward} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} />
                   <div className="mt-3">
                     <div className="mb-1 flex items-center justify-between text-[10px] font-fira">
@@ -144,12 +173,22 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
             <div key={`available_${quest.id}`} className="rounded-lg border border-cyber-blue/20 bg-cyber-dark/60 p-4 transition-colors hover:border-cyber-blue/40">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
+                  {(() => {
+                    const resonance = getTraitQuestResonance(quest, traitProfile);
+                    return (
+                      <div className="flex flex-wrap items-center gap-2">
                     <div className="font-bold text-white font-rajdhani text-lg">{quest.title}</div>
-                    <span className="rounded border border-cyber-purple/20 bg-cyber-purple/10 px-2 py-0.5 text-[10px] font-fira text-cyber-purple">Lv.{quest.minLv}+</span>
+                    <span className="rounded border border-cyber-purple/20 bg-cyber-purple/10 px-2 py-0.5 text-[10px] font-fira text-cyber-purple">Lv.{quest.minLv} 필요</span>
+                    {quest.buildTag && (
+                      <SignalBadge tone="neutral" size="sm">{quest.buildLabel || quest.buildTag}</SignalBadge>
+                    )}
+                    {resonance.label && (
+                      <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>
+                    )}
                   </div>
-                  <div className="mt-1 text-xs text-cyber-blue/60 font-fira leading-relaxed">{quest.desc}</div>
-                  <div className="mt-2 text-[11px] text-slate-300 font-fira">목표: {getQuestObjectiveText(quest)}</div>
+                    );
+                  })()}
+                  <div className="mt-2 text-[12px] text-slate-300 font-fira">{getQuestObjectiveText(quest)}</div>
                   <RewardChips reward={quest.reward} accent="blue" />
                 </div>
                 <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="min-h-[44px] shrink-0 rounded-lg border border-cyber-blue/40 bg-cyber-blue/10 px-5 py-3 text-xs font-bold text-cyber-blue transition-all hover:bg-cyber-blue/20">
@@ -173,11 +212,9 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
                     <div className="font-bold text-slate-200 font-rajdhani text-lg">{quest.title}</div>
                     <span className="rounded border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[10px] font-fira text-purple-300">Lv.{quest.minLv} 필요</span>
                   </div>
-                  <div className="mt-1 text-xs text-slate-400 font-fira leading-relaxed">{quest.desc}</div>
-                  <div className="mt-2 text-[11px] text-slate-300 font-fira">목표: {getQuestObjectiveText(quest)}</div>
+                  <div className="mt-2 text-[12px] text-slate-300 font-fira">{getQuestObjectiveText(quest)}</div>
                   <RewardChips reward={quest.reward} accent="blue" />
                 </div>
-                <div className="shrink-0 rounded-lg border border-slate-700 bg-cyber-black/40 px-4 py-3 text-[11px] font-fira text-slate-400">Lv.{quest.minLv - player.level} 더 필요</div>
               </div>
             </div>
           )) : (
@@ -186,9 +223,6 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
         </section>
       </div>
 
-      <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-cyber-dark text-cyber-blue/60 hover:text-cyber-blue py-4 rounded-sm border border-cyber-blue/20 hover:border-cyber-blue/50 font-rajdhani text-lg font-bold tracking-[0.2em] transition-all hover:bg-cyber-blue/5 min-h-[44px]">
-        EXIT TERMINAL
-      </button>
     </Motion.div>
   );
 };

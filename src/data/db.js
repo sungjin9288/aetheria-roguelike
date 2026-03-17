@@ -1,10 +1,10 @@
-import { ELEMENTS } from './elements';
-import { CLASSES } from './classes';
-import { ITEMS } from './items';
-import { MAPS } from './maps';
-import { MONSTERS } from './monsters';
-import { LOOT_TABLE } from './loot';
-import { QUESTS, ACHIEVEMENTS } from './quests';
+import { ELEMENTS } from './elements.jsx';
+import { CLASSES } from './classes.js';
+import { ITEMS } from './items.js';
+import { MAPS } from './maps.js';
+import { MONSTERS } from './monsters.js';
+import { LOOT_TABLE } from './loot.js';
+import { QUESTS, ACHIEVEMENTS } from './quests.js';
 
 export const DB = {
     ELEMENTS,

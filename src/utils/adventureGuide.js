@@ -1,6 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { QUESTS } from '../data/quests.js';
-import { getDiscoveryOdds } from './explorationPacing.js';
+import { getDiscoveryOdds, getMapPacingProfile } from './explorationPacing.js';
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -90,6 +90,7 @@ export const getExplorationForecast = (player, mapData) => {
     }
 
     const odds = getDiscoveryOdds(player, mapData);
+    const pacingProfile = odds.pacingProfile || getMapPacingProfile(mapData);
     const eventPct = clampPercent(odds.narrativeEventChance);
     const relicPct = clampPercent(odds.relicChance);
     const quietPct = clampPercent(odds.quietChance);
@@ -98,7 +99,7 @@ export const getExplorationForecast = (player, mapData) => {
     let description = '전투와 발견이 무난하게 섞이는 구간입니다.';
 
     if (mapData.boss) {
-        mood = '보스 권역';
+        mood = eventPct >= 8 ? '보스 전조' : '보스 권역';
         description = '강한 교전이 예상됩니다. 회복과 퀵슬롯 정비를 우선하세요.';
     } else if (eventPct >= 10 || relicPct >= 12) {
         mood = '발견 상승';
@@ -106,7 +107,10 @@ export const getExplorationForecast = (player, mapData) => {
     } else if (quietPct >= 24) {
         mood = '정적 구간';
         description = '조용한 탐색이 길어지고 있습니다. 다음 발견 확률이 서서히 오릅니다.';
-    } else if (mapData.level >= 20) {
+    } else if (pacingProfile.id === 'volatile') {
+        mood = '변칙 지대';
+        description = '이벤트와 이변이 잦은 구간입니다. 짧은 정비 뒤 탐험을 이어가는 편이 좋습니다.';
+    } else if (pacingProfile.id === 'hostile' || mapData.level >= 20) {
         mood = '고위험 교전';
         description = '한 번의 실수가 치명적일 수 있는 상위 전장입니다.';
     }
@@ -115,6 +119,7 @@ export const getExplorationForecast = (player, mapData) => {
         mood,
         description,
         chips: [
+            { label: 'TEMPO', value: pacingProfile.label },
             { label: 'EVENT', value: `${eventPct}%` },
             { label: 'RELIC', value: `${relicPct}%` },
             { label: 'QUIET', value: `${quietPct}%` },
