@@ -72,7 +72,15 @@ export const ITEMS = {
         { name: '청해 단검', type: 'weapon', val: 90, tier: 4, price: 5900, elem: '냉기', jobs: ['도적', '어쌔신'], desc: '심해의 냉기가 깃든 단검.', desc_stat: 'ATK+90(냉)' },
         { name: '심연 파쇄창', type: 'weapon', hands: 2, val: 102, tier: 4, price: 7200, elem: '어둠', jobs: ['전사', '나이트', '버서커'], desc: '심연을 찢는 중창.', desc_stat: 'ATK+102(암) / 2H' },
         { name: '에테르 세이버', type: 'weapon', val: 205, tier: 5, price: 31500, elem: '빛', jobs: ['전사', '나이트', '모험가'], desc: '차원 에너지로 단련된 검.', desc_stat: 'ATK+205(빛)' },
-        { name: '성운 지팡이', type: 'weapon', hands: 2, val: 195, tier: 5, price: 30500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '별무리의 공명을 담은 지팡이.', desc_stat: 'ATK+195(빛) / 2H' }
+        { name: '성운 지팡이', type: 'weapon', hands: 2, val: 195, tier: 5, price: 30500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '별무리의 공명을 담은 지팡이.', desc_stat: 'ATK+195(빛) / 2H' },
+        // Tier 6 - 에테르급 (에테르 관문 / 혼돈의 심연 전용)
+        { name: '공허의 대검', type: 'weapon', hands: 2, val: 285, tier: 6, price: 65000, elem: '어둠', jobs: ['버서커', '흑마법사'], desc: '공허에서 빚어낸 절멸의 대검.', desc_stat: 'ATK+285(암) / 2H' },
+        { name: '에테르 플럭스 로드', type: 'weapon', hands: 2, val: 265, tier: 6, price: 60000, elem: '빛', jobs: ['아크메이지', '대마법사'], desc: '에테르 흐름을 조종하는 마도 로드.', desc_stat: 'ATK+265(빛) / 2H' },
+        { name: '차원 붕괴창', type: 'weapon', hands: 2, val: 305, tier: 6, price: 70000, elem: '대지', jobs: ['전사', '버서커', '나이트'], desc: '차원을 찢는 에테르급 중창.', desc_stat: 'ATK+305(지) / 2H' },
+        { name: '허공의 지팡이', type: 'weapon', hands: 2, val: 275, tier: 6, price: 63000, elem: '어둠', jobs: ['흑마법사', '그림자 주군'], desc: '허공의 어둠을 응축한 마지팡이.', desc_stat: 'ATK+275(암) / 2H' },
+        { name: '에테르 심판궁', type: 'weapon', hands: 2, val: 255, tier: 6, price: 58000, elem: '빛', jobs: ['레인저', '사냥의 군주'], desc: '에테르 에너지가 깃든 심판의 활.', desc_stat: 'ATK+255(빛) / 2H' },
+        { name: '영겁의 세이버', type: 'weapon', val: 290, tier: 6, price: 67000, elem: '빛', jobs: ['나이트', '팔라딘'], desc: '영겁의 시간을 담은 성광 세이버.', desc_stat: 'ATK+290(빛)' },
+        { name: '혼돈 절멸기', type: 'weapon', val: 300, tier: 6, price: 72000, elem: '어둠', jobs: ['어쌔신', '그림자 주군'], desc: '혼돈의 정수로 벼린 절멸의 단검.', desc_stat: 'ATK+300(암)' }
     ],
     armors: [
         // Tier 1 - 초급 (12개)

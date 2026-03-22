@@ -18,7 +18,7 @@ import EventPanel from './EventPanel';
 import { soundManager } from '../systems/SoundManager';
 import { GS } from '../reducers/gameStates';
 import SignalBadge from './SignalBadge';
-import { runGuidanceAction } from '../utils/adventureGuideActions';
+import { getGravesAtLoc } from '../utils/graveUtils';
 
 import CombatPanel from './tabs/CombatPanel';
 import JobChangePanel from './tabs/JobChangePanel';
@@ -47,7 +47,8 @@ const ControlPanel = ({
   currentEvent,
   stats = null,
   mobile = false,
-  setSideTab = null,
+  desktopSidebar = false,
+  compactDesktop = false,
 }) => {
   const [confirmReset, setConfirmReset] = useState(false);
   const mapData = DB.MAPS[player.loc];
@@ -55,65 +56,79 @@ const ControlPanel = ({
   const moveRecommendations = getMoveRecommendations(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, DB.MAPS);
   const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind] || null;
   const isSafeZone = mapData.type === 'safe';
-  const showGraveRecovery = grave && grave.loc === player.loc;
+  const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
+  const useCompactDesktopRail = desktopSidebar && compactDesktop;
 
   const actionGridClass = mobile
-    ? 'grid grid-cols-4 gap-1.5'
-    : 'grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3';
+    ? 'grid grid-cols-2 gap-2'
+    : useCompactDesktopRail
+      ? 'grid grid-cols-2 gap-1'
+      : desktopSidebar
+      ? 'grid grid-cols-2 gap-1.5'
+      : 'grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3';
   const actionButtonBase = mobile
-    ? 'relative min-h-[50px] px-1 py-2 rounded-[1rem] flex flex-col items-center justify-center gap-1 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
-    : 'relative min-h-[56px] p-2 sm:p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]';
+    ? 'relative min-h-[66px] rounded-[1.2rem] px-2 py-2.5 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+    : useCompactDesktopRail
+      ? 'relative min-h-[30px] rounded-[0.78rem] px-0.75 py-0.5 flex items-center justify-center gap-0.75 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+      : desktopSidebar
+      ? 'relative min-h-[44px] rounded-[1rem] px-1.25 py-1.25 flex flex-col items-center justify-center gap-0.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+      : 'relative min-h-[60px] p-2 sm:p-3 rounded-[1.3rem] flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]';
   const actionLabelClass = mobile
-    ? 'text-[8px] font-rajdhani font-bold tracking-[0.16em]'
-    : 'text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest';
+    ? 'text-[10px] font-rajdhani font-bold tracking-[0.16em]'
+    : useCompactDesktopRail
+      ? 'text-[6.5px] font-rajdhani font-bold tracking-[0.14em]'
+      : desktopSidebar
+      ? 'text-[7px] font-rajdhani font-bold tracking-[0.16em]'
+      : 'text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest';
   const resetButtonClass = mobile
     ? 'min-h-[50px] rounded-[1rem] border px-2 py-2 text-[8px] font-rajdhani font-bold tracking-[0.16em] transition-all flex flex-col items-center justify-center gap-1'
-    : 'min-h-[44px] rounded-xl border px-3 py-2 text-[10px] font-rajdhani font-bold tracking-[0.18em] transition-all';
+    : useCompactDesktopRail
+      ? 'min-h-[24px] rounded-[0.78rem] border px-1.25 py-0.5 text-[6.5px] font-rajdhani font-bold tracking-[0.14em] transition-all flex items-center justify-center'
+      : desktopSidebar
+      ? 'min-h-[32px] rounded-[0.95rem] border px-2 py-1 text-[7px] font-rajdhani font-bold tracking-[0.16em] transition-all flex items-center justify-center'
+      : 'min-h-[44px] rounded-xl border px-3 py-2 text-[10px] font-rajdhani font-bold tracking-[0.18em] transition-all';
 
   const getRecommendedClass = (buttonKey) => (
-    recommendedButton === buttonKey
+    !desktopSidebar && recommendedButton === buttonKey
       ? 'ring-1 ring-cyan-300/45 shadow-[0_0_18px_rgba(34,211,238,0.18)]'
       : ''
   );
 
-  const handleGuidanceAction = (action) => {
-    soundManager.play('click');
-    runGuidanceAction({
-      action,
-      actions,
-      setGameState,
-      setSideTab,
-    });
-  };
-
-  const renderActionButton = (button, extraClass = '') => {
+  const renderActionButton = (button, extraClass = '', { hideLabel = false } = {}) => {
     const {
       key,
       testId,
       icon: Icon,
       label,
       mobileLabel = label,
+      sidebarLabel = mobileLabel || label,
       onClick,
       className,
       disabled = false,
     } = button;
+    const buttonLabel = mobile ? mobileLabel : desktopSidebar ? sidebarLabel : label;
 
     return (
       <Motion.button
         key={key}
         data-testid={testId}
+        title={buttonLabel}
         whileTap={{ scale: 0.95 }}
         disabled={disabled}
         onClick={onClick}
         className={`${actionButtonBase} ${getRecommendedClass(key)} ${className} ${extraClass}`.trim()}
       >
-        {!mobile && recommendedButton === key && (
+        {!mobile && !desktopSidebar && recommendedButton === key && (
           <div className="absolute top-1.5 right-1.5">
             <SignalBadge tone="recommended" size="sm">추천</SignalBadge>
           </div>
         )}
-        <Icon size={mobile ? 16 : 18} className="transition-transform group-hover:scale-110" />
-        <span className={actionLabelClass}>{mobile ? mobileLabel : label}</span>
+        <Icon size={mobile ? 16 : useCompactDesktopRail ? 12 : desktopSidebar ? 13 : 18} className="transition-transform group-hover:scale-110" />
+        {hideLabel ? (
+          <span className="sr-only">{buttonLabel}</span>
+        ) : (
+          <span className={actionLabelClass}>{buttonLabel}</span>
+        )}
       </Motion.button>
     );
   };
@@ -126,10 +141,10 @@ const ControlPanel = ({
           whileTap={{ scale: 0.95 }}
           disabled={isAiThinking}
           onClick={() => setConfirmReset(true)}
-          className={`${compact ? resetButtonClass : actionButtonBase} ${className} bg-[linear-gradient(180deg,rgba(40,10,14,0.84)_0%,rgba(18,8,10,0.96)_100%)] border border-red-800/30 text-red-500/80 hover:bg-red-900/40 hover:border-red-600/50`.trim()}
+          className={`${compact ? resetButtonClass : actionButtonBase} ${className} bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/80 hover:bg-rose-400/10 hover:border-rose-200/30`.trim()}
         >
-          <X size={mobile ? 16 : 18} className="text-red-500/70 group-hover:text-red-500 group-hover:scale-110 transition-all" />
-          <span className={`${actionLabelClass} text-red-600/70 group-hover:text-red-500`}>RESET</span>
+          <X size={mobile ? 16 : useCompactDesktopRail ? 12 : desktopSidebar ? 13 : 18} className="text-rose-200/70 group-hover:text-rose-100 group-hover:scale-110 transition-all" />
+          <span className={`${actionLabelClass} text-rose-100/72 group-hover:text-rose-50`}>RESET</span>
         </Motion.button>
       );
     }
@@ -143,7 +158,7 @@ const ControlPanel = ({
             actions.reset();
             setConfirmReset(false);
           }}
-          className={`${compact ? `${resetButtonClass} min-h-[44px]` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-red-900/60 border border-red-500/70 text-red-200 hover:bg-red-700/60`}
+          className={`${compact ? `${resetButtonClass} ${useCompactDesktopRail ? 'min-h-[36px]' : 'min-h-[44px]'}` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-red-900/60 border border-red-500/70 text-red-200 hover:bg-red-700/60`}
         >
           {compact ? 'RESET OK' : 'CONFIRM RESET'}
         </Motion.button>
@@ -151,7 +166,7 @@ const ControlPanel = ({
           data-testid="control-reset-cancel"
           whileTap={{ scale: 0.95 }}
           onClick={() => setConfirmReset(false)}
-          className={`${compact ? `${resetButtonClass} min-h-[44px]` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-cyber-dark/60 border border-slate-600/50 text-slate-400 hover:bg-slate-700/40`}
+          className={`${compact ? `${resetButtonClass} ${useCompactDesktopRail ? 'min-h-[36px]' : 'min-h-[44px]'}` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-cyber-dark/60 border border-slate-600/50 text-slate-400 hover:bg-slate-700/40`}
         >
           CANCEL
         </Motion.button>
@@ -160,7 +175,18 @@ const ControlPanel = ({
   };
 
   if (gameState === GS.COMBAT) {
-    return <CombatPanel player={player} actions={actions} enemy={enemy} stats={stats} isAiThinking={isAiThinking} mobile={mobile} />;
+    return (
+      <CombatPanel
+        player={player}
+        actions={actions}
+        enemy={enemy}
+        stats={stats}
+        isAiThinking={isAiThinking}
+        mobile={mobile}
+        compact={desktopSidebar || useCompactDesktopRail}
+        dense={useCompactDesktopRail}
+      />
+    );
   }
 
   if (gameState === GS.EVENT && isAiThinking) {
@@ -201,19 +227,21 @@ const ControlPanel = ({
       testId: 'control-explore',
       icon: MapIcon,
       label: 'EXPLORE',
+      sidebarLabel: 'EXP',
       onClick: () => {
         soundManager.play('click');
         actions.explore();
       },
-      className: 'bg-[linear-gradient(180deg,rgba(8,20,32,0.86)_0%,rgba(5,11,21,0.96)_100%)] border border-cyan-400/20 text-cyber-blue/90 hover:bg-cyan-500/10 hover:shadow-[0_0_18px_rgba(34,211,238,0.14)] hover:border-cyan-300/40',
+      className: 'bg-[linear-gradient(180deg,rgba(18,34,41,0.82)_0%,rgba(8,14,18,0.96)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.1)]',
     },
     {
       key: 'move',
       testId: 'control-move',
       icon: ArrowRight,
       label: 'MOVE',
+      sidebarLabel: 'MOVE',
       onClick: () => setGameState(GS.MOVING),
-      className: 'bg-[linear-gradient(180deg,rgba(10,24,26,0.86)_0%,rgba(5,11,17,0.96)_100%)] border border-emerald-400/20 text-cyber-green/90 hover:bg-emerald-400/10 hover:shadow-[0_0_18px_rgba(16,185,129,0.14)] hover:border-emerald-300/40',
+      className: 'bg-[linear-gradient(180deg,rgba(22,29,37,0.84)_0%,rgba(9,13,18,0.96)_100%)] border border-white/8 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-[#7dd4d8]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.08)]',
     },
   ];
 
@@ -222,8 +250,9 @@ const ControlPanel = ({
     testId: 'control-rest',
     icon: Moon,
     label: 'REST',
+    sidebarLabel: 'REST',
     onClick: actions.rest,
-    className: 'bg-[linear-gradient(180deg,rgba(12,23,19,0.82)_0%,rgba(7,11,10,0.96)_100%)] border border-emerald-500/20 text-emerald-500/90 hover:bg-emerald-500/10 hover:shadow-[0_0_18px_rgba(16,185,129,0.14)] hover:border-emerald-400/40',
+    className: 'bg-[linear-gradient(180deg,rgba(25,28,23,0.82)_0%,rgba(12,13,10,0.96)_100%)] border border-[#d5b180]/16 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/24',
   };
 
   const marketButton = {
@@ -231,11 +260,12 @@ const ControlPanel = ({
     testId: 'control-market',
     icon: ShoppingBag,
     label: mobile ? 'SHOP' : 'MARKET',
+    sidebarLabel: 'SHOP',
     onClick: () => {
       actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
       actions.setGameState(GS.SHOP);
     },
-    className: 'bg-[linear-gradient(180deg,rgba(30,22,8,0.82)_0%,rgba(15,12,6,0.96)_100%)] border border-yellow-500/20 text-yellow-500/90 hover:bg-yellow-500/10 hover:shadow-[0_0_18px_rgba(234,179,8,0.14)] hover:border-yellow-400/40',
+    className: 'bg-[linear-gradient(180deg,rgba(34,24,14,0.84)_0%,rgba(16,11,7,0.96)_100%)] border border-[#d5b180]/22 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30',
   };
 
   const classButton = {
@@ -243,8 +273,9 @@ const ControlPanel = ({
     testId: 'control-class',
     icon: GraduationCap,
     label: 'CLASS',
+    sidebarLabel: 'CLASS',
     onClick: () => setGameState(GS.JOB_CHANGE),
-    className: 'bg-[linear-gradient(180deg,rgba(22,12,32,0.82)_0%,rgba(10,7,17,0.96)_100%)] border border-violet-500/20 text-purple-500/90 hover:bg-violet-500/10 hover:shadow-[0_0_18px_rgba(168,85,247,0.14)] hover:border-violet-400/40',
+    className: 'bg-[linear-gradient(180deg,rgba(28,20,39,0.84)_0%,rgba(12,10,18,0.96)_100%)] border border-[#9a8ac0]/18 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/28',
   };
 
   const questButton = {
@@ -252,8 +283,9 @@ const ControlPanel = ({
     testId: 'control-quests',
     icon: ScrollText,
     label: mobile ? 'QUEST' : 'QUESTS',
+    sidebarLabel: 'QUEST',
     onClick: () => setGameState(GS.QUEST_BOARD),
-    className: 'bg-[linear-gradient(180deg,rgba(14,18,34,0.82)_0%,rgba(7,9,18,0.96)_100%)] border border-indigo-500/20 text-indigo-400/90 hover:bg-indigo-500/10 hover:shadow-[0_0_18px_rgba(99,102,241,0.14)] hover:border-indigo-400/40',
+    className: 'bg-[linear-gradient(180deg,rgba(20,24,34,0.84)_0%,rgba(9,11,18,0.96)_100%)] border border-white/8 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-white/[0.04]',
   };
 
   const craftButton = {
@@ -261,8 +293,9 @@ const ControlPanel = ({
     testId: 'control-craft',
     icon: Hammer,
     label: 'CRAFT',
+    sidebarLabel: 'CRAFT',
     onClick: () => setGameState(GS.CRAFTING),
-    className: 'bg-[linear-gradient(180deg,rgba(32,17,8,0.82)_0%,rgba(16,10,7,0.96)_100%)] border border-orange-500/20 text-orange-500/90 hover:bg-orange-500/10 hover:shadow-[0_0_18px_rgba(249,115,22,0.14)] hover:border-orange-400/40',
+    className: 'bg-[linear-gradient(180deg,rgba(30,22,18,0.84)_0%,rgba(14,10,9,0.96)_100%)] border border-[#d5b180]/14 text-[#f1dcc1] hover:border-[#d5b180]/24 hover:bg-[#d5b180]/8',
   };
 
   const safeZoneButtons = [marketButton, restButton, classButton, questButton, craftButton];
@@ -274,38 +307,110 @@ const ControlPanel = ({
       testId: 'control-recover',
       icon: Ghost,
       label: mobile ? 'LOOT' : 'RECOVER',
+      sidebarLabel: 'LOOT',
       onClick: actions.lootGrave,
-      className: 'bg-[linear-gradient(180deg,rgba(25,30,40,0.85)_0%,rgba(11,15,22,0.96)_100%)] border border-slate-500/35 text-slate-300 hover:bg-slate-800/80 hover:shadow-[0_0_18px_rgba(148,163,184,0.18)]',
+      className: 'bg-[linear-gradient(180deg,rgba(26,31,38,0.85)_0%,rgba(12,15,20,0.96)_100%)] border border-white/10 text-slate-200 hover:border-[#d5b180]/16 hover:bg-white/[0.04]',
     });
   }
+
+  const desktopSidebarButtons = [
+    ...coreButtons,
+    ...(isSafeZone ? safeZoneButtons : []),
+    ...auxiliaryButtons,
+  ];
+
+  const desktopPriorityKeys = (() => {
+    if (!desktopSidebar) return [];
+    const availableKeys = new Set(desktopSidebarButtons.map((button) => button.key));
+    const ordered = [];
+    const pushKey = (key) => {
+      if (availableKeys.has(key) && !ordered.includes(key)) ordered.push(key);
+    };
+
+    pushKey(recommendedButton);
+
+    const fallbacks = isSafeZone
+      ? ['explore', 'move', 'market', 'rest', 'quests', 'class', 'craft', 'grave']
+      : ['explore', 'move', 'grave'];
+
+    fallbacks.forEach(pushKey);
+    return ordered.slice(0, 2);
+  })();
+
+  const desktopPriorityButtons = desktopSidebarButtons
+    .filter((button) => desktopPriorityKeys.includes(button.key))
+    .sort((a, b) => desktopPriorityKeys.indexOf(a.key) - desktopPriorityKeys.indexOf(b.key));
+
+  const desktopSecondaryButtons = desktopSidebarButtons
+    .filter((button) => !desktopPriorityKeys.includes(button.key));
 
   return (
     <Motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`mt-2.5 md:mt-4 relative z-10 w-full ${mobile ? 'panel-noise rounded-[1.65rem] border border-cyan-400/16 bg-[linear-gradient(180deg,rgba(8,13,25,0.95)_0%,rgba(5,10,18,0.96)_100%)] p-2.5 shadow-[0_24px_60px_rgba(2,8,20,0.4)] backdrop-blur-2xl' : ''}`}
+      className={`relative z-10 w-full ${
+        mobile
+          ? 'mt-2.5 md:mt-4 panel-noise aether-surface rounded-[1.8rem] p-2.5'
+          : useCompactDesktopRail
+            ? 'panel-noise aether-surface rounded-[1.05rem] p-1.5'
+            : desktopSidebar
+            ? 'panel-noise aether-surface rounded-[1.35rem] p-2.5'
+            : 'mt-2.5 md:mt-4'
+      }`}
     >
+      {desktopSidebar && (
+        <div className={`${useCompactDesktopRail ? 'mb-0.5' : 'mb-1.5'} flex items-center justify-between gap-2 px-0.25`}>
+          <div className={`${useCompactDesktopRail ? 'text-[8px]' : 'text-[9px]'} font-fira uppercase tracking-[0.18em] text-slate-500`}>
+            {gameState === GS.MOVING ? 'Routes' : 'Actions'}
+          </div>
+          {useCompactDesktopRail ? (
+            <SignalBadge tone={isSafeZone ? 'upgrade' : 'neutral'} size="sm">
+              {isSafeZone ? '안전' : '필드'}
+            </SignalBadge>
+          ) : (
+            <div className="text-[9px] font-fira text-slate-400/66">
+              {player.loc}
+            </div>
+          )}
+        </div>
+      )}
       {gameState === GS.MOVING ? (
-        <div className={`gap-2 md:gap-3 ${mobile ? 'grid grid-cols-2' : 'flex flex-wrap'}`}>
+        <div className={`${
+          mobile
+            ? 'grid grid-cols-2 gap-2'
+            : desktopSidebar
+              ? useCompactDesktopRail
+                ? 'grid grid-cols-1 gap-0.75'
+                : 'grid grid-cols-1 gap-2 md:gap-3'
+              : 'flex flex-wrap gap-2 md:gap-3'
+        }`}>
           {moveRecommendations.map((route) => (
             <Motion.button
               whileTap={{ scale: 0.95 }}
               key={route.name}
               disabled={isAiThinking}
               onClick={() => actions.move(route.name)}
-              className={`${mobile ? 'min-h-[78px] px-3 py-2 text-xs' : 'flex-1 min-w-[150px] min-h-[92px] px-4 py-3'} ${
+              className={`${
+                mobile
+                  ? 'min-h-[78px] px-3 py-2 text-xs'
+                  : useCompactDesktopRail
+                    ? 'min-h-[40px] px-1.5 py-1.25 text-[8px]'
+                    : desktopSidebar
+                    ? 'min-h-[54px] px-2 py-1.5 text-[9px]'
+                    : 'flex-1 min-w-[150px] min-h-[92px] px-4 py-3'
+              } ${
                 route.isRecommended
-                  ? 'border-cyber-green/55 bg-cyber-green/10 shadow-[0_0_18px_rgba(0,255,157,0.16)]'
-                  : 'border-cyber-blue/25 bg-cyber-dark/75'
-              } rounded-md text-left hover:bg-cyber-green/10 hover:shadow-[0_0_15px_rgba(0,255,157,0.18)] flex flex-col items-start justify-between gap-2 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all backdrop-blur-md`}
+                  ? 'border-[#7dd4d8]/26 bg-[#7dd4d8]/12 shadow-[0_18px_30px_rgba(125,212,216,0.1)]'
+                  : 'border-white/8 bg-black/18'
+              } rounded-[1.2rem] text-left hover:border-[#d5b180]/20 hover:bg-[#d5b180]/8 flex flex-col items-start justify-between gap-2 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all backdrop-blur-md`}
             >
               <div className="flex w-full items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-cyber-green">
-                    <MapIcon size={16} />
-                    <span className="truncate">{route.name}</span>
+                  <div className="flex items-center gap-2 text-[#e4f7f5]">
+                    <MapIcon size={useCompactDesktopRail ? 12 : 16} />
+                    <span className={`truncate ${useCompactDesktopRail ? 'text-[11px]' : ''}`}>{route.name}</span>
                   </div>
-                  <div className="mt-1 text-[10px] font-fira text-cyber-blue/50">
+                  <div className={`mt-1 font-fira text-slate-400/72 ${useCompactDesktopRail ? 'text-[8px]' : 'text-[10px]'}`}>
                     {route.levelLabel}
                   </div>
                 </div>
@@ -313,67 +418,85 @@ const ControlPanel = ({
                   {route.isRecommended ? '추천' : route.badge}
                 </SignalBadge>
               </div>
-              <div className="text-[10px] font-fira text-cyber-blue/70 leading-snug">
-                {route.reason}
-              </div>
+              {!useCompactDesktopRail && (
+                <div className="text-[10px] font-fira text-slate-300/72 leading-snug">
+                  {route.reason}
+                </div>
+              )}
             </Motion.button>
           ))}
           <Motion.button
             data-testid="control-move-cancel"
             whileTap={{ scale: 0.95 }}
             onClick={() => setGameState(GS.IDLE)}
-            className={`${mobile ? 'col-span-2 min-h-[42px] px-3 py-2 text-xs' : 'flex-1 min-w-[120px] min-h-[50px] px-4 md:px-6 py-3 md:py-4'} bg-red-900/20 border border-red-500/30 text-red-400 rounded-md hover:bg-red-900/40 font-bold tracking-wider transition-all`}
+            className={`${
+              mobile
+                ? 'col-span-2 min-h-[42px] px-3 py-2 text-xs'
+                : useCompactDesktopRail
+                  ? 'min-h-[26px] px-2 py-1 text-[8px]'
+                  : desktopSidebar
+                  ? 'min-h-[34px] px-2 py-1 text-[8px]'
+                  : 'flex-1 min-w-[120px] min-h-[50px] px-4 md:px-6 py-3 md:py-4'
+            } bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/84 rounded-[1.1rem] hover:bg-rose-400/10 font-bold tracking-wider transition-all`}
           >
             CANCEL
           </Motion.button>
         </div>
       ) : (
         <>
-          {!mobile && (
-            <div className="mb-2 max-w-md rounded-xl border border-cyber-blue/15 bg-cyber-black/55 px-3 py-2">
-              <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/55">
-                <span>추천 행동</span>
-                <span className="text-cyber-green">{guidance.emphasis}</span>
-              </div>
-              <div className="mt-1 text-sm font-rajdhani font-bold text-white">{guidance.title}</div>
-              <div className="mt-0.5 text-[11px] font-fira text-cyber-blue/65">{guidance.detail}</div>
-              {(guidance.primaryAction || guidance.secondaryAction) && (
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {guidance.primaryAction ? (
-                    <button
-                      onClick={() => handleGuidanceAction(guidance.primaryAction)}
-                      className="min-h-[36px] rounded-lg border border-cyber-green/30 bg-cyber-green/10 px-3 py-2 text-[10px] font-rajdhani font-bold tracking-[0.16em] text-cyber-green transition-colors hover:bg-cyber-green/15"
-                    >
-                      {guidance.primaryAction.label}
-                    </button>
-                  ) : (
-                    <div />
-                  )}
-                  {guidance.secondaryAction ? (
-                    <button
-                      onClick={() => handleGuidanceAction(guidance.secondaryAction)}
-                      className="min-h-[36px] rounded-lg border border-cyber-blue/20 bg-cyber-black/60 px-3 py-2 text-[10px] font-rajdhani font-bold tracking-[0.16em] text-cyber-blue/80 transition-colors hover:bg-cyber-blue/10"
-                    >
-                      {guidance.secondaryAction.label}
-                    </button>
-                  ) : (
-                    <div />
-                  )}
+          {desktopSidebar ? (
+            <div className={useCompactDesktopRail ? 'space-y-0.5' : 'space-y-1'}>
+              {desktopPriorityButtons.length > 0 && (
+                <div className={`grid ${desktopPriorityButtons.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} ${useCompactDesktopRail ? 'gap-0.5' : 'gap-1'}`}>
+                  {desktopPriorityButtons.map((button) => renderActionButton(
+                    button,
+                    `${useCompactDesktopRail ? 'min-h-[30px] rounded-[0.78rem]' : 'min-h-[46px] rounded-[1rem]'} ${
+                      recommendedButton === button.key
+                        ? 'ring-1 ring-cyan-300/35 shadow-[0_0_12px_rgba(34,211,238,0.16)]'
+                        : ''
+                    }`
+                  ))}
                 </div>
               )}
+
+              {desktopSecondaryButtons.length > 0 && (
+                <div className={`grid ${useCompactDesktopRail ? 'grid-cols-5 gap-0.5' : 'grid-cols-3 gap-[0.3125rem]'}`}>
+                  {desktopSecondaryButtons.map((button) => renderActionButton(
+                    button,
+                    useCompactDesktopRail
+                      ? 'min-h-[24px] rounded-[0.72rem] px-0.25 py-0.25'
+                      : 'min-h-[30px] rounded-[0.95rem]',
+                    useCompactDesktopRail ? { hideLabel: true } : {}
+                  ))}
+                </div>
+              )}
+
+              {renderResetControl({
+                compact: true,
+                className: 'w-full',
+                confirmGridClass: 'grid grid-cols-2 gap-1',
+              })}
+            </div>
+          ) : (
+            <div className={actionGridClass}>
+              {coreButtons.map((button) => renderActionButton(button))}
+              {(mobile || desktopSidebar) && !isSafeZone && renderResetControl({
+                compact: true,
+                className: desktopSidebar ? 'col-span-2' : '',
+                confirmGridClass: desktopSidebar ? 'col-span-2 grid-cols-2 gap-1.5' : 'col-span-2 grid-cols-2 gap-1.5',
+              })}
+              {isSafeZone && safeZoneButtons.map((button) => renderActionButton(button))}
+              {auxiliaryButtons.map((button) => renderActionButton(button))}
+              {(mobile || desktopSidebar) && isSafeZone && renderResetControl({
+                compact: true,
+                className: desktopSidebar ? 'col-span-2' : '',
+                confirmGridClass: desktopSidebar ? 'col-span-2 grid-cols-2 gap-1.5' : 'col-span-2 grid-cols-2 gap-1.5',
+              })}
+              {!mobile && !desktopSidebar && renderResetControl({
+                className: 'sm:col-start-4',
+              })}
             </div>
           )}
-
-          <div className={actionGridClass}>
-            {coreButtons.map((button) => renderActionButton(button))}
-            {mobile && !isSafeZone && renderResetControl({ compact: true, confirmGridClass: 'col-span-2 grid-cols-2 gap-1.5' })}
-            {isSafeZone && safeZoneButtons.map((button) => renderActionButton(button))}
-            {auxiliaryButtons.map((button) => renderActionButton(button))}
-            {mobile && isSafeZone && renderResetControl({ compact: true, confirmGridClass: 'col-span-2 grid-cols-2 gap-1.5' })}
-            {!mobile && renderResetControl({
-              className: 'sm:col-start-4',
-            })}
-          </div>
         </>
       )}
     </Motion.div>

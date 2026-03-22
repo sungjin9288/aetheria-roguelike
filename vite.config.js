@@ -9,15 +9,25 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // React 코어
-          'vendor-react': ['react', 'react-dom'],
-          // 애니메이션 (framer-motion은 별도 청크)
-          'vendor-motion': ['framer-motion'],
-          // Firebase (필요 모듈만)
-          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          // 차트
-          'vendor-charts': ['chart.js', 'react-chartjs-2'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('/react/') || id.includes('/react-dom/')) return 'vendor-react'
+            if (id.includes('framer-motion')) return 'vendor-motion'
+            if (id.includes('/firebase/')) return 'vendor-firebase'
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) return 'vendor-charts'
+          }
+
+          // 큰 게임 데이터는 별도 청크로 분리한다.
+          // Dashboard는 App.jsx에서 lazy import 되므로 archive 계열은
+          // 기본 청크 분할에 맡겨 cycle 없는 chunk graph를 유지한다.
+          if (id.includes('/src/data/')) return 'game-data'
+
+          if (
+            id.includes('/src/systems/CombatEngine.js')
+            || id.includes('/src/hooks/useCombatActions.js')
+          ) {
+            return 'game-combat'
+          }
         }
       }
     }

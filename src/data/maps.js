@@ -24,15 +24,15 @@ export const MAPS = {
     '북부 요새': { level: 30, type: 'safe', exits: ['얼음 성채', '기계 폐도'], monsters: [], desc: '북쪽 끝 설원에 위치한 전방 요새입니다. (Tier 3 상점)', eventChance: 0 },
 
     // 확장 지역 (Lv 28-55)
-    '기계 폐도': { level: 28, type: 'dungeon', exits: ['북부 요새', '천공 정원'], monsters: ['강철 자동인형', '전류 추적자', '증기 골렘', '폐회로 마도병'], desc: '고대 문명 자동 병기가 멈추지 않고 순찰하는 폐허 지구입니다.', eventChance: 0.24 },
+    '기계 폐도': { level: 28, type: 'dungeon', exits: ['북부 요새', '천공 정원'], monsters: ['강철 자동인형', '전류 추적자', '증기 골렘', '폐회로 마도병', '과부하 포격기'], desc: '고대 문명 자동 병기가 멈추지 않고 순찰하는 폐허 지구입니다.', eventChance: 0.24 },
     '천공 정원': { level: 35, type: 'dungeon', exits: ['기계 폐도', '심해 회랑'], monsters: ['천공 수호조', '빛결 수정체', '폭풍 세이렌', '성운 감시자'], desc: '구름 위에 떠 있는 잔해 정원. 빛과 폭풍의 마력이 교차합니다.', eventChance: 0.26 },
-    '심해 회랑': { level: 42, type: 'dungeon', exits: ['천공 정원', '에테르 관문'], monsters: ['심해 기도사', '심연 크라켄', '해류 파수꾼', '망각의 나가'], desc: '심해의 균열을 따라 이어진 회랑. 고요하지만 치명적인 장소입니다.', eventChance: 0.28 },
-    '에테르 관문': { level: 50, type: 'dungeon', exits: ['심해 회랑', '혼돈의 심연'], monsters: ['차원 파쇄자', '영겁의 수문장', '에테르 드래곤'], bossMonsters: ['차원 파쇄자', '영겁의 수문장', '에테르 드래곤'], desc: '차원 사이에 열린 최상위 전장. 끝없는 전투의 관문입니다.', eventChance: 0.32, boss: true },
+    '심해 회랑': { level: 42, type: 'dungeon', exits: ['천공 정원', '에테르 관문'], monsters: ['심해 기도사', '심연 크라켄', '해류 파수꾼', '망각의 나가', '어비스 리바이어던'], desc: '심해의 균열을 따라 이어진 회랑. 고요하지만 치명적인 장소입니다.', eventChance: 0.28 },
+    '에테르 관문': { level: 50, type: 'dungeon', exits: ['심해 회랑', '혼돈의 심연'], monsters: ['에테르 파편체', '공허 집행관', '차원 파쇄자', '영겁의 수문장', '에테르 드래곤'], bossMonsters: ['차원 파쇄자', '영겁의 수문장', '에테르 드래곤'], desc: '차원 사이에 열린 최상위 전장. 끝없는 전투의 관문입니다.', eventChance: 0.32, boss: true },
 
     // 최종 지역 (Lv 30-50)
     '암흑 성': { level: 30, type: 'dungeon', exits: ['어둠의 동굴', '마왕성'], monsters: ['데스나이트', '리치', '뱀파이어', '암흑 사제'], desc: '어둠의 세력이 지배하는 성입니다.', eventChance: 0.24 },
     '마왕성': { level: 40, type: 'dungeon', exits: ['암흑 성', '혼돈의 심연'], monsters: ['마왕의 사도', '지옥의 문지기', '타락한 천사', '마왕'], bossMonsters: ['마왕'], desc: '마왕이 군림하는 최종 목적지입니다.', eventChance: 0.3, boss: true },
-    '혼돈의 심연': { level: 'infinite', type: 'dungeon', exits: ['마왕성'], monsters: ['혼돈의 추종자', '타락한 용사', '심연의 수호자', '공허의 짐승'], desc: '끝이 없는 심연입니다. 층을 거듭할수록 끝없이 강해지는 적들이 기다립니다.', eventChance: 0.18 },
+    '혼돈의 심연': { level: 'infinite', type: 'dungeon', exits: ['마왕성'], monsters: ['혼돈의 추종자', '타락한 용사', '심연의 수호자', '공허의 짐승', '혼돈의 화신'], desc: '끝이 없는 심연입니다. 층을 거듭할수록 끝없이 강해지는 적들이 기다립니다.', eventChance: 0.18 },
 
     // 시크릿 맵
     '고대 보물고': { level: 25, type: 'dungeon', exits: ['시작의 마을'], monsters: ['황금 골렘', '보물사냥꾼', '미믹'], desc: '잊혀진 열쇠로 열린 비밀의 보물고입니다. 황금이 넘쳐나는 위험한 곳입니다.', eventChance: 0.24, boss: false }

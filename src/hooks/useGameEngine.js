@@ -59,9 +59,10 @@ export const useGameEngine = () => {
         []
     );
 
-    const getFullStats = useCallback(() => {
-        const cls = DB.CLASSES[player.job] || DB.CLASSES['모험가'];
-        const equipProfile = getEquipmentProfile(player.equip);
+    const getFullStats = useCallback((targetPlayer = player) => {
+        const activePlayer = targetPlayer ?? player;
+        const cls = DB.CLASSES[activePlayer.job] || DB.CLASSES['모험가'];
+        const equipProfile = getEquipmentProfile(activePlayer.equip);
         const {
             mainWeapon,
             offhandWeapon,
@@ -75,10 +76,10 @@ export const useGameEngine = () => {
         const dualWieldMult = offhandWeapon ? BALANCE.DUAL_WIELD_ATK_BONUS : 1;
         const dualWieldDefMult = offhandWeapon ? BALANCE.DUAL_WIELD_DEF_MULT : 1;
 
-        const aVal = player.equip.armor?.val || 0;
-        const buff = player.tempBuff || {};
-        const meta = player.meta || {};
-        const titlePassive = getTitlePassive(player.activeTitle) || {};
+        const aVal = activePlayer.equip.armor?.val || 0;
+        const buff = activePlayer.tempBuff || {};
+        const meta = activePlayer.meta || {};
+        const titlePassive = getTitlePassive(activePlayer.activeTitle) || {};
 
         // === Set Bonus ===
         let atkMultBonus = 1;
@@ -86,9 +87,9 @@ export const useGameEngine = () => {
         let hpMultBonus = 1;
         let activeSet = null;
 
-        const wPrefix = player.equip.weapon?.prefixName;
-        const aPrefix = player.equip.armor?.prefixName;
-        const oPrefix = player.equip.offhand?.prefixName;
+        const wPrefix = activePlayer.equip.weapon?.prefixName;
+        const aPrefix = activePlayer.equip.armor?.prefixName;
+        const oPrefix = activePlayer.equip.offhand?.prefixName;
 
         const prefixes = [wPrefix, aPrefix, oPrefix].filter(Boolean);
         if (prefixes.length >= 2) {
@@ -106,14 +107,14 @@ export const useGameEngine = () => {
         }
 
         const isMagic =
-            ['마법사', '아크메이지', '흑마법사', '성직자'].includes(player.job) ||
-            (player.equip.weapon?.elem && !['물리', 'physical'].includes(player.equip.weapon.elem));
+            ['마법사', '아크메이지', '흑마법사', '성직자'].includes(activePlayer.job) ||
+            (activePlayer.equip.weapon?.elem && !['물리', 'physical'].includes(activePlayer.equip.weapon.elem));
 
         // === Codex Bonus ===
         let codexAtk = 0;
         let codexDef = 0;
         let codexHp = 0;
-        const registry = player.stats?.killRegistry || {};
+        const registry = activePlayer.stats?.killRegistry || {};
         Object.values(registry).forEach(kills => {
             if (kills >= 10) codexHp += 5;
             if (kills >= 50) codexDef += 1;
@@ -121,13 +122,13 @@ export const useGameEngine = () => {
         });
 
         // v4.0 — 유물 스탯 배율 계산
-        const relics = player.relics || [];
+        const relics = activePlayer.relics || [];
         const ra = relics.reduce((acc, r) => {
             if (r.effect === 'glass_cannon')  return acc + r.val.atk;
             if (r.effect === 'ancient_power') return acc + r.val.atk;
             if (r.effect === 'omega')         return acc + r.val;
             if (r.effect === 'cursed_power')  return acc + r.val.atk;
-            if (r.effect === 'low_hp_atk' && player.hp / Math.max(1, player.maxHp) < r.val.threshold) return acc + r.val.bonus;
+            if (r.effect === 'low_hp_atk' && activePlayer.hp / Math.max(1, activePlayer.maxHp) < r.val.threshold) return acc + r.val.bonus;
             return acc;
         }, 0);
         const rd = relics.reduce((acc, r) => {
@@ -153,10 +154,10 @@ export const useGameEngine = () => {
             return acc;
         }, 0);
 
-        const baseAtk = (player.atk + mainAttack + offhandAttack + codexAtk + (meta.bonusAtk || 0)) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * dualWieldMult;
-        const baseDef = (player.def + aVal + shieldDef + codexDef) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
-        const baseMaxHp = (player.maxHp + codexHp) * hpMultBonus;
-        const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus) * rmp;
+        const baseAtk = (activePlayer.atk + mainAttack + offhandAttack + codexAtk + (meta.bonusAtk || 0)) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * dualWieldMult;
+        const baseDef = (activePlayer.def + aVal + shieldDef + codexDef) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
+        const baseMaxHp = (activePlayer.maxHp + codexHp) * hpMultBonus;
+        const baseMaxMp = ((activePlayer.maxMp || 50) + equipmentMpBonus) * rmp;
         const baseCritChance = Math.min(0.75, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus + (titlePassive.crit || 0));
         const preBuildStats = {
             atk: Math.floor(baseAtk * (1 + ra) + (titlePassive.atk || 0)),
@@ -170,9 +171,9 @@ export const useGameEngine = () => {
             relics,
             critChance: baseCritChance,
         };
-        const buildProfile = getRunBuildProfile(player, preBuildStats);
-        const traitProfile = getTraitProfile(player, preBuildStats);
-        const traitBonus = getTraitBonus(player, preBuildStats);
+        const buildProfile = getRunBuildProfile(activePlayer, preBuildStats);
+        const traitProfile = getTraitProfile(activePlayer, preBuildStats);
+        const traitBonus = getTraitBonus(activePlayer, preBuildStats);
         const finalAtk = Math.floor(preBuildStats.atk * (traitBonus.atkMult || 1));
         const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1));
         const finalMaxHp = preBuildStats.maxHp;

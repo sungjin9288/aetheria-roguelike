@@ -3,6 +3,7 @@ import { CONSTANTS } from '../data/constants';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 import { LatencyTracker } from '../systems/LatencyTracker';
 import { buildEventPackage, getRecentEventSet, pickFallbackEvent, summarizeHistory } from '../utils/aiEventUtils';
+import { isSmokeRuntime } from '../utils/runtimeMode';
 
 /**
  * AI_SERVICE 내부 공용 프록시 호출 헬퍼 (DRY 적용)
@@ -60,6 +61,10 @@ export const AI_SERVICE = {
     },
 
     generateEvent: async (loc, history = [], uid = 'anonymous', context = {}) => {
+        if (isSmokeRuntime()) {
+            return pickFallbackEvent(loc, history, context);
+        }
+
         if (!TokenQuotaManager.canMakeAICall()) {
             return {
                 ...pickFallbackEvent(loc, history, context),
@@ -100,6 +105,10 @@ export const AI_SERVICE = {
     },
 
     generateStory: async (type, data, uid = 'anonymous') => {
+        if (isSmokeRuntime()) {
+            return AI_SERVICE.getFallback(type, data);
+        }
+
         if (!TokenQuotaManager.canMakeAICall()) {
             return AI_SERVICE.getFallback(type, data);
         }

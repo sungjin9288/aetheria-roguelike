@@ -634,8 +634,13 @@ export const CombatEngine = {
         // 유물: EXP/골드 배율
         const expMult = 1 + (relics.find(r => r.effect === 'exp_mult')?.val || 0);
         const goldMult = 1 + (relics.find(r => r.effect === 'gold_mult')?.val || 0);
+        // 레벨 차이 골드 스케일링: 플레이어가 몬스터보다 10레벨 이상 높으면 골드 감소 (최소 30%)
+        const playerLevel = p.level || 1;
+        const enemyLevel = enemy.level || 1;
+        const levelGap = Math.max(0, playerLevel - enemyLevel - 9);
+        const levelPenalty = Math.max(0.3, 1 - levelGap * 0.07);
         const expGained = Math.floor(enemy.exp * expMult);
-        const goldGained = Math.floor(enemy.gold * goldMult);
+        const goldGained = Math.floor(enemy.gold * goldMult * levelPenalty);
 
         p.gold += goldGained;
 
@@ -749,6 +754,32 @@ export const CombatEngine = {
         });
 
         return { items, logs };
+    },
+
+    /**
+     * 적의 다음 행동을 예측하여 텔레그래프 메시지를 반환합니다.
+     * CombatPanel에서 UI 경고 표시에 사용.
+     */
+    predictEnemyNextAction(enemy) {
+        if (!enemy || enemy.hp <= 0) return null;
+        if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: '기절 중 — 행동 불가', color: 'blue' };
+
+        // 보스 Phase 2 전환 임박 체크
+        const hpRatio = enemy.hp / Math.max(1, enemy.maxHp || enemy.hp);
+        if (enemy.isBoss && !enemy.phase2Triggered && enemy.phase2 && hpRatio <= BALANCE.BOSS_PHASE2_THRESHOLD + 0.1) {
+            return { type: 'phase2_imminent', label: `⚡ Phase 2 임박 — ${enemy.phase2?.name || '형태 변환'}`, color: 'purple' };
+        }
+
+        const pattern = enemy.taunted
+            ? { guardChance: 0, heavyChance: 1.0 }
+            : (enemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
+
+        // 가장 높은 확률 행동을 예측
+        if (pattern.guardChance >= 0.5) return { type: 'guard', label: `방어 태세 (${Math.round(pattern.guardChance * 100)}%)`, color: 'blue' };
+        if (pattern.heavyChance >= 0.4) return { type: 'heavy', label: `강타 준비 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'red' };
+        if (pattern.guardChance >= 0.3) return { type: 'guard', label: `방어 가능 (${Math.round(pattern.guardChance * 100)}%)`, color: 'blue' };
+        if (pattern.heavyChance >= 0.25) return { type: 'heavy', label: `강타 가능 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'orange' };
+        return { type: 'normal', label: '일반 공격 예상', color: 'gray' };
     },
 
     handleDefeat(player, INITIAL_PLAYER) {

@@ -1,14 +1,15 @@
 import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { CLASSES } from '../data/classes';
+import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics';
 import { AI_SERVICE } from '../services/aiService';
 import { toArray, getJobSkills, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel } from '../utils/gameUtils';
 import { resetDailyProtocolIfNeeded, rollExplorationEvent, spawnEnemy, applyBattleStartRelics, getFirstVisitReward } from '../utils/exploreUtils';
 import { advanceExploreState, getMapPacingProfile, getNarrativeEventChance, getQuietExplorationChance } from '../utils/explorationPacing';
 import { getRunBuildProfile } from '../utils/runProfileUtils';
-import { resolveGraveRecovery } from '../utils/graveUtils.js';
+import { getGravesAtLoc, removeGravesAtLoc, resolveGraveRecovery } from '../utils/graveUtils.js';
+import { clearTemporaryAdventureState, hasTemporaryAdventureState } from '../utils/playerStateUtils.js';
 import { applyDynamicDifficulty, enrichSnapshotWithDifficulty } from '../systems/DifficultyManager';
-// RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN — 동적 import로 exploreUtils.js에서 사용
 import { PRESTIGE_TITLES } from '../data/titles';
 import { AT } from '../reducers/actionTypes';
 import { GS } from '../reducers/gameStates';
@@ -83,16 +84,22 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (player.level < requiredLevel) return addLog('error', `레벨 ${requiredLevel} 이상이어야 이동 가능합니다.`);
         if (!DB.MAPS[player.loc].exits.includes(loc)) return addLog('error', '갈 수 없는 곳입니다.');
         const firstVisit = !(player.stats?.visitedMaps || []).includes(loc);
+        const isSafeDestination = targetMap.type === 'safe';
+        const shouldClearTemporaryState = isSafeDestination && hasTemporaryAdventureState(player);
+        const gravesAtDestination = getGravesAtLoc(grave, loc);
         dispatch({
             type: 'SET_PLAYER',
-            payload: (p) => ({
-                ...p,
-                loc,
-                stats: {
-                    ...(p.stats || {}),
-                    visitedMaps: Array.from(new Set([...(p.stats?.visitedMaps || []), loc]))
-                }
-            })
+            payload: (p) => {
+                const nextPlayer = isSafeDestination ? clearTemporaryAdventureState(p) : { ...p };
+                return {
+                    ...nextPlayer,
+                    loc,
+                    stats: {
+                        ...(nextPlayer.stats || {}),
+                        visitedMaps: Array.from(new Set([...(p.stats?.visitedMaps || []), loc]))
+                    }
+                };
+            }
         });
         dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
         addLog('success', `${loc}로 이동했습니다.`);
@@ -105,7 +112,8 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 dispatch({
                     type: 'SET_PLAYER',
                     payload: (p) => {
-                        let updated = { ...p, gold: (p.gold || 0) + visitReward.gold };
+                        let updated = isSafeDestination ? clearTemporaryAdventureState(p) : { ...p };
+                        updated = { ...updated, gold: (updated.gold || 0) + visitReward.gold };
                         const expResult = CombatEngine.applyExpGain(updated, visitReward.exp);
                         return expResult.updatedPlayer;
                     }
@@ -113,7 +121,10 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             }
         }
         addLog('system', targetMap.desc);
-        if (grave && grave.loc === loc) addLog('event', '근처에서 당신의 유해를 발견했습니다.');
+        if (shouldClearTemporaryState) addLog('info', '마을에 복귀하며 임시 버프와 상태이상이 정리되었습니다.');
+        if (gravesAtDestination.length > 0) {
+            addLog('event', gravesAtDestination.length > 1 ? `근처에서 당신의 유해 ${gravesAtDestination.length}구를 발견했습니다.` : '근처에서 당신의 유해를 발견했습니다.');
+        }
     },
 
     start: (name, gender = 'male', jobId = '모험가') => {
@@ -228,13 +239,11 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         }
 
         // 전투 직전 유물 발견 기회 (Phase 1-B)
-        const { MAX_RELICS_PER_RUN: maxRelics } = await import('../data/relics');
-        if (playerRelics.length < maxRelics && Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
-            const { RELICS: relicList, pickWeightedRelics: pick } = await import('../data/relics');
-            const available = relicList.filter(r => !playerRelics.some(pr => pr.id === r.id));
+        if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
+            const available = RELICS.filter(r => !playerRelics.some(pr => pr.id === r.id));
             if (available.length > 0) {
                 commitExploreOutcome('relic_found');
-                const candidates = pick(available, 3);
+                const candidates = pickWeightedRelics(available, 3);
                 dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
                 addLog('event', '✨ [유물 발견] 전투 직전, 고대의 유물이 눈에 들어옵니다!');
                 return;
@@ -245,7 +254,23 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog });
 
         // Stage 3: 동적 난이도 조절 적용
-        const { mStats } = applyDynamicDifficulty(rawStats, player, addLog);
+        let { mStats } = applyDynamicDifficulty(rawStats, player, addLog);
+
+        // 무한 심연 모드: 혼돈의 심연에서 abyssFloor 기반 스케일링
+        if (mapData.level === 'infinite') {
+            const floor = (player.stats?.abyssFloor || 0) + 1;
+            const abyssScale = 1 + (floor - 1) * 0.08; // 층당 8% 스탯 증가
+            mStats = {
+                ...mStats,
+                hp: Math.floor(mStats.hp * abyssScale),
+                maxHp: Math.floor(mStats.maxHp * abyssScale),
+                atk: Math.floor(mStats.atk * abyssScale),
+                exp: Math.floor(mStats.exp * (1 + (floor - 1) * 0.12)),
+                gold: Math.floor(mStats.gold * (1 + (floor - 1) * 0.1)),
+                level: 50 + floor,
+            };
+            if (floor % 5 === 0) addLog('warning', `🌀 심연 ${floor}층 — 강대한 적들이 기다립니다...`);
+        }
 
         // 전투 시작 유물 효과 적용 (Phase 1-B)
         const fullStats = getFullStats();
@@ -327,12 +352,14 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         if (gameState !== 'idle') return;
         const mapData = DB.MAPS[player.loc];
         if (mapData.type !== 'safe') return addLog('error', '휴식은 안전한 지역에서만 가능합니다.');
-        if (player.gold < BALANCE.REST_COST) return addLog('error', '골드가 부족합니다.');
+        // 휴식 비용: 레벨 기반 스케일링 (100G * (1 + lv/20))
+        const restCost = Math.floor(BALANCE.REST_COST * (1 + (player.level || 1) / 20));
+        if (player.gold < restCost) return addLog('error', `골드가 부족합니다. (필요: ${restCost}G)`);
 
         const stats = getFullStats();
         const updatedPlayer = {
             ...player,
-            gold: player.gold - BALANCE.REST_COST,
+            gold: player.gold - restCost,
             hp: stats.maxHp,
             mp: stats.maxMp,
             stats: {
@@ -344,10 +371,10 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             type: 'SET_PLAYER',
             payload: updatedPlayer
         });
-        dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: BALANCE.REST_COST } });
-        emitDailyProtocolLogs('goldSpend', BALANCE.REST_COST);
+        dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: restCost } });
+        emitDailyProtocolLogs('goldSpend', restCost);
         emitUnlockedTitles(updatedPlayer);
-        addLog('success', '휴식 완료. HP/MP가 회복되었습니다.');
+        addLog('success', `휴식 완료. HP/MP가 회복되었습니다. (-${restCost}G)`);
         addStoryLog('rest', { loc: player.loc });
     },
 
@@ -395,11 +422,12 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     },
 
     lootGrave: () => {
-        if (!grave) return;
-        const { updatedPlayer, logMsg } = resolveGraveRecovery(player, grave);
+        const gravesAtLoc = getGravesAtLoc(grave, player.loc);
+        if (gravesAtLoc.length === 0) return;
+        const { updatedPlayer, logMsg } = resolveGraveRecovery(player, gravesAtLoc);
         dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
         emitUnlockedTitles(updatedPlayer);
-        dispatch({ type: 'SET_GRAVE', payload: null });
+        dispatch({ type: 'SET_GRAVE', payload: removeGravesAtLoc(grave, player.loc) });
         addLog('success', logMsg);
     },
 

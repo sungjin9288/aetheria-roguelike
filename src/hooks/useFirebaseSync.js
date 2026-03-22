@@ -16,6 +16,7 @@ import { signInAnonymously } from 'firebase/auth';
 import { auth, db, hasFirebaseConfig } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { migrateData } from '../utils/gameUtils';
+import { isSmokeRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 
@@ -27,6 +28,7 @@ const makeLogPayload = (type, text) => ({ type, text, id: `${Date.now()}_${Math.
  * useFirebaseSync — Firebase 인증, 실시간 동기화, 리더보드, 자동 저장
  */
 export const useFirebaseSync = (state, dispatch) => {
+    const smokeMode = isSmokeRuntime();
     const {
         player,
         gameState,
@@ -43,8 +45,19 @@ export const useFirebaseSync = (state, dispatch) => {
     const lastLoadedTimestampRef = useRef(state.lastLoadedTimestamp);
     const hasBootLogRef = useRef(state.logs.length > 0);
 
+    useEffect(() => {
+        if (!smokeMode || syncStatus === 'offline') return;
+        dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
+    }, [dispatch, smokeMode, syncStatus]);
+
     // --- Auth ---
     useEffect(() => {
+        if (smokeMode) {
+            dispatch({ type: 'LOAD_DATA', payload: { player: INITIAL_STATE.player } });
+            dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
+            return undefined;
+        }
+
         dispatch({ type: 'SET_BOOT_STAGE', payload: 'auth' });
         let authResolved = false;
 
@@ -86,7 +99,7 @@ export const useFirebaseSync = (state, dispatch) => {
                 fallbackAuthOffline('클라우드 인증 실패로 오프라인 모드로 시작했습니다.');
             });
         return () => clearTimeout(authTimer);
-    }, [dispatch]);
+    }, [dispatch, smokeMode]);
 
     useEffect(() => {
         lastLoadedTimestampRef.current = state.lastLoadedTimestamp;
@@ -94,6 +107,7 @@ export const useFirebaseSync = (state, dispatch) => {
 
     // --- Config & Leaderboard ---
     useEffect(() => {
+        if (smokeMode) return undefined;
         if (bootStage !== 'config') return;
 
         const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
@@ -121,10 +135,11 @@ export const useFirebaseSync = (state, dispatch) => {
         fetchLeaderboard();
         dispatch({ type: 'SET_BOOT_STAGE', payload: 'data' });
         return () => unsubConfig();
-    }, [bootStage, dispatch]);
+    }, [bootStage, dispatch, smokeMode]);
 
     // --- User Data Listener ---
     useEffect(() => {
+        if (smokeMode) return undefined;
         if (bootStage !== 'data' || !uid) return;
 
         const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
@@ -179,10 +194,11 @@ export const useFirebaseSync = (state, dispatch) => {
             clearTimeout(bootstrapTimer);
             unsubscribe();
         };
-    }, [uid, bootStage, dispatch]);
+    }, [uid, bootStage, dispatch, smokeMode]);
 
     // --- Auto Save (Debounced) ---
     useEffect(() => {
+        if (smokeMode) return undefined;
         if (syncStatus !== 'syncing' || !uid) return;
 
         const saveData = async () => {
@@ -232,7 +248,7 @@ export const useFirebaseSync = (state, dispatch) => {
 
         const timer = setTimeout(saveData, BALANCE.DEBOUNCE_SAVE_MS);
         return () => clearTimeout(timer);
-    }, [player, gameState, enemy, grave, currentEvent, quickSlots, onboardingDismissed, syncStatus, uid, dispatch]);
+    }, [player, gameState, enemy, grave, currentEvent, quickSlots, onboardingDismissed, syncStatus, uid, dispatch, smokeMode]);
 
     // Update boot log ref
     useEffect(() => {

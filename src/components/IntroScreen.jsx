@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import AetherMark from './AetherMark';
+import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
 
 const MOBILE_NAME_POOL = ['진', '리아', '카일', '세나', '루카', '시아', '하린', '레온'];
 const randomMobileName = () => MOBILE_NAME_POOL[Math.floor(Math.random() * MOBILE_NAME_POOL.length)];
@@ -8,6 +9,11 @@ const randomMobileName = () => MOBILE_NAME_POOL[Math.floor(Math.random() * MOBIL
 const IntroScreen = ({ onStart, mobile = false }) => {
     const [name, setName] = useState('');
     const mobileSuggestions = useMemo(() => MOBILE_NAME_POOL, []);
+
+    useEffect(() => {
+        markPerfOnce('aetheria:intro-visible');
+        measurePerfOnce('aetheria:intro-visible-ms', 'aetheria:app-mounted', 'aetheria:intro-visible');
+    }, []);
 
     const canStart = name.trim().length > 0;
     const selectedName = useMemo(() => name.trim(), [name]);
@@ -27,17 +33,17 @@ const IntroScreen = ({ onStart, mobile = false }) => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className={`panel-noise w-full text-center relative overflow-hidden rounded-[1.75rem] border backdrop-blur-2xl shadow-[0_28px_90px_rgba(4,10,24,0.55)] ${
+            className={`panel-noise aether-surface-strong relative w-full overflow-hidden text-center ${
                 mobile
-                    ? 'max-w-xl border-cyan-500/20 bg-slate-950/90 px-5 py-6'
-                    : 'max-w-2xl border-cyber-purple/25 bg-cyber-slate/80 p-6 md:p-8'
+                    ? 'max-w-xl rounded-[2rem] px-5 py-6'
+                    : 'max-w-2xl rounded-[2.2rem] p-6 md:p-8'
             }`}
         >
             <div className="absolute inset-0 opacity-70 pointer-events-none">
-                <div className="absolute -top-20 left-1/2 h-44 w-44 -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
-                <div className="absolute -bottom-24 right-0 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl" />
+                <div className="absolute -top-20 left-1/2 h-44 w-44 -translate-x-1/2 rounded-full bg-[#d5b180]/10 blur-3xl" />
+                <div className="absolute -bottom-24 right-0 h-40 w-40 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
             </div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-scanline" />
+            <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
             <div className="relative z-10 mb-6 flex flex-col items-center gap-3">
                 <AetherMark size={mobile ? 'md' : 'lg'} />
@@ -46,7 +52,7 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3, duration: 0.8 }}
-                        className={`${mobile ? 'text-4xl' : 'text-5xl'} font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-emerald-300 to-cyan-500 mb-1 font-rajdhani drop-shadow-lg tracking-[0.18em]`}
+                        className={`${mobile ? 'text-4xl' : 'text-5xl'} mb-1 bg-gradient-to-r from-[#f4e6c8] via-[#b3ece7] to-[#82c7d4] bg-clip-text font-rajdhani font-bold tracking-[0.18em] text-transparent`}
                     >
                         AETHERIA
                     </Motion.h1>
@@ -54,17 +60,23 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.8, duration: 1 }}
-                        className="font-fira text-[11px] tracking-[0.26em] text-cyan-200/70"
+                        className="font-fira text-[11px] tracking-[0.26em] text-[#d7dde4]/62"
                     >
-                        DUSK ARCHIVE INITIALIZED
+                        MOONLIT FIELD LEDGER
                     </Motion.p>
                 </div>
+                <p className="max-w-[32rem] text-[12px] font-fira leading-relaxed text-slate-300/78">
+                    쇠락한 지대의 기록을 수집하고, 매 회차 다른 유물과 선택으로 살아남는 로그북형 roguelike.
+                </p>
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
-                    <span className="rounded-full border border-cyan-400/16 bg-slate-950/72 px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/60">
-                        Archive Field Client
+                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-300/80">
+                        Archive Client
                     </span>
-                    <span className="rounded-full border border-emerald-400/16 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.18em] text-emerald-200/80">
-                        Mobile-Ready
+                    <span className="rounded-full border border-[#d5b180]/18 bg-[#d5b180]/10 px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.18em] text-[#f4e6c8]/82">
+                        Ruin Survey
+                    </span>
+                    <span className="rounded-full border border-[#7dd4d8]/18 bg-[#7dd4d8]/10 px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/82">
+                        Touch + Desktop
                     </span>
                 </div>
             </div>
@@ -80,9 +92,9 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                 >
                     {mobile ? (
                         <div className="space-y-3">
-                            <p className="text-slate-400 text-sm font-fira">콜사인을 직접 정하거나 추천안을 고른 뒤 바로 시작하세요</p>
-                            <div className="rounded-[1.35rem] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,16,28,0.92)_0%,rgba(5,9,18,0.96)_100%)] px-4 py-4 shadow-[0_18px_48px_rgba(2,8,20,0.3)]">
-                                <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-200/45 font-fira">Callsign</div>
+                            <p className="text-sm font-fira text-slate-300/72">콜사인을 정하고 기록을 열면 바로 첫 탐사가 시작됩니다.</p>
+                            <div className="rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,18,26,0.88)_0%,rgba(8,11,17,0.95)_100%)] px-4 py-4 shadow-[0_18px_48px_rgba(2,8,20,0.3)]">
+                                <div className="text-[11px] font-fira uppercase tracking-[0.2em] text-slate-400/70">Callsign</div>
                                 <input
                                     data-testid="intro-name-input"
                                     type="text"
@@ -90,14 +102,14 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                                     onChange={(e) => setName(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="콜사인 입력"
-                                    className="mt-2 w-full rounded-[1rem] border border-cyan-400/18 bg-slate-950/82 px-3 py-3 text-center font-rajdhani text-xl text-cyan-100 transition-all placeholder:text-cyan-200/25 focus:border-emerald-300 focus:outline-none focus:shadow-[0_0_28px_rgba(34,211,238,0.15)]"
+                                    className="mt-2 w-full rounded-[1.15rem] border border-white/10 bg-black/28 px-3 py-3 text-center font-rajdhani text-xl text-[#f0f6f7] transition-all placeholder:text-slate-500 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
                                     maxLength={16}
                                 />
                                 <div className="mt-1 flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
-                                    <span className="text-cyber-blue/45">{selectedName ? '기록 준비 완료' : '콜사인을 입력하세요'}</span>
-                                    <span data-testid="intro-mobile-name" className="text-cyan-200/65">{selectedName || 'EMPTY'}</span>
+                                    <span className="text-slate-400/65">{selectedName ? '기록 준비 완료' : '콜사인을 입력하세요'}</span>
+                                    <span data-testid="intro-mobile-name" className="text-[#dff7f5]/70">{selectedName || 'EMPTY'}</span>
                                 </div>
-                                <div className="mt-3 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">추천 콜사인</div>
+                                <div className="mt-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/65">추천 콜사인</div>
                                 <div className="mt-2 grid grid-cols-4 gap-2">
                                     {mobileSuggestions.map((option) => (
                                         <button
@@ -106,8 +118,8 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                                             onClick={() => setName(option)}
                                             className={`rounded-xl border px-2 py-2.5 text-sm font-rajdhani font-bold ${
                                                 selectedName === option
-                                                    ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-200'
-                                                    : 'border-slate-700 bg-slate-900/70 text-slate-300'
+                                                    ? 'border-[#7dd4d8]/30 bg-[#7dd4d8]/12 text-[#dff7f5]'
+                                                    : 'border-white/8 bg-black/24 text-slate-300'
                                             }`}
                                         >
                                             {option}
@@ -119,14 +131,14 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                                         type="button"
                                         data-testid="intro-reroll-name"
                                         onClick={() => setName(randomMobileName())}
-                                        className="flex-1 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-3 py-3 text-sm font-rajdhani font-bold text-cyan-200"
+                                        className="flex-1 rounded-xl border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-3 text-sm font-rajdhani font-bold text-[#f4e6c8]"
                                     >
                                         랜덤 생성
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setName('')}
-                                        className="rounded-xl border border-slate-700 bg-slate-950/75 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/65"
+                                        className="rounded-xl border border-white/8 bg-black/24 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/80"
                                     >
                                         지우기
                                     </button>
@@ -134,16 +146,16 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-2">
-                            <p className="text-slate-400 text-sm font-fira">이름을 입력하세요</p>
+                        <div className="space-y-3">
+                            <p className="text-sm font-fira text-slate-300/72">콜사인을 입력하면 폐허 지대 원정 기록이 활성화됩니다.</p>
                             <input
                                 data-testid="intro-name-input"
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="이름 입력"
-                                className="w-full rounded-2xl border border-cyan-400/25 bg-slate-950/80 p-4 text-center font-rajdhani text-xl text-cyan-100 transition-all placeholder:text-cyan-200/25 focus:border-emerald-300 focus:outline-none focus:shadow-[0_0_28px_rgba(34,211,238,0.15)]"
+                                placeholder="콜사인 입력"
+                                className="w-full rounded-[1.4rem] border border-white/10 bg-black/28 p-4 text-center font-rajdhani text-xl text-[#eff6f7] transition-all placeholder:text-slate-500 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
                                 autoFocus
                                 maxLength={16}
                             />
@@ -159,9 +171,9 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                     whileTap={{ scale: 0.97 }}
                     onClick={handleStart}
                     disabled={!canStart}
-                    className="flex-1 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 py-4 font-rajdhani font-bold text-emerald-200 transition-all hover:bg-emerald-400/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex-1 rounded-[1.4rem] border border-[#7dd4d8]/24 bg-[linear-gradient(180deg,rgba(125,212,216,0.18)_0%,rgba(125,212,216,0.08)_100%)] py-4 font-rajdhani font-bold tracking-[0.16em] text-[#e6f6f6] transition-all hover:border-[#d5b180]/28 hover:bg-[linear-gradient(180deg,rgba(213,177,128,0.18)_0%,rgba(125,212,216,0.12)_100%)] hover:shadow-[0_22px_40px_rgba(125,212,216,0.12)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    {mobile ? '여정 시작' : '기록 시작'}
+                    {mobile ? '기록 개시' : 'FIELD LEDGER OPEN'}
                 </Motion.button>
             </div>
         </Motion.div>

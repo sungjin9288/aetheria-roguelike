@@ -4,10 +4,11 @@ import { CombatEngine } from '../systems/CombatEngine';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { GS } from '../reducers/gameStates';
-import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary } from '../utils/gameUtils';
+import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary, toArray } from '../utils/gameUtils';
 import { getEquipmentProfile, getNextEquipmentState } from '../utils/equipmentUtils';
 import { pushBattleRecord, makeBattleRecord } from '../systems/DifficultyManager';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../utils/runProfileUtils';
+import { appendGrave } from '../utils/graveUtils.js';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -98,7 +99,7 @@ const addCombatDigestLogs = ({
 /**
  * createCombatActions — 전투 로직 (공격, 스킬, 도주)
  */
-export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog, addStoryLog, getFullStats }) => {
+export const createCombatActions = ({ player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats }) => {
     let pendingEnemyTurn = null;
     const emitDailyProtocolLogs = (type, amount = 1) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
@@ -115,6 +116,146 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
     };
 
     return {
+
+    combatUseItem: (item) => {
+        if (pendingEnemyTurn) { clearTimeout(pendingEnemyTurn); pendingEnemyTurn = null; }
+        if (gameState !== GS.COMBAT || !enemy) return addLog('error', '전투 상태가 아닙니다.');
+
+        const inventoryItem = player.inv.find((entry) => entry.id === item?.id);
+        if (!inventoryItem) return addLog('error', '인벤토리에 없는 아이템입니다.');
+        if (!['hp', 'mp', 'cure', 'buff'].includes(inventoryItem.type)) {
+            return addLog('error', '전투 중에는 소모품만 사용할 수 있습니다.');
+        }
+
+        let updatedPlayer = player;
+
+        if (inventoryItem.type === 'hp') {
+            const stats = getFullStats(player);
+            updatedPlayer = {
+                ...player,
+                hp: Math.min(stats.maxHp, player.hp + (inventoryItem.val || 0)),
+                inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
+            };
+            addLog('success', `${inventoryItem.name} 사용.`);
+        } else if (inventoryItem.type === 'mp') {
+            const stats = getFullStats(player);
+            updatedPlayer = {
+                ...player,
+                mp: Math.min(stats.maxMp, player.mp + (inventoryItem.val || 0)),
+                inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
+            };
+            addLog('success', `${inventoryItem.name} 사용.`);
+        } else if (inventoryItem.type === 'cure') {
+            updatedPlayer = {
+                ...player,
+                status: toArray(player.status).filter((status) => status !== inventoryItem.effect),
+                inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
+            };
+            addLog('success', `${inventoryItem.name} 사용: 상태이상 해제`);
+        } else if (inventoryItem.type === 'buff') {
+            updatedPlayer = {
+                ...player,
+                tempBuff: {
+                    atk: inventoryItem.effect === 'atk_up' || inventoryItem.effect === 'all_up' ? (inventoryItem.val || 1.3) - 1 : 0,
+                    def: inventoryItem.effect === 'def_up' || inventoryItem.effect === 'all_up' ? (inventoryItem.val || 1.3) - 1 : 0,
+                    turn: inventoryItem.turn || 3,
+                    name: inventoryItem.name
+                },
+                inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
+            };
+            addLog('success', `${inventoryItem.name} 사용: 버프 활성화`);
+        }
+
+        dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+
+        const turnTick = CombatEngine.tickCombatState(updatedPlayer);
+        turnTick.logs.forEach((log) => addLog(log.type, log.text));
+        const playerForEnemyTurn = turnTick.updatedPlayer;
+        dispatch({ type: 'SET_PLAYER', payload: playerForEnemyTurn });
+
+        const counterStats = getFullStats(playerForEnemyTurn);
+        const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, enemy, counterStats);
+        counterResult.logs.forEach((log) => addLog(log.type, log.text));
+
+        if (counterResult.isEnemyDead) {
+            dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
+            dispatch({ type: 'SET_ENEMY', payload: null });
+            addLog('success', `[지속 피해] ${enemy.name}이(가) 쓰러졌습니다!`);
+            const victoryResult = CombatEngine.handleVictory(counterResult.updatedPlayer, enemy);
+            let victoriousPlayer = victoryResult.updatedPlayer;
+            victoryResult.logs.forEach((log) => addLog(log.type, log.text));
+
+            const victoryStats = {
+                ...counterStats,
+                maxHp: victoriousPlayer.maxHp,
+                maxMp: victoriousPlayer.maxMp,
+            };
+            const buildProfileForProgress = getRunBuildProfile(victoriousPlayer, victoryStats);
+            victoriousPlayer = {
+                ...victoriousPlayer,
+                stats: {
+                    ...(victoriousPlayer.stats || {}),
+                    buildWins: {
+                        ...((victoriousPlayer.stats || {}).buildWins || {}),
+                        [buildProfileForProgress.primary.id]: (((victoriousPlayer.stats || {}).buildWins || {})[buildProfileForProgress.primary.id] || 0) + 1
+                    }
+                }
+            };
+
+            const questResult = CombatEngine.updateQuestProgress(victoriousPlayer, enemy.baseName || enemy.name);
+            victoriousPlayer = { ...victoriousPlayer, quests: questResult.updatedQuests };
+            if (questResult.completedCount > 0) {
+                addLog('system', `퀘스트 조건 달성: ${questResult.completedCount}개`);
+            }
+
+            const lootResult = CombatEngine.processLoot(enemy, victoriousPlayer);
+            lootResult.logs.forEach((log) => addLog(log.type, log.text));
+            if (lootResult.items.length > 0) {
+                victoriousPlayer = { ...victoriousPlayer, inv: [...victoriousPlayer.inv, ...lootResult.items] };
+            }
+
+            dispatch({ type: 'SET_PLAYER', payload: victoriousPlayer });
+            dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
+            emitDailyProtocolLogs('kills', 1);
+            emitUnlockedTitles(victoriousPlayer);
+
+            const droppedItems = lootResult.items.map((entry) => entry.name);
+            const traitProfile = getTraitProfile(victoriousPlayer, victoryStats);
+            const lootUpgradeHint = getLootUpgradeHint(victoriousPlayer.equip, lootResult.items);
+            const traitLootHint = getTraitLootHint(lootResult.items, traitProfile, victoriousPlayer);
+            addCombatDigestLogs({
+                addLog,
+                enemyName: enemy.name,
+                victoryResult,
+                droppedItems,
+                upgradeHint: lootUpgradeHint,
+                traitHint: traitLootHint,
+                bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
+                bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
+            });
+            dispatch({ type: 'SET_POST_COMBAT_RESULT', payload: null });
+            return;
+        }
+
+        if (counterResult.isDead) {
+            const deadPlayer = counterResult.updatedPlayer;
+            const defeatResult = CombatEngine.handleDefeat(deadPlayer, INITIAL_STATE.player);
+            const deathRecordPlayer = { ...defeatResult.updatedPlayer, stats: pushBattleRecord(defeatResult.updatedPlayer.stats, makeBattleRecord('death', 0)) };
+            dispatch({ type: AT.SET_RUN_SUMMARY, payload: buildRunSummary(deadPlayer, playerForEnemyTurn.loc) });
+            dispatch({ type: AT.SET_GRAVE, payload: appendGrave(grave, defeatResult.graveData) });
+            dispatch({ type: AT.SET_PLAYER, payload: deathRecordPlayer });
+            dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
+            dispatch({ type: AT.SET_ENEMY, payload: null });
+            emitUnlockedTitles(deathRecordPlayer);
+            defeatResult.logs.forEach((log) => addLog(log.type, log.text));
+            addStoryLog('death', { loc: playerForEnemyTurn.loc });
+            return;
+        }
+
+        dispatch({ type: 'SET_ENEMY', payload: counterResult.updatedEnemy });
+        dispatch({ type: 'SET_PLAYER', payload: counterResult.updatedPlayer });
+        dispatch({ type: 'SET_VISUAL_EFFECT', payload: counterResult.isCrit ? 'shake' : null });
+    },
 
     combat: (type) => {
         if (pendingEnemyTurn) { clearTimeout(pendingEnemyTurn); pendingEnemyTurn = null; }
@@ -345,7 +486,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     // Stage 3: 적 반격 사망 전투 결과 기록
                     const deathRecordPlayer = { ...defeatResult.updatedPlayer, stats: pushBattleRecord(defeatResult.updatedPlayer.stats, makeBattleRecord('death', 0)) };
                     dispatch({ type: AT.SET_RUN_SUMMARY, payload: buildRunSummary(deadPlayer, playerForEnemyTurn.loc) });
-                    dispatch({ type: AT.SET_GRAVE, payload: defeatResult.graveData });
+                    dispatch({ type: AT.SET_GRAVE, payload: appendGrave(grave, defeatResult.graveData) });
                     dispatch({ type: AT.SET_PLAYER, payload: deathRecordPlayer });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                     dispatch({ type: AT.SET_ENEMY, payload: null });
@@ -380,7 +521,7 @@ export const createCombatActions = ({ player, gameState, enemy, dispatch, addLog
                     const deadPlayer = protectedResult.updatedPlayer;
                     const defeatResult = CombatEngine.handleDefeat(deadPlayer, INITIAL_STATE.player);
                     dispatch({ type: AT.SET_RUN_SUMMARY, payload: buildRunSummary(deadPlayer, deadPlayer.loc) });
-                    dispatch({ type: AT.SET_GRAVE, payload: defeatResult.graveData });
+                    dispatch({ type: AT.SET_GRAVE, payload: appendGrave(grave, defeatResult.graveData) });
                     dispatch({ type: AT.SET_PLAYER, payload: defeatResult.updatedPlayer });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                     dispatch({ type: AT.SET_ENEMY, payload: null });

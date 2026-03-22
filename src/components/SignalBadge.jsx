@@ -7,20 +7,20 @@ const SIZE_CLASS = {
 };
 
 const TONE_CLASS = {
-    neutral: 'border-cyan-400/14 bg-slate-950/76 text-cyber-blue/78',
-    recommended: 'border-cyan-300/28 bg-cyan-400/10 text-cyan-100 shadow-[0_0_12px_rgba(34,211,238,0.12)]',
-    resonance: 'border-violet-400/28 bg-violet-500/10 text-violet-200 shadow-[0_0_12px_rgba(168,85,247,0.12)]',
-    upgrade: 'border-amber-400/28 bg-amber-500/10 text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.12)]',
-    success: 'border-emerald-400/28 bg-emerald-500/10 text-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.12)]',
-    warning: 'border-yellow-400/28 bg-yellow-500/10 text-yellow-200 shadow-[0_0_12px_rgba(234,179,8,0.12)]',
-    danger: 'border-red-500/28 bg-red-950/25 text-red-300 shadow-[0_0_12px_rgba(239,68,68,0.12)]',
-    equipped: 'border-emerald-400/24 bg-emerald-500/10 text-emerald-200',
-    spotlight: 'border-violet-400/24 bg-violet-500/10 text-violet-200',
+    neutral: 'border-white/8 bg-white/[0.035] text-slate-300',
+    recommended: 'border-[#7dd4d8]/28 bg-[#7dd4d8]/10 text-[#dff7f5] shadow-[0_10px_24px_rgba(125,212,216,0.12)]',
+    resonance: 'border-[#9a8ac0]/28 bg-[#9a8ac0]/10 text-[#e3dcff] shadow-[0_10px_24px_rgba(154,138,192,0.12)]',
+    upgrade: 'border-[#d5b180]/28 bg-[#d5b180]/10 text-[#f6e7c8] shadow-[0_10px_24px_rgba(213,177,128,0.12)]',
+    success: 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100 shadow-[0_10px_24px_rgba(110,231,183,0.1)]',
+    warning: 'border-amber-300/24 bg-amber-300/10 text-amber-100 shadow-[0_10px_24px_rgba(252,211,77,0.1)]',
+    danger: 'border-rose-300/24 bg-rose-400/10 text-rose-100 shadow-[0_10px_24px_rgba(251,113,133,0.1)]',
+    equipped: 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100',
+    spotlight: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]',
 };
 
 const SignalBadge = ({ tone = 'neutral', size = 'md', className = '', children }) => (
     <span
-        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase ${SIZE_CLASS[size] || SIZE_CLASS.md} ${TONE_CLASS[tone] || TONE_CLASS.neutral} ${className}`.trim()}
+        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size] || SIZE_CLASS.md} ${TONE_CLASS[tone] || TONE_CLASS.neutral} ${className}`.trim()}
     >
         {children}
     </span>

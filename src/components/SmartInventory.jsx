@@ -10,10 +10,10 @@ import SignalBadge from './SignalBadge';
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
  */
 const StatDiff = ({ val, label }) => {
-    if (val === 0) return <span className="text-cyber-blue/30 text-xs">{label} ±0</span>;
+    if (val === 0) return <span className="text-slate-500 text-[11px]">{label} ±0</span>;
     const up = val > 0;
     return (
-        <span className={`text-xs font-bold flex items-center gap-0.5 ${up ? 'text-cyber-green' : 'text-red-400'}`}>
+        <span className={`text-[11px] font-bold flex items-center gap-0.5 ${up ? 'text-emerald-300' : 'text-rose-300'}`}>
             {up ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
             {label} {up ? '+' : ''}{val}
         </span>
@@ -42,6 +42,7 @@ const ITEM_TYPE_TO_FILTER = {
     cure: 'hp',
     mat: 'material',
 };
+const MAX_COMPACT_ITEMS = 3;
 
 const canEquipItem = (item, job) => !Array.isArray(item.jobs) || item.jobs.includes(job);
 
@@ -51,9 +52,10 @@ const getItemTags = (item) => {
     return tags;
 };
 
-const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null }) => {
+const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact = false }) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState(null);
+    const [showAllItems, setShowAllItems] = React.useState(false);
     const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
     const spotlightSet = useMemo(() => new Set(spotlightNames), [spotlightNames]);
     const traitProfile = useMemo(
@@ -130,24 +132,49 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
         player.inv.filter(i => i.type === 'mat' && (i.price || 0) <= 30).length,
         [player.inv]
     );
+    const activeFilterLabel = FILTERS.find((entry) => entry.id === activeFilter)?.label || '전체';
+    const visibleFiltered = (() => {
+        if (!compact || showAllItems || filtered.length <= MAX_COMPACT_ITEMS) return filtered;
+
+        return filtered
+            .map(({ item, count }, index) => {
+                let priority = 0;
+                if (spotlightSet.has(item.name)) priority += 100;
+                if (quickSlots?.some((slot) => slot?.id === item?.id)) priority += 80;
+                if (isEquipUpgrade(item)) priority += 55;
+                if (['hp', 'mp', 'buff', 'cure'].includes(item.type)) priority += 28;
+                if (['weapon', 'armor', 'shield'].includes(item.type)) priority += 16;
+                if (count > 1) priority += Math.min(count, 6);
+                return { item, count, index, priority };
+            })
+            .sort((a, b) => b.priority - a.priority || a.index - b.index)
+            .slice(0, MAX_COMPACT_ITEMS)
+            .map(({ item, count }) => ({ item, count }));
+    })();
+    const hiddenItemCount = Math.max(0, filtered.length - visibleFiltered.length);
+    const useSummaryCards = compact && !showAllItems && filtered.length > MAX_COMPACT_ITEMS;
+    const useDenseCompactInventory = compact && !showAllItems;
+    const inventorySectionLabel = showAllItems
+        ? (activeFilter === 'all' ? '전체 보관품' : `${activeFilterLabel} 전체`)
+        : (activeFilter === 'all' ? '우선 보관품' : `${activeFilterLabel} 우선 보관품`);
 
     return (
-        <div className="space-y-3">
+        <div className={compact ? 'space-y-2' : 'space-y-3'}>
             {spotlightNames.length > 0 && (
                 <Motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     data-testid="inventory-spotlight-detail"
-                    className="flex items-start justify-between gap-3 rounded border border-cyber-purple/25 bg-cyber-purple/10 px-3 py-2.5"
+                    className={`flex items-start justify-between gap-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/10 ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}
                 >
                     <div className="min-w-0">
-                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-cyber-purple/75">
+                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-[#e3dcff]/72">
                             {spotlight?.title || '전리품 주목'}
                         </div>
-                        <div className="mt-1 text-[11px] font-fira text-cyber-purple/90 leading-snug">
+                        <div className={`${compact ? 'mt-0.5 text-[10px]' : 'mt-1 text-[11px]'} font-fira text-slate-200/82 leading-snug`}>
                             {spotlight?.detail || '이번 전투 보상과 관련된 장비를 먼저 확인하세요.'}
                         </div>
-                        <div className="mt-2 flex flex-wrap gap-1">
+                        <div className={`${compact ? 'mt-1.5' : 'mt-2'} flex flex-wrap gap-1`}>
                             {spotlightNames.slice(0, 3).map((name) => (
                                 <SignalBadge key={`spotlight_${name}`} tone="spotlight" size="sm">{name}</SignalBadge>
                             ))}
@@ -156,7 +183,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     {onClearSpotlight && (
                         <button
                             onClick={() => onClearSpotlight()}
-                            className="shrink-0 rounded border border-cyber-purple/20 bg-cyber-black/40 px-2 py-1 text-[10px] font-fira text-cyber-purple/75 hover:bg-cyber-purple/10"
+                            className={`shrink-0 rounded-full border border-white/8 bg-black/18 ${compact ? 'px-2 py-0.5 text-[9px]' : 'px-2.5 py-1 text-[10px]'} font-fira text-slate-300/76 hover:bg-white/[0.04]`}
                         >
                             닫기
                         </button>
@@ -165,15 +192,20 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
             )}
 
             {/* Filter Bar */}
-            <div className="flex gap-1 flex-wrap">
+            <div className={`rounded-[1rem] border border-white/8 bg-black/16 ${compact ? 'px-1.5 py-1.5' : 'px-2 py-2'}`}>
+                <div className={`${useDenseCompactInventory ? 'flex flex-nowrap items-center gap-1 overflow-x-auto pb-0.5' : 'flex flex-wrap items-center gap-1.5'}`}>
                 {FILTERS.map(f => (
                     <button
                         key={f.id}
-                        onClick={() => setActiveFilter(f.id)}
-                        className={`text-xs px-2.5 py-1 rounded border font-rajdhani font-bold transition-all min-h-[32px]
+                        onClick={() => {
+                            setActiveFilter(f.id);
+                            setShowAllItems(false);
+                        }}
+                        className={`${compact ? 'min-h-[26px] px-2 py-0.5 text-[10px]' : 'min-h-[30px] px-2.5 py-1 text-[11px]'} rounded-full border font-rajdhani font-bold transition-all
+                            ${useDenseCompactInventory ? 'shrink-0 whitespace-nowrap' : ''}
                             ${activeFilter === f.id
-                                ? 'bg-cyber-blue/20 border-cyber-blue/60 text-cyber-blue'
-                                : 'bg-cyber-dark/30 border-cyber-blue/10 text-cyber-blue/40 hover:border-cyber-blue/30'
+                                ? 'bg-[#7dd4d8]/14 border-[#7dd4d8]/30 text-[#dff7f5]'
+                                : 'bg-black/18 border-white/8 text-slate-400 hover:border-white/14 hover:text-slate-200'
                             }`}
                     >
                         {f.label}
@@ -185,12 +217,13 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSmartEquip}
-                        className="ml-auto text-xs px-2.5 py-1 rounded border border-cyber-green/40 bg-cyber-green/10 text-cyber-green font-rajdhani font-bold flex items-center gap-1 min-h-[32px] hover:bg-cyber-green/20 transition-all"
+                        className={`${useDenseCompactInventory ? 'shrink-0 whitespace-nowrap' : 'ml-auto'} rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all ${compact ? 'min-h-[26px] px-2 py-0.5 text-[10px]' : 'min-h-[30px] px-2.5 py-1 text-[11px]'}`}
                         title="최적 장비 자동 장착"
                     >
-                        <Star size={11} /> 추천 장착
+                        <Star size={compact ? 10 : 11} /> {compact ? '추천' : '추천 장착'}
                     </Motion.button>
                 )}
+                </div>
             </div>
 
             {/* 시나리오 2: 인벤토리 과밀 배너 + 일괄 판매 */}
@@ -198,33 +231,59 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 <Motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between bg-orange-950/30 border border-orange-500/30 rounded px-3 py-2"
+                    className={`flex items-center justify-between rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/8 ${compact ? 'px-2.5 py-1.5' : 'px-3 py-2'}`}
                 >
-                    <div className="flex items-center gap-2 text-orange-400 text-xs font-fira">
-                        <AlertCircle size={13} className="shrink-0 animate-pulse" />
+                    <div className={`flex items-center gap-2 text-[#f6e7c8] font-fira ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+                        <AlertCircle size={compact ? 12 : 13} className="shrink-0 animate-pulse" />
                         <span>인벤토리 {player.inv.length}/20 — 저가 재료 {sellableMatCount}개 정리 가능</span>
                     </div>
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => actions.autoSell?.()}
-                        className="text-xs flex items-center gap-1 font-rajdhani font-bold text-orange-400 bg-orange-900/40 hover:bg-orange-800/50 border border-orange-500/40 px-2.5 py-1 rounded min-h-[32px] transition-all shrink-0 ml-2"
+                        className={`flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 ${compact ? 'min-h-[26px] px-2 py-0.5 text-[10px]' : 'min-h-[30px] px-2.5 py-1 text-[11px]'}`}
                     >
-                        <Package size={11} /> 일괄 정리
+                        <Package size={compact ? 10 : 11} /> 일괄 정리
                     </Motion.button>
                 </Motion.div>
             )}
 
+            {compact && (hiddenItemCount > 0 || showAllItems) && (
+                <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
+                    <span className="text-slate-500">{inventorySectionLabel}</span>
+                    {hiddenItemCount > 0 ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowAllItems(true)}
+                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] text-slate-300/78 hover:bg-white/[0.04]"
+                        >
+                            +{hiddenItemCount} 더 보기
+                        </button>
+                    ) : showAllItems ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowAllItems(false)}
+                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] text-slate-300/78 hover:bg-white/[0.04]"
+                        >
+                            요약 보기
+                        </button>
+                    ) : null}
+                </div>
+            )}
+
             {/* Item List */}
-            <div className="space-y-1.5">
+            <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
                 {filtered.length === 0 && (
-                    <div className="text-cyber-blue/30 text-center py-6 text-sm font-rajdhani tracking-widest">
+                    <div className={`rounded-[1rem] border border-white/8 bg-black/16 text-center font-rajdhani tracking-widest text-slate-500 ${compact ? 'py-5 text-[13px]' : 'py-6 text-sm'}`}>
                         해당 카테고리의 아이템이 없습니다
                     </div>
                 )}
-                {filtered.map(({ item, count }, i) => {
+                {visibleFiltered.map(({ item, count }, i) => {
                     const diff = getCompareDiff(item);
                     const canEquip = !['weapon', 'armor', 'shield'].includes(item.type) || canEquipItem(item, player.job);
                     const itemIdentity = getEquipmentIdentity(item);
+                    const assignedQuickSlots = quickSlots
+                        ?.map((slot, index) => (slot?.id === item?.id ? index + 1 : null))
+                        .filter(Boolean) || [];
                     const isCurrentEquip =
                         getEquipmentIdentity(player.equip?.weapon) === itemIdentity ||
                         getEquipmentIdentity(player.equip?.armor) === itemIdentity ||
@@ -240,19 +299,19 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                             transition={{ delay: i * 0.04 }}
                             onMouseEnter={() => setHoveredItem(item.name)}
                             onMouseLeave={() => setHoveredItem(null)}
-                            className={`bg-cyber-dark/40 p-3 rounded-sm border flex justify-between items-center group transition-all cursor-pointer min-h-[50px]
+                            className={`${useSummaryCards ? 'min-h-[44px] p-2' : compact ? 'min-h-[48px] p-2.5' : 'min-h-[54px] p-3'} rounded-[1rem] border flex justify-between items-center group transition-all cursor-pointer
                                 ${isSpotlighted
-                                    ? 'border-cyber-purple/45 bg-cyber-purple/10 shadow-[0_0_16px_rgba(168,85,247,0.12)]'
+                                    ? 'border-[#9a8ac0]/30 bg-[#9a8ac0]/10 shadow-[0_0_16px_rgba(154,138,192,0.12)]'
                                     : isCurrentEquip
-                                        ? 'border-cyber-green/40 bg-cyber-green/5'
-                                        : 'border-cyber-blue/10 hover:border-cyber-green/50 hover:bg-cyber-green/5'}`}
+                                        ? 'border-emerald-300/24 bg-emerald-300/[0.06]'
+                                        : 'border-white/8 bg-black/18 hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]'}`}
                         >
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className={`text-sm font-fira ${item.tier >= 2 ? 'text-cyber-purple drop-shadow-sm' : 'text-cyber-blue/80'}`}>
+                                    <span className={`${compact ? 'text-[12px]' : 'text-sm'} font-fira ${item.tier >= 2 ? 'text-[#e3dcff]' : 'text-white/86'}`}>
                                         {item.name}
                                     </span>
-                                    {count > 1 && <span className="text-cyber-blue/30 text-xs">x{count}</span>}
+                                    {count > 1 && <span className={`${compact ? 'text-[10px]' : 'text-xs'} text-slate-500`}>x{count}</span>}
                                     {isSpotlighted && <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
                                     {resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
@@ -260,8 +319,8 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                 </div>
 
                                 {/* Compare diff (on hover or always for equip items) */}
-                                {diff && (hoveredItem === item.name || isCurrentEquip) && (
-                                    <div className="flex gap-2 mt-1">
+                                {diff && !useSummaryCards && (hoveredItem === item.name || isCurrentEquip) && (
+                                    <div className={`mt-1 flex ${compact ? 'gap-1.5 flex-wrap' : 'gap-2'}`}>
                                         {diff.atk !== 0 && <StatDiff val={diff.atk} label="ATK" />}
                                         {diff.def !== 0 && <StatDiff val={diff.def} label="DEF" />}
                                         {diff.crit !== 0 && <StatDiff val={diff.crit} label="CRIT%" />}
@@ -270,20 +329,26 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     </div>
                                 )}
                                 {(getItemStatText(item) || item.desc_stat) && (
-                                    <div className="text-cyber-blue/30 text-xs font-fira mt-0.5 truncate">{getItemStatText(item) || item.desc_stat}</div>
+                                    <div className={`mt-0.5 truncate font-fira text-slate-400/72 ${compact ? 'text-[10px]' : 'text-xs'}`}>{getItemStatText(item) || item.desc_stat}</div>
+                                )}
+                                {useSummaryCards && assignedQuickSlots.length > 0 && (
+                                    <div className="mt-0.5 text-[9px] font-fira uppercase tracking-[0.12em] text-slate-500">
+                                        슬롯 {assignedQuickSlots.join(', ')}
+                                    </div>
                                 )}
                                 {getItemTags(item).length > 0 && (
-                                    <div className="mt-1 flex flex-wrap gap-1">
+                                    <div className={`${compact ? 'mt-0.5' : 'mt-1'} flex flex-wrap gap-1`}>
                                         {getItemTags(item).map((tag) => (
                                             <SignalBadge key={`${item.name}_${tag}`} tone="neutral" size="sm">{tag}</SignalBadge>
                                         ))}
                                     </div>
                                 )}
-                                {onAssignQuickSlot && (
+                                {onAssignQuickSlot && !useSummaryCards && (
                                     <QuickSlotAssigner
                                         item={item}
                                         currentSlots={quickSlots}
                                         onAssign={onAssignQuickSlot}
+                                        compact={compact}
                                     />
                                 )}
                             </div>
@@ -291,7 +356,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                 whileTap={{ scale: 0.95 }}
                                 disabled={!canEquip}
                                 onClick={() => actions.useItem(item)}
-                                className="text-xs bg-cyber-blue/10 hover:bg-cyber-blue/30 disabled:opacity-30 disabled:hover:bg-cyber-blue/10 text-cyber-blue px-3 py-2 rounded border border-cyber-blue/30 font-bold min-h-[40px] ml-2 shrink-0"
+                                className={`bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold ml-2 shrink-0 ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[10px]' : compact ? 'min-h-[32px] px-2.5 py-1 text-[10px]' : 'min-h-[38px] px-3 py-2 text-[11px]'}`}
                             >
                                 {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
                             </Motion.button>

@@ -138,6 +138,19 @@ export const MONSTERS = {
         dropMod: 2.3,
         phase2: { name: '해방된 에테르 드래곤', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '에테르의 흐름이 역전됩니다! 용이 에테르의 근원에 닿았습니다!', statusEffect: 'poison' },
     },
+
+    // 기계 폐도 추가 몬스터
+    '과부하 포격기': { weakness: '대지', resistance: '냉기', atkMult: 1.2, pattern: { guardChance: 0.0, heavyChance: 0.45 } },
+
+    // 심해 회랑 추가 몬스터
+    '어비스 리바이어던': { weakness: '빛', resistance: '냉기', hpMult: 1.4, atkMult: 1.16, pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+
+    // 에테르 관문 비보스 몬스터 (지역 탐험 중 등장)
+    '에테르 파편체': { weakness: '어둠', resistance: '빛', hpMult: 1.25, atkMult: 1.22, pattern: { guardChance: 0.0, heavyChance: 0.35 } },
+    '공허 집행관': { weakness: '빛', resistance: '어둠', hpMult: 1.3, atkMult: 1.28, pattern: { guardChance: 0.15, heavyChance: 0.4 } },
+
+    // 혼돈의 심연 추가 몬스터
+    '혼돈의 화신': { weakness: '빛', resistance: '어둠', hpMult: 1.45, atkMult: 1.3, pattern: { guardChance: 0.05, heavyChance: 0.5 } },
 };
 
 export const BOSS_BRIEFS = Object.freeze({

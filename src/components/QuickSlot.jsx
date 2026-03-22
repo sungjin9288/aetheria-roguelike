@@ -12,39 +12,41 @@ import { GS } from '../reducers/gameStates';
  *   onUnassign: (slotIdx) => void
  *   gameState: string
  */
-const QuickSlot = ({ slots = [null, null, null], onUse, gameState }) => {
+const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false }) => {
     const canUse = gameState === GS.COMBAT || gameState === GS.IDLE;
 
     return (
-        <div className="flex items-center gap-1.5">
-            <Zap size={12} className="text-cyber-blue/40 shrink-0" />
-            <div className="flex gap-1.5">
+        <div className={`flex items-center ${dense ? 'gap-1.5' : 'gap-2'}`}>
+            <div className={`flex shrink-0 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-[#d5b180] ${dense ? 'h-6 w-6' : 'h-8 w-8'}`}>
+                <Zap size={dense ? 10 : 12} />
+            </div>
+            <div className={`flex ${dense ? 'gap-1' : 'gap-1.5'}`}>
                 {slots.map((item, i) => (
                     <Motion.button
                         key={i}
                         whileTap={item && canUse ? { scale: 0.9 } : {}}
                         onClick={() => item && canUse && onUse(item, i)}
                         title={item ? `${item.name} — 빠른 사용 (슬롯 ${i + 1})` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
-                        className={`relative w-9 h-9 rounded border text-center transition-all text-xs font-fira flex items-center justify-center
+                        className={`relative flex items-center justify-center rounded-[0.95rem] border text-center text-xs font-fira transition-all backdrop-blur-md ${dense ? 'h-8 w-8 rounded-[0.8rem]' : 'h-10 w-10'}
                             ${item
                                 ? canUse
-                                    ? 'border-cyber-blue/40 bg-cyber-blue/10 hover:bg-cyber-blue/20 text-cyber-blue cursor-pointer'
-                                    : 'border-cyber-blue/20 bg-cyber-dark/30 text-cyber-blue/50 cursor-default'
-                                : 'border-cyber-blue/10 bg-cyber-dark/20 text-cyber-blue/20 cursor-default'
+                                    ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 text-[#dff7f5] shadow-[0_12px_22px_rgba(125,212,216,0.1)] cursor-pointer hover:border-[#d5b180]/22 hover:bg-[#d5b180]/10'
+                                    : 'border-white/8 bg-white/[0.03] text-slate-500 cursor-default'
+                                : 'border-white/6 bg-black/18 text-slate-600 cursor-default'
                             }`}
                     >
                         {item ? (
                             <>
-                                <span className="text-[10px] leading-tight text-center break-all">
-                                    {item.name.slice(0, 3)}
+                                <span className={`${dense ? 'text-[9px]' : 'text-[10px]'} leading-tight text-center break-all`}>
+                                    {item.name.slice(0, dense ? 2 : 3)}
                                 </span>
                                 {/* Slot number badge */}
-                                <span className="absolute -top-1 -left-1 text-[9px] bg-cyber-dark border border-cyber-blue/20 px-0.5 rounded text-cyber-blue/50">
+                                <span className={`absolute rounded-full border border-white/10 bg-[rgba(9,12,18,0.95)] text-slate-400 ${dense ? '-left-0.5 -top-0.5 px-1 py-0 text-[7px]' : '-left-1 -top-1 px-1 py-0 text-[8px]'}`}>
                                     {i + 1}
                                 </span>
                             </>
                         ) : (
-                            <span className="text-cyber-blue/20">{i + 1}</span>
+                            <span className={dense ? 'text-[10px] text-slate-600' : 'text-slate-600'}>{i + 1}</span>
                         )}
                     </Motion.button>
                 ))}
@@ -56,26 +58,26 @@ const QuickSlot = ({ slots = [null, null, null], onUse, gameState }) => {
 /**
  * QuickSlotAssigner — 인벤토리 아이템에서 퀵슬롯 할당 UI
  */
-export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots }) => {
+export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots, compact = false }) => {
     const isAssigned = currentSlots?.some(s => s?.id === item?.id);
 
     if (!item || !['hp', 'mp', 'buff', 'cure'].includes(item.type)) return null;
 
     return (
-        <div className="flex items-center gap-1 mt-1">
-            <span className="text-cyber-blue/40 text-xs font-fira">퀵슬롯:</span>
+        <div className={`mt-1 flex items-center ${compact ? 'gap-0.5' : 'gap-1'}`}>
+            <span className={`font-fira text-slate-400/70 ${compact ? 'text-[10px]' : 'text-xs'}`}>퀵슬롯:</span>
             {Array.from({ length: slotCount }, (_, i) => {
                 const occupied = currentSlots[i];
                 return (
                     <button
                         key={i}
                         onClick={() => onAssign(i, item)}
-                        className={`w-6 h-6 rounded border text-[10px] font-bold transition-all
+                        className={`${compact ? 'h-5 w-5 text-[9px]' : 'h-6 w-6 text-[10px]'} rounded border font-bold transition-all backdrop-blur-md
                             ${occupied?.id === item?.id
-                                ? 'border-cyber-green/60 bg-cyber-green/10 text-cyber-green'
+                                ? 'border-[#7dd4d8]/35 bg-[#7dd4d8]/10 text-[#dff7f5]'
                                 : occupied
-                                    ? 'border-cyber-blue/20 bg-cyber-dark/20 text-cyber-blue/30'
-                                    : 'border-cyber-blue/30 hover:border-cyber-blue/60 bg-cyber-dark/30 text-cyber-blue/50'
+                                    ? 'border-white/8 bg-black/20 text-slate-500'
+                                    : 'border-white/10 hover:border-[#d5b180]/30 bg-black/24 text-slate-400'
                             }`}
                         title={occupied ? `슬롯 ${i + 1}: ${occupied.name}` : `슬롯 ${i + 1}에 할당`}
                     >
@@ -89,10 +91,10 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots 
                         const idx = currentSlots?.findIndex(s => s?.id === item?.id);
                         if (idx >= 0) onAssign(idx, null);
                     }}
-                    className="text-red-400/50 hover:text-red-400 ml-1"
+                    className="ml-1 text-rose-300/55 hover:text-rose-200"
                     title="할당 해제"
                 >
-                    <X size={11} />
+                    <X size={compact ? 10 : 11} />
                 </button>
             )}
         </div>
