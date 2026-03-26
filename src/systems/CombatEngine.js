@@ -1,11 +1,14 @@
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
+import { DROP_TABLES } from '../data/dropTables.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
+import { CLASSES } from '../data/classes.js';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
 import { syncQuestProgress } from '../utils/questProgress.js';
 import { buildGraveData } from '../utils/graveUtils.js';
 import { MSG } from '../data/messages.js';
+import { getActiveRelicSynergies } from '../data/relics.js';
 
 /**
  * CombatEngine - Pure functions for combat calculations
@@ -72,16 +75,34 @@ export const CombatEngine = {
         return { ...player, mp: nextMp };
     },
 
-    applyFatalProtection(player, relics = [], incomingDamage = 0, logs = []) {
+    applyFatalProtection(player, relics = [], incomingDamage = 0, logs = [], activeSynergies = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
 
         if (nextHp <= 0) {
             const deathSaveRelic = relics.find((relic) => relic.effect === 'death_save');
-            if (deathSaveRelic && !flags.deathSaveUsed) {
-                nextHp = 1;
+            // 시너지: 절대 불사 (absolute_immortal) — reviveCount 2회 지원
+            const absoluteImmortalSyn = activeSynergies.find(s => s.bonus.reviveCount);
+            const maxRevives = absoluteImmortalSyn ? (absoluteImmortalSyn.bonus.reviveCount || 1) : 1;
+            const reviveUsedCount = flags.deathSaveUsedCount || 0;
+
+            if (deathSaveRelic && reviveUsedCount < maxRevives) {
+                // 시너지: 불멸의 전사/절대 불사 (reviveHeal) — 부활 시 HP 회복량 증가
+                const reviveHealSyn = activeSynergies.find(s => s.bonus.reviveHeal);
+                nextHp = reviveHealSyn
+                    ? Math.floor((player.maxHp || 150) * reviveHealSyn.bonus.reviveHeal)
+                    : 1;
                 flags.deathSaveUsed = true;
-                logs.push({ type: 'event', text: '[불사의 의지] 치명상을 버텼습니다!' });
+                flags.deathSaveUsedCount = reviveUsedCount + 1;
+                // 시너지: 난공불락 (healOnSave) — 부활 시 추가 HP 회복
+                const healOnSaveSyn = activeSynergies.find(s => s.bonus.healOnSave);
+                if (healOnSaveSyn) {
+                    const bonus = Math.floor((player.maxHp || 150) * healOnSaveSyn.bonus.healOnSave);
+                    nextHp = Math.min(player.maxHp || 150, nextHp + bonus);
+                    logs.push({ type: 'heal', text: `[난공불락] 부활 시 +${bonus} HP 회복!` });
+                }
+                const reviveMsg = reviveUsedCount > 0 ? `[절대 불사] ${reviveUsedCount + 1}회 부활!` : '[불사의 의지] 치명상을 버텼습니다!';
+                logs.push({ type: 'event', text: reviveMsg });
             } else {
                 const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
                 if (voidHeartRelic && !flags.voidHeartUsed) {
@@ -112,9 +133,9 @@ export const CombatEngine = {
             case 'fear':
                 return { ...enemy, fearTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, 0.70) };
             case 'curse':
-                return { ...enemy, cursedTurns: 3, atkMult: Math.min(enemy.atkMult ?? 1, 0.80), cursed: true };
+                return { ...enemy, cursedTurns: 3, atkMult: Math.min(enemy.atkMult ?? 1, 0.75), cursed: true };
             case 'taunt':
-                return { ...enemy, taunted: true, tauntTurns: 1 };
+                return { ...enemy, taunted: true, tauntTurns: 3 };
             case 'stun':
             case 'freeze':
                 return { ...enemy, stunnedTurns: Math.max(enemy.stunnedTurns ?? 0, 1) };
@@ -136,19 +157,19 @@ export const CombatEngine = {
      * 적의 상태이상 틱을 처리합니다. 매 적 행동 전에 호출하세요.
      * DoT 피해, 상태 턴 감소, 만료 처리를 수행합니다.
      */
-    tickEnemyStatus(enemy, logs = []) {
+    tickEnemyStatus(enemy, logs = [], curseAmpMult = 1, synergyDotMult = 1) {
         let updated = { ...enemy };
 
-        // DoT (burn / poison / bleed)
+        // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
         (updated.dots || []).forEach(dot => {
-            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * 0.05));
+            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * BALANCE.STATUS_DOT_RATIO * synergyDotMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
             const dotKor = dot === 'burn' ? '화상' : dot === 'poison' ? '독' : '출혈';
             logs.push({ type: 'event', text: `[${dotKor}] ${updated.name}에게 ${dmg} 지속 피해!` });
         });
-        // 저주 DoT
+        // 저주 DoT (curse_amp 패시브 반영)
         if (updated.cursed) {
-            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * 0.03));
+            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * 0.03 * curseAmpMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
             logs.push({ type: 'event', text: `[저주] ${updated.name}에게 ${dmg} 저주 피해!` });
         }
@@ -222,6 +243,31 @@ export const CombatEngine = {
             }
         }
 
+        // 유물: 대지의 심장 (regen) — 매 턴 최대 HP의 5% 회복
+        const regenRelic = relics.find((relic) => relic.effect === 'regen');
+        if (regenRelic && (updated.hp || 0) < (updated.maxHp || 150)) {
+            const heal = Math.max(1, Math.floor((updated.maxHp || 150) * (regenRelic.val || 0.05)));
+            updated.hp = Math.min(updated.maxHp || 150, (updated.hp || 1) + heal);
+            logs.push({ type: 'heal', text: `[대지의 심장] +${heal} HP 재생` });
+        }
+
+        // 시너지: 영원의 생명 (healPerTurn) — 매 턴 4% HP 재생
+        const healPerTurnSyn = getActiveRelicSynergies(relics).find(s => s.bonus.healPerTurn);
+        if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || 150)) {
+            const heal = Math.max(1, Math.floor((updated.maxHp || 150) * healPerTurnSyn.bonus.healPerTurn));
+            updated.hp = Math.min(updated.maxHp || 150, (updated.hp || 1) + heal);
+            logs.push({ type: 'heal', text: `[영원의 생명] +${heal} HP 재생` });
+        }
+
+        // 유물: 시간의 파편 (cd_minus) — 매 턴 모든 스킬 쿨타임 추가 -1
+        const cdMinusRelic = relics.find((relic) => relic.effect === 'cd_minus');
+        if (cdMinusRelic) {
+            const cds = { ...(updated.skillLoadout?.cooldowns || {}) };
+            let reduced = false;
+            Object.keys(cds).forEach((k) => { if (cds[k] > 0) { cds[k] = Math.max(0, cds[k] - 1); reduced = true; } });
+            if (reduced) updated.skillLoadout = { ...(updated.skillLoadout || {}), cooldowns: cds };
+        }
+
         return { updatedPlayer: updated, logs };
     },
 
@@ -237,11 +283,15 @@ export const CombatEngine = {
         const effectiveDef = apRelic ? Math.floor((stats.def || 0) * (1 - apRelic.val)) : (stats.def || 0);
         const statsForAtk = apRelic ? { ...stats, def: effectiveDef } : stats;
 
-        const { damage: baseDmg, isCrit } = this.calculateDamage(statsForAtk, {
+        const { damage: rawBaseDmg, isCrit } = this.calculateDamage(statsForAtk, {
             mult: 1,
             guarding: !!enemy.guarding,
             elementMultiplier
         });
+
+        // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
+        const critDmgRelic = relics.find(r => r.effect === 'crit_dmg');
+        const baseDmg = (isCrit && critDmgRelic) ? Math.floor(rawBaseDmg * (critDmgRelic.val || 1)) : rawBaseDmg;
 
         // 유물: 연격 (double_strike) — 두 번째 타격 추가
         const dsRelic = relics.find(r => r.effect === 'double_strike');
@@ -275,6 +325,32 @@ export const CombatEngine = {
             voidHeartTriggered = true;
         }
 
+        // 유물: 예언의 돌판 (execute_atk) — 보스 HP 25% 이하 시 ATK 2배
+        const executeAtkRelic = relics.find((r) => r.effect === 'execute_atk');
+        let executeAtkTriggered = false;
+        if (executeAtkRelic && enemy.isBoss && enemy.hp / Math.max(1, enemy.maxHp || 1) < (executeAtkRelic.threshold || 0.25)) {
+            finalDamage = Math.floor(finalDamage * (executeAtkRelic.val || 2.0));
+            executeAtkTriggered = true;
+        }
+
+        // 유물: 공허의 메아리 (echo_atk) — 스킬 사용 후 다음 일반 공격 피해 강화
+        const echoAtkRelic = relics.find((r) => r.effect === 'echo_atk');
+        let echoTriggered = false;
+        if (echoAtkRelic && flags.echoArmed) {
+            finalDamage = Math.floor(finalDamage * (echoAtkRelic.val || 1.8));
+            flags.echoArmed = false;
+            echoTriggered = true;
+        }
+
+        // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
+        const lowHpDmgRelic = relics.find(r => r.effect === 'low_hp_dmg');
+        if (lowHpDmgRelic) {
+            const hpRatio = player.hp / Math.max(1, player.maxHp || 150);
+            if (hpRatio < (lowHpDmgRelic.threshold || 0.4)) {
+                finalDamage = Math.floor(finalDamage * (lowHpDmgRelic.val || 1.4));
+            }
+        }
+
         const newEnemyHp = enemy.hp - finalDamage;
         const tags = [];
         if (enemy.guarding) tags.push('방어 격파');
@@ -290,6 +366,16 @@ export const CombatEngine = {
             updatedPlayer = this.applyCritMpRestore(updatedPlayer, relics, logs);
         }
 
+        // 시너지: 흡혈 군주 (vampire_lord) — 일반 공격 흡혈
+        const vampireSyn = (stats.activeSynergies || []).find(s => s.bonus.lifeSteal);
+        if (vampireSyn) {
+            const steal = Math.floor(finalDamage * vampireSyn.bonus.lifeSteal);
+            if (steal > 0) {
+                updatedPlayer = { ...updatedPlayer, hp: Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + steal) };
+                logs.push({ type: 'heal', text: `[흡혈 군주] +${steal} HP 흡혈!` });
+            }
+        }
+
         logs.unshift({
             type: isCrit ? 'critical' : 'combat',
             text: MSG.COMBAT_ATTACK_DETAIL(enemy.name, finalDamage, Math.max(0, newEnemyHp), enemy.maxHp, tags)
@@ -301,6 +387,8 @@ export const CombatEngine = {
         if (executeTriggered) logs.push({ type: 'event', text: `[처형자의 날] 처형 피해!` });
         if (comboTriggered) logs.push({ type: 'event', text: '[연격의 반지] 축적된 연격이 폭발했습니다!' });
         if (voidHeartTriggered) logs.push({ type: 'event', text: '[허공의 심장] 허공 각성 일격!' });
+        if (executeAtkTriggered) logs.push({ type: 'critical', text: '[예언의 돌판] 예언 처형! 피해 2배!' });
+        if (echoTriggered) logs.push({ type: 'event', text: '[공허의 메아리] 강화된 공격!' });
 
         return {
             updatedPlayer,
@@ -316,11 +404,41 @@ export const CombatEngine = {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
 
+        // 스킬 분기 선택 적용
+        const skillChoiceKey = player.skillChoices?.[skill.name];
+        if (skillChoiceKey) {
+            const classData = CLASSES[player.job];
+            const branches = classData?.skillBranches?.[skill.name];
+            if (branches) {
+                const branch = branches.find(b => b.choice === skillChoiceKey);
+                if (branch?.override) {
+                    skill = { ...skill, ...branch.override };
+                }
+            }
+        }
+
         const relics = stats.relics || [];
         const mpCost = skill.mp || BALANCE.SKILL_MP_COST;
         const loadout = player.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const cooldowns = { ...(loadout.cooldowns || {}) };
         const cooldown = cooldowns[skill.name] || 0;
+
+        // escape_100: 즉시 100% 전투 이탈 (무당 공허의 문 / 시간술사 순간 이동)
+        if (skill.effect === 'escape_100') {
+            if (player.mp < mpCost) {
+                return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
+            }
+            const updatedPlayer = { ...player, mp: player.mp - mpCost };
+            return {
+                success: true,
+                forceEscape: true,
+                updatedPlayer,
+                updatedEnemy: enemy,
+                logs: [{ type: 'success', text: `[${skill.name}] ${MSG.ESCAPE_SUCCESS}` }],
+                isCrit: false,
+                isVictory: false
+            };
+        }
 
         if (cooldown > 0) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_ON_COOLDOWN(skill.name, cooldown) }] };
@@ -335,11 +453,15 @@ export const CombatEngine = {
 
         const skillElem = skill.type || stats.elem;
         const elementMultiplier = this.getElementMultiplier(skillElem, enemy);
-        const { damage, isCrit } = this.calculateDamage(stats, {
+        const { damage: rawSkillDmg, isCrit } = this.calculateDamage(stats, {
             mult: skill.mult || 1.5,
             guarding: !!enemy.guarding,
             elementMultiplier
         });
+
+        // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
+        const critDmgRelicSkill = relics.find(r => r.effect === 'crit_dmg');
+        const damage = (isCrit && critDmgRelicSkill) ? Math.floor(rawSkillDmg * (critDmgRelicSkill.val || 1)) : rawSkillDmg;
 
         const dotRelic = relics.find((relic) => relic.effect === 'dot_mult');
         const dotMult = dotRelic ? dotRelic.val : 1;
@@ -350,18 +472,29 @@ export const CombatEngine = {
         // 유물: 정신 연소 (skill_mult) — 스킬 피해 70% 증가
         const smRelic = relics.find(r => r.effect === 'skill_mult');
         const smMult = smRelic ? (1 + smRelic.val) : 1;
-        const totalDamage = Math.floor((damage + extraDamage) * smMult);
+        // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
+        const lowHpDmgRelicSkill = relics.find(r => r.effect === 'low_hp_dmg');
+        const lowHpMultSkill = (lowHpDmgRelicSkill && player.hp / Math.max(1, player.maxHp || 150) < (lowHpDmgRelicSkill.threshold || 0.4))
+            ? (lowHpDmgRelicSkill.val || 1.4) : 1;
+        const totalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
         const newEnemyHp = enemy.hp - totalDamage;
 
         // 적에게 상태이상 부여 (#5)
         // stun/freeze/poison/burn/bleed/blind/fear/curse/taunt 통합 처리
         const STATUS_EFFECTS_TO_ENEMY = ['stun', 'freeze', 'poison', 'burn', 'bleed', 'blind', 'fear', 'curse', 'taunt'];
         let postEffectEnemy = { ...enemy, hp: newEnemyHp, guarding: false };
+        const effectLabels = { stun: '기절', freeze: '빙결', poison: '독', burn: '화상', bleed: '출혈', blind: '실명', fear: '공포', curse: '저주', taunt: '도발' };
         if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect)) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
-            const effectLabels = { stun: '기절', freeze: '빙결', poison: '독', burn: '화상', bleed: '출혈', blind: '실명', fear: '공포', curse: '저주', taunt: '도발' };
             if (effectLabels[skill.effect]) {
                 logs.push({ type: 'event', text: `[${skill.name}] ${enemy.name}에게 [${effectLabels[skill.effect]}] 부여!` });
+            }
+        }
+        // 분기 선택으로 추가된 2차 상태이상
+        if (skill.secondEffect && STATUS_EFFECTS_TO_ENEMY.includes(skill.secondEffect)) {
+            postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.secondEffect);
+            if (effectLabels[skill.secondEffect]) {
+                logs.push({ type: 'event', text: `[분기 효과] ${enemy.name}에게 [${effectLabels[skill.secondEffect]}] 추가 부여!` });
             }
         }
         const updatedEnemy = postEffectEnemy;
@@ -416,6 +549,21 @@ export const CombatEngine = {
             logs.push({ type: 'heal', text: `[생명흡수] +${drainHeal} HP 흡수!` });
         }
 
+        // hp_regen: 즉시 HP 회복 (성직자 기적의 손길, 버서커 역경의 힘 등)
+        if (skill.effect === 'hp_regen' && skill.val) {
+            const healAmt = Math.max(1, Math.floor((updatedPlayer.maxHp || player.maxHp) * skill.val));
+            updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + healAmt);
+            logs.push({ type: 'heal', text: `[${skill.name}] +${healAmt} HP 회복!` });
+        }
+
+        // mp_regen: 즉시 MP 회복 (마법사 마나 가속 등)
+        if (skill.effect === 'mp_regen' && skill.val) {
+            const mpAmt = skill.val;
+            const maxMp = this.getEffectiveMaxMp(updatedPlayer, relics);
+            updatedPlayer.mp = Math.min(maxMp, (updatedPlayer.mp || player.mp) + mpAmt);
+            logs.push({ type: 'event', text: `[${skill.name}] +${mpAmt} MP 회복!` });
+        }
+
         // purify: 플레이어 상태이상 전부 제거 + 로그 (#5)
         if (skill.effect === 'purify') {
             const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
@@ -429,6 +577,48 @@ export const CombatEngine = {
         if (skill.effect === 'stealth') {
             updatedPlayer.nextHitEvaded = true;
             logs.push({ type: 'event', text: `[${skill.name}] 다음 적 공격을 회피합니다!` });
+        }
+
+        // extraTurn: 이번 스킬 사용 후 적 턴 스킵 → 플레이어 추가 행동 (Sprint 16 — 시간술사)
+        if (skill.effect === 'extraTurn') {
+            updatedPlayer.extraTurnGranted = true;
+            if (skill.val && skill.val > 1) {
+                const atkBonus = skill.val - 1;
+                updatedPlayer.tempBuff = { atk: atkBonus, def: 0, turn: 1, name: skill.name };
+            }
+            logs.push({ type: 'event', text: MSG.SKILL_EXTRA_TURN(skill.name) });
+        }
+
+        // 시너지: 시간 지배자 (time_master) — 스킬 사용 후 10% 확률 추가 행동
+        const timeMasterSyn = relics && (stats.activeSynergies || []).find(s => s.bonus.extraTurnChance);
+        if (timeMasterSyn && !updatedPlayer.extraTurnGranted && Math.random() < (timeMasterSyn.bonus.extraTurnChance || 0)) {
+            updatedPlayer.extraTurnGranted = true;
+            logs.push({ type: 'event', text: `[시간 지배자] 시간이 멈춥니다 — 추가 행동!` });
+        }
+
+        // resetCooldowns: 모든 스킬 쿨타임을 0으로 초기화 (Sprint 16 — 시간술사)
+        if (skill.effect === 'resetCooldowns') {
+            const resetLoadout = updatedPlayer.skillLoadout || { selected: 0, cooldowns: {} };
+            updatedPlayer.skillLoadout = { ...resetLoadout, cooldowns: {} };
+            logs.push({ type: 'event', text: MSG.SKILL_RESET_COOLDOWNS(skill.name) });
+        }
+
+        // 유물: 공허의 메아리 (echo_atk) — 스킬 사용 후 다음 일반 공격 강화 플래그
+        const echoRelicInSkill = relics.find((r) => r.effect === 'echo_atk');
+        if (echoRelicInSkill) {
+            updatedPlayer.combatFlags = { ...this.getCombatFlags(updatedPlayer), echoArmed: true };
+            logs.push({ type: 'event', text: `[공허의 메아리] 다음 공격이 강화됩니다!` });
+        }
+
+        // crit_cooldown: 크리티컬 시 모든 쿨타임 -1 (Sprint 16 — 인과율 조작)
+        if (skill.effect === 'crit_cooldown' && isCrit) {
+            const cdLoadout = updatedPlayer.skillLoadout || { selected: 0, cooldowns: {} };
+            const reducedCds = {};
+            Object.entries(cdLoadout.cooldowns || {}).forEach(([k, v]) => {
+                if (v > 0) reducedCds[k] = v - 1;
+            });
+            updatedPlayer.skillLoadout = { ...cdLoadout, cooldowns: reducedCds };
+            logs.push({ type: 'event', text: `[인과율 조작] 치명타! 모든 쿨타임 -1.` });
         }
 
 
@@ -462,7 +652,13 @@ export const CombatEngine = {
         const logs = [];
 
         // ── 적 상태이상 틱 처리 (#5) ──────────────────────────────────────
-        const enemyTickResult = this.tickEnemyStatus(updatedEnemy, []);
+        // curse_amp 패시브: 무당/시간술사 직업 보너스
+        const curseAmpPassive = CLASSES[player.job]?.skills?.find(s => s.passive && s.effect === 'curse_amp');
+        const curseAmpMult = curseAmpPassive ? (curseAmpPassive.val || 1) : 1;
+        // 시너지: 죽음의 예언자 (dotMult) — DoT 피해 증폭
+        const activeSynergies = stats.activeSynergies || [];
+        const synergyDotMult = activeSynergies.reduce((acc, syn) => syn.bonus.dotMult ? acc + syn.bonus.dotMult : acc, 1);
+        const enemyTickResult = this.tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult);
         updatedEnemy = enemyTickResult.updatedEnemy;
         enemyTickResult.logs.forEach(l => logs.push(l));
         // DoT로 인해 이미 사망한 경우
@@ -479,24 +675,63 @@ export const CombatEngine = {
             };
         }
 
-        // ── 보스 Phase 2 전환 체크 ─────────────────────────────────────────
-        if (updatedEnemy.isBoss && !updatedEnemy.phase2Triggered && updatedEnemy.phase2) {
+        // ── Phase 전환 체크 (보스 + 엘리트 통합) ───────────────────
+        if (updatedEnemy.isBoss || updatedEnemy.isElite) {
             const hpRatio = updatedEnemy.hp / Math.max(1, updatedEnemy.maxHp || updatedEnemy.hp);
-            if (hpRatio <= BALANCE.BOSS_PHASE2_THRESHOLD) {
-                const p2 = updatedEnemy.phase2;
-                updatedEnemy = {
-                    ...updatedEnemy,
-                    name: p2.name,
-                    atk: Math.floor(updatedEnemy.atk * (1 + p2.atkBonus)),
-                    pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p2.pattern },
-                    phase2Triggered: true,
-                };
-                logs.push({ type: 'warning', text: `⚡ ${p2.log}` });
-                if (p2.statusEffect) {
-                    const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-                    if (!currentStatus.includes(p2.statusEffect)) {
-                        updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p2.statusEffect] };
-                        logs.push({ type: 'warning', text: `[Phase 2] [${p2.statusEffect === 'burn' ? '화상' : p2.statusEffect === 'poison' ? '독' : '빙결'}] 상태이상 부여!` });
+            const statusLabels = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주' };
+
+            // Phase 3 (원시의 신 등 3페이즈 보스, threshold 25%)
+            if (updatedEnemy.phase3 && !updatedEnemy.phase3Triggered) {
+                const threshold = updatedEnemy.phase3.threshold ?? 0.25;
+                if (hpRatio <= threshold) {
+                    const p3 = updatedEnemy.phase3;
+                    updatedEnemy = {
+                        ...updatedEnemy,
+                        name: p3.name,
+                        atk: Math.floor(updatedEnemy.atk * (1 + p3.atkBonus)),
+                        pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p3.pattern },
+                        phase3Triggered: true,
+                    };
+                    logs.push({ type: 'critical', text: `💀 ${p3.log}` });
+                    if (p3.statusEffect) {
+                        const resistRelic = relics.find(r => r.effect === 'status_resist');
+                        const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
+                        const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
+                        if (!currentStatus.includes(p3.statusEffect) && Math.random() >= resistChance) {
+                            updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p3.statusEffect] };
+                            logs.push({ type: 'warning', text: `[Phase 3] [${statusLabels[p3.statusEffect] || p3.statusEffect}] 상태이상 부여!` });
+                        } else if (resistRelic && Math.random() < resistChance) {
+                            logs.push({ type: 'success', text: `[고대의 봉인] 상태이상을 저항했습니다!` });
+                        }
+                    }
+                }
+            }
+
+            // Phase 2 (threshold: BALANCE.BOSS_PHASE2_THRESHOLD ± 10% 랜덤)
+            if (updatedEnemy.phase2 && !updatedEnemy.phase2Triggered) {
+                const baseThreshold = updatedEnemy.phase2.threshold ?? BALANCE.BOSS_PHASE2_THRESHOLD;
+                const jitter = (Math.random() - 0.5) * 0.2;
+                const threshold = Math.max(0.2, Math.min(0.7, baseThreshold + jitter));
+                if (hpRatio <= threshold) {
+                    const p2 = updatedEnemy.phase2;
+                    updatedEnemy = {
+                        ...updatedEnemy,
+                        name: p2.name,
+                        atk: Math.floor(updatedEnemy.atk * (1 + p2.atkBonus)),
+                        pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p2.pattern },
+                        phase2Triggered: true,
+                    };
+                    logs.push({ type: 'warning', text: `⚡ ${p2.log}` });
+                    if (p2.statusEffect) {
+                        const resistRelic2 = relics.find(r => r.effect === 'status_resist');
+                        const resistChance2 = resistRelic2 ? (resistRelic2.val || 0) : 0;
+                        const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
+                        if (!currentStatus.includes(p2.statusEffect) && Math.random() >= resistChance2) {
+                            updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p2.statusEffect] };
+                            logs.push({ type: 'warning', text: `[Phase 2] [${statusLabels[p2.statusEffect] || p2.statusEffect}] 상태이상 부여!` });
+                        } else if (resistRelic2 && Math.random() < resistChance2) {
+                            logs.push({ type: 'success', text: `[고대의 봉인] 상태이상을 저항했습니다!` });
+                        }
                     }
                 }
             }
@@ -542,21 +777,48 @@ export const CombatEngine = {
 
         // 유물: 가시 갑옷 (reflect) — 피격 시 적에게 반사
         const reflectRelic = relics.find(r => r.effect === 'reflect');
-        const reflectDmg = reflectRelic ? Math.floor(stats.def * reflectRelic.val) : 0;
+        // 시너지: 절대 반사 (absolute_reflect) — 반사율 50%, 스턴 25% 확률
+        const absoluteReflectSyn = activeSynergies.find(s => s.bonus.reflect);
+        const reflectMult = absoluteReflectSyn ? (absoluteReflectSyn.bonus.reflect || 0.3) : (reflectRelic ? reflectRelic.val : 0);
+        const reflectDmg = (reflectRelic || absoluteReflectSyn) ? Math.floor(stats.def * reflectMult) : 0;
         const enemyHpAfterReflect = reflectDmg > 0 ? Math.max(0, updatedEnemy.hp - reflectDmg) : updatedEnemy.hp;
         if (reflectDmg > 0) {
             updatedEnemy = { ...updatedEnemy, hp: enemyHpAfterReflect };
-            logs.push({ type: 'event', text: `[가시 갑옷] 반사 피해 ${reflectDmg}!` });
+            logs.push({ type: 'event', text: `[반사] 반사 피해 ${reflectDmg}!` });
+            // 스턴 확률
+            if (absoluteReflectSyn && Math.random() < (absoluteReflectSyn.bonus.stunOnReflect || 0)) {
+                updatedEnemy = { ...updatedEnemy, stunnedTurns: Math.max(updatedEnemy.stunnedTurns ?? 0, 1) };
+                logs.push({ type: 'event', text: '[절대 반사] 반사 충격으로 적이 기절!' });
+            }
         }
 
         // atkMult: blind / fear / curse에 의한 적 공격력 감소 (#5)
         const enemyAtkMult = updatedEnemy.atkMult ?? 1;
-        const enemyDmg = Math.max(1, Math.floor((updatedEnemy.atk * mult * enemyAtkMult) - stats.def));
+        const rawEnemyAtk = updatedEnemy.atk * mult * enemyAtkMult;
+        // 최소 피해량: 원래 공격력의 10% (DEF 스택으로 완전 무효화 방지, 고DEF 빌드 보상)
+        const minEnemyDmg = Math.max(1, Math.floor(rawEnemyAtk * 0.10));
+        const enemyDmg = Math.max(minEnemyDmg, Math.floor(rawEnemyAtk - stats.def));
         if (enemyAtkMult < 1 && (updatedEnemy.blindTurns > 0 || updatedEnemy.fearTurns > 0 || updatedEnemy.cursedTurns > 0)) {
             const statusName = updatedEnemy.blindTurns > 0 ? '실명' : updatedEnemy.fearTurns > 0 ? '공포' : '저주';
             logs.push({ type: 'info', text: `[${statusName}] ${updatedEnemy.name}의 공격력이 감소합니다!` });
         }
-        const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs);
+
+        // 몬스터 공격 시 상태이상 부여 (pattern.statusEffect + pattern.statusChance 지원)
+        if (heavy && updatedEnemy.pattern?.statusEffect && Math.random() < (updatedEnemy.pattern.statusChance || 0.25)) {
+            const sEff = updatedEnemy.pattern.statusEffect;
+            const resistRelic = relics.find(r => r.effect === 'status_resist');
+            const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
+            const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
+            if (!currentStatus.includes(sEff) && Math.random() >= resistChance) {
+                const statusLabels = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주', bleed: '출혈' };
+                updatedPlayer = { ...updatedPlayer, status: [...currentStatus, sEff] };
+                logs.push({ type: 'warning', text: `[${updatedEnemy.name}] [${statusLabels[sEff] || sEff}] 부여!` });
+            } else if (resistRelic) {
+                logs.push({ type: 'success', text: `[고대의 봉인] 상태이상을 저항했습니다!` });
+            }
+        }
+
+        const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs, activeSynergies);
 
 
         return {
@@ -602,8 +864,8 @@ export const CombatEngine = {
             if (p.level >= 50) p.nextExp = Math.max(p.nextExp, BALANCE.EXP_LEVEL_CAP_50);
             p.maxHp += 20;
             p.maxMp += 10;
-            p.hp = p.maxHp;
-            p.mp = p.maxMp;
+            p.hp = Math.min(p.hp + 20, p.maxHp);
+            p.mp = Math.min(p.mp + 10, p.maxMp);
             p.atk += 2;
             p.def += 1;
             levelUps += 1;
@@ -634,8 +896,22 @@ export const CombatEngine = {
         // 유물: EXP/골드 배율
         const expMult = 1 + (relics.find(r => r.effect === 'exp_mult')?.val || 0);
         const goldMult = 1 + (relics.find(r => r.effect === 'gold_mult')?.val || 0);
-        const expGained = Math.floor(enemy.exp * expMult);
-        const goldGained = Math.floor(enemy.gold * goldMult);
+        // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배)
+        const challengeMods = p.challengeModifiers || [];
+        const challengeScale = BALANCE.CHALLENGE_REWARD_SCALING || {};
+        const challengeRewardMult = challengeMods.length >= (challengeScale.threshold || 3) ? (challengeScale.mult || 1.5) : 1;
+        // 유물: 처치 보너스 (kill_bonus)
+        const killBonusRelic = relics.find(r => r.effect === 'kill_bonus');
+        const killExpMult = killBonusRelic ? (1 + (killBonusRelic.val?.exp || 0)) : 1;
+        const killGoldMult = killBonusRelic ? (1 + (killBonusRelic.val?.gold || 0)) : 1;
+        // 레벨 차이 골드 스케일링: 플레이어가 몬스터보다 10레벨 이상 높으면 골드 감소 (최소 30%)
+        const playerLevel = p.level || 1;
+        const enemyLevel = enemy.level || 1;
+        const levelGap = Math.max(0, playerLevel - enemyLevel - 9);
+        const levelPenalty = Math.max(0.3, 1 - levelGap * 0.07);
+        const expGained = Math.floor(enemy.exp * expMult * killExpMult * challengeRewardMult);
+        const noGold = p.challengeModifiers?.includes('noGold');
+        const goldGained = Math.floor(enemy.gold * goldMult * killGoldMult * levelPenalty * (noGold ? 0.5 : 1) * challengeRewardMult);
 
         p.gold += goldGained;
 
@@ -692,6 +968,28 @@ export const CombatEngine = {
             logs.push({ type: 'heal', text: `[피의 서약] +${heal} HP` });
         }
 
+        // 시너지: 불멸의 전사 (killHeal), 무한 포식 (devour) — 처치 시 HP 회복
+        const victorySynergies = getActiveRelicSynergies(relics);
+        const killHealSyn = victorySynergies.find(s => s.bonus.killHeal);
+        if (killHealSyn) {
+            const heal = Math.floor((p.maxHp || 150) * killHealSyn.bonus.killHeal);
+            p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
+            logs.push({ type: 'heal', text: `[불멸의 전사] +${heal} HP (처치 회복)` });
+        }
+        const devourSyn = victorySynergies.find(s => s.bonus.devour);
+        if (devourSyn) {
+            const heal = Math.floor((p.maxHp || 150) * devourSyn.bonus.devour);
+            p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
+            logs.push({ type: 'heal', text: `[무한 포식] +${heal} HP (포식)` });
+        }
+
+        // 유물: 별의 핵 (mp_restore_battle) — 전투 종료 시 MP 전량 회복
+        const starCoreRelic = relics.find(r => r.effect === 'mp_restore_battle');
+        if (starCoreRelic) {
+            p.mp = p.maxMp || 50;
+            logs.push({ type: 'heal', text: `[별의 핵] MP 전량 회복!` });
+        }
+
         const expResult = this.applyExpGain(p, expGained);
         expResult.logs.forEach((log) => logs.push(log));
         leveledUp = expResult.leveledUp;
@@ -724,11 +1022,36 @@ export const CombatEngine = {
         const items = [];
         const logs = [];
         const lootKey = this.resolveEnemyBaseName(enemy) || enemy.name;
-        const lootList = LOOT_TABLE[lootKey] || LOOT_TABLE[enemy.name];
         const relics = player?.relics || [];
         const dropRateMult = 1 + (relics.find((relic) => relic.effect === 'drop_rate')?.val || 0);
         const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
 
+        // 강화 드롭 테이블 우선 참조
+        const enrichedList = DROP_TABLES[lootKey] || DROP_TABLES[enemy.name];
+        if (enrichedList) {
+            const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
+            enrichedList.forEach((entry) => {
+                const chance = Math.min(1, entry.rate * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
+                if (Math.random() < chance) {
+                    const itemData = allItems.find((i) => i.name === entry.item);
+                    if (!itemData) return;
+                    const qty = entry.qty ? (entry.qty[0] + Math.floor(Math.random() * (entry.qty[1] - entry.qty[0] + 1))) : 1;
+                    for (let q = 0; q < qty; q++) {
+                        const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
+                        const newItem = applyItemPrefix(baseItem);
+                        items.push(newItem);
+                        logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
+                        if (newItem.prefixed) {
+                            logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                        }
+                    }
+                }
+            });
+            return { items, logs };
+        }
+
+        // 레거시 LOOT_TABLE 폴백
+        const lootList = LOOT_TABLE[lootKey] || LOOT_TABLE[enemy.name];
         if (!lootList || lootList.length === 0) return { items: [], logs: [] };
 
         lootList.forEach((itemName) => {
@@ -748,7 +1071,51 @@ export const CombatEngine = {
             }
         });
 
+        // 고레벨 몬스터 보너스 장비 드랍 (exp 기반 레벨 추정)
+        const inferredLevel = Math.max(1, Math.floor(((enemy.exp || 10) - 10) / 5));
+        if (inferredLevel >= 30) {
+            const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
+            const bonusChance = enemy.isBoss ? 0.25 : 0.06;
+            if (Math.random() < bonusChance * dropRateMult * bossDropMult) {
+                const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter(i => (i.tier || 1) === bonusTier);
+                if (tierPool.length > 0) {
+                    const picked = tierPool[Math.floor(Math.random() * tierPool.length)];
+                    const baseItem = { ...picked, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
+                    const newItem = applyItemPrefix(baseItem);
+                    items.push(newItem);
+                    logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
+                    if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                }
+            }
+        }
+
         return { items, logs };
+    },
+
+    /**
+     * 적의 다음 행동을 예측하여 텔레그래프 메시지를 반환합니다.
+     * CombatPanel에서 UI 경고 표시에 사용.
+     */
+    predictEnemyNextAction(enemy) {
+        if (!enemy || enemy.hp <= 0) return null;
+        if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: '기절 중 — 행동 불가', color: 'blue' };
+
+        // 보스 Phase 2 전환 임박 체크
+        const hpRatio = enemy.hp / Math.max(1, enemy.maxHp || enemy.hp);
+        if (enemy.isBoss && !enemy.phase2Triggered && enemy.phase2 && hpRatio <= BALANCE.BOSS_PHASE2_THRESHOLD + 0.1) {
+            return { type: 'phase2_imminent', label: `⚡ Phase 2 임박 — ${enemy.phase2?.name || '형태 변환'}`, color: 'purple' };
+        }
+
+        const pattern = enemy.taunted
+            ? { guardChance: 0, heavyChance: 1.0 }
+            : (enemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
+
+        // 가장 높은 확률 행동을 예측
+        if (pattern.guardChance >= 0.5) return { type: 'guard', label: `방어 태세 (${Math.round(pattern.guardChance * 100)}%)`, color: 'blue' };
+        if (pattern.heavyChance >= 0.4) return { type: 'heavy', label: `강타 준비 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'red' };
+        if (pattern.guardChance >= 0.3) return { type: 'guard', label: `방어 가능 (${Math.round(pattern.guardChance * 100)}%)`, color: 'blue' };
+        if (pattern.heavyChance >= 0.25) return { type: 'heavy', label: `강타 가능 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'orange' };
+        return { type: 'normal', label: '일반 공격 예상', color: 'gray' };
     },
 
     handleDefeat(player, INITIAL_PLAYER) {

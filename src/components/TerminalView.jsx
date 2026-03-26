@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { Bot, AlertTriangle, CheckCircle, Terminal, ChevronDown, ChevronUp, Filter, Volume2, VolumeX } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CommandAutocomplete from './CommandAutocomplete';
@@ -7,53 +7,112 @@ import { GS } from '../reducers/gameStates';
 
 const LOG_STYLES = {
     combat: {
-        text: 'text-cyber-pink shadow-[0_0_10px_rgba(255,0,255,0.4)]',
-        bg: 'bg-cyber-pink/5 border-l-2 border-cyber-pink pl-2',
+        text: 'text-rose-100 font-semibold',
+        bg: 'bg-[linear-gradient(90deg,rgba(148,73,103,0.20)_0%,rgba(38,16,26,0.08)_100%)] border-l-2 border-rose-300/45 pl-2.5',
         icon: AlertTriangle,
     },
     critical: {
-        text: 'text-red-500 font-bold text-lg drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]',
-        bg: 'bg-red-950/40 border-l-4 border-red-500 pl-2',
+        text: 'text-red-200 font-bold',
+        bg: 'bg-red-950/28 border-l-2 border-red-300/55 pl-2.5',
         icon: null,
     },
     story: {
-        text: 'text-cyber-blue italic',
-        bg: 'bg-cyber-blue/5 border-l-2 border-cyber-blue pl-2',
+        text: 'text-slate-200/88 italic',
+        bg: 'bg-white/[0.025] border-l-2 border-white/10 pl-2.5',
         icon: Bot,
     },
     system: {
-        text: 'text-cyber-green font-bold',
-        bg: 'bg-cyber-green/5',
+        text: 'text-[#dff7f5] font-semibold',
+        bg: 'bg-[linear-gradient(90deg,rgba(125,212,216,0.16)_0%,rgba(16,25,29,0.06)_100%)] border-l-2 border-[#7dd4d8]/34 pl-2.5',
         icon: Terminal,
     },
     error: {
-        text: 'text-red-400 font-bold',
-        bg: 'bg-red-950/30 border border-red-500/30',
+        text: 'text-rose-200 font-bold',
+        bg: 'bg-red-950/24 border border-rose-300/22',
         icon: null,
     },
     success: {
-        text: 'text-yellow-300 drop-shadow-[0_0_8px_rgba(253,224,71,0.5)]',
-        bg: 'transparent',
+        text: 'text-[#f6e7c8]',
+        bg: 'bg-[linear-gradient(90deg,rgba(213,177,128,0.16)_0%,rgba(30,20,10,0.08)_100%)] border-l-2 border-[#d5b180]/34 pl-2.5',
         icon: CheckCircle,
     },
     event: {
-        text: 'text-cyber-purple font-rajdhani text-lg drop-shadow-[0_0_5px_rgba(188,19,254,0.5)]',
-        bg: 'transparent',
+        text: 'text-[#ece5ff] font-rajdhani text-lg font-bold',
+        bg: 'bg-[linear-gradient(90deg,rgba(154,138,192,0.18)_0%,rgba(30,20,42,0.08)_100%)] border-l-2 border-[#9a8ac0]/34 pl-2.5',
         icon: null,
     },
     loading: {
-        text: 'text-cyber-blue/50',
+        text: 'text-slate-500',
         bg: 'transparent',
         icon: null,
     },
     warning: {
-        text: 'text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]',
+        text: 'text-amber-100',
+        bg: 'bg-[linear-gradient(90deg,rgba(213,177,128,0.12)_0%,rgba(32,20,8,0.08)_100%)] border-l-2 border-amber-300/34 pl-2.5',
+        icon: null,
+    },
+};
+
+const DESKTOP_LOG_STYLES = {
+    combat: {
+        text: 'text-rose-100/92 font-semibold',
+        bg: 'bg-[linear-gradient(90deg,rgba(185,71,105,0.10)_0%,rgba(16,8,12,0.04)_100%)] border-l-2 border-rose-300/40 pl-2',
+        icon: AlertTriangle,
+    },
+    critical: {
+        text: 'text-red-200/96 font-bold',
+        bg: 'bg-[linear-gradient(90deg,rgba(136,33,33,0.18)_0%,rgba(22,8,8,0.05)_100%)] border-l-2 border-red-400/52 pl-2',
+        icon: null,
+    },
+    story: {
+        text: 'text-slate-300/72 italic',
+        bg: 'bg-white/[0.018] border-l-2 border-white/8 pl-2',
+        icon: Bot,
+    },
+    system: {
+        text: 'text-slate-300/78 font-medium',
+        bg: 'bg-[#7dd4d8]/[0.035] border-l-2 border-[#7dd4d8]/16 pl-2',
+        icon: Terminal,
+    },
+    error: {
+        text: 'text-red-300 font-bold',
+        bg: 'bg-red-950/20 border border-red-500/18',
+        icon: null,
+    },
+    success: {
+        text: 'text-[#f6e7c8]/90',
+        bg: 'bg-[linear-gradient(90deg,rgba(213,177,128,0.10)_0%,rgba(22,14,7,0.04)_100%)] border-l-2 border-[#d5b180]/30 pl-2',
+        icon: CheckCircle,
+    },
+    event: {
+        text: 'text-violet-100/92 font-semibold',
+        bg: 'bg-[linear-gradient(90deg,rgba(154,138,192,0.12)_0%,rgba(21,13,30,0.04)_100%)] border-l-2 border-[#9a8ac0]/36 pl-2',
+        icon: null,
+    },
+    loading: {
+        text: 'text-cyber-blue/42',
         bg: 'transparent',
+        icon: null,
+    },
+    warning: {
+        text: 'text-amber-100/88',
+        bg: 'bg-[linear-gradient(90deg,rgba(213,177,128,0.08)_0%,rgba(23,16,8,0.04)_100%)] border-l-2 border-amber-300/32 pl-2',
         icon: null,
     },
 };
 
 const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
+const DESKTOP_DEFAULT_STYLE = { text: 'text-slate-200/84', bg: 'transparent', icon: null };
+const DESKTOP_LOG_BADGES = {
+    combat: { label: 'COMBAT', className: 'border-rose-300/24 bg-rose-400/[0.10] text-rose-100/78' },
+    critical: { label: 'CRIT', className: 'border-red-300/26 bg-red-500/[0.12] text-red-100/82' },
+    story: { label: 'AI', className: 'border-white/10 bg-white/[0.04] text-slate-300/64' },
+    system: { label: 'SYS', className: 'border-[#7dd4d8]/16 bg-[#7dd4d8]/[0.08] text-[#dff7f5]/62' },
+    success: { label: 'GAIN', className: 'border-[#d5b180]/20 bg-[#d5b180]/[0.10] text-[#f6e7c8]/76' },
+    event: { label: 'EVENT', className: 'border-[#9a8ac0]/22 bg-[#9a8ac0]/[0.12] text-[#ece5ff]/74' },
+    warning: { label: 'WARN', className: 'border-amber-300/20 bg-amber-400/[0.10] text-amber-100/72' },
+    error: { label: 'ERROR', className: 'border-red-300/22 bg-red-500/[0.12] text-red-100/78' },
+};
 
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system']);
 const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
@@ -120,9 +179,20 @@ const TerminalView = ({
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [gameState, quickSlots, onQuickSlotUse, onCommand, showInput]);
 
-    const bgClass = gameState === GS.EVENT
-        ? "bg-cyber-purple/10 border-cyber-purple/50 shadow-[0_0_20px_rgba(188,19,254,0.15)]"
-        : "bg-cyber-black/90 border-cyber-green/30 shadow-[0_0_15px_rgba(0,255,157,0.1)]";
+    // Most recent AI story narrative (pinned display)
+    const latestStory = useMemo(() => {
+        for (let i = logs.length - 1; i >= 0; i--) {
+            if (logs[i].type === 'story') return logs[i];
+        }
+        return null;
+    }, [logs]);
+    const bgClass = mobile
+        ? (gameState === GS.EVENT
+            ? 'aether-surface-strong border-[#9a8ac0]/18'
+            : 'aether-surface border-white/10')
+        : (gameState === GS.EVENT
+            ? 'aether-surface-strong border-[#9a8ac0]/18'
+            : 'aether-surface border-white/10');
 
     // #10: 전투 중 로그 필터링 — 요약 모드에서는 전투 관련 최근 N개만 표시
     const isCombat = gameState === GS.COMBAT;
@@ -146,35 +216,71 @@ const TerminalView = ({
             ? 'bg-yellow-400 animate-pulse'
             : 'bg-red-500 shadow-[0_0_8px_#ff00ff]';
     const syncLabel = syncStatus === 'synced' ? 'ONLINE' : syncStatus === 'syncing' ? 'SYNCING' : 'OFFLINE';
+    const showQuickSlots = Boolean(player && quickSlots && (!mobile || hasAnyQuickSlot));
     const showFooter = Boolean(showInput || (player && quickSlots && (!mobile || hasAnyQuickSlot)));
     const showExpandToggle = isCombat || (mobile && logs.length > compactMobileLogCount);
+    const footerInput = showInput ? (
+        <div className={`relative flex min-w-0 items-center gap-2 rounded-[1rem] border border-white/8 bg-black/14 transition-colors focus-within:border-[#7dd4d8]/24 ${mobile ? 'px-3 py-2' : 'px-2.5 py-1.5'}`}>
+            {player && (
+                <CommandAutocomplete
+                    input={inputValue}
+                    gameState={gameState}
+                    player={player}
+                    onSelect={(cmd) => {
+                        setInputValue(cmd);
+                        onCommand?.(cmd);
+                        setInputValue('');
+                    }}
+                />
+            )}
+            <span className={`font-bold text-[#7dd4d8] ${mobile ? 'text-base' : 'text-sm'}`}>{'>'}</span>
+            <input
+                data-terminal-input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className={`w-full border-none bg-transparent font-fira text-[#eff6f7] outline-none transition-all placeholder:text-slate-500 ${mobile ? 'text-sm md:text-base' : 'text-sm'}`}
+                placeholder="ENTER COMMAND..."
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        if (inputValue.trim()) {
+                            onCommand?.(inputValue);
+                            setInputValue('');
+                        }
+                    }
+                }}
+                autoFocus={autoFocusInput}
+            />
+        </div>
+    ) : null;
 
     return (
         <div
             data-testid="terminal-panel"
-            className={`panel-noise min-w-0 ${mobile ? 'flex-1 min-h-[clamp(24rem,46dvh,36rem)]' : 'flex-1 min-h-0'} md:h-full ${bgClass} border ${mobile ? 'rounded-[1.6rem]' : 'rounded-lg'} ${mobile ? 'p-2.5' : 'p-3 md:p-4 md:px-5'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col backdrop-blur-md`}
+            className={`panel-noise min-w-0 ${mobile ? 'flex-1 min-h-[clamp(24rem,46dvh,36rem)]' : 'flex-1 min-h-0'} md:h-full ${bgClass} ${mobile ? 'rounded-[1.75rem]' : 'rounded-[1.5rem]'} ${mobile ? 'p-2.5' : 'p-2.5 md:p-3'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
         >
             {/* Scanline overlay */}
             <div
-                className="absolute inset-0 z-0 opacity-10 pointer-events-none"
+                className={`absolute inset-0 z-0 pointer-events-none ${mobile ? 'opacity-10' : 'opacity-[0.04]'}`}
                 style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 0.6px, transparent 0.6px)', backgroundSize: '3px 3px' }}
             ></div>
 
-            <div className={`mb-1.5 flex items-center justify-between gap-2 shrink-0 z-10 ${mobile ? 'rounded-[0.9rem] border border-cyan-400/10 bg-slate-950/62 px-2 py-1 text-[8px]' : 'rounded-md border border-cyan-400/10 bg-slate-950/52 px-3 py-2 text-[10px]'} font-fira uppercase tracking-[0.16em] text-cyber-blue/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]`}>
-                <div className="min-w-0 flex items-center gap-1.5 text-cyber-blue/68">
+            <div className={`flex items-center justify-between gap-2 shrink-0 z-10 ${mobile ? 'mb-2 rounded-[1rem] border border-white/8 bg-black/16 px-2.5 py-1.5 text-[8px]' : 'mb-1.5 rounded-[0.95rem] border border-white/8 bg-black/12 px-2.5 py-1.5 text-[9px]'} font-fira uppercase tracking-[0.14em] text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]`}>
+                <div className="min-w-0 flex items-center gap-1 text-slate-300/80">
                     <span className="flex items-center gap-1">
-                        <Terminal size={mobile ? 9 : 12} />
-                        <span>{mobile ? 'LOG' : 'Field Log'}</span>
+                        <Terminal size={mobile ? 9 : 11} />
+                        <span>{mobile ? 'LOG' : 'Log'}</span>
                     </span>
-                    <span className={`rounded-full border px-1.5 py-0.5 ${isCombat ? 'border-cyber-pink/30 text-cyber-pink' : gameState === GS.EVENT ? 'border-cyber-purple/30 text-cyber-purple' : 'border-cyan-400/16 text-cyber-green/80'}`}>
+                    <span className={`rounded-full border px-1.5 py-0.5 text-[7px] ${isCombat ? 'border-rose-300/18 text-rose-100/80 bg-rose-400/[0.06]' : gameState === GS.EVENT ? 'border-[#9a8ac0]/20 text-[#ece5ff]/78 bg-[#9a8ac0]/10' : 'border-[#7dd4d8]/18 text-[#dff7f5]/76 bg-[#7dd4d8]/10'}`}>
                         {stateLabel}
                     </span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                     {showExpandToggle && (
                         <button
                             onClick={() => setLogExpanded((open) => !open)}
-                            className="rounded-full border border-cyan-400/14 bg-slate-950/78 px-1.5 py-0.5 text-[8px] font-fira uppercase tracking-[0.16em] text-cyber-blue/70"
+                            className="rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[7px] font-fira uppercase tracking-[0.14em] text-slate-300/72"
                         >
                             {isCombat
                                 ? (logExpanded
@@ -186,39 +292,52 @@ const TerminalView = ({
                     <button
                         onClick={onToggleMute}
                         disabled={!onToggleMute}
-                        className="rounded-full border border-cyan-400/14 bg-slate-950/78 p-1 text-cyber-blue/70 transition-colors hover:text-cyber-blue disabled:opacity-50"
+                        className="rounded-full border border-white/8 bg-black/20 p-0.5 text-slate-300/70 transition-colors hover:text-white disabled:opacity-50"
                         aria-label="Toggle Sound"
                         title="Toggle Sound"
                     >
-                        {isMuted ? <VolumeX size={mobile ? 11 : 13} data-mute-icon /> : <Volume2 size={mobile ? 11 : 13} data-mute-icon />}
+                        {isMuted ? <VolumeX size={mobile ? 11 : 11} data-mute-icon /> : <Volume2 size={mobile ? 11 : 11} data-mute-icon />}
                     </button>
-                    <div className="flex items-center gap-1 rounded-full border border-cyan-400/10 bg-slate-950/74 px-1.5 py-0.5 text-[8px] text-cyber-blue/70">
+                    <div className="flex items-center gap-1 rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[7px] text-slate-300/70">
                         <span className={`h-1.5 w-1.5 rounded-full ${syncDotClass}`}></span>
                         <span className={mobile ? 'sr-only' : ''}>{syncLabel}</span>
                     </div>
                 </div>
             </div>
 
-            <div className={`flex-1 space-y-1.5 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 ${mobile ? 'min-h-0' : ''}`}>
+            {/* Pinned AI Narrative */}
+            {mobile && latestStory && gameState !== GS.COMBAT && (
+                <div className="relative z-10 mb-2 rounded border border-cyber-blue/25 bg-cyber-blue/5 px-3 py-2 shrink-0">
+                    <div className="flex items-start gap-2">
+                        <Bot size={12} className="text-cyber-blue/60 mt-0.5 shrink-0" />
+                        <div>
+                            <div className="text-[9px] font-fira uppercase tracking-widest text-cyber-blue/40 mb-0.5">AI 내러티브</div>
+                            <p className="text-[11px] font-fira text-cyber-blue/80 italic leading-relaxed">{latestStory.text}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className={`flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 ${mobile ? 'min-h-0 space-y-1.5' : 'space-y-1'}`}>
                 {logs.length === 0 && (
                     <Motion.div
-                        className={`text-cyber-blue/50 text-center ${mobile ? 'mt-6 text-xs' : 'mt-20'} font-rajdhani tracking-widest flex flex-col items-center`}
+                        className={`text-slate-400/72 text-center ${mobile ? 'mt-6 text-xs' : 'mt-20'} font-rajdhani tracking-[0.16em] flex flex-col items-center`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: [0.3, 0.8, 0.3] }}
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <Terminal size={mobile ? 24 : 32} className="mx-auto mb-3 opacity-45 text-cyber-blue" />
+                        <Terminal size={mobile ? 24 : 32} className="mx-auto mb-3 opacity-45 text-[#7dd4d8]" />
                         {mobile ? (
                             <>
-                                field log ready
+                                field ledger ready
                                 <br />
-                                아래 액션으로 탐험을 시작하세요
+                                아래 행동 카드로 원정을 시작하세요
                             </>
                         ) : (
                             <>
-                                SYSTEM INITIALIZED
+                                FIELD LEDGER INITIALIZED
                                 <br />
-                                WAITING FOR INPUT...
+                                awaiting command
                             </>
                         )}
                     </Motion.div>
@@ -226,7 +345,10 @@ const TerminalView = ({
 
                 <AnimatePresence initial={false}>
                     {displayLogs.map((log) => {
-                        const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
+                        const style = mobile
+                            ? (LOG_STYLES[log.type] || DEFAULT_STYLE)
+                            : (DESKTOP_LOG_STYLES[log.type] || DESKTOP_DEFAULT_STYLE);
+                        const badge = !mobile ? DESKTOP_LOG_BADGES[log.type] : null;
                         const IconComp = style.icon;
 
                         return (
@@ -234,9 +356,14 @@ const TerminalView = ({
                                 key={log.id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className={`${mobile ? 'text-xs py-1 px-2.5' : 'text-sm py-1.5 px-3'} rounded-sm ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
+                                className={`${mobile ? 'text-xs py-1.5 px-2.5' : 'text-[13px] py-1 px-2.5 leading-[1.4]'} rounded-[0.9rem] ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
                             >
-                                {IconComp && <IconComp size={14} className="inline mr-2 -mt-1 opacity-80" />}
+                                {badge && (
+                                    <span className={`mr-1.5 inline-flex rounded-full border px-1.5 py-[1px] align-[1px] text-[8px] font-fira uppercase tracking-[0.12em] ${badge.className}`}>
+                                        {badge.label}
+                                    </span>
+                                )}
+                                {IconComp && <IconComp size={mobile ? 14 : 12} className="inline mr-1.5 -mt-0.5 opacity-80" />}
                                 {log.text}
                             </Motion.div>
                         );
@@ -249,7 +376,7 @@ const TerminalView = ({
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="text-xs text-cyber-blue/40 font-rajdhani tracking-widest flex items-center gap-2 mt-4 pl-3"
+                            className={`${mobile ? 'mt-4 gap-2 pl-3 text-xs' : 'mt-2 gap-1.5 pl-2.5 text-[10px]'} flex items-center font-rajdhani tracking-widest text-slate-500`}
                         >
                             <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                             <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
@@ -263,50 +390,37 @@ const TerminalView = ({
 
             {/* CLI INPUT AREA */}
             {showFooter && (
-                <div className={`${mobile ? 'mt-2 pt-2' : 'mt-4 pt-3 md:pb-1'} border-t border-cyber-blue/20 flex flex-col gap-2 bg-transparent shrink-0 z-20`}>
-                    {/* QuickSlot row */}
-                    {player && quickSlots && (!mobile || hasAnyQuickSlot) && (
-                        <QuickSlot
-                            slots={quickSlots}
-                            onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
-                            gameState={gameState}
-                        />
-                    )}
-                    {showInput ? (
-                        <div className="relative flex gap-2 items-center focus-within:border-cyber-blue/50 transition-colors">
-                            {player && (
-                                <CommandAutocomplete
-                                    input={inputValue}
+                <div className={`${mobile ? 'mt-2 pt-2' : 'mt-2 pt-2 md:pb-0'} border-t border-white/8 bg-transparent shrink-0 z-20`}>
+                    {mobile ? (
+                        <div className="flex flex-col gap-2">
+                            {showQuickSlots && (
+                                <QuickSlot
+                                    slots={quickSlots}
+                                    onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
                                     gameState={gameState}
-                                    player={player}
-                                    onSelect={(cmd) => {
-                                        setInputValue(cmd);
-                                        onCommand?.(cmd);
-                                        setInputValue('');
-                                    }}
                                 />
                             )}
-                            <span className="text-cyber-green font-bold animate-pulse">{'>'}</span>
-                            <input
-                                data-terminal-input
-                                ref={inputRef}
-                                type="text"
-                                value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
-                                className="bg-transparent border-none outline-none text-cyber-green font-fira w-full placeholder:text-cyber-blue/30 focus:placeholder:text-cyber-blue/10 transition-all text-sm md:text-base"
-                                placeholder="ENTER COMMAND..."
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        if (inputValue.trim()) {
-                                            onCommand?.(inputValue);
-                                            setInputValue('');
-                                        }
-                                    }
-                                }}
-                                autoFocus={autoFocusInput}
-                            />
+                            {footerInput}
                         </div>
-                    ) : null}
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            {showQuickSlots && (
+                                <div className="shrink-0">
+                                    <QuickSlot
+                                        slots={quickSlots}
+                                        onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
+                                        gameState={gameState}
+                                        dense
+                                    />
+                                </div>
+                            )}
+                            {footerInput && (
+                                <div className="min-w-0 flex-1">
+                                    {footerInput}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

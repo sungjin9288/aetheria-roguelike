@@ -74,15 +74,15 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
   return (
     <Motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className={`${overlayPanelClass} bg-cyber-black/95 z-30 p-4 md:p-6 rounded-lg border border-cyber-blue/50 flex flex-col shadow-[0_0_30px_rgba(0,204,255,0.2)] backdrop-blur-xl`}
+      className={`${overlayPanelClass} panel-noise aether-surface-strong z-30 flex flex-col rounded-[1.8rem] p-4 md:p-6`}
     >
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-2xl text-cyber-blue font-bold font-rajdhani uppercase tracking-wider flex items-center gap-2 drop-shadow-sm">
+        <h2 className="flex items-center gap-2 text-2xl font-rajdhani font-bold uppercase tracking-[0.16em] text-[#f6e7c8]">
           <ScrollText /> Mission Terminal
         </h2>
         <button
           onClick={() => setGameState('idle')}
-          className="min-h-[40px] rounded-full border border-cyber-blue/20 bg-cyber-black/60 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-cyber-blue/75 transition-colors hover:border-cyber-blue/45 hover:text-cyber-blue"
+          className="min-h-[40px] rounded-full border border-white/8 bg-black/20 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-300/78 transition-colors hover:bg-white/[0.06] hover:text-white"
           aria-label="미션 터미널 닫기"
         >
           <span className="flex items-center gap-1.5">
@@ -92,24 +92,24 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
         </button>
       </div>
       {/* 통계 헤더 */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-cyber-blue/20 bg-cyber-dark/40 px-3 py-2 text-[11px] font-fira">
-        <span className="text-cyber-blue/80">현재 레벨 Lv.{player.level}</span>
-        <span className="text-cyber-green">진행 중 {activeQuestEntries.length}</span>
-        <span className="text-cyber-purple">수락 가능 {availableQuestEntries.length}</span>
-        <span className="text-amber-400">보상 대기 {claimableQuestCount}</span>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-[1.2rem] border border-white/8 bg-black/18 px-3 py-2 text-[11px] font-fira">
+        <span className="text-slate-300">현재 레벨 Lv.{player.level}</span>
+        <span className="text-[#dff7f5]">진행 중 {activeQuestEntries.length}</span>
+        <span className="text-[#ece5ff]">수락 가능 {availableQuestEntries.length}</span>
+        <span className="text-[#f6e7c8]">보상 대기 {claimableQuestCount}</span>
       </div>
       {/* 현상수배 */}
-      <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+      <div className="mb-4 rounded-[1.2rem] border border-[#d5b180]/18 bg-[#d5b180]/8 p-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="text-sm font-bold text-amber-300 font-rajdhani tracking-[0.16em]">현상수배 게시판</div>
-            <div className="mt-1 text-[11px] text-slate-400 font-fira">{bountyHelperText}</div>
+            <div className="text-sm font-bold text-[#f6e7c8] font-rajdhani tracking-[0.16em]">현상수배 게시판</div>
+            <div className="mt-1 text-[11px] text-slate-300/72 font-fira">{bountyHelperText}</div>
           </div>
           <Motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => actions.requestBounty()}
             disabled={!canRequestBounty}
-            className="min-h-[44px] shrink-0 rounded-lg border border-amber-500/30 bg-amber-500/10 px-5 py-3 text-xs font-bold text-amber-300 transition-all hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-[44px] shrink-0 rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 px-5 py-3 text-xs font-bold text-[#f6e7c8] transition-all hover:bg-[#d5b180]/16 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {bountyButtonLabel}
           </Motion.button>
@@ -123,7 +123,7 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
             <h3 className="text-sm font-bold text-cyber-green font-rajdhani tracking-[0.18em]">진행 중 임무</h3>
           </div>
           {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry) => (
-            <div key={`active_${entry.id}`} className={`rounded-lg border p-4 ${entry.isComplete ? 'border-cyber-green/40 bg-cyber-green/10' : entry.isBounty ? 'border-amber-500/30 bg-amber-500/10' : 'border-cyber-blue/20 bg-cyber-dark/60'}`}>
+            <div key={`active_${entry.id}`} className={`rounded-[1.2rem] border p-4 ${entry.isComplete ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10' : entry.isBounty ? 'border-[#d5b180]/22 bg-[#d5b180]/8' : 'border-white/8 bg-black/18'}`}>
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -170,7 +170,7 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
         <section className="space-y-3">
           <h3 className="text-sm font-bold text-cyber-blue font-rajdhani tracking-[0.18em] border-b border-cyber-blue/20 pb-2">수락 가능 임무</h3>
           {availableQuestEntries.length > 0 ? availableQuestEntries.map((quest) => (
-            <div key={`available_${quest.id}`} className="rounded-lg border border-cyber-blue/20 bg-cyber-dark/60 p-4 transition-colors hover:border-cyber-blue/40">
+            <div key={`available_${quest.id}`} className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4 transition-colors hover:border-[#7dd4d8]/18">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="flex-1 min-w-0">
                   {(() => {
@@ -205,7 +205,7 @@ const QuestBoardPanel = ({ player, actions, setGameState }) => {
         <section className="space-y-3">
           <h3 className="text-sm font-bold text-purple-300 font-rajdhani tracking-[0.18em] border-b border-purple-500/20 pb-2">곧 열릴 임무</h3>
           {lockedQuestEntries.length > 0 ? lockedQuestEntries.map((quest) => (
-            <div key={`locked_${quest.id}`} className="rounded-lg border border-purple-500/20 bg-slate-900/70 p-4">
+            <div key={`locked_${quest.id}`} className="rounded-[1.2rem] border border-white/8 bg-black/14 p-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">

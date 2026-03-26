@@ -4,10 +4,22 @@ import { ChevronDown, ChevronUp, Compass, Crosshair } from 'lucide-react';
 import SignalBadge from '../SignalBadge';
 import { getAdventureGuidance, getExplorationForecast, getQuestTracker } from '../../utils/adventureGuide';
 import { runGuidanceAction } from '../../utils/adventureGuideActions';
+import { calcPerformanceScore, getDifficultyMults } from '../../systems/DifficultyManager';
+
+const DIFF_BADGE = {
+    '압도': { label: '⚔️ 압도 중', cls: 'border-amber-500/40 bg-amber-950/40 text-amber-400' },
+    '위기': { label: '🛡️ 위기', cls: 'border-red-500/40 bg-red-950/40 text-red-400' },
+    '열세': { label: '🛡️ 열세', cls: 'border-orange-500/40 bg-orange-950/40 text-orange-400' },
+};
 
 const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab, mobile = false, onMobileOpenDetails }) => {
     const [detailsOpen, setDetailsOpen] = useState(!mobile);
     const mapData = runtime?.mapData;
+    const diffBadge = useMemo(() => {
+        const score = calcPerformanceScore(player);
+        const diff = getDifficultyMults(score);
+        return DIFF_BADGE[diff.label] || null;
+    }, [player]);
     const guidance = useMemo(
         () => getAdventureGuidance(player, stats, mapData, runtime?.gameState || 'idle'),
         [mapData, player, runtime?.gameState, stats]
@@ -41,6 +53,11 @@ const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab,
                     {mobile ? 'Next' : '현재 목표'}
                 </span>
                 <div className="flex items-center gap-2">
+                    {diffBadge && (
+                        <span className={`rounded border px-1.5 py-0.5 text-[9px] font-fira font-bold ${diffBadge.cls}`}>
+                            {diffBadge.label}
+                        </span>
+                    )}
                     <SignalBadge
                         tone={
                             guidance.emphasis === '위험'

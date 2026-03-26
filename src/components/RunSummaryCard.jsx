@@ -3,6 +3,7 @@ import { motion as Motion } from 'framer-motion';
 import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar } from 'lucide-react';
 import { getTitleLabel } from '../utils/gameUtils';
 import { getRunSummaryAnalysis } from '../utils/outcomeAnalysis';
+import SignalBadge from './SignalBadge';
 
 const SHARE_TEXT = (s) =>
 `⚔️ AETHERIA RUN ENDED
@@ -16,6 +17,15 @@ ${s.activeTitle ? `[${getTitleLabel(s.activeTitle)}] ` : ''}${s.job} Lv.${s.leve
 ⚡ 프레스티지: ${s.prestigeRank}랭크
 
 #에테리아 #AetheriaRPG #로그라이크`;
+
+const STAT_CARD_STYLE = [
+    'text-[#f6e7c8] border-[#d5b180]/18 bg-[#d5b180]/10',
+    'text-[#dff7f5] border-[#7dd4d8]/18 bg-[#7dd4d8]/10',
+    'text-rose-100 border-rose-300/20 bg-rose-400/10',
+    'text-[#e3dcff] border-[#9a8ac0]/20 bg-[#9a8ac0]/10',
+    'text-slate-100 border-white/8 bg-white/[0.04]',
+    'text-[#f6e7c8] border-[#d5b180]/18 bg-[#d5b180]/10',
+];
 
 const RunSummaryCard = ({ runSummary: s, onRestart }) => {
     const [copied, setCopied] = useState(false);
@@ -32,120 +42,139 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
     };
 
     const stats = [
-        { icon: <Trophy size={14} className="text-yellow-400" />, label: 'LEVEL', value: s.level, color: 'text-yellow-400' },
-        { icon: <Sword size={14} className="text-orange-400" />,  label: 'CLASS',  value: s.job,   color: 'text-orange-300' },
-        { icon: <Skull size={14} className="text-red-400" />,     label: 'KILLS',  value: s.kills.toLocaleString(), color: 'text-red-400' },
-        { icon: <Skull size={14} className="text-purple-400" />,  label: 'BOSSES', value: s.bossKills, color: 'text-purple-400' },
-        { icon: <Gem size={14} className="text-cyber-blue" />,    label: 'RELICS', value: s.relicsFound, color: 'text-cyber-blue' },
-        { icon: <Coins size={14} className="text-yellow-500" />,  label: 'GOLD',   value: s.totalGold.toLocaleString(), color: 'text-yellow-500' },
+        { icon: <Trophy size={14} className="text-[#d5b180]" />, label: 'LEVEL', value: s.level },
+        { icon: <Sword size={14} className="text-[#7dd4d8]" />, label: 'CLASS', value: s.job },
+        { icon: <Skull size={14} className="text-rose-200" />, label: 'KILLS', value: s.kills.toLocaleString() },
+        { icon: <Skull size={14} className="text-[#e3dcff]" />, label: 'BOSSES', value: s.bossKills },
+        { icon: <Gem size={14} className="text-slate-100" />, label: 'RELICS', value: s.relicsFound },
+        { icon: <Coins size={14} className="text-[#d5b180]" />, label: 'GOLD', value: s.totalGold.toLocaleString() },
     ];
 
     return (
         <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-cyber-dark/90 backdrop-blur-md px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
         >
+            <div className="aether-overlay" />
+            <div
+                className="pointer-events-none absolute inset-0 opacity-70"
+                style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(213,177,128,0.12), transparent 30%), radial-gradient(circle at bottom right, rgba(125,212,216,0.08), transparent 24%)' }}
+            />
+
             <Motion.div
                 initial={{ opacity: 0, y: 40, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="w-full max-w-md bg-cyber-slate/90 border border-red-500/40 rounded-xl shadow-[0_0_40px_rgba(239,68,68,0.25)] overflow-hidden"
+                className="panel-noise aether-surface-strong relative z-10 w-full max-w-[34rem] overflow-hidden rounded-[2rem] shadow-[0_36px_96px_rgba(1,6,14,0.62)]"
             >
-                {/* 상단 스캔라인 */}
-                <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-red-500 to-transparent animate-scanline" />
+                <div
+                    className="pointer-events-none absolute inset-0 opacity-60"
+                    style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.05), transparent 22%), radial-gradient(circle at top right, rgba(154,138,192,0.12), transparent 28%)' }}
+                />
 
-                {/* 헤더 */}
-                <div className="bg-red-950/50 px-6 py-5 text-center border-b border-red-500/20">
-                    <Motion.div
-                        animate={{ opacity: [1, 0.3, 1] }}
-                        transition={{ duration: 1.2, repeat: Infinity }}
-                        className="text-red-500 text-xs font-fira tracking-[0.4em] mb-2"
-                    >
-                        ■ RUN ENDED ■
-                    </Motion.div>
-                    <div className="text-2xl font-bold text-white font-rajdhani">
-                        {s.activeTitle
-                            ? <><span className="text-cyber-purple">[{getTitleLabel(s.activeTitle)}]</span> {s.job}</>
-                            : s.job
-                        }
-                    </div>
-                    <div className="text-xs text-slate-400 font-fira mt-1 flex items-center justify-center gap-1">
-                        <MapPin size={10} /> {s.loc}에서 전사
-                    </div>
-                    {s.prestigeRank > 0 && (
-                        <div className="mt-2 inline-flex items-center gap-1 text-xs text-cyber-purple border border-cyber-purple/30 px-2 py-0.5 rounded bg-cyber-purple/10 font-rajdhani">
-                            <Zap size={10} /> PRESTIGE {s.prestigeRank}
+                <div className="px-6 pb-5 pt-6">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                            <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
+                                Memorial Ledger
+                            </div>
+                            <div className="mt-2 text-[1.7rem] font-rajdhani font-bold tracking-[0.08em] text-[#f6e7c8]">
+                                {s.activeTitle
+                                    ? <><span className="text-[#e3dcff]">[{getTitleLabel(s.activeTitle)}]</span> {s.job}</>
+                                    : s.job
+                                }
+                            </div>
+                            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-fira text-slate-300/76">
+                                <span className="inline-flex items-center gap-1.5">
+                                    <MapPin size={11} className="text-slate-400" />
+                                    {s.loc}에서 전사
+                                </span>
+                                <span className="text-slate-500">·</span>
+                                <span>Lv.{s.level}</span>
+                            </div>
                         </div>
-                    )}
-                </div>
 
-                {/* 통계 그리드 */}
-                <div className="grid grid-cols-3 gap-px bg-cyber-blue/10 border-b border-cyber-blue/10">
-                    {stats.map((st, i) => (
-                        <div key={i} className="bg-cyber-dark/60 px-3 py-3 text-center">
-                            <div className="flex justify-center mb-1">{st.icon}</div>
-                            <div className={`text-lg font-bold font-rajdhani ${st.color}`}>{st.value}</div>
-                            <div className="text-[10px] text-slate-500 font-fira tracking-widest">{st.label}</div>
+                        <div className="flex flex-wrap gap-1.5">
+                            <SignalBadge tone="danger" size="sm">Run Ended</SignalBadge>
+                            {s.prestigeRank > 0 && (
+                                <SignalBadge tone="resonance" size="sm">
+                                    <span className="inline-flex items-center gap-1">
+                                        <Zap size={10} />
+                                        Prestige {s.prestigeRank}
+                                    </span>
+                                </SignalBadge>
+                            )}
                         </div>
-                    ))}
-                </div>
+                    </div>
 
-                {/* 메시지 */}
-                <div className="px-6 py-4 text-center space-y-4">
-                    <p className="text-xs text-slate-400 font-fira leading-relaxed">
-                        에테르가 흩어졌습니다. 하지만 기억은 남습니다.
-                        <br />
-                        <span className="text-cyber-blue">다시 접속하여 더 강해지세요.</span>
-                    </p>
-                    <div className="rounded-lg border border-cyber-blue/15 bg-cyber-dark/50 px-4 py-3 text-left">
-                        <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/60">
-                            <span className="flex items-center gap-1.5">
+                    <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                        {stats.map((st, index) => (
+                            <div key={st.label} className={`rounded-[1rem] border px-3 py-3 ${STAT_CARD_STYLE[index]}`}>
+                                <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] opacity-76">
+                                    {st.icon}
+                                    {st.label}
+                                </div>
+                                <div className="mt-2 text-[1.3rem] font-rajdhani font-bold text-white">
+                                    {st.value}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-5 rounded-[1.25rem] border border-white/8 bg-black/18 px-4 py-3.5">
+                        <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                            <span className="inline-flex items-center gap-1.5">
                                 <Radar size={11} />
                                 Run Readout
                             </span>
-                            <span className="text-cyber-purple">{analysis.headline}</span>
+                            <span className="text-[#f6e7c8]">{analysis.headline}</span>
                         </div>
-                        <div className="mt-2 space-y-1 text-[11px] font-fira text-slate-300">
+
+                        <div className="mt-3 space-y-1.5 text-[11px] font-fira text-slate-200/86">
                             {analysis.notes.map((note) => (
                                 <div key={note}>• {note}</div>
                             ))}
                         </div>
-                        <div className="mt-2 pt-2 border-t border-cyber-blue/10 space-y-1 text-[11px] font-fira text-cyber-blue/75">
+
+                        <div className="mt-3 border-t border-white/8 pt-3 space-y-1.5 text-[11px] font-fira text-[#dff7f5]/78">
                             {analysis.focus.map((focus) => (
                                 <div key={focus}>→ {focus}</div>
                             ))}
                         </div>
                     </div>
-                </div>
 
-                {/* 버튼 */}
-                <div className="px-6 pb-6 grid grid-cols-2 gap-3">
-                    <Motion.button
-                        data-testid="run-summary-share"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={handleShare}
-                        className={`flex items-center justify-center gap-2 py-3 rounded border font-rajdhani font-bold text-sm transition-all
-                            ${copied
-                                ? 'bg-cyber-green/20 border-cyber-green text-cyber-green shadow-[0_0_15px_rgba(0,255,157,0.3)]'
-                                : 'bg-cyber-blue/10 border-cyber-blue/40 text-cyber-blue hover:bg-cyber-blue/20 hover:shadow-[0_0_15px_rgba(0,204,255,0.3)]'
+                    <p className="mt-4 text-center text-[11px] font-fira leading-relaxed text-slate-400/76">
+                        에테르는 흩어졌지만 기록은 남습니다. 같은 죽음을 반복하지 않도록 이번 런의 패턴을 다음 시도에 반영하세요.
+                    </p>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                        <Motion.button
+                            data-testid="run-summary-share"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={handleShare}
+                            className={`flex items-center justify-center gap-2 rounded-[1rem] border px-3 py-3 text-sm font-rajdhani font-bold transition-all ${
+                                copied
+                                    ? 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100'
+                                    : 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 text-[#dff7f5] hover:bg-[#7dd4d8]/14'
                             }`}
-                    >
-                        {copied ? <CheckCircle size={15} /> : <Share2 size={15} />}
-                        {copied ? '복사 완료!' : '결과 공유'}
-                    </Motion.button>
+                        >
+                            {copied ? <CheckCircle size={15} /> : <Share2 size={15} />}
+                            {copied ? '복사 완료' : '결과 공유'}
+                        </Motion.button>
 
-                    <Motion.button
-                        data-testid="run-summary-restart"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={onRestart}
-                        className="flex items-center justify-center gap-2 py-3 rounded border border-red-500/50 bg-red-950/30 text-red-400 hover:bg-red-900/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] font-rajdhani font-bold text-sm transition-all"
-                    >
-                        <RotateCcw size={15} />
-                        다시 시작
-                    </Motion.button>
+                        <Motion.button
+                            data-testid="run-summary-restart"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={onRestart}
+                            className="flex items-center justify-center gap-2 rounded-[1rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-3 text-sm font-rajdhani font-bold text-[#f6e7c8] transition-all hover:bg-[#d5b180]/14"
+                        >
+                            <RotateCcw size={15} />
+                            다시 시작
+                        </Motion.button>
+                    </div>
                 </div>
             </Motion.div>
         </Motion.div>

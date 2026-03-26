@@ -2,9 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --aether-bg-0: #05070b;
+  --aether-bg-1: #0b1016;
+  --aether-bg-2: #141b24;
+  --aether-ink: #edf2f7;
+  --aether-muted: #95a6b5;
+  --aether-line: rgba(204, 224, 237, 0.12);
+  --aether-line-strong: rgba(227, 236, 244, 0.18);
+  --aether-cyan: #7dd4d8;
+  --aether-cyan-soft: rgba(125, 212, 216, 0.12);
+  --aether-amber: #d5b180;
+  --aether-amber-soft: rgba(213, 177, 128, 0.12);
+  --aether-violet: #9a8ac0;
+  --aether-shadow: rgba(3, 8, 16, 0.58);
+}
+
 @layer base {
+  html {
+    background:
+      radial-gradient(circle at top left, rgba(213, 177, 128, 0.12), transparent 26%),
+      radial-gradient(circle at 78% 14%, rgba(125, 212, 216, 0.1), transparent 24%),
+      linear-gradient(180deg, #06080d 0%, #05070b 42%, #04060a 100%);
+  }
+
   body {
-    @apply bg-cyber-black text-slate-200 font-rajdhani overflow-x-hidden selection:bg-cyan-400/40 selection:text-white;
+    @apply text-slate-200 font-rajdhani overflow-x-hidden selection:bg-cyan-200/20 selection:text-white;
+    background:
+      radial-gradient(circle at top left, rgba(213, 177, 128, 0.12), transparent 24%),
+      radial-gradient(circle at 82% 16%, rgba(125, 212, 216, 0.1), transparent 22%),
+      linear-gradient(180deg, var(--aether-bg-1) 0%, var(--aether-bg-0) 44%, #04060a 100%);
+    color: var(--aether-ink);
   }
 
   h1,
@@ -39,15 +67,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-cyber-dark;
+  background: rgba(8, 12, 18, 0.92);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-cyber-slate rounded;
+  background: rgba(117, 136, 153, 0.56);
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-cyber-purple;
+  background: rgba(153, 170, 184, 0.72);
 }
 
 /* ============================================
@@ -329,9 +358,11 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 0.45px, transparent 0.45px);
-  background-size: 4px 4px;
-  opacity: 0.06;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.11) 0.35px, transparent 0.45px),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent 32%);
+  background-size: 5px 5px, 100% 100%;
+  opacity: 0.05;
   pointer-events: none;
   z-index: 0;
 }
@@ -340,9 +371,98 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%, transparent 82%, rgba(34, 211, 238, 0.05));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 16%, transparent 84%, rgba(125, 212, 216, 0.05)),
+    radial-gradient(circle at top left, rgba(213, 177, 128, 0.08), transparent 28%);
   pointer-events: none;
   z-index: 0;
+}
+
+.aether-surface {
+  background: linear-gradient(180deg, rgba(18, 24, 32, 0.88) 0%, rgba(8, 12, 18, 0.96) 100%);
+  border: 1px solid var(--aether-line);
+  box-shadow:
+    0 24px 60px var(--aether-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+}
+
+.aether-surface-strong {
+  background:
+    radial-gradient(circle at top left, rgba(213, 177, 128, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(21, 28, 37, 0.94) 0%, rgba(8, 11, 17, 0.98) 100%);
+  border: 1px solid var(--aether-line-strong);
+  box-shadow:
+    0 28px 72px rgba(1, 6, 14, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(28px);
+}
+
+.aether-soft-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.aether-hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(213, 177, 128, 0.28) 18%, rgba(125, 212, 216, 0.22) 50%, transparent 100%);
+}
+
+.aether-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  background: transparent;
+}
+
+.aether-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(149, 166, 181, 0.42);
+  border-radius: 999px;
+}
+
+/* ============================================
+   COMPONENT UTILITY CLASSES
+   ============================================ */
+
+/* 오버레이 백드롭 (유물 선택, 이벤트, 환생, 런 요약 등) */
+.aether-overlay {
+  @apply absolute inset-0;
+  background: linear-gradient(180deg, rgba(5, 8, 12, 0.84) 0%, rgba(7, 10, 15, 0.92) 100%);
+  backdrop-filter: blur(12px);
+}
+
+/* 게임 카드/패널 기본 */
+.aether-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+/* 액션 버튼 기본 */
+.aether-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  backdrop-filter: blur(24px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.aether-btn:disabled {
+  opacity: 0.5;
+}
+
+/* 리스트 아이템 행 */
+.aether-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.5rem 0.625rem;
+  transition: color 0.15s;
 }
 
 /* ============================================
@@ -370,11 +490,11 @@
 /* 스크롤바 스타일 */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
-  background: #1e293b;
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: rgba(149, 166, 181, 0.42);
   border-radius: 4px;
 }
 
@@ -383,4 +503,56 @@
   .hover-glow:hover {
     box-shadow: 0 0 10px rgba(var(--tw-shadow-color), 0.5);
   }
+}
+
+/* ============================================
+   PERFORMANCE: GPU COMPOSITING HINTS
+   ============================================ */
+
+/* backdrop-filter 사용 요소에 GPU 레이어 승격 */
+.aether-surface,
+.aether-surface-strong,
+.aether-overlay {
+  will-change: backdrop-filter;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* 저사양 기기: backdrop-filter 비활성 (성능 우선) */
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .aether-surface,
+  .aether-surface-strong,
+  .aether-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* 모션 감소 선호 사용자 — 모든 CSS 애니메이션 비활성 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 포커스 링 — 키보드 탐색 시 명확한 아웃라인 */
+:focus-visible {
+  outline: 2px solid var(--aether-cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 마우스/터치 시 포커스 링 숨김 */
+:focus:not(:focus-visible) {
+  outline: none;
 }

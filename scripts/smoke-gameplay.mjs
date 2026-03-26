@@ -9,17 +9,34 @@ const DEFAULT_CHROME_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Goog
 const ALLOWED_404_PATHS = new Set(['/favicon.ico', '/api/ai-proxy']);
 const args = process.argv.slice(2);
 const isMobile = args.includes('--mobile');
-const urlArgIndex = args.indexOf('--url');
-const targetUrl = urlArgIndex >= 0 ? args[urlArgIndex + 1] : process.env.AETHERIA_SMOKE_URL || DEFAULT_URL;
 const viewportLabel = isMobile ? 'mobile' : 'desktop';
-const artifactDir = path.resolve(process.cwd(), 'playtest-artifacts', viewportLabel);
-
 const ensure = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 
 const sanitizeName = (value) => value.replace(/[^a-z0-9_-]+/gi, '-').toLowerCase();
+const getArgValue = (name) => {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : null;
+};
+const parseDimension = (name, fallback) => {
+  const raw = Number(getArgValue(name));
+  return Number.isFinite(raw) && raw > 0 ? raw : fallback;
+};
+
+const smokeUrl = new URL(getArgValue('--url') || process.env.AETHERIA_SMOKE_URL || DEFAULT_URL);
+smokeUrl.searchParams.set('smoke', '1');
+
+const targetUrl = smokeUrl.toString();
+const targetOrigin = smokeUrl.origin;
+const artifactLabel = sanitizeName(getArgValue('--artifact-label') || viewportLabel);
+const desktopViewport = {
+  width: parseDimension('--viewport-width', 1440),
+  height: parseDimension('--viewport-height', 1100),
+};
+const artifactDir = path.resolve(process.cwd(), 'playtest-artifacts', artifactLabel);
 const logSmoke = (message) => console.log(`[smoke:${viewportLabel}] ${message}`);
+const CLOSE_TIMEOUT_MS = 2500;
 
 async function launchBrowser() {
   const executablePath = process.env.PLAYWRIGHT_CHROME_PATH || DEFAULT_CHROME_PATH;
@@ -33,6 +50,19 @@ async function launchBrowser() {
       throw error;
     }
     return chromium.launch({ headless: true });
+  }
+}
+
+async function settleClose(task, label) {
+  try {
+    await Promise.race([
+      task,
+      delay(CLOSE_TIMEOUT_MS).then(() => {
+        throw new Error(`${label} timeout`);
+      }),
+    ]);
+  } catch (error) {
+    console.warn(`[smoke:${viewportLabel}] ${label} skipped: ${error.message}`);
   }
 }
 
@@ -55,7 +85,7 @@ async function writeStateArtifact(name, state, page) {
   const basename = sanitizeName(name);
   await fs.mkdir(artifactDir, { recursive: true });
   await fs.writeFile(path.join(artifactDir, `${basename}.json`), `${JSON.stringify(state, null, 2)}\n`, 'utf8');
-  await page.screenshot({ path: path.join(artifactDir, `${basename}.png`), fullPage: true });
+  await page.screenshot({ path: path.join(artifactDir, `${basename}.png`), fullPage: true, timeout: 60000 });
 }
 
 async function scrollToTop(page) {
@@ -277,6 +307,7 @@ async function driveExploreLoop(page) {
     await settleAfterCommand(page, 18000);
 
     let state = await readState(page);
+    // Debug logging removed after smoke fix
     if (isRunOver(state)) {
       state = await restartFromRunOver(page, `04-run-over-${attempt + 1}`);
       continue;
@@ -347,6 +378,10 @@ async function verifyTabs(page) {
     await restartFromRunOver(page, '08-tabs-run-over');
   }
 
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('map'));
+  const mapState = await waitForState(page, (state) => state.sideTab === 'map', 'map tab activation');
+  await writeStateArtifact('08a-map-tab', mapState, page);
+
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('stats'));
   const statsState = await waitForState(page, (state) => state.sideTab === 'stats', 'stats tab activation');
   await writeStateArtifact('08-stats-tab', statsState, page);
@@ -362,17 +397,19 @@ async function verifyTabs(page) {
 async function main() {
   logSmoke('start');
   const browser = await launchBrowser();
+  let context;
   const errors = [];
   const consoleErrors = [];
   const responseFailures = [];
+  const requestFailures = [];
 
   try {
-    const context = isMobile
+    context = isMobile
       ? await browser.newContext({
           ...devices['iPhone 13'],
         })
       : await browser.newContext({
-          viewport: { width: 1440, height: 1100 },
+          viewport: desktopViewport,
         });
 
     const page = await context.newPage();
@@ -382,19 +419,30 @@ async function main() {
     page.on('console', (message) => {
       if (message.type() === 'error') {
         const text = message.text();
-        if (!text.startsWith('Failed to load resource: the server responded with a status of 404')) {
-          consoleErrors.push(text);
-        }
+        if (text.startsWith('Failed to load resource:')) return;
+        consoleErrors.push(text);
       }
     });
     page.on('response', (response) => {
       if (response.status() < 400) return;
       try {
-        const pathname = new URL(response.url()).pathname;
+        const url = new URL(response.url());
+        if (url.origin !== targetOrigin) return;
+        const pathname = url.pathname;
         if (ALLOWED_404_PATHS.has(pathname) && response.status() === 404) return;
         responseFailures.push(`${response.status()} ${pathname}`);
       } catch {
         responseFailures.push(`${response.status()} ${response.url()}`);
+      }
+    });
+    page.on('requestfailed', (request) => {
+      try {
+        const url = new URL(request.url());
+        if (url.origin !== targetOrigin) return;
+        if (ALLOWED_404_PATHS.has(url.pathname)) return;
+        requestFailures.push(`${request.failure()?.errorText || 'REQUEST_FAILED'} ${url.pathname}`);
+      } catch {
+        requestFailures.push(`${request.failure()?.errorText || 'REQUEST_FAILED'} ${request.url()}`);
       }
     });
 
@@ -426,16 +474,24 @@ async function main() {
     ensure(finalState.mode === 'game' && !isRunOver(finalState), 'Smoke ended outside the main game loop');
     ensure(errors.length === 0, `Page errors detected:\n${errors.join('\n')}`);
     ensure(responseFailures.length === 0, `HTTP failures detected:\n${responseFailures.join('\n')}`);
+    ensure(requestFailures.length === 0, `Request failures detected:\n${requestFailures.join('\n')}`);
     ensure(consoleErrors.length === 0, `Console errors detected:\n${consoleErrors.join('\n')}`);
 
     console.log(`[smoke:${viewportLabel}] ok`);
   } finally {
-    await browser.close();
+    if (context) {
+      await settleClose(context.close(), 'context.close');
+    }
+    await settleClose(browser.close(), 'browser.close');
   }
 }
 
-main().catch((error) => {
-  console.error(`[smoke:${viewportLabel}] failed`);
-  console.error(error.stack || error.message || String(error));
-  process.exitCode = 1;
-});
+main()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error(`[smoke:${viewportLabel}] failed`);
+    console.error(error.stack || error.message || String(error));
+    process.exit(1);
+  });

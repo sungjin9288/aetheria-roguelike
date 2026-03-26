@@ -11,13 +11,42 @@ import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyM
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
 export const toArray = (v) => (Array.isArray(v) ? v : []);
 
-/** 플레이어의 직업 스킬 목록을 반환 */
+/** 플레이어의 직업 스킬 목록을 반환 (패시브 제외 — 전투용 액티브 스킬만) */
 export const getJobSkills = (player) => {
-    const classSkills = toArray(DB.CLASSES[player?.job]?.skills);
+    const classSkills = toArray(DB.CLASSES[player?.job]?.skills).filter(s => !s.passive);
     const weaponSkills = getWeaponMagicSkills(player?.equip);
     const traitSkill = getTraitSkill(player);
     return [...classSkills, ...weaponSkills, ...(traitSkill ? [traitSkill] : [])];
 };
+
+/**
+ * 현재 직업의 패시브 스킬 보너스 계산
+ * @param {object} player
+ * @returns {{ hp: number, mp: number, atk: number, def: number }}
+ */
+export const getPassiveSkillBonuses = (player) => {
+    const cls = DB.CLASSES[player?.job];
+    const bonus = { hp: 0, mp: 0, atk: 0, def: 0, lowHpAtkMult: 1 };
+    if (!cls) return bonus;
+    toArray(cls.skills).filter(s => s.passive).forEach(s => {
+        if (s.effect === 'hp_up') bonus.hp += (s.val || 0);
+        if (s.effect === 'mp_up') bonus.mp += (s.val || 0);
+        if (s.effect === 'atk_up') bonus.atk += (s.val || 0);
+        if (s.effect === 'def_up') bonus.def += (s.val || 0);
+        // low_hp_atk: HP 30% 이하 시 ATK 배율 (무당 죽음의 직관)
+        if (s.effect === 'low_hp_atk' && s.val) {
+            const hpRatio = (player.hp || 0) / Math.max(1, player.maxHp || 150);
+            if (hpRatio < 0.3) bonus.lowHpAtkMult = Math.max(bonus.lowHpAtkMult, s.val);
+        }
+    });
+    return bonus;
+};
+
+/** 티어 → 등급 자동 매핑 */
+const TIER_TO_RARITY = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary', 6: 'legendary' };
+
+/** 아이템 등급 반환 (명시적 rarity 우선, 없으면 tier 기반 자동 매핑) */
+export const getItemRarity = (item) => item?.rarity || TIER_TO_RARITY[item?.tier] || 'common';
 
 /** 아이템 인스턴스 생성 (고유 ID 부여) */
 export const makeItem = (template) => ({
@@ -89,6 +118,44 @@ export const getTitlePassiveLabel = (token) => {
     return passive?.label || '패시브 없음';
 };
 
+/**
+ * 아이템/몬스터를 도감에 등록 (immutable — 새 player 반환)
+ * @param {object} player
+ * @param {'weapons'|'armors'|'shields'|'monsters'|'recipes'|'materials'} category
+ * @param {string} name
+ */
+export const registerCodex = (player, category, name) => {
+    if (!name || !category) return player;
+    const codex = player.stats?.codex || {};
+    const cat = codex[category] || {};
+    if (cat[name]) return player; // 이미 등록됨
+    return {
+        ...player,
+        stats: {
+            ...player.stats,
+            codex: {
+                ...codex,
+                [category]: { ...cat, [name]: { discovered: true, obtainedAt: Date.now() } },
+            },
+        },
+    };
+};
+
+/**
+ * loot 아이템 배열을 codex에 일괄 등록
+ */
+export const registerLootToCodex = (player, lootItems) => {
+    let p = player;
+    for (const item of lootItems) {
+        const cat = item.type === 'weapon' ? 'weapons'
+            : item.type === 'armor' ? 'armors'
+            : item.type === 'shield' ? 'shields'
+            : item.type === 'mat' ? 'materials' : null;
+        if (cat) p = registerCodex(p, cat, item.name);
+    }
+    return p;
+};
+
 /** 골드 획득을 누적 통계와 함께 반영 */
 export const grantGold = (player, amount = 0) => {
     if (!amount) return player;
@@ -129,6 +196,10 @@ export const getAchievementCurrentValue = (achievement, player) => {
     const stats = player?.stats || {};
     const target = achievement?.target;
     if (target === 'level') return player?.level || 0;
+    if (target === 'prestige') return player?.meta?.prestigeRank || 0;
+    if (target === 'synths') return stats?.syntheses || 0;
+    if (target === 'discoveries') return Object.keys(stats?.visitedMaps || {}).length;
+    if (target === 'relicCount') return (player?.relics || []).length + (stats?.relicCount || 0);
     return stats?.[target] || 0;
 };
 
@@ -271,6 +342,94 @@ export const migrateData = (rawData) => {
     target.stats.dailyProtocol   = target.stats.dailyProtocol   || null;
     // pendingRelics는 런타임 전용 — 저장 불필요, 로드 시 null로 초기화
     savedData.pendingRelics = null;
+
+    // v4.1 — 도감(Codex) + 프리미엄 재화
+    if (!target.stats.codex) {
+        target.stats.codex = { weapons: {}, armors: {}, shields: {}, monsters: {}, recipes: {}, materials: {} };
+        // 기존 인벤토리에서 codex 부트스트랩
+        for (const item of toArray(target.inv)) {
+            const cat = item.type === 'weapon' ? 'weapons'
+                : item.type === 'armor' ? 'armors'
+                : item.type === 'shield' ? 'shields'
+                : item.type === 'mat' ? 'materials' : null;
+            if (cat && item.name) {
+                target.stats.codex[cat][item.name] = { discovered: true, obtainedAt: Date.now() };
+            }
+        }
+        // 기존 장비에서도 부트스트랩
+        for (const slot of ['weapon', 'armor', 'offhand']) {
+            const eq = target.equip?.[slot];
+            if (eq?.name) {
+                const cat = eq.type === 'weapon' ? 'weapons'
+                    : eq.type === 'armor' ? 'armors'
+                    : eq.type === 'shield' ? 'shields' : null;
+                if (cat) target.stats.codex[cat][eq.name] = { discovered: true, obtainedAt: Date.now() };
+            }
+        }
+        // killRegistry에서 몬스터 codex 부트스트랩
+        for (const [name, kills] of Object.entries(target.stats.killRegistry || {})) {
+            if (kills > 0) {
+                target.stats.codex.monsters[name] = { discovered: true, kills };
+            }
+        }
+    }
+    target.premiumCurrency = target.premiumCurrency || 0;
+    target.stats.codexClaimed = Array.isArray(target.stats.codexClaimed) ? target.stats.codexClaimed : [];
+
+    // v4.2 — 시즌 패스
+    if (!target.seasonPass) {
+        target.seasonPass = { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+    }
+
+    // v4.3 — 강화, 주간 미션, 챌린지, 스킬 분기, 묘비 침략
+    if (!target.weeklyProtocol) {
+        target.weeklyProtocol = { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] };
+    }
+    target.skillChoices = target.skillChoices && typeof target.skillChoices === 'object' ? target.skillChoices : {};
+    target.challengeModifiers = Array.isArray(target.challengeModifiers) ? target.challengeModifiers : [];
+    target.stats.dailyInvadeCount = target.stats.dailyInvadeCount || 0;
+    target.stats.lastInvadeDate   = target.stats.lastInvadeDate   || null;
+    // 인벤 아이템에 enhance 기본값 보장
+    if (Array.isArray(target.inv)) {
+        target.inv = target.inv.map((item) => item ? { ...item, enhance: item.enhance || 0 } : item);
+    }
+
+    // v5.0 — 진 엔딩, 이벤트 체인, 시너지
+    if (!target.eventChainProgress || typeof target.eventChainProgress !== 'object') {
+        target.eventChainProgress = {};
+    }
+    // 구역 보스 처치 기록 (런별 리셋)
+    target.stats.areaBossDefeated = target.stats.areaBossDefeated || {};
+    // combatFlags 신규 필드 — 다중 부활 카운터
+    if (target.combatFlags) {
+        target.combatFlags.deathSaveUsedCount = target.combatFlags.deathSaveUsedCount || 0;
+    }
+    // 진 엔딩 파편 카운터
+    target.meta.trueEndingFragments = target.meta.trueEndingFragments || 0;
+
+    // 발견 체인 완료 기록
+    target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
+
+    // 접두사 마이그레이션 — prefixed 플래그가 있지만 prefixName 누락된 아이템 보강
+    const fixPrefixedItem = (item) => {
+        if (!item || !item.prefixed) return item;
+        if (!item.prefixName && item.name) {
+            // 이름에서 접두사 추출 시도 (첫 번째 공백 기준)
+            const parts = item.name.split(' ');
+            if (parts.length > 1) {
+                item.prefixName = parts[0];
+            }
+        }
+        return item;
+    };
+    if (Array.isArray(target.inv)) {
+        target.inv = target.inv.map(fixPrefixedItem);
+    }
+    if (target.equip) {
+        target.equip.weapon = fixPrefixedItem(target.equip.weapon);
+        target.equip.armor = fixPrefixedItem(target.equip.armor);
+        target.equip.offhand = fixPrefixedItem(target.equip.offhand);
+    }
 
     return savedData;
 };

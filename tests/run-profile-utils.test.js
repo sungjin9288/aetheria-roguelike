@@ -18,7 +18,7 @@ test('exploration pacing increases narrative chance after long dry streaks and r
     const quietChance = getQuietExplorationChance(dryStats);
 
     assert.equal(narrativeChance, 0.125);
-    assert.ok(Math.abs(quietChance - 0.15) < 1e-9);
+    assert.ok(Math.abs(quietChance - 0.12) < 1e-9); // EVENT_CHANCE_NOTHING=0.2, quietStreak=3 → clamped to MIN_NOTHING_CHANCE
 });
 
 test('advanceExploreState resets and increments the expected exploration counters', () => {

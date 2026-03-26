@@ -5,34 +5,128 @@ service cloud.firestore {
 
     // ============================================================
     // Aetheria RPG — Firestore 보안 규칙
-    // APP_ID: aetheria-rpg
+    // APP_ID: aetheria-rpg  (v5.0 출시용)
+    // 마지막 수정: 2026-03-25
     // ============================================================
 
-    // 최상위 artifacts/{appId} 하위 경로 전체를 관리
-    match /artifacts/{appId} {
+    // 인증 유저 여부 공통 함수
+    function isAuthed() {
+      return request.auth != null;
+    }
 
-      // ── 유저 개인 데이터: 본인만 읽기/쓰기 ──────────────────────
+    // 본인 UID 일치 여부
+    function isSelf(uid) {
+      return isAuthed() && request.auth.uid == uid;
+    }
+
+    // 문자열 길이 범위 검사
+    function strLen(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    // 앱 ID를 리터럴로 고정 — 와일드카드 대신 'aetheria-rpg' 전용
+    match /artifacts/aetheria-rpg {
+
+      // ── 유저 개인 저장 데이터 ──────────────────────────────────
+      // 경로: artifacts/aetheria-rpg/users/{uid}
       match /users/{uid} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
+        // 본인만 읽기
+        allow read: if isSelf(uid);
 
-        // 기록 히스토리 서브컬렉션도 동일 조건
+        // 본인만 쓰기 + 기본 구조 검증
+        // payload: { player, gameState, enemy, grave, currentEvent, quickSlots,
+        //            onboardingDismissed, version, lastActive }
+        allow write: if isSelf(uid)
+          && request.resource.data.keys().hasAll(['player', 'gameState', 'lastActive'])
+          && request.resource.data.lastActive is timestamp;
+
+        // 기록 히스토리 서브컬렉션: 본인만
         match /history/{docId} {
-          allow read, write: if request.auth != null && request.auth.uid == uid;
+          allow read, write: if isSelf(uid);
         }
       }
 
-      // ── 공개 설정 (live config): 모든 인증 유저 읽기, 쓰기 불가 ──
+      // ── 공개 설정 (live config) ────────────────────────────────
+      // 경로: artifacts/aetheria-rpg/public/data
+      // 읽기: 모두 허용 (앱 초기화에 필요)
+      // 쓰기: 완전 차단 (Firebase Console에서만 관리)
       match /public/data {
         allow read: if true;
         allow write: if false;
       }
 
-      // ── 리더보드: 모두 읽기, 본인 entry만 쓰기 ──────────────────
-      // 경로: artifacts/{appId}/public/data/leaderboard/{uid}
+      // ── 리더보드 ──────────────────────────────────────────────
+      // 경로: artifacts/aetheria-rpg/public/data/leaderboard/{uid}
       match /public/data/leaderboard/{uid} {
+        // 누구나 읽기 (랭킹 조회)
         allow read: if true;
-        allow write: if request.auth != null && request.auth.uid == uid;
+
+        // 본인 entry만 쓰기 + 필드 유효성 검사
+        allow write: if isSelf(uid)
+          && request.resource.data.keys().hasAll(['nickname', 'totalKills', 'uid', 'updatedAt'])
+          && request.resource.data.uid == uid
+          && strLen(request.resource.data.nickname, 20)
+          && request.resource.data.totalKills is number
+          && request.resource.data.totalKills >= 0
+          && request.resource.data.totalKills <= 100000  // 비정상적 수치 차단
+          && request.resource.data.updatedAt is timestamp;
       }
+
+      // ── 공개 묘비 (PvP) ───────────────────────────────────────
+      // 경로: artifacts/aetheria-rpg/public/data/graves/{uid}
+      match /public/data/graves/{uid} {
+        // 인증된 유저만 읽기 (미인증 차단)
+        allow read: if isAuthed();
+
+        // 본인 묘비만 생성/갱신
+        allow write: if isSelf(uid)
+          && request.resource.data.uid == uid
+          // 필수 필드 존재 확인
+          && request.resource.data.keys().hasAll([
+               'playerName', 'level', 'loc', 'gold',
+               'guardPower', 'createdAt', 'uid'
+             ])
+          // playerName: 1~20자 문자열
+          && strLen(request.resource.data.playerName, 20)
+          // level: 1~99
+          && request.resource.data.level is number
+          && request.resource.data.level >= 1
+          && request.resource.data.level <= 99
+          // loc: 1~30자 문자열
+          && strLen(request.resource.data.loc, 30)
+          // gold: 0~9,999,999
+          && request.resource.data.gold is number
+          && request.resource.data.gold >= 0
+          && request.resource.data.gold <= 9999999
+          // guardPower: 0~9999
+          && request.resource.data.guardPower is number
+          && request.resource.data.guardPower >= 0
+          && request.resource.data.guardPower <= 9999
+          // createdAt: 서버 타임스탬프
+          && request.resource.data.createdAt is timestamp
+          // items 필드가 있는 경우 배열이고 최대 5개
+          && (!('items' in request.resource.data)
+              || (request.resource.data.items is list
+                  && request.resource.data.items.size() <= 5));
+
+        // 삭제: 클라이언트에서 불가 (서버/Admin SDK 전용)
+        allow delete: if false;
+      }
+
+      // ── 그 외 하위 경로: 전면 차단 ────────────────────────────
+      match /{document=**} {
+        allow read, write: if false;
+      }
+    }
+
+    // aetheria-rpg 외 다른 appId 전면 차단
+    match /artifacts/{appId}/{document=**} {
+      allow read, write: if false;
+    }
+
+    // 최상위 다른 컬렉션 전면 차단
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -15,9 +15,10 @@ const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
  * SystemTab — Dashboard의 system 탭 콘텐츠 (#4 분리)
  * props: player, actions, stats
  */
-const SystemTab = ({ player, actions, stats, runtime = null }) => {
+const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState(null);
+    const [showAllSystem, setShowAllSystem] = useState(false);
 
     const qaContext = useMemo(() => {
         const platform = typeof navigator !== 'undefined'
@@ -170,209 +171,278 @@ const SystemTab = ({ player, actions, stats, runtime = null }) => {
     }, [actions, feedbackText, player]);
 
     const feedbackStatusClass = feedbackStatus?.type === 'error'
-        ? 'text-red-400 border-red-500/30 bg-red-950/20'
-        : 'text-cyber-green border-cyber-green/30 bg-cyber-green/10';
+        ? 'text-rose-200 border-rose-300/22 bg-rose-400/10'
+        : 'text-emerald-100 border-emerald-300/24 bg-emerald-300/10';
+    const today = new Date().toISOString().slice(0, 10);
+    const dailyProtocol = player.stats?.dailyProtocol;
+    const isDailyProtocolToday = Boolean(dailyProtocol?.missions?.length) && dailyProtocol.date === today;
+    const dailyDoneCount = isDailyProtocolToday ? dailyProtocol.missions.filter((mission) => mission.done).length : 0;
+    const nextDailyMission = isDailyProtocolToday
+        ? (dailyProtocol.missions.find((mission) => !mission.done) || dailyProtocol.missions[0] || null)
+        : null;
+    const leaderboard = actions.leaderboard || [];
+    const topRanker = leaderboard[0] || null;
+    const myRankIndex = leaderboard.findIndex((entry) => entry.nickname === player.name);
+    const showSystemSummary = compact && !showAllSystem;
 
     return (
-        <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 p-2">
+        <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`${compact ? 'space-y-2.5 p-1' : 'space-y-3 p-1.5'}`}>
+            {compact && (
+                <div className="flex items-center justify-between gap-2">
+                    <div className="text-slate-500 text-xs font-fira tracking-[0.18em] uppercase">System</div>
+                    <button
+                        type="button"
+                        onClick={() => setShowAllSystem((prev) => !prev)}
+                        className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
+                    >
+                        {showAllSystem ? '요약 보기' : '시스템 더 보기'}
+                    </button>
+                </div>
+            )}
+
             {/* 세션 정보 */}
-            <div className="text-xs text-cyber-blue/40 mb-2 font-fira border-l-2 border-cyber-blue/10 pl-3">
-                <p>SESSION: {_SESSION_ID}</p>
-                <p>UID: {actions.getUid()}</p>
-                <p>BUILD: v{CONSTANTS.DATA_VERSION}</p>
+            <div className={`rounded-[1rem] border border-white/8 bg-black/18 text-[10px] text-slate-400/72 font-fira ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}>
+                <div className={`${compact ? 'grid grid-cols-2 gap-x-2 gap-y-1' : 'flex flex-wrap gap-x-3 gap-y-1'}`}>
+                    <p className="truncate">SESSION: {_SESSION_ID}</p>
+                    <p className="truncate">UID: {actions.getUid() || 'guest'}</p>
+                    <p className="truncate">BUILD: v{CONSTANTS.DATA_VERSION}</p>
+                </div>
                 {(player.meta?.prestigeRank || 0) > 0 && (
-                    <p className="text-purple-400 mt-1">PRESTIGE: {player.meta.prestigeRank}회 환생 완료</p>
+                    <p className="text-[#d9d0f3] mt-1">PRESTIGE: {player.meta.prestigeRank}회 환생 완료</p>
                 )}
             </div>
 
-            <div className="bg-cyber-black/40 p-3 rounded border border-cyber-blue/20">
-                <div className="flex items-center justify-between gap-3 mb-2">
-                    <div className="text-xs font-bold text-cyber-blue/70 font-rajdhani tracking-wider">QA READOUT</div>
-                    <div className="flex items-center gap-2">
+            <div className={`rounded-[1rem] border border-white/8 bg-black/18 ${compact ? 'p-2.5' : 'p-3'}`}>
+                <div className={`gap-3 ${compact && showSystemSummary ? 'mb-1.5 flex flex-col items-stretch' : compact ? 'mb-1.5 flex items-center justify-between' : 'mb-2 flex items-center justify-between'}`}>
+                    <div className="text-[11px] font-bold text-slate-300/76 font-rajdhani tracking-[0.18em]">QA READOUT</div>
+                    <div className={`flex items-center gap-2 ${compact && showSystemSummary ? 'w-full' : ''}`}>
                         <Motion.button
                             whileTap={{ scale: 0.98 }}
                             onClick={copyQaReadout}
-                            className="min-h-[36px] px-3 rounded border border-cyber-blue/30 bg-cyber-blue/10 text-cyber-blue text-[11px] font-fira flex items-center gap-1.5"
+                            className={`${compact ? 'min-h-[30px] px-2.5 text-[10px]' : 'min-h-[34px] px-3 text-[11px]'} ${compact && showSystemSummary ? 'flex-1 justify-center' : ''} rounded-full border border-white/8 bg-black/20 text-slate-200 font-fira flex items-center gap-1.5`}
                         >
                             <Copy size={12} /> COPY
                         </Motion.button>
                         <Motion.button
                             whileTap={{ scale: 0.98 }}
                             onClick={exportQaSnapshot}
-                            className="min-h-[36px] px-3 rounded border border-cyber-blue/30 bg-cyber-blue/10 text-cyber-blue text-[11px] font-fira flex items-center gap-1.5"
+                            className={`${compact ? 'min-h-[30px] px-2.5 text-[10px]' : 'min-h-[34px] px-3 text-[11px]'} ${compact && showSystemSummary ? 'flex-1 justify-center' : ''} rounded-full border border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5] font-fira flex items-center gap-1.5`}
                         >
                             <Save size={12} /> EXPORT
                         </Motion.button>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5 text-[10px] font-fira text-cyber-blue/70 mb-2">
-                    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5">VIEWPORT: {runtime?.viewport || 'unknown'}</div>
-                    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5">STATE: {runtime?.gameState || 'unknown'}</div>
-                    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5">SYNC: {runtime?.syncStatus || 'unknown'}</div>
-                    <div className="rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2 py-1.5">AI: {runtime?.isAiThinking ? 'thinking' : 'idle'}</div>
+                <div className="grid grid-cols-2 gap-1.5 text-[10px] font-fira text-slate-300/76 mb-2">
+                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">VIEWPORT: {runtime?.viewport || 'unknown'}</div>
+                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">STATE: {runtime?.gameState || 'unknown'}</div>
+                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">SYNC: {runtime?.syncStatus || 'unknown'}</div>
+                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">AI: {runtime?.isAiThinking ? 'thinking' : 'idle'}</div>
                 </div>
-                <pre className="whitespace-pre-wrap break-all rounded border border-cyber-blue/10 bg-cyber-dark/30 px-2.5 py-2 text-[10px] font-fira text-cyber-blue/55">
-                    {qaReadout}
-                </pre>
+                {!showSystemSummary && (
+                    <pre className="whitespace-pre-wrap break-all rounded-[0.95rem] border border-white/8 bg-black/22 px-2.5 py-2 text-[10px] font-fira text-slate-400/72">
+                        {qaReadout}
+                    </pre>
+                )}
             </div>
 
-            {/* 유물 */}
-            {(player.relics || []).length > 0 && (
-                <div className="bg-purple-950/30 border border-purple-700/30 rounded-lg p-3">
-                    <div className="text-xs font-bold text-purple-400 mb-2 flex items-center gap-2">
-                        ✦ 보유 유물 ({player.relics.length}/5)
-                    </div>
-                    <div className="space-y-1">
-                        {player.relics.map((r) => (
-                            <div key={r.id} className="flex items-start gap-2 text-xs">
-                                <span className={`font-bold shrink-0 ${RARITY_COLORS[r.rarity] || 'text-slate-300'}`}>{r.name}</span>
-                                <span className="text-gray-400">{r.desc}</span>
+            {showSystemSummary ? (
+                <>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        <div className="rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 px-2.5 py-2">
+                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Relics</div>
+                            <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#e3dcff]">{(player.relics || []).length}/5</div>
+                            <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">{player.relics?.[0]?.name || '획득 전'}</div>
+                        </div>
+                        <div className="rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/8 px-2.5 py-2">
+                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Titles</div>
+                            <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#f6e7c8]">{(player.titles || []).length}</div>
+                            <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">{player.activeTitle ? getTitleLabel(player.activeTitle) : '활성 없음'}</div>
+                        </div>
+                        <div className="rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/8 px-2.5 py-2">
+                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Daily</div>
+                            <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#dff7f5]">
+                                {isDailyProtocolToday ? `${dailyDoneCount}/${dailyProtocol.missions.length}` : '없음'}
                             </div>
-                        ))}
+                            <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">
+                                {nextDailyMission
+                                    ? `${nextDailyMission.type} ${nextDailyMission.progress}/${nextDailyMission.goal}`
+                                    : '오늘의 프로토콜 없음'}
+                            </div>
+                        </div>
+                        <div className="rounded-[1rem] border border-white/8 bg-black/18 px-2.5 py-2">
+                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Hall</div>
+                            <div className="mt-1 text-[12px] font-rajdhani font-bold text-slate-100 truncate">
+                                {topRanker?.nickname || 'SYNCING'}
+                            </div>
+                            <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">
+                                {myRankIndex >= 0 ? `내 순위 ${myRankIndex + 1}위` : '개인 순위 미기록'}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
-
-            {/* 칭호 */}
-            {(player.titles || []).length > 0 && (
-                <div className="bg-cyber-dark/40 border border-yellow-700/30 rounded-lg p-3">
-                    <div className="text-xs font-bold text-yellow-500 mb-2 flex items-center gap-2">🏆 보유 칭호 ({player.titles.length})</div>
-                    {player.activeTitle && (
-                        <div className="mb-2 rounded border border-yellow-500/20 bg-yellow-500/10 px-2.5 py-2 text-[10px] font-fira">
-                            <div className="text-yellow-400 font-bold">활성 칭호: [{getTitleLabel(player.activeTitle)}]</div>
-                            <div className="text-cyber-blue/70 mt-1">패시브: {getTitlePassiveLabel(player.activeTitle)}</div>
+                    {feedbackStatus && (
+                        <div className={`text-xs px-2 py-1 rounded border ${feedbackStatusClass}`}>{feedbackStatus.text}</div>
+                    )}
+                </>
+            ) : (
+                <>
+                    {/* 유물 */}
+                    {(player.relics || []).length > 0 && (
+                        <div className="rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 p-3">
+                            <div className="text-[11px] font-bold text-[#e3dcff] mb-2 flex items-center gap-2 font-rajdhani tracking-[0.16em]">
+                                Relics ({player.relics.length}/5)
+                            </div>
+                            <div className="space-y-1">
+                                {player.relics.map((r) => (
+                                    <div key={r.id} className="flex items-start gap-2 text-[11px] rounded-[0.9rem] border border-white/8 bg-black/16 px-2.5 py-2">
+                                        <span className={`font-bold shrink-0 ${RARITY_COLORS[r.rarity] || 'text-slate-300'}`}>{r.name}</span>
+                                        <span className="text-slate-300/72">{r.desc}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
-                    <div className="space-y-1 max-h-28 overflow-y-auto custom-scrollbar">
-                        {player.titles.map((id) => {
-                            const isActive = player.activeTitle === id;
-                            return (
-                                <button
-                                    key={id}
-                                    onClick={() => actions.setActiveTitle?.(isActive ? null : id)}
-                                    className={`w-full text-left text-xs px-2 py-1 rounded transition-colors ${isActive ? 'bg-yellow-900/40 border border-yellow-600/50' : 'hover:bg-gray-800/50'}`}
-                                >
-                                    <span className={`font-bold ${getTitleColor(id)}`}>[{getTitleLabel(id)}]</span>
-                                    {isActive && <span className="text-yellow-500 text-[10px] ml-2">활성</span>}
-                                    <div className="text-cyber-blue/45 text-[10px] mt-0.5">{getTitlePassiveLabel(id)}</div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
 
-            {/* 일일 프로토콜 */}
-            {(() => {
-                const dp = player.stats?.dailyProtocol;
-                if (!dp || !dp.missions?.length) return null;
-                const today = new Date().toISOString().slice(0, 10);
-                if (dp.date !== today) return null;
-                return (
-                    <div className="bg-cyan-950/30 border border-cyan-700/30 rounded-lg p-3">
-                        <div className="flex justify-between items-center mb-2">
-                            <div className="text-xs font-bold text-cyan-400">📋 일일 프로토콜</div>
-                            {dp.relicShards > 0 && <span className="text-xs text-purple-400">{dp.relicShards}/5 조각</span>}
+                    {/* 칭호 */}
+                    {(player.titles || []).length > 0 && (
+                        <div className="rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/8 p-3">
+                            <div className="text-[11px] font-bold text-[#f6e7c8] mb-2 flex items-center gap-2 font-rajdhani tracking-[0.16em]">Titles ({player.titles.length})</div>
+                            {player.activeTitle && (
+                                <div className="mb-2 rounded-[0.95rem] border border-[#d5b180]/18 bg-black/16 px-2.5 py-2 text-[10px] font-fira">
+                                    <div className="text-[#f6e7c8] font-bold">활성 칭호: [{getTitleLabel(player.activeTitle)}]</div>
+                                    <div className="text-slate-300/72 mt-1">패시브: {getTitlePassiveLabel(player.activeTitle)}</div>
+                                </div>
+                            )}
+                            <div className="space-y-1 max-h-28 overflow-y-auto custom-scrollbar">
+                                {player.titles.map((id) => {
+                                    const isActive = player.activeTitle === id;
+                                    return (
+                                        <button
+                                            key={id}
+                                            onClick={() => actions.setActiveTitle?.(isActive ? null : id)}
+                                            className={`w-full text-left text-xs px-2.5 py-2 rounded-[0.95rem] border transition-colors ${isActive ? 'bg-black/20 border-[#d5b180]/24' : 'border-white/8 bg-white/[0.03] hover:bg-white/[0.05]'}`}
+                                        >
+                                            <span className={`font-bold ${getTitleColor(id)}`}>[{getTitleLabel(id)}]</span>
+                                            {isActive && <span className="text-[#f6e7c8] text-[10px] ml-2">활성</span>}
+                                            <div className="text-slate-400/72 text-[10px] mt-0.5">{getTitlePassiveLabel(id)}</div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            {dp.missions.map((m) => {
-                                const pct = Math.min(100, ((m.progress || 0) / Math.max(1, m.goal)) * 100);
-                                const rewardText = m.reward.essence ? `에센스 ${m.reward.essence}` : m.reward.item || (m.reward.relicShard ? '유물 조각' : '');
-                                return (
-                                    <div key={m.id}>
-                                        <div className="flex justify-between text-[10px] mb-0.5">
-                                            <span className={m.done ? 'text-cyan-400 line-through' : 'text-gray-300'}>
-                                                {m.type === 'kills' ? `처치 ${m.goal}` : m.type === 'explores' ? `탐색 ${m.goal}` : `골드 지출 ${m.goal}`}
-                                            </span>
-                                            <span className="text-gray-500">{m.progress}/{m.goal} → {rewardText}</span>
-                                        </div>
-                                        <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                                            <div className={`h-full rounded-full transition-all ${m.done ? 'bg-cyan-400' : 'bg-cyan-700'}`} style={{ width: `${pct}%` }} />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
-            })()}
+                    )}
 
-            {/* Hall of Fame */}
-            <div className="bg-cyber-black/40 p-3 rounded border border-yellow-500/20 mb-2 relative overflow-hidden">
-                <div className="text-xs font-bold text-yellow-500 mb-3 flex items-center gap-2 font-rajdhani tracking-wider"><Crown size={12} /> HALL OF FAME</div>
-                <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
-                    {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker, i) => {
-                        const isMe = ranker.nickname === player.name;
+                    {/* 일일 프로토콜 */}
+                    {(() => {
+                        const dp = player.stats?.dailyProtocol;
+                        if (!dp || !dp.missions?.length) return null;
+                        if (dp.date !== today) return null;
                         return (
-                            <div key={i} className={`flex justify-between text-[10px] border-b border-cyber-blue/5 pb-1 last:border-0 p-1 rounded transition-colors font-fira ${isMe ? 'bg-cyber-green/10 border-l-2 border-l-cyber-green pl-2' : 'hover:bg-cyber-blue/5 text-cyber-blue/70'}`}>
-                                <span className="flex gap-2 items-center min-w-0">
-                                    <span className={`w-4 text-center font-bold shrink-0 ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-slate-600'}`}>{i + 1}</span>
-                                    <span className={`truncate ${isMe ? 'text-cyber-green font-bold' : 'text-white'}`}>
-                                        {ranker.nickname}
-                                        {ranker.activeTitle && <span className="text-cyber-purple/70 ml-1">[{getTitleLabel(ranker.activeTitle)}]</span>}
-                                        {isMe && <span className="text-cyber-green ml-1">◀</span>}
-                                    </span>
-                                </span>
-                                <span className="flex gap-2 items-center shrink-0 ml-1">
-                                    {ranker.prestigeRank > 0 && <span className="text-cyber-purple text-[9px]">⚡{ranker.prestigeRank}</span>}
-                                    <span className="text-red-400 flex items-center gap-1"><Skull size={8} /> {(ranker.totalKills || 0).toLocaleString()}</span>
-                                </span>
+                            <div className="rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/8 p-3">
+                                <div className="flex justify-between items-center mb-2">
+                                    <div className="text-[11px] font-bold text-[#dff7f5] font-rajdhani tracking-[0.16em]">Daily Protocol</div>
+                                    {dp.relicShards > 0 && <span className="text-[10px] text-[#d9d0f3]">{dp.relicShards}/5 조각</span>}
+                                </div>
+                                <div className="space-y-2">
+                                    {dp.missions.map((m) => {
+                                        const pct = Math.min(100, ((m.progress || 0) / Math.max(1, m.goal)) * 100);
+                                        const rewardText = m.reward.essence ? `에센스 ${m.reward.essence}` : m.reward.item || (m.reward.relicShard ? '유물 조각' : '');
+                                        return (
+                                            <div key={m.id} className="rounded-[0.95rem] border border-white/8 bg-black/16 px-2.5 py-2">
+                                                <div className="flex justify-between text-[10px] mb-0.5">
+                                                    <span className={m.done ? 'text-[#dff7f5] line-through' : 'text-slate-300/86'}>
+                                                        {m.type === 'kills' ? `처치 ${m.goal}` : m.type === 'explores' ? `탐색 ${m.goal}` : `골드 지출 ${m.goal}`}
+                                                    </span>
+                                                    <span className="text-slate-500">{m.progress}/{m.goal} → {rewardText}</span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-black/30 rounded-full overflow-hidden">
+                                                    <div className={`h-full rounded-full transition-all ${m.done ? 'bg-[#7dd4d8]' : 'bg-[#7dd4d8]/60'}`} style={{ width: `${pct}%` }} />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         );
-                    }) : <div className="text-xs text-cyber-blue/30 text-center font-fira animate-pulse">SYNCING NETWORK...</div>}
-                </div>
-            </div>
+                    })()}
 
-            {/* 로그 다운로드 */}
-            <Motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                    const exportData = {
-                        timestamp: new Date().toISOString(),
-                        summary: { name: player.name, level: player.level, job: player.job, gold: player.gold },
-                        stats,
-                        equipment: player.equip,
-                        history: [...(player.archivedHistory || []), ...player.history]
-                    };
-                    exportToJson(`aetheria_log_${Date.now()}.json`, exportData);
-                }}
-                className="w-full bg-cyber-blue/10 hover:bg-cyber-blue/20 text-cyber-blue py-3 rounded-sm border border-cyber-blue/30 flex items-center justify-center gap-2 font-rajdhani font-bold tracking-wider transition-all hover:shadow-[0_0_15px_rgba(0,204,255,0.3)] min-h-[44px]"
-            >
-                <Save size={16} /> DOWNLOAD LOGS
-            </Motion.button>
-
-            {/* Admin */}
-            {actions.isAdmin() && (
-                <div className="bg-red-950/20 p-3 rounded border border-red-500/30 mt-4">
-                    <div className="text-xs font-bold text-red-400 mb-2 font-rajdhani flex items-center gap-2"><Shield size={12} /> ADMIN CONTROLS</div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <button onClick={handleSetMultiplier} className="min-h-[44px] bg-red-900/50 hover:bg-red-800/50 py-2 rounded text-white border border-red-500/30 text-xs">SET MULTIPLIER</button>
-                        <button onClick={handleBroadcast} className="min-h-[44px] bg-red-900/50 hover:bg-red-800/50 py-2 rounded text-white border border-red-500/30 text-xs">BROADCAST</button>
+                    {/* Hall of Fame */}
+                    <div className="rounded-[1rem] border border-[#d5b180]/18 bg-black/18 p-3 mb-2 relative overflow-hidden">
+                        <div className="text-[11px] font-bold text-[#f6e7c8] mb-3 flex items-center gap-2 font-rajdhani tracking-[0.18em]"><Crown size={12} /> HALL OF FAME</div>
+                        <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                            {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker, i) => {
+                                const isMe = ranker.nickname === player.name;
+                                return (
+                                    <div key={i} className={`flex justify-between text-[10px] border-b border-white/6 pb-1 last:border-0 p-1 rounded transition-colors font-fira ${isMe ? 'bg-emerald-300/[0.06] border-l-2 border-l-emerald-300 pl-2' : 'hover:bg-white/[0.03] text-slate-300/76'}`}>
+                                        <span className="flex gap-2 items-center min-w-0">
+                                            <span className={`w-4 text-center font-bold shrink-0 ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-amber-600' : 'text-slate-600'}`}>{i + 1}</span>
+                                            <span className={`truncate ${isMe ? 'text-emerald-100 font-bold' : 'text-white'}`}>
+                                                {ranker.nickname}
+                                                {ranker.activeTitle && <span className="text-[#d9d0f3]/70 ml-1">[{getTitleLabel(ranker.activeTitle)}]</span>}
+                                                {isMe && <span className="text-emerald-100 ml-1">◀</span>}
+                                            </span>
+                                        </span>
+                                        <span className="flex gap-2 items-center shrink-0 ml-1">
+                                            {ranker.prestigeRank > 0 && <span className="text-[#d9d0f3] text-[9px]">⚡{ranker.prestigeRank}</span>}
+                                            <span className="text-rose-300 flex items-center gap-1"><Skull size={8} /> {(ranker.totalKills || 0).toLocaleString()}</span>
+                                        </span>
+                                    </div>
+                                );
+                            }) : <div className="text-xs text-slate-500 text-center font-fira animate-pulse">SYNCING NETWORK...</div>}
+                        </div>
                     </div>
-                </div>
-            )}
 
-            {/* Feedback */}
-            <div className="bg-cyber-black/40 p-3 rounded border border-cyber-green/20 mt-4">
-                <div className="text-xs font-bold text-cyber-green/70 mb-2 font-rajdhani">System Feedback</div>
-                {feedbackStatus && (
-                    <div className={`text-xs mb-2 px-2 py-1 rounded border ${feedbackStatusClass}`}>{feedbackStatus.text}</div>
-                )}
-                <textarea
-                    placeholder="Report anomalies..."
-                    className="w-full bg-cyber-black/80 border border-cyber-green/20 rounded p-2 text-sm text-cyber-blue/80 h-24 resize-none focus:outline-none focus:border-cyber-green/50 placeholder:text-cyber-green/20 font-fira"
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                    maxLength={500}
-                />
-                <Motion.button
-                    whileTap={{ scale: 0.98 }}
-                    onClick={submitFeedback}
-                    className="w-full mt-2 min-h-[44px] bg-cyber-green/10 hover:bg-cyber-green/20 py-2 rounded text-cyber-green text-sm border border-cyber-green/30 font-bold tracking-wider"
-                >
-                    TRANSMIT
-                </Motion.button>
-            </div>
+                    {/* 로그 다운로드 */}
+                    <Motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                            const exportData = {
+                                timestamp: new Date().toISOString(),
+                                summary: { name: player.name, level: player.level, job: player.job, gold: player.gold },
+                                stats,
+                                equipment: player.equip,
+                                history: [...(player.archivedHistory || []), ...player.history]
+                            };
+                            exportToJson(`aetheria_log_${Date.now()}.json`, exportData);
+                        }}
+                        className="w-full bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 text-[#dff7f5] py-3 rounded-full border border-[#7dd4d8]/22 flex items-center justify-center gap-2 font-rajdhani font-bold tracking-[0.16em] transition-all min-h-[42px]"
+                    >
+                        <Save size={16} /> DOWNLOAD LOGS
+                    </Motion.button>
+
+                    {/* Admin */}
+                    {actions.isAdmin() && (
+                        <div className="bg-rose-400/10 p-3 rounded-[1rem] border border-rose-300/22 mt-4">
+                            <div className="text-[11px] font-bold text-rose-100 mb-2 font-rajdhani flex items-center gap-2 tracking-[0.16em]"><Shield size={12} /> ADMIN CONTROLS</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={handleSetMultiplier} className="min-h-[42px] bg-black/22 hover:bg-black/28 py-2 rounded-full text-rose-100 border border-rose-300/22 text-[11px]">SET MULTIPLIER</button>
+                                <button onClick={handleBroadcast} className="min-h-[42px] bg-black/22 hover:bg-black/28 py-2 rounded-full text-rose-100 border border-rose-300/22 text-[11px]">BROADCAST</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Feedback */}
+                    <div className="bg-black/18 p-3 rounded-[1rem] border border-white/8 mt-4">
+                        <div className="text-[11px] font-bold text-slate-300/76 mb-2 font-rajdhani tracking-[0.16em]">System Feedback</div>
+                        {feedbackStatus && (
+                            <div className={`text-xs mb-2 px-2 py-1 rounded border ${feedbackStatusClass}`}>{feedbackStatus.text}</div>
+                        )}
+                        <textarea
+                            placeholder="Report anomalies..."
+                            className="w-full bg-black/24 border border-white/8 rounded-[0.95rem] p-2.5 text-sm text-slate-200/84 h-24 resize-none focus:outline-none focus:border-[#7dd4d8]/24 placeholder:text-slate-500 font-fira"
+                            value={feedbackText}
+                            onChange={(e) => setFeedbackText(e.target.value)}
+                            maxLength={500}
+                        />
+                        <Motion.button
+                            whileTap={{ scale: 0.98 }}
+                            onClick={submitFeedback}
+                            className="w-full mt-2 min-h-[42px] bg-emerald-300/10 hover:bg-emerald-300/16 py-2 rounded-full text-emerald-100 text-sm border border-emerald-300/24 font-bold tracking-[0.16em]"
+                        >
+                            TRANSMIT
+                        </Motion.button>
+                    </div>
+                </>
+            )}
         </Motion.div>
     );
 };

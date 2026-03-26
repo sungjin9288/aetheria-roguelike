@@ -4,6 +4,7 @@ import { ITEMS } from './items.js';
 import { MAPS } from './maps.js';
 import { MONSTERS } from './monsters.js';
 import { LOOT_TABLE } from './loot.js';
+import { DROP_TABLES } from './dropTables.js';
 import { QUESTS, ACHIEVEMENTS } from './quests.js';
 
 export const DB = {
@@ -13,6 +14,7 @@ export const DB = {
     MAPS,
     MONSTERS,
     LOOT_TABLE,
+    DROP_TABLES,
     QUESTS,
     ACHIEVEMENTS
 };

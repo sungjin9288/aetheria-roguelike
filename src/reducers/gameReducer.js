@@ -3,6 +3,7 @@ import { CONSTANTS, BALANCE } from '../data/constants';
 import { AT } from './actionTypes';
 import { findItemByName, makeItem } from '../utils/gameUtils';
 import { DEFAULT_EXPLORE_STATE } from '../utils/explorationPacing';
+import { SEASON_TIER_XP, SEASON_REWARDS } from '../data/seasonPass';
 
 const sanitizeQuickSlots = (slots = [], inventory = []) => {
     const ids = new Set((inventory || []).map((item) => item?.id).filter(Boolean));
@@ -89,13 +90,19 @@ export const INITIAL_STATE = {
         name: '', job: '모험가', gender: 'male', level: 1, hp: CONSTANTS.START_HP, maxHp: CONSTANTS.START_HP, mp: CONSTANTS.START_MP, maxMp: CONSTANTS.START_MP, atk: 10, def: 5, exp: 0, nextExp: 100, gold: CONSTANTS.START_GOLD, loc: '시작의 마을',
         inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0], offhand: null },
         quests: [], achievements: [],
-        stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0, bountyDate: null, bountyIssued: false, bountiesCompleted: 0, relicCount: 0, comboCount: 0, crafts: 0, abyssFloor: 0, demonKingSlain: 0, dailyProtocol: null, claimedAchievements: [], explores: 0, lowHpWins: 0, discoveries: 0, buildWins: {}, visitedMaps: ['시작의 마을'], exploreState: { ...DEFAULT_EXPLORE_STATE } },
-        tempBuff: { atk: 0, turn: 0 }, status: [],
+        stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0, bountyDate: null, bountyIssued: false, bountiesCompleted: 0, relicCount: 0, comboCount: 0, crafts: 0, abyssFloor: 0, demonKingSlain: 0, dailyProtocol: null, claimedAchievements: [], explores: 0, lowHpWins: 0, discoveries: 0, buildWins: {}, visitedMaps: ['시작의 마을'], exploreState: { ...DEFAULT_EXPLORE_STATE }, codex: { weapons: {}, armors: {}, shields: {}, monsters: {}, recipes: {}, materials: {} }, codexClaimed: [] },
+        premiumCurrency: 0,
+        seasonPass: { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' },
+        weeklyProtocol: { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] },
+        skillChoices: {},
+        challengeModifiers: [],
+        tempBuff: { atk: 0, def: 0, turn: 0, name: null }, status: [],
         skillLoadout: { selected: 0, cooldowns: {} },
         meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0, prestigeRank: 0, totalPrestigeAtk: 0, totalPrestigeHp: 0, totalPrestigeMp: 0 },
         relics: [], titles: [], activeTitle: null,
         combatFlags: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
-        history: [], archivedHistory: []
+        history: [], archivedHistory: [],
+        eventChainProgress: {}
     },
 
     // Runtime State
@@ -114,7 +121,7 @@ export const INITIAL_STATE = {
 
     // Shared Data
     leaderboard: [],
-    liveConfig: { eventMultiplier: 1, announcement: '' },
+    liveConfig: { eventMultiplier: 1, announcement: '', seasonEvent: null },
 
     // Sync Guard
     lastLoadedTimestamp: 0,
@@ -125,6 +132,7 @@ export const INITIAL_STATE = {
     onboardingDismissed: false,        // 온보딩 안내 숨김 여부
     pendingRelics: null,               // v4.0: 유물 3지선다 후보 배열
     runSummary: null,                  // v5.0: 런 종료 요약 (사망 시)
+    publicGraves: [],                  // v4.3: 공개 묘비 목록 (침략 대상)
 };
 
 // --- REDUCER (Atomic Logic) ---
@@ -238,6 +246,25 @@ export const gameReducer = (state, action) => {
         case 'SET_RUN_SUMMARY':
             return { ...state, runSummary: action.payload };
 
+        // ── v5.0: True Ending ───────────────────────────────────────────────
+        case AT.TRIGGER_TRUE_ENDING:
+            return { ...state, gameState: 'true_ending', syncStatus: 'syncing' };
+
+        // ── v5.0: 내러티브 이벤트 체인 ─────────────────────────────────────
+        case AT.UPDATE_EVENT_CHAIN: {
+            const { chainId, step } = action.payload;
+            return {
+                ...state,
+                player: {
+                    ...state.player,
+                    eventChainProgress: {
+                        ...(state.player.eventChainProgress || {}),
+                        [chainId]: step,
+                    }
+                }
+            };
+        }
+
         // ── v4.0: Relic System ──────────────────────────────────────────────
         case AT.SET_PENDING_RELICS:
             return { ...state, pendingRelics: action.payload };
@@ -280,7 +307,11 @@ export const gameReducer = (state, action) => {
                     demonKingSlain: (state.player.stats.demonKingSlain || 0) + 1,
                     bountiesCompleted: state.player.stats.bountiesCompleted,
                     crafts: state.player.stats.crafts,
+                    codex: state.player.stats.codex || INITIAL_STATE.player.stats.codex,
+                    codexClaimed: state.player.stats.codexClaimed || [],
                 },
+                premiumCurrency: state.player.premiumCurrency || 0,
+                seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
             };
             return {
                 ...INITIAL_STATE,
@@ -323,6 +354,202 @@ export const gameReducer = (state, action) => {
             return {
                 ...state,
                 player: applyDailyProtocolProgress(state.player, dpType, amount),
+                syncStatus: 'syncing',
+            };
+        }
+
+        // ── v4.1: Codex System ───────────────────────────────────────────
+        case AT.UPDATE_CODEX: {
+            const { category, name } = action.payload; // category: 'weapons'|'armors'|..., name: item/monster name
+            const codex = state.player.stats.codex || {};
+            const cat = codex[category] || {};
+            if (cat[name]) return state; // 이미 발견됨
+            return {
+                ...state,
+                player: {
+                    ...state.player,
+                    stats: {
+                        ...state.player.stats,
+                        codex: {
+                            ...codex,
+                            [category]: { ...cat, [name]: { discovered: true, obtainedAt: Date.now() } },
+                        },
+                    },
+                },
+                syncStatus: 'syncing',
+            };
+        }
+
+        case AT.SET_PREMIUM_CURRENCY:
+            return {
+                ...state,
+                player: {
+                    ...state.player,
+                    premiumCurrency: action.payload,
+                },
+                syncStatus: 'syncing',
+            };
+
+        // ── v4.2: Season Pass ────────────────────────────────────────────
+        case AT.ADD_SEASON_XP: {
+            const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+            const newXp = sp.xp + (action.payload || 0);
+            const newTier = Math.min(30, Math.floor(newXp / SEASON_TIER_XP));
+            return {
+                ...state,
+                player: {
+                    ...state.player,
+                    seasonPass: { ...sp, xp: newXp, tier: newTier },
+                },
+                syncStatus: 'syncing',
+            };
+        }
+
+        case AT.CLAIM_SEASON_REWARD: {
+            const { tier: claimTier } = action.payload;
+            const sp2 = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+            if ((sp2.claimed || []).includes(claimTier)) return state;
+            const rewardRow = SEASON_REWARDS.find(r => r.tier === claimTier);
+            if (!rewardRow) return state;
+            // Apply free track always; also apply premium track if player has premium
+            const tracks = [rewardRow.free, sp2.isPremium ? rewardRow.premium : null].filter(Boolean);
+            let nextPlayer = {
+                ...state.player,
+                seasonPass: { ...sp2, claimed: [...(sp2.claimed || []), claimTier] },
+            };
+            for (const track of tracks) {
+                if (track.gold) nextPlayer = { ...nextPlayer, gold: (nextPlayer.gold || 0) + track.gold };
+                if (track.premiumCurrency) nextPlayer = { ...nextPlayer, premiumCurrency: (nextPlayer.premiumCurrency || 0) + track.premiumCurrency };
+                if (track.title) {
+                    const tl = nextPlayer.titles || [];
+                    if (!tl.includes(track.title)) nextPlayer = { ...nextPlayer, titles: [...tl, track.title] };
+                }
+                if (track.item) {
+                    const itemTemplate = findItemByName(track.item);
+                    if (itemTemplate) nextPlayer = { ...nextPlayer, inv: [...(nextPlayer.inv || []), makeItem(itemTemplate)] };
+                }
+            }
+            return { ...state, player: nextPlayer, syncStatus: 'syncing' };
+        }
+
+        case AT.CLAIM_CODEX_REWARD: {
+            const { milestoneId, reward } = action.payload;
+            const prevClaimed = state.player.stats?.codexClaimed || [];
+            if (prevClaimed.includes(milestoneId)) return state;
+            const newClaimed = [...prevClaimed, milestoneId];
+            let p = {
+                ...state.player,
+                stats: {
+                    ...state.player.stats,
+                    codexClaimed: newClaimed,
+                    codexBonusAtk: (state.player.stats?.codexBonusAtk || 0) + (reward.atk || 0),
+                    codexBonusDef: (state.player.stats?.codexBonusDef || 0) + (reward.def || 0),
+                    codexBonusHp: (state.player.stats?.codexBonusHp || 0) + (reward.hp || 0),
+                },
+            };
+            if (reward.gold) p = { ...p, gold: (p.gold || 0) + reward.gold };
+            if (reward.premiumCurrency) p = { ...p, premiumCurrency: (p.premiumCurrency || 0) + reward.premiumCurrency };
+            return { ...state, player: p, syncStatus: 'syncing' };
+        }
+
+        // ── v4.3: Item Enhancement ───────────────────────────────────────
+        case AT.ENHANCE_ITEM: {
+            const { itemId, success } = action.payload;
+            // Update in inventory
+            const newInv = state.player.inv.map(item => {
+                if (item.id !== itemId) return item;
+                if (!success) return item;
+                return { ...item, enhance: (item.enhance || 0) + 1 };
+            });
+            // Update equipped item if matched
+            const equip = state.player.equip;
+            const newEquip = {};
+            for (const slot of ['weapon', 'armor', 'offhand']) {
+                if (equip[slot]?.id === itemId && success) {
+                    newEquip[slot] = { ...equip[slot], enhance: (equip[slot].enhance || 0) + 1 };
+                } else {
+                    newEquip[slot] = equip[slot];
+                }
+            }
+            return {
+                ...state,
+                player: { ...state.player, inv: newInv, equip: newEquip },
+                syncStatus: 'syncing',
+            };
+        }
+
+        // ── v4.3: Weekly Mission ─────────────────────────────────────────
+        case AT.UPDATE_WEEKLY_PROTOCOL: {
+            const { type: wpType, amount: wpAmount = 1 } = action.payload;
+            const wp = state.player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] };
+            const key = wpType === 'kills' ? 'kills' : wpType === 'explores' ? 'explores' : wpType === 'bossKills' ? 'bossKills' : null;
+            if (!key) return state;
+            return {
+                ...state,
+                player: {
+                    ...state.player,
+                    weeklyProtocol: { ...wp, [key]: (wp[key] || 0) + wpAmount },
+                },
+                syncStatus: 'syncing',
+            };
+        }
+        case AT.CLAIM_WEEKLY_MISSION: {
+            const { missionId, reward } = action.payload;
+            const wp2 = state.player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] };
+            if ((wp2.claimed || []).includes(missionId)) return state;
+            let p2 = {
+                ...state.player,
+                weeklyProtocol: { ...wp2, claimed: [...(wp2.claimed || []), missionId] },
+            };
+            if (reward.gold) p2 = { ...p2, gold: (p2.gold || 0) + reward.gold };
+            if (reward.premiumCurrency) p2 = { ...p2, premiumCurrency: (p2.premiumCurrency || 0) + reward.premiumCurrency };
+            return { ...state, player: p2, syncStatus: 'syncing' };
+        }
+
+        // ── v4.3: Challenge Modifiers ────────────────────────────────────
+        case AT.SET_CHALLENGE_MODIFIERS:
+            return {
+                ...state,
+                player: { ...state.player, challengeModifiers: action.payload || [] },
+                syncStatus: 'syncing',
+            };
+
+        // ── v4.3: Skill Branch ───────────────────────────────────────────
+        case AT.CHOOSE_SKILL_BRANCH: {
+            const { skillName, choice } = action.payload;
+            return {
+                ...state,
+                player: {
+                    ...state.player,
+                    skillChoices: { ...(state.player.skillChoices || {}), [skillName]: choice },
+                },
+                syncStatus: 'syncing',
+            };
+        }
+
+        case AT.SET_PUBLIC_GRAVES:
+            return { ...state, publicGraves: action.payload };
+
+        case AT.INVADE_GRAVE: {
+            const { reward, uid: targetUid } = action.payload;
+            const today = new Date().toDateString();
+            const lastInvadeDate = state.player.stats?.lastInvadeDate;
+            const currentCount = lastInvadeDate === today ? (state.player.stats?.dailyInvadeCount || 0) : 0;
+            const nextInv = reward
+                ? [...(state.player.inv || []), reward]
+                : state.player.inv;
+            return {
+                ...state,
+                player: {
+                    ...state.player,
+                    inv: nextInv,
+                    stats: {
+                        ...(state.player.stats || {}),
+                        dailyInvadeCount: currentCount + 1,
+                        lastInvadeDate: today,
+                    },
+                },
+                publicGraves: state.publicGraves.filter((g) => g.uid !== targetUid),
                 syncStatus: 'syncing',
             };
         }

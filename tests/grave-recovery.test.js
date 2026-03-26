@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildGraveData, resolveGraveRecovery } from '../src/utils/graveUtils.js';
+import { appendGrave, buildGraveData, getGravesAtLoc, removeGravesAtLoc, resolveGraveRecovery } from '../src/utils/graveUtils.js';
 
 const BASE_PLAYER = {
     name: '',
@@ -106,4 +106,27 @@ test('grave recovery supports legacy single-item graves', () => {
     assert.equal(result.updatedPlayer.inv.length, 1);
     assert.equal(result.updatedPlayer.inv[0].name, '호신용 지팡이');
     assert.match(result.logMsg, /호신용 지팡이/);
+});
+
+test('grave utilities preserve multiple corpses and recover by location', () => {
+    const first = { loc: '고요한 숲', gold: 20, items: [{ name: '롱소드', type: 'weapon' }], timestamp: 100 };
+    const second = { loc: '버려진 동굴', gold: 35, items: [{ name: '천 로브', type: 'armor' }], timestamp: 200 };
+    const third = { loc: '고요한 숲', gold: 10, items: [{ name: '해독제', type: 'cure' }], timestamp: 300 };
+    const merged = appendGrave(appendGrave(null, first), [second, third]);
+
+    assert.equal(merged.length, 3);
+    assert.deepEqual(getGravesAtLoc(merged, '고요한 숲').map((grave) => grave.timestamp), [300, 100]);
+
+    const recovered = resolveGraveRecovery(
+        { ...BASE_PLAYER, gold: 5, inv: [], stats: { ...(BASE_PLAYER.stats || {}) } },
+        getGravesAtLoc(merged, '고요한 숲')
+    );
+
+    assert.equal(recovered.updatedPlayer.gold, 35);
+    assert.deepEqual(recovered.updatedPlayer.inv.map((item) => item.name), ['해독제', '롱소드']);
+    assert.match(recovered.logMsg, /2구의 유해 정리/);
+
+    const remaining = removeGravesAtLoc(merged, '고요한 숲');
+    assert.equal(remaining.length, 1);
+    assert.equal(remaining[0].loc, '버려진 동굴');
 });

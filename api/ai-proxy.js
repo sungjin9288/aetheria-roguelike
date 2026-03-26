@@ -130,15 +130,34 @@ const buildGeminiPayload = (type, data, uid) => {
     let schema = null;
 
     if (type === 'event') {
-        systemInstruction = "당신은 '에테리아(Aetheria)' 판타지 RPG의 게임 마스터입니다. 한국어로 1~2문장 분량의 짧고 선명한 현장 이벤트를 만드세요. 최근 사건과 같은 소재를 반복하지 말고, 선택지는 반드시 서로 다르게 2~3개 제시하세요. 각 선택지에는 즉시 적용 가능한 결과를 붙이세요.";
+        // 플레이어 스냅샷에서 핵심 컨텍스트 추출
+        const ps = data.playerSnapshot || {};
+        const buildTags = Array.isArray(ps.buildProfile) ? ps.buildProfile.join(', ') : (ps.buildProfile || '없음');
+        const relicsHeld = Array.isArray(ps.relics) ? ps.relics.map(r => r.name || r).join(', ') : '없음';
+        const diffLabel = ps.difficultyLabel || '균형';
+        const winRate = ps.recentWinRate != null ? `${ps.recentWinRate}%` : '알 수 없음';
+        const hpRatio = (ps.hp && ps.maxHp) ? Math.round((ps.hp / ps.maxHp) * 100) : null;
+        const playerContext = [
+            `이름: ${ps.name || '모험가'} | 직업: ${ps.job || '알 수 없음'} | Lv.${ps.level || 1}`,
+            `HP: ${hpRatio != null ? hpRatio + '%' : '알 수 없음'} | MP: ${ps.mp || 0}/${ps.maxMp || 50}`,
+            `빌드 성향: ${buildTags}`,
+            `보유 유물: ${relicsHeld}`,
+            `전투 난이도: ${diffLabel} (최근 승률 ${winRate})`,
+            `보유 골드: ${ps.gold || 0}G`,
+        ].join('\n');
+
+        systemInstruction = "당신은 '에테리아(Aetheria)' 판타지 RPG의 게임 마스터입니다. 한국어로 1~2문장 분량의 짧고 선명한 현장 이벤트를 만드세요. 플레이어의 빌드 성향과 보유 유물, 현재 전투 상황을 반영하여 이벤트와 보상이 해당 빌드에 적합하도록 연출하세요. 최근 사건과 같은 소재를 반복하지 말고, 선택지는 반드시 서로 다르게 2~3개 제시하세요. 각 선택지에는 즉시 적용 가능한 결과를 붙이세요.";
         prompt = `현재 위치: ${data.location || '알 수 없음'}
-지역 정보: ${stringifyCompact(data.mapSnapshot || {}, 500)}
-플레이어 정보: ${stringifyCompact(data.playerSnapshot || {}, 500)}
-최근 사건 요약: ${stringifyCompact(data.history || [], 900)}
+지역 정보: ${stringifyCompact(data.mapSnapshot || {}, 300)}
+플레이어 상태:
+${playerContext}
+최근 사건 요약: ${stringifyCompact(data.history || [], 700)}
 UID: ${uid}
 주의사항:
 - 최근 사건과 동일한 연출, 동일한 보상 패턴은 피할 것
 - 선택지 2~3개는 성격이 달라야 함 (신중/공격적/회피 등)
+- 플레이어 빌드(${buildTags})와 유물(${relicsHeld})을 고려한 이벤트/보상을 우선할 것
+- 전투 난이도가 '위기' 또는 '열세'이면 HP 회복이나 도움이 되는 이벤트를 섞을 것
 - outcomes 길이는 choices 길이와 같아야 함
 - outcome의 gold/exp/hp/mp는 정수, item은 실제 보상 아이템명일 때만 기입
 상황과 선택지, 결과를 생성해주세요.`;
