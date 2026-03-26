@@ -2,13 +2,23 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import AetherMark from './AetherMark';
 import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
+import { BALANCE } from '../data/constants';
 
 const MOBILE_NAME_POOL = ['진', '리아', '카일', '세나', '루카', '시아', '하린', '레온'];
 const randomMobileName = () => MOBILE_NAME_POOL[Math.floor(Math.random() * MOBILE_NAME_POOL.length)];
 
+const CHALLENGE_REWARD_TEXT = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
+
 const IntroScreen = ({ onStart, mobile = false }) => {
     const [name, setName] = useState('');
+    const [selectedChallenges, setSelectedChallenges] = useState([]);
     const mobileSuggestions = useMemo(() => MOBILE_NAME_POOL, []);
+
+    const toggleChallenge = (id) => {
+        setSelectedChallenges(prev =>
+            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id].slice(0, 3)
+        );
+    };
 
     useEffect(() => {
         markPerfOnce('aetheria:intro-visible');
@@ -20,7 +30,7 @@ const IntroScreen = ({ onStart, mobile = false }) => {
 
     const handleStart = () => {
         if (canStart) {
-            onStart(selectedName, 'male', '모험가');
+            onStart(selectedName, 'male', '모험가', selectedChallenges);
         }
     };
 
@@ -164,7 +174,37 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                 </Motion.div>
             </AnimatePresence>
 
-            <div className="flex mt-8">
+            {/* Challenge Modifiers */}
+            <div className="mt-5">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/70">Challenge Modifiers</span>
+                    {selectedChallenges.length > 0 && (
+                        <span className="text-[10px] font-fira text-[#d5b180]">{CHALLENGE_REWARD_TEXT[selectedChallenges.length]}</span>
+                    )}
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                    {BALANCE.CHALLENGE_MODIFIERS.map(mod => {
+                        const isSelected = selectedChallenges.includes(mod.id);
+                        return (
+                            <button
+                                key={mod.id}
+                                type="button"
+                                onClick={() => toggleChallenge(mod.id)}
+                                className={`rounded-[1rem] border px-2.5 py-2 text-left transition-all ${
+                                    isSelected
+                                        ? 'border-[#d5b180]/38 bg-[#d5b180]/12 text-[#f6e7c8]'
+                                        : 'border-white/8 bg-black/16 text-slate-400 hover:border-white/14 hover:text-slate-300'
+                                }`}
+                            >
+                                <div className="text-[11px] font-rajdhani font-bold">{mod.label}</div>
+                                <div className="text-[9px] font-fira text-slate-500 leading-snug mt-0.5">{mod.desc}</div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="flex mt-6">
                 <Motion.button
                     data-testid="intro-start-button"
                     whileHover={{ scale: 1.02 }}

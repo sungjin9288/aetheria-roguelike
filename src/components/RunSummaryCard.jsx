@@ -56,7 +56,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
             animate={{ opacity: 1 }}
             className="fixed inset-0 z-50 flex items-center justify-center px-4"
         >
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,12,0.86)_0%,rgba(7,10,15,0.94)_100%)] backdrop-blur-[14px]" />
+            <div className="aether-overlay" />
             <div
                 className="pointer-events-none absolute inset-0 opacity-70"
                 style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(213,177,128,0.12), transparent 30%), radial-gradient(circle at bottom right, rgba(125,212,216,0.08), transparent 24%)' }}

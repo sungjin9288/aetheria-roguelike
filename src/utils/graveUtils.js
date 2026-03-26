@@ -57,6 +57,22 @@ export const getGraveItems = (grave) => (
             : []
 );
 
+export const calcInvasionChance = (playerAtk, guardPower) => {
+    const atk = Math.max(1, playerAtk);
+    const guard = Math.max(1, guardPower);
+    return Math.min(0.9, atk / (atk + guard));
+};
+
+export const resolveInvasion = (targetGrave, playerAtk) => {
+    const chance = calcInvasionChance(playerAtk, targetGrave.guardPower || 10);
+    const success = Math.random() < chance;
+    const items = targetGrave.items || [];
+    const reward = success && items.length > 0
+        ? { ...items[Math.floor(Math.random() * items.length)], id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` }
+        : null;
+    return { success, reward, chance };
+};
+
 export const resolveGraveRecovery = (player, grave) => {
     const graves = normalizeGraves(grave);
     const recoveredItems = graves

@@ -4,6 +4,7 @@ import { motion as Motion } from 'framer-motion';
 import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils';
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
 import SignalBadge from '../SignalBadge';
+import { BALANCE } from '../../data/constants';
 
 // ── 유틸 ──────────────────────────────────────────────
 const getQuestObjectiveText = (quest) => (
@@ -77,6 +78,13 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
     const dpMissions = isDpToday ? (dp.missions || []) : [];
     const dpDoneCount = dpMissions.filter((m) => m.done).length;
     const nextDpMission = dpMissions.find((mission) => !mission.done) || dpMissions[0] || null;
+
+    // Weekly Protocol
+    const wp = player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, claimed: [] };
+    const weeklyMissions = BALANCE.WEEKLY_MISSIONS.map(m => {
+        const current = m.id === 'weeklyKills' ? (wp.kills || 0) : m.id === 'weeklyExplore' ? (wp.explores || 0) : (wp.bossKills || 0);
+        return { ...m, current, done: current >= m.target, claimed: (wp.claimed || []).includes(m.id) };
+    });
     const visibleQuestEntries = (() => {
         if (!compact || showAllQuests || activeQuestEntries.length <= MAX_COMPACT_QUESTS) return activeQuestEntries;
         return [...activeQuestEntries]
@@ -187,6 +195,95 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                         </div>
                     )
                 )}
+                {/* 발견 체인 섹션 */}
+                {(() => {
+                    const chains = BALANCE.DISCOVERY_CHAINS || [];
+                    if (!chains.length) return null;
+                    const visitedMaps = new Set(player.stats?.visitedMaps || []);
+                    const completedChains = player.stats?.discoveryChains || [];
+                    return (
+                        <div className={`rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/5 ${compact ? 'mb-2 px-2.5 py-2' : 'mb-3 px-3 py-2.5'}`}>
+                            <div className={`flex items-center justify-between ${compact ? 'mb-1.5' : 'mb-2'}`}>
+                                <span className="text-[#dff7f5] text-[10px] font-fira tracking-widest uppercase">Discovery Chains</span>
+                                <span className={`text-[10px] font-fira px-1.5 py-0.5 rounded-full border ${completedChains.length === chains.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]'}`}>
+                                    {completedChains.length}/{chains.length}
+                                </span>
+                            </div>
+                            <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-1.5'}`}>
+                                {chains.map((chain) => {
+                                    const done = completedChains.includes(chain.id);
+                                    const visitedCount = chain.locations.filter(l => visitedMaps.has(l)).length;
+                                    const pct = Math.min(100, (visitedCount / chain.locations.length) * 100);
+                                    return (
+                                        <div key={chain.id} className={`rounded-[0.9rem] border px-2.5 py-1.5 ${done ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : 'border-white/8 bg-black/18'}`}>
+                                            <div className="flex items-center justify-between mb-0.5">
+                                                <span className={`text-[10px] font-fira ${done ? 'text-emerald-100' : 'text-slate-200/84'}`}>
+                                                    {chain.label}
+                                                </span>
+                                                {done ? (
+                                                    <span className="text-[9px] font-fira text-emerald-100 border border-emerald-300/24 bg-emerald-300/8 px-1.5 py-0.5 rounded-full">✓ 완료</span>
+                                                ) : (
+                                                    <span className="text-[9px] font-fira text-slate-400/72">{visitedCount}/{chain.locations.length} 방문</span>
+                                                )}
+                                            </div>
+                                            <div className="h-[2px] overflow-hidden rounded-full bg-black/30">
+                                                <div className={`h-full rounded-full transition-all duration-500 ${done ? 'bg-emerald-300' : 'bg-[#7dd4d8]/50'}`} style={{ width: `${pct}%` }} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                {/* Weekly Protocol 섹션 */}
+                {weeklyMissions.length > 0 && (
+                    <div className={`rounded-[1rem] border border-[#d5b180]/20 bg-[#d5b180]/6 ${compact ? 'mb-2 px-2.5 py-2' : 'mb-3 px-3 py-2.5'}`}>
+                        <div className={`flex items-center justify-between ${compact ? 'mb-1.5' : 'mb-2'}`}>
+                            <span className="text-[#f6e7c8] text-[10px] font-fira tracking-widest uppercase">Weekly Mission</span>
+                            <span className={`text-[10px] font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every(m => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
+                                {weeklyMissions.filter(m => m.claimed).length}/{weeklyMissions.length}
+                            </span>
+                        </div>
+                        <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-1.5'}`}>
+                            {weeklyMissions.map((mission) => {
+                                const pct = Math.min(100, (mission.current / Math.max(1, mission.target)) * 100);
+                                return (
+                                    <div
+                                        key={mission.id}
+                                        className={`rounded-[0.9rem] border px-2.5 py-1.5 transition-all ${mission.claimed ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : mission.done ? 'border-[#d5b180]/28 bg-[#d5b180]/10' : 'border-white/8 bg-black/18'}`}
+                                    >
+                                        <div className="flex items-center justify-between mb-0.5">
+                                            <span className={`text-[10px] font-fira ${mission.claimed ? 'text-emerald-100' : mission.done ? 'text-[#f6e7c8]' : 'text-slate-300/82'}`}>
+                                                {mission.label} ({mission.current}/{mission.target})
+                                            </span>
+                                            {mission.done && !mission.claimed ? (
+                                                <button
+                                                    onClick={() => actions.claimWeeklyMission?.(mission.id, mission.reward)}
+                                                    className="text-[9px] font-fira font-bold text-[#f6e7c8] bg-[#d5b180]/18 border border-[#d5b180]/30 rounded-full px-2 py-0.5 hover:bg-[#d5b180]/28 transition-colors"
+                                                >
+                                                    수령
+                                                </button>
+                                            ) : (
+                                                <span className={`text-[9px] font-fira ${mission.claimed ? 'text-emerald-100' : 'text-slate-500'}`}>
+                                                    {mission.claimed ? '✓ 수령됨' : `+${mission.reward.gold}G${mission.reward.premiumCurrency ? ` +${mission.reward.premiumCurrency}💎` : ''}`}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="h-[2px] overflow-hidden rounded-full bg-black/30">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-500 ${mission.claimed ? 'bg-emerald-300' : mission.done ? 'bg-[#d5b180]/70' : 'bg-[#d5b180]/40'}`}
+                                                style={{ width: `${pct}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {compact && (hiddenQuestCount > 0 || showAllQuests) && (
                     <div className="mb-2 flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
                         <span className="text-slate-500">{showAllQuests ? '전체 임무' : '우선 임무'}</span>

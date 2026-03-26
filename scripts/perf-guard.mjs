@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { setTimeout as delay } from 'node:timers/promises';
 import { chromium, devices } from 'playwright';
 
 const DEFAULT_URL = 'http://127.0.0.1:4173/';
@@ -26,6 +27,7 @@ smokeUrl.searchParams.set('smoke', '1');
 const targetUrl = smokeUrl.toString();
 const artifactLabel = sanitizeName(getArgValue('--artifact-label') || `perf-${viewportLabel}`);
 const artifactDir = path.resolve(process.cwd(), 'playtest-artifacts', artifactLabel);
+const CLOSE_TIMEOUT_MS = 2500;
 
 const thresholds = isMobile
   ? {
@@ -67,6 +69,19 @@ async function launchBrowser() {
       throw error;
     }
     return chromium.launch({ headless: true });
+  }
+}
+
+async function settleClose(task, label) {
+  try {
+    await Promise.race([
+      task,
+      delay(CLOSE_TIMEOUT_MS).then(() => {
+        throw new Error(`${label} timeout`);
+      }),
+    ]);
+  } catch (error) {
+    console.warn(`[perf:${viewportLabel}] ${label} skipped: ${error.message}`);
   }
 }
 
@@ -219,8 +234,8 @@ async function main() {
 
     logPerf('ok');
   } finally {
-    await context.close();
-    await browser.close();
+    await settleClose(context.close(), 'context.close');
+    await settleClose(browser.close(), 'browser.close');
   }
 }
 

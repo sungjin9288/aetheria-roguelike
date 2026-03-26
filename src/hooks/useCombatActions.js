@@ -1,14 +1,17 @@
 import { DB } from '../data/db';
-import { BALANCE } from '../data/constants';
+import { BALANCE, CONSTANTS } from '../data/constants';
 import { CombatEngine } from '../systems/CombatEngine';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
+import { SEASON_XP } from '../data/seasonPass';
 import { GS } from '../reducers/gameStates';
-import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary, toArray } from '../utils/gameUtils';
+import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary, toArray, registerCodex, registerLootToCodex } from '../utils/gameUtils';
 import { getEquipmentProfile, getNextEquipmentState } from '../utils/equipmentUtils';
 import { pushBattleRecord, makeBattleRecord } from '../systems/DifficultyManager';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../utils/runProfileUtils';
 import { appendGrave } from '../utils/graveUtils.js';
+import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics';
+import { MSG } from '../data/messages';
 
 const getSelectedSkill = (player) => {
     const skills = getJobSkills(player);
@@ -99,6 +102,35 @@ const addCombatDigestLogs = ({
 /**
  * createCombatActions — 전투 로직 (공격, 스킬, 도주)
  */
+const applyAbyssFloorAdvance = (p, dispatch, addLog) => {
+    if (p.loc !== '혼돈의 심연') return p;
+    const currentDepth = p.stats?.abyssFloor || 1;
+    const newDepth = currentDepth + 1;
+    let updated = { ...p, stats: { ...(p.stats || {}), abyssFloor: newDepth } };
+    addLog('system', `심연의 더 깊은 곳으로 진입했습니다. (현재: ${newDepth}층)`);
+    const milestone = BALANCE.ABYSS_MILESTONE_REWARDS[newDepth];
+    if (milestone) {
+        addLog('event', MSG.ABYSS_MILESTONE(newDepth));
+        if (milestone.type === 'relic_choice') {
+            const available = RELICS.filter(r => !(updated.relics || []).some(pr => pr.id === r.id));
+            if (available.length > 0) {
+                dispatch({ type: AT.SET_PENDING_RELICS, payload: pickWeightedRelics(available, 3) });
+            }
+        } else if (milestone.type === 'legendary_item') {
+            const legendaryPool = (DB.ITEMS || []).flat().filter(i => i.tier === 5);
+            if (legendaryPool.length > 0) {
+                const item = makeItem(legendaryPool[Math.floor(Math.random() * legendaryPool.length)]);
+                updated = { ...updated, inv: [...(updated.inv || []), item] };
+                addLog('success', `🏆 전설 아이템 획득: [${item.name}]`);
+            }
+        } else if (milestone.type === 'prestige_points') {
+            updated = { ...updated, prestigePoints: (updated.prestigePoints || 0) + (milestone.amount || 1) };
+            addLog('success', `✨ 프레스티지 포인트 +${milestone.amount || 1}`);
+        }
+    }
+    return updated;
+};
+
 export const createCombatActions = ({ player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats }) => {
     let pendingEnemyTurn = null;
     const emitDailyProtocolLogs = (type, amount = 1) => {
@@ -212,10 +244,17 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
             lootResult.logs.forEach((log) => addLog(log.type, log.text));
             if (lootResult.items.length > 0) {
                 victoriousPlayer = { ...victoriousPlayer, inv: [...victoriousPlayer.inv, ...lootResult.items] };
+                victoriousPlayer = registerLootToCodex(victoriousPlayer, lootResult.items);
             }
+            // 몬스터 도감 등록
+            const enemyBaseName = CombatEngine.resolveEnemyBaseName(enemy);
+            victoriousPlayer = registerCodex(victoriousPlayer, 'monsters', enemyBaseName);
+            victoriousPlayer = applyAbyssFloorAdvance(victoriousPlayer, dispatch, addLog);
 
             dispatch({ type: 'SET_PLAYER', payload: victoriousPlayer });
             dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
+            dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'kills' } });
+            if (enemy?.isBoss) dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills' } });
             emitDailyProtocolLogs('kills', 1);
             emitUnlockedTitles(victoriousPlayer);
 
@@ -269,11 +308,26 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
             let playerAfterAction = playerAtActionStart;
 
             if (type === 'skill') {
-                const selected = getSelectedSkill(playerAtActionStart);
+                let selected = getSelectedSkill(playerAtActionStart);
+                if (playerAtActionStart.challengeModifiers?.includes('randomSkills')) {
+                    const allSkills = getJobSkills(playerAtActionStart);
+                    if (allSkills.length > 0) {
+                        const randomSkill = allSkills[Math.floor(Math.random() * allSkills.length)];
+                        selected = { skill: randomSkill, index: 0, total: allSkills.length };
+                        addLog('warn', `혼돈의 기술: [${randomSkill.name}] 발동!`);
+                    }
+                }
                 result = CombatEngine.performSkill(playerAtActionStart, enemyAtActionStart, stats, selected?.skill);
                 if (!result.success) return addLog('error', result.logs[0]?.text || '스킬 사용 실패');
                 playerAfterAction = result.updatedPlayer;
                 dispatch({ type: 'SET_PLAYER', payload: result.updatedPlayer });
+                // escape_100: 즉시 전투 이탈 (무당 공허의 문 / 시간술사 순간 이동)
+                if (result.forceEscape) {
+                    result.logs.forEach((log) => addLog(log.type, log.text));
+                    dispatch({ type: 'SET_ENEMY', payload: null });
+                    dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
+                    return;
+                }
             } else {
                 result = CombatEngine.attack(playerAtActionStart, enemyAtActionStart, stats);
                 playerAfterAction = result.updatedPlayer;
@@ -319,10 +373,12 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
                 lootResult.logs.forEach((log) => addLog(log.type, log.text));
                 if (lootResult.items.length > 0) {
                     updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
+                    updatedPlayer = registerLootToCodex(updatedPlayer, lootResult.items);
                 }
 
                 // 마일스톤 보상 처리 (checkMilestones 연결)
                 const baseName = CombatEngine.resolveEnemyBaseName(enemyAtActionStart);
+                updatedPlayer = registerCodex(updatedPlayer, 'monsters', baseName);
                 const milestoneRewards = checkMilestones(
                     updatedPlayer.stats?.killRegistry || {},
                     baseName
@@ -345,22 +401,23 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
                     });
                 }
 
-                if (updatedPlayer.loc === '혼돈의 심연') {
-                    const currentDepth = updatedPlayer.stats?.abyssFloor || 1;
-                    updatedPlayer = {
-                        ...updatedPlayer,
-                        stats: {
-                            ...(updatedPlayer.stats || {}),
-                            abyssFloor: currentDepth + 1
-                        }
-                    };
-                    addLog('system', `심연의 더 깊은 곳으로 진입했습니다. (현재: ${currentDepth + 1}층)`);
-                }
+                updatedPlayer = applyAbyssFloorAdvance(updatedPlayer, dispatch, addLog);
 
                 dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
                 dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
+                dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'kills' } });
+                const isBossKill = enemyAtActionStart?.isBoss || false;
+                if (isBossKill) dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills' } });
+                // 구역 보스 처치 기록 — 이번 런에서 재스폰 방지
+                if (isBossKill && enemyAtActionStart?.baseName) {
+                    dispatch({ type: AT.SET_PLAYER, payload: (p) => ({
+                        ...p,
+                        stats: { ...p.stats, areaBossDefeated: { ...(p.stats.areaBossDefeated || {}), [enemyAtActionStart.baseName]: true } }
+                    })});
+                }
                 emitDailyProtocolLogs('kills', 1);
                 emitUnlockedTitles(updatedPlayer);
+                dispatch({ type: AT.ADD_SEASON_XP, payload: isBossKill ? SEASON_XP.bossKill : SEASON_XP.kill });
 
                 // Stage 3: 승리 전투 결과 기록
                 const winHpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
@@ -372,10 +429,73 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
                     })
                 });
 
-                // 마왕 처치 → 에테르 환생
+                // 마왕 처치 → 진 엔딩 조건 체크 or 에테르 환생
                 if (victoryResult.isDemonKingSlain) {
+                    // 원시의 파편 드랍 (프레스티지 1회 이상, 1/3 확률)
+                    const prestigeRank = updatedPlayer.meta?.prestigeRank || 0;
+                    const shardCount = (updatedPlayer.inv || []).filter((i) => i?.name === '원시의 파편').length;
+                    if (prestigeRank >= 1 && shardCount < 3 && Math.random() < CONSTANTS.PRIMAL_SHARD_DROP_CHANCE) {
+                        const shardItem = makeItem({ name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편.' });
+                        dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
+                        addLog('event', MSG.PRIMAL_SHARD_DROP(shardCount + 1));
+                    }
+
+                    // 진 엔딩 조건: 프레스티지 3회 이상 + 파편 3개
+                    const currentShardCount = (updatedPlayer.inv || []).filter((i) => i?.name === '원시의 파편').length;
+                    if (prestigeRank >= 3 && currentShardCount >= 3) {
+                        addLog('critical', MSG.TRUE_BOSS_UNLOCK);
+                        // 원시의 파편 3개 소모 후 진 보스 전투 진입
+                        const newInv = (() => {
+                            let removed = 0;
+                            return (updatedPlayer.inv || []).filter((i) => {
+                                if (i?.name === '원시의 파편' && removed < 3) { removed++; return false; }
+                                return true;
+                            });
+                        })();
+                        const trueBossData = DB.MONSTERS?.['원시의 신'];
+                        if (trueBossData) {
+                            const baseHp = 8000;
+                            const baseAtk = 280;
+                            const trueBoss = {
+                                name: '원시의 신',
+                                baseName: '원시의 신',
+                                hp: Math.floor(baseHp * (trueBossData.hpMult || 2.2)),
+                                maxHp: Math.floor(baseHp * (trueBossData.hpMult || 2.2)),
+                                atk: Math.floor(baseAtk * (trueBossData.atkMult || 1.8)),
+                                def: 120, level: 70,
+                                isBoss: true,
+                                weakness: '빛', resistance: '어둠',
+                                expMult: trueBossData.expMult || 5.0,
+                                goldMult: trueBossData.goldMult || 5.0,
+                                dropMod: trueBossData.dropMod || 5.0,
+                                phase2: trueBossData.phase2,
+                                phase3: trueBossData.phase3,
+                                exp: 5000, gold: 9999,
+                                pattern: { guardChance: 0.05, heavyChance: 0.4 },
+                            };
+                            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: newInv }) });
+                            dispatch({ type: AT.SET_ENEMY, payload: trueBoss });
+                            dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                            addLog('critical', MSG.TRUE_BOSS_APPEAR);
+                        }
+                        return;
+                    }
+
+                    // 조건 미충족 → 일반 환생
+                    if (prestigeRank >= 1 && shardCount < 3) {
+                        addLog('info', MSG.PRIMAL_SHARD_HINT(Math.min(shardCount + 1, 3)));
+                    }
                     dispatch({ type: 'SET_GAME_STATE', payload: GS.ASCENSION });
                     addLog('system', '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...');
+                    return;
+                }
+
+                // 원시의 신 처치 → 진 엔딩
+                if (enemyAtActionStart.baseName === '원시의 신' || enemyAtActionStart.name?.includes('원시의 신') || enemyAtActionStart.name?.includes('원초적 혼돈')) {
+                    const heartItem = makeItem({ name: '원시의 심장', type: 'key', price: 0, tier: 6, desc: '원시의 신의 심장.' });
+                    dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
+                    dispatch({ type: AT.TRIGGER_TRUE_ENDING });
+                    addLog('critical', '🌟 원시의 신이 쓰러졌습니다. 세계의 진실이 밝혀집니다...');
                     return;
                 }
 
@@ -405,6 +525,12 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
             }
 
             dispatch({ type: 'SET_ENEMY', payload: result.updatedEnemy });
+
+            // Sprint 16: extraTurnGranted — 시간술사 '시간 가속' 효과 → 적 턴 스킵
+            if (playerAfterAction.extraTurnGranted) {
+                dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, extraTurnGranted: false }) });
+                return;
+            }
 
             pendingEnemyTurn = setTimeout(() => {
                 pendingEnemyTurn = null;
@@ -455,10 +581,16 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
                     lootResult.logs.forEach((log) => addLog(log.type, log.text));
                     if (lootResult.items.length > 0) {
                         updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
+                        updatedPlayer = registerLootToCodex(updatedPlayer, lootResult.items);
                     }
+                    const enemyBase = CombatEngine.resolveEnemyBaseName(result.updatedEnemy);
+                    updatedPlayer = registerCodex(updatedPlayer, 'monsters', enemyBase);
+                    updatedPlayer = applyAbyssFloorAdvance(updatedPlayer, dispatch, addLog);
 
                     dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
                     dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
+                    dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'kills' } });
+                    if (result.updatedEnemy?.isBoss) dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills' } });
                     emitDailyProtocolLogs('kills', 1);
                     emitUnlockedTitles(updatedPlayer);
 

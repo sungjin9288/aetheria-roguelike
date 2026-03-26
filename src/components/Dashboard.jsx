@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp } from 'lucide-react';
+import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp, Star, Skull } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { MOTION } from '../utils/animationConfig';
 import { DB } from '../data/db';
 import SmartInventory from './SmartInventory';
 import AchievementPanel from './AchievementPanel';
@@ -8,9 +9,11 @@ import SkillTreePreview from './SkillTreePreview';
 import MapNavigator from './MapNavigator';
 import BuildAdvicePanel from './BuildAdvicePanel';
 import StatsPanel from './StatsPanel';
-import Bestiary from './Bestiary';
+import Codex from './Codex';
+import GravePanel from './GravePanel';
 import QuestTab from './tabs/QuestTab';
 import SystemTab from './tabs/SystemTab';
+import SeasonPassPanel from './tabs/SeasonPassPanel';
 import SignalBadge from './SignalBadge';
 
 const TAB_ITEMS = [
@@ -20,14 +23,16 @@ const TAB_ITEMS = [
     { id: 'skills', icon: BookOpen, label: 'Skills', mobileLabel: 'SKILL' },
     { id: 'map', icon: Map, label: 'Map', mobileLabel: 'MAP' },
     { id: 'stats', icon: BarChart3, label: 'Stats', mobileLabel: 'STAT' },
-    { id: 'bestiary', icon: Eye, label: 'Bestiary', mobileLabel: 'CODEX' },
+    { id: 'codex', icon: Eye, label: 'Codex', mobileLabel: 'CODEX' },
+    { id: 'pass', icon: Star, label: 'Pass', mobileLabel: 'PASS' },
+    { id: 'graves', icon: Skull, label: 'Graves', mobileLabel: 'GRAVE' },
     { id: 'system', icon: Zap, label: 'System', mobileLabel: 'SYS' }
 ];
 
 const MOBILE_PRIMARY_TABS = ['inventory', 'quest', 'map', 'stats'];
-const MOBILE_SECONDARY_TABS = ['achievements', 'skills', 'bestiary', 'system'];
+const MOBILE_SECONDARY_TABS = ['achievements', 'skills', 'codex', 'pass', 'graves', 'system'];
 const DESKTOP_PRIMARY_TABS = ['inventory', 'quest', 'map'];
-const DESKTOP_SECONDARY_TABS = ['achievements', 'skills', 'stats', 'bestiary', 'system'];
+const DESKTOP_SECONDARY_TABS = ['achievements', 'skills', 'stats', 'codex', 'pass', 'graves', 'system'];
 const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = false, rail = false, dense = false, iconOnly = false, testId = null }) => {
     const Icon = icon;
     const frameClass = rail
@@ -65,8 +70,7 @@ const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = fals
 
 // Animation variants for tab content
 const tabVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+    ...MOTION.variants.tab,
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
@@ -134,7 +138,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                     )}
 
                     {sideTab === 'skills' && (
-                        <SkillTreePreview player={player} compact={desktopArchiveCompact} />
+                        <SkillTreePreview player={player} compact={desktopArchiveCompact} actions={actions} />
                     )}
 
                     {sideTab === 'map' && (
@@ -153,8 +157,16 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                         <StatsPanel player={player} stats={stats} compact={desktopArchiveCompact} />
                     )}
 
-                    {sideTab === 'bestiary' && (
-                        <Bestiary player={player} compact={desktopArchiveCompact} />
+                    {sideTab === 'codex' && (
+                        <Codex player={player} compact={desktopArchiveCompact} dispatch={actions?.dispatch} />
+                    )}
+
+                    {sideTab === 'pass' && (
+                        <SeasonPassPanel player={player} dispatch={actions?.dispatch} />
+                    )}
+
+                    {sideTab === 'graves' && (
+                        <GravePanel player={player} actions={actions} compact={desktopArchiveCompact} />
                     )}
 
                     {sideTab === 'system' && (
@@ -202,8 +214,13 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                                 <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-slate-500">
                                     {entry.label}
                                 </div>
-                                <div className="mt-1 truncate text-[10px] font-fira leading-none text-slate-200/88">
-                                    {entry.item?.name || entry.fallback}
+                                <div className="mt-1 flex items-center gap-1 min-w-0">
+                                    <span className="truncate text-[10px] font-fira leading-none text-slate-200/88">
+                                        {entry.item?.name || entry.fallback}
+                                    </span>
+                                    {(entry.item?.enhance || 0) > 0 && (
+                                        <span className="shrink-0 text-[9px] font-bold font-fira text-[#d5b180]">+{entry.item.enhance}</span>
+                                    )}
                                 </div>
                             </div>
                         ))}

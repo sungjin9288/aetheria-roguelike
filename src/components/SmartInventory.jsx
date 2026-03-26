@@ -66,8 +66,12 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     const grouped = useMemo(() => {
         const map = {};
         for (const item of player.inv) {
-            if (!map[item.name]) map[item.name] = { item, count: 0 };
-            map[item.name].count++;
+            // Enhanced items are unique — group by name+enhance; non-equipment groups by name only
+            const enhance = item.enhance || 0;
+            const isEquipType = ['weapon', 'armor', 'shield'].includes(item.type);
+            const key = isEquipType ? `${item.name}__+${enhance}__${item.id}` : item.name;
+            if (!map[key]) map[key] = { item, count: 0 };
+            map[key].count++;
         }
         return Object.values(map);
     }, [player.inv]);
@@ -311,6 +315,9 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     <span className={`${compact ? 'text-[12px]' : 'text-sm'} font-fira ${item.tier >= 2 ? 'text-[#e3dcff]' : 'text-white/86'}`}>
                                         {item.name}
                                     </span>
+                                    {(item.enhance || 0) > 0 && (
+                                        <span className="text-[10px] font-bold font-fira text-[#d5b180]">+{item.enhance}</span>
+                                    )}
                                     {count > 1 && <span className={`${compact ? 'text-[10px]' : 'text-xs'} text-slate-500`}>x{count}</span>}
                                     {isSpotlighted && <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
@@ -352,14 +359,26 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     />
                                 )}
                             </div>
-                            <Motion.button
-                                whileTap={{ scale: 0.95 }}
-                                disabled={!canEquip}
-                                onClick={() => actions.useItem(item)}
-                                className={`bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold ml-2 shrink-0 ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[10px]' : compact ? 'min-h-[32px] px-2.5 py-1 text-[10px]' : 'min-h-[38px] px-3 py-2 text-[11px]'}`}
-                            >
-                                {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
-                            </Motion.button>
+                            <div className="flex items-center gap-1 ml-2 shrink-0">
+                                {['weapon', 'armor', 'shield'].includes(item.type) && actions.enhanceItem && (item.enhance || 0) < 10 && (
+                                    <Motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => actions.enhanceItem(item.id)}
+                                        className={`bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] rounded-full border border-[#d5b180]/22 font-bold font-fira ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[9px]' : compact ? 'min-h-[32px] px-2 py-1 text-[9px]' : 'min-h-[38px] px-2.5 py-2 text-[10px]'}`}
+                                        title={`강화 +${(item.enhance || 0) + 1}`}
+                                    >
+                                        +강화
+                                    </Motion.button>
+                                )}
+                                <Motion.button
+                                    whileTap={{ scale: 0.95 }}
+                                    disabled={!canEquip}
+                                    onClick={() => actions.useItem(item)}
+                                    className={`bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[10px]' : compact ? 'min-h-[32px] px-2.5 py-1 text-[10px]' : 'min-h-[38px] px-3 py-2 text-[11px]'}`}
+                                >
+                                    {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
+                                </Motion.button>
+                            </div>
                         </Motion.div>
                     );
                 })}

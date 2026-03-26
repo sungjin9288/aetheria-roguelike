@@ -18,7 +18,7 @@ const EventPanel = ({ currentEvent, actions }) => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-30"
         >
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,8,11,0.78)_0%,rgba(8,10,14,0.86)_100%)] backdrop-blur-[10px]" />
+            <div className="aether-overlay" />
             <div
                 className="pointer-events-none absolute inset-0 opacity-70"
                 style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(213,177,128,0.12), transparent 28%), radial-gradient(circle at bottom right, rgba(125,212,216,0.08), transparent 24%)' }}

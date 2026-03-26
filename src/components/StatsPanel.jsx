@@ -177,6 +177,20 @@ const StatsPanel = ({ player, stats, compact = false }) => {
                     <div className="flex justify-between"><span>BONUS HP:</span><span className="text-emerald-100">+{player.meta.bonusHp || 0}</span></div>
                 </div>
             )}
+
+            {stats?.activeSynergies?.length > 0 && (
+                <div className="space-y-1.5">
+                    <div className="text-[10px] text-slate-500 font-fira uppercase tracking-[0.16em] flex items-center gap-1.5">
+                        <Sparkles size={10} /> 유물 시너지
+                    </div>
+                    {stats.activeSynergies.map((syn) => (
+                        <div key={syn.name} className="rounded-[0.95rem] border border-fuchsia-400/20 bg-fuchsia-900/10 px-2.5 py-1.5 flex items-center justify-between gap-2">
+                            <span className="text-[9px] font-fira text-fuchsia-200/90 font-bold">{syn.name}</span>
+                            <span className="text-[8px] font-fira text-fuchsia-300/60">{syn.desc}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

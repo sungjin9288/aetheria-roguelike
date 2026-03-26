@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Zap, Shield, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { Zap, Shield, ChevronDown, ChevronRight, Sparkles, GitBranch, RefreshCw } from 'lucide-react';
 import { DB } from '../data/db';
+import { CLASSES } from '../data/classes';
 import { getJobSkills } from '../utils/gameUtils';
+import { BALANCE } from '../data/constants';
 import SignalBadge from './SignalBadge';
 
 const EFFECT_LABELS = {
@@ -86,13 +88,16 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, sum
     );
 };
 
-const SkillTreePreview = ({ player, compact = false }) => {
+const SkillTreePreview = ({ player, compact = false, actions = null }) => {
     const [showAllSkills, setShowAllSkills] = useState(false);
     const [expandedJob, setExpandedJob] = useState(null);
+    const [swapTarget, setSwapTarget] = useState(null); // skillName being swapped
     const currentClass = DB.CLASSES[player.job];
     const allCurrentSkills = getJobSkills(player);
     const selectedIndex = player.skillLoadout?.selected ?? 0;
     const cooldowns = player.skillLoadout?.cooldowns || {};
+    const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
+    const swapCost = BALANCE.SKILL_SWAP_COST || 50;
 
     if (!currentClass) return null;
 
@@ -135,21 +140,83 @@ const SkillTreePreview = ({ player, compact = false }) => {
             </div>
 
             <div className={`rounded-[1.15rem] border border-white/8 bg-black/16 ${compact ? 'px-3 py-3' : 'px-4 py-3.5'}`}>
-                <div className="mb-3 flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                    <Shield size={12} />
-                    Current Loadout
+                <div className="mb-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                        <Shield size={12} />
+                        Current Loadout
+                    </div>
+                    {isInSafeZone && actions?.swapSkillChoice && (
+                        <SignalBadge tone="success" size="sm">스킬 교체 가능</SignalBadge>
+                    )}
                 </div>
                 <div className="space-y-2">
-                    {visibleCurrentSkills?.map((skill) => (
-                        <SkillCard
-                            key={skill.name}
-                            skill={skill}
-                            selected={skill.name === selectedSkillName}
-                            cooldown={cooldowns[skill.name] || 0}
-                            compact={compact}
-                            summary={showSkillSummary}
-                        />
-                    ))}
+                    {visibleCurrentSkills?.map((skill) => {
+                        const branches = currentClass?.skillBranches?.[skill.name];
+                        const currentChoice = player.skillChoices?.[skill.name];
+                        const isSwapping = swapTarget === skill.name;
+                        return (
+                            <div key={skill.name}>
+                                <SkillCard
+                                    skill={skill}
+                                    selected={skill.name === selectedSkillName}
+                                    cooldown={cooldowns[skill.name] || 0}
+                                    compact={compact}
+                                    summary={showSkillSummary}
+                                />
+                                {/* 스킬 분기 교체 — 안전지대 + 분기 있는 스킬 */}
+                                {!showSkillSummary && isInSafeZone && branches && actions?.swapSkillChoice && (
+                                    <div className="mt-1.5 rounded-[1rem] border border-[#d5b180]/14 bg-[#d5b180]/5 px-2.5 py-2">
+                                        <div className="flex items-center justify-between gap-2 mb-2">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.14em] text-[#d5b180]/70">
+                                                <GitBranch size={10} />
+                                                분기 선택 {currentChoice ? `(현재: ${branches.find(b=>b.choice===currentChoice)?.label || currentChoice})` : '(기본)'}
+                                            </div>
+                                            <button
+                                                onClick={() => setSwapTarget(isSwapping ? null : skill.name)}
+                                                className="text-[9px] font-fira text-slate-400 hover:text-white transition-colors"
+                                            >
+                                                {isSwapping ? '취소' : '교체'}
+                                            </button>
+                                        </div>
+                                        {isSwapping && (
+                                            <div className="space-y-1.5">
+                                                {branches.map((branch) => {
+                                                    const isActive = currentChoice === branch.choice || (!currentChoice && branch.choice === 'A');
+                                                    const canAfford = (player.gold || 0) >= swapCost;
+                                                    return (
+                                                        <button
+                                                            key={branch.choice}
+                                                            disabled={isActive || !canAfford}
+                                                            onClick={() => {
+                                                                actions.swapSkillChoice(skill.name, branch.choice);
+                                                                setSwapTarget(null);
+                                                            }}
+                                                            className={`w-full rounded-[0.85rem] border px-2.5 py-2 text-left text-[11px] transition-all disabled:cursor-not-allowed ${
+                                                                isActive
+                                                                    ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 text-[#dff7f5]'
+                                                                    : canAfford
+                                                                        ? 'border-white/8 bg-black/18 text-slate-200 hover:border-[#d5b180]/24 hover:bg-[#d5b180]/8'
+                                                                        : 'border-white/8 bg-black/18 text-slate-500 opacity-50'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="font-rajdhani font-bold">{branch.label}</span>
+                                                                {isActive
+                                                                    ? <SignalBadge tone="recommended" size="sm">선택중</SignalBadge>
+                                                                    : <span className="text-[10px] font-fira text-[#f6e7c8]/70">{swapCost}G</span>
+                                                                }
+                                                            </div>
+                                                            <div className="mt-0.5 text-[10px] font-fira text-slate-400">{branch.desc}</div>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -242,6 +309,55 @@ const SkillTreePreview = ({ player, compact = false }) => {
                     </div>
                 )
             )}
+
+            {/* 스킬 분기 선택 */}
+            {!compact && (() => {
+                const classData = CLASSES[player.job];
+                const skillBranches = classData?.skillBranches;
+                if (!skillBranches || Object.keys(skillBranches).length === 0) return null;
+                return (
+                    <div className="rounded-[1.15rem] border border-white/8 bg-black/16 px-4 py-3.5">
+                        <div className="mb-3 flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                            <GitBranch size={12} />
+                            Skill Branches
+                        </div>
+                        <div className="space-y-3">
+                            {Object.entries(skillBranches).map(([skillName, branches]) => {
+                                const chosen = player.skillChoices?.[skillName];
+                                return (
+                                    <div key={skillName}>
+                                        <div className="mb-1.5 text-[11px] font-rajdhani font-bold text-slate-300/80">{skillName}</div>
+                                        <div className="grid grid-cols-2 gap-1.5">
+                                            {branches.map((branch) => {
+                                                const isChosen = chosen === branch.choice;
+                                                return (
+                                                    <button
+                                                        key={branch.choice}
+                                                        type="button"
+                                                        onClick={() => actions?.chooseSkillBranch?.(skillName, branch.choice)}
+                                                        disabled={!actions?.chooseSkillBranch}
+                                                        className={`rounded-[0.95rem] border px-2.5 py-2.5 text-left transition-all ${
+                                                            isChosen
+                                                                ? 'border-[#7dd4d8]/30 bg-[#7dd4d8]/12 text-[#dff7f5]'
+                                                                : 'border-white/8 bg-black/16 text-slate-400 hover:border-white/14 hover:text-slate-300'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-[10px] font-fira font-bold text-[#d5b180]">{branch.choice}</span>
+                                                            <span className="text-[12px] font-rajdhani font-bold">{branch.label}</span>
+                                                        </div>
+                                                        <div className="mt-0.5 text-[10px] font-fira text-slate-500 leading-snug">{branch.desc}</div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 };

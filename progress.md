@@ -1562,3 +1562,91 @@ Verification (Market Open Perf Stabilization Pass):
 Notes:
 - Sequential reruns are now stable again: desktop `marketOpenMs 20.4`, `marketOpenMeasureMs 3.7`; mobile `marketOpenMs 44.6`, `marketOpenMeasureMs 3.7`.
 - A parallel desktop/mobile perf experiment during this pass temporarily inflated `startRun` into the `2.5s+` range, but that was test contention rather than an app regression; sequential reruns returned to the expected range (`desktop 1129.4 / 1036.5`, `mobile 1157.1 / 1027.5`).
+
+Done (Playtest Exit Guard + iPhone Real Device Pass):
+- Updated `scripts/smoke-gameplay.mjs` and `scripts/perf-guard.mjs` with a shared close-timeout pattern so `context.close()` / `browser.close()` no longer block the wrapper after `[smoke] ok`; the scripts now warn and continue if Chrome teardown stalls.
+- Re-ran the full `AETHERIA_RUN_PERF=1 ./scripts/local-playtest.sh` flow and confirmed the wrapper now reaches `[local-playtest] done` instead of hanging after smoke completion.
+- Re-synced the latest web bundle into the Capacitor shells with `npm run cap:sync`.
+- Verified mobile prereqs with `npm run mobile:doctor`, confirming the connected Apple device (`성진` / `iPhone 14 Pro Max` / `FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B`) and that Android real-device QA remains blocked here because `adb` is not installed.
+- Built a fresh signed iOS archive using a new DerivedData path to avoid the stale SwiftPM checkout issue:
+  - `AETHERIA_IOS_HOME=/Users/sungjin`
+  - `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1`
+  - `AETHERIA_IOS_DERIVED_DATA_PATH=/tmp/aetheria-ios-archive-build-20260322-2`
+  - `AETHERIA_IOS_CLANG_MODULE_CACHE_PATH=/tmp/aetheria-clang-module-cache-20260322-2`
+  - `npm run ios:archive`
+- Installed `/Users/sungjin/dev/personal/aetheria-roguelike/build/ios/Aetheria.xcarchive/Products/Applications/App.app` onto the paired iPhone with `xcrun devicectl device install app` and launched `com.aetheria.roguelike` with `xcrun devicectl device process launch`.
+- Verified the on-device process is present through `xcrun devicectl device info processes`, which reported:
+  - `/private/var/containers/Bundle/Application/6E448DB5-BB0F-4DEE-8C4F-434E407F0224/App.app/App`
+
+Verification (Playtest Exit Guard + iPhone Real Device Pass):
+- `npm run lint`
+- `npm run build:guard`
+- `AETHERIA_RUN_PERF=1 ./scripts/local-playtest.sh`
+  - reached `[smoke:desktop] ok`
+  - reached `[smoke:mobile] ok`
+  - reached `[perf:desktop] ok`
+  - reached `[perf:mobile] ok`
+  - reached `[local-playtest] done`
+- `npm run cap:sync`
+- `npm run mobile:doctor`
+- `AETHERIA_IOS_HOME=/Users/sungjin AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 AETHERIA_IOS_DERIVED_DATA_PATH=/tmp/aetheria-ios-archive-build-20260322-2 AETHERIA_IOS_CLANG_MODULE_CACHE_PATH=/tmp/aetheria-clang-module-cache-20260322-2 npm run ios:archive`
+- `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B build/ios/Aetheria.xcarchive/Products/Applications/App.app`
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B com.aetheria.roguelike`
+- `xcrun devicectl device info processes --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B | rg "com.aetheria|roguelike|App.app/App"`
+
+Notes:
+- Latest full local playtest perf sample:
+  - desktop `startRunMs 1158.8`, `startRunMeasureMs 1069.3`, `marketOpenMs 37.4`, `marketOpenMeasureMs 3.3`
+  - mobile `startRunMs 1125.4`, `startRunMeasureMs 1023.5`, `marketOpenMs 45.3`, `marketOpenMeasureMs 3.1`
+- The first archive retry failed because the old `/tmp/aetheria-ios-archive-build` SwiftPM checkout was incomplete; switching to a fresh DerivedData path resolved it without changing project code.
+- Android real-device installation was not executed in this shell because `adb` is unavailable.
+
+Done (Sprint 15–20: 콘텐츠 극적 확장 + 출시 준비):
+
+Sprint 15 — 진 엔딩 & 숨겨진 최종 보스:
+- 원시의 신 (3페이즈 보스) 추가 — `src/data/monsters.js`
+- 원시의 파편, 원시의 심장 아이템 추가 — `src/data/items.js`
+- 진 보스 트리거 로직 — `src/hooks/useGameActions.js`
+- 3페이즈 지원 (phase 배열 처리) — `src/systems/CombatEngine.js`
+- TrueEndingScreen 신규 — `src/components/TrueEndingScreen.jsx`
+- `TRIGGER_TRUE_ENDING` 액션 타입, `true_ending` GS 추가
+
+Sprint 16 — 신규 직업 2종:
+- 무당 (Tier 2, Lv 12): 저주/DoT/흡혈 빌드 — `src/data/classes.js`
+- 시간술사 (Tier 3, Lv 25): 추가 턴/쿨리셋/고배율 — `src/data/classes.js`
+- extraTurn, resetCooldowns, curse 효과 처리 — `src/systems/CombatEngine.js`
+- escape_100, hp_regen, mp_regen 스킬 효과 구현
+
+Sprint 17 — 3단계 내러티브 이벤트 체인:
+- "고대의 예언" / "사라진 마법사" / "최후의 영웅" 3개 체인 — `src/data/eventChains.js`
+- 체인 진행 상태 저장 — `player.eventChainProgress`
+- 위치 기반 체인 inject — `src/utils/aiEventUtils.js`
+- `UPDATE_EVENT_CHAIN` 액션 타입 + reducer 처리
+
+Sprint 18 — 신규 맵 5개 + 몬스터 25종 + 숨겨진 보스 3종:
+- 황금 왕국, 지하 미궁, 공중 신전, 영혼의 강, 금지된 도서관 — `src/data/maps.js`
+- 신규 몬스터 25종 (위치별 5종) + 숨겨진 보스 3종 — `src/data/monsters.js`
+- 숨겨진 보스 조건 체크 — `src/utils/exploreUtils.js`
+
+Sprint 19 — 신규 유물 15종 + 유물 시너지 시스템:
+- 신규 Epic/Legendary 유물 15종 — `src/data/relics.js`
+- RELIC_SYNERGIES 배열 (15개 시너지) — `src/data/relics.js`
+- getActiveRelicSynergies() — `src/data/relics.js`
+- 시너지 스탯 적용 (atkMult, mpMult, statBonus 등) — `src/hooks/useGameEngine.js`
+- 전투 내 시너지 효과 전면 구현 (vampire_lord, arcane_surge, time_master,
+  absolute_reflect, unbreakable, dot_amplify, healPerTurn, killHeal, devour) — `src/systems/CombatEngine.js`
+- 시너지 뱃지 UI — `src/components/StatsPanel.jsx`
+
+Sprint 20 — 출시 준비:
+- DATA_VERSION 5.0, SAVE_KEY 'aetheria_save_v5_0' 확인 — `src/data/constants.js`
+- migrateData() v5.0 대응 (eventChainProgress, deathSaveUsedCount, trueEndingFragments) — `src/utils/gameUtils.js`
+- Firestore 보안 규칙 완비 (users, graves, leaderboard, public/data) — `firestore.rules`
+- 오프라인 fallback 이벤트 풀 144개 확인 — `src/utils/aiEventUtils.js`
+- 단위 테스트 59/59 통과 — `npm run test:unit`
+- 스모크 테스트 통과 — `npm run test:smoke`
+- OnboardingGuide 컴포넌트 App.jsx 연결 — `src/App.jsx`
+
+Verification (Sprint 15–20):
+- `npm run test:unit` → 59/59 pass
+- `npm run test:smoke` → [smoke:desktop] ok
+- `npm run build` → ✓ built in 2.45s (no errors)

@@ -18,9 +18,10 @@ const TONE_CLASS = {
     spotlight: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]',
 };
 
-const SignalBadge = ({ tone = 'neutral', size = 'md', className = '', children }) => (
+const SignalBadge = ({ tone = 'neutral', size = 'md', className = '', children, ...rest }) => (
     <span
         className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size] || SIZE_CLASS.md} ${TONE_CLASS[tone] || TONE_CLASS.neutral} ${className}`.trim()}
+        {...rest}
     >
         {children}
     </span>

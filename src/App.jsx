@@ -1,5 +1,5 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { motion as Motion } from 'framer-motion';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { motion as Motion, MotionConfig } from 'framer-motion';
 
 import { GS } from './reducers/gameStates';
 import { soundManager } from './systems/SoundManager';
@@ -9,6 +9,7 @@ import MainLayout from './components/MainLayout';
 import TerminalView from './components/TerminalView';
 import ControlPanel from './components/ControlPanel';
 import IntroScreen from './components/IntroScreen';
+import OnboardingGuide from './components/OnboardingGuide';
 import DamageNumber from './components/DamageNumber';
 import AetherMark from './components/AetherMark';
 import StatusBar from './components/StatusBar';
@@ -19,8 +20,10 @@ const loadDashboard = () => import('./components/Dashboard');
 const Dashboard = lazy(loadDashboard);
 const RelicChoicePanel = lazy(() => import('./components/RelicChoicePanel'));
 const AscensionScreen  = lazy(() => import('./components/AscensionScreen'));
+const TrueEndingScreen = lazy(() => import('./components/TrueEndingScreen'));
 const RunSummaryCard   = lazy(() => import('./components/RunSummaryCard'));
 const PostCombatCard   = lazy(() => import('./components/PostCombatCard'));
+const PremiumShop      = lazy(() => import('./components/PremiumShop'));
 
 import { useGameEngine } from './hooks/useGameEngine';
 import { useDamageFlash } from './hooks/useDamageFlash';
@@ -54,6 +57,7 @@ function App() {
   const engine = useGameEngine();
   const [isMuted, setIsMuted] = useState(false);
   const [inventorySpotlight] = useState(null);
+  const [premiumShopOpen, setPremiumShopOpen] = useState(false);
   const [viewportProfile, setViewportProfile] = useState(getViewportProfile);
   const { isMobile: isMobileViewport, isNarrowDesktop: isNarrowDesktopViewport } = viewportProfile;
   const fullStats = engine.getFullStats();
@@ -72,6 +76,10 @@ function App() {
     : useCompactDesktopRail
       ? 'desktop-compact'
       : 'desktop';
+
+  // Onboarding dismiss handler
+  const handleOnboardingDismiss = () => engine.dispatch({ type: 'SET_ONBOARDING_DISMISSED' });
+  const showOnboarding = !engine.onboardingDismissed && String(engine.player.name || '').trim().length > 0;
 
   // QuickSlot use handler
   const handleQuickSlotUse = (item, index) => {
@@ -119,84 +127,97 @@ function App() {
     measurePerfOnce('aetheria:market-open-from-click-ms', 'aetheria:test-market-open', 'aetheria:shop-open');
   }, [engine.gameState]);
 
+  // Smoke test ref — updated synchronously during render so test harness always reads fresh state
+  const engineRef = useRef(engine);
+  engineRef.current = engine;
+  const fullStatsRef = useRef(fullStats);
+  fullStatsRef.current = fullStats;
+  const inventorySpotlightRef = useRef(inventorySpotlight);
+  inventorySpotlightRef.current = inventorySpotlight;
+
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
 
-    window.render_game_to_text = () => JSON.stringify({
-      bootStage: engine.bootStage,
-      mode: engine.gameState === GS.DEAD && engine.runSummary
+    window.render_game_to_text = () => {
+      const e = engineRef.current;
+      const fs = fullStatsRef.current;
+      const is = inventorySpotlightRef.current;
+      return JSON.stringify({
+      bootStage: e.bootStage,
+      mode: e.gameState === GS.DEAD && e.runSummary
         ? 'run_summary'
-        : !engine.player.name
+        : !e.player.name
           ? 'intro'
           : 'game',
-      gameState: engine.gameState,
-      isAiThinking: engine.isAiThinking,
-      syncStatus: engine.syncStatus,
+      gameState: e.gameState,
+      isAiThinking: e.isAiThinking,
+      syncStatus: e.syncStatus,
       player: {
-        name: engine.player.name || '',
-        job: engine.player.job,
-        level: engine.player.level,
-        loc: engine.player.loc,
-        hp: engine.player.hp,
-        maxHp: fullStats.maxHp,
-        mp: engine.player.mp,
-        maxMp: fullStats.maxMp,
-        gold: engine.player.gold,
+        name: e.player.name || '',
+        job: e.player.job,
+        level: e.player.level,
+        loc: e.player.loc,
+        hp: e.player.hp,
+        maxHp: fs.maxHp,
+        mp: e.player.mp,
+        maxMp: fs.maxMp,
+        gold: e.player.gold,
       },
-      enemy: engine.enemy
+      enemy: e.enemy
         ? {
-            name: engine.enemy.name,
-            baseName: engine.enemy.baseName || engine.enemy.name,
-            hp: engine.enemy.hp,
-            maxHp: engine.enemy.maxHp,
-            isBoss: Boolean(engine.enemy.isBoss),
-            phase2Triggered: Boolean(engine.enemy.phase2Triggered),
+            name: e.enemy.name,
+            baseName: e.enemy.baseName || e.enemy.name,
+            hp: e.enemy.hp,
+            maxHp: e.enemy.maxHp,
+            isBoss: Boolean(e.enemy.isBoss),
+            phase2Triggered: Boolean(e.enemy.phase2Triggered),
           }
         : null,
-      currentEvent: engine.currentEvent
+      currentEvent: e.currentEvent
         ? {
-            desc: engine.currentEvent.desc || '',
-            choices: Array.isArray(engine.currentEvent.choices) ? engine.currentEvent.choices : [],
+            desc: e.currentEvent.desc || '',
+            choices: Array.isArray(e.currentEvent.choices) ? e.currentEvent.choices : [],
           }
         : null,
-      pendingRelics: Array.isArray(engine.pendingRelics) ? engine.pendingRelics.map((relic) => relic.name) : null,
-      postCombatResult: engine.postCombatResult
+      pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((relic) => relic.name) : null,
+      postCombatResult: e.postCombatResult
         ? {
-            enemy: engine.postCombatResult.enemy,
-            exp: engine.postCombatResult.exp,
-            gold: engine.postCombatResult.gold,
-            items: engine.postCombatResult.items || [],
+            enemy: e.postCombatResult.enemy,
+            exp: e.postCombatResult.exp,
+            gold: e.postCombatResult.gold,
+            items: e.postCombatResult.items || [],
           }
         : null,
-      inventorySpotlight: inventorySpotlight
+      inventorySpotlight: is
         ? {
-            token: inventorySpotlight.token,
-            title: inventorySpotlight.title,
-            names: inventorySpotlight.names || [],
+            token: is.token,
+            title: is.title,
+            names: is.names || [],
           }
         : null,
-      runSummary: engine.runSummary
+      runSummary: e.runSummary
         ? {
-            level: engine.runSummary.level,
-            job: engine.runSummary.job,
-            loc: engine.runSummary.loc,
+            level: e.runSummary.level,
+            job: e.runSummary.job,
+            loc: e.runSummary.loc,
           }
         : null,
-      sideTab: engine.sideTab,
-      logTail: engine.logs.slice(-6).map((log) => ({ type: log.type, text: log.text })),
+      sideTab: e.sideTab,
+      logTail: e.logs.slice(-6).map((log) => ({ type: log.type, text: log.text })),
     });
+    };
 
     window.advanceTime = (ms = 0) => new Promise((resolve) => window.setTimeout(resolve, Math.max(0, ms)));
     window.__AETHERIA_TEST_API__ = {
       getState: () => JSON.parse(window.render_game_to_text()),
       getPerfSnapshot: () => getPerfSnapshot(),
       markPerf: (name) => markPerf(name),
-      resetGame: () => engine.actions.reset?.(),
-      sendCommand: (command) => engine.handleCommand(command),
-      clearPostCombat: () => engine.actions.clearPostCombat?.(),
-      setSideTab: (tab) => engine.actions.setSideTab?.(tab),
+      resetGame: () => engineRef.current.actions.reset?.(),
+      sendCommand: (command) => engineRef.current.handleCommand(command),
+      clearPostCombat: () => engineRef.current.actions.clearPostCombat?.(),
+      setSideTab: (tab) => engineRef.current.actions.setSideTab?.(tab),
       injectPostCombatResult: () => {
-        engine.dispatch({
+        engineRef.current.dispatch({
           type: 'SET_POST_COMBAT_RESULT',
           payload: {
             enemy: '테스트 골렘',
@@ -219,7 +240,7 @@ function App() {
         });
       },
       injectRelicChoice: () => {
-        engine.dispatch({
+        engineRef.current.dispatch({
           type: 'SET_PENDING_RELICS',
           payload: [
             {
@@ -247,7 +268,8 @@ function App() {
         });
       },
       injectRunSummary: () => {
-        engine.dispatch({
+        const er = engineRef.current;
+        er.dispatch({
           type: 'SET_RUN_SUMMARY',
           payload: {
             level: 17,
@@ -261,14 +283,15 @@ function App() {
             activeTitle: 'veteran',
           },
         });
-        engine.dispatch({ type: 'SET_GAME_STATE', payload: GS.DEAD });
+        er.dispatch({ type: 'SET_GAME_STATE', payload: GS.DEAD });
       },
       injectAscensionPreview: () => {
-        engine.dispatch({
+        const er = engineRef.current;
+        er.dispatch({
           type: 'SET_PLAYER',
           payload: {
             meta: {
-              ...(engine.player.meta || {}),
+              ...(er.player.meta || {}),
               prestigeRank: 1,
               bonusAtk: 4,
               bonusHp: 20,
@@ -277,10 +300,11 @@ function App() {
             },
           },
         });
-        engine.dispatch({ type: 'SET_GAME_STATE', payload: GS.ASCENSION });
+        er.dispatch({ type: 'SET_GAME_STATE', payload: GS.ASCENSION });
       },
       injectEvent: () => {
-        engine.dispatch({
+        const er = engineRef.current;
+        er.dispatch({
           type: 'SET_EVENT',
           payload: {
             desc: '[TEST EVENT] 낡은 봉인이 흔들립니다. 어떻게 대응하시겠습니까?',
@@ -291,7 +315,7 @@ function App() {
             ]
           }
         });
-        engine.dispatch({ type: 'SET_GAME_STATE', payload: GS.EVENT });
+        er.dispatch({ type: 'SET_GAME_STATE', payload: GS.EVENT });
       },
     };
 
@@ -300,27 +324,13 @@ function App() {
       delete window.advanceTime;
       delete window.__AETHERIA_TEST_API__;
     };
-  // Test harness exposure only: rebind when referenced runtime snapshots change.
+  // Test harness uses refs (updated synchronously during render) so only needs to run once for setup/cleanup.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    engine.bootStage,
-    engine.gameState,
-    engine.isAiThinking,
-    engine.player,
-    engine.enemy,
-    engine.currentEvent,
-    engine.pendingRelics,
-    engine.postCombatResult,
-    inventorySpotlight,
-    engine.runSummary,
-    engine.sideTab,
-    engine.logs,
-    engine.syncStatus,
-    fullStats,
-  ]);
+  }, []);
 
   if (engine.bootStage !== 'ready') {
     return (
+      <MotionConfig reducedMotion="user">
       <div className="flex h-[100dvh] w-full bg-cyber-black items-center justify-center text-cyber-blue font-rajdhani relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-20 pointer-events-none"
@@ -344,6 +354,7 @@ function App() {
           </div>
         </Motion.div>
       </div>
+      </MotionConfig>
     );
   }
 
@@ -351,28 +362,33 @@ function App() {
   // handleDefeat가 player.name을 ''로 리셋하므로 IntroScreen 조건에 걸리기 전에 처리
   if (engine.gameState === GS.DEAD && engine.runSummary) {
     return (
-      <MainLayout visualEffect={null}>
-        <Suspense fallback={null}>
-          <RunSummaryCard
-            runSummary={engine.runSummary}
-            onRestart={() => engine.actions.reset?.()}
-          />
-        </Suspense>
-      </MainLayout>
+      <MotionConfig reducedMotion="user">
+        <MainLayout visualEffect={null}>
+          <Suspense fallback={null}>
+            <RunSummaryCard
+              runSummary={engine.runSummary}
+              onRestart={() => engine.actions.reset?.()}
+            />
+          </Suspense>
+        </MainLayout>
+      </MotionConfig>
     );
   }
 
   if (!String(engine.player.name || '').trim()) {
     return (
-      <MainLayout visualEffect={null}>
-        <div className="flex flex-col items-center justify-center h-full space-y-6 relative z-10">
-          <IntroScreen onStart={engine.actions.start} mobile={isMobileViewport} />
-        </div>
-      </MainLayout>
+      <MotionConfig reducedMotion="user">
+        <MainLayout visualEffect={null}>
+          <div className="flex flex-col items-center justify-center h-full space-y-6 relative z-10">
+            <IntroScreen onStart={engine.actions.start} mobile={isMobileViewport} />
+          </div>
+        </MainLayout>
+      </MotionConfig>
     );
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <MainLayout visualEffect={engine.visualEffect}>
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className={`absolute inset-0 ${isMobileViewport ? 'animate-aurora' : ''} bg-[radial-gradient(circle_at_top_left,rgba(213,177,128,0.09),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(125,212,216,0.1),transparent_22%),linear-gradient(180deg,rgba(7,11,17,0.42)_0%,rgba(3,5,8,0.74)_100%)]`} />
@@ -389,7 +405,40 @@ function App() {
           mobile={isMobileViewport}
           compactDesktop={!isMobileViewport}
           className={!isMobileViewport ? 'px-1 py-0.5 rounded-[1rem]' : ''}
+          onCrystalClick={(engine.player?.premiumCurrency || 0) > 0 ? () => setPremiumShopOpen(true) : null}
         />
+        {/* 시즌 이벤트 배너 */}
+        {engine.liveConfig?.seasonEvent?.active && (
+          <div className="flex items-center justify-between gap-2 rounded-[0.9rem] border border-[#d5b180]/28 bg-[#d5b180]/10 px-3 py-2 text-[11px] font-fira">
+            <span className="text-[#f4e6c8]">
+              ⚡ {engine.liveConfig.seasonEvent.name || '시즌 이벤트'} 진행 중
+              {engine.liveConfig.seasonEvent.endsAt ? ` — D-${Math.max(0, Math.ceil((engine.liveConfig.seasonEvent.endsAt.toDate?.() || new Date(engine.liveConfig.seasonEvent.endsAt) - new Date()) / 86400000))}` : ''}
+              {engine.liveConfig.seasonEvent.goldMultiplier > 1 ? ` | 골드+${Math.round((engine.liveConfig.seasonEvent.goldMultiplier - 1) * 100)}%` : ''}
+              {engine.liveConfig.seasonEvent.xpMultiplier > 1 ? ` XP+${Math.round((engine.liveConfig.seasonEvent.xpMultiplier - 1) * 100)}%` : ''}
+            </span>
+            {engine.liveConfig.seasonEvent.bonusMap && (
+              <button
+                type="button"
+                onClick={() => engine.actions.move(engine.liveConfig.seasonEvent.bonusMap)}
+                className="shrink-0 rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 px-2 py-0.5 text-[10px] font-fira text-[#f4e6c8] uppercase tracking-[0.14em] hover:bg-[#d5b180]/24"
+              >
+                이동
+              </button>
+            )}
+          </div>
+        )}
+        {premiumShopOpen && (
+          <Suspense fallback={null}>
+            <PremiumShop
+              player={engine.player}
+              onClose={() => setPremiumShopOpen(false)}
+              onExpandInventory={() => { engine.actions.expandInventory?.(); }}
+              onPurchaseSynthProtect={() => { engine.actions.purchaseSynthProtect?.(); }}
+              onPurchaseRevive={() => { engine.actions.purchaseRevive?.(); }}
+              onPurchaseTitle={(id, name, cost) => { engine.actions.purchaseCosmeticTitle?.(id, name, cost); }}
+            />
+          </Suspense>
+        )}
 
         {isMobileViewport ? (
           <Motion.div
@@ -398,6 +447,9 @@ function App() {
             transition={{ duration: 0.5 }}
             className={`relative z-10 flex min-h-0 flex-1 w-full flex-col gap-2 ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
           >
+            {showOnboarding && (
+              <OnboardingGuide player={engine.player} onDismiss={handleOnboardingDismiss} mobile />
+            )}
             <TerminalView
               logs={engine.logs}
               gameState={engine.gameState}
@@ -479,6 +531,9 @@ function App() {
             transition={{ duration: 0.5 }}
             className={`relative z-10 w-full grid grid-cols-1 gap-1 md:flex-1 md:min-h-0 md:overflow-hidden transition-all duration-150 md:grid-cols-[minmax(0,1fr)_11rem] lg:grid-cols-[minmax(0,1fr)_clamp(11.5rem,16vw,12.75rem)] xl:grid-cols-[minmax(0,1fr)_clamp(12rem,16vw,13.5rem)] ${damageFlash ? 'ring-2 ring-red-500/40' : ''} ${healFlash ? 'ring-2 ring-green-500/40' : ''}`}
           >
+              {showOnboarding && (
+                <OnboardingGuide player={engine.player} onDismiss={handleOnboardingDismiss} />
+              )}
               <TerminalView
                 logs={engine.logs}
                 gameState={engine.gameState}
@@ -573,7 +628,18 @@ function App() {
         </Suspense>
       )}
 
+      {/* v5.0: 진 엔딩 풀스크린 */}
+      {engine.gameState === GS.TRUE_ENDING && (
+        <Suspense fallback={null}>
+          <TrueEndingScreen
+            player={engine.player}
+            actions={engine.actions}
+          />
+        </Suspense>
+      )}
+
     </MainLayout>
+    </MotionConfig>
   );
 }
 

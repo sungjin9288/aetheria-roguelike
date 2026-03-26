@@ -92,7 +92,7 @@ const EnemyStatus = ({ enemy, mobile = false, compact = false }) => {
   );
 };
 
-const StatusBar = ({ player, stats, enemy = null, mobile = false, compactDesktop = false, className = '' }) => {
+const StatusBar = ({ player, stats, enemy = null, mobile = false, compactDesktop = false, className = '', onCrystalClick = null }) => {
   if (!player?.name) return null;
   const compactBadgeClass = compactDesktop ? 'min-h-[16px] px-1 py-0 text-[7px] tracking-[0.12em]' : '';
 
@@ -119,6 +119,15 @@ const StatusBar = ({ player, stats, enemy = null, mobile = false, compactDesktop
               <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-slate-400/68">Gold</div>
               <div className="text-[14px] font-rajdhani font-bold leading-none text-[#f6e7c8]">{player.gold}</div>
             </div>
+            {(player.premiumCurrency || 0) > 0 && (
+              <div
+                className={`shrink-0 rounded-[1rem] border border-cyan-400/20 bg-cyan-400/8 px-2.5 py-1.5 text-right ${onCrystalClick ? 'cursor-pointer hover:bg-cyan-400/14 transition-colors pointer-events-auto' : ''}`}
+                onClick={onCrystalClick}
+              >
+                <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyan-300/70">Crystal</div>
+                <div className="text-[14px] font-rajdhani font-bold leading-none text-cyan-200">{player.premiumCurrency}</div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-1.5">
@@ -138,6 +147,16 @@ const StatusBar = ({ player, stats, enemy = null, mobile = false, compactDesktop
                 <SignalBadge tone="neutral" size="sm" className={compactBadgeClass}>{player.job}</SignalBadge>
                 <SignalBadge tone="resonance" size="sm" className={compactBadgeClass}>Lv.{player.level}</SignalBadge>
                 <SignalBadge tone="upgrade" size="sm" className={compactBadgeClass}>{player.gold} CR</SignalBadge>
+                {(player.premiumCurrency || 0) > 0 && (
+                  <SignalBadge
+                    tone="info"
+                    size="sm"
+                    className={`${compactBadgeClass}${onCrystalClick ? ' cursor-pointer hover:opacity-80 pointer-events-auto' : ''}`}
+                    onClick={onCrystalClick}
+                  >
+                    💎{player.premiumCurrency}
+                  </SignalBadge>
+                )}
                 {!compactDesktop && (
                   <span className="truncate text-[9px] font-fira uppercase tracking-[0.16em] text-slate-400/68">
                     {player.loc}

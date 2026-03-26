@@ -1,5 +1,6 @@
 import { AT } from '../reducers/actionTypes';
 import { RARITY_COLORS } from '../data/titles';
+import { RELIC_SYNERGIES } from '../data/relics';
 import SignalBadge from './SignalBadge';
 
 /**
@@ -33,20 +34,45 @@ const SYNERGY_MAP = {
 };
 
 const getRelicSynergyScore = (newRelic, ownedRelics = []) => {
-    if (!ownedRelics.length) return { score: 0, label: null, synergies: [] };
     const ownedEffects = ownedRelics.map(r => r.effect);
+    const ownedNames = new Set(ownedRelics.map(r => r.name));
+
+    // 3피스 전설 시너지 확인 — 신규 유물이 마지막 피스인 경우
+    const legendarySyn = RELIC_SYNERGIES.find(syn =>
+        syn.requires.length === 3 &&
+        syn.requires.includes(newRelic.name) &&
+        syn.requires.filter(name => ownedNames.has(name)).length === 2
+    );
+    if (legendarySyn) {
+        const synergyNames = legendarySyn.requires.filter(n => ownedNames.has(n));
+        return { score: 120, label: '전설 시너지 완성!', synergies: synergyNames, legendaryHint: legendarySyn.label };
+    }
+
+    // 3피스 시너지 1개 남음 힌트 — 신규 유물이 첫 번째 피스인 경우
+    const nearLegendarySyn = RELIC_SYNERGIES.find(syn =>
+        syn.requires.length === 3 &&
+        syn.requires.includes(newRelic.name) &&
+        syn.requires.filter(name => ownedNames.has(name)).length === 1
+    );
+
+    if (!ownedRelics.length) return nearLegendarySyn
+        ? { score: 0, label: null, synergies: [], nearLegendary: nearLegendarySyn.label }
+        : { score: 0, label: null, synergies: [] };
+
     const synergyEffects = SYNERGY_MAP[newRelic.effect] || [];
     const matches = ownedEffects.filter(e => synergyEffects.includes(e));
-    // 또한 소유한 유물이 newRelic을 시너지로 언급하는지 체크
     ownedEffects.forEach(e => {
         if ((SYNERGY_MAP[e] || []).includes(newRelic.effect) && !matches.includes(e)) matches.push(e);
     });
 
-    if (!matches.length) return { score: 0, label: null, synergies: [] };
+    if (!matches.length) return nearLegendarySyn
+        ? { score: 0, label: null, synergies: [], nearLegendary: nearLegendarySyn.label }
+        : { score: 0, label: null, synergies: [] };
+
     const score = Math.min(100, matches.length * 40);
     const label = score >= 80 ? '완벽한 시너지' : score >= 40 ? '좋은 시너지' : '약한 시너지';
     const synergyNames = ownedRelics.filter(r => matches.includes(r.effect)).map(r => r.name);
-    return { score, label, synergies: synergyNames };
+    return { score, label, synergies: synergyNames, nearLegendary: nearLegendarySyn?.label || null };
 };
 
 const RARITY_CARD = {
@@ -92,7 +118,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,12,0.84)_0%,rgba(7,10,15,0.92)_100%)] backdrop-blur-[12px]" />
+            <div className="aether-overlay" />
             <div
                 className="pointer-events-none absolute inset-0 opacity-70"
                 style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(213,177,128,0.12), transparent 30%), radial-gradient(circle at bottom right, rgba(125,212,216,0.08), transparent 24%)' }}
@@ -122,6 +148,8 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                     {pendingRelics.map((relic, index) => {
                         const synergy = getRelicSynergyScore(relic, ownedRelics);
                         const hasSynergy = synergy.score > 0;
+                        const isLegendaryComplete = synergy.legendaryHint != null;
+                        const hasNearLegendary = synergy.nearLegendary != null;
                         return (
                         <button
                             key={relic.id}
@@ -131,16 +159,26 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                                 group flex min-h-[15rem] flex-col rounded-[1.35rem] border p-4 text-left
                                 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0
                                 ${RARITY_CARD[relic.rarity] || RARITY_CARD.common}
-                                ${hasSynergy ? 'shadow-[0_18px_34px_rgba(125,212,216,0.08)]' : 'shadow-[0_14px_26px_rgba(1,6,14,0.28)]'}
+                                ${isLegendaryComplete ? 'shadow-[0_18px_40px_rgba(251,113,133,0.15)]' : hasSynergy ? 'shadow-[0_18px_34px_rgba(125,212,216,0.08)]' : 'shadow-[0_14px_26px_rgba(1,6,14,0.28)]'}
                             `}
                         >
-                            <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
                                 <SignalBadge tone={RARITY_BADGE_TONE[relic.rarity] || 'neutral'} size="sm">
                                     {RARITY_LABEL[relic.rarity] || relic.rarity}
                                 </SignalBadge>
-                                {hasSynergy && (
+                                {isLegendaryComplete && (
+                                    <SignalBadge tone="danger" size="sm">
+                                        ★ 전설 시너지 완성!
+                                    </SignalBadge>
+                                )}
+                                {!isLegendaryComplete && hasSynergy && (
                                     <SignalBadge tone={synergy.score >= 80 ? 'success' : 'recommended'} size="sm">
                                         {synergy.label}
+                                    </SignalBadge>
+                                )}
+                                {!isLegendaryComplete && !hasSynergy && hasNearLegendary && (
+                                    <SignalBadge tone="upgrade" size="sm">
+                                        전설까지 -1
                                     </SignalBadge>
                                 )}
                             </div>
@@ -154,11 +192,29 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                             </div>
 
                             <div className="mt-auto pt-4">
-                                {hasSynergy ? (
+                                {isLegendaryComplete ? (
+                                    <div className="rounded-[1rem] border border-rose-300/22 bg-rose-400/10 px-3 py-2.5 text-[10px] font-fira">
+                                        <div className="uppercase tracking-[0.16em] text-rose-300/70">Legendary Synergy</div>
+                                        <div className="mt-1 font-bold text-rose-100">{synergy.legendaryHint}</div>
+                                        <div className="mt-0.5 text-slate-300/72">{synergy.synergies.join(' · ')}</div>
+                                    </div>
+                                ) : hasSynergy ? (
                                     <div className="rounded-[1rem] border border-white/8 bg-black/20 px-3 py-2.5 text-[10px] font-fira text-slate-300/82">
                                         <div className="uppercase tracking-[0.16em] text-slate-500">Linked Relics</div>
                                         <div className="mt-1 leading-relaxed text-[#dff7f5]">
                                             {synergy.synergies.join(' · ')}
+                                        </div>
+                                        {hasNearLegendary && (
+                                            <div className="mt-1.5 text-[#d5b180]/80">
+                                                ◆ 전설 시너지 [{synergy.nearLegendary}] 까지 1개
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : hasNearLegendary ? (
+                                    <div className="rounded-[1rem] border border-[#d5b180]/22 bg-[#d5b180]/8 px-3 py-2.5 text-[10px] font-fira">
+                                        <div className="uppercase tracking-[0.16em] text-[#d5b180]/60">Near Legendary</div>
+                                        <div className="mt-1 text-[#f6e7c8]">
+                                            [{synergy.nearLegendary}] 시너지까지 1개 남음
                                         </div>
                                     </div>
                                 ) : (

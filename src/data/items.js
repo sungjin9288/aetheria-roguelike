@@ -80,7 +80,46 @@ export const ITEMS = {
         { name: '허공의 지팡이', type: 'weapon', hands: 2, val: 275, tier: 6, price: 63000, elem: '어둠', jobs: ['흑마법사', '그림자 주군'], desc: '허공의 어둠을 응축한 마지팡이.', desc_stat: 'ATK+275(암) / 2H' },
         { name: '에테르 심판궁', type: 'weapon', hands: 2, val: 255, tier: 6, price: 58000, elem: '빛', jobs: ['레인저', '사냥의 군주'], desc: '에테르 에너지가 깃든 심판의 활.', desc_stat: 'ATK+255(빛) / 2H' },
         { name: '영겁의 세이버', type: 'weapon', val: 290, tier: 6, price: 67000, elem: '빛', jobs: ['나이트', '팔라딘'], desc: '영겁의 시간을 담은 성광 세이버.', desc_stat: 'ATK+290(빛)' },
-        { name: '혼돈 절멸기', type: 'weapon', val: 300, tier: 6, price: 72000, elem: '어둠', jobs: ['어쌔신', '그림자 주군'], desc: '혼돈의 정수로 벼린 절멸의 단검.', desc_stat: 'ATK+300(암)' }
+        { name: '혼돈 절멸기', type: 'weapon', val: 300, tier: 6, price: 72000, elem: '어둠', jobs: ['어쌔신', '그림자 주군'], desc: '혼돈의 정수로 벼린 절멸의 단검.', desc_stat: 'ATK+300(암)' },
+        // Phase 4B 확장 무기
+        // T1 추가 (+5)
+        { name: '뼈 단검', type: 'weapon', val: 9, tier: 1, price: 65, jobs: ['도적', '어쌔신', '모험가'], desc: '뼈를 깎아 만든 단검.', desc_stat: 'ATK+9' },
+        { name: '돌망치', type: 'weapon', hands: 2, val: 16, tier: 1, price: 140, jobs: ['전사', '버서커'], desc: '원시적이지만 강력한 돌망치.', desc_stat: 'ATK+16 / 2H' },
+        { name: '수정 완드', type: 'weapon', val: 11, tier: 1, price: 85, jobs: ['마법사', '모험가'], desc: '수정이 박힌 작은 완드.', desc_stat: 'ATK+11' },
+        { name: '나뭇가지 활', type: 'weapon', hands: 2, val: 10, tier: 1, price: 70, jobs: ['레인저', '모험가'], desc: '나뭇가지로 만든 조잡한 활.', desc_stat: 'ATK+10 / 2H' },
+        { name: '녹슨 도끼', type: 'weapon', val: 13, tier: 1, price: 105, jobs: ['전사', '버서커', '모험가'], desc: '녹슬었지만 무겁다.', desc_stat: 'ATK+13' },
+        // T2 추가 (+5)
+        { name: '독침 단검', type: 'weapon', val: 30, tier: 2, price: 470, elem: '자연', jobs: ['도적', '어쌔신'], desc: '독이 배인 단검.', desc_stat: 'ATK+30(독)' },
+        { name: '바람의 활', type: 'weapon', hands: 2, val: 32, tier: 2, price: 500, jobs: ['레인저'], desc: '바람을 가르는 활.', desc_stat: 'ATK+32 / 2H' },
+        { name: '철퇴장', type: 'weapon', val: 27, tier: 2, price: 420, jobs: ['전사', '나이트', '버서커'], desc: '무겁고 단단한 철퇴.', desc_stat: 'ATK+27' },
+        { name: '대지의 지팡이', type: 'weapon', hands: 2, val: 31, tier: 2, price: 520, elem: '대지', jobs: ['마법사', '아크메이지'], desc: '대지의 기운이 흐르는 지팡이.', desc_stat: 'ATK+31(지) / 2H' },
+        { name: '쌍칼', type: 'weapon', val: 29, tier: 2, price: 460, jobs: ['도적', '어쌔신', '레인저'], desc: '양손에 하나씩 쥐는 쌍검.', desc_stat: 'ATK+29' },
+        // T3 추가 (+3)
+        { name: '빙결 장궁', type: 'weapon', hands: 2, val: 54, tier: 3, price: 1480, elem: '냉기', jobs: ['레인저'], desc: '얼음 정령의 가호를 받은 활.', desc_stat: 'ATK+54(냉) / 2H' },
+        { name: '어둠의 팔치온', type: 'weapon', val: 53, tier: 3, price: 1400, elem: '어둠', jobs: ['전사', '버서커'], desc: '어둠이 서린 곡도.', desc_stat: 'ATK+53(암)' },
+        { name: '독아 채찍', type: 'weapon', val: 47, tier: 3, price: 1250, elem: '자연', jobs: ['어쌔신'], desc: '독이 배인 가시 채찍.', desc_stat: 'ATK+47(독)' },
+        // T4 추가 (+3)
+        { name: '천공의 활', type: 'weapon', hands: 2, val: 88, tier: 4, price: 5800, elem: '빛', jobs: ['레인저'], desc: '천공 정원에서 발견된 활.', desc_stat: 'ATK+88(빛) / 2H' },
+        { name: '심해의 창', type: 'weapon', hands: 2, val: 95, tier: 4, price: 6200, elem: '냉기', jobs: ['전사', '나이트'], desc: '심해의 압력을 담은 창.', desc_stat: 'ATK+95(냉) / 2H' },
+        { name: '광기의 도끼', type: 'weapon', hands: 2, val: 100, tier: 4, price: 6800, jobs: ['버서커'], desc: '광기에 사로잡힌 도끼.', desc_stat: 'ATK+100 / 2H' },
+        // T5 추가 (+2)
+        { name: '영혼 절단자', type: 'weapon', val: 195, tier: 5, price: 30000, elem: '어둠', jobs: ['어쌔신'], desc: '영혼까지 베는 단검.', desc_stat: 'ATK+195(암)' },
+        { name: '대지의 심판', type: 'weapon', hands: 2, val: 185, tier: 5, price: 28500, elem: '대지', jobs: ['전사', '나이트'], desc: '대지의 분노를 담은 대검.', desc_stat: 'ATK+185(지) / 2H' },
+        // 신규 맵 전용 무기
+        // T2 — 신성한 호수 / 수정 동굴
+        { name: '성수 단검', type: 'weapon', val: 31, tier: 2, price: 490, elem: '빛', jobs: ['도적', '어쌔신', '모험가'], desc: '신성한 호수의 성수로 정화된 단검.', desc_stat: 'ATK+31(빛)' },
+        { name: '수정 창', type: 'weapon', hands: 2, val: 30, tier: 2, price: 475, elem: '대지', jobs: ['전사', '나이트'], desc: '수정 동굴에서 채굴한 결정으로 만든 창.', desc_stat: 'ATK+30(지) / 2H' },
+        // T3 — 화염의 사원 / 북부 설원 / 고대 마법 탑 / 어둠의 지하 감옥
+        { name: '화염 사원의 검', type: 'weapon', val: 57, tier: 3, price: 1530, elem: '화염', jobs: ['전사', '버서커'], desc: '화염의 사원 사제들이 봉인해 두었던 불꽃검.', desc_stat: 'ATK+57(화)' },
+        { name: '빙원의 장창', type: 'weapon', hands: 2, val: 55, tier: 3, price: 1490, elem: '냉기', jobs: ['전사', '나이트'], desc: '북부 설원의 혹한이 응결된 장창.', desc_stat: 'ATK+55(냉) / 2H' },
+        { name: '고대 마탑 스태프', type: 'weapon', hands: 2, val: 60, tier: 3, price: 1600, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '고대 마법 탑에 봉인되어 있던 강력한 지팡이.', desc_stat: 'ATK+60(빛) / 2H' },
+        { name: '어둠 감옥 단검', type: 'weapon', val: 54, tier: 3, price: 1430, elem: '어둠', jobs: ['도적', '어쌔신'], desc: '어둠의 지하 감옥에서 제련된 단검.', desc_stat: 'ATK+54(암)' },
+        // T4 — 어둠의 지하 감옥 / 차원의 틈새
+        { name: '타락 기사의 검', type: 'weapon', val: 96, tier: 4, price: 6400, elem: '어둠', jobs: ['전사', '나이트'], desc: '타락 기사가 사용하던 저주받은 검.', desc_stat: 'ATK+96(암)' },
+        { name: '차원 균열 지팡이', type: 'weapon', hands: 2, val: 105, tier: 4, price: 7300, elem: '어둠', jobs: ['마법사', '아크메이지', '흑마법사'], desc: '차원의 균열을 담아 제련된 마도 지팡이.', desc_stat: 'ATK+105(암) / 2H' },
+        // T5 — 차원의 틈새 최종 보스 드롭
+        { name: '에테르 거인의 대검', type: 'weapon', hands: 2, val: 225, tier: 5, price: 36000, elem: '빛', jobs: ['전사', '버서커'], desc: '에테르 거인의 힘이 응결된 전설의 대검.', desc_stat: 'ATK+225(빛) / 2H' },
+        { name: '차원 마왕의 낫', type: 'weapon', hands: 2, val: 240, tier: 5, price: 40000, elem: '어둠', jobs: ['흑마법사', '버서커'], desc: '차원 마왕이 세계를 수확하던 절멸의 낫.', desc_stat: 'ATK+240(암) / 2H' },
     ],
     armors: [
         // Tier 1 - 초급 (12개)
@@ -145,18 +184,60 @@ export const ITEMS = {
         { name: '세계수의 로브', type: 'armor', val: 78, tier: 5, price: 14200, elem: '자연', jobs: ['아크메이지'], desc: '세계수의 잎으로 만든 로브.', desc_stat: 'DEF+78(자)' },
         { name: '어둠의 왕 갑주', type: 'armor', val: 95, tier: 5, price: 16000, elem: '어둠', jobs: ['흑마법사', '버서커'], desc: '어둠의 왕이 입었던 갑주.', desc_stat: 'DEF+95(암)' },
         { name: '심해의 수호복', type: 'armor', val: 103, tier: 5, price: 17200, elem: '냉기', jobs: ['전사', '나이트', '레인저'], desc: '심해 압력에서도 버티는 갑주.', desc_stat: 'DEF+103(냉)' },
-        { name: '천공 성전', type: 'shield', subtype: 'focus', val: 14, mp: 60, crit: 0.08, tier: 5, price: 16800, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '천공의 마법식을 봉인한 성전.', desc_stat: 'DEF+14 / MP+60 / CRIT+8%' }
+        { name: '천공 성전', type: 'shield', subtype: 'focus', val: 14, mp: 60, crit: 0.08, tier: 5, price: 16800, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '천공의 마법식을 봉인한 성전.', desc_stat: 'DEF+14 / MP+60 / CRIT+8%' },
+        // Tier 6 - 미식 (2개)
+        { name: '차원 방패 이지스', type: 'shield', val: 70, tier: 6, price: 45000, elem: '빛', jobs: ['나이트', '팔라딘'], desc: '차원의 경계를 막아내는 절대 방패.', desc_stat: 'DEF+70(빛)' },
+        { name: '에테르 그리모어', type: 'shield', subtype: 'focus', val: 20, mp: 80, crit: 0.12, tier: 6, price: 48000, elem: '어둠', jobs: ['아크메이지', '흑마법사', '대마법사'], desc: '에테르 에너지가 봉인된 마도 그리모어.', desc_stat: 'DEF+20 / MP+80 / CRIT+12%' },
+        // Phase 4B 확장 방어구
+        // T1 추가 (+3)
+        { name: '짚 모자', type: 'armor', val: 2, tier: 1, price: 30, jobs: ['모험가', '레인저'], desc: '농부의 짚 모자.', desc_stat: 'DEF+2' },
+        { name: '뼈 갑옷', type: 'armor', val: 7, tier: 1, price: 85, jobs: ['전사', '버서커', '모험가'], desc: '뼈를 엮어 만든 원시 갑옷.', desc_stat: 'DEF+7' },
+        { name: '수련생 로브', type: 'armor', val: 4, tier: 1, price: 50, jobs: ['마법사', '모험가'], desc: '마법 수련생의 로브.', desc_stat: 'DEF+4' },
+        // T2 추가 (+3)
+        { name: '독안개 망토', type: 'armor', val: 14, tier: 2, price: 330, elem: '자연', jobs: ['도적', '어쌔신'], desc: '독안개를 머금은 망토.', desc_stat: 'DEF+14(독)' },
+        { name: '드워프 흉갑', type: 'armor', val: 19, tier: 2, price: 380, jobs: ['전사', '버서커'], desc: '드워프 장인의 흉갑.', desc_stat: 'DEF+19' },
+        { name: '바람의 외투', type: 'armor', val: 13, tier: 2, price: 300, jobs: ['레인저', '모험가'], desc: '바람처럼 가벼운 외투.', desc_stat: 'DEF+13' },
+        // T3 추가 (+3)
+        { name: '폭풍 로브', type: 'armor', val: 23, tier: 3, price: 900, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '번개가 깃든 로브.', desc_stat: 'DEF+23(빛)' },
+        { name: '기계식 갑옷', type: 'armor', val: 32, tier: 3, price: 1050, jobs: ['전사', '나이트', '버서커'], desc: '기계 폐도에서 수거한 갑옷.', desc_stat: 'DEF+32' },
+        { name: '심해 외투', type: 'armor', val: 27, tier: 3, price: 920, elem: '냉기', jobs: ['도적', '레인저'], desc: '심해 생물의 가죽 외투.', desc_stat: 'DEF+27(냉)' },
+        // T4 추가 (+2)
+        { name: '천공의 갑주', type: 'armor', val: 58, tier: 4, price: 5000, elem: '빛', jobs: ['전사', '나이트'], desc: '천공 정원의 금속으로 만든 갑주.', desc_stat: 'DEF+58(빛)' },
+        { name: '심연 잠수복', type: 'armor', val: 54, tier: 4, price: 4800, elem: '냉기', jobs: ['도적', '레인저'], desc: '극한 심해에서 버티는 전투복.', desc_stat: 'DEF+54(냉)' },
+        // T5 추가 (+2)
+        { name: '에테르 전투복', type: 'armor', val: 88, tier: 5, price: 15500, elem: '빛', jobs: ['도적', '어쌔신', '레인저'], desc: '차원 에너지로 강화된 전투복.', desc_stat: 'DEF+88(빛)' },
+        { name: '혼돈의 갑주', type: 'armor', val: 105, tier: 5, price: 17000, elem: '어둠', jobs: ['전사', '버서커', '나이트'], desc: '혼돈의 심연에서 단련된 갑주.', desc_stat: 'DEF+105(암)' },
+        // 신규 맵 전용 방어구
+        // T2 — 신성한 호수 / 수정 동굴
+        { name: '수정 갑옷', type: 'armor', val: 17, tier: 2, price: 355, elem: '대지', jobs: ['전사', '나이트'], desc: '수정 광물로 강화한 갑옷.', desc_stat: 'DEF+17(지)' },
+        { name: '성수 로브', type: 'armor', val: 13, tier: 2, price: 325, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '신성한 호수의 성수로 정화된 로브.', desc_stat: 'DEF+13(빛)' },
+        // T3 — 화염의 사원 / 북부 설원 / 고대 마법 탑
+        { name: '화염 사원 로브', type: 'armor', val: 24, tier: 3, price: 890, elem: '화염', jobs: ['마법사', '아크메이지'], desc: '화염의 사제들이 입던 불꽃 로브.', desc_stat: 'DEF+24(화)' },
+        { name: '설원 갑주', type: 'armor', val: 33, tier: 3, price: 1080, elem: '냉기', jobs: ['전사', '버서커'], desc: '북부 설원의 극한에 단련된 갑주.', desc_stat: 'DEF+33(냉)' },
+        { name: '고대 마탑 예복', type: 'armor', val: 25, tier: 3, price: 950, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '고대 마법 탑의 현자가 입던 예복.', desc_stat: 'DEF+25(빛)' },
+        // T4 — 어둠의 지하 감옥
+        { name: '어둠 감옥 갑주', type: 'armor', val: 64, tier: 4, price: 5100, elem: '어둠', jobs: ['전사', '나이트'], desc: '어둠의 지하 감옥의 고문관이 착용하던 갑주.', desc_stat: 'DEF+64(암)' },
+        // T5 — 차원의 틈새
+        { name: '차원 갑주', type: 'armor', val: 112, tier: 5, price: 18500, jobs: ['전사', '나이트', '버서커'], desc: '차원의 틈새에서 단련된 궁극의 갑주.', desc_stat: 'DEF+112' },
+        { name: '에테르 군주 로브', type: 'armor', val: 92, tier: 5, price: 16500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '에테르 거인의 힘이 깃든 마도 로브.', desc_stat: 'DEF+92(빛)' },
+        // Tier 6 - 미식 (6개)
+        { name: '원시의 전투갑주', type: 'armor', val: 145, tier: 6, price: 55000, elem: '대지', jobs: ['전사', '나이트', '팔라딘'], desc: '원시의 신이 만든 갑주. 대지의 핵이 공명한다.', desc_stat: 'DEF+145(지)' },
+        { name: '에테르 로브 오브 아포칼립스', type: 'armor', val: 120, tier: 6, price: 50000, elem: '빛', jobs: ['아크메이지', '대마법사'], desc: '에테르의 종말적 에너지를 담은 로브.', desc_stat: 'DEF+120(빛)' },
+        { name: '공허의 외투', type: 'armor', val: 125, tier: 6, price: 52000, elem: '어둠', jobs: ['흑마법사', '어쌔신', '그림자 주군'], desc: '공허에서 직조한 어둠의 외투.', desc_stat: 'DEF+125(암)' },
+        { name: '드래곤 임페리얼', type: 'armor', val: 150, tier: 6, price: 58000, jobs: ['전사', '버서커', '나이트'], desc: '용신의 비늘로 단련한 궁극의 갑주.', desc_stat: 'DEF+150' },
+        { name: '차원 사냥꾼 슈트', type: 'armor', val: 115, tier: 6, price: 48000, elem: '빛', jobs: ['레인저', '도적', '사냥의 군주'], desc: '차원을 넘나드는 사냥꾼의 전투복.', desc_stat: 'DEF+115(빛)' },
+        { name: '광기의 대갑주', type: 'armor', val: 135, tier: 6, price: 53000, elem: '화염', jobs: ['버서커'], desc: '광기와 불꽃이 하나된 금단의 갑주.', desc_stat: 'DEF+135(화)' },
     ],
     consumables: [
-        // 체력물약
+        // 체력물약 (고급일수록 가성비 향상: 하급 1.67→중급 1.88→상급 2.0→엘릭서 MAX)
         { name: '하급 체력 물약', val: 50, type: 'hp', price: 30, desc: 'HP 50 회복', desc_stat: 'HP+50' },
-        { name: '중급 체력 물약', val: 150, type: 'hp', price: 100, desc: 'HP 150 회복', desc_stat: 'HP+150' },
-        { name: '상급 체력 물약', val: 300, type: 'hp', price: 300, desc: 'HP 300 회복', desc_stat: 'HP+300' },
-        { name: '엘릭서', val: 9999, type: 'hp', price: 2000, desc: 'HP 완전 회복', desc_stat: 'HP MAX' },
+        { name: '중급 체력 물약', val: 150, type: 'hp', price: 80, desc: 'HP 150 회복', desc_stat: 'HP+150' },
+        { name: '상급 체력 물약', val: 300, type: 'hp', price: 150, desc: 'HP 300 회복', desc_stat: 'HP+300' },
+        { name: '엘릭서', val: 9999, type: 'hp', price: 1500, desc: 'HP 완전 회복', desc_stat: 'HP MAX' },
         // 마나물약
         { name: '하급 마나 물약', val: 30, type: 'mp', price: 40, desc: 'MP 30 회복', desc_stat: 'MP+30' },
-        { name: '중급 마나 물약', val: 80, type: 'mp', price: 120, desc: 'MP 80 회복', desc_stat: 'MP+80' },
-        { name: '상급 마나 물약', val: 200, type: 'mp', price: 350, desc: 'MP 200 회복', desc_stat: 'MP+200' },
+        { name: '중급 마나 물약', val: 80, type: 'mp', price: 90, desc: 'MP 80 회복', desc_stat: 'MP+80' },
+        { name: '상급 마나 물약', val: 200, type: 'mp', price: 200, desc: 'MP 200 회복', desc_stat: 'MP+200' },
         // 상태이상 치료
         { name: '해독제', type: 'cure', effect: 'poison', price: 50, desc: '중독 상태를 치료', desc_stat: '해독' },
         { name: '치료약', type: 'cure', effect: 'burn', price: 50, desc: '화상 상태를 치료', desc_stat: '화상치료' },
@@ -190,13 +271,45 @@ export const ITEMS = {
         // 상급 재료
         { name: '용의 심장', type: 'mat', price: 2000, desc: '드래곤의 핵심', desc_stat: '재료' },
         { name: '마왕의 혼', type: 'mat', price: 5000, desc: '최강의 재료', desc_stat: '재료' },
+        // 진 엔딩 아이템
+        { name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편. 3개를 모으면 진실이 드러난다.', desc_stat: '진 엔딩 파편 (1/3)' },
+        { name: '원시의 심장', type: 'key', price: 0, tier: 6, desc: '원시의 신의 심장. 세계의 근원적 힘이 응축되어 있다.', desc_stat: '진 엔딩 완성' },
         { name: '미스릴 원석', type: 'mat', price: 500, desc: '가공되지 않은 미스릴', desc_stat: '재료' },
         { name: '오리할콘', type: 'mat', price: 1000, desc: '전설의 금속', desc_stat: '재료' },
         { name: '정령의 핵', type: 'mat', price: 800, desc: '원소 정령의 핵심', desc_stat: '재료' },
         { name: '기계 코어', type: 'mat', price: 420, desc: '고대 자동 병기의 동력핵', desc_stat: '재료' },
         { name: '천공 결정', type: 'mat', price: 520, desc: '천공 정원에서 채집한 마력 결정', desc_stat: '재료' },
         { name: '심해 진주', type: 'mat', price: 620, desc: '심해 균열에서만 생성되는 진주', desc_stat: '재료' },
-        { name: '고대 각인석', type: 'mat', price: 950, desc: '잊힌 문명의 각인이 남은 돌', desc_stat: '재료' }
+        { name: '고대 각인석', type: 'mat', price: 950, desc: '잊힌 문명의 각인이 남은 돌', desc_stat: '재료' },
+        // Phase 4B 확장 재료
+        { name: '독버섯 포자', type: 'mat', price: 10, desc: '독성이 있는 버섯 포자', desc_stat: '재료' },
+        { name: '벌레 껍질', type: 'mat', price: 15, desc: '단단한 곤충 껍질', desc_stat: '재료' },
+        { name: '요정의 날개', type: 'mat', price: 35, desc: '희미하게 빛나는 날개', desc_stat: '재료' },
+        { name: '도적의 문장', type: 'mat', price: 25, desc: '도적단의 문장이 새겨진 패', desc_stat: '재료' },
+        { name: '구울 뼈', type: 'mat', price: 30, desc: '부식된 언데드의 뼈', desc_stat: '재료' },
+        { name: '님프의 이슬', type: 'mat', price: 40, desc: '수련 위에 맺힌 이슬', desc_stat: '재료' },
+        { name: '용암 핵', type: 'mat', price: 150, desc: '용암 골렘의 핵심 결정', desc_stat: '재료' },
+        { name: '와이번 날개', type: 'mat', price: 200, desc: '화염 와이번의 날개막', desc_stat: '재료' },
+        { name: '미라의 붕대', type: 'mat', price: 45, desc: '저주가 서린 고대 붕대', desc_stat: '재료' },
+        { name: '뱀파이어 송곳니', type: 'mat', price: 350, desc: '흡혈 능력이 깃든 송곳니', desc_stat: '재료' },
+        { name: '천사의 깃털', type: 'mat', price: 800, desc: '타락하기 전의 잔상이 남은 깃털', desc_stat: '재료' },
+        { name: '폭풍 정수', type: 'mat', price: 480, desc: '천공 폭풍의 응축된 에너지', desc_stat: '재료' },
+        { name: '심연의 잉크', type: 'mat', price: 550, desc: '심해 생물의 먹물 정수', desc_stat: '재료' },
+        { name: '에테르 파편', type: 'mat', price: 1200, desc: '차원 경계에서 떨어진 파편', desc_stat: '재료' },
+        { name: '혼돈의 결정', type: 'mat', price: 1500, desc: '혼돈의 심연에서만 채집 가능', desc_stat: '재료' },
+        // 신규 맵 전용 재료
+        { name: '성수', type: 'mat', price: 60, desc: '신성한 호수의 정화된 물', desc_stat: '재료' },
+        { name: '수정 파편', type: 'mat', price: 80, desc: '수정 동굴의 광물 파편', desc_stat: '재료' },
+        { name: '불꽃 비늘', type: 'mat', price: 130, desc: '화염의 사원 생물의 비늘', desc_stat: '재료' },
+        { name: '서리 늑대 가죽', type: 'mat', price: 120, desc: '북부 설원의 서리 늑대 가죽', desc_stat: '재료' },
+        { name: '거인의 뼈', type: 'mat', price: 150, desc: '설원 거인의 단단한 뼈', desc_stat: '재료' },
+        { name: '눈 결정', type: 'mat', price: 110, desc: '눈보라 정령이 결정화된 파편', desc_stat: '재료' },
+        { name: '고대 마력석', type: 'mat', price: 200, desc: '고대 마법 탑에서 발견된 마력 응결체', desc_stat: '재료' },
+        { name: '어둠 사슬', type: 'mat', price: 180, desc: '어둠의 지하 감옥의 저주받은 사슬 조각', desc_stat: '재료' },
+        { name: '타락 금속', type: 'mat', price: 220, desc: '타락 기사의 갑옷에서 떼어낸 금속', desc_stat: '재료' },
+        { name: '차원 수정', type: 'mat', price: 900, desc: '차원의 틈새에서 결정화된 공간 에너지', desc_stat: '재료' },
+        { name: '에테르 심장', type: 'mat', price: 3500, desc: '에테르 거인의 핵심 에너지 결정', desc_stat: '재료' },
+        { name: '차원 마왕 심장', type: 'mat', price: 8000, desc: '차원 마왕의 심장부에서 추출한 결정체', desc_stat: '재료' },
     ],
     prefixes: [
         { name: '날카로운', type: 'weapon', stat: 'atk', val: 3, price: 1.2 },
@@ -255,5 +368,40 @@ export const ITEMS = {
         { id: 'r25', name: '심연 파쇄창', inputs: [{ name: '심해 진주', qty: 2 }, { name: '어둠의 정수', qty: 3 }], gold: 2400 },
         { id: 'r26', name: '성광 방벽', inputs: [{ name: '빛의 결정', qty: 5 }, { name: '오리할콘', qty: 2 }], gold: 2100 },
         { id: 'r27', name: '에테르 세이버', inputs: [{ name: '고대 각인석', qty: 2 }, { name: '마왕의 혼', qty: 1 }], gold: 4800 },
+        // Phase 4B 확장 레시피
+        { id: 'r28', name: '독침 단검', inputs: [{ name: '독버섯 포자', qty: 5 }, { name: '녹슨 단검', qty: 1 }], gold: 200 },
+        { id: 'r29', name: '대지의 지팡이', inputs: [{ name: '자연의 결정', qty: 3 }, { name: '나무지팡이', qty: 1 }], gold: 300 },
+        { id: 'r30', name: '뼈 갑옷', inputs: [{ name: '해골 뼈', qty: 5 }, { name: '구울 뼈', qty: 3 }], gold: 50 },
+        { id: 'r31', name: '독안개 망토', inputs: [{ name: '독버섯 포자', qty: 5 }, { name: '멧돼지 가죽', qty: 3 }], gold: 200 },
+        { id: 'r32', name: '빙결 장궁', inputs: [{ name: '냉기의 결정', qty: 3 }, { name: '엘프의활', qty: 1 }], gold: 800 },
+        { id: 'r33', name: '어둠의 팔치온', inputs: [{ name: '어둠의 정수', qty: 4 }, { name: '미스릴 원석', qty: 2 }], gold: 900 },
+        { id: 'r34', name: '기계식 갑옷', inputs: [{ name: '기계 코어', qty: 4 }, { name: '철광석', qty: 5 }], gold: 700 },
+        { id: 'r35', name: '심해 외투', inputs: [{ name: '심해 진주', qty: 2 }, { name: '심연의 잉크', qty: 1 }], gold: 650 },
+        { id: 'r36', name: '폭풍 로브', inputs: [{ name: '천공 결정', qty: 3 }, { name: '폭풍 정수', qty: 2 }], gold: 600 },
+        { id: 'r37', name: '천공의 활', inputs: [{ name: '천공 결정', qty: 4 }, { name: '폭풍 정수', qty: 2 }], gold: 2200 },
+        { id: 'r38', name: '심해의 창', inputs: [{ name: '심해 진주', qty: 3 }, { name: '오리할콘', qty: 2 }], gold: 2500 },
+        { id: 'r39', name: '광기의 도끼', inputs: [{ name: '용의 심장', qty: 1 }, { name: '오리할콘', qty: 3 }], gold: 3000 },
+        { id: 'r40', name: '에테르 전투복', inputs: [{ name: '에테르 파편', qty: 2 }, { name: '고대 각인석', qty: 2 }], gold: 5500 },
+        { id: 'r41', name: '혼돈의 갑주', inputs: [{ name: '혼돈의 결정', qty: 2 }, { name: '어둠의 정수', qty: 5 }], gold: 6000 },
+        { id: 'r42', name: '영혼 절단자', inputs: [{ name: '뱀파이어 송곳니', qty: 2 }, { name: '어둠의 정수', qty: 3 }], gold: 4500 },
+        // 신규 맵 전용 레시피
+        { id: 'r43', name: '성수 단검', inputs: [{ name: '성수', qty: 3 }, { name: '빛의 결정', qty: 1 }], gold: 250 },
+        { id: 'r44', name: '수정 창', inputs: [{ name: '수정 파편', qty: 5 }, { name: '철광석', qty: 3 }], gold: 280 },
+        { id: 'r45', name: '수정 갑옷', inputs: [{ name: '수정 파편', qty: 6 }, { name: '철광석', qty: 4 }], gold: 300 },
+        { id: 'r46', name: '성수 로브', inputs: [{ name: '성수', qty: 4 }, { name: '마나 결정', qty: 1 }], gold: 220 },
+        { id: 'r47', name: '화염 사원의 검', inputs: [{ name: '불꽃 비늘', qty: 4 }, { name: '화염의 결정', qty: 3 }], gold: 800 },
+        { id: 'r48', name: '화염 사원 로브', inputs: [{ name: '불꽃 비늘', qty: 3 }, { name: '화염의 결정', qty: 2 }], gold: 650 },
+        { id: 'r49', name: '빙원의 장창', inputs: [{ name: '서리 늑대 가죽', qty: 4 }, { name: '냉기의 결정', qty: 3 }], gold: 750 },
+        { id: 'r50', name: '설원 갑주', inputs: [{ name: '거인의 뼈', qty: 3 }, { name: '눈 결정', qty: 3 }], gold: 850 },
+        { id: 'r51', name: '고대 마탑 스태프', inputs: [{ name: '고대 마력석', qty: 3 }, { name: '빛의 결정', qty: 3 }], gold: 1000 },
+        { id: 'r52', name: '고대 마탑 예복', inputs: [{ name: '고대 마력석', qty: 2 }, { name: '마나 결정', qty: 3 }], gold: 800 },
+        { id: 'r53', name: '어둠 감옥 단검', inputs: [{ name: '어둠 사슬', qty: 3 }, { name: '어둠의 정수', qty: 3 }], gold: 900 },
+        { id: 'r54', name: '타락 기사의 검', inputs: [{ name: '타락 금속', qty: 3 }, { name: '어둠 사슬', qty: 2 }], gold: 2800 },
+        { id: 'r55', name: '어둠 감옥 갑주', inputs: [{ name: '타락 금속', qty: 4 }, { name: '오리할콘', qty: 2 }], gold: 3200 },
+        { id: 'r56', name: '차원 균열 지팡이', inputs: [{ name: '차원 수정', qty: 2 }, { name: '에테르 파편', qty: 2 }], gold: 4000 },
+        { id: 'r57', name: '에테르 거인의 대검', inputs: [{ name: '에테르 심장', qty: 1 }, { name: '오리할콘', qty: 3 }], gold: 8000 },
+        { id: 'r58', name: '차원 마왕의 낫', inputs: [{ name: '차원 마왕 심장', qty: 1 }, { name: '어둠의 정수', qty: 5 }], gold: 10000 },
+        { id: 'r59', name: '차원 갑주', inputs: [{ name: '차원 수정', qty: 3 }, { name: '타락 금속', qty: 3 }], gold: 7000 },
+        { id: 'r60', name: '에테르 군주 로브', inputs: [{ name: '에테르 심장', qty: 1 }, { name: '빛의 결정', qty: 5 }], gold: 7500 },
     ]
 };

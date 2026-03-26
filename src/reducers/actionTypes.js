@@ -53,6 +53,33 @@ export const AT = Object.freeze({
 
     // v5.0
     SET_RUN_SUMMARY: 'SET_RUN_SUMMARY',
+
+    // v4.1 — Codex & Synthesis
+    UPDATE_CODEX: 'UPDATE_CODEX',
+    SYNTHESIZE_ITEMS: 'SYNTHESIZE_ITEMS',
+    SET_PREMIUM_CURRENCY: 'SET_PREMIUM_CURRENCY',
+
+    // v4.2 — Season Pass
+    ADD_SEASON_XP: 'ADD_SEASON_XP',
+    CLAIM_SEASON_REWARD: 'CLAIM_SEASON_REWARD',
+    CLAIM_CODEX_REWARD: 'CLAIM_CODEX_REWARD',
+
+    // v4.3 — Enhancement + Weekly + Challenge + Skill Branch
+    ENHANCE_ITEM: 'ENHANCE_ITEM',
+    CLAIM_WEEKLY_MISSION: 'CLAIM_WEEKLY_MISSION',
+    UPDATE_WEEKLY_PROTOCOL: 'UPDATE_WEEKLY_PROTOCOL',
+    SET_CHALLENGE_MODIFIERS: 'SET_CHALLENGE_MODIFIERS',
+    CHOOSE_SKILL_BRANCH: 'CHOOSE_SKILL_BRANCH',
+
+    // v4.3 — Grave PvP
+    SET_PUBLIC_GRAVES: 'SET_PUBLIC_GRAVES',
+    INVADE_GRAVE: 'INVADE_GRAVE',
+
+    // v5.0 — True Ending
+    TRIGGER_TRUE_ENDING: 'TRIGGER_TRUE_ENDING',
+
+    // v5.0 — 내러티브 이벤트 체인
+    UPDATE_EVENT_CHAIN: 'UPDATE_EVENT_CHAIN',
 });
 
 /**
@@ -60,14 +87,15 @@ export const AT = Object.freeze({
  * 모든 게임 상태는 이 객체를 사용하세요.
  */
 export const GS = Object.freeze({
-    IDLE:       'idle',
-    COMBAT:     'combat',
-    EVENT:      'event',
-    DEAD:       'dead',
-    ASCENSION:  'ascension',
-    MOVING:     'moving',
-    SHOP:       'shop',
-    JOB_CHANGE: 'job_change',
-    QUEST_BOARD: 'quest_board',
-    CRAFTING:   'crafting',
+    IDLE:         'idle',
+    COMBAT:       'combat',
+    EVENT:        'event',
+    DEAD:         'dead',
+    ASCENSION:    'ascension',
+    MOVING:       'moving',
+    SHOP:         'shop',
+    JOB_CHANGE:   'job_change',
+    QUEST_BOARD:  'quest_board',
+    CRAFTING:     'crafting',
+    TRUE_ENDING:  'true_ending',
 });

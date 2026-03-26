@@ -1,7 +1,20 @@
 import React, { useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
+import { DB } from '../data/db';
 import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
+import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
+
+/** 맵 레벨을 기준으로 상점 최대 아이템 티어 계산 */
+const getShopMaxTier = (loc) => {
+    const mapData = DB.MAPS?.[loc] || {};
+    const mapLevel = typeof mapData.level === 'number' ? mapData.level : 1;
+    const isSafe = mapData.type === 'safe';
+    const tierFromLevel = mapLevel < 10 ? 1 : mapLevel < 20 ? 2 : mapLevel < 30 ? 3 : mapLevel < 40 ? 4 : mapLevel < 50 ? 5 : 6;
+    const safeBonus = (isSafe && mapLevel > 1) ? 1 : 0;   // 시작의 마을 제외하고 safe 맵 +1
+    const shopBonus = mapData.shopBonus ? 1 : 0;           // 황금 왕국 등 프리미엄 상점 +1
+    return Math.min(6, tierFromLevel + safeBonus + shopBonus);
+};
 
 const getOverlayPanelClass = (mobile) => (
     mobile
@@ -83,9 +96,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     const loc = player.loc;
     const expansionKey = `${loc}:${shopMode}`;
 
-    let maxTier = 1;
-    if (loc === '사막 오아시스') maxTier = 2;
-    if (loc === '북부 요새') maxTier = 4;
+    const maxTier = getShopMaxTier(loc);
 
     const traitProfile = useMemo(
         () => getTraitProfile(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }),
@@ -129,6 +140,9 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
             .sort((a, b) => (a.price || 0) - (b.price || 0))
     ), [player.inv]);
 
+    const dailyDeals = useMemo(() => getDailyDeals(player.level || 1), [player.level]);
+    const weeklySpecial = useMemo(() => getWeeklySpecial(player.level || 1), [player.level]);
+
     return (
         <div className={`${getOverlayPanelClass(mobile)} panel-noise aether-surface-strong ${mobile ? '' : 'md:w-[min(48rem,78%)] lg:w-[min(58rem,74%)] rounded-[1.8rem]'} z-20 flex flex-col p-3 md:p-5`}>
             <div className={`mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between ${mobile ? 'sticky top-0 z-10 -mx-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] px-3 pb-3 pt-1' : ''}`}>
@@ -148,7 +162,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                             골드 {player.gold} CR
                         </span>
                         <span className="rounded-full border border-white/8 bg-black/22 px-2.5 py-1 text-slate-300/80">
-                            인벤 {player.inv.length}/{BALANCE.INV_MAX_SIZE}
+                            인벤 {player.inv.length}/{player.maxInv || BALANCE.INV_MAX_SIZE}
                         </span>
                     </div>
                 </div>
@@ -184,6 +198,55 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
             </div>
 
             <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 auto-rows-[minmax(6.15rem,auto)] content-start gap-2.5 custom-scrollbar pr-1">
+                {/* Daily Deals + Weekly Special */}
+                {shopMode === 'buy' && (dailyDeals.items.length > 0 || weeklySpecial) && (
+                    <div className="col-span-full space-y-2 pb-2 mb-2 border-b border-white/8">
+                        <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-amber-300/70">Daily Deals — 10% OFF</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {dailyDeals.items.map((item) => {
+                                const canBuy = player.gold >= item.price && (!isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job));
+                                return (
+                                    <div key={item.name} className="flex items-center justify-between gap-2 rounded-[1rem] border border-amber-400/20 bg-amber-400/5 px-3 py-2">
+                                        <div className="min-w-0">
+                                            <div className="text-xs font-rajdhani font-bold text-white truncate">{item.name}</div>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                <span className="text-[10px] font-fira text-amber-300 font-bold">{item.price} CR</span>
+                                                <span className="text-[9px] font-fira text-slate-500 line-through">{item.originalPrice}</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => actions.market('buy', item)}
+                                            disabled={!canBuy}
+                                            className="shrink-0 min-h-[32px] rounded-full border border-amber-400/30 px-2.5 py-1 text-[10px] font-bold text-amber-300 transition-all disabled:opacity-30 hover:bg-amber-400/10"
+                                        >
+                                            {canBuy ? '구매' : '불가'}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {weeklySpecial && (
+                            <div className="flex items-center justify-between gap-3 rounded-[1rem] border border-purple-400/25 bg-purple-400/5 px-3 py-2.5">
+                                <div className="min-w-0">
+                                    <div className="text-[9px] font-fira uppercase tracking-wider text-purple-300/60 mb-0.5">Weekly Special — 15% OFF</div>
+                                    <div className="text-sm font-rajdhani font-bold text-white truncate">{weeklySpecial.name}</div>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className="text-[11px] font-fira text-purple-300 font-bold">{weeklySpecial.price} CR</span>
+                                        <span className="text-[9px] font-fira text-slate-500 line-through">{weeklySpecial.originalPrice}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => actions.market('buy', weeklySpecial)}
+                                    disabled={player.gold < weeklySpecial.price}
+                                    className="shrink-0 min-h-[36px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-300 transition-all disabled:opacity-30 hover:bg-purple-400/10"
+                                >
+                                    {player.gold >= weeklySpecial.price ? '구매' : '골드 부족'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {shopMode === 'buy' ? (
                     buyItems.length > 0 ? (
                         visibleBuyItems.map(({ item, affordable, equipable }) => {

@@ -123,6 +123,7 @@
 - 모바일 market open 최적화 패스 완료: `ShopPanel.jsx`에서 상점 buy-list 정렬용 affordability/equipability/resonance 계산을 memoized view model로 바꾸고, 모바일은 초기 12개만 먼저 렌더한 뒤 `더 보기`로 확장되게 바꿔 첫 오픈 commit 비용을 낮춘 뒤 `lint`, `AETHERIA_RUN_PERF=1 ./scripts/local-playtest.sh` 검증 기준 mobile `marketOpenMs 1357.6 -> 341.2`, `marketOpenMeasureMs 1336.7 -> 318.4` 개선까지 확인
 - start-run prefetch + chunk graph 정리 패스 완료: `App.jsx`에서 lazy `Dashboard`를 intro-ready 시점에 미리 `loadDashboard()` 하도록 바꿔 첫 런 클릭 경로의 cold fetch 비용을 줄이고, 같은 파일에서 `engine.getFullStats()`를 렌더당 1회로 재사용하도록 정리했으며, `vite.config.js`에서는 `archive-panels` manual chunk를 제거해 `Dashboard` lazy chunk 도입 후 다시 생긴 circular chunk warning을 없앤 뒤 `lint`, `build:guard`, desktop/mobile `smoke-gameplay`, desktop/mobile `perf-guard` 검증까지 완료
 - market open perf 측정 안정화 패스 완료: `scripts/perf-guard.mjs`에 `markAndDomClick()`를 추가해 `market` 퍼포먼스 마크와 버튼 클릭이 같은 페이지 턴에서 일어나도록 바꿔 Playwright 모바일 탭 오버헤드를 제거했고, `lint` 및 순차 desktop/mobile `perf-guard` 재검증 기준 `marketOpenMs / marketOpenMeasureMs`를 desktop `20.4 / 3.7`, mobile `44.6 / 3.7`로 안정화 확인
+- playtest 종료 guard + iPhone 실기기 패스 완료: `scripts/smoke-gameplay.mjs` / `scripts/perf-guard.mjs`에 close-timeout guard를 추가해 `local-playtest` wrapper가 smoke/perf 종료 후 `[local-playtest] done`까지 안정적으로 떨어지도록 정리했고, `AETHERIA_RUN_PERF=1 ./scripts/local-playtest.sh`, `npm run cap:sync`, `npm run mobile:doctor`, fresh DerivedData 기반 `npm run ios:archive`, `xcrun devicectl` install/launch/process 확인까지 완료
 
 ---
 

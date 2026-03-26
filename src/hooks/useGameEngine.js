@@ -5,7 +5,8 @@ import { soundManager } from '../systems/SoundManager';
 import { AI_SERVICE } from '../services/aiService';
 import { parseCommand } from '../utils/commandParser';
 import { gameReducer, INITIAL_STATE } from '../reducers/gameReducer';
-import { getTitlePassive } from '../utils/gameUtils';
+import { getTitlePassive, getPassiveSkillBonuses } from '../utils/gameUtils';
+import { getActiveRelicSynergies } from '../data/relics';
 import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from '../utils/equipmentUtils';
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from '../utils/runProfileUtils';
 
@@ -120,6 +121,9 @@ export const useGameEngine = () => {
             if (kills >= 50) codexDef += 1;
             if (kills >= 100) codexAtk += 1;
         });
+        codexAtk += (activePlayer.stats?.codexBonusAtk || 0);
+        codexDef += (activePlayer.stats?.codexBonusDef || 0);
+        codexHp  += (activePlayer.stats?.codexBonusHp  || 0);
 
         // v4.0 — 유물 스탯 배율 계산
         const relics = activePlayer.relics || [];
@@ -128,7 +132,13 @@ export const useGameEngine = () => {
             if (r.effect === 'ancient_power') return acc + r.val.atk;
             if (r.effect === 'omega')         return acc + r.val;
             if (r.effect === 'cursed_power')  return acc + r.val.atk;
-            if (r.effect === 'low_hp_atk' && activePlayer.hp / Math.max(1, activePlayer.maxHp) < r.val.threshold) return acc + r.val.bonus;
+            if (r.effect === 'battle_start_atk') return acc + (r.val || 0);
+            if (r.effect === 'triple_up')    return acc + (r.atkVal || 0);
+            if (r.effect === 'low_hp_atk') {
+                const threshold = typeof r.val === 'object' ? r.val.threshold : 0.3;
+                const bonus = typeof r.val === 'object' ? r.val.bonus : (r.val - 1);
+                if (activePlayer.hp / Math.max(1, activePlayer.maxHp) < threshold) return acc + bonus;
+            }
             return acc;
         }, 0);
         const rd = relics.reduce((acc, r) => {
@@ -136,6 +146,7 @@ export const useGameEngine = () => {
             if (r.effect === 'stone_skin' || r.effect === 'def_mult') return acc + r.val;
             if (r.effect === 'fortress')     return acc + r.val.def;
             if (r.effect === 'omega')        return acc + r.val;
+            if (r.effect === 'triple_up')    return acc + (r.defVal || 0);
             return acc;
         }, 0);
         const rhp = 1 + relics.reduce((acc, r) => {
@@ -151,13 +162,41 @@ export const useGameEngine = () => {
         const relicCritBonus = relics.reduce((acc, r) => {
             if (r.effect === 'ancient_power') return acc + r.val.crit;
             if (r.effect === 'omega')         return acc + r.val;
+            if (r.effect === 'dual_crit' && offhandWeapon) return acc + (r.val || 0);
             return acc;
         }, 0);
 
-        const baseAtk = (activePlayer.atk + mainAttack + offhandAttack + codexAtk + (meta.bonusAtk || 0)) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * dualWieldMult;
-        const baseDef = (activePlayer.def + aVal + shieldDef + codexDef) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
-        const baseMaxHp = (activePlayer.maxHp + codexHp) * hpMultBonus;
-        const baseMaxMp = ((activePlayer.maxMp || 50) + equipmentMpBonus) * rmp;
+        // Sprint 19: 유물 — 처치 스택 ATK 보너스 (kill_stack), triple_up 평탄 MP
+        const killStackBonus = relics.reduce((acc, r) => {
+            if (r.effect === 'kill_stack') {
+                const stacks = Math.floor((activePlayer.stats?.kills || 0) / (r.stackPer || 50));
+                return acc + stacks * (r.stackVal || 25);
+            }
+            return acc;
+        }, 0);
+        const relicMpFlat = relics.reduce((acc, r) => {
+            if (r.effect === 'triple_up') return acc + (r.mpVal || 0);
+            return acc;
+        }, 0);
+
+        // === Passive Skill Bonuses ===
+        const passiveBonus = getPassiveSkillBonuses(activePlayer);
+
+        // === Enhancement Bonus ===
+        const weaponEnhance = activePlayer.equip.weapon?.enhance || 0;
+        const armorEnhance = activePlayer.equip.armor?.enhance || 0;
+        const offhandEnhance = activePlayer.equip.offhand?.enhance || 0;
+        const weaponBaseVal = activePlayer.equip.weapon?.val || 0;
+        const armorBaseVal = activePlayer.equip.armor?.val || 0;
+        const offhandBaseVal = activePlayer.equip.offhand?.val || 0;
+        const enhanceAtkBonus = Math.floor(weaponBaseVal * BALANCE.ENHANCE_STAT_BONUS * weaponEnhance)
+            + Math.floor(offhandBaseVal * BALANCE.ENHANCE_STAT_BONUS * offhandEnhance * 0.5);
+        const enhanceDefBonus = Math.floor(armorBaseVal * BALANCE.ENHANCE_STAT_BONUS * armorEnhance);
+
+        const baseAtk = (activePlayer.atk + mainAttack + offhandAttack + codexAtk + enhanceAtkBonus + killStackBonus + (meta.bonusAtk || 0) + passiveBonus.atk) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * dualWieldMult * (passiveBonus.lowHpAtkMult || 1);
+        const baseDef = (activePlayer.def + aVal + shieldDef + codexDef + enhanceDefBonus + passiveBonus.def) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
+        const baseMaxHp = (activePlayer.maxHp + codexHp + passiveBonus.hp) * hpMultBonus;
+        const baseMaxMp = ((activePlayer.maxMp || 50) + equipmentMpBonus + relicMpFlat + passiveBonus.mp) * rmp;
         const baseCritChance = Math.min(0.75, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus + (titlePassive.crit || 0));
         const preBuildStats = {
             atk: Math.floor(baseAtk * (1 + ra) + (titlePassive.atk || 0)),
@@ -174,10 +213,27 @@ export const useGameEngine = () => {
         const buildProfile = getRunBuildProfile(activePlayer, preBuildStats);
         const traitProfile = getTraitProfile(activePlayer, preBuildStats);
         const traitBonus = getTraitBonus(activePlayer, preBuildStats);
-        const finalAtk = Math.floor(preBuildStats.atk * (traitBonus.atkMult || 1));
-        const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1));
-        const finalMaxHp = preBuildStats.maxHp;
-        const finalMaxMp = preBuildStats.maxMp + (traitBonus.mpFlat || 0);
+
+        // Sprint 19: 유물 시너지 보너스 적용
+        const activeSynergies = getActiveRelicSynergies(relics);
+        let synergyAtkMult = 1;
+        let synergyMpFlat = 0;
+        let synergyStatMult = 1;
+        let synergyLowHpAtk = 0;
+        const synergyHpRatio = (activePlayer.hp || 0) / Math.max(1, activePlayer.maxHp || 150);
+        activeSynergies.forEach((syn) => {
+            if (syn.bonus.atkMult) synergyAtkMult += syn.bonus.atkMult;
+            if (syn.bonus.mpMult) synergyMpFlat += Math.floor((preBuildStats.maxMp) * syn.bonus.mpMult);
+            // 시너지: 영원의 생명 (statBonus) — 전 스탯 20% 증가
+            if (syn.bonus.statBonus) synergyStatMult += syn.bonus.statBonus;
+            // 시너지: 무한 포식 (lowHpAtk) — HP 40% 이하 시 ATK 보너스
+            if (syn.bonus.lowHpAtk && synergyHpRatio < 0.4) synergyLowHpAtk += syn.bonus.lowHpAtk;
+        });
+
+        const finalAtk = Math.floor(preBuildStats.atk * (traitBonus.atkMult || 1) * synergyAtkMult * synergyStatMult * (1 + synergyLowHpAtk));
+        const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1) * synergyStatMult);
+        const finalMaxHp = Math.floor(preBuildStats.maxHp * synergyStatMult);
+        const finalMaxMp = preBuildStats.maxMp + (traitBonus.mpFlat || 0) + synergyMpFlat;
         const finalCritChance = Math.min(0.75, preBuildStats.critChance + (traitBonus.critBonus || 0));
 
         return {
@@ -195,6 +251,7 @@ export const useGameEngine = () => {
             traitProfile,
             traitBonus,
             titlePassive,
+            activeSynergies,
         };
     }, [player]);
 
@@ -203,29 +260,32 @@ export const useGameEngine = () => {
             dispatch({ type: 'SET_AI_THINKING', payload: true });
             const tempId = Date.now();
             dispatch({ type: 'ADD_LOG', payload: { type: 'loading', text: '...', id: tempId } });
-            const fullStats = getFullStats();
-            const buildProfile = getRunBuildProfile(player, fullStats);
+            try {
+                const fullStats = getFullStats();
+                const buildProfile = getRunBuildProfile(player, fullStats);
 
-            const narrative = await AI_SERVICE.generateStory(type, {
-                ...data,
-                history: player.history,
-                location: player.loc,
-                playerSnapshot: {
-                    name: player.name,
-                    job: player.job,
-                    level: player.level,
-                    hp: player.hp,
-                    maxHp: player.maxHp,
-                    mp: player.mp,
-                    maxMp: player.maxMp,
-                    title: player.activeTitle || null,
-                    relicCount: (player.relics || []).length,
-                    buildProfile: buildProfile.tags.map((tag) => tag.name).slice(0, 4)
-                }
-            }, uid);
+                const narrative = await AI_SERVICE.generateStory(type, {
+                    ...data,
+                    history: player.history,
+                    location: player.loc,
+                    playerSnapshot: {
+                        name: player.name,
+                        job: player.job,
+                        level: player.level,
+                        hp: player.hp,
+                        maxHp: player.maxHp,
+                        mp: player.mp,
+                        maxMp: player.maxMp,
+                        title: player.activeTitle || null,
+                        relicCount: (player.relics || []).length,
+                        buildProfile: buildProfile.tags.map((tag) => tag.name).slice(0, 4)
+                    }
+                }, uid);
 
-            dispatch({ type: 'UPDATE_LOG', payload: { id: tempId, log: { id: tempId, type: 'story', text: narrative } } });
-            dispatch({ type: 'SET_AI_THINKING', payload: false });
+                dispatch({ type: 'UPDATE_LOG', payload: { id: tempId, log: { id: tempId, type: 'story', text: narrative } } });
+            } finally {
+                dispatch({ type: 'SET_AI_THINKING', payload: false });
+            }
         },
         [player, uid, getFullStats]
     );
@@ -233,7 +293,7 @@ export const useGameEngine = () => {
     // --- Compose Actions from Extracted Hooks ---
     const actions = useMemo(
         () => {
-            const deps = { player, gameState, uid, grave, currentEvent, isAiThinking, enemy, dispatch, addLog, addStoryLog, getFullStats };
+            const deps = { player, gameState, uid, grave, currentEvent, isAiThinking, enemy, liveConfig, dispatch, addLog, addStoryLog, getFullStats };
             const gameActions = createGameActions(deps);
             const combatActions = createCombatActions(deps);
             const inventoryActions = createInventoryActions(deps);
@@ -260,6 +320,7 @@ export const useGameEngine = () => {
                 liveConfig,
                 leaderboard,
                 getFullStats,
+                dispatch,
             };
         },
         [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard]

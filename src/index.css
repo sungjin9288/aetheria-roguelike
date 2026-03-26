@@ -421,6 +421,51 @@
 }
 
 /* ============================================
+   COMPONENT UTILITY CLASSES
+   ============================================ */
+
+/* 오버레이 백드롭 (유물 선택, 이벤트, 환생, 런 요약 등) */
+.aether-overlay {
+  @apply absolute inset-0;
+  background: linear-gradient(180deg, rgba(5, 8, 12, 0.84) 0%, rgba(7, 10, 15, 0.92) 100%);
+  backdrop-filter: blur(12px);
+}
+
+/* 게임 카드/패널 기본 */
+.aether-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+/* 액션 버튼 기본 */
+.aether-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  backdrop-filter: blur(24px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.aether-btn:disabled {
+  opacity: 0.5;
+}
+
+/* 리스트 아이템 행 */
+.aether-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.5rem 0.625rem;
+  transition: color 0.15s;
+}
+
+/* ============================================
    MOBILE OPTIMIZATION (Phase 3.3)
    ============================================ */
 
@@ -458,4 +503,56 @@
   .hover-glow:hover {
     box-shadow: 0 0 10px rgba(var(--tw-shadow-color), 0.5);
   }
+}
+
+/* ============================================
+   PERFORMANCE: GPU COMPOSITING HINTS
+   ============================================ */
+
+/* backdrop-filter 사용 요소에 GPU 레이어 승격 */
+.aether-surface,
+.aether-surface-strong,
+.aether-overlay {
+  will-change: backdrop-filter;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* 저사양 기기: backdrop-filter 비활성 (성능 우선) */
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .aether-surface,
+  .aether-surface-strong,
+  .aether-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* 모션 감소 선호 사용자 — 모든 CSS 애니메이션 비활성 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 포커스 링 — 키보드 탐색 시 명확한 아웃라인 */
+:focus-visible {
+  outline: 2px solid var(--aether-cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 마우스/터치 시 포커스 링 숨김 */
+:focus:not(:focus-visible) {
+  outline: none;
 }

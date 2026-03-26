@@ -1,10 +1,14 @@
 import { DB } from '../data/db';
-import { BALANCE } from '../data/constants';
-import { toArray, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, isAchievementUnlocked } from '../utils/gameUtils';
+import { BALANCE, CONSTANTS } from '../data/constants';
+import { toArray, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, isAchievementUnlocked, registerCodex, registerLootToCodex } from '../utils/gameUtils';
 import { getEquipmentIdentity, getNextEquipmentState, isTwoHandWeapon } from '../utils/equipmentUtils';
+import { validateSynthesis, performSynthesis } from '../utils/synthesisUtils';
+import { SEASON_XP } from '../data/seasonPass';
 import { getTraitProfile, getTraitQuestResonance } from '../utils/runProfileUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
+import { MSG } from '../data/messages';
+import { resolveInvasion } from '../utils/graveUtils';
 
 /**
  * createInventoryActions — 아이템 사용, 장비, 마켓, 제작, 퀘스트 완료
@@ -94,6 +98,10 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 return;
             }
 
+            if (player.challengeModifiers?.includes('noPotion') && ['hp', 'mp', 'cure'].includes(inventoryItem.type)) {
+                return addLog('warn', '금욕 챌린지: 소모 아이템을 사용할 수 없습니다.');
+            }
+
             if (inventoryItem.type === 'hp') {
                 const stats = getFullStats();
                 dispatch({
@@ -157,7 +165,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             if (gameState !== 'shop') return;
             if (type === 'buy') {
                 if (player.gold < item.price) return addLog('error', '골드가 부족합니다.');
-                if ((player.inv?.length || 0) >= BALANCE.INV_MAX_SIZE) return addLog('error', '인벤토리가 가득 찼습니다.');
+                if ((player.inv?.length || 0) >= (player.maxInv || BALANCE.INV_MAX_SIZE)) return addLog('error', '인벤토리가 가득 찼습니다.');
                 if (
                     ['weapon', 'armor', 'shield'].includes(item.type)
                     && Array.isArray(item.jobs)
@@ -166,7 +174,8 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     return addLog('error', `${player.job}은(는) ${item.name}을(를) 장착할 수 없습니다.`);
                 }
 
-                const updatedPlayer = { ...player, gold: player.gold - item.price, inv: [...player.inv, makeItem(item)] };
+                let updatedPlayer = { ...player, gold: player.gold - item.price, inv: [...player.inv, makeItem(item)] };
+                updatedPlayer = registerLootToCodex(updatedPlayer, [item]);
                 dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
                 dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: item.price } });
                 emitDailyProtocolLogs('goldSpend', item.price);
@@ -212,7 +221,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 ? makeItem(craftedTemplate)
                 : makeItem({ name: recipe.name, type: 'mat', price: 0, desc: 'Crafted item', desc_stat: 'CRAFTED' });
 
-            const updatedPlayer = {
+            let updatedPlayer = {
                 ...player,
                 gold: player.gold - recipe.gold,
                 inv: [...newInv, craftedItem],
@@ -221,8 +230,12 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     crafts: (player.stats?.crafts || 0) + 1,
                 }
             };
+            // 도감 등록: 레시피 + 결과 아이템
+            updatedPlayer = registerCodex(updatedPlayer, 'recipes', recipe.id);
+            updatedPlayer = registerLootToCodex(updatedPlayer, [craftedItem]);
             dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
             dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: recipe.gold } });
+            dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.craft });
             emitDailyProtocolLogs('goldSpend', recipe.gold);
             emitUnlockedTitles(updatedPlayer);
             addLog('success', `${recipe.name} 제작 완료`);
@@ -284,6 +297,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
 
             updatedPlayer = syncLevelQuests(updatedPlayer);
             dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+            dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.questComplete });
             emitUnlockedTitles(updatedPlayer);
             addLog('success', `퀘스트 완료: ${qData.title}`);
         },
@@ -318,7 +332,150 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             addLog('success', `업적 달성: ${achData.title}`);
         },
 
+        synthesize: (itemIds, useProtect = false) => {
+            const items = itemIds.map((id) => player.inv.find((entry) => entry.id === id)).filter(Boolean);
+            const validation = validateSynthesis(items, player.gold);
+            if (!validation.valid) {
+                if (validation.reason === 'NO_GOLD') return addLog('error', MSG.SYNTHESIS_NOT_ENOUGH_GOLD);
+                return addLog('error', MSG.SYNTHESIS_NOT_ENOUGH);
+            }
+            if (useProtect && player.premiumCurrency < BALANCE.SYNTHESIS_PROTECT_COST) {
+                return addLog('error', `${BALANCE.PREMIUM_CURRENCY_NAME}이(가) 부족합니다.`);
+            }
+
+            const result = performSynthesis(items, null, useProtect);
+            const usedIds = new Set(itemIds);
+            let newInv = player.inv.filter((entry) => !usedIds.has(entry.id));
+
+            // 실패 시 반환 아이템 복원
+            for (const returned of result.returnedItems) {
+                newInv.push(returned);
+            }
+
+            let updatedPlayer = {
+                ...player,
+                gold: player.gold - result.goldSpent,
+                premiumCurrency: player.premiumCurrency - result.premiumSpent,
+                inv: newInv,
+                stats: {
+                    ...(player.stats || {}),
+                    syntheses: (player.stats?.syntheses || 0) + 1,
+                },
+            };
+
+            if (result.success && result.outputItem) {
+                const crafted = makeItem(result.outputItem);
+                updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, crafted] };
+                updatedPlayer = registerLootToCodex(updatedPlayer, [crafted]);
+                addLog('success', MSG.SYNTHESIS_SUCCESS(result.outputItem.name));
+            } else {
+                if (useProtect) {
+                    addLog('info', MSG.SYNTHESIS_PROTECTED);
+                } else {
+                    addLog('error', MSG.SYNTHESIS_FAIL);
+                }
+            }
+
+            dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
+            if (result.success) dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.synthesize });
+            emitUnlockedTitles(updatedPlayer);
+        },
+
         // 시나리오 2: 저가 재료 일괄 판매 (#autoSell)
+        // ── 프리미엄 상점 구매 액션 ──────────────────────────────────────
+        expandInventory: () => {
+            const cost = BALANCE.INV_EXPAND_COST;
+            if ((player.premiumCurrency || 0) < cost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
+            const newMax = (player.maxInv || 20) + BALANCE.INV_EXPAND_AMOUNT;
+            dispatch({ type: AT.SET_PLAYER, payload: p => ({ ...p, premiumCurrency: p.premiumCurrency - cost, maxInv: newMax }) });
+            addLog('system', MSG.PREMIUM_INV_EXPAND(newMax));
+        },
+
+        purchaseSynthProtect: () => {
+            const cost = BALANCE.SYNTHESIS_PROTECT_COST;
+            if ((player.premiumCurrency || 0) < cost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
+            dispatch({ type: AT.SET_PLAYER, payload: p => ({
+                ...p,
+                premiumCurrency: p.premiumCurrency - cost,
+                stats: { ...(p.stats || {}), synthProtects: (p.stats?.synthProtects || 0) + 1 },
+            }) });
+            addLog('system', MSG.PREMIUM_PURCHASE('합성 보호권', cost));
+        },
+
+        purchaseRevive: () => {
+            const cost = BALANCE.REVIVE_COST;
+            if ((player.premiumCurrency || 0) < cost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
+            dispatch({ type: AT.SET_PLAYER, payload: p => ({ ...p, premiumCurrency: p.premiumCurrency - cost, reviveTokens: (p.reviveTokens || 0) + 1 }) });
+            addLog('system', MSG.PREMIUM_PURCHASE('즉시 부활권', cost));
+        },
+
+        purchaseCosmeticTitle: (titleId, titleName, titleCost) => {
+            if ((player.premiumCurrency || 0) < titleCost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
+            const owned = player.stats?.cosmeticTitles || [];
+            if (owned.includes(titleId)) return addLog('info', '이미 보유 중인 칭호입니다.');
+            dispatch({ type: AT.SET_PLAYER, payload: p => ({
+                ...p,
+                premiumCurrency: p.premiumCurrency - titleCost,
+                stats: { ...(p.stats || {}), cosmeticTitles: [...owned, titleId] },
+            }) });
+            addLog('system', MSG.PREMIUM_PURCHASE(`칭호 [${titleName}]`, titleCost));
+        },
+
+        // ── 주간 미션 수령 ────────────────────────────────────────────────
+        claimWeeklyMission: (missionId, reward) => {
+            dispatch({ type: AT.CLAIM_WEEKLY_MISSION, payload: { missionId, reward } });
+            addLog('success', MSG.WEEKLY_MISSION_CLAIM(reward.gold || 0, reward.premiumCurrency));
+        },
+
+        // ── 아이템 강화 ──────────────────────────────────────────────────
+        enhanceItem: (itemId) => {
+            const item = player.inv.find(i => i.id === itemId)
+                || player.equip.weapon?.id === itemId && player.equip.weapon
+                || player.equip.armor?.id === itemId && player.equip.armor
+                || player.equip.offhand?.id === itemId && player.equip.offhand;
+            if (!item) return addLog('error', '아이템을 찾을 수 없습니다.');
+            if (!['weapon', 'armor', 'shield'].includes(item.type)) return addLog('warn', MSG.ENHANCE_NOT_EQUIP);
+            const currentLevel = item.enhance || 0;
+            if (currentLevel >= BALANCE.ENHANCE_MAX) return addLog('warn', MSG.ENHANCE_MAX_LEVEL);
+            const cost = BALANCE.ENHANCE_COSTS[currentLevel];
+            if (player.gold < cost) return addLog('warn', MSG.ENHANCE_NO_GOLD(cost));
+            const rate = BALANCE.ENHANCE_RATES[currentLevel];
+            const success = Math.random() < rate;
+            const newGold = player.gold - cost;
+            dispatch({ type: AT.SET_PLAYER, payload: p => ({ ...p, gold: newGold }) });
+            dispatch({ type: AT.ENHANCE_ITEM, payload: { itemId, success } });
+            if (success) {
+                addLog('success', MSG.ENHANCE_SUCCESS(item.name, currentLevel + 1));
+            } else {
+                addLog('warn', MSG.ENHANCE_FAIL(item.name, currentLevel + 1));
+            }
+        },
+
+        chooseSkillBranch: (skillName, choice) => {
+            dispatch({ type: AT.CHOOSE_SKILL_BRANCH, payload: { skillName, choice } });
+            addLog('system', `[${skillName}] 분기 ${choice} 선택 완료.`);
+        },
+
+        invadeGrave: (targetGrave) => {
+            const today = new Date().toDateString();
+            const lastDate = player.stats?.lastInvadeDate;
+            const count = lastDate === today ? (player.stats?.dailyInvadeCount || 0) : 0;
+            if (count >= CONSTANTS.DAILY_INVADE_LIMIT) {
+                return addLog('warn', MSG.INVADE_LIMIT);
+            }
+            if (!targetGrave.items || targetGrave.items.length === 0) {
+                return addLog('warn', MSG.INVADE_NO_ITEMS);
+            }
+            const playerAtk = getFullStats?.()?.atk || player.atk || 10;
+            const { success, reward } = resolveInvasion(targetGrave, playerAtk);
+            dispatch({ type: AT.INVADE_GRAVE, payload: { reward: reward || null, uid: targetGrave.uid } });
+            if (success && reward) {
+                addLog('success', MSG.INVADE_SUCCESS(targetGrave.playerName || '무명 용사', reward.name));
+            } else {
+                addLog('warn', MSG.INVADE_FAIL(targetGrave.playerName || '무명 용사'));
+            }
+        },
+
         // 단가 30G 이하 재료(mat) 타입 아이템을 모두 50% 가격에 일괄 판매
         autoSell: () => {
             const SELL_PRICE_THRESHOLD = 30;

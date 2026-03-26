@@ -10,6 +10,33 @@ import { AT } from '../reducers/actionTypes';
 import { getDiscoveryOdds } from './explorationPacing';
 
 // ─────────────────────────────────────────────────────────────────────────
+// 0. ISO 주차 번호 계산 (월요일 기준)
+// ─────────────────────────────────────────────────────────────────────────
+const getISOWeekNumber = (date = new Date()) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 0.5. 주간 프로토콜 리셋
+// ─────────────────────────────────────────────────────────────────────────
+export const resetWeeklyProtocolIfNeeded = (player, dispatch) => {
+    const currentWeek = getISOWeekNumber();
+    const wp = player.weeklyProtocol;
+    if (!wp || wp.lastResetWeek !== currentWeek) {
+        dispatch({
+            type: AT.SET_PLAYER,
+            payload: p => ({
+                ...p,
+                weeklyProtocol: { kills: 0, explores: 0, bossKills: 0, lastResetWeek: currentWeek, claimed: [] },
+            }),
+        });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
 // 1. 일일 프로토콜 리셋 & 카운트 업 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
 export const resetDailyProtocolIfNeeded = (player, dispatch) => {
@@ -85,6 +112,21 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
 
+    // Sprint 18: 숨겨진 보스 해금 조건 체크
+    const hiddenBossChecks = [
+        // 시간의 파수꾼: 시간술사 직업 + Lv 40+ (공중 신전)
+        { boss: '시간의 파수꾼', loc: '공중 신전', check: () => player.job === '시간술사' && (player.level || 1) >= 40 },
+        // 원한의 용사: "최후의 영웅" 체인 3단계 완료 (지하 미궁)
+        { boss: '원한의 용사', loc: '지하 미궁', check: () => (player.eventChainProgress?.last_hero || 0) >= 3 },
+        // 공허의 군주: 무한 심연 100층 클리어 (금지된 도서관)
+        { boss: '공허의 군주', loc: '금지된 도서관', check: () => (player.stats?.abyssFloor || 0) >= 100 },
+    ];
+    hiddenBossChecks.forEach(({ boss, loc, check }) => {
+        if (mapData.name === loc && check() && !encounterPool.includes(boss)) {
+            encounterPool.push(boss);
+        }
+    });
+
     const bossHunterRelic = playerRelics.find((r) => r.effect === 'boss_hunter');
     if (bossHunterRelic && mapBossMonsters.length > 0) {
         for (let i = 1; i < Math.max(1, Math.floor(bossHunterRelic.val.spawn || 1)); i += 1) {
@@ -92,7 +134,14 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
         }
     }
 
-    const baseName = encounterPool[Math.floor(Math.random() * encounterPool.length)];
+    // 구역 보스 (15% 확률 스폰) — mapData.boss가 문자열이고 이번 런 미처치 시 보장
+    const areaBossName = typeof mapData.boss === 'string' ? mapData.boss : null;
+    const spawnAreaBoss = areaBossName
+        && !(player.stats?.areaBossDefeated?.[areaBossName])
+        && Math.random() < 0.15;
+    const baseName = spawnAreaBoss
+        ? areaBossName
+        : encounterPool[Math.floor(Math.random() * encounterPool.length)];
     let level = mapData.level || 1;
     let isInfinite = false;
     let depth = 0;
@@ -137,9 +186,15 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
         || BOSS_MONSTERS.includes(baseName)
     );
 
+    // eliteOnly 챌린지: 모든 적에게 엘리트 접두어 강제 부여
+    const forceElite = player.challengeModifiers?.includes('eliteOnly') && !mStats.isBoss;
     // 접두어 부여
-    if (Math.random() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES) {
-        const prefix = CONSTANTS.MONSTER_PREFIXES[Math.floor(Math.random() * CONSTANTS.MONSTER_PREFIXES.length)];
+    if ((forceElite || Math.random() < BALANCE.PREFIX_CHANCE) && CONSTANTS.MONSTER_PREFIXES) {
+        const elitePrefixes = forceElite
+            ? CONSTANTS.MONSTER_PREFIXES.filter((p) => p.isElite)
+            : CONSTANTS.MONSTER_PREFIXES;
+        const pool = elitePrefixes.length > 0 ? elitePrefixes : CONSTANTS.MONSTER_PREFIXES;
+        const prefix = pool[Math.floor(Math.random() * pool.length)];
         mStats.name = `${prefix.name} ${baseName}`;
         mStats.hp = Math.floor(mStats.hp * prefix.mod);
         mStats.maxHp = Math.floor(mStats.maxHp * prefix.mod);
@@ -147,7 +202,20 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
         mStats.exp = Math.floor(mStats.exp * prefix.expMod);
         mStats.gold = Math.floor(mStats.gold * prefix.expMod);
         mStats.dropMod = (mStats.dropMod || 1.0) * (prefix.dropMod || 1.0);
-        mStats.isElite = !!prefix.isElite;
+        mStats.isElite = forceElite || !!prefix.isElite;
+
+        // 엘리트 몬스터 페이즈: HP 50% 이하 시 패턴 강화 (보스 제외)
+        if (mStats.isElite && !mStats.isBoss && !mStats.phase2) {
+            mStats.phase2 = {
+                name: `격노한 ${baseName}`,
+                atkBonus: 0.25,
+                pattern: {
+                    guardChance: Math.max(0, (mStats.pattern?.guardChance || 0.12) - 0.05),
+                    heavyChance: Math.min(0.6, (mStats.pattern?.heavyChance || 0.15) + 0.15),
+                },
+                log: `${baseName}이(가) 광폭화합니다! 공격이 거세집니다!`,
+            };
+        }
 
         if (mStats.isElite) addLog('critical', `⚠️ 엘리트 몬스터 [${prefix.name}] 개체가 등장했습니다!`);
         else if (prefix.name !== '일반적인') addLog('warning', `[${prefix.name}] 개체가 나타났습니다.`);
@@ -184,6 +252,25 @@ export const applyBattleStartRelics = (player, playerRelics, fullStats, { addLog
         addLog('warning', `[저주받은 반지] 전투 시작 대가 -${selfDamage} HP`);
     }
 
+    // 유물: 혼돈의 심장 (chaos_relic) — 전투 시작 시 랜덤 효과 발동
+    const chaosRelic = playerRelics.find((r) => r.effect === 'chaos_relic');
+    if (chaosRelic) {
+        const roll = Math.floor(Math.random() * 3);
+        if (roll === 0) {
+            const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * 0.1));
+            combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
+            addLog('heal', `[혼돈의 심장] 혼돈의 기운 — HP +${heal} 회복!`);
+        } else if (roll === 1) {
+            const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
+            combatStartPlayer.tempBuff = { ...existing, atk: existing.atk + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
+            addLog('event', `[혼돈의 심장] 혼돈의 기운 — ATK +25% (3턴)!`);
+        } else {
+            const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
+            combatStartPlayer.tempBuff = { ...existing, def: existing.def + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
+            addLog('event', `[혼돈의 심장] 혼돈의 기운 — DEF +25% (3턴)!`);
+        }
+    }
+
     const chaosBuffRelic = playerRelics.find((r) => r.effect === 'chaos_buff');
     if (chaosBuffRelic) {
         const existingBuff = { atk: 0, def: 0, turn: 0, name: null, ...(combatStartPlayer.tempBuff || {}) };
@@ -200,6 +287,54 @@ export const applyBattleStartRelics = (player, playerRelics, fullStats, { addLog
     }
 
     return combatStartPlayer;
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 4.5. 발견 체인 체크 — 지역 조합 방문 시 보상 (Discovery Chains)
+// ─────────────────────────────────────────────────────────────────────────
+export const checkDiscoveryChains = (player, loc, { dispatch, addLog }) => {
+    const chains = BALANCE.DISCOVERY_CHAINS;
+    if (!chains) return;
+    const visited = new Set([...(player.stats?.visitedMaps || []), loc]);
+    const completed = player.stats?.discoveryChains || [];
+
+    chains.forEach(chain => {
+        if (completed.includes(chain.id)) return;
+        if (!chain.locations.every(l => visited.has(l))) return;
+
+        // 체인 달성!
+        const rewardParts = [];
+        if (chain.reward.gold) rewardParts.push(`${chain.reward.gold}G`);
+        if (chain.reward.exp) rewardParts.push(`${chain.reward.exp} EXP`);
+        if (chain.reward.item) rewardParts.push(chain.reward.item);
+        if (chain.reward.premiumCurrency) rewardParts.push(`${chain.reward.premiumCurrency} 크리스탈`);
+
+        addLog('event', `🔍 ${chain.desc}`);
+        addLog('success', `🏆 [발견 체인 완료] ${chain.label}! 보상: ${rewardParts.join(', ')}`);
+
+        dispatch({
+            type: AT.SET_PLAYER,
+            payload: p => {
+                const updated = { ...p };
+                updated.gold = (updated.gold || 0) + (chain.reward.gold || 0);
+                updated.exp = (updated.exp || 0) + (chain.reward.exp || 0);
+                if (chain.reward.premiumCurrency) {
+                    updated.premiumCurrency = (updated.premiumCurrency || 0) + chain.reward.premiumCurrency;
+                }
+                if (chain.reward.item) {
+                    const itemData = DB.ITEMS?.allItems?.find(i => i.name === chain.reward.item);
+                    if (itemData && (updated.inv || []).length < (BALANCE.INV_MAX_SIZE || 20)) {
+                        updated.inv = [...(updated.inv || []), { ...itemData, id: `disc_${Date.now()}` }];
+                    }
+                }
+                updated.stats = {
+                    ...updated.stats,
+                    discoveryChains: [...(updated.stats?.discoveryChains || []), chain.id],
+                };
+                return updated;
+            },
+        });
+    });
 };
 
 // ─────────────────────────────────────────────────────────────────────────

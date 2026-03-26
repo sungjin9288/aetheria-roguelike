@@ -36,6 +36,7 @@ const desktopViewport = {
 };
 const artifactDir = path.resolve(process.cwd(), 'playtest-artifacts', artifactLabel);
 const logSmoke = (message) => console.log(`[smoke:${viewportLabel}] ${message}`);
+const CLOSE_TIMEOUT_MS = 2500;
 
 async function launchBrowser() {
   const executablePath = process.env.PLAYWRIGHT_CHROME_PATH || DEFAULT_CHROME_PATH;
@@ -49,6 +50,19 @@ async function launchBrowser() {
       throw error;
     }
     return chromium.launch({ headless: true });
+  }
+}
+
+async function settleClose(task, label) {
+  try {
+    await Promise.race([
+      task,
+      delay(CLOSE_TIMEOUT_MS).then(() => {
+        throw new Error(`${label} timeout`);
+      }),
+    ]);
+  } catch (error) {
+    console.warn(`[smoke:${viewportLabel}] ${label} skipped: ${error.message}`);
   }
 }
 
@@ -293,6 +307,7 @@ async function driveExploreLoop(page) {
     await settleAfterCommand(page, 18000);
 
     let state = await readState(page);
+    // Debug logging removed after smoke fix
     if (isRunOver(state)) {
       state = await restartFromRunOver(page, `04-run-over-${attempt + 1}`);
       continue;
@@ -465,9 +480,9 @@ async function main() {
     console.log(`[smoke:${viewportLabel}] ok`);
   } finally {
     if (context) {
-      await context.close().catch(() => {});
+      await settleClose(context.close(), 'context.close');
     }
-    await browser.close();
+    await settleClose(browser.close(), 'browser.close');
   }
 }
 

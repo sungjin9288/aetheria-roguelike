@@ -14,4 +14,5 @@ export const GS = Object.freeze({
     DEAD: 'dead',
     ASCENSION: 'ascension',
     FORMATION: 'formation',
+    TRUE_ENDING: 'true_ending',
 });

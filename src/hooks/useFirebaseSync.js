@@ -16,6 +16,7 @@ import { signInAnonymously } from 'firebase/auth';
 import { auth, db, hasFirebaseConfig } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { migrateData } from '../utils/gameUtils';
+import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
 import { isSmokeRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
@@ -235,6 +236,7 @@ export const useFirebaseSync = (state, dispatch) => {
                         level:        player.level || 1,
                         bossKills:    player.stats?.bossKills || 0,
                         job:          player.job || '모험가',
+                        uid,
                         updatedAt:    serverTimestamp(),
                     }, { merge: true });
                 }
@@ -254,4 +256,25 @@ export const useFirebaseSync = (state, dispatch) => {
     useEffect(() => {
         hasBootLogRef.current = state.logs.length > 0;
     }, [state.logs]);
+
+    // --- Public Grave Upload on Death ---
+    useEffect(() => {
+        if (smokeMode || !uid || !hasFirebaseConfig) return;
+        if (gameState !== 'dead') return;
+        const graveEntries = normalizeGraves(grave);
+        const allItems = graveEntries.flatMap((g) => getGraveItems(g)).slice(0, 3);
+        const totalGold = graveEntries.reduce((sum, g) => sum + (g?.gold || 0), 0);
+        const graveDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', uid);
+        setDoc(graveDocRef, {
+            playerName: player.name || '무명 용사',
+            level: player.level || 1,
+            loc: player.loc || '알 수 없는 곳',
+            items: allItems,
+            gold: totalGold,
+            guardPower: player.atk || 10,
+            createdAt: serverTimestamp(),
+            uid,
+        }).catch((e) => console.warn('Public grave upload failed', e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gameState, uid]);
 };
