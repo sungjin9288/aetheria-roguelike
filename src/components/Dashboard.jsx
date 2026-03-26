@@ -60,7 +60,7 @@ const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = fals
             {iconOnly ? (
                 <span className="sr-only">{label}</span>
             ) : (
-                <span className={`${rail ? 'text-[8px] tracking-[0.1em]' : dense ? 'text-[7px] tracking-[0.12em]' : 'text-[8px] tracking-[0.14em]'} font-fira uppercase`}>
+                <span className={`${rail ? 'text-[8px] tracking-[0.1em]' : dense ? 'text-[8px] tracking-[0.12em]' : 'text-[8px] tracking-[0.14em]'} font-fira uppercase`}>
                     {label}
                 </span>
             )}

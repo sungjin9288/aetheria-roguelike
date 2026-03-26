@@ -5,7 +5,11 @@ import { DB } from '../data/db';
 import { CLASSES } from '../data/classes';
 import { getJobSkills } from '../utils/gameUtils';
 import { BALANCE } from '../data/constants';
+import { MSG } from '../data/messages';
 import SignalBadge from './SignalBadge';
+import SkillTypeIcon from './icons/SkillTypeIcon';
+import ClassIcon from './icons/ClassIcon';
+import ClassTree from './ClassTree';
 
 const EFFECT_LABELS = {
     burn: '화상',
@@ -51,7 +55,7 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, sum
                         <div className="text-[1rem] font-rajdhani font-bold text-slate-100">
                             {skill.name}
                         </div>
-                        {skill.type && <SignalBadge tone={tone} size="sm">{skill.type}</SignalBadge>}
+                        {skill.type && <SignalBadge tone={tone} size="sm"><SkillTypeIcon type={skill.type} size={10} className="mr-0.5 -mt-px" />{skill.type}</SignalBadge>}
                         {selected && <SignalBadge tone="recommended" size="sm">선택중</SignalBadge>}
                         {skill.fromWeapon && <SignalBadge tone="spotlight" size="sm">무기</SignalBadge>}
                         {skill.fromTrait && <SignalBadge tone="resonance" size="sm">성향</SignalBadge>}
@@ -92,6 +96,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }) => {
     const [showAllSkills, setShowAllSkills] = useState(false);
     const [expandedJob, setExpandedJob] = useState(null);
     const [swapTarget, setSwapTarget] = useState(null); // skillName being swapped
+    const [showClassTree, setShowClassTree] = useState(false);
     const currentClass = DB.CLASSES[player.job];
     const allCurrentSkills = getJobSkills(player);
     const selectedIndex = player.skillLoadout?.selected ?? 0;
@@ -115,12 +120,15 @@ const SkillTreePreview = ({ player, compact = false, actions = null }) => {
         <div className={compact ? 'space-y-2.5' : 'space-y-3'}>
             <div className={`rounded-[1.2rem] border border-white/8 bg-black/18 ${compact ? 'px-3 py-3' : 'px-4 py-3.5'}`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                            Skill Ledger
-                        </div>
-                        <div className="mt-1 text-[1.05rem] font-rajdhani font-bold text-slate-100">
-                            {player.job} 전투 스킬
+                    <div className="flex items-center gap-2.5">
+                        <ClassIcon className={player.job} size={28} tier={currentClass?.tier || 0} showBorder />
+                        <div>
+                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                                Skill Ledger
+                            </div>
+                            <div className="mt-1 text-[1.05rem] font-rajdhani font-bold text-slate-100">
+                                {player.job} 전투 스킬
+                            </div>
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -308,6 +316,27 @@ const SkillTreePreview = ({ player, compact = false, actions = null }) => {
                         </div>
                     </div>
                 )
+            )}
+
+            {/* 전직 계통도 */}
+            {!compact && (
+                <div className="rounded-[1.15rem] border border-white/8 bg-black/16 px-4 py-3.5">
+                    <button
+                        onClick={() => setShowClassTree(v => !v)}
+                        className="flex w-full items-center justify-between text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                        <span className="flex items-center gap-2">
+                            <Sparkles size={12} />
+                            {MSG.CLASS_TREE_TITLE}
+                        </span>
+                        {showClassTree ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    </button>
+                    {showClassTree && (
+                        <div className="mt-3">
+                            <ClassTree player={player} />
+                        </div>
+                    )}
+                </div>
             )}
 
             {/* 스킬 분기 선택 */}

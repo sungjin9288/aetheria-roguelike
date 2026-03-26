@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { BookOpen, Sword, Shield, Bug, Hammer, Leaf } from 'lucide-react';
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
@@ -10,6 +10,7 @@ import WeaponCodex from './codex/WeaponCodex';
 import MonsterCodex from './codex/MonsterCodex';
 import RecipeCodex from './codex/RecipeCodex';
 import MaterialCodex from './codex/MaterialCodex';
+import CodexDiscoveryOverlay from './codex/CodexDiscoveryOverlay';
 
 const SUB_TABS = [
     { id: 'equip', label: 'EQUIP', icon: Sword },
@@ -20,6 +21,8 @@ const SUB_TABS = [
 
 const Codex = ({ player, dispatch }) => {
     const [subTab, setSubTab] = useState('equip');
+    const [discoveryEntry, setDiscoveryEntry] = useState(null);
+    const dismissDiscovery = useCallback(() => setDiscoveryEntry(null), []);
     const progress = useMemo(() => {
         const codex = player?.stats?.codex || {};
         const claimed = player?.stats?.codexClaimed || [];
@@ -131,6 +134,7 @@ const Codex = ({ player, dispatch }) => {
                     totalCounts={totalCounts}
                     discoveredCounts={discoveredCounts}
                     progress={progress}
+                    player={player}
                 />
             )}
             {subTab === 'monster' && (
@@ -142,6 +146,9 @@ const Codex = ({ player, dispatch }) => {
             {subTab === 'material' && (
                 <MaterialCodex codex={codex} />
             )}
+
+            {/* 도감 발견 오버레이 */}
+            <CodexDiscoveryOverlay entry={discoveryEntry} onDismiss={dismissDiscovery} />
         </div>
     );
 };

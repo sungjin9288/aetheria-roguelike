@@ -6,6 +6,7 @@ import { MSG } from '../../data/messages';
 import { getItemRarity } from '../../utils/gameUtils';
 import SignalBadge from '../SignalBadge';
 import ItemIcon from '../icons/ItemIcon';
+import EquipmentCodexCard from './EquipmentCodexCard';
 
 const RARITY_BORDER = {
     common: 'border-slate-500/30',
@@ -29,7 +30,7 @@ const CATEGORY_TABS = [
     { id: 'shields', label: 'SHIELDS' },
 ];
 
-const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress }) => {
+const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }) => {
     const [category, setCategory] = useState('weapons');
     const [selectedItem, setSelectedItem] = useState(null);
 
@@ -120,33 +121,11 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress }) => {
                 ))}
             </div>
 
-            {/* Detail Panel */}
+            {/* Detail Panel — EquipmentCodexCard */}
             {selectedItem && (() => {
                 const item = items.find(i => i.name === selectedItem);
                 if (!item) return null;
-                const rarity = getItemRarity(item);
-                return (
-                    <div className={`rounded-[0.95rem] border ${RARITY_BORDER[rarity]} ${RARITY_BG[rarity]} p-3 space-y-1.5`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <ItemIcon item={item} size={28} showBorder />
-                                <span className="font-rajdhani font-bold text-sm text-white">{item.name}</span>
-                            </div>
-                            <SignalBadge tone={rarity === 'legendary' ? 'danger' : rarity === 'epic' ? 'caution' : 'neutral'} size="sm">
-                                {MSG.RARITY_LABEL[rarity]}
-                            </SignalBadge>
-                        </div>
-                        <div className="text-[10px] font-fira text-slate-400">{item.desc}</div>
-                        <div className="text-[10px] font-fira text-cyber-blue">{item.desc_stat}</div>
-                        {item.elem && <div className="text-[10px] font-fira text-amber-300">속성: {item.elem}</div>}
-                        {item.jobs && (
-                            <div className="text-[10px] font-fira text-slate-500">
-                                착용: {item.jobs.join(', ')}
-                            </div>
-                        )}
-                        <div className="text-[10px] font-fira text-slate-500">가격: {item.price}G</div>
-                    </div>
-                );
+                return <EquipmentCodexCard item={item} player={player} />;
             })()}
 
             {/* Milestones */}

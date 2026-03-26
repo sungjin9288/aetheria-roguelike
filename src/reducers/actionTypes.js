@@ -80,6 +80,9 @@ export const AT = Object.freeze({
 
     // v5.0 — 내러티브 이벤트 체인
     UPDATE_EVENT_CHAIN: 'UPDATE_EVENT_CHAIN',
+
+    // v5.1 — 도감 발견 알림
+    CODEX_NEW_DISCOVERY: 'CODEX_NEW_DISCOVERY',
 });
 
 /**

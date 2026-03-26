@@ -147,4 +147,29 @@ export const MSG = {
     // --- 스킬 교체 ---
     SKILL_SWAP: (oldName, newName) => `스킬 교체: [${oldName}] → [${newName}]`,
     SKILL_SWAP_COST: (gold) => `스킬 교체 비용: ${gold}G`,
+
+    // --- 직업/클래스 ---
+    CLASS_TIER_0: '기본',
+    CLASS_TIER_1: '1차 전직',
+    CLASS_TIER_2: '2차 전직',
+    CLASS_TIER_3: '최종 전직',
+    CLASS_STAT_HP: 'HP',
+    CLASS_STAT_MP: 'MP',
+    CLASS_STAT_ATK: 'ATK',
+    CLASS_REQ_LEVEL: (lv) => `Lv.${lv} 이상`,
+    CLASS_TREE_TITLE: '전직 계통도',
+    CLASS_CURRENT: '현재 직업',
+    CLASS_AVAILABLE: '전직 가능',
+    CLASS_LOCKED: '잠김',
+
+    // --- 도감 ---
+    CODEX_NEW_ENTRY: (name) => `새로운 도감 항목 발견: ${name}`,
+    CODEX_DISCOVERED: '발견',
+    CODEX_UNDISCOVERED: '미발견',
+    CODEX_PROGRESS: (n, total) => `${n}/${total} 발견`,
+    MONSTER_WEAKNESS: '약점',
+    MONSTER_RESISTANCE: '내성',
+    MONSTER_KILL_COUNT: (n) => `처치 ${n}회`,
+    EQUIP_STAT_COMPARE: '스탯 비교',
+    EQUIP_EQUIPPED: '장착 중',
 };

@@ -3,8 +3,10 @@ import { Lock } from 'lucide-react';
 import { DB } from '../../data/db';
 import { LOOT_TABLE } from '../../data/loot';
 import { BOSS_BRIEFS, MONSTERS } from '../../data/monsters';
+import { MSG } from '../../data/messages';
 import SignalBadge from '../SignalBadge';
 import MonsterIcon from '../icons/MonsterIcon';
+import SkillTypeIcon from '../icons/SkillTypeIcon';
 
 /**
  * MonsterCodex — Bestiary 로직을 그대로 활용하되 Codex 서브탭으로 배치
@@ -86,8 +88,11 @@ const MonsterCodex = ({ player }) => {
                             {m.encountered ? m.name : '???'}
                         </span>
                         {m.isBoss && m.encountered && <SignalBadge tone="danger" size="sm">Boss</SignalBadge>}
+                        {m.encountered && m.weakness && (
+                            <SkillTypeIcon type={m.weakness} size={12} className="ml-auto shrink-0" />
+                        )}
                         {m.encountered && (
-                            <span className="ml-auto text-[10px] text-slate-500 font-fira shrink-0">x{m.kills}</span>
+                            <span className={`${m.weakness ? '' : 'ml-auto'} text-[10px] text-slate-500 font-fira shrink-0`}>x{m.kills}</span>
                         )}
                     </button>
                 ))}
@@ -106,18 +111,43 @@ const MonsterCodex = ({ player }) => {
                             </div>
                             {m.isBoss && <SignalBadge tone="danger" size="sm">Boss</SignalBadge>}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-fira">처치: {m.kills}회</div>
+                        {/* 킬 카운트 프로그레스 바 */}
+                        <div className="space-y-1">
+                            <div className="text-[10px] text-slate-500 font-fira">{MSG.MONSTER_KILL_COUNT(m.kills)}</div>
+                            <div className="flex gap-0.5">
+                                {[
+                                    { target: 10, color: '#cd7f32', label: '10' },
+                                    { target: 50, color: '#c0c0c0', label: '50' },
+                                    { target: 100, color: '#ffd700', label: '100' },
+                                ].map(({ target, color, label }) => {
+                                    const pct = Math.min(100, (m.kills / target) * 100);
+                                    return (
+                                        <div key={target} className="flex-1">
+                                            <div className="h-[5px] rounded-full bg-white/6 overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full transition-all duration-500"
+                                                    style={{ width: `${pct}%`, background: color }}
+                                                />
+                                            </div>
+                                            <div className="text-[8px] font-fira text-slate-600 text-center mt-0.5">{label}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                         <div className="text-[10px] text-slate-500 font-fira">출현: {m.location || '불명'}</div>
                         {(m.weakness || m.resistance) && (
                             <div className="flex flex-wrap gap-1.5 text-[10px] font-fira">
                                 {m.weakness && (
-                                    <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-emerald-100">
-                                        약점 {m.weakness}
+                                    <span className="flex items-center gap-1 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-emerald-100">
+                                        <SkillTypeIcon type={m.weakness} size={11} />
+                                        {MSG.MONSTER_WEAKNESS} {m.weakness}
                                     </span>
                                 )}
                                 {m.resistance && (
-                                    <span className="rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 text-[#f6e7c8]">
-                                        내성 {m.resistance}
+                                    <span className="flex items-center gap-1 rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 text-[#f6e7c8]">
+                                        <SkillTypeIcon type={m.resistance} size={11} />
+                                        {MSG.MONSTER_RESISTANCE} {m.resistance}
                                     </span>
                                 )}
                             </div>
