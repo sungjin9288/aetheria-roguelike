@@ -397,7 +397,7 @@ function App() {
         <div className={`absolute -left-12 top-24 rounded-full blur-3xl ${isMobileViewport ? 'h-48 w-48 bg-[#d5b180]/10 animate-float-slow' : 'h-40 w-40 bg-[#d5b180]/7'}`} />
         <div className={`absolute -right-12 bottom-20 rounded-full blur-3xl ${isMobileViewport ? 'h-56 w-56 bg-[#7dd4d8]/10 animate-float-slow' : 'h-44 w-44 bg-[#7dd4d8]/6'}`} style={isMobileViewport ? { animationDelay: '-2.7s' } : undefined} />
       </div>
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-2 md:gap-3">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-1.5 md:gap-3">
         <StatusBar
           player={engine.player}
           stats={fullStats}
