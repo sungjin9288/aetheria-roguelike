@@ -15,7 +15,7 @@ export const RemoteConfigLoader = {
             const configDoc = await getDoc(doc(db, 'system', 'game_config'));
             if (configDoc.exists()) {
                 this.cache = configDoc.data();
-                console.log('✅ Remote game config loaded (v' + (this.cache.version || '?') + ')');
+                console.info('✅ Remote game config loaded (v' + (this.cache.version || '?') + ')');
                 return this.cache;
             }
         } catch (e) {

@@ -4,11 +4,11 @@ import { DROP_TABLES } from '../data/dropTables.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { CLASSES } from '../data/classes.js';
-import { applyItemPrefix } from '../utils/itemPrefixUtils';
 import { syncQuestProgress } from '../utils/questProgress.js';
 import { buildGraveData } from '../utils/graveUtils.js';
 import { MSG } from '../data/messages.js';
 import { getActiveRelicSynergies } from '../data/relics.js';
+import { processLoot as _processLoot, resolveEnemyBaseName as _resolveEnemyBaseName } from './CombatEngine.loot.js';
 
 /**
  * CombatEngine - Pure functions for combat calculations
@@ -21,17 +21,13 @@ export const CombatEngine = {
     DEFAULT_COMBAT_FLAGS: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
 
     resolveEnemyBaseName(enemy) {
-        if (!enemy) return '';
-        if (enemy.baseName) return enemy.baseName;
-        if (LOOT_TABLE[enemy.name]) return enemy.name;
-        const parts = String(enemy.name || '').split(' ');
-        return parts.length > 1 ? parts.slice(1).join(' ') : (enemy.name || '');
+        return _resolveEnemyBaseName(enemy);
     },
 
     getElementMultiplier(elem, enemy) {
         if (!elem || elem === 'physical' || elem === 'none') return 1;
-        if (enemy?.weakness && enemy.weakness === elem) return 1.25;
-        if (enemy?.resistance && enemy.resistance === elem) return 0.75;
+        if (enemy?.weakness && enemy.weakness === elem) return BALANCE.ELEMENT_WEAK_MULT;
+        if (enemy?.resistance && enemy.resistance === elem) return BALANCE.ELEMENT_RESIST_MULT;
         return 1;
     },
 
@@ -42,8 +38,8 @@ export const CombatEngine = {
             elementMultiplier = 1,
             critChance = BALANCE.CRIT_CHANCE
         } = options;
-        const guardMult = guarding ? 0.65 : 1;
-        const baseDamage = Math.floor(stats.atk * (0.9 + Math.random() * 0.2) * mult * guardMult * elementMultiplier);
+        const guardMult = guarding ? BALANCE.GUARD_DAMAGE_MULT : 1;
+        const baseDamage = Math.floor(stats.atk * (BALANCE.DAMAGE_BASE_RATIO + Math.random() * BALANCE.DAMAGE_VARIANCE) * mult * guardMult * elementMultiplier);
         const isCrit = Math.random() < critChance;
         return {
             damage: Math.max(1, isCrit ? baseDamage * 2 : baseDamage),
@@ -90,15 +86,15 @@ export const CombatEngine = {
                 // 시너지: 불멸의 전사/절대 불사 (reviveHeal) — 부활 시 HP 회복량 증가
                 const reviveHealSyn = activeSynergies.find(s => s.bonus.reviveHeal);
                 nextHp = reviveHealSyn
-                    ? Math.floor((player.maxHp || 150) * reviveHealSyn.bonus.reviveHeal)
+                    ? Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * reviveHealSyn.bonus.reviveHeal)
                     : 1;
                 flags.deathSaveUsed = true;
                 flags.deathSaveUsedCount = reviveUsedCount + 1;
                 // 시너지: 난공불락 (healOnSave) — 부활 시 추가 HP 회복
                 const healOnSaveSyn = activeSynergies.find(s => s.bonus.healOnSave);
                 if (healOnSaveSyn) {
-                    const bonus = Math.floor((player.maxHp || 150) * healOnSaveSyn.bonus.healOnSave);
-                    nextHp = Math.min(player.maxHp || 150, nextHp + bonus);
+                    const bonus = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healOnSaveSyn.bonus.healOnSave);
+                    nextHp = Math.min(player.maxHp || BALANCE.DEFAULT_MAX_HP, nextHp + bonus);
                     logs.push({ type: 'heal', text: `[난공불락] 부활 시 +${bonus} HP 회복!` });
                 }
                 const reviveMsg = reviveUsedCount > 0 ? `[절대 불사] ${reviveUsedCount + 1}회 부활!` : '[불사의 의지] 치명상을 버텼습니다!';
@@ -129,11 +125,11 @@ export const CombatEngine = {
         if (!effect) return enemy;
         switch (effect) {
             case 'blind':
-                return { ...enemy, blindTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, 0.65) };
+                return { ...enemy, blindTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, BALANCE.BLIND_ATK_MULT) };
             case 'fear':
-                return { ...enemy, fearTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, 0.70) };
+                return { ...enemy, fearTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, BALANCE.FEAR_ATK_MULT) };
             case 'curse':
-                return { ...enemy, cursedTurns: 3, atkMult: Math.min(enemy.atkMult ?? 1, 0.75), cursed: true };
+                return { ...enemy, cursedTurns: 3, atkMult: Math.min(enemy.atkMult ?? 1, BALANCE.CURSE_ATK_MULT), cursed: true };
             case 'taunt':
                 return { ...enemy, taunted: true, tauntTurns: 3 };
             case 'stun':
@@ -169,27 +165,43 @@ export const CombatEngine = {
         });
         // 저주 DoT (curse_amp 패시브 반영)
         if (updated.cursed) {
-            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * 0.03 * curseAmpMult));
+            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || BALANCE.DEFAULT_MAX_HP) * BALANCE.CURSE_DOT_RATIO * curseAmpMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
             logs.push({ type: 'event', text: `[저주] ${updated.name}에게 ${dmg} 저주 피해!` });
         }
 
         // 상태 턴 감소 & 만료
         if ((updated.blindTurns ?? 0) > 0) {
-            updated.blindTurns -= 1;
-            if (updated.blindTurns <= 0) { delete updated.blindTurns; delete updated.atkMult; }
+            if (updated.blindTurns - 1 <= 0) {
+                const { blindTurns: _b, atkMult: _a, ...rest } = updated;
+                updated = rest;
+            } else {
+                updated = { ...updated, blindTurns: updated.blindTurns - 1 };
+            }
         }
         if ((updated.fearTurns ?? 0) > 0) {
-            updated.fearTurns -= 1;
-            if (updated.fearTurns <= 0) { delete updated.fearTurns; delete updated.atkMult; }
+            if (updated.fearTurns - 1 <= 0) {
+                const { fearTurns: _f, atkMult: _a, ...rest } = updated;
+                updated = rest;
+            } else {
+                updated = { ...updated, fearTurns: updated.fearTurns - 1 };
+            }
         }
         if ((updated.cursedTurns ?? 0) > 0) {
-            updated.cursedTurns -= 1;
-            if (updated.cursedTurns <= 0) { delete updated.cursedTurns; updated.cursed = false; delete updated.atkMult; }
+            if (updated.cursedTurns - 1 <= 0) {
+                const { cursedTurns: _c, atkMult: _a, ...rest } = updated;
+                updated = { ...rest, cursed: false };
+            } else {
+                updated = { ...updated, cursedTurns: updated.cursedTurns - 1 };
+            }
         }
         if ((updated.tauntTurns ?? 0) > 0) {
-            updated.tauntTurns -= 1;
-            if (updated.tauntTurns <= 0) { delete updated.tauntTurns; updated.taunted = false; }
+            if (updated.tauntTurns - 1 <= 0) {
+                const { tauntTurns: _t, ...rest } = updated;
+                updated = { ...rest, taunted: false };
+            } else {
+                updated = { ...updated, tauntTurns: updated.tauntTurns - 1 };
+            }
         }
 
         return { updatedEnemy: updated, logs };
@@ -229,7 +241,7 @@ export const CombatEngine = {
         // === 상태이상 DoT 처리 (poison / burn) ===
         const DOT_STATUSES = ['poison', 'burn'];
         updated.status.filter(s => DOT_STATUSES.includes(s)).forEach(s => {
-            const dmg = Math.max(1, Math.floor((updated.maxHp || 150) * BALANCE.STATUS_DOT_RATIO));
+            const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * BALANCE.STATUS_DOT_RATIO));
             updated.hp = Math.max(1, (updated.hp ?? 1) - dmg);
             logs.push({ type: 'warning', text: MSG.STATUS_DOT(s, dmg) });
         });
@@ -245,17 +257,17 @@ export const CombatEngine = {
 
         // 유물: 대지의 심장 (regen) — 매 턴 최대 HP의 5% 회복
         const regenRelic = relics.find((relic) => relic.effect === 'regen');
-        if (regenRelic && (updated.hp || 0) < (updated.maxHp || 150)) {
-            const heal = Math.max(1, Math.floor((updated.maxHp || 150) * (regenRelic.val || 0.05)));
-            updated.hp = Math.min(updated.maxHp || 150, (updated.hp || 1) + heal);
+        if (regenRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
+            const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (regenRelic.val || 0.05)));
+            updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[대지의 심장] +${heal} HP 재생` });
         }
 
         // 시너지: 영원의 생명 (healPerTurn) — 매 턴 4% HP 재생
         const healPerTurnSyn = getActiveRelicSynergies(relics).find(s => s.bonus.healPerTurn);
-        if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || 150)) {
-            const heal = Math.max(1, Math.floor((updated.maxHp || 150) * healPerTurnSyn.bonus.healPerTurn));
-            updated.hp = Math.min(updated.maxHp || 150, (updated.hp || 1) + heal);
+        if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
+            const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * healPerTurnSyn.bonus.healPerTurn));
+            updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[영원의 생명] +${heal} HP 재생` });
         }
 
@@ -345,7 +357,7 @@ export const CombatEngine = {
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
         const lowHpDmgRelic = relics.find(r => r.effect === 'low_hp_dmg');
         if (lowHpDmgRelic) {
-            const hpRatio = player.hp / Math.max(1, player.maxHp || 150);
+            const hpRatio = player.hp / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP);
             if (hpRatio < (lowHpDmgRelic.threshold || 0.4)) {
                 finalDamage = Math.floor(finalDamage * (lowHpDmgRelic.val || 1.4));
             }
@@ -474,7 +486,7 @@ export const CombatEngine = {
         const smMult = smRelic ? (1 + smRelic.val) : 1;
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
         const lowHpDmgRelicSkill = relics.find(r => r.effect === 'low_hp_dmg');
-        const lowHpMultSkill = (lowHpDmgRelicSkill && player.hp / Math.max(1, player.maxHp || 150) < (lowHpDmgRelicSkill.threshold || 0.4))
+        const lowHpMultSkill = (lowHpDmgRelicSkill && player.hp / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP) < (lowHpDmgRelicSkill.threshold || 0.4))
             ? (lowHpDmgRelicSkill.val || 1.4) : 1;
         const totalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
         const newEnemyHp = enemy.hp - totalDamage;
@@ -862,12 +874,12 @@ export const CombatEngine = {
             p.level += 1;
             p.nextExp = Math.floor(p.nextExp * BALANCE.EXP_SCALE_RATE);
             if (p.level >= 50) p.nextExp = Math.max(p.nextExp, BALANCE.EXP_LEVEL_CAP_50);
-            p.maxHp += 20;
-            p.maxMp += 10;
-            p.hp = Math.min(p.hp + 20, p.maxHp);
-            p.mp = Math.min(p.mp + 10, p.maxMp);
-            p.atk += 2;
-            p.def += 1;
+            p.maxHp += BALANCE.HP_PER_LEVEL;
+            p.maxMp += BALANCE.MP_PER_LEVEL;
+            p.hp = Math.min(p.hp + BALANCE.HP_PER_LEVEL, p.maxHp);
+            p.mp = Math.min(p.mp + BALANCE.MP_PER_LEVEL, p.maxMp);
+            p.atk += BALANCE.ATK_PER_LEVEL;
+            p.def += BALANCE.DEF_PER_LEVEL;
             levelUps += 1;
             visualEffect = 'levelUp';
             logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level) });
@@ -963,7 +975,7 @@ export const CombatEngine = {
         // 유물: 피의 서약 (on_kill_heal) — 처치 시 HP 회복
         const healRelic = relics.find(r => r.effect === 'on_kill_heal');
         if (healRelic) {
-            const heal = Math.floor((p.maxHp || 150) * healRelic.val);
+            const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * healRelic.val);
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[피의 서약] +${heal} HP` });
         }
@@ -972,13 +984,13 @@ export const CombatEngine = {
         const victorySynergies = getActiveRelicSynergies(relics);
         const killHealSyn = victorySynergies.find(s => s.bonus.killHeal);
         if (killHealSyn) {
-            const heal = Math.floor((p.maxHp || 150) * killHealSyn.bonus.killHeal);
+            const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * killHealSyn.bonus.killHeal);
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[불멸의 전사] +${heal} HP (처치 회복)` });
         }
         const devourSyn = victorySynergies.find(s => s.bonus.devour);
         if (devourSyn) {
-            const heal = Math.floor((p.maxHp || 150) * devourSyn.bonus.devour);
+            const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * devourSyn.bonus.devour);
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[무한 포식] +${heal} HP (포식)` });
         }
@@ -1019,77 +1031,7 @@ export const CombatEngine = {
     },
 
     processLoot(enemy, player = null) {
-        const items = [];
-        const logs = [];
-        const lootKey = this.resolveEnemyBaseName(enemy) || enemy.name;
-        const relics = player?.relics || [];
-        const dropRateMult = 1 + (relics.find((relic) => relic.effect === 'drop_rate')?.val || 0);
-        const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
-
-        // 강화 드롭 테이블 우선 참조
-        const enrichedList = DROP_TABLES[lootKey] || DROP_TABLES[enemy.name];
-        if (enrichedList) {
-            const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
-            enrichedList.forEach((entry) => {
-                const chance = Math.min(1, entry.rate * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
-                if (Math.random() < chance) {
-                    const itemData = allItems.find((i) => i.name === entry.item);
-                    if (!itemData) return;
-                    const qty = entry.qty ? (entry.qty[0] + Math.floor(Math.random() * (entry.qty[1] - entry.qty[0] + 1))) : 1;
-                    for (let q = 0; q < qty; q++) {
-                        const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
-                        const newItem = applyItemPrefix(baseItem);
-                        items.push(newItem);
-                        logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
-                        if (newItem.prefixed) {
-                            logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
-                        }
-                    }
-                }
-            });
-            return { items, logs };
-        }
-
-        // 레거시 LOOT_TABLE 폴백
-        const lootList = LOOT_TABLE[lootKey] || LOOT_TABLE[enemy.name];
-        if (!lootList || lootList.length === 0) return { items: [], logs: [] };
-
-        lootList.forEach((itemName) => {
-            const chance = Math.min(1, BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
-            if (Math.random() < chance) {
-                const itemData = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]
-                    .find((i) => i.name === itemName);
-                if (!itemData) return;
-
-                const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
-                const newItem = applyItemPrefix(baseItem);
-                items.push(newItem);
-                logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
-                if (newItem.prefixed) {
-                    logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
-                }
-            }
-        });
-
-        // 고레벨 몬스터 보너스 장비 드랍 (exp 기반 레벨 추정)
-        const inferredLevel = Math.max(1, Math.floor(((enemy.exp || 10) - 10) / 5));
-        if (inferredLevel >= 30) {
-            const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
-            const bonusChance = enemy.isBoss ? 0.25 : 0.06;
-            if (Math.random() < bonusChance * dropRateMult * bossDropMult) {
-                const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter(i => (i.tier || 1) === bonusTier);
-                if (tierPool.length > 0) {
-                    const picked = tierPool[Math.floor(Math.random() * tierPool.length)];
-                    const baseItem = { ...picked, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
-                    const newItem = applyItemPrefix(baseItem);
-                    items.push(newItem);
-                    logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
-                    if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
-                }
-            }
-        }
-
-        return { items, logs };
+        return _processLoot(enemy, player);
     },
 
     /**
@@ -1136,7 +1078,7 @@ export const CombatEngine = {
         starterState.name = '';
         starterState.gold = CONSTANTS.START_GOLD;
         starterState.atk = (starterState.atk || 10) + (meta.bonusAtk || 0);
-        starterState.maxHp = (starterState.maxHp || 150) + (meta.bonusHp || 0);
+        starterState.maxHp = (starterState.maxHp || BALANCE.DEFAULT_MAX_HP) + (meta.bonusHp || 0);
         starterState.maxMp = (starterState.maxMp || 50) + (meta.bonusMp || 0);
         starterState.hp = starterState.maxHp;
         starterState.mp = starterState.maxMp;

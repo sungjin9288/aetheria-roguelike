@@ -4,6 +4,10 @@ const ENV = import.meta.env || {};
 export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map(s => s.trim()).filter(Boolean);
 
 export const CONSTANTS = {
+    DEFAULT_JOB: '모험가',
+    START_LOCATION: '시작의 마을',
+    ABYSS_MAP_NAME: '혼돈의 심연',
+
     // Note: GEMINI_API_KEY moved to server-side (api/ai-proxy.js)
     // Client no longer needs this key directly
     USE_AI_PROXY: ENV.VITE_USE_AI_PROXY === 'true' || false,
@@ -98,6 +102,42 @@ export const BALANCE = {
     ENHANCE_STAT_BONUS: 0.1,   // 강화 레벨당 스탯 10% 보너스
     ENHANCE_COSTS: [0, 150, 400, 800, 1800, 3500, 7000, 13000, 25000, 50000], // 강화 비용 완화
     ENHANCE_RATES: [1.0, 0.95, 0.90, 0.85, 0.75, 0.65, 0.55, 0.45, 0.35, 0.25],
+
+    // 레벨업 성장치
+    HP_PER_LEVEL: 20,               // 레벨당 기본 HP 증가
+    MP_PER_LEVEL: 10,               // 레벨당 기본 MP 증가
+    ATK_PER_LEVEL: 2,               // 레벨당 기본 ATK 증가
+    DEF_PER_LEVEL: 1,               // 레벨당 기본 DEF 증가
+
+    // 루팅 보너스 드랍
+    LOOT_BONUS_MIN_LEVEL: 30,       // 보너스 장비 드랍 최소 추정 레벨
+    LOOT_BOSS_BONUS_CHANCE: 0.25,   // 보스 보너스 장비 드랍 확률
+    LOOT_NORMAL_BONUS_CHANCE: 0.06, // 일반 보너스 장비 드랍 확률
+    LOOT_BASE_EXP: 10,             // 레벨 추정 기본 EXP
+    LOOT_EXP_LEVEL_DIVISOR: 5,     // 레벨 추정 EXP 나눗수
+
+    // 난이도 매니저
+    DIFFICULTY_BATTLE_WINDOW: 20,   // 최근 N 전투 분석
+
+    // 현상수배 카운트
+    BOUNTY_MIN_COUNT: 5,            // 현상수배 최소 처치 수
+    BOUNTY_COUNT_RANGE: 6,          // 현상수배 처치 수 범위 (min + 0~range-1)
+
+    // 전투 계산 — 속성 배율
+    ELEMENT_WEAK_MULT: 1.25,        // 속성 약점 피해 배율
+    ELEMENT_RESIST_MULT: 0.75,      // 속성 저항 피해 배율
+    // 전투 계산 — 기본 공식
+    GUARD_DAMAGE_MULT: 0.65,        // 가드 중 받는 피해 배율
+    DAMAGE_BASE_RATIO: 0.9,         // 데미지 최솟값 비율 (분산 하한)
+    DAMAGE_VARIANCE: 0.2,           // 데미지 분산 폭
+    // 상태이상 ATK 패널티 배율
+    BLIND_ATK_MULT: 0.65,
+    FEAR_ATK_MULT: 0.70,
+    CURSE_ATK_MULT: 0.75,
+    // 저주 DoT 비율 (maxHp 기준)
+    CURSE_DOT_RATIO: 0.03,
+    // 플레이어 기본 최대 HP (maxHp 미설정 시 fallback)
+    DEFAULT_MAX_HP: 150,
 
     // v4.3 — 주간 미션
     WEEKLY_MISSIONS: [

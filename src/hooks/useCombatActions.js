@@ -5,7 +5,8 @@ import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { SEASON_XP } from '../data/seasonPass';
 import { GS } from '../reducers/gameStates';
-import { getJobSkills, makeItem, findItemByName, checkMilestones, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, buildRunSummary, toArray, registerCodex, registerLootToCodex } from '../utils/gameUtils';
+import { getJobSkills, makeItem, checkMilestones, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, buildRunSummary, toArray, registerCodex, registerLootToCodex, makeEmitTitles } from '../utils/gameUtils';
+import { addItemByName } from '../utils/inventoryUtils';
 import { getEquipmentProfile, getNextEquipmentState } from '../utils/equipmentUtils';
 import { pushBattleRecord, makeBattleRecord } from '../systems/DifficultyManager';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../utils/runProfileUtils';
@@ -53,7 +54,7 @@ const getLootUpgradeHint = (equip = {}, lootItems = []) => {
         const candidate = {
             name: item.name,
             score,
-            summary: summaryParts.join(' / ') || '장비 효율 상승',
+            summary: summaryParts.join(' / ') || MSG.COMBAT_DIGEST_DEFAULT_SUMMARY,
         };
 
         if (!bestHint || candidate.score > bestHint.score) {
@@ -75,35 +76,95 @@ const addCombatDigestLogs = ({
     bossClearBonus = 0,
 }) => {
     const summaryParts = [
-        `${enemyName} 처치`,
+        MSG.COMBAT_DIGEST_KILL(enemyName),
         `EXP +${victoryResult.expGained || 0}`,
         `Gold +${victoryResult.goldGained || 0}`,
     ];
     if (droppedItems.length > 0) {
-        summaryParts.push(`전리품 ${droppedItems.slice(0, 2).join(' · ')}${droppedItems.length > 2 ? ` 외 ${droppedItems.length - 2}` : ''}`);
+        const lootText = `${droppedItems.slice(0, 2).join(' · ')}${droppedItems.length > 2 ? ` +${droppedItems.length - 2}` : ''}`;
+        summaryParts.push(MSG.COMBAT_DIGEST_LOOT(lootText));
     }
-    addLog('system', `전투 정리: ${summaryParts.join(' · ')}`);
+    addLog('system', MSG.COMBAT_DIGEST(summaryParts.join(' · ')));
 
     if (bossRewardHint) {
-        addLog('info', `보스 보상: ${bossClearBonus > 0 ? `초회 토벌 +${bossClearBonus}G` : '보스 전리품'} · ${bossRewardHint}`);
+        addLog('info', MSG.COMBAT_DIGEST_BOSS_REWARD(bossClearBonus, bossRewardHint));
         return;
     }
 
     if (upgradeHint) {
-        addLog('info', `장비 갱신: ${upgradeHint.name} · ${upgradeHint.summary}`);
+        addLog('info', MSG.COMBAT_DIGEST_EQUIP_UPGRADE(upgradeHint.name, upgradeHint.summary));
         return;
     }
 
     if (traitHint) {
-        addLog('info', `성향 공명: ${traitHint.name} · ${traitHint.summary}`);
+        addLog('info', MSG.COMBAT_DIGEST_TRAIT_HINT(traitHint.name, traitHint.summary));
     }
 };
 
 /**
  * createCombatActions — 전투 로직 (공격, 스킬, 도주)
  */
+/**
+ * 마왕 처치 후처리: 파편 드랍 / 진 보스 진입 / 일반 환생
+ * @returns {boolean} true이면 호출자가 즉시 return해야 함
+ */
+const handleDemonKingSlain = (updatedPlayer, dispatch, addLog) => {
+    const prestigeRank = updatedPlayer.meta?.prestigeRank || 0;
+    const shardCount = (updatedPlayer.inv || []).filter((i) => i?.name === '원시의 파편').length;
+
+    if (prestigeRank >= 1 && shardCount < 3 && Math.random() < CONSTANTS.PRIMAL_SHARD_DROP_CHANCE) {
+        const shardItem = makeItem({ name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편.' });
+        dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
+        addLog('event', MSG.PRIMAL_SHARD_DROP(shardCount + 1));
+    }
+
+    const currentShardCount = (updatedPlayer.inv || []).filter((i) => i?.name === '원시의 파편').length;
+    if (prestigeRank >= 3 && currentShardCount >= 3) {
+        addLog('critical', MSG.TRUE_BOSS_UNLOCK);
+        let removed = 0;
+        const newInv = (updatedPlayer.inv || []).filter((i) => {
+            if (i?.name === '원시의 파편' && removed < 3) { removed++; return false; }
+            return true;
+        });
+        const trueBossData = DB.MONSTERS?.['원시의 신'];
+        if (trueBossData) {
+            const baseHp = 8000;
+            const baseAtk = 280;
+            const trueBoss = {
+                name: '원시의 신',
+                baseName: '원시의 신',
+                hp: Math.floor(baseHp * (trueBossData.hpMult || 2.2)),
+                maxHp: Math.floor(baseHp * (trueBossData.hpMult || 2.2)),
+                atk: Math.floor(baseAtk * (trueBossData.atkMult || 1.8)),
+                def: 120, level: 70,
+                isBoss: true,
+                weakness: '빛', resistance: '어둠',
+                expMult: trueBossData.expMult || 5.0,
+                goldMult: trueBossData.goldMult || 5.0,
+                dropMod: trueBossData.dropMod || 5.0,
+                phase2: trueBossData.phase2,
+                phase3: trueBossData.phase3,
+                exp: 5000, gold: 9999,
+                pattern: { guardChance: 0.05, heavyChance: 0.4 },
+            };
+            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: newInv }) });
+            dispatch({ type: AT.SET_ENEMY, payload: trueBoss });
+            dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+            addLog('critical', MSG.TRUE_BOSS_APPEAR);
+        }
+        return true;
+    }
+
+    if (prestigeRank >= 1 && shardCount < 3) {
+        addLog('info', MSG.PRIMAL_SHARD_HINT(Math.min(shardCount + 1, 3)));
+    }
+    dispatch({ type: 'SET_GAME_STATE', payload: GS.ASCENSION });
+    addLog('system', MSG.DEMON_KING_SLAIN_ASCEND);
+    return true;
+};
+
 const applyAbyssFloorAdvance = (p, dispatch, addLog) => {
-    if (p.loc !== '혼돈의 심연') return p;
+    if (p.loc !== CONSTANTS.ABYSS_MAP_NAME) return p;
     const currentDepth = p.stats?.abyssFloor || 1;
     const newDepth = currentDepth + 1;
     let updated = { ...p, stats: { ...(p.stats || {}), abyssFloor: newDepth } };
@@ -139,24 +200,18 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
             addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);
         });
     };
-    const emitUnlockedTitles = (updatedPlayer) => {
-        const newTitles = checkTitles(updatedPlayer);
-        if (newTitles.length > 0) {
-            dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
-        }
-    };
+    const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
     return {
 
     combatUseItem: (item) => {
         if (pendingEnemyTurn) { clearTimeout(pendingEnemyTurn); pendingEnemyTurn = null; }
-        if (gameState !== GS.COMBAT || !enemy) return addLog('error', '전투 상태가 아닙니다.');
+        if (gameState !== GS.COMBAT || !enemy) return addLog('error', MSG.COMBAT_NOT_IN_BATTLE);
 
         const inventoryItem = player.inv.find((entry) => entry.id === item?.id);
-        if (!inventoryItem) return addLog('error', '인벤토리에 없는 아이템입니다.');
+        if (!inventoryItem) return addLog('error', MSG.COMBAT_ITEM_NOT_FOUND);
         if (!['hp', 'mp', 'cure', 'buff'].includes(inventoryItem.type)) {
-            return addLog('error', '전투 중에는 소모품만 사용할 수 있습니다.');
+            return addLog('error', MSG.COMBAT_CONSUMABLE_ONLY);
         }
 
         let updatedPlayer = player;
@@ -298,7 +353,7 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
 
     combat: (type) => {
         if (pendingEnemyTurn) { clearTimeout(pendingEnemyTurn); pendingEnemyTurn = null; }
-        if (gameState !== GS.COMBAT || !enemy) return addLog('error', '전투 상태가 아닙니다.');
+        if (gameState !== GS.COMBAT || !enemy) return addLog('error', MSG.COMBAT_NOT_IN_BATTLE);
         const stats = getFullStats();
         const playerAtActionStart = player;
         const enemyAtActionStart = enemy;
@@ -318,7 +373,7 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
                     }
                 }
                 result = CombatEngine.performSkill(playerAtActionStart, enemyAtActionStart, stats, selected?.skill);
-                if (!result.success) return addLog('error', result.logs[0]?.text || '스킬 사용 실패');
+                if (!result.success) return addLog('error', result.logs[0]?.text || MSG.SKILL_NO_MP);
                 playerAfterAction = result.updatedPlayer;
                 dispatch({ type: 'SET_PLAYER', payload: result.updatedPlayer });
                 // escape_100: 즉시 전투 이탈 (무당 공허의 문 / 시간술사 순간 이동)
@@ -352,15 +407,14 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
                     maxMp: updatedPlayer.maxMp,
                 };
                 const buildProfileForProgress = getRunBuildProfile(updatedPlayer, victoryStats);
+                const buildWinsKey = buildProfileForProgress.primary.id;
+                const prevBuildWins = updatedPlayer.stats?.buildWins || {};
                 updatedPlayer = {
                     ...updatedPlayer,
                     stats: {
                         ...(updatedPlayer.stats || {}),
-                        buildWins: {
-                            ...((updatedPlayer.stats || {}).buildWins || {}),
-                            [buildProfileForProgress.primary.id]: (((updatedPlayer.stats || {}).buildWins || {})[buildProfileForProgress.primary.id] || 0) + 1
-                        }
-                    }
+                        buildWins: { ...prevBuildWins, [buildWinsKey]: (prevBuildWins[buildWinsKey] || 0) + 1 },
+                    },
                 };
 
                 const questResult = CombatEngine.updateQuestProgress(updatedPlayer, enemyAtActionStart.baseName || enemyAtActionStart.name);
@@ -389,8 +443,7 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
                         if (reward.type === 'gold') {
                             updatedPlayer = grantGold(updatedPlayer, reward.val);
                         } else if (reward.type === 'item') {
-                            const itemDef = findItemByName(reward.val);
-                            if (itemDef) updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemDef)] };
+                            updatedPlayer = addItemByName(updatedPlayer, reward.val);
                         } else if (reward.type === 'title') {
                             updatedPlayer = {
                                 ...updatedPlayer,
@@ -431,63 +484,7 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
 
                 // 마왕 처치 → 진 엔딩 조건 체크 or 에테르 환생
                 if (victoryResult.isDemonKingSlain) {
-                    // 원시의 파편 드랍 (프레스티지 1회 이상, 1/3 확률)
-                    const prestigeRank = updatedPlayer.meta?.prestigeRank || 0;
-                    const shardCount = (updatedPlayer.inv || []).filter((i) => i?.name === '원시의 파편').length;
-                    if (prestigeRank >= 1 && shardCount < 3 && Math.random() < CONSTANTS.PRIMAL_SHARD_DROP_CHANCE) {
-                        const shardItem = makeItem({ name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편.' });
-                        dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
-                        addLog('event', MSG.PRIMAL_SHARD_DROP(shardCount + 1));
-                    }
-
-                    // 진 엔딩 조건: 프레스티지 3회 이상 + 파편 3개
-                    const currentShardCount = (updatedPlayer.inv || []).filter((i) => i?.name === '원시의 파편').length;
-                    if (prestigeRank >= 3 && currentShardCount >= 3) {
-                        addLog('critical', MSG.TRUE_BOSS_UNLOCK);
-                        // 원시의 파편 3개 소모 후 진 보스 전투 진입
-                        const newInv = (() => {
-                            let removed = 0;
-                            return (updatedPlayer.inv || []).filter((i) => {
-                                if (i?.name === '원시의 파편' && removed < 3) { removed++; return false; }
-                                return true;
-                            });
-                        })();
-                        const trueBossData = DB.MONSTERS?.['원시의 신'];
-                        if (trueBossData) {
-                            const baseHp = 8000;
-                            const baseAtk = 280;
-                            const trueBoss = {
-                                name: '원시의 신',
-                                baseName: '원시의 신',
-                                hp: Math.floor(baseHp * (trueBossData.hpMult || 2.2)),
-                                maxHp: Math.floor(baseHp * (trueBossData.hpMult || 2.2)),
-                                atk: Math.floor(baseAtk * (trueBossData.atkMult || 1.8)),
-                                def: 120, level: 70,
-                                isBoss: true,
-                                weakness: '빛', resistance: '어둠',
-                                expMult: trueBossData.expMult || 5.0,
-                                goldMult: trueBossData.goldMult || 5.0,
-                                dropMod: trueBossData.dropMod || 5.0,
-                                phase2: trueBossData.phase2,
-                                phase3: trueBossData.phase3,
-                                exp: 5000, gold: 9999,
-                                pattern: { guardChance: 0.05, heavyChance: 0.4 },
-                            };
-                            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: newInv }) });
-                            dispatch({ type: AT.SET_ENEMY, payload: trueBoss });
-                            dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
-                            addLog('critical', MSG.TRUE_BOSS_APPEAR);
-                        }
-                        return;
-                    }
-
-                    // 조건 미충족 → 일반 환생
-                    if (prestigeRank >= 1 && shardCount < 3) {
-                        addLog('info', MSG.PRIMAL_SHARD_HINT(Math.min(shardCount + 1, 3)));
-                    }
-                    dispatch({ type: 'SET_GAME_STATE', payload: GS.ASCENSION });
-                    addLog('system', '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...');
-                    return;
+                    if (handleDemonKingSlain(updatedPlayer, dispatch, addLog)) return;
                 }
 
                 // 원시의 신 처치 → 진 엔딩
@@ -495,7 +492,7 @@ export const createCombatActions = ({ player, gameState, enemy, grave, dispatch,
                     const heartItem = makeItem({ name: '원시의 심장', type: 'key', price: 0, tier: 6, desc: '원시의 신의 심장.' });
                     dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
                     dispatch({ type: AT.TRIGGER_TRUE_ENDING });
-                    addLog('critical', '🌟 원시의 신이 쓰러졌습니다. 세계의 진실이 밝혀집니다...');
+                    addLog('critical', MSG.TRUE_GOD_SLAIN);
                     return;
                 }
 

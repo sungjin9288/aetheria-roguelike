@@ -125,8 +125,7 @@ export const useFirebaseSync = (state, dispatch) => {
                 const lbRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard');
                 const q = query(lbRef, orderBy('totalKills', 'desc'), limit(50));
                 const snap = await getDocs(q);
-                const data = [];
-                snap.forEach((d) => data.push(d.data()));
+                const data = snap.docs.map((d) => d.data());
                 dispatch({ type: 'SET_LEADERBOARD', payload: data });
             } catch (e) {
                 console.warn('Leaderboard fetch failed', e);
@@ -173,7 +172,7 @@ export const useFirebaseSync = (state, dispatch) => {
                 const activeData = migrateData(remoteData);
                 if (activeData) {
                     if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
-                    if (!activeData.player.loc) activeData.player.loc = '시작의 마을';
+                    if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
 
                     dispatch({ type: 'LOAD_DATA', payload: activeData });
                     lastLoadedTimestampRef.current = remoteData.lastActive?.toMillis() || Date.now();
@@ -235,7 +234,7 @@ export const useFirebaseSync = (state, dispatch) => {
                         activeTitle:  player.activeTitle || null,
                         level:        player.level || 1,
                         bossKills:    player.stats?.bossKills || 0,
-                        job:          player.job || '모험가',
+                        job:          player.job || CONSTANTS.DEFAULT_JOB,
                         uid,
                         updatedAt:    serverTimestamp(),
                     }, { merge: true });

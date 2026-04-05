@@ -1,6 +1,8 @@
 import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
-import { toArray, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, isAchievementUnlocked, registerCodex, registerLootToCodex } from '../utils/gameUtils';
+import { toArray, makeItem, findItemByName, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, isAchievementUnlocked, registerCodex, registerLootToCodex, makeEmitTitles } from '../utils/gameUtils';
+import { addItemByName } from '../utils/inventoryUtils';
+import { incrementStat } from '../utils/playerStateUtils';
 import { getEquipmentIdentity, getNextEquipmentState, isTwoHandWeapon } from '../utils/equipmentUtils';
 import { validateSynthesis, performSynthesis } from '../utils/synthesisUtils';
 import { SEASON_XP } from '../data/seasonPass';
@@ -14,13 +16,7 @@ import { resolveInvasion } from '../utils/graveUtils';
  * createInventoryActions — 아이템 사용, 장비, 마켓, 제작, 퀘스트 완료
  */
 export const createInventoryActions = ({ player, gameState, dispatch, addLog, getFullStats }) => {
-    const emitUnlockedTitles = (updatedPlayer) => {
-        const newTitles = checkTitles(updatedPlayer);
-        if (newTitles.length > 0) {
-            dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
-        }
-    };
+    const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
     const emitDailyProtocolLogs = (type, amount = 1) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
@@ -38,25 +34,19 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
 
         useItem: (item) => {
             const inventoryItem = player.inv.find((entry) => entry.id === item.id);
-            if (!inventoryItem) return addLog('error', '인벤토리에 없는 아이템입니다.');
+            if (!inventoryItem) return addLog('error', MSG.INV_ITEM_NOT_FOUND);
 
             if (['weapon', 'armor', 'shield'].includes(inventoryItem.type)) {
                 if (Array.isArray(inventoryItem.jobs) && !inventoryItem.jobs.includes(player.job)) {
-                    return addLog('error', `${player.job}은(는) ${inventoryItem.name}을 장착할 수 없습니다.`);
+                    return addLog('error', MSG.EQUIP_JOB_RESTRICT(player.job, inventoryItem.name));
                 }
 
-                let newInv = player.inv.filter((entry) => entry.id !== inventoryItem.id);
+                const filteredInv = player.inv.filter((entry) => entry.id !== inventoryItem.id);
                 const currentEquip = { ...player.equip };
                 const inventoryItemKey = getEquipmentIdentity(inventoryItem);
-                const pushBackToInventory = (equippedItem) => {
-                    if (!equippedItem) return;
-                    if (equippedItem.id && equippedItem.id === inventoryItem.id) return;
-                    if (equippedItem.name === '맨손' || equippedItem.name === '천옷') return;
-                    newInv.push(equippedItem.id ? equippedItem : makeItem(equippedItem));
-                };
 
                 if (inventoryItem.type === 'shield' && isTwoHandWeapon(currentEquip.weapon)) {
-                    addLog('error', '양손 무기 사용 중에는 방패를 장착할 수 없습니다.');
+                    addLog('error', MSG.EQUIP_TWO_HAND_SHIELD_BLOCK);
                     return;
                 }
 
@@ -67,39 +57,47 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                         .map((equippedItem) => getEquipmentIdentity(equippedItem))
                 );
 
-                [currentEquip.weapon, currentEquip.offhand, currentEquip.armor].forEach((equippedItem) => {
-                    const equippedKey = getEquipmentIdentity(equippedItem);
-                    if (!equippedItem || equippedKey === inventoryItemKey) return;
-                    if (!preservedKeys.has(equippedKey)) pushBackToInventory(equippedItem);
-                });
+                const itemsToReturn = [currentEquip.weapon, currentEquip.offhand, currentEquip.armor]
+                    .filter((equippedItem) => {
+                        if (!equippedItem) return false;
+                        const equippedKey = getEquipmentIdentity(equippedItem);
+                        if (equippedKey === inventoryItemKey) return false;
+                        if (preservedKeys.has(equippedKey)) return false;
+                        if (equippedItem.id && equippedItem.id === inventoryItem.id) return false;
+                        if (equippedItem.name === '맨손' || equippedItem.name === '천옷') return false;
+                        return true;
+                    })
+                    .map((equippedItem) => equippedItem.id ? equippedItem : makeItem(equippedItem));
+
+                const newInv = [...filteredInv, ...itemsToReturn];
 
                 if (inventoryItem.type === 'weapon') {
                     if (isTwoHandWeapon(inventoryItem) && currentEquip.offhand) {
-                        addLog('info', '양손 무기로 전환되어 보조 손 장비가 해제되었습니다.');
+                        addLog('info', MSG.EQUIP_TWO_HAND_OFFHAND_RELEASE);
                     } else if (!isTwoHandWeapon(inventoryItem) && isTwoHandWeapon(currentEquip.weapon)) {
-                        addLog('info', '양손 무기를 해제하고 한손 무기 체계로 전환했습니다.');
+                        addLog('info', MSG.EQUIP_TWO_HAND_TO_ONE_HAND);
                     } else if (getEquipmentIdentity(nextEquip.offhand) === inventoryItemKey) {
-                        addLog('info', '보조 손에 한손 무기를 장착했습니다.');
+                        addLog('info', MSG.EQUIP_OFFHAND_SET);
                     } else if (
                         getEquipmentIdentity(nextEquip.weapon) === inventoryItemKey &&
                         getEquipmentIdentity(nextEquip.offhand) === getEquipmentIdentity(currentEquip.weapon) &&
                         getEquipmentIdentity(currentEquip.weapon) !== inventoryItemKey
                     ) {
-                        addLog('info', '새 무기를 주손에 장착하고 기존 무기를 보조손으로 이동했습니다.');
+                        addLog('info', MSG.EQUIP_MAIN_SHIFT);
                     } else if (getEquipmentIdentity(nextEquip.weapon) === inventoryItemKey) {
-                        addLog('info', '주손 무기를 교체했습니다.');
+                        addLog('info', MSG.EQUIP_MAIN_REPLACE);
                     }
                 } else if (inventoryItem.type === 'shield' && currentEquip.offhand) {
-                    addLog('info', '보조 손 장비를 교체했습니다.');
+                    addLog('info', MSG.EQUIP_OFFHAND_REPLACE);
                 }
 
                 dispatch({ type: 'SET_PLAYER', payload: { ...player, inv: newInv, equip: nextEquip } });
-                addLog('success', `${inventoryItem.name} 장착.`);
+                addLog('success', MSG.EQUIP_DONE(inventoryItem.name));
                 return;
             }
 
             if (player.challengeModifiers?.includes('noPotion') && ['hp', 'mp', 'cure'].includes(inventoryItem.type)) {
-                return addLog('warn', '금욕 챌린지: 소모 아이템을 사용할 수 없습니다.');
+                return addLog('warn', MSG.CHALLENGE_NO_CONSUMABLE);
             }
 
             if (inventoryItem.type === 'hp') {
@@ -157,21 +155,21 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                         inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
                     }
                 });
-                addLog('success', `${inventoryItem.name} 사용: 버프 활성화`);
+                addLog('success', MSG.ITEM_USE_BUFF(inventoryItem.name));
             }
         },
 
         market: (type, item) => {
             if (gameState !== 'shop') return;
             if (type === 'buy') {
-                if (player.gold < item.price) return addLog('error', '골드가 부족합니다.');
-                if ((player.inv?.length || 0) >= (player.maxInv || BALANCE.INV_MAX_SIZE)) return addLog('error', '인벤토리가 가득 찼습니다.');
+                if (player.gold < item.price) return addLog('error', MSG.GOLD_INSUFFICIENT);
+                if ((player.inv?.length || 0) >= (player.maxInv || BALANCE.INV_MAX_SIZE)) return addLog('error', MSG.INV_FULL);
                 if (
                     ['weapon', 'armor', 'shield'].includes(item.type)
                     && Array.isArray(item.jobs)
                     && !item.jobs.includes(player.job)
                 ) {
-                    return addLog('error', `${player.job}은(는) ${item.name}을(를) 장착할 수 없습니다.`);
+                    return addLog('error', MSG.EQUIP_JOB_RESTRICT(player.job, item.name));
                 }
 
                 let updatedPlayer = { ...player, gold: player.gold - item.price, inv: [...player.inv, makeItem(item)] };
@@ -179,17 +177,15 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
                 dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: item.price } });
                 emitDailyProtocolLogs('goldSpend', item.price);
-                addLog('success', `${item.name} 구매 완료.`);
+                addLog('success', MSG.SHOP_BUY_DONE(item.name));
             } else if (type === 'sell') {
                 const sellPrice = Math.floor(item.price * 0.5);
-                const idx = player.inv.findIndex((entry) => entry.id === item.id);
-                if (idx > -1) {
-                    const newInv = [...player.inv];
-                    newInv.splice(idx, 1);
+                const newInv = player.inv.filter((entry) => entry.id !== item.id);
+                if (newInv.length < player.inv.length) {
                     const updatedPlayer = { ...grantGold(player, sellPrice), inv: newInv };
                     dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
                     emitUnlockedTitles(updatedPlayer);
-                    addLog('success', `${item.name} 판매 완료 (+${sellPrice}G)`);
+                    addLog('success', MSG.SHOP_SELL_DONE(item.name, sellPrice));
                 }
             }
         },
@@ -197,11 +193,11 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         craft: (recipeId) => {
             const recipe = DB.ITEMS.recipes?.find((entry) => entry.id === recipeId);
             if (!recipe) return;
-            if (player.gold < recipe.gold) return addLog('error', '골드가 부족합니다.');
+            if (player.gold < recipe.gold) return addLog('error', MSG.GOLD_INSUFFICIENT);
 
             for (const input of recipe.inputs) {
                 const count = player.inv.filter((entry) => entry.name === input.name).length;
-                if (count < input.qty) return addLog('error', `재료 부족: ${input.name}`);
+                if (count < input.qty) return addLog('error', MSG.CRAFT_MAT_INSUFFICIENT(input.name));
             }
 
             let newInv = [...player.inv];
@@ -221,15 +217,11 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 ? makeItem(craftedTemplate)
                 : makeItem({ name: recipe.name, type: 'mat', price: 0, desc: 'Crafted item', desc_stat: 'CRAFTED' });
 
-            let updatedPlayer = {
+            let updatedPlayer = incrementStat({
                 ...player,
                 gold: player.gold - recipe.gold,
                 inv: [...newInv, craftedItem],
-                stats: {
-                    ...(player.stats || {}),
-                    crafts: (player.stats?.crafts || 0) + 1,
-                }
-            };
+            }, 'crafts');
             // 도감 등록: 레시피 + 결과 아이템
             updatedPlayer = registerCodex(updatedPlayer, 'recipes', recipe.id);
             updatedPlayer = registerLootToCodex(updatedPlayer, [craftedItem]);
@@ -238,7 +230,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.craft });
             emitDailyProtocolLogs('goldSpend', recipe.gold);
             emitUnlockedTitles(updatedPlayer);
-            addLog('success', `${recipe.name} 제작 완료`);
+            addLog('success', MSG.CRAFT_DONE(recipe.name));
         },
 
         completeQuest: (qId) => {
@@ -247,7 +239,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
 
             const qData = pQuest.isBounty ? pQuest : DB.QUESTS.find((quest) => quest.id === qId);
             if (!qData) return;
-            if (pQuest.progress < qData.goal) return addLog('error', '아직 완료 조건을 만족하지 못했습니다.');
+            if (pQuest.progress < qData.goal) return addLog('error', MSG.QUEST_NOT_COMPLETE);
 
             let updatedPlayer = {
                 ...player,
@@ -263,20 +255,14 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             }
 
             if (pQuest.isBounty) {
-                updatedPlayer = {
-                    ...updatedPlayer,
-                    stats: {
-                        ...(updatedPlayer.stats || {}),
-                        bountiesCompleted: (updatedPlayer.stats?.bountiesCompleted || 0) + 1
-                    }
-                };
+                updatedPlayer = incrementStat(updatedPlayer, 'bountiesCompleted');
             }
 
             if (qData.reward?.item) {
-                const itemData = findItemByName(qData.reward.item);
-                if (itemData) {
-                    updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemData)] };
-                    addLog('success', `보상 아이템: ${itemData.name}`);
+                const prevInvLen = updatedPlayer.inv.length;
+                updatedPlayer = addItemByName(updatedPlayer, qData.reward.item);
+                if (updatedPlayer.inv.length > prevInvLen) {
+                    addLog('success', MSG.QUEST_REWARD_ITEM(qData.reward.item));
                 }
             }
 
@@ -291,7 +277,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 if (resonance.score >= 6 && qData.reward?.gold) {
                     const bonusGold = Math.max(100, Math.floor(qData.reward.gold * 0.15));
                     updatedPlayer = grantGold(updatedPlayer, bonusGold);
-                    addLog('event', `[${traitProfile.title}] 공명 보상 +${bonusGold}G`);
+                    addLog('event', MSG.QUEST_TRAIT_BONUS(traitProfile.title, bonusGold));
                 }
             }
 
@@ -299,16 +285,16 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
             dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.questComplete });
             emitUnlockedTitles(updatedPlayer);
-            addLog('success', `퀘스트 완료: ${qData.title}`);
+            addLog('success', MSG.QUEST_DONE(qData.title));
         },
 
         claimAchievement: (achId) => {
             const achData = DB.ACHIEVEMENTS.find((achievement) => achievement.id === achId);
             if (!achData) return;
-            if (!isAchievementUnlocked(achData, player)) return addLog('error', '아직 달성하지 못한 업적입니다.');
+            if (!isAchievementUnlocked(achData, player)) return addLog('error', MSG.ACH_NOT_UNLOCKED);
 
             const claimed = player.stats?.claimedAchievements || [];
-            if (claimed.includes(achId)) return addLog('info', '이미 수령한 업적입니다.');
+            if (claimed.includes(achId)) return addLog('info', MSG.ACH_ALREADY_CLAIMED);
 
             let updatedPlayer = {
                 ...player,
@@ -320,16 +306,16 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
 
             if (achData.reward.gold) updatedPlayer = grantGold(updatedPlayer, achData.reward.gold);
             if (achData.reward.item) {
-                const itemData = findItemByName(achData.reward.item);
-                if (itemData) {
-                    updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemData)] };
-                    addLog('success', `업적 보상 아이템: ${itemData.name}`);
+                const prevInvLen = updatedPlayer.inv.length;
+                updatedPlayer = addItemByName(updatedPlayer, achData.reward.item);
+                if (updatedPlayer.inv.length > prevInvLen) {
+                    addLog('success', MSG.ACH_REWARD_ITEM(achData.reward.item));
                 }
             }
 
             dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);
-            addLog('success', `업적 달성: ${achData.title}`);
+            addLog('success', MSG.ACH_DONE(achData.title));
         },
 
         synthesize: (itemIds, useProtect = false) => {
@@ -340,28 +326,22 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 return addLog('error', MSG.SYNTHESIS_NOT_ENOUGH);
             }
             if (useProtect && player.premiumCurrency < BALANCE.SYNTHESIS_PROTECT_COST) {
-                return addLog('error', `${BALANCE.PREMIUM_CURRENCY_NAME}이(가) 부족합니다.`);
+                return addLog('error', MSG.PREMIUM_INSUFFICIENT(BALANCE.PREMIUM_CURRENCY_NAME));
             }
 
             const result = performSynthesis(items, null, useProtect);
             const usedIds = new Set(itemIds);
-            let newInv = player.inv.filter((entry) => !usedIds.has(entry.id));
+            const newInv = [
+                ...player.inv.filter((entry) => !usedIds.has(entry.id)),
+                ...result.returnedItems,
+            ];
 
-            // 실패 시 반환 아이템 복원
-            for (const returned of result.returnedItems) {
-                newInv.push(returned);
-            }
-
-            let updatedPlayer = {
+            let updatedPlayer = incrementStat({
                 ...player,
                 gold: player.gold - result.goldSpent,
                 premiumCurrency: player.premiumCurrency - result.premiumSpent,
                 inv: newInv,
-                stats: {
-                    ...(player.stats || {}),
-                    syntheses: (player.stats?.syntheses || 0) + 1,
-                },
-            };
+            }, 'syntheses');
 
             if (result.success && result.outputItem) {
                 const crafted = makeItem(result.outputItem);
@@ -412,7 +392,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         purchaseCosmeticTitle: (titleId, titleName, titleCost) => {
             if ((player.premiumCurrency || 0) < titleCost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
             const owned = player.stats?.cosmeticTitles || [];
-            if (owned.includes(titleId)) return addLog('info', '이미 보유 중인 칭호입니다.');
+            if (owned.includes(titleId)) return addLog('info', MSG.TITLE_ALREADY_OWNED);
             dispatch({ type: AT.SET_PLAYER, payload: p => ({
                 ...p,
                 premiumCurrency: p.premiumCurrency - titleCost,
@@ -433,7 +413,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 || player.equip.weapon?.id === itemId && player.equip.weapon
                 || player.equip.armor?.id === itemId && player.equip.armor
                 || player.equip.offhand?.id === itemId && player.equip.offhand;
-            if (!item) return addLog('error', '아이템을 찾을 수 없습니다.');
+            if (!item) return addLog('error', MSG.ITEM_NOT_FOUND);
             if (!['weapon', 'armor', 'shield'].includes(item.type)) return addLog('warn', MSG.ENHANCE_NOT_EQUIP);
             const currentLevel = item.enhance || 0;
             if (currentLevel >= BALANCE.ENHANCE_MAX) return addLog('warn', MSG.ENHANCE_MAX_LEVEL);
@@ -453,7 +433,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
 
         chooseSkillBranch: (skillName, choice) => {
             dispatch({ type: AT.CHOOSE_SKILL_BRANCH, payload: { skillName, choice } });
-            addLog('system', `[${skillName}] 분기 ${choice} 선택 완료.`);
+            addLog('system', MSG.SKILL_BRANCH_CHOSEN(skillName, choice));
         },
 
         invadeGrave: (targetGrave) => {
@@ -483,7 +463,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 (item) => item.type === 'mat' && (item.price || 0) <= SELL_PRICE_THRESHOLD
             );
             if (sellTargets.length === 0) {
-                addLog('info', '판매할 저가 재료가 없습니다.');
+                addLog('info', MSG.BULK_SELL_EMPTY);
                 return;
             }
             const sellIds = new Set(sellTargets.map((item) => item.id));
@@ -492,7 +472,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             const updatedPlayer = grantGold({ ...player, inv: newInv }, totalGold);
             dispatch({ type: 'SET_PLAYER', payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);
-            addLog('success', `재료 ${sellTargets.length}개 일괄 판매 (+${totalGold}G)`);
+            addLog('success', MSG.BULK_SELL_DONE(sellTargets.length, totalGold));
         },
     });
 };

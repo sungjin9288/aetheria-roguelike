@@ -3,7 +3,8 @@ import { BALANCE, CONSTANTS } from '../data/constants';
 import { CLASSES } from '../data/classes';
 import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics';
 import { AI_SERVICE } from '../services/aiService';
-import { toArray, getJobSkills, makeItem, findItemByName, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel } from '../utils/gameUtils';
+import { toArray, getJobSkills, checkTitles, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, getTitleLabel, makeEmitTitles } from '../utils/gameUtils';
+import { addItemByName } from '../utils/inventoryUtils';
 import { resetDailyProtocolIfNeeded, resetWeeklyProtocolIfNeeded, rollExplorationEvent, spawnEnemy, applyBattleStartRelics, getFirstVisitReward, checkDiscoveryChains } from '../utils/exploreUtils';
 import { advanceExploreState, getMapPacingProfile, getNarrativeEventChance, getQuietExplorationChance } from '../utils/explorationPacing';
 import { getRunBuildProfile } from '../utils/runProfileUtils';
@@ -20,9 +21,9 @@ import { CombatEngine } from '../systems/CombatEngine';
 import { getChainEventForLoc } from '../data/eventChains';
 
 const buildClassVitals = (level, jobId, meta = {}) => {
-    const cls = CLASSES[jobId] || CLASSES['모험가'];
-    const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod) + Math.max(0, level - 1) * 20 + (meta.bonusHp || 0);
-    const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod) + Math.max(0, level - 1) * 10 + (meta.bonusMp || 0);
+    const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
+    const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod) + Math.max(0, level - 1) * BALANCE.HP_PER_LEVEL + (meta.bonusHp || 0);
+    const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod) + Math.max(0, level - 1) * BALANCE.MP_PER_LEVEL + (meta.bonusMp || 0);
     return { maxHp, maxMp };
 };
 
@@ -30,18 +31,12 @@ const buildClassVitals = (level, jobId, meta = {}) => {
  * useGameActions — 이동, 탐색, 휴식, 이벤트, 직업, 퀘스트 수락, 시작, 리셋
  */
 export const createGameActions = ({ player, gameState, uid, grave, currentEvent, isAiThinking, liveConfig, dispatch, addLog, addStoryLog, getFullStats }) => {
-    const emitUnlockedTitles = (updatedPlayer) => {
-        const newTitles = checkTitles(updatedPlayer);
-        if (newTitles.length > 0) {
-            dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-            newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
-        }
-    };
+    const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
     const emitDailyProtocolLogs = (type, amount = 1) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
         completed.forEach((mission) => {
-            addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);
+            addLog('system', MSG.DAILY_PROTOCOL_DONE(formatDailyProtocolReward(mission.reward)));
         });
     };
 
@@ -79,21 +74,22 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     move: (loc) => {
         if (isAiThinking) return;
         if (!loc) {
-            const exits = DB.MAPS[player.loc].exits.join(', ');
-            return addLog('info', `이동 가능한 지역: ${exits}`);
+            const currentMap = DB.MAPS[player.loc];
+            const exits = currentMap?.exits?.join(', ') || '없음';
+            return addLog('info', MSG.MOVE_EXITS(exits));
         }
-        if (!['idle', 'moving'].includes(gameState)) return addLog('error', '지금은 이동할 수 없는 상태입니다.');
+        if (!['idle', 'moving'].includes(gameState)) return addLog('error', MSG.MOVE_BLOCKED);
 
         const targetMap = DB.MAPS[loc];
-        if (!targetMap) return addLog('error', '존재하지 않는 지역입니다.');
+        if (!targetMap) return addLog('error', MSG.MAP_NOT_FOUND);
         // 시즌 전용 맵: seasonEvent 활성 시에만 접근 가능
         if (targetMap.seasonOnly && !liveConfig?.seasonEvent?.active) {
-            return addLog('warn', '⚡ 시즌 이벤트 기간에만 접근할 수 있는 지역입니다.');
+            return addLog('warn', MSG.MOVE_SEASON_ONLY);
         }
         const requiredLevel = targetMap.minLv ?? (Array.isArray(targetMap.level) ? targetMap.level[0] : targetMap.level) ?? 1;
-        if (player.level < requiredLevel) return addLog('error', `레벨 ${requiredLevel} 이상이어야 이동 가능합니다.`);
+        if (player.level < requiredLevel) return addLog('error', MSG.MOVE_LEVEL_REQUIRED(requiredLevel));
         // 시즌 맵은 exits 체크 없이 직접 접근 허용
-        if (!targetMap.seasonOnly && !DB.MAPS[player.loc].exits.includes(loc)) return addLog('error', '갈 수 없는 곳입니다.');
+        if (!targetMap.seasonOnly && !(DB.MAPS[player.loc]?.exits || []).includes(loc)) return addLog('error', MSG.MOVE_NO_EXIT);
         const firstVisit = !(player.stats?.visitedMaps || []).includes(loc);
         const isSafeDestination = targetMap.type === 'safe';
         const shouldClearTemporaryState = isSafeDestination && hasTemporaryAdventureState(player);
@@ -113,9 +109,9 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             }
         });
         dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
-        addLog('success', `${loc}로 이동했습니다.`);
+        addLog('success', MSG.MOVE_ARRIVED(loc));
         if (firstVisit) {
-            addLog('event', `🗺️ 새 지역 발견: ${loc}`);
+            addLog('event', MSG.MOVE_NEW_AREA(loc));
             // Phase 2-C: 지역 최초 방문 보상 지급
             const visitReward = getFirstVisitReward(loc, player);
             if (visitReward) {
@@ -137,16 +133,16 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         }
         // 발견 체인 체크
         checkDiscoveryChains(player, loc, { dispatch, addLog });
-        if (shouldClearTemporaryState) addLog('info', '마을에 복귀하며 임시 버프와 상태이상이 정리되었습니다.');
+        if (shouldClearTemporaryState) addLog('info', MSG.TOWN_BUFF_CLEAR);
         if (gravesAtDestination.length > 0) {
-            addLog('event', gravesAtDestination.length > 1 ? `근처에서 당신의 유해 ${gravesAtDestination.length}구를 발견했습니다.` : '근처에서 당신의 유해를 발견했습니다.');
+            addLog('event', gravesAtDestination.length > 1 ? MSG.GRAVE_FOUND_MULTI(gravesAtDestination.length) : MSG.GRAVE_FOUND_SINGLE);
         }
     },
 
-    start: (name, gender = 'male', jobId = '모험가', challengeModifiers = []) => {
+    start: (name, gender = 'male', jobId = CONSTANTS.DEFAULT_JOB, challengeModifiers = []) => {
         const trimmedName = String(name || '').trim().slice(0, 16);
         if (!trimmedName) return;
-        const cls = CLASSES[jobId] || CLASSES['모험가'];
+        const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
         const vitals = buildClassVitals(player.level || 1, jobId, player.meta || {});
         let maxHp = vitals.maxHp;
         let startGold = CONSTANTS.START_GOLD;
@@ -165,11 +161,11 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             challengeModifiers: mods,
             stats: {
                 ...(player.stats || {}),
-                visitedMaps: ['시작의 마을']
+                visitedMaps: [CONSTANTS.START_LOCATION]
             }
         }});
-        addLog('system', `[콜사인] ${trimmedName} — 에테리아 기록이 열렸습니다.`);
-        addLog('event', `초기 스킬: ${cls.skills[0]?.name || '강타'}`);
+        addLog('system', MSG.START_CALLSIGN(trimmedName));
+        addLog('event', MSG.START_INITIAL_SKILL(cls.skills[0]?.name || '강타'));
         if (mods.length > 0) {
             const labels = mods.map(id => BALANCE.CHALLENGE_MODIFIERS.find(m => m.id === id)?.label || id);
             addLog('warn', MSG.CHALLENGE_START(labels));
@@ -193,10 +189,11 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     },
 
     explore: async () => {
-        if (gameState !== GS.IDLE) return addLog('error', '탐색할 수 없는 상태입니다.');
-        if (player.loc === '시작의 마을') return addLog('info', '마을 주변은 평화롭습니다.');
+        if (gameState !== GS.IDLE) return addLog('error', MSG.EXPLORE_BLOCKED);
+        if (player.loc === CONSTANTS.START_LOCATION) return addLog('info', MSG.TOWN_PEACEFUL);
 
         const mapData = DB.MAPS[player.loc];
+        if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
         const playerRelics = player.relics || [];
         const eventChanceBonus = playerRelics.reduce((acc, relic) => (
             relic.effect === 'event_chance' ? acc + relic.val : acc
@@ -248,7 +245,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 if (eventData?.exhausted) {
                     commitExploreOutcome('nothing');
                     dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
-                    addLog('warning', eventData.message || '오늘 AI 호출 한도에 도달했습니다.');
+                    addLog('warning', eventData.message || MSG.AI_QUOTA_REACHED);
                 } else if (eventData && eventData.desc) {
                     commitExploreOutcome('narrative_event');
                     if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
@@ -261,7 +258,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 } else {
                     commitExploreOutcome('nothing');
                     dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
-                    addLog('info', '아무 일도 일어나지 않았습니다.');
+                    addLog('info', MSG.EXPLORE_NOTHING);
                 }
             } finally {
                 dispatch({ type: 'SET_AI_THINKING', payload: false });
@@ -277,7 +274,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 return;
             }
             commitExploreOutcome('nothing');
-            return addLog('info', '주변이 조용합니다.');
+            return addLog('info', MSG.EXPLORE_QUIET);
         }
 
         // 전투 직전 유물 발견 기회 (Phase 1-B)
@@ -287,7 +284,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 commitExploreOutcome('relic_found');
                 const candidates = pickWeightedRelics(available, 3);
                 dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-                addLog('event', '✨ [유물 발견] 전투 직전, 고대의 유물이 눈에 들어옵니다!');
+                addLog('event', MSG.EXPLORE_RELIC_FOUND);
                 return;
             }
         }
@@ -332,7 +329,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 };
                 addLog('critical', MSG.ABYSS_BOSS_APPEAR(bossName));
             } else if (floor % 5 === 0) {
-                addLog('warning', `🌀 심연 ${floor}층 — 강대한 적들이 기다립니다...`);
+                addLog('warning', MSG.ABYSS_FLOOR_WARNING(floor));
             }
         }
 
@@ -341,7 +338,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         commitExploreOutcome('combat', (nextPlayer) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }));
         dispatch({ type: 'SET_ENEMY', payload: mStats });
         dispatch({ type: 'SET_GAME_STATE', payload: GS.COMBAT });
-        addLog('combat', `${mStats.name} 등장!`);
+        addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
         addStoryLog('encounter', { loc: player.loc, name: baseName });
     },
 
@@ -369,19 +366,18 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                     updatedPlayer = grantGold(updatedPlayer, rwd.amount);
                 }
                 if (rwd.type === 'item' && rwd.name) {
-                    const itemDef = findItemByName(rwd.name);
-                    if (itemDef) updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemDef)] };
+                    updatedPlayer = addItemByName(updatedPlayer, rwd.name);
                 }
                 if (rwd.type === 'relic') {
                     const pickedRelics = pickWeightedRelics(updatedPlayer.relics || [], 1);
                     if (pickedRelics.length > 0) {
                         updatedPlayer = { ...updatedPlayer, relics: [...(updatedPlayer.relics || []), pickedRelics[0]] };
-                        addLog('success', `✨ [체인 보상] 유물 [${pickedRelics[0].name}] 획득!`);
+                        addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name));
                     }
                 }
                 if (rwd.type === 'combat_bonus') {
                     updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: '기사의 혼령' } };
-                    addLog('success', `⚔ [최후의 영웅] 기사의 혼령 합류! ATK +${Math.round(((rwd.atkMult || 1.3) - 1) * 100)}% ${rwd.duration || 5}턴`);
+                    addLog('success', MSG.CHAIN_REWARD_COMBAT_BONUS(Math.round(((rwd.atkMult || 1.3) - 1) * 100), rwd.duration || 5));
                 }
             }
             // SET_PLAYER를 먼저 dispatch한 후 UPDATE_EVENT_CHAIN을 dispatch해야
@@ -417,20 +413,19 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 };
             }
             if (selectedOutcome.item) {
-                const itemDef = findItemByName(selectedOutcome.item);
-                if (itemDef) updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, makeItem(itemDef)] };
+                updatedPlayer = addItemByName(updatedPlayer, selectedOutcome.item);
             }
-            resultText = selectedOutcome.log || '선택의 결과가 반영되었습니다.';
+            resultText = selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT;
             addLog('event', resultText);
         } else if (roll > 0.4) {
             const rewardGold = player.level * 50;
             updatedPlayer = grantGold(updatedPlayer, rewardGold);
-            resultText = `성공! ${rewardGold}G를 획득했습니다.`;
+            resultText = MSG.EVENT_SUCCESS_GOLD(rewardGold);
             addLog('success', resultText);
         } else {
             const dmg = Math.floor(Math.max(1, updatedPlayer.maxHp) * 0.1);
             updatedPlayer = { ...updatedPlayer, hp: Math.max(1, updatedPlayer.hp - dmg) };
-            resultText = `실패... ${dmg} 피해를 입었습니다.`;
+            resultText = MSG.EVENT_FAIL_DAMAGE(dmg);
             addLog('error', resultText);
         }
 
@@ -457,10 +452,10 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     rest: () => {
         if (gameState !== 'idle') return;
         const mapData = DB.MAPS[player.loc];
-        if (mapData.type !== 'safe') return addLog('error', '휴식은 안전한 지역에서만 가능합니다.');
+        if (!mapData || mapData.type !== 'safe') return addLog('error', MSG.REST_SAFE_ONLY);
         // 휴식 비용: 레벨 기반 스케일링 (100G * (1 + lv/20))
         const restCost = Math.floor(BALANCE.REST_COST * (1 + (player.level || 1) / 20));
-        if (player.gold < restCost) return addLog('error', `골드가 부족합니다. (필요: ${restCost}G)`);
+        if (player.gold < restCost) return addLog('error', MSG.REST_GOLD_INSUFFICIENT(restCost));
 
         const stats = getFullStats();
         const updatedPlayer = {
@@ -480,7 +475,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: restCost } });
         emitDailyProtocolLogs('goldSpend', restCost);
         emitUnlockedTitles(updatedPlayer);
-        addLog('success', `휴식 완료. HP/MP가 회복되었습니다. (-${restCost}G)`);
+        addLog('success', MSG.REST_DONE_FULL(restCost));
         addStoryLog('rest', { loc: player.loc });
     },
 
@@ -488,14 +483,14 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     swapSkillChoice: (skillName, newChoice) => {
         if (gameState !== 'idle') return;
         const mapData = DB.MAPS[player.loc];
-        if (!mapData || mapData.type !== 'safe') return addLog('error', '스킬 교체는 안전한 지역에서만 가능합니다.');
+        if (!mapData || mapData.type !== 'safe') return addLog('error', MSG.SKILL_SWAP_SAFE_ONLY);
         const cost = BALANCE.SKILL_SWAP_COST || 50;
-        if ((player.gold || 0) < cost) return addLog('error', `골드가 부족합니다. (필요: ${cost}G)`);
+        if ((player.gold || 0) < cost) return addLog('error', MSG.SKILL_SWAP_GOLD_INSUFFICIENT(cost));
         const classData = CLASSES[player.job];
         const branches = classData?.skillBranches?.[skillName];
-        if (!branches) return addLog('error', '해당 스킬에 분기가 없습니다.');
+        if (!branches) return addLog('error', MSG.SKILL_NO_BRANCH);
         const branch = branches.find(b => b.choice === newChoice);
-        if (!branch) return addLog('error', '유효하지 않은 분기입니다.');
+        if (!branch) return addLog('error', MSG.SKILL_INVALID_BRANCH);
         const oldChoice = player.skillChoices?.[skillName] || '기본';
         dispatch({
             type: AT.SET_PLAYER,
@@ -512,13 +507,13 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     // ControlPanel에서 확인 UI를 거친 뒤 호출됩니다 (window.confirm 제거)
     reset: () => {
         dispatch({ type: 'RESET_GAME' });
-        addLog('system', '초기 기록이 적용되었습니다. 이름을 정하고 다시 시작해 주세요.');
+        addLog('system', MSG.INIT_RECORD_APPLIED);
     },
 
     jobChange: (jobName) => {
         const current = DB.CLASSES[player.job];
-        if (!current?.next?.includes(jobName)) return addLog('error', '전직 가능한 직업이 아닙니다.');
-        if (player.level < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', '전직 레벨이 부족합니다.');
+        if (!current?.next?.includes(jobName)) return addLog('error', MSG.JOB_CHANGE_INVALID);
+        if (player.level < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);
 
         const vitals = buildClassVitals(player.level, jobName, player.meta || {});
         dispatch({
@@ -533,15 +528,15 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
             }
         });
         dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
-        addLog('success', `${jobName} 전직 완료!`);
+        addLog('success', MSG.JOB_CHANGE_DONE(jobName));
     },
 
     acceptQuest: (qId) => {
-        if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', '퀘스트 수락은 마을 게시판에서만 가능합니다.');
-        if (player.quests.some((q) => q.id === qId)) return addLog('error', '이미 수락한 퀘스트입니다.');
+        if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', MSG.QUEST_TOWN_ONLY);
+        if (player.quests.some((q) => q.id === qId)) return addLog('error', MSG.QUEST_ALREADY_ACCEPTED);
         const qData = DB.QUESTS.find((q) => q.id === qId);
         if (!qData) return;
-        if (player.level < (qData.minLv || 1)) return addLog('error', `레벨 ${qData.minLv} 이상이어야 수락 가능합니다.`);
+        if (player.level < (qData.minLv || 1)) return addLog('error', MSG.QUEST_LEVEL_REQUIRED(qData.minLv));
         dispatch({
             type: 'SET_PLAYER',
             payload: (p) => ({
@@ -549,7 +544,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 quests: [...p.quests, { id: qId, progress: qData.target === 'Level' ? p.level : 0 }]
             })
         });
-        addLog('event', `퀘스트 수락: ${qData.title}`);
+        addLog('event', MSG.QUEST_ACCEPTED(qData.title));
     },
 
     lootGrave: () => {
@@ -563,11 +558,11 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
     },
 
     requestBounty: () => {
-        if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', '현상수배 수주는 마을 게시판에서만 가능합니다.');
-        if (player.quests.some(q => q.isBounty)) return addLog('error', '이미 진행 중인 현상수배가 있습니다. (퀘스트 완료 후 수주 가능)');
+        if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', MSG.BOUNTY_TOWN_ONLY);
+        if (player.quests.some(q => q.isBounty)) return addLog('error', MSG.BOUNTY_ALREADY_ACTIVE);
         const today = new Date().toISOString().slice(0, 10);
         if (player.stats?.bountyDate === today && player.stats?.bountyIssued) {
-            return addLog('error', '오늘 현상수배는 이미 발급되었습니다. 내일 다시 요청하세요.');
+            return addLog('error', MSG.BOUNTY_DAILY_LIMIT);
         }
 
         const validMonsters = [];
@@ -578,7 +573,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         });
         if (!validMonsters.length) validMonsters.push('슬라임');
         const target = validMonsters[Math.floor(Math.random() * validMonsters.length)];
-        const count = 5 + Math.floor(Math.random() * 6); // 5~10
+        const count = BALANCE.BOUNTY_MIN_COUNT + Math.floor(Math.random() * BALANCE.BOUNTY_COUNT_RANGE);
         const bId = `bounty_${Date.now()}`;
 
         const newBounty = {
@@ -608,7 +603,7 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
                 }
             })
         });
-        addLog('event', `새로운 현상수배 수락: ${target} ${count}마리`);
+        addLog('event', MSG.BOUNTY_ACCEPTED_NEW(target, count));
     },
 
     // v4.0: 에테르 환생 확인
@@ -651,15 +646,15 @@ export const createGameActions = ({ player, gameState, uid, grave, currentEvent,
         dispatch({ type: AT.ASCEND, payload: { meta: newMeta, newTitle: title } });
         if (ascensionTitles.length > 0) {
             dispatch({ type: AT.UNLOCK_TITLES, payload: ascensionTitles });
-            ascensionTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
+            ascensionTitles.forEach((id) => addLog('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
         }
-        addLog('system', `⚡ [에테르 환생 ${rank}회] ${title} 칭호 획득! 영구 보너스 적용됨.`);
+        addLog('system', MSG.ASCEND_DONE(rank, title));
     },
 
     // v4.0: 환생 취소 — idle 복귀
     cancelAscension: () => {
         dispatch({ type: 'SET_GAME_STATE', payload: GS.IDLE });
-        addLog('info', '환생을 취소했습니다. 여정을 계속합니다.');
+        addLog('info', MSG.ASCEND_CANCEL);
     },
     });
 };

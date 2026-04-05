@@ -7,8 +7,7 @@ import { SEASON_TIER_XP, SEASON_REWARDS } from '../data/seasonPass';
 
 const sanitizeQuickSlots = (slots = [], inventory = []) => {
     const ids = new Set((inventory || []).map((item) => item?.id).filter(Boolean));
-    const normalized = Array.isArray(slots) ? slots.slice(0, 3) : [];
-    while (normalized.length < 3) normalized.push(null);
+    const normalized = Array.from({ length: 3 }, (_, i) => (Array.isArray(slots) ? slots[i] : undefined) ?? null);
     return normalized.map((slot) => (slot?.id && ids.has(slot.id) ? slot : null));
 };
 
