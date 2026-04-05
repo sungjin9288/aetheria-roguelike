@@ -113,6 +113,16 @@ const DESKTOP_LOG_BADGES = {
     warning: { label: 'WARN', className: 'border-amber-300/20 bg-amber-400/[0.10] text-amber-100/72' },
     error: { label: 'ERROR', className: 'border-red-300/22 bg-red-500/[0.12] text-red-100/78' },
 };
+const MOBILE_LOG_BADGES = {
+    combat: { label: 'COMBAT', className: 'border-rose-300/24 bg-rose-400/10 text-rose-100/84' },
+    critical: { label: 'CRIT', className: 'border-red-300/28 bg-red-500/12 text-red-100/88' },
+    story: { label: 'AI', className: 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]/84' },
+    system: { label: 'SYS', className: 'border-[#7dd4d8]/20 bg-[#7dd4d8]/8 text-[#dff7f5]/76' },
+    success: { label: 'GAIN', className: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]/84' },
+    event: { label: 'EVENT', className: 'border-[#9a8ac0]/24 bg-[#9a8ac0]/12 text-[#ece5ff]/84' },
+    warning: { label: 'WARN', className: 'border-amber-300/24 bg-amber-400/10 text-amber-100/84' },
+    error: { label: 'ERROR', className: 'border-red-300/24 bg-red-500/10 text-red-100/84' },
+};
 
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system']);
 const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
@@ -219,6 +229,7 @@ const TerminalView = ({
     const showQuickSlots = Boolean(player && quickSlots && (!mobile || hasAnyQuickSlot));
     const showFooter = Boolean(showInput || (player && quickSlots && (!mobile || hasAnyQuickSlot)));
     const showExpandToggle = isCombat || (mobile && logs.length > compactMobileLogCount);
+    const visibleLogCountLabel = hiddenCount > 0 ? `${displayLogs.length}/${logs.length}` : `${displayLogs.length}`;
     const footerInput = showInput ? (
         <div className={`relative flex min-w-0 items-center gap-2 rounded-[1rem] border border-white/8 bg-black/14 transition-colors focus-within:border-[#7dd4d8]/24 ${mobile ? 'px-3 py-2' : 'px-2.5 py-1.5'}`}>
             {player && (
@@ -258,23 +269,41 @@ const TerminalView = ({
     return (
         <div
             data-testid="terminal-panel"
-            className={`panel-noise min-w-0 ${mobile ? 'flex-1 min-h-[clamp(18rem,38dvh,30rem)]' : 'flex-1 min-h-0'} md:h-full ${bgClass} ${mobile ? 'rounded-[1.75rem]' : 'rounded-[1.5rem]'} ${mobile ? 'p-2.5' : 'p-2.5 md:p-3'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
+            className={`panel-noise min-w-0 ${mobile ? 'flex-1 min-h-[clamp(14.5rem,32dvh,22rem)]' : 'flex-1 min-h-0'} md:h-full ${bgClass} ${mobile ? 'rounded-[1.85rem]' : 'rounded-[1.5rem]'} ${mobile ? 'p-3' : 'p-2.5 md:p-3'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
         >
             {/* Scanline overlay */}
             <div
                 className={`absolute inset-0 z-0 pointer-events-none ${mobile ? 'opacity-10' : 'opacity-[0.04]'}`}
                 style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 0.6px, transparent 0.6px)', backgroundSize: '3px 3px' }}
             ></div>
+            {mobile && (
+                <>
+                    <div className="pointer-events-none absolute -right-10 top-4 h-24 w-24 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
+                    <div className="pointer-events-none absolute -left-8 bottom-6 h-28 w-28 rounded-full bg-[#d5b180]/10 blur-3xl" />
+                </>
+            )}
 
-            <div className={`flex items-center justify-between gap-2 shrink-0 z-10 ${mobile ? 'mb-2 rounded-[1rem] border border-white/8 bg-black/16 px-2.5 py-1.5 text-[8px]' : 'mb-1.5 rounded-[0.95rem] border border-white/8 bg-black/12 px-2.5 py-1.5 text-[9px]'} font-fira uppercase tracking-[0.14em] text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]`}>
-                <div className="min-w-0 flex items-center gap-1 text-slate-300/80">
-                    <span className="flex items-center gap-1">
-                        <Terminal size={mobile ? 9 : 11} />
-                        <span>{mobile ? 'LOG' : 'Log'}</span>
-                    </span>
-                    <span className={`rounded-full border px-1.5 py-0.5 text-[7px] ${isCombat ? 'border-rose-300/18 text-rose-100/80 bg-rose-400/[0.06]' : gameState === GS.EVENT ? 'border-[#9a8ac0]/20 text-[#ece5ff]/78 bg-[#9a8ac0]/10' : 'border-[#7dd4d8]/18 text-[#dff7f5]/76 bg-[#7dd4d8]/10'}`}>
-                        {stateLabel}
-                    </span>
+            <div className={`flex items-center justify-between gap-2 shrink-0 z-10 ${mobile ? 'mb-2.5 rounded-[1.2rem] aether-panel-core px-3 py-2.5' : 'mb-1.5 rounded-[0.95rem] border border-white/8 bg-black/12 px-2.5 py-1.5 text-[9px]'} font-fira uppercase tracking-[0.14em] text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]`}>
+                <div className="min-w-0">
+                    <div className="flex items-center gap-1 text-slate-300/80">
+                        <span className="flex items-center gap-1">
+                            <Terminal size={mobile ? 10 : 11} />
+                            <span>{mobile ? 'Field Feed' : 'Log'}</span>
+                        </span>
+                        <span className={`rounded-full border px-1.5 py-0.5 text-[7px] ${isCombat ? 'border-rose-300/18 text-rose-100/80 bg-rose-400/[0.06]' : gameState === GS.EVENT ? 'border-[#9a8ac0]/20 text-[#ece5ff]/78 bg-[#9a8ac0]/10' : 'border-[#7dd4d8]/18 text-[#dff7f5]/76 bg-[#7dd4d8]/10'}`}>
+                            {stateLabel}
+                        </span>
+                        {mobile && (
+                            <span className="rounded-full border border-white/8 bg-black/18 px-1.5 py-0.5 text-[7px] text-slate-300/72">
+                                {visibleLogCountLabel}
+                            </span>
+                        )}
+                    </div>
+                    {mobile && (
+                        <div className="mt-1 text-[9px] font-fira normal-case tracking-normal text-slate-300/62">
+                            {latestStory && !isCombat ? 'AI narrative pulse is pinned above the feed.' : 'Recent actions and rewards are streamed here in sequence.'}
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center gap-1">
                     {showExpandToggle && (
@@ -307,12 +336,15 @@ const TerminalView = ({
 
             {/* Pinned AI Narrative */}
             {mobile && latestStory && gameState !== GS.COMBAT && (
-                <div className="relative z-10 mb-2 rounded border border-cyber-blue/25 bg-cyber-blue/5 px-3 py-2 shrink-0">
-                    <div className="flex items-start gap-2">
-                        <Bot size={12} className="text-cyber-blue/60 mt-0.5 shrink-0" />
+                <div className="relative z-10 mb-2.5 overflow-hidden rounded-[1.2rem] aether-panel-core px-3 py-3 shrink-0">
+                    <div className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 38%)' }} />
+                    <div className="relative flex items-start gap-2.5">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[1rem] border border-[#7dd4d8]/18 bg-black/18 text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <Bot size={14} className="shrink-0" />
+                        </div>
                         <div>
-                            <div className="text-[9px] font-fira uppercase tracking-widest text-cyber-blue/40 mb-0.5">AI 내러티브</div>
-                            <p className="text-[11px] font-fira text-cyber-blue/80 italic leading-relaxed">{latestStory.text}</p>
+                            <div className="mb-0.5 text-[9px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/62">Narrative Pulse</div>
+                            <p className="text-[11px] font-fira text-slate-100/84 italic leading-relaxed">{latestStory.text}</p>
                         </div>
                     </div>
                 </div>
@@ -329,9 +361,9 @@ const TerminalView = ({
                         <Terminal size={mobile ? 24 : 32} className="mx-auto mb-3 opacity-45 text-[#7dd4d8]" />
                         {mobile ? (
                             <>
-                                field ledger ready
+                                field feed online
                                 <br />
-                                아래 행동 카드로 원정을 시작하세요
+                                아래 tactical tile로 원정을 시작하세요
                             </>
                         ) : (
                             <>
@@ -348,7 +380,7 @@ const TerminalView = ({
                         const style = mobile
                             ? (LOG_STYLES[log.type] || DEFAULT_STYLE)
                             : (DESKTOP_LOG_STYLES[log.type] || DESKTOP_DEFAULT_STYLE);
-                        const badge = !mobile ? DESKTOP_LOG_BADGES[log.type] : null;
+                        const badge = mobile ? MOBILE_LOG_BADGES[log.type] : DESKTOP_LOG_BADGES[log.type];
                         const IconComp = style.icon;
 
                         return (
@@ -356,7 +388,7 @@ const TerminalView = ({
                                 key={log.id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className={`${mobile ? 'text-xs py-1.5 px-2.5' : 'text-[13px] py-1 px-2.5 leading-[1.4]'} rounded-[0.9rem] ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
+                                className={`${mobile ? 'text-xs py-2 px-2.5' : 'text-[13px] py-1 px-2.5 leading-[1.4]'} ${mobile ? 'aether-panel-muted' : ''} rounded-[0.95rem] ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
                             >
                                 {badge && (
                                     <span className={`mr-1.5 inline-flex rounded-full border px-1.5 py-[1px] align-[1px] text-[8px] font-fira uppercase tracking-[0.12em] ${badge.className}`}>

@@ -43,7 +43,8 @@ const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dens
   }
 
   return (
-    <div className={`rounded-[1rem] border border-white/8 bg-black/18 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${dense ? 'px-1.5 py-1' : compact ? 'px-2 py-1.5' : 'px-2.5 py-2'}`}>
+    <div className={`aether-panel-muted relative overflow-hidden rounded-[1rem] ${dense ? 'px-1.5 py-1' : compact ? 'px-2 py-1.5' : 'px-2.5 py-2'}`}>
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/16 to-transparent" />
       <div className={`flex items-center justify-between gap-2 font-fira uppercase tracking-[0.16em] ${dense ? 'text-[7px]' : compact ? 'text-[8px]' : 'text-[9px]'}`}>
         <span className={theme.label}>{label}</span>
         <span className="text-white/72">{safeValue}/{safeMax}</span>
@@ -66,11 +67,12 @@ const EnemyStatus = ({ enemy, mobile = false, compact = false }) => {
   const percentage = Math.min(100, (safeValue / safeMax) * 100);
 
   return (
-    <div className={`rounded-[1rem] border border-rose-300/18 bg-[linear-gradient(180deg,rgba(58,20,29,0.48)_0%,rgba(18,9,12,0.78)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${mobile ? 'px-2.5 py-2' : compact ? 'px-2 py-1' : 'px-3 py-2.5'}`}>
+    <div className={`relative overflow-hidden rounded-[1.1rem] border border-rose-300/18 bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_16px_36px_rgba(22,6,10,0.28),inset_0_1px_0_rgba(255,255,255,0.03)] ${mobile ? 'px-2.75 py-2.5' : compact ? 'px-2 py-1' : 'px-3 py-2.5'}`}>
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-100/22 to-transparent" />
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className={`${compact ? 'text-[7px]' : 'text-[9px]'} font-fira uppercase tracking-[0.16em] text-rose-100/58`}>
-            Combat Target
+          <div className={`${compact ? 'text-[7px]' : 'text-[9px]'} font-fira uppercase tracking-[0.18em] text-rose-100/58`}>
+            {mobile ? 'Target Lock' : 'Combat Target'}
           </div>
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
             <span className={`truncate font-rajdhani font-bold text-rose-50/94 ${compact ? 'text-[11px]' : 'text-[13px]'}`}>{enemy.name}</span>
@@ -95,42 +97,59 @@ const EnemyStatus = ({ enemy, mobile = false, compact = false }) => {
 const StatusBar = ({ player, stats, enemy = null, mobile = false, compactDesktop = false, className = '', onCrystalClick = null }) => {
   if (!player?.name) return null;
   const compactBadgeClass = compactDesktop ? 'min-h-[16px] px-1 py-0 text-[7px] tracking-[0.12em]' : '';
+  const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
+  const runStateLabel = enemy ? 'Combat Lock' : 'Field Run';
 
   return (
     <section
       data-testid="persistent-status-bar"
-      className={`pointer-events-none panel-noise aether-surface sticky top-[calc(env(safe-area-inset-top)+0.15rem)] z-50 w-full overflow-hidden rounded-[1.45rem] ${mobile ? 'px-2.5 py-2.5' : compactDesktop ? 'px-1 py-0.5' : 'px-2.5 py-2'} ${className}`.trim()}
+      className={`pointer-events-none panel-noise aether-surface sticky top-[calc(env(safe-area-inset-top)+0.15rem)] z-50 w-full overflow-hidden ${mobile ? 'rounded-[1.55rem]' : 'rounded-[1.45rem]'} ${mobile ? 'px-3 py-3' : compactDesktop ? 'px-1 py-0.5' : 'px-2.5 py-2'} ${className}`.trim()}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/22 to-transparent" />
+      {mobile && (
+        <>
+          <div className="absolute -right-8 top-0 h-24 w-24 rounded-full bg-[#d5b180]/12 blur-2xl" />
+          <div className="absolute -left-10 bottom-0 h-20 w-20 rounded-full bg-[#7dd4d8]/10 blur-2xl" />
+        </>
+      )}
       {mobile ? (
-        <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
+        <div className="space-y-2.5">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="flex min-w-0 items-center gap-1.5">
-                <span className="truncate text-[14px] font-rajdhani font-bold text-white/94">{player.name}</span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="aether-pill rounded-full px-2 py-0.5 text-[8px] font-fira uppercase tracking-[0.18em] text-slate-300/72">
+                  Live Run
+                </span>
+                <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{runStateLabel}</SignalBadge>
+              </div>
+              <div className="mt-2 flex min-w-0 items-center gap-1.5">
+                <span className="truncate text-[16px] font-rajdhani font-bold tracking-[0.04em] text-white/96">{player.name}</span>
                 <SignalBadge tone="neutral" size="sm">{player.job}</SignalBadge>
                 <SignalBadge tone="resonance" size="sm">Lv.{player.level}</SignalBadge>
               </div>
-              <div className="mt-1 truncate text-[10px] font-fira text-slate-400/76">
-                {player.loc}
+              <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] font-fira text-slate-300/76">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#7dd4d8] shadow-[0_0_10px_rgba(125,212,216,0.42)] animate-pulse" />
+                <span className="truncate">{player.loc}</span>
               </div>
             </div>
-            <div className="shrink-0 rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/10 px-2.5 py-1.5 text-right shadow-[0_12px_28px_rgba(213,177,128,0.08)]">
-              <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-slate-400/68">Gold</div>
-              <div className="text-[14px] font-rajdhani font-bold leading-none text-[#f6e7c8]">{player.gold}</div>
-            </div>
-            {(player.premiumCurrency || 0) > 0 && (
-              <div
-                className={`shrink-0 rounded-[1rem] border border-cyan-400/20 bg-cyan-400/8 px-2.5 py-1.5 text-right ${onCrystalClick ? 'cursor-pointer hover:bg-cyan-400/14 transition-colors pointer-events-auto' : ''}`}
-                onClick={onCrystalClick}
-              >
-                <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-cyan-300/70">Crystal</div>
-                <div className="text-[14px] font-rajdhani font-bold leading-none text-cyan-200">{player.premiumCurrency}</div>
+            <div className="grid shrink-0 gap-1.5">
+              <div className="aether-panel-muted rounded-[1.05rem] px-2.75 py-1.75 text-right min-w-[4.75rem]">
+                <div className="text-[8px] font-fira uppercase tracking-[0.18em] text-slate-400/68">Gold</div>
+                <div className="text-[14px] font-rajdhani font-bold leading-none text-[#f6e7c8]">{player.gold}</div>
               </div>
-            )}
+              {hasPremiumCurrency && (
+                <div
+                  className={`rounded-[1.05rem] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(18,47,54,0.48)_0%,rgba(8,19,24,0.72)_100%)] px-2.75 py-1.75 text-right shadow-[0_12px_28px_rgba(34,211,238,0.08)] ${onCrystalClick ? 'cursor-pointer hover:bg-cyan-400/14 transition-colors pointer-events-auto' : ''}`}
+                  onClick={onCrystalClick}
+                >
+                  <div className="text-[8px] font-fira uppercase tracking-[0.18em] text-cyan-300/70">Crystal</div>
+                  <div className="text-[14px] font-rajdhani font-bold leading-none text-cyan-200">{player.premiumCurrency}</div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
             <StatusMetric label="HP" value={player.hp} max={stats?.maxHp} variant="hp" />
             <StatusMetric label="NRG" value={player.mp} max={stats?.maxMp} variant="mp" />
             <StatusMetric label="EXP" value={player.exp} max={player.nextExp} variant="exp" />

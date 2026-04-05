@@ -1,11 +1,11 @@
-import { ITEMS } from '../data/items';
-import { DB } from '../data/db';
-import { BOSS_MONSTERS } from '../data/monsters';
-import { getWeaponMagicSkills, isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils';
-import { DEFAULT_EXPLORE_STATE } from './explorationPacing';
-import { TITLES, TITLE_PASSIVES } from '../data/titles';
-import { getRunBuildProfile, getTraitSkill } from './runProfileUtils';
-import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager';
+import { ITEMS } from '../data/items.js';
+import { DB } from '../data/db.js';
+import { BOSS_MONSTERS } from '../data/monsters.js';
+import { getWeaponMagicSkills, isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils.js';
+import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
+import { TITLES, TITLE_PASSIVES } from '../data/titles.js';
+import { getRunBuildProfile, getTraitSkill } from './runProfileUtils.js';
+import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager.js';
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
@@ -459,6 +459,21 @@ export const checkTitles = (player) => {
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
         return false;
     }).map(t => t.id);
+};
+
+/**
+ * 타이틀 획득 로그를 처리하는 함수를 생성합니다.
+ * useCombatActions, useGameActions, useInventoryActions에서 동일하게 쓰이는 패턴을 통합합니다.
+ * @param {Function} dispatch - Redux dispatch
+ * @param {Function} addLog - 로그 출력 함수
+ * @returns {Function} (updatedPlayer) => void
+ */
+export const makeEmitTitles = (dispatch, addLog) => (updatedPlayer) => {
+    const newTitles = checkTitles(updatedPlayer);
+    if (newTitles.length > 0) {
+        dispatch({ type: 'UNLOCK_TITLES', payload: newTitles });
+        newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
+    }
 };
 
 /**

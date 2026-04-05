@@ -1,6 +1,6 @@
 # Aetheria RPG - Task Board
 
-**Last Updated:** 2026-03-17  
+**Last Updated:** 2026-03-31  
 **Engineer:** Aetheria Staff Engineer (Architectural Specialist)
 
 ---
@@ -25,19 +25,29 @@
 - iPhone 실기기 5분 빠른 루틴 수행 및 이슈 수집
 - 실기기 수동 QA 결과 반영
 - TestFlight 업로드
-- Android 실제 release keystore 기준 최종 번들 검증
+- `iPhone 14 Pro Max` CoreDevice 연결 복구 후 최신 UI archive 재설치/런치 재확인 (`xcrun devicectl list devices`에서 `No provider was found`, `xcrun xctrace list devices`에서 실기기 `offline` 상태로 확인되어 현재 호스트-디바이스 연결이 blocker)
+- Android 실제 release keystore 기준 최종 번들 검증 (`android/key.properties` 또는 `AETHERIA_ANDROID_KEYSTORE_*` 누락으로 현재 blocker)
 - Android 실기기 연결 후 5분 루틴 재실행
 - Android QA 환경 준비 (`adb` 또는 연결 가능한 실기기 확보)
 
 ### 🔄 In Progress
 - 새 기능 추가를 멈추고 `RC-1` 고정 기준으로 실기기 QA -> 수정 -> signed build 순서로 전환
-- 연결된 `iPhone 14 Pro Max`에 최신 `com.aetheria.roguelike` 설치/실행까지 완료한 상태에서 5분 터치 QA 대기
+- 최신 디자인 패스를 `cap:sync -> android:debug -> ios:build:device -> ios:archive`까지 반영한 상태에서, `iPhone 14 Pro Max`가 현재 `CoreDevice provider missing + xctrace offline device` 상태라 호스트 연결 복구 후 재설치/실행만 남음
 - 모바일 `Field Log` 확장판과 시체 회수 복구(`grave` 유지/로드/회수) 기준으로 iPhone 실기기 재확인
 - 보스 브리핑 / 성향 공명 / 빌드 유도 퀘스트 / 탐험 템포 신호의 실기기 판독성 확인
 - 최신 모바일 `Field Log -> Status -> Field Actions` 구조 기준 iPhone 5분 루틴 재실행 및 결과 수집
 - `Archive Dock` 상태별 숨김, 4열 액션 그리드의 `RESET` 위치, 카드 내부 `구매` 상점 플로우의 실기기 사용성 확인
 
 ### ✅ Completed
+- 모바일 수동 테스트 셋업 갱신 완료: `npm run test:unit`, `npm run lint`, `npm run mobile:doctor`, `./scripts/local-playtest.sh`, `npm run cap:sync`, `npm run android:debug`, `npm run ios:build:device`, `npm run ios:archive`를 순서대로 다시 통과시켜 최신 레이아웃이 Android debug APK와 iOS signed archive에 반영된 상태까지 정리했고, preview는 `4173` 충돌 시 `4174`로 우회해 smoke를 마무리함
+- 모바일 포커스 패널 레이아웃 리팩터 완료: `App.jsx`에서 `EVENT / SHOP / QUEST_BOARD / JOB_CHANGE / CRAFTING` 상태를 모바일 focus stage로 분리해 `Field Feed / Snapshot / Archive Dock` 스택과 동시 렌더링되지 않도록 정리하고, `ControlPanel` 및 `EventPanel / ShopPanel / QuestBoardPanel / JobChangePanel / CraftingPanel`이 고정 overlay 대신 인라인 `flex-1` 스테이지로 동작하게 바꾼 뒤 `TerminalView` 모바일 최소 높이도 줄여 세로 낭비를 완화하고 `npm run test:unit`, `npm run lint`, `npm run build:guard`, `./scripts/local-playtest.sh` 검증까지 완료
+- 게임 구성 오퍼레이션 큐레이션 패스 완료: `src/utils/questOperations.js`로 스토리/빌드/성장/보스/토벌 축 기반 추천 오퍼레이션 선택 로직을 추가하고, `QuestBoardPanel`이 추천 3개와 백로그를 분리해 보여주도록 정리했으며 `adventureGuide`도 새 임무 없음 상태에서 최우선 추천 작전을 직접 언급하도록 연결한 뒤 `npm run test:unit`, `npm run lint`, `npm run build:guard`, `./scripts/local-playtest.sh` 검증까지 완료
+- 디자인 패스 후 네이티브 재패키징 완료: `npm run test:unit`, preview 기반 `npm run test:smoke`, `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, `npm run ios:build:device`, `npm run ios:archive`를 다시 통과시켜 최신 모바일 UI가 Android debug APK와 iOS signed archive에 반영된 상태까지 확인
+- 모바일 비주얼 패스 1안+2안 완료: `StatusBar`, `TerminalView`, `ControlPanel`, `Dashboard` 모바일 요약/도크/시트, `CombatPanel`, `ShopPanel`, `EventPanel`, `QuestBoardPanel`, `QuestTab`, `StatsPanel`, `SmartInventory`, 공통 `aether` surface 계층을 같은 톤으로 재정리해 첫 화면 HUD/액션 그리드부터 상점·이벤트·전투·아카이브까지 트렌디한 밀도와 위계를 맞춘 뒤 `npm run lint`, `npm run build:guard`, `AETHERIA_RUN_PERF=1 ./scripts/local-playtest.sh` 기준 desktop/mobile smoke + desktop/mobile perf 재검증 완료
+- 모바일 상점 smoke guard 안정화 완료: `scripts/smoke-gameplay.mjs`가 모바일 상점에서 비액션 카드 shell 클릭에 의존하지 않고 실제 `구매` CTA 노출/overlay close 경로를 검증하도록 정리해 fixed sheet hit-test 편차로 인한 false negative를 제거
+- Android internal signed artifact 검증 완료: 로컬 `~/.android/debug.keystore`를 환경변수로 주입해 `npm run android:release`와 `npm run android:release:apk`를 통과시키고 내부 확인용 산출물 `android/app/build/outputs/bundle/release/app-release.aab`, `android/app/build/outputs/apk/release/app-release.apk` 생성까지 확인
+- 인트로 수정 후 RC-1 네이티브 전달 재검증 완료: `./scripts/local-playtest.sh`, `npm run ios:build:device`, `npm run ios:archive`를 다시 통과시키고 `xcrun devicectl`로 연결된 `iPhone 14 Pro Max`(`FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B`)에 `build/ios/Aetheria.xcarchive/Products/Applications/App.app`를 재설치/런치해 최신 빌드가 실기기에서 뜨는 것까지 확인
+- 모바일 인트로 진입 복구 및 첫인상 보정 완료: `App.jsx` 인트로 래퍼를 `min-h-full` 스크롤 안전 구조로 바꾸고 `IntroScreen.jsx`에서 모바일 카드 shrink/clipping을 제거했으며, 콜사인/시그널/챌린지/CTA 위계를 재정리해 시작 버튼 접근성을 복구한 뒤 `lint`, `build:guard`, `test:unit`, desktop/mobile smoke, desktop/mobile perf, `mobile:doctor`, `cap:sync`, `android:debug`, `ios:archive` 검증 완료
 - 데스크톱 웹 로그 중심 단순화 완료: 상단 `Field Briefing` 제거, 우측 정보 카드 스택 제거, 하단 액션 덱을 우측 `Archive / Actions` 컬럼으로 이동, 데스크톱 배경/로그 대비를 장시간 플레이 기준으로 완화
 - 전투 중 소모품 사용, 다중 시체 유지/회수, 마을 복귀 시 임시 버프/상태 정리 버그 수정 완료
 - 최신 로그/시체 복구 빌드 iPhone 반영 완료: `npm run cap:sync`, `npm run ios:archive` 후 signed archive를 `iPhone 14 Pro Max`에 재설치하고 `com.aetheria.roguelike` 실행 확인

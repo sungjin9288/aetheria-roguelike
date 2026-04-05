@@ -28,7 +28,7 @@ const StatBar = ({ label, value, color }) => {
 /**
  * ClassCard — 직업 선택 카드 (아이콘 + 스탯 바 + 설명)
  */
-const ClassCard = ({ jobName, player, onSelect, disabled = false, compact = false }) => {
+const ClassCard = ({ jobName, onSelect, disabled = false, compact = false }) => {
     const jobData = DB.CLASSES[jobName];
     if (!jobData) return null;
 

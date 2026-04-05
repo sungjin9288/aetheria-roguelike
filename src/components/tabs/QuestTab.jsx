@@ -103,7 +103,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
     return (
         <div className="flex flex-col h-full">
             {/* 헤더 바 */}
-            <div className={`${compact ? 'mb-2 p-2.5' : 'mb-3 p-3'} rounded-[1rem] border border-white/8 bg-black/18 shrink-0`}>
+            <div className={`${compact ? 'mb-2 p-2.5 aether-panel-core' : 'mb-3 p-3 rounded-[1rem] border border-white/8 bg-black/18'} rounded-[1rem] shrink-0`}>
                 <div className="flex flex-wrap items-center gap-1.5">
                     <SignalBadge tone="neutral" size="sm">진행 {activeQuestEntries.length}</SignalBadge>
                     <SignalBadge tone={claimableQuestCount > 0 ? 'success' : 'neutral'} size="sm">보상 대기 {claimableQuestCount}</SignalBadge>
@@ -123,7 +123,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                 {/* Daily Protocol 섹션 */}
                 {dpMissions.length > 0 && (
                     compact && !showAllQuests ? (
-                        <div className="mb-2 rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 px-2.5 py-2">
+                        <div className="mb-2 rounded-[1rem] border border-[#9a8ac0]/20 bg-[radial-gradient(circle_at_top_right,rgba(154,138,192,0.16),transparent_24%),linear-gradient(180deg,rgba(33,22,46,0.22)_0%,rgba(16,10,20,0.1)_100%)] px-2.5 py-2">
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                     <span className="text-[#e3dcff] text-[10px] font-fira tracking-widest uppercase">Daily Protocol</span>
@@ -202,7 +202,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                     const visitedMaps = new Set(player.stats?.visitedMaps || []);
                     const completedChains = player.stats?.discoveryChains || [];
                     return (
-                        <div className={`rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/5 ${compact ? 'mb-2 px-2.5 py-2' : 'mb-3 px-3 py-2.5'}`}>
+                        <div className={`rounded-[1rem] border border-[#7dd4d8]/18 bg-[radial-gradient(circle_at_top_right,rgba(125,212,216,0.12),transparent_24%),linear-gradient(180deg,rgba(14,33,37,0.18)_0%,rgba(8,15,18,0.08)_100%)] ${compact ? 'mb-2 px-2.5 py-2' : 'mb-3 px-3 py-2.5'}`}>
                             <div className={`flex items-center justify-between ${compact ? 'mb-1.5' : 'mb-2'}`}>
                                 <span className="text-[#dff7f5] text-[10px] font-fira tracking-widest uppercase">Discovery Chains</span>
                                 <span className={`text-[10px] font-fira px-1.5 py-0.5 rounded-full border ${completedChains.length === chains.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]'}`}>

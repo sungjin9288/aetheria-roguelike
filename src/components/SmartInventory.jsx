@@ -169,7 +169,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     data-testid="inventory-spotlight-detail"
-                    className={`flex items-start justify-between gap-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/10 ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}
+                    className={`flex items-start justify-between gap-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[radial-gradient(circle_at_top_right,rgba(154,138,192,0.16),transparent_24%),linear-gradient(180deg,rgba(33,22,46,0.22)_0%,rgba(16,10,20,0.1)_100%)] ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}
                 >
                     <div className="min-w-0">
                         <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-[#e3dcff]/72">
@@ -196,7 +196,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
             )}
 
             {/* Filter Bar */}
-            <div className={`rounded-[1rem] border border-white/8 bg-black/16 ${compact ? 'px-1.5 py-1.5' : 'px-2 py-2'}`}>
+            <div className={`rounded-[1rem] ${compact ? 'aether-panel-core px-1.5 py-1.5' : 'border border-white/8 bg-black/16 px-2 py-2'}`}>
                 <div className={`${useDenseCompactInventory ? 'flex flex-nowrap items-center gap-1 overflow-x-auto pb-0.5' : 'flex flex-wrap items-center gap-1.5'}`}>
                 {FILTERS.map(f => (
                     <button
@@ -235,7 +235,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 <Motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`flex items-center justify-between rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/8 ${compact ? 'px-2.5 py-1.5' : 'px-3 py-2'}`}
+                    className={`flex items-center justify-between rounded-[1rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)] ${compact ? 'px-2.5 py-1.5' : 'px-3 py-2'}`}
                 >
                     <div className={`flex items-center gap-2 text-[#f6e7c8] font-fira ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
                         <AlertCircle size={compact ? 12 : 13} className="shrink-0 animate-pulse" />
@@ -277,7 +277,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
             {/* Item List */}
             <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
                 {filtered.length === 0 && (
-                    <div className={`rounded-[1rem] border border-white/8 bg-black/16 text-center font-rajdhani tracking-widest text-slate-500 ${compact ? 'py-5 text-[13px]' : 'py-6 text-sm'}`}>
+                    <div className={`rounded-[1rem] border border-white/8 ${compact ? 'aether-panel-muted py-5 text-[13px]' : 'bg-black/16 py-6 text-sm'} text-center font-rajdhani tracking-widest text-slate-500`}>
                         해당 카테고리의 아이템이 없습니다
                     </div>
                 )}
@@ -308,7 +308,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     ? 'border-[#9a8ac0]/30 bg-[#9a8ac0]/10 shadow-[0_0_16px_rgba(154,138,192,0.12)]'
                                     : isCurrentEquip
                                         ? 'border-emerald-300/24 bg-emerald-300/[0.06]'
-                                        : 'border-white/8 bg-black/18 hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]'}`}
+                                        : 'border-white/8 aether-panel-muted hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]'}`}
                         >
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">

@@ -12,7 +12,7 @@ const RARITY_LABEL = { common: '일반', uncommon: '고급', rare: '희귀', epi
 /**
  * CraftingPanel — 제작/합성 패널 (탭 전환)
  */
-const CraftingPanel = ({ player, actions, setGameState }) => {
+const CraftingPanel = ({ player, actions, setGameState, mobileFocused = false }) => {
   const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
   const [mode, setMode] = useState('craft');
   const [selectedIds, setSelectedIds] = useState([]);
@@ -233,7 +233,7 @@ const CraftingPanel = ({ player, actions, setGameState }) => {
   return (
     <Motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className={`${overlayPanelClass} bg-cyber-black/95 z-30 p-4 md:p-6 rounded-lg border border-orange-500/40 flex flex-col shadow-[0_0_30px_rgba(249,115,22,0.2)] backdrop-blur-xl`}
+      className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col rounded-[1.95rem] border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-xl' : `${overlayPanelClass} bg-cyber-black/95 z-30 flex flex-col rounded-lg border border-orange-500/40 p-4 md:p-6 shadow-[0_0_30px_rgba(249,115,22,0.2)] backdrop-blur-xl`}`}
     >
       {/* 헤더 + 모드 토글 */}
       <div className="flex items-center justify-between mb-4">

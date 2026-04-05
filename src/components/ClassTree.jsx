@@ -31,10 +31,8 @@ const buildTree = () => {
     return { nodes, edges, tiers };
 };
 
-const TreeNode = ({ node, isCurrent, isAvailable, isLocked, playerLevel }) => {
+const TreeNode = ({ node, isCurrent, isAvailable, isLocked }) => {
     const tier = node.tier;
-    const color = TIER_COLORS[tier];
-    const meetsReq = playerLevel >= node.reqLv;
 
     return (
         <Motion.div
@@ -72,7 +70,7 @@ const TreeNode = ({ node, isCurrent, isAvailable, isLocked, playerLevel }) => {
  * ClassTree — 전직 계통도 시각화 (CSS Grid 4열)
  */
 const ClassTree = ({ player }) => {
-    const { nodes, edges, tiers } = useMemo(() => buildTree(), []);
+    const { tiers } = useMemo(() => buildTree(), []);
     const currentClass = DB.CLASSES[player.job];
     const availableJobs = new Set(currentClass?.next || []);
 
@@ -88,9 +86,6 @@ const ClassTree = ({ player }) => {
         }
         return visited;
     }, [player.job]);
-
-    // 연결선을 위한 부모-자식 관계 매핑
-    const maxPerTier = Math.max(...Object.values(tiers).map(t => t.length), 1);
 
     return (
         <div className="space-y-2">
@@ -133,7 +128,6 @@ const ClassTree = ({ player }) => {
                                     isCurrent={player.job === node.name}
                                     isAvailable={availableJobs.has(node.name)}
                                     isLocked={!reachable.has(node.name) && player.job !== node.name}
-                                    playerLevel={player.level}
                                 />
                             ))}
                         </div>

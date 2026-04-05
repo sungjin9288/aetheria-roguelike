@@ -62,7 +62,7 @@ export const useGameEngine = () => {
 
     const getFullStats = useCallback((targetPlayer = player) => {
         const activePlayer = targetPlayer ?? player;
-        const cls = DB.CLASSES[activePlayer.job] || DB.CLASSES['모험가'];
+        const cls = DB.CLASSES[activePlayer.job] || DB.CLASSES[CONSTANTS.DEFAULT_JOB];
         const equipProfile = getEquipmentProfile(activePlayer.equip);
         const {
             mainWeapon,

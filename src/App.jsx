@@ -53,6 +53,14 @@ const DashboardFallback = ({ mobile = false, summary = false }) => (
   />
 );
 
+const MOBILE_FOCUS_PANEL_STATES = new Set([
+  GS.EVENT,
+  GS.SHOP,
+  GS.QUEST_BOARD,
+  GS.JOB_CHANGE,
+  GS.CRAFTING,
+]);
+
 function App() {
   const engine = useGameEngine();
   const [isMuted, setIsMuted] = useState(false);
@@ -64,6 +72,7 @@ function App() {
 
   // Damage Flash hook
   const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
+  const isMobileFocusState = isMobileViewport && MOBILE_FOCUS_PANEL_STATES.has(engine.gameState);
   const mobileArchiveDockVisible = (
     [GS.IDLE, GS.MOVING].includes(engine.gameState)
     && !engine.pendingRelics
@@ -324,8 +333,6 @@ function App() {
       delete window.advanceTime;
       delete window.__AETHERIA_TEST_API__;
     };
-  // Test harness uses refs (updated synchronously during render) so only needs to run once for setup/cleanup.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (engine.bootStage !== 'ready') {
@@ -379,7 +386,7 @@ function App() {
     return (
       <MotionConfig reducedMotion="user">
         <MainLayout visualEffect={null}>
-          <div className="flex flex-col items-center justify-center h-full space-y-6 relative z-10">
+          <div className={`relative z-10 flex w-full flex-col items-center gap-4 md:gap-6 ${isMobileViewport ? 'min-h-full justify-start py-3' : 'h-full justify-center'}`}>
             <IntroScreen onStart={engine.actions.start} mobile={isMobileViewport} />
           </div>
         </MainLayout>
@@ -445,47 +452,51 @@ function App() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className={`relative z-10 flex min-h-0 flex-1 w-full flex-col gap-2 ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
+            className={`relative z-10 flex min-h-0 flex-1 w-full flex-col ${isMobileFocusState ? 'overflow-hidden gap-2' : 'gap-2'} ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
           >
-            {showOnboarding && (
+            {showOnboarding && !isMobileFocusState && (
               <OnboardingGuide player={engine.player} onDismiss={handleOnboardingDismiss} mobile />
             )}
-            <TerminalView
-              logs={engine.logs}
-              gameState={engine.gameState}
-              onCommand={engine.handleCommand}
-              autoFocusInput={false}
-              mobile
-              player={engine.player}
-              stats={fullStats}
-              quickSlots={engine.quickSlots}
-              onQuickSlotUse={handleQuickSlotUse}
-              showInput={false}
-              syncStatus={engine.syncStatus}
-              isMuted={isMuted}
-              onToggleMute={() => setIsMuted(soundManager.toggleMute())}
-            />
-            <Suspense fallback={<DashboardFallback mobile summary />}>
-              <Dashboard
+            {!isMobileFocusState && (
+              <TerminalView
+                logs={engine.logs}
+                gameState={engine.gameState}
+                onCommand={engine.handleCommand}
+                autoFocusInput={false}
                 mobile
-                mobileSection="summary"
                 player={engine.player}
-                grave={engine.grave}
-                sideTab={engine.sideTab}
-                setSideTab={engine.actions.setSideTab}
-                actions={engine.actions}
                 stats={fullStats}
                 quickSlots={engine.quickSlots}
-                inventorySpotlight={inventorySpotlight}
-                runtime={{
-                  syncStatus: engine.syncStatus,
-                  gameState: engine.gameState,
-                  isAiThinking: engine.isAiThinking,
-                  viewport: 'mobile',
-                  mobileArchiveDockVisible,
-                }}
+                onQuickSlotUse={handleQuickSlotUse}
+                showInput={false}
+                syncStatus={engine.syncStatus}
+                isMuted={isMuted}
+                onToggleMute={() => setIsMuted(soundManager.toggleMute())}
               />
-            </Suspense>
+            )}
+            {!isMobileFocusState && (
+              <Suspense fallback={<DashboardFallback mobile summary />}>
+                <Dashboard
+                  mobile
+                  mobileSection="summary"
+                  player={engine.player}
+                  grave={engine.grave}
+                  sideTab={engine.sideTab}
+                  setSideTab={engine.actions.setSideTab}
+                  actions={engine.actions}
+                  stats={fullStats}
+                  quickSlots={engine.quickSlots}
+                  inventorySpotlight={inventorySpotlight}
+                  runtime={{
+                    syncStatus: engine.syncStatus,
+                    gameState: engine.gameState,
+                    isAiThinking: engine.isAiThinking,
+                    viewport: 'mobile',
+                    mobileArchiveDockVisible,
+                  }}
+                />
+              </Suspense>
+            )}
             <ControlPanel
               gameState={engine.gameState}
               player={engine.player}
@@ -499,29 +510,32 @@ function App() {
               currentEvent={engine.currentEvent}
               stats={fullStats}
               mobile
+              mobileFocused={isMobileFocusState}
             />
-            <Suspense fallback={mobileArchiveDockVisible ? <DashboardFallback mobile /> : null}>
-              <Dashboard
-                mobile
-                mobileSection="archive"
-                player={engine.player}
-                grave={engine.grave}
-                sideTab={engine.sideTab}
-                setSideTab={engine.actions.setSideTab}
-                actions={engine.actions}
-                stats={fullStats}
-                quickSlots={engine.quickSlots}
-                inventorySpotlight={inventorySpotlight}
-                runtime={{
-                  syncStatus: engine.syncStatus,
-                  gameState: engine.gameState,
-                  isAiThinking: engine.isAiThinking,
-                  viewport: 'mobile',
-                  mobileArchiveDockVisible,
-                }}
-              />
-            </Suspense>
-            {mobileArchiveDockVisible && <div className="h-[4.1rem] shrink-0 md:hidden" aria-hidden="true" />}
+            {!isMobileFocusState && (
+              <Suspense fallback={mobileArchiveDockVisible ? <DashboardFallback mobile /> : null}>
+                <Dashboard
+                  mobile
+                  mobileSection="archive"
+                  player={engine.player}
+                  grave={engine.grave}
+                  sideTab={engine.sideTab}
+                  setSideTab={engine.actions.setSideTab}
+                  actions={engine.actions}
+                  stats={fullStats}
+                  quickSlots={engine.quickSlots}
+                  inventorySpotlight={inventorySpotlight}
+                  runtime={{
+                    syncStatus: engine.syncStatus,
+                    gameState: engine.gameState,
+                    isAiThinking: engine.isAiThinking,
+                    viewport: 'mobile',
+                    mobileArchiveDockVisible,
+                  }}
+                />
+              </Suspense>
+            )}
+            {!isMobileFocusState && mobileArchiveDockVisible && <div className="h-[4.1rem] shrink-0 md:hidden" aria-hidden="true" />}
           </Motion.div>
         ) : (
           <>

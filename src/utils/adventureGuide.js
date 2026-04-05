@@ -1,6 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import { QUESTS } from '../data/quests.js';
 import { getDiscoveryOdds, getMapPacingProfile } from './explorationPacing.js';
+import { getQuestBoardRecommendations } from './questOperations.js';
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -289,9 +290,12 @@ export const getAdventureGuidance = (player, stats, mapData, runtimeState = 'idl
     }
 
     if (safe && !questTracker) {
+        const featuredQuest = getQuestBoardRecommendations(player).featured[0] || null;
         return {
             title: '새 임무 수령 가능',
-            detail: '현재 진행 중인 임무가 없습니다. 마을 게시판에서 목표를 받아 성장 축을 잡으세요.',
+            detail: featuredQuest
+                ? `추천 작전: ${featuredQuest.quest.title} · ${featuredQuest.reason}`
+                : '현재 진행 중인 임무가 없습니다. 마을 게시판에서 목표를 받아 성장 축을 잡으세요.',
             emphasis: '목표 설정',
             primaryAction: { kind: 'open_quest_board', label: '게시판 열기' },
             secondaryAction: { kind: 'open_move', label: '이동 준비' },

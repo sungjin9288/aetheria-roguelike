@@ -217,7 +217,6 @@ async function verifyShopFlow(page) {
     ensure(await page.locator('[data-testid="shop-close-footer"]').count() === 0, 'Mobile shop should not render the desktop footer close control');
     ensure(await shopCards.count() > 0, 'Mobile shop did not render compact buy cards');
 
-    await shopCards.first().click();
     await inlineBuyButton.waitFor({ state: 'visible', timeout: 5000 });
   }
 

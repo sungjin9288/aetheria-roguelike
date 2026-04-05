@@ -24,16 +24,7 @@ import CombatPanel from './tabs/CombatPanel';
 import JobChangePanel from './tabs/JobChangePanel';
 import QuestBoardPanel from './tabs/QuestBoardPanel';
 import CraftingPanel from './tabs/CraftingPanel';
-
-const ACTION_KIND_TO_BUTTON = {
-  explore: 'explore',
-  open_move: 'move',
-  rest: 'rest',
-  open_class: 'class',
-  open_quest_board: 'quests',
-  open_shop: 'market',
-  claim_quest: 'quests',
-};
+import { ACTION_KIND_TO_BUTTON, ACTION_PRESENTATION } from './controlPanelConfig';
 
 const ControlPanel = ({
   gameState,
@@ -47,6 +38,7 @@ const ControlPanel = ({
   currentEvent,
   stats = null,
   mobile = false,
+  mobileFocused = false,
   desktopSidebar = false,
   compactDesktop = false,
 }) => {
@@ -60,28 +52,28 @@ const ControlPanel = ({
   const useCompactDesktopRail = desktopSidebar && compactDesktop;
 
   const actionGridClass = mobile
-    ? 'grid grid-cols-2 gap-2'
+    ? 'grid grid-cols-2 gap-2.5'
     : useCompactDesktopRail
       ? 'grid grid-cols-2 gap-1'
       : desktopSidebar
       ? 'grid grid-cols-2 gap-1.5'
       : 'grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3';
   const actionButtonBase = mobile
-    ? 'relative min-h-[66px] rounded-[1.2rem] px-2 py-2.5 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+    ? 'relative min-h-[88px] overflow-hidden rounded-[1.35rem] px-3 py-3 flex flex-col items-start justify-between gap-2 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_18px_34px_rgba(1,6,14,0.22),inset_0_1px_0_rgba(255,255,255,0.03)]'
     : useCompactDesktopRail
       ? 'relative min-h-[30px] rounded-[0.78rem] px-0.75 py-0.5 flex items-center justify-center gap-0.75 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
       : desktopSidebar
       ? 'relative min-h-[44px] rounded-[1rem] px-1.25 py-1.25 flex flex-col items-center justify-center gap-0.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
       : 'relative min-h-[60px] p-2 sm:p-3 rounded-[1.3rem] flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]';
   const actionLabelClass = mobile
-    ? 'text-[10px] font-rajdhani font-bold tracking-[0.16em]'
+    ? 'text-[11px] font-rajdhani font-bold tracking-[0.18em] text-left'
     : useCompactDesktopRail
       ? 'text-[6.5px] font-rajdhani font-bold tracking-[0.14em]'
       : desktopSidebar
       ? 'text-[7px] font-rajdhani font-bold tracking-[0.16em]'
       : 'text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest';
   const resetButtonClass = mobile
-    ? 'min-h-[50px] rounded-[1rem] border px-2 py-2 text-[8px] font-rajdhani font-bold tracking-[0.16em] transition-all flex flex-col items-center justify-center gap-1'
+    ? 'min-h-[56px] rounded-[1.15rem] border px-2.5 py-2 text-[9px] font-rajdhani font-bold tracking-[0.18em] transition-all flex flex-col items-center justify-center gap-1'
     : useCompactDesktopRail
       ? 'min-h-[24px] rounded-[0.78rem] border px-1.25 py-0.5 text-[6.5px] font-rajdhani font-bold tracking-[0.14em] transition-all flex items-center justify-center'
       : desktopSidebar
@@ -107,6 +99,7 @@ const ControlPanel = ({
       disabled = false,
     } = button;
     const buttonLabel = mobile ? mobileLabel : desktopSidebar ? sidebarLabel : label;
+    const actionMeta = ACTION_PRESENTATION[key] || null;
 
     return (
       <Motion.button
@@ -118,16 +111,50 @@ const ControlPanel = ({
         onClick={onClick}
         className={`${actionButtonBase} ${getRecommendedClass(key)} ${className} ${extraClass}`.trim()}
       >
+        {mobile && (
+          <div
+            className="pointer-events-none absolute inset-0 opacity-80"
+            style={{ backgroundImage: 'radial-gradient(circle at 82% 12%, rgba(255,255,255,0.08), transparent 22%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%)' }}
+          />
+        )}
         {!mobile && !desktopSidebar && recommendedButton === key && (
           <div className="absolute top-1.5 right-1.5">
             <SignalBadge tone="recommended" size="sm">추천</SignalBadge>
           </div>
         )}
-        <Icon size={mobile ? 16 : useCompactDesktopRail ? 12 : desktopSidebar ? 13 : 18} className="transition-transform group-hover:scale-110" />
-        {hideLabel ? (
-          <span className="sr-only">{buttonLabel}</span>
+        {mobile ? (
+          <>
+            <div className="flex w-full items-start justify-between gap-2">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border border-white/8 bg-black/18 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <Icon size={16} className="transition-transform group-hover:scale-110" />
+              </span>
+              <div className="flex items-center gap-1">
+                {recommendedButton === key && <SignalBadge tone="recommended" size="sm">추천</SignalBadge>}
+                {actionMeta?.tag && <SignalBadge tone={actionMeta.tone} size="sm">{actionMeta.tag}</SignalBadge>}
+              </div>
+            </div>
+            {hideLabel ? (
+              <span className="sr-only">{buttonLabel}</span>
+            ) : (
+              <div className="w-full">
+                <div className={actionLabelClass}>{buttonLabel}</div>
+                {actionMeta?.detail && (
+                  <div className="mt-1 text-[10px] font-fira leading-snug text-white/58">
+                    {actionMeta.detail}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         ) : (
-          <span className={actionLabelClass}>{buttonLabel}</span>
+          <>
+            <Icon size={useCompactDesktopRail ? 12 : desktopSidebar ? 13 : 18} className="transition-transform group-hover:scale-110" />
+            {hideLabel ? (
+              <span className="sr-only">{buttonLabel}</span>
+            ) : (
+              <span className={actionLabelClass}>{buttonLabel}</span>
+            )}
+          </>
         )}
       </Motion.button>
     );
@@ -194,7 +221,10 @@ const ControlPanel = ({
       <Motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="panel-noise mt-4 p-6 border border-cyber-purple/50 rounded-lg bg-cyber-black/80 text-center animate-pulse text-cyber-purple font-rajdhani tracking-widest shadow-neon-purple backdrop-blur-md z-10 relative"
+        className={mobileFocused
+          ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center rounded-[1.9rem] border border-[#9a8ac0]/20 px-5 py-6 text-center text-[#ece5ff] shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-md'
+          : 'panel-noise mt-4 rounded-lg border border-cyber-purple/50 bg-cyber-black/80 p-6 text-center font-rajdhani tracking-widest text-cyber-purple shadow-neon-purple backdrop-blur-md z-10 relative animate-pulse'
+        }
       >
         NEURAL LINK ACTIVE... PROCESSING SCENARIO...
       </Motion.div>
@@ -202,23 +232,23 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.EVENT && !isAiThinking) {
-    return <EventPanel currentEvent={currentEvent} actions={actions} />;
+    return <EventPanel currentEvent={currentEvent} actions={actions} mobileFocused={mobileFocused} />;
   }
 
   if (gameState === GS.SHOP) {
-    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} mobile={mobile} />;
+    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} mobile={mobile} mobileFocused={mobileFocused} />;
   }
 
   if (gameState === GS.JOB_CHANGE) {
-    return <JobChangePanel player={player} actions={actions} setGameState={setGameState} />;
+    return <JobChangePanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} />;
   }
 
   if (gameState === GS.QUEST_BOARD) {
-    return <QuestBoardPanel player={player} actions={actions} setGameState={setGameState} />;
+    return <QuestBoardPanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} />;
   }
 
   if (gameState === GS.CRAFTING) {
-    return <CraftingPanel player={player} actions={actions} setGameState={setGameState} />;
+    return <CraftingPanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} />;
   }
 
   const coreButtons = [
@@ -350,7 +380,7 @@ const ControlPanel = ({
       animate={{ opacity: 1 }}
       className={`relative z-10 w-full ${
         mobile
-          ? 'mt-2.5 md:mt-4 panel-noise aether-surface rounded-[1.8rem] p-2.5'
+          ? 'panel-noise aether-surface rounded-[1.9rem] p-3'
           : useCompactDesktopRail
             ? 'panel-noise aether-surface rounded-[1.05rem] p-1.5'
             : desktopSidebar
@@ -358,6 +388,34 @@ const ControlPanel = ({
             : 'mt-2.5 md:mt-4'
       }`}
     >
+      {mobile && (
+        <>
+          <div className="pointer-events-none absolute -top-6 right-0 h-20 w-20 rounded-full bg-[#d5b180]/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-8 left-0 h-24 w-24 rounded-full bg-[#7dd4d8]/8 blur-3xl" />
+        </>
+      )}
+      {mobile && (
+        <div className="mb-2.5 rounded-[1.25rem] aether-panel-core px-3 py-2.5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/68">
+                {gameState === GS.MOVING ? 'Route Matrix' : 'Tactical Deck'}
+              </div>
+              <div className="mt-1 text-[14px] font-rajdhani font-bold leading-none text-white/94">
+                {gameState === GS.MOVING ? '다음 이동 노선을 선택하세요.' : guidance.title}
+              </div>
+              <div className="mt-1 text-[10px] font-fira leading-snug text-slate-300/72">
+                {gameState === GS.MOVING
+                  ? '권장 경로와 난이도 정보를 보고 안정적으로 진입할 구역을 정합니다.'
+                  : guidance.detail}
+              </div>
+            </div>
+            <SignalBadge tone={isSafeZone ? 'upgrade' : 'neutral'} size="sm">
+              {isSafeZone ? '안전 지대' : '현장 작전'}
+            </SignalBadge>
+          </div>
+        </div>
+      )}
       {desktopSidebar && (
         <div className={`${useCompactDesktopRail ? 'mb-0.5' : 'mb-1.5'} flex items-center justify-between gap-2 px-0.25`}>
           <div className={`${useCompactDesktopRail ? 'text-[8px]' : 'text-[9px]'} font-fira uppercase tracking-[0.18em] text-slate-500`}>
@@ -392,7 +450,7 @@ const ControlPanel = ({
               onClick={() => actions.move(route.name)}
               className={`${
                 mobile
-                  ? 'min-h-[78px] px-3 py-2 text-xs'
+                  ? 'min-h-[92px] rounded-[1.35rem] px-3 py-3 text-xs'
                   : useCompactDesktopRail
                     ? 'min-h-[40px] px-1.5 py-1.25 text-[8px]'
                     : desktopSidebar
@@ -400,14 +458,16 @@ const ControlPanel = ({
                     : 'flex-1 min-w-[150px] min-h-[92px] px-4 py-3'
               } ${
                 route.isRecommended
-                  ? 'border-[#7dd4d8]/26 bg-[#7dd4d8]/12 shadow-[0_18px_30px_rgba(125,212,216,0.1)]'
-                  : 'border-white/8 bg-black/18'
-              } rounded-[1.2rem] text-left hover:border-[#d5b180]/20 hover:bg-[#d5b180]/8 flex flex-col items-start justify-between gap-2 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all backdrop-blur-md`}
+                  ? 'border-[#7dd4d8]/26 bg-[radial-gradient(circle_at_82%_12%,rgba(125,212,216,0.14),transparent_22%),linear-gradient(180deg,rgba(18,34,41,0.84)_0%,rgba(8,14,18,0.96)_100%)] shadow-[0_18px_30px_rgba(125,212,216,0.1)]'
+                  : 'border-white/8 bg-[linear-gradient(180deg,rgba(18,21,28,0.84)_0%,rgba(8,11,16,0.96)_100%)]'
+              } text-left hover:border-[#d5b180]/20 hover:bg-[#d5b180]/8 flex flex-col items-start justify-between gap-2 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all backdrop-blur-md`}
             >
               <div className="flex w-full items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-[#e4f7f5]">
-                    <MapIcon size={useCompactDesktopRail ? 12 : 16} />
+                    <span className={`flex items-center justify-center rounded-[0.9rem] border border-white/8 bg-black/18 ${mobile ? 'h-8 w-8' : 'h-7 w-7'}`}>
+                      <MapIcon size={useCompactDesktopRail ? 12 : 16} />
+                    </span>
                     <span className={`truncate ${useCompactDesktopRail ? 'text-[11px]' : ''}`}>{route.name}</span>
                   </div>
                   <div className={`mt-1 font-fira text-slate-400/72 ${useCompactDesktopRail ? 'text-[8px]' : 'text-[10px]'}`}>

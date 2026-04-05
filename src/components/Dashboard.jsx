@@ -3,6 +3,8 @@ import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp,
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { MOTION } from '../utils/animationConfig';
 import { DB } from '../data/db';
+import ArchiveTabButton from './ArchiveTabButton';
+import DashboardMobileSummary from './DashboardMobileSummary';
 import SmartInventory from './SmartInventory';
 import AchievementPanel from './AchievementPanel';
 import SkillTreePreview from './SkillTreePreview';
@@ -33,40 +35,6 @@ const MOBILE_PRIMARY_TABS = ['inventory', 'quest', 'map', 'stats'];
 const MOBILE_SECONDARY_TABS = ['achievements', 'skills', 'codex', 'pass', 'graves', 'system'];
 const DESKTOP_PRIMARY_TABS = ['inventory', 'quest', 'map'];
 const DESKTOP_SECONDARY_TABS = ['achievements', 'skills', 'stats', 'codex', 'pass', 'graves', 'system'];
-const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = false, rail = false, dense = false, iconOnly = false, testId = null }) => {
-    const Icon = icon;
-    const frameClass = rail
-        ? 'flex min-h-[32px] shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1'
-        : dense
-            ? iconOnly
-                ? 'flex min-h-[27px] items-center justify-center gap-0 rounded-[0.72rem] px-0.5 py-0.5'
-                : 'flex min-h-[30px] items-center justify-center gap-0.5 rounded-[0.8rem] px-0.75 py-0.75 flex-col'
-            : 'flex flex-col items-center justify-center gap-1 rounded-[1rem]';
-    const heightClass = rail || dense ? '' : compact ? 'min-h-[40px]' : 'min-h-[52px]';
-
-    return (
-        <Motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={onClick}
-            data-testid={testId}
-            title={label}
-            className={`border ${dense ? 'px-1 py-1' : 'px-2 py-1.5'} transition-all backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] ${
-                active
-                    ? 'border-[#7dd4d8]/26 bg-[linear-gradient(180deg,rgba(125,212,216,0.18)_0%,rgba(125,212,216,0.08)_100%)] text-[#e4f7f5] shadow-[0_16px_30px_rgba(125,212,216,0.12)]'
-                    : 'text-slate-300/65 border-white/8 hover:border-[#d5b180]/18 bg-black/18'
-            } ${frameClass} ${heightClass}`}
-        >
-            <Icon size={rail ? 11 : dense ? (iconOnly ? 11 : 12) : 14} />
-            {iconOnly ? (
-                <span className="sr-only">{label}</span>
-            ) : (
-                <span className={`${rail ? 'text-[8px] tracking-[0.1em]' : dense ? 'text-[8px] tracking-[0.12em]' : 'text-[8px] tracking-[0.14em]'} font-fira uppercase`}>
-                    {label}
-                </span>
-            )}
-        </Motion.button>
-    );
-};
 
 // Animation variants for tab content
 const tabVariants = {
@@ -88,12 +56,6 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
     const activeMobileTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
     const ActiveArchiveIcon = activeMobileTab.icon;
     const activeDesktopTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
-    const mapData = DB.MAPS[player?.loc];
-    const loadoutEntries = [
-        { label: 'LEFT', item: player?.equip?.offhand, slot: 'offhand', fallback: 'EMPTY' },
-        { label: 'RIGHT', item: player?.equip?.weapon, slot: 'main', fallback: 'EMPTY' },
-        { label: 'ARMOR', item: player?.equip?.armor, slot: 'armor', fallback: 'EMPTY' },
-    ];
     const handleTabSelect = (tabId) => {
         setSideTab(tabId);
         if (mobile) setMobileArchiveExpanded(true);
@@ -179,54 +141,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
 
     if (mobile) {
         if (mobileSection === 'summary') {
-            return (
-                <Motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="md:hidden panel-noise aether-surface rounded-[1.55rem] px-3 py-2.5"
-                >
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                            <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                                Field Snapshot
-                            </div>
-                            <div className="mt-1 truncate text-[14px] font-rajdhani font-bold text-white/92">
-                                {player?.loc}
-                            </div>
-                            <div className="mt-1 text-[10px] font-fira text-slate-400/76 truncate">
-                                {mapData?.boss ? '보스 권역' : mapData?.type === 'safe' ? '안전 지대' : '탐험 구역'}
-                            </div>
-                        </div>
-                        <SignalBadge
-                            tone={mapData?.boss ? 'danger' : mapData?.type === 'safe' ? 'upgrade' : 'neutral'}
-                            size="sm"
-                        >
-                            {mapData?.boss ? '보스' : mapData?.type === 'safe' ? '안전' : '탐험'}
-                        </SignalBadge>
-                    </div>
-
-                    <div className="mt-2 grid grid-cols-3 gap-1.5 rounded-[1.05rem] border border-white/8 bg-black/18 px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                        {loadoutEntries.map((entry) => (
-                            <div
-                                key={entry.label}
-                                className="min-w-0 rounded-[0.9rem] border border-white/8 bg-white/[0.02] px-2 py-1.5"
-                            >
-                                <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-slate-500">
-                                    {entry.label}
-                                </div>
-                                <div className="mt-1 flex items-center gap-1 min-w-0">
-                                    <span className="truncate text-[10px] font-fira leading-none text-slate-200/88">
-                                        {entry.item?.name || entry.fallback}
-                                    </span>
-                                    {(entry.item?.enhance || 0) > 0 && (
-                                        <span className="shrink-0 text-[9px] font-bold font-fira text-[#d5b180]">+{entry.item.enhance}</span>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Motion.div>
-            );
+            return <DashboardMobileSummary player={player} />;
         }
 
         if (!showArchiveDock && !archiveOpen) {
@@ -244,15 +159,16 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                             type="button"
                             data-testid="mobile-archive-open"
                             onClick={() => setMobileArchiveExpanded(true)}
-                            className="panel-noise aether-surface group flex w-full items-center justify-between gap-3 rounded-full px-3 py-2"
+                            className="panel-noise aether-surface-strong group flex w-full items-center justify-between gap-3 rounded-[1.25rem] px-3 py-2.5 overflow-hidden"
                         >
+                            <div className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: 'radial-gradient(circle at top right, rgba(213,177,128,0.12), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%)' }} />
                             <div className="flex min-w-0 items-center gap-2.5">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/8 bg-white/[0.03] text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border border-white/8 bg-white/[0.03] text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                                     <ActiveArchiveIcon size={14} />
                                 </div>
                                 <div className="min-w-0 text-left">
-                                    <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-500">Archive</div>
-                                    <div className="mt-0.5 truncate text-[12px] font-rajdhani font-bold text-white/92">
+                                    <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/68">Archive Dock</div>
+                                    <div className="mt-0.5 truncate text-[13px] font-rajdhani font-bold text-white/92">
                                         {hasInventorySpotlight
                                             ? (inventorySpotlight?.title || '전리품 검토')
                                             : activeMobileTab.label}
@@ -291,13 +207,13 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                                 exit={{ y: '100%' }}
                                 transition={{ duration: 0.22, ease: 'easeOut' }}
                                 onClick={(e) => e.stopPropagation()}
-                                className="panel-noise aether-surface-strong absolute inset-x-0 bottom-0 max-h-[72dvh] rounded-t-[1.9rem] border-t px-3.5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[0_-20px_60px_rgba(2,8,20,0.45)]"
+                                className="panel-noise aether-surface-strong absolute inset-x-0 bottom-0 max-h-[72dvh] rounded-t-[2rem] border-t px-3.5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[0_-20px_60px_rgba(2,8,20,0.45)]"
                             >
                                 <div className="mx-auto h-1.5 w-12 rounded-full bg-white/12" />
                                 <div className="mt-3 flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">Archive</div>
-                                        <div className="mt-1 text-[15px] font-rajdhani font-bold text-white/92">
+                                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/68">Archive</div>
+                                        <div className="mt-1 text-[16px] font-rajdhani font-bold text-white/92">
                                             {hasInventorySpotlight
                                                 ? (inventorySpotlight?.title || '전리품 검토')
                                                 : activeMobileTab.label}
@@ -317,7 +233,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                                 {hasInventorySpotlight && (
                                     <div
                                         data-testid="inventory-spotlight"
-                                        className="mt-3 rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/8 px-3 py-2.5"
+                                        className="mt-3 rounded-[1.1rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.16),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.26)_0%,rgba(18,13,8,0.18)_100%)] px-3 py-2.5"
                                     >
                                         <div className="flex items-center justify-between gap-2">
                                             <span className="text-[10px] font-fira uppercase tracking-[0.16em] text-[#f6e7c8]/78">
@@ -358,7 +274,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                                     ))}
                                 </div>
 
-                                <div className="mt-3 max-h-[42dvh] overflow-y-auto custom-scrollbar pr-1 rounded-[1.15rem] border border-white/8 bg-black/18 px-1 py-1">
+                                <div className="mt-3 max-h-[42dvh] overflow-y-auto custom-scrollbar pr-1 rounded-[1.2rem] border border-white/8 bg-black/18 px-1 py-1">
                                     {renderTabContent()}
                                 </div>
                             </Motion.div>

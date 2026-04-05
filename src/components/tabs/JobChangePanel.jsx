@@ -7,7 +7,7 @@ import ClassIcon from '../icons/ClassIcon';
 /**
  * JobChangePanel — 전직 선택 패널
  */
-const JobChangePanel = ({ player, actions, setGameState }) => {
+const JobChangePanel = ({ player, actions, setGameState, mobileFocused = false }) => {
   const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
   const current = DB.CLASSES[player.job];
   const avail = current?.next || [];
@@ -16,7 +16,7 @@ const JobChangePanel = ({ player, actions, setGameState }) => {
     <Motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`${overlayPanelClass} bg-cyber-black/95 z-30 p-4 md:p-8 rounded-xl border border-cyber-purple/50 flex flex-col items-center justify-center shadow-[0_0_40px_rgba(188,19,254,0.3)] backdrop-blur-2xl overflow-y-auto`}
+      className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col items-center overflow-y-auto rounded-[1.95rem] border border-[#9a8ac0]/18 px-4 py-5 shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-2xl' : `${overlayPanelClass} bg-cyber-black/95 z-30 flex flex-col items-center justify-center overflow-y-auto rounded-xl border border-cyber-purple/50 p-4 md:p-8 shadow-[0_0_40px_rgba(188,19,254,0.3)] backdrop-blur-2xl`}`}
     >
       {/* 현재 직업 */}
       <div className="flex items-center gap-3 mb-4">

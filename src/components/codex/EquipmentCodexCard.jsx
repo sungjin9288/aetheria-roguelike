@@ -52,7 +52,7 @@ const CornerOrnament = ({ color, position }) => {
     );
 };
 
-const StatRow = ({ label, value, compareValue, color }) => {
+const StatRow = ({ label, value, compareValue }) => {
     const diff = compareValue != null ? value - compareValue : null;
     return (
         <div className="flex items-center justify-between text-[10px] font-fira">

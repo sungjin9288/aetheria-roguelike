@@ -65,7 +65,7 @@ const StatsPanel = ({ player, stats, compact = false }) => {
                 )}
             </div>
 
-            <div className={`rounded-[1rem] border border-white/8 bg-black/18 ${compact ? 'p-2.5 space-y-2' : 'p-3 space-y-2.5'}`}>
+            <div className={`overflow-hidden rounded-[1.1rem] ${compact ? 'aether-panel-core p-2.5 space-y-2' : 'border border-white/8 bg-black/18 p-3 space-y-2.5'}`}>
                 <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">
                     <span className="flex items-center gap-1.5">
                         <Sparkles size={10} />
@@ -74,19 +74,19 @@ const StatsPanel = ({ player, stats, compact = false }) => {
                     <SignalBadge tone="resonance" size="sm">{trait.title}</SignalBadge>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
-                    <div className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-2.5 py-2">
+                    <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
                         <div className="text-[9px] text-slate-500 font-fira uppercase flex items-center gap-1 mb-0.5">
                             <Sparkles size={9} /> 현재 성향
                         </div>
                         <div className={`font-fira font-bold text-xs ${trait.accent}`}>{trait.name}</div>
                     </div>
-                    <div className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-2.5 py-2">
+                    <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
                         <div className="text-[9px] text-slate-500 font-fira uppercase flex items-center gap-1 mb-0.5">
                             <Zap size={9} /> 전용 스킬
                         </div>
                         <div className="font-fira font-bold text-xs text-emerald-100">{trait.skill?.name || '없음'}</div>
                     </div>
-                    <div className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-2.5 py-2 col-span-2">
+                    <div className="col-span-2 rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
                         <div className="text-[9px] text-slate-500 font-fira uppercase flex items-center gap-1 mb-0.5">
                             <Shield size={9} /> 패시브
                         </div>
@@ -113,10 +113,10 @@ const StatsPanel = ({ player, stats, compact = false }) => {
                     </>
                 ) : (
                     <div className="grid grid-cols-2 gap-1.5 text-[10px] font-fira text-slate-300/76">
-                        <div className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-2.5 py-1.5">
+                        <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-1.5">
                             보상 포커스: <span className="text-[#dff7f5]">{trait.rewardFocus}</span>
                         </div>
-                        <div className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-2.5 py-1.5">
+                        <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-1.5">
                             권장 임무: <span className="text-[#e3dcff]">{trait.questFocus}</span>
                         </div>
                     </div>
@@ -127,7 +127,7 @@ const StatsPanel = ({ player, stats, compact = false }) => {
                 {visibleStatEntries.map((entry) => {
                     const Icon = entry.icon;
                     return (
-                        <div key={entry.label} className="bg-black/18 border border-white/8 rounded-[0.95rem] px-2.5 py-2">
+                        <div key={entry.label} className="aether-panel-muted rounded-[0.95rem] px-2.5 py-2">
                             <div className="text-[9px] text-slate-500 font-fira uppercase flex items-center gap-1 mb-0.5">
                                 <Icon size={9} /> {entry.label}
                             </div>
@@ -138,7 +138,7 @@ const StatsPanel = ({ player, stats, compact = false }) => {
             </div>
 
             {compact && !showAllStats && topKillPreview && (
-                <div className="rounded-[1rem] border border-white/8 bg-black/18 px-2.5 py-2 text-[10px] font-fira text-slate-300/76">
+                <div className="rounded-[1rem] aether-panel-muted px-2.5 py-2 text-[10px] font-fira text-slate-300/76">
                     TOP HUNT: <span className="text-[#dff7f5]">{topKillPreview[0]}</span> {topKillPreview[1]}회
                 </div>
             )}

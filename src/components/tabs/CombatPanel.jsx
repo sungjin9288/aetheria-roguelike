@@ -10,6 +10,8 @@ const ACTION_BUTTONS = [
     key: 'attack',
     label: 'ATTACK',
     mobileLabel: 'ATK',
+    tag: 'Burst',
+    detail: '기본 공격으로 콤보와 처치 압박을 이어갑니다.',
     icon: Sword,
     className: 'bg-[linear-gradient(180deg,rgba(82,28,37,0.72)_0%,rgba(27,12,15,0.94)_100%)] border border-rose-300/20 text-rose-100 hover:bg-rose-400/10 hover:border-rose-200/28',
   },
@@ -17,6 +19,8 @@ const ACTION_BUTTONS = [
     key: 'skill',
     label: 'SKILL',
     mobileLabel: 'SKL',
+    tag: 'Core',
+    detail: '선택된 스킬을 사용해 전투 흐름을 바꿉니다.',
     icon: Zap,
     className: 'bg-[linear-gradient(180deg,rgba(24,43,48,0.74)_0%,rgba(8,16,18,0.94)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:bg-[#7dd4d8]/10 hover:border-[#d5b180]/24',
   },
@@ -24,6 +28,8 @@ const ACTION_BUTTONS = [
     key: 'swap',
     label: 'SWAP',
     mobileLabel: 'SWAP',
+    tag: 'Loadout',
+    detail: '다음 스킬을 순환해 대응 루트를 교체합니다.',
     icon: RotateCw,
     className: 'bg-[linear-gradient(180deg,rgba(33,23,45,0.74)_0%,rgba(12,10,18,0.94)_100%)] border border-[#9a8ac0]/20 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/28',
   },
@@ -31,6 +37,8 @@ const ACTION_BUTTONS = [
     key: 'escape',
     label: 'ESCAPE',
     mobileLabel: 'RUN',
+    tag: 'Exit',
+    detail: '위험 구간에서 손실을 줄이고 이탈을 시도합니다.',
     icon: ArrowRight,
     className: 'bg-[linear-gradient(180deg,rgba(28,31,27,0.74)_0%,rgba(10,12,10,0.94)_100%)] border border-[#d5b180]/16 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/24',
   },
@@ -158,9 +166,17 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
           ? dense
             ? 'panel-noise aether-surface rounded-[1.2rem] p-2'
             : 'panel-noise aether-surface rounded-[1.5rem] p-3'
+          : mobile
+            ? 'panel-noise aether-surface rounded-[1.9rem] p-3'
           : 'mt-2.5 md:mt-4'
       }`}
     >
+      {mobile && !compact && (
+        <>
+          <div className="pointer-events-none absolute -top-6 right-0 h-20 w-20 rounded-full bg-[#d5b180]/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-8 left-0 h-24 w-24 rounded-full bg-rose-400/8 blur-3xl" />
+        </>
+      )}
       {dense ? (
         compactMetaEntries.length > 0 && (
           <div className="grid gap-1">
@@ -181,6 +197,30 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
         )
       ) : (
         <>
+          {mobile && (
+            <div className="rounded-[1.2rem] aether-panel-core px-3 py-2.5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/66">
+                    Combat Sequence
+                  </div>
+                  <div className="mt-1 text-[14px] font-rajdhani font-bold text-white/94">
+                    {enemy?.name || 'Enemy'}와 교전 중
+                  </div>
+                  <div className="mt-1 text-[10px] font-fira leading-snug text-slate-300/74">
+                    {selectedSkill
+                      ? `${selectedSkill.name} 준비 완료 · MP ${selectedSkill.mp || 0} · CD ${skillCooldown}`
+                      : '선택된 스킬이 없으면 기본 공격과 탈출 위주로 운영합니다.'}
+                  </div>
+                </div>
+                {enemyTelegraph && enemyTelegraph.type !== 'normal' && (
+                  <span className={`rounded-full border px-2 py-1 text-[9px] font-fira uppercase tracking-[0.16em] ${telegraphColorClass}`}>
+                    {enemyTelegraph.label}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
           {bossBriefLine && (
             <div className="rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/10 px-3 py-1.5 text-center text-[10px] font-fira text-[#f6e7c8]">
               보스 전술: {bossBriefLine}
@@ -234,14 +274,35 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
               whileTap={{ scale: 0.95 }}
               disabled={isDisabled}
               onClick={() => handleAction(action.key)}
-              className={`${dense ? 'min-h-[42px]' : mobile || compact ? 'min-h-[58px]' : 'min-h-[52px]'} rounded-[1.15rem] border px-1.5 py-2 font-bold transition-all backdrop-blur-md disabled:opacity-45 ${action.className}`}
+              className={`${dense ? 'min-h-[42px]' : mobile ? 'min-h-[88px] overflow-hidden px-3 py-3 text-left' : compact ? 'min-h-[58px]' : 'min-h-[52px]'} rounded-[1.15rem] border ${mobile ? '' : 'px-1.5 py-2'} font-bold transition-all backdrop-blur-md disabled:opacity-45 ${action.className}`}
             >
-              <div className={`flex items-center justify-center ${dense ? 'gap-1.5' : 'flex-col gap-1'}`}>
-                <Icon size={dense ? 13 : mobile ? 16 : 18} className={action.key === 'swap' ? 'transition-transform group-hover:rotate-180' : ''} />
-                <span className={`${dense ? 'text-[8px] tracking-[0.14em]' : mobile || compact ? 'text-[9px] tracking-[0.16em]' : 'text-[10px] tracking-[0.18em]'} font-rajdhani`}>
-                  {mobile ? action.mobileLabel : action.label}
-                </span>
-              </div>
+              {mobile ? (
+                <div className="flex h-full flex-col justify-between gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-[1rem] border border-white/8 bg-black/18 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                      <Icon size={16} className={action.key === 'swap' ? 'transition-transform group-hover:rotate-180' : ''} />
+                    </span>
+                    <span className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[8px] font-fira uppercase tracking-[0.16em] text-white/72">
+                      {action.tag}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-rajdhani tracking-[0.18em] text-white/92">
+                      {action.label}
+                    </div>
+                    <div className="mt-1 text-[10px] font-fira leading-snug text-white/58">
+                      {action.detail}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className={`flex items-center justify-center ${dense ? 'gap-1.5' : 'flex-col gap-1'}`}>
+                  <Icon size={dense ? 13 : compact ? 16 : 18} className={action.key === 'swap' ? 'transition-transform group-hover:rotate-180' : ''} />
+                  <span className={`${dense ? 'text-[8px] tracking-[0.14em]' : compact ? 'text-[9px] tracking-[0.16em]' : 'text-[10px] tracking-[0.18em]'} font-rajdhani`}>
+                    {compact ? action.mobileLabel : action.label}
+                  </span>
+                </div>
+              )}
             </Motion.button>
           );
         })}
@@ -259,7 +320,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
                 whileTap={{ scale: 0.97 }}
                 disabled={isAiThinking}
                 onClick={() => handleConsumableUse(item)}
-                className={`rounded-[1rem] border ${dense ? 'px-2 py-1.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type)}`}
+                className={`rounded-[1rem] border ${dense ? 'px-2 py-1.5' : mobile ? 'px-3 py-2.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type)}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className={`${dense ? 'text-[10px]' : 'text-[11px]'} font-rajdhani font-bold leading-tight`}>{item.name}</span>
