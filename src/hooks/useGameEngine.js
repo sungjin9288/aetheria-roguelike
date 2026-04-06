@@ -166,6 +166,31 @@ export const useGameEngine = () => {
             return acc;
         }, 0);
 
+        // 심연 스케일링 유물 (abyss_atk_scale, abyss_crit_scale, abyss_floor_power)
+        const abyssFloor = activePlayer.stats?.abyssFloor || 0;
+        const abyssRelicAtkBonus = relics.reduce((acc, r) => {
+            if (r.effect === 'abyss_atk_scale') {
+                const bonus = Math.min(r.val.maxBonus, Math.floor(abyssFloor / r.val.perFloors) * r.val.atkPer);
+                return acc + bonus;
+            }
+            if (r.effect === 'abyss_floor_power' && abyssFloor >= r.val.minFloor) {
+                return acc + r.val.atkBonus;
+            }
+            return acc;
+        }, 0);
+        const abyssRelicDefBonus = relics.reduce((acc, r) => {
+            if (r.effect === 'abyss_floor_power' && abyssFloor >= r.val.minFloor) {
+                return acc + r.val.defBonus;
+            }
+            return acc;
+        }, 0);
+        const abyssRelicCritBonus = relics.reduce((acc, r) => {
+            if (r.effect === 'abyss_crit_scale') {
+                return acc + Math.min(r.val.maxBonus, Math.floor(abyssFloor / r.val.perFloors) * r.val.critPer);
+            }
+            return acc;
+        }, 0);
+
         // Sprint 19: 유물 — 처치 스택 ATK 보너스 (kill_stack), triple_up 평탄 MP
         const killStackBonus = relics.reduce((acc, r) => {
             if (r.effect === 'kill_stack') {
@@ -193,11 +218,11 @@ export const useGameEngine = () => {
             + Math.floor(offhandBaseVal * BALANCE.ENHANCE_STAT_BONUS * offhandEnhance * 0.5);
         const enhanceDefBonus = Math.floor(armorBaseVal * BALANCE.ENHANCE_STAT_BONUS * armorEnhance);
 
-        const baseAtk = (activePlayer.atk + mainAttack + offhandAttack + codexAtk + enhanceAtkBonus + killStackBonus + (meta.bonusAtk || 0) + passiveBonus.atk) * cls.atkMod * (1 + (buff.atk || 0)) * atkMultBonus * dualWieldMult * (passiveBonus.lowHpAtkMult || 1);
-        const baseDef = (activePlayer.def + aVal + shieldDef + codexDef + enhanceDefBonus + passiveBonus.def) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
+        const baseAtk = (activePlayer.atk + mainAttack + offhandAttack + codexAtk + enhanceAtkBonus + killStackBonus + (meta.bonusAtk || 0) + passiveBonus.atk) * cls.atkMod * (1 + (buff.atk || 0) + abyssRelicAtkBonus) * atkMultBonus * dualWieldMult * (passiveBonus.lowHpAtkMult || 1);
+        const baseDef = (activePlayer.def + aVal + shieldDef + codexDef + enhanceDefBonus + passiveBonus.def) * (1 + (buff.def || 0) + abyssRelicDefBonus) * defMultBonus * dualWieldDefMult;
         const baseMaxHp = (activePlayer.maxHp + codexHp + passiveBonus.hp) * hpMultBonus;
         const baseMaxMp = ((activePlayer.maxMp || 50) + equipmentMpBonus + relicMpFlat + passiveBonus.mp) * rmp;
-        const baseCritChance = Math.min(0.75, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus + (titlePassive.crit || 0) + passiveBonus.crit);
+        const baseCritChance = Math.min(0.75, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus + abyssRelicCritBonus + (titlePassive.crit || 0) + passiveBonus.crit);
         const preBuildStats = {
             atk: Math.floor(baseAtk * (1 + ra) + (titlePassive.atk || 0)),
             def: Math.floor(baseDef * (1 + rd) + (titlePassive.def || 0)),

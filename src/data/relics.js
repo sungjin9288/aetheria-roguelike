@@ -347,6 +347,32 @@ export const RELICS = [
         effect: 'entropy_tick',
         val: { interval: 3, damage: 0.08 },
     },
+
+    // ── 심연 전용 유물 ──────────────────────────────────────────────────────────
+    {
+        id: 'abyss_resonance',
+        name: '심연의 공명',
+        rarity: 'epic',
+        desc: '심연 층수 10층마다 ATK +3%, 최대 +60% (심연 내에서만)',
+        effect: 'abyss_atk_scale',
+        val: { perFloors: 10, atkPer: 0.03, maxBonus: 0.6 },
+    },
+    {
+        id: 'void_crystal',
+        name: '공허의 결정',
+        rarity: 'epic',
+        desc: '심연 층수 5층마다 크리티컬 확률 +1%, 최대 +20%',
+        effect: 'abyss_crit_scale',
+        val: { perFloors: 5, critPer: 0.01, maxBonus: 0.2 },
+    },
+    {
+        id: 'abyssal_dominion',
+        name: '심연의 지배',
+        rarity: 'legendary',
+        desc: '심연 30층 이상에서 ATK +40%, DEF +30% 영구 적용',
+        effect: 'abyss_floor_power',
+        val: { minFloor: 30, atkBonus: 0.4, defBonus: 0.3 },
+    },
 ];
 
 /** 희귀도별 가중치 (가중 추첨) */

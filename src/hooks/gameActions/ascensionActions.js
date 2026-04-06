@@ -39,6 +39,7 @@ export const createAscensionActions = (deps, { emitUnlockedTitles: _emitUnlocked
                     total_gold: player.stats.total_gold,
                     relicCount: player.stats.relicCount,
                     abyssFloor: player.stats.abyssFloor,
+                    abyssRecord: player.stats.abyssRecord || 0,
                     demonKingSlain: (player.stats.demonKingSlain || 0) + 1,
                     bountiesCompleted: player.stats.bountiesCompleted,
                     crafts: player.stats.crafts,
