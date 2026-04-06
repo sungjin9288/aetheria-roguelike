@@ -160,6 +160,24 @@ export const TITLES = Object.freeze([
         cond: { type: 'abyssFloor', val: 50 },
         color: 'text-purple-400',
     },
+    {
+        id: 'void_conqueror',
+        name: '허무의 정복자',
+        cond: { type: 'abyssRecord', val: 100 },
+        color: 'text-violet-300',
+    },
+    {
+        id: 'abyss_legend',
+        name: '심연의 전설',
+        cond: { type: 'abyssRecord', val: 200 },
+        color: 'text-fuchsia-400',
+    },
+    {
+        id: 'void_sovereign',
+        name: '공허의 군림자',
+        cond: { type: 'abyssRecord', val: 300 },
+        color: 'text-rose-400',
+    },
 
     // ─── 퀘스트/기타 계열 ─────────────────────────────────────────────────
     {

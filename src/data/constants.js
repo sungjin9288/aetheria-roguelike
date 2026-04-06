@@ -222,19 +222,28 @@ export const BALANCE = {
 
     // v4.3 — 무한 심연 강화
     ABYSS_MILESTONE_REWARDS: {
-        10: { type: 'relic_choice' },
-        25: { type: 'relic_choice' },
-        50: { type: 'legendary_item' },
-        75: { type: 'prestige_points', amount: 1 },
+        10:  { type: 'relic_choice' },
+        25:  { type: 'relic_choice' },
+        50:  { type: 'legendary_item' },
+        75:  { type: 'prestige_points', amount: 1 },
         100: { type: 'legendary_item' },
+        150: { type: 'relic_choice' },
+        200: { type: 'prestige_points', amount: 2 },
+        300: { type: 'legendary_item' },
+        500: { type: 'prestige_points', amount: 3 },
     },
-    ABYSS_BOSS_FLOORS: [10, 20, 30, 40, 50],
+    ABYSS_BOSS_FLOORS: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
     ABYSS_BOSS_NAMES: {
         10: '혼돈의 수호자',
         20: '심연의 파수꾼',
         30: '차원 분열자',
         40: '엔트로피 군주',
         50: '무한의 화신',
+        60: '허무의 전령',
+        70: '멸절의 사도',
+        80: '공허의 심판자',
+        90: '허무의 황제',
+        100: '공허의 신',
     },
 
     // 연속 처치 (Kill Streak) 시스템

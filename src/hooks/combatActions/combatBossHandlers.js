@@ -67,7 +67,15 @@ export const handleDemonKingSlain = (updatedPlayer, dispatch, addLog) => {
 export const applyAbyssFloorAdvance = (p, dispatch, addLog) => {
     if (p.loc !== CONSTANTS.ABYSS_MAP_NAME) return p;
     const newDepth = (p.stats?.abyssFloor || 1) + 1;
-    let updated = { ...p, stats: { ...(p.stats || {}), abyssFloor: newDepth } };
+    const prevRecord = p.stats?.abyssRecord || 0;
+    const newRecord = Math.max(prevRecord, newDepth);
+    let updated = {
+        ...p,
+        stats: { ...(p.stats || {}), abyssFloor: newDepth, abyssRecord: newRecord },
+    };
+    if (newDepth > prevRecord) {
+        addLog('system', MSG.ABYSS_RECORD(newDepth));
+    }
     addLog('system', `심연의 더 깊은 곳으로 진입했습니다. (현재: ${newDepth}층)`);
     const milestone = BALANCE.ABYSS_MILESTONE_REWARDS[newDepth];
     if (milestone) {

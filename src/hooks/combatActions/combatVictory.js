@@ -125,6 +125,18 @@ export const handleVictoryOutcome = ({
             addLog('critical', MSG.TRUE_GOD_SLAIN);
             return { earlyReturn: true };
         }
+        if (deadEnemy.baseName === '공허의 신' || deadEnemy.name?.includes('공허의 신') || deadEnemy.name?.includes('절대 공허')) {
+            const voidCore = makeItem({ name: '공허의 핵심', type: 'key', price: 0, tier: 6, desc: '심연 100층을 정복한 자에게만 허락된 공허의 본질. 세상의 어떤 힘도 이것을 무너뜨릴 수 없다.' });
+            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({
+                ...p,
+                inv: [...(p.inv || []), voidCore],
+                titles: [...new Set([...(p.titles || []), '허무의 정복자'])],
+                activeTitle: p.activeTitle || '허무의 정복자',
+                stats: { ...(p.stats || {}), abyssRecord: Math.max(p.stats?.abyssRecord || 0, p.stats?.abyssFloor || 100) },
+            })});
+            addLog('critical', MSG.VOID_GOD_SLAIN);
+            return { earlyReturn: false };
+        }
         addStoryLog('victory', { name: deadEnemy.name });
     }
 

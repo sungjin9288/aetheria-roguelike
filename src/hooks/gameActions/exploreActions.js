@@ -148,6 +148,7 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
                         weakness: bossProfile?.weakness,
                         resistance: bossProfile?.resistance,
                         phase2: bossProfile?.phase2,
+                        phase3: bossProfile?.phase3,
                     };
                     addLog('critical', MSG.ABYSS_BOSS_APPEAR(bossName));
                 } else if (floor % 5 === 0) {

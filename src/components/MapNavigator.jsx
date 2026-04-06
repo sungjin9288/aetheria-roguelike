@@ -68,6 +68,11 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                         🌀 심연 {player?.stats?.abyssFloor || 1}층 (층당 스탯 +8%)
                     </span>
                 )}
+                {(player?.stats?.abyssRecord || 0) > 0 && (
+                    <span className="ml-2 text-[#c4b5fd] text-[10px]">
+                        최고 {player.stats.abyssRecord}층
+                    </span>
+                )}
                 <span className="ml-2 text-slate-500">{compact ? '이동은 `MOVE`' : '이동은 `MOVE` 명령 또는 하단 `MOVE` 패널에서만 가능합니다.'}</span>
             </div>
 

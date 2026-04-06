@@ -344,6 +344,7 @@ export const migrateData = (rawData) => {
     target.stats.discoveries     = target.stats.discoveries     || 0;
     target.stats.buildWins       = target.stats.buildWins && typeof target.stats.buildWins === 'object' ? target.stats.buildWins : {};
     target.stats.abyssFloor      = target.stats.abyssFloor      || 0;
+    target.stats.abyssRecord     = target.stats.abyssRecord     || 0;
     target.stats.demonKingSlain  = target.stats.demonKingSlain  || 0;
     target.stats.dailyProtocol   = target.stats.dailyProtocol   || null;
     // pendingRelics는 런타임 전용 — 저장 불필요, 로드 시 null로 초기화
@@ -463,6 +464,7 @@ export const checkTitles = (player) => {
         if (type === 'relicCount')     return (player.stats?.relicCount    || 0) >= val;
         if (type === 'prestige')       return (player.meta?.prestigeRank   || 0) >= val;
         if (type === 'abyssFloor')     return (player.stats?.abyssFloor    || 0) >= val;
+        if (type === 'abyssRecord')    return (player.stats?.abyssRecord   || 0) >= val;
         if (type === 'bountyDone')     return (player.stats?.bountiesCompleted || 0) >= val;
         if (type === 'crafts')         return (player.stats?.crafts        || 0) >= val;
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;

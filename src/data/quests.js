@@ -208,9 +208,12 @@ export const ACHIEVEMENTS = [
     { id: 'ach_bounty_25',    title: '전설의 사냥꾼',  desc: '현상수배 25건 완료',        target: 'bountiesCompleted', goal: 25, reward: { gold: 25000, item: '전설 현상금 배지' } },
 
     // ── 심연 업적 ────────────────────────────────────────────────────────────
-    { id: 'ach_abyss_10',     title: '심연 입문',      desc: '혼돈의 심연 10층 도달',     target: 'abyssFloor', goal: 10,  reward: { gold: 5000 } },
-    { id: 'ach_abyss_30',     title: '심연 탐험자',    desc: '혼돈의 심연 30층 도달',     target: 'abyssFloor', goal: 30,  reward: { gold: 15000, item: '심연의 파편' } },
-    { id: 'ach_abyss_50',     title: '심연의 지배자',  desc: '혼돈의 심연 50층 도달',     target: 'abyssFloor', goal: 50,  reward: { gold: 40000, item: '심연 지배 증표' } },
+    { id: 'ach_abyss_10',      title: '심연 입문',          desc: '혼돈의 심연 10층 도달',   target: 'abyssRecord', goal: 10,  reward: { gold: 5000 } },
+    { id: 'ach_abyss_30',      title: '심연 탐험자',        desc: '혼돈의 심연 30층 도달',   target: 'abyssRecord', goal: 30,  reward: { gold: 15000, item: '심연의 파편' } },
+    { id: 'ach_abyss_50',      title: '심연의 지배자',      desc: '혼돈의 심연 50층 도달',   target: 'abyssRecord', goal: 50,  reward: { gold: 40000, item: '심연 지배 증표' } },
+    { id: 'ach_abyss_100',     title: '허무의 정복자',      desc: '혼돈의 심연 100층 도달',  target: 'abyssRecord', goal: 100, reward: { gold: 100000, item: '공허의 핵심' } },
+    { id: 'ach_abyss_200',     title: '심연의 전설',        desc: '혼돈의 심연 200층 도달',  target: 'abyssRecord', goal: 200, reward: { gold: 300000, premiumCurrency: 50 } },
+    { id: 'ach_abyss_300',     title: '공허의 군림자',      desc: '혼돈의 심연 300층 도달',  target: 'abyssRecord', goal: 300, reward: { gold: 500000, premiumCurrency: 100 } },
 
     // ── 유물 업적 ────────────────────────────────────────────────────────────
     { id: 'ach_relic_5',   title: '유물 수집가',  desc: '유물 5개 획득',    target: 'relicCount', goal: 5,   reward: { gold: 3000 } },
