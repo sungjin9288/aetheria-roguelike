@@ -872,8 +872,10 @@ export const CombatEngine = {
         while (p.level < CONSTANTS.MAX_LEVEL && p.exp >= p.nextExp) {
             p.exp -= p.nextExp;
             p.level += 1;
-            p.nextExp = Math.floor(p.nextExp * BALANCE.EXP_SCALE_RATE);
-            if (p.level >= 50) p.nextExp = Math.max(p.nextExp, BALANCE.EXP_LEVEL_CAP_50);
+            p.nextExp = Math.min(
+                Math.floor(p.nextExp * BALANCE.EXP_SCALE_RATE),
+                BALANCE.EXP_LEVEL_HARD_CAP
+            );
             p.maxHp += BALANCE.HP_PER_LEVEL;
             p.maxMp += BALANCE.MP_PER_LEVEL;
             p.hp = Math.min(p.hp + BALANCE.HP_PER_LEVEL, p.maxHp);
@@ -883,6 +885,25 @@ export const CombatEngine = {
             levelUps += 1;
             visualEffect = 'levelUp';
             logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level) });
+
+            // 레벨 마일스톤 보상
+            const isMajor = p.level % BALANCE.LEVEL_MAJOR_MILESTONE_EVERY === 0;
+            const isMinor = !isMajor && p.level % BALANCE.LEVEL_MILESTONE_EVERY === 0;
+            if (isMajor) {
+                const atkBonus = BALANCE.MILESTONE_STAT_ATK;
+                const hpBonus = BALANCE.MILESTONE_STAT_HP;
+                const mpBonus = BALANCE.MILESTONE_STAT_MP;
+                p.atk += atkBonus;
+                p.maxHp += hpBonus;
+                p.hp = Math.min(p.hp + hpBonus, p.maxHp);
+                p.maxMp += mpBonus;
+                p.mp = Math.min(p.mp + mpBonus, p.maxMp);
+                logs.push({ type: 'event', text: MSG.LEVEL_MAJOR_MILESTONE(p.level, atkBonus, hpBonus, mpBonus) });
+            } else if (isMinor) {
+                const goldBonus = p.level * BALANCE.MILESTONE_GOLD_PER_LV;
+                p.gold = (p.gold || 0) + goldBonus;
+                logs.push({ type: 'event', text: MSG.LEVEL_MILESTONE(p.level, goldBonus) });
+            }
         }
 
         if (p.level >= CONSTANTS.MAX_LEVEL) {

@@ -149,7 +149,7 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
     if (level === 'infinite') {
         isInfinite = true;
         depth = player.stats?.abyssFloor || 1;
-        level = 45 + Math.floor(depth / 2);
+        level = 50 + Math.floor(depth / 2);
     }
 
     const mStats = {
@@ -158,7 +158,7 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
         hp: 120 + level * 30 + (depth * 25),
         maxHp: 120 + level * 30 + (depth * 25),
         atk: 15 + level * 4 + (depth * 3),
-        exp: 10 + level * 5 + (depth * 4),
+        exp: 10 + level * 8 + (depth * 4),
         gold: 10 + level * 2 + (depth * 3),
         pattern: {
             guardChance: Math.min(0.4, 0.12 + level * 0.01 + (depth * 0.005)),

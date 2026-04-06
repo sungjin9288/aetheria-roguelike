@@ -53,6 +53,9 @@ export const MSG = {
     LEGACY_ESSENCE: (n) => `레거시 에센스 +${n}`,
     LEGACY_RANK: (n) => `레거시 랭크 ${n} 달성!`,
     LEVEL_UP: (lv) => `레벨 업! Lv.${lv}`,
+    LEVEL_MILESTONE: (lv, gold) => `🎖️ Lv.${lv} 달성! 골드 ${gold.toLocaleString()} 획득`,
+    LEVEL_MAJOR_MILESTONE: (lv, atk, hp, mp) => `✨ Lv.${lv} 메이저 마일스톤! ATK+${atk} / HP+${hp} / MP+${mp} 영구 증가`,
+    EQUIP_LEVEL_REQUIRED: (name, lv) => `${name}은(는) Lv.${lv} 이상에서 장착할 수 있습니다.`,
     BUFF_EXPIRED: '버프 효과가 만료되었습니다.',
     DEFEAT: '전투에서 패배했습니다. 레거시 보너스는 유지됩니다.',
 

@@ -68,8 +68,9 @@ export const BALANCE = {
     KEY_EVENT_PITY_PER_EXPLORE: 0.04,
     KEY_EVENT_MAX_CHANCE: 0.35,
     // v4.0 — 신규 시스템 상수
-    EXP_SCALE_RATE: 1.38,           // EXP 곡선 — 레벨당 전투 수 ~30% 증가 (10시간 1회차 목표)
-    EXP_LEVEL_CAP_50: 800000,       // Lv50+ EXP 하한선
+    EXP_SCALE_RATE: 1.20,           // EXP 곡선 — 완화된 스케일 (Lv40 ~10시간 1회차 목표)
+    EXP_LEVEL_CAP_50: 300000,       // (deprecated — 하한선 역할 제거, 상한선 EXP_LEVEL_HARD_CAP 사용)
+    EXP_LEVEL_HARD_CAP: 300000,     // 레벨당 최대 EXP 요구량 상한선 (Lv44+ 일정하게 유지)
     RELIC_FIND_CHANCE: 0.08,        // 탐색 시 유물 발견 확률 (8%)
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
     PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가
@@ -108,6 +109,17 @@ export const BALANCE = {
     MP_PER_LEVEL: 10,               // 레벨당 기본 MP 증가
     ATK_PER_LEVEL: 2,               // 레벨당 기본 ATK 증가
     DEF_PER_LEVEL: 1,               // 레벨당 기본 DEF 증가
+
+    // 레벨 마일스톤 보상
+    LEVEL_MILESTONE_EVERY: 5,       // N레벨마다 골드 보너스
+    LEVEL_MAJOR_MILESTONE_EVERY: 10, // N레벨마다 스탯 보너스
+    MILESTONE_GOLD_PER_LV: 60,      // 마일스톤 골드 = level × 60
+    MILESTONE_STAT_HP: 25,          // 메이저 마일스톤 HP 보너스
+    MILESTONE_STAT_MP: 12,          // 메이저 마일스톤 MP 보너스
+    MILESTONE_STAT_ATK: 4,          // 메이저 마일스톤 ATK 보너스
+
+    // 아이템 티어별 장착 최소 레벨
+    TIER_REQ_LEVEL: { 1: 1, 2: 10, 3: 28, 4: 45, 5: 60, 6: 75 },
 
     // 루팅 보너스 드랍
     LOOT_BONUS_MIN_LEVEL: 30,       // 보너스 장비 드랍 최소 추정 레벨

@@ -37,6 +37,10 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             if (!inventoryItem) return addLog('error', MSG.INV_ITEM_NOT_FOUND);
 
             if (['weapon', 'armor', 'shield'].includes(inventoryItem.type)) {
+                const reqLevel = inventoryItem.reqLevel ?? (BALANCE.TIER_REQ_LEVEL?.[inventoryItem.tier] ?? 1);
+                if ((player.level || 1) < reqLevel) {
+                    return addLog('error', MSG.EQUIP_LEVEL_REQUIRED(inventoryItem.name, reqLevel));
+                }
                 if (Array.isArray(inventoryItem.jobs) && !inventoryItem.jobs.includes(player.job)) {
                     return addLog('error', MSG.EQUIP_JOB_RESTRICT(player.job, inventoryItem.name));
                 }
