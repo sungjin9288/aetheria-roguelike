@@ -52,7 +52,7 @@ export const CLASSES = {
             { name: '차원 분열', mp: 55, type: '어둠', mult: 3.8, effect: 'curse', desc: '공간을 찢어 저주와 대미지 부여' },
             // 패시브
             { name: '마력 집중', passive: true, effect: 'mp_up', val: 60, desc: '최대 MP +60 (패시브)' },
-            { name: '원소 친화', passive: true, effect: 'atk_up', val: 8, desc: 'ATK +8 (패시브)' },
+            { name: '예리한 주문', passive: true, effect: 'crit_up', val: 0.04, desc: '크리티컬 확률 +4% — 마법 집중 (패시브)' },
         ],
         skillBranches: {
             '화염구': [
@@ -82,7 +82,7 @@ export const CLASSES = {
             { name: '독 보강', mp: 22, type: '자연', mult: 1.6, effect: 'poison', desc: '기존 독 강화 + 추가 자연 피해' },
             // 패시브
             { name: '날카로운 감각', passive: true, effect: 'atk_up', val: 6, desc: 'ATK +6 (패시브)' },
-            { name: '날렵함', passive: true, effect: 'def_up', val: 3, desc: 'DEF +3 (패시브)' },
+            { name: '암살자의 눈', passive: true, effect: 'crit_up', val: 0.05, desc: '크리티컬 확률 +5% (패시브)' },
         ],
         skillBranches: {
             '급소찌르기': [
@@ -168,7 +168,7 @@ export const CLASSES = {
             { name: '시간 왜곡', mp: 55, type: 'debuff', effect: 'stun', turn: 2, desc: '시간 왜곡으로 적 행동 중단 2턴' },
             // 패시브
             { name: '대마도사의 심상', passive: true, effect: 'mp_up', val: 120, desc: '최대 MP +120 (패시브)' },
-            { name: '원소 강화', passive: true, effect: 'atk_up', val: 18, desc: 'ATK +18 (패시브)' },
+            { name: '원소 집중', passive: true, effect: 'crit_up', val: 0.06, desc: '크리티컬 확률 +6% — 원소 집중 (패시브)' },
         ],
         skillBranches: {
             '메테오': [
@@ -222,7 +222,7 @@ export const CLASSES = {
             { name: '처형 판결', mp: 80, mult: 6.0, crit: 0.9, desc: '고배율 + 90% 치명타 처형기' },
             // 패시브
             { name: '암살자의 각인', passive: true, effect: 'atk_up', val: 10, desc: 'ATK +10 (패시브)' },
-            { name: '그림자의 춤', passive: true, effect: 'def_up', val: 5, desc: 'DEF +5 (패시브)' },
+            { name: '그림자의 정밀함', passive: true, effect: 'crit_up', val: 0.07, desc: '크리티컬 확률 +7% — 그림자 특화 (패시브)' },
         ],
         skillBranches: {
             '암살': [
@@ -249,7 +249,7 @@ export const CLASSES = {
             { name: '폭풍 화살비', mp: 70, mult: 5.0, desc: '수십 발의 화살을 일제히 발사' },
             // 패시브
             { name: '정밀 조준', passive: true, effect: 'atk_up', val: 8, desc: 'ATK +8 (패시브)' },
-            { name: '자연 친화', passive: true, effect: 'hp_up', val: 40, desc: '최대 HP +40 (패시브)' },
+            { name: '사냥꾼의 전리품', passive: true, effect: 'gold_up', val: 0.15, desc: '골드 획득 +15% (패시브)' },
         ],
         skillBranches: {
             '저격': [
@@ -276,7 +276,7 @@ export const CLASSES = {
             { name: '기적의 손길', mp: 45, type: 'buff', effect: 'hp_regen', val: 0.15, turn: 3, desc: 'HP 15% 회복 + 3턴간 지속 회복' },
             // 패시브
             { name: '신의 은총', passive: true, effect: 'hp_up', val: 50, desc: '최대 HP +50 (패시브)' },
-            { name: '성스러운 마나', passive: true, effect: 'mp_up', val: 40, desc: '최대 MP +40 (패시브)' },
+            { name: '신성한 학습', passive: true, effect: 'exp_up', val: 0.08, desc: '경험치 획득 +8% — 신의 가르침 (패시브)' },
         ],
         next: ['팔라딘']
     },
@@ -295,7 +295,7 @@ export const CLASSES = {
             { name: '천상의 포화', mp: 100, type: '빛', mult: 6.5, effect: 'purify', desc: '빛의 연속 공격 + 정화' },
             // 패시브
             { name: '팔라딘의 맹세', passive: true, effect: 'hp_up', val: 250, desc: '최대 HP +250 (패시브)' },
-            { name: '성소의 가호', passive: true, effect: 'def_up', val: 20, desc: 'DEF +20 (패시브)' },
+            { name: '성소의 깨달음', passive: true, effect: 'exp_up', val: 0.12, desc: '경험치 획득 +12% — 성소의 축복 (패시브)' },
         ],
         next: []
     },
@@ -329,7 +329,7 @@ export const CLASSES = {
             { name: '대마법사의 위엄', mp: 60, type: 'buff', effect: 'atk_up', val: 2.5, turn: 4, desc: 'ATK 150% 상승 4턴 — 마력 해방' },
             // 패시브
             { name: '마법의 정점', passive: true, effect: 'mp_up', val: 200, desc: '최대 MP +200 (패시브)' },
-            { name: '원소 지배', passive: true, effect: 'atk_up', val: 25, desc: 'ATK +25 (패시브)' },
+            { name: '완전한 원소', passive: true, effect: 'crit_up', val: 0.09, desc: '크리티컬 확률 +9% — 원소 지배 (패시브)' },
         ],
         next: []
     },
@@ -346,7 +346,7 @@ export const CLASSES = {
             { name: '무한 연격', mp: 90, mult: 8.0, crit: 0.95, desc: '연속 치명타 공격' },
             // 패시브
             { name: '절대 어둠', passive: true, effect: 'atk_up', val: 22, desc: 'ATK +22 (패시브)' },
-            { name: '그림자 체질', passive: true, effect: 'def_up', val: 10, desc: 'DEF +10 (패시브)' },
+            { name: '그림자 처형', passive: true, effect: 'crit_up', val: 0.10, desc: '크리티컬 확률 +10% — 절대 암살 (패시브)' },
         ],
         next: []
     },
@@ -389,7 +389,7 @@ export const CLASSES = {
             { name: '인과율 조작', mp: 55, mult: 2.8, crit: 0.5, effect: 'crit_cooldown', desc: '크리 시 모든 쿨타임 -1' },
             { name: '시간 붕괴', mp: 120, type: '어둠', mult: 6.0, crit: 0.7, desc: '궁극기 — 70% 치명타 시공 붕괴' },
             // 패시브
-            { name: '시간 감각', passive: true, effect: 'atk_up', val: 15, desc: 'ATK +15 (패시브)' },
+            { name: '시간 감각', passive: true, effect: 'crit_up', val: 0.08, desc: '크리티컬 확률 +8% — 최적의 순간 포착 (패시브)' },
             { name: '차원 감지', passive: true, effect: 'mp_up', val: 80, desc: '최대 MP +80 (패시브)' },
         ],
         skillBranches: {
@@ -417,7 +417,7 @@ export const CLASSES = {
             { name: '대지의 화살', mp: 75, type: '대지', mult: 6.0, effect: 'stun', desc: '대지 속성 기절 + 강력한 피해' },
             // 패시브
             { name: '야생의 본능', passive: true, effect: 'atk_up', val: 18, desc: 'ATK +18 (패시브)' },
-            { name: '숲의 수호', passive: true, effect: 'hp_up', val: 120, desc: '최대 HP +120 (패시브)' },
+            { name: '풍요로운 사냥', passive: true, effect: 'gold_up', val: 0.20, desc: '골드 획득 +20% — 풍성한 수확 (패시브)' },
         ],
         next: []
     }

@@ -25,7 +25,8 @@ export const handleVictoryOutcome = ({
     emitDailyProtocolLogs, emitUnlockedTitles,
     extendedChecks = false,
 }) => {
-    const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy);
+    const passiveBonus = { goldMult: stats?.passiveGoldMult || 0, expMult: stats?.passiveExpMult || 0 };
+    const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus);
     let updatedPlayer = victoryResult.updatedPlayer;
     victoryResult.logs.forEach((log) => addLog(log.type, log.text));
     if (victoryResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: victoryResult.visualEffect });

@@ -386,6 +386,150 @@ export const EVENT_CHAINS = [
             },
         ],
     },
+
+    // ── 신규 체인 9: 세계수의 오염 ───────────────────────────────────────────
+    {
+        id: 'world_tree_corruption',
+        label: '세계수의 오염',
+        desc: '타락한 에너지가 세계수를 물들이고 있습니다. 정화의 길을 따라가세요.',
+        steps: [
+            {
+                step: 0,
+                loc: '세계수 숲',
+                event: {
+                    title: '오염된 뿌리',
+                    desc: '세계수 숲 깊숙이 들어서자 뿌리들이 검게 물들어 있습니다. 고대 수호자의 흔적이 남아 있고, 타락한 에너지가 땅 속에서 솟아오릅니다. "탐험자여, 이 오염을 멈춰주세요."',
+                    choices: ['오염의 근원을 추적한다', '뿌리에서 에너지를 채취한다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'world_tree_corruption', log: '오염의 근원을 향해 발걸음을 옮깁니다. 고대 신전에 단서가 있을 것입니다.', reward: { type: 'gold', amount: 2500 } },
+                        { type: 'chain_advance', chainId: 'world_tree_corruption', log: '타락한 에너지를 채취했습니다. 이 힘을 이용해 더 깊이 파고들겠습니다.', reward: { type: 'stat_bonus', atk: 8, hp: 50 } },
+                    ],
+                },
+            },
+            {
+                step: 1,
+                loc: '고대 신전 도시',
+                event: {
+                    title: '신전의 비밀',
+                    desc: '고대 신전 도시에서 오염의 실마리를 발견했습니다. 신전 제관의 유품 속에 봉인 의식의 기록이 남아 있습니다. "이 의식으로 오염을 되돌릴 수 있습니다."',
+                    choices: ['봉인 의식을 거행한다', '신전의 힘을 흡수한다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'world_tree_corruption', log: '봉인 의식을 거행했습니다. 신성한 에너지가 오염을 밀어냅니다. 마지막 관문이 남았습니다.', reward: { type: 'gold', amount: 5000 } },
+                        { type: 'chain_advance', chainId: 'world_tree_corruption', log: '신전의 힘을 흡수했습니다. 오염과 정화가 뒤섞인 힘이 몸속에서 충돌합니다.', reward: { type: 'stat_bonus', atk: 15, def: 8 } },
+                    ],
+                },
+            },
+            {
+                step: 2,
+                loc: '에테르 관문',
+                event: {
+                    title: '세계수 정화',
+                    desc: '에테르 관문을 통해 오염의 근원이 이어져 있습니다. 세계수를 완전히 정화하려면 이 관문을 봉인해야 합니다. "당신만이 이 봉인을 완성할 수 있습니다."',
+                    choices: ['관문을 봉인한다', '관문을 통해 힘을 흡수한다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'world_tree_corruption', log: '에테르 관문을 봉인했습니다! 세계수가 되살아납니다. 자연의 정령들이 보상을 내립니다.', reward: { type: 'item', name: '세계수의 이슬' } },
+                        { type: 'chain_advance', chainId: 'world_tree_corruption', log: '관문의 에너지를 흡수했습니다. 압도적인 힘이 몸에 새겨집니다.', reward: { type: 'relic' } },
+                    ],
+                },
+            },
+        ],
+    },
+
+    // ── 신규 체인 10: 신성한 사도의 시련 ────────────────────────────────────
+    {
+        id: 'divine_apostle_trial',
+        label: '신성한 사도의 시련',
+        desc: '고대 신전에 깃든 신성한 힘이 당신을 시험합니다.',
+        steps: [
+            {
+                step: 0,
+                loc: '고대 신전 도시',
+                event: {
+                    title: '수호신의 시험',
+                    desc: '고대 신전 도시 중심부에서 빛나는 제단을 발견했습니다. 신성한 목소리가 울립니다. "이방인이여, 네 가치를 증명하라. 세 가지 시험을 통과해야 신전의 축복을 받을 수 있다."',
+                    choices: ['시험을 수락한다', '제단에서 성물을 가져간다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '시험을 수락했습니다. 첫 번째 시험은 차원의 균열에서 기다리고 있습니다.', reward: { type: 'gold', amount: 1000 } },
+                        { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '제단에서 성물을 가져갔습니다. 신성한 파편이 어딘가에서 반응할 것입니다.', reward: { type: 'stat_bonus', hp: 80, def: 5 } },
+                    ],
+                },
+            },
+            {
+                step: 1,
+                loc: '차원의 균열 전초기지',
+                event: {
+                    title: '두 번째 시험 — 균열 속의 각오',
+                    desc: '차원의 균열 전초기지에서 신성한 흔적을 다시 발견했습니다. "두 번째 시험이다. 차원의 혼돈 속에서도 네 신념을 지킬 수 있느냐?"',
+                    choices: ['신념을 지키며 싸운다', '혼돈의 힘을 이용한다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '신념을 지켜냈습니다. 신성한 빛이 당신을 감쌉니다. 마지막 시험이 에테르 관문에서 기다립니다.', reward: { type: 'gold', amount: 8000 } },
+                        { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '혼돈의 힘을 활용해 시험을 통과했습니다. 비정통적이지만 효과적이었습니다.', reward: { type: 'stat_bonus', atk: 20, mp: 50 } },
+                    ],
+                },
+            },
+            {
+                step: 2,
+                loc: '에테르 관문',
+                event: {
+                    title: '최후의 심판',
+                    desc: '에테르 관문 앞에서 수호신의 사도가 현신했습니다. "마지막 시험이다. 네 선택이 세계의 운명을 결정짓는다."',
+                    choices: ['신성한 힘으로 판결을 받는다', '에테르의 힘으로 스스로 길을 연다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '신성한 판결을 받았습니다! 수호신이 당신을 인정합니다. 신전의 성광석과 축복이 내려집니다.', reward: { type: 'item', name: '신전의 성광석' } },
+                        { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '스스로 길을 열었습니다. 신과 대등한 힘을 인정받아 전설의 유물이 주어집니다.', reward: { type: 'relic' } },
+                    ],
+                },
+            },
+        ],
+    },
+
+    // ── 신규 체인 11: 균열의 비밀 ────────────────────────────────────────────
+    {
+        id: 'rift_secret',
+        label: '균열의 비밀',
+        desc: '차원의 균열 너머에 숨겨진 진실을 파헤칩니다.',
+        steps: [
+            {
+                step: 0,
+                loc: '차원의 균열 전초기지',
+                event: {
+                    title: '차원 교란의 원인',
+                    desc: '전초기지에서 차원 보병의 유품을 발견했습니다. 암호화된 명령서에는 "균열을 확대하라 — 차원 마왕의 명령"이라 적혀 있습니다. 더 깊이 조사해야 합니다.',
+                    choices: ['명령서를 해독한다', '전초기지 지휘관을 추적한다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'rift_secret', log: '명령서를 해독했습니다. 균열의 중심이 붕괴된 마법 요새와 연결되어 있습니다.', reward: { type: 'gold', amount: 3500 } },
+                        { type: 'chain_advance', chainId: 'rift_secret', log: '지휘관의 흔적을 찾았습니다. 그가 붕괴된 요새로 도주했다는 증거를 확보했습니다.', reward: { type: 'stat_bonus', atk: 12, def: 6 } },
+                    ],
+                },
+            },
+            {
+                step: 1,
+                loc: '붕괴된 마법 요새',
+                event: {
+                    title: '요새의 진실',
+                    desc: '붕괴된 마법 요새에서 차원 균열 발생 장치를 발견했습니다. "이 장치가 균열을 증폭시키고 있습니다. 파괴하면 차원 침략을 약화시킬 수 있습니다."',
+                    choices: ['장치를 파괴한다', '장치를 역이용한다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'rift_secret', log: '장치를 파괴했습니다! 균열의 에너지가 약해집니다. 마지막 진원지가 에테르 관문에 있습니다.', reward: { type: 'gold', amount: 10000 } },
+                        { type: 'chain_advance', chainId: 'rift_secret', log: '장치를 역이용해 균열 에너지를 흡수했습니다. 강대한 힘이 쌓이지만 위험도 증가합니다.', reward: { type: 'stat_bonus', atk: 25, hp: 100 } },
+                    ],
+                },
+            },
+            {
+                step: 2,
+                loc: '에테르 관문',
+                event: {
+                    title: '균열의 봉인',
+                    desc: '에테르 관문이 차원 균열의 최종 진원지였습니다. 균열 봉인석의 힘으로 이 관문을 완전히 봉인할 수 있습니다. "이 봉인이 세계를 구할 것입니다."',
+                    choices: ['균열을 완전히 봉인한다', '균열의 힘을 자신에게 봉인한다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'rift_secret', log: '균열이 완전히 봉인되었습니다! 차원 침략이 저지되었습니다. 균열 봉인석의 힘이 보상으로 주어집니다.', reward: { type: 'item', name: '균열 봉인석' } },
+                        { type: 'chain_advance', chainId: 'rift_secret', log: '균열의 힘을 자신에게 봉인했습니다. 차원의 힘이 몸에 깃들었습니다. 전설의 유물이 강림합니다!', reward: { type: 'relic' } },
+                    ],
+                },
+            },
+        ],
+    },
 ];
 
 /**

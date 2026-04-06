@@ -26,13 +26,19 @@ export const getJobSkills = (player) => {
  */
 export const getPassiveSkillBonuses = (player) => {
     const cls = DB.CLASSES[player?.job];
-    const bonus = { hp: 0, mp: 0, atk: 0, def: 0, lowHpAtkMult: 1 };
+    const bonus = { hp: 0, mp: 0, atk: 0, def: 0, crit: 0, goldMult: 0, expMult: 0, lowHpAtkMult: 1 };
     if (!cls) return bonus;
     toArray(cls.skills).filter(s => s.passive).forEach(s => {
-        if (s.effect === 'hp_up') bonus.hp += (s.val || 0);
-        if (s.effect === 'mp_up') bonus.mp += (s.val || 0);
-        if (s.effect === 'atk_up') bonus.atk += (s.val || 0);
-        if (s.effect === 'def_up') bonus.def += (s.val || 0);
+        if (s.effect === 'hp_up')   bonus.hp   += (s.val || 0);
+        if (s.effect === 'mp_up')   bonus.mp   += (s.val || 0);
+        if (s.effect === 'atk_up')  bonus.atk  += (s.val || 0);
+        if (s.effect === 'def_up')  bonus.def  += (s.val || 0);
+        // crit_up: 크리티컬 확률 보너스 (도적/암살자/마법사 계열)
+        if (s.effect === 'crit_up') bonus.crit += (s.val || 0);
+        // gold_up: 골드 획득량 배율 보너스 (레인저/사냥꾼 계열)
+        if (s.effect === 'gold_up') bonus.goldMult += (s.val || 0);
+        // exp_up: 경험치 획득량 배율 보너스 (성직자/팔라딘 계열)
+        if (s.effect === 'exp_up')  bonus.expMult  += (s.val || 0);
         // low_hp_atk: HP 30% 이하 시 ATK 배율 (무당 죽음의 직관)
         if (s.effect === 'low_hp_atk' && s.val) {
             const hpRatio = (player.hp || 0) / Math.max(1, player.maxHp || 150);

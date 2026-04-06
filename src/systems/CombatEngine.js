@@ -898,16 +898,16 @@ export const CombatEngine = {
         };
     },
 
-    handleVictory(player, enemy) {
+    handleVictory(player, enemy, passiveBonus = {}) {
         const p = { ...player };
         const relics = p.relics || [];
         const baseName = this.resolveEnemyBaseName(enemy);
         const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
         const bossBrief = enemy.isBoss ? BOSS_BRIEFS[baseName] : null;
 
-        // 유물: EXP/골드 배율
-        const expMult = 1 + (relics.find(r => r.effect === 'exp_mult')?.val || 0);
-        const goldMult = 1 + (relics.find(r => r.effect === 'gold_mult')?.val || 0);
+        // 유물 + 패시브 스킬: EXP/골드 배율
+        const expMult = 1 + (relics.find(r => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0);
+        const goldMult = 1 + (relics.find(r => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0);
         // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배)
         const challengeMods = p.challengeModifiers || [];
         const challengeScale = BALANCE.CHALLENGE_REWARD_SCALING || {};

@@ -197,7 +197,7 @@ export const useGameEngine = () => {
         const baseDef = (activePlayer.def + aVal + shieldDef + codexDef + enhanceDefBonus + passiveBonus.def) * (1 + (buff.def || 0)) * defMultBonus * dualWieldDefMult;
         const baseMaxHp = (activePlayer.maxHp + codexHp + passiveBonus.hp) * hpMultBonus;
         const baseMaxMp = ((activePlayer.maxMp || 50) + equipmentMpBonus + relicMpFlat + passiveBonus.mp) * rmp;
-        const baseCritChance = Math.min(0.75, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus + (titlePassive.crit || 0));
+        const baseCritChance = Math.min(0.75, BALANCE.CRIT_CHANCE + equipmentCritBonus + relicCritBonus + (titlePassive.crit || 0) + passiveBonus.crit);
         const preBuildStats = {
             atk: Math.floor(baseAtk * (1 + ra) + (titlePassive.atk || 0)),
             def: Math.floor(baseDef * (1 + rd) + (titlePassive.def || 0)),
@@ -260,6 +260,8 @@ export const useGameEngine = () => {
             activeSynergies,
             killStreak,
             killStreakTier: streakTierIdx,
+            passiveGoldMult: passiveBonus.goldMult,
+            passiveExpMult: passiveBonus.expMult,
         };
     }, [player]);
 
