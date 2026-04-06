@@ -286,4 +286,34 @@ export const MSG = {
     TRUE_GOD_SLAIN: '🌟 원시의 신이 쓰러졌습니다. 세계의 진실이 밝혀집니다...',
     VOID_GOD_SLAIN: '💀 공허의 신이 쓰러졌습니다. 공허가 잠시 물러났습니다... 당신은 심연의 끝을 정복했습니다.',
     ABYSS_RECORD: (floor) => `🏆 심연 최고 기록 경신! ${floor}층 도달`,
+
+    // --- 전투 아이템/스킬 ---
+    COMBAT_CHAOS_SKILL: (name) => `혼돈의 기술: [${name}] 발동!`,
+    COMBAT_DOT_KILL: (name) => `[지속 피해] ${name}이(가) 쓰러졌습니다!`,
+    ITEM_USE_SIMPLE: (name) => `${name} 사용.`,
+    ITEM_USE_CURE: (name) => `${name} 사용: 상태이상 해제`,
+
+    // --- 전투 승리 ---
+    QUEST_CONDITION_MET: (count) => `퀘스트 조건 달성: ${count}개`,
+    KILL_STREAK_BONUS: (streak, atkPct) => `🔥 ${streak}연속 처치! ATK +${atkPct}% 보너스 발동`,
+
+    // --- 심연 ---
+    ABYSS_DESCEND: (floor) => `심연의 더 깊은 곳으로 진입했습니다. (현재: ${floor}층)`,
+    ABYSS_LEGENDARY_ITEM: (name) => `🏆 전설 아이템 획득: [${name}]`,
+    ABYSS_PRESTIGE_POINTS: (n) => `✨ 프레스티지 포인트 +${n}`,
+
+    // --- Firebase 동기화 ---
+    SYNC_SERVER_LOADED: '서버 데이터와 동기화되었습니다.',
+    SYNC_AUTH_TIMEOUT: '인증 지연으로 오프라인 모드로 시작했습니다.',
+    SYNC_NO_CONFIG: '클라우드 설정을 찾을 수 없어 오프라인 모드로 시작했습니다.',
+    SYNC_AUTH_FAIL: '클라우드 인증 실패로 오프라인 모드로 시작했습니다.',
+    SYNC_TIMEOUT: '클라우드 응답 지연으로 오프라인 모드로 시작했습니다.',
+    SYNC_CONNECT_FAIL: '클라우드 연결 실패로 오프라인 모드로 시작했습니다.',
+
+    // --- 탐험 선택지 ---
+    CHOICE_DEFAULT: (n) => `선택지 ${n}`,
+
+    // --- 이동 기본값 ---
+    MOVE_NO_EXITS: '없음',
+
 };

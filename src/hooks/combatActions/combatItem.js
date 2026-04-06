@@ -27,13 +27,13 @@ export const createCombatItemActions = (deps, { emitDailyProtocolLogs, emitUnloc
 
             if (inventoryItem.type === 'hp') {
                 updatedPlayer = { ...player, hp: Math.min(stats.maxHp, player.hp + (inventoryItem.val || 0)), inv: player.inv.filter((e) => e.id !== inventoryItem.id) };
-                addLog('success', `${inventoryItem.name} 사용.`);
+                addLog('success', MSG.ITEM_USE_SIMPLE(inventoryItem.name));
             } else if (inventoryItem.type === 'mp') {
                 updatedPlayer = { ...player, mp: Math.min(stats.maxMp, player.mp + (inventoryItem.val || 0)), inv: player.inv.filter((e) => e.id !== inventoryItem.id) };
-                addLog('success', `${inventoryItem.name} 사용.`);
+                addLog('success', MSG.ITEM_USE_SIMPLE(inventoryItem.name));
             } else if (inventoryItem.type === 'cure') {
                 updatedPlayer = { ...player, status: toArray(player.status).filter((s) => s !== inventoryItem.effect), inv: player.inv.filter((e) => e.id !== inventoryItem.id) };
-                addLog('success', `${inventoryItem.name} 사용: 상태이상 해제`);
+                addLog('success', MSG.ITEM_USE_CURE(inventoryItem.name));
             } else if (inventoryItem.type === 'buff') {
                 updatedPlayer = {
                     ...player,
@@ -44,7 +44,7 @@ export const createCombatItemActions = (deps, { emitDailyProtocolLogs, emitUnloc
                     },
                     inv: player.inv.filter((e) => e.id !== inventoryItem.id)
                 };
-                addLog('success', `${inventoryItem.name} 사용: 버프 활성화`);
+                addLog('success', MSG.ITEM_USE_BUFF(inventoryItem.name));
             }
 
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
@@ -61,7 +61,7 @@ export const createCombatItemActions = (deps, { emitDailyProtocolLogs, emitUnloc
             if (counterResult.isEnemyDead) {
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 dispatch({ type: AT.SET_ENEMY, payload: null });
-                addLog('success', `[지속 피해] ${enemy.name}이(가) 쓰러졌습니다!`);
+                addLog('success', MSG.COMBAT_DOT_KILL(enemy.name));
                 handleVictoryOutcome({
                     playerAfterCombat: counterResult.updatedPlayer,
                     deadEnemy: enemy,

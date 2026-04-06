@@ -15,6 +15,7 @@ import { signInAnonymously } from 'firebase/auth';
 
 import { auth, db, hasFirebaseConfig } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
+import { MSG } from '../data/messages';
 import { migrateData } from '../utils/gameUtils';
 import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
 import { isSmokeRuntime } from '../utils/runtimeMode';
@@ -71,13 +72,13 @@ export const useFirebaseSync = (state, dispatch) => {
         };
 
         const authTimer = setTimeout(() => {
-            fallbackAuthOffline('인증 지연으로 오프라인 모드로 시작했습니다.');
+            fallbackAuthOffline(MSG.SYNC_AUTH_TIMEOUT);
         }, AUTH_TIMEOUT_MS);
 
         if (!hasFirebaseConfig) {
             console.warn('[FIREBASE] Missing required config. Booting in offline mode.');
             clearTimeout(authTimer);
-            fallbackAuthOffline('클라우드 설정을 찾을 수 없어 오프라인 모드로 시작했습니다.');
+            fallbackAuthOffline(MSG.SYNC_NO_CONFIG);
             return () => clearTimeout(authTimer);
         }
 
@@ -97,7 +98,7 @@ export const useFirebaseSync = (state, dispatch) => {
             .catch((e) => {
                 console.error('Auth Failed', e);
                 clearTimeout(authTimer);
-                fallbackAuthOffline('클라우드 인증 실패로 오프라인 모드로 시작했습니다.');
+                fallbackAuthOffline(MSG.SYNC_AUTH_FAIL);
             });
         return () => clearTimeout(authTimer);
     }, [dispatch, smokeMode]);
@@ -154,7 +155,7 @@ export const useFirebaseSync = (state, dispatch) => {
         };
 
         const bootstrapTimer = setTimeout(() => {
-            fallbackToOffline('클라우드 응답 지연으로 오프라인 모드로 시작했습니다.');
+            fallbackToOffline(MSG.SYNC_TIMEOUT);
         }, BOOTSTRAP_TIMEOUT_MS);
 
         const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
@@ -178,7 +179,7 @@ export const useFirebaseSync = (state, dispatch) => {
                     lastLoadedTimestampRef.current = remoteData.lastActive?.toMillis() || Date.now();
                     if (!hasBootLogRef.current) {
                         hasBootLogRef.current = true;
-                        dispatch({ type: 'ADD_LOG', payload: makeLogPayload('system', '서버 데이터와 동기화되었습니다.') });
+                        dispatch({ type: 'ADD_LOG', payload: makeLogPayload('system', MSG.SYNC_SERVER_LOADED) });
                     }
                 }
             } else {
@@ -187,7 +188,7 @@ export const useFirebaseSync = (state, dispatch) => {
         }, (e) => {
             console.warn('User data subscribe failed', e);
             clearTimeout(bootstrapTimer);
-            fallbackToOffline('클라우드 연결 실패로 오프라인 모드로 시작했습니다.');
+            fallbackToOffline(MSG.SYNC_CONNECT_FAIL);
         });
 
         return () => {

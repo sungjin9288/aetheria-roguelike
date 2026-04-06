@@ -33,7 +33,7 @@ export const createCombatAttackActions = (deps, { emitDailyProtocolLogs, emitUnl
                         if (allSkills.length > 0) {
                             const randomSkill = allSkills[Math.floor(Math.random() * allSkills.length)];
                             selected = { skill: randomSkill, index: 0, total: allSkills.length };
-                            addLog('warn', `혼돈의 기술: [${randomSkill.name}] 발동!`);
+                            addLog('warn', MSG.COMBAT_CHAOS_SKILL(randomSkill.name));
                         }
                     }
                     result = CombatEngine.performSkill(playerAtActionStart, enemyAtActionStart, stats, selected?.skill);
@@ -94,7 +94,7 @@ export const createCombatAttackActions = (deps, { emitDailyProtocolLogs, emitUnl
                     if (counterResult.isEnemyDead) {
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                         dispatch({ type: AT.SET_ENEMY, payload: null });
-                        addLog('success', `[지속 피해] ${result.updatedEnemy.name}이(가) 쓰러졌습니다!`);
+                        addLog('success', MSG.COMBAT_DOT_KILL(result.updatedEnemy.name));
                         handleVictoryOutcome({
                             playerAfterCombat: counterResult.updatedPlayer,
                             deadEnemy: result.updatedEnemy,

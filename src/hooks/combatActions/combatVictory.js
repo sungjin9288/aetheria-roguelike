@@ -45,7 +45,7 @@ export const handleVictoryOutcome = ({
     // questProgress
     const questResult = CombatEngine.updateQuestProgress(updatedPlayer, deadEnemy.baseName || deadEnemy.name);
     updatedPlayer = { ...updatedPlayer, quests: questResult.updatedQuests };
-    if (questResult.completedCount > 0) addLog('system', `퀘스트 조건 달성: ${questResult.completedCount}개`);
+    if (questResult.completedCount > 0) addLog('system', MSG.QUEST_CONDITION_MET(questResult.completedCount));
 
     // loot
     const lootResult = CombatEngine.processLoot(deadEnemy, updatedPlayer);
@@ -88,7 +88,7 @@ export const handleVictoryOutcome = ({
     if (hitNewTier) {
         const tierIdx = tierThresholds.indexOf(newStreak);
         const atkPct = Math.round(BALANCE.KILL_STREAK_ATK_BONUS[tierIdx] * 100);
-        addLog('event', `🔥 ${newStreak}연속 처치! ATK +${atkPct}% 보너스 발동`);
+        addLog('event', MSG.KILL_STREAK_BONUS(newStreak, atkPct));
     }
     updatedPlayer = { ...updatedPlayer, killStreak: newStreak };
 

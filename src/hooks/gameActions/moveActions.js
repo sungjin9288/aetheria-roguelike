@@ -13,7 +13,7 @@ export const createMoveActions = (deps, { emitUnlockedTitles }) => {
         move: (loc) => {
             if (isAiThinking) return;
             if (!loc) {
-                const exits = DB.MAPS[player.loc]?.exits?.join(', ') || '없음';
+                const exits = DB.MAPS[player.loc]?.exits?.join(', ') || MSG.MOVE_NO_EXITS;
                 return addLog('info', MSG.MOVE_EXITS(exits));
             }
             if (!['idle', 'moving'].includes(gameState)) return addLog('error', MSG.MOVE_BLOCKED);

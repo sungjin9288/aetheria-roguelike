@@ -76,7 +76,7 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
                         commitExploreOutcome('narrative_event');
                         if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
                         const normalizedChoices = toArray(eventData.choices)
-                            .map((choice, idx) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`))
+                            .map((choice, idx) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || MSG.CHOICE_DEFAULT(idx + 1)))
                             .slice(0, 3);
                         const normalized = { ...eventData, choices: normalizedChoices, outcomes: toArray(eventData.outcomes) };
                         dispatch({ type: AT.SET_EVENT, payload: normalized });

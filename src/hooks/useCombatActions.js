@@ -14,7 +14,7 @@ export const createCombatActions = (deps) => {
     const emitDailyProtocolLogs = (type, amount = 1) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
         completed.forEach((mission) => {
-            addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);
+            addLog('system', MSG.DAILY_PROTOCOL_DONE(formatDailyProtocolReward(mission.reward)));
         });
     };
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);

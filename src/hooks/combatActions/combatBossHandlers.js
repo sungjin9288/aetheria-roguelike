@@ -76,7 +76,7 @@ export const applyAbyssFloorAdvance = (p, dispatch, addLog) => {
     if (newDepth > prevRecord) {
         addLog('system', MSG.ABYSS_RECORD(newDepth));
     }
-    addLog('system', `심연의 더 깊은 곳으로 진입했습니다. (현재: ${newDepth}층)`);
+    addLog('system', MSG.ABYSS_DESCEND(newDepth));
     const milestone = BALANCE.ABYSS_MILESTONE_REWARDS[newDepth];
     if (milestone) {
         addLog('event', MSG.ABYSS_MILESTONE(newDepth));
@@ -88,11 +88,11 @@ export const applyAbyssFloorAdvance = (p, dispatch, addLog) => {
             if (legendaryPool.length > 0) {
                 const item = makeItem(legendaryPool[Math.floor(Math.random() * legendaryPool.length)]);
                 updated = { ...updated, inv: [...(updated.inv || []), item] };
-                addLog('success', `🏆 전설 아이템 획득: [${item.name}]`);
+                addLog('success', MSG.ABYSS_LEGENDARY_ITEM(item.name));
             }
         } else if (milestone.type === 'prestige_points') {
             updated = { ...updated, prestigePoints: (updated.prestigePoints || 0) + (milestone.amount || 1) };
-            addLog('success', `✨ 프레스티지 포인트 +${milestone.amount || 1}`);
+            addLog('success', MSG.ABYSS_PRESTIGE_POINTS(milestone.amount || 1));
         }
     }
     return updated;
