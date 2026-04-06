@@ -89,6 +89,17 @@ export const QUESTS = [
     { id: 130, title: '리치 재토벌',            desc: '되살아난 리치를 다시 한번 처치하세요',             target: '리치',          goal: 3,  reward: { exp: 7000,  gold: 15000, item: '혼돈의 로드' },   minLv: 40 },
     { id: 131, title: '죽음의 기사 토벌',       desc: '마왕성의 죽음의 기사를 토벌하세요',               target: '죽음의 기사',   goal: 5,  reward: { exp: 4500,  gold: 9000 },                         minLv: 42 },
 
+    // 신규 지역 — 세계수 숲 / 고대 신전 도시 / 차원의 균열 전초기지 (Lv 33-55)
+    { id: 140, title: '세계수 수호자 사냥',     desc: '세계수 숲의 수호자를 처치하세요',                  target: '세계수 수호자', goal: 8,  reward: { exp: 3000,  gold: 5000 },                         minLv: 33 },
+    { id: 141, title: '자연의 정령 정화',       desc: '타락한 자연의 정령을 정화하세요',                  target: '자연의 정령',   goal: 12, reward: { exp: 2500,  gold: 4500 },                         minLv: 33 },
+    { id: 142, title: '[보스] 타락한 세계수 영혼 토벌', desc: '세계수를 오염시킨 타락한 영혼을 토벌하세요', target: '타락한 세계수 영혼', goal: 1, reward: { exp: 10000, gold: 15000, item: '세계수의 이슬' }, minLv: 35 },
+    { id: 143, title: '신전 경비병 소탕',       desc: '고대 신전 도시의 경비병을 소탕하세요',             target: '신전 경비병',   goal: 10, reward: { exp: 5000,  gold: 9000 },                         minLv: 42 },
+    { id: 144, title: '시간 파편체 분쇄',       desc: '신전에 출몰하는 시간 파편체를 분쇄하세요',          target: '시간 파편체',   goal: 8,  reward: { exp: 5500,  gold: 10000 },                        minLv: 42 },
+    { id: 145, title: '[보스] 수호신의 사도 처치', desc: '신전 도시를 지배하는 사도를 처치하세요',          target: '수호신의 사도', goal: 1,  reward: { exp: 15000, gold: 22000, item: '신전의 성광석' }, minLv: 45 },
+    { id: 146, title: '차원 보병 격멸',         desc: '균열 전초기지의 차원 보병을 격멸하세요',            target: '차원 보병',     goal: 8,  reward: { exp: 6000,  gold: 11000 },                        minLv: 47 },
+    { id: 147, title: '에테르 돌격대 소탕',     desc: '균열을 넘어온 에테르 돌격대를 소탕하세요',          target: '에테르 돌격대', goal: 10, reward: { exp: 7000,  gold: 13000 },                        minLv: 47 },
+    { id: 148, title: '[보스] 균열의 사령관 격파', desc: '차원 침공을 지휘하는 사령관을 격파하세요',        target: '균열의 사령관', goal: 1,  reward: { exp: 20000, gold: 30000, item: '균열 봉인석' },   minLv: 50 },
+
     // 보스 챌린지
     { id: 132, title: '[보스] 하수도 여왕 처치',      desc: '하수도의 여왕을 처치하세요',       target: '하수도의 여왕',     goal: 1, reward: { exp: 2000,  gold: 3000 },                         minLv: 10 },
     { id: 133, title: '[보스] 전초기지 사령관 격파',  desc: '전초기지 사령관을 격파하세요',     target: '전초기지 사령관',   goal: 1, reward: { exp: 3000,  gold: 5000 },                         minLv: 18 },

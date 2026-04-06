@@ -188,6 +188,36 @@ export const ITEMS = {
         // Tier 6 - 미식 (2개)
         { name: '차원 방패 이지스', type: 'shield', val: 70, tier: 6, price: 45000, elem: '빛', jobs: ['나이트', '팔라딘'], desc: '차원의 경계를 막아내는 절대 방패.', desc_stat: 'DEF+70(빛)' },
         { name: '에테르 그리모어', type: 'shield', subtype: 'focus', val: 20, mp: 80, crit: 0.12, tier: 6, price: 48000, elem: '어둠', jobs: ['아크메이지', '흑마법사', '대마법사'], desc: '에테르 에너지가 봉인된 마도 그리모어.', desc_stat: 'DEF+20 / MP+80 / CRIT+12%' },
+        // ── Sprint 21: 방패 대폭 보강 (+10) ────────────────────────────────────
+        // T2 방패 (+3)
+        { name: '화염 방패', type: 'shield', val: 14, tier: 2, price: 360, elem: '화염', jobs: ['전사', '나이트', '버서커'], desc: '화염 원소 저항이 깃든 방패.', desc_stat: 'DEF+14(화)' },
+        { name: '냉기 방패', type: 'shield', val: 14, tier: 2, price: 360, elem: '냉기', jobs: ['전사', '나이트'], desc: '얼음 마법으로 단련된 방패.', desc_stat: 'DEF+14(냉)' },
+        { name: '자연 방패', type: 'shield', val: 13, tier: 2, price: 340, elem: '자연', jobs: ['전사', '나이트', '모험가'], desc: '세계수 목재로 만든 방패.', desc_stat: 'DEF+13(자)' },
+        // T3 방패 (+3)
+        { name: '어둠 방패', type: 'shield', val: 22, tier: 3, price: 950, elem: '어둠', jobs: ['전사', '나이트', '흑마법사'], desc: '어둠을 흡수하는 방패.', desc_stat: 'DEF+22(암)' },
+        { name: '대지 방패', type: 'shield', val: 28, tier: 3, price: 1050, elem: '대지', jobs: ['전사', '나이트', '버서커'], desc: '대지 원소로 강화된 두꺼운 방패.', desc_stat: 'DEF+28(지)' },
+        { name: '쌍두 마도서', type: 'shield', subtype: 'focus', val: 7, mp: 38, crit: 0.055, tier: 3, price: 1100, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '빛과 자연의 주문식이 양면에 새겨진 마도서.', desc_stat: 'DEF+7 / MP+38 / CRIT+5.5%' },
+        // T4 방패 (+2)
+        { name: '세계수 방패', type: 'shield', val: 38, tier: 4, price: 5700, elem: '자연', jobs: ['나이트', '팔라딘', '전사'], desc: '세계수 숲의 신성한 나무로 빚은 방패.', desc_stat: 'DEF+38(자)' },
+        { name: '균열 차단 방패', type: 'shield', val: 44, tier: 4, price: 6100, elem: '빛', jobs: ['나이트', '전사', '팔라딘'], desc: '차원 균열의 에너지를 차단하는 방패.', desc_stat: 'DEF+44(빛)' },
+        // T5 방패 (+1) + T6 방패 (+1)
+        { name: '세계의 방패', type: 'shield', val: 55, tier: 5, price: 18000, elem: '자연', jobs: ['나이트', '팔라딘'], desc: '세계수의 의지가 깃든 전설의 방패. 자연의 가호를 부여한다.', desc_stat: 'DEF+55(자)' },
+        { name: '원시의 이지스', type: 'shield', val: 80, tier: 6, price: 52000, elem: '대지', jobs: ['나이트', '팔라딘', '전사'], desc: '원시의 신의 힘을 봉인한 절대 방벽. 모든 원소를 저항한다.', desc_stat: 'DEF+80(지)' },
+        // ── Sprint 21: T5-T6 무기/방어구 (+10) ──────────────────────────────────
+        // T5 신규 무기 (+3) — 신규 지역 테마
+        { name: '세계수의 검', type: 'weapon', val: 192, tier: 5, price: 30500, elem: '자연', jobs: ['전사', '나이트'], desc: '세계수 숲의 정수가 깃든 성검. 자연과 빛의 힘이 공명한다.', desc_stat: 'ATK+192(자)' },
+        { name: '신전 도시의 지팡이', type: 'weapon', hands: 2, val: 188, tier: 5, price: 29500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '고대 신전 도시의 제관이 사용하던 성스러운 지팡이.', desc_stat: 'ATK+188(빛) / 2H' },
+        { name: '균열의 날', type: 'weapon', val: 197, tier: 5, price: 31000, elem: '어둠', jobs: ['어쌔신', '그림자 주군'], desc: '차원 균열의 에너지를 담아 벼린 단검. 차원을 가른다.', desc_stat: 'ATK+197(암)' },
+        // T6 신규 무기 (+2)
+        { name: '세계수 절멸창', type: 'weapon', hands: 2, val: 310, tier: 6, price: 72000, elem: '자연', jobs: ['전사', '나이트', '팔라딘'], desc: '타락한 세계수의 심장목으로 만든 에테르급 창. 자연의 힘이 폭발한다.', desc_stat: 'ATK+310(자) / 2H' },
+        { name: '시간 파편 소드', type: 'weapon', val: 295, tier: 6, price: 68000, elem: '빛', jobs: ['시간술사', '전사', '나이트'], desc: '시간 파편을 벼린 검. 공격마다 시간이 비틀린다.', desc_stat: 'ATK+295(빛)' },
+        // T5 신규 방어구 (+3) — 신규 지역 테마
+        { name: '세계수 갑주', type: 'armor', val: 108, tier: 5, price: 17800, elem: '자연', jobs: ['전사', '나이트'], desc: '세계수 숲의 수호자가 착용하던 갑주. 자연의 회복력이 깃들어 있다.', desc_stat: 'DEF+108(자)' },
+        { name: '신전 제관 예복', type: 'armor', val: 90, tier: 5, price: 15800, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '고대 신전 도시의 대제관이 입던 성스러운 예복.', desc_stat: 'DEF+90(빛)' },
+        { name: '균열 외피갑옷', type: 'armor', val: 96, tier: 5, price: 16200, elem: '어둠', jobs: ['도적', '어쌔신'], desc: '차원 균열에서 채취한 소재로 만든 전투복. 차원 에너지를 흡수한다.', desc_stat: 'DEF+96(암)' },
+        // T6 신규 방어구 (+2)
+        { name: '신전 도시의 성의', type: 'armor', val: 130, tier: 6, price: 51000, elem: '빛', jobs: ['나이트', '팔라딘', '아크메이지'], desc: '고대 신전 도시에서 발견된 에테르급 성의. 신들의 가호가 깃들어 있다.', desc_stat: 'DEF+130(빛)' },
+        { name: '세계수 뿌리 갑옷', type: 'armor', val: 140, tier: 6, price: 54000, elem: '자연', jobs: ['전사', '버서커', '나이트'], desc: '세계수의 뿌리를 엮어 만든 갑옷. 무한한 재생력을 부여한다.', desc_stat: 'DEF+140(자)' },
         // Phase 4B 확장 방어구
         // T1 추가 (+3)
         { name: '짚 모자', type: 'armor', val: 2, tier: 1, price: 30, jobs: ['모험가', '레인저'], desc: '농부의 짚 모자.', desc_stat: 'DEF+2' },

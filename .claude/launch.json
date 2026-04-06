@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "aetheria-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--host", "--port", "5179"],
+      "runtimeExecutable": "/Users/sungjin/.local/share/mise/installs/node/24.13.1/bin/node",
+      "runtimeArgs": ["/Users/sungjin/dev/personal/aetheria-roguelike/node_modules/.bin/vite", "--host", "--port", "5179"],
       "port": 5179
     }
   ]

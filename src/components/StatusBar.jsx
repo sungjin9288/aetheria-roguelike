@@ -130,6 +130,11 @@ const StatusBar = ({ player, stats, enemy = null, mobile = false, compactDesktop
               <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] font-fira text-slate-300/76">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#7dd4d8] shadow-[0_0_10px_rgba(125,212,216,0.42)] animate-pulse" />
                 <span className="truncate">{player.loc}</span>
+                {(player.killStreak || 0) >= 3 && (
+                  <span className="shrink-0 rounded-full bg-orange-500/20 border border-orange-400/30 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.14em] text-orange-300 animate-pulse">
+                    🔥 {player.killStreak}연속
+                  </span>
+                )}
               </div>
             </div>
             <div className="grid shrink-0 gap-1.5">
@@ -174,6 +179,11 @@ const StatusBar = ({ player, stats, enemy = null, mobile = false, compactDesktop
                     onClick={onCrystalClick}
                   >
                     💎{player.premiumCurrency}
+                  </SignalBadge>
+                )}
+                {(player.killStreak || 0) >= 3 && (
+                  <SignalBadge tone="danger" size="sm" className={`${compactBadgeClass} animate-pulse`}>
+                    🔥{player.killStreak}
                   </SignalBadge>
                 )}
                 {!compactDesktop && (

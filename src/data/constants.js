@@ -224,6 +224,12 @@ export const BALANCE = {
         40: '엔트로피 군주',
         50: '무한의 화신',
     },
+
+    // 연속 처치 (Kill Streak) 시스템
+    KILL_STREAK_DECAY_MS: 30000,        // 30초 비전투 시 스트릭 초기화
+    KILL_STREAK_TIERS: [3, 5, 10, 20], // 보너스 발동 임계 연속 처치 수
+    KILL_STREAK_ATK_BONUS: [0.05, 0.10, 0.18, 0.30], // 각 티어 ATK 배율 보너스
+    KILL_STREAK_CRIT_BONUS: [0.03, 0.06, 0.10, 0.15], // 각 티어 CRIT 보너스
 };
 
 Object.freeze(CONSTANTS);

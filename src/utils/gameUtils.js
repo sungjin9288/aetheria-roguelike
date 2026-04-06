@@ -404,6 +404,10 @@ export const migrateData = (rawData) => {
     if (target.combatFlags) {
         target.combatFlags.deathSaveUsedCount = target.combatFlags.deathSaveUsedCount || 0;
     }
+    // Kill Streak 필드 마이그레이션
+    if (typeof target.killStreak !== 'number') {
+        target.killStreak = 0;
+    }
     // 진 엔딩 파편 카운터
     target.meta.trueEndingFragments = target.meta.trueEndingFragments || 0;
 

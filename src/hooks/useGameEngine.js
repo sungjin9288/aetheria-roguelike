@@ -230,11 +230,17 @@ export const useGameEngine = () => {
             if (syn.bonus.lowHpAtk && synergyHpRatio < 0.4) synergyLowHpAtk += syn.bonus.lowHpAtk;
         });
 
-        const finalAtk = Math.floor(preBuildStats.atk * (traitBonus.atkMult || 1) * synergyAtkMult * synergyStatMult * (1 + synergyLowHpAtk));
+        // Kill Streak 보너스 (KILL_STREAK_TIERS 기준 단계별 ATK%/CRIT 보너스)
+        const killStreak = activePlayer.killStreak || 0;
+        const streakTierIdx = BALANCE.KILL_STREAK_TIERS.reduce((best, threshold, i) => (killStreak >= threshold ? i : best), -1);
+        const streakAtkBonus = streakTierIdx >= 0 ? BALANCE.KILL_STREAK_ATK_BONUS[streakTierIdx] : 0;
+        const streakCritBonus = streakTierIdx >= 0 ? BALANCE.KILL_STREAK_CRIT_BONUS[streakTierIdx] : 0;
+
+        const finalAtk = Math.floor(preBuildStats.atk * (traitBonus.atkMult || 1) * synergyAtkMult * synergyStatMult * (1 + synergyLowHpAtk) * (1 + streakAtkBonus));
         const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1) * synergyStatMult);
         const finalMaxHp = Math.floor(preBuildStats.maxHp * synergyStatMult);
         const finalMaxMp = preBuildStats.maxMp + (traitBonus.mpFlat || 0) + synergyMpFlat;
-        const finalCritChance = Math.min(0.75, preBuildStats.critChance + (traitBonus.critBonus || 0));
+        const finalCritChance = Math.min(0.75, preBuildStats.critChance + (traitBonus.critBonus || 0) + streakCritBonus);
 
         return {
             atk: finalAtk,
@@ -252,6 +258,8 @@ export const useGameEngine = () => {
             traitBonus,
             titlePassive,
             activeSynergies,
+            killStreak,
+            killStreakTier: streakTierIdx,
         };
     }, [player]);
 

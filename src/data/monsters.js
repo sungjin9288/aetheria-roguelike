@@ -355,6 +355,50 @@ export const MONSTERS = {
         phase3: { name: '공허의 심연', atkBonus: 1.2, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '모든 것이 공허로 돌아갑니다!', statusEffect: 'curse', threshold: 0.25 },
     },
 
+    // ── Sprint 21: 신규 지역 몬스터 ─────────────────────────────────────────
+
+    // 세계수 숲 (5종)
+    '세계수 수호자':    { hp: 320, atk: 68, def: 30, exp: 195, gold: 88, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.2, heavyChance: 0.25 } },
+    '자연의 정령':      { hp: 260, atk: 75, def: 18, exp: 178, gold: 80, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
+    '야생 그리핀':      { hp: 350, atk: 80, def: 22, exp: 210, gold: 95, weakness: '냉기', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '고목 골렘':        { hp: 480, atk: 62, def: 50, exp: 225, gold: 100, weakness: '화염', resistance: '대지', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
+    '뿌리 포식자':      { hp: 290, atk: 85, def: 14, exp: 188, gold: 84, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'poison' },
+
+    // 고대 신전 도시 (5종)
+    '신전 경비병':      { hp: 410, atk: 82, def: 38, exp: 228, gold: 105, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
+    '영겁의 수호신상':  { hp: 550, atk: 70, def: 60, exp: 255, gold: 120, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
+    '신성한 제관':      { hp: 300, atk: 90, def: 20, exp: 218, gold: 98, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
+    '시간 파편체':      { hp: 340, atk: 88, def: 24, exp: 232, gold: 108, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '망령 기사단장':    { hp: 460, atk: 95, def: 42, exp: 260, gold: 125, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 } },
+
+    // 차원의 균열 전초기지 (5종 + 1 중보스)
+    '차원 보병':        { hp: 380, atk: 92, def: 32, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
+    '공허 포격수':      { hp: 280, atk: 108, def: 14, exp: 248, gold: 118, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },
+    '균열 감시자':      { hp: 440, atk: 88, def: 44, exp: 252, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
+    '에테르 돌격대':    { hp: 360, atk: 102, def: 26, exp: 258, gold: 122, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
+    '차원 사령관':      { hp: 520, atk: 112, def: 50, exp: 280, gold: 140, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.45 } },
+
+    // ── Sprint 21: 신규 보스 3종 ─────────────────────────────────────────────
+    '타락한 세계수 영혼': {
+        isBoss: true, weakness: '화염', resistance: '자연',
+        hpMult: 1.65, atkMult: 1.32, expMult: 2.8, goldMult: 2.8, dropMod: 3.5,
+        pattern: { guardChance: 0.1, heavyChance: 0.4 },
+        phase2: { name: '분노한 세계수 영혼', atkBonus: 0.5, pattern: { guardChance: 0.0, heavyChance: 0.55 }, log: '세계수의 영혼이 타락의 끝에 도달했습니다! 숲 전체가 울부짖습니다!', statusEffect: 'poison' },
+    },
+    '수호신의 사도': {
+        isBoss: true, weakness: '어둠', resistance: '빛',
+        hpMult: 1.75, atkMult: 1.38, expMult: 3.2, goldMult: 3.0, dropMod: 4.0,
+        pattern: { guardChance: 0.15, heavyChance: 0.45 },
+        phase2: { name: '해방된 수호신의 사도', atkBonus: 0.55, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '수호신의 힘이 완전히 해방되었습니다! 신전 전체가 빛으로 가득 찹니다!', statusEffect: 'burn' },
+        phase3: { name: '수호신의 심판', threshold: 0.25, atkBonus: 0.9, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '수호신이 최후의 심판을 내립니다!', statusEffect: 'curse' },
+    },
+    '균열의 사령관': {
+        isBoss: true, weakness: '빛', resistance: '어둠',
+        hpMult: 1.7, atkMult: 1.42, expMult: 3.0, goldMult: 3.2, dropMod: 3.8,
+        pattern: { guardChance: 0.1, heavyChance: 0.5 },
+        phase2: { name: '각성한 균열의 사령관', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '균열의 사령관이 진정한 차원의 힘을 해방했습니다! 현실이 흔들립니다!', statusEffect: 'curse' },
+    },
+
     // ── 심연 전용 보스 (10층 단위) ──────────────────────────────────────────
     '혼돈의 수호자': {
         isBoss: true,
