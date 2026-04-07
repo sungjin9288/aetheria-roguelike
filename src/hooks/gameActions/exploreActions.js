@@ -13,7 +13,7 @@ import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
 
 export const createExploreActions = (deps, { commitExploreOutcome }) => {
-    const { player, gameState, uid, isAiThinking, liveConfig, dispatch, addLog, addStoryLog, getFullStats } = deps;
+    const { player, gameState, uid, dispatch, addLog, addStoryLog, getFullStats } = deps;
     return {
         explore: async () => {
             if (gameState !== GS.IDLE) return addLog('error', MSG.EXPLORE_BLOCKED);

@@ -6,7 +6,7 @@ import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { PRESTIGE_TITLES } from '../../data/titles';
 import { INITIAL_STATE } from '../../reducers/gameReducer';
 
-export const createAscensionActions = (deps, { emitUnlockedTitles: _emitUnlockedTitles }) => {
+export const createAscensionActions = (deps) => {
     const { player, dispatch, addLog } = deps;
     return {
         confirmAscension: () => {

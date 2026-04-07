@@ -155,5 +155,5 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
             delete window.advanceTime;
             delete window.__AETHERIA_TEST_API__;
         };
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 };
