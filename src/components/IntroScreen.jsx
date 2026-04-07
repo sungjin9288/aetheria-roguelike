@@ -75,7 +75,7 @@ const IntroScreen = ({ onStart, mobile = false }) => {
             </div>
             <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-            <div className={`relative z-10 flex flex-col items-center ${mobile ? 'mb-5 gap-3' : 'mb-6 gap-3'}`}>
+            <div className={`relative z-10 flex flex-col items-center ${mobile ? 'mb-5 gap-2' : 'mb-6 gap-3'}`}>
                 <AetherMark size={mobile ? 'md' : 'lg'} />
                 <div>
                     <Motion.h1
@@ -95,27 +95,31 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                         MOONLIT FIELD LEDGER
                     </Motion.p>
                 </div>
-                <p className={`${mobile ? 'max-w-[19rem] text-[11px]' : 'max-w-[32rem] text-[12px]'} font-fira leading-relaxed text-slate-300/78`}>
-                    세션은 짧고 선택은 날카롭게. 매 회차 다른 전리품과 빌드 루프로 폐허 지대를 밀어붙이는 로그북형 roguelike.
-                </p>
-                <div className={`grid w-full ${mobile ? 'grid-cols-3 gap-1.5' : 'max-w-[36rem] grid-cols-3 gap-2'}`}>
-                    {INTRO_SIGNALS.map((signal) => (
-                        <div
-                            key={signal.label}
-                            className={`relative overflow-hidden rounded-[1rem] border bg-black/18 px-2.5 py-2 text-left ${signal.border}`}
-                        >
-                            <div className={`absolute inset-0 bg-gradient-to-br ${signal.accent}`} />
-                            <div className="relative z-10">
-                                <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-400/75">
-                                    {signal.label}
+                {!mobile && (
+                    <>
+                        <p className="max-w-[32rem] text-[12px] font-fira leading-relaxed text-slate-300/78">
+                            세션은 짧고 선택은 날카롭게. 매 회차 다른 전리품과 빌드 루프로 폐허 지대를 밀어붙이는 로그북형 roguelike.
+                        </p>
+                        <div className="grid w-full max-w-[36rem] grid-cols-3 gap-2">
+                            {INTRO_SIGNALS.map((signal) => (
+                                <div
+                                    key={signal.label}
+                                    className={`relative overflow-hidden rounded-[1rem] border bg-black/18 px-2.5 py-2 text-left ${signal.border}`}
+                                >
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${signal.accent}`} />
+                                    <div className="relative z-10">
+                                        <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-400/75">
+                                            {signal.label}
+                                        </div>
+                                        <div className={`text-sm mt-1 font-rajdhani font-bold tracking-[0.16em] ${signal.tone}`}>
+                                            {signal.value}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className={`${mobile ? 'text-[0.72rem]' : 'text-sm'} mt-1 font-rajdhani font-bold tracking-[0.16em] ${signal.tone}`}>
-                                    {signal.value}
-                                </div>
-                            </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </>
+                )}
             </div>
 
             <AnimatePresence mode="wait">
@@ -129,7 +133,6 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                 >
                     {mobile ? (
                         <div className="space-y-3">
-                            <p className="text-[12px] font-fira leading-relaxed text-slate-300/74">콜사인만 정하면 첫 목표와 탐사 루프가 바로 열립니다.</p>
                             <div className="rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,18,26,0.88)_0%,rgba(8,11,17,0.95)_100%)] px-4 py-4 shadow-[0_18px_48px_rgba(2,8,20,0.3)]">
                                 <div className="flex items-start justify-between gap-3 text-left">
                                     <div>

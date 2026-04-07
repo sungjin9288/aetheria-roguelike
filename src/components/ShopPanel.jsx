@@ -151,38 +151,24 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                     <div className="pointer-events-none absolute -left-10 bottom-16 h-32 w-32 rounded-full bg-[#7dd4d8]/8 blur-3xl" />
                 </>
             )}
-            <div className={`mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between ${mobile ? 'sticky top-0 z-10 -mx-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] px-3 pb-3 pt-1' : ''}`}>
-                <div>
-                    <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-slate-400/66">Broker Ledger</div>
-                    <h2 className="text-xl md:text-2xl font-bold font-rajdhani tracking-[0.18em] text-[#f6e7c8]">
-                        MARKET
-                    </h2>
-                    <div className="mt-1 text-[11px] font-fira text-slate-300/70">
-                        오늘의 회전 딜과 장비 차이를 한 화면에서 확인합니다.
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-fira">
-                        <span className="rounded-full border border-[#d5b180]/18 bg-[#d5b180]/10 px-2.5 py-1 text-[#f6e7c8]">
-                            위치: {loc}
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-white/[0.04] px-2.5 py-1 text-slate-300">
-                            상점 등급 T{maxTier}
-                        </span>
-                        <span className="rounded-full border border-[#7dd4d8]/18 bg-[#7dd4d8]/10 px-2.5 py-1 text-[#dff7f5]">
-                            골드 {player.gold} CR
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-black/22 px-2.5 py-1 text-slate-300/80">
-                            인벤 {player.inv.length}/{player.maxInv || BALANCE.INV_MAX_SIZE}
-                        </span>
+            <div className={`mb-3 flex items-center justify-between gap-2 ${mobile ? 'sticky top-0 z-10 -mx-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] px-3 pb-2.5 pt-1' : 'flex-col gap-3 md:flex-row md:items-start'}`}>
+                <div className="min-w-0">
+                    <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/66">Broker Ledger</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <h2 className="text-[1.1rem] font-bold font-rajdhani tracking-[0.18em] text-[#f6e7c8] leading-none">
+                            MARKET
+                        </h2>
+                        <span className="text-[9px] font-fira text-slate-400/70">{loc} · T{maxTier} · {player.gold} CR · {player.inv.length}/{player.maxInv || BALANCE.INV_MAX_SIZE}</span>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 self-start">
-                    <div className="flex shrink-0 rounded-full border border-white/8 bg-black/20 p-1">
+                <div className="flex shrink-0 items-center gap-1.5">
+                    <div className="flex rounded-full border border-white/8 bg-black/20 p-0.5">
                         <button
                             onClick={() => {
                                 setShopMode('buy');
                                 setSellConfirmId(null);
                             }}
-                            className={`rounded-full px-4 py-2 text-xs font-bold transition-colors ${shopMode === 'buy' ? 'bg-[#d5b180]/18 text-[#f6e7c8]' : 'text-slate-400 hover:text-white'}`}
+                            className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${shopMode === 'buy' ? 'bg-[#d5b180]/18 text-[#f6e7c8]' : 'text-slate-400 hover:text-white'}`}
                         >
                             구매
                         </button>
@@ -191,7 +177,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                 setShopMode('sell');
                                 setSellConfirmId(null);
                             }}
-                            className={`rounded-full px-4 py-2 text-xs font-bold transition-colors ${shopMode === 'sell' ? 'bg-rose-400/16 text-rose-100' : 'text-slate-400 hover:text-white'}`}
+                            className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${shopMode === 'sell' ? 'bg-rose-400/16 text-rose-100' : 'text-slate-400 hover:text-white'}`}
                         >
                             판매
                         </button>
@@ -199,7 +185,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                     <button
                         data-testid="shop-close"
                         onClick={() => setGameState('idle')}
-                        className="min-h-[40px] rounded-full border border-white/8 bg-black/20 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-white/[0.06]"
+                        className="min-h-[36px] rounded-full border border-white/8 bg-black/20 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-white/[0.06]"
                     >
                         닫기
                     </button>
