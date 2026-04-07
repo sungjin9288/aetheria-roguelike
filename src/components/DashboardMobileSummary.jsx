@@ -21,9 +21,7 @@ const DashboardMobileSummary = ({ player }) => {
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden panel-noise aether-surface rounded-[1.7rem] px-3 py-3 overflow-hidden"
         >
-            <div className="pointer-events-none absolute -right-8 top-0 h-24 w-24 rounded-full bg-[#d5b180]/10 blur-3xl" />
-            <div className="pointer-events-none absolute -left-6 bottom-0 h-20 w-20 rounded-full bg-[#7dd4d8]/8 blur-3xl" />
-            <div className="relative flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <div className="text-[11px] font-fira uppercase tracking-[0.2em] text-slate-400/68">
                         Field Snapshot

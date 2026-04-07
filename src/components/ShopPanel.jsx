@@ -145,12 +145,6 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
 
     return (
         <div className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3' : `${getOverlayPanelClass(mobile)} panel-noise aether-surface-strong ${mobile ? '' : 'md:w-[min(48rem,78%)] lg:w-[min(58rem,74%)] rounded-[1.8rem]'}`} z-20 flex flex-col overflow-hidden p-3 md:p-5`}>
-            {mobile && (
-                <>
-                    <div className="pointer-events-none absolute -right-8 top-2 h-28 w-28 rounded-full bg-[#d5b180]/10 blur-3xl" />
-                    <div className="pointer-events-none absolute -left-10 bottom-16 h-32 w-32 rounded-full bg-[#7dd4d8]/8 blur-3xl" />
-                </>
-            )}
             <div className={`mb-3 flex items-center justify-between gap-2 ${mobile ? 'sticky top-0 z-10 -mx-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] px-3 pb-2.5 pt-1' : 'flex-col gap-3 md:flex-row md:items-start'}`}>
                 <div className="min-w-0">
                     <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/66">Broker Ledger</div>
