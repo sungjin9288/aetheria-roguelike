@@ -54,43 +54,70 @@ const MobileGameLayout = ({
             />
         )}
         {!isMobileFocusState && (
-            <Suspense fallback={<DashboardFallback summary />}>
-                <Dashboard
-                    mobile
-                    mobileSection="summary"
-                    player={engine.player}
-                    grave={engine.grave}
-                    sideTab={engine.sideTab}
-                    setSideTab={engine.actions.setSideTab}
-                    actions={engine.actions}
-                    stats={fullStats}
-                    quickSlots={engine.quickSlots}
-                    inventorySpotlight={inventorySpotlight}
-                    runtime={{
-                        syncStatus: engine.syncStatus,
-                        gameState: engine.gameState,
-                        isAiThinking: engine.isAiThinking,
-                        viewport: 'mobile',
-                        mobileArchiveDockVisible,
-                    }}
-                />
-            </Suspense>
+            // min-h-0 + overflow-hidden: allows this card to shrink below its natural
+            // content height on small phones so ControlPanel buttons always stay visible.
+            <div className="min-h-0 overflow-hidden">
+                <Suspense fallback={<DashboardFallback summary />}>
+                    <Dashboard
+                        mobile
+                        mobileSection="summary"
+                        player={engine.player}
+                        grave={engine.grave}
+                        sideTab={engine.sideTab}
+                        setSideTab={engine.actions.setSideTab}
+                        actions={engine.actions}
+                        stats={fullStats}
+                        quickSlots={engine.quickSlots}
+                        inventorySpotlight={inventorySpotlight}
+                        runtime={{
+                            syncStatus: engine.syncStatus,
+                            gameState: engine.gameState,
+                            isAiThinking: engine.isAiThinking,
+                            viewport: 'mobile',
+                            mobileArchiveDockVisible,
+                        }}
+                    />
+                </Suspense>
+            </div>
         )}
-        <ControlPanel
-            gameState={engine.gameState}
-            player={engine.player}
-            enemy={engine.enemy}
-            actions={engine.actions}
-            setSideTab={engine.actions.setSideTab}
-            setGameState={engine.actions.setGameState}
-            shopItems={engine.shopItems}
-            grave={engine.grave}
-            isAiThinking={engine.isAiThinking}
-            currentEvent={engine.currentEvent}
-            stats={fullStats}
-            mobile
-            mobileFocused={isMobileFocusState}
-        />
+        {/* Focus state (SHOP/EVENT/etc.): ControlPanel fills all remaining space via flex-1
+            on its returned panel (ShopPanel/EventPanel). Normal state: shrink-0 prevents
+            action buttons from being pushed off-screen on small phones. */}
+        {isMobileFocusState ? (
+            <ControlPanel
+                gameState={engine.gameState}
+                player={engine.player}
+                enemy={engine.enemy}
+                actions={engine.actions}
+                setSideTab={engine.actions.setSideTab}
+                setGameState={engine.actions.setGameState}
+                shopItems={engine.shopItems}
+                grave={engine.grave}
+                isAiThinking={engine.isAiThinking}
+                currentEvent={engine.currentEvent}
+                stats={fullStats}
+                mobile
+                mobileFocused
+            />
+        ) : (
+            <div className="shrink-0">
+                <ControlPanel
+                    gameState={engine.gameState}
+                    player={engine.player}
+                    enemy={engine.enemy}
+                    actions={engine.actions}
+                    setSideTab={engine.actions.setSideTab}
+                    setGameState={engine.actions.setGameState}
+                    shopItems={engine.shopItems}
+                    grave={engine.grave}
+                    isAiThinking={engine.isAiThinking}
+                    currentEvent={engine.currentEvent}
+                    stats={fullStats}
+                    mobile
+                    mobileFocused={false}
+                />
+            </div>
+        )}
         {!isMobileFocusState && (
             <Suspense fallback={mobileArchiveDockVisible ? <DashboardFallback /> : null}>
                 <Dashboard

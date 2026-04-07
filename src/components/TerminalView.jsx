@@ -269,7 +269,7 @@ const TerminalView = ({
     return (
         <div
             data-testid="terminal-panel"
-            className={`panel-noise min-w-0 ${mobile ? 'flex-1 min-h-[clamp(8rem,16dvh,11rem)]' : 'flex-1 min-h-0'} md:h-full ${bgClass} ${mobile ? 'rounded-[1.85rem]' : 'rounded-[1.5rem]'} ${mobile ? 'p-3' : 'p-2.5 md:p-3'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
+            className={`panel-noise min-w-0 ${mobile ? 'flex-1 min-h-[clamp(5rem,10dvh,8rem)]' : 'flex-1 min-h-0'} md:h-full ${bgClass} ${mobile ? 'rounded-[1.85rem]' : 'rounded-[1.5rem]'} ${mobile ? 'p-3' : 'p-2.5 md:p-3'} relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
         >
             {/* Scanline overlay */}
             <div
