@@ -378,7 +378,7 @@ const ControlPanel = ({
     <Motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`relative z-10 w-full ${
+      className={`relative z-10 w-full ${mobileFocused ? 'min-h-0 flex-1 flex flex-col' : ''} ${
         mobile
           ? 'panel-noise aether-surface rounded-[1.9rem] p-3'
           : useCompactDesktopRail
