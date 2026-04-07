@@ -59,7 +59,7 @@ const ControlPanel = ({
       ? 'grid grid-cols-2 gap-1.5'
       : 'grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3';
   const actionButtonBase = mobile
-    ? 'relative min-h-[88px] overflow-hidden rounded-[1.35rem] px-3 py-3 flex flex-col items-start justify-between gap-2 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_18px_34px_rgba(1,6,14,0.22),inset_0_1px_0_rgba(255,255,255,0.03)]'
+    ? 'relative min-h-[52px] overflow-hidden rounded-[1.2rem] px-3 py-2.5 flex flex-col items-start justify-between gap-1 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_18px_34px_rgba(1,6,14,0.22),inset_0_1px_0_rgba(255,255,255,0.03)]'
     : useCompactDesktopRail
       ? 'relative min-h-[30px] rounded-[0.78rem] px-0.75 py-0.5 flex items-center justify-center gap-0.75 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
       : desktopSidebar
@@ -125,8 +125,8 @@ const ControlPanel = ({
         {mobile ? (
           <>
             <div className="flex w-full items-start justify-between gap-2">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[1rem] border border-white/8 bg-black/18 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                <Icon size={16} className="transition-transform group-hover:scale-110" />
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] border border-white/8 bg-black/18 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <Icon size={13} className="transition-transform group-hover:scale-110" />
               </span>
               <div className="flex items-center gap-1">
                 {recommendedButton === key && <SignalBadge tone="recommended" size="sm">추천</SignalBadge>}
@@ -138,11 +138,6 @@ const ControlPanel = ({
             ) : (
               <div className="w-full">
                 <div className={actionLabelClass}>{buttonLabel}</div>
-                {actionMeta?.detail && (
-                  <div className="mt-1 text-[10px] font-fira leading-snug text-white/58">
-                    {actionMeta.detail}
-                  </div>
-                )}
               </div>
             )}
           </>
@@ -388,34 +383,6 @@ const ControlPanel = ({
             : 'mt-2.5 md:mt-4'
       }`}
     >
-      {mobile && (
-        <>
-          <div className="pointer-events-none absolute -top-6 right-0 h-20 w-20 rounded-full bg-[#d5b180]/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-8 left-0 h-24 w-24 rounded-full bg-[#7dd4d8]/8 blur-3xl" />
-        </>
-      )}
-      {mobile && (
-        <div className="mb-2.5 rounded-[1.25rem] aether-panel-core px-3 py-2.5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/68">
-                {gameState === GS.MOVING ? 'Route Matrix' : 'Tactical Deck'}
-              </div>
-              <div className="mt-1 text-[14px] font-rajdhani font-bold leading-none text-white/94">
-                {gameState === GS.MOVING ? '다음 이동 노선을 선택하세요.' : guidance.title}
-              </div>
-              <div className="mt-1 text-[10px] font-fira leading-snug text-slate-300/72">
-                {gameState === GS.MOVING
-                  ? '권장 경로와 난이도 정보를 보고 안정적으로 진입할 구역을 정합니다.'
-                  : guidance.detail}
-              </div>
-            </div>
-            <SignalBadge tone={isSafeZone ? 'upgrade' : 'neutral'} size="sm">
-              {isSafeZone ? '안전 지대' : '현장 작전'}
-            </SignalBadge>
-          </div>
-        </div>
-      )}
       {desktopSidebar && (
         <div className={`${useCompactDesktopRail ? 'mb-0.5' : 'mb-1.5'} flex items-center justify-between gap-2 px-0.25`}>
           <div className={`${useCompactDesktopRail ? 'text-[8px]' : 'text-[9px]'} font-fira uppercase tracking-[0.18em] text-slate-500`}>

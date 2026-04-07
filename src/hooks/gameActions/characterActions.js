@@ -19,10 +19,13 @@ export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProt
             const mods = Array.isArray(challengeModifiers) ? challengeModifiers : [];
             if (mods.includes('halfHp')) maxHp = Math.max(50, Math.floor(maxHp * 0.5));
             if (mods.includes('noGold')) startGold = 0;
+            // Compute full starting HP/MP including passive skill bonuses for the chosen job
+            const tempPlayer = { ...player, job: jobId, maxHp, maxMp: vitals.maxMp };
+            const fullStartStats = getFullStats(tempPlayer);
             dispatch({ type: AT.SET_PLAYER, payload: {
                 name: trimmedName, gender, job: jobId,
-                maxHp, hp: maxHp,
-                maxMp: vitals.maxMp, mp: vitals.maxMp,
+                maxHp, hp: fullStartStats.maxHp,
+                maxMp: vitals.maxMp, mp: fullStartStats.maxMp,
                 gold: startGold,
                 challengeModifiers: mods,
                 stats: { ...(player.stats || {}), visitedMaps: [CONSTANTS.START_LOCATION] }

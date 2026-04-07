@@ -133,18 +133,7 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                 >
                     {mobile ? (
                         <div className="space-y-3">
-                            <div className="rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,18,26,0.88)_0%,rgba(8,11,17,0.95)_100%)] px-4 py-4 shadow-[0_18px_48px_rgba(2,8,20,0.3)]">
-                                <div className="flex items-start justify-between gap-3 text-left">
-                                    <div>
-                                        <div className="text-[11px] font-fira uppercase tracking-[0.2em] text-slate-400/70">Callsign</div>
-                                    </div>
-                                    <div className="min-w-[6.5rem] rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/10 px-3 py-2 text-right shadow-[0_0_24px_rgba(125,212,216,0.08)]">
-                                        <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/55">Live Tag</div>
-                                        <div data-testid="intro-mobile-name" className="mt-1 truncate font-rajdhani text-xl font-bold tracking-[0.12em] text-[#e8fbfa]">
-                                            {selectedName || 'EMPTY'}
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className="rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,18,26,0.88)_0%,rgba(8,11,17,0.95)_100%)] px-4 py-4">
                                 <input
                                     ref={nameInputRef}
                                     data-testid="intro-name-input"
@@ -152,16 +141,12 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                                     value={name}
                                     onChange={(e) => applyName(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="콜사인 입력"
-                                    className="mt-2 w-full rounded-[1.15rem] border border-white/10 bg-black/28 px-3 py-3 text-center font-rajdhani text-xl text-[#f0f6f7] transition-all placeholder:text-slate-500 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
+                                    placeholder="닉네임 입력"
+                                    className="w-full rounded-[1.15rem] border border-white/10 bg-black/28 px-3 py-3 text-center font-rajdhani text-xl text-[#f0f6f7] transition-all placeholder:text-slate-500 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
                                     maxLength={16}
                                 />
-                                <div className="mt-1 flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
-                                    <span className="text-slate-400/65">{selectedName ? '기록 준비 완료' : '콜사인을 입력하세요'}</span>
-                                    <span className="text-[#dff7f5]/70">{selectedName ? 'Ready' : 'Standby'}</span>
-                                </div>
-                                <div className="mt-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/65">추천 콜사인</div>
-                                <div className="mt-2 grid grid-cols-4 gap-2">
+                                <div data-testid="intro-mobile-name" className="sr-only">{selectedName}</div>
+                                <div className="mt-3 grid grid-cols-4 gap-2">
                                     {mobileSuggestions.map((option) => (
                                         <button
                                             key={option}
