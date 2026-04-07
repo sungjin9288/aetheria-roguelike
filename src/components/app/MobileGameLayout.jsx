@@ -31,7 +31,7 @@ const MobileGameLayout = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`relative z-10 flex min-h-0 flex-1 w-full flex-col ${isMobileFocusState ? 'overflow-hidden gap-2' : 'gap-2'} ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
+        className={`relative z-10 flex min-h-0 flex-1 w-full flex-col overflow-hidden gap-2 ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
     >
         {showOnboarding && !isMobileFocusState && (
             <OnboardingGuide player={engine.player} onDismiss={handleOnboardingDismiss} mobile />
@@ -76,21 +76,23 @@ const MobileGameLayout = ({
                 />
             </Suspense>
         )}
-        <ControlPanel
-            gameState={engine.gameState}
-            player={engine.player}
-            enemy={engine.enemy}
-            actions={engine.actions}
-            setSideTab={engine.actions.setSideTab}
-            setGameState={engine.actions.setGameState}
-            shopItems={engine.shopItems}
-            grave={engine.grave}
-            isAiThinking={engine.isAiThinking}
-            currentEvent={engine.currentEvent}
-            stats={fullStats}
-            mobile
-            mobileFocused={isMobileFocusState}
-        />
+        <div className={`min-h-0 ${isMobileFocusState ? 'flex-1 flex flex-col overflow-hidden' : 'overflow-y-auto'}`}>
+            <ControlPanel
+                gameState={engine.gameState}
+                player={engine.player}
+                enemy={engine.enemy}
+                actions={engine.actions}
+                setSideTab={engine.actions.setSideTab}
+                setGameState={engine.actions.setGameState}
+                shopItems={engine.shopItems}
+                grave={engine.grave}
+                isAiThinking={engine.isAiThinking}
+                currentEvent={engine.currentEvent}
+                stats={fullStats}
+                mobile
+                mobileFocused={isMobileFocusState}
+            />
+        </div>
         {!isMobileFocusState && (
             <Suspense fallback={mobileArchiveDockVisible ? <DashboardFallback /> : null}>
                 <Dashboard
