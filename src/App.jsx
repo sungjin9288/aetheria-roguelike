@@ -99,9 +99,19 @@ function App() {
         return (
             <MotionConfig reducedMotion="user">
                 <MainLayout visualEffect={null}>
-                    <div className={`relative z-10 flex w-full flex-col items-center gap-4 md:gap-6 ${isMobileViewport ? 'min-h-full justify-start py-3' : 'h-full justify-center'}`}>
-                        <IntroScreen onStart={engine.actions.start} mobile={isMobileViewport} />
-                    </div>
+                    {isMobileViewport ? (
+                        // Mobile: flex-1 min-h-0 overflow-y-auto creates an internal scroll
+                        // context within the flex chain so intro content can scroll freely.
+                        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto w-full">
+                            <div className="flex flex-col items-center w-full gap-4 py-3">
+                                <IntroScreen onStart={engine.actions.start} mobile />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-6">
+                            <IntroScreen onStart={engine.actions.start} mobile={false} />
+                        </div>
+                    )}
                 </MainLayout>
             </MotionConfig>
         );
