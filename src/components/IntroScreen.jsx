@@ -137,9 +137,6 @@ const IntroScreen = ({ onStart, mobile = false }) => {
                                 <div className="flex items-start justify-between gap-3 text-left">
                                     <div>
                                         <div className="text-[11px] font-fira uppercase tracking-[0.2em] text-slate-400/70">Callsign</div>
-                                        <p className="mt-1 text-[10px] font-fira leading-relaxed text-slate-400/70">
-                                            빠르게 고르고 바로 진입할 수 있게 추천 콜사인을 준비했습니다.
-                                        </p>
                                     </div>
                                     <div className="min-w-[6.5rem] rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/10 px-3 py-2 text-right shadow-[0_0_24px_rgba(125,212,216,0.08)]">
                                         <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/55">Live Tag</div>
