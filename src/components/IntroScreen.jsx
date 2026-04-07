@@ -63,10 +63,10 @@ const IntroScreen = ({ onStart, mobile = false }) => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className={`panel-noise aether-surface-strong relative w-full text-center ${
+            className={`panel-noise aether-surface-strong relative w-full overflow-hidden text-center ${
                 mobile
-                    ? 'rounded-[2rem] px-4 py-5'
-                    : 'max-w-2xl overflow-hidden rounded-[2.2rem] p-6 md:p-8'
+                    ? 'max-w-xl shrink-0 rounded-[2rem] px-4 py-5'
+                    : 'max-w-2xl rounded-[2.2rem] p-6 md:p-8'
             }`}
         >
             <div className="absolute inset-0 opacity-70 pointer-events-none">

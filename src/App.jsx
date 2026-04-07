@@ -99,7 +99,7 @@ function App() {
         return (
             <MotionConfig reducedMotion="user">
                 <MainLayout visualEffect={null}>
-                    <div className={`relative z-10 flex w-full flex-col items-center gap-4 md:gap-6 ${isMobileViewport ? 'overflow-y-auto py-3' : 'h-full justify-center'}`}>
+                    <div className={`relative z-10 flex w-full flex-col items-center gap-4 md:gap-6 ${isMobileViewport ? 'min-h-full justify-start py-3' : 'h-full justify-center'}`}>
                         <IntroScreen onStart={engine.actions.start} mobile={isMobileViewport} />
                     </div>
                 </MainLayout>

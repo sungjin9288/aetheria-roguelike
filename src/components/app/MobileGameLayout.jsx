@@ -31,7 +31,7 @@ const MobileGameLayout = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`relative z-10 flex min-h-0 flex-1 w-full flex-col ${isMobileFocusState ? 'overflow-hidden' : 'overflow-y-auto'} gap-2 ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
+        className={`relative z-10 flex min-h-0 flex-1 w-full flex-col ${isMobileFocusState ? 'overflow-hidden gap-2' : 'gap-2'} ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
     >
         {showOnboarding && !isMobileFocusState && (
             <OnboardingGuide player={engine.player} onDismiss={handleOnboardingDismiss} mobile />
