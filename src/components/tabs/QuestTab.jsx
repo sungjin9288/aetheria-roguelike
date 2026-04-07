@@ -36,7 +36,7 @@ export const QuestRewardChips = ({ reward, accent = 'blue' }) => {
             ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
             : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue';
     return (
-        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-fira">
+        <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-fira">
             {rewards.map((entry) => (
                 <span key={`${accent}_${entry}`} className={`rounded border px-2 py-1 ${accentClass}`}>{entry}</span>
             ))}
@@ -111,7 +111,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                         {isInSafeZone ? '게시판 이용 가능' : '수락은 마을 전용'}
                     </SignalBadge>
                 </div>
-                <div className={`${compact ? 'mt-1.5 text-[10px]' : 'mt-2 text-[11px]'} text-slate-400/78 font-fira leading-snug`}>
+                <div className={`${compact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} text-slate-400/78 font-fira leading-snug`}>
                     {compact
                         ? '수락은 마을 전용, 여기서는 진행과 보상 수령만 확인합니다.'
                         : '새 퀘스트와 현상수배는 마을의 `QUESTS` 게시판에서만 수락할 수 있습니다. 이 탭에서는 진행 현황과 보상 수령만 확인합니다.'}
@@ -126,19 +126,19 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                         <div className="mb-2 rounded-[1rem] border border-[#9a8ac0]/20 bg-[radial-gradient(circle_at_top_right,rgba(154,138,192,0.16),transparent_24%),linear-gradient(180deg,rgba(33,22,46,0.22)_0%,rgba(16,10,20,0.1)_100%)] px-2.5 py-2">
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[#e3dcff] text-[10px] font-fira tracking-widest uppercase">Daily Protocol</span>
-                                    <span className={`text-[10px] font-fira px-1.5 py-0.5 rounded-full border ${dpDoneCount === dpMissions.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-white/8 bg-black/18 text-slate-300/72'}`}>
+                                    <span className="text-[#e3dcff] text-xs font-fira tracking-widest uppercase">Daily Protocol</span>
+                                    <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${dpDoneCount === dpMissions.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-white/8 bg-black/18 text-slate-300/72'}`}>
                                         {dpDoneCount}/{dpMissions.length}
                                     </span>
                                 </div>
                                 {dp?.relicShards > 0 && (
-                                    <span className="text-[10px] font-fira text-[#f6e7c8] border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs font-fira text-[#f6e7c8] border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 rounded-full">
                                         ◆ {dp.relicShards}
                                     </span>
                                 )}
                             </div>
                             {nextDpMission && (
-                                <div className="mt-1.5 space-y-1 font-fira text-[10px] leading-snug">
+                                <div className="mt-1.5 space-y-1 font-fira text-xs leading-snug">
                                     <div className="text-slate-200/84">
                                         다음 임무: {DAILY_TYPE_LABEL[nextDpMission.type] || nextDpMission.type} {nextDpMission.progress}/{nextDpMission.goal}
                                     </div>
@@ -152,13 +152,13 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                         <div className={`${compact ? 'mb-2 p-2.5' : 'mb-3 p-3'} rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8`}>
                             <div className={`flex items-center justify-between ${compact ? 'mb-1.5' : 'mb-2'}`}>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[#e3dcff] text-[10px] font-fira tracking-widest uppercase">Daily Protocol</span>
-                                    <span className={`text-[10px] font-fira px-1.5 py-0.5 rounded-full border ${dpDoneCount === dpMissions.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-white/8 bg-black/18 text-slate-300/72'}`}>
+                                    <span className="text-[#e3dcff] text-xs font-fira tracking-widest uppercase">Daily Protocol</span>
+                                    <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${dpDoneCount === dpMissions.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-white/8 bg-black/18 text-slate-300/72'}`}>
                                         {dpDoneCount}/{dpMissions.length}
                                     </span>
                                 </div>
                                 {dp.relicShards > 0 && (
-                                    <span className="text-[10px] font-fira text-[#f6e7c8] border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs font-fira text-[#f6e7c8] border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 rounded-full">
                                         ◆ 유물 파편 ×{dp.relicShards}
                                     </span>
                                 )}
@@ -175,10 +175,10 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                                             className={`rounded-[0.95rem] border transition-all ${compact ? 'px-2.5 py-1.5' : 'px-3 py-2'} ${mission.done ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : 'border-white/8 bg-black/18'}`}
                                         >
                                             <div className={`flex items-center justify-between ${compact ? 'mb-0.5' : 'mb-1'}`}>
-                                                <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-fira ${mission.done ? 'text-emerald-100' : 'text-slate-200/84'}`}>
+                                                <span className={`${compact ? 'text-xs' : 'text-sm'} font-fira ${mission.done ? 'text-emerald-100' : 'text-slate-200/84'}`}>
                                                     {DAILY_TYPE_LABEL[mission.type] || mission.type} {mission.progress}/{mission.goal}
                                                 </span>
-                                                <span className={`text-[10px] font-fira ${mission.done ? 'text-emerald-100 font-bold' : 'text-slate-500'}`}>
+                                                <span className={`text-xs font-fira ${mission.done ? 'text-emerald-100 font-bold' : 'text-slate-500'}`}>
                                                     {mission.done ? '✓ ' : ''}{rewardLabel}
                                                 </span>
                                             </div>
@@ -204,8 +204,8 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                     return (
                         <div className={`rounded-[1rem] border border-[#7dd4d8]/18 bg-[radial-gradient(circle_at_top_right,rgba(125,212,216,0.12),transparent_24%),linear-gradient(180deg,rgba(14,33,37,0.18)_0%,rgba(8,15,18,0.08)_100%)] ${compact ? 'mb-2 px-2.5 py-2' : 'mb-3 px-3 py-2.5'}`}>
                             <div className={`flex items-center justify-between ${compact ? 'mb-1.5' : 'mb-2'}`}>
-                                <span className="text-[#dff7f5] text-[10px] font-fira tracking-widest uppercase">Discovery Chains</span>
-                                <span className={`text-[10px] font-fira px-1.5 py-0.5 rounded-full border ${completedChains.length === chains.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]'}`}>
+                                <span className="text-[#dff7f5] text-xs font-fira tracking-widest uppercase">Discovery Chains</span>
+                                <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${completedChains.length === chains.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]'}`}>
                                     {completedChains.length}/{chains.length}
                                 </span>
                             </div>
@@ -217,13 +217,13 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                                     return (
                                         <div key={chain.id} className={`rounded-[0.9rem] border px-2.5 py-1.5 ${done ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : 'border-white/8 bg-black/18'}`}>
                                             <div className="flex items-center justify-between mb-0.5">
-                                                <span className={`text-[10px] font-fira ${done ? 'text-emerald-100' : 'text-slate-200/84'}`}>
+                                                <span className={`text-xs font-fira ${done ? 'text-emerald-100' : 'text-slate-200/84'}`}>
                                                     {chain.label}
                                                 </span>
                                                 {done ? (
-                                                    <span className="text-[9px] font-fira text-emerald-100 border border-emerald-300/24 bg-emerald-300/8 px-1.5 py-0.5 rounded-full">✓ 완료</span>
+                                                    <span className="text-[11px] font-fira text-emerald-100 border border-emerald-300/24 bg-emerald-300/8 px-1.5 py-0.5 rounded-full">✓ 완료</span>
                                                 ) : (
-                                                    <span className="text-[9px] font-fira text-slate-400/72">{visitedCount}/{chain.locations.length} 방문</span>
+                                                    <span className="text-[11px] font-fira text-slate-400/72">{visitedCount}/{chain.locations.length} 방문</span>
                                                 )}
                                             </div>
                                             <div className="h-[2px] overflow-hidden rounded-full bg-black/30">
@@ -241,8 +241,8 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                 {weeklyMissions.length > 0 && (
                     <div className={`rounded-[1rem] border border-[#d5b180]/20 bg-[#d5b180]/6 ${compact ? 'mb-2 px-2.5 py-2' : 'mb-3 px-3 py-2.5'}`}>
                         <div className={`flex items-center justify-between ${compact ? 'mb-1.5' : 'mb-2'}`}>
-                            <span className="text-[#f6e7c8] text-[10px] font-fira tracking-widest uppercase">Weekly Mission</span>
-                            <span className={`text-[10px] font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every(m => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
+                            <span className="text-[#f6e7c8] text-xs font-fira tracking-widest uppercase">Weekly Mission</span>
+                            <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every(m => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
                                 {weeklyMissions.filter(m => m.claimed).length}/{weeklyMissions.length}
                             </span>
                         </div>
@@ -255,18 +255,18 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                                         className={`rounded-[0.9rem] border px-2.5 py-1.5 transition-all ${mission.claimed ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : mission.done ? 'border-[#d5b180]/28 bg-[#d5b180]/10' : 'border-white/8 bg-black/18'}`}
                                     >
                                         <div className="flex items-center justify-between mb-0.5">
-                                            <span className={`text-[10px] font-fira ${mission.claimed ? 'text-emerald-100' : mission.done ? 'text-[#f6e7c8]' : 'text-slate-300/82'}`}>
+                                            <span className={`text-xs font-fira ${mission.claimed ? 'text-emerald-100' : mission.done ? 'text-[#f6e7c8]' : 'text-slate-300/82'}`}>
                                                 {mission.label} ({mission.current}/{mission.target})
                                             </span>
                                             {mission.done && !mission.claimed ? (
                                                 <button
                                                     onClick={() => actions.claimWeeklyMission?.(mission.id, mission.reward)}
-                                                    className="text-[9px] font-fira font-bold text-[#f6e7c8] bg-[#d5b180]/18 border border-[#d5b180]/30 rounded-full px-2 py-0.5 hover:bg-[#d5b180]/28 transition-colors"
+                                                    className="text-[11px] font-fira font-bold text-[#f6e7c8] bg-[#d5b180]/18 border border-[#d5b180]/30 rounded-full px-2 py-0.5 hover:bg-[#d5b180]/28 transition-colors"
                                                 >
                                                     수령
                                                 </button>
                                             ) : (
-                                                <span className={`text-[9px] font-fira ${mission.claimed ? 'text-emerald-100' : 'text-slate-500'}`}>
+                                                <span className={`text-[11px] font-fira ${mission.claimed ? 'text-emerald-100' : 'text-slate-500'}`}>
                                                     {mission.claimed ? '✓ 수령됨' : `+${mission.reward.gold}G${mission.reward.premiumCurrency ? ` +${mission.reward.premiumCurrency}💎` : ''}`}
                                                 </span>
                                             )}
@@ -285,13 +285,13 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                 )}
 
                 {compact && (hiddenQuestCount > 0 || showAllQuests) && (
-                    <div className="mb-2 flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
+                    <div className="mb-2 flex items-center justify-between gap-2 text-xs font-fira uppercase tracking-[0.16em]">
                         <span className="text-slate-500">{showAllQuests ? '전체 임무' : '우선 임무'}</span>
                         {hiddenQuestCount > 0 ? (
                             <button
                                 type="button"
                                 onClick={() => setShowAllQuests(true)}
-                                className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] text-slate-300/78 hover:bg-white/[0.04]"
+                                className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[11px] text-slate-300/78 hover:bg-white/[0.04]"
                             >
                                 +{hiddenQuestCount} 더 보기
                             </button>
@@ -299,7 +299,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                             <button
                                 type="button"
                                 onClick={() => setShowAllQuests(false)}
-                                className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] text-slate-300/78 hover:bg-white/[0.04]"
+                                className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[11px] text-slate-300/78 hover:bg-white/[0.04]"
                             >
                                 요약 보기
                             </button>
@@ -323,7 +323,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                                         <div className={`font-bold font-rajdhani ${compact ? 'text-[13px]' : 'text-sm'} ${entry.isComplete ? 'text-emerald-100' : entry.isBounty ? 'text-[#f6e7c8]' : 'text-white/88'}`}>
                                             {entry.quest.title}
                                         </div>
-                                        {entry.isBounty && <span className="rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 text-[10px] font-fira text-[#f6e7c8]">현상수배</span>}
+                                        {entry.isBounty && <span className="rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 text-xs font-fira text-[#f6e7c8]">현상수배</span>}
                                         {entry.quest.buildTag && (
                                             <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
                                         )}
@@ -332,17 +332,17 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                                         ) : null}
                                     </div>
                                     {!useQuestSummaryCards && (
-                                        <div className={`${compact ? 'mt-0.5 text-[10px]' : 'mt-1 text-xs'} text-slate-400/72 leading-snug`}>{entry.quest.desc}</div>
+                                        <div className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-xs'} text-slate-400/72 leading-snug`}>{entry.quest.desc}</div>
                                     )}
-                                    <div className={`${compact ? 'mt-1.5 text-[10px]' : 'mt-2 text-[11px]'} text-slate-300/86 font-fira`}>목표: {getQuestObjectiveText(entry.quest)}</div>
+                                    <div className={`${compact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} text-slate-300/86 font-fira`}>목표: {getQuestObjectiveText(entry.quest)}</div>
                                     {!useQuestSummaryCards && entry.resonance.summary ? (
-                                        <div className={`${compact ? 'mt-1 text-[10px]' : 'mt-2 text-[11px]'} font-fira text-[#d9d0f3]/72`}>{entry.resonance.summary}</div>
+                                        <div className={`${compact ? 'mt-1 text-xs' : 'mt-2 text-sm'} font-fira text-[#d9d0f3]/72`}>{entry.resonance.summary}</div>
                                     ) : null}
                                     {!useQuestSummaryCards && (
                                         <QuestRewardChips reward={entry.quest.reward} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} />
                                     )}
                                     <div className={useQuestSummaryCards ? 'mt-1.5' : compact ? 'mt-2' : 'mt-3'}>
-                                        <div className="mb-1 flex justify-between text-[10px] font-fira">
+                                        <div className="mb-1 flex justify-between text-xs font-fira">
                                             <span className={entry.isComplete ? 'text-emerald-100' : 'text-slate-300/74'}>{getQuestProgressText(entry.quest, entry.progress)}</span>
                                             <span className="text-slate-500">{entry.progress}/{entry.quest.goal}</span>
                                         </div>
@@ -355,11 +355,11 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                                     </div>
                                 </div>
                                 {entry.isComplete ? (
-                                    <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className={`bg-emerald-300/12 hover:bg-emerald-300/18 text-emerald-100 font-bold rounded-full border border-emerald-300/24 shrink-0 ${compact ? 'min-h-[32px] px-3 py-1 text-[10px]' : 'min-h-[40px] px-4 py-2 text-[11px]'}`}>
+                                    <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className={`bg-emerald-300/12 hover:bg-emerald-300/18 text-emerald-100 font-bold rounded-full border border-emerald-300/24 shrink-0 ${compact ? 'min-h-[36px] px-3 py-1 text-xs' : 'min-h-[40px] px-4 py-2 text-sm'}`}>
                                         수령
                                     </Motion.button>
                                 ) : (
-                                    <div className={`text-slate-400/72 font-fira bg-black/18 rounded-full border border-white/8 shrink-0 ${compact ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-[11px]'}`}>진행 중</div>
+                                    <div className={`text-slate-400/72 font-fira bg-black/18 rounded-full border border-white/8 shrink-0 ${compact ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm'}`}>진행 중</div>
                                 )}
                             </div>
                         </Motion.div>
@@ -368,7 +368,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                     <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`rounded-[1rem] border border-white/8 bg-black/16 text-center flex flex-col items-center gap-2 ${compact ? 'py-8' : 'py-10'}`}>
                         <Scroll size={compact ? 20 : 24} className="opacity-20" />
                         <span className={`${compact ? 'text-[13px]' : 'text-sm'} font-rajdhani tracking-widest text-slate-400`}>NO ACTIVE MISSIONS</span>
-                        <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-slate-500 font-fira`}>
+                        <span className={`${compact ? 'text-xs' : 'text-sm'} text-slate-500 font-fira`}>
                             {isInSafeZone ? '마을 게시판에서 새 임무를 수락할 수 있습니다.' : '마을로 이동하면 퀘스트 게시판을 이용할 수 있습니다.'}
                         </span>
                     </Motion.div>

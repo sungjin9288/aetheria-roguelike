@@ -25,7 +25,7 @@ const DashboardMobileSummary = ({ player }) => {
             <div className="pointer-events-none absolute -left-6 bottom-0 h-20 w-20 rounded-full bg-[#7dd4d8]/8 blur-3xl" />
             <div className="relative flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/68">
+                    <div className="text-[11px] font-fira uppercase tracking-[0.2em] text-slate-400/68">
                         Field Snapshot
                     </div>
                     <div className="mt-1 truncate text-[16px] font-rajdhani font-bold tracking-[0.04em] text-white/94">
@@ -59,7 +59,7 @@ const DashboardMobileSummary = ({ player }) => {
                                 {entry.item?.name || entry.fallback}
                             </span>
                             {(entry.item?.enhance || 0) > 0 && (
-                                <span className="shrink-0 text-[9px] font-bold font-fira text-[#d5b180]">+{entry.item.enhance}</span>
+                                <span className="shrink-0 text-[11px] font-bold font-fira text-[#d5b180]">+{entry.item.enhance}</span>
                             )}
                         </div>
                     </div>

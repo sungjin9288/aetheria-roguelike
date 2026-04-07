@@ -201,7 +201,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
             )}
 
             {/* 세션 정보 */}
-            <div className={`rounded-[1rem] border border-white/8 bg-black/18 text-[10px] text-slate-400/72 font-fira ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}>
+            <div className={`rounded-[1rem] border border-white/8 bg-black/18 text-[10px] text-slate-400/90 font-fira ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}>
                 <div className={`${compact ? 'grid grid-cols-2 gap-x-2 gap-y-1' : 'flex flex-wrap gap-x-3 gap-y-1'}`}>
                     <p className="truncate">SESSION: {_SESSION_ID}</p>
                     <p className="truncate">UID: {actions.getUid() || 'guest'}</p>
@@ -239,7 +239,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                     <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">AI: {runtime?.isAiThinking ? 'thinking' : 'idle'}</div>
                 </div>
                 {!showSystemSummary && (
-                    <pre className="whitespace-pre-wrap break-all rounded-[0.95rem] border border-white/8 bg-black/22 px-2.5 py-2 text-[10px] font-fira text-slate-400/72">
+                    <pre className="whitespace-pre-wrap break-all rounded-[0.95rem] border border-white/8 bg-black/22 px-2.5 py-2 text-[10px] font-fira text-slate-400/90">
                         {qaReadout}
                     </pre>
                 )}
@@ -249,17 +249,17 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                 <>
                     <div className="grid grid-cols-2 gap-1.5">
                         <div className="rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 px-2.5 py-2">
-                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Relics</div>
+                            <div className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">Relics</div>
                             <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#e3dcff]">{(player.relics || []).length}/5</div>
                             <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">{player.relics?.[0]?.name || '획득 전'}</div>
                         </div>
                         <div className="rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/8 px-2.5 py-2">
-                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Titles</div>
+                            <div className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">Titles</div>
                             <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#f6e7c8]">{(player.titles || []).length}</div>
                             <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">{player.activeTitle ? getTitleLabel(player.activeTitle) : '활성 없음'}</div>
                         </div>
                         <div className="rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/8 px-2.5 py-2">
-                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Daily</div>
+                            <div className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">Daily</div>
                             <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#dff7f5]">
                                 {isDailyProtocolToday ? `${dailyDoneCount}/${dailyProtocol.missions.length}` : '없음'}
                             </div>
@@ -270,7 +270,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                             </div>
                         </div>
                         <div className="rounded-[1rem] border border-white/8 bg-black/18 px-2.5 py-2">
-                            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Hall</div>
+                            <div className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">Hall</div>
                             <div className="mt-1 text-[12px] font-rajdhani font-bold text-slate-100 truncate">
                                 {topRanker?.nickname || 'SYNCING'}
                             </div>
@@ -323,7 +323,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                                         >
                                             <span className={`font-bold ${getTitleColor(id)}`}>[{getTitleLabel(id)}]</span>
                                             {isActive && <span className="text-[#f6e7c8] text-[10px] ml-2">활성</span>}
-                                            <div className="text-slate-400/72 text-[10px] mt-0.5">{getTitlePassiveLabel(id)}</div>
+                                            <div className="text-slate-400/90 text-[10px] mt-0.5">{getTitlePassiveLabel(id)}</div>
                                         </button>
                                     );
                                 })}

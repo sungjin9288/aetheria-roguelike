@@ -10,10 +10,10 @@ import SignalBadge from './SignalBadge';
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
  */
 const StatDiff = ({ val, label }) => {
-    if (val === 0) return <span className="text-slate-500 text-[11px]">{label} ±0</span>;
+    if (val === 0) return <span className="text-slate-500 text-xs">{label} ±0</span>;
     const up = val > 0;
     return (
-        <span className={`text-[11px] font-bold flex items-center gap-0.5 ${up ? 'text-emerald-300' : 'text-rose-300'}`}>
+        <span className={`text-xs font-bold flex items-center gap-0.5 ${up ? 'text-emerald-300' : 'text-rose-300'}`}>
             {up ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
             {label} {up ? '+' : ''}{val}
         </span>
@@ -172,10 +172,10 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     className={`flex items-start justify-between gap-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[radial-gradient(circle_at_top_right,rgba(154,138,192,0.16),transparent_24%),linear-gradient(180deg,rgba(33,22,46,0.22)_0%,rgba(16,10,20,0.1)_100%)] ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}
                 >
                     <div className="min-w-0">
-                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-[#e3dcff]/72">
+                        <div className="text-xs font-fira uppercase tracking-[0.16em] text-[#e3dcff]/72">
                             {spotlight?.title || '전리품 주목'}
                         </div>
-                        <div className={`${compact ? 'mt-0.5 text-[10px]' : 'mt-1 text-[11px]'} font-fira text-slate-200/82 leading-snug`}>
+                        <div className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} font-fira text-slate-200/82 leading-snug`}>
                             {spotlight?.detail || '이번 전투 보상과 관련된 장비를 먼저 확인하세요.'}
                         </div>
                         <div className={`${compact ? 'mt-1.5' : 'mt-2'} flex flex-wrap gap-1`}>
@@ -187,7 +187,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     {onClearSpotlight && (
                         <button
                             onClick={() => onClearSpotlight()}
-                            className={`shrink-0 rounded-full border border-white/8 bg-black/18 ${compact ? 'px-2 py-0.5 text-[9px]' : 'px-2.5 py-1 text-[10px]'} font-fira text-slate-300/76 hover:bg-white/[0.04]`}
+                            className={`shrink-0 rounded-full border border-white/8 bg-black/18 ${compact ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs'} font-fira text-slate-300/76 hover:bg-white/[0.04]`}
                         >
                             닫기
                         </button>
@@ -205,7 +205,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                             setActiveFilter(f.id);
                             setShowAllItems(false);
                         }}
-                        className={`${compact ? 'min-h-[26px] px-2 py-0.5 text-[10px]' : 'min-h-[30px] px-2.5 py-1 text-[11px]'} rounded-full border font-rajdhani font-bold transition-all
+                        className={`${compact ? 'min-h-[36px] px-2 py-0.5 text-xs' : 'min-h-[30px] px-2.5 py-1 text-sm'} rounded-full border font-rajdhani font-bold transition-all
                             ${useDenseCompactInventory ? 'shrink-0 whitespace-nowrap' : ''}
                             ${activeFilter === f.id
                                 ? 'bg-[#7dd4d8]/14 border-[#7dd4d8]/30 text-[#dff7f5]'
@@ -221,7 +221,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSmartEquip}
-                        className={`${useDenseCompactInventory ? 'shrink-0 whitespace-nowrap' : 'ml-auto'} rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all ${compact ? 'min-h-[26px] px-2 py-0.5 text-[10px]' : 'min-h-[30px] px-2.5 py-1 text-[11px]'}`}
+                        className={`${useDenseCompactInventory ? 'shrink-0 whitespace-nowrap' : 'ml-auto'} rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all ${compact ? 'min-h-[36px] px-2 py-0.5 text-xs' : 'min-h-[30px] px-2.5 py-1 text-sm'}`}
                         title="최적 장비 자동 장착"
                     >
                         <Star size={compact ? 10 : 11} /> {compact ? '추천' : '추천 장착'}
@@ -237,14 +237,14 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     animate={{ opacity: 1, y: 0 }}
                     className={`flex items-center justify-between rounded-[1rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)] ${compact ? 'px-2.5 py-1.5' : 'px-3 py-2'}`}
                 >
-                    <div className={`flex items-center gap-2 text-[#f6e7c8] font-fira ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+                    <div className={`flex items-center gap-2 text-[#f6e7c8] font-fira ${compact ? 'text-xs' : 'text-sm'}`}>
                         <AlertCircle size={compact ? 12 : 13} className="shrink-0 animate-pulse" />
                         <span>인벤토리 {player.inv.length}/20 — 저가 재료 {sellableMatCount}개 정리 가능</span>
                     </div>
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => actions.autoSell?.()}
-                        className={`flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 ${compact ? 'min-h-[26px] px-2 py-0.5 text-[10px]' : 'min-h-[30px] px-2.5 py-1 text-[11px]'}`}
+                        className={`flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 ${compact ? 'min-h-[36px] px-2 py-0.5 text-xs' : 'min-h-[30px] px-2.5 py-1 text-sm'}`}
                     >
                         <Package size={compact ? 10 : 11} /> 일괄 정리
                     </Motion.button>
@@ -252,13 +252,13 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
             )}
 
             {compact && (hiddenItemCount > 0 || showAllItems) && (
-                <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
+                <div className="flex items-center justify-between gap-2 text-xs font-fira uppercase tracking-[0.16em]">
                     <span className="text-slate-500">{inventorySectionLabel}</span>
                     {hiddenItemCount > 0 ? (
                         <button
                             type="button"
                             onClick={() => setShowAllItems(true)}
-                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] text-slate-300/78 hover:bg-white/[0.04]"
+                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[11px] text-slate-300/78 hover:bg-white/[0.04]"
                         >
                             +{hiddenItemCount} 더 보기
                         </button>
@@ -266,7 +266,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                         <button
                             type="button"
                             onClick={() => setShowAllItems(false)}
-                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] text-slate-300/78 hover:bg-white/[0.04]"
+                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[11px] text-slate-300/78 hover:bg-white/[0.04]"
                         >
                             요약 보기
                         </button>
@@ -316,9 +316,9 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                         {item.name}
                                     </span>
                                     {(item.enhance || 0) > 0 && (
-                                        <span className="text-[10px] font-bold font-fira text-[#d5b180]">+{item.enhance}</span>
+                                        <span className="text-xs font-bold font-fira text-[#d5b180]">+{item.enhance}</span>
                                     )}
-                                    {count > 1 && <span className={`${compact ? 'text-[10px]' : 'text-xs'} text-slate-500`}>x{count}</span>}
+                                    {count > 1 && <span className={`${compact ? 'text-xs' : 'text-sm'} text-slate-500`}>x{count}</span>}
                                     {isSpotlighted && <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
                                     {resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
@@ -336,10 +336,10 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     </div>
                                 )}
                                 {(getItemStatText(item) || item.desc_stat) && (
-                                    <div className={`mt-0.5 truncate font-fira text-slate-400/72 ${compact ? 'text-[10px]' : 'text-xs'}`}>{getItemStatText(item) || item.desc_stat}</div>
+                                    <div className={`mt-0.5 truncate font-fira text-slate-400/72 ${compact ? 'text-xs' : 'text-sm'}`}>{getItemStatText(item) || item.desc_stat}</div>
                                 )}
                                 {useSummaryCards && assignedQuickSlots.length > 0 && (
-                                    <div className="mt-0.5 text-[9px] font-fira uppercase tracking-[0.12em] text-slate-500">
+                                    <div className="mt-0.5 text-[11px] font-fira uppercase tracking-[0.12em] text-slate-500">
                                         슬롯 {assignedQuickSlots.join(', ')}
                                     </div>
                                 )}
@@ -364,7 +364,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     <Motion.button
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => actions.enhanceItem(item.id)}
-                                        className={`bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] rounded-full border border-[#d5b180]/22 font-bold font-fira ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[9px]' : compact ? 'min-h-[32px] px-2 py-1 text-[9px]' : 'min-h-[38px] px-2.5 py-2 text-[10px]'}`}
+                                        className={`bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] rounded-full border border-[#d5b180]/22 font-bold font-fira ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[11px]' : compact ? 'min-h-[32px] px-2 py-1 text-[11px]' : 'min-h-[38px] px-2.5 py-2 text-xs'}`}
                                         title={`강화 +${(item.enhance || 0) + 1}`}
                                     >
                                         +강화
@@ -374,7 +374,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     whileTap={{ scale: 0.95 }}
                                     disabled={!canEquip}
                                     onClick={() => actions.useItem(item)}
-                                    className={`bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[10px]' : compact ? 'min-h-[32px] px-2.5 py-1 text-[10px]' : 'min-h-[38px] px-3 py-2 text-[11px]'}`}
+                                    className={`bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-xs' : compact ? 'min-h-[32px] px-2.5 py-1 text-xs' : 'min-h-[38px] px-3 py-2 text-sm'}`}
                                 >
                                     {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
                                 </Motion.button>

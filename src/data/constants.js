@@ -33,7 +33,7 @@ export const CONSTANTS = {
 
 // Game Balance Constants - Centralized magic numbers
 export const BALANCE = {
-    REST_COST: 80,              // 초반 경제 완화 (기존 100)
+    REST_COST: 60,              // 경제 완화 — Lv50 기준 1-2전투로 휴식 가능 (기존 80)
     SKILL_MP_COST: 10,
     CRIT_CHANCE: 0.1,
     DROP_CHANCE: 0.4,
@@ -68,9 +68,9 @@ export const BALANCE = {
     KEY_EVENT_PITY_PER_EXPLORE: 0.04,
     KEY_EVENT_MAX_CHANCE: 0.35,
     // v4.0 — 신규 시스템 상수
-    EXP_SCALE_RATE: 1.20,           // EXP 곡선 — 완화된 스케일 (Lv40 ~10시간 1회차 목표)
-    EXP_LEVEL_CAP_50: 300000,       // (deprecated — 하한선 역할 제거, 상한선 EXP_LEVEL_HARD_CAP 사용)
-    EXP_LEVEL_HARD_CAP: 300000,     // 레벨당 최대 EXP 요구량 상한선 (Lv44+ 일정하게 유지)
+    EXP_SCALE_RATE: 1.15,           // EXP 곡선 — 완화 (Lv50 ~45전투, Lv60 ~80전투 목표)
+    EXP_LEVEL_CAP_50: 150000,       // (deprecated — 하한선 역할 제거, 상한선 EXP_LEVEL_HARD_CAP 사용)
+    EXP_LEVEL_HARD_CAP: 150000,     // 레벨당 최대 EXP 요구량 상한선 반감 (기존 300K → 150K)
     RELIC_FIND_CHANCE: 0.08,        // 탐색 시 유물 발견 확률 (8%)
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
     PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가

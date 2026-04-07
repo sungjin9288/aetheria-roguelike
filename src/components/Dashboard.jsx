@@ -167,7 +167,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                                     <ActiveArchiveIcon size={14} />
                                 </div>
                                 <div className="min-w-0 text-left">
-                                    <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/68">Archive Dock</div>
+                                    <div className="text-[11px] font-fira uppercase tracking-[0.2em] text-slate-400/68">Archive Dock</div>
                                     <div className="mt-0.5 truncate text-[13px] font-rajdhani font-bold text-white/92">
                                         {hasInventorySpotlight
                                             ? (inventorySpotlight?.title || '전리품 검토')
@@ -247,7 +247,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                                     </div>
                                 )}
 
-                                <div className="mt-3 grid grid-cols-4 gap-1.5">
+                                <div className="mt-3 grid grid-cols-4 gap-2">
                                     {primaryMobileTabs.map((tab) => (
                                         <ArchiveTabButton
                                             key={tab.id}
@@ -260,7 +260,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                                         />
                                     ))}
                                 </div>
-                                <div className="mt-2 grid grid-cols-4 gap-1.5">
+                                <div className="mt-2 grid grid-cols-4 gap-2">
                                     {secondaryMobileTabs.map((tab) => (
                                         <ArchiveTabButton
                                             key={tab.id}
@@ -296,7 +296,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
         >
                 <div className={`${useCompactDesktopRail ? 'mb-0.25' : 'mb-1.5'} flex items-center justify-between gap-2`}>
                     <div className="min-w-0 flex items-center gap-1.5">
-                        <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                        <div className="text-[11px] font-fira uppercase tracking-[0.18em] text-slate-400">
                             Archive
                         </div>
                         <div className={`${useCompactDesktopRail ? 'text-[11px]' : 'text-[13px]'} truncate font-rajdhani font-bold text-white/92`}>
@@ -359,10 +359,10 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
 
                 {hasInventorySpotlight && (
                     <div className={`${useCompactDesktopRail ? 'mt-0.75 rounded-[0.8rem] px-1.75 py-0.75' : 'mt-1.5 rounded-[0.9rem] px-2 py-1.5'} border border-[#d5b180]/18 bg-[#d5b180]/8`}>
-                        <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-[#f6e7c8]/76">
+                        <div className="text-[11px] font-fira uppercase tracking-[0.18em] text-[#f6e7c8]/76">
                             {inventorySpotlight?.title || '전리품 주목'}
                         </div>
-                        <div className={`${useCompactDesktopRail ? 'mt-0.5 text-[9px]' : 'mt-1 text-[10px]'} font-fira leading-relaxed text-slate-300/82`}>
+                        <div className={`${useCompactDesktopRail ? 'mt-0.5 text-[11px]' : 'mt-1 text-[10px]'} font-fira leading-relaxed text-slate-300/82`}>
                             {inventorySpotlight?.detail || '획득한 장비와 소모품을 바로 확인하세요.'}
                         </div>
                     </div>

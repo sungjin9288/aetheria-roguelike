@@ -100,7 +100,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                                         </SignalBadge>
                                     </span>
                                 </div>
-                                <div className={`${compact ? 'mt-0.25 text-[9px]' : 'mt-1 text-[10px]'} font-fira text-slate-400/72`}>
+                                <div className={`${compact ? 'mt-0.25 text-[11px]' : 'mt-1 text-[10px]'} font-fira text-slate-400/72`}>
                                     {compact ? route.levelLabel : `${route.levelLabel} · ${route.reason}`}
                                 </div>
                             </div>
@@ -116,7 +116,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                         <button
                             type="button"
                             onClick={() => setShowAllMaps(true)}
-                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] text-slate-300/78 hover:bg-white/[0.04]"
+                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[11px] text-slate-300/78 hover:bg-white/[0.04]"
                         >
                             +{hiddenMapCount} 더 보기
                         </button>
@@ -124,7 +124,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                         <button
                             type="button"
                             onClick={() => setShowAllMaps(false)}
-                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] text-slate-300/78 hover:bg-white/[0.04]"
+                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[11px] text-slate-300/78 hover:bg-white/[0.04]"
                         >
                             요약 보기
                         </button>
@@ -156,11 +156,11 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                    <div className={`font-rajdhani font-bold ${compact ? 'text-[12px]' : 'text-sm'} truncate ${isCurrent ? 'text-[#dff7f5]' : hasGrave ? 'text-rose-200' : isVisited ? 'text-slate-100' : 'text-slate-500'}`}>
+                                    <div className={`font-rajdhani font-bold ${compact ? 'text-[12px]' : 'text-sm'} truncate ${isCurrent ? 'text-[#dff7f5]' : hasGrave ? 'text-rose-200' : isVisited ? 'text-slate-100' : 'text-slate-400'}`}>
                                         {hasGrave && <span className="mr-1 text-rose-300">✝</span>}
                                         {map.name}
                                     </div>
-                                    <div className={`${compact ? 'mt-0.5 text-[9px]' : 'mt-1 text-[10px]'} font-fira text-slate-500`}>
+                                    <div className={`${compact ? 'mt-0.5 text-[11px]' : 'mt-1 text-[10px]'} font-fira text-slate-500`}>
                                         {map.type === 'safe' ? '마을 / 안전지대' : map.boss ? '보스 지역' : '탐험 지역'} · {levelText}
                                         {hasGrave && <span className="ml-1 text-rose-300/80">· 유해 {gravesAtMap.length}구 · {graveGold}G</span>}
                                     </div>

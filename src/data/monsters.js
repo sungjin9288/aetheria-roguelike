@@ -565,6 +565,87 @@ export const MONSTERS = {
         hpMult: 1.52, atkMult: 1.32, expMult: 1.48, goldMult: 1.48,
         phase2: { name: '폭식하는 차원 포식자', atkBonus: 0.42, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '차원 포식자가 공간 자체를 삼키기 시작합니다! 차원의 균열이 확산됩니다!', statusEffect: 'curse' },
     },
+
+    // ── 신규 맵 몬스터 (Lv 31-40) ───────────────────────────────────────────
+
+    // 폐기된 연구소 (Lv32) — 3 regular + 1 boss
+    '변이 실험체':     { hp: 380, atk: 48, def: 22, exp: 270, gold: 120, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.35 }, statusOnHit: 'poison' },
+    '오작동 로봇':     { hp: 420, atk: 52, def: 30, exp: 285, gold: 130, weakness: '대지', resistance: '냉기', hpMult: 1.12, pattern: { guardChance: 0.25, heavyChance: 0.25 } },
+    '부식된 골렘':     { hp: 450, atk: 45, def: 38, exp: 295, gold: 125, weakness: '냉기', resistance: '화염', hpMult: 1.18, pattern: { guardChance: 0.3, heavyChance: 0.2 } },
+    '프로토타입 제로': {
+        isBoss: true, weakness: '대지', resistance: '냉기',
+        hpMult: 1.85, atkMult: 1.35, expMult: 2.2, goldMult: 2.0, dropMod: 2.5,
+        pattern: { guardChance: 0.15, heavyChance: 0.4 },
+        phase2: { name: '폭주하는 프로토타입 제로', atkBonus: 0.4, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '프로토타입 제로의 리미터가 해제됩니다! 파괴 프로토콜이 기동합니다!', statusEffect: 'burn' },
+    },
+
+    // 저주받은 묘지 (Lv34) — 3 regular + 1 boss
+    '망령 기사':       { hp: 400, atk: 50, def: 25, exp: 280, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
+    '언데드 마법사':   { hp: 350, atk: 55, def: 18, exp: 290, gold: 125, weakness: '빛', resistance: '어둠', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
+    '뼈 수집가':       { hp: 430, atk: 47, def: 32, exp: 275, gold: 135, weakness: '빛', resistance: '어둠', hpMult: 1.15, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
+    '묘지기 네크론': {
+        isBoss: true, weakness: '빛', resistance: '어둠',
+        hpMult: 1.9, atkMult: 1.38, expMult: 2.3, goldMult: 2.1, dropMod: 2.6,
+        pattern: { guardChance: 0.1, heavyChance: 0.45 },
+        phase2: { name: '각성한 묘지기 네크론', atkBonus: 0.42, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '네크론이 묘지의 모든 망자를 깨웁니다! 죽음의 기운이 폭발합니다!', statusEffect: 'curse' },
+    },
+
+    // 용암 지대 (Lv36) — 3 regular + 1 boss
+    '마그마 정령':     { hp: 440, atk: 55, def: 24, exp: 310, gold: 140, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '화산 도마뱀':     { hp: 470, atk: 58, def: 28, exp: 325, gold: 145, weakness: '냉기', resistance: '화염', atkMult: 1.08, pattern: { guardChance: 0.15, heavyChance: 0.35 } },
+    '용암 거인':       { hp: 520, atk: 52, def: 40, exp: 340, gold: 150, weakness: '냉기', resistance: '화염', hpMult: 1.2, pattern: { guardChance: 0.3, heavyChance: 0.25 } },
+    '화염 군주 이프리트': {
+        isBoss: true, weakness: '냉기', resistance: '화염',
+        hpMult: 2.0, atkMult: 1.42, expMult: 2.5, goldMult: 2.3, dropMod: 2.8,
+        pattern: { guardChance: 0.1, heavyChance: 0.5 },
+        phase2: { name: '진화한 화염 군주 이프리트', atkBonus: 0.45, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '이프리트가 용암의 심장을 해방합니다! 대지가 녹아내리기 시작합니다!', statusEffect: 'burn' },
+    },
+
+    // 바람의 고원 (Lv38) — 3 regular + 1 boss
+    '폭풍 매':         { hp: 500, atk: 65, def: 22, exp: 355, gold: 155, weakness: '대지', resistance: '빛', atkMult: 1.12, pattern: { guardChance: 0.05, heavyChance: 0.45 } },
+    '바람 정령':       { hp: 530, atk: 60, def: 26, exp: 365, gold: 150, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.35 } },
+    '뇌운의 사냥꾼':   { hp: 580, atk: 68, def: 30, exp: 390, gold: 165, weakness: '대지', resistance: '빛', hpMult: 1.1, pattern: { guardChance: 0.15, heavyChance: 0.4 } },
+    '천둥새 제피로스': {
+        isBoss: true, weakness: '대지', resistance: '빛',
+        hpMult: 2.1, atkMult: 1.45, expMult: 2.6, goldMult: 2.4, dropMod: 3.0,
+        pattern: { guardChance: 0.1, heavyChance: 0.45 },
+        phase2: { name: '폭풍의 천둥새 제피로스', atkBonus: 0.48, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '제피로스가 폭풍의 눈을 해방합니다! 하늘 전체가 뇌광으로 뒤덮입니다!', statusEffect: 'stun' },
+    },
+
+    // ── 신규 맵 몬스터 (Lv 65-75) ───────────────────────────────────────────
+
+    // 에테르 폐허 (Lv65) — 3 regular + 1 boss
+    '에테르 방랑자':   { hp: 1250, atk: 145, def: 60, exp: 720, gold: 320, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '차원의 포식자':   { hp: 1400, atk: 160, def: 55, exp: 780, gold: 340, weakness: '빛', resistance: '어둠', atkMult: 1.15, pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
+    '붕괴된 수호자':   { hp: 1500, atk: 140, def: 75, exp: 820, gold: 350, weakness: '대지', resistance: '빛', hpMult: 1.2, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
+    '에테르 심판자': {
+        isBoss: true, weakness: '어둠', resistance: '빛',
+        hpMult: 2.2, atkMult: 1.55, expMult: 3.0, goldMult: 2.8, dropMod: 3.5,
+        pattern: { guardChance: 0.1, heavyChance: 0.5 },
+        phase2: { name: '각성한 에테르 심판자', atkBonus: 0.5, pattern: { guardChance: 0.05, heavyChance: 0.6 }, log: '에테르 심판자가 차원의 법칙을 재편합니다! 공간이 뒤틀리기 시작합니다!', statusEffect: 'burn' },
+        phase3: { name: '에테르의 절대 심판', threshold: 0.25, atkBonus: 0.85, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '심판자가 에테르의 근원과 하나가 됩니다! 모든 저항이 무력화됩니다!', statusEffect: 'curse' },
+    },
+
+    // 공허의 회랑 (Lv70) — 3 regular + 1 boss
+    '공허의 감시자':   { hp: 1450, atk: 170, def: 65, exp: 850, gold: 380, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },
+    '허무의 기사':     { hp: 1600, atk: 180, def: 72, exp: 900, gold: 400, weakness: '빛', resistance: '어둠', hpMult: 1.15, pattern: { guardChance: 0.2, heavyChance: 0.45 } },
+    '차원 균열체':     { hp: 1350, atk: 195, def: 50, exp: 880, gold: 390, weakness: '빛', resistance: '어둠', atkMult: 1.18, pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
+    '공허의 대행자': {
+        isBoss: true, weakness: '빛', resistance: '어둠',
+        hpMult: 2.4, atkMult: 1.65, expMult: 3.2, goldMult: 3.0, dropMod: 4.0,
+        pattern: { guardChance: 0.1, heavyChance: 0.5 },
+        phase2: { name: '해방된 공허의 대행자', atkBonus: 0.55, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '공허의 대행자가 허무의 권능을 해방합니다! 존재의 경계가 희미해집니다!', statusEffect: 'curse' },
+        phase3: { name: '절대 공허의 대행자', threshold: 0.2, atkBonus: 0.95, defBonus: 20, pattern: { guardChance: 0.0, heavyChance: 0.78 }, log: '대행자가 공허 그 자체와 합일합니다! 모든 것이 소멸로 향합니다!', statusEffect: 'burn' },
+    },
+
+    // 종말의 전장 (Lv73) — 1 boss only (3-phase)
+    '종말의 기사': {
+        isBoss: true, weakness: '빛', resistance: '어둠',
+        hpMult: 2.5, atkMult: 1.8, expMult: 3.5, goldMult: 3.5, dropMod: 4.5,
+        pattern: { guardChance: 0.1, heavyChance: 0.5 },
+        phase2: { name: '분노한 종말의 기사', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '종말의 기사가 파멸의 검을 뽑아듭니다! 전장 전체가 검은 화염에 휩싸입니다!', statusEffect: 'burn' },
+        phase3: { name: '종말의 화신', threshold: 0.2, atkBonus: 1.1, defBonus: 25, pattern: { guardChance: 0.0, heavyChance: 0.82 }, log: '기사가 종말 그 자체로 변모합니다! 이것이 최후의 전투입니다!', statusEffect: 'curse' },
+    },
 };
 
 export const BOSS_BRIEFS = Object.freeze({
@@ -693,6 +774,69 @@ export const BOSS_BRIEFS = Object.freeze({
         rewardHint: '이 보스를 쓰러뜨리면 진 엔딩이 해금됩니다. 게임의 진정한 결말입니다.',
         warningChips: ['3페이즈', '원초 저주', '강타+화상'],
         recommendedBuilds: ['비전 공명', '양손 파쇄', '방패 요새']
+    },
+    '프로토타입 제로': {
+        signature: '리미터 해제와 파괴 프로토콜',
+        entryHint: '대지 속성 무기와 회복 아이템을 충분히 갖추고 진입하세요.',
+        counterHint: '대지 속성이 효과적입니다. 2페이즈 화상에 대비해 해제 수단을 준비하세요.',
+        phaseHint: 'HP 50% 이하에서 리미터가 해제되며 강타 빈도가 크게 늘어납니다.',
+        rewardHint: '기계 계열 장비와 연구소 전리품을 얻을 수 있습니다.',
+        warningChips: ['리미터 해제', '화상 패턴'],
+        recommendedBuilds: ['방패 요새', '양손 파쇄']
+    },
+    '묘지기 네크론': {
+        signature: '망자 소환과 죽음의 저주',
+        entryHint: '빛 속성과 저주 해제 수단을 준비한 뒤 진입하세요.',
+        counterHint: '빛 속성이 효과적입니다. 2페이즈에서 저주가 중첩되므로 단기전이 유리합니다.',
+        phaseHint: 'HP 50% 이하에서 망자를 깨우며 저주 폭발 패턴으로 전환됩니다.',
+        rewardHint: '어둠 계열 희귀 장비와 묘지 전리품을 얻을 수 있습니다.',
+        warningChips: ['망자 소환', '저주 폭발'],
+        recommendedBuilds: ['비전 공명', '양손 파쇄']
+    },
+    '화염 군주 이프리트': {
+        signature: '용암 해방과 대지 용해',
+        entryHint: '냉기 속성과 화상 저항 수단을 갖추고 진입하세요.',
+        counterHint: '냉기 속성이 효과적입니다. 화상 누적에 대비해 회복 루틴을 유지하세요.',
+        phaseHint: 'HP 50% 이하에서 용암 심장이 해방되며 화상과 강타가 겹칩니다.',
+        rewardHint: '화염 계열 상위 장비와 이프리트 전리품을 얻을 수 있습니다.',
+        warningChips: ['용암 해방', '화상 누적'],
+        recommendedBuilds: ['방패 요새', '비전 공명']
+    },
+    '천둥새 제피로스': {
+        signature: '폭풍 해방과 뇌광 기절',
+        entryHint: '대지 속성과 기절 저항 수단을 갖추고 진입하세요.',
+        counterHint: '대지 속성이 효과적입니다. 2페이즈 기절 패턴에 대비해 HP를 넉넉히 유지하세요.',
+        phaseHint: 'HP 50% 이하에서 폭풍의 눈이 해방되며 기절 연속 공격이 시작됩니다.',
+        rewardHint: '바람 계열 상위 장비와 고원 전리품을 얻을 수 있습니다.',
+        warningChips: ['폭풍 해방', '기절 연속'],
+        recommendedBuilds: ['양손 파쇄', '광전 도박']
+    },
+    '에테르 심판자': {
+        signature: '차원 재편과 3페이즈 절대 심판',
+        entryHint: '어둠 속성과 높은 방어력, 충분한 회복 수단을 갖추고 진입하세요.',
+        counterHint: '어둠 속성이 효과적입니다. 3페이즈에 대비해 자원을 비축하세요.',
+        phaseHint: 'HP 50% 이하에서 차원을 재편하고, 25% 이하에서 절대 심판으로 저주와 극강 강타를 퍼붓습니다.',
+        rewardHint: '에테르 계열 최상위 장비와 차원 전리품을 얻을 수 있습니다.',
+        warningChips: ['3페이즈', '차원 재편', '절대 심판'],
+        recommendedBuilds: ['비전 공명', '방패 요새']
+    },
+    '공허의 대행자': {
+        signature: '허무 권능과 3페이즈 공허 합일',
+        entryHint: '빛 속성 최상위 무기와 저주 해제 수단, 높은 HP를 확보하고 진입하세요.',
+        counterHint: '빛 속성이 효과적입니다. 3페이즈 소멸 패턴에 대비해 마무리 화력을 챙기세요.',
+        phaseHint: 'HP 50% 이하에서 허무의 권능이 해방되고, 20% 이하에서 공허와 합일하여 모든 것을 소멸시킵니다.',
+        rewardHint: '공허 계열 전설 장비와 대량 보상을 얻을 수 있습니다.',
+        warningChips: ['3페이즈', '허무 권능', '공허 합일'],
+        recommendedBuilds: ['비전 공명', '양손 파쇄', '방패 요새']
+    },
+    '종말의 기사': {
+        signature: '파멸의 검과 3페이즈 종말 변모',
+        entryHint: '빛 속성 최상위 무기, 최고 등급 방어구, 충분한 회복 수단을 모두 갖추고 진입하세요.',
+        counterHint: '빛 속성이 효과적입니다. 3페이즈에서 화상과 저주가 겹치므로 해제 수단이 필수입니다.',
+        phaseHint: 'HP 50% 이하에서 파멸의 검을 뽑아들고, 20% 이하에서 종말 그 자체로 변모합니다. 자원 비축이 핵심입니다.',
+        rewardHint: '종말 계열 전설 장비와 최상위 보상을 얻을 수 있는 최종급 보스입니다.',
+        warningChips: ['3페이즈', '파멸의 검', '종말 변모'],
+        recommendedBuilds: ['방패 요새', '양손 파쇄', '비전 공명']
     }
 });
 

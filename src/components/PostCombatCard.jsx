@@ -78,16 +78,16 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
             {(lootSummary || primarySignal) && (
                 <div className="space-y-1.5">
                     {lootSummary && (
-                        <div className="flex items-start gap-2 text-[11px] font-fira text-slate-200/86">
+                        <div className="flex items-start gap-2 text-xs font-fira text-slate-200/86">
                             <Package size={13} className="mt-0.5 text-[#d5b180]" />
                             <div>
-                                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Loot</div>
+                                <div className="text-xs uppercase tracking-[0.16em] text-slate-500">Loot</div>
                                 <div className="mt-0.5 leading-relaxed">{lootSummary}</div>
                             </div>
                         </div>
                     )}
                     {primarySignal && (
-                        <div className={`rounded-[0.95rem] border px-2.5 py-2 text-[10px] font-fira ${toneClassForSignal(primarySignal.tone)}`}>
+                        <div className={`rounded-[0.95rem] border px-2.5 py-2 text-xs font-fira ${toneClassForSignal(primarySignal.tone)}`}>
                             <div className="uppercase tracking-[0.16em] opacity-72">{primarySignal.title}</div>
                             <div className="mt-1 font-bold">{primarySignal.name}</div>
                             {primarySignal.summary && (
@@ -99,14 +99,14 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
             )}
 
             <div className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-3 py-2.5">
-                <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-500">
+                <div className="flex items-center justify-between gap-2 text-xs font-fira uppercase tracking-[0.16em] text-slate-500">
                     <span className="flex items-center gap-1.5">
                         <Radar size={11} />
                         Field Readout
                     </span>
                     <span className="text-[#f6e7c8]">{analysis.grade}</span>
                 </div>
-                <div className="mt-2 text-[11px] font-fira leading-relaxed text-slate-200/86">{compactNote}</div>
+                <div className="mt-2 text-xs font-fira leading-relaxed text-slate-200/86">{compactNote}</div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                     {summaryBadges.map((entry) => (
                         <SignalBadge key={entry} tone="neutral" size="sm">{entry}</SignalBadge>
@@ -120,25 +120,25 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
     const renderDesktopPrimaryPanel = () => (
         <div className="grid gap-3 md:grid-cols-[1.04fr_0.96fr]">
             <div className="rounded-[1.2rem] border border-white/8 bg-black/18 px-3.5 py-3.5">
-                <div className="flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                <div className="flex items-center gap-2 text-xs font-fira uppercase tracking-[0.18em] text-slate-500">
                     <Package size={12} />
                     Reward Ledger
                 </div>
                 <div className="mt-3 space-y-2.5">
                     {lootSummary ? (
                         <div className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-3 py-2.5">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-slate-500">전리품</div>
+                            <div className="text-xs font-fira uppercase tracking-[0.16em] text-slate-500">전리품</div>
                             <div className="mt-1 text-[12px] font-fira leading-relaxed text-slate-200/88">
                                 {lootSummary}
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-3 py-2.5 text-[11px] font-fira text-slate-400/74">
+                        <div className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-3 py-2.5 text-xs font-fira text-slate-400/74">
                             드롭된 전리품은 없지만 전투 로그와 경험치는 정상 기록되었습니다.
                         </div>
                     )}
                     {rewardSignals.map((signal) => (
-                        <div key={`${signal.title}-${signal.name}`} className={`rounded-[1rem] border px-3 py-2.5 text-[11px] font-fira ${toneClassForSignal(signal.tone)}`}>
+                        <div key={`${signal.title}-${signal.name}`} className={`rounded-[1rem] border px-3 py-2.5 text-xs font-fira ${toneClassForSignal(signal.tone)}`}>
                             <div className="uppercase tracking-[0.16em] opacity-72">{signal.title}</div>
                             <div className="mt-1 font-bold">{signal.name}</div>
                             {signal.summary && (
@@ -150,19 +150,19 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
             </div>
 
             <div className="rounded-[1.2rem] border border-white/8 bg-black/18 px-3.5 py-3.5">
-                <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                <div className="flex items-center justify-between gap-2 text-xs font-fira uppercase tracking-[0.18em] text-slate-500">
                     <span className="flex items-center gap-1.5">
                         <Radar size={12} />
                         Tactical Readout
                     </span>
                     <span className="text-[#f6e7c8]">{analysis.grade}</span>
                 </div>
-                <div className="mt-3 space-y-1.5 text-[11px] font-fira text-slate-200/86">
+                <div className="mt-3 space-y-1.5 text-xs font-fira text-slate-200/86">
                     {analysis.notes.map((note) => (
                         <div key={note}>• {note}</div>
                     ))}
                 </div>
-                <div className="mt-3 border-t border-white/8 pt-3 space-y-1.5 text-[11px] font-fira text-[#dff7f5]/80">
+                <div className="mt-3 border-t border-white/8 pt-3 space-y-1.5 text-xs font-fira text-[#dff7f5]/80">
                     {analysis.actions.map((action) => (
                         <div key={action}>→ {action}</div>
                     ))}
@@ -197,7 +197,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                         <div className="px-3.5 py-3 space-y-3">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                                    <div className="flex flex-wrap items-center gap-1.5 text-xs font-fira uppercase tracking-[0.18em] text-slate-500">
                                         <span className="inline-flex items-center gap-1.5 text-[#dff7f5]">
                                             <Sword size={13} />
                                             Field Report
@@ -207,7 +207,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                     <div className="mt-1 text-[1.05rem] font-rajdhani font-bold tracking-[0.08em] text-[#f6e7c8]">
                                         {result.enemy || '적'} 전투 정리
                                     </div>
-                                    <div className="mt-1 text-[11px] font-fira text-slate-300/72">
+                                    <div className="mt-1 text-xs font-fira text-slate-300/72">
                                         {analysis.rewardMood}
                                     </div>
                                 </div>
@@ -222,11 +222,11 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
 
                             <div className="grid grid-cols-2 gap-2">
                                 <div className={`rounded-[1rem] border px-3 py-2.5 ${METRIC_CARD_CLASS.exp}`}>
-                                    <div className="text-[10px] font-fira uppercase tracking-[0.16em] opacity-70">EXP</div>
+                                    <div className="text-xs font-fira uppercase tracking-[0.16em] opacity-70">EXP</div>
                                     <div className="mt-1 text-xl font-rajdhani font-bold">+{result.exp}</div>
                                 </div>
                                 <div className={`rounded-[1rem] border px-3 py-2.5 ${METRIC_CARD_CLASS.gold}`}>
-                                    <div className="text-[10px] font-fira uppercase tracking-[0.16em] opacity-70">Gold</div>
+                                    <div className="text-xs font-fira uppercase tracking-[0.16em] opacity-70">Gold</div>
                                     <div className="mt-1 text-xl font-rajdhani font-bold">+{result.gold}</div>
                                 </div>
                             </div>
@@ -238,12 +238,12 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                     <Motion.button
                                         whileTap={{ scale: 0.97 }}
                                         onClick={() => { onRest?.(); handleClose(); }}
-                                        className="min-h-[42px] rounded-[1rem] border border-rose-300/24 bg-rose-400/10 px-3 py-2 text-[11px] font-rajdhani font-bold text-rose-100"
+                                        className="min-h-[42px] rounded-[1rem] border border-rose-300/24 bg-rose-400/10 px-3 py-2 text-xs font-rajdhani font-bold text-rose-100"
                                     >
                                         휴식 우선
                                     </Motion.button>
                                 ) : (
-                                    <div className="flex min-h-[42px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-[10px] font-fira text-slate-300/72">
+                                    <div className="flex min-h-[42px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-xs font-fira text-slate-300/72">
                                         {mpLow ? 'MP 회복 점검' : '다음 행동 준비 완료'}
                                     </div>
                                 )}
@@ -252,7 +252,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                     <Motion.button
                                         whileTap={{ scale: 0.97 }}
                                         onClick={() => { onSell?.(); handleClose(); }}
-                                        className="min-h-[42px] rounded-[1rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 py-2 text-[11px] font-rajdhani font-bold text-[#dff7f5]"
+                                        className="min-h-[42px] rounded-[1rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#dff7f5]"
                                     >
                                         인벤 정리
                                     </Motion.button>
@@ -261,7 +261,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                         data-testid="post-combat-review-loot"
                                         whileTap={{ scale: 0.97 }}
                                         onClick={() => { onSell?.(); handleClose(); }}
-                                        className="min-h-[42px] rounded-[1rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-2 text-[11px] font-rajdhani font-bold text-[#f6e7c8]"
+                                        className="min-h-[42px] rounded-[1rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#f6e7c8]"
                                     >
                                         장비 확인
                                     </Motion.button>
@@ -270,12 +270,12 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                         data-testid="post-combat-review-loot"
                                         whileTap={{ scale: 0.97 }}
                                         onClick={() => { onSell?.(); handleClose(); }}
-                                        className="min-h-[42px] rounded-[1rem] border border-[#9a8ac0]/24 bg-[#9a8ac0]/10 px-3 py-2 text-[11px] font-rajdhani font-bold text-[#e3dcff]"
+                                        className="min-h-[42px] rounded-[1rem] border border-[#9a8ac0]/24 bg-[#9a8ac0]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#e3dcff]"
                                     >
                                         공명 확인
                                     </Motion.button>
                                 ) : (
-                                    <div className="flex min-h-[42px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-[10px] font-fira text-slate-300/72">
+                                    <div className="flex min-h-[42px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-xs font-fira text-slate-300/72">
                                         로그에서 전투 세부 내용을 확인하세요
                                     </div>
                                 )}
@@ -285,7 +285,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                 data-testid="post-combat-continue"
                                 whileTap={{ scale: 0.97 }}
                                 onClick={handleClose}
-                                className="w-full min-h-[42px] rounded-[1rem] border border-white/8 bg-black/22 px-3 py-2 text-[11px] font-rajdhani font-bold tracking-[0.16em] text-slate-100 transition-colors hover:bg-white/[0.05]"
+                                className="w-full min-h-[42px] rounded-[1rem] border border-white/8 bg-black/22 px-3 py-2 text-xs font-rajdhani font-bold tracking-[0.16em] text-slate-100 transition-colors hover:bg-white/[0.05]"
                             >
                                 계속 진행
                             </Motion.button>
@@ -294,7 +294,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                         <>
                             <div className="flex items-start justify-between gap-3 border-b border-white/8 px-4 py-4">
                                 <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                                    <div className="flex flex-wrap items-center gap-2 text-xs font-fira uppercase tracking-[0.18em] text-slate-500">
                                         <span className="inline-flex items-center gap-1.5 text-[#dff7f5]">
                                             <Sword size={14} />
                                             Field Report
@@ -318,11 +318,11 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                             <div className="space-y-3 px-4 py-4">
                                 <div className="grid grid-cols-2 gap-2.5">
                                     <div className={`rounded-[1rem] border px-3.5 py-3 ${METRIC_CARD_CLASS.exp}`}>
-                                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] opacity-70">EXP</div>
+                                        <div className="text-xs font-fira uppercase tracking-[0.16em] opacity-70">EXP</div>
                                         <div className="mt-1 text-xl font-rajdhani font-bold">+{result.exp}</div>
                                     </div>
                                     <div className={`rounded-[1rem] border px-3.5 py-3 ${METRIC_CARD_CLASS.gold}`}>
-                                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] opacity-70">Gold</div>
+                                        <div className="text-xs font-fira uppercase tracking-[0.16em] opacity-70">Gold</div>
                                         <div className="mt-1 text-xl font-rajdhani font-bold">+{result.gold}G</div>
                                     </div>
                                 </div>
@@ -334,7 +334,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                         <Motion.button
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() => { onRest?.(); handleClose(); }}
-                                            className="flex w-full items-center justify-between rounded-[1rem] border border-rose-300/24 bg-rose-400/10 px-3.5 py-3 text-left text-[11px] font-rajdhani font-bold text-rose-100"
+                                            className="flex w-full items-center justify-between rounded-[1rem] border border-rose-300/24 bg-rose-400/10 px-3.5 py-3 text-left text-xs font-rajdhani font-bold text-rose-100"
                                         >
                                             <div className="flex items-center gap-2">
                                                 <Heart size={14} />
@@ -349,7 +349,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                             data-testid="post-combat-review-loot"
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() => { onSell?.(); handleClose(); }}
-                                            className={`flex w-full items-center justify-between rounded-[1rem] border px-3.5 py-3 text-left text-[11px] font-rajdhani font-bold ${
+                                            className={`flex w-full items-center justify-between rounded-[1rem] border px-3.5 py-3 text-left text-xs font-rajdhani font-bold ${
                                                 upgradeHint
                                                     ? 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]'
                                                     : 'border-[#9a8ac0]/24 bg-[#9a8ac0]/10 text-[#e3dcff]'
@@ -364,7 +364,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                     )}
 
                                     {mpLow && !hpLow && (
-                                        <div className="flex items-center gap-2 rounded-[1rem] border border-white/8 bg-black/18 px-3.5 py-3 text-[11px] font-fira text-slate-300/78">
+                                        <div className="flex items-center gap-2 rounded-[1rem] border border-white/8 bg-black/18 px-3.5 py-3 text-xs font-fira text-slate-300/78">
                                             <Zap size={13} className="text-[#7dd4d8]" />
                                             MP가 낮습니다. 다음 전투 전 회복 아이템 사용을 고려하세요.
                                         </div>
@@ -375,7 +375,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                             data-testid="post-combat-review-loot"
                                             whileTap={{ scale: 0.97 }}
                                             onClick={() => { onSell?.(); handleClose(); }}
-                                            className="flex w-full items-center justify-between rounded-[1rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3.5 py-3 text-left text-[11px] font-rajdhani font-bold text-[#dff7f5]"
+                                            className="flex w-full items-center justify-between rounded-[1rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3.5 py-3 text-left text-xs font-rajdhani font-bold text-[#dff7f5]"
                                         >
                                             <div className="flex items-center gap-2">
                                                 <Package size={14} />
@@ -392,7 +392,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell, mobile = false }) => 
                                     data-testid="post-combat-continue"
                                     whileTap={{ scale: 0.97 }}
                                     onClick={handleClose}
-                                    className="w-full rounded-[1rem] border border-white/8 bg-black/20 px-3 py-3 text-[11px] font-rajdhani font-bold tracking-[0.18em] text-slate-100 transition-colors hover:bg-white/[0.05]"
+                                    className="w-full rounded-[1rem] border border-white/8 bg-black/20 px-3 py-3 text-xs font-rajdhani font-bold tracking-[0.18em] text-slate-100 transition-colors hover:bg-white/[0.05]"
                                 >
                                     계속 진행
                                 </Motion.button>

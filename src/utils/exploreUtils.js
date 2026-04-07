@@ -158,7 +158,7 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
         hp: 120 + level * 30 + (depth * 25),
         maxHp: 120 + level * 30 + (depth * 25),
         atk: 15 + level * 4 + (depth * 3),
-        exp: 10 + level * 8 + (depth * 4),
+        exp: 10 + level * 10 + (depth * 4),
         gold: 10 + level * 2 + (depth * 3),
         pattern: {
             guardChance: Math.min(0.4, 0.12 + level * 0.01 + (depth * 0.005)),

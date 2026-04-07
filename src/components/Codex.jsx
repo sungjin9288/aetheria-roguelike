@@ -106,7 +106,7 @@ const Codex = ({ player, dispatch }) => {
             )}
 
             {/* Sub Tabs */}
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                 {SUB_TABS.map(tab => {
                     const Icon = tab.icon;
                     const active = subTab === tab.id;
@@ -114,7 +114,7 @@ const Codex = ({ player, dispatch }) => {
                         <button
                             key={tab.id}
                             onClick={() => setSubTab(tab.id)}
-                            className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[9px] font-fira uppercase tracking-wider transition-all
+                            className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[11px] font-fira uppercase tracking-wider transition-all
                                 ${active
                                     ? 'bg-cyber-blue/15 border border-cyber-blue/40 text-cyber-blue'
                                     : 'border border-white/8 text-slate-500 hover:text-slate-300 hover:border-white/14'

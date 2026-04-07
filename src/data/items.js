@@ -73,6 +73,18 @@ export const ITEMS = {
         { name: '심연 파쇄창', type: 'weapon', hands: 2, val: 102, tier: 4, price: 7200, elem: '어둠', jobs: ['전사', '나이트', '버서커'], desc: '심연을 찢는 중창.', desc_stat: 'ATK+102(암) / 2H' },
         { name: '에테르 세이버', type: 'weapon', val: 205, tier: 5, price: 31500, elem: '빛', jobs: ['전사', '나이트', '모험가'], desc: '차원 에너지로 단련된 검.', desc_stat: 'ATK+205(빛)' },
         { name: '성운 지팡이', type: 'weapon', hands: 2, val: 195, tier: 5, price: 30500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '별무리의 공명을 담은 지팡이.', desc_stat: 'ATK+195(빛) / 2H' },
+        // 확장 Tier 4 무기 — Lv45+ (5개)
+        { name: '에테르 검', type: 'weapon', val: 85, tier: 4, price: 1200, elem: '에테르', jobs: ['전사', '나이트', '모험가'], desc: '에테르 에너지가 응축된 검.', desc_stat: 'ATK+85(에)' },
+        { name: '폭풍의 창', type: 'weapon', hands: 2, val: 90, tier: 4, price: 1400, elem: '바람', jobs: ['전사', '나이트', '버서커'], desc: '폭풍을 가르는 창.', desc_stat: 'ATK+90(풍) / 2H' },
+        { name: '암흑 단검', type: 'weapon', val: 75, tier: 4, price: 1000, elem: '어둠', jobs: ['도적', '어쌔신'], desc: '어둠에 잠식된 단검.', desc_stat: 'ATK+75(암)' },
+        { name: '용암 대검', type: 'weapon', hands: 2, val: 100, tier: 4, price: 1500, elem: '화염', jobs: ['전사', '버서커'], desc: '용암에서 단련된 대검.', desc_stat: 'ATK+100(화) / 2H' },
+        { name: '빙결 지팡이', type: 'weapon', hands: 2, val: 70, tier: 4, price: 1100, elem: '얼음', mpBonus: 30, jobs: ['마법사', '아크메이지'], desc: '빙결 마력이 깃든 지팡이.', desc_stat: 'ATK+70(빙) MP+30 / 2H' },
+        // 확장 Tier 5 무기 — Lv60+ (5개)
+        { name: '파멸의 검', type: 'weapon', val: 140, tier: 5, price: 3000, elem: '어둠', jobs: ['전사', '버서커', '흑마법사'], desc: '파멸을 부르는 검.', desc_stat: 'ATK+140(암)' },
+        { name: '성스러운 창', type: 'weapon', hands: 2, val: 135, tier: 5, price: 3500, elem: '빛', jobs: ['전사', '나이트'], desc: '성스러운 빛의 창.', desc_stat: 'ATK+135(빛) / 2H' },
+        { name: '차원절단자', type: 'weapon', val: 120, tier: 5, price: 2500, elem: '에테르', jobs: ['도적', '어쌔신', '모험가'], desc: '차원을 절단하는 검.', desc_stat: 'ATK+120(에)' },
+        { name: '용의 화염', type: 'weapon', hands: 2, val: 155, tier: 5, price: 4000, elem: '화염', jobs: ['전사', '버서커'], desc: '용의 화염을 담은 검.', desc_stat: 'ATK+155(화) / 2H' },
+        { name: '빙하의 지팡이', type: 'weapon', hands: 2, val: 110, tier: 5, price: 2800, elem: '얼음', mpBonus: 50, jobs: ['마법사', '아크메이지'], desc: '빙하의 마력이 깃든 지팡이.', desc_stat: 'ATK+110(빙) MP+50 / 2H' },
         // Tier 6 - 에테르급 (에테르 관문 / 혼돈의 심연 전용)
         { name: '공허의 대검', type: 'weapon', hands: 2, val: 285, tier: 6, price: 65000, elem: '어둠', jobs: ['버서커', '흑마법사'], desc: '공허에서 빚어낸 절멸의 대검.', desc_stat: 'ATK+285(암) / 2H' },
         { name: '에테르 플럭스 로드', type: 'weapon', hands: 2, val: 265, tier: 6, price: 60000, elem: '빛', jobs: ['아크메이지', '대마법사'], desc: '에테르 흐름을 조종하는 마도 로드.', desc_stat: 'ATK+265(빛) / 2H' },
@@ -250,6 +262,18 @@ export const ITEMS = {
         // T5 — 차원의 틈새
         { name: '차원 갑주', type: 'armor', val: 112, tier: 5, price: 18500, jobs: ['전사', '나이트', '버서커'], desc: '차원의 틈새에서 단련된 궁극의 갑주.', desc_stat: 'DEF+112' },
         { name: '에테르 군주 로브', type: 'armor', val: 92, tier: 5, price: 16500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '에테르 거인의 힘이 깃든 마도 로브.', desc_stat: 'DEF+92(빛)' },
+        // 확장 Tier 4 방어구 — Lv45+ (5개)
+        { name: '에테르 갑옷', type: 'armor', val: 55, tier: 4, price: 1200, jobs: ['전사', '나이트', '모험가'], desc: '에테르 에너지로 강화된 갑옷.', desc_stat: 'DEF+55' },
+        { name: '상급 폭풍 로브', type: 'armor', val: 40, tier: 4, price: 1000, mpBonus: 25, jobs: ['마법사', '아크메이지'], desc: '폭풍의 마력이 깃든 상급 로브.', desc_stat: 'DEF+40 MP+25' },
+        { name: '암영 망토', type: 'armor', val: 35, tier: 4, price: 900, evasion: 0.08, jobs: ['도적', '어쌔신'], desc: '그림자에 녹아드는 망토.', desc_stat: 'DEF+35 회피+8%' },
+        { name: '용암 판금갑', type: 'armor', val: 65, tier: 4, price: 1500, hpBonus: 80, jobs: ['전사', '버서커', '나이트'], desc: '용암에서 단련된 판금 갑옷.', desc_stat: 'DEF+65 HP+80' },
+        { name: '빙화 경갑', type: 'armor', val: 45, tier: 4, price: 1100, elem: '얼음', jobs: ['전사', '나이트', '레인저'], desc: '얼음 정수로 강화된 경갑.', desc_stat: 'DEF+45(빙)' },
+        // 확장 Tier 5 방어구 — Lv60+ (5개)
+        { name: '천상의 갑옷', type: 'armor', val: 85, tier: 5, price: 3000, jobs: ['전사', '나이트'], desc: '천상의 금속으로 만든 갑옷.', desc_stat: 'DEF+85' },
+        { name: '차원의 로브', type: 'armor', val: 60, tier: 5, price: 2500, mpBonus: 45, jobs: ['마법사', '아크메이지', '흑마법사'], desc: '차원의 에너지가 깃든 로브.', desc_stat: 'DEF+60 MP+45' },
+        { name: '용비늘 갑주', type: 'armor', val: 95, tier: 5, price: 4000, hpBonus: 150, jobs: ['전사', '버서커', '나이트'], desc: '용의 비늘로 만든 갑주.', desc_stat: 'DEF+95 HP+150' },
+        { name: '공허의 전투 외투', type: 'armor', val: 50, tier: 5, price: 2000, evasion: 0.12, jobs: ['도적', '어쌔신'], desc: '공허의 에너지로 직조한 전투 외투.', desc_stat: 'DEF+50 회피+12%' },
+        { name: '별빛 경갑', type: 'armor', val: 75, tier: 5, price: 3500, elem: '빛', jobs: ['전사', '나이트', '레인저'], desc: '별빛으로 단련된 경갑.', desc_stat: 'DEF+75(빛)' },
         // Tier 6 - 미식 (6개)
         { name: '원시의 전투갑주', type: 'armor', val: 145, tier: 6, price: 55000, elem: '대지', jobs: ['전사', '나이트', '팔라딘'], desc: '원시의 신이 만든 갑주. 대지의 핵이 공명한다.', desc_stat: 'DEF+145(지)' },
         { name: '에테르 로브 오브 아포칼립스', type: 'armor', val: 120, tier: 6, price: 50000, elem: '빛', jobs: ['아크메이지', '대마법사'], desc: '에테르의 종말적 에너지를 담은 로브.', desc_stat: 'DEF+120(빛)' },

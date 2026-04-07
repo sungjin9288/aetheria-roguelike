@@ -16,8 +16,8 @@ const BALANCE = {
     GUARD_DAMAGE_MULT: 0.65,
     DAMAGE_BASE_RATIO: 0.9,
     DAMAGE_VARIANCE: 0.2,
-    EXP_SCALE_RATE: 1.20,              // 실제값: 완화된 스케일
-    EXP_LEVEL_HARD_CAP: 300000,        // 레벨당 최대 EXP 상한선
+    EXP_SCALE_RATE: 1.15,              // 실제값: 완화된 스케일 (1.20 → 1.15)
+    EXP_LEVEL_HARD_CAP: 150000,        // 레벨당 최대 EXP 상한선 (300K → 150K)
     HP_PER_LEVEL: 20,
     MP_PER_LEVEL: 10,
     ATK_PER_LEVEL: 2,
@@ -263,10 +263,10 @@ test('applyExpGain: 다중 레벨업 (EXP 충분할 때)', () => {
     assert.ok(result.levelUps > 2);
 });
 
-test('applyExpGain: nextExp 스케일링 (EXP_SCALE_RATE = 1.20)', () => {
+test('applyExpGain: nextExp 스케일링 (EXP_SCALE_RATE = 1.15)', () => {
     const player = { level: 1, exp: 0, nextExp: 100, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5 };
     const result = applyExpGain(player, 100);
-    assert.equal(result.updatedPlayer.nextExp, Math.floor(100 * 1.20));
+    assert.equal(result.updatedPlayer.nextExp, Math.floor(100 * BALANCE.EXP_SCALE_RATE));
 });
 
 test('applyExpGain: MAX_LEVEL(99) 캡', () => {
