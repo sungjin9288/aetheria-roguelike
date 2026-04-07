@@ -16,10 +16,8 @@ const getShopMaxTier = (loc) => {
     return Math.min(6, tierFromLevel + safeBonus + shopBonus);
 };
 
-const getOverlayPanelClass = (mobile) => (
-    mobile
-        ? 'fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.65rem)] bottom-0 rounded-t-[1.75rem] rounded-b-none border-t'
-        : 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+0.8rem)] bottom-[calc(env(safe-area-inset-bottom)+0.9rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-4'
+const getOverlayPanelClass = () => (
+    'fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.65rem)] bottom-0 rounded-t-[1.75rem] rounded-b-none border-t'
 );
 
 const isEquipmentItem = (item) => ['weapon', 'armor', 'shield'].includes(item?.type);
@@ -89,7 +87,7 @@ const getCompactItemSummary = (item) => {
 
 const MOBILE_INITIAL_BUY_LIMIT = 12;
 
-const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobile = false, mobileFocused = false }) => {
+const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false }) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
@@ -130,9 +128,9 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     }, [shopItems, maxTier, currentGold, currentJob, traitProfile]);
 
     const visibleBuyItems = useMemo(() => {
-        if (!mobile || buyItemsExpanded) return buyItems;
+        if (buyItemsExpanded) return buyItems;
         return buyItems.slice(0, MOBILE_INITIAL_BUY_LIMIT);
-    }, [buyItems, mobile, buyItemsExpanded]);
+    }, [buyItems, buyItemsExpanded]);
 
     const sellItems = useMemo(() => (
         [...player.inv]
@@ -144,8 +142,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     const weeklySpecial = useMemo(() => getWeeklySpecial(player.level || 1), [player.level]);
 
     return (
-        <div className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3' : `${getOverlayPanelClass(mobile)} panel-noise aether-surface-strong ${mobile ? '' : 'md:w-[min(48rem,78%)] lg:w-[min(58rem,74%)] rounded-[1.8rem]'}`} z-20 flex flex-col overflow-hidden p-3 md:p-5`}>
-            <div className={`mb-3 flex items-center justify-between gap-2 ${mobile ? 'sticky top-0 z-10 -mx-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] px-3 pb-2.5 pt-1' : 'flex-col gap-3 md:flex-row md:items-start'}`}>
+        <div className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3' : `${getOverlayPanelClass()} panel-noise aether-surface-strong`} z-20 flex flex-col overflow-hidden p-3`}>
+            <div className="mb-3 flex items-center justify-between gap-2 sticky top-0 z-10 -mx-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] px-3 pb-2.5 pt-1">
                 <div className="min-w-0">
                     <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/66">Broker Ledger</div>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -250,14 +248,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                     key={item.name}
                                     className={`relative flex flex-col rounded-[1.3rem] border px-3 py-2.75 transition-all ${canBuy ? 'aether-panel-muted hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]' : 'bg-black/14 border-white/8'} border-white/8`}
                                 >
-                                    {mobile && (
-                                        <button
-                                            type="button"
-                                            data-testid="shop-buy-item"
-                                            aria-label={`${item.name} 카드`}
-                                            className="absolute inset-0 z-10 rounded-[1.3rem]"
-                                        />
-                                    )}
+                                    <button
+                                        type="button"
+                                        data-testid="shop-buy-item"
+                                        aria-label={`${item.name} 카드`}
+                                        className="absolute inset-0 z-10 rounded-[1.3rem]"
+                                    />
                                     <div className="relative z-20">
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0 flex-1">
@@ -275,20 +271,18 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                             </div>
                                             <div className="shrink-0 flex items-center gap-2">
                                                 <div className="text-[11px] font-fira font-bold text-[#f6e7c8]">{item.price} CR</div>
-                                                {mobile && (
-                                                    <button
-                                                        data-testid="shop-buy-inline"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (!canBuy) return;
-                                                            actions.market('buy', item);
-                                                        }}
-                                                        disabled={!canBuy}
-                                                        className="relative z-30 min-h-[32px] rounded-full border border-[#d5b180]/24 px-2.5 py-1 text-[10px] font-bold text-[#f6e7c8] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
-                                                    >
-                                                        {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
-                                                    </button>
-                                                )}
+                                                <button
+                                                    data-testid="shop-buy-inline"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (!canBuy) return;
+                                                        actions.market('buy', item);
+                                                    }}
+                                                    disabled={!canBuy}
+                                                    className="relative z-30 min-h-[32px] rounded-full border border-[#d5b180]/24 px-2.5 py-1 text-[10px] font-bold text-[#f6e7c8] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
+                                                >
+                                                    {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
+                                                </button>
                                             </div>
                                         </div>
 
@@ -299,18 +293,6 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                                 </div>
                                             </div>
                                         )}
-
-                                        <div className="mt-1.5 flex items-center justify-end gap-3">
-                                            {!mobile && (
-                                                <button
-                                                    onClick={() => actions.market('buy', item)}
-                                                    disabled={!canBuy}
-                                                    className="min-h-[40px] rounded-full border border-[#d5b180]/24 px-3 py-2 text-xs font-bold text-[#f6e7c8] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
-                                                >
-                                                    {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
-                                                </button>
-                                            )}
-                                        </div>
                                     </div>
                                 </div>
                             );
@@ -383,7 +365,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                     )
                 )}
 
-                {shopMode === 'buy' && mobile && buyItems.length > visibleBuyItems.length && (
+                {shopMode === 'buy' && buyItems.length > visibleBuyItems.length && (
                     <button
                         type="button"
                         onClick={() => setBuyItemsExpansion({ key: expansionKey, expanded: true })}
@@ -394,15 +376,6 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                 )}
             </div>
 
-            {!mobile && (
-                <button
-                    data-testid="shop-close-footer"
-                    onClick={() => setGameState('idle')}
-                    className="mt-4 w-full min-h-[44px] rounded-full border border-white/8 bg-black/20 py-3 text-sm font-bold text-slate-200 transition-colors hover:bg-white/[0.06]"
-                >
-                    상점 닫기
-                </button>
-            )}
         </div>
     );
 };

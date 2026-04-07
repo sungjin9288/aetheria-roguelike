@@ -33,8 +33,6 @@ const TAB_ITEMS = [
 
 const MOBILE_PRIMARY_TABS = ['inventory', 'quest', 'map', 'stats'];
 const MOBILE_SECONDARY_TABS = ['achievements', 'skills', 'codex', 'pass', 'graves', 'system'];
-const DESKTOP_PRIMARY_TABS = ['inventory', 'quest', 'map'];
-const DESKTOP_SECONDARY_TABS = ['achievements', 'skills', 'stats', 'codex', 'pass', 'graves', 'system'];
 
 // Animation variants for tab content
 const tabVariants = {
@@ -42,23 +40,19 @@ const tabVariants = {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
-const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile = false, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null, compactDesktop = false }) => {
+const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null }) => {
     const [mobileArchiveExpanded, setMobileArchiveExpanded] = useState(false);
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
-    const useCompactDesktopRail = compactDesktop || runtime?.viewport === 'desktop-compact';
     const hasInventorySpotlight = Boolean(inventorySpotlight?.token) && sideTab === 'inventory';
     const showArchiveDock = runtime?.mobileArchiveDockVisible ?? true;
     const archiveOpen = showArchiveDock && (hasInventorySpotlight || mobileArchiveExpanded);
     const primaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_PRIMARY_TABS.includes(tab.id));
     const secondaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_SECONDARY_TABS.includes(tab.id));
-    const primaryDesktopTabs = TAB_ITEMS.filter((tab) => DESKTOP_PRIMARY_TABS.includes(tab.id));
-    const secondaryDesktopTabs = TAB_ITEMS.filter((tab) => DESKTOP_SECONDARY_TABS.includes(tab.id));
     const activeMobileTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
     const ActiveArchiveIcon = activeMobileTab.icon;
-    const activeDesktopTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
     const handleTabSelect = (tabId) => {
         setSideTab(tabId);
-        if (mobile) setMobileArchiveExpanded(true);
+        setMobileArchiveExpanded(true);
     };
 
     useEffect(() => {
@@ -68,7 +62,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
     }, [showArchiveDock]);
 
     const renderTabContent = () => {
-        const desktopArchiveCompact = !mobile;
+        const desktopArchiveCompact = false;
         return (
             <AnimatePresence mode="wait">
                 <Motion.div
@@ -77,7 +71,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className={useCompactDesktopRail ? 'space-y-1 pr-0.5' : 'space-y-2 pr-1'}
+                    className="space-y-2 pr-1"
                 >
                     {sideTab === 'inventory' && (
                         <SmartInventory
@@ -139,16 +133,15 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
         );
     };
 
-    if (mobile) {
-        if (mobileSection === 'summary') {
-            return <DashboardMobileSummary player={player} />;
-        }
+    if (mobileSection === 'summary') {
+        return <DashboardMobileSummary player={player} />;
+    }
 
-        if (!showArchiveDock && !archiveOpen) {
-            return null;
-        }
+    if (!showArchiveDock && !archiveOpen) {
+        return null;
+    }
 
-        return (
+    return (
             <>
                 {showArchiveDock && (
                     <div
@@ -283,99 +276,6 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobile 
                 </AnimatePresence>
             </>
         );
-    }
-
-    // Desktop
-    return (
-        <aside className="hidden md:flex h-full min-h-0 w-full">
-            <Motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.08 }}
-            className={`panel-noise aether-surface flex min-h-0 flex-1 flex-col overflow-hidden ${useCompactDesktopRail ? 'rounded-[1.05rem] p-1.25' : 'rounded-[1.25rem] p-2'}`}
-        >
-                <div className={`${useCompactDesktopRail ? 'mb-0.25' : 'mb-1.5'} flex items-center justify-between gap-2`}>
-                    <div className="min-w-0 flex items-center gap-1.5">
-                        <div className="text-[11px] font-fira uppercase tracking-[0.18em] text-slate-400">
-                            Archive
-                        </div>
-                        <div className={`${useCompactDesktopRail ? 'text-[11px]' : 'text-[13px]'} truncate font-rajdhani font-bold text-white/92`}>
-                            {activeDesktopTab.label || 'Inventory'}
-                        </div>
-                    </div>
-                    {hasInventorySpotlight && (
-                        <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>
-                    )}
-                </div>
-
-                {useCompactDesktopRail ? (
-                    <div className="grid grid-cols-4 gap-[3px]">
-                        {TAB_ITEMS.map((tab) => (
-                            <ArchiveTabButton
-                                key={tab.id}
-                                icon={tab.icon}
-                                label={tab.label}
-                                active={sideTab === tab.id}
-                                onClick={() => handleTabSelect(tab.id)}
-                                compact
-                                dense
-                                iconOnly
-                                testId={`dashboard-tab-${tab.id}`}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <>
-                        <div className="grid grid-cols-3 gap-1">
-                            {primaryDesktopTabs.map((tab) => (
-                                <ArchiveTabButton
-                                    key={tab.id}
-                                    icon={tab.icon}
-                                    label={tab.mobileLabel || tab.label}
-                                    active={sideTab === tab.id}
-                                    onClick={() => handleTabSelect(tab.id)}
-                                    compact
-                                    testId={`dashboard-tab-${tab.id}`}
-                                />
-                            ))}
-                        </div>
-                        <div className="mt-1 grid grid-cols-5 gap-1">
-                            {secondaryDesktopTabs.map((tab) => (
-                                <ArchiveTabButton
-                                    key={tab.id}
-                                    icon={tab.icon}
-                                    label={tab.label}
-                                    active={sideTab === tab.id}
-                                    onClick={() => handleTabSelect(tab.id)}
-                                    compact
-                                    dense
-                                    iconOnly
-                                    testId={`dashboard-tab-${tab.id}`}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {hasInventorySpotlight && (
-                    <div className={`${useCompactDesktopRail ? 'mt-0.75 rounded-[0.8rem] px-1.75 py-0.75' : 'mt-1.5 rounded-[0.9rem] px-2 py-1.5'} border border-[#d5b180]/18 bg-[#d5b180]/8`}>
-                        <div className="text-[11px] font-fira uppercase tracking-[0.18em] text-[#f6e7c8]/76">
-                            {inventorySpotlight?.title || '전리품 주목'}
-                        </div>
-                        <div className={`${useCompactDesktopRail ? 'mt-0.5 text-[11px]' : 'mt-1 text-[10px]'} font-fira leading-relaxed text-slate-300/82`}>
-                            {inventorySpotlight?.detail || '획득한 장비와 소모품을 바로 확인하세요.'}
-                        </div>
-                    </div>
-                )}
-
-                <div className={`${useCompactDesktopRail ? 'mt-0.5 rounded-[0.8rem] p-[3px]' : 'mt-1.5 rounded-[0.95rem] p-1'} min-h-0 flex-1 overflow-hidden border border-white/8 bg-black/18 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]`}>
-                    <div className={`h-full overflow-y-auto custom-scrollbar ${useCompactDesktopRail ? 'px-[3px] pr-0' : 'px-0.5 pr-0.5'}`}>
-                        {renderTabContent()}
-                    </div>
-                </div>
-            </Motion.div>
-        </aside>
-    );
 };
 
 export default Dashboard;

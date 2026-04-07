@@ -4,7 +4,6 @@ import { MotionConfig } from 'framer-motion';
 import { GS } from './reducers/gameStates';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useDamageFlash } from './hooks/useDamageFlash';
-import { useViewportProfile } from './hooks/useViewportProfile';
 import { useGameTestApi } from './hooks/useGameTestApi';
 import { markPerfOnce, measurePerfOnce, markPerf } from './utils/performanceMarks';
 
@@ -22,7 +21,6 @@ function App() {
     const [isMuted, setIsMuted] = useState(false);
     const [inventorySpotlight] = useState(null);
     const [premiumShopOpen, setPremiumShopOpen] = useState(false);
-    const { isMobile: isMobileViewport, isNarrowDesktop: isNarrowDesktopViewport } = useViewportProfile();
     const fullStats = engine.getFullStats();
     const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
 
@@ -60,16 +58,13 @@ function App() {
         measurePerfOnce('aetheria:market-open-from-click-ms', 'aetheria:test-market-open', 'aetheria:shop-open');
     }, [engine.gameState]);
 
-    const isMobileFocusState = isMobileViewport && MOBILE_FOCUS_PANEL_STATES.has(engine.gameState);
+    const isMobileFocusState = MOBILE_FOCUS_PANEL_STATES.has(engine.gameState);
     const mobileArchiveDockVisible = (
         [GS.IDLE, GS.MOVING].includes(engine.gameState)
         && !engine.pendingRelics
         && !engine.postCombatResult
         && engine.gameState !== GS.ASCENSION
     );
-    const useCompactDesktopRail = !isMobileViewport && isNarrowDesktopViewport;
-    const runtimeViewport = isMobileViewport ? 'mobile' : useCompactDesktopRail ? 'desktop-compact' : 'desktop';
-
     const showOnboarding = !engine.onboardingDismissed && String(engine.player.name || '').trim().length > 0;
     const handleOnboardingDismiss = () => engine.dispatch({ type: 'SET_ONBOARDING_DISMISSED' });
     const handleQuickSlotUse = (item, index) => {
@@ -99,19 +94,13 @@ function App() {
         return (
             <MotionConfig reducedMotion="user">
                 <MainLayout visualEffect={null}>
-                    {isMobileViewport ? (
-                        // Mobile: flex-1 min-h-0 overflow-y-auto creates an internal scroll
-                        // context within the flex chain so intro content can scroll freely.
-                        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto w-full">
-                            <div className="flex flex-col items-center w-full gap-4 py-3">
-                                <IntroScreen onStart={engine.actions.start} mobile />
-                            </div>
+                    {/* Mobile: flex-1 min-h-0 overflow-y-auto creates an internal scroll
+                        context within the flex chain so intro content can scroll freely. */}
+                    <div className="relative z-10 flex-1 min-h-0 overflow-y-auto w-full">
+                        <div className="flex flex-col items-center w-full gap-4 py-3">
+                            <IntroScreen onStart={engine.actions.start} mobile />
                         </div>
-                    ) : (
-                        <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-6">
-                            <IntroScreen onStart={engine.actions.start} mobile={false} />
-                        </div>
-                    )}
+                    </div>
                 </MainLayout>
             </MotionConfig>
         );
@@ -121,11 +110,8 @@ function App() {
         <GameRoot
             engine={engine}
             fullStats={fullStats}
-            isMobileViewport={isMobileViewport}
             isMobileFocusState={isMobileFocusState}
             mobileArchiveDockVisible={mobileArchiveDockVisible}
-            useCompactDesktopRail={useCompactDesktopRail}
-            runtimeViewport={runtimeViewport}
             inventorySpotlight={inventorySpotlight}
             premiumShopOpen={premiumShopOpen}
             setPremiumShopOpen={setPremiumShopOpen}

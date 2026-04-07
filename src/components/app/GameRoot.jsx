@@ -5,7 +5,6 @@ import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
 import MobileGameLayout from './MobileGameLayout';
-import DesktopGameLayout from './DesktopGameLayout';
 
 const RelicChoicePanel = lazy(() => import('../RelicChoicePanel'));
 const AscensionScreen  = lazy(() => import('../AscensionScreen'));
@@ -15,8 +14,7 @@ const PremiumShop      = lazy(() => import('../PremiumShop'));
 
 const GameRoot = ({
     engine, fullStats,
-    isMobileViewport, isMobileFocusState, mobileArchiveDockVisible,
-    useCompactDesktopRail, runtimeViewport,
+    isMobileFocusState, mobileArchiveDockVisible,
     inventorySpotlight,
     premiumShopOpen, setPremiumShopOpen,
     isMuted, setIsMuted,
@@ -28,13 +26,13 @@ const GameRoot = ({
         <MainLayout visualEffect={engine.visualEffect}>
             {/* Background layers */}
             <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-                <div className={`absolute inset-0 ${isMobileViewport ? 'animate-aurora' : ''} bg-[radial-gradient(circle_at_top_left,rgba(213,177,128,0.09),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(125,212,216,0.1),transparent_22%),linear-gradient(180deg,rgba(7,11,17,0.42)_0%,rgba(3,5,8,0.74)_100%)]`} />
-                <div className={`absolute inset-0 ${isMobileViewport ? 'opacity-[0.18]' : 'opacity-[0.12]'} aether-soft-grid`} />
+                <div className="absolute inset-0 animate-aurora bg-[radial-gradient(circle_at_top_left,rgba(213,177,128,0.09),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(125,212,216,0.1),transparent_22%),linear-gradient(180deg,rgba(7,11,17,0.42)_0%,rgba(3,5,8,0.74)_100%)]" />
+                <div className="absolute inset-0 opacity-[0.18] aether-soft-grid" />
                 <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.03] via-transparent to-transparent" />
-                <div className={`absolute -left-12 top-24 rounded-full blur-3xl ${isMobileViewport ? 'h-48 w-48 bg-[#d5b180]/10 animate-float-slow' : 'h-40 w-40 bg-[#d5b180]/7'}`} />
+                <div className="absolute -left-12 top-24 rounded-full blur-3xl h-48 w-48 bg-[#d5b180]/10 animate-float-slow" />
                 <div
-                    className={`absolute -right-12 bottom-20 rounded-full blur-3xl ${isMobileViewport ? 'h-56 w-56 bg-[#7dd4d8]/10 animate-float-slow' : 'h-44 w-44 bg-[#7dd4d8]/6'}`}
-                    style={isMobileViewport ? { animationDelay: '-2.7s' } : undefined}
+                    className="absolute -right-12 bottom-20 rounded-full blur-3xl h-56 w-56 bg-[#7dd4d8]/10 animate-float-slow"
+                    style={{ animationDelay: '-2.7s' }}
                 />
             </div>
 
@@ -43,9 +41,8 @@ const GameRoot = ({
                     player={engine.player}
                     stats={fullStats}
                     enemy={engine.gameState === GS.COMBAT ? engine.enemy : null}
-                    mobile={isMobileViewport}
-                    compactDesktop={!isMobileViewport}
-                    className={!isMobileViewport ? 'px-1 py-0.5 rounded-[1rem]' : ''}
+                    mobile={true}
+                    compactDesktop={false}
                     onCrystalClick={(engine.player?.premiumCurrency || 0) > 0 ? () => setPremiumShopOpen(true) : null}
                 />
 
@@ -83,38 +80,20 @@ const GameRoot = ({
                     </Suspense>
                 )}
 
-                {isMobileViewport ? (
-                    <MobileGameLayout
-                        engine={engine}
-                        fullStats={fullStats}
-                        isMobileFocusState={isMobileFocusState}
-                        mobileArchiveDockVisible={mobileArchiveDockVisible}
-                        inventorySpotlight={inventorySpotlight}
-                        isMuted={isMuted}
-                        setIsMuted={setIsMuted}
-                        handleQuickSlotUse={handleQuickSlotUse}
-                        showOnboarding={showOnboarding}
-                        handleOnboardingDismiss={handleOnboardingDismiss}
-                        damageFlash={damageFlash}
-                        healFlash={healFlash}
-                    />
-                ) : (
-                    <DesktopGameLayout
-                        engine={engine}
-                        fullStats={fullStats}
-                        isMobileViewport={isMobileViewport}
-                        useCompactDesktopRail={useCompactDesktopRail}
-                        runtimeViewport={runtimeViewport}
-                        inventorySpotlight={inventorySpotlight}
-                        isMuted={isMuted}
-                        setIsMuted={setIsMuted}
-                        handleQuickSlotUse={handleQuickSlotUse}
-                        showOnboarding={showOnboarding}
-                        handleOnboardingDismiss={handleOnboardingDismiss}
-                        damageFlash={damageFlash}
-                        healFlash={healFlash}
-                    />
-                )}
+                <MobileGameLayout
+                    engine={engine}
+                    fullStats={fullStats}
+                    isMobileFocusState={isMobileFocusState}
+                    mobileArchiveDockVisible={mobileArchiveDockVisible}
+                    inventorySpotlight={inventorySpotlight}
+                    isMuted={isMuted}
+                    setIsMuted={setIsMuted}
+                    handleQuickSlotUse={handleQuickSlotUse}
+                    showOnboarding={showOnboarding}
+                    handleOnboardingDismiss={handleOnboardingDismiss}
+                    damageFlash={damageFlash}
+                    healFlash={healFlash}
+                />
             </div>
 
             {/* Floating overlays */}
@@ -137,7 +116,7 @@ const GameRoot = ({
                         onClose={() => engine.actions.clearPostCombat?.()}
                         onRest={() => engine.actions.rest?.()}
                         onSell={() => engine.actions.setSideTab?.('inventory')}
-                        mobile={isMobileViewport}
+                        mobile={true}
                     />
                 </Suspense>
             )}

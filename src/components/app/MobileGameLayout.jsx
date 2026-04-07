@@ -142,7 +142,7 @@ const MobileGameLayout = ({
             </Suspense>
         )}
         {!isMobileFocusState && mobileArchiveDockVisible && (
-            <div className="h-[4.1rem] shrink-0 md:hidden" aria-hidden="true" />
+            <div className="h-[4.1rem] shrink-0" aria-hidden="true" />
         )}
     </Motion.div>
 );

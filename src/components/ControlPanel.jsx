@@ -37,10 +37,7 @@ const ControlPanel = ({
   isAiThinking,
   currentEvent,
   stats = null,
-  mobile = false,
   mobileFocused = false,
-  desktopSidebar = false,
-  compactDesktop = false,
 }) => {
   const [confirmReset, setConfirmReset] = useState(false);
   const mapData = DB.MAPS[player.loc];
@@ -49,39 +46,14 @@ const ControlPanel = ({
   const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind] || null;
   const isSafeZone = mapData.type === 'safe';
   const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
-  const useCompactDesktopRail = desktopSidebar && compactDesktop;
 
-  const actionGridClass = mobile
-    ? 'grid grid-cols-2 gap-2.5'
-    : useCompactDesktopRail
-      ? 'grid grid-cols-2 gap-1'
-      : desktopSidebar
-      ? 'grid grid-cols-2 gap-1.5'
-      : 'grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3';
-  const actionButtonBase = mobile
-    ? 'relative min-h-[52px] overflow-hidden rounded-[1.2rem] px-3 py-2.5 flex flex-col items-start justify-between gap-1 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_18px_34px_rgba(1,6,14,0.22),inset_0_1px_0_rgba(255,255,255,0.03)]'
-    : useCompactDesktopRail
-      ? 'relative min-h-[30px] rounded-[0.78rem] px-0.75 py-0.5 flex items-center justify-center gap-0.75 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
-      : desktopSidebar
-      ? 'relative min-h-[44px] rounded-[1rem] px-1.25 py-1.25 flex flex-col items-center justify-center gap-0.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
-      : 'relative min-h-[60px] p-2 sm:p-3 rounded-[1.3rem] flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]';
-  const actionLabelClass = mobile
-    ? 'text-[11px] font-rajdhani font-bold tracking-[0.18em] text-left'
-    : useCompactDesktopRail
-      ? 'text-[6.5px] font-rajdhani font-bold tracking-[0.14em]'
-      : desktopSidebar
-      ? 'text-[7px] font-rajdhani font-bold tracking-[0.16em]'
-      : 'text-[10px] sm:text-xs font-rajdhani font-bold tracking-widest';
-  const resetButtonClass = mobile
-    ? 'min-h-[56px] rounded-[1.15rem] border px-2.5 py-2 text-[9px] font-rajdhani font-bold tracking-[0.18em] transition-all flex flex-col items-center justify-center gap-1'
-    : useCompactDesktopRail
-      ? 'min-h-[24px] rounded-[0.78rem] border px-1.25 py-0.5 text-[6.5px] font-rajdhani font-bold tracking-[0.14em] transition-all flex items-center justify-center'
-      : desktopSidebar
-      ? 'min-h-[32px] rounded-[0.95rem] border px-2 py-1 text-[7px] font-rajdhani font-bold tracking-[0.16em] transition-all flex items-center justify-center'
-      : 'min-h-[44px] rounded-xl border px-3 py-2 text-[10px] font-rajdhani font-bold tracking-[0.18em] transition-all';
+  const actionGridClass = 'grid grid-cols-2 gap-2.5';
+  const actionButtonBase = 'relative min-h-[52px] overflow-hidden rounded-[1.2rem] px-3 py-2.5 flex flex-col items-start justify-between gap-1 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_18px_34px_rgba(1,6,14,0.22),inset_0_1px_0_rgba(255,255,255,0.03)]';
+  const actionLabelClass = 'text-[11px] font-rajdhani font-bold tracking-[0.18em] text-left';
+  const resetButtonClass = 'min-h-[56px] rounded-[1.15rem] border px-2.5 py-2 text-[9px] font-rajdhani font-bold tracking-[0.18em] transition-all flex flex-col items-center justify-center gap-1';
 
   const getRecommendedClass = (buttonKey) => (
-    !desktopSidebar && recommendedButton === buttonKey
+    recommendedButton === buttonKey
       ? 'ring-1 ring-cyan-300/45 shadow-[0_0_18px_rgba(34,211,238,0.18)]'
       : ''
   );
@@ -93,12 +65,11 @@ const ControlPanel = ({
       icon: Icon,
       label,
       mobileLabel = label,
-      sidebarLabel = mobileLabel || label,
       onClick,
       className,
       disabled = false,
     } = button;
-    const buttonLabel = mobile ? mobileLabel : desktopSidebar ? sidebarLabel : label;
+    const buttonLabel = mobileLabel;
     const actionMeta = ACTION_PRESENTATION[key] || null;
 
     return (
@@ -111,45 +82,25 @@ const ControlPanel = ({
         onClick={onClick}
         className={`${actionButtonBase} ${getRecommendedClass(key)} ${className} ${extraClass}`.trim()}
       >
-        {mobile && (
-          <div
-            className="pointer-events-none absolute inset-0 opacity-80"
-            style={{ backgroundImage: 'radial-gradient(circle at 82% 12%, rgba(255,255,255,0.08), transparent 22%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%)' }}
-          />
-        )}
-        {!mobile && !desktopSidebar && recommendedButton === key && (
-          <div className="absolute top-1.5 right-1.5">
-            <SignalBadge tone="recommended" size="sm">추천</SignalBadge>
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{ backgroundImage: 'radial-gradient(circle at 82% 12%, rgba(255,255,255,0.08), transparent 22%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%)' }}
+        />
+        <div className="flex w-full items-start justify-between gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] border border-white/8 bg-black/18 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <Icon size={13} className="transition-transform group-hover:scale-110" />
+          </span>
+          <div className="flex items-center gap-1">
+            {recommendedButton === key && <SignalBadge tone="recommended" size="sm">추천</SignalBadge>}
+            {actionMeta?.tag && <SignalBadge tone={actionMeta.tone} size="sm">{actionMeta.tag}</SignalBadge>}
           </div>
-        )}
-        {mobile ? (
-          <>
-            <div className="flex w-full items-start justify-between gap-2">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] border border-white/8 bg-black/18 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                <Icon size={13} className="transition-transform group-hover:scale-110" />
-              </span>
-              <div className="flex items-center gap-1">
-                {recommendedButton === key && <SignalBadge tone="recommended" size="sm">추천</SignalBadge>}
-                {actionMeta?.tag && <SignalBadge tone={actionMeta.tone} size="sm">{actionMeta.tag}</SignalBadge>}
-              </div>
-            </div>
-            {hideLabel ? (
-              <span className="sr-only">{buttonLabel}</span>
-            ) : (
-              <div className="w-full">
-                <div className={actionLabelClass}>{buttonLabel}</div>
-              </div>
-            )}
-          </>
+        </div>
+        {hideLabel ? (
+          <span className="sr-only">{buttonLabel}</span>
         ) : (
-          <>
-            <Icon size={useCompactDesktopRail ? 12 : desktopSidebar ? 13 : 18} className="transition-transform group-hover:scale-110" />
-            {hideLabel ? (
-              <span className="sr-only">{buttonLabel}</span>
-            ) : (
-              <span className={actionLabelClass}>{buttonLabel}</span>
-            )}
-          </>
+          <div className="w-full">
+            <div className={actionLabelClass}>{buttonLabel}</div>
+          </div>
         )}
       </Motion.button>
     );
@@ -165,7 +116,7 @@ const ControlPanel = ({
           onClick={() => setConfirmReset(true)}
           className={`${compact ? resetButtonClass : actionButtonBase} ${className} bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/80 hover:bg-rose-400/10 hover:border-rose-200/30`.trim()}
         >
-          <X size={mobile ? 16 : useCompactDesktopRail ? 12 : desktopSidebar ? 13 : 18} className="text-rose-200/70 group-hover:text-rose-100 group-hover:scale-110 transition-all" />
+          <X size={16} className="text-rose-200/70 group-hover:text-rose-100 group-hover:scale-110 transition-all" />
           <span className={`${actionLabelClass} text-rose-100/72 group-hover:text-rose-50`}>RESET</span>
         </Motion.button>
       );
@@ -180,7 +131,7 @@ const ControlPanel = ({
             actions.reset();
             setConfirmReset(false);
           }}
-          className={`${compact ? `${resetButtonClass} ${useCompactDesktopRail ? 'min-h-[36px]' : 'min-h-[44px]'}` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-red-900/60 border border-red-500/70 text-red-200 hover:bg-red-700/60`}
+          className={`${compact ? `${resetButtonClass} min-h-[44px]` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-red-900/60 border border-red-500/70 text-red-200 hover:bg-red-700/60`}
         >
           {compact ? 'RESET OK' : 'CONFIRM RESET'}
         </Motion.button>
@@ -188,7 +139,7 @@ const ControlPanel = ({
           data-testid="control-reset-cancel"
           whileTap={{ scale: 0.95 }}
           onClick={() => setConfirmReset(false)}
-          className={`${compact ? `${resetButtonClass} ${useCompactDesktopRail ? 'min-h-[36px]' : 'min-h-[44px]'}` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-cyber-dark/60 border border-slate-600/50 text-slate-400 hover:bg-slate-700/40`}
+          className={`${compact ? `${resetButtonClass} min-h-[44px]` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-cyber-dark/60 border border-slate-600/50 text-slate-400 hover:bg-slate-700/40`}
         >
           CANCEL
         </Motion.button>
@@ -204,9 +155,9 @@ const ControlPanel = ({
         enemy={enemy}
         stats={stats}
         isAiThinking={isAiThinking}
-        mobile={mobile}
-        compact={desktopSidebar || useCompactDesktopRail}
-        dense={useCompactDesktopRail}
+        mobile
+        compact={false}
+        dense={false}
       />
     );
   }
@@ -231,7 +182,7 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.SHOP) {
-    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} mobile={mobile} mobileFocused={mobileFocused} />;
+    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} mobileFocused={mobileFocused} />;
   }
 
   if (gameState === GS.JOB_CHANGE) {
@@ -284,8 +235,8 @@ const ControlPanel = ({
     key: 'market',
     testId: 'control-market',
     icon: ShoppingBag,
-    label: mobile ? 'SHOP' : 'MARKET',
-    sidebarLabel: 'SHOP',
+    label: 'SHOP',
+    mobileLabel: 'SHOP',
     onClick: () => {
       actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
       actions.setGameState(GS.SHOP);
@@ -307,8 +258,8 @@ const ControlPanel = ({
     key: 'quests',
     testId: 'control-quests',
     icon: ScrollText,
-    label: mobile ? 'QUEST' : 'QUESTS',
-    sidebarLabel: 'QUEST',
+    label: 'QUEST',
+    mobileLabel: 'QUEST',
     onClick: () => setGameState(GS.QUEST_BOARD),
     className: 'bg-[linear-gradient(180deg,rgba(20,24,34,0.84)_0%,rgba(9,11,18,0.96)_100%)] border border-white/8 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-white/[0.04]',
   };
@@ -331,99 +282,28 @@ const ControlPanel = ({
       key: 'grave',
       testId: 'control-recover',
       icon: Ghost,
-      label: mobile ? 'LOOT' : 'RECOVER',
-      sidebarLabel: 'LOOT',
+      label: 'LOOT',
+      mobileLabel: 'LOOT',
       onClick: actions.lootGrave,
       className: 'bg-[linear-gradient(180deg,rgba(26,31,38,0.85)_0%,rgba(12,15,20,0.96)_100%)] border border-white/10 text-slate-200 hover:border-[#d5b180]/16 hover:bg-white/[0.04]',
     });
   }
 
-  const desktopSidebarButtons = [
-    ...coreButtons,
-    ...(isSafeZone ? safeZoneButtons : []),
-    ...auxiliaryButtons,
-  ];
-
-  const desktopPriorityKeys = (() => {
-    if (!desktopSidebar) return [];
-    const availableKeys = new Set(desktopSidebarButtons.map((button) => button.key));
-    const ordered = [];
-    const pushKey = (key) => {
-      if (availableKeys.has(key) && !ordered.includes(key)) ordered.push(key);
-    };
-
-    pushKey(recommendedButton);
-
-    const fallbacks = isSafeZone
-      ? ['explore', 'move', 'market', 'rest', 'quests', 'class', 'craft', 'grave']
-      : ['explore', 'move', 'grave'];
-
-    fallbacks.forEach(pushKey);
-    return ordered.slice(0, 2);
-  })();
-
-  const desktopPriorityButtons = desktopSidebarButtons
-    .filter((button) => desktopPriorityKeys.includes(button.key))
-    .sort((a, b) => desktopPriorityKeys.indexOf(a.key) - desktopPriorityKeys.indexOf(b.key));
-
-  const desktopSecondaryButtons = desktopSidebarButtons
-    .filter((button) => !desktopPriorityKeys.includes(button.key));
-
   return (
     <Motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`relative z-10 w-full ${
-        mobile
-          ? 'panel-noise aether-surface rounded-[1.9rem] p-3'
-          : useCompactDesktopRail
-            ? 'panel-noise aether-surface rounded-[1.05rem] p-1.5'
-            : desktopSidebar
-            ? 'panel-noise aether-surface rounded-[1.35rem] p-2.5'
-            : 'mt-2.5 md:mt-4'
-      }`}
+      className="relative z-10 w-full panel-noise aether-surface rounded-[1.9rem] p-3"
     >
-      {desktopSidebar && (
-        <div className={`${useCompactDesktopRail ? 'mb-0.5' : 'mb-1.5'} flex items-center justify-between gap-2 px-0.25`}>
-          <div className={`${useCompactDesktopRail ? 'text-[8px]' : 'text-[9px]'} font-fira uppercase tracking-[0.18em] text-slate-500`}>
-            {gameState === GS.MOVING ? 'Routes' : 'Actions'}
-          </div>
-          {useCompactDesktopRail ? (
-            <SignalBadge tone={isSafeZone ? 'upgrade' : 'neutral'} size="sm">
-              {isSafeZone ? '안전' : '필드'}
-            </SignalBadge>
-          ) : (
-            <div className="text-[9px] font-fira text-slate-400/66">
-              {player.loc}
-            </div>
-          )}
-        </div>
-      )}
       {gameState === GS.MOVING ? (
-        <div className={`${
-          mobile
-            ? 'grid grid-cols-2 gap-2'
-            : desktopSidebar
-              ? useCompactDesktopRail
-                ? 'grid grid-cols-1 gap-0.75'
-                : 'grid grid-cols-1 gap-2 md:gap-3'
-              : 'flex flex-wrap gap-2 md:gap-3'
-        }`}>
+        <div className="grid grid-cols-2 gap-2">
           {moveRecommendations.map((route) => (
             <Motion.button
               whileTap={{ scale: 0.95 }}
               key={route.name}
               disabled={isAiThinking}
               onClick={() => actions.move(route.name)}
-              className={`${
-                mobile
-                  ? 'min-h-[92px] rounded-[1.35rem] px-3 py-3 text-xs'
-                  : useCompactDesktopRail
-                    ? 'min-h-[40px] px-1.5 py-1.25 text-[8px]'
-                    : desktopSidebar
-                    ? 'min-h-[54px] px-2 py-1.5 text-[9px]'
-                    : 'flex-1 min-w-[150px] min-h-[92px] px-4 py-3'
-              } ${
+              className={`min-h-[92px] rounded-[1.35rem] px-3 py-3 text-xs ${
                 route.isRecommended
                   ? 'border-[#7dd4d8]/26 bg-[radial-gradient(circle_at_82%_12%,rgba(125,212,216,0.14),transparent_22%),linear-gradient(180deg,rgba(18,34,41,0.84)_0%,rgba(8,14,18,0.96)_100%)] shadow-[0_18px_30px_rgba(125,212,216,0.1)]'
                   : 'border-white/8 bg-[linear-gradient(180deg,rgba(18,21,28,0.84)_0%,rgba(8,11,16,0.96)_100%)]'
@@ -432,12 +312,12 @@ const ControlPanel = ({
               <div className="flex w-full items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-[#e4f7f5]">
-                    <span className={`flex items-center justify-center rounded-[0.9rem] border border-white/8 bg-black/18 ${mobile ? 'h-8 w-8' : 'h-7 w-7'}`}>
-                      <MapIcon size={useCompactDesktopRail ? 12 : 16} />
+                    <span className="flex items-center justify-center rounded-[0.9rem] border border-white/8 bg-black/18 h-8 w-8">
+                      <MapIcon size={16} />
                     </span>
-                    <span className={`truncate ${useCompactDesktopRail ? 'text-[11px]' : ''}`}>{route.name}</span>
+                    <span className="truncate">{route.name}</span>
                   </div>
-                  <div className={`mt-1 font-fira text-slate-400/72 ${useCompactDesktopRail ? 'text-[8px]' : 'text-[10px]'}`}>
+                  <div className="mt-1 font-fira text-slate-400/72 text-[10px]">
                     {route.levelLabel}
                   </div>
                 </div>
@@ -445,86 +325,36 @@ const ControlPanel = ({
                   {route.isRecommended ? '추천' : route.badge}
                 </SignalBadge>
               </div>
-              {!useCompactDesktopRail && (
-                <div className="text-[10px] font-fira text-slate-300/72 leading-snug">
-                  {route.reason}
-                </div>
-              )}
+              <div className="text-[10px] font-fira text-slate-300/72 leading-snug">
+                {route.reason}
+              </div>
             </Motion.button>
           ))}
           <Motion.button
             data-testid="control-move-cancel"
             whileTap={{ scale: 0.95 }}
             onClick={() => setGameState(GS.IDLE)}
-            className={`${
-              mobile
-                ? 'col-span-2 min-h-[42px] px-3 py-2 text-xs'
-                : useCompactDesktopRail
-                  ? 'min-h-[26px] px-2 py-1 text-[8px]'
-                  : desktopSidebar
-                  ? 'min-h-[34px] px-2 py-1 text-[8px]'
-                  : 'flex-1 min-w-[120px] min-h-[50px] px-4 md:px-6 py-3 md:py-4'
-            } bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/84 rounded-[1.1rem] hover:bg-rose-400/10 font-bold tracking-wider transition-all`}
+            className="col-span-2 min-h-[42px] px-3 py-2 text-xs bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/84 rounded-[1.1rem] hover:bg-rose-400/10 font-bold tracking-wider transition-all"
           >
             CANCEL
           </Motion.button>
         </div>
       ) : (
-        <>
-          {desktopSidebar ? (
-            <div className={useCompactDesktopRail ? 'space-y-0.5' : 'space-y-1'}>
-              {desktopPriorityButtons.length > 0 && (
-                <div className={`grid ${desktopPriorityButtons.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} ${useCompactDesktopRail ? 'gap-0.5' : 'gap-1'}`}>
-                  {desktopPriorityButtons.map((button) => renderActionButton(
-                    button,
-                    `${useCompactDesktopRail ? 'min-h-[30px] rounded-[0.78rem]' : 'min-h-[46px] rounded-[1rem]'} ${
-                      recommendedButton === button.key
-                        ? 'ring-1 ring-cyan-300/35 shadow-[0_0_12px_rgba(34,211,238,0.16)]'
-                        : ''
-                    }`
-                  ))}
-                </div>
-              )}
-
-              {desktopSecondaryButtons.length > 0 && (
-                <div className={`grid ${useCompactDesktopRail ? 'grid-cols-5 gap-0.5' : 'grid-cols-3 gap-[0.3125rem]'}`}>
-                  {desktopSecondaryButtons.map((button) => renderActionButton(
-                    button,
-                    useCompactDesktopRail
-                      ? 'min-h-[24px] rounded-[0.72rem] px-0.25 py-0.25'
-                      : 'min-h-[30px] rounded-[0.95rem]',
-                    useCompactDesktopRail ? { hideLabel: true } : {}
-                  ))}
-                </div>
-              )}
-
-              {renderResetControl({
-                compact: true,
-                className: 'w-full',
-                confirmGridClass: 'grid grid-cols-2 gap-1',
-              })}
-            </div>
-          ) : (
-            <div className={actionGridClass}>
-              {coreButtons.map((button) => renderActionButton(button))}
-              {(mobile || desktopSidebar) && !isSafeZone && renderResetControl({
-                compact: true,
-                className: desktopSidebar ? 'col-span-2' : '',
-                confirmGridClass: desktopSidebar ? 'col-span-2 grid-cols-2 gap-1.5' : 'col-span-2 grid-cols-2 gap-1.5',
-              })}
-              {isSafeZone && safeZoneButtons.map((button) => renderActionButton(button))}
-              {auxiliaryButtons.map((button) => renderActionButton(button))}
-              {(mobile || desktopSidebar) && isSafeZone && renderResetControl({
-                compact: true,
-                className: desktopSidebar ? 'col-span-2' : '',
-                confirmGridClass: desktopSidebar ? 'col-span-2 grid-cols-2 gap-1.5' : 'col-span-2 grid-cols-2 gap-1.5',
-              })}
-              {!mobile && !desktopSidebar && renderResetControl({
-                className: 'sm:col-start-4',
-              })}
-            </div>
-          )}
-        </>
+        <div className={actionGridClass}>
+          {coreButtons.map((button) => renderActionButton(button))}
+          {!isSafeZone && renderResetControl({
+            compact: true,
+            className: '',
+            confirmGridClass: 'col-span-2 grid-cols-2 gap-1.5',
+          })}
+          {isSafeZone && safeZoneButtons.map((button) => renderActionButton(button))}
+          {auxiliaryButtons.map((button) => renderActionButton(button))}
+          {isSafeZone && renderResetControl({
+            compact: true,
+            className: '',
+            confirmGridClass: 'col-span-2 grid-cols-2 gap-1.5',
+          })}
+        </div>
       )}
     </Motion.div>
   );
