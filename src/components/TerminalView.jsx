@@ -215,23 +215,14 @@ const TerminalView = ({
             <div className="pointer-events-none absolute -right-10 top-4 h-24 w-24 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
             <div className="pointer-events-none absolute -left-8 bottom-6 h-28 w-28 rounded-full bg-[#d5b180]/10 blur-3xl" />
 
-            <div className="flex items-center justify-between gap-2 shrink-0 z-10 mb-2.5 rounded-[1.2rem] aether-panel-core px-3 py-2.5 font-fira uppercase tracking-[0.14em] text-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                <div className="min-w-0">
-                    <div className="flex items-center gap-1 text-slate-300/80">
-                        <span className="flex items-center gap-1">
-                            <Terminal size={10} />
-                            <span>Field Feed</span>
-                        </span>
-                        <span className={`rounded-full border px-1.5 py-0.5 text-[9px] ${isCombat ? 'border-rose-300/18 text-rose-100/80 bg-rose-400/[0.06]' : gameState === GS.EVENT ? 'border-[#9a8ac0]/20 text-[#ece5ff]/78 bg-[#9a8ac0]/10' : 'border-[#7dd4d8]/18 text-[#dff7f5]/76 bg-[#7dd4d8]/10'}`}>
-                            {stateLabel}
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-black/18 px-1.5 py-0.5 text-[9px] text-slate-300/72">
-                            {visibleLogCountLabel}
-                        </span>
-                    </div>
-                    <div className="mt-1 text-[11px] font-fira normal-case tracking-normal text-slate-300/62">
-                        {latestStory && !isCombat ? 'AI narrative pulse is pinned above the feed.' : 'Recent actions and rewards are streamed here in sequence.'}
-                    </div>
+            <div className="flex items-center justify-between gap-2 shrink-0 z-10 mb-2 px-1 font-fira">
+                <div className="flex items-center gap-1">
+                    <span className={`rounded-full border px-1.5 py-0.5 text-[9px] ${isCombat ? 'border-rose-300/18 text-rose-100/80 bg-rose-400/[0.06]' : gameState === GS.EVENT ? 'border-[#9a8ac0]/20 text-[#ece5ff]/78 bg-[#9a8ac0]/10' : 'border-[#7dd4d8]/18 text-[#dff7f5]/76 bg-[#7dd4d8]/10'}`}>
+                        {stateLabel}
+                    </span>
+                    <span className="rounded-full border border-white/8 bg-black/18 px-1.5 py-0.5 text-[9px] text-slate-300/72">
+                        {visibleLogCountLabel}
+                    </span>
                 </div>
                 <div className="flex items-center gap-1">
                     {showExpandToggle && (
@@ -287,9 +278,7 @@ const TerminalView = ({
                         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
                         <Terminal size={24} className="mx-auto mb-3 opacity-45 text-[#7dd4d8]" />
-                        field feed online
-                        <br />
-                        아래 tactical tile로 원정을 시작하세요
+                        아래 버튼으로 원정을 시작하세요
                     </Motion.div>
                 )}
 

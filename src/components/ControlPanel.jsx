@@ -24,7 +24,7 @@ import CombatPanel from './tabs/CombatPanel';
 import JobChangePanel from './tabs/JobChangePanel';
 import QuestBoardPanel from './tabs/QuestBoardPanel';
 import CraftingPanel from './tabs/CraftingPanel';
-import { ACTION_KIND_TO_BUTTON, ACTION_PRESENTATION } from './controlPanelConfig';
+import { ACTION_KIND_TO_BUTTON } from './controlPanelConfig';
 
 const ControlPanel = ({
   gameState,
@@ -70,7 +70,6 @@ const ControlPanel = ({
       disabled = false,
     } = button;
     const buttonLabel = mobileLabel;
-    const actionMeta = ACTION_PRESENTATION[key] || null;
 
     return (
       <Motion.button
