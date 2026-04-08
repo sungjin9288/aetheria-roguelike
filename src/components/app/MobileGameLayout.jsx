@@ -2,7 +2,6 @@ import React, { lazy, Suspense } from 'react';
 import { motion as Motion } from 'framer-motion';
 import TerminalView from '../TerminalView';
 import ControlPanel from '../ControlPanel';
-import OnboardingGuide from '../OnboardingGuide';
 import { soundManager } from '../../systems/SoundManager';
 
 const Dashboard = lazy(() => import('../Dashboard'));
@@ -24,7 +23,6 @@ const MobileGameLayout = ({
     inventorySpotlight,
     isMuted, setIsMuted,
     handleQuickSlotUse,
-    showOnboarding, handleOnboardingDismiss,
     damageFlash, healFlash,
 }) => (
     <Motion.div
@@ -33,9 +31,6 @@ const MobileGameLayout = ({
         transition={{ duration: 0.5 }}
         className={`relative z-10 flex min-h-0 flex-1 w-full flex-col ${isMobileFocusState ? 'overflow-hidden gap-2' : 'gap-2'} ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
     >
-        {showOnboarding && !isMobileFocusState && (
-            <OnboardingGuide player={engine.player} onDismiss={handleOnboardingDismiss} mobile />
-        )}
         {!isMobileFocusState && (
             <TerminalView
                 logs={engine.logs}
@@ -52,33 +47,6 @@ const MobileGameLayout = ({
                 isMuted={isMuted}
                 onToggleMute={() => setIsMuted(soundManager.toggleMute())}
             />
-        )}
-        {!isMobileFocusState && (
-            // min-h-0 + overflow-hidden: allows this card to shrink below its natural
-            // content height on small phones so ControlPanel buttons always stay visible.
-            <div className="min-h-0 overflow-hidden">
-                <Suspense fallback={<DashboardFallback summary />}>
-                    <Dashboard
-                        mobile
-                        mobileSection="summary"
-                        player={engine.player}
-                        grave={engine.grave}
-                        sideTab={engine.sideTab}
-                        setSideTab={engine.actions.setSideTab}
-                        actions={engine.actions}
-                        stats={fullStats}
-                        quickSlots={engine.quickSlots}
-                        inventorySpotlight={inventorySpotlight}
-                        runtime={{
-                            syncStatus: engine.syncStatus,
-                            gameState: engine.gameState,
-                            isAiThinking: engine.isAiThinking,
-                            viewport: 'mobile',
-                            mobileArchiveDockVisible,
-                        }}
-                    />
-                </Suspense>
-            </div>
         )}
         {/* Focus state (SHOP/EVENT/etc.): ControlPanel fills all remaining space via flex-1
             on its returned panel (ShopPanel/EventPanel). Normal state: shrink-0 prevents
