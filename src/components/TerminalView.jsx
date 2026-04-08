@@ -155,7 +155,6 @@ const TerminalView = ({
         : shouldCompactMobileLogs
             ? Math.max(0, logs.length - displayLogs.length)
             : 0;
-    const stateLabel = isCombat ? 'Combat' : gameState === GS.EVENT ? 'Event' : 'Field';
     const syncDotClass = syncStatus === 'synced'
         ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]'
         : syncStatus === 'syncing'
@@ -165,7 +164,6 @@ const TerminalView = ({
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
     const showFooter = Boolean(showInput || (player && quickSlots && hasAnyQuickSlot));
     const showExpandToggle = isCombat || logs.length > compactMobileLogCount;
-    const visibleLogCountLabel = hiddenCount > 0 ? `${displayLogs.length}/${logs.length}` : `${displayLogs.length}`;
     const footerInput = showInput ? (
         <div className="relative flex min-w-0 items-center gap-2 rounded-[1rem] border border-white/8 bg-black/14 transition-colors focus-within:border-[#7dd4d8]/24 px-3 py-2">
             {player && (
@@ -205,7 +203,7 @@ const TerminalView = ({
     return (
         <div
             data-testid="terminal-panel"
-            className={`panel-noise min-w-0 min-h-[6rem] max-h-[clamp(10rem,30dvh,22rem)] ${bgClass} rounded-[1.85rem] p-3 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
+            className={`panel-noise min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.85rem] p-3 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
         >
             {/* Scanline overlay */}
             <div
@@ -215,15 +213,7 @@ const TerminalView = ({
             <div className="pointer-events-none absolute -right-10 top-4 h-24 w-24 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
             <div className="pointer-events-none absolute -left-8 bottom-6 h-28 w-28 rounded-full bg-[#d5b180]/10 blur-3xl" />
 
-            <div className="flex items-center justify-between gap-2 shrink-0 z-10 mb-2 px-1 font-fira">
-                <div className="flex items-center gap-1">
-                    <span className={`rounded-full border px-1.5 py-0.5 text-[9px] ${isCombat ? 'border-rose-300/18 text-rose-100/80 bg-rose-400/[0.06]' : gameState === GS.EVENT ? 'border-[#9a8ac0]/20 text-[#ece5ff]/78 bg-[#9a8ac0]/10' : 'border-[#7dd4d8]/18 text-[#dff7f5]/76 bg-[#7dd4d8]/10'}`}>
-                        {stateLabel}
-                    </span>
-                    <span className="rounded-full border border-white/8 bg-black/18 px-1.5 py-0.5 text-[9px] text-slate-300/72">
-                        {visibleLogCountLabel}
-                    </span>
-                </div>
+            <div className="flex items-center justify-end gap-2 shrink-0 z-10 mb-2 px-1 font-fira">
                 <div className="flex items-center gap-1">
                     {showExpandToggle && (
                         <button
