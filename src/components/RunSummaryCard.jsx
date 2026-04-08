@@ -108,7 +108,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                         </div>
                     </div>
 
-                    <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                    <div className="mt-5 grid grid-cols-2 gap-2.5">
                         {stats.map((st, index) => (
                             <div key={st.label} className={`rounded-[1rem] border px-3 py-3 ${STAT_CARD_STYLE[index]}`}>
                                 <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] opacity-76">

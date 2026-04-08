@@ -19,7 +19,7 @@ const DashboardMobileSummary = ({ player }) => {
         <Motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="md:hidden panel-noise aether-surface rounded-[1.7rem] px-3 py-3 overflow-hidden"
+            className="panel-noise aether-surface rounded-[1.7rem] px-3 py-3 overflow-hidden"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

@@ -73,7 +73,7 @@ const AscensionScreen = ({ player, actions }) => {
                         </div>
                     </div>
 
-                    <div className="mt-5 grid gap-3 lg:grid-cols-[1.05fr_0.95fr]">
+                    <div className="mt-5 grid gap-3">
                         <div className="space-y-3">
                             <div className="rounded-[1.25rem] border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-4 py-3.5">
                                 <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">

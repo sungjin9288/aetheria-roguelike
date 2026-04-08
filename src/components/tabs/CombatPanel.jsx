@@ -168,7 +168,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
             : 'panel-noise aether-surface rounded-[1.5rem] p-3'
           : mobile
             ? 'panel-noise aether-surface rounded-[1.9rem] p-3'
-          : 'mt-2.5 md:mt-4'
+          : 'mt-2.5'
       }`}
     >
       {mobile && !compact && (

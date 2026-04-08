@@ -82,7 +82,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                         <span className="text-slate-400">추천 이동</span>
                         <span className="text-[#dff7f5]">{visibleRecommendations[0].name}</span>
                     </div>
-                    <div className={`grid ${compact ? 'gap-1.5' : 'gap-2 md:grid-cols-2'}`}>
+                    <div className={`grid ${compact ? 'gap-1.5' : 'gap-2'}`}>
                         {visibleRecommendations.map((route) => (
                             <div
                                 key={route.name}
@@ -132,7 +132,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                 </div>
             )}
 
-            <div className={`grid grid-cols-1 ${compact ? 'gap-1' : 'gap-2 xl:grid-cols-2'}`}>
+            <div className={`grid grid-cols-1 ${compact ? 'gap-1' : 'gap-2'}`}>
                 {visibleMapEntries.map((map) => {
                     const isCurrent = player?.loc === map.name;
                     const isVisited = visitedMaps.has(map.name);

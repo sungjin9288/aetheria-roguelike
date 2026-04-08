@@ -106,7 +106,7 @@ const Codex = ({ player, dispatch }) => {
             )}
 
             {/* Sub Tabs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
                 {SUB_TABS.map(tab => {
                     const Icon = tab.icon;
                     const active = subTab === tab.id;

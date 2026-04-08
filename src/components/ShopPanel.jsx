@@ -184,12 +184,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 auto-rows-[minmax(6.15rem,auto)] content-start gap-2.5 custom-scrollbar pr-1">
+            <div className="flex-1 overflow-y-auto grid grid-cols-1 auto-rows-[minmax(6.15rem,auto)] content-start gap-2.5 custom-scrollbar pr-1">
                 {/* Daily Deals + Weekly Special */}
                 {shopMode === 'buy' && (dailyDeals.items.length > 0 || weeklySpecial) && (
                     <div className="col-span-full mb-2 space-y-2 border-b border-white/8 pb-2">
                         <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-amber-300/70">Daily Deals — 10% OFF</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                             {dailyDeals.items.map((item) => {
                                 const canBuy = player.gold >= item.price && (!isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job));
                                 return (

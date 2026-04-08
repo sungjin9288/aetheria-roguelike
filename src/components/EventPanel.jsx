@@ -9,7 +9,7 @@ import SignalBadge from './SignalBadge';
 const EventPanel = ({ currentEvent, actions, mobileFocused = false }) => {
     if (!currentEvent) return null;
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
-    const overlayPanelClass = 'absolute inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:inset-x-4 md:bottom-4 md:top-20';
+    const overlayPanelClass = 'absolute inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
     const panelBody = (
         <div className="relative flex h-full min-h-0 flex-col">
             <div className="flex items-start justify-between gap-3">
@@ -101,7 +101,7 @@ const EventPanel = ({ currentEvent, actions, mobileFocused = false }) => {
                 initial={{ opacity: 0, y: 18, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.22, ease: 'easeOut' }}
-                className={`${overlayPanelClass} panel-noise aether-surface-strong overflow-hidden rounded-[2rem] p-3 md:p-5`}
+                className={`${overlayPanelClass} panel-noise aether-surface-strong overflow-hidden rounded-[2rem] p-3`}
             >
                 <div
                     className="pointer-events-none absolute inset-0 opacity-60"

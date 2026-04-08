@@ -43,7 +43,7 @@ const RewardChips = ({ reward, accent = 'blue' }) => {
  * QuestBoardPanel — 퀘스트 보드 패널 (진행 중 / 수락 가능 / 잠긴 임무)
  */
 const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false }) => {
-  const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] md:absolute md:inset-x-4 md:bottom-4 md:top-20';
+  const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
   const {
     traitProfile,
     activeEntries: activeQuestEntries,
@@ -68,7 +68,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false 
   return (
     <Motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-4' : `${overlayPanelClass} panel-noise aether-surface-strong z-30 flex flex-col rounded-[1.95rem] p-4 md:p-6 overflow-hidden`}`}
+      className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-4' : `${overlayPanelClass} panel-noise aether-surface-strong z-30 flex flex-col rounded-[1.95rem] p-4 overflow-hidden`}`}
     >
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
@@ -99,7 +99,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false 
       </div>
       {/* 현상수배 */}
       <div className="mb-4 rounded-[1.2rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.16),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.26)_0%,rgba(18,13,8,0.12)_100%)] p-3">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-sm font-bold text-[#f6e7c8] font-rajdhani tracking-[0.16em]">현상수배 게시판</div>
             <div className="mt-1 text-[11px] text-slate-300/72 font-fira">{bountyHelperText}</div>
@@ -122,7 +122,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false 
               <h3 className="text-sm font-bold text-[#dff7f5] font-rajdhani tracking-[0.18em]">추천 오퍼레이션</h3>
               <span className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400">Run Composition</span>
             </div>
-            <div className="grid gap-3 xl:grid-cols-3">
+            <div className="grid gap-3">
               {featuredOperations.map((entry, index) => (
                 <div key={`featured_${entry.quest.id}`} className="rounded-[1.2rem] border border-[#7dd4d8]/16 bg-[radial-gradient(circle_at_top_right,rgba(125,212,216,0.14),transparent_24%),linear-gradient(180deg,rgba(12,19,29,0.96)_0%,rgba(7,12,18,0.92)_100%)] p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -175,7 +175,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false 
           </div>
           {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry) => (
             <div key={`active_${entry.id}`} className={`rounded-[1.2rem] border p-4 ${entry.isComplete ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10' : entry.isBounty ? 'border-[#d5b180]/22 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)]' : 'aether-panel-muted'}`}>
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className={`font-bold font-rajdhani text-lg ${entry.isComplete ? 'text-cyber-green' : 'text-white'}`}>{entry.quest.title}</div>
@@ -228,7 +228,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false 
             const resonance = entry.resonance.label ? entry.resonance : getTraitQuestResonance(quest, traitProfile);
             return (
             <div key={`available_${quest.id}`} className="rounded-[1.2rem] border border-white/8 aether-panel-muted p-4 transition-colors hover:border-[#7dd4d8]/18">
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="font-bold text-white font-rajdhani text-lg">{quest.title}</div>
@@ -264,7 +264,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false 
           <h3 className="text-sm font-bold text-purple-300 font-rajdhani tracking-[0.18em] border-b border-purple-500/20 pb-2">곧 열릴 임무</h3>
           {lockedQuestEntries.length > 0 ? lockedQuestEntries.map((quest) => (
             <div key={`locked_${quest.id}`} className="rounded-[1.2rem] border border-white/8 aether-panel-muted p-4">
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="font-bold text-slate-200 font-rajdhani text-lg">{quest.title}</div>

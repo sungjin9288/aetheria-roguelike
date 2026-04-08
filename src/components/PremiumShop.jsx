@@ -37,10 +37,10 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
     ];
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center md:items-center" onClick={onClose}>
+        <div className="fixed inset-0 z-[200] flex items-end justify-center" onClick={onClose}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div
-                className="relative w-full max-w-sm panel-noise aether-surface rounded-t-[2rem] md:rounded-[1.8rem] px-4 py-5 space-y-4 max-h-[85vh] overflow-y-auto"
+                className="relative w-full max-w-sm panel-noise aether-surface rounded-t-[2rem] px-4 py-5 space-y-4 max-h-[85vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}

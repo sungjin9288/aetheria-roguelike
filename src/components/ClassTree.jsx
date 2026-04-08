@@ -108,7 +108,7 @@ const ClassTree = ({ player }) => {
 
             {/* 트리 그리드 — 모바일: 2열(T0+T1 / T2+T3), 데스크탑: 4열 */}
             <div className="overflow-x-auto pb-2">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-2 gap-y-1.5 min-w-[280px] md:min-w-[520px]">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 min-w-[280px]">
                     {[0, 1, 2, 3].map(tier => (
                         <div key={tier} className="space-y-1.5">
                             {/* 티어 헤더 */}

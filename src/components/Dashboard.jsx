@@ -146,7 +146,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                 {showArchiveDock && (
                     <div
                         data-testid="mobile-archive-dock"
-                        className="md:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+0.55rem)] left-1/2 z-30 w-[min(calc(100%-1.5rem),22rem)] -translate-x-1/2"
+                        className="fixed bottom-[calc(env(safe-area-inset-bottom)+0.55rem)] left-1/2 z-30 w-[min(calc(100%-1.5rem),22rem)] -translate-x-1/2"
                     >
                         <button
                             type="button"
@@ -187,7 +187,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="md:hidden fixed inset-0 z-40 bg-[rgba(5,7,10,0.74)] backdrop-blur-md"
+                            className="fixed inset-0 z-40 bg-[rgba(5,7,10,0.74)] backdrop-blur-md"
                             onClick={() => {
                                 setMobileArchiveExpanded(false);
                                 onClearInventorySpotlight?.();

@@ -123,7 +123,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                 className="pointer-events-none absolute inset-0 opacity-70"
                 style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(213,177,128,0.12), transparent 30%), radial-gradient(circle at bottom right, rgba(125,212,216,0.08), transparent 24%)' }}
             />
-            <div className="panel-noise aether-surface-strong relative mx-4 w-full max-w-3xl overflow-hidden rounded-[2rem] p-5 shadow-[0_34px_90px_rgba(1,6,14,0.6)] md:p-6">
+            <div className="panel-noise aether-surface-strong relative mx-4 w-full max-w-3xl overflow-hidden rounded-[2rem] p-5 shadow-[0_34px_90px_rgba(1,6,14,0.6)]">
                 <div className="pointer-events-none absolute inset-0 opacity-60" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 24%), radial-gradient(circle at top right, rgba(154,138,192,0.1), transparent 26%)' }} />
 
                 <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
@@ -144,7 +144,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                     </div>
                 </div>
 
-                <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="mb-5 grid grid-cols-1 gap-3">
                     {pendingRelics.map((relic, index) => {
                         const synergy = getRelicSynergyScore(relic, ownedRelics);
                         const hasSynergy = synergy.score > 0;
@@ -227,8 +227,8 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                     );})}
                 </div>
 
-                <div className="flex flex-col gap-3 border-t border-white/8 pt-4 text-center md:flex-row md:items-center md:justify-between">
-                    <div className="text-[10px] font-fira leading-relaxed text-slate-400/72 md:text-left">
+                <div className="flex flex-col gap-3 border-t border-white/8 pt-4 text-center">
+                    <div className="text-[10px] font-fira leading-relaxed text-slate-400/72">
                         선택을 미루면 이번 기회는 지나갑니다. 유물이 부족한 빌드는 전투 후반 안정성이 크게 흔들릴 수 있습니다.
                     </div>
                     <button
