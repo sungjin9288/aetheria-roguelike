@@ -205,7 +205,7 @@ const TerminalView = ({
     return (
         <div
             data-testid="terminal-panel"
-            className={`panel-noise min-w-0 min-h-[5rem] max-h-[clamp(10rem,26dvh,18rem)] ${bgClass} rounded-[1.85rem] p-3 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
+            className={`panel-noise min-w-0 min-h-[5rem] max-h-[clamp(8rem,20dvh,14rem)] ${bgClass} rounded-[1.85rem] p-3 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
         >
             {/* Scanline overlay */}
             <div

@@ -42,8 +42,11 @@ const tabVariants = {
 
 const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null }) => {
     const [mobileArchiveExpanded, setMobileArchiveExpanded] = useState(false);
+    const [dockSeen, setDockSeen] = useState(() => sessionStorage.getItem('archiveDockSeen') === '1');
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
     const hasInventorySpotlight = Boolean(inventorySpotlight?.token) && sideTab === 'inventory';
+    const hasCompletableQuest = (player?.quests || []).some(q => q.done && !q.claimed);
+    const showNotifDot = hasInventorySpotlight || hasCompletableQuest;
     const showArchiveDock = runtime?.mobileArchiveDockVisible ?? true;
     const archiveOpen = showArchiveDock && (hasInventorySpotlight || mobileArchiveExpanded);
     const primaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_PRIMARY_TABS.includes(tab.id));
@@ -151,8 +154,8 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                         <button
                             type="button"
                             data-testid="mobile-archive-open"
-                            onClick={() => setMobileArchiveExpanded(true)}
-                            className="panel-noise aether-surface-strong group flex w-full items-center justify-between gap-3 rounded-[1.25rem] px-3 py-2.5 overflow-hidden"
+                            onClick={() => { setMobileArchiveExpanded(true); if (!dockSeen) { setDockSeen(true); sessionStorage.setItem('archiveDockSeen', '1'); } }}
+                            className={`panel-noise aether-surface-strong group relative flex w-full items-center justify-between gap-3 rounded-[1.25rem] px-3 py-2.5 overflow-hidden ${!dockSeen ? 'animate-bounce' : ''}`}
                         >
                             <div className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: 'radial-gradient(circle at top right, rgba(213,177,128,0.12), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%)' }} />
                             <div className="flex min-w-0 items-center gap-2.5">
@@ -177,6 +180,9 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                     <ChevronUp size={12} />
                                 </span>
                             </div>
+                            {showNotifDot && (
+                                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#d5b180] shadow-[0_0_6px_rgba(213,177,128,0.6)] animate-pulse" />
+                            )}
                         </button>
                     </div>
                 )}

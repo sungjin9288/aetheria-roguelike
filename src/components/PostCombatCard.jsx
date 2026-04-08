@@ -174,12 +174,12 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
                                 <Motion.button
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => { onRest?.(); handleClose(); }}
-                                    className="min-h-[42px] rounded-[1rem] border border-rose-300/24 bg-rose-400/10 px-3 py-2 text-xs font-rajdhani font-bold text-rose-100"
+                                    className="min-h-[44px] rounded-[1rem] border border-rose-300/24 bg-rose-400/10 px-3 py-2 text-xs font-rajdhani font-bold text-rose-100"
                                 >
                                     휴식 우선
                                 </Motion.button>
                             ) : (
-                                <div className="flex min-h-[42px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-xs font-fira text-slate-300/72">
+                                <div className="flex min-h-[44px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-xs font-fira text-slate-300/72">
                                     {mpLow ? 'MP 회복 점검' : '다음 행동 준비 완료'}
                                 </div>
                             )}
@@ -188,7 +188,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
                                 <Motion.button
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => { onSell?.(); handleClose(); }}
-                                    className="min-h-[42px] rounded-[1rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#dff7f5]"
+                                    className="min-h-[44px] rounded-[1rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#dff7f5]"
                                 >
                                     인벤 정리
                                 </Motion.button>
@@ -197,7 +197,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
                                     data-testid="post-combat-review-loot"
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => { onSell?.(); handleClose(); }}
-                                    className="min-h-[42px] rounded-[1rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#f6e7c8]"
+                                    className="min-h-[44px] rounded-[1rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#f6e7c8]"
                                 >
                                     장비 확인
                                 </Motion.button>
@@ -206,12 +206,12 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
                                     data-testid="post-combat-review-loot"
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => { onSell?.(); handleClose(); }}
-                                    className="min-h-[42px] rounded-[1rem] border border-[#9a8ac0]/24 bg-[#9a8ac0]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#e3dcff]"
+                                    className="min-h-[44px] rounded-[1rem] border border-[#9a8ac0]/24 bg-[#9a8ac0]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#e3dcff]"
                                 >
                                     공명 확인
                                 </Motion.button>
                             ) : (
-                                <div className="flex min-h-[42px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-xs font-fira text-slate-300/72">
+                                <div className="flex min-h-[44px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-xs font-fira text-slate-300/72">
                                     로그에서 전투 세부 내용을 확인하세요
                                 </div>
                             )}
@@ -221,7 +221,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
                             data-testid="post-combat-continue"
                             whileTap={{ scale: 0.97 }}
                             onClick={handleClose}
-                            className="w-full min-h-[42px] rounded-[1rem] border border-white/8 bg-black/22 px-3 py-2 text-xs font-rajdhani font-bold tracking-[0.16em] text-slate-100 transition-colors hover:bg-white/[0.05]"
+                            className="w-full min-h-[44px] rounded-[1rem] border border-white/8 bg-black/22 px-3 py-2 text-xs font-rajdhani font-bold tracking-[0.16em] text-slate-100 transition-colors hover:bg-white/[0.05]"
                         >
                             계속 진행
                         </Motion.button>

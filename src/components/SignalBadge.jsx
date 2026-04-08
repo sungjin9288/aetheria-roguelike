@@ -1,7 +1,7 @@
 import React from 'react';
 
 const SIZE_CLASS = {
-    sm: 'min-h-[20px] px-1.5 py-0.5 text-[8px] tracking-[0.16em]',
+    sm: 'min-h-[20px] px-1.5 py-0.5 text-[9px] tracking-[0.16em]',
     md: 'min-h-[24px] px-2 py-0.5 text-[10px] tracking-[0.16em]',
     lg: 'min-h-[28px] px-2.5 py-1 text-[11px] tracking-[0.18em]',
 };

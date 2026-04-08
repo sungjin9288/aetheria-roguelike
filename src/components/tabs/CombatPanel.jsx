@@ -251,9 +251,9 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
             {selectedSkill ? (
               <span>
                 {selectedSkill.name}
-                <span className="text-cyber-blue/42"> · </span>
+                <span className="text-cyber-blue/65"> · </span>
                 MP {selectedSkill.mp || 0}
-                <span className="text-cyber-blue/42"> · </span>
+                <span className="text-cyber-blue/65"> · </span>
                 CD {skillCooldown}
               </span>
             ) : (
@@ -310,7 +310,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
 
       {combatConsumables.length > 0 && (
         <div className="space-y-2">
-          <div className="px-1 text-[9px] font-fira uppercase tracking-[0.22em] text-cyber-blue/45">
+          <div className="px-1 text-[10px] font-fira uppercase tracking-[0.22em] text-cyber-blue/65">
             Combat Items
           </div>
           <div className={`grid gap-2 ${dense ? 'grid-cols-1' : mobile || compact ? 'grid-cols-2' : 'grid-cols-3'}`}>

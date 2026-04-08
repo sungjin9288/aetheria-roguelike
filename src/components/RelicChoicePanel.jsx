@@ -123,20 +123,17 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                 className="pointer-events-none absolute inset-0 opacity-70"
                 style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(213,177,128,0.12), transparent 30%), radial-gradient(circle at bottom right, rgba(125,212,216,0.08), transparent 24%)' }}
             />
-            <div className="panel-noise aether-surface-strong relative mx-4 w-full max-w-3xl overflow-hidden rounded-[2rem] p-5 shadow-[0_34px_90px_rgba(1,6,14,0.6)]">
+            <div className="panel-noise aether-surface-strong relative mx-4 w-full max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[2rem] p-4 shadow-[0_34px_90px_rgba(1,6,14,0.6)]">
                 <div className="pointer-events-none absolute inset-0 opacity-60" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 24%), radial-gradient(circle at top right, rgba(154,138,192,0.1), transparent 26%)' }} />
 
-                <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                         <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
                             Relic Archive
                         </div>
-                        <h2 className="mt-1 text-[1.35rem] font-rajdhani font-bold tracking-[0.1em] text-[#f6e7c8]">
+                        <h2 className="mt-1 text-[1.1rem] font-rajdhani font-bold tracking-[0.1em] text-[#f6e7c8]">
                             공명할 유물을 선택하세요
                         </h2>
-                        <p className="mt-1 max-w-[32rem] text-[11px] font-fira leading-relaxed text-slate-300/76">
-                            선택한 유물은 이번 런 동안 유지됩니다. 현재 보유 유물과의 시너지도 함께 참고할 수 있습니다.
-                        </p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                         <SignalBadge tone="spotlight" size="sm">선택 1개</SignalBadge>
@@ -144,7 +141,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                     </div>
                 </div>
 
-                <div className="mb-5 grid grid-cols-1 gap-3">
+                <div className="mb-3 grid grid-cols-1 gap-2">
                     {pendingRelics.map((relic, index) => {
                         const synergy = getRelicSynergyScore(relic, ownedRelics);
                         const hasSynergy = synergy.score > 0;
@@ -156,7 +153,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                             data-testid={`relic-choice-${index}`}
                             onClick={() => handleSelect(relic)}
                             className={`
-                                group flex min-h-[15rem] flex-col rounded-[1.35rem] border p-4 text-left
+                                group flex flex-col rounded-[1.35rem] border p-3 text-left
                                 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0
                                 ${RARITY_CARD[relic.rarity] || RARITY_CARD.common}
                                 ${isLegendaryComplete ? 'shadow-[0_18px_40px_rgba(251,113,133,0.15)]' : hasSynergy ? 'shadow-[0_18px_34px_rgba(125,212,216,0.08)]' : 'shadow-[0_14px_26px_rgba(1,6,14,0.28)]'}
@@ -183,42 +180,42 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                                 )}
                             </div>
 
-                            <div className={`mt-4 text-[1.15rem] font-rajdhani font-bold leading-tight ${RARITY_COLORS[relic.rarity] || 'text-white'} group-hover:text-white`}>
+                            <div className={`mt-2 text-[1rem] font-rajdhani font-bold leading-tight ${RARITY_COLORS[relic.rarity] || 'text-white'} group-hover:text-white`}>
                                 {relic.name}
                             </div>
 
-                            <div className="mt-2 text-[11px] font-fira leading-relaxed text-slate-200/82">
+                            <div className="mt-1.5 text-[11px] font-fira leading-relaxed text-slate-200/82">
                                 {relic.desc}
                             </div>
 
-                            <div className="mt-auto pt-4">
+                            <div className="mt-auto pt-2.5">
                                 {isLegendaryComplete ? (
-                                    <div className="rounded-[1rem] border border-rose-300/22 bg-rose-400/10 px-3 py-2.5 text-[10px] font-fira">
+                                    <div className="rounded-[1rem] border border-rose-300/22 bg-rose-400/10 px-2.5 py-2 text-[10px] font-fira">
                                         <div className="uppercase tracking-[0.16em] text-rose-300/70">Legendary Synergy</div>
-                                        <div className="mt-1 font-bold text-rose-100">{synergy.legendaryHint}</div>
+                                        <div className="mt-0.5 font-bold text-rose-100">{synergy.legendaryHint}</div>
                                         <div className="mt-0.5 text-slate-300/72">{synergy.synergies.join(' · ')}</div>
                                     </div>
                                 ) : hasSynergy ? (
-                                    <div className="rounded-[1rem] border border-white/8 bg-black/20 px-3 py-2.5 text-[10px] font-fira text-slate-300/82">
+                                    <div className="rounded-[1rem] border border-white/8 bg-black/20 px-2.5 py-2 text-[10px] font-fira text-slate-300/82">
                                         <div className="uppercase tracking-[0.16em] text-slate-500">Linked Relics</div>
-                                        <div className="mt-1 leading-relaxed text-[#dff7f5]">
+                                        <div className="mt-0.5 leading-relaxed text-[#dff7f5]">
                                             {synergy.synergies.join(' · ')}
                                         </div>
                                         {hasNearLegendary && (
-                                            <div className="mt-1.5 text-[#d5b180]/80">
+                                            <div className="mt-1 text-[#d5b180]/80">
                                                 ◆ 전설 시너지 [{synergy.nearLegendary}] 까지 1개
                                             </div>
                                         )}
                                     </div>
                                 ) : hasNearLegendary ? (
-                                    <div className="rounded-[1rem] border border-[#d5b180]/22 bg-[#d5b180]/8 px-3 py-2.5 text-[10px] font-fira">
+                                    <div className="rounded-[1rem] border border-[#d5b180]/22 bg-[#d5b180]/8 px-2.5 py-2 text-[10px] font-fira">
                                         <div className="uppercase tracking-[0.16em] text-[#d5b180]/60">Near Legendary</div>
-                                        <div className="mt-1 text-[#f6e7c8]">
+                                        <div className="mt-0.5 text-[#f6e7c8]">
                                             [{synergy.nearLegendary}] 시너지까지 1개 남음
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="rounded-[1rem] border border-white/8 bg-black/16 px-3 py-2.5 text-[10px] font-fira text-slate-400/75">
+                                    <div className="rounded-[1rem] border border-white/8 bg-black/16 px-2.5 py-2 text-[10px] font-fira text-slate-400/75">
                                         현재 보유 유물과 직접 공명하는 효과는 없습니다.
                                     </div>
                                 )}
@@ -227,14 +224,11 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }) => {
                     );})}
                 </div>
 
-                <div className="flex flex-col gap-3 border-t border-white/8 pt-4 text-center">
-                    <div className="text-[10px] font-fira leading-relaxed text-slate-400/72">
-                        선택을 미루면 이번 기회는 지나갑니다. 유물이 부족한 빌드는 전투 후반 안정성이 크게 흔들릴 수 있습니다.
-                    </div>
+                <div className="flex flex-col gap-2 border-t border-white/8 pt-3 text-center">
                     <button
                         data-testid="relic-choice-skip"
                         onClick={handleDecline}
-                        className="min-h-[42px] rounded-full border border-white/8 bg-black/18 px-4 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-300/76 transition-colors hover:bg-white/[0.04] hover:text-white"
+                        className="min-h-[44px] rounded-full border border-white/8 bg-black/18 px-4 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-300/76 transition-colors hover:bg-white/[0.04] hover:text-white"
                     >
                         이번 선택 건너뛰기
                     </button>

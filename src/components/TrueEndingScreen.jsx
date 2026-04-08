@@ -97,7 +97,7 @@ const TrueEndingScreen = ({ player, actions }) => {
                         {stats.map(({ label, value }) => (
                             <div key={label} className="flex flex-col items-center gap-1">
                                 <span className="text-[16px] font-bold text-[#f4e6c8] font-fira">{value}</span>
-                                <span className="text-[8px] text-slate-500 font-fira uppercase tracking-wider">{label}</span>
+                                <span className="text-[10px] text-slate-500 font-fira uppercase tracking-wider">{label}</span>
                             </div>
                         ))}
                     </div>
@@ -118,7 +118,7 @@ const TrueEndingScreen = ({ player, actions }) => {
                     >
                         New Game+
                     </button>
-                    <p className="text-[8px] text-slate-600 font-fira">프레스티지 보너스를 유지한 채로 처음부터</p>
+                    <p className="text-[10px] text-slate-600 font-fira">프레스티지 보너스를 유지한 채로 처음부터</p>
                 </Motion.div>
             )}
         </div>

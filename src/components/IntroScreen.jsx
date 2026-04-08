@@ -117,7 +117,7 @@ const IntroScreen = ({ onStart }) => {
                                         onClick={() => applyName(option, true)}
                                         className={`rounded-xl border px-2 py-2.5 text-sm font-rajdhani font-bold ${
                                             selectedName === option
-                                                ? 'border-[#7dd4d8]/30 bg-[#7dd4d8]/12 text-[#dff7f5]'
+                                                ? 'border-[#7dd4d8]/45 bg-[#7dd4d8]/18 text-[#dff7f5]'
                                             : 'border-white/8 bg-black/24 text-slate-300'
                                         }`}
                                     >

@@ -79,7 +79,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
                                     <div className="min-w-0 flex-1">
                                         <div className="text-[11px] font-rajdhani font-bold text-white/90">{item.name}</div>
                                         <div className="text-[9px] font-fira text-slate-500">{item.desc}</div>
-                                        <div className="text-[8px] font-fira text-slate-600 mt-0.5">{item.detail}</div>
+                                        <div className="text-[10px] font-fira text-slate-600 mt-0.5">{item.detail}</div>
                                     </div>
                                     <button
                                         onClick={() => canAfford && item.onBuy?.()}
@@ -118,7 +118,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
                                     ) : (
                                         <button
                                             onClick={() => canAfford && onPurchaseTitle?.(title.id, title.name, title.cost)}
-                                            className={`shrink-0 flex items-center gap-1 rounded-[0.7rem] border px-2 py-1 text-[8px] font-fira transition-all ${
+                                            className={`shrink-0 flex items-center gap-1 rounded-[0.7rem] border px-2 py-1 text-[9px] font-fira transition-all ${
                                                 canAfford
                                                     ? 'border-cyan-400/40 bg-cyan-400/12 text-cyan-300 hover:bg-cyan-400/22'
                                                     : 'border-white/6 bg-black/10 text-slate-600 cursor-not-allowed'
@@ -134,7 +134,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
                 </div>
 
                 {/* Free sources hint */}
-                <div className="rounded-[0.95rem] border border-white/6 bg-black/12 px-3 py-2 text-[8px] font-fira text-slate-600 space-y-0.5">
+                <div className="rounded-[0.95rem] border border-white/6 bg-black/12 px-3 py-2 text-[9px] font-fira text-slate-600 space-y-0.5">
                     <div className="text-slate-500 mb-1">무료 획득처</div>
                     <div>• 도감 마일스톤 달성 (+10~50 💎)</div>
                     <div>• 첫 보스 처치 (+10~30 💎)</div>

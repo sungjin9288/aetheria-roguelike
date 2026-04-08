@@ -1,55 +1,60 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { DB } from '../data/db';
-import SignalBadge from './SignalBadge';
+import { getTraitProfile } from '../utils/runProfile';
 
 /**
- * DashboardMobileSummary — 모바일 Field Snapshot 요약 카드 (mobileSection === 'summary')
+ * DashboardMobileSummary — 장비 로드아웃 + 한눈에 보기 상태 pill 스트립
+ * StatusBar와 중복되는 위치/직업/레벨 정보는 제거하고 핵심 진행 상태만 표시
  */
 const DashboardMobileSummary = ({ player }) => {
-    const mapData = DB.MAPS[player?.loc];
-    const sectorLabel = mapData?.boss ? '보스 권역' : mapData?.type === 'safe' ? '안전 지대' : '탐험 구역';
     const loadoutEntries = [
         { label: 'LEFT', item: player?.equip?.offhand, fallback: 'EMPTY' },
         { label: 'RIGHT', item: player?.equip?.weapon, fallback: 'EMPTY' },
         { label: 'ARMOR', item: player?.equip?.armor, fallback: 'EMPTY' },
     ];
 
+    const statusPills = useMemo(() => {
+        if (!player) return [];
+        const pills = [];
+        const activeQuests = player.quests?.filter(q => !q.done)?.length || 0;
+        const completedQuests = player.quests?.filter(q => q.done)?.length || 0;
+        if (activeQuests > 0 || completedQuests > 0) {
+            pills.push({ key: 'quest', label: `퀘스트 ${completedQuests}/${activeQuests + completedQuests}`, tone: completedQuests > 0 ? 'success' : 'neutral' });
+        }
+        const relicCount = player.relics?.length || 0;
+        if (relicCount > 0) {
+            pills.push({ key: 'relic', label: `유물 ×${relicCount}`, tone: 'resonance' });
+        }
+        const trait = getTraitProfile(player);
+        if (trait?.label) {
+            pills.push({ key: 'trait', label: trait.label, tone: 'recommended' });
+        }
+        const codex = player.stats?.codex;
+        if (codex) {
+            const count = Object.values(codex).reduce((sum, cat) => sum + Object.keys(cat || {}).length, 0);
+            if (count > 0) pills.push({ key: 'codex', label: `도감 ${count}`, tone: 'neutral' });
+        }
+        const passTier = player.seasonPass?.tier || 0;
+        if (passTier > 0) {
+            pills.push({ key: 'pass', label: `Pass Lv.${passTier}`, tone: 'upgrade' });
+        }
+        return pills;
+    }, [player]);
+
     return (
         <Motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="panel-noise aether-surface rounded-[1.7rem] px-3 py-3 overflow-hidden"
+            className="panel-noise aether-surface rounded-[1.7rem] px-3 py-2.5 overflow-hidden"
         >
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <div className="text-[11px] font-fira uppercase tracking-[0.2em] text-slate-400/68">
-                        Field Snapshot
-                    </div>
-                    <div className="mt-1 truncate text-[16px] font-rajdhani font-bold tracking-[0.04em] text-white/94">
-                        {player?.loc}
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-fira text-slate-300/74">
-                        <span className="aether-pill rounded-full px-2 py-0.5 uppercase tracking-[0.16em]">{player?.job}</span>
-                        <span className="aether-pill rounded-full px-2 py-0.5 uppercase tracking-[0.16em]">Lv.{player?.level}</span>
-                        <span className="truncate">{sectorLabel}</span>
-                    </div>
-                </div>
-                <SignalBadge
-                    tone={mapData?.boss ? 'danger' : mapData?.type === 'safe' ? 'upgrade' : 'neutral'}
-                    size="sm"
-                >
-                    {mapData?.boss ? '보스' : mapData?.type === 'safe' ? '안전' : '탐험'}
-                </SignalBadge>
-            </div>
-
-            <div className="relative mt-3 grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+            {/* 장비 로드아웃 */}
+            <div className="grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                 {loadoutEntries.map((entry) => (
                     <div
                         key={entry.label}
                         className="min-w-0 rounded-[1rem] aether-panel-muted px-2 py-1.75"
                     >
-                        <div className="text-[8px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                        <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500">
                             {entry.label}
                         </div>
                         <div className="mt-1 flex items-center gap-1 min-w-0">
@@ -63,6 +68,26 @@ const DashboardMobileSummary = ({ player }) => {
                     </div>
                 ))}
             </div>
+
+            {/* 진행 상태 pill 스트립 */}
+            {statusPills.length > 0 && (
+                <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+                    {statusPills.map((pill) => (
+                        <span
+                            key={pill.key}
+                            className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] backdrop-blur-md ${
+                                pill.tone === 'success' ? 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100'
+                                : pill.tone === 'resonance' ? 'border-[#9a8ac0]/28 bg-[#9a8ac0]/10 text-[#e3dcff]'
+                                : pill.tone === 'recommended' ? 'border-[#7dd4d8]/28 bg-[#7dd4d8]/10 text-[#dff7f5]'
+                                : pill.tone === 'upgrade' ? 'border-[#d5b180]/28 bg-[#d5b180]/10 text-[#f6e7c8]'
+                                : 'border-white/8 bg-white/[0.035] text-slate-300'
+                            }`}
+                        >
+                            {pill.label}
+                        </span>
+                    ))}
+                </div>
+            )}
         </Motion.div>
     );
 };

@@ -44,7 +44,7 @@ const TreeNode = ({ node, isCurrent, isAvailable, isLocked }) => {
                     : isAvailable
                         ? 'border-cyber-purple/40 bg-cyber-purple/8 animate-pulse-slow'
                         : isLocked
-                            ? 'border-white/6 bg-black/20 opacity-35'
+                            ? 'border-white/6 bg-black/20 opacity-50'
                             : 'border-white/10 bg-white/[0.04]'
             }`}
         >
@@ -55,7 +55,7 @@ const TreeNode = ({ node, isCurrent, isAvailable, isLocked }) => {
                 }`}>
                     {node.name}
                 </div>
-                <div className="text-[8px] font-fira text-slate-500">
+                <div className="text-[9px] font-fira text-slate-500">
                     {TIER_LABELS[tier]} · Lv.{node.reqLv}
                 </div>
             </div>
@@ -113,7 +113,7 @@ const ClassTree = ({ player }) => {
                         <div key={tier} className="space-y-1.5">
                             {/* 티어 헤더 */}
                             <div className="text-center mb-1">
-                                <div className="text-[8px] font-fira uppercase tracking-wider" style={{ color: TIER_COLORS[tier] }}>
+                                <div className="text-[9px] font-fira uppercase tracking-wider" style={{ color: TIER_COLORS[tier] }}>
                                     T{tier}
                                 </div>
                                 <div className="text-[9px] font-fira text-slate-500">
