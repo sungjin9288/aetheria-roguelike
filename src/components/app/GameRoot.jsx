@@ -1,4 +1,5 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useCallback } from 'react';
+import { soundManager } from '../../systems/SoundManager';
 import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import MainLayout from '../MainLayout';
@@ -21,7 +22,9 @@ const GameRoot = ({
     handleQuickSlotUse,
     showOnboarding, handleOnboardingDismiss,
     damageFlash, healFlash, damageAmount,
-}) => (
+}) => {
+    const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
+    return (
     <MotionConfig reducedMotion="user">
         <MainLayout visualEffect={engine.visualEffect}>
             {/* Background layers */}
@@ -44,6 +47,8 @@ const GameRoot = ({
                     mobile={true}
                     compactDesktop={false}
                     onCrystalClick={(engine.player?.premiumCurrency || 0) > 0 ? () => setPremiumShopOpen(true) : null}
+                    isMuted={isMuted}
+                    onToggleMute={handleToggleMute}
                 />
 
                 {/* 시즌 이벤트 배너 */}
@@ -140,6 +145,7 @@ const GameRoot = ({
             )}
         </MainLayout>
     </MotionConfig>
-);
+    );
+};
 
 export default GameRoot;

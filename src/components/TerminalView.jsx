@@ -77,9 +77,6 @@ const TerminalView = ({
     quickSlots,
     onQuickSlotUse,
     showInput = true,
-    syncStatus = 'offline',
-    isMuted = false,
-    onToggleMute,
 }) => {
     const endRef = useRef(null);
     const inputRef = useRef(null);
@@ -155,12 +152,6 @@ const TerminalView = ({
         : shouldCompactMobileLogs
             ? Math.max(0, logs.length - displayLogs.length)
             : 0;
-    const syncDotClass = syncStatus === 'synced'
-        ? 'bg-cyber-green shadow-[0_0_8px_#00ff9d]'
-        : syncStatus === 'syncing'
-            ? 'bg-yellow-400 animate-pulse'
-            : 'bg-red-500 shadow-[0_0_8px_#ff00ff]';
-    const syncLabel = syncStatus === 'synced' ? 'ONLINE' : syncStatus === 'syncing' ? 'SYNCING' : 'OFFLINE';
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
     const showFooter = Boolean(showInput || (player && quickSlots && hasAnyQuickSlot));
     const showExpandToggle = isCombat || logs.length > compactMobileLogCount;
@@ -213,35 +204,20 @@ const TerminalView = ({
             <div className="pointer-events-none absolute -right-10 top-4 h-24 w-24 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
             <div className="pointer-events-none absolute -left-8 bottom-6 h-28 w-28 rounded-full bg-[#d5b180]/10 blur-3xl" />
 
-            <div className="flex items-center justify-end gap-2 shrink-0 z-10 mb-2 px-1 font-fira">
-                <div className="flex items-center gap-1">
-                    {showExpandToggle && (
-                        <button
-                            onClick={() => setLogExpanded((open) => !open)}
-                            className="rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/72"
-                        >
-                            {isCombat
-                                ? (logExpanded
-                                    ? <span className="inline-flex items-center gap-1"><ChevronUp size={10} /> 요약</span>
-                                    : <span className="inline-flex items-center gap-1"><Filter size={10} /> 전체 {hiddenCount > 0 ? `+${hiddenCount}` : ''}</span>)
-                                : (logExpanded ? '접기' : `전체 +${hiddenCount}`)}
-                        </button>
-                    )}
+            {showExpandToggle && (
+                <div className="flex items-center justify-end shrink-0 z-10 mb-1.5 px-1">
                     <button
-                        onClick={onToggleMute}
-                        disabled={!onToggleMute}
-                        className="rounded-full border border-white/8 bg-black/20 p-0.5 text-slate-300/70 transition-colors hover:text-white disabled:opacity-50"
-                        aria-label="Toggle Sound"
-                        title="Toggle Sound"
+                        onClick={() => setLogExpanded((open) => !open)}
+                        className="rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/72"
                     >
-                        {isMuted ? <VolumeX size={11} data-mute-icon /> : <Volume2 size={11} data-mute-icon />}
+                        {isCombat
+                            ? (logExpanded
+                                ? <span className="inline-flex items-center gap-1"><ChevronUp size={10} /> 요약</span>
+                                : <span className="inline-flex items-center gap-1"><Filter size={10} /> 전체 {hiddenCount > 0 ? `+${hiddenCount}` : ''}</span>)
+                            : (logExpanded ? '접기' : `전체 +${hiddenCount}`)}
                     </button>
-                    <div className="flex items-center gap-1 rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[9px] text-slate-300/70">
-                        <span className={`h-1.5 w-1.5 rounded-full ${syncDotClass}`}></span>
-                        <span className="sr-only">{syncLabel}</span>
-                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Pinned AI Narrative */}
             {latestStory && gameState !== GS.COMBAT && (
@@ -259,7 +235,8 @@ const TerminalView = ({
                 </div>
             )}
 
-            <div className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 min-h-0 space-y-1.5">
+            <div className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 min-h-0">
+                <div className="flex flex-col justify-end min-h-full gap-1.5">
                 {logs.length === 0 && (
                     <Motion.div
                         className="text-slate-400/72 text-center mt-6 text-xs font-rajdhani tracking-[0.16em] flex flex-col items-center"
@@ -313,6 +290,7 @@ const TerminalView = ({
                     )}
                 </AnimatePresence>
                 <div ref={endRef} />
+                </div>
             </div>
 
             {/* CLI INPUT AREA */}

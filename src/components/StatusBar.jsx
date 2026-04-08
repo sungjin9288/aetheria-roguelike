@@ -1,4 +1,5 @@
 import React from 'react';
+import { Volume2, VolumeX } from 'lucide-react';
 import SignalBadge from './SignalBadge';
 
 const METER_THEME = {
@@ -94,7 +95,7 @@ const EnemyStatus = ({ enemy, mobile = false, compact = false }) => {
   );
 };
 
-const StatusBar = ({ player, stats, enemy = null, className = '', onCrystalClick = null }) => {
+const StatusBar = ({ player, stats, enemy = null, className = '', onCrystalClick = null, isMuted = false, onToggleMute = null }) => {
   if (!player?.name) return null;
   const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
   return (
@@ -116,14 +117,25 @@ const StatusBar = ({ player, stats, enemy = null, className = '', onCrystalClick
             <span className="shrink-0 rounded-full bg-orange-500/20 border border-orange-400/30 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.14em] text-orange-300 animate-pulse">🔥{player.killStreak}</span>
           )}
         </div>
-        <div className="shrink-0 text-right">
-          <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
-          <span className="ml-0.5 text-[9px] font-fira text-slate-400/68">CR</span>
-          {hasPremiumCurrency && (
-            <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick}>
-              💎{player.premiumCurrency}
-            </div>
+        <div className="shrink-0 flex items-center gap-1.5">
+          {onToggleMute && (
+            <button
+              onClick={onToggleMute}
+              className="pointer-events-auto rounded-full border border-white/8 bg-black/20 p-1 text-slate-300/70 transition-colors hover:text-white"
+              aria-label="Toggle Sound"
+            >
+              {isMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
+            </button>
           )}
+          <div className="text-right">
+            <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
+            <span className="ml-0.5 text-[9px] font-fira text-slate-400/68">CR</span>
+            {hasPremiumCurrency && (
+              <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick}>
+                💎{player.premiumCurrency}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <div className="mt-1.5 grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 p-1.5">
