@@ -47,10 +47,10 @@ const ControlPanel = ({
   const isSafeZone = mapData.type === 'safe';
   const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
 
-  const actionGridClass = 'grid grid-cols-2 gap-1.5';
-  const actionButtonBase = 'relative h-[44px] overflow-hidden rounded-[1.1rem] px-2.5 flex items-center justify-between gap-2 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_8px_18px_rgba(1,6,14,0.18),inset_0_1px_0_rgba(255,255,255,0.03)]';
-  const actionLabelClass = 'text-[11px] font-rajdhani font-bold tracking-[0.14em] text-left';
-  const resetButtonClass = 'h-[44px] rounded-[1.1rem] border px-2.5 text-[9px] font-rajdhani font-bold tracking-[0.14em] transition-all flex items-center justify-center gap-2';
+  const actionGridClass = 'grid grid-cols-3 gap-1.5';
+  const actionButtonBase = 'relative h-[42px] overflow-hidden rounded-[1rem] px-2.5 flex items-center gap-2 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_8px_18px_rgba(1,6,14,0.18),inset_0_1px_0_rgba(255,255,255,0.03)]';
+  const actionLabelClass = 'text-[10px] font-rajdhani font-bold tracking-[0.12em] text-left';
+  const resetButtonClass = 'h-[42px] rounded-[1rem] border px-2.5 text-[9px] font-rajdhani font-bold tracking-[0.12em] transition-all flex items-center justify-center gap-2';
 
   const getRecommendedClass = (buttonKey) => (
     recommendedButton === buttonKey
@@ -96,12 +96,9 @@ const ControlPanel = ({
             <div className={actionLabelClass}>{buttonLabel}</div>
           )}
         </div>
-        <div className="flex items-center shrink-0">
-          {recommendedButton === key
-            ? <SignalBadge tone="recommended" size="sm">추천</SignalBadge>
-            : actionMeta?.tag && <SignalBadge tone={actionMeta.tone} size="sm">{actionMeta.tag}</SignalBadge>
-          }
-        </div>
+        {recommendedButton === key && (
+          <span className="ml-auto shrink-0 h-1.5 w-1.5 rounded-full bg-[#7dd4d8] shadow-[0_0_4px_rgba(125,212,216,0.8)]" />
+        )}
       </Motion.button>
     );
   };
@@ -347,14 +344,14 @@ const ControlPanel = ({
           {!isSafeZone && renderResetControl({
             compact: true,
             className: '',
-            confirmGridClass: 'col-span-2 grid-cols-2 gap-1.5',
+            confirmGridClass: 'col-span-3 grid-cols-2 gap-1.5',
           })}
           {isSafeZone && safeZoneButtons.map((button) => renderActionButton(button))}
           {auxiliaryButtons.map((button) => renderActionButton(button))}
           {isSafeZone && renderResetControl({
             compact: true,
             className: '',
-            confirmGridClass: 'col-span-2 grid-cols-2 gap-1.5',
+            confirmGridClass: 'col-span-3 grid-cols-2 gap-1.5',
           })}
         </div>
       )}
