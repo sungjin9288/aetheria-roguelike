@@ -236,7 +236,7 @@ const TerminalView = ({
             )}
 
             <div className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 min-h-0">
-                <div className="flex flex-col justify-end min-h-full gap-1.5">
+                <div className="flex flex-col gap-1.5">
                 {logs.length === 0 && (
                     <Motion.div
                         className="text-slate-400/72 text-center mt-6 text-xs font-rajdhani tracking-[0.16em] flex flex-col items-center"
