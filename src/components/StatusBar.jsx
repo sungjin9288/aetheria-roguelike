@@ -104,10 +104,14 @@ const StatusBar = ({ player, stats, enemy = null, className = '', onCrystalClick
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/22 to-transparent" style={{position:'absolute'}} />
       <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 flex items-center gap-1.5">
+        <div className="min-w-0 flex flex-wrap items-center gap-1.5">
           <span className="truncate text-[15px] font-rajdhani font-bold tracking-[0.04em] text-white/96">{player.name}</span>
           <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{enemy ? '전투중' : player.job}</SignalBadge>
           <SignalBadge tone="resonance" size="sm">Lv.{player.level}</SignalBadge>
+          <span className="flex items-center gap-1 text-[9px] font-fira text-slate-300/65">
+            <span className="h-1 w-1 shrink-0 rounded-full bg-[#7dd4d8] animate-pulse" />
+            <span className="truncate max-w-[80px]">{player.loc}</span>
+          </span>
           {(player.killStreak || 0) >= 3 && (
             <span className="shrink-0 rounded-full bg-orange-500/20 border border-orange-400/30 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.14em] text-orange-300 animate-pulse">🔥{player.killStreak}</span>
           )}
@@ -122,11 +126,7 @@ const StatusBar = ({ player, stats, enemy = null, className = '', onCrystalClick
           )}
         </div>
       </div>
-      <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[9px] font-fira text-slate-300/65">
-        <span className="h-1 w-1 shrink-0 rounded-full bg-[#7dd4d8] animate-pulse" />
-        <span className="truncate">{player.loc}</span>
-      </div>
-      <div className="mt-2 grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 p-1.5">
+      <div className="mt-1.5 grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 p-1.5">
         <StatusMetric label="HP" value={player.hp} max={stats?.maxHp} variant="hp" compact />
         <StatusMetric label="NRG" value={player.mp} max={stats?.maxMp} variant="mp" compact />
         <StatusMetric label="EXP" value={player.exp} max={player.nextExp} variant="exp" compact />

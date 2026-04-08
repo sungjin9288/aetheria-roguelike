@@ -47,10 +47,10 @@ const ControlPanel = ({
   const isSafeZone = mapData.type === 'safe';
   const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
 
-  const actionGridClass = 'grid grid-cols-2 gap-2.5';
-  const actionButtonBase = 'relative min-h-[52px] overflow-hidden rounded-[1.2rem] px-3 py-2.5 flex flex-col items-start justify-between gap-1 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_18px_34px_rgba(1,6,14,0.22),inset_0_1px_0_rgba(255,255,255,0.03)]';
-  const actionLabelClass = 'text-[11px] font-rajdhani font-bold tracking-[0.18em] text-left';
-  const resetButtonClass = 'min-h-[56px] rounded-[1.15rem] border px-2.5 py-2 text-[9px] font-rajdhani font-bold tracking-[0.18em] transition-all flex flex-col items-center justify-center gap-1';
+  const actionGridClass = 'grid grid-cols-2 gap-1.5';
+  const actionButtonBase = 'relative h-[44px] overflow-hidden rounded-[1.1rem] px-2.5 flex items-center justify-between gap-2 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_8px_18px_rgba(1,6,14,0.18),inset_0_1px_0_rgba(255,255,255,0.03)]';
+  const actionLabelClass = 'text-[11px] font-rajdhani font-bold tracking-[0.14em] text-left';
+  const resetButtonClass = 'h-[44px] rounded-[1.1rem] border px-2.5 text-[9px] font-rajdhani font-bold tracking-[0.14em] transition-all flex items-center justify-center gap-2';
 
   const getRecommendedClass = (buttonKey) => (
     recommendedButton === buttonKey
@@ -86,22 +86,22 @@ const ControlPanel = ({
           className="pointer-events-none absolute inset-0 opacity-80"
           style={{ backgroundImage: 'radial-gradient(circle at 82% 12%, rgba(255,255,255,0.08), transparent 22%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%)' }}
         />
-        <div className="flex w-full items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] border border-white/8 bg-black/18 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <Icon size={13} className="transition-transform group-hover:scale-110" />
           </span>
-          <div className="flex items-center gap-1">
-            {recommendedButton === key && <SignalBadge tone="recommended" size="sm">추천</SignalBadge>}
-            {actionMeta?.tag && <SignalBadge tone={actionMeta.tone} size="sm">{actionMeta.tag}</SignalBadge>}
-          </div>
-        </div>
-        {hideLabel ? (
-          <span className="sr-only">{buttonLabel}</span>
-        ) : (
-          <div className="w-full">
+          {hideLabel ? (
+            <span className="sr-only">{buttonLabel}</span>
+          ) : (
             <div className={actionLabelClass}>{buttonLabel}</div>
-          </div>
-        )}
+          )}
+        </div>
+        <div className="flex items-center shrink-0">
+          {recommendedButton === key
+            ? <SignalBadge tone="recommended" size="sm">추천</SignalBadge>
+            : actionMeta?.tag && <SignalBadge tone={actionMeta.tone} size="sm">{actionMeta.tag}</SignalBadge>
+          }
+        </div>
       </Motion.button>
     );
   };
@@ -116,7 +116,9 @@ const ControlPanel = ({
           onClick={() => setConfirmReset(true)}
           className={`${compact ? resetButtonClass : actionButtonBase} ${className} bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/80 hover:bg-rose-400/10 hover:border-rose-200/30`.trim()}
         >
-          <X size={16} className="text-rose-200/70 group-hover:text-rose-100 group-hover:scale-110 transition-all" />
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] border border-rose-300/18 bg-black/18">
+            <X size={13} className="text-rose-200/70 group-hover:text-rose-100 transition-all" />
+          </span>
           <span className={`${actionLabelClass} text-rose-100/72 group-hover:text-rose-50`}>RESET</span>
         </Motion.button>
       );
@@ -293,7 +295,7 @@ const ControlPanel = ({
     <Motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative z-10 w-full panel-noise aether-surface rounded-[1.9rem] p-3"
+      className="relative z-10 w-full panel-noise aether-surface rounded-[1.55rem] p-2"
     >
       {gameState === GS.MOVING ? (
         <div className="grid grid-cols-2 gap-2">
