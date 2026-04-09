@@ -349,9 +349,16 @@
   isolation: isolate;
 }
 
-.panel-noise>* {
-  position: relative;
+.panel-noise > * {
   z-index: 1;
+}
+
+.panel-noise > .absolute {
+  position: absolute !important;
+}
+
+.panel-noise > :not(.absolute) {
+  position: relative;
 }
 
 .panel-noise::before {

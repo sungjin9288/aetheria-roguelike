@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion as Motion } from 'framer-motion';
-import { ScrollText, X } from 'lucide-react';
+import { ScrollText } from 'lucide-react';
 import { formatRewardParts } from '../../utils/gameUtils';
 import { getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { getQuestBoardRecommendations } from '../../utils/questOperations.js';
 import SignalBadge from '../SignalBadge';
+import FocusPanelHeader from '../FocusPanelHeader';
 
 const getQuestObjectiveText = (quest) => {
   if (quest?.objective) return quest.objective;
@@ -42,7 +43,7 @@ const RewardChips = ({ reward, accent = 'blue' }) => {
 /**
  * QuestBoardPanel — 퀘스트 보드 패널 (진행 중 / 수락 가능 / 잠긴 임무)
  */
-const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false }) => {
+const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false, onOpenArchiveConsole = null }) => {
   const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
   const {
     traitProfile,
@@ -70,26 +71,19 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false 
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-4' : `${overlayPanelClass} panel-noise aether-surface-strong z-30 flex flex-col rounded-[1.95rem] p-4 overflow-hidden`}`}
     >
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h2 className="flex items-center gap-2 text-2xl font-rajdhani font-bold uppercase tracking-[0.16em] text-[#f6e7c8]">
-            <ScrollText /> Mission Terminal
-          </h2>
-          <div className="mt-1 text-[11px] font-fira text-slate-300/70">
-            진행 중 임무, 현상수배, 다음 수락 후보를 한 번에 점검합니다.
-          </div>
-        </div>
-        <button
-          onClick={() => setGameState('idle')}
-          className="min-h-[40px] rounded-full border border-white/8 bg-black/20 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-300/78 transition-colors hover:bg-white/[0.06] hover:text-white"
-          aria-label="미션 터미널 닫기"
-        >
-          <span className="flex items-center gap-1.5">
-            <X size={12} />
-            닫기
-          </span>
-        </button>
-      </div>
+      <FocusPanelHeader
+        eyebrow="Mission Grid"
+        title="MISSION TERMINAL"
+        titleClassName="flex items-center gap-2 text-[1.35rem]"
+        meta="진행 중 임무, 현상수배, 다음 수락 후보를 한 번에 점검합니다."
+        onBack={() => setGameState('idle')}
+        backLabel="복귀"
+        bleedClassName={mobileFocused ? '-mx-4 px-4' : '-mx-4 px-4'}
+        onOpenArchive={onOpenArchiveConsole}
+        archiveLabel="INV"
+        archiveTestId="quest-board-open-archive"
+        rightSlot={<ScrollText size={18} className="text-[#f6e7c8]/78" />}
+      />
       {/* 통계 헤더 */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-[1.2rem] aether-panel-core px-3 py-2.5 text-[11px] font-fira">
         <span className="text-slate-300">현재 레벨 Lv.{player.level}</span>

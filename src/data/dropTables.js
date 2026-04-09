@@ -31,6 +31,7 @@ export const DROP_TABLES = {
         { item: '철광석', rate: 0.4 },
         { item: '녹슨 단검', rate: 0.1 },
         { item: '동전 주머니', rate: 0.3 },
+        { item: '강화 재료', rate: 0.18 },
     ],
     // ── 폐허 ──
     '해골 병사': [
@@ -53,6 +54,7 @@ export const DROP_TABLES = {
     '광석골렘': [
         { item: '철광석', rate: 0.6, qty: [2, 4] },
         { item: '미스릴 원석', rate: 0.2 },
+        { item: '강화 재료', rate: 0.24, qty: [1, 2] },
     ],
     // ── 동굴 ──
     '동굴 트롤': [

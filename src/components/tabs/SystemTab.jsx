@@ -7,6 +7,7 @@ import { APP_ID, CONSTANTS } from '../../data/constants';
 import { exportToJson } from '../../utils/fileUtils';
 import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/gameUtils';
 import { RARITY_COLORS } from '../../data/titles';
+import { MSG } from '../../data/messages';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 
 const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
@@ -208,7 +209,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                     <p className="truncate">BUILD: v{CONSTANTS.DATA_VERSION}</p>
                 </div>
                 {(player.meta?.prestigeRank || 0) > 0 && (
-                    <p className="text-[#d9d0f3] mt-1">PRESTIGE: {player.meta.prestigeRank}회 환생 완료</p>
+                    <p className="text-[#d9d0f3] mt-1">{MSG.UI_PRESTIGE}: {player.meta.prestigeRank}회 {MSG.UI_PRESTIGE_COMPLETE}</p>
                 )}
             </div>
 
@@ -275,7 +276,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                                 {topRanker?.nickname || 'SYNCING'}
                             </div>
                             <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">
-                                {myRankIndex >= 0 ? `내 순위 ${myRankIndex + 1}위` : '개인 순위 미기록'}
+                                {myRankIndex >= 0 ? `${MSG.UI_MY_RANK} ${myRankIndex + 1}위` : '개인 순위 미기록'}
                             </div>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
 import { TITLES, TITLE_PASSIVES } from '../data/titles.js';
 import { getRunBuildProfile, getTraitSkill } from './runProfileUtils.js';
 import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager.js';
+import { AT } from '../reducers/actionTypes.js';
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
@@ -483,7 +484,7 @@ export const checkTitles = (player) => {
 export const makeEmitTitles = (dispatch, addLog) => (updatedPlayer) => {
     const newTitles = checkTitles(updatedPlayer);
     if (newTitles.length > 0) {
-        dispatch({ type: 'UNLOCK_TITLES', payload: newTitles });
+        dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
         newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
     }
 };

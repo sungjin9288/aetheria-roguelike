@@ -47,36 +47,36 @@ const ClassCard = ({ jobName, onSelect, disabled = false, compact = false }) => 
 
     return (
         <Motion.button
-            whileHover={{ scale: disabled ? 1 : 1.03, y: disabled ? 0 : -2 }}
+            whileHover={{ scale: disabled ? 1 : 1.02, y: disabled ? 0 : -1 }}
             whileTap={{ scale: disabled ? 1 : 0.97 }}
             onClick={() => !disabled && onSelect?.(jobName)}
             disabled={disabled}
-            className={`group relative w-full rounded-[1.15rem] border p-4 text-left transition-all ${
+            className={`group relative w-full rounded-[1.15rem] border p-3 text-left transition-all ${
                 disabled
                     ? 'border-white/6 bg-cyber-dark/60 opacity-35 cursor-not-allowed'
                     : 'border-cyber-purple/30 bg-cyber-dark/80 hover:border-cyber-purple/60 hover:bg-cyber-purple/8 hover:shadow-[0_0_24px_rgba(188,19,254,0.25)]'
             }`}
         >
             {/* 아이콘 + 이름 */}
-            <div className="flex items-center gap-2.5 mb-3">
-                <ClassIcon className={jobName} size={34} tier={tier} showBorder />
+            <div className="flex items-center gap-2 mb-2">
+                <ClassIcon className={jobName} size={28} tier={tier} showBorder />
                 <div className="min-w-0">
-                    <div className="text-[1.1rem] font-rajdhani font-bold text-white group-hover:text-cyber-purple transition-colors truncate">
+                    <div className="text-[15px] font-rajdhani font-bold text-white group-hover:text-cyber-purple transition-colors truncate">
                         {jobName}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex items-center gap-1.5">
                         <SignalBadge tone={TIER_TONES[tier]} size="sm">{TIER_LABELS[tier]}</SignalBadge>
                     </div>
                 </div>
             </div>
 
             {/* 설명 */}
-            <div className="text-[10px] font-fira text-slate-400/80 mb-3 line-clamp-2 leading-relaxed">
+            <div className="text-[10px] font-fira text-slate-400/80 mb-2 line-clamp-1 leading-snug">
                 {jobData.desc}
             </div>
 
             {/* 스탯 바 */}
-            <div className="space-y-1.5 mb-3">
+            <div className="space-y-1 mb-2">
                 <StatBar label={MSG.CLASS_STAT_HP} value={jobData.hpMod} color="#f87171" />
                 <StatBar label={MSG.CLASS_STAT_MP} value={jobData.mpMod} color="#00ccff" />
                 <StatBar label={MSG.CLASS_STAT_ATK} value={jobData.atkMod} color="#f59e0b" />
@@ -84,8 +84,8 @@ const ClassCard = ({ jobName, onSelect, disabled = false, compact = false }) => 
 
             {/* 하단 정보 */}
             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-fira text-slate-500">{skillCount} skills</span>
-                <span className={`text-[10px] font-fira px-2 py-0.5 rounded-full border ${
+                <span className="text-[9px] font-fira text-slate-500">{skillCount} skills</span>
+                <span className={`text-[9px] font-fira px-2 py-0.5 rounded-full border ${
                     disabled
                         ? 'border-white/8 text-slate-500 bg-black/20'
                         : 'border-cyber-blue/30 text-cyber-blue bg-cyber-blue/10'

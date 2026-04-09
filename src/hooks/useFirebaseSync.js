@@ -20,6 +20,7 @@ import { migrateData } from '../utils/gameUtils';
 import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
 import { isSmokeRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
+import { AT } from '../reducers/actionTypes';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
@@ -49,26 +50,26 @@ export const useFirebaseSync = (state, dispatch) => {
 
     useEffect(() => {
         if (!smokeMode || syncStatus === 'offline') return;
-        dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
+        dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
     }, [dispatch, smokeMode, syncStatus]);
 
     // --- Auth ---
     useEffect(() => {
         if (smokeMode) {
-            dispatch({ type: 'LOAD_DATA', payload: { player: INITIAL_STATE.player } });
-            dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
+            dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
+            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
             return undefined;
         }
 
-        dispatch({ type: 'SET_BOOT_STAGE', payload: 'auth' });
+        dispatch({ type: AT.SET_BOOT_STAGE, payload: 'auth' });
         let authResolved = false;
 
         const fallbackAuthOffline = (message) => {
             if (authResolved) return;
             authResolved = true;
-            dispatch({ type: 'LOAD_DATA', payload: { player: INITIAL_STATE.player } });
-            dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
-            dispatch({ type: 'ADD_LOG', payload: makeLogPayload('warning', message) });
+            dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
+            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
+            dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('warning', message) });
         };
 
         const authTimer = setTimeout(() => {
@@ -88,8 +89,8 @@ export const useFirebaseSync = (state, dispatch) => {
                 authResolved = true;
                 clearTimeout(authTimer);
                 const uid = cred.user.uid;
-                dispatch({ type: 'SET_UID', payload: uid });
-                dispatch({ type: 'SET_BOOT_STAGE', payload: 'config' });
+                dispatch({ type: AT.SET_UID, payload: uid });
+                dispatch({ type: AT.SET_BOOT_STAGE, payload: 'config' });
                 // 크로스 디바이스 쿼터 동기화 (Dead Code → 활성화)
                 TokenQuotaManager.syncToFirestore(uid, db).catch((e) => {
                     console.warn('Token quota sync failed', e);
@@ -115,7 +116,7 @@ export const useFirebaseSync = (state, dispatch) => {
         const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
         const unsubConfig = onSnapshot(configDocRef, (snap) => {
             if (snap.exists() && snap.data().config) {
-                dispatch({ type: 'SET_LIVE_CONFIG', payload: snap.data().config });
+                dispatch({ type: AT.SET_LIVE_CONFIG, payload: snap.data().config });
             }
         }, (e) => {
             console.warn('Live config subscribe failed', e);
@@ -127,14 +128,14 @@ export const useFirebaseSync = (state, dispatch) => {
                 const q = query(lbRef, orderBy('totalKills', 'desc'), limit(50));
                 const snap = await getDocs(q);
                 const data = snap.docs.map((d) => d.data());
-                dispatch({ type: 'SET_LEADERBOARD', payload: data });
+                dispatch({ type: AT.SET_LEADERBOARD, payload: data });
             } catch (e) {
                 console.warn('Leaderboard fetch failed', e);
             }
         };
 
         fetchLeaderboard();
-        dispatch({ type: 'SET_BOOT_STAGE', payload: 'data' });
+        dispatch({ type: AT.SET_BOOT_STAGE, payload: 'data' });
         return () => unsubConfig();
     }, [bootStage, dispatch, smokeMode]);
 
@@ -149,9 +150,9 @@ export const useFirebaseSync = (state, dispatch) => {
         const fallbackToOffline = (message) => {
             if (bootResolved) return;
             bootResolved = true;
-            dispatch({ type: 'LOAD_DATA', payload: { player: INITIAL_STATE.player } });
-            dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
-            dispatch({ type: 'ADD_LOG', payload: makeLogPayload('warning', message) });
+            dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
+            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
+            dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('warning', message) });
         };
 
         const bootstrapTimer = setTimeout(() => {
@@ -175,15 +176,15 @@ export const useFirebaseSync = (state, dispatch) => {
                     if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
                     if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
 
-                    dispatch({ type: 'LOAD_DATA', payload: activeData });
+                    dispatch({ type: AT.LOAD_DATA, payload: activeData });
                     lastLoadedTimestampRef.current = remoteData.lastActive?.toMillis() || Date.now();
                     if (!hasBootLogRef.current) {
                         hasBootLogRef.current = true;
-                        dispatch({ type: 'ADD_LOG', payload: makeLogPayload('system', MSG.SYNC_SERVER_LOADED) });
+                        dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('system', MSG.SYNC_SERVER_LOADED) });
                     }
                 }
             } else {
-                dispatch({ type: 'LOAD_DATA', payload: { player: INITIAL_STATE.player } });
+                dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
             }
         }, (e) => {
             console.warn('User data subscribe failed', e);
@@ -241,10 +242,10 @@ export const useFirebaseSync = (state, dispatch) => {
                     }, { merge: true });
                 }
 
-                dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+                dispatch({ type: AT.SET_SYNC_STATUS, payload: 'synced' });
             } catch (e) {
                 console.error('Save Failed', e);
-                dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
+                dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
             }
         };
 

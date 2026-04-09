@@ -95,6 +95,7 @@ export const MSG = {
     ENHANCE_FAIL: (name, lv) => `💔 [${name}] +${lv} 강화 실패. 등급 유지.`,
     ENHANCE_MAX_LEVEL: '이미 최고 강화 등급입니다 (+10).',
     ENHANCE_NO_GOLD: (cost) => `강화 비용이 부족합니다. (필요: ${cost}G)`,
+    ENHANCE_NO_MATERIAL: (name, count) => `${name}이(가) 부족합니다. (필요: ${count}개)`,
     ENHANCE_NOT_EQUIP: '강화는 장비 아이템에만 가능합니다.',
 
     // --- 주간 미션 (Weekly Mission) ---
@@ -316,4 +317,28 @@ export const MSG = {
     // --- 이동 기본값 ---
     MOVE_NO_EXITS: '없음',
 
+    // --- UI 라벨 (버튼/섹션) ---
+    UI_CLOSE: '닫기',
+    UI_OPEN: '열기',
+    UI_REFRESH: '갱신',
+    UI_REVIEW: '검토',
+    UI_NOTABLE: '주목',
+    UI_ALL: '전체',
+    UI_EQUIPPED: '장착 중',
+    UI_MY_RANK: '내 순위',
+    UI_LOOT_REVIEW: '전리품 검토',
+    UI_LOOT_FOCUS: '전리품 주목',
+    UI_LOOT_FOCUS_HINT: '이번 전투에서 얻은 장비를 우선 확인하세요.',
+    UI_PRESTIGE: 'PRESTIGE',
+    UI_PRESTIGE_COMPLETE: '환생 완료',
+    UI_AUTO_EQUIP_BEST: '최적 장비 자동 장착',
+
+    // --- 인벤토리 필터 ---
+    INV_FILTER_ALL: '전체',
+    INV_FILTER_WEAPON: '무기',
+    INV_FILTER_ARMOR: '방어구',
+    INV_FILTER_SHIELD: '보조',
+    INV_FILTER_CONSUMABLE: '회복',
+    INV_FILTER_MATERIAL: '재료',
+    INV_FULL_WARNING: (used, max) => `인벤토리가 꽉 찼습니다 (${used}/${max})`,
 };

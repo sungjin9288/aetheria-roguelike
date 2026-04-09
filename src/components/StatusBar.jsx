@@ -101,7 +101,7 @@ const StatusBar = ({ player, stats, enemy = null, className = '', onCrystalClick
   return (
     <section
       data-testid="persistent-status-bar"
-      className={`pointer-events-none panel-noise aether-surface sticky top-[calc(env(safe-area-inset-top)+0.15rem)] z-50 w-full overflow-hidden rounded-[1.55rem] px-3 py-2 ${className}`.trim()}
+      className={`pointer-events-none panel-noise aether-surface sticky top-0 z-50 w-full overflow-hidden rounded-[1.55rem] px-3 py-2 ${className}`.trim()}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/22 to-transparent" style={{position:'absolute'}} />
       <div className="flex items-center justify-between gap-2">

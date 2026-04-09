@@ -77,8 +77,10 @@ const TerminalView = ({
     quickSlots,
     onQuickSlotUse,
     showInput = true,
+    className = '',
+    toolbarLeft = null,
 }) => {
-    const endRef = useRef(null);
+    const logViewportRef = useRef(null);
     const inputRef = useRef(null);
     const [inputValue, setInputValue] = useState('');
     const [logExpanded, setLogExpanded] = useState(false); // #10: 전투 로그 요약/전체 토글
@@ -89,12 +91,6 @@ const TerminalView = ({
         const resetTimer = window.setTimeout(() => setLogExpanded(false), 0);
         return () => window.clearTimeout(resetTimer);
     }, [gameState]);
-
-    useEffect(() => {
-        if (endRef.current) {
-            endRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-    }, [logs]);
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -155,6 +151,18 @@ const TerminalView = ({
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
     const showFooter = Boolean(showInput || (player && quickSlots && hasAnyQuickSlot));
     const showExpandToggle = isCombat || logs.length > compactMobileLogCount;
+
+    useEffect(() => {
+        const viewport = logViewportRef.current;
+        if (!viewport) return;
+
+        const shouldFollowTail = isCombat || logExpanded || logs.length > compactMobileLogCount;
+        viewport.scrollTo({
+            top: shouldFollowTail ? viewport.scrollHeight : 0,
+            behavior: 'auto',
+        });
+    }, [compactMobileLogCount, isCombat, logExpanded, logs.length]);
+
     const footerInput = showInput ? (
         <div className="relative flex min-w-0 items-center gap-2 rounded-[1rem] border border-white/8 bg-black/14 transition-colors focus-within:border-[#7dd4d8]/24 px-3 py-2">
             {player && (
@@ -191,10 +199,12 @@ const TerminalView = ({
         </div>
     ) : null;
 
+    const showToolbar = Boolean(toolbarLeft) || showExpandToggle;
+
     return (
         <div
             data-testid="terminal-panel"
-            className={`panel-noise min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.85rem] p-3 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
+            className={`panel-noise min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.85rem] px-3 py-2.5 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col ${className}`}
         >
             {/* Scanline overlay */}
             <div
@@ -204,92 +214,95 @@ const TerminalView = ({
             <div className="pointer-events-none absolute -right-10 top-4 h-24 w-24 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
             <div className="pointer-events-none absolute -left-8 bottom-6 h-28 w-28 rounded-full bg-[#d5b180]/10 blur-3xl" />
 
-            {showExpandToggle && (
-                <div className="flex items-center justify-end shrink-0 z-10 mb-1.5 px-1">
-                    <button
-                        onClick={() => setLogExpanded((open) => !open)}
-                        className="rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/72"
-                    >
-                        {isCombat
-                            ? (logExpanded
-                                ? <span className="inline-flex items-center gap-1"><ChevronUp size={10} /> 요약</span>
-                                : <span className="inline-flex items-center gap-1"><Filter size={10} /> 전체 {hiddenCount > 0 ? `+${hiddenCount}` : ''}</span>)
-                            : (logExpanded ? '접기' : `전체 +${hiddenCount}`)}
-                    </button>
-                </div>
-            )}
-
-            {/* Pinned AI Narrative */}
-            {latestStory && gameState !== GS.COMBAT && (
-                <div className="relative z-10 mb-2.5 overflow-hidden rounded-[1.2rem] aether-panel-core px-3 py-3 shrink-0">
-                    <div className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 38%)' }} />
-                    <div className="relative flex items-start gap-2.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[1rem] border border-[#7dd4d8]/18 bg-black/18 text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                            <Bot size={14} className="shrink-0" />
+            <div ref={logViewportRef} className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-0.5 min-h-0">
+                {showToolbar && (
+                    <div className="mb-2 flex items-center justify-between px-1 gap-2">
+                        <div className="min-w-0">
+                            {toolbarLeft}
                         </div>
-                        <div>
-                            <div className="mb-0.5 text-[11px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/62">Narrative Pulse</div>
-                            <p className="text-[11px] font-fira text-slate-100/84 italic leading-relaxed">{latestStory.text}</p>
-                        </div>
+                        {showExpandToggle && (
+                            <button
+                                onClick={() => setLogExpanded((open) => !open)}
+                                className="shrink-0 rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/72"
+                            >
+                                {isCombat
+                                    ? (logExpanded
+                                        ? <span className="inline-flex items-center gap-1"><ChevronUp size={10} /> 요약</span>
+                                        : <span className="inline-flex items-center gap-1"><Filter size={10} /> 전체 {hiddenCount > 0 ? `+${hiddenCount}` : ''}</span>)
+                                    : (logExpanded ? '접기' : `전체 +${hiddenCount}`)}
+                            </button>
+                        )}
                     </div>
-                </div>
-            )}
-
-            <div className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 min-h-0">
-                <div className="flex flex-col gap-1.5">
-                {logs.length === 0 && (
-                    <Motion.div
-                        className="text-slate-400/72 text-center mt-6 text-xs font-rajdhani tracking-[0.16em] flex flex-col items-center"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0.3, 0.8, 0.3] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                        <Terminal size={24} className="mx-auto mb-3 opacity-45 text-[#7dd4d8]" />
-                        아래 버튼으로 원정을 시작하세요
-                    </Motion.div>
                 )}
 
-                <AnimatePresence initial={false}>
-                    {displayLogs.map((log) => {
-                        const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
-                        const badge = MOBILE_LOG_BADGES[log.type];
-                        const IconComp = style.icon;
+                {latestStory && gameState !== GS.COMBAT && (
+                    <div className="relative mb-2.5 overflow-hidden rounded-[1.2rem] aether-panel-core px-3 py-3">
+                        <div className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 38%)' }} />
+                        <div className="relative flex items-start gap-2.5">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[1rem] border border-[#7dd4d8]/18 bg-black/18 text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                <Bot size={14} className="shrink-0" />
+                            </div>
+                            <div>
+                                <div className="mb-0.5 text-[11px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/62">Narrative Pulse</div>
+                                <p className="text-[11px] font-fira text-slate-100/84 italic leading-relaxed">{latestStory.text}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-                        return (
-                            <Motion.div
-                                key={log.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className={`text-xs py-2 px-2.5 aether-panel-muted rounded-[0.95rem] ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
-                            >
-                                {badge && (
-                                    <span className={`mr-1.5 inline-flex rounded-full border px-1.5 py-[1px] align-[1px] text-[8px] font-fira uppercase tracking-[0.12em] ${badge.className}`}>
-                                        {badge.label}
-                                    </span>
-                                )}
-                                {IconComp && <IconComp size={14} className="inline mr-1.5 -mt-0.5 opacity-80" />}
-                                {log.text}
-                            </Motion.div>
-                        );
-                    })}
-                </AnimatePresence>
-
-                <AnimatePresence>
-                    {logs.length > 0 && logs[logs.length - 1].type === 'loading' && (
+                <div className="space-y-1.5">
+                    {logs.length === 0 && (
                         <Motion.div
+                            className="flex flex-col items-center py-2 text-center text-xs font-rajdhani tracking-[0.16em] text-slate-400/72"
                             initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="mt-4 gap-2 pl-3 text-xs flex items-center font-rajdhani tracking-widest text-slate-500"
+                            animate={{ opacity: [0.3, 0.8, 0.3] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                         >
-                            <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                            <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                            <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                            <span className="ml-2">PROCESSING NARRATIVE...</span>
+                            <Terminal size={24} className="mx-auto mb-3 opacity-45 text-[#7dd4d8]" />
+                            아래 버튼으로 원정을 시작하세요
                         </Motion.div>
                     )}
-                </AnimatePresence>
-                <div ref={endRef} />
+
+                    <AnimatePresence initial={false}>
+                        {displayLogs.map((log) => {
+                            const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
+                            const badge = MOBILE_LOG_BADGES[log.type];
+                            const IconComp = style.icon;
+
+                            return (
+                                <Motion.div
+                                    key={log.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className={`text-xs py-2 px-2.5 leading-[1.45] aether-panel-muted rounded-[0.95rem] ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
+                                >
+                                    {badge && (
+                                        <span className={`mr-1.5 inline-flex rounded-full border px-1.5 py-[1px] align-[1px] text-[8px] font-fira uppercase tracking-[0.12em] ${badge.className}`}>
+                                            {badge.label}
+                                        </span>
+                                    )}
+                                    {IconComp && <IconComp size={14} className="inline mr-1.5 -mt-0.5 opacity-80" />}
+                                    {log.text}
+                                </Motion.div>
+                            );
+                        })}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {logs.length > 0 && logs[logs.length - 1].type === 'loading' && (
+                            <Motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="mt-4 gap-2 pl-3 text-xs flex items-center font-rajdhani tracking-widest text-slate-500"
+                            >
+                                <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                <span className="ml-2">PROCESSING NARRATIVE...</span>
+                            </Motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 

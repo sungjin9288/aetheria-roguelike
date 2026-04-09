@@ -166,6 +166,13 @@ npm run test:smoke
 ./scripts/local-playtest.sh
 ```
 
+## OpenSpace Integration
+
+This repo is wired for repo-local OpenSpace skills covering bootstrap, UI, content, and playtest loops.
+
+- Guide: [docs/openspace_integration.md](./docs/openspace_integration.md)
+- Smoke: `python3 scripts/openspace_smoke.py`
+
 ### Environment Variables
 
 | 변수 | 용도 |

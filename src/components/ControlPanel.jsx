@@ -3,10 +3,6 @@ import {
   ArrowRight,
   Map as MapIcon,
   ShoppingBag,
-  Moon,
-  GraduationCap,
-  ScrollText,
-  Hammer,
   Ghost,
   X,
 } from 'lucide-react';
@@ -38,6 +34,7 @@ const ControlPanel = ({
   currentEvent,
   stats = null,
   mobileFocused = false,
+  onOpenArchiveConsole = null,
 }) => {
   const [confirmReset, setConfirmReset] = useState(false);
   const mapData = DB.MAPS[player.loc];
@@ -180,19 +177,19 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.SHOP) {
-    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} mobileFocused={mobileFocused} />;
+    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} mobileFocused={mobileFocused} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
   if (gameState === GS.JOB_CHANGE) {
-    return <JobChangePanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} />;
+    return <JobChangePanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
   if (gameState === GS.QUEST_BOARD) {
-    return <QuestBoardPanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} />;
+    return <QuestBoardPanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
   if (gameState === GS.CRAFTING) {
-    return <CraftingPanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} />;
+    return <CraftingPanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
   const coreButtons = [
@@ -219,16 +216,6 @@ const ControlPanel = ({
     },
   ];
 
-  const restButton = {
-    key: 'rest',
-    testId: 'control-rest',
-    icon: Moon,
-    label: 'REST',
-    sidebarLabel: 'REST',
-    onClick: actions.rest,
-    className: 'bg-[linear-gradient(180deg,rgba(25,28,23,0.82)_0%,rgba(12,13,10,0.96)_100%)] border border-[#d5b180]/16 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/24',
-  };
-
   const marketButton = {
     key: 'market',
     testId: 'control-market',
@@ -242,37 +229,7 @@ const ControlPanel = ({
     className: 'bg-[linear-gradient(180deg,rgba(34,24,14,0.84)_0%,rgba(16,11,7,0.96)_100%)] border border-[#d5b180]/22 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30',
   };
 
-  const classButton = {
-    key: 'class',
-    testId: 'control-class',
-    icon: GraduationCap,
-    label: 'CLASS',
-    sidebarLabel: 'CLASS',
-    onClick: () => setGameState(GS.JOB_CHANGE),
-    className: 'bg-[linear-gradient(180deg,rgba(28,20,39,0.84)_0%,rgba(12,10,18,0.96)_100%)] border border-[#9a8ac0]/18 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/28',
-  };
-
-  const questButton = {
-    key: 'quests',
-    testId: 'control-quests',
-    icon: ScrollText,
-    label: 'QUEST',
-    mobileLabel: 'QUEST',
-    onClick: () => setGameState(GS.QUEST_BOARD),
-    className: 'bg-[linear-gradient(180deg,rgba(20,24,34,0.84)_0%,rgba(9,11,18,0.96)_100%)] border border-white/8 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-white/[0.04]',
-  };
-
-  const craftButton = {
-    key: 'craft',
-    testId: 'control-craft',
-    icon: Hammer,
-    label: 'CRAFT',
-    sidebarLabel: 'CRAFT',
-    onClick: () => setGameState(GS.CRAFTING),
-    className: 'bg-[linear-gradient(180deg,rgba(30,22,18,0.84)_0%,rgba(14,10,9,0.96)_100%)] border border-[#d5b180]/14 text-[#f1dcc1] hover:border-[#d5b180]/24 hover:bg-[#d5b180]/8',
-  };
-
-  const safeZoneButtons = [marketButton, restButton, classButton, questButton, craftButton];
+  const safeZoneButtons = [marketButton];
 
   const auxiliaryButtons = [];
   if (showGraveRecovery) {
@@ -291,7 +248,7 @@ const ControlPanel = ({
     <Motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative z-10 w-full panel-noise aether-surface rounded-[1.55rem] p-2"
+      className="relative z-10 w-full panel-noise aether-surface rounded-[1.55rem] p-1.5"
     >
       {gameState === GS.MOVING ? (
         <div className="grid grid-cols-2 gap-2">
@@ -301,29 +258,27 @@ const ControlPanel = ({
               key={route.name}
               disabled={isAiThinking}
               onClick={() => actions.move(route.name)}
-              className={`min-h-[92px] rounded-[1.35rem] px-3 py-3 text-xs ${
+              className={`rounded-[1.35rem] px-3 py-2.5 text-xs ${
                 route.isRecommended
                   ? 'border-[#7dd4d8]/26 bg-[radial-gradient(circle_at_82%_12%,rgba(125,212,216,0.14),transparent_22%),linear-gradient(180deg,rgba(18,34,41,0.84)_0%,rgba(8,14,18,0.96)_100%)] shadow-[0_18px_30px_rgba(125,212,216,0.1)]'
                   : 'border-white/8 bg-[linear-gradient(180deg,rgba(18,21,28,0.84)_0%,rgba(8,11,16,0.96)_100%)]'
-              } text-left hover:border-[#d5b180]/20 hover:bg-[#d5b180]/8 flex flex-col items-start justify-between gap-2 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all backdrop-blur-md`}
+              } text-left hover:border-[#d5b180]/20 hover:bg-[#d5b180]/8 flex flex-col items-start gap-1.5 disabled:opacity-50 font-rajdhani font-bold tracking-wider transition-all backdrop-blur-md`}
             >
-              <div className="flex w-full items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-[#e4f7f5]">
-                    <span className="flex items-center justify-center rounded-[0.9rem] border border-white/8 bg-black/18 h-8 w-8">
-                      <MapIcon size={16} />
-                    </span>
-                    <span className="truncate">{route.name}</span>
-                  </div>
-                  <div className="mt-1 font-fira text-slate-400/72 text-[10px]">
-                    {route.levelLabel}
+              <div className="flex w-full items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-[#e4f7f5] min-w-0">
+                  <span className="flex shrink-0 items-center justify-center rounded-[0.75rem] border border-white/8 bg-black/18 h-7 w-7">
+                    <MapIcon size={14} />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="truncate text-[12px]">{route.name}</div>
+                    <div className="font-fira text-slate-400/72 text-[9px] font-normal">{route.levelLabel}</div>
                   </div>
                 </div>
                 <SignalBadge tone={route.isRecommended ? 'recommended' : 'neutral'} size="sm">
                   {route.isRecommended ? '추천' : route.badge}
                 </SignalBadge>
               </div>
-              <div className="text-[10px] font-fira text-slate-300/72 leading-snug">
+              <div className="text-[9px] font-fira text-slate-300/60 leading-snug line-clamp-2">
                 {route.reason}
               </div>
             </Motion.button>
@@ -340,14 +295,14 @@ const ControlPanel = ({
       ) : (
         <div className={actionGridClass}>
           {coreButtons.map((button) => renderActionButton(button))}
-          {!isSafeZone && renderResetControl({
+          {!mobileFocused && !isSafeZone && renderResetControl({
             compact: true,
             className: '',
             confirmGridClass: 'col-span-3 grid-cols-2 gap-1.5',
           })}
           {isSafeZone && safeZoneButtons.map((button) => renderActionButton(button))}
           {auxiliaryButtons.map((button) => renderActionButton(button))}
-          {isSafeZone && renderResetControl({
+          {!mobileFocused && isSafeZone && renderResetControl({
             compact: true,
             className: '',
             confirmGridClass: 'col-span-3 grid-cols-2 gap-1.5',

@@ -4,6 +4,7 @@ import { DB } from '../data/db';
 import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
+import FocusPanelHeader from './FocusPanelHeader';
 
 /** 맵 레벨을 기준으로 상점 최대 아이템 티어 계산 */
 const getShopMaxTier = (loc) => {
@@ -87,7 +88,7 @@ const getCompactItemSummary = (item) => {
 
 const MOBILE_INITIAL_BUY_LIMIT = 12;
 
-const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false }) => {
+const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false, onOpenArchiveConsole = null }) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
@@ -143,51 +144,49 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
 
     return (
         <div className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3' : `${getOverlayPanelClass()} panel-noise aether-surface-strong`} z-20 flex flex-col overflow-hidden p-3`}>
-            <div className="mb-3 flex items-center justify-between gap-2 sticky top-0 z-10 -mx-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] px-3 pb-2.5 pt-1">
-                <div className="min-w-0">
-                    <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/66">Broker Ledger</div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                        <h2 className="text-[1.1rem] font-bold font-rajdhani tracking-[0.18em] text-[#f6e7c8] leading-none">
-                            MARKET
-                        </h2>
-                        <span className="text-[9px] font-fira text-slate-400/70">{loc} · T{maxTier} · {player.gold} CR · {player.inv.length}/{player.maxInv || BALANCE.INV_MAX_SIZE}</span>
-                    </div>
+            <FocusPanelHeader
+                eyebrow="Broker Ledger"
+                title="MARKET"
+                titleClassName="text-[1.1rem] leading-none"
+                meta={`${loc} · T${maxTier} · ${player.gold} CR · ${player.inv.length}/${player.maxInv || BALANCE.INV_MAX_SIZE}`}
+                onBack={() => setGameState('idle')}
+                backLabel="복귀"
+                backTestId="shop-close"
+                onOpenArchive={onOpenArchiveConsole}
+                archiveLabel="INV"
+                archiveTestId="shop-open-archive"
+            />
+
+            <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/74">
+                    {shopMode === 'buy' ? '구매 후보를 빠르게 비교합니다.' : '판매 확정 전 한 번 더 확인합니다.'}
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                    <div className="flex rounded-full border border-white/8 bg-black/20 p-0.5">
-                        <button
-                            onClick={() => {
-                                setShopMode('buy');
-                                setSellConfirmId(null);
-                            }}
-                            className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${shopMode === 'buy' ? 'bg-[#d5b180]/18 text-[#f6e7c8]' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            구매
-                        </button>
-                        <button
-                            onClick={() => {
-                                setShopMode('sell');
-                                setSellConfirmId(null);
-                            }}
-                            className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${shopMode === 'sell' ? 'bg-rose-400/16 text-rose-100' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            판매
-                        </button>
-                    </div>
+                <div className="flex shrink-0 rounded-full border border-white/8 bg-black/20 p-0.5">
                     <button
-                        data-testid="shop-close"
-                        onClick={() => setGameState('idle')}
-                        className="min-h-[36px] rounded-full border border-white/8 bg-black/20 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-white/[0.06]"
+                        onClick={() => {
+                            setShopMode('buy');
+                            setSellConfirmId(null);
+                        }}
+                        className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${shopMode === 'buy' ? 'bg-[#d5b180]/18 text-[#f6e7c8]' : 'text-slate-400 hover:text-white'}`}
                     >
-                        닫기
+                        구매
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShopMode('sell');
+                            setSellConfirmId(null);
+                        }}
+                        className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${shopMode === 'sell' ? 'bg-rose-400/16 text-rose-100' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        판매
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto grid grid-cols-1 auto-rows-[minmax(6.15rem,auto)] content-start gap-2.5 custom-scrollbar pr-1">
+            <div className="flex-1 overflow-y-auto space-y-2.5 custom-scrollbar pr-1">
                 {/* Daily Deals + Weekly Special */}
                 {shopMode === 'buy' && (dailyDeals.items.length > 0 || weeklySpecial) && (
-                    <div className="col-span-full mb-2 space-y-2 border-b border-white/8 pb-2">
+                    <div className="mb-2 space-y-2 border-b border-white/8 pb-2">
                         <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-amber-300/70">Daily Deals — 10% OFF</div>
                         <div className="grid grid-cols-1 gap-2">
                             {dailyDeals.items.map((item) => {
@@ -246,52 +245,44 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                             return (
                                 <div
                                     key={item.name}
-                                    className={`relative flex flex-col rounded-[1.3rem] border px-3 py-2.75 transition-all ${canBuy ? 'aether-panel-muted hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]' : 'bg-black/14 border-white/8'} border-white/8`}
+                                    data-testid="shop-buy-item"
+                                    className={`overflow-hidden rounded-[1.2rem] border px-3 py-2.5 transition-all ${canBuy ? 'aether-panel-muted hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]' : 'bg-black/14 border-white/8'} border-white/8`}
                                 >
-                                    <button
-                                        type="button"
-                                        data-testid="shop-buy-item"
-                                        aria-label={`${item.name} 카드`}
-                                        className="absolute inset-0 z-10 rounded-[1.3rem]"
-                                    />
-                                    <div className="relative z-20">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="truncate font-bold text-slate-100 font-rajdhani text-[1.05rem] leading-none">{item.name}</div>
-                                                    {typeTag && (
-                                                        <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-fira text-slate-300/85">
-                                                            {typeTag}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="mt-1 truncate text-[10px] leading-none text-slate-400 font-fira">
-                                                    {summary}
-                                                </div>
-                                            </div>
-                                            <div className="shrink-0 flex items-center gap-2">
-                                                <div className="text-[11px] font-fira font-bold text-[#f6e7c8]">{item.price} CR</div>
-                                                <button
-                                                    data-testid="shop-buy-inline"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (!canBuy) return;
-                                                        actions.market('buy', item);
-                                                    }}
-                                                    disabled={!canBuy}
-                                                    className="relative z-30 min-h-[32px] rounded-full border border-[#d5b180]/24 px-2.5 py-1 text-[10px] font-bold text-[#f6e7c8] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
-                                                >
-                                                    {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
-                                                </button>
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="truncate font-bold text-slate-100 font-rajdhani text-[1rem] leading-tight">{item.name}</div>
+                                                {typeTag && (
+                                                    <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-fira text-slate-300/85">
+                                                        {typeTag}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-
+                                        <div className="shrink-0 flex items-center gap-2">
+                                            <div className="text-[11px] font-fira font-bold text-[#f6e7c8]">{item.price} CR</div>
+                                            <button
+                                                data-testid="shop-buy-inline"
+                                                onClick={() => {
+                                                    if (!canBuy) return;
+                                                    actions.market('buy', item);
+                                                }}
+                                                disabled={!canBuy}
+                                                className="min-h-[34px] rounded-full border border-[#d5b180]/24 px-2.5 py-1 text-[10px] font-bold text-[#f6e7c8] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
+                                            >
+                                                {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="mt-1 flex items-center gap-1.5 text-[10px] font-fira leading-[1.35] min-w-0">
+                                        <div className="min-w-0 flex-1 truncate text-slate-400">{summary}</div>
                                         {comparison && (
-                                            <div className={`mt-1.5 rounded-[0.95rem] border px-2 py-1.5 text-[10px] font-fira leading-none ${getToneClass(comparison.tone)}`}>
-                                                <div className="truncate">
+                                            <>
+                                                <span className="shrink-0 text-slate-600">/</span>
+                                                <div className={`min-w-0 max-w-[52%] truncate rounded-full border px-2 py-0.5 ${getToneClass(comparison.tone)}`}>
                                                     대비 {comparisonText}
                                                 </div>
-                                            </div>
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -369,7 +360,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                     <button
                         type="button"
                         onClick={() => setBuyItemsExpansion({ key: expansionKey, expanded: true })}
-                        className="col-span-full min-h-[44px] rounded-[1.05rem] border border-white/8 bg-black/18 px-4 py-3 text-[11px] font-fira uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-white/[0.05]"
+                        className="min-h-[44px] w-full rounded-[1.05rem] border border-white/8 bg-black/18 px-4 py-3 text-[11px] font-fira uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-white/[0.05]"
                     >
                         더 보기 ({buyItems.length - visibleBuyItems.length}개 남음)
                     </button>

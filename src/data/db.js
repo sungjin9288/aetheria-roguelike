@@ -1,4 +1,3 @@
-import { ELEMENTS } from './elements.jsx';
 import { CLASSES } from './classes.js';
 import { ITEMS } from './items.js';
 import { MAPS } from './maps.js';
@@ -8,7 +7,6 @@ import { DROP_TABLES } from './dropTables.js';
 import { QUESTS, ACHIEVEMENTS } from './quests.js';
 
 export const DB = {
-    ELEMENTS,
     CLASSES,
     ITEMS,
     MAPS,

@@ -111,7 +111,7 @@ export const featureActionMap = {
 
     // ── Item Enhancement ──────────────────────────────────────────────────
     ENHANCE_ITEM: (state, action) => {
-        const { itemId, success } = action.payload;
+        const { itemId, slot: slotName, success } = action.payload;
         const newInv = state.player.inv.map(item => {
             if (item.id !== itemId) return item;
             if (!success) return item;
@@ -119,10 +119,14 @@ export const featureActionMap = {
         });
         const equip = state.player.equip;
         const newEquip = {};
-        for (const slot of ['weapon', 'armor', 'offhand']) {
-            newEquip[slot] = (equip[slot]?.id === itemId && success)
-                ? { ...equip[slot], enhance: (equip[slot].enhance || 0) + 1 }
-                : equip[slot];
+        for (const key of ['weapon', 'armor', 'offhand']) {
+            const shouldEnhance = success && (
+                (slotName && slotName === key)
+                || equip[key]?.id === itemId
+            );
+            newEquip[key] = shouldEnhance
+                ? { ...equip[key], enhance: (equip[key].enhance || 0) + 1 }
+                : equip[key];
         }
         return {
             ...state,

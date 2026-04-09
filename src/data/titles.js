@@ -212,14 +212,8 @@ export const TITLES = Object.freeze([
     },
 ]);
 
-/** 희귀도 등급 → 표시 색상 */
-export const RARITY_COLORS = Object.freeze({
-    common: 'text-slate-300',
-    uncommon: 'text-cyan-400',
-    rare: 'text-purple-400',
-    epic: 'text-yellow-400',
-    legendary: 'text-red-400',
-});
+// 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
+export { RARITY_CLASSES as RARITY_COLORS } from './constants.js';
 
 export const TITLE_PASSIVES = Object.freeze({
     first_blood:      { atk: 1, label: 'ATK +1' },

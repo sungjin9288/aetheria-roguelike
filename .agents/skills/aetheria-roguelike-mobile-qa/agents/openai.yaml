@@ -1,0 +1,4 @@
+interface:
+  display_name: "Aetheria Mobile QA"
+  short_description: "Run Aetheria mobile QA and signed build loop"
+  default_prompt: "Work on Aetheria Roguelike mobile QA, release build, and device validation flow."

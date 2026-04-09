@@ -1,4 +1,5 @@
 import { DB } from '../data/db';
+import { CONSTANTS } from '../data/constants';
 
 /**
  * shopRotation.js — 날짜 시드 기반 결정론적 상점 생성
@@ -122,10 +123,15 @@ export const getMaterialShop = (playerLevel = 1) => {
         return true;
     });
 
+    const pinnedEnhanceMaterial = materials.find((mat) => mat.name === CONSTANTS.ENHANCE_MATERIAL_NAME) || null;
     const shuffled = seededShuffle(materials, seed);
     // 레벨에 따라 5~8개 소재 판매
     const count = Math.min(materials.length, playerLevel < 10 ? 5 : playerLevel < 25 ? 6 : 8);
-    return shuffled.slice(0, count).map((mat) => ({
+    const picked = pinnedEnhanceMaterial
+        ? [pinnedEnhanceMaterial, ...shuffled.filter((mat) => mat.name !== pinnedEnhanceMaterial.name).slice(0, Math.max(0, count - 1))]
+        : shuffled.slice(0, count);
+
+    return picked.map((mat) => ({
         ...mat,
         price: Math.floor(mat.price * 2.5), // 소재 상점은 마크업
         isMaterialShop: true,

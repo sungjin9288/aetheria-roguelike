@@ -4,16 +4,32 @@ import AetherMark from './AetherMark';
 import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
 import { BALANCE } from '../data/constants';
 
-const MOBILE_NAME_POOL = ['진', '리아', '카일', '세나', '루카', '시아', '하린', '레온'];
-const randomMobileName = () => MOBILE_NAME_POOL[Math.floor(Math.random() * MOBILE_NAME_POOL.length)];
+const HANGUL_INITIALS = [0, 2, 3, 5, 6, 7, 9, 11, 12, 14, 15, 16, 17, 18];
+const HANGUL_MEDIALS = [0, 1, 4, 5, 8, 12, 13, 17, 18, 20];
+const HANGUL_FINALS = [0, 0, 1, 4, 8, 16, 17, 19, 21, 27];
+const HANGUL_BASE = 0xac00;
+
+const randomFrom = (pool) => pool[Math.floor(Math.random() * pool.length)];
+const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+const buildRandomHangulSyllable = () => {
+    const initial = randomFrom(HANGUL_INITIALS);
+    const medial = randomFrom(HANGUL_MEDIALS);
+    const final = randomFrom(HANGUL_FINALS);
+    return String.fromCharCode(HANGUL_BASE + (initial * 21 * 28) + (medial * 28) + final);
+};
+
+const randomMobileName = () => Array.from(
+    { length: randomBetween(2, 5) },
+    () => buildRandomHangulSyllable(),
+).join('');
 
 const CHALLENGE_REWARD_TEXT = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
 
 const IntroScreen = ({ onStart }) => {
-    const [name, setName] = useState('');
+    const [name, setName] = useState(() => randomMobileName());
     const [selectedChallenges, setSelectedChallenges] = useState([]);
     const nameInputRef = useRef(null);
-    const mobileSuggestions = useMemo(() => MOBILE_NAME_POOL, []);
 
     const toggleChallenge = (id) => {
         setSelectedChallenges(prev =>
@@ -97,50 +113,30 @@ const IntroScreen = ({ onStart }) => {
                 >
                     <div className="space-y-3">
                         <div className="rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,18,26,0.88)_0%,rgba(8,11,17,0.95)_100%)] px-4 py-4">
-                            <input
-                                ref={nameInputRef}
-                                data-testid="intro-name-input"
-                                type="text"
-                                value={name}
-                                onChange={(e) => applyName(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="닉네임 입력"
-                                className="w-full rounded-[1.15rem] border border-white/10 bg-black/28 px-3 py-3 text-center font-rajdhani text-xl text-[#f0f6f7] transition-all placeholder:text-slate-500 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
-                                maxLength={16}
-                            />
-                            <div data-testid="intro-mobile-name" className="sr-only">{selectedName}</div>
-                            <div className="mt-3 grid grid-cols-4 gap-2">
-                                {mobileSuggestions.map((option) => (
-                                    <button
-                                        key={option}
-                                        type="button"
-                                        onClick={() => applyName(option, true)}
-                                        className={`rounded-xl border px-2 py-2.5 text-sm font-rajdhani font-bold ${
-                                            selectedName === option
-                                                ? 'border-[#7dd4d8]/45 bg-[#7dd4d8]/18 text-[#dff7f5]'
-                                            : 'border-white/8 bg-black/24 text-slate-300'
-                                        }`}
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="mt-3 flex gap-2">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    ref={nameInputRef}
+                                    data-testid="intro-name-input"
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => applyName(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="닉네임 입력"
+                                    className="w-full rounded-[1.15rem] border border-[#d5b180]/20 bg-[#f6e7c8] px-3 py-3 text-center font-rajdhani text-xl text-black transition-all placeholder:text-black/38 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
+                                    maxLength={16}
+                                />
                                 <button
                                     type="button"
                                     data-testid="intro-reroll-name"
                                     onClick={() => applyName(randomMobileName(), true)}
-                                    className="flex-1 rounded-xl border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-3 text-sm font-rajdhani font-bold text-[#f4e6c8]"
+                                    className="shrink-0 rounded-[1.05rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-3 text-[11px] font-rajdhani font-bold tracking-[0.14em] text-[#f4e6c8]"
                                 >
-                                    랜덤 생성
+                                    랜덤
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => applyName('', true)}
-                                    className="rounded-xl border border-white/8 bg-black/24 px-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/80"
-                                >
-                                    지우기
-                                </button>
+                            </div>
+                            <div data-testid="intro-mobile-name" className="sr-only">{selectedName}</div>
+                            <div className="mt-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/70">
+                                랜덤 버튼으로 2~5글자 호출명을 새로 만들고 바로 수정해서 시작할 수 있습니다.
                             </div>
                         </div>
                     </div>

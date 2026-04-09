@@ -7,6 +7,7 @@ export const CONSTANTS = {
     DEFAULT_JOB: '모험가',
     START_LOCATION: '시작의 마을',
     ABYSS_MAP_NAME: '혼돈의 심연',
+    ENHANCE_MATERIAL_NAME: '강화 재료',
 
     // Note: GEMINI_API_KEY moved to server-side (api/ai-proxy.js)
     // Client no longer needs this key directly
@@ -82,6 +83,7 @@ export const BALANCE = {
     // v4.1 — 등급 시스템
     RARITY_TIERS: ['common', 'uncommon', 'rare', 'epic', 'legendary'],
     RARITY_SELL_MULT: { common: 1, uncommon: 1.2, rare: 1.5, epic: 2, legendary: 3 },
+    // Hex 컬러 (인라인 스타일/아이콘/프레임용). Tailwind 클래스 버전은 RARITY_CLASSES 사용.
     RARITY_COLORS: { common: '#9ca3af', uncommon: '#22c55e', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b' },
 
     // v4.1 — 합성 시스템
@@ -101,8 +103,9 @@ export const BALANCE = {
     // v4.3 — 아이템 강화 시스템
     ENHANCE_MAX: 10,
     ENHANCE_STAT_BONUS: 0.1,   // 강화 레벨당 스탯 10% 보너스
-    ENHANCE_COSTS: [0, 150, 400, 800, 1800, 3500, 7000, 13000, 25000, 50000], // 강화 비용 완화
+    ENHANCE_COSTS: [150, 400, 800, 1800, 3500, 7000, 13000, 25000, 50000, 90000], // +0 -> +1부터 비용 필요
     ENHANCE_RATES: [1.0, 0.95, 0.90, 0.85, 0.75, 0.65, 0.55, 0.45, 0.35, 0.25],
+    ENHANCE_MATERIAL_COSTS: [1, 1, 1, 2, 2, 3, 3, 4, 4, 5],
 
     // 레벨업 성장치
     HP_PER_LEVEL: 20,               // 레벨당 기본 HP 증가
@@ -251,7 +254,24 @@ export const BALANCE = {
     KILL_STREAK_TIERS: [3, 5, 10, 20], // 보너스 발동 임계 연속 처치 수
     KILL_STREAK_ATK_BONUS: [0.05, 0.10, 0.18, 0.30], // 각 티어 ATK 배율 보너스
     KILL_STREAK_CRIT_BONUS: [0.03, 0.06, 0.10, 0.15], // 각 티어 CRIT 보너스
+
+    // 인벤토리 UX 임계값
+    INV_FULL_THRESHOLD: 18,             // 인벤토리 과밀 경고 임계 (최대의 ~90%)
+    INV_COMPACT_MAX_ITEMS: 3,           // compact 모드에서 우선 표시 아이템 수
 };
 
 Object.freeze(CONSTANTS);
 Object.freeze(BALANCE);
+
+/**
+ * 희귀도 등급 → Tailwind 텍스트 색상 클래스
+ * BALANCE.RARITY_COLORS는 hex 값, RARITY_CLASSES는 tailwind 클래스.
+ * 두 값의 이름이 혼동되지 않도록 분리되어 있다.
+ */
+export const RARITY_CLASSES = Object.freeze({
+    common: 'text-slate-300',
+    uncommon: 'text-cyan-400',
+    rare: 'text-purple-400',
+    epic: 'text-yellow-400',
+    legendary: 'text-red-400',
+});

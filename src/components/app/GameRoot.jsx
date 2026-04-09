@@ -15,15 +15,15 @@ const PremiumShop      = lazy(() => import('../PremiumShop'));
 
 const GameRoot = ({
     engine, fullStats,
-    isMobileFocusState, mobileArchiveDockVisible,
+    isPanelFocusState, mobileArchiveDockVisible,
     inventorySpotlight,
     premiumShopOpen, setPremiumShopOpen,
     isMuted, setIsMuted,
     handleQuickSlotUse,
-    showOnboarding, handleOnboardingDismiss,
     damageFlash, healFlash, damageAmount,
 }) => {
     const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
+
     return (
     <MotionConfig reducedMotion="user">
         <MainLayout visualEffect={engine.visualEffect}>
@@ -44,8 +44,6 @@ const GameRoot = ({
                     player={engine.player}
                     stats={fullStats}
                     enemy={engine.gameState === GS.COMBAT ? engine.enemy : null}
-                    mobile={true}
-                    compactDesktop={false}
                     onCrystalClick={(engine.player?.premiumCurrency || 0) > 0 ? () => setPremiumShopOpen(true) : null}
                     isMuted={isMuted}
                     onToggleMute={handleToggleMute}
@@ -88,14 +86,10 @@ const GameRoot = ({
                 <MobileGameLayout
                     engine={engine}
                     fullStats={fullStats}
-                    isMobileFocusState={isMobileFocusState}
+                    isPanelFocusState={isPanelFocusState}
                     mobileArchiveDockVisible={mobileArchiveDockVisible}
                     inventorySpotlight={inventorySpotlight}
-                    isMuted={isMuted}
-                    setIsMuted={setIsMuted}
                     handleQuickSlotUse={handleQuickSlotUse}
-                    showOnboarding={showOnboarding}
-                    handleOnboardingDismiss={handleOnboardingDismiss}
                     damageFlash={damageFlash}
                     healFlash={healFlash}
                 />

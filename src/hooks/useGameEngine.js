@@ -5,6 +5,8 @@ import { soundManager } from '../systems/SoundManager';
 import { AI_SERVICE } from '../services/aiService';
 import { parseCommand } from '../utils/commandParser';
 import { gameReducer, INITIAL_STATE } from '../reducers/gameReducer';
+import { AT } from '../reducers/actionTypes';
+import { GS } from '../reducers/gameStates';
 import { getTitlePassive, getPassiveSkillBonuses } from '../utils/gameUtils';
 import { getActiveRelicSynergies } from '../data/relics';
 import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from '../utils/equipmentUtils';
@@ -56,7 +58,7 @@ export const useGameEngine = () => {
 
     // --- Shared Helpers ---
     const addLog = useCallback(
-        (type, text) => dispatch({ type: 'ADD_LOG', payload: { type, text, id: `${Date.now()}_${Math.random()}` } }),
+        (type, text) => dispatch({ type: AT.ADD_LOG, payload: { type, text, id: `${Date.now()}_${Math.random()}` } }),
         []
     );
 
@@ -292,9 +294,9 @@ export const useGameEngine = () => {
 
     const addStoryLog = useCallback(
         async (type, data) => {
-            dispatch({ type: 'SET_AI_THINKING', payload: true });
+            dispatch({ type: AT.SET_AI_THINKING, payload: true });
             const tempId = Date.now();
-            dispatch({ type: 'ADD_LOG', payload: { type: 'loading', text: '...', id: tempId } });
+            dispatch({ type: AT.ADD_LOG, payload: { type: 'loading', text: '...', id: tempId } });
             try {
                 const fullStats = getFullStats();
                 const buildProfile = getRunBuildProfile(player, fullStats);
@@ -317,9 +319,9 @@ export const useGameEngine = () => {
                     }
                 }, uid);
 
-                dispatch({ type: 'UPDATE_LOG', payload: { id: tempId, log: { id: tempId, type: 'story', text: narrative } } });
+                dispatch({ type: AT.UPDATE_LOG, payload: { id: tempId, log: { id: tempId, type: 'story', text: narrative } } });
             } finally {
-                dispatch({ type: 'SET_AI_THINKING', payload: false });
+                dispatch({ type: AT.SET_AI_THINKING, payload: false });
             }
         },
         [player, uid, getFullStats]
@@ -339,16 +341,20 @@ export const useGameEngine = () => {
                 ...inventoryActions,
 
                 // UI State setters
-                setSideTab: (val) => dispatch({ type: 'SET_SIDE_TAB', payload: val }),
-                setGameState: (val) => dispatch({ type: 'SET_GAME_STATE', payload: val }),
-                setShopItems: (val) => dispatch({ type: 'SET_SHOP_ITEMS', payload: val }),
-                setAiThinking: (val) => dispatch({ type: 'SET_AI_THINKING', payload: val }),
-                setActiveTitle: (val) => dispatch({ type: 'SET_PLAYER', payload: { activeTitle: val } }),
+                setSideTab: (val) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
+                setGameState: (val) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
+                setShopItems: (val) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
+                setAiThinking: (val) => dispatch({ type: AT.SET_AI_THINKING, payload: val }),
+                setActiveTitle: (val) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
+                dismissEvent: () => {
+                    dispatch({ type: AT.SET_EVENT, payload: null });
+                    dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                },
 
                 // Feature Actions
-                setQuickSlot: (index, item) => dispatch({ type: 'SET_QUICK_SLOT', payload: { index, item } }),
-                clearPostCombat: () => dispatch({ type: 'SET_POST_COMBAT_RESULT', payload: null }),
-                dismissOnboarding: () => dispatch({ type: 'SET_ONBOARDING_DISMISSED' }),
+                setQuickSlot: (index, item) => dispatch({ type: AT.SET_QUICK_SLOT, payload: { index, item } }),
+                clearPostCombat: () => dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null }),
+                dismissOnboarding: () => dispatch({ type: AT.SET_ONBOARDING_DISMISSED }),
 
                 getUid: () => uid,
                 isAdmin: () => ADMIN_UIDS.includes(uid),

@@ -3,7 +3,10 @@ import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
 import { getEquipmentIdentity, getEquipmentProfile, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
+import { getEnhanceAvailability } from '../utils/enhancementUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
+import { MSG } from '../data/messages';
+import { BALANCE } from '../data/constants';
 import SignalBadge from './SignalBadge';
 
 /**
@@ -24,12 +27,12 @@ const StatDiff = ({ val, label }) => {
  * SmartInventory — 인벤토리 스마트 필터 + 장비 비교 (시나리오 2)
  */
 const FILTERS = [
-    { id: 'all', label: '전체' },
-    { id: 'weapon', label: '무기' },
-    { id: 'armor', label: '방어구' },
-    { id: 'shield', label: '보조' },
-    { id: 'hp', label: '회복' },
-    { id: 'material', label: '재료' },
+    { id: 'all', label: MSG.INV_FILTER_ALL },
+    { id: 'weapon', label: MSG.INV_FILTER_WEAPON },
+    { id: 'armor', label: MSG.INV_FILTER_ARMOR },
+    { id: 'shield', label: MSG.INV_FILTER_SHIELD },
+    { id: 'hp', label: MSG.INV_FILTER_CONSUMABLE },
+    { id: 'material', label: MSG.INV_FILTER_MATERIAL },
 ];
 
 const ITEM_TYPE_TO_FILTER = {
@@ -42,7 +45,7 @@ const ITEM_TYPE_TO_FILTER = {
     cure: 'hp',
     mat: 'material',
 };
-const MAX_COMPACT_ITEMS = 3;
+const MAX_COMPACT_ITEMS = BALANCE.INV_COMPACT_MAX_ITEMS;
 
 const canEquipItem = (item, job) => !Array.isArray(item.jobs) || item.jobs.includes(job);
 
@@ -130,13 +133,12 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     };
 
     // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
-    const INV_FULL_THRESHOLD = 18;
-    const isInvNearFull = player.inv.length >= INV_FULL_THRESHOLD;
+    const isInvNearFull = player.inv.length >= BALANCE.INV_FULL_THRESHOLD;
     const sellableMatCount = useMemo(() =>
         player.inv.filter(i => i.type === 'mat' && (i.price || 0) <= 30).length,
         [player.inv]
     );
-    const activeFilterLabel = FILTERS.find((entry) => entry.id === activeFilter)?.label || '전체';
+    const activeFilterLabel = FILTERS.find((entry) => entry.id === activeFilter)?.label || MSG.INV_FILTER_ALL;
     const visibleFiltered = (() => {
         if (!compact || showAllItems || filtered.length <= MAX_COMPACT_ITEMS) return filtered;
 
@@ -173,10 +175,10 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 >
                     <div className="min-w-0">
                         <div className="text-xs font-fira uppercase tracking-[0.16em] text-[#e3dcff]/72">
-                            {spotlight?.title || '전리품 주목'}
+                            {spotlight?.title || MSG.UI_LOOT_FOCUS}
                         </div>
                         <div className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} font-fira text-slate-200/82 leading-snug`}>
-                            {spotlight?.detail || '이번 전투 보상과 관련된 장비를 먼저 확인하세요.'}
+                            {spotlight?.detail || MSG.UI_LOOT_FOCUS_HINT}
                         </div>
                         <div className={`${compact ? 'mt-1.5' : 'mt-2'} flex flex-wrap gap-1`}>
                             {spotlightNames.slice(0, 3).map((name) => (
@@ -189,7 +191,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                             onClick={() => onClearSpotlight()}
                             className={`shrink-0 rounded-full border border-white/8 bg-black/18 ${compact ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs'} font-fira text-slate-300/76 hover:bg-white/[0.04]`}
                         >
-                            닫기
+                            {MSG.UI_CLOSE}
                         </button>
                     )}
                 </Motion.div>
@@ -222,7 +224,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSmartEquip}
                         className={`${useDenseCompactInventory ? 'shrink-0 whitespace-nowrap' : 'ml-auto'} rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all ${compact ? 'min-h-[36px] px-2 py-0.5 text-xs' : 'min-h-[30px] px-2.5 py-1 text-sm'}`}
-                        title="최적 장비 자동 장착"
+                        title={MSG.UI_AUTO_EQUIP_BEST}
                     >
                         <Star size={compact ? 10 : 11} /> {compact ? '추천' : '추천 장착'}
                     </Motion.button>
@@ -294,6 +296,8 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                         getEquipmentIdentity(player.equip?.offhand) === itemIdentity;
                     const isSpotlighted = spotlightSet.has(item.name);
                     const resonance = getTraitItemResonance(item, traitProfile, player);
+                    const enhanceState = getEnhanceAvailability(item, player.gold, player.inv);
+                    const enhanceRequirement = enhanceState.requirement;
 
                     return (
                         <Motion.div
@@ -338,6 +342,16 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                 {(getItemStatText(item) || item.desc_stat) && (
                                     <div className={`mt-0.5 truncate font-fira text-slate-400/72 ${compact ? 'text-xs' : 'text-sm'}`}>{getItemStatText(item) || item.desc_stat}</div>
                                 )}
+                                {enhanceRequirement && !useSummaryCards && (
+                                    <div className="mt-0.5 space-y-0.5 text-[11px] font-fira">
+                                        <div className="text-slate-500/88">
+                                            강화 비용 {enhanceRequirement.gold.toLocaleString()}G · 강화 재료 {enhanceRequirement.materials}
+                                        </div>
+                                        <div className={enhanceState.affordable ? 'text-emerald-200/70' : 'text-amber-200/78'}>
+                                            {enhanceState.hint}
+                                        </div>
+                                    </div>
+                                )}
                                 {useSummaryCards && assignedQuickSlots.length > 0 && (
                                     <div className="mt-0.5 text-[11px] font-fira uppercase tracking-[0.12em] text-slate-500">
                                         슬롯 {assignedQuickSlots.join(', ')}
@@ -360,11 +374,12 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                 )}
                             </div>
                             <div className="flex items-center gap-1 ml-2 shrink-0">
-                                {['weapon', 'armor', 'shield'].includes(item.type) && actions.enhanceItem && (item.enhance || 0) < 10 && (
+                                {enhanceState.canEnhance && actions.enhanceItem && (
                                     <Motion.button
                                         whileTap={{ scale: 0.95 }}
+                                        disabled={!enhanceState.affordable}
                                         onClick={() => actions.enhanceItem(item.id)}
-                                        className={`bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] rounded-full border border-[#d5b180]/22 font-bold font-fira ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[11px]' : compact ? 'min-h-[32px] px-2 py-1 text-[11px]' : 'min-h-[38px] px-2.5 py-2 text-xs'}`}
+                                        className={`rounded-full border font-bold font-fira ${enhanceState.affordable ? 'bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] border-[#d5b180]/22' : 'border-white/8 bg-black/20 text-slate-500'} ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[11px]' : compact ? 'min-h-[32px] px-2 py-1 text-[11px]' : 'min-h-[38px] px-2.5 py-2 text-xs'}`}
                                         title={`강화 +${(item.enhance || 0) + 1}`}
                                     >
                                         +강화

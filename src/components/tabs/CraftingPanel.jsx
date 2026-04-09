@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Hammer, Sparkles, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { DB } from '../../data/db';
 import { BALANCE } from '../../data/constants';
 import { getSynthesisGroups, validateSynthesis } from '../../utils/synthesisUtils';
 import { getItemRarity } from '../../utils/gameUtils';
+import FocusPanelHeader from '../FocusPanelHeader';
 
 const TYPE_LABEL = { weapon: '무기', armor: '방어구', shield: '방패' };
 const RARITY_LABEL = { common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설' };
@@ -12,7 +13,7 @@ const RARITY_LABEL = { common: '일반', uncommon: '고급', rare: '희귀', epi
 /**
  * CraftingPanel — 제작/합성 패널 (탭 전환)
  */
-const CraftingPanel = ({ player, actions, setGameState }) => {
+const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }) => {
   const [mode, setMode] = useState('craft');
   const [selectedIds, setSelectedIds] = useState([]);
   const [useProtect, setUseProtect] = useState(false);
@@ -44,7 +45,7 @@ const CraftingPanel = ({ player, actions, setGameState }) => {
   };
 
   const renderCraftMode = () => (
-    <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
+    <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-2">
       {recipes.length === 0 ? (
         <div className="rounded-lg border border-dashed border-orange-500/20 bg-cyber-dark/30 px-4 py-12 text-center text-sm font-rajdhani tracking-widest text-orange-400/40">
           NO RECIPES AVAILABLE
@@ -54,22 +55,22 @@ const CraftingPanel = ({ player, actions, setGameState }) => {
         const hasMaterials = recipe.inputs.every((input) => getItemCount(input.name) >= input.qty);
         const canCraft = hasGold && hasMaterials;
         return (
-          <div key={recipe.id} className="bg-cyber-dark/60 p-4 rounded-md border border-orange-500/20 flex flex-col gap-3 hover:border-orange-500/40 transition-colors">
-            <div className="flex items-center justify-between gap-3">
+          <div key={recipe.id} className="bg-cyber-dark/60 px-3 py-2.5 rounded-md border border-orange-500/20 flex flex-col gap-2 hover:border-orange-500/40 transition-colors">
+            <div className="flex items-center justify-between gap-2">
               <div>
-                <div className="font-bold text-white font-rajdhani text-lg">{recipe.name}</div>
-                <div className="text-xs text-orange-300/70 font-fira mt-1">{recipe.gold}G</div>
+                <div className="font-bold text-white font-rajdhani text-[14px]">{recipe.name}</div>
+                <div className="text-[11px] text-orange-300/70 font-fira">{recipe.gold}G</div>
               </div>
               <Motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => actions.craft(recipe.id)}
                 disabled={!canCraft}
-                className="px-5 py-3 bg-orange-500/10 border border-orange-500/50 rounded-sm disabled:opacity-30 disabled:border-slate-700 text-orange-300 text-xs font-bold hover:bg-orange-500/20 hover:shadow-[0_0_15px_rgba(249,115,22,0.25)] transition-all whitespace-nowrap tracking-wider min-h-[44px]"
+                className="px-4 py-1.5 bg-orange-500/10 border border-orange-500/50 rounded-sm disabled:opacity-30 disabled:border-slate-700 text-orange-300 text-[11px] font-bold hover:bg-orange-500/20 transition-all whitespace-nowrap tracking-wider min-h-[36px]"
               >
                 {canCraft ? 'CRAFT' : 'LOCKED'}
               </Motion.button>
             </div>
-            <div className="flex flex-wrap gap-2 text-xs font-fira">
+            <div className="flex flex-wrap gap-1.5 text-[11px] font-fira">
               {recipe.inputs.map((input) => {
                 const owned = getItemCount(input.name);
                 const enough = owned >= input.qty;
@@ -232,41 +233,44 @@ const CraftingPanel = ({ player, actions, setGameState }) => {
   return (
     <Motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col rounded-[1.95rem] border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-xl"
+      className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-xl"
     >
-      {/* 헤더 + 모드 토글 */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl text-orange-400 font-bold font-rajdhani uppercase tracking-wider flex items-center gap-2 drop-shadow-sm">
-          {mode === 'craft' ? <Hammer size={20} /> : <Sparkles size={20} />}
-          {mode === 'craft' ? 'Forge Matrix' : 'Synthesis'}
-        </h2>
-        <div className="flex bg-cyber-dark/80 rounded-sm border border-orange-500/20 overflow-hidden">
-          {[
-            { id: 'craft', label: 'CRAFT' },
-            { id: 'synth', label: 'SYNTH' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => { setMode(tab.id); setSelectedIds([]); }}
-              className={`px-4 py-2 text-xs font-rajdhani font-bold tracking-wider transition-all min-h-[36px]
-                ${mode === tab.id
-                  ? tab.id === 'craft'
-                    ? 'bg-orange-500/20 text-orange-300'
-                    : 'bg-purple-500/20 text-purple-300'
-                  : 'text-slate-500 hover:text-slate-300'
-                }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <FocusPanelHeader
+        eyebrow="Forge Circuit"
+        title={mode === 'craft' ? 'FORGE MATRIX' : 'SYNTHESIS'}
+        titleClassName="flex items-center gap-2 text-[1.05rem] text-orange-400"
+        meta={mode === 'craft' ? '제작 가능한 레시피와 재료 수량을 즉시 비교합니다.' : '동일 티어 장비를 골라 합성 결과를 확인합니다.'}
+        onBack={() => setGameState('idle')}
+        backLabel="복귀"
+        bleedClassName="-mx-4 px-4"
+        onOpenArchive={onOpenArchiveConsole}
+        archiveLabel="INV"
+        archiveTestId="crafting-open-archive"
+        rightSlot={
+          <div className="flex overflow-hidden rounded-sm border border-orange-500/20 bg-cyber-dark/80">
+            {[
+              { id: 'craft', label: 'CRAFT' },
+              { id: 'synth', label: 'SYNTH' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => { setMode(tab.id); setSelectedIds([]); }}
+                className={`min-h-[36px] px-4 py-2 text-xs font-rajdhani font-bold tracking-wider transition-all
+                  ${mode === tab.id
+                    ? tab.id === 'craft'
+                      ? 'bg-orange-500/20 text-orange-300'
+                      : 'bg-purple-500/20 text-purple-300'
+                    : 'text-slate-500 hover:text-slate-300'
+                  }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        }
+      />
 
       {mode === 'craft' ? renderCraftMode() : renderSynthMode()}
-
-      <button onClick={() => setGameState('idle')} className="mt-4 w-full bg-cyber-dark text-orange-300/70 hover:text-orange-300 py-4 rounded-sm border border-orange-500/20 hover:border-orange-500/50 font-rajdhani text-lg font-bold tracking-[0.2em] transition-all hover:bg-orange-500/5 min-h-[44px]">
-        EXIT FORGE
-      </button>
     </Motion.div>
   );
 };

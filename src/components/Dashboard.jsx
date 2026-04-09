@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp, Star, Skull } from 'lucide-react';
+import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp, Star, Skull, Moon, GraduationCap, Hammer, RotateCcw, X, Shield } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { MOTION } from '../utils/animationConfig';
 import { DB } from '../data/db';
+import { MSG } from '../data/messages';
+import { GS } from '../reducers/gameStates';
 import ArchiveTabButton from './ArchiveTabButton';
 import DashboardMobileSummary from './DashboardMobileSummary';
+import EquipmentPanel from './EquipmentPanel';
 import SmartInventory from './SmartInventory';
 import AchievementPanel from './AchievementPanel';
 import SkillTreePreview from './SkillTreePreview';
@@ -19,6 +22,7 @@ import SeasonPassPanel from './tabs/SeasonPassPanel';
 import SignalBadge from './SignalBadge';
 
 const TAB_ITEMS = [
+    { id: 'equipment', icon: Shield, label: 'Equipment', mobileLabel: 'GEAR' },
     { id: 'inventory', icon: Package, label: 'Inventory', mobileLabel: 'INV' },
     { id: 'quest', icon: Scroll, label: 'Quest', mobileLabel: 'QUEST' },
     { id: 'achievements', icon: Trophy, label: 'Achievements', mobileLabel: 'ACHV' },
@@ -31,8 +35,18 @@ const TAB_ITEMS = [
     { id: 'system', icon: Zap, label: 'System', mobileLabel: 'SYS' }
 ];
 
-const MOBILE_PRIMARY_TABS = ['inventory', 'quest', 'map', 'stats'];
+const MOBILE_PRIMARY_TABS = ['equipment', 'inventory', 'quest', 'map', 'stats'];
 const MOBILE_SECONDARY_TABS = ['achievements', 'skills', 'codex', 'pass', 'graves', 'system'];
+const TOWN_MENU_ACTIONS = [
+    { id: 'rest', label: 'REST', icon: Moon },
+    { id: 'class', label: 'CLASS', icon: GraduationCap },
+    { id: 'quest', label: 'QUEST', icon: Scroll },
+    { id: 'craft', label: 'CRAFT', icon: Hammer },
+];
+
+const MENU_SYSTEM_ACTIONS = [
+    { id: 'reset', label: 'RESET', icon: RotateCcw, tone: 'danger' },
+];
 
 // Animation variants for tab content
 const tabVariants = {
@@ -40,10 +54,12 @@ const tabVariants = {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
-const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null }) => {
+const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null, consoleExpanded = false, onReturnToLog = null }) => {
     const [mobileArchiveExpanded, setMobileArchiveExpanded] = useState(false);
     const [dockSeen, setDockSeen] = useState(() => sessionStorage.getItem('archiveDockSeen') === '1');
+    const [confirmMenuReset, setConfirmMenuReset] = useState(false);
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
+    const isInlineArchiveConsole = mobileSection === 'console';
     const hasInventorySpotlight = Boolean(inventorySpotlight?.token) && sideTab === 'inventory';
     const hasCompletableQuest = (player?.quests || []).some(q => q.done && !q.claimed);
     const showNotifDot = hasInventorySpotlight || hasCompletableQuest;
@@ -54,8 +70,33 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
     const activeMobileTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
     const ActiveArchiveIcon = activeMobileTab.icon;
     const handleTabSelect = (tabId) => {
+        setConfirmMenuReset(false);
         setSideTab(tabId);
         setMobileArchiveExpanded(true);
+    };
+    const handleMenuAction = (actionId) => {
+        if (actionId !== 'reset') {
+            setConfirmMenuReset(false);
+        }
+        if (actionId === 'rest') {
+            actions.rest?.();
+            return;
+        }
+        if (actionId === 'class') {
+            actions.setGameState?.(GS.JOB_CHANGE);
+            return;
+        }
+        if (actionId === 'quest') {
+            handleTabSelect('quest');
+            return;
+        }
+        if (actionId === 'craft') {
+            actions.setGameState?.(GS.CRAFTING);
+            return;
+        }
+        if (actionId === 'reset') {
+            setConfirmMenuReset(true);
+        }
     };
 
     useEffect(() => {
@@ -85,6 +126,15 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             onAssignQuickSlot={(index, item) => actions.setQuickSlot?.(index, item)}
                             spotlight={inventorySpotlight}
                             onClearSpotlight={onClearInventorySpotlight}
+                        />
+                    )}
+
+                    {sideTab === 'equipment' && (
+                        <EquipmentPanel
+                            player={player}
+                            stats={stats}
+                            actions={actions}
+                            compact={desktopArchiveCompact}
                         />
                     )}
 
@@ -136,8 +186,208 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
         );
     };
 
+    const renderMobileArchiveRail = (items) => (
+        <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
+            {items.map((tab) => (
+                <ArchiveTabButton
+                    key={tab.id}
+                    icon={tab.icon}
+                    label={tab.mobileLabel || tab.label}
+                    active={sideTab === tab.id}
+                    onClick={() => handleTabSelect(tab.id)}
+                    compact
+                    rail
+                    testId={`dashboard-tab-${tab.id}`}
+                />
+            ))}
+        </div>
+    );
+
     if (mobileSection === 'summary') {
         return <DashboardMobileSummary player={player} />;
+    }
+
+    if (isInlineArchiveConsole) {
+        if (!showArchiveDock && !consoleExpanded) {
+            return null;
+        }
+
+        const inlineArchiveOpen = consoleExpanded ? true : archiveOpen;
+
+        return (
+            <div
+                data-testid="mobile-archive-console"
+                className={`panel-noise aether-surface-strong rounded-[1.55rem] border border-white/10 px-3 py-2.5 shadow-[0_18px_34px_rgba(4,10,18,0.24)] ${consoleExpanded ? 'flex min-h-0 flex-1 flex-col' : 'shrink-0'}`}
+            >
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border border-white/8 bg-white/[0.03] text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                            <ActiveArchiveIcon size={14} />
+                        </div>
+                            <div className="min-w-0">
+                                <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/70">Menu Console</div>
+                                <div className="mt-0.5 flex items-center gap-2">
+                                <span className="truncate text-[14px] font-rajdhani font-bold text-white/92">
+                                    {hasInventorySpotlight
+                                        ? (inventorySpotlight?.title || MSG.UI_LOOT_REVIEW)
+                                        : activeMobileTab.label}
+                                </span>
+                                {showNotifDot && (
+                                    <SignalBadge tone="spotlight" size="sm">
+                                        {hasInventorySpotlight ? MSG.UI_NOTABLE : MSG.UI_REFRESH}
+                                    </SignalBadge>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        data-testid={onReturnToLog ? 'mobile-console-return-log' : 'mobile-archive-toggle'}
+                        onClick={() => {
+                            if (onReturnToLog) {
+                                setConfirmMenuReset(false);
+                                onReturnToLog();
+                                return;
+                            }
+
+                            setMobileArchiveExpanded((open) => {
+                                const nextOpen = !open;
+                                if (!nextOpen) {
+                                    setConfirmMenuReset(false);
+                                }
+                                return nextOpen;
+                            });
+                            if (!dockSeen) {
+                                setDockSeen(true);
+                                sessionStorage.setItem('archiveDockSeen', '1');
+                            }
+                        }}
+                        className={`shrink-0 rounded-full border border-white/8 bg-black/20 px-3 py-1.5 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-300/78 ${
+                            !dockSeen && !inlineArchiveOpen && !onReturnToLog ? 'shadow-[0_0_0_1px_rgba(125,212,216,0.16)]' : ''
+                        }`}
+                    >
+                        {onReturnToLog ? MSG.UI_CLOSE : (inlineArchiveOpen ? MSG.UI_CLOSE : MSG.UI_OPEN)}
+                    </button>
+                </div>
+
+                <AnimatePresence initial={false}>
+                    {inlineArchiveOpen && (
+                        <Motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            className={consoleExpanded ? 'mt-2.5 flex min-h-0 flex-1 flex-col gap-2.5' : 'mt-2.5 space-y-2.5'}
+                        >
+                            {hasInventorySpotlight && (
+                                <div
+                                    data-testid="inventory-spotlight"
+                                    className="shrink-0 rounded-[1.1rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.16),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.26)_0%,rgba(18,13,8,0.18)_100%)] px-3 py-2.5"
+                                >
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-[10px] font-fira uppercase tracking-[0.16em] text-[#f6e7c8]/78">
+                                            {inventorySpotlight?.title || MSG.UI_LOOT_FOCUS}
+                                        </span>
+                                        <SignalBadge tone="spotlight" size="sm">{MSG.UI_REVIEW}</SignalBadge>
+                                    </div>
+                                    <div className="mt-1 text-[11px] font-fira text-slate-300/80 leading-snug">
+                                        {inventorySpotlight?.detail || MSG.UI_LOOT_FOCUS_HINT}
+                                    </div>
+                                </div>
+                            )}
+
+                            {isInSafeZone && (
+                                <div className="shrink-0 rounded-[1.15rem] border border-[#d5b180]/14 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.12),transparent_22%),linear-gradient(180deg,rgba(26,20,12,0.28)_0%,rgba(12,10,8,0.18)_100%)] px-2 py-2">
+                                    <div className="mb-2 px-1 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">Town Menu</div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {TOWN_MENU_ACTIONS.map((action) => {
+                                            const Icon = action.icon;
+                                            return (
+                                                <button
+                                                    key={action.id}
+                                                    type="button"
+                                                    data-testid={`menu-town-${action.id}`}
+                                                    onClick={() => handleMenuAction(action.id)}
+                                                    className="flex min-h-[46px] flex-col items-center justify-center gap-1 rounded-[1rem] border border-white/8 bg-black/20 px-2 py-2 text-[8px] font-fira uppercase tracking-[0.14em] text-slate-200/84 transition-colors hover:border-[#d5b180]/18 hover:bg-white/[0.05]"
+                                                >
+                                                    <Icon size={13} />
+                                                    <span>{action.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="shrink-0 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2">
+                                <div className="mb-2 px-1 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">System</div>
+                                {confirmMenuReset ? (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            data-testid="menu-reset-confirm"
+                                            onClick={() => {
+                                                setConfirmMenuReset(false);
+                                                actions.reset?.();
+                                            }}
+                                            className="flex min-h-[46px] items-center justify-center gap-2 rounded-[1rem] border border-rose-300/20 bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-rose-100/88 transition-colors hover:border-rose-200/28 hover:bg-rose-500/14"
+                                        >
+                                            <RotateCcw size={13} />
+                                            <span>RESET OK</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            data-testid="menu-reset-cancel"
+                                            onClick={() => setConfirmMenuReset(false)}
+                                            className="flex min-h-[46px] items-center justify-center gap-2 rounded-[1rem] border border-white/8 bg-black/20 px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
+                                        >
+                                            <X size={13} />
+                                            <span>CANCEL</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {MENU_SYSTEM_ACTIONS.map((action) => {
+                                            const Icon = action.icon;
+                                            const isDanger = action.tone === 'danger';
+                                            return (
+                                                <button
+                                                    key={action.id}
+                                                    type="button"
+                                                    data-testid={`menu-${action.id}`}
+                                                    onClick={() => handleMenuAction(action.id)}
+                                                    className={`flex min-h-[46px] items-center justify-center gap-2 rounded-[1rem] border px-2 py-2 text-[9px] font-fira uppercase tracking-[0.16em] transition-colors ${
+                                                        isDanger
+                                                            ? 'border-rose-300/18 bg-[linear-gradient(180deg,rgba(54,18,24,0.58)_0%,rgba(18,9,12,0.9)_100%)] text-rose-100/84 hover:border-rose-200/26 hover:bg-rose-500/12'
+                                                            : 'border-white/8 bg-black/20 text-slate-200/84 hover:border-[#d5b180]/18 hover:bg-white/[0.05]'
+                                                    }`}
+                                                >
+                                                    <Icon size={13} />
+                                                    <span>{action.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="shrink-0 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2">
+                                {renderMobileArchiveRail(primaryMobileTabs)}
+                                <div className="mt-2 border-t border-white/6 pt-2">
+                                    {renderMobileArchiveRail(secondaryMobileTabs)}
+                                </div>
+                            </div>
+
+                            <div
+                                data-testid="mobile-archive-console-content"
+                                className={`${consoleExpanded ? 'min-h-0 flex-1' : 'max-h-[15.5rem]'} overflow-y-auto custom-scrollbar rounded-[1.2rem] border border-white/8 bg-black/18 px-2 py-2`}
+                            >
+                                {renderTabContent()}
+                            </div>
+                        </Motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        );
     }
 
     if (!showArchiveDock && !archiveOpen) {
@@ -214,7 +464,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                         <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/68">Archive</div>
                                         <div className="mt-1 text-[16px] font-rajdhani font-bold text-white/92">
                                             {hasInventorySpotlight
-                                                ? (inventorySpotlight?.title || '전리품 검토')
+                                                ? (inventorySpotlight?.title || MSG.UI_LOOT_REVIEW)
                                                 : activeMobileTab.label}
                                         </div>
                                     </div>
@@ -225,7 +475,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                         }}
                                         className="min-h-[38px] rounded-full border border-white/8 bg-black/20 px-3 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-300/78"
                                     >
-                                        닫기
+                                        {MSG.UI_CLOSE}
                                     </button>
                                 </div>
 
@@ -236,12 +486,12 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                     >
                                         <div className="flex items-center justify-between gap-2">
                                             <span className="text-[10px] font-fira uppercase tracking-[0.16em] text-[#f6e7c8]/78">
-                                                {inventorySpotlight?.title || '전리품 주목'}
+                                                {inventorySpotlight?.title || MSG.UI_LOOT_FOCUS}
                                             </span>
-                                            <SignalBadge tone="spotlight" size="sm">검토</SignalBadge>
+                                            <SignalBadge tone="spotlight" size="sm">{MSG.UI_REVIEW}</SignalBadge>
                                         </div>
                                         <div className="mt-1 text-[11px] font-fira text-slate-300/80 leading-snug">
-                                            {inventorySpotlight?.detail || '이번 전투에서 얻은 장비를 우선 확인하세요.'}
+                                            {inventorySpotlight?.detail || MSG.UI_LOOT_FOCUS_HINT}
                                         </div>
                                     </div>
                                 )}

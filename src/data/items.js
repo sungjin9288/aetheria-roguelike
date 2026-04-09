@@ -304,6 +304,7 @@ export const ITEMS = {
     ],
     materials: [
         // 기본 재료
+        { name: '강화 재료', type: 'mat', price: 40, desc: '대장간에서 장비 공명에 쓰는 단단한 결정 조각', desc_stat: '강화 재료' },
         { name: '슬라임 젤리', type: 'mat', price: 5, desc: '끈적거리는 액체', desc_stat: '재료' },
         { name: '동전 주머니', type: 'mat', price: 50, desc: '동전이 든 주머니', desc_stat: '재료' },
         { name: '철광석', type: 'mat', price: 20, desc: '단단한 광석', desc_stat: '재료' },

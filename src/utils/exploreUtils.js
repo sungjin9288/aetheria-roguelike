@@ -2,12 +2,12 @@
  * exploreUtils.js — explore() 로직 분리 모듈 (Phase 1-B)
  * useGameActions.js의 explore()에서 추출한 순수 함수들.
  */
-import { DB } from '../data/db';
-import { BALANCE, CONSTANTS } from '../data/constants';
-import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics';
-import { BOSS_MONSTERS } from '../data/monsters';
-import { AT } from '../reducers/actionTypes';
-import { getDiscoveryOdds } from './explorationPacing';
+import { DB } from '../data/db.js';
+import { BALANCE, CONSTANTS } from '../data/constants.js';
+import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics.js';
+import { BOSS_MONSTERS } from '../data/monsters.js';
+import { AT } from '../reducers/actionTypes.js';
+import { getDiscoveryOdds } from './explorationPacing.js';
 
 // ─────────────────────────────────────────────────────────────────────────
 // 0. ISO 주차 번호 계산 (월요일 기준)
@@ -62,7 +62,7 @@ export const rollExplorationEvent = (player, mapData, playerRelics, { dispatch, 
     const hasKey = player.inv.some(i => i.name === '잊혀진 열쇠');
     if (hasKey && mapData.level >= 10 && Math.random() < discoveryOdds.keyEventChance) {
         dispatch({
-            type: 'SET_PLAYER',
+            type: AT.SET_PLAYER,
             payload: (p) => {
                 const keyIdx = p.inv.findIndex(i => i.name === '잊혀진 열쇠');
                 const newInv = [...p.inv];
@@ -84,9 +84,9 @@ export const rollExplorationEvent = (player, mapData, playerRelics, { dispatch, 
         addLog('warning', `[기상 이변] ${anomaly.desc}`);
         if (anomaly.effect === 'mana_regen') {
             const stats = getFullStats();
-            dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * 0.3)) }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * 0.3)) }) });
         } else {
-            dispatch({ type: 'SET_PLAYER', payload: (p) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
         }
         return 'anomaly';
     }

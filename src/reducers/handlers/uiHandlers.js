@@ -1,4 +1,5 @@
 import { BALANCE } from '../../data/constants';
+import { GS } from '../gameStates';
 import { sanitizeQuickSlots } from './helpers';
 
 export const uiActionMap = {
@@ -22,7 +23,7 @@ export const uiActionMap = {
 
     RESET_RUNTIME_UI: (state) => ({
         ...state,
-        gameState: 'idle',
+        gameState: GS.IDLE,
         logs: [],
         enemy: null,
         currentEvent: null,

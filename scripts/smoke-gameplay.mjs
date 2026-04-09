@@ -83,8 +83,10 @@ async function waitForState(page, predicate, description, timeout = 15000) {
 
 async function writeStateArtifact(name, state, page) {
   const basename = sanitizeName(name);
+  const domMetrics = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getDomMetrics?.() || null);
+  const artifactState = domMetrics ? { ...state, domMetrics } : state;
   await fs.mkdir(artifactDir, { recursive: true });
-  await fs.writeFile(path.join(artifactDir, `${basename}.json`), `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+  await fs.writeFile(path.join(artifactDir, `${basename}.json`), `${JSON.stringify(artifactState, null, 2)}\n`, 'utf8');
   await page.screenshot({ path: path.join(artifactDir, `${basename}.png`), fullPage: true, timeout: 60000 });
 }
 
@@ -102,6 +104,10 @@ async function scrollToTop(page) {
 
 async function sendTerminalCommand(page, command) {
   const input = page.locator('[data-terminal-input]');
+  if (!await input.count()) {
+    await sendGameCommand(page, command);
+    return;
+  }
   await input.click();
   await input.fill(command);
   await input.press('Enter');
@@ -120,6 +126,34 @@ async function settleAfterCommand(page, timeout = 12000) {
   );
 }
 
+function isGeneratedHangulName(value) {
+  return /^[가-힣]{2,5}$/.test(String(value || ''));
+}
+
+async function verifyIntroNameGenerator(page) {
+  const nameInput = page.locator('[data-testid="intro-name-input"]');
+  const rerollButton = page.locator('[data-testid="intro-reroll-name"]');
+
+  if (!await nameInput.count()) return;
+
+  await nameInput.waitFor({ state: 'visible', timeout: 10000 });
+  await rerollButton.waitFor({ state: 'visible', timeout: 10000 });
+
+  const firstName = await nameInput.inputValue();
+  ensure(isGeneratedHangulName(firstName), `Initial intro name did not match 2~5 char Hangul rule: ${firstName}`);
+
+  const seenNames = new Set([firstName]);
+  for (let index = 0; index < 3; index += 1) {
+    await rerollButton.click();
+    await delay(120);
+    const nextName = await nameInput.inputValue();
+    ensure(isGeneratedHangulName(nextName), `Rerolled intro name did not match 2~5 char Hangul rule: ${nextName}`);
+    seenNames.add(nextName);
+  }
+
+  ensure(seenNames.size >= 2, 'Intro reroll did not produce at least one distinct generated name');
+}
+
 async function resetToIntro(page) {
   let state = await readState(page);
   if (state.mode === 'intro') return state;
@@ -133,6 +167,7 @@ async function startNewRun(page) {
   const startButton = page.locator('[data-testid="intro-start-button"]');
   const nameInput = page.locator('[data-testid="intro-name-input"]');
   if (await nameInput.count()) {
+    await verifyIntroNameGenerator(page);
     await nameInput.fill(isMobile ? '모바일검증' : '데스크검증');
   }
   await startButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -183,17 +218,70 @@ async function verifyMobileFirstFold(page) {
   if (!isMobile) return;
 
   const terminalPanel = page.locator('[data-testid="terminal-panel"]');
-  const archiveDock = page.locator('[data-testid="mobile-archive-dock"]');
-  const restButton = page.locator('[data-testid="control-rest"]');
-  const resetButton = page.locator('[data-testid="control-reset"]');
+  const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
+  const moveButton = page.locator('[data-testid="control-move"]');
+  const shopButton = page.locator('[data-testid="control-market"]');
 
   await terminalPanel.waitFor({ state: 'visible', timeout: 10000 });
-  await archiveDock.waitFor({ state: 'visible', timeout: 10000 });
-  await restButton.waitFor({ state: 'visible', timeout: 10000 });
-  await resetButton.waitFor({ state: 'visible', timeout: 10000 });
+  await archiveOpenButton.waitFor({ state: 'visible', timeout: 10000 });
+  await moveButton.waitFor({ state: 'visible', timeout: 10000 });
+  await shopButton.waitFor({ state: 'visible', timeout: 10000 });
+  ensure(
+    !await page.locator('[data-testid="control-reset"]').first().isVisible().catch(() => false),
+    'Mobile action bar should not render reset after menu consolidation'
+  );
 
   const terminalBox = await terminalPanel.boundingBox();
-  ensure(terminalBox && terminalBox.height >= 180, 'Mobile log panel did not retain the expanded first-fold height');
+  ensure(terminalBox && terminalBox.height >= 240, 'Mobile log panel did not retain the expanded first-fold height');
+}
+
+async function verifyMobileArchiveConsole(page) {
+  if (!isMobile) return;
+
+  const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
+  const archiveConsole = page.locator('[data-testid="mobile-archive-console"]');
+  const archiveReturnButton = page.locator('[data-testid="mobile-console-return-log"]');
+
+  await archiveOpenButton.click();
+  await archiveConsole.waitFor({ state: 'visible', timeout: 10000 });
+  await page.locator('[data-testid="menu-town-rest"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="menu-town-class"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="menu-town-quest"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="menu-town-craft"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="menu-reset"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="dashboard-tab-equipment"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="dashboard-tab-stats"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="dashboard-tab-equipment"]').click();
+  await page.locator('[data-testid="equipment-slot-weapon"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="equipment-slot-armor"]').waitFor({ state: 'visible', timeout: 5000 });
+  const weaponSlot = page.locator('[data-testid="equipment-slot-weapon"]');
+
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({ gold: 100, materialCount: 0, weaponEnhance: 0 }));
+  await weaponSlot.getByText('골드 부족').waitFor({ state: 'visible', timeout: 5000 });
+  ensure(await page.locator('[data-testid="equipment-enhance-weapon"]').isDisabled(), 'Equipment enhance button should be disabled when gold is insufficient');
+
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({ gold: 500, materialCount: 0, weaponEnhance: 0 }));
+  await weaponSlot.getByText('재료 부족').waitFor({ state: 'visible', timeout: 5000 });
+  ensure(await page.locator('[data-testid="equipment-enhance-weapon"]').isDisabled(), 'Equipment enhance button should be disabled when material is insufficient');
+
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({ gold: 500, materialCount: 1, weaponEnhance: 0 }));
+  await weaponSlot.getByText('강화 가능').waitFor({ state: 'visible', timeout: 5000 });
+  ensure(!await page.locator('[data-testid="equipment-enhance-weapon"]').isDisabled(), 'Equipment enhance button should be enabled when requirements are met');
+
+  await page.locator('[data-testid="dashboard-tab-inventory"]').click();
+  await page.locator('[data-testid="mobile-archive-console-content"]').waitFor({ state: 'visible', timeout: 5000 });
+  const returnText = await page.locator('[data-testid="mobile-console-return-log"]').textContent();
+  ensure(String(returnText || '').includes('닫기'), 'Mobile menu close affordance should use 닫기 label');
+
+  await page.locator('[data-testid="menu-reset"]').click();
+  await page.locator('[data-testid="menu-reset-confirm"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="menu-reset-cancel"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="menu-reset-cancel"]').click();
+  await page.locator('[data-testid="menu-reset"]').waitFor({ state: 'visible', timeout: 5000 });
+  await writeStateArtifact('02-archive-console-open', await readState(page), page);
+
+  await archiveReturnButton.click();
+  await page.locator('[data-testid="terminal-panel"]').waitFor({ state: 'visible', timeout: 10000 });
 }
 
 async function verifyShopFlow(page) {
@@ -209,11 +297,11 @@ async function verifyShopFlow(page) {
   await writeStateArtifact('02a-shop-open', openState, page);
 
   if (isMobile) {
-    const archiveDock = page.locator('[data-testid="mobile-archive-dock"]');
+    const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
     const shopCards = page.locator('[data-testid="shop-buy-item"]');
     const inlineBuyButton = page.locator('[data-testid="shop-buy-inline"]').first();
 
-    ensure(!await archiveDock.isVisible(), 'Archive dock should hide while the mobile shop overlay is open');
+    ensure(!await archiveOpenButton.isVisible(), 'Archive console trigger should hide while the mobile shop overlay is open');
     ensure(await page.locator('[data-testid="shop-close-footer"]').count() === 0, 'Mobile shop should not render the desktop footer close control');
     ensure(await shopCards.count() > 0, 'Mobile shop did not render compact buy cards');
 
@@ -228,8 +316,79 @@ async function verifyShopFlow(page) {
     'shop panel to close'
   );
   if (isMobile) {
-    await page.locator('[data-testid="mobile-archive-dock"]').waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator('[data-testid="mobile-console-open-archive"]').waitFor({ state: 'visible', timeout: 10000 });
   }
+}
+
+async function verifyMobileFocusPanelFlow(page, {
+  trigger,
+  openPredicate,
+  openDescription,
+  artifactName,
+  closePredicate = (nextState) => nextState.gameState === 'idle',
+}) {
+  const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
+  const backButton = page.getByRole('button', { name: /복귀/i }).first();
+
+  await trigger();
+  const openState = await waitForState(page, openPredicate, openDescription);
+  await writeStateArtifact(artifactName, openState, page);
+
+  await backButton.waitFor({ state: 'visible', timeout: 5000 });
+  ensure(!await archiveOpenButton.isVisible(), `${artifactName} should hide archive console trigger while open`);
+
+  await backButton.click();
+  await waitForState(page, closePredicate, `${artifactName} to close`);
+  const returnToLogButton = page.locator('[data-testid="mobile-console-return-log"]');
+  if (await returnToLogButton.isVisible().catch(() => false)) {
+    await returnToLogButton.click();
+  }
+  await archiveOpenButton.waitFor({ state: 'visible', timeout: 10000 });
+}
+
+async function verifyMobileFocusPanels(page) {
+  if (!isMobile) return;
+
+  const openTownMenuShortcut = async (testId) => {
+    await page.locator('[data-testid="mobile-console-open-archive"]').click();
+    await page.locator('[data-testid="mobile-archive-console"]').waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator(`[data-testid="${testId}"]`).click();
+  };
+
+  await verifyMobileFocusPanelFlow(page, {
+    trigger: async () => {
+      await openTownMenuShortcut('menu-town-class');
+    },
+    openPredicate: (nextState) => nextState.gameState === 'job_change',
+    openDescription: 'job change panel to open',
+    artifactName: '02b-class-open',
+  });
+
+  await openTownMenuShortcut('menu-town-quest');
+  await waitForState(page, (nextState) => nextState.sideTab === 'quest', 'quest menu tab to open');
+  await writeStateArtifact('02c-quest-open', await readState(page), page);
+  await page.locator('[data-testid="mobile-console-return-log"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="mobile-console-return-log"]').click();
+  await page.locator('[data-testid="mobile-console-open-archive"]').waitFor({ state: 'visible', timeout: 10000 });
+
+  await verifyMobileFocusPanelFlow(page, {
+    trigger: async () => {
+      await openTownMenuShortcut('menu-town-craft');
+    },
+    openPredicate: (nextState) => nextState.gameState === 'crafting',
+    openDescription: 'crafting panel to open',
+    artifactName: '02d-craft-open',
+  });
+
+  await verifyMobileFocusPanelFlow(page, {
+    trigger: async () => {
+      await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectEvent?.());
+    },
+    openPredicate: (nextState) => nextState.gameState === 'event' && Boolean(nextState.currentEvent),
+    openDescription: 'event panel to open',
+    artifactName: '02e-event-open',
+    closePredicate: (nextState) => nextState.gameState === 'idle' && !nextState.currentEvent,
+  });
 }
 
 async function moveToForest(page) {
@@ -452,7 +611,9 @@ async function main() {
     logSmoke('boot ready');
     await startNewRun(page);
     await verifyMobileFirstFold(page);
+    await verifyMobileArchiveConsole(page);
     await verifyShopFlow(page);
+    await verifyMobileFocusPanels(page);
     await verifyTerminalStatus(page);
     logSmoke('field ready');
     await moveToForest(page);

@@ -14,7 +14,7 @@ import GameRoot from './components/app/GameRoot';
 
 const RunSummaryCard = lazy(() => import('./components/RunSummaryCard'));
 
-const MOBILE_FOCUS_PANEL_STATES = new Set([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
+const FOCUS_PANEL_STATES = new Set([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
 
 function App() {
     const engine = useGameEngine();
@@ -58,15 +58,13 @@ function App() {
         measurePerfOnce('aetheria:market-open-from-click-ms', 'aetheria:test-market-open', 'aetheria:shop-open');
     }, [engine.gameState]);
 
-    const isMobileFocusState = MOBILE_FOCUS_PANEL_STATES.has(engine.gameState);
+    const isPanelFocusState = FOCUS_PANEL_STATES.has(engine.gameState);
     const mobileArchiveDockVisible = (
         [GS.IDLE, GS.MOVING].includes(engine.gameState)
         && !engine.pendingRelics
         && !engine.postCombatResult
         && engine.gameState !== GS.ASCENSION
     );
-    const showOnboarding = !engine.onboardingDismissed && String(engine.player.name || '').trim().length > 0;
-    const handleOnboardingDismiss = () => engine.dispatch({ type: 'SET_ONBOARDING_DISMISSED' });
     const handleQuickSlotUse = (item, index) => {
         if (!engine.player.inv.some((entry) => entry.id === item?.id)) {
             if (typeof index === 'number') engine.actions.setQuickSlot?.(index, null);
@@ -110,7 +108,7 @@ function App() {
         <GameRoot
             engine={engine}
             fullStats={fullStats}
-            isMobileFocusState={isMobileFocusState}
+            isPanelFocusState={isPanelFocusState}
             mobileArchiveDockVisible={mobileArchiveDockVisible}
             inventorySpotlight={inventorySpotlight}
             premiumShopOpen={premiumShopOpen}
@@ -118,8 +116,6 @@ function App() {
             isMuted={isMuted}
             setIsMuted={setIsMuted}
             handleQuickSlotUse={handleQuickSlotUse}
-            showOnboarding={showOnboarding}
-            handleOnboardingDismiss={handleOnboardingDismiss}
             damageFlash={damageFlash}
             healFlash={healFlash}
             damageAmount={damageAmount}

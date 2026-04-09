@@ -1,8 +1,9 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
+import { Package } from 'lucide-react';
+import { GS } from '../../reducers/gameStates';
 import TerminalView from '../TerminalView';
 import ControlPanel from '../ControlPanel';
-import { soundManager } from '../../systems/SoundManager';
 
 const Dashboard = lazy(() => import('../Dashboard'));
 
@@ -12,107 +13,136 @@ const DashboardFallback = ({ summary = false }) => (
         className={`panel-noise aether-surface animate-pulse border border-white/8 ${
             summary
                 ? 'rounded-[1.2rem] px-3 py-3 min-h-[5.75rem]'
-                : 'fixed bottom-[calc(env(safe-area-inset-bottom)+0.55rem)] left-1/2 z-30 w-[min(calc(100%-1.5rem),22rem)] -translate-x-1/2 rounded-full px-3 py-2.5'
+                : 'shrink-0 rounded-[1.55rem] px-3 py-2.5 min-h-[4.5rem]'
         }`}
     />
 );
 
+const MobileConsoleArchiveButton = ({ active = false, onClick }) => (
+    <button
+        type="button"
+        data-testid="mobile-console-open-archive"
+        onClick={onClick}
+        className={`inline-flex min-h-[30px] items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-fira uppercase tracking-[0.16em] transition-all ${
+            active
+                ? 'border-[#d5b180]/28 bg-[#d5b180]/12 text-[#f6e7c8]'
+                : 'border-white/8 bg-black/18 text-slate-300/74 hover:border-[#d5b180]/18 hover:text-slate-100'
+        }`}
+    >
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/8 bg-white/[0.04]">
+            <Package size={10} />
+        </span>
+        Menu
+    </button>
+);
+
 const MobileGameLayout = ({
     engine, fullStats,
-    isMobileFocusState, mobileArchiveDockVisible,
+    isPanelFocusState, mobileArchiveDockVisible,
     inventorySpotlight,
-    isMuted, setIsMuted,
     handleQuickSlotUse,
     damageFlash, healFlash,
-}) => (
-    <Motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`relative z-10 flex min-h-0 flex-1 w-full flex-col ${isMobileFocusState ? 'overflow-hidden gap-2' : 'gap-2'} ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
-    >
-        {!isMobileFocusState && (
-            <TerminalView
-                logs={engine.logs}
-                gameState={engine.gameState}
-                onCommand={engine.handleCommand}
-                autoFocusInput={false}
-                mobile
-                player={engine.player}
-                stats={fullStats}
-                quickSlots={engine.quickSlots}
-                onQuickSlotUse={handleQuickSlotUse}
-                showInput={false}
-                syncStatus={engine.syncStatus}
-                isMuted={isMuted}
-                onToggleMute={() => setIsMuted(soundManager.toggleMute())}
-            />
-        )}
+}) => {
+    const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
+    const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
+    const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
+    const openArchiveConsole = () => {
+        engine.actions.setSideTab?.('inventory');
+        engine.actions.setGameState?.(GS.IDLE);
+        setMobileConsoleMode('archive');
+    };
+
+    return (
+        <Motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className={`relative z-10 flex min-h-0 flex-1 w-full flex-col ${isPanelFocusState ? 'overflow-hidden gap-1.5' : 'gap-1'} ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
+        >
+            {!isPanelFocusState && (
+                showArchiveConsole ? (
+                    <Suspense fallback={archiveAvailable ? <DashboardFallback /> : null}>
+                        <Dashboard
+                            mobile
+                            mobileSection="console"
+                            consoleExpanded
+                            onReturnToLog={() => setMobileConsoleMode('log')}
+                            player={engine.player}
+                            grave={engine.grave}
+                            sideTab={engine.sideTab}
+                            setSideTab={engine.actions.setSideTab}
+                            actions={engine.actions}
+                            stats={fullStats}
+                            quickSlots={engine.quickSlots}
+                            inventorySpotlight={inventorySpotlight}
+                            runtime={{
+                                syncStatus: engine.syncStatus,
+                                gameState: engine.gameState,
+                                isAiThinking: engine.isAiThinking,
+                                viewport: 'mobile',
+                                mobileArchiveDockVisible,
+                            }}
+                        />
+                    </Suspense>
+                ) : (
+                    <TerminalView
+                        logs={engine.logs}
+                        gameState={engine.gameState}
+                        onCommand={engine.handleCommand}
+                        autoFocusInput={false}
+                        player={engine.player}
+                        stats={fullStats}
+                        quickSlots={engine.quickSlots}
+                        onQuickSlotUse={handleQuickSlotUse}
+                        showInput={false}
+                    />
+                )
+            )}
+            {!isPanelFocusState && !showArchiveConsole && archiveAvailable && (
+                <div className="shrink-0 px-1">
+                    <div className="flex items-center justify-start">
+                        <MobileConsoleArchiveButton onClick={openArchiveConsole} />
+                    </div>
+                </div>
+            )}
         {/* Focus state (SHOP/EVENT/etc.): ControlPanel fills all remaining space via flex-1
             on its returned panel (ShopPanel/EventPanel). Normal state: shrink-0 prevents
             action buttons from being pushed off-screen on small phones. */}
-        {isMobileFocusState ? (
-            <ControlPanel
-                gameState={engine.gameState}
-                player={engine.player}
-                enemy={engine.enemy}
-                actions={engine.actions}
-                setSideTab={engine.actions.setSideTab}
-                setGameState={engine.actions.setGameState}
-                shopItems={engine.shopItems}
-                grave={engine.grave}
-                isAiThinking={engine.isAiThinking}
-                currentEvent={engine.currentEvent}
-                stats={fullStats}
-                mobile
-                mobileFocused
-            />
-        ) : (
-            <div className="shrink-0">
+            {isPanelFocusState ? (
                 <ControlPanel
                     gameState={engine.gameState}
                     player={engine.player}
                     enemy={engine.enemy}
                     actions={engine.actions}
-                    setSideTab={engine.actions.setSideTab}
                     setGameState={engine.actions.setGameState}
                     shopItems={engine.shopItems}
                     grave={engine.grave}
                     isAiThinking={engine.isAiThinking}
                     currentEvent={engine.currentEvent}
                     stats={fullStats}
-                    mobile
-                    mobileFocused={false}
+                    mobileFocused
+                    onOpenArchiveConsole={openArchiveConsole}
                 />
-            </div>
-        )}
-        {!isMobileFocusState && (
-            <Suspense fallback={mobileArchiveDockVisible ? <DashboardFallback /> : null}>
-                <Dashboard
-                    mobile
-                    mobileSection="archive"
-                    player={engine.player}
-                    grave={engine.grave}
-                    sideTab={engine.sideTab}
-                    setSideTab={engine.actions.setSideTab}
-                    actions={engine.actions}
-                    stats={fullStats}
-                    quickSlots={engine.quickSlots}
-                    inventorySpotlight={inventorySpotlight}
-                    runtime={{
-                        syncStatus: engine.syncStatus,
-                        gameState: engine.gameState,
-                        isAiThinking: engine.isAiThinking,
-                        viewport: 'mobile',
-                        mobileArchiveDockVisible,
-                    }}
-                />
-            </Suspense>
-        )}
-        {!isMobileFocusState && mobileArchiveDockVisible && (
-            <div className="h-[4.1rem] shrink-0" aria-hidden="true" />
-        )}
-    </Motion.div>
-);
+            ) : (
+                <div className="shrink-0">
+                    <ControlPanel
+                        gameState={engine.gameState}
+                        player={engine.player}
+                        enemy={engine.enemy}
+                        actions={engine.actions}
+                        setGameState={engine.actions.setGameState}
+                        shopItems={engine.shopItems}
+                        grave={engine.grave}
+                        isAiThinking={engine.isAiThinking}
+                        currentEvent={engine.currentEvent}
+                        stats={fullStats}
+                        mobileFocused
+                        onOpenArchiveConsole={openArchiveConsole}
+                    />
+                </div>
+            )}
+        </Motion.div>
+    );
+};
 
 export default MobileGameLayout;

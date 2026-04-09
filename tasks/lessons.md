@@ -15,6 +15,7 @@
 | 2026-03-31 | 모바일 인트로에서 시작 버튼이 화면 아래로 잘려 접근 불가 | `100dvh` 셸 안에서 `h-full` 래퍼와 shrink 가능한 인트로 카드가 함께 작동해 카드 내부 콘텐츠가 클리핑되고 실제 scroll height가 늘지 않았음 | 모바일 첫 진입 화면은 `min-h-full` 기반 스크롤 컨테이너를 쓰고, CTA를 포함한 핵심 카드에는 shrink/clipping이 생기지 않도록 높이 제약을 명시적으로 점검한다 |
 | 2026-03-31 | 모바일 상점 smoke가 카드 클릭에서 반복적으로 false negative 발생 | fixed overlay + glass surface 조합에서는 비액션 카드 shell hit-test가 환경에 따라 흔들리고 실제 사용자 액션과도 어긋났음 | 모바일 overlay smoke는 장식 카드가 아니라 실제 CTA/button을 기준으로 검증하고, open/close/CTA 노출 여부를 핵심 성공 조건으로 삼는다 |
 | 2026-03-31 | 모바일 focus 패널이 `Field Feed / Snapshot / Archive Dock`와 겹쳐 상점·이벤트·미션 화면이 답답하게 누적됨 | `App`이 모바일에서도 기본 로그/요약 스택을 계속 렌더한 상태에서 `SHOP / EVENT / QUEST_BOARD / JOB_CHANGE / CRAFTING` 패널을 fixed overlay로만 얹어, 공간을 두 번 쓰고 z-index 충돌까지 만들었음 | 모바일에서 panel-heavy 상태는 일반 본문 스택과 분리한 단일 focus stage로 렌더하고, 같은 상태에서는 fixed overlay보다 `min-h-0 flex-1` 인라인 패널 구성을 우선한다 |
+| 2026-04-08 | OpenSpace 게임 통합 시 repo wiring과 host execution 상태가 혼동되기 쉬움 | repo-local skill dir, Codex MCP config, local `search_skills`는 정상이어도 plain shell `execute_task`는 host-side auth/session/timeout에 막힐 수 있음 | 게임 repo OpenSpace smoke는 bridge skill 존재, local search discovery, MCP config 반영 여부를 우선 성공 기준으로 삼고, `execute_task` timeout은 host follow-up으로 분리 기록한다 |
 
 ---
 
@@ -55,6 +56,10 @@
 ### R9: Mobile Focus Stage
 - **Rule:** 모바일 `SHOP / EVENT / QUEST_BOARD / JOB_CHANGE / CRAFTING` 같은 panel-heavy 상태는 `Field Feed / Snapshot / Archive Dock`와 동시에 쌓지 말고, 단일 `focus stage`에서 `min-h-0 flex-1` 인라인 패널로 렌더한다
 - **Rationale:** 기본 스택 위에 fixed overlay를 얹는 방식은 같은 세로 공간을 중복 소비하고, 상태바/도크와 z-index 충돌을 일으켜 겹침과 빈 공간을 동시에 만든다
+
+### R10: Separate OpenSpace Wiring From Host Runtime
+- **Rule:** OpenSpace 통합 검증은 `repo skill dirs present + local search discovery + MCP config wiring`을 우선 확인하고, plain shell `execute_task` timeout이나 auth 실패는 repo 회귀와 분리해 기록한다
+- **Rationale:** repo wiring은 이미 정상인데 host-side session/auth 문제 때문에 통합 자체가 실패한 것처럼 오판하는 일을 줄여야 한다
 
 ---
 

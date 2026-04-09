@@ -36,9 +36,9 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }) => {
         dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
         dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'explores' } });
         emitDailyProtocolLogs('explores', 1);
-        dispatch({ type: 'ADD_SEASON_XP', payload: SEASON_XP.explore });
+        dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.explore });
         dispatch({
-            type: 'SET_PLAYER',
+            type: AT.SET_PLAYER,
             payload: (currentPlayer) => {
                 let nextPlayer = {
                     ...currentPlayer,
