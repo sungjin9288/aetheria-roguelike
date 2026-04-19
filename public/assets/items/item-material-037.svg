@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <g shape-rendering="crispEdges">
+    <rect x="114" y="75" width="4" height="8" fill="#ebffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="112" y="77" width="8" height="4" fill="#ebffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="56" y="41" width="6" height="12" fill="#ebffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="53" y="44" width="12" height="6" fill="#ebffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="84" y="42" width="4" height="8" fill="#ebffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="82" y="44" width="8" height="4" fill="#ebffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="125" y="136" width="6" height="12" fill="#ebffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="122" y="139" width="12" height="6" fill="#ebffff" opacity="0.25" shape-rendering="crispEdges"/>
+    <path d="M64 24 C90 24 110 38 112 62 C114 84 104 112 84 136 L68 136 C50 112 42 82 44 62 C46 40 56 24 64 24 Z" fill="#36475d" /><path d="M72 30 C90 32 100 46 100 64 C100 84 92 110 78 128 L70 128 C58 108 54 84 56 66 C58 46 64 32 72 30 Z" fill="#ebffff" opacity="0.8"/>
+  </g>
+</svg>

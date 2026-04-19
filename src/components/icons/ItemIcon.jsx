@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { BALANCE } from '../../data/constants';
 import { getItemRarity } from '../../utils/gameUtils';
+import { getEquipmentVisualKey, getItemIconAssetSrc } from '../../utils/itemVisuals';
+import EquipmentAvatarPreview from './EquipmentAvatarPreview.jsx';
 
 /**
  * SVG 아이콘 경로 — 장비 타입별 실루엣
@@ -9,11 +11,13 @@ import { getItemRarity } from '../../utils/gameUtils';
 const ICON_PATHS = {
     // 무기
     sword: 'M14.5 3.5 20 9l-7 7-5.5-5.5 7-7ZM3 21l3.5-3.5M7.5 16.5l2 2',
+    greatsword: 'M13 2l9 9-9 9-3-3 9-9-3-3-6 6-3-3 6-6Z',
     dagger: 'M16 3 21 8l-9 9-4-4 8-10ZM3 21l4-4',
     staff: 'M12 2v18M8 4h8M9 20h6M12 8l3 3M12 8l-3 3',
     bow: 'M18 4c-4 2-6 6-6 10M18 4c-2 4-6 6-10 6M18 4 6 16M4 20l2-4',
     axe: 'M12 2v20M8 6c-3 0-5 2-5 5s2 5 5 5M16 6c3 0 5 2 5 5s-2 5-5 5',
     hammer: 'M12 12v10M6 6h12v6H6V6ZM10 2h4v4h-4V2Z',
+    spear: 'M12 2l3 4-3 2-3-2 3-4Zm0 6v14M10 18h4M9 22h6',
     scythe: 'M18 3c-4 0-8 3-8 8l-6 6 2 2 6-6c5 0 8-4 8-8M5 19l2 2',
     whip: 'M5 19c3-3 4-7 7-9s6-1 8-3c2-2 1-4 1-4',
     // 방어구
@@ -27,76 +31,86 @@ const ICON_PATHS = {
     // 소모품
     potion: 'M9 3h6v3l2 4v8c0 1-1 3-5 3s-5-2-5-3V10l2-4V3Z',
     material: 'M12 2l8 5v10l-8 5-8-5V7l8-5Z',
+    ore: 'M6 16 8 7l4-3 4 2 2 8-4 5H9l-3-3Z',
+    crystal: 'M12 2l5 6-2 10h-6L7 8l5-6Z',
+    scale: 'M12 3c4 0 7 3 7 7 0 6-4 9-7 11-3-2-7-5-7-11 0-4 3-7 7-7Z',
+    fang: 'M8 4h8l-1 9-3 7-3-7-1-9Z',
+    bone: 'M7 6c0-1 1-2 2-2 1 0 2 1 2 2v2l4 4v6c0 1-1 2-2 2-1 0-2-1-2-2v-2l-4-4V6Z',
+    core: 'M12 3l6 3v6c0 5-3 8-6 10-3-2-6-5-6-10V6l6-3Zm0 4-2 2v2l2 2 2-2V9l-2-2Z',
+    relic: 'M12 3l7 4-3 4 1 8h-10l1-8-3-4 7-4Z',
+    herb: 'M12 20V8M12 10c-2-4-5-5-7-5 0 4 2 7 7 9M12 10c2-4 5-5 7-5 0 4-2 7-7 9',
+    pouch: 'M8 5c0-1 1-2 4-2s4 1 4 2v1h2v3c0 5-2 9-6 12-4-3-6-7-6-12V6h2V5Z',
+    key: 'M8 13a4 4 0 1 1 3 3H4v-2h2v-2h2v1Z',
 };
 
 /**
  * 아이템 타입 → 아이콘 키 매핑
  */
-const getIconKey = (item) => {
-    if (!item) return 'material';
-    if (item.type === 'weapon') {
-        if (item.hands === 2) {
-            if (item.name?.includes('활') || item.name?.includes('궁')) return 'bow';
-            if (item.name?.includes('지팡이') || item.name?.includes('스태프') || item.name?.includes('로드') || item.name?.includes('완드')) return 'staff';
-            if (item.name?.includes('도끼') || item.name?.includes('해머') || item.name?.includes('망치')) return 'axe';
-            if (item.name?.includes('창')) return 'sword';
-            if (item.name?.includes('낫')) return 'scythe';
-            return 'sword';
-        }
-        if (item.name?.includes('단검') || item.name?.includes('표창') || item.name?.includes('절멸기')) return 'dagger';
-        if (item.name?.includes('지팡이') || item.name?.includes('완드') || item.name?.includes('로드')) return 'staff';
-        if (item.name?.includes('채찍')) return 'whip';
-        return 'sword';
-    }
-    if (item.type === 'armor') {
-        if (item.name?.includes('로브') || item.name?.includes('예복')) return 'robe';
-        if (item.name?.includes('망토') || item.name?.includes('외투')) return 'cloak';
-        if (item.name?.includes('장화') || item.name?.includes('장갑')) return 'boots';
-        return 'armor';
-    }
-    if (item.type === 'shield') {
-        if (item.subtype === 'focus') return 'book';
-        return 'shield';
-    }
-    if (item.type === 'hp' || item.type === 'mp' || item.type === 'cure' || item.type === 'buff') return 'potion';
-    return 'material';
-};
-
 /**
  * ItemIcon — 아이템 아이콘 컴포넌트
  * @param {{ item: Object, size?: number, showBorder?: boolean, className?: string }} props
  */
 const ItemIcon = ({ item, size = 24, showBorder = false, className = '' }) => {
-    const iconKey = getIconKey(item);
+    const iconKey = getEquipmentVisualKey(item);
     const path = ICON_PATHS[iconKey] || ICON_PATHS.material;
     const rarity = item ? getItemRarity(item) : 'common';
     const color = BALANCE.RARITY_COLORS[rarity] || '#9ca3af';
+    const isEquipmentItem = ['weapon', 'armor', 'shield'].includes(item?.type);
+    const assetSrc = useMemo(() => getItemIconAssetSrc(item), [item]);
+    const [assetState, setAssetState] = useState({ key: iconKey, failed: false });
+    const activeAssetState = assetState.key === iconKey ? assetState : { key: iconKey, failed: false };
+    const previewVariant = size >= 34 ? 'card' : 'default';
+    const shellStyle = showBorder ? {
+        border: `1.5px solid ${color}40`,
+        borderRadius: 8,
+        background: `radial-gradient(circle at 30% 24%, ${color}18, transparent 42%), linear-gradient(180deg, rgba(20,24,30,0.98) 0%, rgba(8,10,14,1) 100%)`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 12px ${color}14`,
+    } : {
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 8,
+        background: 'linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(8,10,14,1) 100%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+    };
 
     return (
         <div
             className={`inline-flex items-center justify-center shrink-0 ${className}`}
+            data-item-icon-style={isEquipmentItem ? 'equipment-asset' : 'asset'}
             style={{
                 width: size,
                 height: size,
-                ...(showBorder ? {
-                    border: `1.5px solid ${color}40`,
-                    borderRadius: 6,
-                    background: `${color}10`,
-                } : {}),
+                ...shellStyle,
             }}
         >
-            <svg
-                width={size * 0.7}
-                height={size * 0.7}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={color}
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path d={path} />
-            </svg>
+            {!activeAssetState.failed ? (
+                <img
+                    src={assetSrc}
+                    alt=""
+                    aria-hidden="true"
+                    className="pixelated object-contain"
+                    style={{
+                        width: isEquipmentItem ? size * 0.92 : size * 0.78,
+                        height: isEquipmentItem ? size * 0.92 : size * 0.78,
+                        filter: `drop-shadow(0 0 6px ${color}35)`,
+                    }}
+                    onError={() => setAssetState({ key: iconKey, failed: true })}
+                />
+            ) : isEquipmentItem ? (
+                <EquipmentAvatarPreview item={item} size={size} variant={previewVariant} className="h-full w-full" />
+            ) : (
+                <svg
+                    width={size * 0.7}
+                    height={size * 0.7}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={color}
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path d={path} />
+                </svg>
+            )}
         </div>
     );
 };

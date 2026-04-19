@@ -8,6 +8,7 @@ import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils
 import { MSG } from '../data/messages';
 import { BALANCE } from '../data/constants';
 import SignalBadge from './SignalBadge';
+import ItemIcon from './icons/ItemIcon';
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -314,6 +315,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                         ? 'border-emerald-300/24 bg-emerald-300/[0.06]'
                                         : 'border-white/8 aether-panel-muted hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]'}`}
                         >
+                            <ItemIcon item={item} size={useSummaryCards ? 28 : compact ? 32 : 36} showBorder className="mr-2 opacity-95" />
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className={`${compact ? 'text-[12px]' : 'text-sm'} font-fira ${item.tier >= 2 ? 'text-[#e3dcff]' : 'text-white/86'}`}>

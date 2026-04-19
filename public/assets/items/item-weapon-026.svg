@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <g shape-rendering="crispEdges">
+    <rect x="75" y="32" width="4" height="8" fill="#ffe4b3" opacity="0.25" shape-rendering="crispEdges"/><rect x="73" y="34" width="8" height="4" fill="#ffe4b3" opacity="0.25" shape-rendering="crispEdges"/><rect x="43" y="129" width="6" height="12" fill="#ffe4b3" opacity="0.25" shape-rendering="crispEdges"/><rect x="40" y="132" width="12" height="6" fill="#ffe4b3" opacity="0.25" shape-rendering="crispEdges"/><rect x="122" y="102" width="4" height="8" fill="#ffe4b3" opacity="0.25" shape-rendering="crispEdges"/><rect x="120" y="104" width="8" height="4" fill="#ffe4b3" opacity="0.25" shape-rendering="crispEdges"/><rect x="32" y="56" width="6" height="12" fill="#ffe4b3" opacity="0.25" shape-rendering="crispEdges"/><rect x="29" y="59" width="12" height="6" fill="#ffe4b3" opacity="0.25" shape-rendering="crispEdges"/>
+    <polygon points="86,28 104,40 74,90 60,78" fill="#6e4f2e" shape-rendering="crispEdges"/><polygon points="86,32 98,40 72,82 64,76" fill="#ffe4b3" opacity="0.76" shape-rendering="crispEdges"/><rect x="51" y="74" width="28" height="8" fill="#ce9758" shape-rendering="crispEdges"/><rect x="55" y="82" width="10" height="24" fill="#3d2c18" shape-rendering="crispEdges"/><circle cx="60" cy="110" r="6" fill="#ce9758" shape-rendering="crispEdges"/>
+  </g>
+</svg>

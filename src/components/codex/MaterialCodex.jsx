@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Lock, Eye } from 'lucide-react';
 import { DB } from '../../data/db';
 import { LOOT_TABLE } from '../../data/loot';
+import ItemIcon from '../icons/ItemIcon';
 
 const MaterialCodex = ({ codex }) => {
     const materials = DB.ITEMS.materials || [];
@@ -41,6 +42,7 @@ const MaterialCodex = ({ codex }) => {
                                 }`}
                         >
                             <div className="flex items-center gap-2">
+                                <ItemIcon item={found ? mat : { type: 'mat', name: '미확인 소재' }} size={28} showBorder className="opacity-95" />
                                 {found
                                     ? <Eye size={12} className="text-amber-300 shrink-0" />
                                     : <Lock size={12} className="text-slate-600 shrink-0" />

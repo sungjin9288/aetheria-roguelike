@@ -1,0 +1,41 @@
+{
+  "$comment": "Signature 아이템 레지스트리 단일 소스. itemVisuals.js(asset 경로 라우팅)과 signatureItems.js(풍부한 메타데이터) 둘 다 이 파일을 읽어 circular import를 회피한다.",
+  "version": 1,
+  "entries": {
+    "성검 에테르니아": {
+      "spriteKey": "signature-weapon-ethernia",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "holy",
+      "artNote": "빛 1H · 황금 십자가드 + 펌멜 보석"
+    },
+    "마왕의 대낫": {
+      "spriteKey": "signature-weapon-demon-scythe",
+      "tier": "legendary",
+      "category": "boss-drop",
+      "tone": "shadow",
+      "artNote": "어둠 2H · 상단 단일 곡선 블레이드"
+    },
+    "라그나로크": {
+      "spriteKey": "signature-weapon-ragnarok",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "fire",
+      "artNote": "화염 2H · 넓은 블레이드 + flared crossguard"
+    },
+    "차원 마왕의 낫": {
+      "spriteKey": "signature-weapon-dimension-scythe",
+      "tier": "legendary",
+      "category": "boss-drop",
+      "tone": "shadow",
+      "artNote": "어둠 2H · 상하 이중 블레이드(차원 균열)"
+    },
+    "천공 성전": {
+      "spriteKey": "signature-shield-celestial-tome",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "holy",
+      "artNote": "focus offhand · 황금 십자가 엠블럼 성서"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Package } from 'lucide-react';
 import { GS } from '../../reducers/gameStates';
@@ -42,12 +42,13 @@ const MobileGameLayout = ({
     inventorySpotlight,
     handleQuickSlotUse,
     damageFlash, healFlash,
+    mobileConsoleMode,
+    setMobileConsoleMode,
 }) => {
-    const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
-    const openArchiveConsole = () => {
-        engine.actions.setSideTab?.('inventory');
+    const openArchiveConsole = (tab = 'inventory') => {
+        engine.actions.setSideTab?.(tab);
         engine.actions.setGameState?.(GS.IDLE);
         setMobileConsoleMode('archive');
     };

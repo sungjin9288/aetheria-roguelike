@@ -44,10 +44,6 @@ const TOWN_MENU_ACTIONS = [
     { id: 'craft', label: 'CRAFT', icon: Hammer },
 ];
 
-const MENU_SYSTEM_ACTIONS = [
-    { id: 'reset', label: 'RESET', icon: RotateCcw, tone: 'danger' },
-];
-
 // Animation variants for tab content
 const tabVariants = {
     ...MOTION.variants.tab,
@@ -203,6 +199,19 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
         </div>
     );
 
+    const renderResetRailButton = () => (
+        <button
+            type="button"
+            data-testid="menu-reset"
+            onClick={() => setConfirmMenuReset(true)}
+            className="flex min-h-[32px] shrink-0 items-center justify-center gap-1 rounded-full border border-rose-300/18 bg-[linear-gradient(180deg,rgba(54,18,24,0.58)_0%,rgba(18,9,12,0.92)_100%)] px-2 py-1 text-[8px] font-fira uppercase tracking-[0.1em] text-rose-100/82 transition-colors hover:border-rose-200/26 hover:bg-rose-500/12"
+            title="RESET"
+        >
+            <RotateCcw size={11} />
+            <span>RESET</span>
+        </button>
+    );
+
     if (mobileSection === 'summary') {
         return <DashboardMobileSummary player={player} />;
     }
@@ -297,7 +306,10 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
 
                             {isInSafeZone && (
                                 <div className="shrink-0 rounded-[1.15rem] border border-[#d5b180]/14 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.12),transparent_22%),linear-gradient(180deg,rgba(26,20,12,0.28)_0%,rgba(12,10,8,0.18)_100%)] px-2 py-2">
-                                    <div className="mb-2 px-1 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">Town Menu</div>
+                                    <div className="mb-2 flex items-center justify-between gap-2 px-1">
+                                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">Town Ops</div>
+                                        <SignalBadge tone="recommended" size="sm">SAFE ZONE</SignalBadge>
+                                    </div>
                                     <div className="grid grid-cols-4 gap-2">
                                         {TOWN_MENU_ACTIONS.map((action) => {
                                             const Icon = action.icon;
@@ -319,8 +331,37 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             )}
 
                             <div className="shrink-0 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2">
-                                <div className="mb-2 px-1 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">System</div>
-                                {confirmMenuReset ? (
+                                <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
+                                    {primaryMobileTabs.map((tab) => (
+                                        <ArchiveTabButton
+                                            key={tab.id}
+                                            icon={tab.icon}
+                                            label={tab.mobileLabel || tab.label}
+                                            active={sideTab === tab.id}
+                                            onClick={() => handleTabSelect(tab.id)}
+                                            compact
+                                            rail
+                                            testId={`dashboard-tab-${tab.id}`}
+                                        />
+                                    ))}
+                                    {renderResetRailButton()}
+                                </div>
+                                <div className="mt-2 border-t border-white/6 pt-2">
+                                    {renderMobileArchiveRail(secondaryMobileTabs)}
+                                </div>
+                            </div>
+
+                            {confirmMenuReset && (
+                                <div className="shrink-0 rounded-[1.15rem] border border-rose-300/16 bg-[linear-gradient(180deg,rgba(54,18,24,0.34)_0%,rgba(18,9,12,0.78)_100%)] px-2 py-2">
+                                    <div className="mb-2 flex items-center gap-2 px-1">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-rose-300/16 bg-black/16 text-rose-100/84">
+                                            <RotateCcw size={13} />
+                                        </span>
+                                        <div className="min-w-0">
+                                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-rose-100/58">Run Reset</div>
+                                            <div className="text-[11px] font-fira text-rose-100/84">현재 진행 상황을 초기화합니다.</div>
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             type="button"
@@ -329,7 +370,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                                 setConfirmMenuReset(false);
                                                 actions.reset?.();
                                             }}
-                                            className="flex min-h-[46px] items-center justify-center gap-2 rounded-[1rem] border border-rose-300/20 bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-rose-100/88 transition-colors hover:border-rose-200/28 hover:bg-rose-500/14"
+                                            className="flex min-h-[42px] items-center justify-center gap-2 rounded-[1rem] border border-rose-300/20 bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-rose-100/88 transition-colors hover:border-rose-200/28 hover:bg-rose-500/14"
                                         >
                                             <RotateCcw size={13} />
                                             <span>RESET OK</span>
@@ -338,44 +379,14 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             type="button"
                                             data-testid="menu-reset-cancel"
                                             onClick={() => setConfirmMenuReset(false)}
-                                            className="flex min-h-[46px] items-center justify-center gap-2 rounded-[1rem] border border-white/8 bg-black/20 px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
+                                            className="flex min-h-[42px] items-center justify-center gap-2 rounded-[1rem] border border-white/8 bg-black/20 px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
                                         >
                                             <X size={13} />
                                             <span>CANCEL</span>
                                         </button>
                                     </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {MENU_SYSTEM_ACTIONS.map((action) => {
-                                            const Icon = action.icon;
-                                            const isDanger = action.tone === 'danger';
-                                            return (
-                                                <button
-                                                    key={action.id}
-                                                    type="button"
-                                                    data-testid={`menu-${action.id}`}
-                                                    onClick={() => handleMenuAction(action.id)}
-                                                    className={`flex min-h-[46px] items-center justify-center gap-2 rounded-[1rem] border px-2 py-2 text-[9px] font-fira uppercase tracking-[0.16em] transition-colors ${
-                                                        isDanger
-                                                            ? 'border-rose-300/18 bg-[linear-gradient(180deg,rgba(54,18,24,0.58)_0%,rgba(18,9,12,0.9)_100%)] text-rose-100/84 hover:border-rose-200/26 hover:bg-rose-500/12'
-                                                            : 'border-white/8 bg-black/20 text-slate-200/84 hover:border-[#d5b180]/18 hover:bg-white/[0.05]'
-                                                    }`}
-                                                >
-                                                    <Icon size={13} />
-                                                    <span>{action.label}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="shrink-0 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2">
-                                {renderMobileArchiveRail(primaryMobileTabs)}
-                                <div className="mt-2 border-t border-white/6 pt-2">
-                                    {renderMobileArchiveRail(secondaryMobileTabs)}
                                 </div>
-                            </div>
+                            )}
 
                             <div
                                 data-testid="mobile-archive-console-content"

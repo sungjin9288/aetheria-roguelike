@@ -5,6 +5,7 @@ import { DB } from '../../data/db';
 import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon } from '../../utils/equipmentUtils';
 import { getTraitPassiveParts, getTraitProfile } from '../../utils/runProfileUtils';
 import { getExplorationForecast, getQuestTracker } from '../../utils/adventureGuide';
+import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
 
 const BAR_THEMES = {
@@ -112,8 +113,7 @@ const getEquipmentTagMeta = (item, slot = 'main') => {
     return { label: 'EQ', className: 'text-slate-300' };
 };
 
-const EquipmentSlot = ({ label, item, slot = 'main', fallback, icon, compact = false }) => {
-    const SlotIcon = icon;
+const EquipmentSlot = ({ label, item, slot = 'main', fallback, compact = false }) => {
     const tag = getEquipmentTagMeta(item, slot);
 
     return (
@@ -121,7 +121,7 @@ const EquipmentSlot = ({ label, item, slot = 'main', fallback, icon, compact = f
             <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-start gap-2">
                     <div className={`${compact ? 'h-6 w-6' : 'h-7 w-7'} shrink-0 rounded border border-cyber-blue/20 bg-cyber-black/70 flex items-center justify-center text-cyber-blue/70`}>
-                        <SlotIcon size={compact ? 11 : 13} />
+                        <ItemIcon item={item} size={compact ? 18 : 22} />
                     </div>
                     <div className="min-w-0">
                         <div className={`${compact ? 'text-[8px]' : 'text-[9px]'} font-fira uppercase tracking-[0.2em] text-cyber-blue/45`}>
@@ -152,9 +152,9 @@ export const EquipmentPanel = ({ player, stats, compact = false }) => (
             </span>
         </div>
         <div className="grid grid-cols-3 gap-2 text-[10px] font-fira">
-            <EquipmentSlot label="Main" item={player?.equip?.weapon} slot="main" fallback="UNARMED" icon={Sword} compact={compact} />
-            <EquipmentSlot label="Off" item={player?.equip?.offhand} slot="offhand" fallback="EMPTY" icon={Shield} compact={compact} />
-            <EquipmentSlot label="Armor" item={player?.equip?.armor} slot="armor" fallback="CIVILIAN" icon={User} compact={compact} />
+            <EquipmentSlot label="Main" item={player?.equip?.weapon} slot="main" fallback="UNARMED" compact={compact} />
+            <EquipmentSlot label="Off" item={player?.equip?.offhand} slot="offhand" fallback="EMPTY" compact={compact} />
+            <EquipmentSlot label="Armor" item={player?.equip?.armor} slot="armor" fallback="CIVILIAN" compact={compact} />
         </div>
     </div>
 );

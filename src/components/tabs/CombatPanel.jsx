@@ -156,6 +156,27 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
         }
       : null,
   ].filter(Boolean);
+  const mobileCombatSignals = [
+    enemyTelegraph && enemyTelegraph.type !== 'normal'
+      ? { key: 'telegraph', text: enemyTelegraph.label, className: telegraphColorClass }
+      : null,
+    bossBriefLine
+      ? {
+          key: 'boss',
+          text: `보스 전술 · ${bossBriefLine}`,
+          className: 'border-[#d5b180]/18 bg-[#d5b180]/10 text-[#f6e7c8]',
+        }
+      : null,
+    comboRelic
+      ? {
+          key: 'combo',
+          text: comboCount >= comboStack ? `COMBO READY ${comboCount}/${comboStack}` : `COMBO ${comboCount}/${comboStack}`,
+          className: comboCount >= comboStack
+            ? 'border-cyber-pink/50 bg-cyber-pink/12 text-cyber-pink'
+            : 'border-cyber-pink/18 bg-cyber-pink/6 text-cyber-pink/70',
+        }
+      : null,
+  ].filter(Boolean).slice(0, 2);
 
   return (
     <Motion.div
@@ -203,26 +224,21 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
                   </div>
                 )}
               </div>
-              {enemyTelegraph && enemyTelegraph.type !== 'normal' && (
-                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.16em] ${telegraphColorClass}`}>
-                  {enemyTelegraph.label}
-                </span>
-              )}
             </div>
           )}
-          {bossBriefLine && (
+          {!mobile && bossBriefLine && (
             <div className="rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/10 px-3 py-1.5 text-center text-[10px] font-fira text-[#f6e7c8]">
               보스 전술: {bossBriefLine}
             </div>
           )}
 
-          {enemyTelegraph && enemyTelegraph.type !== 'normal' && (
+          {!mobile && enemyTelegraph && enemyTelegraph.type !== 'normal' && (
             <div className={`rounded-[1rem] border px-3 py-1.5 text-center text-[10px] font-fira ${telegraphColorClass}`}>
               ▶ {enemy?.name} — {enemyTelegraph.label}
             </div>
           )}
 
-          {comboRelic && (
+          {!mobile && comboRelic && (
             <div className={`rounded-[1rem] border px-3 py-1.5 text-center text-[10px] font-fira transition-all ${
               comboCount >= comboStack - 1
                 ? 'border-cyber-pink/60 bg-cyber-pink/10 text-cyber-pink animate-pulse'
@@ -233,6 +249,18 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
                 <span key={i} className={`mx-0.5 ${i < comboCount ? 'text-cyber-pink' : 'text-cyber-pink/25'}`}>◆</span>
               ))}
               {comboCount >= comboStack && <span className="ml-1 font-bold">READY!</span>}
+            </div>
+          )}
+          {mobileCombatSignals.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {mobileCombatSignals.map((signal) => (
+                <span
+                  key={signal.key}
+                  className={`inline-flex min-h-[24px] items-center rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.16em] ${signal.className}`}
+                >
+                  {signal.text}
+                </span>
+              ))}
             </div>
           )}
 
@@ -250,12 +278,12 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
               whileTap={{ scale: 0.95 }}
               disabled={isDisabled}
               onClick={() => handleAction(action.key)}
-              className={`h-[44px] overflow-hidden rounded-[1rem] border px-2.5 flex items-center gap-2 font-bold transition-all backdrop-blur-md disabled:opacity-45 ${action.className}`}
+              className={`h-[48px] overflow-hidden rounded-[1rem] border px-2.5 flex items-center gap-2 font-bold transition-all backdrop-blur-md shadow-[0_12px_24px_rgba(2,8,18,0.18)] disabled:opacity-45 ${action.className}`}
             >
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] border border-white/8 bg-black/18 text-white/90">
                 <Icon size={13} className={action.key === 'swap' ? 'transition-transform group-hover:rotate-180' : ''} />
               </span>
-              <span className="text-[11px] font-rajdhani tracking-[0.14em]">
+              <span className="text-[12px] font-rajdhani tracking-[0.14em] text-white/94">
                 {action.mobileLabel || action.label}
               </span>
             </Motion.button>

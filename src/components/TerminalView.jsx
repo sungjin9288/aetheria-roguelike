@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
-import { Bot, AlertTriangle, CheckCircle, Terminal, ChevronDown, ChevronUp, Filter, Volume2, VolumeX } from 'lucide-react';
+import { Bot, AlertTriangle, CheckCircle, Terminal, ChevronUp, Filter } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
@@ -151,6 +151,7 @@ const TerminalView = ({
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
     const showFooter = Boolean(showInput || (player && quickSlots && hasAnyQuickSlot));
     const showExpandToggle = isCombat || logs.length > compactMobileLogCount;
+    const showNarrativePulse = Boolean(latestStory) && gameState !== GS.COMBAT && (logExpanded || logs.length > compactMobileLogCount);
 
     useEffect(() => {
         const viewport = logViewportRef.current;
@@ -235,16 +236,16 @@ const TerminalView = ({
                     </div>
                 )}
 
-                {latestStory && gameState !== GS.COMBAT && (
-                    <div className="relative mb-2.5 overflow-hidden rounded-[1.2rem] aether-panel-core px-3 py-3">
+                {showNarrativePulse && (
+                    <div className="relative mb-2 overflow-hidden rounded-[1.05rem] aether-panel-core px-2.5 py-2">
                         <div className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 38%)' }} />
-                        <div className="relative flex items-start gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[1rem] border border-[#7dd4d8]/18 bg-black/18 text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                <Bot size={14} className="shrink-0" />
+                        <div className="relative flex items-start gap-2">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.9rem] border border-[#7dd4d8]/18 bg-black/18 text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                <Bot size={12} className="shrink-0" />
                             </div>
                             <div>
-                                <div className="mb-0.5 text-[11px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/62">Narrative Pulse</div>
-                                <p className="text-[11px] font-fira text-slate-100/84 italic leading-relaxed">{latestStory.text}</p>
+                                <div className="mb-0.5 text-[10px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/62">Narrative Pulse</div>
+                                <p className="line-clamp-2 text-[10px] font-fira text-slate-100/82 italic leading-relaxed">{latestStory.text}</p>
                             </div>
                         </div>
                     </div>

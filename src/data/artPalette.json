@@ -1,0 +1,58 @@
+{
+  "$comment": "아트 팔레트 단일 진실 원천 (JS runtime + Python generator 공용). 수정 시 양쪽 즉시 반영. 레퍼런스: Octopath/Eastward 계열 cute JRPG pixel RPG.",
+  "version": 2,
+  "artDirection": {
+    "lightDirection": "top-left 45° — 모든 wearable에 동일 적용",
+    "lightAngleDeg": 315,
+    "outlinePolicy": "dark plum tone; 절대 pure black 금지",
+    "defaultOutline": "#2a1f2e",
+    "maxInternalShades": 3,
+    "allowGradient": false,
+    "allowGlowBlur": false,
+    "allowDropShadow": false
+  },
+  "elementToneKey": {
+    "화염": "fire",
+    "냉기": "frost",
+    "어둠": "shadow",
+    "빛": "holy",
+    "자연": "nature",
+    "대지": "earth",
+    "물리": "steel"
+  },
+  "defaultToneKey": {
+    "weapon": "steel",
+    "armor": "cloth",
+    "offhand": "wood"
+  },
+  "tonePalettes": {
+    "steel":   { "outline": "#2a1f2e", "shade": "#4a5166", "mid": "#8c96aa", "hi": "#e6ecf4", "trim": "#d5b180", "material": "metal" },
+    "rust":    { "outline": "#2a1f2e", "shade": "#4a2d1b", "mid": "#9a6a40", "hi": "#e6c08a", "trim": "#d9a56c", "material": "metal" },
+    "wood":    { "outline": "#2a1f2e", "shade": "#3e2815", "mid": "#8a5f38", "hi": "#d9a96e", "trim": "#b8814d", "material": "wood" },
+    "bone":    { "outline": "#2a1f2e", "shade": "#726956", "mid": "#c8b995", "hi": "#f7eedb", "trim": "#b8aa8e", "material": "wood" },
+    "leather": { "outline": "#2a1f2e", "shade": "#3a261a", "mid": "#7d5a3a", "hi": "#d6a878", "trim": "#a8784f", "material": "leather" },
+    "cloth":   { "outline": "#2a1f2e", "shade": "#2f4272", "mid": "#4a69a1", "hi": "#a8c4e6", "trim": "#e4c285", "material": "cloth" },
+    "canvas":  { "outline": "#2a1f2e", "shade": "#5a4028", "mid": "#a8875a", "hi": "#eed8a8", "trim": "#c98d58", "material": "cloth" },
+    "holy":    { "outline": "#2a1f2e", "shade": "#5a4620", "mid": "#c4a458", "hi": "#fff5d8", "trim": "#f1dfae", "material": "holy" },
+    "shadow":  { "outline": "#2a1f2e", "shade": "#2d2144", "mid": "#554076", "hi": "#b69ed8", "trim": "#c7a4f0", "material": "arcane" },
+    "nature":  { "outline": "#2a1f2e", "shade": "#2d4226", "mid": "#5f8b5d", "hi": "#a8d0a0", "trim": "#8dd48f", "material": "cloth" },
+    "frost":   { "outline": "#2a1f2e", "shade": "#29455a", "mid": "#5c9ab4", "hi": "#cce8f5", "trim": "#b5ebff", "material": "metal" },
+    "fire":    { "outline": "#2a1f2e", "shade": "#6a2e16", "mid": "#c45a2a", "hi": "#ffb48a", "trim": "#ffc97e", "material": "metal" },
+    "earth":   { "outline": "#2a1f2e", "shade": "#4c3720", "mid": "#9b7b4e", "hi": "#d8b878", "trim": "#d9b070", "material": "wood" },
+    "arcane":  { "outline": "#2a1f2e", "shade": "#31245d", "mid": "#7a6ac0", "hi": "#c0b0e8", "trim": "#e4c285", "material": "arcane" },
+    "straw":   { "outline": "#2a1f2e", "shade": "#604c26", "mid": "#c79d52", "hi": "#ffe2a6", "trim": "#9f6e36", "material": "straw" }
+  },
+  "referenceAccents": {
+    "$comment": "레퍼런스 캐릭터 로스터에서 추출한 common accent/skin tone. 신규 wearable 제작 시 이 중에서 맞추면 같은 세계관으로 읽힘.",
+    "skin": "#f0c29b",
+    "skinHi": "#ffd9b0",
+    "hairBrown": "#7a5236",
+    "hairDark": "#2b2028",
+    "hairBlond": "#e5d49a",
+    "hairPink": "#e68fb6",
+    "clothCream": "#f0e8d8",
+    "clothCrimson": "#a03e3c",
+    "clothTeal": "#5a9fa2",
+    "clothPurple": "#554076"
+  }
+}

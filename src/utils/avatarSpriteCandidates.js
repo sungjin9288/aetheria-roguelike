@@ -1,0 +1,129 @@
+export const JOB_SPRITE_SLUG_MAP = {
+    모험가: 'adventurer',
+    전사: 'warrior',
+    나이트: 'knight',
+    버서커: 'berserker',
+    도적: 'rogue',
+    어쌔신: 'assassin',
+    레인저: 'ranger',
+    마법사: 'mage',
+    아크메이지: 'archmage',
+    흑마법사: 'warlock',
+    팔라딘: 'paladin',
+    시간술사: 'chronomancer',
+    그림자주군: 'shadow-lord',
+    '그림자 주군': 'shadow-lord',
+    대마법사: 'grand-mage',
+};
+
+const AVAILABLE_AVATAR_KEYS = new Set([
+    'adventurer',
+    'adventurer-archer',
+    'adventurer-caster',
+    'adventurer-coat',
+    'adventurer-dagger',
+    'adventurer-guardian',
+    'adventurer-heavy',
+    'adventurer-lancer',
+    'adventurer-leather',
+    'adventurer-plate',
+    'adventurer-robe',
+    'adventurer-sword',
+    'archmage',
+    'archmage-robe',
+    'archmage-robe-caster',
+    'assassin',
+    'assassin-leather',
+    'assassin-leather-dagger',
+    'berserker',
+    'berserker-plate',
+    'berserker-plate-heavy',
+    'chronomancer',
+    'chronomancer-robe',
+    'chronomancer-robe-caster',
+    'grand-mage',
+    'grand-mage-robe',
+    'grand-mage-robe-caster',
+    'knight',
+    'knight-plate',
+    'knight-plate-guardian',
+    'mage',
+    'mage-robe',
+    'mage-robe-caster',
+    'paladin',
+    'paladin-plate',
+    'paladin-plate-guardian',
+    'ranger',
+    'ranger-coat',
+    'ranger-coat-archer',
+    'rogue',
+    'rogue-leather',
+    'rogue-leather-dagger',
+    'shadow-lord',
+    'shadow-lord-leather',
+    'shadow-lord-leather-dagger',
+    'warlock',
+    'warlock-robe',
+    'warlock-robe-caster',
+    'warrior',
+    'warrior-plate',
+    'warrior-plate-heavy',
+    'warrior-plate-sword',
+]);
+
+const buildCandidatePaths = (orderedKeys) => (
+    [...new Set(orderedKeys.filter((key) => AVAILABLE_AVATAR_KEYS.has(key)))]
+        .map((key) => `/assets/avatars/${key}.png`)
+);
+
+const resolveAppearanceKeys = (appearance) => {
+    const normalizedJob = String(appearance?.job || '모험가').replace(/\s+/g, '');
+    const jobSlug = JOB_SPRITE_SLUG_MAP[normalizedJob] || JOB_SPRITE_SLUG_MAP[appearance?.job] || 'adventurer';
+    const armorStyle = appearance?.armorStyle || 'coat';
+    const loadoutStyle = appearance?.loadoutStyle || 'sword';
+
+    return { jobSlug, armorStyle, loadoutStyle };
+};
+
+export const getAvatarSpriteCandidates = (appearance) => {
+    const { jobSlug, armorStyle, loadoutStyle } = resolveAppearanceKeys(appearance);
+
+    const orderedKeys = [
+        `${jobSlug}-${armorStyle}-${loadoutStyle}`,
+        `${jobSlug}-${armorStyle}`,
+        `${jobSlug}-${loadoutStyle}`,
+        jobSlug,
+        `adventurer-${armorStyle}`,
+        `adventurer-${loadoutStyle}`,
+        'adventurer',
+    ];
+
+    return buildCandidatePaths(orderedKeys);
+};
+
+export const getAvatarEquipmentPreviewCandidates = (appearance) => {
+    const { jobSlug, armorStyle, loadoutStyle } = resolveAppearanceKeys(appearance);
+    const emphasizesLoadout = Boolean(appearance?.weapon || appearance?.offhand);
+
+    const orderedKeys = emphasizesLoadout
+        ? [
+            `${jobSlug}-${armorStyle}-${loadoutStyle}`,
+            `${jobSlug}-${loadoutStyle}`,
+            `${jobSlug}-${armorStyle}`,
+            jobSlug,
+            `adventurer-${loadoutStyle}`,
+            `adventurer-${armorStyle}`,
+            'adventurer',
+        ]
+        : [
+            `${jobSlug}-${armorStyle}-${loadoutStyle}`,
+            `${jobSlug}-${armorStyle}`,
+            `${jobSlug}-${loadoutStyle}`,
+            jobSlug,
+            `adventurer-${armorStyle}`,
+            `adventurer-${loadoutStyle}`,
+            'adventurer',
+        ];
+
+    return buildCandidatePaths(orderedKeys);
+};

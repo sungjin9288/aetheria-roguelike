@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback } from 'react';
+import React, { lazy, Suspense, useCallback, useState } from 'react';
 import { soundManager } from '../../systems/SoundManager';
 import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
@@ -22,7 +22,13 @@ const GameRoot = ({
     handleQuickSlotUse,
     damageFlash, healFlash, damageAmount,
 }) => {
+    const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
     const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
+    const handleOpenEquipment = useCallback(() => {
+        engine.actions.setSideTab?.('equipment');
+        engine.actions.setGameState?.(GS.IDLE);
+        setMobileConsoleMode('archive');
+    }, [engine.actions]);
 
     return (
     <MotionConfig reducedMotion="user">
@@ -47,6 +53,7 @@ const GameRoot = ({
                     onCrystalClick={(engine.player?.premiumCurrency || 0) > 0 ? () => setPremiumShopOpen(true) : null}
                     isMuted={isMuted}
                     onToggleMute={handleToggleMute}
+                    onOpenEquipment={engine.gameState === GS.COMBAT ? null : handleOpenEquipment}
                 />
 
                 {/* 시즌 이벤트 배너 */}
@@ -92,6 +99,8 @@ const GameRoot = ({
                     handleQuickSlotUse={handleQuickSlotUse}
                     damageFlash={damageFlash}
                     healFlash={healFlash}
+                    mobileConsoleMode={mobileConsoleMode}
+                    setMobileConsoleMode={setMobileConsoleMode}
                 />
             </div>
 

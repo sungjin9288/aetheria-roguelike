@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
 import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
+import ItemIcon from './icons/ItemIcon';
 
 /** 맵 레벨을 기준으로 상점 최대 아이템 티어 계산 */
 const getShopMaxTier = (loc) => {
@@ -92,6 +93,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
+    const [purchaseNotice, setPurchaseNotice] = useState('');
     const loc = player.loc;
     const expansionKey = `${loc}:${shopMode}`;
 
@@ -104,7 +106,14 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
 
     const currentJob = player.job;
     const currentGold = player.gold;
+    const inventoryHasRoom = (player.inv?.length || 0) < (player.maxInv || BALANCE.INV_MAX_SIZE);
     const buyItemsExpanded = buyItemsExpansion.key === expansionKey && buyItemsExpansion.expanded;
+
+    useEffect(() => {
+        if (!purchaseNotice) return undefined;
+        const timer = window.setTimeout(() => setPurchaseNotice(''), 1800);
+        return () => window.clearTimeout(timer);
+    }, [purchaseNotice]);
 
     const buyItems = useMemo(() => {
         return shopItems
@@ -117,6 +126,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                     item,
                     affordable,
                     equipable,
+                    inventoryHasRoom,
                     priorityScore: (affordable ? 0 : 1) + (equipable ? 0 : 2),
                     resonanceScore: resonance.score,
                 };
@@ -126,7 +136,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                 || b.resonanceScore - a.resonanceScore
                 || (a.item.price || 0) - (b.item.price || 0)
             ));
-    }, [shopItems, maxTier, currentGold, currentJob, traitProfile]);
+    }, [shopItems, maxTier, currentGold, currentJob, traitProfile, inventoryHasRoom]);
 
     const visibleBuyItems = useMemo(() => {
         if (buyItemsExpanded) return buyItems;
@@ -148,7 +158,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                 eyebrow="Broker Ledger"
                 title="MARKET"
                 titleClassName="text-[1.1rem] leading-none"
-                meta={`${loc} · T${maxTier} · ${player.gold} CR · ${player.inv.length}/${player.maxInv || BALANCE.INV_MAX_SIZE}`}
+                meta={`${loc} · T${maxTier} · ${player.inv.length}/${player.maxInv || BALANCE.INV_MAX_SIZE}`}
                 onBack={() => setGameState('idle')}
                 backLabel="복귀"
                 backTestId="shop-close"
@@ -156,6 +166,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                 archiveLabel="INV"
                 archiveTestId="shop-open-archive"
             />
+
+            {purchaseNotice && (
+                <div className="mb-2 rounded-[1rem] border border-emerald-300/22 bg-emerald-400/10 px-3 py-2 text-[11px] font-fira font-semibold text-emerald-100">
+                    구매 완료 · {purchaseNotice}
+                </div>
+            )}
 
             <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/74">
@@ -190,18 +206,24 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                         <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-amber-300/70">Daily Deals — 10% OFF</div>
                         <div className="grid grid-cols-1 gap-2">
                             {dailyDeals.items.map((item) => {
-                                const canBuy = player.gold >= item.price && (!isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job));
+                                const canBuy = inventoryHasRoom && player.gold >= item.price && (!isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job));
                                 return (
                                     <div key={item.name} className="flex items-center justify-between gap-2 rounded-[1.1rem] border border-amber-400/20 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.12),transparent_24%),linear-gradient(180deg,rgba(47,33,15,0.24)_0%,rgba(18,12,8,0.12)_100%)] px-3 py-2.5">
-                                        <div className="min-w-0">
-                                            <div className="text-xs font-rajdhani font-bold text-white truncate">{item.name}</div>
-                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                <span className="text-[10px] font-fira text-amber-300 font-bold">{item.price} CR</span>
-                                                <span className="text-[9px] font-fira text-slate-500 line-through">{item.originalPrice}</span>
+                                        <div className="min-w-0 flex items-center gap-2">
+                                            <ItemIcon item={item} size={34} showBorder className="opacity-95" />
+                                            <div className="min-w-0">
+                                                <div className="text-xs font-rajdhani font-bold text-white truncate">{item.name}</div>
+                                                <div className="mt-0.5 flex items-center gap-1.5">
+                                                    <span className="text-[10px] font-fira text-amber-300 font-bold">{item.price} CR</span>
+                                                    <span className="text-[9px] font-fira text-slate-500 line-through">{item.originalPrice}</span>
+                                                </div>
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => actions.market('buy', item)}
+                                            onClick={() => {
+                                                actions.market('buy', item);
+                                                setPurchaseNotice(item.name);
+                                            }}
                                             disabled={!canBuy}
                                             className="shrink-0 min-h-[32px] rounded-full border border-amber-400/30 px-2.5 py-1 text-[10px] font-bold text-amber-300 transition-all disabled:opacity-30 hover:bg-amber-400/10"
                                         >
@@ -213,20 +235,26 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                         </div>
                         {weeklySpecial && (
                             <div className="flex items-center justify-between gap-3 rounded-[1.15rem] border border-purple-400/25 bg-[radial-gradient(circle_at_82%_12%,rgba(154,138,192,0.16),transparent_22%),linear-gradient(180deg,rgba(33,22,46,0.24)_0%,rgba(16,10,20,0.12)_100%)] px-3 py-2.75">
-                                <div className="min-w-0">
-                                    <div className="text-[9px] font-fira uppercase tracking-wider text-purple-300/60 mb-0.5">Weekly Special — 15% OFF</div>
-                                    <div className="text-sm font-rajdhani font-bold text-white truncate">{weeklySpecial.name}</div>
-                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                        <span className="text-[11px] font-fira text-purple-300 font-bold">{weeklySpecial.price} CR</span>
-                                        <span className="text-[9px] font-fira text-slate-500 line-through">{weeklySpecial.originalPrice}</span>
+                                <div className="min-w-0 flex items-center gap-2.5">
+                                    <ItemIcon item={weeklySpecial} size={38} showBorder className="opacity-95" />
+                                    <div className="min-w-0">
+                                        <div className="mb-0.5 text-[9px] font-fira uppercase tracking-wider text-purple-300/60">Weekly Special — 15% OFF</div>
+                                        <div className="text-sm font-rajdhani font-bold text-white truncate">{weeklySpecial.name}</div>
+                                        <div className="mt-0.5 flex items-center gap-1.5">
+                                            <span className="text-[11px] font-fira text-purple-300 font-bold">{weeklySpecial.price} CR</span>
+                                            <span className="text-[9px] font-fira text-slate-500 line-through">{weeklySpecial.originalPrice}</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => actions.market('buy', weeklySpecial)}
-                                    disabled={player.gold < weeklySpecial.price}
+                                    onClick={() => {
+                                        actions.market('buy', weeklySpecial);
+                                        setPurchaseNotice(weeklySpecial.name);
+                                    }}
+                                    disabled={!inventoryHasRoom || player.gold < weeklySpecial.price}
                                     className="shrink-0 min-h-[36px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-300 transition-all disabled:opacity-30 hover:bg-purple-400/10"
                                 >
-                                    {player.gold >= weeklySpecial.price ? '구매' : '골드 부족'}
+                                    {!inventoryHasRoom ? '가방 가득' : player.gold >= weeklySpecial.price ? '구매' : '골드 부족'}
                                 </button>
                             </div>
                         )}
@@ -235,8 +263,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
 
                 {shopMode === 'buy' ? (
                     buyItems.length > 0 ? (
-                        visibleBuyItems.map(({ item, affordable, equipable }) => {
-                            const canBuy = affordable && equipable;
+                        visibleBuyItems.map(({ item, affordable, equipable, inventoryHasRoom: canStore }) => {
+                            const canBuy = affordable && equipable && canStore;
                             const comparison = getComparisonMeta(item, player.equip);
                             const typeTag = getItemTags(item)[0];
                             const summary = getCompactItemSummary(item);
@@ -249,13 +277,24 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                     className={`overflow-hidden rounded-[1.2rem] border px-3 py-2.5 transition-all ${canBuy ? 'aether-panel-muted hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]' : 'bg-black/14 border-white/8'} border-white/8`}
                                 >
                                     <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="truncate font-bold text-slate-100 font-rajdhani text-[1rem] leading-tight">{item.name}</div>
-                                                {typeTag && (
-                                                    <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-fira text-slate-300/85">
-                                                        {typeTag}
-                                                    </span>
+                                        <div className="min-w-0 flex flex-1 items-start gap-2.5">
+                                            <ItemIcon item={item} size={40} showBorder className="mt-0.5 opacity-95" />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="truncate font-bold text-slate-100 font-rajdhani text-[1rem] leading-tight">{item.name}</div>
+                                                    {typeTag && (
+                                                        <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-fira text-slate-300/85">
+                                                            {typeTag}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="mt-1 text-[10px] font-fira leading-[1.35] text-slate-400">{summary}</div>
+                                                {comparison && (
+                                                    <div className="mt-1">
+                                                        <div className={`inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-[10px] font-fira leading-[1.2] ${getToneClass(comparison.tone)}`}>
+                                                            <span className="truncate">{comparisonText}</span>
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -266,24 +305,14 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                                 onClick={() => {
                                                     if (!canBuy) return;
                                                     actions.market('buy', item);
+                                                    setPurchaseNotice(item.name);
                                                 }}
                                                 disabled={!canBuy}
                                                 className="min-h-[34px] rounded-full border border-[#d5b180]/24 px-2.5 py-1 text-[10px] font-bold text-[#f6e7c8] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
                                             >
-                                                {!affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
+                                                {!canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
                                             </button>
                                         </div>
-                                    </div>
-                                    <div className="mt-1 flex items-center gap-1.5 text-[10px] font-fira leading-[1.35] min-w-0">
-                                        <div className="min-w-0 flex-1 truncate text-slate-400">{summary}</div>
-                                        {comparison && (
-                                            <>
-                                                <span className="shrink-0 text-slate-600">/</span>
-                                                <div className={`min-w-0 max-w-[52%] truncate rounded-full border px-2 py-0.5 ${getToneClass(comparison.tone)}`}>
-                                                    대비 {comparisonText}
-                                                </div>
-                                            </>
-                                        )}
                                     </div>
                                 </div>
                             );
@@ -308,9 +337,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                     className={`flex flex-col rounded-[1.3rem] border px-3 py-3 transition-all ${isConfirming ? 'bg-rose-400/10 border-rose-300/24 shadow-[0_18px_28px_rgba(251,113,133,0.08)]' : 'aether-panel-muted hover:border-rose-300/18'}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <div className="font-bold text-red-300 font-rajdhani text-base truncate">{item.name}</div>
-                                            <div className="mt-1 text-[11px] text-slate-400 font-fira truncate">{summary}</div>
+                                        <div className="min-w-0 flex items-start gap-2.5">
+                                            <ItemIcon item={item} size={38} showBorder className="mt-0.5 opacity-95" />
+                                            <div className="min-w-0">
+                                                <div className="font-bold text-red-300 font-rajdhani text-base truncate">{item.name}</div>
+                                                <div className="mt-1 text-[11px] text-slate-400 font-fira truncate">{summary}</div>
+                                            </div>
                                         </div>
                                         <span className="shrink-0 text-[#f6e7c8] font-fira font-bold text-sm">+{sellPrice} CR</span>
                                     </div>

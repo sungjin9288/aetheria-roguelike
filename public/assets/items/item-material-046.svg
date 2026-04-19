@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <g shape-rendering="crispEdges">
+    <rect x="44" y="94" width="4" height="8" fill="#e5fdff" opacity="0.25" shape-rendering="crispEdges"/><rect x="42" y="96" width="8" height="4" fill="#e5fdff" opacity="0.25" shape-rendering="crispEdges"/><rect x="128" y="31" width="6" height="12" fill="#e5fdff" opacity="0.25" shape-rendering="crispEdges"/><rect x="125" y="34" width="12" height="6" fill="#e5fdff" opacity="0.25" shape-rendering="crispEdges"/><rect x="108" y="75" width="4" height="8" fill="#e5fdff" opacity="0.25" shape-rendering="crispEdges"/><rect x="106" y="77" width="8" height="4" fill="#e5fdff" opacity="0.25" shape-rendering="crispEdges"/><rect x="111" y="114" width="6" height="12" fill="#e5fdff" opacity="0.25" shape-rendering="crispEdges"/><rect x="108" y="117" width="12" height="6" fill="#e5fdff" opacity="0.25" shape-rendering="crispEdges"/>
+    <path d="M80 22 C110 28 124 54 122 82 C120 108 102 126 80 136 C58 126 40 108 38 82 C36 54 50 28 80 22 Z" fill="#234e6a" /><path d="M80 34 C102 40 112 58 110 82 C108 100 96 114 80 122 C64 114 52 100 50 82 C48 58 58 40 80 34 Z" fill="#e5fdff" opacity="0.78"/><rect x="72" y="42" width="16" height="10" fill="#6deeff" shape-rendering="crispEdges"/>
+  </g>
+</svg>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <g shape-rendering="crispEdges">
+    <rect x="45" y="69" width="4" height="8" fill="#fff9da" opacity="0.25" shape-rendering="crispEdges"/><rect x="43" y="71" width="8" height="4" fill="#fff9da" opacity="0.25" shape-rendering="crispEdges"/><rect x="48" y="39" width="6" height="12" fill="#fff9da" opacity="0.25" shape-rendering="crispEdges"/><rect x="45" y="42" width="12" height="6" fill="#fff9da" opacity="0.25" shape-rendering="crispEdges"/><rect x="135" y="106" width="4" height="8" fill="#fff9da" opacity="0.25" shape-rendering="crispEdges"/><rect x="133" y="108" width="8" height="4" fill="#fff9da" opacity="0.25" shape-rendering="crispEdges"/>
+    <path d="M52 115 Q42 80 52 45 L62 45 Q52 80 62 115 Z" fill="#506fa9" shape-rendering="crispEdges"/><path d="M102 45 Q112 80 102 115 L92 115 Q102 80 92 45 Z" fill="#506fa9" shape-rendering="crispEdges"/><line x1="58" y1="47" x2="96" y2="113" stroke="#fff9da" stroke-width="3" stroke-linecap="square" /><line x1="58" y1="113" x2="96" y2="47" stroke="#293b5c" stroke-width="2" stroke-linecap="square" opacity="0.55"/><rect x="70" y="74" width="20" height="8" fill="#dfeaf8" shape-rendering="crispEdges"/>
+  </g>
+</svg>

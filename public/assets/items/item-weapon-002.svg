@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <g shape-rendering="crispEdges">
+    <rect x="111" y="124" width="4" height="8" fill="#fcedce" opacity="0.25" shape-rendering="crispEdges"/><rect x="109" y="126" width="8" height="4" fill="#fcedce" opacity="0.25" shape-rendering="crispEdges"/><rect x="90" y="103" width="6" height="12" fill="#fcedce" opacity="0.25" shape-rendering="crispEdges"/><rect x="87" y="106" width="12" height="6" fill="#fcedce" opacity="0.25" shape-rendering="crispEdges"/>
+    <polygon points="84,18 98,28 92,94 79,84" fill="#44639d" shape-rendering="crispEdges"/><polygon points="88,24 96,30 92,80 85,84" fill="#fcedce" opacity="0.82" shape-rendering="crispEdges"/><rect x="74" y="94" width="26" height="10" fill="#d3deec" shape-rendering="crispEdges"/><rect x="86" y="104" width="10" height="20" fill="#293b5c" shape-rendering="crispEdges"/><circle cx="91" cy="126" r="7" fill="#d3deec" shape-rendering="crispEdges"/><polygon points="91,100 102,105.5 91,111 80,105.5" fill="#d3deec" shape-rendering="crispEdges"/><polygon points="91,102 96.5,105.5 91,109 85.5,105.5" fill="#fcedce" opacity="0.76" shape-rendering="crispEdges"/>
+  </g>
+</svg>

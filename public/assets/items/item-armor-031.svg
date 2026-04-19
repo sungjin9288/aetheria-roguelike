@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <g shape-rendering="crispEdges">
+    <rect x="107" y="106" width="4" height="8" fill="#f1ffe3" opacity="0.25" shape-rendering="crispEdges"/><rect x="105" y="108" width="8" height="4" fill="#f1ffe3" opacity="0.25" shape-rendering="crispEdges"/><rect x="69" y="101" width="6" height="12" fill="#f1ffe3" opacity="0.25" shape-rendering="crispEdges"/><rect x="66" y="104" width="12" height="6" fill="#f1ffe3" opacity="0.25" shape-rendering="crispEdges"/><rect x="95" y="56" width="4" height="8" fill="#f1ffe3" opacity="0.25" shape-rendering="crispEdges"/><rect x="93" y="58" width="8" height="4" fill="#f1ffe3" opacity="0.25" shape-rendering="crispEdges"/><rect x="58" y="98" width="6" height="12" fill="#f1ffe3" opacity="0.25" shape-rendering="crispEdges"/><rect x="55" y="101" width="12" height="6" fill="#f1ffe3" opacity="0.25" shape-rendering="crispEdges"/>
+    <polygon points="48,30 80,20 112,30 124,72 112,118 80,130 48,118 36,72" fill="#2e5a45" shape-rendering="crispEdges"/><polygon points="58,36 80,28 102,36 112,72 102,108 80,118 58,108 48,72" fill="#f1ffe3" opacity="0.78" shape-rendering="crispEdges"/><rect x="56" y="48" width="48" height="12" fill="#7ed67c" shape-rendering="crispEdges"/><rect x="72" y="58" width="16" height="46" fill="#152e22" shape-rendering="crispEdges"/>
+  </g>
+</svg>

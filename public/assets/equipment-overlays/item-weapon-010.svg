@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="none">
+  <defs>
+    <filter id="shadow-item-weapon-010" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="0.8" flood-color="rgba(10, 12, 16, 0.28)"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow-item-weapon-010)">
+    <polygon points="48,38 54,40 41,61 36,58" fill="#766450" shape-rendering="crispEdges"/><polygon points="49,40 53,41 42,58 38,57" fill="rgba(250, 239, 219, 0.72)" shape-rendering="crispEdges"/><rect x="38" y="56" width="7" height="2" fill="#d6c2a4" shape-rendering="crispEdges"/><rect x="40" y="58" width="2" height="7" fill="#5e4c38" shape-rendering="crispEdges"/><circle cx="41" cy="66" r="1.5" fill="#d6c2a4" shape-rendering="crispEdges"/>
+  </g>
+</svg>

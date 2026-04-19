@@ -12,11 +12,138 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
     useEffect(() => {
         if (typeof window === 'undefined') return undefined;
 
+        const avatarScenarioMap = {
+            'paladin-plate': {
+                name: '성광 기사',
+                job: '팔라딘',
+                level: 24,
+                loc: '북부 요새',
+                equip: {
+                    weapon: { id: 'smoke-paladin-blade', name: '성광 롱소드', type: 'weapon', hands: 1, elem: '빛', enhance: 4 },
+                    offhand: { id: 'smoke-paladin-shield', name: '축성 방패', type: 'shield', elem: '빛', enhance: 2 },
+                    armor: { id: 'smoke-paladin-armor', name: '성기사의 갑주', type: 'armor', elem: '빛', enhance: 3 },
+                },
+            },
+            'archmage-robe': {
+                name: '성운 현자',
+                job: '아크메이지',
+                level: 28,
+                loc: '별의 제단',
+                equip: {
+                    weapon: { id: 'smoke-archmage-staff', name: '혜성의 지팡이', type: 'weapon', hands: 2, elem: '냉기', enhance: 5 },
+                    offhand: { id: 'smoke-archmage-focus', name: '시간의 마도서', type: 'shield', subtype: 'focus', elem: '빛', enhance: 2 },
+                    armor: { id: 'smoke-archmage-robe', name: '세계수의 로브', type: 'armor', elem: '자연', enhance: 4 },
+                },
+            },
+            'shadow-lord-leather': {
+                name: '야영 그림자',
+                job: '그림자 주군',
+                level: 31,
+                loc: '무너진 회랑',
+                equip: {
+                    weapon: { id: 'smoke-shadow-dagger', name: '균열 단검', type: 'weapon', hands: 1, elem: '어둠', enhance: 6 },
+                    offhand: { id: 'smoke-shadow-offhand', name: '밤의 송곳니', type: 'weapon', hands: 1, elem: '어둠', enhance: 5 },
+                    armor: { id: 'smoke-shadow-armor', name: '균열 외피갑옷', type: 'armor', elem: '어둠', enhance: 4 },
+                },
+            },
+            'ranger-coat': {
+                name: '숲길 추적자',
+                job: '레인저',
+                level: 22,
+                loc: '고요한 숲',
+                equip: {
+                    weapon: { id: 'smoke-ranger-bow', name: '바람 사냥활', type: 'weapon', hands: 2, elem: '자연', enhance: 3 },
+                    offhand: null,
+                    armor: { id: 'smoke-ranger-coat', name: '전설의 사냥꾼 외투', type: 'armor', elem: '자연', enhance: 3 },
+                },
+            },
+            'berserker-plate': {
+                name: '혈풍 광전사',
+                job: '버서커',
+                level: 27,
+                loc: '붉은 협곡',
+                equip: {
+                    weapon: { id: 'smoke-berserker-axe', name: '광전사의 도끼', type: 'weapon', hands: 2, elem: '화염', enhance: 5 },
+                    offhand: null,
+                    armor: { id: 'smoke-berserker-armor', name: '혼돈의 갑주', type: 'armor', elem: '어둠', enhance: 4 },
+                },
+            },
+            'adventurer-straw-hat': {
+                name: '들녘 신참',
+                job: '모험가',
+                level: 6,
+                loc: '시작의 마을',
+                equip: {
+                    weapon: { id: 'smoke-adventurer-dagger', name: '녹슨 단검', type: 'weapon', hands: 1, enhance: 1 },
+                    offhand: null,
+                    armor: { id: 'smoke-adventurer-hat', name: '짚 모자', type: 'armor', enhance: 0 },
+                },
+            },
+            'adventurer-travel-tunic': {
+                name: '길잡이 견습',
+                job: '모험가',
+                level: 6,
+                loc: '시작의 마을',
+                equip: {
+                    weapon: { id: 'smoke-adventurer-axe', name: '녹슨 도끼', type: 'weapon', hands: 1, enhance: 1 },
+                    offhand: { id: 'smoke-adventurer-shield', name: '목재 방패', type: 'shield', enhance: 0 },
+                    armor: { id: 'smoke-adventurer-tunic', name: '여행자 튜닉', type: 'armor', enhance: 0 },
+                },
+            },
+        };
+
+        const safeText = (value, fallback = '') => {
+            if (typeof value === 'string') return value;
+            if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+            if (value && typeof value === 'object') {
+                for (const key of ['label', 'text', 'id', 'name', 'desc']) {
+                    try {
+                        const candidate = value[key];
+                        if (typeof candidate === 'string') return candidate;
+                        if (typeof candidate === 'number' || typeof candidate === 'boolean') return String(candidate);
+                    } catch {
+                        continue;
+                    }
+                }
+                return fallback;
+            }
+            return fallback;
+        };
+        const safeList = (items, fallback = '[item]') => (
+            Array.isArray(items) ? items.map((item) => safeText(item, fallback)) : []
+        );
+        const sanitizeValue = (value, depth = 0) => {
+            if (depth > 6) return '[max-depth]';
+            if (value == null) return value;
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+            if (typeof value === 'function' || typeof value === 'symbol' || typeof value === 'bigint') return `[${typeof value}]`;
+            if (Array.isArray(value)) return value.map((entry) => sanitizeValue(entry, depth + 1));
+            if (typeof value !== 'object') return null;
+
+            try {
+                const tag = Object.prototype.toString.call(value);
+                if (tag === '[object Date]') return value.toISOString();
+                if (tag !== '[object Object]') return safeText(value, tag);
+            } catch {
+                return '[unserializable]';
+            }
+
+            const next = {};
+            for (const key of Object.keys(value)) {
+                try {
+                    next[key] = sanitizeValue(value[key], depth + 1);
+                } catch {
+                    next[key] = '[unserializable]';
+                }
+            }
+            return next;
+        };
+
         window.render_game_to_text = () => {
             const e = engineRef.current;
             const fs = fullStatsRef.current;
             const is = inventorySpotlightRef.current;
-            return JSON.stringify({
+            return JSON.stringify(sanitizeValue({
                 bootStage: e.bootStage,
                 mode: e.gameState === GS.DEAD && e.runSummary
                     ? 'run_summary'
@@ -49,28 +176,28 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                     : null,
                 currentEvent: e.currentEvent
                     ? {
-                        desc: e.currentEvent.desc || '',
-                        choices: Array.isArray(e.currentEvent.choices) ? e.currentEvent.choices : [],
+                        desc: safeText(e.currentEvent.desc),
+                        choices: safeList(e.currentEvent.choices, '[choice]'),
                     }
                     : null,
                 pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((r) => r.name) : null,
                 postCombatResult: e.postCombatResult
                     ? {
-                        enemy: e.postCombatResult.enemy,
+                        enemy: safeText(e.postCombatResult.enemy),
                         exp: e.postCombatResult.exp,
                         gold: e.postCombatResult.gold,
-                        items: e.postCombatResult.items || [],
+                        items: safeList(e.postCombatResult.items),
                     }
                     : null,
                 inventorySpotlight: is
-                    ? { token: is.token, title: is.title, names: is.names || [] }
+                    ? { token: is.token, title: safeText(is.title), names: safeList(is.names) }
                     : null,
                 runSummary: e.runSummary
                     ? { level: e.runSummary.level, job: e.runSummary.job, loc: e.runSummary.loc }
                     : null,
                 sideTab: e.sideTab,
                 logTail: e.logs.slice(-6).map((log) => ({ type: log.type, text: log.text })),
-            });
+            }));
         };
 
         window.advanceTime = (ms = 0) => new Promise((resolve) => window.setTimeout(resolve, Math.max(0, ms)));
@@ -168,6 +295,26 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                     },
                 });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'equipment' });
+            },
+            seedAvatarScenario: (preset = 'paladin-plate') => {
+                const er = engineRef.current;
+                const scenario = avatarScenarioMap[preset];
+                if (!scenario) return false;
+
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        name: scenario.name,
+                        job: scenario.job,
+                        level: scenario.level,
+                        loc: er.player.loc || scenario.loc,
+                        hp: er.player.hp,
+                        mp: er.player.mp,
+                        equip: scenario.equip,
+                    },
+                });
+                er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'equipment' });
+                return true;
             },
             injectPostCombatResult: () => {
                 engineRef.current.dispatch({

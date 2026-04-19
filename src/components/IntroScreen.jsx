@@ -3,31 +3,12 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import AetherMark from './AetherMark';
 import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
 import { BALANCE } from '../data/constants';
-
-const HANGUL_INITIALS = [0, 2, 3, 5, 6, 7, 9, 11, 12, 14, 15, 16, 17, 18];
-const HANGUL_MEDIALS = [0, 1, 4, 5, 8, 12, 13, 17, 18, 20];
-const HANGUL_FINALS = [0, 0, 1, 4, 8, 16, 17, 19, 21, 27];
-const HANGUL_BASE = 0xac00;
-
-const randomFrom = (pool) => pool[Math.floor(Math.random() * pool.length)];
-const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-const buildRandomHangulSyllable = () => {
-    const initial = randomFrom(HANGUL_INITIALS);
-    const medial = randomFrom(HANGUL_MEDIALS);
-    const final = randomFrom(HANGUL_FINALS);
-    return String.fromCharCode(HANGUL_BASE + (initial * 21 * 28) + (medial * 28) + final);
-};
-
-const randomMobileName = () => Array.from(
-    { length: randomBetween(2, 5) },
-    () => buildRandomHangulSyllable(),
-).join('');
+import { createRandomMobileName } from '../utils/nameGenerator';
 
 const CHALLENGE_REWARD_TEXT = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
 
 const IntroScreen = ({ onStart }) => {
-    const [name, setName] = useState(() => randomMobileName());
+    const [name, setName] = useState(() => createRandomMobileName());
     const [selectedChallenges, setSelectedChallenges] = useState([]);
     const nameInputRef = useRef(null);
 
@@ -128,7 +109,7 @@ const IntroScreen = ({ onStart }) => {
                                 <button
                                     type="button"
                                     data-testid="intro-reroll-name"
-                                    onClick={() => applyName(randomMobileName(), true)}
+                                    onClick={() => applyName(createRandomMobileName(), true)}
                                     className="shrink-0 rounded-[1.05rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-3 text-[11px] font-rajdhani font-bold tracking-[0.14em] text-[#f4e6c8]"
                                 >
                                     랜덤
@@ -136,7 +117,7 @@ const IntroScreen = ({ onStart }) => {
                             </div>
                             <div data-testid="intro-mobile-name" className="sr-only">{selectedName}</div>
                             <div className="mt-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/70">
-                                랜덤 버튼으로 2~5글자 호출명을 새로 만들고 바로 수정해서 시작할 수 있습니다.
+                                실제 이름 순위 패턴 기반 2~3글자 호출명을 새로 만들고 바로 수정해서 시작할 수 있습니다.
                             </div>
                         </div>
                     </div>

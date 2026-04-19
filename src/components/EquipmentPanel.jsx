@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { Coins, Shield, Sparkles, Sword } from 'lucide-react';
+import { Shield, Sparkles, Sword } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
 import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
-import { getEquipmentProfile, getItemStatText, getWeaponStyleLabel } from '../utils/equipmentUtils';
-import SignalBadge from './SignalBadge';
+import { getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
+import { deriveCharacterAppearance } from '../utils/characterAppearance';
+import PixelCharacterAvatar from './PixelCharacterAvatar';
 
 const SLOT_CONFIG = [
     { key: 'weapon', label: '주무기', icon: Sword },
@@ -13,6 +14,7 @@ const SLOT_CONFIG = [
 
 const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip), [player?.equip]);
+    const appearance = useMemo(() => deriveCharacterAppearance(player), [player]);
     const enhanceMaterialCount = useMemo(
         () => countInventoryItemByName(player?.inv, CONSTANTS.ENHANCE_MATERIAL_NAME),
         [player?.inv]
@@ -32,43 +34,57 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
         };
     }), [player?.equip, player?.gold, player?.inv]);
 
-    const offenseSummary = (stats?.atk || 0) + Math.round((stats?.critChance || 0) * 100);
-    const defenseSummary = (stats?.def || 0) + (stats?.maxHp || 0);
+    const weaponName = equipProfile.mainWeapon?.name || '없음';
+    const offhandName = equipProfile.offhandItem?.name || '없음';
+    const armorName = player?.equip?.armor?.name || '없음';
 
     return (
         <div className={compact ? 'space-y-2.5' : 'space-y-3'}>
             <div className={`overflow-hidden rounded-[1.1rem] ${compact ? 'aether-panel-core p-2.5' : 'border border-white/8 bg-black/18 p-3'}`}>
-                <div className="flex items-center justify-between gap-3">
-                    <div>
-                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">Equipment Bay</div>
-                        <div className="mt-0.5 text-sm font-rajdhani font-bold text-white/90">현재 장비 현황</div>
-                    </div>
-                    <SignalBadge tone="neutral" size="sm">{player?.job || '모험가'}</SignalBadge>
-                </div>
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                    <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                        <div className="flex items-center gap-1 text-[11px] font-fira uppercase text-slate-400">
-                            <Coins size={10} /> Gold
+                <div className="flex items-start gap-3">
+                    <PixelCharacterAvatar
+                        appearance={appearance}
+                        size={compact ? 'md' : 'lg'}
+                        dataTestId="equipment-character-preview"
+                        label="장비 외형 미리보기"
+                        className="shrink-0"
+                        showEnhanceBadge={false}
+                    />
+                    <div className="min-w-0 flex-1">
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
+                                <div className="text-[11px] font-fira uppercase text-slate-400">ATK</div>
+                                <div className="mt-0.5 text-xs font-fira font-bold text-[#dff7f5]">{stats?.atk || 0}</div>
+                            </div>
+                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
+                                <div className="text-[11px] font-fira uppercase text-slate-400">DEF</div>
+                                <div className="mt-0.5 text-xs font-fira font-bold text-white/88">{stats?.def || 0}</div>
+                            </div>
+                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
+                                <div className="text-[11px] font-fira uppercase text-slate-400">강화 재료</div>
+                                <div className="mt-0.5 text-xs font-fira font-bold text-[#e3dcff]">{enhanceMaterialCount}개</div>
+                            </div>
                         </div>
-                        <div className="mt-0.5 text-xs font-fira font-bold text-[#f6e7c8]">{(player?.gold || 0).toLocaleString()} G</div>
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
+                                <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/74">주무기</div>
+                                <div className="mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] text-white/88">{weaponName}</div>
+                            </div>
+                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
+                                <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/74">방어구</div>
+                                <div className="mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] text-white/88">{armorName}</div>
+                            </div>
+                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
+                                <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/74">보조장비</div>
+                                <div className="mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] text-white/88">{offhandName}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                        <div className="text-[11px] font-fira uppercase text-slate-400">ATK/CRIT</div>
-                        <div className="mt-0.5 text-xs font-fira font-bold text-[#dff7f5]">{offenseSummary}</div>
-                    </div>
-                    <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                        <div className="text-[11px] font-fira uppercase text-slate-400">강화 재료</div>
-                        <div className="mt-0.5 text-xs font-fira font-bold text-[#e3dcff]">{enhanceMaterialCount}개</div>
-                    </div>
-                </div>
-                <div className="mt-2 rounded-[0.95rem] aether-panel-muted px-2.5 py-2 text-[11px] font-fira text-slate-300/76">
-                    방어 합산 {defenseSummary} · 주무기 {equipProfile.mainWeapon?.name || '미장착'} · 보조 {equipProfile.offhandItem?.name || '없음'}
                 </div>
             </div>
 
             <div className="space-y-1.5">
                 {slotEntries.map((slot) => {
-                    const Icon = slot.icon;
                     const item = slot.item;
                     const slotKey = slot.key;
 
@@ -80,39 +96,26 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-slate-300/76">
-                                            <Icon size={12} />
-                                        </span>
-                                        <div className="min-w-0">
-                                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/68">{slot.label}</div>
-                                            {item ? (
-                                                <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                                    <span className="truncate text-sm font-fira text-white/88">{item.name}</span>
-                                                    {(item.enhance || 0) > 0 && (
-                                                        <span className="text-xs font-fira font-bold text-[#d5b180]">+{item.enhance}</span>
-                                                    )}
-                                                    <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>
-                                                </div>
-                                            ) : (
-                                                <div className="mt-0.5 text-xs font-fira text-slate-500">장착된 장비가 없습니다</div>
-                                            )}
-                                        </div>
+                                    <div className="min-w-0">
+                                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/68">{slot.label}</div>
+                                        {item ? (
+                                            <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                                <span className="break-words text-sm font-fira text-white/88">{item.name}</span>
+                                                {(item.enhance || 0) > 0 && (
+                                                    <span className="text-xs font-fira font-bold text-[#d5b180]">+{item.enhance}</span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="mt-0.5 text-xs font-fira text-slate-500">장착된 장비가 없습니다</div>
+                                        )}
                                     </div>
-
                                     {item && (
                                         <>
-                                            <div className="mt-2 text-xs font-fira text-slate-300/80">
-                                                {getItemStatText(item)}
-                                            </div>
-                                            <div className="mt-1 flex flex-wrap gap-1">
-                                                <SignalBadge tone="neutral" size="sm">{getWeaponStyleLabel(item)}</SignalBadge>
-                                                <SignalBadge tone="neutral" size="sm">T{item.tier || 1}</SignalBadge>
-                                            </div>
+                                            <div className="mt-2 text-xs font-fira leading-[1.45] text-slate-300/80">{getItemStatText(item)}</div>
                                             {slot.canEnhance && slot.requirement && (
-                                                <div className="mt-2 space-y-0.5 text-[11px] font-fira">
-                                                    <div className="text-slate-400/76">
-                                                        다음 강화: {slot.requirement.gold.toLocaleString()}G · {slot.requirement.materialName} {slot.requirement.materials}개
+                                                <div className="mt-2 rounded-[0.9rem] border border-white/8 bg-black/16 px-2.5 py-2 space-y-0.5 text-[11px] font-fira">
+                                                    <div className="text-slate-300/86">
+                                                        {slot.requirement.gold.toLocaleString()}G · {slot.requirement.materialName} {slot.requirement.materials}개
                                                     </div>
                                                     <div className={slot.affordable ? 'text-emerald-200/70' : 'text-amber-200/78'}>
                                                         {slot.enhanceHint}

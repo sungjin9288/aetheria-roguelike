@@ -219,11 +219,13 @@ async function verifyMobileFirstFold(page) {
 
   const terminalPanel = page.locator('[data-testid="terminal-panel"]');
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
+  const statusCharacterChip = page.locator('[data-testid="status-character-chip"]');
   const moveButton = page.locator('[data-testid="control-move"]');
   const shopButton = page.locator('[data-testid="control-market"]');
 
   await terminalPanel.waitFor({ state: 'visible', timeout: 10000 });
   await archiveOpenButton.waitFor({ state: 'visible', timeout: 10000 });
+  await statusCharacterChip.waitFor({ state: 'visible', timeout: 10000 });
   await moveButton.waitFor({ state: 'visible', timeout: 10000 });
   await shopButton.waitFor({ state: 'visible', timeout: 10000 });
   ensure(
@@ -238,9 +240,17 @@ async function verifyMobileFirstFold(page) {
 async function verifyMobileArchiveConsole(page) {
   if (!isMobile) return;
 
+  const statusCharacterChip = page.locator('[data-testid="status-character-chip"]');
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
   const archiveConsole = page.locator('[data-testid="mobile-archive-console"]');
   const archiveReturnButton = page.locator('[data-testid="mobile-console-return-log"]');
+  const equipmentPreview = page.locator('[data-testid="equipment-character-preview"]');
+
+  await statusCharacterChip.click();
+  await archiveConsole.waitFor({ state: 'visible', timeout: 10000 });
+  await equipmentPreview.waitFor({ state: 'visible', timeout: 5000 });
+  await archiveReturnButton.click();
+  await page.locator('[data-testid="terminal-panel"]').waitFor({ state: 'visible', timeout: 10000 });
 
   await archiveOpenButton.click();
   await archiveConsole.waitFor({ state: 'visible', timeout: 10000 });
@@ -273,6 +283,69 @@ async function verifyMobileArchiveConsole(page) {
   const returnText = await page.locator('[data-testid="mobile-console-return-log"]').textContent();
   ensure(String(returnText || '').includes('닫기'), 'Mobile menu close affordance should use 닫기 label');
 
+  const avatarPresets = [
+    { id: 'paladin-plate', job: '팔라딘' },
+    { id: 'archmage-robe', job: '아크메이지' },
+    { id: 'shadow-lord-leather', job: '그림자 주군' },
+    { id: 'ranger-coat', job: '레인저' },
+    { id: 'berserker-plate', job: '버서커' },
+    { id: 'adventurer-straw-hat', job: '모험가' },
+    { id: 'adventurer-travel-tunic', job: '모험가' },
+  ];
+
+  const avatarStates = {};
+
+  for (const preset of avatarPresets) {
+    const seeded = await page.evaluate((value) => window.__AETHERIA_TEST_API__?.seedAvatarScenario?.(value), preset.id);
+    ensure(seeded, `Avatar preset ${preset.id} could not be injected`);
+    const avatarState = await waitForState(
+      page,
+      (nextState) => nextState.player?.job === preset.job && nextState.sideTab === 'equipment',
+      `${preset.id} avatar scenario to load`
+    );
+    if (!await archiveConsole.isVisible().catch(() => false)) {
+      const reopenedWith = await page.evaluate(() => {
+        const chip = document.querySelector('[data-testid="status-character-chip"]');
+        if (chip instanceof HTMLElement) {
+          chip.click();
+          return 'status-character-chip';
+        }
+        const archiveButton = document.querySelector('[data-testid="mobile-console-open-archive"]');
+        if (archiveButton instanceof HTMLElement) {
+          archiveButton.click();
+          return 'mobile-console-open-archive';
+        }
+        return null;
+      });
+      ensure(reopenedWith, `Avatar preset ${preset.id} could not reopen the archive console`);
+    }
+    await archiveConsole.waitFor({ state: 'visible', timeout: 5000 });
+    await page.locator('[data-testid="equipment-character-preview"]').waitFor({ state: 'visible', timeout: 5000 });
+    const avatarMeta = await page.locator('[data-testid="equipment-character-preview"]').evaluate((node) => ({
+      weapon: node.getAttribute('data-avatar-weapon'),
+      offhand: node.getAttribute('data-avatar-offhand'),
+      armor: node.getAttribute('data-avatar-armor'),
+      headgear: node.getAttribute('data-avatar-headgear'),
+    }));
+    avatarStates[preset.id] = avatarMeta;
+    await writeStateArtifact(`02b-avatar-${preset.id}`, avatarState, page);
+  }
+
+  ensure(
+    avatarStates['adventurer-straw-hat']?.headgear === 'straw-hat',
+    'Adventurer straw-hat scenario did not expose straw-hat avatar state'
+  );
+  ensure(
+    avatarStates['adventurer-travel-tunic']?.headgear === 'none',
+    'Adventurer travel-tunic scenario should not expose a headgear state'
+  );
+  ensure(
+    avatarStates['adventurer-straw-hat']?.armor !== avatarStates['adventurer-travel-tunic']?.armor
+      || avatarStates['adventurer-straw-hat']?.weapon !== avatarStates['adventurer-travel-tunic']?.weapon
+      || avatarStates['adventurer-straw-hat']?.offhand !== avatarStates['adventurer-travel-tunic']?.offhand,
+    'Avatar state attributes did not change between same-job equipment presets'
+  );
+
   await page.locator('[data-testid="menu-reset"]').click();
   await page.locator('[data-testid="menu-reset-confirm"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="menu-reset-cancel"]').waitFor({ state: 'visible', timeout: 5000 });
@@ -300,10 +373,14 @@ async function verifyShopFlow(page) {
     const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
     const shopCards = page.locator('[data-testid="shop-buy-item"]');
     const inlineBuyButton = page.locator('[data-testid="shop-buy-inline"]').first();
+    const anyItemIcons = page.locator('[data-item-icon-style]');
+    const equipmentAssetIcons = page.locator('[data-item-icon-style="equipment-asset"]');
 
     ensure(!await archiveOpenButton.isVisible(), 'Archive console trigger should hide while the mobile shop overlay is open');
     ensure(await page.locator('[data-testid="shop-close-footer"]').count() === 0, 'Mobile shop should not render the desktop footer close control');
     ensure(await shopCards.count() > 0, 'Mobile shop did not render compact buy cards');
+    ensure(await anyItemIcons.count() > 0, 'Mobile shop did not render any item icon cards');
+    ensure(await equipmentAssetIcons.count() > 0, 'Mobile shop should render standalone equipment asset illustrations for gear items');
 
     await inlineBuyButton.waitFor({ state: 'visible', timeout: 5000 });
   }

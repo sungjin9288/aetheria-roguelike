@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+  <g shape-rendering="crispEdges">
+    <rect x="84" y="115" width="4" height="8" fill="#f4ffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="82" y="117" width="8" height="4" fill="#f4ffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="117" y="134" width="6" height="12" fill="#f4ffff" opacity="0.25" shape-rendering="crispEdges"/><rect x="114" y="137" width="12" height="6" fill="#f4ffff" opacity="0.25" shape-rendering="crispEdges"/>
+    <polygon points="40,94 54,46 96,30 122,58 114,110 66,126" fill="#587ccf" shape-rendering="crispEdges"/><polygon points="52,92 62,54 94,42 112,62 106,100 72,112" fill="#f4ffff" opacity="0.78" shape-rendering="crispEdges"/><rect x="74" y="48" width="12" height="44" fill="#dcf6ff" opacity="0.56" shape-rendering="crispEdges"/>
+  </g>
+</svg>

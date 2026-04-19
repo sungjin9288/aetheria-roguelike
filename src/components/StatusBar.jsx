@@ -1,5 +1,6 @@
 import React from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
+import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
 
 const METER_THEME = {
@@ -95,7 +96,16 @@ const EnemyStatus = ({ enemy, mobile = false, compact = false }) => {
   );
 };
 
-const StatusBar = ({ player, stats, enemy = null, className = '', onCrystalClick = null, isMuted = false, onToggleMute = null }) => {
+const StatusBar = ({
+  player,
+  stats,
+  enemy = null,
+  className = '',
+  onCrystalClick = null,
+  isMuted = false,
+  onToggleMute = null,
+  onOpenEquipment = null,
+}) => {
   if (!player?.name) return null;
   const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
   return (
@@ -104,46 +114,59 @@ const StatusBar = ({ player, stats, enemy = null, className = '', onCrystalClick
       className={`pointer-events-none panel-noise aether-surface sticky top-0 z-50 w-full overflow-hidden rounded-[1.55rem] px-3 py-2 ${className}`.trim()}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/22 to-transparent" style={{position:'absolute'}} />
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 flex flex-wrap items-center gap-1.5">
-          <span className="truncate text-[15px] font-rajdhani font-bold tracking-[0.04em] text-white/96">{player.name}</span>
-          <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{enemy ? '전투중' : player.job}</SignalBadge>
-          <SignalBadge tone="resonance" size="sm">Lv.{player.level}</SignalBadge>
-          <span className="flex items-center gap-1 text-[9px] font-fira text-slate-300/65">
-            <span className="h-1 w-1 shrink-0 rounded-full bg-[#7dd4d8] animate-pulse" />
-            <span className="truncate max-w-[80px]">{player.loc}</span>
-          </span>
-          {(player.killStreak || 0) >= 3 && (
-            <span className="shrink-0 rounded-full bg-orange-500/20 border border-orange-400/30 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.14em] text-orange-300 animate-pulse">🔥{player.killStreak}</span>
-          )}
-        </div>
-        <div className="shrink-0 flex items-center gap-1.5">
-          {onToggleMute && (
-            <button
-              onClick={onToggleMute}
-              className="pointer-events-auto rounded-full border border-white/8 bg-black/20 p-1 text-slate-300/70 transition-colors hover:text-white"
-              aria-label="Toggle Sound"
-            >
-              {isMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
-            </button>
-          )}
-          <div className="text-right">
-            <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
-            <span className="ml-0.5 text-[9px] font-fira text-slate-400/68">CR</span>
-            {hasPremiumCurrency && (
-              <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick}>
-                💎{player.premiumCurrency}
+      <div className="flex items-start gap-2.5">
+        <PixelCharacterAvatar
+          player={player}
+          size="sm"
+          interactive={Boolean(onOpenEquipment)}
+          onClick={onOpenEquipment}
+          dataTestId="status-character-chip"
+          label="장비 콘솔 열기"
+          className="shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+              <span className="truncate text-[14px] font-rajdhani font-bold tracking-[0.04em] text-white/96">{player.name}</span>
+              <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{enemy ? '전투중' : player.job}</SignalBadge>
+              <SignalBadge tone="resonance" size="sm">Lv.{player.level}</SignalBadge>
+              <span className="flex items-center gap-1 text-[8px] font-fira text-slate-300/60">
+                <span className="h-1 w-1 shrink-0 rounded-full bg-[#7dd4d8] animate-pulse" />
+                <span className="truncate max-w-[64px]">{player.loc}</span>
+              </span>
+              {(player.killStreak || 0) >= 3 && (
+                <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em] text-orange-300">🔥{player.killStreak}</span>
+              )}
+            </div>
+            <div className="shrink-0 flex items-center gap-1.5">
+              {onToggleMute && (
+                <button
+                  onClick={onToggleMute}
+                  className="pointer-events-auto rounded-full border border-white/8 bg-black/20 p-1 text-slate-300/70 transition-colors hover:text-white"
+                  aria-label="Toggle Sound"
+                >
+                  {isMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
+                </button>
+              )}
+              <div className="text-right">
+                <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
+                <span className="ml-0.5 text-[9px] font-fira text-slate-400/68">CR</span>
+                {hasPremiumCurrency && (
+                  <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick}>
+                    💎{player.premiumCurrency}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          </div>
+          <div className="mt-1.5 grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 p-1.5">
+            <StatusMetric label="HP" value={player.hp} max={stats?.maxHp} variant="hp" compact />
+            <StatusMetric label="NRG" value={player.mp} max={stats?.maxMp} variant="mp" compact />
+            <StatusMetric label="EXP" value={player.exp} max={player.nextExp} variant="exp" compact />
           </div>
         </div>
       </div>
-      <div className="mt-1.5 grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 p-1.5">
-        <StatusMetric label="HP" value={player.hp} max={stats?.maxHp} variant="hp" compact />
-        <StatusMetric label="NRG" value={player.mp} max={stats?.maxMp} variant="mp" compact />
-        <StatusMetric label="EXP" value={player.exp} max={player.nextExp} variant="exp" compact />
-      </div>
-      {enemy && <EnemyStatus enemy={enemy} mobile />}
+      {enemy && <div className="mt-1.5"><EnemyStatus enemy={enemy} mobile /></div>}
     </section>
   );
 };
