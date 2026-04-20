@@ -1,10 +1,12 @@
-import React, { lazy, Suspense, useCallback, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { soundManager } from '../../systems/SoundManager';
 import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
+import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
 import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
+import LegendaryDropOverlay from '../LegendaryDropOverlay';
 import MobileGameLayout from './MobileGameLayout';
 
 const RelicChoicePanel = lazy(() => import('../RelicChoicePanel'));
@@ -23,6 +25,21 @@ const GameRoot = ({
     damageFlash, healFlash, damageAmount,
 }) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
+    const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv);
+    const legendarySoundPlayedRef = useRef(null);
+    useEffect(() => {
+        if (!legendaryDrop) {
+            legendarySoundPlayedRef.current = null;
+            return;
+        }
+        if (legendarySoundPlayedRef.current === legendaryDrop.name) return;
+        legendarySoundPlayedRef.current = legendaryDrop.name;
+        try {
+            soundManager.play?.('levelUp');
+        } catch {
+            // fallback: 일부 sound 이름은 지원 안 할 수 있음
+        }
+    }, [legendaryDrop]);
     const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
     const handleOpenEquipment = useCallback(() => {
         engine.actions.setSideTab?.('equipment');
@@ -146,6 +163,8 @@ const GameRoot = ({
                     />
                 </Suspense>
             )}
+
+            <LegendaryDropOverlay item={legendaryDrop} onDismiss={dismissLegendaryDrop} />
         </MainLayout>
     </MotionConfig>
     );
