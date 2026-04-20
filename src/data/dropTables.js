@@ -84,15 +84,20 @@ export const DROP_TABLES = {
         { item: '용의 비늘', rate: 0.5, qty: [1, 2] },
         { item: '용의 심장', rate: 0.2 },
         { item: '용살자의창', rate: 0.08 },
+        { item: '라그나로크', rate: 0.03 },
+        { item: '용의 화염', rate: 0.05 },
     ],
     // ── 사막 ──
     '스핑크스': [
         { item: '빛의 결정', rate: 0.4, qty: [1, 2] },
         { item: '대마법사로브', rate: 0.1 },
+        { item: '성스러운 창', rate: 0.03 },
+        { item: '신전 도시의 지팡이', rate: 0.03 },
     ],
     '아누비스 수호자': [
         { item: '어둠의 정수', rate: 0.45, qty: [1, 2] },
         { item: '성기사의 갑주', rate: 0.08 },
+        { item: '천벌의 지팡이', rate: 0.03 },
     ],
     // ── 얼음 ──
     '얼음 거인': [
@@ -103,12 +108,15 @@ export const DROP_TABLES = {
         { item: '용의 비늘', rate: 0.45 },
         { item: '냉기의 결정', rate: 0.5, qty: [1, 2] },
         { item: '서리칼날', rate: 0.08 },
+        { item: '빙결의 왕관검', rate: 0.04 },
     ],
     // ── 암흑 ──
     '리치': [
         { item: '어둠의 정수', rate: 0.55, qty: [1, 3] },
         { item: '마나 결정', rate: 0.35 },
         { item: '혼돈의 지팡이', rate: 0.05 },
+        { item: '암흑 군주의 망토', rate: 0.04 },
+        { item: '그림자 절단기', rate: 0.03 },
     ],
     '데스나이트': [
         { item: '어둠의 정수', rate: 0.5, qty: [1, 2] },
@@ -134,10 +142,12 @@ export const DROP_TABLES = {
     '천공 수호조': [
         { item: '천공 결정', rate: 0.5, qty: [1, 2] },
         { item: '유성 완드', rate: 0.06 },
+        { item: '천공 성전', rate: 0.05 },
     ],
     '폭풍 세이렌': [
         { item: '천공 결정', rate: 0.45 },
         { item: '폭풍 스태프', rate: 0.05 },
+        { item: '바람의 궁극', rate: 0.04 },
     ],
     // ── 심해 ──
     '심연 크라켄': [
@@ -150,12 +160,16 @@ export const DROP_TABLES = {
         { item: '고대 각인석', rate: 0.45 },
         { item: '심연 파쇄창', rate: 0.08 },
         { item: '성광 방벽', rate: 0.06 },
+        { item: '차원 방패 이지스', rate: 0.05 },
+        { item: '차원 마왕의 낫', rate: 0.04 },
     ],
     '에테르 드래곤': [
         { item: '고대 각인석', rate: 0.55, qty: [1, 2] },
         { item: '에테르 세이버', rate: 0.08 },
         { item: '성운 지팡이', rate: 0.06 },
         { item: '엘릭서', rate: 0.3 },
+        { item: '드래곤로드 갑주', rate: 0.04 },
+        { item: '에테르 그리모어', rate: 0.03 },
     ],
     // ── 혼돈 ──
     '혼돈의 화신': [
@@ -163,6 +177,7 @@ export const DROP_TABLES = {
         { item: '어둠의 정수', rate: 0.5, qty: [1, 2] },
         { item: '혼돈의 결정', rate: 0.3 },
         { item: '엘릭서', rate: 0.35 },
+        { item: '광기의 갑주', rate: 0.04 },
     ],
 
     // ══════ Phase 4B 확장 드롭 ══════
@@ -178,6 +193,7 @@ export const DROP_TABLES = {
     '숲 요정': [
         { item: '요정의 날개', rate: 0.4 },
         { item: '자연의 결정', rate: 0.3 },
+        { item: '세계수의 검', rate: 0.03 },
     ],
     // 평원 확장
     '평원 도적': [
@@ -194,6 +210,8 @@ export const DROP_TABLES = {
     '수련 님프': [
         { item: '님프의 이슬', rate: 0.45 },
         { item: '자연의 결정', rate: 0.25 },
+        { item: '세계수의 지팡이', rate: 0.03 },
+        { item: '세계수의 로브', rate: 0.03 },
     ],
     '거대 거북': [
         { item: '철광석', rate: 0.4, qty: [1, 2] },
@@ -300,6 +318,7 @@ export const DROP_TABLES = {
         { item: '천사의 깃털', rate: 0.35 },
         { item: '빛의 결정', rate: 0.4 },
         { item: '어둠의 정수', rate: 0.3 },
+        { item: '성검 에테르니아', rate: 0.02 },
     ],
     // 기계 확장
     '전류 추적자': [
