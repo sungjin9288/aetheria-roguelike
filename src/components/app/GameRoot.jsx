@@ -25,7 +25,7 @@ const GameRoot = ({
     damageFlash, healFlash, damageAmount,
 }) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
-    const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv);
+    const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch);
     const legendarySoundPlayedRef = useRef(null);
     useEffect(() => {
         if (!legendaryDrop) {

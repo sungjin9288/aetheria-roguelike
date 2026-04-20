@@ -7,6 +7,8 @@ import { TITLES, TITLE_PASSIVES } from '../data/titles.js';
 import { getRunBuildProfile, getTraitSkill } from './runProfileUtils.js';
 import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager.js';
 import { AT } from '../reducers/actionTypes.js';
+import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
+import signatureSetsData from '../data/signatureSets.json' with { type: 'json' };
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
@@ -207,7 +209,51 @@ export const getAchievementCurrentValue = (achievement, player) => {
     if (target === 'synths') return stats?.syntheses || 0;
     if (target === 'discoveries') return Object.keys(stats?.visitedMaps || {}).length;
     if (target === 'relicCount') return (player?.relics || []).length + (stats?.relicCount || 0);
+    if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
+    if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
     return stats?.[target] || 0;
+};
+
+const RESOLVE_BUCKET_BY_TYPE = Object.freeze({
+    weapon: 'weapons',
+    shield: 'shields',
+    armor: 'armors',
+});
+
+const SIGNATURE_REGISTRY_ENTRIES = signatureRegistryData?.entries || {};
+const SIGNATURE_SETS_MAP = signatureSetsData?.sets || {};
+
+const isSignatureDiscovered = (itemName, player) => {
+    const codex = player?.stats?.codex;
+    if (!codex) return false;
+    const all = [
+        ...(DB.ITEMS?.weapons || []),
+        ...(DB.ITEMS?.armors || []),
+    ];
+    const item = all.find((entry) => entry?.name === itemName);
+    if (!item) return false;
+    const bucket = RESOLVE_BUCKET_BY_TYPE[item.type];
+    if (!bucket) return false;
+    return Boolean(codex[bucket]?.[itemName]);
+};
+
+const countDiscoveredSignatures = (player) => {
+    let count = 0;
+    for (const name of Object.keys(SIGNATURE_REGISTRY_ENTRIES)) {
+        if (isSignatureDiscovered(name, player)) count += 1;
+    }
+    return count;
+};
+
+const countCompletedSignatureSets = (player) => {
+    let count = 0;
+    for (const setDef of Object.values(SIGNATURE_SETS_MAP)) {
+        const members = setDef?.members || [];
+        if (members.length === 0) continue;
+        const allFound = members.every((name) => isSignatureDiscovered(name, player));
+        if (allFound) count += 1;
+    }
+    return count;
 };
 
 /** 업적 달성 여부 */

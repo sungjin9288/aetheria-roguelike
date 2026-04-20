@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { hasDedicatedSignatureArt } from '../data/signatureItems.js';
+import { AT } from '../reducers/actionTypes.js';
+
+const CODEX_BUCKET_BY_TYPE = Object.freeze({
+    weapon: 'weapons',
+    shield: 'shields',
+    armor: 'armors',
+});
 
 /**
  * player.inv를 관찰해서 dedicated signature art를 가진 아이템이 새로 추가되면
@@ -22,7 +29,7 @@ const getSignatureItemNames = (inv = []) => {
     return names;
 };
 
-export const useLegendaryDropDetector = (inv) => {
+export const useLegendaryDropDetector = (inv, dispatch = null) => {
     const seenRef = useRef(null);
     const queueRef = useRef([]);
     const [currentDrop, setCurrentDrop] = useState(null);
@@ -52,6 +59,17 @@ export const useLegendaryDropDetector = (inv) => {
             seenRef.current.add(name);
         }
 
+        // 신규 signature 획득 시 codex 자동 업데이트 — 업적 카운터와 LegendaryCodex 잠금 해제 연결
+        if (dispatch) {
+            for (const name of newlySeen) {
+                const item = (inv || []).find((entry) => entry?.name === name);
+                const bucket = CODEX_BUCKET_BY_TYPE[item?.type];
+                if (bucket) {
+                    dispatch({ type: AT.UPDATE_CODEX, payload: { category: bucket, name } });
+                }
+            }
+        }
+
         const firstItem = (inv || []).find((entry) => entry?.name === newlySeen[0] && hasDedicatedSignatureArt(entry));
         if (!firstItem) return;
 
@@ -64,7 +82,7 @@ export const useLegendaryDropDetector = (inv) => {
             }
             return prev;
         });
-    }, [inv]);
+    }, [inv, dispatch]);
 
     return { currentDrop, dismissDrop: dismiss };
 };

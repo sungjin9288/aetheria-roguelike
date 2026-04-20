@@ -263,4 +263,12 @@ export const ACHIEVEMENTS = [
     // ── 특수 업적 ────────────────────────────────────────────────────────────
     { id: 'ach_demon_king',   title: '세계의 구원자',  desc: '마왕을 처치하여 세계를 구함', target: 'demonKingSlain', goal: 1, reward: { gold: 50000, item: '세계 구원자의 증표' } },
     { id: 'ach_demon_king_5', title: '반복된 전설',    desc: '마왕 5회 처치',             target: 'demonKingSlain', goal: 5, reward: { gold: 100000, item: '전설의 반지' } },
+
+    // ── 전설 수집 업적 (signature 시스템) ────────────────────────────────────
+    { id: 'ach_sig_first',    title: '첫 번째 전설',      desc: 'dedicated signature 아이템 첫 발견',   target: 'signaturesDiscovered', goal: 1,  reward: { gold: 3000, item: '영웅의 물약' } },
+    { id: 'ach_sig_5',        title: '전설 수집가',       desc: 'dedicated signature 5종 발견',         target: 'signaturesDiscovered', goal: 5,  reward: { gold: 15000, item: '엘릭서' } },
+    { id: 'ach_sig_10',       title: '전설의 서사',       desc: 'dedicated signature 10종 발견',        target: 'signaturesDiscovered', goal: 10, reward: { gold: 40000, item: '황금 반지' } },
+    { id: 'ach_sig_20',       title: '모든 전설의 증인',  desc: 'dedicated signature 20종 전부 발견',   target: 'signaturesDiscovered', goal: 20, reward: { gold: 150000, item: '신화 전설 영혼', premiumCurrency: 30 } },
+    { id: 'ach_sig_set_1',    title: '세트의 완성',       desc: 'signature 세트 1개 완성(멤버 전원 수집)', target: 'signatureSetsCompleted', goal: 1, reward: { gold: 25000, item: '세트 완성의 증표' } },
+    { id: 'ach_sig_set_all',  title: '전설의 집대성',     desc: '모든 signature 세트 완성',              target: 'signatureSetsCompleted', goal: 5, reward: { gold: 250000, item: '에테르 집대성의 왕관', premiumCurrency: 100 } },
 ];
