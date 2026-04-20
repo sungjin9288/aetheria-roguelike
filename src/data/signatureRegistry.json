@@ -1,12 +1,13 @@
 {
-  "$comment": "Signature 아이템 레지스트리 단일 소스. itemVisuals.js(asset 경로 라우팅)과 signatureItems.js(풍부한 메타데이터) 둘 다 이 파일을 읽어 circular import를 회피한다.",
-  "version": 1,
+  "$comment": "Signature 아이템 레지스트리 단일 소스. itemVisuals.js(asset 경로 라우팅)과 signatureItems.js(풍부한 메타데이터) 둘 다 이 파일을 읽어 circular import를 회피한다. setGroup은 signatureSets.json의 key와 매칭(없으면 세트 비소속).",
+  "version": 2,
   "entries": {
     "성검 에테르니아": {
       "spriteKey": "signature-weapon-ethernia",
       "tier": "legendary",
       "category": "unique-weapon",
       "tone": "holy",
+      "setGroup": "celestial",
       "artNote": "빛 1H · 황금 십자가드 + 펌멜 보석"
     },
     "마왕의 대낫": {
@@ -14,6 +15,7 @@
       "tier": "legendary",
       "category": "boss-drop",
       "tone": "shadow",
+      "setGroup": "shadow-lord",
       "artNote": "어둠 2H · 상단 단일 곡선 블레이드"
     },
     "라그나로크": {
@@ -21,6 +23,7 @@
       "tier": "legendary",
       "category": "unique-weapon",
       "tone": "fire",
+      "setGroup": "dragon-lord",
       "artNote": "화염 2H · 넓은 블레이드 + flared crossguard"
     },
     "차원 마왕의 낫": {
@@ -28,6 +31,7 @@
       "tier": "legendary",
       "category": "boss-drop",
       "tone": "shadow",
+      "setGroup": "dimension",
       "artNote": "어둠 2H · 상하 이중 블레이드(차원 균열)"
     },
     "천공 성전": {
@@ -35,6 +39,7 @@
       "tier": "legendary",
       "category": "set-core",
       "tone": "holy",
+      "setGroup": "celestial",
       "artNote": "focus offhand · 황금 십자가 엠블럼 성서"
     },
     "드래곤로드 갑주": {
@@ -42,6 +47,7 @@
       "tier": "legendary",
       "category": "boss-drop",
       "tone": "fire",
+      "setGroup": "dragon-lord",
       "artNote": "plate · 용비늘 텍스처 + 뿔 숄더"
     },
     "암흑 군주의 망토": {
@@ -49,6 +55,7 @@
       "tier": "legendary",
       "category": "set-core",
       "tone": "shadow",
+      "setGroup": "shadow-lord",
       "artNote": "wide cloak · 어둠 트림 + 그림자 tendril hem"
     },
     "세계수의 지팡이": {
@@ -56,6 +63,7 @@
       "tier": "legendary",
       "category": "set-core",
       "tone": "nature",
+      "setGroup": "worldtree",
       "artNote": "2H staff · 가지형 상단 + 잎 액센트"
     },
     "차원 방패 이지스": {
@@ -63,6 +71,7 @@
       "tier": "legendary",
       "category": "set-core",
       "tone": "holy",
+      "setGroup": "dimension",
       "artNote": "hex tower shield · 프리즘 중앙 균열"
     },
     "에테르 그리모어": {
@@ -98,6 +107,7 @@
       "tier": "legendary",
       "category": "unique-weapon",
       "tone": "shadow",
+      "setGroup": "shadow-lord",
       "artNote": "1H · 곡선 falchion + 어둠 rim"
     },
     "성스러운 창": {
@@ -105,6 +115,7 @@
       "tier": "legendary",
       "category": "unique-weapon",
       "tone": "holy",
+      "setGroup": "celestial",
       "artNote": "2H spear · 황금 창촉 + 옆 나부끼는 깃발"
     },
     "용의 화염": {
@@ -112,6 +123,7 @@
       "tier": "legendary",
       "category": "unique-weapon",
       "tone": "fire",
+      "setGroup": "dragon-lord",
       "artNote": "2H · 불꽃 형상 블레이드 + 드래곤 발톱 crossguard"
     },
     "세계수의 검": {
@@ -119,6 +131,7 @@
       "tier": "legendary",
       "category": "set-core",
       "tone": "nature",
+      "setGroup": "worldtree",
       "artNote": "1H · 잎사귀형 블레이드 + 넝쿨 감긴 grip"
     },
     "신전 도시의 지팡이": {
@@ -126,6 +139,7 @@
       "tier": "legendary",
       "category": "set-core",
       "tone": "holy",
+      "setGroup": "celestial",
       "artNote": "2H staff · 제관 원반 + 중앙 십자 레이"
     },
     "광기의 갑주": {
@@ -140,6 +154,7 @@
       "tier": "legendary",
       "category": "set-core",
       "tone": "nature",
+      "setGroup": "worldtree",
       "artNote": "robe · 잎 소매 + 가지 허리띠 + 넝쿨 중앙 트림"
     }
   }

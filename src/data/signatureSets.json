@@ -1,0 +1,51 @@
+{
+  "$comment": "Signature 아이템 세트 정의. signatureRegistry.json의 setGroup 필드와 key가 매칭된다. 기존 items.js의 prefix-based 세트와 병행 동작(중복 적용 가능).",
+  "version": 1,
+  "sets": {
+    "celestial": {
+      "name": "천공의 성좌",
+      "tone": "holy",
+      "members": ["성검 에테르니아", "천공 성전", "성스러운 창", "신전 도시의 지팡이"],
+      "bonuses": {
+        "2": { "atkMult": 1.1, "defMult": 1.05, "desc": "2세트: 모든 공격 +10%, 방어 +5%" },
+        "3": { "atkMult": 1.18, "defMult": 1.1, "hpMult": 1.05, "desc": "3세트: 공격 +18%, 방어 +10%, HP +5%" },
+        "4": { "atkMult": 1.25, "defMult": 1.18, "hpMult": 1.12, "desc": "4세트: 모든 스탯 대폭 상승" }
+      }
+    },
+    "worldtree": {
+      "name": "세계수의 수호",
+      "tone": "nature",
+      "members": ["세계수의 지팡이", "세계수의 검", "세계수의 로브"],
+      "bonuses": {
+        "2": { "defMult": 1.15, "hpMult": 1.1, "desc": "2세트: 방어 +15%, HP +10%" },
+        "3": { "atkMult": 1.1, "defMult": 1.25, "hpMult": 1.2, "desc": "3세트: 공격 +10%, 방어 +25%, HP +20%" }
+      }
+    },
+    "dragon-lord": {
+      "name": "용왕의 분노",
+      "tone": "fire",
+      "members": ["드래곤로드 갑주", "용의 화염", "라그나로크"],
+      "bonuses": {
+        "2": { "atkMult": 1.18, "desc": "2세트: 공격 +18%" },
+        "3": { "atkMult": 1.32, "defMult": 1.1, "desc": "3세트: 공격 +32%, 방어 +10%" }
+      }
+    },
+    "dimension": {
+      "name": "차원의 균형",
+      "tone": "shadow",
+      "members": ["차원 방패 이지스", "차원 마왕의 낫"],
+      "bonuses": {
+        "2": { "atkMult": 1.22, "defMult": 1.15, "desc": "2세트: 공격 +22%, 방어 +15%" }
+      }
+    },
+    "shadow-lord": {
+      "name": "암흑 군주의 계약",
+      "tone": "shadow",
+      "members": ["암흑 군주의 망토", "그림자 절단기", "마왕의 대낫"],
+      "bonuses": {
+        "2": { "atkMult": 1.28, "defMult": 0.95, "desc": "2세트: 공격 +28%, 방어 -5%(어둠 계약)" },
+        "3": { "atkMult": 1.45, "defMult": 0.9, "desc": "3세트: 공격 +45%, 방어 -10%(완전한 타락)" }
+      }
+    }
+  }
+}

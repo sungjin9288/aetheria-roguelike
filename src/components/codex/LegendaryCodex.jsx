@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Lock, Sparkles } from 'lucide-react';
 import { DB } from '../../data/db';
 import { SIGNATURE_ITEM_REGISTRY } from '../../data/signatureItems.js';
+import { getSignatureSetDefinitions } from '../../utils/signatureSetBonus.js';
 import ItemIcon from '../icons/ItemIcon.jsx';
 
 /**
@@ -55,7 +56,7 @@ const buildEntries = () => {
 
 const LegendaryCodex = ({ player }) => {
     const [selected, setSelected] = useState(null);
-    const codex = player?.stats?.codex || {};
+    const codex = useMemo(() => player?.stats?.codex || {}, [player?.stats?.codex]);
     const entries = useMemo(() => buildEntries(), []);
     const discoveredCount = entries.filter((entry) => {
         const bucket = resolveDiscoveryBucket(entry.item);
@@ -65,6 +66,25 @@ const LegendaryCodex = ({ player }) => {
     const selectedEntry = selected
         ? entries.find((entry) => entry.item.name === selected)
         : null;
+
+    const setSummary = useMemo(() => {
+        const sets = getSignatureSetDefinitions();
+        return Object.entries(sets).map(([key, def]) => {
+            const discovered = def.members.filter((memberName) => {
+                const entry = entries.find((e) => e.item.name === memberName);
+                if (!entry) return false;
+                const bucket = resolveDiscoveryBucket(entry.item);
+                return bucket && codex[bucket]?.[entry.item.name];
+            }).length;
+            const equipped = def.members.filter((memberName) => {
+                const equip = player?.equip;
+                return equip?.weapon?.name === memberName
+                    || equip?.armor?.name === memberName
+                    || equip?.offhand?.name === memberName;
+            }).length;
+            return { key, def, total: def.members.length, discovered, equipped };
+        });
+    }, [codex, entries, player?.equip]);
 
     return (
         <div className="space-y-2">
@@ -78,6 +98,45 @@ const LegendaryCodex = ({ player }) => {
                     {discoveredCount}/{entries.length}
                 </div>
             </div>
+
+            {/* Set summary */}
+            {setSummary.length > 0 && (
+                <div className="space-y-1.5">
+                    <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider">Sets</div>
+                    <div className="grid grid-cols-1 gap-1.5">
+                        {setSummary.map(({ key, def, total, discovered, equipped }) => {
+                            const accent = TONE_ACCENT[def.tone] || DEFAULT_TONE_ACCENT;
+                            const activeBonus = equipped >= 2
+                                ? def.bonuses[String([...Object.keys(def.bonuses)].map(Number).filter((n) => n <= equipped).sort((a, b) => b - a)[0])]
+                                : null;
+                            return (
+                                <div
+                                    key={key}
+                                    className="rounded-lg px-2.5 py-1.5 flex flex-col gap-0.5"
+                                    style={{
+                                        border: `1px solid ${equipped >= 2 ? accent.border : 'rgba(255,255,255,0.08)'}`,
+                                        background: equipped >= 2
+                                            ? `radial-gradient(circle at 18% 40%, ${accent.glow}, transparent 50%), linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)`
+                                            : 'linear-gradient(180deg, rgba(14,17,22,0.9) 0%, rgba(8,10,14,1) 100%)',
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between text-[10px] font-fira">
+                                        <span className="font-rajdhani font-bold text-white text-[11px]">{def.name}</span>
+                                        <span className={equipped >= 2 ? 'text-amber-200' : 'text-slate-500'}>
+                                            {equipped > 0 ? `장착 ${equipped}` : '미장착'} · 수집 {discovered}/{total}
+                                        </span>
+                                    </div>
+                                    {activeBonus && (
+                                        <div className="text-[9px] font-fira text-amber-200/90">
+                                            {activeBonus.desc}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Grid */}
             <div className="grid grid-cols-3 gap-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">

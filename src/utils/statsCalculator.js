@@ -4,6 +4,7 @@ import { getActiveRelicSynergies } from '../data/relics.js';
 import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from './equipmentUtils.js';
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfileUtils.js';
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
+import { computeSignatureSetBonus } from './signatureSetBonus.js';
 
 const MAGIC_JOBS = ['마법사', '아크메이지', '흑마법사', '성직자'];
 const PHYSICAL_ELEMENTS = ['물리', 'physical'];
@@ -254,6 +255,7 @@ export const calculateFullStats = (player) => {
     const titlePassive = getTitlePassive(player.activeTitle) || {};
 
     const setBonus = computeSetBonus(player.equip);
+    const signatureSetBonus = computeSignatureSetBonus(player.equip);
     const codexBonus = computeCodexBonus(player.stats);
 
     const weaponElem = player.equip.weapon?.elem;
@@ -274,6 +276,7 @@ export const calculateFullStats = (player) => {
         cls.atkMod *
         (1 + (buff.atk || 0) + abyssBonus.atk) *
         setBonus.atkMult *
+        signatureSetBonus.atkMult *
         dualWieldAtkMult *
         (passiveBonus.lowHpAtkMult || 1);
 
@@ -281,9 +284,10 @@ export const calculateFullStats = (player) => {
         (player.def + armorVal + shieldDef + codexBonus.def + enhanceBonus.def + passiveBonus.def) *
         (1 + (buff.def || 0) + abyssBonus.def) *
         setBonus.defMult *
+        signatureSetBonus.defMult *
         dualWieldDefMult;
 
-    const baseMaxHp = (player.maxHp + codexBonus.hp + passiveBonus.hp) * setBonus.hpMult;
+    const baseMaxHp = (player.maxHp + codexBonus.hp + passiveBonus.hp) * setBonus.hpMult * signatureSetBonus.hpMult;
     const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat + passiveBonus.mp) * relicBonus.mpMult;
     const baseCritChance = Math.min(
         0.75,
@@ -299,6 +303,7 @@ export const calculateFullStats = (player) => {
         isMagic: isMagic || isMagicWeapon(mainWeapon) || isMagicWeapon(offhandWeapon) || Boolean(offhandShield?.elem && offhandShield?.elem !== '물리'),
         weaponHands: getWeaponHands(mainWeapon),
         activeSet: setBonus.activeSet,
+        activeSignatureSet: signatureSetBonus.activeSet,
         relics,
         critChance: baseCritChance,
     };
@@ -335,6 +340,7 @@ export const calculateFullStats = (player) => {
         isMagic: preBuildStats.isMagic,
         weaponHands: preBuildStats.weaponHands,
         activeSet: setBonus.activeSet,
+        activeSignatureSet: signatureSetBonus.activeSet,
         relics,
         critChance: finalCritChance,
         buildProfile,
