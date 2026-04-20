@@ -90,6 +90,24 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                     armor: { id: 'smoke-adventurer-tunic', name: '여행자 튜닉', type: 'armor', enhance: 0 },
                 },
             },
+            'legendary-loadout': {
+                name: '전설 연출',
+                job: '팔라딘',
+                level: 50,
+                loc: '세계의 끝',
+                equip: {
+                    weapon: { id: 'smoke-legendary-weapon', name: '성검 에테르니아', type: 'weapon', hands: 1, elem: '빛', tier: 5, enhance: 7 },
+                    offhand: { id: 'smoke-legendary-offhand', name: '천공 성전', type: 'shield', subtype: 'focus', elem: '빛', tier: 5, enhance: 5 },
+                    armor: { id: 'smoke-legendary-armor', name: '드래곤로드 갑주', type: 'armor', elem: '화염', tier: 5, enhance: 6 },
+                },
+                inv: [
+                    { id: 'smoke-legendary-inv-1', name: '마왕의 대낫', type: 'weapon', hands: 2, elem: '어둠', tier: 5, enhance: 6 },
+                    { id: 'smoke-legendary-inv-2', name: '라그나로크', type: 'weapon', hands: 2, elem: '화염', tier: 5, enhance: 5 },
+                    { id: 'smoke-legendary-inv-3', name: '세계수의 지팡이', type: 'weapon', hands: 2, elem: '자연', tier: 5, enhance: 4 },
+                    { id: 'smoke-legendary-inv-4', name: '에테르 그리모어', type: 'shield', subtype: 'focus', elem: '어둠', tier: 6, enhance: 3 },
+                    { id: 'smoke-legendary-inv-5', name: '빙결의 왕관검', type: 'weapon', hands: 1, elem: '냉기', tier: 5, enhance: 4 },
+                ],
+            },
         };
 
         const safeText = (value, fallback = '') => {
@@ -301,18 +319,19 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                 const scenario = avatarScenarioMap[preset];
                 if (!scenario) return false;
 
-                er.dispatch({
-                    type: AT.SET_PLAYER,
-                    payload: {
-                        name: scenario.name,
-                        job: scenario.job,
-                        level: scenario.level,
-                        loc: er.player.loc || scenario.loc,
-                        hp: er.player.hp,
-                        mp: er.player.mp,
-                        equip: scenario.equip,
-                    },
-                });
+                const payload = {
+                    name: scenario.name,
+                    job: scenario.job,
+                    level: scenario.level,
+                    loc: er.player.loc || scenario.loc,
+                    hp: er.player.hp,
+                    mp: er.player.mp,
+                    equip: scenario.equip,
+                };
+                if (Array.isArray(scenario.inv)) {
+                    payload.inv = scenario.inv;
+                }
+                er.dispatch({ type: AT.SET_PLAYER, payload });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'equipment' });
                 return true;
             },

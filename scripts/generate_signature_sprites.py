@@ -514,6 +514,168 @@ def paint_holy_spear_wearable(draw, p, ox, oy, scale=2):
     poly(draw, [(17, 13), (23, 14), (21, 17), (17, 15)], p["trim"], ox, oy, scale)
 
 
+# ───────────────────────────────────────────────────────────────────────
+# Tier B (5종) — 다음 사이클 확장
+# ───────────────────────────────────────────────────────────────────────
+
+# 16. 용의 화염 — 화염 2H greatsword, 용 비늘 블레이드
+def paint_dragon_flame_item(draw, p, ox, oy, scale=4):
+    # flame-shaped blade (curved)
+    poly(draw, [(11, 2), (15, 4), (16, 9), (14, 14), (15, 18), (11, 20), (8, 18), (9, 14), (7, 9), (8, 4)], p["outline"], ox, oy, scale)
+    poly(draw, [(12, 4), (14, 5), (15, 10), (13, 14), (14, 17), (11, 18), (9, 17), (10, 14), (8, 10), (10, 5)], p["shade"], ox, oy, scale)
+    poly(draw, [(11, 6), (13, 7), (13, 13), (11, 16), (10, 13), (10, 7)], p["mid"], ox, oy, scale)
+    rect(draw, 11, 8, 1, 8, p["hi"], ox, oy, scale)
+    # scale rivets on blade (dragon scale detail)
+    dot(draw, 12, 11, p["trim"], ox, oy, scale)
+    dot(draw, 11, 13, p["trim"], ox, oy, scale)
+    # flared crossguard with claws
+    poly(draw, [(4, 20), (19, 20), (20, 22), (3, 22)], p["outline"], ox, oy, scale)
+    poly(draw, [(5, 20), (7, 18), (5, 20)], p["outline"], ox, oy, scale)
+    poly(draw, [(16, 20), (18, 18), (18, 20)], p["outline"], ox, oy, scale)
+    rect(draw, 8, 20, 7, 2, p["trim"], ox, oy, scale)
+    # grip
+    rect(draw, 10, 22, 3, 6, p["outline"], ox, oy, scale)
+    rect(draw, 11, 23, 1, 4, (113, 72, 38, 255), ox, oy, scale)
+    rect(draw, 10, 28, 3, 2, p["trim"], ox, oy, scale)
+
+
+def paint_dragon_flame_wearable(draw, p, ox, oy, scale=2):
+    poly(draw, [(13, 2), (17, 4), (18, 10), (16, 15), (17, 19), (13, 21), (10, 19), (11, 15), (9, 10), (10, 4)], p["outline"], ox, oy, scale)
+    rect(draw, 13, 8, 1, 9, p["hi"], ox, oy, scale)
+    dot(draw, 14, 11, p["trim"], ox, oy, scale)
+    poly(draw, [(5, 21), (21, 21), (22, 23), (4, 23)], p["outline"], ox, oy, scale)
+    rect(draw, 10, 21, 7, 2, p["trim"], ox, oy, scale)
+    rect(draw, 12, 23, 3, 7, p["outline"], ox, oy, scale)
+    rect(draw, 13, 24, 1, 5, (113, 72, 38, 255), ox, oy, scale)
+
+
+# 17. 세계수의 검 — 자연 1H sword, 잎사귀 날
+def paint_worldtree_sword_item(draw, p, ox, oy, scale=4):
+    # leaf-shaped blade
+    poly(draw, [(11, 1), (14, 4), (15, 10), (13, 15), (11, 18), (9, 15), (7, 10), (8, 4)], p["outline"], ox, oy, scale)
+    poly(draw, [(11, 3), (13, 5), (14, 10), (12, 14), (11, 16), (10, 14), (8, 10), (9, 5)], p["shade"], ox, oy, scale)
+    poly(draw, [(11, 5), (12, 7), (12, 12), (11, 14), (10, 12), (10, 7)], p["mid"], ox, oy, scale)
+    # leaf vein (central highlight)
+    rect(draw, 11, 4, 1, 13, p["hi"], ox, oy, scale)
+    # side vein details (좌우로 대각 1px)
+    dot(draw, 9, 9, p["trim"], ox, oy, scale)
+    dot(draw, 13, 9, p["trim"], ox, oy, scale)
+    dot(draw, 9, 12, p["trim"], ox, oy, scale)
+    dot(draw, 13, 12, p["trim"], ox, oy, scale)
+    # vine-wrapped crossguard
+    poly(draw, [(6, 18), (16, 18), (17, 20), (5, 20)], p["outline"], ox, oy, scale)
+    rect(draw, 7, 18, 9, 1, p["trim"], ox, oy, scale)
+    # grip (with vine wrap)
+    rect(draw, 10, 20, 3, 6, p["outline"], ox, oy, scale)
+    rect(draw, 11, 21, 1, 4, (113, 72, 38, 255), ox, oy, scale)
+    dot(draw, 11, 22, p["trim"], ox, oy, scale)
+    dot(draw, 11, 24, p["trim"], ox, oy, scale)
+    rect(draw, 10, 26, 3, 2, p["outline"], ox, oy, scale)
+
+
+def paint_worldtree_sword_wearable(draw, p, ox, oy, scale=2):
+    poly(draw, [(13, 1), (16, 4), (17, 11), (15, 16), (13, 19), (11, 16), (9, 11), (10, 4)], p["outline"], ox, oy, scale)
+    rect(draw, 13, 4, 1, 14, p["hi"], ox, oy, scale)
+    dot(draw, 11, 10, p["trim"], ox, oy, scale)
+    dot(draw, 15, 10, p["trim"], ox, oy, scale)
+    poly(draw, [(7, 19), (19, 19), (20, 21), (6, 21)], p["outline"], ox, oy, scale)
+    rect(draw, 8, 19, 11, 1, p["trim"], ox, oy, scale)
+    rect(draw, 12, 21, 3, 7, p["outline"], ox, oy, scale)
+    rect(draw, 13, 22, 1, 5, (113, 72, 38, 255), ox, oy, scale)
+
+
+# 18. 신전 도시의 지팡이 — 빛 2H staff, 고대 제관 원반
+def paint_temple_city_staff_item(draw, p, ox, oy, scale=4):
+    # shaft
+    rect(draw, 12, 8, 3, 22, p["outline"], ox, oy, scale)
+    rect(draw, 13, 9, 1, 20, p["shade"], ox, oy, scale)
+    # sun disc head (원반형)
+    poly(draw, [(8, 1), (18, 1), (20, 4), (20, 8), (18, 11), (8, 11), (6, 8), (6, 4)], p["outline"], ox, oy, scale)
+    poly(draw, [(9, 2), (17, 2), (19, 4), (19, 8), (17, 10), (9, 10), (7, 8), (7, 4)], p["shade"], ox, oy, scale)
+    poly(draw, [(10, 3), (16, 3), (18, 5), (18, 7), (16, 9), (10, 9), (8, 7), (8, 5)], p["mid"], ox, oy, scale)
+    # inner sun rays (원반 중앙 십자)
+    rect(draw, 12, 4, 3, 5, p["trim"], ox, oy, scale)
+    rect(draw, 10, 5, 7, 1, p["trim"], ox, oy, scale)
+    rect(draw, 10, 7, 7, 1, p["trim"], ox, oy, scale)
+    # center jewel
+    rect(draw, 13, 6, 1, 1, p["hi"], ox, oy, scale)
+    # grip band
+    rect(draw, 12, 16, 3, 2, p["trim"], ox, oy, scale)
+
+
+def paint_temple_city_staff_wearable(draw, p, ox, oy, scale=2):
+    rect(draw, 14, 8, 3, 24, p["outline"], ox, oy, scale)
+    rect(draw, 15, 9, 1, 22, p["shade"], ox, oy, scale)
+    poly(draw, [(9, 1), (21, 1), (23, 5), (23, 9), (21, 12), (9, 12), (7, 9), (7, 5)], p["outline"], ox, oy, scale)
+    poly(draw, [(10, 2), (20, 2), (22, 5), (22, 9), (20, 11), (10, 11), (8, 9), (8, 5)], p["shade"], ox, oy, scale)
+    poly(draw, [(11, 3), (19, 3), (21, 6), (21, 8), (19, 10), (11, 10), (9, 8), (9, 6)], p["mid"], ox, oy, scale)
+    rect(draw, 14, 4, 3, 6, p["trim"], ox, oy, scale)
+    rect(draw, 11, 6, 9, 1, p["trim"], ox, oy, scale)
+    rect(draw, 14, 17, 3, 2, p["trim"], ox, oy, scale)
+
+
+# 19. 광기의 갑주 — 버서커 plate, 고통 가시 + 피 얼룩
+def paint_mad_armor_item(draw, p, ox, oy, scale=4):
+    # jagged spiked shoulders
+    poly(draw, [(2, 9), (6, 4), (8, 6), (4, 11)], p["outline"], ox, oy, scale)
+    poly(draw, [(20, 9), (24, 4), (26, 6), (22, 11)], p["outline"], ox, oy, scale)
+    poly(draw, [(3, 9), (5, 6), (7, 7), (4, 10)], p["shade"], ox, oy, scale)
+    poly(draw, [(21, 9), (23, 6), (25, 7), (22, 10)], p["shade"], ox, oy, scale)
+    # main plate
+    poly(draw, [(6, 10), (22, 10), (25, 13), (24, 25), (14, 28), (4, 25), (3, 13)], p["outline"], ox, oy, scale)
+    poly(draw, [(7, 11), (21, 11), (23, 13), (22, 24), (14, 27), (5, 24), (5, 13)], p["shade"], ox, oy, scale)
+    poly(draw, [(9, 13), (19, 13), (21, 15), (20, 23), (14, 25), (7, 23), (7, 15)], p["mid"], ox, oy, scale)
+    # jagged chest trim (분노 균열)
+    poly(draw, [(10, 14), (12, 16), (14, 14), (16, 16), (18, 14)], p["trim"], ox, oy, scale)
+    # central rage eye
+    rect(draw, 13, 17, 2, 3, p["hi"], ox, oy, scale)
+    rect(draw, 13, 18, 2, 1, p["outline"], ox, oy, scale)
+    # bottom chaos spikes
+    poly(draw, [(7, 25), (9, 28), (11, 25)], p["outline"], ox, oy, scale)
+    poly(draw, [(17, 25), (19, 28), (21, 25)], p["outline"], ox, oy, scale)
+
+
+def paint_mad_armor_wearable(draw, p, ox, oy, scale=2):
+    poly(draw, [(2, 8), (7, 4), (10, 7), (5, 11)], p["outline"], ox, oy, scale)
+    poly(draw, [(22, 8), (27, 4), (30, 7), (27, 11)], p["outline"], ox, oy, scale)
+    poly(draw, [(6, 9), (26, 9), (29, 12), (28, 26), (16, 30), (3, 26), (3, 12)], p["outline"], ox, oy, scale)
+    poly(draw, [(8, 10), (24, 10), (27, 12), (26, 25), (16, 28), (5, 25), (5, 12)], p["shade"], ox, oy, scale)
+    poly(draw, [(10, 13), (22, 13), (24, 16), (23, 24), (16, 26), (8, 24), (8, 16)], p["mid"], ox, oy, scale)
+    poly(draw, [(12, 14), (14, 16), (16, 14), (18, 16), (20, 14)], p["trim"], ox, oy, scale)
+    rect(draw, 15, 18, 2, 3, p["hi"], ox, oy, scale)
+
+
+# 20. 세계수의 로브 — 자연 robe, 잎사귀 소매 + 가지 허리
+def paint_worldtree_robe_item(draw, p, ox, oy, scale=4):
+    # robe silhouette (taller, flowing)
+    poly(draw, [(8, 3), (20, 3), (23, 8), (24, 26), (20, 29), (8, 29), (4, 26), (5, 8)], p["outline"], ox, oy, scale)
+    poly(draw, [(9, 4), (19, 4), (22, 8), (22, 25), (19, 28), (9, 28), (6, 25), (6, 8)], p["shade"], ox, oy, scale)
+    poly(draw, [(11, 6), (17, 6), (20, 9), (20, 24), (18, 26), (10, 26), (8, 24), (8, 9)], p["mid"], ox, oy, scale)
+    # leaf-shaped sleeves (양쪽 소매 끝에 잎)
+    poly(draw, [(4, 14), (6, 18), (3, 18)], p["trim"], ox, oy, scale)
+    poly(draw, [(24, 14), (22, 18), (25, 18)], p["trim"], ox, oy, scale)
+    # branch-pattern belt
+    rect(draw, 8, 17, 12, 2, p["outline"], ox, oy, scale)
+    rect(draw, 9, 17, 10, 1, p["trim"], ox, oy, scale)
+    # vine detail down center
+    rect(draw, 13, 8, 2, 9, p["trim"], ox, oy, scale)
+    dot(draw, 14, 10, p["hi"], ox, oy, scale)
+    dot(draw, 14, 13, p["hi"], ox, oy, scale)
+    # leaf accent on collar
+    rect(draw, 12, 5, 4, 2, p["trim"], ox, oy, scale)
+
+
+def paint_worldtree_robe_wearable(draw, p, ox, oy, scale=2):
+    poly(draw, [(8, 3), (24, 3), (27, 9), (28, 28), (24, 31), (8, 31), (4, 28), (5, 9)], p["outline"], ox, oy, scale)
+    poly(draw, [(9, 4), (23, 4), (26, 9), (26, 27), (23, 30), (9, 30), (6, 27), (6, 9)], p["shade"], ox, oy, scale)
+    poly(draw, [(11, 6), (21, 6), (24, 10), (24, 26), (21, 28), (11, 28), (8, 26), (8, 10)], p["mid"], ox, oy, scale)
+    poly(draw, [(4, 15), (7, 19), (3, 19)], p["trim"], ox, oy, scale)
+    poly(draw, [(28, 15), (25, 19), (29, 19)], p["trim"], ox, oy, scale)
+    rect(draw, 9, 18, 14, 2, p["outline"], ox, oy, scale)
+    rect(draw, 10, 18, 12, 1, p["trim"], ox, oy, scale)
+    rect(draw, 15, 9, 2, 10, p["trim"], ox, oy, scale)
+
+
 SIGNATURES: tuple[Signature, ...] = (
     Signature(
         slug="signature-weapon-ethernia",
@@ -635,6 +797,47 @@ SIGNATURES: tuple[Signature, ...] = (
         family="weapon",
         item_painter=paint_holy_spear_item,
         wearable_painter=paint_holy_spear_wearable,
+    ),
+    # ── Tier B ──────────────────────────────────────────────
+    Signature(
+        slug="signature-weapon-dragon-flame",
+        item_name="용의 화염",
+        tone_key="fire",
+        family="weapon",
+        item_painter=paint_dragon_flame_item,
+        wearable_painter=paint_dragon_flame_wearable,
+    ),
+    Signature(
+        slug="signature-weapon-worldtree-sword",
+        item_name="세계수의 검",
+        tone_key="nature",
+        family="weapon",
+        item_painter=paint_worldtree_sword_item,
+        wearable_painter=paint_worldtree_sword_wearable,
+    ),
+    Signature(
+        slug="signature-weapon-temple-city-staff",
+        item_name="신전 도시의 지팡이",
+        tone_key="holy",
+        family="weapon",
+        item_painter=paint_temple_city_staff_item,
+        wearable_painter=paint_temple_city_staff_wearable,
+    ),
+    Signature(
+        slug="signature-armor-mad-armor",
+        item_name="광기의 갑주",
+        tone_key="rust",
+        family="armor",
+        item_painter=paint_mad_armor_item,
+        wearable_painter=paint_mad_armor_wearable,
+    ),
+    Signature(
+        slug="signature-armor-worldtree-robe",
+        item_name="세계수의 로브",
+        tone_key="nature",
+        family="armor",
+        item_painter=paint_worldtree_robe_item,
+        wearable_painter=paint_worldtree_robe_wearable,
     ),
 )
 

@@ -3,6 +3,7 @@ import { BALANCE } from '../../data/constants';
 import { getItemRarity } from '../../utils/gameUtils';
 import { getEquipmentVisualKey, getItemIconAssetSrc } from '../../utils/itemVisuals';
 import EquipmentAvatarPreview from './EquipmentAvatarPreview.jsx';
+import SignatureBadge from './SignatureBadge.jsx';
 
 /**
  * SVG 아이콘 경로 — 장비 타입별 실루엣
@@ -50,7 +51,7 @@ const ICON_PATHS = {
  * ItemIcon — 아이템 아이콘 컴포넌트
  * @param {{ item: Object, size?: number, showBorder?: boolean, className?: string }} props
  */
-const ItemIcon = ({ item, size = 24, showBorder = false, className = '' }) => {
+const ItemIcon = ({ item, size = 24, showBorder = false, className = '', hideSignatureBadge = false }) => {
     const iconKey = getEquipmentVisualKey(item);
     const path = ICON_PATHS[iconKey] || ICON_PATHS.material;
     const rarity = item ? getItemRarity(item) : 'common';
@@ -72,9 +73,11 @@ const ItemIcon = ({ item, size = 24, showBorder = false, className = '' }) => {
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
     };
 
+    const badgeSize = Math.max(8, Math.round(size * 0.32));
+
     return (
         <div
-            className={`inline-flex items-center justify-center shrink-0 ${className}`}
+            className={`relative inline-flex items-center justify-center shrink-0 ${className}`}
             data-item-icon-style={isEquipmentItem ? 'equipment-asset' : 'asset'}
             style={{
                 width: size,
@@ -111,6 +114,7 @@ const ItemIcon = ({ item, size = 24, showBorder = false, className = '' }) => {
                     <path d={path} />
                 </svg>
             )}
+            {!hideSignatureBadge && <SignatureBadge item={item} size={badgeSize} />}
         </div>
     );
 };

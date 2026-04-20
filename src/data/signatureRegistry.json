@@ -106,6 +106,41 @@
       "category": "unique-weapon",
       "tone": "holy",
       "artNote": "2H spear · 황금 창촉 + 옆 나부끼는 깃발"
+    },
+    "용의 화염": {
+      "spriteKey": "signature-weapon-dragon-flame",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "fire",
+      "artNote": "2H · 불꽃 형상 블레이드 + 드래곤 발톱 crossguard"
+    },
+    "세계수의 검": {
+      "spriteKey": "signature-weapon-worldtree-sword",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "nature",
+      "artNote": "1H · 잎사귀형 블레이드 + 넝쿨 감긴 grip"
+    },
+    "신전 도시의 지팡이": {
+      "spriteKey": "signature-weapon-temple-city-staff",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "holy",
+      "artNote": "2H staff · 제관 원반 + 중앙 십자 레이"
+    },
+    "광기의 갑주": {
+      "spriteKey": "signature-armor-mad-armor",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "rust",
+      "artNote": "plate · 가시 숄더 + 분노 crack + rage eye"
+    },
+    "세계수의 로브": {
+      "spriteKey": "signature-armor-worldtree-robe",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "nature",
+      "artNote": "robe · 잎 소매 + 가지 허리띠 + 넝쿨 중앙 트림"
     }
   }
 }

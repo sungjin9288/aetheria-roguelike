@@ -111,6 +111,31 @@ test('SIGNATURE_ITEM_REGISTRY has the 5 Tier S entries with dedicated sprite key
     }
 });
 
+test('SIGNATURE_ITEM_REGISTRY has the 10 Tier A entries', () => {
+    const tierA = [
+        '드래곤로드 갑주', '암흑 군주의 망토', '세계수의 지팡이', '차원 방패 이지스', '에테르 그리모어',
+        '천벌의 지팡이', '빙결의 왕관검', '바람의 궁극', '그림자 절단기', '성스러운 창',
+    ];
+    for (const name of tierA) {
+        assert.ok(SIGNATURE_ITEM_REGISTRY[name], `Tier A ${name} should be registered`);
+    }
+});
+
+test('SIGNATURE_ITEM_REGISTRY has the 5 Tier B entries', () => {
+    const tierB = [
+        '용의 화염', '세계수의 검', '신전 도시의 지팡이', '광기의 갑주', '세계수의 로브',
+    ];
+    for (const name of tierB) {
+        assert.ok(SIGNATURE_ITEM_REGISTRY[name], `Tier B ${name} should be registered`);
+        assert.match(SIGNATURE_ITEM_REGISTRY[name].spriteKey, /^signature-/);
+    }
+});
+
+test('registry reaches 20 dedicated signatures total', () => {
+    const count = getSignatureItemCount();
+    assert.ok(count.dedicated >= 20, `Expected at least 20 dedicated signatures, got ${count.dedicated}`);
+});
+
 test('getItemIconAssetSrc prefers signature sprite path for Tier S items', () => {
     const src = getItemIconAssetSrc({ name: '성검 에테르니아', type: 'weapon' });
     assert.equal(src, '/assets/equipment-exact/signature-weapon-ethernia.png');
