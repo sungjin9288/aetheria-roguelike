@@ -44,11 +44,10 @@ const TOWN_MENU_ACTIONS = [
     { id: 'craft', label: 'CRAFT', icon: Hammer },
 ];
 
-// Animation variants for tab content
-const tabVariants = {
-    ...MOTION.variants.tab,
-    exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
-};
+// NOTE: 이전에 AnimatePresence + tabVariants로 탭 전환 애니메이션을 처리했으나,
+// mode="wait"가 key 전환 시 stale 상태로 고착되는 회귀가 있어 (모바일 Menu Console에서
+// INV/GEAR/CODEX 클릭 시 탭 콘텐츠가 갱신되지 않는 버그) plain div로 전환.
+// 필요 시 framer-motion 업그레이드 후 재도입 검토.
 
 const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null, consoleExpanded = false, onReturnToLog = null }) => {
     const [mobileArchiveExpanded, setMobileArchiveExpanded] = useState(false);
@@ -104,15 +103,10 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
     const renderTabContent = () => {
         const desktopArchiveCompact = false;
         return (
-            <AnimatePresence mode="wait">
-                <Motion.div
-                    key={sideTab}
-                    variants={tabVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="space-y-2 pr-1"
-                >
+            <div
+                key={typeof sideTab === 'string' ? sideTab : 'inventory'}
+                className="space-y-2 pr-1"
+            >
                     {sideTab === 'inventory' && (
                         <SmartInventory
                             player={player}
@@ -177,8 +171,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                     {sideTab === 'system' && (
                         <SystemTab player={player} actions={actions} stats={stats} runtime={runtime} compact={desktopArchiveCompact} />
                     )}
-                </Motion.div>
-            </AnimatePresence>
+            </div>
         );
     };
 

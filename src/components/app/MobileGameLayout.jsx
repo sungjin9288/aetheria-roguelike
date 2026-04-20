@@ -47,8 +47,10 @@ const MobileGameLayout = ({
 }) => {
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
-    const openArchiveConsole = (tab = 'inventory') => {
-        engine.actions.setSideTab?.(tab);
+    const openArchiveConsole = (tab) => {
+        // onClick 등에서 이벤트 객체를 그대로 전달하는 것을 방지 (기본값이 event 객체로 덮이면 안 됨)
+        const target = typeof tab === 'string' ? tab : 'inventory';
+        engine.actions.setSideTab?.(target);
         engine.actions.setGameState?.(GS.IDLE);
         setMobileConsoleMode('archive');
     };
