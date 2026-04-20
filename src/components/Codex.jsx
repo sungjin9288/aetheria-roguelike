@@ -4,6 +4,7 @@ import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { getCodexProgress } from '../data/codexRewards';
+import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { AT } from '../reducers/actionTypes';
 import SignalBadge from './SignalBadge';
 import WeaponCodex from './codex/WeaponCodex';
@@ -55,10 +56,26 @@ const Codex = ({ player, dispatch }) => {
         };
     }, [player?.stats?.codex]);
 
-    const codex = player?.stats?.codex || {};
+    const codex = useMemo(() => player?.stats?.codex || {}, [player?.stats?.codex]);
     const totalAll = totalCounts.weapons + totalCounts.armors + totalCounts.shields + totalCounts.monsters + totalCounts.recipes + totalCounts.materials;
     const discoveredAll = discoveredCounts.weapons + discoveredCounts.armors + discoveredCounts.shields + discoveredCounts.monsters + discoveredCounts.recipes + discoveredCounts.materials;
     const pct = totalAll > 0 ? Math.round((discoveredAll / totalAll) * 100) : 0;
+
+    const legendaryCount = useMemo(() => {
+        const total = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
+        let discovered = 0;
+        const all = [
+            ...(DB.ITEMS.weapons || []),
+            ...(DB.ITEMS.armors || []),
+        ];
+        for (const itemName of Object.keys(SIGNATURE_ITEM_REGISTRY)) {
+            const item = all.find((entry) => entry?.name === itemName);
+            if (!item) continue;
+            const bucket = item.type === 'weapon' ? 'weapons' : item.type === 'shield' ? 'shields' : 'armors';
+            if (codex[bucket]?.[itemName]) discovered += 1;
+        }
+        return { total, discovered, pct: total > 0 ? Math.round((discovered / total) * 100) : 0 };
+    }, [codex]);
 
     return (
         <div className="space-y-2.5">
@@ -112,18 +129,21 @@ const Codex = ({ player, dispatch }) => {
                 {SUB_TABS.map(tab => {
                     const Icon = tab.icon;
                     const active = subTab === tab.id;
+                    const isLegend = tab.id === 'legend';
+                    const accent = isLegend && active ? 'bg-amber-300/15 border-amber-300/45 text-amber-200' : active ? 'bg-cyber-blue/15 border-cyber-blue/40 text-cyber-blue' : 'border-white/8 text-slate-500 hover:text-slate-300 hover:border-white/14';
                     return (
                         <button
                             key={tab.id}
                             onClick={() => setSubTab(tab.id)}
-                            className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[11px] font-fira uppercase tracking-wider transition-all
-                                ${active
-                                    ? 'bg-cyber-blue/15 border border-cyber-blue/40 text-cyber-blue'
-                                    : 'border border-white/8 text-slate-500 hover:text-slate-300 hover:border-white/14'
-                                }`}
+                            className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[11px] font-fira uppercase tracking-wider transition-all border ${accent}`}
                         >
                             <Icon size={12} />
                             {tab.label}
+                            {isLegend && (
+                                <span className="text-[8px] font-fira text-amber-200/75 leading-none">
+                                    {legendaryCount.discovered}/{legendaryCount.total}
+                                </span>
+                            )}
                         </button>
                     );
                 })}
