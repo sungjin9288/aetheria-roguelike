@@ -12,6 +12,15 @@ const SLOT_CONFIG = [
     { key: 'offhand', label: '보조장비', icon: Sparkles },
 ];
 
+const SIG_SET_TONE = Object.freeze({
+    holy: { border: 'rgba(246,231,162,0.5)', glow: 'rgba(246,231,162,0.18)', text: '#f6e7a2' },
+    fire: { border: 'rgba(255,180,138,0.5)', glow: 'rgba(255,180,138,0.18)', text: '#ffb48a' },
+    frost: { border: 'rgba(204,232,245,0.5)', glow: 'rgba(204,232,245,0.18)', text: '#cce8f5' },
+    shadow: { border: 'rgba(199,164,240,0.5)', glow: 'rgba(199,164,240,0.18)', text: '#c7a4f0' },
+    arcane: { border: 'rgba(192,176,232,0.5)', glow: 'rgba(192,176,232,0.18)', text: '#c0b0e8' },
+    nature: { border: 'rgba(168,208,160,0.5)', glow: 'rgba(168,208,160,0.18)', text: '#a8d0a0' },
+});
+
 const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip), [player?.equip]);
     const appearance = useMemo(() => deriveCharacterAppearance(player), [player]);
@@ -37,6 +46,8 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
     const weaponName = equipProfile.mainWeapon?.name || '없음';
     const offhandName = equipProfile.offhandItem?.name || '없음';
     const armorName = player?.equip?.armor?.name || '없음';
+    const activeSignatureSet = stats?.activeSignatureSet || null;
+    const sigSetTone = activeSignatureSet ? (SIG_SET_TONE[activeSignatureSet.tone] || SIG_SET_TONE.holy) : null;
 
     return (
         <div className={compact ? 'space-y-2.5' : 'space-y-3'}>
@@ -82,6 +93,38 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                     </div>
                 </div>
             </div>
+
+            {activeSignatureSet && sigSetTone && (
+                <div
+                    data-testid="active-signature-set-badge"
+                    data-signature-set-key={activeSignatureSet.key}
+                    className="relative overflow-hidden rounded-[1rem] px-3 py-2"
+                    style={{
+                        border: `1px solid ${sigSetTone.border}`,
+                        background: `radial-gradient(circle at 18% 42%, ${sigSetTone.glow}, transparent 54%), linear-gradient(180deg, rgba(20,24,30,0.92) 0%, rgba(10,12,16,1) 100%)`,
+                    }}
+                >
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Sparkles size={12} style={{ color: sigSetTone.text }} />
+                            <span
+                                className="font-rajdhani font-bold text-[12px] truncate"
+                                style={{ color: sigSetTone.text }}
+                            >
+                                {activeSignatureSet.name}
+                            </span>
+                        </div>
+                        <span className="shrink-0 text-[10px] font-fira" style={{ color: sigSetTone.text }}>
+                            {activeSignatureSet.tier}세트 활성
+                        </span>
+                    </div>
+                    {activeSignatureSet.desc && (
+                        <div className="mt-1 text-[10px] font-fira leading-[1.4] text-slate-300/85">
+                            {activeSignatureSet.desc}
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div className="space-y-1.5">
                 {slotEntries.map((slot) => {

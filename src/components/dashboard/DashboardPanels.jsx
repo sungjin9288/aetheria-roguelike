@@ -140,7 +140,15 @@ const EquipmentSlot = ({ label, item, slot = 'main', fallback, compact = false }
     );
 };
 
-export const EquipmentPanel = ({ player, stats, compact = false }) => (
+const COMPACT_SET_TONE = {
+    holy: '#f6e7a2', fire: '#ffb48a', frost: '#cce8f5', shadow: '#c7a4f0',
+    arcane: '#c0b0e8', nature: '#a8d0a0',
+};
+
+export const EquipmentPanel = ({ player, stats, compact = false }) => {
+    const activeSig = stats?.activeSignatureSet || null;
+    const setColor = activeSig ? (COMPACT_SET_TONE[activeSig.tone] || COMPACT_SET_TONE.holy) : null;
+    return (
     <div className={`panel-noise border ${compact ? 'border-cyan-400/18 rounded-[1.2rem] bg-slate-950/72 shadow-[0_16px_36px_rgba(2,8,20,0.28)]' : 'border-cyber-blue/20 rounded-md bg-cyber-dark/30'} ${compact ? 'p-3' : 'p-3.5'} space-y-2`}>
         <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.2em] text-cyber-blue/60">
             <span className="flex items-center gap-1.5">
@@ -151,13 +159,25 @@ export const EquipmentPanel = ({ player, stats, compact = false }) => (
                 ATK {stats?.atk} / DEF {stats?.def}
             </span>
         </div>
+        {activeSig && setColor && (
+            <div
+                data-testid="active-signature-set-inline"
+                data-signature-set-key={activeSig.key}
+                className="flex items-center justify-between gap-2 rounded-[0.9rem] border px-2 py-1 text-[10px] font-fira"
+                style={{ borderColor: `${setColor}80`, color: setColor, backgroundColor: `${setColor}14` }}
+            >
+                <span className="truncate font-bold">✦ {activeSig.name}</span>
+                <span className="shrink-0">{activeSig.tier}세트</span>
+            </div>
+        )}
         <div className="grid grid-cols-3 gap-2 text-[10px] font-fira">
             <EquipmentSlot label="Main" item={player?.equip?.weapon} slot="main" fallback="UNARMED" compact={compact} />
             <EquipmentSlot label="Off" item={player?.equip?.offhand} slot="offhand" fallback="EMPTY" compact={compact} />
             <EquipmentSlot label="Armor" item={player?.equip?.armor} slot="armor" fallback="CIVILIAN" compact={compact} />
         </div>
     </div>
-);
+    );
+};
 
 export const RunProgressPanel = ({ player, mobile = false }) => {
     const mapData = DB.MAPS[player?.loc];
