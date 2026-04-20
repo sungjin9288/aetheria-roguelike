@@ -136,6 +136,23 @@ test('registry reaches 20 dedicated signatures total', () => {
     assert.ok(count.dedicated >= 20, `Expected at least 20 dedicated signatures, got ${count.dedicated}`);
 });
 
+test('every SIGNATURE_ITEM_REGISTRY entry maps to a real item in DB.ITEMS', () => {
+    // LegendaryCodex는 DB.ITEMS.weapons + DB.ITEMS.armors에서 이름으로 찾아오므로,
+    // 매핑이 깨지면 전설 도감이 빈 칸으로 뜬다.
+    const allNames = new Set(
+        Object.values(ITEMS).flat().filter(Boolean).map((item) => item.name)
+    );
+    for (const name of Object.keys(SIGNATURE_ITEM_REGISTRY)) {
+        assert.equal(allNames.has(name), true, `Signature registry entry "${name}" has no matching item in items.js`);
+    }
+});
+
+test('SIGNATURE_ITEM_REGISTRY entry spriteKeys are all unique (no collision)', () => {
+    const spriteKeys = Object.values(SIGNATURE_ITEM_REGISTRY).map((m) => m.spriteKey);
+    const unique = new Set(spriteKeys);
+    assert.equal(spriteKeys.length, unique.size, 'Duplicate spriteKey detected across signatures');
+});
+
 test('getItemIconAssetSrc prefers signature sprite path for Tier S items', () => {
     const src = getItemIconAssetSrc({ name: '성검 에테르니아', type: 'weapon' });
     assert.equal(src, '/assets/equipment-exact/signature-weapon-ethernia.png');

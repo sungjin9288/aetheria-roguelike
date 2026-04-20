@@ -2,8 +2,21 @@ import React, { useMemo, useState } from 'react';
 import { BALANCE } from '../../data/constants';
 import { getItemRarity } from '../../utils/gameUtils';
 import { getEquipmentVisualKey, getItemIconAssetSrc } from '../../utils/itemVisuals';
+import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signatureItems.js';
 import EquipmentAvatarPreview from './EquipmentAvatarPreview.jsx';
 import SignatureBadge from './SignatureBadge.jsx';
+
+const SIGNATURE_TONE_RING = Object.freeze({
+    holy: { border: '#f6e7a2', glow: 'rgba(246,231,162,0.45)' },
+    fire: { border: '#ffb48a', glow: 'rgba(255,180,138,0.45)' },
+    frost: { border: '#cce8f5', glow: 'rgba(204,232,245,0.4)' },
+    shadow: { border: '#c7a4f0', glow: 'rgba(199,164,240,0.45)' },
+    arcane: { border: '#c0b0e8', glow: 'rgba(192,176,232,0.45)' },
+    nature: { border: '#a8d0a0', glow: 'rgba(168,208,160,0.45)' },
+    earth: { border: '#d8b878', glow: 'rgba(216,184,120,0.4)' },
+    steel: { border: '#e6ecf4', glow: 'rgba(230,236,244,0.35)' },
+    rust: { border: '#d9a56c', glow: 'rgba(217,165,108,0.4)' },
+});
 
 /**
  * SVG 아이콘 경로 — 장비 타입별 실루엣
@@ -61,7 +74,12 @@ const ItemIcon = ({ item, size = 24, showBorder = false, className = '', hideSig
     const [assetState, setAssetState] = useState({ key: iconKey, failed: false });
     const activeAssetState = assetState.key === iconKey ? assetState : { key: iconKey, failed: false };
     const previewVariant = size >= 34 ? 'card' : 'default';
-    const shellStyle = showBorder ? {
+    const isDedicatedSignature = hasDedicatedSignatureArt(item);
+    const signatureRing = isDedicatedSignature
+        ? SIGNATURE_TONE_RING[getSignatureMetadata(item)?.tone] || SIGNATURE_TONE_RING.holy
+        : null;
+
+    const baseShell = showBorder ? {
         border: `1.5px solid ${color}40`,
         borderRadius: 8,
         background: `radial-gradient(circle at 30% 24%, ${color}18, transparent 42%), linear-gradient(180deg, rgba(20,24,30,0.98) 0%, rgba(8,10,14,1) 100%)`,
@@ -72,6 +90,11 @@ const ItemIcon = ({ item, size = 24, showBorder = false, className = '', hideSig
         background: 'linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(8,10,14,1) 100%)',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
     };
+    const shellStyle = signatureRing ? {
+        ...baseShell,
+        border: `1.5px solid ${signatureRing.border}`,
+        boxShadow: `${baseShell.boxShadow}, 0 0 0 1px ${signatureRing.border}22, 0 0 12px ${signatureRing.glow}`,
+    } : baseShell;
 
     const badgeSize = Math.max(8, Math.round(size * 0.32));
 
@@ -79,6 +102,7 @@ const ItemIcon = ({ item, size = 24, showBorder = false, className = '', hideSig
         <div
             className={`relative inline-flex items-center justify-center shrink-0 ${className}`}
             data-item-icon-style={isEquipmentItem ? 'equipment-asset' : 'asset'}
+            data-signature-item={isDedicatedSignature ? 'true' : undefined}
             style={{
                 width: size,
                 height: size,

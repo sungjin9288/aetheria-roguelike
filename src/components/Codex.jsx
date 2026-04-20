@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { BookOpen, Sword, Shield, Bug, Hammer, Leaf } from 'lucide-react';
+import { BookOpen, Sword, Shield, Bug, Hammer, Leaf, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
@@ -10,6 +10,7 @@ import WeaponCodex from './codex/WeaponCodex';
 import MonsterCodex from './codex/MonsterCodex';
 import RecipeCodex from './codex/RecipeCodex';
 import MaterialCodex from './codex/MaterialCodex';
+import LegendaryCodex from './codex/LegendaryCodex';
 import CodexDiscoveryOverlay from './codex/CodexDiscoveryOverlay';
 
 const SUB_TABS = [
@@ -17,6 +18,7 @@ const SUB_TABS = [
     { id: 'monster', label: 'MONSTER', icon: Bug },
     { id: 'recipe', label: 'RECIPE', icon: Hammer },
     { id: 'material', label: 'MATERIAL', icon: Leaf },
+    { id: 'legend', label: 'LEGEND', icon: Sparkles },
 ];
 
 const Codex = ({ player, dispatch }) => {
@@ -106,7 +108,7 @@ const Codex = ({ player, dispatch }) => {
             )}
 
             {/* Sub Tabs */}
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
                 {SUB_TABS.map(tab => {
                     const Icon = tab.icon;
                     const active = subTab === tab.id;
@@ -145,6 +147,9 @@ const Codex = ({ player, dispatch }) => {
             )}
             {subTab === 'material' && (
                 <MaterialCodex codex={codex} />
+            )}
+            {subTab === 'legend' && (
+                <LegendaryCodex player={player} />
             )}
 
             {/* 도감 발견 오버레이 */}
