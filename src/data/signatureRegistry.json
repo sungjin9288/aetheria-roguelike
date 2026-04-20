@@ -36,6 +36,76 @@
       "category": "set-core",
       "tone": "holy",
       "artNote": "focus offhand · 황금 십자가 엠블럼 성서"
+    },
+    "드래곤로드 갑주": {
+      "spriteKey": "signature-armor-dragon-lord",
+      "tier": "legendary",
+      "category": "boss-drop",
+      "tone": "fire",
+      "artNote": "plate · 용비늘 텍스처 + 뿔 숄더"
+    },
+    "암흑 군주의 망토": {
+      "spriteKey": "signature-armor-dark-lord-cloak",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "shadow",
+      "artNote": "wide cloak · 어둠 트림 + 그림자 tendril hem"
+    },
+    "세계수의 지팡이": {
+      "spriteKey": "signature-weapon-worldtree-staff",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "nature",
+      "artNote": "2H staff · 가지형 상단 + 잎 액센트"
+    },
+    "차원 방패 이지스": {
+      "spriteKey": "signature-shield-aegis-dimension",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "holy",
+      "artNote": "hex tower shield · 프리즘 중앙 균열"
+    },
+    "에테르 그리모어": {
+      "spriteKey": "signature-shield-ether-grimoire",
+      "tier": "legendary",
+      "category": "set-core",
+      "tone": "arcane",
+      "artNote": "focus grimoire · 체인 잠금 + 룬 커버"
+    },
+    "천벌의 지팡이": {
+      "spriteKey": "signature-weapon-divine-wrath-staff",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "holy",
+      "artNote": "2H staff · 십자 상단 + 후광 링"
+    },
+    "빙결의 왕관검": {
+      "spriteKey": "signature-weapon-frost-crown-sword",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "frost",
+      "artNote": "1H · 크리스탈 블레이드 + 왕관 펌멜"
+    },
+    "바람의 궁극": {
+      "spriteKey": "signature-weapon-wind-ultimate-bow",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "nature",
+      "artNote": "2H longbow · 바람 깃털 액센트"
+    },
+    "그림자 절단기": {
+      "spriteKey": "signature-weapon-shadow-cutter",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "shadow",
+      "artNote": "1H · 곡선 falchion + 어둠 rim"
+    },
+    "성스러운 창": {
+      "spriteKey": "signature-weapon-holy-spear",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "holy",
+      "artNote": "2H spear · 황금 창촉 + 옆 나부끼는 깃발"
     }
   }
 }

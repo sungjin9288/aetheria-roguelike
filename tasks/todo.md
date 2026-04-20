@@ -208,6 +208,8 @@
 - 시그니처 시스템 인프라 완료 (RC 3): `src/data/signatureRegistry.json` + `src/data/signatureItems.js`로 하이브리드 Tier S/A/B 구조 정립, Tier S 5종(성검 에테르니아, 마왕의 대낫, 라그나로크, 차원 마왕의 낫, 천공 성전)의 고유 pixel art를 `scripts/generate_signature_sprites.py`로 생성하고 `itemVisuals.js`에 signature > named(tinted) > family fallback 우선순위 라우팅 추가, `hasDedicatedSignatureArt()` / `getSignatureMetadata()` API 노출, `tests/signature-items.test.js` 14개 테스트로 라우팅 회귀 방어, 전체 311/311 테스트 통과
 - 연기 결정: 아이템 200+개 전부 고유 art (Option A) → 제작비 6~12개월로 비현실적. 대신 Hybrid 채택(family + tint 90% / dedicated 10% × 10~20개). 다음 사이클에 Tier A 10종 추가.
 - 연기 결정: base avatar (adventurer.png 등 52종) 레퍼런스-핏 리드로잉 → 절차적 생성으로는 Octopath 품질 불가, 외부 픽셀 아티스트 or 수작업 필요. 현 base sprite는 family overlay + 새 팔레트와 outline tone이 불일치하므로 다음 사이클에 (a) post-processing 스크립트로 outline만 dark plum 정규화하거나 (b) 핸드 아트 커미션 둘 중 하나 결정 필요
+- 아바타 outline 정규화 패스 완료 (RC 4a): `scripts/analyze_avatar_outlines.py`로 52종 base avatar sprite의 outline 분포를 분석한 결과 대부분 pure black(#000000) 지배, `scripts/normalize_avatar_outlines.py`로 luminance<8 near-black 픽셀만 보수적으로 `#2a1f2e`(artPalette 기준 dark plum)로 치환 — 52개 파일 × 260만 outline 픽셀 정규화, shaded 영역은 미변경. family overlay와 outline tone이 통일되어 composite 렌더링 시 이질감 해소.
+- Tier A 10종 dedicated signature 아트 패스 완료 (RC 4b): 드래곤로드 갑주 · 암흑 군주의 망토 · 세계수의 지팡이 · 차원 방패 이지스 · 에테르 그리모어 · 천벌의 지팡이 · 빙결의 왕관검 · 바람의 궁극 · 그림자 절단기 · 성스러운 창 10종에 대해 `scripts/generate_signature_sprites.py`에 painter 추가, `src/data/signatureRegistry.json` 등록까지 완료. 총 15종 dedicated + 65종 tinted-named = 80개 signature 자산.
 
 ---
 

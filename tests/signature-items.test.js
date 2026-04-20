@@ -35,9 +35,10 @@ test('getSignatureSpriteKey returns the dedicated signature key when available',
 });
 
 test('getSignatureSpriteKey falls back to SPECIAL_ITEM_ICON_KEYS for named-but-not-dedicated items', () => {
-    // 빙결의 왕관검 is in SPECIAL but not in SIGNATURE_ITEM_REGISTRY
-    const key = getSignatureSpriteKey({ name: '빙결의 왕관검' });
-    assert.equal(key, SPECIAL_ITEM_ICON_KEYS['빙결의 왕관검']);
+    // 현자의 예복 is in SPECIAL_ITEM_ICON_KEYS but not in SIGNATURE_ITEM_REGISTRY (tinted fallback).
+    const key = getSignatureSpriteKey({ name: '현자의 예복' });
+    assert.equal(key, SPECIAL_ITEM_ICON_KEYS['현자의 예복']);
+    assert.doesNotMatch(key, /^signature-/);
 });
 
 test('getSignatureSpriteKey returns null for family items', () => {
@@ -45,9 +46,11 @@ test('getSignatureSpriteKey returns null for family items', () => {
     assert.equal(getSignatureSpriteKey(null), null);
 });
 
-test('hasDedicatedSignatureArt distinguishes Tier S dedicated art from tinted named items', () => {
+test('hasDedicatedSignatureArt distinguishes dedicated Tier S/A art from tinted named items', () => {
     assert.equal(hasDedicatedSignatureArt({ name: '성검 에테르니아' }), true);
-    assert.equal(hasDedicatedSignatureArt({ name: '빙결의 왕관검' }), false);
+    assert.equal(hasDedicatedSignatureArt({ name: '드래곤로드 갑주' }), true);
+    // 현자의 예복 is named-tinted only, no dedicated art
+    assert.equal(hasDedicatedSignatureArt({ name: '현자의 예복' }), false);
     assert.equal(hasDedicatedSignatureArt({ name: '녹슨 단검' }), false);
 });
 
