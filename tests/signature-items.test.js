@@ -34,11 +34,12 @@ test('getSignatureSpriteKey returns the dedicated signature key when available',
     assert.equal(key, 'signature-weapon-ethernia');
 });
 
-test('getSignatureSpriteKey falls back to SPECIAL_ITEM_ICON_KEYS for named-but-not-dedicated items', () => {
-    // 현자의 예복 is in SPECIAL_ITEM_ICON_KEYS but not in SIGNATURE_ITEM_REGISTRY (tinted fallback).
-    const key = getSignatureSpriteKey({ name: '현자의 예복' });
-    assert.equal(key, SPECIAL_ITEM_ICON_KEYS['현자의 예복']);
-    assert.doesNotMatch(key, /^signature-/);
+test('getSignatureSpriteKey returns null for tinted-named items (only dedicated get a key)', () => {
+    // 현자의 예복 is in SPECIAL_ITEM_ICON_KEYS but not in SIGNATURE_ITEM_REGISTRY.
+    // signatureItems는 순수 dedicated 레지스트리만 다루고, tinted 경로는 itemVisuals가 처리.
+    assert.equal(getSignatureSpriteKey({ name: '현자의 예복' }), null);
+    // itemVisuals 쪽에서는 여전히 tinted 키가 존재하는지 sanity check
+    assert.ok(SPECIAL_ITEM_ICON_KEYS['현자의 예복']);
 });
 
 test('getSignatureSpriteKey returns null for family items', () => {
@@ -94,12 +95,10 @@ test('SIGNATURE_CANDIDATES has 10-20 entries as per art direction guidance', () 
     assert.ok(SIGNATURE_CANDIDATES.length <= 25, `Expected at most 25 candidates, got ${SIGNATURE_CANDIDATES.length}`);
 });
 
-test('getSignatureItemCount returns a breakdown of dedicated + tinted signatures', () => {
+test('getSignatureItemCount returns dedicated count only (tinted fallback moved to itemVisuals)', () => {
     const count = getSignatureItemCount();
-    assert.ok(count.total > 0);
-    assert.ok(count.dedicated >= 5, 'At least 5 dedicated signatures (Tier S)');
-    assert.ok(count.namedTinted > 0);
-    assert.ok(count.total >= count.dedicated);
+    assert.ok(count.dedicated >= 20, 'At least 20 dedicated signatures (Tier S/A/B)');
+    assert.equal(count.total, count.dedicated);
 });
 
 test('SIGNATURE_ITEM_REGISTRY has the 5 Tier S entries with dedicated sprite keys', () => {

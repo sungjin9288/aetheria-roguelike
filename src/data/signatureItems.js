@@ -23,7 +23,12 @@
  */
 
 import registrySource from './signatureRegistry.json' with { type: 'json' };
-import { SPECIAL_ITEM_ICON_KEYS } from '../utils/itemVisuals.js';
+
+// NOTE: 이전 버전에서는 `../utils/itemVisuals.js`의 SPECIAL_ITEM_ICON_KEYS를 import했으나,
+// signatureItems는 src/data 소속(→ game-data 청크)이고 itemVisuals는 utils 소속(기본 청크)이라
+// Rollup chunk 그래프에 game-combat → game-data → game-combat circular warning이 발생했음.
+// tint-based named 아이템 탐색은 itemVisuals 쪽에서 이미 `SIGNATURE_SPRITE_KEY_BY_NAME` +
+// `SPECIAL_ITEM_ICON_KEYS` 폴백으로 처리하므로 signatureItems는 dedicated 레지스트리만 책임진다.
 
 /**
  * 현재 items.js는 id 필드를 쓰지 않으므로 name을 키로 한다.
@@ -79,24 +84,16 @@ export const SIGNATURE_CANDIDATES = Object.freeze([
     { itemName: '세계수의 로브', slot: 'armor', reason: '자연 세트 핵심' },
 ]);
 
-/** 아이템이 signature인지 확인 (고유 아트 보유 아이템). */
-export const isSignatureItem = (item) => {
-    if (!item) return false;
-    if (item.name && SIGNATURE_ITEM_REGISTRY[item.name]) return true;
-    if (item.name && SPECIAL_ITEM_ICON_KEYS[item.name]) return true;
-    return false;
-};
+/** 아이템이 dedicated signature인지 확인 (Tier S/A/B 고유 아트 보유). */
+export const isSignatureItem = (item) => (
+    Boolean(item?.name && SIGNATURE_ITEM_REGISTRY[item.name])
+);
 
-/** 아이템의 signature sprite key 반환 (없으면 null). 고유 art 우선, 없으면 tint 기반 named fallback. */
+/** 아이템의 dedicated signature sprite key 반환 (없으면 null). */
 export const getSignatureSpriteKey = (item) => {
     if (!item || !item.name) return null;
-    if (SIGNATURE_ITEM_REGISTRY[item.name]) {
-        return SIGNATURE_ITEM_REGISTRY[item.name].spriteKey;
-    }
-    if (SPECIAL_ITEM_ICON_KEYS[item.name]) {
-        return SPECIAL_ITEM_ICON_KEYS[item.name];
-    }
-    return null;
+    const meta = SIGNATURE_ITEM_REGISTRY[item.name];
+    return meta ? meta.spriteKey : null;
 };
 
 /** 진짜 고유 아트가 있는지 (tint 기반 named는 제외) — UI badge/effects에 사용. */
@@ -110,11 +107,8 @@ export const getSignatureMetadata = (item) => {
     return SIGNATURE_ITEM_REGISTRY[item.name] || null;
 };
 
-/** 현재 signature를 가진 아이템 수 (telemetry용). */
+/** 현재 dedicated signature를 가진 아이템 수 (telemetry용). */
 export const getSignatureItemCount = () => {
-    const dedicated = new Set(Object.keys(SIGNATURE_ITEM_REGISTRY));
-    const namedTinted = new Set(Object.keys(SPECIAL_ITEM_ICON_KEYS));
-    // SIGNATURE_ITEM_REGISTRY와 SPECIAL_ITEM_ICON_KEYS는 같은 name을 다룰 수 있으므로 union.
-    const all = new Set([...dedicated, ...namedTinted]);
-    return { total: all.size, dedicated: dedicated.size, namedTinted: namedTinted.size };
+    const dedicated = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
+    return { total: dedicated, dedicated };
 };

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp, Star, Skull, Moon, GraduationCap, Hammer, RotateCcw, X, Shield } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { MOTION } from '../utils/animationConfig';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { GS } from '../reducers/gameStates';
