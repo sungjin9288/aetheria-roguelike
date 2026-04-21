@@ -156,6 +156,43 @@
       "tone": "nature",
       "setGroup": "worldtree",
       "artNote": "robe · 잎 소매 + 가지 허리띠 + 넝쿨 중앙 트림"
+    },
+    "에테르 거인의 대검": {
+      "spriteKey": "signature-weapon-ether-giant-greatsword",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "holy",
+      "setGroup": "celestial",
+      "artNote": "2H greatsword · 거인 룬 슬릿 블레이드 + 2겹 crossguard"
+    },
+    "영혼 절단자": {
+      "spriteKey": "signature-weapon-soul-reaper",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "shadow",
+      "setGroup": "shadow-lord",
+      "artNote": "1H dagger · 훅형 블레이드 + 영혼 오브 + 혼 연기"
+    },
+    "대지의 심판": {
+      "spriteKey": "signature-weapon-earth-verdict",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "earth",
+      "artNote": "2H warhammer · 네모 대형 헤드 + 대지 룬 + 중앙 코어"
+    },
+    "심해의 수호복": {
+      "spriteKey": "signature-armor-abyssal-guardian",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "frost",
+      "artNote": "plate · 비늘 표면 + 산호 숄더 + 심해 진주 코어"
+    },
+    "혼돈의 갑주": {
+      "spriteKey": "signature-armor-chaos-armor",
+      "tier": "legendary",
+      "category": "unique-weapon",
+      "tone": "shadow",
+      "artNote": "plate · 가시 숄더 + 혼돈 Z-crack + 공허 코어"
     }
   }
 }

@@ -55,6 +55,7 @@ export const DROP_TABLES = {
         { item: '철광석', rate: 0.6, qty: [2, 4] },
         { item: '미스릴 원석', rate: 0.2 },
         { item: '강화 재료', rate: 0.24, qty: [1, 2] },
+        { item: '대지의 심판', rate: 0.02 },
     ],
     // ── 동굴 ──
     '동굴 트롤': [
@@ -117,6 +118,7 @@ export const DROP_TABLES = {
         { item: '혼돈의 지팡이', rate: 0.05 },
         { item: '암흑 군주의 망토', rate: 0.04 },
         { item: '그림자 절단기', rate: 0.03 },
+        { item: '영혼 절단자', rate: 0.03 },
     ],
     '데스나이트': [
         { item: '어둠의 정수', rate: 0.5, qty: [1, 2] },
@@ -155,6 +157,7 @@ export const DROP_TABLES = {
         { item: '청해 단검', rate: 0.08 },
         { item: '심해의 수호복', rate: 0.06 },
     ],
+    // signature 심해의 수호복은 이미 0.06으로 드롭됨 — 추가 Tier C 경로는 중복 방지
     // ── 에테르 관문 ──
     '차원 파쇄자': [
         { item: '고대 각인석', rate: 0.45 },
@@ -170,6 +173,7 @@ export const DROP_TABLES = {
         { item: '엘릭서', rate: 0.3 },
         { item: '드래곤로드 갑주', rate: 0.04 },
         { item: '에테르 그리모어', rate: 0.03 },
+        { item: '에테르 거인의 대검', rate: 0.03 },
     ],
     // ── 혼돈 ──
     '혼돈의 화신': [
@@ -178,6 +182,7 @@ export const DROP_TABLES = {
         { item: '혼돈의 결정', rate: 0.3 },
         { item: '엘릭서', rate: 0.35 },
         { item: '광기의 갑주', rate: 0.04 },
+        { item: '혼돈의 갑주', rate: 0.03 },
     ],
 
     // ══════ Phase 4B 확장 드롭 ══════

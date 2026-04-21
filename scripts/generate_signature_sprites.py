@@ -676,6 +676,180 @@ def paint_worldtree_robe_wearable(draw, p, ox, oy, scale=2):
     rect(draw, 15, 9, 2, 10, p["trim"], ox, oy, scale)
 
 
+# ───────────────────────────────────────────────────────────────────────
+# Tier C (5종) — 추가 엔드게임 커버리지 (signature 20 → 25)
+# ───────────────────────────────────────────────────────────────────────
+
+# 21. 에테르 거인의 대검 — 빛 2H greatsword, 거인 룬 + 2겹 crossguard
+def paint_ether_giant_greatsword_item(draw, p, ox, oy, scale=4):
+    # massive blade w/ rune slit
+    poly(draw, [(11, 1), (15, 3), (15, 17), (11, 19), (7, 17), (7, 3)], p["outline"], ox, oy, scale)
+    poly(draw, [(8, 3), (11, 2), (14, 3), (14, 16), (11, 18), (8, 16)], p["shade"], ox, oy, scale)
+    poly(draw, [(9, 5), (13, 5), (13, 15), (11, 17), (9, 15)], p["mid"], ox, oy, scale)
+    rect(draw, 10, 6, 2, 10, p["hi"], ox, oy, scale)
+    # rune slits in the blade (ether giant mark)
+    rect(draw, 11, 8, 1, 1, p["trim"], ox, oy, scale)
+    rect(draw, 11, 11, 1, 1, p["trim"], ox, oy, scale)
+    rect(draw, 11, 14, 1, 1, p["trim"], ox, oy, scale)
+    # double crossguard (upper)
+    rect(draw, 4, 19, 15, 1, p["outline"], ox, oy, scale)
+    rect(draw, 5, 19, 13, 1, p["trim"], ox, oy, scale)
+    # lower guard
+    rect(draw, 3, 21, 17, 1, p["outline"], ox, oy, scale)
+    rect(draw, 4, 21, 15, 1, p["trim"], ox, oy, scale)
+    # long grip (two-handed)
+    rect(draw, 10, 22, 3, 8, p["outline"], ox, oy, scale)
+    rect(draw, 11, 23, 1, 6, (113, 72, 38, 255), ox, oy, scale)
+    # pommel
+    rect(draw, 9, 30, 5, 2, p["outline"], ox, oy, scale)
+    rect(draw, 10, 30, 3, 1, p["trim"], ox, oy, scale)
+
+
+def paint_ether_giant_greatsword_wearable(draw, p, ox, oy, scale=2):
+    poly(draw, [(13, 1), (17, 3), (17, 18), (13, 20), (9, 18), (9, 3)], p["outline"], ox, oy, scale)
+    rect(draw, 12, 6, 2, 11, p["hi"], ox, oy, scale)
+    rect(draw, 13, 9, 1, 1, p["trim"], ox, oy, scale)
+    rect(draw, 13, 13, 1, 1, p["trim"], ox, oy, scale)
+    rect(draw, 6, 20, 15, 1, p["outline"], ox, oy, scale)
+    rect(draw, 5, 22, 17, 1, p["outline"], ox, oy, scale)
+    rect(draw, 12, 23, 3, 8, p["outline"], ox, oy, scale)
+    rect(draw, 13, 24, 1, 6, (113, 72, 38, 255), ox, oy, scale)
+
+
+# 22. 영혼 절단자 — 어둠 1H dagger, 영혼 연기 blade
+def paint_soul_reaper_item(draw, p, ox, oy, scale=4):
+    # curved dagger blade (hooked tip)
+    poly(draw, [(10, 3), (13, 4), (14, 7), (13, 12), (11, 16), (9, 16), (8, 12), (9, 7)], p["outline"], ox, oy, scale)
+    poly(draw, [(11, 5), (12, 6), (12, 12), (11, 15), (10, 15), (10, 12), (10, 7)], p["shade"], ox, oy, scale)
+    rect(draw, 11, 7, 1, 7, p["mid"], ox, oy, scale)
+    # soul wisp accents
+    dot(draw, 9, 9, p["hi"], ox, oy, scale)
+    dot(draw, 13, 11, p["hi"], ox, oy, scale)
+    # crossguard (short, skull-like)
+    rect(draw, 7, 16, 9, 2, p["outline"], ox, oy, scale)
+    rect(draw, 8, 16, 7, 1, p["trim"], ox, oy, scale)
+    # soul orb in guard center
+    rect(draw, 10, 16, 2, 1, p["hi"], ox, oy, scale)
+    # grip (short 1H)
+    rect(draw, 10, 18, 3, 5, p["outline"], ox, oy, scale)
+    rect(draw, 11, 19, 1, 3, (113, 72, 38, 255), ox, oy, scale)
+    # pommel (small)
+    rect(draw, 9, 23, 5, 2, p["outline"], ox, oy, scale)
+    rect(draw, 10, 23, 3, 1, p["trim"], ox, oy, scale)
+    # rising soul smoke particles
+    dot(draw, 8, 2, p["trim"], ox, oy, scale)
+    dot(draw, 14, 3, p["trim"], ox, oy, scale)
+
+
+def paint_soul_reaper_wearable(draw, p, ox, oy, scale=2):
+    poly(draw, [(12, 4), (15, 5), (16, 9), (15, 14), (13, 18), (11, 18), (9, 14), (11, 9), (11, 5)], p["outline"], ox, oy, scale)
+    rect(draw, 13, 9, 1, 7, p["mid"], ox, oy, scale)
+    dot(draw, 15, 13, p["hi"], ox, oy, scale)
+    rect(draw, 9, 18, 9, 2, p["outline"], ox, oy, scale)
+    rect(draw, 12, 20, 3, 5, p["outline"], ox, oy, scale)
+    rect(draw, 13, 21, 1, 3, (113, 72, 38, 255), ox, oy, scale)
+
+
+# 23. 대지의 심판 — 대지 2H warhammer, 네모난 대형 해머 머리
+def paint_earth_verdict_item(draw, p, ox, oy, scale=4):
+    # large rectangular hammer head
+    rect(draw, 4, 3, 17, 10, p["outline"], ox, oy, scale)
+    rect(draw, 5, 4, 15, 8, p["shade"], ox, oy, scale)
+    rect(draw, 7, 5, 11, 6, p["mid"], ox, oy, scale)
+    # earth rune (crossed lines)
+    rect(draw, 10, 6, 1, 4, p["trim"], ox, oy, scale)
+    rect(draw, 14, 6, 1, 4, p["trim"], ox, oy, scale)
+    rect(draw, 9, 8, 7, 1, p["trim"], ox, oy, scale)
+    # center gem (earth core)
+    rect(draw, 11, 7, 3, 2, p["hi"], ox, oy, scale)
+    # rivets at corners
+    dot(draw, 5, 4, p["trim"], ox, oy, scale)
+    dot(draw, 19, 4, p["trim"], ox, oy, scale)
+    dot(draw, 5, 11, p["trim"], ox, oy, scale)
+    dot(draw, 19, 11, p["trim"], ox, oy, scale)
+    # shaft
+    rect(draw, 11, 13, 3, 16, p["outline"], ox, oy, scale)
+    rect(draw, 12, 14, 1, 14, (113, 72, 38, 255), ox, oy, scale)
+    # pommel ring
+    rect(draw, 10, 29, 5, 2, p["outline"], ox, oy, scale)
+    rect(draw, 11, 29, 3, 1, p["trim"], ox, oy, scale)
+
+
+def paint_earth_verdict_wearable(draw, p, ox, oy, scale=2):
+    rect(draw, 5, 3, 19, 11, p["outline"], ox, oy, scale)
+    rect(draw, 7, 4, 15, 9, p["shade"], ox, oy, scale)
+    rect(draw, 9, 5, 11, 7, p["mid"], ox, oy, scale)
+    rect(draw, 13, 7, 3, 2, p["hi"], ox, oy, scale)
+    rect(draw, 13, 14, 3, 17, p["outline"], ox, oy, scale)
+    rect(draw, 14, 15, 1, 15, (113, 72, 38, 255), ox, oy, scale)
+
+
+# 24. 심해의 수호복 — 냉기 plate armor, 비늘 표면 + 산호 액센트
+def paint_abyssal_guardian_item(draw, p, ox, oy, scale=4):
+    # plate silhouette (broader bottom)
+    poly(draw, [(5, 4), (8, 2), (16, 2), (19, 4), (22, 9), (21, 25), (17, 29), (7, 29), (3, 25), (2, 9)], p["outline"], ox, oy, scale)
+    poly(draw, [(6, 5), (9, 3), (15, 3), (18, 5), (20, 9), (19, 24), (16, 28), (8, 28), (5, 24), (4, 9)], p["shade"], ox, oy, scale)
+    poly(draw, [(8, 7), (11, 5), (13, 5), (16, 7), (18, 10), (17, 23), (15, 26), (9, 26), (7, 23), (6, 10)], p["mid"], ox, oy, scale)
+    # scale pattern (3 rows of diamond scales)
+    dot(draw, 10, 11, p["trim"], ox, oy, scale)
+    dot(draw, 14, 11, p["trim"], ox, oy, scale)
+    dot(draw, 12, 13, p["trim"], ox, oy, scale)
+    dot(draw, 10, 15, p["trim"], ox, oy, scale)
+    dot(draw, 14, 15, p["trim"], ox, oy, scale)
+    dot(draw, 12, 17, p["trim"], ox, oy, scale)
+    dot(draw, 10, 19, p["trim"], ox, oy, scale)
+    dot(draw, 14, 19, p["trim"], ox, oy, scale)
+    # coral accents on shoulders
+    rect(draw, 5, 7, 2, 2, p["hi"], ox, oy, scale)
+    rect(draw, 17, 7, 2, 2, p["hi"], ox, oy, scale)
+    # belt
+    rect(draw, 6, 22, 13, 2, p["outline"], ox, oy, scale)
+    rect(draw, 7, 22, 11, 1, p["trim"], ox, oy, scale)
+    # center pearl (abyssal core)
+    rect(draw, 11, 12, 2, 2, p["hi"], ox, oy, scale)
+
+
+def paint_abyssal_guardian_wearable(draw, p, ox, oy, scale=2):
+    poly(draw, [(6, 4), (10, 2), (22, 2), (26, 4), (29, 10), (28, 28), (24, 31), (8, 31), (4, 28), (3, 10)], p["outline"], ox, oy, scale)
+    poly(draw, [(8, 5), (11, 4), (21, 4), (24, 5), (27, 11), (26, 27), (23, 30), (9, 30), (6, 27), (5, 11)], p["shade"], ox, oy, scale)
+    poly(draw, [(10, 7), (13, 6), (19, 6), (22, 7), (24, 11), (23, 25), (20, 28), (12, 28), (9, 25), (8, 11)], p["mid"], ox, oy, scale)
+    dot(draw, 14, 14, p["trim"], ox, oy, scale)
+    dot(draw, 18, 14, p["trim"], ox, oy, scale)
+    dot(draw, 16, 18, p["trim"], ox, oy, scale)
+    rect(draw, 15, 12, 2, 3, p["hi"], ox, oy, scale)
+
+
+# 25. 혼돈의 갑주 — 어둠 plate armor, 가시 어깨 + 혼돈 균열 가슴
+def paint_chaos_armor_item(draw, p, ox, oy, scale=4):
+    # spiked shoulder blades (sharp inward)
+    poly(draw, [(2, 5), (7, 2), (9, 8), (4, 11)], p["outline"], ox, oy, scale)
+    poly(draw, [(22, 5), (17, 2), (15, 8), (20, 11)], p["outline"], ox, oy, scale)
+    poly(draw, [(3, 6), (6, 4), (8, 8), (5, 10)], p["shade"], ox, oy, scale)
+    poly(draw, [(21, 6), (18, 4), (16, 8), (19, 10)], p["shade"], ox, oy, scale)
+    # main chaos plate
+    poly(draw, [(5, 9), (8, 7), (16, 7), (19, 9), (21, 12), (20, 26), (17, 29), (7, 29), (4, 26), (3, 12)], p["outline"], ox, oy, scale)
+    poly(draw, [(7, 10), (9, 8), (15, 8), (17, 10), (19, 12), (18, 25), (16, 28), (8, 28), (6, 25), (5, 12)], p["shade"], ox, oy, scale)
+    poly(draw, [(8, 11), (11, 10), (13, 10), (16, 11), (17, 13), (16, 24), (14, 27), (10, 27), (8, 24), (7, 13)], p["mid"], ox, oy, scale)
+    # chaos crack (jagged Z shape on chest)
+    poly(draw, [(10, 13), (13, 15), (11, 17), (14, 19), (12, 21), (14, 23)], p["trim"], ox, oy, scale)
+    # chaos core (void center)
+    rect(draw, 11, 18, 2, 3, p["hi"], ox, oy, scale)
+    rect(draw, 11, 19, 2, 1, p["outline"], ox, oy, scale)
+    # bottom spike hem
+    poly(draw, [(7, 28), (9, 31), (11, 28)], p["outline"], ox, oy, scale)
+    poly(draw, [(13, 28), (15, 31), (17, 28)], p["outline"], ox, oy, scale)
+
+
+def paint_chaos_armor_wearable(draw, p, ox, oy, scale=2):
+    poly(draw, [(2, 5), (8, 2), (10, 8), (5, 11)], p["outline"], ox, oy, scale)
+    poly(draw, [(28, 5), (22, 2), (20, 8), (25, 11)], p["outline"], ox, oy, scale)
+    poly(draw, [(6, 9), (10, 7), (20, 7), (24, 9), (26, 12), (25, 26), (22, 29), (8, 29), (5, 26), (4, 12)], p["outline"], ox, oy, scale)
+    poly(draw, [(8, 10), (12, 8), (18, 8), (22, 10), (24, 13), (23, 25), (20, 28), (10, 28), (7, 25), (6, 13)], p["shade"], ox, oy, scale)
+    poly(draw, [(10, 12), (14, 11), (16, 11), (20, 12), (21, 14), (20, 24), (18, 26), (12, 26), (10, 24), (9, 14)], p["mid"], ox, oy, scale)
+    poly(draw, [(13, 14), (16, 16), (14, 18), (17, 20), (15, 22)], p["trim"], ox, oy, scale)
+    rect(draw, 14, 19, 2, 3, p["hi"], ox, oy, scale)
+
+
 SIGNATURES: tuple[Signature, ...] = (
     Signature(
         slug="signature-weapon-ethernia",
@@ -838,6 +1012,47 @@ SIGNATURES: tuple[Signature, ...] = (
         family="armor",
         item_painter=paint_worldtree_robe_item,
         wearable_painter=paint_worldtree_robe_wearable,
+    ),
+    # ── Tier C ──────────────────────────────────────────────
+    Signature(
+        slug="signature-weapon-ether-giant-greatsword",
+        item_name="에테르 거인의 대검",
+        tone_key="holy",
+        family="weapon",
+        item_painter=paint_ether_giant_greatsword_item,
+        wearable_painter=paint_ether_giant_greatsword_wearable,
+    ),
+    Signature(
+        slug="signature-weapon-soul-reaper",
+        item_name="영혼 절단자",
+        tone_key="shadow",
+        family="weapon",
+        item_painter=paint_soul_reaper_item,
+        wearable_painter=paint_soul_reaper_wearable,
+    ),
+    Signature(
+        slug="signature-weapon-earth-verdict",
+        item_name="대지의 심판",
+        tone_key="earth",
+        family="weapon",
+        item_painter=paint_earth_verdict_item,
+        wearable_painter=paint_earth_verdict_wearable,
+    ),
+    Signature(
+        slug="signature-armor-abyssal-guardian",
+        item_name="심해의 수호복",
+        tone_key="frost",
+        family="armor",
+        item_painter=paint_abyssal_guardian_item,
+        wearable_painter=paint_abyssal_guardian_wearable,
+    ),
+    Signature(
+        slug="signature-armor-chaos-armor",
+        item_name="혼돈의 갑주",
+        tone_key="shadow",
+        family="armor",
+        item_painter=paint_chaos_armor_item,
+        wearable_painter=paint_chaos_armor_wearable,
     ),
 )
 

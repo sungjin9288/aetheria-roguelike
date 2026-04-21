@@ -51,12 +51,14 @@ test('signaturesDiscovered target counts 5 after 5 discoveries', () => {
     assert.equal(isAchievementUnlocked(achievement, player), true);
 });
 
-test('signaturesDiscovered target reaches 20 when all are discovered', () => {
+test('signaturesDiscovered target returns full registry size when all discovered; ach_sig_20 unlocks at goal', () => {
     const allNames = Object.keys(SIGNATURE_ITEM_REGISTRY);
     const codex = mockCodexForSignatures(allNames);
     const player = { stats: { codex } };
     const achievement = ACHIEVEMENTS.find((a) => a.id === 'ach_sig_20');
-    assert.equal(getAchievementCurrentValue(achievement, player), 20);
+    // registry가 goal(20)보다 커져도 count는 실제 등록 수 — achievement는 goal 이상이면 unlock
+    assert.equal(getAchievementCurrentValue(achievement, player), allNames.length);
+    assert.ok(allNames.length >= achievement.goal, `registry size ${allNames.length} must meet goal ${achievement.goal}`);
     assert.equal(isAchievementUnlocked(achievement, player), true);
 });
 
