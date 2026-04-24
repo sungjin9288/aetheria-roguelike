@@ -1051,8 +1051,8 @@ export const CombatEngine = {
         return syncQuestProgress(player, enemyName, DB.QUESTS);
     },
 
-    processLoot(enemy, player = null) {
-        return _processLoot(enemy, player);
+    processLoot(enemy, player = null, signaturePityMult = 1.0) {
+        return _processLoot(enemy, player, signaturePityMult);
     },
 
     /**

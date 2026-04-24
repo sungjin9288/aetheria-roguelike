@@ -4,6 +4,7 @@ import { DROP_TABLES } from '../data/dropTables.js';
 import { BALANCE } from '../data/constants.js';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
 import { MSG } from '../data/messages.js';
+import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 
 /**
  * 적의 기본 이름을 해석합니다 (접두사 제거).
@@ -24,15 +25,17 @@ export const resolveEnemyBaseName = (enemy) => {
  * CombatEngine.processLoot와 동일한 로직의 독립 순수 함수 버전.
  * @param {Object} enemy
  * @param {Object|null} player
+ * @param {number} [signaturePityMult=1.0] - signature 드롭에만 적용되는 pity 배율
  * @returns {{ items: Object[], logs: Object[] }}
  */
-export const processLoot = (enemy, player = null) => {
+export const processLoot = (enemy, player = null, signaturePityMult = 1.0) => {
     const items = [];
     const logs = [];
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
     const dropRateMult = 1 + (relics.find((relic) => relic.effect === 'drop_rate')?.val || 0);
     const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
+    const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
 
     const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
 
@@ -40,7 +43,10 @@ export const processLoot = (enemy, player = null) => {
     const enrichedList = DROP_TABLES[lootKey] || DROP_TABLES[enemy.name];
     if (enrichedList) {
         enrichedList.forEach((entry) => {
-            const chance = Math.min(1, entry.rate * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
+            // Signature 아이템에만 pity 배율 적용 (일반 아이템 드롭률은 변동 없음)
+            const isSignature = Boolean(SIGNATURE_ITEM_REGISTRY[entry.item]);
+            const entryPityMult = isSignature ? pityMult : 1;
+            const chance = Math.min(1, entry.rate * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult * entryPityMult);
             if (Math.random() < chance) {
                 const itemData = allItems.find((i) => i.name === entry.item);
                 if (!itemData) return;

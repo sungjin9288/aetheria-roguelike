@@ -9,6 +9,8 @@ import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyMana
 import { SEASON_XP } from '../../data/seasonPass';
 import { addCombatDigestLogs, getLootUpgradeHint } from './_helpers';
 import { applyAbyssFloorAdvance, handleDemonKingSlain } from './combatBossHandlers';
+import { getSignaturePityMultiplier } from '../../utils/signaturePity';
+import { isSignatureItem } from '../../data/signatureItems.js';
 
 /**
  * 전투 승리 공통 후처리.
@@ -47,12 +49,33 @@ export const handleVictoryOutcome = ({
     updatedPlayer = { ...updatedPlayer, quests: questResult.updatedQuests };
     if (questResult.completedCount > 0) addLog('system', MSG.QUEST_CONDITION_MET(questResult.completedCount));
 
-    // loot
-    const lootResult = CombatEngine.processLoot(deadEnemy, updatedPlayer);
+    // loot — signature pity 배율 적용 (bad-luck 보호막)
+    const signaturePityMult = getSignaturePityMultiplier(updatedPlayer.stats?.signaturePity);
+    const lootResult = CombatEngine.processLoot(deadEnemy, updatedPlayer, signaturePityMult);
     lootResult.logs.forEach((log) => addLog(log.type, log.text));
     if (lootResult.items.length > 0) {
         updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
         updatedPlayer = registerLootToCodex(updatedPlayer, lootResult.items);
+    }
+
+    // signature pity bookkeeping:
+    //  - signature 하나라도 드롭 → pity = 0
+    //  - 보스 토벌 + signature 미획득 → pity += 1
+    //  - 일반 몹은 pity 영향 없음
+    const signatureDropped = lootResult.items.some((it) => isSignatureItem(it));
+    const prevPity = updatedPlayer.stats?.signaturePity || 0;
+    if (signatureDropped) {
+        if (prevPity > 0) {
+            updatedPlayer = {
+                ...updatedPlayer,
+                stats: { ...updatedPlayer.stats, signaturePity: 0 },
+            };
+        }
+    } else if (deadEnemy?.isBoss) {
+        updatedPlayer = {
+            ...updatedPlayer,
+            stats: { ...updatedPlayer.stats, signaturePity: prevPity + 1 },
+        };
     }
 
     // codex
