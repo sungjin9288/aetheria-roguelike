@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Sword, Package, X, Radar } from 'lucide-react';
+import { Sword, Package, X, Radar, Sparkles } from 'lucide-react';
 import { getPostCombatAnalysis } from '../utils/outcomeAnalysis';
+import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 
 const METRIC_CARD_CLASS = {
@@ -26,6 +27,10 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
         : Array.isArray(result.loot)
             ? result.loot
             : [];
+    // signature 각인은 Field Report 상단에 별도 gold row로 강조.
+    // 일반 lootSummary에서는 제외해 중복 표시 방지.
+    const signatureLoot = droppedItems.filter((name) => typeof name === 'string' && isSignatureItem({ name }));
+    const nonSignatureLoot = droppedItems.filter((name) => !(typeof name === 'string' && isSignatureItem({ name })));
     const hasLevelUp = Boolean(result.leveledUp);
     const hpLow = typeof result.hpLow === 'boolean'
         ? result.hpLow
@@ -64,8 +69,8 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
         traitHint ? { title: '성향 공명', name: traitHint.name, summary: traitHint.summary, tone: 'purple' } : null,
     ].filter(Boolean);
     const primarySignal = rewardSignals[0] || null;
-    const lootSummary = droppedItems.length > 0
-        ? `${droppedItems.slice(0, 2).join(' · ')}${droppedItems.length > 2 ? ` 외 ${droppedItems.length - 2}` : ''}`
+    const lootSummary = nonSignatureLoot.length > 0
+        ? `${nonSignatureLoot.slice(0, 2).join(' · ')}${nonSignatureLoot.length > 2 ? ` 외 ${nonSignatureLoot.length - 2}` : ''}`
         : null;
     const summaryBadges = analysis.rewardHighlights.slice(0, 2);
 
@@ -73,8 +78,28 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }) => {
 
     const renderMobilePrimaryPanel = () => (
         <div className="space-y-2.5 rounded-[1.15rem] border border-white/8 bg-black/18 px-3 py-3">
-            {(lootSummary || primarySignal) && (
+            {(lootSummary || primarySignal || signatureLoot.length > 0) && (
                 <div className="space-y-1.5">
+                    {signatureLoot.length > 0 && (
+                        <div
+                            data-testid="post-combat-legendary"
+                            className="rounded-[0.95rem] border border-[#f6e7a2]/40 px-2.5 py-2 shadow-[0_2px_10px_rgba(246,231,162,0.18)]"
+                            style={{
+                                background: 'linear-gradient(180deg, rgba(246,231,162,0.14) 0%, rgba(64,48,12,0.4) 100%)',
+                            }}
+                        >
+                            <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.18em] text-[#f6e7a2]">
+                                <Sparkles size={11} />
+                                Legendary
+                            </div>
+                            <div className="mt-1 text-sm font-rajdhani font-bold text-[#fef3c7] leading-tight">
+                                {signatureLoot.join(' · ')}
+                            </div>
+                            <div className="mt-0.5 text-[10px] font-fira text-[#f6e7a2]/80">
+                                전설 각인 {signatureLoot.length > 1 ? `${signatureLoot.length}종 ` : ''}획득 — 도감에 기록됨
+                            </div>
+                        </div>
+                    )}
                     {lootSummary && (
                         <div className="flex items-start gap-2 text-xs font-fira text-slate-200/86">
                             <Package size={13} className="mt-0.5 text-[#d5b180]" />
