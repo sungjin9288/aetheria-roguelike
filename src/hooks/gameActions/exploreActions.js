@@ -5,6 +5,7 @@ import { AI_SERVICE } from '../../services/aiService';
 import { toArray } from '../../utils/gameUtils';
 import { rollExplorationEvent, spawnEnemy, applyBattleStartRelics } from '../../utils/exploreUtils';
 import { getBossSignatureDrops } from '../../utils/bossSignatureHint';
+import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { getMapPacingProfile, getNarrativeEventChance, getQuietExplorationChance } from '../../utils/explorationPacing';
 import { getRunBuildProfile } from '../../utils/runProfileUtils';
 import { applyDynamicDifficulty, enrichSnapshotWithDifficulty } from '../../systems/DifficultyManager';
@@ -169,6 +170,12 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
                     const top = sigDrops[0];
                     const topPct = Math.max(1, Math.round(top.rate * 100));
                     addLog('legendary', MSG.SIGNATURE_BOSS_HINT(mStats.baseName, sigDrops.length, top.name, topPct));
+                    // pity 공명 피드백 — 보스 연속 무획득 누적 시 배율 표기
+                    const pityMult = getSignaturePityMultiplier(player.stats?.signaturePity);
+                    if (pityMult > 1) {
+                        const pct = Math.round((pityMult - 1) * 100);
+                        addLog('legendary', MSG.SIGNATURE_PITY_RESONANCE(pct, player.stats.signaturePity));
+                    }
                 }
             }
             addStoryLog('encounter', { loc: player.loc, name: baseName });

@@ -57,6 +57,7 @@ export const MSG = {
             ? `✦ [${bossName}] 전설 각인 ${count}종 드롭 가능 — 최고 [${topName}] ${topPct}%`
             : `✦ [${bossName}] 전설 각인 [${topName}] 드롭 가능 — ${topPct}%`
     ),
+    SIGNATURE_PITY_RESONANCE: (pct, pity) => `✦ 각인 공명 +${pct}% — 보스 ${pity}회 연속 무획득 보정 적용`,
     LEGACY_ESSENCE: (n) => `레거시 에센스 +${n}`,
     LEGACY_RANK: (n) => `레거시 랭크 ${n} 달성!`,
     LEVEL_UP: (lv) => `레벨 업! Lv.${lv}`,
