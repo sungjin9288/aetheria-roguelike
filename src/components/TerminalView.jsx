@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
-import { Bot, AlertTriangle, CheckCircle, Terminal, ChevronUp, Filter } from 'lucide-react';
+import { Bot, AlertTriangle, CheckCircle, Sparkles, Terminal, ChevronUp, Filter } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
@@ -51,6 +51,11 @@ const LOG_STYLES = {
         bg: 'bg-[linear-gradient(90deg,rgba(213,177,128,0.12)_0%,rgba(32,20,8,0.08)_100%)] border-l-2 border-amber-300/34 pl-2.5',
         icon: null,
     },
+    legendary: {
+        text: 'text-[#f6e7a2] font-rajdhani font-bold text-base tracking-wide',
+        bg: 'bg-[linear-gradient(90deg,rgba(246,231,162,0.22)_0%,rgba(38,28,6,0.10)_100%)] border-l-2 border-[#f6e7a2]/65 pl-2.5',
+        icon: Sparkles,
+    },
 };
 
 const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
@@ -63,9 +68,10 @@ const MOBILE_LOG_BADGES = {
     event: { label: 'EVENT', className: 'border-[#9a8ac0]/24 bg-[#9a8ac0]/12 text-[#ece5ff]/84' },
     warning: { label: 'WARN', className: 'border-amber-300/24 bg-amber-400/10 text-amber-100/84' },
     error: { label: 'ERROR', className: 'border-red-300/24 bg-red-500/10 text-red-100/84' },
+    legendary: { label: 'LEGEND', className: 'border-[#f6e7a2]/40 bg-[#f6e7a2]/15 text-[#f6e7a2]' },
 };
 
-const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system']);
+const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system', 'legendary']);
 const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
 
 const TerminalView = ({

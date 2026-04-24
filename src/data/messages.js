@@ -50,6 +50,7 @@ export const MSG = {
     VICTORY: (exp, gold) => `승리! EXP +${exp}, Gold +${gold}`,
     LOOT_GET: (name) => `전리품: ${name}`,
     LOOT_PREFIX: (name) => `접두사 부여: [${name}]`,
+    SIGNATURE_DISCOVERED: (name) => `✦ 전설 각인 ─ ${name} 획득!`,
     LEGACY_ESSENCE: (n) => `레거시 에센스 +${n}`,
     LEGACY_RANK: (n) => `레거시 랭크 ${n} 달성!`,
     LEVEL_UP: (lv) => `레벨 업! Lv.${lv}`,

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { hasDedicatedSignatureArt } from '../data/signatureItems.js';
+import { MSG } from '../data/messages.js';
 import { AT } from '../reducers/actionTypes.js';
 
 const CODEX_BUCKET_BY_TYPE = Object.freeze({
@@ -59,7 +60,8 @@ export const useLegendaryDropDetector = (inv, dispatch = null) => {
             seenRef.current.add(name);
         }
 
-        // 신규 signature 획득 시 codex 자동 업데이트 — 업적 카운터와 LegendaryCodex 잠금 해제 연결
+        // 신규 signature 획득 시 codex 자동 업데이트 + 전용 로그 emit.
+        // 업적 카운터와 LegendaryCodex 잠금 해제 연결 + Terminal 강조 출력.
         if (dispatch) {
             for (const name of newlySeen) {
                 const item = (inv || []).find((entry) => entry?.name === name);
@@ -67,6 +69,14 @@ export const useLegendaryDropDetector = (inv, dispatch = null) => {
                 if (bucket) {
                     dispatch({ type: AT.UPDATE_CODEX, payload: { category: bucket, name } });
                 }
+                dispatch({
+                    type: AT.ADD_LOG,
+                    payload: {
+                        type: 'legendary',
+                        text: MSG.SIGNATURE_DISCOVERED(name),
+                        id: `legendary_${Date.now()}_${name}`,
+                    },
+                });
             }
         }
 
