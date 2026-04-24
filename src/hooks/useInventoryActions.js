@@ -11,6 +11,7 @@ import { getTraitProfile, getTraitQuestResonance } from '../utils/runProfileUtil
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
+import { isSignatureItem } from '../data/signatureItems.js';
 import { resolveInvasion } from '../utils/graveUtils';
 
 /**
@@ -184,6 +185,11 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 emitDailyProtocolLogs('goldSpend', item.price);
                 addLog('success', MSG.SHOP_BUY_DONE(item.name));
             } else if (type === 'sell') {
+                // 전설 각인 아이템은 우발적 판매 방지 — 드롭률이 낮고 세트 효과 기반이라
+                // 잘못 판매하면 복구가 어려워 유저 경험에 큰 피해.
+                if (isSignatureItem(item)) {
+                    return addLog('warning', MSG.SIGNATURE_SELL_BLOCKED(item.name));
+                }
                 const sellPrice = Math.floor(item.price * 0.5);
                 const newInv = player.inv.filter((entry) => entry.id !== item.id);
                 if (newInv.length < player.inv.length) {

@@ -6,6 +6,7 @@ import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils
 import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
+import { isSignatureItem } from '../data/signatureItems.js';
 
 /** 맵 레벨을 기준으로 상점 최대 아이템 티어 계산 */
 const getShopMaxTier = (loc) => {
@@ -330,6 +331,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                             const comparison = getComparisonMeta(item, player.equip);
                             const summary = getCompactItemSummary(item);
                             const comparisonText = comparison ? getCompactText(comparison.text) : '';
+                            const isSignatureLocked = isSignatureItem(item);
 
                             return (
                                 <div
@@ -362,10 +364,16 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
 
                                     <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-2.5">
                                         <div className="text-[10px] font-fira text-slate-400">
-                                            {isConfirming ? '한 번 더 누르면 판매됩니다.' : '판매 대기'}
+                                            {isSignatureLocked
+                                                ? '전설 각인 — 판매 불가'
+                                                : isConfirming ? '한 번 더 누르면 판매됩니다.' : '판매 대기'}
                                         </div>
                                         <button
+                                            type="button"
+                                            data-testid={isSignatureLocked ? 'shop-sell-locked' : undefined}
+                                            disabled={isSignatureLocked}
                                             onClick={() => {
+                                                if (isSignatureLocked) return;
                                                 if (isConfirming) {
                                                     actions.market('sell', item);
                                                     setSellConfirmId(null);
@@ -373,9 +381,13 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                                 }
                                                 setSellConfirmId(item.id);
                                             }}
-                                            className={`min-h-[40px] rounded-lg border px-3 py-2 text-xs font-bold transition-all ${isConfirming ? 'border-red-400 bg-red-600/20 text-red-200 hover:bg-red-600/30' : 'border-red-500/40 text-red-300 hover:bg-red-500/10 hover:border-red-400'}`}
+                                            className={`min-h-[40px] rounded-lg border px-3 py-2 text-xs font-bold transition-all ${isSignatureLocked
+                                                ? 'border-[#f6e7a2]/35 bg-[#f6e7a2]/10 text-[#f6e7a2]/80 cursor-not-allowed'
+                                                : isConfirming
+                                                    ? 'border-red-400 bg-red-600/20 text-red-200 hover:bg-red-600/30'
+                                                    : 'border-red-500/40 text-red-300 hover:bg-red-500/10 hover:border-red-400'}`}
                                         >
-                                            {isConfirming ? '정말 판매' : '판매'}
+                                            {isSignatureLocked ? '✦ 보호됨' : isConfirming ? '정말 판매' : '판매'}
                                         </button>
                                     </div>
                                 </div>
