@@ -5,6 +5,7 @@ import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { GS } from '../reducers/gameStates';
 import ArchiveTabButton from './ArchiveTabButton';
+import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import DashboardMobileSummary from './DashboardMobileSummary';
 import EquipmentPanel from './EquipmentPanel';
 import SmartInventory from './SmartInventory';
@@ -67,6 +68,23 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
         setConfirmMenuReset(false);
         setSideTab(tabId);
         setMobileArchiveExpanded(true);
+    };
+
+    // Signature 도감 진행도 — Codex 탭 뱃지로 "X/Y" 표시해 at-a-glance 컬렉션 진행도 제공.
+    // 전설 각인을 하나도 수집하지 못한 상태에서는 뱃지를 숨겨 UI 노이즈 방지.
+    const signatureProgress = getSignatureDiscoveryProgress(player);
+    const signatureBadge = signatureProgress.discovered > 0
+        ? `${signatureProgress.discovered}/${signatureProgress.total}`
+        : null;
+    const signatureBadgeTitle = signatureProgress.discovered > 0
+        ? `전설 각인 ${signatureProgress.discovered}/${signatureProgress.total} 수집 (${signatureProgress.percent}%)`
+        : null;
+    /** 탭 id에 따라 추가 badge prop을 반환 (Codex만 signature 진행도 뱃지 부착). */
+    const getTabExtras = (tabId) => {
+        if (tabId === 'codex' && signatureBadge) {
+            return { badge: signatureBadge, badgeTitle: signatureBadgeTitle };
+        }
+        return {};
     };
     const handleMenuAction = (actionId) => {
         if (actionId !== 'reset') {
@@ -186,6 +204,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                     compact
                     rail
                     testId={`dashboard-tab-${tab.id}`}
+                    {...getTabExtras(tab.id)}
                 />
             ))}
         </div>
@@ -334,6 +353,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             compact
                                             rail
                                             testId={`dashboard-tab-${tab.id}`}
+                                            {...getTabExtras(tab.id)}
                                         />
                                     ))}
                                     {renderResetRailButton()}
@@ -509,6 +529,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             onClick={() => handleTabSelect(tab.id)}
                                             compact
                                             testId={`dashboard-tab-${tab.id}`}
+                                            {...getTabExtras(tab.id)}
                                         />
                                     ))}
                                 </div>
@@ -522,6 +543,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             onClick={() => handleTabSelect(tab.id)}
                                             compact
                                             testId={`dashboard-tab-${tab.id}`}
+                                            {...getTabExtras(tab.id)}
                                         />
                                     ))}
                                 </div>

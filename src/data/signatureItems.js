@@ -112,3 +112,34 @@ export const getSignatureItemCount = () => {
     const dedicated = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
     return { total: dedicated, dedicated };
 };
+
+/**
+ * 플레이어의 signature 도감 진행도 조회.
+ *
+ * player.stats.codex.{weapons|armors|shields}에서 SIGNATURE_ITEM_REGISTRY에 등록된
+ * 이름이 발견됐는지 검사. family 아이템은 별도로 다른 레코드가 있으므로 섞이지 않는다.
+ *
+ * Dashboard/Codex 탭 뱃지, Achievement 카운터 등에서 재사용.
+ *
+ * @param {{ stats?: { codex?: object } } | null | undefined} player
+ * @returns {{ discovered: number, total: number, percent: number }}
+ */
+export const getSignatureDiscoveryProgress = (player) => {
+    const total = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
+    const codex = player?.stats?.codex || null;
+    if (!codex) return { discovered: 0, total, percent: 0 };
+
+    const weapons = codex.weapons || {};
+    const armors = codex.armors || {};
+    const shields = codex.shields || {};
+
+    let discovered = 0;
+    for (const name of Object.keys(SIGNATURE_ITEM_REGISTRY)) {
+        if (weapons[name] || armors[name] || shields[name]) {
+            discovered += 1;
+        }
+    }
+
+    const percent = total > 0 ? Math.round((discovered / total) * 100) : 0;
+    return { discovered, total, percent };
+};

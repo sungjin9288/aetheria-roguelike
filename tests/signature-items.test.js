@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
     SIGNATURE_CANDIDATES,
     SIGNATURE_ITEM_REGISTRY,
+    getSignatureDiscoveryProgress,
     getSignatureItemCount,
     getSignatureMetadata,
     getSignatureSpriteKey,
@@ -166,4 +167,60 @@ test('getItemIconAssetSrc falls back to family/tinted art for non-signature item
     const src = getItemIconAssetSrc({ name: '녹슨 단검', type: 'weapon' });
     // should NOT contain 'signature-' prefix
     assert.doesNotMatch(src, /signature-/);
+});
+
+// --- getSignatureDiscoveryProgress (Dashboard Codex 뱃지용) ---
+
+test('getSignatureDiscoveryProgress returns { discovered:0, total:N } for null/empty player', () => {
+    const total = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
+    assert.deepEqual(getSignatureDiscoveryProgress(null), { discovered: 0, total, percent: 0 });
+    assert.deepEqual(getSignatureDiscoveryProgress(undefined), { discovered: 0, total, percent: 0 });
+    assert.deepEqual(getSignatureDiscoveryProgress({}), { discovered: 0, total, percent: 0 });
+    assert.deepEqual(getSignatureDiscoveryProgress({ stats: {} }), { discovered: 0, total, percent: 0 });
+    assert.deepEqual(getSignatureDiscoveryProgress({ stats: { codex: {} } }), { discovered: 0, total, percent: 0 });
+});
+
+test('getSignatureDiscoveryProgress counts discovered signatures across buckets', () => {
+    const player = {
+        stats: {
+            codex: {
+                weapons: { '성검 에테르니아': { discovered: true }, '라그나로크': { discovered: true } },
+                armors: { '드래곤로드 갑주': { discovered: true } },
+                shields: {},
+            },
+        },
+    };
+    const result = getSignatureDiscoveryProgress(player);
+    assert.equal(result.discovered, 3);
+    assert.ok(result.total >= 20, 'registry should have at least 20 signatures');
+    assert.ok(result.percent > 0 && result.percent <= 100);
+});
+
+test('getSignatureDiscoveryProgress ignores non-signature codex entries', () => {
+    const player = {
+        stats: {
+            codex: {
+                weapons: {
+                    '녹슨 단검': { discovered: true }, // non-signature
+                    '성검 에테르니아': { discovered: true }, // signature
+                },
+                armors: {},
+                shields: {},
+            },
+        },
+    };
+    const result = getSignatureDiscoveryProgress(player);
+    assert.equal(result.discovered, 1, '녹슨 단검 is not signature → only 성검 에테르니아 counts');
+});
+
+test('getSignatureDiscoveryProgress at 100% when every signature discovered', () => {
+    const allSignatures = Object.keys(SIGNATURE_ITEM_REGISTRY);
+    const codex = { weapons: {}, armors: {}, shields: {} };
+    for (const name of allSignatures) {
+        // 임의로 weapons 버킷에 다 넣어도 헬퍼는 3개 버킷을 모두 스캔하므로 잡아낸다.
+        codex.weapons[name] = { discovered: true };
+    }
+    const result = getSignatureDiscoveryProgress({ stats: { codex } });
+    assert.equal(result.discovered, allSignatures.length);
+    assert.equal(result.percent, 100);
 });
