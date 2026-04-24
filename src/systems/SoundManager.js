@@ -159,6 +159,18 @@ class SoundManager {
                 this._playTone(1318.51, 0.3, 0.36);  // E6
                 break;
 
+            // 전설 각인 드롭 및 anticipate 계열(boss hint / pity resonance)
+            // victory보다 한 옥타브 위, C maj7 보이싱으로 cinematic shimmer
+            case 'legendary':
+                this._playTone(523.25, 0.09, 0);      // C5
+                this._playTone(659.25, 0.09, 0.08);   // E5
+                this._playTone(783.99, 0.09, 0.16);   // G5
+                this._playTone(987.77, 0.11, 0.24);   // B5
+                this._playTone(1046.50, 0.12, 0.34);  // C6
+                this._playTone(1318.51, 0.42, 0.44);  // E6 sustain
+                this._playTone(1975.53, 0.24, 0.44);  // B6 overlay shimmer
+                break;
+
             default:
                 break;
         }

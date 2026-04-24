@@ -50,6 +50,7 @@ export const useGameEngine = () => {
             if (lastLog.type === 'levelUp') soundManager.play('levelUp');
             if (lastLog.type === 'error') soundManager.play('error');
             if (lastLog.type === 'item') soundManager.play('item');
+            if (lastLog.type === 'legendary') soundManager.play('legendary');
         }
     }, [logs]);
 
