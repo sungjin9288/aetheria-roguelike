@@ -1,9 +1,10 @@
 import React from 'react';
-import { Sword, Zap, ArrowRight, RotateCw } from 'lucide-react';
+import { Sword, Zap, ArrowRight, RotateCw, Sparkles } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { soundManager } from '../../systems/SoundManager';
 import { getEnemyTacticalProfile } from '../../utils/runProfileUtils';
 import { CombatEngine } from '../../systems/CombatEngine';
+import { getBossSignatureDrops } from '../../utils/bossSignatureHint.js';
 
 const ACTION_BUTTONS = [
   {
@@ -51,6 +52,11 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
   const bossBriefLine = enemy?.isBoss
     ? tacticalProfile?.entryHint || tacticalProfile?.hint || tacticalProfile?.phaseHint
     : null;
+  // 전투 중 상주 reminder — boss + signature 드롭 가능 시 "끝까지 버틸 이유" 노출
+  const signatureDropCandidates = enemy?.isBoss
+    ? getBossSignatureDrops(CombatEngine.resolveEnemyBaseName(enemy))
+    : [];
+  const primarySignatureDrop = signatureDropCandidates[0] || null;
   const combatConsumables = Object.values(
     (player.inv || [])
       .filter((item) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type))
@@ -229,6 +235,25 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
           {!mobile && bossBriefLine && (
             <div className="rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/10 px-3 py-1.5 text-center text-[10px] font-fira text-[#f6e7c8]">
               보스 전술: {bossBriefLine}
+            </div>
+          )}
+
+          {primarySignatureDrop && (
+            <div
+              data-testid="combat-signature-drop-hint"
+              className="flex items-center justify-center gap-1.5 rounded-[1rem] px-3 py-1.5 text-[10px] font-fira"
+              style={{
+                border: '1px solid rgba(246,231,162,0.42)',
+                background: 'linear-gradient(180deg, rgba(246,231,162,0.12) 0%, rgba(18,16,10,0.72) 100%)',
+                color: '#f6e7a2',
+              }}
+            >
+              <Sparkles size={11} />
+              <span className="uppercase tracking-[0.18em]">전설 각인</span>
+              <span className="truncate">
+                ✦ {primarySignatureDrop.name}
+                {signatureDropCandidates.length > 1 ? ` 외 ${signatureDropCandidates.length - 1}` : ''}
+              </span>
             </div>
           )}
 
