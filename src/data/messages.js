@@ -52,6 +52,11 @@ export const MSG = {
     LOOT_PREFIX: (name) => `접두사 부여: [${name}]`,
     SIGNATURE_DISCOVERED: (name) => `✦ 전설 각인 ─ ${name} 획득!`,
     SIGNATURE_SELL_BLOCKED: (name) => `[${name}]은(는) 전설 각인 아이템이라 판매할 수 없습니다.`,
+    SIGNATURE_BOSS_HINT: (bossName, count, topName, topPct) => (
+        count > 1
+            ? `✦ [${bossName}] 전설 각인 ${count}종 드롭 가능 — 최고 [${topName}] ${topPct}%`
+            : `✦ [${bossName}] 전설 각인 [${topName}] 드롭 가능 — ${topPct}%`
+    ),
     LEGACY_ESSENCE: (n) => `레거시 에센스 +${n}`,
     LEGACY_RANK: (n) => `레거시 랭크 ${n} 달성!`,
     LEVEL_UP: (lv) => `레벨 업! Lv.${lv}`,

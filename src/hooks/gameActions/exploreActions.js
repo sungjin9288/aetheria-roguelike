@@ -4,6 +4,7 @@ import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../../data/relic
 import { AI_SERVICE } from '../../services/aiService';
 import { toArray } from '../../utils/gameUtils';
 import { rollExplorationEvent, spawnEnemy, applyBattleStartRelics } from '../../utils/exploreUtils';
+import { getBossSignatureDrops } from '../../utils/bossSignatureHint';
 import { getMapPacingProfile, getNarrativeEventChance, getQuietExplorationChance } from '../../utils/explorationPacing';
 import { getRunBuildProfile } from '../../utils/runProfileUtils';
 import { applyDynamicDifficulty, enrichSnapshotWithDifficulty } from '../../systems/DifficultyManager';
@@ -161,6 +162,15 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
             dispatch({ type: AT.SET_ENEMY, payload: mStats });
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
             addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+            // anticipate 레이어: boss가 signature를 드롭 가능한 경우 pre-combat 예고
+            if (mStats.isBoss) {
+                const sigDrops = getBossSignatureDrops(mStats.baseName);
+                if (sigDrops.length > 0) {
+                    const top = sigDrops[0];
+                    const topPct = Math.max(1, Math.round(top.rate * 100));
+                    addLog('legendary', MSG.SIGNATURE_BOSS_HINT(mStats.baseName, sigDrops.length, top.name, topPct));
+                }
+            }
             addStoryLog('encounter', { loc: player.loc, name: baseName });
         },
     };
