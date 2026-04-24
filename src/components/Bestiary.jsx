@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { BookOpen, Lock, Eye } from 'lucide-react';
+import { BookOpen, Lock, Eye, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
 import { LOOT_TABLE } from '../data/loot';
 import { BOSS_BRIEFS, MONSTERS } from '../data/monsters';
+import { getBossSignatureDrops } from '../utils/bossSignatureHint';
 import SignalBadge from './SignalBadge';
 
 /**
@@ -24,11 +25,13 @@ const Bestiary = ({ player, compact = false }) => {
             const kills = registry[name] || 0;
             const monsterMeta = MONSTERS[name] || {};
             const bossBrief = BOSS_BRIEFS[name] || null;
+            const signatureDrops = getBossSignatureDrops(name);
             return {
                 name,
                 kills,
                 encountered: kills > 0,
                 drops: LOOT_TABLE[name] || [],
+                signatureDrops,
                 location: Object.entries(DB.MAPS)
                     .filter(([, map]) => (map.monsters || []).includes(name))
                     .map(([loc]) => loc)
@@ -119,34 +122,52 @@ const Bestiary = ({ player, compact = false }) => {
                 )
             ) : (
                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                    {allMonsters.map((m) => (
-                        <Motion.button
-                            key={m.name}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            onClick={() => m.encountered && setSelectedMonster(selectedMonster === m.name ? null : m.name)}
-                            className={`w-full text-left flex items-center gap-2 p-2.5 rounded-[0.95rem] border transition-all text-xs
-                                ${m.encountered
-                                    ? selectedMonster === m.name
-                                        ? 'bg-rose-400/10 border-rose-300/22'
-                                        : 'bg-black/18 border-white/8 hover:border-white/14'
-                                    : 'bg-black/10 border-white/6 opacity-30 cursor-default'
-                                }`}
-                        >
-                            {m.encountered
-                                ? <Eye size={12} className="text-rose-300 shrink-0" />
-                                : <Lock size={12} className="text-slate-600 shrink-0" />
-                            }
-                            <span className={`font-rajdhani font-bold truncate ${m.encountered ? 'text-white' : 'text-slate-600'}`}>
-                                {m.encountered ? m.name : '???'}
-                            </span>
-                            {m.encountered && (
-                                <span className="ml-auto text-[10px] text-slate-500 font-fira shrink-0">
-                                    ×{m.kills}
+                    {allMonsters.map((m) => {
+                        const hasSignature = m.signatureDrops?.length > 0;
+                        return (
+                            <Motion.button
+                                key={m.name}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                onClick={() => m.encountered && setSelectedMonster(selectedMonster === m.name ? null : m.name)}
+                                data-has-signature={hasSignature ? 'true' : 'false'}
+                                className={`w-full text-left flex items-center gap-2 p-2.5 rounded-[0.95rem] border transition-all text-xs
+                                    ${m.encountered
+                                        ? selectedMonster === m.name
+                                            ? 'bg-rose-400/10 border-rose-300/22'
+                                            : 'bg-black/18 border-white/8 hover:border-white/14'
+                                        : 'bg-black/10 border-white/6 opacity-30 cursor-default'
+                                    }`}
+                            >
+                                {m.encountered
+                                    ? <Eye size={12} className="text-rose-300 shrink-0" />
+                                    : <Lock size={12} className="text-slate-600 shrink-0" />
+                                }
+                                <span className={`font-rajdhani font-bold truncate ${m.encountered ? 'text-white' : 'text-slate-600'}`}>
+                                    {m.encountered ? m.name : '???'}
                                 </span>
-                            )}
-                        </Motion.button>
-                    ))}
+                                {m.encountered && hasSignature && (
+                                    <span
+                                        className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-fira shrink-0"
+                                        style={{
+                                            color: '#f6e7a2',
+                                            border: '1px solid rgba(246,231,162,0.42)',
+                                            background: 'rgba(246,231,162,0.08)',
+                                        }}
+                                        title={`전설 각인 ${m.signatureDrops.length}종 드롭 가능`}
+                                    >
+                                        <Sparkles size={8} />
+                                        전설 {m.signatureDrops.length}
+                                    </span>
+                                )}
+                                {m.encountered && (
+                                    <span className="ml-auto text-[10px] text-slate-500 font-fira shrink-0">
+                                        ×{m.kills}
+                                    </span>
+                                )}
+                            </Motion.button>
+                        );
+                    })}
                 </div>
             )}
 
@@ -186,6 +207,30 @@ const Bestiary = ({ player, compact = false }) => {
                                 {m.drops.map(d => (
                                     <div key={d} className="text-[10px] text-[#f6e7c8]/72 font-fira pl-2">• {d}</div>
                                 ))}
+                            </div>
+                        )}
+                        {m.signatureDrops?.length > 0 && (
+                            <div
+                                data-testid="bestiary-signature-drops"
+                                className="space-y-1 rounded-[0.9rem] px-2.5 py-2"
+                                style={{
+                                    border: '1px solid rgba(246,231,162,0.32)',
+                                    background: 'linear-gradient(180deg, rgba(246,231,162,0.08) 0%, rgba(18,16,10,0.55) 100%)',
+                                }}
+                            >
+                                <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.14em]" style={{ color: '#f6e7a2' }}>
+                                    <Sparkles size={10} />
+                                    전설 각인 드롭
+                                </div>
+                                {m.signatureDrops.map((drop) => {
+                                    const pct = Math.max(1, Math.round((drop.rate || 0) * 100));
+                                    return (
+                                        <div key={drop.name} className="flex items-center justify-between text-[10px] font-fira">
+                                            <span style={{ color: '#f6e7a2' }}>✦ {drop.name}</span>
+                                            <span className="text-slate-400/80">{pct}%</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                         {m.bossBrief && (
