@@ -1,8 +1,32 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Activity, BarChart3, Coins, Compass, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
+import { Activity, BarChart3, Coins, Compass, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import SignalBadge from './SignalBadge';
+
+/**
+ * Signature 세트 tone → 색상 매핑.
+ * EquipmentPanel.jsx의 SIG_SET_TONE과 동일한 팔레트 — 시각적 일관성 유지.
+ */
+const SIG_SET_TONE = Object.freeze({
+    holy: { border: 'rgba(246,231,162,0.5)', glow: 'rgba(246,231,162,0.18)', text: '#f6e7a2' },
+    fire: { border: 'rgba(255,180,138,0.5)', glow: 'rgba(255,180,138,0.18)', text: '#ffb48a' },
+    frost: { border: 'rgba(204,232,245,0.5)', glow: 'rgba(204,232,245,0.18)', text: '#cce8f5' },
+    shadow: { border: 'rgba(199,164,240,0.5)', glow: 'rgba(199,164,240,0.18)', text: '#c7a4f0' },
+    arcane: { border: 'rgba(192,176,232,0.5)', glow: 'rgba(192,176,232,0.18)', text: '#c0b0e8' },
+    nature: { border: 'rgba(168,208,160,0.5)', glow: 'rgba(168,208,160,0.18)', text: '#a8d0a0' },
+});
+
+/**
+ * multiplier → 퍼센트 레이블 (1.18 → "+18%", 0.9 → "-10%"). 1.0 근처는 "—".
+ * @param {number} mult
+ * @returns {string}
+ */
+const formatMultDelta = (mult) => {
+    if (!Number.isFinite(mult) || Math.abs(mult - 1) < 0.005) return '—';
+    const delta = Math.round((mult - 1) * 100);
+    return `${delta >= 0 ? '+' : ''}${delta}%`;
+};
 
 /**
  * StatsPanel — 플레이 통계 + 성향 요약
@@ -23,6 +47,9 @@ const StatsPanel = ({ player, stats, compact = false }) => {
 
     const trait = useMemo(() => stats?.traitProfile || getTraitProfile(player, stats), [player, stats]);
     const passiveParts = useMemo(() => getTraitPassiveParts(trait), [trait]);
+
+    const activeSignatureSet = stats?.activeSignatureSet || null;
+    const sigSetTone = activeSignatureSet ? (SIG_SET_TONE[activeSignatureSet.tone] || SIG_SET_TONE.holy) : null;
 
     const topKills = useMemo(() => (
         Object.entries(overview.killRegistry)
@@ -122,6 +149,67 @@ const StatsPanel = ({ player, stats, compact = false }) => {
                     </div>
                 )}
             </div>
+
+            {activeSignatureSet && sigSetTone && (
+                <div
+                    data-testid="stats-active-signature-set"
+                    data-signature-set-key={activeSignatureSet.key}
+                    className="relative overflow-hidden rounded-[1.1rem] px-3 py-2.5 space-y-2"
+                    style={{
+                        border: `1px solid ${sigSetTone.border}`,
+                        background: `radial-gradient(circle at 20% 38%, ${sigSetTone.glow}, transparent 58%), linear-gradient(180deg, rgba(20,24,30,0.92) 0%, rgba(10,12,16,1) 100%)`,
+                    }}
+                >
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Sparkles size={12} style={{ color: sigSetTone.text }} />
+                            <span
+                                className="font-rajdhani font-bold text-[13px] truncate"
+                                style={{ color: sigSetTone.text }}
+                            >
+                                {activeSignatureSet.name}
+                            </span>
+                        </div>
+                        <span
+                            className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-fira uppercase tracking-[0.14em]"
+                            style={{ color: sigSetTone.text, border: `1px solid ${sigSetTone.border}` }}
+                        >
+                            {activeSignatureSet.tier}세트 활성
+                        </span>
+                    </div>
+                    {activeSignatureSet.desc && (
+                        <div className="text-[11px] font-fira leading-[1.45] text-slate-300/85">
+                            {activeSignatureSet.desc}
+                        </div>
+                    )}
+                    <div className="grid grid-cols-3 gap-1.5 pt-1">
+                        <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
+                            <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
+                                <Sword size={9} /> ATK
+                            </div>
+                            <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
+                                {formatMultDelta(activeSignatureSet.atkMult)}
+                            </div>
+                        </div>
+                        <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
+                            <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
+                                <Shield size={9} /> DEF
+                            </div>
+                            <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
+                                {formatMultDelta(activeSignatureSet.defMult)}
+                            </div>
+                        </div>
+                        <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
+                            <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
+                                <Heart size={9} /> HP
+                            </div>
+                            <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
+                                {formatMultDelta(activeSignatureSet.hpMult)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-2 gap-1.5">
                 {visibleStatEntries.map((entry) => {

@@ -67,10 +67,14 @@ export const computeSignatureSetBonus = (equip) => {
     const bonus = setDef.bonuses[String(availableTiers[0])];
     if (!bonus) return neutral;
 
+    const atkMult = bonus.atkMult || 1;
+    const defMult = bonus.defMult || 1;
+    const hpMult = bonus.hpMult || 1;
+
     return {
-        atkMult: bonus.atkMult || 1,
-        defMult: bonus.defMult || 1,
-        hpMult: bonus.hpMult || 1,
+        atkMult,
+        defMult,
+        hpMult,
         activeSet: {
             key: bestKey,
             name: setDef.name,
@@ -78,6 +82,9 @@ export const computeSignatureSetBonus = (equip) => {
             count: bestCount,
             tier: availableTiers[0],
             desc: bonus.desc,
+            atkMult,
+            defMult,
+            hpMult,
         },
     };
 };
