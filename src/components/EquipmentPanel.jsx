@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { Shield, Sparkles, Sword } from 'lucide-react';
+import { Shield, Sparkles, Sword, Target } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
 import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
 import { getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
+import { getSignatureSetProgress } from '../utils/signatureSetBonus.js';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 
 const SLOT_CONFIG = [
@@ -48,6 +49,10 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
     const armorName = player?.equip?.armor?.name || '없음';
     const activeSignatureSet = stats?.activeSignatureSet || null;
     const sigSetTone = activeSignatureSet ? (SIG_SET_TONE[activeSignatureSet.tone] || SIG_SET_TONE.holy) : null;
+    const setProgress = useMemo(() => getSignatureSetProgress(player?.equip), [player?.equip]);
+    // 아직 활성화되지 않았거나(1개만 착용) 상위 티어가 남은 경우에만 힌트 카드 표시
+    const showProgressHint = setProgress && setProgress.nextBonus;
+    const progressTone = setProgress ? (SIG_SET_TONE[setProgress.tone] || SIG_SET_TONE.holy) : null;
 
     return (
         <div className={compact ? 'space-y-2.5' : 'space-y-3'}>
@@ -121,6 +126,49 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                     {activeSignatureSet.desc && (
                         <div className="mt-1 text-[10px] font-fira leading-[1.4] text-slate-300/85">
                             {activeSignatureSet.desc}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {showProgressHint && progressTone && (
+                <div
+                    data-testid="signature-set-progress-hint"
+                    data-signature-set-key={setProgress.key}
+                    data-equipped-count={setProgress.equippedCount}
+                    data-next-tier={setProgress.nextTier}
+                    className="relative overflow-hidden rounded-[1rem] px-3 py-2"
+                    style={{
+                        border: `1px dashed ${progressTone.border}`,
+                        background: `linear-gradient(180deg, rgba(14,16,20,0.92) 0%, rgba(8,10,14,1) 100%)`,
+                    }}
+                >
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Target size={11} style={{ color: progressTone.text }} />
+                            <span className="font-rajdhani font-bold text-[11px] truncate" style={{ color: progressTone.text }}>
+                                {setProgress.name}
+                            </span>
+                            <span className="shrink-0 text-[9px] font-fira text-slate-400/80">
+                                {setProgress.equippedCount}/{setProgress.totalMembers} 장착
+                            </span>
+                        </div>
+                        <span
+                            className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.12em]"
+                            style={{ color: progressTone.text, border: `1px solid ${progressTone.border}` }}
+                        >
+                            {setProgress.nextTier}세트 대기
+                        </span>
+                    </div>
+                    {setProgress.nextBonus?.desc && (
+                        <div className="mt-1 text-[10px] font-fira leading-[1.4] text-slate-300/75">
+                            {setProgress.nextTier - setProgress.equippedCount}개 더 장착 시 — {setProgress.nextBonus.desc}
+                        </div>
+                    )}
+                    {setProgress.missingMembers.length > 0 && (
+                        <div className="mt-1 text-[9px] font-fira text-slate-500/85 truncate">
+                            필요: {setProgress.missingMembers.slice(0, 3).join(' · ')}
+                            {setProgress.missingMembers.length > 3 ? ` +${setProgress.missingMembers.length - 3}` : ''}
                         </div>
                     )}
                 </div>

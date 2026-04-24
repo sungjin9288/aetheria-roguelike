@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { computeSignatureSetBonus, getSignatureSet, getSignatureSetDefinitions } from '../src/utils/signatureSetBonus.js';
+import { computeSignatureSetBonus, getSignatureSet, getSignatureSetDefinitions, getSignatureSetProgress } from '../src/utils/signatureSetBonus.js';
 
 test('no signature items equipped → neutral bonus', () => {
     const result = computeSignatureSetBonus({
@@ -98,6 +98,93 @@ test('getSignatureSetDefinitions returns all 5 known sets', () => {
         assert.ok(defs[key].members.length >= 2);
         assert.ok(defs[key].bonuses['2']);
     }
+});
+
+// --- getSignatureSetProgress (EquipmentPanel 세트 진행도 힌트용) ---
+
+test('getSignatureSetProgress returns null when no signature is equipped', () => {
+    const result = getSignatureSetProgress({
+        weapon: { name: '녹슨 단검' },
+        armor: null,
+        offhand: null,
+    });
+    assert.equal(result, null);
+});
+
+test('getSignatureSetProgress returns null when equip is falsy', () => {
+    assert.equal(getSignatureSetProgress(null), null);
+    assert.equal(getSignatureSetProgress(undefined), null);
+});
+
+test('getSignatureSetProgress: 1 celestial equipped → nextTier=2, not active', () => {
+    const result = getSignatureSetProgress({
+        weapon: { name: '성검 에테르니아' },
+        armor: null,
+        offhand: null,
+    });
+    assert.ok(result);
+    assert.equal(result.key, 'celestial');
+    assert.equal(result.equippedCount, 1);
+    assert.equal(result.totalMembers, 4);
+    assert.equal(result.currentTier, null);
+    assert.equal(result.nextTier, 2);
+    assert.ok(result.nextBonus);
+    assert.ok(result.nextBonus.atkMult > 1, 'celestial 2-set should boost atk');
+    assert.equal(result.isActive, false);
+    assert.ok(result.missingMembers.includes('천공 성전'));
+});
+
+test('getSignatureSetProgress: 2 celestial equipped → active at tier 2, nextTier=3', () => {
+    const result = getSignatureSetProgress({
+        weapon: { name: '성검 에테르니아' },
+        offhand: { name: '천공 성전' },
+        armor: null,
+    });
+    assert.ok(result);
+    assert.equal(result.equippedCount, 2);
+    assert.equal(result.currentTier, 2);
+    assert.equal(result.nextTier, 3);
+    assert.equal(result.isActive, true);
+    assert.ok(result.nextBonus);
+});
+
+test('getSignatureSetProgress: shadow-lord 2-piece → active, no higher tier in some sets', () => {
+    // shadow-lord has bonuses 2 and 3 — 2 equipped, nextTier=3
+    const result = getSignatureSetProgress({
+        weapon: { name: '그림자 절단기' },
+        armor: { name: '암흑 군주의 망토' },
+        offhand: null,
+    });
+    assert.ok(result);
+    assert.equal(result.key, 'shadow-lord');
+    assert.equal(result.currentTier, 2);
+    assert.equal(result.nextTier, 3);
+});
+
+test('getSignatureSetProgress: dimension set only has 2-tier, reaching 2 exhausts progression', () => {
+    // dimension bonuses = { 2: ... } — 2 equipped, nextTier=null
+    const result = getSignatureSetProgress({
+        weapon: { name: '차원 마왕의 낫' },
+        offhand: { name: '차원 방패 이지스' },
+        armor: null,
+    });
+    assert.ok(result);
+    assert.equal(result.key, 'dimension');
+    assert.equal(result.currentTier, 2);
+    assert.equal(result.nextTier, null);
+    assert.equal(result.nextBonus, null);
+    assert.equal(result.isActive, true);
+});
+
+test('getSignatureSetProgress picks the set with most equipped when multiple groups present', () => {
+    const result = getSignatureSetProgress({
+        weapon: { name: '성검 에테르니아' }, // celestial
+        offhand: { name: '천공 성전' }, // celestial
+        armor: { name: '세계수의 로브' }, // worldtree (1개뿐)
+    });
+    assert.ok(result);
+    assert.equal(result.key, 'celestial', 'celestial(2) wins over worldtree(1)');
+    assert.equal(result.equippedCount, 2);
 });
 
 test('every set member exists in SIGNATURE_ITEM_REGISTRY', () => {
