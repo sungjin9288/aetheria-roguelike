@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar } from 'lucide-react';
+import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles } from 'lucide-react';
 import { getTitleLabel } from '../utils/gameUtils';
 import { getRunSummaryAnalysis } from '../utils/outcomeAnalysis';
 import SignalBadge from './SignalBadge';
@@ -121,6 +121,40 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                             </div>
                         ))}
                     </div>
+
+                    {s.signaturesAcquired > 0 && (
+                        <div
+                            data-testid="run-summary-signatures"
+                            className="mt-5 rounded-[1.25rem] px-4 py-3.5"
+                            style={{
+                                border: '1px solid rgba(246,231,162,0.42)',
+                                background: 'linear-gradient(180deg, rgba(246,231,162,0.12) 0%, rgba(18,16,10,0.72) 100%)',
+                            }}
+                        >
+                            <div
+                                className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.18em]"
+                                style={{ color: '#f6e7a2' }}
+                            >
+                                <Sparkles size={11} />
+                                전설 각인 {s.signaturesAcquired}종 획득
+                            </div>
+                            <div className="mt-2.5 flex flex-wrap gap-1.5">
+                                {(s.signatureNames || []).map((name) => (
+                                    <span
+                                        key={name}
+                                        className="rounded-full px-2 py-0.5 text-[10px] font-fira"
+                                        style={{
+                                            color: '#f6e7a2',
+                                            border: '1px solid rgba(246,231,162,0.42)',
+                                            background: 'rgba(246,231,162,0.08)',
+                                        }}
+                                    >
+                                        ✦ {name}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="mt-5 rounded-[1.25rem] border border-white/8 bg-black/18 px-4 py-3.5">
                         <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">

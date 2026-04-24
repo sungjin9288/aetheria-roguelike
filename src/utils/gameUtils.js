@@ -545,6 +545,17 @@ export const buildRunSummary = (player, loc) => {
     const buildProfile = getRunBuildProfile(player, { maxHp: player.maxHp });
     const recentBattles = (player.stats?.recentBattles || []).slice(-20);
 
+    // 이 런에서 획득한 signature — inventory + equip 합산, 중복 제거
+    const signatureSet = new Set();
+    const collectSignature = (item) => {
+        if (item?.name && SIGNATURE_REGISTRY_ENTRIES[item.name]) signatureSet.add(item.name);
+    };
+    (player?.inv || []).forEach(collectSignature);
+    collectSignature(player?.equip?.weapon);
+    collectSignature(player?.equip?.armor);
+    collectSignature(player?.equip?.offhand);
+    const signatureNames = [...signatureSet];
+
     return {
         level:        player.level,
         job:          player.job || '모험가',
@@ -561,5 +572,7 @@ export const buildRunSummary = (player, loc) => {
         recentWinRate: recentBattles.length > 0
             ? Math.round((recentBattles.filter((battle) => battle.result === 'win').length / recentBattles.length) * 100)
             : null,
+        signaturesAcquired: signatureNames.length,
+        signatureNames,
     };
 };
