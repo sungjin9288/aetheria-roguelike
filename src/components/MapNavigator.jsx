@@ -5,6 +5,7 @@ import { getMoveRecommendations } from '../utils/adventureGuide';
 import SignalBadge from './SignalBadge';
 import { getGravesAtLoc } from '../utils/graveUtils';
 import { getMapProgressState } from '../utils/mapProgress';
+import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/mapSignatureHints';
 
 const MAP_ORDER = Object.entries(DB.MAPS)
     .map(([name, map]) => ({ name, ...map }))
@@ -114,10 +115,14 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
 
     const mapEntries = useMemo(() => MAP_ORDER.map((map) => {
         const progress = getMapProgressState(map.name, player, DB.MAPS);
+        const signatureDrops = getMapSignatureDrops(map.name);
+        const undiscoveredSignatures = getMapUndiscoveredSignatures(map.name, player);
         return {
             ...map,
             ...progress,
             graves: getGravesAtLoc(grave, map.name),
+            signatureDrops,
+            undiscoveredSignatures,
         };
     }), [grave, player]);
 
@@ -225,6 +230,11 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                                     <div className="mt-0.5 text-[9px] font-fira text-slate-300/70">
                                         {entry.progress.discovered}/{entry.progress.total || 0} 도감
                                     </div>
+                                    {entry.undiscoveredSignatures.length > 0 && (
+                                        <div className="mt-1 text-[9px] font-fira text-[#f6e7a2]/90">
+                                            ✦ 전설 {entry.undiscoveredSignatures.length}
+                                        </div>
+                                    )}
                                     {graveCount > 0 && (
                                         <div className="mt-1 text-[9px] font-fira text-rose-200/82">
                                             유해 {graveCount} · {graveGold}G
@@ -287,6 +297,49 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                             })}
                         </div>
                     </div>
+
+                    {selectedEntry.signatureDrops.length > 0 && (
+                        <div
+                            className="mt-3 rounded-[0.9rem] px-2.5 py-2"
+                            style={{
+                                border: '1px solid rgba(246,231,162,0.3)',
+                                background: 'linear-gradient(180deg, rgba(246,231,162,0.08) 0%, rgba(20,24,30,0.6) 100%)',
+                            }}
+                        >
+                            <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.14em] text-[#f6e7a2]">
+                                <span className="flex items-center gap-1.5">
+                                    <Sparkles size={11} />
+                                    전설 각인 드롭
+                                </span>
+                                {selectedEntry.undiscoveredSignatures.length > 0 && (
+                                    <span className="text-[#fef3c7]">
+                                        미발견 {selectedEntry.undiscoveredSignatures.length}/{selectedEntry.signatureDrops.length}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                {selectedEntry.signatureDrops.map(({ name, rate }) => {
+                                    const discovered = !selectedEntry.undiscoveredSignatures.find((s) => s.name === name);
+                                    return (
+                                        <span
+                                            key={name}
+                                            className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-fira ${
+                                                discovered
+                                                    ? 'border-white/10 bg-white/[0.03] text-slate-400/80'
+                                                    : 'border-[#f6e7a2]/30 bg-[#f6e7a2]/6 text-[#fef3c7]'
+                                            }`}
+                                        >
+                                            <span>{discovered ? '✓' : '✦'}</span>
+                                            <span>{name}</span>
+                                            <span className={discovered ? 'text-slate-500' : 'text-[#f6e7a2]/80'}>
+                                                {Math.max(1, Math.round(rate * 100))}%
+                                            </span>
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {selectedEntry.lore && (
                         <div className="mt-3 rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2.5 py-2 text-[11px] font-fira leading-snug text-slate-300/74">
