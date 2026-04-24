@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 import { getTraitProfile } from '../utils/runProfile';
+import { isSignatureItem } from '../data/signatureItems.js';
 
 /**
  * DashboardMobileSummary — 장비 로드아웃 + 한눈에 보기 상태 pill 스트립
@@ -49,24 +51,47 @@ const DashboardMobileSummary = ({ player }) => {
         >
             {/* 장비 로드아웃 */}
             <div className="grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                {loadoutEntries.map((entry) => (
-                    <div
-                        key={entry.label}
-                        className="min-w-0 rounded-[1rem] aether-panel-muted px-2 py-1.75"
-                    >
-                        <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                            {entry.label}
+                {loadoutEntries.map((entry) => {
+                    const isSignature = entry.item ? isSignatureItem(entry.item) : false;
+                    const tileStyle = isSignature
+                        ? {
+                            border: '1px solid rgba(246,231,162,0.42)',
+                            background: 'linear-gradient(180deg, rgba(246,231,162,0.12) 0%, rgba(18,16,10,0.72) 100%)',
+                        }
+                        : undefined;
+                    const tileClassName = isSignature
+                        ? 'min-w-0 rounded-[1rem] px-2 py-1.75'
+                        : 'min-w-0 rounded-[1rem] aether-panel-muted px-2 py-1.75';
+                    return (
+                        <div
+                            key={entry.label}
+                            data-is-signature={isSignature ? 'true' : 'false'}
+                            data-testid={isSignature ? `mobile-summary-signature-${entry.label.toLowerCase()}` : undefined}
+                            style={tileStyle}
+                            className={tileClassName}
+                        >
+                            <div className="flex items-center justify-between gap-1">
+                                <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                                    {entry.label}
+                                </span>
+                                {isSignature && (
+                                    <Sparkles size={9} style={{ color: '#f6e7a2' }} />
+                                )}
+                            </div>
+                            <div className="mt-1 flex items-center gap-1 min-w-0">
+                                <span
+                                    className={`truncate text-[10px] font-fira leading-none ${isSignature ? '' : 'text-slate-200/88'}`}
+                                    style={isSignature ? { color: '#f6e7a2' } : undefined}
+                                >
+                                    {entry.item?.name || entry.fallback}
+                                </span>
+                                {(entry.item?.enhance || 0) > 0 && (
+                                    <span className="shrink-0 text-[11px] font-bold font-fira text-[#d5b180]">+{entry.item.enhance}</span>
+                                )}
+                            </div>
                         </div>
-                        <div className="mt-1 flex items-center gap-1 min-w-0">
-                            <span className="truncate text-[10px] font-fira leading-none text-slate-200/88">
-                                {entry.item?.name || entry.fallback}
-                            </span>
-                            {(entry.item?.enhance || 0) > 0 && (
-                                <span className="shrink-0 text-[11px] font-bold font-fira text-[#d5b180]">+{entry.item.enhance}</span>
-                            )}
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* 진행 상태 pill 스트립 */}
