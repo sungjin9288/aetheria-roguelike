@@ -4,6 +4,7 @@ import { DB } from '../../data/db';
 import { SIGNATURE_ITEM_REGISTRY } from '../../data/signatureItems.js';
 import { getSignatureSetDefinitions } from '../../utils/signatureSetBonus.js';
 import { getSignatureDropSources } from '../../utils/signatureDropSources.js';
+import { getSignaturePityMultiplier, SIGNATURE_PITY } from '../../utils/signaturePity.js';
 import ItemIcon from '../icons/ItemIcon.jsx';
 
 /**
@@ -64,6 +65,13 @@ const LegendaryCodex = ({ player }) => {
         return bucket && codex[bucket]?.[entry.item.name];
     }).length;
 
+    const pity = Math.max(0, Number(player?.stats?.signaturePity) || 0);
+    const pityMult = getSignaturePityMultiplier(pity);
+    const pityActive = pityMult > 1;
+    const pityPct = pityActive ? Math.round((pityMult - 1) * 100) : 0;
+    const pityRemaining = pityActive ? 0 : Math.max(0, SIGNATURE_PITY.THRESHOLD - pity);
+    const pityCapped = pityMult >= SIGNATURE_PITY.CAP;
+
     const selectedEntry = selected
         ? entries.find((entry) => entry.item.name === selected)
         : null;
@@ -98,6 +106,40 @@ const LegendaryCodex = ({ player }) => {
                 <div className="text-[9px] font-fira text-amber-200">
                     {discoveredCount}/{entries.length}
                 </div>
+            </div>
+
+            {/* Pity resonance status */}
+            <div
+                data-testid="legendary-codex-pity-status"
+                data-pity={pity}
+                data-pity-mult={pityMult}
+                className="rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2"
+                style={{
+                    border: `1px solid ${pityActive ? 'rgba(246,231,162,0.42)' : 'rgba(255,255,255,0.08)'}`,
+                    background: pityActive
+                        ? 'radial-gradient(circle at 22% 40%, rgba(246,231,162,0.14), transparent 54%), linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)'
+                        : 'linear-gradient(180deg, rgba(14,17,22,0.9) 0%, rgba(8,10,14,1) 100%)',
+                }}
+            >
+                <div className="flex items-center gap-1.5 min-w-0">
+                    <Sparkles size={11} className={pityActive ? 'text-amber-300' : 'text-slate-500'} />
+                    <span className="font-rajdhani font-bold text-[11px]" style={{ color: pityActive ? '#f6e7a2' : '#c8cdd6' }}>
+                        각인 공명
+                    </span>
+                    <span className="text-[9px] font-fira text-slate-400/80 truncate">
+                        {pityActive
+                            ? (pityCapped ? '상한 도달' : `보스 ${pity}회 누적`)
+                            : (pity > 0
+                                ? `적재 ${pity}/${SIGNATURE_PITY.THRESHOLD} · 임계까지 ${pityRemaining}회`
+                                : `보스 ${SIGNATURE_PITY.THRESHOLD}회 연속 무획득 시 배율 상승`)}
+                    </span>
+                </div>
+                <span
+                    className="shrink-0 text-[10px] font-fira font-bold"
+                    style={{ color: pityActive ? '#f6e7a2' : '#6b7280' }}
+                >
+                    {pityActive ? `+${pityPct}%` : '+0%'}
+                </span>
             </div>
 
             {/* Set summary */}
