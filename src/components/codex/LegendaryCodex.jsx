@@ -3,6 +3,7 @@ import { Lock, Sparkles } from 'lucide-react';
 import { DB } from '../../data/db';
 import { SIGNATURE_ITEM_REGISTRY } from '../../data/signatureItems.js';
 import { getSignatureSetDefinitions } from '../../utils/signatureSetBonus.js';
+import { getSignatureDropSources } from '../../utils/signatureDropSources.js';
 import ItemIcon from '../icons/ItemIcon.jsx';
 
 /**
@@ -213,6 +214,28 @@ const LegendaryCodex = ({ player }) => {
                             <div className="text-[9px] font-fira text-slate-500 mt-1.5 italic">
                                 {selectedEntry.meta.artNote}
                             </div>
+                            {(() => {
+                                const sources = getSignatureDropSources(selectedEntry.item.name);
+                                if (sources.length === 0) return null;
+                                return (
+                                    <div className="mt-2 pt-2 border-t border-white/5">
+                                        <div className="text-[8px] font-fira text-slate-500 uppercase tracking-wider mb-1">
+                                            획득처
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {sources.map(({ monster, rate }) => (
+                                                <span
+                                                    key={monster}
+                                                    className="inline-flex items-center gap-1 rounded-full border border-amber-300/25 bg-amber-300/5 px-1.5 py-0.5 text-[9px] font-fira text-amber-100/90"
+                                                >
+                                                    <span className="text-slate-200">{monster}</span>
+                                                    <span className="text-amber-300/80">{Math.max(1, Math.round(rate * 100))}%</span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>
