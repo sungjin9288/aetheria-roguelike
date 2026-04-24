@@ -7,6 +7,7 @@ import { getEnhanceAvailability } from '../utils/enhancementUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
 import { BALANCE } from '../data/constants';
+import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 import ItemIcon from './icons/ItemIcon';
 
@@ -146,7 +147,9 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
         return filtered
             .map(({ item, count }, index) => {
                 let priority = 0;
+                const isSignature = isSignatureItem(item);
                 if (spotlightSet.has(item.name)) priority += 100;
+                if (isSignature) priority += 90;
                 if (quickSlots?.some((slot) => slot?.id === item?.id)) priority += 80;
                 if (isEquipUpgrade(item)) priority += 55;
                 if (['hp', 'mp', 'buff', 'cure'].includes(item.type)) priority += 28;
@@ -296,9 +299,26 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                         getEquipmentIdentity(player.equip?.armor) === itemIdentity ||
                         getEquipmentIdentity(player.equip?.offhand) === itemIdentity;
                     const isSpotlighted = spotlightSet.has(item.name);
+                    const isSignature = isSignatureItem(item);
                     const resonance = getTraitItemResonance(item, traitProfile, player);
                     const enhanceState = getEnhanceAvailability(item, player.gold, player.inv);
                     const enhanceRequirement = enhanceState.requirement;
+
+                    // 우선순위: spotlight > signature > currentEquip > default
+                    const rowClass = isSpotlighted
+                        ? 'border border-[#9a8ac0]/30 bg-[#9a8ac0]/10 shadow-[0_0_16px_rgba(154,138,192,0.12)]'
+                        : isSignature
+                            ? 'border shadow-[0_0_14px_rgba(246,231,162,0.10)]'
+                            : isCurrentEquip
+                                ? 'border border-emerald-300/24 bg-emerald-300/[0.06]'
+                                : 'border border-white/8 aether-panel-muted hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]';
+
+                    const rowStyle = !isSpotlighted && isSignature
+                        ? {
+                            borderColor: 'rgba(246,231,162,0.42)',
+                            background: 'linear-gradient(180deg, rgba(246,231,162,0.08) 0%, rgba(18,16,10,0.72) 100%)',
+                        }
+                        : undefined;
 
                     return (
                         <Motion.div
@@ -308,23 +328,36 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                             transition={{ delay: i * 0.04 }}
                             onMouseEnter={() => setHoveredItem(item.name)}
                             onMouseLeave={() => setHoveredItem(null)}
-                            className={`${useSummaryCards ? 'min-h-[44px] p-2' : compact ? 'min-h-[48px] p-2.5' : 'min-h-[54px] p-3'} rounded-[1rem] border flex justify-between items-center group transition-all cursor-pointer
-                                ${isSpotlighted
-                                    ? 'border-[#9a8ac0]/30 bg-[#9a8ac0]/10 shadow-[0_0_16px_rgba(154,138,192,0.12)]'
-                                    : isCurrentEquip
-                                        ? 'border-emerald-300/24 bg-emerald-300/[0.06]'
-                                        : 'border-white/8 aether-panel-muted hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]'}`}
+                            data-is-signature={isSignature ? 'true' : 'false'}
+                            style={rowStyle}
+                            className={`${useSummaryCards ? 'min-h-[44px] p-2' : compact ? 'min-h-[48px] p-2.5' : 'min-h-[54px] p-3'} rounded-[1rem] flex justify-between items-center group transition-all cursor-pointer ${rowClass}`}
                         >
                             <ItemIcon item={item} size={useSummaryCards ? 28 : compact ? 32 : 36} showBorder className="mr-2 opacity-95" />
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className={`${compact ? 'text-[12px]' : 'text-sm'} font-fira ${item.tier >= 2 ? 'text-[#e3dcff]' : 'text-white/86'}`}>
+                                    <span
+                                        className={`${compact ? 'text-[12px]' : 'text-sm'} font-fira ${isSignature ? '' : (item.tier >= 2 ? 'text-[#e3dcff]' : 'text-white/86')}`}
+                                        style={isSignature ? { color: '#f6e7a2' } : undefined}
+                                    >
                                         {item.name}
                                     </span>
                                     {(item.enhance || 0) > 0 && (
                                         <span className="text-xs font-bold font-fira text-[#d5b180]">+{item.enhance}</span>
                                     )}
                                     {count > 1 && <span className={`${compact ? 'text-xs' : 'text-sm'} text-slate-500`}>x{count}</span>}
+                                    {isSignature && (
+                                        <span
+                                            data-testid={`inventory-signature-chip-${item.id || item.name}`}
+                                            className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em]"
+                                            style={{
+                                                color: '#f6e7a2',
+                                                border: '1px solid rgba(246,231,162,0.42)',
+                                                background: 'rgba(246,231,162,0.08)',
+                                            }}
+                                        >
+                                            ✦ 전설 각인
+                                        </span>
+                                    )}
                                     {isSpotlighted && <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
                                     {resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
