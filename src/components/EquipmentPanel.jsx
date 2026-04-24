@@ -5,6 +5,7 @@ import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhan
 import { getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getSignatureSetProgress } from '../utils/signatureSetBonus.js';
+import { isSignatureItem } from '../data/signatureItems.js';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 
 const SLOT_CONFIG = [
@@ -33,10 +34,12 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
     const slotEntries = useMemo(() => SLOT_CONFIG.map((slot) => {
         const item = player?.equip?.[slot.key] || null;
         const availability = getEnhanceAvailability(item, player?.gold || 0, player?.inv || []);
+        const isSignature = item ? isSignatureItem(item) : false;
 
         return {
             ...slot,
             item,
+            isSignature,
             requirement: availability.requirement,
             canEnhance: availability.canEnhance,
             affordable: availability.affordable,
@@ -178,12 +181,27 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                 {slotEntries.map((slot) => {
                     const item = slot.item;
                     const slotKey = slot.key;
+                    const isSignature = slot.isSignature;
+
+                    const slotStyle = isSignature
+                        ? {
+                            border: '1px solid rgba(246,231,162,0.42)',
+                            background: 'linear-gradient(180deg, rgba(246,231,162,0.08) 0%, rgba(18,16,10,0.72) 100%)',
+                            boxShadow: 'inset 0 0 0 1px rgba(246,231,162,0.08)',
+                        }
+                        : undefined;
+
+                    const slotClassName = isSignature
+                        ? `rounded-[1rem] ${compact ? 'px-2.5 py-2.5' : 'px-3 py-3'}`
+                        : `rounded-[1rem] border ${compact ? 'px-2.5 py-2.5' : 'px-3 py-3'} ${item ? 'border-white/8 aether-panel-muted' : 'border-white/6 bg-black/14'}`;
 
                     return (
                         <div
                             key={slot.key}
                             data-testid={`equipment-slot-${slot.key}`}
-                            className={`rounded-[1rem] border ${compact ? 'px-2.5 py-2.5' : 'px-3 py-3'} ${item ? 'border-white/8 aether-panel-muted' : 'border-white/6 bg-black/14'}`}
+                            data-is-signature={isSignature ? 'true' : 'false'}
+                            className={slotClassName}
+                            style={slotStyle}
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
@@ -191,9 +209,28 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                                         <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/68">{slot.label}</div>
                                         {item ? (
                                             <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                                <span className="break-words text-sm font-fira text-white/88">{item.name}</span>
+                                                <span
+                                                    className={`break-words text-sm font-fira ${isSignature ? '' : 'text-white/88'}`}
+                                                    style={isSignature ? { color: '#f6e7a2' } : undefined}
+                                                >
+                                                    {item.name}
+                                                </span>
                                                 {(item.enhance || 0) > 0 && (
                                                     <span className="text-xs font-fira font-bold text-[#d5b180]">+{item.enhance}</span>
+                                                )}
+                                                {isSignature && (
+                                                    <span
+                                                        data-testid={`equipment-signature-chip-${slot.key}`}
+                                                        className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em]"
+                                                        style={{
+                                                            color: '#f6e7a2',
+                                                            border: '1px solid rgba(246,231,162,0.42)',
+                                                            background: 'rgba(246,231,162,0.08)',
+                                                        }}
+                                                    >
+                                                        <Sparkles size={9} />
+                                                        전설 각인
+                                                    </span>
                                                 )}
                                             </div>
                                         ) : (
