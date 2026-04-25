@@ -3,20 +3,8 @@ import { motion as Motion } from 'framer-motion';
 import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles } from 'lucide-react';
 import { getTitleLabel } from '../utils/gameUtils';
 import { getRunSummaryAnalysis } from '../utils/outcomeAnalysis';
+import { buildRunShareText } from '../utils/runShareText.js';
 import SignalBadge from './SignalBadge';
-
-const SHARE_TEXT = (s) =>
-`⚔️ AETHERIA RUN ENDED
-─────────────────────
-${s.activeTitle ? `[${getTitleLabel(s.activeTitle)}] ` : ''}${s.job} Lv.${s.level}
-📍 ${s.loc}에서 전사
-
-🗡️ 처치: ${s.kills.toLocaleString()}마리 (보스 ${s.bossKills}회)
-💎 유물: ${s.relicsFound}개 수집
-💰 총 골드: ${s.totalGold.toLocaleString()}
-⚡ 프레스티지: ${s.prestigeRank}랭크
-
-#에테리아 #AetheriaRPG #로그라이크`;
 
 const STAT_CARD_STYLE = [
     'text-[#f6e7c8] border-[#d5b180]/18 bg-[#d5b180]/10',
@@ -33,7 +21,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
 
     const handleShare = async () => {
         try {
-            await navigator.clipboard.writeText(SHARE_TEXT(s));
+            await navigator.clipboard.writeText(buildRunShareText(s));
             setCopied(true);
             setTimeout(() => setCopied(false), 2500);
         } catch {
