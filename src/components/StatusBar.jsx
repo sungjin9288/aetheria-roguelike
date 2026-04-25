@@ -2,6 +2,7 @@ import React from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
+import { isSignatureItem } from '../data/signatureItems.js';
 
 const METER_THEME = {
   hp: {
@@ -108,6 +109,12 @@ const StatusBar = ({
 }) => {
   if (!player?.name) return null;
   const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
+  // 장착중인 signature 개수 — sticky HUD에 ✦N 칩으로 상시 노출
+  const equippedSignatureCount = [
+    player?.equip?.weapon,
+    player?.equip?.armor,
+    player?.equip?.offhand,
+  ].filter((item) => item && isSignatureItem(item)).length;
   return (
     <section
       data-testid="persistent-status-bar"
@@ -136,6 +143,21 @@ const StatusBar = ({
               </span>
               {(player.killStreak || 0) >= 3 && (
                 <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em] text-orange-300">🔥{player.killStreak}</span>
+              )}
+              {equippedSignatureCount > 0 && (
+                <span
+                  data-testid="status-signature-chip"
+                  data-signature-count={equippedSignatureCount}
+                  className="shrink-0 rounded-full px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em]"
+                  style={{
+                    color: '#f6e7a2',
+                    border: '1px solid rgba(246,231,162,0.42)',
+                    background: 'rgba(246,231,162,0.12)',
+                  }}
+                  aria-label={`전설 각인 ${equippedSignatureCount}종 장착중`}
+                >
+                  ✦{equippedSignatureCount}
+                </span>
               )}
             </div>
             <div className="shrink-0 flex items-center gap-1.5">
