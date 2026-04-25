@@ -356,13 +356,9 @@ export const getEquipmentOverlayAssetSrc = (item) => {
     if (item?.name && SIGNATURE_SPRITE_KEY_BY_NAME[item.name]) {
         return `/assets/equipment-wearable-exact/${SIGNATURE_SPRITE_KEY_BY_NAME[item.name]}.png`;
     }
-    // 일반 장비는 overlay 없음.
-    // 베이스 sprite (adventurer-{loadoutStyle}.png 등)가 이미 손에 든 무기 실루엣을
-    // chibi 픽셀 스타일로 baked-in 상태. 인벤토리 아이콘용으로 그려진
-    // /equipment-family/overlays/*.png를 그 위에 깔면 redundancy + style 충돌이
-    // 발생해 실기기 QA에서 어색함이 보고됐다.
-    // 시그니처 아이템만 dedicated character-overlay assets로 추가 강조.
-    return null;
+    const wearableFamilyKey = getEquipmentWearableFamilyKey(item);
+    if (!wearableFamilyKey) return null;
+    return `/assets/equipment-family/overlays/${wearableFamilyKey}.png`;
 };
 
 export const getAvatarLoadoutStyle = (weaponVisualKey, offhandVisualKey) => {
