@@ -119,14 +119,13 @@ test('getAvatarSpriteCandidates prefers the most specific armor/loadout variant 
         loadoutStyle: 'guardian',
     });
 
-    // cycle 41 (자연스러운 장비 착용감): job-specific 매치 → weaponful armor 자체 우선
-    // plate는 weaponful이라 adventurer-plate가 adventurer-guardian보다 먼저.
+    // cycle 43 (직업 정체성 fix): typicalLoadout='guardian' (paladin), priority 단순화
+    // loadoutStyle은 입력 받지만 sprite 결정에 사용 X.
     assert.deepEqual(candidates, [
         '/assets/avatars/paladin-plate-guardian.png',
         '/assets/avatars/paladin-plate.png',
         '/assets/avatars/paladin.png',
         '/assets/avatars/adventurer-plate.png',
-        '/assets/avatars/adventurer-guardian.png',
         '/assets/avatars/adventurer.png',
     ]);
 });
@@ -138,13 +137,12 @@ test('getAvatarSpriteCandidates normalizes spaced job names while still preferri
         loadoutStyle: 'dagger',
     });
 
-    // cycle 41: leather는 weaponless라 loadout sprite (adventurer-dagger) 우선
-    // — 캐릭터가 자연스럽게 dagger를 들고 있는 sprite가 floating overlay보다 자연.
+    // cycle 43: shadow-lord typicalLoadout='dagger' → shadow-lord-leather-dagger 우선
+    // 무기 변경해도 같은 sprite 유지.
     assert.deepEqual(candidates, [
         '/assets/avatars/shadow-lord-leather-dagger.png',
         '/assets/avatars/shadow-lord-leather.png',
         '/assets/avatars/shadow-lord.png',
-        '/assets/avatars/adventurer-dagger.png',
         '/assets/avatars/adventurer-leather.png',
         '/assets/avatars/adventurer.png',
     ]);
@@ -157,11 +155,10 @@ test('getAvatarSpriteCandidates falls back to adventurer-specific variants when 
         loadoutStyle: 'caster',
     });
 
-    // cycle 41: jobSlug='adventurer' (fallback) + robe는 weaponful → adventurer-robe 우선
-    // (이미 robe + staff가 baked-in되어 자연스러움)
+    // cycle 43: jobSlug='adventurer' (fallback), useJobSpecific=false
+    // → adventurer-armorStyle → adventurer (loadoutStyle 무시)
     assert.deepEqual(candidates, [
         '/assets/avatars/adventurer-robe.png',
-        '/assets/avatars/adventurer-caster.png',
         '/assets/avatars/adventurer.png',
     ]);
 });

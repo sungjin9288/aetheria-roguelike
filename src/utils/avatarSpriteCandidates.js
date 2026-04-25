@@ -106,35 +106,55 @@ const WEAPONLESS_ADVENTURER_SPRITES = new Set([
     'adventurer-sword',
 ]);
 
+/**
+ * 직업별 typical loadout — 직업이 캐릭터 정체성을 결정. 무기를 변경해도 sprite는
+ * 직업의 typical 시각을 유지 (cycle 43 — 사용자 피드백: 무기 바꿨다고 캐릭터가
+ * 다른 sprite로 바뀌면 안 됨).
+ *
+ * 무기 시각 차별화는 인벤토리/장비 슬롯 (cycle 36-40 chibi PNG) + 시그니처
+ * dedicated overlay에서만.
+ */
+export const JOB_TYPICAL_LOADOUT = Object.freeze({
+    warrior: 'sword',
+    knight: 'guardian',
+    berserker: 'heavy',
+    rogue: 'dagger',
+    assassin: 'dagger',
+    ranger: 'archer',
+    mage: 'caster',
+    archmage: 'caster',
+    warlock: 'caster',
+    paladin: 'guardian',
+    chronomancer: 'caster',
+    'shadow-lord': 'dagger',
+    'grand-mage': 'caster',
+});
+
 export const getAvatarSpriteCandidates = (appearance) => {
-    const { jobSlug, armorStyle, loadoutStyle } = resolveAppearanceKeys(appearance);
+    const { jobSlug, armorStyle } = resolveAppearanceKeys(appearance);
 
-    const armorKey = `adventurer-${armorStyle}`;
-    const loadoutKey = `adventurer-${loadoutStyle}`;
-    const isArmorWeaponless = WEAPONLESS_ADVENTURER_SPRITES.has(armorKey);
-    // jobSlug === 'adventurer'면 job-specific 라인이 adventurer-{armor}/adventurer-{loadout}로
-    // 풀려서 weaponful sprites가 top priority가 됨. 'adventurer' job은 job-specific 라인을 skip하고
-    // 곧바로 weaponless 우선순위로 진입.
+    const typicalLoadout = JOB_TYPICAL_LOADOUT[jobSlug] || null;
     const useJobSpecific = jobSlug !== 'adventurer';
-
-    // 우선순위 (cycle 41 — 자연스러운 장비 착용감 우선):
-    // 1-4. job-specific 매치 (class identity 보존)
-    // 5. armor가 weaponful이면 그것 prefer (예: adventurer-plate = plate+sword 통합)
-    //    armor가 weaponless면 loadout sprite로 폴백 (예: adventurer-dagger = hood+daggers)
-    // 6. 위와 반대 케이스
-    // 7. adventurer (generic 폴백)
+    // 우선순위 (cycle 43 — 직업 정체성 fix):
+    // 1. job-armor-typicalLoadout (가장 디테일한 직업 시각)
+    // 2. job-armor (armor가 직업 typical과 다를 때)
+    // 3. job-typicalLoadout (armor variant 없을 때)
+    // 4. jobSlug (직업 단독 default sprite)
+    // 5. adventurer-armor (직업 sprite 없으면 일반 armor 폴백)
+    // 6. adventurer (generic)
     //
-    // 사용자 QA 피드백: weaponless 베이스 + overlay floating dagger가 부자연스럽다
-    // → weapon-baked-in sprite 우선시로 "캐릭터가 자연스럽게 장비 착용"한 시각 확보.
+    // loadoutStyle은 입력 받지만 sprite 결정에 사용 X — 무기 바꿔도 sprite 유지.
+    // 사용자 피드백: "직업별로만 캐릭터 아바타 구분, 무기 바꿔서 sprite 바뀌면 안 됨"
     const orderedKeys = [
-        useJobSpecific ? `${jobSlug}-${armorStyle}-${loadoutStyle}` : null,
+        useJobSpecific && typicalLoadout
+            ? `${jobSlug}-${armorStyle}-${typicalLoadout}`
+            : null,
         useJobSpecific ? `${jobSlug}-${armorStyle}` : null,
-        useJobSpecific ? `${jobSlug}-${loadoutStyle}` : null,
+        useJobSpecific && typicalLoadout
+            ? `${jobSlug}-${typicalLoadout}`
+            : null,
         useJobSpecific ? jobSlug : null,
-        // weaponless armor → loadout sprite (weapon baked-in) 우선
-        // weaponful armor → 그 자체로 자연스러우니 그것 우선
-        isArmorWeaponless ? loadoutKey : armorKey,
-        isArmorWeaponless ? armorKey : loadoutKey,
+        `adventurer-${armorStyle}`,
         'adventurer',
     ];
 
