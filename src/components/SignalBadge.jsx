@@ -16,6 +16,9 @@ const TONE_CLASS = {
     danger: 'border-rose-300/24 bg-rose-400/10 text-rose-100 shadow-[0_10px_24px_rgba(251,113,133,0.1)]',
     equipped: 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100',
     spotlight: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]',
+    // 전설 각인 전용 — 다른 surface(Equipment/Inventory/Status/Combat hint)에서
+    // 사용된 #f6e7a2 / rgba(246,231,162) gold 팔레트와 일치
+    signature: 'border-[rgba(246,231,162,0.42)] bg-[rgba(246,231,162,0.12)] text-[#f6e7a2] shadow-[0_10px_24px_rgba(246,231,162,0.12)]',
 };
 
 const SignalBadge = ({ tone = 'neutral', size = 'md', className = '', children, ...rest }) => (

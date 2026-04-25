@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Compass, Crosshair } from 'lucide-react';
+import { ChevronDown, ChevronUp, Compass, Crosshair, Sparkles } from 'lucide-react';
 import SignalBadge from '../SignalBadge';
 import { getAdventureGuidance, getExplorationForecast, getQuestTracker } from '../../utils/adventureGuide';
 import { runGuidanceAction } from '../../utils/adventureGuideActions';
@@ -64,7 +64,9 @@ const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab,
                                 ? 'danger'
                                 : guidance.emphasis === '즉시 이득'
                                     ? 'success'
-                                    : 'neutral'
+                                    : guidance.emphasis === '확률 증폭'
+                                        ? 'signature'
+                                        : 'neutral'
                         }
                         size="md"
                     >
@@ -83,7 +85,12 @@ const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab,
             </div>
 
             <div className="space-y-1">
-                <div className={`${mobile ? 'text-[15px]' : 'text-sm'} font-rajdhani font-bold text-white`}>{guidance.title}</div>
+                <div className={`${mobile ? 'text-[15px]' : 'text-sm'} font-rajdhani font-bold text-white flex items-center gap-1.5`}>
+                    {guidance.emphasis === '확률 증폭' && (
+                        <Sparkles size={mobile ? 13 : 12} style={{ color: '#f6e7a2' }} aria-hidden="true" />
+                    )}
+                    <span>{guidance.title}</span>
+                </div>
                 <div className="text-[11px] font-fira text-cyber-blue/60">{guidance.detail}</div>
             </div>
 
