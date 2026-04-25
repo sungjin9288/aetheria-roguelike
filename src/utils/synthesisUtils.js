@@ -1,6 +1,7 @@
-import { BALANCE } from '../data/constants';
-import { DB } from '../data/db';
-import { getItemRarity } from './gameUtils';
+import { BALANCE } from '../data/constants.js';
+import { DB } from '../data/db.js';
+import { getItemRarity } from './gameUtils.js';
+import { isSignatureItem } from '../data/signatureItems.js';
 
 /**
  * synthesisUtils.js — 아이템 합성 순수 함수
@@ -46,6 +47,12 @@ export const validateSynthesis = (items, playerGold) => {
     // 모두 합성 가능한 장비인지
     if (!items.every(isSynthesizable)) {
         return { valid: false, reason: 'INVALID_TYPE' };
+    }
+
+    // 전설 각인은 합성 재료로 절대 소비 금지 — picker 필터를 우회한 입력 차단
+    const signatureInput = items.find((item) => isSignatureItem(item));
+    if (signatureInput) {
+        return { valid: false, reason: 'SIGNATURE_INPUT', signatureName: signatureInput.name };
     }
 
     // 같은 type + tier인지
@@ -131,6 +138,8 @@ export const getSynthesisGroups = (inventory) => {
     for (const item of inventory) {
         if (!isSynthesizable(item)) continue;
         if (item.tier >= 6) continue;
+        // 전설 각인은 picker에서 아예 노출하지 않음 (실수 클릭 방지)
+        if (isSignatureItem(item)) continue;
         const key = `${item.type}_${item.tier}`;
         if (!groups[key]) {
             groups[key] = { type: item.type, tier: item.tier, rarity: getItemRarity(item), items: [], count: 0 };

@@ -333,6 +333,9 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             const items = itemIds.map((id) => player.inv.find((entry) => entry.id === id)).filter(Boolean);
             const validation = validateSynthesis(items, player.gold);
             if (!validation.valid) {
+                if (validation.reason === 'SIGNATURE_INPUT') {
+                    return addLog('warning', MSG.SIGNATURE_SYNTH_BLOCKED(validation.signatureName || ''));
+                }
                 if (validation.reason === 'NO_GOLD') return addLog('error', MSG.SYNTHESIS_NOT_ENOUGH_GOLD);
                 return addLog('error', MSG.SYNTHESIS_NOT_ENOUGH);
             }

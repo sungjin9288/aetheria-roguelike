@@ -1,4 +1,4 @@
-import { DB } from '../data/db';
+import { DB } from '../data/db.js';
 
 /**
  * messages.js — 게임 내 모든 메시지를 한국어로 통합 관리합니다.
@@ -52,6 +52,7 @@ export const MSG = {
     LOOT_PREFIX: (name) => `접두사 부여: [${name}]`,
     SIGNATURE_DISCOVERED: (name) => `✦ 전설 각인 ─ ${name} 획득!`,
     SIGNATURE_SELL_BLOCKED: (name) => `[${name}]은(는) 전설 각인 아이템이라 판매할 수 없습니다.`,
+    SIGNATURE_SYNTH_BLOCKED: (name) => `[${name}]은(는) 전설 각인 아이템이라 합성 재료로 사용할 수 없습니다.`,
     SIGNATURE_BOSS_HINT: (bossName, count, topName, topPct) => (
         count > 1
             ? `✦ [${bossName}] 전설 각인 ${count}종 드롭 가능 — 최고 [${topName}] ${topPct}%`
