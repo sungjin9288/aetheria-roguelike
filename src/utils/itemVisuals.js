@@ -111,6 +111,30 @@ const buildExactItemIconKeys = () => {
 
 export const EXACT_ITEM_ICON_KEYS = buildExactItemIconKeys();
 
+/**
+ * imagegen으로 character와 같은 결의 chibi 픽셀 아트로 생성된 자산 키.
+ * 이 set의 키만 character overlay path에서 equipment-exact를 사용.
+ * 나머지는 procedural Python 생성된 자산이라 character와 시각 충돌 — overlay에 안 씀.
+ *
+ * 자산 출처: output/imagegen/all-item-exact-icons/
+ * cycle 36에서 public/assets/equipment-exact/로 deploy.
+ *
+ * 추가 imagegen 자산 생성 시 이 set에 키 등록 필요.
+ */
+export const IMAGEGEN_OVERLAY_KEYS = new Set([
+    'item-weapon-001', 'item-weapon-002', 'item-weapon-003', 'item-weapon-004',
+    'item-weapon-005', 'item-weapon-006', 'item-weapon-007', 'item-weapon-008',
+    'item-weapon-009', 'item-weapon-010', 'item-weapon-011', 'item-weapon-012',
+    'item-weapon-013', 'item-weapon-014', 'item-weapon-015', 'item-weapon-016',
+    'item-weapon-017', 'item-weapon-018', 'item-weapon-019', 'item-weapon-020',
+    'item-weapon-021', 'item-weapon-022', 'item-weapon-023', 'item-weapon-024',
+    'item-weapon-025', 'item-weapon-026', 'item-weapon-027', 'item-weapon-028',
+    'item-weapon-029', 'item-weapon-030', 'item-weapon-031', 'item-weapon-032',
+    'item-weapon-033', 'item-weapon-034', 'item-weapon-035', 'item-weapon-036',
+    'item-weapon-037', 'item-weapon-048', 'item-weapon-049', 'item-weapon-050',
+    'item-weapon-059', 'item-weapon-066',
+]);
+
 export const ITEM_ICON_ASSET_KEYS = [
     'sword',
     'greatsword',
@@ -355,6 +379,14 @@ export const getEquipmentOverlayAssetSrc = (item) => {
     // signature 고유 wearable이 있으면 우선.
     if (item?.name && SIGNATURE_SPRITE_KEY_BY_NAME[item.name]) {
         return `/assets/equipment-wearable-exact/${SIGNATURE_SPRITE_KEY_BY_NAME[item.name]}.png`;
+    }
+    // imagegen으로 chibi 결로 만들어진 자산만 character overlay로 사용 (IMAGEGEN_OVERLAY_KEYS).
+    // procedural Python 생성 자산은 character와 시각 충돌하므로 family overlay로 폴백.
+    if (item?.name && EXACT_ITEM_ICON_KEYS[item.name]) {
+        const exactKey = EXACT_ITEM_ICON_KEYS[item.name];
+        if (IMAGEGEN_OVERLAY_KEYS.has(exactKey)) {
+            return `/assets/equipment-exact/${exactKey}.png`;
+        }
     }
     const wearableFamilyKey = getEquipmentWearableFamilyKey(item);
     if (!wearableFamilyKey) return null;
