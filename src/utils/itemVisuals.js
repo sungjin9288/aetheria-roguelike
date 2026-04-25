@@ -379,7 +379,46 @@ export const getEquipmentWearableFamilyKey = (item) => {
 };
 
 export const getItemIconAssetKey = (item) => getEquipmentVisualKey(item);
-export const getItemIconAssetExtension = (assetKey) => (String(assetKey || '').startsWith('item-') ? 'svg' : 'png');
+
+/**
+ * cycle 40에서 chibi 결로 derive된 PNG가 있는 item 키 set.
+ * 이 set의 키는 .png로 로드 (procedural SVG 대신).
+ * scripts/derive_item_variants.py가 생성한 PNG들 등록.
+ */
+export const IMAGEGEN_ITEM_PNG_KEYS = new Set([
+    // hp / mp / cure / buff (consumable) — potion.png base + hue-rotate
+    'item-consumable-001', 'item-consumable-002', 'item-consumable-003', 'item-consumable-004',
+    'item-consumable-005', 'item-consumable-006', 'item-consumable-007',
+    'item-consumable-008', 'item-consumable-009', 'item-consumable-010', 'item-consumable-011',
+    'item-consumable-012', 'item-consumable-013', 'item-consumable-014',
+    // mat (재료) — herb/ore/scale/bone/fang/crystal/core/relic/pouch/material base
+    'item-material-001', 'item-material-002', 'item-material-003', 'item-material-004',
+    'item-material-005', 'item-material-006', 'item-material-007', 'item-material-008',
+    'item-material-009', 'item-material-010', 'item-material-011', 'item-material-012',
+    'item-material-013', 'item-material-014', 'item-material-015', 'item-material-016',
+    'item-material-017', 'item-material-018', 'item-material-019', 'item-material-020',
+    'item-material-021', 'item-material-022', 'item-material-023', 'item-material-024',
+    'item-material-025', 'item-material-026', 'item-material-027', 'item-material-028',
+    'item-material-029', 'item-material-030', 'item-material-031', 'item-material-032',
+    'item-material-033', 'item-material-034', 'item-material-035', 'item-material-036',
+    'item-material-037', 'item-material-038', 'item-material-039', 'item-material-040',
+    'item-material-041', 'item-material-042', 'item-material-043', 'item-material-044',
+    'item-material-045', 'item-material-046', 'item-material-047', 'item-material-048',
+    'item-material-049', 'item-material-050', 'item-material-051', 'item-material-052',
+    'item-material-053', 'item-material-054',
+    // key
+    'item-key-001', 'item-key-002',
+    // all (relic) — relic.png base + name hint
+    'item-relic-001', 'item-relic-002', 'item-relic-003', 'item-relic-004',
+    'item-relic-005', 'item-relic-006', 'item-relic-007',
+]);
+
+export const getItemIconAssetExtension = (assetKey) => {
+    const k = String(assetKey || '');
+    // chibi PNG 우선 로드 (cycle 40)
+    if (IMAGEGEN_ITEM_PNG_KEYS.has(k)) return 'png';
+    return k.startsWith('item-') ? 'svg' : 'png';
+};
 export const getExactEquipmentItemAssetKey = (item) => {
     if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return null;
     // 우선순위: 고유 signature art → named(tinted) → auto-exact
