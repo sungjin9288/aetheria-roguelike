@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { QUESTS } from '../data/quests.js';
 import { getDiscoveryOdds, getMapPacingProfile } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
+import { getSignaturePityMultiplier } from './signaturePity.js';
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -287,6 +288,23 @@ export const getAdventureGuidance = (player, stats, mapData, runtimeState = 'idl
             primaryAction: { kind: 'open_inventory', label: '가방 열기' },
             secondaryAction: { kind: 'open_shop', label: '상점 열기' },
         };
+    }
+
+    // 안전지대에서 signature pity가 적립돼 있으면, 보스 권역으로 진입할 적기.
+    // 휴식/퀘스트 루프에 갇혀 적립분이 잠겨버리는 것을 막는 deterministic 힌트.
+    if (safe) {
+        const pity = Math.max(0, Number(player?.stats?.signaturePity) || 0);
+        const pityMult = getSignaturePityMultiplier(pity);
+        if (pityMult > 1) {
+            const pct = Math.round((pityMult - 1) * 100);
+            return {
+                title: '전설 각인 공명',
+                detail: `보스 토벌 ${pity}회 누적 — 다음 signature 드롭 확률 +${pct}% 적용 중. 보스 권역으로 진입할 적기입니다.`,
+                emphasis: '확률 증폭',
+                primaryAction: { kind: 'open_move', label: '보스 경로' },
+                secondaryAction: questTracker ? { kind: 'open_quest', label: '임무 확인' } : null,
+            };
+        }
     }
 
     if (safe && !questTracker) {
