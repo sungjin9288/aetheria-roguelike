@@ -117,21 +117,25 @@ export const getAvatarSpriteCandidates = (appearance) => {
     // 곧바로 weaponless 우선순위로 진입.
     const useJobSpecific = jobSlug !== 'adventurer';
 
-    // 우선순위 (cycle 35 — Path C):
-    // 1-4. job-specific 매치 (class identity 보존, jobSlug !== 'adventurer'일 때만)
-    // 5. weaponless adventurer-{armor} (있으면 prefer — overlay가 무기 100% 담당)
-    // 6. adventurer (weaponless universal — promoted)
-    // 7. weaponful adventurer-{armor} (last resort)
-    // 8. adventurer-{loadout} (항상 weaponful — 진짜 last resort)
+    // 우선순위 (cycle 41 — 자연스러운 장비 착용감 우선):
+    // 1-4. job-specific 매치 (class identity 보존)
+    // 5. armor가 weaponful이면 그것 prefer (예: adventurer-plate = plate+sword 통합)
+    //    armor가 weaponless면 loadout sprite로 폴백 (예: adventurer-dagger = hood+daggers)
+    // 6. 위와 반대 케이스
+    // 7. adventurer (generic 폴백)
+    //
+    // 사용자 QA 피드백: weaponless 베이스 + overlay floating dagger가 부자연스럽다
+    // → weapon-baked-in sprite 우선시로 "캐릭터가 자연스럽게 장비 착용"한 시각 확보.
     const orderedKeys = [
         useJobSpecific ? `${jobSlug}-${armorStyle}-${loadoutStyle}` : null,
         useJobSpecific ? `${jobSlug}-${armorStyle}` : null,
         useJobSpecific ? `${jobSlug}-${loadoutStyle}` : null,
         useJobSpecific ? jobSlug : null,
-        isArmorWeaponless ? armorKey : null,
+        // weaponless armor → loadout sprite (weapon baked-in) 우선
+        // weaponful armor → 그 자체로 자연스러우니 그것 우선
+        isArmorWeaponless ? loadoutKey : armorKey,
+        isArmorWeaponless ? armorKey : loadoutKey,
         'adventurer',
-        !isArmorWeaponless ? armorKey : null,
-        loadoutKey,
     ];
 
     return buildCandidatePaths(orderedKeys);
