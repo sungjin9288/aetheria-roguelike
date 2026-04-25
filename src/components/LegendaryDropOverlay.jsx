@@ -50,6 +50,7 @@ const LegendaryDropOverlay = ({ item, onDismiss }) => {
                     transition={{ duration: 0.25 }}
                     className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-auto bg-black/20 backdrop-blur-[1px]"
                     onClick={onDismiss}
+                    data-testid="legendary-drop-overlay"
                     data-legendary-drop={item.name}
                     role="alertdialog"
                     aria-label={`전설 획득: ${item.name}`}
