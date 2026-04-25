@@ -181,6 +181,28 @@ const LegendaryCodex = ({ player }) => {
                 </div>
             )}
 
+            {/* Empty-state educational hint — 발견 0개일 때 어디서 어떻게 시작하는지 안내 */}
+            {discoveredCount === 0 && (
+                <div
+                    data-testid="legendary-codex-empty-hint"
+                    className="rounded-[1rem] px-3 py-2.5 text-[11px] font-fira leading-relaxed"
+                    style={{
+                        border: '1px solid rgba(246,231,162,0.42)',
+                        background: 'linear-gradient(180deg, rgba(246,231,162,0.10) 0%, rgba(18,16,10,0.62) 100%)',
+                        color: '#f6e7a2',
+                    }}
+                >
+                    <div className="text-[10px] uppercase tracking-[0.18em] mb-1">
+                        ✦ 첫 발견까지
+                    </div>
+                    <div className="text-slate-200/86">
+                        보스를 토벌하면 전설 각인이 떨어질 수 있습니다. 이동 패널의
+                        <span className="mx-1" style={{ color: '#f6e7a2' }}>✦N</span>
+                        칩이 붙은 경로가 미발견 각인을 가진 보스 권역입니다.
+                    </div>
+                </div>
+            )}
+
             {/* Grid */}
             <div className="grid grid-cols-3 gap-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
                 {entries.map(({ item, meta }) => {
