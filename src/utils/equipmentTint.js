@@ -30,27 +30,41 @@ const WOOD_HINTS = ['나무', '목재', '곤봉', '완드'];
  *   bright: brightness multiplier
  */
 const ELEMENT_FILTERS = Object.freeze({
-    화염: { hue: -10, sat: 1.4, bright: 1.1 },
-    불: { hue: -10, sat: 1.4, bright: 1.1 },
-    화염속성: { hue: -10, sat: 1.4, bright: 1.1 },
-    냉기: { hue: 180, sat: 1.2, bright: 1.05 },
-    얼음: { hue: 180, sat: 1.2, bright: 1.05 },
-    빛: { hue: 30, sat: 1.3, bright: 1.2 },
-    자연: { hue: 90, sat: 1.25, bright: 1.0 },
-    대지: { hue: 25, sat: 1.0, bright: 0.95 },
-    어둠: { hue: 260, sat: 1.15, bright: 0.85 },
-    에테르: { hue: 200, sat: 1.2, bright: 1.05 },
-    바람: { hue: 110, sat: 1.15, bright: 1.05 },
+    화염: { hue: -10, sat: 1.4, bright: 1.1, glow: '#ff8c4a' },
+    불: { hue: -10, sat: 1.4, bright: 1.1, glow: '#ff8c4a' },
+    화염속성: { hue: -10, sat: 1.4, bright: 1.1, glow: '#ff8c4a' },
+    냉기: { hue: 180, sat: 1.2, bright: 1.05, glow: '#7ec8e3' },
+    얼음: { hue: 180, sat: 1.2, bright: 1.05, glow: '#7ec8e3' },
+    빛: { hue: 30, sat: 1.3, bright: 1.2, glow: '#f6d878' },
+    자연: { hue: 90, sat: 1.25, bright: 1.0, glow: '#7ad48a' },
+    대지: { hue: 25, sat: 1.0, bright: 0.95, glow: '#b58d52' },
+    어둠: { hue: 260, sat: 1.15, bright: 0.85, glow: '#7a4fc4' },
+    에테르: { hue: 200, sat: 1.2, bright: 1.05, glow: '#6cb4d4' },
+    바람: { hue: 110, sat: 1.15, bright: 1.05, glow: '#a8e0b4' },
 });
 
 const HINT_FILTERS = Object.freeze({
-    rust: { hue: -20, sat: 1.25, bright: 0.85 },
-    holy: { hue: 35, sat: 1.3, bright: 1.15 },
-    arcane: { hue: 240, sat: 1.2, bright: 1.0 },
-    shadow: { hue: 270, sat: 1.1, bright: 0.82 },
-    nature: { hue: 100, sat: 1.2, bright: 1.0 },
-    wood: { hue: 20, sat: 0.95, bright: 0.95 },
+    rust: { hue: -20, sat: 1.25, bright: 0.85, glow: '#d97a3a' },
+    holy: { hue: 35, sat: 1.3, bright: 1.15, glow: '#f6d878' },
+    arcane: { hue: 240, sat: 1.2, bright: 1.0, glow: '#9b8aff' },
+    shadow: { hue: 270, sat: 1.1, bright: 0.82, glow: '#7a4fc4' },
+    nature: { hue: 100, sat: 1.2, bright: 1.0, glow: '#7ad48a' },
+    wood: { hue: 20, sat: 0.95, bright: 0.95, glow: '#b58d52' },
 });
+
+/**
+ * Tier별 drop-shadow blur 반경 (px). T3부터 visible glow를 만들어
+ * "이 장비는 평범하지 않다"는 신호를 캐릭터 미리보기에서도 즉시 전달.
+ * T1-T2는 0(필터 미부착) — 실제 게임 진행 초반부 노이즈 방지.
+ */
+const TIER_GLOW_BLUR = {
+    1: 0,
+    2: 0,
+    3: 1.5,
+    4: 2.5,
+    5: 3.5,
+    6: 4.5,
+};
 
 const matchHint = (name, hints) => hints.some((hint) => name.includes(hint));
 
@@ -87,5 +101,12 @@ export const getEquipmentTintFilter = (item) => {
     const finalSat = mod.sat * tierSat;
     const finalBright = mod.bright * tierBright;
 
-    return `hue-rotate(${mod.hue}deg) saturate(${finalSat.toFixed(2)}) brightness(${finalBright.toFixed(2)})`;
+    // T3+ 일반 장비에 hint palette 색상의 drop-shadow glow.
+    // 시그니처는 위에서 이미 null로 빠져나갔으므로 여기까지 도달 X.
+    const glowBlur = TIER_GLOW_BLUR[Math.max(1, Math.min(6, tier))] || 0;
+    const glow = glowBlur > 0 && mod.glow
+        ? ` drop-shadow(0 0 ${glowBlur}px ${mod.glow})`
+        : '';
+
+    return `hue-rotate(${mod.hue}deg) saturate(${finalSat.toFixed(2)}) brightness(${finalBright.toFixed(2)})${glow}`;
 };

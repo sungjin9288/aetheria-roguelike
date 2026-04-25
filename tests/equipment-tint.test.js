@@ -69,3 +69,50 @@ test('no hint and no elem returns null (silence)', () => {
     const filter = getEquipmentTintFilter({ name: '평범한 무기', type: 'weapon', tier: 1 });
     assert.equal(filter, null);
 });
+
+// --- Cycle 34: tier-based drop-shadow glow ---
+
+test('tier 1-2 items do NOT add drop-shadow glow', () => {
+    const t1 = getEquipmentTintFilter({ name: '녹슨 단검', type: 'weapon', tier: 1 });
+    const t2 = getEquipmentTintFilter({ name: '녹슨 단검', type: 'weapon', tier: 2 });
+    assert.ok(!/drop-shadow/.test(t1 || ''), `tier 1 should NOT have drop-shadow, got: ${t1}`);
+    assert.ok(!/drop-shadow/.test(t2 || ''), `tier 2 should NOT have drop-shadow, got: ${t2}`);
+});
+
+test('tier 3+ items add drop-shadow glow', () => {
+    const t3 = getEquipmentTintFilter({ name: '녹슨 단검', type: 'weapon', tier: 3 });
+    const t5 = getEquipmentTintFilter({ name: '녹슨 단검', type: 'weapon', tier: 5 });
+    assert.match(t3 || '', /drop-shadow\(/);
+    assert.match(t5 || '', /drop-shadow\(/);
+});
+
+test('higher tier produces stronger glow (larger blur radius)', () => {
+    const t3 = getEquipmentTintFilter({ name: '성광의 검', type: 'weapon', tier: 3 });
+    const t5 = getEquipmentTintFilter({ name: '성광의 검', type: 'weapon', tier: 5 });
+    // Extract blur radius from "drop-shadow(0 0 Npx ...)"
+    const t3Match = (t3 || '').match(/drop-shadow\(0 0 (\d+(?:\.\d+)?)px/);
+    const t5Match = (t5 || '').match(/drop-shadow\(0 0 (\d+(?:\.\d+)?)px/);
+    assert.ok(t3Match && t5Match, 'both tiers should have drop-shadow');
+    const t3Blur = Number.parseFloat(t3Match[1]);
+    const t5Blur = Number.parseFloat(t5Match[1]);
+    assert.ok(t5Blur > t3Blur, `tier 5 blur (${t5Blur}) should exceed tier 3 blur (${t3Blur})`);
+});
+
+test('glow color matches hint palette (rust → orange-ish, holy → gold)', () => {
+    const rustGlow = getEquipmentTintFilter({ name: '녹슨 단검', type: 'weapon', tier: 4 });
+    const holyGlow = getEquipmentTintFilter({ name: '성광의 검', type: 'weapon', tier: 4 });
+    // Different hints should produce different glow colors
+    const rustColor = (rustGlow || '').match(/drop-shadow\([^)]*?(rgb[a]?\([^)]+\)|#[0-9a-f]{3,6})/i);
+    const holyColor = (holyGlow || '').match(/drop-shadow\([^)]*?(rgb[a]?\([^)]+\)|#[0-9a-f]{3,6})/i);
+    assert.ok(rustColor, `rust glow should specify a color, got: ${rustGlow}`);
+    assert.ok(holyColor, `holy glow should specify a color, got: ${holyGlow}`);
+    assert.notEqual(rustColor[1], holyColor[1], 'rust and holy glows should use distinct colors');
+});
+
+test('signature items still skip glow (their PNG art handles it)', () => {
+    assert.equal(
+        getEquipmentTintFilter({ name: '성검 에테르니아', type: 'weapon', tier: 5 }),
+        null,
+        'signature items must not be tinted/glowed (they have dedicated art)'
+    );
+});
