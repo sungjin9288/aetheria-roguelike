@@ -131,8 +131,19 @@ export const IMAGEGEN_OVERLAY_KEYS = new Set([
     'item-weapon-025', 'item-weapon-026', 'item-weapon-027', 'item-weapon-028',
     'item-weapon-029', 'item-weapon-030', 'item-weapon-031', 'item-weapon-032',
     'item-weapon-033', 'item-weapon-034', 'item-weapon-035', 'item-weapon-036',
-    'item-weapon-037', 'item-weapon-048', 'item-weapon-049', 'item-weapon-050',
-    'item-weapon-059', 'item-weapon-066',
+    'item-weapon-037', 'item-weapon-038', 'item-weapon-039', 'item-weapon-040',
+    'item-weapon-041', 'item-weapon-042', 'item-weapon-043', 'item-weapon-044',
+    'item-weapon-045', 'item-weapon-046', 'item-weapon-047', 'item-weapon-048',
+    'item-weapon-049', 'item-weapon-050', 'item-weapon-051', 'item-weapon-052',
+    'item-weapon-053', 'item-weapon-054', 'item-weapon-055', 'item-weapon-056',
+    'item-weapon-057', 'item-weapon-058', 'item-weapon-059', 'item-weapon-060',
+    'item-weapon-061', 'item-weapon-062', 'item-weapon-063', 'item-weapon-064',
+    'item-weapon-065', 'item-weapon-066', 'item-weapon-067', 'item-weapon-068',
+    'item-weapon-069', 'item-weapon-070', 'item-weapon-071', 'item-weapon-072',
+    'item-weapon-073', 'item-weapon-074', 'item-weapon-075', 'item-weapon-076',
+    'item-weapon-077', 'item-weapon-078', 'item-weapon-079', 'item-weapon-080',
+    'item-weapon-081', 'item-weapon-082', 'item-weapon-083', 'item-weapon-084',
+    'item-weapon-085', 'item-weapon-086', 'item-weapon-087', 'item-weapon-088',
 ]);
 
 export const ITEM_ICON_ASSET_KEYS = [
