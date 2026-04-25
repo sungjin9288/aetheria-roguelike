@@ -1,5 +1,6 @@
 import React from 'react';
 import { getEquipmentOverlayAssetSrc } from '../../utils/itemVisuals.js';
+import { getEquipmentTintFilter } from '../../utils/equipmentTint.js';
 import {
     BACK_LAYER_ARMOR_STYLES,
     BACK_LAYER_HEADGEAR_STYLES,
@@ -39,6 +40,10 @@ const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null,
     const offhandOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.offhand?.item);
     const weaponOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.weapon?.item);
     const armorOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.armor?.item);
+    // 비-시그니처 아이템에 per-item 색감 차별화 (cycle 33). 시그니처는 자체 PNG에 색이 들어있어 null 반환.
+    const offhandTint = getEquipmentTintFilter(appearance?.offhand?.item);
+    const weaponTint = getEquipmentTintFilter(appearance?.weapon?.item);
+    const armorTint = getEquipmentTintFilter(appearance?.armor?.item);
 
     const weaponStyle = appearance?.weapon?.art?.style || appearance?.weapon?.visual || 'none';
     const offhandStyle = appearance?.offhand?.art?.style || appearance?.offhand?.visual || 'none';
@@ -80,6 +85,7 @@ const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null,
                         height={OVERLAY_VIEWBOX}
                         preserveAspectRatio="xMidYMid meet"
                         transform={armorTransform || undefined}
+                        style={armorTint ? { filter: armorTint } : undefined}
                     />
                 )}
                 {shouldRenderOffhand && (
@@ -91,6 +97,7 @@ const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null,
                         height={OVERLAY_VIEWBOX}
                         preserveAspectRatio="xMidYMid meet"
                         transform={offhandTransform}
+                        style={offhandTint ? { filter: offhandTint } : undefined}
                     />
                 )}
                 {shouldRenderWeapon && (
@@ -102,6 +109,7 @@ const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null,
                         height={OVERLAY_VIEWBOX}
                         preserveAspectRatio="xMidYMid meet"
                         transform={weaponTransform}
+                        style={weaponTint ? { filter: weaponTint } : undefined}
                     />
                 )}
             </svg>
