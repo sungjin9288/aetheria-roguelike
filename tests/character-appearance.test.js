@@ -119,13 +119,15 @@ test('getAvatarSpriteCandidates prefers the most specific armor/loadout variant 
         loadoutStyle: 'guardian',
     });
 
+    // cycle 35 (Path C): job-specific 매치 → 그 다음 weaponless adventurer를 weaponful armor 위로 promote
+    // plate은 weaponful이므로 adventurer가 adventurer-plate보다 우선.
     assert.deepEqual(candidates, [
         '/assets/avatars/paladin-plate-guardian.png',
         '/assets/avatars/paladin-plate.png',
         '/assets/avatars/paladin.png',
+        '/assets/avatars/adventurer.png',
         '/assets/avatars/adventurer-plate.png',
         '/assets/avatars/adventurer-guardian.png',
-        '/assets/avatars/adventurer.png',
     ]);
 });
 
@@ -136,13 +138,15 @@ test('getAvatarSpriteCandidates normalizes spaced job names while still preferri
         loadoutStyle: 'dagger',
     });
 
+    // leather는 weaponless variant (adventurer-leather)이 존재하므로 prefer.
+    // 그 다음 adventurer (clean) → 마지막에 weaponful adventurer-dagger.
     assert.deepEqual(candidates, [
         '/assets/avatars/shadow-lord-leather-dagger.png',
         '/assets/avatars/shadow-lord-leather.png',
         '/assets/avatars/shadow-lord.png',
         '/assets/avatars/adventurer-leather.png',
-        '/assets/avatars/adventurer-dagger.png',
         '/assets/avatars/adventurer.png',
+        '/assets/avatars/adventurer-dagger.png',
     ]);
 });
 
@@ -153,10 +157,12 @@ test('getAvatarSpriteCandidates falls back to adventurer-specific variants when 
         loadoutStyle: 'caster',
     });
 
+    // jobSlug === 'adventurer' (fallback)이므로 useJobSpecific = false.
+    // robe은 weaponful이므로 adventurer (clean)이 adventurer-robe보다 먼저.
     assert.deepEqual(candidates, [
+        '/assets/avatars/adventurer.png',
         '/assets/avatars/adventurer-robe.png',
         '/assets/avatars/adventurer-caster.png',
-        '/assets/avatars/adventurer.png',
     ]);
 });
 

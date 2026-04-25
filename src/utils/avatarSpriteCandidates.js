@@ -72,7 +72,7 @@ const AVAILABLE_AVATAR_KEYS = new Set([
 ]);
 
 const buildCandidatePaths = (orderedKeys) => (
-    [...new Set(orderedKeys.filter((key) => AVAILABLE_AVATAR_KEYS.has(key)))]
+    [...new Set(orderedKeys.filter((key) => key && AVAILABLE_AVATAR_KEYS.has(key)))]
         .map((key) => `/assets/avatars/${key}.png`)
 );
 
@@ -85,17 +85,53 @@ const resolveAppearanceKeys = (appearance) => {
     return { jobSlug, armorStyle, loadoutStyle };
 };
 
+/**
+ * 무기가 baked-in 되어있지 않은 베이스 sprite 셋.
+ * AvatarEquipmentOverlay가 무기를 그리는데 베이스에도 무기가 있으면
+ * 시각 충돌 + redundancy 발생. 이 셋의 sprite는 빈 손이라 overlay가 정상 동작.
+ *
+ * 시각 감사 결과 (cycle 35):
+ *   ✓ adventurer (generic, weaponless)
+ *   ✓ adventurer-coat (weaponless)
+ *   ✓ adventurer-leather (weaponless)
+ *   ✓ adventurer-sword (소형 sheathed dagger만, 큰 무기 없음)
+ *   ✗ adventurer-plate (sword baked-in)
+ *   ✗ adventurer-robe (staff baked-in)
+ *   ✗ adventurer-dagger / archer / caster / guardian / heavy / lancer (loadout-specific weapon)
+ */
+const WEAPONLESS_ADVENTURER_SPRITES = new Set([
+    'adventurer',
+    'adventurer-coat',
+    'adventurer-leather',
+    'adventurer-sword',
+]);
+
 export const getAvatarSpriteCandidates = (appearance) => {
     const { jobSlug, armorStyle, loadoutStyle } = resolveAppearanceKeys(appearance);
 
+    const armorKey = `adventurer-${armorStyle}`;
+    const loadoutKey = `adventurer-${loadoutStyle}`;
+    const isArmorWeaponless = WEAPONLESS_ADVENTURER_SPRITES.has(armorKey);
+    // jobSlug === 'adventurer'면 job-specific 라인이 adventurer-{armor}/adventurer-{loadout}로
+    // 풀려서 weaponful sprites가 top priority가 됨. 'adventurer' job은 job-specific 라인을 skip하고
+    // 곧바로 weaponless 우선순위로 진입.
+    const useJobSpecific = jobSlug !== 'adventurer';
+
+    // 우선순위 (cycle 35 — Path C):
+    // 1-4. job-specific 매치 (class identity 보존, jobSlug !== 'adventurer'일 때만)
+    // 5. weaponless adventurer-{armor} (있으면 prefer — overlay가 무기 100% 담당)
+    // 6. adventurer (weaponless universal — promoted)
+    // 7. weaponful adventurer-{armor} (last resort)
+    // 8. adventurer-{loadout} (항상 weaponful — 진짜 last resort)
     const orderedKeys = [
-        `${jobSlug}-${armorStyle}-${loadoutStyle}`,
-        `${jobSlug}-${armorStyle}`,
-        `${jobSlug}-${loadoutStyle}`,
-        jobSlug,
-        `adventurer-${armorStyle}`,
-        `adventurer-${loadoutStyle}`,
+        useJobSpecific ? `${jobSlug}-${armorStyle}-${loadoutStyle}` : null,
+        useJobSpecific ? `${jobSlug}-${armorStyle}` : null,
+        useJobSpecific ? `${jobSlug}-${loadoutStyle}` : null,
+        useJobSpecific ? jobSlug : null,
+        isArmorWeaponless ? armorKey : null,
         'adventurer',
+        !isArmorWeaponless ? armorKey : null,
+        loadoutKey,
     ];
 
     return buildCandidatePaths(orderedKeys);
