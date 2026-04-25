@@ -166,9 +166,24 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                                 key={route.name}
                                 type="button"
                                 onClick={() => setSelectedMapName(route.name)}
-                                className="rounded-full border border-white/8 bg-black/18 px-2.5 py-1 text-[10px] font-fira text-slate-200/84 hover:border-[#7dd4d8]/18"
+                                className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-black/18 px-2.5 py-1 text-[10px] font-fira text-slate-200/84 hover:border-[#7dd4d8]/18"
                             >
-                                {route.name} · {route.levelLabel}
+                                <span>{route.name} · {route.levelLabel}</span>
+                                {route.undiscoveredSignatureCount > 0 && (
+                                    <span
+                                        data-testid={`move-recommendation-signature-${route.name}`}
+                                        data-signature-count={route.undiscoveredSignatureCount}
+                                        className="ml-0.5 inline-flex items-center rounded-full px-1 text-[9px] font-bold leading-none"
+                                        style={{
+                                            color: '#f6e7a2',
+                                            border: '1px solid rgba(246,231,162,0.42)',
+                                            background: 'rgba(246,231,162,0.12)',
+                                        }}
+                                        aria-label={`미발견 전설 각인 ${route.undiscoveredSignatureCount}종`}
+                                    >
+                                        ✦{route.undiscoveredSignatureCount}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>

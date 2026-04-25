@@ -274,9 +274,26 @@ const ControlPanel = ({
                     <div className="font-fira text-slate-400/72 text-[9px] font-normal">{route.levelLabel}</div>
                   </div>
                 </div>
-                <SignalBadge tone={route.isRecommended ? 'recommended' : 'neutral'} size="sm">
-                  {route.isRecommended ? '추천' : route.badge}
-                </SignalBadge>
+                <div className="flex shrink-0 items-center gap-1">
+                  <SignalBadge tone={route.isRecommended ? 'recommended' : 'neutral'} size="sm">
+                    {route.isRecommended ? '추천' : route.badge}
+                  </SignalBadge>
+                  {route.undiscoveredSignatureCount > 0 && (
+                    <span
+                      data-testid={`move-recommendation-signature-${route.name}`}
+                      data-signature-count={route.undiscoveredSignatureCount}
+                      className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-fira font-bold leading-none"
+                      style={{
+                        color: '#f6e7a2',
+                        border: '1px solid rgba(246,231,162,0.42)',
+                        background: 'rgba(246,231,162,0.12)',
+                      }}
+                      aria-label={`미발견 전설 각인 ${route.undiscoveredSignatureCount}종`}
+                    >
+                      ✦{route.undiscoveredSignatureCount}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="text-[9px] font-fira text-slate-300/60 leading-snug line-clamp-2">
                 {route.reason}
