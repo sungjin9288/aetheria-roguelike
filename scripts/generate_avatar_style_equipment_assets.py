@@ -289,6 +289,10 @@ def resolve_canvas_metrics(canvas_size: tuple[int, int], kind: str) -> tuple[int
 def draw_manual_family(kind: str, canvas_size: tuple[int, int]) -> Image.Image:
     image = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
     scale, offset_x, offset_y = resolve_canvas_metrics(canvas_size, kind)
+    # OVERLAY 모드에서는 무기류의 grip/pommel/lower-shaft를 생략한다.
+    # 캐릭터의 손이 자연스럽게 그 자리를 가리도록 의도된 anchor.
+    # ITEM 모드(인벤토리 아이콘)는 손잡이까지 그대로 그린다.
+    is_overlay = canvas_size == OVERLAY_CANVAS
 
     # 공용 artPalette.json에서 로드 (런타임 JS와 정확히 동일 값).
     # plate 슬롯 전용 팔레트는 별도 키가 없으므로 steel에 plate 트림을 덮어씌움.
@@ -342,32 +346,45 @@ def draw_manual_family(kind: str, canvas_size: tuple[int, int]) -> Image.Image:
         colors = palettes["cloth"]
 
     if kind == "sword":
+        # 블레이드 + 크로스가드는 항상 그린다 (overlay에서도 보여야 함)
         poly("outline", [(13, 1), (15, 3), (14, 5), (9, 18), (7, 18), (12, 4)])
         poly("shade", [(13, 2), (14, 3), (13, 5), (9, 17), (8, 17), (12, 5)])
         poly("mid", [(12, 2), (13, 3), (12, 5), (9, 16), (8, 16), (11, 5)])
         line("hi", (12, 3), (9, 15))
         rect("outline", 6, 18, 10, 2)
         rect("trim", 7, 18, 8, 1)
-        rect("outline", 10, 20, 3, 5)
-        rect("leather", 10, 21, 2, 3)
-        rect("trim", 9, 25, 5, 2)
+        if not is_overlay:
+            # GRIP + POMMEL — 캐릭터 손에 가려질 영역. 인벤토리 아이콘에만 표시.
+            rect("outline", 10, 20, 3, 5)
+            rect("leather", 10, 21, 2, 3)
+            rect("trim", 9, 25, 5, 2)
     elif kind == "dagger":
+        # 블레이드 + 크로스가드는 항상
         poly("outline", [(12, 3), (14, 5), (11, 12), (9, 12), (11, 5)])
         poly("shade", [(12, 4), (13, 5), (11, 11), (10, 11), (11, 6)])
         poly("mid", [(11, 4), (12, 5), (10, 10), (10, 9)])
         line("hi", (11, 5), (10, 9))
         rect("outline", 7, 12, 9, 2)
         rect("trim", 8, 12, 7, 1)
-        rect("outline", 10, 14, 3, 4)
-        rect("leather", 10, 15, 2, 2)
-        rect("trim", 9, 18, 5, 1)
+        if not is_overlay:
+            # GRIP + POMMEL — 손에 가려지는 영역
+            rect("outline", 10, 14, 3, 4)
+            rect("leather", 10, 15, 2, 2)
+            rect("trim", 9, 18, 5, 1)
     elif kind == "heavy":
-        rect("outline", 8, 7, 3, 16)
-        rect("leather", 8, 8, 2, 12)
+        # 도끼/대검 머리 + 자루 상단 — 항상 표시
+        # overlay 모드에서는 자루 하단(y>=14) + 폼멜 트림(y=22) 생략해 손이 가리는 영역 정리
+        if is_overlay:
+            rect("outline", 8, 7, 3, 7)
+            rect("leather", 8, 8, 2, 6)
+        else:
+            rect("outline", 8, 7, 3, 16)
+            rect("leather", 8, 8, 2, 12)
         poly("outline", [(10, 4), (19, 4), (22, 7), (22, 13), (18, 16), (10, 16)])
         poly("shade", [(11, 5), (18, 5), (20, 7), (20, 12), (17, 14), (11, 14)])
         poly("mid", [(12, 6), (17, 6), (18, 8), (18, 11), (16, 13), (12, 13)])
-        rect("trim", 9, 22, 5, 2)
+        if not is_overlay:
+            rect("trim", 9, 22, 5, 2)
         dots("hi", [(13, 7), (14, 9), (14, 11)])
     elif kind == "bow":
         poly("outline", [(7, 2), (6, 5), (5, 9), (5, 14), (6, 18), (7, 21), (9, 20), (8, 17), (8, 6), (9, 3)])
@@ -377,24 +394,37 @@ def draw_manual_family(kind: str, canvas_size: tuple[int, int]) -> Image.Image:
         line("trim", (9, 5), (15, 18))
         line("hi", (10, 6), (14, 17))
     elif kind == "staff":
-        rect("outline", 11, 7, 3, 16)
-        rect("leather", 11, 8, 2, 13)
+        # 지팡이: orb(상단) + 샤프트. overlay에서는 손 위쪽만 보이도록 샤프트 하단 자름.
+        if is_overlay:
+            rect("outline", 11, 7, 3, 8)
+            rect("leather", 11, 8, 2, 6)
+        else:
+            rect("outline", 11, 7, 3, 16)
+            rect("leather", 11, 8, 2, 13)
         poly("outline", [(8, 3), (11, 1), (15, 1), (18, 3), (18, 7), (15, 9), (11, 9), (8, 7)])
         poly("shade", [(9, 4), (11, 2), (15, 2), (17, 4), (17, 6), (15, 8), (11, 8), (9, 6)])
         poly("mid", [(11, 3), (14, 3), (15, 4), (15, 6), (14, 7), (11, 7), (10, 6), (10, 4)])
         rect("trim", 11, 10, 3, 1)
         dots("hi", [(12, 3), (13, 4), (12, 5)])
     elif kind == "lance":
-        rect("outline", 11, 3, 2, 20)
-        rect("leather", 11, 9, 1, 10)
+        # 창: 촉(상단) + 깃발 + 샤프트. overlay에서는 샤프트 하단(y>=15) + 폼멜 자름.
+        if is_overlay:
+            rect("outline", 11, 3, 2, 12)
+            rect("leather", 11, 9, 1, 6)
+        else:
+            rect("outline", 11, 3, 2, 20)
+            rect("leather", 11, 9, 1, 10)
         poly("outline", [(12, 0), (15, 4), (13, 8), (11, 8), (9, 4)])
         poly("shade", [(12, 2), (14, 4), (13, 6), (11, 6), (10, 4)])
         poly("mid", [(12, 3), (13, 4), (12, 5), (11, 4)])
         poly("trim", [(13, 10), (18, 12), (13, 14)])
-        rect("trim", 9, 22, 5, 1)
+        if not is_overlay:
+            rect("trim", 9, 22, 5, 1)
     elif kind == "whip":
-        rect("outline", 8, 17, 5, 2)
-        rect("leather", 9, 17, 3, 1)
+        # 채찍: 손잡이(y=17~19) + 채찍 곡선. overlay에서 손잡이는 손이 가리므로 생략.
+        if not is_overlay:
+            rect("outline", 8, 17, 5, 2)
+            rect("leather", 9, 17, 3, 1)
         line("outline", (13, 17), (18, 15), 1)
         line("shade", (18, 15), (21, 12), 1)
         line("mid", (21, 12), (22, 9), 1)
