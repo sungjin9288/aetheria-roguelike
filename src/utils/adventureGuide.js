@@ -3,6 +3,7 @@ import { QUESTS } from '../data/quests.js';
 import { getDiscoveryOdds, getMapPacingProfile } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
+import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -148,10 +149,15 @@ export const getMoveRecommendations = (player, stats, currentMap, maps = {}) => 
             const isSafeTarget = targetMap.type === 'safe';
             const isVisited = visitedMaps.has(exitName);
             const forecast = getExplorationForecast(player, targetMap);
+            // collection-driven 신호: 미발견 signature가 있는 경로는 ✦N 칩으로 강조
+            const undiscoveredSignatureCount = getMapUndiscoveredSignatures(exitName, player).length;
             const chips = [
                 { label: 'LV', value: targetMap.level === 'infinite' ? 'Abyss' : `${targetLevel}` },
                 { label: 'STATE', value: isSafeTarget ? 'SAFE' : forecast.mood },
             ];
+            if (undiscoveredSignatureCount > 0) {
+                chips.push({ label: 'LEGEND', value: `✦${undiscoveredSignatureCount}` });
+            }
             let score = 0;
             let badge = '전진';
             let reason = '현재 전력으로 무난하게 전개할 수 있는 경로입니다.';
@@ -223,6 +229,7 @@ export const getMoveRecommendations = (player, stats, currentMap, maps = {}) => 
                 isBoss: Boolean(targetMap.boss),
                 levelLabel: targetMap.level === 'infinite' ? 'Abyss' : `Lv.${targetLevel}`,
                 chips,
+                undiscoveredSignatureCount,
             };
         })
         .filter(Boolean)
