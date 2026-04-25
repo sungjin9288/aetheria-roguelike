@@ -1,6 +1,7 @@
 import { ArrowRight, Crown, Sparkles, ShieldAlert } from 'lucide-react';
 import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';
+import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 
 const PRESTIGE_UNLOCKS = [
@@ -22,6 +23,8 @@ const STAT_TONE = {
 const AscensionScreen = ({ player, actions }) => {
     const meta = player.meta || {};
     const currentRank = meta.prestigeRank || 0;
+    // codex는 ASCEND reducer에서 보존되지만 UI에 명시되지 않아 trust 모먼트가 빈다
+    const signatureProgress = getSignatureDiscoveryProgress(player);
     const nextRank = currentRank + 1;
     const nextTitle = PRESTIGE_TITLES[Math.min(nextRank - 1, PRESTIGE_TITLES.length - 1)];
 
@@ -140,6 +143,25 @@ const AscensionScreen = ({ player, actions }) => {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {signatureProgress.discovered > 0 && (
+                                <div
+                                    data-testid="ascension-signature-preserve"
+                                    className="rounded-[1.2rem] px-4 py-3 text-[11px] font-fira"
+                                    style={{
+                                        border: '1px solid rgba(246,231,162,0.42)',
+                                        background: 'linear-gradient(180deg, rgba(246,231,162,0.10) 0%, rgba(18,16,10,0.62) 100%)',
+                                    }}
+                                >
+                                    <div className="flex items-start gap-2" style={{ color: '#f6e7a2' }}>
+                                        <Sparkles size={14} className="mt-0.5 shrink-0" />
+                                        <div className="leading-relaxed">
+                                            <span className="font-bold">✦ 전설 각인 도감 {signatureProgress.discovered}/{signatureProgress.total} 보존</span>
+                                            <span className="ml-1 text-slate-200/82">— 환생 후에도 발견 기록과 도감 진행도는 그대로 유지됩니다.</span>
+                                        </div>
                                     </div>
                                 </div>
                             )}
