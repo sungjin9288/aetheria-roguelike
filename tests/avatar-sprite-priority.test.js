@@ -4,86 +4,69 @@ import assert from 'node:assert/strict';
 import { getAvatarSpriteCandidates, JOB_TYPICAL_LOADOUT } from '../src/utils/avatarSpriteCandidates.js';
 
 /**
- * Avatar sprite candidate priority — cycle 43 redesign.
+ * Avatar sprite priority — cycle 46 (단순화).
  *
- * 사용자 QA 피드백 (cycle 43): "직업별로만 캐릭터 아바타 구분해야지, 무기 바꿨다고
- * 캐릭터 아바타가 궁수로 바뀌면 문제". 직업이 캐릭터 정체성 → sprite 결정에
- * loadoutStyle 사용 X, JOB_TYPICAL_LOADOUT 매핑으로 직업별 default 시각 고정.
+ * 사용자 핵심 통찰: "장비를 교체했을때 아바타가 바뀌는건 직업이 바뀌는게 되는거"
+ * → sprite는 오직 직업(전직)만이 결정. armor/weapon 변경은 sprite에 영향 X.
  *
- * 우선순위 (cycle 43):
- *   1. job-armor-typicalLoadout (직업 정체성 + armor)
- *   2. job-armor (armor variant)
- *   3. job-typicalLoadout
- *   4. jobSlug (직업 단독)
- *   5. adventurer-armor (직업 sprite 없으면)
- *   6. adventurer (generic)
+ * 우선순위:
+ *   1. JOB_DEFAULT_SPRITE[jobSlug] (직업별 명시 매핑된 default)
+ *   2. jobSlug (직업 단독 sprite)
+ *   3. adventurer (universal fallback)
  *
- * 계약:
- *   1. 같은 직업 + 같은 armor에서 weapon 변경 시 sprite 안 바뀜 (직업 정체성)
- *   2. 어쌔신/도적/그림자주군 → typicalLoadout='dagger'
- *   3. 마법사/아크메이지/흑마법사/시간술사/대마법사 → 'caster'
- *   4. 나이트/팔라딘 → 'guardian'
- *   5. 전사 → 'sword', 버서커 → 'heavy', 레인저 → 'archer'
- *   6. 모험가는 typical 없음 (generic 폴백)
+ * 장비 변경 = stat 변화 + 인벤토리 슬롯 시각 + outfit set bonus 메카닉.
+ * 시각이 흔들리지 않는 캐릭터 정체성 시스템.
  */
 
-const indexOfPath = (paths, key) => paths.findIndex((p) => p.endsWith(`/${key}.png`));
 const firstPath = (paths) => paths[0]?.split('/').pop().replace('.png', '');
 
-test('사용자 케이스: 모험가 + leather + 무기 변경 시 sprite 안 바뀜', () => {
-    const dagger = firstPath(getAvatarSpriteCandidates({ job: '모험가', armorStyle: 'leather', loadoutStyle: 'dagger' }));
-    const sword = firstPath(getAvatarSpriteCandidates({ job: '모험가', armorStyle: 'leather', loadoutStyle: 'sword' }));
-    const bow = firstPath(getAvatarSpriteCandidates({ job: '모험가', armorStyle: 'leather', loadoutStyle: 'bow' }));
-    assert.equal(dagger, 'adventurer-leather');
-    assert.equal(sword, 'adventurer-leather');
-    assert.equal(bow, 'adventurer-leather');
+test('모험가는 모든 장비 변경에 대해 sprite 동일 (직업 정체성 fix)', () => {
+    const variations = [
+        { armorStyle: 'leather', loadoutStyle: 'dagger' },
+        { armorStyle: 'plate', loadoutStyle: 'sword' },
+        { armorStyle: 'robe', loadoutStyle: 'caster' },
+        { armorStyle: 'coat', loadoutStyle: 'archer' },
+    ];
+    const sprites = variations.map((v) =>
+        firstPath(getAvatarSpriteCandidates({ job: '모험가', ...v }))
+    );
+    assert.equal(new Set(sprites).size, 1, 'all should be same sprite');
+    assert.equal(sprites[0], 'adventurer');
 });
 
-test('어쌔신 — typicalLoadout=dagger, 무기 변경 무관', () => {
-    const dagger = firstPath(getAvatarSpriteCandidates({ job: '어쌔신', armorStyle: 'leather', loadoutStyle: 'dagger' }));
-    const sword = firstPath(getAvatarSpriteCandidates({ job: '어쌔신', armorStyle: 'leather', loadoutStyle: 'sword' }));
-    assert.equal(dagger, 'assassin-leather-dagger');
-    assert.equal(sword, 'assassin-leather-dagger');
+test('전사는 항상 warrior-plate-sword (default 매핑)', () => {
+    const a = firstPath(getAvatarSpriteCandidates({ job: '전사', armorStyle: 'plate', loadoutStyle: 'sword' }));
+    const b = firstPath(getAvatarSpriteCandidates({ job: '전사', armorStyle: 'leather', loadoutStyle: 'dagger' }));
+    assert.equal(a, 'warrior-plate-sword');
+    assert.equal(b, 'warrior-plate-sword');
 });
 
-test('나이트 — typicalLoadout=guardian, 무기 변경 무관', () => {
-    const guardian = firstPath(getAvatarSpriteCandidates({ job: '나이트', armorStyle: 'plate', loadoutStyle: 'guardian' }));
-    const dagger = firstPath(getAvatarSpriteCandidates({ job: '나이트', armorStyle: 'plate', loadoutStyle: 'dagger' }));
-    assert.equal(guardian, 'knight-plate-guardian');
-    assert.equal(dagger, 'knight-plate-guardian');
+test('어쌔신은 항상 assassin-leather-dagger', () => {
+    const a = firstPath(getAvatarSpriteCandidates({ job: '어쌔신', armorStyle: 'leather', loadoutStyle: 'dagger' }));
+    const b = firstPath(getAvatarSpriteCandidates({ job: '어쌔신', armorStyle: 'plate', loadoutStyle: 'sword' }));
+    assert.equal(a, 'assassin-leather-dagger');
+    assert.equal(b, 'assassin-leather-dagger');
 });
 
-test('아크메이지 — typicalLoadout=caster, 무기 변경 무관', () => {
-    const caster = firstPath(getAvatarSpriteCandidates({ job: '아크메이지', armorStyle: 'robe', loadoutStyle: 'caster' }));
-    const sword = firstPath(getAvatarSpriteCandidates({ job: '아크메이지', armorStyle: 'robe', loadoutStyle: 'sword' }));
-    assert.equal(caster, 'archmage-robe-caster');
-    assert.equal(sword, 'archmage-robe-caster');
+test('아크메이지는 항상 archmage-robe-caster', () => {
+    const a = firstPath(getAvatarSpriteCandidates({ job: '아크메이지', armorStyle: 'robe', loadoutStyle: 'caster' }));
+    const b = firstPath(getAvatarSpriteCandidates({ job: '아크메이지', armorStyle: 'leather', loadoutStyle: 'dagger' }));
+    assert.equal(a, 'archmage-robe-caster');
+    assert.equal(b, 'archmage-robe-caster');
 });
 
-test('JOB_TYPICAL_LOADOUT 매핑 핵심 직업', () => {
+test('그림자 주군은 정규화된 jobSlug로 매핑', () => {
+    const sprite = firstPath(getAvatarSpriteCandidates({ job: '그림자 주군', armorStyle: 'leather', loadoutStyle: 'dagger' }));
+    assert.equal(sprite, 'shadow-lord-leather-dagger');
+});
+
+test('JOB_TYPICAL_LOADOUT는 outfit affinity 표시용으로 보존됨', () => {
+    // cycle 46에서는 sprite 결정에 사용 X — UI/메카닉용.
     assert.equal(JOB_TYPICAL_LOADOUT.warrior, 'sword');
-    assert.equal(JOB_TYPICAL_LOADOUT.knight, 'guardian');
-    assert.equal(JOB_TYPICAL_LOADOUT.berserker, 'heavy');
     assert.equal(JOB_TYPICAL_LOADOUT.assassin, 'dagger');
-    assert.equal(JOB_TYPICAL_LOADOUT.rogue, 'dagger');
-    assert.equal(JOB_TYPICAL_LOADOUT.ranger, 'archer');
-    assert.equal(JOB_TYPICAL_LOADOUT.mage, 'caster');
-    assert.equal(JOB_TYPICAL_LOADOUT.archmage, 'caster');
-    assert.equal(JOB_TYPICAL_LOADOUT.paladin, 'guardian');
-    assert.equal(JOB_TYPICAL_LOADOUT['shadow-lord'], 'dagger');
-    assert.equal(JOB_TYPICAL_LOADOUT['grand-mage'], 'caster');
 });
 
-test('모험가는 typical 없음 — armor 매핑 폴백', () => {
-    const leather = firstPath(getAvatarSpriteCandidates({ job: '모험가', armorStyle: 'leather', loadoutStyle: 'sword' }));
-    const plate = firstPath(getAvatarSpriteCandidates({ job: '모험가', armorStyle: 'plate', loadoutStyle: 'sword' }));
-    assert.equal(leather, 'adventurer-leather');
-    assert.equal(plate, 'adventurer-plate');
-});
-
-test('직업별 sprite가 없으면 adventurer-armor로 폴백', () => {
-    // 어쌔신이 plate 입은 경우 — assassin-plate-dagger / assassin-plate / assassin-dagger 모두 없음
-    // → assassin (있음) 폴백
-    const paths = getAvatarSpriteCandidates({ job: '어쌔신', armorStyle: 'plate', loadoutStyle: 'sword' });
-    assert.equal(firstPath(paths), 'assassin');
+test('미확인 직업은 adventurer 폴백', () => {
+    const sprite = firstPath(getAvatarSpriteCandidates({ job: '???', armorStyle: 'plate', loadoutStyle: 'sword' }));
+    assert.equal(sprite, 'adventurer');
 });

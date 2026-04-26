@@ -144,6 +144,24 @@ const StatusBar = ({
               {(player.killStreak || 0) >= 3 && (
                 <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em] text-orange-300">🔥{player.killStreak}</span>
               )}
+              {stats?.jobAffinity?.matchCount > 0 && (() => {
+                const tier = stats.jobAffinity.tier;
+                const tone =
+                  tier === 'full' ? { color: '#f6e7a2', border: 'rgba(246,231,162,0.55)', bg: 'rgba(246,231,162,0.18)' } :
+                  tier === 'partial2' ? { color: '#d5b180', border: 'rgba(213,177,128,0.50)', bg: 'rgba(213,177,128,0.14)' } :
+                  { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.12)' };
+                return (
+                  <span
+                    data-testid="status-outfit-affinity-chip"
+                    data-affinity-tier={tier}
+                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-fira font-bold tracking-[0.1em]"
+                    style={{ color: tone.color, border: `1px solid ${tone.border}`, background: tone.bg }}
+                    aria-label={`${stats.jobAffinity.label} ${stats.jobAffinity.matchCount}/${stats.jobAffinity.totalSlots || 3}`}
+                  >
+                    ⚔{stats.jobAffinity.matchCount}/{stats.jobAffinity.totalSlots || 3}
+                  </span>
+                );
+              })()}
               {equippedSignatureCount > 0 && (
                 <span
                   data-testid="status-signature-chip"

@@ -130,31 +130,42 @@ export const JOB_TYPICAL_LOADOUT = Object.freeze({
     'grand-mage': 'caster',
 });
 
-export const getAvatarSpriteCandidates = (appearance) => {
-    const { jobSlug, armorStyle } = resolveAppearanceKeys(appearance);
+/**
+ * 직업별 default sprite — cycle 46. armor/weapon 모두 sprite에 영향 X.
+ * 오직 직업(전직)만이 sprite 결정. 장비 변경은 stat + 인벤토리 슬롯 시각 + outfit
+ * set bonus mechanic으로만 차별화 (cycle 45 jobOutfitAffinity).
+ *
+ * 사용자 피드백: "장비를 교체했을때 아바타가 바뀌는건 직업이 바뀌는게 되는거"
+ * → 캐릭터 sprite는 절대 흔들리지 않게 직업으로만 fix.
+ *
+ * 각 직업의 가장 풍부한 default sprite를 명시 매핑 (디테일 큰 sprite 우선).
+ */
+const JOB_DEFAULT_SPRITE = Object.freeze({
+    adventurer: 'adventurer',
+    warrior: 'warrior-plate-sword',
+    knight: 'knight-plate-guardian',
+    berserker: 'berserker-plate-heavy',
+    rogue: 'rogue-leather-dagger',
+    assassin: 'assassin-leather-dagger',
+    ranger: 'ranger-coat-archer',
+    mage: 'mage-robe-caster',
+    archmage: 'archmage-robe-caster',
+    warlock: 'warlock-robe-caster',
+    paladin: 'paladin-plate-guardian',
+    chronomancer: 'chronomancer-robe-caster',
+    'shadow-lord': 'shadow-lord-leather-dagger',
+    'grand-mage': 'grand-mage-robe-caster',
+});
 
-    const typicalLoadout = JOB_TYPICAL_LOADOUT[jobSlug] || null;
-    const useJobSpecific = jobSlug !== 'adventurer';
-    // 우선순위 (cycle 43 — 직업 정체성 fix):
-    // 1. job-armor-typicalLoadout (가장 디테일한 직업 시각)
-    // 2. job-armor (armor가 직업 typical과 다를 때)
-    // 3. job-typicalLoadout (armor variant 없을 때)
-    // 4. jobSlug (직업 단독 default sprite)
-    // 5. adventurer-armor (직업 sprite 없으면 일반 armor 폴백)
-    // 6. adventurer (generic)
-    //
-    // loadoutStyle은 입력 받지만 sprite 결정에 사용 X — 무기 바꿔도 sprite 유지.
-    // 사용자 피드백: "직업별로만 캐릭터 아바타 구분, 무기 바꿔서 sprite 바뀌면 안 됨"
+export const getAvatarSpriteCandidates = (appearance) => {
+    const { jobSlug } = resolveAppearanceKeys(appearance);
+
+    // cycle 46: armor/loadout 모두 sprite에 영향 X. 직업만이 sprite 결정.
+    // 장비 변경 = stat + 인벤토리 슬롯 + outfit set bonus 메카닉 (cycle 45).
+    // 이렇게 해야 "캐릭터 정체성"이 흔들리지 않고 진짜 RPG 정체성 시스템.
     const orderedKeys = [
-        useJobSpecific && typicalLoadout
-            ? `${jobSlug}-${armorStyle}-${typicalLoadout}`
-            : null,
-        useJobSpecific ? `${jobSlug}-${armorStyle}` : null,
-        useJobSpecific && typicalLoadout
-            ? `${jobSlug}-${typicalLoadout}`
-            : null,
-        useJobSpecific ? jobSlug : null,
-        `adventurer-${armorStyle}`,
+        JOB_DEFAULT_SPRITE[jobSlug] || null,
+        jobSlug,
         'adventurer',
     ];
 

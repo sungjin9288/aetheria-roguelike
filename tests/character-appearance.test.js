@@ -112,55 +112,57 @@ test('deriveCharacterAppearance derives distinct loadout styles from equipped we
     assert.equal(lancerAppearance.loadoutStyle, 'lancer');
 });
 
-test('getAvatarSpriteCandidates prefers the most specific armor/loadout variant first', () => {
+test('getAvatarSpriteCandidates uses job-only default sprite (cycle 46)', () => {
     const candidates = getAvatarSpriteCandidates({
         job: '팔라딘',
         armorStyle: 'plate',
         loadoutStyle: 'guardian',
     });
 
-    // cycle 43 (직업 정체성 fix): typicalLoadout='guardian' (paladin), priority 단순화
-    // loadoutStyle은 입력 받지만 sprite 결정에 사용 X.
+    // cycle 46: 직업만이 sprite 결정. armor/loadout 무시. JOB_DEFAULT_SPRITE 매핑 우선.
     assert.deepEqual(candidates, [
         '/assets/avatars/paladin-plate-guardian.png',
-        '/assets/avatars/paladin-plate.png',
         '/assets/avatars/paladin.png',
-        '/assets/avatars/adventurer-plate.png',
         '/assets/avatars/adventurer.png',
     ]);
 });
 
-test('getAvatarSpriteCandidates normalizes spaced job names while still preferring leather/dagger variants', () => {
+test('shadow-lord uses dedicated default sprite regardless of equipment', () => {
     const candidates = getAvatarSpriteCandidates({
         job: '그림자 주군',
-        armorStyle: 'leather',
-        loadoutStyle: 'dagger',
+        armorStyle: 'plate',  // 비전공 armor
+        loadoutStyle: 'sword', // 비전공 weapon
     });
-
-    // cycle 43: shadow-lord typicalLoadout='dagger' → shadow-lord-leather-dagger 우선
-    // 무기 변경해도 같은 sprite 유지.
+    // cycle 46: 장비와 무관하게 shadow-lord-leather-dagger 첫번째
     assert.deepEqual(candidates, [
         '/assets/avatars/shadow-lord-leather-dagger.png',
-        '/assets/avatars/shadow-lord-leather.png',
         '/assets/avatars/shadow-lord.png',
-        '/assets/avatars/adventurer-leather.png',
         '/assets/avatars/adventurer.png',
     ]);
 });
 
-test('getAvatarSpriteCandidates falls back to adventurer-specific variants when job mapping is unknown', () => {
+test('unknown job falls back to adventurer (jobSlug = adventurer)', () => {
     const candidates = getAvatarSpriteCandidates({
         job: '미확인 직업',
         armorStyle: 'robe',
         loadoutStyle: 'caster',
     });
+    // cycle 46: jobSlug='adventurer' 폴백. JOB_DEFAULT_SPRITE.adventurer = 'adventurer'
+    assert.deepEqual(candidates, ['/assets/avatars/adventurer.png']);
+});
 
-    // cycle 43: jobSlug='adventurer' (fallback), useJobSpecific=false
-    // → adventurer-armorStyle → adventurer (loadoutStyle 무시)
-    assert.deepEqual(candidates, [
-        '/assets/avatars/adventurer-robe.png',
-        '/assets/avatars/adventurer.png',
-    ]);
+test('cycle 46: 모험가는 어떤 장비를 입든 항상 같은 sprite', () => {
+    const cases = [
+        { armorStyle: 'leather', loadoutStyle: 'dagger' },
+        { armorStyle: 'plate', loadoutStyle: 'sword' },
+        { armorStyle: 'robe', loadoutStyle: 'caster' },
+        { armorStyle: 'coat', loadoutStyle: 'archer' },
+    ];
+    const sprites = new Set(
+        cases.map((c) => getAvatarSpriteCandidates({ job: '모험가', ...c })[0])
+    );
+    assert.equal(sprites.size, 1, 'should always pick the same sprite');
+    assert.equal([...sprites][0], '/assets/avatars/adventurer.png');
 });
 
 test('buildEquipmentPreviewAppearance derives robe previews from the same avatar family path', () => {
