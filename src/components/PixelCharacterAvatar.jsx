@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getAvatarSpriteCandidates } from '../utils/avatarSpriteCandidates';
+import { resolveCharacterLayers } from '../utils/layeredCharacter.js';
 import AvatarEquipmentOverlay from './icons/AvatarEquipmentOverlay.jsx';
+import LayeredCharacter from './LayeredCharacter.jsx';
 
 const SIZE_MAP = {
     sm: {
@@ -71,6 +73,10 @@ const PixelCharacterAvatar = ({
     const activeSpriteState = spriteState.signature === spriteSignature ? spriteState : { signature: spriteSignature, index: 0 };
     const activeSpriteSrc = spriteCandidates[Math.min(activeSpriteState.index, spriteCandidates.length - 1)] || '/assets/avatars/adventurer.png';
 
+    // cycle 47: layered character system. body 자산이 manifest에 있으면 layered 합성,
+    // 없으면 폴백 (직업 sprite, cycle 46).
+    const layers = useMemo(() => resolveCharacterLayers(player), [player]);
+
     const avatar = (
         <div
             data-testid={dataTestId}
@@ -86,21 +92,25 @@ const PixelCharacterAvatar = ({
             <div className="pointer-events-none absolute -right-1 top-1 h-5 w-5 rounded-full blur-[10px]" style={{ backgroundColor: softenColor(appearance.palette.glow || appearance.palette.accent, 0.28) }} />
             <div className={`relative h-full w-full overflow-hidden ${sizeConfig.inner}`}>
                 <AvatarEquipmentOverlay appearance={appearance} layer="back" />
-                <img
-                    src={activeSpriteSrc}
-                    alt=""
-                    aria-hidden="true"
-                    className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
-                    onError={() => {
-                        setSpriteState((current) => {
-                            const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
-                            return {
-                                signature: spriteSignature,
-                                index: currentState.index < spriteCandidates.length - 1 ? currentState.index + 1 : currentState.index,
-                            };
-                        });
-                    }}
-                />
+                {layers ? (
+                    <LayeredCharacter layers={layers} />
+                ) : (
+                    <img
+                        src={activeSpriteSrc}
+                        alt=""
+                        aria-hidden="true"
+                        className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
+                        onError={() => {
+                            setSpriteState((current) => {
+                                const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
+                                return {
+                                    signature: spriteSignature,
+                                    index: currentState.index < spriteCandidates.length - 1 ? currentState.index + 1 : currentState.index,
+                                };
+                            });
+                        }}
+                    />
+                )}
                 <AvatarEquipmentOverlay appearance={appearance} layer="front" />
             </div>
             {showEnhanceBadge && totalEnhance > 0 && (
