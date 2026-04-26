@@ -98,28 +98,36 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                                 <div className="mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] text-white/88">{offhandName}</div>
                             </div>
                         </div>
-                        {stats?.jobAffinity?.matched && (
-                            <div
-                                data-testid="job-affinity-bonus"
-                                className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-fira font-bold"
-                                style={{
-                                    color: '#7dd4d8',
-                                    border: '1px solid rgba(125,212,216,0.42)',
-                                    background: 'rgba(125,212,216,0.10)',
-                                }}
-                            >
-                                <span>⚔ {stats.jobAffinity.label}</span>
-                                {stats.jobAffinity.bonus.atkMult > 1 && (
-                                    <span className="text-white/82">ATK +{Math.round((stats.jobAffinity.bonus.atkMult - 1) * 100)}%</span>
-                                )}
-                                {stats.jobAffinity.bonus.defMult > 1 && (
-                                    <span className="text-white/82">DEF +{Math.round((stats.jobAffinity.bonus.defMult - 1) * 100)}%</span>
-                                )}
-                                {stats.jobAffinity.bonus.mpBonus > 0 && (
-                                    <span className="text-white/82">MP +{Math.round(stats.jobAffinity.bonus.mpBonus * 100)}%</span>
-                                )}
-                            </div>
-                        )}
+                        {stats?.jobAffinity?.matchCount > 0 && (() => {
+                            const aff = stats.jobAffinity;
+                            const tone =
+                                aff.tier === 'full' ? { color: '#f6e7a2', border: 'rgba(246,231,162,0.42)', bg: 'rgba(246,231,162,0.10)' } :
+                                aff.tier === 'partial2' ? { color: '#d5b180', border: 'rgba(213,177,128,0.42)', bg: 'rgba(213,177,128,0.10)' } :
+                                { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.10)' };
+                            return (
+                                <div
+                                    data-testid="job-outfit-affinity"
+                                    data-affinity-tier={aff.tier}
+                                    data-match-count={aff.matchCount}
+                                    className="mt-2 inline-flex flex-wrap items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-fira font-bold"
+                                    style={{ color: tone.color, border: `1px solid ${tone.border}`, background: tone.bg }}
+                                >
+                                    <span>⚔ {aff.label} ({aff.matchCount}/{aff.totalSlots || 3})</span>
+                                    {aff.bonus.atkMult > 1 && (
+                                        <span className="text-white/82">ATK +{Math.round((aff.bonus.atkMult - 1) * 100)}%</span>
+                                    )}
+                                    {aff.bonus.defMult > 1 && (
+                                        <span className="text-white/82">DEF +{Math.round((aff.bonus.defMult - 1) * 100)}%</span>
+                                    )}
+                                    {aff.bonus.hpBonus > 0 && (
+                                        <span className="text-white/82">HP +{Math.round(aff.bonus.hpBonus * 100)}%</span>
+                                    )}
+                                    {aff.bonus.mpBonus > 0 && (
+                                        <span className="text-white/82">MP +{Math.round(aff.bonus.mpBonus * 100)}%</span>
+                                    )}
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>

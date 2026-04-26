@@ -446,19 +446,14 @@ export const getEquipmentOverlayAssetKey = (item) => {
     return wearableFamilyKey;
 };
 export const getEquipmentOverlayAssetSrc = (item) => {
-    // cycle 44 (사용자 피드백 — "장비 디자인이 아바타에 입혀지는 느낌"):
-    // - armor/shield: overlay 없음 (큰 robe.png 같은 게 캐릭터를 가리는 문제 회피)
-    // - weapon: 작은 chibi PNG를 sprite의 hand 위치에 overlay (per-weapon 차별화)
-    // - signature: dedicated overlay (모든 type, 강조)
+    // cycle 45 (사용자 피드백 — "합성 느낌이 부자연, 진짜 착용 느낌이어야"):
+    // 일반 장비 overlay는 본질적으로 sprite 위에 합성되는 형태라 "착용 느낌"을 못 만듬.
+    // 시그니처만 dedicated overlay (강조 효과). 일반 장비 차별화는:
+    //   - 인벤토리/장비 슬롯의 chibi PNG (cycle 36-40)
+    //   - sprite swap (cycle 43 직업×armor priority)
+    //   - outfit set bonus (cycle 45 — 새 mechanic)
     if (item?.name && SIGNATURE_SPRITE_KEY_BY_NAME[item.name]) {
         return `/assets/equipment-wearable-exact/${SIGNATURE_SPRITE_KEY_BY_NAME[item.name]}.png`;
-    }
-    // 일반 weapon에만 imagegen chibi PNG overlay (armor/shield는 베이스 sprite로 충분)
-    if (item?.type === 'weapon' && item?.name && EXACT_ITEM_ICON_KEYS[item.name]) {
-        const exactKey = EXACT_ITEM_ICON_KEYS[item.name];
-        if (IMAGEGEN_OVERLAY_KEYS.has(exactKey)) {
-            return `/assets/equipment-exact/${exactKey}.png`;
-        }
     }
     return null;
 };

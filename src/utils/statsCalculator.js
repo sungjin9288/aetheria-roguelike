@@ -5,7 +5,7 @@ import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from './equipmentU
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfileUtils.js';
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
-import { getJobWeaponAffinity } from './jobWeaponAffinity.js';
+import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 
 const MAGIC_JOBS = ['마법사', '아크메이지', '흑마법사', '성직자'];
 const PHYSICAL_ELEMENTS = ['물리', 'physical'];
@@ -258,10 +258,12 @@ export const calculateFullStats = (player) => {
     const setBonus = computeSetBonus(player.equip);
     const signatureSetBonus = computeSignatureSetBonus(player.equip);
     const codexBonus = computeCodexBonus(player.stats);
-    // cycle 44: 직업 typical loadout과 매칭되는 무기 장착 시 stat 보너스 (페널티 없음)
-    const affinity = getJobWeaponAffinity(player);
+    // cycle 45: outfit set bonus — 장비의 jobs[]가 player.job과 매칭되는 슬롯 카운트별 누적 보너스
+    const affinity = getJobOutfitAffinity(player);
     const affinityAtkMult = affinity.bonus.atkMult || 1;
     const affinityDefMult = affinity.bonus.defMult || 1;
+    const affinityMpBonus = affinity.bonus.mpBonus || 0;
+    const affinityHpBonus = affinity.bonus.hpBonus || 0;
 
     const weaponElem = player.equip.weapon?.elem;
     const isMagic =
@@ -294,8 +296,8 @@ export const calculateFullStats = (player) => {
         dualWieldDefMult *
         affinityDefMult;
 
-    const baseMaxHp = (player.maxHp + codexBonus.hp + passiveBonus.hp) * setBonus.hpMult * signatureSetBonus.hpMult;
-    const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat + passiveBonus.mp) * relicBonus.mpMult;
+    const baseMaxHp = (player.maxHp + codexBonus.hp + passiveBonus.hp) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
+    const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat + passiveBonus.mp) * relicBonus.mpMult * (1 + affinityMpBonus);
     const baseCritChance = Math.min(
         0.75,
         BALANCE.CRIT_CHANCE + equipmentCritBonus + relicBonus.critBonus + abyssBonus.crit + (titlePassive.crit || 0) + passiveBonus.crit
@@ -359,6 +361,6 @@ export const calculateFullStats = (player) => {
         killStreakTier: streak.tierIdx,
         passiveGoldMult: passiveBonus.goldMult,
         passiveExpMult: passiveBonus.expMult,
-        jobAffinity: affinity,  // cycle 44: { matched, typical, weaponKey, bonus, label }
+        jobAffinity: affinity,  // cycle 45: { matchCount, totalSlots, bonus, label, tier, slots }
     };
 };
