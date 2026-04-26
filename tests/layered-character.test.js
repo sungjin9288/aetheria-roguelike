@@ -20,8 +20,8 @@ test('player가 null/job 없으면 null', () => {
 });
 
 test('body manifest에 자산 없으면 null (폴백 동작)', () => {
-    // 초기 manifest는 모두 empty이므로 모든 player가 폴백됨
-    const result = resolveCharacterLayers({ job: '모험가', equip: {} });
+    // body 자산이 등록되지 않은 직업은 폴백
+    const result = resolveCharacterLayers({ job: '버서커', equip: {} });
     assert.equal(result, null);
 });
 
