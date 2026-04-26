@@ -34,24 +34,12 @@ import { JOB_SPRITE_SLUG_MAP } from './avatarSpriteCandidates.js';
  * 처음에는 모두 empty — body가 없으면 layered system 비활성, 폴백 동작.
  */
 export const LAYERED_MANIFEST = Object.freeze({
-    body:    new Set([
-        // 채워질 키 예: 'adventurer', 'warrior', 'assassin', ...
-    ]),
-    cape:    new Set([
-        // 'royal-blue', 'green-hood', ...
-    ]),
-    armor:   new Set([
-        // 'leather', 'plate', 'robe', 'coat'
-    ]),
-    boots:   new Set([
-        // 'leather-boots', 'plate-boots', 'cloth-shoes', ...
-    ]),
-    weapon:  new Set([
-        // 'dagger', 'sword', 'staff', 'bow', 'axe', 'spear', 'hammer'
-    ]),
-    helmet:  new Set([
-        // 'cap', 'hood', 'helm', 'wizard-hat'
-    ]),
+    body:    new Set([]),    // imagegen 자산 받으면 키 등록
+    cape:    new Set([]),
+    armor:   new Set([]),
+    boots:   new Set([]),
+    weapon:  new Set([]),
+    helmet:  new Set([]),
 });
 
 const LAYER_ORDER = Object.freeze(['cape', 'body', 'boots', 'armor', 'weapon', 'helmet']);
