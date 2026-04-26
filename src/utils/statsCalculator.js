@@ -5,6 +5,7 @@ import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from './equipmentU
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfileUtils.js';
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
+import { getJobWeaponAffinity } from './jobWeaponAffinity.js';
 
 const MAGIC_JOBS = ['마법사', '아크메이지', '흑마법사', '성직자'];
 const PHYSICAL_ELEMENTS = ['물리', 'physical'];
@@ -257,6 +258,10 @@ export const calculateFullStats = (player) => {
     const setBonus = computeSetBonus(player.equip);
     const signatureSetBonus = computeSignatureSetBonus(player.equip);
     const codexBonus = computeCodexBonus(player.stats);
+    // cycle 44: 직업 typical loadout과 매칭되는 무기 장착 시 stat 보너스 (페널티 없음)
+    const affinity = getJobWeaponAffinity(player);
+    const affinityAtkMult = affinity.bonus.atkMult || 1;
+    const affinityDefMult = affinity.bonus.defMult || 1;
 
     const weaponElem = player.equip.weapon?.elem;
     const isMagic =
@@ -278,6 +283,7 @@ export const calculateFullStats = (player) => {
         setBonus.atkMult *
         signatureSetBonus.atkMult *
         dualWieldAtkMult *
+        affinityAtkMult *
         (passiveBonus.lowHpAtkMult || 1);
 
     const baseDef =
@@ -285,7 +291,8 @@ export const calculateFullStats = (player) => {
         (1 + (buff.def || 0) + abyssBonus.def) *
         setBonus.defMult *
         signatureSetBonus.defMult *
-        dualWieldDefMult;
+        dualWieldDefMult *
+        affinityDefMult;
 
     const baseMaxHp = (player.maxHp + codexBonus.hp + passiveBonus.hp) * setBonus.hpMult * signatureSetBonus.hpMult;
     const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat + passiveBonus.mp) * relicBonus.mpMult;
@@ -352,5 +359,6 @@ export const calculateFullStats = (player) => {
         killStreakTier: streak.tierIdx,
         passiveGoldMult: passiveBonus.goldMult,
         passiveExpMult: passiveBonus.expMult,
+        jobAffinity: affinity,  // cycle 44: { matched, typical, weaponKey, bonus, label }
     };
 };

@@ -98,6 +98,28 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                                 <div className="mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] text-white/88">{offhandName}</div>
                             </div>
                         </div>
+                        {stats?.jobAffinity?.matched && (
+                            <div
+                                data-testid="job-affinity-bonus"
+                                className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-fira font-bold"
+                                style={{
+                                    color: '#7dd4d8',
+                                    border: '1px solid rgba(125,212,216,0.42)',
+                                    background: 'rgba(125,212,216,0.10)',
+                                }}
+                            >
+                                <span>⚔ {stats.jobAffinity.label}</span>
+                                {stats.jobAffinity.bonus.atkMult > 1 && (
+                                    <span className="text-white/82">ATK +{Math.round((stats.jobAffinity.bonus.atkMult - 1) * 100)}%</span>
+                                )}
+                                {stats.jobAffinity.bonus.defMult > 1 && (
+                                    <span className="text-white/82">DEF +{Math.round((stats.jobAffinity.bonus.defMult - 1) * 100)}%</span>
+                                )}
+                                {stats.jobAffinity.bonus.mpBonus > 0 && (
+                                    <span className="text-white/82">MP +{Math.round(stats.jobAffinity.bonus.mpBonus * 100)}%</span>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

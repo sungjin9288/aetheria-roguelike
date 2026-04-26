@@ -446,15 +446,19 @@ export const getEquipmentOverlayAssetKey = (item) => {
     return wearableFamilyKey;
 };
 export const getEquipmentOverlayAssetSrc = (item) => {
-    // cycle 42 (사용자 QA 반영): 시그니처만 character overlay 적용.
-    // 일반 장비는 베이스 sprite의 baked-in 시각으로 처리 (cycle 41 priority가
-    // weapon-baked-in sprite를 prefer함).
-    //
-    // 사용자 피드백: 풀-사이즈 인벤토리 아이콘이 character overlay로 깔리면
-    // (1) 큰 armor가 캐릭터를 가리거나 (2) floating 도구처럼 보임.
-    // 시그니처는 dedicated character-overlay-quality assets라 그것만 표시.
+    // cycle 44 (사용자 피드백 — "장비 디자인이 아바타에 입혀지는 느낌"):
+    // - armor/shield: overlay 없음 (큰 robe.png 같은 게 캐릭터를 가리는 문제 회피)
+    // - weapon: 작은 chibi PNG를 sprite의 hand 위치에 overlay (per-weapon 차별화)
+    // - signature: dedicated overlay (모든 type, 강조)
     if (item?.name && SIGNATURE_SPRITE_KEY_BY_NAME[item.name]) {
         return `/assets/equipment-wearable-exact/${SIGNATURE_SPRITE_KEY_BY_NAME[item.name]}.png`;
+    }
+    // 일반 weapon에만 imagegen chibi PNG overlay (armor/shield는 베이스 sprite로 충분)
+    if (item?.type === 'weapon' && item?.name && EXACT_ITEM_ICON_KEYS[item.name]) {
+        const exactKey = EXACT_ITEM_ICON_KEYS[item.name];
+        if (IMAGEGEN_OVERLAY_KEYS.has(exactKey)) {
+            return `/assets/equipment-exact/${exactKey}.png`;
+        }
     }
     return null;
 };
