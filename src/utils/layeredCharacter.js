@@ -39,15 +39,17 @@ export const LAYERED_MANIFEST = Object.freeze({
     ]),    // imagegen 자산 받으면 키 등록
     cape:    new Set([]),
     armor:   new Set([
-        'leather',
+        'leather', 'plate', 'robe',
     ]),
     boots:   new Set([
         'leather',
     ]),
     weapon:  new Set([
-        'dagger', 'sword',
+        'bow', 'dagger', 'staff', 'sword',
     ]),
-    helmet:  new Set([]),
+    helmet:  new Set([
+        'helm',
+    ]),
 });
 
 const LAYER_ORDER = Object.freeze(['cape', 'body', 'boots', 'armor', 'weapon', 'helmet']);
