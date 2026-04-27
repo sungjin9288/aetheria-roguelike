@@ -35,11 +35,12 @@ CANVAS = 256
 # anchor_y/x: 객체 중심이 위치할 캔버스 좌표 비율
 LAYER_PLACEMENT = {
     "body":   {"height_ratio": 0.92, "anchor_x": 0.50, "anchor_y_bottom": True, "padding_bottom": 0.04},
-    "cape":   {"height_ratio": 0.95, "anchor_x": 0.50, "anchor_y_bottom": True, "padding_bottom": 0.02},
-    "armor":  {"height_ratio": 0.40, "anchor_x": 0.50, "anchor_y": 0.45},
-    "boots":  {"height_ratio": 0.20, "anchor_x": 0.50, "anchor_y": 0.85},
-    "weapon": {"height_ratio": 0.55, "anchor_x": 0.68, "anchor_y": 0.50},
-    "helmet": {"height_ratio": 0.25, "anchor_x": 0.50, "anchor_y": 0.16},
+    "cape":   {"height_ratio": 0.92, "anchor_x": 0.50, "anchor_y_bottom": True, "padding_bottom": 0.06},
+    "armor":  {"height_ratio": 0.42, "anchor_x": 0.50, "anchor_y": 0.46},
+    "boots":  {"height_ratio": 0.18, "anchor_x": 0.50, "anchor_y": 0.86},
+    # weapon: 살짝 안쪽으로 (0.68→0.62) + 약간 작게 (0.55→0.50) — 잘림 방지 + 비율 자연스러움
+    "weapon": {"height_ratio": 0.50, "anchor_x": 0.62, "anchor_y": 0.50},
+    "helmet": {"height_ratio": 0.22, "anchor_x": 0.50, "anchor_y": 0.13},
 }
 
 
