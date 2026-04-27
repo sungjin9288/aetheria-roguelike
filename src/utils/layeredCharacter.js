@@ -37,18 +37,20 @@ export const LAYERED_MANIFEST = Object.freeze({
     body:    new Set([
         'adventurer',
     ]),    // imagegen 자산 받으면 키 등록
-    cape:    new Set([]),
+    cape:    new Set([
+        'cloak',
+    ]),
     armor:   new Set([
-        'leather', 'plate', 'robe',
+        'coat', 'leather', 'plate', 'robe',
     ]),
     boots:   new Set([
-        'leather',
+        'cloth', 'leather', 'plate',
     ]),
     weapon:  new Set([
-        'bow', 'dagger', 'staff', 'sword',
+        'axe', 'bow', 'dagger', 'spear', 'staff', 'sword',
     ]),
     helmet:  new Set([
-        'helm',
+        'cap', 'helm', 'hood', 'wizard-hat',
     ]),
 });
 
