@@ -74,13 +74,16 @@ const resolveBodyKey = (job) => {
 const resolveArmorKey = (armorItem) => {
     if (!armorItem || armorItem.type !== 'armor') return null;
     const name = String(armorItem.name || '');
-    // 우선순위: 구체 재질(가죽/판금/로브) > 일반 패턴(갑옷)
+    // 우선순위: 구체 재질(가죽/판금/로브) > 외투류 > 일반 갑옷
+    // 주의: "튜닉"은 매핑 X — body PNG가 이미 흰 튜닉 차림이라
+    //       추가 layer 없이 body만 보여주는 게 맞음 (여행자 튜닉 등).
     if (/가죽|경갑|레더|조끼/.test(name)) return 'leather';
     if (/로브|예복|성의|가운/.test(name)) return 'robe';
     if (/판금|중갑|풀플레이트|흉갑/.test(name)) return 'plate';
-    if (/외투|망토|클로크|튜닉|복(?!\s)|코트/.test(name)) return 'coat';
+    if (/외투|망토|클로크|코트/.test(name)) return 'coat';
     if (/갑주|갑옷/.test(name)) return 'plate';  // 일반 갑옷은 마지막
-    return 'coat';  // default fallback
+    // 매핑 안 되면 (튜닉, 천옷 등) layer 추가 없이 body만 보여줌
+    return null;
 };
 
 /**
