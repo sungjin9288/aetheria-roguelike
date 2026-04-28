@@ -37,18 +37,33 @@ const TYPE_TONE = {
     물리: 'neutral',
 };
 
-const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, summary = false }) => {
+const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, summary = false, onSelect = null }) => {
     const isOnCooldown = cooldown > 0;
     const tone = TYPE_TONE[skill.type] || 'neutral';
+    const interactive = Boolean(onSelect) && !selected;
+
+    const baseClassName = `rounded-[1.05rem] border transition-all ${summary ? 'px-2.5 py-2' : compact ? 'px-2.5 py-2.5' : 'px-3 py-3'} ${
+        selected
+            ? 'border-[#7dd4d8]/40 bg-[#7dd4d8]/14 shadow-[0_16px_28px_rgba(125,212,216,0.16)]'
+            : interactive
+                ? 'border-white/10 bg-black/18 hover:border-[#7dd4d8]/26 hover:bg-[#7dd4d8]/6 cursor-pointer'
+                : 'border-white/8 bg-black/18'
+    } ${isOnCooldown ? 'opacity-64' : ''}`;
+
+    // 탭 가능한 경우 button으로, 아니면 div로 (a11y).
+    const Wrapper = interactive ? 'button' : 'div';
+    const wrapperProps = interactive
+        ? {
+            type: 'button',
+            onClick: () => onSelect(skill.name),
+            'data-testid': `skill-card-select-${skill.name}`,
+            'aria-label': `${skill.name} 선택`,
+            className: `${baseClassName} text-left w-full`,
+        }
+        : { className: baseClassName };
 
     return (
-        <div
-            className={`rounded-[1.05rem] border transition-all ${summary ? 'px-2.5 py-2' : compact ? 'px-2.5 py-2.5' : 'px-3 py-3'} ${
-                selected
-                    ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 shadow-[0_16px_28px_rgba(125,212,216,0.08)]'
-                    : 'border-white/8 bg-black/18'
-            } ${isOnCooldown ? 'opacity-64' : ''}`}
-        >
+        <Wrapper {...wrapperProps}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -88,7 +103,7 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, sum
                     )}
                 </div>
             </div>
-        </div>
+        </Wrapper>
     );
 };
 
@@ -170,6 +185,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }) => {
                                     cooldown={cooldowns[skill.name] || 0}
                                     compact={compact}
                                     summary={showSkillSummary}
+                                    onSelect={actions?.selectSkill || null}
                                 />
                                 {/* 스킬 분기 교체 — 안전지대 + 분기 있는 스킬 */}
                                 {!showSkillSummary && isInSafeZone && branches && actions?.swapSkillChoice && (

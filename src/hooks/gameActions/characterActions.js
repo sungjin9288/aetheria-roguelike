@@ -50,6 +50,18 @@ export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProt
             });
         },
 
+        // cycle 56: 직접 skill 이름으로 선택 (UI에서 카드 탭 → 즉시 활성).
+        selectSkill: (skillName) => {
+            const skills = getJobSkills(player);
+            if (!skills.length) return;
+            const idx = skills.findIndex((s) => s.name === skillName);
+            if (idx < 0) return;
+            dispatch({
+                type: AT.SET_PLAYER,
+                payload: { skillLoadout: { selected: idx, cooldowns: { ...(player.skillLoadout?.cooldowns || {}) } } }
+            });
+        },
+
         rest: () => {
             if (gameState !== 'idle') return;
             const mapData = DB.MAPS[player.loc];

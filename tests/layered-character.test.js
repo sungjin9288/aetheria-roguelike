@@ -8,70 +8,34 @@ import {
 } from '../src/utils/layeredCharacter.js';
 
 /**
- * Job-Based Skin System (cycle 55):
- *   - body PNG가 직업의 skin (cycle 47-53 layered 시도 후 단일화)
- *   - body manifest에 있으면 skin 반환, 없으면 null → 폴백 (cycle 46 sprite)
- *   - armor/weapon/cape/helmet/boots는 슬롯 UI에서만 표시 (avatar에 합성 X)
+ * Job-Based Avatar (cycle 56):
+ *   - layered system 비활성 (LAYERED_RENDER_ENABLED=false in source)
+ *   - 항상 null 반환 → cycle 46 sprite (직업별 풍부 default) 사용
+ *   - manifest는 deploy 호환 위해 유지
  */
 
-test('player가 null/job 없으면 null', () => {
+test('cycle 56: resolveCharacterLayers는 항상 null (cycle 46 sprite로 폴백)', () => {
     assert.equal(resolveCharacterLayers(null), null);
     assert.equal(resolveCharacterLayers({}), null);
+    assert.equal(resolveCharacterLayers({ job: '모험가' }), null);
+    assert.equal(resolveCharacterLayers({ job: '나이트', equip: { armor: { type: 'armor', name: '판금 갑옷' } } }), null);
 });
 
-test('body manifest에 자산 없으면 null (폴백)', () => {
+test('LAYERED_MANIFEST.body는 14 직업 등록 유지 (재활성 시 즉시 사용 가능)', () => {
+    assert.ok(LAYERED_MANIFEST.body.has('adventurer'));
+    assert.ok(LAYERED_MANIFEST.body.has('shadow-lord'));
+    assert.equal(LAYERED_MANIFEST.body.size, 14);
+});
+
+test('getMissingLayers는 layered 비활성 시점에도 manifest 직접 조회', () => {
     LAYERED_MANIFEST.body.delete('adventurer');
     try {
-        const result = resolveCharacterLayers({ job: '모험가', equip: {} });
-        assert.equal(result, null);
-    } finally {
-        LAYERED_MANIFEST.body.add('adventurer');
-    }
-});
-
-test('body manifest에 자산 있으면 skin 반환', () => {
-    const result = resolveCharacterLayers({ job: '모험가', equip: {} });
-    assert.ok(result);
-    assert.equal(result.body, '/assets/avatars/layers/body/adventurer.png');
-    assert.deepEqual(result.layerOrder, ['body']);
-});
-
-test('cycle 55: 장비를 입어도 avatar에는 body skin만 (armor 무시)', () => {
-    const result = resolveCharacterLayers({
-        job: '모험가',
-        equip: { armor: { type: 'armor', name: '가죽 갑옷' } },
-    });
-    assert.equal(result.armor, undefined);
-    assert.deepEqual(result.layerOrder, ['body']);
-});
-
-test('cycle 55: weapon도 avatar에 합성 X (장비 슬롯에서만 표시)', () => {
-    const result = resolveCharacterLayers({
-        job: '모험가',
-        equip: { weapon: { type: 'weapon', name: '녹슨 단검' } },
-    });
-    assert.equal(result.weapon, undefined);
-    assert.deepEqual(result.layerOrder, ['body']);
-});
-
-test('직업 정규화 (그림자 주군 → shadow-lord)', () => {
-    const result = resolveCharacterLayers({ job: '그림자 주군', equip: {} });
-    assert.equal(result.body, '/assets/avatars/layers/body/shadow-lord.png');
-});
-
-test('getMissingLayers는 body 누락만 검사 (cycle 55)', () => {
-    LAYERED_MANIFEST.body.delete('adventurer');
-    try {
-        const missing = getMissingLayers({ job: '모험가', equip: {} });
+        const missing = getMissingLayers({ job: '모험가' });
         assert.deepEqual(missing, ['body:adventurer']);
     } finally {
         LAYERED_MANIFEST.body.add('adventurer');
     }
 
-    // body 있으면 missing 비어있음 (장비는 무시)
-    const noneMissing = getMissingLayers({
-        job: '모험가',
-        equip: { armor: { type: 'armor', name: '가죽 갑옷' } },
-    });
+    const noneMissing = getMissingLayers({ job: '모험가' });
     assert.deepEqual(noneMissing, []);
 });

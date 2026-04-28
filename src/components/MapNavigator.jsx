@@ -25,11 +25,15 @@ const BAND_CONFIG = [
     { key: 'endgame', label: 'Endgame', maxLevel: Number.POSITIVE_INFINITY },
 ];
 
-const NODE_X_PATTERN = [14, 38, 62, 86];
+// cycle 56: 가독성 우선. 3 컬럼 + 노드 간격 넉넉하게.
+// 이전 (4컬럼 / 84px row gap)에서 같은 band에 5+ 지역이 몰릴 때 겹침 발생.
+const NODE_X_PATTERN = [20, 50, 80];
 const SAFE_X = 50;
-const NODE_WIDTH = 88;
+const NODE_WIDTH = 100;
 const NODE_HALF = NODE_WIDTH / 2;
-const NODE_HEIGHT = 56;
+const NODE_HEIGHT = 78;
+const ROW_GAP = 112;       // band 내 추가 행 간격
+const BAND_GAP_BASE = 188; // band 간 간격
 
 const STATUS_THEME = {
     unexplored: {
@@ -66,7 +70,7 @@ const buildAtlasLayout = (entries) => {
         const bandIndex = Math.max(0, getBandIndex(entry));
         const bandCount = bandRows.get(bandIndex) || 0;
         const laneIndex = entry.type === 'safe' ? null : bandCount % NODE_X_PATTERN.length;
-        const y = 42 + bandIndex * 150 + Math.floor(bandCount / NODE_X_PATTERN.length) * 84;
+        const y = 42 + bandIndex * BAND_GAP_BASE + Math.floor(bandCount / NODE_X_PATTERN.length) * ROW_GAP;
         const x = entry.type === 'safe' ? SAFE_X : NODE_X_PATTERN[laneIndex];
 
         bandRows.set(bandIndex, bandCount + 1);
@@ -205,7 +209,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                 </div>
 
                 <div className="overflow-x-auto custom-scrollbar">
-                    <div className="relative min-w-[420px]" style={{ height: `${atlas.height}px` }}>
+                    <div className="relative min-w-[480px]" style={{ height: `${atlas.height}px` }}>
                         <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 100 ${atlas.height}`} preserveAspectRatio="none" aria-hidden="true">
                             {atlas.edges.map((edge) => (
                                 <line
@@ -234,7 +238,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                                     key={entry.name}
                                     type="button"
                                     onClick={() => setSelectedMapName(entry.name)}
-                                    className={`absolute w-[88px] rounded-[1rem] border px-2 py-2 text-left shadow-[0_14px_28px_rgba(3,8,16,0.18)] transition-all ${theme.card} ${isSelected ? 'ring-1 ring-[#d5b180]/36' : ''}`}
+                                    className={`absolute w-[100px] rounded-[1rem] border px-2 py-2 text-left shadow-[0_14px_28px_rgba(3,8,16,0.18)] transition-all ${theme.card} ${isSelected ? 'ring-1 ring-[#d5b180]/36' : ''}`}
                                     style={{ left: `calc(${node.x}% - ${NODE_HALF}px)`, top: `${node.y}px`, minHeight: `${NODE_HEIGHT}px` }}
                                 >
                                     <div className="flex items-center justify-between gap-1">

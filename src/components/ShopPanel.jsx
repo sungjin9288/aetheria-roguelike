@@ -207,7 +207,11 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                         <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-amber-300/70">Daily Deals — 10% OFF</div>
                         <div className="grid grid-cols-1 gap-2">
                             {dailyDeals.items.map((item) => {
-                                const canBuy = inventoryHasRoom && player.gold >= item.price && (!isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job));
+                                const canStore = inventoryHasRoom;
+                                const affordable = player.gold >= item.price;
+                                const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job);
+                                const canBuy = canStore && affordable && equipable;
+                                const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
                                 return (
                                     <div key={item.name} className="flex items-center justify-between gap-2 rounded-[1.1rem] border border-amber-400/20 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.12),transparent_24%),linear-gradient(180deg,rgba(47,33,15,0.24)_0%,rgba(18,12,8,0.12)_100%)] px-3 py-2.5">
                                         <div className="min-w-0 flex items-center gap-2">
@@ -218,6 +222,9 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                                     <span className="text-[10px] font-fira text-amber-300 font-bold">{item.price} CR</span>
                                                     <span className="text-[9px] font-fira text-slate-500 line-through">{item.originalPrice}</span>
                                                 </div>
+                                                {!canBuy && reason && (
+                                                    <div className="mt-0.5 text-[9px] font-fira text-rose-300/85">{reason}</div>
+                                                )}
                                             </div>
                                         </div>
                                         <button
@@ -226,9 +233,10 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                                 setPurchaseNotice(item.name);
                                             }}
                                             disabled={!canBuy}
+                                            title={!canBuy && reason ? reason : '구매'}
                                             className="shrink-0 min-h-[32px] rounded-full border border-amber-400/30 px-2.5 py-1 text-[10px] font-bold text-amber-300 transition-all disabled:opacity-30 hover:bg-amber-400/10"
                                         >
-                                            {canBuy ? '구매' : '불가'}
+                                            {canBuy ? '구매' : reason}
                                         </button>
                                     </div>
                                 );
@@ -247,16 +255,26 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                         </div>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        actions.market('buy', weeklySpecial);
-                                        setPurchaseNotice(weeklySpecial.name);
-                                    }}
-                                    disabled={!inventoryHasRoom || player.gold < weeklySpecial.price}
-                                    className="shrink-0 min-h-[36px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-300 transition-all disabled:opacity-30 hover:bg-purple-400/10"
-                                >
-                                    {!inventoryHasRoom ? '가방 가득' : player.gold >= weeklySpecial.price ? '구매' : '골드 부족'}
-                                </button>
+                                {(() => {
+                                    const canStore = inventoryHasRoom;
+                                    const affordable = player.gold >= weeklySpecial.price;
+                                    const equipable = !isEquipmentItem(weeklySpecial) || !Array.isArray(weeklySpecial.jobs) || weeklySpecial.jobs.includes(player.job);
+                                    const canBuy = canStore && affordable && equipable;
+                                    const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
+                                    return (
+                                        <button
+                                            onClick={() => {
+                                                actions.market('buy', weeklySpecial);
+                                                setPurchaseNotice(weeklySpecial.name);
+                                            }}
+                                            disabled={!canBuy}
+                                            title={!canBuy && reason ? reason : '구매'}
+                                            className="shrink-0 min-h-[36px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-300 transition-all disabled:opacity-30 hover:bg-purple-400/10"
+                                        >
+                                            {canBuy ? '구매' : reason}
+                                        </button>
+                                    );
+                                })()}
                             </div>
                         )}
                     </div>

@@ -57,7 +57,15 @@ const resolveBodyKey = (job) => {
  *
  * body가 manifest에 없으면 null 반환 → 폴백 (cycle 46 직업 sprite).
  */
+// cycle 56: layered system 비활성. 사용자 피드백: layered body PNG가 너무
+// 단순/재미없음 ("아바타 너무 재미없게 생겼어 / 우리 디자인 잘해놨잖아").
+// cycle 46 sprite (직업별 풍부한 default — 갑옷+무기+망토 baked-in으로
+// 시각적으로 압도적)을 그대로 사용하는 게 정답.
+// hand-grip weapon 재생성 등 향후 layered 재활성 시 false → true 한 줄.
+const LAYERED_RENDER_ENABLED = false;
+
 export const resolveCharacterLayers = (player) => {
+    if (!LAYERED_RENDER_ENABLED) return null;
     if (!player?.job) return null;
 
     const bodyKey = resolveBodyKey(player.job);
