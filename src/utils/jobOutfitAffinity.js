@@ -130,6 +130,27 @@ export const getJobOutfitAffinity = (player) => {
 };
 
 /**
+ * 직업 세트 카탈로그 — items DB에서 해당 직업 호환 장비 추출.
+ *
+ * @param {string} job - 한글 직업명
+ * @param {object} items - DB.ITEMS (weapons, armors 배열 보유)
+ * @returns {{ weapon: object[], armor: object[], offhand: object[] }}
+ *
+ * 각 슬롯별 후보를 tier 오름차순 정렬. 사용자가 "어떤 아이템을 모아야
+ * 세트가 발동하는가" 직접 보고 모험을 계획할 수 있도록.
+ */
+export const getJobSetCatalog = (job, items) => {
+    const empty = { weapon: [], armor: [], offhand: [] };
+    if (!job || !items) return empty;
+    const matchesJob = (item) => Array.isArray(item.jobs) && item.jobs.includes(job);
+    const byTier = (a, b) => (a.tier || 0) - (b.tier || 0) || (a.price || 0) - (b.price || 0);
+    const weapons = (items.weapons || []).filter(matchesJob).sort(byTier);
+    const armors = (items.armors || []).filter((it) => it.type === 'armor' && matchesJob(it)).sort(byTier);
+    const offhands = (items.armors || []).filter((it) => it.type === 'shield' && matchesJob(it)).sort(byTier);
+    return { weapon: weapons, armor: armors, offhand: offhands };
+};
+
+/**
  * UI용: outfit affinity tone (gold gradation by tier).
  */
 export const getOutfitAffinityTone = (tier) => {

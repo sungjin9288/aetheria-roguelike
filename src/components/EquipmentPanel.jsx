@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
-import { Shield, Sparkles, Sword, Target } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Shield, Sparkles, Sword, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
 import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
 import { getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getSignatureSetProgress } from '../utils/signatureSetBonus.js';
 import { isSignatureItem } from '../data/signatureItems.js';
+import { getJobSetCatalog } from '../utils/jobOutfitAffinity.js';
+import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 
 const SLOT_CONFIG = [
@@ -24,7 +26,21 @@ const SIG_SET_TONE = Object.freeze({
 });
 
 const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
+    const [showSetCatalog, setShowSetCatalog] = useState(false);
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip), [player?.equip]);
+    const setCatalog = useMemo(() => getJobSetCatalog(player?.job, DB.ITEMS), [player?.job]);
+    // 인벤토리 + 장착 중 보유 아이템 이름 set (카탈로그에서 ✓/💼 표시용)
+    const ownedItemNames = useMemo(() => {
+        const names = new Set();
+        (player?.inv || []).forEach((it) => it?.name && names.add(it.name));
+        Object.values(player?.equip || {}).forEach((it) => it?.name && names.add(it.name));
+        return names;
+    }, [player?.inv, player?.equip]);
+    const equippedItemNames = useMemo(() => {
+        const names = new Set();
+        Object.values(player?.equip || {}).forEach((it) => it?.name && names.add(it.name));
+        return names;
+    }, [player?.equip]);
     const appearance = useMemo(() => deriveCharacterAppearance(player), [player]);
     const enhanceMaterialCount = useMemo(
         () => countInventoryItemByName(player?.inv, CONSTANTS.ENHANCE_MATERIAL_NAME),
@@ -147,6 +163,79 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                     </div>
                 </div>
             </div>
+
+            {/* cycle 58: 직업 세트 카탈로그 — 어떤 아이템이 세트에 포함되는지 명시.
+                사용자 피드백: "세트 효과마다 어떤 아이템들이 세트로 포함되는지를 알려줘야
+                유저들이 그걸 보고 세트아이템을 맞추지". 펼침 토글로 인벤 가시성 보존. */}
+            {(setCatalog.weapon.length + setCatalog.armor.length + setCatalog.offhand.length) > 0 && (
+                <div className="rounded-[1rem] border border-white/8 bg-black/16 px-3 py-2.5">
+                    <button
+                        type="button"
+                        onClick={() => setShowSetCatalog((prev) => !prev)}
+                        data-testid="job-set-catalog-toggle"
+                        className="flex w-full items-center justify-between gap-2 text-left"
+                        aria-expanded={showSetCatalog}
+                    >
+                        <div className="min-w-0">
+                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-[#d5b180]/82">⚔ {player?.job} 세트 카탈로그</div>
+                            <div className="mt-0.5 text-[11px] font-fira text-slate-300/72 leading-snug">
+                                슬롯별 세트 매칭 후보 · ✓ 장착중 · 🎒 보유 · 미발견 = 미보유
+                            </div>
+                        </div>
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-fira text-slate-400/72">
+                            {setCatalog.weapon.length + setCatalog.armor.length + setCatalog.offhand.length}개
+                            {showSetCatalog ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </span>
+                    </button>
+                    {showSetCatalog && (
+                        <div className="mt-2.5 space-y-2.5">
+                            {[
+                                { key: 'weapon', label: '주무기', list: setCatalog.weapon },
+                                { key: 'armor',  label: '방어구', list: setCatalog.armor },
+                                { key: 'offhand', label: '보조장비', list: setCatalog.offhand },
+                            ].map((group) => {
+                                if (group.list.length === 0) return null;
+                                const ownedCount = group.list.filter((it) => ownedItemNames.has(it.name)).length;
+                                return (
+                                    <div key={group.key}>
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                                            <span className="text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/80">{group.label}</span>
+                                            <span className="text-[9px] font-fira text-slate-500">{ownedCount}/{group.list.length} 보유</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {group.list.map((it) => {
+                                                const isEquipped = equippedItemNames.has(it.name);
+                                                const isOwned = ownedItemNames.has(it.name);
+                                                const baseCls = 'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-fira leading-tight';
+                                                const cls = isEquipped
+                                                    ? `${baseCls} border-emerald-300/50 bg-emerald-300/10 text-emerald-100`
+                                                    : isOwned
+                                                        ? `${baseCls} border-[#d5b180]/40 bg-[#d5b180]/8 text-[#f6e7c8]`
+                                                        : `${baseCls} border-white/10 bg-white/[0.02] text-slate-400/80`;
+                                                return (
+                                                    <span
+                                                        key={it.name}
+                                                        className={cls}
+                                                        title={`${it.name} (T${it.tier || 1}) — ${it.desc_stat || it.desc || ''}`}
+                                                        data-testid={`set-catalog-item-${it.name}`}
+                                                    >
+                                                        <span>{isEquipped ? '✓' : isOwned ? '🎒' : '·'}</span>
+                                                        <span className="truncate max-w-[100px]">{it.name}</span>
+                                                        <span className="text-slate-500/80">T{it.tier || 1}</span>
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            <div className="rounded-[0.85rem] border border-white/8 bg-white/[0.02] px-2.5 py-1.5 text-[10px] font-fira leading-snug text-slate-400/80">
+                                💡 위 아이템 중 주무기·방어구·보조장비 세 슬롯에 모두 장착하면 풀세트 효과 (ATK +30%, DEF +20%, HP +10%, MP +15%) 발동
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {activeSignatureSet && sigSetTone && (
                 <div
