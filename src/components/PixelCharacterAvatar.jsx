@@ -91,27 +91,32 @@ const PixelCharacterAvatar = ({
             <div className="pointer-events-none absolute inset-[3px] rounded-[inherit] border border-white/[0.04]" />
             <div className="pointer-events-none absolute -right-1 top-1 h-5 w-5 rounded-full blur-[10px]" style={{ backgroundColor: softenColor(appearance.palette.glow || appearance.palette.accent, 0.28) }} />
             <div className={`relative h-full w-full overflow-hidden ${sizeConfig.inner}`}>
-                <AvatarEquipmentOverlay appearance={appearance} layer="back" />
+                {/* cycle 47: layered가 활성이면 AvatarEquipmentOverlay(cycle 35 SVG)는 건너뜀.
+                    layered 자체가 body+armor+weapon+boots+helmet+cape 합성이라
+                    overlay까지 그리면 double-render로 cycle 46처럼 보임. */}
                 {layers ? (
                     <LayeredCharacter layers={layers} />
                 ) : (
-                    <img
-                        src={activeSpriteSrc}
-                        alt=""
-                        aria-hidden="true"
-                        className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
-                        onError={() => {
-                            setSpriteState((current) => {
-                                const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
-                                return {
-                                    signature: spriteSignature,
-                                    index: currentState.index < spriteCandidates.length - 1 ? currentState.index + 1 : currentState.index,
-                                };
-                            });
-                        }}
-                    />
+                    <>
+                        <AvatarEquipmentOverlay appearance={appearance} layer="back" />
+                        <img
+                            src={activeSpriteSrc}
+                            alt=""
+                            aria-hidden="true"
+                            className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
+                            onError={() => {
+                                setSpriteState((current) => {
+                                    const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
+                                    return {
+                                        signature: spriteSignature,
+                                        index: currentState.index < spriteCandidates.length - 1 ? currentState.index + 1 : currentState.index,
+                                    };
+                                });
+                            }}
+                        />
+                        <AvatarEquipmentOverlay appearance={appearance} layer="front" />
+                    </>
                 )}
-                <AvatarEquipmentOverlay appearance={appearance} layer="front" />
             </div>
             {showEnhanceBadge && totalEnhance > 0 && (
                 <span className={`absolute bottom-1 right-1 rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 font-fira font-bold text-[#f6e7c8] shadow-[0_6px_18px_rgba(213,177,128,0.22)] ${sizeConfig.badge}`}>
