@@ -192,9 +192,16 @@ export const resolveCharacterLayers = (player) => {
         layers.boots = `/assets/avatars/layers/boots/${bootsKey}.png`;
     }
 
-    const weaponKey = resolveWeaponKey(player.equip?.weapon);
-    if (weaponKey && LAYERED_MANIFEST.weapon.has(weaponKey)) {
-        layers.weapon = `/assets/avatars/layers/weapon/${weaponKey}.png`;
+    // cycle 54: 무기 PNG가 "치비 손이 손잡이를 잡고 있는" 형태로 재생성되기 전까지
+    // 임시 숨김. 현재 weapon PNG는 무기만 있고 손이 없어서 body의 옆구리 손에
+    // 덧대지면 "무기가 떠 있는" 부자연스러운 모습 발생.
+    // 재생성 완료 시 WEAPON_LAYER_ENABLED = true 로 한 줄 변경하면 즉시 활성.
+    const WEAPON_LAYER_ENABLED = false;
+    if (WEAPON_LAYER_ENABLED) {
+        const weaponKey = resolveWeaponKey(player.equip?.weapon);
+        if (weaponKey && LAYERED_MANIFEST.weapon.has(weaponKey)) {
+            layers.weapon = `/assets/avatars/layers/weapon/${weaponKey}.png`;
+        }
     }
 
     const capeKey = resolveCapeKey(player.equip?.armor);

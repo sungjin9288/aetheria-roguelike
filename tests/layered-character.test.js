@@ -49,17 +49,18 @@ test('armor가 manifest에 있으면 layer에 추가', () => {
     assert.ok(result.layerOrder.includes('armor'));
 });
 
-test('weapon이 manifest에 있으면 layer에 추가', () => {
-    // cycle 53 시점: dagger는 manifest 상주.
+test('weapon은 cycle 54에서 임시 숨김 (hand-grip 무기 재생성 대기)', () => {
+    // cycle 54: 현 weapon PNG는 손 없이 무기만 그려져 있어 body의 옆구리 손에
+    // 자연스럽게 합성 안 됨. hand-grip 포함 weapon 재생성 후 재활성 예정.
     const result = resolveCharacterLayers({
         job: '모험가',
         equip: { weapon: { type: 'weapon', name: '녹슨 단검' } },
     });
-    assert.equal(result.weapon, '/assets/avatars/layers/weapon/dagger.png');
-    assert.ok(result.layerOrder.includes('weapon'));
+    assert.equal(result.weapon, undefined);
+    assert.ok(!result.layerOrder.includes('weapon'));
 });
 
-test('layerOrder는 back→front (cape→body→boots→armor→weapon→helmet)', () => {
+test('layerOrder는 back→front (cape→body→boots→armor→helmet); weapon 임시 제외', () => {
     const result = resolveCharacterLayers({
         job: '모험가',
         equip: {
@@ -69,9 +70,8 @@ test('layerOrder는 back→front (cape→body→boots→armor→weapon→helmet)
     });
     const idxBody = result.layerOrder.indexOf('body');
     const idxArmor = result.layerOrder.indexOf('armor');
-    const idxWeapon = result.layerOrder.indexOf('weapon');
     assert.ok(idxBody < idxArmor, 'body before armor');
-    assert.ok(idxArmor < idxWeapon, 'armor before weapon (weapon 손에 든 것이 가장 앞)');
+    assert.ok(!result.layerOrder.includes('weapon'), 'weapon 임시 비활성 (cycle 54)');
 });
 
 test('직업 정규화 (그림자 주군 → shadow-lord)', () => {
