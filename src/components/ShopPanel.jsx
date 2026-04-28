@@ -299,11 +299,24 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                         <div className="min-w-0 flex flex-1 items-start gap-2.5">
                                             <ItemIcon item={item} size={40} showBorder className="mt-0.5 opacity-95" />
                                             <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-1.5">
+                                                <div className="flex flex-wrap items-center gap-1.5">
                                                     <div className="truncate font-bold text-slate-100 font-rajdhani text-[1rem] leading-tight">{item.name}</div>
                                                     {typeTag && (
                                                         <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-fira text-slate-300/85">
                                                             {typeTag}
+                                                        </span>
+                                                    )}
+                                                    {Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
+                                                        <span
+                                                            title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
+                                                            className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold uppercase tracking-[0.1em]"
+                                                            style={{
+                                                                color: '#d5b180',
+                                                                border: '1px solid rgba(213,177,128,0.42)',
+                                                                background: 'rgba(213,177,128,0.10)',
+                                                            }}
+                                                        >
+                                                            ⚔ 세트
                                                         </span>
                                                     )}
                                                 </div>

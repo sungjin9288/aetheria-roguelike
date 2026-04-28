@@ -86,46 +86,61 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                             </div>
                         </div>
                         <div className="mt-2 grid grid-cols-3 gap-2">
-                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                                <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/74">주무기</div>
-                                <div className="mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] text-white/88">{weaponName}</div>
-                            </div>
-                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                                <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/74">방어구</div>
-                                <div className="mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] text-white/88">{armorName}</div>
-                            </div>
-                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                                <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/74">보조장비</div>
-                                <div className="mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] text-white/88">{offhandName}</div>
-                            </div>
+                            {[
+                                { key: 'weapon', label: '주무기', name: weaponName, slot: stats?.jobAffinity?.slots?.weapon },
+                                { key: 'armor',  label: '방어구', name: armorName,  slot: stats?.jobAffinity?.slots?.armor },
+                                { key: 'offhand', label: '보조장비', name: offhandName, slot: stats?.jobAffinity?.slots?.offhand },
+                            ].map((s) => (
+                                <div
+                                    key={s.key}
+                                    className={`rounded-[0.95rem] px-2.5 py-2 transition-colors ${s.slot ? 'border border-[#d5b180]/30 bg-[#d5b180]/8' : 'aether-panel-muted'}`}
+                                    title={s.slot ? `${player?.job} 세트 매치 슬롯` : undefined}
+                                >
+                                    <div className="flex items-center justify-between gap-1">
+                                        <span className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/74">{s.label}</span>
+                                        {s.slot && (
+                                            <span aria-label="세트 매치" title="세트 매치" className="text-[9px] font-fira font-bold text-[#d5b180]">⚔</span>
+                                        )}
+                                    </div>
+                                    <div className={`mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] ${s.slot ? 'text-[#f6e7c8]' : 'text-white/88'}`}>{s.name}</div>
+                                </div>
+                            ))}
                         </div>
-                        {stats?.jobAffinity?.matchCount > 0 && (() => {
-                            const aff = stats.jobAffinity;
+                        {/* cycle 57: 세트 효과 발동 상태 + 발동 조건 안내. matchCount 0 케이스도 노출. */}
+                        {(() => {
+                            const aff = stats?.jobAffinity;
+                            if (!aff) return null;
+                            const matchCount = aff.matchCount || 0;
                             const tone =
                                 aff.tier === 'full' ? { color: '#f6e7a2', border: 'rgba(246,231,162,0.42)', bg: 'rgba(246,231,162,0.10)' } :
                                 aff.tier === 'partial2' ? { color: '#d5b180', border: 'rgba(213,177,128,0.42)', bg: 'rgba(213,177,128,0.10)' } :
-                                { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.10)' };
+                                aff.tier === 'partial1' ? { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.10)' } :
+                                { color: '#94a3b8', border: 'rgba(148,163,184,0.32)', bg: 'rgba(148,163,184,0.06)' };
+                            const dots = [0, 1, 2].map((i) => i < matchCount ? '●' : '○').join('');
+                            const nextHint = matchCount === 0
+                                ? `같은 직업(${player?.job}) 호환 장비 1개 장착 시 세트 효과 발동`
+                                : matchCount < 3
+                                    ? `+${3 - matchCount}슬롯 매치 시 ${matchCount === 1 ? '2단계 (ATK +15% DEF +10%)' : '풀세트 (ATK +30% DEF +20%)'}`
+                                    : '풀세트 발동 — 모든 슬롯 매치 완료';
                             return (
                                 <div
                                     data-testid="job-outfit-affinity"
                                     data-affinity-tier={aff.tier}
-                                    data-match-count={aff.matchCount}
-                                    className="mt-2 inline-flex flex-wrap items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-fira font-bold"
+                                    data-match-count={matchCount}
+                                    className="mt-2 rounded-[0.95rem] px-2.5 py-2 text-[10px] font-fira"
                                     style={{ color: tone.color, border: `1px solid ${tone.border}`, background: tone.bg }}
                                 >
-                                    <span>⚔ {aff.label} ({aff.matchCount}/{aff.totalSlots || 3})</span>
-                                    {aff.bonus.atkMult > 1 && (
-                                        <span className="text-white/82">ATK +{Math.round((aff.bonus.atkMult - 1) * 100)}%</span>
-                                    )}
-                                    {aff.bonus.defMult > 1 && (
-                                        <span className="text-white/82">DEF +{Math.round((aff.bonus.defMult - 1) * 100)}%</span>
-                                    )}
-                                    {aff.bonus.hpBonus > 0 && (
-                                        <span className="text-white/82">HP +{Math.round(aff.bonus.hpBonus * 100)}%</span>
-                                    )}
-                                    {aff.bonus.mpBonus > 0 && (
-                                        <span className="text-white/82">MP +{Math.round(aff.bonus.mpBonus * 100)}%</span>
-                                    )}
+                                    <div className="flex flex-wrap items-center gap-1.5 font-bold">
+                                        <span className="tracking-[0.18em]" aria-hidden="true">{dots}</span>
+                                        <span>{aff.label || `${player?.job} 세트`} ({matchCount}/3)</span>
+                                        {aff.bonus?.atkMult > 1 && <span className="text-white/82">ATK +{Math.round((aff.bonus.atkMult - 1) * 100)}%</span>}
+                                        {aff.bonus?.defMult > 1 && <span className="text-white/82">DEF +{Math.round((aff.bonus.defMult - 1) * 100)}%</span>}
+                                        {aff.bonus?.hpBonus > 0 && <span className="text-white/82">HP +{Math.round(aff.bonus.hpBonus * 100)}%</span>}
+                                        {aff.bonus?.mpBonus > 0 && <span className="text-white/82">MP +{Math.round(aff.bonus.mpBonus * 100)}%</span>}
+                                    </div>
+                                    <div className="mt-1 text-white/70 font-normal leading-snug" style={{ color: 'rgba(255,255,255,0.66)' }}>
+                                        💡 {nextHint}
+                                    </div>
                                 </div>
                             );
                         })()}

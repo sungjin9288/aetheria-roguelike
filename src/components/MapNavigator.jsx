@@ -62,49 +62,9 @@ const getBandIndex = (map) => {
     return BAND_CONFIG.findIndex((band) => mapLevel <= band.maxLevel);
 };
 
-const buildAtlasLayout = (entries) => {
-    const bandRows = new Map();
-    const nodeMap = new Map();
-
-    entries.forEach((entry) => {
-        const bandIndex = Math.max(0, getBandIndex(entry));
-        const bandCount = bandRows.get(bandIndex) || 0;
-        const laneIndex = entry.type === 'safe' ? null : bandCount % NODE_X_PATTERN.length;
-        const y = 42 + bandIndex * BAND_GAP_BASE + Math.floor(bandCount / NODE_X_PATTERN.length) * ROW_GAP;
-        const x = entry.type === 'safe' ? SAFE_X : NODE_X_PATTERN[laneIndex];
-
-        bandRows.set(bandIndex, bandCount + 1);
-        nodeMap.set(entry.name, { ...entry, x, y, bandIndex });
-    });
-
-    const edges = [];
-    const added = new Set();
-
-    entries.forEach((entry) => {
-        const source = nodeMap.get(entry.name);
-        (entry.exits || []).forEach((targetName) => {
-            const target = nodeMap.get(targetName);
-            if (!source || !target) return;
-            const edgeKey = [entry.name, targetName].sort().join('::');
-            if (added.has(edgeKey)) return;
-            added.add(edgeKey);
-            edges.push({
-                key: edgeKey,
-                x1: source.x,
-                y1: source.y + NODE_HEIGHT / 2,
-                x2: target.x,
-                y2: target.y + NODE_HEIGHT / 2,
-            });
-        });
-    });
-
-    const maxY = [...nodeMap.values()].reduce((acc, node) => Math.max(acc, node.y), 0);
-    return {
-        nodeMap,
-        edges,
-        height: maxY + NODE_HEIGHT + 48,
-    };
-};
+// cycle 57: 절대위치 그리드(buildAtlasLayout) 폐기. tier별 vertical list로 대체.
+// 좌표 상수(NODE_X_PATTERN, ROW_GAP, BAND_GAP_BASE, NODE_HEIGHT 등)는 unused지만
+// 의도적으로 const 선언만 유지 — 향후 atlas view 재도입 시 재활용.
 
 const MapNavigator = ({ player, grave, stats, compact = false }) => {
     const [showAllMaps, setShowAllMaps] = useState(false);
@@ -131,8 +91,10 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
     }), [grave, player]);
 
     const visibleEntries = compact && !showAllMaps ? mapEntries.slice(0, 14) : mapEntries;
-    const atlas = useMemo(() => buildAtlasLayout(visibleEntries), [visibleEntries]);
-    const selectedEntry = atlas.nodeMap.get(selectedMapName) || atlas.nodeMap.get(player?.loc) || visibleEntries[0] || null;
+    const selectedEntry = visibleEntries.find((e) => e.name === selectedMapName)
+        || visibleEntries.find((e) => e.name === player?.loc)
+        || visibleEntries[0]
+        || null;
     const visibleRecommendations = moveRecommendations.slice(0, compact ? 2 : 3);
     const statusCounts = visibleEntries.reduce((acc, entry) => {
         acc[entry.state] += 1;
@@ -194,6 +156,8 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                 </div>
             )}
 
+            {/* cycle 57: tier별 그룹 vertical list. 절대위치 그리드는 노드 겹침 + 가독성 문제로 폐기.
+                각 카드가 직업 친화 표시할 수 있도록 충분히 넓게 표시. */}
             <div className="rounded-[1rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.025)_0%,rgba(255,255,255,0.01)_100%)] px-2 py-2">
                 <div className="mb-2 flex items-center justify-between gap-2 px-1">
                     <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">World Routes</div>
@@ -208,61 +172,70 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                     ) : null}
                 </div>
 
-                <div className="overflow-x-auto custom-scrollbar">
-                    <div className="relative min-w-[480px]" style={{ height: `${atlas.height}px` }}>
-                        <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 100 ${atlas.height}`} preserveAspectRatio="none" aria-hidden="true">
-                            {atlas.edges.map((edge) => (
-                                <line
-                                    key={edge.key}
-                                    x1={edge.x1}
-                                    y1={edge.y1}
-                                    x2={edge.x2}
-                                    y2={edge.y2}
-                                    stroke="rgba(148,163,184,0.22)"
-                                    strokeWidth="0.6"
-                                    strokeDasharray="2 2"
-                                />
-                            ))}
-                        </svg>
-
-                        {visibleEntries.map((entry) => {
-                            const node = atlas.nodeMap.get(entry.name);
-                            const theme = STATUS_THEME[entry.state];
-                            const isSelected = selectedEntry?.name === entry.name;
-                            const isCurrent = entry.isCurrent;
-                            const graveCount = entry.graves.length;
-                            const graveGold = entry.graves.reduce((sum, item) => sum + Math.max(0, item?.gold || 0), 0);
-
-                            return (
-                                <button
-                                    key={entry.name}
-                                    type="button"
-                                    onClick={() => setSelectedMapName(entry.name)}
-                                    className={`absolute w-[100px] rounded-[1rem] border px-2 py-2 text-left shadow-[0_14px_28px_rgba(3,8,16,0.18)] transition-all ${theme.card} ${isSelected ? 'ring-1 ring-[#d5b180]/36' : ''}`}
-                                    style={{ left: `calc(${node.x}% - ${NODE_HALF}px)`, top: `${node.y}px`, minHeight: `${NODE_HEIGHT}px` }}
-                                >
-                                    <div className="flex items-center justify-between gap-1">
-                                        <span className={`h-2.5 w-2.5 rounded-full ${theme.dot}`} />
-                                        {isCurrent ? <MapPin size={11} className="text-[#dff7f5]" /> : entry.state === 'completed' ? <Check size={11} className="text-emerald-200" /> : entry.state === 'exploring' ? <Compass size={11} className="text-[#dff7f5]" /> : <Lock size={11} className="text-slate-500" />}
+                <div className="space-y-3">
+                    {BAND_CONFIG.map((band, bandIndex) => {
+                        const bandEntries = visibleEntries.filter((entry) => getBandIndex(entry) === bandIndex);
+                        if (bandEntries.length === 0) return null;
+                        const bandLevelHint = band.maxLevel === Number.POSITIVE_INFINITY
+                            ? 'Lv.60+'
+                            : `~Lv.${band.maxLevel}`;
+                        return (
+                            <div key={band.key} className="space-y-1.5">
+                                <div className="flex items-center justify-between px-1">
+                                    <div className="flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/72">
+                                        <span className="text-[#dff7f5]/80">{band.label}</span>
+                                        <span className="text-slate-500">{bandLevelHint}</span>
                                     </div>
-                                    <div className="mt-1 truncate text-[11px] font-rajdhani font-bold">{entry.name}</div>
-                                    <div className="mt-0.5 text-[9px] font-fira text-slate-300/70">
-                                        {entry.progress.discovered}/{entry.progress.total || 0} 도감
-                                    </div>
-                                    {entry.undiscoveredSignatures.length > 0 && (
-                                        <div className="mt-1 text-[9px] font-fira text-[#f6e7a2]/90">
-                                            ✦ 전설 {entry.undiscoveredSignatures.length}
-                                        </div>
-                                    )}
-                                    {graveCount > 0 && (
-                                        <div className="mt-1 text-[9px] font-fira text-rose-200/82">
-                                            유해 {graveCount} · {graveGold}G
-                                        </div>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
+                                    <span className="text-[9px] font-fira text-slate-500">{bandEntries.length}곳</span>
+                                </div>
+                                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                    {bandEntries.map((entry) => {
+                                        const theme = STATUS_THEME[entry.state];
+                                        const isSelected = selectedEntry?.name === entry.name;
+                                        const isCurrent = entry.isCurrent;
+                                        const graveCount = entry.graves.length;
+                                        const graveGold = entry.graves.reduce((sum, item) => sum + Math.max(0, item?.gold || 0), 0);
+                                        const levelLabel = entry.level === 'infinite'
+                                            ? 'Abyss'
+                                            : `Lv.${entry.minLv ?? entry.level ?? 1}`;
+                                        return (
+                                            <button
+                                                key={entry.name}
+                                                type="button"
+                                                onClick={() => setSelectedMapName(entry.name)}
+                                                className={`w-full rounded-[1rem] border px-3 py-2.5 text-left shadow-[0_10px_22px_rgba(3,8,16,0.16)] transition-all ${theme.card} ${isSelected ? 'ring-1 ring-[#d5b180]/40' : 'hover:border-white/14'}`}
+                                            >
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <span className={`h-2 w-2 shrink-0 rounded-full ${theme.dot}`} />
+                                                        <span className="truncate text-[12px] font-rajdhani font-bold">{entry.name}</span>
+                                                    </div>
+                                                    <div className="flex shrink-0 items-center gap-1">
+                                                        {isCurrent
+                                                            ? <MapPin size={12} className="text-[#dff7f5]" />
+                                                            : entry.state === 'completed' ? <Check size={12} className="text-emerald-200" />
+                                                            : entry.state === 'exploring' ? <Compass size={12} className="text-[#dff7f5]" />
+                                                            : <Lock size={12} className="text-slate-500" />}
+                                                        <span className="text-[9px] font-fira text-slate-400/80">{levelLabel}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-fira text-slate-300/76">
+                                                    <span>도감 {entry.progress.discovered}/{entry.progress.total || 0}</span>
+                                                    {entry.undiscoveredSignatures.length > 0 && (
+                                                        <span className="text-[#f6e7a2]/95">✦ 전설 {entry.undiscoveredSignatures.length}</span>
+                                                    )}
+                                                    {graveCount > 0 && (
+                                                        <span className="text-rose-200/85">유해 {graveCount}·{graveGold}G</span>
+                                                    )}
+                                                    {isCurrent && <span className="text-[#dff7f5]">현재 위치</span>}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 

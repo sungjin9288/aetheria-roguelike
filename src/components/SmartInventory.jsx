@@ -362,6 +362,20 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
                                     {resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
                                     {!canEquip && <SignalBadge tone="danger" size="sm">직업 제한</SignalBadge>}
+                                    {canEquip && Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
+                                        <span
+                                            data-testid={`inventory-job-affinity-${item.id || item.name}`}
+                                            title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
+                                            className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold uppercase tracking-[0.1em]"
+                                            style={{
+                                                color: '#d5b180',
+                                                border: '1px solid rgba(213,177,128,0.42)',
+                                                background: 'rgba(213,177,128,0.10)',
+                                            }}
+                                        >
+                                            ⚔ {player.job} 세트
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Compare diff (on hover or always for equip items) */}
