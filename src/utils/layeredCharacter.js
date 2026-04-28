@@ -35,7 +35,7 @@ import { JOB_SPRITE_SLUG_MAP } from './avatarSpriteCandidates.js';
  */
 export const LAYERED_MANIFEST = Object.freeze({
     body:    new Set([
-        'adventurer', 'archmage', 'assassin', 'knight', 'mage', 'warrior',
+        'adventurer', 'archmage', 'assassin', 'berserker', 'chronomancer', 'grand-mage', 'knight', 'mage', 'paladin', 'ranger', 'rogue', 'shadow-lord', 'warlock', 'warrior',
     ]),    // imagegen 자산 받으면 키 등록
     cape:    new Set([
         'cloak',

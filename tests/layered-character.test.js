@@ -20,99 +20,86 @@ test('player가 null/job 없으면 null', () => {
 });
 
 test('body manifest에 자산 없으면 null (폴백 동작)', () => {
-    // body 자산이 등록되지 않은 직업은 폴백
-    const result = resolveCharacterLayers({ job: '버서커', equip: {} });
-    assert.equal(result, null);
-});
-
-test('body manifest에 추가 시 layered 객체 반환', () => {
-    LAYERED_MANIFEST.body.add('adventurer');
+    // cycle 53 시점: 14 직업 전부 manifest 등록됨. 임시 제거 후 폴백 검증.
+    LAYERED_MANIFEST.body.delete('adventurer');
     try {
         const result = resolveCharacterLayers({ job: '모험가', equip: {} });
-        assert.ok(result);
-        assert.equal(result.body, '/assets/avatars/layers/body/adventurer.png');
-        assert.deepEqual(result.layerOrder, ['body']);
+        assert.equal(result, null);
     } finally {
-        LAYERED_MANIFEST.body.delete('adventurer');
+        LAYERED_MANIFEST.body.add('adventurer');
     }
+});
+
+test('body manifest에 자산 있으면 layered 객체 반환', () => {
+    // adventurer는 cycle 47부터 manifest 상주. 별도 add/delete 불필요.
+    const result = resolveCharacterLayers({ job: '모험가', equip: {} });
+    assert.ok(result);
+    assert.equal(result.body, '/assets/avatars/layers/body/adventurer.png');
+    assert.deepEqual(result.layerOrder, ['body']);
 });
 
 test('armor가 manifest에 있으면 layer에 추가', () => {
-    LAYERED_MANIFEST.body.add('adventurer');
-    LAYERED_MANIFEST.armor.add('leather');
-    try {
-        const result = resolveCharacterLayers({
-            job: '모험가',
-            equip: { armor: { type: 'armor', name: '가죽 갑옷' } },
-        });
-        assert.ok(result.armor);
-        assert.equal(result.armor, '/assets/avatars/layers/armor/leather.png');
-        assert.ok(result.layerOrder.includes('armor'));
-    } finally {
-        LAYERED_MANIFEST.body.delete('adventurer');
-        LAYERED_MANIFEST.armor.delete('leather');
-    }
+    // cycle 53 시점: leather는 manifest 상주. 별도 add 불필요.
+    const result = resolveCharacterLayers({
+        job: '모험가',
+        equip: { armor: { type: 'armor', name: '가죽 갑옷' } },
+    });
+    assert.ok(result.armor);
+    assert.equal(result.armor, '/assets/avatars/layers/armor/leather.png');
+    assert.ok(result.layerOrder.includes('armor'));
 });
 
 test('weapon이 manifest에 있으면 layer에 추가', () => {
-    LAYERED_MANIFEST.body.add('adventurer');
-    LAYERED_MANIFEST.weapon.add('dagger');
-    try {
-        const result = resolveCharacterLayers({
-            job: '모험가',
-            equip: { weapon: { type: 'weapon', name: '녹슨 단검' } },
-        });
-        assert.equal(result.weapon, '/assets/avatars/layers/weapon/dagger.png');
-        assert.ok(result.layerOrder.includes('weapon'));
-    } finally {
-        LAYERED_MANIFEST.body.delete('adventurer');
-        LAYERED_MANIFEST.weapon.delete('dagger');
-    }
+    // cycle 53 시점: dagger는 manifest 상주.
+    const result = resolveCharacterLayers({
+        job: '모험가',
+        equip: { weapon: { type: 'weapon', name: '녹슨 단검' } },
+    });
+    assert.equal(result.weapon, '/assets/avatars/layers/weapon/dagger.png');
+    assert.ok(result.layerOrder.includes('weapon'));
 });
 
 test('layerOrder는 back→front (cape→body→boots→armor→weapon→helmet)', () => {
-    LAYERED_MANIFEST.body.add('adventurer');
-    LAYERED_MANIFEST.armor.add('leather');
-    LAYERED_MANIFEST.weapon.add('dagger');
-    try {
-        const result = resolveCharacterLayers({
-            job: '모험가',
-            equip: {
-                weapon: { type: 'weapon', name: '녹슨 단검' },
-                armor: { type: 'armor', name: '가죽 갑옷' },
-            },
-        });
-        const idxBody = result.layerOrder.indexOf('body');
-        const idxArmor = result.layerOrder.indexOf('armor');
-        const idxWeapon = result.layerOrder.indexOf('weapon');
-        assert.ok(idxBody < idxArmor, 'body before armor');
-        assert.ok(idxArmor < idxWeapon, 'armor before weapon (weapon 손에 든 것이 가장 앞)');
-    } finally {
-        LAYERED_MANIFEST.body.delete('adventurer');
-        LAYERED_MANIFEST.armor.delete('leather');
-        LAYERED_MANIFEST.weapon.delete('dagger');
-    }
-});
-
-test('직업 정규화 (그림자 주군 → shadow-lord)', () => {
-    LAYERED_MANIFEST.body.add('shadow-lord');
-    try {
-        const result = resolveCharacterLayers({ job: '그림자 주군', equip: {} });
-        assert.equal(result.body, '/assets/avatars/layers/body/shadow-lord.png');
-    } finally {
-        LAYERED_MANIFEST.body.delete('shadow-lord');
-    }
-});
-
-test('getMissingLayers는 누락 자산 식별', () => {
-    const missing = getMissingLayers({
+    const result = resolveCharacterLayers({
         job: '모험가',
         equip: {
             weapon: { type: 'weapon', name: '녹슨 단검' },
             armor: { type: 'armor', name: '가죽 갑옷' },
         },
     });
-    assert.ok(missing.includes('body:adventurer'));
-    assert.ok(missing.includes('armor:leather'));
-    assert.ok(missing.includes('weapon:dagger'));
+    const idxBody = result.layerOrder.indexOf('body');
+    const idxArmor = result.layerOrder.indexOf('armor');
+    const idxWeapon = result.layerOrder.indexOf('weapon');
+    assert.ok(idxBody < idxArmor, 'body before armor');
+    assert.ok(idxArmor < idxWeapon, 'armor before weapon (weapon 손에 든 것이 가장 앞)');
+});
+
+test('직업 정규화 (그림자 주군 → shadow-lord)', () => {
+    // cycle 53 시점: shadow-lord는 manifest 상주.
+    const result = resolveCharacterLayers({ job: '그림자 주군', equip: {} });
+    assert.equal(result.body, '/assets/avatars/layers/body/shadow-lord.png');
+});
+
+test('getMissingLayers는 누락 자산 식별', () => {
+    // cycle 53 시점: 위 자산들은 모두 manifest 등록되어 missing이 아님.
+    // 임시로 삭제해서 missing 검출 검증.
+    LAYERED_MANIFEST.body.delete('adventurer');
+    LAYERED_MANIFEST.armor.delete('leather');
+    LAYERED_MANIFEST.weapon.delete('dagger');
+    try {
+        const missing = getMissingLayers({
+            job: '모험가',
+            equip: {
+                weapon: { type: 'weapon', name: '녹슨 단검' },
+                armor: { type: 'armor', name: '가죽 갑옷' },
+            },
+        });
+        assert.ok(missing.includes('body:adventurer'));
+        assert.ok(missing.includes('armor:leather'));
+        assert.ok(missing.includes('weapon:dagger'));
+    } finally {
+        LAYERED_MANIFEST.body.add('adventurer');
+        LAYERED_MANIFEST.armor.add('leather');
+        LAYERED_MANIFEST.weapon.add('dagger');
+    }
 });
