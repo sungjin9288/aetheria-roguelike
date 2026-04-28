@@ -62,6 +62,7 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
             <div className={`overflow-hidden rounded-[1.1rem] ${compact ? 'aether-panel-core p-2.5' : 'border border-white/8 bg-black/18 p-3'}`}>
                 <div className="flex items-start gap-3">
                     <PixelCharacterAvatar
+                        player={player}
                         appearance={appearance}
                         size={compact ? 'md' : 'lg'}
                         dataTestId="equipment-character-preview"

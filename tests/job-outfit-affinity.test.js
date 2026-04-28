@@ -89,8 +89,9 @@ test('slots 정보가 어느 슬롯이 매칭됐는지 명시', () => {
     assert.equal(aff.slots.offhand, false);
 });
 
-test('label에 직업 이름 포함', () => {
-    const aff = getJobOutfitAffinity({
+test('label은 직업별 flavor 명칭 (cycle 53: 흥미 유발 워딩)', () => {
+    // 아크메이지 풀세트 → "원소의 군주"
+    const affFull = getJobOutfitAffinity({
         job: '아크메이지',
         equip: {
             weapon: { name: '마법지팡이', jobs: ['마법사', '아크메이지', '흑마법사'] },
@@ -98,7 +99,27 @@ test('label에 직업 이름 포함', () => {
             offhand: { name: '마도서', jobs: ['아크메이지'] },
         },
     });
-    assert.match(aff.label, /아크메이지/);
+    assert.equal(affFull.label, '원소의 군주');
+    assert.equal(affFull.tier, 'full');
+
+    // 모험가 2/3 → "방랑자의 약속"
+    const affPartial2 = getJobOutfitAffinity({
+        job: '모험가',
+        equip: {
+            weapon: { name: '단검', jobs: ['모험가'] },
+            armor: { name: '튜닉', jobs: ['모험가'] },
+            offhand: null,
+        },
+    });
+    assert.equal(affPartial2.label, '방랑자의 약속');
+    assert.equal(affPartial2.tier, 'partial2');
+
+    // 매핑에 없는 직업은 generic fallback
+    const affUnknown = getJobOutfitAffinity({
+        job: '커스텀직업',
+        equip: { weapon: { jobs: ['커스텀직업'] } },
+    });
+    assert.equal(affUnknown.label, '커스텀직업의 결');
 });
 
 test('jobs 메타데이터 없는 장비는 매칭 안 됨', () => {
