@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React, { useMemo } from 'react';
 import { Lock, Eye } from 'lucide-react';
 import { DB } from '../../data/db';

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React, { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles } from 'lucide-react';

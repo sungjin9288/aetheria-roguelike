@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
+// @ts-nocheck — TODO: cycle 59+ migration. props 타입 명시 필요
 import React, { useEffect, useState } from 'react';
 import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp, Star, Skull, Moon, GraduationCap, Hammer, RotateCcw, X, Shield } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';

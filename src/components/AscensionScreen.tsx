@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import { ArrowRight, Crown, Sparkles, ShieldAlert } from 'lucide-react';
 import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';

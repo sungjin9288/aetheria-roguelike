@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { RELICS } from '../data/relics';

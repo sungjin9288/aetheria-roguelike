@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
+// @ts-nocheck — TODO: cycle 59+ migration. props 타입 명시 필요
 import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { soundManager } from '../../systems/SoundManager';
 import { MotionConfig } from 'framer-motion';

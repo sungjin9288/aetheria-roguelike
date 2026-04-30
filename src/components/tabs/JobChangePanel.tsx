@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
+// @ts-nocheck — TODO: cycle 59+ migration. props 타입 명시 필요
 import React from 'react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../../data/db';

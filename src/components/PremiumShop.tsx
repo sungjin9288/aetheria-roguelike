@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React from 'react';
 import { X, Package, Shield, Zap, Star } from 'lucide-react';
 import { PREMIUM_SHOP } from '../data/premiumShop';

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Circle, ChevronRight, X } from 'lucide-react';

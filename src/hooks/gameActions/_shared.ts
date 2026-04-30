@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
 import { BALANCE, CONSTANTS } from '../../data/constants';
 import { CLASSES } from '../../data/classes';
 import { getDailyProtocolCompletions, formatDailyProtocolReward, makeEmitTitles } from '../../utils/gameUtils';
@@ -11,7 +10,7 @@ import { resetDailyProtocolIfNeeded, resetWeeklyProtocolIfNeeded } from '../../u
 /**
  * 클래스 기반 HP/MP 최대치 계산
  */
-export const buildClassVitals = (level, jobId, meta = {}) => {
+export const buildClassVitals = (level, jobId, meta: any = {}) => {
     const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
     const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod) + Math.max(0, level - 1) * BALANCE.HP_PER_LEVEL + (meta.bonusHp || 0);
     const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod) + Math.max(0, level - 1) * BALANCE.MP_PER_LEVEL + (meta.bonusMp || 0);

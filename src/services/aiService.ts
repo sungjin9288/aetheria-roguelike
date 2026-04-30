@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
 import { auth } from '../firebase';
 import { CONSTANTS } from '../data/constants';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
@@ -61,7 +60,7 @@ export const AI_SERVICE = {
         return templates[type] || '운명의 수레바퀴가 돈기 시작합니다.';
     },
 
-    generateEvent: async (loc, history = [], uid = 'anonymous', context = {}) => {
+    generateEvent: async (loc, history: any[] = [], uid = 'anonymous', context: any = {}) => {
         if (isSmokeRuntime()) {
             return pickFallbackEvent(loc, history, context);
         }

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. JSDoc 보존, 복잡한 객체 타입 narrowing 필요
 const RECENT_HISTORY_LIMIT = 6;
 const RECENT_EVENT_LIMIT = 8;
 

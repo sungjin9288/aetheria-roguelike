@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
 import { CombatEngine } from '../../systems/CombatEngine';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';

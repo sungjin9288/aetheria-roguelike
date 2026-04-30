@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React, { useState, useMemo, useCallback } from 'react';
 import { BookOpen, Sword, Shield, Bug, Hammer, Leaf, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';

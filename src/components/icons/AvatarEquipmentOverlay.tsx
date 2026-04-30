@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React from 'react';
 import { getEquipmentOverlayAssetSrc } from '../../utils/itemVisuals.js';
 import { getEquipmentTintFilter } from '../../utils/equipmentTint.js';

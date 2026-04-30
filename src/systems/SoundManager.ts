@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
+// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 /**
  * SoundManager - Web Audio API 기반 사운드 엔진
  * 오실레이터를 이용한 레트로 효과음 생성 (외부 파일 불필요)

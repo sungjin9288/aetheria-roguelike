@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React, { useState } from 'react';
 import { Lock, Check } from 'lucide-react';
 import { DB } from '../../data/db';

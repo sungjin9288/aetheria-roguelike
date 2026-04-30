@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React from 'react';
 import { motion as Motion, MotionConfig } from 'framer-motion';
 import AetherMark from '../AetherMark';

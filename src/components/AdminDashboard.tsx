@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 // Admin Analytics Dashboard Component
 // v4.0: Hybrid Strategy - Analytics offloaded to AWS Lambda
 // Displays user statistics, job paths, death causes with Chart.js visualization

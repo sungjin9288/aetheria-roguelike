@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React, { useMemo, useState } from 'react';
 import { buildEquipmentPreviewAppearance, getEquipmentPreviewStage } from '../../utils/avatarEquipmentPreview.js';
 import { getAvatarEquipmentPreviewCandidates } from '../../utils/avatarSpriteCandidates.js';

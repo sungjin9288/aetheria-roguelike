@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
+// @ts-nocheck — TODO: cycle 59+ migration. literal union narrowing
 export const MONSTERS = {
     슬라임: { weakness: '화염', resistance: '대지', hpMult: 0.8, pattern: { guardChance: 0.05, heavyChance: 0.1 }, statusOnHit: 'poison' },
     늑대: { weakness: '화염', resistance: '자연', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.35 } },

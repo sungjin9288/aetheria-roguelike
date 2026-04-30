@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
+// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { findItemByName, makeItem } from '../../utils/gameUtils';
 import { SEASON_TIER_XP, SEASON_REWARDS } from '../../data/seasonPass';
 

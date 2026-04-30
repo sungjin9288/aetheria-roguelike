@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 59+ migration. JSDoc 보존, 복잡한 객체 타입 narrowing 필요
+// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { getItemRarity } from './gameUtils.js';

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';

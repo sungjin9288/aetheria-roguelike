@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import { AT } from '../reducers/actionTypes';
 import { RARITY_COLORS } from '../data/titles';
 import { RELIC_SYNERGIES } from '../data/relics';

@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
+// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
@@ -32,7 +32,7 @@ export const CombatEngine = {
         return 1;
     },
 
-    calculateDamage(stats, options = {}) {
+    calculateDamage(stats, options: any = {}) {
         const {
             mult = 1,
             guarding = false,
@@ -52,7 +52,7 @@ export const CombatEngine = {
         return { ...this.DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
     },
 
-    getEffectiveMaxMp(player, relics = []) {
+    getEffectiveMaxMp(player, relics: any[] = []) {
         const rmp = 1 + relics.reduce((acc, relic) => {
             if (relic.effect === 'mp_mult') return acc + relic.val;
             if (relic.effect === 'omega') return acc + relic.val;
@@ -61,7 +61,7 @@ export const CombatEngine = {
         return Math.floor((player?.maxMp || 50) * rmp);
     },
 
-    applyCritMpRestore(player, relics = [], logs = []) {
+    applyCritMpRestore(player, relics: any[] = [], logs: any[] = []) {
         const critMpRelic = relics.find((relic) => relic.effect === 'crit_mp_regen');
         if (!critMpRelic) return player;
 
@@ -72,7 +72,7 @@ export const CombatEngine = {
         return { ...player, mp: nextMp };
     },
 
-    applyFatalProtection(player, relics = [], incomingDamage = 0, logs = [], activeSynergies = []) {
+    applyFatalProtection(player, relics: any[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
 
@@ -154,7 +154,7 @@ export const CombatEngine = {
      * 적의 상태이상 틱을 처리합니다. 매 적 행동 전에 호출하세요.
      * DoT 피해, 상태 턴 감소, 만료 처리를 수행합니다.
      */
-    tickEnemyStatus(enemy, logs = [], curseAmpMult = 1, synergyDotMult = 1) {
+    tickEnemyStatus(enemy, logs: any[] = [], curseAmpMult = 1, synergyDotMult = 1) {
         let updated = { ...enemy };
 
         // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
@@ -920,7 +920,7 @@ export const CombatEngine = {
         };
     },
 
-    handleVictory(player, enemy, passiveBonus = {}) {
+    handleVictory(player, enemy, passiveBonus: any = {}) {
         const p = { ...player };
         const relics = p.relics || [];
         const baseName = this.resolveEnemyBaseName(enemy);

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
 import { getJobSkills } from '../../utils/gameUtils';
 import { getEquipmentProfile, getNextEquipmentState } from '../../utils/equipmentUtils';
 import { MSG } from '../../data/messages';
@@ -17,7 +16,7 @@ export const getSelectedSkill = (player) => {
 /**
  * 루트 아이템 중 장비 업그레이드 힌트 계산. 없으면 null.
  */
-export const getLootUpgradeHint = (equip = {}, lootItems = []) => {
+export const getLootUpgradeHint = (equip: any = {}, lootItems: any[] = []) => {
     const equipmentDrops = (lootItems || []).filter((item) => ['weapon', 'armor', 'shield'].includes(item?.type));
     if (!equipmentDrops.length) return null;
 

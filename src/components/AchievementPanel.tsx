@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Trophy, Star, Skull, Swords, Crown, Gift } from 'lucide-react';
