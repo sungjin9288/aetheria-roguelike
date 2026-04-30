@@ -25,7 +25,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('MSG.SIGNATURE_PITY_RESONANCE is defined as a function in messages.js', async () => {
-    const source = await readSrc('src/data/messages.js');
+    const source = await readSrc('src/data/messages.ts');
     assert.ok(
         /SIGNATURE_PITY_RESONANCE\s*:\s*\(/.test(source),
         'SIGNATURE_PITY_RESONANCE should be a function in MSG'
@@ -33,7 +33,7 @@ test('MSG.SIGNATURE_PITY_RESONANCE is defined as a function in messages.js', asy
 });
 
 test('exploreActions imports getSignaturePityMultiplier', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.js');
+    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
     assert.ok(
         source.includes('getSignaturePityMultiplier'),
         'exploreActions should import getSignaturePityMultiplier'
@@ -41,7 +41,7 @@ test('exploreActions imports getSignaturePityMultiplier', async () => {
 });
 
 test('exploreActions emits pity resonance log as legendary type', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.js');
+    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
     assert.ok(
         /SIGNATURE_PITY_RESONANCE/.test(source),
         'should reference MSG.SIGNATURE_PITY_RESONANCE'
@@ -54,7 +54,7 @@ test('exploreActions emits pity resonance log as legendary type', async () => {
 });
 
 test('exploreActions gates pity log behind pityMult > 1 AND boss signature available', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.js');
+    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
     // pityMult > 1 가드
     assert.ok(
         /pityMult\s*>\s*1/.test(source) || /signaturePityMult\s*>\s*1/.test(source),
@@ -68,7 +68,7 @@ test('exploreActions gates pity log behind pityMult > 1 AND boss signature avail
 });
 
 test('exploreActions computes pity multiplier from player.stats.signaturePity', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.js');
+    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
     assert.ok(
         /getSignaturePityMultiplier\(\s*player\.stats\??\.?signaturePity/.test(source)
             || /getSignaturePityMultiplier\(\s*player\?\.\s*stats\?\.\s*signaturePity/.test(source),

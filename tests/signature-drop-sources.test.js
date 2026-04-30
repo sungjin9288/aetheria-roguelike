@@ -77,7 +77,7 @@ test('getAllSignatureDropSourceIndex results are consistent with getSignatureDro
 });
 
 test('LegendaryCodex wires drop sources into detail panel', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.jsx');
+    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
     assert.ok(
         source.includes("import { getSignatureDropSources }"),
         'LegendaryCodex should import getSignatureDropSources'

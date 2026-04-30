@@ -65,7 +65,7 @@ test('getBossSignatureDrops covers major signature-dropping bosses', () => {
 });
 
 test('MSG.SIGNATURE_BOSS_HINT is a function returning Korean hint string', async () => {
-    const source = await readSrc('src/data/messages.js');
+    const source = await readSrc('src/data/messages.ts');
     assert.ok(
         /SIGNATURE_BOSS_HINT\s*:\s*\(/.test(source),
         'SIGNATURE_BOSS_HINT should be defined as a function in MSG'
@@ -73,7 +73,7 @@ test('MSG.SIGNATURE_BOSS_HINT is a function returning Korean hint string', async
 });
 
 test('exploreActions wires signature boss hint before ENEMY_APPEAR log', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.js');
+    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
     assert.ok(
         source.includes("import { getBossSignatureDrops }"),
         'exploreActions should import getBossSignatureDrops'

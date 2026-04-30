@@ -27,7 +27,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('StatusBar imports isSignatureItem', async () => {
-    const source = await readSrc('src/components/StatusBar.jsx');
+    const source = await readSrc('src/components/StatusBar.tsx');
     assert.ok(
         /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"][^'"]*signatureItems/.test(source),
         'StatusBar should import isSignatureItem from signatureItems'
@@ -35,7 +35,7 @@ test('StatusBar imports isSignatureItem', async () => {
 });
 
 test('StatusBar aggregates equipped signature count from weapon/armor/offhand', async () => {
-    const source = await readSrc('src/components/StatusBar.jsx');
+    const source = await readSrc('src/components/StatusBar.tsx');
     // 세 슬롯 모두 한 번씩은 isSignatureItem에 통과돼야 함
     assert.ok(/equip\?\.weapon|equip\.weapon/.test(source), 'weapon slot read missing');
     assert.ok(/equip\?\.armor|equip\.armor/.test(source), 'armor slot read missing');
@@ -43,7 +43,7 @@ test('StatusBar aggregates equipped signature count from weapon/armor/offhand', 
 });
 
 test('StatusBar exposes status-signature-chip testid', async () => {
-    const source = await readSrc('src/components/StatusBar.jsx');
+    const source = await readSrc('src/components/StatusBar.tsx');
     assert.ok(
         /status-signature-chip/.test(source),
         'should expose data-testid="status-signature-chip" for the persistent signature signal'
@@ -51,7 +51,7 @@ test('StatusBar exposes status-signature-chip testid', async () => {
 });
 
 test('StatusBar exposes data-signature-count attribute', async () => {
-    const source = await readSrc('src/components/StatusBar.jsx');
+    const source = await readSrc('src/components/StatusBar.tsx');
     assert.ok(
         /data-signature-count/.test(source),
         'should expose data-signature-count attribute for debugging/integration tests'
@@ -59,7 +59,7 @@ test('StatusBar exposes data-signature-count attribute', async () => {
 });
 
 test('StatusBar uses ✦ marker for signature chip', async () => {
-    const source = await readSrc('src/components/StatusBar.jsx');
+    const source = await readSrc('src/components/StatusBar.tsx');
     // ✦ 마커가 chip JSX 근처에 있어야 함
     assert.ok(
         /✦/.test(source),
@@ -68,7 +68,7 @@ test('StatusBar uses ✦ marker for signature chip', async () => {
 });
 
 test('StatusBar uses gold palette for signature chip', async () => {
-    const source = await readSrc('src/components/StatusBar.jsx');
+    const source = await readSrc('src/components/StatusBar.tsx');
     assert.ok(
         /#f6e7a2|246,\s*231,\s*162/.test(source),
         'signature chip should reuse #f6e7a2 / rgba(246,231,162) gold palette'

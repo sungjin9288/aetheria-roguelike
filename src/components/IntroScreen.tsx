@@ -1,0 +1,182 @@
+// @ts-nocheck — TODO: cycle 58+ migration (JSDoc 기반 props 보존)
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
+import AetherMark from './AetherMark';
+import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
+import { BALANCE } from '../data/constants';
+import { createRandomMobileName } from '../utils/nameGenerator';
+
+const CHALLENGE_REWARD_TEXT = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
+
+const IntroScreen = ({ onStart }) => {
+    const [name, setName] = useState(() => createRandomMobileName());
+    const [selectedChallenges, setSelectedChallenges] = useState([]);
+    const nameInputRef = useRef(null);
+
+    const toggleChallenge = (id) => {
+        setSelectedChallenges(prev =>
+            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id].slice(0, 3)
+        );
+    };
+
+    const blurMobileInput = () => {
+        nameInputRef.current?.blur();
+    };
+
+    const applyName = (nextName, dismissKeyboard = false) => {
+        setName(nextName);
+        if (dismissKeyboard) {
+            blurMobileInput();
+        }
+    };
+
+    useEffect(() => {
+        markPerfOnce('aetheria:intro-visible');
+        measurePerfOnce('aetheria:intro-visible-ms', 'aetheria:app-mounted', 'aetheria:intro-visible');
+    }, []);
+
+    const canStart = name.trim().length > 0;
+    const selectedName = useMemo(() => name.trim(), [name]);
+
+    const handleStart = () => {
+        if (canStart) {
+            blurMobileInput();
+            onStart(selectedName, 'male', '모험가', selectedChallenges);
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && canStart) handleStart();
+    };
+
+    return (
+        <Motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="panel-noise aether-surface-strong relative w-full overflow-hidden text-center max-w-xl shrink-0 rounded-[2rem] px-4 py-5"
+        >
+            <div className="absolute inset-0 opacity-70 pointer-events-none">
+                <div className="absolute -top-20 left-1/2 h-44 w-44 -translate-x-1/2 rounded-full bg-[#d5b180]/10 blur-3xl" />
+                <div className="absolute -bottom-24 right-0 h-40 w-40 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
+            </div>
+            <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+
+            <div className="relative z-10 flex flex-col items-center mb-5 gap-2">
+                <AetherMark size="md" />
+                <div>
+                    <Motion.h1
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.8 }}
+                        className="text-[2.75rem] mb-1 bg-gradient-to-r from-[#f4e6c8] via-[#b3ece7] to-[#82c7d4] bg-clip-text font-rajdhani font-bold tracking-[0.18em] text-transparent"
+                    >
+                        AETHERIA
+                    </Motion.h1>
+                    <Motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8, duration: 1 }}
+                        className="font-fira text-[11px] tracking-[0.26em] text-[#d7dde4]/62"
+                    >
+                        MOONLIT FIELD LEDGER
+                    </Motion.p>
+                </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+                <Motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-5"
+                >
+                    <div className="space-y-3">
+                        <div className="rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,18,26,0.88)_0%,rgba(8,11,17,0.95)_100%)] px-4 py-4">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    ref={nameInputRef}
+                                    data-testid="intro-name-input"
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => applyName(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="닉네임 입력"
+                                    className="w-full rounded-[1.15rem] border border-[#d5b180]/20 bg-[#f6e7c8] px-3 py-3 text-center font-rajdhani text-xl text-black transition-all placeholder:text-black/38 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
+                                    maxLength={16}
+                                />
+                                <button
+                                    type="button"
+                                    data-testid="intro-reroll-name"
+                                    onClick={() => applyName(createRandomMobileName(), true)}
+                                    className="shrink-0 rounded-[1.05rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-3 text-[11px] font-rajdhani font-bold tracking-[0.14em] text-[#f4e6c8]"
+                                >
+                                    랜덤
+                                </button>
+                            </div>
+                            <div data-testid="intro-mobile-name" className="sr-only">{selectedName}</div>
+                            <div className="mt-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/70">
+                                실제 이름 순위 패턴 기반 2~3글자 호출명을 새로 만들고 바로 수정해서 시작할 수 있습니다.
+                            </div>
+                        </div>
+                    </div>
+                </Motion.div>
+            </AnimatePresence>
+
+            {/* Challenge Modifiers */}
+            <div className="mt-5 rounded-[1.35rem] border border-white/8 bg-black/16 px-3 py-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/70">Challenge Modifiers</span>
+                    <div className="flex items-center gap-2">
+                        {selectedChallenges.length > 0 && (
+                            <span className="text-[10px] font-fira text-[#d5b180]">{CHALLENGE_REWARD_TEXT[selectedChallenges.length]}</span>
+                        )}
+                        <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500/80">Up to 3</span>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                    {BALANCE.CHALLENGE_MODIFIERS.map(mod => {
+                        const isSelected = selectedChallenges.includes(mod.id);
+                        return (
+                            <button
+                                key={mod.id}
+                                type="button"
+                                onClick={() => toggleChallenge(mod.id)}
+                                className={`min-h-[4.7rem] rounded-[1rem] border px-2.5 py-2 text-left transition-all ${
+                                    isSelected
+                                        ? 'border-[#d5b180]/38 bg-[#d5b180]/12 text-[#f6e7c8]'
+                                        : 'border-white/8 bg-black/16 text-slate-400 hover:border-white/14 hover:text-slate-300'
+                                }`}
+                            >
+                                <div className="text-[11px] font-rajdhani font-bold">{mod.label}</div>
+                                <div className="text-[9px] font-fira text-slate-500 leading-snug mt-0.5">{mod.desc}</div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="mt-5 space-y-2">
+                <p className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/65">
+                    시작 즉시 첫 지역, 목표, 추천 액션이 배정됩니다.
+                </p>
+                <div className="flex">
+                    <Motion.button
+                        data-testid="intro-start-button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleStart}
+                        disabled={!canStart}
+                        className="flex-1 rounded-[1.4rem] border border-[#7dd4d8]/24 bg-[linear-gradient(180deg,rgba(125,212,216,0.18)_0%,rgba(125,212,216,0.08)_100%)] font-rajdhani font-bold text-[#e6f6f6] transition-all hover:border-[#d5b180]/28 hover:bg-[linear-gradient(180deg,rgba(213,177,128,0.18)_0%,rgba(125,212,216,0.12)_100%)] hover:shadow-[0_22px_40px_rgba(125,212,216,0.12)] disabled:cursor-not-allowed disabled:opacity-40 py-3.5 text-[0.95rem] tracking-[0.18em]"
+                    >
+                        기록 개시
+                    </Motion.button>
+                </div>
+            </div>
+        </Motion.div>
+    );
+};
+
+export default IntroScreen;

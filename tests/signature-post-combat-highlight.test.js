@@ -24,7 +24,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('PostCombatCard imports isSignatureItem', async () => {
-    const source = await readSrc('src/components/PostCombatCard.jsx');
+    const source = await readSrc('src/components/PostCombatCard.tsx');
     assert.ok(
         /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"]\.\.\/data\/signatureItems\.js['"]/.test(source),
         'should import isSignatureItem from signatureItems.js'
@@ -32,7 +32,7 @@ test('PostCombatCard imports isSignatureItem', async () => {
 });
 
 test('PostCombatCard imports Sparkles icon', async () => {
-    const source = await readSrc('src/components/PostCombatCard.jsx');
+    const source = await readSrc('src/components/PostCombatCard.tsx');
     assert.ok(
         /import\s*\{[^}]*Sparkles[^}]*\}\s*from\s*['"]lucide-react['"]/.test(source),
         'should import Sparkles from lucide-react'
@@ -40,7 +40,7 @@ test('PostCombatCard imports Sparkles icon', async () => {
 });
 
 test('PostCombatCard splits droppedItems into signatureLoot and nonSignatureLoot', async () => {
-    const source = await readSrc('src/components/PostCombatCard.jsx');
+    const source = await readSrc('src/components/PostCombatCard.tsx');
     assert.ok(
         /signatureLoot/.test(source),
         'should derive signatureLoot variable'
@@ -57,7 +57,7 @@ test('PostCombatCard splits droppedItems into signatureLoot and nonSignatureLoot
 });
 
 test('PostCombatCard lootSummary is built from nonSignatureLoot (excludes signatures)', async () => {
-    const source = await readSrc('src/components/PostCombatCard.jsx');
+    const source = await readSrc('src/components/PostCombatCard.tsx');
     // lootSummary = nonSignatureLoot.length > 0 ? ... : null
     assert.ok(
         /lootSummary\s*=\s*nonSignatureLoot\.length/.test(source),
@@ -66,7 +66,7 @@ test('PostCombatCard lootSummary is built from nonSignatureLoot (excludes signat
 });
 
 test('PostCombatCard renders Legendary row with gold styling when signatureLoot is non-empty', async () => {
-    const source = await readSrc('src/components/PostCombatCard.jsx');
+    const source = await readSrc('src/components/PostCombatCard.tsx');
     assert.ok(
         /signatureLoot\.length\s*>\s*0/.test(source),
         'should guard Legendary row render behind signatureLoot.length > 0'
@@ -84,7 +84,7 @@ test('PostCombatCard renders Legendary row with gold styling when signatureLoot 
 });
 
 test('PostCombatCard primary panel renders when signatureLoot exists even if no other loot', async () => {
-    const source = await readSrc('src/components/PostCombatCard.jsx');
+    const source = await readSrc('src/components/PostCombatCard.tsx');
     // 기존 조건 (lootSummary || primarySignal)에 signatureLoot 분기도 포함돼야 함
     assert.ok(
         /signatureLoot\.length\s*>\s*0/.test(source),

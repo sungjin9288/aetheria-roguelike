@@ -29,7 +29,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('LegendaryDropOverlay exposes legendary-drop-overlay testid', async () => {
-    const source = await readSrc('src/components/LegendaryDropOverlay.jsx');
+    const source = await readSrc('src/components/LegendaryDropOverlay.tsx');
     assert.ok(
         /data-testid\s*=\s*["']legendary-drop-overlay["']/.test(source),
         'should expose data-testid="legendary-drop-overlay"'
@@ -37,7 +37,7 @@ test('LegendaryDropOverlay exposes legendary-drop-overlay testid', async () => {
 });
 
 test('LegendaryDropOverlay preserves dynamic data-legendary-drop attribute (regression)', async () => {
-    const source = await readSrc('src/components/LegendaryDropOverlay.jsx');
+    const source = await readSrc('src/components/LegendaryDropOverlay.tsx');
     assert.ok(
         /data-legendary-drop\s*=\s*\{\s*item\.name\s*\}/.test(source),
         'data-legendary-drop={item.name} dynamic attribute must be preserved for per-item selection'
@@ -45,7 +45,7 @@ test('LegendaryDropOverlay preserves dynamic data-legendary-drop attribute (regr
 });
 
 test('LegendaryDropOverlay preserves role="alertdialog" (a11y regression)', async () => {
-    const source = await readSrc('src/components/LegendaryDropOverlay.jsx');
+    const source = await readSrc('src/components/LegendaryDropOverlay.tsx');
     assert.ok(
         /role\s*=\s*["']alertdialog["']/.test(source),
         'role="alertdialog" must be preserved for screen reader announcement'

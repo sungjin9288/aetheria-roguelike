@@ -23,7 +23,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('GravePanel imports isSignatureItem from signatureItems', async () => {
-    const source = await readSrc('src/components/GravePanel.jsx');
+    const source = await readSrc('src/components/GravePanel.tsx');
     assert.ok(
         /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"][^'"]*signatureItems/.test(source),
         'GravePanel should import isSignatureItem'
@@ -31,7 +31,7 @@ test('GravePanel imports isSignatureItem from signatureItems', async () => {
 });
 
 test('GravePanel calls isSignatureItem on grave items', async () => {
-    const source = await readSrc('src/components/GravePanel.jsx');
+    const source = await readSrc('src/components/GravePanel.tsx');
     assert.ok(
         /isSignatureItem\(\s*\w+\s*\)/.test(source),
         'GravePanel should call isSignatureItem(item) to detect bounty graves'
@@ -39,7 +39,7 @@ test('GravePanel calls isSignatureItem on grave items', async () => {
 });
 
 test('GravePanel renders "전설" label on signature bounty', async () => {
-    const source = await readSrc('src/components/GravePanel.jsx');
+    const source = await readSrc('src/components/GravePanel.tsx');
     assert.ok(
         /전설/.test(source),
         'GravePanel should show 전설 label when bounty signatures exist'
@@ -47,7 +47,7 @@ test('GravePanel renders "전설" label on signature bounty', async () => {
 });
 
 test('GravePanel grave card exposes data-has-signature attribute', async () => {
-    const source = await readSrc('src/components/GravePanel.jsx');
+    const source = await readSrc('src/components/GravePanel.tsx');
     assert.ok(
         /data-has-signature/.test(source),
         'grave card should expose data-has-signature for styling/testing'
@@ -55,7 +55,7 @@ test('GravePanel grave card exposes data-has-signature attribute', async () => {
 });
 
 test('GravePanel uses stable testid for signature bounty badge', async () => {
-    const source = await readSrc('src/components/GravePanel.jsx');
+    const source = await readSrc('src/components/GravePanel.tsx');
     assert.ok(
         /grave-signature-bounty/.test(source),
         'signature bounty badge should carry a stable testid'

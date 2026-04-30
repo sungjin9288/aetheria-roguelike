@@ -81,7 +81,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('RunSummaryCard references signaturesAcquired from run summary', async () => {
-    const source = await readSrc('src/components/RunSummaryCard.jsx');
+    const source = await readSrc('src/components/RunSummaryCard.tsx');
     assert.ok(
         /signaturesAcquired/.test(source),
         'RunSummaryCard should read signaturesAcquired off runSummary'
@@ -89,7 +89,7 @@ test('RunSummaryCard references signaturesAcquired from run summary', async () =
 });
 
 test('RunSummaryCard renders "전설 각인" section with stable testid', async () => {
-    const source = await readSrc('src/components/RunSummaryCard.jsx');
+    const source = await readSrc('src/components/RunSummaryCard.tsx');
     assert.ok(
         /run-summary-signatures/.test(source),
         'run summary should carry data-testid="run-summary-signatures" for the signature block'

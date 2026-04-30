@@ -24,7 +24,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('AscensionScreen imports getSignatureDiscoveryProgress', async () => {
-    const source = await readSrc('src/components/AscensionScreen.jsx');
+    const source = await readSrc('src/components/AscensionScreen.tsx');
     assert.ok(
         /import\s*\{[^}]*getSignatureDiscoveryProgress[^}]*\}\s*from\s*['"][^'"]*signatureItems/.test(source),
         'AscensionScreen should import getSignatureDiscoveryProgress'
@@ -32,7 +32,7 @@ test('AscensionScreen imports getSignatureDiscoveryProgress', async () => {
 });
 
 test('AscensionScreen exposes ascension-signature-preserve testid', async () => {
-    const source = await readSrc('src/components/AscensionScreen.jsx');
+    const source = await readSrc('src/components/AscensionScreen.tsx');
     assert.ok(
         /ascension-signature-preserve/.test(source),
         'should expose data-testid="ascension-signature-preserve"'
@@ -40,7 +40,7 @@ test('AscensionScreen exposes ascension-signature-preserve testid', async () => 
 });
 
 test('AscensionScreen render is gated on discoveredCount > 0', async () => {
-    const source = await readSrc('src/components/AscensionScreen.jsx');
+    const source = await readSrc('src/components/AscensionScreen.tsx');
     // signature 발견이 0개면 banner 미표시 — discovered > 0 조건이 걸려야 함
     const gateMatch = source.match(
         /(discovered\s*>\s*0|discovered\s*&&|signatureProgress\.discovered)[\s\S]{0,300}ascension-signature-preserve/
@@ -52,7 +52,7 @@ test('AscensionScreen render is gated on discoveredCount > 0', async () => {
 });
 
 test('AscensionScreen banner mentions 전설 각인 + 보존/유지', async () => {
-    const source = await readSrc('src/components/AscensionScreen.jsx');
+    const source = await readSrc('src/components/AscensionScreen.tsx');
     const blockMatch = source.match(/ascension-signature-preserve[\s\S]{0,1200}/);
     assert.ok(blockMatch, 'preserve banner block not found');
     const block = blockMatch[0];
@@ -61,7 +61,7 @@ test('AscensionScreen banner mentions 전설 각인 + 보존/유지', async () =
 });
 
 test('AscensionScreen banner uses ✦ glyph + gold palette', async () => {
-    const source = await readSrc('src/components/AscensionScreen.jsx');
+    const source = await readSrc('src/components/AscensionScreen.tsx');
     const blockMatch = source.match(/ascension-signature-preserve[\s\S]{0,900}/);
     assert.ok(blockMatch);
     const block = blockMatch[0];

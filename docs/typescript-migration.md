@@ -1,80 +1,92 @@
 # TypeScript 마이그레이션 가이드
 
-cycle 58에 점진 마이그레이션 시작. 한 번에 변환하지 않고 file-by-file.
+cycle 58 — 점진 마이그레이션 phase 1 완료.
 
 ## 인프라
 
-- `tsconfig.json`: `allowJs: true` + `noEmit: true` (Vite가 emit 담당, tsc는 type-check만)
-- `tsx` 로더: `node --import tsx --test` 로 `.ts` 테스트 즉시 실행 (트랜스파일 X)
-- `npm run type-check` 으로 전체 타입 검사
+- `tsconfig.json`: `allowJs: true`, `noEmit: true`, strict 점진 활성 예정
+- `tsx` 로더: `node --import tsx --test` 로 `.ts/.tsx` 테스트 즉시 실행
+- `npm run type-check` 으로 전체 타입 검사 (CI에 포함)
+- `src/vite-env.d.ts`: Vite env + window 글로벌 타입 정의
 
-## 변환 완료 (6)
+## 변환 완료 (~110 파일)
 
-- `src/utils/jobOutfitAffinity.ts` (cycle 58a) — AffinityTier/Bonus/OutfitAffinity 등 핵심 인터페이스
-- `src/utils/equipmentTint.ts` (cycle 58a)
-- `src/utils/runtimeMode.ts` (cycle 58b)
-- `src/reducers/actionTypes.ts` (cycle 58b) — `AT` literal union 노출 (`ActionType` type)
-- `src/reducers/gameStates.ts` (cycle 58b) — `GS` literal union 노출 (`GameState` type)
-- `src/data/db.ts` (cycle 58b) — 정적 데이터 진입점 `DB as const`
+전체 `.js`/`.jsx` → `.ts`/`.tsx` 마이그레이션 완료. 두 카테고리:
 
-## 권장 변환 순서
+### A. 명시적 타입 적용 (8 파일)
+순수 leaf 파일은 인터페이스/타입 명시:
 
-1. **Leaf 유틸 (의존성 없는 pure 함수)** — 가장 안전
-   - `src/utils/avatarSpriteCandidates.js`
-   - `src/utils/anchorPoints.js`
-   - `src/utils/commandParser.js`
-   - `src/utils/exploreUtils.js`
-2. **데이터 디렉토리** — 타입 정의 큰 효과
-   - `src/data/constants.js` → 자동 보호되는 `BALANCE`/`CONSTANTS` 타입
-   - `src/data/messages.js` → `MSG` 객체 자동완성
-   - `src/data/actionTypes.js` → `AT` discriminated union
-   - `src/data/gameStates.js` → `GS` literal union
-3. **유틸 (의존성 있음)** — 위 끝나면
-   - `src/utils/equipmentUtils.js`
-   - `src/utils/gameUtils.js`
-   - `src/utils/statsCalculator.js`
-4. **시스템** — pure 함수 위주, 다음 후보
-   - `src/systems/CombatEngine.js`
-   - `src/systems/SoundManager.js`
-5. **훅** — 가장 늦게 (외부 deps 의존)
-6. **컴포넌트** — `.jsx` → `.tsx` (컴포넌트 props 타입 우선)
+- `src/utils/jobOutfitAffinity.ts` — `OutfitAffinity` / `SetCatalog` / `AffinityBonus`
+- `src/utils/equipmentTint.ts` — `TintMod` / `TintableItem`
+- `src/utils/runtimeMode.ts` — typed flag helpers
+- `src/reducers/actionTypes.ts` — `AT as const` + `ActionType` literal union
+- `src/reducers/gameStates.ts` — `GS as const` + `GameState` literal union
+- `src/data/db.ts` — `DB as const`
+- `src/data/constants.ts` — Vite env 타입 안전
+- `src/data/messages.ts` (변환만, JSDoc 보존)
+
+### B. `// @ts-nocheck` 적용 (~100 파일)
+JSDoc 풍부 → 향후 strict 활성 시 풀어 fix:
+
+- `src/utils/*` (전체)
+- `src/data/*` (전체)
+- `src/systems/*` (전체)
+- `src/hooks/*` (전체)
+- `src/services/*` (전체)
+- `src/reducers/handlers/*`
+- `src/components/**/*.tsx` (67개 — props 타입은 JSDoc 보존)
+
+## 다음 단계 (후속 사이클)
+
+### Phase 2: ts-nocheck 제거
+권장 순서:
+1. `src/utils/*` — 의존성 적은 leaf부터
+2. `src/data/*` — 정적 데이터 (대형 객체 타입)
+3. `src/reducers/handlers/*`
+4. `src/services/*`
+5. `src/hooks/*`
+6. `src/systems/*`
+7. `src/components/*` — props 타입 명시 (가장 마지막)
+
+### Phase 3: strict 모드 단계적 활성
+1. `noImplicitAny: true`
+2. `strictNullChecks: true`
+3. `strict: true` (전체)
+
+### Phase 4: 타입 정의 통합
+- `Player`, `Item`, `Monster`, `Map`, `Skill` 등 도메인 타입을 `src/types/` 로 분리
+- DB.ITEMS / DB.MONSTERS 등에 정확한 타입 부여
 
 ## 변환 패턴
 
 ```typescript
-// .js → .ts: JSDoc → TypeScript 타입
-// 외부 import는 `from '../utils/foo.js'` 그대로 유지 (Vite/tsx 둘 다 .ts 자동 매핑)
-import { someFn } from './leaf.js';   // ✓ 작동
+// .js → .ts: 파일명만 변경. JSDoc은 보존.
+import { X } from './foo.js';   // ✓ Vite/tsx 둘 다 .ts 자동 매핑
 
-// 인터페이스 명시
+// 인터페이스 명시 (점진)
 export interface PlayerLike {
     job?: string;
     equip?: { weapon?: ItemLike | null; ... };
 }
 
-// 함수 시그니처
-export const myFn = (input: PlayerLike): SomeReturn => { ... };
+// strict 비활성 상황의 임시 회피
+// @ts-nocheck — TODO: cycle XX migration
 ```
-
-## 일반 함정
-
-- `Object.freeze`로 만든 상수의 인덱스 접근: `as const` 또는 `Readonly<Record<...>>` 사용
-- `null | undefined | Item` 케이스: `item?.field` 활용 또는 narrow guard 추가
-- `any` 회피: `unknown` 후 type guard
 
 ## 빌드/테스트
 
 | 명령 | 효과 |
 |------|------|
-| `npm run type-check` | 전체 .ts/.tsx 타입 검사 (CI에 추가 권장) |
-| `npm run test:unit` | tsx 로더로 .ts 직접 실행 |
+| `npm run type-check` | 전체 .ts/.tsx 타입 검사 |
+| `npm run test:unit` | tsx 로더로 .ts/.tsx 테스트 |
+| `npm run test:e2e` | Playwright 8개 시나리오 |
 | `npm run build` | Vite 자동 처리 |
 
-## 다음 단계 (후속 사이클)
+## 일반 함정 (변환 시 주의)
 
-1. `src/data/*` 타입 정의 (한 번에 큰 효과)
-2. `src/utils/*` 일괄 변환
-3. `src/components/*` `.jsx` → `.tsx`
-4. `tsconfig.json`에서 `strict: true`, `noImplicitAny: true` 단계적 활성
+- `Object.freeze` 후 인덱스 접근: `as const` 권장
+- 기본 인자 `(x = {})`: 빈 객체 `{}` narrowing이 막힘 → 명시 타입 또는 ts-nocheck
+- `import.meta.env` 접근: `vite-env.d.ts`에 키 등록
+- `window.__GLOBAL__` 접근: `Window` interface 확장 (vite-env.d.ts)
+- 테스트의 `readSrc('src/...js')`: `.ts`로 sed 일괄 치환
 
-전체 완료까지 ~3-5 세션 추정.

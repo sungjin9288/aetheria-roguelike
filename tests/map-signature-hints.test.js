@@ -93,7 +93,7 @@ test('getMapUndiscoveredSignatures handles null player', () => {
 });
 
 test('MapNavigator imports helpers and renders signature hint UI', async () => {
-    const source = await readSrc('src/components/MapNavigator.jsx');
+    const source = await readSrc('src/components/MapNavigator.tsx');
     assert.ok(
         /import\s*\{[^}]*getMapSignatureDrops[^}]*\}\s*from\s*['"]\.\.\/utils\/mapSignatureHints/.test(source)
             || source.includes('getMapSignatureDrops'),

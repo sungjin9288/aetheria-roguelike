@@ -62,7 +62,7 @@ test('getSignaturePityMultiplier handles bad input safely', () => {
 // --- CombatEngine.loot processLoot wiring ---
 
 test('CombatEngine.loot processLoot accepts signaturePityMult param', async () => {
-    const source = await readSrc('src/systems/CombatEngine.loot.js');
+    const source = await readSrc('src/systems/CombatEngine.loot.ts');
     assert.ok(
         /export const processLoot\s*=\s*\([^)]*signaturePityMult/.test(source),
         'processLoot signature should include signaturePityMult param'
@@ -75,7 +75,7 @@ test('CombatEngine.loot processLoot accepts signaturePityMult param', async () =
 });
 
 test('CombatEngine top-level processLoot forwards signaturePityMult', async () => {
-    const source = await readSrc('src/systems/CombatEngine.js');
+    const source = await readSrc('src/systems/CombatEngine.ts');
     assert.ok(
         /processLoot\s*\([^)]*signaturePityMult/.test(source),
         'CombatEngine.processLoot should expose signaturePityMult param'
@@ -85,13 +85,13 @@ test('CombatEngine top-level processLoot forwards signaturePityMult', async () =
 // --- combatVictory pity bookkeeping ---
 
 test('combatVictory imports pity helper and isSignatureItem', async () => {
-    const source = await readSrc('src/hooks/combatActions/combatVictory.js');
+    const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
     assert.ok(source.includes('getSignaturePityMultiplier'), 'should import getSignaturePityMultiplier');
     assert.ok(source.includes('isSignatureItem'), 'should import isSignatureItem to detect drop');
 });
 
 test('combatVictory passes pityMult to processLoot and updates signaturePity after', async () => {
-    const source = await readSrc('src/hooks/combatActions/combatVictory.js');
+    const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
     // pityMult 계산 → processLoot 호출에 전달
     assert.ok(
         /processLoot\([^)]*signaturePityMult|processLoot\([^,]+,[^,]+,\s*\w*[pP]ity/.test(source),

@@ -21,7 +21,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('MSG.SIGNATURE_DISCOVERED formatter exists in messages.js', async () => {
-    const source = await readSrc('src/data/messages.js');
+    const source = await readSrc('src/data/messages.ts');
     assert.ok(
         /SIGNATURE_DISCOVERED:\s*\(.*?\)\s*=>/.test(source),
         'messages.js should define SIGNATURE_DISCOVERED arrow formatter'
@@ -29,14 +29,14 @@ test('MSG.SIGNATURE_DISCOVERED formatter exists in messages.js', async () => {
 });
 
 test('useLegendaryDropDetector emits legendary log via MSG + ADD_LOG', async () => {
-    const source = await readSrc('src/hooks/useLegendaryDropDetector.js');
+    const source = await readSrc('src/hooks/useLegendaryDropDetector.ts');
     assert.ok(source.includes('MSG.SIGNATURE_DISCOVERED'), 'should use MSG.SIGNATURE_DISCOVERED');
     assert.ok(source.includes('AT.ADD_LOG'), 'should dispatch ADD_LOG');
     assert.ok(source.includes("type: 'legendary'"), 'should tag log with type=legendary');
 });
 
 test('TerminalView registers legendary log style + badge + combat visibility', async () => {
-    const source = await readSrc('src/components/TerminalView.jsx');
+    const source = await readSrc('src/components/TerminalView.tsx');
     assert.ok(/legendary:\s*\{/.test(source), 'LOG_STYLES should define legendary style');
     assert.ok(source.includes("label: 'LEGEND'"), 'MOBILE_LOG_BADGES should label legendary as LEGEND');
     assert.ok(

@@ -20,7 +20,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('ArchiveTabButton accepts badge prop and renders it', async () => {
-    const source = await readSrc('src/components/ArchiveTabButton.jsx');
+    const source = await readSrc('src/components/ArchiveTabButton.tsx');
     assert.ok(source.includes('badge = null'), 'should default badge to null');
     assert.ok(source.includes('badgeTitle'), 'should accept badgeTitle for tooltip');
     assert.ok(/badge != null && \(/.test(source), 'should render badge only when not null');
@@ -29,7 +29,7 @@ test('ArchiveTabButton accepts badge prop and renders it', async () => {
 });
 
 test('Dashboard wires getSignatureDiscoveryProgress to codex tab badge', async () => {
-    const source = await readSrc('src/components/Dashboard.jsx');
+    const source = await readSrc('src/components/Dashboard.tsx');
     assert.ok(
         source.includes("import { getSignatureDiscoveryProgress } from '../data/signatureItems.js'"),
         'Dashboard should import getSignatureDiscoveryProgress'
@@ -46,7 +46,7 @@ test('Dashboard wires getSignatureDiscoveryProgress to codex tab badge', async (
 });
 
 test('all four ArchiveTabButton call sites spread getTabExtras', async () => {
-    const source = await readSrc('src/components/Dashboard.jsx');
+    const source = await readSrc('src/components/Dashboard.tsx');
     const extrasSpread = (source.match(/\.\.\.getTabExtras\(tab\.id\)/g) || []).length;
     assert.ok(
         extrasSpread >= 4,

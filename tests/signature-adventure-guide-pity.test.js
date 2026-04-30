@@ -110,7 +110,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('adventureGuide.js가 getSignaturePityMultiplier import', async () => {
-    const source = await readSrc('src/utils/adventureGuide.js');
+    const source = await readSrc('src/utils/adventureGuide.ts');
     assert.ok(
         /import\s*\{[^}]*getSignaturePityMultiplier[^}]*\}\s*from\s*['"][^'"]*signaturePity/.test(source),
         'adventureGuide should import getSignaturePityMultiplier from signaturePity util'

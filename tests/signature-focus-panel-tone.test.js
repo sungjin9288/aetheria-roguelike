@@ -22,7 +22,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('SignalBadge supports signature tone with #f6e7a2 gold palette', async () => {
-    const source = await readSrc('src/components/SignalBadge.jsx');
+    const source = await readSrc('src/components/SignalBadge.tsx');
     assert.ok(
         /signature\s*:\s*['"`][^'"`]*(?:#f6e7a2|246,\s*231,\s*162)/.test(source),
         'SignalBadge TONE_CLASS should expose a "signature" tone using gold palette'
@@ -30,7 +30,7 @@ test('SignalBadge supports signature tone with #f6e7a2 gold palette', async () =
 });
 
 test('FocusPanel maps "확률 증폭" emphasis to signature tone', async () => {
-    const source = await readSrc('src/components/dashboard/FocusPanel.jsx');
+    const source = await readSrc('src/components/dashboard/FocusPanel.tsx');
     assert.ok(
         /확률 증폭/.test(source),
         'FocusPanel should reference "확률 증폭" emphasis label'
@@ -44,7 +44,7 @@ test('FocusPanel maps "확률 증폭" emphasis to signature tone', async () => {
 });
 
 test('FocusPanel imports Sparkles icon for signature emphasis', async () => {
-    const source = await readSrc('src/components/dashboard/FocusPanel.jsx');
+    const source = await readSrc('src/components/dashboard/FocusPanel.tsx');
     assert.ok(
         /import\s*\{[^}]*Sparkles[^}]*\}\s*from\s*['"]lucide-react['"]/.test(source),
         'FocusPanel should import Sparkles from lucide-react for signature emphasis cue'
@@ -52,7 +52,7 @@ test('FocusPanel imports Sparkles icon for signature emphasis', async () => {
 });
 
 test('FocusPanel renders Sparkles only when emphasis is signature pity', async () => {
-    const source = await readSrc('src/components/dashboard/FocusPanel.jsx');
+    const source = await readSrc('src/components/dashboard/FocusPanel.tsx');
     // Sparkles 사용처가 conditional이어야 함 — 매번 렌더하면 다른 advice도 sparkle 폭격 받음
     assert.ok(
         /확률 증폭[\s\S]{0,200}<Sparkles|<Sparkles[\s\S]{0,200}확률 증폭|isSignaturePity[\s\S]{0,200}<Sparkles/.test(source),
@@ -61,7 +61,7 @@ test('FocusPanel renders Sparkles only when emphasis is signature pity', async (
 });
 
 test('FocusPanel preserves existing emphasis → tone mapping (regression)', async () => {
-    const source = await readSrc('src/components/dashboard/FocusPanel.jsx');
+    const source = await readSrc('src/components/dashboard/FocusPanel.tsx');
     assert.ok(/위험[\s\S]{0,40}['"]danger['"]/.test(source), '위험→danger 매핑 보존');
     assert.ok(/즉시 이득[\s\S]{0,40}['"]success['"]/.test(source), '즉시 이득→success 매핑 보존');
 });

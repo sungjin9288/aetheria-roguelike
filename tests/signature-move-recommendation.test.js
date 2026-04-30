@@ -107,7 +107,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('adventureGuide.js imports getMapUndiscoveredSignatures', async () => {
-    const source = await readSrc('src/utils/adventureGuide.js');
+    const source = await readSrc('src/utils/adventureGuide.ts');
     assert.ok(
         /import\s*\{[^}]*getMapUndiscoveredSignatures[^}]*\}\s*from\s*['"][^'"]*mapSignatureHints/.test(source),
         'adventureGuide should import getMapUndiscoveredSignatures from mapSignatureHints'

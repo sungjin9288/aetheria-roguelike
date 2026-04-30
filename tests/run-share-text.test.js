@@ -87,7 +87,7 @@ test('RunSummaryCard delegates clipboard text to buildRunShareText', async () =>
     const { fileURLToPath } = await import('node:url');
     const path = await import('node:path');
     const here = path.dirname(fileURLToPath(import.meta.url));
-    const source = await readFile(path.join(here, '..', 'src/components/RunSummaryCard.jsx'), 'utf8');
+    const source = await readFile(path.join(here, '..', 'src/components/RunSummaryCard.tsx'), 'utf8');
     assert.ok(
         /import\s*\{[^}]*buildRunShareText[^}]*\}\s*from\s*['"][^'"]*runShareText/.test(source),
         'RunSummaryCard should import buildRunShareText'

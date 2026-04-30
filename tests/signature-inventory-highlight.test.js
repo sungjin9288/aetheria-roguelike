@@ -23,7 +23,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('SmartInventory imports isSignatureItem', async () => {
-    const source = await readSrc('src/components/SmartInventory.jsx');
+    const source = await readSrc('src/components/SmartInventory.tsx');
     assert.ok(
         /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"][^'"]*signatureItems/.test(source),
         'SmartInventory should import isSignatureItem'
@@ -31,7 +31,7 @@ test('SmartInventory imports isSignatureItem', async () => {
 });
 
 test('SmartInventory row renders data-is-signature attribute', async () => {
-    const source = await readSrc('src/components/SmartInventory.jsx');
+    const source = await readSrc('src/components/SmartInventory.tsx');
     assert.ok(
         /data-is-signature/.test(source),
         'inventory row should expose data-is-signature'
@@ -39,7 +39,7 @@ test('SmartInventory row renders data-is-signature attribute', async () => {
 });
 
 test('SmartInventory shows "전설 각인" label for signature items', async () => {
-    const source = await readSrc('src/components/SmartInventory.jsx');
+    const source = await readSrc('src/components/SmartInventory.tsx');
     assert.ok(
         /전설 각인/.test(source),
         'inventory should render 전설 각인 label on signature rows'
@@ -47,7 +47,7 @@ test('SmartInventory shows "전설 각인" label for signature items', async () 
 });
 
 test('SmartInventory compact priority boost for signature items', async () => {
-    const source = await readSrc('src/components/SmartInventory.jsx');
+    const source = await readSrc('src/components/SmartInventory.tsx');
     // 기존 priority 계산 블럭 안에 isSignature 가중치가 있어야 한다
     assert.ok(
         /isSignature[\s\S]{0,200}priority\s*\+=/.test(source)
@@ -57,7 +57,7 @@ test('SmartInventory compact priority boost for signature items', async () => {
 });
 
 test('SmartInventory computes isSignature per item via isSignatureItem(item)', async () => {
-    const source = await readSrc('src/components/SmartInventory.jsx');
+    const source = await readSrc('src/components/SmartInventory.tsx');
     assert.ok(
         /isSignatureItem\(\s*\w+\s*\)/.test(source),
         'should call isSignatureItem(item) per row'

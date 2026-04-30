@@ -26,7 +26,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('EquipmentPanel imports isSignatureItem from signatureItems', async () => {
-    const source = await readSrc('src/components/EquipmentPanel.jsx');
+    const source = await readSrc('src/components/EquipmentPanel.tsx');
     assert.ok(
         /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"][^'"]*signatureItems/.test(source),
         'EquipmentPanel should import isSignatureItem'
@@ -34,7 +34,7 @@ test('EquipmentPanel imports isSignatureItem from signatureItems', async () => {
 });
 
 test('EquipmentPanel slot renders data-is-signature attribute', async () => {
-    const source = await readSrc('src/components/EquipmentPanel.jsx');
+    const source = await readSrc('src/components/EquipmentPanel.tsx');
     assert.ok(
         /data-is-signature/.test(source),
         'equipment slot should expose data-is-signature for styling/testing'
@@ -42,7 +42,7 @@ test('EquipmentPanel slot renders data-is-signature attribute', async () => {
 });
 
 test('EquipmentPanel shows "전설 각인" label only for signature slots', async () => {
-    const source = await readSrc('src/components/EquipmentPanel.jsx');
+    const source = await readSrc('src/components/EquipmentPanel.tsx');
     assert.ok(
         /전설 각인/.test(source),
         'should include the 전설 각인 label for signature items'
@@ -50,7 +50,7 @@ test('EquipmentPanel shows "전설 각인" label only for signature slots', asyn
 });
 
 test('EquipmentPanel signature chip uses a stable testid', async () => {
-    const source = await readSrc('src/components/EquipmentPanel.jsx');
+    const source = await readSrc('src/components/EquipmentPanel.tsx');
     assert.ok(
         /equipment-signature-chip/.test(source),
         'signature chip should carry data-testid="equipment-signature-chip-..." hook'
@@ -58,7 +58,7 @@ test('EquipmentPanel signature chip uses a stable testid', async () => {
 });
 
 test('EquipmentPanel computes isSignature per slot (guarded by item truthiness)', async () => {
-    const source = await readSrc('src/components/EquipmentPanel.jsx');
+    const source = await readSrc('src/components/EquipmentPanel.tsx');
     // isSignature 계산은 item이 있을 때만 유의미해야 한다.
     // isSignatureItem(item) 패턴이 나타나야 함
     assert.ok(

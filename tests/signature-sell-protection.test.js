@@ -19,7 +19,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('MSG.SIGNATURE_SELL_BLOCKED formatter exists', async () => {
-    const source = await readSrc('src/data/messages.js');
+    const source = await readSrc('src/data/messages.ts');
     assert.ok(
         /SIGNATURE_SELL_BLOCKED:\s*\(.*?\)\s*=>/.test(source),
         'messages.js should define SIGNATURE_SELL_BLOCKED arrow formatter'
@@ -27,7 +27,7 @@ test('MSG.SIGNATURE_SELL_BLOCKED formatter exists', async () => {
 });
 
 test('useInventoryActions sell handler guards signature items', async () => {
-    const source = await readSrc('src/hooks/useInventoryActions.js');
+    const source = await readSrc('src/hooks/useInventoryActions.ts');
     assert.ok(source.includes("import { isSignatureItem }"), 'should import isSignatureItem');
     assert.ok(
         /type === 'sell'[\s\S]{0,300}?isSignatureItem/.test(source),
@@ -40,7 +40,7 @@ test('useInventoryActions sell handler guards signature items', async () => {
 });
 
 test('ShopPanel sell tab disables button for signature items', async () => {
-    const source = await readSrc('src/components/ShopPanel.jsx');
+    const source = await readSrc('src/components/ShopPanel.tsx');
     assert.ok(source.includes("import { isSignatureItem }"), 'should import isSignatureItem');
     assert.ok(source.includes('isSignatureLocked'), 'should derive isSignatureLocked flag');
     assert.ok(

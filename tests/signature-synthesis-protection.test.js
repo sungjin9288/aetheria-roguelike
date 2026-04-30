@@ -105,7 +105,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('useInventoryActions.synthesize handles SIGNATURE_INPUT reason', async () => {
-    const source = await readSrc('src/hooks/useInventoryActions.js');
+    const source = await readSrc('src/hooks/useInventoryActions.ts');
     assert.ok(
         /SIGNATURE_INPUT/.test(source),
         'synthesize should reference the SIGNATURE_INPUT validation reason'

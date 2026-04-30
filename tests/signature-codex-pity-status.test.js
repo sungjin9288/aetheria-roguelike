@@ -27,7 +27,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('LegendaryCodex imports pity helpers', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.jsx');
+    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
     assert.ok(
         /getSignaturePityMultiplier/.test(source),
         'should import getSignaturePityMultiplier'
@@ -39,7 +39,7 @@ test('LegendaryCodex imports pity helpers', async () => {
 });
 
 test('LegendaryCodex reads player.stats.signaturePity', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.jsx');
+    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
     assert.ok(
         /player[^]{0,40}stats[^]{0,10}signaturePity/.test(source),
         'should read player.stats.signaturePity'
@@ -47,7 +47,7 @@ test('LegendaryCodex reads player.stats.signaturePity', async () => {
 });
 
 test('LegendaryCodex renders stable pity status testid', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.jsx');
+    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
     assert.ok(
         /legendary-codex-pity-status/.test(source),
         'pity status card should carry data-testid="legendary-codex-pity-status"'
@@ -55,7 +55,7 @@ test('LegendaryCodex renders stable pity status testid', async () => {
 });
 
 test('LegendaryCodex shows "공명" label in pity card', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.jsx');
+    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
     assert.ok(
         /공명/.test(source),
         'pity card should include the 공명 (resonance) label'
@@ -63,7 +63,7 @@ test('LegendaryCodex shows "공명" label in pity card', async () => {
 });
 
 test('LegendaryCodex references SIGNATURE_PITY.THRESHOLD for progress', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.jsx');
+    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
     assert.ok(
         /SIGNATURE_PITY\.THRESHOLD/.test(source),
         'pity progress calculation should reference SIGNATURE_PITY.THRESHOLD'

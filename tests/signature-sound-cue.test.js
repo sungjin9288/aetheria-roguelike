@@ -26,7 +26,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('SoundManager handles legendary case', async () => {
-    const source = await readSrc('src/systems/SoundManager.js');
+    const source = await readSrc('src/systems/SoundManager.ts');
     assert.ok(
         /case\s*['"]legendary['"]/.test(source),
         "SoundManager.play should have a 'legendary' case"
@@ -34,7 +34,7 @@ test('SoundManager handles legendary case', async () => {
 });
 
 test('legendary sound is an arpeggio (multiple _playTone calls inside the case)', async () => {
-    const source = await readSrc('src/systems/SoundManager.js');
+    const source = await readSrc('src/systems/SoundManager.ts');
     const match = source.match(/case\s*['"]legendary['"][\s\S]*?break;/);
     assert.ok(match, "could not locate the 'legendary' case block");
     const block = match[0];
@@ -46,7 +46,7 @@ test('legendary sound is an arpeggio (multiple _playTone calls inside the case)'
 });
 
 test('useGameEngine plays legendary sound on legendary log type', async () => {
-    const source = await readSrc('src/hooks/useGameEngine.js');
+    const source = await readSrc('src/hooks/useGameEngine.ts');
     assert.ok(
         /lastLog\.type\s*===\s*['"]legendary['"][\s\S]{0,60}soundManager\.play\(\s*['"]legendary['"]/.test(source),
         "useGameEngine should dispatch soundManager.play('legendary') on legendary log type"

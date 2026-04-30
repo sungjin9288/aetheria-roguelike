@@ -27,7 +27,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('CombatPanel imports getBossSignatureDrops', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.jsx');
+    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
     assert.ok(
         /import\s*\{[^}]*getBossSignatureDrops[^}]*\}\s*from\s*['"][^'"]*bossSignatureHint/.test(source),
         'CombatPanel should import getBossSignatureDrops from bossSignatureHint util'
@@ -35,7 +35,7 @@ test('CombatPanel imports getBossSignatureDrops', async () => {
 });
 
 test('CombatPanel resolves enemy baseName before querying signature drops', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.jsx');
+    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
     assert.ok(
         /resolveEnemyBaseName\s*\(/.test(source),
         'should normalize prefixed boss name via CombatEngine.resolveEnemyBaseName'
@@ -47,7 +47,7 @@ test('CombatPanel resolves enemy baseName before querying signature drops', asyn
 });
 
 test('CombatPanel renders combat-signature-drop-hint testid', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.jsx');
+    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
     assert.ok(
         /combat-signature-drop-hint/.test(source),
         'should expose data-testid="combat-signature-drop-hint" for the signature reminder block'
@@ -55,7 +55,7 @@ test('CombatPanel renders combat-signature-drop-hint testid', async () => {
 });
 
 test('CombatPanel labels the reminder as 전설 각인', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.jsx');
+    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
     assert.ok(
         /전설 각인/.test(source),
         'reminder should be labeled "전설 각인"'
@@ -63,7 +63,7 @@ test('CombatPanel labels the reminder as 전설 각인', async () => {
 });
 
 test('CombatPanel uses gold palette #f6e7a2 for signature reminder', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.jsx');
+    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
     assert.ok(
         /#f6e7a2|246,231,162/.test(source),
         'signature reminder should reuse #f6e7a2 / rgba(246,231,162) gold palette'

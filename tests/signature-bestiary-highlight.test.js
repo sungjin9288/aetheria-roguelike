@@ -23,7 +23,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('Bestiary imports signature drop helper', async () => {
-    const source = await readSrc('src/components/Bestiary.jsx');
+    const source = await readSrc('src/components/Bestiary.tsx');
     assert.ok(
         /getBossSignatureDrops/.test(source),
         'Bestiary should import a signature drop helper (e.g. getBossSignatureDrops)'
@@ -31,7 +31,7 @@ test('Bestiary imports signature drop helper', async () => {
 });
 
 test('Bestiary computes signatureDrops per monster', async () => {
-    const source = await readSrc('src/components/Bestiary.jsx');
+    const source = await readSrc('src/components/Bestiary.tsx');
     assert.ok(
         /signatureDrops/.test(source),
         'Bestiary should expose signatureDrops on each monster entry'
@@ -39,7 +39,7 @@ test('Bestiary computes signatureDrops per monster', async () => {
 });
 
 test('Bestiary monster button carries data-has-signature attribute', async () => {
-    const source = await readSrc('src/components/Bestiary.jsx');
+    const source = await readSrc('src/components/Bestiary.tsx');
     assert.ok(
         /data-has-signature/.test(source),
         'monster entry should expose data-has-signature for styling/testing'
@@ -47,7 +47,7 @@ test('Bestiary monster button carries data-has-signature attribute', async () =>
 });
 
 test('Bestiary detail panel renders "전설 각인" label with rate %', async () => {
-    const source = await readSrc('src/components/Bestiary.jsx');
+    const source = await readSrc('src/components/Bestiary.tsx');
     assert.ok(
         /전설 각인/.test(source),
         'detail panel should render a 전설 각인 section'
@@ -60,7 +60,7 @@ test('Bestiary detail panel renders "전설 각인" label with rate %', async ()
 });
 
 test('Bestiary uses stable testid for signature drops section', async () => {
-    const source = await readSrc('src/components/Bestiary.jsx');
+    const source = await readSrc('src/components/Bestiary.tsx');
     assert.ok(
         /bestiary-signature-drops/.test(source),
         'signature drops section should carry a stable testid'

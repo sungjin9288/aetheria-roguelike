@@ -24,7 +24,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('DashboardMobileSummary imports isSignatureItem', async () => {
-    const source = await readSrc('src/components/DashboardMobileSummary.jsx');
+    const source = await readSrc('src/components/DashboardMobileSummary.tsx');
     assert.ok(
         /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"][^'"]*signatureItems/.test(source),
         'should import isSignatureItem'
@@ -32,7 +32,7 @@ test('DashboardMobileSummary imports isSignatureItem', async () => {
 });
 
 test('DashboardMobileSummary loadout tile exposes data-is-signature', async () => {
-    const source = await readSrc('src/components/DashboardMobileSummary.jsx');
+    const source = await readSrc('src/components/DashboardMobileSummary.tsx');
     assert.ok(
         /data-is-signature/.test(source),
         'loadout tile should expose data-is-signature attr'
@@ -40,7 +40,7 @@ test('DashboardMobileSummary loadout tile exposes data-is-signature', async () =
 });
 
 test('DashboardMobileSummary calls isSignatureItem per item', async () => {
-    const source = await readSrc('src/components/DashboardMobileSummary.jsx');
+    const source = await readSrc('src/components/DashboardMobileSummary.tsx');
     assert.ok(
         /isSignatureItem\(\s*\w+/.test(source),
         'should invoke isSignatureItem(item) per loadout entry'
@@ -48,7 +48,7 @@ test('DashboardMobileSummary calls isSignatureItem per item', async () => {
 });
 
 test('DashboardMobileSummary applies signature gold palette', async () => {
-    const source = await readSrc('src/components/DashboardMobileSummary.jsx');
+    const source = await readSrc('src/components/DashboardMobileSummary.tsx');
     assert.ok(
         /#f6e7a2/.test(source),
         'signature tile should use gold palette color token (#f6e7a2)'
@@ -56,7 +56,7 @@ test('DashboardMobileSummary applies signature gold palette', async () => {
 });
 
 test('DashboardMobileSummary uses stable testid hook for signature loadout tile', async () => {
-    const source = await readSrc('src/components/DashboardMobileSummary.jsx');
+    const source = await readSrc('src/components/DashboardMobileSummary.tsx');
     assert.ok(
         /mobile-summary-signature/.test(source),
         'should expose a stable testid for the signature loadout cue'
