@@ -1,3 +1,4 @@
+import type { Player } from '../types/index.js';
 /**
  * exploreUtils.js — explore() 로직 분리 모듈 (Phase 1-B)
  * useGameActions.js의 explore()에서 추출한 순수 함수들.
@@ -22,7 +23,7 @@ const getISOWeekNumber = (date = new Date()) => {
 // ─────────────────────────────────────────────────────────────────────────
 // 0.5. 주간 프로토콜 리셋
 // ─────────────────────────────────────────────────────────────────────────
-export const resetWeeklyProtocolIfNeeded = (player: any, dispatch: any) => {
+export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: any) => {
     const currentWeek = getISOWeekNumber();
     const wp = player.weeklyProtocol;
     if (!wp || wp.lastResetWeek !== currentWeek) {
@@ -39,11 +40,11 @@ export const resetWeeklyProtocolIfNeeded = (player: any, dispatch: any) => {
 // ─────────────────────────────────────────────────────────────────────────
 // 1. 일일 프로토콜 리셋 & 카운트 업 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const resetDailyProtocolIfNeeded = (player: any, dispatch: any) => {
+export const resetDailyProtocolIfNeeded = (player: Player, dispatch: any) => {
     const today = new Date().toISOString().slice(0, 10);
     const dp = player.stats?.dailyProtocol;
     if (!dp || dp.date !== today) {
-        const lvl = player.level;
+        const lvl = player.level || 1;
         const missions = [
             { id: 'kill_n',    type: 'kills',    goal: Math.max(10, lvl * 2),    reward: { essence: Math.floor(lvl * 5) }, progress: 0, done: false },
             { id: 'explore_n', type: 'explores', goal: 10,                        reward: { item: '중급 체력 물약' },          progress: 0, done: false },
@@ -57,9 +58,9 @@ export const resetDailyProtocolIfNeeded = (player: any, dispatch: any) => {
 // 2. 탐색 이벤트 롤 — 아노말리, 열쇠 이벤트, 유물 발견 처리 (Phase 1-B)
 // 반환값: 'event_triggered' | 'relic_found' | 'anomaly' | 'nothing' | null (계속 진행)
 // ─────────────────────────────────────────────────────────────────────────
-export const rollExplorationEvent = (player: any, mapData: any, playerRelics: any, { dispatch, addLog, getFullStats }: any) => {
+export const rollExplorationEvent = (player: Player, mapData: any, playerRelics: any, { dispatch, addLog, getFullStats }: any) => {
     const discoveryOdds = getDiscoveryOdds(player, mapData);
-    const hasKey = player.inv.some((i: any) => i.name === '잊혀진 열쇠');
+    const hasKey = (player.inv || []).some((i: any) => i.name === '잊혀진 열쇠');
     if (hasKey && mapData.level >= 10 && Math.random() < discoveryOdds.keyEventChance) {
         dispatch({
             type: AT.SET_PLAYER,
@@ -108,7 +109,7 @@ export const rollExplorationEvent = (player: any, mapData: any, playerRelics: an
 // ─────────────────────────────────────────────────────────────────────────
 // 3. 몬스터 스탯 생성 + 접두어 부여 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const spawnEnemy = (mapData: any, player: any, playerRelics: any, { addLog }: any) => {
+export const spawnEnemy = (mapData: any, player: Player, playerRelics: any, { addLog }: any) => {
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
 
@@ -227,7 +228,7 @@ export const spawnEnemy = (mapData: any, player: any, playerRelics: any, { addLo
 // ─────────────────────────────────────────────────────────────────────────
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const applyBattleStartRelics = (player: any, playerRelics: any, fullStats: any, { addLog }: any) => {
+export const applyBattleStartRelics = (player: Player, playerRelics: any, fullStats: any, { addLog }: any) => {
     let combatStartPlayer = {
         ...player,
         combatFlags: {
@@ -262,11 +263,11 @@ export const applyBattleStartRelics = (player: any, playerRelics: any, fullStats
             addLog('heal', `[혼돈의 심장] 혼돈의 기운 — HP +${heal} 회복!`);
         } else if (roll === 1) {
             const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
-            combatStartPlayer.tempBuff = { ...existing, atk: existing.atk + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
+            combatStartPlayer.tempBuff = { ...existing, atk: (existing.atk ?? 0) + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
             addLog('event', `[혼돈의 심장] 혼돈의 기운 — ATK +25% (3턴)!`);
         } else {
             const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
-            combatStartPlayer.tempBuff = { ...existing, def: existing.def + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
+            combatStartPlayer.tempBuff = { ...existing, def: (existing.def ?? 0) + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
             addLog('event', `[혼돈의 심장] 혼돈의 기운 — DEF +25% (3턴)!`);
         }
     }
@@ -292,7 +293,7 @@ export const applyBattleStartRelics = (player: any, playerRelics: any, fullStats
 // ─────────────────────────────────────────────────────────────────────────
 // 4.5. 발견 체인 체크 — 지역 조합 방문 시 보상 (Discovery Chains)
 // ─────────────────────────────────────────────────────────────────────────
-export const checkDiscoveryChains = (player: any, loc: any, { dispatch, addLog }: any) => {
+export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLog }: any) => {
     const chains = BALANCE.DISCOVERY_CHAINS;
     if (!chains) return;
     const visited = new Set([...(player.stats?.visitedMaps || []), loc]);
@@ -369,7 +370,7 @@ const FIRST_VISIT_REWARDS: any = {
  * 지역 첫 방문 여부를 확인하고, 해당되면 보상 객체를 반환합니다.
  * @returns {{ gold: number, exp: number, msg: string } | null}
  */
-export const getFirstVisitReward = (loc: any, player: any) => {
+export const getFirstVisitReward = (loc: any, player: Player) => {
     const visited = player.stats?.visitedMaps || [];
     if (visited.includes(loc)) return null;
     return FIRST_VISIT_REWARDS[loc] || null;

@@ -1,11 +1,12 @@
 import { QUESTS } from '../data/quests.js';
+import type { Player } from "../types/index.js";
 import { countLowHpWins } from '../systems/DifficultyManager.js';
 
 const findQuestDefinition = (quest: any, questCatalog: any = QUESTS) => (
     quest?.isBounty ? quest : questCatalog.find((entry: any) => entry.id === quest.id)
 );
 
-export const syncQuestProgress = (player: any, enemyName: any = '', questCatalog: any = QUESTS) => {
+export const syncQuestProgress = (player: Player, enemyName: any = '', questCatalog: any = QUESTS) => {
     if (!player?.quests?.length) {
         return { updatedQuests: player?.quests || [], completedCount: 0 };
     }
@@ -63,7 +64,7 @@ export const syncQuestProgress = (player: any, enemyName: any = '', questCatalog
         const questData = findQuestDefinition(quest, questCatalog);
         return questData
             && quest.progress >= questData.goal
-            && player.quests.find((activeQuest: any) => activeQuest.id === quest.id)?.progress < questData.goal;
+            && (player.quests || []).find((activeQuest: any) => activeQuest.id === quest.id)?.progress < questData.goal;
     }).length;
 
     return { updatedQuests, completedCount };

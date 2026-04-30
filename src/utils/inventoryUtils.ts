@@ -1,4 +1,5 @@
 import { makeItem, findItemByName } from './gameUtils';
+import type { Player } from "../types/index.js";
 
 /**
  * inventoryUtils — 인벤토리 조작 공통 유틸리티
@@ -11,7 +12,7 @@ import { makeItem, findItemByName } from './gameUtils';
  * @param {Object} itemDef - DB 아이템 정의 객체
  * @returns {Object} 새 player 객체
  */
-export const addItemToInventory = (player: any, itemDef: any) => ({
+export const addItemToInventory = (player: Player, itemDef: any) => ({
     ...player,
     inv: [...(player.inv || []), makeItem(itemDef)],
 });
@@ -23,7 +24,7 @@ export const addItemToInventory = (player: any, itemDef: any) => ({
  * @param {string} itemName
  * @returns {Object} 새 player 객체
  */
-export const addItemByName = (player: any, itemName: any) => {
+export const addItemByName = (player: Player, itemName: any) => {
     const itemDef = findItemByName(itemName);
     if (!itemDef) return player;
     return addItemToInventory(player, itemDef);

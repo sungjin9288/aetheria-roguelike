@@ -1,4 +1,5 @@
 import { ITEMS } from '../data/items.js';
+import type { Player } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { getWeaponMagicSkills, isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils.js';
@@ -15,8 +16,8 @@ import signatureSetsData from '../data/signatureSets.json' with { type: 'json' }
 export const toArray = (v: any) => (Array.isArray(v) ? v : []);
 
 /** 플레이어의 직업 스킬 목록을 반환 (패시브 제외 — 전투용 액티브 스킬만) */
-export const getJobSkills = (player: any) => {
-    const classSkills = toArray(DB.CLASSES[player?.job]?.skills).filter((s: any) => !s.passive);
+export const getJobSkills = (player: Player) => {
+    const classSkills = toArray(DB.CLASSES[player?.job as string]?.skills).filter((s: any) => !s.passive);
     const weaponSkills = getWeaponMagicSkills(player?.equip);
     const traitSkill = getTraitSkill(player);
     return [...classSkills, ...weaponSkills, ...(traitSkill ? [traitSkill] : [])];
@@ -27,8 +28,8 @@ export const getJobSkills = (player: any) => {
  * @param {object} player
  * @returns {{ hp: number, mp: number, atk: number, def: number }}
  */
-export const getPassiveSkillBonuses = (player: any) => {
-    const cls = DB.CLASSES[player?.job];
+export const getPassiveSkillBonuses = (player: Player) => {
+    const cls = DB.CLASSES[player?.job as string];
     const bonus = { hp: 0, mp: 0, atk: 0, def: 0, crit: 0, goldMult: 0, expMult: 0, lowHpAtkMult: 1 };
     if (!cls) return bonus;
     toArray(cls.skills).filter((s: any) => s.passive).forEach((s: any) => {
@@ -75,7 +76,7 @@ export const getAllItems = () => [
 export const findItemByName = (name: any) => getAllItems().find((i: any) => i.name === name);
 
 /** 일일 프로토콜 진행으로 이번 액션에서 막 완료될 미션 목록 반환 */
-export const getDailyProtocolCompletions = (player: any, type: any, amount: any = 1) => {
+export const getDailyProtocolCompletions = (player: Player, type: any, amount: any = 1) => {
     const missions = toArray(player?.stats?.dailyProtocol?.missions);
     return missions.filter((mission: any) => (
         mission?.type === type
@@ -133,7 +134,7 @@ export const getTitlePassiveLabel = (token: any) => {
  * @param {'weapons'|'armors'|'shields'|'monsters'|'recipes'|'materials'} category
  * @param {string} name
  */
-export const registerCodex = (player: any, category: any, name: any) => {
+export const registerCodex = (player: Player, category: any, name: any) => {
     if (!name || !category) return player;
     const codex = player.stats?.codex || {};
     const cat = codex[category] || {};
@@ -153,7 +154,7 @@ export const registerCodex = (player: any, category: any, name: any) => {
 /**
  * loot 아이템 배열을 codex에 일괄 등록
  */
-export const registerLootToCodex = (player: any, lootItems: any) => {
+export const registerLootToCodex = (player: Player, lootItems: any) => {
     let p = player;
     for (const item of lootItems) {
         const cat = item.type === 'weapon' ? 'weapons'
@@ -166,7 +167,7 @@ export const registerLootToCodex = (player: any, lootItems: any) => {
 };
 
 /** 골드 획득을 누적 통계와 함께 반영 */
-export const grantGold = (player: any, amount: any = 0) => {
+export const grantGold = (player: Player, amount: any = 0) => {
     if (!amount) return player;
     const stats = player.stats || {};
     return {
@@ -180,7 +181,7 @@ export const grantGold = (player: any, amount: any = 0) => {
 };
 
 /** 플레이어의 활성 퀘스트를 화면 렌더링용으로 정규화 */
-export const getActiveQuestEntries = (player: any) => (
+export const getActiveQuestEntries = (player: Player) => (
     toArray(player?.quests)
         .map((questState: any) => {
             const quest = questState?.isBounty
@@ -201,7 +202,7 @@ export const getActiveQuestEntries = (player: any) => (
 );
 
 /** 업적 진행값 계산 */
-export const getAchievementCurrentValue = (achievement: any, player: any) => {
+export const getAchievementCurrentValue = (achievement: any, player: Player) => {
     const stats = player?.stats || {};
     const target = achievement?.target;
     if (target === 'level') return player?.level || 0;
@@ -223,7 +224,7 @@ const RESOLVE_BUCKET_BY_TYPE: any = Object.freeze({
 const SIGNATURE_REGISTRY_ENTRIES: Record<string, any> = signatureRegistryData?.entries || {};
 const SIGNATURE_SETS_MAP = signatureSetsData?.sets || {};
 
-const isSignatureDiscovered = (itemName: any, player: any) => {
+const isSignatureDiscovered = (itemName: any, player: Player) => {
     const codex = player?.stats?.codex;
     if (!codex) return false;
     const all = [
@@ -237,7 +238,7 @@ const isSignatureDiscovered = (itemName: any, player: any) => {
     return Boolean(codex[bucket]?.[itemName]);
 };
 
-const countDiscoveredSignatures = (player: any) => {
+const countDiscoveredSignatures = (player: Player) => {
     let count = 0;
     for (const name of Object.keys(SIGNATURE_REGISTRY_ENTRIES)) {
         if (isSignatureDiscovered(name, player)) count += 1;
@@ -245,7 +246,7 @@ const countDiscoveredSignatures = (player: any) => {
     return count;
 };
 
-const countCompletedSignatureSets = (player: any) => {
+const countCompletedSignatureSets = (player: Player) => {
     let count = 0;
     for (const setDef of Object.values(SIGNATURE_SETS_MAP) as any[]) {
         const members = setDef?.members || [];
@@ -257,7 +258,7 @@ const countCompletedSignatureSets = (player: any) => {
 };
 
 /** 업적 달성 여부 */
-export const isAchievementUnlocked = (achievement: any, player: any) => (
+export const isAchievementUnlocked = (achievement: any, player: Player) => (
     getAchievementCurrentValue(achievement, player) >= (achievement?.goal || 0)
 );
 
@@ -497,14 +498,14 @@ export const migrateData = (rawData: any) => {
  * @param {object} player
  * @returns {string[]} 새로 해금된 칭호 ID 목록
  */
-export const checkTitles = (player: any) => {
+export const checkTitles = (player: Player) => {
     const existing = new Set(player.titles || []);
     return TITLES.filter((t: any) => {
         if (existing.has(t.id)) return false;
         const { type, val } = t.cond;
         if (type === 'kills')          return (player.stats?.kills         || 0) >= val;
         if (type === 'bossKills')      return (player.stats?.bossKills     || 0) >= val;
-        if (type === 'level')          return player.level >= val;
+        if (type === 'level')          return (player.level ?? 0) >= val;
         if (type === 'deaths')         return (player.stats?.deaths        || 0) >= val;
         if (type === 'total_gold')     return (player.stats?.total_gold    || 0) >= val;
         if (type === 'rests')          return (player.stats?.rests         || 0) >= val;
@@ -541,7 +542,7 @@ export const makeEmitTitles = (dispatch: any, addLog: any) => (updatedPlayer: an
  * @param {object} player - 최종 플레이어 상태
  * @param {string} loc - 사망 위치 (player.loc).
  */
-export const buildRunSummary = (player: any, loc: any) => {
+export const buildRunSummary = (player: Player, loc: any) => {
     const buildProfile = getRunBuildProfile(player, { maxHp: player.maxHp });
     const recentBattles = (player.stats?.recentBattles || []).slice(-20);
 

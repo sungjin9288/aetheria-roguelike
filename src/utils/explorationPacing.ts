@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import type { Player } from "../types/index.js";
 
 export const DEFAULT_EXPLORE_STATE = Object.freeze({
     sinceNarrativeEvent: 0,
@@ -109,7 +110,7 @@ export const getQuietExplorationChance = (stats: any = {}, mapData: any = null) 
     );
 };
 
-export const getDiscoveryOdds = (player: any, mapData: any) => {
+export const getDiscoveryOdds = (player: Player, mapData: any) => {
     const exploreState = getExploreState(player?.stats);
     const profile = getMapPacingProfile(mapData);
     const pitySinceDiscovery = Math.max(0, exploreState.sinceDiscovery - 2);

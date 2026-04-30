@@ -1,3 +1,4 @@
+import type { Player } from '../types/index.js';
 const createGraveItem = (item: any) => ({
     ...item,
     id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
@@ -5,8 +6,8 @@ const createGraveItem = (item: any) => ({
 
 const sortGravesByLatest = (a: any, b: any) => (b?.timestamp || 0) - (a?.timestamp || 0);
 
-export const buildGraveData = (player: any, random: any = Math.random, now: any = Date.now) => {
-    let droppedItems = [];
+export const buildGraveData = (player: Player, random: any = Math.random, now: any = Date.now) => {
+    let droppedItems: any[] = [];
     const tradableItems = Array.isArray(player?.inv)
         ? player.inv.filter((item: any) => !item?.id?.startsWith('starter_'))
         : [];
@@ -73,7 +74,7 @@ export const resolveInvasion = (targetGrave: any, playerAtk: any) => {
     return { success, reward, chance };
 };
 
-export const resolveGraveRecovery = (player: any, grave: any) => {
+export const resolveGraveRecovery = (player: Player, grave: any) => {
     const graves = normalizeGraves(grave);
     const recoveredItems = graves
         .flatMap((entry: any) => getGraveItems(entry))

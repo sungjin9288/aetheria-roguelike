@@ -1,4 +1,5 @@
 import { QUESTS } from '../data/quests.js';
+import type { Player } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 
@@ -35,7 +36,7 @@ const FEATURED_LANE_ORDER: any = ['story', 'build', 'growth', 'boss', 'hunt'];
 const toArray = (value: any) => (Array.isArray(value) ? value : []);
 const getQuestLevelGap = (quest: any, playerLevel: any = 1) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
 const isStoryQuest = (quest: any) => String(quest?.title || '').includes('[스토리]');
-const getActiveQuestEntries = (player: any) => (
+const getActiveQuestEntries = (player: Player) => (
     toArray(player?.quests)
         .map((questState: any) => {
             const quest = questState?.isBounty
@@ -109,7 +110,7 @@ const getQuestReason = (quest: any, lane: any, resonance: any, targetMaps: any[]
     return '당장 밀기 좋은 기본 토벌 임무로 파밍과 전투 감각을 유지하기 쉽습니다.';
 };
 
-const scoreQuest = (quest: any, player: any, traitProfile: any, activeEntries: any, maps: any = MAPS) => {
+const scoreQuest = (quest: any, player: Player, traitProfile: any, activeEntries: any, maps: any = MAPS) => {
     const resonance = getTraitQuestResonance(quest, traitProfile);
     const lane = getQuestLane(quest, resonance, maps);
     const playerLevel = player?.level || 1;
@@ -120,7 +121,7 @@ const scoreQuest = (quest: any, player: any, traitProfile: any, activeEntries: a
         const level = maps[mapName]?.level;
         return typeof level === 'number' && level <= playerLevel + 6 && level >= Math.max(1, playerLevel - 8);
     });
-    const isCurrentZoneTarget = targetMaps.includes(player?.loc);
+    const isCurrentZoneTarget = targetMaps.includes(player?.loc as string);
 
     let score = resonance.score * 10;
     score += Math.max(0, 18 - (levelGap * 4));
@@ -150,7 +151,7 @@ const scoreQuest = (quest: any, player: any, traitProfile: any, activeEntries: a
     };
 };
 
-export const getQuestBoardRecommendations = (player: any, maps: any = MAPS, questCatalog: any = QUESTS) => {
+export const getQuestBoardRecommendations = (player: Player, maps: any = MAPS, questCatalog: any = QUESTS) => {
     const traitProfile = getTraitProfile(player, { maxHp: player?.maxHp, maxMp: player?.maxMp });
     const activeEntries = getActiveQuestEntries(player);
     const activeRegularQuestIds = new Set(activeEntries.filter((entry: any) => !entry.isBounty).map((entry: any) => entry.id));

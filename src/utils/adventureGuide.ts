@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import type { Player } from "../types/index.js";
 import { QUESTS } from '../data/quests.js';
 import { getDiscoveryOdds, getMapPacingProfile } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
@@ -7,7 +8,7 @@ import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
 
 const toArray = (value: any) => (Array.isArray(value) ? value : []);
 
-const getActiveQuestEntries = (player: any) => (
+const getActiveQuestEntries = (player: Player) => (
     toArray(player?.quests)
         .map((questState: any) => {
             const quest = questState?.isBounty
@@ -33,7 +34,7 @@ const getMapLevel = (map: any, playerLevel: any = 1) => (
         ? Math.max((playerLevel || 1) + 8, 50)
         : (map?.minLv ?? map?.level ?? 1)
 );
-const getVisitedMaps = (player: any) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
+const getVisitedMaps = (player: Player) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
 
 const getQuestProgressLabel = (entry: any) => {
     if (!entry?.quest) return '';
@@ -41,7 +42,7 @@ const getQuestProgressLabel = (entry: any) => {
     return `${entry.progress}/${entry.quest.goal}`;
 };
 
-export const getQuestTracker = (player: any) => {
+export const getQuestTracker = (player: Player) => {
     const entries = getActiveQuestEntries(player);
     if (!entries.length) return null;
 
@@ -72,7 +73,7 @@ export const getQuestTracker = (player: any) => {
     };
 };
 
-export const getExplorationForecast = (player: any, mapData: any) => {
+export const getExplorationForecast = (player: Player, mapData: any) => {
     if (!mapData) {
         return {
             mood: '기록 동기화 중',
@@ -130,7 +131,7 @@ export const getExplorationForecast = (player: any, mapData: any) => {
     };
 };
 
-export const getMoveRecommendations = (player: any, stats: any, currentMap: any, maps: any = {}) => {
+export const getMoveRecommendations = (player: Player, stats: any, currentMap: any, maps: any = {}) => {
     if (!currentMap?.exits?.length) return [];
 
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
@@ -240,7 +241,7 @@ export const getMoveRecommendations = (player: any, stats: any, currentMap: any,
         }));
 };
 
-export const getAdventureGuidance = (player: any, stats: any, mapData: any, runtimeState: any = 'idle') => {
+export const getAdventureGuidance = (player: Player, stats: any, mapData: any, runtimeState: any = 'idle') => {
     const safe = mapData?.type === 'safe';
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     const mpRatio = (player?.mp || 0) / Math.max(1, stats?.maxMp || player?.maxMp || 1);

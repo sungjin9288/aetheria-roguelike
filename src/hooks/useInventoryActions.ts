@@ -359,7 +359,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
 
             if (result.success && result.outputItem) {
                 const crafted = makeItem(result.outputItem);
-                updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, crafted] };
+                updatedPlayer = { ...updatedPlayer, inv: [...(updatedPlayer.inv || []), crafted] };
                 updatedPlayer = registerLootToCodex(updatedPlayer, [crafted]);
                 addLog('success', MSG.SYNTHESIS_SUCCESS(result.outputItem.name));
             } else {

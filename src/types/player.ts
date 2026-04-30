@@ -7,6 +7,10 @@
 
 import type { EquipSlots, Item, ConsumableItem } from './item.js';
 
+/**
+ * PlayerStats — `[key: string]: any` 인덱스 시그니처로 ad-hoc 필드 허용.
+ * (signaturePity, areaBossDefeated, codexBonusAtk 등 동적 추가).
+ */
 export interface PlayerStats {
     kills?: number;
     total_gold?: number;
@@ -23,25 +27,27 @@ export interface PlayerStats {
     abyssFloor?: number;
     abyssRecord?: number;
     demonKingSlain?: number;
-    dailyProtocol?: { date?: string; completions?: number; claimed?: string[] } | null;
+    dailyProtocol?: any;
     claimedAchievements?: string[];
     explores?: number;
     lowHpWins?: number;
     discoveries?: number;
     buildWins?: Record<string, number>;
     visitedMaps?: string[];
-    exploreState?: Record<string, unknown>;
+    exploreState?: Record<string, any>;
     codex?: PlayerCodex;
     codexClaimed?: string[];
+    [key: string]: any;
 }
 
 export interface PlayerCodex {
-    weapons?: Record<string, true>;
-    armors?: Record<string, true>;
-    shields?: Record<string, true>;
-    monsters?: Record<string, true>;
-    recipes?: Record<string, true>;
-    materials?: Record<string, true>;
+    weapons?: Record<string, any>;
+    armors?: Record<string, any>;
+    shields?: Record<string, any>;
+    monsters?: Record<string, any>;
+    recipes?: Record<string, any>;
+    materials?: Record<string, any>;
+    [key: string]: any;
 }
 
 export interface SignaturePity {
@@ -96,42 +102,54 @@ export interface WeeklyProtocol {
     claimed?: string[];
 }
 
+/**
+ * Player 도메인 타입 — 모든 필드가 optional.
+ *
+ * 이유: 코드베이스 곳곳에서 player.X를 다양한 부분 형태로 사용해서
+ * 모든 필드를 optional로 두는 게 호환성 좋음. 점진 적용 — 향후 부분 인터페이스
+ * (PlayerCore, PlayerCombat 등) 분화 가능.
+ *
+ * 또한 PlayerStats / 기타 sub-shape도 자주 ad-hoc 필드 추가 (e.g. relicShards,
+ * areaBossDefeated 등) 가능하도록 [key: string]: any 인덱스 시그니처 포함.
+ */
 export interface Player {
-    name: string;
-    job: string;
+    name?: string;
+    job?: string;
     gender?: 'male' | 'female' | string;
-    level: number;
-    hp: number;
-    maxHp: number;
-    mp: number;
-    maxMp: number;
-    atk: number;
-    def: number;
-    exp: number;
+    level?: number;
+    hp?: number;
+    maxHp?: number;
+    mp?: number;
+    maxMp?: number;
+    atk?: number;
+    def?: number;
+    exp?: number;
     nextExp?: number;
-    gold: number;
-    loc: string;
-    inv: Item[];
-    equip: EquipSlots;
-    quests?: string[];
+    gold?: number;
+    loc?: string;
+    inv?: Item[];
+    equip?: EquipSlots;
+    quests?: any[];
     achievements?: string[];
-    stats?: PlayerStats;
+    stats?: PlayerStats & { [key: string]: any };
     premiumCurrency?: number;
     seasonPass?: SeasonPassState;
     weeklyProtocol?: WeeklyProtocol;
     skillChoices?: Record<string, string>;
     challengeModifiers?: string[];
     tempBuff?: TempBuff;
-    status?: Array<{ name: string; turn: number; effect?: string }>;
+    status?: any[];
     skillLoadout?: SkillLoadout;
-    meta?: PlayerMeta;
-    relics?: Array<{ id: string; name: string }>;
+    meta?: PlayerMeta & { [key: string]: any };
+    relics?: any[];
     titles?: string[];
     activeTitle?: string | null;
     combatFlags?: CombatFlags;
     killStreak?: number;
-    history?: unknown[];
-    archivedHistory?: unknown[];
-    eventChainProgress?: Record<string, unknown>;
-    signaturePity?: SignaturePity;
+    history?: any[];
+    archivedHistory?: any[];
+    eventChainProgress?: Record<string, any>;
+    signaturePity?: SignaturePity | number;
+    maxInv?: number;
+    [key: string]: any;
 }

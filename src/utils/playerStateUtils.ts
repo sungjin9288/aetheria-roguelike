@@ -1,10 +1,11 @@
+import type { Player } from '../types/index.js';
 /**
  * player.stats 필드를 immutable하게 업데이트합니다.
  * @param {Object} player
  * @param {Object} statsUpdate - 덮어쓸 stats 필드들
  * @returns {Object} 새 player 객체
  */
-export const updateStats = (player: any, statsUpdate: any) => ({
+export const updateStats = (player: Player, statsUpdate: any): Player => ({
     ...player,
     stats: { ...(player.stats || {}), ...statsUpdate },
 });
@@ -16,7 +17,7 @@ export const updateStats = (player: any, statsUpdate: any) => ({
  * @param {number} amount - 누적할 값 (기본 1)
  * @returns {Object} 새 player 객체
  */
-export const incrementStat = (player: any, field: any, amount: any = 1) =>
+export const incrementStat = (player: Player, field: any, amount: any = 1): Player =>
     updateStats(player, { [field]: (player.stats?.[field] || 0) + amount });
 
 export const EMPTY_TEMP_BUFF: any = {
@@ -33,7 +34,7 @@ export const DEFAULT_COMBAT_FLAGS = {
     voidHeartArmed: false,
 };
 
-export const hasTemporaryAdventureState = (player: any) => {
+export const hasTemporaryAdventureState = (player: Player) => {
     const buff = { ...EMPTY_TEMP_BUFF, ...(player?.tempBuff || {}) };
     const combatFlags = { ...DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
 
@@ -51,7 +52,7 @@ export const hasTemporaryAdventureState = (player: any) => {
     );
 };
 
-export const clearTemporaryAdventureState = (player: any) => ({
+export const clearTemporaryAdventureState = (player: Player) => ({
     ...player,
     tempBuff: { ...EMPTY_TEMP_BUFF },
     status: [],

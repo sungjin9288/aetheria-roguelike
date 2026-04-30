@@ -1,4 +1,5 @@
 import { BOSS_BRIEFS } from '../data/monsters.js';
+import type { Player } from "../types/index.js";
 import { getDifficultyMults, calcPerformanceScore, countLowHpWins } from '../systems/DifficultyManager.js';
 import { getExploreState } from './explorationPacing.js';
 import { isFocusOffhand, isMagicWeapon, isShield, isTwoHandWeapon, isWeapon } from './equipmentUtils.js';
@@ -19,7 +20,7 @@ const scoreTag = (id: any, name: any, desc: any, score: any, reasons: any[] = []
     reasons,
 });
 
-const relicEffectsOf = (player: any) => new Set((player?.relics || []).map((relic: any) => relic.effect));
+const relicEffectsOf = (player: Player) => new Set((player?.relics || []).map((relic: any) => relic.effect));
 const hasProfileTag = (profile: any, id: any) => profile?.primary?.id === id || (profile?.tags || []).some((tag: any) => tag.id === id);
 const labelTag = (id: any) => ARCHETYPE_LABELS[id] || id;
 const toPercent = (value: any = 0) => `${Math.round(value * 100)}%`;
@@ -73,7 +74,7 @@ export const getClassBuildBonus = (job: any, profile: any) => {
 
 // --- Run build profile ---
 
-export const getRunBuildProfile = (player: any, stats: any = {}) => {
+export const getRunBuildProfile = (player: Player, stats: any = {}) => {
     const relicEffects = relicEffectsOf(player);
     const mainWeapon = player?.equip?.weapon || null;
     const offhand = player?.equip?.offhand || null;
@@ -175,7 +176,7 @@ export const getRunBuildProfile = (player: any, stats: any = {}) => {
 
 // --- Trait functions ---
 
-const pickTraitId = (player: any, buildProfile: any) => {
+const pickTraitId = (player: Player, buildProfile: any) => {
     const relicEffects = relicEffectsOf(player);
     const primaryId = buildProfile.primary.id;
     const lowHpWins = countLowHpWins(player?.stats, 0.2);
@@ -189,7 +190,7 @@ const pickTraitId = (player: any, buildProfile: any) => {
     return TRAIT_DEFINITIONS[primaryId] ? primaryId : 'balanced';
 };
 
-const buildTraitSkill = (traitId: any, player: any, stats: any = {}) => {
+const buildTraitSkill = (traitId: any, player: Player, stats: any = {}) => {
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
     if (!definition.skill) return null;
 
@@ -219,7 +220,7 @@ const buildTraitSkill = (traitId: any, player: any, stats: any = {}) => {
     };
 };
 
-export const getTraitProfile = (player: any, stats: any = {}) => {
+export const getTraitProfile = (player: Player, stats: any = {}) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const traitId = pickTraitId(player, buildProfile);
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
@@ -252,9 +253,9 @@ export const getTraitProfile = (player: any, stats: any = {}) => {
     };
 };
 
-export const getTraitBonus = (player: any, stats: any = {}) => getTraitProfile(player, stats).bonus;
+export const getTraitBonus = (player: Player, stats: any = {}) => getTraitProfile(player, stats).bonus;
 
-export const getTraitSkill = (player: any, stats: any = {}) => getTraitProfile(player, stats).skill;
+export const getTraitSkill = (player: Player, stats: any = {}) => getTraitProfile(player, stats).skill;
 
 export const getTraitPassiveParts = (traitProfile: any) => {
     const bonus = traitProfile?.bonus || {};
@@ -266,7 +267,7 @@ export const getTraitPassiveParts = (traitProfile: any) => {
     return parts;
 };
 
-export const getTraitItemResonance = (item: any, traitProfile: any, player: any = null) => {
+export const getTraitItemResonance = (item: any, traitProfile: any, player: Player | null = null) => {
     if (!item) return { score: 0, label: null, reasons: [], summary: null };
 
     const traitId = traitProfile?.id || 'balanced';
@@ -339,7 +340,7 @@ export const getTraitItemResonance = (item: any, traitProfile: any, player: any 
     };
 };
 
-export const getTraitFeaturedItems = (items: any[] = [], traitProfile: any, player: any = null, limit: any = 3) => (
+export const getTraitFeaturedItems = (items: any[] = [], traitProfile: any, player: Player | null = null, limit: any = 3) => (
     (items || [])
         .map((item: any) => ({
             item,
@@ -350,7 +351,7 @@ export const getTraitFeaturedItems = (items: any[] = [], traitProfile: any, play
         .slice(0, limit)
 );
 
-export const getTraitLootHint = (items: any[] = [], traitProfile: any, player: any = null) => {
+export const getTraitLootHint = (items: any[] = [], traitProfile: any, player: Player | null = null) => {
     const [best] = getTraitFeaturedItems(items, traitProfile, player, 1);
     if (!best) return null;
 
@@ -409,7 +410,7 @@ export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
 
 // --- Diagnostics ---
 
-export const getRunDiagnostics = (player: any, stats: any = {}) => {
+export const getRunDiagnostics = (player: Player, stats: any = {}) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const classIdentity = getClassBuildIdentity(player?.job);
     const classCompatibility = getClassBuildCompatibility(player?.job, buildProfile);

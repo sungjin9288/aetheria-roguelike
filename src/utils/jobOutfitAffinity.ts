@@ -39,14 +39,10 @@ export interface ItemLike {
     jobs?: string[];
 }
 
-interface PlayerLike {
-    job?: string;
-    equip?: {
-        weapon?: ItemLike | null;
-        armor?: ItemLike | null;
-        offhand?: ItemLike | null;
-    };
-}
+// cycle 60 phase D: Player 도메인 타입 사용 (any 대신).
+// 이 함수는 player.job + player.equip.{weapon,armor,offhand}만 보면 되므로
+// Player의 부분 인터페이스로 충분.
+import type { Player } from '../types/index.js';
 
 interface ItemsDb {
     weapons?: ItemLike[];
@@ -112,7 +108,7 @@ const isJobMatch = (item: ItemLike | null | undefined, job: string): boolean => 
 /**
  * matchCount=3 → 풀 보너스. matchCount=2 → 중간. matchCount=1 → 약 ATK. 0 → 없음.
  */
-export const getJobOutfitAffinity = (player: PlayerLike): OutfitAffinity => {
+export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
     const empty: OutfitAffinity = {
         matchCount: 0,
         totalSlots: 0,

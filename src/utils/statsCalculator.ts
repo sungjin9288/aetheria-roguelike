@@ -1,4 +1,5 @@
 import { CONSTANTS, BALANCE } from '../data/constants.js';
+import type { Player } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { getActiveRelicSynergies } from '../data/relics.js';
 import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from './equipmentUtils.js';
@@ -66,8 +67,8 @@ const computeCodexBonus = (stats: any) => {
  * @param {boolean} hasOffhandWeapon
  * @returns {object} relic-derived multipliers and flat bonuses
  */
-const computeRelicBonuses = (relics: any, player: any, hasOffhandWeapon: any) => {
-    const hpRatio = player.hp / Math.max(1, player.maxHp);
+const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any) => {
+    const hpRatio = (player.hp ?? 0) / Math.max(1, player.maxHp ?? 1);
 
     const atkFlat = relics.reduce((acc: any, r: any) => {
         if (r.effect === 'glass_cannon') return acc + r.val.atk;
@@ -231,10 +232,10 @@ const computeKillStreakBonus = (killStreak: any) => {
  * @param {object} player
  * @returns {object} derived stats
  */
-export const calculateFullStats = (player: any) => {
+export const calculateFullStats = (player: Player) => {
     if (!player) return null;
 
-    const cls = DB.CLASSES[player.job] || DB.CLASSES[CONSTANTS.DEFAULT_JOB];
+    const cls = DB.CLASSES[player.job as string] || DB.CLASSES[CONSTANTS.DEFAULT_JOB];
     const equipProfile = getEquipmentProfile(player.equip);
     const {
         mainWeapon,
@@ -250,7 +251,7 @@ export const calculateFullStats = (player: any) => {
     const dualWieldAtkMult = offhandWeapon ? BALANCE.DUAL_WIELD_ATK_BONUS : 1;
     const dualWieldDefMult = offhandWeapon ? BALANCE.DUAL_WIELD_DEF_MULT : 1;
 
-    const armorVal = player.equip.armor?.val || 0;
+    const armorVal = player.equip?.armor?.val || 0;
     const buff = player.tempBuff || {};
     const meta = player.meta || {};
     const titlePassive = getTitlePassive(player.activeTitle) || {};
@@ -265,9 +266,9 @@ export const calculateFullStats = (player: any) => {
     const affinityMpBonus = affinity.bonus.mpBonus || 0;
     const affinityHpBonus = affinity.bonus.hpBonus || 0;
 
-    const weaponElem = player.equip.weapon?.elem;
+    const weaponElem = player.equip?.weapon?.elem;
     const isMagic =
-        MAGIC_JOBS.includes(player.job) ||
+        MAGIC_JOBS.includes(player.job as string) ||
         (weaponElem && !PHYSICAL_ELEMENTS.includes(weaponElem));
 
     const relics = player.relics || [];
@@ -279,7 +280,7 @@ export const calculateFullStats = (player: any) => {
     const enhanceBonus = computeEnhanceBonus(player.equip);
 
     const baseAtk =
-        (player.atk + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + (meta.bonusAtk || 0) + passiveBonus.atk) *
+        ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + (meta.bonusAtk || 0) + passiveBonus.atk) *
         cls.atkMod *
         (1 + (buff.atk || 0) + abyssBonus.atk) *
         setBonus.atkMult *
@@ -289,14 +290,14 @@ export const calculateFullStats = (player: any) => {
         (passiveBonus.lowHpAtkMult || 1);
 
     const baseDef =
-        (player.def + armorVal + shieldDef + codexBonus.def + enhanceBonus.def + passiveBonus.def) *
+        ((player.def ?? 0) + armorVal + shieldDef + codexBonus.def + enhanceBonus.def + passiveBonus.def) *
         (1 + (buff.def || 0) + abyssBonus.def) *
         setBonus.defMult *
         signatureSetBonus.defMult *
         dualWieldDefMult *
         affinityDefMult;
 
-    const baseMaxHp = (player.maxHp + codexBonus.hp + passiveBonus.hp) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
+    const baseMaxHp = ((player.maxHp ?? 0) + codexBonus.hp + passiveBonus.hp) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
     const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat + passiveBonus.mp) * relicBonus.mpMult * (1 + affinityMpBonus);
     const baseCritChance = Math.min(
         0.75,

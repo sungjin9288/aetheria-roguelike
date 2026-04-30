@@ -5,9 +5,40 @@ import { bootstrapActionMap } from './handlers/bootstrapHandlers';
 import { uiActionMap, entityActionMap } from './handlers/uiHandlers';
 import { makeProgressionActionMap } from './handlers/progressionHandlers';
 import { featureActionMap } from './handlers/featureHandlers';
+import type { Player } from '../types';
+
+/**
+ * Game state shape — cycle 60 phase D — Player 도메인 타입 적용.
+ * 다른 필드(enemy, grave, currentEvent 등)는 점진 적용 예정 — 현재는 any.
+ */
+export interface GameState {
+    bootStage: string;
+    uid: string | null;
+    player: Player;
+    version: number;
+    gameState: string;
+    logs: any[];
+    enemy: any;
+    currentEvent: any;
+    grave: any;
+    shopItems: any[];
+    sideTab: string;
+    isAiThinking: boolean;
+    visualEffect: any;
+    syncStatus: string;
+    leaderboard: any[];
+    liveConfig: any;
+    lastLoadedTimestamp: number;
+    quickSlots: any[];
+    postCombatResult: any;
+    onboardingDismissed: boolean;
+    pendingRelics: any;
+    runSummary: any;
+    publicGraves: any[];
+}
 
 // --- INITIAL STATE ---
-export const INITIAL_STATE: any = {
+export const INITIAL_STATE: GameState = {
     // Bootstrapping Flags
     bootStage: 'init', // init -> auth -> config -> data -> ready
     uid: null,
@@ -72,7 +103,12 @@ const ACTION_MAP: any = {
 };
 
 // --- REDUCER ---
-export const gameReducer = (state: any, action: any) => {
+export interface GameAction {
+    type: string;
+    payload?: any;
+}
+
+export const gameReducer = (state: GameState, action: GameAction): GameState => {
     const handler = ACTION_MAP[action.type];
     return handler ? handler(state, action) : state;
 };

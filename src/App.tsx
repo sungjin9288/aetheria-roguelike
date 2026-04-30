@@ -14,7 +14,7 @@ import GameRoot from './components/app/GameRoot';
 
 const RunSummaryCard = lazy(() => import('./components/RunSummaryCard'));
 
-const FOCUS_PANEL_STATES = new Set([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
+const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
 
 function App() {
     const engine = useGameEngine();
@@ -60,13 +60,13 @@ function App() {
 
     const isPanelFocusState = FOCUS_PANEL_STATES.has(engine.gameState);
     const mobileArchiveDockVisible = (
-        [GS.IDLE, GS.MOVING].includes(engine.gameState)
+        ([GS.IDLE, GS.MOVING] as string[]).includes(engine.gameState)
         && !engine.pendingRelics
         && !engine.postCombatResult
         && engine.gameState !== GS.ASCENSION
     );
     const handleQuickSlotUse = (item: any, index: any) => {
-        if (!engine.player.inv.some((entry: any) => entry.id === item?.id)) {
+        if (!(engine.player.inv || []).some((entry: any) => entry.id === item?.id)) {
             if (typeof index === 'number') engine.actions.setQuickSlot?.(index, null);
             return;
         }

@@ -1,4 +1,5 @@
 import { isTwoHandWeapon } from './equipmentUtils.js';
+import type { Player } from "../types/index.js";
 import { getEquipmentArtProfile } from './equipmentArt.js';
 import { getArmorStyleFromItem, getAvatarLoadoutStyle, getItemIconAssetKey, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
 
@@ -53,8 +54,8 @@ const getOverlayTone = (slot: any, item: any, fallback: any) => {
     return '#6c665d';
 };
 
-export const deriveCharacterAppearance = (player: any) => {
-    const baseStyle = JOB_STYLE_MAP[player?.job] || DEFAULT_JOB_STYLE;
+export const deriveCharacterAppearance = (player: Player) => {
+    const baseStyle = JOB_STYLE_MAP[player?.job as string] || DEFAULT_JOB_STYLE;
     const equip = player?.equip || {};
     const armor = equip.armor || null;
     const weapon = equip.weapon || null;
@@ -85,7 +86,7 @@ export const deriveCharacterAppearance = (player: any) => {
             armor: getOverlayTone('armor', armor, '#6c665d'),
             weapon: getOverlayTone('weapon', weapon, '#d8c7a5'),
             offhand: getOverlayTone('offhand', offhand, '#bfa88b'),
-            glow: ELEMENT_COLOR_MAP[frameTone] || baseStyle.accentColor,
+            glow: ELEMENT_COLOR_MAP[frameTone as string] || baseStyle.accentColor,
         },
         weapon: {
             item: weapon,
