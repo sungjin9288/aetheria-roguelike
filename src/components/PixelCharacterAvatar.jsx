@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getAvatarSpriteCandidates } from '../utils/avatarSpriteCandidates';
-import { resolveCharacterLayers } from '../utils/layeredCharacter.js';
-import LayeredCharacter from './LayeredCharacter.jsx';
 
 const SIZE_MAP = {
     sm: {
@@ -72,10 +70,6 @@ const PixelCharacterAvatar = ({
     const activeSpriteState = spriteState.signature === spriteSignature ? spriteState : { signature: spriteSignature, index: 0 };
     const activeSpriteSrc = spriteCandidates[Math.min(activeSpriteState.index, spriteCandidates.length - 1)] || '/assets/avatars/adventurer.png';
 
-    // cycle 47: layered character system. body 자산이 manifest에 있으면 layered 합성,
-    // 없으면 폴백 (직업 sprite, cycle 46).
-    const layers = useMemo(() => resolveCharacterLayers(player), [player]);
-
     const avatar = (
         <div
             data-testid={dataTestId}
@@ -90,30 +84,23 @@ const PixelCharacterAvatar = ({
             <div className="pointer-events-none absolute inset-[3px] rounded-[inherit] border border-white/[0.04]" />
             <div className="pointer-events-none absolute -right-1 top-1 h-5 w-5 rounded-full blur-[10px]" style={{ backgroundColor: softenColor(appearance.palette.glow || appearance.palette.accent, 0.28) }} />
             <div className={`relative h-full w-full overflow-hidden ${sizeConfig.inner}`}>
-                {/* cycle 55: avatar = job skin (단일 body PNG).
-                    장비는 슬롯 UI + 스탯 + 세트 효과로만 표현 (avatar에 합성 X).
-                    layered 활성 시 LayeredCharacter (body 한 장) 렌더,
-                    폴백 시 cycle 46 직업 sprite 렌더. AvatarEquipmentOverlay
-                    (cycle 35 SVG 덧그리기)는 양쪽 모두에서 비활성. */}
-                {layers ? (
-                    <LayeredCharacter layers={layers} />
-                ) : (
-                    <img
-                        src={activeSpriteSrc}
-                        alt=""
-                        aria-hidden="true"
-                        className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
-                        onError={() => {
-                            setSpriteState((current) => {
-                                const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
-                                return {
-                                    signature: spriteSignature,
-                                    index: currentState.index < spriteCandidates.length - 1 ? currentState.index + 1 : currentState.index,
-                                };
-                            });
-                        }}
-                    />
-                )}
+                {/* cycle 56+: avatar = cycle 46 직업별 sprite (망토+갑옷+무기 baked-in).
+                    장비 변화는 슬롯 UI + 스탯 + 세트 효과(직업 호환 카탈로그)로만 표현. */}
+                <img
+                    src={activeSpriteSrc}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
+                    onError={() => {
+                        setSpriteState((current) => {
+                            const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
+                            return {
+                                signature: spriteSignature,
+                                index: currentState.index < spriteCandidates.length - 1 ? currentState.index + 1 : currentState.index,
+                            };
+                        });
+                    }}
+                />
             </div>
             {showEnhanceBadge && totalEnhance > 0 && (
                 <span className={`absolute bottom-1 right-1 rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 font-fira font-bold text-[#f6e7c8] shadow-[0_6px_18px_rgba(213,177,128,0.22)] ${sizeConfig.badge}`}>

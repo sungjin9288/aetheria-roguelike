@@ -25,15 +25,8 @@ const BAND_CONFIG = [
     { key: 'endgame', label: 'Endgame', maxLevel: Number.POSITIVE_INFINITY },
 ];
 
-// cycle 56: 가독성 우선. 3 컬럼 + 노드 간격 넉넉하게.
-// 이전 (4컬럼 / 84px row gap)에서 같은 band에 5+ 지역이 몰릴 때 겹침 발생.
-const NODE_X_PATTERN = [20, 50, 80];
-const SAFE_X = 50;
-const NODE_WIDTH = 100;
-const NODE_HALF = NODE_WIDTH / 2;
-const NODE_HEIGHT = 78;
-const ROW_GAP = 112;       // band 내 추가 행 간격
-const BAND_GAP_BASE = 188; // band 간 간격
+// cycle 57: 절대위치 atlas 그리드 폐기, tier별 vertical list 채택 (cycle 58 cleanup).
+// 좌표 상수(NODE_X_PATTERN, SAFE_X, NODE_*, ROW_GAP, BAND_GAP_BASE)는 모두 제거됨.
 
 const STATUS_THEME = {
     unexplored: {
@@ -62,9 +55,6 @@ const getBandIndex = (map) => {
     return BAND_CONFIG.findIndex((band) => mapLevel <= band.maxLevel);
 };
 
-// cycle 57: 절대위치 그리드(buildAtlasLayout) 폐기. tier별 vertical list로 대체.
-// 좌표 상수(NODE_X_PATTERN, ROW_GAP, BAND_GAP_BASE, NODE_HEIGHT 등)는 unused지만
-// 의도적으로 const 선언만 유지 — 향후 atlas view 재도입 시 재활용.
 
 const MapNavigator = ({ player, grave, stats, compact = false }) => {
     const [showAllMaps, setShowAllMaps] = useState(false);
