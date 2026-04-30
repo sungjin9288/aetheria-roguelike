@@ -15,4 +15,7 @@ export const GS = Object.freeze({
     ASCENSION: 'ascension',
     FORMATION: 'formation',
     TRUE_ENDING: 'true_ending',
-});
+} as const);
+
+/** 가능한 game state 값 (literal union — TS narrowing 용). */
+export type GameState = typeof GS[keyof typeof GS];

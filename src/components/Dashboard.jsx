@@ -348,6 +348,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             key={tab.id}
                                             icon={tab.icon}
                                             label={tab.mobileLabel || tab.label}
+                                            testId={`archive-tab-${tab.id}`}
                                             active={sideTab === tab.id}
                                             onClick={() => handleTabSelect(tab.id)}
                                             compact

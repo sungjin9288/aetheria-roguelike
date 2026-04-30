@@ -6,6 +6,10 @@ import { LOOT_TABLE } from './loot.js';
 import { DROP_TABLES } from './dropTables.js';
 import { QUESTS, ACHIEVEMENTS } from './quests.js';
 
+/**
+ * 게임 정적 데이터의 단일 진입점.
+ * UI/시스템은 DB.ITEMS, DB.MONSTERS 등을 통해서만 접근.
+ */
 export const DB = {
     CLASSES,
     ITEMS,
@@ -14,7 +18,7 @@ export const DB = {
     LOOT_TABLE,
     DROP_TABLES,
     QUESTS,
-    ACHIEVEMENTS
-};
+    ACHIEVEMENTS,
+} as const;
 
 Object.freeze(DB);

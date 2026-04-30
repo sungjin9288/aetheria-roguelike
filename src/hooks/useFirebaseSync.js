@@ -18,7 +18,7 @@ import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { migrateData } from '../utils/gameUtils';
 import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
-import { isSmokeRuntime } from '../utils/runtimeMode';
+import { isMockRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
@@ -31,7 +31,7 @@ const makeLogPayload = (type, text) => ({ type, text, id: `${Date.now()}_${Math.
  * useFirebaseSync — Firebase 인증, 실시간 동기화, 리더보드, 자동 저장
  */
 export const useFirebaseSync = (state, dispatch) => {
-    const smokeMode = isSmokeRuntime();
+    const smokeMode = isMockRuntime();
     const {
         player,
         gameState,

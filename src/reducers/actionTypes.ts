@@ -80,7 +80,9 @@ export const AT = Object.freeze({
 
     // v5.0 — 내러티브 이벤트 체인
     UPDATE_EVENT_CHAIN: 'UPDATE_EVENT_CHAIN',
-});
+} as const);
+
+export type ActionType = typeof AT[keyof typeof AT];
 
 /**
  * 게임 상태(gameState) 문자열 상수 — 오타 방지 및 중앙화 (#3)
@@ -98,4 +100,6 @@ export const GS = Object.freeze({
     QUEST_BOARD:  'quest_board',
     CRAFTING:     'crafting',
     TRUE_ENDING:  'true_ending',
-});
+} as const);
+
+export type GameStateValue = typeof GS[keyof typeof GS];

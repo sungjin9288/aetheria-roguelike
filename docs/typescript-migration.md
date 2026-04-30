@@ -8,10 +8,14 @@ cycle 58에 점진 마이그레이션 시작. 한 번에 변환하지 않고 fil
 - `tsx` 로더: `node --import tsx --test` 로 `.ts` 테스트 즉시 실행 (트랜스파일 X)
 - `npm run type-check` 으로 전체 타입 검사
 
-## 변환 완료 (2)
+## 변환 완료 (6)
 
-- `src/utils/jobOutfitAffinity.ts` (시범)
-- `src/utils/equipmentTint.ts` (시범)
+- `src/utils/jobOutfitAffinity.ts` (cycle 58a) — AffinityTier/Bonus/OutfitAffinity 등 핵심 인터페이스
+- `src/utils/equipmentTint.ts` (cycle 58a)
+- `src/utils/runtimeMode.ts` (cycle 58b)
+- `src/reducers/actionTypes.ts` (cycle 58b) — `AT` literal union 노출 (`ActionType` type)
+- `src/reducers/gameStates.ts` (cycle 58b) — `GS` literal union 노출 (`GameState` type)
+- `src/data/db.ts` (cycle 58b) — 정적 데이터 진입점 `DB as const`
 
 ## 권장 변환 순서
 
