@@ -1,21 +1,72 @@
 /**
- * jobOutfitAffinity.js — 장비 = 직업 정체성 시스템 (cycle 45).
+ * jobOutfitAffinity.ts — 장비 = 직업 정체성 시스템 (cycle 45).
  *
  * 사용자 통찰: "장비를 교체했을때 아바타가 바뀌는건 직업이 바뀌는게 되는거잖아.
  * 각 장비에 그러한 내용이 들어가야 할거 같아."
  *
- * 기존 데이터 활용: items.js의 모든 장비에 `jobs: [...]` 배열이 있음 (어떤 직업이
- * 사용 적합한지 정의). 이걸 outfit affinity 매칭으로 활용:
- *   - weapon, armor, offhand 각 장비의 jobs[]에 player.job이 포함되는지 검사
- *   - 매칭 카운트 (0~3)에 따라 누적 보너스
- *   - 매칭 카운트가 높을수록 "직업 정체성이 강하게 발현"
+ * 기존 데이터 활용: items.js의 모든 장비에 `jobs: [...]` 배열이 있음.
+ * weapon, armor, offhand 각 장비의 jobs[]에 player.job이 포함되는지 검사.
+ * 매칭 카운트(0~3)에 따라 누적 보너스 — partial1 / partial2 / full.
  *
  * Pure 함수, side effect 없음.
+ *
+ * cycle 58: TypeScript 마이그레이션 시범 파일 (leaf 유틸).
  */
 
-const FULL_OUTFIT_BONUS = Object.freeze({ atkMult: 1.30, defMult: 1.20, mpBonus: 0.15, hpBonus: 0.10 });
-const PARTIAL_2_BONUS = Object.freeze({ atkMult: 1.15, defMult: 1.10, mpBonus: 0.05, hpBonus: 0.05 });
-const PARTIAL_1_BONUS = Object.freeze({ atkMult: 1.05 });
+export type AffinityTier = 'none' | 'partial1' | 'partial2' | 'full';
+
+export interface AffinityBonus {
+    atkMult?: number;
+    defMult?: number;
+    mpBonus?: number;
+    hpBonus?: number;
+}
+
+export interface OutfitAffinity {
+    matchCount: number;
+    totalSlots: number;
+    bonus: AffinityBonus;
+    label: string | null;
+    tier: AffinityTier;
+    slots: { weapon: boolean; armor: boolean; offhand: boolean };
+}
+
+export interface ItemLike {
+    name?: string;
+    type?: string;
+    tier?: number;
+    price?: number;
+    jobs?: string[];
+}
+
+interface PlayerLike {
+    job?: string;
+    equip?: {
+        weapon?: ItemLike | null;
+        armor?: ItemLike | null;
+        offhand?: ItemLike | null;
+    };
+}
+
+interface ItemsDb {
+    weapons?: ItemLike[];
+    armors?: ItemLike[];
+}
+
+interface SetCatalog {
+    weapon: ItemLike[];
+    armor: ItemLike[];
+    offhand: ItemLike[];
+}
+
+interface AffinityTone {
+    color: string;
+    glow: string;
+}
+
+const FULL_OUTFIT_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.30, defMult: 1.20, mpBonus: 0.15, hpBonus: 0.10 });
+const PARTIAL_2_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.15, defMult: 1.10, mpBonus: 0.05, hpBonus: 0.05 });
+const PARTIAL_1_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.05 });
 
 /**
  * 직업별 set 효과 명칭 — 정체성 + 분위기로 흥미 유발.
@@ -26,7 +77,7 @@ const PARTIAL_1_BONUS = Object.freeze({ atkMult: 1.05 });
  *
  * 직업이 매핑에 없으면 generic fallback (직업명 + 단계 어휘) 사용.
  */
-const JOB_AFFINITY_NAMES = Object.freeze({
+const JOB_AFFINITY_NAMES: Record<string, { partial1: string; partial2: string; full: string }> = Object.freeze({
     모험가:   { partial1: '여정의 결', partial2: '방랑자의 약속', full: '방랑자의 별자리' },
     전사:     { partial1: '단련된 손', partial2: '강철의 의지', full: '전장의 군림' },
     나이트:   { partial1: '서약의 결', partial2: '기사의 맹세', full: '성역의 수호자' },
@@ -44,46 +95,25 @@ const JOB_AFFINITY_NAMES = Object.freeze({
     대마법사: { partial1: '별빛의 결', partial2: '별의 회로', full: '별의 회랑' },
 });
 
-const buildAffinityLabel = (job, tier) => {
+const buildAffinityLabel = (job: string, tier: AffinityTier): string => {
     const flavor = JOB_AFFINITY_NAMES[job];
-    if (flavor && flavor[tier]) return flavor[tier];
-    // fallback: 직업이 매핑에 없을 때 generic 어휘 (이질감 최소)
+    if (flavor && tier !== 'none' && flavor[tier]) return flavor[tier];
     if (tier === 'full') return `${job}의 정점`;
     if (tier === 'partial2') return `${job}의 호흡`;
     return `${job}의 결`;
 };
 
-/**
- * 단일 슬롯의 jobs[] 매칭 검사.
- *
- * @param {object | null | undefined} item
- * @param {string} job
- * @returns {boolean}
- */
-const isJobMatch = (item, job) => {
+const isJobMatch = (item: ItemLike | null | undefined, job: string): boolean => {
     if (!item || !job) return false;
     const jobs = Array.isArray(item.jobs) ? item.jobs : [];
     return jobs.includes(job);
 };
 
 /**
- * @param {object} player
- * @returns {{
- *   matchCount: number,
- *   totalSlots: number,
- *   bonus: { atkMult?: number, defMult?: number, mpBonus?: number, hpBonus?: number },
- *   label: string | null,
- *   tier: 'none' | 'partial1' | 'partial2' | 'full',
- *   slots: { weapon: boolean, armor: boolean, offhand: boolean }
- * }}
- *
- * matchCount=3 (full outfit) → 강한 보너스 + "풀 직업 정체성"
- * matchCount=2 → 중간 보너스
- * matchCount=1 → 약한 ATK 보너스
- * matchCount=0 → 보너스 없음
+ * matchCount=3 → 풀 보너스. matchCount=2 → 중간. matchCount=1 → 약 ATK. 0 → 없음.
  */
-export const getJobOutfitAffinity = (player) => {
-    const empty = {
+export const getJobOutfitAffinity = (player: PlayerLike): OutfitAffinity => {
+    const empty: OutfitAffinity = {
         matchCount: 0,
         totalSlots: 0,
         bonus: {},
@@ -112,8 +142,8 @@ export const getJobOutfitAffinity = (player) => {
         return { ...empty, totalSlots, slots };
     }
 
-    let bonus;
-    let tier;
+    let bonus: AffinityBonus;
+    let tier: AffinityTier;
     if (matchCount >= 3) {
         bonus = { ...FULL_OUTFIT_BONUS };
         tier = 'full';
@@ -131,19 +161,13 @@ export const getJobOutfitAffinity = (player) => {
 
 /**
  * 직업 세트 카탈로그 — items DB에서 해당 직업 호환 장비 추출.
- *
- * @param {string} job - 한글 직업명
- * @param {object} items - DB.ITEMS (weapons, armors 배열 보유)
- * @returns {{ weapon: object[], armor: object[], offhand: object[] }}
- *
- * 각 슬롯별 후보를 tier 오름차순 정렬. 사용자가 "어떤 아이템을 모아야
- * 세트가 발동하는가" 직접 보고 모험을 계획할 수 있도록.
+ * 각 슬롯별 후보를 tier → price 오름차순 정렬 (초급 → 고급).
  */
-export const getJobSetCatalog = (job, items) => {
-    const empty = { weapon: [], armor: [], offhand: [] };
+export const getJobSetCatalog = (job: string | undefined | null, items: ItemsDb | undefined | null): SetCatalog => {
+    const empty: SetCatalog = { weapon: [], armor: [], offhand: [] };
     if (!job || !items) return empty;
-    const matchesJob = (item) => Array.isArray(item.jobs) && item.jobs.includes(job);
-    const byTier = (a, b) => (a.tier || 0) - (b.tier || 0) || (a.price || 0) - (b.price || 0);
+    const matchesJob = (item: ItemLike) => Array.isArray(item.jobs) && item.jobs.includes(job);
+    const byTier = (a: ItemLike, b: ItemLike) => (a.tier || 0) - (b.tier || 0) || (a.price || 0) - (b.price || 0);
     const weapons = (items.weapons || []).filter(matchesJob).sort(byTier);
     const armors = (items.armors || []).filter((it) => it.type === 'armor' && matchesJob(it)).sort(byTier);
     const offhands = (items.armors || []).filter((it) => it.type === 'shield' && matchesJob(it)).sort(byTier);
@@ -153,7 +177,7 @@ export const getJobSetCatalog = (job, items) => {
 /**
  * UI용: outfit affinity tone (gold gradation by tier).
  */
-export const getOutfitAffinityTone = (tier) => {
+export const getOutfitAffinityTone = (tier: AffinityTier): AffinityTone => {
     if (tier === 'full') return { color: '#f6e7a2', glow: 'rgba(246,231,162,0.42)' };
     if (tier === 'partial2') return { color: '#d5b180', glow: 'rgba(213,177,128,0.32)' };
     if (tier === 'partial1') return { color: '#7dd4d8', glow: 'rgba(125,212,216,0.28)' };

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    /* JS 호환 — 기존 .js/.jsx 파일도 type-check */
+    "allowJs": true,
+    "checkJs": false,
+
+    /* 호환성 (Vite 등 번들러용) */
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* 점진 마이그레이션을 위해 strict 점진 활성 */
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noUnusedLocals": false,
+
+    /* Vite/Capacitor가 emit 담당. tsc는 type-check만. */
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist", "android", "ios", "scripts/_archive", "output"]
+}
