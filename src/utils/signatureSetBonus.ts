@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import signatureRegistry from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSets from '../data/signatureSets.json' with { type: 'json' };
 
@@ -47,7 +46,7 @@ export const computeSignatureSetBonus = (equip) => {
     // 가장 많이 착용된 세트 선택 (동률 시 첫 발견)
     let bestKey = null;
     let bestCount = 0;
-    for (const [key, count] of Object.entries(counts)) {
+    for (const [key, count] of Object.entries(counts) as Array<[string, number]>) {
         if (count > bestCount) {
             bestKey = key;
             bestCount = count;

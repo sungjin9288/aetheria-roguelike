@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. literal union narrowing
 import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { toArray, makeItem, findItemByName, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, isAchievementUnlocked, registerCodex, registerLootToCodex, makeEmitTitles } from '../utils/gameUtils';

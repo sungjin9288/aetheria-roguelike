@@ -20,7 +20,7 @@ import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 const buildMapIndex = () => {
     /** @type {Record<string, MapSignatureDrop[]>} */
     const index = {};
-    for (const [mapName, map] of Object.entries(MAPS)) {
+    for (const [mapName, map] of Object.entries(MAPS) as Array<[string, any]>) {
         const monsters = Array.isArray(map?.monsters) ? map.monsters : [];
         // signature name → best rate (동일 signature가 여러 몬스터에서 드롭 가능할 때 최고 rate만 남김)
         const seen = new Map();

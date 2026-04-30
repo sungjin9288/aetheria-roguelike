@@ -1,4 +1,4 @@
-export const MAPS = {
+export const MAPS: any = {
     // ── 초반 지역 (Lv 1-10) ──────────────────────────────────────────────────
     '시작의 마을': {
         level: 1, type: 'safe', exits: ['고요한 숲', '서쪽 평원'],

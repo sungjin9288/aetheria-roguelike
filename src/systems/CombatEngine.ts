@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
@@ -492,11 +491,17 @@ export const CombatEngine = {
         const totalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
         const newEnemyHp = enemy.hp - totalDamage;
 
+        // logs 선언을 status effect 검사 이전으로 이동 (use-before-declaration 버그 수정).
+        const logs: Array<{ type: string; text: string }> = [{
+            type: isCrit ? 'critical' : 'combat',
+            text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp)
+        }];
+
         // 적에게 상태이상 부여 (#5)
         // stun/freeze/poison/burn/bleed/blind/fear/curse/taunt 통합 처리
         const STATUS_EFFECTS_TO_ENEMY = ['stun', 'freeze', 'poison', 'burn', 'bleed', 'blind', 'fear', 'curse', 'taunt'];
         let postEffectEnemy = { ...enemy, hp: newEnemyHp, guarding: false };
-        const effectLabels = { stun: '기절', freeze: '빙결', poison: '독', burn: '화상', bleed: '출혈', blind: '실명', fear: '공포', curse: '저주', taunt: '도발' };
+        const effectLabels: Record<string, string> = { stun: '기절', freeze: '빙결', poison: '독', burn: '화상', bleed: '출혈', blind: '실명', fear: '공포', curse: '저주', taunt: '도발' };
         if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect)) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
             if (effectLabels[skill.effect]) {
@@ -522,10 +527,6 @@ export const CombatEngine = {
             }
         };
         updatedPlayer.skillLoadout.cooldowns[skill.name] = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
-        const logs = [{
-            type: isCrit ? 'critical' : 'combat',
-            text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp)
-        }];
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
         const slRelic = relics.find(r => r.effect === 'skill_lifesteal');
@@ -626,9 +627,10 @@ export const CombatEngine = {
         // crit_cooldown: 크리티컬 시 모든 쿨타임 -1 (Sprint 16 — 인과율 조작)
         if (skill.effect === 'crit_cooldown' && isCrit) {
             const cdLoadout = updatedPlayer.skillLoadout || { selected: 0, cooldowns: {} };
-            const reducedCds = {};
+            const reducedCds: Record<string, number> = {};
             Object.entries(cdLoadout.cooldowns || {}).forEach(([k, v]) => {
-                if (v > 0) reducedCds[k] = v - 1;
+                const cd = Number(v);
+                if (cd > 0) reducedCds[k] = cd - 1;
             });
             updatedPlayer.skillLoadout = { ...cdLoadout, cooldowns: reducedCds };
             logs.push({ type: 'event', text: `[인과율 조작] 치명타! 모든 쿨타임 -1.` });
@@ -663,6 +665,8 @@ export const CombatEngine = {
         let updatedEnemy = { ...enemy };
         let updatedPlayer = { ...player };
         const logs = [];
+        // relics 선언을 함수 상단으로 (Phase 전환 블록에서 use-before-declaration 방지).
+        const relics = stats.relics || [];
 
         // ── 적 상태이상 틱 처리 (#5) ──────────────────────────────────────
         // curse_amp 패시브: 무당/시간술사 직업 보너스
@@ -779,7 +783,6 @@ export const CombatEngine = {
         }
 
         const heavy = roll < pattern.guardChance + pattern.heavyChance;
-        const relics = stats.relics || [];
         let mult = heavy ? 1.4 : 1;
         const critBlockRelic = relics.find((relic) => relic.effect === 'crit_block');
         if (heavy && critBlockRelic && Math.random() < critBlockRelic.val) {
@@ -932,7 +935,7 @@ export const CombatEngine = {
         const goldMult = 1 + (relics.find(r => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0);
         // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배)
         const challengeMods = p.challengeModifiers || [];
-        const challengeScale = BALANCE.CHALLENGE_REWARD_SCALING || {};
+        const challengeScale: { threshold?: number; mult?: number } = (BALANCE as any).CHALLENGE_REWARD_SCALING || {};
         const challengeRewardMult = challengeMods.length >= (challengeScale.threshold || 3) ? (challengeScale.mult || 1.5) : 1;
         // 유물: 처치 보너스 (kill_bonus)
         const killBonusRelic = relics.find(r => r.effect === 'kill_bonus');

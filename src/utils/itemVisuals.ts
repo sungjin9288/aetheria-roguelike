@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { ITEMS } from '../data/items.js';
 import signatureRegistrySource from '../data/signatureRegistry.json' with { type: 'json' };
 import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon, isMagicWeapon } from './equipmentUtils.js';
@@ -93,9 +92,9 @@ const EXACT_ICON_CATEGORY_BY_TYPE = {
 };
 
 const buildExactItemIconKeys = () => {
-    const counters = {};
-    const exactKeys = {};
-    const allItems = Object.values(ITEMS).flat().filter(Boolean);
+    const counters: Record<string, number> = {};
+    const exactKeys: Record<string, string> = {};
+    const allItems = (Object.values(ITEMS).flat() as any[]).filter(Boolean);
 
     for (const item of allItems) {
         if (!item?.name) continue;

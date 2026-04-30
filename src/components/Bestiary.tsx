@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 타입 명시 필요
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { BookOpen, Lock, Eye, Sparkles } from 'lucide-react';
@@ -18,22 +17,22 @@ const Bestiary = ({ player, compact = false }) => {
 
     const allMonsters = useMemo(() => {
         const registry = player?.stats?.killRegistry || {};
-        const monstersSet = new Set();
-        Object.values(DB.MAPS).forEach(map => {
-            (map.monsters || []).forEach(m => monstersSet.add(m));
+        const monstersSet = new Set<string>();
+        (Object.values(DB.MAPS) as any[]).forEach((map: any) => {
+            (map.monsters || []).forEach((m: string) => monstersSet.add(m));
         });
-        return Array.from(monstersSet).map(name => {
+        return Array.from(monstersSet).map((name: string) => {
             const kills = registry[name] || 0;
-            const monsterMeta = MONSTERS[name] || {};
-            const bossBrief = BOSS_BRIEFS[name] || null;
+            const monsterMeta = (MONSTERS as any)[name] || {};
+            const bossBrief = (BOSS_BRIEFS as any)[name] || null;
             const signatureDrops = getBossSignatureDrops(name);
             return {
                 name,
                 kills,
                 encountered: kills > 0,
-                drops: LOOT_TABLE[name] || [],
+                drops: (LOOT_TABLE as any)[name] || [],
                 signatureDrops,
-                location: Object.entries(DB.MAPS)
+                location: (Object.entries(DB.MAPS) as Array<[string, any]>)
                     .filter(([, map]) => (map.monsters || []).includes(name))
                     .map(([loc]) => loc)
                     .join(', '),

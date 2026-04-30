@@ -6,7 +6,7 @@ import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { PRESTIGE_TITLES } from '../../data/titles';
 import { INITIAL_STATE } from '../../reducers/gameReducer';
 
-export const createAscensionActions = (deps) => {
+export const createAscensionActions = (deps, _shared?: any) => {
     const { player, dispatch, addLog } = deps;
     return {
         confirmAscension: () => {

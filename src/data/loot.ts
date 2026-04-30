@@ -1,4 +1,4 @@
-export const LOOT_TABLE = {
+export const LOOT_TABLE: any = {
     // 숲 지역
     '슬라임': ['슬라임 젤리', '하급 체력 물약'],
     '늑대': ['멧돼지 가죽', '하급 체력 물약'],

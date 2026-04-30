@@ -4,7 +4,7 @@ import { BALANCE } from './constants';
  * premiumShop.js — 프리미엄 상점 아이템 정의
  * 에테르 크리스탈로 구매 가능한 아이템/서비스 목록
  */
-export const PREMIUM_SHOP = {
+export const PREMIUM_SHOP: any = {
     /** 인벤토리 확장 */
     invExpand: {
         id: 'inv_expand',
@@ -48,7 +48,7 @@ export const PREMIUM_SHOP = {
  * - 프레스티지 보상: 회차당 20~50개
  * - 업적 보상: 일부 업적에 포함
  */
-export const PREMIUM_FREE_SOURCES = [
+export const PREMIUM_FREE_SOURCES: any = [
     { source: '도감 마일스톤', amount: '10~25', desc: '카테고리별 수집 목표 달성' },
     { source: '첫 보스 처치', amount: '10~30', desc: '각 보스 최초 처치 보상' },
     { source: '프레스티지', amount: '20~50', desc: '환생 시 축적 보상' },

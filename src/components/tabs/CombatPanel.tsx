@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 타입 명시 필요
+// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React from 'react';
 import { Sword, Zap, ArrowRight, RotateCw, Sparkles } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';

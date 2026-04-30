@@ -1,5 +1,4 @@
-// @ts-nocheck — TODO: cycle 59+ migration. literal union narrowing
-export const MONSTERS = {
+export const MONSTERS: any = {
     슬라임: { weakness: '화염', resistance: '대지', hpMult: 0.8, pattern: { guardChance: 0.05, heavyChance: 0.1 }, statusOnHit: 'poison' },
     늑대: { weakness: '화염', resistance: '자연', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.35 } },
     '숲의 정령': { weakness: '화염', resistance: '자연' },
@@ -841,6 +840,6 @@ export const BOSS_BRIEFS = Object.freeze({
     }
 });
 
-export const BOSS_MONSTERS = Object.entries(MONSTERS)
+export const BOSS_MONSTERS = (Object.entries(MONSTERS) as Array<[string, any]>)
     .filter(([, data]) => Boolean(data?.isBoss))
     .map(([name]) => name);

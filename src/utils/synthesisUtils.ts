@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { getItemRarity } from './gameUtils.js';
@@ -149,7 +148,7 @@ export const getSynthesisGroups = (inventory) => {
         groups[key].count += 1;
     }
 
-    return Object.values(groups)
+    return (Object.values(groups) as any[])
         .filter((g) => g.count >= BALANCE.SYNTHESIS_INPUT_COUNT)
         .sort((a, b) => a.tier - b.tier || a.type.localeCompare(b.type));
 };

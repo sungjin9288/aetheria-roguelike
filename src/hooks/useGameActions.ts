@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { makeSharedHelpers } from './gameActions/_shared';
 import { createMoveActions } from './gameActions/moveActions';
 import { createExploreActions } from './gameActions/exploreActions';

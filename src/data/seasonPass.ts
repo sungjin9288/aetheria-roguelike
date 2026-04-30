@@ -7,7 +7,7 @@
  */
 
 /** 시즌 패스 XP 소스 */
-export const SEASON_XP = {
+export const SEASON_XP: any = {
     explore: 10,
     kill: 5,
     bossKill: 50,
@@ -21,7 +21,7 @@ export const SEASON_XP = {
 export const SEASON_TIER_XP = 200;
 
 /** 시즌 패스 보상 테이블 (30티어) */
-export const SEASON_REWARDS = [
+export const SEASON_REWARDS: any = [
     // 티어 1~10: 기본 보상
     { tier: 1,  free: { gold: 500 },               premium: { gold: 1000 } },
     { tier: 2,  free: { item: '중급 체력 물약' },    premium: { item: '상급 체력 물약' } },
@@ -60,7 +60,7 @@ export const SEASON_REWARDS = [
 ];
 
 /** 시즌 패스 초기 상태 */
-export const INITIAL_SEASON_PASS = {
+export const INITIAL_SEASON_PASS: any = {
     xp: 0,
     tier: 0,
     claimed: [],         // 수령한 티어 번호 배열

@@ -1,4 +1,4 @@
-export const QUESTS = [
+export const QUESTS: any = [
     // ── 초반 퀘스트 (Lv 1-10) ────────────────────────────────────────────────
     { id: 1,  title: '슬라임 소탕',      desc: '슬라임 3마리 처치',       target: '슬라임',      goal: 3,  reward: { exp: 50,   gold: 100 },           minLv: 1 },
     { id: 2,  title: '멧돼지 사냥',      desc: '멧돼지 5마리 처치',       target: '멧돼지',      goal: 5,  reward: { exp: 80,   gold: 150 },           minLv: 2 },
@@ -175,7 +175,7 @@ export const QUESTS = [
 ];
 
 
-export const ACHIEVEMENTS = [
+export const ACHIEVEMENTS: any = [
     // ── 전투 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_first_blood',  title: '첫 번째 피',     desc: '첫 전투 승리',              target: 'kills',      goal: 1,    reward: { gold: 50 } },
     { id: 'ach_kill_10',      title: '초보 사냥꾼',    desc: '몬스터 10마리 처치',        target: 'kills',      goal: 10,   reward: { gold: 200 } },

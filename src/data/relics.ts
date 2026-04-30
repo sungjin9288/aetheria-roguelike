@@ -4,7 +4,7 @@
  * Slay the Spire 방식의 로그라이크 런 빌드 핵심.
  */
 
-export const RELICS = [
+export const RELICS: any = [
     // ─── 공격 계열 (8개) ───────────────────────────────────────────────────
     {
         id: 'blood_pact',

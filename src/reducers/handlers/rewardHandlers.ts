@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { findItemByName, makeItem } from '../../utils/gameUtils';
 import { SEASON_TIER_XP, SEASON_REWARDS } from '../../data/seasonPass';
 
@@ -55,7 +54,7 @@ export const rewardActionMap = {
             ...state.player,
             seasonPass: { ...sp, claimed: [...(sp.claimed || []), claimTier] },
         };
-        for (const track of tracks) {
+        for (const track of tracks as Array<any>) {
             if (track.gold) nextPlayer = { ...nextPlayer, gold: (nextPlayer.gold || 0) + track.gold };
             if (track.premiumCurrency) nextPlayer = { ...nextPlayer, premiumCurrency: (nextPlayer.premiumCurrency || 0) + track.premiumCurrency };
             if (track.title) {

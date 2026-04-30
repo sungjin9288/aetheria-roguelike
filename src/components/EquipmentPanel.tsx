@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 타입 명시 필요
+// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo, useState } from 'react';
 import { Shield, Sparkles, Sword, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';

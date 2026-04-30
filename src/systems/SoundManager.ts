@@ -1,9 +1,12 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 /**
  * SoundManager - Web Audio API 기반 사운드 엔진
  * 오실레이터를 이용한 레트로 효과음 생성 (외부 파일 불필요)
  */
 class SoundManager {
+    ctx: AudioContext | null;
+    muted: boolean;
+    initialized: boolean;
+
     constructor() {
         this.ctx = null;
         this.muted = false;
@@ -13,8 +16,8 @@ class SoundManager {
     init() {
         if (this.initialized) return;
         try {
-            window.AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioContext();
+            const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+            this.ctx = new Ctx();
             this.initialized = true;
         } catch {
             console.warn('Web Audio API not supported');

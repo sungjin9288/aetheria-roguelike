@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { ITEMS } from '../data/items.js';
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
@@ -248,7 +247,7 @@ const countDiscoveredSignatures = (player) => {
 
 const countCompletedSignatureSets = (player) => {
     let count = 0;
-    for (const setDef of Object.values(SIGNATURE_SETS_MAP)) {
+    for (const setDef of Object.values(SIGNATURE_SETS_MAP) as any[]) {
         const members = setDef?.members || [];
         if (members.length === 0) continue;
         const allFound = members.every((name) => isSignatureDiscovered(name, player));
@@ -422,7 +421,7 @@ export const migrateData = (rawData) => {
             }
         }
         // killRegistry에서 몬스터 codex 부트스트랩
-        for (const [name, kills] of Object.entries(target.stats.killRegistry || {})) {
+        for (const [name, kills] of Object.entries(target.stats.killRegistry || {}) as Array<[string, number]>) {
             if (kills > 0) {
                 target.stats.codex.monsters[name] = { discovered: true, kills };
             }

@@ -1,4 +1,4 @@
-export const CLASSES = {
+export const CLASSES: any = {
     '모험가': {
         tier: 0, desc: '기본 직업', hpMod: 1.0, mpMod: 1.0, atkMod: 1.0,
         skills: [

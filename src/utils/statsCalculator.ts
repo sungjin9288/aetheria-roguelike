@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { CONSTANTS, BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { getActiveRelicSynergies } from '../data/relics.js';
@@ -50,7 +49,7 @@ const computeCodexBonus = (stats) => {
     let def = 0;
     let hp = 0;
     const registry = stats?.killRegistry || {};
-    Object.values(registry).forEach(kills => {
+    Object.values(registry).forEach((kills: any) => {
         if (kills >= 10) hp += 5;
         if (kills >= 50) def += 1;
         if (kills >= 100) atk += 1;

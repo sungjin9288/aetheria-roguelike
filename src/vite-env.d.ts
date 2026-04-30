@@ -26,4 +26,9 @@ interface PerfRegistry {
 
 interface Window {
     __AETHERIA_PERF_REGISTRY__?: PerfRegistry;
+    __firebase_config?: string;
+    __initial_auth_token?: string;
+    __AETHERIA_TEST_API__?: any;
+    render_game_to_text?: any;
+    advanceTime?: any;
 }

@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 타입 명시 필요
+// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Zap, Shield, ChevronDown, ChevronRight, Sparkles, GitBranch, RefreshCw } from 'lucide-react';

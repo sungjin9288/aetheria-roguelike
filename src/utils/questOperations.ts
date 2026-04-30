@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { QUESTS } from '../data/quests.js';
 import { MAPS } from '../data/maps.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
@@ -59,7 +58,7 @@ const getActiveQuestEntries = (player) => (
 const getQuestTargetMaps = (quest, maps = MAPS) => {
     if (!quest?.target || quest.target === 'Level') return [];
 
-    return Object.entries(maps)
+    return (Object.entries(maps) as Array<[string, any]>)
         .filter(([, map]) => {
             const pool = [
                 ...toArray(map?.monsters),

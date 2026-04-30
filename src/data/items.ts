@@ -1,4 +1,4 @@
-export const ITEMS = {
+export const ITEMS: any = {
     weapons: [
         // Tier 1 - 초급 (15개)
         { name: '녹슨 단검', type: 'weapon', val: 5, tier: 1, price: 50, jobs: ['모험가', '도적', '마법사', '어쌔신', '레인저'], desc: '기본 단검', desc_stat: 'ATK+5' },

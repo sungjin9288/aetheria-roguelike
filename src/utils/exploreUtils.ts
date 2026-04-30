@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 /**
  * exploreUtils.js — explore() 로직 분리 모듈 (Phase 1-B)
  * useGameActions.js의 explore()에서 추출한 순수 함수들.
@@ -17,7 +16,7 @@ const getISOWeekNumber = (date = new Date()) => {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return Math.ceil(((((d as any) - (yearStart as any)) / 86400000) + 1) / 7);
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -153,7 +152,7 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
         level = 50 + Math.floor(depth / 2);
     }
 
-    const mStats = {
+    const mStats: any = {
         name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
         baseName,
         hp: 120 + level * 30 + (depth * 25),

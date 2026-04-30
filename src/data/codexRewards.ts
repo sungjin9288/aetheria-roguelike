@@ -2,7 +2,7 @@
  * codexRewards.js — 도감 마일스톤 보상 정의
  * 각 카테고리별 발견 수에 따른 보상 + 프리미엄 재화
  */
-export const CODEX_MILESTONES = {
+export const CODEX_MILESTONES: any = {
     weapons: [
         { count: 5,  reward: { atk: 2 }, label: '무기 수집가 I' },
         { count: 15, reward: { atk: 4, premiumCurrency: 5 }, label: '무기 수집가 II' },
@@ -54,7 +54,7 @@ export const getCodexProgress = (codex = {}, claimed = []) => {
     const milestones = [];
     const unclaimed = [];
 
-    for (const [category, milestoneList] of Object.entries(CODEX_MILESTONES)) {
+    for (const [category, milestoneList] of Object.entries(CODEX_MILESTONES) as Array<[string, any[]]>) {
         const catEntries = codex[category] || {};
         const discovered = Object.keys(catEntries).length;
 

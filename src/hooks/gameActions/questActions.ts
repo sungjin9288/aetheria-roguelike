@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { DB } from '../../data/db';
 import { BALANCE } from '../../data/constants';
 import { AT } from '../../reducers/actionTypes';
@@ -41,8 +40,8 @@ export const createQuestActions = (deps, { emitUnlockedTitles }) => {
             if (player.stats?.bountyDate === today && player.stats?.bountyIssued) {
                 return addLog('error', MSG.BOUNTY_DAILY_LIMIT);
             }
-            const validMonsters = [];
-            Object.values(DB.MAPS).forEach(m => {
+            const validMonsters: string[] = [];
+            (Object.values(DB.MAPS) as any[]).forEach((m: any) => {
                 if (m.level !== 'infinite' && m.level <= player.level + 5 && m.level >= Math.max(1, player.level - 10) && !m.boss) {
                     validMonsters.push(...(m.monsters || []));
                 }

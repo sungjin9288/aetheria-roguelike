@@ -11,8 +11,8 @@ const MaterialCodex = ({ codex }) => {
 
     // 각 소재의 획득처 계산
     const matSources = useMemo(() => {
-        const sources = {};
-        for (const [monster, drops] of Object.entries(LOOT_TABLE)) {
+        const sources: Record<string, string[]> = {};
+        for (const [monster, drops] of Object.entries(LOOT_TABLE) as Array<[string, string[]]>) {
             for (const itemName of drops) {
                 if (!sources[itemName]) sources[itemName] = [];
                 sources[itemName].push(monster);

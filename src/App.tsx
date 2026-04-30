@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 타입 명시 필요
+// @ts-nocheck — TODO: cycle 59+ migration
 import React, { useState, useRef, lazy, Suspense, useEffect } from 'react';
 import { MotionConfig } from 'framer-motion';
 

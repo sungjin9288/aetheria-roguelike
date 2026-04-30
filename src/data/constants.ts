@@ -4,7 +4,7 @@ const ENV: ImportMetaEnv = (typeof import.meta !== 'undefined' && import.meta.en
 // Admin UIDs — 환경변수에서 쉼표 구분으로 주입 (VITE_ADMIN_UIDS=uid1,uid2)
 export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map(s => s.trim()).filter(Boolean);
 
-export const CONSTANTS = {
+export const CONSTANTS: any = {
     DEFAULT_JOB: '모험가',
     START_LOCATION: '시작의 마을',
     ABYSS_MAP_NAME: '혼돈의 심연',
@@ -34,7 +34,7 @@ export const CONSTANTS = {
 };
 
 // Game Balance Constants - Centralized magic numbers
-export const BALANCE = {
+export const BALANCE: any = {
     REST_COST: 60,              // 경제 완화 — Lv50 기준 1-2전투로 휴식 가능 (기존 80)
     SKILL_MP_COST: 10,
     CRIT_CHANCE: 0.1,

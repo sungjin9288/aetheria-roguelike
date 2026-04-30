@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. 클래스 필드 / 복잡한 객체 narrowing 필요
 import { useEffect } from 'react';
 import { CONSTANTS } from '../data/constants';
 import { GS } from '../reducers/gameStates';
@@ -320,7 +319,7 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                 const scenario = avatarScenarioMap[preset];
                 if (!scenario) return false;
 
-                const payload = {
+                const payload: any = {
                     name: scenario.name,
                     job: scenario.job,
                     level: scenario.level,

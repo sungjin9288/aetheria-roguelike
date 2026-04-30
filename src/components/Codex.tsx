@@ -37,8 +37,8 @@ const Codex = ({ player, dispatch }) => {
         const weapons = DB.ITEMS.weapons?.length || 0;
         const armors = (DB.ITEMS.armors || []).filter(a => a.type === 'armor').length;
         const shields = (DB.ITEMS.armors || []).filter(a => a.type === 'shield').length;
-        const monsters = new Set();
-        Object.values(DB.MAPS).forEach(map => (map.monsters || []).forEach(m => monsters.add(m)));
+        const monsters = new Set<string>();
+        (Object.values(DB.MAPS) as any[]).forEach(map => (map.monsters || []).forEach((m: string) => monsters.add(m)));
         const recipes = DB.ITEMS.recipes?.length || 0;
         const materials = DB.ITEMS.materials?.length || 0;
         return { weapons, armors, shields, monsters: monsters.size, recipes, materials };
