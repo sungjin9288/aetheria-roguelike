@@ -1,4 +1,4 @@
-export const fetchAnalyticsData = async (token) => {
+export const fetchAnalyticsData = async (token: any) => {
     const proxyUrl = import.meta.env.VITE_AI_PROXY_URL || '';
     const baseUrl = proxyUrl.includes('/game/story')
         ? proxyUrl.split('/game/story')[0]

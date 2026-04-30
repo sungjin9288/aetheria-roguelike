@@ -26,11 +26,11 @@ export const handleVictoryOutcome = ({
     dispatch, addLog, addStoryLog,
     emitDailyProtocolLogs, emitUnlockedTitles,
     extendedChecks = false,
-}) => {
+}: any) => {
     const passiveBonus = { goldMult: stats?.passiveGoldMult || 0, expMult: stats?.passiveExpMult || 0 };
     const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus);
     let updatedPlayer = victoryResult.updatedPlayer;
-    victoryResult.logs.forEach((log) => addLog(log.type, log.text));
+    victoryResult.logs.forEach((log: any) => addLog(log.type, log.text));
     if (victoryResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: victoryResult.visualEffect });
 
     const victoryStats = { ...stats, maxHp: updatedPlayer.maxHp, maxMp: updatedPlayer.maxMp };
@@ -52,7 +52,7 @@ export const handleVictoryOutcome = ({
     // loot — signature pity 배율 적용 (bad-luck 보호막)
     const signaturePityMult = getSignaturePityMultiplier(updatedPlayer.stats?.signaturePity);
     const lootResult = CombatEngine.processLoot(deadEnemy, updatedPlayer, signaturePityMult);
-    lootResult.logs.forEach((log) => addLog(log.type, log.text));
+    lootResult.logs.forEach((log: any) => addLog(log.type, log.text));
     if (lootResult.items.length > 0) {
         updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
         updatedPlayer = registerLootToCodex(updatedPlayer, lootResult.items);
@@ -62,7 +62,7 @@ export const handleVictoryOutcome = ({
     //  - signature 하나라도 드롭 → pity = 0
     //  - 보스 토벌 + signature 미획득 → pity += 1
     //  - 일반 몹은 pity 영향 없음
-    const signatureDropped = lootResult.items.some((it) => isSignatureItem(it));
+    const signatureDropped = lootResult.items.some((it: any) => isSignatureItem(it));
     const prevPity = updatedPlayer.stats?.signaturePity || 0;
     if (signatureDropped) {
         if (prevPity > 0) {
@@ -86,7 +86,7 @@ export const handleVictoryOutcome = ({
     if (extendedChecks) {
         const milestoneRewards = checkMilestones(updatedPlayer.stats?.killRegistry || {}, baseName);
         if (milestoneRewards.length > 0) {
-            milestoneRewards.forEach((reward) => {
+            milestoneRewards.forEach((reward: any) => {
                 addLog('event', reward.msg);
                 if (reward.type === 'gold') updatedPlayer = grantGold(updatedPlayer, reward.val);
                 else if (reward.type === 'item') updatedPlayer = addItemByName(updatedPlayer, reward.val);
@@ -123,14 +123,14 @@ export const handleVictoryOutcome = ({
 
     if (extendedChecks) {
         if (isBossKill && deadEnemy?.baseName) {
-            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
                 ...p,
                 stats: { ...p.stats, areaBossDefeated: { ...(p.stats.areaBossDefeated || {}), [deadEnemy.baseName]: true } }
             })});
         }
         dispatch({ type: AT.ADD_SEASON_XP, payload: isBossKill ? SEASON_XP.bossKill : SEASON_XP.kill });
         const winHpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
-        dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
+        dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
     }
 
     emitDailyProtocolLogs('kills', 1);
@@ -143,14 +143,14 @@ export const handleVictoryOutcome = ({
         }
         if (deadEnemy.baseName === '원시의 신' || deadEnemy.name?.includes('원시의 신') || deadEnemy.name?.includes('원초적 혼돈')) {
             const heartItem = makeItem({ name: '원시의 심장', type: 'key', price: 0, tier: 6, desc: '원시의 신의 심장.' });
-            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
             dispatch({ type: AT.TRIGGER_TRUE_ENDING });
             addLog('critical', MSG.TRUE_GOD_SLAIN);
             return { earlyReturn: true };
         }
         if (deadEnemy.baseName === '공허의 신' || deadEnemy.name?.includes('공허의 신') || deadEnemy.name?.includes('절대 공허')) {
             const voidCore = makeItem({ name: '공허의 핵심', type: 'key', price: 0, tier: 6, desc: '심연 100층을 정복한 자에게만 허락된 공허의 본질. 세상의 어떤 힘도 이것을 무너뜨릴 수 없다.' });
-            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
                 ...p,
                 inv: [...(p.inv || []), voidCore],
                 titles: [...new Set([...(p.titles || []), '허무의 정복자'])],
@@ -163,7 +163,7 @@ export const handleVictoryOutcome = ({
         addStoryLog('victory', { name: deadEnemy.name });
     }
 
-    const droppedItems = lootResult.items.map((i) => i.name);
+    const droppedItems = lootResult.items.map((i: any) => i.name);
     const traitProfile = getTraitProfile(updatedPlayer, victoryStats);
     const upgradeHint = getLootUpgradeHint(updatedPlayer.equip, lootResult.items);
     const traitHint = getTraitLootHint(lootResult.items, traitProfile, updatedPlayer);

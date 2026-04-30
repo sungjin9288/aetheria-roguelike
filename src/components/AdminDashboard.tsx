@@ -21,7 +21,7 @@ import { fetchAnalyticsData } from '../services/analyticsService';
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 // Admin Dashboard Component
-export const AdminDashboard = ({ isAdmin }) => {
+export const AdminDashboard = ({ isAdmin }: any) => {
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
@@ -92,7 +92,7 @@ export const AdminDashboard = ({ isAdmin }) => {
             <div className="flex items-center justify-between border-b border-slate-700 pb-2">
                 <h2 className="text-lg font-bold text-indigo-400">📊 Admin Analytics (AWS Hybrid)</h2>
                 <div className="flex gap-2 text-xs">
-                    {['overview', 'jobs', 'deaths'].map(tab => (
+                    {['overview', 'jobs', 'deaths'].map((tab: any) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}

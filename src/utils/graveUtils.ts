@@ -1,14 +1,14 @@
-const createGraveItem = (item) => ({
+const createGraveItem = (item: any) => ({
     ...item,
     id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
 });
 
-const sortGravesByLatest = (a, b) => (b?.timestamp || 0) - (a?.timestamp || 0);
+const sortGravesByLatest = (a: any, b: any) => (b?.timestamp || 0) - (a?.timestamp || 0);
 
 export const buildGraveData = (player, random = Math.random, now = Date.now) => {
     let droppedItems = [];
     const tradableItems = Array.isArray(player?.inv)
-        ? player.inv.filter((item) => !item?.id?.startsWith('starter_'))
+        ? player.inv.filter((item: any) => !item?.id?.startsWith('starter_'))
         : [];
 
     if (tradableItems.length > 0) {
@@ -26,30 +26,30 @@ export const buildGraveData = (player, random = Math.random, now = Date.now) => 
     };
 };
 
-export const normalizeGraves = (grave) => {
+export const normalizeGraves = (grave: any) => {
     if (!grave) return [];
 
     const graves = Array.isArray(grave) ? grave : [grave];
     return graves
-        .filter((entry) => entry && typeof entry === 'object' && entry.loc)
+        .filter((entry: any) => entry && typeof entry === 'object' && entry.loc)
         .sort(sortGravesByLatest);
 };
 
-export const appendGrave = (grave, nextGrave) => {
+export const appendGrave = (grave: any, nextGrave: any) => {
     const merged = [...normalizeGraves(grave), ...normalizeGraves(nextGrave)];
     return merged.length > 0 ? merged.sort(sortGravesByLatest) : null;
 };
 
-export const getGravesAtLoc = (grave, loc) => (
-    normalizeGraves(grave).filter((entry) => entry.loc === loc)
+export const getGravesAtLoc = (grave: any, loc: any) => (
+    normalizeGraves(grave).filter((entry: any) => entry.loc === loc)
 );
 
-export const removeGravesAtLoc = (grave, loc) => {
-    const remaining = normalizeGraves(grave).filter((entry) => entry.loc !== loc);
+export const removeGravesAtLoc = (grave: any, loc: any) => {
+    const remaining = normalizeGraves(grave).filter((entry: any) => entry.loc !== loc);
     return remaining.length > 0 ? remaining : null;
 };
 
-export const getGraveItems = (grave) => (
+export const getGraveItems = (grave: any) => (
     Array.isArray(grave?.items)
         ? grave.items
         : grave?.item
@@ -57,13 +57,13 @@ export const getGraveItems = (grave) => (
             : []
 );
 
-export const calcInvasionChance = (playerAtk, guardPower) => {
+export const calcInvasionChance = (playerAtk: any, guardPower: any) => {
     const atk = Math.max(1, playerAtk);
     const guard = Math.max(1, guardPower);
     return Math.min(0.9, atk / (atk + guard));
 };
 
-export const resolveInvasion = (targetGrave, playerAtk) => {
+export const resolveInvasion = (targetGrave: any, playerAtk: any) => {
     const chance = calcInvasionChance(playerAtk, targetGrave.guardPower || 10);
     const success = Math.random() < chance;
     const items = targetGrave.items || [];
@@ -73,13 +73,13 @@ export const resolveInvasion = (targetGrave, playerAtk) => {
     return { success, reward, chance };
 };
 
-export const resolveGraveRecovery = (player, grave) => {
+export const resolveGraveRecovery = (player: any, grave: any) => {
     const graves = normalizeGraves(grave);
     const recoveredItems = graves
-        .flatMap((entry) => getGraveItems(entry))
-        .map((item) => createGraveItem(item));
-    const goldGain = graves.reduce((total, entry) => total + Math.max(0, entry?.gold || 0), 0);
-    const updatedPlayer = {
+        .flatMap((entry: any) => getGraveItems(entry))
+        .map((item: any) => createGraveItem(item));
+    const goldGain = graves.reduce((total: any, entry: any) => total + Math.max(0, entry?.gold || 0), 0);
+    const updatedPlayer: Record<string, any> = {
         ...player,
         gold: (player?.gold || 0) + goldGain,
         inv: [...(player?.inv || []), ...recoveredItems],
@@ -91,7 +91,7 @@ export const resolveGraveRecovery = (player, grave) => {
     const summary = [`유해 회수: ${goldGain}G 획득`];
 
     if (recoveredItems.length > 0) {
-        summary.push(`${recoveredItems.map((item) => item.name).join(', ')} 획득`);
+        summary.push(`${recoveredItems.map((item: any) => item.name).join(', ')} 획득`);
     }
 
     if (graves.length > 1) {

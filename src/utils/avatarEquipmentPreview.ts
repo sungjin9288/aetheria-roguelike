@@ -7,14 +7,14 @@ import {
     placementToTransform,
 } from './anchorPoints.js';
 
-const HOLY_PREVIEW_PATTERNS = ['성', '천', '심판', '성광', '이지스', '기사'];
-const SHADOW_PREVIEW_PATTERNS = ['암흑', '어둠', '심연', '공허', '그림자'];
-const NATURE_PREVIEW_PATTERNS = ['엘프', '숲', '사냥', '레인저', '자연'];
+const HOLY_PREVIEW_PATTERNS: any = ['성', '천', '심판', '성광', '이지스', '기사'];
+const SHADOW_PREVIEW_PATTERNS: any = ['암흑', '어둠', '심연', '공허', '그림자'];
+const NATURE_PREVIEW_PATTERNS: any = ['엘프', '숲', '사냥', '레인저', '자연'];
 const HEAVY_WEAPON_STYLES = new Set(['greatsword', 'greataxe', 'axe', 'hammer', 'mace', 'spear', 'lance', 'scythe']);
 const DAGGER_WEAPON_STYLES = new Set(['dagger', 'fang-dagger', 'throwing-blade', 'twinblade']);
 const FOCUS_OFFHAND_STYLES = new Set(['grimoire', 'tome', 'tablet', 'scroll', 'book']);
 
-const resolvePreviewArmorStyle = (item, profile) => {
+const resolvePreviewArmorStyle = (item: any, profile: any) => {
     if (!item || item.type !== 'armor') return 'coat';
 
     if (profile?.bodyStyle === 'robe') return 'robe';
@@ -25,9 +25,9 @@ const resolvePreviewArmorStyle = (item, profile) => {
     return getArmorStyleFromItem(item, 'coat');
 };
 
-const containsAny = (text, patterns) => patterns.some((pattern) => text.includes(pattern));
+const containsAny = (text: any, patterns: any) => patterns.some((pattern: any) => text.includes(pattern));
 
-const resolvePreviewJobFromArmor = (item, profile) => {
+const resolvePreviewJobFromArmor = (item: any, profile: any) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -54,7 +54,7 @@ const resolvePreviewJobFromArmor = (item, profile) => {
     return '모험가';
 };
 
-const resolvePreviewJobFromWeapon = (item, visualKey) => {
+const resolvePreviewJobFromWeapon = (item: any, visualKey: any) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -76,7 +76,7 @@ const resolvePreviewJobFromWeapon = (item, visualKey) => {
     return '모험가';
 };
 
-const resolvePreviewJobFromOffhand = (item, visualKey) => {
+const resolvePreviewJobFromOffhand = (item: any, visualKey: any) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -91,13 +91,13 @@ const resolvePreviewJobFromOffhand = (item, visualKey) => {
     return resolvePreviewJobFromWeapon(item, visualKey);
 };
 
-export const getWeaponTransform = (profile) => placementToTransform(getWeaponPlacement(profile?.style));
+export const getWeaponTransform = (profile: any) => placementToTransform(getWeaponPlacement(profile?.style));
 
-export const getOffhandTransform = (profile) => placementToTransform(getOffhandPlacement(profile?.style));
+export const getOffhandTransform = (profile: any) => placementToTransform(getOffhandPlacement(profile?.style));
 
-export const getArmorTransform = (profile) => placementToTransform(getArmorPlacement(profile));
+export const getArmorTransform = (profile: any) => placementToTransform(getArmorPlacement(profile));
 
-const withVariant = (baseStage, variant, overrides: any = {}) => {
+const withVariant = (baseStage: any, variant: any, overrides: any = {}) => {
     if (variant === 'card') {
         return {
             ...baseStage,
@@ -115,7 +115,7 @@ const withVariant = (baseStage, variant, overrides: any = {}) => {
     };
 };
 
-export const getEquipmentPreviewStage = (item, appearance, variant = 'default') => {
+export const getEquipmentPreviewStage = (item: any, appearance: any, variant: any = 'default') => {
     const armorArt = appearance?.armor?.art || null;
     const weaponStyle = appearance?.weapon?.art?.style || appearance?.weapon?.visual || 'none';
     const offhandStyle = appearance?.offhand?.art?.style || appearance?.offhand?.visual || 'none';
@@ -137,7 +137,7 @@ export const getEquipmentPreviewStage = (item, appearance, variant = 'default') 
     }
 
     if (armorArt?.bodyStyle && armorArt.bodyStyle !== 'none') {
-        const armorStageMap = {
+        const armorStageMap: Record<string, any> = {
             robe: { scale: 1.17, translateX: 0, translateY: 6 },
             plate: { scale: 1.14, translateX: 0, translateY: 5 },
             leather: { scale: 1.17, translateX: 0, translateY: 6 },
@@ -292,8 +292,8 @@ export const getEquipmentPreviewStage = (item, appearance, variant = 'default') 
     });
 };
 
-export const buildEquipmentPreviewAppearance = (item) => {
-    const preview = {
+export const buildEquipmentPreviewAppearance = (item: any) => {
+    const preview: Record<string, any> = {
         job: '모험가',
         frameTone: item?.elem || null,
         armorStyle: 'coat',

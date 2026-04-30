@@ -1,16 +1,16 @@
-const uniqueList = (values = []) => [...new Set(values.filter(Boolean))];
+const uniqueList = (values: any = []) => [...new Set(values.filter(Boolean))];
 
-export const getMapEncounterRoster = (map) => uniqueList([
+export const getMapEncounterRoster = (map: any) => uniqueList([
     ...(map?.monsters || []),
     ...(map?.bossMonsters || []),
     typeof map?.boss === 'string' ? map.boss : null,
 ]);
 
-export const getMapCodexProgress = (mapName, maps, codex: any = {}) => {
+export const getMapCodexProgress = (mapName: any, maps: any, codex: any = {}) => {
     const map = maps?.[mapName];
     const roster = getMapEncounterRoster(map);
     const discoveredSet = new Set(Object.keys(codex?.monsters || {}));
-    const discovered = roster.filter((monster) => discoveredSet.has(monster)).length;
+    const discovered = roster.filter((monster: any) => discoveredSet.has(monster)).length;
 
     return {
         total: roster.length,
@@ -19,7 +19,7 @@ export const getMapCodexProgress = (mapName, maps, codex: any = {}) => {
     };
 };
 
-export const getMapProgressState = (mapName, player, maps) => {
+export const getMapProgressState = (mapName: any, player: any, maps: any) => {
     const currentLoc = player?.loc;
     const visitedSet = new Set([...(player?.stats?.visitedMaps || []), currentLoc].filter(Boolean));
     const codex = player?.stats?.codex || {};

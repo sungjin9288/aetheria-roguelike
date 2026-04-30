@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getAvatarSpriteCandidates } from '../utils/avatarSpriteCandidates';
 
-const SIZE_MAP = {
+const SIZE_MAP: any = {
     sm: {
         frame: 'h-[4.6rem] w-[4.6rem] rounded-[1.25rem] p-1.5',
         inner: 'rounded-[0.95rem]',
@@ -20,7 +20,7 @@ const SIZE_MAP = {
     },
 };
 
-const FRAME_TONE_CLASS = {
+const FRAME_TONE_CLASS: any = {
     화염: 'border-orange-300/28 bg-[radial-gradient(circle_at_76%_16%,rgba(251,146,60,0.26),transparent_26%),linear-gradient(180deg,rgba(35,20,12,0.98)_0%,rgba(8,8,8,1)_100%)]',
     냉기: 'border-cyan-300/24 bg-[radial-gradient(circle_at_76%_16%,rgba(103,232,249,0.22),transparent_28%),linear-gradient(180deg,rgba(14,22,34,0.98)_0%,rgba(7,10,16,1)_100%)]',
     어둠: 'border-violet-300/26 bg-[radial-gradient(circle_at_76%_16%,rgba(167,139,250,0.24),transparent_28%),linear-gradient(180deg,rgba(23,17,36,0.98)_0%,rgba(7,7,16,1)_100%)]',
@@ -29,7 +29,7 @@ const FRAME_TONE_CLASS = {
     대지: 'border-amber-300/22 bg-[radial-gradient(circle_at_76%_16%,rgba(214,179,139,0.2),transparent_28%),linear-gradient(180deg,rgba(31,25,21,0.98)_0%,rgba(10,9,8,1)_100%)]',
 };
 
-const softenColor = (hex, alpha = 0.24) => {
+const softenColor = (hex: any, alpha: any = 0.24) => {
     if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length !== 7) {
         return `rgba(255,255,255,${alpha})`;
     }
@@ -50,7 +50,7 @@ const PixelCharacterAvatar = ({
     showEnhanceBadge = true,
     dataTestId = null,
     label = '캐릭터 외형',
-}) => {
+}: any) => {
     const appearance = useMemo(
         () => providedAppearance || deriveCharacterAppearance(player),
         [player, providedAppearance]
@@ -92,7 +92,7 @@ const PixelCharacterAvatar = ({
                     aria-hidden="true"
                     className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
                     onError={() => {
-                        setSpriteState((current) => {
+                        setSpriteState((current: any) => {
                             const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
                             return {
                                 signature: spriteSignature,

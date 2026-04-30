@@ -7,7 +7,7 @@ import SignalBadge from '../SignalBadge';
 import { BALANCE } from '../../data/constants';
 
 // ── 유틸 ──────────────────────────────────────────────
-const getQuestObjectiveText = (quest) => (
+const getQuestObjectiveText = (quest: any) => (
     quest?.objective
         ? quest.objective
         : (
@@ -17,17 +17,17 @@ const getQuestObjectiveText = (quest) => (
         )
 );
 
-const getQuestProgressText = (quest, progress = 0) => (
+const getQuestProgressText = (quest: any, progress: any = 0) => (
     quest?.target === 'Level'
         ? `레벨 ${progress}/${quest.goal}`
         : `${progress}/${quest.goal}`
 );
 
-const getQuestProgressPercent = (progress = 0, goal = 1) =>
+const getQuestProgressPercent = (progress: any = 0, goal: any = 1) =>
     Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
 const MAX_COMPACT_QUESTS = 2;
 
-export const QuestRewardChips = ({ reward, accent = 'blue' }) => {
+export const QuestRewardChips = ({ reward, accent = 'blue' }: any) => {
     const rewards = formatRewardParts(reward);
     if (!rewards.length) return null;
     const accentClass = accent === 'green'
@@ -37,7 +37,7 @@ export const QuestRewardChips = ({ reward, accent = 'blue' }) => {
             : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue';
     return (
         <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-fira">
-            {rewards.map((entry) => (
+            {rewards.map((entry: any) => (
                 <span key={`${accent}_${entry}`} className={`rounded border px-2 py-1 ${accentClass}`}>{entry}</span>
             ))}
         </div>
@@ -49,19 +49,19 @@ export const QuestRewardChips = ({ reward, accent = 'blue' }) => {
  * QuestTab — Dashboard의 quest 탭 콘텐츠 (#4 분리)
  * props: player, actions, isInSafeZone
  */
-const DAILY_TYPE_LABEL = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
+const DAILY_TYPE_LABEL: any = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
 
-const getDailyRewardLabel = (reward) => {
+const getDailyRewardLabel = (reward: any) => {
     if (reward?.essence) return `에센스 +${reward.essence}`;
     if (reward?.item) return reward.item;
     if (reward?.relicShard) return '유물 파편 +1';
     return '';
 };
 
-const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
+const QuestTab = ({ player, actions, isInSafeZone, compact = false }: any) => {
     const traitProfile = getTraitProfile(player, { maxHp: player.maxHp, maxMp: player.maxMp });
     const [showAllQuests, setShowAllQuests] = React.useState(false);
-    const activeQuestEntries = getActiveQuestEntries(player).map((entry, index) => {
+    const activeQuestEntries = getActiveQuestEntries(player).map((entry: any, index: any) => {
         const resonance = getTraitQuestResonance(entry.quest, traitProfile);
         const progressPercent = getQuestProgressPercent(entry.progress, entry.quest.goal);
         return {
@@ -71,24 +71,24 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
             originalIndex: index,
         };
     });
-    const claimableQuestCount = activeQuestEntries.filter((e) => e.isComplete).length;
+    const claimableQuestCount = activeQuestEntries.filter((e: any) => e.isComplete).length;
     const dp = player.stats?.dailyProtocol;
     const today = new Date().toISOString().slice(0, 10);
     const isDpToday = dp?.date === today;
     const dpMissions = isDpToday ? (dp.missions || []) : [];
-    const dpDoneCount = dpMissions.filter((m) => m.done).length;
-    const nextDpMission = dpMissions.find((mission) => !mission.done) || dpMissions[0] || null;
+    const dpDoneCount = dpMissions.filter((m: any) => m.done).length;
+    const nextDpMission = dpMissions.find((mission: any) => !mission.done) || dpMissions[0] || null;
 
     // Weekly Protocol
     const wp = player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, claimed: [] };
-    const weeklyMissions = BALANCE.WEEKLY_MISSIONS.map(m => {
+    const weeklyMissions = BALANCE.WEEKLY_MISSIONS.map((m: any) => {
         const current = m.id === 'weeklyKills' ? (wp.kills || 0) : m.id === 'weeklyExplore' ? (wp.explores || 0) : (wp.bossKills || 0);
         return { ...m, current, done: current >= m.target, claimed: (wp.claimed || []).includes(m.id) };
     });
     const visibleQuestEntries = (() => {
         if (!compact || showAllQuests || activeQuestEntries.length <= MAX_COMPACT_QUESTS) return activeQuestEntries;
         return [...activeQuestEntries]
-            .sort((a, b) =>
+            .sort((a: any, b: any) =>
                 Number(b.isComplete) - Number(a.isComplete) ||
                 Number(b.isBounty) - Number(a.isBounty) ||
                 (b.resonance?.score || 0) - (a.resonance?.score || 0) ||
@@ -164,7 +164,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                                 )}
                             </div>
                             <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-1.5'}`}>
-                                {dpMissions.map((mission) => {
+                                {dpMissions.map((mission: any) => {
                                     const pct = Math.min(100, (mission.progress / Math.max(1, mission.goal)) * 100);
                                     const rewardLabel = getDailyRewardLabel(mission.reward);
                                     return (
@@ -210,9 +210,9 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                                 </span>
                             </div>
                             <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-1.5'}`}>
-                                {chains.map((chain) => {
+                                {chains.map((chain: any) => {
                                     const done = completedChains.includes(chain.id);
-                                    const visitedCount = chain.locations.filter(l => visitedMaps.has(l)).length;
+                                    const visitedCount = chain.locations.filter((l: any) => visitedMaps.has(l)).length;
                                     const pct = Math.min(100, (visitedCount / chain.locations.length) * 100);
                                     return (
                                         <div key={chain.id} className={`rounded-[0.9rem] border px-2.5 py-1.5 ${done ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : 'border-white/8 bg-black/18'}`}>
@@ -242,12 +242,12 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                     <div className={`rounded-[1rem] border border-[#d5b180]/20 bg-[#d5b180]/6 ${compact ? 'mb-2 px-2.5 py-2' : 'mb-3 px-3 py-2.5'}`}>
                         <div className={`flex items-center justify-between ${compact ? 'mb-1.5' : 'mb-2'}`}>
                             <span className="text-[#f6e7c8] text-xs font-fira tracking-widest uppercase">Weekly Mission</span>
-                            <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every(m => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
-                                {weeklyMissions.filter(m => m.claimed).length}/{weeklyMissions.length}
+                            <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every((m: any) => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
+                                {weeklyMissions.filter((m: any) => m.claimed).length}/{weeklyMissions.length}
                             </span>
                         </div>
                         <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-1.5'}`}>
-                            {weeklyMissions.map((mission) => {
+                            {weeklyMissions.map((mission: any) => {
                                 const pct = Math.min(100, (mission.current / Math.max(1, mission.target)) * 100);
                                 return (
                                     <div
@@ -307,7 +307,7 @@ const QuestTab = ({ player, actions, isInSafeZone, compact = false }) => {
                     </div>
                 )}
                 {activeQuestEntries.length > 0 ? (
-                    visibleQuestEntries.map((entry, i) => (
+                    visibleQuestEntries.map((entry: any, i: any) => (
                         <Motion.div
                             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                             key={entry.id}

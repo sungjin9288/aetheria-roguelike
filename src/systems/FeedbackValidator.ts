@@ -5,7 +5,7 @@ export const FeedbackValidator = {
     RATE_LIMIT_KEY: 'aetheria_feedback_ts',
     RATE_LIMIT_MS: 60000, // 1 minute
 
-    validate(content) {
+    validate(content: any) {
         if (!content || content.length < this.MIN_LENGTH) {
             return { valid: false, error: `최소 ${this.MIN_LENGTH}자 이상 입력해주세요.` };
         }

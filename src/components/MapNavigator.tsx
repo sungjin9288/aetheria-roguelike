@@ -8,7 +8,7 @@ import { getMapProgressState } from '../utils/mapProgress';
 import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/mapSignatureHints';
 
 const MAP_ORDER = (Object.entries(DB.MAPS) as Array<[string, any]>)
-    .map(([name, map]) => ({ name, ...map }))
+    .map(([name, map]: any) => ({ name, ...map }))
     .sort((a: any, b: any) => {
         const aLevel = a.level === 'infinite' ? 999 : (a.minLv ?? a.level ?? 1);
         const bLevel = b.level === 'infinite' ? 999 : (b.minLv ?? b.level ?? 1);
@@ -17,7 +17,7 @@ const MAP_ORDER = (Object.entries(DB.MAPS) as Array<[string, any]>)
         return aLevel - bLevel;
     });
 
-const BAND_CONFIG = [
+const BAND_CONFIG: any = [
     { key: 'frontier', label: 'Frontier', maxLevel: 10 },
     { key: 'midlands', label: 'Midlands', maxLevel: 20 },
     { key: 'highlands', label: 'Highlands', maxLevel: 35 },
@@ -28,7 +28,7 @@ const BAND_CONFIG = [
 // cycle 57: 절대위치 atlas 그리드 폐기, tier별 vertical list 채택 (cycle 58 cleanup).
 // 좌표 상수(NODE_X_PATTERN, SAFE_X, NODE_*, ROW_GAP, BAND_GAP_BASE)는 모두 제거됨.
 
-const STATUS_THEME = {
+const STATUS_THEME: any = {
     unexplored: {
         label: '미탐험',
         badge: 'neutral',
@@ -49,14 +49,14 @@ const STATUS_THEME = {
     },
 };
 
-const getBandIndex = (map) => {
+const getBandIndex = (map: any) => {
     if (map.type === 'safe' && (map.minLv ?? map.level ?? 1) <= 15) return 0;
     const mapLevel = map.level === 'infinite' ? 999 : (map.minLv ?? map.level ?? 1);
-    return BAND_CONFIG.findIndex((band) => mapLevel <= band.maxLevel);
+    return BAND_CONFIG.findIndex((band: any) => mapLevel <= band.maxLevel);
 };
 
 
-const MapNavigator = ({ player, grave, stats, compact = false }) => {
+const MapNavigator = ({ player, grave, stats, compact = false }: any) => {
     const [showAllMaps, setShowAllMaps] = useState(false);
     const [selectedMapName, setSelectedMapName] = useState(player?.loc);
     const currentMap = DB.MAPS[player?.loc];
@@ -67,7 +67,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
         DB.MAPS,
     );
 
-    const mapEntries = useMemo(() => MAP_ORDER.map((map) => {
+    const mapEntries = useMemo(() => MAP_ORDER.map((map: any) => {
         const progress = getMapProgressState(map.name, player, DB.MAPS);
         const signatureDrops = getMapSignatureDrops(map.name);
         const undiscoveredSignatures = getMapUndiscoveredSignatures(map.name, player);
@@ -81,12 +81,12 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
     }), [grave, player]);
 
     const visibleEntries = compact && !showAllMaps ? mapEntries.slice(0, 14) : mapEntries;
-    const selectedEntry = visibleEntries.find((e) => e.name === selectedMapName)
-        || visibleEntries.find((e) => e.name === player?.loc)
+    const selectedEntry = visibleEntries.find((e: any) => e.name === selectedMapName)
+        || visibleEntries.find((e: any) => e.name === player?.loc)
         || visibleEntries[0]
         || null;
     const visibleRecommendations = moveRecommendations.slice(0, compact ? 2 : 3);
-    const statusCounts = visibleEntries.reduce((acc, entry) => {
+    const statusCounts = visibleEntries.reduce((acc: any, entry: any) => {
         acc[entry.state] += 1;
         return acc;
     }, { unexplored: 0, exploring: 0, completed: 0 });
@@ -117,7 +117,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                         <span className="text-[#dff7f5]">{visibleRecommendations[0].name}</span>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                        {visibleRecommendations.map((route) => (
+                        {visibleRecommendations.map((route: any) => (
                             <button
                                 key={route.name}
                                 type="button"
@@ -154,7 +154,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                     {compact && mapEntries.length > visibleEntries.length ? (
                         <button
                             type="button"
-                            onClick={() => setShowAllMaps((prev) => !prev)}
+                            onClick={() => setShowAllMaps((prev: any) => !prev)}
                             className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[10px] font-fira text-slate-300/78 hover:bg-white/[0.04]"
                         >
                             {showAllMaps ? '요약 보기' : `+${mapEntries.length - visibleEntries.length} 더 보기`}
@@ -163,8 +163,8 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                 </div>
 
                 <div className="space-y-3">
-                    {BAND_CONFIG.map((band, bandIndex) => {
-                        const bandEntries = visibleEntries.filter((entry) => getBandIndex(entry) === bandIndex);
+                    {BAND_CONFIG.map((band: any, bandIndex: any) => {
+                        const bandEntries = visibleEntries.filter((entry: any) => getBandIndex(entry) === bandIndex);
                         if (bandEntries.length === 0) return null;
                         const bandLevelHint = band.maxLevel === Number.POSITIVE_INFINITY
                             ? 'Lv.60+'
@@ -179,12 +179,12 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                                     <span className="text-[9px] font-fira text-slate-500">{bandEntries.length}곳</span>
                                 </div>
                                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                                    {bandEntries.map((entry) => {
+                                    {bandEntries.map((entry: any) => {
                                         const theme = STATUS_THEME[entry.state];
                                         const isSelected = selectedEntry?.name === entry.name;
                                         const isCurrent = entry.isCurrent;
                                         const graveCount = entry.graves.length;
-                                        const graveGold = entry.graves.reduce((sum, item) => sum + Math.max(0, item?.gold || 0), 0);
+                                        const graveGold = entry.graves.reduce((sum: any, item: any) => sum + Math.max(0, item?.gold || 0), 0);
                                         const levelLabel = entry.level === 'infinite'
                                             ? 'Abyss'
                                             : `Lv.${entry.minLv ?? entry.level ?? 1}`;
@@ -269,7 +269,7 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                             <span>연결 지역</span>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
-                            {(selectedEntry.exits || []).map((exitName) => {
+                            {(selectedEntry.exits || []).map((exitName: any) => {
                                 const exitState = getMapProgressState(exitName, player, DB.MAPS);
                                 return (
                                     <SignalBadge key={`${selectedEntry.name}-${exitName}`} tone={STATUS_THEME[exitState.state].badge} size="sm">
@@ -300,8 +300,8 @@ const MapNavigator = ({ player, grave, stats, compact = false }) => {
                                 )}
                             </div>
                             <div className="mt-2 flex flex-wrap gap-1.5">
-                                {selectedEntry.signatureDrops.map(({ name, rate }) => {
-                                    const discovered = !selectedEntry.undiscoveredSignatures.find((s) => s.name === name);
+                                {selectedEntry.signatureDrops.map(({ name, rate }: any) => {
+                                    const discovered = !selectedEntry.undiscoveredSignatures.find((s: any) => s.name === name);
                                     return (
                                         <span
                                             key={name}

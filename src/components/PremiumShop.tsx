@@ -3,7 +3,7 @@ import { X, Package, Shield, Zap, Star } from 'lucide-react';
 import { PREMIUM_SHOP } from '../data/premiumShop';
 import SignalBadge from './SignalBadge';
 
-const ITEM_ICONS = {
+const ITEM_ICONS: any = {
     inv_expand: Package,
     synth_protect: Shield,
     revive: Zap,
@@ -13,7 +13,7 @@ const CrystalIcon = () => (
     <span className="text-cyan-300" aria-hidden="true">💎</span>
 );
 
-const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtect, onPurchaseRevive, onPurchaseTitle }) => {
+const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtect, onPurchaseRevive, onPurchaseTitle }: any) => {
     const crystals = player?.premiumCurrency || 0;
     const ownedTitles = player?.stats?.cosmeticTitles || [];
     const maxInv = player?.maxInv || 20;
@@ -65,7 +65,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
                 <div>
                     <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-600 mb-2">유틸리티</div>
                     <div className="space-y-2">
-                        {utilItems.map(item => {
+                        {utilItems.map((item: any) => {
                             const Icon = ITEM_ICONS[item.id] || Package;
                             const canAfford = crystals >= item.cost;
                             return (
@@ -101,7 +101,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
                 <div>
                     <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-600 mb-2">코스메틱 칭호</div>
                     <div className="space-y-1.5">
-                        {PREMIUM_SHOP.cosmeticTitles.map(title => {
+                        {PREMIUM_SHOP.cosmeticTitles.map((title: any) => {
                             const owned = ownedTitles.includes(title.id);
                             const canAfford = crystals >= title.cost;
                             return (

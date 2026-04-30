@@ -17,7 +17,9 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
 
-    /* 점진 활성 — 후속 사이클에서 noImplicitAny → strictNullChecks → strict 단계적 */
+    /* cycle 58 phase 6 — noImplicitAny 거의 도달 (1702→156).
+     * 156 잔여는 TS7053(index access by any) + 일부 TS7006 — 다음 사이클 manual fix.
+     * 현재는 false로 유지 (type-check 통과). 향후 strict 단계적 활성. */
     "strict": false,
     "noImplicitAny": false,
     "strictNullChecks": false,

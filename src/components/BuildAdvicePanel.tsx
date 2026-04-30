@@ -5,7 +5,7 @@ import { TRAIT_DEFINITIONS } from '../data/traits';
 import { getRunBuildProfile } from '../utils/runProfile';
 
 /** 아키타입별 추천 유물 효과 목록 (우선순위 순) */
-const BUILD_RELIC_HINTS = {
+const BUILD_RELIC_HINTS: any = {
     crusher:  ['double_strike', 'execute_bonus', 'ancient_power', 'combo_stack', 'low_hp_atk'],
     dual:     ['double_strike', 'combo_stack', 'execute_bonus', 'armor_pen', 'ancient_power'],
     fortress: ['fortress', 'reflect', 'stone_skin', 'battle_start_heal', 'crit_block'],
@@ -16,7 +16,7 @@ const BUILD_RELIC_HINTS = {
     balanced: ['battle_start_heal', 'stone_skin', 'gold_mult', 'exp_mult', 'ancient_power'],
 };
 
-const RARITY_COLOR = {
+const RARITY_COLOR: any = {
     common:    'text-slate-400',
     uncommon:  'text-cyan-400',
     rare:      'text-purple-400',
@@ -24,17 +24,17 @@ const RARITY_COLOR = {
     legendary: 'text-red-400',
 };
 
-const RARITY_LABEL = {
+const RARITY_LABEL: any = {
     common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설',
 };
 
-const getRecommendedRelics = (primaryId, ownedRelicEffects) => {
+const getRecommendedRelics = (primaryId: any, ownedRelicEffects: any) => {
     const hints = BUILD_RELIC_HINTS[primaryId] || BUILD_RELIC_HINTS.balanced;
     const owned = new Set(ownedRelicEffects);
     // Filter relics matching hint effects, not already owned
     const candidates = hints
-        .flatMap((effect) => RELICS.filter((r) => r.effect === effect && !owned.has(r.effect)))
-        .filter((r, idx, arr) => arr.findIndex((x) => x.id === r.id) === idx); // dedupe
+        .flatMap((effect: any) => RELICS.filter((r: any) => r.effect === effect && !owned.has(r.effect)))
+        .filter((r: any, idx: any, arr: any) => arr.findIndex((x: any) => x.id === r.id) === idx); // dedupe
     return candidates.slice(0, 4);
 };
 
@@ -42,13 +42,13 @@ const getRecommendedRelics = (primaryId, ownedRelicEffects) => {
  * BuildAdvicePanel — 현재 빌드 아키타입 기반 유물 + 스킬 추천
  * 맵 탭 하단에 배치됩니다.
  */
-const BuildAdvicePanel = ({ player, compact = false }) => {
+const BuildAdvicePanel = ({ player, compact = false }: any) => {
     const [open, setOpen] = useState(false);
 
     const profile = useMemo(() => getRunBuildProfile(player || {}), [player]);
     const primaryId = profile?.primary?.id || 'balanced';
     const trait = TRAIT_DEFINITIONS[primaryId] || TRAIT_DEFINITIONS.balanced;
-    const ownedEffects = (player?.relics || []).map((r) => r.effect);
+    const ownedEffects = (player?.relics || []).map((r: any) => r.effect);
     const recommended = useMemo(
         () => getRecommendedRelics(primaryId, ownedEffects),
         [primaryId, ownedEffects]
@@ -58,7 +58,7 @@ const BuildAdvicePanel = ({ player, compact = false }) => {
         <div className="bg-black/18 border border-white/8 rounded-[1rem] overflow-hidden">
             {/* 헤더 토글 */}
             <button
-                onClick={() => setOpen((o) => !o)}
+                onClick={() => setOpen((o: any) => !o)}
                 className={`w-full flex items-center justify-between font-fira text-slate-400/76 hover:text-slate-200 hover:bg-white/[0.03] transition-colors ${compact ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2.5 text-xs'}`}
             >
                 <span className={`flex items-center ${compact ? 'gap-1.5 tracking-[0.14em]' : 'gap-2 tracking-widest'} uppercase`}>
@@ -101,7 +101,7 @@ const BuildAdvicePanel = ({ player, compact = false }) => {
                             <div className="text-[10px] text-slate-500 italic">이 빌드와 맞는 유물을 모두 보유 중입니다.</div>
                         ) : (
                             <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
-                                {recommended.map((relic) => (
+                                {recommended.map((relic: any) => (
                                     <div key={relic.id} className={`rounded-[0.95rem] border border-white/8 bg-black/18 ${compact ? 'px-2 py-1.25' : 'px-2.5 py-2'}`}>
                                         <div className="flex items-center justify-between gap-2">
                                             <span className={`text-xs font-bold ${RARITY_COLOR[relic.rarity] || 'text-slate-300'}`}>{relic.name}</span>

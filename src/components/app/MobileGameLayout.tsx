@@ -7,7 +7,7 @@ import ControlPanel from '../ControlPanel';
 
 const Dashboard = lazy(() => import('../Dashboard'));
 
-const DashboardFallback = ({ summary = false }) => (
+const DashboardFallback = ({ summary = false }: any) => (
     <div
         aria-hidden="true"
         className={`panel-noise aether-surface animate-pulse border border-white/8 ${
@@ -18,7 +18,7 @@ const DashboardFallback = ({ summary = false }) => (
     />
 );
 
-const MobileConsoleArchiveButton = ({ active = false, onClick }) => (
+const MobileConsoleArchiveButton = ({ active = false, onClick }: any) => (
     <button
         type="button"
         data-testid="mobile-console-open-archive"
@@ -44,10 +44,10 @@ const MobileGameLayout = ({
     damageFlash, healFlash,
     mobileConsoleMode,
     setMobileConsoleMode,
-}) => {
+}: any) => {
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
-    const openArchiveConsole = (tab) => {
+    const openArchiveConsole = (tab: any) => {
         // onClick 등에서 이벤트 객체를 그대로 전달하는 것을 방지 (기본값이 event 객체로 덮이면 안 됨)
         const target = typeof tab === 'string' ? tab : 'inventory';
         engine.actions.setSideTab?.(target);

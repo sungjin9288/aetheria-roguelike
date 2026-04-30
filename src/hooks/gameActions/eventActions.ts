@@ -6,16 +6,16 @@ import { addItemByName } from '../../utils/inventoryUtils';
 import { pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
 
-export const createEventActions = (deps, { emitUnlockedTitles }) => {
+export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
     const { player, currentEvent, dispatch, addLog, getFullStats } = deps;
     return {
-        handleEventChoice: (idx) => {
+        handleEventChoice: (idx: any) => {
             if (!currentEvent) return;
 
             const isChainEvent = Boolean(currentEvent._chainId);
             const selectedOutcome = isChainEvent
                 ? (toArray(currentEvent.outcomes)[idx] || null)
-                : (toArray(currentEvent.outcomes).find((o) => o.choiceIndex === idx) || null);
+                : (toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null);
             const roll = Math.random();
             let updatedPlayer = player;
             const fullStats = getFullStats();
@@ -61,7 +61,7 @@ export const createEventActions = (deps, { emitUnlockedTitles }) => {
                 if (selectedOutcome.exp) {
                     const expResult = CombatEngine.applyExpGain(updatedPlayer, selectedOutcome.exp);
                     updatedPlayer = expResult.updatedPlayer;
-                    expResult.logs.forEach((log) => addLog(log.type, log.text));
+                    expResult.logs.forEach((log: any) => addLog(log.type, log.text));
                     if (expResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: expResult.visualEffect });
                 }
                 if (selectedOutcome.hp) {

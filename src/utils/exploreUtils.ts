@@ -22,7 +22,7 @@ const getISOWeekNumber = (date = new Date()) => {
 // ─────────────────────────────────────────────────────────────────────────
 // 0.5. 주간 프로토콜 리셋
 // ─────────────────────────────────────────────────────────────────────────
-export const resetWeeklyProtocolIfNeeded = (player, dispatch) => {
+export const resetWeeklyProtocolIfNeeded = (player: any, dispatch: any) => {
     const currentWeek = getISOWeekNumber();
     const wp = player.weeklyProtocol;
     if (!wp || wp.lastResetWeek !== currentWeek) {
@@ -39,7 +39,7 @@ export const resetWeeklyProtocolIfNeeded = (player, dispatch) => {
 // ─────────────────────────────────────────────────────────────────────────
 // 1. 일일 프로토콜 리셋 & 카운트 업 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const resetDailyProtocolIfNeeded = (player, dispatch) => {
+export const resetDailyProtocolIfNeeded = (player: any, dispatch: any) => {
     const today = new Date().toISOString().slice(0, 10);
     const dp = player.stats?.dailyProtocol;
     if (!dp || dp.date !== today) {
@@ -57,14 +57,14 @@ export const resetDailyProtocolIfNeeded = (player, dispatch) => {
 // 2. 탐색 이벤트 롤 — 아노말리, 열쇠 이벤트, 유물 발견 처리 (Phase 1-B)
 // 반환값: 'event_triggered' | 'relic_found' | 'anomaly' | 'nothing' | null (계속 진행)
 // ─────────────────────────────────────────────────────────────────────────
-export const rollExplorationEvent = (player, mapData, playerRelics, { dispatch, addLog, getFullStats }) => {
+export const rollExplorationEvent = (player: any, mapData: any, playerRelics: any, { dispatch, addLog, getFullStats }: any) => {
     const discoveryOdds = getDiscoveryOdds(player, mapData);
-    const hasKey = player.inv.some(i => i.name === '잊혀진 열쇠');
+    const hasKey = player.inv.some((i: any) => i.name === '잊혀진 열쇠');
     if (hasKey && mapData.level >= 10 && Math.random() < discoveryOdds.keyEventChance) {
         dispatch({
             type: AT.SET_PLAYER,
-            payload: (p) => {
-                const keyIdx = p.inv.findIndex(i => i.name === '잊혀진 열쇠');
+            payload: (p: any) => {
+                const keyIdx = p.inv.findIndex((i: any) => i.name === '잊혀진 열쇠');
                 const newInv = [...p.inv];
                 if (keyIdx > -1) newInv.splice(keyIdx, 1);
                 return { ...p, inv: newInv, loc: '고대 보물고' };
@@ -84,16 +84,16 @@ export const rollExplorationEvent = (player, mapData, playerRelics, { dispatch, 
         addLog('warning', `[기상 이변] ${anomaly.desc}`);
         if (anomaly.effect === 'mana_regen') {
             const stats = getFullStats();
-            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * 0.3)) }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * 0.3)) }) });
         } else {
-            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
         }
         return 'anomaly';
     }
 
     // 유물 발견
     if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < discoveryOdds.relicChance) {
-        const available = RELICS.filter(r => !playerRelics.some(pr => pr.id === r.id));
+        const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
         if (available.length > 0) {
             const candidates = pickWeightedRelics(available, 3);
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
@@ -108,7 +108,7 @@ export const rollExplorationEvent = (player, mapData, playerRelics, { dispatch, 
 // ─────────────────────────────────────────────────────────────────────────
 // 3. 몬스터 스탯 생성 + 접두어 부여 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
+export const spawnEnemy = (mapData: any, player: any, playerRelics: any, { addLog }: any) => {
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
 
@@ -121,13 +121,13 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
         // 공허의 군주: 무한 심연 100층 클리어 (금지된 도서관)
         { boss: '공허의 군주', loc: '금지된 도서관', check: () => (player.stats?.abyssFloor || 0) >= 100 },
     ];
-    hiddenBossChecks.forEach(({ boss, loc, check }) => {
+    hiddenBossChecks.forEach(({ boss, loc, check }: any) => {
         if (mapData.name === loc && check() && !encounterPool.includes(boss)) {
             encounterPool.push(boss);
         }
     });
 
-    const bossHunterRelic = playerRelics.find((r) => r.effect === 'boss_hunter');
+    const bossHunterRelic = playerRelics.find((r: any) => r.effect === 'boss_hunter');
     if (bossHunterRelic && mapBossMonsters.length > 0) {
         for (let i = 1; i < Math.max(1, Math.floor(bossHunterRelic.val.spawn || 1)); i += 1) {
             encounterPool = [...encounterPool, ...mapBossMonsters];
@@ -191,7 +191,7 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
     // 접두어 부여
     if ((forceElite || Math.random() < BALANCE.PREFIX_CHANCE) && CONSTANTS.MONSTER_PREFIXES) {
         const elitePrefixes = forceElite
-            ? CONSTANTS.MONSTER_PREFIXES.filter((p) => p.isElite)
+            ? CONSTANTS.MONSTER_PREFIXES.filter((p: any) => p.isElite)
             : CONSTANTS.MONSTER_PREFIXES;
         const pool = elitePrefixes.length > 0 ? elitePrefixes : CONSTANTS.MONSTER_PREFIXES;
         const prefix = pool[Math.floor(Math.random() * pool.length)];
@@ -227,7 +227,7 @@ export const spawnEnemy = (mapData, player, playerRelics, { addLog }) => {
 // ─────────────────────────────────────────────────────────────────────────
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const applyBattleStartRelics = (player, playerRelics, fullStats, { addLog }) => {
+export const applyBattleStartRelics = (player: any, playerRelics: any, fullStats: any, { addLog }: any) => {
     let combatStartPlayer = {
         ...player,
         combatFlags: {
@@ -238,14 +238,14 @@ export const applyBattleStartRelics = (player, playerRelics, fullStats, { addLog
         }
     };
 
-    const startHealRelic = playerRelics.find((r) => r.effect === 'battle_start_heal');
+    const startHealRelic = playerRelics.find((r: any) => r.effect === 'battle_start_heal');
     if (startHealRelic) {
         const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * startHealRelic.val));
         combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
         addLog('heal', `[재생 코어] 전투 시작 회복 +${heal} HP`);
     }
 
-    const cursedPowerRelic = playerRelics.find((r) => r.effect === 'cursed_power');
+    const cursedPowerRelic = playerRelics.find((r: any) => r.effect === 'cursed_power');
     if (cursedPowerRelic) {
         const selfDamage = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * cursedPowerRelic.val.hp_cost));
         combatStartPlayer.hp = Math.max(1, (combatStartPlayer.hp || 1) - selfDamage);
@@ -253,7 +253,7 @@ export const applyBattleStartRelics = (player, playerRelics, fullStats, { addLog
     }
 
     // 유물: 혼돈의 심장 (chaos_relic) — 전투 시작 시 랜덤 효과 발동
-    const chaosRelic = playerRelics.find((r) => r.effect === 'chaos_relic');
+    const chaosRelic = playerRelics.find((r: any) => r.effect === 'chaos_relic');
     if (chaosRelic) {
         const roll = Math.floor(Math.random() * 3);
         if (roll === 0) {
@@ -271,7 +271,7 @@ export const applyBattleStartRelics = (player, playerRelics, fullStats, { addLog
         }
     }
 
-    const chaosBuffRelic = playerRelics.find((r) => r.effect === 'chaos_buff');
+    const chaosBuffRelic = playerRelics.find((r: any) => r.effect === 'chaos_buff');
     if (chaosBuffRelic) {
         const existingBuff = { atk: 0, def: 0, turn: 0, name: null, ...(combatStartPlayer.tempBuff || {}) };
         const rollAtk = Math.random() < 0.5;
@@ -292,15 +292,15 @@ export const applyBattleStartRelics = (player, playerRelics, fullStats, { addLog
 // ─────────────────────────────────────────────────────────────────────────
 // 4.5. 발견 체인 체크 — 지역 조합 방문 시 보상 (Discovery Chains)
 // ─────────────────────────────────────────────────────────────────────────
-export const checkDiscoveryChains = (player, loc, { dispatch, addLog }) => {
+export const checkDiscoveryChains = (player: any, loc: any, { dispatch, addLog }: any) => {
     const chains = BALANCE.DISCOVERY_CHAINS;
     if (!chains) return;
     const visited = new Set([...(player.stats?.visitedMaps || []), loc]);
     const completed = player.stats?.discoveryChains || [];
 
-    chains.forEach(chain => {
+    chains.forEach((chain: any) => {
         if (completed.includes(chain.id)) return;
-        if (!chain.locations.every(l => visited.has(l))) return;
+        if (!chain.locations.every((l: any) => visited.has(l))) return;
 
         // 체인 달성!
         const rewardParts = [];
@@ -322,7 +322,7 @@ export const checkDiscoveryChains = (player, loc, { dispatch, addLog }) => {
                     updated.premiumCurrency = (updated.premiumCurrency || 0) + chain.reward.premiumCurrency;
                 }
                 if (chain.reward.item) {
-                    const itemData = DB.ITEMS?.allItems?.find(i => i.name === chain.reward.item);
+                    const itemData = DB.ITEMS?.allItems?.find((i: any) => i.name === chain.reward.item);
                     if (itemData && (updated.inv || []).length < (BALANCE.INV_MAX_SIZE || 20)) {
                         updated.inv = [...(updated.inv || []), { ...itemData, id: `disc_${Date.now()}` }];
                     }
@@ -341,7 +341,7 @@ export const checkDiscoveryChains = (player, loc, { dispatch, addLog }) => {
 // 5. 지역 최초 방문 보상 (Phase 2-C)
 // 처음 방문하는 지역에 고정 보상을 지급합니다.
 // ─────────────────────────────────────────────────────────────────────────
-const FIRST_VISIT_REWARDS = {
+const FIRST_VISIT_REWARDS: any = {
     '고요한 숲':    { gold: 100,  exp: 50,  msg: '🌲 [첫 방문] 고요한 숲 탐험 완료! 보상 +100G, +50 EXP' },
     '서쪽 평원':   { gold: 150,  exp: 60,  msg: '🌾 [첫 방문] 서쪽 평원 탐험! +150G, +60 EXP' },
     '호수의 신전': { gold: 200,  exp: 100, msg: '🌊 [첫 방문] 호수의 신전 발견! +200G, +100 EXP' },
@@ -369,7 +369,7 @@ const FIRST_VISIT_REWARDS = {
  * 지역 첫 방문 여부를 확인하고, 해당되면 보상 객체를 반환합니다.
  * @returns {{ gold: number, exp: number, msg: string } | null}
  */
-export const getFirstVisitReward = (loc, player) => {
+export const getFirstVisitReward = (loc: any, player: any) => {
     const visited = player.stats?.visitedMaps || [];
     if (visited.includes(loc)) return null;
     return FIRST_VISIT_REWARDS[loc] || null;

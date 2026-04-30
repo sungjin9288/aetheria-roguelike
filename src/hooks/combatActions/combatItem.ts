@@ -8,15 +8,15 @@ import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyMana
 import { appendGrave } from '../../utils/graveUtils.js';
 import { handleVictoryOutcome } from './combatVictory';
 
-export const createCombatItemActions = (deps, { emitDailyProtocolLogs, emitUnlockedTitles }, pendingRef) => {
+export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
     const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats } = deps;
 
     return {
-        combatUseItem: (item) => {
+        combatUseItem: (item: any) => {
             if (pendingRef.current) { clearTimeout(pendingRef.current); pendingRef.current = null; }
             if (gameState !== GS.COMBAT || !enemy) return addLog('error', MSG.COMBAT_NOT_IN_BATTLE);
 
-            const inventoryItem = player.inv.find((entry) => entry.id === item?.id);
+            const inventoryItem = player.inv.find((entry: any) => entry.id === item?.id);
             if (!inventoryItem) return addLog('error', MSG.COMBAT_ITEM_NOT_FOUND);
             if (!['hp', 'mp', 'cure', 'buff'].includes(inventoryItem.type)) {
                 return addLog('error', MSG.COMBAT_CONSUMABLE_ONLY);
@@ -26,13 +26,13 @@ export const createCombatItemActions = (deps, { emitDailyProtocolLogs, emitUnloc
             const stats = getFullStats(player);
 
             if (inventoryItem.type === 'hp') {
-                updatedPlayer = { ...player, hp: Math.min(stats.maxHp, player.hp + (inventoryItem.val || 0)), inv: player.inv.filter((e) => e.id !== inventoryItem.id) };
+                updatedPlayer = { ...player, hp: Math.min(stats.maxHp, player.hp + (inventoryItem.val || 0)), inv: player.inv.filter((e: any) => e.id !== inventoryItem.id) };
                 addLog('success', MSG.ITEM_USE_SIMPLE(inventoryItem.name));
             } else if (inventoryItem.type === 'mp') {
-                updatedPlayer = { ...player, mp: Math.min(stats.maxMp, player.mp + (inventoryItem.val || 0)), inv: player.inv.filter((e) => e.id !== inventoryItem.id) };
+                updatedPlayer = { ...player, mp: Math.min(stats.maxMp, player.mp + (inventoryItem.val || 0)), inv: player.inv.filter((e: any) => e.id !== inventoryItem.id) };
                 addLog('success', MSG.ITEM_USE_SIMPLE(inventoryItem.name));
             } else if (inventoryItem.type === 'cure') {
-                updatedPlayer = { ...player, status: toArray(player.status).filter((s) => s !== inventoryItem.effect), inv: player.inv.filter((e) => e.id !== inventoryItem.id) };
+                updatedPlayer = { ...player, status: toArray(player.status).filter((s: any) => s !== inventoryItem.effect), inv: player.inv.filter((e: any) => e.id !== inventoryItem.id) };
                 addLog('success', MSG.ITEM_USE_CURE(inventoryItem.name));
             } else if (inventoryItem.type === 'buff') {
                 updatedPlayer = {
@@ -42,7 +42,7 @@ export const createCombatItemActions = (deps, { emitDailyProtocolLogs, emitUnloc
                         def: inventoryItem.effect === 'def_up' || inventoryItem.effect === 'all_up' ? (inventoryItem.val || 1.3) - 1 : 0,
                         turn: inventoryItem.turn || 3, name: inventoryItem.name
                     },
-                    inv: player.inv.filter((e) => e.id !== inventoryItem.id)
+                    inv: player.inv.filter((e: any) => e.id !== inventoryItem.id)
                 };
                 addLog('success', MSG.ITEM_USE_BUFF(inventoryItem.name));
             }
@@ -50,13 +50,13 @@ export const createCombatItemActions = (deps, { emitDailyProtocolLogs, emitUnloc
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
 
             const turnTick = CombatEngine.tickCombatState(updatedPlayer);
-            turnTick.logs.forEach((log) => addLog(log.type, log.text));
+            turnTick.logs.forEach((log: any) => addLog(log.type, log.text));
             const playerForEnemyTurn = turnTick.updatedPlayer;
             dispatch({ type: AT.SET_PLAYER, payload: playerForEnemyTurn });
 
             const counterStats = getFullStats(playerForEnemyTurn);
             const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, enemy, counterStats);
-            counterResult.logs.forEach((log) => addLog(log.type, log.text));
+            counterResult.logs.forEach((log: any) => addLog(log.type, log.text));
 
             if (counterResult.isEnemyDead) {
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
@@ -82,7 +82,7 @@ export const createCombatItemActions = (deps, { emitDailyProtocolLogs, emitUnloc
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                 dispatch({ type: AT.SET_ENEMY, payload: null });
                 emitUnlockedTitles(deathRecordPlayer);
-                defeatResult.logs.forEach((log) => addLog(log.type, log.text));
+                defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                 addStoryLog('death', { loc: playerForEnemyTurn.loc });
                 return;
             }

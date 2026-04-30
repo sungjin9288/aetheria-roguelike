@@ -49,7 +49,7 @@ export const CODEX_MILESTONES: any = {
  * @param {string[]} claimed - player.stats.codexClaimed (이미 보상 수령한 마일스톤 ID)
  * @returns {{ total, discovered, milestones: { category, label, reward, claimed }[], unclaimed: [] }}
  */
-export const getCodexProgress = (codex = {}, claimed = []) => {
+export const getCodexProgress = (codex: any = {}, claimed: any = []) => {
     const claimedSet = new Set(claimed);
     const milestones = [];
     const unclaimed = [];

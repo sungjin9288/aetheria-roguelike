@@ -16,7 +16,7 @@ const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
  * SystemTab — Dashboard의 system 탭 콘텐츠 (#4 분리)
  * props: player, actions, stats
  */
-const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) => {
+const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: any) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState(null);
     const [showAllSystem, setShowAllSystem] = useState(false);
@@ -62,7 +62,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
     }, [qaContext]);
 
     const qaSnapshot = useMemo(() => {
-        const inventoryCounts = player.inv.reduce((acc, item) => {
+        const inventoryCounts = player.inv.reduce((acc: any, item: any) => {
             acc[item.name] = (acc[item.name] || 0) + 1;
             return acc;
         }, {});
@@ -97,7 +97,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                 offhand: player.equip?.offhand?.name || null,
                 armor: player.equip?.armor?.name || null,
             },
-            relics: (player.relics || []).map((relic) => ({
+            relics: (player.relics || []).map((relic: any) => ({
                 id: relic.id,
                 name: relic.name,
                 rarity: relic.rarity,
@@ -123,7 +123,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
         setFeedbackStatus({ type: 'success', text: 'QA snapshot exported.' });
     }, [qaSnapshot]);
 
-    const updateLiveConfig = useCallback(async (partialConfig) => {
+    const updateLiveConfig = useCallback(async (partialConfig: any) => {
         const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
         await setDoc(configRef, { config: partialConfig }, { merge: true });
     }, []);
@@ -177,13 +177,13 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
     const today = new Date().toISOString().slice(0, 10);
     const dailyProtocol = player.stats?.dailyProtocol;
     const isDailyProtocolToday = Boolean(dailyProtocol?.missions?.length) && dailyProtocol.date === today;
-    const dailyDoneCount = isDailyProtocolToday ? dailyProtocol.missions.filter((mission) => mission.done).length : 0;
+    const dailyDoneCount = isDailyProtocolToday ? dailyProtocol.missions.filter((mission: any) => mission.done).length : 0;
     const nextDailyMission = isDailyProtocolToday
-        ? (dailyProtocol.missions.find((mission) => !mission.done) || dailyProtocol.missions[0] || null)
+        ? (dailyProtocol.missions.find((mission: any) => !mission.done) || dailyProtocol.missions[0] || null)
         : null;
     const leaderboard = actions.leaderboard || [];
     const topRanker = leaderboard[0] || null;
-    const myRankIndex = leaderboard.findIndex((entry) => entry.nickname === player.name);
+    const myRankIndex = leaderboard.findIndex((entry: any) => entry.nickname === player.name);
     const showSystemSummary = compact && !showAllSystem;
 
     return (
@@ -193,7 +193,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                     <div className="text-slate-500 text-xs font-fira tracking-[0.18em] uppercase">System</div>
                     <button
                         type="button"
-                        onClick={() => setShowAllSystem((prev) => !prev)}
+                        onClick={() => setShowAllSystem((prev: any) => !prev)}
                         className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
                     >
                         {showAllSystem ? '요약 보기' : '시스템 더 보기'}
@@ -293,7 +293,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                                 Relics ({player.relics.length}/5)
                             </div>
                             <div className="space-y-1">
-                                {player.relics.map((r) => (
+                                {player.relics.map((r: any) => (
                                     <div key={r.id} className="flex items-start gap-2 text-[11px] rounded-[0.9rem] border border-white/8 bg-black/16 px-2.5 py-2">
                                         <span className={`font-bold shrink-0 ${RARITY_COLORS[r.rarity] || 'text-slate-300'}`}>{r.name}</span>
                                         <span className="text-slate-300/72">{r.desc}</span>
@@ -314,7 +314,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                                 </div>
                             )}
                             <div className="space-y-1 max-h-28 overflow-y-auto custom-scrollbar">
-                                {player.titles.map((id) => {
+                                {player.titles.map((id: any) => {
                                     const isActive = player.activeTitle === id;
                                     return (
                                         <button
@@ -344,7 +344,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                                     {dp.relicShards > 0 && <span className="text-[10px] text-[#d9d0f3]">{dp.relicShards}/5 조각</span>}
                                 </div>
                                 <div className="space-y-2">
-                                    {dp.missions.map((m) => {
+                                    {dp.missions.map((m: any) => {
                                         const pct = Math.min(100, ((m.progress || 0) / Math.max(1, m.goal)) * 100);
                                         const rewardText = m.reward.essence ? `에센스 ${m.reward.essence}` : m.reward.item || (m.reward.relicShard ? '유물 조각' : '');
                                         return (
@@ -370,7 +370,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                     <div className="rounded-[1rem] border border-[#d5b180]/18 bg-black/18 p-3 mb-2 relative overflow-hidden">
                         <div className="text-[11px] font-bold text-[#f6e7c8] mb-3 flex items-center gap-2 font-rajdhani tracking-[0.18em]"><Crown size={12} /> HALL OF FAME</div>
                         <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
-                            {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker, i) => {
+                            {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker: any, i: any) => {
                                 const isMe = ranker.nickname === player.name;
                                 return (
                                     <div key={i} className={`flex justify-between text-[10px] border-b border-white/6 pb-1 last:border-0 p-1 rounded transition-colors font-fira ${isMe ? 'bg-emerald-300/[0.06] border-l-2 border-l-emerald-300 pl-2' : 'hover:bg-white/[0.03] text-slate-300/76'}`}>
@@ -396,7 +396,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                     <Motion.button
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
-                            const exportData = {
+                            const exportData: Record<string, any> = {
                                 timestamp: new Date().toISOString(),
                                 summary: { name: player.name, level: player.level, job: player.job, gold: player.gold },
                                 stats,
@@ -431,7 +431,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
                             placeholder="Report anomalies..."
                             className="w-full bg-black/24 border border-white/8 rounded-[0.95rem] p-2.5 text-sm text-slate-200/84 h-24 resize-none focus:outline-none focus:border-[#7dd4d8]/24 placeholder:text-slate-500 font-fira"
                             value={feedbackText}
-                            onChange={(e) => setFeedbackText(e.target.value)}
+                            onChange={(e: any) => setFeedbackText(e.target.value)}
                             maxLength={500}
                         />
                         <Motion.button

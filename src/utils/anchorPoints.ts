@@ -49,7 +49,7 @@ export const BACK_LAYER_OFFHAND_STYLES = Object.freeze(new Set([
 // 현재 렌더링은 SVG `<image>` 요소 위에 `transform` 문자열을 씌우는 방식.
 // placement 데이터에서 SVG transform 문자열을 생성한다.
 // ──────────────────────────────────────────────────────────────────────────
-const toTransformString = ({ translateX, translateY, rotate, rotateX, rotateY, scale }) => {
+const toTransformString = ({ translateX, translateY, rotate, rotateX, rotateY, scale }: any) => {
     const parts = [`translate(${translateX} ${translateY})`];
     if (rotate) {
         parts.push(`rotate(${rotate} ${rotateX ?? 0} ${rotateY ?? 0})`);
@@ -60,7 +60,7 @@ const toTransformString = ({ translateX, translateY, rotate, rotateX, rotateY, s
     return parts.join(' ');
 };
 
-const placement = (anchor, layer, transform) => Object.freeze({ anchor, layer, transform: Object.freeze(transform) });
+const placement = (anchor: any, layer: any, transform: any) => Object.freeze({ anchor, layer, transform: Object.freeze(transform) });
 
 // ──────────────────────────────────────────────────────────────────────────
 // Weapon placements (main hand / front hand)
@@ -184,16 +184,16 @@ const DEFAULT_BODY_PLACEMENT = placement('torso_center', 'front', { translateX: 
 // Public API
 // ──────────────────────────────────────────────────────────────────────────
 
-export const getWeaponPlacement = (style) => WEAPON_PLACEMENTS[style] || DEFAULT_WEAPON_PLACEMENT;
+export const getWeaponPlacement = (style: any) => WEAPON_PLACEMENTS[style] || DEFAULT_WEAPON_PLACEMENT;
 
-export const getOffhandPlacement = (style) => OFFHAND_PLACEMENTS[style] || DEFAULT_OFFHAND_PLACEMENT;
+export const getOffhandPlacement = (style: any) => OFFHAND_PLACEMENTS[style] || DEFAULT_OFFHAND_PLACEMENT;
 
-export const getHeadgearPlacement = (style) => {
+export const getHeadgearPlacement = (style: any) => {
     if (!style || style === 'none') return null;
     return HEADGEAR_PLACEMENTS[style] || DEFAULT_HEADGEAR_PLACEMENT;
 };
 
-export const getBodyPlacement = (style) => {
+export const getBodyPlacement = (style: any) => {
     if (!style || style === 'none') return null;
     return BODY_PLACEMENTS[style] || DEFAULT_BODY_PLACEMENT;
 };
@@ -203,7 +203,7 @@ export const getBodyPlacement = (style) => {
  * - headgear-only 장비는 headgear placement
  * - body 장비는 body placement (headgear도 있을 경우 별도로 합성)
  */
-export const getArmorPlacement = (armorArt) => {
+export const getArmorPlacement = (armorArt: any) => {
     if (!armorArt) return null;
     if (armorArt.isHeadgearOnly && armorArt.headgearStyle && armorArt.headgearStyle !== 'none') {
         return getHeadgearPlacement(armorArt.headgearStyle);
@@ -217,6 +217,6 @@ export const getArmorPlacement = (armorArt) => {
     return null;
 };
 
-export const placementToTransform = (plc) => (plc ? toTransformString(plc.transform) : null);
+export const placementToTransform = (plc: any) => (plc ? toTransformString(plc.transform) : null);
 
-export const placementLayer = (plc) => (plc && plc.layer === 'back' ? 'back' : 'front');
+export const placementLayer = (plc: any) => (plc && plc.layer === 'back' ? 'back' : 'front');

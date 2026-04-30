@@ -12,11 +12,11 @@ import signatureSetsData from '../data/signatureSets.json' with { type: 'json' }
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
-export const toArray = (v) => (Array.isArray(v) ? v : []);
+export const toArray = (v: any) => (Array.isArray(v) ? v : []);
 
 /** 플레이어의 직업 스킬 목록을 반환 (패시브 제외 — 전투용 액티브 스킬만) */
-export const getJobSkills = (player) => {
-    const classSkills = toArray(DB.CLASSES[player?.job]?.skills).filter(s => !s.passive);
+export const getJobSkills = (player: any) => {
+    const classSkills = toArray(DB.CLASSES[player?.job]?.skills).filter((s: any) => !s.passive);
     const weaponSkills = getWeaponMagicSkills(player?.equip);
     const traitSkill = getTraitSkill(player);
     return [...classSkills, ...weaponSkills, ...(traitSkill ? [traitSkill] : [])];
@@ -27,11 +27,11 @@ export const getJobSkills = (player) => {
  * @param {object} player
  * @returns {{ hp: number, mp: number, atk: number, def: number }}
  */
-export const getPassiveSkillBonuses = (player) => {
+export const getPassiveSkillBonuses = (player: any) => {
     const cls = DB.CLASSES[player?.job];
     const bonus = { hp: 0, mp: 0, atk: 0, def: 0, crit: 0, goldMult: 0, expMult: 0, lowHpAtkMult: 1 };
     if (!cls) return bonus;
-    toArray(cls.skills).filter(s => s.passive).forEach(s => {
+    toArray(cls.skills).filter((s: any) => s.passive).forEach((s: any) => {
         if (s.effect === 'hp_up')   bonus.hp   += (s.val || 0);
         if (s.effect === 'mp_up')   bonus.mp   += (s.val || 0);
         if (s.effect === 'atk_up')  bonus.atk  += (s.val || 0);
@@ -52,13 +52,13 @@ export const getPassiveSkillBonuses = (player) => {
 };
 
 /** 티어 → 등급 자동 매핑 */
-const TIER_TO_RARITY = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary', 6: 'legendary' };
+const TIER_TO_RARITY: any = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary', 6: 'legendary' };
 
 /** 아이템 등급 반환 (명시적 rarity 우선, 없으면 tier 기반 자동 매핑) */
-export const getItemRarity = (item) => item?.rarity || TIER_TO_RARITY[item?.tier] || 'common';
+export const getItemRarity = (item: any) => item?.rarity || TIER_TO_RARITY[item?.tier] || 'common';
 
 /** 아이템 인스턴스 생성 (고유 ID 부여) */
-export const makeItem = (template) => ({
+export const makeItem = (template: any) => ({
     ...template,
     id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
 });
@@ -72,12 +72,12 @@ export const getAllItems = () => [
 ];
 
 /** 이름으로 아이템을 찾아 반환 */
-export const findItemByName = (name) => getAllItems().find((i) => i.name === name);
+export const findItemByName = (name: any) => getAllItems().find((i: any) => i.name === name);
 
 /** 일일 프로토콜 진행으로 이번 액션에서 막 완료될 미션 목록 반환 */
-export const getDailyProtocolCompletions = (player, type, amount = 1) => {
+export const getDailyProtocolCompletions = (player: any, type: any, amount: any = 1) => {
     const missions = toArray(player?.stats?.dailyProtocol?.missions);
-    return missions.filter((mission) => (
+    return missions.filter((mission: any) => (
         mission?.type === type
         && !mission.done
         && ((mission.progress || 0) + amount) >= mission.goal
@@ -104,25 +104,25 @@ export const formatRewardParts = (reward: any = {}) => {
 };
 
 /** 칭호 메타데이터 조회 */
-export const getTitleDefinition = (token) => TITLES.find((title) => title.id === token) || null;
+export const getTitleDefinition = (token: any) => TITLES.find((title: any) => title.id === token) || null;
 
 /** 칭호 표시 이름 반환 (ID 또는 문자열 모두 지원) */
-export const getTitleLabel = (token) => {
+export const getTitleLabel = (token: any) => {
     if (!token) return '';
     return getTitleDefinition(token)?.name || String(token);
 };
 
 /** 칭호 색상 반환 */
-export const getTitleColor = (token) => getTitleDefinition(token)?.color || 'text-cyber-purple';
+export const getTitleColor = (token: any) => getTitleDefinition(token)?.color || 'text-cyber-purple';
 
 /** 칭호 패시브 메타 조회 */
-export const getTitlePassive = (token) => {
+export const getTitlePassive = (token: any) => {
     if (!token) return null;
     return TITLE_PASSIVES[token] || null;
 };
 
 /** 칭호 패시브 표시 문구 */
-export const getTitlePassiveLabel = (token) => {
+export const getTitlePassiveLabel = (token: any) => {
     const passive = getTitlePassive(token);
     return passive?.label || '패시브 없음';
 };
@@ -133,7 +133,7 @@ export const getTitlePassiveLabel = (token) => {
  * @param {'weapons'|'armors'|'shields'|'monsters'|'recipes'|'materials'} category
  * @param {string} name
  */
-export const registerCodex = (player, category, name) => {
+export const registerCodex = (player: any, category: any, name: any) => {
     if (!name || !category) return player;
     const codex = player.stats?.codex || {};
     const cat = codex[category] || {};
@@ -153,7 +153,7 @@ export const registerCodex = (player, category, name) => {
 /**
  * loot 아이템 배열을 codex에 일괄 등록
  */
-export const registerLootToCodex = (player, lootItems) => {
+export const registerLootToCodex = (player: any, lootItems: any) => {
     let p = player;
     for (const item of lootItems) {
         const cat = item.type === 'weapon' ? 'weapons'
@@ -166,7 +166,7 @@ export const registerLootToCodex = (player, lootItems) => {
 };
 
 /** 골드 획득을 누적 통계와 함께 반영 */
-export const grantGold = (player, amount = 0) => {
+export const grantGold = (player: any, amount: any = 0) => {
     if (!amount) return player;
     const stats = player.stats || {};
     return {
@@ -180,12 +180,12 @@ export const grantGold = (player, amount = 0) => {
 };
 
 /** 플레이어의 활성 퀘스트를 화면 렌더링용으로 정규화 */
-export const getActiveQuestEntries = (player) => (
+export const getActiveQuestEntries = (player: any) => (
     toArray(player?.quests)
-        .map((questState) => {
+        .map((questState: any) => {
             const quest = questState?.isBounty
                 ? questState
-                : DB.QUESTS.find((entry) => entry.id === questState?.id);
+                : DB.QUESTS.find((entry: any) => entry.id === questState?.id);
             if (!quest) return null;
 
             const progress = questState?.progress || 0;
@@ -201,7 +201,7 @@ export const getActiveQuestEntries = (player) => (
 );
 
 /** 업적 진행값 계산 */
-export const getAchievementCurrentValue = (achievement, player) => {
+export const getAchievementCurrentValue = (achievement: any, player: any) => {
     const stats = player?.stats || {};
     const target = achievement?.target;
     if (target === 'level') return player?.level || 0;
@@ -214,7 +214,7 @@ export const getAchievementCurrentValue = (achievement, player) => {
     return stats?.[target] || 0;
 };
 
-const RESOLVE_BUCKET_BY_TYPE = Object.freeze({
+const RESOLVE_BUCKET_BY_TYPE: any = Object.freeze({
     weapon: 'weapons',
     shield: 'shields',
     armor: 'armors',
@@ -223,21 +223,21 @@ const RESOLVE_BUCKET_BY_TYPE = Object.freeze({
 const SIGNATURE_REGISTRY_ENTRIES = signatureRegistryData?.entries || {};
 const SIGNATURE_SETS_MAP = signatureSetsData?.sets || {};
 
-const isSignatureDiscovered = (itemName, player) => {
+const isSignatureDiscovered = (itemName: any, player: any) => {
     const codex = player?.stats?.codex;
     if (!codex) return false;
     const all = [
         ...(DB.ITEMS?.weapons || []),
         ...(DB.ITEMS?.armors || []),
     ];
-    const item = all.find((entry) => entry?.name === itemName);
+    const item = all.find((entry: any) => entry?.name === itemName);
     if (!item) return false;
     const bucket = RESOLVE_BUCKET_BY_TYPE[item.type];
     if (!bucket) return false;
     return Boolean(codex[bucket]?.[itemName]);
 };
 
-const countDiscoveredSignatures = (player) => {
+const countDiscoveredSignatures = (player: any) => {
     let count = 0;
     for (const name of Object.keys(SIGNATURE_REGISTRY_ENTRIES)) {
         if (isSignatureDiscovered(name, player)) count += 1;
@@ -245,24 +245,24 @@ const countDiscoveredSignatures = (player) => {
     return count;
 };
 
-const countCompletedSignatureSets = (player) => {
+const countCompletedSignatureSets = (player: any) => {
     let count = 0;
     for (const setDef of Object.values(SIGNATURE_SETS_MAP) as any[]) {
         const members = setDef?.members || [];
         if (members.length === 0) continue;
-        const allFound = members.every((name) => isSignatureDiscovered(name, player));
+        const allFound = members.every((name: any) => isSignatureDiscovered(name, player));
         if (allFound) count += 1;
     }
     return count;
 };
 
 /** 업적 달성 여부 */
-export const isAchievementUnlocked = (achievement, player) => (
+export const isAchievementUnlocked = (achievement: any, player: any) => (
     getAchievementCurrentValue(achievement, player) >= (achievement?.goal || 0)
 );
 
 // Milestone Utility
-export const checkMilestones = (killRegistry, lastKillName) => {
+export const checkMilestones = (killRegistry: any, lastKillName: any) => {
     const rewards = [];
     const count = killRegistry[lastKillName] || 0;
 
@@ -284,7 +284,7 @@ export const checkMilestones = (killRegistry, lastKillName) => {
 };
 
 // Data Migration Utility
-export const migrateData = (rawData) => {
+export const migrateData = (rawData: any) => {
     if (!rawData) return null;
     // Deep clone to avoid mutating the Firestore snapshot directly
     const savedData = JSON.parse(JSON.stringify(rawData));
@@ -313,21 +313,21 @@ export const migrateData = (rawData) => {
     // Ensure equip is object not string (Old version compatibility)
     target.equip = target.equip || {};
     if (typeof target.equip?.weapon === 'string') {
-        target.equip.weapon = ITEMS.weapons.find(w => w.name === target.equip.weapon) || ITEMS.weapons[0];
+        target.equip.weapon = ITEMS.weapons.find((w: any) => w.name === target.equip.weapon) || ITEMS.weapons[0];
     }
     if (typeof target.equip?.armor === 'string') {
-        target.equip.armor = ITEMS.armors.find(a => a.name === target.equip.armor) || ITEMS.armors[0];
+        target.equip.armor = ITEMS.armors.find((a: any) => a.name === target.equip.armor) || ITEMS.armors[0];
     }
     if (typeof target.equip?.offhand === 'string') {
-        const shield = ITEMS.armors.find(a => a.type === 'shield' && a.name === target.equip.offhand);
-        const weapon = ITEMS.weapons.find(w => w.name === target.equip.offhand);
+        const shield = ITEMS.armors.find((a: any) => a.type === 'shield' && a.name === target.equip.offhand);
+        const weapon = ITEMS.weapons.find((w: any) => w.name === target.equip.offhand);
         target.equip.offhand = shield || weapon || null;
     }
     if (!target.equip.weapon || !isWeapon(target.equip.weapon)) {
         target.equip.weapon = ITEMS.weapons[0];
     }
     if (!target.equip.armor || target.equip.armor.type !== 'armor') {
-        target.equip.armor = ITEMS.armors.find(a => a.type === 'armor') || ITEMS.armors[0];
+        target.equip.armor = ITEMS.armors.find((a: any) => a.type === 'armor') || ITEMS.armors[0];
     }
     if (target.equip.offhand && !isShield(target.equip.offhand) && !isWeapon(target.equip.offhand)) {
         target.equip.offhand = null;
@@ -445,7 +445,7 @@ export const migrateData = (rawData) => {
     target.stats.lastInvadeDate   = target.stats.lastInvadeDate   || null;
     // 인벤 아이템에 enhance 기본값 보장
     if (Array.isArray(target.inv)) {
-        target.inv = target.inv.map((item) => item ? { ...item, enhance: item.enhance || 0 } : item);
+        target.inv = target.inv.map((item: any) => item ? { ...item, enhance: item.enhance || 0 } : item);
     }
 
     // v5.0 — 진 엔딩, 이벤트 체인, 시너지
@@ -469,7 +469,7 @@ export const migrateData = (rawData) => {
     target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
 
     // 접두사 마이그레이션 — prefixed 플래그가 있지만 prefixName 누락된 아이템 보강
-    const fixPrefixedItem = (item) => {
+    const fixPrefixedItem = (item: any) => {
         if (!item || !item.prefixed) return item;
         if (!item.prefixName && item.name) {
             // 이름에서 접두사 추출 시도 (첫 번째 공백 기준)
@@ -497,9 +497,9 @@ export const migrateData = (rawData) => {
  * @param {object} player
  * @returns {string[]} 새로 해금된 칭호 ID 목록
  */
-export const checkTitles = (player) => {
+export const checkTitles = (player: any) => {
     const existing = new Set(player.titles || []);
-    return TITLES.filter(t => {
+    return TITLES.filter((t: any) => {
         if (existing.has(t.id)) return false;
         const { type, val } = t.cond;
         if (type === 'kills')          return (player.stats?.kills         || 0) >= val;
@@ -517,7 +517,7 @@ export const checkTitles = (player) => {
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
         return false;
-    }).map(t => t.id);
+    }).map((t: any) => t.id);
 };
 
 /**
@@ -525,13 +525,13 @@ export const checkTitles = (player) => {
  * useCombatActions, useGameActions, useInventoryActions에서 동일하게 쓰이는 패턴을 통합합니다.
  * @param {Function} dispatch - Redux dispatch
  * @param {Function} addLog - 로그 출력 함수
- * @returns {Function} (updatedPlayer) => void
+ * @returns {Function} (updatedPlayer: any) => void
  */
-export const makeEmitTitles = (dispatch, addLog) => (updatedPlayer) => {
+export const makeEmitTitles = (dispatch: any, addLog: any) => (updatedPlayer: any) => {
     const newTitles = checkTitles(updatedPlayer);
     if (newTitles.length > 0) {
         dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-        newTitles.forEach((id) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
+        newTitles.forEach((id: any) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
     }
 };
 
@@ -541,13 +541,13 @@ export const makeEmitTitles = (dispatch, addLog) => (updatedPlayer) => {
  * @param {object} player - 최종 플레이어 상태
  * @param {string} loc - 사망 위치 (player.loc).
  */
-export const buildRunSummary = (player, loc) => {
+export const buildRunSummary = (player: any, loc: any) => {
     const buildProfile = getRunBuildProfile(player, { maxHp: player.maxHp });
     const recentBattles = (player.stats?.recentBattles || []).slice(-20);
 
     // 이 런에서 획득한 signature — inventory + equip 합산, 중복 제거
     const signatureSet = new Set();
-    const collectSignature = (item) => {
+    const collectSignature = (item: any) => {
         if (item?.name && SIGNATURE_REGISTRY_ENTRIES[item.name]) signatureSet.add(item.name);
     };
     (player?.inv || []).forEach(collectSignature);
@@ -567,10 +567,10 @@ export const buildRunSummary = (player, loc) => {
         prestigeRank: player.meta?.prestigeRank || 0,
         totalGold:    player.stats?.total_gold || 0,
         primaryBuild: buildProfile.primary.name,
-        buildTags:    buildProfile.tags.map((tag) => tag.name).slice(0, 4),
+        buildTags:    buildProfile.tags.map((tag: any) => tag.name).slice(0, 4),
         difficultyLabel: getDifficultyMults(calcPerformanceScore(player)).label,
         recentWinRate: recentBattles.length > 0
-            ? Math.round((recentBattles.filter((battle) => battle.result === 'win').length / recentBattles.length) * 100)
+            ? Math.round((recentBattles.filter((battle: any) => battle.result === 'win').length / recentBattles.length) * 100)
             : null,
         signaturesAcquired: signatureNames.length,
         signatureNames,

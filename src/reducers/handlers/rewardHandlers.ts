@@ -3,7 +3,7 @@ import { SEASON_TIER_XP, SEASON_REWARDS } from '../../data/seasonPass';
 
 export const rewardActionMap = {
     // ── Codex ─────────────────────────────────────────────────────────────
-    UPDATE_CODEX: (state, action) => {
+    UPDATE_CODEX: (state: any, action: any) => {
         const { category, name } = action.payload;
         const codex = state.player.stats.codex || {};
         const cat = codex[category] || {};
@@ -25,14 +25,14 @@ export const rewardActionMap = {
     },
 
     // ── Premium Currency ──────────────────────────────────────────────────
-    SET_PREMIUM_CURRENCY: (state, action) => ({
+    SET_PREMIUM_CURRENCY: (state: any, action: any) => ({
         ...state,
         player: { ...state.player, premiumCurrency: action.payload },
         syncStatus: 'syncing',
     }),
 
     // ── Season Pass ───────────────────────────────────────────────────────
-    ADD_SEASON_XP: (state, action) => {
+    ADD_SEASON_XP: (state: any, action: any) => {
         const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
         const newXp = sp.xp + (action.payload || 0);
         const newTier = Math.min(30, Math.floor(newXp / SEASON_TIER_XP));
@@ -43,11 +43,11 @@ export const rewardActionMap = {
         };
     },
 
-    CLAIM_SEASON_REWARD: (state, action) => {
+    CLAIM_SEASON_REWARD: (state: any, action: any) => {
         const { tier: claimTier } = action.payload;
         const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
         if ((sp.claimed || []).includes(claimTier)) return state;
-        const rewardRow = SEASON_REWARDS.find(r => r.tier === claimTier);
+        const rewardRow = SEASON_REWARDS.find((r: any) => r.tier === claimTier);
         if (!rewardRow) return state;
         const tracks = [rewardRow.free, sp.isPremium ? rewardRow.premium : null].filter(Boolean);
         let nextPlayer = {
@@ -69,7 +69,7 @@ export const rewardActionMap = {
         return { ...state, player: nextPlayer, syncStatus: 'syncing' };
     },
 
-    CLAIM_CODEX_REWARD: (state, action) => {
+    CLAIM_CODEX_REWARD: (state: any, action: any) => {
         const { milestoneId, reward } = action.payload;
         const prevClaimed = state.player.stats?.codexClaimed || [];
         if (prevClaimed.includes(milestoneId)) return state;
@@ -89,9 +89,9 @@ export const rewardActionMap = {
     },
 
     // ── Item Enhancement ──────────────────────────────────────────────────
-    ENHANCE_ITEM: (state, action) => {
+    ENHANCE_ITEM: (state: any, action: any) => {
         const { itemId, slot: slotName, success } = action.payload;
-        const newInv = state.player.inv.map(item => {
+        const newInv = state.player.inv.map((item: any) => {
             if (item.id !== itemId) return item;
             if (!success) return item;
             return { ...item, enhance: (item.enhance || 0) + 1 };

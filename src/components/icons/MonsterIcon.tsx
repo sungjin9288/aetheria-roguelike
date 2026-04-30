@@ -5,7 +5,7 @@ import React from 'react';
  * 발견: 컬러 표시, 미발견: 검은 실루엣 + 물음표
  */
 
-const SILHOUETTE_PATHS = {
+const SILHOUETTE_PATHS: any = {
     // 기본 (슬라임류)
     slime: 'M6 16c0 2 2.7 4 6 4s6-2 6-4c0-3-1-6-2-8s-2-4-4-4-3 2-4 4-2 5-2 8Z',
     // 짐승형
@@ -29,7 +29,7 @@ const SILHOUETTE_PATHS = {
 /**
  * 몬스터 이름에서 실루엣 타입 추론
  */
-const getMonsterType = (name) => {
+const getMonsterType = (name: any) => {
     if (!name) return 'humanoid';
     if (name.includes('슬라임')) return 'slime';
     if (name.includes('드래곤') || name.includes('와이번')) return 'dragon';
@@ -47,7 +47,7 @@ const getMonsterType = (name) => {
  * MonsterIcon — 몬스터 아이콘 컴포넌트
  * @param {{ name: string, discovered?: boolean, isBoss?: boolean, size?: number, className?: string }} props
  */
-const MonsterIcon = ({ name, discovered = false, isBoss = false, size = 32, className = '' }) => {
+const MonsterIcon = ({ name, discovered = false, isBoss = false, size = 32, className = '' }: any) => {
     const type = isBoss ? 'boss' : getMonsterType(name);
     const path = SILHOUETTE_PATHS[type] || SILHOUETTE_PATHS.humanoid;
 

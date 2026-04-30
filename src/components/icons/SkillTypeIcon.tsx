@@ -5,7 +5,7 @@ import React from 'react';
  * viewBox="0 0 24 24", stroke-based
  */
 
-const TYPE_PATHS = {
+const TYPE_PATHS: any = {
     // 원소
     '물리': 'M7 2l3 7H4l6 5-2 8 4-6 4 6-2-8 6-5h-6l3-7',
     '화염': 'M12 22c-4 0-7-3-7-7 0-3 2-5 4-8l3-4 3 4c2 3 4 5 4 8 0 4-3 7-7 7ZM10 16a2 2 0 104 0',
@@ -21,7 +21,7 @@ const TYPE_PATHS = {
     '번개': 'M13 2l-5 10h6l-5 10 10-12h-6L17 2h-4Z',
 };
 
-const TYPE_COLORS = {
+const TYPE_COLORS: any = {
     '물리': '#e2e8f0',
     '화염': '#f97316',
     '냉기': '#22d3ee',
@@ -38,7 +38,7 @@ const TYPE_COLORS = {
  * SkillTypeIcon — 스킬 속성 아이콘
  * @param {{ type: string, size?: number, className?: string }} props
  */
-const SkillTypeIcon = ({ type, size = 14, className = '' }) => {
+const SkillTypeIcon = ({ type, size = 14, className = '' }: any) => {
     const path = TYPE_PATHS[type];
     if (!path) return null;
     const color = TYPE_COLORS[type] || '#e2e8f0';

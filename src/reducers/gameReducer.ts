@@ -7,7 +7,7 @@ import { makeProgressionActionMap } from './handlers/progressionHandlers';
 import { featureActionMap } from './handlers/featureHandlers';
 
 // --- INITIAL STATE ---
-export const INITIAL_STATE = {
+export const INITIAL_STATE: any = {
     // Bootstrapping Flags
     bootStage: 'init', // init -> auth -> config -> data -> ready
     uid: null,
@@ -63,7 +63,7 @@ export const INITIAL_STATE = {
 };
 
 // --- ACTION MAP ---
-const ACTION_MAP = {
+const ACTION_MAP: any = {
     ...bootstrapActionMap,
     ...uiActionMap,
     ...entityActionMap,
@@ -72,7 +72,7 @@ const ACTION_MAP = {
 };
 
 // --- REDUCER ---
-export const gameReducer = (state, action) => {
+export const gameReducer = (state: any, action: any) => {
     const handler = ACTION_MAP[action.type];
     return handler ? handler(state, action) : state;
 };

@@ -20,7 +20,7 @@ import {
 
 const OVERLAY_VIEWBOX = 72;
 
-const resolveOffhandLayer = (appearance) => {
+const resolveOffhandLayer = (appearance: any) => {
     const style = appearance?.offhand?.art?.style || appearance?.offhand?.visual || 'none';
     const placement = getOffhandPlacement(style);
     // BACK_LAYER_OFFHAND_STYLES로 일차 결정, 없으면 placement.layer 참조
@@ -28,7 +28,7 @@ const resolveOffhandLayer = (appearance) => {
     return placementLayer(placement);
 };
 
-const resolveArmorLayer = (appearance) => {
+const resolveArmorLayer = (appearance: any) => {
     const bodyStyle = appearance?.armor?.art?.bodyStyle || 'none';
     const headgearStyle = appearance?.armor?.art?.headgearStyle || 'none';
     if (BACK_LAYER_ARMOR_STYLES.has(bodyStyle)) return 'back';
@@ -36,7 +36,7 @@ const resolveArmorLayer = (appearance) => {
     return 'front';
 };
 
-const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null, layer = 'front' }) => {
+const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null, layer = 'front' }: any) => {
     const offhandOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.offhand?.item);
     const weaponOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.weapon?.item);
     const armorOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.armor?.item);

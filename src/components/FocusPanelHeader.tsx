@@ -15,7 +15,7 @@ const FocusPanelHeader = ({
   className = '',
   titleClassName = '',
   bleedClassName = '-mx-3 px-3',
-}) => (
+}: any) => (
   <div
     className={`sticky top-0 z-10 mb-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] pb-2.5 pt-1 ${bleedClassName} ${className}`.trim()}
   >

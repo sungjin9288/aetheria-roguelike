@@ -9,7 +9,7 @@ import { getTitleLabel } from './gameUtils.js';
  * @param {object} s - buildRunSummary가 만든 run summary 객체
  * @returns {string} 클립보드/공유용 멀티라인 텍스트
  */
-export const buildRunShareText = (s) => {
+export const buildRunShareText = (s: any) => {
     const titlePrefix = s?.activeTitle ? `[${getTitleLabel(s.activeTitle)}] ` : '';
     const job = s?.job ?? '';
     const level = s?.level ?? 0;
@@ -28,7 +28,7 @@ export const buildRunShareText = (s) => {
     if (signatureCount > 0) {
         const head = `✦ 전설 각인: ${signatureCount}종 획득`;
         const detail = signatureNames.length > 0
-            ? `\n   ${signatureNames.map((n) => `✦ ${n}`).join(' · ')}`
+            ? `\n   ${signatureNames.map((n: any) => `✦ ${n}`).join(' · ')}`
             : '';
         signatureLine = `\n${head}${detail}`;
     }

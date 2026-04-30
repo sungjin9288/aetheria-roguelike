@@ -14,7 +14,7 @@ import ItemIcon from '../icons/ItemIcon.jsx';
  * family codex와 동일한 룰로 잠금/잠금해제 표시.
  */
 
-const TONE_ACCENT = Object.freeze({
+const TONE_ACCENT: any = Object.freeze({
     holy: { border: 'rgba(246,231,162,0.6)', glow: 'rgba(246,231,162,0.18)', label: '빛' },
     fire: { border: 'rgba(255,180,138,0.6)', glow: 'rgba(255,180,138,0.18)', label: '화염' },
     frost: { border: 'rgba(204,232,245,0.55)', glow: 'rgba(204,232,245,0.16)', label: '냉기' },
@@ -26,7 +26,7 @@ const TONE_ACCENT = Object.freeze({
     rust: { border: 'rgba(217,165,108,0.5)', glow: 'rgba(217,165,108,0.14)', label: '광란' },
 });
 
-const CATEGORY_LABEL = Object.freeze({
+const CATEGORY_LABEL: any = Object.freeze({
     'unique-weapon': 'UNIQUE',
     'boss-drop': 'BOSS DROP',
     'set-core': 'SET CORE',
@@ -34,7 +34,7 @@ const CATEGORY_LABEL = Object.freeze({
 
 const DEFAULT_TONE_ACCENT = TONE_ACCENT.holy;
 
-const resolveDiscoveryBucket = (item) => {
+const resolveDiscoveryBucket = (item: any) => {
     if (item.type === 'weapon') return 'weapons';
     if (item.type === 'shield') return 'shields';
     if (item.type === 'armor') return 'armors';
@@ -46,9 +46,9 @@ const buildEntries = () => {
         ...(DB.ITEMS.weapons || []),
         ...(DB.ITEMS.armors || []),
     ];
-    const byName = Object.fromEntries(all.map((item) => [item.name, item]));
+    const byName = Object.fromEntries(all.map((item: any) => [item.name, item]));
     return Object.entries(SIGNATURE_ITEM_REGISTRY)
-        .map(([name, meta]) => {
+        .map(([name, meta]: any) => {
             const item = byName[name];
             if (!item) return null;
             return { item, meta };
@@ -56,11 +56,11 @@ const buildEntries = () => {
         .filter(Boolean);
 };
 
-const LegendaryCodex = ({ player }) => {
+const LegendaryCodex = ({ player }: any) => {
     const [selected, setSelected] = useState(null);
     const codex = useMemo(() => player?.stats?.codex || {}, [player?.stats?.codex]);
     const entries = useMemo(() => buildEntries(), []);
-    const discoveredCount = entries.filter((entry) => {
+    const discoveredCount = entries.filter((entry: any) => {
         const bucket = resolveDiscoveryBucket(entry.item);
         return bucket && codex[bucket]?.[entry.item.name];
     }).length;
@@ -73,14 +73,14 @@ const LegendaryCodex = ({ player }) => {
     const pityCapped = pityMult >= SIGNATURE_PITY.CAP;
 
     const selectedEntry = selected
-        ? entries.find((entry) => entry.item.name === selected)
+        ? entries.find((entry: any) => entry.item.name === selected)
         : null;
 
     const setSummary = useMemo(() => {
         const sets = getSignatureSetDefinitions();
-        return (Object.entries(sets) as Array<[string, any]>).map(([key, def]) => {
+        return (Object.entries(sets) as Array<[string, any]>).map(([key, def]: any) => {
             const discovered = def.members.filter((memberName: string) => {
-                const entry = entries.find((e) => e.item.name === memberName);
+                const entry = entries.find((e: any) => e.item.name === memberName);
                 if (!entry) return false;
                 const bucket = resolveDiscoveryBucket(entry.item);
                 return bucket && codex[bucket]?.[entry.item.name];
@@ -147,10 +147,10 @@ const LegendaryCodex = ({ player }) => {
                 <div className="space-y-1.5">
                     <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider">Sets</div>
                     <div className="grid grid-cols-1 gap-1.5">
-                        {setSummary.map(({ key, def, total, discovered, equipped }) => {
+                        {setSummary.map(({ key, def, total, discovered, equipped }: any) => {
                             const accent = TONE_ACCENT[def.tone] || DEFAULT_TONE_ACCENT;
                             const activeBonus = equipped >= 2
-                                ? def.bonuses[String([...Object.keys(def.bonuses)].map(Number).filter((n) => n <= equipped).sort((a, b) => b - a)[0])]
+                                ? def.bonuses[String([...Object.keys(def.bonuses)].map(Number).filter((n: any) => n <= equipped).sort((a: any, b: any) => b - a)[0])]
                                 : null;
                             return (
                                 <div
@@ -205,7 +205,7 @@ const LegendaryCodex = ({ player }) => {
 
             {/* Grid */}
             <div className="grid grid-cols-3 gap-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
-                {entries.map(({ item, meta }) => {
+                {entries.map(({ item, meta }: any) => {
                     const bucket = resolveDiscoveryBucket(item);
                     const found = bucket ? Boolean(codex[bucket]?.[item.name]) : false;
                     const accent = TONE_ACCENT[meta.tone] || DEFAULT_TONE_ACCENT;
@@ -287,7 +287,7 @@ const LegendaryCodex = ({ player }) => {
                                             획득처
                                         </div>
                                         <div className="flex flex-wrap gap-1">
-                                            {sources.map(({ monster, rate }) => (
+                                            {sources.map(({ monster, rate }: any) => (
                                                 <span
                                                     key={monster}
                                                     className="inline-flex items-center gap-1 rounded-full border border-amber-300/25 bg-amber-300/5 px-1.5 py-0.5 text-[9px] font-fira text-amber-100/90"

@@ -8,7 +8,7 @@ export const DEFAULT_EXPLORE_STATE = Object.freeze({
     lastOutcome: 'start',
 });
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
 
 export const getExploreState = (stats: any = {}) => {
     const raw = stats?.exploreState || {};
@@ -109,7 +109,7 @@ export const getQuietExplorationChance = (stats: any = {}, mapData = null) => {
     );
 };
 
-export const getDiscoveryOdds = (player, mapData) => {
+export const getDiscoveryOdds = (player: any, mapData: any) => {
     const exploreState = getExploreState(player?.stats);
     const profile = getMapPacingProfile(mapData);
     const pitySinceDiscovery = Math.max(0, exploreState.sinceDiscovery - 2);

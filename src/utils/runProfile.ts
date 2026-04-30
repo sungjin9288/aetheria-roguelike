@@ -19,23 +19,23 @@ const scoreTag = (id, name, desc, score, reasons: any[] = []) => ({
     reasons,
 });
 
-const relicEffectsOf = (player) => new Set((player?.relics || []).map((relic) => relic.effect));
-const hasProfileTag = (profile, id) => profile?.primary?.id === id || (profile?.tags || []).some((tag) => tag.id === id);
-const labelTag = (id) => ARCHETYPE_LABELS[id] || id;
-const toPercent = (value = 0) => `${Math.round(value * 100)}%`;
-const hasAnyJob = (item, jobs: any[] = []) => Array.isArray(item?.jobs) && jobs.some((job) => item.jobs.includes(job));
-const isConsumableType = (item) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type);
-const hasElement = (item) => Boolean(item?.elem && item.elem !== '물리');
+const relicEffectsOf = (player: any) => new Set((player?.relics || []).map((relic: any) => relic.effect));
+const hasProfileTag = (profile: any, id: any) => profile?.primary?.id === id || (profile?.tags || []).some((tag: any) => tag.id === id);
+const labelTag = (id: any) => ARCHETYPE_LABELS[id] || id;
+const toPercent = (value: any = 0) => `${Math.round(value * 100)}%`;
+const hasAnyJob = (item: any, jobs: any[] = []) => Array.isArray(item?.jobs) && jobs.some((job: any) => item.jobs.includes(job));
+const isConsumableType = (item: any) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type);
+const hasElement = (item: any) => Boolean(item?.elem && item.elem !== '물리');
 
 // --- Class build functions ---
 
-export const getClassBuildIdentity = (job = '모험가') => (
+export const getClassBuildIdentity = (job: any = '모험가') => (
     CLASS_BUILD_IDENTITIES[job] || CLASS_BUILD_IDENTITIES['모험가']
 );
 
-export const getClassBuildCompatibility = (job, profile) => {
+export const getClassBuildCompatibility = (job: any, profile: any) => {
     const identity = getClassBuildIdentity(job);
-    const matchedTags = identity.preferredTags.filter((tag) => hasProfileTag(profile, tag));
+    const matchedTags = identity.preferredTags.filter((tag: any) => hasProfileTag(profile, tag));
     const primaryMatch = hasProfileTag(profile, identity.preferredTags[0]);
     const score = matchedTags.length + (primaryMatch ? 1 : 0);
 
@@ -54,9 +54,9 @@ export const getClassBuildCompatibility = (job, profile) => {
     };
 };
 
-export const getClassBuildBonus = (job, profile) => {
+export const getClassBuildBonus = (job: any, profile: any) => {
     const identity = getClassBuildIdentity(job);
-    const activeSynergy = identity.synergies.find((entry) => entry.tags.some((tag) => hasProfileTag(profile, tag))) || null;
+    const activeSynergy = identity.synergies.find((entry: any) => entry.tags.some((tag: any) => hasProfileTag(profile, tag))) || null;
     const bonus = activeSynergy?.bonus || {};
 
     return {
@@ -73,7 +73,7 @@ export const getClassBuildBonus = (job, profile) => {
 
 // --- Run build profile ---
 
-export const getRunBuildProfile = (player, stats: any = {}) => {
+export const getRunBuildProfile = (player: any, stats: any = {}) => {
     const relicEffects = relicEffectsOf(player);
     const mainWeapon = player?.equip?.weapon || null;
     const offhand = player?.equip?.offhand || null;
@@ -161,8 +161,8 @@ export const getRunBuildProfile = (player, stats: any = {}) => {
     }
 
     const ranked = tags
-        .filter((tag) => tag.score >= 3)
-        .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ko'));
+        .filter((tag: any) => tag.score >= 3)
+        .sort((a: any, b: any) => b.score - a.score || a.name.localeCompare(b.name, 'ko'));
 
     const primary = ranked[0] || scoreTag('balanced', '균형형 런', '아직 특정 축에 치우치지 않은 기본 빌드.', 0, ['다양한 선택 가능']);
 
@@ -175,7 +175,7 @@ export const getRunBuildProfile = (player, stats: any = {}) => {
 
 // --- Trait functions ---
 
-const pickTraitId = (player, buildProfile) => {
+const pickTraitId = (player: any, buildProfile: any) => {
     const relicEffects = relicEffectsOf(player);
     const primaryId = buildProfile.primary.id;
     const lowHpWins = countLowHpWins(player?.stats, 0.2);
@@ -189,7 +189,7 @@ const pickTraitId = (player, buildProfile) => {
     return TRAIT_DEFINITIONS[primaryId] ? primaryId : 'balanced';
 };
 
-const buildTraitSkill = (traitId, player, stats: any = {}) => {
+const buildTraitSkill = (traitId: any, player: any, stats: any = {}) => {
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
     if (!definition.skill) return null;
 
@@ -219,7 +219,7 @@ const buildTraitSkill = (traitId, player, stats: any = {}) => {
     };
 };
 
-export const getTraitProfile = (player, stats: any = {}) => {
+export const getTraitProfile = (player: any, stats: any = {}) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const traitId = pickTraitId(player, buildProfile);
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
@@ -252,11 +252,11 @@ export const getTraitProfile = (player, stats: any = {}) => {
     };
 };
 
-export const getTraitBonus = (player, stats: any = {}) => getTraitProfile(player, stats).bonus;
+export const getTraitBonus = (player: any, stats: any = {}) => getTraitProfile(player, stats).bonus;
 
-export const getTraitSkill = (player, stats: any = {}) => getTraitProfile(player, stats).skill;
+export const getTraitSkill = (player: any, stats: any = {}) => getTraitProfile(player, stats).skill;
 
-export const getTraitPassiveParts = (traitProfile) => {
+export const getTraitPassiveParts = (traitProfile: any) => {
     const bonus = traitProfile?.bonus || {};
     const parts = [];
     if ((bonus.atkMult || 1) > 1) parts.push(`ATK +${toPercent((bonus.atkMult || 1) - 1)}`);
@@ -266,7 +266,7 @@ export const getTraitPassiveParts = (traitProfile) => {
     return parts;
 };
 
-export const getTraitItemResonance = (item, traitProfile, player = null) => {
+export const getTraitItemResonance = (item: any, traitProfile: any, player: any = null) => {
     if (!item) return { score: 0, label: null, reasons: [], summary: null };
 
     const traitId = traitProfile?.id || 'balanced';
@@ -341,12 +341,12 @@ export const getTraitItemResonance = (item, traitProfile, player = null) => {
 
 export const getTraitFeaturedItems = (items: any[] = [], traitProfile, player = null, limit = 3) => (
     (items || [])
-        .map((item) => ({
+        .map((item: any) => ({
             item,
             resonance: getTraitItemResonance(item, traitProfile, player),
         }))
-        .filter((entry) => entry.resonance.score >= 3)
-        .sort((left, right) => right.resonance.score - left.resonance.score || (left.item.price || 0) - (right.item.price || 0))
+        .filter((entry: any) => entry.resonance.score >= 3)
+        .sort((left: any, right: any) => right.resonance.score - left.resonance.score || (left.item.price || 0) - (right.item.price || 0))
         .slice(0, limit)
 );
 
@@ -363,13 +363,13 @@ export const getTraitLootHint = (items: any[] = [], traitProfile, player = null)
     };
 };
 
-export const getTraitQuestResonance = (quest, traitProfile) => {
+export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
     if (!quest) return { score: 0, label: null, summary: null };
 
     const buildTags = new Set([
         traitProfile?.id,
         traitProfile?.buildProfile?.primary?.id,
-        ...((traitProfile?.buildProfile?.tags || []).map((tag) => tag.id))
+        ...((traitProfile?.buildProfile?.tags || []).map((tag: any) => tag.id))
     ].filter(Boolean));
 
     let score = 0;
@@ -409,18 +409,18 @@ export const getTraitQuestResonance = (quest, traitProfile) => {
 
 // --- Diagnostics ---
 
-export const getRunDiagnostics = (player, stats: any = {}) => {
+export const getRunDiagnostics = (player: any, stats: any = {}) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const classIdentity = getClassBuildIdentity(player?.job);
     const classCompatibility = getClassBuildCompatibility(player?.job, buildProfile);
     const classBonus = getClassBuildBonus(player?.job, buildProfile);
     const recentBattles = (player?.stats?.recentBattles || []).slice(-20);
-    const wins = recentBattles.filter((battle) => battle.result === 'win');
+    const wins = recentBattles.filter((battle: any) => battle.result === 'win');
     const winRate = recentBattles.length > 0
         ? Math.round((wins.length / recentBattles.length) * 100)
         : null;
     const avgWinHp = wins.length > 0
-        ? Math.round((wins.reduce((sum, battle) => sum + ((battle.hpRatio || 0) * 100), 0) / wins.length))
+        ? Math.round((wins.reduce((sum: any, battle: any) => sum + ((battle.hpRatio || 0) * 100), 0) / wins.length))
         : null;
     const exploreState = getExploreState(player?.stats);
     const difficulty = getDifficultyMults(calcPerformanceScore(player));
@@ -465,7 +465,7 @@ export const getRunDiagnostics = (player, stats: any = {}) => {
 
 // --- Enemy tactical profile ---
 
-export const getEnemyTacticalProfile = (enemy, stats: any = {}) => {
+export const getEnemyTacticalProfile = (enemy: any, stats: any = {}) => {
     if (!enemy) return null;
 
     const pattern = enemy.pattern || {};

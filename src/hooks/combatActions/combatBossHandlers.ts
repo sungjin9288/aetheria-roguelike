@@ -10,27 +10,27 @@ import { RELICS, pickWeightedRelics } from '../../data/relics';
  * 마왕 처치 후처리: 파편 드랍 / 진 보스 진입 / 일반 환생
  * @returns {boolean} true이면 호출자가 즉시 return해야 함
  */
-export const handleDemonKingSlain = (updatedPlayer, dispatch, addLog) => {
+export const handleDemonKingSlain = (updatedPlayer: any, dispatch: any, addLog: any) => {
     const prestigeRank = updatedPlayer.meta?.prestigeRank || 0;
-    const shardCount = (updatedPlayer.inv || []).filter((i) => i?.name === '원시의 파편').length;
+    const shardCount = (updatedPlayer.inv || []).filter((i: any) => i?.name === '원시의 파편').length;
 
     if (prestigeRank >= 1 && shardCount < 3 && Math.random() < CONSTANTS.PRIMAL_SHARD_DROP_CHANCE) {
         const shardItem = makeItem({ name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편.' });
-        dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
+        dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
         addLog('event', MSG.PRIMAL_SHARD_DROP(shardCount + 1));
     }
 
-    const currentShardCount = (updatedPlayer.inv || []).filter((i) => i?.name === '원시의 파편').length;
+    const currentShardCount = (updatedPlayer.inv || []).filter((i: any) => i?.name === '원시의 파편').length;
     if (prestigeRank >= 3 && currentShardCount >= 3) {
         addLog('critical', MSG.TRUE_BOSS_UNLOCK);
         let removed = 0;
-        const newInv = (updatedPlayer.inv || []).filter((i) => {
+        const newInv = (updatedPlayer.inv || []).filter((i: any) => {
             if (i?.name === '원시의 파편' && removed < 3) { removed++; return false; }
             return true;
         });
         const trueBossData = DB.MONSTERS?.['원시의 신'];
         if (trueBossData) {
-            const trueBoss = {
+            const trueBoss: Record<string, any> = {
                 name: '원시의 신', baseName: '원시의 신',
                 hp: Math.floor(8000 * (trueBossData.hpMult || 2.2)),
                 maxHp: Math.floor(8000 * (trueBossData.hpMult || 2.2)),
@@ -44,7 +44,7 @@ export const handleDemonKingSlain = (updatedPlayer, dispatch, addLog) => {
                 exp: 5000, gold: 9999,
                 pattern: { guardChance: 0.05, heavyChance: 0.4 },
             };
-            dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, inv: newInv }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: newInv }) });
             dispatch({ type: AT.SET_ENEMY, payload: trueBoss });
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
             addLog('critical', MSG.TRUE_BOSS_APPEAR);
@@ -64,7 +64,7 @@ export const handleDemonKingSlain = (updatedPlayer, dispatch, addLog) => {
  * 무한 심연 층 진행. 현재 위치가 심연 맵이 아니면 player를 그대로 반환.
  * @returns {object} 업데이트된 player
  */
-export const applyAbyssFloorAdvance = (p, dispatch, addLog) => {
+export const applyAbyssFloorAdvance = (p: any, dispatch: any, addLog: any) => {
     if (p.loc !== CONSTANTS.ABYSS_MAP_NAME) return p;
     const newDepth = (p.stats?.abyssFloor || 1) + 1;
     const prevRecord = p.stats?.abyssRecord || 0;
@@ -81,10 +81,10 @@ export const applyAbyssFloorAdvance = (p, dispatch, addLog) => {
     if (milestone) {
         addLog('event', MSG.ABYSS_MILESTONE(newDepth));
         if (milestone.type === 'relic_choice') {
-            const available = RELICS.filter(r => !(updated.relics || []).some(pr => pr.id === r.id));
+            const available = RELICS.filter((r: any) => !(updated.relics || []).some((pr: any) => pr.id === r.id));
             if (available.length > 0) dispatch({ type: AT.SET_PENDING_RELICS, payload: pickWeightedRelics(available, 3) });
         } else if (milestone.type === 'legendary_item') {
-            const legendaryPool = (DB.ITEMS || []).flat().filter(i => i.tier === 5);
+            const legendaryPool = (DB.ITEMS || []).flat().filter((i: any) => i.tier === 5);
             if (legendaryPool.length > 0) {
                 const item = makeItem(legendaryPool[Math.floor(Math.random() * legendaryPool.length)]);
                 updated = { ...updated, inv: [...(updated.inv || []), item] };

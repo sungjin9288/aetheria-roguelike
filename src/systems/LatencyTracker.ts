@@ -44,14 +44,14 @@ export const LatencyTracker = {
 
     getAverageLatency(type = null) {
         const filtered = type
-            ? this.recentLatencies.filter(l => l.type === type && !l.isError)
-            : this.recentLatencies.filter(l => !l.isError);
+            ? this.recentLatencies.filter((l: any) => l.type === type && !l.isError)
+            : this.recentLatencies.filter((l: any) => !l.isError);
 
         if (filtered.length === 0) return 0;
-        return filtered.reduce((sum, l) => sum + l.latency, 0) / filtered.length;
+        return filtered.reduce((sum: any, l: any) => sum + l.latency, 0) / filtered.length;
     },
 
-    onSlowResponse(type, latency) {
+    onSlowResponse(type: any, latency: any) {
         // Hook for custom alerting (can integrate with monitoring systems)
         // For now, just dispatch a custom event
         if (typeof window !== 'undefined') {
@@ -65,8 +65,8 @@ export const LatencyTracker = {
         return {
             avgLatency: this.getAverageLatency(),
             callCount: this.recentLatencies.length,
-            errorCount: this.recentLatencies.filter(l => l.isError).length,
-            slowCount: this.recentLatencies.filter(l => l.latency > this.THRESHOLD_MS).length
+            errorCount: this.recentLatencies.filter((l: any) => l.isError).length,
+            slowCount: this.recentLatencies.filter((l: any) => l.latency > this.THRESHOLD_MS).length
         };
     }
 };

@@ -11,7 +11,7 @@ import SkillTypeIcon from './icons/SkillTypeIcon';
 import ClassIcon from './icons/ClassIcon';
 import ClassTree from './ClassTree';
 
-const EFFECT_LABELS = {
+const EFFECT_LABELS: any = {
     burn: '화상',
     bleed: '출혈',
     poison: '독',
@@ -27,7 +27,7 @@ const EFFECT_LABELS = {
     stealth: '은신',
 };
 
-const TYPE_TONE = {
+const TYPE_TONE: any = {
     화염: 'warning',
     빛: 'upgrade',
     냉기: 'recommended',
@@ -37,7 +37,7 @@ const TYPE_TONE = {
     물리: 'neutral',
 };
 
-const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, summary = false, onSelect = null }) => {
+const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, summary = false, onSelect = null }: any) => {
     const isOnCooldown = cooldown > 0;
     const tone = TYPE_TONE[skill.type] || 'neutral';
     const interactive = Boolean(onSelect) && !selected;
@@ -125,7 +125,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
     const selectedSkillName = allCurrentSkills[selectedIndex % Math.max(1, allCurrentSkills.length)]?.name || null;
     const visibleCurrentSkills = compact && !showAllSkills
         ? [...allCurrentSkills]
-            .sort((a, b) => Number(b.name === selectedSkillName) - Number(a.name === selectedSkillName))
+            .sort((a: any, b: any) => Number(b.name === selectedSkillName) - Number(a.name === selectedSkillName))
             .slice(0, 2)
         : allCurrentSkills;
     const hiddenSkillCount = Math.max(0, allCurrentSkills.length - visibleCurrentSkills.length);
@@ -152,7 +152,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                         {compact && (hiddenSkillCount > 0 || nextJobs.length > 0) && (
                             <button
                                 type="button"
-                                onClick={() => setShowAllSkills((prev) => !prev)}
+                                onClick={() => setShowAllSkills((prev: any) => !prev)}
                                 className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
                             >
                                 {showAllSkills ? '요약 보기' : '스킬 더 보기'}
@@ -173,7 +173,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                     )}
                 </div>
                 <div className="space-y-2">
-                    {visibleCurrentSkills?.map((skill) => {
+                    {visibleCurrentSkills?.map((skill: any) => {
                         const branches = currentClass?.skillBranches?.[skill.name];
                         const currentChoice = player.skillChoices?.[skill.name];
                         const isSwapping = swapTarget === skill.name;
@@ -204,7 +204,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                                         </div>
                                         {isSwapping && (
                                             <div className="space-y-1.5">
-                                                {branches.map((branch) => {
+                                                {branches.map((branch: any) => {
                                                     const isActive = currentChoice === branch.choice || (!currentChoice && branch.choice === 'A');
                                                     const canAfford = (player.gold || 0) >= swapCost;
                                                     return (
@@ -252,7 +252,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                             Advancement Preview
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                            {nextJobs.slice(0, 2).map((jobName) => {
+                            {nextJobs.slice(0, 2).map((jobName: any) => {
                                 const jobData = DB.CLASSES[jobName];
                                 if (!jobData) return null;
                                 const meetsReq = player.level >= (jobData.reqLv || 0);
@@ -273,7 +273,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                         </div>
 
                         <div className="space-y-2">
-                            {nextJobs.map((jobName) => {
+                            {nextJobs.map((jobName: any) => {
                                 const jobData = DB.CLASSES[jobName];
                                 if (!jobData) return null;
                                 const isOpen = expandedJob === jobName;
@@ -319,7 +319,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                                                     className="overflow-hidden"
                                                 >
                                                     <div className="space-y-2 border-t border-white/8 px-3 pb-3 pt-3">
-                                                        {jobData.skills?.map((skill) => (
+                                                        {jobData.skills?.map((skill: any) => (
                                                             <SkillCard key={skill.name} skill={skill} compact={compact} />
                                                         ))}
                                                     </div>
@@ -367,13 +367,13 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                             Skill Branches
                         </div>
                         <div className="space-y-3">
-                            {(Object.entries(skillBranches) as Array<[string, any[]]>).map(([skillName, branches]) => {
+                            {(Object.entries(skillBranches) as Array<[string, any[]]>).map(([skillName, branches]: any) => {
                                 const chosen = player.skillChoices?.[skillName];
                                 return (
                                     <div key={skillName}>
                                         <div className="mb-1.5 text-[11px] font-rajdhani font-bold text-slate-300/80">{skillName}</div>
                                         <div className="grid grid-cols-2 gap-1.5">
-                                            {branches.map((branch) => {
+                                            {branches.map((branch: any) => {
                                                 const isChosen = chosen === branch.choice;
                                                 return (
                                                     <button

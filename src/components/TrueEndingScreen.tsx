@@ -10,7 +10,7 @@ const STARS = Array.from({ length: 60 }, () => ({
     delay: Math.random() * 3,
 }));
 
-const ENDING_LINES = [
+const ENDING_LINES: any = [
     '오랜 싸움이 끝났습니다.',
     '원시의 신이 쓰러지며, 세계를 짓누르던 어둠이 서서히 걷힙니다.',
     '당신의 발자국은 이 땅에 영원히 새겨질 것입니다.',
@@ -18,14 +18,14 @@ const ENDING_LINES = [
     '이것이 영웅의 이야기입니다.',
 ];
 
-const TrueEndingScreen = ({ player, actions }) => {
+const TrueEndingScreen = ({ player, actions }: any) => {
     const [lineIndex, setLineIndex] = useState(0);
     const [showStats, setShowStats] = useState(false);
     const [showButton, setShowButton] = useState(false);
 
     useEffect(() => {
         if (lineIndex < ENDING_LINES.length) {
-            const t = setTimeout(() => setLineIndex((i) => i + 1), 1800);
+            const t = setTimeout(() => setLineIndex((i: any) => i + 1), 1800);
             return () => clearTimeout(t);
         } else {
             const t1 = setTimeout(() => setShowStats(true), 600);
@@ -47,7 +47,7 @@ const TrueEndingScreen = ({ player, actions }) => {
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">
             {/* Star field background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {STARS.map((s, i) => (
+                {STARS.map((s: any, i: any) => (
                     <Motion.div
                         key={i}
                         className="absolute rounded-full bg-white"
@@ -72,7 +72,7 @@ const TrueEndingScreen = ({ player, actions }) => {
 
             {/* Narrative lines */}
             <div className="w-full max-w-md px-6 mb-10 space-y-4 min-h-[140px]">
-                {ENDING_LINES.slice(0, lineIndex).map((line, i) => (
+                {ENDING_LINES.slice(0, lineIndex).map((line: any, i: any) => (
                     <Motion.p
                         key={i}
                         initial={{ opacity: 0, y: 8 }}
@@ -94,7 +94,7 @@ const TrueEndingScreen = ({ player, actions }) => {
                     className="w-full max-w-sm px-6 mb-10"
                 >
                     <div className="rounded-[1.2rem] border border-[#d5b180]/20 bg-[#d5b180]/5 p-4 grid grid-cols-3 gap-3">
-                        {stats.map(({ label, value }) => (
+                        {stats.map(({ label, value }: any) => (
                             <div key={label} className="flex flex-col items-center gap-1">
                                 <span className="text-[16px] font-bold text-[#f4e6c8] font-fira">{value}</span>
                                 <span className="text-[10px] text-slate-500 font-fira uppercase tracking-wider">{label}</span>

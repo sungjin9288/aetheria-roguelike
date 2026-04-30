@@ -5,14 +5,14 @@ import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
 import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
 
-const toArray = (value) => (Array.isArray(value) ? value : []);
+const toArray = (value: any) => (Array.isArray(value) ? value : []);
 
-const getActiveQuestEntries = (player) => (
+const getActiveQuestEntries = (player: any) => (
     toArray(player?.quests)
-        .map((questState) => {
+        .map((questState: any) => {
             const quest = questState?.isBounty
                 ? questState
-                : QUESTS.find((entry) => entry.id === questState?.id);
+                : QUESTS.find((entry: any) => entry.id === questState?.id);
             if (!quest) return null;
 
             const progress = questState?.progress || 0;
@@ -27,25 +27,25 @@ const getActiveQuestEntries = (player) => (
         .filter(Boolean)
 );
 
-const clampPercent = (value) => Math.max(0, Math.min(100, Math.round(value * 100)));
-const getMapLevel = (map, playerLevel = 1) => (
+const clampPercent = (value: any) => Math.max(0, Math.min(100, Math.round(value * 100)));
+const getMapLevel = (map: any, playerLevel: any = 1) => (
     map?.level === 'infinite'
         ? Math.max((playerLevel || 1) + 8, 50)
         : (map?.minLv ?? map?.level ?? 1)
 );
-const getVisitedMaps = (player) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
+const getVisitedMaps = (player: any) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
 
-const getQuestProgressLabel = (entry) => {
+const getQuestProgressLabel = (entry: any) => {
     if (!entry?.quest) return '';
     if (entry.quest.target === 'Level') return `Lv.${entry.progress}/${entry.quest.goal}`;
     return `${entry.progress}/${entry.quest.goal}`;
 };
 
-export const getQuestTracker = (player) => {
+export const getQuestTracker = (player: any) => {
     const entries = getActiveQuestEntries(player);
     if (!entries.length) return null;
 
-    const claimable = entries.find((entry) => entry.isComplete);
+    const claimable = entries.find((entry: any) => entry.isComplete);
     if (claimable) {
         return {
             kind: 'claimable',
@@ -56,7 +56,7 @@ export const getQuestTracker = (player) => {
         };
     }
 
-    const ranked = [...entries].sort((left, right) => {
+    const ranked = [...entries].sort((left: any, right: any) => {
         const leftScore = (left.isBounty ? 20 : 0) + ((left.progress || 0) / Math.max(1, left.quest.goal));
         const rightScore = (right.isBounty ? 20 : 0) + ((right.progress || 0) / Math.max(1, right.quest.goal));
         return rightScore - leftScore;
@@ -72,7 +72,7 @@ export const getQuestTracker = (player) => {
     };
 };
 
-export const getExplorationForecast = (player, mapData) => {
+export const getExplorationForecast = (player: any, mapData: any) => {
     if (!mapData) {
         return {
             mood: '기록 동기화 중',
@@ -130,7 +130,7 @@ export const getExplorationForecast = (player, mapData) => {
     };
 };
 
-export const getMoveRecommendations = (player, stats, currentMap, maps = {}) => {
+export const getMoveRecommendations = (player: any, stats: any, currentMap: any, maps: any = {}) => {
     if (!currentMap?.exits?.length) return [];
 
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
@@ -140,7 +140,7 @@ export const getMoveRecommendations = (player, stats, currentMap, maps = {}) => 
     const visitedMaps = getVisitedMaps(player);
 
     return currentMap.exits
-        .map((exitName) => {
+        .map((exitName: any) => {
             const targetMap = maps?.[exitName];
             if (!targetMap) return null;
 
@@ -233,14 +233,14 @@ export const getMoveRecommendations = (player, stats, currentMap, maps = {}) => 
             };
         })
         .filter(Boolean)
-        .sort((left, right) => right.score - left.score)
-        .map((entry, index) => ({
+        .sort((left: any, right: any) => right.score - left.score)
+        .map((entry: any, index: any) => ({
             ...entry,
             isRecommended: index === 0,
         }));
 };
 
-export const getAdventureGuidance = (player, stats, mapData, runtimeState = 'idle') => {
+export const getAdventureGuidance = (player: any, stats: any, mapData: any, runtimeState: any = 'idle') => {
     const safe = mapData?.type === 'safe';
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     const mpRatio = (player?.mp || 0) / Math.max(1, stats?.maxMp || player?.maxMp || 1);

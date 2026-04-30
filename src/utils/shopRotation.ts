@@ -9,7 +9,7 @@ import { CONSTANTS } from '../data/constants';
 /**
  * 날짜 기반 시드 해시 (간단한 결정론적 RNG)
  */
-const dateHash = (dateStr, salt = 0) => {
+const dateHash = (dateStr: any, salt: any = 0) => {
     let hash = salt;
     for (let i = 0; i < dateStr.length; i++) {
         hash = ((hash << 5) - hash + dateStr.charCodeAt(i)) | 0;
@@ -20,7 +20,7 @@ const dateHash = (dateStr, salt = 0) => {
 /**
  * 시드 기반 배열 셔플 (Fisher-Yates, deterministic)
  */
-const seededShuffle = (arr, seed) => {
+const seededShuffle = (arr: any, seed: any) => {
     const result = [...arr];
     let s = seed;
     for (let i = result.length - 1; i > 0; i--) {
@@ -55,7 +55,7 @@ const getWeekKey = () => {
  * @param {number} playerLevel
  * @returns {{ items: Object[], discount: number }}
  */
-export const getDailyDeals = (playerLevel = 1) => {
+export const getDailyDeals = (playerLevel: any = 1) => {
     const today = getToday();
     const seed = dateHash(today, 42);
 
@@ -64,12 +64,12 @@ export const getDailyDeals = (playerLevel = 1) => {
 
     const allItems = [
         ...(DB.ITEMS.weapons || []),
-        ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
+        ...(DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor'),
         ...(DB.ITEMS.consumables || []),
-    ].filter((item) => (item.tier || 1) <= maxTier);
+    ].filter((item: any) => (item.tier || 1) <= maxTier);
 
     const shuffled = seededShuffle(allItems, seed);
-    const items = shuffled.slice(0, 3).map((item) => ({
+    const items = shuffled.slice(0, 3).map((item: any) => ({
         ...item,
         originalPrice: item.price,
         price: Math.floor(item.price * 0.9),
@@ -84,7 +84,7 @@ export const getDailyDeals = (playerLevel = 1) => {
  * @param {number} playerLevel
  * @returns {Object|null}
  */
-export const getWeeklySpecial = (playerLevel = 1) => {
+export const getWeeklySpecial = (playerLevel: any = 1) => {
     const weekKey = getWeekKey();
     const seed = dateHash(weekKey, 777);
 
@@ -92,8 +92,8 @@ export const getWeeklySpecial = (playerLevel = 1) => {
 
     const rareItems = [
         ...(DB.ITEMS.weapons || []),
-        ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
-    ].filter((item) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier);
+        ...(DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor'),
+    ].filter((item: any) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier);
 
     if (rareItems.length === 0) return null;
 
@@ -112,26 +112,26 @@ export const getWeeklySpecial = (playerLevel = 1) => {
  * @param {number} playerLevel
  * @returns {Object[]}
  */
-export const getMaterialShop = (playerLevel = 1) => {
+export const getMaterialShop = (playerLevel: any = 1) => {
     const today = getToday();
     const seed = dateHash(today, 123);
 
-    const materials = (DB.ITEMS.materials || []).filter((m) => {
+    const materials = (DB.ITEMS.materials || []).filter((m: any) => {
         if (playerLevel < 10) return m.price <= 50;
         if (playerLevel < 20) return m.price <= 200;
         if (playerLevel < 35) return m.price <= 600;
         return true;
     });
 
-    const pinnedEnhanceMaterial = materials.find((mat) => mat.name === CONSTANTS.ENHANCE_MATERIAL_NAME) || null;
+    const pinnedEnhanceMaterial = materials.find((mat: any) => mat.name === CONSTANTS.ENHANCE_MATERIAL_NAME) || null;
     const shuffled = seededShuffle(materials, seed);
     // 레벨에 따라 5~8개 소재 판매
     const count = Math.min(materials.length, playerLevel < 10 ? 5 : playerLevel < 25 ? 6 : 8);
     const picked = pinnedEnhanceMaterial
-        ? [pinnedEnhanceMaterial, ...shuffled.filter((mat) => mat.name !== pinnedEnhanceMaterial.name).slice(0, Math.max(0, count - 1))]
+        ? [pinnedEnhanceMaterial, ...shuffled.filter((mat: any) => mat.name !== pinnedEnhanceMaterial.name).slice(0, Math.max(0, count - 1))]
         : shuffled.slice(0, count);
 
-    return picked.map((mat) => ({
+    return picked.map((mat: any) => ({
         ...mat,
         price: Math.floor(mat.price * 2.5), // 소재 상점은 마크업
         isMaterialShop: true,

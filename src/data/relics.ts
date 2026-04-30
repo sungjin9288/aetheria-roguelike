@@ -547,19 +547,19 @@ export const RELIC_SYNERGIES = Object.freeze([
  * @param {object[]} relics - 보유 유물 배열
  * @returns {object[]} 활성 시너지 배열
  */
-export const getActiveRelicSynergies = (relics = []) => {
-    const ownedNames = new Set(relics.map((r) => r.name));
-    return RELIC_SYNERGIES.filter((syn) => syn.requires.every((name) => ownedNames.has(name)));
+export const getActiveRelicSynergies = (relics: any = []) => {
+    const ownedNames = new Set(relics.map((r: any) => r.name));
+    return RELIC_SYNERGIES.filter((syn: any) => syn.requires.every((name: any) => ownedNames.has(name)));
 };
 
-export const pickWeightedRelics = (pool, count = 3) => {
+export const pickWeightedRelics = (pool: any, count: any = 3) => {
     if (pool.length === 0) return [];
     const result = [];
     const remaining = [...pool];
     const needed = Math.min(count, remaining.length);
 
     for (let i = 0; i < needed; i++) {
-        const totalWeight = remaining.reduce((sum, r) => sum + (RELIC_WEIGHTS[r.rarity] || 1), 0);
+        const totalWeight = remaining.reduce((sum: any, r: any) => sum + (RELIC_WEIGHTS[r.rarity] || 1), 0);
         let rand = Math.random() * totalWeight;
         let chosen = remaining[remaining.length - 1]; // fallback
         for (let j = 0; j < remaining.length; j++) {

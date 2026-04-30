@@ -11,7 +11,7 @@ import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signa
  * - 접근성: aria-label로 tier + category 전달.
  */
 
-const TONE_COLORS = Object.freeze({
+const TONE_COLORS: any = Object.freeze({
     holy: { fill: '#f6e7a2', glow: 'rgba(246,231,162,0.6)', stroke: '#5a4620' },
     fire: { fill: '#ffb48a', glow: 'rgba(255,180,138,0.6)', stroke: '#6a2e16' },
     frost: { fill: '#cce8f5', glow: 'rgba(204,232,245,0.6)', stroke: '#29455a' },
@@ -24,7 +24,7 @@ const TONE_COLORS = Object.freeze({
 
 const DEFAULT_TONE_COLOR = TONE_COLORS.holy;
 
-const SignatureBadge = ({ item, size = 10, className = '' }) => {
+const SignatureBadge = ({ item, size = 10, className = '' }: any) => {
     if (!item || !hasDedicatedSignatureArt(item)) return null;
     const meta = getSignatureMetadata(item);
     const toneColor = TONE_COLORS[meta?.tone] || DEFAULT_TONE_COLOR;

@@ -3,7 +3,7 @@ import { Lock, Check } from 'lucide-react';
 import { DB } from '../../data/db';
 import SignalBadge from '../SignalBadge';
 
-const RecipeCodex = ({ codex, player }) => {
+const RecipeCodex = ({ codex, player }: any) => {
     const [selected, setSelected] = useState(null);
     const recipes = DB.ITEMS.recipes || [];
     const recipeCodex = codex.recipes || {};
@@ -18,11 +18,11 @@ const RecipeCodex = ({ codex, player }) => {
             </div>
 
             <div className="space-y-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
-                {recipes.map(recipe => {
+                {recipes.map((recipe: any) => {
                     const found = !!recipeCodex[recipe.id];
                     const hasGold = (player?.gold || 0) >= recipe.gold;
-                    const hasMats = recipe.inputs.every(inp =>
-                        inv.filter(i => i.name === inp.name).length >= inp.qty
+                    const hasMats = recipe.inputs.every((inp: any) =>
+                        inv.filter((i: any) => i.name === inp.name).length >= inp.qty
                     );
                     const canCraft = found && hasGold && hasMats;
 
@@ -55,8 +55,8 @@ const RecipeCodex = ({ codex, player }) => {
                             {found && selected === recipe.id && (
                                 <div className="mt-2 space-y-1 text-[10px] font-fira">
                                     <div className="text-slate-400">재료:</div>
-                                    {recipe.inputs.map(inp => {
-                                        const owned = inv.filter(i => i.name === inp.name).length;
+                                    {recipe.inputs.map((inp: any) => {
+                                        const owned = inv.filter((i: any) => i.name === inp.name).length;
                                         const enough = owned >= inp.qty;
                                         return (
                                             <div key={inp.name} className={`pl-2 ${enough ? 'text-cyber-green' : 'text-rose-300'}`}>

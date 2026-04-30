@@ -4,15 +4,15 @@ import { ELEMENT_TONE_KEY, TONE_PALETTES } from '../data/artPalette.js';
 
 const HEADGEAR_ONLY_PATTERN = /(모자|두건|후드|투구|헬름|왕관|관|면갑|복면)/;
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
 
-const containsAny = (name, patterns) => patterns.some((pattern) => name.includes(pattern));
+const containsAny = (name: any, patterns: any) => patterns.some((pattern: any) => name.includes(pattern));
 
-const hashText = (value = '') => (
-    [...String(value)].reduce((total, char, index) => ((total * 31) + (char.codePointAt(0) || 0) + index) % 9973, 17)
+const hashText = (value: any = '') => (
+    [...String(value)].reduce((total: any, char: any, index: any) => ((total * 31) + (char.codePointAt(0) || 0) + index) % 9973, 17)
 );
 
-const hexToRgb = (hex) => {
+const hexToRgb = (hex: any) => {
     const normalized = String(hex || '').replace('#', '');
     if (normalized.length !== 6) return { r: 255, g: 255, b: 255 };
     return {
@@ -22,11 +22,11 @@ const hexToRgb = (hex) => {
     };
 };
 
-const rgbToHex = ({ r, g, b }) => (
-    `#${[r, g, b].map((channel) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0')).join('')}`
+const rgbToHex = ({ r, g, b }: any) => (
+    `#${[r, g, b].map((channel: any) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0')).join('')}`
 );
 
-const mixHex = (left, right, ratio = 0.5) => {
+const mixHex = (left: any, right: any, ratio: any = 0.5) => {
     const l = hexToRgb(left);
     const r = hexToRgb(right);
     return rgbToHex({
@@ -36,7 +36,7 @@ const mixHex = (left, right, ratio = 0.5) => {
     });
 };
 
-const tintPalette = (palette, item) => {
+const tintPalette = (palette: any, item: any) => {
     const offset = hashText(item?.name || '') % 11;
     const ratio = 0.06 + (offset * 0.012);
     return {
@@ -47,7 +47,7 @@ const tintPalette = (palette, item) => {
     };
 };
 
-const getToneKey = (item, slot = 'weapon') => {
+const getToneKey = (item: any, slot: any = 'weapon') => {
     if (!item) {
         if (slot === 'armor') return 'cloth';
         if (slot === 'offhand') return 'wood';
@@ -69,7 +69,7 @@ const getToneKey = (item, slot = 'weapon') => {
     return 'steel';
 };
 
-const getArmorHeadgearStyle = (item) => {
+const getArmorHeadgearStyle = (item: any) => {
     if (!item || item.type !== 'armor') return 'none';
     const name = String(item.name || '');
 
@@ -84,7 +84,7 @@ const getArmorHeadgearStyle = (item) => {
     return 'none';
 };
 
-const getArmorBodyStyle = (item, fallback = 'coat') => {
+const getArmorBodyStyle = (item: any, fallback: any = 'coat') => {
     if (!item || item.type !== 'armor') return fallback;
     const name = String(item.name || '');
 
@@ -105,7 +105,7 @@ const getArmorBodyStyle = (item, fallback = 'coat') => {
     return 'cloak';
 };
 
-const getOffhandStyle = (item) => {
+const getOffhandStyle = (item: any) => {
     if (!item || !isShield(item)) return 'none';
     const name = String(item.name || '');
 
@@ -120,7 +120,7 @@ const getOffhandStyle = (item) => {
     return 'kite-shield';
 };
 
-const getWeaponStyle = (item) => {
+const getWeaponStyle = (item: any) => {
     if (!item || !isWeapon(item)) return 'none';
     return getWeaponVisualKey(item);
 };

@@ -6,7 +6,7 @@ import { getItemRarity } from '../../utils/gameUtils';
 import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
 
-const RARITY_FRAME = {
+const RARITY_FRAME: any = {
     common: { border: '#9ca3af', glow: 'none', corner: false },
     uncommon: { border: '#22c55e', glow: 'none', corner: true },
     rare: { border: '#3b82f6', glow: '0 0 8px rgba(59,130,246,0.3)', corner: true },
@@ -14,7 +14,7 @@ const RARITY_FRAME = {
     legendary: { border: '#f59e0b', glow: '0 0 16px rgba(245,158,11,0.4)', corner: true },
 };
 
-const RARITY_TONE = {
+const RARITY_TONE: any = {
     common: 'neutral',
     uncommon: 'success',
     rare: 'recommended',
@@ -25,14 +25,14 @@ const RARITY_TONE = {
 /**
  * SVG 코너 장식
  */
-const CornerOrnament = ({ color, position }) => {
-    const transforms = {
+const CornerOrnament = ({ color, position }: any) => {
+    const transforms: Record<string, any> = {
         'top-left': '',
         'top-right': 'scale(-1,1) translate(-24,0)',
         'bottom-left': 'scale(1,-1) translate(0,-24)',
         'bottom-right': 'scale(-1,-1) translate(-24,-24)',
     };
-    const posClass = {
+    const posClass: Record<string, any> = {
         'top-left': 'top-0 left-0',
         'top-right': 'top-0 right-0',
         'bottom-left': 'bottom-0 left-0',
@@ -52,7 +52,7 @@ const CornerOrnament = ({ color, position }) => {
     );
 };
 
-const StatRow = ({ label, value, compareValue }) => {
+const StatRow = ({ label, value, compareValue }: any) => {
     const diff = compareValue != null ? value - compareValue : null;
     return (
         <div className="flex items-center justify-between text-[10px] font-fira">
@@ -72,7 +72,7 @@ const StatRow = ({ label, value, compareValue }) => {
 /**
  * EquipmentCodexCard — 레어리티별 프레임 + 스탯 비교 레이아웃
  */
-const EquipmentCodexCard = ({ item, player }) => {
+const EquipmentCodexCard = ({ item, player }: any) => {
     if (!item) return null;
 
     const rarity = getItemRarity(item);
@@ -100,7 +100,7 @@ const EquipmentCodexCard = ({ item, player }) => {
             }}
         >
             {/* 코너 장식 */}
-            {frame.corner && ['top-left', 'top-right', 'bottom-left', 'bottom-right'].map(pos => (
+            {frame.corner && ['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos: any) => (
                 <CornerOrnament key={pos} color={frame.border} position={pos} />
             ))}
 

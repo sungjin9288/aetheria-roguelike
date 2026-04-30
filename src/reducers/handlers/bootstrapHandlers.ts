@@ -1,13 +1,13 @@
 import { sanitizeQuickSlots } from './helpers';
 
 export const bootstrapActionMap = {
-    SET_BOOT_STAGE: (state, action) =>
+    SET_BOOT_STAGE: (state: any, action: any) =>
         ({ ...state, bootStage: action.payload }),
 
-    SET_UID: (state, action) =>
+    SET_UID: (state: any, action: any) =>
         ({ ...state, uid: action.payload }),
 
-    LOAD_DATA: (state, action) => {
+    LOAD_DATA: (state: any, action: any) => {
         const loadedPlayer = { ...state.player, ...action.payload.player };
         return {
             ...state,
@@ -26,9 +26,9 @@ export const bootstrapActionMap = {
         };
     },
 
-    SET_LIVE_CONFIG: (state, action) =>
+    SET_LIVE_CONFIG: (state: any, action: any) =>
         ({ ...state, liveConfig: { ...state.liveConfig, ...action.payload } }),
 
-    SET_LEADERBOARD: (state, action) =>
+    SET_LEADERBOARD: (state: any, action: any) =>
         ({ ...state, leaderboard: action.payload }),
 };

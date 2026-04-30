@@ -6,7 +6,7 @@ import React from 'react';
  * 티어별 색상: T0 slate, T1 cyber-blue, T2 cyber-purple, T3 legendary-gold
  */
 
-const CLASS_PATHS = {
+const CLASS_PATHS: any = {
     // Tier 0
     '모험가': 'M12 2l2 4h4l-3 3 1 5-4-3-4 3 1-5-3-3h4l2-4ZM12 14v7M8 21h8',
     // Tier 1
@@ -31,7 +31,7 @@ const CLASS_PATHS = {
     '사냥의 군주': 'M4 20l8-8 8 8M12 4v8M8 6l4-4 4 4M3 12h4M17 12h4M7 17l2-2M15 17l2-2',
 };
 
-const TIER_COLORS = {
+const TIER_COLORS: any = {
     0: '#9ca3af',   // slate
     1: '#00ccff',   // cyber-blue
     2: '#bc13fe',   // cyber-purple
@@ -42,7 +42,7 @@ const TIER_COLORS = {
  * ClassIcon — 직업 아이콘 컴포넌트
  * @param {{ className: string, size?: number, tier?: number, showBorder?: boolean, style?: string }} props
  */
-const ClassIcon = ({ className: jobName, size = 28, tier = 0, showBorder = false, cssClass = '' }) => {
+const ClassIcon = ({ className: jobName, size = 28, tier = 0, showBorder = false, cssClass = '' }: any) => {
     const path = CLASS_PATHS[jobName] || CLASS_PATHS['모험가'];
     const color = TIER_COLORS[tier] ?? TIER_COLORS[0];
 

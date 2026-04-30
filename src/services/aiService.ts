@@ -15,7 +15,7 @@ import { isSmokeRuntime } from '../utils/runtimeMode';
 const callProxy = async (body, trackLabel = 'ai-call', timeoutMs = 9500) => {
     try {
         const token = await auth?.currentUser?.getIdToken?.();
-        const headers = {
+        const headers: Record<string, any> = {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         };
@@ -45,8 +45,8 @@ const callProxy = async (body, trackLabel = 'ai-call', timeoutMs = 9500) => {
 
 // --- AI SERVICE (v3.7) ---
 export const AI_SERVICE = {
-    getFallback: (type, data) => {
-        const templates = {
+    getFallback: (type: any, data: any) => {
+        const templates: Record<string, any> = {
             encounter: `⚠️ [${data.loc}]의 어둠 속에서 [${data.name}]이(가) 나타났습니다!`,
             victory:   `🎉 [${data.name}]에게 결정타를 날렸습니다! 승리!`,
             death:     `💠 [${data.player?.name || '당신'}]의 의식이 흘려집니다...`,
@@ -60,7 +60,7 @@ export const AI_SERVICE = {
         return templates[type] || '운명의 수레바퀴가 돈기 시작합니다.';
     },
 
-    generateEvent: async (loc, history: any[] = [], uid = 'anonymous', context: any = {}) => {
+    generateEvent: async (loc: any, history: any[] = [], uid = 'anonymous', context: any = {}) => {
         if (isSmokeRuntime()) {
             return pickFallbackEvent(loc, history, context);
         }
@@ -104,7 +104,7 @@ export const AI_SERVICE = {
         return pickFallbackEvent(loc, history, context);
     },
 
-    generateStory: async (type, data, uid = 'anonymous') => {
+    generateStory: async (type: any, data: any, uid: any = 'anonymous') => {
         if (isSmokeRuntime()) {
             return AI_SERVICE.getFallback(type, data);
         }
@@ -116,7 +116,7 @@ export const AI_SERVICE = {
         const compactHistory = summarizeHistory(data?.history);
 
         // Stage 1: 지원 타입 확장 맵핑 (bossPhase2, questComplete, ruinRecap)
-        const contextMap = {
+        const contextMap: Record<string, any> = {
             encounter:     `${data.loc}에서 ${data.name} 몬스터와 조우`,
             victory:       `${data.name} 처치 후 승리`,
             death:         `${data.player?.name || '용사'}의 전사 — ${data.loc}`,

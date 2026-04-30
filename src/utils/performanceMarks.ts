@@ -9,19 +9,19 @@ const getRegistry = () => {
     return window.__AETHERIA_PERF_REGISTRY__;
 };
 
-const getLatestEntry = (name, type) => {
+const getLatestEntry = (name: any, type: any) => {
     if (typeof performance === 'undefined') return null;
     const entries = performance.getEntriesByName(name, type);
     return entries.length > 0 ? entries[entries.length - 1] : null;
 };
 
-export const markPerf = (name) => {
+export const markPerf = (name: any) => {
     if (typeof performance === 'undefined') return null;
     performance.mark(name);
     return getLatestEntry(name, 'mark');
 };
 
-export const markPerfOnce = (name) => {
+export const markPerfOnce = (name: any) => {
     const registry = getRegistry();
     if (!registry) return null;
     if (registry.marks.has(name)) return getLatestEntry(name, 'mark');
@@ -29,7 +29,7 @@ export const markPerfOnce = (name) => {
     return markPerf(name);
 };
 
-export const measurePerf = (name, startMark, endMark) => {
+export const measurePerf = (name: any, startMark: any, endMark: any) => {
     if (typeof performance === 'undefined') return null;
     try {
         performance.measure(name, startMark, endMark);
@@ -39,7 +39,7 @@ export const measurePerf = (name, startMark, endMark) => {
     return getLatestEntry(name, 'measure');
 };
 
-export const measurePerfOnce = (name, startMark, endMark) => {
+export const measurePerfOnce = (name: any, startMark: any, endMark: any) => {
     const registry = getRegistry();
     if (!registry) return null;
     if (registry.measures.has(name)) return getLatestEntry(name, 'measure');
@@ -53,14 +53,14 @@ export const getPerfSnapshot = () => {
 
     const snapshot = {};
     performance.getEntriesByType('measure')
-        .filter((entry) => entry.name.startsWith('aetheria:'))
-        .forEach((entry) => {
+        .filter((entry: any) => entry.name.startsWith('aetheria:'))
+        .forEach((entry: any) => {
             snapshot[entry.name] = Number(entry.duration.toFixed(1));
         });
 
     performance.getEntriesByType('mark')
-        .filter((entry) => entry.name.startsWith('aetheria:'))
-        .forEach((entry) => {
+        .filter((entry: any) => entry.name.startsWith('aetheria:'))
+        .forEach((entry: any) => {
             snapshot[`${entry.name}:mark`] = Number(entry.startTime.toFixed(1));
         });
 

@@ -5,7 +5,7 @@ import { MSG } from '../../data/messages';
 /**
  * 현재 선택된 스킬 반환. 없으면 null.
  */
-export const getSelectedSkill = (player) => {
+export const getSelectedSkill = (player: any) => {
     const skills = getJobSkills(player);
     if (!skills.length) return null;
     const selected = Number.isInteger(player.skillLoadout?.selected) ? player.skillLoadout.selected : 0;
@@ -17,7 +17,7 @@ export const getSelectedSkill = (player) => {
  * 루트 아이템 중 장비 업그레이드 힌트 계산. 없으면 null.
  */
 export const getLootUpgradeHint = (equip: any = {}, lootItems: any[] = []) => {
-    const equipmentDrops = (lootItems || []).filter((item) => ['weapon', 'armor', 'shield'].includes(item?.type));
+    const equipmentDrops = (lootItems || []).filter((item: any) => ['weapon', 'armor', 'shield'].includes(item?.type));
     if (!equipmentDrops.length) return null;
 
     const currentProfile = getEquipmentProfile(equip);
@@ -25,7 +25,7 @@ export const getLootUpgradeHint = (equip: any = {}, lootItems: any[] = []) => {
     const currentDef = (equip.armor?.val || 0) + currentProfile.shieldDef;
 
     let bestHint = null;
-    equipmentDrops.forEach((item) => {
+    equipmentDrops.forEach((item: any) => {
         const nextEquip = getNextEquipmentState(equip, item);
         const nextProfile = getEquipmentProfile(nextEquip);
         const nextAtk = nextProfile.mainAttack + nextProfile.offhandAttack;
@@ -54,7 +54,7 @@ export const addCombatDigestLogs = ({
     addLog, enemyName, victoryResult,
     droppedItems = [], upgradeHint = null, traitHint = null,
     bossRewardHint = null, bossClearBonus = 0,
-}) => {
+}: any) => {
     const summaryParts = [
         MSG.COMBAT_DIGEST_KILL(enemyName),
         `EXP +${victoryResult.expGained || 0}`,

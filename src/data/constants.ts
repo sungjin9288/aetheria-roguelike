@@ -2,7 +2,7 @@ export const APP_ID = 'aetheria-rpg';
 // Vite env (test 환경에선 import.meta.env 부재 가능)
 const ENV: ImportMetaEnv = (typeof import.meta !== 'undefined' && import.meta.env) || ({} as ImportMetaEnv);
 // Admin UIDs — 환경변수에서 쉼표 구분으로 주입 (VITE_ADMIN_UIDS=uid1,uid2)
-export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map(s => s.trim()).filter(Boolean);
+export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map((s: any) => s.trim()).filter(Boolean);
 
 export const CONSTANTS: any = {
     DEFAULT_JOB: '모험가',

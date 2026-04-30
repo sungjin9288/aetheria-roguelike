@@ -7,7 +7,7 @@ export const runGuidanceAction = ({
     setGameState,
     setSideTab,
     onOpenArchive,
-}) => {
+}: any) => {
     if (!action) return;
 
     switch (action.kind) {

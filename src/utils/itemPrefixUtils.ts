@@ -2,12 +2,12 @@ import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { getItemStatText } from './equipmentUtils';
 
-const normalizeItemType = (type) => {
+const normalizeItemType = (type: any) => {
     if (type === 'shield') return 'armor';
     return type;
 };
 
-const supportsPrefixStat = (normalizedType, prefixStat) => {
+const supportsPrefixStat = (normalizedType: any, prefixStat: any) => {
     if (prefixStat === 'atk') return normalizedType === 'weapon';
     if (prefixStat === 'def') return normalizedType === 'armor';
     if (prefixStat === 'hp') return ['hp', 'mp'].includes(normalizedType);
@@ -15,20 +15,20 @@ const supportsPrefixStat = (normalizedType, prefixStat) => {
     return false;
 };
 
-const formatStatText = (item, normalizedType) => {
+const formatStatText = (item: any, normalizedType: any) => {
     if (normalizedType === 'weapon' || normalizedType === 'armor') return getItemStatText(item);
     if (normalizedType === 'hp') return `HP+${item.val}`;
     if (normalizedType === 'mp') return `MP+${item.val}`;
     return item.desc_stat || '';
 };
 
-const getPrefixCandidates = (item) => {
+const getPrefixCandidates = (item: any) => {
     const normalizedType = normalizeItemType(item?.type);
     const supportedTypes = ['weapon', 'armor', 'hp', 'mp'];
     if (!supportedTypes.includes(normalizedType)) return [];
     const prefixes = Array.isArray(DB.ITEMS?.prefixes) ? DB.ITEMS.prefixes : [];
 
-    return prefixes.filter((prefix) => {
+    return prefixes.filter((prefix: any) => {
         if (!prefix?.type) return false;
         const typeMatch = prefix.type === 'all' || prefix.type === normalizedType;
         if (!typeMatch) return false;
@@ -36,7 +36,7 @@ const getPrefixCandidates = (item) => {
     });
 };
 
-const applyPrefixStats = (item, prefix) => {
+const applyPrefixStats = (item: any, prefix: any) => {
     const next = { ...item };
     const normalizedType = normalizeItemType(next.type);
 
@@ -56,7 +56,7 @@ const applyPrefixStats = (item, prefix) => {
     return next;
 };
 
-export const applyItemPrefix = (item, options: any = {}) => {
+export const applyItemPrefix = (item: any, options: any = {}) => {
     if (!item || item.prefixed) return item;
 
     const chance = typeof options.chance === 'number' ? options.chance : BALANCE.ITEM_PREFIX_CHANCE;

@@ -56,17 +56,17 @@ export const useGameEngine = () => {
 
     // --- Shared Helpers ---
     const addLog = useCallback(
-        (type, text) => dispatch({ type: AT.ADD_LOG, payload: { type, text, id: `${Date.now()}_${Math.random()}` } }),
+        (type: any, text: any) => dispatch({ type: AT.ADD_LOG, payload: { type, text, id: `${Date.now()}_${Math.random()}` } }),
         []
     );
 
     const getFullStats = useCallback(
-        (targetPlayer = player) => calculateFullStats(targetPlayer ?? player),
+        (targetPlayer: any = player) => calculateFullStats(targetPlayer ?? player),
         [player]
     );
 
     const addStoryLog = useCallback(
-        async (type, data) => {
+        async (type: any, data: any) => {
             dispatch({ type: AT.SET_AI_THINKING, payload: true });
             const tempId = Date.now();
             dispatch({ type: AT.ADD_LOG, payload: { type: 'loading', text: '...', id: tempId } });
@@ -88,7 +88,7 @@ export const useGameEngine = () => {
                         maxMp: player.maxMp,
                         title: player.activeTitle || null,
                         relicCount: (player.relics || []).length,
-                        buildProfile: buildProfile.tags.map((tag) => tag.name).slice(0, 4)
+                        buildProfile: buildProfile.tags.map((tag: any) => tag.name).slice(0, 4)
                     }
                 }, uid);
 
@@ -114,18 +114,18 @@ export const useGameEngine = () => {
                 ...inventoryActions,
 
                 // UI State setters
-                setSideTab: (val) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
-                setGameState: (val) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
-                setShopItems: (val) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
-                setAiThinking: (val) => dispatch({ type: AT.SET_AI_THINKING, payload: val }),
-                setActiveTitle: (val) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
+                setSideTab: (val: any) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
+                setGameState: (val: any) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
+                setShopItems: (val: any) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
+                setAiThinking: (val: any) => dispatch({ type: AT.SET_AI_THINKING, payload: val }),
+                setActiveTitle: (val: any) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
                 dismissEvent: () => {
                     dispatch({ type: AT.SET_EVENT, payload: null });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 },
 
                 // Feature Actions
-                setQuickSlot: (index, item) => dispatch({ type: AT.SET_QUICK_SLOT, payload: { index, item } }),
+                setQuickSlot: (index: any, item: any) => dispatch({ type: AT.SET_QUICK_SLOT, payload: { index, item } }),
                 clearPostCombat: () => dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null }),
                 dismissOnboarding: () => dispatch({ type: AT.SET_ONBOARDING_DISMISSED }),
 
@@ -140,7 +140,7 @@ export const useGameEngine = () => {
         [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard]
     );
 
-    const handleCommand = useCallback((text) => {
+    const handleCommand = useCallback((text: any) => {
         const result = parseCommand(text, gameState, player, actions);
         if (typeof result === 'string') addLog('system', result);
     }, [gameState, player, actions, addLog]);

@@ -4,7 +4,7 @@ import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
 import { isSignatureItem } from '../data/signatureItems.js';
 
-const METER_THEME = {
+const METER_THEME: any = {
   hp: {
     border: 'border-rose-300/24',
     fill: 'bg-gradient-to-r from-rose-400/55 to-rose-300',
@@ -22,7 +22,7 @@ const METER_THEME = {
   },
 };
 
-const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dense = false, inline = false }) => {
+const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dense = false, inline = false }: any) => {
   const theme = METER_THEME[variant] || METER_THEME.hp;
   const safeMax = Math.max(1, max || 1);
   const safeValue = Math.max(0, value || 0);
@@ -62,7 +62,7 @@ const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dens
   );
 };
 
-const EnemyStatus = ({ enemy, mobile = false, compact = false }) => {
+const EnemyStatus = ({ enemy, mobile = false, compact = false }: any) => {
   if (!enemy) return null;
 
   const safeMax = Math.max(1, enemy.maxHp || 1);
@@ -106,7 +106,7 @@ const StatusBar = ({
   isMuted = false,
   onToggleMute = null,
   onOpenEquipment = null,
-}) => {
+}: any) => {
   if (!player?.name) return null;
   const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
   // 장착중인 signature 개수 — sticky HUD에 ✦N 칩으로 상시 노출
@@ -114,7 +114,7 @@ const StatusBar = ({
     player?.equip?.weapon,
     player?.equip?.armor,
     player?.equip?.offhand,
-  ].filter((item) => item && isSignatureItem(item)).length;
+  ].filter((item: any) => item && isSignatureItem(item)).length;
   return (
     <section
       data-testid="persistent-status-bar"

@@ -5,7 +5,7 @@ export function registerServiceWorker() {
   if (Capacitor.isNativePlatform()) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
+    navigator.serviceWorker.register('/sw.js').catch((error: any) => {
       console.warn('[PWA] Service worker registration failed:', error);
     });
   });

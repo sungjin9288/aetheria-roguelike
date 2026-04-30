@@ -5,7 +5,7 @@ import { DB } from '../data/db';
 import { formatRewardParts, getAchievementCurrentValue, isAchievementUnlocked } from '../utils/gameUtils';
 import SignalBadge from './SignalBadge';
 
-const THEME_BY_TARGET = {
+const THEME_BY_TARGET: any = {
     kills: { icon: Swords, titleClass: 'text-rose-100', iconTone: 'text-rose-200', card: 'border-rose-300/18 bg-rose-400/10' },
     bossKills: { icon: Trophy, titleClass: 'text-[#e3dcff]', iconTone: 'text-[#e3dcff]', card: 'border-[#9a8ac0]/24 bg-[#9a8ac0]/10' },
     deaths: { icon: Skull, titleClass: 'text-slate-200', iconTone: 'text-slate-300', card: 'border-white/8 bg-white/[0.04]' },
@@ -13,7 +13,7 @@ const THEME_BY_TARGET = {
     level: { icon: Star, titleClass: 'text-[#dff7f5]', iconTone: 'text-[#dff7f5]', card: 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10' },
 };
 
-const getTheme = (achievement) => {
+const getTheme = (achievement: any) => {
     const base = THEME_BY_TARGET[achievement?.target] || THEME_BY_TARGET.kills;
     if (achievement?.goal >= 100) {
         return { ...base, icon: Crown, titleClass: 'text-[#f6e7c8]', iconTone: 'text-[#f6e7c8]', card: 'border-[#d5b180]/22 bg-[#d5b180]/10' };
@@ -24,11 +24,11 @@ const getTheme = (achievement) => {
     return base;
 };
 
-const AchievementPanel = ({ player, actions, compact = false }) => {
+const AchievementPanel = ({ player, actions, compact = false }: any) => {
     const [showAllAchievements, setShowAllAchievements] = useState(false);
     const achievements = useMemo(() => {
         const claimed = player?.stats?.claimedAchievements || [];
-        return (DB.ACHIEVEMENTS || []).map((achievement) => {
+        return (DB.ACHIEVEMENTS || []).map((achievement: any) => {
             const current = getAchievementCurrentValue(achievement, player);
             return {
                 ...achievement,
@@ -41,24 +41,24 @@ const AchievementPanel = ({ player, actions, compact = false }) => {
         });
     }, [player]);
 
-    const unlocked = achievements.filter((a) => a.unlocked);
-    const locked = achievements.filter((a) => !a.unlocked);
-    const claimableCount = unlocked.filter((a) => !a.claimed).length;
+    const unlocked = achievements.filter((a: any) => a.unlocked);
+    const locked = achievements.filter((a: any) => !a.unlocked);
+    const claimableCount = unlocked.filter((a: any) => !a.claimed).length;
     const completionRatio = (unlocked.length / Math.max(1, achievements.length)) * 100;
     const summaryAchievements = useMemo(() => {
-        const rankedLocked = [...locked].sort((a, b) => (
+        const rankedLocked = [...locked].sort((a: any, b: any) => (
             (b.current / Math.max(1, b.goal)) - (a.current / Math.max(1, a.goal)) || a.goal - b.goal
         ));
         return [
-            ...unlocked.filter((entry) => !entry.claimed),
+            ...unlocked.filter((entry: any) => !entry.claimed),
             ...rankedLocked,
-            ...unlocked.filter((entry) => entry.claimed),
+            ...unlocked.filter((entry: any) => entry.claimed),
         ].slice(0, 3);
     }, [locked, unlocked]);
     const hiddenAchievementCount = Math.max(0, achievements.length - summaryAchievements.length);
     const showSummaryView = compact && !showAllAchievements;
 
-    const handleClaim = (ach) => {
+    const handleClaim = (ach: any) => {
         if (ach.claimed) return;
         if (actions?.claimAchievement) actions.claimAchievement(ach.id);
     };
@@ -81,7 +81,7 @@ const AchievementPanel = ({ player, actions, compact = false }) => {
                         {compact && (hiddenAchievementCount > 0 || showAllAchievements) && (
                             <button
                                 type="button"
-                                onClick={() => setShowAllAchievements((prev) => !prev)}
+                                onClick={() => setShowAllAchievements((prev: any) => !prev)}
                                 className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
                             >
                                 {showAllAchievements ? '요약 보기' : '기록 더 보기'}
@@ -101,7 +101,7 @@ const AchievementPanel = ({ player, actions, compact = false }) => {
 
             {showSummaryView ? (
                 <div className="space-y-2">
-                    {summaryAchievements.map((a, i) => {
+                    {summaryAchievements.map((a: any, i: any) => {
                         const Icon = a.icon;
                         return (
                             <Motion.div
@@ -147,7 +147,7 @@ const AchievementPanel = ({ player, actions, compact = false }) => {
                 </div>
             ) : unlocked.length > 0 && (
                 <div className="space-y-2">
-                    {unlocked.map((a, i) => {
+                    {unlocked.map((a: any, i: any) => {
                         const Icon = a.icon;
                         return (
                             <Motion.div
@@ -201,7 +201,7 @@ const AchievementPanel = ({ player, actions, compact = false }) => {
                         Locked Records
                     </div>
                     <div className="mt-3 space-y-2">
-                        {locked.map((a) => {
+                        {locked.map((a: any) => {
                             const Icon = a.icon;
                             return (
                                 <div key={a.id} className="flex items-center gap-3 rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-3 py-2.5 opacity-72">

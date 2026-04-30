@@ -65,8 +65,8 @@ function App() {
         && !engine.postCombatResult
         && engine.gameState !== GS.ASCENSION
     );
-    const handleQuickSlotUse = (item, index) => {
-        if (!engine.player.inv.some((entry) => entry.id === item?.id)) {
+    const handleQuickSlotUse = (item: any, index: any) => {
+        if (!engine.player.inv.some((entry: any) => entry.id === item?.id)) {
             if (typeof index === 'number') engine.actions.setQuickSlot?.(index, null);
             return;
         }

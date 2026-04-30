@@ -5,7 +5,7 @@ import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
 import { GS } from '../reducers/gameStates';
 
-const LOG_STYLES = {
+const LOG_STYLES: any = {
     combat: {
         text: 'text-rose-100 font-semibold',
         bg: 'bg-[linear-gradient(90deg,rgba(148,73,103,0.20)_0%,rgba(38,16,26,0.08)_100%)] border-l-2 border-rose-300/45 pl-2.5',
@@ -58,8 +58,8 @@ const LOG_STYLES = {
     },
 };
 
-const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
-const MOBILE_LOG_BADGES = {
+const DEFAULT_STYLE: any = { text: 'text-slate-300', bg: 'transparent', icon: null };
+const MOBILE_LOG_BADGES: any = {
     combat: { label: 'COMBAT', className: 'border-rose-300/24 bg-rose-400/10 text-rose-100/84' },
     critical: { label: 'CRIT', className: 'border-red-300/28 bg-red-500/12 text-red-100/88' },
     story: { label: 'AI', className: 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]/84' },
@@ -100,7 +100,7 @@ const TerminalView = ({
 
     // Keyboard shortcuts
     useEffect(() => {
-        const handleKeyDown = (e) => {
+        const handleKeyDown = (e: any) => {
             // Skip if typing in input
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -145,7 +145,7 @@ const TerminalView = ({
     const hasAnyQuickSlot = Array.isArray(quickSlots) && quickSlots.some(Boolean);
     const shouldCompactMobileLogs = !logExpanded && !isCombat;
     const displayLogs = isCombat && !logExpanded
-        ? logs.filter(l => COMBAT_LOG_TYPES.has(l.type)).slice(-SUMMARY_LOG_COUNT)
+        ? logs.filter((l: any) => COMBAT_LOG_TYPES.has(l.type)).slice(-SUMMARY_LOG_COUNT)
         : shouldCompactMobileLogs
             ? logs.slice(-compactMobileLogCount)
             : logs;
@@ -177,7 +177,7 @@ const TerminalView = ({
                     input={inputValue}
                     gameState={gameState}
                     player={player}
-                    onSelect={(cmd) => {
+                    onSelect={(cmd: any) => {
                         setInputValue(cmd);
                         onCommand?.(cmd);
                         setInputValue('');
@@ -190,10 +190,10 @@ const TerminalView = ({
                 ref={inputRef}
                 type="text"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e: any) => setInputValue(e.target.value)}
                 className="w-full border-none bg-transparent font-fira text-[#eff6f7] text-sm outline-none transition-all placeholder:text-slate-500"
                 placeholder="ENTER COMMAND..."
-                onKeyDown={(e) => {
+                onKeyDown={(e: any) => {
                     if (e.key === 'Enter') {
                         if (inputValue.trim()) {
                             onCommand?.(inputValue);
@@ -229,7 +229,7 @@ const TerminalView = ({
                         </div>
                         {showExpandToggle && (
                             <button
-                                onClick={() => setLogExpanded((open) => !open)}
+                                onClick={() => setLogExpanded((open: any) => !open)}
                                 className="shrink-0 rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/72"
                             >
                                 {isCombat
@@ -271,7 +271,7 @@ const TerminalView = ({
                     )}
 
                     <AnimatePresence initial={false}>
-                        {displayLogs.map((log) => {
+                        {displayLogs.map((log: any) => {
                             const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
                             const badge = MOBILE_LOG_BADGES[log.type];
                             const IconComp = style.icon;
@@ -320,7 +320,7 @@ const TerminalView = ({
                         {showQuickSlots && (
                             <QuickSlot
                                 slots={quickSlots}
-                                onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
+                                onUse={(item: any, idx: any) => onQuickSlotUse?.(item, idx)}
                                 gameState={gameState}
                             />
                         )}

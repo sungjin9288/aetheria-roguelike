@@ -7,8 +7,8 @@ import { getSynthesisGroups, validateSynthesis } from '../../utils/synthesisUtil
 import { getItemRarity } from '../../utils/gameUtils';
 import FocusPanelHeader from '../FocusPanelHeader';
 
-const TYPE_LABEL = { weapon: '무기', armor: '방어구', shield: '방패' };
-const RARITY_LABEL = { common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설' };
+const TYPE_LABEL: any = { weapon: '무기', armor: '방어구', shield: '방패' };
+const RARITY_LABEL: any = { common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설' };
 
 /**
  * CraftingPanel — 제작/합성 패널 (탭 전환)
@@ -20,20 +20,20 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
 
   // ──── 제작 모드 ────
   const recipes = DB.ITEMS.recipes || [];
-  const getItemCount = (name) => player.inv.filter((item) => item.name === name).length;
+  const getItemCount = (name: any) => player.inv.filter((item: any) => item.name === name).length;
 
   // ──── 합성 모드 ────
   const synthGroups = useMemo(() => getSynthesisGroups(player.inv), [player.inv]);
 
-  const toggleSlot = (itemId) => {
-    setSelectedIds((prev) => {
-      if (prev.includes(itemId)) return prev.filter((id) => id !== itemId);
+  const toggleSlot = (itemId: any) => {
+    setSelectedIds((prev: any) => {
+      if (prev.includes(itemId)) return prev.filter((id: any) => id !== itemId);
       if (prev.length >= BALANCE.SYNTHESIS_INPUT_COUNT) return prev;
       return [...prev, itemId];
     });
   };
 
-  const selectedItems = selectedIds.map((id) => player.inv.find((i) => i.id === id)).filter(Boolean);
+  const selectedItems = selectedIds.map((id: any) => player.inv.find((i: any) => i.id === id)).filter(Boolean);
   const validation = selectedItems.length === BALANCE.SYNTHESIS_INPUT_COUNT
     ? validateSynthesis(selectedItems, player.gold)
     : null;
@@ -50,9 +50,9 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
         <div className="rounded-lg border border-dashed border-orange-500/20 bg-cyber-dark/30 px-4 py-12 text-center text-sm font-rajdhani tracking-widest text-orange-400/40">
           NO RECIPES AVAILABLE
         </div>
-      ) : recipes.map((recipe) => {
+      ) : recipes.map((recipe: any) => {
         const hasGold = player.gold >= recipe.gold;
-        const hasMaterials = recipe.inputs.every((input) => getItemCount(input.name) >= input.qty);
+        const hasMaterials = recipe.inputs.every((input: any) => getItemCount(input.name) >= input.qty);
         const canCraft = hasGold && hasMaterials;
         return (
           <div key={recipe.id} className="bg-cyber-dark/60 px-3 py-2.5 rounded-md border border-orange-500/20 flex flex-col gap-2 hover:border-orange-500/40 transition-colors">
@@ -71,7 +71,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
               </Motion.button>
             </div>
             <div className="flex flex-wrap gap-1.5 text-[11px] font-fira">
-              {recipe.inputs.map((input) => {
+              {recipe.inputs.map((input: any) => {
                 const owned = getItemCount(input.name);
                 const enough = owned >= input.qty;
                 return (
@@ -97,7 +97,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
             {BALANCE.SYNTHESIS_INPUT_COUNT}개 동일 타입 · 동일 티어 장비 선택
           </div>
           <div className="flex gap-2 justify-center mb-3">
-            {Array.from({ length: BALANCE.SYNTHESIS_INPUT_COUNT }).map((_, i) => {
+            {Array.from({ length: BALANCE.SYNTHESIS_INPUT_COUNT }).map((_: any, i: any) => {
               const item = selectedItems[i];
               return (
                 <Motion.button
@@ -143,7 +143,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
               {/* 보호 토글 */}
               {validation.successRate < 1 && (
                 <button
-                  onClick={() => setUseProtect((p) => !p)}
+                  onClick={() => setUseProtect((p: any) => !p)}
                   className={`flex items-center gap-1.5 w-full py-2 px-3 rounded border text-[10px] transition-all
                     ${useProtect
                       ? 'border-amber-400/50 bg-amber-950/30 text-amber-300'
@@ -160,7 +160,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
                 <div className="mt-2 pt-2 border-t border-purple-500/10">
                   <div className="text-[10px] text-purple-400/60 mb-1.5">T{validation.tier + 1} 결과 후보</div>
                   <div className="flex flex-wrap gap-1.5">
-                    {outputs.slice(0, 6).map((o) => (
+                    {outputs.slice(0, 6).map((o: any) => (
                       <span
                         key={o.name}
                         className="px-2 py-0.5 rounded text-[9px] border"
@@ -197,14 +197,14 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
           <div className="rounded-lg border border-dashed border-purple-500/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-rajdhani tracking-widest text-purple-400/40">
             NO SYNTHESIZABLE SETS
           </div>
-        ) : synthGroups.map((group) => (
+        ) : synthGroups.map((group: any) => (
           <div key={`${group.type}_${group.tier}`} className="bg-cyber-dark/60 p-3 rounded-md border border-purple-500/15">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs font-bold font-rajdhani text-purple-300">{TYPE_LABEL[group.type]} T{group.tier}</span>
               <span className="text-[10px] font-fira text-purple-400/50">{group.count}개 보유</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {group.items.map((item) => {
+              {group.items.map((item: any) => {
                 const isSelected = selectedIds.includes(item.id);
                 const rarity = getItemRarity(item);
                 return (
@@ -251,7 +251,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
             {[
               { id: 'craft', label: 'CRAFT' },
               { id: 'synth', label: 'SYNTH' },
-            ].map((tab) => (
+            ].map((tab: any) => (
               <button
                 key={tab.id}
                 onClick={() => { setMode(tab.id); setSelectedIds([]); }}

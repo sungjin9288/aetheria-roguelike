@@ -6,13 +6,13 @@ import { getAdventureGuidance, getExplorationForecast, getQuestTracker } from '.
 import { runGuidanceAction } from '../../utils/adventureGuideActions';
 import { calcPerformanceScore, getDifficultyMults } from '../../systems/DifficultyManager';
 
-const DIFF_BADGE = {
+const DIFF_BADGE: any = {
     '압도': { label: '⚔️ 압도 중', cls: 'border-amber-500/40 bg-amber-950/40 text-amber-400' },
     '위기': { label: '🛡️ 위기', cls: 'border-red-500/40 bg-red-950/40 text-red-400' },
     '열세': { label: '🛡️ 열세', cls: 'border-orange-500/40 bg-orange-950/40 text-orange-400' },
 };
 
-const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab, mobile = false, onMobileOpenDetails }) => {
+const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab, mobile = false, onMobileOpenDetails }: any) => {
     const [detailsOpen, setDetailsOpen] = useState(!mobile);
     const mapData = runtime?.mapData;
     const diffBadge = useMemo(() => {
@@ -33,7 +33,7 @@ const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab,
         [player]
     );
 
-    const handleGuidanceAction = (action) => runGuidanceAction({
+    const handleGuidanceAction = (action: any) => runGuidanceAction({
         action,
         actions,
         setGameState,
@@ -74,7 +74,7 @@ const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab,
                     </SignalBadge>
                     {mobile && (
                         <button
-                            onClick={() => setDetailsOpen((open) => !open)}
+                            onClick={() => setDetailsOpen((open: any) => !open)}
                             className="rounded border border-cyber-blue/15 bg-cyber-black/55 px-2 py-1 text-cyber-blue/70"
                             aria-label={detailsOpen ? '목표 상세 닫기' : '목표 상세 열기'}
                         >
@@ -175,7 +175,7 @@ const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab,
                             </div>
                             <div className="mt-1 text-[11px] font-fira text-cyber-blue/65">{forecast.description}</div>
                             <div className="mt-2 flex flex-wrap gap-1.5">
-                                {forecast.chips.map((chip) => (
+                                {forecast.chips.map((chip: any) => (
                                     <SignalBadge key={`${chip.label}_${chip.value}`} tone="neutral" size="sm">
                                         {chip.label} {chip.value}
                                     </SignalBadge>

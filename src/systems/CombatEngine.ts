@@ -20,18 +20,18 @@ export const CombatEngine = {
     DEFAULT_META: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
     DEFAULT_COMBAT_FLAGS: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
 
-    resolveEnemyBaseName(enemy) {
+    resolveEnemyBaseName(enemy: any) {
         return _resolveEnemyBaseName(enemy);
     },
 
-    getElementMultiplier(elem, enemy) {
+    getElementMultiplier(elem: any, enemy: any) {
         if (!elem || elem === 'physical' || elem === 'none') return 1;
         if (enemy?.weakness && enemy.weakness === elem) return BALANCE.ELEMENT_WEAK_MULT;
         if (enemy?.resistance && enemy.resistance === elem) return BALANCE.ELEMENT_RESIST_MULT;
         return 1;
     },
 
-    calculateDamage(stats, options: any = {}) {
+    calculateDamage(stats: any, options: any = {}) {
         const {
             mult = 1,
             guarding = false,
@@ -47,12 +47,12 @@ export const CombatEngine = {
         };
     },
 
-    getCombatFlags(player) {
+    getCombatFlags(player: any) {
         return { ...this.DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
     },
 
-    getEffectiveMaxMp(player, relics: any[] = []) {
-        const rmp = 1 + relics.reduce((acc, relic) => {
+    getEffectiveMaxMp(player: any, relics: any[] = []) {
+        const rmp = 1 + relics.reduce((acc: any, relic: any) => {
             if (relic.effect === 'mp_mult') return acc + relic.val;
             if (relic.effect === 'omega') return acc + relic.val;
             return acc;
@@ -60,8 +60,8 @@ export const CombatEngine = {
         return Math.floor((player?.maxMp || 50) * rmp);
     },
 
-    applyCritMpRestore(player, relics: any[] = [], logs: any[] = []) {
-        const critMpRelic = relics.find((relic) => relic.effect === 'crit_mp_regen');
+    applyCritMpRestore(player: any, relics: any[] = [], logs: any[] = []) {
+        const critMpRelic = relics.find((relic: any) => relic.effect === 'crit_mp_regen');
         if (!critMpRelic) return player;
 
         const nextMp = Math.min(this.getEffectiveMaxMp(player, relics), (player.mp || 0) + critMpRelic.val);
@@ -71,27 +71,27 @@ export const CombatEngine = {
         return { ...player, mp: nextMp };
     },
 
-    applyFatalProtection(player, relics: any[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
+    applyFatalProtection(player: any, relics: any[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
 
         if (nextHp <= 0) {
-            const deathSaveRelic = relics.find((relic) => relic.effect === 'death_save');
+            const deathSaveRelic = relics.find((relic: any) => relic.effect === 'death_save');
             // 시너지: 절대 불사 (absolute_immortal) — reviveCount 2회 지원
-            const absoluteImmortalSyn = activeSynergies.find(s => s.bonus.reviveCount);
+            const absoluteImmortalSyn = activeSynergies.find((s: any) => s.bonus.reviveCount);
             const maxRevives = absoluteImmortalSyn ? (absoluteImmortalSyn.bonus.reviveCount || 1) : 1;
             const reviveUsedCount = flags.deathSaveUsedCount || 0;
 
             if (deathSaveRelic && reviveUsedCount < maxRevives) {
                 // 시너지: 불멸의 전사/절대 불사 (reviveHeal) — 부활 시 HP 회복량 증가
-                const reviveHealSyn = activeSynergies.find(s => s.bonus.reviveHeal);
+                const reviveHealSyn = activeSynergies.find((s: any) => s.bonus.reviveHeal);
                 nextHp = reviveHealSyn
                     ? Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * reviveHealSyn.bonus.reviveHeal)
                     : 1;
                 flags.deathSaveUsed = true;
                 flags.deathSaveUsedCount = reviveUsedCount + 1;
                 // 시너지: 난공불락 (healOnSave) — 부활 시 추가 HP 회복
-                const healOnSaveSyn = activeSynergies.find(s => s.bonus.healOnSave);
+                const healOnSaveSyn = activeSynergies.find((s: any) => s.bonus.healOnSave);
                 if (healOnSaveSyn) {
                     const bonus = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healOnSaveSyn.bonus.healOnSave);
                     nextHp = Math.min(player.maxHp || BALANCE.DEFAULT_MAX_HP, nextHp + bonus);
@@ -100,7 +100,7 @@ export const CombatEngine = {
                 const reviveMsg = reviveUsedCount > 0 ? `[절대 불사] ${reviveUsedCount + 1}회 부활!` : '[불사의 의지] 치명상을 버텼습니다!';
                 logs.push({ type: 'event', text: reviveMsg });
             } else {
-                const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
+                const voidHeartRelic = relics.find((relic: any) => relic.effect === 'void_heart');
                 if (voidHeartRelic && !flags.voidHeartUsed) {
                     nextHp = 1;
                     flags.voidHeartUsed = true;
@@ -121,7 +121,7 @@ export const CombatEngine = {
      * 스킬 effect 값을 적 오브젝트에 상태이상으로 적용합니다.
      * blind / fear / curse / taunt / stun / freeze / poison / burn / bleed 처리.
      */
-    applyStatusEffectToEnemy(enemy, effect) {
+    applyStatusEffectToEnemy(enemy: any, effect: any) {
         if (!effect) return enemy;
         switch (effect) {
             case 'blind':
@@ -153,11 +153,11 @@ export const CombatEngine = {
      * 적의 상태이상 틱을 처리합니다. 매 적 행동 전에 호출하세요.
      * DoT 피해, 상태 턴 감소, 만료 처리를 수행합니다.
      */
-    tickEnemyStatus(enemy, logs: any[] = [], curseAmpMult = 1, synergyDotMult = 1) {
+    tickEnemyStatus(enemy: any, logs: any[] = [], curseAmpMult = 1, synergyDotMult = 1) {
         let updated = { ...enemy };
 
         // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
-        (updated.dots || []).forEach(dot => {
+        (updated.dots || []).forEach((dot: any) => {
             const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * BALANCE.STATUS_DOT_RATIO * synergyDotMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
             const dotKor = dot === 'burn' ? '화상' : dot === 'poison' ? '독' : '출혈';
@@ -207,14 +207,14 @@ export const CombatEngine = {
         return { updatedEnemy: updated, logs };
     },
 
-    tickCombatState(player) {
+    tickCombatState(player: any) {
         const logs = [];
         const updated = { ...player };
         const relics = updated.relics || [];
         const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const nextCooldowns = { ...(loadout.cooldowns || {}) };
 
-        Object.keys(nextCooldowns).forEach((key) => {
+        Object.keys(nextCooldowns).forEach((key: any) => {
             if (nextCooldowns[key] > 0) nextCooldowns[key] -= 1;
         });
 
@@ -240,13 +240,13 @@ export const CombatEngine = {
 
         // === 상태이상 DoT 처리 (poison / burn) ===
         const DOT_STATUSES = ['poison', 'burn'];
-        updated.status.filter(s => DOT_STATUSES.includes(s)).forEach(s => {
+        updated.status.filter((s: any) => DOT_STATUSES.includes(s)).forEach((s: any) => {
             const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * BALANCE.STATUS_DOT_RATIO));
             updated.hp = Math.max(1, (updated.hp ?? 1) - dmg);
             logs.push({ type: 'warning', text: MSG.STATUS_DOT(s, dmg) });
         });
 
-        const mpRegenRelic = relics.find((relic) => relic.effect === 'mp_regen_turn');
+        const mpRegenRelic = relics.find((relic: any) => relic.effect === 'mp_regen_turn');
         if (mpRegenRelic) {
             const nextMp = Math.min(this.getEffectiveMaxMp(updated, relics), (updated.mp || 0) + mpRegenRelic.val);
             if (nextMp > (updated.mp || 0)) {
@@ -256,7 +256,7 @@ export const CombatEngine = {
         }
 
         // 유물: 대지의 심장 (regen) — 매 턴 최대 HP의 5% 회복
-        const regenRelic = relics.find((relic) => relic.effect === 'regen');
+        const regenRelic = relics.find((relic: any) => relic.effect === 'regen');
         if (regenRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (regenRelic.val || 0.05)));
             updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
@@ -264,7 +264,7 @@ export const CombatEngine = {
         }
 
         // 시너지: 영원의 생명 (healPerTurn) — 매 턴 4% HP 재생
-        const healPerTurnSyn = getActiveRelicSynergies(relics).find(s => s.bonus.healPerTurn);
+        const healPerTurnSyn = getActiveRelicSynergies(relics).find((s: any) => s.bonus.healPerTurn);
         if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * healPerTurnSyn.bonus.healPerTurn));
             updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
@@ -272,18 +272,18 @@ export const CombatEngine = {
         }
 
         // 유물: 시간의 파편 (cd_minus) — 매 턴 모든 스킬 쿨타임 추가 -1
-        const cdMinusRelic = relics.find((relic) => relic.effect === 'cd_minus');
+        const cdMinusRelic = relics.find((relic: any) => relic.effect === 'cd_minus');
         if (cdMinusRelic) {
             const cds = { ...(updated.skillLoadout?.cooldowns || {}) };
             let reduced = false;
-            Object.keys(cds).forEach((k) => { if (cds[k] > 0) { cds[k] = Math.max(0, cds[k] - 1); reduced = true; } });
+            Object.keys(cds).forEach((k: any) => { if (cds[k] > 0) { cds[k] = Math.max(0, cds[k] - 1); reduced = true; } });
             if (reduced) updated.skillLoadout = { ...(updated.skillLoadout || {}), cooldowns: cds };
         }
 
         return { updatedPlayer: updated, logs };
     },
 
-    attack(player, enemy, stats) {
+    attack(player: any, enemy: any, stats: any) {
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
         const logs = [];
@@ -291,7 +291,7 @@ export const CombatEngine = {
         const flags = this.getCombatFlags(player);
 
         // 유물: 방어 무시 (armor_pen)
-        const apRelic = relics.find(r => r.effect === 'armor_pen');
+        const apRelic = relics.find((r: any) => r.effect === 'armor_pen');
         const effectiveDef = apRelic ? Math.floor((stats.def || 0) * (1 - apRelic.val)) : (stats.def || 0);
         const statsForAtk = apRelic ? { ...stats, def: effectiveDef } : stats;
 
@@ -302,22 +302,22 @@ export const CombatEngine = {
         });
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
-        const critDmgRelic = relics.find(r => r.effect === 'crit_dmg');
+        const critDmgRelic = relics.find((r: any) => r.effect === 'crit_dmg');
         const baseDmg = (isCrit && critDmgRelic) ? Math.floor(rawBaseDmg * (critDmgRelic.val || 1)) : rawBaseDmg;
 
         // 유물: 연격 (double_strike) — 두 번째 타격 추가
-        const dsRelic = relics.find(r => r.effect === 'double_strike');
+        const dsRelic = relics.find((r: any) => r.effect === 'double_strike');
         const secondHit = dsRelic ? Math.floor(baseDmg * dsRelic.val) : 0;
         const damage = baseDmg + secondHit;
 
         // 유물: 처형자의 날 (execute_bonus) — 적 HP 25% 미만 시 추가 피해
-        const exRelic = relics.find(r => r.effect === 'execute_bonus');
+        const exRelic = relics.find((r: any) => r.effect === 'execute_bonus');
         const executeTriggered = Boolean(exRelic && enemy.hp / (enemy.maxHp || 1) < exRelic.val.threshold);
         let finalDamage = executeTriggered
             ? Math.floor(damage * (1 + exRelic.val.mult))
             : damage;
 
-        const comboRelic = relics.find((relic) => relic.effect === 'combo_stack');
+        const comboRelic = relics.find((relic: any) => relic.effect === 'combo_stack');
         let comboTriggered = false;
         if (comboRelic) {
             if ((flags.comboCount || 0) >= comboRelic.val.stack) {
@@ -329,7 +329,7 @@ export const CombatEngine = {
             }
         }
 
-        const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
+        const voidHeartRelic = relics.find((relic: any) => relic.effect === 'void_heart');
         let voidHeartTriggered = false;
         if (voidHeartRelic && flags.voidHeartArmed) {
             finalDamage = Math.floor(finalDamage * voidHeartRelic.val.dmg_mult);
@@ -338,7 +338,7 @@ export const CombatEngine = {
         }
 
         // 유물: 예언의 돌판 (execute_atk) — 보스 HP 25% 이하 시 ATK 2배
-        const executeAtkRelic = relics.find((r) => r.effect === 'execute_atk');
+        const executeAtkRelic = relics.find((r: any) => r.effect === 'execute_atk');
         let executeAtkTriggered = false;
         if (executeAtkRelic && enemy.isBoss && enemy.hp / Math.max(1, enemy.maxHp || 1) < (executeAtkRelic.threshold || 0.25)) {
             finalDamage = Math.floor(finalDamage * (executeAtkRelic.val || 2.0));
@@ -346,7 +346,7 @@ export const CombatEngine = {
         }
 
         // 유물: 공허의 메아리 (echo_atk) — 스킬 사용 후 다음 일반 공격 피해 강화
-        const echoAtkRelic = relics.find((r) => r.effect === 'echo_atk');
+        const echoAtkRelic = relics.find((r: any) => r.effect === 'echo_atk');
         let echoTriggered = false;
         if (echoAtkRelic && flags.echoArmed) {
             finalDamage = Math.floor(finalDamage * (echoAtkRelic.val || 1.8));
@@ -355,7 +355,7 @@ export const CombatEngine = {
         }
 
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
-        const lowHpDmgRelic = relics.find(r => r.effect === 'low_hp_dmg');
+        const lowHpDmgRelic = relics.find((r: any) => r.effect === 'low_hp_dmg');
         if (lowHpDmgRelic) {
             const hpRatio = player.hp / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP);
             if (hpRatio < (lowHpDmgRelic.threshold || 0.4)) {
@@ -379,7 +379,7 @@ export const CombatEngine = {
         }
 
         // 시너지: 흡혈 군주 (vampire_lord) — 일반 공격 흡혈
-        const vampireSyn = (stats.activeSynergies || []).find(s => s.bonus.lifeSteal);
+        const vampireSyn = (stats.activeSynergies || []).find((s: any) => s.bonus.lifeSteal);
         if (vampireSyn) {
             const steal = Math.floor(finalDamage * vampireSyn.bonus.lifeSteal);
             if (steal > 0) {
@@ -411,7 +411,7 @@ export const CombatEngine = {
         };
     },
 
-    performSkill(player, enemy, stats, skill) {
+    performSkill(player: any, enemy: any, stats: any, skill: any) {
         if (!skill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
@@ -422,7 +422,7 @@ export const CombatEngine = {
             const classData = CLASSES[player.job];
             const branches = classData?.skillBranches?.[skill.name];
             if (branches) {
-                const branch = branches.find(b => b.choice === skillChoiceKey);
+                const branch = branches.find((b: any) => b.choice === skillChoiceKey);
                 if (branch?.override) {
                     skill = { ...skill, ...branch.override };
                 }
@@ -460,7 +460,7 @@ export const CombatEngine = {
         }
 
         // 유물: 주문 메아리 (free_skill) — 15% 확률 MP 무료
-        const freeSkillRelic = relics.find(r => r.effect === 'free_skill');
+        const freeSkillRelic = relics.find((r: any) => r.effect === 'free_skill');
         const actualMpCost = (freeSkillRelic && Math.random() < freeSkillRelic.val) ? 0 : mpCost;
 
         const skillElem = skill.type || stats.elem;
@@ -472,20 +472,20 @@ export const CombatEngine = {
         });
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
-        const critDmgRelicSkill = relics.find(r => r.effect === 'crit_dmg');
+        const critDmgRelicSkill = relics.find((r: any) => r.effect === 'crit_dmg');
         const damage = (isCrit && critDmgRelicSkill) ? Math.floor(rawSkillDmg * (critDmgRelicSkill.val || 1)) : rawSkillDmg;
 
-        const dotRelic = relics.find((relic) => relic.effect === 'dot_mult');
+        const dotRelic = relics.find((relic: any) => relic.effect === 'dot_mult');
         const dotMult = dotRelic ? dotRelic.val : 1;
         const extraDamage = ['burn', 'poison', 'bleed'].includes(skill.effect)
             ? Math.floor(damage * 0.2 * dotMult)
             : 0;
 
         // 유물: 정신 연소 (skill_mult) — 스킬 피해 70% 증가
-        const smRelic = relics.find(r => r.effect === 'skill_mult');
+        const smRelic = relics.find((r: any) => r.effect === 'skill_mult');
         const smMult = smRelic ? (1 + smRelic.val) : 1;
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
-        const lowHpDmgRelicSkill = relics.find(r => r.effect === 'low_hp_dmg');
+        const lowHpDmgRelicSkill = relics.find((r: any) => r.effect === 'low_hp_dmg');
         const lowHpMultSkill = (lowHpDmgRelicSkill && player.hp / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP) < (lowHpDmgRelicSkill.threshold || 0.4))
             ? (lowHpDmgRelicSkill.val || 1.4) : 1;
         const totalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
@@ -517,7 +517,7 @@ export const CombatEngine = {
         }
         const updatedEnemy = postEffectEnemy;
 
-        const updatedPlayer = {
+        const updatedPlayer: Record<string, any> = {
             ...player,
             mp: player.mp - actualMpCost,
             skillLoadout: { selected: loadout.selected || 0, cooldowns: { ...cooldowns } },
@@ -529,7 +529,7 @@ export const CombatEngine = {
         updatedPlayer.skillLoadout.cooldowns[skill.name] = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
-        const slRelic = relics.find(r => r.effect === 'skill_lifesteal');
+        const slRelic = relics.find((r: any) => r.effect === 'skill_lifesteal');
         if (slRelic) {
             const heal = Math.floor(totalDamage * slRelic.val);
             updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + heal);
@@ -538,7 +538,7 @@ export const CombatEngine = {
             const critLogs = [];
             const restoredPlayer = this.applyCritMpRestore(updatedPlayer, relics, critLogs);
             updatedPlayer.mp = restoredPlayer.mp;
-            critLogs.forEach((entry) => logs.push(entry));
+            critLogs.forEach((entry: any) => logs.push(entry));
         }
 
         if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk'].includes(skill.effect)) {
@@ -604,7 +604,7 @@ export const CombatEngine = {
         }
 
         // 시너지: 시간 지배자 (time_master) — 스킬 사용 후 10% 확률 추가 행동
-        const timeMasterSyn = relics && (stats.activeSynergies || []).find(s => s.bonus.extraTurnChance);
+        const timeMasterSyn = relics && (stats.activeSynergies || []).find((s: any) => s.bonus.extraTurnChance);
         if (timeMasterSyn && !updatedPlayer.extraTurnGranted && Math.random() < (timeMasterSyn.bonus.extraTurnChance || 0)) {
             updatedPlayer.extraTurnGranted = true;
             logs.push({ type: 'event', text: `[시간 지배자] 시간이 멈춥니다 — 추가 행동!` });
@@ -618,7 +618,7 @@ export const CombatEngine = {
         }
 
         // 유물: 공허의 메아리 (echo_atk) — 스킬 사용 후 다음 일반 공격 강화 플래그
-        const echoRelicInSkill = relics.find((r) => r.effect === 'echo_atk');
+        const echoRelicInSkill = relics.find((r: any) => r.effect === 'echo_atk');
         if (echoRelicInSkill) {
             updatedPlayer.combatFlags = { ...this.getCombatFlags(updatedPlayer), echoArmed: true };
             logs.push({ type: 'event', text: `[공허의 메아리] 다음 공격이 강화됩니다!` });
@@ -628,7 +628,7 @@ export const CombatEngine = {
         if (skill.effect === 'crit_cooldown' && isCrit) {
             const cdLoadout = updatedPlayer.skillLoadout || { selected: 0, cooldowns: {} };
             const reducedCds: Record<string, number> = {};
-            Object.entries(cdLoadout.cooldowns || {}).forEach(([k, v]) => {
+            Object.entries(cdLoadout.cooldowns || {}).forEach(([k, v]: any) => {
                 const cd = Number(v);
                 if (cd > 0) reducedCds[k] = cd - 1;
             });
@@ -661,7 +661,7 @@ export const CombatEngine = {
         };
     },
 
-    enemyAttack(player, enemy, stats) {
+    enemyAttack(player: any, enemy: any, stats: any) {
         let updatedEnemy = { ...enemy };
         let updatedPlayer = { ...player };
         const logs = [];
@@ -670,14 +670,14 @@ export const CombatEngine = {
 
         // ── 적 상태이상 틱 처리 (#5) ──────────────────────────────────────
         // curse_amp 패시브: 무당/시간술사 직업 보너스
-        const curseAmpPassive = CLASSES[player.job]?.skills?.find(s => s.passive && s.effect === 'curse_amp');
+        const curseAmpPassive = CLASSES[player.job]?.skills?.find((s: any) => s.passive && s.effect === 'curse_amp');
         const curseAmpMult = curseAmpPassive ? (curseAmpPassive.val || 1) : 1;
         // 시너지: 죽음의 예언자 (dotMult) — DoT 피해 증폭
         const activeSynergies = stats.activeSynergies || [];
-        const synergyDotMult = activeSynergies.reduce((acc, syn) => syn.bonus.dotMult ? acc + syn.bonus.dotMult : acc, 1);
+        const synergyDotMult = activeSynergies.reduce((acc: any, syn: any) => syn.bonus.dotMult ? acc + syn.bonus.dotMult : acc, 1);
         const enemyTickResult = this.tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult);
         updatedEnemy = enemyTickResult.updatedEnemy;
-        enemyTickResult.logs.forEach(l => logs.push(l));
+        enemyTickResult.logs.forEach((l: any) => logs.push(l));
         // DoT로 인해 이미 사망한 경우
         if (updatedEnemy.hp <= 0) {
             return { updatedPlayer, updatedEnemy, damage: 0, isDead: false, isEnemyDead: true, logs };
@@ -711,7 +711,7 @@ export const CombatEngine = {
                     };
                     logs.push({ type: 'critical', text: `💀 ${p3.log}` });
                     if (p3.statusEffect) {
-                        const resistRelic = relics.find(r => r.effect === 'status_resist');
+                        const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
                         const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
                         const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
                         if (!currentStatus.includes(p3.statusEffect) && Math.random() >= resistChance) {
@@ -740,7 +740,7 @@ export const CombatEngine = {
                     };
                     logs.push({ type: 'warning', text: `⚡ ${p2.log}` });
                     if (p2.statusEffect) {
-                        const resistRelic2 = relics.find(r => r.effect === 'status_resist');
+                        const resistRelic2 = relics.find((r: any) => r.effect === 'status_resist');
                         const resistChance2 = resistRelic2 ? (resistRelic2.val || 0) : 0;
                         const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
                         if (!currentStatus.includes(p2.statusEffect) && Math.random() >= resistChance2) {
@@ -784,7 +784,7 @@ export const CombatEngine = {
 
         const heavy = roll < pattern.guardChance + pattern.heavyChance;
         let mult = heavy ? 1.4 : 1;
-        const critBlockRelic = relics.find((relic) => relic.effect === 'crit_block');
+        const critBlockRelic = relics.find((relic: any) => relic.effect === 'crit_block');
         if (heavy && critBlockRelic && Math.random() < critBlockRelic.val) {
             mult = 1;
             logs.push({ type: 'event', text: '[강철 의지] 강타를 흘려냈습니다!' });
@@ -792,9 +792,9 @@ export const CombatEngine = {
         const heavyResolved = heavy && mult > 1;
 
         // 유물: 가시 갑옷 (reflect) — 피격 시 적에게 반사
-        const reflectRelic = relics.find(r => r.effect === 'reflect');
+        const reflectRelic = relics.find((r: any) => r.effect === 'reflect');
         // 시너지: 절대 반사 (absolute_reflect) — 반사율 50%, 스턴 25% 확률
-        const absoluteReflectSyn = activeSynergies.find(s => s.bonus.reflect);
+        const absoluteReflectSyn = activeSynergies.find((s: any) => s.bonus.reflect);
         const reflectMult = absoluteReflectSyn ? (absoluteReflectSyn.bonus.reflect || 0.3) : (reflectRelic ? reflectRelic.val : 0);
         const reflectDmg = (reflectRelic || absoluteReflectSyn) ? Math.floor(stats.def * reflectMult) : 0;
         const enemyHpAfterReflect = reflectDmg > 0 ? Math.max(0, updatedEnemy.hp - reflectDmg) : updatedEnemy.hp;
@@ -822,7 +822,7 @@ export const CombatEngine = {
         // 몬스터 공격 시 상태이상 부여 (pattern.statusEffect + pattern.statusChance 지원)
         if (heavy && updatedEnemy.pattern?.statusEffect && Math.random() < (updatedEnemy.pattern.statusChance || 0.25)) {
             const sEff = updatedEnemy.pattern.statusEffect;
-            const resistRelic = relics.find(r => r.effect === 'status_resist');
+            const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
             const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
             const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
             if (!currentStatus.includes(sEff) && Math.random() >= resistChance) {
@@ -850,7 +850,7 @@ export const CombatEngine = {
         };
     },
 
-    attemptEscape(enemy, stats) {
+    attemptEscape(enemy: any, stats: any) {
         const success = Math.random() > BALANCE.ESCAPE_CHANCE;
         if (success) {
             return { success: true, logs: [{ type: 'info', text: MSG.ESCAPE_SUCCESS }] };
@@ -931,14 +931,14 @@ export const CombatEngine = {
         const bossBrief = enemy.isBoss ? BOSS_BRIEFS[baseName] : null;
 
         // 유물 + 패시브 스킬: EXP/골드 배율
-        const expMult = 1 + (relics.find(r => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0);
-        const goldMult = 1 + (relics.find(r => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0);
+        const expMult = 1 + (relics.find((r: any) => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0);
+        const goldMult = 1 + (relics.find((r: any) => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0);
         // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배)
         const challengeMods = p.challengeModifiers || [];
         const challengeScale: { threshold?: number; mult?: number } = (BALANCE as any).CHALLENGE_REWARD_SCALING || {};
         const challengeRewardMult = challengeMods.length >= (challengeScale.threshold || 3) ? (challengeScale.mult || 1.5) : 1;
         // 유물: 처치 보너스 (kill_bonus)
-        const killBonusRelic = relics.find(r => r.effect === 'kill_bonus');
+        const killBonusRelic = relics.find((r: any) => r.effect === 'kill_bonus');
         const killExpMult = killBonusRelic ? (1 + (killBonusRelic.val?.exp || 0)) : 1;
         const killGoldMult = killBonusRelic ? (1 + (killBonusRelic.val?.gold || 0)) : 1;
         // 레벨 차이 골드 스케일링: 플레이어가 몬스터보다 10레벨 이상 높으면 골드 감소 (최소 30%)
@@ -998,7 +998,7 @@ export const CombatEngine = {
         p.meta = meta;
 
         // 유물: 피의 서약 (on_kill_heal) — 처치 시 HP 회복
-        const healRelic = relics.find(r => r.effect === 'on_kill_heal');
+        const healRelic = relics.find((r: any) => r.effect === 'on_kill_heal');
         if (healRelic) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * healRelic.val);
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
@@ -1007,13 +1007,13 @@ export const CombatEngine = {
 
         // 시너지: 불멸의 전사 (killHeal), 무한 포식 (devour) — 처치 시 HP 회복
         const victorySynergies = getActiveRelicSynergies(relics);
-        const killHealSyn = victorySynergies.find(s => s.bonus.killHeal);
+        const killHealSyn = victorySynergies.find((s: any) => s.bonus.killHeal);
         if (killHealSyn) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * killHealSyn.bonus.killHeal);
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[불멸의 전사] +${heal} HP (처치 회복)` });
         }
-        const devourSyn = victorySynergies.find(s => s.bonus.devour);
+        const devourSyn = victorySynergies.find((s: any) => s.bonus.devour);
         if (devourSyn) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * devourSyn.bonus.devour);
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
@@ -1021,14 +1021,14 @@ export const CombatEngine = {
         }
 
         // 유물: 별의 핵 (mp_restore_battle) — 전투 종료 시 MP 전량 회복
-        const starCoreRelic = relics.find(r => r.effect === 'mp_restore_battle');
+        const starCoreRelic = relics.find((r: any) => r.effect === 'mp_restore_battle');
         if (starCoreRelic) {
             p.mp = p.maxMp || 50;
             logs.push({ type: 'heal', text: `[별의 핵] MP 전량 회복!` });
         }
 
         const expResult = this.applyExpGain(p, expGained);
-        expResult.logs.forEach((log) => logs.push(log));
+        expResult.logs.forEach((log: any) => logs.push(log));
         leveledUp = expResult.leveledUp;
         visualEffect = expResult.visualEffect;
 
@@ -1051,7 +1051,7 @@ export const CombatEngine = {
         };
     },
 
-    updateQuestProgress(player, enemyName) {
+    updateQuestProgress(player: any, enemyName: any) {
         return syncQuestProgress(player, enemyName, DB.QUESTS);
     },
 
@@ -1063,7 +1063,7 @@ export const CombatEngine = {
      * 적의 다음 행동을 예측하여 텔레그래프 메시지를 반환합니다.
      * CombatPanel에서 UI 경고 표시에 사용.
      */
-    predictEnemyNextAction(enemy) {
+    predictEnemyNextAction(enemy: any) {
         if (!enemy || enemy.hp <= 0) return null;
         if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: '기절 중 — 행동 불가', color: 'blue' };
 
@@ -1085,7 +1085,7 @@ export const CombatEngine = {
         return { type: 'normal', label: '일반 공격 예상', color: 'gray' };
     },
 
-    handleDefeat(player, INITIAL_PLAYER) {
+    handleDefeat(player: any, INITIAL_PLAYER: any) {
         const graveData = buildGraveData(player);
 
         const starterState = { ...INITIAL_PLAYER };

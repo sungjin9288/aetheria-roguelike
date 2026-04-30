@@ -3,7 +3,7 @@ import { hasDedicatedSignatureArt } from '../data/signatureItems.js';
 import { MSG } from '../data/messages.js';
 import { AT } from '../reducers/actionTypes.js';
 
-const CODEX_BUCKET_BY_TYPE = Object.freeze({
+const CODEX_BUCKET_BY_TYPE: any = Object.freeze({
     weapon: 'weapons',
     shield: 'shields',
     armor: 'armors',
@@ -20,7 +20,7 @@ const CODEX_BUCKET_BY_TYPE = Object.freeze({
  * - 이미 본 아이템 이름은 재노출 안 함 (같은 전설을 두 번 봐도 한 번만).
  */
 
-const getSignatureItemNames = (inv = []) => {
+const getSignatureItemNames = (inv: any = []) => {
     const names = [];
     for (const entry of inv) {
         if (entry && hasDedicatedSignatureArt(entry)) {
@@ -30,13 +30,13 @@ const getSignatureItemNames = (inv = []) => {
     return names;
 };
 
-export const useLegendaryDropDetector = (inv, dispatch = null) => {
+export const useLegendaryDropDetector = (inv: any, dispatch: any = null) => {
     const seenRef = useRef(null);
     const queueRef = useRef([]);
     const [currentDrop, setCurrentDrop] = useState(null);
 
     const dismiss = useCallback(() => {
-        setCurrentDrop((prev) => {
+        setCurrentDrop((prev: any) => {
             if (!prev) return null;
             const next = queueRef.current.shift() || null;
             return next;
@@ -53,7 +53,7 @@ export const useLegendaryDropDetector = (inv, dispatch = null) => {
             return;
         }
 
-        const newlySeen = signatureNames.filter((name) => !seenRef.current.has(name));
+        const newlySeen = signatureNames.filter((name: any) => !seenRef.current.has(name));
         if (newlySeen.length === 0) return;
 
         for (const name of newlySeen) {
@@ -64,7 +64,7 @@ export const useLegendaryDropDetector = (inv, dispatch = null) => {
         // 업적 카운터와 LegendaryCodex 잠금 해제 연결 + Terminal 강조 출력.
         if (dispatch) {
             for (const name of newlySeen) {
-                const item = (inv || []).find((entry) => entry?.name === name);
+                const item = (inv || []).find((entry: any) => entry?.name === name);
                 const bucket = CODEX_BUCKET_BY_TYPE[item?.type];
                 if (bucket) {
                     dispatch({ type: AT.UPDATE_CODEX, payload: { category: bucket, name } });
@@ -80,14 +80,14 @@ export const useLegendaryDropDetector = (inv, dispatch = null) => {
             }
         }
 
-        const firstItem = (inv || []).find((entry) => entry?.name === newlySeen[0] && hasDedicatedSignatureArt(entry));
+        const firstItem = (inv || []).find((entry: any) => entry?.name === newlySeen[0] && hasDedicatedSignatureArt(entry));
         if (!firstItem) return;
 
-        setCurrentDrop((prev) => {
+        setCurrentDrop((prev: any) => {
             if (!prev) return firstItem;
             // 이미 표시중이면 큐에 추가
             for (const name of newlySeen.slice(1)) {
-                const queuedItem = (inv || []).find((entry) => entry?.name === name && hasDedicatedSignatureArt(entry));
+                const queuedItem = (inv || []).find((entry: any) => entry?.name === name && hasDedicatedSignatureArt(entry));
                 if (queuedItem) queueRef.current.push(queuedItem);
             }
             return prev;

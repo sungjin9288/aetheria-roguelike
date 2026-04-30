@@ -12,7 +12,7 @@ import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
  * @param {Object} enemy
  * @returns {string}
  */
-export const resolveEnemyBaseName = (enemy) => {
+export const resolveEnemyBaseName = (enemy: any) => {
     if (!enemy) return '';
     if (enemy.baseName) return enemy.baseName;
     if (LOOT_TABLE[enemy.name]) return enemy.name;
@@ -33,8 +33,8 @@ export const processLoot = (enemy, player = null, signaturePityMult = 1.0) => {
     const logs = [];
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
-    const dropRateMult = 1 + (relics.find((relic) => relic.effect === 'drop_rate')?.val || 0);
-    const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
+    const dropRateMult = 1 + (relics.find((relic: any) => relic.effect === 'drop_rate')?.val || 0);
+    const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic: any) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
 
     const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
@@ -42,13 +42,13 @@ export const processLoot = (enemy, player = null, signaturePityMult = 1.0) => {
     // 강화 드롭 테이블 우선 참조
     const enrichedList = DROP_TABLES[lootKey] || DROP_TABLES[enemy.name];
     if (enrichedList) {
-        enrichedList.forEach((entry) => {
+        enrichedList.forEach((entry: any) => {
             // Signature 아이템에만 pity 배율 적용 (일반 아이템 드롭률은 변동 없음)
             const isSignature = Boolean(SIGNATURE_ITEM_REGISTRY[entry.item]);
             const entryPityMult = isSignature ? pityMult : 1;
             const chance = Math.min(1, entry.rate * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult * entryPityMult);
             if (Math.random() < chance) {
-                const itemData = allItems.find((i) => i.name === entry.item);
+                const itemData = allItems.find((i: any) => i.name === entry.item);
                 if (!itemData) return;
                 const qty = entry.qty ? (entry.qty[0] + Math.floor(Math.random() * (entry.qty[1] - entry.qty[0] + 1))) : 1;
                 for (let q = 0; q < qty; q++) {
@@ -69,10 +69,10 @@ export const processLoot = (enemy, player = null, signaturePityMult = 1.0) => {
     const lootList = LOOT_TABLE[lootKey] || LOOT_TABLE[enemy.name];
     if (!lootList || lootList.length === 0) return { items: [], logs: [] };
 
-    lootList.forEach((itemName) => {
+    lootList.forEach((itemName: any) => {
         const chance = Math.min(1, BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
         if (Math.random() < chance) {
-            const itemData = allItems.find((i) => i.name === itemName);
+            const itemData = allItems.find((i: any) => i.name === itemName);
             if (!itemData) return;
 
             const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
@@ -91,7 +91,7 @@ export const processLoot = (enemy, player = null, signaturePityMult = 1.0) => {
         const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
         if (Math.random() < bonusChance * dropRateMult * bossDropMult) {
-            const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter(i => (i.tier || 1) === bonusTier);
+            const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
                 const picked = tierPool[Math.floor(Math.random() * tierPool.length)];
                 const baseItem = { ...picked, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };

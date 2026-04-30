@@ -5,16 +5,16 @@ import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
 import { BALANCE } from '../data/constants';
 import { createRandomMobileName } from '../utils/nameGenerator';
 
-const CHALLENGE_REWARD_TEXT = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
+const CHALLENGE_REWARD_TEXT: any = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
 
 const IntroScreen = ({ onStart }: any) => {
     const [name, setName] = useState(() => createRandomMobileName());
     const [selectedChallenges, setSelectedChallenges] = useState([]);
     const nameInputRef = useRef(null);
 
-    const toggleChallenge = (id) => {
+    const toggleChallenge = (id: any) => {
         setSelectedChallenges(prev =>
-            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id].slice(0, 3)
+            prev.includes(id) ? prev.filter((c: any) => c !== id) : [...prev, id].slice(0, 3)
         );
     };
 
@@ -22,7 +22,7 @@ const IntroScreen = ({ onStart }: any) => {
         nameInputRef.current?.blur();
     };
 
-    const applyName = (nextName, dismissKeyboard = false) => {
+    const applyName = (nextName: any, dismissKeyboard: any = false) => {
         setName(nextName);
         if (dismissKeyboard) {
             blurMobileInput();
@@ -44,7 +44,7 @@ const IntroScreen = ({ onStart }: any) => {
         }
     };
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: any) => {
         if (e.key === 'Enter' && canStart) handleStart();
     };
 
@@ -100,7 +100,7 @@ const IntroScreen = ({ onStart }: any) => {
                                     data-testid="intro-name-input"
                                     type="text"
                                     value={name}
-                                    onChange={(e) => applyName(e.target.value)}
+                                    onChange={(e: any) => applyName(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="닉네임 입력"
                                     className="w-full rounded-[1.15rem] border border-[#d5b180]/20 bg-[#f6e7c8] px-3 py-3 text-center font-rajdhani text-xl text-black transition-all placeholder:text-black/38 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
@@ -136,7 +136,7 @@ const IntroScreen = ({ onStart }: any) => {
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
-                    {BALANCE.CHALLENGE_MODIFIERS.map(mod => {
+                    {BALANCE.CHALLENGE_MODIFIERS.map((mod: any) => {
                         const isSelected = selectedChallenges.includes(mod.id);
                         return (
                             <button

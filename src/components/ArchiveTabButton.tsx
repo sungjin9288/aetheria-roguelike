@@ -4,7 +4,7 @@ import { motion as Motion } from 'framer-motion';
 /**
  * ArchiveTabButton — Dashboard 탭 선택 버튼 (모바일/데스크탑 공용)
  */
-const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = false, rail = false, dense = false, iconOnly = false, testId = null, badge = null, badgeTitle = null }) => {
+const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = false, rail = false, dense = false, iconOnly = false, testId = null, badge = null, badgeTitle = null }: any) => {
     const Icon = icon;
     const frameClass = rail
         ? 'flex min-h-[32px] shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1'

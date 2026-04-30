@@ -44,7 +44,7 @@ export const SILHOUETTE_RULES = Object.freeze({
 
 // Tone palette를 freeze된 객체로 노출.
 // base/accent는 기존 코드 호환용 alias (base = mid, accent = hi).
-const buildRuntimePalette = (raw) => Object.freeze({
+const buildRuntimePalette = (raw: any) => Object.freeze({
     outline: raw.outline,
     shade: raw.shade,
     mid: raw.mid,
@@ -58,7 +58,7 @@ const buildRuntimePalette = (raw) => Object.freeze({
 
 export const TONE_PALETTES = Object.freeze(
     Object.fromEntries(
-        Object.entries(paletteSource.tonePalettes).map(([key, value]) => [key, buildRuntimePalette(value)])
+        Object.entries(paletteSource.tonePalettes).map(([key, value]: any) => [key, buildRuntimePalette(value)])
     )
 );
 
@@ -68,8 +68,8 @@ export const DEFAULT_TONE_KEY = Object.freeze({ ...paletteSource.defaultToneKey 
 
 export const REFERENCE_ACCENTS = Object.freeze({ ...paletteSource.referenceAccents });
 
-export const getTonePalette = (toneKey) => TONE_PALETTES[toneKey] || TONE_PALETTES.steel;
+export const getTonePalette = (toneKey: any) => TONE_PALETTES[toneKey] || TONE_PALETTES.steel;
 
-export const getElementToneKey = (elem) => ELEMENT_TONE_KEY[elem] || null;
+export const getElementToneKey = (elem: any) => ELEMENT_TONE_KEY[elem] || null;
 
-export const getDefaultToneKey = (slot) => DEFAULT_TONE_KEY[slot] || 'steel';
+export const getDefaultToneKey = (slot: any) => DEFAULT_TONE_KEY[slot] || 'steel';

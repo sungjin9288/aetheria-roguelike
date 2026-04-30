@@ -5,10 +5,10 @@ import { MSG } from '../data/messages';
 import ClassIcon from './icons/ClassIcon';
 import SignalBadge from './SignalBadge';
 
-const TIER_LABELS = { 0: MSG.CLASS_TIER_0, 1: MSG.CLASS_TIER_1, 2: MSG.CLASS_TIER_2, 3: MSG.CLASS_TIER_3 };
-const TIER_TONES = { 0: 'neutral', 1: 'recommended', 2: 'resonance', 3: 'upgrade' };
+const TIER_LABELS: any = { 0: MSG.CLASS_TIER_0, 1: MSG.CLASS_TIER_1, 2: MSG.CLASS_TIER_2, 3: MSG.CLASS_TIER_3 };
+const TIER_TONES: any = { 0: 'neutral', 1: 'recommended', 2: 'resonance', 3: 'upgrade' };
 
-const StatBar = ({ label, value, color }) => {
+const StatBar = ({ label, value, color }: any) => {
     // value는 modifier (1.0 = 기준, 2.0 = 100% width, 3.0 = clamped)
     const pct = Math.min(100, Math.max(8, (value / 3.0) * 100));
     return (
@@ -33,7 +33,7 @@ const ClassCard = ({ jobName, onSelect, disabled = false, compact = false }: any
     if (!jobData) return null;
 
     const tier = jobData.tier || 0;
-    const skillCount = jobData.skills?.filter(s => !s.passive)?.length || 0;
+    const skillCount = jobData.skills?.filter((s: any) => !s.passive)?.length || 0;
 
     if (compact) {
         return (

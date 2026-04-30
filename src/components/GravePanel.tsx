@@ -8,7 +8,7 @@ import { isSignatureItem } from '../data/signatureItems.js';
 
 const GRAVES_LIMIT = 10;
 
-const GravePanel = ({ player, actions, compact = false }) => {
+const GravePanel = ({ player, actions, compact = false }: any) => {
     const [graves, setGraves] = useState([]);
     const [loading, setLoading] = useState(false);
     const [invadingUid, setInvadingUid] = useState(null);
@@ -27,11 +27,11 @@ const GravePanel = ({ player, actions, compact = false }) => {
             const q = query(gravesCol, orderBy('createdAt', 'desc'), limit(GRAVES_LIMIT));
             const snap = await getDocs(q);
             const fetched = [];
-            snap.forEach((d) => {
+            snap.forEach((d: any) => {
                 const data = d.data();
                 if (data.uid !== player?.uid) fetched.push({ ...data, uid: d.id });
             });
-            setGraves(fetched.filter((g) => g.uid !== player?.uid));
+            setGraves(fetched.filter((g: any) => g.uid !== player?.uid));
         } catch (e) {
             console.warn('Grave fetch failed', e);
         } finally {
@@ -44,17 +44,17 @@ const GravePanel = ({ player, actions, compact = false }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const handleInvade = async (grave) => {
+    const handleInvade = async (grave: any) => {
         if (remainingInvades <= 0) return;
         setInvadingUid(grave.uid);
         await actions?.invadeGrave?.(grave);
-        setGraves((prev) => prev.filter((g) => g.uid !== grave.uid));
+        setGraves((prev: any) => prev.filter((g: any) => g.uid !== grave.uid));
         setTimeout(() => setInvadingUid(null), 600);
     };
 
-    const tierColor = (items) => {
+    const tierColor = (items: any) => {
         if (!items?.length) return 'text-slate-500';
-        const maxTier = Math.max(...items.map((i) => i.tier || 1));
+        const maxTier = Math.max(...items.map((i: any) => i.tier || 1));
         if (maxTier >= 5) return 'text-yellow-400';
         if (maxTier >= 4) return 'text-purple-400';
         if (maxTier >= 3) return 'text-blue-400';
@@ -104,12 +104,12 @@ const GravePanel = ({ player, actions, compact = false }) => {
                 </div>
             )}
 
-            {graves.map((grave) => {
+            {graves.map((grave: any) => {
                 const chance = calcInvasionChance(playerAtk, grave.guardPower || 10);
                 const chancePercent = Math.round(chance * 100);
                 const isInvading = invadingUid === grave.uid;
                 const noItems = !grave.items?.length;
-                const signatureItems = (grave.items || []).filter((item) => isSignatureItem(item));
+                const signatureItems = (grave.items || []).filter((item: any) => isSignatureItem(item));
                 const hasSignature = signatureItems.length > 0;
 
                 const cardStyle = hasSignature
@@ -160,7 +160,7 @@ const GravePanel = ({ player, actions, compact = false }) => {
                         {/* Items */}
                         {grave.items?.length > 0 && (
                             <div className="flex flex-wrap gap-1">
-                                {grave.items.map((item, idx) => {
+                                {grave.items.map((item: any, idx: any) => {
                                     const itemIsSignature = isSignatureItem(item);
                                     return (
                                         <span

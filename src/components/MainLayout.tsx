@@ -1,11 +1,11 @@
 import React from 'react';
 import { soundManager } from '../systems/SoundManager';
 
-const MainLayout = ({ children, visualEffect }) => (
+const MainLayout = ({ children, visualEffect }: any) => (
   <div
     data-app-shell
     className={`relative flex h-[100dvh] w-full flex-col overflow-x-hidden overflow-y-auto p-2 pt-[calc(env(safe-area-inset-top)+0.1rem)] pb-[calc(env(safe-area-inset-bottom)+0.5rem)] font-mono text-slate-200 ${visualEffect === 'shake' ? 'animate-shake' : ''}`}
-    onClick={(e) => {
+    onClick={(e: any) => {
       // 첫 클릭 시 AudioContext 초기화 (브라우저 정책)
       soundManager.init();
       // 버튼 클릭만 사운드 (버블링 방지)

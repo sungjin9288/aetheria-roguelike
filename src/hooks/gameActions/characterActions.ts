@@ -7,10 +7,10 @@ import { MSG } from '../../data/messages';
 import { getJobSkills } from '../../utils/gameUtils';
 import { buildClassVitals } from './_shared';
 
-export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProtocolLogs }) => {
+export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDailyProtocolLogs }: any) => {
     const { player, gameState, dispatch, addLog, addStoryLog, getFullStats } = deps;
     return {
-        start: (name, gender = 'male', jobId = CONSTANTS.DEFAULT_JOB, challengeModifiers = []) => {
+        start: (name: any, gender: any = 'male', jobId: any = CONSTANTS.DEFAULT_JOB, challengeModifiers: any = []) => {
             const trimmedName = String(name || '').trim().slice(0, 16);
             if (!trimmedName) return;
             const vitals = buildClassVitals(player.level || 1, jobId, player.meta || {});
@@ -34,12 +34,12 @@ export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProt
             addLog('system', MSG.START_CALLSIGN(trimmedName));
             addLog('event', MSG.START_INITIAL_SKILL(cls.skills?.[0]?.name || '강타'));
             if (mods.length > 0) {
-                const labels = mods.map(id => BALANCE.CHALLENGE_MODIFIERS.find(m => m.id === id)?.label || id);
+                const labels = mods.map((id: any) => BALANCE.CHALLENGE_MODIFIERS.find((m: any) => m.id === id)?.label || id);
                 addLog('warn', MSG.CHALLENGE_START(labels));
             }
         },
 
-        cycleSkill: (dir = 1) => {
+        cycleSkill: (dir: any = 1) => {
             const skills = getJobSkills(player);
             if (!skills.length) return;
             const current = Number.isInteger(player.skillLoadout?.selected) ? player.skillLoadout.selected : 0;
@@ -51,10 +51,10 @@ export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProt
         },
 
         // cycle 56: 직접 skill 이름으로 선택 (UI에서 카드 탭 → 즉시 활성).
-        selectSkill: (skillName) => {
+        selectSkill: (skillName: any) => {
             const skills = getJobSkills(player);
             if (!skills.length) return;
-            const idx = skills.findIndex((s) => s.name === skillName);
+            const idx = skills.findIndex((s: any) => s.name === skillName);
             if (idx < 0) return;
             dispatch({
                 type: AT.SET_PLAYER,
@@ -69,7 +69,7 @@ export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProt
             const restCost = Math.floor(BALANCE.REST_COST * (1 + (player.level || 1) / 20));
             if (player.gold < restCost) return addLog('error', MSG.REST_GOLD_INSUFFICIENT(restCost));
             const stats = getFullStats();
-            const updatedPlayer = {
+            const updatedPlayer: Record<string, any> = {
                 ...player,
                 gold: player.gold - restCost,
                 hp: stats.maxHp,
@@ -84,7 +84,7 @@ export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProt
             addStoryLog('rest', { loc: player.loc });
         },
 
-        swapSkillChoice: (skillName, newChoice) => {
+        swapSkillChoice: (skillName: any, newChoice: any) => {
             if (gameState !== 'idle') return;
             const mapData = DB.MAPS[player.loc];
             if (!mapData || mapData.type !== 'safe') return addLog('error', MSG.SKILL_SWAP_SAFE_ONLY);
@@ -93,7 +93,7 @@ export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProt
             const classData = CLASSES[player.job];
             const branches = classData?.skillBranches?.[skillName];
             if (!branches) return addLog('error', MSG.SKILL_NO_BRANCH);
-            const branch = branches.find(b => b.choice === newChoice);
+            const branch = branches.find((b: any) => b.choice === newChoice);
             if (!branch) return addLog('error', MSG.SKILL_INVALID_BRANCH);
             const oldChoice = player.skillChoices?.[skillName] || '기본';
             dispatch({
@@ -113,7 +113,7 @@ export const createCharacterActions = (deps, { emitUnlockedTitles, emitDailyProt
             addLog('system', MSG.INIT_RECORD_APPLIED);
         },
 
-        jobChange: (jobName) => {
+        jobChange: (jobName: any) => {
             const current = DB.CLASSES[player.job];
             if (!current?.next?.includes(jobName)) return addLog('error', MSG.JOB_CHANGE_INVALID);
             if (player.level < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);

@@ -41,7 +41,7 @@ import registrySource from './signatureRegistry.json' with { type: 'json' };
  */
 export const SIGNATURE_ITEM_REGISTRY = Object.freeze(
     Object.fromEntries(
-        Object.entries(registrySource.entries).map(([name, meta]) => [name, Object.freeze({ ...meta })])
+        Object.entries(registrySource.entries).map(([name, meta]: any) => [name, Object.freeze({ ...meta })])
     )
 );
 
@@ -85,24 +85,24 @@ export const SIGNATURE_CANDIDATES = Object.freeze([
 ]);
 
 /** 아이템이 dedicated signature인지 확인 (Tier S/A/B 고유 아트 보유). */
-export const isSignatureItem = (item) => (
+export const isSignatureItem = (item: any) => (
     Boolean(item?.name && SIGNATURE_ITEM_REGISTRY[item.name])
 );
 
 /** 아이템의 dedicated signature sprite key 반환 (없으면 null). */
-export const getSignatureSpriteKey = (item) => {
+export const getSignatureSpriteKey = (item: any) => {
     if (!item || !item.name) return null;
     const meta = SIGNATURE_ITEM_REGISTRY[item.name];
     return meta ? meta.spriteKey : null;
 };
 
 /** 진짜 고유 아트가 있는지 (tint 기반 named는 제외) — UI badge/effects에 사용. */
-export const hasDedicatedSignatureArt = (item) => (
+export const hasDedicatedSignatureArt = (item: any) => (
     Boolean(item?.name && SIGNATURE_ITEM_REGISTRY[item.name])
 );
 
 /** signature 메타데이터 반환 (tier, category, tone, artNote). 없으면 null. */
-export const getSignatureMetadata = (item) => {
+export const getSignatureMetadata = (item: any) => {
     if (!item?.name) return null;
     return SIGNATURE_ITEM_REGISTRY[item.name] || null;
 };
@@ -124,7 +124,7 @@ export const getSignatureItemCount = () => {
  * @param {{ stats?: { codex?: object } } | null | undefined} player
  * @returns {{ discovered: number, total: number, percent: number }}
  */
-export const getSignatureDiscoveryProgress = (player) => {
+export const getSignatureDiscoveryProgress = (player: any) => {
     const total = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
     const codex = player?.stats?.codex || null;
     if (!codex) return { discovered: 0, total, percent: 0 };

@@ -44,7 +44,7 @@ class SoundManager {
         return { osc, gain, now: this.ctx.currentTime };
     }
 
-    play(type) {
+    play(type: any) {
         if (!this._ensureReady()) return;
 
         switch (type) {
@@ -180,7 +180,7 @@ class SoundManager {
         }
     }
 
-    _playTone(freq, dur, delay) {
+    _playTone(freq: any, dur: any, delay: any) {
         if (this.muted || !this.ctx) return;
         const { osc, gain } = this._createNodes();
         const startAt = this.ctx.currentTime + delay;

@@ -4,7 +4,7 @@
  * @param {Object} statsUpdate - 덮어쓸 stats 필드들
  * @returns {Object} 새 player 객체
  */
-export const updateStats = (player, statsUpdate) => ({
+export const updateStats = (player: any, statsUpdate: any) => ({
     ...player,
     stats: { ...(player.stats || {}), ...statsUpdate },
 });
@@ -16,7 +16,7 @@ export const updateStats = (player, statsUpdate) => ({
  * @param {number} amount - 누적할 값 (기본 1)
  * @returns {Object} 새 player 객체
  */
-export const incrementStat = (player, field, amount = 1) =>
+export const incrementStat = (player: any, field: any, amount: any = 1) =>
     updateStats(player, { [field]: (player.stats?.[field] || 0) + amount });
 
 export const EMPTY_TEMP_BUFF = {
@@ -33,7 +33,7 @@ export const DEFAULT_COMBAT_FLAGS = {
     voidHeartArmed: false,
 };
 
-export const hasTemporaryAdventureState = (player) => {
+export const hasTemporaryAdventureState = (player: any) => {
     const buff = { ...EMPTY_TEMP_BUFF, ...(player?.tempBuff || {}) };
     const combatFlags = { ...DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
 
@@ -51,7 +51,7 @@ export const hasTemporaryAdventureState = (player) => {
     );
 };
 
-export const clearTemporaryAdventureState = (player) => ({
+export const clearTemporaryAdventureState = (player: any) => ({
     ...player,
     tempBuff: { ...EMPTY_TEMP_BUFF },
     status: [],

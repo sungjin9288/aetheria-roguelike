@@ -7,14 +7,14 @@ import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 
-const MAGIC_JOBS = ['마법사', '아크메이지', '흑마법사', '성직자'];
-const PHYSICAL_ELEMENTS = ['물리', 'physical'];
+const MAGIC_JOBS: any = ['마법사', '아크메이지', '흑마법사', '성직자'];
+const PHYSICAL_ELEMENTS: any = ['물리', 'physical'];
 
 /**
  * @param {object} equip
  * @returns {{ atkMult: number, defMult: number, hpMult: number, activeSet: object | null }}
  */
-const computeSetBonus = (equip) => {
+const computeSetBonus = (equip: any) => {
     const prefixes = [
         equip.weapon?.prefixName,
         equip.armor?.prefixName,
@@ -25,11 +25,11 @@ const computeSetBonus = (equip) => {
         return { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
     }
 
-    const counts = prefixes.reduce((acc, p) => ({ ...acc, [p]: (acc[p] || 0) + 1 }), {});
-    const setName = Object.keys(counts).find(k => counts[k] >= 2);
+    const counts = prefixes.reduce((acc: any, p: any) => ({ ...acc, [p]: (acc[p] || 0) + 1 }), {});
+    const setName = Object.keys(counts).find((k: any) => counts[k] >= 2);
     if (!setName) return { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
 
-    const setData = DB.ITEMS.sets?.find(s => s.prefix === setName);
+    const setData = DB.ITEMS.sets?.find((s: any) => s.prefix === setName);
     if (!setData?.setBonus) return { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
 
     return {
@@ -44,7 +44,7 @@ const computeSetBonus = (equip) => {
  * @param {object} stats player.stats
  * @returns {{ atk: number, def: number, hp: number }}
  */
-const computeCodexBonus = (stats) => {
+const computeCodexBonus = (stats: any) => {
     let atk = 0;
     let def = 0;
     let hp = 0;
@@ -66,10 +66,10 @@ const computeCodexBonus = (stats) => {
  * @param {boolean} hasOffhandWeapon
  * @returns {object} relic-derived multipliers and flat bonuses
  */
-const computeRelicBonuses = (relics, player, hasOffhandWeapon) => {
+const computeRelicBonuses = (relics: any, player: any, hasOffhandWeapon: any) => {
     const hpRatio = player.hp / Math.max(1, player.maxHp);
 
-    const atkFlat = relics.reduce((acc, r) => {
+    const atkFlat = relics.reduce((acc: any, r: any) => {
         if (r.effect === 'glass_cannon') return acc + r.val.atk;
         if (r.effect === 'ancient_power') return acc + r.val.atk;
         if (r.effect === 'omega') return acc + r.val;
@@ -84,7 +84,7 @@ const computeRelicBonuses = (relics, player, hasOffhandWeapon) => {
         return acc;
     }, 0);
 
-    const defFlat = relics.reduce((acc, r) => {
+    const defFlat = relics.reduce((acc: any, r: any) => {
         if (r.effect === 'glass_cannon') return acc + r.val.def;
         if (r.effect === 'stone_skin' || r.effect === 'def_mult') return acc + r.val;
         if (r.effect === 'fortress') return acc + r.val.def;
@@ -93,26 +93,26 @@ const computeRelicBonuses = (relics, player, hasOffhandWeapon) => {
         return acc;
     }, 0);
 
-    const hpMult = 1 + relics.reduce((acc, r) => {
+    const hpMult = 1 + relics.reduce((acc: any, r: any) => {
         if (r.effect === 'fortress') return acc + r.val.hp;
         if (r.effect === 'omega') return acc + r.val;
         return acc;
     }, 0);
 
-    const mpMult = 1 + relics.reduce((acc, r) => {
+    const mpMult = 1 + relics.reduce((acc: any, r: any) => {
         if (r.effect === 'mp_mult') return acc + r.val;
         if (r.effect === 'omega') return acc + r.val;
         return acc;
     }, 0);
 
-    const critBonus = relics.reduce((acc, r) => {
+    const critBonus = relics.reduce((acc: any, r: any) => {
         if (r.effect === 'ancient_power') return acc + r.val.crit;
         if (r.effect === 'omega') return acc + r.val;
         if (r.effect === 'dual_crit' && hasOffhandWeapon) return acc + (r.val || 0);
         return acc;
     }, 0);
 
-    const mpFlat = relics.reduce((acc, r) => {
+    const mpFlat = relics.reduce((acc: any, r: any) => {
         if (r.effect === 'triple_up') return acc + (r.mpVal || 0);
         return acc;
     }, 0);
@@ -125,8 +125,8 @@ const computeRelicBonuses = (relics, player, hasOffhandWeapon) => {
  * @param {number} abyssFloor
  * @returns {{ atk: number, def: number, crit: number }}
  */
-const computeAbyssRelicBonuses = (relics, abyssFloor) => {
-    const atk = relics.reduce((acc, r) => {
+const computeAbyssRelicBonuses = (relics: any, abyssFloor: any) => {
+    const atk = relics.reduce((acc: any, r: any) => {
         if (r.effect === 'abyss_atk_scale') {
             const bonus = Math.min(r.val.maxBonus, Math.floor(abyssFloor / r.val.perFloors) * r.val.atkPer);
             return acc + bonus;
@@ -137,14 +137,14 @@ const computeAbyssRelicBonuses = (relics, abyssFloor) => {
         return acc;
     }, 0);
 
-    const def = relics.reduce((acc, r) => {
+    const def = relics.reduce((acc: any, r: any) => {
         if (r.effect === 'abyss_floor_power' && abyssFloor >= r.val.minFloor) {
             return acc + r.val.defBonus;
         }
         return acc;
     }, 0);
 
-    const crit = relics.reduce((acc, r) => {
+    const crit = relics.reduce((acc: any, r: any) => {
         if (r.effect === 'abyss_crit_scale') {
             return acc + Math.min(r.val.maxBonus, Math.floor(abyssFloor / r.val.perFloors) * r.val.critPer);
         }
@@ -159,8 +159,8 @@ const computeAbyssRelicBonuses = (relics, abyssFloor) => {
  * @param {number} totalKills
  * @returns {number}
  */
-const computeKillStackAtkBonus = (relics, totalKills) =>
-    relics.reduce((acc, r) => {
+const computeKillStackAtkBonus = (relics: any, totalKills: any) =>
+    relics.reduce((acc: any, r: any) => {
         if (r.effect === 'kill_stack') {
             const stacks = Math.floor(totalKills / (r.stackPer || 50));
             return acc + stacks * (r.stackVal || 25);
@@ -172,7 +172,7 @@ const computeKillStackAtkBonus = (relics, totalKills) =>
  * @param {object} equip
  * @returns {{ atk: number, def: number }}
  */
-const computeEnhanceBonus = (equip) => {
+const computeEnhanceBonus = (equip: any) => {
     const weaponEnhance = equip.weapon?.enhance || 0;
     const armorEnhance = equip.armor?.enhance || 0;
     const offhandEnhance = equip.offhand?.enhance || 0;
@@ -194,13 +194,13 @@ const computeEnhanceBonus = (equip) => {
  * @param {number} hpRatio
  * @returns {{ atkMult: number, statMult: number, mpFlat: number, lowHpAtk: number }}
  */
-const applySynergyBonuses = (synergies, preBuildStats, hpRatio) => {
+const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) => {
     let atkMult = 1;
     let statMult = 1;
     let mpFlat = 0;
     let lowHpAtk = 0;
 
-    synergies.forEach((syn) => {
+    synergies.forEach((syn: any) => {
         if (syn.bonus.atkMult) atkMult += syn.bonus.atkMult;
         if (syn.bonus.mpMult) mpFlat += Math.floor(preBuildStats.maxMp * syn.bonus.mpMult);
         if (syn.bonus.statBonus) statMult += syn.bonus.statBonus;
@@ -214,9 +214,9 @@ const applySynergyBonuses = (synergies, preBuildStats, hpRatio) => {
  * @param {number} killStreak
  * @returns {{ atkBonus: number, critBonus: number, tierIdx: number }}
  */
-const computeKillStreakBonus = (killStreak) => {
+const computeKillStreakBonus = (killStreak: any) => {
     const tierIdx = BALANCE.KILL_STREAK_TIERS.reduce(
-        (best, threshold, i) => (killStreak >= threshold ? i : best),
+        (best: any, threshold: any, i: any) => (killStreak >= threshold ? i : best),
         -1
     );
     const atkBonus = tierIdx >= 0 ? BALANCE.KILL_STREAK_ATK_BONUS[tierIdx] : 0;
@@ -231,7 +231,7 @@ const computeKillStreakBonus = (killStreak) => {
  * @param {object} player
  * @returns {object} derived stats
  */
-export const calculateFullStats = (player) => {
+export const calculateFullStats = (player: any) => {
     if (!player) return null;
 
     const cls = DB.CLASSES[player.job] || DB.CLASSES[CONSTANTS.DEFAULT_JOB];
@@ -303,7 +303,7 @@ export const calculateFullStats = (player) => {
         BALANCE.CRIT_CHANCE + equipmentCritBonus + relicBonus.critBonus + abyssBonus.crit + (titlePassive.crit || 0) + passiveBonus.crit
     );
 
-    const preBuildStats = {
+    const preBuildStats: Record<string, any> = {
         atk: Math.floor(baseAtk * (1 + relicBonus.atkFlat) + (titlePassive.atk || 0)),
         def: Math.floor(baseDef * (1 + relicBonus.defFlat) + (titlePassive.def || 0)),
         maxHp: Math.floor(baseMaxHp * relicBonus.hpMult) + (titlePassive.hp || 0),

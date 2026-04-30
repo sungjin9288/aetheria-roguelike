@@ -13,7 +13,7 @@ import signatureSets from '../data/signatureSets.json' with { type: 'json' };
 const REGISTRY = signatureRegistry.entries || {};
 const SETS = signatureSets.sets || {};
 
-const getRegistryEntry = (item) => {
+const getRegistryEntry = (item: any) => {
     if (!item?.name) return null;
     return REGISTRY[item.name] || null;
 };
@@ -27,7 +27,7 @@ const getRegistryEntry = (item) => {
  *   activeSet: { key: string, name: string, tone: string, count: number, desc: string } | null
  * }}
  */
-export const computeSignatureSetBonus = (equip) => {
+export const computeSignatureSetBonus = (equip: any) => {
     const neutral = { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
     if (!equip) return neutral;
 
@@ -38,7 +38,7 @@ export const computeSignatureSetBonus = (equip) => {
     }
     if (groups.length < 2) return neutral;
 
-    const counts = groups.reduce((acc, key) => {
+    const counts = groups.reduce((acc: any, key: any) => {
         acc[key] = (acc[key] || 0) + 1;
         return acc;
     }, {});
@@ -59,9 +59,9 @@ export const computeSignatureSetBonus = (equip) => {
 
     // 가능한 최고 tier 선택 (bestCount 이하 중 가장 높은 키)
     const availableTiers = Object.keys(setDef.bonuses)
-        .map((k) => Number(k))
-        .filter((n) => Number.isFinite(n) && n <= bestCount)
-        .sort((a, b) => b - a);
+        .map((k: any) => Number(k))
+        .filter((n: any) => Number.isFinite(n) && n <= bestCount)
+        .sort((a: any, b: any) => b - a);
     if (availableTiers.length === 0) return neutral;
 
     const bonus = setDef.bonuses[String(availableTiers[0])];
@@ -93,7 +93,7 @@ export const computeSignatureSetBonus = (equip) => {
 export const getSignatureSetDefinitions = () => SETS;
 
 /** UI 도움용: 특정 setGroup의 정의. */
-export const getSignatureSet = (key) => SETS[key] || null;
+export const getSignatureSet = (key: any) => SETS[key] || null;
 
 /**
  * 현재 장착 구성에서 가장 "가까운" signature 세트의 진행도를 반환.
@@ -122,7 +122,7 @@ export const getSignatureSet = (key) => SETS[key] || null;
  *   isActive: boolean
  * } | null}
  */
-export const getSignatureSetProgress = (equip) => {
+export const getSignatureSetProgress = (equip: any) => {
     if (!equip) return null;
 
     const equippedByGroup = new Map();
@@ -150,17 +150,17 @@ export const getSignatureSetProgress = (equip) => {
     if (!setDef) return null;
 
     const tierNumbers = Object.keys(setDef.bonuses || {})
-        .map((k) => Number(k))
-        .filter((n) => Number.isFinite(n))
-        .sort((a, b) => a - b);
+        .map((k: any) => Number(k))
+        .filter((n: any) => Number.isFinite(n))
+        .sort((a: any, b: any) => a - b);
 
-    const currentTier = [...tierNumbers].reverse().find((n) => n <= bestCount) ?? null;
-    const nextTier = tierNumbers.find((n) => n > bestCount) ?? null;
+    const currentTier = [...tierNumbers].reverse().find((n: any) => n <= bestCount) ?? null;
+    const nextTier = tierNumbers.find((n: any) => n > bestCount) ?? null;
     const nextBonusRaw = nextTier != null ? setDef.bonuses[String(nextTier)] : null;
 
     const members = [...(setDef.members || [])];
     const equippedMembers = equippedByGroup.get(bestKey) || [];
-    const missingMembers = members.filter((name) => !equippedMembers.includes(name));
+    const missingMembers = members.filter((name: any) => !equippedMembers.includes(name));
 
     return {
         key: bestKey,

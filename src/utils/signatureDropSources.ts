@@ -36,7 +36,7 @@ const buildSourceIndex = () => {
     }
     // rate 내림차순
     for (const name of Object.keys(index)) {
-        index[name].sort((a, b) => b.rate - a.rate);
+        index[name].sort((a: any, b: any) => b.rate - a.rate);
         Object.freeze(index[name]);
     }
     return Object.freeze(index);
@@ -50,7 +50,7 @@ const SOURCE_INDEX = buildSourceIndex();
  * @param {string | null | undefined} itemName
  * @returns {ReadonlyArray<SignatureDropSource>} 미등록/null → []
  */
-export const getSignatureDropSources = (itemName) => {
+export const getSignatureDropSources = (itemName: any) => {
     if (!itemName || typeof itemName !== 'string') return [];
     return SOURCE_INDEX[itemName] || [];
 };

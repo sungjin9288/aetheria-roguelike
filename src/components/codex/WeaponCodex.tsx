@@ -8,7 +8,7 @@ import SignalBadge from '../SignalBadge';
 import ItemIcon from '../icons/ItemIcon';
 import EquipmentCodexCard from './EquipmentCodexCard';
 
-const RARITY_BORDER = {
+const RARITY_BORDER: any = {
     common: 'border-slate-500/30',
     uncommon: 'border-emerald-400/40',
     rare: 'border-blue-400/40',
@@ -16,7 +16,7 @@ const RARITY_BORDER = {
     legendary: 'border-amber-400/50',
 };
 
-const RARITY_BG = {
+const RARITY_BG: any = {
     common: 'bg-slate-500/8',
     uncommon: 'bg-emerald-400/8',
     rare: 'bg-blue-400/8',
@@ -24,20 +24,20 @@ const RARITY_BG = {
     legendary: 'bg-amber-400/10',
 };
 
-const CATEGORY_TABS = [
+const CATEGORY_TABS: any = [
     { id: 'weapons', label: 'WEAPONS' },
     { id: 'armors', label: 'ARMORS' },
     { id: 'shields', label: 'SHIELDS' },
 ];
 
-const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }) => {
+const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }: any) => {
     const [category, setCategory] = useState('weapons');
     const [selectedItem, setSelectedItem] = useState(null);
 
     const items = useMemo(() => {
         if (category === 'weapons') return DB.ITEMS.weapons || [];
-        if (category === 'armors') return (DB.ITEMS.armors || []).filter(a => a.type === 'armor');
-        if (category === 'shields') return (DB.ITEMS.armors || []).filter(a => a.type === 'shield');
+        if (category === 'armors') return (DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor');
+        if (category === 'shields') return (DB.ITEMS.armors || []).filter((a: any) => a.type === 'shield');
         return [];
     }, [category]);
 
@@ -55,13 +55,13 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player })
     }, [items]);
 
     // 마일스톤 보상 (해당 카테고리)
-    const milestones = progress.milestones.filter(ms => ms.category === category);
+    const milestones = progress.milestones.filter((ms: any) => ms.category === category);
 
     return (
         <div className="space-y-2">
             {/* Category toggle */}
             <div className="flex gap-1">
-                {CATEGORY_TABS.map(tab => (
+                {CATEGORY_TABS.map((tab: any) => (
                     <button
                         key={tab.id}
                         onClick={() => { setCategory(tab.id); setSelectedItem(null); }}
@@ -78,13 +78,13 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player })
 
             {/* Item Grid by Tier */}
             <div className="space-y-3 max-h-[45vh] overflow-y-auto custom-scrollbar">
-                {grouped.map(([tier, tierItems]) => (
+                {grouped.map(([tier, tierItems]: any) => (
                     <div key={tier}>
                         <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider mb-1.5">
                             Tier {tier} — {MSG.RARITY_LABEL[getItemRarity(tierItems[0])] || '일반'}
                         </div>
                         <div className="grid grid-cols-3 gap-1.5">
-                            {tierItems.map(item => {
+                            {tierItems.map((item: any) => {
                                 const found = !!catCodex[item.name];
                                 const rarity = getItemRarity(item);
                                 return (
@@ -123,7 +123,7 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player })
 
             {/* Detail Panel — EquipmentCodexCard */}
             {selectedItem && (() => {
-                const item = items.find(i => i.name === selectedItem);
+                const item = items.find((i: any) => i.name === selectedItem);
                 if (!item) return null;
                 return <EquipmentCodexCard item={item} player={player} />;
             })()}
@@ -132,7 +132,7 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player })
             {milestones.length > 0 && (
                 <div className="space-y-1">
                     <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider">Milestones</div>
-                    {milestones.map(ms => (
+                    {milestones.map((ms: any) => (
                         <div
                             key={ms.id}
                             className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-[10px] font-fira

@@ -6,7 +6,7 @@ import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signa
 import EquipmentAvatarPreview from './EquipmentAvatarPreview.jsx';
 import SignatureBadge from './SignatureBadge.jsx';
 
-const SIGNATURE_TONE_RING = Object.freeze({
+const SIGNATURE_TONE_RING: any = Object.freeze({
     holy: { border: '#f6e7a2', glow: 'rgba(246,231,162,0.45)' },
     fire: { border: '#ffb48a', glow: 'rgba(255,180,138,0.45)' },
     frost: { border: '#cce8f5', glow: 'rgba(204,232,245,0.4)' },
@@ -22,7 +22,7 @@ const SIGNATURE_TONE_RING = Object.freeze({
  * SVG 아이콘 경로 — 장비 타입별 실루엣
  * viewBox="0 0 24 24", stroke-based
  */
-const ICON_PATHS = {
+const ICON_PATHS: any = {
     // 무기
     sword: 'M14.5 3.5 20 9l-7 7-5.5-5.5 7-7ZM3 21l3.5-3.5M7.5 16.5l2 2',
     greatsword: 'M13 2l9 9-9 9-3-3 9-9-3-3-6 6-3-3 6-6Z',
@@ -64,7 +64,7 @@ const ICON_PATHS = {
  * ItemIcon — 아이템 아이콘 컴포넌트
  * @param {{ item: Object, size?: number, showBorder?: boolean, className?: string }} props
  */
-const ItemIcon = ({ item, size = 24, showBorder = false, className = '', hideSignatureBadge = false }) => {
+const ItemIcon = ({ item, size = 24, showBorder = false, className = '', hideSignatureBadge = false }: any) => {
     const iconKey = getEquipmentVisualKey(item);
     const path = ICON_PATHS[iconKey] || ICON_PATHS.material;
     const rarity = item ? getItemRarity(item) : 'common';

@@ -14,7 +14,7 @@ import { getSignatureMetadata } from '../data/signatureItems.js';
  * - 아이콘은 실제 signature sprite (gold ring + badge 포함)을 그대로 사용
  */
 
-const TONE_GLOW = Object.freeze({
+const TONE_GLOW: any = Object.freeze({
     holy: { ring: 'rgba(246,231,162,0.6)', radial: 'rgba(246,231,162,0.35)', particle: '#f6e7a2' },
     fire: { ring: 'rgba(255,180,138,0.6)', radial: 'rgba(255,180,138,0.35)', particle: '#ffb48a' },
     frost: { ring: 'rgba(204,232,245,0.55)', radial: 'rgba(204,232,245,0.3)', particle: '#cce8f5' },
@@ -30,7 +30,7 @@ const DEFAULT_GLOW = TONE_GLOW.holy;
 
 const DROP_DURATION_MS = 3000;
 
-const LegendaryDropOverlay = ({ item, onDismiss }) => {
+const LegendaryDropOverlay = ({ item, onDismiss }: any) => {
     useEffect(() => {
         if (!item) return undefined;
         const timer = setTimeout(() => onDismiss?.(), DROP_DURATION_MS);
@@ -65,7 +65,7 @@ const LegendaryDropOverlay = ({ item, onDismiss }) => {
                     />
 
                     {/* 12방향 파티클 스파클 */}
-                    {Array.from({ length: 12 }).map((_, i) => {
+                    {Array.from({ length: 12 }).map((_: any, i: any) => {
                         const angle = (i / 12) * Math.PI * 2;
                         const dx = Math.cos(angle) * 110;
                         const dy = Math.sin(angle) * 110;

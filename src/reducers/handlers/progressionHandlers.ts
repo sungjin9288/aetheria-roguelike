@@ -7,8 +7,8 @@
  * makeProgressionActionMap(INITIAL_STATE) → action map
  * 순환 참조 방지를 위해 팩토리 패턴 사용
  */
-export const makeProgressionActionMap = (INITIAL_STATE) => ({
-    RESET_GAME: (state) => ({
+export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
+    RESET_GAME: (state: any) => ({
         ...INITIAL_STATE,
         grave: state.grave,
         bootStage: 'ready',
@@ -16,13 +16,13 @@ export const makeProgressionActionMap = (INITIAL_STATE) => ({
         syncStatus: 'syncing'
     }),
 
-    SET_RUN_SUMMARY: (state, action) =>
+    SET_RUN_SUMMARY: (state: any, action: any) =>
         ({ ...state, runSummary: action.payload }),
 
-    TRIGGER_TRUE_ENDING: (state) =>
+    TRIGGER_TRUE_ENDING: (state: any) =>
         ({ ...state, gameState: 'true_ending', syncStatus: 'syncing' }),
 
-    UPDATE_EVENT_CHAIN: (state, action) => {
+    UPDATE_EVENT_CHAIN: (state: any, action: any) => {
         const { chainId, step } = action.payload;
         return {
             ...state,
@@ -36,10 +36,10 @@ export const makeProgressionActionMap = (INITIAL_STATE) => ({
         };
     },
 
-    SET_PENDING_RELICS: (state, action) =>
+    SET_PENDING_RELICS: (state: any, action: any) =>
         ({ ...state, pendingRelics: action.payload }),
 
-    ADD_RELIC: (state, action) => {
+    ADD_RELIC: (state: any, action: any) => {
         const relic = action.payload;
         return {
             ...state,
@@ -53,13 +53,13 @@ export const makeProgressionActionMap = (INITIAL_STATE) => ({
         };
     },
 
-    DECLINE_RELIC: (state) =>
+    DECLINE_RELIC: (state: any) =>
         ({ ...state, pendingRelics: null }),
 
-    ASCEND: (state, action) => {
+    ASCEND: (state: any, action: any) => {
         const { meta, newTitle } = action.payload;
         const prevTitles = state.player.titles || [];
-        const freshPlayer = {
+        const freshPlayer: Record<string, any> = {
             ...INITIAL_STATE.player,
             name: state.player.name,
             gender: state.player.gender,
@@ -92,7 +92,7 @@ export const makeProgressionActionMap = (INITIAL_STATE) => ({
         };
     },
 
-    UNLOCK_TITLES: (state, action) => {
+    UNLOCK_TITLES: (state: any, action: any) => {
         const newIds = action.payload;
         if (!newIds || newIds.length === 0) return state;
         const merged = [...new Set([...(state.player.titles || []), ...newIds])];

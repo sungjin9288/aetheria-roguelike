@@ -37,8 +37,8 @@ const buildMapIndex = () => {
             }
         }
         const drops = [...seen.entries()]
-            .map(([name, rate]) => ({ name, rate }))
-            .sort((a, b) => b.rate - a.rate);
+            .map(([name, rate]: any) => ({ name, rate }))
+            .sort((a: any, b: any) => b.rate - a.rate);
         index[mapName] = Object.freeze(drops);
     }
     return Object.freeze(index);
@@ -52,7 +52,7 @@ const MAP_INDEX = buildMapIndex();
  * @param {string | null | undefined} mapName
  * @returns {ReadonlyArray<MapSignatureDrop>}
  */
-export const getMapSignatureDrops = (mapName) => {
+export const getMapSignatureDrops = (mapName: any) => {
     if (!mapName || typeof mapName !== 'string') return [];
     return MAP_INDEX[mapName] || [];
 };
@@ -64,12 +64,12 @@ export const getMapSignatureDrops = (mapName) => {
  * @param {{ stats?: { codex?: object } } | null | undefined} player
  * @returns {ReadonlyArray<MapSignatureDrop>}
  */
-export const getMapUndiscoveredSignatures = (mapName, player) => {
+export const getMapUndiscoveredSignatures = (mapName: any, player: any) => {
     const drops = getMapSignatureDrops(mapName);
     if (drops.length === 0) return [];
     const codex = player?.stats?.codex || {};
     const weapons = codex.weapons || {};
     const armors = codex.armors || {};
     const shields = codex.shields || {};
-    return drops.filter(({ name }) => !(weapons[name] || armors[name] || shields[name]));
+    return drops.filter(({ name }: any) => !(weapons[name] || armors[name] || shields[name]));
 };

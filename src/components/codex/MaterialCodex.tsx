@@ -4,7 +4,7 @@ import { DB } from '../../data/db';
 import { LOOT_TABLE } from '../../data/loot';
 import ItemIcon from '../icons/ItemIcon';
 
-const MaterialCodex = ({ codex }) => {
+const MaterialCodex = ({ codex }: any) => {
     const materials = DB.ITEMS.materials || [];
     const matCodex = codex.materials || {};
     const discovered = Object.keys(matCodex).length;
@@ -28,7 +28,7 @@ const MaterialCodex = ({ codex }) => {
             </div>
 
             <div className="space-y-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
-                {materials.map(mat => {
+                {materials.map((mat: any) => {
                     const found = !!matCodex[mat.name];
                     const sources = matSources[mat.name] || [];
 

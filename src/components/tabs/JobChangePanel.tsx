@@ -39,12 +39,12 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole = 
           </div>
         </div>
         <div className="grid grid-cols-1 gap-2 w-full max-w-2xl justify-items-center">
-          {avail.map((job) => (
+          {avail.map((job: any) => (
             <ClassCard
               key={job}
               jobName={job}
               player={player}
-              onSelect={(name) => actions.jobChange(name)}
+              onSelect={(name: any) => actions.jobChange(name)}
               disabled={player.level < (DB.CLASSES[job]?.reqLv || 999)}
             />
           ))}

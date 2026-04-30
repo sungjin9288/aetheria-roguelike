@@ -8,18 +8,18 @@ import { isSignatureItem } from '../data/signatureItems.js';
  * 같은 type + 같은 tier 장비 3개 → 상위 tier 장비 1개
  */
 
-const SYNTH_TYPES = ['weapon', 'armor', 'shield'];
+const SYNTH_TYPES: any = ['weapon', 'armor', 'shield'];
 
 /**
  * 합성 가능한 아이템인지 확인
  */
-export const isSynthesizable = (item) =>
+export const isSynthesizable = (item: any) =>
     item && SYNTH_TYPES.includes(item.type) && item.tier >= 1 && item.tier <= 5;
 
 /**
  * 주어진 type + tier 조합의 상위 tier 결과 후보 목록
  */
-export const getSynthesisOutputs = (inputType, inputTier) => {
+export const getSynthesisOutputs = (inputType: any, inputTier: any) => {
     const nextTier = inputTier + 1;
     if (nextTier > 6) return [];
 
@@ -28,7 +28,7 @@ export const getSynthesisOutputs = (inputType, inputTier) => {
         inputType === 'armor'  ? DB.ITEMS.armors  :
         inputType === 'shield' ? DB.ITEMS.armors  : [];
 
-    return pool.filter((item) => item.type === inputType && item.tier === nextTier);
+    return pool.filter((item: any) => item.type === inputType && item.tier === nextTier);
 };
 
 /**
@@ -37,7 +37,7 @@ export const getSynthesisOutputs = (inputType, inputTier) => {
  * @param {number} playerGold - 보유 골드
  * @returns {{ valid: boolean, reason?: string, tier?: number, type?: string, outputs?: Object[], goldCost?: number, successRate?: number }}
  */
-export const validateSynthesis = (items, playerGold) => {
+export const validateSynthesis = (items: any, playerGold: any) => {
     const required = BALANCE.SYNTHESIS_INPUT_COUNT;
 
     if (!items || items.length !== required) {
@@ -50,7 +50,7 @@ export const validateSynthesis = (items, playerGold) => {
     }
 
     // 전설 각인은 합성 재료로 절대 소비 금지 — picker 필터를 우회한 입력 차단
-    const signatureInput = items.find((item) => isSignatureItem(item));
+    const signatureInput = items.find((item: any) => isSignatureItem(item));
     if (signatureInput) {
         return { valid: false, reason: 'SIGNATURE_INPUT', signatureName: signatureInput.name };
     }
@@ -58,7 +58,7 @@ export const validateSynthesis = (items, playerGold) => {
     // 같은 type + tier인지
     const type = items[0].type;
     const tier = items[0].tier;
-    if (!items.every((item) => item.type === type && item.tier === tier)) {
+    if (!items.every((item: any) => item.type === type && item.tier === tier)) {
         return { valid: false, reason: 'MISMATCH' };
     }
 
@@ -101,7 +101,7 @@ export const performSynthesis = (items, selectedOutput = null, useProtect = fals
 
     if (success) {
         const outputs = getSynthesisOutputs(type, tier);
-        const output = selectedOutput && outputs.find((o) => o.name === selectedOutput.name)
+        const output = selectedOutput && outputs.find((o: any) => o.name === selectedOutput.name)
             ? selectedOutput
             : outputs[Math.floor(Math.random() * outputs.length)];
 
@@ -132,7 +132,7 @@ export const performSynthesis = (items, selectedOutput = null, useProtect = fals
  * @param {Object[]} inventory - player.inv
  * @returns {{ type: string, tier: number, rarity: string, items: Object[], count: number }[]}
  */
-export const getSynthesisGroups = (inventory) => {
+export const getSynthesisGroups = (inventory: any) => {
     const groups = {};
 
     for (const item of inventory) {
@@ -149,6 +149,6 @@ export const getSynthesisGroups = (inventory) => {
     }
 
     return (Object.values(groups) as any[])
-        .filter((g) => g.count >= BALANCE.SYNTHESIS_INPUT_COUNT)
-        .sort((a, b) => a.tier - b.tier || a.type.localeCompare(b.type));
+        .filter((g: any) => g.count >= BALANCE.SYNTHESIS_INPUT_COUNT)
+        .sort((a: any, b: any) => a.tier - b.tier || a.type.localeCompare(b.type));
 };

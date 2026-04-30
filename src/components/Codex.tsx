@@ -14,7 +14,7 @@ import MaterialCodex from './codex/MaterialCodex';
 import LegendaryCodex from './codex/LegendaryCodex';
 import CodexDiscoveryOverlay from './codex/CodexDiscoveryOverlay';
 
-const SUB_TABS = [
+const SUB_TABS: any = [
     { id: 'equip', label: 'EQUIP', icon: Sword },
     { id: 'monster', label: 'MONSTER', icon: Bug },
     { id: 'recipe', label: 'RECIPE', icon: Hammer },
@@ -35,10 +35,10 @@ const Codex = ({ player, dispatch }: any) => {
     // 전체 도감 항목 수 계산
     const totalCounts = useMemo(() => {
         const weapons = DB.ITEMS.weapons?.length || 0;
-        const armors = (DB.ITEMS.armors || []).filter(a => a.type === 'armor').length;
-        const shields = (DB.ITEMS.armors || []).filter(a => a.type === 'shield').length;
+        const armors = (DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor').length;
+        const shields = (DB.ITEMS.armors || []).filter((a: any) => a.type === 'shield').length;
         const monsters = new Set<string>();
-        (Object.values(DB.MAPS) as any[]).forEach(map => (map.monsters || []).forEach((m: string) => monsters.add(m)));
+        (Object.values(DB.MAPS) as any[]).forEach((map: any) => (map.monsters || []).forEach((m: string) => monsters.add(m)));
         const recipes = DB.ITEMS.recipes?.length || 0;
         const materials = DB.ITEMS.materials?.length || 0;
         return { weapons, armors, shields, monsters: monsters.size, recipes, materials };
@@ -69,7 +69,7 @@ const Codex = ({ player, dispatch }: any) => {
             ...(DB.ITEMS.armors || []),
         ];
         for (const itemName of Object.keys(SIGNATURE_ITEM_REGISTRY)) {
-            const item = all.find((entry) => entry?.name === itemName);
+            const item = all.find((entry: any) => entry?.name === itemName);
             if (!item) continue;
             const bucket = item.type === 'weapon' ? 'weapons' : item.type === 'shield' ? 'shields' : 'armors';
             if (codex[bucket]?.[itemName]) discovered += 1;
@@ -98,7 +98,7 @@ const Codex = ({ player, dispatch }: any) => {
             {/* Unclaimed milestones */}
             {progress.unclaimed.length > 0 && (
                 <div className="space-y-1.5">
-                    {progress.unclaimed.map(m => {
+                    {progress.unclaimed.map((m: any) => {
                         const rewardText = [
                             m.reward.gold && `+${m.reward.gold}G`,
                             m.reward.premiumCurrency && `+${m.reward.premiumCurrency}💎`,
@@ -126,7 +126,7 @@ const Codex = ({ player, dispatch }: any) => {
 
             {/* Sub Tabs */}
             <div className="grid grid-cols-3 gap-1.5">
-                {SUB_TABS.map(tab => {
+                {SUB_TABS.map((tab: any) => {
                     const Icon = tab.icon;
                     const active = subTab === tab.id;
                     const isLegend = tab.id === 'legend';

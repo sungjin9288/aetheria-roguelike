@@ -5,8 +5,8 @@ import { MSG } from '../data/messages';
 import ClassIcon from './icons/ClassIcon';
 import SignalBadge from './SignalBadge';
 
-const TIER_LABELS = { 0: MSG.CLASS_TIER_0, 1: MSG.CLASS_TIER_1, 2: MSG.CLASS_TIER_2, 3: MSG.CLASS_TIER_3 };
-const TIER_COLORS = { 0: '#9ca3af', 1: '#00ccff', 2: '#bc13fe', 3: '#f59e0b' };
+const TIER_LABELS: any = { 0: MSG.CLASS_TIER_0, 1: MSG.CLASS_TIER_1, 2: MSG.CLASS_TIER_2, 3: MSG.CLASS_TIER_3 };
+const TIER_COLORS: any = { 0: '#9ca3af', 1: '#00ccff', 2: '#bc13fe', 3: '#f59e0b' };
 
 /**
  * 전직 트리의 노드 데이터 구축
@@ -15,7 +15,7 @@ const buildTree = () => {
     const nodes: Record<string, any> = {};
     const edges: Array<{ from: string; to: string }> = [];
 
-    (Object.entries(DB.CLASSES) as Array<[string, any]>).forEach(([name, data]) => {
+    (Object.entries(DB.CLASSES) as Array<[string, any]>).forEach(([name, data]: any) => {
         nodes[name] = { name, tier: data.tier || 0, reqLv: data.reqLv || 1, desc: data.desc };
         (data.next || []).forEach((child: string) => {
             edges.push({ from: name, to: child });
@@ -69,7 +69,7 @@ const TreeNode = ({ node, isCurrent, isAvailable, isLocked }: any) => {
 /**
  * ClassTree — 전직 계통도 시각화 (CSS Grid 4열)
  */
-const ClassTree = ({ player }) => {
+const ClassTree = ({ player }: any) => {
     const { tiers } = useMemo(() => buildTree(), []);
     const currentClass = DB.CLASSES[player.job];
     const availableJobs = new Set<string>(currentClass?.next || []);
@@ -82,7 +82,7 @@ const ClassTree = ({ player }) => {
             const name = queue.shift();
             if (visited.has(name)) continue;
             visited.add(name);
-            (DB.CLASSES[name]?.next || []).forEach(n => queue.push(n));
+            (DB.CLASSES[name]?.next || []).forEach((n: any) => queue.push(n));
         }
         return visited;
     }, [player.job]);
@@ -109,7 +109,7 @@ const ClassTree = ({ player }) => {
             {/* 트리 그리드 — 모바일: 2열(T0+T1 / T2+T3), 데스크탑: 4열 */}
             <div className="overflow-x-auto pb-2">
                 <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 min-w-[280px]">
-                    {[0, 1, 2, 3].map(tier => (
+                    {[0, 1, 2, 3].map((tier: any) => (
                         <div key={tier} className="space-y-1.5">
                             {/* 티어 헤더 */}
                             <div className="text-center mb-1">
@@ -121,7 +121,7 @@ const ClassTree = ({ player }) => {
                                 </div>
                             </div>
                             {/* 노드 */}
-                            {tiers[tier].map(node => (
+                            {tiers[tier].map((node: any) => (
                                 <TreeNode
                                     key={node.name}
                                     node={node}
@@ -140,7 +140,7 @@ const ClassTree = ({ player }) => {
                 <div className="flex flex-wrap gap-1 text-[9px] font-fira text-slate-500">
                     <span className="text-slate-400">{player.job}</span>
                     <span>→</span>
-                    {[...availableJobs].map(job => {
+                    {[...availableJobs].map((job: any) => {
                         const meetsReq = player.level >= (DB.CLASSES[job]?.reqLv || 999);
                         return (
                             <span key={job} className={meetsReq ? 'text-cyber-purple' : 'text-slate-500'}>

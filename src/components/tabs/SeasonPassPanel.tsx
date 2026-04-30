@@ -3,7 +3,7 @@ import { AT } from '../../reducers/actionTypes';
 import { SEASON_REWARDS, SEASON_TIER_XP } from '../../data/seasonPass';
 import SignalBadge from '../SignalBadge';
 
-const rewardLabel = (reward) => {
+const rewardLabel = (reward: any) => {
     if (!reward) return '—';
     return [
         reward.gold && `+${reward.gold}G`,
@@ -13,14 +13,14 @@ const rewardLabel = (reward) => {
     ].filter(Boolean).join(' / ');
 };
 
-const SeasonPassPanel = ({ player, dispatch }) => {
+const SeasonPassPanel = ({ player, dispatch }: any) => {
     const sp = player?.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
     const { xp, tier, claimed, isPremium } = sp;
     const tierXpProgress = xp % SEASON_TIER_XP;
     const nextTierXp = SEASON_TIER_XP;
     const xpPct = Math.min(100, Math.round((tierXpProgress / nextTierXp) * 100));
 
-    const claimReward = (rewardTier) => {
+    const claimReward = (rewardTier: any) => {
         dispatch?.({ type: AT.CLAIM_SEASON_REWARD, payload: { tier: rewardTier } });
     };
 
@@ -60,7 +60,7 @@ const SeasonPassPanel = ({ player, dispatch }) => {
 
             {/* Tier rows */}
             <div className="space-y-1 max-h-[360px] overflow-y-auto pr-0.5">
-                {SEASON_REWARDS.map(row => {
+                {SEASON_REWARDS.map((row: any) => {
                     const unlocked = tier >= row.tier;
                     const isClaimed = claimed.includes(row.tier);
                     const isCurrent = tier === row.tier;

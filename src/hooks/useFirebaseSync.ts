@@ -25,12 +25,12 @@ import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
 const AUTH_TIMEOUT_MS = 8000;
-const makeLogPayload = (type, text) => ({ type, text, id: `${Date.now()}_${Math.random()}` });
+const makeLogPayload = (type: any, text: any) => ({ type, text, id: `${Date.now()}_${Math.random()}` });
 
 /**
  * useFirebaseSync — Firebase 인증, 실시간 동기화, 리더보드, 자동 저장
  */
-export const useFirebaseSync = (state, dispatch) => {
+export const useFirebaseSync = (state: any, dispatch: any) => {
     const smokeMode = isMockRuntime();
     const {
         player,
@@ -64,7 +64,7 @@ export const useFirebaseSync = (state, dispatch) => {
         dispatch({ type: AT.SET_BOOT_STAGE, payload: 'auth' });
         let authResolved = false;
 
-        const fallbackAuthOffline = (message) => {
+        const fallbackAuthOffline = (message: any) => {
             if (authResolved) return;
             authResolved = true;
             dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
@@ -84,7 +84,7 @@ export const useFirebaseSync = (state, dispatch) => {
         }
 
         signInAnonymously(auth)
-            .then((cred) => {
+            .then((cred: any) => {
                 if (authResolved) return;
                 authResolved = true;
                 clearTimeout(authTimer);
@@ -92,11 +92,11 @@ export const useFirebaseSync = (state, dispatch) => {
                 dispatch({ type: AT.SET_UID, payload: uid });
                 dispatch({ type: AT.SET_BOOT_STAGE, payload: 'config' });
                 // 크로스 디바이스 쿼터 동기화 (Dead Code → 활성화)
-                TokenQuotaManager.syncToFirestore(uid, db).catch((e) => {
+                TokenQuotaManager.syncToFirestore(uid, db).catch((e: any) => {
                     console.warn('Token quota sync failed', e);
                 });
             })
-            .catch((e) => {
+            .catch((e: any) => {
                 console.error('Auth Failed', e);
                 clearTimeout(authTimer);
                 fallbackAuthOffline(MSG.SYNC_AUTH_FAIL);
@@ -114,11 +114,11 @@ export const useFirebaseSync = (state, dispatch) => {
         if (bootStage !== 'config') return;
 
         const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
-        const unsubConfig = onSnapshot(configDocRef, (snap) => {
+        const unsubConfig = onSnapshot(configDocRef, (snap: any) => {
             if (snap.exists() && snap.data().config) {
                 dispatch({ type: AT.SET_LIVE_CONFIG, payload: snap.data().config });
             }
-        }, (e) => {
+        }, (e: any) => {
             console.warn('Live config subscribe failed', e);
         });
 
@@ -127,7 +127,7 @@ export const useFirebaseSync = (state, dispatch) => {
                 const lbRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard');
                 const q = query(lbRef, orderBy('totalKills', 'desc'), limit(50));
                 const snap = await getDocs(q);
-                const data = snap.docs.map((d) => d.data());
+                const data = snap.docs.map((d: any) => d.data());
                 dispatch({ type: AT.SET_LEADERBOARD, payload: data });
             } catch (e) {
                 console.warn('Leaderboard fetch failed', e);
@@ -147,7 +147,7 @@ export const useFirebaseSync = (state, dispatch) => {
         const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
         let bootResolved = false;
 
-        const fallbackToOffline = (message) => {
+        const fallbackToOffline = (message: any) => {
             if (bootResolved) return;
             bootResolved = true;
             dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
@@ -159,7 +159,7 @@ export const useFirebaseSync = (state, dispatch) => {
             fallbackToOffline(MSG.SYNC_TIMEOUT);
         }, BOOTSTRAP_TIMEOUT_MS);
 
-        const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        const unsubscribe = onSnapshot(userDocRef, (docSnap: any) => {
             if (docSnap.metadata.hasPendingWrites) return;
 
             bootResolved = true;
@@ -186,7 +186,7 @@ export const useFirebaseSync = (state, dispatch) => {
             } else {
                 dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
             }
-        }, (e) => {
+        }, (e: any) => {
             console.warn('User data subscribe failed', e);
             clearTimeout(bootstrapTimer);
             fallbackToOffline(MSG.SYNC_CONNECT_FAIL);
@@ -207,7 +207,7 @@ export const useFirebaseSync = (state, dispatch) => {
             try {
                 const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
                 const playerPayload = { ...player, archivedHistory: [] };
-                const payload = {
+                const payload: Record<string, any> = {
                     player: playerPayload,
                     gameState,
                     enemy,
@@ -221,7 +221,7 @@ export const useFirebaseSync = (state, dispatch) => {
 
                 if (player.archivedHistory && player.archivedHistory.length > 0) {
                     const historyCol = collection(userDocRef, 'history');
-                    await Promise.all(player.archivedHistory.map((h) => addDoc(historyCol, h)));
+                    await Promise.all(player.archivedHistory.map((h: any) => addDoc(historyCol, h)));
                 }
 
                 await setDoc(userDocRef, payload, { merge: true });
@@ -263,8 +263,8 @@ export const useFirebaseSync = (state, dispatch) => {
         if (smokeMode || !uid || !hasFirebaseConfig) return;
         if (gameState !== 'dead') return;
         const graveEntries = normalizeGraves(grave);
-        const allItems = graveEntries.flatMap((g) => getGraveItems(g)).slice(0, 3);
-        const totalGold = graveEntries.reduce((sum, g) => sum + (g?.gold || 0), 0);
+        const allItems = graveEntries.flatMap((g: any) => getGraveItems(g)).slice(0, 3);
+        const totalGold = graveEntries.reduce((sum: any, g: any) => sum + (g?.gold || 0), 0);
         const graveDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', uid);
         setDoc(graveDocRef, {
             playerName: player.name || '무명 용사',
@@ -275,7 +275,7 @@ export const useFirebaseSync = (state, dispatch) => {
             guardPower: player.atk || 10,
             createdAt: serverTimestamp(),
             uid,
-        }).catch((e) => console.warn('Public grave upload failed', e));
+        }).catch((e: any) => console.warn('Public grave upload failed', e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [gameState, uid]);
 };

@@ -169,8 +169,8 @@ export const getJobSetCatalog = (job: string | undefined | null, items: ItemsDb 
     const matchesJob = (item: ItemLike) => Array.isArray(item.jobs) && item.jobs.includes(job);
     const byTier = (a: ItemLike, b: ItemLike) => (a.tier || 0) - (b.tier || 0) || (a.price || 0) - (b.price || 0);
     const weapons = (items.weapons || []).filter(matchesJob).sort(byTier);
-    const armors = (items.armors || []).filter((it) => it.type === 'armor' && matchesJob(it)).sort(byTier);
-    const offhands = (items.armors || []).filter((it) => it.type === 'shield' && matchesJob(it)).sort(byTier);
+    const armors = (items.armors || []).filter((it: any) => it.type === 'armor' && matchesJob(it)).sort(byTier);
+    const offhands = (items.armors || []).filter((it: any) => it.type === 'shield' && matchesJob(it)).sort(byTier);
     return { weapon: weapons, armor: armors, offhand: offhands };
 };
 

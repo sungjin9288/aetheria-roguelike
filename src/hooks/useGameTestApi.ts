@@ -8,11 +8,11 @@ import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
  * smoke test / dev harness용 window API 등록.
  * engineRef, fullStatsRef, inventorySpotlightRef 는 render 중 동기 갱신된 ref여야 한다.
  */
-export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) => {
+export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotlightRef: any) => {
     useEffect(() => {
         if (typeof window === 'undefined') return undefined;
 
-        const avatarScenarioMap = {
+        const avatarScenarioMap: Record<string, any> = {
             'paladin-plate': {
                 name: '성광 기사',
                 job: '팔라딘',
@@ -110,7 +110,7 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
             },
         };
 
-        const safeText = (value, fallback = '') => {
+        const safeText = (value: any, fallback: any = '') => {
             if (typeof value === 'string') return value;
             if (typeof value === 'number' || typeof value === 'boolean') return String(value);
             if (value && typeof value === 'object') {
@@ -127,15 +127,15 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
             }
             return fallback;
         };
-        const safeList = (items, fallback = '[item]') => (
-            Array.isArray(items) ? items.map((item) => safeText(item, fallback)) : []
+        const safeList = (items: any, fallback: any = '[item]') => (
+            Array.isArray(items) ? items.map((item: any) => safeText(item, fallback)) : []
         );
-        const sanitizeValue = (value, depth = 0) => {
+        const sanitizeValue = (value: any, depth: any = 0) => {
             if (depth > 6) return '[max-depth]';
             if (value == null) return value;
             if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
             if (typeof value === 'function' || typeof value === 'symbol' || typeof value === 'bigint') return `[${typeof value}]`;
-            if (Array.isArray(value)) return value.map((entry) => sanitizeValue(entry, depth + 1));
+            if (Array.isArray(value)) return value.map((entry: any) => sanitizeValue(entry, depth + 1));
             if (typeof value !== 'object') return null;
 
             try {
@@ -198,7 +198,7 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                         choices: safeList(e.currentEvent.choices, '[choice]'),
                     }
                     : null,
-                pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((r) => r.name) : null,
+                pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((r: any) => r.name) : null,
                 postCombatResult: e.postCombatResult
                     ? {
                         enemy: safeText(e.postCombatResult.enemy),
@@ -214,16 +214,16 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                     ? { level: e.runSummary.level, job: e.runSummary.job, loc: e.runSummary.loc }
                     : null,
                 sideTab: e.sideTab,
-                logTail: e.logs.slice(-6).map((log) => ({ type: log.type, text: log.text })),
+                logTail: e.logs.slice(-6).map((log: any) => ({ type: log.type, text: log.text })),
             }));
         };
 
-        window.advanceTime = (ms = 0) => new Promise((resolve) => window.setTimeout(resolve, Math.max(0, ms)));
+        window.advanceTime = (ms: any = 0) => new Promise((resolve: any) => window.setTimeout(resolve, Math.max(0, ms)));
 
         window.__AETHERIA_TEST_API__ = {
             getState: () => JSON.parse(window.render_game_to_text()),
             getDomMetrics: () => {
-                const rect = (node) => {
+                const rect = (node: any) => {
                     if (!(node instanceof HTMLElement)) return null;
                     const bounds = node.getBoundingClientRect();
                     return {
@@ -264,7 +264,7 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                         marginBottom: scrollStyle.marginBottom,
                     } : null,
                     panelChildren: panel instanceof HTMLElement
-                        ? Array.from(panel.children).map((child) => ({
+                        ? Array.from(panel.children).map((child: any) => ({
                             tag: child.tagName,
                             className: child.className,
                             position: window.getComputedStyle(child).position,
@@ -277,15 +277,15 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                 };
             },
             getPerfSnapshot: () => getPerfSnapshot(),
-            markPerf: (name) => markPerf(name),
+            markPerf: (name: any) => markPerf(name),
             resetGame: () => engineRef.current.actions.reset?.(),
-            sendCommand: (command) => engineRef.current.handleCommand(command),
+            sendCommand: (command: any) => engineRef.current.handleCommand(command),
             clearPostCombat: () => engineRef.current.actions.clearPostCombat?.(),
-            setSideTab: (tab) => engineRef.current.actions.setSideTab?.(tab),
-            seedEnhanceScenario: ({ gold = 500, materialCount = 0, weaponEnhance = 0 } = {}) => {
+            setSideTab: (tab: any) => engineRef.current.actions.setSideTab?.(tab),
+            seedEnhanceScenario: ({ gold = 500, materialCount = 0, weaponEnhance = 0 }: any = {}) => {
                 const er = engineRef.current;
-                const preservedInventory = (er.player.inv || []).filter((item) => item?.name !== CONSTANTS.ENHANCE_MATERIAL_NAME);
-                const seededMaterials = Array.from({ length: materialCount }, (_, index) => ({
+                const preservedInventory = (er.player.inv || []).filter((item: any) => item?.name !== CONSTANTS.ENHANCE_MATERIAL_NAME);
+                const seededMaterials = Array.from({ length: materialCount }, (_: any, index: any) => ({
                     id: `smoke-enhance-material-${index}`,
                     name: CONSTANTS.ENHANCE_MATERIAL_NAME,
                     type: 'mat',
@@ -314,7 +314,7 @@ export const useGameTestApi = (engineRef, fullStatsRef, inventorySpotlightRef) =
                 });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'equipment' });
             },
-            seedAvatarScenario: (preset = 'paladin-plate') => {
+            seedAvatarScenario: (preset: any = 'paladin-plate') => {
                 const er = engineRef.current;
                 const scenario = avatarScenarioMap[preset];
                 if (!scenario) return false;

@@ -10,7 +10,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 export const createMoveActions = (deps, _shared?: any) => {
     const { player, gameState, grave, isAiThinking, liveConfig, dispatch, addLog, addStoryLog } = deps;
     return {
-        move: (loc) => {
+        move: (loc: any) => {
             if (isAiThinking) return;
             if (!loc) {
                 const exits = DB.MAPS[player.loc]?.exits?.join(', ') || MSG.MOVE_NO_EXITS;
@@ -34,7 +34,7 @@ export const createMoveActions = (deps, _shared?: any) => {
 
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p) => {
+                payload: (p: any) => {
                     const nextPlayer = isSafeDestination ? clearTemporaryAdventureState(p) : { ...p };
                     return {
                         ...nextPlayer,
@@ -56,7 +56,7 @@ export const createMoveActions = (deps, _shared?: any) => {
                     addLog('system', visitReward.msg);
                     dispatch({
                         type: AT.SET_PLAYER,
-                        payload: (p) => {
+                        payload: (p: any) => {
                             let updated = isSafeDestination ? clearTemporaryAdventureState(p) : { ...p };
                             updated = { ...updated, gold: (updated.gold || 0) + visitReward.gold };
                             const expResult = CombatEngine.applyExpGain(updated, visitReward.exp);

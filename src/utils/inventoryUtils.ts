@@ -11,7 +11,7 @@ import { makeItem, findItemByName } from './gameUtils';
  * @param {Object} itemDef - DB 아이템 정의 객체
  * @returns {Object} 새 player 객체
  */
-export const addItemToInventory = (player, itemDef) => ({
+export const addItemToInventory = (player: any, itemDef: any) => ({
     ...player,
     inv: [...(player.inv || []), makeItem(itemDef)],
 });
@@ -23,7 +23,7 @@ export const addItemToInventory = (player, itemDef) => ({
  * @param {string} itemName
  * @returns {Object} 새 player 객체
  */
-export const addItemByName = (player, itemName) => {
+export const addItemByName = (player: any, itemName: any) => {
     const itemDef = findItemByName(itemName);
     if (!itemDef) return player;
     return addItemToInventory(player, itemDef);

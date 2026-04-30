@@ -5,12 +5,12 @@ import { getPostCombatAnalysis } from '../utils/outcomeAnalysis';
 import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 
-const METRIC_CARD_CLASS = {
+const METRIC_CARD_CLASS: any = {
     exp: 'border-[#7dd4d8]/20 bg-[#7dd4d8]/10 text-[#dff7f5]',
     gold: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]',
 };
 
-const toneClassForSignal = (tone) => {
+const toneClassForSignal = (tone: any) => {
     if (tone === 'amber') return 'text-[#f6e7c8] border-[#d5b180]/20 bg-[#d5b180]/10';
     if (tone === 'success') return 'text-emerald-100 border-emerald-300/20 bg-emerald-300/10';
     if (tone === 'purple') return 'text-[#e3dcff] border-[#9a8ac0]/24 bg-[#9a8ac0]/10';
@@ -29,8 +29,8 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: any) => {
             : [];
     // signature 각인은 Field Report 상단에 별도 gold row로 강조.
     // 일반 lootSummary에서는 제외해 중복 표시 방지.
-    const signatureLoot = droppedItems.filter((name) => typeof name === 'string' && isSignatureItem({ name }));
-    const nonSignatureLoot = droppedItems.filter((name) => !(typeof name === 'string' && isSignatureItem({ name })));
+    const signatureLoot = droppedItems.filter((name: any) => typeof name === 'string' && isSignatureItem({ name }));
+    const nonSignatureLoot = droppedItems.filter((name: any) => !(typeof name === 'string' && isSignatureItem({ name })));
     const hasLevelUp = Boolean(result.leveledUp);
     const hpLow = typeof result.hpLow === 'boolean'
         ? result.hpLow
@@ -131,7 +131,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: any) => {
                 </div>
                 <div className="mt-2 text-xs font-fira leading-relaxed text-slate-200/86">{compactNote}</div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                    {summaryBadges.map((entry) => (
+                    {summaryBadges.map((entry: any) => (
                         <SignalBadge key={entry} tone="neutral" size="sm">{entry}</SignalBadge>
                     ))}
                     {compactAction && <SignalBadge tone="recommended" size="sm">{compactAction}</SignalBadge>}

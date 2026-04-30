@@ -4,18 +4,18 @@ import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
 import { getGravesAtLoc, removeGravesAtLoc, resolveGraveRecovery } from '../../utils/graveUtils.js';
 
-export const createQuestActions = (deps, { emitUnlockedTitles }) => {
+export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
     const { player, grave, dispatch, addLog } = deps;
     return {
-        acceptQuest: (qId) => {
+        acceptQuest: (qId: any) => {
             if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', MSG.QUEST_TOWN_ONLY);
-            if (player.quests.some((q) => q.id === qId)) return addLog('error', MSG.QUEST_ALREADY_ACCEPTED);
-            const qData = DB.QUESTS.find((q) => q.id === qId);
+            if (player.quests.some((q: any) => q.id === qId)) return addLog('error', MSG.QUEST_ALREADY_ACCEPTED);
+            const qData = DB.QUESTS.find((q: any) => q.id === qId);
             if (!qData) return;
             if (player.level < (qData.minLv || 1)) return addLog('error', MSG.QUEST_LEVEL_REQUIRED(qData.minLv));
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p) => ({
+                payload: (p: any) => ({
                     ...p,
                     quests: [...p.quests, { id: qId, progress: qData.target === 'Level' ? p.level : 0 }]
                 })
@@ -35,7 +35,7 @@ export const createQuestActions = (deps, { emitUnlockedTitles }) => {
 
         requestBounty: () => {
             if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', MSG.BOUNTY_TOWN_ONLY);
-            if (player.quests.some(q => q.isBounty)) return addLog('error', MSG.BOUNTY_ALREADY_ACTIVE);
+            if (player.quests.some((q: any) => q.isBounty)) return addLog('error', MSG.BOUNTY_ALREADY_ACTIVE);
             const today = new Date().toISOString().slice(0, 10);
             if (player.stats?.bountyDate === today && player.stats?.bountyIssued) {
                 return addLog('error', MSG.BOUNTY_DAILY_LIMIT);
@@ -50,7 +50,7 @@ export const createQuestActions = (deps, { emitUnlockedTitles }) => {
             const target = validMonsters[Math.floor(Math.random() * validMonsters.length)];
             const count = BALANCE.BOUNTY_MIN_COUNT + Math.floor(Math.random() * BALANCE.BOUNTY_COUNT_RANGE);
             const bId = `bounty_${Date.now()}`;
-            const newBounty = {
+            const newBounty: Record<string, any> = {
                 id: bId,
                 title: `[현상수배] ${target} 토벌`,
                 desc: `${target} ${count}마리를 처치하라.`,
@@ -62,7 +62,7 @@ export const createQuestActions = (deps, { emitUnlockedTitles }) => {
             };
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p) => ({
+                payload: (p: any) => ({
                     ...p,
                     quests: [...p.quests, newBounty],
                     stats: { ...(p.stats || {}), bountyDate: today, bountyIssued: true }

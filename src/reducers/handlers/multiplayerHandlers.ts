@@ -1,13 +1,13 @@
 export const multiplayerActionMap = {
     // ── Challenge Modifiers ───────────────────────────────────────────────
-    SET_CHALLENGE_MODIFIERS: (state, action) => ({
+    SET_CHALLENGE_MODIFIERS: (state: any, action: any) => ({
         ...state,
         player: { ...state.player, challengeModifiers: action.payload || [] },
         syncStatus: 'syncing',
     }),
 
     // ── Skill Branch ──────────────────────────────────────────────────────
-    CHOOSE_SKILL_BRANCH: (state, action) => {
+    CHOOSE_SKILL_BRANCH: (state: any, action: any) => {
         const { skillName, choice } = action.payload;
         return {
             ...state,
@@ -20,10 +20,10 @@ export const multiplayerActionMap = {
     },
 
     // ── Grave PvP ─────────────────────────────────────────────────────────
-    SET_PUBLIC_GRAVES: (state, action) =>
+    SET_PUBLIC_GRAVES: (state: any, action: any) =>
         ({ ...state, publicGraves: action.payload }),
 
-    INVADE_GRAVE: (state, action) => {
+    INVADE_GRAVE: (state: any, action: any) => {
         const { reward, uid: targetUid } = action.payload;
         const today = new Date().toDateString();
         const lastInvadeDate = state.player.stats?.lastInvadeDate;
@@ -42,7 +42,7 @@ export const multiplayerActionMap = {
                     lastInvadeDate: today,
                 },
             },
-            publicGraves: state.publicGraves.filter((g) => g.uid !== targetUid),
+            publicGraves: state.publicGraves.filter((g: any) => g.uid !== targetUid),
             syncStatus: 'syncing',
         };
     },

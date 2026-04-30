@@ -8,12 +8,12 @@ import { createCombatItemActions } from './combatActions/combatItem';
  * createCombatActions — 전투 로직 (공격, 스킬, 도주, 아이템 사용)
  * pendingEnemyTurn ref를 공유 mutable ref로 관리합니다.
  */
-export const createCombatActions = (deps) => {
+export const createCombatActions = (deps: any) => {
     const { player, dispatch, addLog } = deps;
 
-    const emitDailyProtocolLogs = (type, amount = 1) => {
+    const emitDailyProtocolLogs = (type: any, amount: any = 1) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
-        completed.forEach((mission) => {
+        completed.forEach((mission: any) => {
             addLog('system', MSG.DAILY_PROTOCOL_DONE(formatDailyProtocolReward(mission.reward)));
         });
     };

@@ -1,22 +1,22 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 
 export const countInventoryItemByName = (inventory = [], itemName) => (
-    (inventory || []).filter((item) => item?.name === itemName).length
+    (inventory || []).filter((item: any) => item?.name === itemName).length
 );
 
-export const getEnhanceRequirement = (currentLevel = 0) => ({
+export const getEnhanceRequirement = (currentLevel: any = 0) => ({
     gold: BALANCE.ENHANCE_COSTS[currentLevel] ?? 0,
     materials: BALANCE.ENHANCE_MATERIAL_COSTS[currentLevel] ?? 1,
     materialName: CONSTANTS.ENHANCE_MATERIAL_NAME,
 });
 
-export const getEnhanceMaterialCount = (inventory = []) => (
+export const getEnhanceMaterialCount = (inventory: any = []) => (
     countInventoryItemByName(inventory, CONSTANTS.ENHANCE_MATERIAL_NAME)
 );
 
 export const consumeInventoryItemByName = (inventory = [], itemName, count = 1) => {
     let removed = 0;
-    const nextInventory = (inventory || []).filter((item) => {
+    const nextInventory = (inventory || []).filter((item: any) => {
         if (item?.name === itemName && removed < count) {
             removed += 1;
             return false;

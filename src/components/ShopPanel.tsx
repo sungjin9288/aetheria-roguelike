@@ -9,7 +9,7 @@ import ItemIcon from './icons/ItemIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
 
 /** 맵 레벨을 기준으로 상점 최대 아이템 티어 계산 */
-const getShopMaxTier = (loc) => {
+const getShopMaxTier = (loc: any) => {
     const mapData = DB.MAPS?.[loc] || {};
     const mapLevel = typeof mapData.level === 'number' ? mapData.level : 1;
     const isSafe = mapData.type === 'safe';
@@ -23,19 +23,19 @@ const getOverlayPanelClass = () => (
     'fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.65rem)] bottom-0 rounded-t-[1.75rem] rounded-b-none border-t'
 );
 
-const isEquipmentItem = (item) => ['weapon', 'armor', 'shield'].includes(item?.type);
+const isEquipmentItem = (item: any) => ['weapon', 'armor', 'shield'].includes(item?.type);
 
-const signedDelta = (value = 0, suffix = '') => `${value >= 0 ? '+' : ''}${value}${suffix}`;
+const signedDelta = (value: any = 0, suffix: any = '') => `${value >= 0 ? '+' : ''}${value}${suffix}`;
 
-const formatPercent = (value = 0) => `${value >= 0 ? '+' : ''}${value}%`;
+const formatPercent = (value: any = 0) => `${value >= 0 ? '+' : ''}${value}%`;
 
-const getItemTags = (item) => {
+const getItemTags = (item: any) => {
     const tags = [];
     if (isWeapon(item)) tags.push(isTwoHandWeapon(item) ? '2H' : '1H');
     return tags;
 };
 
-const getComparisonMeta = (item, equip: any = {}) => {
+const getComparisonMeta = (item: any, equip: any = {}) => {
     if (!item) return null;
     const currentProfile = getEquipmentProfile(equip);
     const nextEquip = getNextEquipmentState(equip, item);
@@ -70,19 +70,19 @@ const getComparisonMeta = (item, equip: any = {}) => {
     return null;
 };
 
-const getToneClass = (tone) => {
+const getToneClass = (tone: any) => {
     if (tone === 'positive') return 'text-[#dff7f5] border-[#7dd4d8]/24 bg-[#7dd4d8]/10';
     if (tone === 'negative') return 'text-rose-100 border-rose-300/24 bg-rose-400/10';
     return 'text-slate-300 border-white/8 bg-white/[0.03]';
 };
 
-const getCompactText = (value = '') => value.replaceAll(' / ', ' · ');
+const getCompactText = (value: any = '') => value.replaceAll(' / ', ' · ');
 
-const getCompactComparisonText = (comparison) => (
+const getCompactComparisonText = (comparison: any) => (
     getCompactText(comparison?.text || '').replace('현재 장비와 동일한 효율', '변화 없음')
 );
 
-const getCompactItemSummary = (item) => {
+const getCompactItemSummary = (item: any) => {
     const summary = getCompactText(getItemStatText(item) || item.desc || '');
     if (!isWeapon(item)) return summary;
     return summary.replace(/^(연계|파쇄)\s[12]H\s·\s/, '');
@@ -118,8 +118,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
 
     const buyItems = useMemo(() => {
         return shopItems
-            .filter((item) => (item.tier || 1) <= maxTier)
-            .map((item) => {
+            .filter((item: any) => (item.tier || 1) <= maxTier)
+            .map((item: any) => {
                 const affordable = currentGold >= item.price;
                 const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(currentJob);
                 const resonance = getTraitItemResonance(item, traitProfile, { job: currentJob });
@@ -132,7 +132,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                     resonanceScore: resonance.score,
                 };
             })
-            .sort((a, b) => (
+            .sort((a: any, b: any) => (
                 a.priorityScore - b.priorityScore
                 || b.resonanceScore - a.resonanceScore
                 || (a.item.price || 0) - (b.item.price || 0)
@@ -146,8 +146,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
 
     const sellItems = useMemo(() => (
         [...player.inv]
-            .filter((item) => !String(item.id).startsWith('starter_'))
-            .sort((a, b) => (a.price || 0) - (b.price || 0))
+            .filter((item: any) => !String(item.id).startsWith('starter_'))
+            .sort((a: any, b: any) => (a.price || 0) - (b.price || 0))
     ), [player.inv]);
 
     const dailyDeals = useMemo(() => getDailyDeals(player.level || 1), [player.level]);
@@ -206,7 +206,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                     <div className="mb-2 space-y-2 border-b border-white/8 pb-2">
                         <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-amber-300/70">Daily Deals — 10% OFF</div>
                         <div className="grid grid-cols-1 gap-2">
-                            {dailyDeals.items.map((item) => {
+                            {dailyDeals.items.map((item: any) => {
                                 const canStore = inventoryHasRoom;
                                 const affordable = player.gold >= item.price;
                                 const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job);
@@ -282,7 +282,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
 
                 {shopMode === 'buy' ? (
                     buyItems.length > 0 ? (
-                        visibleBuyItems.map(({ item, affordable, equipable, inventoryHasRoom: canStore }) => {
+                        visibleBuyItems.map(({ item, affordable, equipable, inventoryHasRoom: canStore }: any) => {
                             const canBuy = affordable && equipable && canStore;
                             const comparison = getComparisonMeta(item, player.equip);
                             const typeTag = getItemTags(item)[0];
@@ -356,7 +356,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                     )
                 ) : (
                     sellItems.length > 0 ? (
-                        sellItems.map((item) => {
+                        sellItems.map((item: any) => {
                             const isConfirming = sellConfirmId === item.id;
                             const sellPrice = Math.floor((item.price || 0) * 0.5);
                             const comparison = getComparisonMeta(item, player.equip);

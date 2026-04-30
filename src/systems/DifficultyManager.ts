@@ -22,13 +22,13 @@ const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
  * 최근 전투 로그에서 성과 지표를 추출합니다.
  * player.stats.recentBattles: Array<{ result: 'win'|'death'|'escape', hpRatio: number }>
  */
-export const calcPerformanceScore = (player) => {
+export const calcPerformanceScore = (player: any) => {
     const battles = (player.stats?.recentBattles || []).slice(-WINDOW);
     if (battles.length < 5) return 0.5; // 데이터 부족 → 중립
 
-    const wins    = battles.filter(b => b.result === 'win').length;
-    const deaths  = battles.filter(b => b.result === 'death').length;
-    const escapes = battles.filter(b => b.result === 'escape').length;
+    const wins    = battles.filter((b: any) => b.result === 'win').length;
+    const deaths  = battles.filter((b: any) => b.result === 'death').length;
+    const escapes = battles.filter((b: any) => b.result === 'escape').length;
     const total   = battles.length;
 
     const winRate    = wins / total;          // 0~1
@@ -36,9 +36,9 @@ export const calcPerformanceScore = (player) => {
     const escapeRate = escapes / total;       // 0~1
 
     // 평균 남은 HP 비율 (승리한 전투만)
-    const winBattles = battles.filter(b => b.result === 'win');
+    const winBattles = battles.filter((b: any) => b.result === 'win');
     const avgHpRatio = winBattles.length > 0
-        ? winBattles.reduce((sum, b) => sum + (b.hpRatio || 0.5), 0) / winBattles.length
+        ? winBattles.reduce((sum: any, b: any) => sum + (b.hpRatio || 0.5), 0) / winBattles.length
         : 0.5;
 
     // 성과 점수 0~1: 높을수록 플레이어가 강함
@@ -58,7 +58,7 @@ export const calcPerformanceScore = (player) => {
 // ─────────────────────────────────────────────────────────────────────────
 // 2. 성과 점수 → 난이도 배율 변환
 // ─────────────────────────────────────────────────────────────────────────
-const DIFF_TABLE = [
+const DIFF_TABLE: any = [
     // { minScore, label, hpMult, atkMult, goldMult, expMult }
     { minScore: 0.85, label: '압도',   hpMult: 1.15, atkMult: 1.15, goldMult: 1.3, expMult: 1.3 },
     { minScore: 0.72, label: '우세',   hpMult: 1.08, atkMult: 1.08, goldMult: 1.15, expMult: 1.15 },
@@ -72,8 +72,8 @@ const DIFF_TABLE = [
  * 성과 점수에서 난이도 배율 객체를 반환합니다.
  * @returns {{ label, hpMult, atkMult, goldMult, expMult }}
  */
-export const getDifficultyMults = (score) => {
-    return DIFF_TABLE.find(t => score >= t.minScore) || DIFF_TABLE[DIFF_TABLE.length - 1];
+export const getDifficultyMults = (score: any) => {
+    return DIFF_TABLE.find((t: any) => score >= t.minScore) || DIFF_TABLE[DIFF_TABLE.length - 1];
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ export const getDifficultyMults = (score) => {
  * @param {function} addLog 로그 출력 함수
  * @returns {{ mStats: object, diffLabel: string }}
  */
-export const applyDynamicDifficulty = (mStats, player, addLog) => {
+export const applyDynamicDifficulty = (mStats: any, player: any, addLog: any) => {
     const score = calcPerformanceScore(player);
     const diff  = getDifficultyMults(score);
 
@@ -102,7 +102,7 @@ export const applyDynamicDifficulty = (mStats, player, addLog) => {
         addLog?.('system', GM_PREFIX_MAP[diff.label]);
     }
 
-    const scaled = {
+    const scaled: Record<string, any> = {
         ...mStats,
         hp:    Math.floor(mStats.hp    * diff.hpMult),
         maxHp: Math.floor(mStats.maxHp * diff.hpMult),
@@ -125,7 +125,7 @@ export const applyDynamicDifficulty = (mStats, player, addLog) => {
  * @param {number} hpRatio  전투 종료 시점 HP / maxHp (0~1)
  * @returns {object}
  */
-export const makeBattleRecord = (result, hpRatio) => ({
+export const makeBattleRecord = (result: any, hpRatio: any) => ({
     result,
     hpRatio: Math.max(0, Math.min(1, hpRatio)),
     ts: Date.now(),
@@ -135,7 +135,7 @@ export const makeBattleRecord = (result, hpRatio) => ({
  * player.stats.recentBattles를 새 전투 결과로 업데이트합니다.
  * 최대 50개까지 보관합니다.
  */
-export const pushBattleRecord = (stats, record) => {
+export const pushBattleRecord = (stats: any, record: any) => {
     const prev = stats?.recentBattles || [];
     return {
         ...stats,
@@ -143,10 +143,10 @@ export const pushBattleRecord = (stats, record) => {
     };
 };
 
-export const countLowHpWins = (stats, threshold = 0.2) => {
+export const countLowHpWins = (stats: any, threshold: any = 0.2) => {
     const recentBattles = stats?.recentBattles || [];
     if (recentBattles.length > 0) {
-        return recentBattles.filter((battle) => (
+        return recentBattles.filter((battle: any) => (
             battle?.result === 'win'
             && Number.isFinite(battle?.hpRatio)
             && battle.hpRatio <= threshold
@@ -161,7 +161,7 @@ export const countLowHpWins = (stats, threshold = 0.2) => {
 /**
  * AI_SERVICE.generateEvent() 호출 시 playerSnapshot에 난이도 정보를 추가합니다.
  */
-export const enrichSnapshotWithDifficulty = (playerSnapshot, player) => {
+export const enrichSnapshotWithDifficulty = (playerSnapshot: any, player: any) => {
     const score = calcPerformanceScore(player);
     const diff  = getDifficultyMults(score);
     return {
@@ -170,7 +170,7 @@ export const enrichSnapshotWithDifficulty = (playerSnapshot, player) => {
         difficultyLabel:  diff.label,
         recentWinRate:    (() => {
             const b = (player.stats?.recentBattles || []).slice(-WINDOW);
-            return b.length > 0 ? Math.round((b.filter(r => r.result === 'win').length / b.length) * 100) : null;
+            return b.length > 0 ? Math.round((b.filter((r: any) => r.result === 'win').length / b.length) * 100) : null;
         })(),
     };
 };

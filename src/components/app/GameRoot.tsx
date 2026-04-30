@@ -23,7 +23,7 @@ const GameRoot = ({
     isMuted, setIsMuted,
     handleQuickSlotUse,
     damageFlash, healFlash, damageAmount,
-}) => {
+}: any) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
     const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch);
     const legendarySoundPlayedRef = useRef(null);
@@ -102,7 +102,7 @@ const GameRoot = ({
                             onExpandInventory={() => { engine.actions.expandInventory?.(); }}
                             onPurchaseSynthProtect={() => { engine.actions.purchaseSynthProtect?.(); }}
                             onPurchaseRevive={() => { engine.actions.purchaseRevive?.(); }}
-                            onPurchaseTitle={(id, name, cost) => { engine.actions.purchaseCosmeticTitle?.(id, name, cost); }}
+                            onPurchaseTitle={(id: any, name: any, cost: any) => { engine.actions.purchaseCosmeticTitle?.(id, name, cost); }}
                         />
                     </Suspense>
                 )}

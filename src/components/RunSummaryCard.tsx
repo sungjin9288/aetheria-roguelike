@@ -6,7 +6,7 @@ import { getRunSummaryAnalysis } from '../utils/outcomeAnalysis';
 import { buildRunShareText } from '../utils/runShareText.js';
 import SignalBadge from './SignalBadge';
 
-const STAT_CARD_STYLE = [
+const STAT_CARD_STYLE: any = [
     'text-[#f6e7c8] border-[#d5b180]/18 bg-[#d5b180]/10',
     'text-[#dff7f5] border-[#7dd4d8]/18 bg-[#7dd4d8]/10',
     'text-rose-100 border-rose-300/20 bg-rose-400/10',
@@ -15,7 +15,7 @@ const STAT_CARD_STYLE = [
     'text-[#f6e7c8] border-[#d5b180]/18 bg-[#d5b180]/10',
 ];
 
-const RunSummaryCard = ({ runSummary: s, onRestart }) => {
+const RunSummaryCard = ({ runSummary: s, onRestart }: any) => {
     const [copied, setCopied] = useState(false);
     const analysis = getRunSummaryAnalysis(s);
 
@@ -97,7 +97,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                     </div>
 
                     <div className="mt-5 grid grid-cols-2 gap-2.5">
-                        {stats.map((st, index) => (
+                        {stats.map((st: any, index: any) => (
                             <div key={st.label} className={`rounded-[1rem] border px-3 py-3 ${STAT_CARD_STYLE[index]}`}>
                                 <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] opacity-76">
                                     {st.icon}
@@ -127,7 +127,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                                 전설 각인 {s.signaturesAcquired}종 획득
                             </div>
                             <div className="mt-2.5 flex flex-wrap gap-1.5">
-                                {(s.signatureNames || []).map((name) => (
+                                {(s.signatureNames || []).map((name: any) => (
                                     <span
                                         key={name}
                                         className="rounded-full px-2 py-0.5 text-[10px] font-fira"
@@ -154,13 +154,13 @@ const RunSummaryCard = ({ runSummary: s, onRestart }) => {
                         </div>
 
                         <div className="mt-3 space-y-1.5 text-[11px] font-fira text-slate-200/86">
-                            {analysis.notes.map((note) => (
+                            {analysis.notes.map((note: any) => (
                                 <div key={note}>• {note}</div>
                             ))}
                         </div>
 
                         <div className="mt-3 border-t border-white/8 pt-3 space-y-1.5 text-[11px] font-fira text-[#dff7f5]/78">
-                            {analysis.focus.map((focus) => (
+                            {analysis.focus.map((focus: any) => (
                                 <div key={focus}>→ {focus}</div>
                             ))}
                         </div>

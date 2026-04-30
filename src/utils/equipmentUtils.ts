@@ -1,8 +1,8 @@
 import { BALANCE } from '../data/constants.js';
 
-const MAGIC_WEAPON_KEYWORDS = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
+const MAGIC_WEAPON_KEYWORDS: any = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
 
-const WEAPON_SKILL_BY_ELEM = {
+const WEAPON_SKILL_BY_ELEM: any = {
     화염: { name: '이그니스 버스트', effect: 'burn', mp: 28, mult: 2.9, cooldown: 2 },
     냉기: { name: '프로스트 노바', effect: 'freeze', mp: 30, mult: 2.8, cooldown: 2 },
     어둠: { name: '섀도우 피어스', effect: 'curse', mp: 30, mult: 3.0, cooldown: 2 },
@@ -12,19 +12,19 @@ const WEAPON_SKILL_BY_ELEM = {
     물리: { name: '아케인 볼트', effect: null, mp: 22, mult: 2.3, cooldown: 1 },
 };
 
-export const isWeapon = (item) => item?.type === 'weapon';
+export const isWeapon = (item: any) => item?.type === 'weapon';
 
-export const isShield = (item) => item?.type === 'shield';
+export const isShield = (item: any) => item?.type === 'shield';
 
-export const isFocusOffhand = (item) => isShield(item) && item?.subtype === 'focus';
+export const isFocusOffhand = (item: any) => isShield(item) && item?.subtype === 'focus';
 
-export const getWeaponHands = (weapon) => Math.max(1, Number(weapon?.hands) || 1);
+export const getWeaponHands = (weapon: any) => Math.max(1, Number(weapon?.hands) || 1);
 
-export const isTwoHandWeapon = (weapon) => isWeapon(weapon) && getWeaponHands(weapon) >= 2;
+export const isTwoHandWeapon = (weapon: any) => isWeapon(weapon) && getWeaponHands(weapon) >= 2;
 
-export const isOneHandWeapon = (weapon) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
+export const isOneHandWeapon = (weapon: any) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
 
-export const getWeaponStyleLabel = (item) => {
+export const getWeaponStyleLabel = (item: any) => {
     if (!item) return '미장착';
     if (isWeapon(item)) return isTwoHandWeapon(item) ? '파쇄 2H' : '연계 1H';
     if (isFocusOffhand(item)) return '비전 보조';
@@ -33,12 +33,12 @@ export const getWeaponStyleLabel = (item) => {
     return '장비';
 };
 
-export const getEquipmentIdentity = (item) => {
+export const getEquipmentIdentity = (item: any) => {
     if (!item) return null;
     return item.id || `${item.type}:${item.name}`;
 };
 
-export const getWeaponAttackValue = (weapon, slot = 'main') => {
+export const getWeaponAttackValue = (weapon: any, slot: any = 'main') => {
     if (!isWeapon(weapon)) return 0;
     const baseVal = weapon.val || 0;
 
@@ -53,24 +53,24 @@ export const getWeaponAttackValue = (weapon, slot = 'main') => {
     return Math.floor(baseVal * BALANCE.ONE_HAND_ATK_RATIO);
 };
 
-export const getWeaponCritBonus = (weapon, slot = 'main') => {
+export const getWeaponCritBonus = (weapon: any, slot: any = 'main') => {
     if (!isOneHandWeapon(weapon)) return 0;
     if (typeof weapon?.crit === 'number') return weapon.crit;
     return slot === 'offhand' ? BALANCE.OFFHAND_ONE_HAND_CRIT_BONUS : BALANCE.ONE_HAND_CRIT_BONUS;
 };
 
-export const getWeaponEquipScore = (weapon, slot = 'main') => (
+export const getWeaponEquipScore = (weapon: any, slot: any = 'main') => (
     getWeaponAttackValue(weapon, slot) + Math.round(getWeaponCritBonus(weapon, slot) * 100)
 );
 
-export const getOffhandCritBonus = (item) => {
+export const getOffhandCritBonus = (item: any) => {
     if (!item) return 0;
     if (isWeapon(item)) return getWeaponCritBonus(item, 'offhand');
     if (isShield(item)) return item.crit || 0;
     return 0;
 };
 
-export const getOffhandMpBonus = (item) => (isShield(item) ? item.mp || 0 : 0);
+export const getOffhandMpBonus = (item: any) => (isShield(item) ? item.mp || 0 : 0);
 
 export const getEquipmentProfile = (equip: any = {}) => {
     const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
@@ -92,15 +92,15 @@ export const getEquipmentProfile = (equip: any = {}) => {
 };
 
 const pickBestOneHandPair = (weapons: any[] = [], requiredWeapon = null) => {
-    const candidates = weapons.filter((weapon) => isOneHandWeapon(weapon));
+    const candidates = weapons.filter((weapon: any) => isOneHandWeapon(weapon));
     if (!candidates.length) return { mainWeapon: null, offhandWeapon: null };
     if (candidates.length === 1) return { mainWeapon: candidates[0], offhandWeapon: null };
 
     let bestPair = { mainWeapon: candidates[0], offhandWeapon: candidates[1] };
     let bestScore = Number.NEGATIVE_INFINITY;
 
-    candidates.forEach((mainWeapon) => {
-        candidates.forEach((offhandWeapon) => {
+    candidates.forEach((mainWeapon: any) => {
+        candidates.forEach((offhandWeapon: any) => {
             if (mainWeapon === offhandWeapon) return;
             if (requiredWeapon && mainWeapon !== requiredWeapon && offhandWeapon !== requiredWeapon) return;
 
@@ -164,12 +164,12 @@ export const getNextEquipmentState = (equip: any = {}, item) => {
     return nextEquip;
 };
 
-export const isMagicWeapon = (weapon) => {
+export const isMagicWeapon = (weapon: any) => {
     if (!isWeapon(weapon)) return false;
     if (weapon.elem && weapon.elem !== '물리') return true;
 
     const name = String(weapon.name || '');
-    return MAGIC_WEAPON_KEYWORDS.some((keyword) => name.includes(keyword));
+    return MAGIC_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
 };
 
 export const getEquippedWeapons = (equip: any = {}) => {
@@ -179,7 +179,7 @@ export const getEquippedWeapons = (equip: any = {}) => {
     return list;
 };
 
-const buildWeaponSkill = ({ slot, weapon }) => {
+const buildWeaponSkill = ({ slot, weapon }: any) => {
     const elem = weapon.elem || '물리';
     const preset = WEAPON_SKILL_BY_ELEM[elem] || WEAPON_SKILL_BY_ELEM.물리;
     const slotLabel = slot === 'offhand' ? '좌수' : '우수';
@@ -205,7 +205,7 @@ export const getWeaponMagicSkills = (equip: any = {}) => {
     const skills = [];
     const seen = new Set();
 
-    getEquippedWeapons(equip).forEach((entry) => {
+    getEquippedWeapons(equip).forEach((entry: any) => {
         if (!isMagicWeapon(entry.weapon)) return;
         const skill = buildWeaponSkill(entry);
         if (seen.has(skill.name)) return;
@@ -216,7 +216,7 @@ export const getWeaponMagicSkills = (equip: any = {}) => {
     return skills;
 };
 
-export const getItemStatText = (item) => {
+export const getItemStatText = (item: any) => {
     if (!item) return '';
 
     const elemSuffix = item.elem ? `(${item.elem})` : '';

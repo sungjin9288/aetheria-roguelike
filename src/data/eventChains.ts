@@ -538,7 +538,7 @@ export const EVENT_CHAINS: any = [
  * @param {Object} progress - player.eventChainProgress
  * @returns {{ chain: Object, step: Object } | null}
  */
-export function getChainEventForLoc(loc, progress = {}) {
+export function getChainEventForLoc(loc: any, progress: any = {}) {
     for (const chain of EVENT_CHAINS) {
         const currentStep = progress[chain.id] ?? 0;
         // 이미 완료된 체인 스킵

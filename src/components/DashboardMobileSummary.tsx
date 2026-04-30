@@ -8,7 +8,7 @@ import { isSignatureItem } from '../data/signatureItems.js';
  * DashboardMobileSummary — 장비 로드아웃 + 한눈에 보기 상태 pill 스트립
  * StatusBar와 중복되는 위치/직업/레벨 정보는 제거하고 핵심 진행 상태만 표시
  */
-const DashboardMobileSummary = ({ player }) => {
+const DashboardMobileSummary = ({ player }: any) => {
     const loadoutEntries = [
         { label: 'LEFT', item: player?.equip?.offhand, fallback: 'EMPTY' },
         { label: 'RIGHT', item: player?.equip?.weapon, fallback: 'EMPTY' },
@@ -18,8 +18,8 @@ const DashboardMobileSummary = ({ player }) => {
     const statusPills = useMemo(() => {
         if (!player) return [];
         const pills = [];
-        const activeQuests = player.quests?.filter(q => !q.done)?.length || 0;
-        const completedQuests = player.quests?.filter(q => q.done)?.length || 0;
+        const activeQuests = player.quests?.filter((q: any) => !q.done)?.length || 0;
+        const completedQuests = player.quests?.filter((q: any) => q.done)?.length || 0;
         if (activeQuests > 0 || completedQuests > 0) {
             pills.push({ key: 'quest', label: `퀘스트 ${completedQuests}/${activeQuests + completedQuests}`, tone: completedQuests > 0 ? 'success' : 'neutral' });
         }
@@ -51,7 +51,7 @@ const DashboardMobileSummary = ({ player }) => {
         >
             {/* 장비 로드아웃 */}
             <div className="grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                {loadoutEntries.map((entry) => {
+                {loadoutEntries.map((entry: any) => {
                     const isSignature = entry.item ? isSignatureItem(entry.item) : false;
                     const tileStyle = isSignature
                         ? {
@@ -97,7 +97,7 @@ const DashboardMobileSummary = ({ player }) => {
             {/* 진행 상태 pill 스트립 */}
             {statusPills.length > 0 && (
                 <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-                    {statusPills.map((pill) => (
+                    {statusPills.map((pill: any) => (
                         <span
                             key={pill.key}
                             className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] backdrop-blur-md ${

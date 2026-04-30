@@ -3,25 +3,25 @@ import { GS } from '../gameStates';
 import { sanitizeQuickSlots } from './helpers';
 
 export const uiActionMap = {
-    SET_SYNC_STATUS: (state, action) =>
+    SET_SYNC_STATUS: (state: any, action: any) =>
         ({ ...state, syncStatus: action.payload }),
 
-    SET_GAME_STATE: (state, action) =>
+    SET_GAME_STATE: (state: any, action: any) =>
         ({ ...state, gameState: action.payload, syncStatus: 'syncing' }),
 
-    SET_AI_THINKING: (state, action) =>
+    SET_AI_THINKING: (state: any, action: any) =>
         ({ ...state, isAiThinking: action.payload }),
 
-    SET_VISUAL_EFFECT: (state, action) =>
+    SET_VISUAL_EFFECT: (state: any, action: any) =>
         ({ ...state, visualEffect: action.payload }),
 
-    SET_SIDE_TAB: (state, action) =>
+    SET_SIDE_TAB: (state: any, action: any) =>
         ({ ...state, sideTab: action.payload }),
 
-    SET_SHOP_ITEMS: (state, action) =>
+    SET_SHOP_ITEMS: (state: any, action: any) =>
         ({ ...state, shopItems: action.payload }),
 
-    RESET_RUNTIME_UI: (state) => ({
+    RESET_RUNTIME_UI: (state: any) => ({
         ...state,
         gameState: GS.IDLE,
         logs: [],
@@ -38,26 +38,26 @@ export const uiActionMap = {
         syncStatus: 'syncing'
     }),
 
-    ADD_LOG: (state, action) =>
+    ADD_LOG: (state: any, action: any) =>
         ({ ...state, logs: [...state.logs, action.payload].slice(-BALANCE.LOG_MAX_SIZE) }),
 
-    UPDATE_LOG: (state, action) => ({
+    UPDATE_LOG: (state: any, action: any) => ({
         ...state,
-        logs: state.logs.map(log => log.id === action.payload.id ? action.payload.log : log)
+        logs: state.logs.map((log: any) => log.id === action.payload.id ? action.payload.log : log)
     }),
 
-    CLEAR_LOGS: (state) =>
+    CLEAR_LOGS: (state: any) =>
         ({ ...state, logs: [], syncStatus: 'syncing' }),
 
-    SET_POST_COMBAT_RESULT: (state, action) =>
+    SET_POST_COMBAT_RESULT: (state: any, action: any) =>
         ({ ...state, postCombatResult: action.payload }),
 
-    SET_ONBOARDING_DISMISSED: (state) =>
+    SET_ONBOARDING_DISMISSED: (state: any) =>
         ({ ...state, onboardingDismissed: true }),
 
-    SET_QUICK_SLOT: (state, action) => {
+    SET_QUICK_SLOT: (state: any, action: any) => {
         const candidate = action.payload.item;
-        if (candidate && !state.player.inv.some((item) => item.id === candidate.id)) {
+        if (candidate && !state.player.inv.some((item: any) => item.id === candidate.id)) {
             return state;
         }
         const next = [...state.quickSlots];
@@ -67,7 +67,7 @@ export const uiActionMap = {
 };
 
 export const entityActionMap = {
-    SET_PLAYER: (state, action) => {
+    SET_PLAYER: (state: any, action: any) => {
         const nextPlayer = typeof action.payload === 'function' ? action.payload(state.player) : action.payload;
         const mergedPlayer = { ...state.player, ...nextPlayer };
         return {
@@ -78,15 +78,15 @@ export const entityActionMap = {
         };
     },
 
-    SET_EVENT: (state, action) =>
+    SET_EVENT: (state: any, action: any) =>
         ({ ...state, currentEvent: action.payload, syncStatus: 'syncing' }),
 
-    SET_ENEMY: (state, action) => ({
+    SET_ENEMY: (state: any, action: any) => ({
         ...state,
         enemy: typeof action.payload === 'function' ? action.payload(state.enemy) : action.payload,
         syncStatus: 'syncing'
     }),
 
-    SET_GRAVE: (state, action) =>
+    SET_GRAVE: (state: any, action: any) =>
         ({ ...state, grave: action.payload, syncStatus: 'syncing' }),
 };

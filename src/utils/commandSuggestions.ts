@@ -5,7 +5,7 @@ import { GS } from '../reducers/gameStates';
  * getAvailableCommands — 현재 상황에서 사용 가능한 커맨드 목록
  * Fast-refresh 경고 방지를 위해 별도 파일로 분리
  */
-export const getAvailableCommands = (gameState, player) => {
+export const getAvailableCommands = (gameState: any, player: any) => {
     const isSafe = DB.MAPS[player.loc]?.type === 'safe';
 
     const base = [
@@ -43,7 +43,7 @@ export const getAvailableCommands = (gameState, player) => {
     }
 
     const exits = DB.MAPS[player.loc]?.exits || [];
-    exits.forEach(exitName => {
+    exits.forEach((exitName: any) => {
         base.push({ cmd: exitName, desc: `→ ${exitName}으로 이동` });
     });
 

@@ -12,7 +12,7 @@ export const createAscensionActions = (deps, _shared?: any) => {
         confirmAscension: () => {
             const meta = player.meta || {};
             const rank = (meta.prestigeRank || 0) + 1;
-            const newMeta = {
+            const newMeta: Record<string, any> = {
                 ...meta,
                 prestigeRank: rank,
                 essence: (meta.essence || 0) + 200,
@@ -24,7 +24,7 @@ export const createAscensionActions = (deps, _shared?: any) => {
                 totalPrestigeMp:  (meta.totalPrestigeMp  || 0) + BALANCE.PRESTIGE_MP_BONUS,
             };
             const title = PRESTIGE_TITLES[Math.min(rank - 1, PRESTIGE_TITLES.length - 1)];
-            const projectedPlayer = {
+            const projectedPlayer: Record<string, any> = {
                 ...INITIAL_STATE.player,
                 name: player.name,
                 gender: player.gender,
@@ -49,7 +49,7 @@ export const createAscensionActions = (deps, _shared?: any) => {
             dispatch({ type: AT.ASCEND, payload: { meta: newMeta, newTitle: title } });
             if (ascensionTitles.length > 0) {
                 dispatch({ type: AT.UNLOCK_TITLES, payload: ascensionTitles });
-                ascensionTitles.forEach((id) => addLog('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
+                ascensionTitles.forEach((id: any) => addLog('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
             }
             addLog('system', MSG.ASCEND_DONE(rank, title));
         },

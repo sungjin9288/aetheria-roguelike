@@ -29,12 +29,12 @@ interface TintableItem {
 }
 
 // scripts/generate_exact_avatar_style_equipment_items.py의 hint 리스트와 동기 유지
-const RUST_HINTS = ['녹슨', '낡은'];
-const HOLY_HINTS = ['성', '천공', '천상', '팔라딘', '심판', '성광'];
-const ARCANE_HINTS = ['마법', '주문', '룬', '그리모어', '마도', '현자', '아크', '에테르', '차원'];
-const SHADOW_HINTS = ['암흑', '어둠', '심연', '공허', '혼돈', '그림자'];
-const NATURE_HINTS = ['세계수', '정령', '숲', '엘프', '레인저', '자연', '사냥'];
-const WOOD_HINTS = ['나무', '목재', '곤봉', '완드'];
+const RUST_HINTS: any = ['녹슨', '낡은'];
+const HOLY_HINTS: any = ['성', '천공', '천상', '팔라딘', '심판', '성광'];
+const ARCANE_HINTS: any = ['마법', '주문', '룬', '그리모어', '마도', '현자', '아크', '에테르', '차원'];
+const SHADOW_HINTS: any = ['암흑', '어둠', '심연', '공허', '혼돈', '그림자'];
+const NATURE_HINTS: any = ['세계수', '정령', '숲', '엘프', '레인저', '자연', '사냥'];
+const WOOD_HINTS: any = ['나무', '목재', '곤봉', '완드'];
 
 const ELEMENT_FILTERS: Readonly<Record<string, TintMod>> = Object.freeze({
     화염: { hue: -10, sat: 1.4, bright: 1.1, glow: '#ff8c4a' },
@@ -71,7 +71,7 @@ const TIER_GLOW_BLUR: Record<number, number> = {
     6: 4.5,
 };
 
-const matchHint = (name: string, hints: string[]): boolean => hints.some((hint) => name.includes(hint));
+const matchHint = (name: string, hints: string[]): boolean => hints.some((hint: any) => name.includes(hint));
 
 /**
  * 아이템 → CSS filter 문자열 (없으면 null).

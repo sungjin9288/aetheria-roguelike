@@ -8,7 +8,7 @@ import { getExplorationForecast, getQuestTracker } from '../../utils/adventureGu
 import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
 
-const BAR_THEMES = {
+const BAR_THEMES: any = {
     hp: {
         border: 'border-red-500/30',
         fill: 'bg-gradient-to-r from-red-500/50 to-red-500',
@@ -26,7 +26,7 @@ const BAR_THEMES = {
     },
 };
 
-export const ProgressBar = ({ value, max, variant = 'hp', label, showMeta = true }) => {
+export const ProgressBar = ({ value, max, variant = 'hp', label, showMeta = true }: any) => {
     const theme = BAR_THEMES[variant] || BAR_THEMES.hp;
     const safeMax = Math.max(1, max || 1);
     const safeValue = Math.max(0, value || 0);
@@ -52,7 +52,7 @@ export const ProgressBar = ({ value, max, variant = 'hp', label, showMeta = true
     );
 };
 
-export const InlineMetric = ({ label, value, max, variant }) => (
+export const InlineMetric = ({ label, value, max, variant }: any) => (
     <div className="flex min-w-[8.5rem] items-center gap-2">
         <span className="w-9 shrink-0 text-right text-[10px] uppercase tracking-widest text-cyber-blue/45">
             {label}
@@ -66,7 +66,7 @@ export const InlineMetric = ({ label, value, max, variant }) => (
     </div>
 );
 
-export const MetricTile = ({ label, value, max, variant }) => {
+export const MetricTile = ({ label, value, max, variant }: any) => {
     const theme = BAR_THEMES[variant] || BAR_THEMES.hp;
     const safeMax = Math.max(1, max || 1);
     const safeValue = Math.max(0, value || 0);
@@ -90,7 +90,7 @@ export const MetricTile = ({ label, value, max, variant }) => {
     );
 };
 
-const getEquipmentTagMeta = (item, slot = 'main') => {
+const getEquipmentTagMeta = (item: any, slot: any = 'main') => {
     if (!item) {
         return {
             label: slot === 'armor' ? 'ARM' : 'EMPTY',
@@ -113,7 +113,7 @@ const getEquipmentTagMeta = (item, slot = 'main') => {
     return { label: 'EQ', className: 'text-slate-300' };
 };
 
-const EquipmentSlot = ({ label, item, slot = 'main', fallback, compact = false }) => {
+const EquipmentSlot = ({ label, item, slot = 'main', fallback, compact = false }: any) => {
     const tag = getEquipmentTagMeta(item, slot);
 
     return (
@@ -140,12 +140,12 @@ const EquipmentSlot = ({ label, item, slot = 'main', fallback, compact = false }
     );
 };
 
-const COMPACT_SET_TONE = {
+const COMPACT_SET_TONE: any = {
     holy: '#f6e7a2', fire: '#ffb48a', frost: '#cce8f5', shadow: '#c7a4f0',
     arcane: '#c0b0e8', nature: '#a8d0a0',
 };
 
-export const EquipmentPanel = ({ player, stats, compact = false }) => {
+export const EquipmentPanel = ({ player, stats, compact = false }: any) => {
     const activeSig = stats?.activeSignatureSet || null;
     const setColor = activeSig ? (COMPACT_SET_TONE[activeSig.tone] || COMPACT_SET_TONE.holy) : null;
     return (
@@ -179,7 +179,7 @@ export const EquipmentPanel = ({ player, stats, compact = false }) => {
     );
 };
 
-export const RunProgressPanel = ({ player, mobile = false }) => {
+export const RunProgressPanel = ({ player, mobile = false }: any) => {
     const mapData = DB.MAPS[player?.loc];
     const questTracker = getQuestTracker(player);
     const forecast = getExplorationForecast(player, mapData);
@@ -248,7 +248,7 @@ export const RunProgressPanel = ({ player, mobile = false }) => {
                     <SignalBadge tone="neutral" size="sm">{player?.loc}</SignalBadge>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                    {progressItems.slice(0, 2).map((item) => (
+                    {progressItems.slice(0, 2).map((item: any) => (
                         <div key={item.label} className="rounded-[1rem] border border-cyan-400/14 bg-cyber-black/45 px-3 py-2.5">
                             <div className="flex items-center justify-between gap-2">
                                 <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">{item.label}</span>
@@ -280,7 +280,7 @@ export const RunProgressPanel = ({ player, mobile = false }) => {
             </div>
 
             <div className={`grid ${mobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 gap-2.5'}`}>
-                {progressItems.map((item) => (
+                {progressItems.map((item: any) => (
                     <div key={item.label} className="rounded-[1rem] border border-cyan-400/14 bg-cyber-black/45 px-3 py-2.5">
                         <div className="flex items-center justify-between gap-2">
                             <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-cyber-blue/45">{item.label}</span>
@@ -297,7 +297,7 @@ export const RunProgressPanel = ({ player, mobile = false }) => {
     );
 };
 
-export const TraitPanel = ({ player, stats, compact = false }) => {
+export const TraitPanel = ({ player, stats, compact = false }: any) => {
     const trait = stats?.traitProfile || getTraitProfile(player, stats);
     const passiveParts = getTraitPassiveParts(trait);
 
@@ -316,7 +316,7 @@ export const TraitPanel = ({ player, stats, compact = false }) => {
             </div>
             <p className="text-[11px] font-fira text-cyber-blue/60">{trait.desc}</p>
             <div className="flex flex-wrap gap-1.5">
-                {passiveParts.length > 0 ? passiveParts.slice(0, compact ? 2 : 4).map((tag) => (
+                {passiveParts.length > 0 ? passiveParts.slice(0, compact ? 2 : 4).map((tag: any) => (
                     <SignalBadge key={tag} tone="neutral" size="sm">{tag}</SignalBadge>
                 )) : (
                     <SignalBadge tone="neutral" size="sm">아직 성향 보너스가 없습니다.</SignalBadge>

@@ -1,18 +1,18 @@
 const RECENT_HISTORY_LIMIT = 6;
 const RECENT_EVENT_LIMIT = 8;
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-const toInt = (value, fallback = 0) => (Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback);
-export const normalizeText = (value, fallback = '') => String(value || fallback).replace(/\s+/g, ' ').trim();
+const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
+const toInt = (value: any, fallback: any = 0) => (Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback);
+export const normalizeText = (value: any, fallback: any = '') => String(value || fallback).replace(/\s+/g, ' ').trim();
 
-const normalizeChoiceText = (choice, idx) => {
+const normalizeChoiceText = (choice: any, idx: any) => {
     const raw = typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`;
     return normalizeText(raw.replace(/^\d+\s*[.)-]?\s*/, ''), `선택지 ${idx + 1}`);
 };
 
 const dedupeChoices = (choices: any[] = []) => {
     const seen = new Set();
-    return choices.filter((choice) => {
+    return choices.filter((choice: any) => {
         const key = normalizeText(choice).toLowerCase();
         if (!key || seen.has(key)) return false;
         seen.add(key);
@@ -22,7 +22,7 @@ const dedupeChoices = (choices: any[] = []) => {
 
 export const summarizeHistory = (history: any[] = [], limit = RECENT_HISTORY_LIMIT) => (
     Array.isArray(history)
-        ? history.slice(-limit).map((entry) => {
+        ? history.slice(-limit).map((entry: any) => {
             if (!entry || typeof entry !== 'object') return null;
             const event = normalizeText(entry.event || entry.desc || entry.text);
             const choice = normalizeText(entry.choice);
@@ -36,12 +36,12 @@ export const getRecentEventSet = (history: any[] = [], limit = RECENT_EVENT_LIMI
     new Set(
         (Array.isArray(history) ? history : [])
             .slice(-limit)
-            .map((entry) => normalizeText(entry?.event || entry?.desc || entry?.text))
+            .map((entry: any) => normalizeText(entry?.event || entry?.desc || entry?.text))
             .filter(Boolean)
     )
 );
 
-const hashString = (value = '') => {
+const hashString = (value: any = '') => {
     let hash = 0;
     for (let i = 0; i < value.length; i += 1) {
         hash = ((hash << 5) - hash) + value.charCodeAt(i);
@@ -50,7 +50,7 @@ const hashString = (value = '') => {
     return Math.abs(hash);
 };
 
-export const getPoolKeyByLocation = (loc) => {
+export const getPoolKeyByLocation = (loc: any) => {
     const keyByKeyword = [
         { key: 'forest', words: ['숲'] },
         { key: 'ruins', words: ['폐허', '광산', '신전'] },
@@ -64,12 +64,12 @@ export const getPoolKeyByLocation = (loc) => {
         { key: 'sky', words: ['천공', '공중 신전'] },
         { key: 'deepsea', words: ['심해'] },
         { key: 'gate', words: ['에테르', '관문'] },
-    ].find((entry) => entry.words.some((word) => String(loc || '').includes(word)));
+    ].find((entry: any) => entry.words.some((word: any) => String(loc || '').includes(word)));
 
     return keyByKeyword?.key || 'default';
 };
 
-const FALLBACK_CHOICE_SETS = {
+const FALLBACK_CHOICE_SETS: any = {
     default: ['조사한다', '경계한다', '지나친다'],
     forest: ['살펴본다', '경계한다', '돌아선다'],
     ruins: ['해독한다', '조심히 접근한다', '지나친다'],
@@ -85,7 +85,7 @@ const FALLBACK_CHOICE_SETS = {
     gate: ['동조한다', '봉인한다', '후퇴한다'],
 };
 
-const ITEM_REWARD_BY_POOL = {
+const ITEM_REWARD_BY_POOL: any = {
     default: ['하급 체력 물약', '하급 마나 물약'],
     forest: ['하급 체력 물약', '해독제'],
     ruins: ['중급 체력 물약', '저주해제 주문서'],
@@ -101,19 +101,19 @@ const ITEM_REWARD_BY_POOL = {
     gate: ['영웅의 물약', '상급 마나 물약'],
 };
 
-const SAFE_KEYWORDS = ['관찰', '해독', '조심', '우회', '분석', '기록', '표식', '표시', '점검', '봉인', '확인', '읽', '해제', '가림막', '거리 유지', '은폐', '경계'];
-const RETREAT_KEYWORDS = ['돌아', '되돌아', '후퇴', '철수', '포기', '무시', '지나친', '대기', '기다린다', '눈을 감는다', '도망'];
-const RISKY_KEYWORDS = ['만진다', '달린다', '강제로', '뛰어내', '기습', '정면 돌파', '직접 진입', '접촉', '전투 준비', '파괴', '돌파', '재가동', '강제 해제', '연다', '추적', '공명 강화'];
+const SAFE_KEYWORDS: any = ['관찰', '해독', '조심', '우회', '분석', '기록', '표식', '표시', '점검', '봉인', '확인', '읽', '해제', '가림막', '거리 유지', '은폐', '경계'];
+const RETREAT_KEYWORDS: any = ['돌아', '되돌아', '후퇴', '철수', '포기', '무시', '지나친', '대기', '기다린다', '눈을 감는다', '도망'];
+const RISKY_KEYWORDS: any = ['만진다', '달린다', '강제로', '뛰어내', '기습', '정면 돌파', '직접 진입', '접촉', '전투 준비', '파괴', '돌파', '재가동', '강제 해제', '연다', '추적', '공명 강화'];
 
-export const classifyChoice = (choiceText = '') => {
+export const classifyChoice = (choiceText: any = '') => {
     const choice = normalizeText(choiceText);
-    if (RETREAT_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'retreat';
-    if (RISKY_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'risky';
-    if (SAFE_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'safe';
+    if (RETREAT_KEYWORDS.some((keyword: any) => choice.includes(keyword))) return 'retreat';
+    if (RISKY_KEYWORDS.some((keyword: any) => choice.includes(keyword))) return 'risky';
+    if (SAFE_KEYWORDS.some((keyword: any) => choice.includes(keyword))) return 'safe';
     return 'balanced';
 };
 
-const pickRewardItem = (poolKey, seed, level) => {
+const pickRewardItem = (poolKey: any, seed: any, level: any) => {
     const pool = ITEM_REWARD_BY_POOL[poolKey] || ITEM_REWARD_BY_POOL.default;
     if (!pool || pool.length === 0) return null;
     const threshold = level >= 25 ? 3 : level >= 10 ? 4 : 5;
@@ -195,7 +195,7 @@ const normalizeOutcomes = (rawOutcomes: any[] = [], choices: any[] = [], context
     const normalized = new Map();
 
     if (Array.isArray(rawOutcomes)) {
-        rawOutcomes.forEach((outcome, idx) => {
+        rawOutcomes.forEach((outcome: any, idx: any) => {
             if (!outcome || typeof outcome !== 'object') return;
             const choiceIndex = clamp(toInt(outcome.choiceIndex, idx), 0, Math.max(0, choices.length - 1));
             if (!choices[choiceIndex] || normalized.has(choiceIndex)) return;
@@ -212,7 +212,7 @@ const normalizeOutcomes = (rawOutcomes: any[] = [], choices: any[] = [], context
         });
     }
 
-    choices.forEach((choice, idx) => {
+    choices.forEach((choice: any, idx: any) => {
         if (normalized.has(idx)) return;
         normalized.set(idx, buildProceduralOutcome({
             desc: context.desc || '',
@@ -222,10 +222,10 @@ const normalizeOutcomes = (rawOutcomes: any[] = [], choices: any[] = [], context
         }));
     });
 
-    return [...normalized.values()].sort((a, b) => a.choiceIndex - b.choiceIndex);
+    return [...normalized.values()].sort((a: any, b: any) => a.choiceIndex - b.choiceIndex);
 };
 
-export const buildEventPackage = (payload, context: any = {}) => {
+export const buildEventPackage = (payload: any, context: any = {}) => {
     const raw = payload?.data || payload;
     if (!raw || typeof raw !== 'object') return null;
 
@@ -235,7 +235,7 @@ export const buildEventPackage = (payload, context: any = {}) => {
     const poolKey = getPoolKeyByLocation(context.location);
     const fallbackChoices = FALLBACK_CHOICE_SETS[poolKey] || FALLBACK_CHOICE_SETS.default;
     const rawChoices = Array.isArray(raw.choices)
-        ? raw.choices.map((choice, idx) => normalizeChoiceText(choice, idx))
+        ? raw.choices.map((choice: any, idx: any) => normalizeChoiceText(choice, idx))
         : [];
     const choices = dedupeChoices([...rawChoices, ...fallbackChoices]).slice(0, 3);
 
@@ -250,7 +250,7 @@ export const buildEventPackage = (payload, context: any = {}) => {
     };
 };
 
-const FALLBACK_EVENT_POOL = {
+const FALLBACK_EVENT_POOL: any = {
     '시작의 마을': [
         { desc: '마을 광장에서 게시판을 발견했습니다.', choices: ['확인하다', '무시한다', '다음에 보다'] },
         { desc: '낯선 상인이 수상쩍은 물건을 팔고 있습니다.', choices: ['구경하다', '의심한다', '지나친다'] },
@@ -514,7 +514,7 @@ const FALLBACK_EVENT_POOL = {
     ],
 };
 
-export const pickFallbackEvent = (loc, history: any[] = [], context: any = {}) => {
+export const pickFallbackEvent = (loc: any, history: any[] = [], context: any = {}) => {
     const explicit = FALLBACK_EVENT_POOL[loc];
     const poolKey = explicit ? loc : getPoolKeyByLocation(loc);
     const basePool = explicit || FALLBACK_EVENT_POOL[poolKey] || FALLBACK_EVENT_POOL.default;
@@ -524,9 +524,9 @@ export const pickFallbackEvent = (loc, history: any[] = [], context: any = {}) =
         : basePool;
     const recentEvents = getRecentEventSet(history);
     const lastEvent = normalizeText((Array.isArray(history) ? history[history.length - 1] : null)?.event);
-    const filteredPool = pool.filter((event) => !recentEvents.has(normalizeText(event?.desc)));
+    const filteredPool = pool.filter((event: any) => !recentEvents.has(normalizeText(event?.desc)));
     const withoutImmediateRepeat = (filteredPool.length > 0 ? filteredPool : pool)
-        .filter((event) => normalizeText(event?.desc) !== lastEvent);
+        .filter((event: any) => normalizeText(event?.desc) !== lastEvent);
     const candidates = withoutImmediateRepeat.length > 0
         ? withoutImmediateRepeat
         : (filteredPool.length > 0 ? filteredPool : pool);

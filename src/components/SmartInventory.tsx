@@ -14,7 +14,7 @@ import ItemIcon from './icons/ItemIcon';
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
  */
-const StatDiff = ({ val, label }) => {
+const StatDiff = ({ val, label }: any) => {
     if (val === 0) return <span className="text-slate-500 text-xs">{label} ±0</span>;
     const up = val > 0;
     return (
@@ -28,7 +28,7 @@ const StatDiff = ({ val, label }) => {
 /**
  * SmartInventory — 인벤토리 스마트 필터 + 장비 비교 (시나리오 2)
  */
-const FILTERS = [
+const FILTERS: any = [
     { id: 'all', label: MSG.INV_FILTER_ALL },
     { id: 'weapon', label: MSG.INV_FILTER_WEAPON },
     { id: 'armor', label: MSG.INV_FILTER_ARMOR },
@@ -37,7 +37,7 @@ const FILTERS = [
     { id: 'material', label: MSG.INV_FILTER_MATERIAL },
 ];
 
-const ITEM_TYPE_TO_FILTER = {
+const ITEM_TYPE_TO_FILTER: any = {
     weapon: 'weapon',
     armor: 'armor',
     shield: 'shield',
@@ -49,15 +49,15 @@ const ITEM_TYPE_TO_FILTER = {
 };
 const MAX_COMPACT_ITEMS = BALANCE.INV_COMPACT_MAX_ITEMS;
 
-const canEquipItem = (item, job) => !Array.isArray(item.jobs) || item.jobs.includes(job);
+const canEquipItem = (item: any, job: any) => !Array.isArray(item.jobs) || item.jobs.includes(job);
 
-const getItemTags = (item) => {
+const getItemTags = (item: any) => {
     const tags = [];
     if (isWeapon(item) || item?.type === 'shield') tags.push(getWeaponStyleLabel(item));
     return tags;
 };
 
-const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact = false }) => {
+const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact = false }: any) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState(null);
     const [showAllItems, setShowAllItems] = React.useState(false);
@@ -83,14 +83,14 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
 
     const filtered = useMemo(() => {
         if (activeFilter === 'all') return grouped;
-        return grouped.filter(({ item }) => {
+        return grouped.filter(({ item }: any) => {
             const f = ITEM_TYPE_TO_FILTER[item.type] || item.type;
             return f === activeFilter;
         });
     }, [grouped, activeFilter]);
 
     // 추천 장착 계산 (최고 val 기준)
-    const getEquipPreview = useCallback((item) => {
+    const getEquipPreview = useCallback((item: any) => {
         const currentProfile = getEquipmentProfile(player.equip);
         const nextEquip = getNextEquipmentState(player.equip, item);
         const nextProfile = getEquipmentProfile(nextEquip);
@@ -106,24 +106,24 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
 
     const bestWeapon = useMemo(() =>
         player.inv
-            .filter(i => i.type === 'weapon' && canEquipItem(i, player.job))
-            .sort((a, b) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
+            .filter((i: any) => i.type === 'weapon' && canEquipItem(i, player.job))
+            .sort((a: any, b: any) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
         [player.inv, player.job, getEquipPreview]
     );
     const bestArmor = useMemo(() =>
         player.inv
-            .filter(i => i.type === 'armor' && canEquipItem(i, player.job))
-            .sort((a, b) => (b.val || 0) - (a.val || 0))[0],
+            .filter((i: any) => i.type === 'armor' && canEquipItem(i, player.job))
+            .sort((a: any, b: any) => (b.val || 0) - (a.val || 0))[0],
         [player.inv, player.job]
     );
 
-    const getCompareDiff = useCallback((item) => {
+    const getCompareDiff = useCallback((item: any) => {
         if (!item) return null;
         if (['weapon', 'armor', 'shield'].includes(item.type)) return getEquipPreview(item);
         return null;
     }, [getEquipPreview]);
 
-    const isEquipUpgrade = useCallback((item) => {
+    const isEquipUpgrade = useCallback((item: any) => {
         const diff = getCompareDiff(item);
         if (!diff) return false;
         return (diff.atk + diff.def + (diff.crit * 2) + Math.floor(diff.mp / 5)) > 0;
@@ -137,10 +137,10 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
     const isInvNearFull = player.inv.length >= BALANCE.INV_FULL_THRESHOLD;
     const sellableMatCount = useMemo(() =>
-        player.inv.filter(i => i.type === 'mat' && (i.price || 0) <= 30).length,
+        player.inv.filter((i: any) => i.type === 'mat' && (i.price || 0) <= 30).length,
         [player.inv]
     );
-    const activeFilterLabel = FILTERS.find((entry) => entry.id === activeFilter)?.label || MSG.INV_FILTER_ALL;
+    const activeFilterLabel = FILTERS.find((entry: any) => entry.id === activeFilter)?.label || MSG.INV_FILTER_ALL;
     const visibleFiltered = (() => {
         if (!compact || showAllItems || filtered.length <= MAX_COMPACT_ITEMS) return filtered;
 
@@ -150,16 +150,16 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 const isSignature = isSignatureItem(item);
                 if (spotlightSet.has(item.name)) priority += 100;
                 if (isSignature) priority += 90;
-                if (quickSlots?.some((slot) => slot?.id === item?.id)) priority += 80;
+                if (quickSlots?.some((slot: any) => slot?.id === item?.id)) priority += 80;
                 if (isEquipUpgrade(item)) priority += 55;
                 if (['hp', 'mp', 'buff', 'cure'].includes(item.type)) priority += 28;
                 if (['weapon', 'armor', 'shield'].includes(item.type)) priority += 16;
                 if (count > 1) priority += Math.min(count, 6);
                 return { item, count, index, priority };
             })
-            .sort((a, b) => b.priority - a.priority || a.index - b.index)
+            .sort((a: any, b: any) => b.priority - a.priority || a.index - b.index)
             .slice(0, MAX_COMPACT_ITEMS)
-            .map(({ item, count }) => ({ item, count }));
+            .map(({ item, count }: any) => ({ item, count }));
     })();
     const hiddenItemCount = Math.max(0, filtered.length - visibleFiltered.length);
     const useSummaryCards = compact && !showAllItems && filtered.length > MAX_COMPACT_ITEMS;
@@ -185,7 +185,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                             {spotlight?.detail || MSG.UI_LOOT_FOCUS_HINT}
                         </div>
                         <div className={`${compact ? 'mt-1.5' : 'mt-2'} flex flex-wrap gap-1`}>
-                            {spotlightNames.slice(0, 3).map((name) => (
+                            {spotlightNames.slice(0, 3).map((name: any) => (
                                 <SignalBadge key={`spotlight_${name}`} tone="spotlight" size="sm">{name}</SignalBadge>
                             ))}
                         </div>
@@ -204,7 +204,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
             {/* Filter Bar */}
             <div className={`rounded-[1rem] ${compact ? 'aether-panel-core px-1.5 py-1.5' : 'border border-white/8 bg-black/16 px-2 py-2'}`}>
                 <div className={`${useDenseCompactInventory ? 'flex flex-nowrap items-center gap-1 overflow-x-auto pb-0.5' : 'flex flex-wrap items-center gap-1.5'}`}>
-                {FILTERS.map(f => (
+                {FILTERS.map((f: any) => (
                     <button
                         key={f.id}
                         onClick={() => {
@@ -292,7 +292,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     const canEquip = !['weapon', 'armor', 'shield'].includes(item.type) || canEquipItem(item, player.job);
                     const itemIdentity = getEquipmentIdentity(item);
                     const assignedQuickSlots = quickSlots
-                        ?.map((slot, index) => (slot?.id === item?.id ? index + 1 : null))
+                        ?.map((slot: any, index: any) => (slot?.id === item?.id ? index + 1 : null))
                         .filter(Boolean) || [];
                     const isCurrentEquip =
                         getEquipmentIdentity(player.equip?.weapon) === itemIdentity ||
@@ -408,7 +408,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                 )}
                                 {getItemTags(item).length > 0 && (
                                     <div className={`${compact ? 'mt-0.5' : 'mt-1'} flex flex-wrap gap-1`}>
-                                        {getItemTags(item).map((tag) => (
+                                        {getItemTags(item).map((tag: any) => (
                                             <SignalBadge key={`${item.name}_${tag}`} tone="neutral" size="sm">{tag}</SignalBadge>
                                         ))}
                                     </div>

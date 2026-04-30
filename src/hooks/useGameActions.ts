@@ -10,7 +10,7 @@ import { createAscensionActions } from './gameActions/ascensionActions';
  * useGameActions — 이동, 탐색, 휴식, 이벤트, 직업, 퀘스트 수락, 시작, 리셋
  * createGameActions는 팩토리 함수로, useGameEngine에서 useMemo로 호출됩니다.
  */
-export const createGameActions = (deps) => {
+export const createGameActions = (deps: any) => {
     const shared = makeSharedHelpers(deps);
     return {
         ...createMoveActions(deps, shared),

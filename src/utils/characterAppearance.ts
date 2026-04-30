@@ -2,7 +2,7 @@ import { isTwoHandWeapon } from './equipmentUtils.js';
 import { getEquipmentArtProfile } from './equipmentArt.js';
 import { getArmorStyleFromItem, getAvatarLoadoutStyle, getItemIconAssetKey, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
 
-const DEFAULT_JOB_STYLE = {
+const DEFAULT_JOB_STYLE: any = {
     hairStyle: 'bob',
     hairColor: '#7a4f3d',
     outfitColor: '#5b7dd8',
@@ -11,7 +11,7 @@ const DEFAULT_JOB_STYLE = {
     accessoryStyle: 'ribbon',
 };
 
-const JOB_STYLE_MAP = {
+const JOB_STYLE_MAP: any = {
     모험가: { hairStyle: 'bob', hairColor: '#7a4f3d', outfitColor: '#5b7dd8', accentColor: '#f6e7c8', armorStyle: 'coat', accessoryStyle: 'ribbon' },
     전사: { hairStyle: 'spike', hairColor: '#4d3c2f', outfitColor: '#6b7280', accentColor: '#d5b180', armorStyle: 'plate', accessoryStyle: 'plume' },
     나이트: { hairStyle: 'crest', hairColor: '#5a4638', outfitColor: '#64748b', accentColor: '#f6e7c8', armorStyle: 'plate', accessoryStyle: 'crest' },
@@ -28,7 +28,7 @@ const JOB_STYLE_MAP = {
     대마법사: { hairStyle: 'long', hairColor: '#3f2b63', outfitColor: '#6073c8', accentColor: '#dff7f5', armorStyle: 'robe', accessoryStyle: 'circlet' },
 };
 
-const ELEMENT_COLOR_MAP = {
+const ELEMENT_COLOR_MAP: any = {
     화염: '#fb923c',
     냉기: '#67e8f9',
     어둠: '#a78bfa',
@@ -38,9 +38,9 @@ const ELEMENT_COLOR_MAP = {
     물리: '#d1d5db',
 };
 
-const clampEnhance = (value) => Math.max(0, Math.min(9, Number(value) || 0));
+const clampEnhance = (value: any) => Math.max(0, Math.min(9, Number(value) || 0));
 
-const getOverlayTone = (slot, item, fallback) => {
+const getOverlayTone = (slot: any, item: any, fallback: any) => {
     if (!item) return fallback;
 
     if (slot === 'weapon') return '#d8c7a5';
@@ -53,7 +53,7 @@ const getOverlayTone = (slot, item, fallback) => {
     return '#6c665d';
 };
 
-export const deriveCharacterAppearance = (player) => {
+export const deriveCharacterAppearance = (player: any) => {
     const baseStyle = JOB_STYLE_MAP[player?.job] || DEFAULT_JOB_STYLE;
     const equip = player?.equip || {};
     const armor = equip.armor || null;

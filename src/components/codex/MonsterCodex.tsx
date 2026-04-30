@@ -11,7 +11,7 @@ import SkillTypeIcon from '../icons/SkillTypeIcon';
 /**
  * MonsterCodex — Bestiary 로직을 그대로 활용하되 Codex 서브탭으로 배치
  */
-const MonsterCodex = ({ player }) => {
+const MonsterCodex = ({ player }: any) => {
     const [selectedMonster, setSelectedMonster] = useState(null);
 
     const allMonsters = useMemo(() => {
@@ -46,7 +46,7 @@ const MonsterCodex = ({ player }) => {
         });
     }, [player]);
 
-    const encountered = allMonsters.filter(m => m.encountered);
+    const encountered = allMonsters.filter((m: any) => m.encountered);
     const total = allMonsters.length;
 
     return (
@@ -56,9 +56,9 @@ const MonsterCodex = ({ player }) => {
                     {encountered.length}/{total} 발견
                 </span>
                 <div className="flex gap-1.5">
-                    <SignalBadge tone="success" size="sm">HP +{allMonsters.reduce((a, m) => a + m.bonuses.hp, 0)}</SignalBadge>
-                    <SignalBadge tone="danger" size="sm">ATK +{allMonsters.reduce((a, m) => a + m.bonuses.atk, 0)}</SignalBadge>
-                    <SignalBadge tone="neutral" size="sm">DEF +{allMonsters.reduce((a, m) => a + m.bonuses.def, 0)}</SignalBadge>
+                    <SignalBadge tone="success" size="sm">HP +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.hp, 0)}</SignalBadge>
+                    <SignalBadge tone="danger" size="sm">ATK +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.atk, 0)}</SignalBadge>
+                    <SignalBadge tone="neutral" size="sm">DEF +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.def, 0)}</SignalBadge>
                 </div>
             </div>
 
@@ -71,7 +71,7 @@ const MonsterCodex = ({ player }) => {
 
             {/* Monster List */}
             <div className="space-y-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
-                {allMonsters.map((m) => (
+                {allMonsters.map((m: any) => (
                     <button
                         key={m.name}
                         onClick={() => m.encountered && setSelectedMonster(selectedMonster === m.name ? null : m.name)}
@@ -100,7 +100,7 @@ const MonsterCodex = ({ player }) => {
 
             {/* Detail Panel */}
             {selectedMonster && (() => {
-                const m = allMonsters.find(x => x.name === selectedMonster);
+                const m = allMonsters.find((x: any) => x.name === selectedMonster);
                 if (!m) return null;
                 return (
                     <div className="bg-black/18 border border-white/8 rounded-[1rem] p-3 space-y-2">
@@ -119,7 +119,7 @@ const MonsterCodex = ({ player }) => {
                                     { target: 10, color: '#cd7f32', label: '10' },
                                     { target: 50, color: '#c0c0c0', label: '50' },
                                     { target: 100, color: '#ffd700', label: '100' },
-                                ].map(({ target, color, label }) => {
+                                ].map(({ target, color, label }: any) => {
                                     const pct = Math.min(100, (m.kills / target) * 100);
                                     return (
                                         <div key={target} className="flex-1">
@@ -155,7 +155,7 @@ const MonsterCodex = ({ player }) => {
                         {m.drops.length > 0 && (
                             <div className="space-y-0.5">
                                 <div className="text-[10px] text-slate-500 font-fira">드롭 아이템:</div>
-                                {m.drops.map(d => (
+                                {m.drops.map((d: any) => (
                                     <div key={d} className="text-[10px] text-[#f6e7c8]/72 font-fira pl-2">• {d}</div>
                                 ))}
                             </div>

@@ -8,7 +8,7 @@ import SignalBadge from './SignalBadge';
  * Signature 세트 tone → 색상 매핑.
  * EquipmentPanel.jsx의 SIG_SET_TONE과 동일한 팔레트 — 시각적 일관성 유지.
  */
-const SIG_SET_TONE = Object.freeze({
+const SIG_SET_TONE: any = Object.freeze({
     holy: { border: 'rgba(246,231,162,0.5)', glow: 'rgba(246,231,162,0.18)', text: '#f6e7a2' },
     fire: { border: 'rgba(255,180,138,0.5)', glow: 'rgba(255,180,138,0.18)', text: '#ffb48a' },
     frost: { border: 'rgba(204,232,245,0.5)', glow: 'rgba(204,232,245,0.18)', text: '#cce8f5' },
@@ -22,7 +22,7 @@ const SIG_SET_TONE = Object.freeze({
  * @param {number} mult
  * @returns {string}
  */
-const formatMultDelta = (mult) => {
+const formatMultDelta = (mult: any) => {
     if (!Number.isFinite(mult) || Math.abs(mult - 1) < 0.005) return '—';
     const delta = Math.round((mult - 1) * 100);
     return `${delta >= 0 ? '+' : ''}${delta}%`;
@@ -84,7 +84,7 @@ const StatsPanel = ({ player, stats, compact = false }: any) => {
                 {hasExpandableSections && (
                     <button
                         type="button"
-                        onClick={() => setShowAllStats((prev) => !prev)}
+                        onClick={() => setShowAllStats((prev: any) => !prev)}
                         className="rounded-full border border-white/8 bg-black/18 px-3 py-1.5 min-h-[36px] text-[11px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
                     >
                         {showAllStats ? '요약 보기' : '통계 더 보기'}
@@ -212,7 +212,7 @@ const StatsPanel = ({ player, stats, compact = false }: any) => {
             )}
 
             <div className="grid grid-cols-2 gap-1.5">
-                {visibleStatEntries.map((entry) => {
+                {visibleStatEntries.map((entry: any) => {
                     const Icon = entry.icon;
                     return (
                         <div key={entry.label} className="aether-panel-muted rounded-[0.95rem] px-2.5 py-2">
@@ -271,7 +271,7 @@ const StatsPanel = ({ player, stats, compact = false }: any) => {
                     <div className="text-xs text-slate-400 font-fira uppercase tracking-[0.16em] flex items-center gap-1.5">
                         <Sparkles size={10} /> 유물 시너지
                     </div>
-                    {stats.activeSynergies.map((syn) => (
+                    {stats.activeSynergies.map((syn: any) => (
                         <div key={syn.name} className="rounded-[0.95rem] border border-fuchsia-400/20 bg-fuchsia-900/10 px-2.5 py-1.5 flex items-center justify-between gap-2">
                             <span className="text-[11px] font-fira text-fuchsia-200/90 font-bold">{syn.name}</span>
                             <span className="text-[8px] font-fira text-fuchsia-300/60">{syn.desc}</span>

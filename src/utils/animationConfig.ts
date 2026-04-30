@@ -18,21 +18,21 @@ export const fadeIn = {
 };
 
 /** 아래→위 슬라이드 + 페이드 (기본 y=12) */
-export const fadeSlideUp = (y = 12) => ({
+export const fadeSlideUp = (y: any = 12) => ({
   initial: { opacity: 0, y },
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.35 },
 });
 
 /** 오른쪽→왼쪽 슬라이드 + 페이드 */
-export const fadeSlideRight = (x = 20) => ({
+export const fadeSlideRight = (x: any = 20) => ({
   initial: { opacity: 0, x },
   animate: { opacity: 1, x: 0 },
   transition: { duration: 0.3 },
 });
 
 /** 스케일 + 페이드 (모달/카드 진입) */
-export const fadeScale = (scale = 0.95) => ({
+export const fadeScale = (scale: any = 0.95) => ({
   initial: { opacity: 0, scale },
   animate: { opacity: 1, scale: 1 },
   transition: { duration: 0.35, ease: 'easeOut' },

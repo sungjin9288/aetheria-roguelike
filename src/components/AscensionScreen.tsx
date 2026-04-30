@@ -4,7 +4,7 @@ import { PRESTIGE_TITLES } from '../data/titles';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 
-const PRESTIGE_UNLOCKS = [
+const PRESTIGE_UNLOCKS: any = [
     { rank: 1, label: '에테르 각성', desc: '허공의 심연 접근 허용 · 에센스 획득 +10%' },
     { rank: 2, label: '강화된 유물', desc: '유물 최대 보유 6개 · 유물 선택지 4지선다' },
     { rank: 3, label: '심연의 메아리', desc: '엘리트 몬스터 출현 확률 +25% · 희귀 아이템 보장 드롭' },
@@ -13,14 +13,14 @@ const PRESTIGE_UNLOCKS = [
     { rank: 10, label: '에테르 초월', desc: '모든 스탯 보너스 2배 적용 · 숨겨진 보스 "에테르 군주" 등장' },
 ];
 
-const STAT_TONE = {
+const STAT_TONE: any = {
     atk: 'text-rose-100 border-rose-300/22 bg-rose-400/10',
     hp: 'text-emerald-100 border-emerald-300/22 bg-emerald-300/10',
     mp: 'text-[#dff7f5] border-[#7dd4d8]/22 bg-[#7dd4d8]/10',
     essence: 'text-[#e3dcff] border-[#9a8ac0]/24 bg-[#9a8ac0]/10',
 };
 
-const AscensionScreen = ({ player, actions }) => {
+const AscensionScreen = ({ player, actions }: any) => {
     const meta = player.meta || {};
     const currentRank = meta.prestigeRank || 0;
     // codex는 ASCEND reducer에서 보존되지만 UI에 명시되지 않아 trust 모먼트가 빈다
@@ -28,8 +28,8 @@ const AscensionScreen = ({ player, actions }) => {
     const nextRank = currentRank + 1;
     const nextTitle = PRESTIGE_TITLES[Math.min(nextRank - 1, PRESTIGE_TITLES.length - 1)];
 
-    const nextUnlock = PRESTIGE_UNLOCKS.find((u) => u.rank === nextRank);
-    const upcomingUnlocks = PRESTIGE_UNLOCKS.filter((u) => u.rank > nextRank).slice(0, 2);
+    const nextUnlock = PRESTIGE_UNLOCKS.find((u: any) => u.rank === nextRank);
+    const upcomingUnlocks = PRESTIGE_UNLOCKS.filter((u: any) => u.rank > nextRank).slice(0, 2);
 
     const bonusAtk = (meta.bonusAtk || 0) + BALANCE.PRESTIGE_ATK_BONUS;
     const bonusHp = (meta.bonusHp || 0) + BALANCE.PRESTIGE_HP_BONUS;
@@ -92,7 +92,7 @@ const AscensionScreen = ({ player, actions }) => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-2.5">
-                                {statRows.map((row) => (
+                                {statRows.map((row: any) => (
                                     <div key={row.label} className={`rounded-[1rem] border px-3 py-3 ${STAT_TONE[row.tone]}`}>
                                         <div className="text-[10px] font-fira uppercase tracking-[0.16em] opacity-76">
                                             {row.label}
@@ -129,7 +129,7 @@ const AscensionScreen = ({ player, actions }) => {
                                         다음 해금 예정
                                     </div>
                                     <div className="mt-3 space-y-2">
-                                        {upcomingUnlocks.map((u) => (
+                                        {upcomingUnlocks.map((u: any) => (
                                             <div key={u.rank} className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-3 py-2.5">
                                                 <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
                                                     <span className="text-[#f6e7c8]">Rank {u.rank}</span>

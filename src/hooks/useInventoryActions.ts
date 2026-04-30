@@ -17,25 +17,25 @@ import { resolveInvasion } from '../utils/graveUtils';
 /**
  * createInventoryActions — 아이템 사용, 장비, 마켓, 제작, 퀘스트 완료
  */
-export const createInventoryActions = ({ player, gameState, dispatch, addLog, getFullStats }) => {
+export const createInventoryActions = ({ player, gameState, dispatch, addLog, getFullStats }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
-    const emitDailyProtocolLogs = (type, amount = 1) => {
+    const emitDailyProtocolLogs = (type: any, amount: any = 1) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
-        completed.forEach((mission) => {
+        completed.forEach((mission: any) => {
             addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);
         });
     };
 
-    const syncLevelQuests = (updatedPlayer) => {
+    const syncLevelQuests = (updatedPlayer: any) => {
         const questResult = CombatEngine.updateQuestProgress(updatedPlayer, '');
         return { ...updatedPlayer, quests: questResult.updatedQuests };
     };
 
     return ({
 
-        useItem: (item) => {
-            const inventoryItem = player.inv.find((entry) => entry.id === item.id);
+        useItem: (item: any) => {
+            const inventoryItem = player.inv.find((entry: any) => entry.id === item.id);
             if (!inventoryItem) return addLog('error', MSG.INV_ITEM_NOT_FOUND);
 
             if (['weapon', 'armor', 'shield'].includes(inventoryItem.type)) {
@@ -47,7 +47,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     return addLog('error', MSG.EQUIP_JOB_RESTRICT(player.job, inventoryItem.name));
                 }
 
-                const filteredInv = player.inv.filter((entry) => entry.id !== inventoryItem.id);
+                const filteredInv = player.inv.filter((entry: any) => entry.id !== inventoryItem.id);
                 const currentEquip = { ...player.equip };
                 const inventoryItemKey = getEquipmentIdentity(inventoryItem);
 
@@ -60,11 +60,11 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 const preservedKeys = new Set(
                     [nextEquip.weapon, nextEquip.offhand, nextEquip.armor]
                         .filter(Boolean)
-                        .map((equippedItem) => getEquipmentIdentity(equippedItem))
+                        .map((equippedItem: any) => getEquipmentIdentity(equippedItem))
                 );
 
                 const itemsToReturn = [currentEquip.weapon, currentEquip.offhand, currentEquip.armor]
-                    .filter((equippedItem) => {
+                    .filter((equippedItem: any) => {
                         if (!equippedItem) return false;
                         const equippedKey = getEquipmentIdentity(equippedItem);
                         if (equippedKey === inventoryItemKey) return false;
@@ -73,7 +73,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                         if (equippedItem.name === '맨손' || equippedItem.name === '천옷') return false;
                         return true;
                     })
-                    .map((equippedItem) => equippedItem.id ? equippedItem : makeItem(equippedItem));
+                    .map((equippedItem: any) => equippedItem.id ? equippedItem : makeItem(equippedItem));
 
                 const newInv = [...filteredInv, ...itemsToReturn];
 
@@ -113,7 +113,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     payload: {
                         ...player,
                         hp: Math.min(stats.maxHp, player.hp + (inventoryItem.val || 0)),
-                        inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
+                        inv: player.inv.filter((entry: any) => entry.id !== inventoryItem.id)
                     }
                 });
                 addLog('success', `${inventoryItem.name} 사용.`);
@@ -127,7 +127,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     payload: {
                         ...player,
                         mp: Math.min(stats.maxMp, player.mp + (inventoryItem.val || 0)),
-                        inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
+                        inv: player.inv.filter((entry: any) => entry.id !== inventoryItem.id)
                     }
                 });
                 addLog('success', `${inventoryItem.name} 사용.`);
@@ -139,8 +139,8 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     type: AT.SET_PLAYER,
                     payload: {
                         ...player,
-                        status: toArray(player.status).filter((status) => status !== inventoryItem.effect),
-                        inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
+                        status: toArray(player.status).filter((status: any) => status !== inventoryItem.effect),
+                        inv: player.inv.filter((entry: any) => entry.id !== inventoryItem.id)
                     }
                 });
                 addLog('success', `${inventoryItem.name} 사용: 상태이상 해제`);
@@ -158,14 +158,14 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                             turn: inventoryItem.turn || 3,
                             name: inventoryItem.name
                         },
-                        inv: player.inv.filter((entry) => entry.id !== inventoryItem.id)
+                        inv: player.inv.filter((entry: any) => entry.id !== inventoryItem.id)
                     }
                 });
                 addLog('success', MSG.ITEM_USE_BUFF(inventoryItem.name));
             }
         },
 
-        market: (type, item) => {
+        market: (type: any, item: any) => {
             if (gameState !== 'shop') return;
             if (type === 'buy') {
                 if (player.gold < item.price) return addLog('error', MSG.GOLD_INSUFFICIENT);
@@ -191,7 +191,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     return addLog('warning', MSG.SIGNATURE_SELL_BLOCKED(item.name));
                 }
                 const sellPrice = Math.floor(item.price * 0.5);
-                const newInv = player.inv.filter((entry) => entry.id !== item.id);
+                const newInv = player.inv.filter((entry: any) => entry.id !== item.id);
                 if (newInv.length < player.inv.length) {
                     const updatedPlayer = { ...grantGold(player, sellPrice), inv: newInv };
                     dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
@@ -201,20 +201,20 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             }
         },
 
-        craft: (recipeId) => {
-            const recipe = DB.ITEMS.recipes?.find((entry) => entry.id === recipeId);
+        craft: (recipeId: any) => {
+            const recipe = DB.ITEMS.recipes?.find((entry: any) => entry.id === recipeId);
             if (!recipe) return;
             if (player.gold < recipe.gold) return addLog('error', MSG.GOLD_INSUFFICIENT);
 
             for (const input of recipe.inputs) {
-                const count = player.inv.filter((entry) => entry.name === input.name).length;
+                const count = player.inv.filter((entry: any) => entry.name === input.name).length;
                 if (count < input.qty) return addLog('error', MSG.CRAFT_MAT_INSUFFICIENT(input.name));
             }
 
             let newInv = [...player.inv];
             for (const input of recipe.inputs) {
                 let removed = 0;
-                newInv = newInv.filter((invItem) => {
+                newInv = newInv.filter((invItem: any) => {
                     if (invItem.name === input.name && removed < input.qty) {
                         removed += 1;
                         return false;
@@ -244,24 +244,24 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             addLog('success', MSG.CRAFT_DONE(recipe.name));
         },
 
-        completeQuest: (qId) => {
-            const pQuest = player.quests.find((quest) => quest.id === qId);
+        completeQuest: (qId: any) => {
+            const pQuest = player.quests.find((quest: any) => quest.id === qId);
             if (!pQuest) return;
 
-            const qData = pQuest.isBounty ? pQuest : DB.QUESTS.find((quest) => quest.id === qId);
+            const qData = pQuest.isBounty ? pQuest : DB.QUESTS.find((quest: any) => quest.id === qId);
             if (!qData) return;
             if (pQuest.progress < qData.goal) return addLog('error', MSG.QUEST_NOT_COMPLETE);
 
             let updatedPlayer = {
                 ...player,
-                quests: player.quests.filter((quest) => quest.id !== qId)
+                quests: player.quests.filter((quest: any) => quest.id !== qId)
             };
 
             if (qData.reward?.gold) updatedPlayer = grantGold(updatedPlayer, qData.reward.gold);
             if (qData.reward?.exp) {
                 const expResult = CombatEngine.applyExpGain(updatedPlayer, qData.reward.exp);
                 updatedPlayer = expResult.updatedPlayer;
-                expResult.logs.forEach((log) => addLog(log.type, log.text));
+                expResult.logs.forEach((log: any) => addLog(log.type, log.text));
                 if (expResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: expResult.visualEffect });
             }
 
@@ -299,8 +299,8 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             addLog('success', MSG.QUEST_DONE(qData.title));
         },
 
-        claimAchievement: (achId) => {
-            const achData = DB.ACHIEVEMENTS.find((achievement) => achievement.id === achId);
+        claimAchievement: (achId: any) => {
+            const achData = DB.ACHIEVEMENTS.find((achievement: any) => achievement.id === achId);
             if (!achData) return;
             if (!isAchievementUnlocked(achData, player)) return addLog('error', MSG.ACH_NOT_UNLOCKED);
 
@@ -329,8 +329,8 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             addLog('success', MSG.ACH_DONE(achData.title));
         },
 
-        synthesize: (itemIds, useProtect = false) => {
-            const items = itemIds.map((id) => player.inv.find((entry) => entry.id === id)).filter(Boolean);
+        synthesize: (itemIds: any, useProtect: any = false) => {
+            const items = itemIds.map((id: any) => player.inv.find((entry: any) => entry.id === id)).filter(Boolean);
             const validation = validateSynthesis(items, player.gold);
             if (!validation.valid) {
                 if (validation.reason === 'SIGNATURE_INPUT') {
@@ -346,7 +346,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             const result = performSynthesis(items, null, useProtect);
             const usedIds = new Set(itemIds);
             const newInv = [
-                ...player.inv.filter((entry) => !usedIds.has(entry.id)),
+                ...player.inv.filter((entry: any) => !usedIds.has(entry.id)),
                 ...result.returnedItems,
             ];
 
@@ -403,7 +403,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             addLog('system', MSG.PREMIUM_PURCHASE('즉시 부활권', cost));
         },
 
-        purchaseCosmeticTitle: (titleId, titleName, titleCost) => {
+        purchaseCosmeticTitle: (titleId: any, titleName: any, titleCost: any) => {
             if ((player.premiumCurrency || 0) < titleCost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
             const owned = player.stats?.cosmeticTitles || [];
             if (owned.includes(titleId)) return addLog('info', MSG.TITLE_ALREADY_OWNED);
@@ -416,17 +416,17 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         },
 
         // ── 주간 미션 수령 ────────────────────────────────────────────────
-        claimWeeklyMission: (missionId, reward) => {
+        claimWeeklyMission: (missionId: any, reward: any) => {
             dispatch({ type: AT.CLAIM_WEEKLY_MISSION, payload: { missionId, reward } });
             addLog('success', MSG.WEEKLY_MISSION_CLAIM(reward.gold || 0, reward.premiumCurrency));
         },
 
         // ── 아이템 강화 ──────────────────────────────────────────────────
-        enhanceItem: (itemId) => {
+        enhanceItem: (itemId: any) => {
             const equipSlot = typeof itemId === 'string' && itemId.startsWith('equip:')
                 ? itemId.split(':')[1]
                 : null;
-            const item = player.inv.find(i => i.id === itemId)
+            const item = player.inv.find((i: any) => i.id === itemId)
                 || (equipSlot ? player.equip?.[equipSlot] : null)
                 || player.equip.weapon?.id === itemId && player.equip.weapon
                 || player.equip.armor?.id === itemId && player.equip.armor
@@ -467,12 +467,12 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             }
         },
 
-        chooseSkillBranch: (skillName, choice) => {
+        chooseSkillBranch: (skillName: any, choice: any) => {
             dispatch({ type: AT.CHOOSE_SKILL_BRANCH, payload: { skillName, choice } });
             addLog('system', MSG.SKILL_BRANCH_CHOSEN(skillName, choice));
         },
 
-        invadeGrave: (targetGrave) => {
+        invadeGrave: (targetGrave: any) => {
             const today = new Date().toDateString();
             const lastDate = player.stats?.lastInvadeDate;
             const count = lastDate === today ? (player.stats?.dailyInvadeCount || 0) : 0;
@@ -496,15 +496,15 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         autoSell: () => {
             const SELL_PRICE_THRESHOLD = 30;
             const sellTargets = player.inv.filter(
-                (item) => item.type === 'mat' && (item.price || 0) <= SELL_PRICE_THRESHOLD
+                (item: any) => item.type === 'mat' && (item.price || 0) <= SELL_PRICE_THRESHOLD
             );
             if (sellTargets.length === 0) {
                 addLog('info', MSG.BULK_SELL_EMPTY);
                 return;
             }
-            const sellIds = new Set(sellTargets.map((item) => item.id));
-            const totalGold = sellTargets.reduce((acc, item) => acc + Math.floor((item.price || 0) * 0.5), 0);
-            const newInv = player.inv.filter((item) => !sellIds.has(item.id));
+            const sellIds = new Set(sellTargets.map((item: any) => item.id));
+            const totalGold = sellTargets.reduce((acc: any, item: any) => acc + Math.floor((item.price || 0) * 0.5), 0);
+            const newInv = player.inv.filter((item: any) => !sellIds.has(item.id));
             const updatedPlayer = grantGold({ ...player, inv: newInv }, totalGold);
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);

@@ -14,7 +14,7 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
 
-export const createExploreActions = (deps, { commitExploreOutcome }) => {
+export const createExploreActions = (deps: any, { commitExploreOutcome }: any) => {
     const { player, gameState, uid, dispatch, addLog, addStoryLog, getFullStats } = deps;
     return {
         explore: async () => {
@@ -24,7 +24,7 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
             const mapData = DB.MAPS[player.loc];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
             const playerRelics = player.relics || [];
-            const eventChanceBonus = playerRelics.reduce((acc, relic) => (
+            const eventChanceBonus = playerRelics.reduce((acc: any, relic: any) => (
                 relic.effect === 'event_chance' ? acc + relic.val : acc
             ), 0);
             const pacingProfile = getMapPacingProfile(mapData);
@@ -52,14 +52,14 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
                 dispatch({ type: AT.SET_AI_THINKING, payload: true });
                 try {
                     const fullStats = getFullStats();
-                    const baseSnapshot = {
+                    const baseSnapshot: Record<string, any> = {
                         name: player.name, job: player.job, level: player.level,
                         hp: player.hp, maxHp: fullStats.maxHp, mp: player.mp, maxMp: fullStats.maxMp,
                         gold: player.gold, title: player.activeTitle || null,
                         relicCount: playerRelics.length,
                         status: toArray(player.status).slice(0, 4),
-                        activeQuests: toArray(player.quests).filter(q => !q.done).slice(0, 3).map(q => q.title),
-                        buildProfile: getRunBuildProfile(player, fullStats).tags.map((tag) => tag.name).slice(0, 4)
+                        activeQuests: toArray(player.quests).filter((q: any) => !q.done).slice(0, 3).map((q: any) => q.title),
+                        buildProfile: getRunBuildProfile(player, fullStats).tags.map((tag: any) => tag.name).slice(0, 4)
                     };
                     const playerSnapshot = enrichSnapshotWithDifficulty(baseSnapshot, player);
                     const eventData = await AI_SERVICE.generateEvent(player.loc, player.history, uid, {
@@ -78,7 +78,7 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
                         commitExploreOutcome('narrative_event');
                         if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
                         const normalizedChoices = toArray(eventData.choices)
-                            .map((choice, idx) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || MSG.CHOICE_DEFAULT(idx + 1)))
+                            .map((choice: any, idx: any) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || MSG.CHOICE_DEFAULT(idx + 1)))
                             .slice(0, 3);
                         const normalized = { ...eventData, choices: normalizedChoices, outcomes: toArray(eventData.outcomes) };
                         dispatch({ type: AT.SET_EVENT, payload: normalized });
@@ -106,7 +106,7 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
 
             // 전투 직전 유물 발견 기회
             if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
-                const available = RELICS.filter(r => !playerRelics.some(pr => pr.id === r.id));
+                const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
                 if (available.length > 0) {
                     commitExploreOutcome('relic_found');
                     const candidates = pickWeightedRelics(available, 3);
@@ -159,7 +159,7 @@ export const createExploreActions = (deps, { commitExploreOutcome }) => {
             }
 
             const fullStats = getFullStats();
-            commitExploreOutcome('combat', (nextPlayer) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }));
+            commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }));
             dispatch({ type: AT.SET_ENEMY, payload: mStats });
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
             addLog('combat', MSG.ENEMY_APPEAR(mStats.name));

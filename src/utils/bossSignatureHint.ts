@@ -18,7 +18,7 @@ import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
  * @param {string | null | undefined} baseName - 몬스터의 baseName (prefix 제외)
  * @returns {{ name: string, rate: number }[]} rate 내림차순 정렬
  */
-export const getBossSignatureDrops = (baseName) => {
+export const getBossSignatureDrops = (baseName: any) => {
     if (!baseName || typeof baseName !== 'string') return [];
     const entries = DROP_TABLES[baseName];
     if (!Array.isArray(entries)) return [];
@@ -30,6 +30,6 @@ export const getBossSignatureDrops = (baseName) => {
         signatureDrops.push({ name: entry.item, rate: Number(entry.rate) || 0 });
     }
     // rate 내림차순 — 최고 확률 signature가 hint 헤드라인이 됨
-    signatureDrops.sort((a, b) => b.rate - a.rate);
+    signatureDrops.sort((a: any, b: any) => b.rate - a.rate);
     return signatureDrops;
 };

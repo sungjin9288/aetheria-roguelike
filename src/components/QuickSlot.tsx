@@ -7,12 +7,12 @@ import { GS } from '../reducers/gameStates';
  * QuickSlot — 빠른 소모품 슬롯 (Feature #8)
  * props:
  *   slots: [item | null, item | null, item | null]
- *   onUse: (item) => void
- *   onAssign: (slotIdx, item) => void
- *   onUnassign: (slotIdx) => void
+ *   onUse: (item: any) => void
+ *   onAssign: (slotIdx: any, item: any) => void
+ *   onUnassign: (slotIdx: any) => void
  *   gameState: string
  */
-const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false }) => {
+const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false }: any) => {
     const canUse = gameState === GS.COMBAT || gameState === GS.IDLE;
 
     return (
@@ -21,7 +21,7 @@ const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false
                 <Zap size={dense ? 10 : 12} />
             </div>
             <div className={`flex ${dense ? 'gap-1' : 'gap-1.5'}`}>
-                {slots.map((item, i) => (
+                {slots.map((item: any, i: any) => (
                     <Motion.button
                         key={i}
                         whileTap={item && canUse ? { scale: 0.9 } : {}}
@@ -58,15 +58,15 @@ const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false
 /**
  * QuickSlotAssigner — 인벤토리 아이템에서 퀵슬롯 할당 UI
  */
-export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots, compact = false }) => {
-    const isAssigned = currentSlots?.some(s => s?.id === item?.id);
+export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots, compact = false }: any) => {
+    const isAssigned = currentSlots?.some((s: any) => s?.id === item?.id);
 
     if (!item || !['hp', 'mp', 'buff', 'cure'].includes(item.type)) return null;
 
     return (
         <div className={`mt-1 flex items-center ${compact ? 'gap-0.5' : 'gap-1'}`}>
             <span className={`font-fira text-slate-400/70 ${compact ? 'text-[10px]' : 'text-xs'}`}>퀵슬롯:</span>
-            {Array.from({ length: slotCount }, (_, i) => {
+            {Array.from({ length: slotCount }, (_: any, i: any) => {
                 const occupied = currentSlots[i];
                 return (
                     <button
@@ -88,7 +88,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots,
             {isAssigned && (
                 <button
                     onClick={() => {
-                        const idx = currentSlots?.findIndex(s => s?.id === item?.id);
+                        const idx = currentSlots?.findIndex((s: any) => s?.id === item?.id);
                         if (idx >= 0) onAssign(idx, null);
                     }}
                     className="ml-1 text-rose-300/55 hover:text-rose-200"

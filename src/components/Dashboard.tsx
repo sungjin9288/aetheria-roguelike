@@ -21,7 +21,7 @@ import SystemTab from './tabs/SystemTab';
 import SeasonPassPanel from './tabs/SeasonPassPanel';
 import SignalBadge from './SignalBadge';
 
-const TAB_ITEMS = [
+const TAB_ITEMS: any = [
     { id: 'equipment', icon: Shield, label: 'Equipment', mobileLabel: 'GEAR' },
     { id: 'inventory', icon: Package, label: 'Inventory', mobileLabel: 'INV' },
     { id: 'quest', icon: Scroll, label: 'Quest', mobileLabel: 'QUEST' },
@@ -35,9 +35,9 @@ const TAB_ITEMS = [
     { id: 'system', icon: Zap, label: 'System', mobileLabel: 'SYS' }
 ];
 
-const MOBILE_PRIMARY_TABS = ['equipment', 'inventory', 'quest', 'map', 'stats'];
-const MOBILE_SECONDARY_TABS = ['achievements', 'skills', 'codex', 'pass', 'graves', 'system'];
-const TOWN_MENU_ACTIONS = [
+const MOBILE_PRIMARY_TABS: any = ['equipment', 'inventory', 'quest', 'map', 'stats'];
+const MOBILE_SECONDARY_TABS: any = ['achievements', 'skills', 'codex', 'pass', 'graves', 'system'];
+const TOWN_MENU_ACTIONS: any = [
     { id: 'rest', label: 'REST', icon: Moon },
     { id: 'class', label: 'CLASS', icon: GraduationCap },
     { id: 'quest', label: 'QUEST', icon: Scroll },
@@ -56,15 +56,15 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
     const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
     const isInlineArchiveConsole = mobileSection === 'console';
     const hasInventorySpotlight = Boolean(inventorySpotlight?.token) && sideTab === 'inventory';
-    const hasCompletableQuest = (player?.quests || []).some(q => q.done && !q.claimed);
+    const hasCompletableQuest = (player?.quests || []).some((q: any) => q.done && !q.claimed);
     const showNotifDot = hasInventorySpotlight || hasCompletableQuest;
     const showArchiveDock = runtime?.mobileArchiveDockVisible ?? true;
     const archiveOpen = showArchiveDock && (hasInventorySpotlight || mobileArchiveExpanded);
-    const primaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_PRIMARY_TABS.includes(tab.id));
-    const secondaryMobileTabs = TAB_ITEMS.filter((tab) => MOBILE_SECONDARY_TABS.includes(tab.id));
-    const activeMobileTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
+    const primaryMobileTabs = TAB_ITEMS.filter((tab: any) => MOBILE_PRIMARY_TABS.includes(tab.id));
+    const secondaryMobileTabs = TAB_ITEMS.filter((tab: any) => MOBILE_SECONDARY_TABS.includes(tab.id));
+    const activeMobileTab = TAB_ITEMS.find((tab: any) => tab.id === sideTab) || TAB_ITEMS[0];
     const ActiveArchiveIcon = activeMobileTab.icon;
-    const handleTabSelect = (tabId) => {
+    const handleTabSelect = (tabId: any) => {
         setConfirmMenuReset(false);
         setSideTab(tabId);
         setMobileArchiveExpanded(true);
@@ -80,13 +80,13 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
         ? `전설 각인 ${signatureProgress.discovered}/${signatureProgress.total} 수집 (${signatureProgress.percent}%)`
         : null;
     /** 탭 id에 따라 추가 badge prop을 반환 (Codex만 signature 진행도 뱃지 부착). */
-    const getTabExtras = (tabId) => {
+    const getTabExtras = (tabId: any) => {
         if (tabId === 'codex' && signatureBadge) {
             return { badge: signatureBadge, badgeTitle: signatureBadgeTitle };
         }
         return {};
     };
-    const handleMenuAction = (actionId) => {
+    const handleMenuAction = (actionId: any) => {
         if (actionId !== 'reset') {
             setConfirmMenuReset(false);
         }
@@ -130,7 +130,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             actions={actions}
                             quickSlots={quickSlots}
                             compact={desktopArchiveCompact}
-                            onAssignQuickSlot={(index, item) => actions.setQuickSlot?.(index, item)}
+                            onAssignQuickSlot={(index: any, item: any) => actions.setQuickSlot?.(index, item)}
                             spotlight={inventorySpotlight}
                             onClearSpotlight={onClearInventorySpotlight}
                         />
@@ -192,9 +192,9 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
         );
     };
 
-    const renderMobileArchiveRail = (items) => (
+    const renderMobileArchiveRail = (items: any) => (
         <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
-            {items.map((tab) => (
+            {items.map((tab: any) => (
                 <ArchiveTabButton
                     key={tab.id}
                     icon={tab.icon}
@@ -270,7 +270,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                 return;
                             }
 
-                            setMobileArchiveExpanded((open) => {
+                            setMobileArchiveExpanded((open: any) => {
                                 const nextOpen = !open;
                                 if (!nextOpen) {
                                     setConfirmMenuReset(false);
@@ -322,7 +322,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                         <SignalBadge tone="recommended" size="sm">SAFE ZONE</SignalBadge>
                                     </div>
                                     <div className="grid grid-cols-4 gap-2">
-                                        {TOWN_MENU_ACTIONS.map((action) => {
+                                        {TOWN_MENU_ACTIONS.map((action: any) => {
                                             const Icon = action.icon;
                                             return (
                                                 <button
@@ -343,7 +343,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
 
                             <div className="shrink-0 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2">
                                 <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
-                                    {primaryMobileTabs.map((tab) => (
+                                    {primaryMobileTabs.map((tab: any) => (
                                         <ArchiveTabButton
                                             key={tab.id}
                                             icon={tab.icon}
@@ -478,7 +478,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                 animate={{ y: 0 }}
                                 exit={{ y: '100%' }}
                                 transition={{ duration: 0.22, ease: 'easeOut' }}
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e: any) => e.stopPropagation()}
                                 className="panel-noise aether-surface-strong absolute inset-x-0 bottom-0 max-h-[72dvh] rounded-t-[2rem] border-t px-3.5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[0_-20px_60px_rgba(2,8,20,0.45)]"
                             >
                                 <div className="mx-auto h-1.5 w-12 rounded-full bg-white/12" />
@@ -520,7 +520,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                 )}
 
                                 <div className="mt-3 grid grid-cols-4 gap-2">
-                                    {primaryMobileTabs.map((tab) => (
+                                    {primaryMobileTabs.map((tab: any) => (
                                         <ArchiveTabButton
                                             key={tab.id}
                                             icon={tab.icon}
@@ -534,7 +534,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                     ))}
                                 </div>
                                 <div className="mt-2 grid grid-cols-4 gap-2">
-                                    {secondaryMobileTabs.map((tab) => (
+                                    {secondaryMobileTabs.map((tab: any) => (
                                         <ArchiveTabButton
                                             key={tab.id}
                                             icon={tab.icon}

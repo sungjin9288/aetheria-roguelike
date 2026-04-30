@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
  * useDamageFlash — HP 변화 시 데미지/회복 flash 및 float 숫자 상태를 생성합니다.
  * returns: { damageFlash, healFlash, damageAmount }
  */
-export const useDamageFlash = (currentHp) => {
+export const useDamageFlash = (currentHp: any) => {
     const [damageFlash, setDamageFlash] = useState(false);
     const [healFlash, setHealFlash] = useState(false);
     const [damageAmount, setDamageAmount] = useState(null);

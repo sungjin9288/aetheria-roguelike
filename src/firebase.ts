@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-const REQUIRED_FIREBASE_KEYS = ['apiKey', 'authDomain', 'projectId'];
+const REQUIRED_FIREBASE_KEYS: any = ['apiKey', 'authDomain', 'projectId'];
 
 const readInjectedConfig = () => {
     if (typeof window === 'undefined') return null;
@@ -25,7 +25,7 @@ const readEnvConfig = () => {
 
 const firebaseConfig = readInjectedConfig() || readEnvConfig() || {};
 const hasFirebaseConfig = REQUIRED_FIREBASE_KEYS.every(
-    (key) => typeof firebaseConfig[key] === 'string' && firebaseConfig[key].trim().length > 0
+    (key: any) => typeof firebaseConfig[key] === 'string' && firebaseConfig[key].trim().length > 0
 );
 
 const app = initializeApp(firebaseConfig);

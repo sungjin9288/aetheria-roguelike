@@ -71,12 +71,12 @@ const AVAILABLE_AVATAR_KEYS = new Set([
     'warrior-plate-sword',
 ]);
 
-const buildCandidatePaths = (orderedKeys) => (
-    [...new Set(orderedKeys.filter((key) => key && AVAILABLE_AVATAR_KEYS.has(key)))]
-        .map((key) => `/assets/avatars/${key}.png`)
+const buildCandidatePaths = (orderedKeys: any) => (
+    [...new Set(orderedKeys.filter((key: any) => key && AVAILABLE_AVATAR_KEYS.has(key)))]
+        .map((key: any) => `/assets/avatars/${key}.png`)
 );
 
-const resolveAppearanceKeys = (appearance) => {
+const resolveAppearanceKeys = (appearance: any) => {
     const normalizedJob = String(appearance?.job || '모험가').replace(/\s+/g, '');
     const jobSlug = JOB_SPRITE_SLUG_MAP[normalizedJob] || JOB_SPRITE_SLUG_MAP[appearance?.job] || 'adventurer';
     const armorStyle = appearance?.armorStyle || 'coat';
@@ -140,7 +140,7 @@ export const JOB_TYPICAL_LOADOUT = Object.freeze({
  *
  * 각 직업의 가장 풍부한 default sprite를 명시 매핑 (디테일 큰 sprite 우선).
  */
-const JOB_DEFAULT_SPRITE = Object.freeze({
+const JOB_DEFAULT_SPRITE: any = Object.freeze({
     adventurer: 'adventurer',
     warrior: 'warrior-plate-sword',
     knight: 'knight-plate-guardian',
@@ -157,7 +157,7 @@ const JOB_DEFAULT_SPRITE = Object.freeze({
     'grand-mage': 'grand-mage-robe-caster',
 });
 
-export const getAvatarSpriteCandidates = (appearance) => {
+export const getAvatarSpriteCandidates = (appearance: any) => {
     const { jobSlug } = resolveAppearanceKeys(appearance);
 
     // cycle 46: armor/loadout 모두 sprite에 영향 X. 직업만이 sprite 결정.
@@ -172,7 +172,7 @@ export const getAvatarSpriteCandidates = (appearance) => {
     return buildCandidatePaths(orderedKeys);
 };
 
-export const getAvatarEquipmentPreviewCandidates = (appearance) => {
+export const getAvatarEquipmentPreviewCandidates = (appearance: any) => {
     const { jobSlug, armorStyle, loadoutStyle } = resolveAppearanceKeys(appearance);
     const emphasizesLoadout = Boolean(appearance?.weapon || appearance?.offhand);
 

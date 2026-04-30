@@ -7,7 +7,7 @@ import { getQuestBoardRecommendations } from '../../utils/questOperations.js';
 import SignalBadge from '../SignalBadge';
 import FocusPanelHeader from '../FocusPanelHeader';
 
-const getQuestObjectiveText = (quest) => {
+const getQuestObjectiveText = (quest: any) => {
   if (quest?.objective) return quest.objective;
   if (quest?.desc) return quest.desc;
   return quest?.target === 'Level'
@@ -15,15 +15,15 @@ const getQuestObjectiveText = (quest) => {
     : `${quest.target} ${quest.goal}회 달성`;
 };
 
-const getQuestProgressText = (quest, progress = 0) => (
+const getQuestProgressText = (quest: any, progress: any = 0) => (
   quest?.target === 'Level'
     ? `레벨 ${progress}/${quest.goal}`
     : `${progress}/${quest.goal}`
 );
 
-const getQuestProgressPercent = (progress = 0, goal = 1) => Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
+const getQuestProgressPercent = (progress: any = 0, goal: any = 1) => Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
 
-const RewardChips = ({ reward, accent = 'blue' }) => {
+const RewardChips = ({ reward, accent = 'blue' }: any) => {
   const rewards = formatRewardParts(reward);
   if (!rewards.length) return null;
   const accentClass = accent === 'green'
@@ -33,7 +33,7 @@ const RewardChips = ({ reward, accent = 'blue' }) => {
       : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue';
   return (
     <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-fira">
-      {rewards.map((entry) => (
+      {rewards.map((entry: any) => (
         <span key={`${accent}_${entry}`} className={`px-2 py-1 rounded border ${accentClass}`}>{entry}</span>
       ))}
     </div>
@@ -52,11 +52,11 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false,
     backlog: backlogQuestEntries,
     locked: lockedQuestEntries,
   } = getQuestBoardRecommendations(player);
-  const claimableQuestCount = activeQuestEntries.filter((e) => e.isComplete).length;
+  const claimableQuestCount = activeQuestEntries.filter((e: any) => e.isComplete).length;
   const availableQuestCount = featuredOperations.length + backlogQuestEntries.length;
 
   const today = new Date().toISOString().slice(0, 10);
-  const hasActiveBounty = activeQuestEntries.some((e) => e.isBounty);
+  const hasActiveBounty = activeQuestEntries.some((e: any) => e.isBounty);
   const bountyIssuedToday = player?.stats?.bountyDate === today && player?.stats?.bountyIssued;
   const canRequestBounty = !hasActiveBounty && !bountyIssuedToday;
   const bountyButtonLabel = hasActiveBounty ? 'DAILY BOUNTY ACTIVE' : bountyIssuedToday ? 'BOUNTY CLAIMED TODAY' : 'REQUEST DAILY BOUNTY';
@@ -117,7 +117,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false,
               <span className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400">Run Composition</span>
             </div>
             <div className="grid gap-3">
-              {featuredOperations.map((entry, index) => (
+              {featuredOperations.map((entry: any, index: any) => (
                 <div key={`featured_${entry.quest.id}`} className="rounded-[1.2rem] border border-[#7dd4d8]/16 bg-[radial-gradient(circle_at_top_right,rgba(125,212,216,0.14),transparent_24%),linear-gradient(180deg,rgba(12,19,29,0.96)_0%,rgba(7,12,18,0.92)_100%)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -167,7 +167,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false,
           <div className="flex items-center justify-between border-b border-cyber-green/20 pb-2">
             <h3 className="text-sm font-bold text-cyber-green font-rajdhani tracking-[0.18em]">진행 중 임무</h3>
           </div>
-          {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry) => (
+          {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry: any) => (
             <div key={`active_${entry.id}`} className={`rounded-[1.2rem] border p-4 ${entry.isComplete ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10' : entry.isBounty ? 'border-[#d5b180]/22 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)]' : 'aether-panel-muted'}`}>
               <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
@@ -217,7 +217,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false,
             <h3 className="text-sm font-bold text-cyber-blue font-rajdhani tracking-[0.18em]">전체 백로그</h3>
             <span className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400">recommended set 제외</span>
           </div>
-          {backlogQuestEntries.length > 0 ? backlogQuestEntries.map((entry) => {
+          {backlogQuestEntries.length > 0 ? backlogQuestEntries.map((entry: any) => {
             const quest = entry.quest;
             const resonance = entry.resonance.label ? entry.resonance : getTraitQuestResonance(quest, traitProfile);
             return (
@@ -256,7 +256,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false,
         {/* 잠긴 임무 */}
         <section className="space-y-3">
           <h3 className="text-sm font-bold text-purple-300 font-rajdhani tracking-[0.18em] border-b border-purple-500/20 pb-2">곧 열릴 임무</h3>
-          {lockedQuestEntries.length > 0 ? lockedQuestEntries.map((quest) => (
+          {lockedQuestEntries.length > 0 ? lockedQuestEntries.map((quest: any) => (
             <div key={`locked_${quest.id}`} className="rounded-[1.2rem] border border-white/8 aether-panel-muted p-4">
               <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">

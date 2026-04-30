@@ -6,7 +6,7 @@ import { getEnemyTacticalProfile } from '../../utils/runProfileUtils';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { getBossSignatureDrops } from '../../utils/bossSignatureHint.js';
 
-const ACTION_BUTTONS = [
+const ACTION_BUTTONS: any = [
   {
     key: 'attack',
     label: 'ATTACK',
@@ -45,7 +45,7 @@ const ACTION_BUTTONS = [
   },
 ];
 
-const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, mobile = false, compact = false, dense = false }) => {
+const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, mobile = false, compact = false, dense = false }: any) => {
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
   const tacticalProfile = getEnemyTacticalProfile(enemy, stats);
@@ -76,21 +76,21 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
   ).slice(0, dense ? 3 : mobile || compact ? 4 : 6) as any[];
 
   // 콤보 시스템 (연격의 반지 유물 보유 시)
-  const comboRelic = player.relics?.find((r) => r.effect === 'combo_stack');
+  const comboRelic = player.relics?.find((r: any) => r.effect === 'combo_stack');
   const comboCount = player.combatFlags?.comboCount || 0;
   const comboStack = comboRelic?.val?.stack || 0;
 
   // 보스 패턴 텔레그래프 (적의 다음 행동 예측)
   const enemyTelegraph = enemy ? CombatEngine.predictEnemyNextAction(enemy) : null;
-  const telegraphColorClass = {
+  const telegraphColorClass: string = ({
     red: 'border-red-500/40 bg-red-900/15 text-red-300',
     orange: 'border-orange-400/40 bg-orange-900/15 text-orange-300',
     blue: 'border-cyber-blue/30 bg-cyber-blue/10 text-cyber-blue',
     purple: 'border-cyber-purple/50 bg-cyber-purple/15 text-cyber-purple animate-pulse',
     gray: 'border-slate-600/30 bg-slate-900/20 text-slate-400',
-  }[enemyTelegraph?.color || 'gray'];
+  } as Record<string, string>)[enemyTelegraph?.color || 'gray'];
 
-  const handleAction = (key) => {
+  const handleAction = (key: any) => {
     if (key === 'attack') {
       soundManager.play('attack');
       actions.combat('attack');
@@ -110,7 +110,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
     actions.combat('escape');
   };
 
-  const handleConsumableUse = (item) => {
+  const handleConsumableUse = (item: any) => {
     soundManager.play('item');
     if (actions.combatUseItem) {
       actions.combatUseItem(item);
@@ -119,7 +119,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
     actions.useItem?.(item);
   };
 
-  const getConsumableTone = (type) => ({
+  const getConsumableTone = (type: any) => ({
     hp: 'border-emerald-500/25 bg-emerald-500/8 text-emerald-200 hover:bg-emerald-500/14',
     mp: 'border-cyber-blue/25 bg-cyber-blue/8 text-cyber-blue hover:bg-cyber-blue/14',
     cure: 'border-amber-400/25 bg-amber-500/8 text-amber-200 hover:bg-amber-500/14',
@@ -201,7 +201,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
       {dense ? (
         compactMetaEntries.length > 0 && (
           <div className="grid gap-1">
-            {compactMetaEntries.map((entry) => (
+            {compactMetaEntries.map((entry: any) => (
               <div
                 key={entry.key}
                 className={`rounded-[0.9rem] border px-2 py-1.5 text-left font-fira ${entry.className}`}
@@ -270,7 +270,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
                 : 'border-cyber-pink/20 bg-cyber-pink/5 text-cyber-pink/60'
             }`}>
               <span className="tracking-widest">COMBO </span>
-              {Array.from({ length: comboStack }).map((_, i) => (
+              {Array.from({ length: comboStack }).map((_: any, i: any) => (
                 <span key={i} className={`mx-0.5 ${i < comboCount ? 'text-cyber-pink' : 'text-cyber-pink/25'}`}>◆</span>
               ))}
               {comboCount >= comboStack && <span className="ml-1 font-bold">READY!</span>}
@@ -278,7 +278,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
           )}
           {mobileCombatSignals.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {mobileCombatSignals.map((signal) => (
+              {mobileCombatSignals.map((signal: any) => (
                 <span
                   key={signal.key}
                   className={`inline-flex min-h-[24px] items-center rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.16em] ${signal.className}`}
@@ -293,7 +293,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
       )}
 
       <div className="grid grid-cols-2 gap-1.5">
-        {ACTION_BUTTONS.map((action) => {
+        {ACTION_BUTTONS.map((action: any) => {
           const Icon = action.icon;
           const isDisabled = isAiThinking || ((action.key === 'skill' || action.key === 'swap') && !selectedSkill);
 
@@ -322,7 +322,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
             Combat Items
           </div>
           <div className={`grid gap-2 ${dense ? 'grid-cols-1' : mobile || compact ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {combatConsumables.map((item) => (
+            {combatConsumables.map((item: any) => (
               <Motion.button
                 key={`${item.type}:${item.name}`}
                 whileTap={{ scale: 0.97 }}

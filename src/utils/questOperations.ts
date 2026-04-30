@@ -2,7 +2,7 @@ import { QUESTS } from '../data/quests.js';
 import { MAPS } from '../data/maps.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 
-const OPERATION_META = {
+const OPERATION_META: any = {
     story: {
         label: 'Story Arc',
         emphasis: '서사 축',
@@ -30,17 +30,17 @@ const OPERATION_META = {
     },
 };
 
-const FEATURED_LANE_ORDER = ['story', 'build', 'growth', 'boss', 'hunt'];
+const FEATURED_LANE_ORDER: any = ['story', 'build', 'growth', 'boss', 'hunt'];
 
-const toArray = (value) => (Array.isArray(value) ? value : []);
-const getQuestLevelGap = (quest, playerLevel = 1) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
-const isStoryQuest = (quest) => String(quest?.title || '').includes('[스토리]');
-const getActiveQuestEntries = (player) => (
+const toArray = (value: any) => (Array.isArray(value) ? value : []);
+const getQuestLevelGap = (quest: any, playerLevel: any = 1) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
+const isStoryQuest = (quest: any) => String(quest?.title || '').includes('[스토리]');
+const getActiveQuestEntries = (player: any) => (
     toArray(player?.quests)
-        .map((questState) => {
+        .map((questState: any) => {
             const quest = questState?.isBounty
                 ? questState
-                : QUESTS.find((entry) => entry.id === questState?.id);
+                : QUESTS.find((entry: any) => entry.id === questState?.id);
             if (!quest) return null;
 
             const progress = questState?.progress || 0;
@@ -55,7 +55,7 @@ const getActiveQuestEntries = (player) => (
         .filter(Boolean)
 );
 
-const getQuestTargetMaps = (quest, maps = MAPS) => {
+const getQuestTargetMaps = (quest: any, maps: any = MAPS) => {
     if (!quest?.target || quest.target === 'Level') return [];
 
     return (Object.entries(maps) as Array<[string, any]>)
@@ -70,15 +70,15 @@ const getQuestTargetMaps = (quest, maps = MAPS) => {
         .map(([name]) => name);
 };
 
-const isBossQuest = (quest, maps = MAPS) => {
+const isBossQuest = (quest: any, maps: any = MAPS) => {
     if (String(quest?.title || '').includes('[보스]')) return true;
-    return getQuestTargetMaps(quest, maps).some((mapName) => {
+    return getQuestTargetMaps(quest, maps).some((mapName: any) => {
         const map = maps[mapName];
         return Boolean(map?.boss) || toArray(map?.bossMonsters).includes(quest?.target);
     });
 };
 
-const getQuestLane = (quest, resonance, maps = MAPS) => {
+const getQuestLane = (quest: any, resonance: any, maps: any = MAPS) => {
     if (isStoryQuest(quest)) return 'story';
     if (quest?.buildTag || quest?.type === 'build_victory' || (quest?.type === 'survive_low_hp' && resonance.score >= 3)) return 'build';
     if (quest?.target === 'Level' || ['craft', 'explore_count', 'discovery_count', 'bounty_count'].includes(quest?.type)) return 'growth';
@@ -109,14 +109,14 @@ const getQuestReason = (quest, lane, resonance, targetMaps: any[] = []) => {
     return '당장 밀기 좋은 기본 토벌 임무로 파밍과 전투 감각을 유지하기 쉽습니다.';
 };
 
-const scoreQuest = (quest, player, traitProfile, activeEntries, maps = MAPS) => {
+const scoreQuest = (quest: any, player: any, traitProfile: any, activeEntries: any, maps: any = MAPS) => {
     const resonance = getTraitQuestResonance(quest, traitProfile);
     const lane = getQuestLane(quest, resonance, maps);
     const playerLevel = player?.level || 1;
     const targetMaps = getQuestTargetMaps(quest, maps);
-    const activeTargets = new Set(activeEntries.map((entry) => entry.quest?.target).filter(Boolean));
+    const activeTargets = new Set(activeEntries.map((entry: any) => entry.quest?.target).filter(Boolean));
     const levelGap = getQuestLevelGap(quest, playerLevel);
-    const hasNearbyTargetMap = targetMaps.some((mapName) => {
+    const hasNearbyTargetMap = targetMaps.some((mapName: any) => {
         const level = maps[mapName]?.level;
         return typeof level === 'number' && level <= playerLevel + 6 && level >= Math.max(1, playerLevel - 8);
     });
@@ -153,18 +153,18 @@ const scoreQuest = (quest, player, traitProfile, activeEntries, maps = MAPS) => 
 export const getQuestBoardRecommendations = (player, maps = MAPS, questCatalog = QUESTS) => {
     const traitProfile = getTraitProfile(player, { maxHp: player?.maxHp, maxMp: player?.maxMp });
     const activeEntries = getActiveQuestEntries(player);
-    const activeRegularQuestIds = new Set(activeEntries.filter((entry) => !entry.isBounty).map((entry) => entry.id));
+    const activeRegularQuestIds = new Set(activeEntries.filter((entry: any) => !entry.isBounty).map((entry: any) => entry.id));
     const playerLevel = player?.level || 1;
 
     const scoredAvailable = questCatalog
-        .filter((quest) => !activeRegularQuestIds.has(quest.id) && playerLevel >= (quest.minLv || 1))
-        .map((quest) => scoreQuest(quest, player, traitProfile, activeEntries, maps))
-        .sort((left, right) => right.score - left.score || left.quest.title.localeCompare(right.quest.title, 'ko'));
+        .filter((quest: any) => !activeRegularQuestIds.has(quest.id) && playerLevel >= (quest.minLv || 1))
+        .map((quest: any) => scoreQuest(quest, player, traitProfile, activeEntries, maps))
+        .sort((left: any, right: any) => right.score - left.score || left.quest.title.localeCompare(right.quest.title, 'ko'));
 
     const featured = [];
     const usedIds = new Set();
-    FEATURED_LANE_ORDER.forEach((lane) => {
-        const match = scoredAvailable.find((entry) => entry.lane === lane && !usedIds.has(entry.quest.id));
+    FEATURED_LANE_ORDER.forEach((lane: any) => {
+        const match = scoredAvailable.find((entry: any) => entry.lane === lane && !usedIds.has(entry.quest.id));
         if (!match || featured.length >= 3) return;
         featured.push(match);
         usedIds.add(match.quest.id);
@@ -177,10 +177,10 @@ export const getQuestBoardRecommendations = (player, maps = MAPS, questCatalog =
         usedIds.add(entry.quest.id);
     }
 
-    const backlog = scoredAvailable.filter((entry) => !usedIds.has(entry.quest.id));
+    const backlog = scoredAvailable.filter((entry: any) => !usedIds.has(entry.quest.id));
     const locked = questCatalog
-        .filter((quest) => !activeRegularQuestIds.has(quest.id) && playerLevel < (quest.minLv || 1))
-        .sort((left, right) => (left.minLv || 1) - (right.minLv || 1))
+        .filter((quest: any) => !activeRegularQuestIds.has(quest.id) && playerLevel < (quest.minLv || 1))
+        .sort((left: any, right: any) => (left.minLv || 1) - (right.minLv || 1))
         .slice(0, 6);
 
     return {

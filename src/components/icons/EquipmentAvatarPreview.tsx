@@ -3,7 +3,7 @@ import { buildEquipmentPreviewAppearance, getEquipmentPreviewStage } from '../..
 import { getAvatarEquipmentPreviewCandidates } from '../../utils/avatarSpriteCandidates.js';
 import AvatarEquipmentOverlay from './AvatarEquipmentOverlay.jsx';
 
-const EquipmentAvatarPreview = ({ item, size = 24, className = '', variant = 'default' }) => {
+const EquipmentAvatarPreview = ({ item, size = 24, className = '', variant = 'default' }: any) => {
     const appearance = useMemo(() => buildEquipmentPreviewAppearance(item), [item]);
     const previewStage = useMemo(() => getEquipmentPreviewStage(item, appearance, variant), [item, appearance, variant]);
     const spriteCandidates = useMemo(
@@ -56,7 +56,7 @@ const EquipmentAvatarPreview = ({ item, size = 24, className = '', variant = 'de
                             : 'brightness(0.95) saturate(0.94) contrast(1.05)',
                     }}
                     onError={() => {
-                        setSpriteState((current) => {
+                        setSpriteState((current: any) => {
                             const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
                             return {
                                 signature: spriteSignature,

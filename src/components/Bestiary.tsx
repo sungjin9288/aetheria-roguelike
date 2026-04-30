@@ -11,7 +11,7 @@ import SignalBadge from './SignalBadge';
  * Bestiary — 몬스터 도감
  * player.stats.killRegistry 기반 만난 몬스터 기록 + 드롭 정보
  */
-const Bestiary = ({ player, compact = false }) => {
+const Bestiary = ({ player, compact = false }: any) => {
     const [showAllBestiary, setShowAllBestiary] = useState(false);
     const [selectedMonster, setSelectedMonster] = useState(null);
 
@@ -48,11 +48,11 @@ const Bestiary = ({ player, compact = false }) => {
         });
     }, [player]);
 
-    const encountered = allMonsters.filter(m => m.encountered);
+    const encountered = allMonsters.filter((m: any) => m.encountered);
     const total = allMonsters.length;
     const visibleMonsters = compact && !showAllBestiary
         ? (encountered.length > 0
-            ? [...encountered].sort((a, b) => b.kills - a.kills).slice(0, 3)
+            ? [...encountered].sort((a: any, b: any) => b.kills - a.kills).slice(0, 3)
             : [])
         : allMonsters;
     const hiddenMonsterCount = Math.max(0, total - visibleMonsters.length);
@@ -69,7 +69,7 @@ const Bestiary = ({ player, compact = false }) => {
                     {compact && (hiddenMonsterCount > 0 || showAllBestiary) && (
                         <button
                             type="button"
-                            onClick={() => setShowAllBestiary((prev) => !prev)}
+                            onClick={() => setShowAllBestiary((prev: any) => !prev)}
                             className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
                         >
                             {showAllBestiary ? '요약 보기' : '도감 더 보기'}
@@ -91,16 +91,16 @@ const Bestiary = ({ player, compact = false }) => {
             {/* Codex Total Bonuses */}
             <div className="flex flex-wrap gap-1.5 text-[10px] font-fira bg-black/18 p-2 rounded-[0.95rem] border border-white/8">
                 <span className="font-bold text-slate-300/80">총 보너스</span>
-                <SignalBadge tone="success" size="sm">HP +{allMonsters.reduce((acc, m) => acc + m.bonuses.hp, 0)}</SignalBadge>
-                <SignalBadge tone="danger" size="sm">ATK +{allMonsters.reduce((acc, m) => acc + m.bonuses.atk, 0)}</SignalBadge>
-                <SignalBadge tone="neutral" size="sm">DEF +{allMonsters.reduce((acc, m) => acc + m.bonuses.def, 0)}</SignalBadge>
+                <SignalBadge tone="success" size="sm">HP +{allMonsters.reduce((acc: any, m: any) => acc + m.bonuses.hp, 0)}</SignalBadge>
+                <SignalBadge tone="danger" size="sm">ATK +{allMonsters.reduce((acc: any, m: any) => acc + m.bonuses.atk, 0)}</SignalBadge>
+                <SignalBadge tone="neutral" size="sm">DEF +{allMonsters.reduce((acc: any, m: any) => acc + m.bonuses.def, 0)}</SignalBadge>
             </div>
 
             {/* Monster List */}
             {showBestiarySummary ? (
                 encountered.length > 0 ? (
                     <div className="space-y-1.5">
-                        {visibleMonsters.map((m) => (
+                        {visibleMonsters.map((m: any) => (
                             <div
                                 key={m.name}
                                 className="w-full text-left flex items-center gap-2 p-2.5 rounded-[0.95rem] border border-white/8 bg-black/18 text-xs"
@@ -122,7 +122,7 @@ const Bestiary = ({ player, compact = false }) => {
                 )
             ) : (
                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                    {allMonsters.map((m) => {
+                    {allMonsters.map((m: any) => {
                         const hasSignature = m.signatureDrops?.length > 0;
                         return (
                             <Motion.button
@@ -173,7 +173,7 @@ const Bestiary = ({ player, compact = false }) => {
 
             {/* Detail Panel */}
             {!showBestiarySummary && selectedMonster && (() => {
-                const m = allMonsters.find(x => x.name === selectedMonster);
+                const m = allMonsters.find((x: any) => x.name === selectedMonster);
                 if (!m) return null;
                 return (
                     <Motion.div
@@ -204,7 +204,7 @@ const Bestiary = ({ player, compact = false }) => {
                         {m.drops.length > 0 && (
                             <div className="space-y-0.5">
                                 <div className="text-[10px] text-slate-500 font-fira">드롭 아이템:</div>
-                                {m.drops.map(d => (
+                                {m.drops.map((d: any) => (
                                     <div key={d} className="text-[10px] text-[#f6e7c8]/72 font-fira pl-2">• {d}</div>
                                 ))}
                             </div>
@@ -222,7 +222,7 @@ const Bestiary = ({ player, compact = false }) => {
                                     <Sparkles size={10} />
                                     전설 각인 드롭
                                 </div>
-                                {m.signatureDrops.map((drop) => {
+                                {m.signatureDrops.map((drop: any) => {
                                     const pct = Math.max(1, Math.round((drop.rate || 0) * 100));
                                     return (
                                         <div key={drop.name} className="flex items-center justify-between text-[10px] font-fira">

@@ -35,7 +35,7 @@ const ControlPanel = ({
   stats = null,
   mobileFocused = false,
   onOpenArchiveConsole = null,
-}) => {
+}: any) => {
   const [confirmReset, setConfirmReset] = useState(false);
   const mapData = DB.MAPS[player.loc];
   const guidance = getAdventureGuidance(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, gameState);
@@ -49,13 +49,13 @@ const ControlPanel = ({
   const actionLabelClass = 'text-[10px] font-rajdhani font-bold tracking-[0.12em] text-left';
   const resetButtonClass = 'h-[42px] rounded-[1rem] border px-2.5 text-[9px] font-rajdhani font-bold tracking-[0.12em] transition-all flex items-center justify-center gap-2';
 
-  const getRecommendedClass = (buttonKey) => (
+  const getRecommendedClass = (buttonKey: any) => (
     recommendedButton === buttonKey
       ? 'ring-1 ring-cyan-300/45 shadow-[0_0_18px_rgba(34,211,238,0.18)]'
       : ''
   );
 
-  const renderActionButton = (button, extraClass = '', { hideLabel = false } = {}) => {
+  const renderActionButton = (button: any, extraClass: any = '', { hideLabel = false }: any = {}) => {
     const {
       key,
       testId,
@@ -99,7 +99,7 @@ const ControlPanel = ({
     );
   };
 
-  const renderResetControl = ({ compact = false, className = '', confirmGridClass = '' } = {}) => {
+  const renderResetControl = ({ compact = false, className = '', confirmGridClass = '' }: any = {}) => {
     if (!confirmReset) {
       return (
         <Motion.button
@@ -216,7 +216,7 @@ const ControlPanel = ({
     },
   ];
 
-  const marketButton = {
+  const marketButton: Record<string, any> = {
     key: 'market',
     testId: 'control-market',
     icon: ShoppingBag,
@@ -252,7 +252,7 @@ const ControlPanel = ({
     >
       {gameState === GS.MOVING ? (
         <div className="grid grid-cols-2 gap-2">
-          {moveRecommendations.map((route) => (
+          {moveRecommendations.map((route: any) => (
             <Motion.button
               whileTap={{ scale: 0.95 }}
               key={route.name}
@@ -311,14 +311,14 @@ const ControlPanel = ({
         </div>
       ) : (
         <div className={actionGridClass}>
-          {coreButtons.map((button) => renderActionButton(button))}
+          {coreButtons.map((button: any) => renderActionButton(button))}
           {!mobileFocused && !isSafeZone && renderResetControl({
             compact: true,
             className: '',
             confirmGridClass: 'col-span-3 grid-cols-2 gap-1.5',
           })}
-          {isSafeZone && safeZoneButtons.map((button) => renderActionButton(button))}
-          {auxiliaryButtons.map((button) => renderActionButton(button))}
+          {isSafeZone && safeZoneButtons.map((button: any) => renderActionButton(button))}
+          {auxiliaryButtons.map((button: any) => renderActionButton(button))}
           {!mobileFocused && isSafeZone && renderResetControl({
             compact: true,
             className: '',

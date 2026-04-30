@@ -10,7 +10,7 @@ import { resetDailyProtocolIfNeeded, resetWeeklyProtocolIfNeeded } from '../../u
 /**
  * 클래스 기반 HP/MP 최대치 계산
  */
-export const buildClassVitals = (level, jobId, meta: any = {}) => {
+export const buildClassVitals = (level: any, jobId: any, meta: any = {}) => {
     const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
     const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod) + Math.max(0, level - 1) * BALANCE.HP_PER_LEVEL + (meta.bonusHp || 0);
     const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod) + Math.max(0, level - 1) * BALANCE.MP_PER_LEVEL + (meta.bonusMp || 0);
@@ -20,17 +20,17 @@ export const buildClassVitals = (level, jobId, meta: any = {}) => {
 /**
  * 공유 헬퍼 팩토리 — emitUnlockedTitles, emitDailyProtocolLogs, commitExploreOutcome
  */
-export const makeSharedHelpers = ({ player, dispatch, addLog }) => {
+export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
-    const emitDailyProtocolLogs = (type, amount = 1) => {
+    const emitDailyProtocolLogs = (type: any, amount: any = 1) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
-        completed.forEach((mission) => {
+        completed.forEach((mission: any) => {
             addLog('system', MSG.DAILY_PROTOCOL_DONE(formatDailyProtocolReward(mission.reward)));
         });
     };
 
-    const commitExploreOutcome = (outcome, transformPlayer = null) => {
+    const commitExploreOutcome = (outcome: any, transformPlayer: any = null) => {
         resetDailyProtocolIfNeeded(player, dispatch);
         resetWeeklyProtocolIfNeeded(player, dispatch);
         dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
@@ -39,7 +39,7 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }) => {
         dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.explore });
         dispatch({
             type: AT.SET_PLAYER,
-            payload: (currentPlayer) => {
+            payload: (currentPlayer: any) => {
                 let nextPlayer = {
                     ...currentPlayer,
                     stats: {

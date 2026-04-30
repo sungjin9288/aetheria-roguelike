@@ -1,26 +1,26 @@
 import React from 'react';
 import { getEquipmentArtProfile } from '../../utils/equipmentArt.js';
 
-const Block = ({ x, y, w, h, fill, opacity = 1 }) => (
+const Block = ({ x, y, w, h, fill, opacity = 1 }: any) => (
     <rect x={x} y={y} width={w} height={h} fill={fill} opacity={opacity} shapeRendering="crispEdges" />
 );
 
-const Poly = ({ points, fill, opacity = 1 }) => (
+const Poly = ({ points, fill, opacity = 1 }: any) => (
     <polygon
-        points={points.map(([x, y]) => `${x},${y}`).join(' ')}
+        points={points.map(([x, y]: any) => `${x},${y}`).join(' ')}
         fill={fill}
         opacity={opacity}
         shapeRendering="crispEdges"
     />
 );
 
-const shadowize = (hex, factor = 0.36) => {
+const shadowize = (hex: any, factor: any = 0.36) => {
     if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return '#241d1a';
-    const parts = [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5, 7)].map((entry) => Number.parseInt(entry, 16));
-    return `#${parts.map((value) => Math.max(0, Math.min(255, Math.round(value * factor))).toString(16).padStart(2, '0')).join('')}`;
+    const parts = [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5, 7)].map((entry: any) => Number.parseInt(entry, 16));
+    return `#${parts.map((value: any) => Math.max(0, Math.min(255, Math.round(value * factor))).toString(16).padStart(2, '0')).join('')}`;
 };
 
-const soften = (hex, alpha = 0.72) => {
+const soften = (hex: any, alpha: any = 0.72) => {
     if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return `rgba(255,255,255,${alpha})`;
     const red = Number.parseInt(hex.slice(1, 3), 16);
     const green = Number.parseInt(hex.slice(3, 5), 16);
@@ -28,7 +28,7 @@ const soften = (hex, alpha = 0.72) => {
     return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
 
-const getInk = (profile) => {
+const getInk = (profile: any) => {
     const accentShadow = shadowize(profile?.palette?.shade || '#2a1f1b', 0.54);
     return {
         outline: '#231816',
@@ -46,7 +46,7 @@ const getInk = (profile) => {
     };
 };
 
-const renderSwordLikeIcon = ({ bladePoints, edgePoints, shinePoints, guardWidth = 14, gripHeight = 10, ink }) => (
+const renderSwordLikeIcon = ({ bladePoints, edgePoints, shinePoints, guardWidth = 14, gripHeight = 10, ink }: any) => (
     <>
         <Poly points={bladePoints} fill={ink.outline} />
         <Poly points={edgePoints} fill={ink.steelShade} />
@@ -58,7 +58,7 @@ const renderSwordLikeIcon = ({ bladePoints, edgePoints, shinePoints, guardWidth 
     </>
 );
 
-const renderSwordLikeAvatar = ({ bladePoints, edgePoints, shinePoints, guardX = 8, guardWidth = 9, gripX = 11, gripHeight = 6, ink }) => (
+const renderSwordLikeAvatar = ({ bladePoints, edgePoints, shinePoints, guardX = 8, guardWidth = 9, gripX = 11, gripHeight = 6, ink }: any) => (
     <>
         <Poly points={bladePoints} fill={ink.outline} />
         <Poly points={edgePoints} fill={ink.steelShade} />
@@ -70,7 +70,7 @@ const renderSwordLikeAvatar = ({ bladePoints, edgePoints, shinePoints, guardX = 
     </>
 );
 
-const WeaponIcon = ({ style, ink }) => {
+const WeaponIcon = ({ style, ink }: any) => {
     switch (style) {
     case 'dagger':
         return renderSwordLikeIcon({
@@ -310,7 +310,7 @@ const WeaponIcon = ({ style, ink }) => {
     }
 };
 
-const WeaponAvatar = ({ style, ink }) => {
+const WeaponAvatar = ({ style, ink }: any) => {
     switch (style) {
     case 'dagger':
     case 'fang-dagger':
@@ -453,7 +453,7 @@ const WeaponAvatar = ({ style, ink }) => {
     }
 };
 
-const OffhandIcon = ({ style, ink }) => {
+const OffhandIcon = ({ style, ink }: any) => {
     switch (style) {
     case 'tower-shield':
         return (
@@ -525,7 +525,7 @@ const OffhandIcon = ({ style, ink }) => {
     }
 };
 
-const OffhandAvatar = ({ style, ink }) => {
+const OffhandAvatar = ({ style, ink }: any) => {
     switch (style) {
     case 'tower-shield':
     case 'kite-shield':
@@ -578,7 +578,7 @@ const OffhandAvatar = ({ style, ink }) => {
     }
 };
 
-const ArmorHeadIcon = ({ style, ink }) => {
+const ArmorHeadIcon = ({ style, ink }: any) => {
     switch (style) {
     case 'straw-hat':
         return (
@@ -647,7 +647,7 @@ const ArmorHeadIcon = ({ style, ink }) => {
     }
 };
 
-const ArmorBodyIcon = ({ style, ink }) => {
+const ArmorBodyIcon = ({ style, ink }: any) => {
     switch (style) {
     case 'robe':
         return (
@@ -715,7 +715,7 @@ const ArmorBodyIcon = ({ style, ink }) => {
     }
 };
 
-const ArmorHeadAvatar = ({ style, ink }) => {
+const ArmorHeadAvatar = ({ style, ink }: any) => {
     switch (style) {
     case 'straw-hat':
         return (
@@ -781,7 +781,7 @@ const ArmorHeadAvatar = ({ style, ink }) => {
     }
 };
 
-const ArmorBodyAvatar = ({ style, ink }) => {
+const ArmorBodyAvatar = ({ style, ink }: any) => {
     switch (style) {
     case 'robe':
         return (
@@ -852,7 +852,7 @@ const ArmorBodyAvatar = ({ style, ink }) => {
     }
 };
 
-const renderWeaponGlyph = (profile, mode) => {
+const renderWeaponGlyph = (profile: any, mode: any) => {
     const ink = getInk(profile);
     if (mode === 'avatar') {
         return <WeaponAvatar style={profile.style} ink={ink} />;
@@ -883,7 +883,7 @@ const renderArmorGlyph = (profile, part = 'full', mode) => {
     );
 };
 
-const renderOffhandGlyph = (profile, mode) => {
+const renderOffhandGlyph = (profile: any, mode: any) => {
     const ink = getInk(profile);
     if (mode === 'avatar') {
         return <OffhandAvatar style={profile.style} ink={ink} />;
@@ -900,7 +900,7 @@ export const EquipmentSpriteLayer = ({
     part = 'full',
     showShadow = false,
     mode = 'icon',
-}) => {
+}: any) => {
     if (!profile || profile.slot === 'none') return null;
 
     return (
@@ -919,7 +919,7 @@ export const EquipmentSpriteGlyph = ({
     size = 24,
     className = '',
     mode = 'icon',
-}) => {
+}: any) => {
     const profile = descriptor || getEquipmentArtProfile(item);
     if (!profile || profile.slot === 'none') return null;
 

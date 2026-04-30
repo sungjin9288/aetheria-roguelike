@@ -30,7 +30,7 @@ const EventPanel = ({ currentEvent, actions, mobileFocused = false }: any) => {
             </div>
 
             <div className="mt-3 flex flex-col gap-2">
-                {choices.length > 0 ? choices.map((choice, idx) => (
+                {choices.length > 0 ? choices.map((choice: any, idx: any) => (
                     <button
                         key={`${choice}_${idx}`}
                         onClick={() => actions.handleEventChoice(idx)}

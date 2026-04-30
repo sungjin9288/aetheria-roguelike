@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SIZE_MAP = {
+const SIZE_MAP: any = {
     sm: {
         shell: 'h-8 w-8',
         ring: 'h-6 w-6',
@@ -21,7 +21,7 @@ const SIZE_MAP = {
     },
 };
 
-const AetherMark = ({ size = 'md', className = '' }) => {
+const AetherMark = ({ size = 'md', className = '' }: any) => {
     const scale = SIZE_MAP[size] || SIZE_MAP.md;
 
     return (
