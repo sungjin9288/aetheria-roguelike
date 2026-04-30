@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useEffect, useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
@@ -36,7 +35,7 @@ const getItemTags = (item) => {
     return tags;
 };
 
-const getComparisonMeta = (item, equip = {}) => {
+const getComparisonMeta = (item, equip: any = {}) => {
     if (!item) return null;
     const currentProfile = getEquipmentProfile(equip);
     const nextEquip = getNextEquipmentState(equip, item);
@@ -91,7 +90,7 @@ const getCompactItemSummary = (item) => {
 
 const MOBILE_INITIAL_BUY_LIMIT = 12;
 
-const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false, onOpenArchiveConsole = null }) => {
+const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false, onOpenArchiveConsole = null }: any) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { DB } from '../../data/db';
@@ -17,20 +16,20 @@ const MonsterCodex = ({ player }) => {
 
     const allMonsters = useMemo(() => {
         const registry = player?.stats?.killRegistry || {};
-        const monstersSet = new Set();
-        Object.values(DB.MAPS).forEach(map => {
-            (map.monsters || []).forEach(m => monstersSet.add(m));
+        const monstersSet = new Set<string>();
+        (Object.values(DB.MAPS) as any[]).forEach((map: any) => {
+            (map.monsters || []).forEach((m: string) => monstersSet.add(m));
         });
-        return Array.from(monstersSet).map(name => {
+        return Array.from(monstersSet).map((name: string) => {
             const kills = registry[name] || 0;
-            const monsterMeta = MONSTERS[name] || {};
-            const bossBrief = BOSS_BRIEFS[name] || null;
+            const monsterMeta = (MONSTERS as any)[name] || {};
+            const bossBrief = (BOSS_BRIEFS as any)[name] || null;
             return {
                 name,
                 kills,
                 encountered: kills > 0,
-                drops: LOOT_TABLE[name] || [],
-                location: Object.entries(DB.MAPS)
+                drops: (LOOT_TABLE as any)[name] || [],
+                location: (Object.entries(DB.MAPS) as Array<[string, any]>)
                     .filter(([, map]) => (map.monsters || []).includes(name))
                     .map(([loc]) => loc)
                     .join(', '),

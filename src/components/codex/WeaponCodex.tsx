@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { DB } from '../../data/db';
@@ -46,13 +45,13 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player })
 
     // 티어별 그룹핑
     const grouped = useMemo(() => {
-        const groups = {};
-        items.forEach(item => {
+        const groups: Record<number, any[]> = {};
+        items.forEach((item: any) => {
             const tier = item.tier || 1;
             if (!groups[tier]) groups[tier] = [];
             groups[tier].push(item);
         });
-        return Object.entries(groups).sort(([a], [b]) => Number(a) - Number(b));
+        return (Object.entries(groups) as Array<[string, any[]]>).sort(([a], [b]) => Number(a) - Number(b));
     }, [items]);
 
     // 마일스톤 보상 (해당 카테고리)

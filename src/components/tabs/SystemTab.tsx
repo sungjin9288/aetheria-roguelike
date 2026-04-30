@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useState, useCallback, useMemo } from 'react';
 import { Copy, Crown, Skull, Shield, Save } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -24,7 +23,7 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }) 
 
     const qaContext = useMemo(() => {
         const platform = typeof navigator !== 'undefined'
-            ? (navigator.userAgentData?.platform || navigator.platform || 'unknown')
+            ? ((navigator as any).userAgentData?.platform || navigator.platform || 'unknown')
             : 'unknown';
         const viewportSize = typeof window !== 'undefined'
             ? `${window.innerWidth}x${window.innerHeight}`

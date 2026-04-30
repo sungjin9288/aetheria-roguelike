@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Zap, Shield, ChevronDown, ChevronRight, Sparkles, GitBranch, RefreshCw } from 'lucide-react';
@@ -53,7 +52,7 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, sum
 
     // 탭 가능한 경우 button으로, 아니면 div로 (a11y).
     const Wrapper = interactive ? 'button' : 'div';
-    const wrapperProps = interactive
+    const wrapperProps: any = interactive
         ? {
             type: 'button',
             onClick: () => onSelect(skill.name),
@@ -108,7 +107,7 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, sum
     );
 };
 
-const SkillTreePreview = ({ player, compact = false, actions = null }) => {
+const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
     const [showAllSkills, setShowAllSkills] = useState(false);
     const [expandedJob, setExpandedJob] = useState(null);
     const [swapTarget, setSwapTarget] = useState(null); // skillName being swapped
@@ -368,7 +367,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }) => {
                             Skill Branches
                         </div>
                         <div className="space-y-3">
-                            {Object.entries(skillBranches).map(([skillName, branches]) => {
+                            {(Object.entries(skillBranches) as Array<[string, any[]]>).map(([skillName, branches]) => {
                                 const chosen = player.skillChoices?.[skillName];
                                 return (
                                     <div key={skillName}>

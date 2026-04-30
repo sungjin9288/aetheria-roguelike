@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React from 'react';
 import { Sword, Zap, ArrowRight, RotateCw, Sparkles } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -58,14 +57,14 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
     ? getBossSignatureDrops(CombatEngine.resolveEnemyBaseName(enemy))
     : [];
   const primarySignatureDrop = signatureDropCandidates[0] || null;
-  const combatConsumables = Object.values(
+  const combatConsumables: any[] = Object.values(
     (player.inv || [])
-      .filter((item) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type))
-      .sort((a, b) => {
-        const typeOrder = { hp: 0, mp: 1, cure: 2, buff: 3 };
+      .filter((item: any) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type))
+      .sort((a: any, b: any) => {
+        const typeOrder: Record<string, number> = { hp: 0, mp: 1, cure: 2, buff: 3 };
         return (typeOrder[a.type] ?? 99) - (typeOrder[b.type] ?? 99);
       })
-      .reduce((acc, item) => {
+      .reduce((acc: Record<string, any>, item: any) => {
         const key = `${item.type}:${item.name}`;
         if (!acc[key]) {
           acc[key] = { ...item, count: 1 };
@@ -73,8 +72,8 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
           acc[key].count += 1;
         }
         return acc;
-      }, {})
-  ).slice(0, dense ? 3 : mobile || compact ? 4 : 6);
+      }, {} as Record<string, any>)
+  ).slice(0, dense ? 3 : mobile || compact ? 4 : 6) as any[];
 
   // 콤보 시스템 (연격의 반지 유물 보유 시)
   const comboRelic = player.relics?.find((r) => r.effect === 'combo_stack');

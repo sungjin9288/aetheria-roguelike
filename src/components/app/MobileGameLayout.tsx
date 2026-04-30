@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { lazy, Suspense } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Package } from 'lucide-react';

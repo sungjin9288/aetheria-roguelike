@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo, useState } from 'react';
 import { Check, Compass, Lock, MapPin, Route, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
@@ -8,9 +7,9 @@ import { getGravesAtLoc } from '../utils/graveUtils';
 import { getMapProgressState } from '../utils/mapProgress';
 import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/mapSignatureHints';
 
-const MAP_ORDER = Object.entries(DB.MAPS)
+const MAP_ORDER = (Object.entries(DB.MAPS) as Array<[string, any]>)
     .map(([name, map]) => ({ name, ...map }))
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
         const aLevel = a.level === 'infinite' ? 999 : (a.minLv ?? a.level ?? 1);
         const bLevel = b.level === 'infinite' ? 999 : (b.minLv ?? b.level ?? 1);
         if (a.type === 'safe' && b.type !== 'safe') return -1;

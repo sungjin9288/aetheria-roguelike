@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo, useState } from 'react';
 import { Lock, Sparkles } from 'lucide-react';
 import { DB } from '../../data/db';
@@ -79,14 +78,14 @@ const LegendaryCodex = ({ player }) => {
 
     const setSummary = useMemo(() => {
         const sets = getSignatureSetDefinitions();
-        return Object.entries(sets).map(([key, def]) => {
-            const discovered = def.members.filter((memberName) => {
+        return (Object.entries(sets) as Array<[string, any]>).map(([key, def]) => {
+            const discovered = def.members.filter((memberName: string) => {
                 const entry = entries.find((e) => e.item.name === memberName);
                 if (!entry) return false;
                 const bucket = resolveDiscoveryBucket(entry.item);
                 return bucket && codex[bucket]?.[entry.item.name];
             }).length;
-            const equipped = def.members.filter((memberName) => {
+            const equipped = def.members.filter((memberName: string) => {
                 const equip = player?.equip;
                 return equip?.weapon?.name === memberName
                     || equip?.armor?.name === memberName

@@ -13,7 +13,7 @@ const RARITY_LABEL = { common: '일반', uncommon: '고급', rare: '희귀', epi
 /**
  * CraftingPanel — 제작/합성 패널 (탭 전환)
  */
-const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }) => {
+const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: any) => {
   const [mode, setMode] = useState('craft');
   const [selectedIds, setSelectedIds] = useState([]);
   const [useProtect, setUseProtect] = useState(false);

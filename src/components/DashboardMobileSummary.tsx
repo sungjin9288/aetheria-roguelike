@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
@@ -34,7 +33,7 @@ const DashboardMobileSummary = ({ player }) => {
         }
         const codex = player.stats?.codex;
         if (codex) {
-            const count = Object.values(codex).reduce((sum, cat) => sum + Object.keys(cat || {}).length, 0);
+            const count: number = (Object.values(codex) as any[]).reduce((sum: number, cat: any) => sum + Object.keys(cat || {}).length, 0);
             if (count > 0) pills.push({ key: 'codex', label: `도감 ${count}`, tone: 'neutral' });
         }
         const passTier = player.seasonPass?.tier || 0;

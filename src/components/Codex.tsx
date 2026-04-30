@@ -22,7 +22,7 @@ const SUB_TABS = [
     { id: 'legend', label: 'LEGEND', icon: Sparkles },
 ];
 
-const Codex = ({ player, dispatch }) => {
+const Codex = ({ player, dispatch }: any) => {
     const [subTab, setSubTab] = useState('equip');
     const [discoveryEntry, setDiscoveryEntry] = useState(null);
     const dismissDiscovery = useCallback(() => setDiscoveryEntry(null), []);

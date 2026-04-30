@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React from 'react';
 import { soundManager } from '../systems/SoundManager';
 
@@ -10,7 +9,7 @@ const MainLayout = ({ children, visualEffect }) => (
       // 첫 클릭 시 AudioContext 초기화 (브라우저 정책)
       soundManager.init();
       // 버튼 클릭만 사운드 (버블링 방지)
-      if (e.target.closest('button')) {
+      if ((e.target as HTMLElement).closest('button')) {
         soundManager.play('click');
       }
     }}

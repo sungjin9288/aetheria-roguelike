@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo, useState } from 'react';
 import { Shield, Sparkles, Sword, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
@@ -32,14 +31,14 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
     const setCatalog = useMemo(() => getJobSetCatalog(player?.job, DB.ITEMS), [player?.job]);
     // 인벤토리 + 장착 중 보유 아이템 이름 set (카탈로그에서 ✓/💼 표시용)
     const ownedItemNames = useMemo(() => {
-        const names = new Set();
-        (player?.inv || []).forEach((it) => it?.name && names.add(it.name));
-        Object.values(player?.equip || {}).forEach((it) => it?.name && names.add(it.name));
+        const names = new Set<string>();
+        (player?.inv || []).forEach((it: any) => it?.name && names.add(it.name));
+        (Object.values(player?.equip || {}) as any[]).forEach((it: any) => it?.name && names.add(it.name));
         return names;
     }, [player?.inv, player?.equip]);
     const equippedItemNames = useMemo(() => {
-        const names = new Set();
-        Object.values(player?.equip || {}).forEach((it) => it?.name && names.add(it.name));
+        const names = new Set<string>();
+        (Object.values(player?.equip || {}) as any[]).forEach((it: any) => it?.name && names.add(it.name));
         return names;
     }, [player?.equip]);
     const appearance = useMemo(() => deriveCharacterAppearance(player), [player]);
@@ -217,7 +216,7 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }) => {
                                                     <span
                                                         key={it.name}
                                                         className={cls}
-                                                        title={`${it.name} (T${it.tier || 1}) — ${it.desc_stat || it.desc || ''}`}
+                                                        title={`${it.name} (T${it.tier || 1}) — ${(it as any).desc_stat || (it as any).desc || ''}`}
                                                         data-testid={`set-catalog-item-${it.name}`}
                                                     >
                                                         <span>{isEquipped ? '✓' : isOwned ? '🎒' : '·'}</span>

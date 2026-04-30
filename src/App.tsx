@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration
 import React, { useState, useRef, lazy, Suspense, useEffect } from 'react';
 import { MotionConfig } from 'framer-motion';
 

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Activity, BarChart3, Coins, Compass, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
@@ -32,7 +31,7 @@ const formatMultDelta = (mult) => {
 /**
  * StatsPanel — 플레이 통계 + 성향 요약
  */
-const StatsPanel = ({ player, stats, compact = false }) => {
+const StatsPanel = ({ player, stats, compact = false }: any) => {
     const [showAllStats, setShowAllStats] = useState(false);
     const overview = useMemo(() => {
         const s = player?.stats || {};
@@ -53,7 +52,7 @@ const StatsPanel = ({ player, stats, compact = false }) => {
     const sigSetTone = activeSignatureSet ? (SIG_SET_TONE[activeSignatureSet.tone] || SIG_SET_TONE.holy) : null;
 
     const topKills = useMemo(() => (
-        Object.entries(overview.killRegistry)
+        (Object.entries(overview.killRegistry) as Array<[string, number]>)
             .sort(([, a], [, b]) => b - a)
             .slice(0, 8)
     ), [overview.killRegistry]);

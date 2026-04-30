@@ -7,7 +7,7 @@ import { createRandomMobileName } from '../utils/nameGenerator';
 
 const CHALLENGE_REWARD_TEXT = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
 
-const IntroScreen = ({ onStart }) => {
+const IntroScreen = ({ onStart }: any) => {
     const [name, setName] = useState(() => createRandomMobileName());
     const [selectedChallenges, setSelectedChallenges] = useState([]);
     const nameInputRef = useRef(null);

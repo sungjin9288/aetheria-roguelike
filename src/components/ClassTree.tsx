@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
@@ -13,26 +12,26 @@ const TIER_COLORS = { 0: '#9ca3af', 1: '#00ccff', 2: '#bc13fe', 3: '#f59e0b' };
  * 전직 트리의 노드 데이터 구축
  */
 const buildTree = () => {
-    const nodes = {};
-    const edges = [];
+    const nodes: Record<string, any> = {};
+    const edges: Array<{ from: string; to: string }> = [];
 
-    Object.entries(DB.CLASSES).forEach(([name, data]) => {
+    (Object.entries(DB.CLASSES) as Array<[string, any]>).forEach(([name, data]) => {
         nodes[name] = { name, tier: data.tier || 0, reqLv: data.reqLv || 1, desc: data.desc };
-        (data.next || []).forEach(child => {
+        (data.next || []).forEach((child: string) => {
             edges.push({ from: name, to: child });
         });
     });
 
     // 티어별 그룹
-    const tiers = { 0: [], 1: [], 2: [], 3: [] };
-    Object.values(nodes).forEach(n => {
+    const tiers: Record<number, any[]> = { 0: [], 1: [], 2: [], 3: [] };
+    (Object.values(nodes) as any[]).forEach((n: any) => {
         if (tiers[n.tier]) tiers[n.tier].push(n);
     });
 
     return { nodes, edges, tiers };
 };
 
-const TreeNode = ({ node, isCurrent, isAvailable, isLocked }) => {
+const TreeNode = ({ node, isCurrent, isAvailable, isLocked }: any) => {
     const tier = node.tier;
 
     return (
@@ -73,7 +72,7 @@ const TreeNode = ({ node, isCurrent, isAvailable, isLocked }) => {
 const ClassTree = ({ player }) => {
     const { tiers } = useMemo(() => buildTree(), []);
     const currentClass = DB.CLASSES[player.job];
-    const availableJobs = new Set(currentClass?.next || []);
+    const availableJobs = new Set<string>(currentClass?.next || []);
 
     // 현재 직업에서 도달 가능한 모든 경로 찾기
     const reachable = useMemo(() => {

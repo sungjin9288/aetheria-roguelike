@@ -43,7 +43,7 @@ const RewardChips = ({ reward, accent = 'blue' }) => {
 /**
  * QuestBoardPanel — 퀘스트 보드 패널 (진행 중 / 수락 가능 / 잠긴 임무)
  */
-const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false, onOpenArchiveConsole = null }) => {
+const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false, onOpenArchiveConsole = null }: any) => {
   const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
   const {
     traitProfile,

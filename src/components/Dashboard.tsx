@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { useEffect, useState } from 'react';
 import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp, Star, Skull, Moon, GraduationCap, Hammer, RotateCcw, X, Shield } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
@@ -50,7 +49,7 @@ const TOWN_MENU_ACTIONS = [
 // INV/GEAR/CODEX 클릭 시 탭 콘텐츠가 갱신되지 않는 버그) plain div로 전환.
 // 필요 시 framer-motion 업그레이드 후 재도입 검토.
 
-const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null, consoleExpanded = false, onReturnToLog = null }) => {
+const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null, consoleExpanded = false, onReturnToLog = null }: any) => {
     const [mobileArchiveExpanded, setMobileArchiveExpanded] = useState(false);
     const [dockSeen, setDockSeen] = useState(() => sessionStorage.getItem('archiveDockSeen') === '1');
     const [confirmMenuReset, setConfirmMenuReset] = useState(false);
@@ -354,7 +353,6 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             onClick={() => handleTabSelect(tab.id)}
                                             compact
                                             rail
-                                            testId={`dashboard-tab-${tab.id}`}
                                             {...getTabExtras(tab.id)}
                                         />
                                     ))}

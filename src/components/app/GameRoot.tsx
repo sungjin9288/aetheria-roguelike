@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 59+ migration. props 인터페이스 + DB.MAPS narrowing 필요
 import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { soundManager } from '../../systems/SoundManager';
 import { MotionConfig } from 'framer-motion';
@@ -79,7 +78,7 @@ const GameRoot = ({
                     <div className="flex items-center justify-between gap-2 rounded-[0.9rem] border border-[#d5b180]/28 bg-[#d5b180]/10 px-3 py-2 text-[11px] font-fira">
                         <span className="text-[#f4e6c8]">
                             ⚡ {engine.liveConfig.seasonEvent.name || '시즌 이벤트'} 진행 중
-                            {engine.liveConfig.seasonEvent.endsAt ? ` — D-${Math.max(0, Math.ceil((engine.liveConfig.seasonEvent.endsAt.toDate?.() || new Date(engine.liveConfig.seasonEvent.endsAt) - new Date()) / 86400000))}` : ''}
+                            {engine.liveConfig.seasonEvent.endsAt ? ` — D-${Math.max(0, Math.ceil(((engine.liveConfig.seasonEvent.endsAt.toDate?.() || new Date(engine.liveConfig.seasonEvent.endsAt)) as any - (new Date() as any)) / 86400000))}` : ''}
                             {engine.liveConfig.seasonEvent.goldMultiplier > 1 ? ` | 골드+${Math.round((engine.liveConfig.seasonEvent.goldMultiplier - 1) * 100)}%` : ''}
                             {engine.liveConfig.seasonEvent.xpMultiplier > 1 ? ` XP+${Math.round((engine.liveConfig.seasonEvent.xpMultiplier - 1) * 100)}%` : ''}
                         </span>
