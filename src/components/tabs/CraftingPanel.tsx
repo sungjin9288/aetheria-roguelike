@@ -15,7 +15,7 @@ const RARITY_LABEL: any = { common: '일반', uncommon: '고급', rare: '희귀'
  */
 const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: any) => {
   const [mode, setMode] = useState('craft');
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedIds, setSelectedIds] = useState<any[]>([]);
   const [useProtect, setUseProtect] = useState(false);
 
   // ──── 제작 모드 ────

@@ -59,7 +59,7 @@ const getItemTags = (item: any) => {
 
 const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact = false }: any) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
-    const [hoveredItem, setHoveredItem] = React.useState(null);
+    const [hoveredItem, setHoveredItem] = React.useState<any>(null);
     const [showAllItems, setShowAllItems] = React.useState(false);
     const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
     const spotlightSet = useMemo(() => new Set(spotlightNames), [spotlightNames]);

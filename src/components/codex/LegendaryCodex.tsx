@@ -57,7 +57,7 @@ const buildEntries = () => {
 };
 
 const LegendaryCodex = ({ player }: any) => {
-    const [selected, setSelected] = useState(null);
+    const [selected, setSelected] = useState<any>(null);
     const codex = useMemo(() => player?.stats?.codex || {}, [player?.stats?.codex]);
     const entries = useMemo(() => buildEntries(), []);
     const discoveredCount = entries.filter((entry: any) => {

@@ -18,7 +18,7 @@ export const RemoteConfigLoader: any = {
                 console.info('✅ Remote game config loaded (v' + (this.cache.version || '?') + ')');
                 return this.cache;
             }
-        } catch (e) {
+        } catch (e: any) {
             console.warn('⚠️ Remote config fetch failed, using local data:', e.message);
         }
         return null;

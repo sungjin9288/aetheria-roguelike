@@ -1,108 +1,82 @@
 # TypeScript 마이그레이션 가이드
 
-cycle 58 phase 6 — **대규모 타입 명시 + 0 ts-nocheck + 0 type-check errors.**
+cycle 59 phase B+C — **strict: true 풀 활성 완료. 0 type-check errors.**
 
-## 인프라
+## 인프라 (최종)
 
-- `tsconfig.json`: `allowJs: true`, `noEmit: true`, `noImplicitAny: false` (점진 활성 예정)
+- `tsconfig.json`: `strict: true`, `noImplicitAny: true`, `strictNullChecks: true`
 - `tsx` 로더: `node --import tsx --test`
 - `npm run type-check`: **0 errors**
-- `src/vite-env.d.ts`: Vite env, Window 글로벌
 - `src/types/`: 도메인 타입 (Player, Item, Monster, GameMap)
 
-## 진행 현황 — 100% 클린 + 대규모 타입 적용
+## 진행 현황 — 100% 클린 + strict 모드
 
-| 디렉토리 | 클린 | ts-nocheck | 비율 |
-|---------|----:|----------:|-----:|
-| `src/utils` | 42 | **0** | **100%** |
-| `src/data` | 19 | **0** | **100%** |
-| `src/reducers` | 11 | **0** | **100%** |
-| `src/hooks` | 20 | **0** | **100%** |
-| `src/systems` | 8 | **0** | **100%** |
-| `src/services` | 2 | **0** | **100%** |
-| `src/components` | 66 | **0** | **100%** |
-| `src/types` | 5 | **0** | **100%** |
-| **합계** | **173** | **0** | **100%** |
+| 디렉토리 | 클린 | ts-nocheck | strict 호환 |
+|---------|----:|----------:|---------:|
+| `src/utils` | 42 | 0 | ✅ |
+| `src/data` | 19 | 0 | ✅ |
+| `src/reducers` | 11 | 0 | ✅ |
+| `src/hooks` | 20 | 0 | ✅ |
+| `src/systems` | 8 | 0 | ✅ |
+| `src/services` | 2 | 0 | ✅ |
+| `src/components` | 66 | 0 | ✅ |
+| `src/types` | 5 | 0 | ✅ |
+| **합계** | **173** | **0** | **strict 호환** |
 
-## 적용된 패턴 (cycle 58 phase 6)
+## strict 모드 활성 phase 진행 요약
 
-### 1. 콜백 함수 인자 `: any` 타입 명시 (~1500개)
-sed 일괄 적용으로 모든 .map/.forEach/.filter/.reduce/.sort/.find/.some/.every 콜백:
-```typescript
-// Before: array.map(item => ...)
-// After:  array.map((item: any) => ...)
-```
+| Phase | 작업 | 결과 |
+|-------|------|-----|
+| **6** | sed 일괄 implicit-any 명시 | 1702 → 156 errors |
+| **A** | noImplicitAny manual fix | 156 → 0 errors |
+| **B** | strictNullChecks | ~54 → 0 errors |
+| **C** | strict: true 전체 | 3 → 0 errors |
 
-### 2. 컴포넌트 props 타입 명시
-모든 React 컴포넌트의 destructured props에 `: any`:
-```typescript
-const Dashboard = ({ player, sideTab, ... }: any) => { ... };
-```
+## strictNullChecks 적용 패턴 (Phase B)
 
-### 3. 클래스 필드 명시
-`SoundManager`, `CombatEngine` 등의 인스턴스 필드 타입 선언.
+### 1. useState/useRef 타입 명시
+- `useState(null)` → `useState<any>(null)`
+- `useState([])` → `useState<any[]>([])`
+- `useRef(null)` → `useRef<any>(null)`
+- `useRef([])` → `useRef<any[]>([])`
 
-### 4. Object.values/entries 캐스팅
-`(Object.entries(MAPS) as Array<[string, any]>)` 패턴 일괄 적용.
+### 2. Object access null assertion
+- `this.ctx.createOscillator()` → `this.ctx!.createOscillator()` (after `_ensureReady` gate)
+- `document.getElementById('root')` → `document.getElementById('root')!`
 
-### 5. 데이터 익스포트 `: any` 명시
-`src/data/*` 22 파일의 정적 export (ITEMS, MONSTERS, MAPS 등)에 `: any` 명시.
+### 3. 옵셔널 chain + nullish coalescing
+- `setProgress.nextTier - X` → `(setProgress.nextTier ?? 0) - X`
+- `bonus.healPerTurn` → `(bonus.healPerTurn ?? 0)`
 
-### 6. CONSTANTS / BALANCE / INITIAL_STATE / DB `: any`
-런타임 추가 키 호환을 위해 `: any` 명시.
+### 4. `null | undefined` → `undefined` 호환
+- `transform={offhandTransform}` → `transform={offhandTransform || undefined}`
+- `href={weaponOverlaySrc}` → `href={weaponOverlaySrc || undefined}`
 
-### 7. 모듈 const `Record<string, any>` 명시
-인덱스 액세스되는 객체 상수에 `Record<string, any>` 추가.
+### 5. `any` cast for index access where TypeScript can't narrow
+- `ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind]` → `[... as any]`
 
-### 8. CombatEngine use-before-declaration 버그 수정
-실제 코드 버그 발견:
-- `logs` 변수: status effect 검사 전에 declare 필요
-- `relics` 변수: enemyAttack의 phase 전환 전에 declare 필요
-
-### 9. Vite env + Window 글로벌
-```typescript
-interface Window {
-    __firebase_config?: string;
-    __AETHERIA_TEST_API__?: any;
-    render_game_to_text?: any;
-    advanceTime?: any;
-}
-```
-
-## 대규모 타입 적용 통계 (cycle 58 phase 6)
-
-- 자동 sed 패턴 변환: ~1500 callback params + ~100 component destructures
-- noImplicitAny 활성 시 baseline: **1702 errors**
-- noImplicitAny 활성 후 fix: **156 errors 잔여** (91% reduction)
-- 현재 `noImplicitAny: false` 유지 (잔여 156은 다음 사이클에서)
-
-## 잔여 작업 (다음 사이클들)
-
-### Phase A: noImplicitAny 풀 활성 (3-4 사이클)
-잔여 156 errors는 주로:
-- TS7053 (61): index access by `any` keys — 객체별로 `as any` 캐스팅 필요
-- TS7006 (67): 일부 multi-arg 함수, default + destructure 결합 패턴
-- TS7018 (8): object literal 추론 실패
-- TS7034/7005 (24): 변수 implicit any in some locations
-
-각 파일 수동 fix 또는 inline `as any` 캐스팅으로 해결. 사이클당 30-50 errors fix.
-
-### Phase B: strictNullChecks 단계 (2-3 사이클)
-A 완료 후 활성. 현재 추정 ~3000 errors (null/undefined narrowing).
-
-### Phase C: strict 전체 (1 사이클)
-B 완료 후 마지막 정리.
-
-### Phase D: 도메인 타입 적용 확장
-src/types/ 의 인터페이스를 reducer/handler/component에 실제 적용.
-
-전체 strict 활성까지 ~6-9 추가 사이클 추정.
+### 6. catch (e) typing (Phase C: strict useUnknownInCatchVariables)
+- `} catch (e) { e.message }` → `} catch (e: any) { e.message }`
 
 ## 빌드/테스트
 
 | 명령 | 효과 |
 |------|------|
-| `npm run type-check` | **0 errors** |
+| `npm run type-check` | **0 errors (strict: true)** |
 | `npm run test:unit` | **536 unit pass** |
 | `npm run test:e2e` | **14 E2E pass** |
 | `npm run build` | Vite 자동 처리 |
+
+## 후속 작업 (Phase D — 도메인 타입 적용 확장)
+
+src/types/ 의 도메인 타입(Player, Item, Monster, GameMap)을 실제 코드에 적용:
+
+### Phase D 작업
+1. `INITIAL_STATE: Player` 명시 (gameReducer)
+2. reducer action payload 타입 (discriminated union)
+3. handlers/* state 타입
+4. components/* props에 도메인 인터페이스 (any 대신)
+5. systems/CombatEngine 메서드에 도메인 타입
+
+이 작업은 안전한 점진 (one file at a time). 추정 5-10 사이클.
+필수가 아니라 품질 향상 단계 — 출시는 현재 상태로 가능.

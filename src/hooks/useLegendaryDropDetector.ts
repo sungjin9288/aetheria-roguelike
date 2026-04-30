@@ -31,9 +31,9 @@ const getSignatureItemNames = (inv: any = []) => {
 };
 
 export const useLegendaryDropDetector = (inv: any, dispatch: any = null) => {
-    const seenRef = useRef(null);
-    const queueRef = useRef([]);
-    const [currentDrop, setCurrentDrop] = useState(null);
+    const seenRef = useRef<any>(null);
+    const queueRef = useRef<any[]>([]);
+    const [currentDrop, setCurrentDrop] = useState<any>(null);
 
     const dismiss = useCallback(() => {
         setCurrentDrop((prev: any) => {

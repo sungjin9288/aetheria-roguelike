@@ -9,9 +9,9 @@ import { isSignatureItem } from '../data/signatureItems.js';
 const GRAVES_LIMIT = 10;
 
 const GravePanel = ({ player, actions, compact = false }: any) => {
-    const [graves, setGraves] = useState([]);
+    const [graves, setGraves] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [invadingUid, setInvadingUid] = useState(null);
+    const [invadingUid, setInvadingUid] = useState<any>(null);
 
     const playerAtk = player?.atk || 10;
     const today = new Date().toDateString();

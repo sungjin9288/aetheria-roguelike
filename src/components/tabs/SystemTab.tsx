@@ -18,7 +18,7 @@ const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
  */
 const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: any) => {
     const [feedbackText, setFeedbackText] = useState('');
-    const [feedbackStatus, setFeedbackStatus] = useState(null);
+    const [feedbackStatus, setFeedbackStatus] = useState<any>(null);
     const [showAllSystem, setShowAllSystem] = useState(false);
 
     const qaContext = useMemo(() => {

@@ -12,7 +12,7 @@ import SkillTypeIcon from '../icons/SkillTypeIcon';
  * MonsterCodex — Bestiary 로직을 그대로 활용하되 Codex 서브탭으로 배치
  */
 const MonsterCodex = ({ player }: any) => {
-    const [selectedMonster, setSelectedMonster] = useState(null);
+    const [selectedMonster, setSelectedMonster] = useState<any>(null);
 
     const allMonsters = useMemo(() => {
         const registry = player?.stats?.killRegistry || {};

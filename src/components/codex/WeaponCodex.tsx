@@ -32,7 +32,7 @@ const CATEGORY_TABS: any = [
 
 const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }: any) => {
     const [category, setCategory] = useState('weapons');
-    const [selectedItem, setSelectedItem] = useState(null);
+    const [selectedItem, setSelectedItem] = useState<any>(null);
 
     const items = useMemo(() => {
         if (category === 'weapons') return DB.ITEMS.weapons || [];

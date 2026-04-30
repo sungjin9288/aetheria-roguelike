@@ -4,7 +4,7 @@ import { DB } from '../../data/db';
 import SignalBadge from '../SignalBadge';
 
 const RecipeCodex = ({ codex, player }: any) => {
-    const [selected, setSelected] = useState(null);
+    const [selected, setSelected] = useState<any>(null);
     const recipes = DB.ITEMS.recipes || [];
     const recipeCodex = codex.recipes || {};
     const discovered = Object.keys(recipeCodex).length;

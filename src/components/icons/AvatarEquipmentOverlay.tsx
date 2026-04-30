@@ -90,25 +90,25 @@ const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null,
                 )}
                 {shouldRenderOffhand && (
                     <image
-                        href={offhandOverlaySrc}
+                        href={offhandOverlaySrc || undefined}
                         x="0"
                         y="0"
                         width={OVERLAY_VIEWBOX}
                         height={OVERLAY_VIEWBOX}
                         preserveAspectRatio="xMidYMid meet"
-                        transform={offhandTransform}
+                        transform={offhandTransform || undefined}
                         style={offhandTint ? { filter: offhandTint } : undefined}
                     />
                 )}
                 {shouldRenderWeapon && (
                     <image
-                        href={weaponOverlaySrc}
+                        href={weaponOverlaySrc || undefined}
                         x="0"
                         y="0"
                         width={OVERLAY_VIEWBOX}
                         height={OVERLAY_VIEWBOX}
                         preserveAspectRatio="xMidYMid meet"
-                        transform={weaponTransform}
+                        transform={weaponTransform || undefined}
                         style={weaponTint ? { filter: weaponTint } : undefined}
                     />
                 )}

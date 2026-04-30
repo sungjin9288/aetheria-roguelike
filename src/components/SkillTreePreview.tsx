@@ -109,8 +109,8 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, sum
 
 const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
     const [showAllSkills, setShowAllSkills] = useState(false);
-    const [expandedJob, setExpandedJob] = useState(null);
-    const [swapTarget, setSwapTarget] = useState(null); // skillName being swapped
+    const [expandedJob, setExpandedJob] = useState<any>(null);
+    const [swapTarget, setSwapTarget] = useState<any>(null); // skillName being swapped
     const [showClassTree, setShowClassTree] = useState(false);
     const currentClass = DB.CLASSES[player.job];
     const allCurrentSkills = getJobSkills(player);

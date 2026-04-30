@@ -92,7 +92,7 @@ const MOBILE_INITIAL_BUY_LIMIT = 12;
 
 const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false, onOpenArchiveConsole = null }: any) => {
     const [shopMode, setShopMode] = useState('buy');
-    const [sellConfirmId, setSellConfirmId] = useState(null);
+    const [sellConfirmId, setSellConfirmId] = useState<any>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
     const [purchaseNotice, setPurchaseNotice] = useState('');
     const loc = player.loc;

@@ -40,7 +40,7 @@ const ControlPanel = ({
   const mapData = DB.MAPS[player.loc];
   const guidance = getAdventureGuidance(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, gameState);
   const moveRecommendations = getMoveRecommendations(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, DB.MAPS);
-  const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind] || null;
+  const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind as any] || null;
   const isSafeZone = mapData.type === 'safe';
   const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
 

@@ -13,7 +13,7 @@ import SignalBadge from './SignalBadge';
  */
 const Bestiary = ({ player, compact = false }: any) => {
     const [showAllBestiary, setShowAllBestiary] = useState(false);
-    const [selectedMonster, setSelectedMonster] = useState(null);
+    const [selectedMonster, setSelectedMonster] = useState<any>(null);
 
     const allMonsters = useMemo(() => {
         const registry = player?.stats?.killRegistry || {};

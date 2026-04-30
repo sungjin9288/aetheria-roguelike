@@ -300,7 +300,7 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }: any) => {
                     </div>
                     {setProgress.nextBonus?.desc && (
                         <div className="mt-1 text-[10px] font-fira leading-[1.4] text-slate-300/75">
-                            {setProgress.nextTier - setProgress.equippedCount}개 더 장착 시 — {setProgress.nextBonus.desc}
+                            {(setProgress.nextTier ?? 0) - setProgress.equippedCount}개 더 장착 시 — {setProgress.nextBonus.desc}
                         </div>
                     )}
                     {setProgress.missingMembers.length > 0 && (

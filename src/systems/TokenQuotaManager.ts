@@ -52,7 +52,7 @@ export const TokenQuotaManager = {
                 limit: this.DAILY_LIMIT,
                 updatedAt: new Date()
             }, { merge: true });
-        } catch (e) {
+        } catch (e: any) {
             console.warn('Quota sync failed:', e.message);
         }
     }

@@ -24,7 +24,7 @@ const SUB_TABS: any = [
 
 const Codex = ({ player, dispatch }: any) => {
     const [subTab, setSubTab] = useState('equip');
-    const [discoveryEntry, setDiscoveryEntry] = useState(null);
+    const [discoveryEntry, setDiscoveryEntry] = useState<any>(null);
     const dismissDiscovery = useCallback(() => setDiscoveryEntry(null), []);
     const progress = useMemo(() => {
         const codex = player?.stats?.codex || {};

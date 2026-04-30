@@ -86,8 +86,8 @@ const TerminalView = ({
     className = '',
     toolbarLeft = null,
 }: any) => {
-    const logViewportRef = useRef(null);
-    const inputRef = useRef(null);
+    const logViewportRef = useRef<any>(null);
+    const inputRef = useRef<any>(null);
     const [inputValue, setInputValue] = useState('');
     const [logExpanded, setLogExpanded] = useState(false); // #10: 전투 로그 요약/전체 토글
 

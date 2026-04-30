@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 export const useDamageFlash = (currentHp: any) => {
     const [damageFlash, setDamageFlash] = useState(false);
     const [healFlash, setHealFlash] = useState(false);
-    const [damageAmount, setDamageAmount] = useState(null);
+    const [damageAmount, setDamageAmount] = useState<any>(null);
     const prevHpRef = useRef(currentHp);
 
     useEffect(() => {

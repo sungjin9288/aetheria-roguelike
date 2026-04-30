@@ -266,7 +266,7 @@ export const CombatEngine = {
         // 시너지: 영원의 생명 (healPerTurn) — 매 턴 4% HP 재생
         const healPerTurnSyn = getActiveRelicSynergies(relics).find((s: any) => s.bonus.healPerTurn);
         if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
-            const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * healPerTurnSyn.bonus.healPerTurn));
+            const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (healPerTurnSyn.bonus.healPerTurn ?? 0)));
             updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[영원의 생명] +${heal} HP 재생` });
         }
@@ -1009,13 +1009,13 @@ export const CombatEngine = {
         const victorySynergies = getActiveRelicSynergies(relics);
         const killHealSyn = victorySynergies.find((s: any) => s.bonus.killHeal);
         if (killHealSyn) {
-            const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * killHealSyn.bonus.killHeal);
+            const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (killHealSyn.bonus.killHeal ?? 0));
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[불멸의 전사] +${heal} HP (처치 회복)` });
         }
         const devourSyn = victorySynergies.find((s: any) => s.bonus.devour);
         if (devourSyn) {
-            const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * devourSyn.bonus.devour);
+            const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (devourSyn.bonus.devour ?? 0));
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[무한 포식] +${heal} HP (포식)` });
         }

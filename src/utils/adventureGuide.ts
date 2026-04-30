@@ -62,7 +62,7 @@ export const getQuestTracker = (player: any) => {
         return rightScore - leftScore;
     });
 
-    const focus = ranked[0];
+    const focus: any = ranked[0];
     return {
         kind: focus.isBounty ? 'bounty' : 'active',
         title: focus.quest.title,

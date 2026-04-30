@@ -37,7 +37,7 @@ const callProxy = async (body: any, trackLabel: any = 'ai-call', timeoutMs: any 
         }, trackLabel);
 
         return result;
-    } catch (e) {
+    } catch (e: any) {
         console.warn(`[AI_SERVICE] ${trackLabel} proxy call failed:`, e.message);
         return null;
     }

@@ -19,7 +19,7 @@ const FOCUS_PANEL_STATES = new Set([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CH
 function App() {
     const engine = useGameEngine();
     const [isMuted, setIsMuted] = useState(false);
-    const [inventorySpotlight] = useState(null);
+    const [inventorySpotlight] = useState<any>(null);
     const [premiumShopOpen, setPremiumShopOpen] = useState(false);
     const fullStats = engine.getFullStats();
     const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);

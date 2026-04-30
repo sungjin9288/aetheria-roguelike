@@ -36,12 +36,12 @@ class SoundManager {
         return true;
     }
 
-    _createNodes() {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+    _createNodes(): any {
+        const osc = this.ctx!.createOscillator();
+        const gain = this.ctx!.createGain();
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        return { osc, gain, now: this.ctx.currentTime };
+        gain.connect(this.ctx!.destination);
+        return { osc, gain, now: this.ctx!.currentTime };
     }
 
     play(type: any) {
@@ -183,7 +183,7 @@ class SoundManager {
     _playTone(freq: any, dur: any, delay: any) {
         if (this.muted || !this.ctx) return;
         const { osc, gain } = this._createNodes();
-        const startAt = this.ctx.currentTime + delay;
+        const startAt = this.ctx!.currentTime + delay;
         osc.type = 'square';
         osc.frequency.setValueAtTime(freq, startAt);
         gain.gain.setValueAtTime(0.05, startAt);

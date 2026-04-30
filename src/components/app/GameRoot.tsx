@@ -26,7 +26,7 @@ const GameRoot = ({
 }: any) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
     const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch);
-    const legendarySoundPlayedRef = useRef(null);
+    const legendarySoundPlayedRef = useRef<any>(null);
     useEffect(() => {
         if (!legendaryDrop) {
             legendarySoundPlayedRef.current = null;

@@ -9,8 +9,8 @@ const CHALLENGE_REWARD_TEXT: any = ['', '+20% 보상', '+50% 보상', '+100% 보
 
 const IntroScreen = ({ onStart }: any) => {
     const [name, setName] = useState(() => createRandomMobileName());
-    const [selectedChallenges, setSelectedChallenges] = useState([]);
-    const nameInputRef = useRef(null);
+    const [selectedChallenges, setSelectedChallenges] = useState<any[]>([]);
+    const nameInputRef = useRef<any>(null);
 
     const toggleChallenge = (id: any) => {
         setSelectedChallenges(prev =>

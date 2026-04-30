@@ -18,9 +18,9 @@
     "forceConsistentCasingInFileNames": true,
 
     /* cycle 59 phase A — noImplicitAny 풀 활성 (156 잔여 manual fix). */
-    "strict": false,
+    "strict": true,
     "noImplicitAny": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noUnusedLocals": false,
 
     /* Vite/Capacitor가 emit 담당. tsc는 type-check만. */

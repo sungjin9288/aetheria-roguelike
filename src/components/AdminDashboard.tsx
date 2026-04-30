@@ -22,7 +22,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tool
 
 // Admin Dashboard Component
 export const AdminDashboard = ({ isAdmin }: any) => {
-    const [analytics, setAnalytics] = useState(null);
+    const [analytics, setAnalytics] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
 
