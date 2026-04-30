@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
+// @ts-nocheck — TODO: cycle 59+ migration. JSDoc 보존, 복잡한 객체 타입 narrowing 필요
 import { QUESTS } from '../data/quests.js';
 import { MAPS } from '../data/maps.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
@@ -87,7 +87,7 @@ const getQuestLane = (quest, resonance, maps = MAPS) => {
     return 'hunt';
 };
 
-const getQuestReason = (quest, lane, resonance, targetMaps = []) => {
+const getQuestReason = (quest, lane, resonance, targetMaps: any[] = []) => {
     if (lane === 'story') {
         return `서사 진행을 당겨 ${quest.minLv || 1}레벨 구간의 다음 전개를 열어 주는 임무입니다.`;
     }

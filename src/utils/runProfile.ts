@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { getDifficultyMults, calcPerformanceScore, countLowHpWins } from '../systems/DifficultyManager.js';
 import { getExploreState } from './explorationPacing.js';
@@ -12,7 +11,7 @@ import {
 
 // --- Internal helpers ---
 
-const scoreTag = (id, name, desc, score, reasons = []) => ({
+const scoreTag = (id, name, desc, score, reasons: any[] = []) => ({
     id,
     name,
     desc,
@@ -24,7 +23,7 @@ const relicEffectsOf = (player) => new Set((player?.relics || []).map((relic) =>
 const hasProfileTag = (profile, id) => profile?.primary?.id === id || (profile?.tags || []).some((tag) => tag.id === id);
 const labelTag = (id) => ARCHETYPE_LABELS[id] || id;
 const toPercent = (value = 0) => `${Math.round(value * 100)}%`;
-const hasAnyJob = (item, jobs = []) => Array.isArray(item?.jobs) && jobs.some((job) => item.jobs.includes(job));
+const hasAnyJob = (item, jobs: any[] = []) => Array.isArray(item?.jobs) && jobs.some((job) => item.jobs.includes(job));
 const isConsumableType = (item) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type);
 const hasElement = (item) => Boolean(item?.elem && item.elem !== '물리');
 
@@ -74,7 +73,7 @@ export const getClassBuildBonus = (job, profile) => {
 
 // --- Run build profile ---
 
-export const getRunBuildProfile = (player, stats = {}) => {
+export const getRunBuildProfile = (player, stats: any = {}) => {
     const relicEffects = relicEffectsOf(player);
     const mainWeapon = player?.equip?.weapon || null;
     const offhand = player?.equip?.offhand || null;
@@ -190,7 +189,7 @@ const pickTraitId = (player, buildProfile) => {
     return TRAIT_DEFINITIONS[primaryId] ? primaryId : 'balanced';
 };
 
-const buildTraitSkill = (traitId, player, stats = {}) => {
+const buildTraitSkill = (traitId, player, stats: any = {}) => {
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
     if (!definition.skill) return null;
 
@@ -220,7 +219,7 @@ const buildTraitSkill = (traitId, player, stats = {}) => {
     };
 };
 
-export const getTraitProfile = (player, stats = {}) => {
+export const getTraitProfile = (player, stats: any = {}) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const traitId = pickTraitId(player, buildProfile);
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
@@ -253,9 +252,9 @@ export const getTraitProfile = (player, stats = {}) => {
     };
 };
 
-export const getTraitBonus = (player, stats = {}) => getTraitProfile(player, stats).bonus;
+export const getTraitBonus = (player, stats: any = {}) => getTraitProfile(player, stats).bonus;
 
-export const getTraitSkill = (player, stats = {}) => getTraitProfile(player, stats).skill;
+export const getTraitSkill = (player, stats: any = {}) => getTraitProfile(player, stats).skill;
 
 export const getTraitPassiveParts = (traitProfile) => {
     const bonus = traitProfile?.bonus || {};
@@ -340,7 +339,7 @@ export const getTraitItemResonance = (item, traitProfile, player = null) => {
     };
 };
 
-export const getTraitFeaturedItems = (items = [], traitProfile, player = null, limit = 3) => (
+export const getTraitFeaturedItems = (items: any[] = [], traitProfile, player = null, limit = 3) => (
     (items || [])
         .map((item) => ({
             item,
@@ -351,7 +350,7 @@ export const getTraitFeaturedItems = (items = [], traitProfile, player = null, l
         .slice(0, limit)
 );
 
-export const getTraitLootHint = (items = [], traitProfile, player = null) => {
+export const getTraitLootHint = (items: any[] = [], traitProfile, player = null) => {
     const [best] = getTraitFeaturedItems(items, traitProfile, player, 1);
     if (!best) return null;
 
@@ -410,7 +409,7 @@ export const getTraitQuestResonance = (quest, traitProfile) => {
 
 // --- Diagnostics ---
 
-export const getRunDiagnostics = (player, stats = {}) => {
+export const getRunDiagnostics = (player, stats: any = {}) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const classIdentity = getClassBuildIdentity(player?.job);
     const classCompatibility = getClassBuildCompatibility(player?.job, buildProfile);
@@ -466,7 +465,7 @@ export const getRunDiagnostics = (player, stats = {}) => {
 
 // --- Enemy tactical profile ---
 
-export const getEnemyTacticalProfile = (enemy, stats = {}) => {
+export const getEnemyTacticalProfile = (enemy, stats: any = {}) => {
     if (!enemy) return null;
 
     const pattern = enemy.pattern || {};

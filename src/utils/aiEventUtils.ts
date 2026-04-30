@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
+// @ts-nocheck — TODO: cycle 59+ migration. JSDoc 보존, 복잡한 객체 타입 narrowing 필요
 const RECENT_HISTORY_LIMIT = 6;
 const RECENT_EVENT_LIMIT = 8;
 
@@ -11,7 +11,7 @@ const normalizeChoiceText = (choice, idx) => {
     return normalizeText(raw.replace(/^\d+\s*[.)-]?\s*/, ''), `선택지 ${idx + 1}`);
 };
 
-const dedupeChoices = (choices = []) => {
+const dedupeChoices = (choices: any[] = []) => {
     const seen = new Set();
     return choices.filter((choice) => {
         const key = normalizeText(choice).toLowerCase();
@@ -21,7 +21,7 @@ const dedupeChoices = (choices = []) => {
     });
 };
 
-export const summarizeHistory = (history = [], limit = RECENT_HISTORY_LIMIT) => (
+export const summarizeHistory = (history: any[] = [], limit = RECENT_HISTORY_LIMIT) => (
     Array.isArray(history)
         ? history.slice(-limit).map((entry) => {
             if (!entry || typeof entry !== 'object') return null;
@@ -33,7 +33,7 @@ export const summarizeHistory = (history = [], limit = RECENT_HISTORY_LIMIT) => 
         : []
 );
 
-export const getRecentEventSet = (history = [], limit = RECENT_EVENT_LIMIT) => (
+export const getRecentEventSet = (history: any[] = [], limit = RECENT_EVENT_LIMIT) => (
     new Set(
         (Array.isArray(history) ? history : [])
             .slice(-limit)
@@ -122,7 +122,7 @@ const pickRewardItem = (poolKey, seed, level) => {
     return pool[seed % pool.length];
 };
 
-const buildProceduralOutcome = ({ desc, choice, choiceIndex, context = {} }) => {
+const buildProceduralOutcome = ({ desc, choice, choiceIndex, context = {} }: any = {}) => {
     const seed = hashString(`${context.location || ''}|${desc}|${choice}|${choiceIndex}`);
     const style = classifyChoice(choice);
     const level = Math.max(1, toInt(context?.playerSnapshot?.level || context?.mapSnapshot?.level || 1, 1));
@@ -192,7 +192,7 @@ const buildProceduralOutcome = ({ desc, choice, choiceIndex, context = {} }) => 
     };
 };
 
-const normalizeOutcomes = (rawOutcomes = [], choices = [], context = {}) => {
+const normalizeOutcomes = (rawOutcomes: any[] = [], choices: any[] = [], context: any = {}) => {
     const normalized = new Map();
 
     if (Array.isArray(rawOutcomes)) {
@@ -226,7 +226,7 @@ const normalizeOutcomes = (rawOutcomes = [], choices = [], context = {}) => {
     return [...normalized.values()].sort((a, b) => a.choiceIndex - b.choiceIndex);
 };
 
-export const buildEventPackage = (payload, context = {}) => {
+export const buildEventPackage = (payload, context: any = {}) => {
     const raw = payload?.data || payload;
     if (!raw || typeof raw !== 'object') return null;
 
@@ -515,7 +515,7 @@ const FALLBACK_EVENT_POOL = {
     ],
 };
 
-export const pickFallbackEvent = (loc, history = [], context = {}) => {
+export const pickFallbackEvent = (loc, history: any[] = [], context: any = {}) => {
     const explicit = FALLBACK_EVENT_POOL[loc];
     const poolKey = explicit ? loc : getPoolKeyByLocation(loc);
     const basePool = explicit || FALLBACK_EVENT_POOL[poolKey] || FALLBACK_EVENT_POOL.default;

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 기반 타입은 보존, strict 점진 활성 시 풀어 fix
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { getItemStatText } from './equipmentUtils';
@@ -57,7 +56,7 @@ const applyPrefixStats = (item, prefix) => {
     return next;
 };
 
-export const applyItemPrefix = (item, options = {}) => {
+export const applyItemPrefix = (item, options: any = {}) => {
     if (!item || item.prefixed) return item;
 
     const chance = typeof options.chance === 'number' ? options.chance : BALANCE.ITEM_PREFIX_CHANCE;

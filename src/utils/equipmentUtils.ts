@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 기반 타입은 보존, strict 점진 활성 시 풀어 fix
 import { BALANCE } from '../data/constants.js';
 
 const MAGIC_WEAPON_KEYWORDS = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
@@ -73,7 +72,7 @@ export const getOffhandCritBonus = (item) => {
 
 export const getOffhandMpBonus = (item) => (isShield(item) ? item.mp || 0 : 0);
 
-export const getEquipmentProfile = (equip = {}) => {
+export const getEquipmentProfile = (equip: any = {}) => {
     const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
     const offhandItem = equip.offhand || null;
     const offhandWeapon = isWeapon(offhandItem) ? offhandItem : null;
@@ -92,7 +91,7 @@ export const getEquipmentProfile = (equip = {}) => {
     };
 };
 
-const pickBestOneHandPair = (weapons = [], requiredWeapon = null) => {
+const pickBestOneHandPair = (weapons: any[] = [], requiredWeapon = null) => {
     const candidates = weapons.filter((weapon) => isOneHandWeapon(weapon));
     if (!candidates.length) return { mainWeapon: null, offhandWeapon: null };
     if (candidates.length === 1) return { mainWeapon: candidates[0], offhandWeapon: null };
@@ -116,7 +115,7 @@ const pickBestOneHandPair = (weapons = [], requiredWeapon = null) => {
     return bestPair;
 };
 
-export const getNextEquipmentState = (equip = {}, item) => {
+export const getNextEquipmentState = (equip: any = {}, item) => {
     if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return { ...equip };
 
     const nextEquip = { ...equip };
@@ -173,7 +172,7 @@ export const isMagicWeapon = (weapon) => {
     return MAGIC_WEAPON_KEYWORDS.some((keyword) => name.includes(keyword));
 };
 
-export const getEquippedWeapons = (equip = {}) => {
+export const getEquippedWeapons = (equip: any = {}) => {
     const list = [];
     if (isWeapon(equip.weapon)) list.push({ slot: 'main', weapon: equip.weapon });
     if (isWeapon(equip.offhand)) list.push({ slot: 'offhand', weapon: equip.offhand });
@@ -202,7 +201,7 @@ const buildWeaponSkill = ({ slot, weapon }) => {
     };
 };
 
-export const getWeaponMagicSkills = (equip = {}) => {
+export const getWeaponMagicSkills = (equip: any = {}) => {
     const skills = [];
     const seen = new Set();
 

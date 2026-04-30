@@ -1,4 +1,4 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 보존, strict 활성 시 풀어 fix
+// @ts-nocheck — TODO: cycle 59+ migration. JSDoc 보존, 복잡한 객체 타입 narrowing 필요
 import { ITEMS } from '../data/items.js';
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
@@ -86,7 +86,7 @@ export const getDailyProtocolCompletions = (player, type, amount = 1) => {
 };
 
 /** 일일 프로토콜 보상 텍스트 포맷 */
-export const formatDailyProtocolReward = (reward = {}) => {
+export const formatDailyProtocolReward = (reward: any = {}) => {
     if (reward.essence) return `에센스 ${reward.essence}`;
     if (reward.item) return reward.item;
     if (reward.relicShard) return `유물 조각 ${reward.relicShard}`;
@@ -94,7 +94,7 @@ export const formatDailyProtocolReward = (reward = {}) => {
 };
 
 /** 일반 보상 텍스트 배열 포맷 */
-export const formatRewardParts = (reward = {}) => {
+export const formatRewardParts = (reward: any = {}) => {
     const parts = [];
     if (reward.exp) parts.push(`EXP ${reward.exp}`);
     if (reward.gold) parts.push(`${reward.gold}G`);

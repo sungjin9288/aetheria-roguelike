@@ -1,10 +1,9 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 기반 타입은 보존, strict 점진 활성 시 풀어 fix
 const clampRatio = (current, max) => {
     if (!Number.isFinite(current) || !Number.isFinite(max) || max <= 0) return 0;
     return Math.max(0, Math.min(1, current / max));
 };
 
-export const getPostCombatAnalysis = (result = {}) => {
+export const getPostCombatAnalysis = (result: any = {}) => {
     const hpRatio = clampRatio(result.playerHp, result.playerMaxHp);
     const mpRatio = clampRatio(result.playerMp, result.playerMaxMp);
     const enemyTier = result.enemyTier || 'NORMAL';
@@ -66,7 +65,7 @@ export const getPostCombatAnalysis = (result = {}) => {
     };
 };
 
-export const getRunSummaryAnalysis = (summary = {}) => {
+export const getRunSummaryAnalysis = (summary: any = {}) => {
     const headline = summary.bossKills > 0
         ? '보스 구간까지 닿은 런'
         : summary.level >= 20

@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 기반 타입은 보존, strict 점진 활성 시 풀어 fix
 import { getEquipmentArtProfile } from './equipmentArt.js';
 import { getArmorStyleFromItem, getAvatarLoadoutStyle, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
 import {
@@ -98,7 +97,7 @@ export const getOffhandTransform = (profile) => placementToTransform(getOffhandP
 
 export const getArmorTransform = (profile) => placementToTransform(getArmorPlacement(profile));
 
-const withVariant = (baseStage, variant, overrides = {}) => {
+const withVariant = (baseStage, variant, overrides: any = {}) => {
     if (variant === 'card') {
         return {
             ...baseStage,

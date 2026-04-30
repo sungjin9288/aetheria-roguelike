@@ -1,4 +1,3 @@
-// @ts-nocheck — TODO: cycle 58+ migration. JSDoc 기반 타입은 보존, strict 점진 활성 시 풀어 fix
 import { BALANCE } from '../data/constants.js';
 
 export const DEFAULT_EXPLORE_STATE = Object.freeze({
@@ -11,7 +10,7 @@ export const DEFAULT_EXPLORE_STATE = Object.freeze({
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-export const getExploreState = (stats = {}) => {
+export const getExploreState = (stats: any = {}) => {
     const raw = stats?.exploreState || {};
     return {
         sinceNarrativeEvent: Math.max(0, raw.sinceNarrativeEvent || 0),
@@ -22,7 +21,7 @@ export const getExploreState = (stats = {}) => {
     };
 };
 
-export const getMapPacingProfile = (mapData = {}) => {
+export const getMapPacingProfile = (mapData: any = {}) => {
     if (!mapData || mapData.type === 'safe') {
         return {
             id: 'safe',
@@ -87,7 +86,7 @@ export const getMapPacingProfile = (mapData = {}) => {
     };
 };
 
-export const getNarrativeEventChance = (baseChance = 0, bonusMultiplier = 0, stats = {}, mapData = null) => {
+export const getNarrativeEventChance = (baseChance = 0, bonusMultiplier = 0, stats: any = {}, mapData = null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const base = Math.min(
@@ -99,7 +98,7 @@ export const getNarrativeEventChance = (baseChance = 0, bonusMultiplier = 0, sta
     return clamp(base + pity, 0, BALANCE.SPECIAL_EVENT_MAX_CHANCE);
 };
 
-export const getQuietExplorationChance = (stats = {}, mapData = null) => {
+export const getQuietExplorationChance = (stats: any = {}, mapData = null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const reduction = exploreState.quietStreak * BALANCE.QUIET_STREAK_NOTHING_REDUCTION;
@@ -138,7 +137,7 @@ export const getDiscoveryOdds = (player, mapData) => {
     };
 };
 
-export const advanceExploreState = (stats = {}, outcome = 'combat') => {
+export const advanceExploreState = (stats: any = {}, outcome = 'combat') => {
     const current = getExploreState(stats);
     const next = { ...current, lastOutcome: outcome };
 
