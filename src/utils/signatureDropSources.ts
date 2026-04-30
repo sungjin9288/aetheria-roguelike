@@ -20,7 +20,7 @@ import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 /** @type {Record<string, SignatureDropSource[]>} */
 const buildSourceIndex = () => {
     /** @type {Record<string, SignatureDropSource[]>} */
-    const index = {};
+    const index: Record<string, any> = {};
     // 모든 signature에 빈 배열 기본값 — consumer가 Array.isArray 체크 없이 쓸 수 있게
     for (const name of Object.keys(SIGNATURE_ITEM_REGISTRY)) {
         index[name] = [];

@@ -130,7 +130,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         const safeList = (items: any, fallback: any = '[item]') => (
             Array.isArray(items) ? items.map((item: any) => safeText(item, fallback)) : []
         );
-        const sanitizeValue = (value: any, depth: any = 0) => {
+        const sanitizeValue = (value: any, depth: any = 0): any => {
             if (depth > 6) return '[max-depth]';
             if (value == null) return value;
             if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
@@ -146,7 +146,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 return '[unserializable]';
             }
 
-            const next = {};
+            const next: Record<string, any> = {};
             for (const key of Object.keys(value)) {
                 try {
                     next[key] = sanitizeValue(value[key], depth + 1);

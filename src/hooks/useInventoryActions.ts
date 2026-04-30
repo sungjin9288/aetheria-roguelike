@@ -381,14 +381,14 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             const cost = BALANCE.INV_EXPAND_COST;
             if ((player.premiumCurrency || 0) < cost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
             const newMax = (player.maxInv || 20) + BALANCE.INV_EXPAND_AMOUNT;
-            dispatch({ type: AT.SET_PLAYER, payload: p => ({ ...p, premiumCurrency: p.premiumCurrency - cost, maxInv: newMax }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, premiumCurrency: p.premiumCurrency - cost, maxInv: newMax }) });
             addLog('system', MSG.PREMIUM_INV_EXPAND(newMax));
         },
 
         purchaseSynthProtect: () => {
             const cost = BALANCE.SYNTHESIS_PROTECT_COST;
             if ((player.premiumCurrency || 0) < cost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
-            dispatch({ type: AT.SET_PLAYER, payload: p => ({
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
                 ...p,
                 premiumCurrency: p.premiumCurrency - cost,
                 stats: { ...(p.stats || {}), synthProtects: (p.stats?.synthProtects || 0) + 1 },
@@ -399,7 +399,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         purchaseRevive: () => {
             const cost = BALANCE.REVIVE_COST;
             if ((player.premiumCurrency || 0) < cost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
-            dispatch({ type: AT.SET_PLAYER, payload: p => ({ ...p, premiumCurrency: p.premiumCurrency - cost, reviveTokens: (p.reviveTokens || 0) + 1 }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, premiumCurrency: p.premiumCurrency - cost, reviveTokens: (p.reviveTokens || 0) + 1 }) });
             addLog('system', MSG.PREMIUM_PURCHASE('즉시 부활권', cost));
         },
 
@@ -407,7 +407,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             if ((player.premiumCurrency || 0) < titleCost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
             const owned = player.stats?.cosmeticTitles || [];
             if (owned.includes(titleId)) return addLog('info', MSG.TITLE_ALREADY_OWNED);
-            dispatch({ type: AT.SET_PLAYER, payload: p => ({
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
                 ...p,
                 premiumCurrency: p.premiumCurrency - titleCost,
                 stats: { ...(p.stats || {}), cosmeticTitles: [...owned, titleId] },
@@ -453,7 +453,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             const success = Math.random() < rate;
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: p => ({
+                payload: (p: any) => ({
                     ...p,
                     gold: p.gold - requirement.gold,
                     inv: nextInventory,

@@ -231,7 +231,7 @@ const ControlPanel = ({
 
   const safeZoneButtons = [marketButton];
 
-  const auxiliaryButtons = [];
+  const auxiliaryButtons: any[] = [];
   if (showGraveRecovery) {
     auxiliaryButtons.push({
       key: 'grave',

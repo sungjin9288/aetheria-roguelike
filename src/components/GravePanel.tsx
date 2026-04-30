@@ -26,7 +26,7 @@ const GravePanel = ({ player, actions, compact = false }: any) => {
             const gravesCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'graves');
             const q = query(gravesCol, orderBy('createdAt', 'desc'), limit(GRAVES_LIMIT));
             const snap = await getDocs(q);
-            const fetched = [];
+            const fetched: any[] = [];
             snap.forEach((d: any) => {
                 const data = d.data();
                 if (data.uid !== player?.uid) fetched.push({ ...data, uid: d.id });

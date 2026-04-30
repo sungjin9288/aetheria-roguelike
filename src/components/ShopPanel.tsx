@@ -30,7 +30,7 @@ const signedDelta = (value: any = 0, suffix: any = '') => `${value >= 0 ? '+' : 
 const formatPercent = (value: any = 0) => `${value >= 0 ? '+' : ''}${value}%`;
 
 const getItemTags = (item: any) => {
-    const tags = [];
+    const tags: any[] = [];
     if (isWeapon(item)) tags.push(isTwoHandWeapon(item) ? '2H' : '1H');
     return tags;
 };
@@ -46,7 +46,7 @@ const getComparisonMeta = (item: any, equip: any = {}) => {
     const mpDelta = nextProfile.mpBonus - currentProfile.mpBonus;
 
     if (item.type === 'armor' || item.type === 'shield' || item.type === 'weapon') {
-        const deltas = [];
+        const deltas: any[] = [];
         if (atkDelta !== 0) deltas.push(`ATK ${signedDelta(atkDelta)}`);
         if (defDelta !== 0) deltas.push(`DEF ${signedDelta(defDelta)}`);
         if (critDelta !== 0) deltas.push(`CRIT ${formatPercent(critDelta)}`);

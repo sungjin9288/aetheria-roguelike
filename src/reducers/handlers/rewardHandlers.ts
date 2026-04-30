@@ -97,7 +97,7 @@ export const rewardActionMap = {
             return { ...item, enhance: (item.enhance || 0) + 1 };
         });
         const equip = state.player.equip;
-        const newEquip = {};
+        const newEquip: Record<string, any> = {};
         for (const key of ['weapon', 'armor', 'offhand']) {
             const shouldEnhance = success && (
                 (slotName && slotName === key)

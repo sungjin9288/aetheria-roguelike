@@ -3,7 +3,7 @@
  * 버튼 종류 → 추천 키 매핑, 프레젠테이션 메타
  */
 
-export const ACTION_KIND_TO_BUTTON = {
+export const ACTION_KIND_TO_BUTTON: Record<string, any> = {
     explore: 'explore',
     open_move: 'move',
     rest: 'rest',

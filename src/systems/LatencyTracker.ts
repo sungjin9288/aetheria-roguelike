@@ -1,11 +1,11 @@
 // --- LATENCY TRACKER (v3.5) ---
 // Monitors AI response times and alerts on slow responses
-export const LatencyTracker = {
+export const LatencyTracker: any = {
     THRESHOLD_MS: 3000, // 3 seconds threshold
     recentLatencies: [],
     MAX_HISTORY: 20,
 
-    async trackCall(asyncFn, callType = 'ai') {
+    async trackCall(asyncFn: any, callType: any = 'ai') {
         const startTime = performance.now();
 
         try {
@@ -28,7 +28,7 @@ export const LatencyTracker = {
         }
     },
 
-    recordLatency(type, latency, isError = false) {
+    recordLatency(type: any, latency: any, isError: any = false) {
         this.recentLatencies.unshift({
             type,
             latency,
@@ -42,7 +42,7 @@ export const LatencyTracker = {
         }
     },
 
-    getAverageLatency(type = null) {
+    getAverageLatency(type: any = null) {
         const filtered = type
             ? this.recentLatencies.filter((l: any) => l.type === type && !l.isError)
             : this.recentLatencies.filter((l: any) => !l.isError);

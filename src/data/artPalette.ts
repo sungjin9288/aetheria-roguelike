@@ -56,15 +56,15 @@ const buildRuntimePalette = (raw: any) => Object.freeze({
     accent: raw.hi,
 });
 
-export const TONE_PALETTES = Object.freeze(
+export const TONE_PALETTES: Record<string, any> = Object.freeze(
     Object.fromEntries(
         Object.entries(paletteSource.tonePalettes).map(([key, value]: any) => [key, buildRuntimePalette(value)])
     )
 );
 
-export const ELEMENT_TONE_KEY = Object.freeze({ ...paletteSource.elementToneKey });
+export const ELEMENT_TONE_KEY: Record<string, any> = Object.freeze({ ...paletteSource.elementToneKey });
 
-export const DEFAULT_TONE_KEY = Object.freeze({ ...paletteSource.defaultToneKey });
+export const DEFAULT_TONE_KEY: Record<string, any> = Object.freeze({ ...paletteSource.defaultToneKey });
 
 export const REFERENCE_ACCENTS = Object.freeze({ ...paletteSource.referenceAccents });
 

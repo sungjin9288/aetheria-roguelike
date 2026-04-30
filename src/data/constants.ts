@@ -269,7 +269,7 @@ Object.freeze(BALANCE);
  * BALANCE.RARITY_COLORS는 hex 값, RARITY_CLASSES는 tailwind 클래스.
  * 두 값의 이름이 혼동되지 않도록 분리되어 있다.
  */
-export const RARITY_CLASSES = Object.freeze({
+export const RARITY_CLASSES: Record<string, any> = Object.freeze({
     common: 'text-slate-300',
     uncommon: 'text-cyan-400',
     rare: 'text-purple-400',

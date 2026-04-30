@@ -376,7 +376,7 @@ export const RELICS: any = [
 ];
 
 /** 희귀도별 가중치 (가중 추첨) */
-export const RELIC_WEIGHTS = Object.freeze({
+export const RELIC_WEIGHTS: Record<string, any> = Object.freeze({
     common: 50,
     uncommon: 30,
     rare: 15,
@@ -554,7 +554,7 @@ export const getActiveRelicSynergies = (relics: any = []) => {
 
 export const pickWeightedRelics = (pool: any, count: any = 3) => {
     if (pool.length === 0) return [];
-    const result = [];
+    const result: any[] = [];
     const remaining = [...pool];
     const needed = Math.min(count, remaining.length);
 

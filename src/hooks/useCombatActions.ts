@@ -21,7 +21,7 @@ export const createCombatActions = (deps: any) => {
     const shared = { emitDailyProtocolLogs, emitUnlockedTitles };
 
     // pendingEnemyTurn을 ref 객체로 래핑하여 combatUseItem과 공유
-    const pendingRef = { current: null };
+    const pendingRef: { current: any } = { current: null };
 
     return {
         ...createCombatAttackActions(deps, shared, pendingRef),

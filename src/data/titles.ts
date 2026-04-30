@@ -215,7 +215,7 @@ export const TITLES = Object.freeze([
 // 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
 export { RARITY_CLASSES as RARITY_COLORS } from './constants.js';
 
-export const TITLE_PASSIVES = Object.freeze({
+export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     first_blood:      { atk: 1, label: 'ATK +1' },
     centurion:        { atk: 2, label: 'ATK +2' },
     warlord:          { atk: 4, crit: 0.01, label: 'ATK +4 · CRIT +1%' },

@@ -10,8 +10,8 @@ import signatureSets from '../data/signatureSets.json' with { type: 'json' };
  *   3. 최고 count 기준 bonus 반환 (예: 3세트면 2세트 효과 대체)
  */
 
-const REGISTRY = signatureRegistry.entries || {};
-const SETS = signatureSets.sets || {};
+const REGISTRY: Record<string, any> = signatureRegistry.entries || {};
+const SETS: Record<string, any> = signatureSets.sets || {};
 
 const getRegistryEntry = (item: any) => {
     if (!item?.name) return null;
@@ -28,10 +28,10 @@ const getRegistryEntry = (item: any) => {
  * }}
  */
 export const computeSignatureSetBonus = (equip: any) => {
-    const neutral = { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
+    const neutral: any = { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
     if (!equip) return neutral;
 
-    const groups = [];
+    const groups: any[] = [];
     for (const slot of ['weapon', 'armor', 'offhand']) {
         const meta = getRegistryEntry(equip[slot]);
         if (meta?.setGroup) groups.push(meta.setGroup);

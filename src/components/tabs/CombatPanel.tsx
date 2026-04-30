@@ -119,12 +119,12 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
     actions.useItem?.(item);
   };
 
-  const getConsumableTone = (type: any) => ({
+  const getConsumableTone = (type: any) => (({
     hp: 'border-emerald-500/25 bg-emerald-500/8 text-emerald-200 hover:bg-emerald-500/14',
     mp: 'border-cyber-blue/25 bg-cyber-blue/8 text-cyber-blue hover:bg-cyber-blue/14',
     cure: 'border-amber-400/25 bg-amber-500/8 text-amber-200 hover:bg-amber-500/14',
     buff: 'border-cyber-purple/25 bg-cyber-purple/8 text-cyber-purple hover:bg-cyber-purple/14',
-  }[type] || 'border-slate-600/30 bg-slate-900/25 text-slate-300 hover:bg-slate-800/40');
+  } as Record<string, string>)[type] || 'border-slate-600/30 bg-slate-900/25 text-slate-300 hover:bg-slate-800/40');
 
   const compactMetaEntries = [
     selectedSkill

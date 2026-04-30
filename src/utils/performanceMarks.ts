@@ -51,7 +51,7 @@ export const measurePerfOnce = (name: any, startMark: any, endMark: any) => {
 export const getPerfSnapshot = () => {
     if (typeof performance === 'undefined') return {};
 
-    const snapshot = {};
+    const snapshot: Record<string, any> = {};
     performance.getEntriesByType('measure')
         .filter((entry: any) => entry.name.startsWith('aetheria:'))
         .forEach((entry: any) => {

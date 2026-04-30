@@ -67,7 +67,7 @@ const placement = (anchor: any, layer: any, transform: any) => Object.freeze({ a
 // 모든 weapon은 `hand_front`에 rotate pivot (12, 12) scaled-space 기준으로 배치된다.
 // 값은 기존 getWeaponTransform()에서 일관되게 추출한 것 — visual output 동일.
 // ──────────────────────────────────────────────────────────────────────────
-export const WEAPON_PLACEMENTS = Object.freeze({
+export const WEAPON_PLACEMENTS: Record<string, any> = Object.freeze({
     sword: placement('hand_front', 'front', { translateX: 41, translateY: 34, rotate: 10, rotateX: 12, rotateY: 12, scale: 0.26 }),
     rapier: placement('hand_front', 'front', { translateX: 40, translateY: 34, rotate: 12, rotateX: 12, rotateY: 12, scale: 0.27 }),
     saber: placement('hand_front', 'front', { translateX: 40, translateY: 34, rotate: 12, rotateX: 12, rotateY: 12, scale: 0.27 }),
@@ -105,7 +105,7 @@ const DEFAULT_WEAPON_PLACEMENT = WEAPON_PLACEMENTS.sword;
 // ──────────────────────────────────────────────────────────────────────────
 // Offhand placements (back hand)
 // ──────────────────────────────────────────────────────────────────────────
-export const OFFHAND_PLACEMENTS = Object.freeze({
+export const OFFHAND_PLACEMENTS: Record<string, any> = Object.freeze({
     shield: placement('hand_back', 'back', { translateX: 11, translateY: 32, rotate: -12, rotateX: 12, rotateY: 12, scale: 0.27 }),
     'tower-shield': placement('hand_back', 'back', { translateX: 11, translateY: 31, rotate: -6, rotateX: 12, rotateY: 12, scale: 0.33 }),
     'kite-shield': placement('hand_back', 'back', { translateX: 11, translateY: 31, rotate: -6, rotateX: 12, rotateY: 12, scale: 0.33 }),
@@ -153,7 +153,7 @@ const DEFAULT_OFFHAND_PLACEMENT = placement('hand_back', 'back', {
 // Headgear placements (head top / center)
 // rotate 없이 translate + scale만 사용 (sprite center 기준 배치)
 // ──────────────────────────────────────────────────────────────────────────
-export const HEADGEAR_PLACEMENTS = Object.freeze({
+export const HEADGEAR_PLACEMENTS: Record<string, any> = Object.freeze({
     'straw-hat': placement('head_top', 'front', { translateX: 12, translateY: 6, scale: 0.48 }),
     'wizard-hat': placement('head_top', 'front', { translateX: 10, translateY: 1, scale: 0.56 }),
     circlet: placement('head_center', 'front', { translateX: 15, translateY: 10, scale: 0.42 }),
@@ -169,7 +169,7 @@ const DEFAULT_HEADGEAR_PLACEMENT = placement('head_top', 'front', { translateX: 
 // ──────────────────────────────────────────────────────────────────────────
 // Body armor placements
 // ──────────────────────────────────────────────────────────────────────────
-export const BODY_PLACEMENTS = Object.freeze({
+export const BODY_PLACEMENTS: Record<string, any> = Object.freeze({
     robe: placement('torso_center', 'front', { translateX: 8, translateY: 19, scale: 0.72 }),
     plate: placement('torso_center', 'front', { translateX: 8, translateY: 20, scale: 0.7 }),
     leather: placement('torso_center', 'front', { translateX: 9, translateY: 20, scale: 0.68 }),

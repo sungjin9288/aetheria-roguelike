@@ -28,7 +28,7 @@ export const resetWeeklyProtocolIfNeeded = (player: any, dispatch: any) => {
     if (!wp || wp.lastResetWeek !== currentWeek) {
         dispatch({
             type: AT.SET_PLAYER,
-            payload: p => ({
+            payload: (p: any) => ({
                 ...p,
                 weeklyProtocol: { kills: 0, explores: 0, bossKills: 0, lastResetWeek: currentWeek, claimed: [] },
             }),
@@ -303,7 +303,7 @@ export const checkDiscoveryChains = (player: any, loc: any, { dispatch, addLog }
         if (!chain.locations.every((l: any) => visited.has(l))) return;
 
         // 체인 달성!
-        const rewardParts = [];
+        const rewardParts: any[] = [];
         if (chain.reward.gold) rewardParts.push(`${chain.reward.gold}G`);
         if (chain.reward.exp) rewardParts.push(`${chain.reward.exp} EXP`);
         if (chain.reward.item) rewardParts.push(chain.reward.item);
@@ -314,7 +314,7 @@ export const checkDiscoveryChains = (player: any, loc: any, { dispatch, addLog }
 
         dispatch({
             type: AT.SET_PLAYER,
-            payload: p => {
+            payload: (p: any) => {
                 const updated = { ...p };
                 updated.gold = (updated.gold || 0) + (chain.reward.gold || 0);
                 updated.exp = (updated.exp || 0) + (chain.reward.exp || 0);

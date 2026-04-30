@@ -12,7 +12,7 @@ import { isSmokeRuntime } from '../utils/runtimeMode';
  * @param {number} timeoutMs - 타임아웃 (ms)
  * @returns {Promise<object|null>}
  */
-const callProxy = async (body, trackLabel = 'ai-call', timeoutMs = 9500) => {
+const callProxy = async (body: any, trackLabel: any = 'ai-call', timeoutMs: any = 9500) => {
     try {
         const token = await auth?.currentUser?.getIdToken?.();
         const headers: Record<string, any> = {

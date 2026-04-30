@@ -1,6 +1,6 @@
 /** 특성(trait) 시스템 — 아키타입 레이블, 특성 정의, 속성-상태 매핑, 직업 빌드 데이터 */
 
-export const ARCHETYPE_LABELS = Object.freeze({
+export const ARCHETYPE_LABELS: Record<string, any> = Object.freeze({
     balanced: '균형형 런',
     crusher: '양손 파쇄',
     dual: '쌍수 연격',
@@ -11,7 +11,7 @@ export const ARCHETYPE_LABELS = Object.freeze({
     status: '상태이상 집행자',
 });
 
-export const TRAIT_DEFINITIONS = Object.freeze({
+export const TRAIT_DEFINITIONS: Record<string, any> = Object.freeze({
     balanced: {
         id: 'balanced',
         name: '균형',
@@ -134,7 +134,7 @@ export const TRAIT_DEFINITIONS = Object.freeze({
     },
 });
 
-export const ELEMENT_TO_STATUS = Object.freeze({
+export const ELEMENT_TO_STATUS: Record<string, any> = Object.freeze({
     화염: 'burn',
     냉기: 'freeze',
     자연: 'poison',
@@ -144,7 +144,7 @@ export const ELEMENT_TO_STATUS = Object.freeze({
     물리: 'bleed',
 });
 
-export const CLASS_BUILD_IDENTITIES = Object.freeze({
+export const CLASS_BUILD_IDENTITIES: Record<string, any> = Object.freeze({
     모험가: {
         label: '개척형',
         desc: '탐험과 기본기 중심으로 어떤 축이든 무난하게 시작할 수 있습니다.',

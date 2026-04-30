@@ -648,7 +648,7 @@ export const MONSTERS: any = {
     },
 };
 
-export const BOSS_BRIEFS = Object.freeze({
+export const BOSS_BRIEFS: Record<string, any> = Object.freeze({
     '화염의 군주': {
         signature: '광역 화상과 강타 연사',
         entryHint: '냉기 속성과 회복 슬롯을 먼저 준비한 뒤 진입하는 편이 안정적입니다.',

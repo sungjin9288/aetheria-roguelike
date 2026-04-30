@@ -131,7 +131,7 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                     dispatch({ type: AT.SET_ENEMY, payload: null });
                 } else {
-                    const protectionLogs = [];
+                    const protectionLogs: any[] = [];
                     const protectedResult = CombatEngine.applyFatalProtection(player, stats.relics || [], escapeResult.damage || 0, protectionLogs);
                     protectionLogs.forEach((log: any) => addLog(log.type, log.text));
                     if (protectedResult.isDead) {

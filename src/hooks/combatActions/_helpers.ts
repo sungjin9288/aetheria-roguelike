@@ -16,7 +16,7 @@ export const getSelectedSkill = (player: any) => {
 /**
  * 루트 아이템 중 장비 업그레이드 힌트 계산. 없으면 null.
  */
-export const getLootUpgradeHint = (equip: any = {}, lootItems: any[] = []) => {
+export const getLootUpgradeHint = (equip: any = {}, lootItems: any[] = []): any => {
     const equipmentDrops = (lootItems || []).filter((item: any) => ['weapon', 'armor', 'shield'].includes(item?.type));
     if (!equipmentDrops.length) return null;
 
@@ -24,7 +24,7 @@ export const getLootUpgradeHint = (equip: any = {}, lootItems: any[] = []) => {
     const currentAtk = currentProfile.mainAttack + currentProfile.offhandAttack;
     const currentDef = (equip.armor?.val || 0) + currentProfile.shieldDef;
 
-    let bestHint = null;
+    let bestHint: any = null;
     equipmentDrops.forEach((item: any) => {
         const nextEquip = getNextEquipmentState(equip, item);
         const nextProfile = getEquipmentProfile(nextEquip);
@@ -36,7 +36,7 @@ export const getLootUpgradeHint = (equip: any = {}, lootItems: any[] = []) => {
         const defDelta = nextDef - currentDef;
         const score = atkDelta + defDelta + (critDelta * 2) + Math.floor(mpDelta / 5);
         if (score <= 0) return;
-        const summaryParts = [];
+        const summaryParts: any[] = [];
         if (atkDelta > 0) summaryParts.push(`ATK +${atkDelta}`);
         if (defDelta > 0) summaryParts.push(`DEF +${defDelta}`);
         if (critDelta > 0) summaryParts.push(`CRIT +${critDelta}%`);

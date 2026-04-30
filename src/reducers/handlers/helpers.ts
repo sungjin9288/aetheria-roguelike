@@ -19,7 +19,7 @@ export const applyDailyProtocolProgress = (player: any, type: any, amount: any =
 
     let essenceGain = 0;
     let newShards = dp.relicShards || 0;
-    const itemRewards = [];
+    const itemRewards: any[] = [];
 
     const updatedMissions = dp.missions.map((mission: any) => {
         if (mission.type !== type || mission.done) return mission;

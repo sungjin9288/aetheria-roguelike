@@ -4,7 +4,7 @@ import { CONSTANTS } from '../data/constants';
 
 // --- REMOTE GAME CONFIG LOADER ---
 // Fetches game balance data from Firestore at runtime
-export const RemoteConfigLoader = {
+export const RemoteConfigLoader: any = {
     cache: null,
 
     async fetchConfig() {

@@ -52,7 +52,7 @@ const MAX_COMPACT_ITEMS = BALANCE.INV_COMPACT_MAX_ITEMS;
 const canEquipItem = (item: any, job: any) => !Array.isArray(item.jobs) || item.jobs.includes(job);
 
 const getItemTags = (item: any) => {
-    const tags = [];
+    const tags: any[] = [];
     if (isWeapon(item) || item?.type === 'shield') tags.push(getWeaponStyleLabel(item));
     return tags;
 };
@@ -69,7 +69,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     );
 
     const grouped = useMemo(() => {
-        const map = {};
+        const map: Record<string, any> = {};
         for (const item of player.inv) {
             // Enhanced items are unique — group by name+enhance; non-equipment groups by name only
             const enhance = item.enhance || 0;

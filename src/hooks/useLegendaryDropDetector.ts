@@ -21,7 +21,7 @@ const CODEX_BUCKET_BY_TYPE: any = Object.freeze({
  */
 
 const getSignatureItemNames = (inv: any = []) => {
-    const names = [];
+    const names: any[] = [];
     for (const entry of inv) {
         if (entry && hasDedicatedSignatureArt(entry)) {
             names.push(entry.name);

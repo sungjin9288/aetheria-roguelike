@@ -11,7 +11,7 @@ import {
 
 // --- Internal helpers ---
 
-const scoreTag = (id, name, desc, score, reasons: any[] = []) => ({
+const scoreTag = (id: any, name: any, desc: any, score: any, reasons: any[] = []) => ({
     id,
     name,
     desc,
@@ -82,10 +82,10 @@ export const getRunBuildProfile = (player: any, stats: any = {}) => {
     const shield = isShield(offhand) && !isFocusOffhand(offhand);
     const focus = isFocusOffhand(offhand);
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
-    const tags = [];
+    const tags: any[] = [];
 
     if (twoHand || relicEffects.has('execute_bonus') || relicEffects.has('armor_pen')) {
-        const reasons = [];
+        const reasons: any[] = [];
         let score = 0;
         if (twoHand) { score += 4; reasons.push('양손 무기'); }
         if (relicEffects.has('execute_bonus')) { score += 2; reasons.push('처형 보정'); }
@@ -96,7 +96,7 @@ export const getRunBuildProfile = (player: any, stats: any = {}) => {
     }
 
     if (dualWield || relicEffects.has('combo_stack') || relicEffects.has('double_strike')) {
-        const reasons = [];
+        const reasons: any[] = [];
         let score = 0;
         if (dualWield) { score += 4; reasons.push('쌍수 무기'); }
         if (relicEffects.has('combo_stack')) { score += 2; reasons.push('연격 스택'); }
@@ -106,7 +106,7 @@ export const getRunBuildProfile = (player: any, stats: any = {}) => {
     }
 
     if (shield || relicEffects.has('reflect') || relicEffects.has('stone_skin') || relicEffects.has('fortress')) {
-        const reasons = [];
+        const reasons: any[] = [];
         let score = 0;
         if (shield) { score += 4; reasons.push('방패 운용'); }
         if (relicEffects.has('reflect')) { score += 2; reasons.push('반사 피해'); }
@@ -117,7 +117,7 @@ export const getRunBuildProfile = (player: any, stats: any = {}) => {
     }
 
     if (stats?.isMagic || focus || isMagicWeapon(mainWeapon) || isMagicWeapon(offhand)) {
-        const reasons = [];
+        const reasons: any[] = [];
         let score = 0;
         if (stats?.isMagic) { score += 2; reasons.push('마법 공격'); }
         if (focus) { score += 3; reasons.push('주문서/마도서'); }
@@ -130,7 +130,7 @@ export const getRunBuildProfile = (player: any, stats: any = {}) => {
     }
 
     if (relicEffects.has('event_chance') || relicEffects.has('drop_rate') || relicEffects.has('gold_mult') || relicEffects.has('exp_mult') || relicEffects.has('boss_hunter')) {
-        const reasons = [];
+        const reasons: any[] = [];
         let score = 0;
         if (relicEffects.has('event_chance')) { score += 2; reasons.push('이벤트 증가'); }
         if (relicEffects.has('drop_rate')) { score += 2; reasons.push('드롭 증가'); }
@@ -141,7 +141,7 @@ export const getRunBuildProfile = (player: any, stats: any = {}) => {
     }
 
     if (relicEffects.has('glass_cannon') || relicEffects.has('cursed_power') || relicEffects.has('low_hp_atk') || hpRatio < 0.45) {
-        const reasons = [];
+        const reasons: any[] = [];
         let score = 0;
         if (relicEffects.has('glass_cannon')) { score += 2; reasons.push('유리 대포'); }
         if (relicEffects.has('cursed_power')) { score += 2; reasons.push('체력 대가 화력'); }
@@ -152,7 +152,7 @@ export const getRunBuildProfile = (player: any, stats: any = {}) => {
     }
 
     if (relicEffects.has('dot_mult') || (mainWeapon?.elem && mainWeapon.elem !== '물리')) {
-        const reasons = [];
+        const reasons: any[] = [];
         let score = 0;
         if (relicEffects.has('dot_mult')) { score += 3; reasons.push('지속 피해 증폭'); }
         if (mainWeapon?.elem && mainWeapon.elem !== '물리') { score += 2; reasons.push(`${mainWeapon.elem} 속성 무기`); }
@@ -258,7 +258,7 @@ export const getTraitSkill = (player: any, stats: any = {}) => getTraitProfile(p
 
 export const getTraitPassiveParts = (traitProfile: any) => {
     const bonus = traitProfile?.bonus || {};
-    const parts = [];
+    const parts: any[] = [];
     if ((bonus.atkMult || 1) > 1) parts.push(`ATK +${toPercent((bonus.atkMult || 1) - 1)}`);
     if ((bonus.defMult || 1) > 1) parts.push(`DEF +${toPercent((bonus.defMult || 1) - 1)}`);
     if ((bonus.critBonus || 0) > 0) parts.push(`CRIT +${toPercent(bonus.critBonus || 0)}`);
@@ -270,7 +270,7 @@ export const getTraitItemResonance = (item: any, traitProfile: any, player: any 
     if (!item) return { score: 0, label: null, reasons: [], summary: null };
 
     const traitId = traitProfile?.id || 'balanced';
-    const reasons = [];
+    const reasons: any[] = [];
     let score = 0;
 
     switch (traitId) {
@@ -339,7 +339,7 @@ export const getTraitItemResonance = (item: any, traitProfile: any, player: any 
     };
 };
 
-export const getTraitFeaturedItems = (items: any[] = [], traitProfile, player = null, limit = 3) => (
+export const getTraitFeaturedItems = (items: any[] = [], traitProfile: any, player: any = null, limit: any = 3) => (
     (items || [])
         .map((item: any) => ({
             item,
@@ -350,7 +350,7 @@ export const getTraitFeaturedItems = (items: any[] = [], traitProfile, player = 
         .slice(0, limit)
 );
 
-export const getTraitLootHint = (items: any[] = [], traitProfile, player = null) => {
+export const getTraitLootHint = (items: any[] = [], traitProfile: any, player: any = null) => {
     const [best] = getTraitFeaturedItems(items, traitProfile, player, 1);
     if (!best) return null;
 
@@ -373,7 +373,7 @@ export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
     ].filter(Boolean));
 
     let score = 0;
-    const reasons = [];
+    const reasons: any[] = [];
 
     if (quest.buildTag && buildTags.has(quest.buildTag)) {
         score += 6;
@@ -438,7 +438,7 @@ export const getRunDiagnostics = (player: any, stats: any = {}) => {
         pacingNote = '방금 큰 발견이 나왔습니다. 다음 몇 턴은 전투/정리 리듬이 됩니다.';
     }
 
-    const recommendations = [];
+    const recommendations: any[] = [];
     if (winRate !== null && winRate < 45) recommendations.push('최근 승률이 낮습니다. 휴식과 방패/회복 루틴을 우선하세요.');
     if (avgWinHp !== null && avgWinHp < 35) recommendations.push('전투 종료 HP가 낮습니다. DEF 또는 회복 수단을 더 챙기는 편이 좋습니다.');
     if (classCompatibility.label === '엇갈림') {

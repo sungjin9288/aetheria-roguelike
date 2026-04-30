@@ -94,7 +94,7 @@ export const formatDailyProtocolReward = (reward: any = {}) => {
 
 /** 일반 보상 텍스트 배열 포맷 */
 export const formatRewardParts = (reward: any = {}) => {
-    const parts = [];
+    const parts: any[] = [];
     if (reward.exp) parts.push(`EXP ${reward.exp}`);
     if (reward.gold) parts.push(`${reward.gold}G`);
     if (reward.item) parts.push(reward.item);
@@ -220,7 +220,7 @@ const RESOLVE_BUCKET_BY_TYPE: any = Object.freeze({
     armor: 'armors',
 });
 
-const SIGNATURE_REGISTRY_ENTRIES = signatureRegistryData?.entries || {};
+const SIGNATURE_REGISTRY_ENTRIES: Record<string, any> = signatureRegistryData?.entries || {};
 const SIGNATURE_SETS_MAP = signatureSetsData?.sets || {};
 
 const isSignatureDiscovered = (itemName: any, player: any) => {
@@ -263,7 +263,7 @@ export const isAchievementUnlocked = (achievement: any, player: any) => (
 
 // Milestone Utility
 export const checkMilestones = (killRegistry: any, lastKillName: any) => {
-    const rewards = [];
+    const rewards: any[] = [];
     const count = killRegistry[lastKillName] || 0;
 
     // 1. Monster Count Milestones

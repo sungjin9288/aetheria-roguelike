@@ -1,4 +1,4 @@
-export const JOB_SPRITE_SLUG_MAP = {
+export const JOB_SPRITE_SLUG_MAP: Record<string, string> = {
     모험가: 'adventurer',
     전사: 'warrior',
     나이트: 'knight',

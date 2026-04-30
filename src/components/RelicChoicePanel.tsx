@@ -33,7 +33,7 @@ const SYNERGY_MAP: any = {
     boss_hunter: ['drop_rate', 'execute_bonus', 'double_strike'],
 };
 
-const getRelicSynergyScore = (newRelic: any, ownedRelics: any = []) => {
+const getRelicSynergyScore = (newRelic: any, ownedRelics: any = []): any => {
     const ownedEffects = ownedRelics.map((r: any) => r.effect);
     const ownedNames = new Set(ownedRelics.map((r: any) => r.name));
 

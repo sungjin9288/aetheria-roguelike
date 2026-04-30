@@ -5,7 +5,7 @@ const createGraveItem = (item: any) => ({
 
 const sortGravesByLatest = (a: any, b: any) => (b?.timestamp || 0) - (a?.timestamp || 0);
 
-export const buildGraveData = (player, random = Math.random, now = Date.now) => {
+export const buildGraveData = (player: any, random: any = Math.random, now: any = Date.now) => {
     let droppedItems = [];
     const tradableItems = Array.isArray(player?.inv)
         ? player.inv.filter((item: any) => !item?.id?.startsWith('starter_'))

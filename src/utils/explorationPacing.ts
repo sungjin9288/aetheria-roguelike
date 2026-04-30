@@ -86,7 +86,7 @@ export const getMapPacingProfile = (mapData: any = {}) => {
     };
 };
 
-export const getNarrativeEventChance = (baseChance = 0, bonusMultiplier = 0, stats: any = {}, mapData = null) => {
+export const getNarrativeEventChance = (baseChance: any = 0, bonusMultiplier: any = 0, stats: any = {}, mapData: any = null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const base = Math.min(
@@ -98,7 +98,7 @@ export const getNarrativeEventChance = (baseChance = 0, bonusMultiplier = 0, sta
     return clamp(base + pity, 0, BALANCE.SPECIAL_EVENT_MAX_CHANCE);
 };
 
-export const getQuietExplorationChance = (stats: any = {}, mapData = null) => {
+export const getQuietExplorationChance = (stats: any = {}, mapData: any = null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const reduction = exploreState.quietStreak * BALANCE.QUIET_STREAK_NOTHING_REDUCTION;

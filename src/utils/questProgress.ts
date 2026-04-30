@@ -5,7 +5,7 @@ const findQuestDefinition = (quest: any, questCatalog: any = QUESTS) => (
     quest?.isBounty ? quest : questCatalog.find((entry: any) => entry.id === quest.id)
 );
 
-export const syncQuestProgress = (player, enemyName = '', questCatalog = QUESTS) => {
+export const syncQuestProgress = (player: any, enemyName: any = '', questCatalog: any = QUESTS) => {
     if (!player?.quests?.length) {
         return { updatedQuests: player?.quests || [], completedCount: 0 };
     }

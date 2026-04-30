@@ -28,9 +28,9 @@ export const resolveEnemyBaseName = (enemy: any) => {
  * @param {number} [signaturePityMult=1.0] - signature 드롭에만 적용되는 pity 배율
  * @returns {{ items: Object[], logs: Object[] }}
  */
-export const processLoot = (enemy, player = null, signaturePityMult = 1.0) => {
-    const items = [];
-    const logs = [];
+export const processLoot = (enemy: any, player: any = null, signaturePityMult: any = 1.0) => {
+    const items: any[] = [];
+    const logs: any[] = [];
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
     const dropRateMult = 1 + (relics.find((relic: any) => relic.effect === 'drop_rate')?.val || 0);

@@ -193,7 +193,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                                         <div className="flex items-center justify-between gap-2 mb-2">
                                             <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.14em] text-[#d5b180]/70">
                                                 <GitBranch size={10} />
-                                                분기 선택 {currentChoice ? `(현재: ${branches.find(b=>b.choice===currentChoice)?.label || currentChoice})` : '(기본)'}
+                                                분기 선택 {currentChoice ? `(현재: ${branches.find((b: any) => b.choice === currentChoice)?.label || currentChoice})` : '(기본)'}
                                             </div>
                                             <button
                                                 onClick={() => setSwapTarget(isSwapping ? null : skill.name)}

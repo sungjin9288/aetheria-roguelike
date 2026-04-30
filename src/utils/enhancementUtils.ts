@@ -1,6 +1,6 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 
-export const countInventoryItemByName = (inventory = [], itemName) => (
+export const countInventoryItemByName = (inventory: any[] = [], itemName: any) => (
     (inventory || []).filter((item: any) => item?.name === itemName).length
 );
 
@@ -14,7 +14,7 @@ export const getEnhanceMaterialCount = (inventory: any = []) => (
     countInventoryItemByName(inventory, CONSTANTS.ENHANCE_MATERIAL_NAME)
 );
 
-export const consumeInventoryItemByName = (inventory = [], itemName, count = 1) => {
+export const consumeInventoryItemByName = (inventory: any[] = [], itemName: any, count: any = 1) => {
     let removed = 0;
     const nextInventory = (inventory || []).filter((item: any) => {
         if (item?.name === itemName && removed < count) {
@@ -27,7 +27,7 @@ export const consumeInventoryItemByName = (inventory = [], itemName, count = 1) 
     return { nextInventory, removed };
 };
 
-export const getEnhanceAvailability = (item, gold = 0, inventory = []) => {
+export const getEnhanceAvailability = (item: any, gold: any = 0, inventory: any[] = []) => {
     if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) {
         return {
             canEnhance: false,

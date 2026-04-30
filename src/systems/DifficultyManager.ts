@@ -92,7 +92,7 @@ export const applyDynamicDifficulty = (mStats: any, player: any, addLog: any) =>
 
     // 중립에 가까우면 로그 생략
     const LABEL_VISIBLE = ['압도', '위기', '열세'];
-    const GM_PREFIX_MAP = {
+    const GM_PREFIX_MAP: Record<string, string> = {
         '압도': '⚔️ [GM] 도전적인 편이 더 재미있겠죠? 몬스터가 강해집니다.',
         '위기': '🛡️ [GM] 잠시 숨을 고를 시간입니다. 몬스터가 약해집니다.',
         '열세': '🛡️ [GM] 어려운 상황이군요. 몬스터 강도를 낮춥니다.',

@@ -51,8 +51,8 @@ export const CODEX_MILESTONES: any = {
  */
 export const getCodexProgress = (codex: any = {}, claimed: any = []) => {
     const claimedSet = new Set(claimed);
-    const milestones = [];
-    const unclaimed = [];
+    const milestones: any[] = [];
+    const unclaimed: any[] = [];
 
     for (const [category, milestoneList] of Object.entries(CODEX_MILESTONES) as Array<[string, any[]]>) {
         const catEntries = codex[category] || {};

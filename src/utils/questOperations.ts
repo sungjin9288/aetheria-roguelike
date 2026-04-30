@@ -86,7 +86,7 @@ const getQuestLane = (quest: any, resonance: any, maps: any = MAPS) => {
     return 'hunt';
 };
 
-const getQuestReason = (quest, lane, resonance, targetMaps: any[] = []) => {
+const getQuestReason = (quest: any, lane: any, resonance: any, targetMaps: any[] = []) => {
     if (lane === 'story') {
         return `서사 진행을 당겨 ${quest.minLv || 1}레벨 구간의 다음 전개를 열어 주는 임무입니다.`;
     }
@@ -150,7 +150,7 @@ const scoreQuest = (quest: any, player: any, traitProfile: any, activeEntries: a
     };
 };
 
-export const getQuestBoardRecommendations = (player, maps = MAPS, questCatalog = QUESTS) => {
+export const getQuestBoardRecommendations = (player: any, maps: any = MAPS, questCatalog: any = QUESTS) => {
     const traitProfile = getTraitProfile(player, { maxHp: player?.maxHp, maxMp: player?.maxMp });
     const activeEntries = getActiveQuestEntries(player);
     const activeRegularQuestIds = new Set(activeEntries.filter((entry: any) => !entry.isBounty).map((entry: any) => entry.id));
@@ -161,7 +161,7 @@ export const getQuestBoardRecommendations = (player, maps = MAPS, questCatalog =
         .map((quest: any) => scoreQuest(quest, player, traitProfile, activeEntries, maps))
         .sort((left: any, right: any) => right.score - left.score || left.quest.title.localeCompare(right.quest.title, 'ko'));
 
-    const featured = [];
+    const featured: any[] = [];
     const usedIds = new Set();
     FEATURED_LANE_ORDER.forEach((lane: any) => {
         const match = scoredAvailable.find((entry: any) => entry.lane === lane && !usedIds.has(entry.quest.id));

@@ -19,7 +19,7 @@ export const updateStats = (player: any, statsUpdate: any) => ({
 export const incrementStat = (player: any, field: any, amount: any = 1) =>
     updateStats(player, { [field]: (player.stats?.[field] || 0) + amount });
 
-export const EMPTY_TEMP_BUFF = {
+export const EMPTY_TEMP_BUFF: any = {
     atk: 0,
     def: 0,
     turn: 0,

@@ -4,7 +4,7 @@ import { DB } from '../data/db.js';
  * messages.js — 게임 내 모든 메시지를 한국어로 통합 관리합니다.
  * CombatEngine, hooks 등에서 참조하세요.
  */
-export const MSG = {
+export const MSG: any = {
     // --- 전투 (Combat) ---
     COMBAT_ATTACK: (name: any, dmg: any, tags: any = []) =>
         `${name}에게 ${dmg} 피해를 입혔습니다.${tags.length ? ` [${tags.join(', ')}]` : ''}`,

@@ -208,7 +208,7 @@ export const CombatEngine = {
     },
 
     tickCombatState(player: any) {
-        const logs = [];
+        const logs: any[] = [];
         const updated = { ...player };
         const relics = updated.relics || [];
         const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
@@ -286,7 +286,7 @@ export const CombatEngine = {
     attack(player: any, enemy: any, stats: any) {
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
-        const logs = [];
+        const logs: any[] = [];
         let updatedPlayer = { ...player, combatFlags: this.getCombatFlags(player) };
         const flags = this.getCombatFlags(player);
 
@@ -364,7 +364,7 @@ export const CombatEngine = {
         }
 
         const newEnemyHp = enemy.hp - finalDamage;
-        const tags = [];
+        const tags: any[] = [];
         if (enemy.guarding) tags.push('방어 격파');
         if (elementMultiplier > 1) tags.push('속성 약점');
         if (elementMultiplier < 1) tags.push('속성 저항');
@@ -535,7 +535,7 @@ export const CombatEngine = {
             updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + heal);
         }
         if (isCrit) {
-            const critLogs = [];
+            const critLogs: any[] = [];
             const restoredPlayer = this.applyCritMpRestore(updatedPlayer, relics, critLogs);
             updatedPlayer.mp = restoredPlayer.mp;
             critLogs.forEach((entry: any) => logs.push(entry));
@@ -664,7 +664,7 @@ export const CombatEngine = {
     enemyAttack(player: any, enemy: any, stats: any) {
         let updatedEnemy = { ...enemy };
         let updatedPlayer = { ...player };
-        const logs = [];
+        const logs: any[] = [];
         // relics 선언을 함수 상단으로 (Phase 전환 블록에서 use-before-declaration 방지).
         const relics = stats.relics || [];
 
@@ -695,7 +695,7 @@ export const CombatEngine = {
         // ── Phase 전환 체크 (보스 + 엘리트 통합) ───────────────────
         if (updatedEnemy.isBoss || updatedEnemy.isElite) {
             const hpRatio = updatedEnemy.hp / Math.max(1, updatedEnemy.maxHp || updatedEnemy.hp);
-            const statusLabels = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주' };
+            const statusLabels: Record<string, string> = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주' };
 
             // Phase 3 (원시의 신 등 3페이즈 보스, threshold 25%)
             if (updatedEnemy.phase3 && !updatedEnemy.phase3Triggered) {
@@ -826,7 +826,7 @@ export const CombatEngine = {
             const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
             const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
             if (!currentStatus.includes(sEff) && Math.random() >= resistChance) {
-                const statusLabels = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주', bleed: '출혈' };
+                const statusLabels: Record<string, string> = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주', bleed: '출혈' };
                 updatedPlayer = { ...updatedPlayer, status: [...currentStatus, sEff] };
                 logs.push({ type: 'warning', text: `[${updatedEnemy.name}] [${statusLabels[sEff] || sEff}] 부여!` });
             } else if (resistRelic) {
@@ -867,9 +867,9 @@ export const CombatEngine = {
         };
     },
 
-    applyExpGain(player, expGained = 0) {
+    applyExpGain(player: any, expGained: any = 0) {
         const p = { ...player, exp: (player.exp || 0) + expGained };
-        const logs = [];
+        const logs: any[] = [];
         let levelUps = 0;
         let visualEffect = null;
 
@@ -923,7 +923,7 @@ export const CombatEngine = {
         };
     },
 
-    handleVictory(player, enemy, passiveBonus: any = {}) {
+    handleVictory(player: any, enemy: any, passiveBonus: any = {}) {
         const p = { ...player };
         const relics = p.relics || [];
         const baseName = this.resolveEnemyBaseName(enemy);
@@ -1055,7 +1055,7 @@ export const CombatEngine = {
         return syncQuestProgress(player, enemyName, DB.QUESTS);
     },
 
-    processLoot(enemy, player = null, signaturePityMult = 1.0) {
+    processLoot(enemy: any, player: any = null, signaturePityMult: any = 1.0) {
         return _processLoot(enemy, player, signaturePityMult);
     },
 

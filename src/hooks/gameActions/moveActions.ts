@@ -7,7 +7,7 @@ import { clearTemporaryAdventureState, hasTemporaryAdventureState } from '../../
 import { checkDiscoveryChains, getFirstVisitReward } from '../../utils/exploreUtils';
 import { CombatEngine } from '../../systems/CombatEngine';
 
-export const createMoveActions = (deps, _shared?: any) => {
+export const createMoveActions = (deps: any, _shared?: any) => {
     const { player, gameState, grave, isAiThinking, liveConfig, dispatch, addLog, addStoryLog } = deps;
     return {
         move: (loc: any) => {

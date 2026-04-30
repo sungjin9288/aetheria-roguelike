@@ -42,7 +42,7 @@ export const TokenQuotaManager = {
     },
 
     // Sync quota to Firestore for cross-device tracking
-    async syncToFirestore(uid, db) {
+    async syncToFirestore(uid: any, db: any) {
         if (!uid || !db) return;
         try {
             const quota = this.getQuotaData();

@@ -23,7 +23,7 @@ export const getBossSignatureDrops = (baseName: any) => {
     const entries = DROP_TABLES[baseName];
     if (!Array.isArray(entries)) return [];
 
-    const signatureDrops = [];
+    const signatureDrops: any[] = [];
     for (const entry of entries) {
         if (!entry?.item) continue;
         if (!SIGNATURE_ITEM_REGISTRY[entry.item]) continue;

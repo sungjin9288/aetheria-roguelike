@@ -9,7 +9,7 @@ const SIGNATURE_SPRITE_KEY_BY_NAME: any = Object.freeze(
     )
 );
 
-export const SPECIAL_ITEM_ICON_KEYS = {
+export const SPECIAL_ITEM_ICON_KEYS: Record<string, string> = {
     '성검 에테르니아': 'named-weapon-01',
     '천벌의 지팡이': 'named-weapon-02',
     '마왕의 대낫': 'named-weapon-03',

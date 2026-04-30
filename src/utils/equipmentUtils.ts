@@ -91,7 +91,7 @@ export const getEquipmentProfile = (equip: any = {}) => {
     };
 };
 
-const pickBestOneHandPair = (weapons: any[] = [], requiredWeapon = null) => {
+const pickBestOneHandPair = (weapons: any[] = [], requiredWeapon: any = null) => {
     const candidates = weapons.filter((weapon: any) => isOneHandWeapon(weapon));
     if (!candidates.length) return { mainWeapon: null, offhandWeapon: null };
     if (candidates.length === 1) return { mainWeapon: candidates[0], offhandWeapon: null };
@@ -115,7 +115,7 @@ const pickBestOneHandPair = (weapons: any[] = [], requiredWeapon = null) => {
     return bestPair;
 };
 
-export const getNextEquipmentState = (equip: any = {}, item) => {
+export const getNextEquipmentState = (equip: any = {}, item: any) => {
     if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return { ...equip };
 
     const nextEquip = { ...equip };
@@ -173,7 +173,7 @@ export const isMagicWeapon = (weapon: any) => {
 };
 
 export const getEquippedWeapons = (equip: any = {}) => {
-    const list = [];
+    const list: any[] = [];
     if (isWeapon(equip.weapon)) list.push({ slot: 'main', weapon: equip.weapon });
     if (isWeapon(equip.offhand)) list.push({ slot: 'offhand', weapon: equip.offhand });
     return list;
@@ -202,7 +202,7 @@ const buildWeaponSkill = ({ slot, weapon }: any) => {
 };
 
 export const getWeaponMagicSkills = (equip: any = {}) => {
-    const skills = [];
+    const skills: any[] = [];
     const seen = new Set();
 
     getEquippedWeapons(equip).forEach((entry: any) => {

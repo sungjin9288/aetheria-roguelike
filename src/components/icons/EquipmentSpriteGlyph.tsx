@@ -864,7 +864,7 @@ const renderWeaponGlyph = (profile: any, mode: any) => {
     );
 };
 
-const renderArmorGlyph = (profile, part = 'full', mode) => {
+const renderArmorGlyph = (profile: any, part: any = 'full', mode: any) => {
     const ink = getInk(profile);
     const head = mode === 'avatar'
         ? <ArmorHeadAvatar style={profile.headgearStyle} ink={ink} />

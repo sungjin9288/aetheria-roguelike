@@ -98,7 +98,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             const oldChoice = player.skillChoices?.[skillName] || '기본';
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: p => ({
+                payload: (p: any) => ({
                     ...p,
                     gold: (p.gold || 0) - cost,
                     skillChoices: { ...(p.skillChoices || {}), [skillName]: newChoice },

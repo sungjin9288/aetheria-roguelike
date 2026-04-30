@@ -89,7 +89,7 @@ export const validateSynthesis = (items: any, playerGold: any) => {
  * @param {boolean} useProtect - 프리미엄 보호 사용 여부
  * @returns {{ success: boolean, outputItem?: Object, returnedItems: Object[], goldSpent: number, premiumSpent: number }}
  */
-export const performSynthesis = (items, selectedOutput = null, useProtect = false) => {
+export const performSynthesis = (items: any, selectedOutput: any = null, useProtect: any = false) => {
     const type = items[0].type;
     const tier = items[0].tier;
     const goldCost = BALANCE.SYNTHESIS_GOLD_COSTS[tier] || 0;
@@ -108,7 +108,7 @@ export const performSynthesis = (items, selectedOutput = null, useProtect = fals
         return {
             success: true,
             outputItem: output,
-            returnedItems: [],
+            returnedItems: [] as any[],
             goldSpent: goldCost,
             premiumSpent,
         };
@@ -120,7 +120,7 @@ export const performSynthesis = (items, selectedOutput = null, useProtect = fals
 
     return {
         success: false,
-        outputItem: null,
+        outputItem: null as any,
         returnedItems,
         goldSpent: goldCost,
         premiumSpent,
@@ -133,7 +133,7 @@ export const performSynthesis = (items, selectedOutput = null, useProtect = fals
  * @returns {{ type: string, tier: number, rarity: string, items: Object[], count: number }[]}
  */
 export const getSynthesisGroups = (inventory: any) => {
-    const groups = {};
+    const groups: Record<string, any> = {};
 
     for (const item of inventory) {
         if (!isSynthesizable(item)) continue;

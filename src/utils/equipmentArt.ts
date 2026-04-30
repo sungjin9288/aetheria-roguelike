@@ -125,7 +125,7 @@ const getWeaponStyle = (item: any) => {
     return getWeaponVisualKey(item);
 };
 
-export const getEquipmentArtProfile = (item, slotHint = null, fallbackArmorStyle = 'coat') => {
+export const getEquipmentArtProfile = (item: any, slotHint: any = null, fallbackArmorStyle: any = 'coat') => {
     if (!item) {
         return {
             slot: slotHint || 'none',
