@@ -84,7 +84,7 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     const playerForEnemyTurn = turnTick.updatedPlayer;
                     dispatch({ type: AT.SET_PLAYER, payload: playerForEnemyTurn });
 
-                    const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, result.updatedEnemy, stats);
+                    const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, result.updatedEnemy as any, stats);
                     counterResult.logs.forEach((log: any) => addLog(log.type, log.text));
                     dispatch({ type: AT.SET_ENEMY, payload: counterResult.updatedEnemy });
                     dispatch({ type: AT.SET_PLAYER, payload: counterResult.updatedPlayer });
@@ -94,7 +94,7 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     if (counterResult.isEnemyDead) {
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                         dispatch({ type: AT.SET_ENEMY, payload: null });
-                        addLog('success', MSG.COMBAT_DOT_KILL(result.updatedEnemy.name));
+                        addLog('success', MSG.COMBAT_DOT_KILL(result.updatedEnemy?.name));
                         handleVictoryOutcome({
                             playerAfterCombat: counterResult.updatedPlayer,
                             deadEnemy: result.updatedEnemy,

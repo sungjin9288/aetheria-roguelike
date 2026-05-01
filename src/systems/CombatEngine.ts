@@ -1,3 +1,4 @@
+import type { Monster } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
@@ -20,11 +21,11 @@ export const CombatEngine = {
     DEFAULT_META: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
     DEFAULT_COMBAT_FLAGS: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
 
-    resolveEnemyBaseName(enemy: any) {
+    resolveEnemyBaseName(enemy: Monster) {
         return _resolveEnemyBaseName(enemy);
     },
 
-    getElementMultiplier(elem: any, enemy: any) {
+    getElementMultiplier(elem: any, enemy: Monster) {
         if (!elem || elem === 'physical' || elem === 'none') return 1;
         if (enemy?.weakness && enemy.weakness === elem) return BALANCE.ELEMENT_WEAK_MULT;
         if (enemy?.resistance && enemy.resistance === elem) return BALANCE.ELEMENT_RESIST_MULT;
@@ -121,7 +122,7 @@ export const CombatEngine = {
      * 스킬 effect 값을 적 오브젝트에 상태이상으로 적용합니다.
      * blind / fear / curse / taunt / stun / freeze / poison / burn / bleed 처리.
      */
-    applyStatusEffectToEnemy(enemy: any, effect: any) {
+    applyStatusEffectToEnemy(enemy: Monster, effect: any) {
         if (!effect) return enemy;
         switch (effect) {
             case 'blind':
@@ -153,7 +154,7 @@ export const CombatEngine = {
      * 적의 상태이상 틱을 처리합니다. 매 적 행동 전에 호출하세요.
      * DoT 피해, 상태 턴 감소, 만료 처리를 수행합니다.
      */
-    tickEnemyStatus(enemy: any, logs: any[] = [], curseAmpMult = 1, synergyDotMult = 1) {
+    tickEnemyStatus(enemy: Monster, logs: any[] = [], curseAmpMult = 1, synergyDotMult = 1) {
         let updated = { ...enemy };
 
         // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
@@ -283,7 +284,7 @@ export const CombatEngine = {
         return { updatedPlayer: updated, logs };
     },
 
-    attack(player: any, enemy: any, stats: any) {
+    attack(player: any, enemy: Monster, stats: any) {
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
         const logs: any[] = [];
@@ -312,7 +313,7 @@ export const CombatEngine = {
 
         // 유물: 처형자의 날 (execute_bonus) — 적 HP 25% 미만 시 추가 피해
         const exRelic = relics.find((r: any) => r.effect === 'execute_bonus');
-        const executeTriggered = Boolean(exRelic && enemy.hp / (enemy.maxHp || 1) < exRelic.val.threshold);
+        const executeTriggered = Boolean(exRelic && (enemy.hp ?? 0) / (enemy.maxHp || 1) < exRelic.val.threshold);
         let finalDamage = executeTriggered
             ? Math.floor(damage * (1 + exRelic.val.mult))
             : damage;
@@ -340,7 +341,7 @@ export const CombatEngine = {
         // 유물: 예언의 돌판 (execute_atk) — 보스 HP 25% 이하 시 ATK 2배
         const executeAtkRelic = relics.find((r: any) => r.effect === 'execute_atk');
         let executeAtkTriggered = false;
-        if (executeAtkRelic && enemy.isBoss && enemy.hp / Math.max(1, enemy.maxHp || 1) < (executeAtkRelic.threshold || 0.25)) {
+        if (executeAtkRelic && enemy.isBoss && (enemy.hp ?? 0) / Math.max(1, enemy.maxHp || 1) < (executeAtkRelic.threshold || 0.25)) {
             finalDamage = Math.floor(finalDamage * (executeAtkRelic.val || 2.0));
             executeAtkTriggered = true;
         }
@@ -363,7 +364,7 @@ export const CombatEngine = {
             }
         }
 
-        const newEnemyHp = enemy.hp - finalDamage;
+        const newEnemyHp = (enemy.hp ?? 0) - finalDamage;
         const tags: any[] = [];
         if (enemy.guarding) tags.push('방어 격파');
         if (elementMultiplier > 1) tags.push('속성 약점');
@@ -411,7 +412,7 @@ export const CombatEngine = {
         };
     },
 
-    performSkill(player: any, enemy: any, stats: any, skill: any) {
+    performSkill(player: any, enemy: Monster, stats: any, skill: any) {
         if (!skill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
@@ -489,7 +490,7 @@ export const CombatEngine = {
         const lowHpMultSkill = (lowHpDmgRelicSkill && player.hp / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP) < (lowHpDmgRelicSkill.threshold || 0.4))
             ? (lowHpDmgRelicSkill.val || 1.4) : 1;
         const totalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
-        const newEnemyHp = enemy.hp - totalDamage;
+        const newEnemyHp = (enemy.hp ?? 0) - totalDamage;
 
         // logs 선언을 status effect 검사 이전으로 이동 (use-before-declaration 버그 수정).
         const logs: Array<{ type: string; text: string }> = [{
@@ -500,7 +501,7 @@ export const CombatEngine = {
         // 적에게 상태이상 부여 (#5)
         // stun/freeze/poison/burn/bleed/blind/fear/curse/taunt 통합 처리
         const STATUS_EFFECTS_TO_ENEMY = ['stun', 'freeze', 'poison', 'burn', 'bleed', 'blind', 'fear', 'curse', 'taunt'];
-        let postEffectEnemy = { ...enemy, hp: newEnemyHp, guarding: false };
+        let postEffectEnemy: Monster = { ...enemy, hp: newEnemyHp, guarding: false };
         const effectLabels: Record<string, string> = { stun: '기절', freeze: '빙결', poison: '독', burn: '화상', bleed: '출혈', blind: '실명', fear: '공포', curse: '저주', taunt: '도발' };
         if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect)) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
@@ -661,7 +662,7 @@ export const CombatEngine = {
         };
     },
 
-    enemyAttack(player: any, enemy: any, stats: any) {
+    enemyAttack(player: any, enemy: Monster, stats: any) {
         let updatedEnemy = { ...enemy };
         let updatedPlayer = { ...player };
         const logs: any[] = [];
@@ -679,7 +680,7 @@ export const CombatEngine = {
         updatedEnemy = enemyTickResult.updatedEnemy;
         enemyTickResult.logs.forEach((l: any) => logs.push(l));
         // DoT로 인해 이미 사망한 경우
-        if (updatedEnemy.hp <= 0) {
+        if ((updatedEnemy.hp ?? 0) <= 0) {
             return { updatedPlayer, updatedEnemy, damage: 0, isDead: false, isEnemyDead: true, logs };
         }
 
@@ -694,7 +695,7 @@ export const CombatEngine = {
 
         // ── Phase 전환 체크 (보스 + 엘리트 통합) ───────────────────
         if (updatedEnemy.isBoss || updatedEnemy.isElite) {
-            const hpRatio = updatedEnemy.hp / Math.max(1, updatedEnemy.maxHp || updatedEnemy.hp);
+            const hpRatio = (updatedEnemy.hp ?? 0) / Math.max(1, updatedEnemy.maxHp || (updatedEnemy.hp ?? 1));
             const statusLabels: Record<string, string> = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주' };
 
             // Phase 3 (원시의 신 등 3페이즈 보스, threshold 25%)
@@ -705,7 +706,7 @@ export const CombatEngine = {
                     updatedEnemy = {
                         ...updatedEnemy,
                         name: p3.name,
-                        atk: Math.floor(updatedEnemy.atk * (1 + p3.atkBonus)),
+                        atk: Math.floor((updatedEnemy.atk ?? 0) * (1 + (p3.atkBonus ?? 0))),
                         pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p3.pattern },
                         phase3Triggered: true,
                     };
@@ -734,7 +735,7 @@ export const CombatEngine = {
                     updatedEnemy = {
                         ...updatedEnemy,
                         name: p2.name,
-                        atk: Math.floor(updatedEnemy.atk * (1 + p2.atkBonus)),
+                        atk: Math.floor((updatedEnemy.atk ?? 0) * (1 + (p2.atkBonus ?? 0))),
                         pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p2.pattern },
                         phase2Triggered: true,
                     };
@@ -797,7 +798,7 @@ export const CombatEngine = {
         const absoluteReflectSyn = activeSynergies.find((s: any) => s.bonus.reflect);
         const reflectMult = absoluteReflectSyn ? (absoluteReflectSyn.bonus.reflect || 0.3) : (reflectRelic ? reflectRelic.val : 0);
         const reflectDmg = (reflectRelic || absoluteReflectSyn) ? Math.floor(stats.def * reflectMult) : 0;
-        const enemyHpAfterReflect = reflectDmg > 0 ? Math.max(0, updatedEnemy.hp - reflectDmg) : updatedEnemy.hp;
+        const enemyHpAfterReflect = reflectDmg > 0 ? Math.max(0, (updatedEnemy.hp ?? 0) - reflectDmg) : (updatedEnemy.hp ?? 0);
         if (reflectDmg > 0) {
             updatedEnemy = { ...updatedEnemy, hp: enemyHpAfterReflect };
             logs.push({ type: 'event', text: `[반사] 반사 피해 ${reflectDmg}!` });
@@ -810,7 +811,7 @@ export const CombatEngine = {
 
         // atkMult: blind / fear / curse에 의한 적 공격력 감소 (#5)
         const enemyAtkMult = updatedEnemy.atkMult ?? 1;
-        const rawEnemyAtk = updatedEnemy.atk * mult * enemyAtkMult;
+        const rawEnemyAtk = (updatedEnemy.atk ?? 0) * mult * enemyAtkMult;
         // 최소 피해량: 원래 공격력의 10% (DEF 스택으로 완전 무효화 방지, 고DEF 빌드 보상)
         const minEnemyDmg = Math.max(1, Math.floor(rawEnemyAtk * 0.10));
         const enemyDmg = Math.max(minEnemyDmg, Math.floor(rawEnemyAtk - stats.def));
@@ -850,13 +851,13 @@ export const CombatEngine = {
         };
     },
 
-    attemptEscape(enemy: any, stats: any) {
+    attemptEscape(enemy: Monster, stats: any) {
         const success = Math.random() > BALANCE.ESCAPE_CHANCE;
         if (success) {
             return { success: true, logs: [{ type: 'info', text: MSG.ESCAPE_SUCCESS }] };
         }
 
-        const enemyDmg = Math.max(1, enemy.atk - stats.def);
+        const enemyDmg = Math.max(1, (enemy.atk ?? 0) - stats.def);
         return {
             success: false,
             damage: enemyDmg,
@@ -923,10 +924,10 @@ export const CombatEngine = {
         };
     },
 
-    handleVictory(player: any, enemy: any, passiveBonus: any = {}) {
+    handleVictory(player: any, enemy: Monster, passiveBonus: any = {}) {
         const p = { ...player };
         const relics = p.relics || [];
-        const baseName = this.resolveEnemyBaseName(enemy);
+        const baseName: string = this.resolveEnemyBaseName(enemy) || '';
         const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
         const bossBrief = enemy.isBoss ? BOSS_BRIEFS[baseName] : null;
 
@@ -946,9 +947,9 @@ export const CombatEngine = {
         const enemyLevel = enemy.level || 1;
         const levelGap = Math.max(0, playerLevel - enemyLevel - 9);
         const levelPenalty = Math.max(0.3, 1 - levelGap * 0.07);
-        const expGained = Math.floor(enemy.exp * expMult * killExpMult * challengeRewardMult);
+        const expGained = Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult);
         const noGold = p.challengeModifiers?.includes('noGold');
-        const goldGained = Math.floor(enemy.gold * goldMult * killGoldMult * levelPenalty * (noGold ? 0.5 : 1) * challengeRewardMult);
+        const goldGained = Math.floor((enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty * (noGold ? 0.5 : 1) * challengeRewardMult);
 
         p.gold += goldGained;
 
@@ -982,7 +983,7 @@ export const CombatEngine = {
         }
 
         const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
-        const essenceGain = Math.max(1, Math.floor(enemy.exp / 8));
+        const essenceGain = Math.max(1, Math.floor((enemy.exp ?? 0) / 8));
         meta.essence += essenceGain;
         logs.push({ type: 'event', text: MSG.LEGACY_ESSENCE(essenceGain) });
 
@@ -1055,7 +1056,7 @@ export const CombatEngine = {
         return syncQuestProgress(player, enemyName, DB.QUESTS);
     },
 
-    processLoot(enemy: any, player: any = null, signaturePityMult: any = 1.0) {
+    processLoot(enemy: Monster, player: any = null, signaturePityMult: any = 1.0) {
         return _processLoot(enemy, player, signaturePityMult);
     },
 
@@ -1063,12 +1064,12 @@ export const CombatEngine = {
      * 적의 다음 행동을 예측하여 텔레그래프 메시지를 반환합니다.
      * CombatPanel에서 UI 경고 표시에 사용.
      */
-    predictEnemyNextAction(enemy: any) {
-        if (!enemy || enemy.hp <= 0) return null;
+    predictEnemyNextAction(enemy: Monster) {
+        if (!enemy || (enemy.hp ?? 0) <= 0) return null;
         if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: '기절 중 — 행동 불가', color: 'blue' };
 
         // 보스 Phase 2 전환 임박 체크
-        const hpRatio = enemy.hp / Math.max(1, enemy.maxHp || enemy.hp);
+        const hpRatio = (enemy.hp ?? 0) / Math.max(1, enemy.maxHp || (enemy.hp ?? 1));
         if (enemy.isBoss && !enemy.phase2Triggered && enemy.phase2 && hpRatio <= BALANCE.BOSS_PHASE2_THRESHOLD + 0.1) {
             return { type: 'phase2_imminent', label: `⚡ Phase 2 임박 — ${enemy.phase2?.name || '형태 변환'}`, color: 'purple' };
         }

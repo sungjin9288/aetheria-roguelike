@@ -1,3 +1,4 @@
+import type { Monster } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
@@ -12,10 +13,10 @@ import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
  * @param {Object} enemy
  * @returns {string}
  */
-export const resolveEnemyBaseName = (enemy: any) => {
+export const resolveEnemyBaseName = (enemy: Monster) => {
     if (!enemy) return '';
     if (enemy.baseName) return enemy.baseName;
-    if (LOOT_TABLE[enemy.name]) return enemy.name;
+    if (LOOT_TABLE[enemy.name as string]) return enemy.name as string;
     const parts = String(enemy.name || '').split(' ');
     return parts.length > 1 ? parts.slice(1).join(' ') : (enemy.name || '');
 };
@@ -28,7 +29,7 @@ export const resolveEnemyBaseName = (enemy: any) => {
  * @param {number} [signaturePityMult=1.0] - signature 드롭에만 적용되는 pity 배율
  * @returns {{ items: Object[], logs: Object[] }}
  */
-export const processLoot = (enemy: any, player: any = null, signaturePityMult: any = 1.0) => {
+export const processLoot = (enemy: Monster, player: any = null, signaturePityMult: any = 1.0) => {
     const items: any[] = [];
     const logs: any[] = [];
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
@@ -40,7 +41,7 @@ export const processLoot = (enemy: any, player: any = null, signaturePityMult: a
     const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
 
     // 강화 드롭 테이블 우선 참조
-    const enrichedList = DROP_TABLES[lootKey] || DROP_TABLES[enemy.name];
+    const enrichedList = DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string];
     if (enrichedList) {
         enrichedList.forEach((entry: any) => {
             // Signature 아이템에만 pity 배율 적용 (일반 아이템 드롭률은 변동 없음)
@@ -66,7 +67,7 @@ export const processLoot = (enemy: any, player: any = null, signaturePityMult: a
     }
 
     // 레거시 LOOT_TABLE 폴백
-    const lootList = LOOT_TABLE[lootKey] || LOOT_TABLE[enemy.name];
+    const lootList = LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string];
     if (!lootList || lootList.length === 0) return { items: [], logs: [] };
 
     lootList.forEach((itemName: any) => {
