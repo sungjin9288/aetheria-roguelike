@@ -681,7 +681,24 @@ async function main() {
       }
     });
 
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+    // cycle 65: preview 서버가 미기동이거나 다른 포트에 떠 있을 때 명확한 안내
+    // 메시지를 제공한다. 기존에는 ERR_CONNECTION_REFUSED만 보여 디버깅이 느렸음.
+    try {
+      await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+    } catch (error) {
+      const msg = error?.message || '';
+      if (msg.includes('ERR_CONNECTION_REFUSED') || msg.includes('net::')) {
+        throw new Error(
+          `${msg}\n\n` +
+          `[smoke] preview 서버에 연결할 수 없습니다 (${targetUrl}).\n` +
+          `[smoke] 다음 중 하나를 먼저 실행하세요:\n` +
+          `[smoke]   - npm run preview -- --port 4173 --host 127.0.0.1 (백그라운드)\n` +
+          `[smoke]   - 또는 --url http://localhost:5173 같은 활성 dev/preview URL\n` +
+          `[smoke]   - 또는 AETHERIA_SMOKE_URL 환경변수로 다른 포트 지정`
+        );
+      }
+      throw error;
+    }
     await page.waitForFunction(() => typeof window.render_game_to_text === 'function', undefined, { timeout: 25000 });
     await waitForState(page, (state) => state.bootStage === 'ready', 'boot stage ready', 25000);
 
