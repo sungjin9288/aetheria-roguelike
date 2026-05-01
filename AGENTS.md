@@ -57,6 +57,11 @@
 - `--url http://localhost:5173` 같은 활성 dev/preview URL 인자
 - `AETHERIA_SMOKE_URL` 환경변수로 다른 포트 지정
 
+### 통합 검증 — npm run verify / verify:full
+
+- `npm run verify` (cycle 67): `type-check + lint + test:unit + build:guard` 4 gate를 한 번에 실행. preview 서버 불필요.
+- `npm run verify:full` (cycle 73): `verify` 통과 후 `local-playtest.sh`를 통해 preview 서버를 자동 기동/정리하면서 smoke desktop + smoke mobile + e2e까지 추가 실행. CI나 RC 체크포인트에서 한 번에 모든 게이트를 검증할 때 사용. 동적 포트로 fallback되면 `PLAYWRIGHT_BASE_URL`이 자동 전달됨.
+
 ## Close-Out
 
 - Report the last completed QA checkpoint from `tasks/todo.md`.

@@ -17,7 +17,9 @@ export default defineConfig({
     reporter: [['list']],
     timeout: 30_000,
     use: {
-        baseURL: 'http://localhost:4173',
+        // cycle 73: PLAYWRIGHT_BASE_URL 환경변수 우선. 기본 preview 포트(4173)
+        // 충돌로 fallback될 때 local-playtest.sh가 동적 포트를 전달.
+        baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4173',
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
     },

@@ -107,5 +107,18 @@ if [[ "${AETHERIA_RUN_PERF:-0}" == "1" ]]; then
   node scripts/perf-guard.mjs --url "${URL}" --mobile
 fi
 
+# cycle 73: AETHERIA_RUN_E2E=1로 Playwright E2E도 함께 실행 (옵트인).
+# Playwright는 baseURL을 playwright.config.ts에서 정해두므로, 다른 포트일 때만
+# PLAYWRIGHT_BASE_URL을 명시하면 됨. 기본 4173에 fallback이 동일하므로
+# preview가 동적 포트로 fallback되었을 때만 override.
+if [[ "${AETHERIA_RUN_E2E:-0}" == "1" ]]; then
+  log_step "e2e (preview ${URL})"
+  if [[ "${PORT}" != "${REQUESTED_PORT}" ]]; then
+    PLAYWRIGHT_BASE_URL="${URL}" npm run test:e2e
+  else
+    npm run test:e2e
+  fi
+fi
+
 log_step "done"
 echo "Local playtest smoke completed: ${URL}"
