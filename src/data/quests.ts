@@ -276,4 +276,10 @@ export const ACHIEVEMENTS: any = [
     { id: 'ach_sig_20',       title: '모든 전설의 증인',  desc: 'dedicated signature 20종 전부 발견',   target: 'signaturesDiscovered', goal: 20, reward: { gold: 150000, item: '신화 전설 영혼', premiumCurrency: 30 } },
     { id: 'ach_sig_set_1',    title: '세트의 완성',       desc: 'signature 세트 1개 완성(멤버 전원 수집)', target: 'signatureSetsCompleted', goal: 1, reward: { gold: 25000, item: '세트 완성의 증표' } },
     { id: 'ach_sig_set_all',  title: '전설의 집대성',     desc: '모든 signature 세트 완성',              target: 'signatureSetsCompleted', goal: 5, reward: { gold: 250000, item: '에테르 집대성의 왕관', premiumCurrency: 100 } },
+
+    // ── 도주 업적 (cycle 74: stats.escapes 신규 카운터) ───────────────────────
+    // 도주는 "겁쟁이"가 아니라 "런 보존" — 위험 인지 + 자원 관리 지표로 인정.
+    { id: 'ach_escape_5',  title: '신중한 모험가',  desc: '전투 도주 5회 성공',  target: 'escapes', goal: 5,  reward: { gold: 800 } },
+    { id: 'ach_escape_20', title: '생존의 본능',    desc: '전투 도주 20회 성공', target: 'escapes', goal: 20, reward: { gold: 4000, item: '엘릭서' } },
+    { id: 'ach_escape_50', title: '회피의 달인',    desc: '전투 도주 50회 성공', target: 'escapes', goal: 50, reward: { gold: 15000, item: '엘릭서' } },
 ];

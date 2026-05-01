@@ -127,7 +127,16 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                 escapeResult.logs.forEach((log: any) => addLog(log.type, log.text));
                 if (escapeResult.success) {
                     const escHpRatio = (player.hp || 0) / Math.max(1, player.maxHp || 1);
-                    dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('escape', escHpRatio)) }) });
+                    // cycle 74: stats.escapes 증분 — 성공한 도주 횟수 누적.
+                    // 기존에는 recentBattles에만 기록되어 윈도우(50) 밖으로 밀려나면
+                    // 사라졌고, achievement / quest target으로 쓸 수 없었음.
+                    dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
+                        ...p,
+                        stats: {
+                            ...pushBattleRecord(p.stats, makeBattleRecord('escape', escHpRatio)),
+                            escapes: (p.stats?.escapes || 0) + 1,
+                        },
+                    }) });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                     dispatch({ type: AT.SET_ENEMY, payload: null });
                 } else {
