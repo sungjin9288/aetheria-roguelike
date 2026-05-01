@@ -47,6 +47,18 @@ export const syncQuestProgress = (player: Player, enemyName: any = '', questCata
             return { ...quest, progress: Math.min(questData.goal, current) };
         }
 
+        // cycle 63: signature 도감 진행 — codex.weapons/armors/shields 합집합 크기로 산출.
+        // checkTitles의 signaturesDiscovered cond.type와 동일한 근사.
+        if (questData.type === 'signature_collect' && questData.target === 'signaturesDiscovered') {
+            const codex: any = (player.stats as any)?.codex || {};
+            const seen = new Set([
+                ...Object.keys(codex.weapons || {}),
+                ...Object.keys(codex.armors || {}),
+                ...Object.keys(codex.shields || {}),
+            ]);
+            return { ...quest, progress: Math.min(questData.goal, seen.size) };
+        }
+
         if (questData.target === 'Level') {
             return { ...quest, progress: player.level };
         }

@@ -172,6 +172,11 @@ export const QUESTS: any = [
     { id: 152, title: '에테르 폐허 완전 탐험',  desc: '에테르 폐허 20회 탐험',           type: 'explore_count', target: 'explores', goal: 20, reward: { exp: 0, gold: 5000, title: '에테르 탐험가' },   minLv: 70 },
     { id: 153, title: '공허의 회랑 정복',       desc: '공허의 회랑 15회 탐험',           type: 'explore_count', target: 'explores', goal: 15, reward: { exp: 0, gold: 6000, title: '공허의 방랑자' },   minLv: 70 },
     { id: 154, title: '종말을 넘어서',          desc: '종말의 기사 3회 처치',            target: '종말의 기사',     goal: 3,  reward: { exp: 25000, gold: 15000, title: '종말의 정복자' }, minLv: 75 },
+
+    // ── cycle 63: 신규 탐험 / 발견 챌린지 (3개) ──────────────────────────────
+    { id: 200, title: '대륙의 발자취',  type: 'explore_count', desc: '50번 탐색 후 새 칭호 획득', target: 'explores',    goal: 50,  reward: { exp: 8000,  gold: 12000 }, minLv: 5 },
+    { id: 201, title: '지도 완성가',    type: 'discovery_count', desc: '15곳 발견', target: 'discoveries', goal: 15, reward: { exp: 25000, gold: 30000, title: '지도 제작자' }, minLv: 25 },
+    { id: 202, title: '전설 기록자',    desc: 'signature 도감 15종 발견', type: 'signature_collect', target: 'signaturesDiscovered', goal: 15, reward: { exp: 50000, gold: 60000, title: '전설의 기록자' }, minLv: 40 },
 ];
 
 
