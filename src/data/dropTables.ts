@@ -414,4 +414,13 @@ export const DROP_TABLES: any = {
         { item: '어둠의 정수', rate: 0.3 },
         { item: '고대 각인석', rate: 0.15 },
     ],
+
+    // cycle 68: 신성한 호수 mid-game 보스 드롭. 자연/냉기 element 보상 중심.
+    '고대 호수의 수호신': [
+        { item: '중급 체력 물약', rate: 0.6 },
+        { item: '상급 마나 물약', rate: 0.45 },
+        { item: '자연의 결정', rate: 0.55, qty: [1, 2] },
+        { item: '마나 결정', rate: 0.5, qty: [1, 2] },
+        { item: '엘릭서', rate: 0.18 },
+    ],
 };

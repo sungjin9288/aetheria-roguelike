@@ -646,6 +646,25 @@ export const MONSTERS: any = {
         phase2: { name: '분노한 종말의 기사', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '종말의 기사가 파멸의 검을 뽑아듭니다! 전장 전체가 검은 화염에 휩싸입니다!', statusEffect: 'burn' },
         phase3: { name: '종말의 화신', threshold: 0.2, atkBonus: 1.1, defBonus: 25, pattern: { guardChance: 0.0, heavyChance: 0.82 }, log: '기사가 종말 그 자체로 변모합니다! 이것이 최후의 전투입니다!', statusEffect: 'curse' },
     },
+    // cycle 68: 신성한 호수의 mid-game 보스. Lv 7~15 구간 진입자에게 보스 경험을
+    // 일찍 제공해 cycle 67까지의 칭호/체인 흐름과 자연스러운 시너지.
+    '고대 호수의 수호신': {
+        isBoss: true,
+        weakness: '어둠',
+        resistance: '냉기',
+        hpMult: 1.45,
+        atkMult: 1.18,
+        expMult: 1.4,
+        goldMult: 1.4,
+        pattern: { guardChance: 0.28, heavyChance: 0.18 },
+        phase2: {
+            name: '각성한 호수의 수호신',
+            atkBonus: 0.32,
+            pattern: { guardChance: 0.12, heavyChance: 0.42 },
+            log: '수호신이 호수의 진정한 힘을 해방합니다! 물결이 사방에서 솟구칩니다!',
+            statusEffect: 'freeze',
+        },
+    },
 };
 
 export const BOSS_BRIEFS: Record<string, any> = Object.freeze({
@@ -837,6 +856,15 @@ export const BOSS_BRIEFS: Record<string, any> = Object.freeze({
         rewardHint: '종말 계열 전설 장비와 최상위 보상을 얻을 수 있는 최종급 보스입니다.',
         warningChips: ['3페이즈', '파멸의 검', '종말 변모'],
         recommendedBuilds: ['방패 요새', '양손 파쇄', '비전 공명']
+    },
+    '고대 호수의 수호신': {
+        signature: '높은 가드와 회복 압박',
+        entryHint: '어둠 속성 또는 빠른 폭딜 수단을 갖춘 뒤 진입하면 회복 페이즈를 끊기 쉽습니다.',
+        counterHint: '어둠 속성과 단기 화력이 가드 사이의 빈 턴을 노리는 데 효과적입니다.',
+        phaseHint: 'HP 50% 이하에서 각성하여 빙결 상태이상이 도입됩니다. 회복 슬롯 또는 빙결 저항을 비축하세요.',
+        rewardHint: '초회 토벌 보너스 + 호수 계열 전리품 (자연/냉기 무기) 파밍 가치가 있는 mid-game 보스입니다.',
+        warningChips: ['높은 가드', '빙결 누적'],
+        recommendedBuilds: ['양손 파쇄', '비전 공명']
     }
 });
 
