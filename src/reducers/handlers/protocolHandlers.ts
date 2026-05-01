@@ -1,8 +1,9 @@
 import { applyDailyProtocolProgress } from './helpers';
+import type { GameState, GameAction } from '../gameReducer';
 
 export const protocolActionMap = {
     // ── Daily Protocol ────────────────────────────────────────────────────
-    SET_DAILY_PROTOCOL: (state: any, action: any) => ({
+    SET_DAILY_PROTOCOL: (state: GameState, action: GameAction) => ({
         ...state,
         player: {
             ...state.player,
@@ -11,7 +12,7 @@ export const protocolActionMap = {
         syncStatus: 'syncing',
     }),
 
-    UPDATE_DAILY_PROTOCOL: (state: any, action: any) => {
+    UPDATE_DAILY_PROTOCOL: (state: GameState, action: GameAction) => {
         const { type: dpType, amount = 1 } = action.payload;
         if (!state.player.stats?.dailyProtocol) return state;
         return {
@@ -22,7 +23,7 @@ export const protocolActionMap = {
     },
 
     // ── Weekly Protocol ───────────────────────────────────────────────────
-    UPDATE_WEEKLY_PROTOCOL: (state: any, action: any) => {
+    UPDATE_WEEKLY_PROTOCOL: (state: GameState, action: GameAction) => {
         const { type: wpType, amount: wpAmount = 1 } = action.payload;
         const wp = state.player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] };
         const key = wpType === 'kills' ? 'kills' : wpType === 'explores' ? 'explores' : wpType === 'bossKills' ? 'bossKills' : null;
@@ -34,7 +35,7 @@ export const protocolActionMap = {
         };
     },
 
-    CLAIM_WEEKLY_MISSION: (state: any, action: any) => {
+    CLAIM_WEEKLY_MISSION: (state: GameState, action: GameAction) => {
         const { missionId, reward } = action.payload;
         const wp = state.player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] };
         if ((wp.claimed || []).includes(missionId)) return state;

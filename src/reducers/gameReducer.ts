@@ -93,20 +93,23 @@ export const INITIAL_STATE: GameState = {
     publicGraves: [],
 };
 
+// --- REDUCER ---
+export interface GameAction {
+    type: string;
+    payload?: any;
+}
+
+type ActionHandler = (state: GameState, action: GameAction) => GameState;
+type ActionMap = Record<string, ActionHandler>;
+
 // --- ACTION MAP ---
-const ACTION_MAP: any = {
+const ACTION_MAP: ActionMap = {
     ...bootstrapActionMap,
     ...uiActionMap,
     ...entityActionMap,
     ...makeProgressionActionMap(INITIAL_STATE),
     ...featureActionMap,
 };
-
-// --- REDUCER ---
-export interface GameAction {
-    type: string;
-    payload?: any;
-}
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
     const handler = ACTION_MAP[action.type];

@@ -1,13 +1,14 @@
 import { sanitizeQuickSlots } from './helpers';
+import type { GameState, GameAction } from '../gameReducer';
 
 export const bootstrapActionMap = {
-    SET_BOOT_STAGE: (state: any, action: any) =>
+    SET_BOOT_STAGE: (state: GameState, action: GameAction) =>
         ({ ...state, bootStage: action.payload }),
 
-    SET_UID: (state: any, action: any) =>
+    SET_UID: (state: GameState, action: GameAction) =>
         ({ ...state, uid: action.payload }),
 
-    LOAD_DATA: (state: any, action: any) => {
+    LOAD_DATA: (state: GameState, action: GameAction) => {
         const loadedPlayer = { ...state.player, ...action.payload.player };
         return {
             ...state,
@@ -26,9 +27,9 @@ export const bootstrapActionMap = {
         };
     },
 
-    SET_LIVE_CONFIG: (state: any, action: any) =>
+    SET_LIVE_CONFIG: (state: GameState, action: GameAction) =>
         ({ ...state, liveConfig: { ...state.liveConfig, ...action.payload } }),
 
-    SET_LEADERBOARD: (state: any, action: any) =>
+    SET_LEADERBOARD: (state: GameState, action: GameAction) =>
         ({ ...state, leaderboard: action.payload }),
 };
