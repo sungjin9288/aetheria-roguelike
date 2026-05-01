@@ -7,6 +7,74 @@
 
 ---
 
+## Cycle 77 — 도주/생존 칭호 2종 + escapes cond.type
+
+- 콘텐츠: 신규 칭호 2종 (`cautious_explorer` HP+20·DEF+1 / `survivor_instinct` HP+40·DEF+2·MP+10).
+- 시스템: `gameUtils.checkTitles`에 `type === 'escapes'` 분기 추가.
+- 디자인 의도: ironman(공격적 무사망)과 짝을 이루는 보수적 위험 회피 운영 축.
+
+검증: tsc 0 / unit 592 / lint clean.
+
+## Cycle 76 — escape_count 퀘스트 2종 + questProgress 핸들러
+
+- 콘텐츠: 신규 퀘스트 2종 (id 203 「신중한 모험」 escapes 5 Lv5+ / id 204 「생존의 기술」 escapes 20 Lv15+ + 엘릭서).
+- 시스템: `questProgress`에 `type === 'escape_count' && target === 'escapes'` 분기 추가.
+- 결과: 도주 카운터가 ACHIEVEMENTS(74)+QUESTS(76)+TITLES(77) 3 시스템에서 1급 시민이 됨.
+
+검증: tsc 0 / unit 589 / lint clean.
+
+## Cycle 75 — signaturesDiscovered 카운트 정확도 (codex 합 → REGISTRY 교집합)
+
+- 시스템: `checkTitles`의 `signaturesDiscovered` 분기와 `questProgress`의 `signature_collect` 분기가 모두 codex 합집합 크기로 근사하던 것을 `countDiscoveredSignatures(player)` 정확 카운트로 교체.
+- 영향: cycle 61의 `legend_seeker` (5종) / `legend_chronicler` (15종) 칭호와 cycle 63의 quest 202가 의도보다 일찍 풀리던 부풀림 회귀 수정.
+- 테스트 갱신: 실제 SIGNATURE_REGISTRY 등록 이름(성검 에테르니아 / 마왕의 대낫 / 라그나로크 등)으로 픽스처 교체.
+
+검증: tsc 0 / unit 587 / lint clean.
+
+## Cycle 74 — stats.escapes 카운터 + 도주 성공 achievement 3종
+
+- 시스템: 도주 성공 시 `stats.escapes += 1` 누적 (기존엔 recentBattles 50개 윈도우에만 푸시되어 윈도우 밖에서 사라짐).
+- INITIAL_STATE.player.stats.escapes = 0 default 추가.
+- 콘텐츠: ACHIEVEMENTS 3종 (`ach_escape_5/20/50` — 신중한 모험가 / 생존의 본능 / 회피의 달인).
+
+검증: tsc 0 / unit 587 / lint clean.
+
+## Cycle 73 — verify:full 통합 + Playwright dynamic baseURL
+
+- 인프라: `npm run verify:full` 신규 (verify 통과 → preview 자동 기동 → smoke desktop+mobile + e2e). `local-playtest.sh` `AETHERIA_RUN_E2E=1` 옵트인 추가.
+- 인프라: `playwright.config.ts` baseURL이 `process.env.PLAYWRIGHT_BASE_URL` 우선 (동적 포트 fallback 호환).
+- 문서: AGENTS.md "통합 검증" 섹션 추가.
+
+## Cycle 72 — TS/TSX 파일 lint coverage 갭 메우기
+
+- 시스템: cycle 58 TS 마이그레이션 이후 src/는 `.ts/.tsx`만 남았으나 eslint config가 `.js/.jsx`만 매칭하던 인프라 갭 발견. `typescript-eslint` 8.x 도입 + `src/**/*.{ts,tsx}` lint block 신설.
+- 코드 위생 자동 수정: `prefer-const` 2건 (exploreUtils / gameUtils).
+- 추가 정리 (phase 2): SmartInventory의 `[(player.inv || [])]` 의존성을 `[player.inv]`로 교체 (매 렌더 새 배열 생성 → useMemo 무력화 잠재 회귀 4 사이트 수정). GameRoot retroactive title useEffect는 narrowed deps 의도된 패턴으로 명시.
+- react-hooks 7+ 신규 strict 규칙(`refs` / `set-state-in-effect`)은 testing harness 패턴 등 기존 의도된 코드와 충돌해 warning으로 완화.
+- 결과: 0 errors / 4 warnings.
+
+## Cycle 71 — hidden boss spawn 트리거 버그 수정
+
+- 시스템: `exploreUtils.spawnEnemy`의 `hiddenBossChecks` 루프가 `mapData.name === loc`로 비교했으나, mapData는 DB.MAPS[player.loc]로 가져와지며 `.name` 필드가 설정된 적이 없어 항상 undefined. 결과: 시간의 파수꾼(시간술사 Lv40+ 공중 신전), 원한의 용사(last_hero 체인 3단계 + 지하 미궁), 공허의 군주(abyssFloor 100+ 금지된 도서관) 3종 hidden boss가 영원히 spawn되지 않던 잠재 회귀.
+- 수정: `mapData.name === loc` → `player.loc === loc`. 회귀 가드 +3개 (스폰 / 직업 미달 / 위치 미달).
+
+## Cycle 70 — Bestiary / MonsterCodex / Codex의 boss-only 누락 버그 수정
+
+- 시스템: 3개 컴포넌트가 `map.monsters`만 보고 `map.boss` / `map.bossMonsters`는 무시 → boss-only 몬스터(예: 고대 호수의 수호신, 하수도의 여왕)가 도감 진행 % / 위치 표시에서 사라짐. `collectMapEncounters(map)` inline helper로 합집합. `boss: true/false` legendary 플래그는 string 필터에서 silently 제외.
+- 회귀 가드: 모든 MAPS의 boss 타입 + 신성한 호수 boss 인식 +5개.
+
+## Cycle 69 — signature drop 연결 + mapSignatureHints boss 필드 버그 수정
+
+- 콘텐츠: 고대 호수의 수호신 드롭 풀에 `심해의 수호복` rate 0.03 추가 (심연 크라켄 Lv50+ 0.06이 주 경로, mid-game 보조 경로 노출). cycle 11-29 anticipate→drop 체인을 mid-game에서도 재현.
+- 시스템: `mapSignatureHints.buildMapIndex`가 `map.monsters`만 보고 `map.boss/bossMonsters`는 무시하던 버그 수정. MapNavigator의 ✦N 칩과 미발견 안내가 정확해짐.
+
+## Cycle 68 — 신규 mid-game 보스 "고대 호수의 수호신" 완전 통합
+
+- 콘텐츠: 신성한 호수(Lv7) mid-game 보스 신규. 5개 데이터 소스 일괄 등록 — MONSTERS(isBoss + phase2 빙결) / BOSS_BRIEFS 7개 키 / BOSS_MONSTERS 자동 derive / MAPS.boss 필드 / DROP_TABLES (5개 드롭).
+- 진행 곡선: 기존 mid-game 보스(하수도의 여왕 Lv10, 전초기지 사령관 Lv18) 사이의 Lv7 구간 첫 보스 경험 제공.
+
+검증: tsc 0 / unit 570 / smoke 통과.
+
 ## Cycle 67 — 의존성 + 안내 메시지 + 통합 검증 + 문서 동기화
 
 - 콘텐츠: 탐색/유틸 유물 3종 (`방랑자의 부적` uncommon · `상인의 인장` rare · `운명의 결정` rare). 기존 `event_chance / gold_mult / drop_rate` 핸들러 재사용으로 CombatEngine 영향 없음.
