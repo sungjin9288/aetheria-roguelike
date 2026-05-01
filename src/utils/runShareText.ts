@@ -33,6 +33,17 @@ export const buildRunShareText = (s: any) => {
         signatureLine = `\n${head}${detail}`;
     }
 
+    // cycle 65: 빌드 + 난이도 라벨 — 자랑 텍스트에 플레이 스타일 노출
+    const primaryBuild = s?.primaryBuild;
+    const difficultyLabel = s?.difficultyLabel;
+    let buildLine = '';
+    if (primaryBuild || difficultyLabel) {
+        const parts: string[] = [];
+        if (primaryBuild) parts.push(`🎯 빌드: ${primaryBuild}`);
+        if (difficultyLabel) parts.push(`📊 ${difficultyLabel}`);
+        buildLine = `\n${parts.join(' · ')}`;
+    }
+
     return `⚔️ AETHERIA RUN ENDED
 ─────────────────────
 ${titlePrefix}${job} Lv.${level}
@@ -41,7 +52,7 @@ ${titlePrefix}${job} Lv.${level}
 🗡️ 처치: ${kills}마리 (보스 ${bossKills}회)
 💎 유물: ${relicsFound}개 수집
 💰 총 골드: ${totalGold}
-⚡ 프레스티지: ${prestigeRank}랭크${signatureLine}
+⚡ 프레스티지: ${prestigeRank}랭크${buildLine}${signatureLine}
 
 #에테리아 #AetheriaRPG #로그라이크`;
 };

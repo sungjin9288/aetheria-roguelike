@@ -97,3 +97,37 @@ test('RunSummaryCard delegates clipboard text to buildRunShareText', async () =>
         'RunSummaryCard should call buildRunShareText to produce clipboard text'
     );
 });
+
+// cycle 65: primaryBuild + difficultyLabel 라인 자랑 텍스트 추가.
+test('buildRunShareText includes primaryBuild + difficulty when provided', () => {
+    const text = buildRunShareText({
+        ...baseSummary,
+        primaryBuild: '쌍수 연격',
+        difficultyLabel: '균형',
+    });
+    assert.ok(text.includes('쌍수 연격'), 'primaryBuild missing');
+    assert.ok(text.includes('균형'), 'difficultyLabel missing');
+    assert.ok(text.includes('🎯'), 'build emoji missing');
+    assert.ok(text.includes('📊'), 'difficulty emoji missing');
+});
+
+test('buildRunShareText silently omits build line when both fields missing', () => {
+    const text = buildRunShareText({
+        ...baseSummary,
+        primaryBuild: undefined,
+        difficultyLabel: undefined,
+    });
+    assert.ok(!text.includes('🎯'), 'build emoji should be silent');
+    assert.ok(!text.includes('📊'), 'difficulty emoji should be silent');
+});
+
+test('buildRunShareText shows only primaryBuild when difficulty missing', () => {
+    const text = buildRunShareText({
+        ...baseSummary,
+        primaryBuild: '비전 공명',
+        difficultyLabel: null,
+    });
+    assert.ok(text.includes('비전 공명'));
+    assert.ok(text.includes('🎯'));
+    assert.ok(!text.includes('📊'), 'difficulty emoji silent without label');
+});
