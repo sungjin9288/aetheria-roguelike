@@ -1,6 +1,7 @@
 import { DB } from '../data/db';
+import type { Player } from '../types/index.js';
 
-export const parseCommand = (input: any, gameState: any, player: any, actions: any) => {
+export const parseCommand = (input: any, gameState: any, player: Player, actions: any) => {
   if (!input || !input.trim()) return;
 
   const tokens = input.trim().replace(/^\//, '').split(' ');
@@ -88,7 +89,7 @@ export const parseCommand = (input: any, gameState: any, player: any, actions: a
 
     case 'shop':
     case '상점':
-      if (DB.MAPS[player.loc]?.type === 'safe') {
+      if (DB.MAPS[player.loc as string]?.type === 'safe') {
         actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
         actions.setGameState('shop');
         return '상점에 입장했습니다.';
@@ -107,13 +108,13 @@ export const parseCommand = (input: any, gameState: any, player: any, actions: a
     case 'inv':
     case '인벤':
       actions.setSideTab('inventory');
-      return `[인벤토리] ${player.inv.length}개 아이템`;
+      return `[인벤토리] ${(player.inv || []).length}개 아이템`;
 
     case 'quest':
     case 'quests':
     case '퀘스트':
       actions.setSideTab('quest');
-      return `[퀘스트] ${player.quests.length}개 진행 중`;
+      return `[퀘스트] ${(player.quests || []).length}개 진행 중`;
 
     case 'map':
     case '지도': {

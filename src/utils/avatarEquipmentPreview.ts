@@ -1,3 +1,4 @@
+import type { Item } from '../types/index.js';
 import { getEquipmentArtProfile } from './equipmentArt.js';
 import { getArmorStyleFromItem, getAvatarLoadoutStyle, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
 import {
@@ -14,7 +15,7 @@ const HEAVY_WEAPON_STYLES = new Set(['greatsword', 'greataxe', 'axe', 'hammer', 
 const DAGGER_WEAPON_STYLES = new Set(['dagger', 'fang-dagger', 'throwing-blade', 'twinblade']);
 const FOCUS_OFFHAND_STYLES = new Set(['grimoire', 'tome', 'tablet', 'scroll', 'book']);
 
-const resolvePreviewArmorStyle = (item: any, profile: any) => {
+const resolvePreviewArmorStyle = (item: Item | null | undefined, profile: any) => {
     if (!item || item.type !== 'armor') return 'coat';
 
     if (profile?.bodyStyle === 'robe') return 'robe';
@@ -27,7 +28,7 @@ const resolvePreviewArmorStyle = (item: any, profile: any) => {
 
 const containsAny = (text: any, patterns: any) => patterns.some((pattern: any) => text.includes(pattern));
 
-const resolvePreviewJobFromArmor = (item: any, profile: any) => {
+const resolvePreviewJobFromArmor = (item: Item | null | undefined, profile: any) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -54,7 +55,7 @@ const resolvePreviewJobFromArmor = (item: any, profile: any) => {
     return '모험가';
 };
 
-const resolvePreviewJobFromWeapon = (item: any, visualKey: any) => {
+const resolvePreviewJobFromWeapon = (item: Item | null | undefined, visualKey: any) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -76,7 +77,7 @@ const resolvePreviewJobFromWeapon = (item: any, visualKey: any) => {
     return '모험가';
 };
 
-const resolvePreviewJobFromOffhand = (item: any, visualKey: any) => {
+const resolvePreviewJobFromOffhand = (item: Item | null | undefined, visualKey: any) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -115,7 +116,7 @@ const withVariant = (baseStage: any, variant: any, overrides: any = {}) => {
     };
 };
 
-export const getEquipmentPreviewStage = (item: any, appearance: any, variant: any = 'default') => {
+export const getEquipmentPreviewStage = (item: Item | null | undefined, appearance: any, variant: any = 'default') => {
     const armorArt = appearance?.armor?.art || null;
     const weaponStyle = appearance?.weapon?.art?.style || appearance?.weapon?.visual || 'none';
     const offhandStyle = appearance?.offhand?.art?.style || appearance?.offhand?.visual || 'none';
@@ -292,7 +293,7 @@ export const getEquipmentPreviewStage = (item: any, appearance: any, variant: an
     });
 };
 
-export const buildEquipmentPreviewAppearance = (item: any) => {
+export const buildEquipmentPreviewAppearance = (item: Item | null | undefined) => {
     const preview: Record<string, any> = {
         job: '모험가',
         frameTone: item?.elem || null,

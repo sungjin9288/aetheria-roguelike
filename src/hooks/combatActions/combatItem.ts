@@ -7,12 +7,13 @@ import { toArray, buildRunSummary } from '../../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { appendGrave } from '../../utils/graveUtils.js';
 import { handleVictoryOutcome } from './combatVictory';
+import type { Item } from '../../types/index.js';
 
 export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
     const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats } = deps;
 
     return {
-        combatUseItem: (item: any) => {
+        combatUseItem: (item: Item) => {
             if (pendingRef.current) { clearTimeout(pendingRef.current); pendingRef.current = null; }
             if (gameState !== GS.COMBAT || !enemy) return addLog('error', MSG.COMBAT_NOT_IN_BATTLE);
 

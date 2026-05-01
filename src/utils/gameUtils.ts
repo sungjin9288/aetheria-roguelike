@@ -1,5 +1,5 @@
 import { ITEMS } from '../data/items.js';
-import type { Player } from "../types/index.js";
+import type { Item, Player } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { getWeaponMagicSkills, isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils.js';
@@ -56,10 +56,10 @@ export const getPassiveSkillBonuses = (player: Player) => {
 const TIER_TO_RARITY: any = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary', 6: 'legendary' };
 
 /** 아이템 등급 반환 (명시적 rarity 우선, 없으면 tier 기반 자동 매핑) */
-export const getItemRarity = (item: any) => item?.rarity || TIER_TO_RARITY[item?.tier] || 'common';
+export const getItemRarity = (item: Item | null | undefined) => item?.rarity || TIER_TO_RARITY[item?.tier ?? 0] || 'common';
 
 /** 아이템 인스턴스 생성 (고유 ID 부여) */
-export const makeItem = (template: any) => ({
+export const makeItem = (template: Item | null | undefined): Item => ({
     ...template,
     id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
 });

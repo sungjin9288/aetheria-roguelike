@@ -1,14 +1,15 @@
 import { getJobSkills } from '../../utils/gameUtils';
 import { getEquipmentProfile, getNextEquipmentState } from '../../utils/equipmentUtils';
 import { MSG } from '../../data/messages';
+import type { Item, Player } from '../../types/index.js';
 
 /**
  * 현재 선택된 스킬 반환. 없으면 null.
  */
-export const getSelectedSkill = (player: any) => {
+export const getSelectedSkill = (player: Player) => {
     const skills = getJobSkills(player);
     if (!skills.length) return null;
-    const selected = Number.isInteger(player.skillLoadout?.selected) ? player.skillLoadout.selected : 0;
+    const selected = Number.isInteger(player.skillLoadout?.selected) ? (player.skillLoadout!.selected as number) : 0;
     const index = ((selected % skills.length) + skills.length) % skills.length;
     return { skill: skills[index], index, total: skills.length };
 };
@@ -16,7 +17,7 @@ export const getSelectedSkill = (player: any) => {
 /**
  * 루트 아이템 중 장비 업그레이드 힌트 계산. 없으면 null.
  */
-export const getLootUpgradeHint = (equip: any = {}, lootItems: any[] = []): any => {
+export const getLootUpgradeHint = (equip: any = {}, lootItems: Item[] = []): any => {
     const equipmentDrops = (lootItems || []).filter((item: any) => ['weapon', 'armor', 'shield'].includes(item?.type));
     if (!equipmentDrops.length) return null;
 

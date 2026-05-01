@@ -13,6 +13,7 @@ import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
 import { isSignatureItem } from '../data/signatureItems.js';
 import { resolveInvasion } from '../utils/graveUtils';
+import type { Item } from '../types/index.js';
 
 /**
  * createInventoryActions — 아이템 사용, 장비, 마켓, 제작, 퀘스트 완료
@@ -34,7 +35,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
 
     return ({
 
-        useItem: (item: any) => {
+        useItem: (item: Item) => {
             const inventoryItem = player.inv.find((entry: any) => entry.id === item.id);
             if (!inventoryItem) return addLog('error', MSG.INV_ITEM_NOT_FOUND);
 
@@ -165,24 +166,25 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             }
         },
 
-        market: (type: any, item: any) => {
+        market: (type: any, item: Item) => {
             if (gameState !== 'shop') return;
             if (type === 'buy') {
-                if (player.gold < item.price) return addLog('error', MSG.GOLD_INSUFFICIENT);
+                const itemPrice = item.price ?? 0;
+                if (player.gold < itemPrice) return addLog('error', MSG.GOLD_INSUFFICIENT);
                 if ((player.inv?.length || 0) >= (player.maxInv || BALANCE.INV_MAX_SIZE)) return addLog('error', MSG.INV_FULL);
                 if (
-                    ['weapon', 'armor', 'shield'].includes(item.type)
+                    ['weapon', 'armor', 'shield'].includes(item.type as string)
                     && Array.isArray(item.jobs)
                     && !item.jobs.includes(player.job)
                 ) {
                     return addLog('error', MSG.EQUIP_JOB_RESTRICT(player.job, item.name));
                 }
 
-                let updatedPlayer = { ...player, gold: player.gold - item.price, inv: [...player.inv, makeItem(item)] };
+                let updatedPlayer = { ...player, gold: player.gold - itemPrice, inv: [...player.inv, makeItem(item)] };
                 updatedPlayer = registerLootToCodex(updatedPlayer, [item]);
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
-                dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: item.price } });
-                emitDailyProtocolLogs('goldSpend', item.price);
+                dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: itemPrice } });
+                emitDailyProtocolLogs('goldSpend', itemPrice);
                 addLog('success', MSG.SHOP_BUY_DONE(item.name));
             } else if (type === 'sell') {
                 // 전설 각인 아이템은 우발적 판매 방지 — 드롭률이 낮고 세트 효과 기반이라
@@ -190,7 +192,7 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 if (isSignatureItem(item)) {
                     return addLog('warning', MSG.SIGNATURE_SELL_BLOCKED(item.name));
                 }
-                const sellPrice = Math.floor(item.price * 0.5);
+                const sellPrice = Math.floor((item.price ?? 0) * 0.5);
                 const newInv = player.inv.filter((entry: any) => entry.id !== item.id);
                 if (newInv.length < player.inv.length) {
                     const updatedPlayer = { ...grantGold(player, sellPrice), inv: newInv };

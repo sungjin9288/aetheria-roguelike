@@ -1,5 +1,5 @@
 import { BALANCE } from '../data/constants.js';
-import type { Player } from "../types/index.js";
+import type { GameMap, Player } from "../types/index.js";
 import { QUESTS } from '../data/quests.js';
 import { getDiscoveryOdds, getMapPacingProfile } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
@@ -29,10 +29,10 @@ const getActiveQuestEntries = (player: Player) => (
 );
 
 const clampPercent = (value: any) => Math.max(0, Math.min(100, Math.round(value * 100)));
-const getMapLevel = (map: any, playerLevel: any = 1) => (
+const getMapLevel = (map: GameMap | null | undefined, playerLevel: any = 1) => (
     map?.level === 'infinite'
         ? Math.max((playerLevel || 1) + 8, 50)
-        : (map?.minLv ?? map?.level ?? 1)
+        : (map?.minLv ?? (typeof map?.level === 'number' ? map.level : 1))
 );
 const getVisitedMaps = (player: Player) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
 
@@ -131,7 +131,7 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
     };
 };
 
-export const getMoveRecommendations = (player: Player, stats: any, currentMap: any, maps: any = {}) => {
+export const getMoveRecommendations = (player: Player, stats: any, currentMap: GameMap | null | undefined, maps: Record<string, GameMap> = {}) => {
     if (!currentMap?.exits?.length) return [];
 
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);

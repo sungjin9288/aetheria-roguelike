@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { getItemRarity } from './gameUtils.js';
 import { isSignatureItem } from '../data/signatureItems.js';
+import type { Item } from '../types/index.js';
 
 /**
  * synthesisUtils.js — 아이템 합성 순수 함수
@@ -13,8 +14,8 @@ const SYNTH_TYPES: any = ['weapon', 'armor', 'shield'];
 /**
  * 합성 가능한 아이템인지 확인
  */
-export const isSynthesizable = (item: any) =>
-    item && SYNTH_TYPES.includes(item.type) && item.tier >= 1 && item.tier <= 5;
+export const isSynthesizable = (item: Item | null | undefined) =>
+    Boolean(item && SYNTH_TYPES.includes(item.type) && (item.tier ?? 0) >= 1 && (item.tier ?? 0) <= 5);
 
 /**
  * 주어진 type + tier 조합의 상위 tier 결과 후보 목록
@@ -37,7 +38,7 @@ export const getSynthesisOutputs = (inputType: any, inputTier: any) => {
  * @param {number} playerGold - 보유 골드
  * @returns {{ valid: boolean, reason?: string, tier?: number, type?: string, outputs?: Object[], goldCost?: number, successRate?: number }}
  */
-export const validateSynthesis = (items: any, playerGold: any) => {
+export const validateSynthesis = (items: Item[] | null | undefined, playerGold: any) => {
     const required = BALANCE.SYNTHESIS_INPUT_COUNT;
 
     if (!items || items.length !== required) {
@@ -57,8 +58,8 @@ export const validateSynthesis = (items: any, playerGold: any) => {
 
     // 같은 type + tier인지
     const type = items[0].type;
-    const tier = items[0].tier;
-    if (!items.every((item: any) => item.type === type && item.tier === tier)) {
+    const tier = items[0].tier ?? 0;
+    if (!items.every((item: any) => item.type === type && (item.tier ?? 0) === tier)) {
         return { valid: false, reason: 'MISMATCH' };
     }
 

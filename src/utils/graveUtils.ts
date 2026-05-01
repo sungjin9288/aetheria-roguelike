@@ -1,5 +1,5 @@
-import type { Player } from '../types/index.js';
-const createGraveItem = (item: any) => ({
+import type { Item, Player } from '../types/index.js';
+const createGraveItem = (item: Item) => ({
     ...item,
     id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
 });

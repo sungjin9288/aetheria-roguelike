@@ -158,7 +158,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
               {/* 가능한 결과물 미리보기 */}
               {outputs.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-purple-500/10">
-                  <div className="text-[10px] text-purple-400/60 mb-1.5">T{validation.tier + 1} 결과 후보</div>
+                  <div className="text-[10px] text-purple-400/60 mb-1.5">T{(validation.tier ?? 0) + 1} 결과 후보</div>
                   <div className="flex flex-wrap gap-1.5">
                     {outputs.slice(0, 6).map((o: any) => (
                       <span

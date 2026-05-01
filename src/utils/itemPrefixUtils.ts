@@ -1,6 +1,7 @@
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { getItemStatText } from './equipmentUtils';
+import type { Item } from '../types/index.js';
 
 const normalizeItemType = (type: any) => {
     if (type === 'shield') return 'armor';
@@ -15,14 +16,14 @@ const supportsPrefixStat = (normalizedType: any, prefixStat: any) => {
     return false;
 };
 
-const formatStatText = (item: any, normalizedType: any) => {
+const formatStatText = (item: Item, normalizedType: any) => {
     if (normalizedType === 'weapon' || normalizedType === 'armor') return getItemStatText(item);
     if (normalizedType === 'hp') return `HP+${item.val}`;
     if (normalizedType === 'mp') return `MP+${item.val}`;
     return item.desc_stat || '';
 };
 
-const getPrefixCandidates = (item: any) => {
+const getPrefixCandidates = (item: Item | null | undefined) => {
     const normalizedType = normalizeItemType(item?.type);
     const supportedTypes = ['weapon', 'armor', 'hp', 'mp'];
     if (!supportedTypes.includes(normalizedType)) return [];
@@ -36,8 +37,8 @@ const getPrefixCandidates = (item: any) => {
     });
 };
 
-const applyPrefixStats = (item: any, prefix: any) => {
-    const next = { ...item };
+const applyPrefixStats = (item: Item, prefix: any) => {
+    const next: Record<string, any> = { ...item };
     const normalizedType = normalizeItemType(next.type);
 
     if (prefix.stat === 'atk' && normalizedType === 'weapon') {
@@ -56,7 +57,7 @@ const applyPrefixStats = (item: any, prefix: any) => {
     return next;
 };
 
-export const applyItemPrefix = (item: any, options: any = {}) => {
+export const applyItemPrefix = (item: any, options: any = {}): any => {
     if (!item || item.prefixed) return item;
 
     const chance = typeof options.chance === 'number' ? options.chance : BALANCE.ITEM_PREFIX_CHANCE;

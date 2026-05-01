@@ -1,4 +1,4 @@
-import type { Monster } from '../types/index.js';
+import type { Item, Monster } from '../types/index.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import type { Player } from "../types/index.js";
 import { getDifficultyMults, calcPerformanceScore, countLowHpWins } from '../systems/DifficultyManager.js';
@@ -25,9 +25,9 @@ const relicEffectsOf = (player: Player) => new Set((player?.relics || []).map((r
 const hasProfileTag = (profile: any, id: any) => profile?.primary?.id === id || (profile?.tags || []).some((tag: any) => tag.id === id);
 const labelTag = (id: any) => ARCHETYPE_LABELS[id] || id;
 const toPercent = (value: any = 0) => `${Math.round(value * 100)}%`;
-const hasAnyJob = (item: any, jobs: any[] = []) => Array.isArray(item?.jobs) && jobs.some((job: any) => item.jobs.includes(job));
-const isConsumableType = (item: any) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type);
-const hasElement = (item: any) => Boolean(item?.elem && item.elem !== '물리');
+const hasAnyJob = (item: Item | null | undefined, jobs: any[] = []) => Array.isArray(item?.jobs) && jobs.some((job: any) => item?.jobs?.includes(job));
+const isConsumableType = (item: Item | null | undefined) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type as string);
+const hasElement = (item: Item | null | undefined) => Boolean(item?.elem && item.elem !== '물리');
 
 // --- Class build functions ---
 
@@ -268,7 +268,7 @@ export const getTraitPassiveParts = (traitProfile: any) => {
     return parts;
 };
 
-export const getTraitItemResonance = (item: any, traitProfile: any, player: Player | null = null) => {
+export const getTraitItemResonance = (item: Item | null | undefined, traitProfile: any, player: Player | null = null) => {
     if (!item) return { score: 0, label: null, reasons: [], summary: null };
 
     const traitId = traitProfile?.id || 'balanced';
@@ -321,7 +321,7 @@ export const getTraitItemResonance = (item: any, traitProfile: any, player: Play
         case 'balanced':
         default:
             if (isConsumableType(item)) { score += 2; reasons.push('범용 보급'); }
-            if (['weapon', 'armor', 'shield'].includes(item?.type)) { score += 1; reasons.push('범용 장비'); }
+            if (['weapon', 'armor', 'shield'].includes(item?.type as string)) { score += 1; reasons.push('범용 장비'); }
             if (hasAnyJob(item, ['모험가'])) { score += 1; reasons.push('모험가 장비 장착 가능'); }
             break;
     }
