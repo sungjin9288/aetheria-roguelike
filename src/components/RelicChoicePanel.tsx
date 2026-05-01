@@ -2,10 +2,10 @@ import { AT } from '../reducers/actionTypes';
 import { RARITY_COLORS } from '../data/titles';
 import { RELIC_SYNERGIES } from '../data/relics';
 import SignalBadge from './SignalBadge';
-import type { Player } from '../types/index.js';
+import type { Player, Relic } from '../types/index.js';
 
 interface RelicChoicePanelProps {
-    pendingRelics?: any[] | null;
+    pendingRelics?: Relic[] | null;
     dispatch: (action: any) => void;
     player?: Player | null;
 }
@@ -115,7 +115,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
 
     const ownedRelics = player?.relics || [];
 
-    const handleSelect = (relic: any) => {
+    const handleSelect = (relic: Relic) => {
         dispatch({ type: AT.ADD_RELIC, payload: relic });
     };
 

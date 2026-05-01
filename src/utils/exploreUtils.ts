@@ -1,4 +1,4 @@
-import type { GameMap, Monster } from '../types/index.js';
+import type { GameMap, Monster, Relic } from '../types/index.js';
 import type { Player } from '../types/index.js';
 /**
  * exploreUtils.js — explore() 로직 분리 모듈 (Phase 1-B)
@@ -59,7 +59,7 @@ export const resetDailyProtocolIfNeeded = (player: Player, dispatch: any) => {
 // 2. 탐색 이벤트 롤 — 아노말리, 열쇠 이벤트, 유물 발견 처리 (Phase 1-B)
 // 반환값: 'event_triggered' | 'relic_found' | 'anomaly' | 'nothing' | null (계속 진행)
 // ─────────────────────────────────────────────────────────────────────────
-export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRelics: any, { dispatch, addLog, getFullStats }: any) => {
+export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRelics: Relic[], { dispatch, addLog, getFullStats }: any) => {
     const discoveryOdds = getDiscoveryOdds(player, mapData);
     const hasKey = (player.inv || []).some((i: any) => i.name === '잊혀진 열쇠');
     if (hasKey && (typeof mapData.level === 'number' && mapData.level >= 10) && Math.random() < discoveryOdds.keyEventChance) {
@@ -110,7 +110,7 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
 // ─────────────────────────────────────────────────────────────────────────
 // 3. 몬스터 스탯 생성 + 접두어 부여 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: any, { addLog }: any) => {
+export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: any) => {
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
 
@@ -229,7 +229,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: any, 
 // ─────────────────────────────────────────────────────────────────────────
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const applyBattleStartRelics = (player: Player, playerRelics: any, fullStats: any, { addLog }: any) => {
+export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog }: any) => {
     let combatStartPlayer = {
         ...player,
         combatFlags: {

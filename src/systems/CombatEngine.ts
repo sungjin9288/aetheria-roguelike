@@ -1,4 +1,4 @@
-import type { Monster } from '../types/index.js';
+import type { Monster, Relic } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
@@ -52,7 +52,7 @@ export const CombatEngine = {
         return { ...this.DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
     },
 
-    getEffectiveMaxMp(player: any, relics: any[] = []) {
+    getEffectiveMaxMp(player: any, relics: Relic[] = []) {
         const rmp = 1 + relics.reduce((acc: any, relic: any) => {
             if (relic.effect === 'mp_mult') return acc + relic.val;
             if (relic.effect === 'omega') return acc + relic.val;
@@ -61,7 +61,7 @@ export const CombatEngine = {
         return Math.floor((player?.maxMp || 50) * rmp);
     },
 
-    applyCritMpRestore(player: any, relics: any[] = [], logs: any[] = []) {
+    applyCritMpRestore(player: any, relics: Relic[] = [], logs: any[] = []) {
         const critMpRelic = relics.find((relic: any) => relic.effect === 'crit_mp_regen');
         if (!critMpRelic) return player;
 
@@ -72,7 +72,7 @@ export const CombatEngine = {
         return { ...player, mp: nextMp };
     },
 
-    applyFatalProtection(player: any, relics: any[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
+    applyFatalProtection(player: any, relics: Relic[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
 

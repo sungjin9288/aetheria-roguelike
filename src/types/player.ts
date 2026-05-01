@@ -145,7 +145,7 @@ export interface Player {
     status?: any[];
     skillLoadout?: SkillLoadout;
     meta?: PlayerMeta & { [key: string]: any };
-    relics?: any[];
+    relics?: import('./relic.js').Relic[];
     titles?: string[];
     activeTitle?: string | null;
     combatFlags?: CombatFlags;
