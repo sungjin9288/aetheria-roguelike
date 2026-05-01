@@ -522,6 +522,8 @@ export const checkTitles = (player: Player) => {
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
         if (type === 'explores')       return ((player.stats as any)?.explores || 0) >= val;
         if (type === 'discoveries')    return ((player.stats as any)?.discoveries || 0) >= val;
+        // cycle 77: 도주 카운터 기반 칭호 (cautious_explorer / survivor_instinct).
+        if (type === 'escapes')        return ((player.stats as any)?.escapes || 0) >= val;
         if (type === 'signaturesDiscovered') {
             // cycle 75: codex 합집합 크기 근사 → SIGNATURE_REGISTRY 교집합 정확 카운트로 교체.
             // 기존 근사는 일반 weapon/armor/shield까지 포함되어 칭호가 의도보다 일찍 풀렸음.

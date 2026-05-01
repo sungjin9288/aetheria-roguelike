@@ -93,3 +93,24 @@ test('checkTitles partial retroactive (일부만 충족)', () => {
     assert.ok(!unlocked.includes('wanderer'), 'wanderer 유지 (재해금 안 됨)');
     assert.ok(!unlocked.includes('cartographer'), 'cartographer 미달');
 });
+
+// cycle 77: 도주 카운터 기반 칭호 (cycle 74의 stats.escapes 활용).
+test('checkTitles unlocks cautious_explorer at escapes >= 10', () => {
+    const player = { titles: [], stats: { escapes: 10 } };
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('cautious_explorer'));
+});
+
+test('checkTitles unlocks survivor_instinct at escapes >= 50', () => {
+    const player = { titles: [], stats: { escapes: 50 } };
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('cautious_explorer'), '10도 함께 풀림');
+    assert.ok(unlocked.includes('survivor_instinct'));
+});
+
+test('checkTitles does not unlock survival titles below threshold', () => {
+    const player = { titles: [], stats: { escapes: 5 } };
+    const unlocked = checkTitles(player);
+    assert.ok(!unlocked.includes('cautious_explorer'));
+    assert.ok(!unlocked.includes('survivor_instinct'));
+});

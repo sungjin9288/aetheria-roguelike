@@ -244,6 +244,22 @@ export const TITLES = Object.freeze([
         cond: { type: 'signaturesDiscovered', val: 15 },
         color: 'text-amber-200',
     },
+
+    // ─── 도주/생존 계열 (cycle 77 신규) ───────────────────────────────────
+    // cycle 74의 stats.escapes 카운터를 기반. ironman(noDeathWin)과 짝을 이루는
+    // "런 보존" 축. 도주는 가치 있는 행동이라는 메시지를 칭호로도 강화.
+    {
+        id: 'cautious_explorer',
+        name: '신중한 모험가',
+        cond: { type: 'escapes', val: 10 },
+        color: 'text-sky-300',
+    },
+    {
+        id: 'survivor_instinct',
+        name: '생존의 본능',
+        cond: { type: 'escapes', val: 50 },
+        color: 'text-sky-200',
+    },
 ]);
 
 // 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
@@ -282,6 +298,11 @@ export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     cartographer:     { hp: 25, mp: 15, label: 'HP +25 · MP +15' },
     legend_seeker:    { atk: 2, crit: 0.01, label: 'ATK +2 · CRIT +1%' },
     legend_chronicler:{ atk: 4, crit: 0.02, hp: 20, label: 'ATK +4 · CRIT +2% · HP +20' },
+
+    // cycle 77 신규 도주/생존 칭호 패시브 — 위험 회피 운영을 보상.
+    // ironman(공격적 무사망)과 대조되는 보수적 빌드의 정체성: HP/DEF 중심.
+    cautious_explorer:{ hp: 20, def: 1, label: 'HP +20 · DEF +1' },
+    survivor_instinct:{ hp: 40, def: 2, mp: 10, label: 'HP +40 · DEF +2 · MP +10' },
 
     각성자:           { hp: 25, mp: 10, label: 'HP +25 · MP +10' },
     초월자:           { hp: 35, atk: 2, label: 'HP +35 · ATK +2' },
