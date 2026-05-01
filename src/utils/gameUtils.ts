@@ -238,7 +238,10 @@ const isSignatureDiscovered = (itemName: any, player: Player) => {
     return Boolean(codex[bucket]?.[itemName]);
 };
 
-const countDiscoveredSignatures = (player: Player) => {
+// cycle 75: export — checkTitles / questProgress의 signature_collect 핸들러가
+// codex.{weapons,armors,shields} 합집합 크기로 근사하던 것을 정확한
+// SIGNATURE_REGISTRY 교집합 카운트로 교체할 수 있도록 노출.
+export const countDiscoveredSignatures = (player: Player) => {
     let count = 0;
     for (const name of Object.keys(SIGNATURE_REGISTRY_ENTRIES)) {
         if (isSignatureDiscovered(name, player)) count += 1;
@@ -520,15 +523,9 @@ export const checkTitles = (player: Player) => {
         if (type === 'explores')       return ((player.stats as any)?.explores || 0) >= val;
         if (type === 'discoveries')    return ((player.stats as any)?.discoveries || 0) >= val;
         if (type === 'signaturesDiscovered') {
-            // signature 도감 진행도 — Codex weapons/armors/shields 교집합으로 산출.
-            const codex = (player.stats as any)?.codex || {};
-            const seen = new Set([
-                ...Object.keys(codex.weapons || {}),
-                ...Object.keys(codex.armors || {}),
-                ...Object.keys(codex.shields || {}),
-            ]);
-            // signatureRegistry 정확 매칭이 어려워 codex 항목 수로 근사 — 충분히 보수적.
-            return seen.size >= val;
+            // cycle 75: codex 합집합 크기 근사 → SIGNATURE_REGISTRY 교집합 정확 카운트로 교체.
+            // 기존 근사는 일반 weapon/armor/shield까지 포함되어 칭호가 의도보다 일찍 풀렸음.
+            return countDiscoveredSignatures(player) >= val;
         }
         return false;
     }).map((t: any) => t.id);

@@ -31,19 +31,27 @@ test('checkTitles unlocks cartographer at discoveries >= 10', () => {
     assert.ok(unlocked.includes('cartographer'), 'cartographer unlocked');
 });
 
-test('checkTitles unlocks legend_seeker via codex signature count', () => {
-    const player = {
-        titles: [],
-        stats: {
-            codex: {
-                weapons: { '낙뢰의 검': true, '심연검': true },
-                armors: { '용골 갑주': true },
-                shields: { '수호 방패': true, '심해의 방패': true },
-            },
-        },
-    };
+// cycle 75: codex 합집합 근사 → SIGNATURE_REGISTRY 교집합 정확 카운트로 교체.
+// 테스트는 실제 등록된 signature 5종으로 카운트를 채워 legend_seeker(5종) 트리거.
+test('checkTitles unlocks legend_seeker via 5 real signatures discovered', () => {
+    // isSignatureDiscovered가 DB.ITEMS에서 type을 조회 후 적절한 codex 버킷으로
+    // 라우팅하므로, 테스트는 모든 버킷에 동일 이름을 넣어 어떤 type이든 매칭되게 함.
+    const realSignatures = [
+        '성검 에테르니아',
+        '마왕의 대낫',
+        '라그나로크',
+        '세계수의 지팡이',
+        '천공 성전',
+    ];
+    const codex = { weapons: {}, armors: {}, shields: {} };
+    for (const name of realSignatures) {
+        codex.weapons[name] = true;
+        codex.armors[name] = true;
+        codex.shields[name] = true;
+    }
+    const player = { titles: [], stats: { codex } };
     const unlocked = checkTitles(player);
-    assert.ok(unlocked.includes('legend_seeker'), 'legend_seeker unlocked at 5 codex entries');
+    assert.ok(unlocked.includes('legend_seeker'), 'legend_seeker unlocked at 5 real signatures');
 });
 
 test('checkTitles does not re-unlock owned titles', () => {
