@@ -7,12 +7,13 @@ import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
+import type { Player } from '../types/index.js';
 
 interface ShopPanelProps {
-    player: any;
+    player: Player;
     actions?: any;
-    shopItems?: any;
-    setGameState?: any;
+    shopItems?: any[];
+    setGameState?: (state: string) => void;
     stats?: any;
     mobileFocused?: boolean;
     onOpenArchiveConsole?: any;
@@ -105,7 +106,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     const [sellConfirmId, setSellConfirmId] = useState<any>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
     const [purchaseNotice, setPurchaseNotice] = useState('');
-    const loc = player.loc;
+    const loc = player.loc || '';
     const expansionKey = `${loc}:${shopMode}`;
 
     const maxTier = getShopMaxTier(loc);
@@ -116,7 +117,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     );
 
     const currentJob = player.job;
-    const currentGold = player.gold;
+    const currentGold = player.gold ?? 0;
     const inventoryHasRoom = (player.inv?.length || 0) < (player.maxInv || BALANCE.INV_MAX_SIZE);
     const buyItemsExpanded = buyItemsExpansion.key === expansionKey && buyItemsExpansion.expanded;
 
@@ -127,7 +128,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     }, [purchaseNotice]);
 
     const buyItems = useMemo(() => {
-        return shopItems
+        return (shopItems || [])
             .filter((item: any) => (item.tier || 1) <= maxTier)
             .map((item: any) => {
                 const affordable = currentGold >= item.price;
@@ -155,7 +156,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     }, [buyItems, buyItemsExpanded]);
 
     const sellItems = useMemo(() => (
-        [...player.inv]
+        [...(player.inv || [])]
             .filter((item: any) => !String(item.id).startsWith('starter_'))
             .sort((a: any, b: any) => (a.price || 0) - (b.price || 0))
     ), [player.inv]);
@@ -169,8 +170,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                 eyebrow="Broker Ledger"
                 title="MARKET"
                 titleClassName="text-[1.1rem] leading-none"
-                meta={`${loc} · T${maxTier} · ${player.inv.length}/${player.maxInv || BALANCE.INV_MAX_SIZE}`}
-                onBack={() => setGameState('idle')}
+                meta={`${loc} · T${maxTier} · ${(player.inv || []).length}/${player.maxInv || BALANCE.INV_MAX_SIZE}`}
+                onBack={() => setGameState?.('idle')}
                 backLabel="복귀"
                 backTestId="shop-close"
                 onOpenArchive={onOpenArchiveConsole}
@@ -218,7 +219,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                         <div className="grid grid-cols-1 gap-2">
                             {dailyDeals.items.map((item: any) => {
                                 const canStore = inventoryHasRoom;
-                                const affordable = player.gold >= item.price;
+                                const affordable = (player.gold ?? 0) >= item.price;
                                 const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job);
                                 const canBuy = canStore && affordable && equipable;
                                 const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
@@ -267,7 +268,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
                                 </div>
                                 {(() => {
                                     const canStore = inventoryHasRoom;
-                                    const affordable = player.gold >= weeklySpecial.price;
+                                    const affordable = (player.gold ?? 0) >= weeklySpecial.price;
                                     const equipable = !isEquipmentItem(weeklySpecial) || !Array.isArray(weeklySpecial.jobs) || weeklySpecial.jobs.includes(player.job);
                                     const canBuy = canStore && affordable && equipable;
                                     const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
