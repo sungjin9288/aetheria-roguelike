@@ -54,3 +54,34 @@ test('checkTitles does not re-unlock owned titles', () => {
     const unlocked = checkTitles(player);
     assert.ok(!unlocked.includes('wanderer'), 'wanderer not re-unlocked');
 });
+
+// cycle 62 phase 3: retroactive 칭호 부여 시나리오 — 기존 save가 신규 칭호 조건을
+// 이미 만족한 상태로 로드되는 경우를 모사. 단일 호출에 여러 칭호가 한 번에 풀려야 함.
+test('checkTitles unlocks multiple new titles in a single call (retroactive load)', () => {
+    const player = {
+        titles: [], // 신규 칭호 미보유 상태
+        stats: {
+            explores: 600, // wanderer + pathfinder 동시 충족
+            discoveries: 12, // cartographer
+        },
+    };
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('wanderer'));
+    assert.ok(unlocked.includes('pathfinder'));
+    assert.ok(unlocked.includes('cartographer'));
+    assert.equal(unlocked.length >= 3, true, 'at least 3 new titles unlocked');
+});
+
+test('checkTitles partial retroactive (일부만 충족)', () => {
+    const player = {
+        titles: ['wanderer'], // 이미 wanderer는 보유
+        stats: {
+            explores: 600, // pathfinder 신규 부여
+            discoveries: 5, // cartographer 미달
+        },
+    };
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('pathfinder'), 'pathfinder unlocked');
+    assert.ok(!unlocked.includes('wanderer'), 'wanderer 유지 (재해금 안 됨)');
+    assert.ok(!unlocked.includes('cartographer'), 'cartographer 미달');
+});
