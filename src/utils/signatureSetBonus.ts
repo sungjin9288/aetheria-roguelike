@@ -28,7 +28,7 @@ const getRegistryEntry = (item: Item | null | undefined) => {
  *   activeSet: { key: string, name: string, tone: string, count: number, desc: string } | null
  * }}
  */
-export const computeSignatureSetBonus = (equip: any) => {
+export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (런타임 동적 슬롯 호환).
     const neutral: any = { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
     if (!equip) return neutral;
 

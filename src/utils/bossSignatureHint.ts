@@ -18,7 +18,7 @@ import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
  * @param {string | null | undefined} baseName - 몬스터의 baseName (prefix 제외)
  * @returns {{ name: string, rate: number }[]} rate 내림차순 정렬
  */
-export const getBossSignatureDrops = (baseName: any) => {
+export const getBossSignatureDrops = (baseName: string | null | undefined) => {
     if (!baseName || typeof baseName !== 'string') return [];
     const entries = DROP_TABLES[baseName];
     if (!Array.isArray(entries)) return [];

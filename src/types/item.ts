@@ -83,9 +83,11 @@ export interface ConsumableItem extends ItemBase {
 export type EquipmentItem = WeaponItem | ArmorItem | ShieldItem;
 export type Item = EquipmentItem | ConsumableItem | ItemBase;
 
-/** 장비 슬롯 (player.equip). */
+/** 장비 슬롯 (player.equip). cycle 60: 임의 Item 할당 호환을 위해 완화. */
 export interface EquipSlots {
-    weapon?: WeaponItem | null;
-    armor?: ArmorItem | null;
-    offhand?: WeaponItem | ShieldItem | null;
+    weapon?: ItemBase | null;
+    armor?: ItemBase | null;
+    offhand?: ItemBase | null;
+    /** 동적으로 추가 가능한 슬롯 (런타임 확장 호환). */
+    [key: string]: any;
 }

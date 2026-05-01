@@ -17,8 +17,8 @@ export const updateStats = (player: Player, statsUpdate: any): Player => ({
  * @param {number} amount - 누적할 값 (기본 1)
  * @returns {Object} 새 player 객체
  */
-export const incrementStat = (player: Player, field: any, amount: any = 1): Player =>
-    updateStats(player, { [field]: (player.stats?.[field] || 0) + amount });
+export const incrementStat = (player: Player, field: string, amount: number = 1): Player =>
+    updateStats(player, { [field]: ((player.stats as any)?.[field] || 0) + amount });
 
 export const EMPTY_TEMP_BUFF: any = {
     atk: 0,

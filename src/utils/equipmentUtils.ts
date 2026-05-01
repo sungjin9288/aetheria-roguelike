@@ -1,4 +1,4 @@
-import type { Item } from '../types/index.js';
+import type { EquipSlots, Item } from '../types/index.js';
 import { BALANCE } from '../data/constants.js';
 import type { Player } from "../types/index.js";
 
@@ -74,7 +74,7 @@ export const getOffhandCritBonus = (item: Item | null | undefined) => {
 
 export const getOffhandMpBonus = (item: Item | null | undefined) => (isShield(item) ? (item?.mp || 0) : 0);
 
-export const getEquipmentProfile = (equip: any = {}) => {
+export const getEquipmentProfile = (equip: EquipSlots = {}) => {
     const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
     const offhandItem = equip.offhand || null;
     const offhandWeapon = isWeapon(offhandItem) ? offhandItem : null;
@@ -117,7 +117,7 @@ const pickBestOneHandPair = (weapons: any[] = [], requiredWeapon: any = null) =>
     return bestPair;
 };
 
-export const getNextEquipmentState = (equip: any = {}, item: Item | null | undefined) => {
+export const getNextEquipmentState = (equip: EquipSlots = {}, item: Item | null | undefined) => {
     if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return { ...equip };
 
     const nextEquip = { ...equip };
@@ -174,7 +174,7 @@ export const isMagicWeapon = (weapon: any) => {
     return MAGIC_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
 };
 
-export const getEquippedWeapons = (equip: any = {}) => {
+export const getEquippedWeapons = (equip: EquipSlots = {}) => {
     const list: any[] = [];
     if (isWeapon(equip.weapon)) list.push({ slot: 'main', weapon: equip.weapon });
     if (isWeapon(equip.offhand)) list.push({ slot: 'offhand', weapon: equip.offhand });
@@ -203,7 +203,7 @@ const buildWeaponSkill = ({ slot, weapon }: any) => {
     };
 };
 
-export const getWeaponMagicSkills = (equip: any = {}) => {
+export const getWeaponMagicSkills = (equip: EquipSlots = {}) => {
     const skills: any[] = [];
     const seen = new Set();
 
