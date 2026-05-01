@@ -35,4 +35,22 @@ test.describe('Navigation', () => {
         // 스킬 카드 또는 Current Loadout 텍스트 노출
         await expect(page.locator('text=/Current Loadout|스킬|선택/').first()).toBeVisible({ timeout: 5_000 });
     });
+
+    // cycle 61 phase 2: 비-default 탭이 lazy-loading 됨 → 클릭 후 콘텐츠 노출까지
+    // Suspense fallback이 잠깐 노출 후 정상 렌더됨을 검증.
+    test('STATS 탭 lazy-loading → 콘텐츠 정상 렌더', async ({ page }) => {
+        const statsTab = page.locator('[data-testid$="-tab-stats"]').first();
+        await expect(statsTab).toBeVisible({ timeout: 8_000 });
+        await statsTab.click();
+        // StatsPanel 안에 항상 노출되는 텍스트 또는 일반 통계 키워드
+        await expect(page.locator('text=/처치|레벨|골드|성향|Stat|Performance/').first()).toBeVisible({ timeout: 8_000 });
+    });
+
+    test('CODEX 탭 lazy-loading → 도감 콘텐츠 노출', async ({ page }) => {
+        const codexTab = page.locator('[data-testid$="-tab-codex"]').first();
+        await expect(codexTab).toBeVisible({ timeout: 8_000 });
+        await codexTab.click();
+        // Codex 안에는 EQUIP/MONSTER/RECIPE 등 sub tab이 항상 노출
+        await expect(page.locator('text=/EQUIP|MONSTER|RECIPE|MATERIAL|LEGEND/').first()).toBeVisible({ timeout: 8_000 });
+    });
 });
