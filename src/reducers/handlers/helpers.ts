@@ -1,4 +1,5 @@
 import { findItemByName, makeItem } from '../../utils/gameUtils';
+import type { Player } from '../../types/index.js';
 
 /**
  * 퀵슬롯을 현재 인벤토리 기준으로 정리합니다.
@@ -13,8 +14,8 @@ export const sanitizeQuickSlots = (slots: any = [], inventory: any = []) => {
 /**
  * 데일리 프로토콜 미션 진행도를 업데이트하고, 완료 시 에센스/아이템 보상을 지급합니다.
  */
-export const applyDailyProtocolProgress = (player: any, type: any, amount: any = 1) => {
-    const dp = player.stats?.dailyProtocol;
+export const applyDailyProtocolProgress = (player: Player, type: any, amount: any = 1) => {
+    const dp = (player.stats as any)?.dailyProtocol;
     if (!dp) return player;
 
     let essenceGain = 0;

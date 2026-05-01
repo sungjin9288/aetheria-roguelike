@@ -371,7 +371,7 @@ const FIRST_VISIT_REWARDS: any = {
  * 지역 첫 방문 여부를 확인하고, 해당되면 보상 객체를 반환합니다.
  * @returns {{ gold: number, exp: number, msg: string } | null}
  */
-export const getFirstVisitReward = (loc: any, player: Player) => {
+export const getFirstVisitReward = (loc: string, player: Player) => {
     const visited = player.stats?.visitedMaps || [];
     if (visited.includes(loc)) return null;
     return FIRST_VISIT_REWARDS[loc] || null;

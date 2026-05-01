@@ -15,6 +15,7 @@
 // 1. 성과 지표 계산
 // ─────────────────────────────────────────────────────────────────────────
 import { BALANCE } from '../data/constants.js';
+import type { Player } from '../types/index.js';
 
 const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
 
@@ -22,8 +23,8 @@ const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
  * 최근 전투 로그에서 성과 지표를 추출합니다.
  * player.stats.recentBattles: Array<{ result: 'win'|'death'|'escape', hpRatio: number }>
  */
-export const calcPerformanceScore = (player: any) => {
-    const battles = (player.stats?.recentBattles || []).slice(-WINDOW);
+export const calcPerformanceScore = (player: Player) => {
+    const battles = ((player.stats as any)?.recentBattles || []).slice(-WINDOW);
     if (battles.length < 5) return 0.5; // 데이터 부족 → 중립
 
     const wins    = battles.filter((b: any) => b.result === 'win').length;
@@ -86,7 +87,7 @@ export const getDifficultyMults = (score: any) => {
  * @param {function} addLog 로그 출력 함수
  * @returns {{ mStats: object, diffLabel: string }}
  */
-export const applyDynamicDifficulty = (mStats: any, player: any, addLog: any) => {
+export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any) => {
     const score = calcPerformanceScore(player);
     const diff  = getDifficultyMults(score);
 
@@ -161,7 +162,7 @@ export const countLowHpWins = (stats: any, threshold: any = 0.2) => {
 /**
  * AI_SERVICE.generateEvent() 호출 시 playerSnapshot에 난이도 정보를 추가합니다.
  */
-export const enrichSnapshotWithDifficulty = (playerSnapshot: any, player: any) => {
+export const enrichSnapshotWithDifficulty = (playerSnapshot: any, player: Player) => {
     const score = calcPerformanceScore(player);
     const diff  = getDifficultyMults(score);
     return {

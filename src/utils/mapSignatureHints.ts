@@ -11,6 +11,7 @@
 import { MAPS } from '../data/maps.js';
 import { DROP_TABLES } from '../data/dropTables.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
+import type { Player } from '../types/index.js';
 
 /**
  * @typedef {{ name: string, rate: number }} MapSignatureDrop
@@ -64,7 +65,7 @@ export const getMapSignatureDrops = (mapName: any) => {
  * @param {{ stats?: { codex?: object } } | null | undefined} player
  * @returns {ReadonlyArray<MapSignatureDrop>}
  */
-export const getMapUndiscoveredSignatures = (mapName: any, player: any) => {
+export const getMapUndiscoveredSignatures = (mapName: any, player: Player | null | undefined) => {
     const drops = getMapSignatureDrops(mapName);
     if (drops.length === 0) return [];
     const codex = player?.stats?.codex || {};

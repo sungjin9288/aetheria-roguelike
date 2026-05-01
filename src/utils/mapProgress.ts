@@ -1,4 +1,4 @@
-import type { GameMap } from '../types/index.js';
+import type { GameMap, Player } from '../types/index.js';
 
 const uniqueList = (values: any = []) => [...new Set(values.filter(Boolean))];
 
@@ -21,7 +21,7 @@ export const getMapCodexProgress = (mapName: any, maps: any, codex: any = {}) =>
     };
 };
 
-export const getMapProgressState = (mapName: any, player: any, maps: any) => {
+export const getMapProgressState = (mapName: any, player: Player | null | undefined, maps: any) => {
     const currentLoc = player?.loc;
     const visitedSet = new Set([...(player?.stats?.visitedMaps || []), currentLoc].filter(Boolean));
     const codex = player?.stats?.codex || {};

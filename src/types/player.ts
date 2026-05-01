@@ -82,8 +82,12 @@ export interface PlayerMeta {
 export interface CombatFlags {
     comboCount?: number;
     deathSaveUsed?: boolean;
+    deathSaveUsedCount?: number;
     voidHeartUsed?: boolean;
     voidHeartArmed?: boolean;
+    echoArmed?: boolean;
+    /** 동적으로 추가되는 임의 플래그 (런타임 확장 호환). */
+    [key: string]: any;
 }
 
 export interface SeasonPassState {

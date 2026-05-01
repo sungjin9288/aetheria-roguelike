@@ -10,7 +10,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 export const createMoveActions = (deps: any, _shared?: any) => {
     const { player, gameState, grave, isAiThinking, liveConfig, dispatch, addLog, addStoryLog } = deps;
     return {
-        move: (loc: any) => {
+        move: (loc: string) => {
             if (isAiThinking) return;
             if (!loc) {
                 const exits = DB.MAPS[player.loc]?.exits?.join(', ') || MSG.MOVE_NO_EXITS;

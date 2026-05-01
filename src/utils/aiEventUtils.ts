@@ -50,7 +50,7 @@ const hashString = (value: any = '') => {
     return Math.abs(hash);
 };
 
-export const getPoolKeyByLocation = (loc: any) => {
+export const getPoolKeyByLocation = (loc: string) => {
     const keyByKeyword = [
         { key: 'forest', words: ['숲'] },
         { key: 'ruins', words: ['폐허', '광산', '신전'] },
@@ -514,7 +514,7 @@ const FALLBACK_EVENT_POOL: any = {
     ],
 };
 
-export const pickFallbackEvent = (loc: any, history: any[] = [], context: any = {}) => {
+export const pickFallbackEvent = (loc: string, history: any[] = [], context: any = {}) => {
     const explicit = FALLBACK_EVENT_POOL[loc];
     const poolKey = explicit ? loc : getPoolKeyByLocation(loc);
     const basePool = explicit || FALLBACK_EVENT_POOL[poolKey] || FALLBACK_EVENT_POOL.default;

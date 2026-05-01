@@ -19,7 +19,7 @@ interface ShopPanelProps {
 }
 
 /** 맵 레벨을 기준으로 상점 최대 아이템 티어 계산 */
-const getShopMaxTier = (loc: any) => {
+const getShopMaxTier = (loc: string) => {
     const mapData = DB.MAPS?.[loc] || {};
     const mapLevel = typeof mapData.level === 'number' ? mapData.level : 1;
     const isSafe = mapData.type === 'safe';

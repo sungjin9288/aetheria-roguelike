@@ -23,6 +23,7 @@
  */
 
 import registrySource from './signatureRegistry.json' with { type: 'json' };
+import type { Player } from '../types/index.js';
 
 // NOTE: 이전 버전에서는 `../utils/itemVisuals.js`의 SPECIAL_ITEM_ICON_KEYS를 import했으나,
 // signatureItems는 src/data 소속(→ game-data 청크)이고 itemVisuals는 utils 소속(기본 청크)이라
@@ -124,7 +125,7 @@ export const getSignatureItemCount = () => {
  * @param {{ stats?: { codex?: object } } | null | undefined} player
  * @returns {{ discovered: number, total: number, percent: number }}
  */
-export const getSignatureDiscoveryProgress = (player: any) => {
+export const getSignatureDiscoveryProgress = (player: Player | null | undefined) => {
     const total = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
     const codex = player?.stats?.codex || null;
     if (!codex) return { discovered: 0, total, percent: 0 };
