@@ -123,8 +123,11 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         // 공허의 군주: 무한 심연 100층 클리어 (금지된 도서관)
         { boss: '공허의 군주', loc: '금지된 도서관', check: () => (player.stats?.abyssFloor || 0) >= 100 },
     ];
+    // cycle 71: mapData.name은 MAPS dict에 저장될 때 설정되지 않으므로 항상 undefined.
+    // hidden boss spawn이 영원히 트리거되지 않던 버그 수정 — player.loc로 비교.
+    const currentLoc = player.loc;
     hiddenBossChecks.forEach(({ boss, loc, check }: any) => {
-        if (mapData.name === loc && check() && !encounterPool.includes(boss)) {
+        if (currentLoc === loc && check() && !encounterPool.includes(boss)) {
             encounterPool.push(boss);
         }
     });

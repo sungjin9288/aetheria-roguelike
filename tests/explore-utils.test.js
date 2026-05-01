@@ -205,3 +205,83 @@ test('spawnEnemy level caps at "infinite" using player abyssFloor', () => {
     assert.ok(mStats.name.startsWith('[20층]') || mStats.name.includes(baseName));
     assert.ok(mStats.hp > 0);
 });
+
+// cycle 71: hidden boss spawn은 mapData.name(undefined)이 아닌 player.loc로
+// 비교해야 트리거된다. 이전 버그에서 항상 false라 hidden boss가 영원히
+// 안 나오던 문제 회귀 가드.
+test('spawnEnemy: 시간술사 + Lv40 + player.loc=공중 신전 → 시간의 파수꾼이 encounter pool에 들어감', () => {
+    const mapData = {
+        level: 45,
+        monsters: ['하늘 정령', '천공 수호조'],
+        bossMonsters: [],
+    };
+    const { addLog } = makeAddLogSpy();
+    let foundHiddenBoss = false;
+    // 100번 spawn해서 시간의 파수꾼이 한 번이라도 등장하는지 확인 (encounter pool에 push되면
+    // Math.random에 따라 가끔 뽑힘). pool에 들어가지 않으면 절대 못 뽑힘.
+    for (let i = 0; i < 100; i++) {
+        const player = {
+            job: '시간술사',
+            level: 45,
+            loc: '공중 신전',
+            stats: { abyssFloor: 0 },
+            challengeModifiers: [],
+        };
+        const { baseName } = spawnEnemy(mapData, player, [], { addLog });
+        if (baseName === '시간의 파수꾼') {
+            foundHiddenBoss = true;
+            break;
+        }
+    }
+    assert.ok(foundHiddenBoss, '시간술사 Lv45 + 공중 신전에서 시간의 파수꾼이 한 번은 spawn 가능해야 함');
+});
+
+test('spawnEnemy: 다른 직업이면 시간의 파수꾼 spawn 안 됨', () => {
+    const mapData = {
+        level: 45,
+        monsters: ['하늘 정령', '천공 수호조'],
+        bossMonsters: [],
+    };
+    const { addLog } = makeAddLogSpy();
+    let foundHiddenBoss = false;
+    for (let i = 0; i < 50; i++) {
+        const player = {
+            job: '전사', // 시간술사 아님
+            level: 45,
+            loc: '공중 신전',
+            stats: { abyssFloor: 0 },
+            challengeModifiers: [],
+        };
+        const { baseName } = spawnEnemy(mapData, player, [], { addLog });
+        if (baseName === '시간의 파수꾼') {
+            foundHiddenBoss = true;
+            break;
+        }
+    }
+    assert.equal(foundHiddenBoss, false, '시간술사가 아닌 직업은 시간의 파수꾼 trigger 조건 미달');
+});
+
+test('spawnEnemy: player.loc가 다른 맵이면 hidden boss spawn 안 됨', () => {
+    const mapData = {
+        level: 45,
+        monsters: ['하늘 정령'],
+        bossMonsters: [],
+    };
+    const { addLog } = makeAddLogSpy();
+    let foundHiddenBoss = false;
+    for (let i = 0; i < 50; i++) {
+        const player = {
+            job: '시간술사',
+            level: 45,
+            loc: '신성한 호수', // 공중 신전 아님
+            stats: { abyssFloor: 0 },
+            challengeModifiers: [],
+        };
+        const { baseName } = spawnEnemy(mapData, player, [], { addLog });
+        if (baseName === '시간의 파수꾼') {
+            foundHiddenBoss = true;
+            break;
+        }
+    }
+    assert.equal(foundHiddenBoss, false, '잘못된 위치에서는 hidden boss trigger 안 됨');
+});
