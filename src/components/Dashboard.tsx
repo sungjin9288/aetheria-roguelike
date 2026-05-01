@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Package, Scroll, Zap, Map, Trophy, BookOpen, BarChart3, Eye, ChevronUp, Star, Skull, Moon, GraduationCap, Hammer, RotateCcw, X, Shield } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { DB } from '../data/db';
@@ -7,20 +7,29 @@ import { GS } from '../reducers/gameStates';
 import ArchiveTabButton from './ArchiveTabButton';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import DashboardMobileSummary from './DashboardMobileSummary';
+// Default 탭(inventory/equipment)은 즉시 import — 사용자가 가장 먼저 보는 화면.
 import EquipmentPanel from './EquipmentPanel';
 import SmartInventory from './SmartInventory';
-import AchievementPanel from './AchievementPanel';
-import SkillTreePreview from './SkillTreePreview';
-import MapNavigator from './MapNavigator';
-import BuildAdvicePanel from './BuildAdvicePanel';
-import StatsPanel from './StatsPanel';
-import Codex from './Codex';
-import GravePanel from './GravePanel';
-import QuestTab from './tabs/QuestTab';
-import SystemTab from './tabs/SystemTab';
-import SeasonPassPanel from './tabs/SeasonPassPanel';
 import SignalBadge from './SignalBadge';
 import type { Player } from '../types/index.js';
+
+// 비-default 탭은 lazy import — 사용자가 탭을 클릭해야 로드 (cycle 61 perf).
+const AchievementPanel = lazy(() => import('./AchievementPanel'));
+const SkillTreePreview = lazy(() => import('./SkillTreePreview'));
+const MapNavigator = lazy(() => import('./MapNavigator'));
+const BuildAdvicePanel = lazy(() => import('./BuildAdvicePanel'));
+const StatsPanel = lazy(() => import('./StatsPanel'));
+const Codex = lazy(() => import('./Codex'));
+const GravePanel = lazy(() => import('./GravePanel'));
+const QuestTab = lazy(() => import('./tabs/QuestTab'));
+const SystemTab = lazy(() => import('./tabs/SystemTab'));
+const SeasonPassPanel = lazy(() => import('./tabs/SeasonPassPanel'));
+
+const TabSpinner = () => (
+    <div className="flex items-center justify-center py-8 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+        Loading…
+    </div>
+);
 
 interface DashboardProps {
     player: Player;
@@ -164,47 +173,65 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                     )}
 
                     {sideTab === 'quest' && (
-                        <QuestTab player={player} actions={actions} isInSafeZone={isInSafeZone} compact={desktopArchiveCompact} />
+                        <Suspense fallback={<TabSpinner />}>
+                            <QuestTab player={player} actions={actions} isInSafeZone={isInSafeZone} compact={desktopArchiveCompact} />
+                        </Suspense>
                     )}
 
                     {sideTab === 'achievements' && (
-                        <AchievementPanel player={player} actions={actions} compact={desktopArchiveCompact} />
+                        <Suspense fallback={<TabSpinner />}>
+                            <AchievementPanel player={player} actions={actions} compact={desktopArchiveCompact} />
+                        </Suspense>
                     )}
 
                     {sideTab === 'skills' && (
-                        <SkillTreePreview player={player} compact={desktopArchiveCompact} actions={actions} />
+                        <Suspense fallback={<TabSpinner />}>
+                            <SkillTreePreview player={player} compact={desktopArchiveCompact} actions={actions} />
+                        </Suspense>
                     )}
 
                     {sideTab === 'map' && (
-                        <div className="space-y-3">
-                            <MapNavigator
-                                player={player}
-                                grave={grave}
-                                stats={stats}
-                                compact={desktopArchiveCompact}
-                            />
-                            <BuildAdvicePanel player={player} compact={desktopArchiveCompact} />
-                        </div>
+                        <Suspense fallback={<TabSpinner />}>
+                            <div className="space-y-3">
+                                <MapNavigator
+                                    player={player}
+                                    grave={grave}
+                                    stats={stats}
+                                    compact={desktopArchiveCompact}
+                                />
+                                <BuildAdvicePanel player={player} compact={desktopArchiveCompact} />
+                            </div>
+                        </Suspense>
                     )}
 
                     {sideTab === 'stats' && (
-                        <StatsPanel player={player} stats={stats} compact={desktopArchiveCompact} />
+                        <Suspense fallback={<TabSpinner />}>
+                            <StatsPanel player={player} stats={stats} compact={desktopArchiveCompact} />
+                        </Suspense>
                     )}
 
                     {sideTab === 'codex' && (
-                        <Codex player={player} compact={desktopArchiveCompact} dispatch={actions?.dispatch} />
+                        <Suspense fallback={<TabSpinner />}>
+                            <Codex player={player} compact={desktopArchiveCompact} dispatch={actions?.dispatch} />
+                        </Suspense>
                     )}
 
                     {sideTab === 'pass' && (
-                        <SeasonPassPanel player={player} dispatch={actions?.dispatch} />
+                        <Suspense fallback={<TabSpinner />}>
+                            <SeasonPassPanel player={player} dispatch={actions?.dispatch} />
+                        </Suspense>
                     )}
 
                     {sideTab === 'graves' && (
-                        <GravePanel player={player} actions={actions} compact={desktopArchiveCompact} />
+                        <Suspense fallback={<TabSpinner />}>
+                            <GravePanel player={player} actions={actions} compact={desktopArchiveCompact} />
+                        </Suspense>
                     )}
 
                     {sideTab === 'system' && (
-                        <SystemTab player={player} actions={actions} stats={stats} runtime={runtime} compact={desktopArchiveCompact} />
+                        <Suspense fallback={<TabSpinner />}>
+                            <SystemTab player={player} actions={actions} stats={stats} runtime={runtime} compact={desktopArchiveCompact} />
+                        </Suspense>
                     )}
             </div>
         );
