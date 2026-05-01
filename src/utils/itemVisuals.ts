@@ -1,3 +1,4 @@
+import type { Item } from '../types/index.js';
 import { ITEMS } from '../data/items.js';
 import signatureRegistrySource from '../data/signatureRegistry.json' with { type: 'json' };
 import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon, isMagicWeapon } from './equipmentUtils.js';
@@ -98,7 +99,7 @@ const buildExactItemIconKeys = () => {
 
     for (const item of allItems) {
         if (!item?.name) continue;
-        if (SPECIAL_ITEM_ICON_KEYS[item.name]) continue;
+        if (SPECIAL_ITEM_ICON_KEYS[item.name as string]) continue;
         if (exactKeys[item.name]) continue;
 
         const category = EXACT_ICON_CATEGORY_BY_TYPE[item.type] || 'misc';
@@ -288,7 +289,7 @@ export const getWeaponVisualKey = (weapon: any) => {
     return isTwoHandWeapon(weapon) ? 'greatsword' : 'sword';
 };
 
-export const getOffhandVisualKey = (item: any) => {
+export const getOffhandVisualKey = (item: Item | null | undefined) => {
     if (!item) return 'none';
     if (isFocusOffhand(item)) return 'book';
     if (isShield(item)) return 'shield';
@@ -296,7 +297,7 @@ export const getOffhandVisualKey = (item: any) => {
     return 'none';
 };
 
-export const getMaterialVisualKey = (item: any) => {
+export const getMaterialVisualKey = (item: Item | null | undefined) => {
     if (!item) return 'material';
     const name = String(item.name || '');
 
@@ -313,10 +314,10 @@ export const getMaterialVisualKey = (item: any) => {
     return 'material';
 };
 
-export const getEquipmentVisualKey = (item: any) => {
+export const getEquipmentVisualKey = (item: Item | null | undefined) => {
     if (!item) return 'material';
-    if (SPECIAL_ITEM_ICON_KEYS[item.name]) return SPECIAL_ITEM_ICON_KEYS[item.name];
-    if (EXACT_ITEM_ICON_KEYS[item.name]) return EXACT_ITEM_ICON_KEYS[item.name];
+    if (SPECIAL_ITEM_ICON_KEYS[item.name as string]) return SPECIAL_ITEM_ICON_KEYS[item.name as string];
+    if (EXACT_ITEM_ICON_KEYS[item.name as string]) return EXACT_ITEM_ICON_KEYS[item.name as string];
 
     if (item.type === 'weapon') return getWeaponVisualKey(item);
     if (item.type === 'armor') {
@@ -333,8 +334,8 @@ export const getEquipmentVisualKey = (item: any) => {
 
 const HEADGEAR_PATTERN = /(모자|두건|후드|투구|헬름|왕관|관|면갑|복면)/;
 
-export const getEquipmentIllustrationFamilyKey = (item: any) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return null;
+export const getEquipmentIllustrationFamilyKey = (item: Item | null | undefined) => {
+    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return null;
 
     if (item.type === 'weapon') {
         const weaponKey = getWeaponVisualKey(item);
@@ -373,12 +374,12 @@ export const getEquipmentIllustrationFamilyKey = (item: any) => {
     return 'armor-coat';
 };
 
-export const getEquipmentWearableFamilyKey = (item: any) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return null;
+export const getEquipmentWearableFamilyKey = (item: Item | null | undefined) => {
+    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return null;
     return getEquipmentIllustrationFamilyKey(item);
 };
 
-export const getItemIconAssetKey = (item: any) => getEquipmentVisualKey(item);
+export const getItemIconAssetKey = (item: Item | null | undefined) => getEquipmentVisualKey(item);
 
 /**
  * cycle 40에서 chibi 결로 derive된 PNG가 있는 item 키 set.
@@ -419,15 +420,15 @@ export const getItemIconAssetExtension = (assetKey: any) => {
     if (IMAGEGEN_ITEM_PNG_KEYS.has(k)) return 'png';
     return k.startsWith('item-') ? 'svg' : 'png';
 };
-export const getExactEquipmentItemAssetKey = (item: any) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return null;
+export const getExactEquipmentItemAssetKey = (item: Item | null | undefined) => {
+    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return null;
     // 우선순위: 고유 signature art → named(tinted) → auto-exact
-    return SIGNATURE_SPRITE_KEY_BY_NAME[item.name]
-        || SPECIAL_ITEM_ICON_KEYS[item.name]
-        || EXACT_ITEM_ICON_KEYS[item.name]
+    return SIGNATURE_SPRITE_KEY_BY_NAME[item.name as string]
+        || SPECIAL_ITEM_ICON_KEYS[item.name as string]
+        || EXACT_ITEM_ICON_KEYS[item.name as string]
         || null;
 };
-export const getItemIconAssetSrc = (item: any) => {
+export const getItemIconAssetSrc = (item: Item | null | undefined) => {
     const exactEquipmentKey = getExactEquipmentItemAssetKey(item);
     if (exactEquipmentKey) {
         return `/assets/equipment-exact/${exactEquipmentKey}.png`;
@@ -439,21 +440,21 @@ export const getItemIconAssetSrc = (item: any) => {
     const assetKey = getItemIconAssetKey(item);
     return `/assets/items/${assetKey}.${getItemIconAssetExtension(assetKey)}`;
 };
-export const getEquipmentOverlayAssetKey = (item: any) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return null;
+export const getEquipmentOverlayAssetKey = (item: Item | null | undefined) => {
+    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return null;
     const wearableFamilyKey = getEquipmentWearableFamilyKey(item);
     if (!wearableFamilyKey) return null;
     return wearableFamilyKey;
 };
-export const getEquipmentOverlayAssetSrc = (item: any) => {
+export const getEquipmentOverlayAssetSrc = (item: Item | null | undefined) => {
     // cycle 45 (사용자 피드백 — "합성 느낌이 부자연, 진짜 착용 느낌이어야"):
     // 일반 장비 overlay는 본질적으로 sprite 위에 합성되는 형태라 "착용 느낌"을 못 만듬.
     // 시그니처만 dedicated overlay (강조 효과). 일반 장비 차별화는:
     //   - 인벤토리/장비 슬롯의 chibi PNG (cycle 36-40)
     //   - sprite swap (cycle 43 직업×armor priority)
     //   - outfit set bonus (cycle 45 — 새 mechanic)
-    if (item?.name && SIGNATURE_SPRITE_KEY_BY_NAME[item.name]) {
-        return `/assets/equipment-wearable-exact/${SIGNATURE_SPRITE_KEY_BY_NAME[item.name]}.png`;
+    if (item?.name && SIGNATURE_SPRITE_KEY_BY_NAME[item.name as string]) {
+        return `/assets/equipment-wearable-exact/${SIGNATURE_SPRITE_KEY_BY_NAME[item.name as string]}.png`;
     }
     return null;
 };

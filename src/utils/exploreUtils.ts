@@ -1,3 +1,4 @@
+import type { Monster } from '../types/index.js';
 import type { Player } from '../types/index.js';
 /**
  * exploreUtils.js — explore() 로직 분리 모듈 (Phase 1-B)

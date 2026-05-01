@@ -1,3 +1,4 @@
+import type { Item } from '../types/index.js';
 import signatureRegistry from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSets from '../data/signatureSets.json' with { type: 'json' };
 
@@ -13,7 +14,7 @@ import signatureSets from '../data/signatureSets.json' with { type: 'json' };
 const REGISTRY: Record<string, any> = signatureRegistry.entries || {};
 const SETS: Record<string, any> = signatureSets.sets || {};
 
-const getRegistryEntry = (item: any) => {
+const getRegistryEntry = (item: Item | null | undefined) => {
     if (!item?.name) return null;
     return REGISTRY[item.name] || null;
 };

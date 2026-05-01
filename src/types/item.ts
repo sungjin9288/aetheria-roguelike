@@ -9,8 +9,8 @@ export type ItemType = 'weapon' | 'armor' | 'shield' | 'consumable' | 'material'
 
 export interface ItemBase {
     id?: string;
-    name: string;
-    type: ItemType;
+    name?: string;
+    type?: string;
     desc?: string;
     desc_stat?: string;
     tier?: number;
@@ -23,6 +23,24 @@ export interface ItemBase {
     elem?: string;
     /** 시그니처 식별자 (선택). */
     signature?: string;
+    /** 무기 양손/한손 (1=한손, 2=양손). */
+    hands?: number;
+    /** 기본 ATK/DEF 값. */
+    val?: number;
+    /** 추가 MP. */
+    mp?: number;
+    /** 추가 크리티컬 확률. */
+    crit?: number;
+    /** 추가 HP. */
+    hp?: number;
+    /** 'focus' 등 세부 분류. */
+    subtype?: string;
+    /** 효과 종류 (consumable). */
+    effect?: string;
+    /** 버프 지속 턴. */
+    turn?: number;
+    /** 동적으로 추가 가능한 임의 필드 (런타임 확장 호환). */
+    [key: string]: any;
 }
 
 export interface WeaponItem extends ItemBase {

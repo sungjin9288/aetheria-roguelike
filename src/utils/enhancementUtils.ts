@@ -1,7 +1,8 @@
+import type { Item } from '../types/index.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 
 export const countInventoryItemByName = (inventory: any[] = [], itemName: any) => (
-    (inventory || []).filter((item: any) => item?.name === itemName).length
+    (inventory || []).filter((item: Item | null | undefined) => item?.name === itemName).length
 );
 
 export const getEnhanceRequirement = (currentLevel: any = 0) => ({
@@ -16,7 +17,7 @@ export const getEnhanceMaterialCount = (inventory: any = []) => (
 
 export const consumeInventoryItemByName = (inventory: any[] = [], itemName: any, count: any = 1) => {
     let removed = 0;
-    const nextInventory = (inventory || []).filter((item: any) => {
+    const nextInventory = (inventory || []).filter((item: Item | null | undefined) => {
         if (item?.name === itemName && removed < count) {
             removed += 1;
             return false;
@@ -27,8 +28,8 @@ export const consumeInventoryItemByName = (inventory: any[] = [], itemName: any,
     return { nextInventory, removed };
 };
 
-export const getEnhanceAvailability = (item: any, gold: any = 0, inventory: any[] = []) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) {
+export const getEnhanceAvailability = (item: Item | null | undefined, gold: any = 0, inventory: any[] = []) => {
+    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) {
         return {
             canEnhance: false,
             affordable: false,

@@ -1,3 +1,4 @@
+import type { Monster } from '../types/index.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import type { Player } from "../types/index.js";
 import { getDifficultyMults, calcPerformanceScore, countLowHpWins } from '../systems/DifficultyManager.js';
@@ -466,7 +467,7 @@ export const getRunDiagnostics = (player: Player, stats: any = {}) => {
 
 // --- Enemy tactical profile ---
 
-export const getEnemyTacticalProfile = (enemy: any, stats: any = {}) => {
+export const getEnemyTacticalProfile = (enemy: Monster, stats: any = {}) => {
     if (!enemy) return null;
 
     const pattern = enemy.pattern || {};
@@ -476,7 +477,7 @@ export const getEnemyTacticalProfile = (enemy: any, stats: any = {}) => {
     const estimatedHeavy = Math.max(1, Math.floor((enemy.atk || 0) * 1.4 - (stats.def || 0)));
     const role = heavyChance >= guardChance + 10 ? '파쇄형' : guardChance >= heavyChance + 10 ? '수비형' : '교전형';
     const tier = enemy.isBoss ? 'BOSS' : enemy.isElite ? 'ELITE' : 'NORMAL';
-    const bossBrief = enemy.isBoss ? BOSS_BRIEFS[enemy.baseName || enemy.name] : null;
+    const bossBrief = enemy.isBoss ? BOSS_BRIEFS[(enemy.baseName || enemy.name) as string] : null;
     const rawPhaseHint = bossBrief?.phaseHint || (enemy.isBoss && enemy.phase2 ? 'HP 50% 이하에서 2페이즈로 전환됩니다.' : null);
     const phaseHint = rawPhaseHint && enemy.isBoss && enemy.phase2 && !rawPhaseHint.includes('50%')
         ? `${rawPhaseHint} (전환 기준 HP 50%)`

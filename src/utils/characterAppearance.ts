@@ -1,3 +1,4 @@
+import type { Item } from '../types/index.js';
 import { isTwoHandWeapon } from './equipmentUtils.js';
 import type { Player } from "../types/index.js";
 import { getEquipmentArtProfile } from './equipmentArt.js';
@@ -41,7 +42,7 @@ const ELEMENT_COLOR_MAP: any = {
 
 const clampEnhance = (value: any) => Math.max(0, Math.min(9, Number(value) || 0));
 
-const getOverlayTone = (slot: any, item: any, fallback: any) => {
+const getOverlayTone = (slot: any, item: Item | null | undefined, fallback: any) => {
     if (!item) return fallback;
 
     if (slot === 'weapon') return '#d8c7a5';

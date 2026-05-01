@@ -1,3 +1,4 @@
+import type { Item } from '../types/index.js';
 import { isFocusOffhand, isShield, isWeapon } from './equipmentUtils.js';
 import { getArmorStyleFromItem, getWeaponVisualKey } from './itemVisuals.js';
 import { ELEMENT_TONE_KEY, TONE_PALETTES } from '../data/artPalette.js';
@@ -36,7 +37,7 @@ const mixHex = (left: any, right: any, ratio: any = 0.5) => {
     });
 };
 
-const tintPalette = (palette: any, item: any) => {
+const tintPalette = (palette: any, item: Item | null | undefined) => {
     const offset = hashText(item?.name || '') % 11;
     const ratio = 0.06 + (offset * 0.012);
     return {
@@ -47,7 +48,7 @@ const tintPalette = (palette: any, item: any) => {
     };
 };
 
-const getToneKey = (item: any, slot: any = 'weapon') => {
+const getToneKey = (item: Item | null | undefined, slot: any = 'weapon') => {
     if (!item) {
         if (slot === 'armor') return 'cloth';
         if (slot === 'offhand') return 'wood';
@@ -69,7 +70,7 @@ const getToneKey = (item: any, slot: any = 'weapon') => {
     return 'steel';
 };
 
-const getArmorHeadgearStyle = (item: any) => {
+const getArmorHeadgearStyle = (item: Item | null | undefined) => {
     if (!item || item.type !== 'armor') return 'none';
     const name = String(item.name || '');
 
@@ -84,7 +85,7 @@ const getArmorHeadgearStyle = (item: any) => {
     return 'none';
 };
 
-const getArmorBodyStyle = (item: any, fallback: any = 'coat') => {
+const getArmorBodyStyle = (item: Item | null | undefined, fallback: any = 'coat') => {
     if (!item || item.type !== 'armor') return fallback;
     const name = String(item.name || '');
 
@@ -105,7 +106,7 @@ const getArmorBodyStyle = (item: any, fallback: any = 'coat') => {
     return 'cloak';
 };
 
-const getOffhandStyle = (item: any) => {
+const getOffhandStyle = (item: Item | null | undefined) => {
     if (!item || !isShield(item)) return 'none';
     const name = String(item.name || '');
 
@@ -120,12 +121,12 @@ const getOffhandStyle = (item: any) => {
     return 'kite-shield';
 };
 
-const getWeaponStyle = (item: any) => {
+const getWeaponStyle = (item: Item | null | undefined) => {
     if (!item || !isWeapon(item)) return 'none';
     return getWeaponVisualKey(item);
 };
 
-export const getEquipmentArtProfile = (item: any, slotHint: any = null, fallbackArmorStyle: any = 'coat') => {
+export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: any = null, fallbackArmorStyle: any = 'coat') => {
     if (!item) {
         return {
             slot: slotHint || 'none',

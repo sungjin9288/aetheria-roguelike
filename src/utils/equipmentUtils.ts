@@ -1,3 +1,4 @@
+import type { Item } from '../types/index.js';
 import { BALANCE } from '../data/constants.js';
 import type { Player } from "../types/index.js";
 
@@ -13,11 +14,11 @@ const WEAPON_SKILL_BY_ELEM: any = {
     물리: { name: '아케인 볼트', effect: null, mp: 22, mult: 2.3, cooldown: 1 },
 };
 
-export const isWeapon = (item: any) => item?.type === 'weapon';
+export const isWeapon = (item: Item | null | undefined) => item?.type === 'weapon';
 
-export const isShield = (item: any) => item?.type === 'shield';
+export const isShield = (item: Item | null | undefined) => item?.type === 'shield';
 
-export const isFocusOffhand = (item: any) => isShield(item) && item?.subtype === 'focus';
+export const isFocusOffhand = (item: Item | null | undefined) => isShield(item) && item?.subtype === 'focus';
 
 export const getWeaponHands = (weapon: any) => Math.max(1, Number(weapon?.hands) || 1);
 
@@ -25,7 +26,7 @@ export const isTwoHandWeapon = (weapon: any) => isWeapon(weapon) && getWeaponHan
 
 export const isOneHandWeapon = (weapon: any) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
 
-export const getWeaponStyleLabel = (item: any) => {
+export const getWeaponStyleLabel = (item: Item | null | undefined) => {
     if (!item) return '미장착';
     if (isWeapon(item)) return isTwoHandWeapon(item) ? '파쇄 2H' : '연계 1H';
     if (isFocusOffhand(item)) return '비전 보조';
@@ -34,7 +35,7 @@ export const getWeaponStyleLabel = (item: any) => {
     return '장비';
 };
 
-export const getEquipmentIdentity = (item: any) => {
+export const getEquipmentIdentity = (item: Item | null | undefined) => {
     if (!item) return null;
     return item.id || `${item.type}:${item.name}`;
 };
@@ -64,14 +65,14 @@ export const getWeaponEquipScore = (weapon: any, slot: any = 'main') => (
     getWeaponAttackValue(weapon, slot) + Math.round(getWeaponCritBonus(weapon, slot) * 100)
 );
 
-export const getOffhandCritBonus = (item: any) => {
+export const getOffhandCritBonus = (item: Item | null | undefined) => {
     if (!item) return 0;
     if (isWeapon(item)) return getWeaponCritBonus(item, 'offhand');
     if (isShield(item)) return item.crit || 0;
     return 0;
 };
 
-export const getOffhandMpBonus = (item: any) => (isShield(item) ? item.mp || 0 : 0);
+export const getOffhandMpBonus = (item: Item | null | undefined) => (isShield(item) ? (item?.mp || 0) : 0);
 
 export const getEquipmentProfile = (equip: any = {}) => {
     const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
@@ -116,8 +117,8 @@ const pickBestOneHandPair = (weapons: any[] = [], requiredWeapon: any = null) =>
     return bestPair;
 };
 
-export const getNextEquipmentState = (equip: any = {}, item: any) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type)) return { ...equip };
+export const getNextEquipmentState = (equip: any = {}, item: Item | null | undefined) => {
+    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return { ...equip };
 
     const nextEquip = { ...equip };
 
@@ -217,7 +218,7 @@ export const getWeaponMagicSkills = (equip: any = {}) => {
     return skills;
 };
 
-export const getItemStatText = (item: any) => {
+export const getItemStatText = (item: Item | null | undefined) => {
     if (!item) return '';
 
     const elemSuffix = item.elem ? `(${item.elem})` : '';
