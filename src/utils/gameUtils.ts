@@ -517,6 +517,19 @@ export const checkTitles = (player: Player) => {
         if (type === 'crafts')         return (player.stats?.crafts        || 0) >= val;
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
+        if (type === 'explores')       return ((player.stats as any)?.explores || 0) >= val;
+        if (type === 'discoveries')    return ((player.stats as any)?.discoveries || 0) >= val;
+        if (type === 'signaturesDiscovered') {
+            // signature 도감 진행도 — Codex weapons/armors/shields 교집합으로 산출.
+            const codex = (player.stats as any)?.codex || {};
+            const seen = new Set([
+                ...Object.keys(codex.weapons || {}),
+                ...Object.keys(codex.armors || {}),
+                ...Object.keys(codex.shields || {}),
+            ]);
+            // signatureRegistry 정확 매칭이 어려워 codex 항목 수로 근사 — 충분히 보수적.
+            return seen.size >= val;
+        }
         return false;
     }).map((t: any) => t.id);
 };

@@ -210,6 +210,40 @@ export const TITLES = Object.freeze([
         cond: { type: 'noDeathWin', val: 1 },
         color: 'text-green-400',
     },
+
+    // ─── 탐험 계열 (cycle 61 신규) ────────────────────────────────────────
+    {
+        id: 'wanderer',
+        name: '방랑자',
+        cond: { type: 'explores', val: 100 },
+        color: 'text-teal-400',
+    },
+    {
+        id: 'pathfinder',
+        name: '길잡이',
+        cond: { type: 'explores', val: 500 },
+        color: 'text-cyan-300',
+    },
+    {
+        id: 'cartographer',
+        name: '지도 제작자',
+        cond: { type: 'discoveries', val: 10 },
+        color: 'text-emerald-300',
+    },
+
+    // ─── 시그니처 계열 (cycle 61 신규) ────────────────────────────────────
+    {
+        id: 'legend_seeker',
+        name: '전설의 추적자',
+        cond: { type: 'signaturesDiscovered', val: 5 },
+        color: 'text-amber-300',
+    },
+    {
+        id: 'legend_chronicler',
+        name: '전설의 기록자',
+        cond: { type: 'signaturesDiscovered', val: 15 },
+        color: 'text-amber-200',
+    },
 ]);
 
 // 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
@@ -241,6 +275,13 @@ export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     bounty_king:      { crit: 0.02, atk: 2, label: 'CRIT +2% · ATK +2' },
     crafter:          { def: 2, mp: 10, label: 'DEF +2 · MP +10' },
     ironman:          { hp: 35, def: 2, label: 'HP +35 · DEF +2' },
+
+    // cycle 61 신규 칭호 패시브
+    wanderer:         { mp: 10, hp: 10, label: 'MP +10 · HP +10' },
+    pathfinder:       { mp: 20, atk: 1, label: 'MP +20 · ATK +1' },
+    cartographer:     { hp: 25, mp: 15, label: 'HP +25 · MP +15' },
+    legend_seeker:    { atk: 2, crit: 0.01, label: 'ATK +2 · CRIT +1%' },
+    legend_chronicler:{ atk: 4, crit: 0.02, hp: 20, label: 'ATK +4 · CRIT +2% · HP +20' },
 
     각성자:           { hp: 25, mp: 10, label: 'HP +25 · MP +10' },
     초월자:           { hp: 35, atk: 2, label: 'HP +35 · ATK +2' },
