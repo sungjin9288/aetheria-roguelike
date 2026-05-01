@@ -580,6 +580,56 @@ export const EVENT_CHAINS: any = [
             },
         ],
     },
+
+    // ── 신규 체인 13: 물의 사도 (cycle 66) ───────────────────────────────────
+    // 호수 → 사막 → 피라미드로 이어지는 잃어버린 신관의 순례. 약 Lv5~30
+    // 진행에 맞춰 자연스러운 경로 + 마지막에 정수의 결정 또는 유물 보상.
+    {
+        id: 'water_apostle',
+        label: '물의 사도',
+        desc: '호수 신전을 떠나 사막을 가로질러 피라미드까지 닿은 옛 신관의 발자취를 추적합니다.',
+        steps: [
+            {
+                step: 0,
+                loc: '호수의 신전',
+                event: {
+                    title: '신관의 일기',
+                    desc: '신전 한구석에서 물이 닿지 않은 가죽 일기를 발견했습니다. 첫 페이지에 "물의 정수가 마르고 있다. 사막을 건너 피라미드로 향한다"라고 적혀 있습니다.',
+                    choices: ['일기를 챙겨 신관을 추적한다', '신성한 일기를 그 자리에 두고 떠난다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'water_apostle', log: '신관의 흔적을 따라가기 시작했습니다. 사막 오아시스 쪽에서 단서가 이어질 것 같습니다.', reward: null },
+                        { type: 'chain_advance_fail', chainId: 'water_apostle', log: '일기는 본래 자리에 두고 떠났습니다. 신전이 작은 축복을 보내옵니다.', reward: { type: 'gold', amount: 800 } },
+                    ],
+                },
+            },
+            {
+                step: 1,
+                loc: '사막 오아시스',
+                event: {
+                    title: '메마른 우물',
+                    desc: '오아시스 가운데 메마른 우물 옆에 신관의 망토 조각이 걸려 있습니다. 망토 안쪽에는 "정수는 피라미드 심장부에 봉인됐다"는 메모가 새겨져 있습니다.',
+                    choices: ['메모를 받아 피라미드로 향한다', '망토 조각만 챙기고 떠난다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'water_apostle', log: '신관의 의지를 이어받아 피라미드 심장부로 향합니다. 마지막 봉인을 풀 수 있을지도 모릅니다.', reward: { type: 'combat_bonus', atkMult: 1.2, duration: 6 } },
+                        { type: 'chain_advance_fail', chainId: 'water_apostle', log: '망토 조각만 챙기고 다음 길은 포기했습니다.', reward: { type: 'gold', amount: 1500 } },
+                    ],
+                },
+            },
+            {
+                step: 2,
+                loc: '피라미드',
+                event: {
+                    title: '봉인된 정수',
+                    desc: '피라미드 심장부에서 신관이 봉인했던 물의 정수를 마주했습니다. 봉인이 약해진 채 천천히 빛을 잃고 있습니다. 신관의 의지가 마지막 한 번을 부탁합니다.',
+                    choices: ['정수에 의지를 더해 봉인을 강화한다', '정수의 힘을 받아들인다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'water_apostle', log: '봉인이 단단해졌습니다. 정수가 보답으로 신관의 유산을 남겼습니다.', reward: { type: 'item', name: '엘릭서' } },
+                        { type: 'chain_advance', chainId: 'water_apostle', log: '정수의 힘이 당신에게 깃들었습니다. 전설 유물 한 점이 손 안에 응결됩니다.', reward: { type: 'relic' } },
+                    ],
+                },
+            },
+        ],
+    },
 ];
 
 /**
