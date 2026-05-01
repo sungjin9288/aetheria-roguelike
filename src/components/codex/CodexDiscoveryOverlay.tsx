@@ -7,7 +7,9 @@ import { MSG } from '../../data/messages';
  * CodexDiscoveryOverlay — 도감 신규 항목 발견 시 glow 애니메이션 오버레이
  * 2초 후 자동 해제
  */
-const CodexDiscoveryOverlay = ({ entry, onDismiss }: any) => {
+interface CodexDiscoveryOverlayProps { entry?: any; onDismiss?: () => void }
+
+const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps) => {
     useEffect(() => {
         if (!entry) return;
         const timer = setTimeout(() => onDismiss?.(), 2200);

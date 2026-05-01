@@ -7,11 +7,16 @@ import { MSG } from '../../data/messages';
 import SignalBadge from '../SignalBadge';
 import MonsterIcon from '../icons/MonsterIcon';
 import SkillTypeIcon from '../icons/SkillTypeIcon';
+import type { Player } from '../../types/index.js';
+
+interface MonsterCodexProps {
+    player?: Player | null;
+}
 
 /**
  * MonsterCodex — Bestiary 로직을 그대로 활용하되 Codex 서브탭으로 배치
  */
-const MonsterCodex = ({ player }: any) => {
+const MonsterCodex = ({ player }: MonsterCodexProps) => {
     const [selectedMonster, setSelectedMonster] = useState<any>(null);
 
     const allMonsters = useMemo(() => {

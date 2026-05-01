@@ -12,7 +12,16 @@ import { GS } from '../reducers/gameStates';
  *   onUnassign: (slotIdx: any) => void
  *   gameState: string
  */
-const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false }: any) => {
+interface QuickSlotProps {
+    slots?: any[];
+    onUse?: (item: any, idx: number) => void;
+    onAssign?: (slotIdx: number, item: any) => void;
+    onUnassign?: (slotIdx: number) => void;
+    gameState?: string;
+    dense?: boolean;
+}
+
+const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false }: QuickSlotProps) => {
     const canUse = gameState === GS.COMBAT || gameState === GS.IDLE;
 
     return (
@@ -25,7 +34,7 @@ const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false
                     <Motion.button
                         key={i}
                         whileTap={item && canUse ? { scale: 0.9 } : {}}
-                        onClick={() => item && canUse && onUse(item, i)}
+                        onClick={() => item && canUse && onUse?.(item, i)}
                         title={item ? `${item.name} — 빠른 사용 (슬롯 ${i + 1})` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
                         className={`relative flex items-center justify-center rounded-[0.95rem] border text-center text-xs font-fira transition-all backdrop-blur-md ${dense ? 'h-8 w-8 rounded-[0.8rem]' : 'h-10 w-10'}
                             ${item

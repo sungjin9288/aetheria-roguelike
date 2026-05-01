@@ -13,7 +13,15 @@ const RARITY_LABEL: any = { common: '일반', uncommon: '고급', rare: '희귀'
 /**
  * CraftingPanel — 제작/합성 패널 (탭 전환)
  */
-const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: any) => {
+interface CraftingPanelProps {
+    player: any;
+    actions?: any;
+    setGameState?: (state: string) => void;
+    mobileFocused?: boolean;
+    onOpenArchiveConsole?: any;
+}
+
+const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: CraftingPanelProps) => {
   const [mode, setMode] = useState('craft');
   const [selectedIds, setSelectedIds] = useState<any[]>([]);
   const [useProtect, setUseProtect] = useState(false);
@@ -240,7 +248,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = n
         title={mode === 'craft' ? 'FORGE MATRIX' : 'SYNTHESIS'}
         titleClassName="flex items-center gap-2 text-[1.05rem] text-orange-400"
         meta={mode === 'craft' ? '제작 가능한 레시피와 재료 수량을 즉시 비교합니다.' : '동일 티어 장비를 골라 합성 결과를 확인합니다.'}
-        onBack={() => setGameState('idle')}
+        onBack={() => setGameState?.('idle')}
         backLabel="복귀"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}

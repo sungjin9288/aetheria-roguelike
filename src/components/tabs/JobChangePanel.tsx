@@ -8,7 +8,15 @@ import FocusPanelHeader from '../FocusPanelHeader';
 /**
  * JobChangePanel — 전직 선택 패널
  */
-const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: any) => {
+interface JobChangePanelProps {
+    player: any;
+    actions?: any;
+    setGameState?: (state: string) => void;
+    mobileFocused?: boolean;
+    onOpenArchiveConsole?: any;
+}
+
+const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: JobChangePanelProps) => {
   const current = DB.CLASSES[player.job];
   const avail = current?.next || [];
 
@@ -22,7 +30,7 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole = 
         eyebrow="Class Circuit"
         title="Class Advancement"
         meta={`현재 ${player.job} · 다음 전직 ${avail.length || 0}개`}
-        onBack={() => setGameState('idle')}
+        onBack={() => setGameState?.('idle')}
         backLabel="복귀"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}

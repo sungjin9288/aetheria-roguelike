@@ -17,7 +17,15 @@ const toneClassForSignal = (tone: any) => {
     return 'text-slate-200 border-white/8 bg-white/[0.04]';
 };
 
-const PostCombatCard = ({ result, onClose, onRest, onSell }: any) => {
+interface PostCombatCardProps {
+    result?: any;
+    onClose?: () => void;
+    onRest?: () => void;
+    onSell?: (item?: any) => void;
+    mobile?: boolean;
+}
+
+const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps) => {
     const [isClosing, setIsClosing] = useState(false);
 
     if (!result) return null;

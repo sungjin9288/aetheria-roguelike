@@ -30,7 +30,15 @@ const CATEGORY_TABS: any = [
     { id: 'shields', label: 'SHIELDS' },
 ];
 
-const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }: any) => {
+interface WeaponCodexProps {
+    codex?: any;
+    totalCounts?: any;
+    discoveredCounts?: any;
+    progress?: any;
+    player?: any;
+}
+
+const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }: WeaponCodexProps) => {
     const [category, setCategory] = useState('weapons');
     const [selectedItem, setSelectedItem] = useState<any>(null);
 

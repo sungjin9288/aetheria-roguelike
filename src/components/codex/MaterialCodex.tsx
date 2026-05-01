@@ -4,9 +4,11 @@ import { DB } from '../../data/db';
 import { LOOT_TABLE } from '../../data/loot';
 import ItemIcon from '../icons/ItemIcon';
 
-const MaterialCodex = ({ codex }: any) => {
+interface MaterialCodexProps { codex?: any }
+
+const MaterialCodex = ({ codex }: MaterialCodexProps) => {
     const materials = DB.ITEMS.materials || [];
-    const matCodex = codex.materials || {};
+    const matCodex = codex?.materials || {};
     const discovered = Object.keys(matCodex).length;
 
     // 각 소재의 획득처 계산

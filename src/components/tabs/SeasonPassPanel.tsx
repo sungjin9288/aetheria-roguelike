@@ -13,7 +13,12 @@ const rewardLabel = (reward: any) => {
     ].filter(Boolean).join(' / ');
 };
 
-const SeasonPassPanel = ({ player, dispatch }: any) => {
+interface SeasonPassPanelProps {
+    player?: any;
+    dispatch?: (action: any) => void;
+}
+
+const SeasonPassPanel = ({ player, dispatch }: SeasonPassPanelProps) => {
     const sp = player?.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
     const { xp, tier, claimed, isPremium } = sp;
     const tierXpProgress = xp % SEASON_TIER_XP;

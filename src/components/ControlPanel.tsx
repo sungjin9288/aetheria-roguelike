@@ -21,6 +21,22 @@ import JobChangePanel from './tabs/JobChangePanel';
 import QuestBoardPanel from './tabs/QuestBoardPanel';
 import CraftingPanel from './tabs/CraftingPanel';
 import { ACTION_KIND_TO_BUTTON } from './controlPanelConfig';
+import type { Player, Monster } from '../types/index.js';
+
+interface ControlPanelProps {
+  gameState?: string;
+  player: Player;
+  enemy?: Monster | null;
+  actions?: any;
+  setGameState?: (state: string) => void;
+  shopItems?: any[];
+  grave?: any;
+  isAiThinking?: boolean;
+  currentEvent?: any;
+  stats?: any;
+  mobileFocused?: boolean;
+  onOpenArchiveConsole?: any;
+}
 
 const ControlPanel = ({
   gameState,
@@ -35,9 +51,9 @@ const ControlPanel = ({
   stats = null,
   mobileFocused = false,
   onOpenArchiveConsole = null,
-}: any) => {
+}: ControlPanelProps) => {
   const [confirmReset, setConfirmReset] = useState(false);
-  const mapData = DB.MAPS[player.loc];
+  const mapData = DB.MAPS[player.loc as string];
   const guidance = getAdventureGuidance(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, gameState);
   const moveRecommendations = getMoveRecommendations(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, DB.MAPS);
   const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind as any] || null;
@@ -211,7 +227,7 @@ const ControlPanel = ({
       icon: ArrowRight,
       label: 'MOVE',
       sidebarLabel: 'MOVE',
-      onClick: () => setGameState(GS.MOVING),
+      onClick: () => setGameState?.(GS.MOVING),
       className: 'bg-[linear-gradient(180deg,rgba(22,29,37,0.84)_0%,rgba(9,13,18,0.96)_100%)] border border-white/8 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-[#7dd4d8]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.08)]',
     },
   ];
@@ -303,7 +319,7 @@ const ControlPanel = ({
           <Motion.button
             data-testid="control-move-cancel"
             whileTap={{ scale: 0.95 }}
-            onClick={() => setGameState(GS.IDLE)}
+            onClick={() => setGameState?.(GS.IDLE)}
             className="col-span-2 min-h-[42px] px-3 py-2 text-xs bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/84 rounded-[1.1rem] hover:bg-rose-400/10 font-bold tracking-wider transition-all"
           >
             CANCEL

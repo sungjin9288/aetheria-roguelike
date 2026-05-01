@@ -5,6 +5,18 @@ import { soundManager } from '../../systems/SoundManager';
 import { getEnemyTacticalProfile } from '../../utils/runProfileUtils';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { getBossSignatureDrops } from '../../utils/bossSignatureHint.js';
+import type { Player, Monster } from '../../types/index.js';
+
+interface CombatPanelProps {
+    player: Player;
+    actions?: any;
+    enemy?: Monster | null;
+    stats?: any;
+    isAiThinking?: boolean;
+    mobile?: boolean;
+    compact?: boolean;
+    dense?: boolean;
+}
 
 const ACTION_BUTTONS: any = [
   {
@@ -45,10 +57,10 @@ const ACTION_BUTTONS: any = [
   },
 ];
 
-const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, mobile = false, compact = false, dense = false }: any) => {
+const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, mobile = false, compact = false, dense = false }: CombatPanelProps) => {
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
-  const tacticalProfile = getEnemyTacticalProfile(enemy, stats);
+  const tacticalProfile = enemy ? getEnemyTacticalProfile(enemy, stats) : null;
   const bossBriefLine = enemy?.isBoss
     ? tacticalProfile?.entryHint || tacticalProfile?.hint || tacticalProfile?.phaseHint
     : null;

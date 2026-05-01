@@ -15,7 +15,12 @@ const STAT_CARD_STYLE: any = [
     'text-[#f6e7c8] border-[#d5b180]/18 bg-[#d5b180]/10',
 ];
 
-const RunSummaryCard = ({ runSummary: s, onRestart }: any) => {
+interface RunSummaryCardProps {
+    runSummary?: any;
+    onRestart?: () => void;
+}
+
+const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
     const [copied, setCopied] = useState(false);
     const analysis = getRunSummaryAnalysis(s);
 

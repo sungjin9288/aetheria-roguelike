@@ -58,7 +58,14 @@ const getDailyRewardLabel = (reward: any) => {
     return '';
 };
 
-const QuestTab = ({ player, actions, isInSafeZone, compact = false }: any) => {
+interface QuestTabProps {
+    player: any;
+    actions?: any;
+    isInSafeZone?: boolean;
+    compact?: boolean;
+}
+
+const QuestTab = ({ player, actions, isInSafeZone, compact = false }: QuestTabProps) => {
     const traitProfile = getTraitProfile(player, { maxHp: player.maxHp, maxMp: player.maxMp });
     const [showAllQuests, setShowAllQuests] = React.useState(false);
     const activeQuestEntries = getActiveQuestEntries(player).map((entry: any, index: any) => {

@@ -43,7 +43,15 @@ const RewardChips = ({ reward, accent = 'blue' }: any) => {
 /**
  * QuestBoardPanel — 퀘스트 보드 패널 (진행 중 / 수락 가능 / 잠긴 임무)
  */
-const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false, onOpenArchiveConsole = null }: any) => {
+interface QuestBoardPanelProps {
+    player: any;
+    actions?: any;
+    setGameState?: (state: string) => void;
+    mobileFocused?: boolean;
+    onOpenArchiveConsole?: any;
+}
+
+const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false, onOpenArchiveConsole = null }: QuestBoardPanelProps) => {
   const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
   const {
     traitProfile,
@@ -76,7 +84,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false,
         title="MISSION TERMINAL"
         titleClassName="flex items-center gap-2 text-[1.35rem]"
         meta="진행 중 임무, 현상수배, 다음 수락 후보를 한 번에 점검합니다."
-        onBack={() => setGameState('idle')}
+        onBack={() => setGameState?.('idle')}
         backLabel="복귀"
         bleedClassName={mobileFocused ? '-mx-4 px-4' : '-mx-4 px-4'}
         onOpenArchive={onOpenArchiveConsole}

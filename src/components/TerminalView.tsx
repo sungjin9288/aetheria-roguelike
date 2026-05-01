@@ -3,6 +3,7 @@ import { Bot, AlertTriangle, CheckCircle, Sparkles, Terminal, ChevronUp, Filter 
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
+import type { Player } from '../types/index.js';
 import { GS } from '../reducers/gameStates';
 
 const LOG_STYLES: any = {
@@ -74,8 +75,22 @@ const MOBILE_LOG_BADGES: any = {
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system', 'legendary']);
 const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
 
+interface TerminalViewProps {
+    logs?: any[];
+    gameState?: string;
+    onCommand?: (cmd: string) => void;
+    autoFocusInput?: boolean;
+    player?: Player | null;
+    stats?: any;
+    quickSlots?: any[];
+    onQuickSlotUse?: (item: any, idx: number) => void;
+    showInput?: boolean;
+    className?: string;
+    toolbarLeft?: any;
+}
+
 const TerminalView = ({
-    logs,
+    logs = [],
     gameState,
     onCommand,
     autoFocusInput = true,
@@ -85,7 +100,7 @@ const TerminalView = ({
     showInput = true,
     className = '',
     toolbarLeft = null,
-}: any) => {
+}: TerminalViewProps) => {
     const logViewportRef = useRef<any>(null);
     const inputRef = useRef<any>(null);
     const [inputValue, setInputValue] = useState('');
@@ -106,9 +121,9 @@ const TerminalView = ({
 
             // Combat shortcuts: 1=Attack, 2=Skill, 3=Escape
             if (gameState === GS.COMBAT) {
-                if (e.key === '1') { e.preventDefault(); onCommand('attack'); }
-                if (e.key === '2') { e.preventDefault(); onCommand('skill'); }
-                if (e.key === '3') { e.preventDefault(); onCommand('escape'); }
+                if (e.key === '1') { e.preventDefault(); onCommand?.('attack'); }
+                if (e.key === '2') { e.preventDefault(); onCommand?.('skill'); }
+                if (e.key === '3') { e.preventDefault(); onCommand?.('escape'); }
             }
 
             // Quick slot shortcuts: Q, W, E
@@ -175,7 +190,7 @@ const TerminalView = ({
             {player && (
                 <CommandAutocomplete
                     input={inputValue}
-                    gameState={gameState}
+                    gameState={gameState || ''}
                     player={player}
                     onSelect={(cmd: any) => {
                         setInputValue(cmd);

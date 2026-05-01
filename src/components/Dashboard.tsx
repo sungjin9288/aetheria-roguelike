@@ -20,6 +20,24 @@ import QuestTab from './tabs/QuestTab';
 import SystemTab from './tabs/SystemTab';
 import SeasonPassPanel from './tabs/SeasonPassPanel';
 import SignalBadge from './SignalBadge';
+import type { Player } from '../types/index.js';
+
+interface DashboardProps {
+    player: Player;
+    grave?: any;
+    sideTab?: string;
+    setSideTab?: (tab: string) => void;
+    actions?: any;
+    stats?: any;
+    mobileSection?: string;
+    mobile?: boolean;
+    quickSlots?: any[];
+    runtime?: any;
+    inventorySpotlight?: any;
+    onClearInventorySpotlight?: any;
+    consoleExpanded?: boolean;
+    onReturnToLog?: any;
+}
 
 const TAB_ITEMS: any = [
     { id: 'equipment', icon: Shield, label: 'Equipment', mobileLabel: 'GEAR' },
@@ -49,11 +67,11 @@ const TOWN_MENU_ACTIONS: any = [
 // INV/GEAR/CODEX 클릭 시 탭 콘텐츠가 갱신되지 않는 버그) plain div로 전환.
 // 필요 시 framer-motion 업그레이드 후 재도입 검토.
 
-const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null, consoleExpanded = false, onReturnToLog = null }: any) => {
+const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null, consoleExpanded = false, onReturnToLog = null }: DashboardProps) => {
     const [mobileArchiveExpanded, setMobileArchiveExpanded] = useState(false);
     const [dockSeen, setDockSeen] = useState(() => sessionStorage.getItem('archiveDockSeen') === '1');
     const [confirmMenuReset, setConfirmMenuReset] = useState(false);
-    const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
+    const isInSafeZone = DB.MAPS[player?.loc as string]?.type === 'safe';
     const isInlineArchiveConsole = mobileSection === 'console';
     const hasInventorySpotlight = Boolean(inventorySpotlight?.token) && sideTab === 'inventory';
     const hasCompletableQuest = (player?.quests || []).some((q: any) => q.done && !q.claimed);
@@ -66,7 +84,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
     const ActiveArchiveIcon = activeMobileTab.icon;
     const handleTabSelect = (tabId: any) => {
         setConfirmMenuReset(false);
-        setSideTab(tabId);
+        setSideTab?.(tabId);
         setMobileArchiveExpanded(true);
     };
 

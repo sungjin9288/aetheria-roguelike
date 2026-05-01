@@ -72,7 +72,12 @@ const StatRow = ({ label, value, compareValue }: any) => {
 /**
  * EquipmentCodexCard — 레어리티별 프레임 + 스탯 비교 레이아웃
  */
-const EquipmentCodexCard = ({ item, player }: any) => {
+interface EquipmentCodexCardProps {
+    item?: any;
+    player?: any;
+}
+
+const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
     if (!item) return null;
 
     const rarity = getItemRarity(item);

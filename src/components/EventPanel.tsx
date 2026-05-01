@@ -7,7 +7,13 @@ import FocusPanelHeader from './FocusPanelHeader';
  * EventPanel - Dynamic event choice UI
  * Separated from ControlPanel for cleaner architecture
  */
-const EventPanel = ({ currentEvent, actions, mobileFocused = false }: any) => {
+interface EventPanelProps {
+    currentEvent?: any;
+    actions?: any;
+    mobileFocused?: boolean;
+}
+
+const EventPanel = ({ currentEvent, actions, mobileFocused = false }: EventPanelProps) => {
     if (!currentEvent) return null;
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
     const overlayPanelClass = 'absolute inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';

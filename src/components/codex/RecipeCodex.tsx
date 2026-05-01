@@ -3,10 +3,12 @@ import { Lock, Check } from 'lucide-react';
 import { DB } from '../../data/db';
 import SignalBadge from '../SignalBadge';
 
-const RecipeCodex = ({ codex, player }: any) => {
+interface RecipeCodexProps { codex?: any; player?: any }
+
+const RecipeCodex = ({ codex, player }: RecipeCodexProps) => {
     const [selected, setSelected] = useState<any>(null);
     const recipes = DB.ITEMS.recipes || [];
-    const recipeCodex = codex.recipes || {};
+    const recipeCodex = codex?.recipes || {};
     const discovered = Object.keys(recipeCodex).length;
 
     const inv = player?.inv || [];

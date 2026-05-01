@@ -16,7 +16,15 @@ const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
  * SystemTab — Dashboard의 system 탭 콘텐츠 (#4 분리)
  * props: player, actions, stats
  */
-const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: any) => {
+interface SystemTabProps {
+    player?: any;
+    actions?: any;
+    stats?: any;
+    runtime?: any;
+    compact?: boolean;
+}
+
+const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: SystemTabProps) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState<any>(null);
     const [showAllSystem, setShowAllSystem] = useState(false);

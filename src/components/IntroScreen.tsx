@@ -7,7 +7,12 @@ import { createRandomMobileName } from '../utils/nameGenerator';
 
 const CHALLENGE_REWARD_TEXT: any = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
 
-const IntroScreen = ({ onStart }: any) => {
+interface IntroScreenProps {
+    onStart?: (...args: any[]) => void;
+    mobile?: boolean;
+}
+
+const IntroScreen = ({ onStart }: IntroScreenProps) => {
     const [name, setName] = useState(() => createRandomMobileName());
     const [selectedChallenges, setSelectedChallenges] = useState<any[]>([]);
     const nameInputRef = useRef<any>(null);
@@ -40,7 +45,7 @@ const IntroScreen = ({ onStart }: any) => {
     const handleStart = () => {
         if (canStart) {
             blurMobileInput();
-            onStart(selectedName, 'male', '모험가', selectedChallenges);
+            onStart?.(selectedName, 'male', '모험가', selectedChallenges);
         }
     };
 

@@ -5,6 +5,18 @@ import SignalBadge from '../SignalBadge';
 import { getAdventureGuidance, getExplorationForecast, getQuestTracker } from '../../utils/adventureGuide';
 import { runGuidanceAction } from '../../utils/adventureGuideActions';
 import { calcPerformanceScore, getDifficultyMults } from '../../systems/DifficultyManager';
+import type { Player } from '../../types/index.js';
+
+interface FocusPanelProps {
+    player: Player;
+    stats?: any;
+    runtime?: any;
+    actions?: any;
+    setGameState?: (state: string) => void;
+    setSideTab?: (tab: string) => void;
+    mobile?: boolean;
+    onMobileOpenDetails?: () => void;
+}
 
 const DIFF_BADGE: any = {
     '압도': { label: '⚔️ 압도 중', cls: 'border-amber-500/40 bg-amber-950/40 text-amber-400' },
@@ -12,7 +24,7 @@ const DIFF_BADGE: any = {
     '열세': { label: '🛡️ 열세', cls: 'border-orange-500/40 bg-orange-950/40 text-orange-400' },
 };
 
-const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab, mobile = false, onMobileOpenDetails }: any) => {
+const FocusPanel = ({ player, stats, runtime, actions, setGameState, setSideTab, mobile = false, onMobileOpenDetails }: FocusPanelProps) => {
     const [detailsOpen, setDetailsOpen] = useState(!mobile);
     const mapData = runtime?.mapData;
     const diffBadge = useMemo(() => {

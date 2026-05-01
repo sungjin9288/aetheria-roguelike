@@ -56,7 +56,11 @@ const buildEntries = () => {
         .filter(Boolean);
 };
 
-const LegendaryCodex = ({ player }: any) => {
+interface LegendaryCodexProps {
+    player?: any;
+}
+
+const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
     const [selected, setSelected] = useState<any>(null);
     const codex = useMemo(() => player?.stats?.codex || {}, [player?.stats?.codex]);
     const entries = useMemo(() => buildEntries(), []);
