@@ -21,9 +21,16 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
 
     const allMonsters = useMemo(() => {
         const registry = player?.stats?.killRegistry || {};
+        // cycle 70: monsters + bossMonsters + boss(단일) 모두 포함 — boss 전용
+        // 몬스터가 도감에서 누락되던 버그 수정 (Bestiary와 동일).
+        const collectMapEncounters = (map: any): string[] => [
+            ...(Array.isArray(map?.monsters) ? map.monsters : []),
+            ...(Array.isArray(map?.bossMonsters) ? map.bossMonsters : []),
+            ...(typeof map?.boss === 'string' ? [map.boss] : []),
+        ];
         const monstersSet = new Set<string>();
         (Object.values(DB.MAPS) as any[]).forEach((map: any) => {
-            (map.monsters || []).forEach((m: string) => monstersSet.add(m));
+            collectMapEncounters(map).forEach((m: string) => monstersSet.add(m));
         });
         return Array.from(monstersSet).map((name: string) => {
             const kills = registry[name] || 0;
@@ -35,7 +42,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                 encountered: kills > 0,
                 drops: (LOOT_TABLE as any)[name] || [],
                 location: (Object.entries(DB.MAPS) as Array<[string, any]>)
-                    .filter(([, map]) => (map.monsters || []).includes(name))
+                    .filter(([, map]) => collectMapEncounters(map).includes(name))
                     .map(([loc]) => loc)
                     .join(', '),
                 bonuses: {

@@ -44,8 +44,13 @@ const Codex = ({ player, dispatch }: CodexProps) => {
         const weapons = DB.ITEMS.weapons?.length || 0;
         const armors = (DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor').length;
         const shields = (DB.ITEMS.armors || []).filter((a: any) => a.type === 'shield').length;
+        // cycle 70: 몬스터 도감 totalCount에 boss / bossMonsters도 포함.
         const monsters = new Set<string>();
-        (Object.values(DB.MAPS) as any[]).forEach((map: any) => (map.monsters || []).forEach((m: string) => monsters.add(m)));
+        (Object.values(DB.MAPS) as any[]).forEach((map: any) => {
+            (map.monsters || []).forEach((m: string) => monsters.add(m));
+            (map.bossMonsters || []).forEach((m: string) => monsters.add(m));
+            if (typeof map.boss === 'string') monsters.add(map.boss);
+        });
         const recipes = DB.ITEMS.recipes?.length || 0;
         const materials = DB.ITEMS.materials?.length || 0;
         return { weapons, armors, shields, monsters: monsters.size, recipes, materials };
