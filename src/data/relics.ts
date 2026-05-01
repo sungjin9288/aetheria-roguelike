@@ -205,6 +205,32 @@ export const RELICS: any = [
         val: { spawn: 3, drop: 1.0 },
     },
 
+    // ─── cycle 67: 탐색/유틸 보강 (3개, 기존 effect 재사용) ───────────────────
+    {
+        id: 'wanderer_charm',
+        name: '방랑자의 부적',
+        rarity: 'uncommon',
+        desc: '이벤트 발생률 30% 증가 (저비용 옵션)',
+        effect: 'event_chance',
+        val: 0.3,
+    },
+    {
+        id: 'merchant_seal',
+        name: '상인의 인장',
+        rarity: 'rare',
+        desc: '골드 획득 60% 증가 (공허의 왕좌 다음 등급)',
+        effect: 'gold_mult',
+        val: 0.6,
+    },
+    {
+        id: 'fortune_relic',
+        name: '운명의 결정',
+        rarity: 'rare',
+        desc: '아이템 드롭률 100% 증가 (행운의 동전 강화 변형)',
+        effect: 'drop_rate',
+        val: 1.0,
+    },
+
     // ─── 특수 계열 (6개) ───────────────────────────────────────────────────
     {
         id: 'combo_ring',
