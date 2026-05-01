@@ -23,9 +23,14 @@ const buildMapIndex = () => {
     const index: Record<string, any> = {};
     for (const [mapName, map] of Object.entries(MAPS) as Array<[string, any]>) {
         const monsters = Array.isArray(map?.monsters) ? map.monsters : [];
+        const bossMonsters = Array.isArray(map?.bossMonsters) ? map.bossMonsters : [];
+        // cycle 69: map.boss 단일 필드도 포함 (신성한 호수의 고대 호수의 수호신처럼
+        // 단일 보스 정의에 signature drop이 있는 경우 hint 인덱스에서 누락되던 버그 수정).
+        const singleBoss = typeof map?.boss === 'string' ? [map.boss] : [];
+        const allMonsters: string[] = [...monsters, ...bossMonsters, ...singleBoss];
         // signature name → best rate (동일 signature가 여러 몬스터에서 드롭 가능할 때 최고 rate만 남김)
         const seen = new Map();
-        for (const monsterName of monsters) {
+        for (const monsterName of allMonsters) {
             const drops = DROP_TABLES[monsterName];
             if (!Array.isArray(drops)) continue;
             for (const drop of drops) {

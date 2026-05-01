@@ -416,11 +416,15 @@ export const DROP_TABLES: any = {
     ],
 
     // cycle 68: 신성한 호수 mid-game 보스 드롭. 자연/냉기 element 보상 중심.
+    // cycle 69: signature "심해의 수호복" 보조 드롭 경로 추가 — 심연 크라켄(Lv50+, 0.06)이
+    // 주 드롭처지만, mid-game 플레이어에게 작은 확률(0.03)로 첫 signature 만남 제공.
+    // signature 피드백 체인의 anticipate→drop 모먼트를 mid-game에서 한 번 노출.
     '고대 호수의 수호신': [
         { item: '중급 체력 물약', rate: 0.6 },
         { item: '상급 마나 물약', rate: 0.45 },
         { item: '자연의 결정', rate: 0.55, qty: [1, 2] },
         { item: '마나 결정', rate: 0.5, qty: [1, 2] },
         { item: '엘릭서', rate: 0.18 },
+        { item: '심해의 수호복', rate: 0.03 },
     ],
 };

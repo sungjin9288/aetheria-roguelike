@@ -51,3 +51,38 @@ test('DROP_TABLES에 고대 호수의 수호신 엔트리 등록됨', () => {
         assert.ok(typeof entry.rate === 'number' && entry.rate > 0 && entry.rate <= 1, 'rate in (0, 1]');
     }
 });
+
+// cycle 69: 신규 보스 → signature drop 연결 테스트.
+// "심해의 수호복" signature가 신성한 호수(고대 호수의 수호신)에서 mid-game
+// 보조 드롭 경로로 제공됨을 회귀 가드. signature 피드백 체인의
+// anticipate→drop 모먼트를 mid-game에서 한 번 노출.
+import { getBossSignatureDrops } from '../src/utils/bossSignatureHint.js';
+import { getMapSignatureDrops } from '../src/utils/mapSignatureHints.js';
+import { getSignatureDropSources } from '../src/utils/signatureDropSources.js';
+
+test('cycle 69: 고대 호수의 수호신에 signature 심해의 수호복 보조 드롭 추가', () => {
+    const drops = DROP_TABLES['고대 호수의 수호신'];
+    const sigDrop = drops.find((d) => d.item === '심해의 수호복');
+    assert.ok(sigDrop, 'signature drop entry should exist');
+    assert.equal(sigDrop.rate, 0.03, 'low rate (mid-game 보조 경로)');
+});
+
+test('cycle 69: getBossSignatureDrops("고대 호수의 수호신")이 심해의 수호복 반환', () => {
+    const sigDrops = getBossSignatureDrops('고대 호수의 수호신');
+    const found = sigDrops.find((d) => d.name === '심해의 수호복');
+    assert.ok(found, 'getBossSignatureDrops should expose the signature');
+    assert.equal(found.rate, 0.03);
+});
+
+test('cycle 69: getMapSignatureDrops("신성한 호수")가 심해의 수호복 포함', () => {
+    const drops = getMapSignatureDrops('신성한 호수');
+    const found = drops.find((d) => d.name === '심해의 수호복');
+    assert.ok(found, 'map signature index should include lake guardian drop');
+});
+
+test('cycle 69: getSignatureDropSources("심해의 수호복")이 두 보스 모두 표시', () => {
+    const sources = getSignatureDropSources('심해의 수호복');
+    const sourceNames = sources.map((s) => s.monster);
+    assert.ok(sourceNames.includes('고대 호수의 수호신'), 'lake guardian should be in sources');
+    assert.ok(sourceNames.includes('심연 크라켄'), 'kraken (existing primary source) preserved');
+});
