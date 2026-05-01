@@ -29,7 +29,7 @@ const MaterialCodex = ({ codex }: MaterialCodexProps) => {
                 {discovered}/{materials.length} 소재 발견
             </div>
 
-            <div className="space-y-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
+            <div className="space-y-1.5 max-h-[45dvh] overflow-y-auto custom-scrollbar">
                 {materials.map((mat: any) => {
                     const found = !!matCodex[mat.name];
                     const sources = matSources[mat.name] || [];

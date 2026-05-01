@@ -127,7 +127,7 @@ const Bestiary = ({ player, compact = false }: BestiaryProps) => {
                     </div>
                 )
             ) : (
-                <div className="space-y-1.5 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                <div className="space-y-1.5 max-h-[50dvh] overflow-y-auto custom-scrollbar">
                     {allMonsters.map((m: any) => {
                         const hasSignature = m.signatureDrops?.length > 0;
                         return (

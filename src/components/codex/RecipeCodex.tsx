@@ -19,7 +19,7 @@ const RecipeCodex = ({ codex, player }: RecipeCodexProps) => {
                 {discovered}/{recipes.length} 레시피 발견
             </div>
 
-            <div className="space-y-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
+            <div className="space-y-1.5 max-h-[45dvh] overflow-y-auto custom-scrollbar">
                 {recipes.map((recipe: any) => {
                     const found = !!recipeCodex[recipe.id];
                     const hasGold = (player?.gold || 0) >= recipe.gold;

@@ -85,7 +85,7 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }:
             </div>
 
             {/* Item Grid by Tier */}
-            <div className="space-y-3 max-h-[45vh] overflow-y-auto custom-scrollbar">
+            <div className="space-y-3 max-h-[45dvh] overflow-y-auto custom-scrollbar">
                 {grouped.map(([tier, tierItems]: any) => (
                     <div key={tier}>
                         <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider mb-1.5">

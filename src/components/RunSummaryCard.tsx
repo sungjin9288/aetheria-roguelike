@@ -47,7 +47,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
         <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 py-[max(env(safe-area-inset-top),0.5rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]"
         >
             <div className="aether-overlay" />
             <div

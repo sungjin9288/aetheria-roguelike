@@ -208,7 +208,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
             )}
 
             {/* Grid */}
-            <div className="grid grid-cols-3 gap-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
+            <div className="grid grid-cols-3 gap-1.5 max-h-[45dvh] overflow-y-auto custom-scrollbar">
                 {entries.map(({ item, meta }: any) => {
                     const bucket = resolveDiscoveryBucket(item);
                     const found = bucket ? Boolean(codex[bucket]?.[item.name]) : false;

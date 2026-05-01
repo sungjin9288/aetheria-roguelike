@@ -75,7 +75,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
             </div>
 
             {/* Monster List */}
-            <div className="space-y-1.5 max-h-[45vh] overflow-y-auto custom-scrollbar">
+            <div className="space-y-1.5 max-h-[45dvh] overflow-y-auto custom-scrollbar">
                 {allMonsters.map((m: any) => (
                     <button
                         key={m.name}

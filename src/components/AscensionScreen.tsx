@@ -49,7 +49,7 @@ const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-[max(env(safe-area-inset-top),0.5rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]">
             <div className="aether-overlay" />
             <div
                 className="pointer-events-none absolute inset-0 opacity-70"
