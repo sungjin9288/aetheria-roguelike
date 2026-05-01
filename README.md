@@ -101,6 +101,19 @@
 | S3 | 시스템 | `useCombatActions.js` — 인벤 풀 체크 `>= 20` → `BALANCE.INV_MAX_SIZE` 교체 |
 | S4 | 시스템 | **상태이상 DoT 구현** — `poison` / `burn` 상태이상 전투 턴마다 피해 적용 (`maxHp × 4%`) |
 
+### Cycle 60–67 누적 (시스템/콘텐츠/품질)
+
+| 분류 | 사이클 | 내용 |
+|------|--------|------|
+| 시스템 | 60 (12 batch) | TS 도메인 타입 정착 — `Player / Item / Monster / GameMap / GameState / GameAction / Relic / EquipSlots`를 `src/types/*`에 정의하고 `gameReducer / handlers/* / utils/* / hooks/* / components/* / CombatEngine` 12개 메서드까지 적용 |
+| 성능 | 61 (4 phase) | 메인 번들 387 → 265 KB (-32%), Dashboard 174 → 51 KB (-71%), 초기 로드 JS 561 → 316 KB (-44%). Firebase 청크를 `firestore / auth / core` 3개로 분리, Dashboard 비-default 탭 10개 React.lazy + Suspense |
+| 콘텐츠 | 61–67 | 신규 칭호 5종(`wanderer / pathfinder / cartographer / legend_seeker / legend_chronicler`), 이벤트 체인 2개(`forgotten_commander / water_apostle`), 챌린지 퀘스트 3개, 탐색/유틸 유물 3개. `signature_collect` quest type + `signaturesDiscovered` cond.type 핸들러 추가 |
+| UX | 62 | 5개 풀스크린 모달 safe-area 패딩, 8개 컴포넌트 `100vh → 100dvh`, GameRoot bootStage ready 시 retroactive 칭호 부여, RunShareText에 빌드/난이도 라인 추가, eventActions `stat_bonus` reward 핸들러 정상화 |
+| 인프라 | 64–67 | E2E 회귀 가드 14 → 20개(STATS/CODEX/QUEST/ACHV lazy-loading + LegendaryCodex 빈 상태), PWA `aetheria-rpg-v3` 캐시 갱신 + manifest 한국어/카테고리, smoke-gameplay 연결 실패 시 안내 메시지, `npm run verify` 통합 스크립트 |
+| 보안 | 65 | `npm audit fix` 12 vulns(1 critical / 7 high / 4 moderate) → 0. vite / xmldom / yaml / brace-expansion patch 적용. cycle 67에서 `npm update` patch/minor wanted 갱신 추가 (84개 deps) |
+
+검증 누적: `npx tsc --noEmit` 0 errors, `npm run test:unit` 565/565, `npm run test:e2e` 20/20, `npm run lint` clean, `npm run build:guard` ok, `npm run cap:sync` + Android/iOS 빌드 모두 성공. 실기기 5분 루틴은 동일 CoreDevice tunnel timeout 환경 blocker가 잔존.
+
 ---
 
 ## 🏗 Architecture
