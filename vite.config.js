@@ -13,7 +13,10 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             if (id.includes('/react/') || id.includes('/react-dom/')) return 'vendor-react'
             if (id.includes('framer-motion')) return 'vendor-motion'
-            if (id.includes('/firebase/')) return 'vendor-firebase'
+            // Firebase 모듈을 기능별로 분리 — 각각 독립 로드/캐시 가능 (cycle 61).
+            if (id.includes('/firebase/firestore') || id.includes('/@firebase/firestore')) return 'vendor-firebase-firestore'
+            if (id.includes('/firebase/auth') || id.includes('/@firebase/auth')) return 'vendor-firebase-auth'
+            if (id.includes('/firebase/') || id.includes('/@firebase/')) return 'vendor-firebase-core'
             if (id.includes('chart.js') || id.includes('react-chartjs-2')) return 'vendor-charts'
           }
 
