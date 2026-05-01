@@ -177,6 +177,11 @@ export const QUESTS: any = [
     { id: 200, title: '대륙의 발자취',  type: 'explore_count', desc: '50번 탐색 후 새 칭호 획득', target: 'explores',    goal: 50,  reward: { exp: 8000,  gold: 12000 }, minLv: 5 },
     { id: 201, title: '지도 완성가',    type: 'discovery_count', desc: '15곳 발견', target: 'discoveries', goal: 15, reward: { exp: 25000, gold: 30000, title: '지도 제작자' }, minLv: 25 },
     { id: 202, title: '전설 기록자',    desc: 'signature 도감 15종 발견', type: 'signature_collect', target: 'signaturesDiscovered', goal: 15, reward: { exp: 50000, gold: 60000, title: '전설의 기록자' }, minLv: 40 },
+
+    // cycle 76: 도주 카운터 기반 챌린지 퀘스트 — cycle 74에서 stats.escapes 도입.
+    // 도주는 "도망"이 아니라 "런 보존" — 위험 인지 + 자원 관리 운영 인정.
+    { id: 203, title: '신중한 모험',    type: 'escape_count',     desc: '도주 5회 성공',           target: 'escapes',     goal: 5,  reward: { exp: 1500,  gold: 2500 }, minLv: 5 },
+    { id: 204, title: '생존의 기술',    type: 'escape_count',     desc: '도주 20회 성공',          target: 'escapes',     goal: 20, reward: { exp: 6000,  gold: 8000, item: '엘릭서' }, minLv: 15 },
 ];
 
 

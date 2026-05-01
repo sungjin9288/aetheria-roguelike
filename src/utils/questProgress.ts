@@ -48,6 +48,12 @@ export const syncQuestProgress = (player: Player, enemyName: any = '', questCata
             return { ...quest, progress: Math.min(questData.goal, current) };
         }
 
+        // cycle 76: 도주 카운터 기반 퀘스트 — cycle 74에서 stats.escapes 도입.
+        if (questData.type === 'escape_count' && questData.target === 'escapes') {
+            const current = (player.stats as any)?.escapes || 0;
+            return { ...quest, progress: Math.min(questData.goal, current) };
+        }
+
         // cycle 75: codex 합집합 근사 → SIGNATURE_REGISTRY 교집합 정확 카운트로 교체.
         // 기존 근사는 일반 weapon/armor/shield까지 포함되어 진행도가 부풀려졌음.
         if (questData.type === 'signature_collect' && questData.target === 'signaturesDiscovered') {

@@ -109,3 +109,28 @@ test('quest progress signature_collect caps at goal', () => {
     const progress = result.updatedQuests.find((quest) => quest.id === 202)?.progress;
     assert.ok(progress === 12 || progress === 15, `progress should be 12 or 15, got ${progress}`);
 });
+
+// cycle 76: escape_count 퀘스트 진행도 — cycle 74의 stats.escapes 카운터 사용.
+test('quest progress syncs escape_count from stats.escapes', () => {
+    const player = {
+        level: 10,
+        stats: { escapes: 7 },
+        quests: [
+            { id: 203, progress: 0 }, // 도주 5회 — already passed
+            { id: 204, progress: 0 }, // 도주 20회 — partial
+        ],
+    };
+    const result = syncQuestProgress(player);
+    assert.equal(result.updatedQuests.find((q) => q.id === 203)?.progress, 5, '203 caps at goal=5');
+    assert.equal(result.updatedQuests.find((q) => q.id === 204)?.progress, 7, '204 progress=7');
+});
+
+test('quest progress escape_count 0 when stats.escapes missing', () => {
+    const player = {
+        level: 10,
+        stats: {},
+        quests: [{ id: 203, progress: 0 }],
+    };
+    const result = syncQuestProgress(player);
+    assert.equal(result.updatedQuests.find((q) => q.id === 203)?.progress, 0);
+});
