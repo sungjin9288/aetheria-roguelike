@@ -1,5 +1,5 @@
 import { BALANCE } from '../data/constants.js';
-import type { Player } from "../types/index.js";
+import type { GameMap, Player } from "../types/index.js";
 
 export const DEFAULT_EXPLORE_STATE = Object.freeze({
     sinceNarrativeEvent: 0,
@@ -22,7 +22,7 @@ export const getExploreState = (stats: any = {}) => {
     };
 };
 
-export const getMapPacingProfile = (mapData: any = {}) => {
+export const getMapPacingProfile = (mapData: GameMap | null | undefined = {}) => {
     if (!mapData || mapData.type === 'safe') {
         return {
             id: 'safe',
@@ -62,7 +62,7 @@ export const getMapPacingProfile = (mapData: any = {}) => {
         };
     }
 
-    if ((mapData.level || 1) >= 25 || mapData.level === 'infinite') {
+    if ((typeof mapData.level === 'number' && mapData.level >= 25) || mapData.level === 'infinite') {
         return {
             id: 'hostile',
             label: '압박',
@@ -87,7 +87,7 @@ export const getMapPacingProfile = (mapData: any = {}) => {
     };
 };
 
-export const getNarrativeEventChance = (baseChance: any = 0, bonusMultiplier: any = 0, stats: any = {}, mapData: any = null) => {
+export const getNarrativeEventChance = (baseChance: any = 0, bonusMultiplier: any = 0, stats: any = {}, mapData: GameMap | null = null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const base = Math.min(
@@ -99,7 +99,7 @@ export const getNarrativeEventChance = (baseChance: any = 0, bonusMultiplier: an
     return clamp(base + pity, 0, BALANCE.SPECIAL_EVENT_MAX_CHANCE);
 };
 
-export const getQuietExplorationChance = (stats: any = {}, mapData: any = null) => {
+export const getQuietExplorationChance = (stats: any = {}, mapData: GameMap | null = null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const reduction = exploreState.quietStreak * BALANCE.QUIET_STREAK_NOTHING_REDUCTION;
@@ -110,7 +110,7 @@ export const getQuietExplorationChance = (stats: any = {}, mapData: any = null) 
     );
 };
 
-export const getDiscoveryOdds = (player: Player, mapData: any) => {
+export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undefined) => {
     const exploreState = getExploreState(player?.stats);
     const profile = getMapPacingProfile(mapData);
     const pitySinceDiscovery = Math.max(0, exploreState.sinceDiscovery - 2);

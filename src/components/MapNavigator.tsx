@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Check, Compass, Lock, MapPin, Route, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
+import type { GameMap } from '../types/index.js';
 import { getMoveRecommendations } from '../utils/adventureGuide';
 import SignalBadge from './SignalBadge';
 import { getGravesAtLoc } from '../utils/graveUtils';
@@ -49,10 +50,10 @@ const STATUS_THEME: any = {
     },
 };
 
-const getBandIndex = (map: any) => {
-    if (map.type === 'safe' && (map.minLv ?? map.level ?? 1) <= 15) return 0;
-    const mapLevel = map.level === 'infinite' ? 999 : (map.minLv ?? map.level ?? 1);
-    return BAND_CONFIG.findIndex((band: any) => mapLevel <= band.maxLevel);
+const getBandIndex = (map: GameMap) => {
+    const mapLevelRaw = map.level === 'infinite' ? 999 : (map.minLv ?? (typeof map.level === 'number' ? map.level : 1));
+    if (map.type === 'safe' && mapLevelRaw <= 15) return 0;
+    return BAND_CONFIG.findIndex((band: any) => mapLevelRaw <= band.maxLevel);
 };
 
 

@@ -1,6 +1,8 @@
+import type { GameMap } from '../types/index.js';
+
 const uniqueList = (values: any = []) => [...new Set(values.filter(Boolean))];
 
-export const getMapEncounterRoster = (map: any) => uniqueList([
+export const getMapEncounterRoster = (map: GameMap | null | undefined) => uniqueList([
     ...(map?.monsters || []),
     ...(map?.bossMonsters || []),
     typeof map?.boss === 'string' ? map.boss : null,
