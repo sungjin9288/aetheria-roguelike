@@ -18,15 +18,32 @@ export default defineConfig({
           }
 
           // 큰 게임 데이터는 별도 청크로 분리한다.
-          // Dashboard는 App.jsx에서 lazy import 되므로 archive 계열은
+          // Dashboard는 App.tsx에서 lazy import 되므로 archive 계열은
           // 기본 청크 분할에 맡겨 cycle 없는 chunk graph를 유지한다.
           if (id.includes('/src/data/')) return 'game-data'
 
+          // CombatEngine + 전투 액션 훅 (cycle 60에서 .ts 확장).
           if (
-            id.includes('/src/systems/CombatEngine.js')
-            || id.includes('/src/hooks/useCombatActions.js')
+            id.includes('/src/systems/CombatEngine')
+            || id.includes('/src/hooks/useCombatActions')
+            || id.includes('/src/hooks/combatActions/')
           ) {
             return 'game-combat'
+          }
+
+          // 장비/아바타 도메인 유틸 (cycle 61 perf 분리)
+          if (
+            id.includes('/src/utils/runProfile')
+            || id.includes('/src/utils/equipmentUtils')
+            || id.includes('/src/utils/avatarEquipmentPreview')
+            || id.includes('/src/utils/itemVisuals')
+            || id.includes('/src/utils/equipmentArt')
+            || id.includes('/src/utils/equipmentTint')
+            || id.includes('/src/utils/jobOutfitAffinity')
+            || id.includes('/src/utils/anchorPoints')
+            || id.includes('/src/utils/characterAppearance')
+          ) {
+            return 'game-equipment'
           }
         }
       }
