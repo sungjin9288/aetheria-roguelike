@@ -38,14 +38,24 @@
 
 ## Verification Expectations
 
+- Run `npx tsc --noEmit` (cycle 59부터 strict: true 활성, cycle 60에서 도메인 타입 정착).
 - Run `npm run lint`.
 - Run `npm run build:guard`.
 - Run `npm run test:unit`.
 - Run `npm run test:smoke`.
+- Run `npm run test:e2e` when the touched path affects user-facing tabs/panels/flows (cycle 64에서 20개 시나리오 회귀 가드 정착).
 - Run `npm run mobile:doctor`.
 - Run `npm run cap:sync`.
 - Run `npm run android:debug`, `npm run ios:build:device`, or `npm run ios:archive` when the touched path affects native packaging, device delivery, or signed-build readiness.
 - If a required verification step cannot run because of local environment limits, state the exact missing dependency or blocker.
+
+### test:smoke 사전 조건
+
+`npm run test:smoke`는 preview 서버가 활성 상태여야 한다 (기본 `http://127.0.0.1:4173/`). preview 서버가 미기동이거나 다른 포트면 cycle 65 phase 5에서 추가한 안내 메시지가 출력되며, 다음 중 하나로 해결한다:
+
+- `npm run preview -- --port 4173 --host 127.0.0.1` (백그라운드)
+- `--url http://localhost:5173` 같은 활성 dev/preview URL 인자
+- `AETHERIA_SMOKE_URL` 환경변수로 다른 포트 지정
 
 ## Close-Out
 
