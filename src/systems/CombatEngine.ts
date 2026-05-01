@@ -1,4 +1,4 @@
-import type { Monster, Relic } from '../types/index.js';
+import type { Monster, Player, Relic } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
@@ -48,11 +48,11 @@ export const CombatEngine = {
         };
     },
 
-    getCombatFlags(player: any) {
+    getCombatFlags(player: Player) {
         return { ...this.DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
     },
 
-    getEffectiveMaxMp(player: any, relics: Relic[] = []) {
+    getEffectiveMaxMp(player: Player, relics: Relic[] = []) {
         const rmp = 1 + relics.reduce((acc: any, relic: any) => {
             if (relic.effect === 'mp_mult') return acc + relic.val;
             if (relic.effect === 'omega') return acc + relic.val;
@@ -288,7 +288,7 @@ export const CombatEngine = {
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
         const logs: any[] = [];
-        let updatedPlayer = { ...player, combatFlags: this.getCombatFlags(player) };
+        let updatedPlayer: any = { ...player, combatFlags: this.getCombatFlags(player) };
         const flags = this.getCombatFlags(player);
 
         // 유물: 방어 무시 (armor_pen)
@@ -664,7 +664,7 @@ export const CombatEngine = {
 
     enemyAttack(player: any, enemy: Monster, stats: any) {
         let updatedEnemy = { ...enemy };
-        let updatedPlayer = { ...player };
+        let updatedPlayer: any = { ...player };
         const logs: any[] = [];
         // relics 선언을 함수 상단으로 (Phase 전환 블록에서 use-before-declaration 방지).
         const relics = stats.relics || [];
@@ -1052,7 +1052,7 @@ export const CombatEngine = {
         };
     },
 
-    updateQuestProgress(player: any, enemyName: any) {
+    updateQuestProgress(player: Player, enemyName: any) {
         return syncQuestProgress(player, enemyName, DB.QUESTS);
     },
 
