@@ -43,6 +43,29 @@ export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
                         updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: '기사의 혼령' } };
                         addLog('success', MSG.CHAIN_REWARD_COMBAT_BONUS(Math.round(((rwd.atkMult || 1.3) - 1) * 100), rwd.duration || 5));
                     }
+                    // cycle 62: stat_bonus는 영구 ATK/DEF/HP 가산 — 기존 chain(rift_secret)에서
+                    // 사용 중이지만 핸들러가 없어 silently 무시되던 보상을 정상화.
+                    if (rwd.type === 'stat_bonus') {
+                        const next: any = { ...updatedPlayer };
+                        if (rwd.atk) next.atk = (next.atk || 0) + rwd.atk;
+                        if (rwd.def) next.def = (next.def || 0) + rwd.def;
+                        if (rwd.hp) {
+                            next.maxHp = (next.maxHp || 0) + rwd.hp;
+                            next.hp = Math.min(next.maxHp, (next.hp || 0) + rwd.hp);
+                        }
+                        if (rwd.mp) {
+                            next.maxMp = (next.maxMp || 0) + rwd.mp;
+                            next.mp = Math.min(next.maxMp, (next.mp || 0) + rwd.mp);
+                        }
+                        updatedPlayer = next;
+                        const parts = [
+                            rwd.atk && `ATK +${rwd.atk}`,
+                            rwd.def && `DEF +${rwd.def}`,
+                            rwd.hp && `HP +${rwd.hp}`,
+                            rwd.mp && `MP +${rwd.mp}`,
+                        ].filter(Boolean).join(' · ');
+                        addLog('success', `[체인 보상] ${parts}`);
+                    }
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
                 if (outcome.type === 'chain_advance' || outcome.type === 'chain_advance_fail') {

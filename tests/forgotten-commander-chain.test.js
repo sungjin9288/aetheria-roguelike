@@ -49,7 +49,8 @@ test('forgotten_commander completed (progress >= 3) does not trigger', () => {
 
 test('forgotten_commander outcomes use supported reward types', () => {
     const chain = EVENT_CHAINS.find((c) => c.id === 'forgotten_commander');
-    const validTypes = new Set(['gold', 'item', 'relic', 'combat_bonus']);
+    // cycle 62: stat_bonus 핸들러도 추가됨.
+    const validTypes = new Set(['gold', 'item', 'relic', 'combat_bonus', 'stat_bonus']);
 
     for (const step of chain.steps) {
         for (const outcome of step.event.outcomes) {
