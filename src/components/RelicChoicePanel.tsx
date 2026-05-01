@@ -2,6 +2,13 @@ import { AT } from '../reducers/actionTypes';
 import { RARITY_COLORS } from '../data/titles';
 import { RELIC_SYNERGIES } from '../data/relics';
 import SignalBadge from './SignalBadge';
+import type { Player } from '../types/index.js';
+
+interface RelicChoicePanelProps {
+    pendingRelics?: any[] | null;
+    dispatch: (action: any) => void;
+    player?: Player | null;
+}
 
 /**
  * 유물 시너지 점수 계산 (0~100)
@@ -103,7 +110,7 @@ const RARITY_BADGE_TONE: any = {
  * RelicChoicePanel — 유물 3지선다 선택 오버레이
  * `pendingRelics` 가 null 이 아닐 때 ControlPanel 위에 표시됨
  */
-const RelicChoicePanel = ({ pendingRelics, dispatch, player }: any) => {
+const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelProps) => {
     if (!pendingRelics || pendingRelics.length === 0) return null;
 
     const ownedRelics = player?.relics || [];

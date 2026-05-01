@@ -1,8 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Activity, BarChart3, Coins, Compass, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
+import type { Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import SignalBadge from './SignalBadge';
+
+interface StatsPanelProps {
+    player?: Player | null;
+    stats?: any;
+    compact?: boolean;
+}
 
 /**
  * Signature 세트 tone → 색상 매핑.
@@ -31,7 +38,7 @@ const formatMultDelta = (mult: any) => {
 /**
  * StatsPanel — 플레이 통계 + 성향 요약
  */
-const StatsPanel = ({ player, stats, compact = false }: any) => {
+const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
     const [showAllStats, setShowAllStats] = useState(false);
     const overview = useMemo(() => {
         const s = player?.stats || {};
@@ -45,7 +52,7 @@ const StatsPanel = ({ player, stats, compact = false }: any) => {
         };
     }, [player]);
 
-    const trait = useMemo(() => stats?.traitProfile || getTraitProfile(player, stats), [player, stats]);
+    const trait = useMemo(() => stats?.traitProfile || (player ? getTraitProfile(player, stats) : null), [player, stats]);
     const passiveParts = useMemo(() => getTraitPassiveParts(trait), [trait]);
 
     const activeSignatureSet = stats?.activeSignatureSet || null;

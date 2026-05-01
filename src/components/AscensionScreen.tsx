@@ -3,6 +3,12 @@ import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
+import type { Player } from '../types/index.js';
+
+interface AscensionScreenProps {
+    player: Player;
+    actions?: any;
+}
 
 const PRESTIGE_UNLOCKS: any = [
     { rank: 1, label: '에테르 각성', desc: '허공의 심연 접근 허용 · 에센스 획득 +10%' },
@@ -20,7 +26,7 @@ const STAT_TONE: any = {
     essence: 'text-[#e3dcff] border-[#9a8ac0]/24 bg-[#9a8ac0]/10',
 };
 
-const AscensionScreen = ({ player, actions }: any) => {
+const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
     const meta = player.meta || {};
     const currentRank = meta.prestigeRank || 0;
     // codex는 ASCEND reducer에서 보존되지만 UI에 명시되지 않아 trust 모먼트가 빈다

@@ -1,14 +1,19 @@
 import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import type { Player } from '../types/index.js';
 import { getTraitProfile } from '../utils/runProfile';
 import { isSignatureItem } from '../data/signatureItems.js';
+
+interface DashboardMobileSummaryProps {
+    player?: Player | null;
+}
 
 /**
  * DashboardMobileSummary — 장비 로드아웃 + 한눈에 보기 상태 pill 스트립
  * StatusBar와 중복되는 위치/직업/레벨 정보는 제거하고 핵심 진행 상태만 표시
  */
-const DashboardMobileSummary = ({ player }: any) => {
+const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
     const loadoutEntries = [
         { label: 'LEFT', item: player?.equip?.offhand, fallback: 'EMPTY' },
         { label: 'RIGHT', item: player?.equip?.weapon, fallback: 'EMPTY' },

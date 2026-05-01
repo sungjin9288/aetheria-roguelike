@@ -9,6 +9,14 @@ import { isSignatureItem } from '../data/signatureItems.js';
 import { getJobSetCatalog } from '../utils/jobOutfitAffinity.js';
 import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
+import type { Player } from '../types/index.js';
+
+interface EquipmentPanelProps {
+    player: Player;
+    stats?: any;
+    actions?: any;
+    compact?: boolean;
+}
 
 const SLOT_CONFIG: any = [
     { key: 'weapon', label: '주무기', icon: Sword },
@@ -25,7 +33,7 @@ const SIG_SET_TONE: any = Object.freeze({
     nature: { border: 'rgba(168,208,160,0.5)', glow: 'rgba(168,208,160,0.18)', text: '#a8d0a0' },
 });
 
-const EquipmentPanel = ({ player, stats, actions, compact = false }: any) => {
+const EquipmentPanel = ({ player, stats, actions, compact = false }: EquipmentPanelProps) => {
     const [showSetCatalog, setShowSetCatalog] = useState(false);
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip), [player?.equip]);
     const setCatalog = useMemo(() => getJobSetCatalog(player?.job, DB.ITEMS), [player?.job]);
@@ -48,7 +56,8 @@ const EquipmentPanel = ({ player, stats, actions, compact = false }: any) => {
     );
 
     const slotEntries = useMemo(() => SLOT_CONFIG.map((slot: any) => {
-        const item = player?.equip?.[slot.key] || null;
+        const equipMap = (player?.equip || {}) as Record<string, any>;
+        const item = equipMap[slot.key] || null;
         const availability = getEnhanceAvailability(item, player?.gold || 0, player?.inv || []);
         const isSignature = item ? isSignatureItem(item) : false;
 

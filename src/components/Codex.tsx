@@ -13,6 +13,13 @@ import RecipeCodex from './codex/RecipeCodex';
 import MaterialCodex from './codex/MaterialCodex';
 import LegendaryCodex from './codex/LegendaryCodex';
 import CodexDiscoveryOverlay from './codex/CodexDiscoveryOverlay';
+import type { Player } from '../types/index.js';
+
+interface CodexProps {
+    player?: Player | null;
+    dispatch: (action: any) => void;
+    compact?: boolean;
+}
 
 const SUB_TABS: any = [
     { id: 'equip', label: 'EQUIP', icon: Sword },
@@ -22,7 +29,7 @@ const SUB_TABS: any = [
     { id: 'legend', label: 'LEGEND', icon: Sparkles },
 ];
 
-const Codex = ({ player, dispatch }: any) => {
+const Codex = ({ player, dispatch }: CodexProps) => {
     const [subTab, setSubTab] = useState('equip');
     const [discoveryEntry, setDiscoveryEntry] = useState<any>(null);
     const dismissDiscovery = useCallback(() => setDiscoveryEntry(null), []);

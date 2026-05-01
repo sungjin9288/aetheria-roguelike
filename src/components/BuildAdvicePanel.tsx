@@ -3,6 +3,12 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { RELICS } from '../data/relics';
 import { TRAIT_DEFINITIONS } from '../data/traits';
 import { getRunBuildProfile } from '../utils/runProfile';
+import type { Player } from '../types/index.js';
+
+interface BuildAdvicePanelProps {
+    player?: Player | null;
+    compact?: boolean;
+}
 
 /** 아키타입별 추천 유물 효과 목록 (우선순위 순) */
 const BUILD_RELIC_HINTS: any = {
@@ -42,7 +48,7 @@ const getRecommendedRelics = (primaryId: any, ownedRelicEffects: any) => {
  * BuildAdvicePanel — 현재 빌드 아키타입 기반 유물 + 스킬 추천
  * 맵 탭 하단에 배치됩니다.
  */
-const BuildAdvicePanel = ({ player, compact = false }: any) => {
+const BuildAdvicePanel = ({ player, compact = false }: BuildAdvicePanelProps) => {
     const [open, setOpen] = useState(false);
 
     const profile = useMemo(() => getRunBuildProfile(player || {}), [player]);

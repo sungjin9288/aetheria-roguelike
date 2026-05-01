@@ -8,6 +8,16 @@ import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
 
+interface ShopPanelProps {
+    player: any;
+    actions?: any;
+    shopItems?: any;
+    setGameState?: any;
+    stats?: any;
+    mobileFocused?: boolean;
+    onOpenArchiveConsole?: any;
+}
+
 /** 맵 레벨을 기준으로 상점 최대 아이템 티어 계산 */
 const getShopMaxTier = (loc: any) => {
     const mapData = DB.MAPS?.[loc] || {};
@@ -90,7 +100,7 @@ const getCompactItemSummary = (item: any) => {
 
 const MOBILE_INITIAL_BUY_LIMIT = 12;
 
-const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false, onOpenArchiveConsole = null }: any) => {
+const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false, onOpenArchiveConsole = null }: ShopPanelProps) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState<any>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });

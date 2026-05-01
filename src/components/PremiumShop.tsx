@@ -2,6 +2,16 @@ import React from 'react';
 import { X, Package, Shield, Zap, Star } from 'lucide-react';
 import { PREMIUM_SHOP } from '../data/premiumShop';
 import SignalBadge from './SignalBadge';
+import type { Player } from '../types/index.js';
+
+interface PremiumShopProps {
+    player?: Player | null;
+    onClose?: () => void;
+    onExpandInventory?: () => void;
+    onPurchaseSynthProtect?: () => void;
+    onPurchaseRevive?: () => void;
+    onPurchaseTitle?: (...args: any[]) => void;
+}
 
 const ITEM_ICONS: any = {
     inv_expand: Package,
@@ -13,7 +23,7 @@ const CrystalIcon = () => (
     <span className="text-cyan-300" aria-hidden="true">💎</span>
 );
 
-const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtect, onPurchaseRevive, onPurchaseTitle }: any) => {
+const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtect, onPurchaseRevive, onPurchaseTitle }: PremiumShopProps) => {
     const crystals = player?.premiumCurrency || 0;
     const ownedTitles = player?.stats?.cosmeticTitles || [];
     const maxInv = player?.maxInv || 20;

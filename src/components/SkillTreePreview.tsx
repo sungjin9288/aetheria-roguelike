@@ -10,6 +10,13 @@ import SignalBadge from './SignalBadge';
 import SkillTypeIcon from './icons/SkillTypeIcon';
 import ClassIcon from './icons/ClassIcon';
 import ClassTree from './ClassTree';
+import type { Player } from '../types/index.js';
+
+interface SkillTreePreviewProps {
+    player: Player;
+    compact?: boolean;
+    actions?: any;
+}
 
 const EFFECT_LABELS: any = {
     burn: '화상',
@@ -107,16 +114,16 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, compact = false, sum
     );
 };
 
-const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
+const SkillTreePreview = ({ player, compact = false, actions = null }: SkillTreePreviewProps) => {
     const [showAllSkills, setShowAllSkills] = useState(false);
     const [expandedJob, setExpandedJob] = useState<any>(null);
     const [swapTarget, setSwapTarget] = useState<any>(null); // skillName being swapped
     const [showClassTree, setShowClassTree] = useState(false);
-    const currentClass = DB.CLASSES[player.job];
+    const currentClass = DB.CLASSES[player.job as string];
     const allCurrentSkills = getJobSkills(player);
     const selectedIndex = player.skillLoadout?.selected ?? 0;
     const cooldowns = player.skillLoadout?.cooldowns || {};
-    const isInSafeZone = DB.MAPS[player?.loc]?.type === 'safe';
+    const isInSafeZone = DB.MAPS[player?.loc as string]?.type === 'safe';
     const swapCost = BALANCE.SKILL_SWAP_COST || 50;
 
     if (!currentClass) return null;
@@ -255,7 +262,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                             {nextJobs.slice(0, 2).map((jobName: any) => {
                                 const jobData = DB.CLASSES[jobName];
                                 if (!jobData) return null;
-                                const meetsReq = player.level >= (jobData.reqLv || 0);
+                                const meetsReq = (player.level ?? 0) >= (jobData.reqLv || 0);
                                 return (
                                     <div key={jobName} className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-2.5 py-2">
                                         <div className={`text-[13px] font-rajdhani font-bold ${meetsReq ? 'text-[#e3dcff]' : 'text-slate-200/86'}`}>{jobName}</div>
@@ -277,7 +284,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
                                 const jobData = DB.CLASSES[jobName];
                                 if (!jobData) return null;
                                 const isOpen = expandedJob === jobName;
-                                const meetsReq = player.level >= (jobData.reqLv || 0);
+                                const meetsReq = (player.level ?? 0) >= (jobData.reqLv || 0);
 
                                 return (
                                     <div
@@ -357,7 +364,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: any) => {
 
             {/* 스킬 분기 선택 */}
             {!compact && (() => {
-                const classData = CLASSES[player.job];
+                const classData = CLASSES[player.job as string];
                 const skillBranches = classData?.skillBranches;
                 if (!skillBranches || Object.keys(skillBranches).length === 0) return null;
                 return (

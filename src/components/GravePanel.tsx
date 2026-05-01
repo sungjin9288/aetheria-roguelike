@@ -5,10 +5,17 @@ import { db, hasFirebaseConfig } from '../firebase';
 import { APP_ID, BALANCE } from '../data/constants';
 import { calcInvasionChance } from '../utils/graveUtils';
 import { isSignatureItem } from '../data/signatureItems.js';
+import type { Player } from '../types/index.js';
 
 const GRAVES_LIMIT = 10;
 
-const GravePanel = ({ player, actions, compact = false }: any) => {
+interface GravePanelProps {
+    player: Player;
+    actions?: any;
+    compact?: boolean;
+}
+
+const GravePanel = ({ player, actions, compact = false }: GravePanelProps) => {
     const [graves, setGraves] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [invadingUid, setInvadingUid] = useState<any>(null);

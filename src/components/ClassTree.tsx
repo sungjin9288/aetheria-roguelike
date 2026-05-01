@@ -2,8 +2,13 @@ import React, { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
+import type { Player } from '../types/index.js';
 import ClassIcon from './icons/ClassIcon';
 import SignalBadge from './SignalBadge';
+
+interface ClassTreeProps {
+    player: Player;
+}
 
 const TIER_LABELS: any = { 0: MSG.CLASS_TIER_0, 1: MSG.CLASS_TIER_1, 2: MSG.CLASS_TIER_2, 3: MSG.CLASS_TIER_3 };
 const TIER_COLORS: any = { 0: '#9ca3af', 1: '#00ccff', 2: '#bc13fe', 3: '#f59e0b' };
@@ -69,9 +74,9 @@ const TreeNode = ({ node, isCurrent, isAvailable, isLocked }: any) => {
 /**
  * ClassTree — 전직 계통도 시각화 (CSS Grid 4열)
  */
-const ClassTree = ({ player }: any) => {
+const ClassTree = ({ player }: ClassTreeProps) => {
     const { tiers } = useMemo(() => buildTree(), []);
-    const currentClass = DB.CLASSES[player.job];
+    const currentClass = DB.CLASSES[player.job as string];
     const availableJobs = new Set<string>(currentClass?.next || []);
 
     // 현재 직업에서 도달 가능한 모든 경로 찾기
@@ -82,7 +87,7 @@ const ClassTree = ({ player }: any) => {
             const name = queue.shift();
             if (visited.has(name)) continue;
             visited.add(name);
-            (DB.CLASSES[name]?.next || []).forEach((n: any) => queue.push(n));
+            (DB.CLASSES[name as string]?.next || []).forEach((n: any) => queue.push(n));
         }
         return visited;
     }, [player.job]);
@@ -141,7 +146,7 @@ const ClassTree = ({ player }: any) => {
                     <span className="text-slate-400">{player.job}</span>
                     <span>→</span>
                     {[...availableJobs].map((job: any) => {
-                        const meetsReq = player.level >= (DB.CLASSES[job]?.reqLv || 999);
+                        const meetsReq = (player.level ?? 0) >= (DB.CLASSES[job]?.reqLv || 999);
                         return (
                             <span key={job} className={meetsReq ? 'text-cyber-purple' : 'text-slate-500'}>
                                 {job}{meetsReq ? ' ✓' : ` (Lv.${DB.CLASSES[job]?.reqLv})`}

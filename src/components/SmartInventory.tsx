@@ -10,6 +10,17 @@ import { BALANCE } from '../data/constants';
 import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 import ItemIcon from './icons/ItemIcon';
+import type { Player } from '../types/index.js';
+
+interface SmartInventoryProps {
+    player: Player;
+    actions?: any;
+    quickSlots?: any[];
+    onAssignQuickSlot?: any;
+    spotlight?: any;
+    onClearSpotlight?: any;
+    compact?: boolean;
+}
 
 /**
  * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
@@ -57,7 +68,7 @@ const getItemTags = (item: any) => {
     return tags;
 };
 
-const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact = false }: any) => {
+const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact = false }: SmartInventoryProps) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState<any>(null);
     const [showAllItems, setShowAllItems] = React.useState(false);
@@ -70,16 +81,16 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
 
     const grouped = useMemo(() => {
         const map: Record<string, any> = {};
-        for (const item of player.inv) {
+        for (const item of (player.inv || [])) {
             // Enhanced items are unique — group by name+enhance; non-equipment groups by name only
             const enhance = item.enhance || 0;
-            const isEquipType = ['weapon', 'armor', 'shield'].includes(item.type);
-            const key = isEquipType ? `${item.name}__+${enhance}__${item.id}` : item.name;
+            const isEquipType = ['weapon', 'armor', 'shield'].includes(item.type as string);
+            const key = (isEquipType ? `${item.name}__+${enhance}__${item.id}` : item.name) as string;
             if (!map[key]) map[key] = { item, count: 0 };
             map[key].count++;
         }
         return Object.values(map);
-    }, [player.inv]);
+    }, [(player.inv || [])]);
 
     const filtered = useMemo(() => {
         if (activeFilter === 'all') return grouped;
@@ -105,16 +116,16 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     }, [player.equip]);
 
     const bestWeapon = useMemo(() =>
-        player.inv
+        (player.inv || [])
             .filter((i: any) => i.type === 'weapon' && canEquipItem(i, player.job))
             .sort((a: any, b: any) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
-        [player.inv, player.job, getEquipPreview]
+        [(player.inv || []), player.job, getEquipPreview]
     );
     const bestArmor = useMemo(() =>
-        player.inv
+        (player.inv || [])
             .filter((i: any) => i.type === 'armor' && canEquipItem(i, player.job))
             .sort((a: any, b: any) => (b.val || 0) - (a.val || 0))[0],
-        [player.inv, player.job]
+        [(player.inv || []), player.job]
     );
 
     const getCompareDiff = useCallback((item: any) => {
@@ -135,10 +146,10 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     };
 
     // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
-    const isInvNearFull = player.inv.length >= BALANCE.INV_FULL_THRESHOLD;
+    const isInvNearFull = (player.inv || []).length >= BALANCE.INV_FULL_THRESHOLD;
     const sellableMatCount = useMemo(() =>
-        player.inv.filter((i: any) => i.type === 'mat' && (i.price || 0) <= 30).length,
-        [player.inv]
+        (player.inv || []).filter((i: any) => i.type === 'mat' && (i.price || 0) <= 30).length,
+        [(player.inv || [])]
     );
     const activeFilterLabel = FILTERS.find((entry: any) => entry.id === activeFilter)?.label || MSG.INV_FILTER_ALL;
     const visibleFiltered = (() => {
@@ -245,7 +256,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 >
                     <div className={`flex items-center gap-2 text-[#f6e7c8] font-fira ${compact ? 'text-xs' : 'text-sm'}`}>
                         <AlertCircle size={compact ? 12 : 13} className="shrink-0 animate-pulse" />
-                        <span>인벤토리 {player.inv.length}/20 — 저가 재료 {sellableMatCount}개 정리 가능</span>
+                        <span>인벤토리 {(player.inv || []).length}/20 — 저가 재료 {sellableMatCount}개 정리 가능</span>
                     </div>
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
@@ -301,7 +312,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     const isSpotlighted = spotlightSet.has(item.name);
                     const isSignature = isSignatureItem(item);
                     const resonance = getTraitItemResonance(item, traitProfile, player);
-                    const enhanceState = getEnhanceAvailability(item, player.gold, player.inv);
+                    const enhanceState = getEnhanceAvailability(item, player.gold, (player.inv || []));
                     const enhanceRequirement = enhanceState.requirement;
 
                     // 우선순위: spotlight > signature > currentEquip > default

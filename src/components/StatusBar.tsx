@@ -3,6 +3,7 @@ import { Volume2, VolumeX } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
 import { isSignatureItem } from '../data/signatureItems.js';
+import type { Player, Monster } from '../types/index.js';
 
 const METER_THEME: any = {
   hp: {
@@ -97,6 +98,17 @@ const EnemyStatus = ({ enemy, mobile = false, compact = false }: any) => {
   );
 };
 
+interface StatusBarProps {
+  player?: Player | null;
+  stats?: any;
+  enemy?: Monster | null;
+  className?: string;
+  onCrystalClick?: (() => void) | null;
+  isMuted?: boolean;
+  onToggleMute?: (() => void) | null;
+  onOpenEquipment?: (() => void) | null;
+}
+
 const StatusBar = ({
   player,
   stats,
@@ -106,7 +118,7 @@ const StatusBar = ({
   isMuted = false,
   onToggleMute = null,
   onOpenEquipment = null,
-}: any) => {
+}: StatusBarProps) => {
   if (!player?.name) return null;
   const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
   // 장착중인 signature 개수 — sticky HUD에 ✦N 칩으로 상시 노출
@@ -192,7 +204,7 @@ const StatusBar = ({
                 <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
                 <span className="ml-0.5 text-[9px] font-fira text-slate-400/68">CR</span>
                 {hasPremiumCurrency && (
-                  <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick}>
+                  <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick || undefined}>
                     💎{player.premiumCurrency}
                   </div>
                 )}

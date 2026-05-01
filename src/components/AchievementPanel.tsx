@@ -2,8 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Trophy, Star, Skull, Swords, Crown, Gift } from 'lucide-react';
 import { DB } from '../data/db';
+import type { Player } from '../types/index.js';
 import { formatRewardParts, getAchievementCurrentValue, isAchievementUnlocked } from '../utils/gameUtils';
 import SignalBadge from './SignalBadge';
+
+interface AchievementPanelProps {
+    player: Player;
+    actions?: any;
+    compact?: boolean;
+}
 
 const THEME_BY_TARGET: any = {
     kills: { icon: Swords, titleClass: 'text-rose-100', iconTone: 'text-rose-200', card: 'border-rose-300/18 bg-rose-400/10' },
@@ -24,7 +31,7 @@ const getTheme = (achievement: any) => {
     return base;
 };
 
-const AchievementPanel = ({ player, actions, compact = false }: any) => {
+const AchievementPanel = ({ player, actions, compact = false }: AchievementPanelProps) => {
     const [showAllAchievements, setShowAllAchievements] = useState(false);
     const achievements = useMemo(() => {
         const claimed = player?.stats?.claimedAchievements || [];

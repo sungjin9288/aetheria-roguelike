@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Star } from 'lucide-react';
+import type { Player } from '../types/index.js';
+
+interface TrueEndingScreenProps {
+    player: Player;
+    actions?: any;
+}
 
 const STARS = Array.from({ length: 60 }, () => ({
     w: Math.random() * 2 + 1,
@@ -18,7 +24,7 @@ const ENDING_LINES: any = [
     '이것이 영웅의 이야기입니다.',
 ];
 
-const TrueEndingScreen = ({ player, actions }: any) => {
+const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
     const [lineIndex, setLineIndex] = useState(0);
     const [showStats, setShowStats] = useState(false);
     const [showButton, setShowButton] = useState(false);

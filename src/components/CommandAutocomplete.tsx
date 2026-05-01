@@ -1,10 +1,18 @@
 import React from 'react';
 import { getAvailableCommands } from '../utils/commandSuggestions';
+import type { Player } from '../types/index.js';
+
+interface CommandAutocompleteProps {
+    input: string;
+    gameState: string;
+    player?: Player | null;
+    onSelect: (cmd: string) => void;
+}
 
 /**
  * CommandAutocomplete — 커맨드 자동완성 드롭다운 (Feature #9)
  */
-const CommandAutocomplete = ({ input, gameState, player, onSelect }: any) => {
+const CommandAutocomplete = ({ input, gameState, player, onSelect }: CommandAutocompleteProps) => {
     const commands = getAvailableCommands(gameState, player);
 
     if (!input.trim() || input.length < 1) return null;

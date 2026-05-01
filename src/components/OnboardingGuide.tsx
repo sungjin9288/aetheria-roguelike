@@ -1,6 +1,12 @@
 import React from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Circle, ChevronRight, X } from 'lucide-react';
+import type { Player } from '../types/index.js';
+
+interface OnboardingGuideProps {
+    player: Player;
+    onDismiss?: () => void;
+}
 
 /**
  * OnboardingGuide — 신규 유저 온보딩 (시나리오 1)
@@ -14,7 +20,7 @@ const STEPS: any = [
     { id: 'rest', label: '③ REST', desc: '안전 지역에서 회복하기', color: 'yellow-400', done: (s: any) => (s.rests || 0) > 0 },
 ];
 
-const OnboardingGuide = ({ player, onDismiss }: any) => {
+const OnboardingGuide = ({ player, onDismiss }: OnboardingGuideProps) => {
     const isNewPlayer = (player.stats?.kills ?? 0) === 0 &&
                         (player.stats?.explores ?? 0) === 0 &&
                         player.level === 1;

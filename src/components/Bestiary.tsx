@@ -5,13 +5,19 @@ import { DB } from '../data/db';
 import { LOOT_TABLE } from '../data/loot';
 import { BOSS_BRIEFS, MONSTERS } from '../data/monsters';
 import { getBossSignatureDrops } from '../utils/bossSignatureHint';
+import type { Player } from '../types/index.js';
 import SignalBadge from './SignalBadge';
+
+interface BestiaryProps {
+    player?: Player | null;
+    compact?: boolean;
+}
 
 /**
  * Bestiary — 몬스터 도감
  * player.stats.killRegistry 기반 만난 몬스터 기록 + 드롭 정보
  */
-const Bestiary = ({ player, compact = false }: any) => {
+const Bestiary = ({ player, compact = false }: BestiaryProps) => {
     const [showAllBestiary, setShowAllBestiary] = useState(false);
     const [selectedMonster, setSelectedMonster] = useState<any>(null);
 
