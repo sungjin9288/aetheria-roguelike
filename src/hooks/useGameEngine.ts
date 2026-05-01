@@ -170,5 +170,6 @@ export const useGameEngine = () => {
         pendingRelics,
         runSummary,
         dispatch,
+        addLog,
     };
 };

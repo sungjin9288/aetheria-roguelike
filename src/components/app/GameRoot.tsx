@@ -3,6 +3,8 @@ import { soundManager } from '../../systems/SoundManager';
 import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
+import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
+import { AT } from '../../reducers/actionTypes';
 import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
@@ -26,6 +28,22 @@ const GameRoot = ({
 }: any) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
     const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch);
+
+    // cycle 62: 신규 칭호(wanderer / pathfinder / cartographer / legend_seeker /
+    // legend_chronicler 등)가 추가된 이후 기존 save를 로드하면, 이미 조건을 만족
+    // 했더라도 다음 인벤토리 액션이 발생할 때까지 칭호가 부여되지 않는다.
+    // bootStage === 'ready' 진입 시점에 1회 확인해 retroactive 부여를 처리.
+    const titleCheckedRef = useRef(false);
+    useEffect(() => {
+        if (titleCheckedRef.current) return;
+        if (engine.bootStage !== 'ready' || !engine.player) return;
+        titleCheckedRef.current = true;
+        const newTitles = checkTitles(engine.player);
+        if (newTitles.length > 0) {
+            engine.dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
+            newTitles.forEach((id: string) => engine.addLog?.('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
+        }
+    }, [engine.bootStage, engine.player, engine.dispatch, engine.addLog]);
     const legendarySoundPlayedRef = useRef<any>(null);
     useEffect(() => {
         if (!legendaryDrop) {
