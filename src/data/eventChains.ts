@@ -530,6 +530,56 @@ export const EVENT_CHAINS: any = [
             },
         ],
     },
+
+    // ── 신규 체인 12: 잊혀진 사령관 (cycle 62) ───────────────────────────────
+    // 옛 제국 사령관의 이야기를 따라가는 3단계 체인. 폐허 → 전초기지 → 마왕성으로
+    // 자연스러운 레벨 진행 구간을 따른다 (레벨 5+ → 18+ → 50+).
+    {
+        id: 'forgotten_commander',
+        label: '잊혀진 사령관',
+        desc: '300년 전 마왕군과 싸운 제국 사령관의 흔적을 추적합니다.',
+        steps: [
+            {
+                step: 0,
+                loc: '잊혀진 폐허',
+                event: {
+                    title: '녹슨 갑옷',
+                    desc: '폐허 한가운데에서 녹슨 갑옷과 함께 부서진 검을 발견했습니다. 갑옷에는 제국 사령관의 문장이 새겨져 있고, 검의 손잡이에는 "용서받지 못한 자"라는 글귀가 있습니다.',
+                    choices: ['갑옷의 주인을 추적한다', '갑옷에 경의를 표하고 떠난다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'forgotten_commander', log: '사령관의 흔적을 추적합니다. 그의 마지막 임무지가 몰락한 전초기지일 것 같습니다.', reward: null },
+                        { type: 'chain_advance_fail', chainId: 'forgotten_commander', log: '갑옷에 경의를 표한 뒤 떠났습니다. 작은 보상이 마음을 채웁니다.', reward: { type: 'gold', amount: 500 } },
+                    ],
+                },
+            },
+            {
+                step: 1,
+                loc: '몰락한 전초기지',
+                event: {
+                    title: '사령관의 일지',
+                    desc: '전초기지 지하 병기고에서 사령관의 일지를 발견했습니다. "...마왕성으로 떠난다. 돌아오지 못할 것이다. 누군가 이 일지를 발견하면, 부디 내 검을 찾아 마왕에게 닿게 해주오."',
+                    choices: ['일지의 부탁을 받아들인다', '위험을 무릅쓰지 않는다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'forgotten_commander', log: '사령관의 의지를 이어받았습니다. 그의 검이 시간을 거슬러 빛을 내기 시작합니다.', reward: { type: 'combat_bonus', atkMult: 1.25, duration: 8 } },
+                        { type: 'chain_advance_fail', chainId: 'forgotten_commander', log: '일지를 그대로 두고 떠났습니다.', reward: null },
+                    ],
+                },
+            },
+            {
+                step: 2,
+                loc: '마왕성',
+                event: {
+                    title: '사령관의 영혼',
+                    desc: '마왕성 입구에서 푸른 빛이 일렁입니다. 사령관의 영혼이 모습을 드러냅니다. "당신이 내 검을 들고 여기까지 왔구나... 마지막 한 번, 함께 싸워주겠소?"',
+                    choices: ['사령관의 영혼과 함께 싸운다', '영혼에게 안식을 권한다'],
+                    outcomes: [
+                        { type: 'chain_advance', chainId: 'forgotten_commander', log: '사령관의 영혼이 당신과 동행합니다. 그의 마지막 의지가 전설 유물로 응결됩니다.', reward: { type: 'relic' } },
+                        { type: 'chain_advance', chainId: 'forgotten_commander', log: '사령관에게 안식을 권했습니다. 영혼이 미소 지으며 사라지고, 그의 갑옷이 당신에게 남겨집니다.', reward: { type: 'item', name: '기사의 흉갑' } },
+                    ],
+                },
+            },
+        ],
+    },
 ];
 
 /**
