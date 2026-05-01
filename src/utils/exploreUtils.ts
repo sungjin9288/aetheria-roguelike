@@ -233,7 +233,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
 export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog }: any) => {
-    let combatStartPlayer = {
+    const combatStartPlayer = {
         ...player,
         combatFlags: {
             comboCount: 0,

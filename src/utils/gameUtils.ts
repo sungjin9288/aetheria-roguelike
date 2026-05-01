@@ -293,7 +293,7 @@ export const migrateData = (rawData: any) => {
     // Target the specific player object if clear structure exists
     // If savedData IS the player (old flat format?), use it.
     // But in this app, usually savedData matches App state structure.
-    let target = savedData.player || savedData;
+    const target = savedData.player || savedData;
 
     // Version Limit
     if (!savedData.version || savedData.version < 2.7) {
