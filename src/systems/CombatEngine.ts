@@ -61,7 +61,7 @@ export const CombatEngine = {
         return Math.floor((player?.maxMp || 50) * rmp);
     },
 
-    applyCritMpRestore(player: any, relics: Relic[] = [], logs: any[] = []) {
+    applyCritMpRestore(player: Player, relics: Relic[] = [], logs: any[] = []) {
         const critMpRelic = relics.find((relic: any) => relic.effect === 'crit_mp_regen');
         if (!critMpRelic) return player;
 
@@ -72,7 +72,7 @@ export const CombatEngine = {
         return { ...player, mp: nextMp };
     },
 
-    applyFatalProtection(player: any, relics: Relic[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
+    applyFatalProtection(player: Player, relics: Relic[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
 
@@ -208,12 +208,12 @@ export const CombatEngine = {
         return { updatedEnemy: updated, logs };
     },
 
-    tickCombatState(player: any) {
+    tickCombatState(player: Player) {
         const logs: any[] = [];
-        const updated = { ...player };
+        const updated: any = { ...player };
         const relics = updated.relics || [];
         const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
-        const nextCooldowns = { ...(loadout.cooldowns || {}) };
+        const nextCooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
 
         Object.keys(nextCooldowns).forEach((key: any) => {
             if (nextCooldowns[key] > 0) nextCooldowns[key] -= 1;
@@ -284,7 +284,7 @@ export const CombatEngine = {
         return { updatedPlayer: updated, logs };
     },
 
-    attack(player: any, enemy: Monster, stats: any) {
+    attack(player: Player, enemy: Monster, stats: any) {
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
         const logs: any[] = [];
@@ -358,7 +358,7 @@ export const CombatEngine = {
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
         const lowHpDmgRelic = relics.find((r: any) => r.effect === 'low_hp_dmg');
         if (lowHpDmgRelic) {
-            const hpRatio = player.hp / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP);
+            const hpRatio = (player.hp ?? 0) / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP);
             if (hpRatio < (lowHpDmgRelic.threshold || 0.4)) {
                 finalDamage = Math.floor(finalDamage * (lowHpDmgRelic.val || 1.4));
             }
@@ -412,7 +412,7 @@ export const CombatEngine = {
         };
     },
 
-    performSkill(player: any, enemy: Monster, stats: any, skill: any) {
+    performSkill(player: Player, enemy: Monster, stats: any, skill: any) {
         if (!skill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
@@ -420,7 +420,7 @@ export const CombatEngine = {
         // 스킬 분기 선택 적용
         const skillChoiceKey = player.skillChoices?.[skill.name];
         if (skillChoiceKey) {
-            const classData = CLASSES[player.job];
+            const classData = CLASSES[player.job as string];
             const branches = classData?.skillBranches?.[skill.name];
             if (branches) {
                 const branch = branches.find((b: any) => b.choice === skillChoiceKey);
@@ -433,15 +433,15 @@ export const CombatEngine = {
         const relics = stats.relics || [];
         const mpCost = skill.mp || BALANCE.SKILL_MP_COST;
         const loadout = player.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
-        const cooldowns = { ...(loadout.cooldowns || {}) };
+        const cooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
         const cooldown = cooldowns[skill.name] || 0;
 
         // escape_100: 즉시 100% 전투 이탈 (무당 공허의 문 / 시간술사 순간 이동)
         if (skill.effect === 'escape_100') {
-            if (player.mp < mpCost) {
+            if ((player.mp ?? 0) < mpCost) {
                 return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
             }
-            const updatedPlayer = { ...player, mp: player.mp - mpCost };
+            const updatedPlayer = { ...player, mp: (player.mp ?? 0) - mpCost };
             return {
                 success: true,
                 forceEscape: true,
@@ -456,7 +456,7 @@ export const CombatEngine = {
         if (cooldown > 0) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_ON_COOLDOWN(skill.name, cooldown) }] };
         }
-        if (player.mp < mpCost) {
+        if ((player.mp ?? 0) < mpCost) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
         }
 
@@ -487,7 +487,7 @@ export const CombatEngine = {
         const smMult = smRelic ? (1 + smRelic.val) : 1;
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
         const lowHpDmgRelicSkill = relics.find((r: any) => r.effect === 'low_hp_dmg');
-        const lowHpMultSkill = (lowHpDmgRelicSkill && player.hp / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP) < (lowHpDmgRelicSkill.threshold || 0.4))
+        const lowHpMultSkill = (lowHpDmgRelicSkill && (player.hp ?? 0) / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP) < (lowHpDmgRelicSkill.threshold || 0.4))
             ? (lowHpDmgRelicSkill.val || 1.4) : 1;
         const totalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
         const newEnemyHp = (enemy.hp ?? 0) - totalDamage;
@@ -520,7 +520,7 @@ export const CombatEngine = {
 
         const updatedPlayer: Record<string, any> = {
             ...player,
-            mp: player.mp - actualMpCost,
+            mp: (player.mp ?? 0) - actualMpCost,
             skillLoadout: { selected: loadout.selected || 0, cooldowns: { ...cooldowns } },
             combatFlags: {
                 ...this.getCombatFlags(player),
@@ -662,7 +662,7 @@ export const CombatEngine = {
         };
     },
 
-    enemyAttack(player: any, enemy: Monster, stats: any) {
+    enemyAttack(player: Player, enemy: Monster, stats: any) {
         let updatedEnemy = { ...enemy };
         let updatedPlayer: any = { ...player };
         const logs: any[] = [];
@@ -671,7 +671,7 @@ export const CombatEngine = {
 
         // ── 적 상태이상 틱 처리 (#5) ──────────────────────────────────────
         // curse_amp 패시브: 무당/시간술사 직업 보너스
-        const curseAmpPassive = CLASSES[player.job]?.skills?.find((s: any) => s.passive && s.effect === 'curse_amp');
+        const curseAmpPassive = CLASSES[player.job as string]?.skills?.find((s: any) => s.passive && s.effect === 'curse_amp');
         const curseAmpMult = curseAmpPassive ? (curseAmpPassive.val || 1) : 1;
         // 시너지: 죽음의 예언자 (dotMult) — DoT 피해 증폭
         const activeSynergies = stats.activeSynergies || [];
@@ -868,8 +868,8 @@ export const CombatEngine = {
         };
     },
 
-    applyExpGain(player: any, expGained: any = 0) {
-        const p = { ...player, exp: (player.exp || 0) + expGained };
+    applyExpGain(player: Player, expGained: any = 0) {
+        const p: any = { ...player, exp: (player.exp || 0) + expGained };
         const logs: any[] = [];
         let levelUps = 0;
         let visualEffect = null;
@@ -924,8 +924,8 @@ export const CombatEngine = {
         };
     },
 
-    handleVictory(player: any, enemy: Monster, passiveBonus: any = {}) {
-        const p = { ...player };
+    handleVictory(player: Player, enemy: Monster, passiveBonus: any = {}) {
+        const p: any = { ...player };
         const relics = p.relics || [];
         const baseName: string = this.resolveEnemyBaseName(enemy) || '';
         const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
@@ -1086,10 +1086,10 @@ export const CombatEngine = {
         return { type: 'normal', label: '일반 공격 예상', color: 'gray' };
     },
 
-    handleDefeat(player: any, INITIAL_PLAYER: any) {
+    handleDefeat(player: Player, INITIAL_PLAYER: any) {
         const graveData = buildGraveData(player);
 
-        const starterState = { ...INITIAL_PLAYER };
+        const starterState: any = { ...INITIAL_PLAYER };
         const meta = { ...this.DEFAULT_META, ...(player.meta || {}) };
         const prevStats = player.stats || starterState.stats || {};
 
