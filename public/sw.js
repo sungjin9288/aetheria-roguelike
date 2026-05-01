@@ -1,4 +1,7 @@
-const CACHE_NAME = 'aetheria-rpg-v2';
+// cycle 64.5: bump cache version after cycle 60-64 large-scale changes
+// (TS migration / chunk reshape / new content). PWA 사용자가 stale 코드를
+// 캐시에서 받지 않도록 강제 갱신.
+const CACHE_NAME = 'aetheria-rpg-v3';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/vite.svg'];
 
 self.addEventListener('install', (event) => {

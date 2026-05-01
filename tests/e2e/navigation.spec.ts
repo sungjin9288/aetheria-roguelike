@@ -53,4 +53,22 @@ test.describe('Navigation', () => {
         // Codex 안에는 EQUIP/MONSTER/RECIPE 등 sub tab이 항상 노출
         await expect(page.locator('text=/EQUIP|MONSTER|RECIPE|MATERIAL|LEGEND/').first()).toBeVisible({ timeout: 8_000 });
     });
+
+    // cycle 64.5: 신규 콘텐츠(cycle 63 퀘스트, cycle 61 칭호)가 추가된 만큼
+    // QUEST / ACHIEVEMENTS 탭 진입 자체가 회귀 가드 가치가 있음.
+    test('QUEST 탭 lazy-loading → 퀘스트 패널 진입', async ({ page }) => {
+        const questTab = page.locator('[data-testid$="-tab-quest"]').first();
+        await expect(questTab).toBeVisible({ timeout: 8_000 });
+        await questTab.click();
+        // Quest 패널은 항상 "퀘스트" 또는 "Operations" 텍스트 노출
+        await expect(page.locator('text=/퀘스트|Operation|Mission|진행/').first()).toBeVisible({ timeout: 8_000 });
+    });
+
+    test('ACHV 탭 lazy-loading → 업적 패널 진입', async ({ page }) => {
+        const achvTab = page.locator('[data-testid$="-tab-achievements"]').first();
+        await expect(achvTab).toBeVisible({ timeout: 8_000 });
+        await achvTab.click();
+        // Achievement 패널의 항상 노출되는 키워드
+        await expect(page.locator('text=/업적|Achievement|첫|처치|보스/').first()).toBeVisible({ timeout: 8_000 });
+    });
 });
