@@ -90,7 +90,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
             map[key].count++;
         }
         return Object.values(map);
-    }, [(player.inv || [])]);
+    }, [player.inv]);
 
     const filtered = useMemo(() => {
         if (activeFilter === 'all') return grouped;
@@ -119,13 +119,13 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
         (player.inv || [])
             .filter((i: any) => i.type === 'weapon' && canEquipItem(i, player.job))
             .sort((a: any, b: any) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
-        [(player.inv || []), player.job, getEquipPreview]
+        [player.inv, player.job, getEquipPreview]
     );
     const bestArmor = useMemo(() =>
         (player.inv || [])
             .filter((i: any) => i.type === 'armor' && canEquipItem(i, player.job))
             .sort((a: any, b: any) => (b.val || 0) - (a.val || 0))[0],
-        [(player.inv || []), player.job]
+        [player.inv, player.job]
     );
 
     const getCompareDiff = useCallback((item: any) => {
@@ -149,7 +149,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
     const isInvNearFull = (player.inv || []).length >= BALANCE.INV_FULL_THRESHOLD;
     const sellableMatCount = useMemo(() =>
         (player.inv || []).filter((i: any) => i.type === 'mat' && (i.price || 0) <= 30).length,
-        [(player.inv || [])]
+        [player.inv]
     );
     const activeFilterLabel = FILTERS.find((entry: any) => entry.id === activeFilter)?.label || MSG.INV_FILTER_ALL;
     const visibleFiltered = (() => {

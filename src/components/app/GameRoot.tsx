@@ -43,6 +43,9 @@ const GameRoot = ({
             engine.dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
             newTitles.forEach((id: string) => engine.addLog?.('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
         }
+    // 의도적으로 entire engine 대신 사용 path만 의존 — 다른 engine 필드 변화로
+    // 재실행되면 retroactive title 부여가 매 변화마다 다시 시도되어 비효율.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [engine.bootStage, engine.player, engine.dispatch, engine.addLog]);
     const legendarySoundPlayedRef = useRef<any>(null);
     useEffect(() => {
