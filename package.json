@@ -16,6 +16,7 @@
     "type-check": "tsc --noEmit",
     "test:smoke": "node scripts/smoke-gameplay.mjs",
     "test:e2e": "playwright test",
+    "verify": "npm run type-check && npm run lint && npm run test:unit && npm run build:guard",
     "preview": "vite preview",
     "mobile:doctor": "bash scripts/mobile-doctor.sh",
     "cap:sync": "npm run build && npx cap sync",
