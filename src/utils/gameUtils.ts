@@ -587,5 +587,9 @@ export const buildRunSummary = (player: Player, loc: any) => {
             : null,
         signaturesAcquired: signatureNames.length,
         signatureNames,
+        // cycle 78: 도주 누적 카운트 — RunSummary가 cycle 74의 stats.escapes를
+        // reflection 단계에서 노출. RunShareText는 cycle 65 phase 4의
+        // primaryBuild/difficulty 라인 다음에 자연스럽게 한 라인 추가 가능.
+        escapes: (player.stats as any)?.escapes || 0,
     };
 };

@@ -131,3 +131,23 @@ test('buildRunShareText shows only primaryBuild when difficulty missing', () => 
     assert.ok(text.includes('🎯'));
     assert.ok(!text.includes('📊'), 'difficulty emoji silent without label');
 });
+
+// cycle 78: 도주 카운트 라인 — buildRunSummary가 stats.escapes를 노출하면
+// reflection share text도 한 줄로 자랑.
+test('buildRunShareText silently omits escape line when escapes=0', () => {
+    const text = buildRunShareText({ ...baseSummary, escapes: 0 });
+    assert.ok(!text.includes('🏃'), 'escape emoji should be silent at 0');
+});
+
+test('buildRunShareText shows escape line when escapes > 0', () => {
+    const text = buildRunShareText({ ...baseSummary, escapes: 7 });
+    assert.ok(text.includes('🏃'), 'escape emoji should appear');
+    assert.ok(text.includes('7회'), 'escape count visible');
+});
+
+test('buildRunShareText escape line silent when field missing', () => {
+    const summary = { ...baseSummary };
+    delete summary.escapes;
+    const text = buildRunShareText(summary);
+    assert.ok(!text.includes('🏃'));
+});

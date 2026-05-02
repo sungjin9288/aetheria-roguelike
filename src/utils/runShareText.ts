@@ -44,6 +44,12 @@ export const buildRunShareText = (s: any) => {
         buildLine = `\n${parts.join(' · ')}`;
     }
 
+    // cycle 78: 도주 누적 카운트 — 0이면 silent ("silence over noise"),
+    // >0이면 보수적 운영 자랑 라인. cycle 74 stats.escapes 도입 + cycle 76/77
+    // quest/title 통합 후 reflection 단계까지 한 줄 노출 완성.
+    const escapeCount = s?.escapes ?? 0;
+    const escapeLine = escapeCount > 0 ? `\n🏃 도주 ${escapeCount}회 — 위험 회피 운영` : '';
+
     return `⚔️ AETHERIA RUN ENDED
 ─────────────────────
 ${titlePrefix}${job} Lv.${level}
@@ -52,7 +58,7 @@ ${titlePrefix}${job} Lv.${level}
 🗡️ 처치: ${kills}마리 (보스 ${bossKills}회)
 💎 유물: ${relicsFound}개 수집
 💰 총 골드: ${totalGold}
-⚡ 프레스티지: ${prestigeRank}랭크${buildLine}${signatureLine}
+⚡ 프레스티지: ${prestigeRank}랭크${buildLine}${escapeLine}${signatureLine}
 
 #에테리아 #AetheriaRPG #로그라이크`;
 };
