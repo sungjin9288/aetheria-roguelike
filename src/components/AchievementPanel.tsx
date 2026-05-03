@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Trophy, Star, Skull, Swords, Crown, Gift } from 'lucide-react';
+import { Trophy, Star, Skull, Swords, Crown, Gift, Footprints, Shield, BookOpen, Compass, Hammer, Sparkles, Coins, RefreshCcw } from 'lucide-react';
 import { DB } from '../data/db';
 import type { Player } from '../types/index.js';
 import { formatRewardParts, getAchievementCurrentValue, isAchievementUnlocked } from '../utils/gameUtils';
@@ -18,6 +18,22 @@ const THEME_BY_TARGET: any = {
     deaths: { icon: Skull, titleClass: 'text-slate-200', iconTone: 'text-slate-300', card: 'border-white/8 bg-white/[0.04]' },
     total_gold: { icon: Crown, titleClass: 'text-[#f6e7c8]', iconTone: 'text-[#f6e7c8]', card: 'border-[#d5b180]/22 bg-[#d5b180]/10' },
     level: { icon: Star, titleClass: 'text-[#dff7f5]', iconTone: 'text-[#dff7f5]', card: 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10' },
+    // cycle 79: 신규 target별 시각 톤. 기존엔 모두 kills(붉은) 폴백이라
+    // escape/discoveries/relics 등이 공격적 분위기로 보였음.
+    escapes:           { icon: Footprints, titleClass: 'text-sky-100', iconTone: 'text-sky-200', card: 'border-sky-300/22 bg-sky-400/10' },
+    explores:          { icon: Compass, titleClass: 'text-teal-100', iconTone: 'text-teal-200', card: 'border-teal-300/22 bg-teal-400/10' },
+    discoveries:       { icon: Compass, titleClass: 'text-emerald-100', iconTone: 'text-emerald-200', card: 'border-emerald-300/22 bg-emerald-400/10' },
+    relicCount:        { icon: Sparkles, titleClass: 'text-violet-100', iconTone: 'text-violet-200', card: 'border-violet-300/22 bg-violet-400/10' },
+    crafts:            { icon: Hammer, titleClass: 'text-orange-100', iconTone: 'text-orange-200', card: 'border-orange-300/22 bg-orange-400/10' },
+    rests:             { icon: BookOpen, titleClass: 'text-slate-100', iconTone: 'text-slate-300', card: 'border-white/8 bg-white/[0.04]' },
+    bountiesCompleted: { icon: Coins, titleClass: 'text-yellow-100', iconTone: 'text-yellow-200', card: 'border-yellow-300/22 bg-yellow-400/10' },
+    abyssRecord:       { icon: Shield, titleClass: 'text-fuchsia-100', iconTone: 'text-fuchsia-200', card: 'border-fuchsia-300/22 bg-fuchsia-400/10' },
+    abyssFloor:        { icon: Shield, titleClass: 'text-fuchsia-100', iconTone: 'text-fuchsia-200', card: 'border-fuchsia-300/22 bg-fuchsia-400/10' },
+    demonKingSlain:    { icon: Trophy, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
+    prestige:          { icon: RefreshCcw, titleClass: 'text-cyan-100', iconTone: 'text-cyan-200', card: 'border-cyan-300/22 bg-cyan-400/10' },
+    signaturesDiscovered:    { icon: Sparkles, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
+    signatureSetsCompleted:  { icon: Trophy, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
+    synths:            { icon: Hammer, titleClass: 'text-orange-100', iconTone: 'text-orange-200', card: 'border-orange-300/22 bg-orange-400/10' },
 };
 
 const getTheme = (achievement: any) => {
