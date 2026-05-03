@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Activity, BarChart3, Coins, Compass, Footprints, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
+import { Activity, BarChart3, Coins, Compass, FlaskConical, Footprints, Hammer, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
 import type { Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import SignalBadge from './SignalBadge';
@@ -79,6 +79,12 @@ const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
         { label: 'RESTS', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
         // cycle 80: ESCAPES — cycle 74-78에서 통합한 도주 카운터를 stats panel에도 노출.
         { label: 'ESCAPES', value: (player?.stats as any)?.escapes || 0, icon: Footprints, color: 'text-sky-300' },
+        // cycle 82: CRAFTS / SYNTHESES — 제작/합성 누적도 stats panel에 노출.
+        // crafts는 INITIAL_STATE에 있었으나 syntheses는 누락되어 같이 선언적 추가.
+        // achievement 'synths'(target='synths' → stats.syntheses) 3종이 cycle 30+부터
+        // 존재하던 갭을 가시화로 닫음. orange/amber 톤으로 제작 계열 묶음.
+        { label: 'CRAFTS', value: player?.stats?.crafts || 0, icon: Hammer, color: 'text-orange-300' },
+        { label: 'SYNTHESES', value: (player?.stats as any)?.syntheses || 0, icon: FlaskConical, color: 'text-amber-300' },
     ];
     const visibleStatEntries = compact && !showAllStats ? statEntries.slice(0, 6) : statEntries;
     const hasExpandableSections = compact && (statEntries.length > 6 || topKills.length > 0 || Boolean(player?.meta));
