@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Activity, BarChart3, Coins, Compass, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
+import { Activity, BarChart3, Coins, Compass, Footprints, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
 import type { Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import SignalBadge from './SignalBadge';
@@ -77,6 +77,8 @@ const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
         { label: 'EXPLORES', value: player?.stats?.explores || 0, icon: Compass, color: 'text-teal-300' },
         { label: 'DISCOVERIES', value: player?.stats?.discoveries || 0, icon: Sparkles, color: 'text-fuchsia-300' },
         { label: 'RESTS', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
+        // cycle 80: ESCAPES — cycle 74-78에서 통합한 도주 카운터를 stats panel에도 노출.
+        { label: 'ESCAPES', value: (player?.stats as any)?.escapes || 0, icon: Footprints, color: 'text-sky-300' },
     ];
     const visibleStatEntries = compact && !showAllStats ? statEntries.slice(0, 6) : statEntries;
     const hasExpandableSections = compact && (statEntries.length > 6 || topKills.length > 0 || Boolean(player?.meta));
