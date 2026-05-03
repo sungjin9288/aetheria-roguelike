@@ -259,9 +259,15 @@ async function verifyMobileArchiveConsole(page) {
   await page.locator('[data-testid="menu-town-quest"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="menu-town-craft"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="menu-reset"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="dashboard-tab-equipment"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="dashboard-tab-stats"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="dashboard-tab-equipment"]').click();
+  // cycle 81: 모바일 archive console의 inline rail 레이아웃에서 primary tabs(equipment /
+  // inventory / quest / map / stats)는 archive-tab-* testid를, secondary tabs(achievements /
+  // skills / codex / pass / graves / system)만 dashboard-tab-* testid를 사용한다.
+  // 이전엔 equipment/stats를 dashboard-tab-* 으로 잘못 매칭해 모바일 smoke가 archive
+  // 진입 직후 실패하던 잠재 회귀 (cycle 73의 verify:full에서 발견 — 표준 `npm run
+  // test:smoke`는 desktop만 돌려 안 잡혔음).
+  await page.locator('[data-testid="archive-tab-equipment"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="archive-tab-stats"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="archive-tab-equipment"]').click();
   await page.locator('[data-testid="equipment-slot-weapon"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="equipment-slot-armor"]').waitFor({ state: 'visible', timeout: 5000 });
   const weaponSlot = page.locator('[data-testid="equipment-slot-weapon"]');
