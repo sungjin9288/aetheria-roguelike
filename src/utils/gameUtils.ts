@@ -594,5 +594,9 @@ export const buildRunSummary = (player: Player, loc: any) => {
         // reflection 단계에서 노출. RunShareText는 cycle 65 phase 4의
         // primaryBuild/difficulty 라인 다음에 자연스럽게 한 라인 추가 가능.
         escapes: (player.stats as any)?.escapes || 0,
+        // cycle 84: 맵 발견 수 — cycle 83에서 'discoveries' 시맨틱을 visitedMaps.length로
+        // 통일한 후속 작업. reflection/share 단계에 탐험 폭 자랑 라인을 silence-over-noise
+        // 패턴으로 노출.
+        discoveries: ((player.stats as any)?.visitedMaps || []).length,
     };
 };

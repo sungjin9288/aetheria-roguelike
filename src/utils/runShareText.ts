@@ -50,6 +50,11 @@ export const buildRunShareText = (s: any) => {
     const escapeCount = s?.escapes ?? 0;
     const escapeLine = escapeCount > 0 ? `\n🏃 도주 ${escapeCount}회 — 위험 회피 운영` : '';
 
+    // cycle 84: 맵 발견 수 — cycle 83에서 'discoveries' 시맨틱을 visitedMaps.length로
+    // 통일한 후속. 0이면 silent, >0이면 탐험 폭 자랑 라인. escapeLine과 같은 패턴.
+    const discoveryCount = s?.discoveries ?? 0;
+    const discoveryLine = discoveryCount > 0 ? `\n🗺️ 지도 발견 ${discoveryCount}곳` : '';
+
     return `⚔️ AETHERIA RUN ENDED
 ─────────────────────
 ${titlePrefix}${job} Lv.${level}
@@ -58,7 +63,7 @@ ${titlePrefix}${job} Lv.${level}
 🗡️ 처치: ${kills}마리 (보스 ${bossKills}회)
 💎 유물: ${relicsFound}개 수집
 💰 총 골드: ${totalGold}
-⚡ 프레스티지: ${prestigeRank}랭크${buildLine}${escapeLine}${signatureLine}
+⚡ 프레스티지: ${prestigeRank}랭크${buildLine}${escapeLine}${discoveryLine}${signatureLine}
 
 #에테리아 #AetheriaRPG #로그라이크`;
 };

@@ -40,14 +40,15 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
         dispatch({
             type: AT.SET_PLAYER,
             payload: (currentPlayer: any) => {
+                // cycle 84: stats.discoveries 누적 제거 — cycle 83에서 'discoveries' 시맨틱이
+                // visitedMaps.length(맵 발견 수)로 통일되면서 이 이벤트 카운터는 어디서도
+                // 읽히지 않는 dead write가 되었음. 안전하게 제거 (Firebase save에 잔존하는
+                // discoveries 필드는 무시되므로 forward-compatible).
                 let nextPlayer = {
                     ...currentPlayer,
                     stats: {
                         ...(currentPlayer.stats || {}),
                         explores: (currentPlayer.stats?.explores || 0) + 1,
-                        discoveries: ['narrative_event', 'relic_found', 'anomaly', 'key_event'].includes(outcome)
-                            ? (currentPlayer.stats?.discoveries || 0) + 1
-                            : (currentPlayer.stats?.discoveries || 0),
                         exploreState: advanceExploreState(currentPlayer.stats, outcome),
                     }
                 };
