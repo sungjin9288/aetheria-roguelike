@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { syncQuestProgress } from '../src/utils/questProgress.js';
 
 test('quest progress syncs build-guiding and discovery quests from player stats', () => {
+    // cycle 83: discovery_count quest는 visitedMaps.length로 통일 — 기존엔
+    // stats.discoveries(이벤트 카운터)를 잘못 읽던 회귀 수정.
     const player = {
         level: 12,
         stats: {
@@ -11,7 +13,7 @@ test('quest progress syncs build-guiding and discovery quests from player stats'
             crafts: 1,
             lowHpWins: 0,
             bountiesCompleted: 0,
-            discoveries: 5,
+            visitedMaps: ['시작의 마을', '평원', '숲', '동굴', '사막'],
             buildWins: {
                 crusher: 3,
                 arcane: 1,

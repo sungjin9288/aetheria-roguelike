@@ -521,7 +521,10 @@ export const checkTitles = (player: Player) => {
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
         if (type === 'explores')       return ((player.stats as any)?.explores || 0) >= val;
-        if (type === 'discoveries')    return ((player.stats as any)?.discoveries || 0) >= val;
+        // cycle 83: 'discoveries' 시맨틱 통일 — visitedMaps.length(맵 발견 수)로 교체.
+        // cartographer("지도 제작자") 칭호가 stats.discoveries(이벤트 카운터)만으로 풀리던
+        // 회귀 수정. achievement(target='discoveries') 정합성 기준선과 일치시킴.
+        if (type === 'discoveries')    return ((player.stats as any)?.visitedMaps || []).length >= val;
         // cycle 77: 도주 카운터 기반 칭호 (cautious_explorer / survivor_instinct).
         if (type === 'escapes')        return ((player.stats as any)?.escapes || 0) >= val;
         if (type === 'signaturesDiscovered') {

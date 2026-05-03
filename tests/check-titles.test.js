@@ -26,7 +26,13 @@ test('checkTitles does not unlock wanderer below threshold', () => {
 });
 
 test('checkTitles unlocks cartographer at discoveries >= 10', () => {
-    const player = { titles: [], stats: { discoveries: 10 } };
+    // cycle 83: discoveries 시맨틱 = visitedMaps.length(맵 발견 수).
+    // 기존엔 stats.discoveries(이벤트 카운터)를 읽어 cartographer("지도 제작자")가
+    // 의도와 어긋나게 풀리던 회귀 수정.
+    const player = {
+        titles: [],
+        stats: { visitedMaps: Array.from({ length: 10 }, (_, i) => `map-${i}`) },
+    };
     const unlocked = checkTitles(player);
     assert.ok(unlocked.includes('cartographer'), 'cartographer unlocked');
 });
@@ -66,11 +72,12 @@ test('checkTitles does not re-unlock owned titles', () => {
 // cycle 62 phase 3: retroactive 칭호 부여 시나리오 — 기존 save가 신규 칭호 조건을
 // 이미 만족한 상태로 로드되는 경우를 모사. 단일 호출에 여러 칭호가 한 번에 풀려야 함.
 test('checkTitles unlocks multiple new titles in a single call (retroactive load)', () => {
+    // cycle 83: discoveries → visitedMaps.length 시맨틱 통일.
     const player = {
         titles: [], // 신규 칭호 미보유 상태
         stats: {
             explores: 600, // wanderer + pathfinder 동시 충족
-            discoveries: 12, // cartographer
+            visitedMaps: Array.from({ length: 12 }, (_, i) => `m${i}`), // cartographer
         },
     };
     const unlocked = checkTitles(player);

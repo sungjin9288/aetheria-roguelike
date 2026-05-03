@@ -75,7 +75,10 @@ const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
         { label: 'TOTAL GOLD', value: overview.totalGold.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
         { label: 'LEVEL', value: player?.level || 1, icon: Activity, color: 'text-cyber-blue' },
         { label: 'EXPLORES', value: player?.stats?.explores || 0, icon: Compass, color: 'text-teal-300' },
-        { label: 'DISCOVERIES', value: player?.stats?.discoveries || 0, icon: Sparkles, color: 'text-fuchsia-300' },
+        // cycle 83: 'discoveries' 시맨틱 통일 — visitedMaps.length(맵 발견 수).
+        // 기존엔 stats.discoveries(이벤트 카운터)를 읽어 ach_discover_*("새 지역 N곳") /
+        // 타이틀 cartographer("지도 제작자") 의도와 어긋났음. 모든 surface가 맵 발견 수로 일치.
+        { label: 'DISCOVERIES', value: (player?.stats?.visitedMaps || []).length, icon: Sparkles, color: 'text-fuchsia-300' },
         { label: 'RESTS', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
         // cycle 80: ESCAPES — cycle 74-78에서 통합한 도주 카운터를 stats panel에도 노출.
         { label: 'ESCAPES', value: (player?.stats as any)?.escapes || 0, icon: Footprints, color: 'text-sky-300' },

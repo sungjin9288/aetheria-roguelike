@@ -43,8 +43,13 @@ export const syncQuestProgress = (player: Player, enemyName: any = '', questCata
             return { ...quest, progress: Math.min(questData.goal, current) };
         }
 
+        // cycle 83: 'discoveries' 타깃 시맨틱 통일 — visitedMaps.length(맵 발견 수)로
+        // 통일. 기존엔 _shared.ts가 누적시키던 stats.discoveries(이벤트 발견 카운터)를
+        // 잘못 읽어 quest 201("15곳 발견")이 이벤트 15회만으로 풀리던 회귀 수정.
+        // achievement getAchievementCurrentValue('discoveries')가 이미 visitedMaps.length를
+        // 읽고 있던 정합성 기준선에 맞춤.
         if (questData.type === 'discovery_count' && questData.target === 'discoveries') {
-            const current = player.stats?.discoveries || 0;
+            const current = (player.stats?.visitedMaps || []).length;
             return { ...quest, progress: Math.min(questData.goal, current) };
         }
 
