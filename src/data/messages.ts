@@ -70,7 +70,13 @@ export const MSG: any = {
 
     // --- 상태이상 (Status Effects) ---
     STATUS_DOT: (effect: any, dmg: any) => {
-        const label = effect === 'poison' ? '중독' : effect === 'burn' ? '화상' : effect;
+        // cycle 106: bleed → 출혈 라벨 추가. CombatEngine player DoT 분기에 bleed가
+        // 누락돼 있던 회귀 fix와 함께 (enemy.dots 분기에선 이미 '출혈' 사용 중이라
+        // surface 일관성 회복).
+        const label = effect === 'poison' ? '중독'
+            : effect === 'burn' ? '화상'
+            : effect === 'bleed' ? '출혈'
+            : effect;
         return `[${label}] 상태이상 피해 ${dmg}`;
     },
 

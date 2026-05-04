@@ -239,8 +239,11 @@ export const CombatEngine = {
 
         updated.status = Array.isArray(updated.status) ? updated.status : [];
 
-        // === 상태이상 DoT 처리 (poison / burn) ===
-        const DOT_STATUSES = ['poison', 'burn'];
+        // === 상태이상 DoT 처리 (poison / burn / bleed) ===
+        // cycle 106: bleed 누락 회귀 fix — 보스 phase 2/3가 statusEffect: 'bleed'를
+        // player에 부여할 수 있는데 player DoT 분기에 bleed가 빠져있어 표시만 되고
+        // 실제 피해 0이었음 (적 enemy.dots 분기는 bleed 포함 정상 동작 — 비대칭 회귀).
+        const DOT_STATUSES = ['poison', 'burn', 'bleed'];
         updated.status.filter((s: any) => DOT_STATUSES.includes(s)).forEach((s: any) => {
             const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * BALANCE.STATUS_DOT_RATIO));
             updated.hp = Math.max(1, (updated.hp ?? 1) - dmg);
