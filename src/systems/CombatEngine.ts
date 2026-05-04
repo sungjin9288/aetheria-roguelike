@@ -288,6 +288,22 @@ export const CombatEngine = {
     },
 
     attack(player: Player, enemy: Monster, stats: any) {
+        // cycle 107: freeze/stun 상태이상 턴 스킵 — 보스 phase 2/3가 부여하는
+        // freeze/stun이 player 쪽에서 처리되지 않아 정상 공격되던 회귀 fix.
+        // 적의 stunnedTurns 처리와 짝을 이룸 (one-turn effect — status 제거 후 진행).
+        const incomingStatus = Array.isArray(player.status) ? player.status : [];
+        const blockingStatus = incomingStatus.find((s: any) => s === 'freeze' || s === 'stun');
+        if (blockingStatus) {
+            const newStatus = incomingStatus.filter((s: any) => s !== blockingStatus);
+            return {
+                updatedPlayer: { ...player, status: newStatus },
+                updatedEnemy: enemy,
+                logs: [{ type: 'warning', text: MSG.PLAYER_STATUS_SKIP(blockingStatus) }],
+                isCrit: false,
+                isVictory: false,
+            };
+        }
+
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
         const logs: any[] = [];
@@ -418,6 +434,22 @@ export const CombatEngine = {
     performSkill(player: Player, enemy: Monster, stats: any, skill: any) {
         if (!skill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
+        }
+
+        // cycle 107: freeze/stun 상태이상 턴 스킵 — attack()와 동일 처리.
+        // 스킬 발동 자체가 막히고 MP는 소비되지 않음.
+        const incomingStatusSkill = Array.isArray(player.status) ? player.status : [];
+        const blockingStatusSkill = incomingStatusSkill.find((s: any) => s === 'freeze' || s === 'stun');
+        if (blockingStatusSkill) {
+            const newStatus = incomingStatusSkill.filter((s: any) => s !== blockingStatusSkill);
+            return {
+                success: true,
+                updatedPlayer: { ...player, status: newStatus },
+                updatedEnemy: enemy,
+                logs: [{ type: 'warning', text: MSG.PLAYER_STATUS_SKIP(blockingStatusSkill) }],
+                isCrit: false,
+                isVictory: false,
+            };
         }
 
         // 스킬 분기 선택 적용

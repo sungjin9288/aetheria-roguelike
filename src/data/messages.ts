@@ -69,6 +69,13 @@ export const MSG: any = {
     DEFEAT: '전투에서 패배했습니다. 레거시 보너스는 유지됩니다.',
 
     // --- 상태이상 (Status Effects) ---
+    // cycle 107: 플레이어가 freeze/stun 상태에서 턴을 스킵할 때의 안내 — 적의
+    // stunnedTurns 처리(MSG.COMBAT_ENEMY_STUNNED)와 짝.
+    PLAYER_STATUS_SKIP: (effect: any) => {
+        const label = effect === 'freeze' ? '빙결' : effect === 'stun' ? '기절' : effect;
+        return `[${label}] 행동 불가 — 턴을 잃었습니다.`;
+    },
+
     STATUS_DOT: (effect: any, dmg: any) => {
         // cycle 106: bleed → 출혈 라벨 추가. CombatEngine player DoT 분기에 bleed가
         // 누락돼 있던 회귀 fix와 함께 (enemy.dots 분기에선 이미 '출혈' 사용 중이라
