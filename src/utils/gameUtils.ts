@@ -400,7 +400,12 @@ export const migrateData = (rawData: any) => {
     target.stats.relicCount      = target.stats.relicCount      || 0;
     target.stats.comboCount      = target.stats.comboCount      || 0;
     target.stats.crafts          = target.stats.crafts          || 0;
-    target.stats.discoveries     = target.stats.discoveries     || 0;
+    // cycle 120: dead 'discoveries' migrate 제거 (cycle 84 INITIAL_STATE 정리 후속).
+    // 신규 영구 카운터 default 추가 — cycle 119 ASCEND preserve와 정합.
+    target.stats.escapes         = target.stats.escapes         || 0;
+    target.stats.syntheses       = target.stats.syntheses       || 0;
+    target.stats.maxKillStreak   = target.stats.maxKillStreak   || 0;
+    target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
     target.stats.buildWins       = target.stats.buildWins && typeof target.stats.buildWins === 'object' ? target.stats.buildWins : {};
     target.stats.abyssFloor      = target.stats.abyssFloor      || 0;
     target.stats.abyssRecord     = target.stats.abyssRecord     || 0;
