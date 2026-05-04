@@ -211,7 +211,11 @@ export const getAchievementCurrentValue = (achievement: any, player: Player) => 
     if (target === 'discoveries') return Object.keys(stats?.visitedMaps || {}).length;
     // cycle 95: 휘발성 killStreak는 매번 0으로 리셋되므로 max-ever 누적 카운터를 읽음.
     if (target === 'maxKillStreak') return stats?.maxKillStreak || 0;
-    if (target === 'relicCount') return (player?.relics || []).length + (stats?.relicCount || 0);
+    // cycle 101: stats.relicCount 단일 source of truth — ADD_RELIC handler가
+    // player.relics에 push와 stats.relicCount++ 둘 다 수행하므로, relics.length를
+    // 추가로 더하면 현재 런의 relic이 double count됨. 이전엔 ach_relic_5("유물 5개")
+    // 가 실제로 3개에서 풀리던 부풀림 회귀를 fix. checkTitles('relicCount')와도 정합.
+    if (target === 'relicCount') return stats?.relicCount || 0;
     if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
     return stats?.[target] || 0;

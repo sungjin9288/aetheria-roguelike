@@ -138,10 +138,12 @@ test('grantGold clamps negative amounts on the stats accumulator', () => {
 
 // ─── Achievements ───────────────────────────────────────────────────────
 test('getAchievementCurrentValue resolves based on the achievement target', () => {
+    // cycle 101: relicCount는 stats.relicCount 단일 source. ADD_RELIC handler가 매 획득
+    // 시 stats.relicCount++ + relics push 둘 다 수행하므로, 정상 데이터는 두 값이 같다.
     const player = {
         level: 5,
         meta: { prestigeRank: 2 },
-        stats: { syntheses: 3, visitedMaps: { a: 1, b: 1 }, kills: 42 },
+        stats: { syntheses: 3, visitedMaps: { a: 1, b: 1 }, kills: 42, relicCount: 2 },
         relics: [{ id: 'r1' }, { id: 'r2' }],
     };
 
