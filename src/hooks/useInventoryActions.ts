@@ -486,7 +486,10 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             const today = new Date().toDateString();
             const lastDate = player.stats?.lastInvadeDate;
             const count = lastDate === today ? (player.stats?.dailyInvadeCount || 0) : 0;
-            if (count >= CONSTANTS.DAILY_INVADE_LIMIT) {
+            // cycle 137: DAILY_INVADE_LIMIT(=5)이 BALANCE 객체에 있으나 기존엔 CONSTANTS의
+            // 동일명 키(undefined)를 참조 → count >= undefined가 항상 false라 일일 5회
+            // 침략 제한이 절대 작동 안 했음 (무제한 침략) 잠복 버그 수정.
+            if (count >= BALANCE.DAILY_INVADE_LIMIT) {
                 return addLog('warn', MSG.INVADE_LIMIT);
             }
             if (!targetGrave.items || targetGrave.items.length === 0) {

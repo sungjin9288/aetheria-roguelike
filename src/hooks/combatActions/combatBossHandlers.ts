@@ -14,14 +14,19 @@ export const handleDemonKingSlain = (updatedPlayer: any, dispatch: any, addLog: 
     const prestigeRank = updatedPlayer.meta?.prestigeRank || 0;
     const shardCount = (updatedPlayer.inv || []).filter((i: any) => i?.name === '원시의 파편').length;
 
-    if (prestigeRank >= 1 && shardCount < 3 && Math.random() < CONSTANTS.PRIMAL_SHARD_DROP_CHANCE) {
+    // cycle 137: PRIMAL_SHARD_DROP_CHANCE는 BALANCE 객체에 있는데 기존엔 CONSTANTS의
+    // 동일명 키(undefined)를 참조해 Math.random() < undefined가 항상 false였음
+    // → 진엔딩 unlock 경로의 shard가 절대 드랍 안 되던 잠복 버그 수정.
+    // 또한 hardcoded 3 → BALANCE.PRIMAL_SHARD_REQUIRED로 교체 (DRY).
+    const SHARD_REQ = BALANCE.PRIMAL_SHARD_REQUIRED || 3;
+    if (prestigeRank >= 1 && shardCount < SHARD_REQ && Math.random() < BALANCE.PRIMAL_SHARD_DROP_CHANCE) {
         const shardItem = makeItem({ name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편.' });
         dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
         addLog('event', MSG.PRIMAL_SHARD_DROP(shardCount + 1));
     }
 
     const currentShardCount = (updatedPlayer.inv || []).filter((i: any) => i?.name === '원시의 파편').length;
-    if (prestigeRank >= 3 && currentShardCount >= 3) {
+    if (prestigeRank >= 3 && currentShardCount >= SHARD_REQ) {
         addLog('critical', MSG.TRUE_BOSS_UNLOCK);
         let removed = 0;
         const newInv = (updatedPlayer.inv || []).filter((i: any) => {
@@ -52,8 +57,8 @@ export const handleDemonKingSlain = (updatedPlayer: any, dispatch: any, addLog: 
         return true;
     }
 
-    if (prestigeRank >= 1 && shardCount < 3) {
-        addLog('info', MSG.PRIMAL_SHARD_HINT(Math.min(shardCount + 1, 3)));
+    if (prestigeRank >= 1 && shardCount < SHARD_REQ) {
+        addLog('info', MSG.PRIMAL_SHARD_HINT(Math.min(shardCount + 1, SHARD_REQ)));
     }
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.ASCENSION });
     addLog('system', MSG.DEMON_KING_SLAIN_ASCEND);
