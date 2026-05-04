@@ -96,6 +96,15 @@ export const getRunSummaryAnalysis = (summary: any = {}) => {
     if ((summary.discoveries || 0) >= 15) {
         focus.push('탐험 폭이 넓었습니다. 같은 호기심으로 다음 런도 시작하세요.');
     }
+    // cycle 97: maxKillStreak (cycle 95 신규 카운터) 기반 reflection.
+    // KILL_STREAK_TIERS [3,5,10,20] 중 10 이상이면 공격 운영 칭찬 — tier 3 진입.
+    // 3 미만이고 레벨 10+이면 streak 활용 권장 — 공격 호흡 미정착 시그널.
+    if ((summary.maxKillStreak || 0) >= 10) {
+        focus.push('공격형 운영 — 연속 처치를 유지해 streak 보너스를 끌어내고 있습니다.');
+    }
+    if ((summary.maxKillStreak || 0) < 3 && (summary.level || 0) >= 10) {
+        focus.push('연속 처치가 끊기는 흐름. 빌드 강화 + 안전한 적부터 정리해 streak를 쌓아보세요.');
+    }
     if (focus.length === 0) focus.push('이번 런은 기반이 좋았습니다. 같은 빌드 축을 더 강하게 밀어도 됩니다.');
 
     return {

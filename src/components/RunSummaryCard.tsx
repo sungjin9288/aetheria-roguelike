@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles, Footprints, Compass } from 'lucide-react';
+import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles, Footprints, Compass, Flame } from 'lucide-react';
 import { getTitleLabel } from '../utils/gameUtils';
 import { getRunSummaryAnalysis } from '../utils/outcomeAnalysis';
 import { buildRunShareText } from '../utils/runShareText.js';
@@ -149,11 +149,11 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                         </div>
                     )}
 
-                    {/* cycle 86: 도주/지도 발견 reflection — escape(cycle 78) / discovery
-                        (cycle 84) line이 share text에만 있고 시각 카드에선 안 보이던 갭 채움.
-                        signatures highlight(cycle 18)와 동일한 mini-section 패턴.
-                        silence-over-noise: 둘 다 0이면 출력 안 함. */}
-                    {(s.escapes > 0 || s.discoveries > 0) && (
+                    {/* cycle 86/97: 도주/지도 발견/연속 처치 reflection — share text에만
+                        있던 라인을 시각 카드에도 노출. signatures highlight(cycle 18)와
+                        동일한 mini-section 패턴. silence-over-noise: 모두 0이면 섹션 자체가
+                        렌더 안 됨. cycle 97: maxKillStreak chip 추가 (cycle 95 데이터). */}
+                    {(s.escapes > 0 || s.discoveries > 0 || s.maxKillStreak > 0) && (
                         <div
                             data-testid="run-summary-extras"
                             className="mt-5 rounded-[1.25rem] border border-white/8 bg-black/18 px-4 py-3"
@@ -177,6 +177,16 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                                     >
                                         <Compass size={11} />
                                         지도 발견 {s.discoveries}곳
+                                    </span>
+                                )}
+                                {s.maxKillStreak > 0 && (
+                                    <span
+                                        data-testid="run-summary-streak"
+                                        className="inline-flex items-center gap-1.5 rounded-full border border-red-300/30 bg-red-400/10 px-2.5 py-1"
+                                        style={{ color: '#fca5a5' }}
+                                    >
+                                        <Flame size={11} />
+                                        최대 {s.maxKillStreak}연속
                                     </span>
                                 )}
                             </div>
