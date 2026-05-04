@@ -152,6 +152,10 @@ export const BALANCE: any = {
     CURSE_ATK_MULT: 0.75,
     // 저주 DoT 비율 (maxHp 기준)
     CURSE_DOT_RATIO: 0.03,
+    // cycle 108: 플레이어가 curse 상태일 때 받는 피해 배율. 적 cursedTurns가
+    // CURSE_ATK_MULT(0.75)로 적의 ATK를 줄이는 것과 짝을 이루는 player-side 페널티.
+    // MSG.SKILL_CURSE_AMPLIFY("저주가 강화되어 피해가 증폭됩니다") 의도 구현.
+    CURSE_PLAYER_DMG_TAKEN_MULT: 1.30,
     // 플레이어 기본 최대 HP (maxHp 미설정 시 fallback)
     DEFAULT_MAX_HP: 150,
 

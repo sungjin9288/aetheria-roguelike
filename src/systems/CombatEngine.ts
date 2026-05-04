@@ -849,10 +849,22 @@ export const CombatEngine = {
         const rawEnemyAtk = (updatedEnemy.atk ?? 0) * mult * enemyAtkMult;
         // 최소 피해량: 원래 공격력의 10% (DEF 스택으로 완전 무효화 방지, 고DEF 빌드 보상)
         const minEnemyDmg = Math.max(1, Math.floor(rawEnemyAtk * 0.10));
-        const enemyDmg = Math.max(minEnemyDmg, Math.floor(rawEnemyAtk - stats.def));
+        let enemyDmg = Math.max(minEnemyDmg, Math.floor(rawEnemyAtk - stats.def));
         if (enemyAtkMult < 1 && (updatedEnemy.blindTurns > 0 || updatedEnemy.fearTurns > 0 || updatedEnemy.cursedTurns > 0)) {
             const statusName = updatedEnemy.blindTurns > 0 ? '실명' : updatedEnemy.fearTurns > 0 ? '공포' : '저주';
             logs.push({ type: 'info', text: `[${statusName}] ${updatedEnemy.name}의 공격력이 감소합니다!` });
+        }
+
+        // cycle 108: 플레이어 curse 상태이상 — 받는 피해 증폭 (BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT).
+        // MSG.SKILL_CURSE_AMPLIFY 의도 구현. 보스 phase / heavy attack에 의한 curse 부여
+        // 위협이 actually 작동하도록. 적의 cursedTurns(공격력 감소)와 짝을 이루는 player-side 페널티.
+        const playerStatusList = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
+        if (playerStatusList.includes('curse')) {
+            const ampMult = BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT || 1.3;
+            const before = enemyDmg;
+            enemyDmg = Math.floor(enemyDmg * ampMult);
+            const pct = Math.round((ampMult - 1) * 100);
+            logs.push({ type: 'warning', text: `[저주] 받는 피해 +${pct}% (${before} → ${enemyDmg})` });
         }
 
         // 몬스터 공격 시 상태이상 부여 (pattern.statusEffect + pattern.statusChance 지원)
