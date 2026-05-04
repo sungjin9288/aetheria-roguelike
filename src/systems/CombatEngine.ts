@@ -316,6 +316,18 @@ export const CombatEngine = {
             };
         }
 
+        // cycle 110: fear 상태이상 — flinch 확률(FEAR_PLAYER_FLINCH_CHANCE).
+        // blind와 같은 모델이지만 의미는 "두려움에 움츠림"으로 차별화. status 유지.
+        if (incomingStatus.includes('fear') && Math.random() < (BALANCE.FEAR_PLAYER_FLINCH_CHANCE || 0.25)) {
+            return {
+                updatedPlayer: { ...player },
+                updatedEnemy: enemy,
+                logs: [{ type: 'warning', text: '[공포] 두려움에 움츠립니다!' }],
+                isCrit: false,
+                isVictory: false,
+            };
+        }
+
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
         const logs: any[] = [];
@@ -471,6 +483,18 @@ export const CombatEngine = {
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
                 logs: [{ type: 'warning', text: '[실명] 스킬이 빗나갔습니다!' }],
+                isCrit: false,
+                isVictory: false,
+            };
+        }
+
+        // cycle 110: fear flinch — attack()와 동일. flinch 시 MP 소비 안 됨, status 유지.
+        if (incomingStatusSkill.includes('fear') && Math.random() < (BALANCE.FEAR_PLAYER_FLINCH_CHANCE || 0.25)) {
+            return {
+                success: true,
+                updatedPlayer: { ...player },
+                updatedEnemy: enemy,
+                logs: [{ type: 'warning', text: '[공포] 두려움에 움츠립니다!' }],
                 isCrit: false,
                 isVictory: false,
             };

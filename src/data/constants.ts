@@ -160,6 +160,10 @@ export const BALANCE: any = {
     // 처럼 적 ATK를 줄이는 것과 짝을 이루는 player-side 페널티. 다중 턴 효과 — 저주해제
     // 주문서 / purify 스킬 / 휴식으로 해제될 때까지 매 행동마다 roll.
     BLIND_PLAYER_MISS_CHANCE: 0.30,
+    // cycle 110: 플레이어가 fear 상태일 때 flinch(턴 무위) 확률. 적의 FEAR_ATK_MULT
+    // (0.70)와 짝을 이루는 player-side 페널티. blind miss(0.30)보다 약간 낮게 — 두 개가
+    // 동시에 부여되는 상황에서 over-disable 방지. 다중 턴 효과.
+    FEAR_PLAYER_FLINCH_CHANCE: 0.25,
     // 플레이어 기본 최대 HP (maxHp 미설정 시 fallback)
     DEFAULT_MAX_HP: 150,
 
