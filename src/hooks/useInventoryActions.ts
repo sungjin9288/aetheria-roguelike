@@ -333,6 +333,10 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);
             addLog('success', MSG.ACH_DONE(achData.title));
+            // cycle 123: 업적 청구 sensory cue — cycle 122 quest_complete 사운드 재사용.
+            // 퀘스트 완료와 업적 청구는 같은 결의 "달성/회수" 모먼트라 동일 음악적
+            // 정체성(E major) 부여.
+            soundManager.play('quest_complete');
         },
 
         synthesize: (itemIds: any, useProtect: any = false) => {
