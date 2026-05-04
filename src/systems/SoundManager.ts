@@ -142,6 +142,16 @@ class SoundManager {
                 break;
             }
 
+            // cycle 122: 퀘스트 완료 — E major arpeggio (E5/G#5/B5/E6).
+            // victory(C major) / discovery_chain(G major) / new_area(D major)와 구분되는
+            // E major 색채. 보상 / 칭호 해금이 동반되는 의미 있는 모먼트.
+            case 'quest_complete':
+                this._playTone(659.25, 0.10, 0);     // E5
+                this._playTone(830.61, 0.10, 0.10);  // G#5
+                this._playTone(987.77, 0.10, 0.20);  // B5
+                this._playTone(1318.51, 0.30, 0.30); // E6 sustain
+                break;
+
             // cycle 118: 첫 방문 지역 — D major triad 3음 짧은 arpeggio.
             // discovery_chain(G major 4음 0.6s)보다 가볍고 짧음 — 첫 방문은 빈번한
             // 이벤트라 사운드 길이를 최소화 (0.3s 합).

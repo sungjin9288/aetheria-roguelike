@@ -11,6 +11,7 @@ import { getTraitProfile, getTraitQuestResonance } from '../utils/runProfileUtil
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
+import { soundManager } from '../systems/SoundManager';
 import { isSignatureItem } from '../data/signatureItems.js';
 import { resolveInvasion } from '../utils/graveUtils';
 import type { Item } from '../types/index.js';
@@ -299,6 +300,9 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.questComplete });
             emitUnlockedTitles(updatedPlayer);
             addLog('success', MSG.QUEST_DONE(qData.title));
+            // cycle 122: 퀘스트 완료 sensory cue — E major arpeggio. cycle 117/118 사운드
+            // 시리즈 패턴. 보상 / 칭호 해금이 동반되는 의미 있는 모먼트의 audio reflection.
+            soundManager.play('quest_complete');
         },
 
         claimAchievement: (achId: any) => {
