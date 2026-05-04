@@ -33,6 +33,7 @@ const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false
                 {slots.map((item: any, i: any) => (
                     <Motion.button
                         key={i}
+                        data-testid={`quick-slot-${i}`}
                         whileTap={item && canUse ? { scale: 0.9 } : {}}
                         onClick={() => item && canUse && onUse?.(item, i)}
                         title={item ? `${item.name} — 빠른 사용 (슬롯 ${i + 1})` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
@@ -80,6 +81,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots,
                 return (
                     <button
                         key={i}
+                        data-testid={`quick-slot-assign-${i}`}
                         onClick={() => onAssign(i, item)}
                         className={`${compact ? 'h-5 w-5 text-[9px]' : 'h-6 w-6 text-[10px]'} rounded border font-bold transition-all backdrop-blur-md
                             ${occupied?.id === item?.id
@@ -96,6 +98,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots,
             })}
             {isAssigned && (
                 <button
+                    data-testid="quick-slot-unassign"
                     onClick={() => {
                         const idx = currentSlots?.findIndex((s: any) => s?.id === item?.id);
                         if (idx >= 0) onAssign(idx, null);
