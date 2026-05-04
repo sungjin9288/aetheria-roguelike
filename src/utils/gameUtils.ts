@@ -398,7 +398,8 @@ export const migrateData = (rawData: any) => {
     target.meta.totalPrestigeHp  = target.meta.totalPrestigeHp  || 0;
     target.meta.totalPrestigeMp  = target.meta.totalPrestigeMp  || 0;
     target.stats.relicCount      = target.stats.relicCount      || 0;
-    target.stats.comboCount      = target.stats.comboCount      || 0;
+    // cycle 124: dead `comboCount` migrate 제거. INITIAL_STATE에서도 제거됨.
+    // 활성 combo 카운터는 combatFlags.comboCount(별도 필드)로 처리.
     target.stats.crafts          = target.stats.crafts          || 0;
     // cycle 120: dead 'discoveries' migrate 제거 (cycle 84 INITIAL_STATE 정리 후속).
     // 신규 영구 카운터 default 추가 — cycle 119 ASCEND preserve와 정합.
