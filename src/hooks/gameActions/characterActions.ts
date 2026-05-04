@@ -69,11 +69,16 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             const restCost = Math.floor(BALANCE.REST_COST * (1 + (player.level || 1) / 20));
             if (player.gold < restCost) return addLog('error', MSG.REST_GOLD_INSUFFICIENT(restCost));
             const stats = getFullStats();
+            // cycle 112: rest 시 player.status 정리 — cycle 106-110에서 활성화된 5종 status
+            // (bleed/freeze/stun/curse/blind/fear)를 안전지대 휴식으로 해소. 며칠간의 회복
+            // 자연스러운 의미 + cure item이 없는 status(bleed/blind/fear/stun)에 대한
+            // UX 안전망. tempBuff은 turn-based라 그대로 유지.
             const updatedPlayer: Record<string, any> = {
                 ...player,
                 gold: player.gold - restCost,
                 hp: stats.maxHp,
                 mp: stats.maxMp,
+                status: [],
                 stats: { ...(player.stats || {}), rests: (player.stats?.rests || 0) + 1 }
             };
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
