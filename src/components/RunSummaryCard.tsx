@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles } from 'lucide-react';
+import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles, Footprints, Compass } from 'lucide-react';
 import { getTitleLabel } from '../utils/gameUtils';
 import { getRunSummaryAnalysis } from '../utils/outcomeAnalysis';
 import { buildRunShareText } from '../utils/runShareText.js';
@@ -145,6 +145,40 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                                         ✦ {name}
                                     </span>
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* cycle 86: 도주/지도 발견 reflection — escape(cycle 78) / discovery
+                        (cycle 84) line이 share text에만 있고 시각 카드에선 안 보이던 갭 채움.
+                        signatures highlight(cycle 18)와 동일한 mini-section 패턴.
+                        silence-over-noise: 둘 다 0이면 출력 안 함. */}
+                    {(s.escapes > 0 || s.discoveries > 0) && (
+                        <div
+                            data-testid="run-summary-extras"
+                            className="mt-5 rounded-[1.25rem] border border-white/8 bg-black/18 px-4 py-3"
+                        >
+                            <div className="flex flex-wrap items-center gap-2 text-[11px] font-fira text-slate-200/86">
+                                {s.escapes > 0 && (
+                                    <span
+                                        data-testid="run-summary-escape"
+                                        className="inline-flex items-center gap-1.5 rounded-full border border-sky-300/30 bg-sky-400/10 px-2.5 py-1"
+                                        style={{ color: '#bae6fd' }}
+                                    >
+                                        <Footprints size={11} />
+                                        도주 {s.escapes}회
+                                    </span>
+                                )}
+                                {s.discoveries > 0 && (
+                                    <span
+                                        data-testid="run-summary-discovery"
+                                        className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/30 bg-emerald-400/10 px-2.5 py-1"
+                                        style={{ color: '#a7f3d0' }}
+                                    >
+                                        <Compass size={11} />
+                                        지도 발견 {s.discoveries}곳
+                                    </span>
+                                )}
                             </div>
                         </div>
                     )}
