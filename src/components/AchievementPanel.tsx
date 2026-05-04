@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Trophy, Star, Skull, Swords, Crown, Gift, Footprints, Shield, BookOpen, Compass, Hammer, Sparkles, Coins, RefreshCcw } from 'lucide-react';
+import { Trophy, Star, Skull, Swords, Crown, Gift, Footprints, Shield, BookOpen, Compass, Hammer, Sparkles, Coins, RefreshCcw, Flame, Link2 } from 'lucide-react';
 import { DB } from '../data/db';
 import type { Player } from '../types/index.js';
 import { formatRewardParts, getAchievementCurrentValue, isAchievementUnlocked } from '../utils/gameUtils';
@@ -34,6 +34,11 @@ const THEME_BY_TARGET: any = {
     signaturesDiscovered:    { icon: Sparkles, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
     signatureSetsCompleted:  { icon: Trophy, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
     synths:            { icon: Hammer, titleClass: 'text-orange-100', iconTone: 'text-orange-200', card: 'border-orange-300/22 bg-orange-400/10' },
+    // cycle 105: cycle 95(maxKillStreak) / cycle 102(discoveryChains)에서 추가된 신규
+    // achievement target에 짝을 이루는 테마. 각각 StatsPanel cycle 96(red Flame) /
+    // cycle 104(indigo Link2) 톤과 일치.
+    maxKillStreak:     { icon: Flame, titleClass: 'text-red-100', iconTone: 'text-red-200', card: 'border-red-300/22 bg-red-400/10' },
+    discoveryChains:   { icon: Link2, titleClass: 'text-indigo-100', iconTone: 'text-indigo-200', card: 'border-indigo-300/22 bg-indigo-400/10' },
 };
 
 const getTheme = (achievement: any) => {
