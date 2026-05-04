@@ -50,7 +50,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black px-4 py-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1rem)]">
+        <div data-testid="true-ending-screen" className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black px-4 py-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1rem)]">
             {/* Star field background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {STARS.map((s: any, i: any) => (
@@ -119,6 +119,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                     className="flex flex-col items-center gap-3"
                 >
                     <button
+                        data-testid="true-ending-confirm"
                         onClick={() => actions?.confirmAscension?.()}
                         className="px-8 py-3 rounded-[1.2rem] border border-[#d5b180]/40 bg-[#d5b180]/12 text-[#d5b180] font-fira text-[10px] uppercase tracking-[0.3em] hover:bg-[#d5b180]/20 hover:border-[#d5b180]/60 transition-all"
                     >
