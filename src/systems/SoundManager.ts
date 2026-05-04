@@ -142,6 +142,16 @@ class SoundManager {
                 break;
             }
 
+            // cycle 117: 발견 체인 완료 — G major arpeggio (G5/B5/D6/G6).
+            // victory(5음 C major) / levelUp(4음 C major)과 구분되는 G major 색채로
+            // 체인 시스템(cycle 102/103)의 정체성을 가짐.
+            case 'discovery_chain':
+                this._playTone(783.99, 0.10, 0);     // G5
+                this._playTone(987.77, 0.10, 0.10);  // B5
+                this._playTone(1174.66, 0.10, 0.20); // D6
+                this._playTone(1567.98, 0.30, 0.30); // G6 sustain
+                break;
+
             // cycle 88: 도주 성공 — victory 5음 상승의 정반대인 짧은 하강 sine.
             // 후퇴 모먼트지만 안도감 / 위험 회피 성공이라 'error'(낮은 sawtooth) 와는
             // 다른 부드러운 톤. cycle 74-87 escape feedback chain의 마지막 sensory cue.

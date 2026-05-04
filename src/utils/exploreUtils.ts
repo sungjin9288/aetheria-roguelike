@@ -10,6 +10,7 @@ import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics.j
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { AT } from '../reducers/actionTypes.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
+import { soundManager } from '../systems/SoundManager.js';
 
 // ─────────────────────────────────────────────────────────────────────────
 // 0. ISO 주차 번호 계산 (월요일 기준)
@@ -316,6 +317,9 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
 
         addLog('event', `🔍 ${chain.desc}`);
         addLog('success', `🏆 [발견 체인 완료] ${chain.label}! 보상: ${rewardParts.join(', ')}`);
+        // cycle 117: 체인 완료 sensory cue — G major arpeggio. cycle 88 escape sound /
+        // cycle 95+ maxKillStreak chain과 같은 결의 audio reflection.
+        soundManager.play('discovery_chain');
 
         dispatch({
             type: AT.SET_PLAYER,
