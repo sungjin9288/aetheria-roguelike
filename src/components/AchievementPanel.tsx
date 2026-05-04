@@ -92,7 +92,7 @@ const AchievementPanel = ({ player, actions, compact = false }: AchievementPanel
     };
 
     return (
-        <div className={compact ? 'space-y-2.5' : 'space-y-3'}>
+        <div data-testid="achievement-panel" className={compact ? 'space-y-2.5' : 'space-y-3'}>
             <div className={`rounded-[1.2rem] border border-white/8 bg-black/18 ${compact ? 'px-3 py-3' : 'px-4 py-3.5'}`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -108,6 +108,7 @@ const AchievementPanel = ({ player, actions, compact = false }: AchievementPanel
                         {claimableCount > 0 && <SignalBadge tone="upgrade" size="sm">수령 대기 {claimableCount}</SignalBadge>}
                         {compact && (hiddenAchievementCount > 0 || showAllAchievements) && (
                             <button
+                                data-testid="achievement-toggle-show-all"
                                 type="button"
                                 onClick={() => setShowAllAchievements((prev: any) => !prev)}
                                 className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
@@ -134,6 +135,7 @@ const AchievementPanel = ({ player, actions, compact = false }: AchievementPanel
                         return (
                             <Motion.div
                                 key={a.id}
+                                data-testid={`achievement-card-${a.id}`}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.04 }}
@@ -156,6 +158,7 @@ const AchievementPanel = ({ player, actions, compact = false }: AchievementPanel
                                     </div>
                                     {a.unlocked && !a.claimed && (
                                         <Motion.button
+                                            data-testid={`achievement-claim-${a.id}`}
                                             whileTap={{ scale: 0.96 }}
                                             onClick={() => handleClaim(a)}
                                             className="shrink-0 rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 px-2.5 py-1.5 text-[10px] font-rajdhani font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/14"
@@ -180,6 +183,7 @@ const AchievementPanel = ({ player, actions, compact = false }: AchievementPanel
                         return (
                             <Motion.div
                                 key={a.id}
+                                data-testid={`achievement-card-${a.id}`}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.04 }}
@@ -206,6 +210,7 @@ const AchievementPanel = ({ player, actions, compact = false }: AchievementPanel
                                         </div>
                                     ) : (
                                         <Motion.button
+                                            data-testid={`achievement-claim-${a.id}`}
                                             whileTap={{ scale: 0.96 }}
                                             onClick={() => handleClaim(a)}
                                             className="shrink-0 rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-2 text-[10px] font-rajdhani font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/14"
