@@ -156,6 +156,10 @@ export const BALANCE: any = {
     // CURSE_ATK_MULT(0.75)로 적의 ATK를 줄이는 것과 짝을 이루는 player-side 페널티.
     // MSG.SKILL_CURSE_AMPLIFY("저주가 강화되어 피해가 증폭됩니다") 의도 구현.
     CURSE_PLAYER_DMG_TAKEN_MULT: 1.30,
+    // cycle 109: 플레이어가 blind 상태일 때 공격이 빗나갈 확률. 적의 BLIND_ATK_MULT(0.65)
+    // 처럼 적 ATK를 줄이는 것과 짝을 이루는 player-side 페널티. 다중 턴 효과 — 저주해제
+    // 주문서 / purify 스킬 / 휴식으로 해제될 때까지 매 행동마다 roll.
+    BLIND_PLAYER_MISS_CHANCE: 0.30,
     // 플레이어 기본 최대 HP (maxHp 미설정 시 fallback)
     DEFAULT_MAX_HP: 150,
 

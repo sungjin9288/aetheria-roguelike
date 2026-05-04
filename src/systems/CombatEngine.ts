@@ -304,6 +304,18 @@ export const CombatEngine = {
             };
         }
 
+        // cycle 109: blind 상태이상 — 매 공격마다 BLIND_PLAYER_MISS_CHANCE roll.
+        // freeze/stun(1턴 effect)과 달리 status 유지 — 저주해제/purify/휴식까지 지속.
+        if (incomingStatus.includes('blind') && Math.random() < (BALANCE.BLIND_PLAYER_MISS_CHANCE || 0.30)) {
+            return {
+                updatedPlayer: { ...player },
+                updatedEnemy: enemy,
+                logs: [{ type: 'warning', text: '[실명] 공격이 빗나갔습니다!' }],
+                isCrit: false,
+                isVictory: false,
+            };
+        }
+
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
         const logs: any[] = [];
@@ -447,6 +459,18 @@ export const CombatEngine = {
                 updatedPlayer: { ...player, status: newStatus },
                 updatedEnemy: enemy,
                 logs: [{ type: 'warning', text: MSG.PLAYER_STATUS_SKIP(blockingStatusSkill) }],
+                isCrit: false,
+                isVictory: false,
+            };
+        }
+
+        // cycle 109: blind miss — attack()와 동일. miss 시 MP 소비 안 됨, status 유지.
+        if (incomingStatusSkill.includes('blind') && Math.random() < (BALANCE.BLIND_PLAYER_MISS_CHANCE || 0.30)) {
+            return {
+                success: true,
+                updatedPlayer: { ...player },
+                updatedEnemy: enemy,
+                logs: [{ type: 'warning', text: '[실명] 스킬이 빗나갔습니다!' }],
                 isCrit: false,
                 isVictory: false,
             };
