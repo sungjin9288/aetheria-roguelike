@@ -33,6 +33,17 @@ export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
                     if (rwd.type === 'item' && rwd.name) {
                         updatedPlayer = addItemByName(updatedPlayer, rwd.name);
                     }
+                    // cycle 139: 'legendary_item' reward 타입 핸들러 추가 — eventChains.ts의
+                    // lost_wizard chain에 정의됐으나 처리 분기 누락이라 보상이 silently 누락
+                    // 되던 회귀 fix. 'item'과 동일하게 addItemByName 호출 + LOOT_GET 로그.
+                    if (rwd.type === 'legendary_item' && rwd.name) {
+                        const before = updatedPlayer.inv?.length || 0;
+                        updatedPlayer = addItemByName(updatedPlayer, rwd.name);
+                        const after = updatedPlayer.inv?.length || 0;
+                        if (after > before) {
+                            addLog('success', MSG.LOOT_GET(rwd.name));
+                        }
+                    }
                     if (rwd.type === 'relic') {
                         const pickedRelics = pickWeightedRelics(updatedPlayer.relics || [], 1);
                         if (pickedRelics.length > 0) {
