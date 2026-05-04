@@ -75,7 +75,7 @@ export const syncQuestProgress = (player: Player, enemyName: any = '', questCata
         }
 
         if (questData.target === 'Level') {
-            return { ...quest, progress: Math.max(quest.progress || 0, player.level) };
+            return { ...quest, progress: Math.max(quest.progress || 0, player.level || 0) };
         }
 
         const exactMatch = questData.target === normalizedEnemyName;
