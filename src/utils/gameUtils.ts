@@ -209,6 +209,8 @@ export const getAchievementCurrentValue = (achievement: any, player: Player) => 
     if (target === 'prestige') return player?.meta?.prestigeRank || 0;
     if (target === 'synths') return stats?.syntheses || 0;
     if (target === 'discoveries') return Object.keys(stats?.visitedMaps || {}).length;
+    // cycle 95: 휘발성 killStreak는 매번 0으로 리셋되므로 max-ever 누적 카운터를 읽음.
+    if (target === 'maxKillStreak') return stats?.maxKillStreak || 0;
     if (target === 'relicCount') return (player?.relics || []).length + (stats?.relicCount || 0);
     if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
@@ -520,6 +522,8 @@ export const checkTitles = (player: Player) => {
         // cycle 85: 합성(synthesis) 카운터 — alchemist 칭호용. cycle 82에서 INITIAL_STATE에
         // syntheses:0 declarative하게 추가했고, achievement target='synths'와 동일한 필드를 읽음.
         if (type === 'synths')         return ((player.stats as any)?.syntheses || 0) >= val;
+        // cycle 95: 최대 연속 처치 — berserker 칭호용. combatVictory에서 max-ever를 누적.
+        if (type === 'maxKillStreak') return ((player.stats as any)?.maxKillStreak || 0) >= val;
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
         if (type === 'explores')       return ((player.stats as any)?.explores || 0) >= val;

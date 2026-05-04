@@ -287,4 +287,11 @@ export const ACHIEVEMENTS: any = [
     { id: 'ach_escape_5',  title: '신중한 모험가',  desc: '전투 도주 5회 성공',  target: 'escapes', goal: 5,  reward: { gold: 800 } },
     { id: 'ach_escape_20', title: '생존의 본능',    desc: '전투 도주 20회 성공', target: 'escapes', goal: 20, reward: { gold: 4000, item: '엘릭서' } },
     { id: 'ach_escape_50', title: '회피의 달인',    desc: '전투 도주 50회 성공', target: 'escapes', goal: 50, reward: { gold: 15000, item: '엘릭서' } },
+
+    // ── 연속 처치 업적 (cycle 95: stats.maxKillStreak 신규 카운터) ─────────────
+    // killStreak는 휘발성(비전투 30초/사망/도주 리셋)이라 max-ever 누적 필요.
+    // BALANCE.KILL_STREAK_TIERS [3,5,10,20]에 맞춘 5/10/20 임계값.
+    { id: 'ach_streak_5',  title: '연속 처치 입문',   desc: '5연속 처치 달성',  target: 'maxKillStreak', goal: 5,  reward: { gold: 500 } },
+    { id: 'ach_streak_10', title: '광기의 진군',      desc: '10연속 처치 달성', target: 'maxKillStreak', goal: 10, reward: { gold: 3000, item: '분노의 물약' } },
+    { id: 'ach_streak_20', title: '학살자',           desc: '20연속 처치 달성', target: 'maxKillStreak', goal: 20, reward: { gold: 12000, item: '영웅의 물약' } },
 ];

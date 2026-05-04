@@ -113,7 +113,19 @@ export const handleVictoryOutcome = ({
         const atkPct = Math.round(BALANCE.KILL_STREAK_ATK_BONUS[tierIdx] * 100);
         addLog('event', MSG.KILL_STREAK_BONUS(newStreak, atkPct));
     }
-    updatedPlayer = { ...updatedPlayer, killStreak: newStreak };
+    // cycle 95: max-ever 연속 처치 누적 — killStreak는 비전투 30초 / 사망 / 도주 시
+    // 0으로 리셋되는 휘발성 카운터라 reflection / 보상 surface에 잡히지 않음. 영구
+    // 보존되는 stats.maxKillStreak를 유지해 ach_streak_5/10/20 + berserker(광전사)
+    // 칭호의 1급 시민 시그널로 사용.
+    const prevMaxStreak = updatedPlayer.stats?.maxKillStreak || 0;
+    updatedPlayer = {
+        ...updatedPlayer,
+        killStreak: newStreak,
+        stats: {
+            ...(updatedPlayer.stats || {}),
+            maxKillStreak: Math.max(prevMaxStreak, newStreak),
+        },
+    };
 
     dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
     dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });

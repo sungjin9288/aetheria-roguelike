@@ -213,6 +213,14 @@ export const TITLES = Object.freeze([
         cond: { type: 'synths', val: 20 },
         color: 'text-amber-300',
     },
+    // cycle 95: maxKillStreak 카운터 기반 칭호 — killStreak 시스템(BALANCE.KILL_STREAK_TIERS
+    // [3,5,10,20])의 최고 임계값에서 unlock. 휘발성 streak를 영구 보상으로 연결.
+    {
+        id: 'berserker',
+        name: '광전사',
+        cond: { type: 'maxKillStreak', val: 20 },
+        color: 'text-red-400',
+    },
     {
         id: 'ironman',
         name: '아이언맨',
@@ -302,6 +310,8 @@ export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     // cycle 85: 연금술사 — crafter(장인)와 같은 제작 계열. 합성 보호/소비 골드의 비용을
     // 흡수하는 mp/atk 보조 패시브로 차별화 (crafter는 def/mp 중심).
     alchemist:        { mp: 15, atk: 1, label: 'MP +15 · ATK +1' },
+    // cycle 95: 광전사 — 공격 일변도 streak 빌드 보상. ATK 최우선 + 부수적 crit.
+    berserker:        { atk: 3, crit: 0.02, label: 'ATK +3 · CRIT +2%' },
     ironman:          { hp: 35, def: 2, label: 'HP +35 · DEF +2' },
 
     // cycle 61 신규 칭호 패시브
