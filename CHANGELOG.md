@@ -7,6 +7,92 @@
 
 ---
 
+## Cycle 113 — CombatPanel 적 debuff chip (cycle 111 player chip의 symmetry)
+
+- UX: CombatPanel에 적 debuff chip(stunnedTurns/cursedTurns/blindTurns/fearTurns/dots). emerald 톤 — cycle 111 rose(player) 위험과 대비.
+- 결과: 플레이어가 부여한 status가 실시간 시각 노출.
+
+검증: tsc 0 / unit 749 / lint clean.
+
+## Cycle 112 — rest 시 player.status 정리 (status 시리즈 후속 UX 안전망)
+
+- UX: characterActions.rest에 status: [] 초기화 추가. cure 아이템이 없는 status(bleed/blind/fear/stun)에 대한 안전망 — 안전지대 휴식으로 모든 디버프 해소.
+- 영향: 영구 디버프 트랩 시나리오 차단.
+
+검증: tsc 0 / unit 744 / lint clean.
+
+## Cycle 111 — StatusBar active debuff chip (cycle 106-110 status 시각 노출)
+
+- UX: StatusBar에 player.status가 length>0이면 debuff chip 노출. rose-200 톤(위험), aria-label에 전체 debuff 한국어 리스트(8종 매핑).
+- testid: `status-debuff-chip` + `data-debuff-count`.
+
+검증: tsc 0 / unit 741 / lint clean.
+
+## Cycle 106-110 — Player status 시스템 5종 복구 시리즈
+
+- 시스템: 보스 phase 2/3가 부여하는 5종 status가 player에 효과 없던 비대칭 회귀를 5 사이클에 걸쳐 복구.
+  - cycle 106: bleed → DoT 매 턴 maxHp 4% (DOT_STATUSES에 추가, MSG.STATUS_DOT 출혈 라벨).
+  - cycle 107: freeze/stun → 1턴 스킵 (attack/performSkill 시작 시 체크, status 제거).
+  - cycle 108: curse → 받는 피해 +30% (BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT, enemyAttack 적용).
+  - cycle 109: blind → 30% miss 확률 (BALANCE.BLIND_PLAYER_MISS_CHANCE, status 유지).
+  - cycle 110: fear → 25% flinch 확률 (BALANCE.FEAR_PLAYER_FLINCH_CHANCE).
+- 영향: 보스 후반 페이즈 위험 시그널 5종 모두 의도대로 작동.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 105 — AchievementPanel THEME_BY_TARGET에 maxKillStreak / discoveryChains 추가
+
+- UX: cycle 95/102에서 추가된 신규 target들이 cycle 79 정착 매핑에 누락되어 default kills 톤(붉은 Swords)으로 표시되던 surface 일관성 회복.
+  - maxKillStreak: Flame red. discoveryChains: Link2 indigo.
+
+검증: tsc 0 / unit 711 / lint clean.
+
+## Cycle 104 — StatsPanel CHAINS row (discoveryChains 진행도 가시화)
+
+- UX: cycle 80/82/96 패턴 그대로 — 카운터 시스템마다 ach + 칭호 + StatsPanel row 한 짝의 일관 구조 유지.
+  Link2 / indigo-300 톤 (chain_master 칭호 색과 매치).
+
+검증: tsc 0 / unit 705 / lint clean.
+
+## Cycle 103 — '세계의 길잡이'(chain_master) 칭호 + discoveryChains cond.type
+
+- 콘텐츠: title `chain_master`(세계의 길잡이) cond `discoveryChains >= 5` ATK+1 · DEF+1 · MP+15 (탐험+전투 균형형).
+- 시스템: gameUtils.checkTitles에 `type === 'discoveryChains'` 분기.
+
+검증: tsc 0 / unit 702 / lint clean.
+
+## Cycle 102 — 발견 체인(discovery chains) 완료 achievement 3종
+
+- 콘텐츠: ach_chain_1/3/all (BALANCE.DISCOVERY_CHAINS 5개 시스템 reflection). exploreUtils가 즉시 보상은 부여했지만 영구 reflection이 비어있던 자리 채움.
+- 시스템: getAchievementCurrentValue 'discoveryChains' 핸들러 추가.
+
+검증: tsc 0 / unit 697 / lint clean.
+
+## Cycle 101 — relicCount achievement 진행도 double-counting 회귀
+
+- 시스템: getAchievementCurrentValue('relicCount')가 `relics.length + stats.relicCount`로 계산되어 ADD_RELIC handler가 둘 다 증분하던 게 double count → ach_relic_5("유물 5개")가 실제 3개에서 풀리던 부풀림 fix.
+- 단일 source of truth(stats.relicCount)로 통일. checkTitles와 정합. cycle 83 'discoveries' 시맨틱 통일과 동일 패턴.
+
+검증: tsc 0 / unit 691 / lint clean.
+
+## Cycle 100 — 잔존 lint warnings 4종 명시 disable (lint 100% clean) 🎯
+
+- 인프라: App.tsx ref-mutate-in-render(3종, 테스트 harness 의도) + GravePanel set-state-in-effect(1종, mount-once fetch) 명시 disable + 사유 주석.
+- 결과: npm run verify 풀 파이프 type-check 0 / lint 0 errors 0 warnings / unit 686 / build-guard ok 완전 통과.
+
+## Cycle 99 — quest Level 진행도 player.level undefined 안전 처리 (TS 회귀)
+
+- 시스템: cycle 94 latch refactor 이후 잔존하던 TS2345 에러 fix — `Math.max(N, undefined) = NaN` 위험 차단.
+- 발견 경로: cycle 78-98 동안 npm run verify type-check를 매번 안 돌려 잠복.
+
+검증: tsc 0 / unit 686 / lint clean.
+
+## Cycle 98 — CHANGELOG에 cycles 78-97 history 일괄 추가
+
+- 문서: cycle 67 phase 종료 이후 20 사이클의 작업이 CHANGELOG에 미반영 상태였음. 단일 batch로 정리.
+
+---
+
 ## Cycle 97 — maxKillStreak reflection 마무리 (RunSummaryCard chip + focus advice)
 
 - UX: RunSummaryCard run-summary-extras에 streak chip(red Flame). extras 섹션 트리거 조건에 `OR maxKillStreak > 0` 추가.
