@@ -47,6 +47,10 @@ const GravePanel = ({ player, actions, compact = false }: GravePanelProps) => {
     };
 
     useEffect(() => {
+        // cycle 100: fetchGraves는 setLoading(true)을 동기 호출하지만, 그 직후 await으로
+        // 비동기 처리되는 mount-once fetch 패턴. react-hooks 7+의 set-state-in-effect
+        // 룰이 엄격하지만 정착된 패턴이라 명시 disable. deps=[]는 의도.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchGraves();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

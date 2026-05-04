@@ -24,12 +24,18 @@ function App() {
     const fullStats = engine.getFullStats();
     const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
 
-    // Smoke test refs — updated synchronously during render so harness always reads fresh state
+    // Smoke test refs — updated synchronously during render so harness always reads fresh state.
+    // cycle 100: react-hooks/refs 룰은 일반 컴포넌트엔 옳지만 여기선 의도적인 패턴이라 명시 disable.
+    // smoke-gameplay.mjs / playwright e2e에서 window.__aetheriaTestApi__를 통해 외부에서
+    // 최신 engine/stats를 읽어야 하므로 render마다 동기 갱신 필요.
     const engineRef = useRef(engine);
+    /* eslint-disable-next-line react-hooks/refs */
     engineRef.current = engine;
     const fullStatsRef = useRef(fullStats);
+    /* eslint-disable-next-line react-hooks/refs */
     fullStatsRef.current = fullStats;
     const inventorySpotlightRef = useRef(inventorySpotlight);
+    /* eslint-disable-next-line react-hooks/refs */
     inventorySpotlightRef.current = inventorySpotlight;
     useGameTestApi(engineRef, fullStatsRef, inventorySpotlightRef);
 
