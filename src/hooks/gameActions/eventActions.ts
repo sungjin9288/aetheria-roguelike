@@ -5,6 +5,7 @@ import { toArray, grantGold } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
+import { soundManager } from '../../systems/SoundManager';
 
 export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
     const { player, currentEvent, dispatch, addLog, getFullStats } = deps;
@@ -74,6 +75,11 @@ export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
                 }
                 dispatch({ type: AT.SET_EVENT, payload: null });
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                // cycle 135: chain 이벤트 보상 sensory cue — cycle 122/123/133 quest_complete
+                // 사운드 재사용 (4번째 "달성/회수" 액션이 동일 E major 정체성 공유).
+                // rwd 처리되어 보상 grant된 outcome 만 — outcome 자체가 reward 없을 때는
+                // 무음 (silence-over-noise).
+                if (rwd) soundManager.play('quest_complete');
                 return;
             }
 
