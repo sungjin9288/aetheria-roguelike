@@ -6,6 +6,7 @@ import { MSG } from '../data/messages';
 import { getCodexProgress } from '../data/codexRewards';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { AT } from '../reducers/actionTypes';
+import { soundManager } from '../systems/SoundManager';
 import SignalBadge from './SignalBadge';
 import WeaponCodex from './codex/WeaponCodex';
 import MonsterCodex from './codex/MonsterCodex';
@@ -126,7 +127,13 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                                 </div>
                                 <button
                                     data-testid={`codex-claim-${m.id}`}
-                                    onClick={() => dispatch?.({ type: AT.CLAIM_CODEX_REWARD, payload: { milestoneId: m.id, reward: m.reward } })}
+                                    onClick={() => {
+                                        dispatch?.({ type: AT.CLAIM_CODEX_REWARD, payload: { milestoneId: m.id, reward: m.reward } });
+                                        // cycle 133: codex milestone 수령 sensory cue — cycle 122/123 quest_complete
+                                        // 사운드 재사용. completeQuest / claimAchievement / claimCodex 3종이 동일
+                                        // "달성/회수" 음악적 정체성(E major) 공유.
+                                        soundManager.play('quest_complete');
+                                    }}
                                     className="shrink-0 rounded-[0.7rem] border border-cyber-green/50 bg-cyber-green/15 px-2.5 py-1 text-[9px] font-fira text-cyber-green transition-all hover:bg-cyber-green/25"
                                 >
                                     수령
