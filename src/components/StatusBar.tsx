@@ -156,6 +156,31 @@ const StatusBar = ({
               {(player.killStreak || 0) >= 3 && (
                 <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em] text-orange-300">🔥{player.killStreak}</span>
               )}
+              {/* cycle 111: 활성 디버프 chip — cycle 106-110에서 활성화된 5종 status
+                  (bleed/freeze/stun/curse/blind/fear)의 시각 노출. 기존엔 전투 로그에만
+                  나오고 스크롤되어 사라져 플레이어가 현재 디버프 상태를 알기 어려웠음.
+                  rose 톤(위험)으로 단일화 — 모든 5종이 player에 부정적이라 통합. */}
+              {Array.isArray(player.status) && player.status.length > 0 && (() => {
+                const DEBUFF_LABELS: Record<string, string> = {
+                  bleed: '출혈', burn: '화상', poison: '중독',
+                  freeze: '빙결', stun: '기절', curse: '저주',
+                  blind: '실명', fear: '공포',
+                };
+                const debuffs = player.status.filter((s: any) => DEBUFF_LABELS[s as string]);
+                if (debuffs.length === 0) return null;
+                const headLabel = DEBUFF_LABELS[debuffs[0] as string] || debuffs[0];
+                const showCount = debuffs.length > 1;
+                return (
+                  <span
+                    data-testid="status-debuff-chip"
+                    data-debuff-count={debuffs.length}
+                    className="shrink-0 rounded-full border border-rose-400/40 bg-rose-500/16 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em] text-rose-200"
+                    aria-label={`디버프 ${debuffs.length}개: ${debuffs.map((d: any) => DEBUFF_LABELS[d as string] || d).join(', ')}`}
+                  >
+                    ⚠ {headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}
+                  </span>
+                );
+              })()}
               {stats?.jobAffinity?.matchCount > 0 && (() => {
                 const tier = stats.jobAffinity.tier;
                 const tone =
