@@ -43,8 +43,23 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     dispatch({ type: AT.SET_PLAYER, payload: result.updatedPlayer });
                     if (result.forceEscape) {
                         result.logs.forEach((log: any) => addLog(log.type, log.text));
+                        // cycle 89: 도주 스킬(escape_100) 코드 패스를 cycle 74-88 escape feedback
+                        // chain에 합류. 이전엔 forceEscape 분기가 단순 SET_ENEMY=null + GS.IDLE만
+                        // 처리해 stats.escapes 증분 / recentBattles record / escape 사운드를
+                        // 모두 누락했음. '공허의 문'(시간술사) / '순간 이동'(차원술사) 사용자가
+                        // 정상 도주 분기 사용자와 동일한 보상 체인을 받지 못하던 회귀 수정.
+                        const escHpRatio = (playerAfterAction?.hp || player.hp || 0)
+                            / Math.max(1, playerAfterAction?.maxHp || player.maxHp || 1);
+                        dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
+                            ...p,
+                            stats: {
+                                ...pushBattleRecord(p.stats, makeBattleRecord('escape', escHpRatio)),
+                                escapes: (p.stats?.escapes || 0) + 1,
+                            },
+                        }) });
                         dispatch({ type: AT.SET_ENEMY, payload: null });
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                        soundManager.play('escape');
                         return;
                     }
                 } else {
