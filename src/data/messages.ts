@@ -6,8 +6,7 @@ import { DB } from '../data/db.js';
  */
 export const MSG: any = {
     // --- 전투 (Combat) ---
-    COMBAT_ATTACK: (name: any, dmg: any, tags: any = []) =>
-        `${name}에게 ${dmg} 피해를 입혔습니다.${tags.length ? ` [${tags.join(', ')}]` : ''}`,
+    // cycle 116: COMBAT_ATTACK 제거 — COMBAT_ATTACK_DETAIL이 active.
     COMBAT_ATTACK_DETAIL: (name: any, dmg: any, cur: any, max: any, tags: any = []) =>
         `${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
     COMBAT_ENEMY_HIT: (name: any, dmg: any) => {
@@ -87,19 +86,12 @@ export const MSG: any = {
         return `[${label}] 상태이상 피해 ${dmg}`;
     },
 
-    // --- 마일스톤 (Milestone) ---
-    MILESTONE_KILLS_10: (name: any) => `🥉 [${name}] 사냥꾼 칭호 획득! (10마리 처치)`,
-    MILESTONE_KILLS_50: (name: any) => `🥈 [${name}] 학살자 칭호 획득! (50마리 처치)`,
-    MILESTONE_KILLS_100: (name: any) => `🥇 [${name}] 지배자 칭호 획득! (100마리 처치)`,
-    MILESTONE_BOSS_FIRST: (name: any) => `👑 [${name}] 최초 처치!`,
-    MILESTONE_BOSS_5: (name: any) => `👑 [${name}] 숙련자 (5회 처치)`,
+    // cycle 116: 데드 마일스톤 / 도감 메시지 키 제거 — MILESTONE_KILLS_*, MILESTONE_BOSS_*,
+    // CODEX_DISCOVER/MILESTONE 등은 active 컴포넌트에서 inline 메시지로 대체되어 0건 사용.
 
     // --- 등급 (Rarity) ---
     RARITY_LABEL: { common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설' },
 
-    // --- 도감 (Codex) ---
-    CODEX_DISCOVER: (name: any) => `📖 도감 등록: ${name}`,
-    CODEX_MILESTONE: (label: any) => `🏆 도감 마일스톤 달성: ${label}`,
     // --- 합성 (Synthesis) ---
     SYNTHESIS_SUCCESS: (name: any) => `✨ 합성 성공! [${name}] 획득!`,
     SYNTHESIS_FAIL: '합성 실패... 일부 재료가 소실되었습니다.',
@@ -121,18 +113,17 @@ export const MSG: any = {
     ENHANCE_NOT_EQUIP: '강화는 장비 아이템에만 가능합니다.',
 
     // --- 주간 미션 (Weekly Mission) ---
-    WEEKLY_MISSION_COMPLETE: (label: any) => `🗓 주간 미션 완료: ${label}`,
+    // cycle 116: WEEKLY_MISSION_COMPLETE/RESET 제거 — 0건 사용. CLAIM만 active.
     WEEKLY_MISSION_CLAIM: (gold: any, crystals: any) => `주간 보상 수령: +${gold}G${crystals ? ` +${crystals}💎` : ''}`,
-    WEEKLY_MISSION_RESET: '주간 미션이 초기화되었습니다.',
 
     // --- 챌린지 런 (Challenge Run) ---
+    // cycle 116: CHALLENGE_COMPLETE 제거 — 0건 사용. START만 active.
     CHALLENGE_START: (labels: any) => `⚔ 챌린지 런 시작: ${labels.join(', ')}`,
-    CHALLENGE_COMPLETE: '🏆 챌린지 런 클리어!',
 
     // --- 진 엔딩 (True Ending) ---
+    // cycle 116: TRUE_BOSS_PHASE3 제거 — 0건 사용. UNLOCK/APPEAR만 active.
     TRUE_BOSS_UNLOCK: '세계의 근원이 흔들립니다... 숨겨진 문이 열렸습니다!',
     TRUE_BOSS_APPEAR: '원시의 신이 강림했습니다. 이것이 진짜 끝입니다.',
-    TRUE_BOSS_PHASE3: '원초적 혼돈이 세계를 집어삼킵니다!',
     PRIMAL_SHARD_DROP: (count: any) => `원시의 파편 획득! (${count}/3)`,
     PRIMAL_SHARD_HINT: (count: any) => `원시의 파편 ${count}/3개. 마왕을 쓰러뜨리면 진실이 드러납니다.`,
 
@@ -149,24 +140,13 @@ export const MSG: any = {
     // --- 신규 직업 스킬 (Sprint 16) ---
     SKILL_EXTRA_TURN: (name: any) => `[${name}] 시간이 흘러갑니다 — 추가 행동 획득!`,
     SKILL_RESET_COOLDOWNS: (name: any) => `[${name}] 모든 쿨타임이 초기화되었습니다!`,
-    SKILL_CURSE_AMPLIFY: (name: any) => `[${name}] 저주가 강화되어 피해가 증폭됩니다!`,
 
-    // --- 누락 보완 키 ---
-    REST_FULL: '체력과 마나를 완전히 회복했습니다.',
-    REST_PARTIAL: (hp: any, mp: any) => `체력 ${hp}, 마나 ${mp} 회복했습니다.`,
-    INVENTORY_FULL: '인벤토리가 가득 찼습니다. 아이템을 정리해 주세요.',
-    BOSS_ENCOUNTER: (name: any) => `[ 보스 ] ${name}이(가) 나타났습니다!`,
-    SAFE_ZONE_ARRIVE: '안전한 곳에 도착했습니다. 상점과 휴식을 이용할 수 있습니다.',
-    AREA_BOSS_ENCOUNTER: (name: any) => `[ 구역 보스 ] ${name}이(가) 행로를 가로막습니다!`,
-    MOVE_BLOCKED_COMBAT: '전투 중에는 이동할 수 없습니다.',
-    MOVE_BLOCKED_EVENT: '이벤트 진행 중에는 이동할 수 없습니다.',
-
-    // --- 발견 체인 (Discovery Chain) ---
-    DISCOVERY_CHAIN_TRIGGER: (label: any) => `🔍 [발견 체인] ${label} — 숨겨진 단서를 발견했습니다!`,
-    DISCOVERY_CHAIN_COMPLETE: (label: any, reward: any) => `🏆 [발견 체인 완료] ${label}! 보상: ${reward}`,
-
-    // --- 챌린지 보상 ---
-    CHALLENGE_REWARD_BONUS: (mult: any) => `⚔ 챌린지 보상 ${Math.round(mult * 100)}% 적용!`,
+    // cycle 116: 데드 키 제거 — REST_FULL/PARTIAL(REST_DONE_FULL이 active),
+    // INVENTORY_FULL(INV_FULL active), BOSS_ENCOUNTER/AREA_BOSS_ENCOUNTER,
+    // SAFE_ZONE_ARRIVE, MOVE_BLOCKED_COMBAT/EVENT(MOVE_BLOCKED active),
+    // DISCOVERY_CHAIN_TRIGGER/COMPLETE(exploreUtils inline string 사용),
+    // CHALLENGE_REWARD_BONUS, SKILL_CURSE_AMPLIFY(cycle 108에서 의도 구현했지만
+    // inline 메시지로 대체).
 
     // --- 스킬 교체 ---
     SKILL_SWAP: (oldName: any, newName: any) => `스킬 교체: [${oldName}] → [${newName}]`,
@@ -187,15 +167,12 @@ export const MSG: any = {
     CLASS_LOCKED: '잠김',
 
     // --- 도감 ---
-    CODEX_NEW_ENTRY: (name: any) => `새로운 도감 항목 발견: ${name}`,
-    CODEX_DISCOVERED: '발견',
-    CODEX_UNDISCOVERED: '미발견',
-    CODEX_PROGRESS: (n: any, total: any) => `${n}/${total} 발견`,
+    // cycle 116: CODEX_NEW_ENTRY/DISCOVERED/UNDISCOVERED/PROGRESS 제거 — 0건 사용.
     MONSTER_WEAKNESS: '약점',
     MONSTER_RESISTANCE: '내성',
     MONSTER_KILL_COUNT: (n: any) => `처치 ${n}회`,
     EQUIP_STAT_COMPARE: '스탯 비교',
-    EQUIP_EQUIPPED: '장착 중',
+    // cycle 116: EQUIP_EQUIPPED / UI_EQUIPPED 둘 다 '장착 중' 중복 정의였음. 둘 다 제거.
 
     // --- 인벤토리/장비 액션 ---
     INV_ITEM_NOT_FOUND: '인벤토리에 없는 아이템입니다.',
@@ -246,7 +223,7 @@ export const MSG: any = {
     EXPLORE_RELIC_FOUND: '✨ [유물 발견] 전투 직전, 고대의 유물이 눈에 들어옵니다!',
     REST_SAFE_ONLY: '휴식은 안전한 지역에서만 가능합니다.',
     REST_GOLD_INSUFFICIENT: (cost: any) => `골드가 부족합니다. (필요: ${cost}G)`,
-    REST_DONE: (cost: any) => `휴식 완료. ${cost}G 소모.`,
+    // cycle 116: REST_DONE 제거 — REST_DONE_FULL이 active.
     SKILL_SWAP_SAFE_ONLY: '스킬 교체는 안전한 지역에서만 가능합니다.',
     SKILL_SWAP_GOLD_INSUFFICIENT: (cost: any) => `골드 부족 (필요: ${cost}G)`,
     SKILL_NO_BRANCH: '해당 스킬에 분기가 없습니다.',
@@ -261,7 +238,7 @@ export const MSG: any = {
     BOUNTY_TOWN_ONLY: '현상수배 수주는 마을 게시판에서만 가능합니다.',
     BOUNTY_ALREADY_ACTIVE: '이미 진행 중인 현상수배가 있습니다. (퀘스트 완료 후 수주 가능)',
     BOUNTY_DAILY_LIMIT: '오늘 현상수배는 이미 발급되었습니다. 내일 다시 요청하세요.',
-    BOUNTY_ACCEPTED: (target: any, count: any) => `현상수배 수주: ${target} ${count}마리 처치`,
+    // cycle 116: BOUNTY_ACCEPTED 제거 — BOUNTY_ACCEPTED_NEW가 active.
     ASCEND_CANCEL: '환생을 취소했습니다. 여정을 계속합니다.',
 
     // --- 이동/탐험 동적 메시지 ---
@@ -287,10 +264,8 @@ export const MSG: any = {
     CHAIN_REWARD_RELIC: (name: any) => `✨ [체인 보상] 유물 [${name}] 획득!`,
     CHAIN_REWARD_COMBAT_BONUS: (atkPct: any, turns: any) => `⚔ [최후의 영웅] 기사의 혼령 합류! ATK +${atkPct}% ${turns}턴`,
 
-    // --- 난이도 매니저 (GM) ---
-    GM_OVERWHELM: '⚔️ [GM] 도전적인 편이 더 재미있겠죠? 몬스터가 강해집니다.',
-    GM_CRISIS: '🛡️ [GM] 잠시 숨을 고를 시간입니다. 몬스터가 약해집니다.',
-    GM_UNDERDOG: '🛡️ [GM] 어려운 상황이군요. 몬스터 강도를 낮춥니다.',
+    // cycle 116: GM_OVERWHELM/CRISIS/UNDERDOG 제거 — 게임 마스터 톤 메시지가 0건 사용
+    // (DifficultyManager가 자체 로그를 inline string으로 처리).
 
     // --- 전투 요약 (PostCombat Digest) ---
     COMBAT_DIGEST_KILL: (name: any) => `${name} 처치`,
@@ -345,8 +320,7 @@ export const MSG: any = {
     UI_REFRESH: '갱신',
     UI_REVIEW: '검토',
     UI_NOTABLE: '주목',
-    UI_ALL: '전체',
-    UI_EQUIPPED: '장착 중',
+    // cycle 116: UI_ALL / UI_EQUIPPED 제거 — 0건 사용 (INV_FILTER_ALL과 inline string으로 대체).
     UI_MY_RANK: '내 순위',
     UI_LOOT_REVIEW: '전리품 검토',
     UI_LOOT_FOCUS: '전리품 주목',
@@ -362,5 +336,5 @@ export const MSG: any = {
     INV_FILTER_SHIELD: '보조',
     INV_FILTER_CONSUMABLE: '회복',
     INV_FILTER_MATERIAL: '재료',
-    INV_FULL_WARNING: (used: any, max: any) => `인벤토리가 꽉 찼습니다 (${used}/${max})`,
+    // cycle 116: INV_FULL_WARNING 제거 — INV_FULL이 active.
 };
