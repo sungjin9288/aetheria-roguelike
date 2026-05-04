@@ -7,6 +7,72 @@
 
 ---
 
+## Cycle 131 — save → migrate → ASCEND 통합 흐름 회귀 가드
+
+- 테스트: cycle 119(ASCEND preserve) + 120(migrate default) + 121(INITIAL_STATE declaration) end-to-end 통합 회귀 가드. 3개 시나리오(legacy save / 신규 플레이어 / 연속 환생).
+
+검증: tsc 0 / unit 812 / lint clean.
+
+## Cycle 125-130 — testid 인프라 sweep 6 사이클
+
+- UX: 핵심 surface 6개에 stable testid 추가 — smoke/e2e 자동화 확보. 합 19개 신규 testid.
+  - 125 AchievementPanel (4): panel / card-${id} / claim-${id} / toggle-show-all
+  - 126 EventPanel (3): event-panel / event-choice-${idx} / event-dismiss
+  - 127 PremiumShop (4): premium-shop / buy-${id} / title-buy-${id} / close
+  - 128 QuickSlot (3): quick-slot-${i} / assign-${i} / unassign
+  - 129 TrueEndingScreen (2): true-ending-screen / confirm
+  - 130 Codex (3): codex-panel / tab-${id} / claim-${id}
+
+검증: 각 사이클 tsc 0 / lint clean / unit pass.
+
+## Cycle 124 — 데드 stats 필드 정리 (comboCount, lowHpWins)
+
+- 정리: INITIAL_STATE에 선언됐지만 사실상 dead인 stats.comboCount / stats.lowHpWins 제거. activate combo는 combatFlags.comboCount(별도 필드), countLowHpWins은 fallback 안전.
+
+검증: tsc 0 / unit 790 / lint clean.
+
+## Cycle 121-123 — discoveryChains INITIAL_STATE + 사운드 시리즈
+
+- 121: INITIAL_STATE에 discoveryChains: [] 선언 (cycle 102/119/120 declarative 마무리).
+- 122: 퀘스트 완료 사운드 추가 (E major 4음 — completeQuest 액션).
+- 123: 업적 청구도 같은 quest_complete 사운드 재사용 (claimAchievement).
+
+검증: 각 사이클 tsc 0 / lint clean / unit pass.
+
+## Cycle 119-120 — Ascension 영구 카운터 보존 + migrate default 정리
+
+- 119: progressionHandlers.ASCEND가 6종 영구 카운터(escapes/syntheses/maxKillStreak/visitedMaps/discoveryChains/abyssRecord) 누락 → 환생 시 multi-run achievement 회귀. 6종 모두 preserve 추가.
+- 120: migrateData에 신규 카운터 default 추가 + dead `discoveries` migrate 라인 제거 (cycle 84 후속).
+
+검증: 각 사이클 tsc 0 / lint clean / unit pass.
+
+## Cycle 117-118 — 사운드 큐 시리즈 (discovery_chain / new_area)
+
+- 117: SoundManager case 'discovery_chain' (G major 4음) — cycle 102/103 chain 보상 sensory cue. exploreUtils.checkDiscoveryChains에서 직접 호출.
+- 118: SoundManager case 'new_area' (D major 3음 짧음) — moveActions firstVisit 분기에서 호출. 6종 음악적 색채 정리(victory C / legendary C+B6 / levelUp C / discovery_chain G / new_area D).
+
+검증: 각 사이클 tsc 0 / lint clean / unit pass.
+
+## Cycle 116 — 미사용 MSG 키 37종 정리
+
+- 정리: src/data/messages.ts에서 호출 0건인 MSG 키 37종 제거 — MILESTONE/BOSS_ENCOUNTER/GM/UI/CODEX/REST_FULL/SKILL_CURSE_AMPLIFY 등 7개 그룹.
+- Firebase save에 영향 없음 (MSG는 코드 정의만).
+
+검증: tsc 0 / unit 756 / lint clean.
+
+## Cycle 115 — AdventureGuide 디버프 정화 hint (cycle 112 actionable)
+
+- UX: safe + player.status.length>0이면 "디버프 정화 권장" hint. cycle 112 rest가 status 클리어하므로 정합. cycle 111 매핑 8종 한국어 라벨 재사용.
+- 우선순위: claimable quest / 모험가 전직 / hpRatio rest 다음.
+
+검증: tsc 0 / unit 754 / lint clean.
+
+## Cycle 114 — CHANGELOG에 cycles 98-113 history 일괄 추가
+
+- 문서: cycle 98 batch 이후 16 사이클 미반영 상태 batch 정리.
+
+---
+
 ## Cycle 113 — CombatPanel 적 debuff chip (cycle 111 player chip의 symmetry)
 
 - UX: CombatPanel에 적 debuff chip(stunnedTurns/cursedTurns/blindTurns/fearTurns/dots). emerald 톤 — cycle 111 rose(player) 위험과 대비.
