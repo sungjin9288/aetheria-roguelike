@@ -50,6 +50,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
         <div className="fixed inset-0 z-[200] flex items-end justify-center pb-[env(safe-area-inset-bottom)]" onClick={onClose}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div
+                data-testid="premium-shop"
                 className="relative w-full max-w-sm panel-noise aether-surface rounded-t-[2rem] px-4 py-5 space-y-4 max-h-[85dvh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
             >
@@ -64,6 +65,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
                         </div>
                     </div>
                     <button
+                        data-testid="premium-shop-close"
                         onClick={onClose}
                         className="rounded-full border border-white/10 bg-black/20 p-1.5 text-slate-400 hover:text-white transition-colors"
                     >
@@ -92,6 +94,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
                                         <div className="text-[10px] font-fira text-slate-600 mt-0.5">{item.detail}</div>
                                     </div>
                                     <button
+                                        data-testid={`premium-buy-${item.id}`}
                                         onClick={() => canAfford && item.onBuy?.()}
                                         className={`shrink-0 flex items-center gap-1 rounded-[0.8rem] border px-2.5 py-1.5 text-[9px] font-fira transition-all ${
                                             canAfford
@@ -127,6 +130,7 @@ const PremiumShop = ({ player, onClose, onExpandInventory, onPurchaseSynthProtec
                                         <SignalBadge tone="upgrade" size="sm">보유</SignalBadge>
                                     ) : (
                                         <button
+                                            data-testid={`premium-title-buy-${title.id}`}
                                             onClick={() => canAfford && onPurchaseTitle?.(title.id, title.name, title.cost)}
                                             className={`shrink-0 flex items-center gap-1 rounded-[0.7rem] border px-2 py-1 text-[9px] font-fira transition-all ${
                                                 canAfford
