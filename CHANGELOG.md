@@ -7,6 +7,123 @@
 
 ---
 
+## Cycle 97 — maxKillStreak reflection 마무리 (RunSummaryCard chip + focus advice)
+
+- UX: RunSummaryCard run-summary-extras에 streak chip(red Flame). extras 섹션 트리거 조건에 `OR maxKillStreak > 0` 추가.
+- 시스템: getRunSummaryAnalysis focus advice 2종 — `>=10` 공격형 칭찬, `<3 && level >= 10` streak 활용 권장.
+- 결과: maxKillStreak feedback chain 8개 surface 완성.
+
+검증: tsc 0 / unit 683 / lint clean.
+
+## Cycle 96 — maxKillStreak feedback chain 표면 통합 (StatsPanel/RunSummary/share)
+
+- UX: StatsPanel MAX STREAK row(Flame red-400) 추가.
+- 시스템: buildRunSummary에 maxKillStreak 필드, buildRunShareText에 "🔥 최대 N연속 처치" silence-over-noise 라인.
+
+검증: tsc 0 / unit 677 / lint clean.
+
+## Cycle 95 — maxKillStreak 누적 + 보상 통합 (achievement 3종 + berserker 칭호)
+
+- 콘텐츠: ach_streak_5/10/20 (BALANCE.KILL_STREAK_TIERS 정렬) + 신규 칭호 'berserker'(광전사) cond `maxKillStreak >= 20` ATK+3 · CRIT+2%.
+- 시스템: INITIAL_STATE.player.stats.maxKillStreak = 0. combatVictory에서 매 처치 후 max(prev, newStreak) 누적. gameUtils 핸들러 2개 추가.
+- 디자인 의도: 휘발성 killStreak를 영구 보상으로 연결.
+
+검증: tsc 0 / unit 671 / lint clean.
+
+## Cycle 94 — 퀘스트 진행도 latch (윈도우 기반 카운터 회귀 방지)
+
+- 시스템: syncQuestProgress의 모든 stat-based 분기에 `Math.max(quest.progress, computed)` latch 헬퍼 적용.
+- 영향: survive_low_hp가 stats.recentBattles(50개 윈도우)를 읽어 옛 저-HP 승리가 윈도우 밖으로 밀려날 때 progress 회귀 → 청구 영구 차단되던 회귀 수정. 단조 카운터에는 무해.
+
+검증: tsc 0 / unit 663 / lint clean.
+
+## Cycle 90-93 — 데드코드 정리 4 사이클 (~1649 lines)
+
+- cycle 90: OnboardingGuide 컴포넌트 + 관련 state plumbing(action / handler / Firebase save / migrate) 8개 파일 정리.
+- cycle 91: EquipmentSpriteGlyph(941L) + DashboardPanels(332L) — 단일 사이클 최대 cleanup.
+- cycle 92: AdminDashboard / analyticsService / animationConfig (~280L).
+- cycle 93: utils 단위 dead exports 4종 — IMAGEGEN_OVERLAY_KEYS / getEquipmentOverlayAssetKey / getOutfitAffinityTone / getMaterialShop (~80L).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 89 — 도주 스킬(escape_100) 코드 패스를 escape feedback chain에 합류
+
+- 시스템: combatAttack의 forceEscape 분기가 cycle 74-88에서 쌓아온 stats.escapes 증분 / recentBattles record / escape 사운드 큐를 모두 누락. '공허의 문'(시간술사) / '순간 이동'(차원술사) 사용자가 보상 체인의 1급 시민이 아니던 회귀 수정.
+
+검증: tsc 0 / unit 634 / lint clean.
+
+## Cycle 88 — 도주 성공 사운드 큐 (escape feedback chain 마지막 sensory cue)
+
+- 시스템: SoundManager case 'escape' (1100→600Hz 하강 sine 0.18s). combatAttack 도주 성공 분기에서 직접 호출.
+- 디자인 의도: victory 5음 상승의 정반대인 retreat tone — error의 sawtooth와 달리 부드러운 sine으로 안도감.
+- 결과: escape feedback chain 9 surface 완성.
+
+검증: tsc 0 / unit 629 / lint clean.
+
+## Cycle 87 — RunSummary focus advice에 escape/discovery 시그널 통합
+
+- 시스템: getRunSummaryAnalysis focus advice 3종(silence-over-noise) — `escapes>=10 && bossKills<=1` 빌드 강화 권장, `discoveries<=4 && level>=12` 탐험 권장, `discoveries>=15` 탐험 칭찬.
+
+검증: tsc 0 / unit 625 / lint clean.
+
+## Cycle 86 — RunSummaryCard에 도주/지도 발견 시각 reflection
+
+- UX: 신규 mini-section run-summary-extras(signatures highlight cycle 18 패턴). 도주 chip(Footprints sky-300) + 지도 발견 chip(Compass emerald-300). 둘 다 0이면 silent.
+
+검증: tsc 0 / unit 620 / lint clean.
+
+## Cycle 85 — 연금술사(alchemist) 칭호 + synths cond.type 핸들러
+
+- 콘텐츠: title `alchemist`(연금술사) cond `synths >= 20` MP+15 · ATK+1. crafter(장인)와 짝을 이루는 제작 계열 보상 라인.
+- 시스템: gameUtils.checkTitles에 `type === 'synths'` 분기 추가.
+
+검증: tsc 0 / unit 615 / lint clean.
+
+## Cycle 84 — discoveries dead write 정리 + RunSummary/share 맵 발견 라인
+
+- 정리: cycle 83 시맨틱 통일 후속 — _shared.ts의 stats.discoveries 누적(이제 dead write) 제거, INITIAL_STATE.discoveries 선언 제거.
+- UX: buildRunSummary discoveries 필드, buildRunShareText "🗺️ 지도 발견 N곳" silence-over-noise.
+
+검증: tsc 0 / unit 610 / lint clean.
+
+## Cycle 83 — 'discoveries' 시맨틱 통일 (visitedMaps.length 기준)
+
+- 시스템: questProgress / checkTitles / StatsPanel이 stats.discoveries(이벤트 카운터)를 잘못 읽던 회귀 수정. 모두 visitedMaps.length로 통일 — achievement(이미 visitedMaps 사용)와 정합.
+- 영향: cartographer("지도 제작자") 칭호가 10번의 이벤트만으로 풀리고 quest 201("15곳 발견")이 의도보다 훨씬 빨리 진행되던 부풀림 fix.
+
+검증: tsc 0 / unit 603 / lint clean.
+
+## Cycle 82 — StatsPanel CRAFTS / SYNTHESES 노출 + syntheses 선언적 일관성
+
+- UX: StatsPanel CRAFTS row(Hammer orange-300) + SYNTHESES row(FlaskConical amber-300).
+- 시스템: INITIAL_STATE.player.stats.syntheses = 0 default — crafts는 있었으나 syntheses 누락 갭 정리.
+
+검증: tsc 0 / unit 599 / lint clean.
+
+## Cycle 81 — 모바일 smoke testid 회귀 (archive-tab-* primary tabs)
+
+- 인프라: scripts/smoke-gameplay.mjs verifyMobileArchiveConsole이 primary tabs(equipment/stats)에 dashboard-tab-* 잘못 매칭하던 회귀 수정. cycle 73 verify:full 통합 스크립트로 모바일 모드까지 돌리며 발견.
+
+검증: tsc 0 / unit 595 / lint clean.
+
+## Cycle 80 — StatsPanel ESCAPES 통계 라인 + sky 톤 일관성
+
+- UX: StatsPanel ESCAPES row(Footprints sky-300) — cycle 74-78 도주 카운터를 stats panel에도 노출.
+
+검증: tsc 0 / unit 594 / lint clean.
+
+## Cycle 79 — AchievementPanel THEME_BY_TARGET 14종 시각 톤 추가
+
+- UX: AchievementPanel에 escapes/explores/discoveries/relicCount/crafts/rests/bountiesCompleted/abyssRecord/abyssFloor/demonKingSlain/prestige/signaturesDiscovered/signatureSetsCompleted/synths 14종 테마 추가.
+
+검증: tsc 0 / unit 593 / lint clean.
+
+## Cycle 78 — RunSummary + RunShareText에 도주 카운트 reflection
+
+- UX: buildRunSummary에 escapes 필드, buildRunShareText에 "🏃 도주 N회 — 위험 회피 운영" silence-over-noise.
+
+검증: tsc 0 / unit 593 / lint clean.
+
 ## Cycle 77 — 도주/생존 칭호 2종 + escapes cond.type
 
 - 콘텐츠: 신규 칭호 2종 (`cautious_explorer` HP+20·DEF+1 / `survivor_instinct` HP+40·DEF+2·MP+10).
