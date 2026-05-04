@@ -531,6 +531,12 @@ export const checkTitles = (player: Player) => {
         if (type === 'synths')         return ((player.stats as any)?.syntheses || 0) >= val;
         // cycle 95: 최대 연속 처치 — berserker 칭호용. combatVictory에서 max-ever를 누적.
         if (type === 'maxKillStreak') return ((player.stats as any)?.maxKillStreak || 0) >= val;
+        // cycle 103: 발견 체인 — chain_master 칭호용. exploreUtils.checkDiscoveryChains에서
+        // stats.discoveryChains 배열에 완료 ID push. cycle 102 achievement target과 동일 source.
+        if (type === 'discoveryChains') {
+            const chains = (player.stats as any)?.discoveryChains;
+            return Array.isArray(chains) && chains.length >= val;
+        }
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
         if (type === 'explores')       return ((player.stats as any)?.explores || 0) >= val;

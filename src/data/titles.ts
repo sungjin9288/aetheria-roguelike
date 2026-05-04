@@ -221,6 +221,14 @@ export const TITLES = Object.freeze([
         cond: { type: 'maxKillStreak', val: 20 },
         color: 'text-red-400',
     },
+    // cycle 103: 발견 체인 마스터 — cycle 102 ach_chain_all과 짝을 이루는 칭호.
+    // 5종 chain(fire/frost/void/ancient/demon)을 모두 완료한 탐험 + 전투 균형형 표상.
+    {
+        id: 'chain_master',
+        name: '세계의 길잡이',
+        cond: { type: 'discoveryChains', val: 5 },
+        color: 'text-indigo-300',
+    },
     {
         id: 'ironman',
         name: '아이언맨',
@@ -312,6 +320,8 @@ export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     alchemist:        { mp: 15, atk: 1, label: 'MP +15 · ATK +1' },
     // cycle 95: 광전사 — 공격 일변도 streak 빌드 보상. ATK 최우선 + 부수적 crit.
     berserker:        { atk: 3, crit: 0.02, label: 'ATK +3 · CRIT +2%' },
+    // cycle 103: 세계의 길잡이 — 5종 chain 완료의 탐험·전투 균형 패시브.
+    chain_master:     { atk: 1, def: 1, mp: 15, label: 'ATK +1 · DEF +1 · MP +15' },
     ironman:          { hp: 35, def: 2, label: 'HP +35 · DEF +2' },
 
     // cycle 61 신규 칭호 패시브
