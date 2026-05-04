@@ -77,6 +77,16 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 total_gold: prevStats.total_gold,
                 relicCount: prevStats.relicCount,
                 abyssFloor: prevStats.abyssFloor,
+                // cycle 119: abyssRecord(best-ever 심연), escapes(cycle 74), syntheses(cycle 82),
+                // maxKillStreak(cycle 95 max-ever 시맨틱), visitedMaps(cycle 83 cartographer
+                // 정합), discoveryChains(cycle 102 ach_chain_*) — 환생 후 진행도 회귀를
+                //막기 위해 명시 보존. 모두 multi-run achievement / title 데이터 소스.
+                abyssRecord: prevStats.abyssRecord,
+                escapes: prevStats.escapes,
+                syntheses: prevStats.syntheses,
+                maxKillStreak: prevStats.maxKillStreak,
+                visitedMaps: Array.isArray(prevStats.visitedMaps) ? prevStats.visitedMaps : initialStats.visitedMaps,
+                discoveryChains: Array.isArray(prevStats.discoveryChains) ? prevStats.discoveryChains : [],
                 demonKingSlain: (prevStats.demonKingSlain || 0) + 1,
                 bountiesCompleted: prevStats.bountiesCompleted,
                 crafts: prevStats.crafts,
