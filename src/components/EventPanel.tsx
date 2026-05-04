@@ -18,7 +18,7 @@ const EventPanel = ({ currentEvent, actions, mobileFocused = false }: EventPanel
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
     const overlayPanelClass = 'absolute inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
     const panelBody = (
-        <div className="relative flex flex-1 min-h-0 flex-col overflow-y-auto custom-scrollbar">
+        <div data-testid="event-panel" className="relative flex flex-1 min-h-0 flex-col overflow-y-auto custom-scrollbar">
             <FocusPanelHeader
                 eyebrow="Decision Window"
                 title="운명의 선택"
@@ -39,6 +39,7 @@ const EventPanel = ({ currentEvent, actions, mobileFocused = false }: EventPanel
                 {choices.length > 0 ? choices.map((choice: any, idx: any) => (
                     <button
                         key={`${choice}_${idx}`}
+                        data-testid={`event-choice-${idx}`}
                         onClick={() => actions.handleEventChoice(idx)}
                         className="group rounded-[1.3rem] aether-panel-muted px-3 py-3 text-left transition-all hover:border-[#d5b180]/20 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]"
                     >
@@ -56,6 +57,7 @@ const EventPanel = ({ currentEvent, actions, mobileFocused = false }: EventPanel
                     </button>
                 )) : (
                     <button
+                        data-testid="event-dismiss"
                         onClick={() => actions.dismissEvent?.()}
                         className="rounded-[1.2rem] aether-panel-muted px-4 py-4 text-left font-bold text-white transition-colors hover:bg-white/[0.04]"
                     >
