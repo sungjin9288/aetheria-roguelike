@@ -204,6 +204,15 @@ export const TITLES = Object.freeze([
         cond: { type: 'crafts', val: 30 },
         color: 'text-orange-400',
     },
+    // cycle 85: 합성(synthesis) 카운터 기반 칭호 — cycle 30+ ach_synth_*과 cycle 82
+    // StatsPanel SYNTHESES 라인의 빈 자리 채움. crafts(crafter)와 짝을 이루는 제작 계열
+    // 보상 라인. ach_synth_20과 동일 임계값으로 자연스러운 진행 호흡.
+    {
+        id: 'alchemist',
+        name: '연금술사',
+        cond: { type: 'synths', val: 20 },
+        color: 'text-amber-300',
+    },
     {
         id: 'ironman',
         name: '아이언맨',
@@ -290,6 +299,9 @@ export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     well_rested:      { hp: 25, mp: 10, label: 'HP +25 · MP +10' },
     bounty_king:      { crit: 0.02, atk: 2, label: 'CRIT +2% · ATK +2' },
     crafter:          { def: 2, mp: 10, label: 'DEF +2 · MP +10' },
+    // cycle 85: 연금술사 — crafter(장인)와 같은 제작 계열. 합성 보호/소비 골드의 비용을
+    // 흡수하는 mp/atk 보조 패시브로 차별화 (crafter는 def/mp 중심).
+    alchemist:        { mp: 15, atk: 1, label: 'MP +15 · ATK +1' },
     ironman:          { hp: 35, def: 2, label: 'HP +35 · DEF +2' },
 
     // cycle 61 신규 칭호 패시브

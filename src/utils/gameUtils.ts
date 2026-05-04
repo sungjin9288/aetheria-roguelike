@@ -518,6 +518,9 @@ export const checkTitles = (player: Player) => {
         if (type === 'abyssRecord')    return (player.stats?.abyssRecord   || 0) >= val;
         if (type === 'bountyDone')     return (player.stats?.bountiesCompleted || 0) >= val;
         if (type === 'crafts')         return (player.stats?.crafts        || 0) >= val;
+        // cycle 85: 합성(synthesis) 카운터 — alchemist 칭호용. cycle 82에서 INITIAL_STATE에
+        // syntheses:0 declarative하게 추가했고, achievement target='synths'와 동일한 필드를 읽음.
+        if (type === 'synths')         return ((player.stats as any)?.syntheses || 0) >= val;
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
         if (type === 'explores')       return ((player.stats as any)?.explores || 0) >= val;
