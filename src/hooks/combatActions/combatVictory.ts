@@ -104,7 +104,13 @@ export const handleVictoryOutcome = ({
     updatedPlayer = applyAbyssFloorAdvance(updatedPlayer, dispatch, addLog);
 
     // Kill Streak 갱신
-    const prevStreak = updatedPlayer.killStreak || 0;
+    // cycle 136: BALANCE.KILL_STREAK_DECAY_MS(30초) 기반 시간 감쇠 구현 — 기존엔
+    // constant 정의만 있고 실제 decay 로직 없어 사망 외엔 streak가 영원히 누적되던 갭.
+    // 마지막 킬 timestamp(lastKillAt)와 비교해 elapsed > DECAY_MS이면 새 streak 시작.
+    const now = Date.now();
+    const lastKillAt = (updatedPlayer as any).lastKillAt;
+    const decayed = typeof lastKillAt === 'number' && (now - lastKillAt) > BALANCE.KILL_STREAK_DECAY_MS;
+    const prevStreak = decayed ? 0 : (updatedPlayer.killStreak || 0);
     const newStreak = prevStreak + 1;
     const tierThresholds = BALANCE.KILL_STREAK_TIERS;
     const hitNewTier = tierThresholds.includes(newStreak);
@@ -117,10 +123,12 @@ export const handleVictoryOutcome = ({
     // 0으로 리셋되는 휘발성 카운터라 reflection / 보상 surface에 잡히지 않음. 영구
     // 보존되는 stats.maxKillStreak를 유지해 ach_streak_5/10/20 + berserker(광전사)
     // 칭호의 1급 시민 시그널로 사용.
+    // cycle 136: lastKillAt 갱신 — 다음 킬에서 elapsed 비교하기 위해 now 저장.
     const prevMaxStreak = updatedPlayer.stats?.maxKillStreak || 0;
     updatedPlayer = {
         ...updatedPlayer,
         killStreak: newStreak,
+        lastKillAt: now,
         stats: {
             ...(updatedPlayer.stats || {}),
             maxKillStreak: Math.max(prevMaxStreak, newStreak),
