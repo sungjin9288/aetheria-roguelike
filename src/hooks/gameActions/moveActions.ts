@@ -6,6 +6,7 @@ import { getGravesAtLoc } from '../../utils/graveUtils.js';
 import { clearTemporaryAdventureState, hasTemporaryAdventureState } from '../../utils/playerStateUtils.js';
 import { checkDiscoveryChains, getFirstVisitReward } from '../../utils/exploreUtils';
 import { CombatEngine } from '../../systems/CombatEngine';
+import { soundManager } from '../../systems/SoundManager';
 
 export const createMoveActions = (deps: any, _shared?: any) => {
     const { player, gameState, grave, isAiThinking, liveConfig, dispatch, addLog, addStoryLog } = deps;
@@ -51,6 +52,9 @@ export const createMoveActions = (deps: any, _shared?: any) => {
 
             if (firstVisit) {
                 addLog('event', MSG.MOVE_NEW_AREA(loc));
+                // cycle 118: 첫 방문 sensory cue — D major triad 짧은 arpeggio.
+                // cycle 117 discovery_chain과 짝을 이루는 가벼운 audio reflection.
+                soundManager.play('new_area');
                 const visitReward = getFirstVisitReward(loc, player);
                 if (visitReward) {
                     addLog('system', visitReward.msg);

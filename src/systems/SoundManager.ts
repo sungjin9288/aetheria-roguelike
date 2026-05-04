@@ -142,6 +142,15 @@ class SoundManager {
                 break;
             }
 
+            // cycle 118: 첫 방문 지역 — D major triad 3음 짧은 arpeggio.
+            // discovery_chain(G major 4음 0.6s)보다 가볍고 짧음 — 첫 방문은 빈번한
+            // 이벤트라 사운드 길이를 최소화 (0.3s 합).
+            case 'new_area':
+                this._playTone(587.33, 0.08, 0);     // D5
+                this._playTone(739.99, 0.08, 0.08);  // F#5
+                this._playTone(880.00, 0.16, 0.16);  // A5 sustain
+                break;
+
             // cycle 117: 발견 체인 완료 — G major arpeggio (G5/B5/D6/G6).
             // victory(5음 C major) / levelUp(4음 C major)과 구분되는 G major 색채로
             // 체인 시스템(cycle 102/103)의 정체성을 가짐.
