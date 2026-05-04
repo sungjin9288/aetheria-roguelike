@@ -288,6 +288,28 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         };
     }
 
+    // cycle 115: 안전지대에서 활성 debuff 인지 시 정화 권장 — cycle 112 rest가 status를
+    // 클리어하므로 자연스러운 actionable hint. cycle 106-110에서 활성화된 5종 status가
+    // 영속할 경우 다음 탐험에 페널티 누적 — 안전지대 복귀 후 즉시 알림.
+    if (safe && Array.isArray(player?.status) && player.status.length > 0) {
+        const DEBUFF_LABEL: Record<string, string> = {
+            bleed: '출혈', burn: '화상', poison: '중독',
+            freeze: '빙결', stun: '기절', curse: '저주',
+            blind: '실명', fear: '공포',
+        };
+        const activeDebuffs = player.status.filter((s: any) => DEBUFF_LABEL[s as string]);
+        if (activeDebuffs.length > 0) {
+            const labels = activeDebuffs.map((s: any) => DEBUFF_LABEL[s as string]).join(', ');
+            return {
+                title: '디버프 정화 권장',
+                detail: `현재 활성 상태이상: ${labels}. 안전지대에서 휴식하면 모든 디버프가 해소됩니다.`,
+                emphasis: '정화 우선',
+                primaryAction: { kind: 'rest', label: '휴식으로 정화' },
+                secondaryAction: questTracker ? { kind: 'open_quest', label: '임무 확인' } : null,
+            };
+        }
+    }
+
     if (safe && inventoryCount >= BALANCE.INV_MAX_SIZE - 2) {
         return {
             title: '인벤토리 정리 필요',
