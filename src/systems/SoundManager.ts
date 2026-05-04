@@ -142,6 +142,21 @@ class SoundManager {
                 break;
             }
 
+            // cycle 88: 도주 성공 — victory 5음 상승의 정반대인 짧은 하강 sine.
+            // 후퇴 모먼트지만 안도감 / 위험 회피 성공이라 'error'(낮은 sawtooth) 와는
+            // 다른 부드러운 톤. cycle 74-87 escape feedback chain의 마지막 sensory cue.
+            case 'escape': {
+                const { osc, gain, now } = this._createNodes();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1100, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.18);
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.start(now);
+                osc.stop(now + 0.18);
+                break;
+            }
+
             case 'explore': {
                 const { osc, gain, now } = this._createNodes();
                 osc.type = 'sine';

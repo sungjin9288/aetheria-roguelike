@@ -9,6 +9,7 @@ import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyMana
 import { appendGrave } from '../../utils/graveUtils.js';
 import { getSelectedSkill } from './_helpers';
 import { handleVictoryOutcome } from './combatVictory';
+import { soundManager } from '../../systems/SoundManager';
 
 export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
     const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats } = deps;
@@ -139,6 +140,10 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     }) });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                     dispatch({ type: AT.SET_ENEMY, payload: null });
+                    // cycle 88: 도주 성공 sensory cue — cycle 74-87 feedback chain의 마지막
+                    // 채널. 'info' 로그는 useGameEngine의 sound 매핑에 없으므로 직접 호출
+                    // (CombatPanel의 'attack'/'item' 패턴과 동일).
+                    soundManager.play('escape');
                 } else {
                     const protectionLogs: any[] = [];
                     const protectedResult = CombatEngine.applyFatalProtection(player, stats.relics || [], escapeResult.damage || 0, protectionLogs);
