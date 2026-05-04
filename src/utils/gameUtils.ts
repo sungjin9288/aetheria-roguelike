@@ -216,6 +216,9 @@ export const getAchievementCurrentValue = (achievement: any, player: Player) => 
     // 추가로 더하면 현재 런의 relic이 double count됨. 이전엔 ach_relic_5("유물 5개")
     // 가 실제로 3개에서 풀리던 부풀림 회귀를 fix. checkTitles('relicCount')와도 정합.
     if (target === 'relicCount') return stats?.relicCount || 0;
+    // cycle 102: 발견 체인(BALANCE.DISCOVERY_CHAINS) 완료 카운트 — exploreUtils
+    // checkDiscoveryChains가 stats.discoveryChains 배열에 완료 ID push.
+    if (target === 'discoveryChains') return Array.isArray(stats?.discoveryChains) ? stats.discoveryChains.length : 0;
     if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
     return stats?.[target] || 0;
