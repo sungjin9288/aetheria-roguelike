@@ -84,6 +84,18 @@ export const getRunSummaryAnalysis = (summary: any = {}) => {
     if ((summary.bossKills || 0) === 0 && (summary.level || 0) >= 12) focus.push('보스 진입 전 방어·회복 루틴을 더 챙기면 한 단계 더 올라갈 수 있습니다.');
     if ((summary.kills || 0) < 30) focus.push('초반 교전 수가 적었습니다. 1~2지역을 더 안정적으로 순환해 성장량을 확보하세요.');
     if ((summary.totalGold || 0) > 0 && (summary.totalGold || 0) < 1500) focus.push('골드 수급이 낮았습니다. 상점 구매보다 장비 교체 타이밍을 아껴보세요.');
+    // cycle 87: cycle 78/84의 escapes/discoveries 시그널을 reflection focus로 연결.
+    // 도주가 많은데 보스 진입이 적으면 빌드 강화 권장, 탐험이 좁으면 맵 확장 권장,
+    // 탐험이 넓으면 칭찬 라인. silence-over-noise — 조건 미충족 시 추가 안 됨.
+    if ((summary.escapes || 0) >= 10 && (summary.bossKills || 0) <= 1) {
+        focus.push('도주가 많았고 보스 진입이 적었습니다. 빌드 강화 후 보스 도전을 권장합니다.');
+    }
+    if ((summary.discoveries || 0) <= 4 && (summary.level || 0) >= 12) {
+        focus.push('맵 발견이 적었습니다. 새 지역을 더 탐색해 유물/이벤트 풀을 넓히세요.');
+    }
+    if ((summary.discoveries || 0) >= 15) {
+        focus.push('탐험 폭이 넓었습니다. 같은 호기심으로 다음 런도 시작하세요.');
+    }
     if (focus.length === 0) focus.push('이번 런은 기반이 좋았습니다. 같은 빌드 축을 더 강하게 밀어도 됩니다.');
 
     return {
