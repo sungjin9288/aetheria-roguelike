@@ -93,7 +93,8 @@ export const EVENT_CHAINS: any = [
                     desc: '정원에서 마법사의 환영이 나타납니다. "당신이 내 일기장을 가져왔군요. 하지만... 이 자리를 떠날 수 없습니다. 나를 대신해 이 마법서를 써주세요."',
                     choices: ['전투를 받아들인다 (전설 보상)', '거절한다'],
                     outcomes: [
-                        { type: 'chain_advance', chainId: 'lost_wizard', log: '환영을 물리쳤습니다. 전설의 마법서를 얻었습니다!', reward: { type: 'legendary_item', name: '전설의 마법서', itemType: 'weapon' } },
+                        // cycle 140: '전설의 마법서'가 items.ts에 없는 missing item이라 보상이 silently 누락됐음. 실재하는 tier 5 mage staff '천벌의 지팡이'로 교체.
+                        { type: 'chain_advance', chainId: 'lost_wizard', log: '환영을 물리쳤습니다. 천벌의 지팡이를 얻었습니다!', reward: { type: 'legendary_item', name: '천벌의 지팡이', itemType: 'weapon' } },
                         { type: 'nothing', log: '거절했습니다. 마법사의 환영이 사라집니다.', reward: null },
                     ],
                 },
@@ -126,7 +127,8 @@ export const EVENT_CHAINS: any = [
                     desc: '협곡 어딘가에서 빛나는 검이 박혀 있습니다. "이 검은... 당신이 구해준 그 기사의 검이군요." 아이템이 당신을 기다리고 있습니다.',
                     choices: ['검을 뽑아낸다', '그대로 둔다'],
                     outcomes: [
-                        { type: 'chain_advance', chainId: 'last_hero', log: '기사의 검을 획득했습니다. 강력한 힘이 느껴집니다.', reward: { type: 'item', name: '기사의 유검', itemType: 'weapon', tier: 4 } },
+                        // cycle 140: '기사의 유검' missing → tier 4 light knight sword '심판자의 검'으로 교체.
+                        { type: 'chain_advance', chainId: 'last_hero', log: '기사의 검을 획득했습니다. 심판자의 검에 강력한 힘이 깃들어 있습니다.', reward: { type: 'item', name: '심판자의 검', itemType: 'weapon', tier: 4 } },
                         { type: 'nothing', log: '검을 두고 왔습니다.', reward: null },
                     ],
                 },
@@ -185,7 +187,8 @@ export const EVENT_CHAINS: any = [
                     desc: '성채 한켠에서 그림자 길드의 마스터가 나타납니다. "당신을 시험했습니다. 이 임무를 완수하면 길드 최고의 보물을 드리죠." 위험한 내부 임무를 제시합니다.',
                     choices: ['임무를 수락한다', '길드를 배신하고 보고한다'],
                     outcomes: [
-                        { type: 'chain_advance', chainId: 'shadow_guild', log: '임무를 완수했습니다! 그림자 길드의 전설 장비를 얻었습니다.', reward: { type: 'item', name: '그림자 단검', itemType: 'weapon', tier: 5 } },
+                        // cycle 140: '그림자 단검' missing → tier 5 shadow weapon '그림자 절단기'로 교체.
+                        { type: 'chain_advance', chainId: 'shadow_guild', log: '임무를 완수했습니다! 그림자 절단기를 얻었습니다.', reward: { type: 'item', name: '그림자 절단기', itemType: 'weapon', tier: 5 } },
                         { type: 'chain_advance', chainId: 'shadow_guild', log: '배신을 선택했습니다. 보상으로 황금을 얻었습니다.', reward: { type: 'gold', amount: 5000 } },
                     ],
                 },
@@ -282,7 +285,8 @@ export const EVENT_CHAINS: any = [
                     desc: '요새 정문에 자동인형 사절단이 기다리고 있습니다. "당신이 우리를 도와준 덕분에 이 세계에서 살아남을 수 있었습니다. 우리가 만든 최고의 장비를 드리겠습니다."',
                     choices: ['감사히 받는다', '대가 없이 받기 미안하다며 거절한다'],
                     outcomes: [
-                        { type: 'chain_advance', chainId: 'machine_uprising', log: '기계 집단이 제작한 전설 장비를 받았습니다!', reward: { type: 'item', name: '기계 코어 갑옷', itemType: 'armor', tier: 5 } },
+                        // cycle 140: '기계 코어 갑옷' missing → tier 5 armor '천상의갑주'로 교체 (기계 자동인형 사절단의 최고급 의장).
+                        { type: 'chain_advance', chainId: 'machine_uprising', log: '기계 집단이 제작한 천상의갑주를 받았습니다!', reward: { type: 'item', name: '천상의갑주', itemType: 'armor', tier: 5 } },
                         { type: 'chain_advance', chainId: 'machine_uprising', log: '거절했지만, 기계들이 당신의 배낭에 몰래 넣어뒀습니다. 강화 재료가 들어있습니다.', reward: { type: 'gold', amount: 8000 } },
                     ],
                 },
@@ -427,7 +431,8 @@ export const EVENT_CHAINS: any = [
                     desc: '에테르 관문을 통해 오염의 근원이 이어져 있습니다. 세계수를 완전히 정화하려면 이 관문을 봉인해야 합니다. "당신만이 이 봉인을 완성할 수 있습니다."',
                     choices: ['관문을 봉인한다', '관문을 통해 힘을 흡수한다'],
                     outcomes: [
-                        { type: 'chain_advance', chainId: 'world_tree_corruption', log: '에테르 관문을 봉인했습니다! 세계수가 되살아납니다. 자연의 정령들이 보상을 내립니다.', reward: { type: 'item', name: '세계수의 이슬' } },
+                        // cycle 140: '세계수의 이슬' missing → 자연 계열 tier 5 weapon '세계수의 지팡이'로 교체.
+                        { type: 'chain_advance', chainId: 'world_tree_corruption', log: '에테르 관문을 봉인했습니다! 세계수가 되살아납니다. 자연의 정령들이 세계수의 지팡이를 내립니다.', reward: { type: 'item', name: '세계수의 지팡이' } },
                         { type: 'chain_advance', chainId: 'world_tree_corruption', log: '관문의 에너지를 흡수했습니다. 압도적인 힘이 몸에 새겨집니다.', reward: { type: 'relic' } },
                     ],
                 },
@@ -475,7 +480,8 @@ export const EVENT_CHAINS: any = [
                     desc: '에테르 관문 앞에서 수호신의 사도가 현신했습니다. "마지막 시험이다. 네 선택이 세계의 운명을 결정짓는다."',
                     choices: ['신성한 힘으로 판결을 받는다', '에테르의 힘으로 스스로 길을 연다'],
                     outcomes: [
-                        { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '신성한 판결을 받았습니다! 수호신이 당신을 인정합니다. 신전의 성광석과 축복이 내려집니다.', reward: { type: 'item', name: '신전의 성광석' } },
+                        // cycle 140: '신전의 성광석' missing → tier 5 holy spear '성스러운 창'으로 교체.
+                        { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '신성한 판결을 받았습니다! 수호신이 당신을 인정하며 성스러운 창을 내립니다.', reward: { type: 'item', name: '성스러운 창' } },
                         { type: 'chain_advance', chainId: 'divine_apostle_trial', log: '스스로 길을 열었습니다. 신과 대등한 힘을 인정받아 전설의 유물이 주어집니다.', reward: { type: 'relic' } },
                     ],
                 },
@@ -523,7 +529,8 @@ export const EVENT_CHAINS: any = [
                     desc: '에테르 관문이 차원 균열의 최종 진원지였습니다. 균열 봉인석의 힘으로 이 관문을 완전히 봉인할 수 있습니다. "이 봉인이 세계를 구할 것입니다."',
                     choices: ['균열을 완전히 봉인한다', '균열의 힘을 자신에게 봉인한다'],
                     outcomes: [
-                        { type: 'chain_advance', chainId: 'rift_secret', log: '균열이 완전히 봉인되었습니다! 차원 침략이 저지되었습니다. 균열 봉인석의 힘이 보상으로 주어집니다.', reward: { type: 'item', name: '균열 봉인석' } },
+                        // cycle 140: '균열 봉인석' missing → tier 4 균열 light shield '균열 차단 방패'로 교체.
+                        { type: 'chain_advance', chainId: 'rift_secret', log: '균열이 완전히 봉인되었습니다! 차원 침략이 저지되었습니다. 균열 차단 방패의 힘이 보상으로 주어집니다.', reward: { type: 'item', name: '균열 차단 방패' } },
                         { type: 'chain_advance', chainId: 'rift_secret', log: '균열의 힘을 자신에게 봉인했습니다. 차원의 힘이 몸에 깃들었습니다. 전설의 유물이 강림합니다!', reward: { type: 'relic' } },
                     ],
                 },
