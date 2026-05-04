@@ -90,7 +90,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
     }, [codex]);
 
     return (
-        <div className="space-y-2.5">
+        <div data-testid="codex-panel" className="space-y-2.5">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="text-slate-500 text-xs font-fira tracking-[0.18em] uppercase flex items-center gap-1.5">
@@ -125,6 +125,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                                     <div className="text-[9px] font-fira text-slate-400 mt-0.5">{rewardText}</div>
                                 </div>
                                 <button
+                                    data-testid={`codex-claim-${m.id}`}
                                     onClick={() => dispatch?.({ type: AT.CLAIM_CODEX_REWARD, payload: { milestoneId: m.id, reward: m.reward } })}
                                     className="shrink-0 rounded-[0.7rem] border border-cyber-green/50 bg-cyber-green/15 px-2.5 py-1 text-[9px] font-fira text-cyber-green transition-all hover:bg-cyber-green/25"
                                 >
@@ -146,6 +147,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                     return (
                         <button
                             key={tab.id}
+                            data-testid={`codex-tab-${tab.id}`}
                             onClick={() => setSubTab(tab.id)}
                             className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[11px] font-fira uppercase tracking-wider transition-all border ${accent}`}
                         >
