@@ -604,5 +604,8 @@ export const buildRunSummary = (player: Player, loc: any) => {
         // 통일한 후속 작업. reflection/share 단계에 탐험 폭 자랑 라인을 silence-over-noise
         // 패턴으로 노출.
         discoveries: ((player.stats as any)?.visitedMaps || []).length,
+        // cycle 96: 최대 연속 처치 — cycle 95에서 누적된 stats.maxKillStreak를 reflection
+        // 으로 노출. berserker 칭호와 같은 데이터 소스.
+        maxKillStreak: (player.stats as any)?.maxKillStreak || 0,
     };
 };

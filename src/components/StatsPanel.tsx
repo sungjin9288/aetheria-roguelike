@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Activity, BarChart3, Coins, Compass, FlaskConical, Footprints, Hammer, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
+import { Activity, BarChart3, Coins, Compass, Flame, FlaskConical, Footprints, Hammer, Heart, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
 import type { Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import SignalBadge from './SignalBadge';
@@ -88,6 +88,9 @@ const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
         // 존재하던 갭을 가시화로 닫음. orange/amber 톤으로 제작 계열 묶음.
         { label: 'CRAFTS', value: player?.stats?.crafts || 0, icon: Hammer, color: 'text-orange-300' },
         { label: 'SYNTHESES', value: (player?.stats as any)?.syntheses || 0, icon: FlaskConical, color: 'text-amber-300' },
+        // cycle 96: MAX STREAK — cycle 95에서 추가한 stats.maxKillStreak를 stats panel에도
+        // 노출. killStreak 시스템 톤(red)과 매치. berserker 칭호 진행도 시각화.
+        { label: 'MAX STREAK', value: (player?.stats as any)?.maxKillStreak || 0, icon: Flame, color: 'text-red-400' },
     ];
     const visibleStatEntries = compact && !showAllStats ? statEntries.slice(0, 6) : statEntries;
     const hasExpandableSections = compact && (statEntries.length > 6 || topKills.length > 0 || Boolean(player?.meta));
