@@ -373,7 +373,6 @@ export const migrateData = (rawData: any) => {
         savedData.quickSlots = savedData.quickSlots.slice(0, 3);
         while (savedData.quickSlots.length < 3) savedData.quickSlots.push(null);
     }
-    savedData.onboardingDismissed = Boolean(savedData.onboardingDismissed);
 
     // v4.0 — 신규 필드 기본값 (기존 세이브 호환)
     target.relics = Array.isArray(target.relics) ? target.relics : [];

@@ -40,7 +40,6 @@ export const AT = Object.freeze({
     // Feature Additions
     SET_QUICK_SLOT: 'SET_QUICK_SLOT',
     SET_POST_COMBAT_RESULT: 'SET_POST_COMBAT_RESULT',
-    SET_ONBOARDING_DISMISSED: 'SET_ONBOARDING_DISMISSED',
 
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',

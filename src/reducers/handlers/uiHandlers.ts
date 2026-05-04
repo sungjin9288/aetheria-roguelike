@@ -53,9 +53,6 @@ export const uiActionMap = {
     SET_POST_COMBAT_RESULT: (state: GameState, action: GameAction) =>
         ({ ...state, postCombatResult: action.payload }),
 
-    SET_ONBOARDING_DISMISSED: (state: GameState) =>
-        ({ ...state, onboardingDismissed: true }),
-
     SET_QUICK_SLOT: (state: GameState, action: GameAction) => {
         const candidate = action.payload.item;
         if (candidate && !(state.player.inv || []).some((item: any) => item.id === candidate.id)) {

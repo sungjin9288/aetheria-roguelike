@@ -34,7 +34,6 @@ export const useGameEngine = () => {
         sideTab,
         quickSlots,
         postCombatResult,
-        onboardingDismissed,
         pendingRelics,
         runSummary,
     } = state;
@@ -127,7 +126,6 @@ export const useGameEngine = () => {
                 // Feature Actions
                 setQuickSlot: (index: any, item: any) => dispatch({ type: AT.SET_QUICK_SLOT, payload: { index, item } }),
                 clearPostCombat: () => dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null }),
-                dismissOnboarding: () => dispatch({ type: AT.SET_ONBOARDING_DISMISSED }),
 
                 getUid: () => uid,
                 isAdmin: () => ADMIN_UIDS.includes(uid),
@@ -166,7 +164,6 @@ export const useGameEngine = () => {
         // Feature additions
         quickSlots,
         postCombatResult,
-        onboardingDismissed,
         pendingRelics,
         runSummary,
         dispatch,

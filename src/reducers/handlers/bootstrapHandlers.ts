@@ -18,7 +18,6 @@ export const bootstrapActionMap = {
             grave: action.payload.grave || null,
             currentEvent: action.payload.currentEvent || null,
             quickSlots: sanitizeQuickSlots(action.payload.quickSlots, loadedPlayer.inv),
-            onboardingDismissed: action.payload.onboardingDismissed ?? state.onboardingDismissed,
             bootStage: 'ready',
             syncStatus: 'synced',
             lastLoadedTimestamp: action.payload.lastActive?.toMillis

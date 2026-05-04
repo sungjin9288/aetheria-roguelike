@@ -31,7 +31,6 @@ export interface GameState {
     lastLoadedTimestamp: number;
     quickSlots: any[];
     postCombatResult: any;
-    onboardingDismissed: boolean;
     pendingRelics: any;
     runSummary: any;
     publicGraves: any[];
@@ -87,7 +86,6 @@ export const INITIAL_STATE: GameState = {
     // Feature Additions
     quickSlots: [null, null, null],
     postCombatResult: null,
-    onboardingDismissed: false,
     pendingRelics: null,
     runSummary: null,
     publicGraves: [],
