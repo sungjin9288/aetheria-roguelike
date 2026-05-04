@@ -275,6 +275,36 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
             </div>
           )}
 
+          {/* cycle 113: 적 debuff chip — cycle 111 player debuff chip의 짝(symmetry).
+              플레이어가 부여한 stun/curse/blind/fear/DoT의 활성 상태를 전투 화면에 노출.
+              emerald 톤(플레이어에게 유리)으로 cycle 111 rose(위험)과 대비. */}
+          {enemy && (() => {
+            const dots: string[] = Array.isArray(enemy?.dots) ? enemy.dots : [];
+            const debuffs: string[] = [];
+            if ((enemy?.stunnedTurns || 0) > 0) debuffs.push(`기절·${enemy.stunnedTurns}T`);
+            if ((enemy?.cursedTurns || 0) > 0) debuffs.push(`저주·${enemy.cursedTurns}T`);
+            if ((enemy?.blindTurns || 0) > 0) debuffs.push(`실명·${enemy.blindTurns}T`);
+            if ((enemy?.fearTurns || 0) > 0) debuffs.push(`공포·${enemy.fearTurns}T`);
+            const DOT_LABEL: Record<string, string> = { poison: '독', burn: '화상', bleed: '출혈' };
+            for (const dot of dots) {
+              if (DOT_LABEL[dot]) debuffs.push(DOT_LABEL[dot]);
+            }
+            if (debuffs.length === 0) return null;
+            const headLabel = debuffs[0];
+            const showCount = debuffs.length > 1;
+            return (
+              <div
+                data-testid="combat-enemy-debuff-chip"
+                data-enemy-debuff-count={debuffs.length}
+                className="flex flex-wrap items-center justify-center gap-1.5 rounded-[1rem] border border-emerald-300/30 bg-emerald-400/8 px-3 py-1 text-[10px] font-fira text-emerald-200"
+                aria-label={`적 디버프: ${debuffs.join(', ')}`}
+              >
+                <span className="uppercase tracking-[0.18em] text-emerald-300/80">적 디버프</span>
+                <span>{headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}</span>
+              </div>
+            );
+          })()}
+
           {!mobile && comboRelic && (
             <div className={`rounded-[1rem] border px-3 py-1.5 text-center text-[10px] font-fira transition-all ${
               comboCount >= comboStack - 1
