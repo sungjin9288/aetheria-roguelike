@@ -112,61 +112,6 @@ const buildExactItemIconKeys = () => {
 
 export const EXACT_ITEM_ICON_KEYS = buildExactItemIconKeys();
 
-/**
- * imagegen으로 character와 같은 결의 chibi 픽셀 아트로 생성된 자산 키.
- * 이 set의 키만 character overlay path에서 equipment-exact를 사용.
- * 나머지는 procedural Python 생성된 자산이라 character와 시각 충돌 — overlay에 안 씀.
- *
- * 자산 출처: output/imagegen/all-item-exact-icons/
- * cycle 36에서 public/assets/equipment-exact/로 deploy.
- *
- * 추가 imagegen 자산 생성 시 이 set에 키 등록 필요.
- */
-export const IMAGEGEN_OVERLAY_KEYS = new Set([
-    'item-armor-001', 'item-armor-002', 'item-armor-003', 'item-armor-004',
-    'item-armor-005', 'item-armor-006', 'item-armor-007', 'item-armor-008',
-    'item-armor-010', 'item-armor-011', 'item-armor-012', 'item-armor-013',
-    'item-armor-014', 'item-armor-015', 'item-armor-016', 'item-armor-017',
-    'item-armor-018', 'item-armor-019', 'item-armor-020', 'item-armor-021',
-    'item-armor-022', 'item-armor-023', 'item-armor-024', 'item-armor-025',
-    'item-armor-026', 'item-armor-027', 'item-armor-028', 'item-armor-029',
-    'item-armor-030', 'item-armor-031', 'item-armor-032', 'item-armor-033',
-    'item-armor-034', 'item-armor-035', 'item-armor-036', 'item-armor-037',
-    'item-armor-038', 'item-armor-039', 'item-armor-040', 'item-armor-042',
-    'item-armor-043', 'item-armor-044', 'item-armor-045', 'item-armor-046',
-    'item-armor-047', 'item-armor-048', 'item-armor-049', 'item-armor-050',
-    'item-armor-051', 'item-armor-052', 'item-armor-053', 'item-armor-054',
-    'item-armor-055', 'item-armor-056', 'item-armor-057', 'item-armor-058',
-    'item-armor-059', 'item-armor-060', 'item-armor-061', 'item-armor-062',
-    'item-armor-063', 'item-armor-064', 'item-shield-001', 'item-shield-002',
-    'item-shield-003', 'item-shield-004', 'item-shield-005', 'item-shield-006',
-    'item-shield-007', 'item-shield-008', 'item-shield-009', 'item-shield-010',
-    'item-shield-011', 'item-shield-012', 'item-shield-013', 'item-shield-014',
-    'item-shield-015', 'item-shield-016', 'item-weapon-001', 'item-weapon-002',
-    'item-weapon-003', 'item-weapon-004', 'item-weapon-005', 'item-weapon-006',
-    'item-weapon-007', 'item-weapon-008', 'item-weapon-009', 'item-weapon-010',
-    'item-weapon-011', 'item-weapon-012', 'item-weapon-013', 'item-weapon-014',
-    'item-weapon-015', 'item-weapon-016', 'item-weapon-017', 'item-weapon-018',
-    'item-weapon-019', 'item-weapon-020', 'item-weapon-021', 'item-weapon-022',
-    'item-weapon-023', 'item-weapon-024', 'item-weapon-025', 'item-weapon-026',
-    'item-weapon-027', 'item-weapon-028', 'item-weapon-029', 'item-weapon-030',
-    'item-weapon-031', 'item-weapon-032', 'item-weapon-033', 'item-weapon-034',
-    'item-weapon-035', 'item-weapon-036', 'item-weapon-037', 'item-weapon-038',
-    'item-weapon-039', 'item-weapon-040', 'item-weapon-041', 'item-weapon-042',
-    'item-weapon-043', 'item-weapon-044', 'item-weapon-045', 'item-weapon-046',
-    'item-weapon-047', 'item-weapon-048', 'item-weapon-049', 'item-weapon-050',
-    'item-weapon-051', 'item-weapon-052', 'item-weapon-053', 'item-weapon-054',
-    'item-weapon-055', 'item-weapon-056', 'item-weapon-057', 'item-weapon-058',
-    'item-weapon-059', 'item-weapon-060', 'item-weapon-061', 'item-weapon-062',
-    'item-weapon-063', 'item-weapon-064', 'item-weapon-065', 'item-weapon-066',
-    'item-weapon-067', 'item-weapon-068', 'item-weapon-069', 'item-weapon-070',
-    'item-weapon-071', 'item-weapon-072', 'item-weapon-073', 'item-weapon-074',
-    'item-weapon-075', 'item-weapon-076', 'item-weapon-077', 'item-weapon-078',
-    'item-weapon-079', 'item-weapon-080', 'item-weapon-081', 'item-weapon-082',
-    'item-weapon-083', 'item-weapon-084', 'item-weapon-085', 'item-weapon-086',
-    'item-weapon-087', 'item-weapon-088',
-]);
-
 export const ITEM_ICON_ASSET_KEYS = [
     'sword',
     'greatsword',
@@ -439,12 +384,6 @@ export const getItemIconAssetSrc = (item: Item | null | undefined) => {
     }
     const assetKey = getItemIconAssetKey(item);
     return `/assets/items/${assetKey}.${getItemIconAssetExtension(assetKey)}`;
-};
-export const getEquipmentOverlayAssetKey = (item: Item | null | undefined) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return null;
-    const wearableFamilyKey = getEquipmentWearableFamilyKey(item);
-    if (!wearableFamilyKey) return null;
-    return wearableFamilyKey;
 };
 export const getEquipmentOverlayAssetSrc = (item: Item | null | undefined) => {
     // cycle 45 (사용자 피드백 — "합성 느낌이 부자연, 진짜 착용 느낌이어야"):

@@ -55,11 +55,6 @@ interface SetCatalog {
     offhand: ItemLike[];
 }
 
-interface AffinityTone {
-    color: string;
-    glow: string;
-}
-
 const FULL_OUTFIT_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.30, defMult: 1.20, mpBonus: 0.15, hpBonus: 0.10 });
 const PARTIAL_2_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.15, defMult: 1.10, mpBonus: 0.05, hpBonus: 0.05 });
 const PARTIAL_1_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.05 });
@@ -170,12 +165,3 @@ export const getJobSetCatalog = (job: string | undefined | null, items: ItemsDb 
     return { weapon: weapons, armor: armors, offhand: offhands };
 };
 
-/**
- * UI용: outfit affinity tone (gold gradation by tier).
- */
-export const getOutfitAffinityTone = (tier: AffinityTier): AffinityTone => {
-    if (tier === 'full') return { color: '#f6e7a2', glow: 'rgba(246,231,162,0.42)' };
-    if (tier === 'partial2') return { color: '#d5b180', glow: 'rgba(213,177,128,0.32)' };
-    if (tier === 'partial1') return { color: '#7dd4d8', glow: 'rgba(125,212,216,0.28)' };
-    return { color: '#94a3b8', glow: 'rgba(148,163,184,0.16)' };
-};

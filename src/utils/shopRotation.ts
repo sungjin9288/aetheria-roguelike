@@ -1,5 +1,4 @@
 import { DB } from '../data/db';
-import { CONSTANTS } from '../data/constants';
 
 /**
  * shopRotation.js — 날짜 시드 기반 결정론적 상점 생성
@@ -107,33 +106,3 @@ export const getWeeklySpecial = (playerLevel: any = 1) => {
     };
 };
 
-/**
- * 소재 상점 (레벨 기반 소재 판매)
- * @param {number} playerLevel
- * @returns {Object[]}
- */
-export const getMaterialShop = (playerLevel: any = 1) => {
-    const today = getToday();
-    const seed = dateHash(today, 123);
-
-    const materials = (DB.ITEMS.materials || []).filter((m: any) => {
-        if (playerLevel < 10) return m.price <= 50;
-        if (playerLevel < 20) return m.price <= 200;
-        if (playerLevel < 35) return m.price <= 600;
-        return true;
-    });
-
-    const pinnedEnhanceMaterial = materials.find((mat: any) => mat.name === CONSTANTS.ENHANCE_MATERIAL_NAME) || null;
-    const shuffled = seededShuffle(materials, seed);
-    // 레벨에 따라 5~8개 소재 판매
-    const count = Math.min(materials.length, playerLevel < 10 ? 5 : playerLevel < 25 ? 6 : 8);
-    const picked = pinnedEnhanceMaterial
-        ? [pinnedEnhanceMaterial, ...shuffled.filter((mat: any) => mat.name !== pinnedEnhanceMaterial.name).slice(0, Math.max(0, count - 1))]
-        : shuffled.slice(0, count);
-
-    return picked.map((mat: any) => ({
-        ...mat,
-        price: Math.floor(mat.price * 2.5), // 소재 상점은 마크업
-        isMaterialShop: true,
-    }));
-};
