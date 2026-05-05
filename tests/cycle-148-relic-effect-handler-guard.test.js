@@ -34,13 +34,13 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     // 일반/희귀 (cycle 148 초기 발견 14종)
     // 'on_hit_freeze', ← cycle 152: 일반 공격 시 val 확률로 적 빙결 핸들러 추가.
     // 'first_turn_evade', ← cycle 150: DEF 보너스 핸들러 추가 (첫 턴 회피는 별도 사이클).
-    'battle_start_buff',
+    // 'battle_start_buff', ← cycle 158: applyBattleStartRelics tempBuff 적용 핸들러 추가.
     // 'titan',     ← cycle 149: HP 보너스 핸들러 추가 (critReduce는 별도 사이클).
     'spell_stack',
     // 'hp_drain_atk', ← cycle 150: atkBonus 핸들러 추가 (매 턴 HP cost는 별도 사이클).
     // 'elem_boost', ← cycle 151: 약점 적중 배율 boost 핸들러 추가.
     // 'genesis',   ← cycle 149: statBonus 핸들러 추가 (healPerTurn은 별도 사이클).
-    'kill_stack_atk',
+    // 'kill_stack_atk', ← cycle 158: combatFlags.killStackAtkBonus per-combat 누적 + atkFlat 합산.
     // 'cooldown_reduce', ← cycle 151: cdReduction 핸들러 추가 (firstFree는 별도 사이클).
     // 'phoenix_revive', ← cycle 157: heal 부분 핸들러 추가 (atkBuff tempBuff는 별도 사이클).
     // 'reflect_crit', ← cycle 152: critBonus 핸들러 추가 (피해 반사는 별도 사이클).

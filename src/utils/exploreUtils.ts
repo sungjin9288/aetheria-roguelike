@@ -234,15 +234,34 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
 export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog }: any) => {
-    const combatStartPlayer = {
+    const combatStartPlayer: any = {
         ...player,
         combatFlags: {
             comboCount: 0,
             deathSaveUsed: false,
             voidHeartUsed: Boolean(player.combatFlags?.voidHeartUsed),
             voidHeartArmed: Boolean(player.combatFlags?.voidHeartArmed),
+            // cycle 158: 'kill_stack_atk' (허공의 왕좌) — 전투 내 ATK 누적은 매 전투 시작 시 0으로 리셋.
+            killStackAtkBonus: 0,
+            // cycle 158: 'phoenix_revive' (cycle 157) — 부활 1회는 매 전투마다 새로 사용 가능.
+            phoenixUsed: false,
         }
     };
+
+    // cycle 158: 'battle_start_buff' (전쟁의 북) — 전투 시작 시 ATK +val.atk (val.turns 턴).
+    //   tempBuff.atk는 multiplier (1 + atk) 로 statsCalculator에서 적용.
+    const startBuffRelic = playerRelics.find((r: any) => r.effect === 'battle_start_buff');
+    if (startBuffRelic) {
+        const atkBonus = startBuffRelic.val?.atk || 0;
+        const turns = startBuffRelic.val?.turns || 1;
+        combatStartPlayer.tempBuff = {
+            atk: atkBonus,
+            def: 0,
+            turn: turns,
+            name: 'battle_start_buff',
+        };
+        addLog('event', `[전쟁의 북] 전투 시작 ATK +${Math.round(atkBonus * 100)}% (${turns}턴)`);
+    }
 
     const startHealRelic = playerRelics.find((r: any) => r.effect === 'battle_start_heal');
     if (startHealRelic) {

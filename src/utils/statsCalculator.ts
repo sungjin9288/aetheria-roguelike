@@ -70,7 +70,11 @@ const computeCodexBonus = (stats: any) => {
 const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any) => {
     const hpRatio = (player.hp ?? 0) / Math.max(1, player.maxHp ?? 1);
 
+    // cycle 158: 'kill_stack_atk' (허공의 왕좌) — combatFlags.killStackAtkBonus per-combat 누적치를 atkFlat에 합산.
+    const killStackAtkPerCombat = (player as any)?.combatFlags?.killStackAtkBonus || 0;
+
     const atkFlat = relics.reduce((acc: any, r: any) => {
+        if (r.effect === 'kill_stack_atk') return acc + killStackAtkPerCombat;
         if (r.effect === 'glass_cannon') return acc + r.val.atk;
         if (r.effect === 'ancient_power') return acc + r.val.atk;
         if (r.effect === 'omega') return acc + r.val;

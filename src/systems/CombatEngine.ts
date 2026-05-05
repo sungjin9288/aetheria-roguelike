@@ -1172,6 +1172,18 @@ export const CombatEngine = {
             logs.push({ type: 'heal', text: `[피의 서약] +${heal} HP` });
         }
 
+        // cycle 158: 'kill_stack_atk' (허공의 왕좌) — 적 처치 시 ATK perKill 누적, max 캡.
+        //   combatFlags.killStackAtkBonus에 저장. applyBattleStartRelics에서 0으로 리셋(전투 내 한정).
+        const killStackRelic = relics.find((r: any) => r.effect === 'kill_stack_atk');
+        if (killStackRelic) {
+            const perKill = killStackRelic.val?.perKill || 0;
+            const maxStack = killStackRelic.val?.max || 1;
+            const flags: any = p.combatFlags || {};
+            const next = Math.min(maxStack, (flags.killStackAtkBonus || 0) + perKill);
+            p.combatFlags = { ...flags, killStackAtkBonus: next };
+            logs.push({ type: 'event', text: `[허공의 왕좌] ATK 누적 +${Math.round(next * 100)}% (이번 전투)` });
+        }
+
         // cycle 157: 'devour_hp' (세계 포식자) — 적 처치 시 적 maxHp의 val(=0.1)만큼 player maxHp 영구 증가.
         // 스펙은 "전투 내"이지만 per-combat 리셋 인프라 미구현 → 런 내 영구 적용 (관대한 해석).
         const devourRelic = relics.find((r: any) => r.effect === 'devour_hp');
