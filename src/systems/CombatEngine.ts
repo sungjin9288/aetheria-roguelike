@@ -804,8 +804,8 @@ export const CombatEngine = {
             critLogs.forEach((entry: any) => logs.push(entry));
         }
 
-        if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk'].includes(skill.effect)) {
-            const buff = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
+        if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(skill.effect)) {
+            const buff: any = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
             if (skill.effect === 'atk_up') buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'def_up') buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'all_up') {
@@ -815,6 +815,11 @@ export const CombatEngine = {
             if (skill.effect === 'berserk') {
                 buff.atk = Math.max(0.2, (skill.val || 2.0) - 1);
                 buff.def = -0.2;
+            }
+            // cycle 172: 'counter' (반격 자세) — 피격 시 반격 확률. val(=1.4)을 chance 보정으로 해석:
+            //   counterChance = val - 1 (예: 1.4 → 40%). counter damage = stats.atk (1배 반격 추가타).
+            if (skill.effect === 'counter') {
+                buff.counterChance = Math.max(0.2, (skill.val || 1.4) - 1);
             }
             updatedPlayer.tempBuff = buff;
         }
@@ -1141,9 +1146,22 @@ export const CombatEngine = {
 
         const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs, activeSynergies);
 
+        // cycle 172: 'counter' (반격 자세) 스킬 — 피격 시 buff.counterChance 확률로 적에게 반격 추가타.
+        //   tempBuff에 counterChance 필드가 있고 turn > 0이며 player가 살아있고 적도 살아있을 때만.
+        let finalEnemy: any = { ...updatedEnemy, guarding: false };
+        const playerBuff = (protectedResult.updatedPlayer as any).tempBuff;
+        if (playerBuff?.counterChance > 0 && playerBuff.turn > 0
+            && !protectedResult.isDead
+            && (finalEnemy.hp ?? 0) > 0
+            && Math.random() < playerBuff.counterChance) {
+            const counterDmg = Math.max(1, Math.floor(stats.atk));
+            finalEnemy = { ...finalEnemy, hp: Math.max(0, (finalEnemy.hp ?? 0) - counterDmg) };
+            logs.push({ type: 'event', text: `[${playerBuff.name}] 반격! ${finalEnemy.name}에게 ${counterDmg} 피해!` });
+        }
+
         return {
             updatedPlayer: protectedResult.updatedPlayer,
-            updatedEnemy: { ...updatedEnemy, guarding: false },
+            updatedEnemy: finalEnemy,
             damage: enemyDmg,
             isDead: protectedResult.isDead,
             isCrit: heavyResolved,
