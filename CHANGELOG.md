@@ -7,6 +7,82 @@
 
 ---
 
+## Cycle 146 — CHANGELOG에 cycles 132-145 history 일괄 추가
+
+- 문서: cycle 132 batch 이후 14 사이클 미반영 상태 batch 정리 (cycle 98 / 114 / 132에 이은 4번째 batch).
+
+검증: tsc 0 / unit 843 / lint clean / build-guard ok.
+
+---
+
+## Cycle 141-145 — quest/ach 보상 missing item baseline 0 달성 🎯
+
+- 콘텐츠: cycle 140 이벤트 체인 7건 fix 후 같은 패턴 검증 결과 quest / achievement reward.item이 75종 unique missing — 모든 보상이 silent no-op (플레이어가 챕터/업적 완수해도 인벤토리에 안 들어감) 발견.
+- 141: KNOWN_MISSING_REWARD_ITEMS Set + 양방향 가드 도입 (NEW missing 즉시 실패 / baseline 좁히기 강제). cycle 140 EVENT_CHAINS 회귀 가드 동봉.
+- 142(-7) / 143(-7) / 144(-15) / 145(-46) 점진 정리. cycle 145는 Perl batch script로 44종 unique missing item을 theme-based 매핑(망토 / 갑옷 / 마나 결정 / 영웅의 물약 / 잊혀진 열쇠 / 기계 코어 / 강화 재료 등)으로 한 번에 교체.
+- 결과: 모든 quest/achievement/event chain 보상이 실재 items.ts 항목 참조. addItemByName silent no-op 회귀 영구 차단.
+
+검증: 각 사이클 tsc 0 / unit 843 / lint clean / build-guard ok.
+
+## Cycle 140 — 이벤트 체인 7건 missing item 콘텐츠 정합
+
+- 콘텐츠: cycle 139 핸들러 인프라 추가 후 검증 결과 EVENT_CHAINS 전반에 items.ts 미등록 item.name reward 7건 발견. lost_wizard / last_hero / shadow_guild / machine_uprising / world_tree_corruption / divine_apostle_trial / rift_secret 7개 chain의 보상이 처음으로 정상 작동.
+- 매핑: 전설의 마법서→천벌의 지팡이 / 기사의 유검→심판자의 검 / 그림자 단검→그림자 절단기 / 기계 코어 갑옷→천상의갑주 / 세계수의 이슬→세계수의 지팡이 / 신전의 성광석→성스러운 창 / 균열 봉인석→균열 차단 방패. outcome log 텍스트도 새 이름과 일치하도록 갱신.
+
+검증: tsc 0 / unit 840 / lint clean / build-guard ok.
+
+## Cycle 139 — 이벤트 체인 legendary_item reward 핸들러 누락 회귀
+
+- 시스템: eventActions.handleEventChoice가 gold/item/relic/combat_bonus/stat_bonus 5개 reward 타입만 처리하고 legendary_item 분기 누락. lost_wizard chain의 전설 보상이 silently 누락되던 회귀.
+- 수정: rwd.type === 'legendary_item' 분기 추가 — 'item'과 동일하게 addItemByName + MSG.LOOT_GET. cycle 122/135 quest_complete 사운드는 외곽 if (rwd) 블록에서 자동 트리거.
+
+검증: tsc 0 / unit 838 / lint clean / build-guard ok.
+
+## Cycle 138 — CONSTANTS/BALANCE namespace 정합성 회귀 가드
+
+- 테스트: cycle 137에서 발견된 2건의 잠복 버그(CONSTANTS.PRIMAL_SHARD_DROP_CHANCE / CONSTANTS.DAILY_INVADE_LIMIT — 둘 다 BALANCE 키를 CONSTANTS로 잘못 참조해 undefined 평가, 게임 핵심 메커니즘 비활성)가 재발 안 하도록 자동화 가드.
+- 메커니즘: src/**/*.{ts,tsx} glob 스캔, BALANCE.X / CONSTANTS.X 참조를 추출해 각 키가 해당 객체에 존재하는지 검증.
+
+검증: tsc 0 / unit 835 / lint clean / build-guard ok.
+
+## Cycle 137 — CONSTANTS/BALANCE 참조 mismatch 2건 + PRIMAL_SHARD_REQUIRED 활성
+
+- 시스템: combatBossHandlers의 CONSTANTS.PRIMAL_SHARD_DROP_CHANCE 참조가 undefined → 마왕 격파 후 primal shard가 영원히 안 떨어져 진엔딩 잠금. useInventoryActions의 CONSTANTS.DAILY_INVADE_LIMIT도 undefined → 일일 침공 제한이 사실상 비활성. 둘 다 BALANCE 객체에서 가져오도록 수정.
+- 부수: shardCount < BALANCE.PRIMAL_SHARD_REQUIRED 게이트 신규 도입 — required 만큼 모이면 추가 드랍 차단. 기존 magic number 3 제거.
+
+검증: tsc 0 / unit 832 / lint clean / build-guard ok.
+
+## Cycle 136 — killStreak 시간 기반 감쇠 활성
+
+- 시스템: BALANCE.KILL_STREAK_DECAY_MS 상수가 선언만 돼 있고 호출 0건 — dead constant. combatVictory에서 lastKillAt timestamp 추적 + 다음 kill 시 경과 시간이 KILL_STREAK_DECAY_MS 초과면 streak 0 reset.
+- 결과: 장시간 휴식/이동 후 streak가 자연스럽게 끊어져 콤보 ramping이 의도대로 동작.
+
+검증: tsc 0 / unit 832 / lint clean / build-guard ok.
+
+## Cycle 135 — 이벤트 체인 보상 사운드 큐
+
+- UX: eventActions.handleEventChoice의 reward 처리 끝에서 if (rwd) soundManager.play('quest_complete') 호출 추가. cycle 122 / 123 / 133에서 정착시킨 quest_complete 사운드(E major 4음) 재사용 — 챕터 보상 수령에 동일한 victory 톤.
+
+검증: tsc 0 / unit 832 / lint clean / build-guard ok.
+
+## Cycle 134 — SoundManager 사운드 키 등록·호출 정합성 회귀 가드
+
+- 테스트: SoundManager.play(key) 호출 콜사이트(grep)와 SoundManager 내부 case 분기를 양방향 비교. 등록 안 된 키 호출(silent fallthrough) / 호출 0건 dead case 둘 다 catch.
+
+검증: tsc 0 / unit 832 / lint clean / build-guard ok.
+
+## Cycle 133 — 도감 milestone 수령 사운드 큐
+
+- UX: claimCodexMilestone 액션에서 quest_complete 사운드 재사용. cycle 122(퀘스트) / 123(업적) 라인 통일 — 모든 milestone 수령 모먼트가 동일 sensory cue.
+
+검증: tsc 0 / unit 832 / lint clean / build-guard ok.
+
+## Cycle 132 — CHANGELOG에 cycles 114-131 history 일괄 추가
+
+- 문서: cycle 114 batch 이후 18 사이클(115-131) 미반영 상태 batch 정리. cycle 98 / 114에 이은 3번째 batch.
+
+---
+
 ## Cycle 131 — save → migrate → ASCEND 통합 흐름 회귀 가드
 
 - 테스트: cycle 119(ASCEND preserve) + 120(migrate default) + 121(INITIAL_STATE declaration) end-to-end 통합 회귀 가드. 3개 시나리오(legacy save / 신규 플레이어 / 연속 환생).
