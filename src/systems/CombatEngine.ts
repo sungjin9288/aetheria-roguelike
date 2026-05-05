@@ -336,6 +336,53 @@ export const CombatEngine = {
             logs.push({ type: 'heal', text: `[영원의 생명] +${heal} HP 재생` });
         }
 
+        // cycle 161: 'genesis' 유물 (창세의 핵) — val.healPerTurn 0.02 매 턴 HP 회복.
+        //   cycle 149에서 statBonus만 적용했고 healPerTurn은 별도 사이클로 미뤘던 잔존.
+        const genesisRelic = relics.find((r: any) => r.effect === 'genesis');
+        if (genesisRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
+            const ratio = genesisRelic.val?.healPerTurn || 0;
+            if (ratio > 0) {
+                const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * ratio));
+                updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
+                logs.push({ type: 'heal', text: `[창세의 핵] +${heal} HP 재생` });
+            }
+        }
+
+        // cycle 161: 시너지 'eternal_fortress' (regenPerTurn 0.08) — 매 턴 8% HP 재생.
+        //   cycle 154에서 defMult만 적용했고 regenPerTurn은 별도 사이클로 미뤘던 잔존.
+        const fortressRegenSyn = getActiveRelicSynergies(relics).find((s: any) =>
+            s.bonus.effect === 'eternal_fortress' || s.bonus.regenPerTurn);
+        if (fortressRegenSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
+            const ratio = fortressRegenSyn.bonus.regenPerTurn || 0;
+            if (ratio > 0) {
+                const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * ratio));
+                updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
+                logs.push({ type: 'heal', text: `[영원의 요새] +${heal} HP 재생` });
+            }
+        }
+
+        // cycle 161: 'hp_drain_atk' 유물 (혈맹의 반지 / 심연의 계약) — val.hpCost 매 턴 HP 소모.
+        //   cycle 150에서 atkBonus만 적용했고 hpCost는 별도 사이클로 미뤘던 잔존.
+        //   hell_reaper 시너지 보유 시 hpCostReduction으로 부담 경감 (cycle 156 시너지 정합).
+        const drainRelic = relics.find((r: any) => r.effect === 'hp_drain_atk');
+        if (drainRelic && (updated.hp || 0) > 1) {
+            let cost = (drainRelic.val?.hpCost || 0);
+            const hellReaperSynRegen = getActiveRelicSynergies(relics).find((s: any) =>
+                s.bonus.effect === 'hell_reaper' || s.bonus.hpCostReduction);
+            if (hellReaperSynRegen) {
+                const reducedCost = hellReaperSynRegen.bonus.hpCostReduction;
+                if (typeof reducedCost === 'number' && reducedCost >= 0 && reducedCost < cost) {
+                    cost = reducedCost; // hell_reaper가 cost를 0.02로 직접 대체
+                }
+            }
+            if (cost > 0) {
+                const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * cost));
+                updated.hp = Math.max(1, (updated.hp || 1) - dmg);
+                const label = hellReaperSynRegen ? '지옥의 수확자' : '혈맹의 반지';
+                logs.push({ type: 'warning', text: `[${label}] HP 대가 -${dmg}` });
+            }
+        }
+
         // 유물: 시간의 파편 (cd_minus) — 매 턴 모든 스킬 쿨타임 추가 -1
         const cdMinusRelic = relics.find((relic: any) => relic.effect === 'cd_minus');
         if (cdMinusRelic) {
