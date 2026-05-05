@@ -387,6 +387,19 @@ export const MONSTERS: any = {
     '서리 마법사':      { hp: 250, atk: 92, def: 16, exp: 195, gold: 92, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'freeze' },
     '얼음 기사':        { hp: 420, atk: 85, def: 40, exp: 232, gold: 108, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.3, heavyChance: 0.35 } },
 
+    // cycle 166: 언데드 / 폭풍 테마 8종 batch (cycle 165 화염/얼음 batch 연속).
+    // 언데드 (5종) — weakness 빛, resistance 어둠.
+    '망자의 사제':      { hp: 280, atk: 88, def: 18, exp: 192, gold: 90, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
+    '묘지 구울':        { hp: 320, atk: 78, def: 24, exp: 188, gold: 85, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.35 }, statusOnHit: 'poison' },
+    '유령 군단':        { hp: 380, atk: 82, def: 28, exp: 215, gold: 98, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },
+    '해골 마법사':      { hp: 240, atk: 96, def: 14, exp: 198, gold: 92, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
+    '저주받은 기사':    { hp: 460, atk: 84, def: 44, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.35 }, statusOnHit: 'curse' },
+
+    // 폭풍/번개 테마 (3종) — weakness 대지, resistance 자연.
+    '뇌운 와이번':      { hp: 340, atk: 90, def: 26, exp: 218, gold: 102, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
+    '번개 정령':        { hp: 260, atk: 86, def: 18, exp: 190, gold: 88, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.45 } },
+    '폭풍 그리핀':      { hp: 400, atk: 92, def: 30, exp: 245, gold: 115, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.55 } },
+
     // 차원의 균열 전초기지 (5종 + 1 중보스)
     '차원 보병':        { hp: 380, atk: 92, def: 32, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
     '공허 포격수':      { hp: 280, atk: 108, def: 14, exp: 248, gold: 118, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },
