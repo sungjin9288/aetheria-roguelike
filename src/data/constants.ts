@@ -193,14 +193,16 @@ export const BALANCE: any = {
             id: 'fire_convergence',
             label: '화염의 수렴',
             locations: ['화염의 협곡', '화염의 사원', '용의 둥지'],
-            reward: { gold: 3000, exp: 2000, item: '용의 숨결' },
+            // cycle 177: '용의 숨결' items.ts 미등록 → '용의 화염' (tier 5 화염 무기).
+            reward: { gold: 3000, exp: 2000, item: '용의 화염' },
             desc: '세 곳의 화염 지역을 탐험하니 고대 용의 기운이 하나로 수렴합니다.',
         },
         {
             id: 'frozen_truth',
             label: '동결된 진실',
             locations: ['북부 설원', '얼음 성채', '빙하 심연'],
-            reward: { gold: 3000, exp: 2000, item: '영원의 빙결정' },
+            // cycle 177: '영원의 빙결정' items.ts 미등록 → '빙결의 왕관검' (tier 5 냉기 무기).
+            reward: { gold: 3000, exp: 2000, item: '빙결의 왕관검' },
             desc: '얼어붙은 세계의 끝에서 잊혀진 진실을 찾아냅니다.',
         },
         {
@@ -221,7 +223,8 @@ export const BALANCE: any = {
             id: 'demon_trail',
             label: '마왕의 흔적',
             locations: ['암흑 성', '마왕성', '혼돈의 심연'],
-            reward: { gold: 6000, exp: 4000, item: '마왕의 인장' },
+            // cycle 177: '마왕의 인장' items.ts 미등록 → '마왕의 대낫' (tier 5 어둠 무기 — 보스 흔적).
+            reward: { gold: 6000, exp: 4000, item: '마왕의 대낫' },
             desc: '마왕의 세력 근거지를 모두 밟아, 그의 흔적을 추적합니다.',
         },
     ],
