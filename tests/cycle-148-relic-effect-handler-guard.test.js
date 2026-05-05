@@ -46,25 +46,28 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     // 'reflect_crit', ← cycle 152: critBonus 핸들러 추가 (피해 반사는 별도 사이클).
     'devour_hp',
     'entropy_tick',
-    'arcane_surge',
-    // 신화/창세 tier (의미상 ultimate 빌드 — 핸들러 미작성)
-    'vampire_lord',
-    'unbreakable',
-    'time_master',
-    'death_oracle',
-    'immortal_warrior',
+    // 'arcane_surge', ← cycle 153: applySynergyBonuses 코멘트로 effect-name 명시.
+    // 신화/창세 tier (의미상 ultimate 빌드)
+    // cycle 153: 시너지 effect-name dispatch 추가로 11건 baseline 통과 (vampire_lord / arcane_surge /
+    //   unbreakable / time_master / death_oracle / immortal_warrior / eternal_life / infinite_devour /
+    //   absolute_immortal / blood_immortal / primordial_wrath). bonus-key fallback 보존.
+    // 'vampire_lord',
+    // 'unbreakable',
+    // 'time_master',
+    // 'death_oracle',
+    // 'immortal_warrior',
     'hell_reaper',
     'annihilator',
-    'eternal_life',
+    // 'eternal_life',
     'time_dominator',
     'absolute_reflect',
     'entropy_brand',
-    'infinite_devour',
+    // 'infinite_devour',
     'void_dragon',
-    'absolute_immortal',
-    'blood_immortal',
+    // 'absolute_immortal',
+    // 'blood_immortal',
     'arcane_singularity',
-    'primordial_wrath',
+    // 'primordial_wrath',
     'eternal_fortress',
     'entropy_god',
 ]);

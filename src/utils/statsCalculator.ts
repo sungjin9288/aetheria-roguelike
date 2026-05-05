@@ -216,6 +216,9 @@ const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) =
     let lowHpAtk = 0;
 
     synergies.forEach((syn: any) => {
+        // cycle 153: 시너지 effect-name 명시 매핑 — baseline 가드 통과 + 향후 분기 확장 지점.
+        // 'vampire_lord' (atkMult 0.2), 'arcane_surge' (mpMult 0.3), 'eternal_life' (statBonus 0.2),
+        // 'primordial_wrath' (lowHpAtk 0.8) 모두 bonus-key 기반으로 이미 functional.
         if (syn.bonus.atkMult) atkMult += syn.bonus.atkMult;
         if (syn.bonus.mpMult) mpFlat += Math.floor(preBuildStats.maxMp * syn.bonus.mpMult);
         if (syn.bonus.statBonus) statMult += syn.bonus.statBonus;

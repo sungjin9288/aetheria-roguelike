@@ -83,21 +83,27 @@ export const CombatEngine = {
 
         if (nextHp <= 0) {
             const deathSaveRelic = relics.find((relic: any) => relic.effect === 'death_save');
-            // 시너지: 절대 불사 (absolute_immortal) — reviveCount 2회 지원
-            const absoluteImmortalSyn = activeSynergies.find((s: any) => s.bonus.reviveCount);
+            // cycle 153: 시너지 'absolute_immortal' — reviveCount 2회 부활. effect-name primary + bonus-key fallback.
+            const absoluteImmortalSyn = activeSynergies.find((s: any) =>
+                s.bonus.effect === 'absolute_immortal' || s.bonus.reviveCount);
             const maxRevives = absoluteImmortalSyn ? (absoluteImmortalSyn.bonus.reviveCount || 1) : 1;
             const reviveUsedCount = flags.deathSaveUsedCount || 0;
 
             if (deathSaveRelic && reviveUsedCount < maxRevives) {
-                // 시너지: 불멸의 전사/절대 불사 (reviveHeal) — 부활 시 HP 회복량 증가
-                const reviveHealSyn = activeSynergies.find((s: any) => s.bonus.reviveHeal);
+                // cycle 153: 시너지 'absolute_immortal' / 'immortal_warrior' / 'blood_immortal' — reviveHeal 부활 시 HP 회복량 증가.
+                const reviveHealSyn = activeSynergies.find((s: any) =>
+                    s.bonus.effect === 'absolute_immortal'
+                    || s.bonus.effect === 'immortal_warrior'
+                    || s.bonus.effect === 'blood_immortal'
+                    || s.bonus.reviveHeal);
                 nextHp = reviveHealSyn
                     ? Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * reviveHealSyn.bonus.reviveHeal)
                     : 1;
                 flags.deathSaveUsed = true;
                 flags.deathSaveUsedCount = reviveUsedCount + 1;
-                // 시너지: 난공불락 (healOnSave) — 부활 시 추가 HP 회복
-                const healOnSaveSyn = activeSynergies.find((s: any) => s.bonus.healOnSave);
+                // cycle 153: 시너지 'unbreakable' — healOnSave 부활 시 추가 HP 회복.
+                const healOnSaveSyn = activeSynergies.find((s: any) =>
+                    s.bonus.effect === 'unbreakable' || s.bonus.healOnSave);
                 if (healOnSaveSyn) {
                     const bonus = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healOnSaveSyn.bonus.healOnSave);
                     nextHp = Math.min(player.maxHp || BALANCE.DEFAULT_MAX_HP, nextHp + bonus);
@@ -427,8 +433,9 @@ export const CombatEngine = {
             updatedPlayer = this.applyCritMpRestore(updatedPlayer, relics, logs);
         }
 
-        // 시너지: 흡혈 군주 (vampire_lord) — 일반 공격 흡혈
-        const vampireSyn = (stats.activeSynergies || []).find((s: any) => s.bonus.lifeSteal);
+        // cycle 153: 시너지 'vampire_lord' — lifeSteal 일반 공격 흡혈.
+        const vampireSyn = (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'vampire_lord' || s.bonus.lifeSteal);
         if (vampireSyn) {
             const steal = Math.floor(finalDamage * vampireSyn.bonus.lifeSteal);
             if (steal > 0) {
@@ -704,8 +711,9 @@ export const CombatEngine = {
             logs.push({ type: 'event', text: MSG.SKILL_EXTRA_TURN(skill.name) });
         }
 
-        // 시너지: 시간 지배자 (time_master) — 스킬 사용 후 10% 확률 추가 행동
-        const timeMasterSyn = relics && (stats.activeSynergies || []).find((s: any) => s.bonus.extraTurnChance);
+        // cycle 153: 시너지 'time_master' — extraTurnChance 스킬 사용 후 추가 행동.
+        const timeMasterSyn = relics && (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'time_master' || s.bonus.extraTurnChance);
         if (timeMasterSyn && !updatedPlayer.extraTurnGranted && Math.random() < (timeMasterSyn.bonus.extraTurnChance || 0)) {
             updatedPlayer.extraTurnGranted = true;
             logs.push({ type: 'event', text: `[시간 지배자] 시간이 멈춥니다 — 추가 행동!` });
@@ -773,9 +781,13 @@ export const CombatEngine = {
         // curse_amp 패시브: 무당/시간술사 직업 보너스
         const curseAmpPassive = CLASSES[player.job as string]?.skills?.find((s: any) => s.passive && s.effect === 'curse_amp');
         const curseAmpMult = curseAmpPassive ? (curseAmpPassive.val || 1) : 1;
-        // 시너지: 죽음의 예언자 (dotMult) — DoT 피해 증폭
+        // cycle 153: 시너지 'death_oracle' — dotMult DoT 피해 증폭.
         const activeSynergies = stats.activeSynergies || [];
-        const synergyDotMult = activeSynergies.reduce((acc: any, syn: any) => syn.bonus.dotMult ? acc + syn.bonus.dotMult : acc, 1);
+        const synergyDotMult = activeSynergies.reduce((acc: any, syn: any) =>
+            (syn.bonus.effect === 'death_oracle' ? acc + (syn.bonus.dotMult || 0)
+                : syn.bonus.dotMult ? acc + syn.bonus.dotMult
+                : acc),
+            1);
         const enemyTickResult = this.tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult);
         updatedEnemy = enemyTickResult.updatedEnemy;
         enemyTickResult.logs.forEach((l: any) => logs.push(l));
@@ -1118,15 +1130,17 @@ export const CombatEngine = {
             logs.push({ type: 'heal', text: `[피의 서약] +${heal} HP` });
         }
 
-        // 시너지: 불멸의 전사 (killHeal), 무한 포식 (devour) — 처치 시 HP 회복
+        // cycle 153: 시너지 'immortal_warrior' (killHeal) / 'infinite_devour' (devour) — 처치 시 HP 회복.
         const victorySynergies = getActiveRelicSynergies(relics);
-        const killHealSyn = victorySynergies.find((s: any) => s.bonus.killHeal);
+        const killHealSyn = victorySynergies.find((s: any) =>
+            s.bonus.effect === 'immortal_warrior' || s.bonus.killHeal);
         if (killHealSyn) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (killHealSyn.bonus.killHeal ?? 0));
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[불멸의 전사] +${heal} HP (처치 회복)` });
         }
-        const devourSyn = victorySynergies.find((s: any) => s.bonus.devour);
+        const devourSyn = victorySynergies.find((s: any) =>
+            s.bonus.effect === 'infinite_devour' || s.bonus.devour);
         if (devourSyn) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (devourSyn.bonus.devour ?? 0));
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
