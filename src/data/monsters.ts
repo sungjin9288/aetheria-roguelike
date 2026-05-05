@@ -371,6 +371,22 @@ export const MONSTERS: any = {
     '시간 파편체':      { hp: 340, atk: 88, def: 24, exp: 232, gold: 108, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
     '망령 기사단장':    { hp: 460, atk: 95, def: 42, exp: 260, gold: 125, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 } },
 
+    // cycle 165: maps.ts 참조 누락 monster profile 추가 — baseline 점진 정리.
+    //   화염/얼음 테마 8종 batch. 모두 maps.ts monsters[]에 spawn 등록돼 있으나
+    //   profile 누락으로 weakness/resistance 미적용이던 generic stat-blank 회귀 fix.
+
+    // 화염 테마 (5종)
+    '화염 비룡':        { hp: 360, atk: 88, def: 28, exp: 200, gold: 95, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.1, heavyChance: 0.45 }, statusOnHit: 'burn' },
+    '마그마 슬라임':    { hp: 240, atk: 65, def: 18, exp: 165, gold: 75, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.25 }, statusOnHit: 'burn' },
+    '화산 정령':        { hp: 280, atk: 80, def: 20, exp: 188, gold: 85, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.4 } },
+    '화산재 골렘':      { hp: 460, atk: 70, def: 48, exp: 218, gold: 100, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
+    '용암 거북':        { hp: 520, atk: 60, def: 55, exp: 215, gold: 98, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.4, heavyChance: 0.15 } },
+
+    // 얼음 테마 (3종)
+    '서리 골렘':        { hp: 480, atk: 72, def: 50, exp: 220, gold: 102, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
+    '서리 마법사':      { hp: 250, atk: 92, def: 16, exp: 195, gold: 92, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'freeze' },
+    '얼음 기사':        { hp: 420, atk: 85, def: 40, exp: 232, gold: 108, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.3, heavyChance: 0.35 } },
+
     // 차원의 균열 전초기지 (5종 + 1 중보스)
     '차원 보병':        { hp: 380, atk: 92, def: 32, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
     '공허 포격수':      { hp: 280, atk: 108, def: 14, exp: 248, gold: 118, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },
