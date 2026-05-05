@@ -30,6 +30,12 @@ export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
                     if (rwd.type === 'gold' && rwd.amount) {
                         updatedPlayer = grantGold(updatedPlayer, rwd.amount);
                     }
+                    // cycle 178: 'info' reward type 핸들러 추가 — eventChains의 ancient_prophecy
+                    // chain에 정의됐으나 처리 분기 누락이라 reward.text 정보가 silent 누락이던 회귀.
+                    // 단순히 reward.text를 system log로 출력 (인벤/스탯 변경 없음).
+                    if (rwd.type === 'info' && rwd.text) {
+                        addLog('system', `📜 ${rwd.text}`);
+                    }
                     if (rwd.type === 'item' && rwd.name) {
                         updatedPlayer = addItemByName(updatedPlayer, rwd.name);
                     }
