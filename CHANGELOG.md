@@ -7,6 +7,39 @@
 
 ---
 
+## Cycle 160 — CHANGELOG에 cycles 147-159 history 일괄 추가
+
+- 문서: cycle 146 batch 이후 13 사이클 미반영 상태 batch 정리 (cycle 98 / 114 / 132 / 146에 이은 5번째 batch).
+
+검증: tsc 0 / unit 895 / lint clean / build-guard ok.
+
+---
+
+## Cycle 148-159 — relic.effect 핸들러 baseline 34 → 0 달성 🎯
+
+- 콘텐츠/시스템: 81종 unique relic effect 중 34종이 src/ 어디에서도 핸들러 등록 0건 발견. 신화/창세 tier 다수 포함된 큰 콘텐츠 갭. cycle 141 quest baseline pattern을 재활용해 12 사이클 점진 정리.
+- 148: KNOWN_MISSING_RELIC_EFFECTS Set(34종) baseline lock + 양방향 가드(NEW dead 즉시 실패 / baseline 좁히기 강제). cycle 134(SoundManager) / 138(CONSTANTS·BALANCE) / 141(quest item) 회귀 가드 패턴 재사용.
+- 149-152: 단순 passive multiplier 정리 — titan / genesis / hp_drain_atk / first_turn_evade / cooldown_reduce / elem_boost / on_hit_freeze / reflect_crit. statsCalculator.computeRelicBonuses 1-line 추가 패턴.
+- 153 batch: 시너지 11종 effect-name dispatch — vampire_lord / arcane_surge / unbreakable / time_master / death_oracle / immortal_warrior / eternal_life / infinite_devour / absolute_immortal / blood_immortal / primordial_wrath. bonus-key fallback 보존.
+- 154: defMult / chaosAtk / critDmg 시너지 — eternal_fortress / entropy_god / void_dragon. applySynergyBonuses 시그니처 확장 + finalDef 곱 인자.
+- 155: time_dominator / arcane_singularity — 기존 cooldown_reduce / free_skill 유물 분기에 합산 합류. cycle 153 timeMasterSyn extraTurnChance 하드코딩 latent bug 동시 fix.
+- 156: hell_reaper / annihilator / absolute_reflect — 기존 vampire_lord / execute_bonus / reflect 분기에 합산 합류.
+- 157: phoenix_revive / devour_hp — applyFatalProtection void_heart fallback + handleVictory maxHp 영구 증가.
+- 158: battle_start_buff / kill_stack_atk — applyBattleStartRelics tempBuff 적용 + combatFlags.killStackAtkBonus per-combat 누적. phoenixUsed 매 전투 리셋(런 1회 발동 버그 fix).
+- 159 🎯: entropy_tick / entropy_brand — 신규 헬퍼 applyEntropyTick으로 turn-based DOT 통합. attack/performSkill 끝부분 호출. baseline 0 달성.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 147 — dead AT(action type) 6건 + 핸들러 일괄 정리 + 회귀 가드
+
+- 정리: actionTypes.ts에 선언만 되고 dispatch 호출이 0건인 AT 키 6건 발견 (RESET_RUNTIME_UI / CLEAR_LOGS / SYNTHESIZE_ITEMS / SET_PREMIUM_CURRENCY / SET_CHALLENGE_MODIFIERS / SET_PUBLIC_GRAVES). uiHandlers / rewardHandlers / multiplayerHandlers의 핸들러도 dead 상태였음. 일괄 제거.
+- 가드: 양방향 회귀 가드 — 모든 AT.X가 src/ 어딘가에서 dispatch되어야 함, 핸들러 등록 키도 AT 정의에 존재해야 함 (string typo 가드). cycle 134(SoundManager) / 138(CONSTANTS·BALANCE) / 141(quest reward.item) / 148(relic.effect) 회귀 가드 패턴 시리즈에 합류.
+- 부수: uiHandlers.ts에서 더 이상 GS import 불필요해 제거.
+
+검증: tsc 0 / unit 845 / lint clean / build-guard ok.
+
+---
+
 ## Cycle 146 — CHANGELOG에 cycles 132-145 history 일괄 추가
 
 - 문서: cycle 132 batch 이후 14 사이클 미반영 상태 batch 정리 (cycle 98 / 114 / 132에 이은 4번째 batch).
