@@ -11,6 +11,7 @@ import { BOSS_MONSTERS } from '../data/monsters.js';
 import { AT } from '../reducers/actionTypes.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { soundManager } from '../systems/SoundManager.js';
+import { findItemByName } from './gameUtils.js';
 
 // ─────────────────────────────────────────────────────────────────────────
 // 0. ISO 주차 번호 계산 (월요일 기준)
@@ -354,7 +355,11 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
                     updated.premiumCurrency = (updated.premiumCurrency || 0) + chain.reward.premiumCurrency;
                 }
                 if (chain.reward.item) {
-                    const itemData = DB.ITEMS?.allItems?.find((i: any) => i.name === chain.reward.item);
+                    // cycle 180: 'DB.ITEMS.allItems'는 존재하지 않는 필드 — DB.ITEMS는 object
+                    //   { weapons, armors, ... }. 기존 lookup이 항상 undefined 반환해 cycle 177
+                    //   reward.item fix 후에도 chain reward 아이템이 silent 누락이던 회귀 fix.
+                    //   gameUtils.findItemByName(getAllItems() lookup) 사용으로 정합.
+                    const itemData = findItemByName(chain.reward.item);
                     if (itemData && (updated.inv || []).length < (BALANCE.INV_MAX_SIZE || 20)) {
                         updated.inv = [...(updated.inv || []), { ...itemData, id: `disc_${Date.now()}` }];
                     }
