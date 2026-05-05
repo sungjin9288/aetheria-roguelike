@@ -25,13 +25,6 @@ export const rewardActionMap = {
         };
     },
 
-    // ── Premium Currency ──────────────────────────────────────────────────
-    SET_PREMIUM_CURRENCY: (state: GameState, action: GameAction) => ({
-        ...state,
-        player: { ...state.player, premiumCurrency: action.payload },
-        syncStatus: 'syncing',
-    }),
-
     // ── Season Pass ───────────────────────────────────────────────────────
     ADD_SEASON_XP: (state: GameState, action: GameAction) => {
         const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };

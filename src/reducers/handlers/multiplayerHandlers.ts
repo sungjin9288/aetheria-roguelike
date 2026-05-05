@@ -1,13 +1,6 @@
 import type { GameState, GameAction } from '../gameReducer';
 
 export const multiplayerActionMap = {
-    // ── Challenge Modifiers ───────────────────────────────────────────────
-    SET_CHALLENGE_MODIFIERS: (state: GameState, action: GameAction) => ({
-        ...state,
-        player: { ...state.player, challengeModifiers: action.payload || [] },
-        syncStatus: 'syncing',
-    }),
-
     // ── Skill Branch ──────────────────────────────────────────────────────
     CHOOSE_SKILL_BRANCH: (state: GameState, action: GameAction) => {
         const { skillName, choice } = action.payload;
@@ -22,9 +15,6 @@ export const multiplayerActionMap = {
     },
 
     // ── Grave PvP ─────────────────────────────────────────────────────────
-    SET_PUBLIC_GRAVES: (state: GameState, action: GameAction) =>
-        ({ ...state, publicGraves: action.payload }),
-
     INVADE_GRAVE: (state: GameState, action: GameAction) => {
         const { reward, uid: targetUid } = action.payload;
         const today = new Date().toDateString();

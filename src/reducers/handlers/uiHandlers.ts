@@ -1,5 +1,4 @@
 import { BALANCE } from '../../data/constants';
-import { GS } from '../gameStates';
 import { sanitizeQuickSlots } from './helpers';
 import type { GameState, GameAction } from '../gameReducer';
 
@@ -22,23 +21,6 @@ export const uiActionMap = {
     SET_SHOP_ITEMS: (state: GameState, action: GameAction) =>
         ({ ...state, shopItems: action.payload }),
 
-    RESET_RUNTIME_UI: (state: GameState) => ({
-        ...state,
-        gameState: GS.IDLE,
-        logs: [],
-        enemy: null,
-        currentEvent: null,
-        shopItems: [],
-        sideTab: 'inventory',
-        isAiThinking: false,
-        visualEffect: null,
-        quickSlots: [null, null, null],
-        postCombatResult: null,
-        pendingRelics: null,
-        runSummary: null,
-        syncStatus: 'syncing'
-    }),
-
     ADD_LOG: (state: GameState, action: GameAction) =>
         ({ ...state, logs: [...state.logs, action.payload].slice(-BALANCE.LOG_MAX_SIZE) }),
 
@@ -46,9 +28,6 @@ export const uiActionMap = {
         ...state,
         logs: state.logs.map((log: any) => log.id === action.payload.id ? action.payload.log : log)
     }),
-
-    CLEAR_LOGS: (state: GameState) =>
-        ({ ...state, logs: [], syncStatus: 'syncing' }),
 
     SET_POST_COMBAT_RESULT: (state: GameState, action: GameAction) =>
         ({ ...state, postCombatResult: action.payload }),
