@@ -40,6 +40,7 @@ const KNOWN_MISSING_MAP_MONSTERS = new Set([]);
 const collectMapMonsterRefs = async () => {
     const maps = await readFile(path.join(ROOT, 'src/data/maps.ts'), 'utf8');
     const refs = new Set();
+    // monsters: [...] — 일반 spawn pool
     const arrRe = /monsters:\s*\[([^\]]+)\]/g;
     let m;
     while ((m = arrRe.exec(maps)) !== null) {
@@ -47,6 +48,16 @@ const collectMapMonsterRefs = async () => {
         let mm;
         while ((mm = strRe.exec(m[1])) !== null) refs.add(mm[1] || mm[2]);
     }
+    // cycle 173: bossMonsters: [...] — 보스 spawn pool 도 포함.
+    const bossArrRe = /bossMonsters:\s*\[([^\]]+)\]/g;
+    while ((m = bossArrRe.exec(maps)) !== null) {
+        const strRe = /'([^']+)'|"([^"]+)"/g;
+        let mm;
+        while ((mm = strRe.exec(m[1])) !== null) refs.add(mm[1] || mm[2]);
+    }
+    // cycle 173: boss: 'name' — 단일 보스 참조도 포함 (boolean true는 제외).
+    const bossSingleRe = /boss:\s*['"]([^'"]+)['"]/g;
+    while ((m = bossSingleRe.exec(maps)) !== null) refs.add(m[1]);
     return refs;
 };
 

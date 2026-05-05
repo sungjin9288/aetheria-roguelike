@@ -451,6 +451,22 @@ export const MONSTERS: any = {
     // 차원 (1종) — weakness 빛, resistance 어둠.
     '차원 방랑자':      { hp: 360, atk: 92, def: 28, exp: 240, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
 
+    // cycle 173: 누락된 boss/bossMonsters 참조 2종 추가 — maps.ts에서 boss/bossMonsters로 등록돼 있으나
+    // MONSTERS profile 누락이던 회귀. cycle 165 baseline은 monsters[]만 검사했고 boss/bossMonsters
+    // 검사를 빠뜨렸다.
+    '봄의 여왕': {
+        isBoss: true, weakness: '화염', resistance: '자연',
+        hpMult: 1.4, atkMult: 1.22, expMult: 2.2, goldMult: 2.2, dropMod: 2.5,
+        pattern: { guardChance: 0.15, heavyChance: 0.35 },
+        phase2: { name: '분노한 봄의 여왕', atkBonus: 0.4, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '봄의 여왕이 정원 전체의 생명력을 흡수했습니다! 꽃잎이 칼날이 됩니다!', statusEffect: 'poison' },
+    },
+    '서리 군주': {
+        isBoss: true, weakness: '화염', resistance: '냉기',
+        hpMult: 1.5, atkMult: 1.28, expMult: 2.5, goldMult: 2.5, dropMod: 2.8,
+        pattern: { guardChance: 0.2, heavyChance: 0.4 },
+        phase2: { name: '극한의 서리 군주', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.6 }, log: '서리 군주가 절대 영도의 폭풍을 해방했습니다! 모든 것이 얼어붙습니다!', statusEffect: 'freeze' },
+    },
+
     // 차원의 균열 전초기지 (5종 + 1 중보스)
     '차원 보병':        { hp: 380, atk: 92, def: 32, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
     '공허 포격수':      { hp: 280, atk: 108, def: 14, exp: 248, gold: 118, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },
