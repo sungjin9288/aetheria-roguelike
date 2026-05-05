@@ -77,6 +77,8 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         if (r.effect === 'cursed_power') return acc + r.val.atk;
         if (r.effect === 'battle_start_atk') return acc + (r.val || 0);
         if (r.effect === 'triple_up') return acc + (r.atkVal || 0);
+        // cycle 149: 'genesis' (창세의 핵) — 전 스탯 statBonus 다중 적용. 매 턴 회복은 별도 사이클.
+        if (r.effect === 'genesis') return acc + (r.val?.statBonus || 0);
         if (r.effect === 'low_hp_atk') {
             const threshold = typeof r.val === 'object' ? r.val.threshold : 0.3;
             const bonus = typeof r.val === 'object' ? r.val.bonus : (r.val - 1);
@@ -91,12 +93,18 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         if (r.effect === 'fortress') return acc + r.val.def;
         if (r.effect === 'omega') return acc + r.val;
         if (r.effect === 'triple_up') return acc + (r.defVal || 0);
+        // cycle 149: 'genesis' (창세의 핵) — 전 스탯 statBonus DEF 적용.
+        if (r.effect === 'genesis') return acc + (r.val?.statBonus || 0);
         return acc;
     }, 0);
 
     const hpMult = 1 + relics.reduce((acc: any, r: any) => {
         if (r.effect === 'fortress') return acc + r.val.hp;
         if (r.effect === 'omega') return acc + r.val;
+        // cycle 149: 'titan' (타이탄의 허리띠) — HP +30% 보너스. 받는 치명타 피해 -50%는 별도 사이클.
+        if (r.effect === 'titan') return acc + (r.val?.hp || 0);
+        // cycle 149: 'genesis' (창세의 핵) — 전 스탯 statBonus HP 적용.
+        if (r.effect === 'genesis') return acc + (r.val?.statBonus || 0);
         return acc;
     }, 0);
 
