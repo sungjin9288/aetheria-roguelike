@@ -32,7 +32,7 @@ export const QUESTS: any = [
     { id: 28, title: '설원 수호자',      desc: '서리 늑대 10마리 처치',   target: '서리 늑대',   goal: 10, reward: { exp: 1800, gold: 2200 },            minLv: 22 },
     { id: 135, title: '사막 도적단 소탕', desc: '사막 도적 8마리 처치',    target: '사막 도적',   goal: 8,  reward: { exp: 2000, gold: 2600, item: '도적의 망토' },  minLv: 23 },
     { id: 136, title: '고대 유적 탐사',   desc: '고대 골렘 6마리 처치',    target: '고대 골렘',   goal: 6,  reward: { exp: 2400, gold: 3000, item: '고대의 파편' },  minLv: 25 },
-    { id: 137, title: '보물고 침입자',    desc: '보물고 수호자 5마리 처치', target: '보물고 수호자', goal: 5, reward: { exp: 2600, gold: 3500, item: '황금 열쇠' },   minLv: 26 },
+    { id: 137, title: '보물고 침입자',    desc: '보물고 수호자 5마리 처치', target: '보물고 수호자', goal: 5, reward: { exp: 2600, gold: 3500, item: '잊혀진 열쇠' },   minLv: 26 },
     { id: 29, title: '탑 수호자 격파',   desc: '탑 수호자 5마리 처치',    target: '탑 수호자',   goal: 5,  reward: { exp: 2200, gold: 2800, item: '현자의 예복' }, minLv: 25 },
     { id: 30, title: '영웅의 길 (2차)',  desc: '레벨 30 달성',           target: 'Level',       goal: 30, reward: { exp: 0,    gold: 5000 },            minLv: 29 },
 
@@ -132,7 +132,7 @@ export const QUESTS: any = [
     { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도의 진실을 파헤쳐라',    target: '증기 골렘',   goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 문명의 유산' }, minLv: 28 },
     { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕의 사도를 통해 마왕의 계획을 알아라', target: '마왕의 사도', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 40 },
     { id: 86, title: '[스토리] 에테르의 균열', desc: '에테르 관문의 균열을 조사하라', target: '에테르 파편체', goal: 10, reward: { exp: 20000, gold: 25000, item: '에테르 탐사 보고서' }, minLv: 50 },
-    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕을 쓰러뜨리고 세계를 구하라', target: '마왕',      goal: 1,  reward: { exp: 100000, gold: 100000, item: '영웅의 훈장' }, minLv: 50 },
+    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕을 쓰러뜨리고 세계를 구하라', target: '마왕',      goal: 1,  reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 50 },
 
     // ── 심연 퀘스트 라인 ─────────────────────────────────────────────────────
     { id: 88, title: '[심연] 심연으로의 첫 발걸음', desc: '혼돈의 심연에서 처음 전투 승리', target: '혼돈의 화신', goal: 1, reward: { exp: 30000, gold: 30000, item: '심연의 결정' }, minLv: 55 },
@@ -154,7 +154,7 @@ export const QUESTS: any = [
     // ── 레벨 전직 퀘스트 ─────────────────────────────────────────────────────
     { id: 100, title: '전직의 자격 (2차)',  desc: '레벨 30 달성하여 2차 전직',   target: 'Level', goal: 30, reward: { exp: 0, gold: 5000 }, minLv: 29 },
     { id: 101, title: '전직의 자격 (3차)',  desc: '레벨 60 달성하여 3차 전직',   target: 'Level', goal: 60, reward: { exp: 0, gold: 20000, item: '전직 증표' }, minLv: 59 },
-    { id: 102, title: '레벨 50 달성',       desc: '레벨 50 달성',                target: 'Level', goal: 50, reward: { exp: 0, gold: 15000, item: '영웅의 증표' }, minLv: 49 },
+    { id: 102, title: '레벨 50 달성',       desc: '레벨 50 달성',                target: 'Level', goal: 50, reward: { exp: 0, gold: 15000, item: '엘릭서' }, minLv: 49 },
     { id: 103, title: '레벨 70 달성',       desc: '레벨 70 달성 — 전설의 영역',  target: 'Level', goal: 70, reward: { exp: 0, gold: 50000, item: '전설의 영혼석' }, minLv: 69 },
     { id: 104, title: '레벨 80 달성',       desc: '레벨 80 달성 — 초월의 경지',  target: 'Level', goal: 80, reward: { exp: 0, gold: 100000, item: '초월자의 증표' }, minLv: 79 },
 
@@ -192,7 +192,7 @@ export const ACHIEVEMENTS: any = [
     { id: 'ach_kill_50',      title: '학살자',         desc: '몬스터 50마리 처치',        target: 'kills',      goal: 50,   reward: { gold: 500 } },
     { id: 'ach_kill_100',     title: '전장의 신',      desc: '몬스터 100마리 처치',       target: 'kills',      goal: 100,  reward: { gold: 2000, item: '중급 체력 물약' } },
     { id: 'ach_kill_300',     title: '피의 군주',      desc: '몬스터 300마리 처치',       target: 'kills',      goal: 300,  reward: { gold: 8000, item: '전사의 반지' } },
-    { id: 'ach_kill_500',     title: '대학살자',       desc: '몬스터 500마리 처치',       target: 'kills',      goal: 500,  reward: { gold: 20000, item: '학살의 대검' } },
+    { id: 'ach_kill_500',     title: '대학살자',       desc: '몬스터 500마리 처치',       target: 'kills',      goal: 500,  reward: { gold: 20000, item: '광기의 도끼' } },
     { id: 'ach_kill_1000',    title: '세계의 파괴자',  desc: '몬스터 1000마리 처치',      target: 'kills',      goal: 1000, reward: { gold: 50000, item: '전설 학살 증표' } },
 
     // ── 보스 업적 ─────────────────────────────────────────────────────────────
@@ -204,13 +204,13 @@ export const ACHIEVEMENTS: any = [
     // ── 골드 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_gold_1000',    title: '저축왕',         desc: '누적 골드 1000G 달성',      target: 'total_gold', goal: 1000,   reward: { item: '하급 체력 물약' } },
     { id: 'ach_gold_10000',   title: '갑부',           desc: '누적 골드 10000G 달성',     target: 'total_gold', goal: 10000,  reward: { item: '엘릭서' } },
-    { id: 'ach_gold_50000',   title: '거상',           desc: '누적 골드 50000G 달성',     target: 'total_gold', goal: 50000,  reward: { item: '황금 반지' } },
-    { id: 'ach_gold_200000',  title: '전설의 재벌',    desc: '누적 골드 200000G 달성',    target: 'total_gold', goal: 200000, reward: { item: '황금 갑주' } },
+    { id: 'ach_gold_50000',   title: '거상',           desc: '누적 골드 50000G 달성',     target: 'total_gold', goal: 50000,  reward: { item: '영웅의 물약' } },
+    { id: 'ach_gold_200000',  title: '전설의 재벌',    desc: '누적 골드 200000G 달성',    target: 'total_gold', goal: 200000, reward: { item: '천상의갑주' } },
 
     // ── 레벨 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_lv_10',        title: '성장의 기쁨',    desc: '레벨 10 달성',              target: 'level',      goal: 10,   reward: { item: '강철 롱소드' } },
     { id: 'ach_lv_20',        title: '성숙한 전사',    desc: '레벨 20 달성',              target: 'level',      goal: 20,   reward: { item: '강화된 갑옷' } },
-    { id: 'ach_lv_30',        title: '노련한 모험가',  desc: '레벨 30 달성',              target: 'level',      goal: 30,   reward: { item: '영웅의 단검' } },
+    { id: 'ach_lv_30',        title: '노련한 모험가',  desc: '레벨 30 달성',              target: 'level',      goal: 30,   reward: { item: '심판자의 검' } },
     { id: 'ach_lv_50',        title: '전설의 경지',    desc: '레벨 50 달성',              target: 'level',      goal: 50,   reward: { item: '전설의 갑주' } },
     { id: 'ach_lv_70',        title: '신의 영역',      desc: '레벨 70 달성',              target: 'level',      goal: 70,   reward: { item: '신화 전설 영혼' } },
 
@@ -277,7 +277,7 @@ export const ACHIEVEMENTS: any = [
     // ── 전설 수집 업적 (signature 시스템) ────────────────────────────────────
     { id: 'ach_sig_first',    title: '첫 번째 전설',      desc: 'dedicated signature 아이템 첫 발견',   target: 'signaturesDiscovered', goal: 1,  reward: { gold: 3000, item: '영웅의 물약' } },
     { id: 'ach_sig_5',        title: '전설 수집가',       desc: 'dedicated signature 5종 발견',         target: 'signaturesDiscovered', goal: 5,  reward: { gold: 15000, item: '엘릭서' } },
-    { id: 'ach_sig_10',       title: '전설의 서사',       desc: 'dedicated signature 10종 발견',        target: 'signaturesDiscovered', goal: 10, reward: { gold: 40000, item: '황금 반지' } },
+    { id: 'ach_sig_10',       title: '전설의 서사',       desc: 'dedicated signature 10종 발견',        target: 'signaturesDiscovered', goal: 10, reward: { gold: 40000, item: '영웅의 물약' } },
     { id: 'ach_sig_20',       title: '모든 전설의 증인',  desc: 'dedicated signature 20종 전부 발견',   target: 'signaturesDiscovered', goal: 20, reward: { gold: 150000, item: '신화 전설 영혼', premiumCurrency: 30 } },
     { id: 'ach_sig_set_1',    title: '세트의 완성',       desc: 'signature 세트 1개 완성(멤버 전원 수집)', target: 'signatureSetsCompleted', goal: 1, reward: { gold: 25000, item: '세트 완성의 증표' } },
     { id: 'ach_sig_set_all',  title: '전설의 집대성',     desc: '모든 signature 세트 완성',              target: 'signatureSetsCompleted', goal: 5, reward: { gold: 250000, item: '에테르 집대성의 왕관', premiumCurrency: 100 } },
