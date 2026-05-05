@@ -358,7 +358,11 @@ export const CombatEngine = {
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
         const critDmgRelic = relics.find((r: any) => r.effect === 'crit_dmg');
-        const baseDmg = (isCrit && critDmgRelic) ? Math.floor(rawBaseDmg * (critDmgRelic.val || 1)) : rawBaseDmg;
+        // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — bonus.critDmg 곱셈 추가.
+        const critDmgSyn = (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg);
+        const critDmgMult = (critDmgRelic?.val || 1) * (isCrit && critDmgSyn ? (critDmgSyn.bonus.critDmg || 1) : 1);
+        const baseDmg = (isCrit && (critDmgRelic || critDmgSyn)) ? Math.floor(rawBaseDmg * critDmgMult) : rawBaseDmg;
 
         // 유물: 연격 (double_strike) — 두 번째 타격 추가
         const dsRelic = relics.find((r: any) => r.effect === 'double_strike');
@@ -577,7 +581,11 @@ export const CombatEngine = {
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
         const critDmgRelicSkill = relics.find((r: any) => r.effect === 'crit_dmg');
-        const damage = (isCrit && critDmgRelicSkill) ? Math.floor(rawSkillDmg * (critDmgRelicSkill.val || 1)) : rawSkillDmg;
+        // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — 스킬 크리에도 bonus.critDmg 곱셈 적용.
+        const critDmgSynSkill = (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg);
+        const skillCritMult = (critDmgRelicSkill?.val || 1) * (isCrit && critDmgSynSkill ? (critDmgSynSkill.bonus.critDmg || 1) : 1);
+        const damage = (isCrit && (critDmgRelicSkill || critDmgSynSkill)) ? Math.floor(rawSkillDmg * skillCritMult) : rawSkillDmg;
 
         const dotRelic = relics.find((relic: any) => relic.effect === 'dot_mult');
         const dotMult = dotRelic ? dotRelic.val : 1;

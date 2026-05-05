@@ -207,13 +207,15 @@ const computeEnhanceBonus = (equip: any) => {
  * @param {Array<object>} synergies
  * @param {object} preBuildStats
  * @param {number} hpRatio
- * @returns {{ atkMult: number, statMult: number, mpFlat: number, lowHpAtk: number }}
+ * @returns {{ atkMult: number, statMult: number, mpFlat: number, lowHpAtk: number, defMult: number }}
  */
 const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) => {
     let atkMult = 1;
     let statMult = 1;
     let mpFlat = 0;
     let lowHpAtk = 0;
+    // cycle 154: defMult — 'eternal_fortress' 시너지 (DEF +80%) 반영.
+    let defMult = 1;
 
     synergies.forEach((syn: any) => {
         // cycle 153: 시너지 effect-name 명시 매핑 — baseline 가드 통과 + 향후 분기 확장 지점.
@@ -223,9 +225,17 @@ const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) =
         if (syn.bonus.mpMult) mpFlat += Math.floor(preBuildStats.maxMp * syn.bonus.mpMult);
         if (syn.bonus.statBonus) statMult += syn.bonus.statBonus;
         if (syn.bonus.lowHpAtk && hpRatio < 0.4) lowHpAtk += syn.bonus.lowHpAtk;
+        // cycle 154: 'eternal_fortress' (defMult 0.8) — 영원의 요새 — DEF 직접 배율.
+        if (syn.bonus.effect === 'eternal_fortress' || syn.bonus.defMult) {
+            defMult += (syn.bonus.defMult || 0);
+        }
+        // cycle 154: 'entropy_god' (chaosAtk 0.5) — 엔트로피의 신 — ATK 직접 배율 (atkMult로 합류).
+        if (syn.bonus.effect === 'entropy_god' || syn.bonus.chaosAtk) {
+            atkMult += (syn.bonus.chaosAtk || 0);
+        }
     });
 
-    return { atkMult, statMult, mpFlat, lowHpAtk };
+    return { atkMult, statMult, mpFlat, lowHpAtk, defMult };
 };
 
 /**
@@ -353,7 +363,8 @@ export const calculateFullStats = (player: Player) => {
         (1 + synergyBonus.lowHpAtk) *
         (1 + streak.atkBonus)
     );
-    const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1) * synergyBonus.statMult);
+    // cycle 154: synergyBonus.defMult — 'eternal_fortress' 시너지 (defMult 0.8) 반영.
+    const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1) * synergyBonus.statMult * synergyBonus.defMult);
     const finalMaxHp = Math.floor(preBuildStats.maxHp * synergyBonus.statMult);
     const finalMaxMp = preBuildStats.maxMp + (traitBonus.mpFlat || 0) + synergyBonus.mpFlat;
     const finalCritChance = Math.min(0.75, preBuildStats.critChance + (traitBonus.critBonus || 0) + streak.critBonus);

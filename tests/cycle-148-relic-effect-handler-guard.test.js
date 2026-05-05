@@ -63,13 +63,13 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     'absolute_reflect',
     'entropy_brand',
     // 'infinite_devour',
-    'void_dragon',
+    // 'void_dragon', ← cycle 154: bonus.critDmg 시너지 dispatch 추가 (CombatEngine attack/performSkill).
     // 'absolute_immortal',
     // 'blood_immortal',
     'arcane_singularity',
     // 'primordial_wrath',
-    'eternal_fortress',
-    'entropy_god',
+    // 'eternal_fortress', ← cycle 154: applySynergyBonuses defMult 추가 (DEF +80%).
+    // 'entropy_god', ← cycle 154: applySynergyBonuses chaosAtk → atkMult 합류 (ATK +50%).
 ]);
 
 const collectRelicEffects = async () => {
