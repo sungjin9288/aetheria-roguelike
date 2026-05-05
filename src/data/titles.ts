@@ -285,6 +285,32 @@ export const TITLES = Object.freeze([
         cond: { type: 'escapes', val: 50 },
         color: 'text-sky-200',
     },
+
+    // cycle 175: 시즌 패스 보상 칭호 — seasonPass.ts SEASON_REWARDS에서 참조하던 Korean
+    //   문자열이 TITLES에 미등록이어서 getTitleDefinition이 undefined 반환 → color/label
+    //   fallback으로 표시되던 잠복 inconsistency. 정식 등록으로 정합성 lock.
+    //
+    //   id는 Korean 문자열 그대로 — CLAIM_SEASON_REWARD가 player.titles에 push하는 토큰과
+    //   매치되도록(rewardHandlers.ts:56 'tl.includes(track.title)'). 즉 prestige titles
+    //   (Korean) 패턴과 동일한 컨벤션.
+    {
+        id: '시즌 선구자',
+        name: '시즌 선구자',
+        cond: { type: 'seasonTier', val: 10 },
+        color: 'text-emerald-300',
+    },
+    {
+        id: '시즌 정복자',
+        name: '시즌 정복자',
+        cond: { type: 'seasonTier', val: 20 },
+        color: 'text-amber-300',
+    },
+    {
+        id: '시즌 마스터',
+        name: '시즌 마스터',
+        cond: { type: 'seasonTier', val: 30 },
+        color: 'text-rose-300',
+    },
 ]);
 
 // 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
