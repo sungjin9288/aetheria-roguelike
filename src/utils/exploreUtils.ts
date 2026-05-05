@@ -245,6 +245,8 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
             killStackAtkBonus: 0,
             // cycle 158: 'phoenix_revive' (cycle 157) — 부활 1회는 매 전투마다 새로 사용 가능.
             phoenixUsed: false,
+            // cycle 159: 'entropy_tick' / 'entropy_brand' — turnCount는 매 전투 시작 시 0으로 리셋.
+            turnCount: 0,
         }
     };
 

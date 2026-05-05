@@ -22,7 +22,12 @@ import path from 'node:path';
  * 3. baseline 좁히기 가드: handled 된 effect가 baseline에 남아 있으면 실패
  *    — 점진 정리 강제.
  *
- * baseline이 0이 될 때까지 이 테스트가 진행도 추적.
+ * cycle 148(34) → 149(-2) → 150(-2) → 151(-2) → 152(-2) → 153(-12 batch) →
+ * 154(-3) → 155(-2) → 156(-3) → 157(-2) → 158(-2) → 159(-2) = 0 🎯
+ *
+ * baseline 0 달성! 모든 81종 effect의 핸들러가 src/ 어딘가에서 참조됨.
+ * 회귀 가드는 빈 Set 기준으로 lock 유지 — 향후 새 유물 추가 시 핸들러
+ * 누락이 즉시 detect 됨.
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -45,7 +50,7 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     // 'phoenix_revive', ← cycle 157: heal 부분 핸들러 추가 (atkBuff tempBuff는 별도 사이클).
     // 'reflect_crit', ← cycle 152: critBonus 핸들러 추가 (피해 반사는 별도 사이클).
     // 'devour_hp', ← cycle 157: handleVictory에서 maxHp 영구 증가 핸들러 추가.
-    'entropy_tick',
+    // 'entropy_tick', ← cycle 159: applyEntropyTick 헬퍼로 매 N턴 고정 피해 핸들러 추가.
     // 'arcane_surge', ← cycle 153: applySynergyBonuses 코멘트로 effect-name 명시.
     // 신화/창세 tier (의미상 ultimate 빌드)
     // cycle 153: 시너지 effect-name dispatch 추가로 11건 baseline 통과 (vampire_lord / arcane_surge /
@@ -61,7 +66,7 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     // 'eternal_life',
     // 'time_dominator', ← cycle 155: cdReduction + extraAction 시너지 dispatch 추가.
     // 'absolute_reflect', ← cycle 156: 받은 피해 reflect + stunOnReflect 시너지 dispatch 추가 (enemyAttack hook).
-    'entropy_brand',
+    // 'entropy_brand', ← cycle 159: applyEntropyTick에서 시너지 우선 분기 (damage 0.12 / interval 2).
     // 'infinite_devour',
     // 'void_dragon', ← cycle 154: bonus.critDmg 시너지 dispatch 추가 (CombatEngine attack/performSkill).
     // 'absolute_immortal',

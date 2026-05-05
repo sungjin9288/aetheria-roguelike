@@ -143,6 +143,46 @@ export const CombatEngine = {
      * 스킬 effect 값을 적 오브젝트에 상태이상으로 적용합니다.
      * blind / fear / curse / taunt / stun / freeze / poison / burn / bleed 처리.
      */
+    /**
+     * cycle 159: entropy tick — 'entropy_tick' 유물 (entropy_engine) +
+     *   'entropy_brand' 시너지의 매 N턴 고정 피해를 적에게 적용.
+     *
+     * 시너지 동시 보유 시 시너지 파라미터(damage 0.12 / interval 2)가 우선
+     * — 시너지가 유물을 강화하는 사양.
+     *
+     * @returns { player, enemy, logs } — turnCount 증가 + (조건 시) 적 hp 차감.
+     */
+    applyEntropyTick(player: Player, enemy: Monster, activeSynergies: any[] = []) {
+        const relics = (player as any)?.relics || [];
+        const flags: any = { ...((player as any).combatFlags || {}) };
+        const turnCount = (flags.turnCount || 0) + 1;
+        flags.turnCount = turnCount;
+
+        const updatedPlayer: any = { ...player, combatFlags: flags };
+        let updatedEnemy: any = enemy;
+        const logs: any[] = [];
+
+        const tickRelic = relics.find((r: any) => r.effect === 'entropy_tick');
+        const brandSyn = activeSynergies.find((s: any) =>
+            s.bonus.effect === 'entropy_brand' || (s.bonus.damage && s.bonus.interval));
+        if (!tickRelic && !brandSyn) {
+            return { player: updatedPlayer, enemy: updatedEnemy, logs };
+        }
+
+        // 시너지 우선 (브랜드 강화 사양). 누락 키는 유물에서 fallback.
+        const damage = brandSyn?.bonus.damage ?? tickRelic?.val?.damage ?? 0;
+        const interval = brandSyn?.bonus.interval ?? tickRelic?.val?.interval ?? 0;
+        const label = brandSyn ? '엔트로피 낙인' : '엔트로피 엔진';
+
+        if (interval > 0 && damage > 0 && turnCount % interval === 0 && (enemy.hp ?? 0) > 0) {
+            const fixedDmg = Math.max(1, Math.floor((enemy.maxHp || enemy.hp || 1) * damage));
+            updatedEnemy = { ...enemy, hp: Math.max(0, (enemy.hp ?? 0) - fixedDmg) };
+            logs.push({ type: 'event', text: `[${label}] 시간 무게 — ${enemy.name} 고정 피해 ${fixedDmg}!` });
+        }
+
+        return { player: updatedPlayer, enemy: updatedEnemy, logs };
+    },
+
     applyStatusEffectToEnemy(enemy: Monster, effect: any) {
         if (!effect) return enemy;
         switch (effect) {
@@ -490,12 +530,18 @@ export const CombatEngine = {
             logs.push({ type: 'event', text: `[동결의 닻] ${enemy.name} 빙결!` });
         }
 
+        // cycle 159: entropy_tick / entropy_brand — 매 N턴 적 maxHp 비율 고정 피해.
+        const entropyResult = this.applyEntropyTick(updatedPlayer, postHitEnemy, stats.activeSynergies || []);
+        updatedPlayer = entropyResult.player;
+        postHitEnemy = entropyResult.enemy;
+        entropyResult.logs.forEach((l: any) => logs.push(l));
+
         return {
             updatedPlayer,
             updatedEnemy: postHitEnemy,
             logs,
             isCrit,
-            isVictory: newEnemyHp <= 0
+            isVictory: (postHitEnemy.hp ?? 0) <= 0
         };
     },
 
@@ -802,13 +848,19 @@ export const CombatEngine = {
         if (smRelic && smRelic.val > 0) logs.push({ type: 'event', text: `[정신 연소] 스킬 피해 강화!` });
         if (dotRelic && extraDamage > 0) logs.push({ type: 'event', text: '[죽음의 낙인] 지속 피해가 증폭됩니다!' });
 
+        // cycle 159: entropy_tick / entropy_brand — 매 N턴 적 maxHp 비율 고정 피해 (스킬 사용 턴에도 적용).
+        const entropyResult = this.applyEntropyTick(updatedPlayer, updatedEnemy, stats.activeSynergies || []);
+        const finalPlayer = entropyResult.player;
+        const finalEnemy = entropyResult.enemy;
+        entropyResult.logs.forEach((l: any) => logs.push(l));
+
         return {
             success: true,
-            updatedPlayer,
-            updatedEnemy,
+            updatedPlayer: finalPlayer,
+            updatedEnemy: finalEnemy,
             logs,
             isCrit,
-            isVictory: newEnemyHp <= 0
+            isVictory: (finalEnemy.hp ?? 0) <= 0
         };
     },
 
