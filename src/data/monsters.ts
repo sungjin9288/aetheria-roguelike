@@ -415,6 +415,19 @@ export const MONSTERS: any = {
     // 동굴 (1종) — weakness 빛, resistance 어둠.
     '동굴 박쥐':        { hp: 150, atk: 62, def: 8, exp: 130, gold: 60, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.35 } },
 
+    // cycle 168: 부패/타락 + 실험실/기계 8종 batch.
+    // 부패/타락 (5종) — weakness 빛, resistance 어둠.
+    '붕괴한 수호자':    { hp: 460, atk: 86, def: 44, exp: 248, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.35 }, statusOnHit: 'curse' },
+    '실험실 수호자':    { hp: 480, atk: 78, def: 48, exp: 232, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.35, heavyChance: 0.25 } },
+    '최후의 수호자':    { hp: 540, atk: 92, def: 50, exp: 268, gold: 125, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.4 } },
+    '타락한 용사':      { hp: 400, atk: 92, def: 32, exp: 240, gold: 112, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.45 } },
+    '파멸의 기사':      { hp: 500, atk: 88, def: 42, exp: 258, gold: 120, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 }, statusOnHit: 'curse' },
+
+    // 실험실/기계 (3종).
+    '생체 병기':        { hp: 380, atk: 84, def: 28, exp: 218, gold: 100, weakness: '자연', resistance: '대지', pattern: { guardChance: 0.1, heavyChance: 0.45 }, statusOnHit: 'poison' },
+    '오염된 연구원':    { hp: 280, atk: 90, def: 18, exp: 198, gold: 92, weakness: '자연', resistance: '대지', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
+    '폭주 자동인형':    { hp: 460, atk: 86, def: 36, exp: 245, gold: 115, weakness: '냉기', resistance: '대지', pattern: { guardChance: 0.2, heavyChance: 0.5 } },
+
     // 차원의 균열 전초기지 (5종 + 1 중보스)
     '차원 보병':        { hp: 380, atk: 92, def: 32, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
     '공허 포격수':      { hp: 280, atk: 108, def: 14, exp: 248, gold: 118, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },
