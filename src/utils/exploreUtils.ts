@@ -360,7 +360,10 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
                     //   reward.item fix 후에도 chain reward 아이템이 silent 누락이던 회귀 fix.
                     //   gameUtils.findItemByName(getAllItems() lookup) 사용으로 정합.
                     const itemData = findItemByName(chain.reward.item);
-                    if (itemData && (updated.inv || []).length < (BALANCE.INV_MAX_SIZE || 20)) {
+                    // cycle 182: player.maxInv (PremiumShop 확장)을 우선 — 기존엔 BALANCE.INV_MAX_SIZE
+                    // 만 사용해 확장된 인벤(25칸)에서도 20칸 기준으로 reward skip 가능했음.
+                    const invCap = (updated.maxInv as number) || (BALANCE.INV_MAX_SIZE || 20);
+                    if (itemData && (updated.inv || []).length < invCap) {
                         updated.inv = [...(updated.inv || []), { ...itemData, id: `disc_${Date.now()}` }];
                     }
                 }

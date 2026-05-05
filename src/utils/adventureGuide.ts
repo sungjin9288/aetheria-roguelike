@@ -137,6 +137,8 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     const mpRatio = (player?.mp || 0) / Math.max(1, stats?.maxMp || player?.maxMp || 1);
     const inventoryCount = player?.inv?.length || 0;
+    // cycle 182: player.maxInv 확장 우선 — 기존 BALANCE.INV_MAX_SIZE 만 사용해 확장 인벤(25)에서도 20-2=18에 경고 발동.
+    const inventoryCap = (player as any)?.maxInv || BALANCE.INV_MAX_SIZE;
     const playerLevel = player?.level || 1;
     const visitedMaps = getVisitedMaps(player);
 
@@ -169,7 +171,7 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
                 if (hpRatio <= 0.5) {
                     score += 32;
                     reason = '체력 회복과 보급을 먼저 하기 좋은 안전 경로입니다.';
-                } else if (inventoryCount >= BALANCE.INV_MAX_SIZE - 2) {
+                } else if (inventoryCount >= inventoryCap - 2) {
                     score += 24;
                     reason = '상점과 정리를 먼저 하기 좋은 여유 구간입니다.';
                 } else if (player?.job === '모험가' && playerLevel >= 5) {
@@ -246,6 +248,8 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     const mpRatio = (player?.mp || 0) / Math.max(1, stats?.maxMp || player?.maxMp || 1);
     const inventoryCount = player?.inv?.length || 0;
+    // cycle 182: player.maxInv 확장 우선 — 확장 인벤(25)에서도 18칸 경고 발동 회귀 fix.
+    const inventoryCap = (player as any)?.maxInv || BALANCE.INV_MAX_SIZE;
     const questTracker = getQuestTracker(player);
 
     if (runtimeState && runtimeState !== 'idle') {
@@ -310,10 +314,10 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         }
     }
 
-    if (safe && inventoryCount >= BALANCE.INV_MAX_SIZE - 2) {
+    if (safe && inventoryCount >= inventoryCap - 2) {
         return {
             title: '인벤토리 정리 필요',
-            detail: `인벤토리가 ${inventoryCount}/${BALANCE.INV_MAX_SIZE} 입니다. 다음 드롭 전에 장비와 소모품을 정리하세요.`,
+            detail: `인벤토리가 ${inventoryCount}/${inventoryCap} 입니다. 다음 드롭 전에 장비와 소모품을 정리하세요.`,
             emphasis: '정리 권장',
             primaryAction: { kind: 'open_inventory', label: '가방 열기' },
             secondaryAction: { kind: 'open_shop', label: '상점 열기' },
