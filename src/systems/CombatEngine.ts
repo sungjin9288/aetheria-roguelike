@@ -25,9 +25,14 @@ export const CombatEngine = {
         return _resolveEnemyBaseName(enemy);
     },
 
-    getElementMultiplier(elem: any, enemy: Monster) {
+    getElementMultiplier(elem: any, enemy: Monster, relics: any[] = []) {
         if (!elem || elem === 'physical' || elem === 'none') return 1;
-        if (enemy?.weakness && enemy.weakness === elem) return BALANCE.ELEMENT_WEAK_MULT;
+        if (enemy?.weakness && enemy.weakness === elem) {
+            // cycle 151: 'elem_boost' (프리즘 핵) — 약점 적중 배율에 val 추가 (1.25 → 1.5).
+            const boostRelic = (relics || []).find((r: any) => r.effect === 'elem_boost');
+            const boost = typeof boostRelic?.val === 'number' ? boostRelic.val : 0;
+            return BALANCE.ELEMENT_WEAK_MULT + boost;
+        }
         if (enemy?.resistance && enemy.resistance === elem) return BALANCE.ELEMENT_RESIST_MULT;
         return 1;
     },
@@ -329,7 +334,7 @@ export const CombatEngine = {
         }
 
         const relics = stats.relics || [];
-        const elementMultiplier = this.getElementMultiplier(stats.elem, enemy);
+        const elementMultiplier = this.getElementMultiplier(stats.elem, enemy, relics);
         const logs: any[] = [];
         let updatedPlayer: any = { ...player, combatFlags: this.getCombatFlags(player) };
         const flags = this.getCombatFlags(player);
@@ -548,7 +553,7 @@ export const CombatEngine = {
         const actualMpCost = (freeSkillRelic && Math.random() < freeSkillRelic.val) ? 0 : mpCost;
 
         const skillElem = skill.type || stats.elem;
-        const elementMultiplier = this.getElementMultiplier(skillElem, enemy);
+        const elementMultiplier = this.getElementMultiplier(skillElem, enemy, relics);
         const { damage: rawSkillDmg, isCrit } = this.calculateDamage(stats, {
             mult: skill.mult || 1.5,
             guarding: !!enemy.guarding,
@@ -610,7 +615,11 @@ export const CombatEngine = {
                 comboCount: 0
             }
         };
-        updatedPlayer.skillLoadout.cooldowns[skill.name] = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
+        // cycle 151: 'cooldown_reduce' (시간 군주의 왕관) — 스킬 사용 시 초기 쿨다운 -val.cdReduction. firstFree는 별도 사이클.
+        const cdRelic = relics.find((r: any) => r.effect === 'cooldown_reduce');
+        const cdReduction = cdRelic?.val?.cdReduction || 0;
+        const baseCd = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
+        updatedPlayer.skillLoadout.cooldowns[skill.name] = Math.max(0, baseCd - cdReduction);
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
         const slRelic = relics.find((r: any) => r.effect === 'skill_lifesteal');

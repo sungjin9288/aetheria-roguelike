@@ -38,10 +38,10 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     // 'titan',     ← cycle 149: HP 보너스 핸들러 추가 (critReduce는 별도 사이클).
     'spell_stack',
     // 'hp_drain_atk', ← cycle 150: atkBonus 핸들러 추가 (매 턴 HP cost는 별도 사이클).
-    'elem_boost',
+    // 'elem_boost', ← cycle 151: 약점 적중 배율 boost 핸들러 추가.
     // 'genesis',   ← cycle 149: statBonus 핸들러 추가 (healPerTurn은 별도 사이클).
     'kill_stack_atk',
-    'cooldown_reduce',
+    // 'cooldown_reduce', ← cycle 151: cdReduction 핸들러 추가 (firstFree는 별도 사이클).
     'phoenix_revive',
     'reflect_crit',
     'devour_hp',
