@@ -23,17 +23,17 @@ export const QUESTS: any = [
     { id: 19, title: '고블린 소탕',      desc: '고블린 12마리 처치',      target: '고블린',      goal: 12, reward: { exp: 700,  gold: 900 },            minLv: 6 },
     { id: 20, title: '석상의 비밀',      desc: '석상 가디언 4마리 처치',  target: '석상 가디언', goal: 4,  reward: { exp: 900,  gold: 1100 },           minLv: 8 },
     { id: 21, title: '폐허 구울 처치',   desc: '폐허 구울 8마리 처치',    target: '폐허 구울',   goal: 8,  reward: { exp: 850,  gold: 1000 },           minLv: 7 },
-    { id: 22, title: '다크 엘프 추적',   desc: '다크 엘프 6마리 처치',    target: '다크 엘프',   goal: 6,  reward: { exp: 1100, gold: 1300, item: '엘프의 단검' }, minLv: 12 },
+    { id: 22, title: '다크 엘프 추적',   desc: '다크 엘프 6마리 처치',    target: '다크 엘프',   goal: 6,  reward: { exp: 1100, gold: 1300, item: '엘프의활' }, minLv: 12 },
     { id: 23, title: '박쥐 퇴치',        desc: '광산 박쥐 15마리 처치',   target: '광산 박쥐',   goal: 15, reward: { exp: 600,  gold: 700 },            minLv: 8 },
-    { id: 24, title: '수정 정령 채집',   desc: '결정 정령 8마리 처치',    target: '결정 정령',   goal: 8,  reward: { exp: 900,  gold: 1200, item: '수정 조각' },   minLv: 12 },
-    { id: 25, title: '화염 사원 조사',   desc: '화염 사제 6마리 처치',    target: '화염 사제',   goal: 6,  reward: { exp: 1300, gold: 1600, item: '불의 정수' },   minLv: 18 },
+    { id: 24, title: '수정 정령 채집',   desc: '결정 정령 8마리 처치',    target: '결정 정령',   goal: 8,  reward: { exp: 900,  gold: 1200, item: '마나 결정' },   minLv: 12 },
+    { id: 25, title: '화염 사원 조사',   desc: '화염 사제 6마리 처치',    target: '화염 사제',   goal: 6,  reward: { exp: 1300, gold: 1600, item: '화염의 결정' },   minLv: 18 },
     { id: 26, title: '피라미드의 비밀',  desc: '미라 15마리 처치',        target: '미라',        goal: 15, reward: { exp: 1500, gold: 2000, item: '저주해제 주문서' }, minLv: 20 },
     { id: 27, title: '얼음 성채 정복',   desc: '얼음 거인 5마리 처치',    target: '얼음 거인',   goal: 5,  reward: { exp: 2000, gold: 2500, item: '냉기의 결정' }, minLv: 20 },
     { id: 28, title: '설원 수호자',      desc: '서리 늑대 10마리 처치',   target: '서리 늑대',   goal: 10, reward: { exp: 1800, gold: 2200 },            minLv: 22 },
     { id: 135, title: '사막 도적단 소탕', desc: '사막 도적 8마리 처치',    target: '사막 도적',   goal: 8,  reward: { exp: 2000, gold: 2600, item: '도적의 망토' },  minLv: 23 },
     { id: 136, title: '고대 유적 탐사',   desc: '고대 골렘 6마리 처치',    target: '고대 골렘',   goal: 6,  reward: { exp: 2400, gold: 3000, item: '고대의 파편' },  minLv: 25 },
     { id: 137, title: '보물고 침입자',    desc: '보물고 수호자 5마리 처치', target: '보물고 수호자', goal: 5, reward: { exp: 2600, gold: 3500, item: '황금 열쇠' },   minLv: 26 },
-    { id: 29, title: '탑 수호자 격파',   desc: '탑 수호자 5마리 처치',    target: '탑 수호자',   goal: 5,  reward: { exp: 2200, gold: 2800, item: '마법사의 로브' }, minLv: 25 },
+    { id: 29, title: '탑 수호자 격파',   desc: '탑 수호자 5마리 처치',    target: '탑 수호자',   goal: 5,  reward: { exp: 2200, gold: 2800, item: '현자의 예복' }, minLv: 25 },
     { id: 30, title: '영웅의 길 (2차)',  desc: '레벨 30 달성',           target: 'Level',       goal: 30, reward: { exp: 0,    gold: 5000 },            minLv: 29 },
 
     // ── 고급 퀘스트 (Lv 25-40) ───────────────────────────────────────────────
@@ -92,13 +92,13 @@ export const QUESTS: any = [
     // 신규 지역 — 세계수 숲 / 고대 신전 도시 / 차원의 균열 전초기지 (Lv 33-55)
     { id: 140, title: '세계수 수호자 사냥',     desc: '세계수 숲의 수호자를 처치하세요',                  target: '세계수 수호자', goal: 8,  reward: { exp: 3000,  gold: 5000 },                         minLv: 33 },
     { id: 141, title: '자연의 정령 정화',       desc: '타락한 자연의 정령을 정화하세요',                  target: '자연의 정령',   goal: 12, reward: { exp: 2500,  gold: 4500 },                         minLv: 33 },
-    { id: 142, title: '[보스] 타락한 세계수 영혼 토벌', desc: '세계수를 오염시킨 타락한 영혼을 토벌하세요', target: '타락한 세계수 영혼', goal: 1, reward: { exp: 10000, gold: 15000, item: '세계수의 이슬' }, minLv: 35 },
+    { id: 142, title: '[보스] 타락한 세계수 영혼 토벌', desc: '세계수를 오염시킨 타락한 영혼을 토벌하세요', target: '타락한 세계수 영혼', goal: 1, reward: { exp: 10000, gold: 15000, item: '세계수의 지팡이' }, minLv: 35 },
     { id: 143, title: '신전 경비병 소탕',       desc: '고대 신전 도시의 경비병을 소탕하세요',             target: '신전 경비병',   goal: 10, reward: { exp: 5000,  gold: 9000 },                         minLv: 42 },
     { id: 144, title: '시간 파편체 분쇄',       desc: '신전에 출몰하는 시간 파편체를 분쇄하세요',          target: '시간 파편체',   goal: 8,  reward: { exp: 5500,  gold: 10000 },                        minLv: 42 },
-    { id: 145, title: '[보스] 수호신의 사도 처치', desc: '신전 도시를 지배하는 사도를 처치하세요',          target: '수호신의 사도', goal: 1,  reward: { exp: 15000, gold: 22000, item: '신전의 성광석' }, minLv: 45 },
+    { id: 145, title: '[보스] 수호신의 사도 처치', desc: '신전 도시를 지배하는 사도를 처치하세요',          target: '수호신의 사도', goal: 1,  reward: { exp: 15000, gold: 22000, item: '성스러운 창' }, minLv: 45 },
     { id: 146, title: '차원 보병 격멸',         desc: '균열 전초기지의 차원 보병을 격멸하세요',            target: '차원 보병',     goal: 8,  reward: { exp: 6000,  gold: 11000 },                        minLv: 47 },
     { id: 147, title: '에테르 돌격대 소탕',     desc: '균열을 넘어온 에테르 돌격대를 소탕하세요',          target: '에테르 돌격대', goal: 10, reward: { exp: 7000,  gold: 13000 },                        minLv: 47 },
-    { id: 148, title: '[보스] 균열의 사령관 격파', desc: '차원 침공을 지휘하는 사령관을 격파하세요',        target: '균열의 사령관', goal: 1,  reward: { exp: 20000, gold: 30000, item: '균열 봉인석' },   minLv: 50 },
+    { id: 148, title: '[보스] 균열의 사령관 격파', desc: '차원 침공을 지휘하는 사령관을 격파하세요',        target: '균열의 사령관', goal: 1,  reward: { exp: 20000, gold: 30000, item: '균열 차단 방패' },   minLv: 50 },
 
     // 보스 챌린지
     { id: 132, title: '[보스] 하수도 여왕 처치',      desc: '하수도의 여왕을 처치하세요',       target: '하수도의 여왕',     goal: 1, reward: { exp: 2000,  gold: 3000 },                         minLv: 10 },
