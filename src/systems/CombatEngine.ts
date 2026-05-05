@@ -369,11 +369,16 @@ export const CombatEngine = {
         const secondHit = dsRelic ? Math.floor(baseDmg * dsRelic.val) : 0;
         const damage = baseDmg + secondHit;
 
-        // 유물: 처형자의 날 (execute_bonus) — 적 HP 25% 미만 시 추가 피해
+        // 유물: 처형자의 날 (execute_bonus) — 적 HP 25% 미만 시 추가 피해.
         const exRelic = relics.find((r: any) => r.effect === 'execute_bonus');
-        const executeTriggered = Boolean(exRelic && (enemy.hp ?? 0) / (enemy.maxHp || 1) < exRelic.val.threshold);
+        // cycle 156: 시너지 'annihilator' (executeThreshold 0.35) — 처형 임계치 상향. 유물의 threshold와 max 합산.
+        const annihilatorSyn = (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'annihilator' || s.bonus.executeThreshold);
+        const exThreshold = Math.max(exRelic?.val?.threshold || 0, annihilatorSyn?.bonus.executeThreshold || 0);
+        const executeTriggered = Boolean((exRelic || annihilatorSyn) && (enemy.hp ?? 0) / (enemy.maxHp || 1) < exThreshold);
+        const exMult = exRelic?.val?.mult || 0;
         let finalDamage = executeTriggered
-            ? Math.floor(damage * (1 + exRelic.val.mult))
+            ? Math.floor(damage * (1 + exMult))
             : damage;
 
         const comboRelic = relics.find((relic: any) => relic.effect === 'combo_stack');
@@ -440,11 +445,16 @@ export const CombatEngine = {
         // cycle 153: 시너지 'vampire_lord' — lifeSteal 일반 공격 흡혈.
         const vampireSyn = (stats.activeSynergies || []).find((s: any) =>
             s.bonus.effect === 'vampire_lord' || s.bonus.lifeSteal);
-        if (vampireSyn) {
-            const steal = Math.floor(finalDamage * vampireSyn.bonus.lifeSteal);
+        // cycle 156: 시너지 'hell_reaper' — lifeStealBonus 0.5 추가 흡혈 (vampire_lord와 합산).
+        const hellReaperSyn = (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'hell_reaper' || s.bonus.lifeStealBonus);
+        const totalLifeSteal = (vampireSyn?.bonus.lifeSteal || 0) + (hellReaperSyn?.bonus.lifeStealBonus || 0);
+        if (totalLifeSteal > 0) {
+            const steal = Math.floor(finalDamage * totalLifeSteal);
             if (steal > 0) {
                 updatedPlayer = { ...updatedPlayer, hp: Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + steal) };
-                logs.push({ type: 'heal', text: `[흡혈 군주] +${steal} HP 흡혈!` });
+                const label = hellReaperSyn ? '지옥의 수확자' : '흡혈 군주';
+                logs.push({ type: 'heal', text: `[${label}] +${steal} HP 흡혈!` });
             }
         }
 
@@ -928,8 +938,9 @@ export const CombatEngine = {
 
         // 유물: 가시 갑옷 (reflect) — 피격 시 적에게 반사
         const reflectRelic = relics.find((r: any) => r.effect === 'reflect');
-        // 시너지: 절대 반사 (absolute_reflect) — 반사율 50%, 스턴 25% 확률
-        const absoluteReflectSyn = activeSynergies.find((s: any) => s.bonus.reflect);
+        // cycle 156: 시너지 'absolute_reflect' — 반사율 50%, 스턴 25% 확률. effect-name primary + bonus.reflect fallback.
+        const absoluteReflectSyn = activeSynergies.find((s: any) =>
+            s.bonus.effect === 'absolute_reflect' || s.bonus.reflect);
         const reflectMult = absoluteReflectSyn ? (absoluteReflectSyn.bonus.reflect || 0.3) : (reflectRelic ? reflectRelic.val : 0);
         const reflectDmg = (reflectRelic || absoluteReflectSyn) ? Math.floor(stats.def * reflectMult) : 0;
         const enemyHpAfterReflect = reflectDmg > 0 ? Math.max(0, (updatedEnemy.hp ?? 0) - reflectDmg) : (updatedEnemy.hp ?? 0);
@@ -982,7 +993,6 @@ export const CombatEngine = {
         }
 
         const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs, activeSynergies);
-
 
         return {
             updatedPlayer: protectedResult.updatedPlayer,

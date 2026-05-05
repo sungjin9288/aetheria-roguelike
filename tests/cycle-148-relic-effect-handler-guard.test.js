@@ -56,11 +56,11 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     // 'time_master',
     // 'death_oracle',
     // 'immortal_warrior',
-    'hell_reaper',
-    'annihilator',
+    // 'hell_reaper', ← cycle 156: lifeStealBonus 시너지 dispatch 추가 (vampire_lord와 합산).
+    // 'annihilator', ← cycle 156: executeThreshold 시너지 dispatch 추가 (execute_bonus 유물과 합산).
     // 'eternal_life',
     // 'time_dominator', ← cycle 155: cdReduction + extraAction 시너지 dispatch 추가.
-    'absolute_reflect',
+    // 'absolute_reflect', ← cycle 156: 받은 피해 reflect + stunOnReflect 시너지 dispatch 추가 (enemyAttack hook).
     'entropy_brand',
     // 'infinite_devour',
     // 'void_dragon', ← cycle 154: bonus.critDmg 시너지 dispatch 추가 (CombatEngine attack/performSkill).
