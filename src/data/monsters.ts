@@ -400,6 +400,21 @@ export const MONSTERS: any = {
     '번개 정령':        { hp: 260, atk: 86, def: 18, exp: 190, gold: 88, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.45 } },
     '폭풍 그리핀':      { hp: 400, atk: 92, def: 30, exp: 245, gold: 115, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.55 } },
 
+    // cycle 167: 자연/꽃 + 공허 + 동굴 8종 batch (cycle 166 언데드/폭풍 batch 연속).
+    // 자연/꽃 테마 (4종) — weakness 화염, resistance 자연.
+    '봄의 정령':        { hp: 220, atk: 70, def: 16, exp: 168, gold: 78, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
+    '정원 요정':        { hp: 200, atk: 76, def: 14, exp: 172, gold: 80, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.4 }, statusOnHit: 'poison' },
+    '꽃 골렘':          { hp: 360, atk: 60, def: 36, exp: 185, gold: 84, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.3, heavyChance: 0.18 } },
+    '꽃잎 슬라임':      { hp: 180, atk: 58, def: 12, exp: 152, gold: 70, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.2 }, statusOnHit: 'poison' },
+
+    // 공허 테마 (3종) — weakness 빛, resistance 어둠.
+    '공허 감시병':      { hp: 380, atk: 86, def: 32, exp: 222, gold: 102, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
+    '공허 마법사':      { hp: 270, atk: 98, def: 16, exp: 218, gold: 100, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
+    '공허의 파편':      { hp: 320, atk: 84, def: 22, exp: 205, gold: 95, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
+
+    // 동굴 (1종) — weakness 빛, resistance 어둠.
+    '동굴 박쥐':        { hp: 150, atk: 62, def: 8, exp: 130, gold: 60, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.35 } },
+
     // 차원의 균열 전초기지 (5종 + 1 중보스)
     '차원 보병':        { hp: 380, atk: 92, def: 32, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
     '공허 포격수':      { hp: 280, atk: 108, def: 14, exp: 248, gold: 118, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },

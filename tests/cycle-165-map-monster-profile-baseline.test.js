@@ -32,18 +32,23 @@ import { MONSTERS } from '../src/data/monsters.js';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 
-// cycle 165 baseline — 42종 → cycle 165(-8 화염/얼음) → cycle 166(-8 언데드/폭풍) = 26.
+// cycle 165 baseline — 42 → 165(-8) → 166(-8) → 167(-8 자연/공허/동굴) = 18.
 const KNOWN_MISSING_MAP_MONSTERS = new Set([
-    '공허 감시병', '공허 마법사', '공허의 파편', '광풍의 원소',
-    '꽃 골렘', '꽃잎 슬라임',
+    // '공허 감시병', ← cycle 167: 공허 테마 batch.
+    // '공허 마법사', ← cycle 167: 공허 테마 batch.
+    // '공허의 파편', ← cycle 167: 공허 테마 batch.
+    '광풍의 원소',
+    // '꽃 골렘', ← cycle 167: 자연/꽃 테마 batch.
+    // '꽃잎 슬라임', ← cycle 167: 자연/꽃 테마 batch.
     // '뇌운 와이번', ← cycle 166: 폭풍 테마 batch.
-    '동굴 박쥐',
+    // '동굴 박쥐', ← cycle 167: 동굴 batch.
     // '마그마 슬라임', ← cycle 165: 화염 테마 batch.
     // '망자의 사제', ← cycle 166: 언데드 테마 batch.
     // '묘지 구울', ← cycle 166: 언데드 테마 batch.
     '바람 추적자',
     // '번개 정령', ← cycle 166: 폭풍 테마 batch.
-    '봄의 정령', '붕괴한 수호자', '생체 병기',
+    // '봄의 정령', ← cycle 167: 자연/꽃 테마 batch.
+    '붕괴한 수호자', '생체 병기',
     // '서리 골렘', ← cycle 165: 얼음 테마 batch.
     // '서리 마법사', ← cycle 165: 얼음 테마 batch.
     '실험실 수호자', '심연의 눈',
@@ -52,7 +57,7 @@ const KNOWN_MISSING_MAP_MONSTERS = new Set([
     // '용암 거북', ← cycle 165: 화염 테마 batch.
     // '유령 군단', ← cycle 166: 언데드 테마 batch.
     // '저주받은 기사', ← cycle 166: 언데드 테마 batch.
-    '정원 요정',
+    // '정원 요정', ← cycle 167: 자연/꽃 테마 batch.
     '종말의 마법사', '종말의 전령', '차원 방랑자', '최후의 수호자',
     '타락한 용사', '파멸의 기사', '폭주 자동인형',
     // '폭풍 그리핀', ← cycle 166: 폭풍 테마 batch.
