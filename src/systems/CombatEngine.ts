@@ -80,6 +80,8 @@ export const CombatEngine = {
     applyFatalProtection(player: Player, relics: Relic[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
+        // cycle 162: phoenix_revive atkBuff tempBuff — 부활 분기에서 set, return에 합류.
+        let phoenixTempBuff: any = null;
 
         if (nextHp <= 0) {
             const deathSaveRelic = relics.find((relic: any) => relic.effect === 'death_save');
@@ -120,20 +122,32 @@ export const CombatEngine = {
                     logs.push({ type: 'event', text: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!' });
                 } else {
                     // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
-                    // atkBuff/duration tempBuff 적용은 별도 사이클 (tempBuff multiplier 인프라 필요).
+                    // cycle 162: atkBuff/duration tempBuff 적용 추가 — 부활 직후 N턴 동안 ATK 증폭.
                     const phoenixRelic = relics.find((relic: any) => relic.effect === 'phoenix_revive');
                     if (phoenixRelic && !flags.phoenixUsed) {
                         const healRatio = phoenixRelic.val?.healRatio || 0.3;
                         nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healRatio));
                         flags.phoenixUsed = true;
-                        logs.push({ type: 'event', text: `[불사조의 깃털] 재의 잿더미에서 부활! +${nextHp} HP` });
+                        const atkBuff = phoenixRelic.val?.atkBuff || 0;
+                        const duration = phoenixRelic.val?.duration || 0;
+                        if (atkBuff > 0 && duration > 0) {
+                            phoenixTempBuff = {
+                                atk: atkBuff,
+                                def: 0,
+                                turn: duration,
+                                name: 'phoenix_revive',
+                            };
+                        }
+                        logs.push({ type: 'event', text: `[불사조의 깃털] 재의 잿더미에서 부활! +${nextHp} HP, ATK +${Math.round(atkBuff * 100)}% (${duration}턴)` });
                     }
                 }
             }
         }
 
+        const updatedPlayer: any = { ...player, hp: nextHp, combatFlags: flags };
+        if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
         return {
-            updatedPlayer: { ...player, hp: nextHp, combatFlags: flags },
+            updatedPlayer,
             isDead: nextHp <= 0
         };
     },
@@ -1084,6 +1098,20 @@ export const CombatEngine = {
             enemyDmg = Math.floor(enemyDmg * ampMult);
             const pct = Math.round((ampMult - 1) * 100);
             logs.push({ type: 'warning', text: `[저주] 받는 피해 +${pct}% (${before} → ${enemyDmg})` });
+        }
+
+        // cycle 162: 'titan' 유물 (타이탄의 허리띠) — val.critReduce 0.5 받는 치명타 피해 감소.
+        //   cycle 149에서 hp 보너스만 적용했고 critReduce는 별도 사이클로 미뤘던 잔존.
+        //   heavyResolved (heavy attack — boss/enemy의 강타) 상황을 enemy crit으로 해석.
+        if (heavyResolved) {
+            const titanRelic = relics.find((r: any) => r.effect === 'titan');
+            const reduce = titanRelic?.val?.critReduce || 0;
+            if (reduce > 0) {
+                const before = enemyDmg;
+                enemyDmg = Math.max(1, Math.floor(enemyDmg * (1 - reduce)));
+                const pct = Math.round(reduce * 100);
+                logs.push({ type: 'success', text: `[타이탄의 허리띠] 강타 피해 -${pct}% (${before} → ${enemyDmg})` });
+            }
         }
 
         // 몬스터 공격 시 상태이상 부여 (pattern.statusEffect + pattern.statusChance 지원)
