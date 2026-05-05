@@ -79,6 +79,8 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         if (r.effect === 'triple_up') return acc + (r.atkVal || 0);
         // cycle 149: 'genesis' (창세의 핵) — 전 스탯 statBonus 다중 적용. 매 턴 회복은 별도 사이클.
         if (r.effect === 'genesis') return acc + (r.val?.statBonus || 0);
+        // cycle 150: 'hp_drain_atk' (혈맹의 반지 / 심연의 계약) — atkBonus 부분 반영. 매 턴 HP cost는 별도 사이클.
+        if (r.effect === 'hp_drain_atk') return acc + (r.val?.atkBonus || 0);
         if (r.effect === 'low_hp_atk') {
             const threshold = typeof r.val === 'object' ? r.val.threshold : 0.3;
             const bonus = typeof r.val === 'object' ? r.val.bonus : (r.val - 1);
@@ -95,6 +97,8 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         if (r.effect === 'triple_up') return acc + (r.defVal || 0);
         // cycle 149: 'genesis' (창세의 핵) — 전 스탯 statBonus DEF 적용.
         if (r.effect === 'genesis') return acc + (r.val?.statBonus || 0);
+        // cycle 150: 'first_turn_evade' (그림자 망토) — DEF 부분 반영. 첫 턴 회피는 별도 사이클.
+        if (r.effect === 'first_turn_evade') return acc + (typeof r.val === 'number' ? r.val : 0);
         return acc;
     }, 0);
 
