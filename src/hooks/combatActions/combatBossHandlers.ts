@@ -89,9 +89,12 @@ export const applyAbyssFloorAdvance = (p: any, dispatch: any, addLog: any) => {
             const available = RELICS.filter((r: any) => !(updated.relics || []).some((pr: any) => pr.id === r.id));
             if (available.length > 0) dispatch({ type: AT.SET_PENDING_RELICS, payload: pickWeightedRelics(available, 3) });
         } else if (milestone.type === 'legendary_item') {
-            const legendaryPool = (DB.ITEMS || []).flat().filter((i: any) => i.tier === 5);
+            // cycle 179: DB.ITEMS는 object — `.flat()` 호출은 TypeError. abyss 50/100/300층
+            //   milestone 처리 중 예외 발생해 abyss 진행 끊기던 잠복 회귀 fix.
+            const allItems: any[] = (Object.values(DB.ITEMS) as any[]).flat().filter((i: any) => i && typeof i === 'object');
+            const legendaryPool = allItems.filter((i: any) => i.tier === 5);
             if (legendaryPool.length > 0) {
-                const item = makeItem(legendaryPool[Math.floor(Math.random() * legendaryPool.length)]);
+                const item = makeItem(legendaryPool[Math.floor(Math.random() * legendaryPool.length)] as any);
                 updated = { ...updated, inv: [...(updated.inv || []), item] };
                 addLog('success', MSG.ABYSS_LEGENDARY_ITEM(item.name));
             }
