@@ -160,13 +160,13 @@ export const QUESTS: any = [
 
     // ── Lv50+ 확장 퀘스트 ────────────────────────────────────────────────────
     // Lv50-60 킬 퀘스트 (4개)
-    { id: 105, title: '에테르 폐허 정화',       desc: '에테르 방랑자 10마리 처치',       target: '에테르 방랑자',   goal: 10, reward: { exp: 3000,  gold: 2000 },  minLv: 50 },
-    { id: 106, title: '차원의 포식자 사냥',     desc: '차원의 포식자 8마리 처치',        target: '차원의 포식자',   goal: 8,  reward: { exp: 3500,  gold: 2500 },  minLv: 50 },
-    { id: 107, title: '공허의 감시자 제거',     desc: '공허의 감시자 10마리 처치',       target: '공허의 감시자',   goal: 10, reward: { exp: 4000,  gold: 3000 },  minLv: 55 },
-    { id: 108, title: '허무의 기사단 섬멸',     desc: '허무의 기사 12마리 처치',         target: '허무의 기사',     goal: 12, reward: { exp: 4500,  gold: 3500 },  minLv: 55 },
+    { id: 105, title: '에테르 폐허 정화',       desc: '에테르 방랑자 10마리 처치',       target: '에테르 잔류체',   goal: 10, reward: { exp: 3000,  gold: 2000 },  minLv: 50 },
+    { id: 106, title: '차원의 포식자 사냥',     desc: '차원의 포식자 8마리 처치',        target: '차원 포식자',   goal: 8,  reward: { exp: 3500,  gold: 2500 },  minLv: 50 },
+    { id: 107, title: '공허의 감시자 제거',     desc: '공허의 감시자 10마리 처치',       target: '공허 감시병',   goal: 10, reward: { exp: 4000,  gold: 3000 },  minLv: 55 },
+    { id: 108, title: '허무의 기사단 섬멸',     desc: '허무의 기사 12마리 처치',         target: '허무 집행관',     goal: 12, reward: { exp: 4500,  gold: 3500 },  minLv: 55 },
     // Lv60-75 보스 퀘스트 (3개)
-    { id: 109, title: '에테르 심판자 토벌',     desc: '에테르 심판자 처치',              target: '에테르 심판자',   goal: 1,  reward: { exp: 8000,  gold: 5000 },  minLv: 60 },
-    { id: 150, title: '공허의 대행자 격파',     desc: '공허의 대행자 처치',              target: '공허의 대행자',   goal: 1,  reward: { exp: 10000, gold: 7000 },  minLv: 65 },
+    { id: 109, title: '에테르 심판자 토벌',     desc: '에테르 심판자 처치',              target: '에테르 드래곤',   goal: 1,  reward: { exp: 8000,  gold: 5000 },  minLv: 60 },
+    { id: 150, title: '공허의 대행자 격파',     desc: '공허의 대행자 처치',              target: '공허 집행관',   goal: 1,  reward: { exp: 10000, gold: 7000 },  minLv: 65 },
     { id: 151, title: '종말의 기사 정복',       desc: '종말의 기사 처치',                target: '종말의 기사',     goal: 1,  reward: { exp: 15000, gold: 10000 }, minLv: 70 },
     // Lv70+ 도전 퀘스트 (3개)
     { id: 152, title: '에테르 폐허 완전 탐험',  desc: '에테르 폐허 20회 탐험',           type: 'explore_count', target: 'explores', goal: 20, reward: { exp: 0, gold: 5000, title: '에테르 탐험가' },   minLv: 70 },
