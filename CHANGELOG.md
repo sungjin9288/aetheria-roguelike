@@ -7,6 +7,46 @@
 
 ---
 
+## Cycle 170 — CHANGELOG에 cycles 161-169 history 일괄 추가
+
+- 문서: cycle 160 batch 이후 9 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160에 이은 6번째 batch.
+
+검증: tsc 0 / unit 934 / lint clean / build-guard ok.
+
+---
+
+## Cycle 165-169 — map.monsters[] → MONSTERS 정합성 baseline 42 → 0 달성 🎯
+
+- 콘텐츠: maps.ts의 monsters[] 배열에 monsters.ts MONSTERS 객체 미등록 이름 42건 발견. spawnEnemy의 DB.MONSTERS[baseName] lookup이 미존재 시 weakness/resistance/multiplier/pattern/phase2 모두 미적용 — generic stat-blank 회귀. 게임은 진행되지만 속성 약점/저항 메커니즘이 작동 안 해 전투 깊이 축소.
+- 165: KNOWN_MISSING_MAP_MONSTERS Set(42) baseline lock + 양방향 가드 + 화염/얼음 8종 batch (-8). cycle 141/148/164 baseline pattern 시리즈에 4번째 합류.
+- 166: 언데드 5(망자의 사제 / 묘지 구울 / 유령 군단 / 해골 마법사 / 저주받은 기사) + 폭풍 3(뇌운 와이번 / 번개 정령 / 폭풍 그리핀) batch (-8).
+- 167: 자연/꽃 4(봄의 정령 / 정원 요정 / 꽃 골렘 / 꽃잎 슬라임) + 공허 3(공허 감시병 / 공허 마법사 / 공허의 파편) + 동굴 박쥐 batch (-8).
+- 168: 부패/타락 5(붕괴한 / 실험실 / 최후의 / 타락한 / 파멸의 수호자/용사/기사) + 실험실 3(생체 병기 / 오염된 연구원 / 폭주 자동인형) batch (-8).
+- 169 🎯: 잔존 10종(바람 2 / 심연 1 / 에테르 2 / 종말 2 / 허무/혼돈 2 / 차원 1) final batch (-10). baseline = new Set([]) lock 달성.
+- 결과: 모든 maps.ts spawn pool monster가 MONSTERS profile 보유. 속성 약점/저항/패턴/statusOnHit 메커니즘이 모든 enemy에 정확히 적용. 회귀 영구 차단.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 164 — quest/ach target → MONSTERS 정합성 10건 일괄 정리 + baseline 0 가드
+
+- 콘텐츠: quests.ts target 필드에 monsters.ts MONSTERS 객체에 없는 이름 10건 사용 중 발견. 해당 퀘스트는 처치 진행도가 영원히 0 (target 이름이 실제 spawn enemy name과 매칭되지 않아). 가장 명백: '사막 도적' (공백) vs '사막도적' (실재 키, 공백 없음).
+- 수정: 10건 batch perl 매핑 — 사막 도적 → 사막도적 / 가고일 → 유령 기사 / 고대 골렘 → 황금 골렘 / 그림자 암살자 → 다크 엘프 / 보물고 수호자 → 황금 골렘 / 빙결 정령 → 서리 정령 / 심해 대사 → 심연의 파수꾼 / 에테르 골렘 → 에테르 거인 / 죽음의 기사 → 타락 기사 / 차원 보행자 → 차원 보병.
+- baseline 가드: cycle 141/148 양방향 가드 패턴 재사용 — 비-system target이 모두 MONSTERS keys 존재. SYSTEM_TARGETS whitelist 회귀 가드 동봉.
+
+검증: tsc 0 / unit 912 / lint clean / build-guard ok.
+
+## Cycle 161-163 — per-turn / 잔존 secondary 메커니즘 정리 (cycles 149-158 TODO)
+
+- 시스템: cycle 148 baseline 0(cycle 159) 달성 후 effect string은 baseline 통과했지만 실제 동작이 부분적이던 잔존 메커니즘 정리.
+- 161: tickCombatState에 3종 — 'genesis' healPerTurn 0.02 (창세의 핵 매 턴 회복) / 'eternal_fortress' regenPerTurn 0.08 (영원의 요새 시너지 매 턴 재생) / 'hp_drain_atk' hpCost (혈맹의 반지 / 심연의 계약 매 턴 HP 소모, hell_reaper 시너지가 cost 직접 대체).
+- 162: applyFatalProtection / enemyAttack — 'phoenix_revive' atkBuff/duration tempBuff (불사조 부활 후 ATK +50% 3턴) / 'titan' critReduce 0.5 (타이탄 강타 -50%).
+- 163: performSkill — 'cooldown_reduce' firstFree (시간 군주 첫 스킬 MP 무소비). combatFlags.firstSkillUsed 추적 + applyBattleStartRelics 매 전투 false 리셋.
+- 결과: 의도된 빌드 path 활성 — 혈맹 ATK 35% / 심연 ATK 60%가 페널티 없이 지급되던 밸런스 누락 fix. hell_reaper "HP 소모 3% 감소" desc가 실제 동작. 영원의 요새 매 턴 +80 HP 재생으로 탱킹 빌드 가능.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 160 — CHANGELOG에 cycles 147-159 history 일괄 추가
 
 - 문서: cycle 146 batch 이후 13 사이클 미반영 상태 batch 정리 (cycle 98 / 114 / 132 / 146에 이은 5번째 batch).
