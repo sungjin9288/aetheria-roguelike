@@ -427,4 +427,20 @@ export const DROP_TABLES: any = {
         { item: '엘릭서', rate: 0.18 },
         { item: '심해의 수호복', rate: 0.03 },
     ],
+
+    // cycle 183: cycle 173에서 추가된 시즌 보스 2종 drop table.
+    //   기존엔 cycle 171 보너스 드랍(25% tier 5/6 random)만 발동 — 큐레이션 보상 부재.
+    //   계절 boss 톤 — 자연/얼음 thematic 보상.
+    '봄의 여왕': [
+        { item: '자연의 결정', rate: 0.7, qty: [1, 2] },
+        { item: '엘프의 눈물', rate: 0.45 },
+        { item: '영웅의 물약', rate: 0.3 },
+        { item: '세계수의 지팡이', rate: 0.05 },
+    ],
+    '서리 군주': [
+        { item: '냉기의 결정', rate: 0.7, qty: [1, 2] },
+        { item: '상급 체력 물약', rate: 0.45 },
+        { item: '영웅의 물약', rate: 0.3 },
+        { item: '빙결의 왕관검', rate: 0.05 },
+    ],
 };
