@@ -42,9 +42,9 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     // 'genesis',   ← cycle 149: statBonus 핸들러 추가 (healPerTurn은 별도 사이클).
     'kill_stack_atk',
     // 'cooldown_reduce', ← cycle 151: cdReduction 핸들러 추가 (firstFree는 별도 사이클).
-    'phoenix_revive',
+    // 'phoenix_revive', ← cycle 157: heal 부분 핸들러 추가 (atkBuff tempBuff는 별도 사이클).
     // 'reflect_crit', ← cycle 152: critBonus 핸들러 추가 (피해 반사는 별도 사이클).
-    'devour_hp',
+    // 'devour_hp', ← cycle 157: handleVictory에서 maxHp 영구 증가 핸들러 추가.
     'entropy_tick',
     // 'arcane_surge', ← cycle 153: applySynergyBonuses 코멘트로 effect-name 명시.
     // 신화/창세 tier (의미상 ultimate 빌드)

@@ -19,7 +19,7 @@ import { processLoot as _processLoot, resolveEnemyBaseName as _resolveEnemyBaseN
 export const CombatEngine = {
     DEFAULT_SKILL_LOADOUT: { selected: 0, cooldowns: {} },
     DEFAULT_META: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
-    DEFAULT_COMBAT_FLAGS: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
+    DEFAULT_COMBAT_FLAGS: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false, phoenixUsed: false } as any,
 
     resolveEnemyBaseName(enemy: Monster) {
         return _resolveEnemyBaseName(enemy);
@@ -118,6 +118,16 @@ export const CombatEngine = {
                     flags.voidHeartUsed = true;
                     flags.voidHeartArmed = true;
                     logs.push({ type: 'event', text: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!' });
+                } else {
+                    // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
+                    // atkBuff/duration tempBuff 적용은 별도 사이클 (tempBuff multiplier 인프라 필요).
+                    const phoenixRelic = relics.find((relic: any) => relic.effect === 'phoenix_revive');
+                    if (phoenixRelic && !flags.phoenixUsed) {
+                        const healRatio = phoenixRelic.val?.healRatio || 0.3;
+                        nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healRatio));
+                        flags.phoenixUsed = true;
+                        logs.push({ type: 'event', text: `[불사조의 깃털] 재의 잿더미에서 부활! +${nextHp} HP` });
+                    }
                 }
             }
         }
@@ -1160,6 +1170,18 @@ export const CombatEngine = {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * healRelic.val);
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: `[피의 서약] +${heal} HP` });
+        }
+
+        // cycle 157: 'devour_hp' (세계 포식자) — 적 처치 시 적 maxHp의 val(=0.1)만큼 player maxHp 영구 증가.
+        // 스펙은 "전투 내"이지만 per-combat 리셋 인프라 미구현 → 런 내 영구 적용 (관대한 해석).
+        const devourRelic = relics.find((r: any) => r.effect === 'devour_hp');
+        if (devourRelic && enemy.maxHp) {
+            const hpGain = Math.floor((enemy.maxHp || 0) * (devourRelic.val || 0));
+            if (hpGain > 0) {
+                p.maxHp = (p.maxHp || BALANCE.DEFAULT_MAX_HP) + hpGain;
+                p.hp = (p.hp || 0) + hpGain; // 신규 HP만큼 현재 HP도 증가 (overheal 방지: maxHp 갱신 후)
+                logs.push({ type: 'heal', text: `[세계 포식자] 영혼 흡수! 최대 HP +${hpGain}` });
+            }
         }
 
         // cycle 153: 시너지 'immortal_warrior' (killHeal) / 'infinite_devour' (devour) — 처치 시 HP 회복.
