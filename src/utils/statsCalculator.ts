@@ -122,6 +122,8 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         if (r.effect === 'ancient_power') return acc + r.val.crit;
         if (r.effect === 'omega') return acc + r.val;
         if (r.effect === 'dual_crit' && hasOffhandWeapon) return acc + (r.val || 0);
+        // cycle 152: 'reflect_crit' (운명의 거울) — critBonus 부분 반영. reflect(피해 반사)는 별도 사이클.
+        if (r.effect === 'reflect_crit') return acc + (r.val?.critBonus || 0);
         return acc;
     }, 0);
 

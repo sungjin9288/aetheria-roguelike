@@ -451,9 +451,17 @@ export const CombatEngine = {
         if (executeAtkTriggered) logs.push({ type: 'critical', text: '[예언의 돌판] 예언 처형! 피해 2배!' });
         if (echoTriggered) logs.push({ type: 'event', text: '[공허의 메아리] 강화된 공격!' });
 
+        // cycle 152: 'on_hit_freeze' (frost_anchor) — val 확률로 적 1턴 빙결.
+        let postHitEnemy: any = { ...enemy, hp: newEnemyHp, guarding: false };
+        const freezeRelic = relics.find((r: any) => r.effect === 'on_hit_freeze');
+        if (freezeRelic && newEnemyHp > 0 && Math.random() < (freezeRelic.val || 0)) {
+            postHitEnemy = this.applyStatusEffectToEnemy(postHitEnemy, 'freeze');
+            logs.push({ type: 'event', text: `[동결의 닻] ${enemy.name} 빙결!` });
+        }
+
         return {
             updatedPlayer,
-            updatedEnemy: { ...enemy, hp: newEnemyHp, guarding: false },
+            updatedEnemy: postHitEnemy,
             logs,
             isCrit,
             isVictory: newEnemyHp <= 0

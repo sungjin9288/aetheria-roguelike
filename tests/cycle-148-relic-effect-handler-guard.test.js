@@ -32,7 +32,7 @@ const RELICS_PATH = path.join(SRC, 'data/relics.ts');
 
 const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     // 일반/희귀 (cycle 148 초기 발견 14종)
-    'on_hit_freeze',
+    // 'on_hit_freeze', ← cycle 152: 일반 공격 시 val 확률로 적 빙결 핸들러 추가.
     // 'first_turn_evade', ← cycle 150: DEF 보너스 핸들러 추가 (첫 턴 회피는 별도 사이클).
     'battle_start_buff',
     // 'titan',     ← cycle 149: HP 보너스 핸들러 추가 (critReduce는 별도 사이클).
@@ -43,7 +43,7 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     'kill_stack_atk',
     // 'cooldown_reduce', ← cycle 151: cdReduction 핸들러 추가 (firstFree는 별도 사이클).
     'phoenix_revive',
-    'reflect_crit',
+    // 'reflect_crit', ← cycle 152: critBonus 핸들러 추가 (피해 반사는 별도 사이클).
     'devour_hp',
     'entropy_tick',
     'arcane_surge',
