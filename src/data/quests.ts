@@ -30,9 +30,9 @@ export const QUESTS: any = [
     { id: 26, title: '피라미드의 비밀',  desc: '미라 15마리 처치',        target: '미라',        goal: 15, reward: { exp: 1500, gold: 2000, item: '저주해제 주문서' }, minLv: 20 },
     { id: 27, title: '얼음 성채 정복',   desc: '얼음 거인 5마리 처치',    target: '얼음 거인',   goal: 5,  reward: { exp: 2000, gold: 2500, item: '냉기의 결정' }, minLv: 20 },
     { id: 28, title: '설원 수호자',      desc: '서리 늑대 10마리 처치',   target: '서리 늑대',   goal: 10, reward: { exp: 1800, gold: 2200 },            minLv: 22 },
-    { id: 135, title: '사막 도적단 소탕', desc: '사막 도적 8마리 처치',    target: '사막 도적',   goal: 8,  reward: { exp: 2000, gold: 2600, item: '그림자 망토' },  minLv: 23 },
-    { id: 136, title: '고대 유적 탐사',   desc: '고대 골렘 6마리 처치',    target: '고대 골렘',   goal: 6,  reward: { exp: 2400, gold: 3000, item: '마나 결정' },  minLv: 25 },
-    { id: 137, title: '보물고 침입자',    desc: '보물고 수호자 5마리 처치', target: '보물고 수호자', goal: 5, reward: { exp: 2600, gold: 3500, item: '잊혀진 열쇠' },   minLv: 26 },
+    { id: 135, title: '사막 도적단 소탕', desc: '사막 도적 8마리 처치',    target: '사막도적',   goal: 8,  reward: { exp: 2000, gold: 2600, item: '그림자 망토' },  minLv: 23 },
+    { id: 136, title: '고대 유적 탐사',   desc: '고대 골렘 6마리 처치',    target: '황금 골렘',   goal: 6,  reward: { exp: 2400, gold: 3000, item: '마나 결정' },  minLv: 25 },
+    { id: 137, title: '보물고 침입자',    desc: '보물고 수호자 5마리 처치', target: '황금 골렘', goal: 5, reward: { exp: 2600, gold: 3500, item: '잊혀진 열쇠' },   minLv: 26 },
     { id: 29, title: '탑 수호자 격파',   desc: '탑 수호자 5마리 처치',    target: '탑 수호자',   goal: 5,  reward: { exp: 2200, gold: 2800, item: '현자의 예복' }, minLv: 25 },
     { id: 30, title: '영웅의 길 (2차)',  desc: '레벨 30 달성',           target: 'Level',       goal: 30, reward: { exp: 0,    gold: 5000 },            minLv: 29 },
 
@@ -76,18 +76,18 @@ export const QUESTS: any = [
     { id: 121, title: '하수도 악어 퇴치',       desc: '하수도의 거대 악어를 퇴치하세요',                 target: '하수도 악어',   goal: 10, reward: { exp: 650,   gold: 1400 },                         minLv: 10 },
 
     // 고급 (Lv 25-40)
-    { id: 122, title: '빙결 정령 파괴',         desc: '얼음 성채의 빙결 정령을 파괴하세요',              target: '빙결 정령',     goal: 12, reward: { exp: 1500,  gold: 3000 },                         minLv: 25 },
+    { id: 122, title: '빙결 정령 파괴',         desc: '얼음 성채의 빙결 정령을 파괴하세요',              target: '서리 정령',     goal: 12, reward: { exp: 1500,  gold: 3000 },                         minLv: 25 },
     { id: 123, title: '미라 토벌',              desc: '피라미드의 미라를 토벌하세요',                    target: '미라',          goal: 10, reward: { exp: 1800,  gold: 3500 },                         minLv: 25 },
     { id: 124, title: '강철 자동인형 해체',     desc: '기계 폐도의 자동인형을 해체하세요',               target: '강철 자동인형', goal: 10, reward: { exp: 2000,  gold: 4000 },                         minLv: 30 },
-    { id: 125, title: '가고일 격파',            desc: '고대 마법 탑의 가고일을 격파하세요',              target: '가고일',        goal: 8,  reward: { exp: 1900,  gold: 3800 },                         minLv: 28 },
-    { id: 126, title: '그림자 암살자 추적',     desc: '암흑 성에 숨어있는 암살자를 추적 처치하세요',      target: '그림자 암살자', goal: 6,  reward: { exp: 2500,  gold: 5000,  item: '암살자의 단검' }, minLv: 35 },
+    { id: 125, title: '가고일 격파',            desc: '고대 마법 탑의 가고일을 격파하세요',              target: '유령 기사',        goal: 8,  reward: { exp: 1900,  gold: 3800 },                         minLv: 28 },
+    { id: 126, title: '그림자 암살자 추적',     desc: '암흑 성에 숨어있는 암살자를 추적 처치하세요',      target: '다크 엘프', goal: 6,  reward: { exp: 2500,  gold: 5000,  item: '암살자의 단검' }, minLv: 35 },
 
     // 최종 (Lv 40+)
-    { id: 127, title: '심해 대사 처치',         desc: '심해 회랑의 거대 뱀을 처치하세요',                target: '심해 대사',     goal: 8,  reward: { exp: 4000,  gold: 8000 },                         minLv: 40 },
-    { id: 128, title: '에테르 골렘 분쇄',       desc: '에테르 관문의 골렘을 분쇄하세요',                 target: '에테르 골렘',   goal: 6,  reward: { exp: 5000,  gold: 10000 },                        minLv: 45 },
-    { id: 129, title: '차원 보행자 소멸',       desc: '차원의 틈새에서 나타나는 보행자를 소멸시키세요',    target: '차원 보행자',   goal: 5,  reward: { exp: 6000,  gold: 12000 },                        minLv: 45 },
+    { id: 127, title: '심해 대사 처치',         desc: '심해 회랑의 거대 뱀을 처치하세요',                target: '심연의 파수꾼',     goal: 8,  reward: { exp: 4000,  gold: 8000 },                         minLv: 40 },
+    { id: 128, title: '에테르 골렘 분쇄',       desc: '에테르 관문의 골렘을 분쇄하세요',                 target: '에테르 거인',   goal: 6,  reward: { exp: 5000,  gold: 10000 },                        minLv: 45 },
+    { id: 129, title: '차원 보행자 소멸',       desc: '차원의 틈새에서 나타나는 보행자를 소멸시키세요',    target: '차원 보병',   goal: 5,  reward: { exp: 6000,  gold: 12000 },                        minLv: 45 },
     { id: 130, title: '리치 재토벌',            desc: '되살아난 리치를 다시 한번 처치하세요',             target: '리치',          goal: 3,  reward: { exp: 7000,  gold: 15000, item: '혼돈의 로드' },   minLv: 40 },
-    { id: 131, title: '죽음의 기사 토벌',       desc: '마왕성의 죽음의 기사를 토벌하세요',               target: '죽음의 기사',   goal: 5,  reward: { exp: 4500,  gold: 9000 },                         minLv: 42 },
+    { id: 131, title: '죽음의 기사 토벌',       desc: '마왕성의 죽음의 기사를 토벌하세요',               target: '타락 기사',   goal: 5,  reward: { exp: 4500,  gold: 9000 },                         minLv: 42 },
 
     // 신규 지역 — 세계수 숲 / 고대 신전 도시 / 차원의 균열 전초기지 (Lv 33-55)
     { id: 140, title: '세계수 수호자 사냥',     desc: '세계수 숲의 수호자를 처치하세요',                  target: '세계수 수호자', goal: 8,  reward: { exp: 3000,  gold: 5000 },                         minLv: 33 },
