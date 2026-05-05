@@ -149,9 +149,13 @@ const StatusBar = ({
               <span className="truncate text-[14px] font-rajdhani font-bold tracking-[0.04em] text-white/96">{player.name}</span>
               <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{enemy ? '전투중' : player.job}</SignalBadge>
               <SignalBadge tone="resonance" size="sm">Lv.{player.level}</SignalBadge>
+              {/* cycle 176: 'blindMap' challenge modifier — 위치 표시 숨김 ('???' 라벨로 대체).
+                  cycle 147 이전엔 dead modifier(handler 0건)였음 — 이제 정상 동작. */}
               <span className="flex items-center gap-1 text-[8px] font-fira text-slate-300/60">
                 <span className="h-1 w-1 shrink-0 rounded-full bg-[#7dd4d8] animate-pulse" />
-                <span className="truncate max-w-[64px]">{player.loc}</span>
+                <span className="truncate max-w-[64px]">
+                  {player.challengeModifiers?.includes('blindMap') ? '???' : player.loc}
+                </span>
               </span>
               {(player.killStreak || 0) >= 3 && (
                 <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em] text-orange-300">🔥{player.killStreak}</span>
