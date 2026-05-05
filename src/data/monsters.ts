@@ -428,6 +428,29 @@ export const MONSTERS: any = {
     '오염된 연구원':    { hp: 280, atk: 90, def: 18, exp: 198, gold: 92, weakness: '자연', resistance: '대지', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
     '폭주 자동인형':    { hp: 460, atk: 86, def: 36, exp: 245, gold: 115, weakness: '냉기', resistance: '대지', pattern: { guardChance: 0.2, heavyChance: 0.5 } },
 
+    // cycle 169 🎯: 바람 / 심연 / 에테르 / 종말 / 허무 / 차원 10종 batch — baseline 10 → 0 달성.
+    // 바람 (2종) — weakness 대지, resistance 자연.
+    '광풍의 원소':      { hp: 240, atk: 80, def: 16, exp: 178, gold: 82, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
+    '바람 추적자':      { hp: 220, atk: 84, def: 14, exp: 175, gold: 80, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
+
+    // 심연 (1종) — weakness 빛, resistance 어둠.
+    '심연의 눈':        { hp: 320, atk: 92, def: 22, exp: 228, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
+
+    // 에테르 (2종) — weakness 자연, resistance 빛.
+    '에테르 잔류체':    { hp: 280, atk: 88, def: 20, exp: 215, gold: 100, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '에테르 흡수체':    { hp: 360, atk: 82, def: 28, exp: 232, gold: 108, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
+
+    // 종말 (2종) — weakness 빛, resistance 어둠.
+    '종말의 마법사':    { hp: 290, atk: 100, def: 18, exp: 248, gold: 118, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 }, statusOnHit: 'curse' },
+    '종말의 전령':      { hp: 420, atk: 96, def: 32, exp: 268, gold: 128, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.5 } },
+
+    // 허무/혼돈 (2종) — weakness 빛, resistance 어둠.
+    '허무 집행관':      { hp: 480, atk: 94, def: 40, exp: 272, gold: 130, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.5 } },
+    '혼돈의 추종자':    { hp: 320, atk: 90, def: 22, exp: 228, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 }, statusOnHit: 'curse' },
+
+    // 차원 (1종) — weakness 빛, resistance 어둠.
+    '차원 방랑자':      { hp: 360, atk: 92, def: 28, exp: 240, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
+
     // 차원의 균열 전초기지 (5종 + 1 중보스)
     '차원 보병':        { hp: 380, atk: 92, def: 32, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
     '공허 포격수':      { hp: 280, atk: 108, def: 14, exp: 248, gold: 118, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },

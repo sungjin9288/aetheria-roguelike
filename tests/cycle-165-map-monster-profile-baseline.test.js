@@ -20,59 +20,22 @@ import { MONSTERS } from '../src/data/monsters.js';
  * cycle 141 reward.item / cycle 148 relic.effect / cycle 164 quest.target
  * baseline pattern 재사용 — 양방향 가드로 점진 정리:
  *
- * 1. KNOWN_MISSING_MAP_MONSTERS Set (42종) — 현재 누락 명시 인정.
+ * 1. KNOWN_MISSING_MAP_MONSTERS Set — 현재 누락 명시 인정.
  * 2. NEW dead 가드: baseline 외 추가되면 즉시 실패 — 새 map 추가 시 monster
  *    profile 누락 catch.
  * 3. baseline 좁히기 가드: monster profile 추가됐으면 baseline에서도 제거.
  *
- * 향후 사이클에서 MONSTERS에 profile 추가할 때마다 KNOWN_MISSING_MAP_MONSTERS
- * Set이 줄어들어 0이 될 때까지 진행도 추적.
+ * cycle 165(34) → 166(-8) → 167(-8) → 168(-8) → 169(-10) = 0 🎯
+ * 5 사이클에서 점진 정리 완료. 빈 Set lock — 새 map monster 추가 시 profile
+ * 누락이 즉시 detect.
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 
-// cycle 165 baseline — 42 → 165(-8) → 166(-8) → 167(-8) → 168(-8 부패/실험실) = 10.
-const KNOWN_MISSING_MAP_MONSTERS = new Set([
-    // '공허 감시병', ← cycle 167: 공허 테마 batch.
-    // '공허 마법사', ← cycle 167: 공허 테마 batch.
-    // '공허의 파편', ← cycle 167: 공허 테마 batch.
-    '광풍의 원소',
-    // '꽃 골렘', ← cycle 167: 자연/꽃 테마 batch.
-    // '꽃잎 슬라임', ← cycle 167: 자연/꽃 테마 batch.
-    // '뇌운 와이번', ← cycle 166: 폭풍 테마 batch.
-    // '동굴 박쥐', ← cycle 167: 동굴 batch.
-    // '마그마 슬라임', ← cycle 165: 화염 테마 batch.
-    // '망자의 사제', ← cycle 166: 언데드 테마 batch.
-    // '묘지 구울', ← cycle 166: 언데드 테마 batch.
-    '바람 추적자',
-    // '번개 정령', ← cycle 166: 폭풍 테마 batch.
-    // '봄의 정령', ← cycle 167: 자연/꽃 테마 batch.
-    // '붕괴한 수호자', ← cycle 168: 부패/타락 batch.
-    // '생체 병기', ← cycle 168: 실험실/기계 batch.
-    // '서리 골렘', ← cycle 165: 얼음 테마 batch.
-    // '서리 마법사', ← cycle 165: 얼음 테마 batch.
-    // '실험실 수호자', ← cycle 168: 부패/타락 batch.
-    '심연의 눈',
-    // '얼음 기사', ← cycle 165: 얼음 테마 batch.
-    '에테르 잔류체', '에테르 흡수체',
-    // '오염된 연구원', ← cycle 168: 실험실/기계 batch.
-    // '용암 거북', ← cycle 165: 화염 테마 batch.
-    // '유령 군단', ← cycle 166: 언데드 테마 batch.
-    // '저주받은 기사', ← cycle 166: 언데드 테마 batch.
-    // '정원 요정', ← cycle 167: 자연/꽃 테마 batch.
-    '종말의 마법사', '종말의 전령', '차원 방랑자',
-    // '최후의 수호자', ← cycle 168: 부패/타락 batch.
-    // '타락한 용사', ← cycle 168: 부패/타락 batch.
-    // '파멸의 기사', ← cycle 168: 부패/타락 batch.
-    // '폭주 자동인형', ← cycle 168: 실험실/기계 batch.
-    // '폭풍 그리핀', ← cycle 166: 폭풍 테마 batch.
-    // '해골 마법사', ← cycle 166: 언데드 테마 batch.
-    '허무 집행관', '혼돈의 추종자',
-    // '화산 정령', ← cycle 165: 화염 테마 batch.
-    // '화산재 골렘', ← cycle 165: 화염 테마 batch.
-    // '화염 비룡', ← cycle 165: 화염 테마 batch.
-]);
+// cycle 165 baseline — 42 → 165(-8) → 166(-8) → 167(-8) → 168(-8) → 169(-10) = 0 🎯
+// 모든 maps.ts spawn pool 참조가 MONSTERS profile을 가짐. 빈 Set lock.
+const KNOWN_MISSING_MAP_MONSTERS = new Set([]);
 
 const collectMapMonsterRefs = async () => {
     const maps = await readFile(path.join(ROOT, 'src/data/maps.ts'), 'utf8');
