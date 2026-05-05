@@ -103,15 +103,15 @@ export const QUESTS: any = [
     // 보스 챌린지
     { id: 132, title: '[보스] 하수도 여왕 처치',      desc: '하수도의 여왕을 처치하세요',       target: '하수도의 여왕',     goal: 1, reward: { exp: 2000,  gold: 3000 },                         minLv: 10 },
     { id: 133, title: '[보스] 전초기지 사령관 격파',  desc: '전초기지 사령관을 격파하세요',     target: '전초기지 사령관',   goal: 1, reward: { exp: 3000,  gold: 5000 },                         minLv: 18 },
-    { id: 134, title: '[보스] 기계 장군 파괴',        desc: '기계 폐도의 장군을 파괴하세요',   target: '기계 장군',         goal: 1, reward: { exp: 6000,  gold: 12000, item: '부서진 기어' },  minLv: 35 },
+    { id: 134, title: '[보스] 기계 장군 파괴',        desc: '기계 폐도의 장군을 파괴하세요',   target: '기계 장군',         goal: 1, reward: { exp: 6000,  gold: 12000, item: '기계 코어' },  minLv: 35 },
 
     // ── 직업/빌드 특화 퀘스트 ────────────────────────────────────────────────
     { id: 60, title: '대장장이의 의뢰',      type: 'craft',           desc: '아이템 3개 제작',              target: 'crafts',             goal: 3,  reward: { exp: 3000,  gold: 5000,  item: '강화 재료' }, minLv: 10 },
     { id: 61, title: '탐험가의 기록',        type: 'explore_count',   desc: '20번 탐색',                    target: 'explores',           goal: 20, reward: { exp: 5000,  gold: 3000 }, minLv: 5 },
-    { id: 62, title: '생존의 의지',          type: 'survive_low_hp',  desc: 'HP 20% 이하에서 승리 5회',     target: 'lowHpWins',          threshold: 0.2, goal: 5, reward: { exp: 8000, gold: 6000, item: '생존자의 반지' }, minLv: 15 },
-    { id: 63, title: '맨몸의 용사',          type: 'survive_low_hp',  desc: 'HP 10% 이하에서 승리 3회',     target: 'lowHpWins',          threshold: 0.1, goal: 3, reward: { exp: 12000, gold: 10000, item: '투사의 증표' }, minLv: 25 },
+    { id: 62, title: '생존의 의지',          type: 'survive_low_hp',  desc: 'HP 20% 이하에서 승리 5회',     target: 'lowHpWins',          threshold: 0.2, goal: 5, reward: { exp: 8000, gold: 6000, item: '엘릭서' }, minLv: 15 },
+    { id: 63, title: '맨몸의 용사',          type: 'survive_low_hp',  desc: 'HP 10% 이하에서 승리 3회',     target: 'lowHpWins',          threshold: 0.1, goal: 3, reward: { exp: 12000, gold: 10000, item: '엘릭서' }, minLv: 25 },
     { id: 64, title: '황금 수집가',          type: 'explore_count',   desc: '50번 탐색',                    target: 'explores',           goal: 50, reward: { exp: 10000, gold: 15000 }, minLv: 20 },
-    { id: 65, title: '장인의 길',            type: 'craft',           desc: '아이템 10개 제작',             target: 'crafts',             goal: 10, reward: { exp: 15000, gold: 20000, item: '장인의 도구' }, minLv: 25 },
+    { id: 65, title: '장인의 길',            type: 'craft',           desc: '아이템 10개 제작',             target: 'crafts',             goal: 10, reward: { exp: 15000, gold: 20000, item: '강화 재료' }, minLv: 25 },
     { id: 66, title: '현상금 사냥꾼',        type: 'bounty_count',    desc: '현상수배 5건 완료',            target: 'bountiesCompleted',  goal: 5,  reward: { exp: 10000, gold: 15000 }, minLv: 10 },
     { id: 67, title: '전설의 사냥꾼',        type: 'bounty_count',    desc: '현상수배 15건 완료',           target: 'bountiesCompleted',  goal: 15, reward: { exp: 25000, gold: 40000, item: '현상금 사냥꾼의 망토' }, minLv: 25 },
     { id: 68, title: '파쇄 전술 훈련',       type: 'build_victory',   buildTag: 'crusher',  buildLabel: '양손 파쇄',  desc: '양손 파쇄 운영으로 전투 4회 승리', objective: '양손 파쇄 축으로 전투 승리 4회', target: 'crusher', goal: 4, reward: { exp: 7000, gold: 8500 }, minLv: 8 },
@@ -119,17 +119,17 @@ export const QUESTS: any = [
     { id: 70, title: '방벽 유지 규율',       type: 'build_victory',   buildTag: 'fortress', buildLabel: '방패 요새',  desc: '방패 요새 운영으로 전투 4회 승리', objective: '방패 요새 축으로 전투 승리 4회', target: 'fortress', goal: 4, reward: { exp: 9000, gold: 9500 }, minLv: 12 },
     { id: 71, title: '비전 공명 관측',       type: 'build_victory',   buildTag: 'arcane',   buildLabel: '비전 공명',  desc: '비전 공명 운영으로 전투 4회 승리', objective: '비전 공명 축으로 전투 승리 4회', target: 'arcane', goal: 4, reward: { exp: 9500, gold: 10000 }, minLv: 12 },
     { id: 72, title: '개척자의 현장 기록',   type: 'discovery_count', buildTag: 'explorer', buildLabel: '탐험 수집가', desc: '탐험 발견 6회 달성', objective: '탐험 발견 6회 달성', target: 'discoveries', goal: 6, reward: { exp: 10000, gold: 11000 }, minLv: 10 },
-    { id: 73, title: '마스터 크래프터',      type: 'craft',           desc: '아이템 25개 제작',             target: 'crafts',             goal: 25, reward: { exp: 30000, gold: 40000, item: '전설의 장인 도구' }, minLv: 40 },
+    { id: 73, title: '마스터 크래프터',      type: 'craft',           desc: '아이템 25개 제작',             target: 'crafts',             goal: 25, reward: { exp: 30000, gold: 40000, item: '강화 재료' }, minLv: 40 },
     { id: 74, title: '탐험의 극한',          type: 'explore_count',   desc: '100번 탐색',                   target: 'explores',           goal: 100, reward: { exp: 20000, gold: 30000 }, minLv: 30 },
-    { id: 75, title: '전설의 경계인',        type: 'survive_low_hp',  desc: 'HP 5% 이하에서 승리 1회',      target: 'lowHpWins',          threshold: 0.05, goal: 1, reward: { exp: 20000, gold: 25000, item: '기적의 부적' }, minLv: 35 },
+    { id: 75, title: '전설의 경계인',        type: 'survive_low_hp',  desc: 'HP 5% 이하에서 승리 1회',      target: 'lowHpWins',          threshold: 0.05, goal: 1, reward: { exp: 20000, gold: 25000, item: '엘릭서' }, minLv: 35 },
     { id: 76, title: '끝없는 현상금',        type: 'bounty_count',    desc: '현상수배 30건 완료',           target: 'bountiesCompleted',  goal: 30, reward: { exp: 50000, gold: 80000, item: '전설 현상수배 증표' }, minLv: 40 },
 
     // ── 스토리 퀘스트 ─────────────────────────────────────────────────────────
     { id: 80, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다',      type: 'explore_count', target: 'explores', goal: 1,  reward: { exp: 100, gold: 200 },            minLv: 1 },
     { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5 },
-    { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 처치', target: '화염 정령',   goal: 5,  reward: { exp: 3000, gold: 3000, item: '불의 시험 증표' }, minLv: 15 },
+    { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 처치', target: '화염 정령',   goal: 5,  reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15 },
     { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙결의 마녀의 정체를 밝혀라',    target: '빙결의 마녀', goal: 1,  reward: { exp: 8000, gold: 8000, item: '해방의 빙정' },    minLv: 30 },
-    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도의 진실을 파헤쳐라',    target: '증기 골렘',   goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 문명의 유산' }, minLv: 28 },
+    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도의 진실을 파헤쳐라',    target: '증기 골렘',   goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 28 },
     { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕의 사도를 통해 마왕의 계획을 알아라', target: '마왕의 사도', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 40 },
     { id: 86, title: '[스토리] 에테르의 균열', desc: '에테르 관문의 균열을 조사하라', target: '에테르 파편체', goal: 10, reward: { exp: 20000, gold: 25000, item: '에테르 탐사 보고서' }, minLv: 50 },
     { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕을 쓰러뜨리고 세계를 구하라', target: '마왕',      goal: 1,  reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 50 },
@@ -147,7 +147,7 @@ export const QUESTS: any = [
     { id: 90, title: '몬스터 100격파',   desc: '누적 몬스터 100마리 처치', type: 'explore_count', target: 'kills',  goal: 100,  reward: { exp: 5000,  gold: 10000 },           minLv: 10 },
     { id: 91, title: '몬스터 500격파',   desc: '누적 몬스터 500마리 처치', type: 'explore_count', target: 'kills',  goal: 500,  reward: { exp: 20000, gold: 30000, item: '전사의 훈장' }, minLv: 25 },
     { id: 92, title: '몬스터 1000격파',  desc: '누적 몬스터 1000마리 처치', type: 'explore_count', target: 'kills', goal: 1000, reward: { exp: 50000, gold: 80000, item: '학살자의 칭호증' }, minLv: 40 },
-    { id: 93, title: '보스 사냥꾼',      desc: '보스 몬스터 10회 처치',    type: 'explore_count', target: 'bossKills', goal: 10, reward: { exp: 30000, gold: 50000, item: '보스 사냥꾼 증표' }, minLv: 25 },
+    { id: 93, title: '보스 사냥꾼',      desc: '보스 몬스터 10회 처치',    type: 'explore_count', target: 'bossKills', goal: 10, reward: { exp: 30000, gold: 50000, item: '영웅의 물약' }, minLv: 25 },
     { id: 94, title: '제작 마스터',      type: 'craft', desc: '총 50회 제작',  target: 'crafts', goal: 50, reward: { exp: 60000, gold: 80000, item: '전설 레시피' }, minLv: 50 },
     { id: 95, title: '세계 탐험가',      type: 'explore_count', desc: '총 200번 탐색', target: 'explores', goal: 200, reward: { exp: 40000, gold: 60000, item: '탐험가의 외투' }, minLv: 35 },
 
@@ -197,9 +197,9 @@ export const ACHIEVEMENTS: any = [
 
     // ── 보스 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_boss_first',   title: '용사의 증명',    desc: '보스 첫 처치',              target: 'bossKills',  goal: 1,   reward: { gold: 1000 } },
-    { id: 'ach_boss_5',       title: '보스 사냥꾼',    desc: '보스 5회 처치',             target: 'bossKills',  goal: 5,   reward: { gold: 5000, item: '보스 사냥꾼 인장' } },
-    { id: 'ach_boss_10',      title: '전설의 토벌자',  desc: '보스 10회 처치',            target: 'bossKills',  goal: 10,  reward: { gold: 15000, item: '보스 토벌 증표' } },
-    { id: 'ach_boss_25',      title: '신화의 사냥꾼',  desc: '보스 25회 처치',            target: 'bossKills',  goal: 25,  reward: { gold: 40000, item: '신화 사냥 훈장' } },
+    { id: 'ach_boss_5',       title: '보스 사냥꾼',    desc: '보스 5회 처치',             target: 'bossKills',  goal: 5,   reward: { gold: 5000, item: '영웅의 물약' } },
+    { id: 'ach_boss_10',      title: '전설의 토벌자',  desc: '보스 10회 처치',            target: 'bossKills',  goal: 10,  reward: { gold: 15000, item: '영웅의 물약' } },
+    { id: 'ach_boss_25',      title: '신화의 사냥꾼',  desc: '보스 25회 처치',            target: 'bossKills',  goal: 25,  reward: { gold: 40000, item: '분노의 물약' } },
 
     // ── 골드 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_gold_1000',    title: '저축왕',         desc: '누적 골드 1000G 달성',      target: 'total_gold', goal: 1000,   reward: { item: '하급 체력 물약' } },
@@ -212,7 +212,7 @@ export const ACHIEVEMENTS: any = [
     { id: 'ach_lv_20',        title: '성숙한 전사',    desc: '레벨 20 달성',              target: 'level',      goal: 20,   reward: { item: '강화된 갑옷' } },
     { id: 'ach_lv_30',        title: '노련한 모험가',  desc: '레벨 30 달성',              target: 'level',      goal: 30,   reward: { item: '심판자의 검' } },
     { id: 'ach_lv_50',        title: '전설의 경지',    desc: '레벨 50 달성',              target: 'level',      goal: 50,   reward: { item: '전설의 갑주' } },
-    { id: 'ach_lv_70',        title: '신의 영역',      desc: '레벨 70 달성',              target: 'level',      goal: 70,   reward: { item: '신화 전설 영혼' } },
+    { id: 'ach_lv_70',        title: '신의 영역',      desc: '레벨 70 달성',              target: 'level',      goal: 70,   reward: { item: '영웅의 물약' } },
 
     // ── 사망 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_die_1',        title: '죽음의 첫맛',    desc: '처음으로 전사',             target: 'deaths',     goal: 1,   reward: { gold: 100 } },
@@ -229,8 +229,8 @@ export const ACHIEVEMENTS: any = [
 
     // ── 제작 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_craft_5',      title: '견습 대장장이',  desc: '아이템 5개 제작',           target: 'crafts',     goal: 5,   reward: { gold: 1000 } },
-    { id: 'ach_craft_20',     title: '숙련 대장장이',  desc: '아이템 20개 제작',          target: 'crafts',     goal: 20,  reward: { gold: 5000, item: '대장장이 망치' } },
-    { id: 'ach_craft_50',     title: '장인',           desc: '아이템 50개 제작',          target: 'crafts',     goal: 50,  reward: { gold: 15000, item: '장인의 도구' } },
+    { id: 'ach_craft_20',     title: '숙련 대장장이',  desc: '아이템 20개 제작',          target: 'crafts',     goal: 20,  reward: { gold: 5000, item: '강화 재료' } },
+    { id: 'ach_craft_50',     title: '장인',           desc: '아이템 50개 제작',          target: 'crafts',     goal: 50,  reward: { gold: 15000, item: '강화 재료' } },
     { id: 'ach_craft_100',    title: '전설의 장인',    desc: '아이템 100개 제작',         target: 'crafts',     goal: 100, reward: { gold: 40000, item: '전설 제작 증표' } },
 
     // ── 휴식 업적 ─────────────────────────────────────────────────────────────
@@ -257,8 +257,8 @@ export const ACHIEVEMENTS: any = [
 
     // ── 합성 업적 ────────────────────────────────────────────────────────────
     { id: 'ach_synth_5',   title: '연금술사 입문', desc: '합성 5회 성공',   target: 'synths',     goal: 5,   reward: { gold: 2000 } },
-    { id: 'ach_synth_20',  title: '숙련 연금술사', desc: '합성 20회 성공',  target: 'synths',     goal: 20,  reward: { gold: 8000, item: '연금술사 장갑' } },
-    { id: 'ach_synth_50',  title: '대연금술사',    desc: '합성 50회 성공',  target: 'synths',     goal: 50,  reward: { gold: 25000, item: '대연금술사 코트' } },
+    { id: 'ach_synth_20',  title: '숙련 연금술사', desc: '합성 20회 성공',  target: 'synths',     goal: 20,  reward: { gold: 8000, item: '분노의 물약' } },
+    { id: 'ach_synth_50',  title: '대연금술사',    desc: '합성 50회 성공',  target: 'synths',     goal: 50,  reward: { gold: 25000, item: '수호의 물약' } },
 
     // ── 탐험 지역 업적 ───────────────────────────────────────────────────────
     { id: 'ach_discover_5',  title: '호기심 많은 여행자', desc: '새 지역 5곳 발견',  target: 'discoveries', goal: 5,  reward: { gold: 1000 } },
@@ -278,7 +278,7 @@ export const ACHIEVEMENTS: any = [
     { id: 'ach_sig_first',    title: '첫 번째 전설',      desc: 'dedicated signature 아이템 첫 발견',   target: 'signaturesDiscovered', goal: 1,  reward: { gold: 3000, item: '영웅의 물약' } },
     { id: 'ach_sig_5',        title: '전설 수집가',       desc: 'dedicated signature 5종 발견',         target: 'signaturesDiscovered', goal: 5,  reward: { gold: 15000, item: '엘릭서' } },
     { id: 'ach_sig_10',       title: '전설의 서사',       desc: 'dedicated signature 10종 발견',        target: 'signaturesDiscovered', goal: 10, reward: { gold: 40000, item: '영웅의 물약' } },
-    { id: 'ach_sig_20',       title: '모든 전설의 증인',  desc: 'dedicated signature 20종 전부 발견',   target: 'signaturesDiscovered', goal: 20, reward: { gold: 150000, item: '신화 전설 영혼', premiumCurrency: 30 } },
+    { id: 'ach_sig_20',       title: '모든 전설의 증인',  desc: 'dedicated signature 20종 전부 발견',   target: 'signaturesDiscovered', goal: 20, reward: { gold: 150000, item: '영웅의 물약', premiumCurrency: 30 } },
     { id: 'ach_sig_set_1',    title: '세트의 완성',       desc: 'signature 세트 1개 완성(멤버 전원 수집)', target: 'signatureSetsCompleted', goal: 1, reward: { gold: 25000, item: '세트 완성의 증표' } },
     { id: 'ach_sig_set_all',  title: '전설의 집대성',     desc: '모든 signature 세트 완성',              target: 'signatureSetsCompleted', goal: 5, reward: { gold: 250000, item: '에테르 집대성의 왕관', premiumCurrency: 100 } },
 
@@ -300,5 +300,5 @@ export const ACHIEVEMENTS: any = [
     // achievement reward가 비어있던 자리. 5 chains: fire/frozen/void/ancient/demon.
     { id: 'ach_chain_1',   title: '체인 입문자',      desc: '발견 체인 1개 완료',  target: 'discoveryChains', goal: 1, reward: { gold: 2000 } },
     { id: 'ach_chain_3',   title: '체인 추적자',      desc: '발견 체인 3개 완료',  target: 'discoveryChains', goal: 3, reward: { gold: 8000, item: '엘릭서' } },
-    { id: 'ach_chain_all', title: '세계의 비밀 수호자', desc: '모든 발견 체인 5개 완료', target: 'discoveryChains', goal: 5, reward: { gold: 30000, item: '신화 전설 영혼', premiumCurrency: 20 } },
+    { id: 'ach_chain_all', title: '세계의 비밀 수호자', desc: '모든 발견 체인 5개 완료', target: 'discoveryChains', goal: 5, reward: { gold: 30000, item: '영웅의 물약', premiumCurrency: 20 } },
 ];
