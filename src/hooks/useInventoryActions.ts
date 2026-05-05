@@ -417,11 +417,19 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             if ((player.premiumCurrency || 0) < titleCost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
             const owned = player.stats?.cosmeticTitles || [];
             if (owned.includes(titleId)) return addLog('info', MSG.TITLE_ALREADY_OWNED);
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
-                ...p,
-                premiumCurrency: p.premiumCurrency - titleCost,
-                stats: { ...(p.stats || {}), cosmeticTitles: [...owned, titleId] },
-            }) });
+            // cycle 185: 구매한 cosmetic title을 player.titles에도 추가 — SystemTab에서 활성화 가능.
+            //   기존엔 stats.cosmeticTitles만 저장돼 UI invisible이던 회귀. titleName은 TITLES.id와
+            //   일치 (cycle 185에서 4 cosmetic 정식 등록).
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => {
+                const ownedTitles = Array.isArray(p.titles) ? p.titles : [];
+                const nextTitles = ownedTitles.includes(titleName) ? ownedTitles : [...ownedTitles, titleName];
+                return {
+                    ...p,
+                    premiumCurrency: p.premiumCurrency - titleCost,
+                    titles: nextTitles,
+                    stats: { ...(p.stats || {}), cosmeticTitles: [...owned, titleId] },
+                };
+            } });
             addLog('system', MSG.PREMIUM_PURCHASE(`칭호 [${titleName}]`, titleCost));
         },
 

@@ -311,6 +311,33 @@ export const TITLES = Object.freeze([
         cond: { type: 'seasonTier', val: 30 },
         color: 'text-rose-300',
     },
+
+    // cycle 185: PremiumShop cosmeticTitles 정식 등록 — 구매 후에도 SystemTab에서 활성화 가능.
+    //   기존엔 player.stats.cosmeticTitles에만 저장돼 UI에서 invisible이던 회귀.
+    {
+        id: '별을 보는 자',
+        name: '별을 보는 자',
+        cond: { type: 'cosmetic', val: 0 },
+        color: 'text-indigo-300',
+    },
+    {
+        id: '공허를 걷는 자',
+        name: '공허를 걷는 자',
+        cond: { type: 'cosmetic', val: 0 },
+        color: 'text-violet-300',
+    },
+    {
+        id: '에테르의 아이',
+        name: '에테르의 아이',
+        cond: { type: 'cosmetic', val: 0 },
+        color: 'text-cyan-300',
+    },
+    {
+        id: '세계의 끝',
+        name: '세계의 끝',
+        cond: { type: 'cosmetic', val: 0 },
+        color: 'text-fuchsia-300',
+    },
 ]);
 
 // 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
