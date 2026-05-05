@@ -567,14 +567,22 @@ export const CombatEngine = {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
         }
 
-        // 유물: 주문 메아리 (free_skill) — 15% 확률 MP 무료
+        // 유물: 주문 메아리 (free_skill) — 15% 확률 MP 무료.
         const freeSkillRelic = relics.find((r: any) => r.effect === 'free_skill');
-        const actualMpCost = (freeSkillRelic && Math.random() < freeSkillRelic.val) ? 0 : mpCost;
+        // cycle 155: 시너지 'arcane_singularity' — bonus.freeSkillChance 35% 추가. 유물과 합산.
+        const arcaneSingSyn = (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'arcane_singularity' || s.bonus.freeSkillChance);
+        const freeChance = (freeSkillRelic?.val || 0) + (arcaneSingSyn?.bonus.freeSkillChance || 0);
+        const actualMpCost = (freeChance > 0 && Math.random() < freeChance) ? 0 : mpCost;
 
         const skillElem = skill.type || stats.elem;
         const elementMultiplier = this.getElementMultiplier(skillElem, enemy, relics);
+        // cycle 155: 시너지 'arcane_singularity' — bonus.skillMult 0.3 스킬 피해 +30% (mult 합산).
+        const skillMultSyn = (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'arcane_singularity' || s.bonus.skillMult);
+        const skillMultBonus = skillMultSyn?.bonus.skillMult || 0;
         const { damage: rawSkillDmg, isCrit } = this.calculateDamage(stats, {
-            mult: skill.mult || 1.5,
+            mult: (skill.mult || 1.5) + skillMultBonus,
             guarding: !!enemy.guarding,
             elementMultiplier
         });
@@ -640,7 +648,10 @@ export const CombatEngine = {
         };
         // cycle 151: 'cooldown_reduce' (시간 군주의 왕관) — 스킬 사용 시 초기 쿨다운 -val.cdReduction. firstFree는 별도 사이클.
         const cdRelic = relics.find((r: any) => r.effect === 'cooldown_reduce');
-        const cdReduction = cdRelic?.val?.cdReduction || 0;
+        // cycle 155: 시너지 'time_dominator' — bonus.cdReduction 2 추가. 유물과 합산.
+        const timeDomSyn = (stats.activeSynergies || []).find((s: any) =>
+            s.bonus.effect === 'time_dominator' || s.bonus.cdReduction);
+        const cdReduction = (cdRelic?.val?.cdReduction || 0) + (timeDomSyn?.bonus.cdReduction || 0);
         const baseCd = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
         updatedPlayer.skillLoadout.cooldowns[skill.name] = Math.max(0, baseCd - cdReduction);
 
@@ -719,10 +730,13 @@ export const CombatEngine = {
             logs.push({ type: 'event', text: MSG.SKILL_EXTRA_TURN(skill.name) });
         }
 
-        // cycle 153: 시너지 'time_master' — extraTurnChance 스킬 사용 후 추가 행동.
+        // cycle 153: 시너지 'time_master' (extraTurnChance 0.1) / cycle 155: 'time_dominator' (extraAction 0.3) —
+        //   스킬 사용 후 확률로 추가 행동. 두 시너지 동시 보유 시 더 높은 확률 채택.
         const timeMasterSyn = relics && (stats.activeSynergies || []).find((s: any) =>
-            s.bonus.effect === 'time_master' || s.bonus.extraTurnChance);
-        if (timeMasterSyn && !updatedPlayer.extraTurnGranted && Math.random() < (timeMasterSyn.bonus.extraTurnChance || 0)) {
+            s.bonus.effect === 'time_master' || s.bonus.effect === 'time_dominator'
+            || s.bonus.extraTurnChance || s.bonus.extraAction);
+        const extraChance = (timeMasterSyn?.bonus.extraTurnChance || timeMasterSyn?.bonus.extraAction || 0);
+        if (timeMasterSyn && !updatedPlayer.extraTurnGranted && Math.random() < extraChance) {
             updatedPlayer.extraTurnGranted = true;
             logs.push({ type: 'event', text: `[시간 지배자] 시간이 멈춥니다 — 추가 행동!` });
         }

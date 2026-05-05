@@ -59,14 +59,14 @@ const KNOWN_MISSING_RELIC_EFFECTS = new Set([
     'hell_reaper',
     'annihilator',
     // 'eternal_life',
-    'time_dominator',
+    // 'time_dominator', ← cycle 155: cdReduction + extraAction 시너지 dispatch 추가.
     'absolute_reflect',
     'entropy_brand',
     // 'infinite_devour',
     // 'void_dragon', ← cycle 154: bonus.critDmg 시너지 dispatch 추가 (CombatEngine attack/performSkill).
     // 'absolute_immortal',
     // 'blood_immortal',
-    'arcane_singularity',
+    // 'arcane_singularity', ← cycle 155: freeSkillChance + skillMult 시너지 dispatch 추가.
     // 'primordial_wrath',
     // 'eternal_fortress', ← cycle 154: applySynergyBonuses defMult 추가 (DEF +80%).
     // 'entropy_god', ← cycle 154: applySynergyBonuses chaosAtk → atkMult 합류 (ATK +50%).
