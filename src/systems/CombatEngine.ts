@@ -121,6 +121,16 @@ export const CombatEngine = {
                     flags.voidHeartArmed = true;
                     logs.push({ type: 'event', text: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!' });
                 } else {
+                    // cycle 186: 'reviveTokens' (PremiumShop revive) — HP 0 도달 시 token 1개 소비해 즉시 부활.
+                    //   spec: 'HP/MP 50% 회복 후 즉시 부활'. token 음수 가드.
+                    //   기존엔 token 구매되지만 소비 로직 없어 dead purchase 회귀.
+                    const reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0);
+                    if (reviveTokens > 0) {
+                        nextHp = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * 0.5);
+                        // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
+                        flags.reviveTokenUsed = true;
+                        logs.push({ type: 'event', text: `[즉시 부활] 프리미엄 부활권 사용 — HP/MP 50% 회복!` });
+                    } else {
                     // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
                     // cycle 162: atkBuff/duration tempBuff 적용 추가 — 부활 직후 N턴 동안 ATK 증폭.
                     const phoenixRelic = relics.find((relic: any) => relic.effect === 'phoenix_revive');
@@ -140,12 +150,18 @@ export const CombatEngine = {
                         }
                         logs.push({ type: 'event', text: `[불사조의 깃털] 재의 잿더미에서 부활! +${nextHp} HP, ATK +${Math.round(atkBuff * 100)}% (${duration}턴)` });
                     }
+                    } // close cycle 186 else (token-not-used path)
                 }
             }
         }
 
         const updatedPlayer: any = { ...player, hp: nextHp, combatFlags: flags };
         if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
+        // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
+        if (flags.reviveTokenUsed) {
+            updatedPlayer.reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0) - 1;
+            updatedPlayer.mp = Math.min(player.maxMp || 50, Math.floor((player.maxMp || 50) * 0.5));
+        }
         return {
             updatedPlayer,
             isDead: nextHp <= 0

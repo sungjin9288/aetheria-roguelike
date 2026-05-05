@@ -349,7 +349,11 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 if (validation.reason === 'NO_GOLD') return addLog('error', MSG.SYNTHESIS_NOT_ENOUGH_GOLD);
                 return addLog('error', MSG.SYNTHESIS_NOT_ENOUGH);
             }
-            if (useProtect && player.premiumCurrency < BALANCE.SYNTHESIS_PROTECT_COST) {
+            // cycle 186: useProtect 시 synthProtects 토큰 우선 소비 — 없으면 premiumCurrency 차감.
+            //   기존엔 token 무시하고 premium 차감만 했음 → purchaseSynthProtect 구매가 dead purchase.
+            const ownedTokens = (player as any).stats?.synthProtects || 0;
+            const useToken = useProtect && ownedTokens > 0;
+            if (useProtect && !useToken && player.premiumCurrency < BALANCE.SYNTHESIS_PROTECT_COST) {
                 return addLog('error', MSG.PREMIUM_INSUFFICIENT(BALANCE.PREMIUM_CURRENCY_NAME));
             }
 
@@ -360,11 +364,15 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 ...result.returnedItems,
             ];
 
+            // 토큰 사용 시 premium currency는 차감 안 함, synthProtects 1 차감.
+            const finalPremiumSpent = useToken ? 0 : result.premiumSpent;
+            const protectStatsDelta = useToken ? { synthProtects: ownedTokens - 1 } : {};
             let updatedPlayer = incrementStat({
                 ...player,
                 gold: player.gold - result.goldSpent,
-                premiumCurrency: player.premiumCurrency - result.premiumSpent,
+                premiumCurrency: player.premiumCurrency - finalPremiumSpent,
                 inv: newInv,
+                stats: { ...(player.stats || {}), ...protectStatsDelta },
             }, 'syntheses');
 
             if (result.success && result.outputItem) {
