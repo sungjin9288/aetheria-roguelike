@@ -66,25 +66,27 @@ export const processLoot = (enemy: Monster, player: Player | null = null, signat
         return { items, logs };
     }
 
-    // 레거시 LOOT_TABLE 폴백
+    // 레거시 LOOT_TABLE 폴백 (없으면 보너스 드랍만 시도)
+    // cycle 171: 기존에는 lootList 없으면 early return으로 보너스 드랍 로직까지 차단됐음.
+    //   non-boss 104종(drop/loot 둘 다 없음)이 고레벨이어도 빈손 회귀 fix.
     const lootList = LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string];
-    if (!lootList || lootList.length === 0) return { items: [], logs: [] };
+    if (lootList && lootList.length > 0) {
+        lootList.forEach((itemName: any) => {
+            const chance = Math.min(1, BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
+            if (Math.random() < chance) {
+                const itemData = allItems.find((i: any) => i.name === itemName);
+                if (!itemData) return;
 
-    lootList.forEach((itemName: any) => {
-        const chance = Math.min(1, BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
-        if (Math.random() < chance) {
-            const itemData = allItems.find((i: any) => i.name === itemName);
-            if (!itemData) return;
-
-            const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
-            const newItem = applyItemPrefix(baseItem);
-            items.push(newItem);
-            logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
-            if (newItem.prefixed) {
-                logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
+                const newItem = applyItemPrefix(baseItem);
+                items.push(newItem);
+                logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
+                if (newItem.prefixed) {
+                    logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                }
             }
-        }
-    });
+        });
+    }
 
     // 고레벨 몬스터 보너스 장비 드랍 (exp 기반 레벨 추정)
     const inferredLevel = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
