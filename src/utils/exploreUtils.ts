@@ -355,7 +355,7 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
                     updated.premiumCurrency = (updated.premiumCurrency || 0) + chain.reward.premiumCurrency;
                 }
                 if (chain.reward.item) {
-                    // cycle 180: 'DB.ITEMS.allItems'는 존재하지 않는 필드 — DB.ITEMS는 object
+                    // cycle 180: 이전엔 존재하지 않는 allItems 필드를 lookup해 silent miss — DB.ITEMS는 object
                     //   { weapons, armors, ... }. 기존 lookup이 항상 undefined 반환해 cycle 177
                     //   reward.item fix 후에도 chain reward 아이템이 silent 누락이던 회귀 fix.
                     //   gameUtils.findItemByName(getAllItems() lookup) 사용으로 정합.
