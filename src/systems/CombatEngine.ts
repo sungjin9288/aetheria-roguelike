@@ -700,7 +700,14 @@ export const CombatEngine = {
         const arcaneSingSyn = (stats.activeSynergies || []).find((s: any) =>
             s.bonus.effect === 'arcane_singularity' || s.bonus.freeSkillChance);
         const freeChance = (freeSkillRelic?.val || 0) + (arcaneSingSyn?.bonus.freeSkillChance || 0);
-        const actualMpCost = (freeChance > 0 && Math.random() < freeChance) ? 0 : mpCost;
+        // cycle 163: 'cooldown_reduce' (시간 군주의 왕관) — val.firstFree=true면 전투 첫 스킬 MP 무소비.
+        //   cycle 151에서 cdReduction만 적용 → firstFree 보조 메커니즘 추가.
+        const playerFlags: any = (player as any).combatFlags || {};
+        const cdRelicForFree = relics.find((r: any) => r.effect === 'cooldown_reduce');
+        const firstFreeAvailable = cdRelicForFree?.val?.firstFree && !playerFlags.firstSkillUsed;
+        const actualMpCost = firstFreeAvailable
+            ? 0
+            : (freeChance > 0 && Math.random() < freeChance) ? 0 : mpCost;
 
         const skillElem = skill.type || stats.elem;
         const elementMultiplier = this.getElementMultiplier(skillElem, enemy, relics);
@@ -770,7 +777,9 @@ export const CombatEngine = {
             skillLoadout: { selected: loadout.selected || 0, cooldowns: { ...cooldowns } },
             combatFlags: {
                 ...this.getCombatFlags(player),
-                comboCount: 0
+                comboCount: 0,
+                // cycle 163: cooldown_reduce.firstFree — 첫 스킬 사용 후 플래그 set.
+                firstSkillUsed: true,
             }
         };
         // cycle 151: 'cooldown_reduce' (시간 군주의 왕관) — 스킬 사용 시 초기 쿨다운 -val.cdReduction. firstFree는 별도 사이클.
@@ -901,7 +910,8 @@ export const CombatEngine = {
         if (updatedPlayer.tempBuff?.name === skill.name) {
             logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(skill.name, updatedPlayer.tempBuff.turn) });
         }
-        if (actualMpCost === 0 && freeSkillRelic) logs.push({ type: 'event', text: `[주문 메아리] MP 소모 없음!` });
+        if (actualMpCost === 0 && firstFreeAvailable) logs.push({ type: 'event', text: `[시간 군주의 왕관] 첫 스킬 MP 무소비!` });
+        else if (actualMpCost === 0 && freeSkillRelic) logs.push({ type: 'event', text: `[주문 메아리] MP 소모 없음!` });
         if (slRelic) {
             const healAmt = Math.floor(totalDamage * slRelic.val);
             if (healAmt > 0) logs.push({ type: 'heal', text: `[영혼 흡수] +${healAmt} HP` });

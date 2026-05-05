@@ -247,6 +247,8 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
             phoenixUsed: false,
             // cycle 159: 'entropy_tick' / 'entropy_brand' — turnCount는 매 전투 시작 시 0으로 리셋.
             turnCount: 0,
+            // cycle 163: 'cooldown_reduce.firstFree' (시간 군주의 왕관) — 매 전투 첫 스킬 무료 가능.
+            firstSkillUsed: false,
         }
     };
 
