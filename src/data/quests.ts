@@ -141,7 +141,7 @@ export const QUESTS: any = [
     { id: 96, title: '[심연] 공허의 문턱',          desc: '무한의 화신(50층)을 정복하라', target: '무한의 화신', goal: 1, reward: { exp: 200000, gold: 200000, item: '마나 결정' }, minLv: 70 },
     { id: 97, title: '[심연] 공허의 신 토벌',       desc: '심연 100층의 최종 보스 공허의 신을 처치하라', target: '공허의 신', goal: 1, reward: { exp: 500000, gold: 500000, item: '어둠의 정수' }, minLv: 75 },
     { id: 98, title: '[심연] 심연의 사냥꾼',        desc: '심연에서 공허의 짐승 20마리 처치', target: '공허의 짐승', goal: 20, reward: { exp: 80000, gold: 80000 }, minLv: 55 },
-    { id: 99, title: '[심연] 혼돈 속의 생존자',     desc: '심연에서 심연의 수호자 10마리 처치', target: '심연의 수호자', goal: 10, reward: { exp: 50000, gold: 50000, item: '기계 코어' }, minLv: 55 },
+    { id: 205, title: '[심연] 혼돈 속의 생존자',     desc: '심연에서 심연의 수호자 10마리 처치', target: '심연의 수호자', goal: 10, reward: { exp: 50000, gold: 50000, item: '기계 코어' }, minLv: 55 },
 
     // ── 반복/수집 퀘스트 ─────────────────────────────────────────────────────
     { id: 90, title: '몬스터 100격파',   desc: '누적 몬스터 100마리 처치', type: 'explore_count', target: 'kills',  goal: 100,  reward: { exp: 5000,  gold: 10000 },           minLv: 10 },
@@ -149,7 +149,7 @@ export const QUESTS: any = [
     { id: 92, title: '몬스터 1000격파',  desc: '누적 몬스터 1000마리 처치', type: 'explore_count', target: 'kills', goal: 1000, reward: { exp: 50000, gold: 80000, item: '분노의 물약' }, minLv: 40 },
     { id: 93, title: '보스 사냥꾼',      desc: '보스 몬스터 10회 처치',    type: 'explore_count', target: 'bossKills', goal: 10, reward: { exp: 30000, gold: 50000, item: '영웅의 물약' }, minLv: 25 },
     { id: 94, title: '제작 마스터',      type: 'craft', desc: '총 50회 제작',  target: 'crafts', goal: 50, reward: { exp: 60000, gold: 80000, item: '강화 재료' }, minLv: 50 },
-    { id: 95, title: '세계 탐험가',      type: 'explore_count', desc: '총 200번 탐색', target: 'explores', goal: 200, reward: { exp: 40000, gold: 60000, item: '사냥꾼의 외투' }, minLv: 35 },
+    { id: 206, title: '세계 탐험가',      type: 'explore_count', desc: '총 200번 탐색', target: 'explores', goal: 200, reward: { exp: 40000, gold: 60000, item: '사냥꾼의 외투' }, minLv: 35 },
 
     // ── 레벨 전직 퀘스트 ─────────────────────────────────────────────────────
     { id: 100, title: '전직의 자격 (2차)',  desc: '레벨 30 달성하여 2차 전직',   target: 'Level', goal: 30, reward: { exp: 0, gold: 5000 }, minLv: 29 },
