@@ -7,6 +7,7 @@ import { toArray, buildRunSummary } from '../../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { appendGrave } from '../../utils/graveUtils.js';
 import { handleVictoryOutcome } from './combatVictory';
+import { soundManager } from '../../systems/SoundManager';
 import type { Item } from '../../types/index.js';
 
 export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
@@ -82,6 +83,8 @@ export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emit
                 dispatch({ type: AT.SET_PLAYER, payload: deathRecordPlayer });
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                 dispatch({ type: AT.SET_ENEMY, payload: null });
+                // cycle 218: 사망 sensory cue — descending tone (cycle 217 lens 확장).
+                soundManager.play('death');
                 emitUnlockedTitles(deathRecordPlayer);
                 defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                 addStoryLog('death', { loc: playerForEnemyTurn.loc });

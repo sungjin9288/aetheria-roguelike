@@ -11,6 +11,7 @@ import { addCombatDigestLogs, getLootUpgradeHint } from './_helpers';
 import { applyAbyssFloorAdvance, handleDemonKingSlain } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
+import { soundManager } from '../../systems/SoundManager';
 
 /**
  * 전투 승리 공통 후처리.
@@ -149,7 +150,13 @@ export const handleVictoryOutcome = ({
     dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
     dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'kills' } });
     const isBossKill = deadEnemy?.isBoss || false;
-    if (isBossKill) dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills' } });
+    if (isBossKill) {
+        dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills' } });
+        // cycle 218: 보스 처치 sensory cue — 5-tone arpeggio (C5→E5→G5→C6→E6) celebratory chord.
+        //   cycle 217 lens 확장 — defined sound but never dispatched. 일반 몹은 무음 유지
+        //   (큰 모먼트만 cue).
+        soundManager.play('victory');
+    }
 
     if (extendedChecks) {
         if (isBossKill && deadEnemy?.baseName) {

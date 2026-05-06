@@ -130,6 +130,8 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         dispatch({ type: AT.SET_PLAYER, payload: deathRecordPlayer });
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                         dispatch({ type: AT.SET_ENEMY, payload: null });
+                        // cycle 218: 사망 sensory cue — descending tone (400→100Hz). cycle 217 lens 확장.
+                        soundManager.play('death');
                         emitUnlockedTitles(deathRecordPlayer);
                         defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                         addStoryLog('death', { loc: playerForEnemyTurn.loc });
@@ -171,6 +173,8 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         dispatch({ type: AT.SET_PLAYER, payload: defeatResult.updatedPlayer });
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                         dispatch({ type: AT.SET_ENEMY, payload: null });
+                        // cycle 218: 도주 실패 후 사망 sensory cue — same death sound as combat death.
+                        soundManager.play('death');
                         emitUnlockedTitles(defeatResult.updatedPlayer);
                         defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                         addStoryLog('death', { loc: player.loc });
