@@ -564,7 +564,9 @@ export const CombatEngine = {
         if (comboTriggered) tags.push('연속 베기');
         if (voidHeartTriggered) tags.push('허공 각성');
 
-        updatedPlayer = { ...updatedPlayer, combatFlags: flags };
+        // cycle 229: 일반 공격 사용 시 spellStackCount 리셋 (연속 스킬 사용 깨짐).
+        //   spell_stack 유물 보유 여부와 무관하게 reset (다음 사용 대비 깨끗한 상태).
+        updatedPlayer = { ...updatedPlayer, combatFlags: { ...flags, spellStackCount: 0 } };
         if (isCrit) {
             updatedPlayer = this.applyCritMpRestore(updatedPlayer, relics, logs);
         }
@@ -743,7 +745,21 @@ export const CombatEngine = {
         const critDmgSynSkill = (stats.activeSynergies || []).find((s: any) =>
             s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg);
         const skillCritMult = (critDmgRelicSkill?.val || 1) * (isCrit && critDmgSynSkill ? (critDmgSynSkill.bonus.critDmg || 1) : 1);
-        const damage = (isCrit && (critDmgRelicSkill || critDmgSynSkill)) ? Math.floor(rawSkillDmg * skillCritMult) : rawSkillDmg;
+        let damage = (isCrit && (critDmgRelicSkill || critDmgSynSkill)) ? Math.floor(rawSkillDmg * skillCritMult) : rawSkillDmg;
+
+        // cycle 229: 'spell_stack' (주문 직조자 spell_weaver) — 스킬 연속 사용 시 데미지 +perStack% 누적,
+        //   max로 cap. 일반 공격(attack)이 spellStackCount를 0으로 리셋. 이전엔 정의만 있고 dispatch
+        //   path 0건이던 silent dead config 8번째 (cycle 222-228 시리즈 마지막 합류).
+        const spellStackRelic = relics.find((r: any) => r.effect === 'spell_stack');
+        if (spellStackRelic) {
+            const perStack = spellStackRelic.val?.perStack || 0;
+            const maxStack = spellStackRelic.val?.max || 0.6;
+            const prevStack = (player as any).combatFlags?.spellStackCount || 0;
+            const stackBonus = Math.min(maxStack, prevStack * perStack);
+            if (stackBonus > 0) {
+                damage = Math.floor(damage * (1 + stackBonus));
+            }
+        }
 
         const dotRelic = relics.find((relic: any) => relic.effect === 'dot_mult');
         const dotMult = dotRelic ? dotRelic.val : 1;
@@ -796,6 +812,12 @@ export const CombatEngine = {
                 comboCount: 0,
                 // cycle 163: cooldown_reduce.firstFree — 첫 스킬 사용 후 플래그 set.
                 firstSkillUsed: true,
+                // cycle 229: spell_stack — 스킬 사용 시 stackCount 증분. 일반 공격 시 0으로 리셋
+                //   (attack 메서드에서 처리). spell_stack 유물 미보유여도 카운터 증분은 안전 (값 사용
+                //   여부는 데미지 계산 시 유물 체크).
+                spellStackCount: spellStackRelic
+                    ? Math.min(((player as any).combatFlags?.spellStackCount || 0) + 1, 999)
+                    : ((player as any).combatFlags?.spellStackCount || 0),
             }
         };
         // cycle 151: 'cooldown_reduce' (시간 군주의 왕관) — 스킬 사용 시 초기 쿨다운 -val.cdReduction. firstFree는 별도 사이클.
