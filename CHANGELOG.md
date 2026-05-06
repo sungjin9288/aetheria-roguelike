@@ -7,6 +7,64 @@
 
 ---
 
+## Cycle 240 🎯 — CHANGELOG에 cycles 222-239 history 일괄 추가
+
+- 마일스톤: cycle 221 batch 이후 18 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221에 이은 10번째 batch.
+- 누적 마일스톤: cycle 220(unit 1162) → 230(unit 1208) → 239(unit 1245, +83 from cycle 220).
+
+검증: tsc 0 / unit 1245 / lint clean / build-guard ok.
+
+---
+
+## Cycle 236-239 — Synergy bonus / skill branch override silent dead config 시리즈 4사이클
+
+- 236: 2 synergy bonus keys dead config — entropy_god의 fixedDmg(매 턴 15% maxHp 고정 피해)와 annihilator/void_dragon의 killStack(처치 시 누적 가속)이 dispatch 0건이던 회귀. applyEntropyTick + handleVictory 양쪽 확장.
+- 237: primordial_wrath 시너지 critChance 0.25 dead config — 마지막 unhandled synergy bonus key. applySynergyBonuses + finalCritChance 합산.
+- 238: skill branch override 'defBonus' 키 dead config — '분노의 방패' / '철벽 배시' branch가 DEF +20% 광고하지만 코드가 read 안 해 0이던 silent 회귀.
+- 239: skill branch override 'effectChance' 키 dead config — '기절 배시' (20% 확률) / '혼란 찌르기' (40% 확률) branches가 100% status 부여하던 OP 회귀. Math.random() 게이트.
+
+cycle 222-229 silent dead config 시리즈와 같은 lens, 12-15사이클 연속 silent dead config / orphan content fix 마무리.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 233-234 — Class weapon / armor coverage orphan content fix
+
+- 233: 8 classes의 weapon 사용 가능 baseline 5+로 확장. 3 zero-weapon classes(성직자/드래곤 나이트/무당)가 '맨손' 외 무기 장착 불가하던 player-facing 회귀 fix. 11개 weapons의 jobs[] 확장.
+- 234: 8 classes의 armor 사용 가능 baseline 5+로 확장 (cycle 233 follow-up). 4 zero-armor classes(성직자/드래곤 나이트/무당/시간술사)가 천옷 외 armor 장착 불가하던 회귀. 16개 armors의 jobs[] 확장.
+
+cycle 231 unreachable T3 classes 후속 회귀 정합성 lock — 18 classes 모두 weapon/armor 5+ playable 보장.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 230-232, 235 — Test determinism + dead reward chain fix
+
+- 230: cycle 156 absolute_reflect 테스트 RNG flake — enemy.pattern 미설정 시 default guardChance 0.2가 20% 확률로 reflect 분기 차단하던 RNG 흔들림 결정론화.
+- 231: 3 T3 classes (드래곤 나이트 / 대마법사 / 그림자 주군) 도달 불가 회귀 — 5 T2 부모(나이트/버서커/아크메이지/흑마법사/어쌔신)의 next: []이라 jobChange 영원히 unlock 불가. T2 → T3 progression 5건 추가.
+- 232: relicShards 5/5 conversion 메커니즘 — UI에 'X/5 조각' 표시되지만 5개 도달 시 변환 코드 0건이던 dead reward chain. applyDailyProtocolProgress 5+ shards 시 1 random 유물 자동 변환 (cap 도달 시 보존).
+- 235: cycle 229 spell_stack 테스트 RNG 분산 flake — DAMAGE_VARIANCE ±10%가 +20% bonus를 깨버리던 흔들림. max stack(+60%) vs stack 0 비교 + 50회 sampling으로 안정화.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 227-229 — Monster / phase / relic effect dead config 3사이클
+
+- 227: 27 monsters의 statusOnHit dead config — 슬라임/화염 비룡/서리 마법사 등이 정의한 statusOnHit (poison/curse/burn/freeze)이 dispatch 0건. heavy hit 시 발동하도록 추가 + status_resist relic 가드.
+- 228: 8 phase3 bosses의 defBonus dead config — 종말의 마왕/절대 공허 등 8개 phase3 보스가 defBonus 10-40 정의했지만 enemyAttack의 phase3 전환에서 atkBonus만 적용되던 'last stand' 강화 의도 절반만 발현 회귀.
+- 229: 'spell_stack' relic effect dead config — spell_weaver legendary가 스킬 연속 사용 시 +60% 데미지 누적 메커니즘이 영원히 0이던 회귀. cycle 148 baseline 0 달성 lock.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 222-226 — Item field silent dead config 5사이클
+
+- 222: Sprint 21 신규 무기 5종(세계수의 검 / 신전 도시의 지팡이 / 균열의 날 / 세계수 절멸창 / 시간 파편 소드) armors 버킷 오배치 — WeaponCodex weapons 카테고리에서 영원히 미발견되던 회귀. 정확한 weapons 버킷으로 이동.
+- 223: 3 cold-themed items의 elem '얼음' → '냉기' 표준 통일 — 39 monsters의 weakness='냉기'와 비매칭이라 ELEMENT_WEAK_MULT 적용 0이던 silent gameplay 회귀.
+- 224: 4 mage items의 mpBonus 필드 dead config — 빙결 지팡이 / 빙하의 지팡이 / 상급 폭풍 로브 / 차원의 로브가 desc_stat에 'MP+N'을 표시하지만 equipmentUtils가 mp 필드만 read해 합계 +150 MP 누락. getItemMpContribution 헬퍼 추가.
+- 225: 2 armors의 hpBonus 필드 dead config — 용암 판금갑 / 용비늘 갑주가 desc_stat에 'HP+80'/'HP+150'을 표시하지만 실제 maxHp 변화 없던 silent 회귀. getItemHpContribution + statsCalculator 합산.
+- 226: 2 armors의 evasion 필드 dead config — 도적/어쌔신용 armor 2종이 desc_stat '회피+8%/12%'를 표시하지만 dispatch path 0건이던 silent 회피 패시브 회귀. CombatEngine.enemyAttack에 회피 roll 추가 (stealth 후순위).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 221 🎯 — CHANGELOG에 cycles 201-220 history 일괄 추가
 
 - 마일스톤: cycle 200 batch 이후 20 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200에 이은 9번째 batch.
