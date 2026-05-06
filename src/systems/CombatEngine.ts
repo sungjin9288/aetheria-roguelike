@@ -1459,7 +1459,13 @@ export const CombatEngine = {
         starterState.stats = {
             ...starterState.stats,
             ...prevStats,
-            deaths: (prevStats.deaths || 0) + 1
+            deaths: (prevStats.deaths || 0) + 1,
+            // cycle 205: areaBossDefeated는 per-RUN flag (exploreUtils.ts:144 주석
+            //   '이번 런 미처치 시 보장'). 사망 = run 종료 → reset 필수.
+            //   기존엔 ...prevStats spread로 보존되어 사망 후 재진입 시 area boss respawn
+            //   영구 차단 → 같은 area의 signature 회수 봉인 + signaturePity counter도
+            //   climb 불가 (보스 kill에서만 +=1). ASCEND/RESET_GAME과 정합성 align.
+            areaBossDefeated: {},
         };
         starterState.meta = meta;
         starterState.achievements = Array.isArray(player.achievements) ? [...player.achievements] : [];
