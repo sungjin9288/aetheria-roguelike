@@ -70,6 +70,9 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                     codexBonusAtk: prevStats.codexBonusAtk || 0,
                     codexBonusDef: prevStats.codexBonusDef || 0,
                     codexBonusHp: prevStats.codexBonusHp || 0,
+                    // cycle 212: signaturePity mercy 카운터 보존 — handleDefeat과 정합 + cycle 75
+                    //   anti-frustration 설계 의도 lock.
+                    signaturePity: prevStats.signaturePity || 0,
                 },
             },
         };
@@ -183,6 +186,10 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 codexBonusAtk: prevStats.codexBonusAtk || 0,
                 codexBonusDef: prevStats.codexBonusDef || 0,
                 codexBonusHp: prevStats.codexBonusHp || 0,
+                // cycle 212: signaturePity multi-run mercy 카운터 보존 — cycle 75 anti-frustration
+                //   설계 정합성. handleDefeat은 prevStats spread로 보존하지만 ASCEND는 보존 list
+                //   미포함이라 wipe되던 비대칭. mercy 시스템 무력화 방지.
+                signaturePity: prevStats.signaturePity || 0,
             },
             premiumCurrency: state.player.premiumCurrency || 0,
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
