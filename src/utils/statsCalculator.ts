@@ -220,6 +220,8 @@ const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) =
     let lowHpAtk = 0;
     // cycle 154: defMult — 'eternal_fortress' 시너지 (DEF +80%) 반영.
     let defMult = 1;
+    // cycle 237: critBonus — 'primordial_wrath' 시너지 (critChance 0.25) 반영.
+    let critBonus = 0;
 
     synergies.forEach((syn: any) => {
         // cycle 153: 시너지 effect-name 명시 매핑 — baseline 가드 통과 + 향후 분기 확장 지점.
@@ -237,9 +239,14 @@ const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) =
         if (syn.bonus.effect === 'entropy_god' || syn.bonus.chaosAtk) {
             atkMult += (syn.bonus.chaosAtk || 0);
         }
+        // cycle 237: 'primordial_wrath' (critChance 0.25) — 시너지 critChance를 baseCritChance에 합산.
+        //   기존엔 dispatch path 0건이던 silent dead config.
+        if (syn.bonus.critChance) {
+            critBonus += syn.bonus.critChance;
+        }
     });
 
-    return { atkMult, statMult, mpFlat, lowHpAtk, defMult };
+    return { atkMult, statMult, mpFlat, lowHpAtk, defMult, critBonus };
 };
 
 /**
@@ -374,7 +381,9 @@ export const calculateFullStats = (player: Player) => {
     const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1) * synergyBonus.statMult * synergyBonus.defMult);
     const finalMaxHp = Math.floor(preBuildStats.maxHp * synergyBonus.statMult);
     const finalMaxMp = preBuildStats.maxMp + (traitBonus.mpFlat || 0) + synergyBonus.mpFlat;
-    const finalCritChance = Math.min(0.75, preBuildStats.critChance + (traitBonus.critBonus || 0) + streak.critBonus);
+    // cycle 237: synergyBonus.critBonus 합산 — primordial_wrath 등 시너지 critChance dead config fix.
+    //   baseCritChance에서 제외 (preBuildStats 의존성 회피), finalCritChance에서 합산.
+    const finalCritChance = Math.min(0.75, preBuildStats.critChance + (traitBonus.critBonus || 0) + streak.critBonus + (synergyBonus.critBonus || 0));
 
     return {
         atk: finalAtk,
