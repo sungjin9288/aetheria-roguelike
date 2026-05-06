@@ -1475,6 +1475,21 @@ export const CombatEngine = {
             { ...DB.ITEMS.consumables[0], id: 'starter_1' },
             { ...DB.ITEMS.consumables[0], id: 'starter_2' }
         ];
+        // cycle 191: 죽음은 RUN 진행도 reset이지만 META 진행도(premium 자산 / 영구 칭호)는 보존.
+        //   cycle 119(6 영구 카운터) / cycle 188(ASCEND premium preserve) 패턴 확장 — 죽음에도 동일.
+        //   기존엔 INITIAL_PLAYER spread로 모두 reset되어 premium currency / 칭호 / 부활권 / 인벤
+        //   확장 슬롯이 사라지던 회귀.
+        starterState.titles = Array.isArray(player.titles) ? [...player.titles] : [];
+        starterState.activeTitle = player.activeTitle || null;
+        starterState.premiumCurrency = Math.max(0, Number((player as any).premiumCurrency) || 0);
+        starterState.reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0);
+        if ((player as any).maxInv !== undefined) {
+            starterState.maxInv = Math.max(20, Number((player as any).maxInv) || 20);
+        }
+        // seasonPass도 RUN 무관 — premium tier 진행도 보존.
+        if ((player as any).seasonPass) {
+            starterState.seasonPass = (player as any).seasonPass;
+        }
 
         return {
             updatedPlayer: starterState,
