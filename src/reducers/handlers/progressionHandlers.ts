@@ -9,13 +9,66 @@ import type { GameState, GameAction } from '../gameReducer';
  * 순환 참조 방지를 위해 팩토리 패턴 사용
  */
 export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
-    RESET_GAME: (state: GameState) => ({
-        ...INITIAL_STATE,
-        grave: state.grave,
-        bootStage: 'ready',
-        uid: state.uid,
-        syncStatus: 'syncing'
-    }),
+    // cycle 204: 사망 후 '다시 시작' 시 META 진행도 보존 — cycle 191(handleDefeat)와 정합.
+    //   기존 동작은 ...INITIAL_STATE로 모든 META를 wipe해 cycle 191의 preserve를
+    //   nullify(다시 시작 클릭 즉시 영구 자산 / 영구 카운터 사라짐).
+    //   이제 cycle 119 / 188 / 191 / 202 / 203 보존 시리즈와 동일 패턴으로 META 명시 보존:
+    //   - meta / titles / activeTitle (영구 자산)
+    //   - premiumCurrency / reviveTokens / maxInv / seasonPass (premium 영구 자산)
+    //   - stats: kills / bossKills / total_gold / abyssRecord / escapes / syntheses /
+    //     maxKillStreak / visitedMaps / discoveryChains / explores / rests / killRegistry /
+    //     buildWins / cosmeticTitles / synthProtects / claimedAchievements (multi-run 카운터/ledger)
+    //   RUN 진행도(gold / inv / equip / relics / hp / mp / quests / skillLoadout)는
+    //   INITIAL_STATE로 reset 유지.
+    RESET_GAME: (state: GameState) => {
+        const prevPlayer: any = state.player || {};
+        const prevStats: any = prevPlayer.stats || {};
+        const initialStats: any = INITIAL_STATE.player.stats || {};
+        return {
+            ...INITIAL_STATE,
+            grave: state.grave,
+            bootStage: 'ready',
+            uid: state.uid,
+            syncStatus: 'syncing',
+            player: {
+                ...INITIAL_STATE.player,
+                meta: { ...INITIAL_STATE.player.meta, ...(prevPlayer.meta || {}) },
+                titles: Array.isArray(prevPlayer.titles) ? [...prevPlayer.titles] : [],
+                activeTitle: prevPlayer.activeTitle || null,
+                premiumCurrency: Math.max(0, Number(prevPlayer.premiumCurrency) || 0),
+                reviveTokens: Math.max(0, Number(prevPlayer.reviveTokens) || 0),
+                ...(prevPlayer.maxInv !== undefined ? { maxInv: Math.max(20, Number(prevPlayer.maxInv) || 20) } : {}),
+                seasonPass: prevPlayer.seasonPass || INITIAL_STATE.player.seasonPass,
+                stats: {
+                    ...initialStats,
+                    kills: prevStats.kills || 0,
+                    bossKills: prevStats.bossKills || 0,
+                    deaths: prevStats.deaths || 0,
+                    total_gold: prevStats.total_gold || 0,
+                    relicCount: prevStats.relicCount || 0,
+                    abyssFloor: prevStats.abyssFloor || 0,
+                    abyssRecord: prevStats.abyssRecord || 0,
+                    escapes: prevStats.escapes || 0,
+                    syntheses: prevStats.syntheses || 0,
+                    maxKillStreak: prevStats.maxKillStreak || 0,
+                    explores: prevStats.explores || 0,
+                    rests: prevStats.rests || 0,
+                    crafts: prevStats.crafts || 0,
+                    bountiesCompleted: prevStats.bountiesCompleted || 0,
+                    demonKingSlain: prevStats.demonKingSlain || 0,
+                    visitedMaps: Array.isArray(prevStats.visitedMaps) ? prevStats.visitedMaps : initialStats.visitedMaps,
+                    discoveryChains: Array.isArray(prevStats.discoveryChains) ? prevStats.discoveryChains : [],
+                    killRegistry: (prevStats.killRegistry && typeof prevStats.killRegistry === 'object') ? prevStats.killRegistry : {},
+                    buildWins: (prevStats.buildWins && typeof prevStats.buildWins === 'object') ? prevStats.buildWins : {},
+                    codex: prevStats.codex || initialStats.codex,
+                    codexClaimed: Array.isArray(prevStats.codexClaimed) ? prevStats.codexClaimed : [],
+                    cosmeticTitles: Array.isArray(prevStats.cosmeticTitles) ? prevStats.cosmeticTitles : [],
+                    synthProtects: prevStats.synthProtects || 0,
+                    claimedAchievements: Array.isArray(prevStats.claimedAchievements) ? prevStats.claimedAchievements : [],
+                },
+            },
+        };
+    },
 
     SET_RUN_SUMMARY: (state: GameState, action: GameAction) =>
         ({ ...state, runSummary: action.payload }),
