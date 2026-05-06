@@ -7,6 +7,41 @@
 
 ---
 
+## Cycle 200 🎯 — CHANGELOG에 cycles 191-199 history 일괄 추가
+
+- 마일스톤: 200 사이클 누적 도달. cycle 190 batch 이후 9 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190에 이은 8번째 batch.
+- 누적 마일스톤: cycle 100(lint clean) → 145(quest item baseline 0) → 159(relic effect baseline 0) → 169(map monster baseline 0) → 188(unit 1000+) → **200(누적 200 사이클)**.
+
+검증: tsc 0 / unit 1047 / lint clean / build-guard ok.
+
+---
+
+## Cycle 197-199 — PRESTIGE_TITLES 정합성 정리 시리즈
+
+- 197: PRESTIGE_TITLES 10종(각성자~에테르의 신)이 ASCEND로 player.titles에 push되지만 TITLES 미등록 → getTitleDefinition undefined → 모든 prestige 칭호가 default 'text-cyber-purple'로 표시되던 visual UX 회귀. 10 Korean id 정식 등록(cond.type='prestigeRank') + 색상 차별화 (cyan→emerald progression). cycle 175(시즌)/cycle 185(cosmetic)/cycle 192(quest reward)와 동일 컨벤션 — 모든 specific cond.type 정식 TITLES 등록 완성 (총 20 신규 entries).
+- 198: hasTemporaryAdventureState가 voidHeart 플래그를 'temporary'로 카운트해 cycle 187 clear preserve 변경 후 안전 맵 이동마다 무한 재호출 회귀. clear가 보존하는 플래그는 has도 미카운트로 일관성 lock.
+- 199: checkTitles에 'prestigeRank' cond.type 핸들러 추가 — ASCEND newTitle 직접 grant 정상 케이스 외에도 복구 케이스(저장 손실/migration) fallback 안전망.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 193-196 — SEASON_XP.codexDiscover dead config 활성
+
+- 193: SEASON_XP.codexDiscover (8 XP) 정의됐으나 dispatch 0건이던 dead config. countNewCodexEntries 헬퍼 추가 + combatVictory에서 신규 codex 등록 수만큼 dispatch.
+- 194: abyss 'prestige_points' reward type이 dead currency. ABYSS_MILESTONE_REWARDS의 floor 75/200/500을 relic_choice/legendary_item으로 교체. combatBossHandlers 분기 + MSG.ABYSS_PRESTIGE_POINTS 제거.
+- 195: dead BALANCE/CONSTANTS 키 6종 정리 (MILESTONE_KILLS / EXP_LEVEL_CAP_50 / RARITY_TIERS / RARITY_SELL_MULT / COSMETIC_TITLE_COST / SAVE_KEY) + 양방향 회귀 가드 (BALANCE.X / (BALANCE as any).X 패턴 모두).
+- 196: codexDiscover dispatch를 useInventoryActions의 3 paths(shopBuy/craft/synth)로 확장. cycle 193 partial fix 완성.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 191-192 — Death/META 진행도 보존 + quest title 정식 등록
+
+- 191: handleDefeat가 RUN 진행도(gold/inv/skillLoadout)는 reset해야 하지만 META 진행도(titles/activeTitle/premiumCurrency/reviveTokens/maxInv/seasonPass) 6종은 보존되어야 함 — INITIAL_PLAYER spread로 모든 자산 reset되던 잠복 회귀. cycle 119(6 영구 카운터)/cycle 188(ASCEND premium preserve) 패턴과 정합.
+- 192: quest 152/153/154의 reward.title 3종(에테르 탐험가/공허의 방랑자/종말의 정복자)이 TITLES 미등록 → SystemTab default 색상 fallback. 정식 등록 + cycle 175/185 컨벤션 (Korean id, cond.type='questReward').
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 190 — CHANGELOG에 cycles 171-189 history 일괄 추가
 
 - 문서: cycle 170 batch 이후 19 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170에 이은 7번째 batch. unit test 1000+ 마일스톤 (cycle 188에서 1002 달성).
