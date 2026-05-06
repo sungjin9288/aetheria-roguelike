@@ -92,9 +92,19 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 crafts: prevStats.crafts,
                 codex: prevStats.codex || initialStats.codex,
                 codexClaimed: prevStats.codexClaimed || [],
+                // cycle 188: cosmeticTitles는 premium 구매로 획득한 영구 자산 — 환생 후에도
+                //   PremiumShop의 'owned' 체크가 정상 동작하도록 보존. 미보존 시 player.titles에는
+                //   남지만 ownership 추적이 풀려 동일 칭호 중복 구매 가능 회귀.
+                cosmeticTitles: Array.isArray(prevStats.cosmeticTitles) ? prevStats.cosmeticTitles : [],
+                // cycle 188: synthProtects(합성 보호권 잔여 토큰) — premium 구매로 획득한 영구 자산.
+                //   미보존 시 환생 후 보유 토큰 0으로 리셋되어 premium 구매가 손실.
+                synthProtects: prevStats.synthProtects || 0,
             },
             premiumCurrency: state.player.premiumCurrency || 0,
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
+            // cycle 188: 프리미엄 구매 자산 보존 — 환생해도 잔여 토큰/확장 슬롯 유지.
+            reviveTokens: (state.player as any).reviveTokens || 0,
+            maxInv: (state.player as any).maxInv || undefined,
         };
         return {
             ...INITIAL_STATE,
