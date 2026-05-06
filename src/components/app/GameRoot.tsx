@@ -27,7 +27,9 @@ const GameRoot = ({
     damageFlash, healFlash, damageAmount,
 }: any) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
-    const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch);
+    // cycle 208: codex prop 전달 — useLegendaryDropDetector가 SEASON_XP 중복 award 방지용
+    //   alreadyInCodex 체크에 활용.
+    const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch, engine.player?.stats?.codex);
 
     // cycle 62: 신규 칭호(wanderer / pathfinder / cartographer / legend_seeker /
     // legend_chronicler 등)가 추가된 이후 기존 save를 로드하면, 이미 조건을 만족
