@@ -558,6 +558,10 @@ export const checkTitles = (player: Player) => {
         if (type === 'rests')          return (player.stats?.rests         || 0) >= val;
         if (type === 'relicCount')     return (player.stats?.relicCount    || 0) >= val;
         if (type === 'prestige')       return (player.meta?.prestigeRank   || 0) >= val;
+        // cycle 199: 'prestigeRank' cond.type — cycle 197에서 PRESTIGE_TITLES 10종을 정식 등록할
+        //   때 도입. ASCEND가 직접 newTitle을 grant하지만 checkTitles에도 fallback handler를 추가해
+        //   복구 케이스(저장 손실 / 마이그레이션 등) 보호.
+        if (type === 'prestigeRank')   return (player.meta?.prestigeRank   || 0) >= val;
         if (type === 'abyssFloor')     return (player.stats?.abyssFloor    || 0) >= val;
         if (type === 'abyssRecord')    return (player.stats?.abyssRecord   || 0) >= val;
         if (type === 'bountyDone')     return (player.stats?.bountiesCompleted || 0) >= val;
