@@ -13,7 +13,8 @@ export const GS = Object.freeze({
     CRAFTING: 'crafting',
     DEAD: 'dead',
     ASCENSION: 'ascension',
-    FORMATION: 'formation',
+    // cycle 207: dead 'formation' state 제거 — 미구현 placeholder. cycle 120/124/195/206
+    //   dead cleanup 패턴. 어떤 핸들러도 dispatch / 비교 안 함.
     TRUE_ENDING: 'true_ending',
 } as const);
 
