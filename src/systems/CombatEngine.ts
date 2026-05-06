@@ -951,6 +951,12 @@ export const CombatEngine = {
                 const atkBonus = skill.val - 1;
                 updatedPlayer.tempBuff = { atk: atkBonus, def: 0, turn: 1, name: skill.name };
             }
+            // cycle 243: skill.mpRestore branch override — '시간 충전' branch B (mpRestore 30) dead config fix.
+            //   '추가 행동 + MP 30 즉시 회복' 광고가 dispatch 0건이던 silent 회귀.
+            if (typeof skill.mpRestore === 'number' && skill.mpRestore > 0) {
+                const effectiveMaxMp = this.getEffectiveMaxMp(player, relics);
+                updatedPlayer.mp = Math.min(effectiveMaxMp, (updatedPlayer.mp || 0) + skill.mpRestore);
+            }
             logs.push({ type: 'event', text: MSG.SKILL_EXTRA_TURN(skill.name) });
         }
 
