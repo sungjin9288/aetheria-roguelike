@@ -510,8 +510,10 @@ export const migrateData = (rawData: any) => {
     if (typeof target.killStreak !== 'number') {
         target.killStreak = 0;
     }
-    // 진 엔딩 파편 카운터
-    target.meta.trueEndingFragments = target.meta.trueEndingFragments || 0;
+    // cycle 206: 진 엔딩 파편 dead meta 필드 제거 — v5.0 schema 잔해 wire-up 안 됨.
+    //   파편 메커니즘은 inv 기반 (combatBossHandlers.ts:15 inv.filter shard count)으로
+    //   구현되어 있어 meta 필드는 dead. cycle 120(discoveries) / cycle 124(comboCount) /
+    //   cycle 195(6 dead constants)와 동일 cleanup 패턴.
 
     // 발견 체인 완료 기록
     target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
