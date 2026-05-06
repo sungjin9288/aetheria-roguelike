@@ -13,6 +13,7 @@ import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
+import { soundManager } from '../../systems/SoundManager';
 
 export const createExploreActions = (deps: any, { commitExploreOutcome }: any) => {
     const { player, gameState, uid, dispatch, addLog, addStoryLog, getFullStats } = deps;
@@ -23,6 +24,11 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
 
             const mapData = DB.MAPS[player.loc];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
+            // cycle 220: 탐험 tick sensory cue — sine wave 800→1200→800Hz arc, 0.16s 짧은 cue
+            //   (gain 0.04 subtle). 정의 있으나 dispatch 0건이던 dead path. 탐험 트리거 시점에
+            //   1회 — narrative event / combat / nothing 분기 전 사용자 입력 confirmation.
+            //   cycle 217-219 sensory cue 시리즈 마지막 합류.
+            soundManager.play('explore');
             const playerRelics = player.relics || [];
             const eventChanceBonus = playerRelics.reduce((acc: any, relic: any) => (
                 relic.effect === 'event_chance' ? acc + relic.val : acc
