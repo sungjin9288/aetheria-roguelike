@@ -277,6 +277,7 @@ export const calculateFullStats = (player: Player) => {
         shieldDef,
         critBonus: equipmentCritBonus,
         mpBonus: equipmentMpBonus,
+        hpBonus: equipmentHpBonus,
     } = equipProfile;
 
     const dualWieldAtkMult = offhandWeapon ? BALANCE.DUAL_WIELD_ATK_BONUS : 1;
@@ -328,7 +329,9 @@ export const calculateFullStats = (player: Player) => {
         dualWieldDefMult *
         affinityDefMult;
 
-    const baseMaxHp = ((player.maxHp ?? 0) + codexBonus.hp + passiveBonus.hp) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
+    // cycle 225: equipmentHpBonus 합산 — armor의 hpBonus 필드 (용암 판금갑 / 용비늘 갑주) 적용.
+    //   기존엔 dead config이라 +230 HP가 영원히 미적용이었음. cycle 224 mpBonus 패턴 동일.
+    const baseMaxHp = ((player.maxHp ?? 0) + codexBonus.hp + passiveBonus.hp + (equipmentHpBonus || 0)) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
     const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat + passiveBonus.mp) * relicBonus.mpMult * (1 + affinityMpBonus);
     const baseCritChance = Math.min(
         0.75,

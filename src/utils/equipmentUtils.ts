@@ -82,6 +82,13 @@ const getItemMpContribution = (item: Item | null | undefined) => {
     return ((item as any)?.mpBonus || 0) + ((item as any)?.mp || 0);
 };
 
+// cycle 225: armor의 hpBonus 필드 합산. 2 armors(용암 판금갑 / 용비늘 갑주)가 desc_stat에
+//   'HP+N'을 표시하지만 코드가 hpBonus를 read 안 해 합계 +230 HP가 silent dead config였음.
+const getItemHpContribution = (item: Item | null | undefined) => {
+    if (!item) return 0;
+    return ((item as any)?.hpBonus || 0);
+};
+
 export const getEquipmentProfile = (equip: EquipSlots = {}) => {
     const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
     const offhandItem = equip.offhand || null;
@@ -102,6 +109,12 @@ export const getEquipmentProfile = (equip: EquipSlots = {}) => {
         mpBonus: getOffhandMpBonus(offhandItem)
             + getItemMpContribution(mainWeapon)
             + getItemMpContribution(equip.armor as any),
+        // cycle 225: armor의 hpBonus 필드 합산 (cycle 224 mpBonus 패턴 동일).
+        //   2 armors(용암 판금갑 / 용비늘 갑주) +230 HP가 dead config이던 회귀 fix.
+        //   weapon/offhand도 미래 대비 합산 — 현재 hpBonus 정의된 weapon/offhand는 0건.
+        hpBonus: getItemHpContribution(mainWeapon)
+            + getItemHpContribution(equip.armor as any)
+            + getItemHpContribution(offhandItem),
     };
 };
 
