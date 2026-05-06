@@ -52,10 +52,20 @@ export const hasTemporaryAdventureState = (player: Player) => {
     );
 };
 
+/**
+ * cycle 187: 안전 지대 이동 시 일시 상태 초기화. void_heart 같은 run-wide 플래그는 보존.
+ *   기존엔 모든 combatFlags를 false로 reset해 voidHeartUsed가 풀려 안전 맵 이동만으로
+ *   death save를 매번 리프레시 가능하던 회귀 fix. desc 'void_heart: 런당 1회'와 정합.
+ */
 export const clearTemporaryAdventureState = (player: Player) => ({
     ...player,
     tempBuff: { ...EMPTY_TEMP_BUFF },
     status: [],
-    combatFlags: { ...DEFAULT_COMBAT_FLAGS },
+    combatFlags: {
+        ...DEFAULT_COMBAT_FLAGS,
+        // run-wide 플래그 보존 (void_heart desc: '런당 1회'). applyBattleStartRelics와 정합.
+        voidHeartUsed: Boolean(player?.combatFlags?.voidHeartUsed),
+        voidHeartArmed: Boolean(player?.combatFlags?.voidHeartArmed),
+    },
     nextHitEvaded: false,
 });
