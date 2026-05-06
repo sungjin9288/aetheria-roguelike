@@ -358,6 +358,19 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     addLog('success', MSG.ACH_REWARD_ITEM(achData.reward.item));
                 }
             }
+            // cycle 215: premiumCurrency 보상이 silently drop되던 회귀 fix — 5 영구 업적
+            //   (ach_abyss_200 / ach_abyss_300 / ach_sig_20 / ach_sig_set_all / ach_chain_all)이
+            //   합계 300 💎를 절대 받을 수 없던 dead reward. cycle 209 quest reward.title 누락 패턴 동일 lens.
+            if (achData.reward?.premiumCurrency) {
+                const gain = Number(achData.reward.premiumCurrency) || 0;
+                if (gain > 0) {
+                    updatedPlayer = {
+                        ...updatedPlayer,
+                        premiumCurrency: (updatedPlayer.premiumCurrency || 0) + gain,
+                    };
+                    addLog('success', `💎 +${gain} 에테르 크리스탈 획득`);
+                }
+            }
 
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);
