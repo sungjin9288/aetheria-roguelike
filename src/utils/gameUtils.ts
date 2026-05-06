@@ -448,6 +448,14 @@ export const migrateData = (rawData: any) => {
     target.premiumCurrency = target.premiumCurrency || 0;
     target.stats.codexClaimed = Array.isArray(target.stats.codexClaimed) ? target.stats.codexClaimed : [];
 
+    // cycle 189: PremiumShop 구매 자산 4종 default — cycle 185(cosmetic title) /
+    //   cycle 186(reviveTokens, synthProtects) / cycle 188(ASCEND preserve) 정합성.
+    //   옛 save에 미정의된 필드를 명시 0/[] 초기화 → fallback 분기 단순화 + 데이터 형태 lock.
+    target.reviveTokens = Math.max(0, Number(target.reviveTokens) || 0);
+    if (target.maxInv !== undefined) target.maxInv = Math.max(20, Number(target.maxInv) || 20);
+    target.stats.synthProtects = Math.max(0, Number(target.stats.synthProtects) || 0);
+    target.stats.cosmeticTitles = Array.isArray(target.stats.cosmeticTitles) ? target.stats.cosmeticTitles : [];
+
     // v4.2 — 시즌 패스
     if (!target.seasonPass) {
         target.seasonPass = { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
