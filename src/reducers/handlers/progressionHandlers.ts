@@ -81,6 +81,9 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                     bountyDate: prevStats.bountyDate ?? null,
                     bountyIssued: Boolean(prevStats.bountyIssued),
                     dailyProtocol: prevStats.dailyProtocol ?? null,
+                    // cycle 216: 일일 grave invasion ledger 보존 — 5회 일일 제한 우회 방지.
+                    dailyInvadeCount: prevStats.dailyInvadeCount || 0,
+                    lastInvadeDate: prevStats.lastInvadeDate ?? null,
                 },
             },
         };
@@ -204,6 +207,10 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 bountyDate: prevStats.bountyDate ?? null,
                 bountyIssued: Boolean(prevStats.bountyIssued),
                 dailyProtocol: prevStats.dailyProtocol ?? null,
+                // cycle 216: 일일 grave invasion ledger 보존 — 5회 일일 제한
+                //   (BALANCE.DAILY_INVADE_LIMIT) 우회 방지. cycle 213 동일 lens.
+                dailyInvadeCount: prevStats.dailyInvadeCount || 0,
+                lastInvadeDate: prevStats.lastInvadeDate ?? null,
             },
             premiumCurrency: state.player.premiumCurrency || 0,
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
