@@ -77,22 +77,6 @@ export const AT = Object.freeze({
 
 export type ActionType = typeof AT[keyof typeof AT];
 
-/**
- * 게임 상태(gameState) 문자열 상수 — 오타 방지 및 중앙화 (#3)
- * 모든 게임 상태는 이 객체를 사용하세요.
- */
-export const GS = Object.freeze({
-    IDLE:         'idle',
-    COMBAT:       'combat',
-    EVENT:        'event',
-    DEAD:         'dead',
-    ASCENSION:    'ascension',
-    MOVING:       'moving',
-    SHOP:         'shop',
-    JOB_CHANGE:   'job_change',
-    QUEST_BOARD:  'quest_board',
-    CRAFTING:     'crafting',
-    TRUE_ENDING:  'true_ending',
-} as const);
-
-export type GameStateValue = typeof GS[keyof typeof GS];
+// cycle 210: dead duplicate GS / GameStateValue export 제거 — gameStates.ts의 GS export가
+//   유일한 정식 source. src/ 전체에서 GS는 항상 './reducers/gameStates'로부터 import.
+//   actionTypes.ts의 GS는 분리 후 정리되지 않은 잔해. cycle 195/206/207 dead cleanup 패턴.
