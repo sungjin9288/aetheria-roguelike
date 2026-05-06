@@ -1,4 +1,5 @@
 import { findItemByName, makeItem } from '../../utils/gameUtils';
+import { RELICS, MAX_RELICS_PER_RUN } from '../../data/relics';
 import type { Player } from '../../types/index.js';
 
 /**
@@ -36,6 +37,20 @@ export const applyDailyProtocolProgress = (player: Player, type: any, amount: an
         return { ...mission, progress, done: progress >= mission.goal };
     });
 
+    // cycle 232: relicShards 5/5 conversion 메커니즘 — UI에 'X/5 조각' 표시되지만 변환 코드 0건
+    //   이던 dead reward chain. 5개 도달 시 1 random 유물 자동 변환 (cap 도달 시 보존).
+    let convertedRelicAdded = null;
+    let postConvertShards = newShards;
+    if (newShards >= 5 && (player.relics || []).length < MAX_RELICS_PER_RUN) {
+        const ownedIds = new Set((player.relics || []).map((r: any) => r?.id));
+        const candidates = RELICS.filter((r: any) => !ownedIds.has(r.id));
+        if (candidates.length > 0) {
+            const pick = candidates[Math.floor(Math.random() * candidates.length)];
+            convertedRelicAdded = pick;
+            postConvertShards = newShards - 5;
+        }
+    }
+
     const nextPlayer: Record<string, any> = {
         ...player,
         stats: {
@@ -43,10 +58,18 @@ export const applyDailyProtocolProgress = (player: Player, type: any, amount: an
             dailyProtocol: {
                 ...dp,
                 missions: updatedMissions,
-                relicShards: newShards,
+                relicShards: postConvertShards,
             }
         }
     };
+
+    if (convertedRelicAdded) {
+        nextPlayer.relics = [...(nextPlayer.relics || []), convertedRelicAdded];
+        nextPlayer.stats = {
+            ...nextPlayer.stats,
+            relicCount: ((nextPlayer.stats as any)?.relicCount || 0) + 1,
+        };
+    }
 
     if (essenceGain > 0) {
         const nextMeta: Record<string, any> = {
