@@ -991,6 +991,18 @@ export const CombatEngine = {
             };
         }
 
+        // cycle 226: 장비 evasion roll — 2 armors(암영 망토 / 공허의 전투 외투)의 evasion 필드가
+        //   desc_stat에 '회피+N%'를 표시하지만 dispatch path 0건이던 silent dead config fix.
+        //   stealth(skill) 후순위로 평가 — 은신은 명시적 발동, evasion은 passive armor 효과.
+        //   cycle 222-225 silent dead config 시리즈 마지막 합류.
+        const armorEvasion = (updatedPlayer.equip?.armor as any)?.evasion || 0;
+        if (armorEvasion > 0 && Math.random() < armorEvasion) {
+            return {
+                updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                logs: [...logs, { type: 'success', text: `[회피] ${enemy.name}의 공격을 회피했습니다!` }]
+            };
+        }
+
         // ── Phase 전환 체크 (보스 + 엘리트 통합) ───────────────────
         if (updatedEnemy.isBoss || updatedEnemy.isElite) {
             const hpRatio = (updatedEnemy.hp ?? 0) / Math.max(1, updatedEnemy.maxHp || (updatedEnemy.hp ?? 1));
