@@ -486,7 +486,11 @@ export const CombatEngine = {
         const { damage: rawBaseDmg, isCrit } = this.calculateDamage(statsForAtk, {
             mult: 1,
             guarding: !!enemy.guarding,
-            elementMultiplier
+            elementMultiplier,
+            // cycle 242: stats.critChance dispatch — finalCritChance(equipment / relic / 칭호 /
+            //   심연 / 시너지 / killStreak / 트레이트 합산)가 SystemTab에 표시만 되고 실제
+            //   attack/skill에는 dispatch 0건이던 dead config fix. 미정의 시 default(0.1) fallback.
+            ...(typeof stats.critChance === 'number' ? { critChance: stats.critChance } : {})
         });
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
@@ -739,10 +743,17 @@ export const CombatEngine = {
         const skillMultSyn = (stats.activeSynergies || []).find((s: any) =>
             s.bonus.effect === 'arcane_singularity' || s.bonus.skillMult);
         const skillMultBonus = skillMultSyn?.bonus.skillMult || 0;
+        // cycle 242: skill.crit branch override 우선, fallback stats.critChance.
+        //   도적 '치명 특화' (crit 0.7) / 어쌔신 '치명 암살' (crit 0.95) branch가 dispatch 0건이던 dead config.
+        //   skill.crit 미정의 시 stats.critChance(equipment / relic / 시너지 / 칭호 합산) 사용.
+        const skillCritChance = (typeof skill.crit === 'number')
+            ? Math.max(0, Math.min(1, skill.crit))
+            : (typeof stats.critChance === 'number' ? stats.critChance : undefined);
         const { damage: rawSkillDmg, isCrit } = this.calculateDamage(stats, {
             mult: (skill.mult || 1.5) + skillMultBonus,
             guarding: !!enemy.guarding,
-            elementMultiplier
+            elementMultiplier,
+            ...(typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
         });
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
