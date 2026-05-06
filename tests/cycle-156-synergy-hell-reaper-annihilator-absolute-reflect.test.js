@@ -55,7 +55,10 @@ test("enemyAttack: absolute_reflect reflect 1.0 — stats.def 기반 반사 (기
         relics: [], skillChoices: {}, titles: [], activeTitle: null,
         killStreak: 0, combatFlags: {}, status: [],
     };
-    const enemy = { name: '오크', hp: 100, maxHp: 100, atk: 50, def: 5 };
+    // cycle 230: pattern 명시 — 미정의 시 default guardChance 0.2가 20% 확률로 guard로 분기되어
+    //   reflect dmg 적용 없이 0 dmg 반환 → 테스트가 RNG로 flaky. guardChance=0으로 고정해
+    //   absolute_reflect 분기를 보장.
+    const enemy = { name: '오크', hp: 100, maxHp: 100, atk: 50, def: 5, pattern: { guardChance: 0, heavyChance: 0 } };
     const stats = {
         atk: 100, def: 50,  // 양수 def → reflectDmg = 50
         relics: [],
