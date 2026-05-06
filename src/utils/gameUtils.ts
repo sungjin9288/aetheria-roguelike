@@ -562,6 +562,11 @@ export const checkTitles = (player: Player) => {
         //   때 도입. ASCEND가 직접 newTitle을 grant하지만 checkTitles에도 fallback handler를 추가해
         //   복구 케이스(저장 손실 / 마이그레이션 등) 보호.
         if (type === 'prestigeRank')   return (player.meta?.prestigeRank   || 0) >= val;
+        // cycle 201: 'seasonTier' cond.type — cycle 175에서 시즌 패스 보상 칭호 3종(시즌
+        //   선구자 / 정복자 / 마스터)을 정식 등록할 때 도입. CLAIM_SEASON_REWARD가 직접 grant하지만
+        //   checkTitles에도 fallback handler를 추가해 복구 케이스(저장 손실 / migration 등) 보호.
+        //   cycle 199 'prestigeRank' 회귀와 동일 패턴.
+        if (type === 'seasonTier')     return ((player as any).seasonPass?.tier || 0) >= val;
         if (type === 'abyssFloor')     return (player.stats?.abyssFloor    || 0) >= val;
         if (type === 'abyssRecord')    return (player.stats?.abyssRecord   || 0) >= val;
         if (type === 'bountyDone')     return (player.stats?.bountiesCompleted || 0) >= val;
