@@ -104,6 +104,20 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 //   isAchievementUnlocked가 여전히 true → claimAchievement는 'claimed.includes()'만
                 //   가드해 ASCEND마다 모든 업적 재청구 가능 exploit. 영구 청구 ledger로 잠금.
                 claimedAchievements: Array.isArray(prevStats.claimedAchievements) ? prevStats.claimedAchievements : [],
+                // cycle 203: cycle 119 누락분 4 영구 카운터 보존 — multi-run achievement / title /
+                //   codex 데이터 소스. 기존엔 ASCEND 시 0 / {} 리셋되어 progress 회귀.
+                //   · explores — 6+ quest target / 1 achievement / 2 title('방랑자' val 100, '길잡이' val 500).
+                //   · rests — title '안락함의 추구자'(rests 50 cond) source.
+                //   · killRegistry — Bestiary / MonsterCodex / atk_per_kill_kind 시너지 source.
+                //   · buildWins — questProgress.ts:51 quest 조건. build kind win counter.
+                explores: prevStats.explores || 0,
+                rests: prevStats.rests || 0,
+                killRegistry: (prevStats.killRegistry && typeof prevStats.killRegistry === 'object')
+                    ? prevStats.killRegistry
+                    : {},
+                buildWins: (prevStats.buildWins && typeof prevStats.buildWins === 'object')
+                    ? prevStats.buildWins
+                    : {},
             },
             premiumCurrency: state.player.premiumCurrency || 0,
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
