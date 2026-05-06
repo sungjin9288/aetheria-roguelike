@@ -73,6 +73,11 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                     // cycle 212: signaturePity mercy 카운터 보존 — handleDefeat과 정합 + cycle 75
                     //   anti-frustration 설계 의도 lock.
                     signaturePity: prevStats.signaturePity || 0,
+                    // cycle 213: 일일 bounty / dailyProtocol 상태 보존 — mid-day RESET_GAME 시
+                    //   일일 1회 제한 우회 (재발급 exploit) 방지.
+                    bountyDate: prevStats.bountyDate ?? null,
+                    bountyIssued: Boolean(prevStats.bountyIssued),
+                    dailyProtocol: prevStats.dailyProtocol ?? null,
                 },
             },
         };
@@ -190,6 +195,12 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 //   설계 정합성. handleDefeat은 prevStats spread로 보존하지만 ASCEND는 보존 list
                 //   미포함이라 wipe되던 비대칭. mercy 시스템 무력화 방지.
                 signaturePity: prevStats.signaturePity || 0,
+                // cycle 213: 일일 bounty / dailyProtocol 상태 보존 — mid-day ASCEND 시 일일 1회
+                //   제한 우회 (재발급 exploit) 방지. cycle 202 paired ledger 패턴 동일 lens.
+                //   handleDefeat과 정합 (prevStats spread로 보존하던 경로와 align).
+                bountyDate: prevStats.bountyDate ?? null,
+                bountyIssued: Boolean(prevStats.bountyIssued),
+                dailyProtocol: prevStats.dailyProtocol ?? null,
             },
             premiumCurrency: state.player.premiumCurrency || 0,
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
