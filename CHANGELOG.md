@@ -7,6 +7,71 @@
 
 ---
 
+## Cycle 221 🎯 — CHANGELOG에 cycles 201-220 history 일괄 추가
+
+- 마일스톤: cycle 200 batch 이후 20 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200에 이은 9번째 batch.
+- 누적 마일스톤: cycle 188(unit 1000+) → 200(누적 200 사이클) → **220(unit 1162, +115)**.
+
+검증: tsc 0 / unit 1162 / lint clean / build-guard ok.
+
+---
+
+## Cycle 217-220 — Sensory cue 시리즈 (defined-but-undispatched sound 4건 보강)
+
+- 217: 레벨업 sensory cue — applyExpGain이 visualEffect='levelUp' set하지만 MainLayout(shake만 처리) + log type mismatch로 audio/visual 둘 다 dead path. useGameEngine에 visualEffect-watching useEffect 추가 → soundManager.play('levelUp').
+- 218: 사망 / 보스 처치 sensory cue — death sound (descending 400→100Hz) + victory sound (5-tone arpeggio) 정의 있으나 dispatch 0건. combatAttack/combatItem GS.DEAD path + combatVictory isBossKill 분기에 dispatch 추가.
+- 219: 스킬 / 휴식 sensory cue — skill sound (sweep tone) + heal sound (ascending arpeggio) 정의 있으나 dispatch 0건. combatAttack performSkill 성공 후 + characterActions rest 성공 후 dispatch.
+- 220: 탐험 sensory cue — explore sound (sine arc, subtle tick 0.16s gain 0.04) 정의 있으나 dispatch 0건. exploreActions validation 통과 후 dispatch. 잔여 dead sound는 'hover' 1건만 (button hover 빈도 너무 높아 의도적 보류).
+
+cycle 117/118/122/123 sensory cue 시리즈 8번째 합류 — SoundManager 16종 중 dispatch path 존재 = 15종.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 211-216 — META preserve series (paired ledger 정합성 + exploit fix)
+
+- 211: codexBonus 3종(Atk/Def/Hp)이 ASCEND/RESET_GAME 시 wipe되어 codexClaimed 재청구 차단과 paired ledger inconsistency → silent permanent stat 손실. 양 분기에 명시 보존.
+- 212: signaturePity mercy 카운터가 handleDefeat은 보존하지만 ASCEND/RESET 시 wipe되어 cycle 75 anti-frustration 설계 무력화. 양 분기 보존으로 정합성 lock (3개 분기 정합).
+- 213: 일일 bounty (bountyDate / bountyIssued) + dailyProtocol이 ASCEND/RESET 시 wipe → mid-day ASCEND로 일일 1회 제한 우회 (재발급 exploit). 양 분기 보존.
+- 214: weeklyProtocol(주간 미션 진행/claimed ledger)이 ASCEND/RESET/handleDefeat 모두에서 wipe → 같은 주 재청구 + 진행도 손실. 3개 분기 모두 명시 보존 (cycle 191 누락분 보강).
+- 216: dailyInvadeCount / lastInvadeDate(grave 일일 5회 제한 ledger)가 ASCEND/RESET 시 wipe → mid-day ASCEND로 5회 추가 침략 가능. 양 분기 보존.
+
+cycle 119 / 188 / 191 / 202-205 / 211-216 META preserve 시리즈 — RUN-bound vs multi-run 분리 정합성 lock.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 208-210 — Dead config / dead grant fix series
+
+- 208: useLegendaryDropDetector가 SEASON_XP.codexDiscover 미적립 — 4 quest reward + 4 event chain reward로 들어오는 signature가 시즌 XP 0건이던 dead config. codex prop 기반 alreadyInCodex 가드로 combatVictory 중복 award 방지하며 dispatch. cycle 193/196 패턴 마지막 path.
+- 209: 5 quest reward.title이 완전 dead grant — cycle 192가 TITLES 등록만 하고 grant 경로(claimQuestReward) 미수리. claimQuestReward에 reward.title push 추가 + 누락 2 entry('지도 제작자' / '전설의 기록자') Korean-id 정식 등록.
+- 210: dead duplicate GS / GameStateValue export from actionTypes.ts 제거 — 정식 source는 gameStates.ts. cycle 195/206/207 dead cleanup 패턴 5번째.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 215 — claimAchievement premiumCurrency dead reward fix (300 💎 회귀)
+
+- 215: 5 영구 업적(ach_abyss_200/300, ach_sig_20/sig_set_all, ach_chain_all)이 합계 300 💎 premiumCurrency 보상을 silently drop. claimAchievement는 reward.gold/item만 처리하고 premiumCurrency 미처리 → 영원히 청구 불가하던 dead reward. cycle 209 quest reward.title 누락 패턴과 동일 lens.
+
+검증: tsc 0 / unit 1134 / lint clean / build-guard ok.
+
+## Cycle 202-207 — META preserve 초반 시리즈 + dead cleanup
+
+- 202: claimedAchievements 영구 ledger 보존 — ASCEND가 claimedAchievements를 wipe하면서 kills/bossKills 등 unlock 카운터는 보존해 ASCEND마다 모든 업적 재청구 가능 exploit (gold/item/칭호 무한 획득).
+- 203: ASCEND가 explores/rests/killRegistry/buildWins 4 영구 카운터 보존 — cycle 119 누락분. Bestiary/MonsterCodex/'방랑자'·'길잡이' title 진행도 wipe 회귀.
+- 204: RESET_GAME META preserve — 사망 후 '다시 시작' 클릭이 cycle 191 META 보존을 즉시 wipe해 cycle 191이 사실상 dead-on-arrival이던 nullify 회귀. RUN 진행도만 reset, META 명시 보존.
+- 205: handleDefeat가 areaBossDefeated를 per-RUN flag로 reset — ...prevStats spread로 보존되어 같은 area의 signature 영구 봉인되던 회귀. exploreUtils 주석 '이번 런 미처치 시 보장'과 정합.
+- 206: dead meta.trueEndingFragments init 제거 — 진 엔딩 파편 메커니즘은 inv 기반으로 별도 구현. wire-up 안 된 v5.0 schema 잔해.
+- 207: dead GS.FORMATION 제거 — 미구현 placeholder, 0건 참조.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 201 — checkTitles seasonTier handler
+
+- 201: 시즌 패스 보상 칭호 3종(시즌 선구자/정복자/마스터)이 cond.type='seasonTier'로 cycle 175 등록되었지만 checkTitles에 'seasonTier' 분기 미구현. CLAIM_SEASON_REWARD 직접 grant는 정상이나 복구 케이스(저장 손실/migration) fallback 안전망 없음. cycle 199 'prestigeRank' 동일 패턴.
+
+검증: tsc 0 / unit 1053 / lint clean / build-guard ok.
+
+---
+
 ## Cycle 200 🎯 — CHANGELOG에 cycles 191-199 history 일괄 추가
 
 - 마일스톤: 200 사이클 누적 도달. cycle 190 batch 이후 9 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190에 이은 8번째 batch.
