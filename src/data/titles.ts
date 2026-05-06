@@ -361,6 +361,23 @@ export const TITLES = Object.freeze([
         color: 'text-orange-300',
     },
 
+    // cycle 209: quest 201/202 reward.title 정식 등록 — cycle 192 누락분.
+    //   기존 cartographer / legend_chronicler 영문-id entry는 checkTitles type='discoveries' /
+    //   'signaturesDiscovered' auto-grant 파이프라인용으로 유지. 본 entry는 quest claim grant
+    //   토큰('지도 제작자' / '전설의 기록자' 한글 string)의 visual lookup 정합성 lock.
+    {
+        id: '지도 제작자',
+        name: '지도 제작자',
+        cond: { type: 'questReward', val: 201 },
+        color: 'text-emerald-300',
+    },
+    {
+        id: '전설의 기록자',
+        name: '전설의 기록자',
+        cond: { type: 'questReward', val: 202 },
+        color: 'text-amber-300',
+    },
+
     // cycle 197: PRESTIGE_TITLES 10종 정식 TITLES 등록 — getTitleDefinition lookup이 token으로
     //   id 비교만 하므로 Korean PRESTIGE_TITLES 토큰들이 기존 TITLES 엔트리와 매칭 안 돼 모두
     //   default color('text-cyber-purple')로 fallback이던 visual UX 회귀.

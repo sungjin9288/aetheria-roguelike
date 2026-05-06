@@ -292,6 +292,23 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 }
             }
 
+            // cycle 209: quest reward.title이 dead grant이던 회귀 fix — cycle 192가 TITLES 등록만
+            //   하고 grant 경로는 미수리. claimQuestReward에서 reward.title이 있으면 player.titles에
+            //   push하고 emitUnlockedTitles로 visual lookup 통합. Set으로 dedup (이미 보유 시 skip).
+            //   영향 quest: 152(에테르 탐험가) / 153(공허의 방랑자) / 154(종말의 정복자) /
+            //   201(지도 제작자) / 202(전설의 기록자).
+            if (qData.reward?.title) {
+                const titleToken = qData.reward.title;
+                if (!(updatedPlayer.titles || []).includes(titleToken)) {
+                    updatedPlayer = {
+                        ...updatedPlayer,
+                        titles: [...new Set([...(updatedPlayer.titles || []), titleToken])],
+                        activeTitle: updatedPlayer.activeTitle || titleToken,
+                    };
+                    addLog('success', `🏆 칭호 획득: [${titleToken}]`);
+                }
+            }
+
             if (qData.buildTag) {
                 const currentStats = getFullStats();
                 const traitProfile = getTraitProfile(updatedPlayer, {
