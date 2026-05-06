@@ -241,15 +241,20 @@ export const BALANCE: any = {
 
     // v4.3 — 무한 심연 강화
     ABYSS_MILESTONE_REWARDS: {
+        // cycle 194: 'prestige_points' reward type을 사용 가능한 보상으로 교체.
+        //   기존엔 player.prestigePoints 카운터가 어디에서도 소비/표시되지 않는 dead currency였음
+        //   (combatBossHandlers에서 +1만 하고 끝). UI/ASCEND/spend 시스템 미구현 상태에서 player가
+        //   abyss 75/200/500층 도달해도 visible 보상 0건이던 회귀.
+        //   대안: 75/500은 relic_choice (선택지 다양화), 200은 legendary_item (기존 패턴 일관).
         10:  { type: 'relic_choice' },
         25:  { type: 'relic_choice' },
         50:  { type: 'legendary_item' },
-        75:  { type: 'prestige_points', amount: 1 },
+        75:  { type: 'relic_choice' },     // was prestige_points 1
         100: { type: 'legendary_item' },
         150: { type: 'relic_choice' },
-        200: { type: 'prestige_points', amount: 2 },
+        200: { type: 'legendary_item' },   // was prestige_points 2
         300: { type: 'legendary_item' },
-        500: { type: 'prestige_points', amount: 3 },
+        500: { type: 'relic_choice' },     // was prestige_points 3 — 최종 마일스톤도 의미 있는 보상
     },
     ABYSS_BOSS_FLOORS: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
     ABYSS_BOSS_NAMES: {

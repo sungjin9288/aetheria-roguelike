@@ -298,7 +298,9 @@ export const MSG: any = {
     // --- 심연 ---
     ABYSS_DESCEND: (floor: any) => `심연의 더 깊은 곳으로 진입했습니다. (현재: ${floor}층)`,
     ABYSS_LEGENDARY_ITEM: (name: any) => `🏆 전설 아이템 획득: [${name}]`,
-    ABYSS_PRESTIGE_POINTS: (n: any) => `✨ 프레스티지 포인트 +${n}`,
+    // cycle 194: ABYSS_PRESTIGE_POINTS 제거 — abyss milestone 'prestige_points' reward type이
+    //   dead config(player.prestigePoints가 spend/UI 미구현)였음. 보상 타입을 relic_choice/
+    //   legendary_item으로 교체해 메시지도 자연 dead → 정리.
 
     // --- Firebase 동기화 ---
     SYNC_SERVER_LOADED: '서버 데이터와 동기화되었습니다.',

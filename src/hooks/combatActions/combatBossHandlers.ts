@@ -98,10 +98,10 @@ export const applyAbyssFloorAdvance = (p: any, dispatch: any, addLog: any) => {
                 updated = { ...updated, inv: [...(updated.inv || []), item] };
                 addLog('success', MSG.ABYSS_LEGENDARY_ITEM(item.name));
             }
-        } else if (milestone.type === 'prestige_points') {
-            updated = { ...updated, prestigePoints: (updated.prestigePoints || 0) + (milestone.amount || 1) };
-            addLog('success', MSG.ABYSS_PRESTIGE_POINTS(milestone.amount || 1));
         }
+        // cycle 194: 'prestige_points' 핸들러 제거 — player.prestigePoints가 spend/UI 미구현
+        //   상태로 dead currency였음. constants.ts ABYSS_MILESTONE_REWARDS에서 75/200/500을
+        //   relic_choice/legendary_item으로 교체해 visible 보상 보장.
     }
     return updated;
 };
