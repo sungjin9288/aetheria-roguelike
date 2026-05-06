@@ -1017,6 +1017,10 @@ export const CombatEngine = {
                         ...updatedEnemy,
                         name: p3.name,
                         atk: Math.floor((updatedEnemy.atk ?? 0) * (1 + (p3.atkBonus ?? 0))),
+                        // cycle 228: 8 phase3 bosses(종말의 마왕 / 절대 공허 등)의 defBonus 10-40을
+                        //   적용. 기존엔 atkBonus만 적용되어 phase3 'last stand' 강화 의도 미반영.
+                        //   silent dead config 시리즈 7번째.
+                        def: ((updatedEnemy.def ?? 0) as number) + ((p3.defBonus ?? 0) as number),
                         pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p3.pattern },
                         phase3Triggered: true,
                     };
