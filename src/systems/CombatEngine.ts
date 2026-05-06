@@ -865,7 +865,22 @@ export const CombatEngine = {
             if (skill.effect === 'counter') {
                 buff.counterChance = Math.max(0.2, (skill.val || 1.4) - 1);
             }
+            // cycle 238: skill branch override의 defBonus 처리 — '분노의 방패' / '철벽 배시' 등이
+            //   defBonus 1.2 (DEF +20%)를 override하지만 read 코드 0건이던 silent dead config fix.
+            //   기본 페널티 (-0.2 berserk 등) 또는 0 def를 override.
+            if (skill.defBonus !== undefined) {
+                buff.def = (skill.defBonus || 1) - 1;
+            }
             updatedPlayer.tempBuff = buff;
+        } else if (skill.defBonus !== undefined) {
+            // cycle 238: non-buff effect 스킬 ('철벽 배시' = stun 효과 + defBonus)도 buff 생성.
+            //   stun 등 attack-type 스킬에 defBonus가 정의되어 있으면 별도로 buff 부여.
+            updatedPlayer.tempBuff = {
+                atk: 0,
+                def: (skill.defBonus || 1) - 1,
+                turn: skill.turn || 1,
+                name: skill.name,
+            };
         }
 
         // drain: 스킬 피해의 25% HP 흡수 (#5)
