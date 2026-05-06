@@ -18,7 +18,7 @@ export const CONSTANTS: any = {
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 200,
-    SAVE_KEY: 'aetheria_save_v5_0',
+    // cycle 195: SAVE_KEY 제거 — Firebase Firestore 사용으로 localStorage save key 미사용 (dead).
     DATA_VERSION: 5.0,
     REMOTE_CONFIG_ENABLED: ENV.VITE_REMOTE_CONFIG === 'true' || false,
     MONSTER_PREFIXES: [
@@ -57,7 +57,8 @@ export const BALANCE: any = {
     DEBOUNCE_SAVE_MS: 500,
     LOG_MAX_SIZE: 50,
     ENEMY_TURN_DELAY_MS: 450,       // 적 반격 딜레이 (ms)
-    MILESTONE_KILLS: [10, 50, 100], // 킬 마일스톤 기준
+    // cycle 195: MILESTONE_KILLS 제거 — checkMilestones에서 10/50/100을 inline 하드코딩하고 있어 dead config.
+    //   향후 milestone 변경 시 checkMilestones 함수를 직접 수정하거나 이 상수 재도입 필요.
     INV_MAX_SIZE: 20,               // 인벤토리 최대 슬롯 수
     STATUS_DOT_RATIO: 0.04,         // 상태이상 DoT 피해 비율 (maxHp 기준 4%)
     MIN_NOTHING_CHANCE: 0.12,
@@ -71,7 +72,7 @@ export const BALANCE: any = {
     KEY_EVENT_MAX_CHANCE: 0.35,
     // v4.0 — 신규 시스템 상수
     EXP_SCALE_RATE: 1.15,           // EXP 곡선 — 완화 (Lv50 ~45전투, Lv60 ~80전투 목표)
-    EXP_LEVEL_CAP_50: 150000,       // (deprecated — 하한선 역할 제거, 상한선 EXP_LEVEL_HARD_CAP 사용)
+    // cycle 195: EXP_LEVEL_CAP_50 제거 — deprecated 상태로 cycle 99에서 EXP_LEVEL_HARD_CAP으로 이행 완료.
     EXP_LEVEL_HARD_CAP: 150000,     // 레벨당 최대 EXP 요구량 상한선 반감 (기존 300K → 150K)
     RELIC_FIND_CHANCE: 0.08,        // 탐색 시 유물 발견 확률 (8%)
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
@@ -82,8 +83,8 @@ export const BALANCE: any = {
     BOUNTY_GOLD_MULT: 3.0,          // 현상수배 골드 = 킬수 × 레벨 × 3.0 (기존 2.5)
 
     // v4.1 — 등급 시스템
-    RARITY_TIERS: ['common', 'uncommon', 'rare', 'epic', 'legendary'],
-    RARITY_SELL_MULT: { common: 1, uncommon: 1.2, rare: 1.5, epic: 2, legendary: 3 },
+    // cycle 195: RARITY_TIERS / RARITY_SELL_MULT 제거 — UI 컴포넌트는 RARITY_CLASSES 사용,
+    //   판매 multiplier는 ShopPanel 등이 별도 처리. 두 키 모두 dead config.
     // Hex 컬러 (인라인 스타일/아이콘/프레임용). Tailwind 클래스 버전은 RARITY_CLASSES 사용.
     RARITY_COLORS: { common: '#9ca3af', uncommon: '#22c55e', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b' },
 
@@ -98,7 +99,8 @@ export const BALANCE: any = {
     PREMIUM_CURRENCY_NAME: '에테르 크리스탈',
     INV_EXPAND_COST: 50,
     INV_EXPAND_AMOUNT: 5,
-    COSMETIC_TITLE_COST: 100,
+    // cycle 195: COSMETIC_TITLE_COST 제거 — cycle 185 이후 PREMIUM_SHOP.cosmeticTitles 각 항목에
+    //   개별 cost 정의 (100/100/150/200). 통합 상수 dead.
     REVIVE_COST: 20,
 
     // v4.3 — 아이템 강화 시스템
