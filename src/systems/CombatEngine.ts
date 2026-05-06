@@ -193,16 +193,22 @@ export const CombatEngine = {
         const logs: any[] = [];
 
         const tickRelic = relics.find((r: any) => r.effect === 'entropy_tick');
+        // cycle 236: entropy_god 시너지의 fixedDmg + interval 패턴도 catch.
+        //   기존엔 'damage && interval'만 잡아 entropy_god(fixedDmg 0.15)가 dispatch 0건이던 dead config.
         const brandSyn = activeSynergies.find((s: any) =>
-            s.bonus.effect === 'entropy_brand' || (s.bonus.damage && s.bonus.interval));
+            s.bonus.effect === 'entropy_brand'
+            || s.bonus.effect === 'entropy_god'
+            || (s.bonus.damage && s.bonus.interval)
+            || (s.bonus.fixedDmg && s.bonus.interval));
         if (!tickRelic && !brandSyn) {
             return { player: updatedPlayer, enemy: updatedEnemy, logs };
         }
 
-        // 시너지 우선 (브랜드 강화 사양). 누락 키는 유물에서 fallback.
-        const damage = brandSyn?.bonus.damage ?? tickRelic?.val?.damage ?? 0;
+        // 시너지 우선 (브랜드/신 강화 사양). 누락 키는 유물에서 fallback.
+        // cycle 236: fixedDmg fallback 추가 — entropy_god는 fixedDmg key 사용.
+        const damage = brandSyn?.bonus.damage ?? brandSyn?.bonus.fixedDmg ?? tickRelic?.val?.damage ?? 0;
         const interval = brandSyn?.bonus.interval ?? tickRelic?.val?.interval ?? 0;
-        const label = brandSyn ? '엔트로피 낙인' : '엔트로피 엔진';
+        const label = brandSyn?.bonus.effect === 'entropy_god' ? '엔트로피의 신' : (brandSyn ? '엔트로피 낙인' : '엔트로피 엔진');
 
         if (interval > 0 && damage > 0 && turnCount % interval === 0 && (enemy.hp ?? 0) > 0) {
             const fixedDmg = Math.max(1, Math.floor((enemy.maxHp || enemy.hp || 1) * damage));
@@ -1412,14 +1418,20 @@ export const CombatEngine = {
 
         // cycle 158: 'kill_stack_atk' (허공의 왕좌) — 적 처치 시 ATK perKill 누적, max 캡.
         //   combatFlags.killStackAtkBonus에 저장. applyBattleStartRelics에서 0으로 리셋(전투 내 한정).
+        // cycle 236: 시너지 'annihilator'(killStack 0.07) / 'void_dragon'(killStack 0.08)의
+        //   killStack 보너스를 perKill에 합산 — silent dead config fix.
         const killStackRelic = relics.find((r: any) => r.effect === 'kill_stack_atk');
-        if (killStackRelic) {
-            const perKill = killStackRelic.val?.perKill || 0;
-            const maxStack = killStackRelic.val?.max || 1;
+        const synergiesForKill = (passiveBonus as any)?.activeSynergies || [];
+        const killStackSynergyBonus = synergiesForKill.reduce((acc: number, s: any) =>
+            acc + (s.bonus?.killStack || 0), 0);
+        if (killStackRelic || killStackSynergyBonus > 0) {
+            const perKill = (killStackRelic?.val?.perKill || 0) + killStackSynergyBonus;
+            const maxStack = killStackRelic?.val?.max || 1;
             const flags: any = p.combatFlags || {};
             const next = Math.min(maxStack, (flags.killStackAtkBonus || 0) + perKill);
             p.combatFlags = { ...flags, killStackAtkBonus: next };
-            logs.push({ type: 'event', text: `[허공의 왕좌] ATK 누적 +${Math.round(next * 100)}% (이번 전투)` });
+            const sourceLabel = killStackRelic ? '[허공의 왕좌]' : '[시너지 처형 분노]';
+            logs.push({ type: 'event', text: `${sourceLabel} ATK 누적 +${Math.round(next * 100)}% (이번 전투)` });
         }
 
         // cycle 157: 'devour_hp' (세계 포식자) — 적 처치 시 적 maxHp의 val(=0.1)만큼 player maxHp 영구 증가.
