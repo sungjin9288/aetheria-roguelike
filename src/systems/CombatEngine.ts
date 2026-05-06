@@ -798,8 +798,14 @@ export const CombatEngine = {
         //   기존엔 100% 부여로 '20% 확률 기절 1턴' / '40% 확률 출혈' 같은 branch가 항상 trigger.
         //   effectChance 미정의 시 default 1.0 (100%) — 회귀 가드.
         const effectChance = skill.effectChance !== undefined ? Math.max(0, Math.min(1, skill.effectChance)) : 1;
+        // cycle 241: skill.stunTurn override — branch B '마비 번개' (stunTurn 2) 등이 광고하던 다중 턴 stun을
+        //   읽어주지 못해 영원히 1턴만 적용되던 silent dead config fix. stun/freeze는 stunnedTurns 카운터 공용.
+        const stunTurn = Math.max(1, Math.floor(skill.stunTurn || 1));
         if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect) && Math.random() < effectChance) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
+            if (skill.effect === 'stun' || skill.effect === 'freeze') {
+                postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
+            }
             if (effectLabels[skill.effect]) {
                 logs.push({ type: 'event', text: `[${skill.name}] ${enemy.name}에게 [${effectLabels[skill.effect]}] 부여!` });
             }
@@ -807,6 +813,9 @@ export const CombatEngine = {
         // 분기 선택으로 추가된 2차 상태이상 (effectChance 동일 적용)
         if (skill.secondEffect && STATUS_EFFECTS_TO_ENEMY.includes(skill.secondEffect) && Math.random() < effectChance) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.secondEffect);
+            if (skill.secondEffect === 'stun' || skill.secondEffect === 'freeze') {
+                postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
+            }
             if (effectLabels[skill.secondEffect]) {
                 logs.push({ type: 'event', text: `[분기 효과] ${enemy.name}에게 [${effectLabels[skill.secondEffect]}] 추가 부여!` });
             }
