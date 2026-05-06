@@ -1496,6 +1496,12 @@ export const CombatEngine = {
         if ((player as any).seasonPass) {
             starterState.seasonPass = (player as any).seasonPass;
         }
+        // cycle 214: 주간 미션 진행도 / claimed ledger 보존 — cycle 191 META preserve 시리즈 보강.
+        //   사망 후 mid-week 진행도(kills 35/50 등)와 claimed 미션이 wipe되던 회귀.
+        //   주 경계 자동 reset(exploreUtils.resetWeeklyProtocolIfNeeded)은 그대로 동작.
+        if ((player as any).weeklyProtocol) {
+            starterState.weeklyProtocol = (player as any).weeklyProtocol;
+        }
 
         return {
             updatedPlayer: starterState,
