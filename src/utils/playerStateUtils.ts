@@ -38,6 +38,10 @@ export const hasTemporaryAdventureState = (player: Player) => {
     const buff = { ...EMPTY_TEMP_BUFF, ...(player?.tempBuff || {}) };
     const combatFlags = { ...DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
 
+    // cycle 198: voidHeartUsed / voidHeartArmed는 cycle 187에서 run-wide로 preserve되도록 변경됨
+    //   ('런당 1회' spec). hasTemporaryAdventureState가 이들을 'temporary'로 카운트하면
+    //   안전 맵 이동마다 clearTemporaryAdventureState가 무한 재호출되는 회귀가 발생.
+    //   clear가 보존하는 플래그는 이 함수에서도 'temporary' 아님으로 간주.
     return Boolean(
         buff.atk
         || buff.def
@@ -46,8 +50,6 @@ export const hasTemporaryAdventureState = (player: Player) => {
         || (Array.isArray(player?.status) && player.status.length > 0)
         || combatFlags.comboCount > 0
         || combatFlags.deathSaveUsed
-        || combatFlags.voidHeartUsed
-        || combatFlags.voidHeartArmed
         || player?.nextHitEvaded
     );
 };

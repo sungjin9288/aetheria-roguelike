@@ -38,7 +38,7 @@ test('temporary adventure state is cleared on town return helper', () => {
         voidHeartArmed: true,  // cycle 187: 보존
     });
     assert.equal(cleared.nextHitEvaded, false);
-    // hasTemporaryAdventureState는 voidHeartUsed/Armed을 "임시 상태"로 간주하므로
-    // cleared 후에도 true 반환 (런-와이드 플래그 보존).
-    assert.equal(hasTemporaryAdventureState(cleared), true);
+    // cycle 198: hasTemporaryAdventureState가 voidHeart 플래그를 'temporary'로 간주 안 함
+    //   (cycle 187에서 clear가 preserve하므로 — 무한 재호출 방지). cleared 상태는 '깨끗'함.
+    assert.equal(hasTemporaryAdventureState(cleared), false);
 });
