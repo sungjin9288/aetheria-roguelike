@@ -794,14 +794,18 @@ export const CombatEngine = {
         const STATUS_EFFECTS_TO_ENEMY = ['stun', 'freeze', 'poison', 'burn', 'bleed', 'blind', 'fear', 'curse', 'taunt'];
         let postEffectEnemy: Monster = { ...enemy, hp: newEnemyHp, guarding: false };
         const effectLabels: Record<string, string> = { stun: '기절', freeze: '빙결', poison: '독', burn: '화상', bleed: '출혈', blind: '실명', fear: '공포', curse: '저주', taunt: '도발' };
-        if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect)) {
+        // cycle 239: skill.effectChance 게이트 — branch override의 확률적 status proc 처리.
+        //   기존엔 100% 부여로 '20% 확률 기절 1턴' / '40% 확률 출혈' 같은 branch가 항상 trigger.
+        //   effectChance 미정의 시 default 1.0 (100%) — 회귀 가드.
+        const effectChance = skill.effectChance !== undefined ? Math.max(0, Math.min(1, skill.effectChance)) : 1;
+        if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect) && Math.random() < effectChance) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
             if (effectLabels[skill.effect]) {
                 logs.push({ type: 'event', text: `[${skill.name}] ${enemy.name}에게 [${effectLabels[skill.effect]}] 부여!` });
             }
         }
-        // 분기 선택으로 추가된 2차 상태이상
-        if (skill.secondEffect && STATUS_EFFECTS_TO_ENEMY.includes(skill.secondEffect)) {
+        // 분기 선택으로 추가된 2차 상태이상 (effectChance 동일 적용)
+        if (skill.secondEffect && STATUS_EFFECTS_TO_ENEMY.includes(skill.secondEffect) && Math.random() < effectChance) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.secondEffect);
             if (effectLabels[skill.secondEffect]) {
                 logs.push({ type: 'event', text: `[분기 효과] ${enemy.name}에게 [${effectLabels[skill.secondEffect]}] 추가 부여!` });
