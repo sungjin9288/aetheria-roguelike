@@ -126,7 +126,8 @@ export const CLASSES: any = {
                 { choice: 'B', label: '신성한 화염', desc: '정화 + 화상 동시 부여', override: { mult: 5.0, secondEffect: 'burn' } },
             ],
         },
-        next: []
+        // cycle 231: 나이트 → 드래곤 나이트 progression — T3 도달 가능 unlock.
+        next: ['드래곤 나이트']
     },
 
     '버서커': {
@@ -153,7 +154,8 @@ export const CLASSES: any = {
                 { choice: 'B', label: '독지 강타', desc: '기절 + 독 동시 부여', override: { mult: 5.5, secondEffect: 'poison' } },
             ],
         },
-        next: []
+        // cycle 231: 버서커 → 드래곤 나이트 progression — warrior path 양 분기 unlock.
+        next: ['드래곤 나이트']
     },
 
     '아크메이지': {
@@ -180,7 +182,8 @@ export const CLASSES: any = {
                 { choice: 'B', label: '심판의 천벌', desc: '기절 2턴 + 저주', override: { mult: 6.0, secondEffect: 'curse', stunTurn: 2 } },
             ],
         },
-        next: []
+        // cycle 231: 아크메이지 → 대마법사 progression — T3 도달 가능 unlock.
+        next: ['대마법사']
     },
 
     '흑마법사': {
@@ -207,7 +210,8 @@ export const CLASSES: any = {
                 { choice: 'B', label: '저주 흡수', desc: '저주 부여 + 흡수', override: { mult: 3.0, secondEffect: 'curse' } },
             ],
         },
-        next: []
+        // cycle 231: 흑마법사 → 대마법사 progression — mage path 양 분기 unlock.
+        next: ['대마법사']
     },
 
     '어쌔신': {
@@ -234,7 +238,8 @@ export const CLASSES: any = {
                 { choice: 'B', label: '저주 일섬', desc: '저주 + 출혈 동시 부여', override: { mult: 7.0, secondEffect: 'curse' } },
             ],
         },
-        next: []
+        // cycle 231: 어쌔신 → 그림자 주군 progression — T3 도달 가능 unlock.
+        next: ['그림자 주군']
     },
 
     '레인저': {
