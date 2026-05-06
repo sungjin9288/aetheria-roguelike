@@ -33,44 +33,50 @@ import { CombatEngine } from '../src/systems/CombatEngine.js';
  * - max cap (val.max=0.6) 보장 — 4번째 스킬부턴 60% 고정.
  */
 
-test('cycle 229: 스킬 연속 사용 시 spell_stack 데미지 누적', () => {
-    const player = {
+test('cycle 229: 스킬 연속 사용 시 spell_stack 데미지 누적 (max stack 비교)', () => {
+    // cycle 235: 데미지 분산 폭(±10%)이 +20% stack 보너스를 변동 우위 깨버리는 RNG flake.
+    //   max stack(+60%)으로 비교하면 분산을 항상 우위 (deterministic).
+    const playerStack0 = {
         name: 'Test', job: '아크메이지', level: 30,
         hp: 1000, maxHp: 1000, mp: 200, maxMp: 200,
         atk: 100, def: 30,
         relics: [{ id: 'spell_weaver', effect: 'spell_stack', val: { perStack: 0.2, max: 0.6 } }],
         skillChoices: {}, titles: [], equip: {},
-        combatFlags: { spellStackCount: 0 },
+        combatFlags: { spellStackCount: 0 }, // 0 stack
         status: [],
         skillLoadout: { selected: 0, cooldowns: {} },
     };
+    const playerStack3 = {
+        ...playerStack0,
+        combatFlags: { spellStackCount: 3 }, // 3 stack → +60% (val.max cap)
+    };
     const enemy = { name: '오크', hp: 100000, maxHp: 100000, atk: 50, def: 5 };
-    // cooldown: 0 — 연속 사용 가능 (default cd는 mpCost/15 ceil이라 1턴)
     const skill = { name: '파이어볼', mp: 10, mult: 1.5, type: 'attack', element: '화염', cooldown: 0 };
     const stats = {
         atk: 200, def: 50,
-        relics: player.relics,
+        relics: playerStack0.relics,
         activeSynergies: [],
         critChance: 0,
     };
 
-    // 1번째 스킬 — stack 0 → 데미지 normal
-    const r1 = CombatEngine.performSkill(player, enemy, stats, skill);
-    assert.equal(r1.success, true, '1st skill success');
-    const dmg1 = (enemy.hp - r1.updatedEnemy.hp);
-    assert.equal(r1.updatedPlayer.combatFlags.spellStackCount, 1, '1번째 스킬 후 stack=1');
+    // 동일 RNG seed 가정은 어렵지만, +60% 보너스가 ±10% 분산을 충분히 우위.
+    // 평균 데미지를 비교하기 위해 N회 샘플링 (50회 → 분산 √50 ≈ 7배 좁아짐).
+    const SAMPLES = 50;
+    let dmgStack0Sum = 0, dmgStack3Sum = 0;
+    for (let i = 0; i < SAMPLES; i++) {
+        const r1 = CombatEngine.performSkill(playerStack0, enemy, stats, skill);
+        const r2 = CombatEngine.performSkill(playerStack3, enemy, stats, skill);
+        dmgStack0Sum += (enemy.hp - r1.updatedEnemy.hp);
+        dmgStack3Sum += (enemy.hp - r2.updatedEnemy.hp);
+    }
+    assert.equal(playerStack0.combatFlags.spellStackCount, 0);
+    // stack 3 평균 ≥ stack 0 평균 * 1.3 (60% 의도, 분산 + cap floor() 고려 1.3 보수).
+    assert.ok(dmgStack3Sum > dmgStack0Sum * 1.3,
+        `+60% stack은 평균 데미지 1.3x+ 차이여야 함. stack0=${dmgStack0Sum}, stack3=${dmgStack3Sum}`);
 
-    // 2번째 스킬 — stack 1 (+20% bonus). 쿨다운을 수동으로 0으로 리셋해 연속 사용 시뮬레이션.
-    const playerForR2 = {
-        ...r1.updatedPlayer,
-        skillLoadout: { ...r1.updatedPlayer.skillLoadout, cooldowns: {} },
-    };
-    const r2 = CombatEngine.performSkill(playerForR2, r1.updatedEnemy, stats, skill);
-    assert.equal(r2.success, true, '2nd skill success');
-    const dmg2 = (r1.updatedEnemy.hp - r2.updatedEnemy.hp);
-    assert.equal(r2.updatedPlayer.combatFlags.spellStackCount, 2, '2번째 스킬 후 stack=2');
-    assert.ok(dmg2 > dmg1,
-        `2번째 스킬은 +20% 누적 데미지여야 함 (dmg1=${dmg1}, dmg2=${dmg2})`);
+    // stackCount 증가 검증 (단일 호출).
+    const r = CombatEngine.performSkill(playerStack0, enemy, stats, skill);
+    assert.equal(r.updatedPlayer.combatFlags.spellStackCount, 1, '1번째 스킬 후 stack 1로 증분');
 });
 
 test('cycle 229: spell_stack 데미지 누적이 val.max로 cap', () => {
