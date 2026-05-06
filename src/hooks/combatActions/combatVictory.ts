@@ -2,7 +2,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
 import { BALANCE } from '../../data/constants';
-import { checkMilestones, grantGold, makeItem, registerCodex, registerLootToCodex } from '../../utils/gameUtils';
+import { checkMilestones, grantGold, makeItem, registerCodex, registerLootToCodex, countNewCodexEntries } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../utils/runProfileUtils';
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
@@ -53,6 +53,8 @@ export const handleVictoryOutcome = ({
     const signaturePityMult = getSignaturePityMultiplier(updatedPlayer.stats?.signaturePity);
     const lootResult = CombatEngine.processLoot(deadEnemy, updatedPlayer, signaturePityMult);
     lootResult.logs.forEach((log: any) => addLog(log.type, log.text));
+    // cycle 193: 신규 codex 등록 수 추적 — SEASON_XP.codexDiscover dispatch용.
+    const codexBefore = countNewCodexEntries(updatedPlayer);
     if (lootResult.items.length > 0) {
         updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
         updatedPlayer = registerLootToCodex(updatedPlayer, lootResult.items);
@@ -81,6 +83,14 @@ export const handleVictoryOutcome = ({
     // codex
     const baseName = CombatEngine.resolveEnemyBaseName(deadEnemy);
     updatedPlayer = registerCodex(updatedPlayer, 'monsters', baseName);
+
+    // cycle 193: 신규 codex 등록 수만큼 SEASON_XP.codexDiscover 적용. 기존엔 SEASON_XP.codexDiscover
+    //   key 정의됐으나 dispatch 0건이던 dead config. loot/monster 모두 포함.
+    const codexAfter = countNewCodexEntries(updatedPlayer);
+    const newCodexCount = codexAfter - codexBefore;
+    if (newCodexCount > 0) {
+        dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.codexDiscover * newCodexCount });
+    }
 
     // milestone (attack/skill 직접 승리에만)
     if (extendedChecks) {

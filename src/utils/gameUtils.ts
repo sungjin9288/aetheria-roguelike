@@ -152,7 +152,21 @@ export const registerCodex = (player: Player, category: any, name: any) => {
 };
 
 /**
+ * cycle 193: 신규 codex 등록 수 카운트 — SEASON_XP.codexDiscover dispatch 신호용.
+ *   registerCodex/registerLootToCodex 호출 전후 codex 카테고리 사이즈 비교로 카운트.
+ */
+const countCodexEntries = (player: Player) => {
+    const codex: any = player.stats?.codex || {};
+    let total = 0;
+    for (const cat of Object.values(codex)) {
+        if (cat && typeof cat === 'object') total += Object.keys(cat as any).length;
+    }
+    return total;
+};
+
+/**
  * loot 아이템 배열을 codex에 일괄 등록
+ * @returns updated player (caller가 prev player와 countCodexEntries 비교로 신규 수 판정).
  */
 export const registerLootToCodex = (player: Player, lootItems: any) => {
     let p = player;
@@ -165,6 +179,14 @@ export const registerLootToCodex = (player: Player, lootItems: any) => {
     }
     return p;
 };
+
+/**
+ * cycle 193: 신규 codex 등록 수 헬퍼 — 호출 전후 비교용.
+ *   SEASON_XP.codexDiscover 적용 시 caller 패턴: const before = countNewCodexEntries(player);
+ *   ... registerLootToCodex 등 호출 후 ... const newCount = countNewCodexEntries(updated) - before;
+ *   if (newCount > 0) dispatch ADD_SEASON_XP * newCount.
+ */
+export const countNewCodexEntries = (player: Player) => countCodexEntries(player);
 
 /** 골드 획득을 누적 통계와 함께 반영 */
 export const grantGold = (player: Player, amount: any = 0) => {
