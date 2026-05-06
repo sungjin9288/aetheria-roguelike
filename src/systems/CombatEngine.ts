@@ -1174,6 +1174,35 @@ export const CombatEngine = {
 
         const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs, activeSynergies);
 
+        // cycle 227: monster.statusOnHit dispatch — 27 monsters define statusOnHit (poison/curse/
+        //   burn/freeze) but no handler. Heavy hit + 미보유 시 status 부여 (cycle 106 phase
+        //   pattern과 정합). 일반 hit은 영향 없음 (모든 hit마다 적용은 너무 강함).
+        //   status_resist relic 확률로 저항.
+        const enemyStatusOnHit = (updatedEnemy as any).statusOnHit;
+        if (heavyResolved && enemyStatusOnHit && !protectedResult.isDead) {
+            const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
+            const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
+            const currentStatus = Array.isArray(protectedResult.updatedPlayer.status) ? protectedResult.updatedPlayer.status : [];
+            if (!currentStatus.includes(enemyStatusOnHit)) {
+                if (Math.random() >= resistChance) {
+                    const statusLabels: Record<string, string> = {
+                        poison: '독', burn: '화상', freeze: '빙결', curse: '저주',
+                        bleed: '출혈', stun: '기절', blind: '실명', fear: '공포',
+                    };
+                    protectedResult.updatedPlayer = {
+                        ...protectedResult.updatedPlayer,
+                        status: [...currentStatus, enemyStatusOnHit],
+                    };
+                    logs.push({
+                        type: 'warning',
+                        text: `[${updatedEnemy.name}] 강타 — [${statusLabels[enemyStatusOnHit] || enemyStatusOnHit}] 상태이상 부여!`,
+                    });
+                } else {
+                    logs.push({ type: 'success', text: '[고대의 봉인] 상태이상을 저항했습니다!' });
+                }
+            }
+        }
+
         // cycle 172: 'counter' (반격 자세) 스킬 — 피격 시 buff.counterChance 확률로 적에게 반격 추가타.
         //   tempBuff에 counterChance 필드가 있고 turn > 0이며 player가 살아있고 적도 살아있을 때만.
         let finalEnemy: any = { ...updatedEnemy, guarding: false };
