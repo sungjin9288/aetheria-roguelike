@@ -65,6 +65,11 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                     cosmeticTitles: Array.isArray(prevStats.cosmeticTitles) ? prevStats.cosmeticTitles : [],
                     synthProtects: prevStats.synthProtects || 0,
                     claimedAchievements: Array.isArray(prevStats.claimedAchievements) ? prevStats.claimedAchievements : [],
+                    // cycle 211: codex milestone 누적 stat 보너스 3종 보존 — codexClaimed
+                    //   재청구 차단과 paired ledger 정합성 (silent permanent loss 방지).
+                    codexBonusAtk: prevStats.codexBonusAtk || 0,
+                    codexBonusDef: prevStats.codexBonusDef || 0,
+                    codexBonusHp: prevStats.codexBonusHp || 0,
                 },
             },
         };
@@ -171,6 +176,13 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 buildWins: (prevStats.buildWins && typeof prevStats.buildWins === 'object')
                     ? prevStats.buildWins
                     : {},
+                // cycle 211: codex milestone 청구 보너스 3종(영구 stat 가산) 보존.
+                //   CLAIM_CODEX_REWARD가 누적 가산하는 stat — codexClaimed는 보존되지만
+                //   codexBonus*가 wipe되면 재청구 차단(codexClaimed 등록) + 보너스 손실의
+                //   silent permanent loss. cycle 202 paired ledger 정합성 동일 lens.
+                codexBonusAtk: prevStats.codexBonusAtk || 0,
+                codexBonusDef: prevStats.codexBonusDef || 0,
+                codexBonusHp: prevStats.codexBonusHp || 0,
             },
             premiumCurrency: state.player.premiumCurrency || 0,
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
