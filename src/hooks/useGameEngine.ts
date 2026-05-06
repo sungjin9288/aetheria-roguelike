@@ -53,6 +53,16 @@ export const useGameEngine = () => {
         }
     }, [logs]);
 
+    // cycle 217: 레벨업 sensory cue 누락 fix — applyExpGain은 visualEffect='levelUp'을 set하지만
+    //   levelup 로그는 type:'system'이라 위 mapping이 절대 trigger 안 됨. visualEffect 변화를
+    //   watch해 levelUp 사운드를 직접 dispatch. cycle 117/118/122/123 sensory cue 시리즈 합류.
+    //   'shake' 등 다른 visualEffect는 false-positive 방지 위해 명시 비교.
+    useEffect(() => {
+        if (visualEffect === 'levelUp') {
+            soundManager.play('levelUp');
+        }
+    }, [visualEffect]);
+
     // --- Shared Helpers ---
     const addLog = useCallback(
         (type: any, text: any) => dispatch({ type: AT.ADD_LOG, payload: { type, text, id: `${Date.now()}_${Math.random()}` } }),
