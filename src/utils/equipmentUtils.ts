@@ -74,6 +74,14 @@ export const getOffhandCritBonus = (item: Item | null | undefined) => {
 
 export const getOffhandMpBonus = (item: Item | null | undefined) => (isShield(item) ? (item?.mp || 0) : 0);
 
+// cycle 224: weapon/armor의 mpBonus 또는 mp 필드 합산. 4 items(빙결 지팡이 / 빙하의 지팡이 /
+//   상급 폭풍 로브 / 차원의 로브)이 desc_stat에 'MP+N'을 표시하지만 코드가 'mp'만 read해서
+//   mpBonus가 silent dead config였음. 본 헬퍼로 양 필드 모두 처리 (shield의 mp 컨벤션 + 별도 mpBonus).
+const getItemMpContribution = (item: Item | null | undefined) => {
+    if (!item) return 0;
+    return ((item as any)?.mpBonus || 0) + ((item as any)?.mp || 0);
+};
+
 export const getEquipmentProfile = (equip: EquipSlots = {}) => {
     const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
     const offhandItem = equip.offhand || null;
@@ -89,7 +97,11 @@ export const getEquipmentProfile = (equip: EquipSlots = {}) => {
         offhandAttack: getWeaponAttackValue(offhandWeapon, 'offhand'),
         shieldDef: offhandShield?.val || 0,
         critBonus: getWeaponCritBonus(mainWeapon, 'main') + getOffhandCritBonus(offhandItem),
-        mpBonus: getOffhandMpBonus(offhandItem),
+        // cycle 224: main weapon + armor + offhand 3개 슬롯 모두에서 mpBonus 합산.
+        //   기존엔 offhand shield의 mp만 처리해서 weapon/armor mpBonus 4종이 silent dead.
+        mpBonus: getOffhandMpBonus(offhandItem)
+            + getItemMpContribution(mainWeapon)
+            + getItemMpContribution(equip.armor as any),
     };
 };
 
