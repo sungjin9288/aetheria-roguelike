@@ -1,6 +1,6 @@
 import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
-import { toArray, makeItem, findItemByName, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, isAchievementUnlocked, registerCodex, registerLootToCodex, makeEmitTitles } from '../utils/gameUtils';
+import { toArray, makeItem, findItemByName, getDailyProtocolCompletions, formatDailyProtocolReward, grantGold, isAchievementUnlocked, registerCodex, registerLootToCodex, countNewCodexEntries, makeEmitTitles } from '../utils/gameUtils';
 import { addItemByName } from '../utils/inventoryUtils';
 import { incrementStat } from '../utils/playerStateUtils';
 import { getEquipmentIdentity, getNextEquipmentState, isTwoHandWeapon } from '../utils/equipmentUtils';
@@ -181,9 +181,15 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     return addLog('error', MSG.EQUIP_JOB_RESTRICT(player.job, item.name));
                 }
 
+                // cycle 196: codex 등록 전후 비교로 신규 발견 수 → SEASON_XP.codexDiscover (cycle 193 패턴 확장).
+                const codexBefore = countNewCodexEntries(player);
                 let updatedPlayer = { ...player, gold: player.gold - itemPrice, inv: [...player.inv, makeItem(item)] };
                 updatedPlayer = registerLootToCodex(updatedPlayer, [item]);
+                const newCodexCount = countNewCodexEntries(updatedPlayer) - codexBefore;
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
+                if (newCodexCount > 0) {
+                    dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.codexDiscover * newCodexCount });
+                }
                 dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: itemPrice } });
                 emitDailyProtocolLogs('goldSpend', itemPrice);
                 addLog('success', MSG.SHOP_BUY_DONE(item.name));
@@ -231,6 +237,8 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 ? makeItem(craftedTemplate)
                 : makeItem({ name: recipe.name, type: 'mat', price: 0, desc: 'Crafted item', desc_stat: 'CRAFTED' });
 
+            // cycle 196: codex 신규 등록 수 추적 — SEASON_XP.codexDiscover dispatch (cycle 193 패턴).
+            const codexBefore = countNewCodexEntries(player);
             let updatedPlayer = incrementStat({
                 ...player,
                 gold: player.gold - recipe.gold,
@@ -239,7 +247,11 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             // 도감 등록: 레시피 + 결과 아이템
             updatedPlayer = registerCodex(updatedPlayer, 'recipes', recipe.id);
             updatedPlayer = registerLootToCodex(updatedPlayer, [craftedItem]);
+            const newCodexCount = countNewCodexEntries(updatedPlayer) - codexBefore;
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
+            if (newCodexCount > 0) {
+                dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.codexDiscover * newCodexCount });
+            }
             dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: recipe.gold } });
             dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.craft });
             emitDailyProtocolLogs('goldSpend', recipe.gold);
@@ -375,6 +387,8 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 stats: { ...(player.stats || {}), ...protectStatsDelta },
             }, 'syntheses');
 
+            // cycle 196: synth 신규 codex 추적 — registerLootToCodex 호출 전후 비교.
+            const synthCodexBefore = countNewCodexEntries(updatedPlayer);
             if (result.success && result.outputItem) {
                 const crafted = makeItem(result.outputItem);
                 updatedPlayer = { ...updatedPlayer, inv: [...(updatedPlayer.inv || []), crafted] };
@@ -387,8 +401,12 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                     addLog('error', MSG.SYNTHESIS_FAIL);
                 }
             }
+            const synthNewCodex = countNewCodexEntries(updatedPlayer) - synthCodexBefore;
 
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
+            if (synthNewCodex > 0) {
+                dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.codexDiscover * synthNewCodex });
+            }
             if (result.success) dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.synthesize });
             emitUnlockedTitles(updatedPlayer);
         },
