@@ -47,3 +47,6 @@ tmp/
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Claude Code scheduling artifacts
+.claude/scheduled_tasks.lock
