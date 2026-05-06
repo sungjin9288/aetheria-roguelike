@@ -5,6 +5,7 @@ import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getJobSkills } from '../../utils/gameUtils';
+import { soundManager } from '../../systems/SoundManager';
 import { buildClassVitals } from './_shared';
 
 export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDailyProtocolLogs }: any) => {
@@ -86,6 +87,9 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             emitDailyProtocolLogs('goldSpend', restCost);
             emitUnlockedTitles(updatedPlayer);
             addLog('success', MSG.REST_DONE_FULL(restCost));
+            // cycle 219: rest 회복 sensory cue — ascending arpeggio (C5→E5→G5) 정의 있으나
+            //   dispatch 0건이던 dead path. 안전지대 휴식 모먼트의 audio reflection.
+            soundManager.play('heal');
             addStoryLog('rest', { loc: player.loc });
         },
 

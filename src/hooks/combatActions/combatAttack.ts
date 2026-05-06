@@ -39,6 +39,9 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     }
                     result = CombatEngine.performSkill(playerAtActionStart, enemyAtActionStart, stats, selected?.skill);
                     if (!result.success) return addLog('error', result.logs[0]?.text || MSG.SKILL_NO_MP);
+                    // cycle 219: 스킬 발동 sensory cue — sweep tone (600→1800→900Hz) 정의 있으나
+                    //   dispatch 0건이던 dead path. 스킬 사용을 일반 공격과 청각적으로 차별화.
+                    soundManager.play('skill');
                     playerAfterAction = result.updatedPlayer;
                     dispatch({ type: AT.SET_PLAYER, payload: result.updatedPlayer });
                     if (result.forceEscape) {
