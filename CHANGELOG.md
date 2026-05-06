@@ -7,6 +7,74 @@
 
 ---
 
+## Cycle 190 — CHANGELOG에 cycles 171-189 history 일괄 추가
+
+- 문서: cycle 170 batch 이후 19 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170에 이은 7번째 batch. unit test 1000+ 마일스톤 (cycle 188에서 1002 달성).
+
+검증: tsc 0 / unit 1005 / lint clean / build-guard ok.
+
+---
+
+## Cycle 185-189 — PremiumShop UX 회귀 정리 5사이클 시리즈
+
+- UX/시스템: PremiumShop 4종(invExpand / synthProtect / revive / cosmeticTitles) 구매 흐름 전체에 걸친 잠복 회귀를 5 사이클 chain으로 정리.
+- 185: cosmetic title 4종(별을 보는 자 / 공허를 걷는 자 / 에테르의 아이 / 세계의 끝)을 TITLES 정식 등록 + purchaseCosmeticTitle이 player.titles에 push 추가. 기존엔 stats.cosmeticTitles만 저장돼 SystemTab 디스플레이에서 invisible이던 "구매했지만 못 쓰는" UX 회귀.
+- 186: reviveTokens / synthProtects 토큰 소비 로직 추가. reviveTokens는 applyFatalProtection death save chain에 새 fallback (void_heart 다음, phoenix_revive 전). synthProtects는 synthesize 함수에서 토큰 우선 소비. 기존엔 둘 다 dead purchase였음.
+- 187: clearTemporaryAdventureState가 voidHeart run-wide 플래그 보존. 기존엔 안전 맵 이동만으로 voidHeartUsed가 false로 풀려 death save '런당 1회' spec 위반. applyBattleStartRelics와 일관성.
+- 188: ASCEND가 premium 구매 자산 4종(stats.cosmeticTitles, stats.synthProtects, reviveTokens, maxInv) 보존. cycle 119 6 영구 카운터 패턴 확장. 환생 시 premium 구매 자산이 사라지던 회귀.
+- 189: migrateData가 4 premium 자산 default 처리(reviveTokens / synthProtects 음수 정규화 + cosmeticTitles array 정합 + maxInv 음수 가드). 옛 save 호환.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 184 — quest target 도달 가능성 6건 batch + 가드 (cycle 164 follow-up)
+
+- 콘텐츠: cycle 164가 quest target → MONSTERS keys 정합성 가드. 그러나 monster가 MONSTERS에 정의만 있고 spawn pool(monsters[] / bossMonsters[] / boss / ABYSS_BOSS_NAMES) 미참여면 spawn 안 함 → 진행도 영원히 0이던 잠복 회귀 6건 발견.
+- 수정: 6 quest target 매핑 (105/106/107/108/109/150) — 에테르 방랑자→에테르 잔류체 / 차원의 포식자→차원 포식자 / 공허의 감시자→공허 감시병 / 허무의 기사→허무 집행관 / 에테르 심판자→에테르 드래곤 / 공허의 대행자→공허 집행관.
+- 가드: spawn pool 도달성 lock — cycle 164(정의 존재) → cycle 184(spawn 도달) 두 단계 정합성.
+
+검증: tsc 0 / unit 984 / lint clean / build-guard ok.
+
+## Cycle 183 — 시즌 보스 2종 drop table 추가 (cycle 173 follow-up)
+
+- 콘텐츠: cycle 173에서 추가된 봄의 여왕 / 서리 군주 보스가 dropTables.ts에 미등록 — cycle 171 보너스 드랍(25% tier 5/6 random)만 발동하던 큐레이션 부재.
+- 수정: 자연 테마(봄의 여왕) / 얼음 테마(서리 군주) drop table 4 entry씩 추가. legendary tier 5 무기는 cycle 177 발견 체인 보상과 동일 매핑 reuse.
+
+검증: tsc 0 / unit 982 / lint clean / build-guard ok.
+
+## Cycle 181-182 — DB shape 가드 + 인벤토리 cap 정합 (cycle 179/180 lessons learned)
+
+- 181: cycle 179/180 잠복 회귀(DB.ITEMS shape 가정 오류) 재발 영구 차단. DB shape lock 5 가드 — DB.ITEMS keys 정확히 7개, 각 array, src/ 화이트리스트(unknown 키 access 금지), DB.QUESTS/ACHIEVEMENTS array, DB.MAPS/MONSTERS/CLASSES keyed object.
+- 182: 인벤토리 cap 검사가 player.maxInv (PremiumShop 확장 슬롯) 존중. exploreUtils chain reward + adventureGuide hint가 BALANCE.INV_MAX_SIZE만 사용해 확장 인벤(25)에서도 20에서 reward skip / 18에서 잘못된 경고 발동하던 회귀.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 179-180 — DB.ITEMS shape 잠복 critical 버그 2건 fix
+
+- 179: combatBossHandlers.ts:92 '(DB.ITEMS).flat()' TypeError로 abyss 50/100/300층 milestone 처리 crash. DB.ITEMS는 object — '.flat()' 호출 불가. abyss 50층 이후 진행 끊기던 critical regression. 'Object.values(DB.ITEMS).flat()' 패턴으로 fix.
+- 180: exploreUtils.ts:357 'DB.ITEMS?.allItems?.find()' silent miss. allItems는 미존재 필드 → 항상 undefined → cycle 177이 매핑한 DISCOVERY_CHAINS reward.item이 inv에 안 들어가던 회귀. findItemByName(getAllItems()) 사용으로 fix.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 175-178 — 데이터 정합성 잠복 회귀 4건
+
+- 175: 시즌 패스 보상 칭호 3종(시즌 선구자 / 정복자 / 마스터)을 TITLES 정식 등록. SEASON_REWARDS에서 참조하지만 TITLES 미등록이라 cosmetic 라벨로만 보이던 inconsistency.
+- 176: 'blindMap' challenge modifier 활성. 6종 modifier 중 5종은 핸들러 보유, blindMap만 silent no-op이던 dead modifier. StatusBar에 '???' 표시 분기 추가 + 모든 modifier 핸들러 가드.
+- 177: DISCOVERY_CHAINS reward.item 3건(용의 숨결 / 영원의 빙결정 / 마왕의 인장) items.ts 미등록 → 기존 items로 매핑(용의 화염 / 빙결의 왕관검 / 마왕의 대낫). 정합성 가드.
+- 178: eventChains 'info' reward type 핸들러 추가. ancient_prophecy chain의 reward.text 정보가 silent 누락이던 회귀.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 171-174 — baseline 시스템 후 발견된 잠복 회귀 4건
+
+- 171: processLoot early-return 버그 fix. 'if (!lootList) return' 이 보너스 드랍 로직(고레벨 enemy tier 4-6 random)을 차단해 drop/loot 미등록 non-boss 104종이 빈손 회귀였음. early return 제거.
+- 172: 'counter' 스킬 효과 추가 ('반격 자세' 마지막 dead skill effect). performSkill buff 분기 + enemyAttack 반격 발동 분기.
+- 173: cycle 165 baseline의 boss/bossMonsters 누락 검출 보강 + 봄의 여왕 / 서리 군주 2 보스 추가. baseline 가드가 monsters[]만 검사해 잠복 회귀 발생.
+- 174: QUESTS 중복 id 2건(99 / 95) fix. 두 번째 중복은 lookup find로 접근 불가하던 dead content. id 205 / 206 재할당. id 유일성 회귀 가드.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 170 — CHANGELOG에 cycles 161-169 history 일괄 추가
 
 - 문서: cycle 160 batch 이후 9 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160에 이은 6번째 batch.
