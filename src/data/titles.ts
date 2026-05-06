@@ -360,6 +360,73 @@ export const TITLES = Object.freeze([
         cond: { type: 'questReward', val: 154 },
         color: 'text-orange-300',
     },
+
+    // cycle 197: PRESTIGE_TITLES 10종 정식 TITLES 등록 — getTitleDefinition lookup이 token으로
+    //   id 비교만 하므로 Korean PRESTIGE_TITLES 토큰들이 기존 TITLES 엔트리와 매칭 안 돼 모두
+    //   default color('text-cyber-purple')로 fallback이던 visual UX 회귀.
+    //   cycle 175(시즌)/cycle 185(cosmetic)/cycle 192(quest reward) 동일 컨벤션 — Korean id.
+    //   기존 'transcendent' / 'eternal' / 'void_lord'는 다른 cond.type(prestige/abyssFloor)으로
+    //   유지(checkTitles auto-grant). 본 cycle은 PRESTIGE_TITLES 토큰 자체에 정식 entry 추가.
+    {
+        id: '각성자',
+        name: '각성자',
+        cond: { type: 'prestigeRank', val: 1 },
+        color: 'text-cyan-400',
+    },
+    {
+        id: '초월자',
+        name: '초월자',
+        cond: { type: 'prestigeRank', val: 2 },
+        color: 'text-purple-400',
+    },
+    {
+        id: '심연의 탐험가',
+        name: '심연의 탐험가',
+        cond: { type: 'prestigeRank', val: 3 },
+        color: 'text-indigo-400',
+    },
+    {
+        id: '에테르 기사',
+        name: '에테르 기사',
+        cond: { type: 'prestigeRank', val: 4 },
+        color: 'text-violet-400',
+    },
+    {
+        id: '허공의 지배자',
+        name: '허공의 지배자',
+        cond: { type: 'prestigeRank', val: 5 },
+        color: 'text-fuchsia-400',
+    },
+    {
+        id: '차원의 균열',
+        name: '차원의 균열',
+        cond: { type: 'prestigeRank', val: 6 },
+        color: 'text-pink-400',
+    },
+    {
+        id: '시간의 파수꾼',
+        name: '시간의 파수꾼',
+        cond: { type: 'prestigeRank', val: 7 },
+        color: 'text-rose-400',
+    },
+    {
+        id: '영겁의 존재',
+        name: '영겁의 존재',
+        cond: { type: 'prestigeRank', val: 8 },
+        color: 'text-yellow-400',
+    },
+    {
+        id: '절대자',
+        name: '절대자',
+        cond: { type: 'prestigeRank', val: 9 },
+        color: 'text-amber-400',
+    },
+    {
+        id: '에테르의 신',
+        name: '에테르의 신',
+        cond: { type: 'prestigeRank', val: 10 },
+        color: 'text-emerald-400',
+    },
 ]);
 
 // 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
