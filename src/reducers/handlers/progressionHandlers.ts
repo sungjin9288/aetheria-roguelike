@@ -99,6 +99,11 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 // cycle 188: synthProtects(합성 보호권 잔여 토큰) — premium 구매로 획득한 영구 자산.
                 //   미보존 시 환생 후 보유 토큰 0으로 리셋되어 premium 구매가 손실.
                 synthProtects: prevStats.synthProtects || 0,
+                // cycle 202: claimedAchievements 영구 ledger 보존 — cycle 188 패턴 확장.
+                //   기존엔 ASCEND 시 [] 으로 리셋되었으나 kills/bossKills 등 영구 카운터는 보존되므로
+                //   isAchievementUnlocked가 여전히 true → claimAchievement는 'claimed.includes()'만
+                //   가드해 ASCEND마다 모든 업적 재청구 가능 exploit. 영구 청구 ledger로 잠금.
+                claimedAchievements: Array.isArray(prevStats.claimedAchievements) ? prevStats.claimedAchievements : [],
             },
             premiumCurrency: state.player.premiumCurrency || 0,
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
