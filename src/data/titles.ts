@@ -338,6 +338,28 @@ export const TITLES = Object.freeze([
         cond: { type: 'cosmetic', val: 0 },
         color: 'text-fuchsia-300',
     },
+
+    // cycle 192: 엔드게임 quest 152/153/154 reward.title 정식 등록 — 기존엔 TITLES 미등록이라
+    //   getTitleDefinition undefined로 cosmetic 라벨 fallback. cycle 175(시즌) / cycle 185(cosmetic)
+    //   패턴과 동일.
+    {
+        id: '에테르 탐험가',
+        name: '에테르 탐험가',
+        cond: { type: 'questReward', val: 152 },
+        color: 'text-cyan-200',
+    },
+    {
+        id: '공허의 방랑자',
+        name: '공허의 방랑자',
+        cond: { type: 'questReward', val: 153 },
+        color: 'text-purple-200',
+    },
+    {
+        id: '종말의 정복자',
+        name: '종말의 정복자',
+        cond: { type: 'questReward', val: 154 },
+        color: 'text-orange-300',
+    },
 ]);
 
 // 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
