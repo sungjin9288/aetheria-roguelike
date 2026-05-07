@@ -392,6 +392,9 @@ export const migrateData = (rawData: any) => {
     target.stats.bountyIssued = Boolean(target.stats.bountyIssued);
     target.stats.bountiesCompleted = target.stats.bountiesCompleted || 0;
     target.stats.claimedAchievements = Array.isArray(target.stats.claimedAchievements) ? target.stats.claimedAchievements : [];
+    // cycle 260: stats.claimedQuestIds 정규화 — quest 완료 영구 ledger. checkTitles
+    //   questReward fallback handler가 의존. cycle 202 claimedAchievements 패턴 동일.
+    target.stats.claimedQuestIds = Array.isArray(target.stats.claimedQuestIds) ? target.stats.claimedQuestIds : [];
     target.stats.visitedMaps = Array.isArray(target.stats.visitedMaps) ? target.stats.visitedMaps : [];
     target.stats.exploreState = { ...DEFAULT_EXPLORE_STATE, ...(target.stats.exploreState || {}) };
     if (target.loc && !target.stats.visitedMaps.includes(target.loc)) {
@@ -569,6 +572,14 @@ export const checkTitles = (player: Player) => {
         //   checkTitles에도 fallback handler를 추가해 복구 케이스(저장 손실 / migration 등) 보호.
         //   cycle 199 'prestigeRank' 회귀와 동일 패턴.
         if (type === 'seasonTier')     return ((player as any).seasonPass?.tier || 0) >= val;
+        // cycle 260: 'questReward' cond.type — cycle 209 quest reward title grant 후 잔존
+        //   누락. claimQuestReward가 직접 grant하지만 checkTitles에 fallback 없어 저장 손실 시
+        //   영구 복구 불가하던 회귀. stats.claimedQuestIds 영구 ledger와 매칭. cycle 199 / 201
+        //   동일 lens. val = quest id (152/153/154/201/202).
+        if (type === 'questReward') {
+            const claimedIds = (player.stats as any)?.claimedQuestIds;
+            return Array.isArray(claimedIds) && claimedIds.includes(val);
+        }
         if (type === 'abyssFloor')     return (player.stats?.abyssFloor    || 0) >= val;
         if (type === 'abyssRecord')    return (player.stats?.abyssRecord   || 0) >= val;
         if (type === 'bountyDone')     return (player.stats?.bountiesCompleted || 0) >= val;

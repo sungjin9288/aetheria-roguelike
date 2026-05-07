@@ -272,6 +272,24 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
                 quests: player.quests.filter((quest: any) => quest.id !== qId)
             };
 
+            // cycle 260: stats.claimedQuestIds 영구 ledger 추적 — checkTitles questReward
+            //   fallback이 저장 손실 / 마이그레이션 등 복구 케이스에서 칭호 복원 가능. cycle
+            //   199 prestigeRank / cycle 201 seasonTier paired pattern. bounty는 별도 카운터(
+            //   bountiesCompleted)로 추적되므로 일반 quest만 push.
+            if (!pQuest.isBounty) {
+                const prevClaimedQuestIds = (updatedPlayer.stats as any)?.claimedQuestIds;
+                const nextClaimedQuestIds = Array.isArray(prevClaimedQuestIds) ? prevClaimedQuestIds : [];
+                if (!nextClaimedQuestIds.includes(qId)) {
+                    updatedPlayer = {
+                        ...updatedPlayer,
+                        stats: {
+                            ...updatedPlayer.stats,
+                            claimedQuestIds: [...nextClaimedQuestIds, qId],
+                        } as any,
+                    };
+                }
+            }
+
             if (qData.reward?.gold) updatedPlayer = grantGold(updatedPlayer, qData.reward.gold);
             if (qData.reward?.exp) {
                 const expResult = CombatEngine.applyExpGain(updatedPlayer, qData.reward.exp);

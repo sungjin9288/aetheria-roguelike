@@ -68,6 +68,10 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                     cosmeticTitles: Array.isArray(prevStats.cosmeticTitles) ? prevStats.cosmeticTitles : [],
                     synthProtects: prevStats.synthProtects || 0,
                     claimedAchievements: Array.isArray(prevStats.claimedAchievements) ? prevStats.claimedAchievements : [],
+                    // cycle 260: claimedQuestIds 영구 ledger 보존 — questReward 칭호(152/153/154/
+                    //   201/202) checkTitles fallback이 의존. RESET_GAME 시 wipe되면 복구 불가.
+                    //   cycle 202 claimedAchievements 패턴 동일 lens.
+                    claimedQuestIds: Array.isArray(prevStats.claimedQuestIds) ? prevStats.claimedQuestIds : [],
                     // cycle 211: codex milestone 누적 stat 보너스 3종 보존 — codexClaimed
                     //   재청구 차단과 paired ledger 정합성 (silent permanent loss 방지).
                     codexBonusAtk: prevStats.codexBonusAtk || 0,
@@ -176,6 +180,10 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 //   isAchievementUnlocked가 여전히 true → claimAchievement는 'claimed.includes()'만
                 //   가드해 ASCEND마다 모든 업적 재청구 가능 exploit. 영구 청구 ledger로 잠금.
                 claimedAchievements: Array.isArray(prevStats.claimedAchievements) ? prevStats.claimedAchievements : [],
+                // cycle 260: claimedQuestIds 영구 ledger 보존 — questReward 칭호 (152/153/154/
+                //   201/202) checkTitles fallback이 의존. ASCEND 시 wipe되면 복구 불가.
+                //   cycle 202 claimedAchievements 패턴 동일 lens.
+                claimedQuestIds: Array.isArray(prevStats.claimedQuestIds) ? prevStats.claimedQuestIds : [],
                 // cycle 203: cycle 119 누락분 4 영구 카운터 보존 — multi-run achievement / title /
                 //   codex 데이터 소스. 기존엔 ASCEND 시 0 / {} 리셋되어 progress 회귀.
                 //   · explores — 6+ quest target / 1 achievement / 2 title('방랑자' val 100, '길잡이' val 500).
