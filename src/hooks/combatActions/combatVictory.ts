@@ -27,9 +27,11 @@ export const handleVictoryOutcome = ({
     dispatch, addLog, addStoryLog,
     emitDailyProtocolLogs, emitUnlockedTitles,
     extendedChecks = false,
+    // cycle 265: liveConfig 4번째 인자로 전달 — seasonEvent / eventMultiplier 보너스 dispatch.
+    liveConfig = {},
 }: any) => {
     const passiveBonus = { goldMult: stats?.passiveGoldMult || 0, expMult: stats?.passiveExpMult || 0 };
-    const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus);
+    const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus, liveConfig);
     let updatedPlayer = victoryResult.updatedPlayer;
     victoryResult.logs.forEach((log: any) => addLog(log.type, log.text));
     if (victoryResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: victoryResult.visualEffect });

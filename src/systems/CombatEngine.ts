@@ -1391,16 +1391,32 @@ export const CombatEngine = {
         };
     },
 
-    handleVictory(player: Player, enemy: Monster, passiveBonus: any = {}) {
+    handleVictory(player: Player, enemy: Monster, passiveBonus: any = {}, liveConfig: any = {}) {
         const p: any = { ...player };
         const relics = p.relics || [];
         const baseName: string = this.resolveEnemyBaseName(enemy) || '';
         const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
         const bossBrief = enemy.isBoss ? BOSS_BRIEFS[baseName] : null;
 
-        // 유물 + 패시브 스킬: EXP/골드 배율
-        const expMult = 1 + (relics.find((r: any) => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0);
-        const goldMult = 1 + (relics.find((r: any) => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0);
+        // cycle 265: liveConfig 보너스 dispatch — 기존엔 admin eventMultiplier(SystemTab UI)와
+        //   seasonEvent.goldMultiplier / xpMultiplier(GameRoot 배너 광고)가 dispatch 0건이라
+        //   광고된 보너스가 fake던 silent UX 회귀. UI 광고 vs 실제 동작 정합 fix.
+        const eventMult = (typeof liveConfig?.eventMultiplier === 'number' && liveConfig.eventMultiplier > 0)
+            ? liveConfig.eventMultiplier
+            : 1;
+        const seasonActive = liveConfig?.seasonEvent?.active === true;
+        const seasonGoldMult = seasonActive && typeof liveConfig.seasonEvent.goldMultiplier === 'number'
+            ? liveConfig.seasonEvent.goldMultiplier
+            : 1;
+        const seasonXpMult = seasonActive && typeof liveConfig.seasonEvent.xpMultiplier === 'number'
+            ? liveConfig.seasonEvent.xpMultiplier
+            : 1;
+
+        // 유물 + 패시브 스킬: EXP/골드 배율 (cycle 265: liveConfig 곱셈 합류)
+        const expMult = (1 + (relics.find((r: any) => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0))
+            * eventMult * seasonXpMult;
+        const goldMult = (1 + (relics.find((r: any) => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0))
+            * seasonGoldMult;
         // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배)
         const challengeMods = p.challengeModifiers || [];
         const challengeScale: { threshold?: number; mult?: number } = (BALANCE as any).CHALLENGE_REWARD_SCALING || {};

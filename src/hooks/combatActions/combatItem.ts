@@ -11,7 +11,7 @@ import { soundManager } from '../../systems/SoundManager';
 import type { Item } from '../../types/index.js';
 
 export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
-    const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats } = deps;
+    const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats, liveConfig } = deps;
 
     return {
         combatUseItem: (item: Item) => {
@@ -70,6 +70,7 @@ export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emit
                     stats: counterStats, dispatch, addLog, addStoryLog,
                     emitDailyProtocolLogs, emitUnlockedTitles,
                     extendedChecks: false,
+                    liveConfig,
                 });
                 return;
             }

@@ -12,7 +12,7 @@ import { handleVictoryOutcome } from './combatVictory';
 import { soundManager } from '../../systems/SoundManager';
 
 export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
-    const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats } = deps;
+    const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats, liveConfig } = deps;
 
     return {
         combat: (type: any) => {
@@ -83,6 +83,7 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         stats, dispatch, addLog, addStoryLog,
                         emitDailyProtocolLogs, emitUnlockedTitles,
                         extendedChecks: true,
+                        liveConfig,
                     });
                     if (earlyReturn) return;
                     return;
@@ -120,6 +121,7 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                             stats, dispatch, addLog, addStoryLog,
                             emitDailyProtocolLogs, emitUnlockedTitles,
                             extendedChecks: false,
+                            liveConfig,
                         });
                         return;
                     }
