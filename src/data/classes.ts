@@ -365,7 +365,8 @@ export const CLASSES: any = {
             { name: '저주의 낙인', mp: 25, type: '어둠', mult: 1.6, effect: 'curse', desc: '강화된 저주 부여 — 적 피해 배율 증폭' },
             { name: '영혼 소환', mp: 35, mult: 2.0, effect: 'bleed', turn: 3, desc: '영혼을 소환해 3턴간 추가 피해' },
             { name: '역병의 안개', mp: 40, type: '자연', mult: 1.5, effect: 'poison', desc: '광역 독 — 모든 독 피해 강화' },
-            { name: '혼의 흡수', mp: 30, mult: 1.8, effect: 'drain', desc: '생명 흡수 — 피해의 30% HP 회복' },
+            // cycle 257: drainRatio 0.30 추가 — desc "30%" data-code 정합 (cycle 257 dispatch와 paired).
+            { name: '혼의 흡수', mp: 30, mult: 1.8, effect: 'drain', drainRatio: 0.30, desc: '생명 흡수 — 피해의 30% HP 회복' },
             { name: '죽음의 낫', mp: 50, type: '어둠', mult: 2.5, effect: 'curse', desc: 'HP 낮을수록 피해 증가, 저주 부여' },
             { name: '공허의 문', mp: 60, type: 'escape', effect: 'escape_100', desc: '100% 확률로 전투 이탈' },
             // 패시브
@@ -380,7 +381,8 @@ export const CLASSES: any = {
             ],
             '죽음의 낫': [
                 { choice: 'A', label: '처형의 낫', desc: '피해 배율 3.5배 (폭딜)', override: { mult: 3.5, effect: 'curse' } },
-                { choice: 'B', label: '흡혈의 낫', desc: '피해의 35% HP 흡수', override: { mult: 2.5, effect: 'drain' } },
+                // cycle 257: drainRatio 0.35 추가 — desc "35%" data-code 정합.
+                { choice: 'B', label: '흡혈의 낫', desc: '피해의 35% HP 흡수', override: { mult: 2.5, effect: 'drain', drainRatio: 0.35 } },
             ],
         },
         next: ['시간술사']

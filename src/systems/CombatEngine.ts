@@ -916,9 +916,12 @@ export const CombatEngine = {
             };
         }
 
-        // drain: 스킬 피해의 25% HP 흡수 (#5)
+        // drain: 스킬 피해의 N% HP 흡수 (#5)
+        // cycle 257: skill.drainRatio override — '혼의 흡수' (desc 30%) / '흡혈의 낫' (desc 35%)이
+        //   광고와 달리 hardcoded 25%로 흡수되던 desc-data 모순 fix. 미정의 시 default 0.25.
         if (skill.effect === 'drain') {
-            const drainHeal = Math.floor(totalDamage * 0.25);
+            const ratio = (typeof skill.drainRatio === 'number' && skill.drainRatio > 0) ? skill.drainRatio : 0.25;
+            const drainHeal = Math.floor(totalDamage * ratio);
             updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + drainHeal);
             logs.push({ type: 'heal', text: `[생명흡수] +${drainHeal} HP 흡수!` });
         }
