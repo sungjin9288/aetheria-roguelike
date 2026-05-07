@@ -470,14 +470,11 @@ export const getRunDiagnostics = (player: Player, stats: any = {}) => {
 
 export const getEnemyTacticalProfile = (enemy: Monster, stats: any = {}) => {
     if (!enemy) return null;
+    void stats; // cycle 270: stats 파라미터는 estimatedHit/estimatedHeavy 계산용이었으나 dead — 시그니처 호환 보존.
 
     const pattern = enemy.pattern || {};
     const guardChance = Math.max(0, Math.round((pattern.guardChance || 0) * 100));
     const heavyChance = Math.max(0, Math.round((pattern.heavyChance || 0) * 100));
-    const estimatedHit = Math.max(1, Math.floor((enemy.atk || 0) - (stats.def || 0)));
-    const estimatedHeavy = Math.max(1, Math.floor((enemy.atk || 0) * 1.4 - (stats.def || 0)));
-    const role = heavyChance >= guardChance + 10 ? '파쇄형' : guardChance >= heavyChance + 10 ? '수비형' : '교전형';
-    const tier = enemy.isBoss ? 'BOSS' : enemy.isElite ? 'ELITE' : 'NORMAL';
     const bossBrief = enemy.isBoss ? BOSS_BRIEFS[(enemy.baseName || enemy.name) as string] : null;
     const rawPhaseHint = bossBrief?.phaseHint || (enemy.isBoss && enemy.phase2 ? 'HP 50% 이하에서 2페이즈로 전환됩니다.' : null);
     const phaseHint = rawPhaseHint && enemy.isBoss && enemy.phase2 && !rawPhaseHint.includes('50%')
@@ -489,23 +486,14 @@ export const getEnemyTacticalProfile = (enemy: Monster, stats: any = {}) => {
             ? '방어 빈도가 높습니다. 큰 스킬은 가드가 빠진 뒤에 쓰는 편이 좋습니다.'
             : '공격 패턴이 고른 편입니다. 안정적인 교전이 유리합니다.';
 
+    // cycle 270: 12 dead 필드 제거 (role/tier/guardChance/heavyChance/estimatedHit/estimatedHeavy/
+    //   weakness/resistance/rewardHint/warningChips/recommendedBuilds/phaseTriggered) — dispatch 0건.
+    //   사용 5종만 반환 (cycle 245 hint/entryHint/phaseHint, cycle 269 signature/counterHint).
     return {
-        role,
-        tier,
-        guardChance,
-        heavyChance,
-        estimatedHit,
-        estimatedHeavy,
-        weakness: enemy.weakness || null,
-        resistance: enemy.resistance || null,
         hint,
         entryHint: bossBrief?.entryHint || null,
         signature: bossBrief?.signature || null,
         counterHint: bossBrief?.counterHint || null,
         phaseHint,
-        rewardHint: bossBrief?.rewardHint || null,
-        warningChips: bossBrief?.warningChips || [],
-        recommendedBuilds: bossBrief?.recommendedBuilds || [],
-        phaseTriggered: Boolean(enemy.phase2Triggered),
     };
 };

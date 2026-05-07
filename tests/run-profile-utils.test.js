@@ -106,6 +106,8 @@ test('class build compatibility and bonus align warrior with crusher setups', ()
 });
 
 test('enemy tactical profile includes boss briefing and phase hint', () => {
+    // cycle 270: tacticalProfile에서 12 dead 필드 (tier/rewardHint/warningChips 등) 제거.
+    //   사용 5종(hint/entryHint/signature/counterHint/phaseHint)만 보존.
     const profile = getEnemyTacticalProfile({
         name: '레드 드래곤',
         baseName: '레드 드래곤',
@@ -117,13 +119,10 @@ test('enemy tactical profile includes boss briefing and phase hint', () => {
         phase2: { name: '격노한 레드 드래곤' },
     }, { def: 40 });
 
-    assert.equal(profile.tier, 'BOSS');
     assert.ok(profile.signature?.includes('브레스'));
     assert.ok(profile.entryHint?.includes('냉기'));
     assert.ok(profile.counterHint?.includes('냉기'));
     assert.ok(profile.phaseHint?.includes('50%'));
-    assert.ok(profile.rewardHint?.includes('초회'));
-    assert.ok(profile.warningChips.includes('브레스'));
 });
 
 test('run diagnostics summarizes pacing and class fit', () => {
