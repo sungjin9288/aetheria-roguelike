@@ -36,6 +36,12 @@ export const handleVictoryOutcome = ({
     victoryResult.logs.forEach((log: any) => addLog(log.type, log.text));
     if (victoryResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: victoryResult.visualEffect });
 
+    // cycle 274: 레벨업 시 addStoryLog('levelUp', ...) — aiService 8 스토리 템플릿 dead 시리즈
+    //   (cycle 272-273 paired). visualEffect / sound (cycle 217) / log는 있지만 narrative cue 부재였음.
+    if (victoryResult.leveledUp && typeof addStoryLog === 'function') {
+        addStoryLog('levelUp', { level: updatedPlayer.level });
+    }
+
     const victoryStats = { ...stats, maxHp: updatedPlayer.maxHp, maxMp: updatedPlayer.maxMp };
 
     // buildWins
