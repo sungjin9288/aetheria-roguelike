@@ -73,7 +73,8 @@ test('calculateFullStats returns base stats shape with required keys', () => {
         'activeSet', 'relics', 'critChance',
         'buildProfile', 'traitProfile', 'traitBonus',
         'titlePassive', 'activeSynergies',
-        'killStreak', 'killStreakTier',
+        'killStreak',
+        // cycle 278: killStreakTier 필드 제거 — dead config cleanup (production consumer 0건).
         'passiveGoldMult', 'passiveExpMult',
     ];
     for (const key of required) {
@@ -198,13 +199,12 @@ test('calculateFullStats low_hp_atk relic activates below threshold', () => {
 });
 
 test('calculateFullStats kill streak atk bonus grows with streak tiers', () => {
+    // cycle 278: killStreakTier 필드 제거 — atk 보너스 효과만 검증.
     const noStreak = calculateFullStats(makePlayer({ killStreak: 0 }));
     const highStreak = calculateFullStats(makePlayer({
         killStreak: BALANCE.KILL_STREAK_TIERS[BALANCE.KILL_STREAK_TIERS.length - 1],
     }));
-    assert.ok(highStreak.atk >= noStreak.atk);
-    assert.ok(highStreak.killStreakTier >= 0);
-    assert.equal(noStreak.killStreakTier, -1);
+    assert.ok(highStreak.atk > noStreak.atk, 'high streak grants atk bonus');
 });
 
 test('calculateFullStats abyss_atk_scale relic scales with floor', () => {

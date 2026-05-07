@@ -410,8 +410,8 @@ export const calculateFullStats = (player: Player) => {
         traitBonus,
         titlePassive,
         activeSynergies,
+        // cycle 278: killStreakTier 필드 제거 — production consumer 0건. raw killStreak count는 dispatch 유지.
         killStreak: player.killStreak || 0,
-        killStreakTier: streak.tierIdx,
         passiveGoldMult: passiveBonus.goldMult,
         passiveExpMult: passiveBonus.expMult,
         jobAffinity: affinity,  // cycle 45: { matchCount, totalSlots, bonus, label, tier, slots }
