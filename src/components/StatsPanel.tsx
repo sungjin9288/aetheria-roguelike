@@ -57,6 +57,10 @@ const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
 
     const activeSignatureSet = stats?.activeSignatureSet || null;
     const sigSetTone = activeSignatureSet ? (SIG_SET_TONE[activeSignatureSet.tone] || SIG_SET_TONE.holy) : null;
+    // cycle 250: stats.activeSet (prefix-based items 세트) UI dispatch — items.ts sets[]
+    //   ('불타는' 화염의 결속, '얼어붙은' 혹한의 방벽 등 7종)이 stats에는 적용되지만 UI 표시
+    //   0건이던 silent 회귀. activeSignatureSet (signature 세트)와 paired 동작.
+    const activeSet = stats?.activeSet || null;
 
     const topKills = useMemo(() => (
         (Object.entries(overview.killRegistry) as Array<[string, number]>)
@@ -232,6 +236,28 @@ const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* cycle 250: prefix-based 세트 보너스 표시 — items.ts sets ('불타는' 등)
+                stats에는 적용되지만 UI invisible이던 silent 회귀 fix. */}
+            {activeSet && (
+                <div
+                    data-testid="stats-active-set"
+                    data-active-set-prefix={activeSet.prefix}
+                    className="rounded-[1rem] border border-amber-300/24 bg-amber-300/[0.06] px-3 py-2 space-y-1"
+                >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <Sparkles size={11} className="text-amber-200 shrink-0" />
+                        <span className="font-rajdhani font-bold text-[12px] text-amber-100 truncate">
+                            {activeSet.prefix} 세트
+                        </span>
+                    </div>
+                    {activeSet.desc && (
+                        <div className="text-[10.5px] font-fira leading-[1.45] text-amber-50/80">
+                            {activeSet.desc}
+                        </div>
+                    )}
                 </div>
             )}
 
