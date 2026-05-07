@@ -812,10 +812,16 @@ export const CombatEngine = {
         // cycle 241: skill.stunTurn override — branch B '마비 번개' (stunTurn 2) 등이 광고하던 다중 턴 stun을
         //   읽어주지 못해 영원히 1턴만 적용되던 silent dead config fix. stun/freeze는 stunnedTurns 카운터 공용.
         const stunTurn = Math.max(1, Math.floor(skill.stunTurn || 1));
+        // cycle 244: skill.curseTurn override — '지속 저주' branch B (curseTurn 3) 등 cursedTurns 카운터 override.
+        //   미정의 시 default 3 (applyStatusEffectToEnemy curse case와 동일). max(prev, curseTurn) 단축 방지.
+        const curseTurn = Math.max(1, Math.floor(skill.curseTurn || 3));
         if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect) && Math.random() < effectChance) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
             if (skill.effect === 'stun' || skill.effect === 'freeze') {
                 postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
+            }
+            if (skill.effect === 'curse') {
+                postEffectEnemy = { ...postEffectEnemy, cursedTurns: Math.max(postEffectEnemy.cursedTurns ?? 0, curseTurn) };
             }
             if (effectLabels[skill.effect]) {
                 logs.push({ type: 'event', text: `[${skill.name}] ${enemy.name}에게 [${effectLabels[skill.effect]}] 부여!` });
@@ -826,6 +832,9 @@ export const CombatEngine = {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.secondEffect);
             if (skill.secondEffect === 'stun' || skill.secondEffect === 'freeze') {
                 postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
+            }
+            if (skill.secondEffect === 'curse') {
+                postEffectEnemy = { ...postEffectEnemy, cursedTurns: Math.max(postEffectEnemy.cursedTurns ?? 0, curseTurn) };
             }
             if (effectLabels[skill.secondEffect]) {
                 logs.push({ type: 'event', text: `[분기 효과] ${enemy.name}에게 [${effectLabels[skill.secondEffect]}] 추가 부여!` });
