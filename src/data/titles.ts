@@ -495,6 +495,12 @@ export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     cautious_explorer:{ hp: 20, def: 1, label: 'HP +20 · DEF +1' },
     survivor_instinct:{ hp: 40, def: 2, mp: 10, label: 'HP +40 · DEF +2 · MP +10' },
 
+    // cycle 248: abyss endgame 칭호 3종 패시브 — TITLES 정의 후 TITLE_PASSIVES 누락이라
+    //   활성화해도 0 stat 보너스이던 silent dead config fix. floor 100/200/300 점진 강화.
+    void_conqueror:   { atk: 3, crit: 0.02, hp: 20, label: 'ATK +3 · CRIT +2% · HP +20' },
+    abyss_legend:     { atk: 5, crit: 0.03, hp: 30, def: 2, label: 'ATK +5 · CRIT +3% · HP +30 · DEF +2' },
+    void_sovereign:   { atk: 7, crit: 0.04, hp: 40, def: 3, mp: 20, label: 'ATK +7 · CRIT +4% · HP +40 · DEF +3 · MP +20' },
+
     각성자:           { hp: 25, mp: 10, label: 'HP +25 · MP +10' },
     초월자:           { hp: 35, atk: 2, label: 'HP +35 · ATK +2' },
     '심연의 탐험가':   { mp: 20, def: 1, label: 'MP +20 · DEF +1' },
