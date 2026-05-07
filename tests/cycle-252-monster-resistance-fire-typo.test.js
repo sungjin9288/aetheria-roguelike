@@ -73,7 +73,8 @@ test('cycle 252: 다른 resistance 값 변화 없음 (회귀 가드)', async () 
     // 물 resistance 가진 monster — 별도 cycle 대기.
     const waterRes = MONSTERS['강의 요괴'];
     assert.equal(waterRes?.resistance, '물', "'강의 요괴' resistance '물' 보존 (cycle 252 범위 외)");
-    // 비전 resistance — 별도 cycle 대기.
-    const arcaneRes = Object.values(MONSTERS).find((m) => m.resistance === '비전');
-    assert.ok(arcaneRes, '비전 resistance 가진 monster 1개 이상 존재 (회귀 가드)');
+    // 번개 weakness — 별도 cycle 대기.
+    const lightningWeak = Object.values(MONSTERS).find((m) => m.weakness === '번개');
+    assert.ok(lightningWeak, '번개 weakness 가진 monster 1개 이상 존재 (회귀 가드)');
+    // 참고: 비전 resistance는 cycle 253에서 에테르로 매핑되어 0건 (정상).
 });

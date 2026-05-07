@@ -325,7 +325,8 @@ export const MONSTERS: any = {
     '함정 수호자':      { hp: 390, atk: 78, def: 35, exp: 218, gold: 96, weakness: '빛', resistance: '대지', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
     '미궁의 마왕':      { hp: 460, atk: 88, def: 40, exp: 245, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
     '돌 거인':          { hp: 500, atk: 70, def: 55, exp: 255, gold: 120, weakness: '번개', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
-    '독 지네':          { hp: 280, atk: 82, def: 18, exp: 188, gold: 84, weakness: '화염', resistance: '독', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'poison' },
+    // cycle 253: resistance '독' → '자연' — items.ts에 elem '독' 없음, 자연 계열(독사의 송곳니/정령의 지팡이)이 elem '자연'.
+    '독 지네':          { hp: 280, atk: 82, def: 18, exp: 188, gold: 84, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'poison' },
     '그림자 사냥꾼':    { hp: 320, atk: 96, def: 20, exp: 228, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
     // 황금 왕국 인근 필드 (5종)
     '황금 왕국 수호자': { hp: 480, atk: 75, def: 50, exp: 250, gold: 200, weakness: '번개', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
@@ -521,7 +522,8 @@ export const MONSTERS: any = {
     '차원 분열자': {
         isBoss: true,
         weakness: '자연',
-        resistance: '비전',
+        // cycle 253: resistance '비전' → '에테르' — items.ts elem '비전' 없음, 차원/공허 weapons (에테르 검 / 차원절단자)이 elem '에테르'.
+        resistance: '에테르',
         hpMult: 1.9,
         atkMult: 1.5,
         expMult: 2.5,
