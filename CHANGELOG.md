@@ -7,6 +7,59 @@
 
 ---
 
+## Cycle 276 🎯 — CHANGELOG에 cycles 260-275 history 일괄 추가
+
+- 마일스톤: cycle 259 batch 이후 16 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259에 이은 12번째 batch.
+- 누적 마일스톤: cycle 259(unit 1348) → 270(unit 1398) → 275(unit 1423, +75 from cycle 259).
+
+검증: tsc 0 / unit 1423 / lint clean / build-guard ok.
+
+---
+
+## Cycle 272-275 — Story 템플릿 dispatch 시리즈 4사이클 마무리
+
+aiService.getFallback의 8 스토리 템플릿 중 4종(levelUp / bossPhase2 / questComplete / ruinRecap)이 dispatch 0건이던 silent narrative gap. 4사이클로 모두 활성화 — 8 템플릿 전부 dispatch 보장.
+
+- 272: 'questComplete' dispatch — completeQuest에 addStoryLog 추가. createInventoryActions deps에 addStoryLog 추출.
+- 273: 'bossPhase2' dispatch — combatAttack가 phase2Triggered transition 감지 (prev false → new true) 후 호출.
+- 274: 'levelUp' dispatch — combatVictory가 victoryResult.leveledUp boolean 감지 후 호출.
+- 275: 'ruinRecap' dispatch — 사망 3 경로 (combatAttack 사망 / combatAttack 도주실패 사망 / combatItem 사망) 모두에 'death' 직후 추가. 시리즈 마무리.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 267-271 — Cleanup lens 시리즈 5사이클 (대량 dead 코드 제거)
+
+이전 사이클들이 dispatch 누락 fix 위주였다면, 이 시리즈는 반대 방향 — 정의되었지만 dispatch 0건인 dead 필드/함수 제거. 코드베이스 단순화.
+
+- 267: getTraitProfile의 skillLabel 필드 제거 (dispatch 0건, 컴포넌트는 trait.skill 직접 접근).
+- 268: getRunBuildProfile의 secondary 필드 제거 (ranked.slice(1, 3) 계산되지만 consume 0건).
+- 269: CombatPanel 보스 signature/counterHint UI dispatch — getEnemyTacticalProfile 14+ 필드 중 dispatch 0건이던 in-combat 핵심 정보 추가.
+- 270: getEnemyTacticalProfile의 12 dead 필드 cleanup — role/tier/guardChance/heavyChance/estimatedHit/estimatedHeavy/weakness/resistance/rewardHint/warningChips/recommendedBuilds/phaseTriggered. 사용 5종(hint/entryHint/phaseHint/signature/counterHint)만 보존.
+- 271: 4 dead exports + 부수 imports cleanup — getClassBuildIdentity / getClassBuildCompatibility / getClassBuildBonus / getRunDiagnostics (미완성 diagnostics 기능, ~70 lines + 2 dead tests). 파일 순감소 49 lines.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 264-266 — Equipment / liveConfig 시리즈 3사이클
+
+- 264: 방패 강화(enhance) DEF 기여 누락 — ENHANCE_ITEM이 offhand shield enhance 카운터 +1 처리하지만 statsCalculator computeEnhanceBonus가 offhand 무기로 가정하고 atk × 0.5만 dispatch. 방패 빌드(나이트/팔라딘)가 강화해도 def +0이고 부정확한 atk 가산만 받던 회귀. isShield 분기 처리.
+- 265: liveConfig.seasonEvent / eventMultiplier 보너스 dispatch 누락 — **가장 큰 player-facing UX 회귀**. GameRoot 배너에 "골드+30% XP+50%" 광고하지만 src/ 어디에도 dispatch 0건. SystemTab admin eventMultiplier 슬라이더도 dead. handleVictory에 4번째 liveConfig 인자 추가, 3 call sites threading.
+- 266: liveConfig.announcement UI dispatch — admin이 SystemTab에서 prompt로 설정 가능하지만 src/ 어디에도 render 안 됨이라 admin 도구 dead. GameRoot에 announcement 배너 추가 (cycle 265 paired completion).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 260-263 — META preserve / fallback chain 시리즈 4사이클
+
+cycle 199/201 prestigeRank/seasonTier checkTitles fallback 시리즈의 paired completion으로 explicit-grant 칭호 4종 모두 복구 보호 lock. 추가로 sensory cue gap 마무리.
+
+- 260: questReward title fallback (cycle 199/201 paired) — 5종 quest reward 칭호 (152/153/154/201/202)가 player.titles 손실 시 영구 복구 불가던 회귀. stats.claimedQuestIds 영구 ledger 도입 + checkTitles handler. 5-file refactor (INITIAL_STATE / completeQuest / checkTitles / migrateData / ASCEND+RESET_GAME preserve).
+- 261: claim 액션 sensory cue paired completion (cycle 122-123 패턴) — claimWeeklyMission sound 0건, SeasonPassPanel claimReward addLog/sound 모두 0건이던 UX dead path. claimSeasonReward 신규 action + Dashboard wiring.
+- 262: cosmetic title fallback (cycle 199/201/260 시리즈 마무리) — 4 cosmetic titles의 영문 ↔ Korean id 매핑 + stats.cosmeticTitles ledger 검증. checkTitles fallback 시리즈 4종 explicit-grant 칭호 모두 보호 완료.
+- 263: 'critical' 로그 타입 sensory cue 누락 — useGameEngine lastLog 사운드 매핑이 5종만 처리, 'critical' 누락이라 크리티컬 hit이 무음. 일반 공격은 attack 사운드 vs 강화된 hit이 약화된 hit처럼 들리던 회귀. 'critical' → 'attack' 매핑 추가.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 259 🎯 — CHANGELOG에 cycles 241-258 history 일괄 추가
 
 - 마일스톤: cycle 240 batch 이후 18 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240에 이은 11번째 batch.
