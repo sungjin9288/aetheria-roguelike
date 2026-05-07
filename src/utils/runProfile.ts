@@ -170,7 +170,7 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
 
     return {
         primary,
-        secondary: ranked.slice(1, 3),
+        // cycle 268: secondary 필드 제거 — dispatch 0건이던 dead config (cycle 267 동일 lens).
         tags: ranked.slice(0, 5),
     };
 };
