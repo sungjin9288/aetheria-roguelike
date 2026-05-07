@@ -179,7 +179,9 @@ export const CLASSES: any = {
             ],
             '천벌': [
                 { choice: 'A', label: '천상의 분노', desc: '데미지 +25%', override: { mult: 7.5 } },
-                { choice: 'B', label: '심판의 천벌', desc: '기절 2턴 + 저주', override: { mult: 6.0, secondEffect: 'curse', stunTurn: 2 } },
+                // cycle 247: effect 'stun' 추가 — base '천벌' effect 'purify'가 STATUS_EFFECTS_TO_ENEMY에 미포함이라
+                //   stunTurn dispatch 미진입이던 desc-data 모순 fix. purify cleanse 포기 trade-off.
+                { choice: 'B', label: '심판의 천벌', desc: '기절 2턴 + 저주', override: { mult: 6.0, effect: 'stun', secondEffect: 'curse', stunTurn: 2 } },
             ],
         },
         // cycle 231: 아크메이지 → 대마법사 progression — T3 도달 가능 unlock.
@@ -373,7 +375,8 @@ export const CLASSES: any = {
         skillBranches: {
             '저주의 낙인': [
                 { choice: 'A', label: '심화 저주', desc: '데미지 +45%', override: { mult: 2.32 } },
-                { choice: 'B', label: '지속 저주', desc: '저주 지속 +2턴', override: { mult: 1.6, curseTurn: 3 } },
+                // cycle 247: curseTurn 3 → 5 (default 3 + desc "+2턴" 정합 — cycle 244 dispatch와 합쳐 실 효과 발현).
+                { choice: 'B', label: '지속 저주', desc: '저주 지속 +2턴', override: { mult: 1.6, curseTurn: 5 } },
             ],
             '죽음의 낫': [
                 { choice: 'A', label: '처형의 낫', desc: '피해 배율 3.5배 (폭딜)', override: { mult: 3.5, effect: 'curse' } },
