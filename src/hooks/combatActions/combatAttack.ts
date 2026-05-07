@@ -152,6 +152,11 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         emitUnlockedTitles(deathRecordPlayer);
                         defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                         addStoryLog('death', { loc: playerForEnemyTurn.loc });
+                        // cycle 275: 사망 회상 narrative — story 템플릿 시리즈 마무리 (cycle 272-274 paired).
+                        //   'death'는 즉각 모먼트, 'ruinRecap'은 retrospective + hopeful (level/name 포함).
+                        if (typeof addStoryLog === 'function') {
+                            addStoryLog('ruinRecap', { name: deadPlayer.name, level: deadPlayer.level });
+                        }
                     }
                 }, BALANCE.ENEMY_TURN_DELAY_MS);
                 return;
@@ -195,6 +200,10 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         emitUnlockedTitles(defeatResult.updatedPlayer);
                         defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                         addStoryLog('death', { loc: player.loc });
+                        // cycle 275: 도주 실패 후 사망에도 'ruinRecap' 회상 narrative.
+                        if (typeof addStoryLog === 'function') {
+                            addStoryLog('ruinRecap', { name: deadPlayer.name, level: deadPlayer.level });
+                        }
                     } else {
                         dispatch({ type: AT.SET_PLAYER, payload: protectedResult.updatedPlayer });
                     }

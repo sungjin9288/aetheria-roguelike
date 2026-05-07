@@ -89,6 +89,10 @@ export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emit
                 emitUnlockedTitles(deathRecordPlayer);
                 defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                 addStoryLog('death', { loc: playerForEnemyTurn.loc });
+                // cycle 275: 'ruinRecap' 회상 narrative — story 템플릿 시리즈 마무리.
+                if (typeof addStoryLog === 'function') {
+                    addStoryLog('ruinRecap', { name: deadPlayer.name, level: deadPlayer.level });
+                }
                 return;
             }
 
