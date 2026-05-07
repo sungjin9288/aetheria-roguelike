@@ -96,6 +96,17 @@ const GameRoot = ({
                     onOpenEquipment={engine.gameState === GS.COMBAT ? null : handleOpenEquipment}
                 />
 
+                {/* cycle 266: liveConfig.announcement 배너 — admin이 SystemTab에서 설정한 공지를
+                    플레이어에게 표시. 빈 문자열 / 미정의 시 미표시 (silence over noise). */}
+                {engine.liveConfig?.announcement && (
+                    <div
+                        data-testid="live-config-announcement"
+                        className="rounded-[0.9rem] border border-cyan-300/24 bg-cyan-300/[0.08] px-3 py-2 text-[11px] font-fira text-cyan-100"
+                    >
+                        📣 {engine.liveConfig.announcement}
+                    </div>
+                )}
+
                 {/* 시즌 이벤트 배너 */}
                 {engine.liveConfig?.seasonEvent?.active && (
                     <div className="flex items-center justify-between gap-2 rounded-[0.9rem] border border-[#d5b180]/28 bg-[#d5b180]/10 px-3 py-2 text-[11px] font-fira">
