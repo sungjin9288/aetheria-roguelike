@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { advanceExploreState, getNarrativeEventChance, getQuietExplorationChance } from '../src/utils/explorationPacing.js';
-import { getRunBuildProfile, getClassBuildCompatibility, getClassBuildBonus, getEnemyTacticalProfile, getRunDiagnostics, getTraitFeaturedItems, getTraitItemResonance, getTraitLootHint, getTraitProfile, getTraitQuestResonance, getTraitSkill } from '../src/utils/runProfileUtils.js';
+// cycle 271: getClassBuildCompatibility / getClassBuildBonus / getRunDiagnostics — production
+//   dispatch 0건이라 dead exports 제거. 관련 테스트도 삭제.
+import { getRunBuildProfile, getEnemyTacticalProfile, getTraitFeaturedItems, getTraitItemResonance, getTraitLootHint, getTraitProfile, getTraitQuestResonance, getTraitSkill } from '../src/utils/runProfileUtils.js';
 
 test('exploration pacing increases narrative chance after long dry streaks and reduces repeated quiet turns', () => {
     const dryStats = {
@@ -83,27 +85,9 @@ test('run build profile recognizes arcane setups with focus and mana relics', ()
     assert.ok(profile.primary.reasons.includes('주문서/마도서'));
 });
 
-test('class build compatibility and bonus align warrior with crusher setups', () => {
-    const player = {
-        job: '전사',
-        hp: 160,
-        maxHp: 160,
-        relics: [{ effect: 'execute_bonus' }],
-        equip: {
-            weapon: { type: 'weapon', name: '양손검', val: 30, hands: 2, elem: '물리' },
-            offhand: null,
-        }
-    };
-
-    const profile = getRunBuildProfile(player, { maxHp: 160, isMagic: false });
-    const compatibility = getClassBuildCompatibility(player.job, profile);
-    const bonus = getClassBuildBonus(player.job, profile);
-
-    assert.equal(profile.primary.id, 'crusher');
-    assert.equal(compatibility.label, '최적');
-    assert.equal(bonus.label, '양손 숙련');
-    assert.ok(bonus.atkMult > 1);
-});
+// cycle 271: 'class build compatibility and bonus' 테스트 제거 — getClassBuildCompatibility /
+//   getClassBuildBonus dead exports cleanup. getRunBuildProfile primary.id 'crusher' 검증은
+//   기존 'build profile detects crusher 양손 setup' 테스트(별도)에서 이미 커버.
 
 test('enemy tactical profile includes boss briefing and phase hint', () => {
     // cycle 270: tacticalProfile에서 12 dead 필드 (tier/rewardHint/warningChips 등) 제거.
@@ -125,41 +109,8 @@ test('enemy tactical profile includes boss briefing and phase hint', () => {
     assert.ok(profile.phaseHint?.includes('50%'));
 });
 
-test('run diagnostics summarizes pacing and class fit', () => {
-    const player = {
-        job: '마법사',
-        hp: 120,
-        maxHp: 180,
-        stats: {
-            recentBattles: [
-                { result: 'win', hpRatio: 0.6 },
-                { result: 'win', hpRatio: 0.5 },
-                { result: 'death', hpRatio: 0 },
-                { result: 'win', hpRatio: 0.42 },
-                { result: 'escape', hpRatio: 0.35 },
-            ],
-            exploreState: {
-                sinceNarrativeEvent: 5,
-                sinceDiscovery: 3,
-                sinceRelic: 4,
-                quietStreak: 2,
-                lastOutcome: 'combat',
-            },
-        },
-        relics: [{ effect: 'mp_mult' }, { effect: 'skill_mult' }],
-        equip: {
-            weapon: { type: 'weapon', name: '푸른 지팡이', val: 16, hands: 1, elem: '냉기' },
-            offhand: { type: 'shield', subtype: 'focus', name: '견습 주문서', val: 2, mp: 10 },
-        }
-    };
-
-    const diagnostics = getRunDiagnostics(player, { maxHp: 180, isMagic: true });
-
-    assert.equal(diagnostics.classCompatibility.label, '최적');
-    assert.equal(diagnostics.buildProfile.primary.id, 'arcane');
-    assert.equal(diagnostics.pacingLabel, '이벤트 대기');
-    assert.ok(diagnostics.recommendations.length > 0);
-});
+// cycle 271: 'run diagnostics summarizes pacing and class fit' 테스트 제거 —
+//   getRunDiagnostics dead export cleanup. 미완성 diagnostics 기능이라 production 호출 0건.
 
 test('trait profile simplifies build identity into a readable passive + skill package', () => {
     const player = {

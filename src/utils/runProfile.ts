@@ -1,14 +1,14 @@
 import type { Item, Monster } from '../types/index.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import type { Player } from "../types/index.js";
-import { getDifficultyMults, calcPerformanceScore, countLowHpWins } from '../systems/DifficultyManager.js';
-import { getExploreState } from './explorationPacing.js';
+// cycle 271: getDifficultyMults / calcPerformanceScore / getExploreState / CLASS_BUILD_IDENTITIES /
+//   hasProfileTag — getRunDiagnostics + 3 class-build helpers 제거 후 dead imports cleanup.
+import { countLowHpWins } from '../systems/DifficultyManager.js';
 import { isFocusOffhand, isMagicWeapon, isShield, isTwoHandWeapon, isWeapon } from './equipmentUtils.js';
 import {
     ARCHETYPE_LABELS,
     TRAIT_DEFINITIONS,
     ELEMENT_TO_STATUS,
-    CLASS_BUILD_IDENTITIES,
 } from '../data/traits.js';
 
 // --- Internal helpers ---
@@ -22,56 +22,14 @@ const scoreTag = (id: any, name: any, desc: any, score: any, reasons: any[] = []
 });
 
 const relicEffectsOf = (player: Player) => new Set((player?.relics || []).map((relic: any) => relic.effect));
-const hasProfileTag = (profile: any, id: any) => profile?.primary?.id === id || (profile?.tags || []).some((tag: any) => tag.id === id);
 const labelTag = (id: any) => ARCHETYPE_LABELS[id] || id;
 const toPercent = (value: any = 0) => `${Math.round(value * 100)}%`;
 const hasAnyJob = (item: Item | null | undefined, jobs: any[] = []) => Array.isArray(item?.jobs) && jobs.some((job: any) => item?.jobs?.includes(job));
 const isConsumableType = (item: Item | null | undefined) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type as string);
 const hasElement = (item: Item | null | undefined) => Boolean(item?.elem && item.elem !== '물리');
 
-// --- Class build functions ---
-
-export const getClassBuildIdentity = (job: any = '모험가') => (
-    CLASS_BUILD_IDENTITIES[job] || CLASS_BUILD_IDENTITIES['모험가']
-);
-
-export const getClassBuildCompatibility = (job: any, profile: any) => {
-    const identity = getClassBuildIdentity(job);
-    const matchedTags = identity.preferredTags.filter((tag: any) => hasProfileTag(profile, tag));
-    const primaryMatch = hasProfileTag(profile, identity.preferredTags[0]);
-    const score = matchedTags.length + (primaryMatch ? 1 : 0);
-
-    let label = '엇갈림';
-    if (score >= 2 && matchedTags.length >= 1) label = '최적';
-    else if (matchedTags.length >= 1) label = '양호';
-    else if (profile?.primary?.id === 'balanced') label = '정착 전';
-
-    return {
-        label,
-        matchedTags,
-        matchedLabels: matchedTags.map(labelTag),
-        summary: matchedTags.length > 0
-            ? `${job}은(는) ${matchedTags.map(labelTag).join(' / ')} 축과 잘 맞습니다.`
-            : `${job} 정체성과 현재 빌드가 아직 완전히 맞물리진 않습니다.`,
-    };
-};
-
-export const getClassBuildBonus = (job: any, profile: any) => {
-    const identity = getClassBuildIdentity(job);
-    const activeSynergy = identity.synergies.find((entry: any) => entry.tags.some((tag: any) => hasProfileTag(profile, tag))) || null;
-    const bonus = activeSynergy?.bonus || {};
-
-    return {
-        matched: Boolean(activeSynergy),
-        label: activeSynergy?.label || '기본 교전',
-        desc: activeSynergy?.desc || identity.desc,
-        atkMult: bonus.atkMult || 1,
-        defMult: bonus.defMult || 1,
-        hpFlat: bonus.hpFlat || 0,
-        mpFlat: bonus.mpFlat || 0,
-        critBonus: bonus.critBonus || 0,
-    };
-};
+// cycle 271: getClassBuildIdentity / getClassBuildCompatibility / getClassBuildBonus 3 dead exports 제거.
+//   미완성 diagnostics 기능의 일부였으나 production 호출 0건이라 dead. getRunDiagnostics 함께 제거.
 
 // --- Run build profile ---
 
@@ -410,61 +368,8 @@ export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
     };
 };
 
-// --- Diagnostics ---
-
-export const getRunDiagnostics = (player: Player, stats: any = {}) => {
-    const buildProfile = getRunBuildProfile(player, stats);
-    const classIdentity = getClassBuildIdentity(player?.job);
-    const classCompatibility = getClassBuildCompatibility(player?.job, buildProfile);
-    const classBonus = getClassBuildBonus(player?.job, buildProfile);
-    const recentBattles = (player?.stats?.recentBattles || []).slice(-20);
-    const wins = recentBattles.filter((battle: any) => battle.result === 'win');
-    const winRate = recentBattles.length > 0
-        ? Math.round((wins.length / recentBattles.length) * 100)
-        : null;
-    const avgWinHp = wins.length > 0
-        ? Math.round((wins.reduce((sum: any, battle: any) => sum + ((battle.hpRatio || 0) * 100), 0) / wins.length))
-        : null;
-    const exploreState = getExploreState(player?.stats);
-    const difficulty = getDifficultyMults(calcPerformanceScore(player));
-
-    let pacingLabel = '안정';
-    let pacingNote = '전투와 발견이 무난하게 섞이고 있습니다.';
-    if (exploreState.quietStreak >= 3) {
-        pacingLabel = '건조';
-        pacingNote = '조용한 탐험이 길게 이어졌습니다. 곧 이벤트 pity가 강하게 작동합니다.';
-    } else if (exploreState.sinceNarrativeEvent >= 4) {
-        pacingLabel = '이벤트 대기';
-        pacingNote = '특수 이벤트 누적이 쌓였습니다. 몇 번 안에 발견이 나올 가능성이 높습니다.';
-    } else if (['narrative_event', 'anomaly', 'key_event', 'relic_found'].includes(exploreState.lastOutcome)) {
-        pacingLabel = '발견 직후';
-        pacingNote = '방금 큰 발견이 나왔습니다. 다음 몇 턴은 전투/정리 리듬이 됩니다.';
-    }
-
-    const recommendations: any[] = [];
-    if (winRate !== null && winRate < 45) recommendations.push('최근 승률이 낮습니다. 휴식과 방패/회복 루틴을 우선하세요.');
-    if (avgWinHp !== null && avgWinHp < 35) recommendations.push('전투 종료 HP가 낮습니다. DEF 또는 회복 수단을 더 챙기는 편이 좋습니다.');
-    if (classCompatibility.label === '엇갈림') {
-        recommendations.push(`${player?.job || '현재 직업'}은 ${classIdentity.preferredTags.map(labelTag).join(' / ')} 축에서 더 강합니다.`);
-    }
-    if (difficulty.label === '압도' || difficulty.label === '우세') recommendations.push('현재 템포가 좋습니다. 보스나 상위 지역 진입을 시도할 타이밍입니다.');
-    if (pacingLabel === '건조') recommendations.push('이벤트 pity가 쌓였습니다. 탐험을 조금 더 이어가면 발견 확률이 올라갑니다.');
-    if (recommendations.length === 0) recommendations.push('현재 런은 안정적입니다. 빌드 축을 유지하며 보스 타이밍을 준비하세요.');
-
-    return {
-        buildProfile,
-        classIdentity,
-        classCompatibility,
-        classBonus,
-        difficultyLabel: difficulty.label,
-        winRate,
-        avgWinHp,
-        pacingLabel,
-        pacingNote,
-        recentBattles: recentBattles.length,
-        recommendations,
-    };
-};
+// cycle 271: getRunDiagnostics export 제거 — 미완성 diagnostics 기능. production 호출 0건이라
+//   tests/만 사용. paired 3 함수 (getClassBuildIdentity / Compatibility / Bonus)와 함께 cleanup.
 
 // --- Enemy tactical profile ---
 
