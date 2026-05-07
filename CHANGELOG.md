@@ -7,6 +7,77 @@
 
 ---
 
+## Cycle 259 🎯 — CHANGELOG에 cycles 241-258 history 일괄 추가
+
+- 마일스톤: cycle 240 batch 이후 18 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240에 이은 11번째 batch.
+- 누적 마일스톤: cycle 240(unit 1245) → 250(unit 1302) → 258(unit 1348, +103 from cycle 240).
+
+검증: tsc 0 / unit 1348 / lint clean / build-guard ok.
+
+---
+
+## Cycle 256-258 — Weapon skill preset coverage + drain ratio 정합 시리즈 3사이클
+
+- 256: WEAPON_SKILL_BY_ELEM의 '바람' / '에테르' preset 누락 dead config — 폭풍의 창(바람) / 에테르 검·차원절단자(에테르)가 fallback '아케인 볼트'에 떨어져 element 정체성 dispatch 0이던 회귀. '게일 컷' / '디멘션 리프트' preset 추가.
+- 257: skill drain effect의 drainRatio dispatch + 데이터 정합 dead config — '혼의 흡수' (desc 30%) / '흡혈의 낫' (desc 35%)이 hardcoded 25% 흡수율 적용되던 desc-data 모순 fix. CombatEngine에 skill.drainRatio 우선 read 추가 + 2건 데이터 정합.
+- 258: '강화 흡수' branch drainRatio 누락 (cycle 257 paired) — desc "데미지 및 흡수량 +30%" 광고하지만 mult만 +30%이고 drainRatio default 0.25 그대로던 회귀. branch override drainRatio: 0.325 추가.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 251-255 — Monster element typo 시리즈 5사이클 마무리
+
+cycle 223 (items elem '얼음' → '냉기') 패턴 monsters 측 audit. items.ts elem과 매칭 안 되던 monster weakness/resistance 13건 element 표준 통일 — getElementMultiplier 매칭 실패로 ELEMENT_WEAK_MULT / ELEMENT_RESIST_MULT 영원히 미적용이던 silent 회귀.
+
+- 251: weakness '불꽃' → '화염' 6 monsters (구름 정령 / 익사한 기사 / 살아있는 마법서 / 잉크 슬라임 / 책의 정령 / 독 지네).
+- 252: resistance '불꽃' → '화염' 2 monsters (분노한 마구스 / 사기꾼 마법사) — paired completion.
+- 253: resistance '독' → '자연' (독 지네) + '비전' → '에테르' (차원 분열자 boss) 2건.
+- 254: resistance '물' → '냉기' 2 monsters (강의 요괴 / 저주받은 어부) — water-themed → ice/cold thematic.
+- 255: '번개' → '빛' 5건 + '마법' → '에테르' 2건 (시리즈 마무리).
+
+monsters.ts 내 weakness/resistance 모든 값이 items elem과 정합 보장.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 250 — stats.activeSet (prefix-based items 세트) UI dispatch dead config
+
+items.ts sets[] 7종 prefix-based 2세트 보너스 ('불타는' 화염의 결속 ATK +10% 등)가 statsCalculator에서 stats.activeSet에 합산되지만 components 검색 시 read 0건 — 'activeSignatureSet'만 StatsPanel에 render되고 일반 prefix 세트는 영원히 UI invisible이던 silent 회귀. cycle 245 패턴 동일 (data → util → struct → UI 4단계 중 마지막 surface 끊김).
+
+수정: StatsPanel.tsx에 activeSet block 추가 (Sparkles + prefix 이름 + desc, amber-300 톤). 미정의 시 미표시 (silence over noise).
+
+검증: tsc 0 / unit 1302 / lint clean / build-guard ok.
+
+## Cycle 248-249 — TITLES vs TITLE_PASSIVES 정합 11건 누락 dead config
+
+cycle 209 한글-id quest reward TITLES 등록 후 TITLE_PASSIVES 미반영이던 paired data follow-up.
+
+- 248: abyss endgame 3종 (void_conqueror floor 100, abyss_legend 200, void_sovereign 300) — 가장 어려운 endgame 활성화 시 0 stat이던 보상 fake. 점진 강화 ATK +3/+5/+7 추가.
+- 249: 시즌 패스 3종 (시즌 선구자/정복자/마스터, tier 10/20/30) + quest reward 5종 (에테르 탐험가 / 공허의 방랑자 / 종말의 정복자 / 지도 제작자 / 전설의 기록자) 패시브 추가. 한글-id는 영문-id (cartographer, legend_chronicler) 미러.
+
+cosmetic 4종 ('별을 보는 자' 등)은 의도된 0 보너스 유지 (premium 구매 cosmetic).
+
+검증: tsc 0 / unit 1296 / lint clean / build-guard ok.
+
+## Cycle 245-247 — UI dispatch / 데이터 정합 시리즈 3사이클
+
+- 245: BOSS_BRIEFS warningChips/recommendedBuilds UI dispatch — ~25 보스에 정의된 위협 키워드/추천 빌드가 runProfile struct까지 흐르지만 Bestiary/MonsterCodex가 signature/counterHint/phaseHint만 render하고 두 필드는 UI 0건이던 silent UX 회귀. 두 컴포넌트에 칩 그룹 2개 추가.
+- 246: MAPS graveDropBonus 필드 dead config — '영혼의 강' 지역만 graveDropBonus 2.0 정의 (lore: "묘비 아이템이 자주 발견됩니다")하지만 buildGraveData가 read 0건이던 회귀. graveUtils에 MAPS import + dropBonus 적용 (gold/dropCount 양쪽).
+- 247: skill branch override desc-data 정합 2건 — 무당 '지속 저주' (curseTurn 3 = default와 동일이라 +0 효과) → 5로 변경, 아크메이지 '심판의 천벌' (effect 'purify' 미포함이라 stunTurn 미적용) → effect 'stun' 추가.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 241-244 — Skill branch override 키 시리즈 4사이클
+
+cycle 238/239 fix 연속 — skill branch override가 정의했지만 dispatch 0건이던 키 추가 audit.
+
+- 241: skill.stunTurn dispatch — 마법사 '마비 번개' (stunTurn 2)가 desc "기절 2턴" 광고하지만 hardcoded 1턴만 적용되던 회귀. effect 'stun'/'freeze' 부여 시 stunnedTurns max 처리.
+- 242: stats.critChance dispatch + skill.crit branch override — **시리즈에서 가장 큰 영향**. statsCalculator finalCritChance가 equipment/relic/심연/칭호/시너지/킬스트릭 critBonus 모두 합산 → SystemTab에 표시만 되고 실제 attack/skill에는 dispatch 0건. 도적 '치명 특화' (crit 0.7) / 어쌔신 '치명 암살' (crit 0.95) branch도 미적용. 모든 crit 보너스 fake → 진짜 적용.
+- 243: skill.mpRestore branch override — 시간술사 '시간 충전' branch (mpRestore 30)가 ATK 페널티 없이 추가 행동만 부여되던 OP 상태 fix.
+- 244: skill.curseTurn override — '지속 저주' branch 의도 dispatch.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 240 🎯 — CHANGELOG에 cycles 222-239 history 일괄 추가
 
 - 마일스톤: cycle 221 batch 이후 18 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221에 이은 10번째 batch.
