@@ -11,6 +11,11 @@ const WEAPON_SKILL_BY_ELEM: any = {
     빛: { name: '루멘 스피어', effect: 'stun', mp: 32, mult: 3.1, cooldown: 3 },
     자연: { name: '바인드 스파이크', effect: 'poison', mp: 26, mult: 2.7, cooldown: 2 },
     대지: { name: '테라 크래시', effect: 'stun', mp: 32, mult: 3.0, cooldown: 3 },
+    // cycle 256: '바람' / '에테르' element preset 추가 — items.ts에 정의된 폭풍의 창 (바람),
+    //   에테르 검 / 차원절단자 (에테르) 무기들이 '물리' fallback (아케인 볼트)에 떨어져
+    //   element 정체성 dispatch 0건이던 silent 회귀 fix.
+    바람: { name: '게일 컷', effect: 'bleed', mp: 26, mult: 2.7, cooldown: 2 },
+    에테르: { name: '디멘션 리프트', effect: 'stun', mp: 32, mult: 3.2, cooldown: 3 },
     물리: { name: '아케인 볼트', effect: null, mp: 22, mult: 2.3, cooldown: 1 },
 };
 
