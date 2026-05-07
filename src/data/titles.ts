@@ -501,6 +501,19 @@ export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     abyss_legend:     { atk: 5, crit: 0.03, hp: 30, def: 2, label: 'ATK +5 · CRIT +3% · HP +30 · DEF +2' },
     void_sovereign:   { atk: 7, crit: 0.04, hp: 40, def: 3, mp: 20, label: 'ATK +7 · CRIT +4% · HP +40 · DEF +3 · MP +20' },
 
+    // cycle 249: 시즌 패스 / 퀘스트 보상 칭호 8종 패시브 — 동일 누락 패턴 paired completion.
+    //   season tier 10/20/30 점진 강화 + quest reward 152~154 / 201~202 톤별 보너스.
+    '시즌 선구자':     { atk: 1, mp: 10, label: 'ATK +1 · MP +10' },
+    '시즌 정복자':     { atk: 2, hp: 25, label: 'ATK +2 · HP +25' },
+    '시즌 마스터':     { atk: 3, def: 1, hp: 30, crit: 0.02, label: 'ATK +3 · DEF +1 · HP +30 · CRIT +2%' },
+    '에테르 탐험가':   { hp: 20, mp: 15, label: 'HP +20 · MP +15' },
+    '공허의 방랑자':   { atk: 2, mp: 20, label: 'ATK +2 · MP +20' },
+    '종말의 정복자':   { atk: 3, def: 1, hp: 25, label: 'ATK +3 · DEF +1 · HP +25' },
+    // cycle 249: '지도 제작자' ↔ cartographer 영문-id 동등 미러 (cycle 209 quest reward 정합).
+    '지도 제작자':     { hp: 25, mp: 15, label: 'HP +25 · MP +15' },
+    // cycle 249: '전설의 기록자' ↔ legend_chronicler 영문-id 동등 미러.
+    '전설의 기록자':   { atk: 4, crit: 0.02, hp: 20, label: 'ATK +4 · CRIT +2% · HP +20' },
+
     각성자:           { hp: 25, mp: 10, label: 'HP +25 · MP +10' },
     초월자:           { hp: 35, atk: 2, label: 'HP +35 · ATK +2' },
     '심연의 탐험가':   { mp: 20, def: 1, label: 'MP +20 · DEF +1' },
