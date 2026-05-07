@@ -22,7 +22,7 @@ export interface PlayerStats {
     bountyIssued?: boolean;
     bountiesCompleted?: number;
     relicCount?: number;
-    comboCount?: number;
+    // cycle 280: comboCount 제거 — stats에 set/read 0건. active combo는 player.combatFlags.comboCount.
     crafts?: number;
     abyssFloor?: number;
     abyssRecord?: number;
@@ -31,7 +31,7 @@ export interface PlayerStats {
     claimedAchievements?: string[];
     explores?: number;
     lowHpWins?: number;
-    discoveries?: number;
+    // cycle 280: discoveries 제거 — cycle 83/84 deprecated (visitedMaps.length로 통일).
     buildWins?: Record<string, number>;
     visitedMaps?: string[];
     exploreState?: Record<string, any>;
