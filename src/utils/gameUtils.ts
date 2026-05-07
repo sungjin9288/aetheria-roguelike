@@ -420,9 +420,7 @@ export const migrateData = (rawData: any) => {
         voidHeartArmed: Boolean(target.combatFlags?.voidHeartArmed),
     };
     target.meta.prestigeRank    = target.meta.prestigeRank    || 0;
-    target.meta.totalPrestigeAtk = target.meta.totalPrestigeAtk || 0;
-    target.meta.totalPrestigeHp  = target.meta.totalPrestigeHp  || 0;
-    target.meta.totalPrestigeMp  = target.meta.totalPrestigeMp  || 0;
+    // cycle 277: totalPrestigeAtk/Hp/Mp 3 dead 필드 정규화 제거 — read 0건. 잔존 saved 데이터는 무해.
     target.stats.relicCount      = target.stats.relicCount      || 0;
     // cycle 124: dead `comboCount` migrate 제거. INITIAL_STATE에서도 제거됨.
     // 활성 combo 카운터는 combatFlags.comboCount(별도 필드)로 처리.

@@ -19,9 +19,8 @@ export const createAscensionActions = (deps: any, _shared?: any) => {
                 bonusAtk:  (meta.bonusAtk  || 0) + BALANCE.PRESTIGE_ATK_BONUS,
                 bonusHp:   (meta.bonusHp   || 0) + BALANCE.PRESTIGE_HP_BONUS,
                 bonusMp:   (meta.bonusMp   || 0) + BALANCE.PRESTIGE_MP_BONUS,
-                totalPrestigeAtk: (meta.totalPrestigeAtk || 0) + BALANCE.PRESTIGE_ATK_BONUS,
-                totalPrestigeHp:  (meta.totalPrestigeHp  || 0) + BALANCE.PRESTIGE_HP_BONUS,
-                totalPrestigeMp:  (meta.totalPrestigeMp  || 0) + BALANCE.PRESTIGE_MP_BONUS,
+                // cycle 277: totalPrestigeAtk/Hp/Mp 3 dead 필드 제거 — read 0건이라 write-only 누적이었음.
+                //   bonusAtk/Hp/Mp가 active applied bonus로 stats 계산에 dispatch.
             };
             const title = PRESTIGE_TITLES[Math.min(rank - 1, PRESTIGE_TITLES.length - 1)];
             const projectedPlayer: Record<string, any> = {
