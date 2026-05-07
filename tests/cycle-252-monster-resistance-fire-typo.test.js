@@ -70,9 +70,7 @@ test('cycle 251 회귀 가드: weakness "불꽃" 0건 유지', async () => {
 
 test('cycle 252: 다른 resistance 값 변화 없음 (회귀 가드)', async () => {
     const { MONSTERS } = await import('../src/data/monsters.js');
-    // 번개 weakness — 별도 cycle 대기 (cycle 254 시점 잔존).
-    const lightningWeak = Object.values(MONSTERS).find((m) => m.weakness === '번개');
-    assert.ok(lightningWeak, '번개 weakness 가진 monster 1개 이상 존재 (회귀 가드)');
-    // 참고: 물 resistance는 cycle 254에서 냉기로 매핑되어 0건 (정상).
-    // 참고: 비전 resistance는 cycle 253에서 에테르로 매핑되어 0건 (정상).
+    // 분노한 마구스 resistance 화염 보존 (cycle 252 fix 결과).
+    assert.equal(MONSTERS['분노한 마구스']?.resistance, '화염', "'분노한 마구스' resistance '화염' 보존");
+    // 참고: 물/비전/번개/마법 resistance는 후속 cycles 253-255에서 모두 매핑 완료.
 });

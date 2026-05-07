@@ -304,9 +304,9 @@ export const MONSTERS: any = {
 
     // ── Sprint 18: 신규 일반 몬스터 25종 ────────────────────────────────────
     // 공중 신전 (5종)
-    '폭풍 수호자':      { hp: 380, atk: 72, def: 28, exp: 210, gold: 95, weakness: '대지', resistance: '번개', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
+    '폭풍 수호자':      { hp: 380, atk: 72, def: 28, exp: 210, gold: 95, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
     '하늘 정령':        { hp: 290, atk: 85, def: 18, exp: 190, gold: 88, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.35 } },
-    '번개 골렘':        { hp: 450, atk: 68, def: 40, exp: 220, gold: 100, weakness: '냉기', resistance: '번개', pattern: { guardChance: 0.3, heavyChance: 0.25 } },
+    '번개 골렘':        { hp: 450, atk: 68, def: 40, exp: 220, gold: 100, weakness: '냉기', resistance: '빛', pattern: { guardChance: 0.3, heavyChance: 0.25 } },
     '바람 드레이크':    { hp: 340, atk: 90, def: 22, exp: 235, gold: 110, weakness: '대지', resistance: '바람', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
     '구름 정령':        { hp: 260, atk: 78, def: 15, exp: 175, gold: 80, weakness: '화염', resistance: '바람', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
     // 영혼의 강 (5종)
@@ -316,7 +316,7 @@ export const MONSTERS: any = {
     '흡혼 해골':        { hp: 280, atk: 88, def: 12, exp: 205, gold: 95, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
     '저주받은 어부':    { hp: 330, atk: 76, def: 24, exp: 185, gold: 82, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.15, heavyChance: 0.35 }, statusOnHit: 'poison' },
     // 금지된 도서관 (5종)
-    '살아있는 마법서':  { hp: 240, atk: 95, def: 10, exp: 215, gold: 98, weakness: '화염', resistance: '마법', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
+    '살아있는 마법서':  { hp: 240, atk: 95, def: 10, exp: 215, gold: 98, weakness: '화염', resistance: '에테르', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
     '잉크 슬라임':      { hp: 400, atk: 60, def: 45, exp: 180, gold: 78, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.15 } },
     '마법 감시자':      { hp: 350, atk: 86, def: 28, exp: 225, gold: 102, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
     '분노한 마구스':    { hp: 300, atk: 100, def: 16, exp: 240, gold: 112, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.6 } },
@@ -324,15 +324,15 @@ export const MONSTERS: any = {
     // 지하 미궁 (5종)
     '함정 수호자':      { hp: 390, atk: 78, def: 35, exp: 218, gold: 96, weakness: '빛', resistance: '대지', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
     '미궁의 마왕':      { hp: 460, atk: 88, def: 40, exp: 245, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
-    '돌 거인':          { hp: 500, atk: 70, def: 55, exp: 255, gold: 120, weakness: '번개', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
+    '돌 거인':          { hp: 500, atk: 70, def: 55, exp: 255, gold: 120, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
     // cycle 253: resistance '독' → '자연' — items.ts에 elem '독' 없음, 자연 계열(독사의 송곳니/정령의 지팡이)이 elem '자연'.
     '독 지네':          { hp: 280, atk: 82, def: 18, exp: 188, gold: 84, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'poison' },
     '그림자 사냥꾼':    { hp: 320, atk: 96, def: 20, exp: 228, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
     // 황금 왕국 인근 필드 (5종)
-    '황금 왕국 수호자': { hp: 480, atk: 75, def: 50, exp: 250, gold: 200, weakness: '번개', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
+    '황금 왕국 수호자': { hp: 480, atk: 75, def: 50, exp: 250, gold: 200, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
     '탐욕의 상인':      { hp: 290, atk: 84, def: 22, exp: 192, gold: 180, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.35 } },
-    '용병 전사':        { hp: 370, atk: 88, def: 32, exp: 215, gold: 115, weakness: '마법', resistance: '물리', pattern: { guardChance: 0.25, heavyChance: 0.4 } },
-    '왕국 기사':        { hp: 430, atk: 80, def: 45, exp: 235, gold: 120, weakness: '번개', resistance: '물리', pattern: { guardChance: 0.35, heavyChance: 0.3 } },
+    '용병 전사':        { hp: 370, atk: 88, def: 32, exp: 215, gold: 115, weakness: '에테르', resistance: '물리', pattern: { guardChance: 0.25, heavyChance: 0.4 } },
+    '왕국 기사':        { hp: 430, atk: 80, def: 45, exp: 235, gold: 120, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.35, heavyChance: 0.3 } },
     '사기꾼 마법사':    { hp: 260, atk: 102, def: 12, exp: 210, gold: 130, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.55 } },
 
     // ── Sprint 18: 숨겨진 보스 3종 ──────────────────────────────────────────

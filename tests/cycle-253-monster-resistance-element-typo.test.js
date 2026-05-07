@@ -85,9 +85,10 @@ test('cycle 251-252 회귀 가드: weakness/resistance "불꽃" 0건 유지', as
     assert.equal(source.match(/resistance:\s*'불꽃'/g), null, 'cycle 252 resistance 불꽃 회귀 가드');
 });
 
-test('cycle 253: 별도 cycle 대기 — 번개/마법 resistance 보존 (회귀 가드)', async () => {
+test('cycle 253: 후속 cycles 254-255 mappings 정합 (회귀 가드)', async () => {
     const { MONSTERS } = await import('../src/data/monsters.js');
-    // 번개 weakness — 별도 cycle 대기 (cycle 253 시점 잔존).
-    assert.equal(MONSTERS['돌 거인']?.weakness, '번개', "'돌 거인' weakness '번개' 보존");
-    // 참고: 물 resistance는 cycle 254에서 냉기로 매핑되어 0건 (정상).
+    // cycle 254: 물 → 냉기.
+    assert.equal(MONSTERS['강의 요괴']?.resistance, '냉기', "'강의 요괴' resistance '냉기' (cycle 254)");
+    // cycle 255: 번개 → 빛.
+    assert.equal(MONSTERS['돌 거인']?.weakness, '빛', "'돌 거인' weakness '빛' (cycle 255)");
 });
