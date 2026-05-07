@@ -46,6 +46,10 @@ export const useGameEngine = () => {
         const lastLog = logs[logs.length - 1];
         if (lastLog) {
             if (lastLog.type === 'combat') soundManager.play('attack');
+            // cycle 263: 'critical' 로그 타입 sensory cue — crit hit 시 'critical' 로그가
+            //   'combat' 직후 push되어 lastLog가 'critical'이라 attack 사운드 dispatch 실패하던
+            //   silent 회귀. 강화된 hit이 무음이라 약화된 hit처럼 들리던 회귀 fix. cycle 122/123 패턴.
+            if (lastLog.type === 'critical') soundManager.play('attack');
             if (lastLog.type === 'levelUp') soundManager.play('levelUp');
             if (lastLog.type === 'error') soundManager.play('error');
             if (lastLog.type === 'item') soundManager.play('item');
