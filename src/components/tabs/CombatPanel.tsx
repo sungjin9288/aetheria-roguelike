@@ -249,6 +249,27 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
               보스 전술: {bossBriefLine}
             </div>
           )}
+          {/* cycle 269: tacticalProfile.signature(보스 mechanic) / counterHint(대응) 추가 dispatch.
+              getEnemyTacticalProfile은 14+ 필드 반환했지만 CombatPanel이 entryHint/hint/phaseHint
+              3종만 read이라 signature/counterHint 등 in-combat 핵심 정보 영원히 invisible. */}
+          {!mobile && enemy?.isBoss && tacticalProfile?.signature && (
+            <div
+              data-testid="combat-boss-signature"
+              className="rounded-[1rem] border border-rose-300/24 bg-rose-300/[0.08] px-3 py-1.5 text-[10px] font-fira"
+            >
+              <span className="text-rose-200 font-bold">기믹</span>
+              <span className="text-slate-300/80"> · {tacticalProfile.signature}</span>
+            </div>
+          )}
+          {!mobile && enemy?.isBoss && tacticalProfile?.counterHint && (
+            <div
+              data-testid="combat-boss-counter"
+              className="rounded-[1rem] border border-emerald-300/24 bg-emerald-300/[0.08] px-3 py-1.5 text-[10px] font-fira"
+            >
+              <span className="text-emerald-200 font-bold">대응</span>
+              <span className="text-slate-300/80"> · {tacticalProfile.counterHint}</span>
+            </div>
+          )}
 
           {primarySignatureDrop && (
             <div
