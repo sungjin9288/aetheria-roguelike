@@ -19,7 +19,7 @@ import type { Item } from '../types/index.js';
 /**
  * createInventoryActions — 아이템 사용, 장비, 마켓, 제작, 퀘스트 완료
  */
-export const createInventoryActions = ({ player, gameState, dispatch, addLog, getFullStats }: any) => {
+export const createInventoryActions = ({ player, gameState, dispatch, addLog, addStoryLog, getFullStats }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
     const emitDailyProtocolLogs = (type: any, amount: any = 1) => {
@@ -350,6 +350,12 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
             // cycle 122: 퀘스트 완료 sensory cue — E major arpeggio. cycle 117/118 사운드
             // 시리즈 패턴. 보상 / 칭호 해금이 동반되는 의미 있는 모먼트의 audio reflection.
             soundManager.play('quest_complete');
+            // cycle 272: aiService 'questComplete' 스토리 템플릿 dispatch — cycle 122 sound와 paired
+            //   narrative cue. 8 스토리 템플릿 중 levelUp/bossPhase2/questComplete/ruinRecap 4종 dead였던
+            //   회귀 fix (questComplete 먼저). AI narrative blurb 또는 fallback 텍스트 표시.
+            if (typeof addStoryLog === 'function') {
+                addStoryLog('questComplete', { questTitle: qData.title });
+            }
         },
 
         claimAchievement: (achId: any) => {
