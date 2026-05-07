@@ -319,7 +319,7 @@ export const MONSTERS: any = {
     '살아있는 마법서':  { hp: 240, atk: 95, def: 10, exp: 215, gold: 98, weakness: '화염', resistance: '마법', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
     '잉크 슬라임':      { hp: 400, atk: 60, def: 45, exp: 180, gold: 78, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.15 } },
     '마법 감시자':      { hp: 350, atk: 86, def: 28, exp: 225, gold: 102, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
-    '분노한 마구스':    { hp: 300, atk: 100, def: 16, exp: 240, gold: 112, weakness: '냉기', resistance: '불꽃', pattern: { guardChance: 0.05, heavyChance: 0.6 } },
+    '분노한 마구스':    { hp: 300, atk: 100, def: 16, exp: 240, gold: 112, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.6 } },
     '책의 정령':        { hp: 270, atk: 92, def: 14, exp: 208, gold: 93, weakness: '화염', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
     // 지하 미궁 (5종)
     '함정 수호자':      { hp: 390, atk: 78, def: 35, exp: 218, gold: 96, weakness: '빛', resistance: '대지', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
@@ -332,7 +332,7 @@ export const MONSTERS: any = {
     '탐욕의 상인':      { hp: 290, atk: 84, def: 22, exp: 192, gold: 180, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.35 } },
     '용병 전사':        { hp: 370, atk: 88, def: 32, exp: 215, gold: 115, weakness: '마법', resistance: '물리', pattern: { guardChance: 0.25, heavyChance: 0.4 } },
     '왕국 기사':        { hp: 430, atk: 80, def: 45, exp: 235, gold: 120, weakness: '번개', resistance: '물리', pattern: { guardChance: 0.35, heavyChance: 0.3 } },
-    '사기꾼 마법사':    { hp: 260, atk: 102, def: 12, exp: 210, gold: 130, weakness: '냉기', resistance: '불꽃', pattern: { guardChance: 0.05, heavyChance: 0.55 } },
+    '사기꾼 마법사':    { hp: 260, atk: 102, def: 12, exp: 210, gold: 130, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.55 } },
 
     // ── Sprint 18: 숨겨진 보스 3종 ──────────────────────────────────────────
     '시간의 파수꾼': {
