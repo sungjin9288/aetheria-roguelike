@@ -110,6 +110,18 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     dispatch({ type: AT.SET_PLAYER, payload: counterResult.updatedPlayer });
                     dispatch({ type: AT.SET_VISUAL_EFFECT, payload: counterResult.isCrit ? 'shake' : null });
 
+                    // cycle 273: phase2 transition 감지 → addStoryLog('bossPhase2', ...) — aiService
+                    //   8 스토리 템플릿 중 dead였던 'bossPhase2' paired completion (cycle 272 패턴).
+                    //   prev (result.updatedEnemy.phase2Triggered) → new (counterResult.updatedEnemy.phase2Triggered)
+                    //   비교로 transition 검출.
+                    if (
+                        !result.updatedEnemy?.phase2Triggered
+                        && counterResult.updatedEnemy?.phase2Triggered
+                        && typeof addStoryLog === 'function'
+                    ) {
+                        addStoryLog('bossPhase2', { bossName: counterResult.updatedEnemy.name });
+                    }
+
                     // DoT로 적 사망
                     if (counterResult.isEnemyDead) {
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
