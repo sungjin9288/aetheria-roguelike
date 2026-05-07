@@ -311,10 +311,10 @@ export const MONSTERS: any = {
     '구름 정령':        { hp: 260, atk: 78, def: 15, exp: 175, gold: 80, weakness: '화염', resistance: '바람', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
     // 영혼의 강 (5종)
     '한 맺힌 망자':     { hp: 310, atk: 80, def: 20, exp: 200, gold: 90, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'curse' },
-    '강의 요괴':        { hp: 360, atk: 74, def: 30, exp: 195, gold: 85, weakness: '빛', resistance: '물', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
+    '강의 요괴':        { hp: 360, atk: 74, def: 30, exp: 195, gold: 85, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
     '익사한 기사':      { hp: 420, atk: 82, def: 35, exp: 230, gold: 105, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.25, heavyChance: 0.35 } },
     '흡혼 해골':        { hp: 280, atk: 88, def: 12, exp: 205, gold: 95, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
-    '저주받은 어부':    { hp: 330, atk: 76, def: 24, exp: 185, gold: 82, weakness: '빛', resistance: '물', pattern: { guardChance: 0.15, heavyChance: 0.35 }, statusOnHit: 'poison' },
+    '저주받은 어부':    { hp: 330, atk: 76, def: 24, exp: 185, gold: 82, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.15, heavyChance: 0.35 }, statusOnHit: 'poison' },
     // 금지된 도서관 (5종)
     '살아있는 마법서':  { hp: 240, atk: 95, def: 10, exp: 215, gold: 98, weakness: '화염', resistance: '마법', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
     '잉크 슬라임':      { hp: 400, atk: 60, def: 45, exp: 180, gold: 78, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.15 } },
