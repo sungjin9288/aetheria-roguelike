@@ -400,15 +400,14 @@ export const calculateFullStats = (player: Player) => {
         maxMp: finalMaxMp,
         elem: preBuildStats.elem,
         isMagic: preBuildStats.isMagic,
-        weaponHands: preBuildStats.weaponHands,
+        // cycle 279: weaponHands / traitBonus / titlePassive — stats expose된 3 dead 필드 제거.
+        //   외부 consumer 0건 (내부 계산용으로만 쓰던 변수가 stats 객체에 노출).
         activeSet: setBonus.activeSet,
         activeSignatureSet: signatureSetBonus.activeSet,
         relics,
         critChance: finalCritChance,
         buildProfile,
         traitProfile,
-        traitBonus,
-        titlePassive,
         activeSynergies,
         // cycle 278: killStreakTier 필드 제거 — production consumer 0건. raw killStreak count는 dispatch 유지.
         killStreak: player.killStreak || 0,

@@ -69,10 +69,11 @@ test('calculateFullStats returns base stats shape with required keys', () => {
     const stats = calculateFullStats(makePlayer());
     const required = [
         'atk', 'def', 'maxHp', 'maxMp',
-        'elem', 'isMagic', 'weaponHands',
+        'elem', 'isMagic',
+        // cycle 279: weaponHands / traitBonus / titlePassive 제거 — 외부 consumer 0건이던 dead expose.
         'activeSet', 'relics', 'critChance',
-        'buildProfile', 'traitProfile', 'traitBonus',
-        'titlePassive', 'activeSynergies',
+        'buildProfile', 'traitProfile',
+        'activeSynergies',
         'killStreak',
         // cycle 278: killStreakTier 필드 제거 — dead config cleanup (production consumer 0건).
         'passiveGoldMult', 'passiveExpMult',
