@@ -208,7 +208,8 @@ export const CLASSES: any = {
                 { choice: 'B', label: '저주 연쇄', desc: '저주 + 독 동시 부여', override: { mult: 6.5, secondEffect: 'poison' } },
             ],
             '생명흡수': [
-                { choice: 'A', label: '강화 흡수', desc: '데미지 및 흡수량 +30%', override: { mult: 3.9 } },
+                // cycle 258: drainRatio 0.325 추가 — desc "흡수량 +30%" 정합 (default 0.25 * 1.3 = 0.325).
+                { choice: 'A', label: '강화 흡수', desc: '데미지 및 흡수량 +30%', override: { mult: 3.9, drainRatio: 0.325 } },
                 { choice: 'B', label: '저주 흡수', desc: '저주 부여 + 흡수', override: { mult: 3.0, secondEffect: 'curse' } },
             ],
         },
