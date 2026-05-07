@@ -5,6 +5,7 @@ import { BOSS_MONSTERS } from '../data/monsters.js';
 import { getWeaponMagicSkills, isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils.js';
 import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
 import { TITLES, TITLE_PASSIVES } from '../data/titles.js';
+import { PREMIUM_SHOP } from '../data/premiumShop.js';
 import { getRunBuildProfile, getTraitSkill } from './runProfileUtils.js';
 import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager.js';
 import { AT } from '../reducers/actionTypes.js';
@@ -579,6 +580,20 @@ export const checkTitles = (player: Player) => {
         if (type === 'questReward') {
             const claimedIds = (player.stats as any)?.claimedQuestIds;
             return Array.isArray(claimedIds) && claimedIds.includes(val);
+        }
+        // cycle 262: 'cosmetic' cond.type — cycle 185 cosmetic 4종 ('별을 보는 자' 등) 정식
+        //   등록 후 잔존 누락. purchaseCosmeticTitle이 직접 grant하지만 checkTitles에 fallback
+        //   없어 player.titles 손실 시 premium 구매 자산 silent loss. cycle 199/201/260 동일 lens.
+        //   매핑: PREMIUM_SHOP.cosmeticTitles[i].name === title.id (Korean) ↔ i.id (영문) ↔ stats.cosmeticTitles 영문 ID.
+        if (type === 'cosmetic') {
+            const ownedEnglishIds = Array.isArray((player.stats as any)?.cosmeticTitles)
+                ? (player.stats as any).cosmeticTitles
+                : [];
+            if (ownedEnglishIds.length === 0) return false;
+            const cosmeticDef = (PREMIUM_SHOP as any)?.cosmeticTitles?.find(
+                (c: any) => c?.name === t.id
+            );
+            return Boolean(cosmeticDef && ownedEnglishIds.includes(cosmeticDef.id));
         }
         if (type === 'abyssFloor')     return (player.stats?.abyssFloor    || 0) >= val;
         if (type === 'abyssRecord')    return (player.stats?.abyssRecord   || 0) >= val;
