@@ -267,6 +267,28 @@ const Bestiary = ({ player, compact = false }: BestiaryProps) => {
                                         <span className="text-slate-400"> · {m.bossBrief.phaseHint}</span>
                                     </div>
                                 )}
+                                {/* cycle 245: warningChips dispatch — BOSS_BRIEFS 데이터 정의 후 UI 표시 0건이던 dead config fix. */}
+                                {Array.isArray(m.bossBrief.warningChips) && m.bossBrief.warningChips.length > 0 && (
+                                    <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                                        <span className="text-rose-200 font-bold mr-0.5">위협</span>
+                                        {m.bossBrief.warningChips.map((chip: string) => (
+                                            <span key={chip} className="rounded-md bg-rose-400/15 border border-rose-300/30 px-1.5 py-0.5 text-[9px] text-rose-100">
+                                                {chip}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                                {/* cycle 245: recommendedBuilds dispatch — 추천 빌드 칩 그룹. */}
+                                {Array.isArray(m.bossBrief.recommendedBuilds) && m.bossBrief.recommendedBuilds.length > 0 && (
+                                    <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                                        <span className="text-emerald-200 font-bold mr-0.5">추천</span>
+                                        {m.bossBrief.recommendedBuilds.map((build: string) => (
+                                            <span key={build} className="rounded-md bg-emerald-400/15 border border-emerald-300/30 px-1.5 py-0.5 text-[9px] text-emerald-100">
+                                                {build}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
                         <div className="pt-2 border-t border-white/8">
