@@ -2,7 +2,7 @@ import { CONSTANTS, BALANCE } from '../data/constants.js';
 import type { Player } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { getActiveRelicSynergies } from '../data/relics.js';
-import { getEquipmentProfile, getWeaponHands, isMagicWeapon } from './equipmentUtils.js';
+import { getEquipmentProfile, getWeaponHands, isMagicWeapon, isShield } from './equipmentUtils.js';
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfileUtils.js';
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
@@ -198,11 +198,19 @@ const computeEnhanceBonus = (equip: any) => {
     const weaponBaseVal = equip.weapon?.val || 0;
     const armorBaseVal = equip.armor?.val || 0;
     const offhandBaseVal = equip.offhand?.val || 0;
+    // cycle 264: offhand 슬롯 분기 — shield면 def 기여, weapon면 atk 기여 (dual-wield × 0.5).
+    //   기존엔 모든 offhand가 atk × 0.5에 가산되어 방패 enhance가 atk를 늘리고 def는 0이던 회귀.
+    //   ENHANCE_ITEM은 offhand shield도 enhance += 1 처리하므로 paired dispatch fix.
+    const offhandIsShield = isShield(equip.offhand);
+    const offhandAtkBonus = offhandIsShield
+        ? 0
+        : Math.floor(offhandBaseVal * BALANCE.ENHANCE_STAT_BONUS * offhandEnhance * 0.5);
+    const offhandDefBonus = offhandIsShield
+        ? Math.floor(offhandBaseVal * BALANCE.ENHANCE_STAT_BONUS * offhandEnhance)
+        : 0;
 
-    const atk =
-        Math.floor(weaponBaseVal * BALANCE.ENHANCE_STAT_BONUS * weaponEnhance) +
-        Math.floor(offhandBaseVal * BALANCE.ENHANCE_STAT_BONUS * offhandEnhance * 0.5);
-    const def = Math.floor(armorBaseVal * BALANCE.ENHANCE_STAT_BONUS * armorEnhance);
+    const atk = Math.floor(weaponBaseVal * BALANCE.ENHANCE_STAT_BONUS * weaponEnhance) + offhandAtkBonus;
+    const def = Math.floor(armorBaseVal * BALANCE.ENHANCE_STAT_BONUS * armorEnhance) + offhandDefBonus;
 
     return { atk, def };
 };
