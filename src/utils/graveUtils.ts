@@ -1,4 +1,5 @@
 import type { Item, Player } from '../types/index.js';
+import { MAPS } from '../data/maps.js';
 const createGraveItem = (item: Item) => ({
     ...item,
     id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
@@ -6,21 +7,35 @@ const createGraveItem = (item: Item) => ({
 
 const sortGravesByLatest = (a: any, b: any) => (b?.timestamp || 0) - (a?.timestamp || 0);
 
+// cycle 246: MAPS의 graveDropBonus 필드 dispatch — '영혼의 강' (lore: "묘비 아이템이 자주
+//   발견됩니다") 등 graveDropBonus 정의 지역에서 묘비 보상 배율을 적용. 미정의 시 default 1.0.
+const getGraveDropBonus = (loc: string | undefined): number => {
+    if (!loc) return 1.0;
+    const map = (MAPS as any)?.[loc];
+    const bonus = map?.graveDropBonus;
+    return typeof bonus === 'number' && bonus > 0 ? bonus : 1.0;
+};
+
 export const buildGraveData = (player: Player, random: any = Math.random, now: any = Date.now) => {
     let droppedItems: any[] = [];
     const tradableItems = Array.isArray(player?.inv)
         ? player.inv.filter((item: any) => !item?.id?.startsWith('starter_'))
         : [];
 
+    const dropBonus = getGraveDropBonus(player?.loc);
+
     if (tradableItems.length > 0) {
         const shuffled = [...tradableItems].sort(() => random() - 0.5);
-        const dropCount = Math.min(shuffled.length, random() < 0.5 ? 1 : 2);
+        const baseDropCount = random() < 0.5 ? 1 : 2;
+        // cycle 246: graveDropBonus가 dropCount에도 반영 (gold와 paired). cap에 inv length.
+        const boostedDropCount = Math.max(baseDropCount, Math.ceil(baseDropCount * dropBonus));
+        const dropCount = Math.min(shuffled.length, boostedDropCount);
         droppedItems = shuffled.slice(0, dropCount);
     }
 
     return {
         loc: player?.loc || '',
-        gold: Math.floor((player?.gold || 0) / 2),
+        gold: Math.floor((player?.gold || 0) / 2 * dropBonus),
         item: droppedItems[0] || null,
         items: droppedItems,
         timestamp: now()
