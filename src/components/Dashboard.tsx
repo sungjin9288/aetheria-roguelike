@@ -218,7 +218,11 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
 
                     {sideTab === 'pass' && (
                         <Suspense fallback={<TabSpinner />}>
-                            <SeasonPassPanel player={player} dispatch={actions?.dispatch} />
+                            <SeasonPassPanel
+                                player={player}
+                                dispatch={actions?.dispatch}
+                                onClaimSeasonReward={actions?.claimSeasonReward}
+                            />
                         </Suspense>
                     )}
 

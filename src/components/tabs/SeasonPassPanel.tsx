@@ -16,17 +16,25 @@ const rewardLabel = (reward: any) => {
 interface SeasonPassPanelProps {
     player?: any;
     dispatch?: (action: any) => void;
+    // cycle 261: actions wrapper로 addLog + sound 통합. 미전달 시 직접 dispatch fallback.
+    onClaimSeasonReward?: (tier: number, rewardLabel: string) => void;
 }
 
-const SeasonPassPanel = ({ player, dispatch }: SeasonPassPanelProps) => {
+const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPanelProps) => {
     const sp = player?.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
     const { xp, tier, claimed, isPremium } = sp;
     const tierXpProgress = xp % SEASON_TIER_XP;
     const nextTierXp = SEASON_TIER_XP;
     const xpPct = Math.min(100, Math.round((tierXpProgress / nextTierXp) * 100));
 
-    const claimReward = (rewardTier: any) => {
-        dispatch?.({ type: AT.CLAIM_SEASON_REWARD, payload: { tier: rewardTier } });
+    // cycle 261: claimSeasonReward 우선 — dispatch + addLog + sound 통합. fallback으로 raw dispatch.
+    const claimReward = (rewardTier: any, row: any) => {
+        const label = rewardLabel(row?.free);
+        if (typeof onClaimSeasonReward === 'function') {
+            onClaimSeasonReward(rewardTier, label);
+        } else if (dispatch) {
+            dispatch({ type: AT.CLAIM_SEASON_REWARD, payload: { tier: rewardTier } });
+        }
     };
 
     return (
@@ -90,7 +98,7 @@ const SeasonPassPanel = ({ player, dispatch }: SeasonPassPanelProps) => {
                             <div className="min-w-0">
                                 {unlocked && !isClaimed ? (
                                     <button
-                                        onClick={() => claimReward(row.tier)}
+                                        onClick={() => claimReward(row.tier, row)}
                                         className="w-full rounded-[0.6rem] border border-cyber-green/50 bg-cyber-green/15 px-1.5 py-0.5 text-[8px] font-fira text-cyber-green hover:bg-cyber-green/25 transition-all text-left truncate"
                                     >
                                         {rewardLabel(row.free)} 수령

@@ -511,6 +511,19 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ge
         claimWeeklyMission: (missionId: any, reward: any) => {
             dispatch({ type: AT.CLAIM_WEEKLY_MISSION, payload: { missionId, reward } });
             addLog('success', MSG.WEEKLY_MISSION_CLAIM(reward.gold || 0, reward.premiumCurrency));
+            // cycle 261: claim 액션 sensory cue paired completion (cycle 122-123 패턴).
+            //   "달성/회수" 모먼트 audio reflection — quest/achievement 사운드 재사용.
+            soundManager.play('quest_complete');
+        },
+
+        // ── 시즌 패스 보상 수령 ──────────────────────────────────────────
+        // cycle 261: SeasonPassPanel claimReward가 dispatch만 있고 addLog/sound 0건이던 UX
+        //   dead path fix. quest/achievement/weekly와 동일 sensory cue.
+        claimSeasonReward: (tier: any, rewardLabel: string | null = null) => {
+            dispatch({ type: AT.CLAIM_SEASON_REWARD, payload: { tier } });
+            const label = rewardLabel ? `${rewardLabel}` : `티어 ${tier}`;
+            addLog('success', `시즌 패스 보상 수령: ${label}`);
+            soundManager.play('quest_complete');
         },
 
         // ── 아이템 강화 ──────────────────────────────────────────────────
