@@ -247,7 +247,8 @@ export const getTraitProfile = (player: Player, stats: any = {}) => {
             critBonus: definition.bonus.critBonus || 0,
         },
         skill,
-        skillLabel: skill ? `${skill.name} · MP ${skill.mp}` : '특수 스킬 없음',
+        // cycle 267: skillLabel 필드 제거 — dispatch 0건이던 dead config. 컴포넌트들은
+        //   trait.skill.{name, mp, cooldown}을 직접 접근 (BuildAdvicePanel은 cooldown까지 포함).
         rewardFocus: definition.rewardFocus,
         questFocus: definition.questFocus,
         bossDirective: definition.bossDirective,
