@@ -382,12 +382,10 @@ export const migrateData = (rawData: any) => {
     target.skillLoadout = target.skillLoadout || { selected: 0, cooldowns: {} };
     target.skillLoadout.selected = Number.isInteger(target.skillLoadout.selected) ? target.skillLoadout.selected : 0;
     target.skillLoadout.cooldowns = target.skillLoadout.cooldowns || {};
+    // cycle 373: 5 sub-field fallback 제거 — 모든 consumer가 이미 `meta.X || 0`
+    //   protection 또는 CombatEngine 로컬 reconstruction (DEFAULT_META 병합)으로
+    //   undefined 안전. 객체 자체 초기화만 필요.
     target.meta = target.meta || { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 };
-    target.meta.essence = target.meta.essence || 0;
-    target.meta.rank = target.meta.rank || 0;
-    target.meta.bonusAtk = target.meta.bonusAtk || 0;
-    target.meta.bonusHp = target.meta.bonusHp || 0;
-    target.meta.bonusMp = target.meta.bonusMp || 0;
     target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0 };
     target.stats.rests = target.stats.rests || 0;
     target.stats.bountyDate = target.stats.bountyDate || null;
