@@ -6,12 +6,15 @@ import type { Item, Player } from '../../types/index.js';
 /**
  * 현재 선택된 스킬 반환. 없으면 null.
  */
+// cycle 353: index / total 출력 dead 정리 — `.skill`만 외부 read.
+//   useCombatActions는 `?.skill || null` unwrap, combatAttack은 `selected?.skill` 사용.
+//   index 변수는 array 인덱싱용 internal const로만 사용.
 export const getSelectedSkill = (player: Player) => {
     const skills = getJobSkills(player);
     if (!skills.length) return null;
     const selected = Number.isInteger(player.skillLoadout?.selected) ? (player.skillLoadout!.selected as number) : 0;
     const index = ((selected % skills.length) + skills.length) % skills.length;
-    return { skill: skills[index], index, total: skills.length };
+    return { skill: skills[index] };
 };
 
 /**

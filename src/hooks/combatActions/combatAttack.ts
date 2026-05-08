@@ -33,7 +33,8 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         const allSkills = getJobSkills(playerAtActionStart);
                         if (allSkills.length > 0) {
                             const randomSkill = allSkills[Math.floor(Math.random() * allSkills.length)];
-                            selected = { skill: randomSkill, index: 0, total: allSkills.length };
+                            // cycle 353: getSelectedSkill 반환 shape 단순화 후 동기화 (index/total 제거).
+                            selected = { skill: randomSkill };
                             addLog('warn', MSG.COMBAT_CHAOS_SKILL(randomSkill.name));
                         }
                     }
