@@ -15,9 +15,9 @@ const TONE_CLASS: any = {
     danger: 'border-rose-300/24 bg-rose-400/10 text-rose-100 shadow-[0_10px_24px_rgba(251,113,133,0.1)]',
     equipped: 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100',
     spotlight: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]',
-    // 전설 각인 전용 — 다른 surface(Equipment/Inventory/Status/Combat hint)에서
-    // 사용된 #f6e7a2 / rgba(246,231,162) gold 팔레트와 일치
-    signature: 'border-[rgba(246,231,162,0.42)] bg-[rgba(246,231,162,0.12)] text-[#f6e7a2] shadow-[0_10px_24px_rgba(246,231,162,0.12)]',
+    // cycle 330: 'signature' tone 제거 — cycle 310 FocusPanel 제거 후 dispatch path 0건이던 dead.
+    //   cycle 23 시점 적립된 signature pity '확률 증폭' emphasis surface가 유일 consumer였으나
+    //   FocusPanel 자체 제거 → tone class도 cascade dead.
 };
 
 const SignalBadge = ({ tone = 'neutral', size = 'md', className = '', children, ...rest }: any) => (
