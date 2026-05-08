@@ -25,7 +25,10 @@ export const getLootUpgradeHint = (equip: any = {}, lootItems: Item[] = []): any
     const currentAtk = currentProfile.mainAttack + currentProfile.offhandAttack;
     const currentDef = (equip.armor?.val || 0) + currentProfile.shieldDef;
 
+    // cycle 352: bestHint score 출력 dead 정리 — name / summary만 외부 read.
+    //   score는 함수 내부 비교용으로만 사용 → 외부 노출 strip.
     let bestHint: any = null;
+    let bestScore = -Infinity;
     equipmentDrops.forEach((item: any) => {
         const nextEquip = getNextEquipmentState(equip, item);
         const nextProfile = getEquipmentProfile(nextEquip);
@@ -37,13 +40,14 @@ export const getLootUpgradeHint = (equip: any = {}, lootItems: Item[] = []): any
         const defDelta = nextDef - currentDef;
         const score = atkDelta + defDelta + (critDelta * 2) + Math.floor(mpDelta / 5);
         if (score <= 0) return;
+        if (score <= bestScore) return;
         const summaryParts: any[] = [];
         if (atkDelta > 0) summaryParts.push(`ATK +${atkDelta}`);
         if (defDelta > 0) summaryParts.push(`DEF +${defDelta}`);
         if (critDelta > 0) summaryParts.push(`CRIT +${critDelta}%`);
         if (mpDelta > 0) summaryParts.push(`MP +${mpDelta}`);
-        const candidate = { name: item.name, score, summary: summaryParts.join(' / ') || MSG.COMBAT_DIGEST_DEFAULT_SUMMARY };
-        if (!bestHint || candidate.score > bestHint.score) bestHint = candidate;
+        bestHint = { name: item.name, summary: summaryParts.join(' / ') || MSG.COMBAT_DIGEST_DEFAULT_SUMMARY };
+        bestScore = score;
     });
     return bestHint;
 };
