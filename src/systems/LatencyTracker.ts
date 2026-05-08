@@ -1,54 +1,25 @@
 // --- LATENCY TRACKER (v3.5) ---
-// Monitors AI response times and alerts on slow responses
+// Monitors AI response times and alerts on slow responses.
+//
+// cycle 308: getStats / getAverageLatency / recordLatency / recentLatencies /
+//   MAX_HISTORY 5 dead surface 제거 — getStats 외부 0건, getAverageLatency는
+//   getStats 내부 1회만, recordLatency는 getStats가 읽지 않을 array 채우기만.
+//   활성 surface는 trackCall (slow-response console.warn + custom event) 하나뿐.
 export const LatencyTracker: any = {
     THRESHOLD_MS: 3000, // 3 seconds threshold
-    recentLatencies: [],
-    MAX_HISTORY: 20,
 
     async trackCall(asyncFn: any, callType: any = 'ai') {
         const startTime = performance.now();
+        const result = await asyncFn();
+        const latency = performance.now() - startTime;
 
-        try {
-            const result = await asyncFn();
-            const latency = performance.now() - startTime;
-
-            this.recordLatency(callType, latency);
-
-            // Alert if over threshold
-            if (latency > this.THRESHOLD_MS) {
-                console.warn(`⚠️ Slow ${callType} response: ${(latency / 1000).toFixed(2)}s (threshold: ${this.THRESHOLD_MS / 1000}s)`);
-                this.onSlowResponse(callType, latency);
-            }
-
-            return result;
-        } catch (e) {
-            const latency = performance.now() - startTime;
-            this.recordLatency(callType, latency, true);
-            throw e;
+        // Alert if over threshold
+        if (latency > this.THRESHOLD_MS) {
+            console.warn(`⚠️ Slow ${callType} response: ${(latency / 1000).toFixed(2)}s (threshold: ${this.THRESHOLD_MS / 1000}s)`);
+            this.onSlowResponse(callType, latency);
         }
-    },
 
-    recordLatency(type: any, latency: any, isError: any = false) {
-        this.recentLatencies.unshift({
-            type,
-            latency,
-            isError,
-            timestamp: Date.now()
-        });
-
-        // Keep only recent history
-        if (this.recentLatencies.length > this.MAX_HISTORY) {
-            this.recentLatencies.pop();
-        }
-    },
-
-    getAverageLatency(type: any = null) {
-        const filtered = type
-            ? this.recentLatencies.filter((l: any) => l.type === type && !l.isError)
-            : this.recentLatencies.filter((l: any) => !l.isError);
-
-        if (filtered.length === 0) return 0;
-        return filtered.reduce((sum: any, l: any) => sum + l.latency, 0) / filtered.length;
+        return result;
     },
 
     onSlowResponse(type: any, latency: any) {
@@ -60,13 +31,4 @@ export const LatencyTracker: any = {
             }));
         }
     },
-
-    getStats() {
-        return {
-            avgLatency: this.getAverageLatency(),
-            callCount: this.recentLatencies.length,
-            errorCount: this.recentLatencies.filter((l: any) => l.isError).length,
-            slowCount: this.recentLatencies.filter((l: any) => l.latency > this.THRESHOLD_MS).length
-        };
-    }
 };
