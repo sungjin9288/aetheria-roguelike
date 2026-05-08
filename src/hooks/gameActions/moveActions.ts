@@ -10,7 +10,9 @@ import { soundManager } from '../../systems/SoundManager';
 
 // cycle 314: addStoryLog 미사용 dependency 제거 — moveActions 어디에서도 호출 0건.
 //   `void addStoryLog` 자가-suppress 라인도 함께 cleanup.
-export const createMoveActions = (deps: any, _shared?: any) => {
+// cycle 315: _shared?: any 미사용 2번째 파라미터 제거 — moveActions에서 shared 헬퍼 사용 0건.
+//   useGameActions에서 createMoveActions(deps, shared) 호출하지만 extra arg는 무시되어 동작 동일.
+export const createMoveActions = (deps: any) => {
     const { player, gameState, grave, isAiThinking, liveConfig, dispatch, addLog } = deps;
     return {
         move: (loc: string) => {

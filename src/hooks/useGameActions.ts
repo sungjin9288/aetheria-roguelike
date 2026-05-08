@@ -12,12 +12,13 @@ import { createAscensionActions } from './gameActions/ascensionActions';
  */
 export const createGameActions = (deps: any) => {
     const shared = makeSharedHelpers(deps);
+    // cycle 315: createMoveActions / createAscensionActions는 shared를 사용하지 않아 1-arg로 호출.
     return {
-        ...createMoveActions(deps, shared),
+        ...createMoveActions(deps),
         ...createExploreActions(deps, shared),
         ...createCharacterActions(deps, shared),
         ...createEventActions(deps, shared),
         ...createQuestActions(deps, shared),
-        ...createAscensionActions(deps, shared),
+        ...createAscensionActions(deps),
     };
 };

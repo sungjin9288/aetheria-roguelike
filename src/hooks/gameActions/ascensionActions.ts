@@ -6,7 +6,9 @@ import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { PRESTIGE_TITLES } from '../../data/titles';
 import { INITIAL_STATE } from '../../reducers/gameReducer';
 
-export const createAscensionActions = (deps: any, _shared?: any) => {
+// cycle 315: _shared?: any 미사용 2번째 파라미터 제거 — ascensionActions에서 shared 헬퍼 사용 0건.
+//   useGameActions에서 createAscensionActions(deps, shared) 호출하지만 extra arg는 무시되어 동작 동일.
+export const createAscensionActions = (deps: any) => {
     const { player, dispatch, addLog } = deps;
     return {
         confirmAscension: () => {
