@@ -42,9 +42,8 @@ test('DashboardPanels.tsx 파일 제거됨', async () => {
     assert.equal(await fileExists('src/components/dashboard/DashboardPanels.tsx'), false);
 });
 
-test('FocusPanel.tsx 회귀 보존 — 같은 폴더의 active sibling', async () => {
-    assert.equal(await fileExists('src/components/dashboard/FocusPanel.tsx'), true);
-});
+// cycle 310: FocusPanel.tsx도 cycle 91 시점에 active이었으나 이후 dispatch path가 모두 다른
+//   컴포넌트로 이주하면서 0건 dead로 전락 → cycle 310에서 제거. 이 회귀 가드는 obsolete.
 
 test('icons 폴더의 active consumer 회귀 보존 — ItemIcon', async () => {
     assert.equal(await fileExists('src/components/icons/ItemIcon.tsx'), true);
