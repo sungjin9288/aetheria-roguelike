@@ -393,9 +393,11 @@ export const migrateData = (rawData: any) => {
     // cycle 377: stats.rests / bountiesCompleted fallback 제거 (cycle 373/374/376 동일 lens) —
     //   모든 consumer가 이미 `|| 0` fallback 처리. ascensionActions 직접 read도 checkTitles
     //   `|| 0` fallback으로 안전.
-    target.stats.claimedAchievements = Array.isArray(target.stats.claimedAchievements) ? target.stats.claimedAchievements : [];
-    // cycle 260: stats.claimedQuestIds 정규화 — quest 완료 영구 ledger. checkTitles
-    //   questReward fallback handler가 의존. cycle 202 claimedAchievements 패턴 동일.
+    // cycle 379: claimedAchievements normalization 제거 (cycle 373-378 동일 lens) —
+    //   모든 consumer (AchievementPanel / useInventoryActions / progressionHandlers)가
+    //   이미 `Array.isArray` 또는 `|| []` fallback 처리.
+    // cycle 260: stats.claimedQuestIds 정규화 보존 — quest 완료 영구 ledger.
+    //   cycle-260 회귀 가드 테스트가 migrateData output 명시 검증.
     target.stats.claimedQuestIds = Array.isArray(target.stats.claimedQuestIds) ? target.stats.claimedQuestIds : [];
     target.stats.visitedMaps = Array.isArray(target.stats.visitedMaps) ? target.stats.visitedMaps : [];
     target.stats.exploreState = { ...DEFAULT_EXPLORE_STATE, ...(target.stats.exploreState || {}) };
