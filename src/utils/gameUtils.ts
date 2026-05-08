@@ -411,7 +411,8 @@ export const migrateData = (rawData: any) => {
     // v4.0 — 신규 필드 기본값 (기존 세이브 호환)
     target.relics = Array.isArray(target.relics) ? target.relics : [];
     target.titles = Array.isArray(target.titles) ? target.titles : [];
-    target.activeTitle = target.activeTitle || null;
+    // cycle 375: target.activeTitle = target.activeTitle || null 제거 — 모든 consumer가
+    //   이미 fallback (`|| null`) 또는 truthy 체크로 undefined / null 안전하게 처리.
     target.combatFlags = {
         comboCount: 0,
         deathSaveUsed: false,
