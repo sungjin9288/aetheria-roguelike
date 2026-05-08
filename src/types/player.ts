@@ -74,9 +74,8 @@ export interface PlayerMeta {
     bonusHp?: number;
     bonusMp?: number;
     prestigeRank?: number;
-    totalPrestigeAtk?: number;
-    totalPrestigeHp?: number;
-    totalPrestigeMp?: number;
+    // cycle 281: totalPrestigeAtk/Hp/Mp 3 dead 필드 제거 (cycle 277 runtime cleanup paired completion).
+    //   runtime read 0건 + saved 데이터 잔존 필드는 무시되지만 무해 (runtime access 안 함).
 }
 
 export interface CombatFlags {
