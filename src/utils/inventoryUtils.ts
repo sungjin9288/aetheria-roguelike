@@ -11,8 +11,10 @@ import type { Item, Player } from "../types/index.js";
  * @param {Object} player
  * @param {Object} itemDef - DB 아이템 정의 객체
  * @returns {Object} 새 player 객체
+ *
+ * cycle 316: export 제거 — addItemByName 내부 1회 사용만, 외부 consumer 0건.
  */
-export const addItemToInventory = (player: Player, itemDef: Item) => ({
+const addItemToInventory = (player: Player, itemDef: Item) => ({
     ...player,
     inv: [...(player.inv || []), makeItem(itemDef)],
 });
