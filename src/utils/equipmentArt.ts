@@ -127,6 +127,8 @@ const getWeaponStyle = (item: Item | null | undefined) => {
 };
 
 export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: any = null, fallbackArmorStyle: any = 'coat') => {
+    // cycle 341: itemName / subtype / hands 3 dead 필드 제거 — 외부 read 0건.
+    //   slot / key / toneKey / palette는 production 또는 tests에서 사용되므로 보존.
     if (!item) {
         return {
             slot: slotHint || 'none',
@@ -149,7 +151,6 @@ export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: 
             headgearStyle,
             bodyStyle,
             isHeadgearOnly: bodyStyle === 'none' && headgearStyle !== 'none',
-            itemName: item.name,
         };
     }
 
@@ -163,8 +164,6 @@ export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: 
             toneKey,
             palette,
             style,
-            subtype: isFocusOffhand(item) ? 'focus' : 'shield',
-            itemName: item.name,
         };
     }
 
@@ -179,8 +178,6 @@ export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: 
             toneKey,
             palette,
             style,
-            hands: Number(item.hands) || 1,
-            itemName: item.name,
         };
     }
 
