@@ -13,10 +13,11 @@ import {
 
 // --- Internal helpers ---
 
-const scoreTag = (id: any, name: any, desc: any, score: any, reasons: any[] = []) => ({
+// cycle 345: scoreTag desc 매개변수 제거 — tag.desc / primary.desc read 0건이던 dead 출력.
+//   8 호출 사이트의 한국어 desc 문자열 인자도 함께 제거.
+const scoreTag = (id: any, name: any, score: any, reasons: any[] = []) => ({
     id,
     name,
-    desc,
     score,
     reasons,
 });
@@ -52,7 +53,7 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
         if (relicEffects.has('armor_pen')) { score += 2; reasons.push('방어 관통'); }
         if (relicEffects.has('ancient_power')) { score += 2; reasons.push('고대의 분노'); }
         if (relicEffects.has('void_heart')) { score += 1; reasons.push('허공의 심장'); }
-        tags.push(scoreTag('crusher', '양손 파쇄', '강한 한 방과 마무리 화력에 집중된 런.', score, reasons));
+        tags.push(scoreTag('crusher', '양손 파쇄', score, reasons));
     }
 
     if (dualWield || relicEffects.has('combo_stack') || relicEffects.has('double_strike')) {
@@ -62,7 +63,7 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
         if (relicEffects.has('combo_stack')) { score += 2; reasons.push('연격 스택'); }
         if (relicEffects.has('double_strike')) { score += 2; reasons.push('2회 타격'); }
         if (relicEffects.has('crit_mp_regen')) { score += 1; reasons.push('치명타 MP 회복'); }
-        tags.push(scoreTag('dual', '쌍수 연격', '치명타와 연속 타격으로 압박하는 런.', score, reasons));
+        tags.push(scoreTag('dual', '쌍수 연격', score, reasons));
     }
 
     if (shield || relicEffects.has('reflect') || relicEffects.has('stone_skin') || relicEffects.has('fortress')) {
@@ -73,7 +74,7 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
         if (relicEffects.has('stone_skin')) { score += 2; reasons.push('방어 배율'); }
         if (relicEffects.has('fortress')) { score += 2; reasons.push('요새 유물'); }
         if (relicEffects.has('crit_block')) { score += 1; reasons.push('강타 차단'); }
-        tags.push(scoreTag('fortress', '방패 요새', '방어와 반사, 안정성을 우선하는 런.', score, reasons));
+        tags.push(scoreTag('fortress', '방패 요새', score, reasons));
     }
 
     if (stats?.isMagic || focus || isMagicWeapon(mainWeapon) || isMagicWeapon(offhand)) {
@@ -86,7 +87,7 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
         if (relicEffects.has('free_skill')) { score += 2; reasons.push('MP 무소모 확률'); }
         if (relicEffects.has('mp_regen_turn')) { score += 2; reasons.push('턴당 MP 회복'); }
         if (relicEffects.has('skill_mult')) { score += 2; reasons.push('스킬 증폭'); }
-        tags.push(scoreTag('arcane', '비전 공명', 'MP 순환과 무기 공명 스킬이 강한 런.', score, reasons));
+        tags.push(scoreTag('arcane', '비전 공명', score, reasons));
     }
 
     if (relicEffects.has('event_chance') || relicEffects.has('drop_rate') || relicEffects.has('gold_mult') || relicEffects.has('exp_mult') || relicEffects.has('boss_hunter')) {
@@ -97,7 +98,7 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
         if (relicEffects.has('gold_mult')) { score += 1; reasons.push('골드 수급'); }
         if (relicEffects.has('exp_mult')) { score += 1; reasons.push('EXP 수급'); }
         if (relicEffects.has('boss_hunter')) { score += 3; reasons.push('보스 추적'); }
-        tags.push(scoreTag('explorer', '탐험 수집가', '이벤트와 드롭, 보스 발견을 노리는 런.', score, reasons));
+        tags.push(scoreTag('explorer', '탐험 수집가', score, reasons));
     }
 
     if (relicEffects.has('glass_cannon') || relicEffects.has('cursed_power') || relicEffects.has('low_hp_atk') || hpRatio < 0.45) {
@@ -108,7 +109,7 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
         if (relicEffects.has('low_hp_atk')) { score += 2; reasons.push('저체력 보너스'); }
         if (hpRatio < 0.45) { score += 1; reasons.push('현재 저체력'); }
         if (relicEffects.has('ancient_power')) { score += 1; reasons.push('공격 치중'); }
-        tags.push(scoreTag('risk', '광전 도박', '생존을 희생해 순간 화력을 끌어올리는 런.', score, reasons));
+        tags.push(scoreTag('risk', '광전 도박', score, reasons));
     }
 
     if (relicEffects.has('dot_mult') || (mainWeapon?.elem && mainWeapon.elem !== '물리')) {
@@ -117,14 +118,14 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
         if (relicEffects.has('dot_mult')) { score += 3; reasons.push('지속 피해 증폭'); }
         if (mainWeapon?.elem && mainWeapon.elem !== '물리') { score += 2; reasons.push(`${mainWeapon.elem} 속성 무기`); }
         if (isMagicWeapon(mainWeapon)) { score += 1; reasons.push('상태이상 스킬 연계'); }
-        tags.push(scoreTag('status', '상태이상 집행자', '독·화상·속성 연계로 누적 피해를 노리는 런.', score, reasons));
+        tags.push(scoreTag('status', '상태이상 집행자', score, reasons));
     }
 
     const ranked = tags
         .filter((tag: any) => tag.score >= 3)
         .sort((a: any, b: any) => b.score - a.score || a.name.localeCompare(b.name, 'ko'));
 
-    const primary = ranked[0] || scoreTag('balanced', '균형형 런', '아직 특정 축에 치우치지 않은 기본 빌드.', 0, ['다양한 선택 가능']);
+    const primary = ranked[0] || scoreTag('balanced', '균형형 런', 0, ['다양한 선택 가능']);
 
     return {
         primary,
