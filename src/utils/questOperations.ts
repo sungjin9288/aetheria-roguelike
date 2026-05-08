@@ -3,31 +3,28 @@ import type { Player } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 
+// cycle 356: OPERATION_META 5 lane에서 summary 필드 제거 — QuestBoardPanel은
+//   entry.meta.label / .emphasis만 read. summary 외부 read 0건이던 dead config.
 const OPERATION_META: any = {
     story: {
         label: 'Story Arc',
         emphasis: '서사 축',
-        summary: '메인 흐름을 당겨 다음 권역 진입 명분을 만드는 임무입니다.',
     },
     build: {
         label: 'Build Path',
         emphasis: '빌드 축',
-        summary: '현재 성향과 장비 운영을 보상 루프로 연결하는 임무입니다.',
     },
     growth: {
         label: 'Power Spike',
         emphasis: '성장 축',
-        summary: '전직, 레벨, 제작, 탐험 누적을 당겨 파워 스파이크를 만드는 임무입니다.',
     },
     boss: {
         label: 'Boss Hunt',
         emphasis: '보스 축',
-        summary: '현재 레벨대 보스 권역과 직결되는 고강도 임무입니다.',
     },
     hunt: {
         label: 'Field Hunt',
         emphasis: '토벌 축',
-        summary: '바로 밀기 좋은 현장 토벌 임무입니다.',
     },
 };
 
