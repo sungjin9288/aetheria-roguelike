@@ -50,10 +50,8 @@ export interface PlayerCodex {
     [key: string]: any;
 }
 
-export interface SignaturePity {
-    drops?: number;
-    pityResonance?: boolean;
-}
+// cycle 282: SignaturePity interface 제거 — Player.signaturePity 외 consumer 0건이라 동시 cleanup.
+//   active signaturePity는 player.stats.signaturePity (number) 형식으로 dispatch.
 
 export interface SkillLoadout {
     selected: number;
@@ -152,7 +150,8 @@ export interface Player {
     history?: any[];
     archivedHistory?: any[];
     eventChainProgress?: Record<string, any>;
-    signaturePity?: SignaturePity | number;
+    // cycle 282: signaturePity top-level 필드 제거 — top-level access 0건.
+    //   active dispatch는 player.stats.signaturePity (nested, number 형식).
     maxInv?: number;
     [key: string]: any;
 }
