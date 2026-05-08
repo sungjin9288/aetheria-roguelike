@@ -52,7 +52,8 @@ test('cycle 283: MonsterBase 4 dead 필드 제거 (elem/dropTable/prefix/signatu
 
 test('cycle 283: BossPhase 3 dead 필드 제거 (atkMult/defMult/skills)', async () => {
     const source = await readSrc('src/types/monster.ts');
-    const phaseBlock = source.match(/export interface BossPhase \{[\s\S]+?\n\}/);
+    // cycle 328: BossPhase export → private (외부 import 0건). 정의는 유지.
+    const phaseBlock = source.match(/(?:export )?interface BossPhase \{[\s\S]+?\n\}/);
     assert.ok(phaseBlock, 'BossPhase interface 발견');
     assert.ok(!/atkMult\?:\s*number;/.test(phaseBlock[0]), 'atkMult 제거됨');
     assert.ok(!/defMult\?:\s*number;/.test(phaseBlock[0]), 'defMult 제거됨');

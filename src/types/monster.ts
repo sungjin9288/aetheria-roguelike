@@ -30,7 +30,8 @@ export interface MonsterBase {
     [key: string]: any;
 }
 
-export interface BossPhase {
+// cycle 328: BossPhase export 제거 — phase2/phase3 필드 타입으로만 사용, 외부 import 0건.
+interface BossPhase {
     threshold?: number;     // HP ratio (0~1) at which this phase activates
     name?: string;
     // cycle 283: atkMult / defMult / skills 3 dead 필드 제거 — 활성은 atkBonus / defBonus(cycle 228).
