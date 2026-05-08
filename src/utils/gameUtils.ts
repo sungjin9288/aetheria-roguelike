@@ -388,8 +388,9 @@ export const migrateData = (rawData: any) => {
     target.meta = target.meta || { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 };
     target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0 };
     target.stats.rests = target.stats.rests || 0;
-    target.stats.bountyDate = target.stats.bountyDate || null;
-    target.stats.bountyIssued = Boolean(target.stats.bountyIssued);
+    // cycle 376: bountyDate / bountyIssued normalizations 제거 — 모든 consumer가
+    //   strict equality (`bountyDate === today`) 또는 truthy 체크 (`&& bountyIssued`)
+    //   로 undefined 안전 처리. Boolean coercion / `|| null` 정규화 redundant.
     target.stats.bountiesCompleted = target.stats.bountiesCompleted || 0;
     target.stats.claimedAchievements = Array.isArray(target.stats.claimedAchievements) ? target.stats.claimedAchievements : [];
     // cycle 260: stats.claimedQuestIds 정규화 — quest 완료 영구 ledger. checkTitles
