@@ -7,6 +7,76 @@
 
 ---
 
+## Cycle 300 🎯 — CHANGELOG에 cycles 277-299 history 일괄 추가
+
+- 마일스톤: cycle 276 batch 이후 23 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276에 이은 13번째 batch.
+- 누적 마일스톤: cycle 276(unit 1423) → 290(unit 1489) → 299(unit 1527, +104 from cycle 276).
+- 시리즈 정체성: 23 사이클 모두 cleanup lens — silent dead config (정의되어 있으나 dispatch / 사용 0건) 제거. cycle 222 시작된 silent dead config 시리즈가 70번째 (cycle 299)까지 도달.
+
+검증: tsc 0 / unit 1527 / lint clean / build-guard ok.
+
+---
+
+## Cycle 295-299 — Type/util private downgrade 시리즈 5사이클 (export 표면 축소)
+
+타입/유틸 정의가 export 되어 있지만 외부 import 0건인 dead surface 5사이클 연속 정리. 동일 파일 내부 union 구성/내부 호출만 사용하는 이중 노출 표면 cleanup.
+
+- 295: jobOutfitAffinity 4 type exports → private (AffinityTier / AffinityBonus / OutfitAffinity / ItemLike — 모두 동일 파일 내부 union 구성용).
+- 296: getSynthesisOutputs export → private (validateSynthesis / performSynthesis 내부 2회 사용만).
+- 297: getExploreState export → private (explorationPacing 내부 4회 사용만 — getNarrativeEventChance / getQuietExplorationChance / getDiscoveryOdds / advanceExploreState).
+- 298: 5 type exports → private (item.ts WeaponItem / ArmorItem / ShieldItem / EquipmentItem + monster.ts BossMonster — Item / Monster union 구성 전용).
+- 299: player.ts 8 sub-interface exports → private (PlayerStats / PlayerCodex / SkillLoadout / TempBuff / PlayerMeta / CombatFlags / SeasonPassState / WeeklyProtocol — Player composition 전용). 4 기존 테스트 regex `(?:export )?` 패턴으로 호환 갱신.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 290-294 — Util export private downgrade 시리즈 5사이클 (cleanup lens 연속)
+
+util 함수/상수가 export 되어 있지만 외부 사용 0건인 dead surface 정리. 함수 시그니처 단순화도 포함.
+
+- 290: applyItemPrefix options 매개변수 dead 정리 — chance / force 분기 정의돼 있지만 호출 사이트 (CombatEngine.loot.ts × 3) 모두 인자 1개. options 파라미터 제거 + BALANCE.ITEM_PREFIX_CHANCE 직접 사용.
+- 291: 2 util private downgrade — updateStats (incrementStat 내부 사용만) / getWeaponEquipScore (getEquipmentProfile 내부 사용만).
+- 292: normalizeText export → private (aiEventUtils 내부 14회 사용만).
+- 293: getAllItems export → private (findItemByName 내부 1회 사용만).
+- 294: itemVisuals 3 exports → private (getMaterialVisualKey / IMAGEGEN_ITEM_PNG_KEYS / getItemIconAssetExtension — 모두 동일 파일 내부 1회 사용만).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 285-289 — Data dead export 제거 시리즈 5사이클 (대량 cleanup 포함)
+
+data/ 정의 중 dispatch 0건이거나 cycle 271 dispatch cleanup 후 잔존한 dead data를 5사이클 연속 정리. 가장 큰 단일 cleanup인 cycle 289 포함.
+
+- 285: PREMIUM_FREE_SOURCES + RELIC_WEIGHTS dead/private cleanup — premium shop / relic pool 가중치 데이터.
+- 286: CODEX_MILESTONES export downgrade — private const (consumer 내부 사용만).
+- 287: INITIAL_SEASON_PASS dead export 제거 — gameReducer.ts:52에 inline 정의되어 있어 dead duplicate.
+- 288: artPalette.ts 6 dead exports cleanup (대량) — ART_GRID / LIGHT_DIRECTION / OUTLINE_POLICY / SILHOUETTE_RULES / REFERENCE_ACCENTS 5 dead + DEFAULT_TONE_KEY private downgrade. art direction 메타정보 — 문서 커멘트로 충분.
+- 289: CLASS_BUILD_IDENTITIES dead data 제거 (~145 lines, cycle 271 paired) — 18 직업의 빌드 정체성 매핑이 cycle 271에서 4 consumer 함수 cleanup 이후 잔존하던 가장 큰 단일 dead 데이터 블록. 파일 292 → 146 lines (50% 감소).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 280-284 — Type cleanup 시리즈 5사이클 (player/monster/item types)
+
+types/ 디렉토리의 dead 필드/타입 별칭 5사이클 연속 정리. cycle 277/278/279 runtime cleanup의 paired completion + types alias dead.
+
+- 280: PlayerStats 타입의 2 dead 필드 cleanup — comboCount / discoveries (CombatFlags의 active comboCount는 별개 — set/read 분리). cycle 83/84 deprecated된 discoveries는 visitedMaps.length로 통일.
+- 281: PlayerMeta 타입의 totalPrestige 3 dead 필드 cleanup (cycle 277 paired) — totalPrestigeAtk/Hp/Mp runtime cleanup paired completion.
+- 282: Player.signaturePity / SignaturePity interface dead cleanup — top-level 필드 access 0건. active dispatch는 player.stats.signaturePity (nested, number).
+- 283: Monster 타입의 9 dead 필드 cleanup (3 interfaces) — MonsterBase: elem/dropTable/prefix/signatureDrops, BossPhase: atkMult/defMult/skills, BossMonster: phases (array)/onDeath. 활성은 phase2/phase3 singular.
+- 284: types/item.ts ItemType + types/map.ts MapType / isSignatureZone dead — type aliases 0 import + map 필드 0 read.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 277-279 — Stats output dead 필드 cleanup 시리즈 3사이클
+
+stats / meta 출력 필드 중 dispatch 또는 read 0건인 dead 필드 3사이클 연속 정리. UI/runtime 단순화.
+
+- 277: meta.totalPrestige 3 dead 필드 cleanup — totalPrestigeAtk/Hp/Mp runtime read 0건 (saved 데이터 잔존이지만 access 안 함).
+- 278: stats.killStreakTier dead 필드 cleanup — 계산되지만 어디서도 read 0건 (display 안 함).
+- 279: stats 출력에서 3 dead 필드 cleanup — weaponHands / traitBonus / titlePassive (statsCalculator computeFullStats 출력하지만 consumer 0건).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 276 🎯 — CHANGELOG에 cycles 260-275 history 일괄 추가
 
 - 마일스톤: cycle 259 batch 이후 16 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259에 이은 12번째 batch.
