@@ -29,7 +29,6 @@ export const getMapPacingProfile = (mapData: GameMap | null | undefined = {}) =>
         return {
             id: 'safe',
             label: '정비',
-            note: '휴식과 보급에 맞는 정비 구간입니다.',
             narrativeMult: 1,
             quietMult: 1,
             relicMult: 1,
@@ -42,7 +41,6 @@ export const getMapPacingProfile = (mapData: GameMap | null | undefined = {}) =>
         return {
             id: 'boss',
             label: '전조',
-            note: '보스 교전 징후가 짙습니다. 조용함은 줄고 압박이 빨라집니다.',
             narrativeMult: 0.82,
             quietMult: 0.72,
             relicMult: 1.08,
@@ -55,7 +53,6 @@ export const getMapPacingProfile = (mapData: GameMap | null | undefined = {}) =>
         return {
             id: 'volatile',
             label: '변칙',
-            note: '이변과 징후가 잦은 지대입니다. 발견 리듬이 빠릅니다.',
             narrativeMult: 1.12,
             quietMult: 0.82,
             relicMult: 1.08,
@@ -68,7 +65,6 @@ export const getMapPacingProfile = (mapData: GameMap | null | undefined = {}) =>
         return {
             id: 'hostile',
             label: '압박',
-            note: '상위 전장이라 전투 밀도가 높고 정적 구간이 짧습니다.',
             narrativeMult: 0.92,
             quietMult: 0.84,
             relicMult: 1.12,
@@ -80,7 +76,6 @@ export const getMapPacingProfile = (mapData: GameMap | null | undefined = {}) =>
     return {
         id: 'frontier',
         label: '개척',
-        note: '전투와 발견이 번갈아 오는 개척 구간입니다.',
         narrativeMult: 1.02,
         quietMult: 0.96,
         relicMult: 1.03,
