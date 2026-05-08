@@ -311,16 +311,16 @@ export const getTraitFeaturedItems = (items: any[] = [], traitProfile: any, play
         .slice(0, limit)
 );
 
+// cycle 354: score / label / traitName 3 출력 필드 제거 — PostCombatCard / _helpers.ts
+//   addCombatDigestLogs 두 consumer 모두 traitHint.name / .summary만 read.
+//   score/label/traitName — src/, tests/ 어디에서도 read 0건.
 export const getTraitLootHint = (items: any[] = [], traitProfile: any, player: Player | null = null) => {
     const [best] = getTraitFeaturedItems(items, traitProfile, player, 1);
     if (!best) return null;
 
     return {
         name: best.item.name,
-        score: best.resonance.score,
-        label: best.resonance.label,
         summary: best.resonance.summary || `${traitProfile?.name || '현재 성향'}과 잘 맞는 전리품입니다.`,
-        traitName: traitProfile?.name || null,
     };
 };
 
