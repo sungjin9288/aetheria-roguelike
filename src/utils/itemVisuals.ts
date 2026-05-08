@@ -242,7 +242,8 @@ export const getOffhandVisualKey = (item: Item | null | undefined) => {
     return 'none';
 };
 
-export const getMaterialVisualKey = (item: Item | null | undefined) => {
+// cycle 294: export 제거 — getEquipmentVisualKey 내부 1회만 사용, 외부 consumer 0건.
+const getMaterialVisualKey = (item: Item | null | undefined) => {
     if (!item) return 'material';
     const name = String(item.name || '');
 
@@ -331,7 +332,8 @@ export const getItemIconAssetKey = (item: Item | null | undefined) => getEquipme
  * 이 set의 키는 .png로 로드 (procedural SVG 대신).
  * scripts/derive_item_variants.py가 생성한 PNG들 등록.
  */
-export const IMAGEGEN_ITEM_PNG_KEYS = new Set([
+// cycle 294: export 제거 — getItemIconAssetExtension 내부 1회만 사용, 외부 consumer 0건.
+const IMAGEGEN_ITEM_PNG_KEYS = new Set([
     // hp / mp / cure / buff (consumable) — potion.png base + hue-rotate
     'item-consumable-001', 'item-consumable-002', 'item-consumable-003', 'item-consumable-004',
     'item-consumable-005', 'item-consumable-006', 'item-consumable-007',
@@ -359,7 +361,8 @@ export const IMAGEGEN_ITEM_PNG_KEYS = new Set([
     'item-relic-005', 'item-relic-006', 'item-relic-007',
 ]);
 
-export const getItemIconAssetExtension = (assetKey: any) => {
+// cycle 294: export 제거 — getItemIconAssetSrc 내부 1회만 사용, 외부 consumer 0건.
+const getItemIconAssetExtension = (assetKey: any) => {
     const k = String(assetKey || '');
     // chibi PNG 우선 로드 (cycle 40)
     if (IMAGEGEN_ITEM_PNG_KEYS.has(k)) return 'png';
