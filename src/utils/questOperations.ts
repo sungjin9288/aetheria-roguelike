@@ -140,9 +140,10 @@ const scoreQuest = (quest: any, player: Player, traitProfile: any, activeEntries
     if (quest?.type === 'craft' && (player?.stats?.crafts || 0) === 0) score += 4;
     if (quest?.type === 'bounty_count' && (player?.stats?.bountiesCompleted || 0) === 0) score += 2;
 
+    // cycle 347: score 출력 dead 정리 — 정렬용으로만 사용, 외부 read 0건. _sortKey로 변경 후 strip.
     return {
         quest,
-        score,
+        _sortKey: score,
         lane,
         resonance,
         targetMaps,
@@ -160,7 +161,13 @@ export const getQuestBoardRecommendations = (player: Player, maps: any = MAPS, q
     const scoredAvailable = questCatalog
         .filter((quest: any) => !activeRegularQuestIds.has(quest.id) && playerLevel >= (quest.minLv || 1))
         .map((quest: any) => scoreQuest(quest, player, traitProfile, activeEntries, maps))
-        .sort((left: any, right: any) => right.score - left.score || left.quest.title.localeCompare(right.quest.title, 'ko'));
+        // cycle 347: _sortKey로 정렬 후 strip (score 외부 노출 0건이므로).
+        .sort((left: any, right: any) => right._sortKey - left._sortKey || left.quest.title.localeCompare(right.quest.title, 'ko'))
+        .map((entry: any) => {
+            const { _sortKey, ...exposed } = entry;
+            void _sortKey;
+            return exposed;
+        });
 
     const featured: any[] = [];
     const usedIds = new Set();
