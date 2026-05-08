@@ -1,6 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
-import { getItemRarity } from './gameUtils.js';
+// cycle 339: getItemRarity import 제거 — group.rarity 사용처 정리 후 cascade dead.
 import { isSignatureItem } from '../data/signatureItems.js';
 import type { Item } from '../types/index.js';
 
@@ -146,7 +146,9 @@ export const getSynthesisGroups = (inventory: any) => {
         if (isSignatureItem(item)) continue;
         const key = `${item.type}_${item.tier}`;
         if (!groups[key]) {
-            groups[key] = { type: item.type, tier: item.tier, rarity: getItemRarity(item), items: [], count: 0 };
+            // cycle 339: rarity 필드 제거 — group.rarity read 0건이던 dead output.
+            //   CraftingPanel은 type / tier / count / items만 사용.
+            groups[key] = { type: item.type, tier: item.tier, items: [], count: 0 };
         }
         groups[key].items.push(item);
         groups[key].count += 1;
