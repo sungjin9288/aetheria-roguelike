@@ -51,7 +51,8 @@ const hashString = (value: any = '') => {
     return Math.abs(hash);
 };
 
-export const getPoolKeyByLocation = (loc: string) => {
+// cycle 318: export 제거 — aiEventUtils 내부 3회 사용만, 외부 호출 0건.
+const getPoolKeyByLocation = (loc: string) => {
     const keyByKeyword = [
         { key: 'forest', words: ['숲'] },
         { key: 'ruins', words: ['폐허', '광산', '신전'] },

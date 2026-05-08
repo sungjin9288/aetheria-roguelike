@@ -38,7 +38,8 @@ test('cycle 292: normalizeText export 제거 (private)', async () => {
 
 test('cycle 292: aiEventUtils active exports 유지', async () => {
     const source = await readSrc('src/utils/aiEventUtils.ts');
-    const activeExports = ['classifyChoice', 'buildEventPackage', 'pickFallbackEvent', 'summarizeHistory', 'getRecentEventSet', 'getPoolKeyByLocation'];
+    // cycle 318: getPoolKeyByLocation private downgrade (aiEventUtils 내부 사용만).
+    const activeExports = ['classifyChoice', 'buildEventPackage', 'pickFallbackEvent', 'summarizeHistory', 'getRecentEventSet'];
     activeExports.forEach((name) => {
         const re = new RegExp(`export const ${name}\\b`);
         assert.ok(re.test(source), `${name} export 유지`);
