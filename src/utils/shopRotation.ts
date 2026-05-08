@@ -50,9 +50,13 @@ const getWeekKey = () => {
 };
 
 /**
- * 일일 추천 아이템 3개 (10% 할인)
+ * 일일 추천 아이템 3개 (10% 할인 — item.price에 이미 적용됨)
  * @param {number} playerLevel
- * @returns {{ items: Object[], discount: number }}
+ * @returns {{ items: Object[] }}
+ *
+ * cycle 355: discount 필드 제거 — ShopPanel은 dailyDeals.items만 read. 외부
+ *   read 0건이던 dead 출력. 0.9 multiplier는 함수 내부에서 item.price에 이미
+ *   적용 완료(originalPrice 보존), 별도 discount 비율 노출은 redundant.
  */
 export const getDailyDeals = (playerLevel: any = 1) => {
     const today = getToday();
@@ -75,7 +79,7 @@ export const getDailyDeals = (playerLevel: any = 1) => {
         isDailyDeal: true,
     }));
 
-    return { items, discount: 0.1 };
+    return { items };
 };
 
 /**
