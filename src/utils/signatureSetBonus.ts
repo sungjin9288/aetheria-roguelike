@@ -72,6 +72,8 @@ export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (�
     const defMult = bonus.defMult || 1;
     const hpMult = bonus.hpMult || 1;
 
+    // cycle 348: activeSet 내부의 atkMult/defMult/hpMult 3 dead 필드 제거 — 부모 return에
+    //   이미 동일 필드 노출 (statsCalculator는 부모만 read). activeSet.atk/def/hpMult read 0건.
     return {
         atkMult,
         defMult,
@@ -83,9 +85,6 @@ export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (�
             count: bestCount,
             tier: availableTiers[0],
             desc: bonus.desc,
-            atkMult,
-            defMult,
-            hpMult,
         },
     };
 };
