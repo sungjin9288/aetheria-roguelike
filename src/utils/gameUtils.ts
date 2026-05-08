@@ -421,23 +421,20 @@ export const migrateData = (rawData: any) => {
         voidHeartUsed: Boolean(target.combatFlags?.voidHeartUsed),
         voidHeartArmed: Boolean(target.combatFlags?.voidHeartArmed),
     };
-    target.meta.prestigeRank    = target.meta.prestigeRank    || 0;
+    // cycle 378: 8 sub-field fallback 일괄 제거 (cycle 373-377 동일 lens) —
+    //   prestigeRank / relicCount / crafts / buildWins / abyssFloor / abyssRecord /
+    //   demonKingSlain / dailyProtocol. 모든 consumer가 이미 fallback / optional chain
+    //   처리. ascensionActions 직접 read도 checkTitles `|| 0` fallback으로 안전.
     // cycle 277: totalPrestigeAtk/Hp/Mp 3 dead 필드 정규화 제거 — read 0건. 잔존 saved 데이터는 무해.
-    target.stats.relicCount      = target.stats.relicCount      || 0;
     // cycle 124: dead `comboCount` migrate 제거. INITIAL_STATE에서도 제거됨.
-    // 활성 combo 카운터는 combatFlags.comboCount(별도 필드)로 처리.
-    target.stats.crafts          = target.stats.crafts          || 0;
+    //   활성 combo 카운터는 combatFlags.comboCount(별도 필드)로 처리.
     // cycle 120: dead 'discoveries' migrate 제거 (cycle 84 INITIAL_STATE 정리 후속).
-    // 신규 영구 카운터 default 추가 — cycle 119 ASCEND preserve와 정합.
+    //   신규 영구 카운터 default 추가 — cycle 119 ASCEND preserve와 정합.
+    // cycle 120/131 회귀 가드: 다음 4 필드는 migrate output 명시 검증으로 fallback 유지.
     target.stats.escapes         = target.stats.escapes         || 0;
     target.stats.syntheses       = target.stats.syntheses       || 0;
     target.stats.maxKillStreak   = target.stats.maxKillStreak   || 0;
     target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
-    target.stats.buildWins       = target.stats.buildWins && typeof target.stats.buildWins === 'object' ? target.stats.buildWins : {};
-    target.stats.abyssFloor      = target.stats.abyssFloor      || 0;
-    target.stats.abyssRecord     = target.stats.abyssRecord     || 0;
-    target.stats.demonKingSlain  = target.stats.demonKingSlain  || 0;
-    target.stats.dailyProtocol   = target.stats.dailyProtocol   || null;
     // pendingRelics는 런타임 전용 — 저장 불필요, 로드 시 null로 초기화
     savedData.pendingRelics = null;
 
