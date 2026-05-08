@@ -518,8 +518,8 @@ export const migrateData = (rawData: any) => {
     //   구현되어 있어 meta 필드는 dead. cycle 120(discoveries) / cycle 124(comboCount) /
     //   cycle 195(6 dead constants)와 동일 cleanup 패턴.
 
-    // 발견 체인 완료 기록
-    target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
+    // cycle 385: discoveryChains 정규화 중복 제거 — 동일 코드가 line 440(cycle 120 영역)에
+    //   이미 존재. 두 번째는 noop이라 redundant.
 
     // 접두사 마이그레이션 — prefixed 플래그가 있지만 prefixName 누락된 아이템 보강
     const fixPrefixedItem = (item: any) => {
