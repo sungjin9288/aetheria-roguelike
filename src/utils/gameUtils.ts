@@ -374,10 +374,10 @@ export const migrateData = (rawData: any) => {
     }
 
     // Modern runtime fields (safe defaults for older saves)
+    // cycle 374: 3 sub-field fallback 제거 (cycle 373 meta 동일 lens) — 모든 consumer가
+    //   이미 `buff.X || 0` protection (statsCalculator) 또는 EMPTY_TEMP_BUFF 병합
+    //   (playerStateUtils)로 undefined 안전. 객체 자체 초기화만 필요.
     target.tempBuff = target.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
-    target.tempBuff.atk = target.tempBuff.atk || 0;
-    target.tempBuff.def = target.tempBuff.def || 0;
-    target.tempBuff.turn = target.tempBuff.turn || 0;
     target.status = Array.isArray(target.status) ? target.status : [];
     target.skillLoadout = target.skillLoadout || { selected: 0, cooldowns: {} };
     target.skillLoadout.selected = Number.isInteger(target.skillLoadout.selected) ? target.skillLoadout.selected : 0;
