@@ -60,5 +60,5 @@ const SkillTypeIcon = ({ type, size = 14, className = '' }: any) => {
     );
 };
 
-export { TYPE_COLORS };
+// cycle 302: TYPE_COLORS 재export 제거 — 외부 import 0건. SkillTypeIcon 내부 사용만.
 export default SkillTypeIcon;
