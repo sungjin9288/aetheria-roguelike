@@ -20,7 +20,8 @@ export const isSynthesizable = (item: Item | null | undefined) =>
 /**
  * 주어진 type + tier 조합의 상위 tier 결과 후보 목록
  */
-export const getSynthesisOutputs = (inputType: any, inputTier: any) => {
+// cycle 296: export 제거 — validateSynthesis/performSynthesis 내부 2회만 사용, 외부 consumer 0건.
+const getSynthesisOutputs = (inputType: any, inputTier: any) => {
     const nextTier = inputTier + 1;
     if (nextTier > 6) return [];
 
