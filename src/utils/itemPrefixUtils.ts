@@ -57,12 +57,10 @@ const applyPrefixStats = (item: Item, prefix: any) => {
     return next;
 };
 
-export const applyItemPrefix = (item: any, options: any = {}): any => {
+export const applyItemPrefix = (item: any): any => {
     if (!item || item.prefixed) return item;
 
-    const chance = typeof options.chance === 'number' ? options.chance : BALANCE.ITEM_PREFIX_CHANCE;
-    const shouldApply = options.force || Math.random() < chance;
-    if (!shouldApply) return item;
+    if (Math.random() >= BALANCE.ITEM_PREFIX_CHANCE) return item;
 
     const candidates = getPrefixCandidates(item);
     if (!candidates.length) return item;
