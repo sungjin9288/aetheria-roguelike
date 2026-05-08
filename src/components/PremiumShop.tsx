@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, Package, Shield, Zap, Star } from 'lucide-react';
 import { PREMIUM_SHOP } from '../data/premiumShop';
 import SignalBadge from './SignalBadge';

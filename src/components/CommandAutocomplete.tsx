@@ -1,4 +1,3 @@
-import React from 'react';
 import { getAvailableCommands } from '../utils/commandSuggestions';
 import type { Player } from '../types/index.js';
 

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';

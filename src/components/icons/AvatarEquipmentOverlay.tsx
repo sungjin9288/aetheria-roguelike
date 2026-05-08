@@ -1,4 +1,3 @@
-import React from 'react';
 import { getEquipmentOverlayAssetSrc } from '../../utils/itemVisuals.js';
 import { getEquipmentTintFilter } from '../../utils/equipmentTint.js';
 import {

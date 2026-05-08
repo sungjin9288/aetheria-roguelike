@@ -1,5 +1,5 @@
 // cycle 321: unused MSG import 제거 — CodexDiscoveryOverlay 어디에서도 MSG 참조 0건.
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 

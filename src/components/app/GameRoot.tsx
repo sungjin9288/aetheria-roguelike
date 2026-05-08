@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { soundManager } from '../../systems/SoundManager';
 import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';

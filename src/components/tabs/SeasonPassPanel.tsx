@@ -1,4 +1,3 @@
-import React from 'react';
 import { AT } from '../../reducers/actionTypes';
 import { SEASON_REWARDS, SEASON_TIER_XP } from '../../data/seasonPass';
 import SignalBadge from '../SignalBadge';

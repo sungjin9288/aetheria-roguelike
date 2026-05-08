@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Trophy, Star, Skull, Swords, Crown, Gift, Footprints, Shield, BookOpen, Compass, Hammer, Sparkles, Coins, RefreshCcw, Flame, Link2 } from 'lucide-react';
 import { DB } from '../data/db';

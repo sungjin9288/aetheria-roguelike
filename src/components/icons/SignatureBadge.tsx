@@ -1,4 +1,3 @@
-import React from 'react';
 import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signatureItems.js';
 
 /**

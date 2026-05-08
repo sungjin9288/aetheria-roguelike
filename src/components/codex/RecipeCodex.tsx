@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Lock, Check } from 'lucide-react';
 import { DB } from '../../data/db';
 import SignalBadge from '../SignalBadge';

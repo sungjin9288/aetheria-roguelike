@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * 스킬/속성 타입별 SVG 아이콘

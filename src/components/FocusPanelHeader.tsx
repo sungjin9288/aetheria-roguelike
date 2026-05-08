@@ -1,4 +1,3 @@
-import React from 'react';
 import { ChevronLeft, Package } from 'lucide-react';
 
 const FocusPanelHeader = ({

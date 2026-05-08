@@ -1,4 +1,4 @@
-import React, { useState, useRef, lazy, Suspense, useEffect } from 'react';
+import { useState, useRef, lazy, Suspense, useEffect } from 'react';
 import { MotionConfig } from 'framer-motion';
 
 import { GS } from './reducers/gameStates';

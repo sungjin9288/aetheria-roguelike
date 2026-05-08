@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Package } from 'lucide-react';
 import { GS } from '../../reducers/gameStates';

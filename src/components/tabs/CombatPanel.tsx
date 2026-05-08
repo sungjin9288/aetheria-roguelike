@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sword, Zap, ArrowRight, RotateCw, Sparkles } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { soundManager } from '../../systems/SoundManager';

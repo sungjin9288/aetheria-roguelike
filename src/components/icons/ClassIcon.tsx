@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * 직업별 고유 SVG 심볼 아이콘

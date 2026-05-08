@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Copy, Crown, Skull, Shield, Save } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';

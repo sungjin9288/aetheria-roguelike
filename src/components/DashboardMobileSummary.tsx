@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import type { Player } from '../types/index.js';

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { buildEquipmentPreviewAppearance, getEquipmentPreviewStage } from '../../utils/avatarEquipmentPreview.js';
 import { getAvatarEquipmentPreviewCandidates } from '../../utils/avatarSpriteCandidates.js';
 import AvatarEquipmentOverlay from './AvatarEquipmentOverlay.jsx';

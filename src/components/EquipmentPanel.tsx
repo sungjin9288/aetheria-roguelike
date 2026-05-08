@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Shield, Sparkles, Sword, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
 import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';

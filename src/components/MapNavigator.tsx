@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Check, Compass, Lock, MapPin, Route, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
 import type { GameMap } from '../types/index.js';

@@ -1,4 +1,3 @@
-import React from 'react';
 import { soundManager } from '../systems/SoundManager';
 
 const MainLayout = ({ children, visualEffect }: any) => (

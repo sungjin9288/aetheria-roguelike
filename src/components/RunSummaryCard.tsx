@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles, Footprints, Compass, Flame } from 'lucide-react';
 import { getTitleLabel } from '../utils/gameUtils';

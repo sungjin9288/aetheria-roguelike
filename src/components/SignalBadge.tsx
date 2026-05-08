@@ -1,4 +1,3 @@
-import React from 'react';
 
 const SIZE_CLASS: any = {
     sm: 'min-h-[20px] px-1.5 py-0.5 text-[9px] tracking-[0.16em]',

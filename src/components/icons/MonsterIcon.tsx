@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * 몬스터 실루엣 SVG 아이콘

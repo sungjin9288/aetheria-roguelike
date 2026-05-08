@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ShieldCheck } from 'lucide-react';
 import { DB } from '../../data/db';

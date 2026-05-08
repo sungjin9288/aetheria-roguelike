@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { BALANCE } from '../../data/constants';
 import { getItemRarity } from '../../utils/gameUtils';
 import { getEquipmentVisualKey, getItemIconAssetSrc } from '../../utils/itemVisuals';

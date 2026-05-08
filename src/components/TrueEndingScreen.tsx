@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 import type { Player } from '../types/index.js';

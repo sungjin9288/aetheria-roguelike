@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * DamageNumber — 데미지/회복 float 숫자 오버레이

@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../../data/db';
 import ClassCard from '../ClassCard';

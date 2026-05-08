@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion as Motion, MotionConfig } from 'framer-motion';
 import AetherMark from '../AetherMark';
 

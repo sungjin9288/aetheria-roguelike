@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Zap, X } from 'lucide-react';
 import { GS } from '../reducers/gameStates';

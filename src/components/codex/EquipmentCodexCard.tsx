@@ -1,5 +1,4 @@
 // cycle 321: unused BALANCE import 제거 — EquipmentCodexCard 어디에서도 BALANCE 참조 0건.
-import React from 'react';
 import { motion as Motion } from 'framer-motion';
 import { MSG } from '../../data/messages';
 import { getItemRarity } from '../../utils/gameUtils';

@@ -1,5 +1,5 @@
 // cycle 321: unused BALANCE import 제거 — WeaponCodex 어디에서도 BALANCE 참조 0건.
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { DB } from '../../data/db';
 import { MSG } from '../../data/messages';

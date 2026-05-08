@@ -1,4 +1,3 @@
-import React from 'react';
 
 const SIZE_MAP: any = {
     sm: {
