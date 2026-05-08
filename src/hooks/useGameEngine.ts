@@ -171,7 +171,8 @@ export const useGameEngine = () => {
         currentEvent,
         visualEffect,
         syncStatus,
-        leaderboard,
+        // cycle 307: leaderboard top-level 반환 제거 — engine.leaderboard 접근 0건.
+        //   SystemTab은 actions.leaderboard 경로로만 사용 (line 147 actions 객체 내).
         liveConfig,
         bootStage,
         handleCommand,
