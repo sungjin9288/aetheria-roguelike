@@ -94,7 +94,7 @@ export const EVENT_CHAINS: any = [
                     choices: ['전투를 받아들인다 (전설 보상)', '거절한다'],
                     outcomes: [
                         // cycle 140: '전설의 마법서'가 items.ts에 없는 missing item이라 보상이 silently 누락됐음. 실재하는 tier 5 mage staff '천벌의 지팡이'로 교체.
-                        { type: 'chain_advance', chainId: 'lost_wizard', log: '환영을 물리쳤습니다. 천벌의 지팡이를 얻었습니다!', reward: { type: 'legendary_item', name: '천벌의 지팡이', itemType: 'weapon' } },
+                        { type: 'chain_advance', chainId: 'lost_wizard', log: '환영을 물리쳤습니다. 천벌의 지팡이를 얻었습니다!', reward: { type: 'legendary_item', name: '천벌의 지팡이' } },
                         { type: 'nothing', log: '거절했습니다. 마법사의 환영이 사라집니다.', reward: null },
                     ],
                 },
@@ -128,7 +128,7 @@ export const EVENT_CHAINS: any = [
                     choices: ['검을 뽑아낸다', '그대로 둔다'],
                     outcomes: [
                         // cycle 140: '기사의 유검' missing → tier 4 light knight sword '심판자의 검'으로 교체.
-                        { type: 'chain_advance', chainId: 'last_hero', log: '기사의 검을 획득했습니다. 심판자의 검에 강력한 힘이 깃들어 있습니다.', reward: { type: 'item', name: '심판자의 검', itemType: 'weapon', tier: 4 } },
+                        { type: 'chain_advance', chainId: 'last_hero', log: '기사의 검을 획득했습니다. 심판자의 검에 강력한 힘이 깃들어 있습니다.', reward: { type: 'item', name: '심판자의 검' } },
                         { type: 'nothing', log: '검을 두고 왔습니다.', reward: null },
                     ],
                 },
@@ -188,7 +188,7 @@ export const EVENT_CHAINS: any = [
                     choices: ['임무를 수락한다', '길드를 배신하고 보고한다'],
                     outcomes: [
                         // cycle 140: '그림자 단검' missing → tier 5 shadow weapon '그림자 절단기'로 교체.
-                        { type: 'chain_advance', chainId: 'shadow_guild', log: '임무를 완수했습니다! 그림자 절단기를 얻었습니다.', reward: { type: 'item', name: '그림자 절단기', itemType: 'weapon', tier: 5 } },
+                        { type: 'chain_advance', chainId: 'shadow_guild', log: '임무를 완수했습니다! 그림자 절단기를 얻었습니다.', reward: { type: 'item', name: '그림자 절단기' } },
                         { type: 'chain_advance', chainId: 'shadow_guild', log: '배신을 선택했습니다. 보상으로 황금을 얻었습니다.', reward: { type: 'gold', amount: 5000 } },
                     ],
                 },
@@ -286,7 +286,7 @@ export const EVENT_CHAINS: any = [
                     choices: ['감사히 받는다', '대가 없이 받기 미안하다며 거절한다'],
                     outcomes: [
                         // cycle 140: '기계 코어 갑옷' missing → tier 5 armor '천상의갑주'로 교체 (기계 자동인형 사절단의 최고급 의장).
-                        { type: 'chain_advance', chainId: 'machine_uprising', log: '기계 집단이 제작한 천상의갑주를 받았습니다!', reward: { type: 'item', name: '천상의갑주', itemType: 'armor', tier: 5 } },
+                        { type: 'chain_advance', chainId: 'machine_uprising', log: '기계 집단이 제작한 천상의갑주를 받았습니다!', reward: { type: 'item', name: '천상의갑주' } },
                         { type: 'chain_advance', chainId: 'machine_uprising', log: '거절했지만, 기계들이 당신의 배낭에 몰래 넣어뒀습니다. 강화 재료가 들어있습니다.', reward: { type: 'gold', amount: 8000 } },
                     ],
                 },
