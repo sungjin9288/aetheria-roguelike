@@ -1,5 +1,5 @@
+// cycle 321: unused Lock icon import 제거 — MonsterCodex JSX에서 <Lock> 0건.
 import React, { useMemo, useState } from 'react';
-import { Lock } from 'lucide-react';
 import { DB } from '../../data/db';
 import { LOOT_TABLE } from '../../data/loot';
 import { BOSS_BRIEFS, MONSTERS } from '../../data/monsters';

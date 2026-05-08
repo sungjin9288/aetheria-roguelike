@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { BookOpen, Sword, Shield, Bug, Hammer, Leaf, Sparkles } from 'lucide-react';
+// cycle 321: unused BALANCE / MSG imports 제거 — Codex.tsx 어디에서도 참조 0건.
 import { DB } from '../data/db';
-import { BALANCE } from '../data/constants';
-import { MSG } from '../data/messages';
 import { getCodexProgress } from '../data/codexRewards';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { AT } from '../reducers/actionTypes';

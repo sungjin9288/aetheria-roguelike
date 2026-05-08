@@ -1,7 +1,7 @@
+// cycle 321: unused LOOT_TABLE / DROP_TABLES imports 제거 — 두 데이터는 CombatEngine.loot.ts에서만 사용.
+//   CombatEngine.ts 본체는 _processLoot / _resolveEnemyBaseName re-export로 충분.
 import type { Monster, Player, Relic } from '../types/index.js';
 import { DB } from '../data/db.js';
-import { LOOT_TABLE } from '../data/loot.js';
-import { DROP_TABLES } from '../data/dropTables.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { CLASSES } from '../data/classes.js';

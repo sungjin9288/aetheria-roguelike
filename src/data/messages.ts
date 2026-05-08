@@ -1,4 +1,4 @@
-import { DB } from '../data/db.js';
+// cycle 321: unused DB import 제거 — messages.ts 어디에서도 DB 참조 0건.
 
 /**
  * messages.js — 게임 내 모든 메시지를 한국어로 통합 관리합니다.

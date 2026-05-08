@@ -1,6 +1,6 @@
+// cycle 321: unused Player type import 제거 — equipmentUtils 어디에서도 Player 참조 0건.
 import type { EquipSlots, Item } from '../types/index.js';
 import { BALANCE } from '../data/constants.js';
-import type { Player } from "../types/index.js";
 
 const MAGIC_WEAPON_KEYWORDS: any = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
 
