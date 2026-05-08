@@ -506,12 +506,9 @@ export const migrateData = (rawData: any) => {
     if (!target.eventChainProgress || typeof target.eventChainProgress !== 'object') {
         target.eventChainProgress = {};
     }
-    // 구역 보스 처치 기록 (런별 리셋)
-    target.stats.areaBossDefeated = target.stats.areaBossDefeated || {};
-    // combatFlags 신규 필드 — 다중 부활 카운터
-    if (target.combatFlags) {
-        target.combatFlags.deathSaveUsedCount = target.combatFlags.deathSaveUsedCount || 0;
-    }
+    // cycle 384: areaBossDefeated / deathSaveUsedCount fallback 제거 (cycle 373-383 동일
+    //   lens) — 모든 consumer가 이미 optional chain (`?.areaBossDefeated?.[name]`) 또는
+    //   `|| {}` / `|| 0` fallback 처리.
     // Kill Streak 필드 마이그레이션
     if (typeof target.killStreak !== 'number') {
         target.killStreak = 0;
