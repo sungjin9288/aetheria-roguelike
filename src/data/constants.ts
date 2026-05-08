@@ -20,7 +20,8 @@ export const CONSTANTS: any = {
     START_GOLD: 200,
     // cycle 195: SAVE_KEY 제거 — Firebase Firestore 사용으로 localStorage save key 미사용 (dead).
     DATA_VERSION: 5.0,
-    REMOTE_CONFIG_ENABLED: ENV.VITE_REMOTE_CONFIG === 'true' || false,
+    // cycle 309: REMOTE_CONFIG_ENABLED 제거 — RemoteConfigLoader.ts (dead module) 외
+    //   read 0건. RemoteConfigLoader 자체가 import 0건이라 cascade dead.
     MONSTER_PREFIXES: [
         { name: '허약한', mod: 0.7, expMod: 0.7, dropMod: 0.8 },
         { name: '일반적인', mod: 1.0, expMod: 1.0, dropMod: 1.0 },
