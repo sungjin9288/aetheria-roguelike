@@ -48,17 +48,8 @@ class SoundManager {
         if (!this._ensureReady()) return;
 
         switch (type) {
-            case 'hover': {
-                const { osc, gain, now } = this._createNodes();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-                osc.start(now);
-                osc.stop(now + 0.05);
-                break;
-            }
+            // cycle 325: hover case 제거 — sound dispatch 0건이던 dead branch.
+            //   부드러운 호버 sfx 정의되어 있었지만 어떤 컴포넌트도 hover 이벤트에 연결 안 함.
 
             case 'click': {
                 const { osc, gain, now } = this._createNodes();

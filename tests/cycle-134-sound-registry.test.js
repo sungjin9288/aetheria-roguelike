@@ -22,8 +22,9 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 // 활성 사운드 키 (cycle 88-133 전체 누적)
+// cycle 325: 'hover' 제거 — soundManager.play('hover') 호출 0건이라 case dead branch.
 const REGISTERED_KEYS = [
-    'hover', 'click', 'error', 'attack', 'levelUp', 'item', 'heal', 'death',
+    'click', 'error', 'attack', 'levelUp', 'item', 'heal', 'death',
     'skill', 'explore', 'victory', 'legendary',
     'escape',          // cycle 88
     'discovery_chain', // cycle 117
