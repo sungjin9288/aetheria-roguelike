@@ -54,10 +54,10 @@ export const getPostCombatAnalysis = (result: any = {}) => {
     if ((result.gold || 0) >= 100) rewardHighlights.push(`GOLD +${result.gold}`);
     if ((result.exp || 0) >= 100) rewardHighlights.push(`EXP +${result.exp}`);
 
+    // cycle 336: hpRatio / mpRatio 출력 필드 제거 — analysis.hpRatio/mpRatio 외부 read 0건.
+    //   내부에서만 grade/notes/actions 분기 계산용으로 사용. 출력은 dead.
     return {
         grade,
-        hpRatio,
-        mpRatio,
         rewardMood,
         rewardHighlights: rewardHighlights.slice(0, 3),
         notes: notes.slice(0, 4),
