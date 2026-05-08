@@ -27,7 +27,8 @@ const getQuestProgressPercent = (progress: any = 0, goal: any = 1) =>
     Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
 const MAX_COMPACT_QUESTS = 2;
 
-export const QuestRewardChips = ({ reward, accent = 'blue' }: any) => {
+// cycle 313: export 제거 — QuestTab 내부 1회 사용만, 외부 import 0건.
+const QuestRewardChips = ({ reward, accent = 'blue' }: any) => {
     const rewards = formatRewardParts(reward);
     if (!rewards.length) return null;
     const accentClass = accent === 'green'
