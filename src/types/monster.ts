@@ -17,21 +17,15 @@ export interface MonsterBase {
     def?: number;
     exp?: number;
     gold?: number;
-    /** 속성 (화염/냉기/빛 등). */
-    elem?: string;
     weakness?: string;
     resistance?: string;
     /** 보스 여부. */
     isBoss?: boolean;
     /** 엘리트 prefix 여부. */
     isElite?: boolean;
-    /** 드랍 테이블 키 (dropTables.js). */
-    dropTable?: string;
     dropMod?: number;
-    /** prefix mod 적용 여부 (일반/광폭/거대/고대 등). */
-    prefix?: string;
-    /** 시그니처 드랍 매핑. */
-    signatureDrops?: Array<{ name: string; rate: number }>;
+    // cycle 283: elem / dropTable / prefix / signatureDrops 4 dead 필드 제거 — runtime access 0건.
+    //   prefix는 mStats.name 직접 string 합치기, signatureDrops는 local variable 사용.
     /** 동적으로 추가되는 임의 필드 (런타임 확장 호환). */
     [key: string]: any;
 }
@@ -39,11 +33,9 @@ export interface MonsterBase {
 export interface BossPhase {
     threshold?: number;     // HP ratio (0~1) at which this phase activates
     name?: string;
-    atkMult?: number;
-    defMult?: number;
+    // cycle 283: atkMult / defMult / skills 3 dead 필드 제거 — 활성은 atkBonus / defBonus(cycle 228).
     atkBonus?: number;
     defBonus?: number;
-    skills?: string[];
     pattern?: { guardChance?: number; heavyChance?: number };
     log?: string;
     statusEffect?: string;
@@ -52,11 +44,9 @@ export interface BossPhase {
 
 export interface BossMonster extends MonsterBase {
     isBoss: true;
-    phases?: BossPhase[];
+    // cycle 283: phases (array) / onDeath 2 dead 필드 제거 — 활성은 phase2/phase3 singular.
     phase2?: BossPhase;
     phase3?: BossPhase;
-    /** 다음 이벤트 / 이벤트 체인 트리거. */
-    onDeath?: string;
 }
 
 export type Monster = MonsterBase | BossMonster;
