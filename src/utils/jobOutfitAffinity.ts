@@ -13,16 +13,17 @@
  * cycle 58: TypeScript 마이그레이션 시범 파일 (leaf 유틸).
  */
 
-export type AffinityTier = 'none' | 'partial1' | 'partial2' | 'full';
+// cycle 295: 4 type exports → private (외부 consumer 0건, 모두 동일 파일 내부 사용만).
+type AffinityTier = 'none' | 'partial1' | 'partial2' | 'full';
 
-export interface AffinityBonus {
+interface AffinityBonus {
     atkMult?: number;
     defMult?: number;
     mpBonus?: number;
     hpBonus?: number;
 }
 
-export interface OutfitAffinity {
+interface OutfitAffinity {
     matchCount: number;
     totalSlots: number;
     bonus: AffinityBonus;
@@ -31,7 +32,7 @@ export interface OutfitAffinity {
     slots: { weapon: boolean; armor: boolean; offhand: boolean };
 }
 
-export interface ItemLike {
+interface ItemLike {
     name?: string;
     type?: string;
     tier?: number;
