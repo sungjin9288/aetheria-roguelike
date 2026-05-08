@@ -220,8 +220,9 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
 
         window.advanceTime = (ms: any = 0) => new Promise((resolve: any) => window.setTimeout(resolve, Math.max(0, ms)));
 
+        // cycle 329: getState / clearPostCombat / injectAscensionPreview 3 dead methods 제거.
+        //   scripts/, tests/, docs 어디에서도 호출 0건. Playwright QA 훅 잔존이었던 것 정리.
         window.__AETHERIA_TEST_API__ = {
-            getState: () => JSON.parse(window.render_game_to_text()),
             getDomMetrics: () => {
                 const rect = (node: any) => {
                     if (!(node instanceof HTMLElement)) return null;
@@ -280,7 +281,6 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             markPerf: (name: any) => markPerf(name),
             resetGame: () => engineRef.current.actions.reset?.(),
             sendCommand: (command: any) => engineRef.current.handleCommand(command),
-            clearPostCombat: () => engineRef.current.actions.clearPostCombat?.(),
             setSideTab: (tab: any) => engineRef.current.actions.setSideTab?.(tab),
             seedEnhanceScenario: ({ gold = 500, materialCount = 0, weaponEnhance = 0 }: any = {}) => {
                 const er = engineRef.current;
@@ -373,19 +373,6 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
-            },
-            injectAscensionPreview: () => {
-                const er = engineRef.current;
-                er.dispatch({
-                    type: AT.SET_PLAYER,
-                    payload: {
-                        meta: {
-                            ...(er.player.meta || {}),
-                            prestigeRank: 1, bonusAtk: 4, bonusHp: 20, bonusMp: 10, essence: 320,
-                        },
-                    },
-                });
-                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.ASCENSION });
             },
             injectEvent: () => {
                 const er = engineRef.current;
