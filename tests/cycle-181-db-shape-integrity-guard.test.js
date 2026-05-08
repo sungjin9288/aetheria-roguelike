@@ -41,8 +41,10 @@ test('DB.ITEMS shape lock — 정확히 7 keys', () => {
     }
 });
 
-test('DB top-level shape lock — 8 sub-objects (CLASSES/ITEMS/MAPS/MONSTERS/LOOT_TABLE/DROP_TABLES/QUESTS/ACHIEVEMENTS)', () => {
-    const expected = ['CLASSES', 'ITEMS', 'MAPS', 'MONSTERS', 'LOOT_TABLE', 'DROP_TABLES', 'QUESTS', 'ACHIEVEMENTS'];
+test('DB top-level shape lock — 6 sub-objects (CLASSES/ITEMS/MAPS/MONSTERS/QUESTS/ACHIEVEMENTS)', () => {
+    // cycle 304: LOOT_TABLE / DROP_TABLES key 제거 — DB 접근 0건. 모든 consumer는
+    //   data/loot.js / data/dropTables.js 직접 import. 기존 8 키 lock 이 6 키로 갱신.
+    const expected = ['CLASSES', 'ITEMS', 'MAPS', 'MONSTERS', 'QUESTS', 'ACHIEVEMENTS'];
     const actual = new Set(Object.keys(DB));
     for (const k of expected) {
         assert.ok(actual.has(k), `DB missing '${k}'`);
