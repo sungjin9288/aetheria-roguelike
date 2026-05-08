@@ -75,7 +75,7 @@ export const AT = Object.freeze({
     UPDATE_EVENT_CHAIN: 'UPDATE_EVENT_CHAIN',
 } as const);
 
-export type ActionType = typeof AT[keyof typeof AT];
+// cycle 301: ActionType type alias 제거 — 외부 import 0건. AT const literal types로 충분.
 
 // cycle 210: dead duplicate GS / GameStateValue export 제거 — gameStates.ts의 GS export가
 //   유일한 정식 source. src/ 전체에서 GS는 항상 './reducers/gameStates'로부터 import.

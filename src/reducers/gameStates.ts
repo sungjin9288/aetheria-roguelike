@@ -18,5 +18,5 @@ export const GS = Object.freeze({
     TRUE_ENDING: 'true_ending',
 } as const);
 
-/** 가능한 game state 값 (literal union — TS narrowing 용). */
-export type GameState = typeof GS[keyof typeof GS];
+// cycle 301: GameState type alias 제거 — 외부 import 0건 (모두 GS const만 사용).
+//   GS const literal types로 narrowing 가능. gameReducer.ts의 GameState (다른 의미)와 명칭 충돌도 해소.
