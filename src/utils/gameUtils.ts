@@ -472,7 +472,9 @@ export const migrateData = (rawData: any) => {
         }
     }
     target.premiumCurrency = target.premiumCurrency || 0;
-    target.stats.codexClaimed = Array.isArray(target.stats.codexClaimed) ? target.stats.codexClaimed : [];
+    // cycle 383: codexClaimed array normalization 제거 (cycle 373-382 동일 lens) —
+    //   모든 consumer (Codex / rewardHandlers / progressionHandlers)가 이미 `|| []` 또는
+    //   `Array.isArray` fallback 처리. cosmeticTitles는 cycle 189 회귀 가드로 보존.
 
     // cycle 189: PremiumShop 구매 자산 4종 default — cycle 185(cosmetic title) /
     //   cycle 186(reviveTokens, synthProtects) / cycle 188(ASCEND preserve) 정합성.
