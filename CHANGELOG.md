@@ -7,6 +7,70 @@
 
 ---
 
+## Cycle 320 🎯 — CHANGELOG에 cycles 301-319 history 일괄 추가
+
+- 마일스톤: cycle 300 batch 이후 19 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300에 이은 14번째 batch.
+- 누적 마일스톤: cycle 300(unit 1527) → 310(unit 1560) → 319(unit 1600, +73 from cycle 300). unit test 1600 milestone 도달.
+- 시리즈 정체성: 19 사이클 모두 cleanup lens — silent dead config 제거 (cycle 222 시작 시리즈 89번째까지 도달). 본 batch 가장 큰 lines 감소: cycle 310 (511 lines), cycle 309 (41 lines RemoteConfigLoader), cycle 311 (47 lines adventureGuideActions cascade) 합 ~600 lines 정리.
+
+검증: tsc 0 / unit 1600 / lint clean / build-guard ok.
+
+---
+
+## Cycle 315-319 — Hooks/types unused dep & import cleanup 시리즈 5사이클
+
+hook factory 파라미터, util private downgrade, type import 정리. 표면 축소 위주.
+
+- 315: moveActions / ascensionActions 미사용 _shared 2nd 파라미터 제거 — 두 factory 모두 shared 헬퍼 미사용. useGameActions 호출 사이트도 1-arg로 갱신 (TS strict).
+- 316: addItemToInventory export → private (addItemByName 내부 1회 사용만).
+- 317: EMPTY_TEMP_BUFF export → private (playerStateUtils 내부 2회 사용만).
+- 318: getPoolKeyByLocation export → private (aiEventUtils 내부 3회 사용만). cycle 292 active-list 가드도 갱신.
+- 319: 2 unused type imports cleanup — runProfileUtils (Monster/Player 미사용 barrel) + types/player.ts (ConsumableItem 미사용).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 311-314 — Cascade orphan & component-internal export cleanup 4사이클
+
+cycle 310 paired completion + 작은 표면 정리.
+
+- 311: adventureGuideActions.ts cascade orphan 제거 (47 lines) — cycle 310의 FocusPanel 제거로 유일 consumer 사라진 module.
+- 312: anchorPoints WEAPON_PLACEMENTS / OFFHAND_PLACEMENTS export → private (helpers 내부 사용만).
+- 313: QuestRewardChips export → private (QuestTab 내부 1회 JSX render만).
+- 314: moveActions 미사용 addStoryLog dependency 제거 + `void addStoryLog;` 자가-suppress 정리.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 308-310 — System / orphaned module 대량 cleanup 시리즈 3사이클
+
+가장 큰 단일 cycle lines 감소 시리즈. 600+ lines 정리.
+
+- 308: LatencyTracker 5 dead surface cascade cleanup — getStats 외부 0건이라 chain (getAverageLatency / recordLatency / recentLatencies / MAX_HISTORY) 모두 cascade dead. 활성 surface는 trackCall (slow-response 경고 + custom event)만 보존.
+- 309: RemoteConfigLoader dead module 제거 (41 lines) + REMOTE_CONFIG_ENABLED 상수 cascade cleanup. fully-orphaned Firestore 게임 config loader.
+- 310: 2 orphaned components 511 lines 제거 (단일 cycle 최대): Bestiary.tsx (307 lines, mount 0건) + dashboard/FocusPanel.tsx (204 lines, mount 0건). 빈 dashboard/ 디렉토리 제거. obsolete 테스트 3건 cleanup.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 304-307 — DB / state / return surface dead cleanup 시리즈 4사이클
+
+reducer state field, DB wrapper key, hook return 표면의 dead 정리.
+
+- 304: DB wrapper 2 dead keys (LOOT_TABLE / DROP_TABLES) — 모든 consumer가 data/loot.js / data/dropTables.js 직접 import. cycle 181 lock test 8→6 keys 갱신.
+- 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건, INVADE_GRAVE filter는 항상 [] no-op.
+- 306: state.version dead 제거 — Firebase sync는 매 save마다 CONSTANTS.DATA_VERSION 직접 기록 (state.version 의존 없음).
+- 307: useGameEngine top-level leaderboard return dead 제거 — actions.leaderboard channel만 SystemTab에서 사용.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 301-303 — Reducer type alias / component dead surface cleanup 3사이클
+
+- 301: 2 reducer type aliases 제거 — actionTypes.ActionType / gameStates.GameState (state shape gameReducer.GameState와 명칭 충돌 해소).
+- 302: ACTION_PRESENTATION (controlPanelConfig) dead + TYPE_COLORS (SkillTypeIcon) re-export 제거.
+- 303: isE2ERuntime / measurePerf private downgrade — 동일 파일 내부 1회 사용만.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 300 🎯 — CHANGELOG에 cycles 277-299 history 일괄 추가
 
 - 마일스톤: cycle 276 batch 이후 23 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276에 이은 13번째 batch.
