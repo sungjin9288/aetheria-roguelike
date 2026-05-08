@@ -162,14 +162,14 @@ export const getSignatureSetProgress = (equip: any) => {
     const equippedMembers = equippedByGroup.get(bestKey) || [];
     const missingMembers = members.filter((name: any) => !equippedMembers.includes(name));
 
+    // cycle 349: members / equippedMembers 2 출력 dead 필드 제거 — 둘 다 외부 read 0건이라
+    //   missingMembers 계산용 internal const로만 사용. currentTier / isActive는 test-active 보존.
     return {
         key: bestKey,
         name: setDef.name,
         tone: setDef.tone,
         equippedCount: bestCount,
         totalMembers: members.length,
-        members,
-        equippedMembers,
         missingMembers,
         currentTier,
         nextTier,
