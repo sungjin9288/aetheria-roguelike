@@ -5,7 +5,7 @@
  * 점진 적용 — 이 타입을 import하는 파일은 ts-nocheck 제거 가능.
  */
 
-export type ItemType = 'weapon' | 'armor' | 'shield' | 'consumable' | 'material' | 'recipe';
+// cycle 284: ItemType type alias 제거 — import 0건. item.type은 string으로 직접 사용.
 
 export interface ItemBase {
     id?: string;

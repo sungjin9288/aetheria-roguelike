@@ -9,13 +9,13 @@
  * exploreUtils / mapProgress 등 런타임에서 임의 필드(progressed 등)를 추가/조회한다.
  */
 
-export type MapType = string;
+// cycle 284: MapType type alias 제거 — string의 단순 alias라 직접 string 사용으로 충분.
 
 export interface GameMap {
     /** 지역 이름 (보통 MAPS 객체의 key지만 일부 시나리오에서 명시적 보유). */
     name?: string;
     /** 지역 분류 ('safe' | 'dungeon' | 'boss' 등). */
-    type?: MapType;
+    type?: string;
     /** 입장 가능 최소 레벨 (legacy alias: level). */
     minLv?: number;
     /** 레벨 — 숫자 또는 'infinite'. */
@@ -33,8 +33,7 @@ export interface GameMap {
     boss?: string;
     /** 이벤트 발생 확률 (0~1). */
     eventChance?: number;
-    /** 시그니처 보스 권역 여부 (전설 각인 드랍). */
-    isSignatureZone?: boolean;
+    // cycle 284: isSignatureZone 제거 — runtime access 0건.
     /** 동적으로 추가되는 임의 필드 (런타임 확장 호환). */
     [key: string]: any;
 }
