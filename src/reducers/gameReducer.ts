@@ -15,7 +15,8 @@ export interface GameState {
     bootStage: string;
     uid: string | null;
     player: Player;
-    version: number;
+    // cycle 306: state.version dead 제거 — INITIAL_STATE 외 read/write 0건.
+    //   Firebase sync는 매 save마다 CONSTANTS.DATA_VERSION 직접 기록.
     gameState: string;
     logs: any[];
     enemy: any;
@@ -65,7 +66,6 @@ export const INITIAL_STATE: GameState = {
     },
 
     // Runtime State
-    version: CONSTANTS.DATA_VERSION,
     gameState: 'idle',
     logs: [],
     enemy: null,
