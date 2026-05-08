@@ -15,8 +15,10 @@ export const multiplayerActionMap = {
     },
 
     // ── Grave PvP ─────────────────────────────────────────────────────────
+    // cycle 305: publicGraves filter 제거 — state.publicGraves dead (항상 []),
+    //   filter no-op. targetUid 인자도 현재 dispatch에서 미사용.
     INVADE_GRAVE: (state: GameState, action: GameAction) => {
-        const { reward, uid: targetUid } = action.payload;
+        const { reward } = action.payload;
         const today = new Date().toDateString();
         const lastInvadeDate = state.player.stats?.lastInvadeDate;
         const currentCount = lastInvadeDate === today ? (state.player.stats?.dailyInvadeCount || 0) : 0;
@@ -34,7 +36,6 @@ export const multiplayerActionMap = {
                     lastInvadeDate: today,
                 },
             },
-            publicGraves: state.publicGraves.filter((g: any) => g.uid !== targetUid),
             syncStatus: 'syncing',
         };
     },
