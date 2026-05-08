@@ -402,7 +402,8 @@ export const RELICS: any = [
 ];
 
 /** 희귀도별 가중치 (가중 추첨) */
-export const RELIC_WEIGHTS: Record<string, any> = Object.freeze({
+// cycle 285: export 제거 — pickWeightedRelics 내부에서만 사용. private const로 downgrade.
+const RELIC_WEIGHTS: Record<string, any> = Object.freeze({
     common: 50,
     uncommon: 30,
     rare: 15,
