@@ -195,6 +195,8 @@ export const getTraitProfile = (player: Player, stats: any = {}) => {
 
     const skill = buildTraitSkill(traitId, player, stats);
 
+    // cycle 351: rewardFocus/questFocus/bossDirective 3 redundant overrides 제거 —
+    //   `...definition` spread가 이미 동일 필드 노출. 명시 override는 dead duplicate.
     return {
         ...definition,
         buildProfile,
@@ -208,9 +210,6 @@ export const getTraitProfile = (player: Player, stats: any = {}) => {
         skill,
         // cycle 267: skillLabel 필드 제거 — dispatch 0건이던 dead config. 컴포넌트들은
         //   trait.skill.{name, mp, cooldown}을 직접 접근 (BuildAdvicePanel은 cooldown까지 포함).
-        rewardFocus: definition.rewardFocus,
-        questFocus: definition.questFocus,
-        bossDirective: definition.bossDirective,
     };
 };
 
