@@ -29,7 +29,8 @@ export const markPerfOnce = (name: any) => {
     return markPerf(name);
 };
 
-export const measurePerf = (name: any, startMark: any, endMark: any) => {
+// cycle 303: export 제거 — measurePerfOnce 내부 1회만 사용, 외부 consumer 0건.
+const measurePerf = (name: any, startMark: any, endMark: any) => {
     if (typeof performance === 'undefined') return null;
     try {
         performance.measure(name, startMark, endMark);

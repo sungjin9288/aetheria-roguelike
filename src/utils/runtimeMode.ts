@@ -19,7 +19,8 @@ const hasFlag = (key: string): boolean => {
 
 export const isSmokeRuntime = (): boolean => hasFlag('smoke');
 
-export const isE2ERuntime = (): boolean => hasFlag('e2e');
+// cycle 303: export 제거 — isMockRuntime 내부 1회만 사용, 외부 consumer 0건.
+const isE2ERuntime = (): boolean => hasFlag('e2e');
 
 /**
  * Firebase 익명 인증 + 클라우드 동기화를 스킵해야 하는 mock 모드.
