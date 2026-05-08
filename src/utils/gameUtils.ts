@@ -414,8 +414,8 @@ export const migrateData = (rawData: any) => {
     }
 
     // v4.0 — 신규 필드 기본값 (기존 세이브 호환)
-    target.relics = Array.isArray(target.relics) ? target.relics : [];
-    target.titles = Array.isArray(target.titles) ? target.titles : [];
+    // cycle 382: target.relics / target.titles normalizations 제거 (cycle 373-381 동일 lens) —
+    //   모든 consumer가 이미 `|| []` 또는 `Array.isArray` 또는 optional chain fallback 처리.
     // cycle 375: target.activeTitle = target.activeTitle || null 제거 — 모든 consumer가
     //   이미 fallback (`|| null`) 또는 truthy 체크로 undefined / null 안전하게 처리.
     target.combatFlags = {
