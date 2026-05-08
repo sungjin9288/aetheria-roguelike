@@ -7,6 +7,40 @@
 
 ---
 
+## Cycle 360 🎯 — CHANGELOG에 cycles 351-359 history 일괄 추가
+
+- 마일스톤: cycle 350 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340 / 350에 이은 17번째 batch.
+- 누적 마일스톤: cycle 350(unit 1718) → 359(unit 1752, +34). silent dead config 시리즈 cycle 222→359 126번째 도달.
+- 시리즈 정체성 변화: 9 사이클 중 351-356은 cycle 333 시작 function output cleanup 연속 (총 cycle 333-356 24사이클), 357-359는 새 lens — unreachable code path / lookup table cleanup.
+- 새로운 lens (cycle 357 도입): "정의됐지만 호출 사이트에 도달할 수 있는 입력 값이 0건"인 unreachable config. function output dead field 시리즈 24사이클 후 자연스럽게 등장.
+
+검증: tsc 0 / unit 1752 / lint clean / build-guard ok.
+
+---
+
+## Cycle 351-359 — Function output cleanup 마무리 + Unreachable code path 신규 lens
+
+cycle 333-350 시리즈에 이어 6사이클 더 동일 lens(function output dead) 진행 후, 357부터 새 lens — unreachable lookup table / code path 정리.
+
+### Function output cleanup 마무리 (cycle 351-356, 24사이클 시리즈 마감)
+
+- 351: getTraitProfile 3 redundant overrides (rewardFocus/questFocus/bossDirective) — `...definition` spread가 이미 노출하던 dead duplicate.
+- 352: getLootUpgradeHint score 출력 dead — 내부 비교용 bestScore 변수로 분리, 외부 노출 strip.
+- 353: getSelectedSkill index/total 2 출력 dead — `{ skill: skills[index] }`만 노출. combatAttack randomSkill 재할당 shape 동기화.
+- 354: getTraitLootHint score/label/traitName 3 출력 dead — name/summary만 PostCombatCard / addCombatDigestLogs read.
+- 355: getDailyDeals discount 1 출력 dead — 0.9 multiplier는 item.price에 이미 적용 완료, 별도 비율 노출 redundant.
+- 356: OPERATION_META summary 5회 dead — 5 lane (story/build/growth/boss/hunt) 모두에서 일괄 제거. label/emphasis만 QuestBoardPanel read.
+
+### Unreachable code path 신규 lens (cycle 357-359, 3사이클)
+
+- 357: FALLBACK_EVENT_POOL '시작의 마을' 12 events unreachable — exploreActions가 START_LOCATION에서 조기 반환, AI_SERVICE.generateEvent 진입 자체 차단. 마을은 type='safe' / eventChance=0인 안전지대.
+- 358: TONE_GLOW.steel + TONE_ACCENT.steel 2 unreachable — signatureRegistry.json / signatureSets.json 어디에도 tone='steel' 0건. 활성 8 tone (holy/fire/frost/shadow/arcane/nature/earth/rust)만 사용.
+- 359: ELEMENT_FILTERS 불/얼음/화염속성 3 unreachable aliases — items.ts elem은 화염/냉기/빛/자연/대지/어둠/에테르/바람/물리 9종만 사용 (cycle 223 '얼음' → '냉기' 통일 후).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 350 🎯 — CHANGELOG에 cycles 341-349 history 일괄 추가
 
 - 마일스톤: cycle 340 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340에 이은 16번째 batch.
