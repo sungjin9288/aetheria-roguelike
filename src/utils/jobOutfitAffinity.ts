@@ -81,8 +81,10 @@ const JOB_AFFINITY_NAMES: Record<string, { partial1: string; partial2: string; f
     흑마법사: { partial1: '금단의 결', partial2: '금단의 계약', full: '암흑의 지배자' },
     팔라딘:   { partial1: '성광의 결', partial2: '성광의 맹세', full: '성기사의 강림' },
     시간술사: { partial1: '시간의 결', partial2: '시공의 흐름', full: '시공의 지배자' },
+    // cycle 361: '그림자주군' (공백 제거) 중복 키 제거 — buildAffinityLabel은 player.job
+    //   ('그림자 주군' 정식 표기, CLASSES.ts와 동일)을 normalize 없이 직접 lookup.
+    //   normalize 후 lookup하는 JOB_SPRITE_SLUG_MAP과는 다른 패턴이라 중복 키는 unreachable.
     '그림자 주군': { partial1: '어둠의 결', partial2: '그림자의 부름', full: '어둠의 군림' },
-    그림자주군: { partial1: '어둠의 결', partial2: '그림자의 부름', full: '어둠의 군림' },
     대마법사: { partial1: '별빛의 결', partial2: '별의 회로', full: '별의 회랑' },
 });
 
