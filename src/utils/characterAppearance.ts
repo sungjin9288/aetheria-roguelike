@@ -2,7 +2,8 @@ import type { Item } from '../types/index.js';
 import { isTwoHandWeapon } from './equipmentUtils.js';
 import type { Player } from "../types/index.js";
 import { getEquipmentArtProfile } from './equipmentArt.js';
-import { getArmorStyleFromItem, getAvatarLoadoutStyle, getItemIconAssetKey, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
+// cycle 342: getItemIconAssetKey import 제거 — iconKey 출력 필드 cleanup 후 cascade dead.
+import { getArmorStyleFromItem, getAvatarLoadoutStyle, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
 
 const DEFAULT_JOB_STYLE: any = {
     hairStyle: 'bob',
@@ -68,13 +69,12 @@ export const deriveCharacterAppearance = (player: Player) => {
     const weaponType = getWeaponVisualKey(weapon);
     const offhandType = getOffhandVisualKey(offhand);
 
+    // cycle 342: level / hairStyle 출력 필드 제거 — read 0건이던 dead.
     return {
         job: player?.job || '모험가',
-        level: player?.level || 1,
         frameTone,
         armorStyle: getArmorStyleFromItem(armor, baseStyle.armorStyle),
         loadoutStyle: getAvatarLoadoutStyle(weaponType, offhandType),
-        hairStyle: baseStyle.hairStyle,
         accessoryStyle: baseStyle.accessoryStyle,
         palette: {
             skin: '#f4c9a3',
@@ -89,29 +89,23 @@ export const deriveCharacterAppearance = (player: Player) => {
             offhand: getOverlayTone('offhand', offhand, '#bfa88b'),
             glow: ELEMENT_COLOR_MAP[frameTone as string] || baseStyle.accentColor,
         },
+        // cycle 342: dead 출력 필드 정리 — item / iconKey / hands / equipped read 0건.
+        //   활성 필드 (test 또는 production read): type / visual / enhance / art.
         weapon: {
-            item: weapon,
             type: weaponType,
             visual: weaponType,
-            iconKey: getItemIconAssetKey(weapon),
             enhance: clampEnhance(weapon?.enhance),
-            hands: isTwoHandWeapon(weapon) ? 2 : 1,
             art: weaponArt,
         },
         offhand: {
-            item: offhand,
             type: offhandType,
             visual: offhandType,
-            iconKey: getItemIconAssetKey(offhand),
             enhance: clampEnhance(offhand?.enhance),
             art: offhandArt,
         },
         armor: {
-            item: armor,
             visual: getArmorStyleFromItem(armor, baseStyle.armorStyle),
-            iconKey: getItemIconAssetKey(armor),
             enhance: clampEnhance(armor?.enhance),
-            equipped: Boolean(armor),
             art: armorArt,
         },
     };
