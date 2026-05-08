@@ -81,7 +81,9 @@ export const validateSynthesis = (items: Item[] | null | undefined, playerGold: 
 
     const successRate = BALANCE.SYNTHESIS_SUCCESS_RATES[tier] || 0.5;
 
-    return { valid: true, tier, type, outputs, goldCost, successRate };
+    // cycle 338: type 필드 제거 — validation.type read 0건이던 dead output.
+    //   CraftingPanel은 outputs/goldCost/successRate/tier만 사용.
+    return { valid: true, tier, outputs, goldCost, successRate };
 };
 
 /**
