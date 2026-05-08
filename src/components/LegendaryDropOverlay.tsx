@@ -14,6 +14,9 @@ import { getSignatureMetadata } from '../data/signatureItems.js';
  * - 아이콘은 실제 signature sprite (gold ring + badge 포함)을 그대로 사용
  */
 
+// cycle 358: steel 톤 제거 — signatureRegistry.json / signatureSets.json 어디에도
+//   tone='steel' 엔트리 0건이라 unreachable. holy / fire / frost / shadow / arcane /
+//   nature / earth / rust 8종만 활성. fallback은 DEFAULT_GLOW (= TONE_GLOW.holy).
 const TONE_GLOW: any = Object.freeze({
     holy: { ring: 'rgba(246,231,162,0.6)', radial: 'rgba(246,231,162,0.35)', particle: '#f6e7a2' },
     fire: { ring: 'rgba(255,180,138,0.6)', radial: 'rgba(255,180,138,0.35)', particle: '#ffb48a' },
@@ -22,7 +25,6 @@ const TONE_GLOW: any = Object.freeze({
     arcane: { ring: 'rgba(192,176,232,0.6)', radial: 'rgba(192,176,232,0.3)', particle: '#c0b0e8' },
     nature: { ring: 'rgba(168,208,160,0.55)', radial: 'rgba(168,208,160,0.28)', particle: '#a8d0a0' },
     earth: { ring: 'rgba(216,184,120,0.5)', radial: 'rgba(216,184,120,0.26)', particle: '#d8b878' },
-    steel: { ring: 'rgba(230,236,244,0.5)', radial: 'rgba(230,236,244,0.24)', particle: '#e6ecf4' },
     rust: { ring: 'rgba(217,165,108,0.5)', radial: 'rgba(217,165,108,0.26)', particle: '#d9a56c' },
 });
 

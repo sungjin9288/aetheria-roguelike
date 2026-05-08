@@ -14,6 +14,8 @@ import ItemIcon from '../icons/ItemIcon.jsx';
  * family codex와 동일한 룰로 잠금/잠금해제 표시.
  */
 
+// cycle 358: steel 톤 제거 — signatureRegistry.json / signatureSets.json 어디에도
+//   tone='steel' 엔트리 0건이라 unreachable. fallback은 DEFAULT_TONE_ACCENT (= holy).
 const TONE_ACCENT: any = Object.freeze({
     holy: { border: 'rgba(246,231,162,0.6)', glow: 'rgba(246,231,162,0.18)', label: '빛' },
     fire: { border: 'rgba(255,180,138,0.6)', glow: 'rgba(255,180,138,0.18)', label: '화염' },
@@ -22,7 +24,6 @@ const TONE_ACCENT: any = Object.freeze({
     arcane: { border: 'rgba(192,176,232,0.6)', glow: 'rgba(192,176,232,0.18)', label: '비전' },
     nature: { border: 'rgba(168,208,160,0.55)', glow: 'rgba(168,208,160,0.16)', label: '자연' },
     earth: { border: 'rgba(216,184,120,0.5)', glow: 'rgba(216,184,120,0.14)', label: '대지' },
-    steel: { border: 'rgba(230,236,244,0.5)', glow: 'rgba(230,236,244,0.14)', label: '강철' },
     rust: { border: 'rgba(217,165,108,0.5)', glow: 'rgba(217,165,108,0.14)', label: '광란' },
 });
 
