@@ -222,25 +222,27 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
                 }
             }
 
+            // cycle 333: score / isSafeTarget / isVisited / isBoss 4 dead 필드 제거 —
+            //   score는 정렬 직후 외부 read 0건, 나머지는 ControlPanel/MapNavigator/test 모두
+            //   read 0건이라 silent metadata. score는 정렬 후 내부 _sortKey로만 유지.
             return {
                 name: exitName,
-                score,
+                _sortKey: score,
                 badge,
                 reason,
-                isSafeTarget,
-                isVisited,
-                isBoss: Boolean(targetMap.boss),
                 levelLabel: targetMap.level === 'infinite' ? 'Abyss' : `Lv.${targetLevel}`,
                 chips,
                 undiscoveredSignatureCount,
             };
         })
         .filter(Boolean)
-        .sort((left: any, right: any) => right.score - left.score)
-        .map((entry: any, index: any) => ({
-            ...entry,
-            isRecommended: index === 0,
-        }));
+        .sort((left: any, right: any) => right._sortKey - left._sortKey)
+        .map((entry: any, index: any) => {
+            // cycle 333: _sortKey 정렬 후 strip — 외부 노출 없음.
+            const { _sortKey, ...exposed } = entry;
+            void _sortKey;
+            return { ...exposed, isRecommended: index === 0 };
+        });
 };
 
 export const getAdventureGuidance = (player: Player, stats: any, mapData: any, runtimeState: any = 'idle') => {
