@@ -1,4 +1,5 @@
-import type { GameMap, Monster, Relic } from '../types/index.js';
+// cycle 323: unused Monster type import 제거 — exploreUtils 어디에서도 Monster 참조 0건.
+import type { GameMap, Relic } from '../types/index.js';
 import type { Player } from '../types/index.js';
 /**
  * exploreUtils.js — explore() 로직 분리 모듈 (Phase 1-B)

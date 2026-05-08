@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Zap, Shield, ChevronDown, ChevronRight, Sparkles, GitBranch, RefreshCw } from 'lucide-react';
+// cycle 323: unused RefreshCw icon import 제거 — SkillTreePreview JSX에서 <RefreshCw> 0건.
+import { Zap, Shield, ChevronDown, ChevronRight, Sparkles, GitBranch } from 'lucide-react';
 import { DB } from '../data/db';
 import { CLASSES } from '../data/classes';
 import { getJobSkills } from '../utils/gameUtils';
