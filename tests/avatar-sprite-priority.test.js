@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getAvatarSpriteCandidates, JOB_TYPICAL_LOADOUT } from '../src/utils/avatarSpriteCandidates.js';
+// cycle 327: JOB_TYPICAL_LOADOUT 제거 — production 사용 0건이라 paired remove.
+import { getAvatarSpriteCandidates } from '../src/utils/avatarSpriteCandidates.js';
 
 /**
  * Avatar sprite priority — cycle 46 (단순화).
@@ -60,11 +61,7 @@ test('그림자 주군은 정규화된 jobSlug로 매핑', () => {
     assert.equal(sprite, 'shadow-lord-leather-dagger');
 });
 
-test('JOB_TYPICAL_LOADOUT는 outfit affinity 표시용으로 보존됨', () => {
-    // cycle 46에서는 sprite 결정에 사용 X — UI/메카닉용.
-    assert.equal(JOB_TYPICAL_LOADOUT.warrior, 'sword');
-    assert.equal(JOB_TYPICAL_LOADOUT.assassin, 'dagger');
-});
+// cycle 327: JOB_TYPICAL_LOADOUT 보존 가드 제거 — 그 데이터 자체가 production 0건이라 cleanup.
 
 test('미확인 직업은 adventurer 폴백', () => {
     const sprite = firstPath(getAvatarSpriteCandidates({ job: '???', armorStyle: 'plate', loadoutStyle: 'sword' }));

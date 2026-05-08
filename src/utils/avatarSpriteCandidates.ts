@@ -106,29 +106,9 @@ const WEAPONLESS_ADVENTURER_SPRITES = new Set([
     'adventurer-sword',
 ]);
 
-/**
- * 직업별 typical loadout — 직업이 캐릭터 정체성을 결정. 무기를 변경해도 sprite는
- * 직업의 typical 시각을 유지 (cycle 43 — 사용자 피드백: 무기 바꿨다고 캐릭터가
- * 다른 sprite로 바뀌면 안 됨).
- *
- * 무기 시각 차별화는 인벤토리/장비 슬롯 (cycle 36-40 chibi PNG) + 시그니처
- * dedicated overlay에서만.
- */
-export const JOB_TYPICAL_LOADOUT = Object.freeze({
-    warrior: 'sword',
-    knight: 'guardian',
-    berserker: 'heavy',
-    rogue: 'dagger',
-    assassin: 'dagger',
-    ranger: 'archer',
-    mage: 'caster',
-    archmage: 'caster',
-    warlock: 'caster',
-    paladin: 'guardian',
-    chronomancer: 'caster',
-    'shadow-lord': 'dagger',
-    'grand-mage': 'caster',
-});
+// cycle 327: JOB_TYPICAL_LOADOUT export 제거 — 정의되어 있지만 production 사용 0건.
+//   getAvatarSpriteCandidates 내부 사용도 0건. cycle 43-46 시점 outfit affinity 표시용으로
+//   보존했으나 그 dispatch path는 끝내 미구현. 테스트만이 유일한 consumer였음 (paired remove).
 
 /**
  * 직업별 default sprite — cycle 46. armor/weapon 모두 sprite에 영향 X.
