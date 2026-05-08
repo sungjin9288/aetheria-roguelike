@@ -15,32 +15,8 @@
 
 import paletteSource from './artPalette.json' with { type: 'json' };
 
-export const ART_GRID = Object.freeze({
-    avatarWidth: 32,
-    avatarHeight: 48,
-    overlayViewBox: 72,
-    pixelsPerUnit: 1,
-});
-
-export const LIGHT_DIRECTION = Object.freeze({
-    angleDeg: paletteSource.artDirection.lightAngleDeg,
-    description: paletteSource.artDirection.lightDirection,
-});
-
-export const OUTLINE_POLICY = Object.freeze({
-    outerTone: 'palette.outline',
-    defaultColor: paletteSource.artDirection.defaultOutline,
-    innerLines: false,
-    note: '모든 wearable은 shared outline(#2a1f2e) 사용. 순검정 금지. 내부 라인 대신 1-step darker shade block.',
-});
-
-export const SILHOUETTE_RULES = Object.freeze({
-    maxInternalShades: paletteSource.artDirection.maxInternalShades,
-    allowHighlight: true,
-    allowGradient: paletteSource.artDirection.allowGradient,
-    allowGlowBlur: paletteSource.artDirection.allowGlowBlur,
-    allowDropShadow: paletteSource.artDirection.allowDropShadow,
-});
+// cycle 288: ART_GRID / LIGHT_DIRECTION / OUTLINE_POLICY / SILHOUETTE_RULES 4 dead exports 제거.
+//   런타임 consumer 0건이던 art direction 메타정보 — 문서 커멘트로 충분.
 
 // Tone palette를 freeze된 객체로 노출.
 // base/accent는 기존 코드 호환용 alias (base = mid, accent = hi).
@@ -64,9 +40,10 @@ export const TONE_PALETTES: Record<string, any> = Object.freeze(
 
 export const ELEMENT_TONE_KEY: Record<string, any> = Object.freeze({ ...paletteSource.elementToneKey });
 
-export const DEFAULT_TONE_KEY: Record<string, any> = Object.freeze({ ...paletteSource.defaultToneKey });
+// cycle 288: DEFAULT_TONE_KEY export 제거 (private const) — getDefaultToneKey 내부 사용만.
+const DEFAULT_TONE_KEY: Record<string, any> = Object.freeze({ ...paletteSource.defaultToneKey });
 
-export const REFERENCE_ACCENTS = Object.freeze({ ...paletteSource.referenceAccents });
+// cycle 288: REFERENCE_ACCENTS dead export 제거 — runtime consumer 0건.
 
 export const getTonePalette = (toneKey: any) => TONE_PALETTES[toneKey] || TONE_PALETTES.steel;
 
