@@ -3,7 +3,8 @@ const RECENT_EVENT_LIMIT = 8;
 
 const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
 const toInt = (value: any, fallback: any = 0) => (Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback);
-export const normalizeText = (value: any, fallback: any = '') => String(value || fallback).replace(/\s+/g, ' ').trim();
+// cycle 292: export 제거 — aiEventUtils 내부 14회 사용만, 외부 consumer 0건.
+const normalizeText = (value: any, fallback: any = '') => String(value || fallback).replace(/\s+/g, ' ').trim();
 
 const normalizeChoiceText = (choice: any, idx: any) => {
     const raw = typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`;
