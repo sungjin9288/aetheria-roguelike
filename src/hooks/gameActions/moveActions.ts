@@ -8,8 +8,10 @@ import { checkDiscoveryChains, getFirstVisitReward } from '../../utils/exploreUt
 import { CombatEngine } from '../../systems/CombatEngine';
 import { soundManager } from '../../systems/SoundManager';
 
+// cycle 314: addStoryLog 미사용 dependency 제거 — moveActions 어디에서도 호출 0건.
+//   `void addStoryLog` 자가-suppress 라인도 함께 cleanup.
 export const createMoveActions = (deps: any, _shared?: any) => {
-    const { player, gameState, grave, isAiThinking, liveConfig, dispatch, addLog, addStoryLog } = deps;
+    const { player, gameState, grave, isAiThinking, liveConfig, dispatch, addLog } = deps;
     return {
         move: (loc: string) => {
             if (isAiThinking) return;
@@ -79,7 +81,6 @@ export const createMoveActions = (deps: any, _shared?: any) => {
                     ? MSG.GRAVE_FOUND_MULTI(gravesAtDestination.length)
                     : MSG.GRAVE_FOUND_SINGLE);
             }
-            void addStoryLog; // addStoryLog is available but not needed for move
         },
     };
 };
