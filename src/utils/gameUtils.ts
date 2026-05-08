@@ -378,9 +378,10 @@ export const migrateData = (rawData: any) => {
     //   이미 `buff.X || 0` protection (statsCalculator) 또는 EMPTY_TEMP_BUFF 병합
     //   (playerStateUtils)로 undefined 안전. 객체 자체 초기화만 필요.
     target.tempBuff = target.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
-    target.status = Array.isArray(target.status) ? target.status : [];
+    // cycle 381: target.status / skillLoadout.selected normalizations 제거 (cycle 373-379
+    //   동일 lens) — 모든 consumer가 이미 동일 패턴 (Array.isArray, Number.isInteger,
+    //   `|| []`, toArray) 사용으로 undefined / 비정상 값 안전 처리.
     target.skillLoadout = target.skillLoadout || { selected: 0, cooldowns: {} };
-    target.skillLoadout.selected = Number.isInteger(target.skillLoadout.selected) ? target.skillLoadout.selected : 0;
     target.skillLoadout.cooldowns = target.skillLoadout.cooldowns || {};
     // cycle 373: 5 sub-field fallback 제거 — 모든 consumer가 이미 `meta.X || 0`
     //   protection 또는 CombatEngine 로컬 reconstruction (DEFAULT_META 병합)으로
