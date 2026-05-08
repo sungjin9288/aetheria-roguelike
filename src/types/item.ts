@@ -7,7 +7,9 @@
 
 // cycle 284: ItemType type alias 제거 — import 0건. item.type은 string으로 직접 사용.
 
-export interface ItemBase {
+// cycle 369: export 제거 — 외부 import 0건 (src/utils, src/components, src/hooks,
+//   src/systems 모두). 동일 파일 Item 유니온 / EquipSlots 필드 타입 구성용 private.
+interface ItemBase {
     id?: string;
     name?: string;
     type?: string;
