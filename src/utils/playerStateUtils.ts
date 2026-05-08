@@ -5,7 +5,8 @@ import type { Player } from '../types/index.js';
  * @param {Object} statsUpdate - 덮어쓸 stats 필드들
  * @returns {Object} 새 player 객체
  */
-export const updateStats = (player: Player, statsUpdate: any): Player => ({
+// cycle 291: export 제거 — incrementStat 내부 사용만 (외부 consumer 0건).
+const updateStats = (player: Player, statsUpdate: any): Player => ({
     ...player,
     stats: { ...(player.stats || {}), ...statsUpdate },
 });

@@ -66,7 +66,8 @@ export const getWeaponCritBonus = (weapon: any, slot: any = 'main') => {
     return slot === 'offhand' ? BALANCE.OFFHAND_ONE_HAND_CRIT_BONUS : BALANCE.ONE_HAND_CRIT_BONUS;
 };
 
-export const getWeaponEquipScore = (weapon: any, slot: any = 'main') => (
+// cycle 291: export 제거 — getEquipmentProfile 내부 사용만 (외부 consumer 0건).
+const getWeaponEquipScore = (weapon: any, slot: any = 'main') => (
     getWeaponAttackValue(weapon, slot) + Math.round(getWeaponCritBonus(weapon, slot) * 100)
 );
 
