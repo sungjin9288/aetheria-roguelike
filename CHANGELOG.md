@@ -7,6 +7,34 @@
 
 ---
 
+## Cycle 350 🎯 — CHANGELOG에 cycles 341-349 history 일괄 추가
+
+- 마일스톤: cycle 340 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340에 이은 16번째 batch.
+- 누적 마일스톤: cycle 340(unit 1684) → 349(unit 1718, +34). silent dead config 시리즈 cycle 222→349 117번째 도달.
+- 시리즈 정체성: 9 사이클 모두 cleanup lens — function output dead field cleanup. cycle 333 시작된 "외부 read 0건이지만 함수 반환에 노출된 필드" 정리 시리즈가 9 cycle 더 진행 (총 cycle 333-349 17사이클).
+
+검증: tsc 0 / unit 1718 / lint clean / build-guard ok.
+
+---
+
+## Cycle 341-349 — Function output dead field cleanup 9사이클 시리즈
+
+cycle 333-340 시리즈에 이어 9사이클 더 — utility/system 함수의 출력 필드 중 외부 read 0건인 dead fields 정리. 같은 lens.
+
+- 341: getEquipmentArtProfile 3 dead 출력 필드 (itemName/subtype/hands) — slot/key/toneKey/palette/headgearStyle/bodyStyle/isHeadgearOnly/style 활성 보존.
+- 342: deriveCharacterAppearance 6 dead 출력 + cascade — top-level level/hairStyle, weapon/offhand/armor sub-objects의 item/iconKey/hands/equipped 정리. getItemIconAssetKey import도 cascade dead.
+- 343: applyDynamicDifficulty 3 dead diff metadata — diffLabel return + scaled mStats의 _diffLabel/_diffScore 모두 read 0건.
+- 344: buildRunSummary buildTags 출력 dead — RunSummaryCard / runShareText / outcomeAnalysis 어디에서도 read 0건. cycle 268의 useGameEngine buildProfile.tags AI snapshot dispatch는 별개로 보존.
+- 345: scoreTag desc 매개변수 + 출력 dead — 8 호출 사이트의 한국어 desc 문자열 인자도 일괄 제거. tag.id/name/score/reasons 4 활성 필드 보존.
+- 346: getJobOutfitAffinity totalSlots 출력 dead — OutfitAffinity interface에서도 제거. matchCount/bonus/label/tier/slots 보존.
+- 347: scoreQuest score → _sortKey internal — 정렬용으로만 사용, 외부 read 0건 (cycle 333 _sortKey 패턴).
+- 348: computeSignatureSetBonus activeSet 내부 atkMult/defMult/hpMult 3 duplicate dead — 부모 return에 이미 동일 필드 노출.
+- 349: getSignatureSetProgress members/equippedMembers 2 출력 dead — 내부 const 변수는 totalMembers/missingMembers 계산용으로 유지.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 340 🎯 — CHANGELOG에 cycles 321-339 history 일괄 추가
 
 - 마일스톤: cycle 320 batch 이후 19 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320에 이은 15번째 batch.
