@@ -61,7 +61,8 @@ test('cycle 283: BossPhase 3 dead 필드 제거 (atkMult/defMult/skills)', async
 
 test('cycle 283: BossMonster 2 dead 필드 제거 (phases/onDeath)', async () => {
     const source = await readSrc('src/types/monster.ts');
-    const bossBlock = source.match(/export interface BossMonster[\s\S]+?\n\}/);
+    // cycle 298: BossMonster export 제거 (private downgrade) → 정의 자체는 유지.
+    const bossBlock = source.match(/(?:export )?interface BossMonster[\s\S]+?\n\}/);
     assert.ok(bossBlock, 'BossMonster interface 발견');
     assert.ok(!/phases\?:\s*BossPhase\[\];/.test(bossBlock[0]), 'phases (array) 제거됨');
     assert.ok(!/onDeath\?:\s*string;/.test(bossBlock[0]), 'onDeath 제거됨');

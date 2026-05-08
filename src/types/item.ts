@@ -43,7 +43,8 @@ export interface ItemBase {
     [key: string]: any;
 }
 
-export interface WeaponItem extends ItemBase {
+// cycle 298: 4 type exports → private (외부 import 0건, 동일 파일 내 Item 유니온 구성용).
+interface WeaponItem extends ItemBase {
     type: 'weapon';
     /** 1=한손, 2=양손. */
     hands?: 1 | 2;
@@ -55,7 +56,7 @@ export interface WeaponItem extends ItemBase {
     mp?: number;
 }
 
-export interface ArmorItem extends ItemBase {
+interface ArmorItem extends ItemBase {
     type: 'armor';
     /** 기본 DEF. */
     val?: number;
@@ -63,7 +64,7 @@ export interface ArmorItem extends ItemBase {
     hp?: number;
 }
 
-export interface ShieldItem extends ItemBase {
+interface ShieldItem extends ItemBase {
     type: 'shield';
     val?: number;
     mp?: number;
@@ -80,7 +81,7 @@ export interface ConsumableItem extends ItemBase {
     effect?: string;
 }
 
-export type EquipmentItem = WeaponItem | ArmorItem | ShieldItem;
+type EquipmentItem = WeaponItem | ArmorItem | ShieldItem;
 export type Item = EquipmentItem | ConsumableItem | ItemBase;
 
 /** 장비 슬롯 (player.equip). cycle 60: 임의 Item 할당 호환을 위해 완화. */

@@ -42,7 +42,8 @@ export interface BossPhase {
     [key: string]: any;
 }
 
-export interface BossMonster extends MonsterBase {
+// cycle 298: BossMonster export 제거 — Monster 유니온 구성용 internal type.
+interface BossMonster extends MonsterBase {
     isBoss: true;
     // cycle 283: phases (array) / onDeath 2 dead 필드 제거 — 활성은 phase2/phase3 singular.
     phase2?: BossPhase;
