@@ -65,7 +65,8 @@ test('cycle 280-283 회귀 가드: 이전 cleanup 동작 유지', async () => {
     const playerSrc = await readSrc('src/types/player.ts');
     const monsterSrc = await readSrc('src/types/monster.ts');
     // cycle 280
-    const statsBlock = playerSrc.match(/export interface PlayerStats[\s\S]+?\n\}/);
+    // cycle 299: PlayerStats export 제거 (private).
+    const statsBlock = playerSrc.match(/(?:export )?interface PlayerStats[\s\S]+?\n\}/);
     assert.ok(statsBlock && !/discoveries\?:\s*number;/.test(statsBlock[0]),
         'cycle 280 PlayerStats.discoveries 0건');
     // cycle 282

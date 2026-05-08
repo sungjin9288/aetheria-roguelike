@@ -11,7 +11,8 @@ import type { EquipSlots, Item, ConsumableItem } from './item.js';
  * PlayerStats — `[key: string]: any` 인덱스 시그니처로 ad-hoc 필드 허용.
  * (signaturePity, areaBossDefeated, codexBonusAtk 등 동적 추가).
  */
-export interface PlayerStats {
+// cycle 299: 8 sub-interface exports → private (외부 import 0건, Player composition 전용).
+interface PlayerStats {
     kills?: number;
     total_gold?: number;
     deaths?: number;
@@ -40,7 +41,7 @@ export interface PlayerStats {
     [key: string]: any;
 }
 
-export interface PlayerCodex {
+interface PlayerCodex {
     weapons?: Record<string, any>;
     armors?: Record<string, any>;
     shields?: Record<string, any>;
@@ -53,19 +54,19 @@ export interface PlayerCodex {
 // cycle 282: SignaturePity interface 제거 — Player.signaturePity 외 consumer 0건이라 동시 cleanup.
 //   active signaturePity는 player.stats.signaturePity (number) 형식으로 dispatch.
 
-export interface SkillLoadout {
+interface SkillLoadout {
     selected: number;
     cooldowns: Record<string, number>;
 }
 
-export interface TempBuff {
+interface TempBuff {
     atk?: number;
     def?: number;
     turn?: number;
     name?: string | null;
 }
 
-export interface PlayerMeta {
+interface PlayerMeta {
     essence?: number;
     rank?: number;
     bonusAtk?: number;
@@ -76,7 +77,7 @@ export interface PlayerMeta {
     //   runtime read 0건 + saved 데이터 잔존 필드는 무시되지만 무해 (runtime access 안 함).
 }
 
-export interface CombatFlags {
+interface CombatFlags {
     comboCount?: number;
     deathSaveUsed?: boolean;
     deathSaveUsedCount?: number;
@@ -87,7 +88,7 @@ export interface CombatFlags {
     [key: string]: any;
 }
 
-export interface SeasonPassState {
+interface SeasonPassState {
     xp?: number;
     tier?: number;
     claimed?: string[];
@@ -95,7 +96,7 @@ export interface SeasonPassState {
     seasonId?: string;
 }
 
-export interface WeeklyProtocol {
+interface WeeklyProtocol {
     kills?: number;
     explores?: number;
     bossKills?: number;

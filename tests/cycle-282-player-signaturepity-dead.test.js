@@ -69,8 +69,9 @@ test('cycle 282: getSignaturePityMultiplier / SIGNATURE_PITY 유지 (회귀 가�
 
 test('cycle 280-281 회귀 가드: 이전 cleanup 동작 유지', async () => {
     const source = await readSrc('src/types/player.ts');
-    const statsBlock = source.match(/export interface PlayerStats[\s\S]+?\n\}/);
-    const metaBlock = source.match(/export interface PlayerMeta[\s\S]+?\n\}/);
+    // cycle 299: PlayerStats / PlayerMeta export 제거 (private) → 정의 유지.
+    const statsBlock = source.match(/(?:export )?interface PlayerStats[\s\S]+?\n\}/);
+    const metaBlock = source.match(/(?:export )?interface PlayerMeta[\s\S]+?\n\}/);
     assert.ok(statsBlock && !/comboCount\?:\s*number;/.test(statsBlock[0]),
         'cycle 280 PlayerStats.comboCount 0건');
     assert.ok(statsBlock && !/discoveries\?:\s*number;/.test(statsBlock[0]),

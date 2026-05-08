@@ -35,14 +35,16 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('cycle 281: PlayerMeta에서 totalPrestigeAtk 제거', async () => {
     const source = await readSrc('src/types/player.ts');
-    const metaBlock = source.match(/export interface PlayerMeta[\s\S]+?\n\}/);
+    // cycle 299: PlayerMeta export 제거 (private) → 정의 유지.
+    const metaBlock = source.match(/(?:export )?interface PlayerMeta[\s\S]+?\n\}/);
     assert.ok(metaBlock, 'PlayerMeta interface 발견');
     assert.ok(!/totalPrestigeAtk\?:/.test(metaBlock[0]), 'totalPrestigeAtk 제거됨');
 });
 
 test('cycle 281: PlayerMeta에서 totalPrestigeHp / Mp 제거', async () => {
     const source = await readSrc('src/types/player.ts');
-    const metaBlock = source.match(/export interface PlayerMeta[\s\S]+?\n\}/);
+    // cycle 299: PlayerMeta export 제거 (private) → 정의 유지.
+    const metaBlock = source.match(/(?:export )?interface PlayerMeta[\s\S]+?\n\}/);
     assert.ok(metaBlock);
     assert.ok(!/totalPrestigeHp\?:/.test(metaBlock[0]), 'totalPrestigeHp 제거됨');
     assert.ok(!/totalPrestigeMp\?:/.test(metaBlock[0]), 'totalPrestigeMp 제거됨');
@@ -50,7 +52,8 @@ test('cycle 281: PlayerMeta에서 totalPrestigeHp / Mp 제거', async () => {
 
 test('cycle 281: PlayerMeta active 필드 유지 (회귀 가드)', async () => {
     const source = await readSrc('src/types/player.ts');
-    const metaBlock = source.match(/export interface PlayerMeta[\s\S]+?\n\}/);
+    // cycle 299: PlayerMeta export 제거 (private) → 정의 유지.
+    const metaBlock = source.match(/(?:export )?interface PlayerMeta[\s\S]+?\n\}/);
     assert.ok(metaBlock);
     const requiredFields = ['essence', 'rank', 'bonusAtk', 'bonusHp', 'bonusMp', 'prestigeRank'];
     requiredFields.forEach((field) => {

@@ -39,7 +39,8 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 test('cycle 280: Stats 타입에서 comboCount 제거 (CombatFlags의 동명 필드는 유지)', async () => {
     const source = await readSrc('src/types/player.ts');
     // Stats interface 블록 (line 1-41) 내부의 comboCount만 검사.
-    const statsBlockMatch = source.match(/export interface PlayerStats[\s\S]+?\n\}/);
+    // cycle 299: PlayerStats export 제거 (private downgrade) → 정의는 유지.
+    const statsBlockMatch = source.match(/(?:export )?interface PlayerStats[\s\S]+?\n\}/);
     assert.ok(statsBlockMatch, 'PlayerStats interface 발견');
     assert.ok(!/comboCount\?:\s*number;/.test(statsBlockMatch[0]),
         'PlayerStats interface에서 comboCount 제거 (CombatFlags의 active comboCount는 별도)');
