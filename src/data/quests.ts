@@ -108,7 +108,9 @@ export const QUESTS: any = [
     // ── 직업/빌드 특화 퀘스트 ────────────────────────────────────────────────
     { id: 60, title: '대장장이의 의뢰',      type: 'craft',           desc: '아이템 3개 제작',              target: 'crafts',             goal: 3,  reward: { exp: 3000,  gold: 5000,  item: '강화 재료' }, minLv: 10 },
     { id: 61, title: '탐험가의 기록',        type: 'explore_count',   desc: '20번 탐색',                    target: 'explores',           goal: 20, reward: { exp: 5000,  gold: 3000 }, minLv: 5 },
-    { id: 62, title: '생존의 의지',          type: 'survive_low_hp',  desc: 'HP 20% 이하에서 승리 5회',     target: 'lowHpWins',          threshold: 0.2, goal: 5, reward: { exp: 8000, gold: 6000, item: '엘릭서' }, minLv: 15 },
+    // cycle 368: threshold: 0.2 redundant default 제거 — questProgress.ts:41
+    //   `questData.threshold || 0.2` fallback과 동일.
+    { id: 62, title: '생존의 의지',          type: 'survive_low_hp',  desc: 'HP 20% 이하에서 승리 5회',     target: 'lowHpWins',          goal: 5, reward: { exp: 8000, gold: 6000, item: '엘릭서' }, minLv: 15 },
     { id: 63, title: '맨몸의 용사',          type: 'survive_low_hp',  desc: 'HP 10% 이하에서 승리 3회',     target: 'lowHpWins',          threshold: 0.1, goal: 3, reward: { exp: 12000, gold: 10000, item: '엘릭서' }, minLv: 25 },
     { id: 64, title: '황금 수집가',          type: 'explore_count',   desc: '50번 탐색',                    target: 'explores',           goal: 50, reward: { exp: 10000, gold: 15000 }, minLv: 20 },
     { id: 65, title: '장인의 길',            type: 'craft',           desc: '아이템 10개 제작',             target: 'crafts',             goal: 10, reward: { exp: 15000, gold: 20000, item: '강화 재료' }, minLv: 25 },

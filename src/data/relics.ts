@@ -276,7 +276,9 @@ export const RELICS: any = [
     { id: 'time_shard',      name: '시간의 파편',   rarity: 'epic',      desc: '스킬 쿨타임 -1 (모든 스킬)', effect: 'cd_minus', val: 1 },
     { id: 'soul_collector',  name: '영혼 수집가',   rarity: 'legendary', desc: '처치 50마리당 ATK +25 스택', effect: 'kill_stack', stackPer: 50, stackVal: 25 },
     { id: 'chaos_heart',     name: '혼돈의 심장',   rarity: 'legendary', desc: '전투마다 랜덤 유물 효과 발동', effect: 'chaos_relic' },
-    { id: 'prophecy_stone',  name: '예언의 돌판',   rarity: 'epic',      desc: '보스 HP 25% 이하 시 ATK 2배', effect: 'execute_atk', val: 2.0, threshold: 0.25 },
+    // cycle 368: threshold: 0.25 redundant default 제거 — CombatEngine.ts:544
+    //   `executeAtkRelic.threshold || 0.25` fallback과 동일.
+    { id: 'prophecy_stone',  name: '예언의 돌판',   rarity: 'epic',      desc: '보스 HP 25% 이하 시 ATK 2배', effect: 'execute_atk', val: 2.0 },
     { id: 'curse_crystal',   name: '저주의 결정',   rarity: 'rare',      desc: '상태이상 피해 +50%', effect: 'dot_mult', val: 1.5 },
     { id: 'time_ring',       name: '시공의 반지',   rarity: 'epic',      desc: '스킬 발동 시 15% 확률 쿨타임 소모 없음', effect: 'free_skill', val: 0.15 },
     { id: 'blood_moon',      name: '피의 달',       rarity: 'rare',      desc: 'HP 25% 이하 시 모든 피해 +40%', effect: 'low_hp_dmg', val: 1.4, threshold: 0.25 },
