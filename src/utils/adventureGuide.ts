@@ -46,12 +46,12 @@ export const getQuestTracker = (player: Player) => {
     const entries = getActiveQuestEntries(player);
     if (!entries.length) return null;
 
+    // cycle 334: detail 필드 제거 — getQuestTracker 외부 read 0건이던 dead field.
     const claimable = entries.find((entry: any) => entry.isComplete);
     if (claimable) {
         return {
             kind: 'claimable',
             title: claimable.quest.title,
-            detail: '보상을 수령할 수 있습니다.',
             progressLabel: '보상 대기',
             questId: claimable.id,
         };
@@ -67,17 +67,17 @@ export const getQuestTracker = (player: Player) => {
     return {
         kind: focus.isBounty ? 'bounty' : 'active',
         title: focus.quest.title,
-        detail: focus.quest.desc,
         progressLabel: getQuestProgressLabel(focus),
         questId: focus.id,
     };
 };
 
+// cycle 334: description 필드 제거 — getExplorationForecast 외부 read 0건이던 dead field.
+//   mood / chips만 ControlPanel & test에서 사용.
 export const getExplorationForecast = (player: Player, mapData: any) => {
     if (!mapData) {
         return {
             mood: '기록 동기화 중',
-            description: '지역 정보를 불러오는 중입니다.',
             chips: [],
         };
     }
@@ -85,7 +85,6 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
     if (mapData.type === 'safe') {
         return {
             mood: '안전 지대',
-            description: '회복, 보급, 전직, 퀘스트 정리에 적합한 구간입니다.',
             chips: [
                 { label: 'REST', value: 'SAFE' },
                 { label: 'BOARD', value: 'OPEN' },
@@ -100,28 +99,21 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
     const quietPct = clampPercent(odds.quietChance);
 
     let mood = '교전 밀도 보통';
-    let description = '전투와 발견이 무난하게 섞이는 구간입니다.';
 
     if (mapData.boss) {
         mood = eventPct >= 8 ? '보스 전조' : '보스 권역';
-        description = '강한 교전이 예상됩니다. 회복과 퀵슬롯 정비를 우선하세요.';
     } else if (eventPct >= 10 || relicPct >= 12) {
         mood = '발견 상승';
-        description = '이상 징후와 유물 기류가 올라온 구간입니다.';
     } else if (quietPct >= 24) {
         mood = '정적 구간';
-        description = '조용한 탐색이 길어지고 있습니다. 다음 발견 확률이 서서히 오릅니다.';
     } else if (pacingProfile.id === 'volatile') {
         mood = '변칙 지대';
-        description = '이벤트와 이변이 잦은 구간입니다. 짧은 정비 뒤 탐험을 이어가는 편이 좋습니다.';
     } else if (pacingProfile.id === 'hostile' || mapData.level >= 20) {
         mood = '고위험 교전';
-        description = '한 번의 실수가 치명적일 수 있는 상위 전장입니다.';
     }
 
     return {
         mood,
-        description,
         chips: [
             { label: 'TEMPO', value: pacingProfile.label },
             { label: 'EVENT', value: `${eventPct}%` },
