@@ -66,7 +66,8 @@ export const makeItem = (template: Item | null | undefined): Item => ({
 });
 
 /** 전체 DB 아이템 목록을 하나의 배열로 반환 */
-export const getAllItems = () => [
+// cycle 293: export 제거 — findItemByName 내부 1회만 사용, 외부 consumer 0건.
+const getAllItems = () => [
     ...toArray(DB.ITEMS?.consumables),
     ...toArray(DB.ITEMS?.weapons),
     ...toArray(DB.ITEMS?.armors),
