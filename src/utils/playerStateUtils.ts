@@ -21,7 +21,8 @@ const updateStats = (player: Player, statsUpdate: any): Player => ({
 export const incrementStat = (player: Player, field: string, amount: number = 1): Player =>
     updateStats(player, { [field]: ((player.stats as any)?.[field] || 0) + amount });
 
-export const EMPTY_TEMP_BUFF: any = {
+// cycle 317: export 제거 — playerStateUtils 내부 2회 사용만, 외부 consumer 0건.
+const EMPTY_TEMP_BUFF: any = {
     atk: 0,
     def: 0,
     turn: 0,
