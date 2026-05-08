@@ -36,7 +36,6 @@ export const getEnhanceAvailability = (item: Item | null | undefined, gold: numb
             missing: 'invalid',
             hint: '강화 불가',
             requirement: null,
-            materialCount: getEnhanceMaterialCount(inventory),
         };
     }
 
@@ -48,7 +47,6 @@ export const getEnhanceAvailability = (item: Item | null | undefined, gold: numb
             missing: 'max',
             hint: '최대 강화',
             requirement: null,
-            materialCount: getEnhanceMaterialCount(inventory),
         };
     }
 
@@ -62,7 +60,6 @@ export const getEnhanceAvailability = (item: Item | null | undefined, gold: numb
             missing: 'gold',
             hint: '골드 부족',
             requirement,
-            materialCount,
         };
     }
 
@@ -73,7 +70,6 @@ export const getEnhanceAvailability = (item: Item | null | undefined, gold: numb
             missing: 'material',
             hint: '재료 부족',
             requirement,
-            materialCount,
         };
     }
 
@@ -83,6 +79,5 @@ export const getEnhanceAvailability = (item: Item | null | undefined, gold: numb
         missing: null,
         hint: '강화 가능',
         requirement,
-        materialCount,
     };
 };
