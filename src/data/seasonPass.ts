@@ -59,11 +59,5 @@ export const SEASON_REWARDS: any = [
     { tier: 30, free: { gold: 15000 },             premium: { premiumCurrency: 50, title: '시즌 마스터' } },
 ];
 
-/** 시즌 패스 초기 상태 */
-export const INITIAL_SEASON_PASS: any = {
-    xp: 0,
-    tier: 0,
-    claimed: [],         // 수령한 티어 번호 배열
-    isPremium: false,    // 프리미엄 구매 여부
-    seasonId: 'S1',      // 시즌 식별자
-};
+// cycle 287: INITIAL_SEASON_PASS dead export 제거 — consumer 0건. INITIAL_STATE.player.seasonPass는
+//   gameReducer.ts:52에 inline 정의되어 있어 이 const는 dead duplicate.
