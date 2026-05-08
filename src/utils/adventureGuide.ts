@@ -256,7 +256,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         return {
             title: '현재 상황 진행 중',
             detail: runtimeState === 'combat' ? '전투 판단을 우선하세요.' : '현재 패널을 먼저 마무리하면 다음 행동이 열립니다.',
-            emphasis: '진행 우선',
             primaryAction: null,
             secondaryAction: null,
         };
@@ -266,7 +265,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         return {
             title: '보상 회수 가능',
             detail: `${questTracker.title} 완료 보상을 지금 회수할 수 있습니다.`,
-            emphasis: '즉시 이득',
             primaryAction: { kind: 'claim_quest', label: '보상 받기', questId: questTracker.questId },
             secondaryAction: { kind: 'open_quest', label: '퀘스트 보기' },
         };
@@ -276,7 +274,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         return {
             title: '전직 준비 완료',
             detail: '모험가 단계를 마쳤습니다. 지금 전직하면 런의 방향이 더 선명해집니다.',
-            emphasis: '성장 분기',
             primaryAction: { kind: 'open_class', label: '전직 보기' },
             secondaryAction: questTracker ? { kind: 'open_quest', label: '임무 확인' } : null,
         };
@@ -286,7 +283,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         return {
             title: '정비 추천',
             detail: '체력이 충분히 회복되지 않았습니다. 다음 출발 전에 휴식으로 안정성을 확보하세요.',
-            emphasis: '안정 우선',
             primaryAction: { kind: 'rest', label: '휴식' },
             secondaryAction: mpRatio <= 0.45 ? { kind: 'rest', label: 'MP도 회복' } : null,
         };
@@ -307,7 +303,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
             return {
                 title: '디버프 정화 권장',
                 detail: `현재 활성 상태이상: ${labels}. 안전지대에서 휴식하면 모든 디버프가 해소됩니다.`,
-                emphasis: '정화 우선',
                 primaryAction: { kind: 'rest', label: '휴식으로 정화' },
                 secondaryAction: questTracker ? { kind: 'open_quest', label: '임무 확인' } : null,
             };
@@ -318,7 +313,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         return {
             title: '인벤토리 정리 필요',
             detail: `인벤토리가 ${inventoryCount}/${inventoryCap} 입니다. 다음 드롭 전에 장비와 소모품을 정리하세요.`,
-            emphasis: '정리 권장',
             primaryAction: { kind: 'open_inventory', label: '가방 열기' },
             secondaryAction: { kind: 'open_shop', label: '상점 열기' },
         };
@@ -334,7 +328,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
             return {
                 title: '전설 각인 공명',
                 detail: `보스 토벌 ${pity}회 누적 — 다음 signature 드롭 확률 +${pct}% 적용 중. 보스 권역으로 진입할 적기입니다.`,
-                emphasis: '확률 증폭',
                 primaryAction: { kind: 'open_move', label: '보스 경로' },
                 secondaryAction: questTracker ? { kind: 'open_quest', label: '임무 확인' } : null,
             };
@@ -348,7 +341,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
             detail: featuredQuest
                 ? `추천 작전: ${featuredQuest.quest.title} · ${featuredQuest.reason}`
                 : '현재 진행 중인 임무가 없습니다. 마을 게시판에서 목표를 받아 성장 축을 잡으세요.',
-            emphasis: '목표 설정',
             primaryAction: { kind: 'open_quest_board', label: '게시판 열기' },
             secondaryAction: { kind: 'open_move', label: '이동 준비' },
         };
@@ -358,7 +350,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         return {
             title: '후퇴 또는 회복 권장',
             detail: '현재 HP가 낮습니다. 더 깊게 들어가기보다 이동과 회복을 먼저 고려하세요.',
-            emphasis: '위험',
             primaryAction: { kind: 'open_move', label: '이동 경로' },
             secondaryAction: { kind: 'open_inventory', label: '회복 확인' },
         };
@@ -368,7 +359,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         return {
             title: '현재 목표 진행 중',
             detail: `${questTracker.title} · ${questTracker.progressLabel}`,
-            emphasis: questTracker.kind === 'bounty' ? '현상수배' : '임무 진행',
             primaryAction: { kind: 'explore', label: '탐험 계속' },
             secondaryAction: { kind: 'open_quest', label: '목표 보기' },
         };
@@ -379,7 +369,6 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         detail: safe
             ? '정비가 끝났다면 다음 지역으로 이동해 흐름을 이어가세요.'
             : '지금 흐름이면 탐험을 한 번 더 밀어도 됩니다.',
-        emphasis: safe ? '다음 지역' : '전진',
         primaryAction: safe ? { kind: 'open_move', label: '이동' } : { kind: 'explore', label: '탐험' },
         secondaryAction: safe && questTracker ? { kind: 'open_quest', label: '임무 확인' } : null,
     };
