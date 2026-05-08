@@ -32,4 +32,5 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-export { app, auth, db, hasFirebaseConfig };
+// cycle 324: `app` export 제거 — src/ 어디에서도 import 0건. auth / db / hasFirebaseConfig만 active.
+export { auth, db, hasFirebaseConfig };
