@@ -103,6 +103,8 @@ export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any)
         addLog?.('system', GM_PREFIX_MAP[diff.label]);
     }
 
+    // cycle 343: _diffLabel / _diffScore / diffLabel return 3 dead 필드 정리.
+    //   exploreActions:127는 { mStats }만 destructure하고 mStats._diff* 읽는 곳 0건.
     const scaled: Record<string, any> = {
         ...mStats,
         hp:    Math.floor(mStats.hp    * diff.hpMult),
@@ -110,11 +112,9 @@ export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any)
         atk:   Math.floor(mStats.atk   * diff.atkMult),
         exp:   Math.floor(mStats.exp   * diff.expMult),
         gold:  Math.floor(mStats.gold  * diff.goldMult),
-        _diffLabel: diff.label,
-        _diffScore: Math.round(score * 100),
     };
 
-    return { mStats: scaled, diffLabel: diff.label };
+    return { mStats: scaled };
 };
 
 // ─────────────────────────────────────────────────────────────────────────
