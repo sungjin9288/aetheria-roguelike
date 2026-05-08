@@ -267,7 +267,7 @@ export const MAPS: any = {
         monsters: ['황금 왕국 수호자', '탐욕의 상인', '용병 전사', '왕국 기사', '사기꾼 마법사'],
         desc: '황금으로 넘쳐나는 무역 도시입니다. 물가가 높지만 최상급 물품을 구할 수 있습니다.',
         lore: '고대 황금 왕국의 후예들이 세운 도시. 물물교환과 모험가 길드가 공존하는 번영의 땅.',
-        eventChance: 0.28, boss: false,
+        eventChance: 0.28,
         shopBonus: 1.5
     },
     '지하 미궁': {
@@ -291,7 +291,7 @@ export const MAPS: any = {
         monsters: ['한 맺힌 망자', '강의 요괴', '익사한 기사', '흡혼 해골', '저주받은 어부'],
         desc: '죽은 자들의 영혼이 흐르는 강입니다. 사망 아이템 드랍률이 증가합니다.',
         lore: '죽은 영웅들의 혼이 마지막 안식을 찾아 흐르는 강. 묘비 아이템이 자주 발견됩니다.',
-        eventChance: 0.32, boss: false,
+        eventChance: 0.32,
         graveDropBonus: 2.0
     },
     '금지된 도서관': {
@@ -389,7 +389,7 @@ export const MAPS: any = {
         monsters: ['황금 골렘', '보물사냥꾼', '미믹', '마법 구체', '고대 마법사', '탑 수호자'],
         desc: '잊혀진 열쇠로 열린 비밀의 보물고입니다. 황금이 넘쳐나는 위험한 곳입니다.',
         lore: '전설의 황금 왕국이 남긴 보물고. 황금 골렘들이 수천 년간 이 보물을 지켜왔습니다. 진짜 보물 상자와 미믹을 구별하는 것이 생존의 핵심입니다.',
-        eventChance: 0.24, boss: false
+        eventChance: 0.24
     },
 
     // ── 시즌 전용 맵 (liveConfig.seasonEvent.active 시에만 접근 가능) ──────────
@@ -399,7 +399,7 @@ export const MAPS: any = {
         seasonOnly: true,
         desc: '봄 축제 기간에만 열리는 비밀 정원입니다. 풍요로운 보상이 기다립니다.',
         lore: '고대 요정들이 봄마다 여는 신성한 정원. 계절의 마법이 넘쳐흐릅니다.',
-        eventChance: 0.45, boss: false,
+        eventChance: 0.45,
         bossMonsters: ['봄의 여왕']
     },
     '서리 폭풍 유적': {
