@@ -298,8 +298,8 @@ export const MONSTERS: any = {
         expMult: 5.0,
         goldMult: 5.0,
         dropMod: 5.0,
-        phase2: { name: '분노한 원시의 신', atkBonus: 0.5, pattern: { guardChance: 0.0, heavyChance: 0.55 }, log: '원시의 신이 고대의 분노를 해방했습니다! 세계의 근원이 흔들립니다...', statusEffect: 'burn', threshold: 0.5 },
-        phase3: { name: '원초적 혼돈', atkBonus: 0.9, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '원시의 신이 존재 자체를 무너뜨립니다. 이것이 진짜 끝입니다!', statusEffect: 'curse', threshold: 0.25 },
+        phase2: { name: '분노한 원시의 신', atkBonus: 0.5, pattern: { guardChance: 0.0, heavyChance: 0.55 }, log: '원시의 신이 고대의 분노를 해방했습니다! 세계의 근원이 흔들립니다...', statusEffect: 'burn' },
+        phase3: { name: '원초적 혼돈', atkBonus: 0.9, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '원시의 신이 존재 자체를 무너뜨립니다. 이것이 진짜 끝입니다!', statusEffect: 'curse' },
     },
 
     // ── Sprint 18: 신규 일반 몬스터 25종 ────────────────────────────────────
@@ -353,7 +353,7 @@ export const MONSTERS: any = {
         hpMult: 2.0, atkMult: 1.7, expMult: 4.0, goldMult: 4.0, dropMod: 5.0,
         pattern: { guardChance: 0.05, heavyChance: 0.5 },
         phase2: { name: '해방된 공허의 군주', atkBonus: 0.8, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '공허가 세계를 집어삼킵니다! 군주가 진정한 힘을 드러냅니다!', statusEffect: 'burn' },
-        phase3: { name: '공허의 심연', atkBonus: 1.2, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '모든 것이 공허로 돌아갑니다!', statusEffect: 'curse', threshold: 0.25 },
+        phase3: { name: '공허의 심연', atkBonus: 1.2, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '모든 것이 공허로 돌아갑니다!', statusEffect: 'curse' },
     },
 
     // ── Sprint 21: 신규 지역 몬스터 ─────────────────────────────────────────
@@ -487,7 +487,7 @@ export const MONSTERS: any = {
         hpMult: 1.75, atkMult: 1.38, expMult: 3.2, goldMult: 3.0, dropMod: 4.0,
         pattern: { guardChance: 0.15, heavyChance: 0.45 },
         phase2: { name: '해방된 수호신의 사도', atkBonus: 0.55, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '수호신의 힘이 완전히 해방되었습니다! 신전 전체가 빛으로 가득 찹니다!', statusEffect: 'burn' },
-        phase3: { name: '수호신의 심판', threshold: 0.25, atkBonus: 0.9, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '수호신이 최후의 심판을 내립니다!', statusEffect: 'curse' },
+        phase3: { name: '수호신의 심판', atkBonus: 0.9, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '수호신이 최후의 심판을 내립니다!', statusEffect: 'curse' },
     },
     '균열의 사령관': {
         isBoss: true, weakness: '빛', resistance: '어둠',
@@ -588,7 +588,7 @@ export const MONSTERS: any = {
         goldMult: 4.5,
         dropMod: 5.0,
         phase2: { name: '분노한 공허의 심판자', atkBonus: 0.65, pattern: { guardChance: 0.0, heavyChance: 0.72 }, log: '공허의 심판자가 우주의 법칙으로 심판을 내립니다! 시간과 공간이 멈춥니다!', statusEffect: 'stun' },
-        phase3: { name: '절대 심판', threshold: 0.25, atkBonus: 1.0, defBonus: 20, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '심판이 최고조에 달합니다! 모든 저항이 무의미합니다!', statusEffect: 'curse' },
+        phase3: { name: '절대 심판', atkBonus: 1.0, defBonus: 20, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '심판이 최고조에 달합니다! 모든 저항이 무의미합니다!', statusEffect: 'curse' },
     },
     // 심연 90층 보스
     '허무의 황제': {
@@ -613,7 +613,7 @@ export const MONSTERS: any = {
         expMult: 8.0,
         goldMult: 8.0,
         dropMod: 10.0,
-        phase2: { name: '분노한 공허의 신', atkBonus: 0.8, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '공허의 신이 우주 창조 이전의 원초적 힘을 해방했습니다! 모든 것이 무로 돌아가려 합니다!', statusEffect: 'curse', threshold: 0.5 },
+        phase2: { name: '분노한 공허의 신', atkBonus: 0.8, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '공허의 신이 우주 창조 이전의 원초적 힘을 해방했습니다! 모든 것이 무로 돌아가려 합니다!', statusEffect: 'curse' },
         phase3: { name: '절대 공허', threshold: 0.2, atkBonus: 1.5, defBonus: 40, pattern: { guardChance: 0.0, heavyChance: 0.88 }, log: '공허의 신이 존재의 근원을 집어삼킵니다! 이것이 진정한 끝... 모든 창조물이 소멸합니다!', statusEffect: 'curse' },
     },
 
@@ -721,7 +721,7 @@ export const MONSTERS: any = {
         hpMult: 2.2, atkMult: 1.55, expMult: 3.0, goldMult: 2.8, dropMod: 3.5,
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '각성한 에테르 심판자', atkBonus: 0.5, pattern: { guardChance: 0.05, heavyChance: 0.6 }, log: '에테르 심판자가 차원의 법칙을 재편합니다! 공간이 뒤틀리기 시작합니다!', statusEffect: 'burn' },
-        phase3: { name: '에테르의 절대 심판', threshold: 0.25, atkBonus: 0.85, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '심판자가 에테르의 근원과 하나가 됩니다! 모든 저항이 무력화됩니다!', statusEffect: 'curse' },
+        phase3: { name: '에테르의 절대 심판', atkBonus: 0.85, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '심판자가 에테르의 근원과 하나가 됩니다! 모든 저항이 무력화됩니다!', statusEffect: 'curse' },
     },
 
     // 공허의 회랑 (Lv70) — 3 regular + 1 boss
