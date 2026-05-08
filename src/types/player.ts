@@ -5,7 +5,8 @@
  * 점진 적용용 — strict하게 만들지 말고 필드는 optional 위주.
  */
 
-import type { EquipSlots, Item, ConsumableItem } from './item.js';
+// cycle 319: ConsumableItem 미사용 import 제거 — player.ts는 Item / EquipSlots만 참조.
+import type { EquipSlots, Item } from './item.js';
 
 /**
  * PlayerStats — `[key: string]: any` 인덱스 시그니처로 ad-hoc 필드 허용.
