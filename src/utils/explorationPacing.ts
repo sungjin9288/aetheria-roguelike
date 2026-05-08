@@ -11,7 +11,9 @@ export const DEFAULT_EXPLORE_STATE = Object.freeze({
 
 const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
 
-export const getExploreState = (stats: any = {}) => {
+// cycle 297: export 제거 — explorationPacing 내부 4회 사용만 (getNarrativeEventChance/
+// getQuietExplorationChance/getDiscoveryOdds/advanceExploreState), 외부 consumer 0건.
+const getExploreState = (stats: any = {}) => {
     const raw = stats?.exploreState || {};
     return {
         sinceNarrativeEvent: Math.max(0, raw.sinceNarrativeEvent || 0),
