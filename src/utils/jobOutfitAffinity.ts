@@ -25,7 +25,6 @@ interface AffinityBonus {
 
 interface OutfitAffinity {
     matchCount: number;
-    totalSlots: number;
     bonus: AffinityBonus;
     label: string | null;
     tier: AffinityTier;
@@ -104,10 +103,11 @@ const isJobMatch = (item: ItemLike | null | undefined, job: string): boolean => 
 /**
  * matchCount=3 → 풀 보너스. matchCount=2 → 중간. matchCount=1 → 약 ATK. 0 → 없음.
  */
+// cycle 346: totalSlots 출력 dead 정리 — affinity.totalSlots / aff.totalSlots read 0건이던 dead.
+//   OutfitAffinity interface에서도 totalSlots 제거 (private interface).
 export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
     const empty: OutfitAffinity = {
         matchCount: 0,
-        totalSlots: 0,
         bonus: {},
         label: null,
         tier: 'none',
@@ -125,13 +125,9 @@ export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
         (slots.weapon ? 1 : 0) +
         (slots.armor ? 1 : 0) +
         (slots.offhand ? 1 : 0);
-    const totalSlots =
-        (player.equip?.weapon ? 1 : 0) +
-        (player.equip?.armor ? 1 : 0) +
-        (player.equip?.offhand ? 1 : 0);
 
     if (matchCount === 0) {
-        return { ...empty, totalSlots, slots };
+        return { ...empty, slots };
     }
 
     let bonus: AffinityBonus;
@@ -148,7 +144,7 @@ export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
     }
     const label = buildAffinityLabel(job, tier);
 
-    return { matchCount, totalSlots, bonus, label, tier, slots };
+    return { matchCount, bonus, label, tier, slots };
 };
 
 /**
