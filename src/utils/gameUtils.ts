@@ -387,11 +387,12 @@ export const migrateData = (rawData: any) => {
     //   undefined 안전. 객체 자체 초기화만 필요.
     target.meta = target.meta || { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 };
     target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0 };
-    target.stats.rests = target.stats.rests || 0;
     // cycle 376: bountyDate / bountyIssued normalizations 제거 — 모든 consumer가
     //   strict equality (`bountyDate === today`) 또는 truthy 체크 (`&& bountyIssued`)
     //   로 undefined 안전 처리. Boolean coercion / `|| null` 정규화 redundant.
-    target.stats.bountiesCompleted = target.stats.bountiesCompleted || 0;
+    // cycle 377: stats.rests / bountiesCompleted fallback 제거 (cycle 373/374/376 동일 lens) —
+    //   모든 consumer가 이미 `|| 0` fallback 처리. ascensionActions 직접 read도 checkTitles
+    //   `|| 0` fallback으로 안전.
     target.stats.claimedAchievements = Array.isArray(target.stats.claimedAchievements) ? target.stats.claimedAchievements : [];
     // cycle 260: stats.claimedQuestIds 정규화 — quest 완료 영구 ledger. checkTitles
     //   questReward fallback handler가 의존. cycle 202 claimedAchievements 패턴 동일.
