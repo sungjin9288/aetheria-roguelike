@@ -674,7 +674,8 @@ export const buildRunSummary = (player: Player, loc: any) => {
         prestigeRank: player.meta?.prestigeRank || 0,
         totalGold:    player.stats?.total_gold || 0,
         primaryBuild: buildProfile.primary.name,
-        buildTags:    buildProfile.tags.map((tag: any) => tag.name).slice(0, 4),
+        // cycle 344: buildTags 필드 제거 — RunSummaryCard / runShareText / outcomeAnalysis
+        //   어디에서도 summary.buildTags read 0건이던 dead output.
         difficultyLabel: getDifficultyMults(calcPerformanceScore(player)).label,
         recentWinRate: recentBattles.length > 0
             ? Math.round((recentBattles.filter((battle: any) => battle.result === 'win').length / recentBattles.length) * 100)

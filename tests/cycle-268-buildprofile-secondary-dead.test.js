@@ -55,14 +55,11 @@ test('cycle 268: getRunBuildProfile primary / tags 필드 유지 (회귀 가드)
 });
 
 test('cycle 268: buildProfile.tags 컴포넌트 dispatch 유지 (회귀 가드)', async () => {
-    const sources = await Promise.all([
-        readSrc('src/utils/gameUtils.ts'),
-        readSrc('src/hooks/useGameEngine.ts'),
-    ]);
-    sources.forEach((src, i) => {
-        assert.ok(/buildProfile\.tags/.test(src),
-            `[file ${i}] buildProfile.tags 접근 유지`);
-    });
+    // cycle 344: gameUtils.ts buildTags 출력 dead 정리 후 useGameEngine.ts만 유지.
+    //   AI snapshot (playerSnapshot.buildProfile)이 유일한 active dispatch.
+    const source = await readSrc('src/hooks/useGameEngine.ts');
+    assert.ok(/buildProfile\.tags/.test(source),
+        'useGameEngine buildProfile.tags AI snapshot dispatch 유지');
 });
 
 test('cycle 267 회귀 가드: skillLabel 0건 유지', async () => {
