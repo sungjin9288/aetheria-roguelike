@@ -2,7 +2,8 @@
  * codexRewards.js — 도감 마일스톤 보상 정의
  * 각 카테고리별 발견 수에 따른 보상 + 프리미엄 재화
  */
-export const CODEX_MILESTONES: any = {
+// cycle 286: export 제거 — getCodexProgress 내부에서만 사용. private const로 downgrade.
+const CODEX_MILESTONES: any = {
     weapons: [
         { count: 5,  reward: { atk: 2 }, label: '무기 수집가 I' },
         { count: 15, reward: { atk: 4, premiumCurrency: 5 }, label: '무기 수집가 II' },
