@@ -7,6 +7,47 @@
 
 ---
 
+## Cycle 380 🎯 — CHANGELOG에 cycles 371-379 history 일괄 추가
+
+- 마일스톤: cycle 370 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340 / 350 / 360 / 370에 이은 19번째 batch.
+- 누적 마일스톤: cycle 370(unit 1791) → 379(unit 1829, +38). silent dead config 시리즈 cycle 222→379 144번째 도달. unit count 1800+ 도달.
+- 시리즈 정체성: 9 사이클 중 2(cycle 371-372)는 maps redundant defaults, 7(cycle 373-379)는 migrateData defensive fallback redundancy — **최장 7사이클 연속 동일 lens**.
+- 본 batch 핵심 통찰: "consumer-level fallback이 이미 보호하는 영역의 migrate-level normalization은 redundant" — 32+ 누적 fallback 정리.
+
+검증: tsc 0 / unit 1829 / lint clean / build-guard ok.
+
+---
+
+## Cycle 371-379 — Maps redundant defaults + migrateData defensive fallback 7사이클 lens
+
+cycle 367 maps redundant pattern 후속으로 maps 추가 정리(371-372), 그 후 cycle 373부터 7사이클 연속 migrateData defensive fallback redundancy 정리. 본 시리즈 가장 긴 동일 lens 연속.
+
+### Maps redundant default annotations (cycle 371-372, 2사이클)
+
+- 371: maps safe-zone `eventChance: 0` 5회 — `mapData.eventChance || 0` fallback + `type === 'safe'` early return으로 명시 불필요. 황금 왕국 (eventChance: 0.28) 보존.
+- 372: maps safe-zone `monsters: []` 5회 — 모든 consumer가 `|| []` fallback. 황금 왕국 monsters 배열 보존.
+
+### migrateData defensive fallback redundancy (cycle 373-379, 7사이클 — 최장 lens)
+
+- 373: meta sub-field fallback 5회 (essence/rank/bonusAtk/bonusHp/bonusMp) — 모든 consumer `|| 0` 또는 CombatEngine DEFAULT_META 병합으로 안전.
+- 374: tempBuff sub-field fallback 3회 (atk/def/turn) — statsCalculator `|| 0` + playerStateUtils EMPTY_TEMP_BUFF 병합.
+- 375: activeTitle fallback 1회 — 모든 consumer truthy 체크 또는 `|| null`.
+- 376: bountyDate / Boolean(bountyIssued) 2회 — strict equality + truthy 체크로 undefined 안전.
+- 377: stats.rests / bountiesCompleted 2회 — 모든 consumer `|| 0` fallback. ascensionActions 직접 read도 checkTitles fallback.
+- 378: 8 sub-field 일괄 (prestigeRank/relicCount/crafts/buildWins/abyssFloor/abyssRecord/demonKingSlain/dailyProtocol) — 본 시리즈 가장 큰 단일 batch.
+- 379: claimedAchievements normalization 1회 — claimedQuestIds는 cycle 260 회귀 가드로 보존.
+
+### 보존된 fallback (회귀 가드)
+
+- escapes / syntheses / maxKillStreak / discoveryChains: cycle 120/131 migrate output 명시 검증.
+- claimedQuestIds: cycle 260 migrate output 명시 검증.
+- visitedMaps: 직후 `.includes()` / `.push()` 직접 호출 의존.
+- exploreState: spread 패턴으로 객체 보장 필요.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 370 🎯 — CHANGELOG에 cycles 361-369 history 일괄 추가
 
 - 마일스톤: cycle 360 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340 / 350 / 360에 이은 18번째 batch.
