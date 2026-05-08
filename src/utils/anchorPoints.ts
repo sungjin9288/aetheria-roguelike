@@ -12,11 +12,12 @@
 // ──────────────────────────────────────────────────────────────────────────
 // Anchor points (72×72 viewBox 좌표)
 // ──────────────────────────────────────────────────────────────────────────
+// cycle 363: shoulder_l / shoulder_r 2 anchors 제거 — placement 함수에서 anchor로 사용 0건.
+//   AVATAR_ANCHORS 정의만 있고 placement 매핑 없음. 활성 anchor 7종 (head_top / head_center /
+//   torso_center / back_anchor / hand_front / hand_back / feet)만 유지.
 export const AVATAR_ANCHORS = Object.freeze({
     head_top: { x: 30, y: 18 },
     head_center: { x: 30, y: 25 },
-    shoulder_l: { x: 22, y: 32 },
-    shoulder_r: { x: 40, y: 32 },
     torso_center: { x: 34, y: 45 },
     back_anchor: { x: 34, y: 45 },
     hand_front: { x: 53, y: 46 },
