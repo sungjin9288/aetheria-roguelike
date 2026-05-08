@@ -7,6 +7,43 @@
 
 ---
 
+## Cycle 370 🎯 — CHANGELOG에 cycles 361-369 history 일괄 추가
+
+- 마일스톤: cycle 360 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340 / 350 / 360에 이은 18번째 batch.
+- 누적 마일스톤: cycle 360(unit 1752) → 369(unit 1791, +39). silent dead config 시리즈 cycle 222→369 135번째 도달.
+- 시리즈 정체성 변화: cycle 357-359 (3사이클) unreachable lens 도입 후, cycle 361-368 (8사이클) unreachable + redundant default annotation 일괄 — 9사이클 중 8사이클이 새 lens. cycle 369는 private downgrade로 회귀.
+- 본 batch 핵심 패턴: "fallback default와 동일 값을 명시한 redundant config" — cycle 364부터 cycle 368까지 5사이클 연속.
+
+검증: tsc 0 / unit 1791 / lint clean / build-guard ok.
+
+---
+
+## Cycle 361-369 — Unreachable + Redundant default annotation lens 8사이클 + private downgrade 회귀
+
+cycle 357-359 unreachable lens에 이어 8사이클 — 데이터 파일에서 fallback default와 동일 값을 명시한 redundant config 정리. cycle 369는 type export private downgrade로 cycle 295/298/312/316 lens 회귀.
+
+### Unreachable lookup duplicate (cycle 361-363, 3사이클)
+
+- 361: JOB_AFFINITY_NAMES `'그림자주군'` (공백 제거) 중복 키 — buildAffinityLabel은 player.job (`'그림자 주군'` 정식 표기)을 normalize 없이 직접 lookup. JOB_SPRITE_SLUG_MAP과 패턴 비대칭.
+- 362: JOB_STYLE_MAP / DEFAULT_JOB_STYLE hairStyle 15회 — cycle 342에서 deriveCharacterAppearance 출력 hairStyle 제거 cascade. 정의만 잔존, read 0건.
+- 363: AVATAR_ANCHORS shoulder_l/shoulder_r 2 anchors — placement 함수에서 anchor로 사용 0건. tests도 7 anchor (shoulder 제외)만 검증.
+
+### Redundant default annotation (cycle 364-368, 5사이클)
+
+- 364: eventChain reward itemType (4회) / tier (3회) — eventActions는 reward.name만 read하고 addItemByName이 DB.ITEMS에서 type/tier lookup.
+- 365: eventChain outcome chainId 70개 — 13 chain의 모든 outcome에 parent chain.id mirror, eventActions는 currentEvent._chainId만 read. 가장 큰 단일 정리.
+- 366: monster phase2/phase3 threshold default 7회 — phase2 0.5 (BOSS_PHASE2_THRESHOLD 동일) × 2, phase3 0.25 (CombatEngine fallback 동일) × 5. 다른 값(0.2)인 phase3는 보존.
+- 367: maps boss: false 4회 — 모든 boss 사용 사이트가 falsy 체크라 명시 불필요.
+- 368: relic prophecy_stone (threshold: 0.25) + quest 62 (threshold: 0.2) 2회 — 각각 CombatEngine.executeAtkRelic / questProgress.questData fallback과 동일.
+
+### Private downgrade 회귀 (cycle 369)
+
+- 369: ItemBase type export → private — 외부 import 0건. 동일 파일 Item 유니온 / EquipSlots 필드 internal reference로만 사용. cycle 298 lens 회귀 (ConsumableItem은 cycle 298 회귀 가드로 보존).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 360 🎯 — CHANGELOG에 cycles 351-359 history 일괄 추가
 
 - 마일스톤: cycle 350 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340 / 350에 이은 17번째 batch.
