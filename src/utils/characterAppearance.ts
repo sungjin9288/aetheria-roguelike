@@ -6,7 +6,6 @@ import { getEquipmentArtProfile } from './equipmentArt.js';
 import { getArmorStyleFromItem, getAvatarLoadoutStyle, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
 
 const DEFAULT_JOB_STYLE: any = {
-    hairStyle: 'bob',
     hairColor: '#7a4f3d',
     outfitColor: '#5b7dd8',
     accentColor: '#f6e7c8',
@@ -15,20 +14,20 @@ const DEFAULT_JOB_STYLE: any = {
 };
 
 const JOB_STYLE_MAP: any = {
-    모험가: { hairStyle: 'bob', hairColor: '#7a4f3d', outfitColor: '#5b7dd8', accentColor: '#f6e7c8', armorStyle: 'coat', accessoryStyle: 'ribbon' },
-    전사: { hairStyle: 'spike', hairColor: '#4d3c2f', outfitColor: '#6b7280', accentColor: '#d5b180', armorStyle: 'plate', accessoryStyle: 'plume' },
-    나이트: { hairStyle: 'crest', hairColor: '#5a4638', outfitColor: '#64748b', accentColor: '#f6e7c8', armorStyle: 'plate', accessoryStyle: 'crest' },
-    버서커: { hairStyle: 'spike', hairColor: '#6b2f2f', outfitColor: '#7c3f3f', accentColor: '#f97316', armorStyle: 'plate', accessoryStyle: 'horn' },
-    도적: { hairStyle: 'short', hairColor: '#2f3f4a', outfitColor: '#475569', accentColor: '#7dd4d8', armorStyle: 'leather', accessoryStyle: 'mask' },
-    어쌔신: { hairStyle: 'bangs', hairColor: '#1f2937', outfitColor: '#553c7b', accentColor: '#f472b6', armorStyle: 'leather', accessoryStyle: 'mask' },
-    레인저: { hairStyle: 'ponytail', hairColor: '#6b4f3d', outfitColor: '#4f6f52', accentColor: '#86efac', armorStyle: 'coat', accessoryStyle: 'leaf' },
-    마법사: { hairStyle: 'long', hairColor: '#4a2f5f', outfitColor: '#5b4b9a', accentColor: '#7dd4d8', armorStyle: 'robe', accessoryStyle: 'hat' },
-    아크메이지: { hairStyle: 'long', hairColor: '#3f2b63', outfitColor: '#5f59b5', accentColor: '#e3dcff', armorStyle: 'robe', accessoryStyle: 'circlet' },
-    흑마법사: { hairStyle: 'long', hairColor: '#251633', outfitColor: '#4b2d63', accentColor: '#c084fc', armorStyle: 'robe', accessoryStyle: 'horn' },
-    팔라딘: { hairStyle: 'crest', hairColor: '#6f543d', outfitColor: '#7087a6', accentColor: '#f6e7c8', armorStyle: 'plate', accessoryStyle: 'halo' },
-    시간술사: { hairStyle: 'bob', hairColor: '#48607b', outfitColor: '#506c92', accentColor: '#dff7f5', armorStyle: 'robe', accessoryStyle: 'clock' },
-    '그림자 주군': { hairStyle: 'bangs', hairColor: '#1c1730', outfitColor: '#41305d', accentColor: '#e879f9', armorStyle: 'leather', accessoryStyle: 'shadow' },
-    대마법사: { hairStyle: 'long', hairColor: '#3f2b63', outfitColor: '#6073c8', accentColor: '#dff7f5', armorStyle: 'robe', accessoryStyle: 'circlet' },
+    모험가: { hairColor: '#7a4f3d', outfitColor: '#5b7dd8', accentColor: '#f6e7c8', armorStyle: 'coat', accessoryStyle: 'ribbon' },
+    전사: { hairColor: '#4d3c2f', outfitColor: '#6b7280', accentColor: '#d5b180', armorStyle: 'plate', accessoryStyle: 'plume' },
+    나이트: { hairColor: '#5a4638', outfitColor: '#64748b', accentColor: '#f6e7c8', armorStyle: 'plate', accessoryStyle: 'crest' },
+    버서커: { hairColor: '#6b2f2f', outfitColor: '#7c3f3f', accentColor: '#f97316', armorStyle: 'plate', accessoryStyle: 'horn' },
+    도적: { hairColor: '#2f3f4a', outfitColor: '#475569', accentColor: '#7dd4d8', armorStyle: 'leather', accessoryStyle: 'mask' },
+    어쌔신: { hairColor: '#1f2937', outfitColor: '#553c7b', accentColor: '#f472b6', armorStyle: 'leather', accessoryStyle: 'mask' },
+    레인저: { hairColor: '#6b4f3d', outfitColor: '#4f6f52', accentColor: '#86efac', armorStyle: 'coat', accessoryStyle: 'leaf' },
+    마법사: { hairColor: '#4a2f5f', outfitColor: '#5b4b9a', accentColor: '#7dd4d8', armorStyle: 'robe', accessoryStyle: 'hat' },
+    아크메이지: { hairColor: '#3f2b63', outfitColor: '#5f59b5', accentColor: '#e3dcff', armorStyle: 'robe', accessoryStyle: 'circlet' },
+    흑마법사: { hairColor: '#251633', outfitColor: '#4b2d63', accentColor: '#c084fc', armorStyle: 'robe', accessoryStyle: 'horn' },
+    팔라딘: { hairColor: '#6f543d', outfitColor: '#7087a6', accentColor: '#f6e7c8', armorStyle: 'plate', accessoryStyle: 'halo' },
+    시간술사: { hairColor: '#48607b', outfitColor: '#506c92', accentColor: '#dff7f5', armorStyle: 'robe', accessoryStyle: 'clock' },
+    '그림자 주군': { hairColor: '#1c1730', outfitColor: '#41305d', accentColor: '#e879f9', armorStyle: 'leather', accessoryStyle: 'shadow' },
+    대마법사: { hairColor: '#3f2b63', outfitColor: '#6073c8', accentColor: '#dff7f5', armorStyle: 'robe', accessoryStyle: 'circlet' },
 };
 
 const ELEMENT_COLOR_MAP: any = {
