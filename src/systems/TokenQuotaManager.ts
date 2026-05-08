@@ -26,10 +26,7 @@ export const TokenQuotaManager = {
         return quota.used < this.DAILY_LIMIT;
     },
 
-    getRemainingCalls() {
-        const quota = this.getQuotaData();
-        return Math.max(0, this.DAILY_LIMIT - quota.used);
-    },
+    // cycle 326: getRemainingCalls 메서드 제거 — 외부/내부 호출 0건이던 dead method.
 
     recordCall() {
         const quota = this.getQuotaData();
