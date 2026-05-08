@@ -7,6 +7,68 @@
 
 ---
 
+## Cycle 340 🎯 — CHANGELOG에 cycles 321-339 history 일괄 추가
+
+- 마일스톤: cycle 320 batch 이후 19 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320에 이은 15번째 batch.
+- 누적 마일스톤: cycle 320(unit 1606) → 330(unit 1642) → 339(unit 1680, +74 from cycle 320). silent dead config 시리즈 cycle 222→339 108번째 도달.
+- 시리즈 정체성: 19 사이클 모두 cleanup lens — silent dead config 제거. 본 batch 핵심 lens 분기:
+  · cycle 321-323: import 표면 batch cleanup (8+55+3 files).
+  · cycle 324-329: dead module/method 제거.
+  · cycle 330-339: cycle 310 FocusPanel 제거 cascade — adventureGuide 5+ 출력 필드 + 의존 surface 정리.
+
+검증: tsc 0 / unit 1680 / lint clean / build-guard ok.
+
+---
+
+## Cycle 333-339 — Function output field dead cleanup 시리즈 7사이클 (cycle 310 cascade)
+
+cycle 310 (FocusPanel orphan 제거) 이후 adventureGuide / outcomeAnalysis / synthesisUtils / enhancementUtils 등 helper 함수의 출력 필드가 외부 read 0건으로 cascade dead. 7 사이클 연속 정리.
+
+- 333: getMoveRecommendations 4 출력 필드 (score/isSafeTarget/isVisited/isBoss) — score는 _sortKey internal로 변경. 활성: name/badge/reason/levelLabel/chips/undiscoveredSignatureCount/isRecommended.
+- 334: getQuestTracker.detail (claimable + active 분기 모두) + getExplorationForecast.description (4 분기) — read 0건 메타데이터.
+- 335: getMapPacingProfile.note 5회 (safe/boss/volatile/hostile/frontier 분기) — pacing 메모 노출되지만 read 0건.
+- 336: getPostCombatAnalysis hpRatio / mpRatio 출력 — 내부 grade/notes/actions 분기 계산용으로만 사용, 외부 read 0건.
+- 337: getEnhanceAvailability materialCount 5회 출력 — material 부족 분기 내부 계산용 const는 유지, 출력 필드만 제거.
+- 338: validateSynthesis 성공 분기 type 출력 — read 0건. CraftingPanel은 outputs/goldCost/successRate/tier만 사용.
+- 339: getSynthesisGroups rarity 출력 필드 + getItemRarity cascade import 정리 — group.rarity read 0건이라 그 import도 cascade dead.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 330-332 — getAdventureGuidance cascade dead 시리즈 3사이클 (cycle 310 paired)
+
+cycle 310 FocusPanel 제거의 직접 cascade로 adventureGuide 메타 surface 일괄 정리.
+
+- 330: SignalBadge 'signature' tone class — cycle 23 시점 FocusPanel `'확률 증폭'` emphasis surface용으로 도입했지만 cycle 310 cascade dead.
+- 331: getAdventureGuidance emphasis 11회 (진행 우선 / 즉시 이득 / 성장 분기 / 안정 우선 / 정화 우선 / 정리 권장 / 확률 증폭 / 목표 설정 / 위험 / 현상수배|임무 진행 / 다음 지역|전진) — read 0건 일괄 cleanup.
+- 332: getAdventureGuidance secondaryAction 11회 + mpRatio 변수 cascade dead — secondaryAction read 0건 + mpRatio는 'MP도 회복' 분기 외 read 0건.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 324-329 — Dead module / method / field cleanup 시리즈 6사이클
+
+다양한 곳의 dead surface batch 정리.
+
+- 324: firebase.ts `app` dead export 제거 — import 0건. auth/db/hasFirebaseConfig만 active.
+- 325: SoundManager 'hover' case dead branch 제거 — sound dispatch 0건이던 case + cycle 134/220 lock test 동기 갱신.
+- 326: TokenQuotaManager.getRemainingCalls dead method — 외부/내부 호출 0건.
+- 327: JOB_TYPICAL_LOADOUT dead data export + paired test cleanup — cycle 43-46 outfit affinity 표시용 13 직업 매핑 데이터, dispatch 미구현.
+- 328: BossPhase type private downgrade — phase2/phase3 필드 타입으로만 사용, 외부 import 0건.
+- 329: useGameTestApi 3 dead methods (getState / clearPostCombat / injectAscensionPreview) — scripts/, tests/, docs 어디에서도 호출 0건.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+## Cycle 321-323 — Import 표면 batch cleanup 시리즈 3사이클
+
+unused import 일괄 정리. 단일 cycle 최대 파일 갯수 (cycle 322 55 files) 포함.
+
+- 321: 8 files 10 unused imports 일괄 cleanup — equipmentUtils Player, Codex BALANCE+MSG, CombatEngine LOOT_TABLE+DROP_TABLES, messages.ts DB, MonsterCodex Lock, CodexDiscoveryOverlay MSG, EquipmentCodexCard BALANCE, WeaponCodex BALANCE.
+- 322: **55 files unused React default import** 일괄 정리 (단일 cycle 최대 파일 갯수). tsconfig "jsx": "react-jsx" automatic runtime 덕분에 React.X 사용 0건이면 default import 불필요.
+- 323: 3 leftover unused imports (cycle 321/322 paired) — exploreUtils Monster, SkillTreePreview RefreshCw, Codex Shield 잔존.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 320 🎯 — CHANGELOG에 cycles 301-319 history 일괄 추가
 
 - 마일스톤: cycle 300 batch 이후 19 사이클 미반영 상태 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300에 이은 14번째 batch.
