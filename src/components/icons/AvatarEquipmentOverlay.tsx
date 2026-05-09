@@ -35,7 +35,10 @@ const resolveArmorLayer = (appearance: any) => {
     return 'front';
 };
 
-const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null, layer = 'front' }: any) => {
+// cycle 431: default layer 값 제거 — 2 호출자 (EquipmentAvatarPreview의 back/
+//   front 레이어 분리 호출) 모두 명시 전달이라 default 도달 불가. className /
+//   dataTestId는 호출자 누락이라 default 활성 path → 보존.
+const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null, layer }: any) => {
     const offhandOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.offhand?.item);
     const weaponOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.weapon?.item);
     const armorOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.armor?.item);
