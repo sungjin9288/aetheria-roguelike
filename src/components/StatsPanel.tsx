@@ -15,12 +15,13 @@ interface StatsPanelProps {
  * Signature 세트 tone → 색상 매핑.
  * EquipmentPanel.jsx의 SIG_SET_TONE과 동일한 팔레트 — 시각적 일관성 유지.
  */
+// cycle 411: frost / arcane 제거 — signatureSets.json sets는 fire/holy/nature/shadow
+//   4 tone만 emit. activeSignatureSet.tone / setProgress.tone 모두 동일 데이터 source라
+//   frost / arcane lookup 절대 hit 안 됨 (cycle 358 steel 동일 lens).
 const SIG_SET_TONE: any = Object.freeze({
     holy: { border: 'rgba(246,231,162,0.5)', glow: 'rgba(246,231,162,0.18)', text: '#f6e7a2' },
     fire: { border: 'rgba(255,180,138,0.5)', glow: 'rgba(255,180,138,0.18)', text: '#ffb48a' },
-    frost: { border: 'rgba(204,232,245,0.5)', glow: 'rgba(204,232,245,0.18)', text: '#cce8f5' },
     shadow: { border: 'rgba(199,164,240,0.5)', glow: 'rgba(199,164,240,0.18)', text: '#c7a4f0' },
-    arcane: { border: 'rgba(192,176,232,0.5)', glow: 'rgba(192,176,232,0.18)', text: '#c0b0e8' },
     nature: { border: 'rgba(168,208,160,0.5)', glow: 'rgba(168,208,160,0.18)', text: '#a8d0a0' },
 });
 
