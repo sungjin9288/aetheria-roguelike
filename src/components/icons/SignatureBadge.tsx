@@ -13,6 +13,9 @@ import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signa
 // cycle 413: steel 제거 — signatureRegistry.json은 8 tone (arcane/earth/fire/
 //   frost/holy/nature/rust/shadow)만 emit. TONE_COLORS.steel lookup 절대 hit
 //   안 됨 (cycle 358 / 412 paired completion).
+// cycle 427: rust 엔트리 추가 — '광기의 갑주' (rust signature) 등이 등록돼 있는데
+//   SignatureBadge만 누락이라 fallback(holy gold)으로 표시되던 silent UI 결손 fix.
+//   다른 surface (LegendaryDropOverlay/LegendaryCodex/ItemIcon) 모두 rust 보유.
 const TONE_COLORS: any = Object.freeze({
     holy: { fill: '#f6e7a2', glow: 'rgba(246,231,162,0.6)', stroke: '#5a4620' },
     fire: { fill: '#ffb48a', glow: 'rgba(255,180,138,0.6)', stroke: '#6a2e16' },
@@ -21,6 +24,7 @@ const TONE_COLORS: any = Object.freeze({
     arcane: { fill: '#c0b0e8', glow: 'rgba(192,176,232,0.6)', stroke: '#31245d' },
     nature: { fill: '#a8d0a0', glow: 'rgba(168,208,160,0.6)', stroke: '#2d4226' },
     earth: { fill: '#d8b878', glow: 'rgba(216,184,120,0.55)', stroke: '#4c3720' },
+    rust: { fill: '#d9a56c', glow: 'rgba(217,165,108,0.55)', stroke: '#4a2e16' },
 });
 
 const DEFAULT_TONE_COLOR = TONE_COLORS.holy;
