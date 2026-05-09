@@ -75,13 +75,14 @@ const MOBILE_LOG_BADGES: any = {
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system', 'legendary']);
 const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
 
+// cycle 404: `stats?: any;` 제거 — 본체 destructure 미사용 + read 0건.
+//   MobileGameLayout이 prop pass했으나 silent dropped (paired remove).
 interface TerminalViewProps {
     logs?: any[];
     gameState?: string;
     onCommand?: (cmd: string) => void;
     autoFocusInput?: boolean;
     player?: Player | null;
-    stats?: any;
     quickSlots?: any[];
     onQuickSlotUse?: (item: any, idx: number) => void;
     showInput?: boolean;

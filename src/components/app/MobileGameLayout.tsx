@@ -93,7 +93,6 @@ const MobileGameLayout = ({
                         onCommand={engine.handleCommand}
                         autoFocusInput={false}
                         player={engine.player}
-                        stats={fullStats}
                         quickSlots={engine.quickSlots}
                         onQuickSlotUse={handleQuickSlotUse}
                         showInput={false}
