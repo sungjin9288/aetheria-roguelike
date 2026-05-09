@@ -1,3 +1,7 @@
+// cycle 395: '그림자 주군' (공백 포함) 키 제거 — resolveAppearanceKeys가 항상
+//   `appearance.job.replace(/\s+/g, '')`로 공백을 strip 후 lookup해 with-space 키
+//   unreachable. CLASSES.ts에서 dispatch된 '그림자 주군'은 normalize 후 '그림자주군'
+//   단일 키로 hit. cycle 361 jobOutfitAffinity 동일 lens 회귀 (변형: normalize-bypass).
 export const JOB_SPRITE_SLUG_MAP: Record<string, string> = {
     모험가: 'adventurer',
     전사: 'warrior',
@@ -12,7 +16,6 @@ export const JOB_SPRITE_SLUG_MAP: Record<string, string> = {
     팔라딘: 'paladin',
     시간술사: 'chronomancer',
     그림자주군: 'shadow-lord',
-    '그림자 주군': 'shadow-lord',
     대마법사: 'grand-mage',
 };
 
@@ -85,26 +88,8 @@ const resolveAppearanceKeys = (appearance: any) => {
     return { jobSlug, armorStyle, loadoutStyle };
 };
 
-/**
- * 무기가 baked-in 되어있지 않은 베이스 sprite 셋.
- * AvatarEquipmentOverlay가 무기를 그리는데 베이스에도 무기가 있으면
- * 시각 충돌 + redundancy 발생. 이 셋의 sprite는 빈 손이라 overlay가 정상 동작.
- *
- * 시각 감사 결과 (cycle 35):
- *   ✓ adventurer (generic, weaponless)
- *   ✓ adventurer-coat (weaponless)
- *   ✓ adventurer-leather (weaponless)
- *   ✓ adventurer-sword (소형 sheathed dagger만, 큰 무기 없음)
- *   ✗ adventurer-plate (sword baked-in)
- *   ✗ adventurer-robe (staff baked-in)
- *   ✗ adventurer-dagger / archer / caster / guardian / heavy / lancer (loadout-specific weapon)
- */
-const WEAPONLESS_ADVENTURER_SPRITES = new Set([
-    'adventurer',
-    'adventurer-coat',
-    'adventurer-leather',
-    'adventurer-sword',
-]);
+// cycle 395: weaponless adventurer sprite 정적 set 제거 — cycle 35 시점 작성된
+//   future-use 데이터였으나 도입 path가 끝내 미실현. src/, tests/ read 0건.
 
 // cycle 327: JOB_TYPICAL_LOADOUT export 제거 — 정의되어 있지만 production 사용 0건.
 //   getAvatarSpriteCandidates 내부 사용도 0건. cycle 43-46 시점 outfit affinity 표시용으로
