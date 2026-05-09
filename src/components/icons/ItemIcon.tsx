@@ -21,29 +21,15 @@ const SIGNATURE_TONE_RING: any = Object.freeze({
 });
 
 /**
- * SVG 아이콘 경로 — 장비 타입별 실루엣
- * viewBox="0 0 24 24", stroke-based
+ * SVG 아이콘 경로 — 비-equipment 아이템 fallback paths.
+ * viewBox="0 0 24 24", stroke-based.
+ *
+ * cycle 414: equipment-style 16 키 (sword/greatsword/dagger/staff/bow/axe/hammer/
+ *   spear/scythe/whip/armor/robe/cloak/boots/shield/book) 제거 — SVG 분기는
+ *   `!isEquipmentItem` 케이스만 진입 (equipment는 EquipmentAvatarPreview가 takeover).
+ *   따라서 equipment-style ICON_PATHS lookup 절대 hit 안 됨.
  */
 const ICON_PATHS: any = {
-    // 무기
-    sword: 'M14.5 3.5 20 9l-7 7-5.5-5.5 7-7ZM3 21l3.5-3.5M7.5 16.5l2 2',
-    greatsword: 'M13 2l9 9-9 9-3-3 9-9-3-3-6 6-3-3 6-6Z',
-    dagger: 'M16 3 21 8l-9 9-4-4 8-10ZM3 21l4-4',
-    staff: 'M12 2v18M8 4h8M9 20h6M12 8l3 3M12 8l-3 3',
-    bow: 'M18 4c-4 2-6 6-6 10M18 4c-2 4-6 6-10 6M18 4 6 16M4 20l2-4',
-    axe: 'M12 2v20M8 6c-3 0-5 2-5 5s2 5 5 5M16 6c3 0 5 2 5 5s-2 5-5 5',
-    hammer: 'M12 12v10M6 6h12v6H6V6ZM10 2h4v4h-4V2Z',
-    spear: 'M12 2l3 4-3 2-3-2 3-4Zm0 6v14M10 18h4M9 22h6',
-    scythe: 'M18 3c-4 0-8 3-8 8l-6 6 2 2 6-6c5 0 8-4 8-8M5 19l2 2',
-    whip: 'M5 19c3-3 4-7 7-9s6-1 8-3c2-2 1-4 1-4',
-    // 방어구
-    armor: 'M12 3 4 7v6c0 5 3.5 8 8 11 4.5-3 8-6 8-11V7l-8-4Z',
-    robe: 'M8 3h8l2 7-2 11H8L6 10l2-7ZM8 3c-1 2-1 4 0 6M16 3c1 2 1 4 0 6',
-    cloak: 'M8 4c-2 0-3 2-3 5v8c0 2 1.5 3 3 4h8c1.5-1 3-2 3-4V9c0-3-1-5-3-5',
-    boots: 'M8 4v10c0 2 0 4-2 6h12c-2-2-2-4-2-6V4',
-    // 방패
-    shield: 'M12 3 4 7v5c0 5 3.5 8 8 11 4.5-3 8-6 8-11V7l-8-4Z',
-    book: 'M4 4h6c1.1 0 2 .9 2 2v14c-1-1-2-1-3-1H4V4ZM20 4h-6c-1.1 0-2 .9-2 2v14c1-1 2-1 3-1h5V4Z',
     // 소모품
     potion: 'M9 3h6v3l2 4v8c0 1-1 3-5 3s-5-2-5-3V10l2-4V3Z',
     material: 'M12 2l8 5v10l-8 5-8-5V7l8-5Z',
