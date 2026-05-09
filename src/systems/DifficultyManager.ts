@@ -126,10 +126,12 @@ export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any)
  * @param {number} hpRatio  전투 종료 시점 HP / maxHp (0~1)
  * @returns {object}
  */
+// cycle 435: timestamp 출력 dead 필드 제거 — battle record consumers
+//   (calcPerformanceScore / countLowHpWins / gameUtils recentWinRate)는 result /
+//   hpRatio만 read. cycle 333-356 시리즈 회귀.
 export const makeBattleRecord = (result: any, hpRatio: any) => ({
     result,
     hpRatio: Math.max(0, Math.min(1, hpRatio)),
-    ts: Date.now(),
 });
 
 /**

@@ -129,10 +129,11 @@ test('makeBattleRecord: 정상 범위 hpRatio 유지', () => {
     assert.equal(record.result, 'escape');
 });
 
-test('makeBattleRecord: timestamp 포함', () => {
-    const before = Date.now();
+// cycle 435: timestamp 출력 dead 필드 제거 — battle record consumers는 result /
+//   hpRatio만 read. 회귀 가드는 cycle-435 test가 대체.
+test('makeBattleRecord: timestamp 필드 제거 (cycle 435)', () => {
     const record = makeBattleRecord('win', 0.5);
-    assert.ok(record.ts >= before);
+    assert.equal(record.ts, undefined, 'ts 필드 제거됨 (cycle 435)');
 });
 
 // ── pushBattleRecord ────────────────────────────────────────────────────────
