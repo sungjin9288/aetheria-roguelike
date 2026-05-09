@@ -7,15 +7,14 @@ import { GS } from '../reducers/gameStates';
  * props:
  *   slots: [item | null, item | null, item | null]
  *   onUse: (item: any) => void
- *   onAssign: (slotIdx: any, item: any) => void
- *   onUnassign: (slotIdx: any) => void
  *   gameState: string
+ *
+ * cycle 399: onAssign / onUnassign dead props 정리 — QuickSlot 본체
+ *   destructure 미사용 + 외부 pass 0건. QuickSlotAssigner는 별개 컴포넌트로 onAssign 사용.
  */
 interface QuickSlotProps {
     slots?: any[];
     onUse?: (item: any, idx: number) => void;
-    onAssign?: (slotIdx: number, item: any) => void;
-    onUnassign?: (slotIdx: number) => void;
     gameState?: string;
     dense?: boolean;
 }
