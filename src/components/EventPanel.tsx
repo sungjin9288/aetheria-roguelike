@@ -12,7 +12,9 @@ interface EventPanelProps {
     mobileFocused?: boolean;
 }
 
-const EventPanel = ({ currentEvent, actions, mobileFocused = false }: EventPanelProps) => {
+// cycle 437: default mobileFocused 값 제거 — 호출자 ControlPanel:192이 명시
+//   전달이라 default 도달 불가 (cycle 364-368 redundant default annotation lens).
+const EventPanel = ({ currentEvent, actions, mobileFocused }: EventPanelProps) => {
     if (!currentEvent) return null;
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
     const overlayPanelClass = 'absolute inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
