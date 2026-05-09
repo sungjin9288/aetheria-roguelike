@@ -214,7 +214,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
 
                     {sideTab === 'codex' && (
                         <Suspense fallback={<TabSpinner />}>
-                            <Codex player={player} compact={desktopArchiveCompact} dispatch={actions?.dispatch} />
+                            <Codex player={player} dispatch={actions?.dispatch} />
                         </Suspense>
                     )}
 

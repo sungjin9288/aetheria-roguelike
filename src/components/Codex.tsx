@@ -16,10 +16,11 @@ import LegendaryCodex from './codex/LegendaryCodex';
 import CodexDiscoveryOverlay from './codex/CodexDiscoveryOverlay';
 import type { Player } from '../types/index.js';
 
+// cycle 405: `compact?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
+//   Dashboard가 prop pass했으나 silent dropped (paired remove).
 interface CodexProps {
     player?: Player | null;
     dispatch: (action: any) => void;
-    compact?: boolean;
 }
 
 const SUB_TABS: any = [
