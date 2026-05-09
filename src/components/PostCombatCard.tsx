@@ -17,12 +17,13 @@ const toneClassForSignal = (tone: any) => {
     return 'text-slate-200 border-white/8 bg-white/[0.04]';
 };
 
+// cycle 402: `mobile?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
+//   GameRoot가 prop pass했으나 silent dropped (paired remove).
 interface PostCombatCardProps {
     result?: any;
     onClose?: () => void;
     onRest?: () => void;
     onSell?: (item?: any) => void;
-    mobile?: boolean;
 }
 
 const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps) => {

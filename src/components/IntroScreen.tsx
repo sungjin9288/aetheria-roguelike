@@ -7,9 +7,10 @@ import { createRandomMobileName } from '../utils/nameGenerator';
 
 const CHALLENGE_REWARD_TEXT: any = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
 
+// cycle 402: `mobile?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
+//   App.tsx가 `mobile` prop pass했으나 silent dropped (paired remove).
 interface IntroScreenProps {
     onStart?: (...args: any[]) => void;
-    mobile?: boolean;
 }
 
 const IntroScreen = ({ onStart }: IntroScreenProps) => {

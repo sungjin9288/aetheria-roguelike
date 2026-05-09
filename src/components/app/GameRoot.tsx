@@ -175,7 +175,6 @@ const GameRoot = ({
                         onClose={() => engine.actions.clearPostCombat?.()}
                         onRest={() => engine.actions.rest?.()}
                         onSell={() => engine.actions.setSideTab?.('inventory')}
-                        mobile={true}
                     />
                 </Suspense>
             )}
