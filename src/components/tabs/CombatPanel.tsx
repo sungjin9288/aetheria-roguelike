@@ -17,13 +17,14 @@ interface CombatPanelProps {
     dense?: boolean;
 }
 
+// cycle 416: tag / detail 출력 dead 정리 — render는 icon/key/className/
+//   mobileLabel/label만 read. tag (Burst/Core/Loadout/Exit) + detail (한국어 설명)
+//   src/, tests/ read 0건이라 dead.
 const ACTION_BUTTONS: any = [
   {
     key: 'attack',
     label: 'ATTACK',
     mobileLabel: 'ATK',
-    tag: 'Burst',
-    detail: '기본 공격으로 콤보와 처치 압박을 이어갑니다.',
     icon: Sword,
     className: 'bg-[linear-gradient(180deg,rgba(82,28,37,0.72)_0%,rgba(27,12,15,0.94)_100%)] border border-rose-300/20 text-rose-100 hover:bg-rose-400/10 hover:border-rose-200/28',
   },
@@ -31,8 +32,6 @@ const ACTION_BUTTONS: any = [
     key: 'skill',
     label: 'SKILL',
     mobileLabel: 'SKL',
-    tag: 'Core',
-    detail: '선택된 스킬을 사용해 전투 흐름을 바꿉니다.',
     icon: Zap,
     className: 'bg-[linear-gradient(180deg,rgba(24,43,48,0.74)_0%,rgba(8,16,18,0.94)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:bg-[#7dd4d8]/10 hover:border-[#d5b180]/24',
   },
@@ -40,8 +39,6 @@ const ACTION_BUTTONS: any = [
     key: 'swap',
     label: 'SWAP',
     mobileLabel: 'SWAP',
-    tag: 'Loadout',
-    detail: '다음 스킬을 순환해 대응 루트를 교체합니다.',
     icon: RotateCw,
     className: 'bg-[linear-gradient(180deg,rgba(33,23,45,0.74)_0%,rgba(12,10,18,0.94)_100%)] border border-[#9a8ac0]/20 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/28',
   },
@@ -49,8 +46,6 @@ const ACTION_BUTTONS: any = [
     key: 'escape',
     label: 'ESCAPE',
     mobileLabel: 'RUN',
-    tag: 'Exit',
-    detail: '위험 구간에서 손실을 줄이고 이탈을 시도합니다.',
     icon: ArrowRight,
     className: 'bg-[linear-gradient(180deg,rgba(28,31,27,0.74)_0%,rgba(10,12,10,0.94)_100%)] border border-[#d5b180]/16 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/24',
   },
