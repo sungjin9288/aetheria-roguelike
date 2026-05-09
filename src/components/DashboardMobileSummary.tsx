@@ -32,9 +32,11 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
         if (relicCount > 0) {
             pills.push({ key: 'relic', label: `유물 ×${relicCount}`, tone: 'resonance' });
         }
+        // cycle 398: schema 미스매치 fix — TRAIT_DEFINITIONS entry는 `title` 필드 (display 용).
+        //   기존 정의되지 않은 필드 lookup으로 가드 false → trait pill 영원히 silent 결손.
         const trait = getTraitProfile(player);
-        if (trait?.label) {
-            pills.push({ key: 'trait', label: trait.label, tone: 'recommended' });
+        if (trait?.title) {
+            pills.push({ key: 'trait', label: trait.title, tone: 'recommended' });
         }
         const codex = player.stats?.codex;
         if (codex) {
