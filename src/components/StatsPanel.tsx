@@ -321,9 +321,11 @@ const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
                     <div className="text-xs text-slate-400 font-fira uppercase tracking-[0.16em] flex items-center gap-1.5">
                         <Sparkles size={10} /> 유물 시너지
                     </div>
+                    {/* cycle 396: syn.name → syn.label — RELIC_SYNERGIES entry는 `label` 필드.
+                          기존 syn.name은 항상 undefined로 React key 충돌 + UI 빈 칸 silent 결손. */}
                     {stats.activeSynergies.map((syn: any) => (
-                        <div key={syn.name} className="rounded-[0.95rem] border border-fuchsia-400/20 bg-fuchsia-900/10 px-2.5 py-1.5 flex items-center justify-between gap-2">
-                            <span className="text-[11px] font-fira text-fuchsia-200/90 font-bold">{syn.name}</span>
+                        <div key={syn.label} className="rounded-[0.95rem] border border-fuchsia-400/20 bg-fuchsia-900/10 px-2.5 py-1.5 flex items-center justify-between gap-2">
+                            <span className="text-[11px] font-fira text-fuchsia-200/90 font-bold">{syn.label}</span>
                             <span className="text-[8px] font-fira text-fuchsia-300/60">{syn.desc}</span>
                         </div>
                     ))}
