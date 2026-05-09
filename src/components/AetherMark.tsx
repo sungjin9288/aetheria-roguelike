@@ -16,7 +16,11 @@ const SIZE_MAP: any = {
     },
 };
 
-const AetherMark = ({ size = 'md', className = '' }: any) => {
+// cycle 432: default size 값 제거 — 2 호출자 (IntroScreen "md" / BootScreen "lg")
+//   모두 명시 전달이라 default 도달 불가. cycle 418 SIZE_MAP.sm 정리의 paired
+//   completion (lookup table cleanup 후 잔존 default 정리). className default는
+//   호출자 누락이라 활성 path → 보존. SIZE_MAP fallback도 방어용 보존.
+const AetherMark = ({ size, className = '' }: any) => {
     const scale = SIZE_MAP[size] || SIZE_MAP.md;
 
     return (

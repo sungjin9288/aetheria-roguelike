@@ -55,12 +55,12 @@ test('cycle 418: 활성 사이즈 보존 (md/lg)', async () => {
     }
 });
 
-test('cycle 418: fallback default 보존 (회귀 가드)', async () => {
+test('cycle 418: fallback 보존 (회귀 가드) — cycle 432가 default size 제거', async () => {
     const source = await readSrc('src/components/AetherMark.tsx');
     assert.ok(/SIZE_MAP\[size\] \|\| SIZE_MAP\.md/.test(source),
-        'fallback `|| SIZE_MAP.md` 동작 보존');
-    assert.ok(/size = 'md'/.test(source),
-        'default `size = md` 보존');
+        'fallback `|| SIZE_MAP.md` 동작 보존 (방어용)');
+    // cycle 432: default `size` 제거 (호출자 모두 명시 전달이라 도달 불가).
+    //   해당 검증은 cycle-432 test가 대체.
 });
 
 test('cycle 418: 정합성 가드 — AetherMark consumers 모두 md/lg만 사용', async () => {
