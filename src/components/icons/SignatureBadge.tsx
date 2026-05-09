@@ -10,6 +10,9 @@ import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signa
  * - 접근성: aria-label로 tier + category 전달.
  */
 
+// cycle 413: steel 제거 — signatureRegistry.json은 8 tone (arcane/earth/fire/
+//   frost/holy/nature/rust/shadow)만 emit. TONE_COLORS.steel lookup 절대 hit
+//   안 됨 (cycle 358 / 412 paired completion).
 const TONE_COLORS: any = Object.freeze({
     holy: { fill: '#f6e7a2', glow: 'rgba(246,231,162,0.6)', stroke: '#5a4620' },
     fire: { fill: '#ffb48a', glow: 'rgba(255,180,138,0.6)', stroke: '#6a2e16' },
@@ -18,7 +21,6 @@ const TONE_COLORS: any = Object.freeze({
     arcane: { fill: '#c0b0e8', glow: 'rgba(192,176,232,0.6)', stroke: '#31245d' },
     nature: { fill: '#a8d0a0', glow: 'rgba(168,208,160,0.6)', stroke: '#2d4226' },
     earth: { fill: '#d8b878', glow: 'rgba(216,184,120,0.55)', stroke: '#4c3720' },
-    steel: { fill: '#e6ecf4', glow: 'rgba(230,236,244,0.5)', stroke: '#334155' },
 });
 
 const DEFAULT_TONE_COLOR = TONE_COLORS.holy;
