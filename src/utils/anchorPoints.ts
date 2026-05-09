@@ -156,7 +156,9 @@ const DEFAULT_OFFHAND_PLACEMENT = placement('hand_back', 'back', {
 // Headgear placements (head top / center)
 // rotate 없이 translate + scale만 사용 (sprite center 기준 배치)
 // ──────────────────────────────────────────────────────────────────────────
-export const HEADGEAR_PLACEMENTS: Record<string, any> = Object.freeze({
+// cycle 408: export 제거 — getHeadgearPlacement 내부 사용만, 외부 0건.
+//   cycle 312 WEAPON_PLACEMENTS / OFFHAND_PLACEMENTS private downgrade paired completion.
+const HEADGEAR_PLACEMENTS: Record<string, any> = Object.freeze({
     'straw-hat': placement('head_top', 'front', { translateX: 12, translateY: 6, scale: 0.48 }),
     'wizard-hat': placement('head_top', 'front', { translateX: 10, translateY: 1, scale: 0.56 }),
     circlet: placement('head_center', 'front', { translateX: 15, translateY: 10, scale: 0.42 }),
@@ -172,7 +174,9 @@ const DEFAULT_HEADGEAR_PLACEMENT = placement('head_top', 'front', { translateX: 
 // ──────────────────────────────────────────────────────────────────────────
 // Body armor placements
 // ──────────────────────────────────────────────────────────────────────────
-export const BODY_PLACEMENTS: Record<string, any> = Object.freeze({
+// cycle 408: export 제거 — getBodyPlacement 내부 사용만, 외부 0건.
+//   cycle 312 paired completion.
+const BODY_PLACEMENTS: Record<string, any> = Object.freeze({
     robe: placement('torso_center', 'front', { translateX: 8, translateY: 19, scale: 0.72 }),
     plate: placement('torso_center', 'front', { translateX: 8, translateY: 20, scale: 0.7 }),
     leather: placement('torso_center', 'front', { translateX: 9, translateY: 20, scale: 0.68 }),
