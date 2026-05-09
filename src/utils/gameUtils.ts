@@ -493,8 +493,9 @@ export const migrateData = (rawData: any) => {
     if (!target.weeklyProtocol) {
         target.weeklyProtocol = { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] };
     }
-    target.skillChoices = target.skillChoices && typeof target.skillChoices === 'object' ? target.skillChoices : {};
-    target.challengeModifiers = Array.isArray(target.challengeModifiers) ? target.challengeModifiers : [];
+    // cycle 387: skillChoices / challengeModifiers normalizations 제거 (cycle 373-386
+    //   동일 lens) — 모든 consumer가 이미 optional chain (`?.[name]`, `?.includes()`)
+    //   또는 `|| {}` / `|| []` fallback 처리.
     // cycle 386: dailyInvadeCount / lastInvadeDate fallback 제거 (cycle 373-385 동일 lens) —
     //   모든 consumer가 이미 `|| 0` fallback 또는 strict equal 비교 (`=== today`)로
     //   undefined / null 안전 처리.
