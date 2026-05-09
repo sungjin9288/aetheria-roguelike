@@ -259,7 +259,7 @@ const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) =
 
 /**
  * @param {number} killStreak
- * @returns {{ atkBonus: number, critBonus: number, tierIdx: number }}
+ * @returns {{ atkBonus: number, critBonus: number }}
  */
 const computeKillStreakBonus = (killStreak: any) => {
     const tierIdx = BALANCE.KILL_STREAK_TIERS.reduce(
@@ -268,7 +268,9 @@ const computeKillStreakBonus = (killStreak: any) => {
     );
     const atkBonus = tierIdx >= 0 ? BALANCE.KILL_STREAK_ATK_BONUS[tierIdx] : 0;
     const critBonus = tierIdx >= 0 ? BALANCE.KILL_STREAK_CRIT_BONUS[tierIdx] : 0;
-    return { atkBonus, critBonus, tierIdx };
+    // cycle 389: tierIdx 출력 dead — calculateFullStats는 streak.atkBonus/critBonus만 read.
+    //   tierIdx는 위 lookup index로만 internal 사용.
+    return { atkBonus, critBonus };
 };
 
 /**
