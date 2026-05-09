@@ -29,7 +29,9 @@ const EMPTY_TEMP_BUFF: any = {
     name: null,
 };
 
-export const DEFAULT_COMBAT_FLAGS = {
+// cycle 391: export 제거 — playerStateUtils 내부 2회 사용만, 외부 consumer 0건.
+//   CombatEngine.DEFAULT_COMBAT_FLAGS는 별개 property (객체 멤버), 무관.
+const DEFAULT_COMBAT_FLAGS = {
     comboCount: 0,
     deathSaveUsed: false,
     voidHeartUsed: false,

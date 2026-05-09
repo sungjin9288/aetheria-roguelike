@@ -40,7 +40,8 @@ test('cycle 317: EMPTY_TEMP_BUFF export 제거 (private)', async () => {
 
 test('cycle 317: playerStateUtils active exports 유지', async () => {
     const source = await readSrc('src/utils/playerStateUtils.ts');
-    const activeExports = ['incrementStat', 'DEFAULT_COMBAT_FLAGS', 'hasTemporaryAdventureState', 'clearTemporaryAdventureState'];
+    // cycle 391: DEFAULT_COMBAT_FLAGS private downgrade로 active export list에서 제거.
+    const activeExports = ['incrementStat', 'hasTemporaryAdventureState', 'clearTemporaryAdventureState'];
     activeExports.forEach((name) => {
         const re = new RegExp(`export const ${name}\\b`);
         assert.ok(re.test(source), `${name} export 유지`);
