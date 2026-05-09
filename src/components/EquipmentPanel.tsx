@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Shield, Sparkles, Sword, Target, ChevronDown, ChevronUp } from 'lucide-react';
+// cycle 417: Sword / Shield import 제거 — SLOT_CONFIG.icon 출력 dead 정리 cascade.
+import { Sparkles, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
 import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
 import { getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
@@ -18,10 +19,11 @@ interface EquipmentPanelProps {
     compact?: boolean;
 }
 
+// cycle 417: icon 출력 dead 정리 — slot.icon read 0건. render는 key/label만 사용.
 const SLOT_CONFIG: any = [
-    { key: 'weapon', label: '주무기', icon: Sword },
-    { key: 'armor', label: '방어구', icon: Shield },
-    { key: 'offhand', label: '보조장비', icon: Sparkles },
+    { key: 'weapon', label: '주무기' },
+    { key: 'armor', label: '방어구' },
+    { key: 'offhand', label: '보조장비' },
 ];
 
 // cycle 411: frost / arcane 제거 — signatureSets.json sets는 fire/holy/nature/shadow
