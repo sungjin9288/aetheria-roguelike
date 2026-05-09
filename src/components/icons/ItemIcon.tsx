@@ -6,6 +6,9 @@ import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signa
 import EquipmentAvatarPreview from './EquipmentAvatarPreview.jsx';
 import SignatureBadge from './SignatureBadge.jsx';
 
+// cycle 412: steel 제거 — signatureRegistry.json은 8 tone (arcane/earth/fire/
+//   frost/holy/nature/rust/shadow)만 emit. SIGNATURE_TONE_RING.steel lookup 절대
+//   hit 안 됨 (cycle 358 LegendaryDropOverlay/LegendaryCodex paired completion).
 const SIGNATURE_TONE_RING: any = Object.freeze({
     holy: { border: '#f6e7a2', glow: 'rgba(246,231,162,0.45)' },
     fire: { border: '#ffb48a', glow: 'rgba(255,180,138,0.45)' },
@@ -14,7 +17,6 @@ const SIGNATURE_TONE_RING: any = Object.freeze({
     arcane: { border: '#c0b0e8', glow: 'rgba(192,176,232,0.45)' },
     nature: { border: '#a8d0a0', glow: 'rgba(168,208,160,0.45)' },
     earth: { border: '#d8b878', glow: 'rgba(216,184,120,0.4)' },
-    steel: { border: '#e6ecf4', glow: 'rgba(230,236,244,0.35)' },
     rust: { border: '#d9a56c', glow: 'rgba(217,165,108,0.4)' },
 });
 
