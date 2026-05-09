@@ -3,7 +3,10 @@ import { buildEquipmentPreviewAppearance, getEquipmentPreviewStage } from '../..
 import { getAvatarEquipmentPreviewCandidates } from '../../utils/avatarSpriteCandidates.js';
 import AvatarEquipmentOverlay from './AvatarEquipmentOverlay.jsx';
 
-const EquipmentAvatarPreview = ({ item, size = 24, className = '', variant = 'default' }: any) => {
+// cycle 434: 3 default 값 제거 — 1 호출자 (ItemIcon)가 size / variant / className
+//   모두 명시 전달이라 default 도달 불가. variant ternary ('card' / else) 분기는
+//   그대로 활성 (cycle 431-433에 이은 redundant default annotation 4-cycle 시리즈).
+const EquipmentAvatarPreview = ({ item, size, className, variant }: any) => {
     const appearance = useMemo(() => buildEquipmentPreviewAppearance(item), [item]);
     const previewStage = useMemo(() => getEquipmentPreviewStage(item, appearance, variant), [item, appearance, variant]);
     const spriteCandidates = useMemo(
