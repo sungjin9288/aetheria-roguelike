@@ -20,7 +20,10 @@ const TONE_CLASS: any = {
     //   FocusPanel 자체 제거 → tone class도 cascade dead.
 };
 
-const SignalBadge = ({ tone = 'neutral', size = 'sm', className = '', children, ...rest }: any) => (
+// cycle 433: default tone / size 제거 — 모든 73 호출자가 두 prop 명시 전달이라
+//   default 도달 불가 (cycle 419 paired completion). SIZE_CLASS / TONE_CLASS
+//   fallback `|| ...sm/.neutral`은 방어용 + cycle 419 회귀 가드로 보존.
+const SignalBadge = ({ tone, size, className = '', children, ...rest }: any) => (
     <span
         className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size] || SIZE_CLASS.sm} ${TONE_CLASS[tone] || TONE_CLASS.neutral} ${className}`.trim()}
         {...rest}

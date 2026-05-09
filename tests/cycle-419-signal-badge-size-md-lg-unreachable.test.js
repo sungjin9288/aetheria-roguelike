@@ -50,11 +50,12 @@ test('cycle 419: sm 사이즈 보존 (활성)', async () => {
     assert.ok(/^\s+sm:/m.test(block), 'SIZE_CLASS.sm 보존');
 });
 
-test('cycle 419: default + fallback 갱신 (sm 기준)', async () => {
+test('cycle 419: fallback 보존 (회귀 가드) — cycle 433이 default size 제거', async () => {
     const source = await readSrc('src/components/SignalBadge.tsx');
-    assert.ok(/size = 'sm'/.test(source), 'default `size = sm` 변경');
+    // cycle 433: default `size`도 제거 (호출자 모두 명시 전달이라 도달 불가).
+    //   해당 검증은 cycle-433 test가 대체.
     assert.ok(/SIZE_CLASS\[size\] \|\| SIZE_CLASS\.sm/.test(source),
-        'fallback `|| SIZE_CLASS.sm` 변경');
+        'fallback `|| SIZE_CLASS.sm` 보존 (방어용)');
 });
 
 test('cycle 419: 정합성 가드 — SignalBadge size="md" / size="lg" 호출 0건', async () => {
