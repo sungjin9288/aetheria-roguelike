@@ -208,13 +208,14 @@ const ControlPanel = ({
     return <CraftingPanel player={player} actions={actions} setGameState={setGameState} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
+  // cycle 423: coreButtons 부가 라벨 출력 dead 제거 — renderActionButton
+  //   destructure 미포함이라 read 0건. label / mobileLabel만 활성.
   const coreButtons = [
     {
       key: 'explore',
       testId: 'control-explore',
       icon: MapIcon,
       label: 'EXPLORE',
-      sidebarLabel: 'EXP',
       onClick: () => {
         soundManager.play('click');
         actions.explore();
@@ -226,7 +227,6 @@ const ControlPanel = ({
       testId: 'control-move',
       icon: ArrowRight,
       label: 'MOVE',
-      sidebarLabel: 'MOVE',
       onClick: () => setGameState?.(GS.MOVING),
       className: 'bg-[linear-gradient(180deg,rgba(22,29,37,0.84)_0%,rgba(9,13,18,0.96)_100%)] border border-white/8 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-[#7dd4d8]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.08)]',
     },
