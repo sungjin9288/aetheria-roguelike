@@ -95,14 +95,18 @@ export const formatDailyProtocolReward = (reward: any = {}) => {
     return '보상';
 };
 
-/** 일반 보상 텍스트 배열 포맷 */
+/** 일반 보상 텍스트 배열 포맷
+ *
+ *  cycle 407: essence / relicShard 분기 제거 — 호출 사이트
+ *  (AchievementPanel / QuestTab / QuestBoardPanel)는 quest/achievement
+ *  reward만 전달. quests.ts/achievements에 essence/relicShard 0건이라 unreachable.
+ *  daily protocol mission reward는 formatDailyProtocolReward로 별도 처리.
+ */
 export const formatRewardParts = (reward: any = {}) => {
     const parts: any[] = [];
     if (reward.exp) parts.push(`EXP ${reward.exp}`);
     if (reward.gold) parts.push(`${reward.gold}G`);
     if (reward.item) parts.push(reward.item);
-    if (reward.essence) parts.push(`에센스 ${reward.essence}`);
-    if (reward.relicShard) parts.push(`유물 조각 ${reward.relicShard}`);
     return parts;
 };
 
