@@ -32,7 +32,9 @@ const getMonsterType = (name: any) => {
     if (!name) return 'humanoid';
     if (name.includes('슬라임')) return 'slime';
     if (name.includes('드래곤') || name.includes('와이번')) return 'dragon';
-    if (name.includes('골렘') || name.includes('골렘') || name.includes('자동인형')) return 'golem';
+    // cycle 422: 동일 문자열 '골렘' 중복 includes 1건 제거 — short-circuit `||`
+    //   에서 두 번째 호출은 첫 번째와 동일 입력/결과라 절대 추가 매치 0건.
+    if (name.includes('골렘') || name.includes('자동인형')) return 'golem';
     if (name.includes('정령') || name.includes('파편체') || name.includes('수정체') || name.includes('님프')) return 'spirit';
     if (name.includes('해골') || name.includes('리치') || name.includes('구울') || name.includes('미라') || name.includes('데스나이트') || name.includes('뱀파이어')) return 'undead';
     if (name.includes('늑대') || name.includes('멧돼지') || name.includes('거북') || name.includes('도마뱀') || name.includes('크라켄') || name.includes('리바이어던')) return 'beast';
