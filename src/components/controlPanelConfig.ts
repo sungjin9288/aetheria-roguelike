@@ -3,13 +3,15 @@
  * 버튼 종류 → 추천 키 매핑, 프레젠테이션 메타
  */
 
+// cycle 392: open_shop 매핑 제거 — adventureGuide.getAdventureGuidance가
+//   producer 0건이라 절대 lookup hit 안 됨. unreachable lookup entry
+//   (cycle 359/361 unreachable lens 회귀).
 export const ACTION_KIND_TO_BUTTON: Record<string, any> = {
     explore: 'explore',
     open_move: 'move',
     rest: 'rest',
     open_class: 'class',
     open_quest_board: 'quests',
-    open_shop: 'market',
     claim_quest: 'quests',
 };
 
