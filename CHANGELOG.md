@@ -7,6 +7,101 @@
 
 ---
 
+## Cycle 430 🎯 — CHANGELOG에 cycles 421-429 history 일괄 추가
+
+- 마일스톤: cycle 420 batch 이후 9 사이클 미반영 batch 정리. 24번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420에 이은 24번째.
+- 누적 마일스톤: cycle 420(unit 1995) → 429(unit 2038, +43). silent dead config
+  시리즈 cycle 222→429 189번째 도달.
+- 시리즈 정체성 — silent UI 결손 회귀 batch: 9 사이클 중 2 사이클(426/427)
+  silent UI regression fix, 7 사이클은 다양 lens 정리. cycle 396/398 lens가
+  cycle 426/427에서 두 번 회귀하며 schema 미스매치가 살아있는 패턴임을 재확인.
+- 본 batch 핵심 패턴: **silent UI 결손 lens가 cycle 348/413 잘못된 cleanup
+  되돌리기로 두 번 회귀**. cycle 426은 cycle 348의 false dead 판정 정정,
+  cycle 427은 cycle 413 paired completion의 누락분 보강.
+
+검증: tsc 0 / unit 2038 / lint clean / build-guard ok.
+
+---
+
+## Cycle 421-429 — Lens 다변화 (unreachable/duplicate/output-dead/silent-UI/redundant-default 5종)
+
+cycle 419 (호출 사이트 분석) 회귀 → duplicate detection (cycle 385 변형) →
+output dead (cycle 333-356 시리즈) → defensive fallback redundancy (cycle 373-388
+시리즈) → unreachable code path (cycle 357 paired) → **silent UI 결손 2연속** →
+redundant default annotation paired completion으로 5 lens 다변화.
+
+### 호출 사이트 + 데이터 정합성 unreachable (cycle 421, 1사이클)
+
+- 421: SkillTypeIcon TYPE_PATHS / TYPE_COLORS '번개' — classes.ts skill.type 10종
+  (물리/화염/냉기/자연/대지/빛/어둠/buff/debuff/escape)에 thunder type 0건.
+  '썬더볼트' 등 thunder 스킬도 type='빛'으로 정의. monsters.ts weakness/
+  resistance 9종에도 0건. cycle 419 호출 사이트 분석 lens 회귀.
+
+### Duplicate detection (cycle 422, 1사이클)
+
+- 422: MonsterIcon getMonsterType `name.includes('골렘') || name.includes('골렘')`
+  — short-circuit `||`에서 동일 문자열 includes 2회. 두 번째 호출은 절대 추가
+  매치 0건이라 의미 있는 분기 0건. cycle 385 변형 — 중복 키 → 중복 함수 호출.
+
+### Output dead (cycle 423, 1사이클)
+
+- 423: ControlPanel coreButtons sidebarLabel 2 entries — renderActionButton
+  destructure가 `{key, testId, icon, label, mobileLabel, onClick, className,
+  disabled}`만 포함. button.sidebarLabel read 0건. cycle 333-356 시리즈 회귀
+  (cycle 416 ACTION_BUTTONS tag/detail batch와 동일 lens).
+
+### Defensive fallback redundancy (cycle 424, 1사이클)
+
+- 424: EXACT_ICON_CATEGORY_BY_TYPE `undefined: 'misc'` — JS 브래킷 룩업
+  `obj[undefined]`은 'undefined' 문자열 키로 coerce → 엔트리 'misc' 반환. 엔트리
+  제거 시 lookup undefined → `|| 'misc'` fallback 동일 'misc' 산출. 양쪽 path
+  동일 결과 → 엔트리 기능적 잉여. cycle 373-388 시리즈 회귀.
+
+### Unreachable code path (cycle 425, 1사이클)
+
+- 425: pickFallbackEvent `explicit = FALLBACK_EVENT_POOL[loc]` lookup —
+  cycle 357 이후 FALLBACK_EVENT_POOL은 English category 키만 (forest/ruins/
+  cave/...). loc 파라미터는 항상 Korean 지명이라 직접 매칭 0건.
+  `explicit` 항상 falsy → `explicit ? loc` / `explicit ||` short-circuit 분기
+  unreachable. cycle 357 paired completion (Korean key 제거 후 잔존 dead
+  branch 정리).
+
+### Silent UI 결손 — cycle 348/413 잘못된 cleanup 정정 (cycle 426-427, 2사이클)
+
+- 426: signatureSetBonus.activeSet atkMult/defMult/hpMult 복원 — cycle 348가
+  '부모 return에 동일 필드'라며 제거했으나 StatsPanel.tsx (line 220/228/236)이
+  `activeSignatureSet.atkMult`/`.defMult`/`.hpMult`를 직접 read해서
+  formatMultDelta로 표시. 2-set 착용 시 ATK/DEF/HP delta가 모두 '—'로 silently
+  표시되던 회귀. 부모 fields는 statsCalculator의 stat 합산용 별도 path.
+- 427: SignatureBadge TONE_COLORS rust 추가 — signatureRegistry.json은 8 tone
+  emit (rust 포함, '광기의 갑주' 아이템). 다른 surface (LegendaryDropOverlay/
+  LegendaryCodex/ItemIcon) 모두 rust 보유. 그러나 SignatureBadge만 7 tone —
+  cycle 413 cleanup 시 paired completion 누락. rust signature 획득 시 badge가
+  holy gold fallback으로 silently 표시되던 정합 결손.
+
+### Redundant default annotation paired (cycle 428-429, 2사이클)
+
+- 428: QuestBoardPanel RewardChips default `accent = 'blue'` — 4 호출자 모두
+  명시 전달이라 default 도달 불가.
+- 429: QuestTab QuestRewardChips 동일 패턴 paired completion — 1 호출자 ternary
+  로 명시 전달. 두 컴포넌트가 거의 동일 형태(formatRewardParts + accent ternary)
+  였으므로 paired cleanup이 자연.
+
+### 신규 lens 의의
+
+- **silent UI 결손 lens 회귀 (cycle 426-427)** — cycle 396/398 이후 cycle 426/427
+  에서 두 번 더 발견. 패턴: "cleanup 시점에 producer-consumer schema 동시 검증
+  부족 → 한 쪽만 정리되어 silent UI gap 형성". 가드: paired completion 시
+  반드시 모든 surface 동기 + 모든 read site의 schema 시뮬레이션.
+- cycle 348(false dead)와 cycle 413(누락분) 두 종류 회귀 모두 발견 — cleanup
+  의 두 가지 위험 패턴 (잘못된 dead 판정 vs paired completion 불완전).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 420 🎯 — CHANGELOG에 cycles 411-419 history 일괄 추가
 
 - 마일스톤: cycle 410 batch 이후 9 사이클 미반영 batch 정리. 23번째 batch.
