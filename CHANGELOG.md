@@ -7,6 +7,74 @@
 
 ---
 
+## Cycle 410 🎯 — CHANGELOG에 cycles 401-409 history 일괄 추가
+
+- 마일스톤: cycle 400 batch 이후 9 사이클 미반영 batch 정리. 22번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400에 이은 22번째.
+- 누적 마일스톤: cycle 400(unit 1907) → 409(unit 1954, +47). silent dead config
+  시리즈 cycle 222→409 171번째 도달.
+- 시리즈 정체성 — interface dead lens 메가 시리즈: 9사이클 중 5사이클(401-405)
+  연속 interface dead, 1사이클(406) function output dead로 자연 전환,
+  2사이클(407+409) function dead 회귀, 1사이클(408) export → private downgrade.
+- 본 batch 핵심 패턴: **컴포넌트 props interface dead가 7개 컴포넌트째 발견** —
+  Dashboard / PostCombatCard / IntroScreen / CraftingPanel / JobChangePanel /
+  TerminalView / Codex 모두 동일 패턴으로 cleanup.
+
+검증: tsc 0 / unit 1954 / lint clean / build-guard ok.
+
+---
+
+## Cycle 401-409 — Interface dead lens 5사이클 + function output dead lens 회귀
+
+cycle 396-398에서 silent UI 결손 lens (schema 미스매치)를 발견한 후 자연
+확장 — interface props 정의는 있지만 본체 destructure 미사용 + 외부 prop pass
+silent dropped 패턴이 5사이클 연속 7 컴포넌트에서 발견. 그 후 function output
+dead / unreachable / private downgrade lens로 다변화.
+
+### Interface dead 5사이클 (cycle 401-405) — 7 컴포넌트 paired remove
+
+- 401: DashboardProps `mobile?: boolean;` — 본체 destructure 미사용 + 변수 read
+  0건. MobileGameLayout이 prop pass했으나 silent dropped.
+- 402: PostCombatCard + IntroScreen 동일 lens batch — 컴포넌트 2개 묶음.
+  `<PostCombatCard mobile={true}>` / `<IntroScreen mobile />` 둘 다 silent dropped.
+- 403: CraftingPanel + JobChangePanel `mobileFocused` 동일 lens batch — 컴포넌트
+  2개. ControlPanel이 prop pass했으나 본체 destructure 미사용.
+  비교: EventPanel/QuestBoardPanel/ShopPanel은 활성 보존.
+- 404: TerminalView `stats?: any;` — 본체 destructure 미사용. MobileGameLayout이
+  `stats={fullStats}` 전달했으나 silent dropped. fullStats 변수 자체는 다른
+  컴포넌트(Dashboard 등)에서 사용 보존.
+- 405: Codex `compact?: boolean;` — 본체 destructure 미사용. Dashboard가
+  `compact={desktopArchiveCompact}` 전달했으나 silent dropped.
+  비교: AchievementPanel/StatsPanel/EquipmentPanel/MapNavigator 등 8개 패널은
+  활성 보존.
+
+### Lens 다변화 (cycle 406-409, 4사이클)
+
+- 406: useGameEngine `actions.setAiThinking` dead method — setter 정의만 있고
+  src/, tests/ 호출 0건. AT.SET_AI_THINKING reducer handler는 다른 dispatch
+  path 의존으로 보존.
+- 407: formatRewardParts `essence` / `relicShard` 분기 unreachable —
+  AchievementPanel/QuestTab/QuestBoardPanel은 quest/achievement reward만
+  전달하지만 quests.ts/achievements 데이터에 essence/relicShard 0건.
+  daily protocol은 별도 formatDailyProtocolReward 처리.
+- 408: HEADGEAR_PLACEMENTS + BODY_PLACEMENTS export → private downgrade batch
+  — cycle 312 WEAPON_PLACEMENTS / OFFHAND_PLACEMENTS paired completion.
+- 409: getTraitItemResonance.reasons 출력 dead — 외부 read 0건. 내부 reasons
+  배열은 summary 계산용 로컬 변수로 유지. score/label/summary 활성 보존.
+
+### 신규 lens 의의
+
+- "interface dead" lens는 cycle 396/398의 silent UI 결손 lens 직계 후속 —
+  schema mismatch가 외부 dispatch path까지 확장된 형태. parent가 prop pass하지만
+  child가 destructure 안 하는 paired remove 케이스를 발견하기 시작했음.
+- 5사이클 연속 발견은 시리즈 사상 두 번째 longest lens 회귀 (cycle 373-388
+  fallback redundancy 16사이클 다음).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 400 🎯 — CHANGELOG에 cycles 391-399 history 일괄 추가
 
 - 마일스톤: cycle 390 batch 이후 9 사이클 미반영 batch 정리. 21번째 batch.
