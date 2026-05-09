@@ -1,8 +1,8 @@
 
+// cycle 419: md / lg 제거 — SignalBadge 73 호출 사이트 모두 size="sm" 명시.
+//   default param도 'sm'로 변경 + fallback도 SIZE_CLASS.sm.
 const SIZE_CLASS: any = {
     sm: 'min-h-[20px] px-1.5 py-0.5 text-[9px] tracking-[0.16em]',
-    md: 'min-h-[24px] px-2 py-0.5 text-[10px] tracking-[0.16em]',
-    lg: 'min-h-[28px] px-2.5 py-1 text-[11px] tracking-[0.18em]',
 };
 
 const TONE_CLASS: any = {
@@ -20,9 +20,9 @@ const TONE_CLASS: any = {
     //   FocusPanel 자체 제거 → tone class도 cascade dead.
 };
 
-const SignalBadge = ({ tone = 'neutral', size = 'md', className = '', children, ...rest }: any) => (
+const SignalBadge = ({ tone = 'neutral', size = 'sm', className = '', children, ...rest }: any) => (
     <span
-        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size] || SIZE_CLASS.md} ${TONE_CLASS[tone] || TONE_CLASS.neutral} ${className}`.trim()}
+        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size] || SIZE_CLASS.sm} ${TONE_CLASS[tone] || TONE_CLASS.neutral} ${className}`.trim()}
         {...rest}
     >
         {children}
