@@ -44,13 +44,14 @@ test('cycle 415: getWeeklySpecial return에서 isWeeklySpecial 0건', async () =
         'getWeeklySpecial return에서 isWeeklySpecial 0건');
 });
 
-test('cycle 415: getDailyDeals isDailyDeal 마커 보존 (cycle 355 회귀)', async () => {
+test('cycle 415: getDailyDeals 0.9 할인 적용 보존 (cycle 436이 마커 제거)', async () => {
     const source = await readSrc('src/utils/shopRotation.ts');
     const fnStart = source.indexOf('export const getDailyDeals');
     const fnEnd = source.indexOf('export const getWeeklySpecial', fnStart);
     const fnBlock = source.slice(fnStart, fnEnd);
-    assert.ok(/isDailyDeal:\s*true/.test(fnBlock),
-        'getDailyDeals isDailyDeal 마커 보존');
+    // cycle 436: 마커 제거 — 0.9 할인 multiplier 적용은 보존.
+    assert.ok(/Math\.floor\(item\.price \* 0\.9\)/.test(fnBlock),
+        '0.9 할인 적용 보존');
 });
 
 test('cycle 415: getWeeklySpecial 동작 보존 (originalPrice / price)', async () => {

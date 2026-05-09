@@ -71,12 +71,14 @@ export const getDailyDeals = (playerLevel: any = 1) => {
         ...(DB.ITEMS.consumables || []),
     ].filter((item: any) => (item.tier || 1) <= maxTier);
 
+    // cycle 436: 일일 딜 마커 제거 — production read 0건이던 dead 출력
+    //   (cycle 415 주간 특별 마커 정리 paired completion). cycle 355는 회귀
+    //   가드로 보존했으나 그 가드 자체가 유일 read였음 (circular guard).
     const shuffled = seededShuffle(allItems, seed);
     const items = shuffled.slice(0, 3).map((item: any) => ({
         ...item,
         originalPrice: item.price,
         price: Math.floor(item.price * 0.9),
-        isDailyDeal: true,
     }));
 
     return { items };

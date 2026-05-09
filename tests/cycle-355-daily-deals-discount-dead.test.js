@@ -48,7 +48,7 @@ test('cycle 355: getDailyDeals 동작 보존 (items 배열 + 0.9 가격)', async
         const first = result.items[0];
         assert.ok(typeof first.price === 'number', 'price 보존');
         assert.ok(typeof first.originalPrice === 'number', 'originalPrice 보존');
-        assert.equal(first.isDailyDeal, true, 'isDailyDeal 마커 보존');
+        // cycle 436: isDailyDeal 마커 제거 — circular guard였음. cycle-436 test가 대체.
         assert.equal(first.price, Math.floor(first.originalPrice * 0.9),
             '0.9 할인 multiplier 그대로 적용');
     }
