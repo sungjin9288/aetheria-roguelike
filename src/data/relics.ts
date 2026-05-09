@@ -425,38 +425,37 @@ export const MAX_RELICS_PER_RUN = 5;
 /**
  * 유물 시너지 정의 (Sprint 19)
  * requires: 두 유물 name이 모두 보유 시 bonus 적용
+ *
+ * cycle 394: id 출력 dead 일괄 정리 — 매칭은 항상 bonus.effect 기반
+ *   (statsCalculator + CombatEngine + 회귀 가드 cycle 153/154/236/237).
+ *   syn.id read는 src/, tests/ 어디에도 0건. StatsPanel React key는 syn.name 사용.
  */
 export const RELIC_SYNERGIES = Object.freeze([
     {
-        id: 'vampire_lord',
         label: '흡혈 군주',
         requires: ['피의 서약', '영혼 흡수'],
         bonus: { effect: 'vampire_lord', atkMult: 0.2, lifeSteal: 0.5 },
         desc: 'ATK +20%, 모든 공격 50% 흡혈',
     },
     {
-        id: 'arcane_surge',
         label: '비전 파동',
         requires: ['마나 수정', '주문 메아리'],
         bonus: { effect: 'arcane_surge', mpMult: 0.3 },
         desc: '최대 MP +30%, 스킬 무료 확률 두 배',
     },
     {
-        id: 'unbreakable',
         label: '난공불락',
         requires: ['강철 의지', '난공불락'],
         bonus: { effect: 'unbreakable', healOnSave: 0.3 },
         desc: '사망 방지 발동 시 최대 HP의 30% 회복',
     },
     {
-        id: 'time_master',
         label: '시간 지배자',
         requires: ['시간의 파편', '시공의 반지'],
         bonus: { effect: 'time_master', extraTurnChance: 0.1 },
         desc: '스킬 사용 후 10% 확률로 추가 행동',
     },
     {
-        id: 'death_oracle',
         label: '죽음의 예언자',
         requires: ['죽음의 낙인', '저주의 결정'],
         bonus: { effect: 'death_oracle', dotMult: 0.5 },
@@ -464,70 +463,60 @@ export const RELIC_SYNERGIES = Object.freeze([
     },
     // ─── 신규 시너지 (10개) ──────────────────────────────────────────────────
     {
-        id: 'immortal_warrior',
         label: '불멸의 전사',
         requires: ['불사조의 깃털', '피의 서약'],
         bonus: { effect: 'immortal_warrior', reviveHeal: 0.5, killHeal: 0.05 },
         desc: '부활 시 HP 50%로 증가, 적 처치 회복 5%',
     },
     {
-        id: 'hell_reaper',
         label: '지옥의 수확자',
         requires: ['심연의 계약', '영혼 흡수'],
         bonus: { effect: 'hell_reaper', hpCostReduction: 0.02, lifeStealBonus: 0.5 },
         desc: 'HP 소모 3%로 감소, 흡혈 50% 증가',
     },
     {
-        id: 'annihilator',
         label: '절멸자',
         requires: ['허공의 왕좌', '처형자의 날'],
         bonus: { effect: 'annihilator', executeThreshold: 0.35, killStack: 0.07 },
         desc: '처형 임계치 35%, 킬 스택 7%로 증가',
     },
     {
-        id: 'eternal_life',
         label: '영원의 생명',
         requires: ['창세의 핵', '재생 코어'],
         bonus: { effect: 'eternal_life', healPerTurn: 0.04, statBonus: 0.2 },
         desc: '매 턴 회복 4%, 전 스탯 20% 증가',
     },
     {
-        id: 'time_dominator',
         label: '시간의 지배자 (강화)',
         requires: ['시간 군주의 왕관', '시간의 파편'],
         bonus: { effect: 'time_dominator', cdReduction: 2, extraAction: 0.3 },
         desc: '쿨다운 2턴 감소, 추가 행동 확률 30%',
     },
     {
-        id: 'absolute_reflect',
         label: '절대 반사',
         requires: ['운명의 거울', '가시 갑옷'],
         bonus: { effect: 'absolute_reflect', reflect: 0.5, stunOnReflect: 0.25 },
         desc: '반사 피해 50%, 반사 시 적 스턴 25%',
     },
     {
-        id: 'entropy_brand',
         label: '엔트로피 낙인',
         requires: ['엔트로피 엔진', '죽음의 낙인'],
         bonus: { effect: 'entropy_brand', damage: 0.12, interval: 2 },
         desc: '고정 피해 12%, 간격 2턴으로 단축',
     },
     {
-        id: 'infinite_devour',
         label: '무한 포식',
         requires: ['세계 포식자', '광전사의 분노'],
         bonus: { effect: 'infinite_devour', devour: 0.15, lowHpAtk: 0.6 },
         desc: 'HP 포식 15%, 저HP ATK 보너스 60%',
     },
     {
-        id: 'void_dragon',
         label: '공허의 용',
         requires: ['허공의 왕좌', '드래곤 발톱'],
         bonus: { effect: 'void_dragon', killStack: 0.08, critDmg: 2.0 },
         desc: '킬 스택 ATK 8%, 크리 추가 피해 2배',
     },
     {
-        id: 'absolute_immortal',
         label: '절대 불사',
         requires: ['불사조의 깃털', '불사의 의지'],
         bonus: { effect: 'absolute_immortal', reviveCount: 2, reviveHeal: 0.5 },
@@ -535,35 +524,30 @@ export const RELIC_SYNERGIES = Object.freeze([
     },
     // ─── 3피스 전설 시너지 (5개) ──────────────────────────────────────────
     {
-        id: 'blood_immortal',
         label: '혈맹 불사',
         requires: ['피의 서약', '영혼 흡수', '허공의 심장'],
         bonus: { effect: 'blood_immortal', lifeSteal: 1.0, reviveHeal: 0.5 },
         desc: '모든 공격 100% 흡혈, 부활 시 HP 50% 회복',
     },
     {
-        id: 'arcane_singularity',
         label: '비전 특이점',
         requires: ['마나 수정', '주문 메아리', '정신 연소'],
         bonus: { effect: 'arcane_singularity', freeSkillChance: 0.35, skillMult: 0.3 },
         desc: '스킬 무료 확률 35%, 스킬 피해 +30% 추가',
     },
     {
-        id: 'primordial_wrath',
         label: '원초의 분노',
         requires: ['고대의 분노', '드래곤 발톱', '광전사의 분노'],
         bonus: { effect: 'primordial_wrath', critChance: 0.25, critDmg: 2.5, lowHpAtk: 0.8 },
         desc: '크리 확률 +25%, 크리 피해 2.5배, 저HP ATK +80%',
     },
     {
-        id: 'eternal_fortress',
         label: '영원의 요새',
         requires: ['난공불락', '암석 피부', '대지의 심장'],
         bonus: { effect: 'eternal_fortress', defMult: 0.8, regenPerTurn: 0.08 },
         desc: 'DEF +80%, 매 턴 HP 8% 재생',
     },
     {
-        id: 'entropy_god',
         label: '엔트로피의 신',
         requires: ['엔트로피 엔진', '죽음의 낙인', '혼돈의 보석'],
         bonus: { effect: 'entropy_god', fixedDmg: 0.15, interval: 1, chaosAtk: 0.5 },
