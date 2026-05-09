@@ -7,6 +7,47 @@
 
 ---
 
+## Cycle 390 🎯 — CHANGELOG에 cycles 381-389 history 일괄 추가
+
+- 마일스톤: cycle 380 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340 / 350 / 360 / 370 / 380에 이은 20번째 batch.
+- 누적 마일스톤: cycle 380(unit 1829) → 389(unit 1867, +38). silent dead config 시리즈 cycle 222→389 153번째 도달. 20번째 batch 안착 — milestone 시리즈도 200사이클 누적.
+- 시리즈 정체성: 9 사이클 중 8(cycle 381-388)는 migrateData defensive fallback redundancy 연속 — cycle 373부터 통산 16사이클 연속, **시리즈 사상 최장 동일 lens**. cycle 389는 internal helper 출력 dead로 lens 전환.
+- 본 batch 핵심 통찰: "migrateData fallback redundancy lens가 자연 종료" — 회귀 가드(cycle 120/131/189/260/298)에 보호되거나 직접 property access (visitedMaps/exploreState)에 필요한 fallback만 잔존.
+
+검증: tsc 0 / unit 1867 / lint clean / build-guard ok.
+
+---
+
+## Cycle 381-389 — migrateData defensive fallback redundancy 8사이클 연속 + helper output dead
+
+cycle 373-380 lens가 cycle 381-388 8사이클 더 연속 — 누적 16사이클 연속 동일 lens (시리즈 사상 최장). cycle 389에서 internal helper 출력 dead lens로 자연 전환.
+
+### migrateData defensive fallback redundancy (cycle 381-388, 8사이클 연속)
+
+- 381: status / skillLoadout.selected normalizations 2회 — 모든 consumer Array.isArray + `|| []` fallback. skillLoadout.cooldowns 직접 dispatch는 보존.
+- 382: target.relics / target.titles normalizations 2회 — 모든 consumer (statsCalculator/checkTitles/migrateData 후속 forEach) Array.isArray + `|| []` fallback.
+- 383: codexClaimed normalization 1회 — 모든 consumer Array.isArray 또는 `|| []` 처리. cosmeticTitles는 cycle 189 회귀 가드로 보존.
+- 384: areaBossDefeated / deathSaveUsedCount fallback 2회 — exploreUtils optional chain / combatVictory `|| {}` / CombatEngine `|| 0` 처리.
+- 385: discoveryChains normalization 중복 1회 — 동일 함수 내 두 군데 중복, 두 번째 라인 noop. 첫 번째는 cycle 120/131 회귀 가드로 보존.
+- 386: dailyInvadeCount / lastInvadeDate fallback 2회 — useRoguelikeInvasion `|| 0` 또는 직접 비교.
+- 387: skillChoices / challengeModifiers normalizations 2회 — 모든 consumer Array.isArray 또는 `|| []` fallback.
+- 388: killStreak normalization 1회 (3-line if 블록) — statsCalculator/StatusBar 모두 `player.killStreak || 0` fallback.
+
+### Internal helper output dead (cycle 389, lens 전환)
+
+- 389: computeKillStreakBonus.tierIdx 출력 1 dead 필드 — 유일 consumer (calculateFullStats)는 streak.atkBonus/critBonus만 read. tierIdx는 함수 내부 lookup index로만 사용. 16사이클 fallback redundancy lens 자연 종료 후 function output dead lens로 회귀.
+
+### 보존된 fallback (회귀 가드 정합)
+
+- cycle 120/131: escapes / syntheses / maxKillStreak / discoveryChains.
+- cycle 189: cosmeticTitles.
+- cycle 260: claimedQuestIds.
+- 직접 access: visitedMaps (.includes/.push) / exploreState (spread) / skillLoadout.cooldowns / reviveTokens / synthProtects (Math.max 음수 clamp).
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 380 🎯 — CHANGELOG에 cycles 371-379 history 일괄 추가
 
 - 마일스톤: cycle 370 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340 / 350 / 360 / 370에 이은 19번째 batch.
