@@ -507,9 +507,11 @@ const FALLBACK_EVENT_POOL: any = {
 };
 
 export const pickFallbackEvent = (loc: string, history: any[] = [], context: any = {}) => {
-    const explicit = FALLBACK_EVENT_POOL[loc];
-    const poolKey = explicit ? loc : getPoolKeyByLocation(loc);
-    const basePool = explicit || FALLBACK_EVENT_POOL[poolKey] || FALLBACK_EVENT_POOL.default;
+    // cycle 425: 직접 loc lookup 분기 제거 — cycle 357 이후 FALLBACK_EVENT_POOL은
+    //   English category 키만 (forest/ruins/cave/...). loc 파라미터는 항상 Korean
+    //   지명이라 직접 매칭 0건이었음. getPoolKeyByLocation이 유일 path.
+    const poolKey = getPoolKeyByLocation(loc);
+    const basePool = FALLBACK_EVENT_POOL[poolKey] || FALLBACK_EVENT_POOL.default;
     // 30% 확률로 구조화 이벤트 풀과 혼합
     const pool = Math.random() < 0.3
         ? [...basePool, ...FALLBACK_EVENT_POOL.structured]
