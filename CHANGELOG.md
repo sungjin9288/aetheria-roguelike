@@ -7,6 +7,77 @@
 
 ---
 
+## Cycle 400 🎯 — CHANGELOG에 cycles 391-399 history 일괄 추가
+
+- 마일스톤: cycle 390 batch 이후 9 사이클 미반영 batch 정리. 21번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390에 이은 21번째.
+- 누적 마일스톤: cycle 390(unit 1867) → 399(unit 1907, +40). silent dead config
+  시리즈 cycle 222→399 162번째 도달. **400 사이클 milestone — total 178 cycles
+  cleanup since cycle 222 base**.
+- 시리즈 정체성 다양화: 9 사이클 중 lens 5종 — private downgrade(391), unreachable
+  (392/395/397), data-config-dead(393/394/399), silent UI 결손(396/398).
+  migrateData fallback redundancy lens 종료 후 자연스러운 lens 다변화.
+- 본 batch 핵심 패턴 신규: **silent UI 결손 lens** — schema 미스매치로 read field가
+  항상 undefined → 가드 false → UI dispatch 영원히 dormant. cycle 396/398 발견 사례.
+
+검증: tsc 0 / unit 1907 / lint clean / build-guard ok.
+
+---
+
+## Cycle 391-399 — Lens 다변화 (private/unreachable/data-config/silent-UI 5종)
+
+cycle 373-388 16사이클 fallback redundancy lens 종료 후 자연 분기. 9사이클 중 lens
+5종 — 단일 lens 회귀가 아닌 **다양한 dead config 형태 동시 정리**.
+
+### Export → private downgrade (cycle 391, 1사이클)
+
+- 391: DEFAULT_COMBAT_FLAGS — playerStateUtils 내부 2회 사용만, 외부 0건.
+  CombatEngine.DEFAULT_COMBAT_FLAGS는 별개 property로 무관. cycle 317 paired
+  test 가드 정정 (잘못된 active export list).
+
+### Unreachable lookup/data (cycle 392/395/397, 3사이클)
+
+- 392: ACTION_KIND_TO_BUTTON `open_shop` — adventureGuide producer 0건이라 lookup
+  절대 hit 안 됨.
+- 395: WEAPONLESS_ADVENTURER_SPRITES Set 정의 dead + JOB_SPRITE_SLUG_MAP
+  `'그림자 주군'` (공백 포함) normalize-bypass 키. resolveAppearanceKeys가 항상
+  공백 strip 후 lookup해 with-space 키 unreachable.
+- 397: THEME_BY_TARGET `abyssFloor` — DB.ACHIEVEMENTS 6 abyss target은 모두
+  abyssRecord. abyssFloor 키 lookup 절대 hit 안 됨.
+
+### Data-config dead (cycle 393/394/399, 3사이클)
+
+- 393: PREMIUM_SHOP entry category/repeatable 10 dead — invExpand/synthProtect/
+  revive 3 entry × 2 + cosmeticTitles 4 entry × 1. PremiumShop 컴포넌트 spread 후
+  사용 0건. 단일 batch 10 dead 필드.
+- 394: RELIC_SYNERGIES `id` 출력 20 dead — 매칭은 항상 bonus.effect 기반.
+  syn.id read는 src/, tests/ 어디에도 0건. cycle 365 (eventChain chainId 70)
+  data-config-dead 변형.
+- 399: QuickSlotProps interface `onAssign` / `onUnassign` 2 필드 dead — 본체
+  destructure 미사용 + 외부 pass 0건. interface dead 변형.
+
+### Silent UI 결손 (cycle 396/398, 2사이클 — 신규 lens 발견)
+
+- 396: StatsPanel `syn.name` → `syn.label` schema 미스매치 fix —
+  RELIC_SYNERGIES entry는 `label` 필드. 기존 `syn.name`은 항상 undefined로
+  React key 충돌 + 시너지 이름 UI 빈 칸 silent 결손.
+- 398: DashboardMobileSummary `trait.label` → `trait.title` schema 미스매치 fix —
+  TRAIT_DEFINITIONS entry는 `title` 필드. `if (trait?.label)` 가드 항상 false →
+  trait pill 영원히 silent 결손.
+
+### 신규 lens 발견 의의
+
+- "silent UI 결손" lens는 cycle 193 (SEASON_XP.codexDiscover dispatch 0건) /
+  cycle 218 (victory 사운드) silent dispatch lens의 schema 미스매치 변형.
+- 정의된 read 사이트는 활성이지만 schema mismatch로 producer 0건과 동일 결과 —
+  UI가 silent로 dormant. 이런 형태는 grep만으로 발견 어려움 (read 사이트 자체는
+  존재하므로). 후속 사이클에서 schema cross-check 패턴으로 추적 가능.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 390 🎯 — CHANGELOG에 cycles 381-389 history 일괄 추가
 
 - 마일스톤: cycle 380 batch 이후 9 사이클 미반영 batch 정리. cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 / 300 / 320 / 340 / 350 / 360 / 370 / 380에 이은 20번째 batch.
