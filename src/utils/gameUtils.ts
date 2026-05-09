@@ -495,8 +495,9 @@ export const migrateData = (rawData: any) => {
     }
     target.skillChoices = target.skillChoices && typeof target.skillChoices === 'object' ? target.skillChoices : {};
     target.challengeModifiers = Array.isArray(target.challengeModifiers) ? target.challengeModifiers : [];
-    target.stats.dailyInvadeCount = target.stats.dailyInvadeCount || 0;
-    target.stats.lastInvadeDate   = target.stats.lastInvadeDate   || null;
+    // cycle 386: dailyInvadeCount / lastInvadeDate fallback 제거 (cycle 373-385 동일 lens) —
+    //   모든 consumer가 이미 `|| 0` fallback 또는 strict equal 비교 (`=== today`)로
+    //   undefined / null 안전 처리.
     // 인벤 아이템에 enhance 기본값 보장
     if (Array.isArray(target.inv)) {
         target.inv = target.inv.map((item: any) => item ? { ...item, enhance: item.enhance || 0 } : item);
