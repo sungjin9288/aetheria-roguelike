@@ -7,6 +7,72 @@
 
 ---
 
+## Cycle 420 🎯 — CHANGELOG에 cycles 411-419 history 일괄 추가
+
+- 마일스톤: cycle 410 batch 이후 9 사이클 미반영 batch 정리. 23번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410에 이은 23번째.
+- 누적 마일스톤: cycle 410(unit 1954) → 419(unit 1995, +41). silent dead config
+  시리즈 cycle 222→419 180번째 도달.
+- 시리즈 정체성 — unreachable lens 메가 시리즈: 9 사이클 중 6 사이클(411/412/413/
+  414/418/419) unreachable lens 정리. 데이터 정합성 + 호출 사이트 분석 두
+  계열로 다양화.
+- 본 batch 핵심 패턴: **데이터 정합성 vs 호출 사이트 두 unreachable lens 동시
+  발견**. 시그니처 tone 정합성(411-413), 컴포넌트 size 호출 분석(418-419)으로
+  각각 발견.
+
+검증: tsc 0 / unit 1995 / lint clean / build-guard ok.
+
+---
+
+## Cycle 411-419 — Unreachable lens 메가 시리즈 (6사이클) + 출력 dead 다양화
+
+cycle 358 (steel tone) paired completion 시작 → 시그니처 tone 정합성 unreachable
+3사이클 → ICON_PATHS equipment-style 16 unreachable batch → output dead /
+cascade imports / SIZE_MAP 호출 사이트 unreachable로 연계 다양화.
+
+### 시그니처 tone 정합성 unreachable (cycle 411-413, 3사이클)
+
+- 411: SIG_SET_TONE.frost / arcane (StatsPanel + EquipmentPanel batch) —
+  signatureSets.json은 fire/holy/nature/shadow 4 tone만 emit. cycle 358 lens.
+- 412: ItemIcon SIGNATURE_TONE_RING.steel — signatureRegistry.json 8 tone에
+  steel 0건. cycle 358 paired completion.
+- 413: SignatureBadge TONE_COLORS.steel — 동일 lens 마무리 (4 컴포넌트 paired
+  completion 완성: TONE_GLOW + TONE_ACCENT + SIGNATURE_TONE_RING + TONE_COLORS).
+
+### ICON_PATHS 큰 batch (cycle 414, 1사이클)
+
+- 414: ItemIcon ICON_PATHS equipment-style 16 unreachable 일괄 — SVG 분기는
+  `!isEquipmentItem` 케이스만 진입 (equipment는 EquipmentAvatarPreview takeover).
+  sword/greatsword/dagger/staff/bow/axe/hammer/spear/scythe/whip/armor/robe/
+  cloak/boots/shield/book 16 키. 12 키 (material + 비-equipment fallback) 보존.
+
+### 출력 dead 다양화 (cycle 415-417, 3사이클)
+
+- 415: getWeeklySpecial isWeeklySpecial 출력 dead 마커 — cycle 355는
+  isDailyDeal을 회귀 가드로 보존했으나 isWeeklySpecial은 누락분 정리.
+- 416: CombatPanel ACTION_BUTTONS 4 entry × 2 fields = 8 dead (tag/detail).
+  렌더는 icon/key/className/mobileLabel/label만 read.
+- 417: EquipmentPanel SLOT_CONFIG icon 3 dead + cascade lucide-react Sword/
+  Shield 미사용 import 정리. Sparkles는 다른 JSX에서 활성 보존.
+
+### 호출 사이트 unreachable (cycle 418-419, 2사이클)
+
+- 418: AetherMark SIZE_MAP.sm — IntroScreen / BootScreen은 md/lg만 사용.
+- 419: SignalBadge SIZE_CLASS md/lg — 73 호출 사이트 모두 size="sm" 명시.
+  default param + fallback도 sm 기준으로 갱신.
+
+### 신규 lens 의의
+
+- "호출 사이트 분석 기반 unreachable" lens는 cycle 411-413의 데이터 정합성
+  unreachable과 보완 — 데이터/생산자가 정의되지 않은 케이스 vs 소비자가 절대
+  사용하지 않는 케이스. 두 계열 모두 동일 결과(lookup 절대 hit 안 됨).
+- 73 호출 사이트 분석은 시리즈 사상 가장 상세한 호출 traceability 확인.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 410 🎯 — CHANGELOG에 cycles 401-409 history 일괄 추가
 
 - 마일스톤: cycle 400 batch 이후 9 사이클 미반영 batch 정리. 22번째 batch.
