@@ -102,11 +102,12 @@ export const getWeeklySpecial = (playerLevel: any = 1) => {
 
     const shuffled = seededShuffle(rareItems, seed);
     const item = shuffled[0];
+    // cycle 415: isWeeklySpecial 마커 제거 — src/, tests/ read 0건이던 dead 출력.
+    //   originalPrice / price는 ShopPanel line-through 표시에 사용 보존.
     return {
         ...item,
         originalPrice: item.price,
         price: Math.floor(item.price * 0.85),
-        isWeeklySpecial: true,
     };
 };
 
