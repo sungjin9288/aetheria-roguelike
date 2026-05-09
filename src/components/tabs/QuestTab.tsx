@@ -28,7 +28,9 @@ const getQuestProgressPercent = (progress: any = 0, goal: any = 1) =>
 const MAX_COMPACT_QUESTS = 2;
 
 // cycle 313: export 제거 — QuestTab 내부 1회 사용만, 외부 import 0건.
-const QuestRewardChips = ({ reward, accent = 'blue' }: any) => {
+// cycle 429: default accent 값 제거 — 호출자가 ternary로 명시 전달이라 default
+//   도달 불가 (cycle 428 QuestBoardPanel RewardChips paired completion).
+const QuestRewardChips = ({ reward, accent }: any) => {
     const rewards = formatRewardParts(reward);
     if (!rewards.length) return null;
     const accentClass = accent === 'green'
