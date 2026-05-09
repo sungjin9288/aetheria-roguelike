@@ -130,7 +130,8 @@ export const useGameEngine = () => {
                 setSideTab: (val: any) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
                 setGameState: (val: any) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
                 setShopItems: (val: any) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
-                setAiThinking: (val: any) => dispatch({ type: AT.SET_AI_THINKING, payload: val }),
+                // cycle 406: setAiThinking 제거 — actions.setAiThinking 호출 0건이라 dead.
+                //   AT.SET_AI_THINKING reducer handler는 보존 (다른 dispatch path 의존).
                 setActiveTitle: (val: any) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
                 dismissEvent: () => {
                     dispatch({ type: AT.SET_EVENT, payload: null });
