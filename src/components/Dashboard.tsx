@@ -31,6 +31,9 @@ const TabSpinner = () => (
     </div>
 );
 
+// cycle 401: `mobile?: boolean;` 제거 — Dashboard 본체 destructure 미사용 +
+//   변수 read 0건. MobileGameLayout이 prop pass했으나 silent dropped (paired remove).
+//   mobileSection / mobileLabel / mobileFocused는 별개 식별자로 보존.
 interface DashboardProps {
     player: Player;
     grave?: any;
@@ -39,7 +42,6 @@ interface DashboardProps {
     actions?: any;
     stats?: any;
     mobileSection?: string;
-    mobile?: boolean;
     quickSlots?: any[];
     runtime?: any;
     inventorySpotlight?: any;

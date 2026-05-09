@@ -66,7 +66,6 @@ const MobileGameLayout = ({
                 showArchiveConsole ? (
                     <Suspense fallback={archiveAvailable ? <DashboardFallback /> : null}>
                         <Dashboard
-                            mobile
                             mobileSection="console"
                             consoleExpanded
                             onReturnToLog={() => setMobileConsoleMode('log')}
