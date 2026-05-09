@@ -27,8 +27,9 @@ const THEME_BY_TARGET: any = {
     crafts:            { icon: Hammer, titleClass: 'text-orange-100', iconTone: 'text-orange-200', card: 'border-orange-300/22 bg-orange-400/10' },
     rests:             { icon: BookOpen, titleClass: 'text-slate-100', iconTone: 'text-slate-300', card: 'border-white/8 bg-white/[0.04]' },
     bountiesCompleted: { icon: Coins, titleClass: 'text-yellow-100', iconTone: 'text-yellow-200', card: 'border-yellow-300/22 bg-yellow-400/10' },
+    // cycle 397: abyssFloor entry 제거 — DB.ACHIEVEMENTS의 6 abyss target은 모두 abyssRecord.
+    //   getTheme[achievement.target] lookup은 'abyssFloor'로 hit 0건이라 unreachable.
     abyssRecord:       { icon: Shield, titleClass: 'text-fuchsia-100', iconTone: 'text-fuchsia-200', card: 'border-fuchsia-300/22 bg-fuchsia-400/10' },
-    abyssFloor:        { icon: Shield, titleClass: 'text-fuchsia-100', iconTone: 'text-fuchsia-200', card: 'border-fuchsia-300/22 bg-fuchsia-400/10' },
     demonKingSlain:    { icon: Trophy, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
     prestige:          { icon: RefreshCcw, titleClass: 'text-cyan-100', iconTone: 'text-cyan-200', card: 'border-cyan-300/22 bg-cyan-400/10' },
     signaturesDiscovered:    { icon: Sparkles, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
