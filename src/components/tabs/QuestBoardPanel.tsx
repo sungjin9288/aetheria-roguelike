@@ -22,7 +22,9 @@ const getQuestProgressText = (quest: any, progress: any = 0) => (
 
 const getQuestProgressPercent = (progress: any = 0, goal: any = 1) => Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
 
-const RewardChips = ({ reward, accent = 'blue' }: any) => {
+// cycle 428: default accent 값 제거 — 4 호출자 모두 명시 전달이라 default 도달
+//   불가. ternary fallback (green/amber/else) 분기는 그대로 활성.
+const RewardChips = ({ reward, accent }: any) => {
   const rewards = formatRewardParts(reward);
   if (!rewards.length) return null;
   const accentClass = accent === 'green'
