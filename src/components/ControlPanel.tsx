@@ -197,7 +197,7 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.JOB_CHANGE) {
-    return <JobChangePanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} onOpenArchiveConsole={onOpenArchiveConsole} />;
+    return <JobChangePanel player={player} actions={actions} setGameState={setGameState} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
   if (gameState === GS.QUEST_BOARD) {
@@ -205,7 +205,7 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.CRAFTING) {
-    return <CraftingPanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} onOpenArchiveConsole={onOpenArchiveConsole} />;
+    return <CraftingPanel player={player} actions={actions} setGameState={setGameState} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
   const coreButtons = [

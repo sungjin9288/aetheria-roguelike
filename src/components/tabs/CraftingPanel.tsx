@@ -13,11 +13,12 @@ const RARITY_LABEL: any = { common: '일반', uncommon: '고급', rare: '희귀'
 /**
  * CraftingPanel — 제작/합성 패널 (탭 전환)
  */
+// cycle 403: `mobileFocused?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
+//   ControlPanel이 prop pass했으나 silent dropped (paired remove).
 interface CraftingPanelProps {
     player: any;
     actions?: any;
     setGameState?: (state: string) => void;
-    mobileFocused?: boolean;
     onOpenArchiveConsole?: any;
 }
 

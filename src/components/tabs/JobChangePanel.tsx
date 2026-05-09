@@ -7,11 +7,12 @@ import FocusPanelHeader from '../FocusPanelHeader';
 /**
  * JobChangePanel — 전직 선택 패널
  */
+// cycle 403: `mobileFocused?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
+//   ControlPanel이 prop pass했으나 silent dropped (paired remove).
 interface JobChangePanelProps {
     player: any;
     actions?: any;
     setGameState?: (state: string) => void;
-    mobileFocused?: boolean;
     onOpenArchiveConsole?: any;
 }
 
