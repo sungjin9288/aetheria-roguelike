@@ -16,8 +16,8 @@ const TYPE_PATHS: any = {
     // 버프/디버프
     'buff': 'M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6l3-6Z',
     'debuff': 'M12 2v4M4 12h4M16 12h4M6 6l3 3M15 15l3 3M6 18l3-3M15 9l3-3M12 8a4 4 0 100 8 4 4 0 000-8ZM10 10l4 4M14 10l-4 4',
-    // 번개 (빛 파생)
-    '번개': 'M13 2l-5 10h6l-5 10 10-12h-6L17 2h-4Z',
+    // cycle 421: thunder 키 제거 — classes.ts skill.type 값 분석 시 thunder type 0건
+    //   ('썬더볼트' 등도 빛 type으로 정의). monsters.ts weakness/resistance도 0건.
 };
 
 const TYPE_COLORS: any = {
@@ -28,7 +28,6 @@ const TYPE_COLORS: any = {
     '대지': '#b45309',
     '빛': '#facc15',
     '어둠': '#a855f7',
-    '번개': '#fbbf24',
     'buff': '#34d399',
     'debuff': '#f87171',
 };
