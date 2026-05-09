@@ -72,8 +72,11 @@ export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (�
     const defMult = bonus.defMult || 1;
     const hpMult = bonus.hpMult || 1;
 
-    // cycle 348: activeSet 내부의 atkMult/defMult/hpMult 3 dead 필드 제거 — 부모 return에
-    //   이미 동일 필드 노출 (statsCalculator는 부모만 read). activeSet.atk/def/hpMult read 0건.
+    // cycle 426: activeSet 내부의 atkMult/defMult/hpMult 3 필드 복원 — cycle 348의
+    //   잘못된 dead 판정 정정. StatsPanel.tsx (line 220/228/236)이 stats.activeSignatureSet
+    //   .atkMult / .defMult / .hpMult를 직접 read해서 formatMultDelta로 표시. 제거 시
+    //   2-set 착용 시 ATK/DEF/HP delta 모두 '—'로 표시되던 silent UI 결손.
+    //   부모 return의 동일 필드는 statsCalculator의 stat 합산용 (별도 path).
     return {
         atkMult,
         defMult,
@@ -85,6 +88,9 @@ export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (�
             count: bestCount,
             tier: availableTiers[0],
             desc: bonus.desc,
+            atkMult,
+            defMult,
+            hpMult,
         },
     };
 };
