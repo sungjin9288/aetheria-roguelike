@@ -78,6 +78,9 @@ export const SPECIAL_ITEM_ICON_KEYS: Record<string, string> = {
     '광기의 대갑주': 'named-armor-29',
 };
 
+// cycle 424: 'undefined' 엔트리 제거 — `obj[item.type] || 'misc'` 패턴에서
+//   item.type 부재 시 lookup이 undefined 반환 → `||` fallback이 동일 'misc'
+//   산출. 엔트리는 기능적 잉여 (defensive fallback redundancy).
 const EXACT_ICON_CATEGORY_BY_TYPE: any = {
     weapon: 'weapon',
     armor: 'armor',
@@ -89,7 +92,6 @@ const EXACT_ICON_CATEGORY_BY_TYPE: any = {
     mat: 'material',
     key: 'key',
     all: 'relic',
-    undefined: 'misc',
 };
 
 const buildExactItemIconKeys = () => {
