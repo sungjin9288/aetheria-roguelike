@@ -511,10 +511,9 @@ export const migrateData = (rawData: any) => {
     // cycle 384: areaBossDefeated / deathSaveUsedCount fallback 제거 (cycle 373-383 동일
     //   lens) — 모든 consumer가 이미 optional chain (`?.areaBossDefeated?.[name]`) 또는
     //   `|| {}` / `|| 0` fallback 처리.
-    // Kill Streak 필드 마이그레이션
-    if (typeof target.killStreak !== 'number') {
-        target.killStreak = 0;
-    }
+    // cycle 388: killStreak 정규화 제거 (cycle 373-387 동일 lens) — 모든 consumer가
+    //   `player.killStreak || 0` fallback 처리. 비숫자 값(corrupt save)도 이후 비교에서
+    //   NaN → false 반환으로 안전 (crash 없음).
     // cycle 206: 진 엔딩 파편 dead meta 필드 제거 — v5.0 schema 잔해 wire-up 안 됨.
     //   파편 메커니즘은 inv 기반 (combatBossHandlers.ts:15 inv.filter shard count)으로
     //   구현되어 있어 meta 필드는 dead. cycle 120(discoveries) / cycle 124(comboCount) /
