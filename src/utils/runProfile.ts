@@ -227,8 +227,10 @@ export const getTraitPassiveParts = (traitProfile: any) => {
     return parts;
 };
 
+// cycle 409: reasons 출력 dead 정리 — 외부 read 0건. 내부 reasons 배열은 summary
+//   계산용 로컬 var로만 사용. score / label / summary는 활성 보존.
 export const getTraitItemResonance = (item: Item | null | undefined, traitProfile: any, player: Player | null = null) => {
-    if (!item) return { score: 0, label: null, reasons: [], summary: null };
+    if (!item) return { score: 0, label: null, summary: null };
 
     const traitId = traitProfile?.id || 'balanced';
     const reasons: any[] = [];
@@ -295,7 +297,6 @@ export const getTraitItemResonance = (item: Item | null | undefined, traitProfil
     return {
         score,
         label,
-        reasons,
         summary: reasons.slice(0, 2).join(' · ') || null,
     };
 };
