@@ -7,6 +7,82 @@
 
 ---
 
+## Cycle 480 🎯 — CHANGELOG에 cycles 471-479 history 일괄 추가
+
+- 마일스톤: cycle 470 batch 이후 9 사이클 미반영 batch 정리. 29번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470에 이은 29번째.
+- 누적 마일스톤: cycle 470(unit 2197) → 479(unit 2240, +43). silent dead config
+  시리즈 cycle 222→479 232번째 도달.
+- 시리즈 정체성 — **9사이클 연속 cascade cleanup**: cycle 471 (Dashboard 일괄
+  10 callsite + dead config flag 제거) → cycle 472-479 (각 panel paired
+  cascade). 단일 cleanup이 후속 8 사이클의 paired completion을 trigger한 첫
+  메가 시리즈.
+- 본 batch 핵심 패턴: **cascade lens** — declaration의 prop default 정리(cycle
+  452)가 callsite 전달 정리(cycle 471)와 합쳐져 producer-consumer 양 끝에서
+  unreachable이 확정. 후속 cycles이 하나씩 panel을 paired completion으로 정리.
+
+검증: tsc 0 / unit 2240 / lint clean / build-guard ok.
+
+---
+
+## Cycle 471-479 — Dashboard `desktopArchiveCompact` cascade 9사이클 paired
+
+cycle 471의 `const desktopArchiveCompact = false;` const + 10 callsite의 compact
+prop 일괄 제거가 후속 8 사이클의 paired completion을 trigger.
+
+### Trigger (cycle 471)
+
+- 471: Dashboard `desktopArchiveCompact = false` const 제거 — reassign 0건의
+  unchanging false flag (dead config flag). 10 callsite의 `compact={
+  desktopArchiveCompact}` attr 일괄 제거. cycle 452 (declaration default 정리)
+  + cycle 457 (callsite 명시 attr) 양방향 lens 결합. cycle 451/452의 stale
+  테스트 → 호출 존재 가드로 약화.
+
+### Cascade 8사이클 (cycle 472-479)
+
+각 panel이 cycle 471 이후 caller 0건이라 compact 항상 undefined → cascade dead:
+
+- 472: MapNavigator — compact prop + showAllMaps state + 4 ternary + toggle
+  button 블록 dead. visibleEntries → mapEntries 직접.
+- 473: AchievementPanel — compact prop + showAllAchievements state +
+  summaryAchievements useMemo + 2 const + className ternary 2건 + toggle UI
+  + summary 카드 블록 dead. {!showSummaryView && locked > 0} 가드도 평탄화.
+- 474: EquipmentPanel — compact prop + 5 ternary 가지 (className 2건 / Pixel
+  Avatar size / slot padding 2건) dead.
+- 475: StatsPanel — compact prop + showAllStats state + 3 const (visibleStat
+  Entries / hasExpandableSections / topKillPreview) + 8 ternary + toggle UI
+  + summary 분기 dead.
+- 476: GravePanel — compact prop + 20 ternary 가지 (text size / icon size /
+  spacing 등) dead. 가장 많은 ternary cleanup.
+- 477: SystemTab — compact prop + showAllSystem state + 5 const (showSystem
+  Summary / dailyDoneCount / nextDailyMission / topRanker / myRankIndex /
+  leaderboard) + 8 ternary + 토글 헤더 + summary 카드 4개 블록 dead.
+- 478: BuildAdvicePanel — compact prop + 19 ternary 가지 (padding / text /
+  spacing / 라벨 변형 / `!compact && desc` conditional UI 다수) dead.
+- 479: SkillTreePreview — compact prop + showAllSkills state + 3 const +
+  14 ternary + toggle UI + summary 분기 + 내부 SkillCard subprop + ClassTree
+  / SkillBranches `!compact &&` 블록 dead. internal helper까지 cascade.
+
+### 신규 lens 의의
+
+- **Cascade lens 정착** — cycle 471의 단일 cleanup이 9사이클 paired
+  completion을 trigger. cycle 463-466 (icons/ 디렉토리 4사이클 paired)의
+  확장 변형 — 디렉토리 단위가 아니라 **producer-consumer chain 단위 cascade**.
+  단일 dead config flag가 거대한 unreachable 트리를 만든 첫 사례.
+- **Stale 테스트 가드 약화 패턴** — cycle 405/451/452/125 등에서 cascade
+  대상 panel을 가드 list에서 단계적으로 제외. test list가 cleanup의 마이그
+  레이션 표 역할.
+- **State + useMemo + const 동시 cascade** — cycle 473/475/477/479은 단일
+  prop dead가 useState / useMemo / 의존 const까지 cascade. dead prop 1개가
+  여러 hook + 파생 const + 큰 JSX 블록을 동시 unreachable로 만드는 패턴.
+- **Internal helper 동시 정리** — cycle 479는 SkillTreePreview의 외부 prop과
+  내부 SkillCard 컴포넌트 prop을 같은 cleanup으로 정리. 같은 파일 paired
+  (cycle 458-459 StatusBar)의 cascade 변형.
+
+---
+
 ## Cycle 470 🎯 — CHANGELOG에 cycles 461-469 history 일괄 추가
 
 - 마일스톤: cycle 460 batch 이후 9 사이클 미반영 batch 정리. 28번째 batch.
