@@ -21,7 +21,10 @@ const CODEX_BUCKET_BY_TYPE: any = Object.freeze({
  * - 이미 본 아이템 이름은 재노출 안 함 (같은 전설을 두 번 봐도 한 번만).
  */
 
-const getSignatureItemNames = (inv: any = []) => {
+// cycle 614: inv default [] 제거 — explicit default-elimination pattern
+//   (cycle 608-613에 이은 6번째 적용). caller에 || [] defensive guard 명시
+//   추가 후 default unreachable.
+const getSignatureItemNames = (inv: any) => {
     const names: any[] = [];
     for (const entry of inv) {
         if (entry && hasDedicatedSignatureArt(entry)) {
@@ -53,7 +56,10 @@ export const useLegendaryDropDetector = (inv: any, dispatch: any, codex: any) =>
     }, []);
 
     useEffect(() => {
-        const signatureNames = getSignatureItemNames(inv);
+        // cycle 614: |[] defensive guard 명시 추가 — explicit default-elimination
+        //   pattern (cycle 608-613). getSignatureItemNames default `[]` 제거 후
+        //   undefined 안전 처리는 caller-side로 이전.
+        const signatureNames = getSignatureItemNames(inv || []);
 
         // 초기 mount: 현재 소지중인 signature 아이템을 모두 seen으로 간주
         // (세이브 로드 시 기존 레전더리로 오버레이 스팸 방지)
