@@ -70,7 +70,10 @@ export const getWeaponCritBonus = (weapon: any, slot: any) => {
 };
 
 // cycle 291: export 제거 — getEquipmentProfile 내부 사용만 (외부 consumer 0건).
-const getWeaponEquipScore = (weapon: any, slot: any = 'main') => (
+// cycle 518: slot default 'main' 제거 — 2 internal callsite 모두 명시 전달
+//   (mainWeapon, 'main' / offhandWeapon, 'offhand')이라 default 도달 불가.
+//   util default 청소 메가 시리즈 16번째 (cycle 502-517).
+const getWeaponEquipScore = (weapon: any, slot: any) => (
     getWeaponAttackValue(weapon, slot) + Math.round(getWeaponCritBonus(weapon, slot) * 100)
 );
 
