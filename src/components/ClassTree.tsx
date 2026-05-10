@@ -23,8 +23,10 @@ const TIER_COLORS: any = { 0: '#9ca3af', 1: '#00ccff', 2: '#bc13fe', 3: '#f59e0b
 const buildTree = () => {
     const nodes: Record<string, any> = {};
 
+    // cycle 455: nodes 객체에서 설명 필드 제거 — TreeNode가 node.tier/.name/.reqLv만
+    //   read하고 그 외 필드는 read 0건이라 cycle 453 paired completion으로 정리.
     (Object.entries(DB.CLASSES) as Array<[string, any]>).forEach(([name, data]: any) => {
-        nodes[name] = { name, tier: data.tier || 0, reqLv: data.reqLv || 1, desc: data.desc };
+        nodes[name] = { name, tier: data.tier || 0, reqLv: data.reqLv || 1 };
     });
 
     // 티어별 그룹
