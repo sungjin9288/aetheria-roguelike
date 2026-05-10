@@ -36,7 +36,11 @@ const TYPE_COLORS: any = {
  * SkillTypeIcon — 스킬 속성 아이콘
  * @param {{ type: string, size?: number, className?: string }} props
  */
-const SkillTypeIcon = ({ type, size = 14, className = '' }: any) => {
+// cycle 569: size default 14 partial cleanup — 4 callers (SkillTreePreview/
+//   MonsterCodex×3) 모두 size 명시 전달이라 default 도달 불가. className은
+//   MonsterCodex:155/161 미전달이라 default '' REACHABLE 보존. 청소 메가
+//   시리즈 62번째 partial cleanup pattern (cycle 542 재적용).
+const SkillTypeIcon = ({ type, size, className = '' }: any) => {
     const path = TYPE_PATHS[type];
     if (!path) return null;
     const color = TYPE_COLORS[type] || '#e2e8f0';
