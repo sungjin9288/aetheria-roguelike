@@ -98,7 +98,10 @@ export const getOffhandTransform = (profile: any) => placementToTransform(getOff
 
 export const getArmorTransform = (profile: any) => placementToTransform(getArmorPlacement(profile));
 
-const withVariant = (baseStage: any, variant: any, overrides: any = {}) => {
+// cycle 564: overrides default {} 제거 — 10 internal callsite (line 128부터)
+//   모두 3 args 명시 (object literal로 overrides 전달)이라 default 도달
+//   불가. private (no export). 청소 메가 시리즈 57번째.
+const withVariant = (baseStage: any, variant: any, overrides: any) => {
     if (variant === 'card') {
         return {
             ...baseStage,
