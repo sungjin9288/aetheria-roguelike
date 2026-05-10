@@ -30,5 +30,6 @@ interface Window {
     __initial_auth_token?: string;
     __AETHERIA_TEST_API__?: any;
     render_game_to_text?: any;
-    advanceTime?: any;
+    // cycle 594: advanceTime 타입 cascade 제거 — cycle 593에서 실제 정의/cleanup
+    //   제거된 후 잔존 dead type. paired completion.
 }
