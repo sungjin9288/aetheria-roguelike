@@ -152,7 +152,7 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.QUEST_BOARD) {
-    return <QuestBoardPanel player={player} actions={actions} setGameState={setGameState} mobileFocused={mobileFocused} onOpenArchiveConsole={onOpenArchiveConsole} />;
+    return <QuestBoardPanel player={player} actions={actions} setGameState={setGameState} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
   if (gameState === GS.CRAFTING) {

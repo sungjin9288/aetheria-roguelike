@@ -83,7 +83,9 @@ test('cycle 403: ControlPanel CraftingPanel/JobChangePanel JSX에서 mobileFocus
 });
 
 test('cycle 403: 활성 컴포넌트 mobileFocused 보존 (회귀 가드)', async () => {
-    for (const f of ['src/components/EventPanel.tsx', 'src/components/tabs/QuestBoardPanel.tsx', 'src/components/ShopPanel.tsx']) {
+    // cycle 487이 QuestBoardPanel mobileFocused cascade로 정리. 잔존 EventPanel /
+    // ShopPanel만 가드.
+    for (const f of ['src/components/EventPanel.tsx', 'src/components/ShopPanel.tsx']) {
         const source = await readSrc(f);
         assert.ok(/mobileFocused\?:/.test(source),
             `${f} mobileFocused 보존 (활성)`);

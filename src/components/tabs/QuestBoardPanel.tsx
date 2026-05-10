@@ -44,16 +44,16 @@ const RewardChips = ({ reward, accent }: any) => {
 /**
  * QuestBoardPanel — 퀘스트 보드 패널 (진행 중 / 수락 가능 / 잠긴 임무)
  */
+// cycle 487: 모바일 포커스 prop 인터페이스 제거 — cycle 486 paired completion
+//   (ControlPanel cascade로 caller 0건이라 항상 truthy 전달이었음).
 interface QuestBoardPanelProps {
     player: any;
     actions?: any;
     setGameState?: (state: string) => void;
-    mobileFocused?: boolean;
     onOpenArchiveConsole?: any;
 }
 
-const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false, onOpenArchiveConsole = null }: QuestBoardPanelProps) => {
-  const overlayPanelClass = 'fixed inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
+const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: QuestBoardPanelProps) => {
   const {
     traitProfile,
     activeEntries: activeQuestEntries,
@@ -78,7 +78,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false,
   return (
     <Motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-4' : `${overlayPanelClass} panel-noise aether-surface-strong z-30 flex flex-col rounded-[1.95rem] p-4 overflow-hidden`}`}
+      className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-4"
     >
       <FocusPanelHeader
         eyebrow="Mission Grid"
@@ -87,7 +87,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, mobileFocused = false,
         meta="진행 중 임무, 현상수배, 다음 수락 후보를 한 번에 점검합니다."
         onBack={() => setGameState?.('idle')}
         backLabel="복귀"
-        bleedClassName={mobileFocused ? '-mx-4 px-4' : '-mx-4 px-4'}
+        bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}
         archiveLabel="INV"
         archiveTestId="quest-board-open-archive"
