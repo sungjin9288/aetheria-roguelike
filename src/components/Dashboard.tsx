@@ -115,10 +115,11 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
         }
         return {};
     };
+    // cycle 444: 'reset' actionId 가드 / 분기 제거 — TOWN_MENU_ACTIONS는 rest /
+    //   class / quest / craft 4 entries만 emit. 'reset' actionId 전달 caller 0건.
+    //   confirmMenuReset state는 별도 caller (직접 button onClick)가 set.
     const handleMenuAction = (actionId: any) => {
-        if (actionId !== 'reset') {
-            setConfirmMenuReset(false);
-        }
+        setConfirmMenuReset(false);
         if (actionId === 'rest') {
             actions.rest?.();
             return;
@@ -133,10 +134,6 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
         }
         if (actionId === 'craft') {
             actions.setGameState?.(GS.CRAFTING);
-            return;
-        }
-        if (actionId === 'reset') {
-            setConfirmMenuReset(true);
         }
     };
 
