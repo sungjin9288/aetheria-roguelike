@@ -53,11 +53,13 @@ test('cycle 291: incrementStat / getEquipmentProfile active export 유지', asyn
     assert.ok(/export const getEquipmentProfile/.test(eqSrc), 'getEquipmentProfile 유지');
 });
 
-test('cycle 291: incrementStat 동작 보존 (회귀 가드)', async () => {
+test('cycle 291: incrementStat 동작 보존 (cycle 502가 amount 파라미터 제거)', async () => {
+    // cycle 502가 amount 파라미터 cascade로 제거 (3 callsite 모두 2 args 호출).
+    // amount=3 테스트 → 1만 증가하는 새 동작으로 가드 업데이트.
     const { incrementStat } = await import('../src/utils/playerStateUtils.js');
     const player = { stats: { kills: 5 } };
-    const next = incrementStat(player, 'kills', 3);
-    assert.equal(next.stats.kills, 8, 'kills 5+3=8');
+    const next = incrementStat(player, 'kills');
+    assert.equal(next.stats.kills, 6, 'kills 5+1=6 (cycle 502 정적 +1)');
     assert.notEqual(next, player, '새 객체 반환 (immutable)');
 });
 

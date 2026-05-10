@@ -12,14 +12,16 @@ const updateStats = (player: Player, statsUpdate: any): Player => ({
 });
 
 /**
- * player.stats의 숫자 필드에 값을 누적합니다. 필드가 없으면 0에서 시작합니다.
+ * player.stats의 숫자 필드에 1만큼 누적합니다. 필드가 없으면 0에서 시작.
  * @param {Object} player
  * @param {string} field - stats 하위 필드명
- * @param {number} amount - 누적할 값 (기본 1)
  * @returns {Object} 새 player 객체
+ *
+ * cycle 502: 누적량 파라미터 제거 — 3 callsite (useInventoryActions) 모두 2 args
+ *   호출. default 1 도달 불가 → 정적 + 1 inline.
  */
-export const incrementStat = (player: Player, field: string, amount: number = 1): Player =>
-    updateStats(player, { [field]: ((player.stats as any)?.[field] || 0) + amount });
+export const incrementStat = (player: Player, field: string): Player =>
+    updateStats(player, { [field]: ((player.stats as any)?.[field] || 0) + 1 });
 
 // cycle 317: export 제거 — playerStateUtils 내부 2회 사용만, 외부 consumer 0건.
 const EMPTY_TEMP_BUFF: any = {
