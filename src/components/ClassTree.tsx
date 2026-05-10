@@ -15,16 +15,16 @@ const TIER_COLORS: any = { 0: '#9ca3af', 1: '#00ccff', 2: '#bc13fe', 3: '#f59e0b
 
 /**
  * 전직 트리의 노드 데이터 구축
+ *
+ * cycle 453: nodes / edges 출력 dead 정리 — 호출자가 tiers만 destructure.
+ *   edges는 build됐지만 consumer 0건이라 push 자체 제거. nodes는 tiers
+ *   그룹핑용 internal const로만 보존.
  */
 const buildTree = () => {
     const nodes: Record<string, any> = {};
-    const edges: Array<{ from: string; to: string }> = [];
 
     (Object.entries(DB.CLASSES) as Array<[string, any]>).forEach(([name, data]: any) => {
         nodes[name] = { name, tier: data.tier || 0, reqLv: data.reqLv || 1, desc: data.desc };
-        (data.next || []).forEach((child: string) => {
-            edges.push({ from: name, to: child });
-        });
     });
 
     // 티어별 그룹
@@ -33,7 +33,7 @@ const buildTree = () => {
         if (tiers[n.tier]) tiers[n.tier].push(n);
     });
 
-    return { nodes, edges, tiers };
+    return { tiers };
 };
 
 const TreeNode = ({ node, isCurrent, isAvailable, isLocked }: any) => {
