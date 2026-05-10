@@ -35,7 +35,7 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
         });
     };
 
-    const commitExploreOutcome = (outcome: any, transformPlayer: any = null) => {
+    const commitExploreOutcome = (outcome: any, transformPlayer: any) => {
         resetDailyProtocolIfNeeded(player, dispatch);
         resetWeeklyProtocolIfNeeded(player, dispatch);
         dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });

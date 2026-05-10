@@ -40,7 +40,7 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
             const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress);
             if (chainTrigger) {
-                commitExploreOutcome('narrative_event');
+                commitExploreOutcome('narrative_event', null);
                 const { chain, step } = chainTrigger;
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: {
@@ -77,11 +77,11 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
                         }
                     });
                     if (eventData?.exhausted) {
-                        commitExploreOutcome('nothing');
+                        commitExploreOutcome('nothing', null);
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                         addLog('warning', eventData.message || MSG.AI_QUOTA_REACHED);
                     } else if (eventData && eventData.desc) {
-                        commitExploreOutcome('narrative_event');
+                        commitExploreOutcome('narrative_event', null);
                         if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
                         const normalizedChoices = toArray(eventData.choices)
                             .map((choice: any, idx: any) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || MSG.CHOICE_DEFAULT(idx + 1)))
@@ -90,7 +90,7 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
                         dispatch({ type: AT.SET_EVENT, payload: normalized });
                         addLog('event', normalized.desc);
                     } else {
-                        commitExploreOutcome('nothing');
+                        commitExploreOutcome('nothing', null);
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                         addLog('info', MSG.EXPLORE_NOTHING);
                     }
@@ -103,10 +103,10 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
             if (Math.random() < quietChance) {
                 const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats });
                 if (quietResult !== 'nothing') {
-                    commitExploreOutcome(quietResult);
+                    commitExploreOutcome(quietResult, null);
                     return;
                 }
-                commitExploreOutcome('nothing');
+                commitExploreOutcome('nothing', null);
                 return addLog('info', MSG.EXPLORE_QUIET);
             }
 
@@ -114,7 +114,7 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
             if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
                 const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
                 if (available.length > 0) {
-                    commitExploreOutcome('relic_found');
+                    commitExploreOutcome('relic_found', null);
                     const candidates = pickWeightedRelics(available, 3);
                     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
                     addLog('event', MSG.EXPLORE_RELIC_FOUND);
