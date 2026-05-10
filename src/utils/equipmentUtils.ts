@@ -130,7 +130,11 @@ export const getEquipmentProfile = (equip: EquipSlots = {}) => {
     };
 };
 
-const pickBestOneHandPair = (weapons: any[] = [], requiredWeapon: any = null) => {
+// cycle 528: weapons / requiredWeapon defaults 제거 — 1 internal callsite
+//   (line 197) pickBestOneHandPair(filter(Boolean) array, item) 2 args 명시
+//   전달이라 두 default 모두 도달 불가. body의 requiredWeapon truthy 가드는
+//   별개 보존. util default 청소 메가 시리즈 25번째 (cycle 502-527).
+const pickBestOneHandPair = (weapons: any[], requiredWeapon: any) => {
     const candidates = weapons.filter((weapon: any) => isOneHandWeapon(weapon));
     if (!candidates.length) return { mainWeapon: null, offhandWeapon: null };
     if (candidates.length === 1) return { mainWeapon: candidates[0], offhandWeapon: null };
