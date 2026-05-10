@@ -28,7 +28,10 @@ const IntroScreen = ({ onStart }: IntroScreenProps) => {
         nameInputRef.current?.blur();
     };
 
-    const applyName = (nextName: any, dismissKeyboard: any = false) => {
+    // cycle 608: dismissKeyboard default false 제거 — explicit default-elimination
+    //   pattern. line 109 caller에 false 명시 추가하여 default unreachable 전환.
+    //   line 118 caller는 true 명시 보존. 신규 lens (active conversion).
+    const applyName = (nextName: any, dismissKeyboard: any) => {
         setName(nextName);
         if (dismissKeyboard) {
             blurMobileInput();
@@ -106,7 +109,7 @@ const IntroScreen = ({ onStart }: IntroScreenProps) => {
                                     data-testid="intro-name-input"
                                     type="text"
                                     value={name}
-                                    onChange={(e: any) => applyName(e.target.value)}
+                                    onChange={(e: any) => applyName(e.target.value, false)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="닉네임 입력"
                                     className="w-full rounded-[1.15rem] border border-[#d5b180]/20 bg-[#f6e7c8] px-3 py-3 text-center font-rajdhani text-xl text-black transition-all placeholder:text-black/38 focus:border-[#7dd4d8]/35 focus:outline-none focus:shadow-[0_0_28px_rgba(125,212,216,0.12)]"
