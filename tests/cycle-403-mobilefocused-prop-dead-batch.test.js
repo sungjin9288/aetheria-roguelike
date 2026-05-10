@@ -82,14 +82,10 @@ test('cycle 403: ControlPanel CraftingPanel/JobChangePanel JSX에서 mobileFocus
         'JobChangePanel JSX에서 mobileFocused prop 0건');
 });
 
-test('cycle 403: 활성 컴포넌트 mobileFocused 보존 (회귀 가드)', async () => {
-    // cycle 487/488이 QuestBoardPanel/ShopPanel mobileFocused cascade로 정리.
-    // 잔존 EventPanel만 가드.
-    for (const f of ['src/components/EventPanel.tsx']) {
-        const source = await readSrc(f);
-        assert.ok(/mobileFocused\?:/.test(source),
-            `${f} mobileFocused 보존 (활성)`);
-    }
+test('cycle 403: 활성 컴포넌트 mobileFocused 보존 (cycle 487-489 cascade로 모두 정리됨)', async () => {
+    // cycle 487/488/489가 QuestBoardPanel/ShopPanel/EventPanel mobileFocused
+    // cascade로 일괄 정리. 잔존 panel 0건 → 가드 list 비움.
+    assert.ok(true, 'cycle 487-489 cascade로 모든 panel 정리됨');
 });
 
 test('cycle 402 회귀 가드: PostCombatCard / IntroScreen mobile 0건', async () => {

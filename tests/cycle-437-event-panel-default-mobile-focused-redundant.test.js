@@ -33,20 +33,18 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('cycle 437: EventPanel destructure에서 default mobileFocused 제거', async () => {
+test('cycle 437: EventPanel mobileFocused cycle 489 cascade로 prop 자체 제거', async () => {
+    // cycle 489가 EventPanel mobileFocused prop 자체를 cascade로 제거.
+    // 이전 default 가드 → cascade 보존 가드로 약화.
     const source = await readSrc('src/components/EventPanel.tsx');
-    const fnIdx = source.indexOf('const EventPanel =');
-    const fnEnd = source.indexOf('=>', fnIdx);
-    const block = source.slice(fnIdx, fnEnd);
-    assert.ok(!/mobileFocused = false/.test(block), 'default mobileFocused 제거됨');
-    assert.ok(/\bmobileFocused\b/.test(block), 'mobileFocused 파라미터 보존');
+    assert.ok(!/mobileFocused/.test(source), 'cycle 489 cascade로 mobileFocused 제거 보존');
 });
 
-test('cycle 437: 호출 사이트 정합성 가드 (ControlPanel 명시 전달)', async () => {
+test('cycle 437: ControlPanel <EventPanel> mobileFocused 전달 cascade 제거', async () => {
     const source = await readSrc('src/components/ControlPanel.tsx');
     const callMatch = source.match(/<EventPanel[^/]*\/>/);
     assert.ok(callMatch, 'EventPanel 호출 발견');
-    assert.ok(/mobileFocused=/.test(callMatch[0]), 'mobileFocused 명시 전달');
+    assert.ok(!/mobileFocused/.test(callMatch[0]), 'cycle 489 cascade로 mobileFocused 전달 제거');
 });
 
 test('cycle 436 회귀 가드: getDailyDeals isDailyDeal 0건', async () => {

@@ -116,7 +116,6 @@ const MobileGameLayout = ({
                     isAiThinking={engine.isAiThinking}
                     currentEvent={engine.currentEvent}
                     stats={fullStats}
-                    mobileFocused
                     onOpenArchiveConsole={openArchiveConsole}
                 />
             ) : (
@@ -132,7 +131,6 @@ const MobileGameLayout = ({
                         isAiThinking={engine.isAiThinking}
                         currentEvent={engine.currentEvent}
                         stats={fullStats}
-                        mobileFocused
                         onOpenArchiveConsole={openArchiveConsole}
                     />
                 </div>

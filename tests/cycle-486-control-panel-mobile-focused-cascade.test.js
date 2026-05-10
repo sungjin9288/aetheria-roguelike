@@ -51,13 +51,11 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('cycle 486: ControlPanel destructure에서 mobileFocused default 0건', async () => {
+test('cycle 486: ControlPanel mobileFocused cycle 489 cascade로 prop 자체 제거', async () => {
+    // cycle 489가 4사이클 cascade 마무리하며 ControlPanel destructure / interface
+    // 에서도 mobileFocused 완전 제거. 이전 default 가드 → cascade 보존 가드로 약화.
     const source = await readSrc('src/components/ControlPanel.tsx');
-    const fnIdx = source.indexOf('const ControlPanel =');
-    const fnEnd = source.indexOf('}: ControlPanelProps', fnIdx);
-    const block = source.slice(fnIdx, fnEnd);
-    assert.ok(!/mobileFocused\s*=\s*false/.test(block), 'mobileFocused default 제거');
-    assert.ok(/\bmobileFocused\b/.test(block), 'mobileFocused prop 자체는 보존 (subchildren forward용)');
+    assert.ok(!/mobileFocused/.test(source), 'cycle 489 cascade로 mobileFocused 제거 보존');
 });
 
 test('cycle 486: renderResetControl helper / 2 unreachable 블록 0건', async () => {
@@ -82,12 +80,13 @@ test('cycle 486: line 181 EVENT 분기 ternary 첫 가지 inline (mobile-focused
         'non-mobile-focused EVENT 가지 제거');
 });
 
-test('cycle 486: 정합성 가드 — MobileGameLayout 2 callsite 모두 mobileFocused 전달', async () => {
+test('cycle 486: MobileGameLayout 2 callsite mobileFocused cycle 489 cascade로 제거', async () => {
+    // cycle 489 paired completion으로 callsite의 mobileFocused 명시 전달도 모두 제거.
     const source = await readSrc('src/components/app/MobileGameLayout.tsx');
     const matches = source.match(/<ControlPanel[\s\S]*?\/>/g) || [];
     assert.equal(matches.length, 2, 'ControlPanel 호출 2건');
     matches.forEach((m, i) => {
-        assert.ok(/mobileFocused/.test(m), `callsite ${i}에 mobileFocused 전달 보존`);
+        assert.ok(!/mobileFocused/.test(m), `callsite ${i}에 mobileFocused 0건 (cascade 완료)`);
     });
 });
 

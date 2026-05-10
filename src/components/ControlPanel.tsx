@@ -32,7 +32,6 @@ interface ControlPanelProps {
   isAiThinking?: boolean;
   currentEvent?: any;
   stats?: any;
-  mobileFocused?: boolean;
   onOpenArchiveConsole?: any;
 }
 
@@ -47,12 +46,13 @@ const ControlPanel = ({
   isAiThinking,
   currentEvent,
   stats = null,
-  mobileFocused,
   onOpenArchiveConsole = null,
 }: ControlPanelProps) => {
-  // cycle 486: mobileFocused 항상 true (2 callsite 모두 shorthand) → default 제거,
-  //   reset 확인 상태 + reset helper 함수 + `!mobileFocused && ...` 2 unreachable
-  //   블록 + EVENT 비-모바일 분기 cascade 정리.
+  // cycle 486-489: 모바일 포커스 플래그 4사이클 cascade — caller 항상 truthy
+  //   전달 (2 callsite shorthand) → reset 확인 상태 / reset helper 함수 /
+  //   비-truthy 가드 2 unreachable 블록 / EVENT 비-모바일 분기 + 3 subchild
+  //   (QuestBoardPanel/ShopPanel/EventPanel) cascade 정리. 본체 변수 read 0건이라
+  //   destructure에서 완전 제거. interface도 정리.
   const mapData = DB.MAPS[player.loc as string];
   const guidance = getAdventureGuidance(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, gameState);
   const moveRecommendations = getMoveRecommendations(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, DB.MAPS);
@@ -140,7 +140,7 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.EVENT && !isAiThinking) {
-    return <EventPanel currentEvent={currentEvent} actions={actions} mobileFocused={mobileFocused} />;
+    return <EventPanel currentEvent={currentEvent} actions={actions} />;
   }
 
   if (gameState === GS.SHOP) {

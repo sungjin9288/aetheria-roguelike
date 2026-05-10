@@ -6,18 +6,18 @@ import FocusPanelHeader from './FocusPanelHeader';
  * EventPanel - Dynamic event choice UI
  * Separated from ControlPanel for cleaner architecture
  */
+// cycle 489: 모바일 포커스 prop 인터페이스 제거 — cycle 486 cascade로 caller 0건
+//   이라 항상 truthy 전달이었음. fallback 분기 26줄 unreachable 함께 cleanup.
 interface EventPanelProps {
     currentEvent?: any;
     actions?: any;
-    mobileFocused?: boolean;
 }
 
-// cycle 437: default mobileFocused 값 제거 — 호출자 ControlPanel:192이 명시
+// cycle 437: 모바일 포커스 default 값 제거 — 호출자 ControlPanel:192이 명시
 //   전달이라 default 도달 불가 (cycle 364-368 redundant default annotation lens).
-const EventPanel = ({ currentEvent, actions, mobileFocused }: EventPanelProps) => {
+const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
     if (!currentEvent) return null;
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
-    const overlayPanelClass = 'absolute inset-x-2 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+0.5rem)]';
     const panelBody = (
         <div data-testid="event-panel" className="relative flex flex-1 min-h-0 flex-col overflow-y-auto custom-scrollbar">
             <FocusPanelHeader
@@ -69,47 +69,18 @@ const EventPanel = ({ currentEvent, actions, mobileFocused }: EventPanelProps) =
         </div>
     );
 
-    if (mobileFocused) {
-        return (
-            <Motion.div
-                initial={{ opacity: 0, y: 18, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
-                className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3"
-            >
-                <div
-                    className="pointer-events-none absolute inset-0 opacity-60"
-                    style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 22%), radial-gradient(circle at top left, rgba(213,177,128,0.1), transparent 30%)' }}
-                />
-                {panelBody}
-            </Motion.div>
-        );
-    }
-
     return (
         <Motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-30"
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3"
         >
-            <div className="aether-overlay" />
             <div
-                className="pointer-events-none absolute inset-0 opacity-70"
-                style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(213,177,128,0.12), transparent 28%), radial-gradient(circle at bottom right, rgba(125,212,216,0.08), transparent 24%)' }}
+                className="pointer-events-none absolute inset-0 opacity-60"
+                style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 22%), radial-gradient(circle at top left, rgba(213,177,128,0.1), transparent 30%)' }}
             />
-            <Motion.div
-                initial={{ opacity: 0, y: 18, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
-                className={`${overlayPanelClass} panel-noise aether-surface-strong overflow-hidden rounded-[2rem] p-3`}
-            >
-                <div
-                    className="pointer-events-none absolute inset-0 opacity-60"
-                    style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 22%), radial-gradient(circle at top left, rgba(213,177,128,0.1), transparent 30%)' }}
-                />
-                {panelBody}
-            </Motion.div>
+            {panelBody}
         </Motion.div>
     );
 };
