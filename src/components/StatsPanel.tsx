@@ -1,14 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Activity, BarChart3, Coins, Compass, Flame, FlaskConical, Footprints, Hammer, Heart, Link2, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
 import type { Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import SignalBadge from './SignalBadge';
 
+// cycle 475: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
+//   제거 후 caller 0건. cascade로 토글 상태 / 가지 ternary / 토글 버튼 일괄 정리.
 interface StatsPanelProps {
     player?: Player | null;
     stats?: any;
-    compact?: boolean;
 }
 
 /**
@@ -39,9 +40,8 @@ const formatMultDelta = (mult: any) => {
 /**
  * StatsPanel — 플레이 통계 + 성향 요약
  */
-// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-const StatsPanel = ({ player, stats, compact }: StatsPanelProps) => {
-    const [showAllStats, setShowAllStats] = useState(false);
+// cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const StatsPanel = ({ player, stats }: StatsPanelProps) => {
     const overview = useMemo(() => {
         const s = player?.stats || {};
         return {
@@ -101,28 +101,15 @@ const StatsPanel = ({ player, stats, compact }: StatsPanelProps) => {
         // chain_master 칭호 톤(indigo)과 매치. exploreUtils.checkDiscoveryChains에서 누적.
         { label: 'CHAINS', value: ((player?.stats as any)?.discoveryChains || []).length, icon: Link2, color: 'text-indigo-300' },
     ];
-    const visibleStatEntries = compact && !showAllStats ? statEntries.slice(0, 6) : statEntries;
-    const hasExpandableSections = compact && (statEntries.length > 6 || topKills.length > 0 || Boolean(player?.meta));
-    const topKillPreview = topKills[0] || null;
-
     return (
-        <div className={compact ? 'space-y-2.5' : 'space-y-4'}>
+        <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
                 <div className="text-slate-400 text-xs font-fira tracking-[0.18em] flex items-center gap-1.5 uppercase">
                     <BarChart3 size={12} /> Statistics
                 </div>
-                {hasExpandableSections && (
-                    <button
-                        type="button"
-                        onClick={() => setShowAllStats((prev: any) => !prev)}
-                        className="rounded-full border border-white/8 bg-black/18 px-3 py-1.5 min-h-[36px] text-[11px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
-                    >
-                        {showAllStats ? '요약 보기' : '통계 더 보기'}
-                    </button>
-                )}
             </div>
 
-            <div className={`overflow-hidden rounded-[1.1rem] ${compact ? 'aether-panel-core p-2.5 space-y-2' : 'border border-white/8 bg-black/18 p-3 space-y-2.5'}`}>
+            <div className="overflow-hidden rounded-[1.1rem] border border-white/8 bg-black/18 p-3 space-y-2.5">
                 <div className="flex items-center justify-between gap-3 text-xs font-fira uppercase tracking-[0.18em] text-slate-400/72">
                     <span className="flex items-center gap-1.5">
                         <Sparkles size={10} />
@@ -148,36 +135,23 @@ const StatsPanel = ({ player, stats, compact }: StatsPanelProps) => {
                             <Shield size={9} /> 패시브
                         </div>
                         <div className="font-fira font-bold text-xs text-slate-200/88">
-                            {passiveParts.length > 0 ? passiveParts.slice(0, compact && !showAllStats ? 2 : passiveParts.length).join(' / ') : trait.passiveLabel}
+                            {passiveParts.length > 0 ? passiveParts.join(' / ') : trait.passiveLabel}
                         </div>
                     </div>
                 </div>
-                {(!compact || showAllStats) ? (
-                    <>
-                        <div className="text-xs font-fira text-slate-300/76 leading-snug">
-                            {trait.desc}
-                        </div>
-                        <div className="text-xs font-fira text-slate-400">
-                            성향 판단: {trait.reasons.join(' · ')}
-                        </div>
-                        <div className="space-y-1 pt-2 border-t border-white/8 text-xs font-fira text-slate-300/74">
-                            <div>→ {trait.unlockHint}</div>
-                            <div>→ 보상 포커스: {trait.rewardFocus}</div>
-                            <div>→ 권장 임무: {trait.questFocus}</div>
-                            <div>→ 보스 운영: {trait.bossDirective}</div>
-                            {trait.skill?.desc && <div>→ {trait.skill.desc}</div>}
-                        </div>
-                    </>
-                ) : (
-                    <div className="grid grid-cols-2 gap-1.5 text-xs font-fira text-slate-300/76">
-                        <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-1.5">
-                            보상 포커스: <span className="text-[#dff7f5]">{trait.rewardFocus}</span>
-                        </div>
-                        <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-1.5">
-                            권장 임무: <span className="text-[#e3dcff]">{trait.questFocus}</span>
-                        </div>
-                    </div>
-                )}
+                <div className="text-xs font-fira text-slate-300/76 leading-snug">
+                    {trait.desc}
+                </div>
+                <div className="text-xs font-fira text-slate-400">
+                    성향 판단: {trait.reasons.join(' · ')}
+                </div>
+                <div className="space-y-1 pt-2 border-t border-white/8 text-xs font-fira text-slate-300/74">
+                    <div>→ {trait.unlockHint}</div>
+                    <div>→ 보상 포커스: {trait.rewardFocus}</div>
+                    <div>→ 권장 임무: {trait.questFocus}</div>
+                    <div>→ 보스 운영: {trait.bossDirective}</div>
+                    {trait.skill?.desc && <div>→ {trait.skill.desc}</div>}
+                </div>
             </div>
 
             {activeSignatureSet && sigSetTone && (
@@ -264,7 +238,7 @@ const StatsPanel = ({ player, stats, compact }: StatsPanelProps) => {
             )}
 
             <div className="grid grid-cols-2 gap-1.5">
-                {visibleStatEntries.map((entry: any) => {
+                {statEntries.map((entry: any) => {
                     const Icon = entry.icon;
                     return (
                         <div key={entry.label} className="aether-panel-muted rounded-[0.95rem] px-2.5 py-2">
@@ -277,13 +251,7 @@ const StatsPanel = ({ player, stats, compact }: StatsPanelProps) => {
                 })}
             </div>
 
-            {compact && !showAllStats && topKillPreview && (
-                <div className="rounded-[1rem] aether-panel-muted px-2.5 py-2 text-xs font-fira text-slate-300/76">
-                    TOP HUNT: <span className="text-[#dff7f5]">{topKillPreview[0]}</span> {topKillPreview[1]}회
-                </div>
-            )}
-
-            {(!compact || showAllStats) && topKills.length > 0 && (
+            {topKills.length > 0 && (
                 <div className="space-y-2">
                     <div className="text-xs text-slate-400 font-fira uppercase tracking-[0.16em]">처치 분포 (TOP 8)</div>
                     {topKills.map(([name, count], i) => (
@@ -309,7 +277,7 @@ const StatsPanel = ({ player, stats, compact }: StatsPanelProps) => {
                 </div>
             )}
 
-            {(!compact || showAllStats) && player?.meta && (
+            {player?.meta && (
                 <div className="rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2.5 space-y-1 text-xs font-fira text-slate-400/76">
                     <div className="flex justify-between"><span>LEGACY ESSENCE:</span><span className="text-[#d9d0f3]">{player.meta.essence || 0}</span></div>
                     <div className="flex justify-between"><span>LEGACY RANK:</span><span className="text-[#f6e7c8]">{player.meta.rank || 0}</span></div>
