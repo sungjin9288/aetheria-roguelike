@@ -6,7 +6,11 @@ import type { Player } from '../../types/index.js';
  * 퀵슬롯을 현재 인벤토리 기준으로 정리합니다.
  * 인벤에 없는 아이템 참조는 null로 교체합니다.
  */
-export const sanitizeQuickSlots = (slots: any = [], inventory: any = []) => {
+// cycle 562: slots / inventory defaults 제거 — 2 production caller (bootstrap
+//   Handlers:20, uiHandlers:53) 모두 2 args 명시 전달이라 두 default 모두
+//   도달 불가. body의 (inventory || []) + Array.isArray(slots) defensive
+//   guards가 undefined/null 안전 처리. 청소 메가 시리즈 55번째.
+export const sanitizeQuickSlots = (slots: any, inventory: any) => {
     const ids = new Set((inventory || []).map((item: any) => item?.id).filter(Boolean));
     const normalized = Array.from({ length: 3 }, (_: any, i: any) => (Array.isArray(slots) ? slots[i] : undefined) ?? null);
     return normalized.map((slot: any) => (slot?.id && ids.has(slot.id) ? slot : null));
