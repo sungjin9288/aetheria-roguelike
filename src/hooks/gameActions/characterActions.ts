@@ -11,7 +11,12 @@ import { buildClassVitals } from './_shared';
 export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDailyProtocolLogs }: any) => {
     const { player, gameState, dispatch, addLog, addStoryLog, getFullStats } = deps;
     return {
-        start: (name: any, gender: any = 'male', jobId: any = CONSTANTS.DEFAULT_JOB, challengeModifiers: any = []) => {
+        // cycle 566: gender / jobId / challengeModifiers 3 defaults 제거 —
+        //   1 production caller (IntroScreen:49 onStart?.(selectedName, 'male',
+        //   '모험가', selectedChallenges)) 4 args 명시 전달이라 모든 default
+        //   도달 불가. body의 Array.isArray(challengeModifiers) defensive
+        //   guard 보존. 청소 메가 시리즈 59번째 single-cycle 3-default batch.
+        start: (name: any, gender: any, jobId: any, challengeModifiers: any) => {
             const trimmedName = String(name || '').trim().slice(0, 16);
             if (!trimmedName) return;
             const vitals = buildClassVitals(player.level || 1, jobId, player.meta || {});
