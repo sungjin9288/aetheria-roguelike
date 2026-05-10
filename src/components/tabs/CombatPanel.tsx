@@ -52,7 +52,11 @@ const ACTION_BUTTONS: any = [
   },
 ];
 
-const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, mobile = false }: CombatPanelProps) => {
+// cycle 575: enemy / stats / mobile 3 defaults batch 제거 — 1 production caller
+//   (ControlPanel:119) 6 props 모두 명시 전달이라 도달 불가. body의 enemy ?
+//   ternary 분기는 별개 보존 (caller가 enemy: null 명시 전달하는 path).
+//   청소 메가 시리즈 67번째 single-cycle 3-default batch.
+const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: CombatPanelProps) => {
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
   const tacticalProfile = enemy ? getEnemyTacticalProfile(enemy, stats) : null;
