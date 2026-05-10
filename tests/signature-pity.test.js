@@ -31,7 +31,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 test('SIGNATURE_PITY constants are frozen and positive', () => {
     assert.ok(Object.isFrozen(SIGNATURE_PITY));
     assert.ok(SIGNATURE_PITY.THRESHOLD > 0);
-    assert.ok(SIGNATURE_PITY.STEP_MULT > 0);
+    // cycle 445: STEP_MULT 노출 제거 — 회귀 가드는 cycle-445 test가 대체.
     assert.ok(SIGNATURE_PITY.CAP > 1);
 });
 
@@ -43,9 +43,11 @@ test('getSignaturePityMultiplier returns 1.0 below threshold', () => {
 
 test('getSignaturePityMultiplier steps up past threshold', () => {
     const thr = SIGNATURE_PITY.THRESHOLD;
-    const step = SIGNATURE_PITY.STEP_MULT;
-    assert.ok(Math.abs(getSignaturePityMultiplier(thr) - (1 + step)) < 1e-9, 'at threshold → 1 + step');
-    assert.ok(Math.abs(getSignaturePityMultiplier(thr * 2) - (1 + 2 * step)) < 1e-9, 'at 2×threshold → 1 + 2*step');
+    // cycle 445: STEP_MULT 노출 제거 — runtime 측정값으로 대체.
+    const step = getSignaturePityMultiplier(thr) - 1;
+    assert.ok(step > 0, 'at threshold: multiplier > 1.0');
+    assert.ok(Math.abs(getSignaturePityMultiplier(thr * 2) - (1 + 2 * step)) < 1e-9,
+        'at 2×threshold → 1 + 2*step (선형 누적)');
 });
 
 test('getSignaturePityMultiplier is clamped at CAP', () => {

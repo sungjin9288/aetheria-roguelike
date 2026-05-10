@@ -30,9 +30,10 @@ const PITY_THRESHOLD = 5;
 const PITY_STEP_MULT = 0.15;
 const PITY_CAP = 2.5;
 
+// cycle 445: STEP_MULT 노출 제거 — production read 0건. 내부 PITY_STEP_MULT
+//   const는 getSignaturePityMultiplier 동작용으로 보존. THRESHOLD / CAP만 노출.
 export const SIGNATURE_PITY = Object.freeze({
     THRESHOLD: PITY_THRESHOLD,
-    STEP_MULT: PITY_STEP_MULT,
     CAP: PITY_CAP,
 });
 
