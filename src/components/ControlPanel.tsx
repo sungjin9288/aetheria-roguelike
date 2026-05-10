@@ -169,8 +169,6 @@ const ControlPanel = ({
         stats={stats}
         isAiThinking={isAiThinking}
         mobile
-        compact={false}
-        dense={false}
       />
     );
   }
