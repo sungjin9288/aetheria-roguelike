@@ -284,7 +284,12 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             resetGame: () => engineRef.current.actions.reset?.(),
             sendCommand: (command: any) => engineRef.current.handleCommand(command),
             setSideTab: (tab: any) => engineRef.current.actions.setSideTab?.(tab),
-            seedEnhanceScenario: ({ gold = 500, materialCount = 0, weaponEnhance = 0 }: any = {}) => {
+            // cycle 605: 4 defaults batch 제거 (gold/materialCount/weaponEnhance
+            //   inner + outer {}) — 3 production caller (smoke-gameplay:275/279/
+            //   283) 모두 완전 object 명시 (3 fields 모두 전달)이라 outer/inner
+            //   defaults 모두 도달 불가. cycle 561 buildProceduralOutcome 동일
+            //   패턴 (outer + inner destructure defaults 동시 정리).
+            seedEnhanceScenario: ({ gold, materialCount, weaponEnhance }: any) => {
                 const er = engineRef.current;
                 const preservedInventory = (er.player.inv || []).filter((item: any) => item?.name !== CONSTANTS.ENHANCE_MATERIAL_NAME);
                 const seededMaterials = Array.from({ length: materialCount }, (_: any, index: any) => ({
