@@ -65,12 +65,9 @@ test('cycle 458: 정합성 가드 — 3 callsite inline 전달 0건', async () =
     });
 });
 
-test('cycle 458: compact / dense / variant 본체 ternary 보존', async () => {
+test('cycle 458: variant 매핑 보존 (cycle 491이 compact/dense ternary cascade 정리)', async () => {
+    // cycle 491이 StatusMetric의 compact / dense props cascade로 ternary 자체 제거.
+    // 이전 ternary 보존 가드 → variant 매핑만 보존 가드로 약화.
     const source = await readSrc('src/components/StatusBar.tsx');
-    // compact ternary 보존
-    assert.ok(/compact\s*\?/.test(source), 'compact ternary 보존');
-    // dense ternary 보존
-    assert.ok(/dense\s*\?/.test(source), 'dense ternary 보존');
-    // variant 매핑 보존
     assert.ok(/METER_THEME\[variant\]/.test(source), 'variant 매핑 보존');
 });

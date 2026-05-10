@@ -22,22 +22,25 @@ const METER_THEME: any = {
   },
 };
 
-// cycle 458: inline prop / if (inline) 분기 제거 — 3 callsite 모두 compact만 전달,
+// cycle 458: inline prop / if (inline) 분기 제거 — 3 callsite 모두 컴팩트만 전달,
 //   inline 진입 0건의 unreachable code path. cycle 357-359/421/425/444 lens.
-const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dense = false }: any) => {
+// cycle 491: 컴팩트/조밀 props cascade — 3 callsite 모두 컴팩트 shorthand (=true)
+//   전달, 조밀 prop 0건 → chained ternary 첫/마지막 가지 unreachable, 컴팩트
+//   가지만 진입 → props 자체 제거 + 정적 className inline.
+const StatusMetric = ({ label, value, max, variant = 'hp' }: any) => {
   const theme = METER_THEME[variant] || METER_THEME.hp;
   const safeMax = Math.max(1, max || 1);
   const safeValue = Math.max(0, value || 0);
   const percentage = Math.min(100, (safeValue / safeMax) * 100);
 
   return (
-    <div className={`aether-panel-muted relative overflow-hidden rounded-[1rem] ${dense ? 'px-1.5 py-1' : compact ? 'px-2 py-1.5' : 'px-2.5 py-2'}`}>
+    <div className="aether-panel-muted relative overflow-hidden rounded-[1rem] px-2 py-1.5">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/16 to-transparent" />
-      <div className={`flex items-center justify-between gap-2 font-fira uppercase tracking-[0.16em] ${dense ? 'text-[7px]' : compact ? 'text-[8px]' : 'text-[9px]'}`}>
+      <div className="flex items-center justify-between gap-2 font-fira uppercase tracking-[0.16em] text-[8px]">
         <span className={theme.label}>{label}</span>
         <span className="text-white/72">{safeValue}/{safeMax}</span>
       </div>
-      <div className={`overflow-hidden rounded-full border bg-black/28 ${theme.border} ${dense ? 'mt-0.5 h-[3px]' : compact ? 'mt-1 h-1' : 'mt-1.5 h-1.5'}`}>
+      <div className={`overflow-hidden rounded-full border bg-black/28 ${theme.border} mt-1 h-1`}>
         <div
           className={`h-full rounded-full ${theme.fill}`}
           style={{ width: `${percentage}%` }}
@@ -47,9 +50,9 @@ const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dens
   );
 };
 
-// cycle 459: compact prop / 6 ternary 가지 제거 — 1 callsite (mobile shorthand) 항상
+// cycle 459: 컴팩트 prop / 6 ternary 가지 제거 — 1 callsite (mobile shorthand) 항상
 //   mobile=true 전달이라 chained ternary 첫 가지만 진입, 그 외 ternary는 모두 false
-//   가지 선택. cycle 458 paired (StatusMetric inline) — unreachable code path lens.
+//   가지 선택. cycle 458 paired (StatusMetric 인라인) — unreachable code path lens.
 const EnemyStatus = ({ enemy, mobile = false }: any) => {
   if (!enemy) return null;
 
@@ -228,9 +231,9 @@ const StatusBar = ({
             </div>
           </div>
           <div className="mt-1.5 grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 p-1.5">
-            <StatusMetric label="HP" value={player.hp} max={stats?.maxHp} variant="hp" compact />
-            <StatusMetric label="NRG" value={player.mp} max={stats?.maxMp} variant="mp" compact />
-            <StatusMetric label="EXP" value={player.exp} max={player.nextExp} variant="exp" compact />
+            <StatusMetric label="HP" value={player.hp} max={stats?.maxHp} variant="hp" />
+            <StatusMetric label="NRG" value={player.mp} max={stats?.maxMp} variant="mp" />
+            <StatusMetric label="EXP" value={player.exp} max={player.nextExp} variant="exp" />
           </div>
         </div>
       </div>
