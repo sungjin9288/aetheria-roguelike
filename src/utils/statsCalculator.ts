@@ -8,8 +8,10 @@ import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 
+// cycle 449: 물리 elem 필터 제거 — items.ts elem 값에 '물리' / 'physical' 0건.
+//   weaponElem 있는 무기는 항상 magic elem이라 필터 redundant.
+//   isMagic 체크는 `weaponElem`(truthy)로 단순화.
 const MAGIC_JOBS: any = ['마법사', '아크메이지', '흑마법사', '성직자'];
-const PHYSICAL_ELEMENTS: any = ['물리', 'physical'];
 
 /**
  * @param {object} equip
@@ -318,7 +320,7 @@ export const calculateFullStats = (player: Player) => {
     const weaponElem = player.equip?.weapon?.elem;
     const isMagic =
         MAGIC_JOBS.includes(player.job as string) ||
-        (weaponElem && !PHYSICAL_ELEMENTS.includes(weaponElem));
+        Boolean(weaponElem);
 
     const relics = player.relics || [];
     const relicBonus = computeRelicBonuses(relics, player, Boolean(offhandWeapon));
