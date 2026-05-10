@@ -130,7 +130,10 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             }
             return fallback;
         };
-        const safeList = (items: any, fallback: any = '[item]') => (
+        // cycle 617: fallback default '[item]' 제거 — explicit default-elimination
+        //   pattern (cycle 608-616 lens 정착, 9번째 적용). 2 callers (line 213/
+        //   217)에 '[item]' 명시 추가 후 default unreachable.
+        const safeList = (items: any, fallback: any) => (
             Array.isArray(items) ? items.map((item: any) => safeText(item, fallback)) : []
         );
         // cycle 615: depth default 0 제거 — explicit default-elimination
@@ -210,11 +213,11 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         enemy: safeText(e.postCombatResult.enemy, ''),
                         exp: e.postCombatResult.exp,
                         gold: e.postCombatResult.gold,
-                        items: safeList(e.postCombatResult.items),
+                        items: safeList(e.postCombatResult.items, '[item]'),
                     }
                     : null,
                 inventorySpotlight: is
-                    ? { token: is.token, title: safeText(is.title, ''), names: safeList(is.names) }
+                    ? { token: is.token, title: safeText(is.title, ''), names: safeList(is.names, '[item]') }
                     : null,
                 runSummary: e.runSummary
                     ? { level: e.runSummary.level, job: e.runSummary.job, loc: e.runSummary.loc }
