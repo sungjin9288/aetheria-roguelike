@@ -16,7 +16,10 @@ interface JobChangePanelProps {
     onOpenArchiveConsole?: any;
 }
 
-const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: JobChangePanelProps) => {
+// cycle 584: onOpenArchiveConsole default null 제거 — 1 production caller
+//   (ControlPanel:151) 4 props 모두 명시 전달이라 default 도달 불가. 청소
+//   메가 시리즈 75번째.
+const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }: JobChangePanelProps) => {
   const current = DB.CLASSES[player.job];
   const avail = current?.next || [];
 
