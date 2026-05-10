@@ -2,7 +2,10 @@ const RECENT_HISTORY_LIMIT = 6;
 const RECENT_EVENT_LIMIT = 8;
 
 const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
-const toInt = (value: any, fallback: any = 0) => (Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback);
+// cycle 522: fallback default 0 제거 — 8 internal callsite 모두 fallback 명시
+//   (1/120/60/idx/0×4)이라 default 0 도달 불가. util default 청소 메가 시리즈
+//   19번째 (cycle 502-521).
+const toInt = (value: any, fallback: any) => (Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback);
 // cycle 292: export 제거 — aiEventUtils 내부 14회 사용만, 외부 consumer 0건.
 const normalizeText = (value: any, fallback: any = '') => String(value || fallback).replace(/\s+/g, ' ').trim();
 
