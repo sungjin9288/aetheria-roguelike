@@ -64,7 +64,11 @@ export const AI_SERVICE = {
         return templates[type] || '운명의 수레바퀴가 돈기 시작합니다.';
     },
 
-    generateEvent: async (loc: any, history: any[] = [], uid = 'anonymous', context: any = {}) => {
+    // cycle 606: history / uid / context 3 defaults 제거 — 1 production caller
+    //   (exploreActions:71 AI_SERVICE.generateEvent(player.loc, player.history,
+    //   uid, {...context})) 4 args 명시 전달이라 3 defaults 모두 도달 불가.
+    //   cycle 539 callProxy paired completion (동일 모듈).
+    generateEvent: async (loc: any, history: any[], uid: any, context: any) => {
         if (isSmokeRuntime()) {
             return pickFallbackEvent(loc, history, context);
         }
