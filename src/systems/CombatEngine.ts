@@ -65,7 +65,11 @@ export const CombatEngine = {
         return { ...this.DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
     },
 
-    getEffectiveMaxMp(player: Player, relics: Relic[] = []) {
+    // cycle 551: relics default [] 제거 — 4 internal callsite (line 84/370/
+    //   957/987) 모두 명시 전달이라 default 도달 불가. 외부 caller 0건, test
+    //   caller 0건. systems/CombatEngine method 시리즈 5번째 (cycle 546-549에
+    //   이은). 청소 메가 시리즈 45번째 (cycle 502-550).
+    getEffectiveMaxMp(player: Player, relics: Relic[]) {
         const rmp = 1 + relics.reduce((acc: any, relic: any) => {
             if (relic.effect === 'mp_mult') return acc + relic.val;
             if (relic.effect === 'omega') return acc + relic.val;
