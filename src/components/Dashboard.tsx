@@ -78,7 +78,13 @@ const TOWN_MENU_ACTIONS: any = [
 // INV/GEAR/CODEX 클릭 시 탭 콘텐츠가 갱신되지 않는 버그) plain div로 전환.
 // 필요 시 framer-motion 업그레이드 후 재도입 검토.
 
-const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection = 'full', quickSlots = [null, null, null], runtime = null, inventorySpotlight = null, onClearInventorySpotlight = null, consoleExpanded = false, onReturnToLog = null }: DashboardProps) => {
+// cycle 572: 6 defaults partial batch 제거 (mobileSection/quickSlots/runtime/
+//   inventorySpotlight/consoleExpanded/onReturnToLog) — 1 production caller
+//   (MobileGameLayout:63) 모두 명시 전달이라 도달 불가. onClearInventorySpotlight
+//   default null은 MobileGameLayout 미전달이라 reachable 보존. 가장 큰
+//   single-cycle batch (6 default), partial cleanup 5번째. 청소 메가 시리즈
+//   64번째.
+const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileSection, quickSlots, runtime, inventorySpotlight, onClearInventorySpotlight = null, consoleExpanded, onReturnToLog }: DashboardProps) => {
     const [mobileArchiveExpanded, setMobileArchiveExpanded] = useState(false);
     const [dockSeen, setDockSeen] = useState(() => sessionStorage.getItem('archiveDockSeen') === '1');
     const [confirmMenuReset, setConfirmMenuReset] = useState(false);
