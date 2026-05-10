@@ -7,6 +7,73 @@
 
 ---
 
+## Cycle 540 🎯 — CHANGELOG에 cycles 531-539 history 일괄 추가 (35번째 batch)
+
+- 마일스톤: cycle 530 batch 이후 9 사이클 미반영 batch 정리. 35번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500 / 510 / 520 / 530에 이은 35번째.
+- 누적 마일스톤: cycle 530(unit 2447) → 539(unit 2485, +38). silent dead config
+  시리즈 cycle 222→539 287번째 도달.
+- 시리즈 정체성 — **default 청소 메가 시리즈 전 디렉토리 확장 완료**: 9사이클
+  중 utils/(2) + components/(2) + hooks/(3) + systems/(2) + reducers/(1) +
+  services/(1)로 모든 source 디렉토리에 lens 확장. cycle 502-539 38사이클
+  누적, 45+ default 정리.
+
+검증: tsc 0 / unit 2485 / lint clean / build-guard ok.
+
+---
+
+## Cycle 531-539 — default 청소 메가 시리즈 디렉토리 확장 9사이클
+
+cycle 521-529 시리즈 9사이클에 이어 cycle 531-539는 utils/ 외 components/ +
+hooks/ + systems/ + reducers/ + services/ 등 모든 source 디렉토리로 lens 확장.
+cycle 530은 batch CHANGELOG.
+
+### default 청소 메가 시리즈 디렉토리 확장 9사이클 (cycle 531-539)
+
+- 531: ShopPanel 3 helpers defaults batch (formatPercent + getComparisonMeta
+  + getCompactText) — components/ 두 번째 batch.
+- 532: buildClassVitals meta default — hooks/ 진입.
+- 533: getRelicSynergyScore ownedRelics default — components/ 추가.
+- 534: getLootUpgradeHint 2 defaults batch — hooks/combatActions/.
+- 535: cycleSkill dir default — hooks/gameActions/.
+- 536: applyExpGain expGained default — systems/ 진입.
+- 537: calculateDamage options default (outer) — systems/ 추가, destructuring
+  inner defaults 보존.
+- 538: applyDailyProtocolProgress amount default — reducers/ 진입.
+- 539: callProxy 2 defaults batch (trackLabel + timeoutMs) — services/ 진입.
+
+**누적 12 default 추가 정리** (cycle 531-539 9사이클).
+**시리즈 누적 45+ default 정리** (cycle 502-539 38사이클 합산).
+
+### 신규 lens 의의
+
+- **모든 source 디렉토리 lens 확장 완료** — cycle 502-528 utils/ 메인,
+  cycle 529 components/ 진입 후, cycle 531-539 9사이클 만에 hooks/ (cycle
+  532/534/535) + systems/ (cycle 536/537) + reducers/ (cycle 538) +
+  services/ (cycle 539) 모두 진입. silent dead config audit lens가
+  utils/만이 아닌 전 source 디렉토리에 적용 가능 확립.
+- **outer-default vs inner-default 분리 정착** — cycle 537 calculateDamage
+  은 outer parameter default `options = {}`만 제거, body destructuring
+  inner default(mult=1, guarding=false, ...)는 별개 보존. caller가 부분
+  options 객체 넘기면 inner default가 활성. cycle 513 entry-point pattern과
+  유사하지만 destructuring layer로 구분.
+- **system method (this.X) 패턴 진입** — cycle 536/537이 CombatEngine의
+  method `applyExpGain` / `calculateDamage`에서 default 정리. internal
+  `this.X(...)` 호출도 caller로 카운트하는 audit 정착.
+- **service async helper 진입** — cycle 539 callProxy가 async function +
+  service layer cleanup. async 패턴에서도 default 청소 lens 적용 가능 확인.
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2447 → 2485 (+38, 누적 신규 가드).
+- lint clean / build-guard ok 9사이클 연속.
+- 0 회귀, 0 revert (cycle 526 이후 test caller audit 정착으로 안전성 ↑).
+
+---
+
 ## Cycle 530 🎯 — CHANGELOG에 cycles 521-529 history 일괄 추가 (34번째 batch)
 
 - 마일스톤: cycle 520 batch 이후 9 사이클 미반영 batch 정리. 34번째 batch.
