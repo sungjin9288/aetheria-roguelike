@@ -560,12 +560,17 @@ export const RELIC_SYNERGIES = Object.freeze([
  * @param {object[]} relics - 보유 유물 배열
  * @returns {object[]} 활성 시너지 배열
  */
-export const getActiveRelicSynergies = (relics: any = []) => {
+// cycle 597: relics default [] 제거 — 5 production caller (statsCalculator/
+//   CombatEngine x4) + 1 test 모두 명시 전달이라 default 도달 불가.
+export const getActiveRelicSynergies = (relics: any) => {
     const ownedNames = new Set(relics.map((r: any) => r.name));
     return RELIC_SYNERGIES.filter((syn: any) => syn.requires.every((name: any) => ownedNames.has(name)));
 };
 
-export const pickWeightedRelics = (pool: any, count: any = 3) => {
+// cycle 597: count default 3 제거 — 4 production caller (exploreUtils/
+//   eventActions/exploreActions/combatBossHandlers) + 1 test 모두 count 명시
+//   (1 또는 3) 전달이라 default 도달 불가.
+export const pickWeightedRelics = (pool: any, count: any) => {
     if (pool.length === 0) return [];
     const result: any[] = [];
     const remaining = [...pool];
