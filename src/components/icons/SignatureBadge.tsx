@@ -29,7 +29,9 @@ const TONE_COLORS: any = Object.freeze({
 
 const DEFAULT_TONE_COLOR = TONE_COLORS.holy;
 
-const SignatureBadge = ({ item, size = 10, className = '' }: any) => {
+// cycle 466: 외부 보조 클래스 prop 제거 — ItemIcon 단일 callsite 전달 0건이라
+//   보간 결과 ''만 추가되는 unreachable. cycle 463/464/465 lens icons/ 디렉토리 회귀.
+const SignatureBadge = ({ item, size = 10 }: any) => {
     if (!item || !hasDedicatedSignatureArt(item)) return null;
     const meta = getSignatureMetadata(item);
     const toneColor = TONE_COLORS[meta?.tone] || DEFAULT_TONE_COLOR;
@@ -37,7 +39,7 @@ const SignatureBadge = ({ item, size = 10, className = '' }: any) => {
 
     return (
         <div
-            className={`pointer-events-none absolute ${className}`.trim()}
+            className="pointer-events-none absolute"
             style={{
                 top: 2,
                 right: 2,
