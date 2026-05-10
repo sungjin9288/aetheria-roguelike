@@ -17,7 +17,11 @@ import { findItemByName } from './gameUtils.js';
 // ─────────────────────────────────────────────────────────────────────────
 // 0. ISO 주차 번호 계산 (월요일 기준)
 // ─────────────────────────────────────────────────────────────────────────
-const getISOWeekNumber = (date = new Date()) => {
+// cycle 618: date default new Date() 제거 — explicit default-elimination
+//   pattern (cycle 608-617 lens 정착, 10번째 적용 — double-digit milestone).
+//   resetWeeklyProtocolIfNeeded:31 caller에 new Date() 명시 추가 후 default
+//   unreachable.
+const getISOWeekNumber = (date) => {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -28,7 +32,8 @@ const getISOWeekNumber = (date = new Date()) => {
 // 0.5. 주간 프로토콜 리셋
 // ─────────────────────────────────────────────────────────────────────────
 export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: any) => {
-    const currentWeek = getISOWeekNumber();
+    // cycle 618: new Date() 명시 추가 — explicit default-elimination cascade.
+    const currentWeek = getISOWeekNumber(new Date());
     const wp = player.weeklyProtocol;
     if (!wp || wp.lastResetWeek !== currentWeek) {
         dispatch({
