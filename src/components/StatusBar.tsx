@@ -105,14 +105,18 @@ interface StatusBarProps {
   onOpenEquipment?: (() => void) | null;
 }
 
+// cycle 586: 5 defaults batch 제거 (enemy/onCrystalClick/isMuted/onToggleMute/
+//   onOpenEquipment) — 1 production caller (GameRoot:89) 7 props 모두 명시
+//   전달이라 5 defaults 모두 도달 불가. 청소 메가 시리즈 77번째 single-cycle
+//   5-default batch (cycle 572 6-default partial 다음으로 큰 batch).
 const StatusBar = ({
   player,
   stats,
-  enemy = null,
-  onCrystalClick = null,
-  isMuted = false,
-  onToggleMute = null,
-  onOpenEquipment = null,
+  enemy,
+  onCrystalClick,
+  isMuted,
+  onToggleMute,
+  onOpenEquipment,
 }: StatusBarProps) => {
   if (!player?.name) return null;
   const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
