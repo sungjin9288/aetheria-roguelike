@@ -5,7 +5,10 @@ export const countInventoryItemByName = (inventory: Item[] = [], itemName: strin
     (inventory || []).filter((item: Item | null | undefined) => item?.name === itemName).length
 );
 
-export const getEnhanceRequirement = (currentLevel: any = 0) => ({
+// cycle 516: currentLevel default 제거 — 1 internal callsite (line 58) +
+//   2 test callsite 모두 명시 전달이라 default 0 도달 불가. util default
+//   청소 메가 시리즈 14번째 (cycle 502-515).
+export const getEnhanceRequirement = (currentLevel: any) => ({
     gold: BALANCE.ENHANCE_COSTS[currentLevel] ?? 0,
     materials: BALANCE.ENHANCE_MATERIAL_COSTS[currentLevel] ?? 1,
     materialName: CONSTANTS.ENHANCE_MATERIAL_NAME,
