@@ -40,7 +40,10 @@ const SYNERGY_MAP: any = {
     boss_hunter: ['drop_rate', 'execute_bonus', 'double_strike'],
 };
 
-const getRelicSynergyScore = (newRelic: any, ownedRelics: any = []): any => {
+// cycle 533: ownedRelics default [] 제거 — 1 internal callsite (line 153)
+//   getRelicSynergyScore(relic, ownedRelics) 명시 전달이라 default 도달 불가.
+//   util/component/hook default 청소 메가 시리즈 29번째 (cycle 502-532).
+const getRelicSynergyScore = (newRelic: any, ownedRelics: any): any => {
     const ownedEffects = ownedRelics.map((r: any) => r.effect);
     const ownedNames = new Set(ownedRelics.map((r: any) => r.name));
 
