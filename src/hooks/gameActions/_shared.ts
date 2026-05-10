@@ -10,7 +10,11 @@ import { resetDailyProtocolIfNeeded, resetWeeklyProtocolIfNeeded } from '../../u
 /**
  * 클래스 기반 HP/MP 최대치 계산
  */
-export const buildClassVitals = (level: any, jobId: any, meta: any = {}) => {
+// cycle 532: meta default {} 제거 — 2 callsite (characterActions.ts:17/129)
+//   모두 player.meta || {} 명시 전달이라 default 도달 불가. body의
+//   (meta.bonusHp/bonusMp || 0) defensive guard는 별개 보존. hooks/ 디렉토리
+//   진입 (cycle 529 components/에 이은 lens 확장 28번째).
+export const buildClassVitals = (level: any, jobId: any, meta: any) => {
     const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
     const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod) + Math.max(0, level - 1) * BALANCE.HP_PER_LEVEL + (meta.bonusHp || 0);
     const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod) + Math.max(0, level - 1) * BALANCE.MP_PER_LEVEL + (meta.bonusMp || 0);
