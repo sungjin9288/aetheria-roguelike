@@ -94,7 +94,10 @@ export const getDailyProtocolCompletions = (player: Player, type: any, amount: a
 };
 
 /** 일일 프로토콜 보상 텍스트 포맷 */
-export const formatDailyProtocolReward = (reward: any = {}) => {
+// cycle 556: reward default {} 제거 — 3 callers (useInventoryActions/_shared/
+//   useCombatActions) 모두 mission.reward 명시 전달이라 default 도달 불가.
+//   gameUtils.ts 같은 모듈 batch (cycle 502-555 default 청소 50번째).
+export const formatDailyProtocolReward = (reward: any) => {
     if (reward.essence) return `에센스 ${reward.essence}`;
     if (reward.item) return reward.item;
     if (reward.relicShard) return `유물 조각 ${reward.relicShard}`;
@@ -108,7 +111,9 @@ export const formatDailyProtocolReward = (reward: any = {}) => {
  *  reward만 전달. quests.ts/achievements에 essence/relicShard 0건이라 unreachable.
  *  daily protocol mission reward는 formatDailyProtocolReward로 별도 처리.
  */
-export const formatRewardParts = (reward: any = {}) => {
+// cycle 556: reward default {} 제거 — 3 callers (QuestBoardPanel/QuestTab/
+//   AchievementPanel) 모두 reward 명시 전달이라 default 도달 불가.
+export const formatRewardParts = (reward: any) => {
     const parts: any[] = [];
     if (reward.exp) parts.push(`EXP ${reward.exp}`);
     if (reward.gold) parts.push(`${reward.gold}G`);
