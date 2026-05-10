@@ -53,7 +53,8 @@ const getTheme = (achievement: any) => {
     return base;
 };
 
-const AchievementPanel = ({ player, actions, compact = false }: AchievementPanelProps) => {
+// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const AchievementPanel = ({ player, actions, compact }: AchievementPanelProps) => {
     const [showAllAchievements, setShowAllAchievements] = useState(false);
     const achievements = useMemo(() => {
         const claimed = player?.stats?.claimedAchievements || [];

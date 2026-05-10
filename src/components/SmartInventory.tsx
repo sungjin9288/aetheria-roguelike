@@ -68,7 +68,9 @@ const getItemTags = (item: any) => {
     return tags;
 };
 
-const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact = false }: SmartInventoryProps) => {
+// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+//   다른 default (quickSlots / spotlight / onClearSpotlight)는 future-proof 보존.
+const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact }: SmartInventoryProps) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState<any>(null);
     const [showAllItems, setShowAllItems] = React.useState(false);

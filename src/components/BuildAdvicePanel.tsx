@@ -48,7 +48,8 @@ const getRecommendedRelics = (primaryId: any, ownedRelicEffects: any) => {
  * BuildAdvicePanel — 현재 빌드 아키타입 기반 유물 + 스킬 추천
  * 맵 탭 하단에 배치됩니다.
  */
-const BuildAdvicePanel = ({ player, compact = false }: BuildAdvicePanelProps) => {
+// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const BuildAdvicePanel = ({ player, compact }: BuildAdvicePanelProps) => {
     const [open, setOpen] = useState(false);
 
     const profile = useMemo(() => getRunBuildProfile(player || {}), [player]);

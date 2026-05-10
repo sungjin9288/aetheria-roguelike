@@ -35,7 +35,8 @@ const SIG_SET_TONE: any = Object.freeze({
     nature: { border: 'rgba(168,208,160,0.5)', glow: 'rgba(168,208,160,0.18)', text: '#a8d0a0' },
 });
 
-const EquipmentPanel = ({ player, stats, actions, compact = false }: EquipmentPanelProps) => {
+// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const EquipmentPanel = ({ player, stats, actions, compact }: EquipmentPanelProps) => {
     const [showSetCatalog, setShowSetCatalog] = useState(false);
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip), [player?.equip]);
     const setCatalog = useMemo(() => getJobSetCatalog(player?.job, DB.ITEMS), [player?.job]);

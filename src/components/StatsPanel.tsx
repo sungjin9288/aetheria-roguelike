@@ -39,7 +39,8 @@ const formatMultDelta = (mult: any) => {
 /**
  * StatsPanel — 플레이 통계 + 성향 요약
  */
-const StatsPanel = ({ player, stats, compact = false }: StatsPanelProps) => {
+// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const StatsPanel = ({ player, stats, compact }: StatsPanelProps) => {
     const [showAllStats, setShowAllStats] = useState(false);
     const overview = useMemo(() => {
         const s = player?.stats || {};
