@@ -15,7 +15,10 @@ import {
 
 // cycle 345: scoreTag desc 매개변수 제거 — tag.desc / primary.desc read 0건이던 dead 출력.
 //   8 호출 사이트의 한국어 desc 문자열 인자도 함께 제거.
-const scoreTag = (id: any, name: any, score: any, reasons: any[] = []) => ({
+// cycle 544: reasons default [] 제거 — 8 internal callsite 모두 reasons
+//   명시 전달이라 default 도달 불가. 청소 메가 시리즈 39번째 batch (cycle
+//   502-543), runProfile.ts 같은 모듈 hasAnyJob과 함께.
+const scoreTag = (id: any, name: any, score: any, reasons: any[]) => ({
     id,
     name,
     score,
@@ -30,7 +33,9 @@ const labelTag = (id: any) => ARCHETYPE_LABELS[id] || id;
 //   cascade로 findQuestDefinition QUESTS default 제거 시도였으나 16개 test
 //   callsite (syncQuestProgress 1 arg)가 default 활성 path였어 revert.
 const toPercent = (value: any) => `${Math.round(value * 100)}%`;
-const hasAnyJob = (item: Item | null | undefined, jobs: any[] = []) => Array.isArray(item?.jobs) && jobs.some((job: any) => item?.jobs?.includes(job));
+// cycle 544: jobs default [] 제거 — 8 internal callsite 모두 jobs 명시
+//   배열 리터럴 전달이라 default 도달 불가.
+const hasAnyJob = (item: Item | null | undefined, jobs: any[]) => Array.isArray(item?.jobs) && jobs.some((job: any) => item?.jobs?.includes(job));
 const isConsumableType = (item: Item | null | undefined) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type as string);
 const hasElement = (item: Item | null | undefined) => Boolean(item?.elem && item.elem !== '물리');
 
