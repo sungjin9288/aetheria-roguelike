@@ -645,7 +645,9 @@ export const EVENT_CHAINS: any = [
  * @param {Object} progress - player.eventChainProgress
  * @returns {{ chain: Object, step: Object } | null}
  */
-export function getChainEventForLoc(loc: any, progress: any = {}) {
+// cycle 596: progress default {} 제거 — exploreActions:41 (production) + 6+
+//   test caller 모두 progress 명시 전달이라 default 도달 불가.
+export function getChainEventForLoc(loc: any, progress: any) {
     for (const chain of EVENT_CHAINS) {
         const currentStep = progress[chain.id] ?? 0;
         // 이미 완료된 체인 스킵

@@ -50,7 +50,10 @@ const CODEX_MILESTONES: any = {
  * @param {string[]} claimed - player.stats.codexClaimed (이미 보상 수령한 마일스톤 ID)
  * @returns {{ total, discovered, milestones: { category, label, reward, claimed }[], unclaimed: [] }}
  */
-export const getCodexProgress = (codex: any = {}, claimed: any = []) => {
+// cycle 596: codex / claimed defaults 제거 — Codex:41 + cycle-286:46 (2 callers)
+//   모두 명시 전달이라 두 default 모두 도달 불가. 청소 메가 시리즈 추가
+//   (data/ 디렉토리 진입).
+export const getCodexProgress = (codex: any, claimed: any) => {
     const claimedSet = new Set(claimed);
     const milestones: any[] = [];
     const unclaimed: any[] = [];
