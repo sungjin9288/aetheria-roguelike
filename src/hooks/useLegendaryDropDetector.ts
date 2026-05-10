@@ -31,7 +31,10 @@ const getSignatureItemNames = (inv: any = []) => {
     return names;
 };
 
-export const useLegendaryDropDetector = (inv: any, dispatch: any = null, codex: any = null) => {
+// cycle 563: dispatch / codex defaults 제거 — 1 production caller (GameRoot
+//   :32) 3 args 명시 전달 (engine.dispatch, engine.player?.stats?.codex)이라
+//   두 default 모두 도달 불가. test caller 0건. 청소 메가 시리즈 56번째.
+export const useLegendaryDropDetector = (inv: any, dispatch: any, codex: any) => {
     const seenRef = useRef<any>(null);
     const queueRef = useRef<any[]>([]);
     // cycle 208: codex prop을 ref로 받아 effect deps 미포함 (re-trigger 방지).
