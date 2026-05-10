@@ -30,6 +30,9 @@ const JOB_STYLE_MAP: any = {
     대마법사: { hairColor: '#3f2b63', outfitColor: '#6073c8', accentColor: '#dff7f5', armorStyle: 'robe', accessoryStyle: 'circlet' },
 };
 
+// cycle 448: '물리' 엔트리 제거 — items.ts elem 값에 '물리' 0건 (실제 elem은
+//   화염/냉기/대지/바람/빛/어둠/에테르/자연 8 종). lookup 절대 hit 안 됨.
+//   바람/에테르는 fallback path 활성 (원래 그랬음).
 const ELEMENT_COLOR_MAP: any = {
     화염: '#fb923c',
     냉기: '#67e8f9',
@@ -37,7 +40,6 @@ const ELEMENT_COLOR_MAP: any = {
     빛: '#f6e7c8',
     자연: '#86efac',
     대지: '#d6b38b',
-    물리: '#d1d5db',
 };
 
 const clampEnhance = (value: any) => Math.max(0, Math.min(9, Number(value) || 0));
