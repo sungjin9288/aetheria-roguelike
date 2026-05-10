@@ -24,7 +24,12 @@ const scoreTag = (id: any, name: any, score: any, reasons: any[] = []) => ({
 
 const relicEffectsOf = (player: Player) => new Set((player?.relics || []).map((relic: any) => relic.effect));
 const labelTag = (id: any) => ARCHETYPE_LABELS[id] || id;
-const toPercent = (value: any = 0) => `${Math.round(value * 100)}%`;
+// cycle 526: value default 0 제거 — 3 internal callsite 모두 명시 전달
+//   (각 caller가 || 1 / || 0 fallback으로 number 보장)이라 default 도달 불가.
+//   util default 청소 메가 시리즈 23번째 (cycle 502-525). 첫 시도는 cycle 508
+//   cascade로 findQuestDefinition QUESTS default 제거 시도였으나 16개 test
+//   callsite (syncQuestProgress 1 arg)가 default 활성 path였어 revert.
+const toPercent = (value: any) => `${Math.round(value * 100)}%`;
 const hasAnyJob = (item: Item | null | undefined, jobs: any[] = []) => Array.isArray(item?.jobs) && jobs.some((job: any) => item?.jobs?.includes(job));
 const isConsumableType = (item: Item | null | undefined) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type as string);
 const hasElement = (item: Item | null | undefined) => Boolean(item?.elem && item.elem !== '물리');
