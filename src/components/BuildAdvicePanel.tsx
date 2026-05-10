@@ -5,9 +5,10 @@ import { TRAIT_DEFINITIONS } from '../data/traits';
 import { getRunBuildProfile } from '../utils/runProfile';
 import type { Player } from '../types/index.js';
 
+// cycle 478: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
+//   제거 후 caller 0건. cascade로 19 ternary 가지 정리 (cycle 472-477 paired).
 interface BuildAdvicePanelProps {
     player?: Player | null;
-    compact?: boolean;
 }
 
 /** 아키타입별 추천 유물 효과 목록 (우선순위 순) */
@@ -48,8 +49,8 @@ const getRecommendedRelics = (primaryId: any, ownedRelicEffects: any) => {
  * BuildAdvicePanel — 현재 빌드 아키타입 기반 유물 + 스킬 추천
  * 맵 탭 하단에 배치됩니다.
  */
-// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-const BuildAdvicePanel = ({ player, compact }: BuildAdvicePanelProps) => {
+// cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const BuildAdvicePanel = ({ player }: BuildAdvicePanelProps) => {
     const [open, setOpen] = useState(false);
 
     const profile = useMemo(() => getRunBuildProfile(player || {}), [player]);
@@ -66,37 +67,35 @@ const BuildAdvicePanel = ({ player, compact }: BuildAdvicePanelProps) => {
             {/* 헤더 토글 */}
             <button
                 onClick={() => setOpen((o: any) => !o)}
-                className={`w-full flex items-center justify-between font-fira text-slate-400/76 hover:text-slate-200 hover:bg-white/[0.03] transition-colors ${compact ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2.5 text-xs'}`}
+                className="w-full flex items-center justify-between font-fira text-slate-400/76 hover:text-slate-200 hover:bg-white/[0.03] transition-colors px-3 py-2.5 text-xs"
             >
-                <span className={`flex items-center ${compact ? 'gap-1.5 tracking-[0.14em]' : 'gap-2 tracking-widest'} uppercase`}>
+                <span className="flex items-center gap-2 tracking-widest uppercase">
                     <span className={trait.accent}>◈</span>
-                    {compact ? 'Build' : '빌드 조언 —'} <span className={`font-bold ${trait.accent}`}>{trait.title}</span>
+                    빌드 조언 — <span className={`font-bold ${trait.accent}`}>{trait.title}</span>
                 </span>
-                {compact && !open ? (
-                    <span className="text-[9px] text-slate-500">열기</span>
-                ) : open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
 
             {open && (
-                <div className={`border-t border-white/8 ${compact ? 'space-y-2 px-2 pb-2' : 'space-y-3 px-3 pb-3'}`}>
+                <div className="border-t border-white/8 space-y-3 px-3 pb-3">
                     {/* 아키타입 요약 */}
-                    <div className={`mt-2 rounded-[0.95rem] border ${compact ? 'px-2 py-1.25' : 'px-3 py-2'} ${trait.chipClass}`}>
+                    <div className={`mt-2 rounded-[0.95rem] border px-3 py-2 ${trait.chipClass}`}>
                         <div className="text-[10px] uppercase tracking-widest opacity-60 mb-0.5">현재 아키타입</div>
-                        <div className={`font-bold ${compact ? 'text-[13px]' : 'text-sm'}`}>{trait.name} — {trait.title}</div>
-                        <div className="text-[10px] opacity-75 mt-0.5">{compact ? trait.passiveLabel : trait.desc}</div>
-                        {!compact && <div className="text-[10px] opacity-60 mt-1">패시브: {trait.passiveLabel}</div>}
+                        <div className="font-bold text-sm">{trait.name} — {trait.title}</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">{trait.desc}</div>
+                        <div className="text-[10px] opacity-60 mt-1">패시브: {trait.passiveLabel}</div>
                     </div>
 
                     {/* 성향 스킬 */}
                     {trait.skill && (
                         <div>
                             <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">성향 스킬</div>
-                            <div className={`rounded-[0.95rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/10 ${compact ? 'px-2 py-1.25' : 'px-3 py-2'}`}>
+                            <div className="rounded-[0.95rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/10 px-3 py-2">
                                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                                    <span className={`${compact ? 'text-[13px]' : 'text-sm'} font-bold text-[#e3dcff]`}>{trait.skill.name}</span>
+                                    <span className="text-sm font-bold text-[#e3dcff]">{trait.skill.name}</span>
                                     <span className="text-[10px] text-slate-400/72">MP {trait.skill.mp} · CD {trait.skill.cooldown}</span>
                                 </div>
-                                {!compact && <div className="text-[10px] text-slate-300/76">{trait.skill.desc}</div>}
+                                <div className="text-[10px] text-slate-300/76">{trait.skill.desc}</div>
                             </div>
                         </div>
                     )}
@@ -107,14 +106,14 @@ const BuildAdvicePanel = ({ player, compact }: BuildAdvicePanelProps) => {
                         {recommended.length === 0 ? (
                             <div className="text-[10px] text-slate-500 italic">이 빌드와 맞는 유물을 모두 보유 중입니다.</div>
                         ) : (
-                            <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
+                            <div className="space-y-1.5">
                                 {recommended.map((relic: any) => (
-                                    <div key={relic.id} className={`rounded-[0.95rem] border border-white/8 bg-black/18 ${compact ? 'px-2 py-1.25' : 'px-2.5 py-2'}`}>
+                                    <div key={relic.id} className="rounded-[0.95rem] border border-white/8 bg-black/18 px-2.5 py-2">
                                         <div className="flex items-center justify-between gap-2">
                                             <span className={`text-xs font-bold ${RARITY_COLOR[relic.rarity] || 'text-slate-300'}`}>{relic.name}</span>
                                             <span className={`text-[9px] font-fira ${RARITY_COLOR[relic.rarity] || 'text-slate-400'}`}>{RARITY_LABEL[relic.rarity]}</span>
                                         </div>
-                                        {!compact && <div className="text-[10px] text-slate-400/72 mt-0.5">{relic.desc}</div>}
+                                        <div className="text-[10px] text-slate-400/72 mt-0.5">{relic.desc}</div>
                                     </div>
                                 ))}
                             </div>
@@ -122,7 +121,7 @@ const BuildAdvicePanel = ({ player, compact }: BuildAdvicePanelProps) => {
                     </div>
 
                     {/* 보스 공략 팁 */}
-                    <div className={`rounded-[0.95rem] border border-[#d5b180]/20 bg-[#d5b180]/10 ${compact ? 'px-2 py-1.25' : 'px-2.5 py-2'}`}>
+                    <div className="rounded-[0.95rem] border border-[#d5b180]/20 bg-[#d5b180]/10 px-2.5 py-2">
                         <div className="text-[10px] text-[#f6e7c8]/68 uppercase tracking-wider mb-0.5">보스 전략</div>
                         <div className="text-[10px] text-[#f6e7c8]/86">{trait.bossDirective}</div>
                     </div>
