@@ -265,7 +265,11 @@ export const CombatEngine = {
      * 적의 상태이상 틱을 처리합니다. 매 적 행동 전에 호출하세요.
      * DoT 피해, 상태 턴 감소, 만료 처리를 수행합니다.
      */
-    tickEnemyStatus(enemy: Monster, logs: any[] = [], curseAmpMult = 1, synergyDotMult = 1) {
+    // cycle 549: logs / curseAmpMult / synergyDotMult 3 defaults batch 제거 —
+    //   1 internal callsite (line 1076) 4 args 모두 명시 전달이라 default 도달
+    //   불가. 외부 caller 0건, test caller 0건. single-cycle 3-default batch
+    //   (cycle 524/527 패턴). 청소 메가 시리즈 44번째.
+    tickEnemyStatus(enemy: Monster, logs: any[], curseAmpMult: any, synergyDotMult: any) {
         let updated = { ...enemy };
 
         // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
