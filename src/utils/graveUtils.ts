@@ -16,7 +16,10 @@ const getGraveDropBonus = (loc: string | undefined): number => {
     return typeof bonus === 'number' && bonus > 0 ? bonus : 1.0;
 };
 
-export const buildGraveData = (player: Player, random: any = Math.random, now: any = Date.now) => {
+// cycle 609: random / now defaults 제거 — explicit default-elimination
+//   pattern. CombatEngine.ts:1640 production caller에 Math.random / Date.now
+//   명시 추가 후 1 production + 6 test caller 모두 3 args 명시.
+export const buildGraveData = (player: Player, random: any, now: any) => {
     let droppedItems: any[] = [];
     const tradableItems = Array.isArray(player?.inv)
         ? player.inv.filter((item: any) => !item?.id?.startsWith('starter_'))
