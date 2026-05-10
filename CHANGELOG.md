@@ -7,6 +7,71 @@
 
 ---
 
+## Cycle 590 🎯🎯 — CHANGELOG에 cycles 581-589 history 일괄 추가 (40번째 batch)
+
+- **40번째 batch 마일스톤**: cycle 98에서 시작된 batch CHANGELOG가 40번째에
+  도달 (98/114/132/146/160/170/190/200/221/240/259/276/300/320/340/350/360/
+  370/380/390/400/410/420/430/440/450/460/470/480/490/500/510/520/530/540/
+  550/560/570/580/590).
+- 마일스톤: cycle 580 batch 이후 9 사이클 미반영 batch 정리. 40번째 batch.
+- 누적 마일스톤: cycle 580(unit 2631) → 589(unit 2660, +29). silent dead config
+  시리즈 cycle 222→589 332번째 도달.
+- 시리즈 정체성 — **default 청소 메가 시리즈 component-level entry-point 시리즈
+  마무리 단계**: 9사이클 모두 components/ entry-level cleanup. cycle 502-589
+  88사이클 누적, 110+ default 정리.
+
+검증: tsc 0 / unit 2660 / lint clean / build-guard ok.
+
+---
+
+## Cycle 581-589 — components/ entry-level cleanup 시리즈 9사이클
+
+cycle 571-579 시리즈 9사이클에 이어 cycle 581-589는 components/ + components/
+tabs entry-level cleanup 시리즈 연속. cycle 590은 batch CHANGELOG.
+
+### default 청소 메가 시리즈 9사이클 (cycle 581-589)
+
+- 581: QuickSlot slots default (TerminalView 1 caller).
+- 582: ClassCard disabled default (JobChangePanel 1 caller).
+- 583: StatusMetric variant default (StatusBar 3 internal callers).
+- 584: JobChangePanel onOpenArchiveConsole default (ControlPanel 1 caller).
+- 585: ItemIcon size default partial cleanup (11 callers, partial 7번째 적용).
+- 586: StatusBar 5 defaults batch (가장 큰 unreachable 5-default batch,
+  GameRoot 1 caller 7 props 모두 명시).
+- 587: ControlPanel 3 defaults batch (MobileGameLayout 2 callers).
+- 588: CraftingPanel onOpenArchiveConsole default (ControlPanel 1 caller).
+- 589: QuestBoardPanel + SystemTab cross-file 2-default batch.
+
+**누적 18 default 추가 정리** (cycle 581-589 9사이클).
+**시리즈 누적 110+ default 정리** (cycle 502-589 88사이클 합산).
+
+### 신규 lens 의의
+
+- **40번째 batch milestone** — cycle 98에서 시작된 batch CHANGELOG 패턴이
+  40 sessions에 도달. 매 batch가 9사이클의 lens 진화를 단일 narrative로
+  묶는 패턴이 정착.
+- **components/large entry-level 마무리 단계** — cycle 572-589 18사이클에
+  걸친 large component cleanup이 거의 완료. Dashboard / StatusBar /
+  ControlPanel / SmartInventory / CombatPanel / ShopPanel / Codex / Class
+  Card / ClassIcon / MonsterIcon / SignatureBadge / SkillTypeIcon / ItemIcon
+  / SkillTreePreview / TerminalView / RelicChoicePanel / JobChangePanel /
+  CraftingPanel / QuestBoardPanel / SystemTab / QuickSlot 모두 처리.
+- **partial cleanup pattern 7번째 정착** — cycle 585 ItemIcon. 11 callers의
+  prop 단위 reachability 분리. partial pattern이 단일 함수의 다중 default
+  cleanup의 표준 패턴.
+- **cross-file batch 정착** — cycle 589 QuestBoardPanel + SystemTab가 cross-
+  file 2-default batch. cycle 541/545에 이은 정착. 다른 모듈의 동일 패턴
+  default를 single-cycle batch로 정리하는 cadence.
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2631 → 2660 (+29).
+- lint clean / build-guard ok 9사이클 연속.
+- 0 회귀, 0 revert.
+
+---
+
 ## Cycle 580 🎯 — CHANGELOG에 cycles 571-579 history 일괄 추가 (39번째 batch)
 
 - 마일스톤: cycle 570 batch 이후 9 사이클 미반영 batch 정리. 39번째 batch.
