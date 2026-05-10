@@ -18,13 +18,15 @@ const SIZE_MAP: any = {
 
 // cycle 432: default size 값 제거 — 2 호출자 (IntroScreen "md" / BootScreen "lg")
 //   모두 명시 전달이라 default 도달 불가. cycle 418 SIZE_MAP.sm 정리의 paired
-//   completion (lookup table cleanup 후 잔존 default 정리). className default는
-//   호출자 누락이라 활성 path → 보존. SIZE_MAP fallback도 방어용 보존.
-const AetherMark = ({ size, className = '' }: any) => {
+//   completion (lookup table cleanup 후 잔존 default 정리). SIZE_MAP fallback도
+//   방어용 보존.
+// cycle 493: 외부 보조 클래스 prop 제거 — 2 호출자 모두 전달 0건이라 보간 결과
+//   ''만 추가되는 unreachable. cycle 463/465/466 icons/ paired 패턴 회귀.
+const AetherMark = ({ size }: any) => {
     const scale = SIZE_MAP[size] || SIZE_MAP.md;
 
     return (
-        <div className={`relative ${scale.shell} shrink-0 ${className}`.trim()} aria-hidden="true">
+        <div className={`relative ${scale.shell} shrink-0`} aria-hidden="true">
             <span className="absolute inset-0 rounded-full border border-cyan-400/28 bg-[radial-gradient(circle_at_30%_30%,rgba(34,211,238,0.28),transparent_58%)] shadow-[0_0_28px_rgba(34,211,238,0.12)]" />
             <span className={`absolute left-1/2 top-1/2 ${scale.ring} -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/40 animate-aether-orbit`} />
             <span className={`absolute left-1/2 top-1/2 ${scale.ring} -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/24 rotate-45 animate-aether-orbit`} style={{ animationDelay: '-2.4s' }} />

@@ -54,12 +54,14 @@ test('cycle 432: 2 호출자 모두 size 명시 전달 (정합성 가드)', asyn
     assert.ok(/<AetherMark size="lg"/.test(boot), 'BootScreen size="lg" 명시');
 });
 
-test('cycle 432: className default 보존 (호출자 누락 path 활성)', async () => {
+test('cycle 432: className cycle 493 cascade로 prop 자체 제거', async () => {
+    // cycle 493이 AetherMark className prop cascade로 정리 (2 호출자 모두
+    // 전달 0건). 이전 default 보존 가드 → cascade 보존 가드로 약화.
     const source = await readSrc('src/components/AetherMark.tsx');
     const fnIdx = source.indexOf('const AetherMark =');
     const fnEnd = source.indexOf('=>', fnIdx);
     const block = source.slice(fnIdx, fnEnd);
-    assert.ok(/className = ''/.test(block), "className default '' 보존");
+    assert.ok(!/className/.test(block), 'cycle 493 cascade로 className 제거 보존');
 });
 
 test('cycle 432: SIZE_MAP fallback 보존 (방어용)', async () => {
