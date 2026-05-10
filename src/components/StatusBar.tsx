@@ -47,7 +47,10 @@ const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dens
   );
 };
 
-const EnemyStatus = ({ enemy, mobile = false, compact = false }: any) => {
+// cycle 459: compact prop / 6 ternary 가지 제거 — 1 callsite (mobile shorthand) 항상
+//   mobile=true 전달이라 chained ternary 첫 가지만 진입, 그 외 ternary는 모두 false
+//   가지 선택. cycle 458 paired (StatusMetric inline) — unreachable code path lens.
+const EnemyStatus = ({ enemy, mobile = false }: any) => {
   if (!enemy) return null;
 
   const safeMax = Math.max(1, enemy.maxHp || 1);
@@ -55,24 +58,24 @@ const EnemyStatus = ({ enemy, mobile = false, compact = false }: any) => {
   const percentage = Math.min(100, (safeValue / safeMax) * 100);
 
   return (
-    <div className={`relative overflow-hidden rounded-[1.1rem] border border-rose-300/18 bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_16px_36px_rgba(22,6,10,0.28),inset_0_1px_0_rgba(255,255,255,0.03)] ${mobile ? 'px-2.75 py-2.5' : compact ? 'px-2 py-1' : 'px-3 py-2.5'}`}>
+    <div className={`relative overflow-hidden rounded-[1.1rem] border border-rose-300/18 bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_16px_36px_rgba(22,6,10,0.28),inset_0_1px_0_rgba(255,255,255,0.03)] ${mobile ? 'px-2.75 py-2.5' : 'px-3 py-2.5'}`}>
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-100/22 to-transparent" />
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className={`${compact ? 'text-[7px]' : 'text-[9px]'} font-fira uppercase tracking-[0.18em] text-rose-100/58`}>
+          <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-rose-100/58">
             {mobile ? 'Target Lock' : 'Combat Target'}
           </div>
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-            <span className={`truncate font-rajdhani font-bold text-rose-50/94 ${compact ? 'text-[11px]' : 'text-[13px]'}`}>{enemy.name}</span>
-            {enemy.isBoss && <SignalBadge tone="danger" size="sm" className={compact ? 'min-h-[16px] px-1 py-0 text-[7px]' : ''}>Boss</SignalBadge>}
+            <span className="truncate font-rajdhani font-bold text-rose-50/94 text-[13px]">{enemy.name}</span>
+            {enemy.isBoss && <SignalBadge tone="danger" size="sm">Boss</SignalBadge>}
           </div>
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-rose-100/52">HP</div>
-          <div className={`font-rajdhani font-bold text-rose-50/90 ${compact ? 'text-[10px]' : 'text-[12px]'}`}>{safeValue}/{safeMax}</div>
+          <div className="font-rajdhani font-bold text-rose-50/90 text-[12px]">{safeValue}/{safeMax}</div>
         </div>
       </div>
-      <div className={`${compact ? 'mt-1 h-[3px]' : 'mt-2 h-1.5'} overflow-hidden rounded-full border border-rose-300/20 bg-black/30`}>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full border border-rose-300/20 bg-black/30">
         <div
           className="h-full rounded-full bg-gradient-to-r from-rose-500/60 to-rose-300"
           style={{ width: `${percentage}%` }}
