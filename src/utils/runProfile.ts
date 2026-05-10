@@ -339,7 +339,10 @@ export const getTraitFeaturedItems = (items: any[], traitProfile: any, player: P
 // cycle 354: score / label / traitName 3 출력 필드 제거 — PostCombatCard / _helpers.ts
 //   addCombatDigestLogs 두 consumer 모두 traitHint.name / .summary만 read.
 //   score/label/traitName — src/, tests/ 어디에서도 read 0건.
-export const getTraitLootHint = (items: any[] = [], traitProfile: any, player: Player | null = null) => {
+// cycle 602: items / player defaults 제거 — 3 callers (combatVictory:217 +
+//   2 test) 모두 3 args 명시 전달이라 두 default 모두 도달 불가. cycle 598
+//   getTraitFeaturedItems와 paired (동일 모듈).
+export const getTraitLootHint = (items: any[], traitProfile: any, player: Player | null) => {
     const [best] = getTraitFeaturedItems(items, traitProfile, player, 1);
     if (!best) return null;
 
