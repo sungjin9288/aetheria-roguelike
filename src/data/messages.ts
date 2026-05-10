@@ -7,7 +7,7 @@
 export const MSG: any = {
     // --- 전투 (Combat) ---
     // cycle 116: COMBAT_ATTACK 제거 — COMBAT_ATTACK_DETAIL이 active.
-    COMBAT_ATTACK_DETAIL: (name: any, dmg: any, cur: any, max: any, tags: any = []) =>
+    COMBAT_ATTACK_DETAIL: (name: any, dmg: any, cur: any, max: any, tags: any) =>
         `${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
     COMBAT_ENEMY_HIT: (name: any, dmg: any) => {
         const variants = [
