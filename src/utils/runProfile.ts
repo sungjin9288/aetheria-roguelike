@@ -201,7 +201,10 @@ const buildTraitSkill = (traitId: any, player: Player, stats: any) => {
     };
 };
 
-export const getTraitProfile = (player: Player, stats: any = {}) => {
+// cycle 613: stats default {} 제거 — explicit default-elimination pattern
+//   (cycle 608/609/611/612에 이은 5번째 적용). DashboardMobileSummary:37
+//   1-arg caller에 {} 명시 추가 후 모든 caller가 명시 전달.
+export const getTraitProfile = (player: Player, stats: any) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const traitId = pickTraitId(player, buildProfile);
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
@@ -239,7 +242,9 @@ export const getTraitProfile = (player: Player, stats: any = {}) => {
 //   getTraitProfile/getTraitSkill는 1-arg caller가 존재 (cleanup 대상 외).
 export const getTraitBonus = (player: Player, stats: any) => getTraitProfile(player, stats).bonus;
 
-export const getTraitSkill = (player: Player, stats: any = {}) => getTraitProfile(player, stats).skill;
+// cycle 613: stats default {} 제거 — explicit default-elimination cascade
+//   (gameUtils:23 1-arg caller에 {} 명시 추가).
+export const getTraitSkill = (player: Player, stats: any) => getTraitProfile(player, stats).skill;
 
 export const getTraitPassiveParts = (traitProfile: any) => {
     const bonus = traitProfile?.bonus || {};

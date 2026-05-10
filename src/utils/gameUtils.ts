@@ -20,7 +20,8 @@ export const toArray = (v: any) => (Array.isArray(v) ? v : []);
 export const getJobSkills = (player: Player) => {
     const classSkills = toArray(DB.CLASSES[player?.job as string]?.skills).filter((s: any) => !s.passive);
     const weaponSkills = getWeaponMagicSkills(player?.equip);
-    const traitSkill = getTraitSkill(player);
+    // cycle 613: stats 인자 명시 추가 — explicit default-elimination cascade.
+    const traitSkill = getTraitSkill(player, {});
     return [...classSkills, ...weaponSkills, ...(traitSkill ? [traitSkill] : [])];
 };
 

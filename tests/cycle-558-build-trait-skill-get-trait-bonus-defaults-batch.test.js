@@ -58,17 +58,20 @@ test('cycle 558: 2 defaults 0건', async () => {
         'getTraitBonus stats default {} 제거');
 });
 
-test('cycle 558: getTraitProfile / getTraitSkill defaults 보존 (reachable)', async () => {
+test('cycle 558: getTraitProfile / getTraitSkill 파라미터 보존 (cycle 613 explicit elimination)', async () => {
+    // cycle 613에서 explicit default-elimination 적용 — DashboardMobileSummary
+    // / gameUtils:23 1-arg caller에 {} 명시 추가 후 defaults 제거됨.
+    // 파라미터 자체는 보존.
     const source = await readSrc('src/utils/runProfile.ts');
     const profileSig = source.slice(source.indexOf('export const getTraitProfile'),
                                      source.indexOf('=>', source.indexOf('export const getTraitProfile')));
-    assert.ok(/stats:\s*any\s*=\s*\{\}/.test(profileSig),
-        'getTraitProfile stats default {} 보존 (reachable from gameUtils 1-arg caller)');
+    assert.ok(/\bstats\b/.test(profileSig),
+        'getTraitProfile stats 파라미터 보존 (default cycle 613 제거)');
 
     const skillSig = source.slice(source.indexOf('export const getTraitSkill'),
                                     source.indexOf('=>', source.indexOf('export const getTraitSkill')));
-    assert.ok(/stats:\s*any\s*=\s*\{\}/.test(skillSig),
-        'getTraitSkill stats default {} 보존 (reachable from gameUtils:23 1-arg caller)');
+    assert.ok(/\bstats\b/.test(skillSig),
+        'getTraitSkill stats 파라미터 보존 (default cycle 613 제거)');
 });
 
 test('cycle 558: 정합성 가드 — callsite 보존', async () => {
