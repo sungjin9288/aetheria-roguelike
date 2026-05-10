@@ -116,7 +116,10 @@ const withVariant = (baseStage: any, variant: any, overrides: any = {}) => {
     };
 };
 
-export const getEquipmentPreviewStage = (item: Item | null | undefined, appearance: any, variant: any = 'default') => {
+// cycle 514: variant default 'default' 제거 — 1 callsite (EquipmentAvatarPreview
+//   :11) 항상 3 args (variant prop) 전달이라 default 도달 불가. util default
+//   청소 메가 시리즈 12번째 (cycle 502-513).
+export const getEquipmentPreviewStage = (item: Item | null | undefined, appearance: any, variant: any) => {
     const armorArt = appearance?.armor?.art || null;
     const weaponStyle = appearance?.weapon?.art?.style || appearance?.weapon?.visual || 'none';
     const offhandStyle = appearance?.offhand?.art?.style || appearance?.offhand?.visual || 'none';
