@@ -7,6 +7,84 @@
 
 ---
 
+## Cycle 470 🎯 — CHANGELOG에 cycles 461-469 history 일괄 추가
+
+- 마일스톤: cycle 460 batch 이후 9 사이클 미반영 batch 정리. 28번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460에 이은 28번째.
+- 누적 마일스톤: cycle 460(unit 2162) → 469(unit 2197, +35). silent dead config
+  시리즈 cycle 222→469 223번째 도달.
+- 시리즈 정체성 — unreachable code path 메가 시리즈 + silent UI 결손 fix:
+  9 사이클 중 6 사이클 (461/463/464/465/466/cycle 459 carry) unreachable prop /
+  분기, 1 사이클 (462) silently dropped attr, 1 사이클 (467) redundant default,
+  1 사이클 (468) silent UI 결손 fix (오타), 1 사이클 (469) defensive fallback
+  unreachable.
+- 본 batch 핵심 패턴: **icons/ 디렉토리 4사이클 paired** (cycle 463/464/465/466
+  ClassIcon/MonsterIcon/SignatureBadge의 className/cssClass/showBorder 일괄 정리).
+  단일 디렉토리 내 paired cleanup이 cycle 458-459 (StatusBar 같은 파일 paired)
+  의 확장된 변형으로 정착.
+
+검증: tsc 0 / unit 2197 / lint clean / build-guard ok.
+
+---
+
+## Cycle 461-469 — Unreachable / Silent UI / Fallback mix 9사이클
+
+### Unreachable code path / prop (cycle 461/463/464/465/466, 5사이클)
+
+- 461: ClassCard `compact` prop + `if (compact)` 9줄 분기 — JobChangePanel 1
+  callsite never passes compact → 항상 false. compact branch unreachable.
+- 463: ClassIcon `cssClass` prop — 4 callsite 모두 전달 0건. body의 ${cssClass}
+  보간은 빈 문자열만 추가되는 unreachable.
+- 464: ClassIcon `showBorder` prop + ternary false 가지 — 4 callsite 모두 truthy
+  shorthand 전달이라 ternary 첫 가지만 진입. 4 callsite의 명시 attr도 제거.
+- 465: MonsterIcon `className` prop — MonsterCodex 2 callsite 전달 0건. cycle 463
+  과 동일 lens, icons/ 디렉토리 paired.
+- 466: SignatureBadge `className` prop — ItemIcon 1 callsite 전달 0건. icons/
+  4사이클 paired 마무리.
+
+### Silently dropped attribute / Silent UI 결손 fix (cycle 462/468, 2사이클)
+
+- 462: JobChangePanel `<ClassCard player={player}>` silently dropped — cycle 461
+  cleanup 후 callsite 점검에서 발견된 paired completion. ClassCard destructure
+  에 player가 없는데 caller가 전달.
+- 468: EquipmentCodexCard `player.equipment` 오타 → `player.equip` 정정 (3곳).
+  Player 도메인은 `equip` 필드 사용이라 `equipment` 참조는 항상 undefined →
+  WeaponCodex 상세 패널의 "vs xxx" 비교 UI가 영원히 미렌더되던 silent 결손 fix.
+  shield 슬롯은 offhand로 매핑 (Player 스키마상 별도 shield 필드 없음).
+
+### Redundant default annotation (cycle 467, 1사이클)
+
+- 467: FocusPanelHeader 3 redundant default — `eyebrow = ''` (5/5 명시 전달),
+  `archiveLabel = '인벤토리'` (4/5 'INV' 전달 + 1/5 archive 미렌더), `className
+  = ''` (0/5 명시이라 보간 결과 항상 빈). cycle 441 paired completion.
+
+### Defensive fallback redundancy (cycle 469, 1사이클)
+
+- 469: adventureGuide `odds.pacingProfile || getMapPacingProfile(mapData)`
+  fallback unreachable — getDiscoveryOdds producer가 항상 5 valid profile 중
+  하나 반환이라 odds.pacingProfile은 항상 truthy. `||` fallback 진입 0건. 미사용
+  된 getMapPacingProfile import도 함께 제거.
+
+### 신규 lens 의의
+
+- **icons/ 디렉토리 4사이클 paired 정착** (cycle 463-466) — 같은 디렉토리 내
+  연속 cleanup으로 4 surface 일괄 정리. cycle 458-459 같은 파일 paired의
+  확장된 변형. 디렉토리 단위 sweep 패턴 첫 시리즈.
+- **Silent UI 결손 fix의 2변형** — cycle 462는 caller가 잘못 전달 (silently
+  dropped), cycle 468은 caller-callee 필드명 오타 (silently always-null).
+  cycle 426/427 lens (미존재 필드 / 미존재 entry)에 typo / dropped attr 변형
+  추가.
+- **Producer-consumer mismatch 양방향** — cycle 444/448-449는 producer가 안
+  보냄 vs consumer가 안 받음, cycle 469는 producer가 항상 valid 반환인데
+  consumer가 defensive fallback 추가. 같은 라이프사이클의 양 끝에서 dead.
+- **callsite + declaration 양방향 정리** — cycle 464는 declaration의 prop
+  default 제거 + 4 callsite 명시 attr 제거를 단일 commit에서 처리. cycle 457
+  (callsite-side) + cycle 451-452 (declaration-side)의 통합 변형.
+
+---
+
 ## Cycle 460 🎯 — CHANGELOG에 cycles 451-459 history 일괄 추가
 
 - 마일스톤: cycle 450 batch 이후 9 사이클 미반영 batch 정리. 27번째 batch.
