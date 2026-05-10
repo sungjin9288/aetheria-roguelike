@@ -15,7 +15,11 @@ export const sanitizeQuickSlots = (slots: any = [], inventory: any = []) => {
 /**
  * 데일리 프로토콜 미션 진행도를 업데이트하고, 완료 시 에센스/아이템 보상을 지급합니다.
  */
-export const applyDailyProtocolProgress = (player: Player, type: any, amount: any = 1) => {
+// cycle 538: amount default 1 제거 — 1 production caller (protocolHandlers
+//   :20) + 6 test caller 모두 명시 전달 (1)이라 default 도달 불가.
+//   util/component/hook/system/reducer default 청소 메가 시리즈 34번째,
+//   reducers/ 진입.
+export const applyDailyProtocolProgress = (player: Player, type: any, amount: any) => {
     const dp = (player.stats as any)?.dailyProtocol;
     if (!dp) return player;
 
