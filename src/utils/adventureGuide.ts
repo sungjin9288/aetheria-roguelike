@@ -29,7 +29,11 @@ const getActiveQuestEntries = (player: Player) => (
 );
 
 const clampPercent = (value: any) => Math.max(0, Math.min(100, Math.round(value * 100)));
-const getMapLevel = (map: GameMap | null | undefined, playerLevel: any = 1) => (
+// cycle 519: playerLevel default 1 제거 — 1 internal callsite (line 145)
+//   getMapLevel(targetMap, playerLevel) 명시 전달이라 default 도달 불가.
+//   util default 청소 메가 시리즈 17번째 (cycle 502-518). body의 (playerLevel
+//   || 1) defensive 가드는 별개 — caller가 0/undefined 넘기는 path 보존.
+const getMapLevel = (map: GameMap | null | undefined, playerLevel: any) => (
     map?.level === 'infinite'
         ? Math.max((playerLevel || 1) + 8, 50)
         : (map?.minLv ?? (typeof map?.level === 'number' ? map.level : 1))
