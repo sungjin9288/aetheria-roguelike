@@ -395,7 +395,11 @@ export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
 
 // --- Enemy tactical profile ---
 
-export const getEnemyTacticalProfile = (enemy: Monster, stats: any = {}) => {
+// cycle 559: stats default {} 제거 — 1 production (CombatPanel:58) +
+//   5 test (cycle-270, run-profile-utils) 모두 명시 전달이라 default 도달
+//   불가. body의 void stats는 cycle 270 시그니처 호환 보존. 청소 메가
+//   시리즈 53번째.
+export const getEnemyTacticalProfile = (enemy: Monster, stats: any) => {
     if (!enemy) return null;
     void stats; // cycle 270: stats 파라미터는 estimatedHit/estimatedHeavy 계산용이었으나 dead — 시그니처 호환 보존.
 
