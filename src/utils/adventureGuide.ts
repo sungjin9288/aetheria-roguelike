@@ -240,7 +240,10 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
         });
 };
 
-export const getAdventureGuidance = (player: Player, stats: any, mapData: any, runtimeState: any = 'idle') => {
+// cycle 509: runtimeState default 제거 — 1 callsite (ControlPanel:57) 항상
+//   gameState 명시 전달이라 default 도달 불가. util default 청소 메가 시리즈
+//   8번째 (cycle 502-508).
+export const getAdventureGuidance = (player: Player, stats: any, mapData: any, runtimeState: any) => {
     const safe = mapData?.type === 'safe';
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     // cycle 332: mpRatio 제거 — secondaryAction 'MP도 회복' 분기 외 read 0건이라 dead.
