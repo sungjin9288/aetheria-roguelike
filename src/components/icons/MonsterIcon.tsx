@@ -46,15 +46,18 @@ const getMonsterType = (name: any) => {
 
 /**
  * MonsterIcon — 몬스터 아이콘 컴포넌트
- * @param {{ name: string, discovered?: boolean, isBoss?: boolean, size?: number, className?: string }} props
+ * @param {{ name: string, discovered?: boolean, isBoss?: boolean, size?: number }} props
+ *
+ * cycle 465: 외부 보조 클래스 prop 제거 — 2 callsite 모두 전달 0건이라 보간
+ *   결과 ''만 추가되는 unreachable. cycle 463/464 lens 회귀 (같은 icons/ 디렉토리).
  */
-const MonsterIcon = ({ name, discovered = false, isBoss = false, size = 32, className = '' }: any) => {
+const MonsterIcon = ({ name, discovered = false, isBoss = false, size = 32 }: any) => {
     const type = isBoss ? 'boss' : getMonsterType(name);
     const path = SILHOUETTE_PATHS[type] || SILHOUETTE_PATHS.humanoid;
 
     return (
         <div
-            className={`inline-flex items-center justify-center shrink-0 ${className}`}
+            className="inline-flex items-center justify-center shrink-0"
             style={{ width: size, height: size }}
         >
             <svg
