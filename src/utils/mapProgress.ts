@@ -1,6 +1,9 @@
 import type { GameMap, Player } from '../types/index.js';
 
-const uniqueList = (values: any = []) => [...new Set(values.filter(Boolean))];
+// cycle 607: values default [] 제거 — 1 internal callsite (line 5)
+//   uniqueList([...spread array]) 명시 전달이라 default 도달 불가.
+//   private (no export). cycle 577과 동일 모듈 paired cleanup.
+const uniqueList = (values: any) => [...new Set(values.filter(Boolean))];
 
 export const getMapEncounterRoster = (map: GameMap | null | undefined) => uniqueList([
     ...(map?.monsters || []),
