@@ -52,7 +52,10 @@ const generateFromParts = (rng: any) => {
     );
 };
 
-export const createRandomMobileName = (rng: any = Math.random) => {
+// cycle 611: rng default Math.random 제거 — explicit default-elimination
+//   pattern (cycle 608/609 신규 lens 3번째 적용). IntroScreen 2 production
+//   caller에 Math.random 명시 추가 후 default unreachable.
+export const createRandomMobileName = (rng: any) => {
     const roll = rng();
     const name = roll < 0.62 ? pick(CURATED_FANTASY_NAMES, rng) : generateFromParts(rng);
     return HANGUL_NAME_RE.test(name) ? name : '아르덴';

@@ -14,7 +14,7 @@ interface IntroScreenProps {
 }
 
 const IntroScreen = ({ onStart }: IntroScreenProps) => {
-    const [name, setName] = useState(() => createRandomMobileName());
+    const [name, setName] = useState(() => createRandomMobileName(Math.random));
     const [selectedChallenges, setSelectedChallenges] = useState<any[]>([]);
     const nameInputRef = useRef<any>(null);
 
@@ -118,7 +118,7 @@ const IntroScreen = ({ onStart }: IntroScreenProps) => {
                                 <button
                                     type="button"
                                     data-testid="intro-reroll-name"
-                                    onClick={() => applyName(createRandomMobileName(), true)}
+                                    onClick={() => applyName(createRandomMobileName(Math.random), true)}
                                     className="shrink-0 rounded-[1.05rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-3 text-[11px] font-rajdhani font-bold tracking-[0.14em] text-[#f4e6c8]"
                                 >
                                     랜덤

@@ -51,7 +51,9 @@ test('cycle 608: 정합성 가드 — 2 callsite 명시 (false/true)', async () 
     const source = await readSrc('src/components/IntroScreen.tsx');
     assert.ok(/applyName\(e\.target\.value,\s*false\)/.test(source),
         'onChange callsite false 명시 추가');
-    assert.ok(/applyName\(createRandomMobileName\(\),\s*true\)/.test(source),
+    // cycle 611: createRandomMobileName 인자 추가 cascade — applyName(create
+    //   RandomMobileName(Math.random), true) 형태로 변경됨. true 보존 가드만 유지.
+    assert.ok(/applyName\(createRandomMobileName\([^)]*\),\s*true\)/.test(source),
         'onClick reroll callsite true 명시 보존');
 });
 
