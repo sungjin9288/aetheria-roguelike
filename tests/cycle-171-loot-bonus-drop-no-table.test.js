@@ -49,7 +49,7 @@ test('cycle 171 RED→GREEN: drop/loot 없는 고레벨 enemy도 보너스 드�
     Math.random = () => 0.0;  // 모든 chance roll 통과
     try {
         const enemy = makeHighLvEnemy(NO_TABLE_MONSTER);
-        const result = processLoot(enemy);
+        const result = processLoot(enemy, null, 1.0); // cycle 629: explicit elimination
         // bonus chance는 LOOT_NORMAL_BONUS_CHANCE * dropRateMult(=1) * bossDropMult(=1).
         // Math.random 0.0이면 bonusChance > 0이면 발동 → items 1+ 보장.
         assert.ok(result.items.length >= 1,
@@ -74,7 +74,7 @@ test('cycle 171: drop/loot 없는 저레벨 enemy는 여전히 빈 드롭 (회�
             gold: 10,
             isBoss: false,
         };
-        const result = processLoot(enemy);
+        const result = processLoot(enemy, null, 1.0); // cycle 629: explicit elimination
         assert.equal(result.items.length, 0,
             '저레벨(inferredLevel < 30)은 보너스 드랍 발동 안 함');
     } finally {
@@ -98,7 +98,7 @@ test('cycle 171: drop table 있는 enemy 회귀 가드 — 정상 드랍 동작'
             gold: 5,
             isBoss: false,
         };
-        const result = processLoot(enemy);
+        const result = processLoot(enemy, null, 1.0); // cycle 629: explicit elimination
         // 슬라임 drop table에 슬라임 젤리(rate 0.55) + 하급 체력 물약(rate 0.2).
         assert.ok(result.items.length >= 1, '슬라임 drop table 정상 fire');
     } finally {

@@ -67,10 +67,10 @@ test('cycle 552: body _processLoot wrapper 보존', async () => {
         '_processLoot(enemy, player, signaturePityMult) delegate 보존');
 });
 
-test('cycle 552: CombatEngine.loot.ts 별개 함수 보존 (cleanup 대상 외)', async () => {
+test('cycle 552: CombatEngine.loot.ts processLoot 시그니처 보존 (cycle 629 explicit elimination)', async () => {
     const source = await readSrc('src/systems/CombatEngine.loot.ts');
-    assert.ok(/export const processLoot = \(enemy: Monster, player: Player \| null = null, signaturePityMult: any = 1\.0\)/.test(source),
-        'CombatEngine.loot.ts processLoot defaults 보존 (test가 1 arg 호출이라 reachable)');
+    assert.ok(/export const processLoot = \(enemy: Monster, player: Player \| null, signaturePityMult: any\)/.test(source),
+        'CombatEngine.loot.ts processLoot 3-arg 시그니처 보존 (cycle 629에서 defaults 제거됨)');
 });
 
 test('cycle 552: cycle 502-551 회귀 가드 — default 청소 시리즈 보존', async () => {

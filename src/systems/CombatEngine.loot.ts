@@ -29,7 +29,7 @@ export const resolveEnemyBaseName = (enemy: Monster) => {
  * @param {number} [signaturePityMult=1.0] - signature 드롭에만 적용되는 pity 배율
  * @returns {{ items: Object[], logs: Object[] }}
  */
-export const processLoot = (enemy: Monster, player: Player | null = null, signaturePityMult: any = 1.0) => {
+export const processLoot = (enemy: Monster, player: Player | null, signaturePityMult: any) => {
     const items: any[] = [];
     const logs: any[] = [];
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
