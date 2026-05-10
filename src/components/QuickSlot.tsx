@@ -20,7 +20,10 @@ interface QuickSlotProps {
     gameState?: string;
 }
 
-const QuickSlot = ({ slots = [null, null, null], onUse, gameState }: QuickSlotProps) => {
+// cycle 581: slots default [null, null, null] 제거 — 1 production caller
+//   (TerminalView:287 <QuickSlot slots={quickSlots} ... />) 명시 전달이라
+//   default 도달 불가. 청소 메가 시리즈 72번째.
+const QuickSlot = ({ slots, onUse, gameState }: QuickSlotProps) => {
     const canUse = gameState === GS.COMBAT || gameState === GS.IDLE;
 
     return (
