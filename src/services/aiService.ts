@@ -12,7 +12,11 @@ import { isSmokeRuntime } from '../utils/runtimeMode';
  * @param {number} timeoutMs - 타임아웃 (ms)
  * @returns {Promise<object|null>}
  */
-const callProxy = async (body: any, trackLabel: any = 'ai-call', timeoutMs: any = 9500) => {
+// cycle 539: trackLabel / timeoutMs defaults 제거 — 2 internal callsite (line
+//   80 'ai-event'/9500, line 133 'ai-story'/9500) 모두 명시 전달이라 두
+//   default 모두 도달 불가. util/component/hook/system/reducer/service default
+//   청소 메가 시리즈 35번째, services/ 진입.
+const callProxy = async (body: any, trackLabel: any, timeoutMs: any) => {
     try {
         const token = await auth?.currentUser?.getIdToken?.();
         const headers: Record<string, any> = {
