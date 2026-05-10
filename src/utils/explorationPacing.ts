@@ -27,7 +27,11 @@ const getExploreState = (stats: any) => {
     };
 };
 
-export const getMapPacingProfile = (mapData: GameMap | null | undefined = {}) => {
+// cycle 599: mapData default {} 제거 — 4 callsite (3 internal + 1
+//   exploreActions production) 모두 mapData 명시 전달이라 default 도달 불가.
+//   body의 !mapData guard가 undefined/null 안전 처리. cycle 600 milestone
+//   직전 마지막 cleanup.
+export const getMapPacingProfile = (mapData: GameMap | null | undefined) => {
     if (!mapData || mapData.type === 'safe') {
         return {
             id: 'safe',
