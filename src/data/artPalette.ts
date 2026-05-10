@@ -19,14 +19,12 @@ import paletteSource from './artPalette.json' with { type: 'json' };
 //   런타임 consumer 0건이던 art direction 메타정보 — 문서 커멘트로 충분.
 
 // Tone palette를 freeze된 객체로 노출.
-// base/accent는 기존 코드 호환용 alias (base = mid, accent = hi).
+// cycle 446: 4 출력 dead 필드 (outline / mid / hi / material) 제거 — production
+//   read 0건. equipmentArt.tintPalette는 base / shade / accent / trim 만 read.
+//   raw 원본 (artPalette.json)은 무영향. base / accent는 mid / hi의 호환 alias.
 const buildRuntimePalette = (raw: any) => Object.freeze({
-    outline: raw.outline,
     shade: raw.shade,
-    mid: raw.mid,
-    hi: raw.hi,
     trim: raw.trim,
-    material: raw.material,
     // 호환 레이어 — 기존 equipmentArt.js가 참조하는 키
     base: raw.mid,
     accent: raw.hi,
