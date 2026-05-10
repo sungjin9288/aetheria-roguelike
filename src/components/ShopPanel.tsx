@@ -35,7 +35,10 @@ const isEquipmentItem = (item: any) => ['weapon', 'armor', 'shield'].includes(it
 
 const signedDelta = (value: any = 0, suffix: any = '') => `${value >= 0 ? '+' : ''}${value}${suffix}`;
 
-const formatPercent = (value: any = 0) => `${value >= 0 ? '+' : ''}${value}%`;
+// cycle 531: value default 0 제거 — 1 callsite (line 60 formatPercent
+//   (critDelta)) value 명시 (Math.round 결과)이라 default 도달 불가. cycle
+//   502-529 default 청소 메가 시리즈 27번째 batch.
+const formatPercent = (value: any) => `${value >= 0 ? '+' : ''}${value}%`;
 
 const getItemTags = (item: any) => {
     const tags: any[] = [];
@@ -43,7 +46,9 @@ const getItemTags = (item: any) => {
     return tags;
 };
 
-const getComparisonMeta = (item: any, equip: any = {}) => {
+// cycle 531: equip default {} 제거 — 2 callsite (line 295/370 getComparisonMeta
+//   (item, player.equip)) equip 명시 전달이라 default 도달 불가.
+const getComparisonMeta = (item: any, equip: any) => {
     if (!item) return null;
     const currentProfile = getEquipmentProfile(equip);
     const nextEquip = getNextEquipmentState(equip, item);
@@ -84,7 +89,9 @@ const getToneClass = (tone: any) => {
     return 'text-slate-300 border-white/8 bg-white/[0.03]';
 };
 
-const getCompactText = (value: any = '') => value.replaceAll(' / ', ' · ');
+// cycle 531: value default '' 제거 — 3 callsite (line 90/94/372) 모두 string
+//   || fallback으로 string 보장 후 명시 전달이라 default 도달 불가.
+const getCompactText = (value: any) => value.replaceAll(' / ', ' · ');
 
 const getCompactComparisonText = (comparison: any) => (
     getCompactText(comparison?.text || '').replace('현재 장비와 동일한 효율', '변화 없음')
