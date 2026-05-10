@@ -26,23 +26,16 @@ const StatBar = ({ label, value, color }: any) => {
 
 /**
  * ClassCard — 직업 선택 카드 (아이콘 + 스탯 바 + 설명)
+ *
+ * cycle 461: compact prop / if (compact) 9줄 분기 제거 — JobChangePanel 1 callsite
+ *   compact 전달 0건 (caller 0이라 항상 false). cycle 458/459 unreachable lens 회귀.
  */
-const ClassCard = ({ jobName, onSelect, disabled = false, compact = false }: any) => {
+const ClassCard = ({ jobName, onSelect, disabled = false }: any) => {
     const jobData = DB.CLASSES[jobName];
     if (!jobData) return null;
 
     const tier = jobData.tier || 0;
     const skillCount = jobData.skills?.filter((s: any) => !s.passive)?.length || 0;
-
-    if (compact) {
-        return (
-            <div className={`flex items-center gap-2 rounded-[0.85rem] border px-2 py-2.5 min-h-[44px] ${disabled ? 'border-white/6 opacity-40' : 'border-white/10 bg-white/[0.03]'}`}>
-                <ClassIcon className={jobName} size={22} tier={tier} />
-                <span className="text-[11px] font-rajdhani font-bold text-slate-200">{jobName}</span>
-                <SignalBadge tone={TIER_TONES[tier]} size="sm">{TIER_LABELS[tier]}</SignalBadge>
-            </div>
-        );
-    }
 
     return (
         <Motion.button
