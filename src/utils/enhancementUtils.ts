@@ -15,7 +15,10 @@ export const getEnhanceMaterialCount = (inventory: Item[] = []) => (
     countInventoryItemByName(inventory, CONSTANTS.ENHANCE_MATERIAL_NAME)
 );
 
-export const consumeInventoryItemByName = (inventory: Item[] = [], itemName: string, count: number = 1) => {
+// cycle 503: 누적량 default 제거 — 1 callsite (useInventoryActions:559) 항상
+//   3 args (count 명시) 전달이라 default 1 도달 불가. cycle 502 incrementStat
+//   amount 파라미터 cleanup 동일 lens.
+export const consumeInventoryItemByName = (inventory: Item[] = [], itemName: string, count: number) => {
     let removed = 0;
     const nextInventory = (inventory || []).filter((item: Item | null | undefined) => {
         if (item?.name === itemName && removed < count) {
