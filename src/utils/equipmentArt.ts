@@ -9,7 +9,11 @@ const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, va
 
 const containsAny = (name: any, patterns: any) => patterns.some((pattern: any) => name.includes(pattern));
 
-const hashText = (value: any = '') => (
+// cycle 521: value default '' 제거 — 1 callsite (line 41) hashText(item?.name
+//   || '')가 string 보장 후 명시 전달이라 default 도달 불가. util default
+//   청소 메가 시리즈 18번째 (cycle 502-519). String(value) coercion이 fallback
+//   역할 (정의역 가드).
+const hashText = (value: any) => (
     [...String(value)].reduce((total: any, char: any, index: any) => ((total * 31) + (char.codePointAt(0) || 0) + index) % 9973, 17)
 );
 
@@ -27,7 +31,10 @@ const rgbToHex = ({ r, g, b }: any) => (
     `#${[r, g, b].map((channel: any) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0')).join('')}`
 );
 
-const mixHex = (left: any, right: any, ratio: any = 0.5) => {
+// cycle 521: ratio default 0.5 제거 — 4 callsite (line 44-47) 모두 3 args
+//   (ratio * 0.2/0.35/0.08/0.16) 명시 전달이라 default 도달 불가. util default
+//   청소 메가 시리즈 18번째 (hashText와 batch).
+const mixHex = (left: any, right: any, ratio: any) => {
     const l = hexToRgb(left);
     const r = hexToRgb(right);
     return rgbToHex({
