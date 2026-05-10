@@ -7,6 +7,83 @@
 
 ---
 
+## Cycle 530 🎯 — CHANGELOG에 cycles 521-529 history 일괄 추가 (34번째 batch)
+
+- 마일스톤: cycle 520 batch 이후 9 사이클 미반영 batch 정리. 34번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500 / 510 / 520에 이은 34번째.
+- 누적 마일스톤: cycle 520(unit 2407) → 529(unit 2447, +40). silent dead config
+  시리즈 cycle 222→529 278번째 도달.
+- 시리즈 정체성 — **util default 청소 메가 시리즈 추가 연장**: 9사이클 중
+  8사이클이 utils/ 디렉토리, 1사이클(529)이 components/ private helper로 lens
+  확장. cycle 502-529 27사이클 누적, 33+ default 정리.
+
+검증: tsc 0 / unit 2447 / lint clean / build-guard ok.
+
+---
+
+## Cycle 521-529 — util default 청소 메가 시리즈 추가 연장 9사이클
+
+cycle 511-519 util default 청소 메가 시리즈 9사이클에 이어 cycle 521-529는
+동일 lens로 9사이클 추가. utils/ 외 components/ 까지 lens 확장. cycle 520은
+batch CHANGELOG.
+
+### util default 청소 메가 시리즈 9사이클 (cycle 521-529)
+
+- 521: hashText + mixHex 2 defaults batch (equipmentArt.ts) — 5 callsite all
+  명시.
+- 522: toInt fallback default (aiEventUtils.ts) — 8 callsite all 명시.
+- 523: getQuestLevelGap playerLevel default (questOperations.ts) — defensive
+  guard 보존 패턴.
+- 524: shopRotation 3 defaults batch (dateHash + getDailyDeals + getWeekly
+  Special) — single-cycle 3-default 정리, ShopPanel 명시 caller.
+- 525: hashString + classifyChoice 2 defaults batch (aiEventUtils.ts) — test
+  caller까지 명시.
+- 526: toPercent value default (runProfile.ts) — private numeric helper 정리.
+  **첫 시도 revert** — findQuestDefinition QUESTS default 제거 시도였으나
+  16개 test callsite (cycle 99/94/83 + quest-progress)가 syncQuestProgress
+  (player) 1 arg 호출이라 default 활성. cycle 512 패턴 재확인.
+- 527: dedupeChoices + normalizeOutcomes 4 defaults batch (aiEventUtils.ts) —
+  single-cycle 4-default 정리, body Array.isArray 가드는 보존.
+- 528: pickBestOneHandPair 2 defaults batch (equipmentUtils.ts) — 1 callsite
+  filter(Boolean) array 명시.
+- 529: softenColor alpha default (PixelCharacterAvatar.tsx) — components/
+  private helper 진입.
+
+**누적 18 default 추가 정리** (cycle 521-529 9사이클, cycle 520 batch +
+cycle 526 revert 케이스 포함).
+**시리즈 누적 33+ default 정리** (cycle 502-529 27사이클 합산).
+
+### 신규 lens 의의
+
+- **components/ 디렉토리로 lens 확장** — cycle 529 softenColor가 utils/
+  외부 첫 적용. components 내 private helper(컴포넌트 모듈 안의 const fn)도
+  redundant default 청소 lens 적용 가능. 이로써 audit scope가 utils/만이
+  아닌 모든 source 모듈 private helper로 확장.
+- **single-cycle multi-default batch 정착** — cycle 524 (3 defaults), cycle
+  527 (4 defaults). 같은 모듈의 자매 헬퍼 또는 같은 함수의 복수 파라미터를
+  single-cycle batch로 정리하는 패턴이 일반화. 사이클 효율 ↑.
+- **test caller audit 패턴 재확인** — cycle 526 첫 시도는 production
+  callers만 본 audit으로 cycle 508 cascade 시도, 그러나 16개 test callsite가
+  default 활성 path였어 revert. 이후 모든 cycle은 `grep -rn` src/ + tests/
+  로 모든 caller scope audit 후 진행. cycle 512 패턴 재확인.
+- **defensive guard 보존 정착** — cycle 523 getQuestLevelGap의 body
+  `(playerLevel || 1)` defensive 가드는 unreachable signature default와
+  별개로 보존. caller가 0/undefined 넘기는 path가 future-proof. cycle
+  519/505 패턴 재확인.
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2407 → 2447 (+40, 누적 신규 가드 + revert로 9사이클 만에
+  cleanup이 진행).
+- lint clean / build-guard ok 9사이클 연속.
+- 1 revert (cycle 526 첫 시도) 발생, immediate recovery로 같은 cycle 내
+  다른 target 완료. revert 패턴은 lesson 학습으로 차후 cycle audit 강화.
+
+---
+
 ## Cycle 520 🎯 — CHANGELOG에 cycles 511-519 history 일괄 추가 (33번째 batch)
 
 - 마일스톤: cycle 510 batch 이후 9 사이클 미반영 batch 정리. 33번째 batch.
