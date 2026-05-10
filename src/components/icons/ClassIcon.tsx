@@ -45,7 +45,11 @@ const TIER_COLORS: any = {
 //   보간 결과 ''만 추가되는 unreachable. cycle 458/459/461 unreachable lens 회귀.
 // cycle 464: 보더 토글 prop 제거 — 4 callsite 모두 truthy shorthand 전달이라
 //   ternary false 가지 dead. paired completion으로 ClassIcon 잔존 dead config 정리.
-const ClassIcon = ({ className: jobName, size = 28, tier = 0 }: any) => {
+// cycle 568: size / tier defaults 제거 — 4 production caller (SkillTreePreview
+//   /ClassTree/ClassCard/JobChangePanel) 모두 size + tier 명시 전달이라 두
+//   default 모두 도달 불가. body의 TIER_COLORS[tier] ?? TIER_COLORS[0] +
+//   CLASS_PATHS jobName fallback은 별개 보존. 청소 메가 시리즈 61번째.
+const ClassIcon = ({ className: jobName, size, tier }: any) => {
     const path = CLASS_PATHS[jobName] || CLASS_PATHS['모험가'];
     const color = TIER_COLORS[tier] ?? TIER_COLORS[0];
 

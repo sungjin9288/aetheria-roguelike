@@ -82,6 +82,7 @@ test('cycle 463: className(jobName 별칭) / size / tier 보존', async () => {
     const fnEnd = source.indexOf('=>', fnIdx);
     const sig = source.slice(fnIdx, fnEnd);
     assert.ok(/className:\s*jobName/.test(sig), 'className 별칭 보존');
-    assert.ok(/size\s*=\s*28/.test(sig), 'size 기본값 보존');
-    assert.ok(/tier\s*=\s*0/.test(sig), 'tier 기본값 보존');
+    // cycle 568: size = 28 / tier = 0 defaults cascade 제거 (4 callsite 모두 명시).
+    assert.ok(/\bsize\b/.test(sig), 'size 파라미터 보존 (default cycle 568 제거)');
+    assert.ok(/\btier\b/.test(sig), 'tier 파라미터 보존 (default cycle 568 제거)');
 });
