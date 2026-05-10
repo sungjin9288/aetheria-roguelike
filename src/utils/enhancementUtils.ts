@@ -1,7 +1,10 @@
 import type { Item } from '../types/index.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 
-export const countInventoryItemByName = (inventory: Item[] = [], itemName: string) => (
+// cycle 578: inventory default [] 제거 — 3 callsite (EquipmentPanel:58 +
+//   internal:18 + test:31) 모두 명시 전달이라 default 도달 불가. body의
+//   (inventory || []) defensive guard 보존. 청소 메가 시리즈 70번째 batch.
+export const countInventoryItemByName = (inventory: Item[], itemName: string) => (
     (inventory || []).filter((item: Item | null | undefined) => item?.name === itemName).length
 );
 
@@ -14,14 +17,17 @@ export const getEnhanceRequirement = (currentLevel: any) => ({
     materialName: CONSTANTS.ENHANCE_MATERIAL_NAME,
 });
 
-export const getEnhanceMaterialCount = (inventory: Item[] = []) => (
+// cycle 578: inventory default [] 제거 — internal:62 + test:32 모두 명시.
+export const getEnhanceMaterialCount = (inventory: Item[]) => (
     countInventoryItemByName(inventory, CONSTANTS.ENHANCE_MATERIAL_NAME)
 );
 
 // cycle 503: 누적량 default 제거 — 1 callsite (useInventoryActions:559) 항상
 //   3 args (count 명시) 전달이라 default 1 도달 불가. cycle 502 incrementStat
 //   amount 파라미터 cleanup 동일 lens.
-export const consumeInventoryItemByName = (inventory: Item[] = [], itemName: string, count: number) => {
+// cycle 578: inventory default [] 제거 — useInventoryActions:563 + test:43
+//   모두 명시. body의 (inventory || []) defensive guard 보존.
+export const consumeInventoryItemByName = (inventory: Item[], itemName: string, count: number) => {
     let removed = 0;
     const nextInventory = (inventory || []).filter((item: Item | null | undefined) => {
         if (item?.name === itemName && removed < count) {
