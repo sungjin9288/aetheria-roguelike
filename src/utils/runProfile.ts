@@ -166,7 +166,9 @@ const pickTraitId = (player: Player, buildProfile: any) => {
     return TRAIT_DEFINITIONS[primaryId] ? primaryId : 'balanced';
 };
 
-const buildTraitSkill = (traitId: any, player: Player, stats: any = {}) => {
+// cycle 558: stats default {} 제거 — 1 internal callsite (line 212) 명시
+//   전달이라 default 도달 불가. private (no export). 청소 메가 시리즈 52번째.
+const buildTraitSkill = (traitId: any, player: Player, stats: any) => {
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
     if (!definition.skill) return null;
 
@@ -229,7 +231,10 @@ export const getTraitProfile = (player: Player, stats: any = {}) => {
     };
 };
 
-export const getTraitBonus = (player: Player, stats: any = {}) => getTraitProfile(player, stats).bonus;
+// cycle 558: stats default {} 제거 — 1 external callsite (statsCalculator
+//   :376) 명시 전달이라 default 도달 불가. test caller 0건.
+//   getTraitProfile/getTraitSkill는 1-arg caller가 존재 (cleanup 대상 외).
+export const getTraitBonus = (player: Player, stats: any) => getTraitProfile(player, stats).bonus;
 
 export const getTraitSkill = (player: Player, stats: any = {}) => getTraitProfile(player, stats).skill;
 
