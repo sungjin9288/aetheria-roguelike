@@ -7,6 +7,75 @@
 
 ---
 
+## Cycle 570 🎯 — CHANGELOG에 cycles 561-569 history 일괄 추가 (38번째 batch)
+
+- 마일스톤: cycle 560 batch 이후 9 사이클 미반영 batch 정리. 38번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500 / 510 / 520 / 530 / 540 / 550 / 560에 이은
+  38번째.
+- 누적 마일스톤: cycle 560(unit 2562) → 569(unit 2598, +36). silent dead config
+  시리즈 cycle 222→569 314번째 도달.
+- 시리즈 정체성 — **default 청소 메가 시리즈 mixed-layer 운영**: 9사이클
+  중 utils/(2) + reducers/(1) + hooks/(2) + components/(4)로 utils가 거의
+  소진되고 components/icons/ 활성화 단계. cycle 502-569 68사이클 누적, 80+
+  default 정리.
+
+검증: tsc 0 / unit 2598 / lint clean / build-guard ok.
+
+---
+
+## Cycle 561-569 — default 청소 메가 시리즈 mixed-layer 9사이클
+
+cycle 551-559 시리즈 9사이클에 이어 cycle 561-569는 utils 거의 소진 후
+components/icons/ + hooks/ + reducers/ 골고루. cycle 570은 batch CHANGELOG.
+
+### default 청소 메가 시리즈 9사이클 (cycle 561-569)
+
+- 561: aiEventUtils buildEventPackage + buildProceduralOutcome 3 defaults batch
+  (4번째 동일 모듈 cleanup).
+- 562: sanitizeQuickSlots 2 defaults batch (reducers/handlers/).
+- 563: useLegendaryDropDetector 2 defaults batch (hooks/).
+- 564: avatarEquipmentPreview withVariant overrides default (10 callsite).
+- 565: SkillTreePreview actions default (component prop).
+- 566: characterActions start 3 defaults batch (single-cycle 3-default).
+- 567: SignatureBadge size default (icons/) — cycle 466 stale guard 업데이트.
+- 568: ClassIcon size + tier 2 defaults batch (4 callers, cycle 463/464 stale
+  guard 업데이트).
+- 569: SkillTypeIcon size default partial cleanup (className은 reachable
+  보존).
+
+**누적 18 default 추가 정리** (cycle 561-569 9사이클).
+**시리즈 누적 80+ default 정리** (cycle 502-569 68사이클 합산).
+
+### 신규 lens 의의
+
+- **utils/ 거의 소진** — cycle 502-560 사이클 동안 utils/ 디렉토리 default
+  cleanup 거의 완료. 잔존은 reachable defaults (createRandomMobileName,
+  getQuestBoardRecommendations entry, normalizeText 등)만 남음. cycle 561은
+  aiEventUtils 4번째 cleanup으로 utils/ 마지막 batch.
+- **components/icons/ 시리즈 시작** — cycle 567/568/569 3사이클 연속 icons/
+  cleanup. SignatureBadge / ClassIcon / SkillTypeIcon 정리. icons/ 디렉토리는
+  cycle 463-466 cssClass/className lens 시리즈 이후 또 다른 lens (size/tier
+  prop default)로 lens 확장.
+- **partial cleanup pattern 4번째 적용** — cycle 569 SkillTypeIcon은 cycle
+  542 signedDelta / cycle 553 applyFatalProtection / cycle 558 buildTraitSkill
+  partial pattern을 4번째 적용. component prop 단위 reachability 분리가
+  정착.
+- **stale guard cascade 정리 정착** — cycle 567/568에서 기존 cycle test의
+  default 보존 가드를 파라미터 보존으로 weakening. cleanup cascade가 기존
+  test guard에 영향 줄 때 자동 weakening 패턴 정착 (cycle 405/431/451 등에서
+  이미 정착된 패턴 연속 적용).
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2562 → 2598 (+36, 누적 신규 가드 + cycle 567/568 weakening).
+- lint clean / build-guard ok 9사이클 연속.
+- 0 회귀, 0 revert (cycle 526 이후 test caller audit 정착으로 안전성 ↑).
+
+---
+
 ## Cycle 560 🎯 — CHANGELOG에 cycles 551-559 history 일괄 추가 (37번째 batch)
 
 - 마일스톤: cycle 550 batch 이후 9 사이클 미반영 batch 정리. 37번째 batch.
