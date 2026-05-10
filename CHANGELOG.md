@@ -7,6 +7,84 @@
 
 ---
 
+## Cycle 460 🎯 — CHANGELOG에 cycles 451-459 history 일괄 추가
+
+- 마일스톤: cycle 450 batch 이후 9 사이클 미반영 batch 정리. 27번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450에 이은 27번째.
+- 누적 마일스톤: cycle 450(unit 2125) → 459(unit 2162, +37). silent dead config
+  시리즈 cycle 222→459 215번째 도달.
+- 시리즈 정체성 — default annotation cleanup mini-batch + unreachable code path
+  메가 시리즈: 9 사이클 중 4 사이클 (451/452/456/457) redundant default,
+  4 사이클 (453/454/455/458/459) output dead / unreachable mix. 1 사이클 (455)은
+  cycle 453 paired completion (buildTree 추가 dead 필드 발견).
+- 본 batch 핵심 패턴: **default annotation cleanup의 batch화** — cycle 451은 단일
+  GravePanel, cycle 452는 6 panel batch (BuildAdvice/Achievement/Stats/Equipment/
+  MapNavigator/SmartInventory), cycle 456-457은 ControlPanel 내 3 default + JSX
+  callsite 2 명시 attr → callsite-side와 declaration-side 양방향 정리. cycle
+  458-459는 같은 파일 (StatusBar) 내 paired unreachable cleanup.
+
+검증: tsc 0 / unit 2162 / lint clean / build-guard ok.
+
+---
+
+## Cycle 451-459 — Default annotation 4사이클 + Output dead / Unreachable 5사이클 mix
+
+cycle 441 single default cleanup → cycle 451-452 6-panel batch → cycle 456-457
+ControlPanel 양방향 → cycle 458-459 같은 파일 paired unreachable로 lens 다변화.
+
+### Redundant default annotation (cycle 451/452/456/457, 4사이클)
+
+- 451: GravePanel default `compact = false` — Dashboard 호출자 명시 전달.
+- 452: Dashboard 6 panel default `compact = false` 일괄 정리 — BuildAdvice/
+  Achievement/Stats/Equipment/MapNavigator/SmartInventory 모두 Dashboard caller가
+  명시 전달. 단일 batch commit.
+- 456: ControlPanel `renderResetControl` 3 default annotation — `compact = false /
+  className = '' / confirmGridClass = ''`. 두 callsite (line 331/338) 모두 3 prop
+  명시 전달이라 fallback path 0건. `: any = {}` 외부 fallback도 제거.
+- 457: ControlPanel `<CombatPanel>` 명시 false 2건 — `compact={false} dense={false}`
+  명시 전달이 destructure 기본값과 동일 → callsite-side에서 redundant attr 제거.
+  cycle 451-452의 declaration-side와 반대 방향 (callsite 측). CombatPanel은 이
+  callsite 1곳에서만 호출.
+
+### Output dead field / Unreachable code path (cycle 453/454/455/458/459, 5사이클)
+
+- 453: ClassTree `buildTree` `nodes` / `edges` 출력 dead — 호출자가 `tiers`만
+  destructure. `nodes`는 `tiers` 그룹핑용 internal const로 보존. `edges`는
+  push/consumer 0건이라 push 자체 제거.
+- 454: Codex `legendaryCount.pct` 출력 dead — UI는 `discovered/total`만 표시.
+  `pct = total > 0 ? Math.round((discovered / total) * 100) : 0` 계산 후 노출하나
+  read 0건.
+- 455: ClassTree `buildTree` node entry `desc` 필드 출력 dead — TreeNode가
+  `node.tier/.name/.reqLv`만 read. cycle 453 paired completion (buildTree 내부의
+  `nodes[name]` 객체 필드 dead 미검출이었음).
+- 458: StatusBar `StatusMetric` `inline` prop + `if (inline)` 16줄 분기 unreachable —
+  3 callsite (line 243-245) 모두 `compact`만 전달, `inline` 0건. internal const
+  (export 0건)이라 다른 file caller도 없음. inline 분기 16줄 제거.
+- 459: StatusBar `EnemyStatus` `compact` prop + 6 ternary 가지 unreachable — 1
+  callsite (line 234) `mobile` shorthand만 전달, `compact` 0건. line 58 chained
+  ternary `mobile ? A : compact ? B : C`에서 mobile=true가 항상 catch → compact
+  가지 진입 0건. 6 ternary 모두 false 가지로 inline. cycle 458 같은 파일 paired.
+
+### 신규 lens 의의
+
+- **Default annotation cleanup의 batch화** — cycle 452의 6-panel 단일 commit
+  batch는 동일 caller (Dashboard)가 동일 prop (compact) 6 panel에 일괄 명시 전달
+  패턴을 발견한 첫 시리즈. 단일 cycle에 6 surface 정리 가능.
+- **Callsite-side vs declaration-side 양방향** — cycle 451-452는 declaration-side
+  default 제거 (caller가 명시 전달이라 default unreachable), cycle 457은
+  callsite-side 명시 attr 제거 (default와 동일하니 attr 자체 redundant). 같은
+  pattern의 두 방향 정리.
+- **같은 파일 paired unreachable** — cycle 458-459는 StatusBar 한 파일에서
+  StatusMetric.inline / EnemyStatus.compact 두 prop이 모두 unreachable 발견.
+  같은 파일 내 paired cleanup의 새 변형 (이전 cycles는 다른 파일끼리 pair).
+- **buildTree paired completion** — cycle 453은 출력 dead 2 필드 (nodes/edges)
+  정리, cycle 455는 cycle 453이 미검출한 `nodes[name].desc` 내부 객체 필드 dead
+  를 추가 발견 — 같은 함수의 2-단계 paired completion 패턴.
+
+---
+
 ## Cycle 450 🎯 — CHANGELOG에 cycles 441-449 history 일괄 추가
 
 - 마일스톤: cycle 440 batch 이후 9 사이클 미반영 batch 정리. 26번째 batch.
