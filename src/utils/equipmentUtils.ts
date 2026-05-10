@@ -215,7 +215,7 @@ export const isMagicWeapon = (weapon: any) => {
     return MAGIC_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
 };
 
-export const getEquippedWeapons = (equip: EquipSlots = {}) => {
+export const getEquippedWeapons = (equip: EquipSlots) => {
     const list: any[] = [];
     if (isWeapon(equip.weapon)) list.push({ slot: 'main', weapon: equip.weapon });
     if (isWeapon(equip.offhand)) list.push({ slot: 'offhand', weapon: equip.offhand });
@@ -244,7 +244,7 @@ const buildWeaponSkill = ({ slot, weapon }: any) => {
     };
 };
 
-export const getWeaponMagicSkills = (equip: EquipSlots = {}) => {
+export const getWeaponMagicSkills = (equip: EquipSlots) => {
     const skills: any[] = [];
     const seen = new Set();
 

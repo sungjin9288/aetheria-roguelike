@@ -19,7 +19,10 @@ export const toArray = (v: any) => (Array.isArray(v) ? v : []);
 /** 플레이어의 직업 스킬 목록을 반환 (패시브 제외 — 전투용 액티브 스킬만) */
 export const getJobSkills = (player: Player) => {
     const classSkills = toArray(DB.CLASSES[player?.job as string]?.skills).filter((s: any) => !s.passive);
-    const weaponSkills = getWeaponMagicSkills(player?.equip);
+    // cycle 631: equip || {} 명시 — explicit default-elimination caller-side
+    //   conversion. player.equip undefined인 경우 getWeaponMagicSkills 내부
+    //   default {} 의존이었으나 cycle 631에서 default 제거.
+    const weaponSkills = getWeaponMagicSkills(player?.equip || {});
     // cycle 613: stats 인자 명시 추가 — explicit default-elimination cascade.
     const traitSkill = getTraitSkill(player, {});
     return [...classSkills, ...weaponSkills, ...(traitSkill ? [traitSkill] : [])];
