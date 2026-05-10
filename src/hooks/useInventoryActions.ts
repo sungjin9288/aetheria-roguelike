@@ -406,7 +406,10 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ad
             soundManager.play('quest_complete');
         },
 
-        synthesize: (itemIds: any, useProtect: any = false) => {
+        // cycle 543: useProtect default false 제거 — 1 callsite (CraftingPanel
+        //   :52) actions.synthesize(selectedIds, useProtect) 명시 전달이라
+        //   default 도달 불가. 청소 메가 시리즈 38번째 (cycle 502-542).
+        synthesize: (itemIds: any, useProtect: any) => {
             const items = itemIds.map((id: any) => player.inv.find((entry: any) => entry.id === id)).filter(Boolean);
             const validation = validateSynthesis(items, player.gold);
             if (!validation.valid) {
