@@ -50,12 +50,14 @@ test('cycle 433: SignalBadge destructure에서 default tone / size 제거', asyn
     assert.ok(/\bsize\b/.test(block), 'size 파라미터 보존');
 });
 
-test('cycle 433: 활성 default (className / children / rest) 보존', async () => {
+test('cycle 433: className cycle 501 cascade로 prop 자체 제거 (children / rest 보존)', async () => {
+    // cycle 501이 className prop cascade로 정리 (77 호출자 모두 전달 0건).
+    // className default 보존 → cascade 보존 가드로 약화.
     const source = await readSrc('src/components/SignalBadge.tsx');
     const fnIdx = source.indexOf('const SignalBadge =');
     const fnEnd = source.indexOf('=>', fnIdx);
     const block = source.slice(fnIdx, fnEnd);
-    assert.ok(/className = ''/.test(block), "className default 보존");
+    assert.ok(!/\bclassName\b/.test(block), 'className 제거 보존');
     assert.ok(/children/.test(block), 'children 보존');
     assert.ok(/\.\.\.rest/.test(block), '...rest 보존');
 });

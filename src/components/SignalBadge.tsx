@@ -23,9 +23,11 @@ const TONE_CLASS: any = {
 // cycle 433: default tone / size 제거 — 모든 73 호출자가 두 prop 명시 전달이라
 //   default 도달 불가 (cycle 419 paired completion). SIZE_CLASS / TONE_CLASS
 //   fallback `|| ...sm/.neutral`은 방어용 + cycle 419 회귀 가드로 보존.
-const SignalBadge = ({ tone, size, className = '', children, ...rest }: any) => (
+// cycle 501: 외부 보조 클래스 prop 제거 — 77 호출자 모두 전달 0건이라 보간 결과
+//   ''만 추가되는 unreachable. cycle 463/465/466/493/495/496/498 lens 회귀.
+const SignalBadge = ({ tone, size, children, ...rest }: any) => (
     <span
-        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size] || SIZE_CLASS.sm} ${TONE_CLASS[tone] || TONE_CLASS.neutral} ${className}`.trim()}
+        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size] || SIZE_CLASS.sm} ${TONE_CLASS[tone] || TONE_CLASS.neutral}`}
         {...rest}
     >
         {children}
