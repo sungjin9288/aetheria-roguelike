@@ -7,6 +7,93 @@
 
 ---
 
+## Cycle 490 🎯 — CHANGELOG에 cycles 481-489 history 일괄 추가
+
+- 마일스톤: cycle 480 batch 이후 9 사이클 미반영 batch 정리. 30번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480에 이은 30번째 (300사이클 클린업 마라톤).
+- 누적 마일스톤: cycle 480(unit 2240) → 489(unit 2286, +46). silent dead config
+  시리즈 cycle 222→489 241번째 도달.
+- 시리즈 정체성 — **cascade lens 메가 시리즈 연속**: cycle 471-482 (Dashboard
+  cascade 11 panel) → cycle 485 (CombatPanel) → cycle 486-489 (ControlPanel
+  mobileFocused 4사이클 cascade). 단일 dead prop이 거대한 unreachable 트리를
+  만드는 패턴이 확장되어 9사이클 중 4사이클이 모두 cascade.
+- 본 batch 핵심 패턴: **producer-consumer chain 단위 cascade**가 cycle 471에서
+  발견된 후 cycle 481-482 (마지막 panel 정리), cycle 485 (CombatPanel 회귀),
+  cycle 486-489 (mobileFocused 4사이클)로 정착됨. 단일 trigger cleanup이
+  10사이클 paired completion을 trigger하는 패턴.
+
+검증: tsc 0 / unit 2286 / lint clean / build-guard ok.
+
+---
+
+## Cycle 481-489 — Cascade 메가 시리즈: Dashboard 마무리 + ControlPanel 4사이클 cascade
+
+cycle 480 batch 직후 cycle 481-482가 Dashboard cascade를 마무리하고, cycle
+485-489가 ControlPanel 트리에서 두 번째 cascade를 시작 — 9사이클 중 7사이클이
+cascade lens.
+
+### Dashboard cascade 마무리 (cycle 481-482)
+
+- 481: QuestTab cascade — compact prop + 1 state + 5 const + 33 ternary 가지 +
+  Daily Protocol summary 분기 + 토글 헤더 + 3 conditional UI 블록 일괄 정리.
+  cycle 471 cascade의 10번째 panel paired completion. 가장 큰 panel 정리 중 하나.
+- 482: SmartInventory cascade — compact prop + 1 state + 7 const + 33 ternary +
+  토글 UI + 5 conditional 블록 + QuickSlotAssigner subprop 일괄 정리. **cycle 471
+  메가 cascade 시리즈 11번째 panel + BALANCE.INV_COMPACT_MAX_ITEMS dead key 추가
+  cleanup으로 Dashboard cascade 완료**.
+
+### ArchiveTabButton 2 props 정리 (cycle 483)
+
+- 483: ArchiveTabButton dense / iconOnly props unreachable batch — 4 callsite
+  모두 전달 0건이라 frameClass / heightClass / Icon size / span tracking 등
+  다수 ternary 가지 cleanup. 같은 컴포넌트에서 2 props 동시 정리.
+
+### MobileGameLayout 2 internal helper props (cycle 484)
+
+- 484: DashboardFallback summary + MobileConsoleArchiveButton active props
+  unreachable batch — 1 callsite 각각 전달 0건. 같은 파일 paired (cycle 458-459
+  StatusBar 패턴 변형).
+
+### CombatPanel cascade (cycle 485)
+
+- 485: CombatPanel compact / dense props cascade — interface + destructure +
+  14 ternary + compactMetaEntries 배열 + 2 conditional UI 블록 cascade dead.
+  cycle 457 (callsite 명시 false 제거) paired completion으로 declaration 정리.
+
+### ControlPanel mobileFocused 4사이클 cascade (cycle 486-489)
+
+- 486: ControlPanel default + reset 확인 상태 + reset helper 38줄 + 2 unreachable
+  블록 + EVENT 비-모바일 분기 cascade. 미사용 X icon / resetButtonClass cascade.
+- 487: QuestBoardPanel — interface + destructure + overlayPanelClass dead const +
+  1 ternary (non-mobile 가지) + 1 identical-branches ternary 정리.
+- 488: ShopPanel — interface + destructure + getOverlayPanelClass dead helper +
+  ternary 정리.
+- 489: EventPanel + ControlPanel 자체 — `if (mobileFocused) { return ... }` +
+  비-mobile fallback 26줄 unreachable. ControlPanel destructure / interface +
+  MobileGameLayout 2 callsite shorthand도 cascade dead로 정리.
+  **4사이클 cascade 마무리** — declaration + 3 subchild + ControlPanel + 2 callsite
+  일괄 정리.
+
+### 신규 lens 의의
+
+- **Cascade 메가 시리즈 연속** — cycle 471-482 (Dashboard 12사이클) → cycle 485
+  (CombatPanel) → cycle 486-489 (ControlPanel 4사이클). cycle 471 trigger 후
+  17사이클 중 13사이클이 cascade. 단일 dead config가 producer-consumer chain
+  전체에서 unreachable 트리를 만드는 패턴이 시스템적 cleanup의 주력 lens로 정착.
+- **Trigger → Cascade의 paired completion 자동화** — cycle 471 단일 cleanup이
+  cycle 472-482 11사이클 paired, cycle 486 단일이 cycle 487-489 3사이클 paired.
+  cleanup 1개가 N개의 후속 cleanup을 trigger하는 multiplier 효과.
+- **Stale 테스트 list가 마이그레이션 표 역할** — cycle 405/451/452/486/487/488 등
+  기존 가드가 cascade 진행에 따라 list에서 단계적으로 제외됨. test 변경 history가
+  cleanup 진행 trace 역할.
+- **Identical-branches ternary 발견** — cycle 487 QuestBoardPanel `mobileFocused
+  ? '-mx-4 px-4' : '-mx-4 px-4'`처럼 두 가지 IDENTICAL인 ternary는 cascade 검증
+  과정에서만 발견됨. silent dead config 시리즈에서 새 변형.
+
+---
+
 ## Cycle 480 🎯 — CHANGELOG에 cycles 471-479 history 일괄 추가
 
 - 마일스톤: cycle 470 batch 이후 9 사이클 미반영 batch 정리. 29번째 batch.
