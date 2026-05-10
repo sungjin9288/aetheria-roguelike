@@ -33,7 +33,12 @@ const getShopMaxTier = (loc: string) => {
 
 const isEquipmentItem = (item: any) => ['weapon', 'armor', 'shield'].includes(item?.type);
 
-const signedDelta = (value: any = 0, suffix: any = '') => `${value >= 0 ? '+' : ''}${value}${suffix}`;
+// cycle 542: value default 0 제거 (partial cleanup) — 3 callsite (line
+//   63/64/66) 모두 1 arg 명시 전달이라 value default 도달 불가. suffix
+//   default ''는 3 callsite 모두 미명시이라 reachable 보존. cycle 537과
+//   다른 patten — outer-vs-inner 분리가 아닌 같은 layer parameter 간 partial
+//   unreachable. 청소 메가 시리즈 37번째.
+const signedDelta = (value: any, suffix: any = '') => `${value >= 0 ? '+' : ''}${value}${suffix}`;
 
 // cycle 531: value default 0 제거 — 1 callsite (line 60 formatPercent
 //   (critDelta)) value 명시 (Math.round 결과)이라 default 도달 불가. cycle
