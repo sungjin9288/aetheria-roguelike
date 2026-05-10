@@ -110,7 +110,10 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             },
         };
 
-        const safeText = (value: any, fallback: any = '') => {
+        // cycle 616: fallback default '' 제거 — explicit default-elimination
+        //   pattern (cycle 608-615 lens 정착, 8번째 적용). 3 callers (line
+        //   200/207/214)에 '' 명시 추가 후 default unreachable.
+        const safeText = (value: any, fallback: any) => {
             if (typeof value === 'string') return value;
             if (typeof value === 'number' || typeof value === 'boolean') return String(value);
             if (value && typeof value === 'object') {
@@ -197,21 +200,21 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     : null,
                 currentEvent: e.currentEvent
                     ? {
-                        desc: safeText(e.currentEvent.desc),
+                        desc: safeText(e.currentEvent.desc, ''),
                         choices: safeList(e.currentEvent.choices, '[choice]'),
                     }
                     : null,
                 pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((r: any) => r.name) : null,
                 postCombatResult: e.postCombatResult
                     ? {
-                        enemy: safeText(e.postCombatResult.enemy),
+                        enemy: safeText(e.postCombatResult.enemy, ''),
                         exp: e.postCombatResult.exp,
                         gold: e.postCombatResult.gold,
                         items: safeList(e.postCombatResult.items),
                     }
                     : null,
                 inventorySpotlight: is
-                    ? { token: is.token, title: safeText(is.title), names: safeList(is.names) }
+                    ? { token: is.token, title: safeText(is.title, ''), names: safeList(is.names) }
                     : null,
                 runSummary: e.runSummary
                     ? { level: e.runSummary.level, job: e.runSummary.job, loc: e.runSummary.loc }
