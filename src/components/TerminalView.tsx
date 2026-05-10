@@ -77,6 +77,8 @@ const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
 
 // cycle 404: `stats?: any;` 제거 — 본체 destructure 미사용 + read 0건.
 //   MobileGameLayout이 prop pass했으나 silent dropped (paired remove).
+// cycle 496: 외부 보조 클래스 / 좌측 도구 모음 props 제거 — 1 callsite 전달 0건
+//   이라 보간/렌더 결과 dead. cycle 463/465/466/493/495 lens 회귀.
 interface TerminalViewProps {
     logs?: any[];
     gameState?: string;
@@ -86,8 +88,6 @@ interface TerminalViewProps {
     quickSlots?: any[];
     onQuickSlotUse?: (item: any, idx: number) => void;
     showInput?: boolean;
-    className?: string;
-    toolbarLeft?: any;
 }
 
 const TerminalView = ({
@@ -99,8 +99,6 @@ const TerminalView = ({
     quickSlots,
     onQuickSlotUse,
     showInput = true,
-    className = '',
-    toolbarLeft = null,
 }: TerminalViewProps) => {
     const logViewportRef = useRef<any>(null);
     const inputRef = useRef<any>(null);
@@ -222,12 +220,12 @@ const TerminalView = ({
         </div>
     ) : null;
 
-    const showToolbar = Boolean(toolbarLeft) || showExpandToggle;
+    const showToolbar = showExpandToggle;
 
     return (
         <div
             data-testid="terminal-panel"
-            className={`panel-noise min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.85rem] px-3 py-2.5 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col ${className}`}
+            className={`panel-noise min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.85rem] px-3 py-2.5 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
         >
             {/* Scanline overlay */}
             <div
@@ -239,10 +237,7 @@ const TerminalView = ({
 
             <div ref={logViewportRef} className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-0.5 min-h-0">
                 {showToolbar && (
-                    <div className="mb-2 flex items-center justify-between px-1 gap-2">
-                        <div className="min-w-0">
-                            {toolbarLeft}
-                        </div>
+                    <div className="mb-2 flex items-center justify-end px-1 gap-2">
                         {showExpandToggle && (
                             <button
                                 onClick={() => setLogExpanded((open: any) => !open)}
