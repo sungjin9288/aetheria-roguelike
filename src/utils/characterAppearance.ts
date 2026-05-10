@@ -75,15 +75,13 @@ export const deriveCharacterAppearance = (player: Player) => {
         armorStyle: getArmorStyleFromItem(armor, baseStyle.armorStyle),
         loadoutStyle: getAvatarLoadoutStyle(weaponType, offhandType),
         accessoryStyle: baseStyle.accessoryStyle,
+        // cycle 447: 5 dead palette 필드 정리 (skin / outline / eye / blush / armor) —
+        //   production read 0건. PixelCharacterAvatar는 glow / accent만 사용,
+        //   tests는 outfit / weapon / offhand / hair 사용.
         palette: {
-            skin: '#f4c9a3',
-            outline: '#111827',
-            eye: '#0f172a',
-            blush: '#f9a8d4',
             hair: baseStyle.hairColor,
             outfit: baseStyle.outfitColor,
             accent: baseStyle.accentColor,
-            armor: getOverlayTone('armor', armor, '#6c665d'),
             weapon: getOverlayTone('weapon', weapon, '#d8c7a5'),
             offhand: getOverlayTone('offhand', offhand, '#bfa88b'),
             glow: ELEMENT_COLOR_MAP[frameTone as string] || baseStyle.accentColor,
