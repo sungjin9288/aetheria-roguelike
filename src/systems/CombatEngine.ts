@@ -190,7 +190,10 @@ export const CombatEngine = {
      *
      * @returns { player, enemy, logs } — turnCount 증가 + (조건 시) 적 hp 차감.
      */
-    applyEntropyTick(player: Player, enemy: Monster, activeSynergies: any[] = []) {
+    // cycle 547: activeSynergies default [] 제거 — 2 internal callsite (line 631,
+    //   1037) + N test callsite (cycle 159/236/237) 모두 || [] 명시 전달이라
+    //   default 도달 불가. 청소 메가 시리즈 42번째 (cycle 502-546).
+    applyEntropyTick(player: Player, enemy: Monster, activeSynergies: any[]) {
         const relics = (player as any)?.relics || [];
         const flags: any = { ...((player as any).combatFlags || {}) };
         const turnCount = (flags.turnCount || 0) + 1;
