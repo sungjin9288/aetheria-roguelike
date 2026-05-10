@@ -281,7 +281,6 @@ export const BALANCE: any = {
 
     // 인벤토리 UX 임계값
     INV_FULL_THRESHOLD: 18,             // 인벤토리 과밀 경고 임계 (최대의 ~90%)
-    INV_COMPACT_MAX_ITEMS: 3,           // compact 모드에서 우선 표시 아이템 수
 };
 
 Object.freeze(CONSTANTS);

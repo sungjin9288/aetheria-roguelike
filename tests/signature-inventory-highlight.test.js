@@ -46,14 +46,13 @@ test('SmartInventory shows "전설 각인" label for signature items', async () 
     );
 });
 
-test('SmartInventory compact priority boost for signature items', async () => {
+test('SmartInventory compact priority boost for signature items (cycle 482 cascade로 priority 로직 제거)', async () => {
+    // cycle 482가 compact prop cascade로 visibleFiltered IIFE (priority 계산 포함)
+    // 자체를 제거. 이 가드 → cascade 보존 가드로 약화.
     const source = await readSrc('src/components/SmartInventory.tsx');
-    // 기존 priority 계산 블럭 안에 isSignature 가중치가 있어야 한다
-    assert.ok(
-        /isSignature[\s\S]{0,200}priority\s*\+=/.test(source)
-            || /priority\s*\+=\s*\d+[\s\S]{0,80}isSignature/.test(source),
-        'compact priority should boost signature items to avoid hiding them'
-    );
+    // visibleFiltered가 제거됐는지 가드
+    assert.ok(!/visibleFiltered/.test(source),
+        'cycle 482 cascade로 visibleFiltered 제거 보존');
 });
 
 test('SmartInventory computes isSignature per item via isSignatureItem(item)', async () => {

@@ -12,6 +12,9 @@ import SignalBadge from './SignalBadge';
 import ItemIcon from './icons/ItemIcon';
 import type { Player } from '../types/index.js';
 
+// cycle 482: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
+//   제거 후 caller 0건. cascade로 토글 상태 + 33 ternary + 5 const 일괄 정리
+//   (cycle 472-479/481 paired의 11번째 / 마지막 panel cleanup으로 cascade 완료).
 interface SmartInventoryProps {
     player: Player;
     actions?: any;
@@ -19,7 +22,6 @@ interface SmartInventoryProps {
     onAssignQuickSlot?: any;
     spotlight?: any;
     onClearSpotlight?: any;
-    compact?: boolean;
 }
 
 /**
@@ -58,8 +60,6 @@ const ITEM_TYPE_TO_FILTER: any = {
     cure: 'hp',
     mat: 'material',
 };
-const MAX_COMPACT_ITEMS = BALANCE.INV_COMPACT_MAX_ITEMS;
-
 const canEquipItem = (item: any, job: any) => !Array.isArray(item.jobs) || item.jobs.includes(job);
 
 const getItemTags = (item: any) => {
@@ -68,12 +68,11 @@ const getItemTags = (item: any) => {
     return tags;
 };
 
-// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+// cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
 //   다른 default (quickSlots / spotlight / onClearSpotlight)는 future-proof 보존.
-const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null, compact }: SmartInventoryProps) => {
+const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null }: SmartInventoryProps) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState<any>(null);
-    const [showAllItems, setShowAllItems] = React.useState(false);
     const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
     const spotlightSet = useMemo(() => new Set(spotlightNames), [spotlightNames]);
     const traitProfile = useMemo(
@@ -153,51 +152,24 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
         (player.inv || []).filter((i: any) => i.type === 'mat' && (i.price || 0) <= 30).length,
         [player.inv]
     );
-    const activeFilterLabel = FILTERS.find((entry: any) => entry.id === activeFilter)?.label || MSG.INV_FILTER_ALL;
-    const visibleFiltered = (() => {
-        if (!compact || showAllItems || filtered.length <= MAX_COMPACT_ITEMS) return filtered;
-
-        return filtered
-            .map(({ item, count }, index) => {
-                let priority = 0;
-                const isSignature = isSignatureItem(item);
-                if (spotlightSet.has(item.name)) priority += 100;
-                if (isSignature) priority += 90;
-                if (quickSlots?.some((slot: any) => slot?.id === item?.id)) priority += 80;
-                if (isEquipUpgrade(item)) priority += 55;
-                if (['hp', 'mp', 'buff', 'cure'].includes(item.type)) priority += 28;
-                if (['weapon', 'armor', 'shield'].includes(item.type)) priority += 16;
-                if (count > 1) priority += Math.min(count, 6);
-                return { item, count, index, priority };
-            })
-            .sort((a: any, b: any) => b.priority - a.priority || a.index - b.index)
-            .slice(0, MAX_COMPACT_ITEMS)
-            .map(({ item, count }: any) => ({ item, count }));
-    })();
-    const hiddenItemCount = Math.max(0, filtered.length - visibleFiltered.length);
-    const useSummaryCards = compact && !showAllItems && filtered.length > MAX_COMPACT_ITEMS;
-    const useDenseCompactInventory = compact && !showAllItems;
-    const inventorySectionLabel = showAllItems
-        ? (activeFilter === 'all' ? '전체 보관품' : `${activeFilterLabel} 전체`)
-        : (activeFilter === 'all' ? '우선 보관품' : `${activeFilterLabel} 우선 보관품`);
 
     return (
-        <div className={compact ? 'space-y-2' : 'space-y-3'}>
+        <div className="space-y-3">
             {spotlightNames.length > 0 && (
                 <Motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     data-testid="inventory-spotlight-detail"
-                    className={`flex items-start justify-between gap-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[radial-gradient(circle_at_top_right,rgba(154,138,192,0.16),transparent_24%),linear-gradient(180deg,rgba(33,22,46,0.22)_0%,rgba(16,10,20,0.1)_100%)] ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}
+                    className="flex items-start justify-between gap-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[radial-gradient(circle_at_top_right,rgba(154,138,192,0.16),transparent_24%),linear-gradient(180deg,rgba(33,22,46,0.22)_0%,rgba(16,10,20,0.1)_100%)] px-3 py-2.5"
                 >
                     <div className="min-w-0">
                         <div className="text-xs font-fira uppercase tracking-[0.16em] text-[#e3dcff]/72">
                             {spotlight?.title || MSG.UI_LOOT_FOCUS}
                         </div>
-                        <div className={`${compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm'} font-fira text-slate-200/82 leading-snug`}>
+                        <div className="mt-1 text-sm font-fira text-slate-200/82 leading-snug">
                             {spotlight?.detail || MSG.UI_LOOT_FOCUS_HINT}
                         </div>
-                        <div className={`${compact ? 'mt-1.5' : 'mt-2'} flex flex-wrap gap-1`}>
+                        <div className="mt-2 flex flex-wrap gap-1">
                             {spotlightNames.slice(0, 3).map((name: any) => (
                                 <SignalBadge key={`spotlight_${name}`} tone="spotlight" size="sm">{name}</SignalBadge>
                             ))}
@@ -206,7 +178,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     {onClearSpotlight && (
                         <button
                             onClick={() => onClearSpotlight()}
-                            className={`shrink-0 rounded-full border border-white/8 bg-black/18 ${compact ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs'} font-fira text-slate-300/76 hover:bg-white/[0.04]`}
+                            className="shrink-0 rounded-full border border-white/8 bg-black/18 px-2.5 py-1 text-xs font-fira text-slate-300/76 hover:bg-white/[0.04]"
                         >
                             {MSG.UI_CLOSE}
                         </button>
@@ -215,17 +187,15 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
             )}
 
             {/* Filter Bar */}
-            <div className={`rounded-[1rem] ${compact ? 'aether-panel-core px-1.5 py-1.5' : 'border border-white/8 bg-black/16 px-2 py-2'}`}>
-                <div className={`${useDenseCompactInventory ? 'flex flex-nowrap items-center gap-1 overflow-x-auto pb-0.5' : 'flex flex-wrap items-center gap-1.5'}`}>
+            <div className="rounded-[1rem] border border-white/8 bg-black/16 px-2 py-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                 {FILTERS.map((f: any) => (
                     <button
                         key={f.id}
                         onClick={() => {
                             setActiveFilter(f.id);
-                            setShowAllItems(false);
                         }}
-                        className={`${compact ? 'min-h-[36px] px-2 py-0.5 text-xs' : 'min-h-[30px] px-2.5 py-1 text-sm'} rounded-full border font-rajdhani font-bold transition-all
-                            ${useDenseCompactInventory ? 'shrink-0 whitespace-nowrap' : ''}
+                        className={`min-h-[30px] px-2.5 py-1 text-sm rounded-full border font-rajdhani font-bold transition-all
                             ${activeFilter === f.id
                                 ? 'bg-[#7dd4d8]/14 border-[#7dd4d8]/30 text-[#dff7f5]'
                                 : 'bg-black/18 border-white/8 text-slate-400 hover:border-white/14 hover:text-slate-200'
@@ -240,10 +210,10 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSmartEquip}
-                        className={`${useDenseCompactInventory ? 'shrink-0 whitespace-nowrap' : 'ml-auto'} rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all ${compact ? 'min-h-[36px] px-2 py-0.5 text-xs' : 'min-h-[30px] px-2.5 py-1 text-sm'}`}
+                        className="ml-auto rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all min-h-[30px] px-2.5 py-1 text-sm"
                         title={MSG.UI_AUTO_EQUIP_BEST}
                     >
-                        <Star size={compact ? 10 : 11} /> {compact ? '추천' : '추천 장착'}
+                        <Star size={11} /> 추천 장착
                     </Motion.button>
                 )}
                 </div>
@@ -254,59 +224,33 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                 <Motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`flex items-center justify-between rounded-[1rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)] ${compact ? 'px-2.5 py-1.5' : 'px-3 py-2'}`}
+                    className="flex items-center justify-between rounded-[1rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)] px-3 py-2"
                 >
-                    <div className={`flex items-center gap-2 text-[#f6e7c8] font-fira ${compact ? 'text-xs' : 'text-sm'}`}>
-                        <AlertCircle size={compact ? 12 : 13} className="shrink-0 animate-pulse" />
+                    <div className="flex items-center gap-2 text-[#f6e7c8] font-fira text-sm">
+                        <AlertCircle size={13} className="shrink-0 animate-pulse" />
                         <span>인벤토리 {(player.inv || []).length}/20 — 저가 재료 {sellableMatCount}개 정리 가능</span>
                     </div>
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => actions.autoSell?.()}
-                        className={`flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 ${compact ? 'min-h-[36px] px-2 py-0.5 text-xs' : 'min-h-[30px] px-2.5 py-1 text-sm'}`}
+                        className="flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 min-h-[30px] px-2.5 py-1 text-sm"
                     >
-                        <Package size={compact ? 10 : 11} /> 일괄 정리
+                        <Package size={11} /> 일괄 정리
                     </Motion.button>
                 </Motion.div>
             )}
 
-            {compact && (hiddenItemCount > 0 || showAllItems) && (
-                <div className="flex items-center justify-between gap-2 text-xs font-fira uppercase tracking-[0.16em]">
-                    <span className="text-slate-500">{inventorySectionLabel}</span>
-                    {hiddenItemCount > 0 ? (
-                        <button
-                            type="button"
-                            onClick={() => setShowAllItems(true)}
-                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[11px] text-slate-300/78 hover:bg-white/[0.04]"
-                        >
-                            +{hiddenItemCount} 더 보기
-                        </button>
-                    ) : showAllItems ? (
-                        <button
-                            type="button"
-                            onClick={() => setShowAllItems(false)}
-                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[11px] text-slate-300/78 hover:bg-white/[0.04]"
-                        >
-                            요약 보기
-                        </button>
-                    ) : null}
-                </div>
-            )}
-
             {/* Item List */}
-            <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
+            <div className="space-y-1.5">
                 {filtered.length === 0 && (
-                    <div className={`rounded-[1rem] border border-white/8 ${compact ? 'aether-panel-muted py-5 text-[13px]' : 'bg-black/16 py-6 text-sm'} text-center font-rajdhani tracking-widest text-slate-500`}>
+                    <div className="rounded-[1rem] border border-white/8 bg-black/16 py-6 text-sm text-center font-rajdhani tracking-widest text-slate-500">
                         해당 카테고리의 아이템이 없습니다
                     </div>
                 )}
-                {visibleFiltered.map(({ item, count }, i) => {
+                {filtered.map(({ item, count }, i) => {
                     const diff = getCompareDiff(item);
                     const canEquip = !['weapon', 'armor', 'shield'].includes(item.type) || canEquipItem(item, player.job);
                     const itemIdentity = getEquipmentIdentity(item);
-                    const assignedQuickSlots = quickSlots
-                        ?.map((slot: any, index: any) => (slot?.id === item?.id ? index + 1 : null))
-                        .filter(Boolean) || [];
                     const isCurrentEquip =
                         getEquipmentIdentity(player.equip?.weapon) === itemIdentity ||
                         getEquipmentIdentity(player.equip?.armor) === itemIdentity ||
@@ -343,13 +287,13 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                             onMouseLeave={() => setHoveredItem(null)}
                             data-is-signature={isSignature ? 'true' : 'false'}
                             style={rowStyle}
-                            className={`${useSummaryCards ? 'min-h-[44px] p-2' : compact ? 'min-h-[48px] p-2.5' : 'min-h-[54px] p-3'} rounded-[1rem] flex justify-between items-center group transition-all cursor-pointer ${rowClass}`}
+                            className={`min-h-[54px] p-3 rounded-[1rem] flex justify-between items-center group transition-all cursor-pointer ${rowClass}`}
                         >
-                            <ItemIcon item={item} size={useSummaryCards ? 28 : compact ? 32 : 36} showBorder className="mr-2 opacity-95" />
+                            <ItemIcon item={item} size={36} showBorder className="mr-2 opacity-95" />
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                     <span
-                                        className={`${compact ? 'text-[12px]' : 'text-sm'} font-fira ${isSignature ? '' : (item.tier >= 2 ? 'text-[#e3dcff]' : 'text-white/86')}`}
+                                        className={`text-sm font-fira ${isSignature ? '' : (item.tier >= 2 ? 'text-[#e3dcff]' : 'text-white/86')}`}
                                         style={isSignature ? { color: '#f6e7a2' } : undefined}
                                     >
                                         {item.name}
@@ -357,7 +301,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     {(item.enhance || 0) > 0 && (
                                         <span className="text-xs font-bold font-fira text-[#d5b180]">+{item.enhance}</span>
                                     )}
-                                    {count > 1 && <span className={`${compact ? 'text-xs' : 'text-sm'} text-slate-500`}>x{count}</span>}
+                                    {count > 1 && <span className="text-sm text-slate-500">x{count}</span>}
                                     {isSignature && (
                                         <span
                                             data-testid={`inventory-signature-chip-${item.id || item.name}`}
@@ -392,8 +336,8 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                 </div>
 
                                 {/* Compare diff (on hover or always for equip items) */}
-                                {diff && !useSummaryCards && (hoveredItem === item.name || isCurrentEquip) && (
-                                    <div className={`mt-1 flex ${compact ? 'gap-1.5 flex-wrap' : 'gap-2'}`}>
+                                {diff && (hoveredItem === item.name || isCurrentEquip) && (
+                                    <div className="mt-1 flex gap-2">
                                         {diff.atk !== 0 && <StatDiff val={diff.atk} label="ATK" />}
                                         {diff.def !== 0 && <StatDiff val={diff.def} label="DEF" />}
                                         {diff.crit !== 0 && <StatDiff val={diff.crit} label="CRIT%" />}
@@ -402,9 +346,9 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     </div>
                                 )}
                                 {(getItemStatText(item) || item.desc_stat) && (
-                                    <div className={`mt-0.5 truncate font-fira text-slate-400/72 ${compact ? 'text-xs' : 'text-sm'}`}>{getItemStatText(item) || item.desc_stat}</div>
+                                    <div className="mt-0.5 truncate font-fira text-slate-400/72 text-sm">{getItemStatText(item) || item.desc_stat}</div>
                                 )}
-                                {enhanceRequirement && !useSummaryCards && (
+                                {enhanceRequirement && (
                                     <div className="mt-0.5 space-y-0.5 text-[11px] font-fira">
                                         <div className="text-slate-500/88">
                                             강화 비용 {enhanceRequirement.gold.toLocaleString()}G · 강화 재료 {enhanceRequirement.materials}
@@ -414,24 +358,18 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                         </div>
                                     </div>
                                 )}
-                                {useSummaryCards && assignedQuickSlots.length > 0 && (
-                                    <div className="mt-0.5 text-[11px] font-fira uppercase tracking-[0.12em] text-slate-500">
-                                        슬롯 {assignedQuickSlots.join(', ')}
-                                    </div>
-                                )}
                                 {getItemTags(item).length > 0 && (
-                                    <div className={`${compact ? 'mt-0.5' : 'mt-1'} flex flex-wrap gap-1`}>
+                                    <div className="mt-1 flex flex-wrap gap-1">
                                         {getItemTags(item).map((tag: any) => (
                                             <SignalBadge key={`${item.name}_${tag}`} tone="neutral" size="sm">{tag}</SignalBadge>
                                         ))}
                                     </div>
                                 )}
-                                {onAssignQuickSlot && !useSummaryCards && (
+                                {onAssignQuickSlot && (
                                     <QuickSlotAssigner
                                         item={item}
                                         currentSlots={quickSlots}
                                         onAssign={onAssignQuickSlot}
-                                        compact={compact}
                                     />
                                 )}
                             </div>
@@ -441,7 +379,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                         whileTap={{ scale: 0.95 }}
                                         disabled={!enhanceState.affordable}
                                         onClick={() => actions.enhanceItem(item.id)}
-                                        className={`rounded-full border font-bold font-fira ${enhanceState.affordable ? 'bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] border-[#d5b180]/22' : 'border-white/8 bg-black/20 text-slate-500'} ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-[11px]' : compact ? 'min-h-[32px] px-2 py-1 text-[11px]' : 'min-h-[38px] px-2.5 py-2 text-xs'}`}
+                                        className={`rounded-full border font-bold font-fira ${enhanceState.affordable ? 'bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] border-[#d5b180]/22' : 'border-white/8 bg-black/20 text-slate-500'} min-h-[38px] px-2.5 py-2 text-xs`}
                                         title={`강화 +${(item.enhance || 0) + 1}`}
                                     >
                                         +강화
@@ -451,7 +389,7 @@ const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAs
                                     whileTap={{ scale: 0.95 }}
                                     disabled={!canEquip}
                                     onClick={() => actions.useItem(item)}
-                                    className={`bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold ${useSummaryCards ? 'min-h-[30px] px-2 py-0.5 text-xs' : compact ? 'min-h-[32px] px-2.5 py-1 text-xs' : 'min-h-[38px] px-3 py-2 text-sm'}`}
+                                    className="bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold min-h-[38px] px-3 py-2 text-sm"
                                 >
                                     {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
                                 </Motion.button>
