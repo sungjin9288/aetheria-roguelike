@@ -22,28 +22,13 @@ const METER_THEME: any = {
   },
 };
 
-const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dense = false, inline = false }: any) => {
+// cycle 458: inline prop / if (inline) 분기 제거 — 3 callsite 모두 compact만 전달,
+//   inline 진입 0건의 unreachable code path. cycle 357-359/421/425/444 lens.
+const StatusMetric = ({ label, value, max, variant = 'hp', compact = false, dense = false }: any) => {
   const theme = METER_THEME[variant] || METER_THEME.hp;
   const safeMax = Math.max(1, max || 1);
   const safeValue = Math.max(0, value || 0);
   const percentage = Math.min(100, (safeValue / safeMax) * 100);
-
-  if (inline) {
-    return (
-      <div className="min-w-0">
-        <div className={`flex items-center justify-between gap-1 font-fira uppercase ${dense ? 'text-[6px] tracking-[0.12em]' : 'text-[7px] tracking-[0.14em]'}`}>
-          <span className={theme.label}>{label}</span>
-          <span className="text-white/72">{safeValue}/{safeMax}</span>
-        </div>
-        <div className={`overflow-hidden rounded-full border bg-black/28 ${theme.border} ${dense ? 'mt-px h-[1.5px]' : 'mt-0.5 h-[2px]'}`}>
-          <div
-            className={`h-full rounded-full ${theme.fill}`}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`aether-panel-muted relative overflow-hidden rounded-[1rem] ${dense ? 'px-1.5 py-1' : compact ? 'px-2 py-1.5' : 'px-2.5 py-2'}`}>
