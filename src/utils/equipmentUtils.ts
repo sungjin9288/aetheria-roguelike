@@ -101,7 +101,7 @@ const getItemHpContribution = (item: Item | null | undefined) => {
     return ((item as any)?.hpBonus || 0);
 };
 
-export const getEquipmentProfile = (equip: EquipSlots = {}) => {
+export const getEquipmentProfile = (equip: EquipSlots) => {
     const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
     const offhandItem = equip.offhand || null;
     const offhandWeapon = isWeapon(offhandItem) ? offhandItem : null;
