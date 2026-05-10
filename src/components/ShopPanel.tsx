@@ -9,13 +9,14 @@ import ItemIcon from './icons/ItemIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
 import type { Player } from '../types/index.js';
 
+// cycle 488: 모바일 포커스 prop 인터페이스 제거 — cycle 486 paired completion
+//   (ControlPanel cascade로 caller 0건이라 항상 truthy 전달이었음).
 interface ShopPanelProps {
     player: Player;
     actions?: any;
     shopItems?: any[];
     setGameState?: (state: string) => void;
     stats?: any;
-    mobileFocused?: boolean;
     onOpenArchiveConsole?: any;
 }
 
@@ -29,10 +30,6 @@ const getShopMaxTier = (loc: string) => {
     const shopBonus = mapData.shopBonus ? 1 : 0;           // 황금 왕국 등 프리미엄 상점 +1
     return Math.min(6, tierFromLevel + safeBonus + shopBonus);
 };
-
-const getOverlayPanelClass = () => (
-    'fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.65rem)] bottom-0 rounded-t-[1.75rem] rounded-b-none border-t'
-);
 
 const isEquipmentItem = (item: any) => ['weapon', 'armor', 'shield'].includes(item?.type);
 
@@ -101,7 +98,7 @@ const getCompactItemSummary = (item: any) => {
 
 const MOBILE_INITIAL_BUY_LIMIT = 12;
 
-const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mobileFocused = false, onOpenArchiveConsole = null }: ShopPanelProps) => {
+const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, onOpenArchiveConsole = null }: ShopPanelProps) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState<any>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
@@ -165,7 +162,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, mob
     const weeklySpecial = useMemo(() => getWeeklySpecial(player.level || 1), [player.level]);
 
     return (
-        <div className={`${mobileFocused ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3' : `${getOverlayPanelClass()} panel-noise aether-surface-strong`} z-20 flex flex-col overflow-hidden p-3`}>
+        <div className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3">
             <FocusPanelHeader
                 eyebrow="Broker Ledger"
                 title="MARKET"

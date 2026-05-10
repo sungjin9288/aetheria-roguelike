@@ -144,7 +144,7 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.SHOP) {
-    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} mobileFocused={mobileFocused} onOpenArchiveConsole={onOpenArchiveConsole} />;
+    return <ShopPanel player={player} actions={actions} shopItems={shopItems} setGameState={setGameState} stats={stats} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
   if (gameState === GS.JOB_CHANGE) {
