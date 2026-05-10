@@ -69,8 +69,10 @@ const getItemTags = (item: any) => {
 };
 
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-//   다른 default (quickSlots / spotlight / onClearSpotlight)는 future-proof 보존.
-const SmartInventory = ({ player, actions, quickSlots = [null, null, null], onAssignQuickSlot, spotlight = null, onClearSpotlight = null }: SmartInventoryProps) => {
+// cycle 574: quickSlots / spotlight / onClearSpotlight 3 defaults batch 제거 —
+//   cycle 452 주석의 future-proof 보존이 audit 결과 1 production caller
+//   (Dashboard:162) 모두 명시 전달이라 도달 불가. 청소 메가 시리즈 66번째.
+const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotlight, onClearSpotlight }: SmartInventoryProps) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [hoveredItem, setHoveredItem] = React.useState<any>(null);
     const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
