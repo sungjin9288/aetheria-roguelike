@@ -73,9 +73,10 @@ test('cycle 405: CodexProps 활성 필드 보존', async () => {
 });
 
 test('cycle 405: 활성 패널 compact 보존 (회귀 가드)', async () => {
+    // cycle 472가 MapNavigator의 compact prop을 cascade로 정리. MapNavigator
+    // 제외하고 가드.
     for (const f of ['src/components/AchievementPanel.tsx', 'src/components/StatsPanel.tsx',
-                     'src/components/EquipmentPanel.tsx', 'src/components/GravePanel.tsx',
-                     'src/components/MapNavigator.tsx']) {
+                     'src/components/EquipmentPanel.tsx', 'src/components/GravePanel.tsx']) {
         const source = await readSrc(f);
         assert.ok(/\bcompact\b/.test(source),
             `${f} compact prop 사용 보존`);

@@ -57,9 +57,10 @@ const getBandIndex = (map: GameMap) => {
 };
 
 
-// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-const MapNavigator = ({ player, grave, stats, compact }: any) => {
-    const [showAllMaps, setShowAllMaps] = useState(false);
+// cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+// cycle 472: 컴팩트 prop 자체 제거 — cycle 471이 Dashboard callsite 전달도 함께
+//   제거해 이제 caller 0건. cascade로 toggle 상태도 dead (버튼 영원 미렌더).
+const MapNavigator = ({ player, grave, stats }: any) => {
     const [selectedMapName, setSelectedMapName] = useState(player?.loc);
     const currentMap = DB.MAPS[player?.loc];
     const moveRecommendations = getMoveRecommendations(
@@ -82,19 +83,19 @@ const MapNavigator = ({ player, grave, stats, compact }: any) => {
         };
     }), [grave, player]);
 
-    const visibleEntries = compact && !showAllMaps ? mapEntries.slice(0, 14) : mapEntries;
+    const visibleEntries = mapEntries;
     const selectedEntry = visibleEntries.find((e: any) => e.name === selectedMapName)
         || visibleEntries.find((e: any) => e.name === player?.loc)
         || visibleEntries[0]
         || null;
-    const visibleRecommendations = moveRecommendations.slice(0, compact ? 2 : 3);
+    const visibleRecommendations = moveRecommendations.slice(0, 3);
     const statusCounts = visibleEntries.reduce((acc: any, entry: any) => {
         acc[entry.state] += 1;
         return acc;
     }, { unexplored: 0, exploring: 0, completed: 0 });
 
     return (
-        <div className={`rounded-[1rem] border border-white/8 bg-black/18 backdrop-blur-md ${compact ? 'space-y-2 p-2.5' : 'space-y-3 p-3'}`}>
+        <div className="rounded-[1rem] border border-white/8 bg-black/18 backdrop-blur-md space-y-3 p-3">
             <div className="flex items-center justify-between gap-3">
                 <div>
                     <div className="text-slate-500 text-xs font-fira tracking-[0.18em] uppercase">Atlas Map</div>
@@ -153,15 +154,6 @@ const MapNavigator = ({ player, grave, stats, compact }: any) => {
             <div className="rounded-[1rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.025)_0%,rgba(255,255,255,0.01)_100%)] px-2 py-2">
                 <div className="mb-2 flex items-center justify-between gap-2 px-1">
                     <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">World Routes</div>
-                    {compact && mapEntries.length > visibleEntries.length ? (
-                        <button
-                            type="button"
-                            onClick={() => setShowAllMaps((prev: any) => !prev)}
-                            className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[10px] font-fira text-slate-300/78 hover:bg-white/[0.04]"
-                        >
-                            {showAllMaps ? '요약 보기' : `+${mapEntries.length - visibleEntries.length} 더 보기`}
-                        </button>
-                    ) : null}
                 </div>
 
                 <div className="space-y-3">
