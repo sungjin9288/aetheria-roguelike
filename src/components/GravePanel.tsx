@@ -15,7 +15,9 @@ interface GravePanelProps {
     compact?: boolean;
 }
 
-const GravePanel = ({ player, actions, compact = false }: GravePanelProps) => {
+// cycle 451: default compact 값 제거 — Dashboard:233이 명시 전달이라 default
+//   도달 불가 (cycle 364-368/437/441 redundant default annotation lens).
+const GravePanel = ({ player, actions, compact }: GravePanelProps) => {
     const [graves, setGraves] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [invadingUid, setInvadingUid] = useState<any>(null);
