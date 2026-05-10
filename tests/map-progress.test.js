@@ -43,7 +43,7 @@ test('getMapProgressState marks non-combat safe zones completed after visit', ()
     }, MAPS);
 
     assert.equal(state.state, 'completed');
-    assert.equal(state.visited, true);
+    // cycle 442: state.visited 출력 dead 제거 — 회귀 가드는 cycle-442 test가 대체.
     assert.equal(state.progress.total, 0);
 });
 

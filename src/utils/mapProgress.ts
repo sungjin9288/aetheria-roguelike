@@ -37,8 +37,9 @@ export const getMapProgressState = (mapName: any, player: Player | null | undefi
         state = 'exploring';
     }
 
+    // cycle 442: visited 출력 필드 제거 — production read 0건. 내부 state 계산용
+    //   const visited는 보존 (line 33+에서 상태 결정에 사용). cycle 333-356 시리즈 회귀.
     return {
-        visited,
         state,
         isCurrent: currentLoc === mapName,
         progress,
