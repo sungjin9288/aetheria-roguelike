@@ -79,7 +79,7 @@ test("devour_hp (world_eater): handleVictory 시 enemy.maxHp * val 만큼 player
     };
     const enemy = { name: '슬라임', hp: 0, maxHp: 200, atk: 10, def: 5, exp: 50, gold: 30 };
 
-    const result = CombatEngine.handleVictory(player, enemy);
+    const result = CombatEngine.handleVictory(player, enemy, {}, {}); // cycle 624: explicit elimination
 
     // val 0.1 * enemy.maxHp 200 = 20 HP 증가.
     assert.equal(result.updatedPlayer.maxHp, 1020,
@@ -102,6 +102,6 @@ test("devour_hp: 미보유 시 maxHp 변화 없음 (회귀 가드)", () => {
     };
     const enemy = { name: '슬라임', hp: 0, maxHp: 200, atk: 10, def: 5, exp: 50, gold: 30 };
 
-    const result = CombatEngine.handleVictory(player, enemy);
+    const result = CombatEngine.handleVictory(player, enemy, {}, {}); // cycle 624: explicit elimination
     assert.equal(result.updatedPlayer.maxHp, 1000);
 });

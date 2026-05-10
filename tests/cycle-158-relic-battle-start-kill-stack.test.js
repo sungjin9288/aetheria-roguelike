@@ -69,11 +69,11 @@ test("kill_stack_atk (void_monarch): handleVictory가 combatFlags.killStackAtkBo
     };
     const enemy = { name: '슬라임', hp: 0, maxHp: 200, atk: 10, def: 5, exp: 50, gold: 30 };
 
-    const result = CombatEngine.handleVictory(player, enemy);
+    const result = CombatEngine.handleVictory(player, enemy, {}, {}); // cycle 624: explicit elimination
     assert.equal(result.updatedPlayer.combatFlags.killStackAtkBonus, 0.05);
 
     // 두 번째 처치
-    const result2 = CombatEngine.handleVictory(result.updatedPlayer, enemy);
+    const result2 = CombatEngine.handleVictory(result.updatedPlayer, enemy, {}, {}); // cycle 624: explicit elimination
     assert.equal(result2.updatedPlayer.combatFlags.killStackAtkBonus, 0.1);
 });
 
@@ -91,7 +91,7 @@ test("kill_stack_atk: max(0.5)에서 캡 — 누적이 max 초과 안 함", () =
     };
     const enemy = { name: '슬라임', hp: 0, maxHp: 200, atk: 10, def: 5, exp: 50, gold: 30 };
 
-    const result = CombatEngine.handleVictory(player, enemy);
+    const result = CombatEngine.handleVictory(player, enemy, {}, {}); // cycle 624: explicit elimination
     // 0.4 + 0.2 = 0.6, but max 0.5 → 0.5
     assert.equal(result.updatedPlayer.combatFlags.killStackAtkBonus, 0.5);
 });

@@ -100,16 +100,15 @@ test('cycle 265: seasonEvent.active false 시 multiplier 무시 (회귀 가드)'
         `seasonEvent.active false 시 exp 동일`);
 });
 
-test('cycle 265: liveConfig 미전달 시 default 동작 (회귀 가드)', () => {
+test('cycle 265: liveConfig 빈 객체 명시 vs 활성 객체 (회귀 가드)', () => {
     const player = makePlayer();
     const enemy = makeEnemy();
-    // liveConfig 인자 없이 (기존 호출 패턴).
-    const r1 = CombatEngine.handleVictory(player, enemy, {});
-    // liveConfig 빈 객체 명시.
+    // cycle 624: explicit default-elimination — 4 args 모두 명시 필수.
+    const r1 = CombatEngine.handleVictory(player, enemy, {}, {});
     const r2 = CombatEngine.handleVictory(player, enemy, {}, {});
     assert.equal(r1.updatedPlayer.gold, r2.updatedPlayer.gold,
-        '인자 없이 vs 빈 객체 동일 동작');
-    assert.equal(r1.expGained, r2.expGained, '인자 없이 vs 빈 객체 expGained 동일');
+        '두 빈 객체 동일 동작');
+    assert.equal(r1.expGained, r2.expGained, '두 빈 객체 expGained 동일');
 });
 
 test('cycle 265: liveConfig.eventMultiplier 1 (default) 시 영향 없음', () => {

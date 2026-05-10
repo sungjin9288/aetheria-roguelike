@@ -1421,7 +1421,7 @@ export const CombatEngine = {
         };
     },
 
-    handleVictory(player: Player, enemy: Monster, passiveBonus: any = {}, liveConfig: any = {}) {
+    handleVictory(player: Player, enemy: Monster, passiveBonus: any, liveConfig: any) {
         const p: any = { ...player };
         const relics = p.relics || [];
         const baseName: string = this.resolveEnemyBaseName(enemy) || '';

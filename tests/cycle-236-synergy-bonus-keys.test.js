@@ -55,7 +55,7 @@ test('cycle 236: 시너지의 killStack이 kill_stack_atk 누적에 합산', () 
     };
     const enemy = { name: '슬라임', hp: 0, maxHp: 100, isBoss: false, exp: 50, gold: 10 };
     const passiveBonus = { goldMult: 0, expMult: 0 };
-    const result = CombatEngine.handleVictory(player, enemy, passiveBonus);
+    const result = CombatEngine.handleVictory(player, enemy, passiveBonus, {}); // cycle 624: explicit elimination
     // void_throne perKill 0.05 → 0.05 누적. 시너지 killStack 0.07 추가 시 0.12 누적.
     // 본 테스트는 시너지 없이 baseline 0.05 유지 검증 (회귀 가드).
     assert.ok((result.updatedPlayer.combatFlags?.killStackAtkBonus || 0) >= 0.05,
@@ -74,7 +74,7 @@ test('cycle 236: 시너지 보유 시 killStack가 perKill에 합산', () => {
     };
     const enemy = { name: '슬라임', hp: 0, maxHp: 100, isBoss: false, exp: 50, gold: 10 };
     const passiveBonus = { goldMult: 0, expMult: 0, activeSynergies: player.activeSynergies };
-    const result = CombatEngine.handleVictory(player, enemy, passiveBonus);
+    const result = CombatEngine.handleVictory(player, enemy, passiveBonus, {}); // cycle 624: explicit elimination
     // 합산 0.05 + 0.07 = 0.12 누적
     const stack = result.updatedPlayer.combatFlags?.killStackAtkBonus || 0;
     assert.ok(stack >= 0.12,
