@@ -31,7 +31,9 @@ export const consumeInventoryItemByName = (inventory: Item[] = [], itemName: str
     return { nextInventory, removed };
 };
 
-export const getEnhanceAvailability = (item: Item | null | undefined, gold: number = 0, inventory: Item[] = []) => {
+// cycle 506: gold / inventory default 제거 — 3 callsite 모두 3 args 전달이라
+//   default 도달 불가. cycle 502-505 util default 청소 메가 시리즈 5번째.
+export const getEnhanceAvailability = (item: Item | null | undefined, gold: number, inventory: Item[]) => {
     if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) {
         return {
             canEnhance: false,
