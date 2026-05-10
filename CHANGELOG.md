@@ -7,6 +7,76 @@
 
 ---
 
+## Cycle 560 🎯 — CHANGELOG에 cycles 551-559 history 일괄 추가 (37번째 batch)
+
+- 마일스톤: cycle 550 batch 이후 9 사이클 미반영 batch 정리. 37번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500 / 510 / 520 / 530 / 540 / 550에 이은 37번째.
+- 누적 마일스톤: cycle 550(unit 2525) → 559(unit 2562, +37). silent dead config
+  시리즈 cycle 222→559 305번째 도달 (cycle 554에서 300번째 silent dead config
+  돌파).
+- 시리즈 정체성 — **default 청소 메가 시리즈 안정 운영 단계**: 9사이클
+  중 utils/(5) + systems/CombatEngine method(3) + entry-point pattern(1)로
+  안정적인 mixed cadence. cycle 502-559 58사이클 누적, 65+ default 정리.
+
+검증: tsc 0 / unit 2562 / lint clean / build-guard ok.
+
+---
+
+## Cycle 551-559 — default 청소 메가 시리즈 + 300번째 silent dead config 통과
+
+cycle 541-549 시리즈 9사이클에 이어 cycle 551-559는 systems/CombatEngine method
+시리즈 (3) + utils/ (5) + entry-point pattern (1). cycle 550은 batch CHANGELOG.
+
+### default 청소 메가 시리즈 9사이클 (cycle 551-559)
+
+- 551: getEffectiveMaxMp relics default (CombatEngine method 5번째).
+- 552: CombatEngine.processLoot method defaults batch (method 6번째,
+  CombatEngine.loot.ts 별개 함수와 구분).
+- 553: applyFatalProtection 3 defaults partial cleanup (method 7번째,
+  partial cleanup pattern 재적용 — activeSynergies는 reachable 보존).
+- 554: getExploreState stats default (explorationPacing.ts) — **300번째
+  silent dead config**.
+- 555: questOperations 4 inner defaults batch (entry-point pattern 재적용,
+  getQuestBoardRecommendations entry default 보존).
+- 556: formatDailyProtocolReward + formatRewardParts 2 defaults batch
+  (gameUtils.ts).
+- 557: outcomeAnalysis getPostCombatAnalysis + getRunSummaryAnalysis 2 defaults
+  batch.
+- 558: buildTraitSkill + getTraitBonus 2 defaults batch (runProfile.ts —
+  getTraitProfile/getTraitSkill는 1-arg caller로 reachable 보존).
+- 559: getEnemyTacticalProfile stats default (runProfile.ts).
+
+**누적 18 default 추가 정리** (cycle 551-559 9사이클).
+**시리즈 누적 65+ default 정리** (cycle 502-559 58사이클 합산).
+
+### 신규 lens 의의
+
+- **300번째 silent dead config 마일스톤** — cycle 554 getExploreState 정리
+  시점에 silent dead config audit lens가 cycle 222 시작 이후 300번째
+  도달. 거의 1년치 누적 cleanup이 단일 lens로 안정 운영.
+- **systems/CombatEngine method 시리즈 7-cycle 연장** — cycle 546-552 7
+  사이클 연속 CombatEngine method default 정리. 단일 모듈 method-by-method
+  cleanup의 효율성 입증. CombatEngine 잔존 reachable defaults는 audit
+  완료, 잔존은 entry path 활성 케이스만.
+- **entry-point pattern 재적용** — cycle 555 questOperations에서 cycle 513
+  pattern (wrapper entry default 보존, inner chain default 정리)
+  재적용. 5 functions chain 중 inner 4 정리, entry getQuestBoardRecommendations
+  보존. 1 entry, 4 chain inner default 청소 패턴 정착.
+- **partial cleanup 적용 확장** — cycle 553 applyFatalProtection은 5 params
+  중 4 unreachable, 1 reachable. cycle 542 signedDelta pattern과 동일하나
+  더 큰 함수에서 적용 검증. 4-default cleanup으로 efficient.
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2525 → 2562 (+37, 누적 신규 가드).
+- lint clean / build-guard ok 9사이클 연속.
+- 0 회귀, 0 revert (cycle 526 이후 test caller audit 정착으로 안전성 ↑).
+
+---
+
 ## Cycle 550 🎯🎯 — 550사이클 마일스톤 + cycles 541-549 history 일괄 추가 (36번째 batch)
 
 - **550사이클 마일스톤**: 프로젝트 사이클 카운터 550 도달. 그 중 cycle 222-549
