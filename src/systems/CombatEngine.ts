@@ -1596,7 +1596,12 @@ export const CombatEngine = {
         return syncQuestProgress(player, enemyName, DB.QUESTS);
     },
 
-    processLoot(enemy: Monster, player: any = null, signaturePityMult: any = 1.0) {
+    // cycle 552: player / signaturePityMult defaults 제거 — 1 production
+    //   caller (combatVictory.ts:63) 3 args 명시 전달. tests/cycle-171은
+    //   CombatEngine.loot.ts의 별개 export된 processLoot (1 arg 호출)이라
+    //   별개. method의 두 default 모두 도달 불가. systems/CombatEngine method
+    //   시리즈 6번째.
+    processLoot(enemy: Monster, player: any, signaturePityMult: any) {
         return _processLoot(enemy, player, signaturePityMult);
     },
 
