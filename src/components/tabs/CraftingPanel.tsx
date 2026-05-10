@@ -22,7 +22,10 @@ interface CraftingPanelProps {
     onOpenArchiveConsole?: any;
 }
 
-const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: CraftingPanelProps) => {
+// cycle 588: onOpenArchiveConsole default null 제거 — 1 production caller
+//   (ControlPanel:162) 4 props 모두 명시 전달이라 default 도달 불가. cycle
+//   584 JobChangePanel 동일 패턴. 청소 메가 시리즈 79번째.
+const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: CraftingPanelProps) => {
   const [mode, setMode] = useState('craft');
   const [selectedIds, setSelectedIds] = useState<any[]>([]);
   const [useProtect, setUseProtect] = useState(false);
