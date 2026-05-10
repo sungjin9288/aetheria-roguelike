@@ -27,7 +27,11 @@ const dedupeChoices = (choices: any[]) => {
     });
 };
 
-export const summarizeHistory = (history: any[] = [], limit = RECENT_HISTORY_LIMIT) => (
+// cycle 603: history default [] 제거 — 3 callers (aiService:80/120 + test)
+//   모두 history 명시 전달이라 default 도달 불가. limit default 보존
+//   (모두 미전달 reachable, partial cleanup 8번째). body의 Array.isArray
+//   guard는 undefined 안전 처리.
+export const summarizeHistory = (history: any[], limit = RECENT_HISTORY_LIMIT) => (
     Array.isArray(history)
         ? history.slice(-limit).map((entry: any) => {
             if (!entry || typeof entry !== 'object') return null;
@@ -39,7 +43,10 @@ export const summarizeHistory = (history: any[] = [], limit = RECENT_HISTORY_LIM
         : []
 );
 
-export const getRecentEventSet = (history: any[] = [], limit = RECENT_EVENT_LIMIT) => (
+// cycle 603: history default [] 제거 — 2 callers (aiService:81 + internal:545)
+//   모두 history 명시 전달이라 default 도달 불가. limit default 보존
+//   (reachable). body의 Array.isArray(history) guard는 undefined 안전 처리.
+export const getRecentEventSet = (history: any[], limit = RECENT_EVENT_LIMIT) => (
     new Set(
         (Array.isArray(history) ? history : [])
             .slice(-limit)
