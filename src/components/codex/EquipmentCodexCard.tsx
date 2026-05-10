@@ -84,12 +84,17 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
     const tone = RARITY_TONE[rarity] || 'neutral';
 
     // 장착 중인 같은 슬롯 아이템 찾기
+    // cycle 468: player.equipment 오타 → player.equip 정정. Player 도메인은
+    //   `equip` 필드만 사용 (gameUtils 200+ 참조). 오타로 equipped가 항상 null이
+    //   되어 비교 UI ("vs xxx" / diff badge) 미렌더되던 silent UI 결손 fix.
+    //   shield 슬롯은 Player 스키마상 offhand에 들어가는 케이스가 일반적이지만,
+    //   이번 수정은 typo만 정정하고 슬롯 매핑은 보존.
     const equipped = item.type === 'weapon'
-        ? player?.equipment?.weapon
+        ? player?.equip?.weapon
         : item.type === 'armor'
-            ? player?.equipment?.armor
+            ? player?.equip?.armor
             : item.type === 'shield'
-                ? player?.equipment?.shield
+                ? player?.equip?.offhand
                 : null;
 
     return (
