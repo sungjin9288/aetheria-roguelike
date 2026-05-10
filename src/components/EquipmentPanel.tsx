@@ -12,11 +12,12 @@ import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import type { Player } from '../types/index.js';
 
+// cycle 474: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
+//   제거 후 caller 0건. cascade로 5 ternary 가지까지 정리 (cycle 472-473 paired).
 interface EquipmentPanelProps {
     player: Player;
     stats?: any;
     actions?: any;
-    compact?: boolean;
 }
 
 // cycle 417: icon 출력 dead 정리 — slot.icon read 0건. render는 key/label만 사용.
@@ -35,8 +36,8 @@ const SIG_SET_TONE: any = Object.freeze({
     nature: { border: 'rgba(168,208,160,0.5)', glow: 'rgba(168,208,160,0.18)', text: '#a8d0a0' },
 });
 
-// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-const EquipmentPanel = ({ player, stats, actions, compact }: EquipmentPanelProps) => {
+// cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const [showSetCatalog, setShowSetCatalog] = useState(false);
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip), [player?.equip]);
     const setCatalog = useMemo(() => getJobSetCatalog(player?.job, DB.ITEMS), [player?.job]);
@@ -86,13 +87,13 @@ const EquipmentPanel = ({ player, stats, actions, compact }: EquipmentPanelProps
     const progressTone = setProgress ? (SIG_SET_TONE[setProgress.tone] || SIG_SET_TONE.holy) : null;
 
     return (
-        <div className={compact ? 'space-y-2.5' : 'space-y-3'}>
-            <div className={`overflow-hidden rounded-[1.1rem] ${compact ? 'aether-panel-core p-2.5' : 'border border-white/8 bg-black/18 p-3'}`}>
+        <div className="space-y-3">
+            <div className="overflow-hidden rounded-[1.1rem] border border-white/8 bg-black/18 p-3">
                 <div className="flex items-start gap-3">
                     <PixelCharacterAvatar
                         player={player}
                         appearance={appearance}
-                        size={compact ? 'md' : 'lg'}
+                        size="lg"
                         dataTestId="equipment-character-preview"
                         label="장비 외형 미리보기"
                         className="shrink-0"
@@ -339,8 +340,8 @@ const EquipmentPanel = ({ player, stats, actions, compact }: EquipmentPanelProps
                         : undefined;
 
                     const slotClassName = isSignature
-                        ? `rounded-[1rem] ${compact ? 'px-2.5 py-2.5' : 'px-3 py-3'}`
-                        : `rounded-[1rem] border ${compact ? 'px-2.5 py-2.5' : 'px-3 py-3'} ${item ? 'border-white/8 aether-panel-muted' : 'border-white/6 bg-black/14'}`;
+                        ? 'rounded-[1rem] px-3 py-3'
+                        : `rounded-[1rem] border px-3 py-3 ${item ? 'border-white/8 aether-panel-muted' : 'border-white/6 bg-black/14'}`;
 
                     return (
                         <div

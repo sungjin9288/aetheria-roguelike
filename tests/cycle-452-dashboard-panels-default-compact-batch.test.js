@@ -41,13 +41,12 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-// cycle 472가 MapNavigator, cycle 473이 AchievementPanel을 cascade cleanup으로
-// compact prop 자체 제거. 나머지 4 panel은 cycle 452 default compact 제거
+// cycle 472/473/474가 MapNavigator/AchievementPanel/EquipmentPanel을 cascade로
+// compact prop 자체 제거. 나머지 3 panel은 cycle 452 default compact 제거
 // 보존 가드 유지.
 const PANELS = [
     { name: 'BuildAdvicePanel', file: 'src/components/BuildAdvicePanel.tsx', fnPattern: 'const BuildAdvicePanel =' },
     { name: 'StatsPanel', file: 'src/components/StatsPanel.tsx', fnPattern: 'const StatsPanel =' },
-    { name: 'EquipmentPanel', file: 'src/components/EquipmentPanel.tsx', fnPattern: 'const EquipmentPanel =' },
     { name: 'SmartInventory', file: 'src/components/SmartInventory.tsx', fnPattern: 'const SmartInventory =' },
 ];
 
