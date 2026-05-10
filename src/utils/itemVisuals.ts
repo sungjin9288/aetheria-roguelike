@@ -198,7 +198,9 @@ export const EQUIPMENT_FAMILY_OVERLAY_ASSET_KEYS = [
     'offhand-book',
 ];
 
-export const getArmorStyleFromItem = (armor: any, fallback: any = 'coat') => {
+// cycle 512: fallback default 제거 — 7 callsite 모두 fallback 명시 전달이라
+//   default 'coat' 도달 불가. util default 청소 메가 시리즈 10번째 (cycle 502-511).
+export const getArmorStyleFromItem = (armor: any, fallback: any) => {
     if (!armor || armor.type !== 'armor') return fallback;
     const name = String(armor.name || '');
 
