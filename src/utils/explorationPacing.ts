@@ -84,7 +84,9 @@ export const getMapPacingProfile = (mapData: GameMap | null | undefined = {}) =>
     };
 };
 
-export const getNarrativeEventChance = (baseChance: any = 0, bonusMultiplier: any = 0, stats: any = {}, mapData: GameMap | null = null) => {
+// cycle 507: 4 default 제거 — 2 callsite 모두 4 args 전달이라 default 도달 불가.
+//   util default 청소 메가 시리즈 6번째 (cycle 502-506 lens).
+export const getNarrativeEventChance = (baseChance: any, bonusMultiplier: any, stats: any, mapData: GameMap | null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const base = Math.min(
@@ -96,7 +98,8 @@ export const getNarrativeEventChance = (baseChance: any = 0, bonusMultiplier: an
     return clamp(base + pity, 0, BALANCE.SPECIAL_EVENT_MAX_CHANCE);
 };
 
-export const getQuietExplorationChance = (stats: any = {}, mapData: GameMap | null = null) => {
+// cycle 507: 2 default 제거 — 2 callsite 모두 2 args 전달이라 default 도달 불가.
+export const getQuietExplorationChance = (stats: any, mapData: GameMap | null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const reduction = exploreState.quietStreak * BALANCE.QUIET_STREAK_NOTHING_REDUCTION;

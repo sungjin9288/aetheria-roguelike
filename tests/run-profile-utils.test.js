@@ -16,8 +16,9 @@ test('exploration pacing increases narrative chance after long dry streaks and r
         }
     };
 
-    const narrativeChance = getNarrativeEventChance(0.2, 0, dryStats);
-    const quietChance = getQuietExplorationChance(dryStats);
+    // cycle 507: 두 함수의 default 제거됨. 모든 args 명시 전달로 업데이트.
+    const narrativeChance = getNarrativeEventChance(0.2, 0, dryStats, null);
+    const quietChance = getQuietExplorationChance(dryStats, null);
 
     assert.equal(narrativeChance, 0.125);
     assert.ok(Math.abs(quietChance - 0.12) < 1e-9); // EVENT_CHANCE_NOTHING=0.2, quietStreak=3 → clamped to MIN_NOTHING_CHANCE
