@@ -51,12 +51,13 @@ test('cycle 399: QuickSlotProps에서 onAssign / onUnassign 0건', async () => {
         'QuickSlotProps에서 onUnassign 0건');
 });
 
-test('cycle 399: QuickSlotProps 활성 필드 보존 (회귀 가드)', async () => {
+test('cycle 399: QuickSlotProps 활성 필드 보존 (cycle 494가 dense cascade로 정리)', async () => {
+    // cycle 494가 dense prop cascade로 정리. 잔존 활성 필드만 가드.
     const source = await readSrc('src/components/QuickSlot.tsx');
     const ifaceStart = source.indexOf('interface QuickSlotProps');
     const ifaceEnd = source.indexOf('}', ifaceStart);
     const ifaceBlock = source.slice(ifaceStart, ifaceEnd);
-    const activeFields = ['slots', 'onUse', 'gameState', 'dense'];
+    const activeFields = ['slots', 'onUse', 'gameState'];
     for (const field of activeFields) {
         const re = new RegExp(`${field}\\?:`);
         assert.ok(re.test(ifaceBlock), `${field} 필드 보존`);

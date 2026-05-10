@@ -12,22 +12,23 @@ import { GS } from '../reducers/gameStates';
  * cycle 399: onAssign / onUnassign dead props 정리 — QuickSlot 본체
  *   destructure 미사용 + 외부 pass 0건. QuickSlotAssigner는 별개 컴포넌트로 onAssign 사용.
  */
+// cycle 494: 조밀 prop 인터페이스 제거 — 1 callsite (TerminalView) 전달 0건.
+//   본체 9 ternary 모두 false 가지 선택 cascade.
 interface QuickSlotProps {
     slots?: any[];
     onUse?: (item: any, idx: number) => void;
     gameState?: string;
-    dense?: boolean;
 }
 
-const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false }: QuickSlotProps) => {
+const QuickSlot = ({ slots = [null, null, null], onUse, gameState }: QuickSlotProps) => {
     const canUse = gameState === GS.COMBAT || gameState === GS.IDLE;
 
     return (
-        <div className={`flex items-center ${dense ? 'gap-1.5' : 'gap-2'}`}>
-            <div className={`flex shrink-0 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-[#d5b180] ${dense ? 'h-6 w-6' : 'h-8 w-8'}`}>
-                <Zap size={dense ? 10 : 12} />
+        <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-[#d5b180] h-8 w-8">
+                <Zap size={12} />
             </div>
-            <div className={`flex ${dense ? 'gap-1' : 'gap-1.5'}`}>
+            <div className="flex gap-1.5">
                 {slots.map((item: any, i: any) => (
                     <Motion.button
                         key={i}
@@ -35,7 +36,7 @@ const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false
                         whileTap={item && canUse ? { scale: 0.9 } : {}}
                         onClick={() => item && canUse && onUse?.(item, i)}
                         title={item ? `${item.name} — 빠른 사용 (슬롯 ${i + 1})` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
-                        className={`relative flex items-center justify-center rounded-[0.95rem] border text-center text-xs font-fira transition-all backdrop-blur-md ${dense ? 'h-8 w-8 rounded-[0.8rem]' : 'h-10 w-10'}
+                        className={`relative flex items-center justify-center rounded-[0.95rem] border text-center text-xs font-fira transition-all backdrop-blur-md h-10 w-10
                             ${item
                                 ? canUse
                                     ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 text-[#dff7f5] shadow-[0_12px_22px_rgba(125,212,216,0.1)] cursor-pointer hover:border-[#d5b180]/22 hover:bg-[#d5b180]/10'
@@ -45,16 +46,16 @@ const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false
                     >
                         {item ? (
                             <>
-                                <span className={`${dense ? 'text-[9px]' : 'text-[10px]'} leading-tight text-center break-all`}>
-                                    {item.name.slice(0, dense ? 2 : 3)}
+                                <span className="text-[10px] leading-tight text-center break-all">
+                                    {item.name.slice(0, 3)}
                                 </span>
                                 {/* Slot number badge */}
-                                <span className={`absolute rounded-full border border-white/10 bg-[rgba(9,12,18,0.95)] text-slate-400 ${dense ? '-left-0.5 -top-0.5 px-1 py-0 text-[7px]' : '-left-1 -top-1 px-1 py-0 text-[8px]'}`}>
+                                <span className="absolute rounded-full border border-white/10 bg-[rgba(9,12,18,0.95)] text-slate-400 -left-1 -top-1 px-1 py-0 text-[8px]">
                                     {i + 1}
                                 </span>
                             </>
                         ) : (
-                            <span className={dense ? 'text-[10px] text-slate-600' : 'text-slate-600'}>{i + 1}</span>
+                            <span className="text-slate-600">{i + 1}</span>
                         )}
                     </Motion.button>
                 ))}
@@ -65,15 +66,18 @@ const QuickSlot = ({ slots = [null, null, null], onUse, gameState, dense = false
 
 /**
  * QuickSlotAssigner — 인벤토리 아이템에서 퀵슬롯 할당 UI
+ *
+ * cycle 494: 컴팩트 prop cascade — cycle 482가 SmartInventory callsite에서
+ *   compact 전달 제거 후 caller 0건. 본체 5 ternary 모두 false 가지 선택.
  */
-export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots, compact = false }: any) => {
+export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots }: any) => {
     const isAssigned = currentSlots?.some((s: any) => s?.id === item?.id);
 
     if (!item || !['hp', 'mp', 'buff', 'cure'].includes(item.type)) return null;
 
     return (
-        <div className={`mt-1 flex items-center ${compact ? 'gap-0.5' : 'gap-1'}`}>
-            <span className={`font-fira text-slate-400/70 ${compact ? 'text-[10px]' : 'text-xs'}`}>퀵슬롯:</span>
+        <div className="mt-1 flex items-center gap-1">
+            <span className="font-fira text-slate-400/70 text-xs">퀵슬롯:</span>
             {Array.from({ length: slotCount }, (_: any, i: any) => {
                 const occupied = currentSlots[i];
                 return (
@@ -81,7 +85,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots,
                         key={i}
                         data-testid={`quick-slot-assign-${i}`}
                         onClick={() => onAssign(i, item)}
-                        className={`${compact ? 'h-5 w-5 text-[9px]' : 'h-6 w-6 text-[10px]'} rounded border font-bold transition-all backdrop-blur-md
+                        className={`h-6 w-6 text-[10px] rounded border font-bold transition-all backdrop-blur-md
                             ${occupied?.id === item?.id
                                 ? 'border-[#7dd4d8]/35 bg-[#7dd4d8]/10 text-[#dff7f5]'
                                 : occupied
@@ -104,7 +108,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots,
                     className="ml-1 text-rose-300/55 hover:text-rose-200"
                     title="할당 해제"
                 >
-                    <X size={compact ? 10 : 11} />
+                    <X size={11} />
                 </button>
             )}
         </div>
