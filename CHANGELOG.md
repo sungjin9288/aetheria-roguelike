@@ -7,6 +7,87 @@
 
 ---
 
+## Cycle 500 🎯🎯 — 500사이클 마일스톤 + cycles 491-499 history 일괄 정리 (31번째 batch)
+
+- **500사이클 마일스톤**: 프로젝트 사이클 카운터가 500에 도달. 그 중 cycle 222-499
+  의 278사이클이 silent dead config 시리즈로, **250번째 silent dead config 정리
+  마일스톤**도 cycle 499에서 동시에 통과.
+- 마일스톤: cycle 490 batch 이후 9 사이클 미반영 batch 정리. 31번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490에 이은 31번째.
+- 누적 마일스톤: cycle 490(unit 2286) → 499(unit 2330, +44). silent dead config
+  시리즈 cycle 222→499 250번째 도달.
+- 시리즈 정체성 — **className/internal-helper props lens 메가 시리즈**: 9사이클
+  중 6사이클 (493-498)이 className 또는 비슷한 외부 보조 prop unreachable 정리.
+  같은 파일 paired 패턴 (494/StatusBar 491-492)도 정착. cascade 후속 정리
+  (cycle 471-489 cascade가 491-498에 이르러 잔존 unreachable을 정리)로 두
+  메가 시리즈 (cascade + className) 합류.
+
+검증: tsc 0 / unit 2330 / lint clean / build-guard ok.
+
+---
+
+## Cycle 491-499 — className/internal-helper props lens 메가 시리즈 + 250th milestone
+
+cycle 471-489 cascade 시리즈 직후 cycle 491-498이 className 등 외부 보조 props
+unreachable 일괄 정리. cycle 499에서 redundant default annotation 회귀로
+250번째 silent dead config 마일스톤 통과.
+
+### 같은 파일 internal const paired (cycle 491-492)
+
+- 491: StatusBar StatusMetric `compact` (3 callsite all true) + `dense`
+  (0 callsite) cascade — chained ternary 3건 정리, 정적 inline.
+- 492: StatusBar EnemyStatus `mobile` always truthy → 2 ternary 가지 + callsite
+  shorthand 정리. **StatusBar.tsx 4사이클 paired (cycle 458/459/491/492)**.
+
+### className unreachable lens 4사이클 (cycle 493/495/496/498)
+
+- 493: AetherMark `className` prop (2 callsite never pass).
+- 495: StatusBar `className` prop (1 callsite never pass).
+- 496: TerminalView `className` + `toolbarLeft` props batch (1 callsite 0건).
+- 498: AvatarEquipmentOverlay `className` + `dataTestId` batch (2 callsite 0건).
+
+### 다른 unreachable cascade (cycle 494/497)
+
+- 494: QuickSlot.tsx 같은 파일 2 internal const cascade — `dense` (9 ternary) +
+  `compact` (5 ternary) batch. cycle 458-459/491-492 같은 파일 paired 패턴 정착.
+- 497: TerminalView `autoFocusInput` + `showInput` cascade — 1 callsite always
+  passes false. '/' keybind / footerInput / showFooter / autoFocus attr +
+  미사용 inputRef/CommandAutocomplete import cascade.
+
+### 250th milestone — Redundant default annotation 회귀 (cycle 499)
+
+- 499: PixelCharacterAvatar 5 redundant defaults (player/size/className/
+  dataTestId/label) — 2/2 callsite 모두 명시 전달. cycle 451-452/467 lens 회귀.
+  silent dead config 시리즈 250번째 도달 마일스톤.
+
+### 신규 lens 의의
+
+- **className unreachable이 시스템적 lens로 정착** — cycle 463/465/466 (icons/)
+  → cycle 493/495 → cycle 496/498 (batch). 외부 보조 클래스 prop이 콜러가
+  거의 안 넘기는 패턴이 코드베이스 전반의 시그니처 디자인 결함으로 굳어 있었음.
+- **같은 파일 internal const paired의 4사이클 누적** — StatusBar.tsx에서
+  cycle 458 → 459 → 491 → 492로 4 internal const가 단계적으로 정리됨. 같은
+  파일에 발견하기 전엔 cleanup 가지 않는다는 증명.
+- **cascade trigger의 paired completion 다단계 회귀** — cycle 471 trigger →
+  482 (Dashboard cascade 마무리) → 485 (CombatPanel) → 486-489 (mobileFocused
+  4사이클) → 491-498 (잔존 잔재 정리)까지 28사이클 후속 cleanup이 단일 trigger
+  에서 발생. cleanup 1개의 multiplier 효과가 ratchet 패턴으로 정착.
+
+### 250사이클 silent dead config 시리즈 회고
+
+cycle 222 (single dead config detection) → cycle 499 (250th detection). 278
+사이클 중 핵심 lens 변천:
+- cycle 222-332: dead lookup entry / 단일 prop / 주석 dead 탐색 (110사이클).
+- cycle 333-356: function output dead field cleanup 메가 시리즈 (24사이클).
+- cycle 357-470: unreachable code path / redundant default / silent UI 결손
+  세 lens의 다양한 변형 (114사이클).
+- cycle 471-499: cascade lens + className/helper prop unreachable의 두 메가
+  시리즈 (29사이클).
+
+---
+
 ## Cycle 490 🎯 — CHANGELOG에 cycles 481-489 history 일괄 추가
 
 - 마일스톤: cycle 480 batch 이후 9 사이클 미반영 batch 정리. 30번째 batch.
