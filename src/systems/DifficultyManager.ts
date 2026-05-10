@@ -146,7 +146,7 @@ export const pushBattleRecord = (stats: any, record: any) => {
     };
 };
 
-export const countLowHpWins = (stats: any, threshold: any = 0.2) => {
+export const countLowHpWins = (stats: any, threshold: any) => {
     const recentBattles = stats?.recentBattles || [];
     if (recentBattles.length > 0) {
         return recentBattles.filter((battle: any) => (

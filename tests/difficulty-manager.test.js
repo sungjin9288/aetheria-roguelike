@@ -186,12 +186,14 @@ test('countLowHpWins: 최근 전투에서 저HP 승리 카운트', () => {
             { result: 'death', hpRatio: 0 },
         ],
     };
-    assert.equal(countLowHpWins(stats), 2); // 0.1과 0.15
+    // cycle 623: explicit default-elimination — threshold 0.2 명시 추가.
+    assert.equal(countLowHpWins(stats, 0.2), 2); // 0.1과 0.15
 });
 
 test('countLowHpWins: 전투 기록 없으면 레거시 lowHpWins 폴백', () => {
     const stats = { lowHpWins: 5 };
-    assert.equal(countLowHpWins(stats), 5);
+    // cycle 623: explicit default-elimination — threshold 0.2 명시 추가.
+    assert.equal(countLowHpWins(stats, 0.2), 5);
 });
 
 test('countLowHpWins: 커스텀 threshold 적용', () => {
