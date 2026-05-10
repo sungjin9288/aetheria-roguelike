@@ -51,7 +51,6 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole = 
             <ClassCard
               key={job}
               jobName={job}
-              player={player}
               onSelect={(name: any) => actions.jobChange(name)}
               disabled={player.level < (DB.CLASSES[job]?.reqLv || 999)}
             />
