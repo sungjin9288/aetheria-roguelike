@@ -7,6 +7,79 @@
 
 ---
 
+## Cycle 610 🎯🎯 — 350번째 silent dead config 마일스톤 + cycles 601-609 batch (42번째)
+
+- **350번째 silent dead config 마일스톤**: cycle 222 시작 이후 cycle 609에서
+  350번째 silent dead config 도달. 1년+ 단일 lens (silent dead config audit)
+  안정 운영, 350개 instances 정리.
+- 마일스톤: cycle 600 batch 이후 9 사이클 미반영 batch 정리. 42번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500 / 510 / 520 / 530 / 540 / 550 / 560 / 570 /
+  580 / 590 / 600에 이은 42번째.
+- 누적 마일스톤: cycle 600(unit 2696) → 609(unit 2731, +35). silent dead config
+  시리즈 cycle 222→609 350번째 도달.
+- 시리즈 정체성 — **default cleanup era 종결 + explicit default-elimination
+  신규 lens 진입**: 9사이클 중 default cleanup(7) + explicit default-elimination
+  (2). 모든 reachable defaults가 caller-side conversion으로 unreachable
+  변환 가능한 패턴 발견. cycle 502-609 108사이클 누적, 140+ default 정리.
+
+검증: tsc 0 / unit 2731 / lint clean / build-guard ok.
+
+---
+
+## Cycle 601-609 — default cleanup era 종결 + explicit default-elimination 신규 lens
+
+cycle 591-599 시리즈 9사이클에 이어 cycle 601-609는 default cleanup이 거의
+exhaustion 단계에 도달, cycle 608에서 explicit default-elimination 신규 lens
+진입. cycle 610은 350번째 milestone + batch CHANGELOG.
+
+### default cleanup + explicit elimination 9사이클 (cycle 601-609)
+
+- 601: performSynthesis 2 defaults batch (synthesisUtils.ts).
+- 602: getTraitLootHint 2 defaults batch (runProfile.ts paired).
+- 603: summarizeHistory + getRecentEventSet 2 history defaults partial batch
+  (aiEventUtils.ts, partial pattern 8번째).
+- 604: seedAvatarScenario preset default (useGameTestApi.ts).
+- 605: seedEnhanceScenario 4 defaults batch (single-cycle 4-default,
+  outer + 3 inner destructure).
+- 606: generateEvent 3 defaults batch (services/aiService.ts, cycle 539
+  paired).
+- 607: uniqueList values default (mapProgress.ts).
+- **608: applyName dismissKeyboard explicit default-elimination — 신규 lens
+  진입** (caller-side conversion + default 제거 combo).
+- **609: buildGraveData random/now explicit default-elimination — 신규 lens
+  2번째 적용 + 350번째 silent dead config 마일스톤**.
+
+**누적 18 default + 2 explicit elimination 정리** (cycle 601-609 9사이클).
+**시리즈 누적 140+ default 정리** (cycle 502-609 108사이클 합산).
+
+### 신규 lens 의의
+
+- **350번째 silent dead config 마일스톤** — cycle 222 시작 이후 cycle 609에서
+  350 instances 도달. 1년+ 단일 lens 안정 운영. silent dead config audit이
+  지속 가능한 cleanup 패턴임을 입증.
+- **default cleanup era 종결 단계** — cycle 502-607 동안 100여 사이클의
+  default cleanup이 거의 exhaustion. 잔존은 reachable defaults (caller가
+  미전달이거나 부분 callers 미전달)만 남음. cycle 608에서 새 lens 발견.
+- **explicit default-elimination 신규 lens 진입** — cycle 608/609 2 cycles.
+  caller-side에 명시 args 추가하여 reachable default를 unreachable로 active
+  conversion. 기존 "reachable default 보존" 패턴과 정반대 방향. default 자체를
+  제거하는 더 강력한 cleanup. cycle 608 IntroScreen.applyName + cycle 609
+  CombatEngine.buildGraveData 2 케이스로 정착.
+- **partial cleanup 8번째 적용** — cycle 603 summarizeHistory/getRecentEventSet
+  의 history default만 제거 + limit default 보존. partial pattern은 cycle 502-
+  607 default era의 표준이 됨.
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2696 → 2731 (+35, 누적 신규 가드).
+- lint clean / build-guard ok 9사이클 연속.
+- 0 회귀, 0 revert.
+
+---
+
 ## Cycle 600 🎯🎯🎯 — 600사이클 마일스톤 + cycles 591-599 history 일괄 추가 (41번째 batch)
 
 - **600사이클 마일스톤**: 프로젝트 사이클 카운터가 600에 도달. 그 중 cycle
