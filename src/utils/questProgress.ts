@@ -7,7 +7,10 @@ const findQuestDefinition = (quest: any, questCatalog: any = QUESTS) => (
     quest?.isBounty ? quest : questCatalog.find((entry: any) => entry.id === quest.id)
 );
 
-export const syncQuestProgress = (player: Player, enemyName: any = '', questCatalog: any = QUESTS) => {
+// cycle 508: enemyName / questCatalog default 제거 — 1 callsite (CombatEngine
+//   :1571) 항상 3 args 전달이라 default 도달 불가. util default 청소 메가
+//   시리즈 7번째 (cycle 502-507).
+export const syncQuestProgress = (player: Player, enemyName: any, questCatalog: any) => {
     if (!player?.quests?.length) {
         return { updatedQuests: player?.quests || [], completedCount: 0 };
     }
