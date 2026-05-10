@@ -110,7 +110,10 @@ const getCompactItemSummary = (item: any) => {
 
 const MOBILE_INITIAL_BUY_LIMIT = 12;
 
-const ShopPanel = ({ player, actions, shopItems, setGameState, stats = null, onOpenArchiveConsole = null }: ShopPanelProps) => {
+// cycle 573: stats / onOpenArchiveConsole defaults 제거 — 1 production caller
+//   (ControlPanel:147) 6 props 모두 명시 전달이라 두 default 모두 도달 불가.
+//   청소 메가 시리즈 65번째.
+const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArchiveConsole }: ShopPanelProps) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState<any>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
