@@ -41,13 +41,15 @@ const TIER_COLORS: any = {
  * ClassIcon — 직업 아이콘 컴포넌트
  * @param {{ className: string, size?: number, tier?: number, showBorder?: boolean, style?: string }} props
  */
-const ClassIcon = ({ className: jobName, size = 28, tier = 0, showBorder = false, cssClass = '' }: any) => {
+// cycle 463: 외부 className 보조 prop 제거 — 4 callsite 모두 전달 0건이라
+//   보간 결과 ''만 추가되는 unreachable. cycle 458/459/461 unreachable lens 회귀.
+const ClassIcon = ({ className: jobName, size = 28, tier = 0, showBorder = false }: any) => {
     const path = CLASS_PATHS[jobName] || CLASS_PATHS['모험가'];
     const color = TIER_COLORS[tier] ?? TIER_COLORS[0];
 
     return (
         <div
-            className={`inline-flex items-center justify-center shrink-0 ${cssClass}`}
+            className="inline-flex items-center justify-center shrink-0"
             style={{
                 width: size,
                 height: size,
