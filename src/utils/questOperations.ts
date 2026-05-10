@@ -89,7 +89,10 @@ const getQuestLane = (quest: any, resonance: any, maps: any = MAPS) => {
     return 'hunt';
 };
 
-const getQuestReason = (quest: any, lane: any, resonance: any, targetMaps: any[] = []) => {
+// cycle 545: targetMaps default [] 제거 — 1 internal callsite (line 153)
+//   getQuestReason(quest, lane, resonance, targetMaps) 명시 전달이라
+//   default 도달 불가. cross-file batch와 동일 사이클.
+const getQuestReason = (quest: any, lane: any, resonance: any, targetMaps: any[]) => {
     if (lane === 'story') {
         return `서사 진행을 당겨 ${quest.minLv || 1}레벨 구간의 다음 전개를 열어 주는 임무입니다.`;
     }

@@ -523,7 +523,10 @@ const FALLBACK_EVENT_POOL: any = {
     ],
 };
 
-export const pickFallbackEvent = (loc: string, history: any[] = [], context: any = {}) => {
+// cycle 545: history / context defaults 제거 — 3 production caller (aiService
+//   :69/74/108) + 5 test caller 모두 3 args 명시이라 두 default 모두 도달
+//   불가. 청소 메가 시리즈 40번째 cross-file batch (cycle 502-544).
+export const pickFallbackEvent = (loc: string, history: any[], context: any) => {
     // cycle 425: 직접 loc lookup 분기 제거 — cycle 357 이후 FALLBACK_EVENT_POOL은
     //   English category 키만 (forest/ruins/cave/...). loc 파라미터는 항상 Korean
     //   지명이라 직접 매칭 0건이었음. getPoolKeyByLocation이 유일 path.
