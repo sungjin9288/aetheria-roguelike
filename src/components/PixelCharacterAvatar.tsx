@@ -29,7 +29,11 @@ const FRAME_TONE_CLASS: any = {
     대지: 'border-amber-300/22 bg-[radial-gradient(circle_at_76%_16%,rgba(214,179,139,0.2),transparent_28%),linear-gradient(180deg,rgba(31,25,21,0.98)_0%,rgba(10,9,8,1)_100%)]',
 };
 
-const softenColor = (hex: any, alpha: any = 0.24) => {
+// cycle 529: alpha default 0.24 제거 — 1 internal callsite (line 89)
+//   softenColor(palette.glow || palette.accent, 0.28) 명시 전달이라 default
+//   도달 불가. components/ private helper로 lens 확장 (cycle 502-528 utils
+//   메가 시리즈 26번째).
+const softenColor = (hex: any, alpha: any) => {
     if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length !== 7) {
         return `rgba(255,255,255,${alpha})`;
     }
