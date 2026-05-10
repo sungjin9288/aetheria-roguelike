@@ -7,6 +7,81 @@
 
 ---
 
+## Cycle 440 🎯 — CHANGELOG에 cycles 431-439 history 일괄 추가
+
+- 마일스톤: cycle 430 batch 이후 9 사이클 미반영 batch 정리. 25번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430에 이은
+  25번째.
+- 누적 마일스톤: cycle 430(unit 2038) → 439(unit 2081, +43). silent dead config
+  시리즈 cycle 222→439 198번째 도달.
+- 시리즈 정체성 — redundant default annotation 5사이클 + timestamp output dead
+  3사이클 + marker dead 1사이클로 양분된 batch. 5종 default cleanup이 4 컴포넌트
+  연속 + 1 EventPanel 자연 회귀, timestamp 3사이클은 cycle 333-356 시리즈 회귀가
+  서로 다른 surface (battle record / codex / event history)에서 발견됨.
+- 본 batch 핵심 패턴: **redundant default 5사이클 메가 시리즈** — cycle 364-368
+  redundant default annotation 시리즈가 cycle 431-434 + 437로 대규모 회귀,
+  4 컴포넌트가 호출 사이트에서 모두 명시 전달이라 default 도달 불가.
+
+검증: tsc 0 / unit 2081 / lint clean / build-guard ok.
+
+---
+
+## Cycle 431-439 — Redundant default 5사이클 + timestamp output dead 3사이클 + marker dead
+
+cycle 419 (호출 사이트 분석) 회귀가 cycle 431-434+437에서 5 컴포넌트 default
+cleanup으로 확대 → cycle 435/438/439에서 timestamp output dead 시리즈 회귀로
+다변화. cycle 436 marker dead는 cycle 415 paired completion.
+
+### Redundant default annotation 메가 시리즈 (cycle 431-434+437, 5사이클)
+
+- 431: AvatarEquipmentOverlay default `layer = 'front'` — 2 호출자 (back/front)
+  명시 전달이라 default 도달 불가. className/dataTestId default는 호출자 누락
+  path 활성이라 보존.
+- 432: AetherMark default `size = 'md'` — 2 호출자 (IntroScreen md / BootScreen
+  lg) 명시 전달. cycle 418 SIZE_MAP.sm 정리 paired completion.
+- 433: SignalBadge default `tone = 'neutral'` + `size = 'sm'` (2 default) —
+  73 호출자 모두 두 prop 명시 전달. cycle 419 SIZE_CLASS md/lg 정리 paired
+  completion. SIZE_CLASS / TONE_CLASS fallback은 방어용 보존.
+- 434: EquipmentAvatarPreview 3 default (`size = 24` / `className = ''` /
+  `variant = 'default'`) — 1 호출자 (ItemIcon) 4 prop 모두 명시 전달.
+- 437: EventPanel default `mobileFocused = false` — ControlPanel:192 명시 전달.
+
+### Timestamp output dead 시리즈 회귀 (cycle 435/438/439, 3사이클)
+
+- 435: DifficultyManager makeBattleRecord `ts: Date.now()` — battle record
+  consumers (calcPerformanceScore / countLowHpWins / gameUtils recentWinRate)는
+  result / hpRatio만 read. battle.ts read 0건.
+- 438: codex 엔트리 `obtainedAt: Date.now()` (4 producer batch) — gameUtils.ts
+  3 sites (registerCodex + migrateData 2 bootstrap) + rewardHandlers.ts
+  CLAIM_CODEX_REWARD. consumer (Codex/WeaponCodex)는 truthy check + Object.keys
+  count만 사용. 결과 entry는 `{ discovered: true }` 단일 필드로 단순화.
+- 439: handleEventChoice history record `timestamp: Date.now()` — aiEventUtils
+  summarizeHistory / getRecentEventSet은 event / choice / outcome만 read.
+
+### Marker dead — paired completion (cycle 436, 1사이클)
+
+- 436: getDailyDeals `isDailyDeal: true` 마커 — production read 0건. cycle 355
+  가 회귀 가드로 보존했으나 그 가드 자체가 유일 read (circular guard). cycle
+  415 isWeeklySpecial 정리에서 paired completion 누락분.
+
+### 신규 lens 의의
+
+- **Redundant default annotation 5-cycle 메가 시리즈** — cycle 364-368 시리즈가
+  cycle 431-434+437에서 회귀하며 5 컴포넌트 batch 정리. 패턴: "호출 사이트
+  100% 명시 전달 → default 도달 불가". cycle 419 SignalBadge 호출 사이트 분석
+  lens (73 호출 검증) 후 후속 cleanup으로 자연 확장.
+- **Timestamp output dead 3-cycle 시리즈** — cycle 435 (battle), 438 (codex),
+  439 (event history) 모두 동일 패턴: `Date.now()` 산출했으나 어떤 consumer도
+  timestamp read 0건. 정합성 가드 (전체 src/ walk) 도입으로 검증 강화.
+- **Circular guard 패턴 발견** (cycle 436) — "회귀 가드"가 자기 자신만이
+  유일한 read인 dead marker. cycle 355의 보존 의도가 paired completion 누락
+  으로 이어진 사례. cleanup 시 회귀 가드의 production read 검증 필수.
+
+검증: 각 사이클 tsc 0 / unit pass / lint clean / build-guard ok.
+
+---
+
 ## Cycle 430 🎯 — CHANGELOG에 cycles 421-429 history 일괄 추가
 
 - 마일스톤: cycle 420 batch 이후 9 사이클 미반영 batch 정리. 24번째 batch.
