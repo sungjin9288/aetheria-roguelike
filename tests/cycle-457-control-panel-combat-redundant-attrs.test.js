@@ -59,8 +59,13 @@ test('cycle 457: 정합성 가드 — mobile prop 보존', async () => {
     assert.ok(/enemy=\{enemy\}/.test(jsx), 'enemy prop 보존');
 });
 
-test('cycle 457: CombatPanel destructure 기본값 보존 (다른 caller 대비)', async () => {
+test('cycle 457: CombatPanel destructure에 compact / dense 0건 (cycle 485 cascade 보존)', async () => {
+    // cycle 485가 CombatPanel compact / dense props 자체를 cascade로 제거.
+    // 이전 가드 → cascade 보존 가드로 약화.
     const source = await readSrc('src/components/tabs/CombatPanel.tsx');
-    assert.ok(/compact = false/.test(source), 'compact = false 본체 기본값 보존');
-    assert.ok(/dense = false/.test(source), 'dense = false 본체 기본값 보존');
+    const fnIdx = source.indexOf('const CombatPanel =');
+    const fnEnd = source.indexOf('=>', fnIdx);
+    const sig = source.slice(fnIdx, fnEnd);
+    assert.ok(!/\bcompact\b/.test(sig), 'cycle 485 cascade로 compact 제거 보존');
+    assert.ok(!/\bdense\b/.test(sig), 'cycle 485 cascade로 dense 제거 보존');
 });

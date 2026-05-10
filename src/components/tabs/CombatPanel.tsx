@@ -6,6 +6,9 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { getBossSignatureDrops } from '../../utils/bossSignatureHint.js';
 import type { Player, Monster } from '../../types/index.js';
 
+// cycle 485: 컴팩트/조밀 모드 props 인터페이스 제거 — cycle 457이 callsite 명시
+//   false 제거 후 caller 0건. cascade로 14 ternary + 1 const + 1 conditional UI
+//   블록 일괄 정리. cycle 471-482 cascade 패턴 + cycle 457 paired completion.
 interface CombatPanelProps {
     player: Player;
     actions?: any;
@@ -13,8 +16,6 @@ interface CombatPanelProps {
     stats?: any;
     isAiThinking?: boolean;
     mobile?: boolean;
-    compact?: boolean;
-    dense?: boolean;
 }
 
 // cycle 416: tag / detail 출력 dead 정리 — render는 icon/key/className/
@@ -51,7 +52,7 @@ const ACTION_BUTTONS: any = [
   },
 ];
 
-const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, mobile = false, compact = false, dense = false }: CombatPanelProps) => {
+const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, mobile = false }: CombatPanelProps) => {
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
   const tacticalProfile = enemy ? getEnemyTacticalProfile(enemy, stats) : null;
@@ -79,7 +80,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
         }
         return acc;
       }, {} as Record<string, any>)
-  ).slice(0, dense ? 3 : mobile || compact ? 4 : 6) as any[];
+  ).slice(0, mobile ? 4 : 6) as any[];
 
   // 콤보 시스템 (연격의 반지 유물 보유 시)
   const comboRelic = player.relics?.find((r: any) => r.effect === 'combo_stack');
@@ -132,42 +133,6 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
     buff: 'border-cyber-purple/25 bg-cyber-purple/8 text-cyber-purple hover:bg-cyber-purple/14',
   } as Record<string, string>)[type] || 'border-slate-600/30 bg-slate-900/25 text-slate-300 hover:bg-slate-800/40');
 
-  const compactMetaEntries = [
-    selectedSkill
-      ? {
-          key: 'skill',
-          label: selectedSkill.name,
-          detail: `MP ${selectedSkill.mp || 0} · CD ${skillCooldown}`,
-          className: 'border-cyber-blue/18 bg-cyber-blue/8 text-cyber-blue',
-        }
-      : null,
-    bossBriefLine
-      ? {
-          key: 'boss',
-          label: '보스 전술',
-          detail: bossBriefLine,
-          className: 'border-[#d5b180]/18 bg-[#d5b180]/10 text-[#f6e7c8]',
-        }
-      : null,
-    enemyTelegraph && enemyTelegraph.type !== 'normal'
-      ? {
-          key: 'telegraph',
-          label: enemyTelegraph.label,
-          detail: enemy?.name || 'enemy',
-          className: telegraphColorClass,
-        }
-      : null,
-    comboRelic
-      ? {
-          key: 'combo',
-          label: 'COMBO',
-          detail: `${comboCount}/${comboStack}${comboCount >= comboStack ? ' READY' : ''}`,
-          className: comboCount >= comboStack
-            ? 'border-cyber-pink/50 bg-cyber-pink/12 text-cyber-pink'
-            : 'border-cyber-pink/18 bg-cyber-pink/6 text-cyber-pink/70',
-        }
-      : null,
-  ].filter(Boolean);
   const mobileCombatSignals = [
     enemyTelegraph && enemyTelegraph.type !== 'normal'
       ? { key: 'telegraph', text: enemyTelegraph.label, className: telegraphColorClass }
@@ -195,35 +160,12 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       className={`relative z-10 w-full space-y-2 ${
-        compact
-          ? dense
-            ? 'panel-noise aether-surface rounded-[1.2rem] p-2'
-            : 'panel-noise aether-surface rounded-[1.5rem] p-3'
-          : mobile
-            ? 'panel-noise aether-surface rounded-[1.9rem] p-3'
+        mobile
+          ? 'panel-noise aether-surface rounded-[1.9rem] p-3'
           : 'mt-2.5'
       }`}
     >
-      {dense ? (
-        compactMetaEntries.length > 0 && (
-          <div className="grid gap-1">
-            {compactMetaEntries.map((entry: any) => (
-              <div
-                key={entry.key}
-                className={`rounded-[0.9rem] border px-2 py-1.5 text-left font-fira ${entry.className}`}
-              >
-                <div className="truncate text-[9px] uppercase tracking-[0.18em]">
-                  {entry.label}
-                </div>
-                <div className="mt-0.5 line-clamp-2 text-[9px] text-white/74">
-                  {entry.detail}
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-      ) : (
-        <>
+      <>
           {mobile && (
             <div className="rounded-[1.1rem] aether-panel-core px-3 py-2 flex items-center justify-between gap-2">
               <div className="min-w-0">
@@ -346,8 +288,7 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
             </div>
           )}
 
-        </>
-      )}
+      </>
 
       <div className="grid grid-cols-2 gap-1.5">
         {ACTION_BUTTONS.map((action: any) => {
@@ -378,28 +319,26 @@ const CombatPanel = ({ player, actions, enemy = null, stats = {}, isAiThinking, 
           <div className="px-1 text-[10px] font-fira uppercase tracking-[0.22em] text-cyber-blue/65">
             Combat Items
           </div>
-          <div className={`grid gap-2 ${dense ? 'grid-cols-1' : mobile || compact ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          <div className={`grid gap-2 ${mobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
             {combatConsumables.map((item: any) => (
               <Motion.button
                 key={`${item.type}:${item.name}`}
                 whileTap={{ scale: 0.97 }}
                 disabled={isAiThinking}
                 onClick={() => handleConsumableUse(item)}
-                className={`rounded-[1rem] border ${dense ? 'px-2 py-1.5' : mobile ? 'px-3 py-2.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type)}`}
+                className={`rounded-[1rem] border ${mobile ? 'px-3 py-2.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type)}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className={`${dense ? 'text-[10px]' : 'text-[11px]'} font-rajdhani font-bold leading-tight`}>{item.name}</span>
+                  <span className="text-[11px] font-rajdhani font-bold leading-tight">{item.name}</span>
                   {item.count > 1 && (
                     <span className="rounded-full border border-white/10 bg-black/20 px-1.5 py-0.5 text-[9px] font-fira text-white/70">
                       x{item.count}
                     </span>
                   )}
                 </div>
-                {!dense && (
-                  <div className="mt-1 text-[10px] font-fira text-white/55">
-                    {item.desc_stat || item.desc}
-                  </div>
-                )}
+                <div className="mt-1 text-[10px] font-fira text-white/55">
+                  {item.desc_stat || item.desc}
+                </div>
               </Motion.button>
             ))}
           </div>

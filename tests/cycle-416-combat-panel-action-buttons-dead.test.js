@@ -68,13 +68,12 @@ test('cycle 416: ACTION_BUTTONS 4 entry 보존 (attack/skill/swap/escape)', asyn
     }
 });
 
-test('cycle 416: compactMetaEntries entry.detail 동작 보존 (별개 배열)', async () => {
+test('cycle 416: compactMetaEntries 배열은 cycle 485 cascade로 제거됨 (paired 보존)', async () => {
+    // cycle 485가 CombatPanel compact/dense props cascade로 정리하면서
+    // compactMetaEntries 배열도 cascade dead로 제거. paired 가드.
     const source = await readSrc('src/components/tabs/CombatPanel.tsx');
-    const blockStart = source.indexOf('compactMetaEntries =');
-    const blockEnd = source.indexOf('].filter', blockStart);
-    const block = source.slice(blockStart, blockEnd);
-    assert.ok(/detail:/.test(block),
-        'compactMetaEntries entry.detail 보존');
+    assert.ok(!/compactMetaEntries/.test(source),
+        'cycle 485 cascade로 compactMetaEntries 제거 보존');
 });
 
 test('cycle 415 회귀 가드: getWeeklySpecial isWeeklySpecial 0건', async () => {
