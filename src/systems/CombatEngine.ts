@@ -25,7 +25,11 @@ export const CombatEngine = {
         return _resolveEnemyBaseName(enemy);
     },
 
-    getElementMultiplier(elem: any, enemy: Monster, relics: any[] = []) {
+    // cycle 546: relics default [] 제거 — 2 internal callsite (line 480, 745)
+    //   + N test callsite 모두 명시 전달이라 default 도달 불가. body의
+    //   (relics || []) defensive guard는 별개 보존 (caller가 null 넘기는 path
+    //   활성). 청소 메가 시리즈 41번째 (cycle 502-545).
+    getElementMultiplier(elem: any, enemy: Monster, relics: any[]) {
         if (!elem || elem === 'physical' || elem === 'none') return 1;
         if (enemy?.weakness && enemy.weakness === elem) {
             // cycle 151: 'elem_boost' (프리즘 핵) — 약점 적중 배율에 val 추가 (1.25 → 1.5).
