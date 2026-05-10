@@ -72,14 +72,11 @@ test('cycle 405: CodexProps 활성 필드 보존', async () => {
     assert.ok(/dispatch:/.test(ifaceBlock), 'dispatch 필드 보존');
 });
 
-test('cycle 405: 활성 패널 compact 보존 (회귀 가드)', async () => {
-    // cycle 472-475가 MapNavigator/AchievementPanel/EquipmentPanel/StatsPanel의
-    // compact prop cascade 정리. 4 panel 제외.
-    for (const f of ['src/components/GravePanel.tsx']) {
-        const source = await readSrc(f);
-        assert.ok(/\bcompact\b/.test(source),
-            `${f} compact prop 사용 보존`);
-    }
+test('cycle 405: 활성 패널 compact 보존 (회귀 가드 — 모두 cascade 정리됨)', async () => {
+    // cycle 472-476이 MapNavigator/AchievementPanel/EquipmentPanel/StatsPanel/
+    // GravePanel의 compact prop cascade로 모두 정리. 5 panel 모두 cascade 정리됨.
+    // 잔존 panel 0건이므로 test는 빈 가드 (정합성 트래킹용).
+    assert.ok(true, '모든 panel이 cascade 정리됨');
 });
 
 test('cycle 404 회귀 가드: TerminalView stats 0건', async () => {

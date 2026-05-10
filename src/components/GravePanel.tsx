@@ -12,12 +12,13 @@ const GRAVES_LIMIT = 10;
 interface GravePanelProps {
     player: Player;
     actions?: any;
-    compact?: boolean;
 }
 
-// cycle 451: default compact 값 제거 — Dashboard:233이 명시 전달이라 default
+// cycle 451: 컴팩트 default 값 제거 — Dashboard:233이 명시 전달이라 default
 //   도달 불가 (cycle 364-368/437/441 redundant default annotation lens).
-const GravePanel = ({ player, actions, compact }: GravePanelProps) => {
+// cycle 476: 컴팩트 prop 자체 제거 — cycle 471이 Dashboard callsite 전달도 정리해
+//   caller 0건. cascade로 20 ternary 모두 false 가지로 inline.
+const GravePanel = ({ player, actions }: GravePanelProps) => {
     const [graves, setGraves] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [invadingUid, setInvadingUid] = useState<any>(null);
@@ -75,17 +76,17 @@ const GravePanel = ({ player, actions, compact }: GravePanelProps) => {
     };
 
     return (
-        <div className={`space-y-${compact ? '2' : '3'}`}>
+        <div className="space-y-3">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Skull size={compact ? 11 : 13} className="text-[#d5b180]/70" />
-                    <span className={`font-fira uppercase tracking-widest ${compact ? 'text-[9px]' : 'text-[10px]'} text-[#d5b180]/80`}>
+                    <Skull size={13} className="text-[#d5b180]/70" />
+                    <span className="font-fira uppercase tracking-widest text-[10px] text-[#d5b180]/80">
                         Grave Invasion
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className={`${compact ? 'text-[8px]' : 'text-[9px]'} text-slate-400 font-fira`}>
+                    <span className="text-[9px] text-slate-400 font-fira">
                         침략 {remainingInvades}/{BALANCE.DAILY_INVADE_LIMIT}
                     </span>
                     <button
@@ -100,19 +101,19 @@ const GravePanel = ({ player, actions, compact }: GravePanelProps) => {
 
             {/* Graves list */}
             {!hasFirebaseConfig && (
-                <div className={`text-center py-4 ${compact ? 'text-[9px]' : 'text-[10px]'} text-slate-500 font-fira`}>
+                <div className="text-center py-4 text-[10px] text-slate-500 font-fira">
                     오프라인 모드 — 묘비 침략 불가
                 </div>
             )}
 
             {hasFirebaseConfig && loading && graves.length === 0 && (
-                <div className={`text-center py-4 ${compact ? 'text-[9px]' : 'text-[10px]'} text-slate-500 font-fira`}>
+                <div className="text-center py-4 text-[10px] text-slate-500 font-fira">
                     불러오는 중...
                 </div>
             )}
 
             {hasFirebaseConfig && !loading && graves.length === 0 && (
-                <div className={`text-center py-4 ${compact ? 'text-[9px]' : 'text-[10px]'} text-slate-500 font-fira`}>
+                <div className="text-center py-4 text-[10px] text-slate-500 font-fira">
                     침략 가능한 묘비가 없습니다.
                 </div>
             )}
@@ -138,21 +139,21 @@ const GravePanel = ({ player, actions, compact }: GravePanelProps) => {
                         key={grave.uid}
                         data-has-signature={hasSignature ? 'true' : 'false'}
                         style={cardStyle}
-                        className={`aether-card p-${compact ? '2' : '3'} space-y-1.5`}
+                        className="aether-card p-3 space-y-1.5"
                     >
                         {/* Grave info */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 min-w-0">
-                                <span className={`${compact ? 'text-[9px]' : 'text-[10px]'} font-fira text-[#f4e6c8] truncate`}>
+                                <span className="text-[10px] font-fira text-[#f4e6c8] truncate">
                                     {grave.playerName || '무명 용사'}
                                 </span>
-                                <span className={`${compact ? 'text-[8px]' : 'text-[9px]'} text-slate-500 font-fira shrink-0`}>
+                                <span className="text-[9px] text-slate-500 font-fira shrink-0">
                                     Lv.{grave.level || 1} · {grave.loc || '?'}
                                 </span>
                                 {hasSignature && (
                                     <span
                                         data-testid={`grave-signature-bounty-${grave.uid}`}
-                                        className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 ${compact ? 'text-[8px]' : 'text-[9px]'} font-fira uppercase tracking-[0.14em] shrink-0`}
+                                        className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] shrink-0"
                                         style={{
                                             color: '#f6e7a2',
                                             border: '1px solid rgba(246,231,162,0.42)',
@@ -160,12 +161,12 @@ const GravePanel = ({ player, actions, compact }: GravePanelProps) => {
                                         }}
                                         title={`전설 각인 ${signatureItems.length}종 보유`}
                                     >
-                                        <Sparkles size={compact ? 8 : 9} />
+                                        <Sparkles size={9} />
                                         전설 {signatureItems.length}
                                     </span>
                                 )}
                             </div>
-                            <span className={`${compact ? 'text-[8px]' : 'text-[9px]'} font-fira text-[#d5b180]/70 shrink-0`}>
+                            <span className="text-[9px] font-fira text-[#d5b180]/70 shrink-0">
                                 {grave.gold || 0}G
                             </span>
                         </div>
@@ -179,7 +180,7 @@ const GravePanel = ({ player, actions, compact }: GravePanelProps) => {
                                         <span
                                             key={idx}
                                             data-is-signature={itemIsSignature ? 'true' : 'false'}
-                                            className={`px-1.5 py-0.5 rounded-md ${compact ? 'text-[7px]' : 'text-[8px]'} font-fira ${itemIsSignature ? '' : `border border-white/10 bg-white/5 ${tierColor([item])}`}`}
+                                            className={`px-1.5 py-0.5 rounded-md text-[8px] font-fira ${itemIsSignature ? '' : `border border-white/10 bg-white/5 ${tierColor([item])}`}`}
                                             style={itemIsSignature ? {
                                                 color: '#f6e7a2',
                                                 border: '1px solid rgba(246,231,162,0.42)',
@@ -202,20 +203,20 @@ const GravePanel = ({ player, actions, compact }: GravePanelProps) => {
                                         style={{ width: `${chancePercent}%` }}
                                     />
                                 </div>
-                                <span className={`${compact ? 'text-[7px]' : 'text-[8px]'} font-fira text-slate-400`}>
+                                <span className="text-[8px] font-fira text-slate-400">
                                     {chancePercent}%
                                 </span>
                             </div>
                             <button
                                 onClick={() => handleInvade(grave)}
                                 disabled={remainingInvades <= 0 || noItems || isInvading}
-                                className={`flex items-center gap-1 px-2 py-1 rounded-[0.7rem] border transition-all ${compact ? 'text-[8px]' : 'text-[9px]'} font-fira uppercase tracking-wider
+                                className={`flex items-center gap-1 px-2 py-1 rounded-[0.7rem] border transition-all text-[9px] font-fira uppercase tracking-wider
                                     ${remainingInvades <= 0 || noItems
                                         ? 'border-white/8 text-slate-600 cursor-not-allowed'
                                         : 'border-[#d5b180]/30 bg-[#d5b180]/10 text-[#d5b180] hover:bg-[#d5b180]/20 hover:border-[#d5b180]/50'
                                     }`}
                             >
-                                <Swords size={compact ? 8 : 9} />
+                                <Swords size={9} />
                                 {isInvading ? '...' : noItems ? '빈 묘비' : '침략'}
                             </button>
                         </div>

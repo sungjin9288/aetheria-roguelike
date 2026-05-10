@@ -34,13 +34,15 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('cycle 451: GravePanel destructure에서 default compact 제거', async () => {
+test('cycle 451: GravePanel destructure에서 default compact 제거 (cycle 476 cascade 보존)', async () => {
+    // cycle 476이 GravePanel compact prop 자체를 cascade로 제거. compact
+    // 파라미터 보존 → cascade 제거 보존 가드로 업데이트.
     const source = await readSrc('src/components/GravePanel.tsx');
     const fnIdx = source.indexOf('const GravePanel =');
     const fnEnd = source.indexOf('=>', fnIdx);
     const block = source.slice(fnIdx, fnEnd);
     assert.ok(!/compact = false/.test(block), 'default compact 제거됨');
-    assert.ok(/\bcompact\b/.test(block), 'compact 파라미터 보존');
+    assert.ok(!/\bcompact\b/.test(block), 'cycle 476 cascade로 compact prop 자체 제거됨');
 });
 
 test('cycle 451: 호출 사이트 정합성 가드 (Dashboard GravePanel 호출 존재)', async () => {
