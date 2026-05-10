@@ -40,16 +40,20 @@ const softenColor = (hex: any, alpha: any = 0.24) => {
     return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
 
+// cycle 499: 5 redundant default 제거 — 2 callsite 모두 명시 전달이라 default
+//   도달 불가 (player / size / className / dataTestId / label). 활성 default
+//   보존: providedAppearance / onClick / interactive / showEnhanceBadge (호출자
+//   부분 누락 path). cycle 451-452/467 패턴 회귀.
 const PixelCharacterAvatar = ({
-    player = null,
+    player,
     appearance: providedAppearance = null,
-    size = 'sm',
-    className = '',
+    size,
+    className,
     onClick = null,
     interactive = false,
     showEnhanceBadge = true,
-    dataTestId = null,
-    label = '캐릭터 외형',
+    dataTestId,
+    label,
 }: any) => {
     const appearance = useMemo(
         () => providedAppearance || deriveCharacterAppearance(player),
