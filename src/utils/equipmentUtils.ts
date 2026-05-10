@@ -158,7 +158,7 @@ const pickBestOneHandPair = (weapons: any[], requiredWeapon: any) => {
     return bestPair;
 };
 
-export const getNextEquipmentState = (equip: EquipSlots = {}, item: Item | null | undefined) => {
+export const getNextEquipmentState = (equip: EquipSlots, item: Item | null | undefined) => {
     if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return { ...equip };
 
     const nextEquip = { ...equip };
