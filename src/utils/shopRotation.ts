@@ -8,7 +8,10 @@ import { DB } from '../data/db';
 /**
  * 날짜 기반 시드 해시 (간단한 결정론적 RNG)
  */
-const dateHash = (dateStr: any, salt: any = 0) => {
+// cycle 524: salt default 0 제거 — 2 callsite (line 63 dateHash(today, 42) +
+//   line 94 dateHash(weekKey, 777)) 모두 명시 전달이라 default 도달 불가.
+//   util default 청소 메가 시리즈 21번째 batch (cycle 502-523).
+const dateHash = (dateStr: any, salt: any) => {
     let hash = salt;
     for (let i = 0; i < dateStr.length; i++) {
         hash = ((hash << 5) - hash + dateStr.charCodeAt(i)) | 0;
@@ -58,7 +61,10 @@ const getWeekKey = () => {
  *   read 0건이던 dead 출력. 0.9 multiplier는 함수 내부에서 item.price에 이미
  *   적용 완료(originalPrice 보존), 별도 discount 비율 노출은 redundant.
  */
-export const getDailyDeals = (playerLevel: any = 1) => {
+// cycle 524: playerLevel default 1 제거 — 1 callsite (ShopPanel.tsx:161
+//   getDailyDeals(player.level || 1)) 명시 전달 + || 1 number 보장이라
+//   default 도달 불가.
+export const getDailyDeals = (playerLevel: any) => {
     const today = getToday();
     const seed = dateHash(today, 42);
 
@@ -89,7 +95,10 @@ export const getDailyDeals = (playerLevel: any = 1) => {
  * @param {number} playerLevel
  * @returns {Object|null}
  */
-export const getWeeklySpecial = (playerLevel: any = 1) => {
+// cycle 524: playerLevel default 1 제거 — 1 callsite (ShopPanel.tsx:162
+//   getWeeklySpecial(player.level || 1)) 명시 전달 + || 1 number 보장이라
+//   default 도달 불가.
+export const getWeeklySpecial = (playerLevel: any) => {
     const weekKey = getWeekKey();
     const seed = dateHash(weekKey, 777);
 
