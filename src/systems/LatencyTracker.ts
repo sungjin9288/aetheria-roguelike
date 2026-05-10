@@ -8,7 +8,7 @@
 export const LatencyTracker: any = {
     THRESHOLD_MS: 3000, // 3 seconds threshold
 
-    async trackCall(asyncFn: any, callType: any = 'ai') {
+    async trackCall(asyncFn: any, callType: any) {
         const startTime = performance.now();
         const result = await asyncFn();
         const latency = performance.now() - startTime;
