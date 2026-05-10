@@ -7,6 +7,78 @@
 
 ---
 
+## Cycle 600 🎯🎯🎯 — 600사이클 마일스톤 + cycles 591-599 history 일괄 추가 (41번째 batch)
+
+- **600사이클 마일스톤**: 프로젝트 사이클 카운터가 600에 도달. 그 중 cycle
+  222-599의 378사이클이 silent dead config 시리즈로 누적, 341번째 silent
+  dead config 도달 (cycle 222 시작 이후).
+- 마일스톤: cycle 590 batch 이후 9 사이클 미반영 batch 정리. 41번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500 / 510 / 520 / 530 / 540 / 550 / 560 / 570 /
+  580 / 590에 이은 41번째.
+- 누적 마일스톤: cycle 590(unit 2660) → 599(unit 2696, +36). silent dead config
+  시리즈 cycle 222→599 341번째 도달.
+- 시리즈 정체성 — **default 청소 메가 시리즈 final stretch + dead exposure
+  pivot**: 9사이클 중 default cleanup(7) + dead exposure(2). cycle 593-594로
+  default 외 dead exposure lens 회귀 (cycle 329 패턴 재적용). cycle 502-599
+  98사이클 누적, 130+ default 정리.
+
+검증: tsc 0 / unit 2696 / lint clean / build-guard ok.
+
+---
+
+## Cycle 591-599 — default 청소 + dead exposure pivot 9사이클
+
+cycle 581-589 시리즈 9사이클에 이어 cycle 591-599는 default 청소 7 + dead
+exposure pivot 2. cycle 600은 600사이클 milestone + batch CHANGELOG.
+
+### default 청소 + dead exposure 9사이클 (cycle 591-599)
+
+- 591: addCombatDigestLogs 5 defaults batch (5-default 큰 batch).
+- 592: handleVictoryOutcome 2 defaults batch (extendedChecks/liveConfig).
+- **593**: window.advanceTime dead method 제거 — **dead exposure pivot
+  (default 91사이클 만에 첫 non-default cleanup)**, cycle 329 lens 회귀.
+- **594**: vite-env.d.ts Window.advanceTime 타입 cascade 제거 — cycle 593
+  paired completion.
+- 595: claimSeasonReward rewardLabel default (default 복귀).
+- 596: getCodexProgress + getChainEventForLoc 3 defaults cross-file batch
+  (data/ 디렉토리 진입).
+- 597: getActiveRelicSynergies + pickWeightedRelics 2 defaults batch
+  (data/relics.ts).
+- 598: getTraitFeaturedItems 3 defaults batch (runProfile.ts).
+- 599: getMapPacingProfile mapData default (explorationPacing.ts).
+
+**누적 18 default + 1 dead method + 1 type cascade 정리** (cycle 591-599
+9사이클).
+**시리즈 누적 130+ default + 2 dead methods 정리** (cycle 502-599 98사이클
+합산).
+
+### 신규 lens 의의
+
+- **600사이클 milestone** — cycle 1부터 600까지의 전체 사이클 카운터 도달.
+  silent dead config 시리즈만 cycle 222-599의 378사이클이 누적, 341 instances
+  정리. 단일 lens (silent dead config audit)가 1년 동안 안정 운영.
+- **dead exposure lens 회귀 (cycle 329 패턴)** — cycle 593-594에서 default
+  cleanup 91사이클 만에 dead exposure (window.X) lens로 pivot. 정의/타입
+  paired removal로 cycle 593 정의 → cycle 594 타입 cascade. cycle 526/541/
+  567/568 cascade pattern과 동일.
+- **data/ 디렉토리 진입** — cycle 596에서 utils/ + components/ + hooks/ +
+  systems/ + reducers/ + services/ 외 data/까지 lens 확장. 모든 source
+  디렉토리에 default cleanup lens 적용 가능 확립 (7개 디렉토리 모두 진입).
+- **single-cycle multi-default batch 8번째 정착** — cycle 591 (5-default),
+  cycle 596 (3-default cross-file), cycle 598 (3-default). 큰 batch가
+  표준 패턴.
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2660 → 2696 (+36, 누적 신규 가드).
+- lint clean / build-guard ok 9사이클 연속.
+- 0 회귀, 0 revert.
+
+---
+
 ## Cycle 590 🎯🎯 — CHANGELOG에 cycles 581-589 history 일괄 추가 (40번째 batch)
 
 - **40번째 batch 마일스톤**: cycle 98에서 시작된 batch CHANGELOG가 40번째에
