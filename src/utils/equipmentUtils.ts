@@ -45,7 +45,9 @@ export const getEquipmentIdentity = (item: Item | null | undefined) => {
     return item.id || `${item.type}:${item.name}`;
 };
 
-export const getWeaponAttackValue = (weapon: any, slot: any = 'main') => {
+// cycle 511: slot default 제거 — 모든 callsite 명시 전달이라 default 도달 불가.
+//   util default 청소 메가 시리즈 9번째 (cycle 502-510).
+export const getWeaponAttackValue = (weapon: any, slot: any) => {
     if (!isWeapon(weapon)) return 0;
     const baseVal = weapon.val || 0;
 
@@ -60,7 +62,8 @@ export const getWeaponAttackValue = (weapon: any, slot: any = 'main') => {
     return Math.floor(baseVal * BALANCE.ONE_HAND_ATK_RATIO);
 };
 
-export const getWeaponCritBonus = (weapon: any, slot: any = 'main') => {
+// cycle 511: slot default 제거 — 모든 callsite 명시 전달이라 default 도달 불가.
+export const getWeaponCritBonus = (weapon: any, slot: any) => {
     if (!isOneHandWeapon(weapon)) return 0;
     if (typeof weapon?.crit === 'number') return weapon.crit;
     return slot === 'offhand' ? BALANCE.OFFHAND_ONE_HAND_CRIT_BONUS : BALANCE.ONE_HAND_CRIT_BONUS;
