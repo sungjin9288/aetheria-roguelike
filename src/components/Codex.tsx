@@ -75,6 +75,8 @@ const Codex = ({ player, dispatch }: CodexProps) => {
     const discoveredAll = discoveredCounts.weapons + discoveredCounts.armors + discoveredCounts.shields + discoveredCounts.monsters + discoveredCounts.recipes + discoveredCounts.materials;
     const pct = totalAll > 0 ? Math.round((discoveredAll / totalAll) * 100) : 0;
 
+    // cycle 454: 백분율 출력 dead 정리 — UI는 `discovered/total`만 표시.
+    //   pct 필드 read 0건 (전체 src/).
     const legendaryCount = useMemo(() => {
         const total = Object.keys(SIGNATURE_ITEM_REGISTRY).length;
         let discovered = 0;
@@ -88,7 +90,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
             const bucket = item.type === 'weapon' ? 'weapons' : item.type === 'shield' ? 'shields' : 'armors';
             if (codex[bucket]?.[itemName]) discovered += 1;
         }
-        return { total, discovered, pct: total > 0 ? Math.round((discovered / total) * 100) : 0 };
+        return { total, discovered };
     }, [codex]);
 
     return (
