@@ -1,7 +1,6 @@
 import { useRef, useEffect, useMemo, useState } from 'react';
 import { Bot, AlertTriangle, CheckCircle, Sparkles, Terminal, ChevronUp, Filter } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import CommandAutocomplete from './CommandAutocomplete';
 import QuickSlot from './QuickSlot';
 import type { Player } from '../types/index.js';
 import { GS } from '../reducers/gameStates';
@@ -79,30 +78,27 @@ const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
 //   MobileGameLayout이 prop pass했으나 silent dropped (paired remove).
 // cycle 496: 외부 보조 클래스 / 좌측 도구 모음 props 제거 — 1 callsite 전달 0건
 //   이라 보간/렌더 결과 dead. cycle 463/465/466/493/495 lens 회귀.
+// cycle 497: 자동 포커스 + 입력 표시 props 제거 — 1 callsite가 두 prop 모두 false
+//   로 명시 전달, default true 도달 불가. cascade로 '/' 단축키 / 입력 푸터 /
+//   푸터 표시 플래그 / autoFocus attr 모두 dead.
 interface TerminalViewProps {
     logs?: any[];
     gameState?: string;
     onCommand?: (cmd: string) => void;
-    autoFocusInput?: boolean;
     player?: Player | null;
     quickSlots?: any[];
     onQuickSlotUse?: (item: any, idx: number) => void;
-    showInput?: boolean;
 }
 
 const TerminalView = ({
     logs = [],
     gameState,
     onCommand,
-    autoFocusInput = true,
     player,
     quickSlots,
     onQuickSlotUse,
-    showInput = true,
 }: TerminalViewProps) => {
     const logViewportRef = useRef<any>(null);
-    const inputRef = useRef<any>(null);
-    const [inputValue, setInputValue] = useState('');
     const [logExpanded, setLogExpanded] = useState(false); // #10: 전투 로그 요약/전체 토글
 
     // 전투 모드 전환 시 요약 모드로 초기화
@@ -132,15 +128,10 @@ const TerminalView = ({
                 if (e.key === 'e' || e.key === 'E') { e.preventDefault(); if (quickSlots[2]) onQuickSlotUse(quickSlots[2], 2); }
             }
 
-            // Focus terminal input: /
-            if (showInput && e.key === '/') {
-                e.preventDefault();
-                inputRef.current?.focus();
-            }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [gameState, quickSlots, onQuickSlotUse, onCommand, showInput]);
+    }, [gameState, quickSlots, onQuickSlotUse, onCommand]);
 
     // Most recent AI story narrative (pinned display)
     const latestStory = useMemo(() => {
@@ -169,7 +160,6 @@ const TerminalView = ({
             ? Math.max(0, logs.length - displayLogs.length)
             : 0;
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
-    const showFooter = Boolean(showInput || (player && quickSlots && hasAnyQuickSlot));
     const showExpandToggle = isCombat || logs.length > compactMobileLogCount;
     const showNarrativePulse = Boolean(latestStory) && gameState !== GS.COMBAT && (logExpanded || logs.length > compactMobileLogCount);
 
@@ -183,42 +173,6 @@ const TerminalView = ({
             behavior: 'auto',
         });
     }, [compactMobileLogCount, isCombat, logExpanded, logs.length]);
-
-    const footerInput = showInput ? (
-        <div className="relative flex min-w-0 items-center gap-2 rounded-[1rem] border border-white/8 bg-black/14 transition-colors focus-within:border-[#7dd4d8]/24 px-3 py-2">
-            {player && (
-                <CommandAutocomplete
-                    input={inputValue}
-                    gameState={gameState || ''}
-                    player={player}
-                    onSelect={(cmd: any) => {
-                        setInputValue(cmd);
-                        onCommand?.(cmd);
-                        setInputValue('');
-                    }}
-                />
-            )}
-            <span className="font-bold text-[#7dd4d8] text-base">{'>'}</span>
-            <input
-                data-terminal-input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e: any) => setInputValue(e.target.value)}
-                className="w-full border-none bg-transparent font-fira text-[#eff6f7] text-sm outline-none transition-all placeholder:text-slate-500"
-                placeholder="ENTER COMMAND..."
-                onKeyDown={(e: any) => {
-                    if (e.key === 'Enter') {
-                        if (inputValue.trim()) {
-                            onCommand?.(inputValue);
-                            setInputValue('');
-                        }
-                    }
-                }}
-                autoFocus={autoFocusInput}
-            />
-        </div>
-    ) : null;
 
     const showToolbar = showExpandToggle;
 
@@ -324,19 +278,14 @@ const TerminalView = ({
                 </div>
             </div>
 
-            {/* CLI INPUT AREA */}
-            {showFooter && (
+            {/* QuickSlot footer */}
+            {showQuickSlots && (
                 <div className="mt-2 pt-2 border-t border-white/8 bg-transparent shrink-0 z-20">
-                    <div className="flex flex-col gap-2">
-                        {showQuickSlots && (
-                            <QuickSlot
-                                slots={quickSlots}
-                                onUse={(item: any, idx: any) => onQuickSlotUse?.(item, idx)}
-                                gameState={gameState}
-                            />
-                        )}
-                        {footerInput}
-                    </div>
+                    <QuickSlot
+                        slots={quickSlots}
+                        onUse={(item: any, idx: any) => onQuickSlotUse?.(item, idx)}
+                        gameState={gameState}
+                    />
                 </div>
             )}
         </div>

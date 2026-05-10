@@ -60,14 +60,15 @@ test('cycle 404: MobileGameLayout TerminalView JSX에서 stats prop 0건', async
         'TerminalView JSX에서 stats prop 0건');
 });
 
-test('cycle 404: TerminalView 활성 props 보존 (cycle 496이 className / toolbarLeft cascade로 정리)', async () => {
+test('cycle 404: TerminalView 활성 props 보존 (cycle 496/497 cascade로 추가 정리됨)', async () => {
     const source = await readSrc('src/components/TerminalView.tsx');
     const ifaceStart = source.indexOf('interface TerminalViewProps');
     const ifaceEnd = source.indexOf('}', ifaceStart);
     const ifaceBlock = source.slice(ifaceStart, ifaceEnd);
-    // cycle 496이 className / toolbarLeft cascade로 정리. 잔존 활성 필드만 가드.
-    const activeFields = ['logs', 'gameState', 'onCommand', 'autoFocusInput', 'player',
-        'quickSlots', 'onQuickSlotUse', 'showInput'];
+    // cycle 496이 className / toolbarLeft, cycle 497이 autoFocusInput / showInput
+    // cascade로 정리. 잔존 활성 필드만 가드.
+    const activeFields = ['logs', 'gameState', 'onCommand', 'player',
+        'quickSlots', 'onQuickSlotUse'];
     for (const field of activeFields) {
         const re = new RegExp(`${field}\\?:`);
         assert.ok(re.test(ifaceBlock), `${field} 필드 보존`);

@@ -82,7 +82,7 @@ test('cycle 496: 정합성 가드 — MobileGameLayout <TerminalView> className/
     assert.ok(!/toolbarLeft/.test(jsx), 'callsite toolbarLeft 전달 0건');
 });
 
-test('cycle 496: 핵심 props 보존', async () => {
+test('cycle 496: 핵심 props 보존 (cycle 497이 autoFocusInput/showInput 추가 정리)', async () => {
     const source = await readSrc('src/components/TerminalView.tsx');
     const fnIdx = source.indexOf('const TerminalView = ({');
     const fnEnd = source.indexOf('}: TerminalViewProps', fnIdx);
@@ -90,7 +90,5 @@ test('cycle 496: 핵심 props 보존', async () => {
     assert.ok(/logs/.test(block), 'logs prop 보존');
     assert.ok(/gameState/.test(block), 'gameState prop 보존');
     assert.ok(/onCommand/.test(block), 'onCommand prop 보존');
-    assert.ok(/autoFocusInput/.test(block), 'autoFocusInput prop 보존');
-    assert.ok(/showInput/.test(block), 'showInput prop 보존');
     assert.ok(/quickSlots/.test(block), 'quickSlots prop 보존');
 });
