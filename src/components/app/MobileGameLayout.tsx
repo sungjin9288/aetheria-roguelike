@@ -7,27 +7,22 @@ import ControlPanel from '../ControlPanel';
 
 const Dashboard = lazy(() => import('../Dashboard'));
 
-const DashboardFallback = ({ summary = false }: any) => (
+// cycle 484: 2 internal helper props 제거 — DashboardFallback summary / Mobile
+//   ConsoleArchiveButton 활성 상태 prop 모두 1 callsite에서 전달 0건이라 ternary
+//   첫 가지 unreachable. cycle 458-459 같은 파일 paired 패턴 회귀.
+const DashboardFallback = () => (
     <div
         aria-hidden="true"
-        className={`panel-noise aether-surface animate-pulse border border-white/8 ${
-            summary
-                ? 'rounded-[1.2rem] px-3 py-3 min-h-[5.75rem]'
-                : 'shrink-0 rounded-[1.55rem] px-3 py-2.5 min-h-[4.5rem]'
-        }`}
+        className="panel-noise aether-surface animate-pulse border border-white/8 shrink-0 rounded-[1.55rem] px-3 py-2.5 min-h-[4.5rem]"
     />
 );
 
-const MobileConsoleArchiveButton = ({ active = false, onClick }: any) => (
+const MobileConsoleArchiveButton = ({ onClick }: any) => (
     <button
         type="button"
         data-testid="mobile-console-open-archive"
         onClick={onClick}
-        className={`inline-flex min-h-[30px] items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-fira uppercase tracking-[0.16em] transition-all ${
-            active
-                ? 'border-[#d5b180]/28 bg-[#d5b180]/12 text-[#f6e7c8]'
-                : 'border-white/8 bg-black/18 text-slate-300/74 hover:border-[#d5b180]/18 hover:text-slate-100'
-        }`}
+        className="inline-flex min-h-[30px] items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-fira uppercase tracking-[0.16em] transition-all border-white/8 bg-black/18 text-slate-300/74 hover:border-[#d5b180]/18 hover:text-slate-100"
     >
         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/8 bg-white/[0.04]">
             <Package size={10} />
