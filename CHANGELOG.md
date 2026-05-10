@@ -7,6 +7,75 @@
 
 ---
 
+## Cycle 580 🎯 — CHANGELOG에 cycles 571-579 history 일괄 추가 (39번째 batch)
+
+- 마일스톤: cycle 570 batch 이후 9 사이클 미반영 batch 정리. 39번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500 / 510 / 520 / 530 / 540 / 550 / 560 / 570
+  에 이은 39번째.
+- 누적 마일스톤: cycle 570(unit 2598) → 579(unit 2631, +33). silent dead config
+  시리즈 cycle 222→579 323번째 도달.
+- 시리즈 정체성 — **default 청소 메가 시리즈 component-level 시리즈**: 9사이클
+  중 components/icons/(1) + components/large(5) + utils/(3)로 components/
+  대형 컴포넌트 entry-level cleanup 시리즈 정착. cycle 502-579 78사이클
+  누적, 95+ default 정리.
+
+검증: tsc 0 / unit 2631 / lint clean / build-guard ok.
+
+---
+
+## Cycle 571-579 — default 청소 메가 시리즈 components/large 시리즈 9사이클
+
+cycle 561-569 시리즈 9사이클에 이어 cycle 571-579는 components/icons/ 마무리
+(MonsterIcon)와 components/large entry-level batch 시리즈로 진입. cycle 580은
+batch CHANGELOG.
+
+### default 청소 메가 시리즈 9사이클 (cycle 571-579)
+
+- 571: MonsterIcon 3 defaults batch (icons/ 4번째, single-cycle 3-default).
+- 572: Dashboard 6 defaults partial batch — **가장 큰 single-cycle batch
+  (6 default)**. partial cleanup 5번째 적용 (onClearInventorySpotlight 보존).
+- 573: ShopPanel 2 defaults batch (stats / onOpenArchiveConsole).
+- 574: SmartInventory 3 defaults batch — cycle 452 future-proof 보존 노트
+  audit 결과 unreachable 확인 후 cleanup.
+- 575: CombatPanel 3 defaults batch (single-cycle 3-default).
+- 576: TerminalView logs default (1).
+- 577: getMapCodexProgress codex default (utils/mapProgress.ts).
+- 578: enhancementUtils 3 inventory defaults batch (single-cycle 3-default,
+  cycle 503/506/516에 이은 동일 모듈 4번째 cleanup).
+- 579: getMoveRecommendations maps default (utils/adventureGuide.ts).
+
+**누적 22 default 추가 정리** (cycle 571-579 9사이클).
+**시리즈 누적 95+ default 정리** (cycle 502-579 78사이클 합산).
+
+### 신규 lens 의의
+
+- **components/large entry-level batch 시리즈** — cycle 572-575 4사이클 연속
+  대형 컴포넌트 (Dashboard/ShopPanel/SmartInventory/CombatPanel) entry-level
+  default 정리. 1 production caller만 있는 컴포넌트는 multi-default batch가
+  매우 효율적. cycle 572에서 6-default partial batch로 시리즈 단일 사이클
+  정리량 최대치 달성.
+- **future-proof 노트 재audit** — cycle 574 SmartInventory에서 cycle 452의
+  "future-proof 보존" 주석을 1년 후 재audit. 실제 caller가 명시 전달이라
+  unreachable로 판명, cleanup. 이전 사이클의 보존 결정도 시간 경과 후 재
+  audit 필요. cycle 558 buildTraitSkill에서도 동일 lens.
+- **single-cycle 3-default batch 4번 추가 정착** — cycle 571(MonsterIcon),
+  cycle 574(SmartInventory), cycle 575(CombatPanel), cycle 578(enhancementUtils).
+  3-default가 single-cycle batch의 표준 패턴으로 정착.
+- **stale guard cascade weakening 정착** — cycle 571에서 cycle 465 test 가드
+  weakening (3 defaults 모두). 이전 사이클의 default 보존 가드를 자동으로
+  파라미터 보존으로 weakening하는 패턴 정착.
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2598 → 2631 (+33, 누적 신규 가드 + cycle 571 weakening).
+- lint clean / build-guard ok 9사이클 연속.
+- 0 회귀, 0 revert.
+
+---
+
 ## Cycle 570 🎯 — CHANGELOG에 cycles 561-569 history 일괄 추가 (38번째 batch)
 
 - 마일스톤: cycle 560 batch 이후 9 사이클 미반영 batch 정리. 38번째 batch.
