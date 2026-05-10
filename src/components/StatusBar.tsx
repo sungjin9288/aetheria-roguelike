@@ -90,11 +90,12 @@ const EnemyStatus = ({ enemy }: any) => {
   );
 };
 
+// cycle 495: 외부 보조 클래스 prop 인터페이스 제거 — GameRoot 1 callsite 전달
+//   0건이라 보간 결과 ''만 추가되는 unreachable. cycle 463/465/466/493 lens 회귀.
 interface StatusBarProps {
   player?: Player | null;
   stats?: any;
   enemy?: Monster | null;
-  className?: string;
   onCrystalClick?: (() => void) | null;
   isMuted?: boolean;
   onToggleMute?: (() => void) | null;
@@ -105,7 +106,6 @@ const StatusBar = ({
   player,
   stats,
   enemy = null,
-  className = '',
   onCrystalClick = null,
   isMuted = false,
   onToggleMute = null,
@@ -122,7 +122,7 @@ const StatusBar = ({
   return (
     <section
       data-testid="persistent-status-bar"
-      className={`pointer-events-none panel-noise aether-surface sticky top-0 z-50 w-full overflow-hidden rounded-[1.55rem] px-3 py-2 ${className}`.trim()}
+      className="pointer-events-none panel-noise aether-surface sticky top-0 z-50 w-full overflow-hidden rounded-[1.55rem] px-3 py-2"
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/22 to-transparent" style={{position:'absolute'}} />
       <div className="flex items-start gap-2.5">
