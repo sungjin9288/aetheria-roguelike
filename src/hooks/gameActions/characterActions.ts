@@ -40,7 +40,10 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             }
         },
 
-        cycleSkill: (dir: any = 1) => {
+        // cycle 535: dir default 1 제거 — 2 callsite (commandParser:80,
+        //   CombatPanel:113) 모두 1 명시 전달이라 default 도달 불가. util
+        //   /component/hook default 청소 메가 시리즈 31번째 (cycle 502-534).
+        cycleSkill: (dir: any) => {
             const skills = getJobSkills(player);
             if (!skills.length) return;
             const current = Number.isInteger(player.skillLoadout?.selected) ? player.skillLoadout.selected : 0;
