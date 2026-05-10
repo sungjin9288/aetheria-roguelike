@@ -55,7 +55,7 @@ const tintPalette = (palette: any, item: Item | null | undefined) => {
     };
 };
 
-const getToneKey = (item: Item | null | undefined, slot: any = 'weapon') => {
+const getToneKey = (item: Item | null | undefined, slot: any) => {
     if (!item) {
         if (slot === 'armor') return 'cloth';
         if (slot === 'offhand') return 'wood';
