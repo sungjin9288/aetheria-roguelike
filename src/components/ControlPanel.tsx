@@ -35,18 +35,21 @@ interface ControlPanelProps {
   onOpenArchiveConsole?: any;
 }
 
+// cycle 587: 3 defaults batch 제거 (enemy/stats/onOpenArchiveConsole) —
+//   2 production caller (MobileGameLayout:106/121) 12 props 모두 명시 전달
+//   이라 3 defaults 모두 도달 불가. 청소 메가 시리즈 78번째.
 const ControlPanel = ({
   gameState,
   player,
-  enemy = null,
+  enemy,
   actions,
   setGameState,
   shopItems,
   grave,
   isAiThinking,
   currentEvent,
-  stats = null,
-  onOpenArchiveConsole = null,
+  stats,
+  onOpenArchiveConsole,
 }: ControlPanelProps) => {
   // cycle 486-489: 모바일 포커스 플래그 4사이클 cascade — caller 항상 truthy
   //   전달 (2 callsite shorthand) → reset 확인 상태 / reset helper 함수 /
