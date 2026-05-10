@@ -16,18 +16,18 @@ const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
  * SystemTab — Dashboard의 system 탭 콘텐츠 (#4 분리)
  * props: player, actions, stats
  */
+// cycle 477: 컴팩트 prop / cascade 정리 — cycle 471이 Dashboard callsite 전달
+//   제거 후 caller 0건. 토글 상태 + 요약 모드 + 8 ternary cascade 정리.
 interface SystemTabProps {
     player?: any;
     actions?: any;
     stats?: any;
     runtime?: any;
-    compact?: boolean;
 }
 
-const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: SystemTabProps) => {
+const SystemTab = ({ player, actions, stats, runtime = null }: SystemTabProps) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState<any>(null);
-    const [showAllSystem, setShowAllSystem] = useState(false);
 
     const qaContext = useMemo(() => {
         const platform = typeof navigator !== 'undefined'
@@ -182,36 +182,12 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: 
     const feedbackStatusClass = feedbackStatus?.type === 'error'
         ? 'text-rose-200 border-rose-300/22 bg-rose-400/10'
         : 'text-emerald-100 border-emerald-300/24 bg-emerald-300/10';
-    const today = new Date().toISOString().slice(0, 10);
-    const dailyProtocol = player.stats?.dailyProtocol;
-    const isDailyProtocolToday = Boolean(dailyProtocol?.missions?.length) && dailyProtocol.date === today;
-    const dailyDoneCount = isDailyProtocolToday ? dailyProtocol.missions.filter((mission: any) => mission.done).length : 0;
-    const nextDailyMission = isDailyProtocolToday
-        ? (dailyProtocol.missions.find((mission: any) => !mission.done) || dailyProtocol.missions[0] || null)
-        : null;
-    const leaderboard = actions.leaderboard || [];
-    const topRanker = leaderboard[0] || null;
-    const myRankIndex = leaderboard.findIndex((entry: any) => entry.nickname === player.name);
-    const showSystemSummary = compact && !showAllSystem;
-
     return (
-        <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`${compact ? 'space-y-2.5 p-1' : 'space-y-3 p-1.5'}`}>
-            {compact && (
-                <div className="flex items-center justify-between gap-2">
-                    <div className="text-slate-500 text-xs font-fira tracking-[0.18em] uppercase">System</div>
-                    <button
-                        type="button"
-                        onClick={() => setShowAllSystem((prev: any) => !prev)}
-                        className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
-                    >
-                        {showAllSystem ? '요약 보기' : '시스템 더 보기'}
-                    </button>
-                </div>
-            )}
+        <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 p-1.5">
 
             {/* 세션 정보 */}
-            <div className={`rounded-[1rem] border border-white/8 bg-black/18 text-[10px] text-slate-400/90 font-fira ${compact ? 'px-2.5 py-2' : 'px-3 py-2.5'}`}>
-                <div className={`${compact ? 'grid grid-cols-2 gap-x-2 gap-y-1' : 'flex flex-wrap gap-x-3 gap-y-1'}`}>
+            <div className="rounded-[1rem] border border-white/8 bg-black/18 text-[10px] text-slate-400/90 font-fira px-3 py-2.5">
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
                     <p className="truncate">SESSION: {_SESSION_ID}</p>
                     <p className="truncate">UID: {actions.getUid() || 'guest'}</p>
                     <p className="truncate">BUILD: v{CONSTANTS.DATA_VERSION}</p>
@@ -221,21 +197,21 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: 
                 )}
             </div>
 
-            <div className={`rounded-[1rem] border border-white/8 bg-black/18 ${compact ? 'p-2.5' : 'p-3'}`}>
-                <div className={`gap-3 ${compact && showSystemSummary ? 'mb-1.5 flex flex-col items-stretch' : compact ? 'mb-1.5 flex items-center justify-between' : 'mb-2 flex items-center justify-between'}`}>
+            <div className="rounded-[1rem] border border-white/8 bg-black/18 p-3">
+                <div className="gap-3 mb-2 flex items-center justify-between">
                     <div className="text-[11px] font-bold text-slate-300/76 font-rajdhani tracking-[0.18em]">QA READOUT</div>
-                    <div className={`flex items-center gap-2 ${compact && showSystemSummary ? 'w-full' : ''}`}>
+                    <div className="flex items-center gap-2">
                         <Motion.button
                             whileTap={{ scale: 0.98 }}
                             onClick={copyQaReadout}
-                            className={`${compact ? 'min-h-[30px] px-2.5 text-[10px]' : 'min-h-[34px] px-3 text-[11px]'} ${compact && showSystemSummary ? 'flex-1 justify-center' : ''} rounded-full border border-white/8 bg-black/20 text-slate-200 font-fira flex items-center gap-1.5`}
+                            className="min-h-[34px] px-3 text-[11px] rounded-full border border-white/8 bg-black/20 text-slate-200 font-fira flex items-center gap-1.5"
                         >
                             <Copy size={12} /> COPY
                         </Motion.button>
                         <Motion.button
                             whileTap={{ scale: 0.98 }}
                             onClick={exportQaSnapshot}
-                            className={`${compact ? 'min-h-[30px] px-2.5 text-[10px]' : 'min-h-[34px] px-3 text-[11px]'} ${compact && showSystemSummary ? 'flex-1 justify-center' : ''} rounded-full border border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5] font-fira flex items-center gap-1.5`}
+                            className="min-h-[34px] px-3 text-[11px] rounded-full border border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5] font-fira flex items-center gap-1.5"
                         >
                             <Save size={12} /> EXPORT
                         </Motion.button>
@@ -247,54 +223,12 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: 
                     <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">SYNC: {runtime?.syncStatus || 'unknown'}</div>
                     <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">AI: {runtime?.isAiThinking ? 'thinking' : 'idle'}</div>
                 </div>
-                {!showSystemSummary && (
-                    <pre className="whitespace-pre-wrap break-all rounded-[0.95rem] border border-white/8 bg-black/22 px-2.5 py-2 text-[10px] font-fira text-slate-400/90">
-                        {qaReadout}
-                    </pre>
-                )}
+                <pre className="whitespace-pre-wrap break-all rounded-[0.95rem] border border-white/8 bg-black/22 px-2.5 py-2 text-[10px] font-fira text-slate-400/90">
+                    {qaReadout}
+                </pre>
             </div>
 
-            {showSystemSummary ? (
-                <>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        <div className="rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 px-2.5 py-2">
-                            <div className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">Relics</div>
-                            <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#e3dcff]">{(player.relics || []).length}/5</div>
-                            <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">{player.relics?.[0]?.name || '획득 전'}</div>
-                        </div>
-                        <div className="rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/8 px-2.5 py-2">
-                            <div className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">Titles</div>
-                            <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#f6e7c8]">{(player.titles || []).length}</div>
-                            <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">{player.activeTitle ? getTitleLabel(player.activeTitle) : '활성 없음'}</div>
-                        </div>
-                        <div className="rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/8 px-2.5 py-2">
-                            <div className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">Daily</div>
-                            <div className="mt-1 text-[12px] font-rajdhani font-bold text-[#dff7f5]">
-                                {isDailyProtocolToday ? `${dailyDoneCount}/${dailyProtocol.missions.length}` : '없음'}
-                            </div>
-                            <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">
-                                {nextDailyMission
-                                    ? `${nextDailyMission.type} ${nextDailyMission.progress}/${nextDailyMission.goal}`
-                                    : '오늘의 프로토콜 없음'}
-                            </div>
-                        </div>
-                        <div className="rounded-[1rem] border border-white/8 bg-black/18 px-2.5 py-2">
-                            <div className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">Hall</div>
-                            <div className="mt-1 text-[12px] font-rajdhani font-bold text-slate-100 truncate">
-                                {topRanker?.nickname || 'SYNCING'}
-                            </div>
-                            <div className="mt-1 text-[10px] font-fira text-slate-300/74 truncate">
-                                {myRankIndex >= 0 ? `${MSG.UI_MY_RANK} ${myRankIndex + 1}위` : '개인 순위 미기록'}
-                            </div>
-                        </div>
-                    </div>
-                    {feedbackStatus && (
-                        <div className={`text-xs px-2 py-1 rounded border ${feedbackStatusClass}`}>{feedbackStatus.text}</div>
-                    )}
-                </>
-            ) : (
-                <>
-                    {/* 유물 */}
+            {/* 유물 */}
                     {(player.relics || []).length > 0 && (
                         <div className="rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 p-3">
                             <div className="text-[11px] font-bold text-[#e3dcff] mb-2 flex items-center gap-2 font-rajdhani tracking-[0.16em]">
@@ -450,8 +384,6 @@ const SystemTab = ({ player, actions, stats, runtime = null, compact = false }: 
                             TRANSMIT
                         </Motion.button>
                     </div>
-                </>
-            )}
         </Motion.div>
     );
 };
