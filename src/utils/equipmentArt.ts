@@ -85,7 +85,11 @@ const getArmorHeadgearStyle = (item: Item | null | undefined) => {
     return 'none';
 };
 
-const getArmorBodyStyle = (item: Item | null | undefined, fallback: any = 'coat') => {
+// cycle 517: fallback default 'coat' 제거 — 1 internal callsite (line 148)
+//   getArmorBodyStyle(item, fallbackArmorStyle) 명시 전달이라 default 도달 불가.
+//   외부 wrapper getEquipmentArtProfile fallbackArmorStyle default 'coat' 유지
+//   (entry point, cycle 513). util default 청소 메가 시리즈 15번째.
+const getArmorBodyStyle = (item: Item | null | undefined, fallback: any) => {
     if (!item || item.type !== 'armor') return fallback;
     const name = String(item.name || '');
 
