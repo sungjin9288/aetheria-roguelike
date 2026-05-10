@@ -115,7 +115,9 @@ const ControlPanel = ({
     );
   };
 
-  const renderResetControl = ({ compact = false, className = '', confirmGridClass = '' }: any = {}) => {
+  // cycle 456: destructure 기본값 3종 제거 — 두 callsite 모두 명시 전달이라
+  //   fallback path 0건. cycle 451-452 default annotation cleanup lens 회귀.
+  const renderResetControl = ({ compact, className, confirmGridClass }: any) => {
     if (!confirmReset) {
       return (
         <Motion.button
