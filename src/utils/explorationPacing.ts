@@ -13,7 +13,10 @@ const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, va
 
 // cycle 297: export 제거 — explorationPacing 내부 4회 사용만 (getNarrativeEventChance/
 // getQuietExplorationChance/getDiscoveryOdds/advanceExploreState), 외부 consumer 0건.
-const getExploreState = (stats: any = {}) => {
+// cycle 554: stats default {} 제거 — 4 internal callsite (line 90/103/114/
+//   145) 모두 명시 전달이라 default 도달 불가. body의 stats?.exploreState
+//   가드가 undefined 안전 처리. 청소 메가 시리즈 48번째 (cycle 502-553).
+const getExploreState = (stats: any) => {
     const raw = stats?.exploreState || {};
     return {
         sinceNarrativeEvent: Math.max(0, raw.sinceNarrativeEvent || 0),
