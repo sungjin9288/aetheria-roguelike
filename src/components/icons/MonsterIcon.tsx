@@ -51,7 +51,11 @@ const getMonsterType = (name: any) => {
  * cycle 465: 외부 보조 클래스 prop 제거 — 2 callsite 모두 전달 0건이라 보간
  *   결과 ''만 추가되는 unreachable. cycle 463/464 lens 회귀 (같은 icons/ 디렉토리).
  */
-const MonsterIcon = ({ name, discovered = false, isBoss = false, size = 32 }: any) => {
+// cycle 571: 3 defaults batch 제거 (discovered/isBoss/size) — 2 production
+//   caller (MonsterCodex:98/121) 모두 4 props 명시 전달이라 default 도달
+//   불가. components/icons/ 시리즈 4번째 (cycle 567-569). single-cycle
+//   3-default batch.
+const MonsterIcon = ({ name, discovered, isBoss, size }: any) => {
     const type = isBoss ? 'boss' : getMonsterType(name);
     const path = SILHOUETTE_PATHS[type] || SILHOUETTE_PATHS.humanoid;
 

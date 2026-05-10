@@ -69,7 +69,9 @@ test('cycle 465: name / discovered / isBoss / size prop 보존', async () => {
     const fnEnd = source.indexOf('=>', fnIdx);
     const sig = source.slice(fnIdx, fnEnd);
     assert.ok(/\bname\b/.test(sig), 'name 보존');
-    assert.ok(/discovered\s*=\s*false/.test(sig), 'discovered 기본값 보존');
-    assert.ok(/isBoss\s*=\s*false/.test(sig), 'isBoss 기본값 보존');
-    assert.ok(/size\s*=\s*32/.test(sig), 'size 기본값 보존');
+    // cycle 571: discovered/isBoss/size defaults cascade 제거 (2 callsite 모두 명시).
+    //   파라미터 자체는 보존.
+    assert.ok(/\bdiscovered\b/.test(sig), 'discovered 파라미터 보존 (default cycle 571 제거)');
+    assert.ok(/\bisBoss\b/.test(sig), 'isBoss 파라미터 보존 (default cycle 571 제거)');
+    assert.ok(/\bsize\b/.test(sig), 'size 파라미터 보존 (default cycle 571 제거)');
 });
