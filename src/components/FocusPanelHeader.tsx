@@ -1,11 +1,14 @@
 import { ChevronLeft, Package } from 'lucide-react';
 
+// cycle 441: default backLabel 값 제거 — 5 호출자 모두 명시 전달이라 default
+//   '뒤로' 도달 불가. 다른 default (archiveLabel/titleClassName 등)는 호출자
+//   부분 누락 path 활성이라 보존.
 const FocusPanelHeader = ({
   eyebrow = '',
   title,
   meta = '',
   onBack = null,
-  backLabel = '뒤로',
+  backLabel,
   backTestId = null,
   rightSlot = null,
   onOpenArchive = null,
