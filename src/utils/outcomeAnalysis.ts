@@ -3,7 +3,10 @@ const clampRatio = (current: any, max: any) => {
     return Math.max(0, Math.min(1, current / max));
 };
 
-export const getPostCombatAnalysis = (result: any = {}) => {
+// cycle 557: result default {} 제거 — 1 production (PostCombatCard:59) +
+//   N test (outcome-analysis, cycle-336) 모두 명시 전달이라 default 도달 불가.
+//   outcomeAnalysis.ts 같은 모듈 batch (cycle 502-556 default 청소 51번째).
+export const getPostCombatAnalysis = (result: any) => {
     const hpRatio = clampRatio(result.playerHp, result.playerMaxHp);
     const mpRatio = clampRatio(result.playerMp, result.playerMaxMp);
     const enemyTier = result.enemyTier || 'NORMAL';
@@ -65,7 +68,9 @@ export const getPostCombatAnalysis = (result: any = {}) => {
     };
 };
 
-export const getRunSummaryAnalysis = (summary: any = {}) => {
+// cycle 557: summary default {} 제거 — 1 production (RunSummaryCard:25) +
+//   N test (cycle-87/97) 모두 summary 명시 전달이라 default 도달 불가.
+export const getRunSummaryAnalysis = (summary: any) => {
     const headline = summary.bossKills > 0
         ? '보스 구간까지 닿은 런'
         : summary.level >= 20
