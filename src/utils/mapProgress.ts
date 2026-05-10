@@ -8,7 +8,10 @@ export const getMapEncounterRoster = (map: GameMap | null | undefined) => unique
     typeof map?.boss === 'string' ? map.boss : null,
 ]);
 
-export const getMapCodexProgress = (mapName: any, maps: any, codex: any = {}) => {
+// cycle 577: codex default {} 제거 — 1 internal (line 28) + 1 test (map-progress
+//   :22) 모두 명시 전달이라 default 도달 불가. body의 codex?.monsters || {}
+//   defensive guard 보존. 청소 메가 시리즈 69번째.
+export const getMapCodexProgress = (mapName: any, maps: any, codex: any) => {
     const map = maps?.[mapName];
     const roster = getMapEncounterRoster(map);
     const discoveredSet = new Set(Object.keys(codex?.monsters || {}));
