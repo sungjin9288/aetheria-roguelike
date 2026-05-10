@@ -56,7 +56,10 @@ interface QuestBoardPanelProps {
     onOpenArchiveConsole?: any;
 }
 
-const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole = null }: QuestBoardPanelProps) => {
+// cycle 589: onOpenArchiveConsole default null 제거 — 1 production caller
+//   (ControlPanel:158) 4 props 명시 전달이라 default 도달 불가. 청소 메가
+//   시리즈 80번째 cross-file batch.
+const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: QuestBoardPanelProps) => {
   const {
     traitProfile,
     activeEntries: activeQuestEntries,
