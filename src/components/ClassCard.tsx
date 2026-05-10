@@ -30,7 +30,10 @@ const StatBar = ({ label, value, color }: any) => {
  * cycle 461: compact prop / if (compact) 9줄 분기 제거 — JobChangePanel 1 callsite
  *   compact 전달 0건 (caller 0이라 항상 false). cycle 458/459 unreachable lens 회귀.
  */
-const ClassCard = ({ jobName, onSelect, disabled = false }: any) => {
+// cycle 582: disabled default false 제거 — 1 production caller (JobChangePanel
+//   :51) disabled={player.level < ...} 명시 전달이라 default 도달 불가.
+//   청소 메가 시리즈 73번째.
+const ClassCard = ({ jobName, onSelect, disabled }: any) => {
     const jobData = DB.CLASSES[jobName];
     if (!jobData) return null;
 
