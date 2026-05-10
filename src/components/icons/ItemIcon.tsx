@@ -52,7 +52,12 @@ const ICON_PATHS: any = {
  * ItemIcon — 아이템 아이콘 컴포넌트
  * @param {{ item: Object, size?: number, showBorder?: boolean, className?: string }} props
  */
-const ItemIcon = ({ item, size = 24, showBorder = false, className = '', hideSignatureBadge = false }: any) => {
+// cycle 585: size default 24 partial cleanup — 11 callers 모두 size 명시
+//   전달이라 default 도달 불가. showBorder/className/hideSignatureBadge는
+//   미전달 callers (WeaponCodex/LegendaryCodex/EquipmentCodexCard 등) 존재이라
+//   reachable 보존. partial cleanup pattern 6번째 적용 (cycle 542). 청소
+//   메가 시리즈 76번째.
+const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatureBadge = false }: any) => {
     const iconKey = getEquipmentVisualKey(item);
     const path = ICON_PATHS[iconKey] || ICON_PATHS.material;
     const rarity = item ? getItemRarity(item) : 'common';
