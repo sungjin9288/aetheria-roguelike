@@ -138,7 +138,10 @@ export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undef
     };
 };
 
-export const advanceExploreState = (stats: any = {}, outcome = 'combat') => {
+// cycle 515: stats / outcome defaults 제거 — 1 callsite (_shared.ts:53)
+//   advanceExploreState(currentPlayer.stats, outcome) 항상 2 args 명시 전달이라
+//   default 도달 불가. util default 청소 메가 시리즈 13번째 (cycle 502-514).
+export const advanceExploreState = (stats: any, outcome: any) => {
     const current = getExploreState(stats);
     const next = { ...current, lastOutcome: outcome };
 
