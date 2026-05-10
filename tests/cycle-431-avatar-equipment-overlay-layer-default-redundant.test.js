@@ -55,13 +55,15 @@ test('cycle 431: 2 호출자 모두 layer 명시 전달 (정합성 가드)', asy
     }
 });
 
-test('cycle 431: 보존 default — className / dataTestId (호출자 누락 path 활성)', async () => {
+test('cycle 431: className / dataTestId cycle 498 cascade로 prop 자체 제거', async () => {
+    // cycle 498이 두 prop 모두 cascade로 정리 (2 호출자 모두 전달 0건).
+    // 이전 default 보존 가드 → cascade 보존 가드로 약화.
     const source = await readSrc('src/components/icons/AvatarEquipmentOverlay.tsx');
     const fnIdx = source.indexOf('const AvatarEquipmentOverlay');
     const fnEnd = source.indexOf('=>', fnIdx);
     const block = source.slice(fnIdx, fnEnd);
-    assert.ok(/className = ''/.test(block), "className default '' 보존");
-    assert.ok(/dataTestId = null/.test(block), 'dataTestId default null 보존');
+    assert.ok(!/className/.test(block), 'className 제거 보존');
+    assert.ok(!/dataTestId/.test(block), 'dataTestId 제거 보존');
 });
 
 test('cycle 429 회귀 가드: QuestRewardChips default accent 0건', async () => {

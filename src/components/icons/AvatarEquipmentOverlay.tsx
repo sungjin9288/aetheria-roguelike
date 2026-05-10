@@ -36,9 +36,10 @@ const resolveArmorLayer = (appearance: any) => {
 };
 
 // cycle 431: default layer 값 제거 — 2 호출자 (EquipmentAvatarPreview의 back/
-//   front 레이어 분리 호출) 모두 명시 전달이라 default 도달 불가. className /
-//   dataTestId는 호출자 누락이라 default 활성 path → 보존.
-const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null, layer }: any) => {
+//   front 레이어 분리 호출) 모두 명시 전달이라 default 도달 불가.
+// cycle 498: 외부 보조 클래스 / 테스트 ID 두 prop 제거 — 2 호출자 모두 전달 0건.
+//   보간 / data-testid attr 모두 dead. cycle 463/465/466/493/495/496 lens 회귀.
+const AvatarEquipmentOverlay = ({ appearance, layer }: any) => {
     const offhandOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.offhand?.item);
     const weaponOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.weapon?.item);
     const armorOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.armor?.item);
@@ -69,8 +70,7 @@ const AvatarEquipmentOverlay = ({ appearance, className = '', dataTestId = null,
     return (
         <div
             aria-hidden="true"
-            data-testid={dataTestId}
-            className={`pointer-events-none absolute inset-0 h-full w-full ${className}`.trim()}
+            className="pointer-events-none absolute inset-0 h-full w-full"
         >
             <svg
                 aria-hidden="true"
