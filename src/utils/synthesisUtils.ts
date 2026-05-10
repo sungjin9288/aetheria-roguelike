@@ -93,7 +93,10 @@ export const validateSynthesis = (items: Item[] | null | undefined, playerGold: 
  * @param {boolean} useProtect - 프리미엄 보호 사용 여부
  * @returns {{ success: boolean, outputItem?: Object, returnedItems: Object[], goldSpent: number, premiumSpent: number }}
  */
-export const performSynthesis = (items: any, selectedOutput: any = null, useProtect: any = false) => {
+// cycle 601: selectedOutput / useProtect defaults 제거 — 1 production caller
+//   (useInventoryActions:430 performSynthesis(items, null, useProtect)) 3 args
+//   명시 전달이라 두 default 모두 도달 불가. 600사이클 milestone 후 첫 cycle.
+export const performSynthesis = (items: any, selectedOutput: any, useProtect: any) => {
     const type = items[0].type;
     const tier = items[0].tier;
     const goldCost = BALANCE.SYNTHESIS_GOLD_COSTS[tier] || 0;
