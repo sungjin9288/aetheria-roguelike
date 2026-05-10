@@ -61,17 +61,13 @@ for (const panel of PANELS) {
     });
 }
 
-test('cycle 452: 정합성 가드 — Dashboard 6 호출자 모두 compact 명시 전달', async () => {
+test('cycle 452: 정합성 가드 — Dashboard 6 panel 호출 존재', async () => {
+    // cycle 471이 Dashboard의 desktop 컴팩트 플래그 + 10 callsite의 compact prop
+    // 전달을 일괄 제거. compact 명시 전달 assertion → 호출 존재 가드로 약화.
     const source = await readSrc('src/components/Dashboard.tsx');
     for (const panel of PANELS) {
-        // <PanelName...> 부터 다음 `>` 또는 `/>`까지 (multiline 허용)
         const segments = source.split(new RegExp(`<${panel.name}\\b`)).slice(1);
         assert.ok(segments.length >= 1, `${panel.name} 호출 발견`);
-        for (const seg of segments) {
-            // 다음 닫는 태그 (`>` 또는 `/>`) 까지의 props 영역
-            const propsBlock = seg.split(/<\//)[0].split(/\/?>/)[0];
-            assert.ok(/compact=/.test(propsBlock), `${panel.name} 호출에 compact 명시`);
-        }
     }
 });
 

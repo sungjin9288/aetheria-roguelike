@@ -143,8 +143,10 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
         return () => window.cancelAnimationFrame(closeTimer);
     }, [showArchiveDock]);
 
+    // cycle 471: 데스크탑 컴팩트 플래그 const 제거 — reassign 0건의 unchanging
+    //   false flag. 10 callsite의 compact prop 전달도 함께 제거 (cycle 452 정리한
+    //   panel default 부재 + caller false 전달이라 undefined 수용 가능).
     const renderTabContent = () => {
-        const desktopArchiveCompact = false;
         return (
             <div
                 key={typeof sideTab === 'string' ? sideTab : 'inventory'}
@@ -155,7 +157,6 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             player={player}
                             actions={actions}
                             quickSlots={quickSlots}
-                            compact={desktopArchiveCompact}
                             onAssignQuickSlot={(index: any, item: any) => actions.setQuickSlot?.(index, item)}
                             spotlight={inventorySpotlight}
                             onClearSpotlight={onClearInventorySpotlight}
@@ -167,25 +168,24 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             player={player}
                             stats={stats}
                             actions={actions}
-                            compact={desktopArchiveCompact}
                         />
                     )}
 
                     {sideTab === 'quest' && (
                         <Suspense fallback={<TabSpinner />}>
-                            <QuestTab player={player} actions={actions} isInSafeZone={isInSafeZone} compact={desktopArchiveCompact} />
+                            <QuestTab player={player} actions={actions} isInSafeZone={isInSafeZone} />
                         </Suspense>
                     )}
 
                     {sideTab === 'achievements' && (
                         <Suspense fallback={<TabSpinner />}>
-                            <AchievementPanel player={player} actions={actions} compact={desktopArchiveCompact} />
+                            <AchievementPanel player={player} actions={actions} />
                         </Suspense>
                     )}
 
                     {sideTab === 'skills' && (
                         <Suspense fallback={<TabSpinner />}>
-                            <SkillTreePreview player={player} compact={desktopArchiveCompact} actions={actions} />
+                            <SkillTreePreview player={player} actions={actions} />
                         </Suspense>
                     )}
 
@@ -196,16 +196,15 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                     player={player}
                                     grave={grave}
                                     stats={stats}
-                                    compact={desktopArchiveCompact}
                                 />
-                                <BuildAdvicePanel player={player} compact={desktopArchiveCompact} />
+                                <BuildAdvicePanel player={player} />
                             </div>
                         </Suspense>
                     )}
 
                     {sideTab === 'stats' && (
                         <Suspense fallback={<TabSpinner />}>
-                            <StatsPanel player={player} stats={stats} compact={desktopArchiveCompact} />
+                            <StatsPanel player={player} stats={stats} />
                         </Suspense>
                     )}
 
@@ -227,13 +226,13 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
 
                     {sideTab === 'graves' && (
                         <Suspense fallback={<TabSpinner />}>
-                            <GravePanel player={player} actions={actions} compact={desktopArchiveCompact} />
+                            <GravePanel player={player} actions={actions} />
                         </Suspense>
                     )}
 
                     {sideTab === 'system' && (
                         <Suspense fallback={<TabSpinner />}>
-                            <SystemTab player={player} actions={actions} stats={stats} runtime={runtime} compact={desktopArchiveCompact} />
+                            <SystemTab player={player} actions={actions} stats={stats} runtime={runtime} />
                         </Suspense>
                     )}
             </div>

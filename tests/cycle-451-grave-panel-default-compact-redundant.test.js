@@ -43,11 +43,12 @@ test('cycle 451: GravePanel destructure에서 default compact 제거', async () 
     assert.ok(/\bcompact\b/.test(block), 'compact 파라미터 보존');
 });
 
-test('cycle 451: 호출 사이트 정합성 가드 (Dashboard 명시 전달)', async () => {
+test('cycle 451: 호출 사이트 정합성 가드 (Dashboard GravePanel 호출 존재)', async () => {
+    // cycle 471이 Dashboard의 desktop 컴팩트 플래그 + 10 callsite의 compact prop
+    // 전달을 일괄 제거. compact 명시 전달 assertion → 호출 존재 가드로 약화.
     const source = await readSrc('src/components/Dashboard.tsx');
     const callMatch = source.match(/<GravePanel[^/]*\/>/);
     assert.ok(callMatch, 'GravePanel 호출 발견');
-    assert.ok(/compact=/.test(callMatch[0]), 'compact 명시 전달');
 });
 
 test('cycle 449 회귀 가드: PHYSICAL_ELEMENTS 0건', async () => {
