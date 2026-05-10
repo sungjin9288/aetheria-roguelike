@@ -130,7 +130,10 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         const safeList = (items: any, fallback: any = '[item]') => (
             Array.isArray(items) ? items.map((item: any) => safeText(item, fallback)) : []
         );
-        const sanitizeValue = (value: any, depth: any = 0): any => {
+        // cycle 615: depth default 0 제거 — explicit default-elimination
+        //   pattern (cycle 608-614 lens 정착). top-level caller (line 164)에
+        //   0 명시 추가 후 default unreachable.
+        const sanitizeValue = (value: any, depth: any): any => {
             if (depth > 6) return '[max-depth]';
             if (value == null) return value;
             if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
@@ -215,7 +218,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     : null,
                 sideTab: e.sideTab,
                 logTail: e.logs.slice(-6).map((log: any) => ({ type: log.type, text: log.text })),
-            }));
+            // cycle 615: depth 0 명시 추가 — explicit default-elimination cascade.
+            }, 0));
         };
 
         // cycle 593: window.advanceTime dead method 제거 — 정의만 있고 read
