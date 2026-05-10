@@ -55,7 +55,7 @@ const TreeNode = ({ node, isCurrent, isAvailable, isLocked }: any) => {
                             : 'border-white/10 bg-white/[0.04]'
             }`}
         >
-            <ClassIcon className={node.name} size={24} tier={tier} showBorder />
+            <ClassIcon className={node.name} size={24} tier={tier} />
             <div className="min-w-0">
                 <div className={`text-[11px] font-rajdhani font-bold truncate ${
                     isCurrent ? 'text-cyber-blue' : isAvailable ? 'text-cyber-purple' : isLocked ? 'text-slate-600' : 'text-slate-200'

@@ -40,7 +40,7 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole = 
 
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
         <div className="flex items-center gap-2.5 mb-3">
-          <ClassIcon className={player.job} size={30} tier={current?.tier || 0} showBorder />
+          <ClassIcon className={player.job} size={30} tier={current?.tier || 0} />
           <div>
             <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Current Class</div>
             <div className="text-[15px] font-rajdhani font-bold text-slate-100">{player.job}</div>

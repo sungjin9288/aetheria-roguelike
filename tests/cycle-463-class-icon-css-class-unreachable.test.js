@@ -74,7 +74,9 @@ test('cycle 463: 정합성 가드 — 4 callsite cssClass 전달 0건', async ()
     }
 });
 
-test('cycle 463: className(jobName 별칭) / size / tier / showBorder 보존', async () => {
+test('cycle 463: className(jobName 별칭) / size / tier 보존', async () => {
+    // cycle 464가 showBorder prop 제거했으므로 이 assertion에서는 검증 제외 (cycle
+    // 464 test가 별도 가드).
     const source = await readSrc('src/components/icons/ClassIcon.tsx');
     const fnIdx = source.indexOf('const ClassIcon =');
     const fnEnd = source.indexOf('=>', fnIdx);
@@ -82,5 +84,4 @@ test('cycle 463: className(jobName 별칭) / size / tier / showBorder 보존', a
     assert.ok(/className:\s*jobName/.test(sig), 'className 별칭 보존');
     assert.ok(/size\s*=\s*28/.test(sig), 'size 기본값 보존');
     assert.ok(/tier\s*=\s*0/.test(sig), 'tier 기본값 보존');
-    assert.ok(/showBorder\s*=\s*false/.test(sig), 'showBorder 기본값 보존');
 });

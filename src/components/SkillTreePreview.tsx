@@ -144,7 +144,7 @@ const SkillTreePreview = ({ player, compact = false, actions = null }: SkillTree
             <div className={`rounded-[1.2rem] border border-white/8 bg-black/18 ${compact ? 'px-3 py-3' : 'px-4 py-3.5'}`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                        <ClassIcon className={player.job} size={28} tier={currentClass?.tier || 0} showBorder />
+                        <ClassIcon className={player.job} size={28} tier={currentClass?.tier || 0} />
                         <div>
                             <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
                                 Skill Ledger

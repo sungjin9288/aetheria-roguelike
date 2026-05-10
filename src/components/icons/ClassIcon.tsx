@@ -39,11 +39,13 @@ const TIER_COLORS: any = {
 
 /**
  * ClassIcon — 직업 아이콘 컴포넌트
- * @param {{ className: string, size?: number, tier?: number, showBorder?: boolean, style?: string }} props
+ * @param {{ className: string, size?: number, tier?: number }} props
  */
 // cycle 463: 외부 className 보조 prop 제거 — 4 callsite 모두 전달 0건이라
 //   보간 결과 ''만 추가되는 unreachable. cycle 458/459/461 unreachable lens 회귀.
-const ClassIcon = ({ className: jobName, size = 28, tier = 0, showBorder = false }: any) => {
+// cycle 464: 보더 토글 prop 제거 — 4 callsite 모두 truthy shorthand 전달이라
+//   ternary false 가지 dead. paired completion으로 ClassIcon 잔존 dead config 정리.
+const ClassIcon = ({ className: jobName, size = 28, tier = 0 }: any) => {
     const path = CLASS_PATHS[jobName] || CLASS_PATHS['모험가'];
     const color = TIER_COLORS[tier] ?? TIER_COLORS[0];
 
@@ -53,11 +55,9 @@ const ClassIcon = ({ className: jobName, size = 28, tier = 0, showBorder = false
             style={{
                 width: size,
                 height: size,
-                ...(showBorder ? {
-                    border: `1.5px solid ${color}50`,
-                    borderRadius: 8,
-                    background: `${color}15`,
-                } : {}),
+                border: `1.5px solid ${color}50`,
+                borderRadius: 8,
+                background: `${color}15`,
             }}
         >
             <svg

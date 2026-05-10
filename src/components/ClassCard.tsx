@@ -51,7 +51,7 @@ const ClassCard = ({ jobName, onSelect, disabled = false }: any) => {
         >
             {/* 아이콘 + 이름 */}
             <div className="flex items-center gap-2 mb-2">
-                <ClassIcon className={jobName} size={28} tier={tier} showBorder />
+                <ClassIcon className={jobName} size={28} tier={tier} />
                 <div className="min-w-0">
                     <div className="text-[15px] font-rajdhani font-bold text-white group-hover:text-cyber-purple transition-colors truncate">
                         {jobName}
