@@ -50,10 +50,12 @@ const StatusMetric = ({ label, value, max, variant = 'hp' }: any) => {
   );
 };
 
-// cycle 459: 컴팩트 prop / 6 ternary 가지 제거 — 1 callsite (mobile shorthand) 항상
-//   mobile=true 전달이라 chained ternary 첫 가지만 진입, 그 외 ternary는 모두 false
+// cycle 459: 컴팩트 prop / 6 ternary 가지 제거 — 1 callsite (모바일 shorthand) 항상
+//   모바일=true 전달이라 chained ternary 첫 가지만 진입, 그 외 ternary는 모두 false
 //   가지 선택. cycle 458 paired (StatusMetric 인라인) — unreachable code path lens.
-const EnemyStatus = ({ enemy, mobile = false }: any) => {
+// cycle 492: 모바일 prop 자체 cascade — destructure / className ternary / 'Target
+//   Lock' 텍스트 ternary / callsite shorthand 일괄 정리. 같은 파일 cycle 491 paired.
+const EnemyStatus = ({ enemy }: any) => {
   if (!enemy) return null;
 
   const safeMax = Math.max(1, enemy.maxHp || 1);
@@ -61,12 +63,12 @@ const EnemyStatus = ({ enemy, mobile = false }: any) => {
   const percentage = Math.min(100, (safeValue / safeMax) * 100);
 
   return (
-    <div className={`relative overflow-hidden rounded-[1.1rem] border border-rose-300/18 bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_16px_36px_rgba(22,6,10,0.28),inset_0_1px_0_rgba(255,255,255,0.03)] ${mobile ? 'px-2.75 py-2.5' : 'px-3 py-2.5'}`}>
+    <div className="relative overflow-hidden rounded-[1.1rem] border border-rose-300/18 bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_16px_36px_rgba(22,6,10,0.28),inset_0_1px_0_rgba(255,255,255,0.03)] px-2.75 py-2.5">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-100/22 to-transparent" />
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-rose-100/58">
-            {mobile ? 'Target Lock' : 'Combat Target'}
+            Target Lock
           </div>
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
             <span className="truncate font-rajdhani font-bold text-rose-50/94 text-[13px]">{enemy.name}</span>
@@ -237,7 +239,7 @@ const StatusBar = ({
           </div>
         </div>
       </div>
-      {enemy && <div className="mt-1.5"><EnemyStatus enemy={enemy} mobile /></div>}
+      {enemy && <div className="mt-1.5"><EnemyStatus enemy={enemy} /></div>}
     </section>
   );
 };

@@ -64,11 +64,12 @@ test('cycle 459: 정합성 가드 — 1 callsite compact 전달 0건', async () 
     assert.ok(!/\bcompact\b/.test(callMatches[0]), 'callsite에 compact 전달 0건');
 });
 
-test('cycle 459: mobile prop / 분기 보존', async () => {
+test('cycle 459: mobile prop cycle 492 cascade로 prop 자체 제거', async () => {
+    // cycle 492가 EnemyStatus mobile prop cascade로 정리. 이전 가드 → cascade
+    // 보존 가드로 약화.
     const source = await readSrc('src/components/StatusBar.tsx');
     const fnIdx = source.indexOf('const EnemyStatus =');
     const fnEnd = source.indexOf('interface StatusBarProps', fnIdx);
     const block = source.slice(fnIdx, fnEnd);
-    assert.ok(/mobile\s*=\s*false/.test(block), 'mobile = false 기본값 보존');
-    assert.ok(/mobile\s*\?/.test(block), 'mobile ternary 보존');
+    assert.ok(!/\bmobile\b/.test(block), 'cycle 492 cascade로 mobile 제거 보존');
 });
