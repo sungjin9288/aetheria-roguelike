@@ -1335,7 +1335,10 @@ export const CombatEngine = {
         };
     },
 
-    applyExpGain(player: Player, expGained: any = 0) {
+    // cycle 536: expGained default 0 제거 — 4 production callsite (3 외부 +
+    //   1 internal) + 16 test callsite 모두 명시 전달이라 default 도달 불가.
+    //   util/component/hook default 청소 메가 시리즈 32번째, systems/ 진입.
+    applyExpGain(player: Player, expGained: any) {
         const p: any = { ...player, exp: (player.exp || 0) + expGained };
         const logs: any[] = [];
         let levelUps = 0;
