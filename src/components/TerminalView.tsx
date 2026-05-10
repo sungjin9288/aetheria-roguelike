@@ -90,8 +90,11 @@ interface TerminalViewProps {
     onQuickSlotUse?: (item: any, idx: number) => void;
 }
 
+// cycle 576: logs default [] 제거 — 1 production caller (MobileGameLayout:85
+//   <TerminalView logs={engine.logs} />) 명시 전달이라 default 도달 불가.
+//   청소 메가 시리즈 68번째.
 const TerminalView = ({
-    logs = [],
+    logs,
     gameState,
     onCommand,
     player,
