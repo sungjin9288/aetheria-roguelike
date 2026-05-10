@@ -529,7 +529,11 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ad
         // ── 시즌 패스 보상 수령 ──────────────────────────────────────────
         // cycle 261: SeasonPassPanel claimReward가 dispatch만 있고 addLog/sound 0건이던 UX
         //   dead path fix. quest/achievement/weekly와 동일 sensory cue.
-        claimSeasonReward: (tier: any, rewardLabel: string | null = null) => {
+        // cycle 595: rewardLabel default null 제거 — 1 caller (SeasonPassPanel:32
+        //   onClaimSeasonReward(rewardTier, label)) 명시 전달이라 default 도달
+        //   불가. body의 rewardLabel ternary는 별개 보존 (caller가 null/empty
+        //   넘기는 path 활성).
+        claimSeasonReward: (tier: any, rewardLabel: string | null) => {
             dispatch({ type: AT.CLAIM_SEASON_REWARD, payload: { tier } });
             const label = rewardLabel ? `${rewardLabel}` : `티어 ${tier}`;
             addLog('success', `시즌 패스 보상 수령: ${label}`);
