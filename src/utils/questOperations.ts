@@ -58,7 +58,11 @@ const getActiveQuestEntries = (player: Player) => (
         .filter(Boolean)
 );
 
-const getQuestTargetMaps = (quest: any, maps: any = MAPS) => {
+// cycle 555: maps default MAPS 제거 (inner) — 2 callers (line 78/122)
+//   chain caller가 maps 명시 전달이라 default 도달 불가. entry-point pattern
+//   (cycle 513 재적용): wrapper getQuestBoardRecommendations의 default는
+//   외부 1-arg caller가 reachable이라 보존, inner chain은 redundant 정리.
+const getQuestTargetMaps = (quest: any, maps: any) => {
     if (!quest?.target || quest.target === 'Level') return [];
 
     return (Object.entries(maps) as Array<[string, any]>)
@@ -73,7 +77,7 @@ const getQuestTargetMaps = (quest: any, maps: any = MAPS) => {
         .map(([name]) => name);
 };
 
-const isBossQuest = (quest: any, maps: any = MAPS) => {
+const isBossQuest = (quest: any, maps: any) => {
     if (String(quest?.title || '').includes('[보스]')) return true;
     return getQuestTargetMaps(quest, maps).some((mapName: any) => {
         const map = maps[mapName];
@@ -81,7 +85,7 @@ const isBossQuest = (quest: any, maps: any = MAPS) => {
     });
 };
 
-const getQuestLane = (quest: any, resonance: any, maps: any = MAPS) => {
+const getQuestLane = (quest: any, resonance: any, maps: any) => {
     if (isStoryQuest(quest)) return 'story';
     if (quest?.buildTag || quest?.type === 'build_victory' || (quest?.type === 'survive_low_hp' && resonance.score >= 3)) return 'build';
     if (quest?.target === 'Level' || ['craft', 'explore_count', 'discovery_count', 'bounty_count'].includes(quest?.type)) return 'growth';
@@ -115,7 +119,7 @@ const getQuestReason = (quest: any, lane: any, resonance: any, targetMaps: any[]
     return '당장 밀기 좋은 기본 토벌 임무로 파밍과 전투 감각을 유지하기 쉽습니다.';
 };
 
-const scoreQuest = (quest: any, player: Player, traitProfile: any, activeEntries: any, maps: any = MAPS) => {
+const scoreQuest = (quest: any, player: Player, traitProfile: any, activeEntries: any, maps: any) => {
     const resonance = getTraitQuestResonance(quest, traitProfile);
     const lane = getQuestLane(quest, resonance, maps);
     const playerLevel = player?.level || 1;
