@@ -31,7 +31,12 @@ const OPERATION_META: any = {
 const FEATURED_LANE_ORDER: any = ['story', 'build', 'growth', 'boss', 'hunt'];
 
 const toArray = (value: any) => (Array.isArray(value) ? value : []);
-const getQuestLevelGap = (quest: any, playerLevel: any = 1) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
+// cycle 523: playerLevel default 1 제거 — 1 internal callsite (line 116)
+//   getQuestLevelGap(quest, playerLevel) 명시 전달이라 default 도달 불가.
+//   util default 청소 메가 시리즈 20번째 (cycle 502-522). body의
+//   (playerLevel || 1) defensive 가드는 별개 (caller가 0/undefined 넘기는
+//   path 보존). cycle 519 getMapLevel 패턴과 동일.
+const getQuestLevelGap = (quest: any, playerLevel: any) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
 const isStoryQuest = (quest: any) => String(quest?.title || '').includes('[스토리]');
 const getActiveQuestEntries = (player: Player) => (
     toArray(player?.quests)
