@@ -316,7 +316,11 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'equipment' });
             },
-            seedAvatarScenario: (preset: any = 'paladin-plate') => {
+            // cycle 604: preset default 'paladin-plate' 제거 — 1 production
+            //   caller (scripts/smoke-gameplay:305 seedAvatarScenario?.(preset.id))
+            //   1 arg 명시 전달이라 default 도달 불가. cycle 593 dead exposure
+            //   pivot에 이은 동일 모듈 default cleanup.
+            seedAvatarScenario: (preset: any) => {
                 const er = engineRef.current;
                 const scenario = avatarScenarioMap[preset];
                 if (!scenario) return false;
