@@ -20,7 +20,12 @@ export const getSelectedSkill = (player: Player) => {
 /**
  * 루트 아이템 중 장비 업그레이드 힌트 계산. 없으면 null.
  */
-export const getLootUpgradeHint = (equip: any = {}, lootItems: Item[] = []): any => {
+// cycle 534: equip / lootItems defaults 제거 — 1 callsite (combatVictory
+//   :213) getLootUpgradeHint(updatedPlayer.equip, lootResult.items) 명시
+//   전달이라 두 default 모두 도달 불가. body의 (lootItems || []) defensive
+//   guard는 별개 보존. util/component/hook default 청소 메가 시리즈 30번째
+//   batch (cycle 502-533).
+export const getLootUpgradeHint = (equip: any, lootItems: Item[]): any => {
     const equipmentDrops = (lootItems || []).filter((item: any) => ['weapon', 'armor', 'shield'].includes(item?.type));
     if (!equipmentDrops.length) return null;
 
