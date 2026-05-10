@@ -39,7 +39,7 @@ const SIG_SET_TONE: any = Object.freeze({
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
 const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const [showSetCatalog, setShowSetCatalog] = useState(false);
-    const equipProfile = useMemo(() => getEquipmentProfile(player?.equip), [player?.equip]);
+    const equipProfile = useMemo(() => getEquipmentProfile(player?.equip || {}), [player?.equip]);
     const setCatalog = useMemo(() => getJobSetCatalog(player?.job, DB.ITEMS), [player?.job]);
     // 인벤토리 + 장착 중 보유 아이템 이름 set (카탈로그에서 ✓/💼 표시용)
     const ownedItemNames = useMemo(() => {
@@ -55,7 +55,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     }, [player?.equip]);
     const appearance = useMemo(() => deriveCharacterAppearance(player), [player]);
     const enhanceMaterialCount = useMemo(
-        () => countInventoryItemByName(player?.inv, CONSTANTS.ENHANCE_MATERIAL_NAME),
+        () => countInventoryItemByName(player?.inv || [], CONSTANTS.ENHANCE_MATERIAL_NAME),
         [player?.inv]
     );
 

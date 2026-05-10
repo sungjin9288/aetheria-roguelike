@@ -105,8 +105,8 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
 
     // 추천 장착 계산 (최고 val 기준)
     const getEquipPreview = useCallback((item: any) => {
-        const currentProfile = getEquipmentProfile(player.equip);
-        const nextEquip = getNextEquipmentState(player.equip, item);
+        const currentProfile = getEquipmentProfile(player.equip || {});
+        const nextEquip = getNextEquipmentState(player.equip || {}, item);
         const nextProfile = getEquipmentProfile(nextEquip);
 
         return {
@@ -260,7 +260,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                     const isSpotlighted = spotlightSet.has(item.name);
                     const isSignature = isSignatureItem(item);
                     const resonance = getTraitItemResonance(item, traitProfile, player);
-                    const enhanceState = getEnhanceAvailability(item, player.gold, (player.inv || []));
+                    const enhanceState = getEnhanceAvailability(item, player.gold ?? 0, (player.inv || []));
                     const enhanceRequirement = enhanceState.requirement;
 
                     // 우선순위: spotlight > signature > currentEquip > default

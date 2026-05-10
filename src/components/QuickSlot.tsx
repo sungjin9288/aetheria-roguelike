@@ -15,7 +15,7 @@ import { GS } from '../reducers/gameStates';
 // cycle 494: 조밀 prop 인터페이스 제거 — 1 callsite (TerminalView) 전달 0건.
 //   본체 9 ternary 모두 false 가지 선택 cascade.
 interface QuickSlotProps {
-    slots?: any[];
+    slots: any[];
     onUse?: (item: any, idx: number) => void;
     gameState?: string;
 }

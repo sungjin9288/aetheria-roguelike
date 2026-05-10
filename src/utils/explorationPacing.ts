@@ -139,8 +139,8 @@ export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undef
             0,
             BALANCE.RELIC_FIND_MAX_CHANCE
         ),
-        quietChance: getQuietExplorationChance(player?.stats, mapData),
-        narrativeEventChance: getNarrativeEventChance(mapData?.eventChance || 0, 0, player?.stats, mapData),
+        quietChance: getQuietExplorationChance(player?.stats, mapData ?? null),
+        narrativeEventChance: getNarrativeEventChance(mapData?.eventChance || 0, 0, player?.stats, mapData ?? null),
         pacingProfile: profile,
     };
 };

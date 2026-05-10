@@ -28,6 +28,7 @@ interface SystemTabProps {
 // cycle 589: runtime default null 제거 — 1 production caller (Dashboard:241)
 //   runtime={runtime} 명시 전달이라 default 도달 불가.
 const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
+    const today = new Date().toISOString().slice(0, 10);
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState<any>(null);
 

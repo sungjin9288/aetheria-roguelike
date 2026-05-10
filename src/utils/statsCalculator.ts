@@ -286,7 +286,7 @@ export const calculateFullStats = (player: Player) => {
     if (!player) return null;
 
     const cls = DB.CLASSES[player.job as string] || DB.CLASSES[CONSTANTS.DEFAULT_JOB];
-    const equipProfile = getEquipmentProfile(player.equip);
+    const equipProfile = getEquipmentProfile(player.equip || {});
     const {
         mainWeapon,
         offhandWeapon,

@@ -21,7 +21,7 @@ import { findItemByName } from './gameUtils.js';
 //   pattern (cycle 608-617 lens 정착, 10번째 적용 — double-digit milestone).
 //   resetWeeklyProtocolIfNeeded:31 caller에 new Date() 명시 추가 후 default
 //   unreachable.
-const getISOWeekNumber = (date) => {
+const getISOWeekNumber = (date: Date) => {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));

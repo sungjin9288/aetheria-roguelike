@@ -82,7 +82,7 @@ const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
 //   로 명시 전달, default true 도달 불가. cascade로 '/' 단축키 / 입력 푸터 /
 //   푸터 표시 플래그 / autoFocus attr 모두 dead.
 interface TerminalViewProps {
-    logs?: any[];
+    logs: any[];
     gameState?: string;
     onCommand?: (cmd: string) => void;
     player?: Player | null;
@@ -285,7 +285,7 @@ const TerminalView = ({
             {showQuickSlots && (
                 <div className="mt-2 pt-2 border-t border-white/8 bg-transparent shrink-0 z-20">
                     <QuickSlot
-                        slots={quickSlots}
+                        slots={quickSlots || []}
                         onUse={(item: any, idx: any) => onQuickSlotUse?.(item, idx)}
                         gameState={gameState}
                     />
