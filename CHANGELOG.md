@@ -7,6 +7,70 @@
 
 ---
 
+## Cycle 510 🎯 — CHANGELOG에 cycles 501-509 history 일괄 추가 (32번째 batch)
+
+- 마일스톤: cycle 500 batch 이후 9 사이클 미반영 batch 정리. 32번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500에 이은 32번째.
+- 누적 마일스톤: cycle 500(unit 2330) → 509(unit 2368, +38). silent dead config
+  시리즈 cycle 222→509 259번째 도달.
+- 시리즈 정체성 — **util default 청소 메가 시리즈**: 9사이클 중 8사이클
+  (502-509)이 utils/ 디렉토리의 redundant default annotation 일괄 정리.
+  cycle 451-452/467/499 component-level default cleanup이 utility-level로
+  확장되어 누적 20개 default 제거 (incrementStat / consumeInventory /
+  getDailyProtocolCompletions + 3 wrapper / grantGold / getEnhanceAvailability /
+  explorationPacing 2 함수 / syncQuestProgress / getAdventureGuidance).
+
+검증: tsc 0 / unit 2368 / lint clean / build-guard ok.
+
+---
+
+## Cycle 501-509 — className 마무리 + util default 청소 메가 시리즈 8사이클
+
+cycle 491-499 className/internal-helper props lens 시리즈에 이어 cycle 501은
+SignalBadge className (가장 많은 호출자 77건) 마무리. cycle 502-509는 utils/
+디렉토리의 redundant default annotation을 8사이클 연속 정리.
+
+### className lens 마무리 (cycle 501)
+
+- 501: SignalBadge `className` prop unreachable — 77 callsite 모두 전달 0건.
+  className lens의 가장 큰 cleanup. cycle 463/465/466/493/495/496/498 lens
+  마무리 (총 9 컴포넌트의 className prop 정리).
+
+### util default 청소 메가 시리즈 (cycle 502-509)
+
+- 502: incrementStat amount 파라미터 — 3 callers all pass 2 args.
+- 503: consumeInventoryItemByName count default — 1 caller passes 3 args.
+- 504: getDailyProtocolCompletions amount + 3 wrapper emitDailyProtocolLogs
+  cascade — 4 default 동시 정리 (single util cleanup이 wrapper 3개에 cascade).
+- 505: grantGold amount default — 9+ callers all pass amount. defensive
+  `if (!amount)` guard는 별개 보존.
+- 506: getEnhanceAvailability gold + inventory 2 defaults batch — 같은 파일
+  cycle 503 paired completion.
+- 507: explorationPacing 2 함수 (getNarrativeEventChance + getQuiet
+  ExplorationChance) 6 defaults batch — 가장 많은 default 한번에 정리.
+  1 stale test (run-profile-utils) 업데이트.
+- 508: syncQuestProgress 2 defaults batch — 1 caller passes 3 args.
+- 509: getAdventureGuidance runtimeState default — 1 caller passes 4 args.
+
+**누적 20 default 정리** (cycle 502-509 8사이클).
+
+### 신규 lens 의의
+
+- **util default 청소가 component default 청소의 후속 lens로 정착** —
+  cycle 451-452/467/499이 component-level default 정리 패턴을 정착시킨 후
+  cycle 502-509가 utils/ 전체로 확장. component → util cascade 패턴.
+- **single util cleanup의 cascade 효과** — cycle 504 (getDailyProtocolCompletions
+  amount cleanup)이 자동으로 3 wrapper의 동일 default도 청소. 함수 chain의
+  default도 cascade로 dead.
+- **defensive guard와 unreachable default의 분리** — cycle 505 grantGold는
+  default `= 0` unreachable이지만 body의 `if (!amount) return player`
+  defensive guard는 caller가 0을 넘기는 케이스에서 활성이라 보존. default
+  unreachable과 body guard의 reachability 분리.
+
+---
+
 ## Cycle 500 🎯🎯 — 500사이클 마일스톤 + cycles 491-499 history 일괄 정리 (31번째 batch)
 
 - **500사이클 마일스톤**: 프로젝트 사이클 카운터가 500에 도달. 그 중 cycle 222-499
