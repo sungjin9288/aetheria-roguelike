@@ -135,7 +135,10 @@ const pickRewardItem = (poolKey: any, seed: any, level: any) => {
     return pool[seed % pool.length];
 };
 
-const buildProceduralOutcome = ({ desc, choice, choiceIndex, context = {} }: any = {}) => {
+// cycle 561: outer + inner context defaults 제거 — 1 internal callsite (line
+//   236)가 완전 object 명시 전달이라 두 default 모두 도달 불가. 청소 메가
+//   시리즈 54번째 batch (cycle 502-560).
+const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: any) => {
     const seed = hashString(`${context.location || ''}|${desc}|${choice}|${choiceIndex}`);
     const style = classifyChoice(choice);
     const level = Math.max(1, toInt(context?.playerSnapshot?.level || context?.mapSnapshot?.level || 1, 1));
@@ -244,7 +247,10 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
     return [...normalized.values()].sort((a: any, b: any) => a.choiceIndex - b.choiceIndex);
 };
 
-export const buildEventPackage = (payload: any, context: any = {}) => {
+// cycle 561: context default {} 제거 — 3 callers (internal:548, aiService
+//   :100, ai-event-utils.test.js:26) 모두 2 args 명시 전달이라 default 도달
+//   불가.
+export const buildEventPackage = (payload: any, context: any) => {
     const raw = payload?.data || payload;
     if (!raw || typeof raw !== 'object') return null;
 
