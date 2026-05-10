@@ -27,7 +27,10 @@ const METER_THEME: any = {
 // cycle 491: 컴팩트/조밀 props cascade — 3 callsite 모두 컴팩트 shorthand (=true)
 //   전달, 조밀 prop 0건 → chained ternary 첫/마지막 가지 unreachable, 컴팩트
 //   가지만 진입 → props 자체 제거 + 정적 className inline.
-const StatusMetric = ({ label, value, max, variant = 'hp' }: any) => {
+// cycle 583: variant default 'hp' 제거 — 3 internal callsite (line 236-238)
+//   모두 variant 명시 (hp/mp/exp). default 도달 불가. body의 METER_THEME[variant]
+//   || METER_THEME.hp nullish fallback은 별개 보존. 청소 메가 시리즈 74번째.
+const StatusMetric = ({ label, value, max, variant }: any) => {
   const theme = METER_THEME[variant] || METER_THEME.hp;
   const safeMax = Math.max(1, max || 1);
   const safeValue = Math.max(0, value || 0);
