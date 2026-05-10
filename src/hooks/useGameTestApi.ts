@@ -218,8 +218,10 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             }));
         };
 
-        window.advanceTime = (ms: any = 0) => new Promise((resolve: any) => window.setTimeout(resolve, Math.max(0, ms)));
-
+        // cycle 593: window.advanceTime dead method 제거 — 정의만 있고 read
+        //   0건 (src/scripts/tests 어디에서도 호출 0건). cycle 329에서 정리한
+        //   3 dead methods (getState/clearPostCombat/injectAscensionPreview)
+        //   동일 lens 회귀.
         // cycle 329: getState / clearPostCombat / injectAscensionPreview 3 dead methods 제거.
         //   scripts/, tests/, docs 어디에서도 호출 0건. Playwright QA 훅 잔존이었던 것 정리.
         window.__AETHERIA_TEST_API__ = {
@@ -393,7 +395,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
 
         return () => {
             delete window.render_game_to_text;
-            delete window.advanceTime;
+            // cycle 593: window.advanceTime delete paired removal (정의 자체 제거됨).
             delete window.__AETHERIA_TEST_API__;
         };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
