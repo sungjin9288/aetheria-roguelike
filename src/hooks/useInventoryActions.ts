@@ -22,7 +22,8 @@ import type { Item } from '../types/index.js';
 export const createInventoryActions = ({ player, gameState, dispatch, addLog, addStoryLog, getFullStats }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
-    const emitDailyProtocolLogs = (type: any, amount: any = 1) => {
+    // cycle 504: amount default 1 제거 — 호출자 5건 모두 amount 명시 전달.
+    const emitDailyProtocolLogs = (type: any, amount: any) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
         completed.forEach((mission: any) => {
             addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);

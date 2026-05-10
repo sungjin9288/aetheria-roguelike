@@ -77,8 +77,14 @@ const getAllItems = () => [
 /** 이름으로 아이템을 찾아 반환 */
 export const findItemByName = (name: any) => getAllItems().find((i: any) => i.name === name);
 
-/** 일일 프로토콜 진행으로 이번 액션에서 막 완료될 미션 목록 반환 */
-export const getDailyProtocolCompletions = (player: Player, type: any, amount: any = 1) => {
+/**
+ * 일일 프로토콜 진행으로 이번 액션에서 막 완료될 미션 목록 반환
+ *
+ * cycle 504: amount default 1 제거 — 3 wrapper (emitDailyProtocolLogs)가 모두
+ *   자체 amount default를 가지지만 wrapper의 외부 호출자 5건 모두 amount 명시
+ *   전달. cascade로 wrapper / leaf default 모두 도달 불가.
+ */
+export const getDailyProtocolCompletions = (player: Player, type: any, amount: any) => {
     const missions = toArray(player?.stats?.dailyProtocol?.missions);
     return missions.filter((mission: any) => (
         mission?.type === type

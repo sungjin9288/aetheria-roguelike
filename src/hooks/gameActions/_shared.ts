@@ -23,7 +23,8 @@ export const buildClassVitals = (level: any, jobId: any, meta: any = {}) => {
 export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
-    const emitDailyProtocolLogs = (type: any, amount: any = 1) => {
+    // cycle 504: amount default 1 제거 — 호출자 5건 모두 amount 명시 전달.
+    const emitDailyProtocolLogs = (type: any, amount: any) => {
         const completed = getDailyProtocolCompletions(player, type, amount);
         completed.forEach((mission: any) => {
             addLog('system', MSG.DAILY_PROTOCOL_DONE(formatDailyProtocolReward(mission.reward)));
