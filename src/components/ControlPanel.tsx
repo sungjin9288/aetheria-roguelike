@@ -73,7 +73,11 @@ const ControlPanel = ({
       : ''
   );
 
-  const renderActionButton = (button: any, extraClass: any = '', { hideLabel = false }: any = {}) => {
+  // cycle 626: extraClass '' / outer {} explicit default-elimination —
+  //   3 callsite (line 284/285/286)에서 ('', {}) 명시 추가 후 outer defaults
+  //   제거. inner destructure default `hideLabel = false`는 보존 (caller {}
+  //   시 그대로 기본값 적용). explicit default-elimination paired batch 3번째.
+  const renderActionButton = (button: any, extraClass: any, { hideLabel = false }: any) => {
     const {
       key,
       testId,
@@ -281,9 +285,9 @@ const ControlPanel = ({
         </div>
       ) : (
         <div className={actionGridClass}>
-          {coreButtons.map((button: any) => renderActionButton(button))}
-          {isSafeZone && safeZoneButtons.map((button: any) => renderActionButton(button))}
-          {auxiliaryButtons.map((button: any) => renderActionButton(button))}
+          {coreButtons.map((button: any) => renderActionButton(button, '', {}))}
+          {isSafeZone && safeZoneButtons.map((button: any) => renderActionButton(button, '', {}))}
+          {auxiliaryButtons.map((button: any) => renderActionButton(button, '', {}))}
         </div>
       )}
     </Motion.div>
