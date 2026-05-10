@@ -74,7 +74,10 @@ export const CombatEngine = {
         return Math.floor((player?.maxMp || 50) * rmp);
     },
 
-    applyCritMpRestore(player: Player, relics: Relic[] = [], logs: any[] = []) {
+    // cycle 548: relics / logs defaults 제거 — 2 internal callsite (line 592,
+    //   890) 모두 명시 전달이라 두 default 모두 도달 불가. 외부 caller 0건,
+    //   test caller 0건. 청소 메가 시리즈 43번째 (cycle 502-547).
+    applyCritMpRestore(player: Player, relics: Relic[], logs: any[]) {
         const critMpRelic = relics.find((relic: any) => relic.effect === 'crit_mp_regen');
         if (!critMpRelic) return player;
 
