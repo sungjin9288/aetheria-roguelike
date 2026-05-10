@@ -92,7 +92,12 @@ export const CombatEngine = {
         return { ...player, mp: nextMp };
     },
 
-    applyFatalProtection(player: Player, relics: Relic[] = [], incomingDamage = 0, logs: any[] = [], activeSynergies: any[] = []) {
+    // cycle 553: 3 defaults partial cleanup — relics/incomingDamage/logs는
+    //   모든 caller (combatAttack/internal/9 tests) 명시 전달이라 unreachable.
+    //   activeSynergies는 combatAttack:189 4-arg caller가 미전달이라 default
+    //   reachable 보존. partial cleanup pattern (cycle 542). systems/CombatEngine
+    //   method 시리즈 7번째.
+    applyFatalProtection(player: Player, relics: Relic[], incomingDamage: any, logs: any[], activeSynergies: any[] = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
         // cycle 162: phoenix_revive atkBuff tempBuff — 부활 분기에서 set, return에 합류.
