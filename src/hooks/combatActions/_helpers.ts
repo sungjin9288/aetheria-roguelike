@@ -63,10 +63,14 @@ export const getLootUpgradeHint = (equip: any, lootItems: Item[]): any => {
 /**
  * 전투 종료 요약 로그 출력
  */
+// cycle 591: 5 defaults batch 제거 (droppedItems/upgradeHint/traitHint/
+//   bossRewardHint/bossClearBonus) — 1 production caller (combatVictory:215)
+//   8 props 모두 명시 전달이라 5 defaults 모두 도달 불가. 청소 메가 시리즈
+//   81번째 single-cycle 5-default batch.
 export const addCombatDigestLogs = ({
     addLog, enemyName, victoryResult,
-    droppedItems = [], upgradeHint = null, traitHint = null,
-    bossRewardHint = null, bossClearBonus = 0,
+    droppedItems, upgradeHint, traitHint,
+    bossRewardHint, bossClearBonus,
 }: any) => {
     const summaryParts = [
         MSG.COMBAT_DIGEST_KILL(enemyName),
