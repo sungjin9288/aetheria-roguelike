@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import {
   ArrowRight,
   Map as MapIcon,
   ShoppingBag,
   Ghost,
-  X,
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
@@ -49,10 +47,12 @@ const ControlPanel = ({
   isAiThinking,
   currentEvent,
   stats = null,
-  mobileFocused = false,
+  mobileFocused,
   onOpenArchiveConsole = null,
 }: ControlPanelProps) => {
-  const [confirmReset, setConfirmReset] = useState(false);
+  // cycle 486: mobileFocused 항상 true (2 callsite 모두 shorthand) → default 제거,
+  //   reset 확인 상태 + reset helper 함수 + `!mobileFocused && ...` 2 unreachable
+  //   블록 + EVENT 비-모바일 분기 cascade 정리.
   const mapData = DB.MAPS[player.loc as string];
   const guidance = getAdventureGuidance(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, gameState);
   const moveRecommendations = getMoveRecommendations(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, DB.MAPS);
@@ -63,7 +63,6 @@ const ControlPanel = ({
   const actionGridClass = 'grid grid-cols-3 gap-1.5';
   const actionButtonBase = 'relative h-[42px] overflow-hidden rounded-[1rem] px-2.5 flex items-center gap-2 text-left disabled:opacity-50 transition-all group backdrop-blur-xl shadow-[0_8px_18px_rgba(1,6,14,0.18),inset_0_1px_0_rgba(255,255,255,0.03)]';
   const actionLabelClass = 'text-[10px] font-rajdhani font-bold tracking-[0.12em] text-left';
-  const resetButtonClass = 'h-[42px] rounded-[1rem] border px-2.5 text-[9px] font-rajdhani font-bold tracking-[0.12em] transition-all flex items-center justify-center gap-2';
 
   const getRecommendedClass = (buttonKey: any) => (
     recommendedButton === buttonKey
@@ -115,51 +114,6 @@ const ControlPanel = ({
     );
   };
 
-  // cycle 456: destructure 기본값 3종 제거 — 두 callsite 모두 명시 전달이라
-  //   fallback path 0건. cycle 451-452 default annotation cleanup lens 회귀.
-  const renderResetControl = ({ compact, className, confirmGridClass }: any) => {
-    if (!confirmReset) {
-      return (
-        <Motion.button
-          data-testid="control-reset"
-          whileTap={{ scale: 0.95 }}
-          disabled={isAiThinking}
-          onClick={() => setConfirmReset(true)}
-          className={`${compact ? resetButtonClass : actionButtonBase} ${className} bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/80 hover:bg-rose-400/10 hover:border-rose-200/30`.trim()}
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] border border-rose-300/18 bg-black/18">
-            <X size={13} className="text-rose-200/70 group-hover:text-rose-100 transition-all" />
-          </span>
-          <span className={`${actionLabelClass} text-rose-100/72 group-hover:text-rose-50`}>RESET</span>
-        </Motion.button>
-      );
-    }
-
-    return (
-      <div className={`${compact ? `${confirmGridClass || 'grid gap-1'} ${className}` : `flex flex-col gap-1.5 min-h-[70px] justify-center ${className}`}`.trim()}>
-        <Motion.button
-          data-testid="control-reset-confirm"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            actions.reset();
-            setConfirmReset(false);
-          }}
-          className={`${compact ? `${resetButtonClass} min-h-[44px]` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-red-900/60 border border-red-500/70 text-red-200 hover:bg-red-700/60`}
-        >
-          {compact ? 'RESET OK' : 'CONFIRM RESET'}
-        </Motion.button>
-        <Motion.button
-          data-testid="control-reset-cancel"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setConfirmReset(false)}
-          className={`${compact ? `${resetButtonClass} min-h-[44px]` : 'flex-1 rounded-sm py-1.5 text-[10px]'} bg-cyber-dark/60 border border-slate-600/50 text-slate-400 hover:bg-slate-700/40`}
-        >
-          CANCEL
-        </Motion.button>
-      </div>
-    );
-  };
-
   if (gameState === GS.COMBAT) {
     return (
       <CombatPanel
@@ -178,10 +132,7 @@ const ControlPanel = ({
       <Motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={mobileFocused
-          ? 'panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center rounded-[1.9rem] border border-[#9a8ac0]/20 px-5 py-6 text-center text-[#ece5ff] shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-md'
-          : 'panel-noise mt-4 rounded-lg border border-cyber-purple/50 bg-cyber-black/80 p-6 text-center font-rajdhani tracking-widest text-cyber-purple shadow-neon-purple backdrop-blur-md z-10 relative animate-pulse'
-        }
+        className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center rounded-[1.9rem] border border-[#9a8ac0]/20 px-5 py-6 text-center text-[#ece5ff] shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-md"
       >
         NEURAL LINK ACTIVE... PROCESSING SCENARIO...
       </Motion.div>
@@ -328,18 +279,8 @@ const ControlPanel = ({
       ) : (
         <div className={actionGridClass}>
           {coreButtons.map((button: any) => renderActionButton(button))}
-          {!mobileFocused && !isSafeZone && renderResetControl({
-            compact: true,
-            className: '',
-            confirmGridClass: 'col-span-3 grid-cols-2 gap-1.5',
-          })}
           {isSafeZone && safeZoneButtons.map((button: any) => renderActionButton(button))}
           {auxiliaryButtons.map((button: any) => renderActionButton(button))}
-          {!mobileFocused && isSafeZone && renderResetControl({
-            compact: true,
-            className: '',
-            confirmGridClass: 'col-span-3 grid-cols-2 gap-1.5',
-          })}
         </div>
       )}
     </Motion.div>
