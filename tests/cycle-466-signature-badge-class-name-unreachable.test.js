@@ -69,5 +69,7 @@ test('cycle 466: item / size prop 보존', async () => {
     const fnEnd = source.indexOf('=>', fnIdx);
     const sig = source.slice(fnIdx, fnEnd);
     assert.ok(/\bitem\b/.test(sig), 'item 보존');
-    assert.ok(/size\s*=\s*10/.test(sig), 'size 기본값 보존');
+    // cycle 567: size default 10 cascade 제거됨 (caller가 명시 전달이라 default unreachable).
+    //   파라미터 자체는 보존.
+    assert.ok(/\bsize\b/.test(sig), 'size 파라미터 보존 (default는 cycle 567에서 제거)');
 });

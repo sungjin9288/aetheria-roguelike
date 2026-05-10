@@ -31,7 +31,10 @@ const DEFAULT_TONE_COLOR = TONE_COLORS.holy;
 
 // cycle 466: 외부 보조 클래스 prop 제거 — ItemIcon 단일 callsite 전달 0건이라
 //   보간 결과 ''만 추가되는 unreachable. cycle 463/464/465 lens icons/ 디렉토리 회귀.
-const SignatureBadge = ({ item, size = 10 }: any) => {
+// cycle 567: size default 10 제거 — 1 production caller (ItemIcon:129
+//   <SignatureBadge item={item} size={badgeSize} />) 명시 전달이라 default
+//   도달 불가. 청소 메가 시리즈 60번째.
+const SignatureBadge = ({ item, size }: any) => {
     if (!item || !hasDedicatedSignatureArt(item)) return null;
     const meta = getSignatureMetadata(item);
     const toneColor = TONE_COLORS[meta?.tone] || DEFAULT_TONE_COLOR;
