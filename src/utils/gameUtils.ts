@@ -203,8 +203,14 @@ export const registerLootToCodex = (player: Player, lootItems: any) => {
  */
 export const countNewCodexEntries = (player: Player) => countCodexEntries(player);
 
-/** 골드 획득을 누적 통계와 함께 반영 */
-export const grantGold = (player: Player, amount: any = 0) => {
+/**
+ * 골드 획득을 누적 통계와 함께 반영
+ *
+ * cycle 505: amount default 0 제거 — 9+ callsite 모두 amount 명시 전달이라
+ *   default 도달 불가. body의 `if (!amount) return player` defensive guard는
+ *   caller가 0을 넘기는 케이스에서 활성이라 보존.
+ */
+export const grantGold = (player: Player, amount: any) => {
     if (!amount) return player;
     const stats = player.stats || {};
     return {
