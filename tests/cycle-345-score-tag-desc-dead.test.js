@@ -62,7 +62,8 @@ test('cycle 345: getRunBuildProfile 동작 보존', async () => {
         relics: [],
         hp: 100, maxHp: 100,
     };
-    const profile = getRunBuildProfile(player);
+    // cycle 612: stats 인자 명시 추가 — explicit default-elimination cascade.
+    const profile = getRunBuildProfile(player, {});
     assert.ok(profile.primary, 'primary 보존');
     assert.ok('id' in profile.primary, 'primary.id 보존');
     assert.ok('name' in profile.primary, 'primary.name 보존');

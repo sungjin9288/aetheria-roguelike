@@ -44,7 +44,10 @@ const hasElement = (item: Item | null | undefined) => Boolean(item?.elem && item
 
 // --- Run build profile ---
 
-export const getRunBuildProfile = (player: Player, stats: any = {}) => {
+// cycle 612: stats default {} 제거 — explicit default-elimination pattern
+//   (cycle 608/609/611에 이은 4번째 적용). BuildAdvicePanel:56 + cycle-345
+//   test:65 두 1-arg caller에 {} 명시 추가 후 모든 7 caller가 명시 전달.
+export const getRunBuildProfile = (player: Player, stats: any) => {
     const relicEffects = relicEffectsOf(player);
     const mainWeapon = player?.equip?.weapon || null;
     const offhand = player?.equip?.offhand || null;

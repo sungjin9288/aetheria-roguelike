@@ -53,7 +53,9 @@ const getRecommendedRelics = (primaryId: any, ownedRelicEffects: any) => {
 const BuildAdvicePanel = ({ player }: BuildAdvicePanelProps) => {
     const [open, setOpen] = useState(false);
 
-    const profile = useMemo(() => getRunBuildProfile(player || {}), [player]);
+    // cycle 612: stats 인자 명시 추가 — explicit default-elimination
+    //   pattern (cycle 608/609/611에 이은 4번째 적용).
+    const profile = useMemo(() => getRunBuildProfile(player || {}, {}), [player]);
     const primaryId = profile?.primary?.id || 'balanced';
     const trait = TRAIT_DEFINITIONS[primaryId] || TRAIT_DEFINITIONS.balanced;
     const ownedEffects = (player?.relics || []).map((r: any) => r.effect);
