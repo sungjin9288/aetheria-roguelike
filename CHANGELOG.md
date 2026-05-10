@@ -7,6 +7,87 @@
 
 ---
 
+## Cycle 520 🎯 — CHANGELOG에 cycles 511-519 history 일괄 추가 (33번째 batch)
+
+- 마일스톤: cycle 510 batch 이후 9 사이클 미반영 batch 정리. 33번째 batch.
+  cycle 98 / 114 / 132 / 146 / 160 / 170 / 190 / 200 / 221 / 240 / 259 / 276 /
+  300 / 320 / 340 / 350 / 360 / 370 / 380 / 390 / 400 / 410 / 420 / 430 / 440 /
+  450 / 460 / 470 / 480 / 490 / 500 / 510에 이은 33번째.
+- 누적 마일스톤: cycle 510(unit 2368) → 519(unit 2407, +39). silent dead config
+  시리즈 cycle 222→519 269번째 도달.
+- 시리즈 정체성 — **util default 청소 메가 시리즈 연장**: 9사이클 모두
+  utils/ 디렉토리의 redundant default annotation 정리. cycle 502-509(8사이클)
+  이후 cycle 511-519(9사이클)로 시리즈가 17사이클까지 연장. 누적 25개 default
+  제거 (cycle 511-519 8개 default 추가).
+
+검증: tsc 0 / unit 2407 / lint clean / build-guard ok.
+
+---
+
+## Cycle 511-519 — util default 청소 메가 시리즈 연장 9사이클
+
+cycle 502-509 util default 청소 메가 시리즈 8사이클에 이어 cycle 511-519는
+동일 lens로 9사이클 추가. utils/ 디렉토리 + private helper까지 확장. cycle 510은
+batch CHANGELOG로 cycle 정렬.
+
+### util default 청소 메가 시리즈 9사이클 (cycle 511-519)
+
+- 511: getWeaponAttackValue + getWeaponCritBonus 2 slot defaults batch —
+  equipmentUtils.ts 자매 헬퍼 동시 정리.
+- 512: getArmorStyleFromItem fallback default — itemVisuals.ts. 7 callers all
+  pass fallback. (첫 시도 equipmentUtils 4 함수 equip defaults는 new-player
+  path crash로 revert. "all callers pass" vs "all callers pass non-null"
+  구별 학습.)
+- 513: getEquipmentArtProfile slotHint default — entry-point wrapper의 inner
+  default 제거하되 outer fallbackArmorStyle default는 보존 (3/4 caller 사용).
+- 514: getEquipmentPreviewStage variant default — 1 callsite 3 args 명시.
+- 515: advanceExploreState stats + outcome 2 defaults batch — _shared.ts에서
+  outcome 명시 전달, getExploreState undefined 안전.
+- 516: getEnhanceRequirement currentLevel default — 1 internal + 2 test caller
+  명시. body `?? 0` / `?? 1` nullish fallback 보존.
+- 517: getArmorBodyStyle fallback default — private helper. inner default
+  제거하되 wrapper getEquipmentArtProfile fallbackArmorStyle은 보존 (cycle
+  513의 entry-point default 전략 재확인).
+- 518: getWeaponEquipScore slot default — private helper, cycle 511의
+  getWeaponAttackValue/getWeaponCritBonus 자매 cleanup.
+- 519: getMapLevel playerLevel default — private helper. body `(playerLevel ||
+  1)` defensive 가드 보존 (caller가 0/undefined 넘기는 path 별개).
+
+**누적 8 default 추가 정리** (cycle 511-519 9사이클, cycle 510 batch 제외).
+**시리즈 누적 25 default 정리** (cycle 502-519 17사이클 합산).
+
+### 신규 lens 의의
+
+- **entry-point default 보존 전략 정착** — cycle 513/517에서 같은 모듈 내
+  wrapper-helper 관계일 때 wrapper(entry point)의 default는 보존하고 inner
+  helper의 redundant inner default만 제거. wrapper에서 string 보장된 값을
+  helper에 명시 전달이라 inner default 도달 불가지만 entry default는
+  외부로부터 접근하는 reachability 보존. cycle 513은 같은 함수 내에서
+  fallbackArmorStyle (3/4 use default 보존), slotHint (4/4 명시 제거)로
+  파라미터별 분리.
+- **defensive guard vs unreachable default 분리 재확인** — cycle 519
+  getMapLevel signature default 1은 unreachable이지만 body `(playerLevel || 1)`
+  defensive guard는 caller가 0을 넘기는 path에서 활성. cycle 505 grantGold
+  pattern과 동일.
+- **revert로 "non-null guarantee" 구분 학습** — cycle 512 첫 시도 equipmentUtils
+  4 함수 equip defaults batch는 cycle 353 test (`getSelectedSkill(player)` no
+  equip → chain calls undefined로 propagate)로 crash. "all current callers
+  pass arg" 만으로는 default 제거 불충분, "all callers pass NON-NULL value"가
+  필요. private helper 4개에 cascade되어 있어 더 위험. 이후 cycle은 single
+  helper 또는 nullish fallback이 명시된 case만 안전 cleanup.
+- **util default 청소가 단일 시리즈 최장 17사이클** — cycle 502-519. silent
+  dead config audit lens 중 가장 긴 단일 lens 시리즈. utils/ 디렉토리 거의
+  완주, 잔존 후보는 nullish-safe defensive default가 살아있는 hybrid 케이스만.
+
+### Quality gate
+
+- tsc 0 errors 유지.
+- unit test 2368 → 2407 (+39, cycle 511-519 누적 신규 가드).
+- lint clean / build-guard ok 9사이클 연속.
+- 0 회귀, 0 stale test 업데이트 필요 (cycle 507 이후 stale 가드 정착).
+
+---
+
 ## Cycle 510 🎯 — CHANGELOG에 cycles 501-509 history 일괄 추가 (32번째 batch)
 
 - 마일스톤: cycle 500 batch 이후 9 사이클 미반영 batch 정리. 32번째 batch.
