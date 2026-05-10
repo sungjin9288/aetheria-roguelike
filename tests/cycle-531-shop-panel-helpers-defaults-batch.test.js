@@ -85,10 +85,10 @@ test('cycle 531: 정합성 가드 — 6 internal callsite 보존', async () => {
     assert.ok(cctCalls >= 3, `getCompactText callsite 3건 이상 보존: ${cctCalls}건`);
 });
 
-test('cycle 531: signedDelta suffix default 보존 (cleanup 대상 외)', async () => {
+test('cycle 531: signedDelta suffix 파라미터 보존 (cycle 621 explicit elimination)', async () => {
     const source = await readSrc('src/components/ShopPanel.tsx');
-    assert.ok(/suffix:\s*any\s*=\s*''/.test(source),
-        "signedDelta suffix default '' 보존 (4 callsite 모두 1 arg 전달이라 reachable)");
+    assert.ok(/const signedDelta = \(value: any, suffix: any\)/.test(source),
+        'signedDelta suffix 파라미터 보존 (cycle 621에서 default 제거됨)');
 });
 
 test('cycle 531: cycle 502-529 회귀 가드 — util default 청소 시리즈 보존', async () => {

@@ -33,12 +33,12 @@ const getShopMaxTier = (loc: string) => {
 
 const isEquipmentItem = (item: any) => ['weapon', 'armor', 'shield'].includes(item?.type);
 
-// cycle 542: value default 0 제거 (partial cleanup) — 3 callsite (line
-//   63/64/66) 모두 1 arg 명시 전달이라 value default 도달 불가. suffix
-//   default ''는 3 callsite 모두 미명시이라 reachable 보존. cycle 537과
-//   다른 patten — outer-vs-inner 분리가 아닌 같은 layer parameter 간 partial
-//   unreachable. 청소 메가 시리즈 37번째.
-const signedDelta = (value: any, suffix: any = '') => `${value >= 0 ? '+' : ''}${value}${suffix}`;
+// cycle 542: value default 0 제거 (partial cleanup) — 3 callsite 모두
+//   1 arg 명시 전달이라 value default 도달 불가.
+// cycle 621: suffix default '' explicit default-elimination — 3 callsite
+//   suffix '' 명시 추가하여 default 도달 불가로 변환 후 제거. explicit
+//   default-elimination pattern 12번째 적용.
+const signedDelta = (value: any, suffix: any) => `${value >= 0 ? '+' : ''}${value}${suffix}`;
 
 // cycle 531: value default 0 제거 — 1 callsite (line 60 formatPercent
 //   (critDelta)) value 명시 (Math.round 결과)이라 default 도달 불가. cycle
@@ -65,10 +65,10 @@ const getComparisonMeta = (item: any, equip: any) => {
 
     if (item.type === 'armor' || item.type === 'shield' || item.type === 'weapon') {
         const deltas: any[] = [];
-        if (atkDelta !== 0) deltas.push(`ATK ${signedDelta(atkDelta)}`);
-        if (defDelta !== 0) deltas.push(`DEF ${signedDelta(defDelta)}`);
+        if (atkDelta !== 0) deltas.push(`ATK ${signedDelta(atkDelta, '')}`);
+        if (defDelta !== 0) deltas.push(`DEF ${signedDelta(defDelta, '')}`);
         if (critDelta !== 0) deltas.push(`CRIT ${formatPercent(critDelta)}`);
-        if (mpDelta !== 0) deltas.push(`MP ${signedDelta(mpDelta)}`);
+        if (mpDelta !== 0) deltas.push(`MP ${signedDelta(mpDelta, '')}`);
         if (!deltas.length) deltas.push('현재 장비와 동일한 효율');
 
         const score = atkDelta + defDelta + (critDelta * 2) + Math.floor(mpDelta / 5);

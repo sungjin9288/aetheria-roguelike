@@ -54,20 +54,20 @@ test('cycle 542: signedDelta signature에서 value default 0건', async () => {
         'signedDelta value default 0 제거');
 });
 
-test('cycle 542: suffix default 보존 (reachable)', async () => {
+test('cycle 542: suffix 파라미터 보존 (cycle 621 explicit elimination)', async () => {
     const source = await readSrc('src/components/ShopPanel.tsx');
     const fnIdx = source.indexOf('const signedDelta');
     const fnEnd = source.indexOf('=>', fnIdx);
     const sig = source.slice(fnIdx, fnEnd);
-    assert.ok(/suffix:\s*any\s*=\s*''/.test(sig),
-        "signedDelta suffix default '' 보존 (3 callsite 모두 1 arg 전달이라 reachable)");
+    assert.ok(/suffix:\s*any\)/.test(sig),
+        'signedDelta suffix 파라미터 보존 (cycle 621에서 default 제거됨)');
 });
 
 test('cycle 542: 정합성 가드 — 3 internal callsite 보존', async () => {
     const source = await readSrc('src/components/ShopPanel.tsx');
-    assert.ok(/signedDelta\(atkDelta\)/.test(source), 'ATK callsite 보존');
-    assert.ok(/signedDelta\(defDelta\)/.test(source), 'DEF callsite 보존');
-    assert.ok(/signedDelta\(mpDelta\)/.test(source), 'MP callsite 보존');
+    assert.ok(/signedDelta\(atkDelta,\s*''\)/.test(source), 'ATK callsite 보존');
+    assert.ok(/signedDelta\(defDelta,\s*''\)/.test(source), 'DEF callsite 보존');
+    assert.ok(/signedDelta\(mpDelta,\s*''\)/.test(source), 'MP callsite 보존');
 });
 
 test('cycle 542: body template literal 보존', async () => {
