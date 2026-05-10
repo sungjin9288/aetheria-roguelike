@@ -49,16 +49,15 @@ test('cycle 441: FocusPanelHeader destructure에서 default backLabel 제거', a
     assert.ok(/\bbackLabel\b/.test(block), 'backLabel 파라미터 보존');
 });
 
-test('cycle 441: 보존 default — eyebrow/meta/archiveLabel/titleClassName/className 그대로', async () => {
+test('cycle 441: 보존 default — meta/titleClassName/bleedClassName 그대로', async () => {
+    // cycle 467이 eyebrow / archiveLabel / className 추가 정리. 이 assertion은
+    // cycle 467 이후 잔존 default만 가드.
     const source = await readSrc('src/components/FocusPanelHeader.tsx');
     const destructIdx = source.indexOf('const FocusPanelHeader');
     const destructEnd = source.indexOf('}: any) => (', destructIdx);
     const block = source.slice(destructIdx, destructEnd);
-    assert.ok(/eyebrow = ''/.test(block), 'eyebrow default 보존');
     assert.ok(/meta = ''/.test(block), 'meta default 보존');
-    assert.ok(/archiveLabel = '인벤토리'/.test(block), 'archiveLabel default 보존');
     assert.ok(/titleClassName = ''/.test(block), 'titleClassName default 보존');
-    assert.ok(/className = ''/.test(block), 'className default 보존');
     assert.ok(/bleedClassName = '-mx-3 px-3'/.test(block), 'bleedClassName default 보존');
 });
 

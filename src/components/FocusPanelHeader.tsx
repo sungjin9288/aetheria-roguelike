@@ -1,10 +1,12 @@
 import { ChevronLeft, Package } from 'lucide-react';
 
 // cycle 441: default backLabel 값 제거 — 5 호출자 모두 명시 전달이라 default
-//   '뒤로' 도달 불가. 다른 default (archiveLabel/titleClassName 등)는 호출자
-//   부분 누락 path 활성이라 보존.
+//   '뒤로' 도달 불가.
+// cycle 467: 잔존 redundant default 3건 추가 정리 — eyebrow / archiveLabel /
+//   className. eyebrow는 5/5 명시 전달, archiveLabel은 4/5 'INV' 전달 + 1/5
+//   archive 미렌더, className은 0/5 전달 (정적 baseline만 사용).
 const FocusPanelHeader = ({
-  eyebrow = '',
+  eyebrow,
   title,
   meta = '',
   onBack = null,
@@ -12,14 +14,13 @@ const FocusPanelHeader = ({
   backTestId = null,
   rightSlot = null,
   onOpenArchive = null,
-  archiveLabel = '인벤토리',
+  archiveLabel,
   archiveTestId = null,
-  className = '',
   titleClassName = '',
   bleedClassName = '-mx-3 px-3',
 }: any) => (
   <div
-    className={`sticky top-0 z-10 mb-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] pb-2.5 pt-1 ${bleedClassName} ${className}`.trim()}
+    className={`sticky top-0 z-10 mb-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] pb-2.5 pt-1 ${bleedClassName}`.trim()}
   >
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0 flex-1">
