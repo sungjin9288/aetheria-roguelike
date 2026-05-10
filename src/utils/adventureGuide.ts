@@ -1,7 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import type { GameMap, Player } from "../types/index.js";
 import { QUESTS } from '../data/quests.js';
-import { getDiscoveryOdds, getMapPacingProfile } from './explorationPacing.js';
+import { getDiscoveryOdds } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
 import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
@@ -93,7 +93,10 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
     }
 
     const odds = getDiscoveryOdds(player, mapData);
-    const pacingProfile = odds.pacingProfile || getMapPacingProfile(mapData);
+    // cycle 469: defensive fallback 제거 — getDiscoveryOdds producer가 항상 5
+    //   valid profile 중 하나 반환이라 odds.pacingProfile은 항상 truthy.
+    //   fallback 진입 0건 unreachable.
+    const pacingProfile = odds.pacingProfile;
     const eventPct = clampPercent(odds.narrativeEventChance);
     const relicPct = clampPercent(odds.relicChance);
     const quietPct = clampPercent(odds.quietChance);
