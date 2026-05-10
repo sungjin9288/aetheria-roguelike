@@ -117,7 +117,11 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, summary = false, onS
     );
 };
 
-const SkillTreePreview = ({ player, actions = null }: SkillTreePreviewProps) => {
+// cycle 565: actions default null 제거 — 1 production caller (Dashboard:188
+//   <SkillTreePreview player={player} actions={actions} />) 명시 전달이라
+//   default 도달 불가. SkillTreePreviewProps interface의 actions?: any
+//   optional은 보존. 청소 메가 시리즈 58번째.
+const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
     const [expandedJob, setExpandedJob] = useState<any>(null);
     const [swapTarget, setSwapTarget] = useState<any>(null); // skillName being swapped
     const [showClassTree, setShowClassTree] = useState(false);
