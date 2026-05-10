@@ -126,7 +126,10 @@ const getWeaponStyle = (item: Item | null | undefined) => {
     return getWeaponVisualKey(item);
 };
 
-export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: any = null, fallbackArmorStyle: any = 'coat') => {
+// cycle 513: slotHint default null 제거 — 4 callsite 모두 slotHint 명시 전달
+//   ('weapon' / 'offhand' / 'armor'). default 도달 불가. fallbackArmorStyle은
+//   3/4 caller가 default 'coat' 활용하므로 보존.
+export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: any, fallbackArmorStyle: any = 'coat') => {
     // cycle 341: itemName / subtype / hands 3 dead 필드 제거 — 외부 read 0건.
     //   slot / key / toneKey / palette는 production 또는 tests에서 사용되므로 보존.
     if (!item) {
