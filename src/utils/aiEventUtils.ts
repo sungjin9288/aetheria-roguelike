@@ -14,7 +14,10 @@ const normalizeChoiceText = (choice: any, idx: any) => {
     return normalizeText(raw.replace(/^\d+\s*[.)-]?\s*/, ''), `선택지 ${idx + 1}`);
 };
 
-const dedupeChoices = (choices: any[] = []) => {
+// cycle 527: choices default [] 제거 — 1 internal callsite (line 251)
+//   dedupeChoices([...rawChoices, ...fallbackChoices])가 spread 배열 명시
+//   전달이라 default 도달 불가. util default 청소 메가 시리즈 24번째 batch.
+const dedupeChoices = (choices: any[]) => {
     const seen = new Set();
     return choices.filter((choice: any) => {
         const key = normalizeText(choice).toLowerCase();
@@ -202,7 +205,12 @@ const buildProceduralOutcome = ({ desc, choice, choiceIndex, context = {} }: any
     };
 };
 
-const normalizeOutcomes = (rawOutcomes: any[] = [], choices: any[] = [], context: any = {}) => {
+// cycle 527: 3 defaults (rawOutcomes/choices/context) 제거 — 1 internal callsite
+//   (line 260) normalizeOutcomes(raw.outcomes, choices, { ...context, desc })
+//   3 args 명시. choices는 dedupeChoices() 결과(항상 배열), context는 spread
+//   object. body의 Array.isArray(rawOutcomes) 가드는 raw.outcomes가 undefined
+//   인 path 보존 (caller가 raw.outcomes를 그대로 전달).
+const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => {
     const normalized = new Map();
 
     if (Array.isArray(rawOutcomes)) {
