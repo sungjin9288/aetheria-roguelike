@@ -22,13 +22,16 @@ import { soundManager } from '../../systems/SoundManager';
  * @param {boolean} opts.extendedChecks - attack/skill 직접 승리 시 true (시즌XP, 마왕, 진엔딩, story log)
  * @returns {{ earlyReturn: boolean }} earlyReturn이 true이면 호출자가 즉시 return
  */
+// cycle 592: extendedChecks / liveConfig 2 defaults batch 제거 — 3 production
+//   caller (combatAttack:81/131, combatItem:67) 모두 명시 전달이라 두 default
+//   모두 도달 불가. cycle 265 liveConfig 4번째 인자 전달 보존. 청소 메가
+//   시리즈 82번째.
 export const handleVictoryOutcome = ({
     playerAfterCombat, deadEnemy, stats,
     dispatch, addLog, addStoryLog,
     emitDailyProtocolLogs, emitUnlockedTitles,
-    extendedChecks = false,
-    // cycle 265: liveConfig 4번째 인자로 전달 — seasonEvent / eventMultiplier 보너스 dispatch.
-    liveConfig = {},
+    extendedChecks,
+    liveConfig,
 }: any) => {
     const passiveBonus = { goldMult: stats?.passiveGoldMult || 0, expMult: stats?.passiveExpMult || 0 };
     const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus, liveConfig);
