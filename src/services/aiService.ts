@@ -112,7 +112,7 @@ export const AI_SERVICE = {
         return pickFallbackEvent(loc, history, context);
     },
 
-    generateStory: async (type: any, data: any, uid: any = 'anonymous') => {
+    generateStory: async (type: any, data: any, uid: any) => {
         if (isSmokeRuntime()) {
             return AI_SERVICE.getFallback(type, data);
         }
