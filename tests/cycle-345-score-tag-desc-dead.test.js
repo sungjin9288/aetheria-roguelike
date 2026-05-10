@@ -66,7 +66,7 @@ test('cycle 345: getRunBuildProfile 동작 보존', async () => {
     assert.ok(profile.primary, 'primary 보존');
     assert.ok('id' in profile.primary, 'primary.id 보존');
     assert.ok('name' in profile.primary, 'primary.name 보존');
-    assert.ok('score' in profile.primary, 'primary.score 보존');
+    // cycle 443: primary.score 출력 dead strip — 회귀 가드는 cycle-443 test가 대체.
     assert.ok('reasons' in profile.primary, 'primary.reasons 보존');
     assert.equal(profile.primary.desc, undefined, 'primary.desc 0건');
 });

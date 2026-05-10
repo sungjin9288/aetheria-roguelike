@@ -121,11 +121,17 @@ export const getRunBuildProfile = (player: Player, stats: any = {}) => {
         tags.push(scoreTag('status', '상태이상 집행자', score, reasons));
     }
 
+    // cycle 443: score 출력 dead 정리 — sort/filter 후 외부 read 0건 (consumer는
+    //   tag.name / tag.id / tag.reasons만 read). cycle 347 _sortKey strip 패턴.
     const ranked = tags
         .filter((tag: any) => tag.score >= 3)
-        .sort((a: any, b: any) => b.score - a.score || a.name.localeCompare(b.name, 'ko'));
+        .sort((a: any, b: any) => b.score - a.score || a.name.localeCompare(b.name, 'ko'))
+        .map(({ score: _score, ...rest }: any) => { void _score; return rest; });
 
-    const primary = ranked[0] || scoreTag('balanced', '균형형 런', 0, ['다양한 선택 가능']);
+    const fallbackPrimary = scoreTag('balanced', '균형형 런', 0, ['다양한 선택 가능']);
+    const { score: _ps, ...fallbackPrimaryStripped } = fallbackPrimary;
+    void _ps;
+    const primary = ranked[0] || fallbackPrimaryStripped;
 
     return {
         primary,
