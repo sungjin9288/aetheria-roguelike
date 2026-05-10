@@ -151,7 +151,10 @@ export const registerCodex = (player: Player, category: any, name: any) => {
             ...player.stats,
             codex: {
                 ...codex,
-                [category]: { ...cat, [name]: { discovered: true, obtainedAt: Date.now() } },
+                // cycle 438: timestamp 출력 dead 제거 — production read 0건.
+                //   codex consumer는 `codex[cat][name]` truthy check 또는 Object.keys
+                //   count만 사용. discovered 필드만 의미 있음.
+                [category]: { ...cat, [name]: { discovered: true } },
             },
         },
     };
@@ -455,7 +458,7 @@ export const migrateData = (rawData: any) => {
                 : item.type === 'shield' ? 'shields'
                 : item.type === 'mat' ? 'materials' : null;
             if (cat && item.name) {
-                target.stats.codex[cat][item.name] = { discovered: true, obtainedAt: Date.now() };
+                target.stats.codex[cat][item.name] = { discovered: true };
             }
         }
         // 기존 장비에서도 부트스트랩
@@ -465,7 +468,7 @@ export const migrateData = (rawData: any) => {
                 const cat = eq.type === 'weapon' ? 'weapons'
                     : eq.type === 'armor' ? 'armors'
                     : eq.type === 'shield' ? 'shields' : null;
-                if (cat) target.stats.codex[cat][eq.name] = { discovered: true, obtainedAt: Date.now() };
+                if (cat) target.stats.codex[cat][eq.name] = { discovered: true };
             }
         }
         // killRegistry에서 몬스터 codex 부트스트랩

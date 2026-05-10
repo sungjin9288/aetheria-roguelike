@@ -17,7 +17,8 @@ export const rewardActionMap = {
                     ...state.player.stats,
                     codex: {
                         ...codex,
-                        [category]: { ...cat, [name]: { discovered: true, obtainedAt: Date.now() } },
+                        // cycle 438: timestamp 출력 dead 제거 (cycle 333-356 시리즈 회귀).
+                        [category]: { ...cat, [name]: { discovered: true } },
                     },
                 },
             },
