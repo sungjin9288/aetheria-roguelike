@@ -322,7 +322,10 @@ export const getTraitItemResonance = (item: Item | null | undefined, traitProfil
     };
 };
 
-export const getTraitFeaturedItems = (items: any[] = [], traitProfile: any, player: Player | null = null, limit: any = 3) => (
+// cycle 598: items / player / limit 3 defaults batch 제거 — 2 callers (1
+//   internal:340 + 1 test:213) 모두 4 args 명시 전달이라 3 defaults 모두 도달
+//   불가. body의 (items || []) defensive guard 보존.
+export const getTraitFeaturedItems = (items: any[], traitProfile: any, player: Player | null, limit: any) => (
     (items || [])
         .map((item: any) => ({
             item,
