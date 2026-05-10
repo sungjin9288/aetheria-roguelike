@@ -134,9 +134,12 @@ export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
             const levelQuestSync = CombatEngine.updateQuestProgress(updatedPlayer, '');
             updatedPlayer = { ...updatedPlayer, quests: levelQuestSync.updatedQuests };
 
+            // cycle 439: history record timestamp 출력 dead 제거 — aiEventUtils
+            //   summarizeHistory / getRecentEventSet은 event / choice / outcome만 read.
+            //   timestamp 필드 어디로도 흐르지 않는 dead (cycle 333-356 시리즈 회귀).
             const newHistory = [
                 ...updatedPlayer.history,
-                { timestamp: Date.now(), event: currentEvent.desc, choice: currentEvent.choices?.[idx], outcome: resultText }
+                { event: currentEvent.desc, choice: currentEvent.choices?.[idx], outcome: resultText }
             ].slice(-50);
             updatedPlayer = { ...updatedPlayer, history: newHistory };
 
