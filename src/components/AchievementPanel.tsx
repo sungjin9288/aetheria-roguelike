@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Trophy, Star, Skull, Swords, Crown, Gift, Footprints, Shield, BookOpen, Compass, Hammer, Sparkles, Coins, RefreshCcw, Flame, Link2 } from 'lucide-react';
 import { DB } from '../data/db';
@@ -6,10 +6,12 @@ import type { Player } from '../types/index.js';
 import { formatRewardParts, getAchievementCurrentValue, isAchievementUnlocked } from '../utils/gameUtils';
 import SignalBadge from './SignalBadge';
 
+// cycle 473: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
+//   제거 후 caller 0건. cascade로 토글 상태 / 요약 useMemo / className ternary
+//   까지 일괄 정리 (cycle 472 paired).
 interface AchievementPanelProps {
     player: Player;
     actions?: any;
-    compact?: boolean;
 }
 
 const THEME_BY_TARGET: any = {
@@ -53,9 +55,8 @@ const getTheme = (achievement: any) => {
     return base;
 };
 
-// cycle 452: default compact 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-const AchievementPanel = ({ player, actions, compact }: AchievementPanelProps) => {
-    const [showAllAchievements, setShowAllAchievements] = useState(false);
+// cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const AchievementPanel = ({ player, actions }: AchievementPanelProps) => {
     const achievements = useMemo(() => {
         const claimed = player?.stats?.claimedAchievements || [];
         return (DB.ACHIEVEMENTS || []).map((achievement: any) => {
@@ -75,18 +76,6 @@ const AchievementPanel = ({ player, actions, compact }: AchievementPanelProps) =
     const locked = achievements.filter((a: any) => !a.unlocked);
     const claimableCount = unlocked.filter((a: any) => !a.claimed).length;
     const completionRatio = (unlocked.length / Math.max(1, achievements.length)) * 100;
-    const summaryAchievements = useMemo(() => {
-        const rankedLocked = [...locked].sort((a: any, b: any) => (
-            (b.current / Math.max(1, b.goal)) - (a.current / Math.max(1, a.goal)) || a.goal - b.goal
-        ));
-        return [
-            ...unlocked.filter((entry: any) => !entry.claimed),
-            ...rankedLocked,
-            ...unlocked.filter((entry: any) => entry.claimed),
-        ].slice(0, 3);
-    }, [locked, unlocked]);
-    const hiddenAchievementCount = Math.max(0, achievements.length - summaryAchievements.length);
-    const showSummaryView = compact && !showAllAchievements;
 
     const handleClaim = (ach: any) => {
         if (ach.claimed) return;
@@ -94,8 +83,8 @@ const AchievementPanel = ({ player, actions, compact }: AchievementPanelProps) =
     };
 
     return (
-        <div data-testid="achievement-panel" className={compact ? 'space-y-2.5' : 'space-y-3'}>
-            <div className={`rounded-[1.2rem] border border-white/8 bg-black/18 ${compact ? 'px-3 py-3' : 'px-4 py-3.5'}`}>
+        <div data-testid="achievement-panel" className="space-y-3">
+            <div className="rounded-[1.2rem] border border-white/8 bg-black/18 px-4 py-3.5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
@@ -108,16 +97,6 @@ const AchievementPanel = ({ player, actions, compact }: AchievementPanelProps) =
                     <div className="flex flex-wrap gap-1.5">
                         <SignalBadge tone="neutral" size="sm">{unlocked.length}/{achievements.length} unlocked</SignalBadge>
                         {claimableCount > 0 && <SignalBadge tone="upgrade" size="sm">수령 대기 {claimableCount}</SignalBadge>}
-                        {compact && (hiddenAchievementCount > 0 || showAllAchievements) && (
-                            <button
-                                data-testid="achievement-toggle-show-all"
-                                type="button"
-                                onClick={() => setShowAllAchievements((prev: any) => !prev)}
-                                className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/78 hover:bg-white/[0.04]"
-                            >
-                                {showAllAchievements ? '요약 보기' : '기록 더 보기'}
-                            </button>
-                        )}
                     </div>
                 </div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
@@ -130,55 +109,7 @@ const AchievementPanel = ({ player, actions, compact }: AchievementPanelProps) =
                 </div>
             </div>
 
-            {showSummaryView ? (
-                <div className="space-y-2">
-                    {summaryAchievements.map((a: any, i: any) => {
-                        const Icon = a.icon;
-                        return (
-                            <Motion.div
-                                key={a.id}
-                                data-testid={`achievement-card-${a.id}`}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.04 }}
-                                className={`rounded-[1rem] border px-3 py-2 ${a.unlocked ? a.card : 'border-white/8 bg-black/16'}`}
-                            >
-                                <div className="flex items-start gap-2.5">
-                                    <div className="mt-0.5 rounded-full border border-white/8 bg-black/20 p-1.5">
-                                        <Icon size={13} className={a.unlocked ? a.iconTone : 'text-slate-500'} />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex flex-wrap items-center gap-1.5">
-                                            <div className={`text-[13px] font-rajdhani font-bold ${a.unlocked ? a.titleClass : 'text-slate-200/84'}`}>{a.title}</div>
-                                            {a.unlocked
-                                                ? <SignalBadge tone={a.claimed ? 'neutral' : 'upgrade'} size="sm">{a.claimed ? '완료' : '수령 가능'}</SignalBadge>
-                                                : <SignalBadge tone="neutral" size="sm">{Math.min(a.current, a.goal)}/{a.goal}</SignalBadge>}
-                                        </div>
-                                        <div className="mt-1 text-[10px] font-fira text-slate-300/74 leading-snug">
-                                            {a.unlocked ? (a.rewardText || a.desc) : a.desc}
-                                        </div>
-                                    </div>
-                                    {a.unlocked && !a.claimed && (
-                                        <Motion.button
-                                            data-testid={`achievement-claim-${a.id}`}
-                                            whileTap={{ scale: 0.96 }}
-                                            onClick={() => handleClaim(a)}
-                                            className="shrink-0 rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 px-2.5 py-1.5 text-[10px] font-rajdhani font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/14"
-                                        >
-                                            수령
-                                        </Motion.button>
-                                    )}
-                                </div>
-                            </Motion.div>
-                        );
-                    })}
-                    {locked.length > 0 && (
-                        <div className="rounded-[0.95rem] border border-white/8 bg-black/16 px-3 py-2 text-[10px] font-fira text-slate-400/76">
-                            잠금 기록 {locked.length}개는 `기록 더 보기`에서 확인합니다.
-                        </div>
-                    )}
-                </div>
-            ) : unlocked.length > 0 && (
+            {unlocked.length > 0 && (
                 <div className="space-y-2">
                     {unlocked.map((a: any, i: any) => {
                         const Icon = a.icon;
@@ -230,7 +161,7 @@ const AchievementPanel = ({ player, actions, compact }: AchievementPanelProps) =
                 </div>
             )}
 
-            {!showSummaryView && locked.length > 0 && (
+            {locked.length > 0 && (
                 <div className="rounded-[1.15rem] border border-white/8 bg-black/16 px-4 py-3.5">
                     <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
                         Locked Records

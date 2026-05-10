@@ -41,7 +41,10 @@ test('AchievementPanel: dynamic achievement-claim-{id} testid 노출', async () 
     assert.match(source, /data-testid\s*=\s*\{`achievement-claim-\$\{[^}]+\}`\}/);
 });
 
-test('AchievementPanel: achievement-toggle-show-all testid 노출', async () => {
+test('AchievementPanel: cycle 473 paired — 요약 토글 버튼 cascade 제거 보존', async () => {
+    // cycle 473이 compact prop cascade로 토글 버튼 + 요약 모드 자체 제거.
+    // 이전 testid assertion → cascade cleanup 보존 가드로 약화.
     const source = await readSrc('src/components/AchievementPanel.tsx');
-    assert.match(source, /data-testid\s*=\s*["']achievement-toggle-show-all["']/);
+    assert.ok(!/achievement-toggle-show-all/.test(source),
+        'cycle 473 토글 버튼 testid 제거 보존');
 });
