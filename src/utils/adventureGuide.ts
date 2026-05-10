@@ -130,7 +130,10 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
     };
 };
 
-export const getMoveRecommendations = (player: Player, stats: any, currentMap: GameMap | null | undefined, maps: Record<string, GameMap> = {}) => {
+// cycle 579: maps default {} 제거 — 2 production caller (MapNavigator:66,
+//   ControlPanel:58) + 8+ test caller 모두 maps 명시 (DB.MAPS / MAPS / object
+//   literal)이라 default 도달 불가. 청소 메가 시리즈 71번째.
+export const getMoveRecommendations = (player: Player, stats: any, currentMap: GameMap | null | undefined, maps: Record<string, GameMap>) => {
     if (!currentMap?.exits?.length) return [];
 
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
