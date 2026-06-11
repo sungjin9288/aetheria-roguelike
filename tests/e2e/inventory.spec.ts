@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { startE2ERun } from './testHelpers';
 
 /**
  * E2E: 인벤토리 패널 + 직업 친화 칩 노출.
@@ -7,17 +8,7 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('Inventory panel', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/?e2e=1');
-        const introInput = page.getByTestId('intro-name-input');
-        if (await introInput.isVisible({ timeout: 10_000 }).catch(() => false)) {
-            await page.getByTestId('intro-start-button').click();
-            await expect(introInput).toBeHidden({ timeout: 15_000 });
-        }
-        await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 20_000 });
-        const statusChip = page.getByTestId('status-character-chip');
-        if (await statusChip.isVisible({ timeout: 3_000 }).catch(() => false)) {
-            await statusChip.click();
-        }
+        await startE2ERun(page, { openStatusConsole: true });
     });
 
     test('INV 진입 → 인벤 패널 헤더 노출', async ({ page }) => {

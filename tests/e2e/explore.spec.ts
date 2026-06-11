@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { startE2ERun } from './testHelpers';
 
 /**
  * E2E: Explore 버튼 흐름.
@@ -8,24 +9,20 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('Explore flow', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/?e2e=1');
-        const introInput = page.getByTestId('intro-name-input');
-        if (await introInput.isVisible({ timeout: 10_000 }).catch(() => false)) {
-            await page.getByTestId('intro-start-button').click();
-            await expect(introInput).toBeHidden({ timeout: 15_000 });
-        }
-        await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 20_000 });
+        await startE2ERun(page);
     });
 
-    test('하단 ControlPanel에 EXPLORE / MOVE 버튼 노출', async ({ page }) => {
+    test('하단 ControlPanel에 EXPLORE / MAP 버튼 노출', async ({ page }) => {
         const explore = page.getByRole('button', { name: /EXPLORE/i }).first();
-        const move = page.getByRole('button', { name: /MOVE/i }).first();
+        const move = page.getByTestId('control-move');
         await expect(explore).toBeVisible({ timeout: 8_000 });
         await expect(move).toBeVisible({ timeout: 5_000 });
+        await expect(move).toHaveAccessibleName(/MAP|MOVE/i);
+        await expect(page.getByTestId('control-map-signal')).toBeVisible({ timeout: 5_000 });
     });
 
-    test('MOVE 버튼 클릭 → 이동 가능 지역 노출', async ({ page }) => {
-        const move = page.getByRole('button', { name: /MOVE/i }).first();
+    test('MAP 버튼 클릭 → 이동 가능 지역 노출', async ({ page }) => {
+        const move = page.getByTestId('control-move');
         await expect(move).toBeVisible({ timeout: 8_000 });
         await move.click();
         // 이동 메뉴는 시작의 마을의 인접 지역(고요한 숲 등) 노출

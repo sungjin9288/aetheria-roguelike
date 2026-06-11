@@ -1,5 +1,451 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (Design & Readability Polish Slice 20):
+- 모바일(390px) 실화면 감사로 readability slice 1-10 이후 남은 중복/충돌 신호를 확정하고 정리했다. 진단 경로: 첫 뷰포트 → 이벤트 → 전투(공격 로그 포함) → 승리 → 상점 → 퀘스트 보드 스크린샷 비교.
+- 적 텔레그래프 명칭 충돌 해소: heavy 예고 라벨 `강타 준비/강타 가능` → `맹공 준비/맹공 주의` (CombatEngine.predictEnemyNextAction). 플레이어 시작 스킬 '강타'와 같은 화면에서 충돌해 적 의도를 내 스킬 확률로 오독하던 문제. 적 heavy hit 로그("맹렬하게 공격합니다") 용어와 통일.
+- 텔레그래프 표시 채널 단일화: CombatPanel의 모바일 telegraph 칩과 데스크톱 `▶ 적 — 라벨` 행 제거 — combat forecast strip INTENT 셀이 동일 라벨을 항상 표시해 한 화면 2회 출력되던 완전 중복. telegraphColorClass 스타일 맵도 함께 제거.
+- 승리 로그 보상 중복 제거: `addCombatDigestLogs`의 summaryParts에서 EXP/Gold 파트 삭제 — 직전 `MSG.VICTORY`("승리! EXP +N, Gold +N")와 동일 수치 2회 출력이던 중복. digest는 처치 + 전리품 요약 + 후속 힌트 anchor 역할만 담당. 미사용이 된 victoryResult destructure도 정리 (callsite 8-props는 cycle 591 가드 그대로).
+- 상점 딜 행 차단 사유 중복 제거: Daily Deals 행의 본문 reason 텍스트 삭제 — 우측 버튼이 동일한 "골드 부족" 등을 이미 표시. 행당 1회 표기로 통일.
+- 퀘스트 보드 추천 오퍼레이션 칩 줄 통합: `Lv/빌드/지역` 메타 칩 줄과 `EXP/G` 보상 칩 줄이 분리되어 어색하게 떠 보이던 것을 RewardChips `inline` 모드 추가로 한 줄에 합류.
+- 로그 핵심 숫자 강조: TerminalView `renderLogText` — 데미지/HP/보상 수치(`+21`, `16`, `73/89`, `35%`)를 본문보다 밝고 굵게 렌더 (readability 리서치 "라벨보다 숫자 먼저" 원칙의 로그 스트림 적용).
+- stale 가드 1건 갱신: cycle-428 RewardChips destructure 정규식에 `inline = false` 허용 분기 추가.
+
+Verification (Design & Readability Polish Slice 20):
+- `npm run type-check` 0 errors, `npm run lint` clean, `npm run test:unit` 2885/2885, `npm run build:guard` ok, `npm run test:smoke` desktop 완주.
+- 브라우저 실측(390×844): 전투 화면에서 telegraph 칩 소멸 + INTENT 단일 표시, 공격 로그 숫자 강조 렌더, 승리 로그 `승리! EXP +21, Gold +18` 1회 + `전투 정리: 숲 요정 처치`(수치 무반복), 상점 차단 사유 행당 1회, 퀘스트 보드 `LV.1 · EXP 60 · 200G` 한 줄 확인.
+
+Checked (Slice 19+20 iOS Device Gate — PASSED):
+- Slice 19+20 포함 아카이브(`2026-06-11 20:14`) 기준 `npm run ios:device:smoke` 전체 통과 (exit 0): metadata → install (`.../21983C8F.../App.app`) → foreground launch (pid 1797) → **60초 hold 후에도 프로세스 생존** → done. 이전 blocker 2건(개발자 프로필 미신뢰, 기기 잠금) 모두 해소.
+- 실기기 자동화 게이트 완료 — 남은 것은 사용자 수동 5분 성장 체감 루틴뿐 (첫 전투 4-5턴 / 레벨업 스탯 표기 / 6탐험 내 첫 유물 / 맹공 INTENT 단일 표시 / 로그 숫자 강조 / 상점·퀘스트 보드 표기).
+
+Done (Early Growth Tempo Slice 19):
+- 전체 점검 결과 초반 30분 경험의 3대 병목을 수치로 확정하고 해소했다: (1) Lv1 전투가 기본공격 9-10턴/강타 6-7턴으로 과도하게 느림, (2) 레벨업 ATK +2가 턴수 변화를 만들지 못해 성장 체감 0, (3) 첫 유물(빌드 선택의 재미)이 평균 10탐험 이후에야 등장.
+- 몬스터 HP 곡선을 spawnEnemy inline `120+30L` → `BALANCE.MONSTER_HP_BASE(70) + L × MONSTER_HP_PER_LEVEL(32)`로 교체. Lv1 -32%, Lv20 -1%, Lv50 +3% — 초반 템포만 선택적으로 가속하고 중후반 밸런스는 보존. 몬스터 골드 base 10 → `BALANCE.MONSTER_GOLD_BASE(16)` (Lv1 골드 12→18, 3-4전투당 휴식 1회 경제). 몬스터 ATK/EXP 곡선은 불변 — Slice 17-18 quest pacing 가드(`tests/quest-progression-pacing.test.js` Lv5 75/259 루트)는 전부 그대로 통과.
+- `BALANCE.ATK_PER_LEVEL` 2 → 3, INITIAL_STATE 시작 atk 10 → 12. Lv1 실효 ATK 14(단검 포함)로 첫 전투 4-5턴, 레벨마다 데미지 +3이 턴수 단축으로 체감되는 구조.
+- 첫 유물 보장: `BALANCE.FIRST_RELIC_PITY_EXPLORES(6)` — 유물 0개 상태로 6탐험 경과 시 다음 전투형 탐험에서 확률 roll 없이 유물 3선택 보장 (`exploreActions.ts` firstRelicPity 분기).
+- 전투 로그 burst 해소: 치명타/속성 약점/속성 저항/연격이 본문과 별도 로그 4건으로 중복 출력되던 것을 attack/skill 양 경로 모두 본문 태그로 통합 (`[치명타]`, `[연격 +N]` 형식). `MSG.SKILL_USE`에 tags 파라미터 추가(COMBAT_ATTACK_DETAIL 동일 패턴, 단일 호출자 명시 전달). 희귀 유물 proc 로그(처형/연속 베기/허공 각성 등)는 흥분 모먼트라 보존.
+- 레벨업 성장 가시화: `MSG.LEVEL_UP`이 `⬆️ 레벨 업! Lv.N — ATK +3 / HP +20` 형식으로 스탯 상승을 직접 표기.
+- 신규 가드 `tests/early-growth-tempo.test.js` 9건: BALANCE 계약, Lv1 슬라임 실측 스폰(신입 보호 포함 HP ≤ 75), 강타 최악 분산 5턴 이내, applyExpGain ATK +3 실측, HP 곡선 초반 가속/후반 보존, 골드 경제, 첫 유물 pity 소스 가드, 레벨업 로그 표기. stale 가드 2건 갱신: `combat-engine-core.test.js` BALANCE 미러 ATK_PER_LEVEL 3 동기화, `cycle-263` critical 로그 카운트가 literal+ternary 합산으로 변경.
+
+Verification (Early Growth Tempo Slice 19):
+- `node --import tsx --test tests/early-growth-tempo.test.js tests/combat-engine-core.test.js tests/cycle-263-critical-log-sound-mapping.test.js tests/quest-progression-pacing.test.js tests/difficulty-manager.test.js` → 83/83.
+- `npm run test:unit` → 2885/2885. `npm run type-check` 0 errors, `npm run lint` clean, `npm run build:guard` ok, `npm run test:smoke` desktop 완주, `npm run test:e2e` Playwright 21/21.
+- 브라우저 실측(dev preview, smoke 모드): 신규 캐릭터로 고요한 숲 진입 → 숲의 정령 HP 89(신입 보호 적용), 기본공격 5턴 처치, 승리 보상 `EXP +21, Gold +18`, 태그 통합 로그 `숲의 정령에게 32 피해! (26/89) [치명타]` 확인. 콘솔 에러 0건.
+
+Blocked / Not Verified (Early Growth Tempo Slice 19):
+- iPhone 실기기 5분 성장 체감 루틴은 여전히 수동 수행 대기 (이번 슬라이스가 그 루틴의 측정 대상).
+- 커밋은 보류 — working tree에 Slice 4-18 미커밋 변경과 함께 누적 중.
+
+Checked (Early Level Curve iOS QA Readiness - 2026-06-08):
+- Rechecked the next release-critical step after Slice 18: latest iPhone readiness for the manual 5-minute early-growth feel routine.
+- `node --import tsx --test tests/quest-progression-pacing.test.js` passed 5/5, keeping the automated early route pacing guard green.
+- `npm run mobile:doctor` passed for iOS/Xcode metadata and continued to report missing Android release signing input.
+- `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` reported no attached Android device.
+- `xcrun devicectl list devices` detected target iPhone `성진` / `iPhone 14 Pro Max` / `FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B` as `available (paired)`.
+- `npm run cap:sync` passed and refreshed Android/iOS Capacitor web assets from the current working tree.
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` passed; latest archive is `build/ios/Aetheria.xcarchive`, timestamp `2026-06-08 00:49:24 KST`.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` installed and launched the app, but failed at the final hold check. Install URL was `file:///private/var/containers/Bundle/Application/B758A94C-C306-455B-83CC-AE69D99286EB/App.app/`; launch initially reported `/App.app/App` pid `84680`, then the process was absent after the 60-second hold.
+- Immediate relaunch triage failed with `Locked`: `Unable to launch com.aetheria.roguelike because the device was not, or could not be, unlocked`.
+
+Blocked / Not Verified (Early Level Curve iOS QA Readiness - 2026-06-08):
+- Latest archive exists and install/initial launch succeeded, but 60-second foreground hold did not complete because the device entered or remained in a locked/non-foreground state.
+- Manual iPhone 5-minute growth-feel routine is still pending and requires the iPhone to stay unlocked and in foreground.
+- Android release verification remains blocked by missing `android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`.
+- Android physical-device QA remains blocked by no attached Android device.
+
+Done (Early Level Curve Slice 18 - 2026-06-07):
+- Continued the early-growth feedback slice after quest reward caps. The remaining issue was the starting EXP curve: a new character's first `nextExp` was 100, so first-visit rewards plus a few early kills could still make the opening feel too fast.
+- Added `CONSTANTS.START_NEXT_EXP = 150` and wired the initial reducer player state to that value.
+- Updated character start so a new run computes class vitals at Lv1 and explicitly resets `level: 1`, `exp: 0`, and `nextExp: CONSTANTS.START_NEXT_EXP`.
+- Aligned quest claim pacing fallback with the same start EXP constant.
+- Added an early route simulation regression test covering first forest visit, first story quest, slime/boar/spider kills, and beginner quest claims. The route now ends at Lv5 with 75/259 EXP instead of continuing the previous faster burst pattern.
+- Synced the updated web assets into Capacitor native projects.
+- Regenerated `build/ios/Aetheria.xcarchive` and installed/launched it on the connected iPhone device.
+
+Verification (Early Level Curve Slice 18 - 2026-06-07):
+- `node --import tsx --test tests/quest-progression-pacing.test.js tests/quest-operations.test.js tests/combat-engine-core.test.js` -> 51/51 passed.
+- `node --import tsx --test tests/cycle-532-build-class-vitals-meta-default-unreachable.test.js tests/cycle-566-start-action-3-defaults-batch.test.js tests/quest-progression-pacing.test.js` -> 13/13 passed after updating source guards for the new Lv1 start contract.
+- `npm run verify` -> type-check, lint, unit 2876/2876, build:guard passed.
+- `AETHERIA_RUN_E2E=1 bash scripts/local-playtest.sh` -> desktop smoke passed, mobile smoke passed, Playwright e2e 21/21 passed.
+- `npm run mobile:doctor` -> iOS/Xcode metadata ok; Android release signing still missing.
+- `npm run cap:sync` -> Android/iOS Capacitor web assets refreshed.
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> archive succeeded.
+- Latest archive: `build/ios/Aetheria.xcarchive`, `2026-06-07 23:33:35 KST`.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` -> metadata, install, launch, process listing, 60-second hold all passed; install URL `file:///private/var/containers/Bundle/Application/7080F1E9-FA8F-461C-B22F-1C94A235D4D8/App.app/`, foreground process pid `84425`.
+
+Blocked / Not Verified (Early Level Curve Slice 18 - 2026-06-07):
+- iPhone manual 5-minute growth-feel routine remains pending on the latest archive.
+- Android physical-device verification remains blocked by no attached Android device.
+- Android release signing remains blocked by missing `android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`.
+
+Done (Quest Progression Pacing Slice 17 - 2026-06-07):
+- Slowed early-game quest leveling after real-device feedback that a few quest completions caused too many level-ups too quickly.
+- Added `EARLY_QUEST_EXP_CAPS` in `src/data/quests.ts`; raw quest definitions remain intact, but exported `QUESTS` now clamp Lv1-10 quest EXP by unlock level so Quest Board display and actual base reward stay aligned.
+- Representative adjusted rewards: `[스토리] 첫 번째 여정` and `거미떼 퇴치` -> 60 EXP, Lv5 long/operation outliers such as `탐험가의 기록`, `대륙의 발자취`, `[스토리] 폐허의 진실`, and `신중한 모험` -> 170 EXP, `파쇄 전술 훈련` -> 330 EXP, `개척자의 현장 기록` and `현상금 사냥꾼` -> 520 EXP.
+- Added `src/utils/progressionPacing.ts` and wired `useInventoryActions.completeQuest` through `getPacedQuestClaimExp` so current EXP is considered at claim time; near-threshold early players cannot receive one quest reward that bursts through multiple levels.
+- Added `tests/quest-progression-pacing.test.js` and updated the applyExpGain source guard to preserve the new paced quest claim callsite.
+- Synced the updated web assets into Capacitor native projects.
+- Regenerated `build/ios/Aetheria.xcarchive` and installed/launched it on the connected iPhone device.
+
+Verification (Quest Progression Pacing Slice 17 - 2026-06-07):
+- `node --import tsx --test tests/quest-progression-pacing.test.js tests/quest-operations.test.js tests/combat-engine-core.test.js` -> 50/50 passed.
+- `npm run verify` -> type-check, lint, unit 2875/2875, build:guard passed.
+- `AETHERIA_RUN_E2E=1 bash scripts/local-playtest.sh` -> desktop smoke passed, mobile smoke passed, Playwright e2e 21/21 passed.
+- `npm run mobile:doctor` -> iOS/Xcode metadata ok; Android release signing still missing.
+- `npm run cap:sync` -> Android/iOS Capacitor web assets refreshed.
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> archive succeeded.
+- Latest archive: `build/ios/Aetheria.xcarchive`, `2026-06-07 23:12:47 KST`.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` -> metadata, install, launch, process listing, 60-second hold all passed; foreground process pid `84203`.
+
+Blocked / Not Verified (Quest Progression Pacing Slice 17 - 2026-06-07):
+- iPhone manual 5-minute growth-pacing routine remains pending: accept/complete several early quests and confirm level-ups feel less bursty on the physical screen.
+- Android physical-device verification remains blocked by no attached Android device.
+- Android release signing remains blocked by missing `android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`.
+
+Done (Full Item Cohesion Slice 16 - 2026-06-05):
+- Extended the item-art cohesion pass beyond equipment to the full item display surface.
+- Added non-equipment family routing in `src/utils/itemVisuals.ts` so `hp`, `mp`, `cure`, `buff`, `mat`, `key`, and `all` items use shared family PNGs instead of defaulting to per-name `item-*` exact art.
+- Added `NON_EQUIPMENT_FAMILY_ITEM_ASSET_KEYS` and `getNonEquipmentIllustrationFamilyKey`.
+- Added typed-catalog name resolution so reference items without a `type` can inherit the matching typed catalog item's visual route when the name exists in the playable catalog.
+- Updated `public/assets/items/README.md` so the documented selection rule matches the current family-first in-game surface.
+- Kept legacy exact-name `item-*` assets in place for generator compatibility and fallback history; they are no longer the default cohesive item surface.
+- Added `tests/item-visuals.test.js` guards for non-equipment family mapping, non-equipment playable item routing, all displayable catalog item route coverage, and non-equipment family asset existence.
+- Recomputed routing after the change: `namedEntries 370`, `signature 29`, `equipmentFamily 256`, `nonEquipmentFamily 85`, `other 0`.
+- Synced the updated web assets into Capacitor native projects.
+- Regenerated `build/ios/Aetheria.xcarchive` and installed/launched it on the connected iPhone device.
+
+Verification (Full Item Cohesion Slice 16 - 2026-06-05):
+- `node --import tsx --test tests/item-visuals.test.js tests/signature-items.test.js` -> 44/44 passed.
+- `npm run verify` -> type-check, lint, unit 2871/2871, build:guard passed.
+- `bash scripts/local-playtest.sh` -> desktop smoke passed, mobile smoke passed.
+- `npm run test:e2e` -> Playwright mobile scenarios 21/21 passed, including Equipment, Inventory, and Shop panels.
+- `npm run mobile:doctor` -> iOS/Xcode metadata ok; Android release signing still missing.
+- `npm run cap:sync` -> Android/iOS Capacitor web assets refreshed.
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> first run hit a transient `CompileAssetCatalogVariant` failure, immediate filtered rerun succeeded.
+- Latest archive: `build/ios/Aetheria.xcarchive`, `2026-06-05 13:46:45 KST`.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` -> metadata, install, launch, process listing, 60-second hold all passed; foreground process pid `73809`.
+
+Blocked / Not Verified (Full Item Cohesion Slice 16 - 2026-06-05):
+- iPhone manual 5-minute readability routine remains pending, now specifically including Shop / Inventory / Equipment / Reward item surfaces on the physical screen.
+- Android physical-device verification remains blocked by no attached Android device.
+- Android release signing remains blocked by missing `android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`.
+
+Done (Equipment Cohesion Slice 15 - 2026-06-05):
+- Unified normal equipment item surfaces so shop/inventory no longer mix avatar thumbnails with standalone item PNGs.
+- `src/utils/itemVisuals.ts` now keeps avatar preview as a fallback path only for normal equipment icons; non-signature equipment resolves to `/assets/equipment-family/items/*`.
+- Preserved dedicated signature equipment art through `/assets/equipment-exact/signature-*.png`.
+- Regenerated `public/assets/equipment-family/items/*.png` after increasing the item-canvas scale/offset for headgear, coat, and leather families so their visual density matches weapons, shields, robe, plate, cloak, and boots.
+- Refreshed `output/imagegen/avatar-style-equipment-family/items-contact-sheet.png` for visual review.
+- Added `tests/item-visuals.test.js` guards that every non-signature equippable catalog item uses family item art and does not route through avatar-preview icon mixing.
+- Synced the updated web assets into Capacitor native projects.
+- Regenerated `build/ios/Aetheria.xcarchive` and installed/launched it on the connected iPhone device.
+
+Verification (Equipment Cohesion Slice 15 - 2026-06-05):
+- `node --import tsx --test tests/item-visuals.test.js tests/equipment-art.test.js tests/signature-items.test.js` -> 46/46 passed.
+- `npm run verify` -> type-check, lint, unit 2867/2867, build:guard passed.
+- `bash scripts/local-playtest.sh` -> desktop smoke passed, mobile smoke passed.
+- `npm run test:e2e` -> Playwright mobile scenarios 21/21 passed, including Equipment, Inventory, and Shop panels.
+- `npm run mobile:doctor` -> iOS/Xcode metadata ok; Android release signing still missing.
+- `npm run cap:sync` -> Android/iOS Capacitor web assets refreshed.
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> archive succeeded.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` -> metadata, install, launch, process listing, 60-second hold all passed; foreground process pid `73433`.
+
+Blocked / Not Verified (Equipment Cohesion Slice 15 - 2026-06-05):
+- iPhone manual 5-minute readability routine remains pending, especially Shop / Inventory / Equipment visual review on the physical screen.
+- Android physical-device verification remains blocked by no attached Android device.
+- Android release signing remains blocked by missing `android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`.
+
+Done (Readability Slice 14 iOS Device Delivery Gate - 2026-06-01):
+- Reopened the iOS delivery gate after the device was reconnected.
+- `xcrun devicectl list devices` now reports the target `iPhone 14 Pro Max` (`성진`, `FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B`) as connected.
+- `xcrun xcdevice list` reports the same phone over USB with `available: true`.
+- `xcodebuild -project ios/App/App.xcodeproj -scheme App -showdestinations` now lists the iPhone, iPad, and generic iOS destinations as available, so the earlier `iOS 26.5 is not installed` blocker is cleared.
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` succeeded and regenerated `build/ios/Aetheria.xcarchive`.
+- The regenerated archive is dated `2026-06-01 12:23:04 KST`; the embedded `App.app` is dated `2026-06-01 12:23:03 KST`.
+- Codesign metadata is `Identifier=com.aetheria.roguelike`, `TeamIdentifier=KS96VQMVHD`, `Apple Development: sungjin92@naver.com (VZN5FH3335)`.
+- Embedded provisioning profile is `iOS Team Provisioning Profile: com.aetheria.roguelike`, UUID `75c44f88-7f82-406a-9b8d-fa10d2518a0a`, expiration `2026-06-08 03:15:30 UTC`.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` passed metadata before install, install, metadata after install, foreground launch, process listing, 60-second hold, and process recheck.
+- Foreground process after launch/hold was `/App.app/App` with pid `52143`.
+
+Verification (Readability Slice 14 iOS Device Delivery Gate - 2026-06-01):
+- `npm run mobile:doctor`
+- `xcrun devicectl list devices`
+- `xcrun xcdevice list`
+- `xcodebuild -project ios/App/App.xcodeproj -scheme App -showdestinations`
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive`
+- `codesign -dv --verbose=4 build/ios/Aetheria.xcarchive/Products/Applications/App.app`
+- `security cms -D -i build/ios/Aetheria.xcarchive/Products/Applications/App.app/embedded.mobileprovision`
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke`
+
+Blocked / Not Verified (Readability Slice 14 iOS Device Delivery Gate - 2026-06-01):
+- iOS signing/device delivery blocker is cleared.
+- The actual iPhone 5-minute manual readability routine has not been run yet.
+- Android physical-device and release signing verification remain blocked by no attached Android device and missing release signing input.
+
+Checked (Readability Slice 13 Real-Device Signing Gate - 2026-06-01):
+- Reopened the physical-device delivery gate after the Slice 12 browser/native-sync baseline.
+- `npm run mobile:doctor` still reports valid iOS metadata and Xcode 26.5, and still reports missing Android release signing input.
+- `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` reports no attached Android device.
+- `xcrun xcdevice list` and `xcrun devicectl list devices` now detect the target `iPhone 14 Pro Max` (`성진`, `FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B`) as available over USB.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` reached metadata and confirmed installed `Aetheria Roguelike 1.1.0 (2)`, then failed at install because the embedded provisioning profile is expired.
+- A direct launch of the currently installed app also fails with invalid code signature / untrusted or invalid profile, confirming the installed app cannot be used for manual QA.
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` was attempted to refresh signing, but `xcodebuild` failed before archive creation because the App scheme destinations report `iOS 26.5 is not installed`.
+- `xcodebuild -showsdks` does show `iphoneos26.5`, but `~/Library/Developer/Xcode/iOS DeviceSupport` lacked completed iPhone15,3 iOS 26.5 support.
+- `xcodebuild -prepareDeviceSupport -platform iOS -osVersion 26.5 -modelCode iPhone15,3 -architecture arm64e` located the phone and created `iPhone15,3 26.5 (23F77)/.tmp` up to 3.3GB, then stalled for more than 17 minutes with no progress and was stopped.
+- `xcodebuild -project ios/App/App.xcodeproj -scheme App -showdestinations` still reports the connected iPhone/iPad and generic iOS destination as ineligible because iOS 26.5 is not installed.
+
+Blocked / Not Verified (Readability Slice 13 Real-Device Signing Gate - 2026-06-01):
+- Latest Slice 12 build is not installed on the iPhone.
+- Existing installed app cannot launch because its signing profile is invalid/expired.
+- iOS archive regeneration is blocked until Xcode iOS 26.5 platform/device support is fully installed.
+- Android physical-device and release signing verification remain blocked by no attached Android device and missing release signing input.
+- No new app regression was found in this step; the blocker is signing/platform environment.
+
+Next Action (Readability Slice 13 Real-Device Signing Gate - 2026-06-01):
+- Complete iOS 26.5 platform/device support installation through Xcode Settings > Components or rerun `xcodebuild -prepareDeviceSupport` while the target iPhone remains unlocked/connected until it finishes.
+- Rerun `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` to create a fresh archive with a non-expired provisioning profile.
+- Rerun `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke`.
+
+Done (Readability Slice 12 Visual Mainstreaming - 2026-06-01):
+- Refreshed the mobile readability skin toward a brighter, more mainstream RPG-console presentation without changing core gameplay rules.
+- Updated global visual tokens and shared surfaces in `src/index.css`, including action/combat button shells, route/map strip contrast, mission/focus/log surfaces, and reduced panel noise.
+- Applied the new button/icon language to `ControlPanel` and `CombatPanel`, with larger fixed hit areas and normal letter spacing for Korean readability.
+- Removed first-frame dimming from mobile focus/combat/control panels so smoke screenshots and real-device entry states are immediately readable.
+- Fixed a real mobile overlay regression: when the archive console reset flow is open, bottom controls are now suppressed so reset CTAs are not intercepted by the underlying control panel.
+- Added a source guard in `tests/mobile-overlay-cta-reachability.test.js` for the archive-console/bottom-control suppression contract.
+- Refreshed mobile smoke evidence, including `playtest-artifacts/mobile/01-after-start.png`, `02c-quest-board-open.png`, `05-combat-2.png`, `08a-map-tab.png`, and `10-tabs-verified.png`.
+- Synced the refreshed web assets into Capacitor native projects.
+
+Verification (Readability Slice 12 Visual Mainstreaming - 2026-06-01):
+- `node --import tsx --test tests/mobile-overlay-cta-reachability.test.js tests/readability-map-signal.test.js tests/mobile-focus-panel-contrast.test.js tests/combat-forecast-readability.test.js` -> 21/21 passed.
+- `AETHERIA_RUN_E2E=1 bash scripts/local-playtest.sh` -> desktop smoke passed, mobile smoke passed, Playwright e2e 21/21 passed.
+- Browser opened `http://127.0.0.1:4173/?smoke=1` at mobile viewport.
+- Visual review completed for the refreshed mobile screenshots listed above.
+- `npm run mobile:doctor` -> iOS/Xcode metadata ok, Android release signing still missing.
+- `npm run cap:sync` -> Android/iOS Capacitor web assets refreshed.
+- `npm run verify` -> type-check, lint, unit 2866/2866, build:guard passed.
+
+Blocked / Not Verified (Readability Slice 12 Visual Mainstreaming - 2026-06-01):
+- Physical iPhone / Android 5-minute readability routines were not run in this pass.
+- Target iPhone still requires unlocked/available CoreDevice state before `npm run ios:device:smoke` can complete.
+- Android physical-device and release signing verification remain blocked by no attached Android device and missing release signing input.
+
+Done (Readability Slice 11 iOS Device Smoke Handoff - 2026-06-01):
+- Added `scripts/ios-device-smoke.sh` and the `npm run ios:device:smoke` package script so the iPhone delivery smoke can be rerun with one command once the device is unlocked.
+- The script checks `xcdevice` availability, reads app metadata, installs `build/ios/Aetheria.xcarchive/Products/Applications/App.app`, rereads metadata, launches `com.aetheria.roguelike`, verifies the process, waits 60 seconds, and verifies the process again.
+- Added environment overrides for `AETHERIA_IOS_DEVICE_ID`, `AETHERIA_IOS_BUNDLE_ID`, `AETHERIA_IOS_APP_PATH`, `AETHERIA_DEVICECTL_TIMEOUT_SECONDS`, and `AETHERIA_IOS_PROCESS_HOLD_SECONDS`.
+- Hardened the script timeout path to terminate the spawned process group so timed-out `devicectl` calls do not continue in the background.
+- Ran the handoff command against the current iPhone state; `xcdevice` now reports the target iPhone 14 Pro Max as `available: true`, but CoreDevice fails at Developer Disk Image mount because the device is locked.
+
+Verification (Readability Slice 11 iOS Device Smoke Handoff - 2026-06-01):
+- `bash -n scripts/ios-device-smoke.sh`
+- `node -e "JSON.parse(require('fs').readFileSync('package.json','utf8')); console.log('package.json ok')"`
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=5 AETHERIA_IOS_PROCESS_HOLD_SECONDS=5 npm run ios:device:smoke` -> blocked at timed device install during the earlier locked/unstable state.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` -> reached the target iPhone, then failed with `kAMDMobileImageMounterDeviceLocked`.
+
+Blocked / Not Verified (Readability Slice 11 iOS Device Smoke Handoff - 2026-06-01):
+- iPhone install/launch/process hold did not complete because the device is locked at the Developer Disk Image mount step.
+- The actual 5-minute manual readability routine remains pending until the iPhone stays unlocked.
+- Android physical-device pass and release signing remain blocked as before.
+
+Checked (Readability Slice 11 Device Gate Retry - 2026-06-01):
+- Rechecked whether the actual phone-size device pass can start after the 2026-05-31 preflight.
+- `xcrun xcdevice list` still detects the target iPhone 14 Pro Max but reports `available: false` with the unlock/cable/same-LAN/developer-mode recovery suggestion.
+- The connected iPad is available over USB, but it was not used as a substitute for phone-size iPhone readability acceptance.
+- `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` still reports no connected Android device.
+- `npm run mobile:doctor` still passes iOS/Xcode metadata checks and still reports missing Android release signing input.
+- No app code was changed and no new smoke/native artifact was regenerated in this retry.
+
+Verification (Readability Slice 11 Device Gate Retry - 2026-06-01):
+- `npm run mobile:doctor`
+- `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l`
+- `xcrun xcdevice list`
+- Timed `xcrun devicectl list devices` and `xcrun devicectl device info apps --bundle-id com.aetheria.roguelike`, both stopped after the 20 second timeout.
+
+Blocked / Not Verified (Readability Slice 11 Device Gate Retry - 2026-06-01):
+- Target `iPhone 14 Pro Max` remains unavailable to Xcode/CoreDevice tooling, so install/launch/process refresh and the 5-minute manual readability routine were not run.
+- Android physical-device pass remains blocked because no Android device is attached.
+- Android release build verification remains blocked by missing signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`).
+- Latest acceptance baseline remains the 2026-05-31 23:18 KST mobile smoke artifact set and the 2026-05-31 23:19 KST Capacitor-synced web assets.
+
+Done (Readability Slice 11 Preflight):
+- Refreshed the real-device readability acceptance baseline without changing app code.
+- Re-ran the full browser QA path so the latest mobile smoke artifacts are dated 2026-05-31 23:18 KST, including `playtest-artifacts/mobile/01-after-start.png`, `05-combat-2.png`, `08a-map-tab.png`, `09-system-tab.png`, `10-tabs-verified.png`, and `09-final-state.png`.
+- Re-ran Capacitor sync so `android/app/src/main/assets/public/index.html` and `ios/App/App/public/index.html` are refreshed at 2026-05-31 23:19 KST.
+- Checked physical-device availability before the 5-minute readability routine: `xcdevice` sees the target iPhone 14 Pro Max, but it is not available; Android has no connected `adb` device.
+- Confirmed the connected iPad is available over USB, but did not treat it as a substitute for phone-size iPhone readability acceptance.
+
+Verification (Readability Slice 11 Preflight):
+- `npm run verify:full`
+- `npm run cap:sync`
+- `npm run mobile:doctor`
+- `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l`
+- `xcrun xcdevice list`
+- Timed `xcrun devicectl` app metadata/device listing attempts, which did not return before timeout.
+
+Blocked / Not Verified (Readability Slice 11 Preflight):
+- Target `iPhone 14 Pro Max` is still not available to CoreDevice / Xcode device tooling. `xcrun xcdevice list` reports `available: false` with the unlock/cable/same-LAN/developer-mode recovery suggestion.
+- Android physical-device pass is blocked because `adb devices -l` reports no connected device.
+- Android release build verification remains blocked by missing signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`).
+- The actual iPhone / Android 5-minute manual readability routines remain pending; this slice completed the preflight and refreshed acceptance evidence only.
+
+Done (Readability Slice 10):
+- Added a mobile focus-panel contrast pass over Shop, Quest Board, Crafting, Event, and Job Change after Slice 9 made their CTAs reachable.
+- Added shared focus-panel styling in `src/index.css`: `aether-focus-panel`, `aether-event-choice`, `aether-craft-row`, `aether-locked-row`, `aether-lock-note`, and `aether-disabled-action`.
+- Replaced broad disabled opacity on class cards, crafting actions, quest bounty actions, and shop buy actions with readable disabled actions and reason notes.
+- Added explicit lock/reason rows for craft material shortages, synthesis selection requirements, and locked quest level requirements.
+- Raised `FocusPanelHeader` eyebrow/meta contrast so focus panel headers do not read as disabled in standard readability mode.
+- Added `tests/mobile-focus-panel-contrast.test.js` to guard the contrast contract, disabled opacity removal, and deterministic focus-panel opt-in.
+- Captured refreshed mobile smoke proof: `playtest-artifacts/mobile/02a-shop-open.png`, `02c-quest-board-open.png`, `02d-craft-open.png`, and `02e-event-open.png`.
+
+Verification (Readability Slice 10):
+- `node --import tsx --test tests/mobile-focus-panel-contrast.test.js tests/mobile-overlay-cta-reachability.test.js`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run verify`
+- `bash scripts/local-playtest.sh`
+- mobile screenshot review for Shop / Quest Board / Crafting / Event overlays
+- `npm run verify:full`
+- `npm run mobile:doctor`
+- `npm run cap:sync`
+
+Blocked / Not Verified (Readability Slice 10):
+- `npm run mobile:doctor` still reports missing Android release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`), which is an environment blocker and not a new app regression.
+- Physical iPhone/Android 5-minute manual routines remain pending.
+
+Done (Readability Slice 9):
+- Added a mobile overlay CTA reachability sweep so dense overlays must expose reachable primary and close actions before device QA.
+- Added `verifyActionReachable` in `scripts/smoke-gameplay.mjs`, checking viewport intersection, visible ratio, minimum hit size, disabled state, pointer-events, visibility, opacity, and scroll recovery via `scrollIntoViewIfNeeded()`.
+- Extended smoke coverage across Post Combat, Relic Choice, Run Summary, Shop, Mobile Archive/Town Ops/Reset, Job Change, Quest Board, Crafting, and Event overlays.
+- Fixed real mobile smoke failures where `mobile-console-return-log` and `crafting-recipe-action` were below the 44px touch target threshold.
+- Added explicit close / primary CTA test ids to Job Change, Quest Board, Crafting, and Event focus panels.
+- Added `tests/mobile-overlay-cta-reachability.test.js` as a source guard for the reachability helper, deterministic CTA coverage, and 44px target sources.
+- Captured refreshed mobile smoke proof including `playtest-artifacts/mobile/02-archive-console-open.png`, `02b-class-open.png`, `02c-quest-board-open.png`, `02d-craft-open.png`, `02e-event-open.png`, `02f-run-summary-reflection-strip.png`, and `10-tabs-verified.png`.
+
+Verification (Readability Slice 9):
+- `node --check scripts/smoke-gameplay.mjs`
+- `node --import tsx --test tests/mobile-overlay-cta-reachability.test.js`
+- `node --import tsx --test tests/mobile-overlay-cta-reachability.test.js tests/readability-map-signal.test.js tests/run-summary-reflection-readability.test.js`
+- `npm run verify`
+- `bash scripts/local-playtest.sh`
+- `npm run verify:full`
+- `npm run mobile:doctor`
+- `npm run cap:sync`
+
+Blocked / Not Verified (Readability Slice 9):
+- `npm run mobile:doctor` still reports missing Android release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`), which is an environment blocker and not a new app regression.
+- Physical iPhone/Android 5-minute manual routines remain pending.
+
+Done (Readability Slice 8):
+- Added a run summary reflection strip so the death/end screen exposes `CAUSE / LESSON / NEXT` before detailed stats.
+- Added `getRunSummaryReflectionStrip` in `src/utils/outcomeAnalysis.ts`, deriving the strip from `getRunSummaryAnalysis`, run stats, boss kills, relics, gold, escapes, discoveries, and max streak.
+- Wired `RunSummaryCard` to render the strip with `data-run-tone` and high-readability styling while preserving share/restart controls.
+- Fixed the mobile summary overlay after smoke exposed the restart CTA could fall outside the viewport; the card now uses `100svh` max-height with internal scrolling.
+- Replaced truncation on reflection values with two-line wrapping so mobile screenshots show full values without ellipsis.
+- Extended smoke coverage to inject deterministic run summary state, verify `run-summary-reflection-strip`, labels, tone, share/restart CTAs, restart recovery, and capture `02f-run-summary-reflection-strip`.
+- Captured visual proof: `playtest-artifacts/desktop/02f-run-summary-reflection-strip.png` and `playtest-artifacts/mobile/02f-run-summary-reflection-strip.png`.
+
+Verification (Readability Slice 8):
+- `node --import tsx --test tests/run-summary-reflection-readability.test.js tests/outcome-analysis.test.js tests/cycle-87-run-analysis-escape-discovery.test.js tests/cycle-97-max-streak-reflection.test.js tests/cycle-557-outcome-analysis-defaults-batch.test.js`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build:guard`
+- `npm run verify`
+- `npm run verify:full`
+- `npm run mobile:doctor`
+- `npm run cap:sync`
+
+Blocked / Not Verified (Readability Slice 8):
+- `npm run mobile:doctor` still reports missing Android release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`), which is an environment blocker and not a new app regression.
+- Physical iPhone/Android 5-minute manual routines remain pending.
+
+Done (Readability Slice 7):
+- Added a relic choice decision strip so relic selection exposes `PICK / WHY / BUILD` before the three candidate cards.
+- Added `src/utils/relicChoiceDecision.ts` to rank candidates from existing synergy, legendary completion, near-legendary, rarity, and effect build labels without changing relic reward mechanics.
+- Wired `RelicChoicePanel` to mark one recommended card with `data-relic-recommended="true"` and a visible `추천` badge.
+- Added relic decision strip styling and high-readability overrides.
+- Extended smoke coverage to inject deterministic relic choices and verify `relic-choice-decision-strip`, labels, tone, and recommended card marker.
+- Captured visual proof: `playtest-artifacts/desktop/02e-relic-choice-decision-strip.png` and `playtest-artifacts/mobile/02e-relic-choice-decision-strip.png`.
+
+Verification (Readability Slice 7):
+- `node --import tsx --test tests/relic-choice-decision-readability.test.js tests/cycle-533-get-relic-synergy-score-owned-relics-default-unreachable.test.js tests/cycle-534-get-loot-upgrade-hint-defaults-batch.test.js tests/cycle-535-cycle-skill-dir-default-unreachable.test.js`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build:guard`
+- `npm run verify`
+- `npm run verify:full`
+- `npm run mobile:doctor`
+- `npm run cap:sync`
+
+Blocked / Not Verified (Readability Slice 7):
+- `npm run mobile:doctor` still reports missing Android release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`), which is an environment blocker and not a new app regression.
+- Physical iPhone/Android 5-minute manual routines remain pending.
+
+Done (Readability Slice 6):
+- Added a post-combat decision strip so battle results expose `STATE / LOOT / NEXT` before detailed reward text.
+- Added `getPostCombatDecisionStrip` in `src/utils/outcomeAnalysis.ts` and wired it into `src/components/PostCombatCard.tsx`.
+- Added pressure / reward / advantage / steady result-strip styling with high-readability overrides.
+- Fixed post-combat analysis defaults so explicit `hpLow:false` / `mpLow:false` are respected when HP/MP ratios are absent.
+- Extended smoke coverage to inject a deterministic post-combat result and verify `post-combat-decision-strip`, labels, and valid tone.
+- Captured visual proof: `aetheria-post-combat-decision-strip.png`, `playtest-artifacts/desktop/02d-post-combat-decision-strip.png`, and `playtest-artifacts/mobile/02d-post-combat-decision-strip.png`.
+
+Verification (Readability Slice 6):
+- `node --import tsx --test tests/post-combat-decision-readability.test.js tests/outcome-analysis.test.js tests/signature-post-combat-highlight.test.js tests/cycle-336-post-combat-ratios-dead.test.js tests/cycle-557-outcome-analysis-defaults-batch.test.js`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build:guard`
+- `npm run verify`
+- `npm run verify:full`
+- `npm run mobile:doctor`
+- `npm run cap:sync`
+
+Blocked / Not Verified (Readability Slice 6):
+- `npm run mobile:doctor` still reports missing Android release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`), which is an environment blocker and not a new app regression.
+- Physical iPhone/Android 5-minute manual routines remain pending.
+
+Done (Readability Slice 5):
+- Added a combat forecast strip to the combat panel so `INTENT / RESPONSE / WINDOW` are visible before action selection.
+- Added `src/utils/combatForecast.ts` to derive forecast text and tone from existing combat state without changing combat mechanics.
+- Added pressure / advantage / reward / steady styling, including high-readability overrides.
+- Extended smoke coverage so combat smoke verifies `combat-forecast-strip` and valid `data-forecast-tone`.
+- Refreshed desktop/mobile smoke artifacts and Capacitor web assets.
+
+Verification (Readability Slice 5):
+- `node --import tsx --test tests/combat-forecast-readability.test.js tests/signature-combat-panel-hint.test.js tests/cycle-269-combat-panel-boss-signature.test.js tests/cycle-270-tactical-profile-dead-cleanup.test.js tests/readability-map-signal.test.js`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build:guard`
+- `npm run verify`
+- `npm run verify:full`
+- `npm run mobile:doctor`
+- `npm run cap:sync`
+
+Blocked / Not Verified (Readability Slice 5):
+- `npm run mobile:doctor` still reports missing Android release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`), which is an environment blocker and not a new app regression.
+- Physical iPhone/Android 5-minute manual routines remain pending.
+
+Done (Readability Slice 4):
+- Added saved `player.settings.readabilityMode` with `standard` default and migration sanitization for legacy/corrupt saves.
+- Added System tab `Standard / High Readability` controls, QA readout/readout export visibility, and a `setReadabilityMode` game action.
+- Wired `MainLayout` `data-readability-mode` so high readability mode raises contrast, lowers panel noise/glow, improves muted text opacity, and strengthens focus rings.
+- Added regression coverage in `tests/readability-mode-persistence.test.js`, `tests/readability-map-signal.test.js`, and `tests/e2e/navigation.spec.ts`.
+- Captured mobile visual proof: `aetheria-readability-mode-standard.png`, `aetheria-readability-mode-high.png`, plus refreshed `playtest-artifacts/mobile/09-system-tab.png` and `playtest-artifacts/mobile/10-tabs-verified.png`.
+
+Verification (Readability Slice 4):
+- `node --import tsx --test tests/readability-map-signal.test.js tests/readability-mode-persistence.test.js`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build:guard`
+- `npx playwright test tests/e2e/navigation.spec.ts --project=chromium-mobile --workers=1`
+- `npm run verify`
+- `npm run verify:full`
+- `npm run mobile:doctor`
+- `npm run cap:sync`
+
+Blocked / Not Verified (Readability Slice 4):
+- `npm run mobile:doctor` still reports missing Android release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`), which is an environment blocker and not a new app regression.
+- Physical iPhone/Android 5-minute manual routines remain pending.
+
 Done:
 - Rewrote `src/App.jsx` to integrate upgraded CombatEngine flow end-to-end.
 - Added skill-slot selection flow (`actions.cycleSkill`) and wired selected-skill execution.
@@ -1650,3 +2096,224 @@ Verification (Sprint 15–20):
 - `npm run test:unit` → 59/59 pass
 - `npm run test:smoke` → [smoke:desktop] ok
 - `npm run build` → ✓ built in 2.45s (no errors)
+
+Done (2026-05-14: town quest board / equipment visual consistency / beginner difficulty pass):
+- Town quest access is now explicit: `ControlPanel` safe-zone actions expose `REST`, `QUEST`, and `SHOP`; the town `BOARD` shortcut opens `QuestBoardPanel`; `QuestTab` adds an in-safe-zone CTA to open the board instead of leaving players in progress-only status.
+- Normal equipment item icons now prefer `equipment-family/items` art, while dedicated signature items keep `equipment-exact/signature-*.png`; this keeps regular shop/inventory gear visually consistent without removing signature item distinction.
+- Early combat now applies a beginner grace window for Lv.1-3 players with fewer than 5 recorded battles: monster HP/ATK are reduced while EXP/GOLD stay at least neutral.
+- Mobile smoke focus-panel coverage was updated so the town quest shortcut validates `gameState === 'quest_board'` and writes `playtest-artifacts/mobile/02c-quest-board-open.*`.
+
+Verification:
+- `node --import tsx --test tests/difficulty-manager.test.js tests/signature-items.test.js tests/quest-operations.test.js` -> 57/57 pass
+- `npm run verify:full` -> type-check, lint, unit 2817/2817, build guard, desktop smoke, mobile smoke, Playwright e2e 20/20 pass
+- `npm run mobile:doctor` -> tooling detected; Android release signing inputs still missing (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`)
+
+Done (2026-05-14: native packaging refresh for device QA):
+- Synced the latest web build into Capacitor native projects with `npm run cap:sync`.
+- Regenerated Android debug delivery artifact: `android/app/build/outputs/apk/debug/app-debug.apk` (202M, May 14 15:51 KST).
+- Regenerated iOS signed archive: `build/ios/Aetheria.xcarchive` (195M, May 14 15:51 KST).
+- Verified iOS archive metadata: bundle id `com.aetheria.roguelike`, marketing version `1.1.0`, build `2`, signing identity `Apple Development: sungjin92@naver.com (VZN5FH3335)`, team `KS96VQMVHD`.
+
+Verification:
+- `npm run cap:sync` -> pass
+- `npm run android:debug` -> pass; release signing warning remains expected because release signing inputs are not configured
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> pass
+- `npm run mobile:doctor` -> pass with existing Android release signing blocker reported
+
+Done (2026-05-14: item visual character-tone alignment follow-up):
+- Regenerated the strongest equipment family item icons from the existing fantasy pixel item source by fixing `scripts/_archive/generate_avatar_style_equipment_assets.py` to resolve the repo root correctly from `_archive`.
+- Updated `weapon-*`, `offhand-*`, `armor-robe`, `armor-plate`, `armor-cloak`, and `armor-boots` family item PNGs so shop/inventory equipment no longer mixes flat manual icons with richer character art.
+- Added `shouldUseAvatarPreviewItemIcon()` and routed visually weak `headgear-*`, `armor-coat`, and `armor-leather` family icons through `EquipmentAvatarPreview`, keeping dedicated signature art on its exact asset path.
+- Added unit coverage for the preview-first routing so hats, tunics, and leather armor stay character-tone aligned while weapons, shields, plate, and potions keep their normal asset flow.
+
+Verification:
+- `node --import tsx --test tests/item-visuals.test.js tests/signature-items.test.js` -> 39/39 pass
+- `npm run verify:full` -> type-check, lint, unit 2818/2818, build guard, desktop smoke, mobile smoke, Playwright e2e 20/20 pass
+- `npm run mobile:doctor` -> pass; Android release signing inputs still missing (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`)
+- `npm run cap:sync` -> pass
+- `npm run android:debug` -> pass; `android/app/build/outputs/apk/debug/app-debug.apk` refreshed at 2026-05-14 16:06 KST, 202M
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> pass; `build/ios/Aetheria.xcarchive` refreshed at 2026-05-14 16:06 KST, 196M
+
+Done (2026-05-14: iPhone latest archive delivery smoke recheck):
+- Confirmed `iPhone 14 Pro Max` is available and paired with `xcrun devicectl list devices`.
+- Installed the latest signed archive payload with `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B build/ios/Aetheria.xcarchive/Products/Applications/App.app`.
+- Confirmed device app metadata: `Aetheria Roguelike`, bundle id `com.aetheria.roguelike`, version `1.1.0`, build `2`.
+- Launched the app with `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --terminate-existing com.aetheria.roguelike`.
+- Confirmed the foreground app process is present in `device info processes` as `/private/var/containers/Bundle/Application/.../App.app/App`.
+- Checked Android availability with `adb devices -l`; no Android device is currently attached.
+
+Verification:
+- `xcrun devicectl device install app ... App.app` -> pass
+- `xcrun devicectl device info apps --device ... --bundle-id com.aetheria.roguelike` -> pass
+- `xcrun devicectl device process launch --device ... --terminate-existing com.aetheria.roguelike` -> pass
+- `xcrun devicectl device info processes --device ... | rg "App\\.app"` -> pass
+- `adb devices -l` -> no connected Android devices
+- `npm run mobile:doctor` -> pass with existing Android release signing input blocker
+
+Done (2026-05-14: active mission tracker / field directive pass):
+- Added route-aware active quest tracker data in `src/utils/adventureGuide.ts`: progress percent, target route label, next step, return label, and compact chips now come from the same quest tracker payload used by guidance.
+- Rendered the tracker in `src/components/ControlPanel.tsx` as a persistent `control-mission-tracker` strip above idle field actions, so an accepted quest keeps showing where to go, what to do next, and when to return.
+- Updated safe-zone active quest guidance so town idle state recommends re-entering the field via `open_move` instead of only describing the quest in passive text.
+- Stabilized Playwright e2e cold boot by adding `tests/e2e/testHelpers.ts`, which waits for either persisted game state or the intro start button before asserting the status bar. Existing e2e specs now share that boot path.
+- Synced the latest verified web bundle into Capacitor and regenerated native delivery artifacts for the next device QA checkpoint.
+
+Verification:
+- `node --import tsx --test tests/adventure-guide.test.js tests/quest-operations.test.js tests/cycle-334-quest-tracker-forecast-dead-fields.test.js` -> 20/20 pass
+- `npm run verify` -> type-check, lint, unit 2824/2824, build guard pass
+- Initial `npm run verify:full` exposed the e2e cold boot flake after desktop/mobile smoke passed; fixed with the shared e2e boot helper.
+- `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4176 npx playwright test tests/e2e/navigation.spec.ts --project=chromium-mobile --workers=1` -> 6/6 pass
+- `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4176 npx playwright test --project=chromium-mobile --workers=1` -> 20/20 pass
+- `./scripts/local-playtest.sh` -> desktop smoke ok, mobile smoke ok, `[local-playtest] done`; mobile browser close timeout guard was hit after smoke completion
+- `npm run mobile:doctor` -> pass with existing Android release signing input blocker
+- `npm run cap:sync` -> pass
+- `npm run android:debug` -> pass; `android/app/build/outputs/apk/debug/app-debug.apk` refreshed at 2026-05-14 17:28 KST, 186M
+- `npm run ios:build:device` -> pass
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> pass; `build/ios/Aetheria.xcarchive` refreshed at 2026-05-14 17:29 KST
+
+Notes:
+- Latest archive device install / foreground launch / process listing were not rerun after the 17:29 archive refresh. The next QA step is to install that archive on `iPhone 14 Pro Max`, confirm launch/process, then run the 5-minute manual loop.
+- Android debug packaging is ready, but Android release signing remains blocked until `android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*` is provided.
+
+Done (2026-05-14: latest iPhone archive install handoff check):
+- Rechecked `iPhone 14 Pro Max` with `xcrun devicectl list devices`; the device is still `available (paired)`.
+- First install attempt for `build/ios/Aetheria.xcarchive/Products/Applications/App.app` failed with CoreDevice `Connection reset by peer`.
+- Recovered the CoreDevice tunnel through `xcrun devicectl device info apps --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --bundle-id com.aetheria.roguelike`, which confirmed `Aetheria Roguelike 1.1.0 (2)`.
+- Retried install and successfully installed the latest 17:29 archive payload on the iPhone.
+- Retried foreground launch twice; the first launch attempt disconnected immediately and the second was rejected as `Locked`, so launch/process confirmation and the 5-minute manual routine remain blocked by device lock state.
+- Rechecked Android readiness: `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` reports no connected Android devices, and `npm run mobile:doctor` still reports missing Android release signing inputs.
+
+Verification:
+- `xcrun devicectl list devices` -> iPhone 14 Pro Max available paired
+- `xcrun devicectl device install app --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B build/ios/Aetheria.xcarchive/Products/Applications/App.app` -> first attempt failed with CoreDevice connection reset, retry passed
+- `xcrun devicectl device info apps --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --bundle-id com.aetheria.roguelike` -> pass; installed app metadata confirmed
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --terminate-existing com.aetheria.roguelike` -> blocked by iPhone `Locked`
+- `xcrun devicectl device info processes --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B | rg "com.aetheria|roguelike|App.app/App"` -> no running app process after blocked launch
+- `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` -> no connected Android devices
+- `npm run mobile:doctor` -> pass with existing Android release signing input blocker
+
+Notes:
+- Latest archive is installed on the iPhone. To continue device QA, unlock the iPhone, keep it awake, rerun foreground launch/process listing, then execute the 5-minute manual loop.
+
+Done (2026-05-14: latest iPhone foreground launch/process confirmation):
+- Rechecked `iPhone 14 Pro Max`; the device is still `available (paired)`.
+- Confirmed installed app metadata again with `xcrun devicectl device info apps --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --bundle-id com.aetheria.roguelike`: `Aetheria Roguelike 1.1.0 (2)`.
+- Launched the latest installed archive payload with `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --terminate-existing com.aetheria.roguelike`.
+- Confirmed the foreground app process with `xcrun devicectl device info processes --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B | rg "com.aetheria|roguelike|App.app/App|Aetheria"`; process `84186` points to `/App.app/App`.
+- Rechecked Android readiness: `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` still reports no connected Android devices, and `npm run mobile:doctor` still reports missing Android release signing inputs.
+
+Verification:
+- `xcrun devicectl list devices` -> iPhone 14 Pro Max available paired
+- `xcrun devicectl device info apps --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --bundle-id com.aetheria.roguelike` -> pass
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --terminate-existing com.aetheria.roguelike` -> pass
+- `xcrun devicectl device info processes --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B | rg "com.aetheria|roguelike|App.app/App|Aetheria"` -> pass
+- `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` -> no connected Android devices
+- `npm run mobile:doctor` -> pass with existing Android release signing input blocker
+
+Notes:
+- Automated iPhone delivery smoke is complete for the latest installed archive. The remaining iPhone checkpoint is the human 5-minute manual routine while the device stays unlocked and awake.
+
+Done (2026-05-14: iPhone 60-second runtime hold before manual QA):
+- Rechecked current QA ledger state: latest installed archive is still `Aetheria Roguelike 1.1.0 (2)` and the remaining iPhone checkpoint is the human 5-minute routine.
+- Rechecked app metadata with `xcrun devicectl device info apps --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --bundle-id com.aetheria.roguelike`; tunnel acquisition and installed app metadata passed.
+- Initial relaunch attempt hit CoreDevice immediate disconnect, but a second metadata query restored tunnel access and `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --terminate-existing com.aetheria.roguelike` succeeded.
+- Confirmed process `84290` at `/App.app/App`, then waited 60 seconds and confirmed the same process was still present.
+- Rechecked Android readiness: `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` still reports no connected Android devices, and `npm run mobile:doctor` still reports missing Android release signing inputs.
+
+Verification:
+- `xcrun devicectl list devices` -> iPhone 14 Pro Max available paired
+- `xcrun devicectl device info apps --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --bundle-id com.aetheria.roguelike` -> pass
+- `xcrun devicectl device process launch --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B --terminate-existing com.aetheria.roguelike` -> first attempt failed with CoreDevice immediate disconnect, retry passed
+- `xcrun devicectl device info processes --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B | rg "com.aetheria|roguelike|App.app/App|Aetheria"` -> pass, process `84290`
+- `sleep 60 && xcrun devicectl device info processes --device FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B | rg "com.aetheria|roguelike|App.app/App|Aetheria"` -> pass, process `84290` remained alive
+- `/Users/sungjin/Library/Android/sdk/platform-tools/adb devices -l` -> no connected Android devices
+- `npm run mobile:doctor` -> pass with existing Android release signing input blocker
+
+Notes:
+- Automated iPhone delivery and short runtime-hold evidence are complete. The next step cannot be automated from this shell: run the `docs/PLAYTEST_CHECKLIST.md` iPhone 5-minute routine on the physical screen and capture `QA READOUT` / exported snapshot if an issue appears.
+
+Done (2026-05-28: readability trend research):
+- Reviewed the current mobile readability evidence from `playtest-artifacts/mobile/01-after-start.png`, `02a-shop-open.png`, and `02c-quest-board-open.png`.
+- Compared the current UI structure against reference lessons from `Balatro`, `Diablo IV`, `Slay the Spire`, `Hades II`, `Into the Breach`, and `Backpack Hero`.
+- Documented the findings and development plan in `docs/READABILITY_TREND_RESEARCH.md`.
+- Main conclusion: the game structure is solid, but readability feels less current because too many panels share the same dark glass treatment, borders, rounded shapes, tiny labels, and decorative spacing. The first implementation should focus on readable typography/surface tokens and first-viewport hierarchy before changing game systems.
+
+Verification:
+- `git diff --check -- docs/READABILITY_TREND_RESEARCH.md tasks/todo.md progress.md` -> pass
+
+Notes:
+- Recommended implementation slice: `Readability Foundation` plus the first part of `First Viewport Recomposition`, targeting `src/index.css`, `StatusBar`, `TerminalView`, and `ControlPanel`.
+
+Done (2026-05-28: readability foundation + map prominence pass):
+- Applied the first readability implementation slice from `docs/READABILITY_TREND_RESEARCH.md`.
+- Added readable typography and surface tokens in `src/index.css` and exposed a `font-readable` Tailwind family through `tailwind.config.js`.
+- Made the map visible before device QA by adding a first-viewport `control-map-signal` strip in `src/components/ControlPanel.tsx`, changing the mobile move action label to `MAP`, and adding a `Route Map` board for route selection.
+- Promoted the map tab's current location into a clear `map-current-location-card` with a primary recommended route CTA in `src/components/MapNavigator.tsx`.
+- Added regression coverage in `tests/readability-map-signal.test.js` and updated affected Playwright e2e expectations for the new MAP-first interaction.
+- Captured mobile visual evidence:
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/aetheria-readability-map-first-screen.png`
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/aetheria-readability-map-tab.png`
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/aetheria-readability-route-board.png`
+
+Verification:
+- `npx tsc --noEmit` -> pass
+- `node --import tsx --test tests/readability-map-signal.test.js tests/cycle-423-control-panel-sidebar-label-dead.test.js` -> pass
+- `npm run verify` -> type-check, lint, unit 2827/2827, build guard pass
+- `npm run test:e2e -- tests/e2e/explore.spec.ts` -> 2/2 pass after updating the intentional MAP button expectation
+- `npm run verify:full` -> type-check, lint, unit 2827/2827, build guard, desktop smoke, mobile smoke, Playwright e2e 20/20 pass
+- `npm run mobile:doctor` -> pass with the existing Android release signing input blocker
+- `npm run cap:sync` -> pass; latest web assets copied into Android and iOS Capacitor shells
+
+Notes:
+- Native debug/archive builds were not rerun in this pass because the touched path is web UI/readability and Capacitor sync, not signing or native delivery logic.
+- Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.
+
+Done (2026-05-28: first viewport readability recomposition pass):
+- Continued the readability trend work into the first playable viewport rather than changing progression systems.
+- Compressed `StatusBar` into a compact readable HUD shell with clearer HP / NRG / EXP meters and less decorative chrome.
+- Rebuilt `TerminalView` around readable log rows and small semantic badges, removing the heavier scanline/orb treatment from the primary log surface.
+- Reframed the active mission tracker in `ControlPanel` as `NEXT / ROUTE / REWARD / RETURN` decision cells so an accepted quest reads like a next-action strip instead of a decorative chip stack.
+- Updated smoke DOM metrics in `src/hooks/useGameTestApi.ts` and expanded readability regression coverage in `tests/readability-map-signal.test.js`.
+- Captured mobile visual evidence:
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/aetheria-readability-first-viewport-v2.png`
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/playtest-artifacts/desktop/01-after-start.png`
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/playtest-artifacts/mobile/01-after-start.png`
+
+Verification:
+- `npx tsc --noEmit` -> pass
+- `node --import tsx --test tests/readability-map-signal.test.js tests/cycle-423-control-panel-sidebar-label-dead.test.js tests/cycle-404-terminal-view-stats-prop-dead.test.js tests/cycle-497-terminal-view-auto-focus-show-input-cascade.test.js` -> 19/19 pass
+- `node --import tsx --test tests/cycle-491-status-metric-compact-dense-cascade.test.js tests/readability-map-signal.test.js` -> 10/10 pass
+- `npm run verify` -> type-check, lint, unit 2829/2829, build guard pass
+- `npm run verify:full` -> type-check, lint, unit 2829/2829, build guard, desktop smoke, mobile smoke, Playwright e2e 20/20 pass
+- Playwright 390x844 first viewport visual check -> no status/log/map/action overlap; screenshot saved to `aetheria-readability-first-viewport-v2.png`
+- `npm run mobile:doctor` -> pass with existing Android release signing input blocker
+- `npm run cap:sync` -> pass; latest web assets copied into Android and iOS Capacitor shells
+
+Notes:
+- Native debug/archive builds were not rerun because this pass touched web UI/readability and Capacitor web asset sync, not native signing or packaging logic.
+- Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.
+
+Done (2026-05-28: Quest Board and Shop modernization pass):
+- Continued `docs/READABILITY_TREND_RESEARCH.md` Slice 3 for modern roguelike decision surfaces.
+- Rebuilt `QuestBoardPanel` around `aether-choice-row` decision rows instead of heavy nested terminal cards. Featured missions now prioritize title, one-line objective, Scout Brief route/risk/payoff/return, reward chips, and the accept action.
+- Reduced the Mission Terminal header and removed the duplicate plan grid from featured mission rows so the first `START OPERATION` action is visible inside a 390x844 mobile viewport.
+- Rebuilt `ShopPanel` buy/sell rows around `aether-shop-row` and `aether-shop-delta`, keeping item art, item identity, stat delta, blocked reason, price, and buy/sell action in one comparable row.
+- Updated readability regression guards so Quest Board decision rows and Shop row state stay covered.
+- Captured mobile visual evidence:
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/aetheria-readability-slice3-shop.png`
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/aetheria-readability-slice3-quest-board.png`
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/playtest-artifacts/mobile/02a-shop-open.png`
+  - `/Users/sungjin/dev/personal/aetheria-roguelike/playtest-artifacts/mobile/02c-quest-board-open.png`
+
+Verification:
+- `npx tsc --noEmit` -> pass
+- `node --import tsx --test tests/readability-map-signal.test.js tests/cycle-428-reward-chips-default-accent-redundant.test.js tests/cycle-429-quest-reward-chips-default-accent-redundant.test.js tests/cycle-488-shop-panel-mobile-focused-cascade.test.js tests/cycle-573-shop-panel-defaults-batch.test.js tests/cycle-589-quest-board-panel-system-tab-defaults-batch.test.js` -> 26/26 pass
+- `npm run verify` -> type-check, lint, unit 2831/2831, build guard pass
+- `npm run verify:full` -> type-check, lint, unit 2831/2831, build guard, desktop smoke, mobile smoke, Playwright e2e 20/20 pass
+- Playwright 390x844 Shop visual check -> row buttons are 74x34, item rows remain readable, screenshot saved to `aetheria-readability-slice3-shop.png`
+- Playwright 390x844 Quest Board visual check -> first mission `START OPERATION` is visible within viewport, screenshot saved to `aetheria-readability-slice3-quest-board.png`
+- `npm run mobile:doctor` -> pass with existing Android release signing input blocker
+- `npm run cap:sync` -> pass; latest web assets copied into Android and iOS Capacitor shells
+
+Notes:
+- Native debug/archive builds were not rerun because this pass touched web UI/readability and Capacitor web asset sync, not native signing or packaging logic.
+- Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.

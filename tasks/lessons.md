@@ -16,6 +16,8 @@
 | 2026-03-31 | 모바일 상점 smoke가 카드 클릭에서 반복적으로 false negative 발생 | fixed overlay + glass surface 조합에서는 비액션 카드 shell hit-test가 환경에 따라 흔들리고 실제 사용자 액션과도 어긋났음 | 모바일 overlay smoke는 장식 카드가 아니라 실제 CTA/button을 기준으로 검증하고, open/close/CTA 노출 여부를 핵심 성공 조건으로 삼는다 |
 | 2026-03-31 | 모바일 focus 패널이 `Field Feed / Snapshot / Archive Dock`와 겹쳐 상점·이벤트·미션 화면이 답답하게 누적됨 | `App`이 모바일에서도 기본 로그/요약 스택을 계속 렌더한 상태에서 `SHOP / EVENT / QUEST_BOARD / JOB_CHANGE / CRAFTING` 패널을 fixed overlay로만 얹어, 공간을 두 번 쓰고 z-index 충돌까지 만들었음 | 모바일에서 panel-heavy 상태는 일반 본문 스택과 분리한 단일 focus stage로 렌더하고, 같은 상태에서는 fixed overlay보다 `min-h-0 flex-1` 인라인 패널 구성을 우선한다 |
 | 2026-04-08 | OpenSpace 게임 통합 시 repo wiring과 host execution 상태가 혼동되기 쉬움 | repo-local skill dir, Codex MCP config, local `search_skills`는 정상이어도 plain shell `execute_task`는 host-side auth/session/timeout에 막힐 수 있음 | 게임 repo OpenSpace smoke는 bridge skill 존재, local search discovery, MCP config 반영 여부를 우선 성공 기준으로 삼고, `execute_task` timeout은 host follow-up으로 분리 기록한다 |
+| 2026-06-01 | 모바일 visual smoke에서 Quest/Combat 패널이 실제보다 어둡게 캡처됨 | focus panel entrance animation의 initial opacity가 smoke screenshot timing과 겹쳐 첫 프레임 가독성을 떨어뜨렸음 | 실기기 acceptance 대상 패널은 첫 render부터 readable state여야 하며, QA 캡처 대상 surface에는 `initial={false}` 또는 동등한 immediate-visible contract를 적용한다 |
+| 2026-06-01 | 모바일 archive reset CTA가 하단 control panel에 pointer hit-test를 빼앗김 | archive console이 열린 상태에서도 bottom `ControlPanel`이 동시에 렌더되어 overlay CTA 아래 z-layer에서 pointer event를 가로챘음 | 모바일에서 modal/console CTA가 활성화되면 동일 영역의 underlying controls를 조건부 suppress하고, reachability source guard로 겹침 회귀를 고정한다 |
 
 ---
 
@@ -60,6 +62,14 @@
 ### R10: Separate OpenSpace Wiring From Host Runtime
 - **Rule:** OpenSpace 통합 검증은 `repo skill dirs present + local search discovery + MCP config wiring`을 우선 확인하고, plain shell `execute_task` timeout이나 auth 실패는 repo 회귀와 분리해 기록한다
 - **Rationale:** repo wiring은 이미 정상인데 host-side session/auth 문제 때문에 통합 자체가 실패한 것처럼 오판하는 일을 줄여야 한다
+
+### R11: Immediate-Readable QA Panels
+- **Rule:** 모바일 smoke / 실기기 acceptance에서 직접 캡처되는 focus, combat, reset, quest 계열 패널은 첫 render부터 readable opacity와 contrast를 가져야 하며, entrance animation이 필수라면 캡처 지점과 분리한다
+- **Rationale:** 실제 UI는 곧 밝아져도 QA 캡처가 첫 프레임을 잡으면 어두운 화면이 acceptance evidence로 남아 잘못된 회귀 판단을 만들 수 있다
+
+### R12: Suppress Underlying Controls Under Mobile Consoles
+- **Rule:** 모바일 modal, archive console, reset confirmation처럼 CTA가 있는 상위 surface가 열려 있으면 같은 터치 영역의 bottom controls를 렌더하지 않거나 pointer target에서 제거한다
+- **Rationale:** 시각적으로는 위에 보이는 CTA라도 아래 control surface가 pointer event를 가로채면 실기기에서는 진행 불가 버그가 된다
 
 ---
 

@@ -29,6 +29,7 @@
     "ios:sync": "npm run build && npx cap sync ios",
     "ios:build:device": "bash scripts/ios-build-device.sh",
     "ios:archive": "bash scripts/ios-archive.sh",
+    "ios:device:smoke": "bash scripts/ios-device-smoke.sh",
     "ios:open": "npx cap open ios"
   },
   "dependencies": {

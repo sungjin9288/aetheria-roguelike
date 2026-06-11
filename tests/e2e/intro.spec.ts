@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { startE2ERun } from './testHelpers';
 
 /**
  * E2E: Intro 화면 → 캐릭터 시작 flow.
@@ -29,13 +30,8 @@ test.describe('Intro flow', () => {
     });
 
     test('StatusBar에 Lv 표시 (게임 부트 완료)', async ({ page }) => {
-        await page.goto('/?e2e=1');
-        const introInput = page.getByTestId('intro-name-input');
-        if (await introInput.isVisible({ timeout: 10_000 }).catch(() => false)) {
-            await page.getByTestId('intro-start-button').click();
-        }
+        await startE2ERun(page);
         const statusBar = page.getByTestId('persistent-status-bar');
-        await expect(statusBar).toBeVisible({ timeout: 20_000 });
         await expect(statusBar).toContainText(/Lv\.\d+/);
     });
 });

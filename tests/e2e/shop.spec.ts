@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { startE2ERun } from './testHelpers';
 
 /**
  * E2E: Shop 패널 진입 + 구매 사유 표시 (cycle 56).
@@ -7,13 +8,7 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('Shop panel', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/?e2e=1');
-        const introInput = page.getByTestId('intro-name-input');
-        if (await introInput.isVisible({ timeout: 10_000 }).catch(() => false)) {
-            await page.getByTestId('intro-start-button').click();
-            await expect(introInput).toBeHidden({ timeout: 15_000 });
-        }
-        await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 20_000 });
+        await startE2ERun(page);
     });
 
     test('SHOP 버튼 노출', async ({ page }) => {

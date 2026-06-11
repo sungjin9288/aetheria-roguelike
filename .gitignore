@@ -50,3 +50,7 @@ tmp/
 
 # Claude Code scheduling artifacts
 .claude/scheduled_tasks.lock
+
+# Claude session artifacts
+.playwright-mcp/
+/aetheria-*.png

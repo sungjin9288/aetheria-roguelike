@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { startE2ERun } from './testHelpers';
 
 /**
  * E2E: 전설 도감 (LegendaryCodex) 진입 + 빈 상태 educational hint.
@@ -10,18 +11,7 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('Legendary Codex empty state', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/?e2e=1');
-        const introInput = page.getByTestId('intro-name-input');
-        if (await introInput.isVisible({ timeout: 10_000 }).catch(() => false)) {
-            await page.getByTestId('intro-start-button').click();
-            await expect(introInput).toBeHidden({ timeout: 15_000 });
-        }
-        await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 20_000 });
-        // 모바일: 캐릭터 칩으로 Dashboard 열기
-        const statusChip = page.getByTestId('status-character-chip');
-        if (await statusChip.isVisible({ timeout: 3_000 }).catch(() => false)) {
-            await statusChip.click();
-        }
+        await startE2ERun(page, { openStatusConsole: true });
     });
 
     test('Codex → LEGEND sub tab → 신규 캐릭터에 educational hint 노출', async ({ page }) => {

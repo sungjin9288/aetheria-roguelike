@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { startE2ERun } from './testHelpers';
 
 /**
  * E2E: 핵심 네비게이션 플로우 — Map / Skills / Stats 탭 진입.
@@ -7,17 +8,7 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('Navigation', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/?e2e=1');
-        const introInput = page.getByTestId('intro-name-input');
-        if (await introInput.isVisible({ timeout: 10_000 }).catch(() => false)) {
-            await page.getByTestId('intro-start-button').click();
-            await expect(introInput).toBeHidden({ timeout: 15_000 });
-        }
-        await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 20_000 });
-        const statusChip = page.getByTestId('status-character-chip');
-        if (await statusChip.isVisible({ timeout: 3_000 }).catch(() => false)) {
-            await statusChip.click();
-        }
+        await startE2ERun(page, { openStatusConsole: true });
     });
 
     test('MAP 탭 진입 → 지역 카드 노출', async ({ page }) => {
@@ -26,6 +17,7 @@ test.describe('Navigation', () => {
         await mapTab.click();
         // tier vertical list (cycle 57)에서 적어도 시작의 마을 또는 다른 지역명 노출
         await expect(page.locator('text=/시작의 마을|World Routes|Atlas/').first()).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-current-location-card')).toBeVisible({ timeout: 5_000 });
     });
 
     test('SKILL 탭 진입 → 스킬 카드 + 선택 가능 안내', async ({ page }) => {
@@ -70,5 +62,20 @@ test.describe('Navigation', () => {
         await achvTab.click();
         // Achievement 패널의 항상 노출되는 키워드
         await expect(page.locator('text=/업적|Achievement|첫|처치|보스/').first()).toBeVisible({ timeout: 8_000 });
+    });
+
+    test('SYSTEM 탭 readability mode 토글 → app shell contrast mode 전환', async ({ page }) => {
+        const systemTab = page.locator('[data-testid$="-tab-system"]').first();
+        await expect(systemTab).toBeVisible({ timeout: 8_000 });
+        await systemTab.click();
+
+        await expect(page.getByTestId('readability-settings')).toBeVisible({ timeout: 8_000 });
+        await page.getByTestId('readability-mode-high').click();
+        await expect(page.locator('[data-app-shell]')).toHaveAttribute('data-readability-mode', 'high');
+        await expect(page.getByTestId('readability-mode-current')).toHaveText('high');
+
+        await page.getByTestId('readability-mode-standard').click();
+        await expect(page.locator('[data-app-shell]')).toHaveAttribute('data-readability-mode', 'standard');
+        await expect(page.getByTestId('readability-mode-current')).toHaveText('standard');
     });
 });

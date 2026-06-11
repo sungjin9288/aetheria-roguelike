@@ -37,6 +37,7 @@ const desktopViewport = {
 const artifactDir = path.resolve(process.cwd(), 'playtest-artifacts', artifactLabel);
 const logSmoke = (message) => console.log(`[smoke:${viewportLabel}] ${message}`);
 const CLOSE_TIMEOUT_MS = 2500;
+const DEFAULT_ACTION_VISIBLE_RATIO = 0.72;
 
 async function launchBrowser() {
   const executablePath = process.env.PLAYWRIGHT_CHROME_PATH || DEFAULT_CHROME_PATH;
@@ -88,6 +89,204 @@ async function writeStateArtifact(name, state, page) {
   await fs.mkdir(artifactDir, { recursive: true });
   await fs.writeFile(path.join(artifactDir, `${basename}.json`), `${JSON.stringify(artifactState, null, 2)}\n`, 'utf8');
   await page.screenshot({ path: path.join(artifactDir, `${basename}.png`), fullPage: true, timeout: 60000 });
+}
+
+async function getReachabilityMetrics(locator) {
+  return locator.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    const viewport = window.visualViewport;
+    const viewportWidth = viewport?.width || window.innerWidth;
+    const viewportHeight = viewport?.height || window.innerHeight;
+    const visibleLeft = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0));
+    const visibleTop = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
+    const area = Math.max(1, rect.width * rect.height);
+    const style = window.getComputedStyle(node);
+    return {
+      rect: {
+        left: Math.round(rect.left),
+        top: Math.round(rect.top),
+        right: Math.round(rect.right),
+        bottom: Math.round(rect.bottom),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      },
+      viewport: {
+        width: Math.round(viewportWidth),
+        height: Math.round(viewportHeight),
+      },
+      visibleWidth: Math.round(visibleLeft),
+      visibleHeight: Math.round(visibleTop),
+      visibleRatio: Number(((visibleLeft * visibleTop) / area).toFixed(3)),
+      disabled: node.matches('button:disabled, [aria-disabled="true"], [disabled]'),
+      pointerEvents: style.pointerEvents,
+      visibility: style.visibility,
+      opacity: Number(style.opacity || 1),
+    };
+  });
+}
+
+const formatReachability = (metrics) => JSON.stringify(metrics);
+
+async function verifyActionReachable(locator, label, options = {}) {
+  const target = locator.first();
+  const minVisibleRatio = options.minVisibleRatio ?? DEFAULT_ACTION_VISIBLE_RATIO;
+  const minHitWidth = options.minHitWidth ?? 32;
+  const minHitHeight = options.minHitHeight ?? 32;
+  await target.waitFor({ state: 'visible', timeout: options.timeout || 5000 });
+
+  let metrics = await getReachabilityMetrics(target);
+  const needsScroll = (
+    metrics.visibleRatio < minVisibleRatio
+    || metrics.visibleWidth < minHitWidth
+    || metrics.visibleHeight < minHitHeight
+  );
+  if (needsScroll && options.allowScroll !== false) {
+    await target.scrollIntoViewIfNeeded({ timeout: options.timeout || 5000 });
+    await delay(120);
+    metrics = await getReachabilityMetrics(target);
+  }
+
+  ensure(
+    metrics.visibleRatio >= minVisibleRatio,
+    `${label} is not sufficiently visible in viewport: ${formatReachability(metrics)}`
+  );
+  ensure(
+    metrics.visibleWidth >= minHitWidth,
+    `${label} visible width is below ${minHitWidth}px: ${formatReachability(metrics)}`
+  );
+  ensure(
+    metrics.visibleHeight >= minHitHeight,
+    `${label} visible height is below ${minHitHeight}px: ${formatReachability(metrics)}`
+  );
+  ensure(
+    options.allowDisabled || !metrics.disabled,
+    `${label} should be enabled: ${formatReachability(metrics)}`
+  );
+  ensure(
+    metrics.pointerEvents !== 'none' && metrics.visibility !== 'hidden' && metrics.opacity > 0,
+    `${label} should be interactable: ${formatReachability(metrics)}`
+  );
+  return metrics;
+}
+
+async function verifyCombatForecast(page) {
+  const forecast = page.locator('[data-testid="combat-forecast-strip"]');
+  await forecast.waitFor({ state: 'visible', timeout: 5000 });
+  const text = await forecast.innerText();
+  const tone = await forecast.getAttribute('data-forecast-tone');
+  ensure(text.includes('INTENT'), 'Combat forecast should expose INTENT');
+  ensure(text.includes('RESPONSE'), 'Combat forecast should expose RESPONSE');
+  ensure(text.includes('WINDOW'), 'Combat forecast should expose WINDOW');
+  ensure(['pressure', 'advantage', 'reward', 'steady'].includes(tone), 'Combat forecast should expose a known tone');
+}
+
+async function verifyPostCombatDecisionStrip(page, options = {}) {
+  if (options.inject) {
+    await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectPostCombatResult?.());
+  }
+  const strip = page.locator('[data-testid="post-combat-decision-strip"]');
+  await strip.waitFor({ state: 'visible', timeout: 5000 });
+  const text = await strip.innerText();
+  const tone = await strip.getAttribute('data-result-tone');
+  ensure(text.includes('STATE'), 'Post-combat decision strip should expose STATE');
+  ensure(text.includes('LOOT'), 'Post-combat decision strip should expose LOOT');
+  ensure(text.includes('NEXT'), 'Post-combat decision strip should expose NEXT');
+  ensure(['pressure', 'advantage', 'reward', 'steady'].includes(tone), 'Post-combat decision strip should expose a known tone');
+  await verifyActionReachable(strip, 'Post-combat first-scan decision strip', {
+    allowDisabled: true,
+    minHitHeight: 32,
+    minVisibleRatio: 0.6,
+  });
+  await verifyActionReachable(page.locator('[data-testid="post-combat-close"]'), 'Post-combat close CTA', {
+    minHitHeight: 44,
+    minHitWidth: 44,
+  });
+  if (options.artifactName) {
+    await writeStateArtifact(options.artifactName, await readState(page), page);
+  }
+  if (options.dismiss) {
+    const continueButton = page.locator('[data-testid="post-combat-continue"]');
+    await verifyActionReachable(continueButton, 'Post-combat continue CTA', {
+      minHitHeight: 44,
+      minVisibleRatio: 0.85,
+    });
+    await continueButton.click();
+    await strip.waitFor({ state: 'hidden', timeout: 5000 });
+  }
+}
+
+async function verifyRelicChoiceDecisionStrip(page, options = {}) {
+  if (options.inject) {
+    await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRelicChoice?.());
+  }
+  const strip = page.locator('[data-testid="relic-choice-decision-strip"]');
+  await strip.waitFor({ state: 'visible', timeout: 5000 });
+  const text = await strip.innerText();
+  const tone = await strip.getAttribute('data-relic-tone');
+  ensure(text.includes('PICK'), 'Relic choice decision strip should expose PICK');
+  ensure(text.includes('WHY'), 'Relic choice decision strip should expose WHY');
+  ensure(text.includes('BUILD'), 'Relic choice decision strip should expose BUILD');
+  ensure(['legendary', 'synergy', 'potential', 'steady'].includes(tone), 'Relic choice decision strip should expose a known tone');
+  ensure(await page.locator('[data-relic-recommended="true"]').count() > 0, 'Relic choice should mark one recommended card');
+  await verifyActionReachable(strip, 'Relic choice first-scan decision strip', {
+    allowDisabled: true,
+    minHitHeight: 32,
+    minVisibleRatio: 0.6,
+  });
+  await verifyActionReachable(page.locator('[data-relic-recommended="true"]'), 'Relic choice recommended CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.45,
+  });
+  if (options.artifactName) {
+    await writeStateArtifact(options.artifactName, await readState(page), page);
+  }
+  if (options.dismiss) {
+    const skipButton = page.locator('[data-testid="relic-choice-skip"]');
+    await verifyActionReachable(skipButton, 'Relic choice skip CTA', {
+      minHitHeight: 44,
+      minVisibleRatio: 0.85,
+    });
+    await skipButton.click();
+    await strip.waitFor({ state: 'hidden', timeout: 5000 });
+  }
+}
+
+async function verifyRunSummaryReflectionStrip(page, options = {}) {
+  if (options.inject) {
+    await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());
+  }
+  const strip = page.locator('[data-testid="run-summary-reflection-strip"]');
+  await strip.waitFor({ state: 'visible', timeout: 5000 });
+  const text = await strip.innerText();
+  const tone = await strip.getAttribute('data-run-tone');
+  ensure(text.includes('CAUSE'), 'Run summary reflection strip should expose CAUSE');
+  ensure(text.includes('LESSON'), 'Run summary reflection strip should expose LESSON');
+  ensure(text.includes('NEXT'), 'Run summary reflection strip should expose NEXT');
+  ensure(['pressure', 'growth', 'breakthrough', 'steady'].includes(tone), 'Run summary reflection strip should expose a known tone');
+  await verifyActionReachable(strip, 'Run summary first-scan reflection strip', {
+    allowDisabled: true,
+    minHitHeight: 32,
+    minVisibleRatio: 0.6,
+  });
+  const shareButton = page.locator('[data-testid="run-summary-share"]');
+  const restartButton = page.locator('[data-testid="run-summary-restart"]');
+  await shareButton.waitFor({ state: 'visible', timeout: 5000 });
+  await restartButton.waitFor({ state: 'visible', timeout: 5000 });
+  if (options.artifactName) {
+    await writeStateArtifact(options.artifactName, await readState(page), page);
+  }
+  await verifyActionReachable(shareButton, 'Run summary share CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  await verifyActionReachable(restartButton, 'Run summary restart CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  if (options.restart) {
+    await restartButton.click();
+    await waitForState(page, (state) => state.mode === 'intro', 'run summary restart to intro');
+  }
 }
 
 async function scrollToTop(page) {
@@ -228,6 +427,10 @@ async function verifyMobileFirstFold(page) {
   await statusCharacterChip.waitFor({ state: 'visible', timeout: 10000 });
   await moveButton.waitFor({ state: 'visible', timeout: 10000 });
   await shopButton.waitFor({ state: 'visible', timeout: 10000 });
+  await verifyActionReachable(archiveOpenButton, 'Mobile archive open CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
   ensure(
     !await page.locator('[data-testid="control-reset"]').first().isVisible().catch(() => false),
     'Mobile action bar should not render reset after menu consolidation'
@@ -249,16 +452,35 @@ async function verifyMobileArchiveConsole(page) {
   await statusCharacterChip.click();
   await archiveConsole.waitFor({ state: 'visible', timeout: 10000 });
   await equipmentPreview.waitFor({ state: 'visible', timeout: 5000 });
+  await verifyActionReachable(archiveReturnButton, 'Mobile archive return CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
   await archiveReturnButton.click();
   await page.locator('[data-testid="terminal-panel"]').waitFor({ state: 'visible', timeout: 10000 });
 
   await archiveOpenButton.click();
   await archiveConsole.waitFor({ state: 'visible', timeout: 10000 });
-  await page.locator('[data-testid="menu-town-rest"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="menu-town-class"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="menu-town-quest"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="menu-town-craft"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="menu-reset"]').waitFor({ state: 'visible', timeout: 5000 });
+  await verifyActionReachable(page.locator('[data-testid="menu-town-rest"]'), 'Town rest CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  await verifyActionReachable(page.locator('[data-testid="menu-town-class"]'), 'Town class CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  await verifyActionReachable(page.locator('[data-testid="menu-town-quest"]'), 'Town quest CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  await verifyActionReachable(page.locator('[data-testid="menu-town-craft"]'), 'Town craft CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  await verifyActionReachable(page.locator('[data-testid="menu-reset"]'), 'Town reset CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
   // cycle 81: 모바일 archive console의 inline rail 레이아웃에서 primary tabs(equipment /
   // inventory / quest / map / stats)는 archive-tab-* testid를, secondary tabs(achievements /
   // skills / codex / pass / graves / system)만 dashboard-tab-* testid를 사용한다.
@@ -284,7 +506,7 @@ async function verifyMobileArchiveConsole(page) {
   await weaponSlot.getByText('강화 가능').waitFor({ state: 'visible', timeout: 5000 });
   ensure(!await page.locator('[data-testid="equipment-enhance-weapon"]').isDisabled(), 'Equipment enhance button should be enabled when requirements are met');
 
-  await page.locator('[data-testid="dashboard-tab-inventory"]').click();
+  await page.locator('[data-testid="archive-tab-inventory"]').click();
   await page.locator('[data-testid="mobile-archive-console-content"]').waitFor({ state: 'visible', timeout: 5000 });
   const returnText = await page.locator('[data-testid="mobile-console-return-log"]').textContent();
   ensure(String(returnText || '').includes('닫기'), 'Mobile menu close affordance should use 닫기 label');
@@ -355,6 +577,15 @@ async function verifyMobileArchiveConsole(page) {
   await page.locator('[data-testid="menu-reset"]').click();
   await page.locator('[data-testid="menu-reset-confirm"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="menu-reset-cancel"]').waitFor({ state: 'visible', timeout: 5000 });
+  await verifyActionReachable(page.locator('[data-testid="menu-reset-confirm"]'), 'Town reset confirm CTA', {
+    allowDisabled: true,
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  await verifyActionReachable(page.locator('[data-testid="menu-reset-cancel"]'), 'Town reset cancel CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
   await page.locator('[data-testid="menu-reset-cancel"]').click();
   await page.locator('[data-testid="menu-reset"]').waitFor({ state: 'visible', timeout: 5000 });
   await writeStateArtifact('02-archive-console-open', await readState(page), page);
@@ -389,9 +620,18 @@ async function verifyShopFlow(page) {
     ensure(await equipmentAssetIcons.count() > 0, 'Mobile shop should render standalone equipment asset illustrations for gear items');
 
     await inlineBuyButton.waitFor({ state: 'visible', timeout: 5000 });
+    await verifyActionReachable(inlineBuyButton, 'Shop first inline buy CTA', {
+      allowDisabled: true,
+      minHitHeight: 34,
+      minVisibleRatio: 0.85,
+    });
   }
 
   const closeButton = page.locator('[data-testid="shop-close"]');
+  await verifyActionReachable(closeButton, 'Shop close CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
   await closeButton.click();
   await waitForState(
     page,
@@ -408,10 +648,16 @@ async function verifyMobileFocusPanelFlow(page, {
   openPredicate,
   openDescription,
   artifactName,
+  closeTestId = null,
+  decisionSelector = null,
+  primarySelector = null,
+  allowDisabledPrimary = false,
   closePredicate = (nextState) => nextState.gameState === 'idle',
 }) {
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
-  const backButton = page.getByRole('button', { name: /복귀/i }).first();
+  const backButton = closeTestId
+    ? page.locator(`[data-testid="${closeTestId}"]`).first()
+    : page.getByRole('button', { name: /복귀/i }).first();
 
   await trigger();
   const openState = await waitForState(page, openPredicate, openDescription);
@@ -419,6 +665,24 @@ async function verifyMobileFocusPanelFlow(page, {
 
   await backButton.waitFor({ state: 'visible', timeout: 5000 });
   ensure(!await archiveOpenButton.isVisible(), `${artifactName} should hide archive console trigger while open`);
+  if (decisionSelector) {
+    await verifyActionReachable(page.locator(decisionSelector).first(), `${artifactName} first-scan decision area`, {
+      allowDisabled: true,
+      minHitHeight: 32,
+      minVisibleRatio: 0.35,
+    });
+  }
+  if (primarySelector) {
+    await verifyActionReachable(page.locator(primarySelector).first(), `${artifactName} primary CTA`, {
+      allowDisabled: allowDisabledPrimary,
+      minHitHeight: 44,
+      minVisibleRatio: 0.45,
+    });
+  }
+  await verifyActionReachable(backButton, `${artifactName} close CTA`, {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
 
   await backButton.click();
   await waitForState(page, closePredicate, `${artifactName} to close`);
@@ -445,14 +709,23 @@ async function verifyMobileFocusPanels(page) {
     openPredicate: (nextState) => nextState.gameState === 'job_change',
     openDescription: 'job change panel to open',
     artifactName: '02b-class-open',
+    closeTestId: 'job-change-close',
+    decisionSelector: '[data-testid="job-change-option"]',
+    primarySelector: '[data-testid="job-change-option"]',
+    allowDisabledPrimary: true,
   });
 
-  await openTownMenuShortcut('menu-town-quest');
-  await waitForState(page, (nextState) => nextState.sideTab === 'quest', 'quest menu tab to open');
-  await writeStateArtifact('02c-quest-open', await readState(page), page);
-  await page.locator('[data-testid="mobile-console-return-log"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="mobile-console-return-log"]').click();
-  await page.locator('[data-testid="mobile-console-open-archive"]').waitFor({ state: 'visible', timeout: 10000 });
+  await verifyMobileFocusPanelFlow(page, {
+    trigger: async () => {
+      await openTownMenuShortcut('menu-town-quest');
+    },
+    openPredicate: (nextState) => nextState.gameState === 'quest_board',
+    openDescription: 'quest board panel to open',
+    artifactName: '02c-quest-board-open',
+    closeTestId: 'quest-board-close',
+    decisionSelector: '[data-testid="quest-decision-row"]',
+    primarySelector: '[data-testid="quest-board-start-operation"]',
+  });
 
   await verifyMobileFocusPanelFlow(page, {
     trigger: async () => {
@@ -461,6 +734,10 @@ async function verifyMobileFocusPanels(page) {
     openPredicate: (nextState) => nextState.gameState === 'crafting',
     openDescription: 'crafting panel to open',
     artifactName: '02d-craft-open',
+    closeTestId: 'crafting-close',
+    decisionSelector: '[data-testid="crafting-recipe-action"]',
+    primarySelector: '[data-testid="crafting-recipe-action"]',
+    allowDisabledPrimary: true,
   });
 
   await verifyMobileFocusPanelFlow(page, {
@@ -470,6 +747,9 @@ async function verifyMobileFocusPanels(page) {
     openPredicate: (nextState) => nextState.gameState === 'event' && Boolean(nextState.currentEvent),
     openDescription: 'event panel to open',
     artifactName: '02e-event-open',
+    closeTestId: 'event-close',
+    decisionSelector: '[data-testid="event-panel"]',
+    primarySelector: '[data-testid="event-choice-0"], [data-testid="event-dismiss"]',
     closePredicate: (nextState) => nextState.gameState === 'idle' && !nextState.currentEvent,
   });
 }
@@ -566,6 +846,7 @@ async function driveExploreLoop(page) {
     }
 
     if (state.gameState === 'combat' && state.enemy) {
+      await verifyCombatForecast(page);
       await writeStateArtifact(`05-combat-${attempt + 1}`, state, page);
       await resolveCombat(page, observations);
       state = await waitForState(
@@ -715,6 +996,22 @@ async function main() {
     await verifyShopFlow(page);
     await verifyMobileFocusPanels(page);
     await verifyTerminalStatus(page);
+    await verifyPostCombatDecisionStrip(page, {
+      inject: true,
+      dismiss: true,
+      artifactName: '02d-post-combat-decision-strip',
+    });
+    await verifyRelicChoiceDecisionStrip(page, {
+      inject: true,
+      dismiss: true,
+      artifactName: '02e-relic-choice-decision-strip',
+    });
+    await verifyRunSummaryReflectionStrip(page, {
+      inject: true,
+      restart: true,
+      artifactName: '02f-run-summary-reflection-strip',
+    });
+    await startNewRun(page);
     logSmoke('field ready');
     await moveToForest(page);
     logSmoke('core loop');
