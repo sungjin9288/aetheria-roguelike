@@ -68,8 +68,8 @@ test('slice 19: 성장/템포 BALANCE 상수 계약', () => {
     assert.equal(BALANCE.MONSTER_HP_PER_LEVEL, 32, '몬스터 HP 곡선 slope 32');
     assert.equal(BALANCE.MONSTER_GOLD_BASE, 16, '몬스터 골드 base 16');
     assert.equal(BALANCE.FIRST_RELIC_PITY_EXPLORES, 6, '첫 유물 보장 pity 6탐험');
-    // EXP pacing 보존 (Slice 17-18 가드와 동일 계약)
-    assert.equal(CONSTANTS.START_NEXT_EXP, 150);
+    // EXP pacing 계약 — slice 23에서 150 → 200 감속 (학습 구간 확보).
+    assert.equal(CONSTANTS.START_NEXT_EXP, 200);
     assert.equal(BALANCE.EXP_SCALE_RATE, 1.15);
 });
 

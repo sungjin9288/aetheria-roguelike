@@ -18,7 +18,10 @@ export const CONSTANTS: any = {
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 200,
-    START_NEXT_EXP: 150,
+    // slice 23: 150 → 200 — 초반 레벨 간격 감속 (학습 구간 확보). 전투 템포
+    //   (slice 19)는 빠르게 유지하되 레벨당 전투 수를 늘린다. Lv1→5 누적
+    //   요구 745 → 998 (+34%).
+    START_NEXT_EXP: 200,
     // cycle 195: SAVE_KEY 제거 — Firebase Firestore 사용으로 localStorage save key 미사용 (dead).
     DATA_VERSION: 5.0,
     // cycle 309: REMOTE_CONFIG_ENABLED 제거 — RemoteConfigLoader.ts (dead module) 외

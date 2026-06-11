@@ -421,7 +421,7 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
     if (safe && (player?.level || 1) <= 2 && totalExplores === 0 && totalKills === 0) {
         return {
             title: '첫 원정 준비',
-            detail: '추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상(+100G, +50 EXP)이 기다립니다.',
+            detail: '추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상(+100G, +25 EXP)이 기다립니다.',
             primaryAction: { kind: 'open_move', label: '첫 출발' },
         };
     }

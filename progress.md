@@ -1,5 +1,17 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (Early Leveling Deceleration Slice 23):
+- 설계 피드백 반영: "초반 레벨업이 너무 빠르면 안 된다 — 초반을 즐기며 게임을 익혀야 한다." slice 17-18이 퀘스트 burst는 막았지만 slice 19 전투 가속(4-5턴)으로 실시간 레벨 간격이 짧아진 상태(Lv5 ~12분)를 감속.
+- 원칙: 성장 "체감"(전투 템포·스탯·로그)은 그대로, 레벨 "간격"만 늘림 — 레벨당 전투 수(=연습량) 증가.
+- CONSTANTS.START_NEXT_EXP 150 → 200 (Lv1→5 누적 요구 745 → 998, +34%).
+- 초반 5지역(고요한 숲/서쪽 평원/호수의 신전/잊혀진 폐허/버려진 광산) 첫 방문 EXP 절반 (25/30/50/60/80) — 골드는 유지(경제 불변). 중후반 지역 불변. adventureGuide 온보딩 문구 동기화.
+- 몬스터/퀘스트 EXP 불변 — 퀘스트 1수령 1레벨 캡(slice 17) 보존.
+- 새 계약: 초반 콘텐츠 전체 소비 루트(첫 방문 2회 + 초반 퀘스트 4종 + 18킬)가 **Lv4 73/302**에서 멈춤 — 전직(Lv5)은 추가 사냥의 보상. `tests/early-leveling-deceleration.test.js` 4건 + quest-progression-pacing 루트 기대값/early-growth-tempo 계약 갱신.
+
+Verification (Early Leveling Deceleration Slice 23):
+- `npm run verify` → 2908/2908 + type-check/lint/build-guard.
+- 시뮬레이션 실측: 가드 루트 종료 Lv4 73/302 (기존 Lv5 75/259 대비 1레벨 감속).
+
 Checked (Slice 21+22 iOS Device Gate — PASSED):
 - Slice 19-22 전부 포함 아카이브 재생성(`ARCHIVE SUCCEEDED`) → `npm run ios:device:smoke` 전체 통과 (exit 0): install (`.../DBA07570.../App.app`) → foreground launch → 60초 hold → done. 잠금/신뢰 블로커 재발 없음.
 - 실기기 수동 5분 루틴 확인 포인트: 첫 전투 4-5턴(S19) / NEXT 가이드 스트립 '첫 원정 준비→첫 교전'(S22) / 마을↔숲 지역 톤 전환(S21) / 퀘스트 보드 한국어 CTA(S22) / [치명타] 태그 로그·INTENT 단일 표시(S20).
