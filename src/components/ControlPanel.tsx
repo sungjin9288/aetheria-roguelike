@@ -492,6 +492,16 @@ const ControlPanel = ({
       ) : (
         <div className="space-y-1.5">
           {questTracker && <MissionTrackerStrip tracker={questTracker} />}
+          {/* slice 22: 가이드 스트립 — getAdventureGuidance가 계산만 되고 추천 버튼
+              하이라이트 외엔 렌더 0건이던 갭 해소. 퀘스트 트래커 부재 시(신규
+              플레이어 포함) 다음 행동 제목+이유를 같은 자리에 노출. */}
+          {!questTracker && guidance?.title && (
+            <div data-testid="adventure-guidance-strip" className="aether-panel-core rounded-[1.05rem] px-3 py-2">
+              <div className="aether-label text-[#7dd4d8]/72">NEXT</div>
+              <div className="mt-0.5 font-readable text-[12px] font-semibold text-white/92">{guidance.title}</div>
+              <div className="mt-0.5 font-readable text-[10px] leading-snug text-slate-300/82 line-clamp-2">{guidance.detail}</div>
+            </div>
+          )}
           <MapSignalStrip
             player={player}
             currentMap={mapData}

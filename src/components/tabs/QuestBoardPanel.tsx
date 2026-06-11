@@ -123,7 +123,9 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
   const hasActiveBounty = activeQuestEntries.some((e: any) => e.isBounty);
   const bountyIssuedToday = player?.stats?.bountyDate === today && player?.stats?.bountyIssued;
   const canRequestBounty = !hasActiveBounty && !bountyIssuedToday;
-  const bountyButtonLabel = hasActiveBounty ? 'DAILY BOUNTY ACTIVE' : bountyIssuedToday ? 'BOUNTY CLAIMED TODAY' : 'REQUEST DAILY BOUNTY';
+  // slice 22: 결정 CTA 한국어화 — 헤더/라벨의 콘솔 무드는 보존하되,
+  //   행동을 확정하는 버튼은 즉시 이해되는 한국어로.
+  const bountyButtonLabel = hasActiveBounty ? '현상수배 진행 중' : bountyIssuedToday ? '오늘 발급 완료' : '현상수배 발급';
   const bountyHelperText = hasActiveBounty
     ? '진행 중인 현상수배를 완료해야 다음 수배를 받을 수 있습니다.'
     : bountyIssuedToday
@@ -219,7 +221,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                     onClick={() => actions.acceptQuest(entry.quest.id)}
                     className="mt-3 min-h-[44px] w-full rounded-[0.9rem] border border-[#7dd4d8]/28 bg-[#7dd4d8]/12 px-4 py-3 text-xs font-bold text-[#dff7f5] transition-all hover:bg-[#7dd4d8]/18"
                   >
-                    START OPERATION
+                    작전 개시
                   </Motion.button>
                 </QuestRowShell>
               ))}
@@ -314,7 +316,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   <RewardChips reward={quest.reward} accent="blue" />
                 </div>
                 <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-[#7dd4d8]/28 bg-[#7dd4d8]/12 px-5 py-3 text-xs font-bold text-[#dff7f5] transition-all hover:bg-[#7dd4d8]/18">
-                  ACCEPT MISSION
+                  임무 수락
                 </Motion.button>
               </div>
             </QuestRowShell>

@@ -413,6 +413,26 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         };
     }
 
+    // slice 22: 첫 세션 온보딩 — 탐험/처치 이력이 전혀 없는 신규 플레이어에게
+    //   이동→탐험→첫 교전 시퀀스를 명시적으로 안내. 보상 회수보다는 후순위,
+    //   전직(Lv5+)·정비 등 일반 힌트보다는 선순위.
+    const totalKills = Number(player?.stats?.kills) || 0;
+    const totalExplores = Number(player?.stats?.explores) || 0;
+    if (safe && (player?.level || 1) <= 2 && totalExplores === 0 && totalKills === 0) {
+        return {
+            title: '첫 원정 준비',
+            detail: '추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상(+100G, +50 EXP)이 기다립니다.',
+            primaryAction: { kind: 'open_move', label: '첫 출발' },
+        };
+    }
+    if (!safe && (player?.level || 1) <= 2 && totalKills === 0) {
+        return {
+            title: '첫 교전',
+            detail: '탐험으로 적을 찾아보세요. 기본 공격에 강타(MP 10 · 피해 1.5배)를 섞으면 4-5턴이면 충분합니다.',
+            primaryAction: { kind: 'explore', label: '탐험 시작' },
+        };
+    }
+
     if (safe && player?.job === '모험가' && (player?.level || 1) >= 5) {
         return {
             title: '전직 준비 완료',

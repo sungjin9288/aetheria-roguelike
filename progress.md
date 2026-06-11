@@ -1,5 +1,16 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (First-Session Onboarding Slice 22):
+- 갭 진단: getAdventureGuidance가 상황 힌트를 계산하지만 추천 버튼 하이라이트 외 텍스트 렌더 0건 + 완전 신규 플레이어(탐험 0/처치 0) 분기 부재 → 첫 5분 시퀀스를 스스로 찾아야 했음.
+- adventureGuide 신규 분기 2종: 마을 '첫 원정 준비'(첫 방문 보상 안내, open_move) / 필드 '첫 교전'(강타 MP 10·1.5배 팁, explore). 보상 회수 분기보다 후순위, 전직/정비보다 선순위. 처치 1회 또는 탐험 이력 발생 시 기존 흐름 복귀.
+- ControlPanel 가이드 스트립 신설(`adventure-guidance-strip`): 퀘스트 트래커 부재 시 같은 자리에 guidance.title+detail 노출 (이중 스트립 방지). 계산만 되던 가이드 텍스트가 처음으로 화면 도달.
+- 결정 CTA 한국어화: START OPERATION→작전 개시, ACCEPT MISSION→임무 수락, REQUEST DAILY BOUNTY→현상수배 발급 (+상태 라벨 2종). 헤더/라벨의 영문 콘솔 무드는 정체성으로 보존 — "행동을 확정하는 버튼"만 한국어.
+- 가드: tests/onboarding-first-session.test.js 7건 (분기 발동/종료/우선순위 + 스트립 렌더 + CTA), stale 1건 갱신(readability-map-signal CTA 문자열).
+
+Verification (First-Session Onboarding Slice 22):
+- `npm run verify` → 2904/2904 + type-check/lint/build-guard. `npm run test:smoke` 완주.
+- 브라우저 실측(390×844): 신규 캐릭터 마을 NEXT 스트립 '첫 원정 준비' → 숲 이동 시 '첫 교전 — 강타 팁' 전환 + EXPLORE 추천 점 연동 확인.
+
 Done (Region Palette & Mid-Game Guard Slice 21):
 - 커밋 정리: slice 4-20 작업 트리 123파일을 주제별 3커밋으로 정리 — feat(ui) 가독성·디자인(75파일), feat(balance) 초반 성장 페이싱(28파일), chore(mobile) 디바이스 게이트·E2E·문서(19파일). 세션 아티팩트(.playwright-mcp/, 루트 스크린샷) .gitignore 제외.
 - 지역별 ambient 팔레트 (READABILITY_TREND_RESEARCH "단일 다크 팔레트" 진단 잔여 해소): `src/utils/regionTheme.ts` — 이름 키워드 + 맵 type 기반 10테마 분류(haven/forest/water/ember/frost/desert/storm/arcane/abyss/ruin). 맵 데이터 필드 추가 없음(세이브 영향 0). 합성 지명 우선순위 처리('빙하 심연'→frost, '수정 동굴'→arcane, '사막 오아시스'→desert safe여도 키워드 우선). GameRoot→MainLayout으로 `--region-accent/--region-soft` CSS 변수 + `data-region-theme` 전달, 상단 radial wash 1레이어(`aether-region-ambient`) + StatusBar 위치 점/텍스트 accent. 시맨틱 컬러 불변, high-readability 모드에서 wash 감쇠(0.35).
