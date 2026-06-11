@@ -415,6 +415,10 @@ export const migrateData = (rawData: any) => {
     //   protection 또는 CombatEngine 로컬 reconstruction (DEFAULT_META 병합)으로
     //   undefined 안전. 객체 자체 초기화만 필요.
     target.meta = target.meta || { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 };
+    target.settings = {
+        ...(target.settings || {}),
+        readabilityMode: target.settings?.readabilityMode === 'high' ? 'high' : 'standard',
+    };
     target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0 };
     // cycle 376: bountyDate / bountyIssued normalizations 제거 — 모든 consumer가
     //   strict equality (`bountyDate === today`) 또는 truthy 체크 (`&& bountyIssued`)

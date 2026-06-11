@@ -71,9 +71,9 @@ test('cycle 507: 정합성 가드 — 모든 callsite 명시 전달', async () =
         'exploreActions getQuietExplorationChance 2 args 보존');
 
     const pacing = await readSrc('src/utils/explorationPacing.ts');
-    assert.ok(/getNarrativeEventChance\(mapData\?\.eventChance \|\| 0, 0, player\?\.stats, mapData\)/.test(pacing),
+    assert.ok(/getNarrativeEventChance\(mapData\?\.eventChance \|\| 0, 0, player\?\.stats, mapData(?: \?\? null)?\)/.test(pacing),
         'getDiscoveryOdds 내부 getNarrativeEventChance 4 args 보존');
-    assert.ok(/getQuietExplorationChance\(player\?\.stats, mapData\)/.test(pacing),
+    assert.ok(/getQuietExplorationChance\(player\?\.stats, mapData(?: \?\? null)?\)/.test(pacing),
         'getDiscoveryOdds 내부 getQuietExplorationChance 2 args 보존');
 });
 

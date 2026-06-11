@@ -5,6 +5,7 @@ import { addItemByName } from '../utils/inventoryUtils';
 import { incrementStat } from '../utils/playerStateUtils';
 import { getEquipmentIdentity, getNextEquipmentState, isTwoHandWeapon } from '../utils/equipmentUtils';
 import { consumeInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
+import { getPacedQuestClaimExp } from '../utils/progressionPacing';
 import { validateSynthesis, performSynthesis } from '../utils/synthesisUtils';
 import { SEASON_XP } from '../data/seasonPass';
 import { getTraitProfile, getTraitQuestResonance } from '../utils/runProfileUtils';
@@ -293,7 +294,8 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ad
 
             if (qData.reward?.gold) updatedPlayer = grantGold(updatedPlayer, qData.reward.gold);
             if (qData.reward?.exp) {
-                const expResult = CombatEngine.applyExpGain(updatedPlayer, qData.reward.exp);
+                const pacedExp = getPacedQuestClaimExp(updatedPlayer, qData.reward.exp);
+                const expResult = CombatEngine.applyExpGain(updatedPlayer, pacedExp);
                 updatedPlayer = expResult.updatedPlayer;
                 expResult.logs.forEach((log: any) => addLog(log.type, log.text));
                 if (expResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: expResult.visualEffect });

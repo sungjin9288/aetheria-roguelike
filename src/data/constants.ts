@@ -18,6 +18,7 @@ export const CONSTANTS: any = {
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 200,
+    START_NEXT_EXP: 150,
     // cycle 195: SAVE_KEY 제거 — Firebase Firestore 사용으로 localStorage save key 미사용 (dead).
     DATA_VERSION: 5.0,
     // cycle 309: REMOTE_CONFIG_ENABLED 제거 — RemoteConfigLoader.ts (dead module) 외
@@ -114,8 +115,17 @@ export const BALANCE: any = {
     // 레벨업 성장치
     HP_PER_LEVEL: 20,               // 레벨당 기본 HP 증가
     MP_PER_LEVEL: 10,               // 레벨당 기본 MP 증가
-    ATK_PER_LEVEL: 2,               // 레벨당 기본 ATK 증가
+    ATK_PER_LEVEL: 3,               // 레벨당 기본 ATK 증가 (slice 19: 2 → 3, 레벨업 턴수 단축 체감)
     DEF_PER_LEVEL: 1,               // 레벨당 기본 DEF 증가
+
+    // slice 19 — 몬스터 스폰 곡선 (기존 spawnEnemy inline 120+30L / 10+2L)
+    // HP 곡선 70+32L: Lv1 -32%, Lv20 -1%, Lv50 +3% — 초반 전투 템포만 선택적 가속
+    MONSTER_HP_BASE: 70,
+    MONSTER_HP_PER_LEVEL: 32,
+    MONSTER_GOLD_BASE: 16,          // 초반 휴식 경제: Lv1 골드 18 → 3-4전투당 휴식 1회
+
+    // slice 19 — 첫 유물 보장: 유물 0개 상태로 N탐험 경과 시 다음 전투형 탐험에서 유물 선택 보장
+    FIRST_RELIC_PITY_EXPLORES: 6,
 
     // 레벨 마일스톤 보상
     LEVEL_MILESTONE_EVERY: 5,       // N레벨마다 골드 보너스

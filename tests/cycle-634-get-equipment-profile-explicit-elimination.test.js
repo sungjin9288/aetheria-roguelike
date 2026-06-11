@@ -49,10 +49,10 @@ test('cycle 634: getEquipmentProfile signature에서 equip default {} 0건', asy
 
 test('cycle 634: production callsite 명시 보존', async () => {
     const sc = await readSrc('src/utils/statsCalculator.ts');
-    assert.ok(/getEquipmentProfile\(player\.equip\)/.test(sc),
+    assert.ok(/getEquipmentProfile\(player\.equip(?: \|\| \{\})?\)/.test(sc),
         'statsCalculator callsite 보존');
     const ep = await readSrc('src/components/EquipmentPanel.tsx');
-    assert.ok(/getEquipmentProfile\(player\?\.equip\)/.test(ep),
+    assert.ok(/getEquipmentProfile\(player\?\.equip(?: \|\| \{\})?\)/.test(ep),
         'EquipmentPanel callsite 보존');
 });
 

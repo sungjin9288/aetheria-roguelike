@@ -592,11 +592,14 @@ export const CombatEngine = {
         }
 
         const newEnemyHp = (enemy.hp ?? 0) - finalDamage;
+        // slice 19: 치명타/약점/저항/연격을 본문 태그로 통합 — 기존엔 같은 정보가
+        //   별도 로그 4건으로 중복 출력되어 한 턴 로그 burst의 주범이었음.
         const tags: any[] = [];
+        if (isCrit) tags.push('치명타');
         if (enemy.guarding) tags.push('방어 격파');
         if (elementMultiplier > 1) tags.push('속성 약점');
         if (elementMultiplier < 1) tags.push('속성 저항');
-        if (dsRelic) tags.push('연격');
+        if (dsRelic && secondHit > 0) tags.push(`연격 +${secondHit}`);
         if (apRelic) tags.push('방어 무시');
         if (comboTriggered) tags.push('연속 베기');
         if (voidHeartTriggered) tags.push('허공 각성');
@@ -628,10 +631,8 @@ export const CombatEngine = {
             type: isCrit ? 'critical' : 'combat',
             text: MSG.COMBAT_ATTACK_DETAIL(enemy.name, finalDamage, Math.max(0, newEnemyHp), enemy.maxHp, tags)
         });
-        if (isCrit) logs.push({ type: 'critical', text: MSG.COMBAT_CRIT });
-        if (elementMultiplier > 1) logs.push({ type: 'success', text: MSG.COMBAT_WEAKNESS });
-        if (elementMultiplier < 1) logs.push({ type: 'warning', text: MSG.COMBAT_RESIST });
-        if (dsRelic && secondHit > 0) logs.push({ type: 'event', text: `[쌍검 각인] 연격! +${secondHit}` });
+        // slice 19: 치명타/약점/저항/연격 별도 로그 제거 — 본문 태그로 통합 완료.
+        //   희귀 유물 proc 로그(처형/연속 베기/허공/예언/메아리)는 흥분 모먼트라 보존.
         if (executeTriggered) logs.push({ type: 'event', text: `[처형자의 날] 처형 피해!` });
         if (comboTriggered) logs.push({ type: 'event', text: '[연격의 반지] 축적된 연격이 폭발했습니다!' });
         if (voidHeartTriggered) logs.push({ type: 'event', text: '[허공의 심장] 허공 각성 일격!' });
@@ -822,9 +823,15 @@ export const CombatEngine = {
         const newEnemyHp = (enemy.hp ?? 0) - totalDamage;
 
         // logs 선언을 status effect 검사 이전으로 이동 (use-before-declaration 버그 수정).
+        // slice 19: 치명타/약점/저항을 본문 태그로 통합 (attack 경로와 동일 패턴) —
+        //   별도 로그 burst 제거.
+        const skillTags: string[] = [];
+        if (isCrit) skillTags.push('치명타');
+        if (elementMultiplier > 1) skillTags.push('속성 약점');
+        if (elementMultiplier < 1) skillTags.push('속성 저항');
         const logs: Array<{ type: string; text: string }> = [{
             type: isCrit ? 'critical' : 'combat',
-            text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp)
+            text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp, skillTags)
         }];
 
         // 적에게 상태이상 부여 (#5)
@@ -1037,8 +1044,7 @@ export const CombatEngine = {
         }
 
 
-        if (elementMultiplier > 1) logs.push({ type: 'success', text: MSG.COMBAT_WEAKNESS });
-        if (elementMultiplier < 1) logs.push({ type: 'warning', text: MSG.COMBAT_RESIST });
+        // slice 19: 약점/저항 별도 로그 제거 — SKILL_USE 본문 태그로 통합 완료.
         if (extraDamage > 0) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(skill.effect, extraDamage) });
         if (updatedPlayer.tempBuff?.name === skill.name) {
             logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(skill.name, updatedPlayer.tempBuff.turn) });
@@ -1386,7 +1392,7 @@ export const CombatEngine = {
             p.def += BALANCE.DEF_PER_LEVEL;
             levelUps += 1;
             visualEffect = 'levelUp';
-            logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level) });
+            logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level, BALANCE.ATK_PER_LEVEL, BALANCE.HP_PER_LEVEL) });
 
             // 레벨 마일스톤 보상
             const isMajor = p.level % BALANCE.LEVEL_MAJOR_MILESTONE_EVERY === 0;
@@ -1629,10 +1635,13 @@ export const CombatEngine = {
             : (enemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
 
         // 가장 높은 확률 행동을 예측
+        // slice 20: heavy 텔레그래프 라벨 '강타' → '맹공' — 플레이어 시작 스킬
+        //   '강타'와 같은 화면에서 명칭이 충돌해 적 의도를 내 스킬 확률로 오독하던 문제.
+        //   적 heavy hit 로그("맹렬하게 공격합니다")와 용어 통일.
         if (pattern.guardChance >= 0.5) return { type: 'guard', label: `방어 태세 (${Math.round(pattern.guardChance * 100)}%)`, color: 'blue' };
-        if (pattern.heavyChance >= 0.4) return { type: 'heavy', label: `강타 준비 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'red' };
+        if (pattern.heavyChance >= 0.4) return { type: 'heavy', label: `맹공 준비 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'red' };
         if (pattern.guardChance >= 0.3) return { type: 'guard', label: `방어 가능 (${Math.round(pattern.guardChance * 100)}%)`, color: 'blue' };
-        if (pattern.heavyChance >= 0.25) return { type: 'heavy', label: `강타 가능 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'orange' };
+        if (pattern.heavyChance >= 0.25) return { type: 'heavy', label: `맹공 주의 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'orange' };
         return { type: 'normal', label: '일반 공격 예상', color: 'gray' };
     },
 

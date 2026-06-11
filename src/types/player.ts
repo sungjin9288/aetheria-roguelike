@@ -105,6 +105,11 @@ interface WeeklyProtocol {
     claimed?: string[];
 }
 
+interface PlayerSettings {
+    readabilityMode?: 'standard' | 'high' | string;
+    [key: string]: any;
+}
+
 /**
  * Player 도메인 타입 — 모든 필드가 optional.
  *
@@ -143,6 +148,7 @@ export interface Player {
     tempBuff?: TempBuff;
     status?: any[];
     skillLoadout?: SkillLoadout;
+    settings?: PlayerSettings;
     meta?: PlayerMeta & { [key: string]: any };
     relics?: import('./relic.js').Relic[];
     titles?: string[];

@@ -6,6 +6,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+    applyDynamicDifficulty,
     calcPerformanceScore,
     getDifficultyMults,
     makeBattleRecord,
@@ -108,6 +109,18 @@ test('getDifficultyMults: 경계값 0.85 정확히 → 압도', () => {
 
 test('getDifficultyMults: 경계값 0.84 → 우세 (압도 미만)', () => {
     assert.equal(getDifficultyMults(0.84).label, '우세');
+});
+
+test('applyDynamicDifficulty: 초반 5전 이전에는 몬스터 공격/체력을 낮추고 보상은 유지 이상으로 보정', () => {
+    const enemy = { hp: 100, maxHp: 100, atk: 20, exp: 10, gold: 10 };
+    const player = { level: 1, stats: { recentBattles: [] } };
+    const { mStats } = applyDynamicDifficulty(enemy, player, () => {});
+
+    assert.equal(mStats.hp, 88);
+    assert.equal(mStats.maxHp, 88);
+    assert.equal(mStats.atk, 16);
+    assert.ok(mStats.exp >= enemy.exp);
+    assert.ok(mStats.gold >= enemy.gold);
 });
 
 // ── makeBattleRecord ────────────────────────────────────────────────────────

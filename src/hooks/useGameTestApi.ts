@@ -220,7 +220,18 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     ? { token: is.token, title: safeText(is.title, ''), names: safeList(is.names, '[item]') }
                     : null,
                 runSummary: e.runSummary
-                    ? { level: e.runSummary.level, job: e.runSummary.job, loc: e.runSummary.loc }
+                    ? {
+                        level: e.runSummary.level,
+                        job: e.runSummary.job,
+                        loc: e.runSummary.loc,
+                        kills: e.runSummary.kills,
+                        bossKills: e.runSummary.bossKills,
+                        relicsFound: e.runSummary.relicsFound,
+                        totalGold: e.runSummary.totalGold,
+                        escapes: e.runSummary.escapes,
+                        discoveries: e.runSummary.discoveries,
+                        maxKillStreak: e.runSummary.maxKillStreak,
+                    }
                     : null,
                 sideTab: e.sideTab,
                 logTail: e.logs.slice(-6).map((log: any) => ({ type: log.type, text: log.text })),
@@ -251,7 +262,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
 
                 const panel = document.querySelector('[data-testid="terminal-panel"]');
                 const scrollViewport = panel?.querySelector('.custom-scrollbar');
-                const firstLog = panel?.querySelector('.aether-panel-muted');
+                const firstLog = panel?.querySelector('.aether-log-row');
                 const archiveButton = document.querySelector('[data-testid="mobile-console-open-archive"]');
                 const panelStyle = panel instanceof HTMLElement ? window.getComputedStyle(panel) : null;
                 const scrollStyle = scrollViewport instanceof HTMLElement ? window.getComputedStyle(scrollViewport) : null;
@@ -391,6 +402,14 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         level: 17, job: '모험가', loc: '북부 요새',
                         kills: 142, bossKills: 3, relicsFound: 5,
                         totalGold: 1842, prestigeRank: 2, activeTitle: 'veteran',
+                        primaryBuild: '치명 MP',
+                        difficultyLabel: '열세',
+                        recentWinRate: 42,
+                        escapes: 2,
+                        discoveries: 16,
+                        maxKillStreak: 12,
+                        signaturesAcquired: 1,
+                        signatureNames: ['성검 에테르니아'],
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });

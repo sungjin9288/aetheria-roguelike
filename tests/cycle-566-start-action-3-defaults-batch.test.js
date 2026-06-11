@@ -34,6 +34,7 @@ import path from 'node:path';
  * 회귀 가드:
  * - 1 production callsite (IntroScreen) 동작 그대로.
  * - body trimmedName / buildClassVitals / Array.isArray 처리 보존.
+ * - start path는 신규 캐릭터 초기 성장 pacing을 위해 Lv1 기준 vitals를 계산.
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -63,8 +64,10 @@ test('cycle 566: body Array.isArray defensive guard 보존', async () => {
     const source = await readSrc('src/hooks/gameActions/characterActions.ts');
     assert.ok(/Array\.isArray\(challengeModifiers\) \? challengeModifiers : \[\]/.test(source),
         'Array.isArray(challengeModifiers) defensive guard 보존');
-    assert.ok(/buildClassVitals\(player\.level \|\| 1, jobId, player\.meta \|\| \{\}\)/.test(source),
-        'buildClassVitals 호출 보존');
+    assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\}\)/.test(source),
+        'buildClassVitals 호출 보존 — 신규 캐릭터 Lv1 기준');
+    assert.ok(/level:\s*1,\s*exp:\s*0,\s*nextExp:\s*CONSTANTS\.START_NEXT_EXP/.test(source),
+        'start payload가 level/exp/nextExp 초기값을 명시');
 });
 
 test('cycle 566: cycle 502-565 회귀 가드 — default 청소 시리즈 보존', async () => {

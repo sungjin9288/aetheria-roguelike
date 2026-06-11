@@ -1,4 +1,37 @@
-export const QUESTS: any = [
+const EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL: Record<number, number> = Object.freeze({
+    1: 60,
+    2: 80,
+    3: 105,
+    4: 130,
+    5: 170,
+    6: 220,
+    7: 270,
+    8: 330,
+    9: 410,
+    10: 520,
+});
+
+const paceEarlyQuestReward = (quest: any) => {
+    const exp = quest?.reward?.exp;
+    const minLv = Number(quest?.minLv || 0);
+    const cap = EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL[minLv];
+
+    if (!Number.isFinite(exp) || exp <= 0 || !cap || exp <= cap) {
+        return quest;
+    }
+
+    return {
+        ...quest,
+        reward: {
+            ...quest.reward,
+            exp: cap,
+        },
+    };
+};
+
+export const EARLY_QUEST_EXP_CAPS = EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL;
+
+const RAW_QUESTS: any = [
     // ── 초반 퀘스트 (Lv 1-10) ────────────────────────────────────────────────
     { id: 1,  title: '슬라임 소탕',      desc: '슬라임 3마리 처치',       target: '슬라임',      goal: 3,  reward: { exp: 50,   gold: 100 },           minLv: 1 },
     { id: 2,  title: '멧돼지 사냥',      desc: '멧돼지 5마리 처치',       target: '멧돼지',      goal: 5,  reward: { exp: 80,   gold: 150 },           minLv: 2 },
@@ -185,6 +218,8 @@ export const QUESTS: any = [
     { id: 203, title: '신중한 모험',    type: 'escape_count',     desc: '도주 5회 성공',           target: 'escapes',     goal: 5,  reward: { exp: 1500,  gold: 2500 }, minLv: 5 },
     { id: 204, title: '생존의 기술',    type: 'escape_count',     desc: '도주 20회 성공',          target: 'escapes',     goal: 20, reward: { exp: 6000,  gold: 8000, item: '엘릭서' }, minLv: 15 },
 ];
+
+export const QUESTS: any = RAW_QUESTS.map(paceEarlyQuestReward);
 
 
 export const ACHIEVEMENTS: any = [

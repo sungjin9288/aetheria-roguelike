@@ -50,7 +50,7 @@ test('cycle 633: 4 production callsite 명시 보존', async () => {
     assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(sp),
         'ShopPanel callsite 보존');
     const si = await readSrc('src/components/SmartInventory.tsx');
-    assert.ok(/getNextEquipmentState\(player\.equip,\s*item\)/.test(si),
+    assert.ok(/getNextEquipmentState\(player\.equip(?: \|\| \{\})?,\s*item\)/.test(si),
         'SmartInventory callsite 보존');
     const ch = await readSrc('src/hooks/combatActions/_helpers.ts');
     assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(ch),

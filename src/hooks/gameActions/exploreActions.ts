@@ -111,7 +111,12 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
             }
 
             // 전투 직전 유물 발견 기회
-            if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
+            // slice 19: 첫 유물 보장 — 유물 0개 상태로 FIRST_RELIC_PITY_EXPLORES(6)탐험
+            //   경과 시 확률 roll 없이 보장. 첫 빌드 선택("와" 모먼트)을 첫 10분 내 제공.
+            const firstRelicPity = playerRelics.length === 0
+                && (player.stats?.exploreState?.sinceRelic || 0) >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
+            if (playerRelics.length < MAX_RELICS_PER_RUN
+                && (firstRelicPity || Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
                 const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
                 if (available.length > 0) {
                     commitExploreOutcome('relic_found', null);

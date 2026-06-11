@@ -38,7 +38,7 @@ test('cycle 618: getISOWeekNumber signature에서 date default 0건', async () =
     const source = await readSrc('src/utils/exploreUtils.ts');
     assert.ok(!/getISOWeekNumber = \(date = new Date\(\)\)/.test(source),
         'getISOWeekNumber date default new Date() 제거');
-    assert.ok(/getISOWeekNumber = \(date\)/.test(source),
+    assert.ok(/getISOWeekNumber = \(date(?::\s*Date)?\)/.test(source),
         'getISOWeekNumber date 파라미터 보존');
 });
 

@@ -57,8 +57,10 @@ test('cycle 536: applyExpGain signature에서 expGained default 0건', async () 
 
 test('cycle 536: 정합성 가드 — 4 production callsite 보존', async () => {
     const inv = await readSrc('src/hooks/useInventoryActions.ts');
-    assert.ok(/CombatEngine\.applyExpGain\(updatedPlayer,\s*qData\.reward\.exp\)/.test(inv),
-        'useInventoryActions callsite 보존');
+    assert.ok(/const pacedExp = getPacedQuestClaimExp\(updatedPlayer,\s*qData\.reward\.exp\)/.test(inv),
+        'useInventoryActions quest exp pacing 보존');
+    assert.ok(/CombatEngine\.applyExpGain\(updatedPlayer,\s*pacedExp\)/.test(inv),
+        'useInventoryActions paced applyExpGain callsite 보존');
 
     const ev = await readSrc('src/hooks/gameActions/eventActions.ts');
     assert.ok(/CombatEngine\.applyExpGain\(updatedPlayer,\s*selectedOutcome\.exp\)/.test(ev),

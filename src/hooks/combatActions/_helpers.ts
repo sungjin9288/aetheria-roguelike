@@ -67,15 +67,18 @@ export const getLootUpgradeHint = (equip: any, lootItems: Item[]): any => {
 //   bossRewardHint/bossClearBonus) — 1 production caller (combatVictory:215)
 //   8 props 모두 명시 전달이라 5 defaults 모두 도달 불가. 청소 메가 시리즈
 //   81번째 single-cycle 5-default batch.
+// slice 20: victoryResult destructure 제거 — EXP/Gold 중복 파트 삭제로 body
+//   read 0건. callsite는 8 props 명시 전달 그대로 (cycle 591 가드 보존).
 export const addCombatDigestLogs = ({
-    addLog, enemyName, victoryResult,
+    addLog, enemyName,
     droppedItems, upgradeHint, traitHint,
     bossRewardHint, bossClearBonus,
 }: any) => {
+    // slice 20: EXP/Gold 파트 제거 — 바로 위 MSG.VICTORY 로그("승리! EXP +N,
+    //   Gold +N")와 동일 수치가 2회 출력되던 중복. digest는 처치 + 전리품 요약
+    //   + 후속 힌트 anchor 역할만 담당.
     const summaryParts = [
         MSG.COMBAT_DIGEST_KILL(enemyName),
-        `EXP +${victoryResult.expGained || 0}`,
-        `Gold +${victoryResult.goldGained || 0}`,
     ];
     if (droppedItems.length > 0) {
         const lootText = `${droppedItems.slice(0, 2).join(' · ')}${droppedItems.length > 2 ? ` +${droppedItems.length - 2}` : ''}`;

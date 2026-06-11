@@ -133,6 +133,15 @@ export const useGameEngine = () => {
                 // cycle 406: setAiThinking 제거 — actions.setAiThinking 호출 0건이라 dead.
                 //   AT.SET_AI_THINKING reducer handler는 보존 (다른 dispatch path 의존).
                 setActiveTitle: (val: any) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
+                setReadabilityMode: (val: any) => dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (currentPlayer: any) => ({
+                        settings: {
+                            ...(currentPlayer.settings || {}),
+                            readabilityMode: val === 'high' ? 'high' : 'standard',
+                        },
+                    }),
+                }),
                 dismissEvent: () => {
                     dispatch({ type: AT.SET_EVENT, payload: null });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });

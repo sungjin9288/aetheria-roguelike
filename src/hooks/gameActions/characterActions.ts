@@ -19,7 +19,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
         start: (name: any, gender: any, jobId: any, challengeModifiers: any) => {
             const trimmedName = String(name || '').trim().slice(0, 16);
             if (!trimmedName) return;
-            const vitals = buildClassVitals(player.level || 1, jobId, player.meta || {});
+            const vitals = buildClassVitals(1, jobId, player.meta || {});
             let maxHp = vitals.maxHp;
             let startGold = CONSTANTS.START_GOLD;
             const mods = Array.isArray(challengeModifiers) ? challengeModifiers : [];
@@ -30,6 +30,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             const fullStartStats = getFullStats(tempPlayer);
             dispatch({ type: AT.SET_PLAYER, payload: {
                 name: trimmedName, gender, job: jobId,
+                level: 1, exp: 0, nextExp: CONSTANTS.START_NEXT_EXP,
                 maxHp, hp: fullStartStats.maxHp,
                 maxMp: vitals.maxMp, mp: fullStartStats.maxMp,
                 gold: startGold,

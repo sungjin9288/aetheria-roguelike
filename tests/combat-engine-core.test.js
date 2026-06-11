@@ -20,7 +20,7 @@ const BALANCE = {
     EXP_LEVEL_HARD_CAP: 150000,        // 레벨당 최대 EXP 상한선 (300K → 150K)
     HP_PER_LEVEL: 20,
     MP_PER_LEVEL: 10,
-    ATK_PER_LEVEL: 2,
+    ATK_PER_LEVEL: 3,                  // slice 19: 2 → 3 (레벨업 성장 체감)
     DEF_PER_LEVEL: 1,
     LEVEL_MILESTONE_EVERY: 5,          // N레벨마다 골드 보너스
     LEVEL_MAJOR_MILESTONE_EVERY: 10,   // N레벨마다 스탯 보너스
@@ -244,7 +244,7 @@ test('applyExpGain: 정확히 nextExp → 레벨업 1회', () => {
     assert.equal(result.levelUps, 1);
 });
 
-test('applyExpGain: 레벨업 시 스탯 증가 (+20 HP, +10 MP, +2 ATK, +1 DEF)', () => {
+test('applyExpGain: 레벨업 시 스탯 증가 (+20 HP, +10 MP, +3 ATK, +1 DEF)', () => {
     const player = { level: 1, exp: 0, nextExp: 100, hp: 100, maxHp: 150, mp: 30, maxMp: 50, atk: 10, def: 5 };
     const result = applyExpGain(player, 100);
     const p = result.updatedPlayer;
@@ -252,7 +252,7 @@ test('applyExpGain: 레벨업 시 스탯 증가 (+20 HP, +10 MP, +2 ATK, +1 DEF)
     assert.equal(p.maxMp, 60);  // 50 + 10
     assert.equal(p.hp, 120);    // min(100 + 20, 170)
     assert.equal(p.mp, 40);     // min(30 + 10, 60)
-    assert.equal(p.atk, 12);    // 10 + 2
+    assert.equal(p.atk, 13);    // 10 + 3 (slice 19)
     assert.equal(p.def, 6);     // 5 + 1
 });
 

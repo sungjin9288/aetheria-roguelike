@@ -165,14 +165,17 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         level = 50 + Math.floor(depth / 2);
     }
 
+    // slice 19: HP 곡선 120+30L → BALANCE.MONSTER_HP_BASE(70)+L×32 — 초반 전투
+    //   템포 가속 (Lv1 -32%, Lv50 +3%). 골드 base 10 → 16 (초반 휴식 경제).
+    //   ATK/EXP 곡선은 불변 (quest pacing 가드 보존).
     const mStats: any = {
         name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
         baseName,
-        hp: 120 + level * 30 + (depth * 25),
-        maxHp: 120 + level * 30 + (depth * 25),
+        hp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
+        maxHp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
         atk: 15 + level * 4 + (depth * 3),
         exp: 10 + level * 10 + (depth * 4),
-        gold: 10 + level * 2 + (depth * 3),
+        gold: BALANCE.MONSTER_GOLD_BASE + level * 2 + (depth * 3),
         pattern: {
             guardChance: Math.min(0.4, 0.12 + level * 0.01 + (depth * 0.005)),
             heavyChance: Math.min(0.45, 0.15 + level * 0.01 + (depth * 0.005))

@@ -60,9 +60,14 @@ test('cycle 263: 기존 5개 사운드 매핑 동작 유지 (회귀 가드)', as
     });
 });
 
-test('cycle 263: critical 로그 타입이 CombatEngine에서 14+ 사용 (회귀 가드)', async () => {
+test('cycle 263: critical 로그 타입이 CombatEngine에서 사용 (회귀 가드)', async () => {
+    // slice 19: 중복 COMBAT_CRIT 별도 로그가 본문 태그로 통합되면서 literal
+    //   `type: 'critical'` 수가 줄었다. crit 시 main 로그가 ternary
+    //   (isCrit ? 'critical' : 'combat')로 critical 타입을 유지하므로
+    //   literal + ternary 양쪽을 합산해 가드한다.
     const source = await readSrc('src/systems/CombatEngine.ts');
-    const matches = source.match(/type:\s*['"]critical['"]/g);
-    assert.ok(matches && matches.length >= 3,
-        `CombatEngine에 'critical' 로그 ≥3건 (실제: ${matches?.length || 0})`);
+    const literal = source.match(/type:\s*['"]critical['"]/g) || [];
+    const ternary = source.match(/isCrit\s*\?\s*['"]critical['"]/g) || [];
+    assert.ok(literal.length + ternary.length >= 3,
+        `CombatEngine에 'critical' 로그 ≥3건 (literal ${literal.length} + ternary ${ternary.length})`);
 });

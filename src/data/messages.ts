@@ -32,8 +32,9 @@ export const MSG: any = {
     COMBAT_RESIST: '적이 속성을 저항했습니다.',
 
     // --- 스킬 (Skill) ---
-    SKILL_USE: (skillName: any, dmg: any, name: any, cur: any, max: any) =>
-        `[${skillName}]: ${name}에게 ${dmg} 피해! (${cur}/${max})`,
+    // slice 19: tags 추가 — 치명타/약점/저항을 본문에 통합 (COMBAT_ATTACK_DETAIL 동일 패턴)
+    SKILL_USE: (skillName: any, dmg: any, name: any, cur: any, max: any, tags: any) =>
+        `[${skillName}]: ${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
     SKILL_BUFF_ACTIVE: (name: any, turns: any) => `[${name}] 버프 활성화 (${turns} 턴)`,
     SKILL_STATUS_BONUS: (effect: any, dmg: any) => `[${effect}] 추가 피해 +${dmg}`,
     SKILL_NO_MP: 'MP가 부족합니다.',
@@ -60,7 +61,8 @@ export const MSG: any = {
     SIGNATURE_PITY_RESONANCE: (pct: any, pity: any) => `✦ 각인 공명 +${pct}% — 보스 ${pity}회 연속 무획득 보정 적용`,
     LEGACY_ESSENCE: (n: any) => `레거시 에센스 +${n}`,
     LEGACY_RANK: (n: any) => `레거시 랭크 ${n} 달성!`,
-    LEVEL_UP: (lv: any) => `레벨 업! Lv.${lv}`,
+    // slice 19: 스탯 상승 표기 — 레벨업이 무엇을 바꿨는지 로그에서 즉시 확인 (성장 가시화)
+    LEVEL_UP: (lv: any, atk: any, hp: any) => `⬆️ 레벨 업! Lv.${lv} — ATK +${atk} / HP +${hp}`,
     LEVEL_MILESTONE: (lv: any, gold: any) => `🎖️ Lv.${lv} 달성! 골드 ${gold.toLocaleString()} 획득`,
     LEVEL_MAJOR_MILESTONE: (lv: any, atk: any, hp: any, mp: any) => `✨ Lv.${lv} 메이저 마일스톤! ATK+${atk} / HP+${hp} / MP+${mp} 영구 증가`,
     EQUIP_LEVEL_REQUIRED: (name: any, lv: any) => `${name}은(는) Lv.${lv} 이상에서 장착할 수 있습니다.`,

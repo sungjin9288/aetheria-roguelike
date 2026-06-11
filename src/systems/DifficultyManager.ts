@@ -18,6 +18,8 @@ import { BALANCE } from '../data/constants.js';
 import type { Player } from '../types/index.js';
 
 const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
+const BEGINNER_GRACE_MAX_LEVEL = 3;
+const BEGINNER_GRACE_BATTLE_COUNT = 5;
 
 /**
  * 최근 전투 로그에서 성과 지표를 추출합니다.
@@ -77,6 +79,23 @@ export const getDifficultyMults = (score: any) => {
     return DIFF_TABLE.find((t: any) => score >= t.minScore) || DIFF_TABLE[DIFF_TABLE.length - 1];
 };
 
+const applyBeginnerGrace = (diff: any, player: Player) => {
+    const level = Number(player?.level || 1);
+    const recentBattleCount = ((player?.stats as any)?.recentBattles || []).length;
+    if (level > BEGINNER_GRACE_MAX_LEVEL || recentBattleCount >= BEGINNER_GRACE_BATTLE_COUNT) {
+        return diff;
+    }
+
+    return {
+        ...diff,
+        label: '신입 보호',
+        hpMult: Math.min(diff.hpMult, 0.88),
+        atkMult: Math.min(diff.atkMult, 0.82),
+        goldMult: Math.max(diff.goldMult, 1.05),
+        expMult: Math.max(diff.expMult, 1.05),
+    };
+};
+
 // ─────────────────────────────────────────────────────────────────────────
 // 3. 몬스터 스탯에 동적 난이도 배율 적용
 // ─────────────────────────────────────────────────────────────────────────
@@ -89,7 +108,7 @@ export const getDifficultyMults = (score: any) => {
  */
 export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any) => {
     const score = calcPerformanceScore(player);
-    const diff  = getDifficultyMults(score);
+    const diff  = applyBeginnerGrace(getDifficultyMults(score), player);
 
     // 중립에 가까우면 로그 생략
     const LABEL_VISIBLE = ['압도', '위기', '열세'];

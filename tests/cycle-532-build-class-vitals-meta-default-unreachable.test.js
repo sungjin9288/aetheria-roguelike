@@ -20,7 +20,7 @@ import path from 'node:path';
  *         ...
  *     };
  * - 호출 사이트 (2 callsite, hooks/gameActions/characterActions.ts):
- *     · line 17: buildClassVitals(player.level || 1, jobId, player.meta || {})
+ *     · start path: buildClassVitals(1, jobId, player.meta || {})
  *     · line 129: buildClassVitals(player.level, jobName, player.meta || {})
  *     · 다른 파일 import 0건.
  * - 결과: meta 항상 `player.meta || {}` 명시 전달. default {} 도달 불가.
@@ -34,7 +34,8 @@ import path from 'node:path';
  * - body의 (meta.bonusHp || 0) / (meta.bonusMp || 0) defensive guard 보존.
  *
  * 회귀 가드:
- * - 2 callsite 동작 그대로.
+ * - 2 callsite에서 meta 명시 전달 보존.
+ * - start path는 신규 캐릭터 초기 EXP/레벨 pacing을 위해 Lv1 기준으로 계산.
  * - body CLASSES 조회 / Math.floor / Math.max 보존.
  */
 
@@ -54,8 +55,8 @@ test('cycle 532: buildClassVitals signature에서 meta default 0건', async () =
 
 test('cycle 532: 정합성 가드 — 2 callsite 보존', async () => {
     const source = await readSrc('src/hooks/gameActions/characterActions.ts');
-    assert.ok(/buildClassVitals\(player\.level \|\| 1,\s*jobId,\s*player\.meta \|\| \{\}\)/.test(source),
-        '1st callsite (player.level || 1, jobId, player.meta || {}) 보존');
+    assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\}\)/.test(source),
+        '1st callsite (1, jobId, player.meta || {}) 보존 — 신규 캐릭터 Lv1 시작');
     assert.ok(/buildClassVitals\(player\.level,\s*jobName,\s*player\.meta \|\| \{\}\)/.test(source),
         '2nd callsite (player.level, jobName, player.meta || {}) 보존');
 });
