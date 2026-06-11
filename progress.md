@@ -1,5 +1,15 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (Region Palette & Mid-Game Guard Slice 21):
+- 커밋 정리: slice 4-20 작업 트리 123파일을 주제별 3커밋으로 정리 — feat(ui) 가독성·디자인(75파일), feat(balance) 초반 성장 페이싱(28파일), chore(mobile) 디바이스 게이트·E2E·문서(19파일). 세션 아티팩트(.playwright-mcp/, 루트 스크린샷) .gitignore 제외.
+- 지역별 ambient 팔레트 (READABILITY_TREND_RESEARCH "단일 다크 팔레트" 진단 잔여 해소): `src/utils/regionTheme.ts` — 이름 키워드 + 맵 type 기반 10테마 분류(haven/forest/water/ember/frost/desert/storm/arcane/abyss/ruin). 맵 데이터 필드 추가 없음(세이브 영향 0). 합성 지명 우선순위 처리('빙하 심연'→frost, '수정 동굴'→arcane, '사막 오아시스'→desert safe여도 키워드 우선). GameRoot→MainLayout으로 `--region-accent/--region-soft` CSS 변수 + `data-region-theme` 전달, 상단 radial wash 1레이어(`aether-region-ambient`) + StatusBar 위치 점/텍스트 accent. 시맨틱 컬러 불변, high-readability 모드에서 wash 감쇠(0.35).
+- 중후반 TTK 밴드 가드: `tests/mid-game-ttk-bands.test.js` — BALANCE 상수 + 실제 아이템 DB(티어 중앙값)에서 기준 플레이어를 유도해 맵 Lv10-50 TTK 2-9턴 / TTD÷TTK ≥ 1.3 / 곡선 폭주(Lv50 ≤ Lv10×2.5) 가드. 실측: 전 구간 TTK 4-5턴, 생존 여유 2.2-4.0x — slice 19 곡선이 중후반에서도 안정 확인.
+- stale 가드 1건 갱신(readability-map-signal MainLayout prop 정규식).
+
+Verification (Region Palette & Mid-Game Guard Slice 21):
+- `npm run verify` → type-check 0 / lint 0 / unit 2897/2897 / build-guard ok. `npm run test:smoke` 완주.
+- 브라우저 실측(390×844): 시작의 마을(haven #d5b180) → 고요한 숲 이동 시 `data-region-theme="forest"` + accent #a8cf96 전환, StatusBar 위치 표기 녹색 확인.
+
 Done (Design & Readability Polish Slice 20):
 - 모바일(390px) 실화면 감사로 readability slice 1-10 이후 남은 중복/충돌 신호를 확정하고 정리했다. 진단 경로: 첫 뷰포트 → 이벤트 → 전투(공격 로그 포함) → 승리 → 상점 → 퀘스트 보드 스크린샷 비교.
 - 적 텔레그래프 명칭 충돌 해소: heavy 예고 라벨 `강타 준비/강타 가능` → `맹공 준비/맹공 주의` (CombatEngine.predictEnemyNextAction). 플레이어 시작 스킬 '강타'와 같은 화면에서 충돌해 적 의도를 내 스킬 확률로 오독하던 문제. 적 heavy hit 로그("맹렬하게 공격합니다") 용어와 통일.

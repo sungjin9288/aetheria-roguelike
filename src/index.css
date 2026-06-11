@@ -1134,6 +1134,17 @@
   outline: none;
 }
 
+/* slice 21: 지역별 ambient 팔레트 — MainLayout이 위치 기반으로 --region-accent /
+   --region-soft를 설정. 상단 radial wash 1개로 지역 분위기만 표현 (시맨틱 컬러 불변). */
+[data-app-shell] {
+  --region-accent: #d5b180;
+  --region-soft: rgba(213, 177, 128, 0.10);
+}
+.aether-region-ambient {
+  background-image: radial-gradient(circle at 50% -8%, var(--region-soft), transparent 46%);
+  transition: background-image 0.6s ease;
+}
+
 /* Player-controlled high readability mode */
 [data-readability-mode="high"] {
   --aether-readable-ink: #f8fbff;
@@ -1152,6 +1163,11 @@
 [data-readability-mode="high"] .panel-noise::after {
   opacity: 0.28;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 26%, transparent 74%, rgba(125, 212, 216, 0.035));
+}
+
+/* slice 21: high 모드에서 지역 ambient wash 감쇠 — 장식보다 대비 우선 원칙 */
+[data-readability-mode="high"] .aether-region-ambient {
+  opacity: 0.35;
 }
 
 [data-readability-mode="high"] .aether-surface,

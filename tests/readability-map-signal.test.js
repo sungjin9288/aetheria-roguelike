@@ -107,7 +107,9 @@ test('readability mode is wired from saved player setting to app shell and syste
     assert.match(css, /backdrop-filter:\s*none/);
     assert.match(mainLayout, /data-readability-mode=\{normalizedReadabilityMode\}/);
     assert.match(gameRoot, /readabilityMode = engine\.player\?\.settings\?\.readabilityMode === 'high' \? 'high' : 'standard'/);
-    assert.match(gameRoot, /<MainLayout visualEffect=\{engine\.visualEffect\} readabilityMode=\{readabilityMode\}>/);
+    // slice 21: regionTheme prop 추가 허용 — readability 배선 가드는 두 prop
+    //   (visualEffect/readabilityMode) 전달 보존이 목적.
+    assert.match(gameRoot, /<MainLayout visualEffect=\{engine\.visualEffect\} readabilityMode=\{readabilityMode\}[^>]*>/);
     assert.match(engine, /setReadabilityMode:/);
     assert.match(engine, /readabilityMode: val === 'high' \? 'high' : 'standard'/);
     assert.match(systemTab, /data-testid="readability-settings"/);

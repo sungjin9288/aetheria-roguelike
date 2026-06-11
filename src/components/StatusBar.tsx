@@ -149,9 +149,10 @@ const StatusBar = ({
               <SignalBadge tone="resonance" size="sm">Lv.{player.level}</SignalBadge>
               {/* cycle 176: 'blindMap' challenge modifier — 위치 표시 숨김 ('???' 라벨로 대체).
                   cycle 147 이전엔 dead modifier(handler 0건)였음 — 이제 정상 동작. */}
-              <span className="flex items-center gap-1 text-[8px] font-fira text-slate-300/62">
-                <span className="h-1 w-1 shrink-0 rounded-full bg-[#7dd4d8] animate-pulse" />
-                <span className="truncate max-w-[76px]">
+              {/* slice 21: 위치 점/텍스트에 지역 accent — 지역 이동이 상태 바에서도 체감되게. */}
+              <span className="flex items-center gap-1 text-[8px] font-fira" style={{ color: 'var(--region-accent)' }}>
+                <span className="h-1 w-1 shrink-0 rounded-full animate-pulse" style={{ backgroundColor: 'var(--region-accent)' }} />
+                <span className="truncate max-w-[76px] opacity-90">
                   {player.challengeModifiers?.includes('blindMap') ? '???' : player.loc}
                 </span>
               </span>

@@ -4,6 +4,8 @@ import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
+import { getRegionTheme } from '../../utils/regionTheme';
+import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
 import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
@@ -28,6 +30,8 @@ const GameRoot = ({
 }: any) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
     const readabilityMode = engine.player?.settings?.readabilityMode === 'high' ? 'high' : 'standard';
+    // slice 21: 지역별 ambient 팔레트 — 위치 기반 accent/wash CSS 변수.
+    const regionTheme = getRegionTheme(engine.player?.loc, DB.MAPS?.[engine.player?.loc]);
     // cycle 208: codex prop 전달 — useLegendaryDropDetector가 SEASON_XP 중복 award 방지용
     //   alreadyInCodex 체크에 활용.
     const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch, engine.player?.stats?.codex);
@@ -73,7 +77,7 @@ const GameRoot = ({
 
     return (
     <MotionConfig reducedMotion="user">
-        <MainLayout visualEffect={engine.visualEffect} readabilityMode={readabilityMode}>
+        <MainLayout visualEffect={engine.visualEffect} readabilityMode={readabilityMode} regionTheme={regionTheme}>
             {/* Background layers */}
             <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
                 <div className="absolute inset-0 animate-aurora bg-[radial-gradient(circle_at_top_left,rgba(213,177,128,0.09),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(125,212,216,0.1),transparent_22%),linear-gradient(180deg,rgba(7,11,17,0.42)_0%,rgba(3,5,8,0.74)_100%)]" />
