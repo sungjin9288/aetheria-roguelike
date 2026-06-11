@@ -7,6 +7,41 @@
 
 ---
 
+## Slices 19-24 🎮 — 게임필 종합 패스: 초반 경험·가독성·지역 팔레트·온보딩
+
+게임 디자인 방향: **전투는 빠르게, 레벨은 느긋하게, 화면은 한 번에 읽히게.**
+
+- **시스템 (slice 19 — 전투 템포·성장 체감)**: 몬스터 HP 곡선 `120+30L → 70+32L`
+  (Lv1 -32%, Lv50 +3%), `ATK_PER_LEVEL 2→3`, 시작 ATK 12 — 첫 전투 4-5턴,
+  레벨업마다 턴수 단축 체감. 첫 유물 6탐험 내 보장(`FIRST_RELIC_PITY_EXPLORES`),
+  몬스터 골드 base 16 (3-4전투당 휴식 1회). 레벨업 로그에 스탯 상승 표기.
+- **시스템 (slice 23 — 초반 레벨업 감속)**: `START_NEXT_EXP 150→200`, 초반
+  5지역 첫 방문 EXP 절반(골드 유지). 초반 콘텐츠 전체 소비 루트가 Lv4
+  73/302에서 멈춤 — 전직(Lv5)은 추가 사냥의 보상. 퀘스트 1수령 1레벨 캡 보존.
+- **UX (slice 20 — 중복 신호 제거)**: 치명타/약점/저항/연격 별도 로그 4건 →
+  본문 태그 통합(`[치명타]`), telegraph 칩/행 → forecast INTENT 단일 채널,
+  적 heavy 예고 '강타'→'맹공'(플레이어 스킬 명칭 충돌 해소), 승리 digest
+  EXP/Gold 중복 제거, 상점 차단 사유 행당 1회, 로그 핵심 숫자 강조 렌더.
+- **UX (slice 21 — 지역별 ambient 팔레트)**: 이름 키워드 + 맵 type 기반
+  10테마(거점/녹지/수역/화염/한랭/사막/창공/비전/심연/폐허) — 셸 wash +
+  StatusBar 위치 accent. 세이브 영향 0, 시맨틱 컬러 불변, high-readability
+  모드 감쇠. 중후반 TTK 밴드 가드 신설 — 맵 Lv10-50 전 구간 TTK 4-5턴 실측.
+- **UX (slice 22 — 첫 세션 온보딩)**: adventureGuide 신규 분기('첫 원정
+  준비'/'첫 교전'+강타 팁) + ControlPanel NEXT 가이드 스트립 신설(계산만
+  되고 렌더 0건이던 갭 해소). 결정 CTA 한국어화(작전 개시/임무 수락/현상수배
+  발급).
+- **UX (slice 24 — 승리 로그 마무리)**: 전리품 1건 시 digest 표기 생략 —
+  LOOT_GET 개별 로그와의 아이템명 중복 제거 (2건 이상 요약만 유지).
+- **인프라**: iOS 디바이스 게이트(`ios-device-smoke.sh`) 신설 — iPhone 14
+  Pro Max 실기기 install→launch→60s hold 통과. slice 4-18 누적 작업 주제별
+  커밋 정리.
+
+검증: tsc 0 / unit 2908 / lint clean / build-guard ok / smoke 완주 /
+Playwright e2e 21 / 실기기 게이트 통과 / 브라우저 실측(전투 5턴·태그
+로그·지역 톤 전환·온보딩 스트립).
+
+---
+
 ## Cycle 630 🎯🎯🎯 — explicit default-elimination 20번째 milestone + cycles 621-629 batch (44번째)
 
 - **explicit default-elimination 20번째 milestone**: cycle 608 신규 lens

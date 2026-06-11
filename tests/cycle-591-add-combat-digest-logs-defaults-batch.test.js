@@ -63,7 +63,8 @@ test('cycle 591: body summaryParts / MSG.COMBAT_DIGEST 처리 보존', async () 
     const source = await readSrc('src/hooks/combatActions/_helpers.ts');
     assert.ok(/MSG\.COMBAT_DIGEST_KILL\(enemyName\)/.test(source),
         'MSG.COMBAT_DIGEST_KILL 보존');
-    assert.ok(/if \(droppedItems\.length > 0\)/.test(source),
+    // slice 24: 전리품 1건 중복 제거로 > 0 → > 1 (다중 드롭 요약일 때만 표기).
+    assert.ok(/if \(droppedItems\.length > 1\)/.test(source),
         'droppedItems.length 처리 보존');
 });
 

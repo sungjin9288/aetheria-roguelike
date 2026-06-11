@@ -80,7 +80,10 @@ export const addCombatDigestLogs = ({
     const summaryParts = [
         MSG.COMBAT_DIGEST_KILL(enemyName),
     ];
-    if (droppedItems.length > 0) {
+    // slice 24: 전리품 1건은 LOOT_GET 개별 로그("전리품: X")가 이미 표시하므로
+    //   digest에선 생략 — 동일 아이템명 2회 출력 중복 제거. 2건 이상일 때만
+    //   요약("A · B +1")로서의 가치가 있어 표기.
+    if (droppedItems.length > 1) {
         const lootText = `${droppedItems.slice(0, 2).join(' · ')}${droppedItems.length > 2 ? ` +${droppedItems.length - 2}` : ''}`;
         summaryParts.push(MSG.COMBAT_DIGEST_LOOT(lootText));
     }
