@@ -1,5 +1,9 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Checked (Slice 19-24 Final iOS Redeploy — PASSED):
+- slice 24(승리 전리품 중복 마무리 + CHANGELOG) 커밋 후 전체 재배포 파이프라인 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../CB83965B.../App.app`) → foreground launch → 60초 hold → done.
+- 이 빌드가 slices 19-24 전부 포함한 실기기 최신 상태. 다음 단계는 사용자 수동 5분 루틴 — 핵심 측정: 초반 레벨 간격(감속 후 Lv2 ~5-6분, 초반 콘텐츠 소비 후 Lv4), 첫 전투 4-5턴, NEXT 온보딩 스트립, 지역 톤 전환, 한국어 CTA, 중복 없는 전투/승리 로그.
+
 Done (Early Leveling Deceleration Slice 23):
 - 설계 피드백 반영: "초반 레벨업이 너무 빠르면 안 된다 — 초반을 즐기며 게임을 익혀야 한다." slice 17-18이 퀘스트 burst는 막았지만 slice 19 전투 가속(4-5턴)으로 실시간 레벨 간격이 짧아진 상태(Lv5 ~12분)를 감속.
 - 원칙: 성장 "체감"(전투 템포·스탯·로그)은 그대로, 레벨 "간격"만 늘림 — 레벨당 전투 수(=연습량) 증가.
