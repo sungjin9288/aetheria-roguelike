@@ -5,6 +5,7 @@ import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils'
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
 import SignalBadge from '../SignalBadge';
 import { BALANCE } from '../../data/constants';
+import { GS } from '../../reducers/gameStates';
 
 // ── 유틸 ──────────────────────────────────────────────
 const getQuestObjectiveText = (quest: any) => (
@@ -112,6 +113,17 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                 <div className="mt-2 text-sm text-slate-400/78 font-fira leading-snug">
                     새 퀘스트와 현상수배는 마을의 `QUESTS` 게시판에서만 수락할 수 있습니다. 이 탭에서는 진행 현황과 보상 수령만 확인합니다.
                 </div>
+                {isInSafeZone && (
+                    <Motion.button
+                        type="button"
+                        data-testid="quest-tab-open-board"
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => actions?.setGameState?.(GS.QUEST_BOARD)}
+                        className="mt-3 min-h-[42px] rounded-[0.95rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-4 py-2 text-xs font-rajdhani font-bold tracking-[0.14em] text-[#dff7f5] transition-colors hover:border-[#7dd4d8]/34 hover:bg-[#7dd4d8]/14"
+                    >
+                        OPEN QUEST BOARD
+                    </Motion.button>
+                )}
             </div>
 
             {/* 퀘스트 목록 + Daily Protocol */}

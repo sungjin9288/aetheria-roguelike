@@ -69,7 +69,7 @@ const MOBILE_SECONDARY_TABS: any = ['achievements', 'skills', 'codex', 'pass', '
 const TOWN_MENU_ACTIONS: any = [
     { id: 'rest', label: 'REST', icon: Moon },
     { id: 'class', label: 'CLASS', icon: GraduationCap },
-    { id: 'quest', label: 'QUEST', icon: Scroll },
+    { id: 'quest', label: 'BOARD', icon: Scroll },
     { id: 'craft', label: 'CRAFT', icon: Hammer },
 ];
 
@@ -135,7 +135,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
             return;
         }
         if (actionId === 'quest') {
-            handleTabSelect('quest');
+            actions.setGameState?.(GS.QUEST_BOARD);
             return;
         }
         if (actionId === 'craft') {
@@ -268,7 +268,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
             type="button"
             data-testid="menu-reset"
             onClick={() => setConfirmMenuReset(true)}
-            className="flex min-h-[32px] shrink-0 items-center justify-center gap-1 rounded-full border border-rose-300/18 bg-[linear-gradient(180deg,rgba(54,18,24,0.58)_0%,rgba(18,9,12,0.92)_100%)] px-2 py-1 text-[8px] font-fira uppercase tracking-[0.1em] text-rose-100/82 transition-colors hover:border-rose-200/26 hover:bg-rose-500/12"
+            className="flex min-h-[44px] shrink-0 items-center justify-center gap-1 rounded-full border border-rose-300/18 bg-[linear-gradient(180deg,rgba(54,18,24,0.58)_0%,rgba(18,9,12,0.92)_100%)] px-3 py-1 text-[8px] font-fira uppercase tracking-[0.1em] text-rose-100/82 transition-colors hover:border-rose-200/26 hover:bg-rose-500/12"
             title="RESET"
         >
             <RotateCcw size={11} />
@@ -335,7 +335,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                 sessionStorage.setItem('archiveDockSeen', '1');
                             }
                         }}
-                        className={`shrink-0 rounded-full border border-white/8 bg-black/20 px-3 py-1.5 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-300/78 ${
+                        className={`min-h-[44px] shrink-0 rounded-full border border-white/8 bg-black/20 px-3 py-1.5 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-300/78 ${
                             !dockSeen && !inlineArchiveOpen && !onReturnToLog ? 'shadow-[0_0_0_1px_rgba(125,212,216,0.16)]' : ''
                         }`}
                     >
@@ -435,7 +435,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                                 setConfirmMenuReset(false);
                                                 actions.reset?.();
                                             }}
-                                            className="flex min-h-[42px] items-center justify-center gap-2 rounded-[1rem] border border-rose-300/20 bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-rose-100/88 transition-colors hover:border-rose-200/28 hover:bg-rose-500/14"
+                                            className="flex min-h-[44px] items-center justify-center gap-2 rounded-[1rem] border border-rose-300/20 bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-rose-100/88 transition-colors hover:border-rose-200/28 hover:bg-rose-500/14"
                                         >
                                             <RotateCcw size={13} />
                                             <span>RESET OK</span>
@@ -444,7 +444,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             type="button"
                                             data-testid="menu-reset-cancel"
                                             onClick={() => setConfirmMenuReset(false)}
-                                            className="flex min-h-[42px] items-center justify-center gap-2 rounded-[1rem] border border-white/8 bg-black/20 px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
+                                            className="flex min-h-[44px] items-center justify-center gap-2 rounded-[1rem] border border-white/8 bg-black/20 px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
                                         >
                                             <X size={13} />
                                             <span>CANCEL</span>

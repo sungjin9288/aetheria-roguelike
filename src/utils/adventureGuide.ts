@@ -1,5 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import type { GameMap, Player } from "../types/index.js";
+import { MAPS } from '../data/maps.js';
 import { QUESTS } from '../data/quests.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
@@ -29,6 +30,66 @@ const getActiveQuestEntries = (player: Player) => (
 );
 
 const clampPercent = (value: any) => Math.max(0, Math.min(100, Math.round(value * 100)));
+const ROUTE_PLAN_LOW_HP_RATIO = 0.35;
+const ROUTE_PLAN_BOSS_HP_RATIO = 0.75;
+const ROUTE_PLAN_INVENTORY_BUFFER = 2;
+
+const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRatio: number, inventoryCount: number, inventoryCap: number) => {
+    if (isSafeTarget) {
+        return {
+            approach: '마을 정비',
+            exitRule: 'REST/BOARD 후 재출발',
+            returnLabel: 'SAFE',
+        };
+    }
+
+    if (targetMap?.boss) {
+        return {
+            approach: hpRatio >= ROUTE_PLAN_BOSS_HP_RATIO ? '보스 진입' : '정비 후 진입',
+            exitRule: 'HP 75% 미만이면 귀환',
+            returnLabel: 'HP 75%',
+        };
+    }
+
+    if (hpRatio <= ROUTE_PLAN_LOW_HP_RATIO) {
+        return {
+            approach: '교전 보류',
+            exitRule: '안전지대 우선',
+            returnLabel: 'SAFE',
+        };
+    }
+
+    if (inventoryCount >= inventoryCap - ROUTE_PLAN_INVENTORY_BUFFER) {
+        return {
+            approach: '전리품 회수',
+            exitRule: '가방 정리 후 재진입',
+            returnLabel: 'BAG',
+        };
+    }
+
+    if (badge === '개척') {
+        return {
+            approach: '미답 권역 조사',
+            exitRule: '발견/전리품 확보 후 귀환',
+            returnLabel: 'DISC',
+        };
+    }
+
+    if (badge === '도전' || badge === '경계') {
+        return {
+            approach: '소모품 확인',
+            exitRule: 'HP 절반 이하면 귀환',
+            returnLabel: 'HP 50%',
+        };
+    }
+
+    return {
+        approach: '목표 교전',
+        exitRule: '목표 처리 후 마을 회수',
+        returnLabel: '회수',
+    };
+};
+
 // cycle 519: playerLevel default 1 제거 — 1 internal callsite (line 145)
 //   getMapLevel(targetMap, playerLevel) 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 17번째 (cycle 502-518). body의 (playerLevel
@@ -46,6 +107,89 @@ const getQuestProgressLabel = (entry: any) => {
     return `${entry.progress}/${entry.quest.goal}`;
 };
 
+const getQuestProgressPercent = (entry: any) => {
+    if (!entry?.quest?.goal) return 0;
+    return Math.max(0, Math.min(100, Math.round(((entry.progress || 0) / Math.max(1, entry.quest.goal)) * 100)));
+};
+
+const getQuestTargetMaps = (quest: any) => {
+    const target = quest?.target;
+    if (!target || target === 'Level') return [];
+
+    return Object.entries(MAPS)
+        .filter(([, map]: any) => (
+            toArray(map?.monsters).includes(target)
+            || toArray(map?.bossMonsters).includes(target)
+            || map?.boss === target
+        ))
+        .map(([name]) => name);
+};
+
+const getQuestRouteLabel = (quest: any, targetMaps: string[]) => {
+    if (targetMaps.length > 0) return targetMaps[0];
+    if (quest?.target === 'Level') return '성장 루트';
+    if (quest?.type === 'craft') return '제작소';
+    if (quest?.type === 'bounty_count') return '현상금';
+    if (quest?.type === 'build_victory') return quest?.buildLabel || '빌드 전투';
+    if (quest?.type === 'discovery_count') return '미답 권역';
+    if (quest?.type === 'explore_count') return '탐험 루프';
+    if (quest?.type === 'survive_low_hp') return '위험 교전';
+    return quest?.target || '현재 권역';
+};
+
+const getQuestNextStep = (entry: any, targetMaps: string[]) => {
+    const quest = entry?.quest || {};
+    const remaining = Math.max(0, (quest.goal || 0) - (entry?.progress || 0));
+
+    if (entry?.isComplete) return '마을에서 보상 회수';
+    if (quest.target === 'Level') return `Lv.${quest.goal}까지 성장`;
+    if (targetMaps.length > 0) return `${targetMaps[0]}에서 ${quest.target} 추적`;
+    if (quest.type === 'craft') return `제작 ${remaining}회 진행`;
+    if (quest.type === 'bounty_count') return `현상금 ${remaining}건 완료`;
+    if (quest.type === 'build_victory') return `${quest.buildLabel || '지정 빌드'} ${remaining}승`;
+    if (quest.type === 'discovery_count') return `발견 ${remaining}회 확보`;
+    if (quest.type === 'explore_count') return `탐험 ${remaining}회 진행`;
+    if (quest.type === 'survive_low_hp') return `저체력 승리 ${remaining}회`;
+    return `${quest.target || '목표'} ${remaining}회 진행`;
+};
+
+const getQuestReturnLabel = (entry: any, targetMaps: string[]) => {
+    const quest = entry?.quest || {};
+    if (entry?.isComplete) return 'CLAIM';
+    if (quest.target === 'Level') return 'LEVEL';
+    if (targetMaps.length > 0) return 'TARGET';
+    if (quest.type === 'craft') return 'CRAFT';
+    if (quest.type === 'bounty_count') return 'BOUNTY';
+    if (quest.type === 'build_victory') return 'BUILD';
+    if (quest.type === 'discovery_count') return 'DISC';
+    return 'RUN';
+};
+
+const buildQuestTrackerPayload = (entry: any, kind: string, progressLabel: string) => {
+    const targetMaps = getQuestTargetMaps(entry.quest);
+    const routeLabel = getQuestRouteLabel(entry.quest, targetMaps);
+    const nextStep = getQuestNextStep(entry, targetMaps);
+    const returnLabel = getQuestReturnLabel(entry, targetMaps);
+    const progressPercent = entry.isComplete ? 100 : getQuestProgressPercent(entry);
+
+    return {
+        kind,
+        title: entry.quest.title,
+        progressLabel,
+        questId: entry.id,
+        progressPercent,
+        routeLabel,
+        nextStep,
+        returnLabel,
+        chips: [
+            { label: 'PROG', value: `${progressPercent}%` },
+            { label: 'ROUTE', value: routeLabel },
+            { label: 'NEXT', value: nextStep },
+            { label: 'RETURN', value: returnLabel },
+        ],
+    };
+};
+
 export const getQuestTracker = (player: Player) => {
     const entries = getActiveQuestEntries(player);
     if (!entries.length) return null;
@@ -53,12 +197,7 @@ export const getQuestTracker = (player: Player) => {
     // cycle 334: detail 필드 제거 — getQuestTracker 외부 read 0건이던 dead field.
     const claimable = entries.find((entry: any) => entry.isComplete);
     if (claimable) {
-        return {
-            kind: 'claimable',
-            title: claimable.quest.title,
-            progressLabel: '보상 대기',
-            questId: claimable.id,
-        };
+        return buildQuestTrackerPayload(claimable, 'claimable', '보상 대기');
     }
 
     const ranked = [...entries].sort((left: any, right: any) => {
@@ -68,12 +207,7 @@ export const getQuestTracker = (player: Player) => {
     });
 
     const focus: any = ranked[0];
-    return {
-        kind: focus.isBounty ? 'bounty' : 'active',
-        title: focus.quest.title,
-        progressLabel: getQuestProgressLabel(focus),
-        questId: focus.id,
-    };
+    return buildQuestTrackerPayload(focus, focus.isBounty ? 'bounty' : 'active', getQuestProgressLabel(focus));
 };
 
 // cycle 334: description 필드 제거 — getExplorationForecast 외부 read 0건이던 dead field.
@@ -224,6 +358,9 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
                 }
             }
 
+            const routePlan = getRoutePlan(targetMap, isSafeTarget, badge, hpRatio, inventoryCount, inventoryCap);
+            chips.push({ label: 'RETURN', value: routePlan.returnLabel });
+
             // cycle 333: score / isSafeTarget / isVisited / isBoss 4 dead 필드 제거 —
             //   score는 정렬 직후 외부 read 0건, 나머지는 ControlPanel/MapNavigator/test 모두
             //   read 0건이라 silent metadata. score는 정렬 후 내부 _sortKey로만 유지.
@@ -235,6 +372,7 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
                 levelLabel: targetMap.level === 'infinite' ? 'Abyss' : `Lv.${targetLevel}`,
                 chips,
                 undiscoveredSignatureCount,
+                routePlan,
             };
         })
         .filter(Boolean)
@@ -319,6 +457,14 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
         };
     }
 
+    if (safe && questTracker) {
+        return {
+            title: '임무 재출발 준비',
+            detail: `${questTracker.title} · ${questTracker.progressLabel} · ${questTracker.nextStep}`,
+            primaryAction: { kind: 'open_move', label: '경로 보기' },
+        };
+    }
+
     // 안전지대에서 signature pity가 적립돼 있으면, 보스 권역으로 진입할 적기.
     // 휴식/퀘스트 루프에 갇혀 적립분이 잠겨버리는 것을 막는 deterministic 힌트.
     if (safe) {
@@ -356,7 +502,7 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
     if (!safe && questTracker) {
         return {
             title: '현재 목표 진행 중',
-            detail: `${questTracker.title} · ${questTracker.progressLabel}`,
+            detail: `${questTracker.title} · ${questTracker.progressLabel} · ${questTracker.nextStep}`,
             primaryAction: { kind: 'explore', label: '탐험 계속' },
         };
     }

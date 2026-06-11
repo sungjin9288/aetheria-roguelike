@@ -49,17 +49,16 @@ Exact item-name keys:
 - `item-relic-001.svg` ...
 - `item-misc-001.svg` ...
 
-This repository now expects exact-name art coverage for every unique item name in `src/data/items.js`.
-The generated exact-name set currently covers 245 non-signature unique names, while 65 tier 5~6 signature items continue to use the `named-*` premium keys.
+The repository keeps exact-name art coverage for compatibility and generation history, but the default in-game item surface now prioritizes cohesive family art.
+The generated exact-name set covers 245 non-signature unique names, while 65 tier 5~6 signature items continue to use dedicated premium keys.
 
 Selection rule:
 
-1. `ItemIcon` first checks exact item-name overrides for tier 5+ signature gear (`named-*`).
-2. If no signature override exists, it checks exact item-name overrides for the remaining catalog (`item-*`).
-3. If no exact match exists, it resolves an equipment/material family key from the item name/type.
-4. Family and named premium icons resolve to `/assets/items/<key>.png`.
-5. Exact per-name catalog icons resolve to `/assets/items/<key>.svg`.
-6. If the asset is missing or fails to load, the legacy inline SVG silhouette is used.
+1. `ItemIcon` first checks dedicated signature gear art (`/assets/equipment-exact/signature-*.png`).
+2. Non-signature equipment resolves to `/assets/equipment-family/items/<family>.png`.
+3. Non-equipment play items resolve to shared `/assets/items/<family>.png` buckets (`potion`, `ore`, `crystal`, `relic`, `key`, etc.).
+4. Exact per-name catalog icons (`item-*`) remain asset-backed for generation compatibility and fallback paths, but they are not the default cohesive item surface.
+5. If a routed asset is missing or fails to load, the legacy inline SVG silhouette is used.
 
 Style target:
 

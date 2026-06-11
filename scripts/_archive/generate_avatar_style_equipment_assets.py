@@ -6,8 +6,9 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageEnhance
 
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 AVATAR_ROOT = REPO_ROOT / "public" / "assets" / "avatars"
+SHARED_ITEM_ICON_DIR = REPO_ROOT / "public" / "assets" / "items"
 ITEM_OUTPUT_DIR = REPO_ROOT / "public" / "assets" / "equipment-family" / "items"
 OVERLAY_OUTPUT_DIR = REPO_ROOT / "public" / "assets" / "equipment-family" / "overlays"
 ARTIFACT_DIR = REPO_ROOT / "output" / "imagegen" / "avatar-style-equipment-family"
@@ -192,6 +193,22 @@ EQUIPMENT_OVERLAY_REGIONS = {
     },
 }
 
+SHARED_ITEM_ICON_BY_MANUAL_KIND = {
+    "sword": "sword",
+    "dagger": "dagger",
+    "heavy": "axe",
+    "bow": "bow",
+    "staff": "staff",
+    "lance": "spear",
+    "whip": "whip",
+    "shield": "shield",
+    "book": "book",
+    "robe": "robe",
+    "plate": "armor",
+    "cloak": "cloak",
+    "boots": "boots",
+}
+
 
 def make_dirs() -> None:
     ITEM_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -202,6 +219,17 @@ def make_dirs() -> None:
 def load_source(source_name: str) -> Image.Image:
     image = Image.open(AVATAR_ROOT / source_name).convert("RGBA")
     return ImageEnhance.Color(ImageEnhance.Contrast(ImageEnhance.Sharpness(image).enhance(1.1)).enhance(1.05)).enhance(1.04)
+
+
+def load_shared_item_icon(kind: str) -> Image.Image | None:
+    asset_key = SHARED_ITEM_ICON_BY_MANUAL_KIND.get(kind)
+    if not asset_key:
+        return None
+    source = SHARED_ITEM_ICON_DIR / f"{asset_key}.png"
+    if not source.exists():
+        return None
+    image = Image.open(source).convert("RGBA")
+    return ImageEnhance.Color(ImageEnhance.Contrast(ImageEnhance.Sharpness(image).enhance(1.08)).enhance(1.04)).enhance(1.04)
 
 
 def crop_region(image: Image.Image, region: tuple[int, int, int, int]) -> Image.Image:
@@ -246,17 +274,27 @@ def draw_blocks(canvas: Image.Image, blocks: list[tuple[int, int, int, int]], fi
 
 def resolve_canvas_metrics(canvas_size: tuple[int, int], kind: str) -> tuple[int, int, int]:
     if canvas_size == ITEM_CANVAS:
-        scale = 4
+        scale = 5 if kind in {
+            "straw-hat",
+            "cap",
+            "wizard-hat",
+            "circlet",
+            "helm",
+            "hood",
+            "mask",
+            "coat",
+            "leather",
+        } else 4
         offset_map = {
-            "wizard-hat": (22, 20),
-            "circlet": (26, 38),
-            "mask": (28, 42),
-            "straw-hat": (18, 26),
-            "cap": (22, 34),
-            "hood": (18, 22),
-            "helm": (18, 24),
-            "coat": (18, 16),
-            "leather": (18, 16),
+            "wizard-hat": (18, 14),
+            "circlet": (18, 30),
+            "mask": (20, 34),
+            "straw-hat": (16, 22),
+            "cap": (18, 28),
+            "hood": (14, 18),
+            "helm": (14, 18),
+            "coat": (20, 10),
+            "leather": (20, 10),
             "robe": (16, 14),
             "plate": (16, 14),
             "cloak": (14, 14),
@@ -287,6 +325,11 @@ def resolve_canvas_metrics(canvas_size: tuple[int, int], kind: str) -> tuple[int
 
 
 def draw_manual_family(kind: str, canvas_size: tuple[int, int]) -> Image.Image:
+    if canvas_size == ITEM_CANVAS:
+        shared_icon = load_shared_item_icon(kind)
+        if shared_icon:
+            return fit_on_canvas(trim_alpha(shared_icon), ITEM_CANVAS, (12, 10, 136, 136))
+
     image = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
     scale, offset_x, offset_y = resolve_canvas_metrics(canvas_size, kind)
     # OVERLAY 모드에서는 무기류의 grip/pommel/lower-shaft를 생략한다.

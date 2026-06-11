@@ -2,6 +2,7 @@ import { Sword, Zap, ArrowRight, RotateCw, Sparkles } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { soundManager } from '../../systems/SoundManager';
 import { getEnemyTacticalProfile } from '../../utils/runProfileUtils';
+import { getCombatForecast } from '../../utils/combatForecast';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { getBossSignatureDrops } from '../../utils/bossSignatureHint.js';
 import type { Player, Monster } from '../../types/index.js';
@@ -91,15 +92,26 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
   const comboCount = player.combatFlags?.comboCount || 0;
   const comboStack = comboRelic?.val?.stack || 0;
 
-  // 보스 패턴 텔레그래프 (적의 다음 행동 예측)
+  // 보스 패턴 텔레그래프 (적의 다음 행동 예측) — slice 20: 표시는 forecast strip
+  //   INTENT 셀 단일 채널로 통일, telegraphColorClass 칩 스타일은 함께 제거.
   const enemyTelegraph = enemy ? CombatEngine.predictEnemyNextAction(enemy) : null;
-  const telegraphColorClass: string = ({
-    red: 'border-red-500/40 bg-red-900/15 text-red-300',
-    orange: 'border-orange-400/40 bg-orange-900/15 text-orange-300',
-    blue: 'border-cyber-blue/30 bg-cyber-blue/10 text-cyber-blue',
-    purple: 'border-cyber-purple/50 bg-cyber-purple/15 text-cyber-purple animate-pulse',
-    gray: 'border-slate-600/30 bg-slate-900/20 text-slate-400',
-  } as Record<string, string>)[enemyTelegraph?.color || 'gray'];
+  const combatForecast = getCombatForecast({
+    player,
+    enemy,
+    stats,
+    selectedSkill,
+    skillCooldown,
+    enemyTelegraph,
+    combatConsumables,
+    primarySignatureDrop,
+  });
+  const combatForecastCells = combatForecast
+    ? [
+        { label: 'INTENT', value: combatForecast.intent },
+        { label: 'RESPONSE', value: combatForecast.response },
+        { label: 'WINDOW', value: combatForecast.window },
+      ]
+    : [];
 
   const handleAction = (key: any) => {
     if (key === 'attack') {
@@ -137,10 +149,9 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
     buff: 'border-cyber-purple/25 bg-cyber-purple/8 text-cyber-purple hover:bg-cyber-purple/14',
   } as Record<string, string>)[type] || 'border-slate-600/30 bg-slate-900/25 text-slate-300 hover:bg-slate-800/40');
 
+  // slice 20: telegraph 칩 제거 — combat forecast strip의 INTENT 셀이 동일한
+  //   enemyTelegraph.label을 항상 표시해 칩과 완전 중복이었음 (한 화면 2회 출력).
   const mobileCombatSignals = [
-    enemyTelegraph && enemyTelegraph.type !== 'normal'
-      ? { key: 'telegraph', text: enemyTelegraph.label, className: telegraphColorClass }
-      : null,
     bossBriefLine
       ? {
           key: 'boss',
@@ -161,7 +172,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
 
   return (
     <Motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       className={`relative z-10 w-full space-y-2 ${
         mobile
@@ -222,7 +233,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
               }}
             >
               <Sparkles size={11} />
-              <span className="uppercase tracking-[0.18em]">전설 각인</span>
+              <span className="uppercase tracking-normal">전설 각인</span>
               <span className="truncate">
                 ✦ {primarySignatureDrop.name}
                 {signatureDropCandidates.length > 1 ? ` 외 ${signatureDropCandidates.length - 1}` : ''}
@@ -230,11 +241,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
             </div>
           )}
 
-          {!mobile && enemyTelegraph && enemyTelegraph.type !== 'normal' && (
-            <div className={`rounded-[1rem] border px-3 py-1.5 text-center text-[10px] font-fira ${telegraphColorClass}`}>
-              ▶ {enemy?.name} — {enemyTelegraph.label}
-            </div>
-          )}
+          {/* slice 20: 데스크톱 telegraph 행 제거 — forecast strip INTENT 셀과 중복. */}
 
           {/* cycle 113: 적 debuff chip — cycle 111 player debuff chip의 짝(symmetry).
               플레이어가 부여한 stun/curse/blind/fear/DoT의 활성 상태를 전투 화면에 노출.
@@ -260,7 +267,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                 className="flex flex-wrap items-center justify-center gap-1.5 rounded-[1rem] border border-emerald-300/30 bg-emerald-400/8 px-3 py-1 text-[10px] font-fira text-emerald-200"
                 aria-label={`적 디버프: ${debuffs.join(', ')}`}
               >
-                <span className="uppercase tracking-[0.18em] text-emerald-300/80">적 디버프</span>
+                <span className="uppercase tracking-normal text-emerald-300/80">적 디버프</span>
                 <span>{headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}</span>
               </div>
             );
@@ -284,12 +291,33 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
               {mobileCombatSignals.map((signal: any) => (
                 <span
                   key={signal.key}
-                  className={`inline-flex min-h-[24px] items-center rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.16em] ${signal.className}`}
+                  className={`inline-flex min-h-[24px] items-center rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-normal ${signal.className}`}
                 >
                   {signal.text}
                 </span>
               ))}
             </div>
+          )}
+          {combatForecast && (
+            <section
+              data-testid="combat-forecast-strip"
+              data-forecast-tone={combatForecast.tone}
+              aria-label="전투 판단 요약"
+              className="aether-combat-forecast rounded-lg px-3 py-2"
+            >
+              <div className="grid grid-cols-3 gap-1.5">
+                {combatForecastCells.map((cell) => (
+                  <div key={cell.label} className="aether-combat-forecast-cell rounded-lg px-2 py-1.5">
+                    <div className="font-fira text-[7px] font-bold uppercase tracking-normal text-slate-400/78">
+                      {cell.label}
+                    </div>
+                    <div className="mt-0.5 line-clamp-2 font-readable text-[10px] font-semibold leading-[1.15] text-slate-100/90">
+                      {cell.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
 
       </>
@@ -305,12 +333,12 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
               whileTap={{ scale: 0.95 }}
               disabled={isDisabled}
               onClick={() => handleAction(action.key)}
-              className={`h-[48px] overflow-hidden rounded-[1rem] border px-2.5 flex items-center gap-2 font-bold transition-all backdrop-blur-md shadow-[0_12px_24px_rgba(2,8,18,0.18)] disabled:opacity-45 ${action.className}`}
+              className={`aether-combat-action min-h-[50px] overflow-hidden rounded-[1rem] px-2.5 flex items-center gap-2 font-bold transition-all backdrop-blur-md disabled:opacity-45 ${action.className}`}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] border border-white/8 bg-black/18 text-white/90">
+              <span className="aether-combat-action-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem]">
                 <Icon size={13} className={action.key === 'swap' ? 'transition-transform group-hover:rotate-180' : ''} />
               </span>
-              <span className="text-[12px] font-rajdhani tracking-[0.14em] text-white/94">
+              <span className="text-[12px] font-readable tracking-normal text-white/94">
                 {action.mobileLabel || action.label}
               </span>
             </Motion.button>
@@ -320,7 +348,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
 
       {combatConsumables.length > 0 && (
         <div className="space-y-2">
-          <div className="px-1 text-[10px] font-fira uppercase tracking-[0.22em] text-cyber-blue/65">
+          <div className="px-1 text-[10px] font-fira uppercase tracking-normal text-cyber-blue/65">
             Combat Items
           </div>
           <div className={`grid gap-2 ${mobile ? 'grid-cols-2' : 'grid-cols-3'}`}>

@@ -68,8 +68,10 @@ test('cycle 557: 정합성 가드 — production callsite 보존', async () => {
 
 test('cycle 557: body clampRatio + headline 분기 보존', async () => {
     const source = await readSrc('src/utils/outcomeAnalysis.ts');
-    assert.ok(/const hpRatio = clampRatio\(result\.playerHp, result\.playerMaxHp\)/.test(source),
-        'clampRatio hpRatio 보존');
+    assert.ok(/result\.hpLow === 'boolean'/.test(source),
+        'explicit hpLow flag 분기 보존');
+    assert.ok(/clampRatio\(result\.playerHp, result\.playerMaxHp\)/.test(source),
+        'ratio fallback clampRatio 보존');
     assert.ok(/summary\.bossKills > 0/.test(source), 'bossKills 분기 보존');
 });
 

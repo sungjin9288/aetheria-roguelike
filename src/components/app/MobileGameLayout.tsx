@@ -22,7 +22,7 @@ const MobileConsoleArchiveButton = ({ onClick }: any) => (
         type="button"
         data-testid="mobile-console-open-archive"
         onClick={onClick}
-        className="inline-flex min-h-[30px] items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-fira uppercase tracking-[0.16em] transition-all border-white/8 bg-black/18 text-slate-300/74 hover:border-[#d5b180]/18 hover:text-slate-100"
+        className="inline-flex min-h-[44px] items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-fira uppercase tracking-[0.16em] transition-all border-white/8 bg-black/18 text-slate-300/74 hover:border-[#d5b180]/18 hover:text-slate-100"
     >
         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/8 bg-white/[0.04]">
             <Package size={10} />
@@ -116,7 +116,7 @@ const MobileGameLayout = ({
                     stats={fullStats}
                     onOpenArchiveConsole={openArchiveConsole}
                 />
-            ) : (
+            ) : !showArchiveConsole ? (
                 <div className="shrink-0">
                     <ControlPanel
                         gameState={engine.gameState}
@@ -132,7 +132,7 @@ const MobileGameLayout = ({
                         onOpenArchiveConsole={openArchiveConsole}
                     />
                 </div>
-            )}
+            ) : null}
         </Motion.div>
     );
 };

@@ -56,7 +56,7 @@ test('cycle 578: 3 inventory defaults 0건', async () => {
 
 test('cycle 578: 정합성 가드 — 다수 callsite 보존', async () => {
     const ep = await readSrc('src/components/EquipmentPanel.tsx');
-    assert.ok(/countInventoryItemByName\(player\?\.inv,\s*CONSTANTS\.ENHANCE_MATERIAL_NAME\)/.test(ep),
+    assert.ok(/countInventoryItemByName\(player\?\.inv(?: \|\| \[\])?,\s*CONSTANTS\.ENHANCE_MATERIAL_NAME\)/.test(ep),
         'EquipmentPanel countInventoryItemByName 보존');
 
     const inv = await readSrc('src/hooks/useInventoryActions.ts');

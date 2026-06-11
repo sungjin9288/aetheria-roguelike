@@ -25,7 +25,7 @@ const FocusPanelHeader = ({
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0 flex-1">
         {eyebrow && (
-          <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-400/66">
+          <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-slate-300/82">
             {eyebrow}
           </div>
         )}
@@ -35,7 +35,7 @@ const FocusPanelHeader = ({
               type="button"
               data-testid={backTestId}
               onClick={onBack}
-              className="flex min-h-[34px] shrink-0 items-center gap-1 rounded-full border border-white/8 bg-black/20 px-2.5 text-[10px] font-fira uppercase tracking-[0.14em] text-slate-200 transition-colors hover:bg-white/[0.06]"
+              className="flex min-h-[44px] shrink-0 items-center gap-1 rounded-full border border-white/8 bg-black/20 px-3 text-[10px] font-fira uppercase tracking-[0.14em] text-slate-200 transition-colors hover:bg-white/[0.06]"
             >
               <ChevronLeft size={12} />
               {backLabel}
@@ -46,7 +46,7 @@ const FocusPanelHeader = ({
               {title}
             </div>
             {meta && (
-              <div className="mt-0.5 text-[10px] font-fira text-slate-400/74">
+              <div className="mt-0.5 text-[10px] font-readable leading-snug text-slate-300/86">
                 {meta}
               </div>
             )}
@@ -63,7 +63,7 @@ const FocusPanelHeader = ({
           type="button"
           data-testid={archiveTestId}
           onClick={onOpenArchive}
-          className="flex min-h-[34px] shrink-0 items-center gap-1 rounded-full border border-[#d5b180]/18 bg-[#d5b180]/10 px-2.5 text-[10px] font-fira uppercase tracking-[0.14em] text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/16"
+          className="flex min-h-[44px] shrink-0 items-center gap-1 rounded-full border border-[#d5b180]/18 bg-[#d5b180]/10 px-3 text-[10px] font-fira uppercase tracking-[0.14em] text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/16"
         >
           <Package size={11} />
           {archiveLabel}

@@ -1,6 +1,7 @@
 import { AT } from '../reducers/actionTypes';
 import { RARITY_COLORS } from '../data/titles';
 import { RELIC_SYNERGIES } from '../data/relics';
+import { getRelicChoiceDecisionStrip } from '../utils/relicChoiceDecision';
 import SignalBadge from './SignalBadge';
 import type { Player, Relic } from '../types/index.js';
 
@@ -117,6 +118,12 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
     if (!pendingRelics || pendingRelics.length === 0) return null;
 
     const ownedRelics = player?.relics || [];
+    const relicCards = pendingRelics.map((relic: any, index: any) => ({
+        relic,
+        index,
+        synergy: getRelicSynergyScore(relic, ownedRelics),
+    }));
+    const relicDecision = getRelicChoiceDecisionStrip(relicCards);
 
     const handleSelect = (relic: Relic) => {
         dispatch({ type: AT.ADD_RELIC, payload: relic });
@@ -151,25 +158,50 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
                     </div>
                 </div>
 
+                <div
+                    data-testid="relic-choice-decision-strip"
+                    data-relic-tone={relicDecision.tone}
+                    aria-label="유물 선택 추천 요약"
+                    className="aether-relic-decision-strip mb-3 grid grid-cols-3 gap-1.5 rounded-[1rem] p-1.5"
+                >
+                    {relicDecision.cells.map((cell: any) => (
+                        <div key={cell.label} className="aether-relic-decision-cell rounded-lg px-2.5 py-2">
+                            <div className="text-[9px] font-fira uppercase tracking-[0.14em] text-slate-400/78">
+                                {cell.label}
+                            </div>
+                            <div className="mt-0.5 truncate text-[11px] font-semibold text-[#f8ecd4]">
+                                {cell.value}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
                 <div className="mb-3 grid grid-cols-1 gap-2">
-                    {pendingRelics.map((relic: any, index: any) => {
-                        const synergy = getRelicSynergyScore(relic, ownedRelics);
+                    {relicCards.map(({ relic, index, synergy }: any) => {
                         const hasSynergy = synergy.score > 0;
                         const isLegendaryComplete = synergy.legendaryHint != null;
                         const hasNearLegendary = synergy.nearLegendary != null;
+                        const isRecommended = relicDecision.recommendedIndex === index;
                         return (
                         <button
                             key={relic.id}
                             data-testid={`relic-choice-${index}`}
+                            data-relic-recommended={isRecommended ? 'true' : 'false'}
                             onClick={() => handleSelect(relic)}
                             className={`
                                 group flex flex-col rounded-[1.35rem] border p-3 text-left
                                 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0
                                 ${RARITY_CARD[relic.rarity] || RARITY_CARD.common}
+                                ${isRecommended ? 'aether-relic-card-recommended' : ''}
                                 ${isLegendaryComplete ? 'shadow-[0_18px_40px_rgba(251,113,133,0.15)]' : hasSynergy ? 'shadow-[0_18px_34px_rgba(125,212,216,0.08)]' : 'shadow-[0_14px_26px_rgba(1,6,14,0.28)]'}
                             `}
                         >
                             <div className="flex items-start justify-between gap-2 flex-wrap">
+                                {isRecommended && (
+                                    <SignalBadge tone="spotlight" size="sm">
+                                        추천
+                                    </SignalBadge>
+                                )}
                                 <SignalBadge tone={RARITY_BADGE_TONE[relic.rarity] || 'neutral'} size="sm">
                                     {RARITY_LABEL[relic.rarity] || relic.rarity}
                                 </SignalBadge>

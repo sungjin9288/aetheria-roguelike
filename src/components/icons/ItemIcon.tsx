@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { BALANCE } from '../../data/constants';
 import { getItemRarity } from '../../utils/gameUtils';
-import { getEquipmentVisualKey, getItemIconAssetSrc } from '../../utils/itemVisuals';
+import { getEquipmentVisualKey, getItemIconAssetSrc, shouldUseAvatarPreviewItemIcon } from '../../utils/itemVisuals';
 import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signatureItems.js';
 import EquipmentAvatarPreview from './EquipmentAvatarPreview.jsx';
 import SignatureBadge from './SignatureBadge.jsx';
@@ -68,6 +68,7 @@ const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatur
     const activeAssetState = assetState.key === iconKey ? assetState : { key: iconKey, failed: false };
     const previewVariant = size >= 34 ? 'card' : 'default';
     const isDedicatedSignature = hasDedicatedSignatureArt(item);
+    const useAvatarPreviewFirst = isEquipmentItem && !isDedicatedSignature && shouldUseAvatarPreviewItemIcon(item);
     const signatureRing = isDedicatedSignature
         ? SIGNATURE_TONE_RING[getSignatureMetadata(item)?.tone] || SIGNATURE_TONE_RING.holy
         : null;
@@ -102,7 +103,9 @@ const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatur
                 ...shellStyle,
             }}
         >
-            {!activeAssetState.failed ? (
+            {useAvatarPreviewFirst ? (
+                <EquipmentAvatarPreview item={item} size={size} variant={previewVariant} className="h-full w-full" />
+            ) : !activeAssetState.failed ? (
                 <img
                     src={assetSrc}
                     alt=""

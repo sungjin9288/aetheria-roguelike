@@ -1,6 +1,7 @@
 import { QUESTS } from '../data/quests.js';
 import type { Player } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
+import { BALANCE } from '../data/constants.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 
 // cycle 356: OPERATION_META 5 lane에서 summary 필드 제거 — QuestBoardPanel은
@@ -29,6 +30,17 @@ const OPERATION_META: any = {
 };
 
 const FEATURED_LANE_ORDER: any = ['story', 'build', 'growth', 'boss', 'hunt'];
+const RUN_PLAN_LOW_HP_RATIO = 0.5;
+const OPERATION_BRIEF_LOW_HP_RATIO = 0.45;
+const OPERATION_BRIEF_BOSS_HP_RATIO = 0.75;
+const OPERATION_BRIEF_INVENTORY_BUFFER = 2;
+const RUN_PLAN_PREP_BY_LANE: any = {
+    story: 'REST 후 출발',
+    build: 'GEAR 매칭 점검',
+    growth: '보급과 성장 확인',
+    boss: 'HP/소모품 점검',
+    hunt: '장비와 HP 점검',
+};
 
 const toArray = (value: any) => (Array.isArray(value) ? value : []);
 // cycle 523: playerLevel default 1 제거 — 1 internal callsite (line 116)
@@ -119,6 +131,166 @@ const getQuestReason = (quest: any, lane: any, resonance: any, targetMaps: any[]
     return '당장 밀기 좋은 기본 토벌 임무로 파밍과 전투 감각을 유지하기 쉽습니다.';
 };
 
+const getOperationPlanObjective = (quest: any, targetMaps: any[]) => {
+    if (targetMaps[0]) return `${targetMaps[0]} 진입`;
+    if (quest?.target === 'Level') return `Lv.${quest.goal} 달성`;
+    if (quest?.type === 'craft') return '제작 루프 가동';
+    if (['explore_count', 'discovery_count'].includes(quest?.type)) return '탐험 루트 확장';
+    if (quest?.target) return `${quest.target} 추적`;
+    return '임무 목표 추적';
+};
+
+const getOperationPrepStep = (player: Player, lane: any) => {
+    const hp = player?.hp || 0;
+    const maxHp = player?.maxHp || 0;
+    if (maxHp > 0 && hp / maxHp <= RUN_PLAN_LOW_HP_RATIO) return 'REST 회복 우선';
+    return RUN_PLAN_PREP_BY_LANE[lane] || RUN_PLAN_PREP_BY_LANE.hunt;
+};
+
+const getOperationPlanSteps = (quest: any, player: Player, lane: any, targetMaps: any[]) => ([
+    { label: '수락', value: 'BOARD 계약 확정' },
+    { label: '정비', value: getOperationPrepStep(player, lane) },
+    { label: '목표', value: getOperationPlanObjective(quest, targetMaps) },
+]);
+
+const getOperationRouteLabel = (quest: any, targetMaps: any[]) => {
+    if (targetMaps[0]) return targetMaps[0];
+    if (quest?.target === 'Level') return '성장 루트';
+    if (quest?.type === 'craft') return '제작/보급 루트';
+    if (['explore_count', 'discovery_count'].includes(quest?.type)) return '미답사 루트';
+    return '현재 권역';
+};
+
+const getOperationTargetLevel = (targetMaps: any[], maps: any, playerLevel: any) => {
+    const targetMap = maps?.[targetMaps[0]];
+    if (!targetMap) return null;
+    if (targetMap.level === 'infinite') return Math.max((playerLevel || 1) + 8, 50);
+    if (typeof targetMap.minLv === 'number') return targetMap.minLv;
+    if (typeof targetMap.level === 'number') return targetMap.level;
+    return null;
+};
+
+const getOperationRiskProfile = (quest: any, player: Player, lane: any, targetMaps: any[], maps: any) => {
+    const hpRatio = (player?.hp || 0) / Math.max(1, player?.maxHp || 1);
+    const playerLevel = player?.level || 1;
+    const targetLevel = getOperationTargetLevel(targetMaps, maps, playerLevel);
+    const levelGap = typeof targetLevel === 'number' ? targetLevel - playerLevel : 0;
+
+    if (hpRatio <= OPERATION_BRIEF_LOW_HP_RATIO) {
+        return {
+            label: '정비 필요',
+            tone: 'danger',
+            detail: 'HP 회복 후 출발',
+        };
+    }
+
+    if (lane === 'boss') {
+        return {
+            label: hpRatio >= OPERATION_BRIEF_BOSS_HP_RATIO ? '보스 준비' : '보스 경계',
+            tone: hpRatio >= OPERATION_BRIEF_BOSS_HP_RATIO ? 'warning' : 'danger',
+            detail: 'HP 75% 이상 유지',
+        };
+    }
+
+    if (levelGap >= 4) {
+        return {
+            label: '도전',
+            tone: 'warning',
+            detail: `Lv.${targetLevel} 권역`,
+        };
+    }
+
+    if (lane === 'build') {
+        return {
+            label: '빌드 정렬',
+            tone: 'resonance',
+            detail: '장비/성향 보상 확인',
+        };
+    }
+
+    if (lane === 'growth') {
+        return {
+            label: '성장 안정',
+            tone: 'upgrade',
+            detail: quest?.target === 'Level' ? '레벨업 목표' : '누적 성장 목표',
+        };
+    }
+
+    return {
+        label: '안정',
+        tone: 'recommended',
+        detail: targetMaps[0] ? '목표 권역 확인' : '기본 토벌',
+    };
+};
+
+const getOperationPayoff = (quest: any, lane: any, resonance: any) => {
+    if (lane === 'story') return '서사 해금';
+    if (lane === 'build' && resonance?.label) return `${resonance.label} 보상 고정`;
+    if (lane === 'growth') return quest?.target === 'Level' ? '레벨 스파이크' : '성장 자원';
+    if (lane === 'boss') return '보스 전리품';
+    if (quest?.reward?.item) return `${quest.reward.item} 확보`;
+    return '골드/EXP 회수';
+};
+
+const getOperationExtractionRule = (quest: any, player: Player, lane: any, targetMaps: any[]) => {
+    const hpRatio = (player?.hp || 0) / Math.max(1, player?.maxHp || 1);
+    const inventoryCap = (player as any)?.maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCount = player?.inv?.length || 0;
+
+    if (hpRatio <= OPERATION_BRIEF_LOW_HP_RATIO) return '수락 전 REST, HP 회복 후 출발';
+    if (inventoryCount >= inventoryCap - OPERATION_BRIEF_INVENTORY_BUFFER) return '가방 정리 후 출발';
+    if (lane === 'boss') return '보스 조우 전 HP 75% 미만이면 귀환';
+    if (quest?.target === 'Level') return `Lv.${quest.goal} 달성 즉시 마을 회수`;
+    if (targetMaps[0]) return `${targetMaps[0]} 목표 ${quest.goal || 1}회 후 귀환`;
+    if (lane === 'build') return '보상 장비 확인 후 빌드 점검';
+    return '목표 달성 후 마을 회수';
+};
+
+const getOperationReturnTag = (extraction: string, lane: any) => {
+    if (extraction.includes('REST')) return 'REST';
+    if (extraction.includes('HP 75%')) return 'HP 75%';
+    if (extraction.includes('가방')) return 'BAG';
+    if (lane === 'growth') return 'SPIKE';
+    return '회수';
+};
+
+const getOperationBrief = (quest: any, player: Player, lane: any, resonance: any, targetMaps: any[], maps: any) => {
+    const risk = getOperationRiskProfile(quest, player, lane, targetMaps, maps);
+    const route = getOperationRouteLabel(quest, targetMaps);
+    const extraction = getOperationExtractionRule(quest, player, lane, targetMaps);
+
+    return {
+        label: 'Scout Brief',
+        route,
+        riskLabel: risk.label,
+        riskTone: risk.tone,
+        riskDetail: risk.detail,
+        payoff: getOperationPayoff(quest, lane, resonance),
+        extraction,
+        tags: [
+            { label: 'ROUTE', value: route },
+            { label: 'RISK', value: risk.label },
+            { label: 'RETURN', value: getOperationReturnTag(extraction, lane) },
+        ],
+    };
+};
+
+const enrichActiveQuestEntry = (entry: any, player: Player, traitProfile: any, maps: any) => {
+    const resonance = getTraitQuestResonance(entry.quest, traitProfile);
+    const lane = entry.isBounty ? 'hunt' : getQuestLane(entry.quest, resonance, maps);
+    const targetMaps = getQuestTargetMaps(entry.quest, maps);
+
+    return {
+        ...entry,
+        lane,
+        resonance,
+        targetMaps,
+        meta: OPERATION_META[lane] || OPERATION_META.hunt,
+        planSteps: getOperationPlanSteps(entry.quest, player, lane, targetMaps),
+        brief: getOperationBrief(entry.quest, player, lane, resonance, targetMaps, maps),
+    };
+};
+
 const scoreQuest = (quest: any, player: Player, traitProfile: any, activeEntries: any, maps: any) => {
     const resonance = getTraitQuestResonance(quest, traitProfile);
     const lane = getQuestLane(quest, resonance, maps);
@@ -158,12 +330,15 @@ const scoreQuest = (quest: any, player: Player, traitProfile: any, activeEntries
         targetMaps,
         meta: OPERATION_META[lane] || OPERATION_META.hunt,
         reason: getQuestReason(quest, lane, resonance, targetMaps),
+        planSteps: getOperationPlanSteps(quest, player, lane, targetMaps),
+        brief: getOperationBrief(quest, player, lane, resonance, targetMaps, maps),
     };
 };
 
 export const getQuestBoardRecommendations = (player: Player, maps: any = MAPS, questCatalog: any = QUESTS) => {
     const traitProfile = getTraitProfile(player, { maxHp: player?.maxHp, maxMp: player?.maxMp });
-    const activeEntries = getActiveQuestEntries(player);
+    const activeEntries = getActiveQuestEntries(player)
+        .map((entry: any) => enrichActiveQuestEntry(entry, player, traitProfile, maps));
     const activeRegularQuestIds = new Set(activeEntries.filter((entry: any) => !entry.isBounty).map((entry: any) => entry.id));
     const playerLevel = player?.level || 1;
 

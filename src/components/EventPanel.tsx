@@ -26,12 +26,13 @@ const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
                 titleClassName="text-[1.2rem]"
                 onBack={() => actions.dismissEvent?.()}
                 backLabel="복귀"
+                backTestId="event-close"
                 rightSlot={<SignalBadge tone="resonance" size="sm">Event</SignalBadge>}
             />
 
             <div className="relative overflow-hidden rounded-[1.25rem] aether-panel-core px-3 py-3 text-white">
-                <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/68">Prompt</div>
-                <div className="mt-1.5 text-[0.95rem] font-fira leading-relaxed text-white/92">
+                <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-300/84">Prompt</div>
+                <div className="mt-1.5 text-[0.95rem] font-readable leading-relaxed text-slate-50">
                     {currentEvent.desc}
                 </div>
             </div>
@@ -42,17 +43,17 @@ const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
                         key={`${choice}_${idx}`}
                         data-testid={`event-choice-${idx}`}
                         onClick={() => actions.handleEventChoice(idx)}
-                        className="group rounded-[1.3rem] aether-panel-muted px-3 py-3 text-left transition-all hover:border-[#d5b180]/20 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]"
+                        className="group rounded-[1.3rem] aether-event-choice px-3 py-3 text-left transition-all hover:border-[#d5b180]/28 hover:bg-[#d5b180]/10 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]"
                     >
                         <div className="flex items-center justify-between gap-2">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500 group-hover:text-[#f4e6c8]/80">
+                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-[#f4e6c8]/78 group-hover:text-[#f4e6c8]">
                                 Choice {idx + 1}
                             </div>
-                            <span className="rounded-full border border-white/8 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.16em] text-slate-300/70 group-hover:text-white/88">
+                            <span className="rounded-full border border-[#d5b180]/22 bg-black/18 px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.16em] text-[#f6e7c8]/88 group-hover:text-white">
                                 Commit
                             </span>
                         </div>
-                        <div className="mt-0.5 text-[0.95rem] font-rajdhani font-bold text-white">
+                        <div className="mt-1 text-[0.98rem] font-readable font-bold text-slate-50">
                             {choice}
                         </div>
                     </button>
@@ -71,14 +72,14 @@ const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
 
     return (
         <Motion.div
-            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            initial={false}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3"
+            className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3"
         >
             <div
                 className="pointer-events-none absolute inset-0 opacity-60"
-                style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 22%), radial-gradient(circle at top left, rgba(213,177,128,0.1), transparent 30%)' }}
+                style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 22%), linear-gradient(145deg, rgba(246,217,140,0.08), transparent 34%)' }}
             />
             {panelBody}
         </Motion.div>

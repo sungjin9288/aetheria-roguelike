@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import { getAdventureGuidance } from '../src/utils/adventureGuide.js';
 import { getQuestBoardRecommendations } from '../src/utils/questOperations.js';
@@ -36,6 +37,73 @@ test('quest board surfaces story and build operations for a fresh run', () => {
     assert.ok(board.featured.some((entry) => entry.quest.title.includes('[스토리]')));
 });
 
+test('quest board featured operations include a town prep run plan', () => {
+    const player = {
+        job: '전사',
+        level: 8,
+        loc: '시작의 마을',
+        hp: 70,
+        maxHp: 180,
+        mp: 32,
+        maxMp: 32,
+        quests: [],
+        relics: [{ effect: 'execute_bonus' }],
+        equip: {
+            weapon: { type: 'weapon', name: '양손검', val: 22, hands: 2, elem: '물리' },
+            offhand: null,
+        },
+        stats: {
+            crafts: 0,
+            bountiesCompleted: 0,
+            visitedMaps: ['시작의 마을', '고요한 숲', '잊혀진 폐허'],
+        },
+    };
+
+    const board = getQuestBoardRecommendations(player);
+    const planSteps = board.featured[0].planSteps;
+
+    assert.deepEqual(planSteps.map((step) => step.label), ['수락', '정비', '목표']);
+    assert.equal(planSteps[0].value, 'BOARD 계약 확정');
+    assert.equal(planSteps[1].value, 'REST 회복 우선');
+    assert.match(planSteps[2].value, /(진입|달성|추적|확장|가동)/);
+    assert.equal(board.featured[0].brief.label, 'Scout Brief');
+    assert.equal(board.featured[0].brief.riskLabel, '정비 필요');
+    assert.match(board.featured[0].brief.extraction, /REST/);
+    assert.ok(board.featured[0].brief.tags.some((tag) => tag.label === 'RETURN'));
+});
+
+test('accepted quest entries retain operation brief metadata', () => {
+    const player = {
+        job: '전사',
+        level: 8,
+        loc: '시작의 마을',
+        hp: 180,
+        maxHp: 180,
+        mp: 32,
+        maxMp: 32,
+        quests: [{ id: 68, progress: 0 }],
+        relics: [{ effect: 'execute_bonus' }],
+        equip: {
+            weapon: { type: 'weapon', name: '양손검', val: 22, hands: 2, elem: '물리' },
+            offhand: null,
+        },
+        inv: [],
+        stats: {
+            crafts: 0,
+            bountiesCompleted: 0,
+            visitedMaps: ['시작의 마을', '고요한 숲', '잊혀진 폐허'],
+        },
+    };
+
+    const board = getQuestBoardRecommendations(player);
+    const active = board.activeEntries[0];
+
+    assert.ok(active.brief.route);
+    assert.ok(active.brief.payoff);
+    assert.match(active.brief.extraction, /(귀환|회수|점검|출발)/);
+    assert.deepEqual(active.planSteps.map((step) => step.label), ['수락', '정비', '목표']);
+});
+
 test('adventure guidance references the top recommended operation when no quest is active', () => {
     const player = {
         job: '모험가',
@@ -65,4 +133,41 @@ test('adventure guidance references the top recommended operation when no quest 
 
     assert.equal(guidance.primaryAction.kind, 'open_quest_board');
     assert.ok(guidance.detail.includes(board.featured[0].quest.title));
+});
+
+test('town quest shortcut opens the quest board focus panel, not only the progress tab', async () => {
+    const source = await readFile(new URL('../src/components/Dashboard.tsx', import.meta.url), 'utf8');
+    const branchStart = source.indexOf("if (actionId === 'quest')");
+    const branchEnd = source.indexOf("if (actionId === 'craft')", branchStart);
+    const questBranch = source.slice(branchStart, branchEnd);
+
+    assert.match(questBranch, /actions\.setGameState\?\.\(GS\.QUEST_BOARD\)/);
+    assert.doesNotMatch(questBranch, /handleTabSelect\('quest'\)/);
+});
+
+test('safe-zone control grid exposes quest board and rest actions for guidance targets', async () => {
+    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
+
+    assert.match(source, /key:\s*'quests'/);
+    assert.match(source, /testId:\s*'control-quests'/);
+    assert.match(source, /actions\.setGameState\(GS\.QUEST_BOARD\)/);
+    assert.match(source, /key:\s*'rest'/);
+    assert.match(source, /testId:\s*'control-rest'/);
+});
+
+test('control panel renders active mission tracker from accepted quests', async () => {
+    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
+
+    assert.match(source, /getQuestTracker/);
+    assert.match(source, /data-testid="control-mission-tracker"/);
+    assert.match(source, /tracker\.chips/);
+    assert.match(source, /tracker\.progressPercent/);
+});
+
+test('quest board renders scout brief rows for featured and active operations', async () => {
+    const source = await readFile(new URL('../src/components/tabs/QuestBoardPanel.tsx', import.meta.url), 'utf8');
+
+    assert.match(source, /OperationBriefRows/);
+    assert.match(source, /brief\.extraction/);
+    assert.match(source, /brief\.payoff/);
 });

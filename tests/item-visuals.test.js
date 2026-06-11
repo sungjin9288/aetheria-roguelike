@@ -14,9 +14,13 @@ import {
     getAvatarLoadoutStyle,
     getEquipmentVisualKey,
     getEquipmentWearableFamilyKey,
+    getItemIconAssetSrc,
+    getNonEquipmentIllustrationFamilyKey,
     getWeaponVisualKey,
     ITEM_ICON_ASSET_KEYS,
+    NON_EQUIPMENT_FAMILY_ITEM_ASSET_KEYS,
     SPECIAL_ITEM_ICON_KEYS,
+    shouldUseAvatarPreviewItemIcon,
 } from '../src/utils/itemVisuals.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -110,9 +114,98 @@ test('equipment family asset keys map representative gear into avatar-style illu
     assert.equal(getEquipmentWearableFamilyKey({ name: '짚 모자', type: 'armor' }), 'headgear-straw-hat');
 });
 
+test('avatar preview item icon routing stays disabled for normal equipment item surfaces', () => {
+    assert.equal(shouldUseAvatarPreviewItemIcon({ name: '짚 모자', type: 'armor' }), false);
+    assert.equal(shouldUseAvatarPreviewItemIcon({ name: '현자의 관', type: 'armor' }), false);
+    assert.equal(shouldUseAvatarPreviewItemIcon({ name: '여행자 튜닉', type: 'armor' }), false);
+    assert.equal(shouldUseAvatarPreviewItemIcon({ name: '균열 외피갑옷', type: 'armor' }), false);
+    assert.equal(shouldUseAvatarPreviewItemIcon({ name: '롱소드', type: 'weapon', hands: 1 }), false);
+    assert.equal(shouldUseAvatarPreviewItemIcon({ name: '목재 방패', type: 'shield' }), false);
+    assert.equal(shouldUseAvatarPreviewItemIcon({ name: '기사의 흉갑', type: 'armor' }), false);
+    assert.equal(shouldUseAvatarPreviewItemIcon({ name: '수호의 물약', type: 'hp' }), false);
+});
+
+test('non-signature equipment item icons consistently use the family art system', async () => {
+    const { ITEMS } = await import('../src/data/items.js');
+    const equipItems = Object.values(ITEMS).flat().filter((item) => (
+        item
+        && ['weapon', 'armor', 'shield'].includes(item.type)
+        && !SPECIAL_ITEM_ICON_KEYS[item.name]
+    ));
+
+    assert.ok(equipItems.length > 100, 'Expected broad non-signature equipment coverage');
+    for (const item of equipItems) {
+        assert.match(
+            getItemIconAssetSrc(item),
+            /^\/assets\/equipment-family\/items\//,
+            `Expected family item icon art for ${item.name}`
+        );
+        assert.equal(shouldUseAvatarPreviewItemIcon(item), false, `Expected no avatar-preview icon mix for ${item.name}`);
+    }
+});
+
+test('non-equipment family asset keys map readable item categories', () => {
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '하급 체력 물약', type: 'hp' }), 'potion');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '상급 마나 물약', type: 'mp' }), 'potion');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '저주해제 주문서', type: 'cure' }), 'potion');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '영웅의 물약', type: 'buff' }), 'potion');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '동전 주머니', type: 'mat' }), 'pouch');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '철광석', type: 'mat' }), 'ore');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '마나 결정', type: 'mat' }), 'crystal');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '용의 비늘', type: 'mat' }), 'scale');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '늑대 송곳니', type: 'mat' }), 'fang');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '고대의 뼈', type: 'mat' }), 'bone');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '마왕의 핵', type: 'mat' }), 'core');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '봉인 각인석', type: 'mat' }), 'relic');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '별포자', type: 'mat' }), 'herb');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '봉인 열쇠', type: 'key' }), 'key');
+    assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '고대 유물', type: 'all' }), 'relic');
+});
+
+test('non-equipment playable item icons consistently use shared family art', async () => {
+    const { ITEMS } = await import('../src/data/items.js');
+    const nonEquipmentItems = Object.values(ITEMS).flat().filter((item) => (
+        item
+        && item.type
+        && !['weapon', 'armor', 'shield'].includes(item.type)
+    ));
+
+    assert.ok(nonEquipmentItems.length > 70, 'Expected broad non-equipment item coverage');
+    for (const item of nonEquipmentItems) {
+        const src = getItemIconAssetSrc(item);
+        assert.match(src, /^\/assets\/items\/(potion|material|ore|crystal|scale|fang|bone|core|relic|herb|pouch|key)\.png$/);
+        assert.doesNotMatch(src, /\/item-[a-z]+-\d+\./, `Expected no exact-name item art routing for ${item.name}`);
+    }
+});
+
+test('every displayable catalog item resolves into a cohesive item art system', async () => {
+    const { ITEMS } = await import('../src/data/items.js');
+    const displayableItems = Object.values(ITEMS).flat().filter((item) => item?.name);
+
+    assert.ok(displayableItems.length > 300, 'Expected full catalog display coverage');
+    for (const item of displayableItems) {
+        const src = getItemIconAssetSrc(item);
+        const isSignatureArt = /^\/assets\/equipment-exact\/signature-/.test(src);
+        const isEquipmentFamilyArt = /^\/assets\/equipment-family\/items\//.test(src);
+        const isNonEquipmentFamilyArt = /^\/assets\/items\/(potion|material|ore|crystal|scale|fang|bone|core|relic|herb|pouch|key)\.png$/.test(src);
+
+        assert.equal(
+            isSignatureArt || isEquipmentFamilyArt || isNonEquipmentFamilyArt,
+            true,
+            `Expected cohesive art route for ${item.name || item.desc || 'unknown'} (${src})`
+        );
+    }
+});
+
 test('all pixel item icon assets exist for the shared equipment image set', () => {
     for (const key of ITEM_ICON_ASSET_KEYS) {
         assert.equal(hasItemAsset(key), true, `Expected item icon asset for key ${key}`);
+    }
+});
+
+test('all non-equipment family item assets exist', () => {
+    for (const key of NON_EQUIPMENT_FAMILY_ITEM_ASSET_KEYS) {
+        assert.equal(hasItemAsset(key), true, `Expected non-equipment family item asset for key ${key}`);
     }
 });
 

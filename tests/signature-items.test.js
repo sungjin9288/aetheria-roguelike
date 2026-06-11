@@ -165,7 +165,8 @@ test('getEquipmentOverlayAssetSrc prefers signature wearable path for Tier S ite
 
 test('getItemIconAssetSrc falls back to family/tinted art for non-signature items', () => {
     const src = getItemIconAssetSrc({ name: '녹슨 단검', type: 'weapon' });
-    // should NOT contain 'signature-' prefix
+    assert.match(src, /^\/assets\/equipment-family\/items\//);
+    assert.doesNotMatch(src, /equipment-exact/);
     assert.doesNotMatch(src, /signature-/);
 });
 

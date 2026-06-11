@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Copy, Crown, Skull, Shield, Save } from 'lucide-react';
+import { Copy, Crown, Eye, Skull, Shield, Save } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -31,6 +31,15 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     const today = new Date().toISOString().slice(0, 10);
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState<any>(null);
+    const readabilityMode = player.settings?.readabilityMode === 'high' ? 'high' : 'standard';
+
+    const handleSetReadabilityMode = useCallback((mode: 'standard' | 'high') => {
+        actions.setReadabilityMode?.(mode);
+        setFeedbackStatus({
+            type: 'success',
+            text: `Readability mode: ${mode === 'high' ? 'high' : 'standard'}.`,
+        });
+    }, [actions]);
 
     const qaContext = useMemo(() => {
         const platform = typeof navigator !== 'undefined'
@@ -51,9 +60,10 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             job: player.job,
             level: player.level,
             loc: player.loc,
+            readability: readabilityMode,
             session: _SESSION_ID,
         };
-    }, [player.job, player.level, player.loc, player.name, runtime]);
+    }, [player.job, player.level, player.loc, player.name, readabilityMode, runtime]);
 
     const qaReadout = useMemo(() => {
         return [
@@ -68,6 +78,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             `JOB=${qaContext.job}`,
             `LV=${qaContext.level}`,
             `LOC=${qaContext.loc}`,
+            `READABILITY=${qaContext.readability}`,
             `SESSION=${qaContext.session}`,
         ].join('\n');
     }, [qaContext]);
@@ -90,6 +101,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                 mp: player.mp,
                 loc: player.loc,
                 activeTitle: player.activeTitle || null,
+                readabilityMode,
             },
             runtime: runtime || null,
             combatStats: stats
@@ -118,7 +130,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             meta: player.meta || null,
             dailyProtocol: player.stats?.dailyProtocol || null,
         };
-    }, [player, qaContext, runtime, stats]);
+    }, [player, qaContext, readabilityMode, runtime, stats]);
 
     const copyQaReadout = useCallback(async () => {
         try {
@@ -198,6 +210,42 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                 {(player.meta?.prestigeRank || 0) > 0 && (
                     <p className="text-[#d9d0f3] mt-1">{MSG.UI_PRESTIGE}: {player.meta.prestigeRank}회 {MSG.UI_PRESTIGE_COMPLETE}</p>
                 )}
+            </div>
+
+            <div data-testid="readability-settings" className="rounded-[1rem] border border-[#7dd4d8]/18 bg-black/18 p-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-[#dff7f5] font-rajdhani tracking-[0.16em]">
+                        <Eye size={12} /> READABILITY
+                    </div>
+                    <span
+                        data-testid="readability-mode-current"
+                        className="rounded-full border border-white/8 bg-white/[0.04] px-2 py-1 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/80"
+                    >
+                        {readabilityMode}
+                    </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Readability mode">
+                    {(['standard', 'high'] as const).map((mode) => {
+                        const active = readabilityMode === mode;
+                        return (
+                            <Motion.button
+                                key={mode}
+                                type="button"
+                                whileTap={{ scale: 0.98 }}
+                                data-testid={`readability-mode-${mode}`}
+                                aria-pressed={active}
+                                onClick={() => handleSetReadabilityMode(mode)}
+                                className={`min-h-[42px] rounded-full border px-3 text-[10px] font-fira font-bold uppercase tracking-[0.14em] transition-colors ${
+                                    active
+                                        ? 'border-[#7dd4d8]/34 bg-[#7dd4d8]/16 text-[#dff7f5] shadow-[0_0_0_1px_rgba(125,212,216,0.12)]'
+                                        : 'border-white/8 bg-black/20 text-slate-300/78 hover:border-white/14 hover:bg-white/[0.05]'
+                                }`}
+                            >
+                                {mode === 'high' ? 'High Readability' : 'Standard'}
+                            </Motion.button>
+                        );
+                    })}
+                </div>
             </div>
 
             <div className="rounded-[1rem] border border-white/8 bg-black/18 p-3">

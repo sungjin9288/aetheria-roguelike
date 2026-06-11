@@ -25,6 +25,23 @@ test('post combat analysis flags risky wins and recovery actions', () => {
     assert.ok(analysis.rewardHighlights.some((entry) => entry.includes('ELITE')));
 });
 
+test('post combat analysis respects explicit hp/mp flags when ratios are absent', () => {
+    const analysis = getPostCombatAnalysis({
+        enemy: '테스트 골렘',
+        exp: 22,
+        gold: 18,
+        items: ['룬 마도서', '강철 롱소드'],
+        hpLow: false,
+        mpLow: false,
+    });
+
+    assert.equal(analysis.grade, '완승');
+    assert.ok(
+        analysis.actions.some((action) => action.includes('다음 지역')),
+        'explicit non-low flags should not fall back to recovery copy'
+    );
+});
+
 test('run summary analysis recommends a next-run focus from weak runs', () => {
     const analysis = getRunSummaryAnalysis({
         level: 9,

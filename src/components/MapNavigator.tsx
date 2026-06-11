@@ -89,17 +89,23 @@ const MapNavigator = ({ player, grave, stats }: any) => {
         || visibleEntries[0]
         || null;
     const visibleRecommendations = moveRecommendations.slice(0, 3);
+    const primaryRoute = visibleRecommendations[0] || null;
+    const blindMap = player?.challengeModifiers?.includes('blindMap');
+    const currentName = blindMap ? '???' : player?.loc;
+    const currentLevelLabel = currentMap?.level === 'infinite'
+        ? 'Abyss'
+        : `Lv.${currentMap?.minLv ?? currentMap?.level ?? 1}`;
     const statusCounts = visibleEntries.reduce((acc: any, entry: any) => {
         acc[entry.state] += 1;
         return acc;
     }, { unexplored: 0, exploring: 0, completed: 0 });
 
     return (
-        <div className="rounded-[1rem] border border-white/8 bg-black/18 backdrop-blur-md space-y-3 p-3">
+        <div className="aether-readable-surface rounded-[1rem] space-y-3 p-3">
             <div className="flex items-center justify-between gap-3">
                 <div>
-                    <div className="text-slate-500 text-xs font-fira tracking-[0.18em] uppercase">Atlas Map</div>
-                    <div className="mt-0.5 text-[11px] font-fira text-slate-300/72">도감 기준으로 맵 진행 상태를 표시합니다.</div>
+                    <div className="aether-label">Atlas Map</div>
+                    <div className="mt-0.5 text-[12px] font-readable text-slate-300/82">현재 위치와 다음 경로를 우선 표시합니다.</div>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <SignalBadge tone="neutral" size="sm">미탐험 {statusCounts.unexplored}</SignalBadge>
@@ -108,14 +114,51 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                 </div>
             </div>
 
-            <div className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-3 py-2 text-[11px] font-fira text-slate-300/80">
-                현재 위치 <span className="ml-1 font-semibold text-[#dff7f5]">{player?.loc}</span>
-                <span className="ml-2 text-slate-500">이동 경로와 도감 완성도를 한 화면에서 확인합니다.</span>
+            <div
+                data-testid="map-current-location-card"
+                className="aether-map-current-card rounded-[1rem] px-3 py-3"
+            >
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.85rem] border border-[#7dd4d8]/30 bg-black/24 text-[#dff7f5]">
+                                <MapPin size={15} />
+                            </span>
+                            <div className="min-w-0">
+                                <div className="aether-label text-[#b9f1ec]/72">Current Position</div>
+                                <div className="mt-0.5 truncate font-readable text-[15px] font-semibold text-white">{currentName}</div>
+                            </div>
+                        </div>
+                        <div className="mt-2 line-clamp-2 font-readable text-[12px] leading-snug text-slate-200/82">
+                            {currentMap?.desc || '현재 지역 정보를 불러오는 중입니다.'}
+                        </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                        <div className="font-fira text-[9px] uppercase tracking-[0.08em] text-slate-300/72">
+                            {currentMap?.type === 'safe' ? 'Safe Zone' : currentMap?.boss ? 'Boss Field' : 'Field'}
+                        </div>
+                        <div className="mt-1 font-fira text-[12px] font-semibold text-[#dff7f5]">{currentLevelLabel}</div>
+                    </div>
+                </div>
+                {primaryRoute && (
+                    <button
+                        type="button"
+                        data-testid="map-primary-route"
+                        onClick={() => setSelectedMapName(primaryRoute.name)}
+                        className="mt-3 flex w-full items-center justify-between gap-2 rounded-[0.9rem] border border-[#7dd4d8]/22 bg-black/20 px-2.5 py-2 text-left"
+                    >
+                        <div className="min-w-0">
+                            <div className="aether-label text-slate-400/76">Recommended Route</div>
+                            <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-[#dff7f5]">{primaryRoute.name}</div>
+                        </div>
+                        <SignalBadge tone="recommended" size="sm">{primaryRoute.badge}</SignalBadge>
+                    </button>
+                )}
             </div>
 
             {visibleRecommendations.length > 0 && (
                 <div className="rounded-[0.95rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/8 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
+                    <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.08em]">
                         <span className="text-slate-400">추천 경로</span>
                         <span className="text-[#dff7f5]">{visibleRecommendations[0].name}</span>
                     </div>
@@ -187,7 +230,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                                 key={entry.name}
                                                 type="button"
                                                 onClick={() => setSelectedMapName(entry.name)}
-                                                className={`w-full rounded-[1rem] border px-3 py-2.5 text-left shadow-[0_10px_22px_rgba(3,8,16,0.16)] transition-all ${theme.card} ${isSelected ? 'ring-1 ring-[#d5b180]/40' : 'hover:border-white/14'}`}
+                                                className={`aether-map-node ${isCurrent ? 'is-current' : ''} w-full rounded-[0.95rem] px-3 py-2.5 text-left shadow-[0_10px_22px_rgba(3,8,16,0.16)] transition-all ${theme.card} ${isSelected ? 'ring-1 ring-[#d5b180]/40' : 'hover:border-white/14'}`}
                                             >
                                                 <div className="flex items-center justify-between gap-2">
                                                     <div className="flex items-center gap-2 min-w-0">

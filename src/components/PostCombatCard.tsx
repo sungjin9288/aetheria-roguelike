@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Sword, Package, X, Radar, Sparkles } from 'lucide-react';
-import { getPostCombatAnalysis } from '../utils/outcomeAnalysis';
+import { getPostCombatAnalysis, getPostCombatDecisionStrip } from '../utils/outcomeAnalysis';
 import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 
@@ -82,6 +82,10 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
         ? `${nonSignatureLoot.slice(0, 2).join(' · ')}${nonSignatureLoot.length > 2 ? ` 외 ${nonSignatureLoot.length - 2}` : ''}`
         : null;
     const summaryBadges = analysis.rewardHighlights.slice(0, 2);
+    const decisionStrip = getPostCombatDecisionStrip(result, {
+        signatureLootCount: signatureLoot.length,
+        nonSignatureLootCount: nonSignatureLoot.length,
+    });
 
     const shellClass = 'inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.8rem)] rounded-[1.55rem]';
 
@@ -184,11 +188,31 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                             <button
                                 data-testid="post-combat-close"
                                 onClick={handleClose}
-                                className="rounded-full border border-white/8 bg-black/18 p-2 text-slate-300/76 transition-colors hover:bg-white/[0.04] hover:text-white"
+                                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/8 bg-black/18 p-2 text-slate-300/76 transition-colors hover:bg-white/[0.04] hover:text-white"
                             >
                                 <X size={14} />
                             </button>
                         </div>
+
+                        <section
+                            data-testid="post-combat-decision-strip"
+                            data-result-tone={decisionStrip.tone}
+                            aria-label="전투 결과 판단 요약"
+                            className="aether-result-strip rounded-lg px-3 py-2"
+                        >
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {decisionStrip.cells.map((cell) => (
+                                    <div key={cell.label} className="aether-result-cell rounded-lg px-2 py-1.5">
+                                        <div className="font-fira text-[7px] font-bold uppercase tracking-[0.1em] text-slate-400/78">
+                                            {cell.label}
+                                        </div>
+                                        <div className="mt-0.5 line-clamp-2 font-readable text-[10px] font-semibold leading-[1.15] text-slate-100/90">
+                                            {cell.value}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
 
                         <div className="grid grid-cols-2 gap-2">
                             <div className={`rounded-[1rem] border px-3 py-2.5 ${METRIC_CARD_CLASS.exp}`}>

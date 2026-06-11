@@ -45,7 +45,7 @@ test('cycle 581: QuickSlot signature에서 slots default 0건', async () => {
 
 test('cycle 581: 정합성 가드 — TerminalView callsite 보존', async () => {
     const source = await readSrc('src/components/TerminalView.tsx');
-    assert.ok(/<QuickSlot[\s\S]*?slots=\{quickSlots\}/.test(source),
+    assert.ok(/<QuickSlot[\s\S]*?slots=\{quickSlots(?: \|\| \[\])?\}/.test(source),
         'TerminalView <QuickSlot slots={quickSlots} /> callsite 보존');
 });
 

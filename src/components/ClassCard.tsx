@@ -39,16 +39,18 @@ const ClassCard = ({ jobName, onSelect, disabled }: any) => {
 
     const tier = jobData.tier || 0;
     const skillCount = jobData.skills?.filter((s: any) => !s.passive)?.length || 0;
+    const reqLv = jobData.reqLv || 1;
 
     return (
         <Motion.button
+            data-testid="job-change-option"
             whileHover={{ scale: disabled ? 1 : 1.02, y: disabled ? 0 : -1 }}
             whileTap={{ scale: disabled ? 1 : 0.97 }}
             onClick={() => !disabled && onSelect?.(jobName)}
             disabled={disabled}
             className={`group relative w-full rounded-[1.15rem] border p-3 text-left transition-all ${
                 disabled
-                    ? 'border-white/6 bg-cyber-dark/60 opacity-35 cursor-not-allowed'
+                    ? 'aether-locked-row cursor-not-allowed'
                     : 'border-cyber-purple/30 bg-cyber-dark/80 hover:border-cyber-purple/60 hover:bg-cyber-purple/8 hover:shadow-[0_0_24px_rgba(188,19,254,0.25)]'
             }`}
         >
@@ -79,13 +81,13 @@ const ClassCard = ({ jobName, onSelect, disabled }: any) => {
 
             {/* 하단 정보 */}
             <div className="flex items-center justify-between">
-                <span className="text-[9px] font-fira text-slate-500">{skillCount} skills</span>
+                <span className="text-[9px] font-fira text-slate-300/80">{skillCount} skills</span>
                 <span className={`text-[9px] font-fira px-2 py-0.5 rounded-full border ${
                     disabled
-                        ? 'border-white/8 text-slate-500 bg-black/20'
+                        ? 'aether-lock-note'
                         : 'border-cyber-blue/30 text-cyber-blue bg-cyber-blue/10'
                 }`}>
-                    {MSG.CLASS_REQ_LEVEL(jobData.reqLv || 1)}
+                    {disabled ? `잠금 · ${MSG.CLASS_REQ_LEVEL(reqLv)}` : MSG.CLASS_REQ_LEVEL(reqLv)}
                 </span>
             </div>
         </Motion.button>

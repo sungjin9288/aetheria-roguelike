@@ -7,6 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        readable: ['var(--aether-readable-font)'],
         rajdhani: ['Rajdhani', 'sans-serif'],
         fira: ['"Fira Code"', 'monospace'],
       },

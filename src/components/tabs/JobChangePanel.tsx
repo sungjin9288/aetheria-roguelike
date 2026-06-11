@@ -25,9 +25,9 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
 
   return (
     <Motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={false}
       animate={{ opacity: 1, scale: 1 }}
-      className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] border border-[#9a8ac0]/18 px-4 py-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-2xl"
+      className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] border border-[#9a8ac0]/18 px-4 py-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
     >
       <FocusPanelHeader
         eyebrow="Class Circuit"
@@ -35,6 +35,7 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
         meta={`현재 ${player.job} · 다음 전직 ${avail.length || 0}개`}
         onBack={() => setGameState?.('idle')}
         backLabel="복귀"
+        backTestId="job-change-close"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}
         archiveLabel="INV"

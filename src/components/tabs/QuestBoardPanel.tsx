@@ -27,22 +27,71 @@ const getQuestProgressPercent = (progress: any, goal: any) => Math.min(100, (Mat
 
 // cycle 428: default accent 값 제거 — 4 호출자 모두 명시 전달이라 default 도달
 //   불가. ternary fallback (green/amber/else) 분기는 그대로 활성.
-const RewardChips = ({ reward, accent }: any) => {
+// slice 20: inline 모드 추가 — 추천 오퍼레이션 카드에서 메타 칩(Lv/빌드/지역)
+//   줄과 보상 칩 줄이 분리되어 'Lv 칩 한 줄 + 보상 칩 한 줄'로 어색하게 떠 보이던
+//   문제. inline이면 부모 flex row에 칩만 합류한다.
+const RewardChips = ({ reward, accent, inline = false }: any) => {
   const rewards = formatRewardParts(reward);
   if (!rewards.length) return null;
   const accentClass = accent === 'green'
-    ? 'border-cyber-green/30 bg-cyber-green/10 text-cyber-green'
+    ? 'border-emerald-300/22 bg-emerald-300/8 text-emerald-100'
     : accent === 'amber'
-      ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
-      : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue';
+      ? 'border-[#d5b180]/24 bg-[#d5b180]/8 text-[#f6e7c8]'
+      : 'border-[#7dd4d8]/18 bg-[#7dd4d8]/8 text-[#dff7f5]';
+  const chips = rewards.map((entry: any) => (
+    <span key={`${accent}_${entry}`} className={`rounded-full border px-2 py-1 text-[10px] font-readable ${accentClass}`}>{entry}</span>
+  ));
+  if (inline) return <>{chips}</>;
   return (
-    <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-fira">
-      {rewards.map((entry: any) => (
-        <span key={`${accent}_${entry}`} className={`px-2 py-1 rounded border ${accentClass}`}>{entry}</span>
-      ))}
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {chips}
     </div>
   );
 };
+
+const OperationBriefRows = ({ brief }: any) => {
+  if (!brief) return null;
+
+  const rows = [
+    { label: 'ROUTE', value: brief.route },
+    { label: 'RISK', value: `${brief.riskLabel} · ${brief.riskDetail}` },
+    { label: 'PAYOFF', value: brief.payoff },
+    { label: 'RETURN', value: brief.extraction },
+  ];
+
+  return (
+    <div className="mt-3">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <div className="aether-label">{brief.label}</div>
+        <SignalBadge tone={brief.riskTone || 'neutral'} size="sm">{brief.riskLabel}</SignalBadge>
+      </div>
+      <div className="grid grid-cols-2 overflow-hidden rounded-[0.95rem] border border-white/8 bg-black/12">
+        {rows.map((row: any) => (
+          <div key={`${brief.route}_${row.label}`} className="aether-choice-cell px-2.5 py-2">
+            <div className="aether-label text-[8px]">{row.label}</div>
+            <div className="mt-0.5 break-words font-readable text-[11px] leading-snug text-slate-200/90">{row.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const QuestObjectiveLine = ({ children }: any) => (
+  <div className="font-readable text-[13px] leading-[1.42] text-slate-100/92">
+    {children}
+  </div>
+);
+
+const QuestRowShell = ({ children, kind, testId }: any) => (
+  <div
+    data-testid={testId}
+    data-quest-row-kind={kind}
+    className={`aether-choice-row rounded-[1.05rem] px-3 py-3 transition-colors hover:border-[#7dd4d8]/22 ${kind === 'reward' ? 'is-reward' : kind === 'bounty' ? 'is-bounty' : ''}`}
+  >
+    {children}
+  </div>
+);
 
 /**
  * QuestBoardPanel — 퀘스트 보드 패널 (진행 중 / 수락 가능 / 잠긴 임무)
@@ -83,16 +132,17 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
 
   return (
     <Motion.div
-      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-4"
+      initial={false} animate={{ opacity: 1, y: 0 }}
+      className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] p-3"
     >
       <FocusPanelHeader
         eyebrow="Mission Grid"
         title="MISSION TERMINAL"
-        titleClassName="flex items-center gap-2 text-[1.35rem]"
+        titleClassName="flex items-center gap-2 text-[1.15rem] leading-none"
         meta="진행 중 임무, 현상수배, 다음 수락 후보를 한 번에 점검합니다."
         onBack={() => setGameState?.('idle')}
         backLabel="복귀"
+        backTestId="quest-board-close"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}
         archiveLabel="INV"
@@ -100,55 +150,57 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
         rightSlot={<ScrollText size={18} className="text-[#f6e7c8]/78" />}
       />
       {/* 통계 헤더 */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-[1.2rem] aether-panel-core px-3 py-2.5 text-[11px] font-fira">
-        <span className="text-slate-300">현재 레벨 Lv.{player.level}</span>
-        <span className="text-[#dff7f5]">진행 중 {activeQuestEntries.length}</span>
-        <span className="text-[#ece5ff]">수락 가능 {availableQuestCount}</span>
-        <span className="text-[#f6e7c8]">보상 대기 {claimableQuestCount}</span>
+      <div className="mb-3 grid grid-cols-4 overflow-hidden rounded-[1rem] border border-white/8 bg-black/14 text-center">
+        <span className="px-2 py-2 font-readable text-[11px] text-slate-200">Lv.{player.level}</span>
+        <span className="border-l border-white/8 px-2 py-2 font-readable text-[11px] text-[#dff7f5]">진행 {activeQuestEntries.length}</span>
+        <span className="border-l border-white/8 px-2 py-2 font-readable text-[11px] text-[#ece5ff]">수락 {availableQuestCount}</span>
+        <span className="border-l border-white/8 px-2 py-2 font-readable text-[11px] text-[#f6e7c8]">보상 {claimableQuestCount}</span>
       </div>
       {/* 현상수배 */}
-      <div className="mb-4 rounded-[1.2rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.16),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.26)_0%,rgba(18,13,8,0.12)_100%)] p-3">
+      <div className="aether-choice-row is-bounty mb-3 rounded-[1.05rem] px-3 py-3">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="text-sm font-bold text-[#f6e7c8] font-rajdhani tracking-[0.16em]">현상수배 게시판</div>
-            <div className="mt-1 text-[11px] text-slate-300/72 font-fira">{bountyHelperText}</div>
+          <div className="min-w-0">
+            <div className="font-readable text-sm font-semibold text-[#f6e7c8]">현상수배 게시판</div>
+            <div className="mt-1 font-readable text-[12px] leading-[1.42] text-slate-200/78">{bountyHelperText}</div>
           </div>
           <Motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => actions.requestBounty()}
             disabled={!canRequestBounty}
-            className="min-h-[44px] shrink-0 rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 px-5 py-3 text-xs font-bold text-[#f6e7c8] transition-all hover:bg-[#d5b180]/16 disabled:cursor-not-allowed disabled:opacity-40"
+            className="aether-disabled-action min-h-[44px] shrink-0 rounded-[0.85rem] border border-[#d5b180]/28 bg-[#d5b180]/12 px-3 py-2 text-[11px] font-bold text-[#f6e7c8] transition-all hover:bg-[#d5b180]/16"
           >
             {bountyButtonLabel}
           </Motion.button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-5 custom-scrollbar pr-2">
+      <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1">
         {featuredOperations.length > 0 && (
           <section className="space-y-3">
-            <div className="flex items-center justify-between border-b border-[#7dd4d8]/18 pb-2">
-              <h3 className="text-sm font-bold text-[#dff7f5] font-rajdhani tracking-[0.18em]">추천 오퍼레이션</h3>
-              <span className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400">Run Composition</span>
+            <div className="flex items-center justify-between border-b border-white/8 pb-2">
+              <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">추천 오퍼레이션</h3>
+              <span className="aether-label">Run Composition</span>
             </div>
             <div className="grid gap-3">
               {featuredOperations.map((entry: any, index: any) => (
-                <div key={`featured_${entry.quest.id}`} className="rounded-[1.2rem] border border-[#7dd4d8]/16 bg-[radial-gradient(circle_at_top_right,rgba(125,212,216,0.14),transparent_24%),linear-gradient(180deg,rgba(12,19,29,0.96)_0%,rgba(7,12,18,0.92)_100%)] p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-[#7dd4d8]/70">
+                <QuestRowShell key={`featured_${entry.quest.id}`} kind="featured" testId="quest-decision-row">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="aether-label text-[#7dd4d8]/72">
                         {entry.meta.label}
                       </div>
-                      <div className="mt-1 text-lg font-rajdhani font-bold text-white">{entry.quest.title}</div>
+                      <div className="mt-0.5 truncate font-readable text-base font-semibold text-white">{entry.quest.title}</div>
+                      <QuestObjectiveLine>{getQuestObjectiveText(entry.quest)}</QuestObjectiveLine>
                     </div>
                     <SignalBadge tone={index === 0 ? 'recommended' : 'resonance'} size="sm">
                       {entry.meta.emphasis}
                     </SignalBadge>
                   </div>
-                  <div className="mt-2 text-[12px] font-fira leading-relaxed text-slate-300/86">
+                  <div className="mt-2 line-clamp-2 font-readable text-[12px] leading-[1.45] text-slate-300/86">
                     {entry.reason}
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
+                  <OperationBriefRows brief={entry.brief} />
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
                     <SignalBadge tone="neutral" size="sm">Lv.{entry.quest.minLv || 1}</SignalBadge>
                     {entry.quest.buildTag && (
                       <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
@@ -159,19 +211,17 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                     {entry.targetMaps[0] && (
                       <SignalBadge tone="upgrade" size="sm">{entry.targetMaps[0]}</SignalBadge>
                     )}
+                    <RewardChips reward={entry.quest.reward} accent="blue" inline />
                   </div>
-                  <div className="mt-3 text-[11px] font-fira text-slate-400">
-                    목표: {getQuestObjectiveText(entry.quest)}
-                  </div>
-                  <RewardChips reward={entry.quest.reward} accent="blue" />
                   <Motion.button
+                    data-testid="quest-board-start-operation"
                     whileTap={{ scale: 0.95 }}
                     onClick={() => actions.acceptQuest(entry.quest.id)}
-                    className="mt-4 min-h-[44px] w-full rounded-[1rem] border border-[#7dd4d8]/28 bg-[#7dd4d8]/10 px-4 py-3 text-xs font-bold text-[#dff7f5] transition-all hover:bg-[#7dd4d8]/16"
+                    className="mt-3 min-h-[44px] w-full rounded-[0.9rem] border border-[#7dd4d8]/28 bg-[#7dd4d8]/12 px-4 py-3 text-xs font-bold text-[#dff7f5] transition-all hover:bg-[#7dd4d8]/18"
                   >
                     START OPERATION
                   </Motion.button>
-                </div>
+                </QuestRowShell>
               ))}
             </div>
           </section>
@@ -179,17 +229,17 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
 
         {/* 진행 중 임무 */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between border-b border-cyber-green/20 pb-2">
-            <h3 className="text-sm font-bold text-cyber-green font-rajdhani tracking-[0.18em]">진행 중 임무</h3>
+          <div className="flex items-center justify-between border-b border-white/8 pb-2">
+            <h3 className="font-readable text-sm font-semibold text-emerald-100">진행 중 임무</h3>
           </div>
           {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry: any) => (
-            <div key={`active_${entry.id}`} className={`rounded-[1.2rem] border p-4 ${entry.isComplete ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10' : entry.isBounty ? 'border-[#d5b180]/22 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)]' : 'aether-panel-muted'}`}>
+            <QuestRowShell key={`active_${entry.id}`} kind={entry.isComplete ? 'reward' : entry.isBounty ? 'bounty' : 'active'} testId="quest-active-row">
               <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className={`font-bold font-rajdhani text-lg ${entry.isComplete ? 'text-cyber-green' : 'text-white'}`}>{entry.quest.title}</div>
-                    {entry.isBounty && <span className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-fira text-amber-300">현상수배</span>}
-                    {entry.isComplete && <span className="rounded border border-cyber-green/30 bg-cyber-green/10 px-2 py-0.5 text-[10px] font-fira text-cyber-green">보상 수령 가능</span>}
+                    <div className={`font-readable text-base font-semibold ${entry.isComplete ? 'text-emerald-100' : 'text-white'}`}>{entry.quest.title}</div>
+                    {entry.isBounty && <span className="rounded-full border border-[#d5b180]/28 bg-[#d5b180]/10 px-2 py-0.5 text-[10px] font-readable text-[#f6e7c8]">현상수배</span>}
+                    {entry.isComplete && <span className="rounded-full border border-emerald-300/24 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-readable text-emerald-100">보상 수령 가능</span>}
                     {entry.quest.buildTag && (
                       <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
                     )}
@@ -200,48 +250,51 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                       ) : null;
                     })()}
                   </div>
-                  <div className="mt-2 text-[12px] text-slate-300 font-fira">{getQuestObjectiveText(entry.quest)}</div>
+                  <div className="mt-1">
+                    <QuestObjectiveLine>{getQuestObjectiveText(entry.quest)}</QuestObjectiveLine>
+                  </div>
+                  <OperationBriefRows brief={entry.brief} />
                   <RewardChips reward={entry.quest.reward} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} />
                   <div className="mt-3">
-                    <div className="mb-1 flex items-center justify-between text-[10px] font-fira">
-                      <span className={entry.isComplete ? 'text-cyber-green' : 'text-cyber-blue/60'}>{getQuestProgressText(entry.quest, entry.progress)}</span>
-                      <span className="text-slate-500">{entry.progress}/{entry.quest.goal}</span>
+                    <div className="mb-1 flex items-center justify-between font-readable text-[10px]">
+                      <span className={entry.isComplete ? 'text-emerald-100' : 'text-[#dff7f5]/74'}>{getQuestProgressText(entry.quest, entry.progress)}</span>
+                      <span className="text-slate-400">{entry.progress}/{entry.quest.goal}</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-cyber-black/60">
-                      <div className={`h-full rounded-full transition-all ${entry.isComplete ? 'bg-cyber-green' : entry.isBounty ? 'bg-amber-400' : 'bg-cyber-blue'}`} style={{ width: `${getQuestProgressPercent(entry.progress, entry.quest.goal)}%` }} />
+                    <div className="h-1.5 overflow-hidden rounded-full bg-black/36">
+                      <div className={`h-full rounded-full transition-all ${entry.isComplete ? 'bg-emerald-300' : entry.isBounty ? 'bg-[#d5b180]' : 'bg-[#7dd4d8]'}`} style={{ width: `${getQuestProgressPercent(entry.progress, entry.quest.goal)}%` }} />
                     </div>
                   </div>
                 </div>
                 {entry.isComplete ? (
-                  <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-lg border border-cyber-green/40 bg-cyber-green px-5 py-3 text-xs font-bold text-cyber-black shadow-[0_0_15px_rgba(0,255,157,0.25)] transition-all hover:bg-emerald-400">
+                  <Motion.button data-testid="quest-board-claim-reward" whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-emerald-300/35 bg-emerald-300/16 px-5 py-3 text-xs font-bold text-emerald-100 transition-all hover:bg-emerald-300/22">
                     CLAIM REWARD
                   </Motion.button>
                 ) : (
-                  <div className="shrink-0 rounded-lg border border-slate-700 bg-cyber-black/40 px-4 py-3 text-[11px] font-fira text-slate-400">진행 중</div>
+                  <div className="shrink-0 rounded-[0.85rem] border border-white/8 bg-black/18 px-4 py-3 font-readable text-[11px] text-slate-300">진행 중</div>
                 )}
               </div>
-            </div>
+            </QuestRowShell>
           )) : (
-            <div className="rounded-lg border border-dashed border-cyber-green/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-rajdhani tracking-widest text-cyber-green/40">ACTIVE QUESTS: NONE</div>
+            <div className="rounded-[1rem] border border-dashed border-emerald-300/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-emerald-100/42">ACTIVE QUESTS: NONE</div>
           )}
         </section>
 
         {/* 수락 가능 임무 */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between border-b border-cyber-blue/20 pb-2">
-            <h3 className="text-sm font-bold text-cyber-blue font-rajdhani tracking-[0.18em]">전체 백로그</h3>
-            <span className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400">recommended set 제외</span>
+          <div className="flex items-center justify-between border-b border-white/8 pb-2">
+            <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">전체 백로그</h3>
+            <span className="aether-label">recommended set 제외</span>
           </div>
           {backlogQuestEntries.length > 0 ? backlogQuestEntries.map((entry: any) => {
             const quest = entry.quest;
             const resonance = entry.resonance.label ? entry.resonance : getTraitQuestResonance(quest, traitProfile);
             return (
-            <div key={`available_${quest.id}`} className="rounded-[1.2rem] border border-white/8 aether-panel-muted p-4 transition-colors hover:border-[#7dd4d8]/18">
+            <QuestRowShell key={`available_${quest.id}`} kind="available" testId="quest-decision-row">
               <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="font-bold text-white font-rajdhani text-lg">{quest.title}</div>
-                    <span className="rounded border border-cyber-purple/20 bg-cyber-purple/10 px-2 py-0.5 text-[10px] font-fira text-cyber-purple">Lv.{quest.minLv} 필요</span>
+                    <div className="font-readable text-base font-semibold text-white">{quest.title}</div>
+                    <span className="rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-2 py-0.5 text-[10px] font-readable text-[#ece5ff]">Lv.{quest.minLv} 필요</span>
                     {quest.buildTag && (
                       <SignalBadge tone="neutral" size="sm">{quest.buildLabel || quest.buildTag}</SignalBadge>
                     )}
@@ -253,39 +306,47 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                       <SignalBadge tone="upgrade" size="sm">{entry.targetMaps[0]}</SignalBadge>
                     )}
                   </div>
-                  <div className="mt-2 text-[12px] text-slate-300 font-fira">{getQuestObjectiveText(quest)}</div>
-                  <div className="mt-2 text-[11px] font-fira text-slate-400">{entry.reason}</div>
+                  <div className="mt-1">
+                    <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
+                  </div>
+                  <div className="mt-2 font-readable text-[12px] leading-[1.42] text-slate-300/82">{entry.reason}</div>
+                  <OperationBriefRows brief={entry.brief} />
                   <RewardChips reward={quest.reward} accent="blue" />
                 </div>
-                <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="min-h-[44px] shrink-0 rounded-lg border border-cyber-blue/40 bg-cyber-blue/10 px-5 py-3 text-xs font-bold text-cyber-blue transition-all hover:bg-cyber-blue/20">
+                <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-[#7dd4d8]/28 bg-[#7dd4d8]/12 px-5 py-3 text-xs font-bold text-[#dff7f5] transition-all hover:bg-[#7dd4d8]/18">
                   ACCEPT MISSION
                 </Motion.button>
               </div>
-            </div>
+            </QuestRowShell>
           );
           }) : (
-            <div className="rounded-lg border border-dashed border-cyber-blue/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-rajdhani tracking-widest text-cyber-blue/40">ACCEPTABLE QUESTS: NONE</div>
+            <div className="rounded-[1rem] border border-dashed border-[#7dd4d8]/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-[#dff7f5]/42">ACCEPTABLE QUESTS: NONE</div>
           )}
         </section>
 
         {/* 잠긴 임무 */}
         <section className="space-y-3">
-          <h3 className="text-sm font-bold text-purple-300 font-rajdhani tracking-[0.18em] border-b border-purple-500/20 pb-2">곧 열릴 임무</h3>
+          <h3 className="border-b border-white/8 pb-2 font-readable text-sm font-semibold text-[#ece5ff]">곧 열릴 임무</h3>
           {lockedQuestEntries.length > 0 ? lockedQuestEntries.map((quest: any) => (
-            <div key={`locked_${quest.id}`} className="rounded-[1.2rem] border border-white/8 aether-panel-muted p-4">
+            <div key={`locked_${quest.id}`} className="aether-locked-row rounded-[1.05rem] px-3 py-3">
               <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="font-bold text-slate-200 font-rajdhani text-lg">{quest.title}</div>
-                    <span className="rounded border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[10px] font-fira text-purple-300">Lv.{quest.minLv} 필요</span>
+                    <div className="font-readable text-base font-semibold text-slate-100">{quest.title}</div>
+                    <span className="aether-lock-note rounded-full px-2 py-0.5 text-[10px] font-readable">잠금 · Lv.{quest.minLv} 필요</span>
                   </div>
-                  <div className="mt-2 text-[12px] text-slate-300 font-fira">{getQuestObjectiveText(quest)}</div>
+                  <div className="mt-1">
+                    <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
+                  </div>
+                  <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
+                    현재 Lv.{player.level} 기준 아직 수락할 수 없습니다. 레벨을 올리면 이 임무가 백로그에 열립니다.
+                  </div>
                   <RewardChips reward={quest.reward} accent="blue" />
                 </div>
               </div>
             </div>
           )) : (
-            <div className="rounded-lg border border-dashed border-purple-500/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-rajdhani tracking-widest text-purple-300/40">LOCKED QUESTS: NONE</div>
+            <div className="rounded-[1rem] border border-dashed border-[#9a8ac0]/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-[#ece5ff]/42">LOCKED QUESTS: NONE</div>
           )}
         </section>
       </div>

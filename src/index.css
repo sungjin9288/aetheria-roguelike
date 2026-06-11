@@ -3,36 +3,54 @@
 @tailwind utilities;
 
 :root {
-  --aether-bg-0: #05070b;
-  --aether-bg-1: #0b1016;
-  --aether-bg-2: #141b24;
+  --aether-bg-0: #070a10;
+  --aether-bg-1: #111821;
+  --aether-bg-2: #1d2834;
   --aether-ink: #edf2f7;
-  --aether-muted: #95a6b5;
-  --aether-line: rgba(204, 224, 237, 0.12);
-  --aether-line-strong: rgba(227, 236, 244, 0.18);
+  --aether-muted: #a9b6c3;
+  --aether-line: rgba(219, 232, 241, 0.15);
+  --aether-line-strong: rgba(238, 244, 249, 0.22);
   --aether-cyan: #7dd4d8;
   --aether-cyan-soft: rgba(125, 212, 216, 0.12);
-  --aether-amber: #d5b180;
-  --aether-amber-soft: rgba(213, 177, 128, 0.12);
+  --aether-amber: #f0c36a;
+  --aether-amber-soft: rgba(240, 195, 106, 0.13);
+  --aether-gold: #f6d98c;
+  --aether-green: #83d6a3;
+  --aether-rose: #f27d9a;
+  --aether-blue: #82b7ff;
   --aether-violet: #9a8ac0;
-  --aether-shadow: rgba(3, 8, 16, 0.58);
+  --aether-shadow: rgba(4, 8, 16, 0.46);
+  --aether-readable-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --aether-display-font: Rajdhani, var(--aether-readable-font);
+  --aether-code-font: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --aether-readable-ink: #f4f7fb;
+  --aether-readable-muted: #bac6d1;
+  --aether-readable-faint: #8ea0b0;
+  --aether-readable-panel: rgba(18, 25, 33, 0.96);
+  --aether-readable-panel-strong: rgba(25, 34, 44, 0.97);
+  --aether-route: #7dd4d8;
+  --aether-route-strong: #b9f1ec;
+  --aether-warning: #f0c36a;
+  --aether-surface-glow: rgba(246, 217, 140, 0.08);
 }
 
 @layer base {
   html {
     background:
-      radial-gradient(circle at top left, rgba(213, 177, 128, 0.12), transparent 26%),
-      radial-gradient(circle at 78% 14%, rgba(125, 212, 216, 0.1), transparent 24%),
-      linear-gradient(180deg, #06080d 0%, #05070b 42%, #04060a 100%);
+      linear-gradient(145deg, rgba(240, 195, 106, 0.1) 0%, transparent 32%),
+      linear-gradient(215deg, rgba(125, 212, 216, 0.1) 0%, transparent 30%),
+      linear-gradient(180deg, #141923 0%, #091018 48%, #07090f 100%);
   }
 
   body {
-    @apply text-slate-200 font-rajdhani overflow-x-hidden selection:bg-cyan-200/20 selection:text-white;
+    @apply text-slate-200 font-readable overflow-x-hidden selection:bg-cyan-200/20 selection:text-white;
     background:
-      radial-gradient(circle at top left, rgba(213, 177, 128, 0.12), transparent 24%),
-      radial-gradient(circle at 82% 16%, rgba(125, 212, 216, 0.1), transparent 22%),
-      linear-gradient(180deg, var(--aether-bg-1) 0%, var(--aether-bg-0) 44%, #04060a 100%);
+      linear-gradient(150deg, rgba(246, 217, 140, 0.09) 0%, rgba(246, 217, 140, 0) 28%),
+      linear-gradient(220deg, rgba(125, 212, 216, 0.1) 0%, rgba(125, 212, 216, 0) 26%),
+      linear-gradient(180deg, var(--aether-bg-1) 0%, var(--aether-bg-0) 48%, #06080d 100%);
     color: var(--aether-ink);
+    font-feature-settings: "kern" 1;
+    letter-spacing: 0;
   }
 
   h1,
@@ -41,13 +59,15 @@
   h4,
   h5,
   h6 {
-    @apply font-bold tracking-wider uppercase;
+    font-family: var(--aether-display-font);
+    font-weight: 700;
+    letter-spacing: 0;
   }
 
   code,
   pre,
   .font-mono {
-    @apply font-fira;
+    font-family: var(--aether-code-font);
   }
 }
 
@@ -366,9 +386,9 @@
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(rgba(255, 255, 255, 0.11) 0.35px, transparent 0.45px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent 32%);
-  background-size: 5px 5px, 100% 100%;
+  background-size: 12px 12px, 100% 100%;
   opacity: 0.05;
   pointer-events: none;
   z-index: 0;
@@ -380,57 +400,579 @@
   inset: 0;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 16%, transparent 84%, rgba(125, 212, 216, 0.05)),
-    radial-gradient(circle at top left, rgba(213, 177, 128, 0.08), transparent 28%);
+    linear-gradient(145deg, rgba(246, 217, 140, 0.07), transparent 34%);
   pointer-events: none;
   z-index: 0;
 }
 
 .aether-surface {
-  background: linear-gradient(180deg, rgba(18, 24, 32, 0.88) 0%, rgba(8, 12, 18, 0.96) 100%);
+  background: linear-gradient(180deg, rgba(18, 25, 34, 0.94) 0%, rgba(8, 12, 18, 0.98) 100%);
   border: 1px solid var(--aether-line);
   box-shadow:
-    0 24px 60px var(--aether-shadow),
+    0 16px 38px rgba(3, 8, 16, 0.46),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(24px);
+  backdrop-filter: blur(16px);
 }
 
 .aether-surface-strong {
   background:
-    radial-gradient(circle at top left, rgba(213, 177, 128, 0.08), transparent 30%),
     linear-gradient(180deg, rgba(21, 28, 37, 0.94) 0%, rgba(8, 11, 17, 0.98) 100%);
   border: 1px solid var(--aether-line-strong);
   box-shadow:
-    0 28px 72px rgba(1, 6, 14, 0.6),
+    0 18px 44px rgba(1, 6, 14, 0.52),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(28px);
+  backdrop-filter: blur(18px);
 }
 
 .aether-panel-core {
   background:
-    radial-gradient(circle at 82% 12%, rgba(213, 177, 128, 0.14), transparent 22%),
-    radial-gradient(circle at top left, rgba(125, 212, 216, 0.11), transparent 34%),
-    linear-gradient(180deg, rgba(16, 22, 30, 0.94) 0%, rgba(6, 9, 14, 0.98) 100%);
-  border: 1px solid rgba(125, 212, 216, 0.16);
+    linear-gradient(135deg, rgba(246, 217, 140, 0.1) 0%, rgba(246, 217, 140, 0) 30%),
+    linear-gradient(215deg, rgba(125, 212, 216, 0.1) 0%, rgba(125, 212, 216, 0) 34%),
+    linear-gradient(180deg, rgba(28, 37, 48, 0.96) 0%, rgba(12, 17, 24, 0.98) 100%);
+  border: 1px solid rgba(218, 232, 241, 0.15);
   box-shadow:
-    0 18px 44px rgba(1, 6, 14, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 18px 40px rgba(1, 6, 14, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.075);
 }
 
 .aether-panel-muted {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.015) 100%),
-    linear-gradient(180deg, rgba(10, 14, 20, 0.88) 0%, rgba(5, 8, 12, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.058) 0%, rgba(255, 255, 255, 0.022) 100%),
+    linear-gradient(180deg, rgba(20, 27, 36, 0.9) 0%, rgba(9, 13, 19, 0.96) 100%);
+  border: 1px solid rgba(238, 244, 249, 0.12);
   box-shadow:
-    0 14px 30px rgba(1, 6, 14, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 14px 26px rgba(1, 6, 14, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.aether-focus-panel {
+  background:
+    linear-gradient(135deg, rgba(246, 217, 140, 0.08) 0%, rgba(246, 217, 140, 0) 28%),
+    linear-gradient(180deg, rgba(32, 42, 54, 0.98) 0%, rgba(12, 17, 24, 0.995) 100%);
+  border: 1px solid rgba(238, 244, 249, 0.22);
+  box-shadow:
+    0 20px 44px rgba(1, 6, 14, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 0 0 1px rgba(246, 217, 140, 0.035);
+  backdrop-filter: blur(8px);
+}
+
+.aether-focus-panel .aether-label {
+  color: rgba(218, 229, 238, 0.9);
+}
+
+.aether-focus-panel .aether-panel-core,
+.aether-focus-panel .aether-panel-muted {
+  border-color: rgba(238, 244, 249, 0.16);
+}
+
+.aether-event-choice {
+  background:
+    linear-gradient(90deg, rgba(213, 177, 128, 0.11) 0%, rgba(17, 22, 30, 0.96) 36%, rgba(8, 12, 18, 0.99) 100%);
+  border: 1px solid rgba(213, 177, 128, 0.18);
+  box-shadow:
+    inset 3px 0 0 rgba(213, 177, 128, 0.58),
+    0 12px 24px rgba(2, 8, 14, 0.2);
+}
+
+.aether-craft-row {
+  background:
+    linear-gradient(90deg, rgba(251, 146, 60, 0.11) 0%, rgba(18, 23, 30, 0.96) 34%, rgba(8, 11, 16, 0.99) 100%);
+  border: 1px solid rgba(251, 146, 60, 0.18);
+  box-shadow:
+    inset 3px 0 0 rgba(251, 146, 60, 0.56),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-locked-row {
+  border: 1px solid rgba(244, 165, 202, 0.2);
+  background:
+    linear-gradient(90deg, rgba(244, 114, 182, 0.1) 0%, rgba(18, 21, 28, 0.96) 34%, rgba(8, 12, 18, 0.99) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(244, 165, 202, 0.52),
+    0 10px 22px rgba(2, 8, 14, 0.18);
+}
+
+.aether-lock-note {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  border: 1px solid rgba(244, 165, 202, 0.22);
+  background: rgba(244, 114, 182, 0.1);
+  color: rgba(255, 219, 234, 0.94);
+}
+
+.aether-disabled-action:disabled {
+  border-color: rgba(244, 165, 202, 0.26);
+  background: rgba(244, 114, 182, 0.1);
+  color: rgba(255, 219, 234, 0.94);
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 .aether-pill {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(238, 244, 249, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
   backdrop-filter: blur(16px);
+}
+
+.aether-readable-copy {
+  font-family: var(--aether-readable-font);
+  letter-spacing: 0;
+  line-height: 1.48;
+}
+
+.aether-label {
+  font-family: var(--aether-code-font);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--aether-readable-muted);
+}
+
+.aether-readable-surface {
+  background:
+    linear-gradient(180deg, rgba(30, 40, 52, 0.95) 0%, rgba(12, 17, 24, 0.98) 100%);
+  border: 1px solid rgba(238, 244, 249, 0.15);
+  box-shadow:
+    0 14px 30px rgba(3, 8, 16, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.aether-status-shell {
+  background:
+    linear-gradient(135deg, rgba(246, 217, 140, 0.1) 0%, rgba(246, 217, 140, 0) 32%),
+    linear-gradient(180deg, rgba(34, 45, 57, 0.98) 0%, rgba(10, 15, 22, 0.995) 100%);
+  border: 1px solid rgba(246, 217, 140, 0.22);
+  box-shadow:
+    0 12px 26px rgba(2, 7, 14, 0.28),
+    0 0 0 1px rgba(125, 212, 216, 0.035),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.aether-status-shell::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.08) 0%, transparent 44%, rgba(131, 214, 163, 0.055) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 54%);
+}
+
+.aether-status-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aether-status-metric {
+  border: 1px solid rgba(238, 244, 249, 0.13);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.026));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 6px 14px rgba(1, 6, 14, 0.13);
+}
+
+.aether-log-panel {
+  background:
+    linear-gradient(135deg, rgba(125, 212, 216, 0.07) 0%, rgba(125, 212, 216, 0) 34%),
+    linear-gradient(180deg, rgba(28, 37, 48, 0.95) 0%, rgba(10, 14, 21, 0.98) 100%);
+  border: 1px solid rgba(238, 244, 249, 0.16);
+  box-shadow:
+    0 12px 28px rgba(2, 7, 14, 0.27),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.aether-log-row {
+  border: 1px solid rgba(238, 244, 249, 0.11);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.058) 0%, rgba(255, 255, 255, 0.024) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 4px 12px rgba(2, 7, 14, 0.12);
+}
+
+.aether-log-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1rem;
+  border-radius: 999px;
+  padding: 0.0625rem 0.375rem;
+  font-family: var(--aether-code-font);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.aether-mission-strip {
+  border: 1px solid rgba(125, 212, 216, 0.3);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.18) 0%, rgba(26, 36, 47, 0.95) 36%, rgba(11, 16, 23, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(125, 212, 216, 0.82),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-decision-cell {
+  min-width: 0;
+  border: 1px solid rgba(238, 244, 249, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.024));
+}
+
+.aether-combat-forecast {
+  border: 1px solid rgba(244, 165, 202, 0.3);
+  background:
+    linear-gradient(90deg, rgba(242, 125, 154, 0.18) 0%, rgba(31, 25, 34, 0.96) 34%, rgba(11, 14, 21, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(244, 165, 202, 0.82),
+    0 10px 22px rgba(2, 8, 14, 0.18);
+}
+
+.aether-combat-forecast[data-forecast-tone="advantage"] {
+  border-color: rgba(151, 231, 192, 0.34);
+  background:
+    linear-gradient(90deg, rgba(131, 214, 163, 0.2) 0%, rgba(18, 32, 27, 0.96) 34%, rgba(9, 13, 17, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(151, 231, 192, 0.84),
+    0 10px 22px rgba(2, 8, 14, 0.18);
+}
+
+.aether-combat-forecast[data-forecast-tone="reward"] {
+  border-color: rgba(246, 217, 140, 0.38);
+  background:
+    linear-gradient(90deg, rgba(246, 217, 140, 0.2) 0%, rgba(34, 27, 17, 0.96) 34%, rgba(13, 11, 8, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(246, 217, 140, 0.86),
+    0 10px 22px rgba(2, 8, 14, 0.18);
+}
+
+.aether-combat-forecast[data-forecast-tone="steady"] {
+  border-color: rgba(125, 212, 216, 0.34);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.18) 0%, rgba(17, 30, 37, 0.96) 34%, rgba(9, 13, 18, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(125, 212, 216, 0.82),
+    0 10px 22px rgba(2, 8, 14, 0.18);
+}
+
+.aether-combat-forecast-cell {
+  min-width: 0;
+  border: 1px solid rgba(238, 244, 249, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.024));
+}
+
+.aether-action-button,
+.aether-combat-action {
+  border: 1px solid rgba(238, 244, 249, 0.13);
+  background:
+    linear-gradient(135deg, rgba(246, 217, 140, 0.08) 0%, rgba(246, 217, 140, 0) 30%),
+    linear-gradient(180deg, rgba(31, 42, 54, 0.96) 0%, rgba(10, 15, 22, 0.98) 100%);
+  color: #f5f9fc;
+  box-shadow:
+    0 10px 22px rgba(1, 6, 14, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.aether-action-button:hover:not(:disabled),
+.aether-combat-action:hover:not(:disabled),
+.aether-action-button:focus-visible,
+.aether-combat-action:focus-visible {
+  border-color: rgba(246, 217, 140, 0.34);
+  box-shadow:
+    0 12px 26px rgba(1, 6, 14, 0.24),
+    0 0 0 1px rgba(246, 217, 140, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.aether-action-icon,
+.aether-combat-action-icon {
+  border: 1px solid rgba(238, 244, 249, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.026));
+  color: #ffffff;
+}
+
+.aether-result-strip {
+  border: 1px solid rgba(125, 212, 216, 0.2);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.12) 0%, rgba(15, 24, 31, 0.94) 34%, rgba(7, 10, 15, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(125, 212, 216, 0.64),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-result-strip[data-result-tone="pressure"] {
+  border-color: rgba(244, 165, 202, 0.22);
+  background:
+    linear-gradient(90deg, rgba(244, 114, 182, 0.12) 0%, rgba(28, 17, 24, 0.94) 34%, rgba(8, 10, 15, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(244, 165, 202, 0.68),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-result-strip[data-result-tone="reward"] {
+  border-color: rgba(238, 202, 148, 0.28);
+  background:
+    linear-gradient(90deg, rgba(213, 177, 128, 0.14) 0%, rgba(30, 23, 15, 0.94) 34%, rgba(10, 8, 6, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(238, 202, 148, 0.74),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-result-strip[data-result-tone="advantage"] {
+  border-color: rgba(151, 231, 192, 0.24);
+  background:
+    linear-gradient(90deg, rgba(125, 216, 175, 0.14) 0%, rgba(15, 27, 24, 0.94) 34%, rgba(7, 11, 14, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(151, 231, 192, 0.72),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-result-cell {
+  min-width: 0;
+  border: 1px solid rgba(212, 227, 239, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.aether-relic-decision-strip {
+  border: 1px solid rgba(125, 212, 216, 0.2);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.12) 0%, rgba(15, 24, 31, 0.94) 34%, rgba(7, 10, 15, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(125, 212, 216, 0.64),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-relic-decision-strip[data-relic-tone="legendary"] {
+  border-color: rgba(251, 113, 133, 0.28);
+  background:
+    linear-gradient(90deg, rgba(251, 113, 133, 0.14) 0%, rgba(31, 17, 23, 0.94) 34%, rgba(10, 8, 10, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(251, 113, 133, 0.72),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-relic-decision-strip[data-relic-tone="synergy"] {
+  border-color: rgba(151, 231, 192, 0.24);
+  background:
+    linear-gradient(90deg, rgba(125, 216, 175, 0.14) 0%, rgba(15, 27, 24, 0.94) 34%, rgba(7, 11, 14, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(151, 231, 192, 0.72),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-relic-decision-strip[data-relic-tone="potential"] {
+  border-color: rgba(238, 202, 148, 0.28);
+  background:
+    linear-gradient(90deg, rgba(213, 177, 128, 0.14) 0%, rgba(30, 23, 15, 0.94) 34%, rgba(10, 8, 6, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(238, 202, 148, 0.74),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-relic-decision-cell {
+  min-width: 0;
+  border: 1px solid rgba(212, 227, 239, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.aether-relic-card-recommended {
+  border-color: rgba(238, 202, 148, 0.42) !important;
+  box-shadow:
+    inset 3px 0 0 rgba(238, 202, 148, 0.76),
+    0 18px 36px rgba(2, 8, 14, 0.32) !important;
+}
+
+.aether-run-reflection-strip {
+  border: 1px solid rgba(125, 212, 216, 0.2);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.12) 0%, rgba(15, 24, 31, 0.94) 34%, rgba(7, 10, 15, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(125, 212, 216, 0.64),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-run-reflection-strip[data-run-tone="pressure"] {
+  border-color: rgba(244, 165, 202, 0.24);
+  background:
+    linear-gradient(90deg, rgba(244, 114, 182, 0.13) 0%, rgba(28, 17, 24, 0.94) 34%, rgba(8, 10, 15, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(244, 165, 202, 0.72),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-run-reflection-strip[data-run-tone="growth"] {
+  border-color: rgba(238, 202, 148, 0.28);
+  background:
+    linear-gradient(90deg, rgba(213, 177, 128, 0.14) 0%, rgba(30, 23, 15, 0.94) 34%, rgba(10, 8, 6, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(238, 202, 148, 0.74),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-run-reflection-strip[data-run-tone="breakthrough"] {
+  border-color: rgba(151, 231, 192, 0.24);
+  background:
+    linear-gradient(90deg, rgba(125, 216, 175, 0.14) 0%, rgba(15, 27, 24, 0.94) 34%, rgba(7, 11, 14, 0.98) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(151, 231, 192, 0.72),
+    0 10px 22px rgba(2, 8, 14, 0.2);
+}
+
+.aether-run-reflection-cell {
+  min-width: 0;
+  border: 1px solid rgba(212, 227, 239, 0.08);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.aether-choice-row {
+  border: 1px solid rgba(238, 244, 249, 0.14);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.13) 0%, rgba(24, 34, 45, 0.95) 34%, rgba(10, 15, 22, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(125, 212, 216, 0.72),
+    0 10px 22px rgba(2, 8, 14, 0.18);
+}
+
+.aether-choice-row.is-reward {
+  border-color: rgba(131, 214, 163, 0.3);
+  background:
+    linear-gradient(90deg, rgba(131, 214, 163, 0.18) 0%, rgba(18, 31, 27, 0.95) 34%, rgba(9, 13, 17, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(131, 214, 163, 0.82),
+    0 10px 22px rgba(2, 8, 14, 0.18);
+}
+
+.aether-choice-row.is-bounty {
+  border-color: rgba(246, 217, 140, 0.34);
+  background:
+    linear-gradient(90deg, rgba(246, 217, 140, 0.17) 0%, rgba(34, 27, 17, 0.95) 34%, rgba(13, 11, 8, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(246, 217, 140, 0.82),
+    0 10px 22px rgba(2, 8, 14, 0.18);
+}
+
+.aether-choice-cell {
+  min-width: 0;
+  border-top: 1px solid rgba(238, 244, 249, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.022));
+}
+
+.aether-shop-row {
+  border: 1px solid rgba(238, 244, 249, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.02) 100%),
+    linear-gradient(90deg, rgba(246, 217, 140, 0.12) 0%, rgba(25, 34, 44, 0.95) 34%, rgba(10, 15, 22, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(246, 217, 140, 0.68),
+    0 10px 20px rgba(2, 8, 14, 0.16);
+}
+
+.aether-shop-row.is-blocked {
+  border-color: rgba(238, 244, 249, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.038) 0%, rgba(255, 255, 255, 0.014) 100%),
+    linear-gradient(90deg, rgba(242, 125, 154, 0.1) 0%, rgba(19, 23, 31, 0.95) 34%, rgba(10, 15, 22, 0.98) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(242, 125, 154, 0.48),
+    0 8px 18px rgba(2, 8, 14, 0.15);
+}
+
+.aether-shop-delta {
+  border: 1px solid rgba(238, 244, 249, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.024));
+}
+
+.aether-route-strip {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(125, 212, 216, 0.38);
+  background:
+    linear-gradient(135deg, rgba(246, 217, 140, 0.1) 0%, rgba(246, 217, 140, 0) 34%),
+    linear-gradient(90deg, rgba(125, 212, 216, 0.24) 0%, rgba(25, 37, 48, 0.94) 38%, rgba(9, 15, 22, 0.99) 100%);
+  box-shadow:
+    0 14px 28px rgba(2, 9, 16, 0.24),
+    inset 5px 0 0 rgba(185, 241, 236, 0.86),
+    inset 0 1px 0 rgba(255, 255, 255, 0.085);
+}
+
+.aether-route-strip::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 50%),
+    linear-gradient(90deg, transparent, rgba(131, 214, 163, 0.07));
+}
+
+.aether-route-strip > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aether-route-path {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.aether-route-path::before,
+.aether-route-path::after {
+  content: "";
+  height: 1px;
+  min-width: 1.25rem;
+  background: linear-gradient(90deg, rgba(125, 212, 216, 0.14), rgba(185, 241, 236, 0.72));
+}
+
+.aether-route-path::after {
+  background: linear-gradient(90deg, rgba(185, 241, 236, 0.72), rgba(213, 177, 128, 0.2));
+}
+
+.aether-map-current-card {
+  border: 1px solid rgba(125, 212, 216, 0.38);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.22) 0%, rgba(26, 37, 48, 0.95) 42%, rgba(10, 15, 22, 0.98) 100%);
+  box-shadow:
+    inset 5px 0 0 rgba(185, 241, 236, 0.92),
+    0 12px 24px rgba(3, 8, 16, 0.22);
+}
+
+.aether-map-route-card {
+  border: 1px solid rgba(238, 244, 249, 0.13);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.018)),
+    rgba(11, 16, 23, 0.78);
+}
+
+.aether-map-route-card.is-recommended {
+  border-color: rgba(125, 212, 216, 0.42);
+  background:
+    linear-gradient(180deg, rgba(125, 212, 216, 0.18) 0%, rgba(10, 16, 23, 0.9) 100%);
+}
+
+.aether-map-node {
+  border: 1px solid rgba(238, 244, 249, 0.13);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.aether-map-node.is-current {
+  border-color: rgba(125, 212, 216, 0.48);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.24) 0%, rgba(20, 30, 40, 0.95) 54%, rgba(9, 14, 21, 0.97) 100%);
+  box-shadow:
+    inset 4px 0 0 rgba(185, 241, 236, 0.92),
+    0 0 0 1px rgba(185, 241, 236, 0.08);
 }
 
 .aether-soft-grid {
@@ -590,4 +1132,146 @@
 /* 마우스/터치 시 포커스 링 숨김 */
 :focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Player-controlled high readability mode */
+[data-readability-mode="high"] {
+  --aether-readable-ink: #f8fbff;
+  --aether-readable-muted: #c3cfda;
+  --aether-readable-faint: #9fb0bf;
+  --aether-readable-panel: rgba(13, 18, 25, 0.99);
+  --aether-readable-panel-strong: rgba(18, 26, 36, 1);
+  color: var(--aether-readable-ink);
+}
+
+[data-readability-mode="high"] .panel-noise::before {
+  opacity: 0.012;
+  background-image: none;
+}
+
+[data-readability-mode="high"] .panel-noise::after {
+  opacity: 0.28;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 26%, transparent 74%, rgba(125, 212, 216, 0.035));
+}
+
+[data-readability-mode="high"] .aether-surface,
+[data-readability-mode="high"] .aether-surface-strong,
+[data-readability-mode="high"] .aether-focus-panel,
+[data-readability-mode="high"] .aether-readable-surface,
+[data-readability-mode="high"] .aether-status-shell,
+[data-readability-mode="high"] .aether-log-panel,
+[data-readability-mode="high"] .aether-action-button,
+[data-readability-mode="high"] .aether-combat-action {
+  background:
+    linear-gradient(180deg, rgba(21, 29, 39, 0.99) 0%, rgba(8, 12, 18, 1) 100%);
+  border-color: rgba(228, 238, 247, 0.2);
+  box-shadow:
+    0 10px 24px rgba(1, 6, 14, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: none;
+}
+
+[data-readability-mode="high"] .aether-log-row,
+[data-readability-mode="high"] .aether-decision-cell,
+[data-readability-mode="high"] .aether-combat-forecast-cell,
+[data-readability-mode="high"] .aether-result-cell,
+[data-readability-mode="high"] .aether-relic-decision-cell,
+[data-readability-mode="high"] .aether-run-reflection-cell,
+[data-readability-mode="high"] .aether-choice-cell,
+[data-readability-mode="high"] .aether-shop-delta,
+[data-readability-mode="high"] .aether-map-route-card,
+[data-readability-mode="high"] .aether-map-node,
+[data-readability-mode="high"] .aether-status-metric,
+[data-readability-mode="high"] .aether-action-icon,
+[data-readability-mode="high"] .aether-combat-action-icon {
+  border-color: rgba(228, 238, 247, 0.16);
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-readability-mode="high"] .aether-choice-row,
+[data-readability-mode="high"] .aether-craft-row,
+[data-readability-mode="high"] .aether-event-choice,
+[data-readability-mode="high"] .aether-combat-forecast,
+[data-readability-mode="high"] .aether-result-strip,
+[data-readability-mode="high"] .aether-relic-decision-strip,
+[data-readability-mode="high"] .aether-run-reflection-strip,
+[data-readability-mode="high"] .aether-shop-row,
+[data-readability-mode="high"] .aether-route-strip,
+[data-readability-mode="high"] .aether-map-current-card,
+[data-readability-mode="high"] .aether-map-node.is-current {
+  border-color: rgba(185, 241, 236, 0.34);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.16) 0%, rgba(17, 25, 34, 0.98) 34%, rgba(8, 12, 18, 1) 100%);
+  box-shadow:
+    inset 3px 0 0 rgba(185, 241, 236, 0.86),
+    0 8px 18px rgba(2, 8, 14, 0.22);
+}
+
+[data-readability-mode="high"] .aether-choice-row.is-reward {
+  border-color: rgba(151, 231, 192, 0.34);
+  background:
+    linear-gradient(90deg, rgba(125, 216, 175, 0.18) 0%, rgba(16, 29, 25, 0.98) 34%, rgba(7, 12, 15, 1) 100%);
+}
+
+[data-readability-mode="high"] .aether-choice-row.is-bounty {
+  border-color: rgba(238, 202, 148, 0.36);
+  background:
+    linear-gradient(90deg, rgba(213, 177, 128, 0.18) 0%, rgba(31, 23, 14, 0.98) 34%, rgba(11, 9, 7, 1) 100%);
+}
+
+[data-readability-mode="high"] .aether-shop-row.is-blocked {
+  border-color: rgba(244, 165, 202, 0.28);
+  background:
+    linear-gradient(90deg, rgba(244, 114, 182, 0.12) 0%, rgba(18, 21, 28, 0.98) 34%, rgba(8, 12, 18, 1) 100%);
+}
+
+[data-readability-mode="high"] .aether-locked-row {
+  border-color: rgba(244, 165, 202, 0.36);
+  background:
+    linear-gradient(90deg, rgba(244, 114, 182, 0.16) 0%, rgba(21, 23, 30, 0.99) 34%, rgba(8, 12, 18, 1) 100%);
+}
+
+[data-readability-mode="high"] .aether-lock-note,
+[data-readability-mode="high"] .aether-disabled-action:disabled {
+  border-color: rgba(255, 202, 224, 0.42);
+  background: rgba(244, 114, 182, 0.16);
+  color: #ffe8f2;
+}
+
+[data-readability-mode="high"] .animate-aurora,
+[data-readability-mode="high"] .animate-float-slow,
+[data-readability-mode="high"] [class*="blur-3xl"],
+[data-readability-mode="high"] [class*="blur-xl"] {
+  animation: none !important;
+  opacity: 0.24 !important;
+}
+
+[data-readability-mode="high"] .text-slate-500,
+[data-readability-mode="high"] .text-slate-400\/68,
+[data-readability-mode="high"] .text-slate-400\/70,
+[data-readability-mode="high"] .text-slate-400\/72,
+[data-readability-mode="high"] .text-slate-400\/76,
+[data-readability-mode="high"] .text-slate-400\/78,
+[data-readability-mode="high"] .text-slate-400\/80,
+[data-readability-mode="high"] .text-slate-400\/90,
+[data-readability-mode="high"] .text-slate-300\/72,
+[data-readability-mode="high"] .text-slate-300\/74,
+[data-readability-mode="high"] .text-slate-300\/76,
+[data-readability-mode="high"] .text-slate-300\/78,
+[data-readability-mode="high"] .text-slate-300\/80,
+[data-readability-mode="high"] .text-slate-300\/84,
+[data-readability-mode="high"] .text-slate-300\/86 {
+  color: rgba(226, 235, 244, 0.94) !important;
+}
+
+[data-readability-mode="high"] button:focus-visible,
+[data-readability-mode="high"] a:focus-visible,
+[data-readability-mode="high"] input:focus-visible,
+[data-readability-mode="high"] textarea:focus-visible,
+[data-readability-mode="high"] select:focus-visible,
+[data-readability-mode="high"] [role="button"]:focus-visible {
+  outline: 3px solid var(--aether-route-strong);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(125, 212, 216, 0.18);
 }

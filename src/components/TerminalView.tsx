@@ -8,37 +8,37 @@ import { GS } from '../reducers/gameStates';
 const LOG_STYLES: any = {
     combat: {
         text: 'text-rose-100 font-semibold',
-        bg: 'bg-[linear-gradient(90deg,rgba(148,73,103,0.20)_0%,rgba(38,16,26,0.08)_100%)] border-l-2 border-rose-300/45 pl-2.5',
+        bg: 'border-l-2 border-rose-300/50 bg-rose-500/8',
         icon: AlertTriangle,
     },
     critical: {
         text: 'text-red-200 font-bold',
-        bg: 'bg-red-950/28 border-l-2 border-red-300/55 pl-2.5',
+        bg: 'border-l-2 border-red-300/60 bg-red-500/10',
         icon: null,
     },
     story: {
-        text: 'text-slate-200/88 italic',
-        bg: 'bg-white/[0.025] border-l-2 border-white/10 pl-2.5',
+        text: 'text-slate-100/88',
+        bg: 'border-l-2 border-white/12 bg-white/[0.025]',
         icon: Bot,
     },
     system: {
         text: 'text-[#dff7f5] font-semibold',
-        bg: 'bg-[linear-gradient(90deg,rgba(125,212,216,0.16)_0%,rgba(16,25,29,0.06)_100%)] border-l-2 border-[#7dd4d8]/34 pl-2.5',
+        bg: 'border-l-2 border-[#7dd4d8]/40 bg-[#7dd4d8]/8',
         icon: Terminal,
     },
     error: {
         text: 'text-rose-200 font-bold',
-        bg: 'bg-red-950/24 border border-rose-300/22',
+        bg: 'border-l-2 border-rose-300/60 bg-red-500/10',
         icon: null,
     },
     success: {
         text: 'text-[#f6e7c8]',
-        bg: 'bg-[linear-gradient(90deg,rgba(213,177,128,0.16)_0%,rgba(30,20,10,0.08)_100%)] border-l-2 border-[#d5b180]/34 pl-2.5',
+        bg: 'border-l-2 border-[#d5b180]/42 bg-[#d5b180]/8',
         icon: CheckCircle,
     },
     event: {
-        text: 'text-[#ece5ff] font-rajdhani text-lg font-bold',
-        bg: 'bg-[linear-gradient(90deg,rgba(154,138,192,0.18)_0%,rgba(30,20,42,0.08)_100%)] border-l-2 border-[#9a8ac0]/34 pl-2.5',
+        text: 'text-[#ece5ff] font-semibold',
+        bg: 'border-l-2 border-[#9a8ac0]/42 bg-[#9a8ac0]/10',
         icon: null,
     },
     loading: {
@@ -48,12 +48,12 @@ const LOG_STYLES: any = {
     },
     warning: {
         text: 'text-amber-100',
-        bg: 'bg-[linear-gradient(90deg,rgba(213,177,128,0.12)_0%,rgba(32,20,8,0.08)_100%)] border-l-2 border-amber-300/34 pl-2.5',
+        bg: 'border-l-2 border-amber-300/42 bg-amber-400/8',
         icon: null,
     },
     legendary: {
-        text: 'text-[#f6e7a2] font-rajdhani font-bold text-base tracking-wide',
-        bg: 'bg-[linear-gradient(90deg,rgba(246,231,162,0.22)_0%,rgba(38,28,6,0.10)_100%)] border-l-2 border-[#f6e7a2]/65 pl-2.5',
+        text: 'text-[#f6e7a2] font-semibold',
+        bg: 'border-l-2 border-[#f6e7a2]/65 bg-[#f6e7a2]/10',
         icon: Sparkles,
     },
 };
@@ -73,6 +73,20 @@ const MOBILE_LOG_BADGES: any = {
 
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system', 'legendary']);
 const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
+
+// slice 20: 로그 핵심 숫자 강조 — 데미지/HP/보상 수치(+21, 16, 73/89, 35%)를
+//   본문보다 한 단계 밝고 굵게 렌더. "라벨보다 숫자가 먼저 읽혀야 한다"는
+//   readability 리서치 원칙의 로그 스트림 적용.
+const NUMBER_TOKEN_RE = /([+-]?\d[\d,.]*(?:\/\d[\d,.]*)?%?)/g;
+const renderLogText = (text: any) => {
+    const parts = String(text ?? '').split(NUMBER_TOKEN_RE);
+    if (parts.length === 1) return text;
+    return parts.map((part: string, idx: number) => (
+        idx % 2 === 1
+            ? <strong key={idx} className="font-bold text-white/95">{part}</strong>
+            : part
+    ));
+};
 
 // cycle 404: `stats?: any;` 제거 — 본체 destructure 미사용 + read 0건.
 //   MobileGameLayout이 prop pass했으나 silent dropped (paired remove).
@@ -182,15 +196,9 @@ const TerminalView = ({
     return (
         <div
             data-testid="terminal-panel"
-            className={`panel-noise min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.85rem] px-3 py-2.5 relative overflow-hidden font-fira transition-all duration-1000 flex flex-col`}
+            className={`aether-log-panel min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.35rem] px-3 py-2 relative overflow-hidden transition-all duration-500 flex flex-col`}
         >
-            {/* Scanline overlay */}
-            <div
-                className="absolute inset-0 z-0 pointer-events-none opacity-10"
-                style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 0.6px, transparent 0.6px)', backgroundSize: '3px 3px' }}
-            ></div>
-            <div className="pointer-events-none absolute -right-10 top-4 h-24 w-24 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
-            <div className="pointer-events-none absolute -left-8 bottom-6 h-28 w-28 rounded-full bg-[#d5b180]/10 blur-3xl" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/16 to-transparent" />
 
             <div ref={logViewportRef} className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-0.5 min-h-0">
                 {showToolbar && (
@@ -228,13 +236,13 @@ const TerminalView = ({
                 <div className="space-y-1.5">
                     {logs.length === 0 && (
                         <Motion.div
-                            className="flex flex-col items-center py-2 text-center text-xs font-rajdhani tracking-[0.16em] text-slate-400/72"
+                            className="flex flex-col items-center py-3 text-center font-readable text-[13px] text-slate-300/78"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: [0.3, 0.8, 0.3] }}
                             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                         >
                             <Terminal size={24} className="mx-auto mb-3 opacity-45 text-[#7dd4d8]" />
-                            아래 버튼으로 원정을 시작하세요
+                            원정 로그 대기
                         </Motion.div>
                     )}
 
@@ -249,15 +257,16 @@ const TerminalView = ({
                                     key={log.id}
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    className={`text-xs py-2 px-2.5 leading-[1.45] aether-panel-muted rounded-[0.95rem] ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
+                                    data-log-type={log.type || 'default'}
+                                    className={`aether-log-row rounded-[0.9rem] px-2.5 py-2 text-[13px] leading-[1.52] font-readable ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
                                 >
                                     {badge && (
-                                        <span className={`mr-1.5 inline-flex rounded-full border px-1.5 py-[1px] align-[1px] text-[8px] font-fira uppercase tracking-[0.12em] ${badge.className}`}>
+                                        <span className={`aether-log-badge mr-1.5 align-[1px] ${badge.className}`}>
                                             {badge.label}
                                         </span>
                                     )}
                                     {IconComp && <IconComp size={14} className="inline mr-1.5 -mt-0.5 opacity-80" />}
-                                    {log.text}
+                                    {renderLogText(log.text)}
                                 </Motion.div>
                             );
                         })}

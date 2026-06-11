@@ -64,24 +64,38 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
         </div>
       ) : recipes.map((recipe: any) => {
         const hasGold = player.gold >= recipe.gold;
-        const hasMaterials = recipe.inputs.every((input: any) => getItemCount(input.name) >= input.qty);
+        const missingInputs = recipe.inputs
+          .map((input: any) => ({ ...input, owned: getItemCount(input.name) }))
+          .filter((input: any) => input.owned < input.qty);
+        const hasMaterials = missingInputs.length === 0;
         const canCraft = hasGold && hasMaterials;
+        const lockReason = !hasGold
+          ? `골드 부족 · ${player.gold}/${recipe.gold}G`
+          : missingInputs.length > 0
+            ? `재료 부족 · ${missingInputs[0].name} ${missingInputs[0].owned}/${missingInputs[0].qty}`
+            : '';
         return (
-          <div key={recipe.id} className="bg-cyber-dark/60 px-3 py-2.5 rounded-md border border-orange-500/20 flex flex-col gap-2 hover:border-orange-500/40 transition-colors">
+          <div key={recipe.id} data-craft-state={canCraft ? 'ready' : 'locked'} className={`aether-craft-row px-3 py-2.5 rounded-md flex flex-col gap-2 transition-colors hover:border-orange-500/40 ${canCraft ? '' : 'aether-locked-row'}`}>
             <div className="flex items-center justify-between gap-2">
               <div>
                 <div className="font-bold text-white font-rajdhani text-[14px]">{recipe.name}</div>
-                <div className="text-[11px] text-orange-300/70 font-fira">{recipe.gold}G</div>
+                <div className="text-[11px] text-orange-200/86 font-fira">{recipe.gold}G</div>
               </div>
               <Motion.button
+                data-testid="crafting-recipe-action"
                 whileTap={{ scale: 0.95 }}
                 onClick={() => actions.craft(recipe.id)}
                 disabled={!canCraft}
-                className="px-4 py-1.5 bg-orange-500/10 border border-orange-500/50 rounded-sm disabled:opacity-30 disabled:border-slate-700 text-orange-300 text-[11px] font-bold hover:bg-orange-500/20 transition-all whitespace-nowrap tracking-wider min-h-[36px]"
+                className="aether-disabled-action px-4 py-1.5 bg-orange-500/10 border border-orange-500/50 rounded-sm text-orange-200 text-[11px] font-bold hover:bg-orange-500/20 transition-all whitespace-nowrap tracking-wider min-h-[44px]"
               >
                 {canCraft ? 'CRAFT' : 'LOCKED'}
               </Motion.button>
             </div>
+            {!canCraft && lockReason && (
+              <div className="aether-lock-note rounded-[0.65rem] px-2 py-1 font-readable text-[11px] leading-snug">
+                {lockReason}
+              </div>
+            )}
             <div className="flex flex-wrap gap-1.5 text-[11px] font-fira">
               {recipe.inputs.map((input: any) => {
                 const owned = getItemCount(input.name);
@@ -195,13 +209,19 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
 
           {/* 합성 버튼 */}
           <Motion.button
+            data-testid="crafting-synthesize-action"
             whileTap={{ scale: 0.95 }}
             onClick={handleSynthesize}
             disabled={!validation?.valid}
-            className="mt-4 w-full py-3 bg-purple-500/10 border border-purple-500/50 rounded-sm disabled:opacity-30 disabled:border-slate-700 text-purple-300 text-sm font-bold hover:bg-purple-500/20 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] transition-all tracking-wider min-h-[44px]"
+            className="aether-disabled-action mt-4 w-full py-3 bg-purple-500/10 border border-purple-500/50 rounded-sm text-purple-200 text-sm font-bold hover:bg-purple-500/20 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] transition-all tracking-wider min-h-[44px]"
           >
             {validation?.valid ? 'SYNTHESIZE' : 'SELECT ITEMS'}
           </Motion.button>
+          {!validation?.valid && (
+            <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
+              동일 타입·동일 티어 장비 {BALANCE.SYNTHESIS_INPUT_COUNT}개를 선택해야 합성할 수 있습니다.
+            </div>
+          )}
         </div>
 
         {/* 합성 가능 장비 목록 */}
@@ -224,7 +244,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                     key={item.id}
                     whileTap={{ scale: 0.92 }}
                     onClick={() => toggleSlot(item.id)}
-                    className={`px-2.5 py-1.5 rounded text-[10px] font-fira border transition-all min-h-[36px]
+                    className={`px-2.5 py-1.5 rounded text-[10px] font-fira border transition-all min-h-[44px]
                       ${isSelected
                         ? 'border-purple-400/70 bg-purple-900/50 text-white ring-1 ring-purple-400/30'
                         : 'border-white/8 bg-black/20 text-slate-300 hover:border-purple-500/30'
@@ -244,8 +264,8 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
 
   return (
     <Motion.div
-      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-xl"
+      initial={false} animate={{ opacity: 1, y: 0 }}
+      className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
     >
       <FocusPanelHeader
         eyebrow="Forge Circuit"
@@ -254,6 +274,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
         meta={mode === 'craft' ? '제작 가능한 레시피와 재료 수량을 즉시 비교합니다.' : '동일 티어 장비를 골라 합성 결과를 확인합니다.'}
         onBack={() => setGameState?.('idle')}
         backLabel="복귀"
+        backTestId="crafting-close"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}
         archiveLabel="INV"

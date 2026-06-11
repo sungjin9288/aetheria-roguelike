@@ -37,13 +37,12 @@ const StatusMetric = ({ label, value, max, variant }: any) => {
   const percentage = Math.min(100, (safeValue / safeMax) * 100);
 
   return (
-    <div className="aether-panel-muted relative overflow-hidden rounded-[1rem] px-2 py-1.5">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/16 to-transparent" />
-      <div className="flex items-center justify-between gap-2 font-fira uppercase tracking-[0.16em] text-[8px]">
+    <div className="aether-status-metric relative overflow-hidden rounded-[0.8rem] px-2 py-1">
+      <div className="flex items-baseline justify-between gap-2 font-fira uppercase tracking-[0.08em] text-[8px]">
         <span className={theme.label}>{label}</span>
-        <span className="text-white/72">{safeValue}/{safeMax}</span>
+        <span className="text-[10px] text-white/78">{safeValue}/{safeMax}</span>
       </div>
-      <div className={`overflow-hidden rounded-full border bg-black/28 ${theme.border} mt-1 h-1`}>
+      <div className={`mt-1 h-[3px] overflow-hidden rounded-full border bg-black/28 ${theme.border}`}>
         <div
           className={`h-full rounded-full ${theme.fill}`}
           style={{ width: `${percentage}%` }}
@@ -129,10 +128,10 @@ const StatusBar = ({
   return (
     <section
       data-testid="persistent-status-bar"
-      className="pointer-events-none panel-noise aether-surface sticky top-0 z-50 w-full overflow-hidden rounded-[1.55rem] px-3 py-2"
+      className="pointer-events-none aether-status-shell sticky top-0 z-50 w-full overflow-hidden rounded-[1.2rem] px-2.5 py-1.5"
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/22 to-transparent" style={{position:'absolute'}} />
-      <div className="flex items-start gap-2.5">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" style={{position:'absolute'}} />
+      <div className="flex items-center gap-2.5">
         <PixelCharacterAvatar
           player={player}
           size="sm"
@@ -145,14 +144,14 @@ const StatusBar = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex flex-wrap items-center gap-1.5">
-              <span className="truncate text-[14px] font-rajdhani font-bold tracking-[0.04em] text-white/96">{player.name}</span>
+              <span className="truncate font-readable text-[14px] font-semibold text-white/96">{player.name}</span>
               <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{enemy ? '전투중' : player.job}</SignalBadge>
               <SignalBadge tone="resonance" size="sm">Lv.{player.level}</SignalBadge>
               {/* cycle 176: 'blindMap' challenge modifier — 위치 표시 숨김 ('???' 라벨로 대체).
                   cycle 147 이전엔 dead modifier(handler 0건)였음 — 이제 정상 동작. */}
-              <span className="flex items-center gap-1 text-[8px] font-fira text-slate-300/60">
+              <span className="flex items-center gap-1 text-[8px] font-fira text-slate-300/62">
                 <span className="h-1 w-1 shrink-0 rounded-full bg-[#7dd4d8] animate-pulse" />
-                <span className="truncate max-w-[64px]">
+                <span className="truncate max-w-[76px]">
                   {player.challengeModifiers?.includes('blindMap') ? '???' : player.loc}
                 </span>
               </span>
@@ -239,14 +238,14 @@ const StatusBar = ({
               </div>
             </div>
           </div>
-          <div className="mt-1.5 grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 p-1.5">
+          <div className="mt-1 grid grid-cols-3 gap-1">
             <StatusMetric label="HP" value={player.hp} max={stats?.maxHp} variant="hp" />
             <StatusMetric label="NRG" value={player.mp} max={stats?.maxMp} variant="mp" />
             <StatusMetric label="EXP" value={player.exp} max={player.nextExp} variant="exp" />
           </div>
         </div>
       </div>
-      {enemy && <div className="mt-1.5"><EnemyStatus enemy={enemy} /></div>}
+      {enemy && <div className="mt-1"><EnemyStatus enemy={enemy} /></div>}
     </section>
   );
 };

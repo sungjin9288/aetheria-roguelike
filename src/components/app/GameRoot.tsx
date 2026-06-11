@@ -27,6 +27,7 @@ const GameRoot = ({
     damageFlash, healFlash, damageAmount,
 }: any) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
+    const readabilityMode = engine.player?.settings?.readabilityMode === 'high' ? 'high' : 'standard';
     // cycle 208: codex prop 전달 — useLegendaryDropDetector가 SEASON_XP 중복 award 방지용
     //   alreadyInCodex 체크에 활용.
     const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch, engine.player?.stats?.codex);
@@ -72,7 +73,7 @@ const GameRoot = ({
 
     return (
     <MotionConfig reducedMotion="user">
-        <MainLayout visualEffect={engine.visualEffect}>
+        <MainLayout visualEffect={engine.visualEffect} readabilityMode={readabilityMode}>
             {/* Background layers */}
             <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
                 <div className="absolute inset-0 animate-aurora bg-[radial-gradient(circle_at_top_left,rgba(213,177,128,0.09),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(125,212,216,0.1),transparent_22%),linear-gradient(180deg,rgba(7,11,17,0.42)_0%,rgba(3,5,8,0.74)_100%)]" />

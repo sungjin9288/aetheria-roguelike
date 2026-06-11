@@ -198,6 +198,21 @@ export const EQUIPMENT_FAMILY_OVERLAY_ASSET_KEYS = [
     'offhand-book',
 ];
 
+export const NON_EQUIPMENT_FAMILY_ITEM_ASSET_KEYS = [
+    'potion',
+    'material',
+    'ore',
+    'crystal',
+    'scale',
+    'fang',
+    'bone',
+    'core',
+    'relic',
+    'herb',
+    'pouch',
+    'key',
+];
+
 // cycle 512: fallback default 제거 — 7 callsite 모두 fallback 명시 전달이라
 //   default 'coat' 도달 불가. util default 청소 메가 시리즈 10번째 (cycle 502-511).
 export const getArmorStyleFromItem = (armor: any, fallback: any) => {
@@ -264,31 +279,46 @@ const getMaterialVisualKey = (item: Item | null | undefined) => {
     return 'material';
 };
 
-export const getEquipmentVisualKey = (item: Item | null | undefined) => {
-    if (!item) return 'material';
-    if (SPECIAL_ITEM_ICON_KEYS[item.name as string]) return SPECIAL_ITEM_ICON_KEYS[item.name as string];
-    if (EXACT_ITEM_ICON_KEYS[item.name as string]) return EXACT_ITEM_ICON_KEYS[item.name as string];
+const TYPED_CATALOG_ITEM_BY_NAME: Record<string, any> = Object.freeze(
+    Object.fromEntries(
+        (Object.values(ITEMS).flat() as any[])
+            .filter((item) => item?.name && item?.type)
+            .map((item) => [item.name, item])
+    )
+);
 
-    if (item.type === 'weapon') return getWeaponVisualKey(item);
-    if (item.type === 'armor') {
-        const armorStyle = getArmorStyleFromItem(item, 'coat');
+const getTypedVisualItem = (item: Item | null | undefined) => {
+    if (!item?.name || item.type) return item;
+    return TYPED_CATALOG_ITEM_BY_NAME[item.name as string] || item;
+};
+
+export const getEquipmentVisualKey = (item: Item | null | undefined) => {
+    const visualItem = getTypedVisualItem(item);
+    if (!visualItem) return 'material';
+    if (SPECIAL_ITEM_ICON_KEYS[visualItem.name as string]) return SPECIAL_ITEM_ICON_KEYS[visualItem.name as string];
+    if (EXACT_ITEM_ICON_KEYS[visualItem.name as string]) return EXACT_ITEM_ICON_KEYS[visualItem.name as string];
+
+    if (visualItem.type === 'weapon') return getWeaponVisualKey(visualItem);
+    if (visualItem.type === 'armor') {
+        const armorStyle = getArmorStyleFromItem(visualItem, 'coat');
         if (armorStyle === 'robe') return 'robe';
         if (armorStyle === 'coat' || armorStyle === 'leather') return 'cloak';
         return 'armor';
     }
-    if (item.type === 'shield') return isFocusOffhand(item) ? 'book' : 'shield';
-    if (item.type === 'hp' || item.type === 'mp' || item.type === 'cure' || item.type === 'buff') return 'potion';
-    if (item.type === 'mat' || item.type === 'key') return getMaterialVisualKey(item);
+    if (visualItem.type === 'shield') return isFocusOffhand(visualItem) ? 'book' : 'shield';
+    if (visualItem.type === 'hp' || visualItem.type === 'mp' || visualItem.type === 'cure' || visualItem.type === 'buff') return 'potion';
+    if (visualItem.type === 'mat' || visualItem.type === 'key') return getMaterialVisualKey(visualItem);
     return 'material';
 };
 
 const HEADGEAR_PATTERN = /(모자|두건|후드|투구|헬름|왕관|관|면갑|복면)/;
 
 export const getEquipmentIllustrationFamilyKey = (item: Item | null | undefined) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return null;
+    const visualItem = getTypedVisualItem(item);
+    if (!visualItem || !['weapon', 'armor', 'shield'].includes(visualItem.type as string)) return null;
 
-    if (item.type === 'weapon') {
-        const weaponKey = getWeaponVisualKey(item);
+    if (visualItem.type === 'weapon') {
+        const weaponKey = getWeaponVisualKey(visualItem);
         if (['sword', 'rapier', 'saber', 'falchion', 'fork'].includes(weaponKey)) return 'weapon-sword';
         if (['dagger', 'fang-dagger', 'throwing-blade', 'twinblade'].includes(weaponKey)) return 'weapon-dagger';
         if (['axe', 'greataxe', 'hammer', 'mace'].includes(weaponKey)) return 'weapon-heavy';
@@ -299,11 +329,11 @@ export const getEquipmentIllustrationFamilyKey = (item: Item | null | undefined)
         return 'weapon-sword';
     }
 
-    if (item.type === 'shield') {
-        return isFocusOffhand(item) ? 'offhand-book' : 'offhand-shield';
+    if (visualItem.type === 'shield') {
+        return isFocusOffhand(visualItem) ? 'offhand-book' : 'offhand-shield';
     }
 
-    const name = String(item.name || '');
+    const name = String(visualItem.name || '');
     if (name.includes('짚')) return 'headgear-straw-hat';
     if (name.includes('마법 모자') || name.includes('현자의 관')) return 'headgear-wizard-hat';
     if (name.includes('제관') || name.includes('왕관') || name.includes('관')) return 'headgear-circlet';
@@ -316,7 +346,7 @@ export const getEquipmentIllustrationFamilyKey = (item: Item | null | undefined)
         return 'headgear-cap';
     }
 
-    const armorStyle = getArmorStyleFromItem(item, 'coat');
+    const armorStyle = getArmorStyleFromItem(visualItem, 'coat');
     if (armorStyle === 'robe') return 'armor-robe';
     if (armorStyle === 'plate') return 'armor-plate';
     if (armorStyle === 'leather') return 'armor-leather';
@@ -325,8 +355,28 @@ export const getEquipmentIllustrationFamilyKey = (item: Item | null | undefined)
 };
 
 export const getEquipmentWearableFamilyKey = (item: Item | null | undefined) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return null;
+    const visualItem = getTypedVisualItem(item);
+    if (!visualItem || !['weapon', 'armor', 'shield'].includes(visualItem.type as string)) return null;
     return getEquipmentIllustrationFamilyKey(item);
+};
+
+export const getNonEquipmentIllustrationFamilyKey = (item: Item | null | undefined) => {
+    const visualItem = getTypedVisualItem(item);
+    if (!visualItem || ['weapon', 'armor', 'shield'].includes(visualItem.type as string)) return null;
+    if (visualItem.type === 'hp' || visualItem.type === 'mp' || visualItem.type === 'cure' || visualItem.type === 'buff') return 'potion';
+    if (visualItem.type === 'key') return 'key';
+    if (visualItem.type === 'all') return 'relic';
+    if (visualItem.type === 'mat') return getMaterialVisualKey(visualItem);
+    return getMaterialVisualKey(visualItem);
+};
+
+export const shouldUseAvatarPreviewItemIcon = (item: Item | null | undefined) => {
+    const familyKey = getEquipmentIllustrationFamilyKey(item);
+    // Item surfaces should read as a unified equipment set. Avatar previews stay
+    // as an image-load fallback only; mixing character thumbnails with item PNGs
+    // made shop/inventory equipment look like different art systems.
+    if (!familyKey) return false;
+    return false;
 };
 
 export const getItemIconAssetKey = (item: Item | null | undefined) => getEquipmentVisualKey(item);
@@ -373,23 +423,33 @@ const getItemIconAssetExtension = (assetKey: any) => {
     return k.startsWith('item-') ? 'svg' : 'png';
 };
 export const getExactEquipmentItemAssetKey = (item: Item | null | undefined) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return null;
+    const visualItem = getTypedVisualItem(item);
+    if (!visualItem || !['weapon', 'armor', 'shield'].includes(visualItem.type as string)) return null;
     // 우선순위: 고유 signature art → named(tinted) → auto-exact
-    return SIGNATURE_SPRITE_KEY_BY_NAME[item.name as string]
-        || SPECIAL_ITEM_ICON_KEYS[item.name as string]
-        || EXACT_ITEM_ICON_KEYS[item.name as string]
+    return SIGNATURE_SPRITE_KEY_BY_NAME[visualItem.name as string]
+        || SPECIAL_ITEM_ICON_KEYS[visualItem.name as string]
+        || EXACT_ITEM_ICON_KEYS[visualItem.name as string]
         || null;
 };
 export const getItemIconAssetSrc = (item: Item | null | undefined) => {
-    const exactEquipmentKey = getExactEquipmentItemAssetKey(item);
+    const visualItem = getTypedVisualItem(item);
+    const signatureEquipmentKey = visualItem?.name ? SIGNATURE_SPRITE_KEY_BY_NAME[visualItem.name as string] : null;
+    if (signatureEquipmentKey) {
+        return `/assets/equipment-exact/${signatureEquipmentKey}.png`;
+    }
+    const equipmentFamilyKey = getEquipmentIllustrationFamilyKey(visualItem);
+    if (equipmentFamilyKey) {
+        return `/assets/equipment-family/items/${equipmentFamilyKey}.png`;
+    }
+    const nonEquipmentFamilyKey = getNonEquipmentIllustrationFamilyKey(visualItem);
+    if (nonEquipmentFamilyKey) {
+        return `/assets/items/${nonEquipmentFamilyKey}.png`;
+    }
+    const exactEquipmentKey = getExactEquipmentItemAssetKey(visualItem);
     if (exactEquipmentKey) {
         return `/assets/equipment-exact/${exactEquipmentKey}.png`;
     }
-    const familyKey = getEquipmentIllustrationFamilyKey(item);
-    if (familyKey) {
-        return `/assets/equipment-family/items/${familyKey}.png`;
-    }
-    const assetKey = getItemIconAssetKey(item);
+    const assetKey = getItemIconAssetKey(visualItem);
     return `/assets/items/${assetKey}.${getItemIconAssetExtension(assetKey)}`;
 };
 export const getEquipmentOverlayAssetSrc = (item: Item | null | undefined) => {

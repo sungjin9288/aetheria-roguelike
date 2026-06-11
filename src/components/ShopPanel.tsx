@@ -94,6 +94,13 @@ const getToneClass = (tone: any) => {
     return 'text-slate-300 border-white/8 bg-white/[0.03]';
 };
 
+const getBuyBlockReason = ({ canStore, affordable, equipable, item }: any) => {
+    if (!canStore) return '가방 가득';
+    if (!affordable) return '골드 부족';
+    if (!equipable && isEquipmentItem(item)) return '직업 제한';
+    return '';
+};
+
 // cycle 531: value default '' 제거 — 3 callsite (line 90/94/372) 모두 string
 //   || fallback으로 string 보장 후 명시 전달이라 default 도달 불가.
 const getCompactText = (value: any) => value.replaceAll(' / ', ' · ');
@@ -177,7 +184,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     const weeklySpecial = useMemo(() => getWeeklySpecial(player.level || 1), [player.level]);
 
     return (
-        <div className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3">
+        <div className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] p-3">
             <FocusPanelHeader
                 eyebrow="Broker Ledger"
                 title="MARKET"
@@ -198,7 +205,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
             )}
 
             <div className="mb-3 flex items-center justify-between gap-2">
-                <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/74">
+                <div className="font-readable text-[11px] leading-[1.35] text-slate-300/78">
                     {shopMode === 'buy' ? '구매 후보를 빠르게 비교합니다.' : '판매 확정 전 한 번 더 확인합니다.'}
                 </div>
                 <div className="flex shrink-0 rounded-full border border-white/8 bg-black/20 p-0.5">
@@ -227,7 +234,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                 {/* Daily Deals + Weekly Special */}
                 {shopMode === 'buy' && (dailyDeals.items.length > 0 || weeklySpecial) && (
                     <div className="mb-2 space-y-2 border-b border-white/8 pb-2">
-                        <div className="text-[10px] font-fira uppercase tracking-[0.2em] text-amber-300/70">Daily Deals — 10% OFF</div>
+                        <div className="aether-label text-[#f6e7c8]/70">Daily Deals - 10% OFF</div>
                         <div className="grid grid-cols-1 gap-2">
                             {dailyDeals.items.map((item: any) => {
                                 const canStore = inventoryHasRoom;
@@ -236,18 +243,17 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                 const canBuy = canStore && affordable && equipable;
                                 const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
                                 return (
-                                    <div key={item.name} className="flex items-center justify-between gap-2 rounded-[1.1rem] border border-amber-400/20 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.12),transparent_24%),linear-gradient(180deg,rgba(47,33,15,0.24)_0%,rgba(18,12,8,0.12)_100%)] px-3 py-2.5">
+                                    <div key={item.name} className={`aether-shop-row ${canBuy ? '' : 'is-blocked'} flex items-center justify-between gap-2 rounded-[1rem] px-3 py-2.5`}>
                                         <div className="min-w-0 flex items-center gap-2">
                                             <ItemIcon item={item} size={34} showBorder className="opacity-95" />
                                             <div className="min-w-0">
-                                                <div className="text-xs font-rajdhani font-bold text-white truncate">{item.name}</div>
+                                                <div className="truncate font-readable text-xs font-semibold text-white">{item.name}</div>
                                                 <div className="mt-0.5 flex items-center gap-1.5">
                                                     <span className="text-[10px] font-fira text-amber-300 font-bold">{item.price} CR</span>
                                                     <span className="text-[9px] font-fira text-slate-500 line-through">{item.originalPrice}</span>
                                                 </div>
-                                                {!canBuy && reason && (
-                                                    <div className="mt-0.5 text-[9px] font-fira text-rose-300/85">{reason}</div>
-                                                )}
+                                                {/* slice 20: 본문 reason 행 제거 — 우측 버튼이 동일한
+                                                    차단 사유를 표시해 같은 행에 2회 출력되던 중복. */}
                                             </div>
                                         </div>
                                         <button
@@ -257,7 +263,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             }}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
-                                            className="shrink-0 min-h-[32px] rounded-full border border-amber-400/30 px-2.5 py-1 text-[10px] font-bold text-amber-300 transition-all disabled:opacity-30 hover:bg-amber-400/10"
+                                            className="aether-disabled-action shrink-0 min-h-[44px] rounded-full border border-amber-400/30 px-2.5 py-1 text-[10px] font-bold text-amber-200 transition-all hover:bg-amber-400/10"
                                         >
                                             {canBuy ? '구매' : reason}
                                         </button>
@@ -266,12 +272,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                             })}
                         </div>
                         {weeklySpecial && (
-                            <div className="flex items-center justify-between gap-3 rounded-[1.15rem] border border-purple-400/25 bg-[radial-gradient(circle_at_82%_12%,rgba(154,138,192,0.16),transparent_22%),linear-gradient(180deg,rgba(33,22,46,0.24)_0%,rgba(16,10,20,0.12)_100%)] px-3 py-2.75">
+                            <div className="aether-shop-row flex items-center justify-between gap-3 rounded-[1rem] px-3 py-2.5">
                                 <div className="min-w-0 flex items-center gap-2.5">
                                     <ItemIcon item={weeklySpecial} size={38} showBorder className="opacity-95" />
                                     <div className="min-w-0">
-                                        <div className="mb-0.5 text-[9px] font-fira uppercase tracking-wider text-purple-300/60">Weekly Special — 15% OFF</div>
-                                        <div className="text-sm font-rajdhani font-bold text-white truncate">{weeklySpecial.name}</div>
+                                        <div className="aether-label mb-0.5 text-[#ece5ff]/62">Weekly Special - 15% OFF</div>
+                                        <div className="truncate font-readable text-sm font-semibold text-white">{weeklySpecial.name}</div>
                                         <div className="mt-0.5 flex items-center gap-1.5">
                                             <span className="text-[11px] font-fira text-purple-300 font-bold">{weeklySpecial.price} CR</span>
                                             <span className="text-[9px] font-fira text-slate-500 line-through">{weeklySpecial.originalPrice}</span>
@@ -292,7 +298,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             }}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
-                                            className="shrink-0 min-h-[36px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-300 transition-all disabled:opacity-30 hover:bg-purple-400/10"
+                                            className="aether-disabled-action shrink-0 min-h-[44px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-200 transition-all hover:bg-purple-400/10"
                                         >
                                             {canBuy ? '구매' : reason}
                                         </button>
@@ -311,28 +317,30 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                             const typeTag = getItemTags(item)[0];
                             const summary = getCompactItemSummary(item);
                             const comparisonText = getCompactComparisonText(comparison);
+                            const blockReason = getBuyBlockReason({ canStore, affordable, equipable, item });
 
                             return (
                                 <div
                                     key={item.name}
                                     data-testid="shop-buy-item"
-                                    className={`overflow-hidden rounded-[1.2rem] border px-3 py-2.5 transition-all ${canBuy ? 'aether-panel-muted hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]' : 'bg-black/14 border-white/8'} border-white/8`}
+                                    data-shop-state={canBuy ? 'ready' : 'blocked'}
+                                    className={`aether-shop-row ${canBuy ? '' : 'is-blocked'} overflow-hidden rounded-[1.05rem] px-3 py-2.5 transition-colors hover:border-[#d5b180]/24`}
                                 >
-                                    <div className="flex items-start justify-between gap-2">
+                                    <div className="grid grid-cols-[42px_minmax(0,1fr)_74px] items-start gap-2.5">
+                                        <ItemIcon item={item} size={42} showBorder className="mt-0.5 opacity-95" />
                                         <div className="min-w-0 flex flex-1 items-start gap-2.5">
-                                            <ItemIcon item={item} size={40} showBorder className="mt-0.5 opacity-95" />
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-1.5">
-                                                    <div className="truncate font-bold text-slate-100 font-rajdhani text-[1rem] leading-tight">{item.name}</div>
+                                                    <div className="truncate font-readable text-[14px] font-semibold leading-tight text-slate-100">{item.name}</div>
                                                     {typeTag && (
-                                                        <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-fira text-slate-300/85">
+                                                        <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-readable text-slate-300/85">
                                                             {typeTag}
                                                         </span>
                                                     )}
                                                     {Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
                                                         <span
                                                             title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
-                                                            className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold uppercase tracking-[0.1em]"
+                                                            className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-readable font-bold"
                                                             style={{
                                                                 color: '#d5b180',
                                                                 border: '1px solid rgba(213,177,128,0.42)',
@@ -343,18 +351,21 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="mt-1 text-[10px] font-fira leading-[1.35] text-slate-400">{summary}</div>
+                                                <div className="mt-1 line-clamp-2 font-readable text-[11px] leading-[1.35] text-slate-300/78">{summary}</div>
                                                 {comparison && (
-                                                    <div className="mt-1">
-                                                        <div className={`inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-[10px] font-fira leading-[1.2] ${getToneClass(comparison.tone)}`}>
-                                                            <span className="truncate">{comparisonText}</span>
+                                                    <div className="mt-1.5">
+                                                        <div className={`aether-shop-delta inline-flex max-w-full items-center rounded-[0.65rem] px-2 py-1 font-readable text-[10px] leading-[1.2] ${getToneClass(comparison.tone)}`}>
+                                                            <span className="break-words">{comparisonText}</span>
                                                         </div>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="shrink-0 flex items-center gap-2">
-                                            <div className="text-[11px] font-fira font-bold text-[#f6e7c8]">{item.price} CR</div>
+                                        <div className="flex min-w-0 shrink-0 flex-col items-stretch gap-1">
+                                            <div className="text-center font-fira text-[11px] font-bold text-[#f6e7c8]">{item.price} CR</div>
+                                            {!canBuy && blockReason && (
+                                                <div className="text-center font-readable text-[9px] leading-[1.15] text-rose-200/88">{blockReason}</div>
+                                            )}
                                             <button
                                                 data-testid="shop-buy-inline"
                                                 onClick={() => {
@@ -363,9 +374,9 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                     setPurchaseNotice(item.name);
                                                 }}
                                                 disabled={!canBuy}
-                                                className="min-h-[34px] rounded-full border border-[#d5b180]/24 px-2.5 py-1 text-[10px] font-bold text-[#f6e7c8] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
+                                                className="aether-disabled-action min-h-[44px] rounded-[0.75rem] border border-[#d5b180]/24 px-2 py-1 text-[10px] font-bold text-[#f6e7c8] transition-all hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
                                             >
-                                                {!canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable && isEquipmentItem(item) ? '직업 제한' : '구매'}
+                                                {canBuy ? '구매' : '불가'}
                                             </button>
                                         </div>
                                     </div>
@@ -390,20 +401,20 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                             return (
                                 <div
                                     key={item.id}
-                                    className={`flex flex-col rounded-[1.3rem] border px-3 py-3 transition-all ${isConfirming ? 'bg-rose-400/10 border-rose-300/24 shadow-[0_18px_28px_rgba(251,113,133,0.08)]' : 'aether-panel-muted hover:border-rose-300/18'}`}
+                                    className={`aether-shop-row is-blocked flex flex-col rounded-[1.05rem] px-3 py-3 transition-all ${isConfirming ? 'border-rose-300/28 bg-rose-400/10' : 'hover:border-rose-300/18'}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0 flex items-start gap-2.5">
                                             <ItemIcon item={item} size={38} showBorder className="mt-0.5 opacity-95" />
                                             <div className="min-w-0">
-                                                <div className="font-bold text-red-300 font-rajdhani text-base truncate">{item.name}</div>
-                                                <div className="mt-1 text-[11px] text-slate-400 font-fira truncate">{summary}</div>
+                                                <div className="truncate font-readable text-base font-semibold text-red-200">{item.name}</div>
+                                                <div className="mt-1 truncate font-readable text-[11px] text-slate-300/78">{summary}</div>
                                             </div>
                                         </div>
                                         <span className="shrink-0 text-[#f6e7c8] font-fira font-bold text-sm">+{sellPrice} CR</span>
                                     </div>
 
-                                    <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-fira">
+                                    <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-readable">
                                         <span className="px-2 py-1 rounded border border-slate-600/70 bg-slate-900/80 text-slate-300">T{item.tier || 1}</span>
                                         <span className="px-2 py-1 rounded border border-red-500/20 bg-red-950/20 text-red-300">
                                             판매가 {sellPrice} CR
@@ -411,13 +422,13 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                     </div>
 
                                     {comparison && (
-                                        <div className={`mt-2 rounded-lg border px-2.5 py-2 text-[10px] font-fira ${getToneClass(comparison.tone)}`}>
+                                        <div className={`aether-shop-delta mt-2 rounded-[0.75rem] px-2.5 py-2 font-readable text-[10px] ${getToneClass(comparison.tone)}`}>
                                             {comparisonText}
                                         </div>
                                     )}
 
                                     <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-2.5">
-                                        <div className="text-[10px] font-fira text-slate-400">
+                                        <div className="font-readable text-[10px] text-slate-300/74">
                                             {isSignatureLocked
                                                 ? '전설 각인 — 판매 불가'
                                                 : isConfirming ? '한 번 더 누르면 판매됩니다.' : '판매 대기'}

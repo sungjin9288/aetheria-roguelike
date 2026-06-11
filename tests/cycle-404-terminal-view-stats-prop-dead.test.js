@@ -70,7 +70,7 @@ test('cycle 404: TerminalView 활성 props 보존 (cycle 496/497 cascade로 추�
     const activeFields = ['logs', 'gameState', 'onCommand', 'player',
         'quickSlots', 'onQuickSlotUse'];
     for (const field of activeFields) {
-        const re = new RegExp(`${field}\\?:`);
+        const re = new RegExp(`${field}\\??:`);
         assert.ok(re.test(ifaceBlock), `${field} 필드 보존`);
     }
 });

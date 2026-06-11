@@ -7,8 +7,12 @@ const clampRatio = (current: any, max: any) => {
 //   N test (outcome-analysis, cycle-336) 모두 명시 전달이라 default 도달 불가.
 //   outcomeAnalysis.ts 같은 모듈 batch (cycle 502-556 default 청소 51번째).
 export const getPostCombatAnalysis = (result: any) => {
-    const hpRatio = clampRatio(result.playerHp, result.playerMaxHp);
-    const mpRatio = clampRatio(result.playerMp, result.playerMaxMp);
+    const hpRatio = typeof result.hpLow === 'boolean'
+        ? result.hpLow ? 0.2 : 1
+        : clampRatio(result.playerHp, result.playerMaxHp);
+    const mpRatio = typeof result.mpLow === 'boolean'
+        ? result.mpLow ? 0.2 : 1
+        : clampRatio(result.playerMp, result.playerMaxMp);
     const enemyTier = result.enemyTier || 'NORMAL';
     const enemyName = result.enemy || '적';
     const primaryBuild = result.primaryBuild || '균형형 런';
@@ -68,6 +72,64 @@ export const getPostCombatAnalysis = (result: any) => {
     };
 };
 
+export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
+    const hpLow = typeof result.hpLow === 'boolean'
+        ? result.hpLow
+        : clampRatio(result.playerHp, result.playerMaxHp) <= 0.35;
+    const mpLow = typeof result.mpLow === 'boolean'
+        ? result.mpLow
+        : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3;
+    const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
+    const enemyTier = result.enemyTier || 'NORMAL';
+    const droppedItems = Array.isArray(result.items)
+        ? result.items
+        : Array.isArray(result.loot)
+            ? result.loot
+            : [];
+    const nonSignatureLootCount = Number.isFinite(context.nonSignatureLootCount)
+        ? context.nonSignatureLootCount
+        : droppedItems.length;
+    const signatureLootCount = Number.isFinite(context.signatureLootCount)
+        ? context.signatureLootCount
+        : 0;
+    const hasUpgradeHint = Boolean(result.upgradeHint);
+    const hasTraitHint = Boolean(result.traitHint);
+
+    let state = '진행 가능';
+    if (hpLow) state = 'HP 회복';
+    else if (mpLow) state = 'MP 보충';
+    else if (result.leveledUp) state = '레벨업';
+    else if (enemyTier === 'BOSS' || enemyTier === 'ELITE') state = '정비 권장';
+
+    let loot = '획득 없음';
+    if (signatureLootCount > 0) loot = `전설 ${signatureLootCount}개`;
+    else if (hasUpgradeHint) loot = '장비 후보';
+    else if (hasTraitHint) loot = '성향 공명';
+    else if (nonSignatureLootCount > 0) loot = `전리품 ${nonSignatureLootCount}개`;
+    else if ((result.gold || 0) >= 100) loot = `Gold +${result.gold}`;
+    else if ((result.exp || 0) >= 100) loot = `EXP +${result.exp}`;
+
+    let next = '다음 지역';
+    if (hpLow) next = '휴식';
+    else if (invFull) next = '인벤 정리';
+    else if (signatureLootCount > 0 || nonSignatureLootCount > 0 || hasUpgradeHint || hasTraitHint) next = '장비 확인';
+    else if (enemyTier === 'BOSS' || enemyTier === 'ELITE') next = '퀵슬롯 점검';
+
+    let tone = 'steady';
+    if (hpLow || invFull) tone = 'pressure';
+    else if (signatureLootCount > 0 || hasUpgradeHint || hasTraitHint || result.leveledUp) tone = 'reward';
+    else if (enemyTier === 'BOSS' || enemyTier === 'ELITE') tone = 'advantage';
+
+    return {
+        tone,
+        cells: [
+            { label: 'STATE', value: state },
+            { label: 'LOOT', value: loot },
+            { label: 'NEXT', value: next },
+        ],
+    };
+};
+
 // cycle 557: summary default {} 제거 — 1 production (RunSummaryCard:25) +
 //   N test (cycle-87/97) 모두 summary 명시 전달이라 default 도달 불가.
 export const getRunSummaryAnalysis = (summary: any) => {
@@ -116,5 +178,88 @@ export const getRunSummaryAnalysis = (summary: any) => {
         headline,
         notes: notes.slice(0, 3),
         focus: focus.slice(0, 3),
+    };
+};
+
+export const getRunSummaryReflectionStrip = (summary: any, analysis: any) => {
+    const level = Number.isFinite(summary.level) ? summary.level : 0;
+    const kills = Number.isFinite(summary.kills) ? summary.kills : 0;
+    const bossKills = Number.isFinite(summary.bossKills) ? summary.bossKills : 0;
+    const relicsFound = Number.isFinite(summary.relicsFound) ? summary.relicsFound : 0;
+    const totalGold = Number.isFinite(summary.totalGold) ? summary.totalGold : 0;
+    const escapes = Number.isFinite(summary.escapes) ? summary.escapes : 0;
+    const discoveries = Number.isFinite(summary.discoveries) ? summary.discoveries : 0;
+    const maxKillStreak = Number.isFinite(summary.maxKillStreak) ? summary.maxKillStreak : 0;
+    const focusText = Array.isArray(analysis?.focus) ? analysis.focus.join(' ') : '';
+
+    const highEscapes = escapes >= 10 && bossKills <= 1;
+    const lowRelics = relicsFound <= 1;
+    const lowBossProgress = bossKills === 0 && level >= 12;
+    const lowKills = kills < 30;
+    const lowGold = totalGold > 0 && totalGold < 1500;
+    const lowDiscovery = discoveries <= 4 && level >= 12;
+    const wideDiscovery = discoveries >= 15;
+    const strongStreak = maxKillStreak >= 10;
+    const lowStreak = maxKillStreak < 3 && level >= 10;
+
+    let tone = 'steady';
+    let cause = '기반 안정';
+    let lesson = analysis?.headline || '런 패턴 확인';
+    let next = '같은 빌드 강화';
+
+    if (highEscapes || /도주.*보스/.test(focusText)) {
+        tone = 'pressure';
+        cause = '후퇴 누적';
+        lesson = '교전 전 정비 부족';
+        next = '회복·장비 점검';
+    } else if (lowRelics || /유물/.test(focusText)) {
+        tone = 'pressure';
+        cause = '유물 부족';
+        lesson = '이벤트 루트 필요';
+        next = 'Map/Quest 확장';
+    } else if (lowBossProgress || /보스 진입 전/.test(focusText)) {
+        tone = 'pressure';
+        cause = '보스 전 정비';
+        lesson = '방어·회복 루틴';
+        next = '퀵슬롯 보강';
+    } else if (lowKills || /교전 수/.test(focusText)) {
+        tone = 'pressure';
+        cause = '성장량 부족';
+        lesson = '초반 순환 짧음';
+        next = '1~2지역 반복';
+    } else if (lowGold || /골드 수급/.test(focusText)) {
+        tone = 'growth';
+        cause = '골드 부족';
+        lesson = '구매 타이밍 조절';
+        next = '상점 전리품 비교';
+    } else if (lowDiscovery || /맵 발견|탐색/.test(focusText)) {
+        tone = 'growth';
+        cause = '탐험 폭 부족';
+        lesson = '이벤트 풀 미확장';
+        next = '새 지역 개방';
+    } else if (lowStreak || /연속 처치가 끊/.test(focusText)) {
+        tone = 'growth';
+        cause = '연속 처치 단절';
+        lesson = '공격 호흡 재정렬';
+        next = '약한 적부터 정리';
+    } else if ((bossKills >= 3 && relicsFound >= 4) || strongStreak || wideDiscovery) {
+        tone = 'breakthrough';
+        cause = bossKills >= 3 ? '보스권 도달' : strongStreak ? '공격 흐름' : '탐험 폭 강점';
+        lesson = strongStreak ? 'streak 운영 유효' : wideDiscovery ? '루트 확장 유효' : '빌드 축 검증';
+        next = bossKills >= 3 ? '막힌 속성 보강' : '동일 강점 유지';
+    } else if (bossKills > 0 || level >= 20) {
+        tone = 'growth';
+        cause = bossKills > 0 ? '보스 진입 성공' : '중반 진입';
+        lesson = '기반은 충분';
+        next = '약점 구간 보강';
+    }
+
+    return {
+        tone,
+        cells: [
+            { label: 'CAUSE', value: cause },
+            { label: 'LESSON', value: lesson },
+            { label: 'NEXT', value: next },
+        ],
     };
 };

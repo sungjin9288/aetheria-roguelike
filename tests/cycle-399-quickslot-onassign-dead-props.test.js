@@ -59,7 +59,7 @@ test('cycle 399: QuickSlotProps 활성 필드 보존 (cycle 494가 dense cascade
     const ifaceBlock = source.slice(ifaceStart, ifaceEnd);
     const activeFields = ['slots', 'onUse', 'gameState'];
     for (const field of activeFields) {
-        const re = new RegExp(`${field}\\?:`);
+        const re = new RegExp(`${field}\\??:`);
         assert.ok(re.test(ifaceBlock), `${field} 필드 보존`);
     }
 });

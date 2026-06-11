@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Skull, Share2, RotateCcw, CheckCircle, Trophy, Sword, Gem, Coins, MapPin, Zap, Radar, Sparkles, Footprints, Compass, Flame } from 'lucide-react';
 import { getTitleLabel } from '../utils/gameUtils';
-import { getRunSummaryAnalysis } from '../utils/outcomeAnalysis';
+import { getRunSummaryAnalysis, getRunSummaryReflectionStrip } from '../utils/outcomeAnalysis';
 import { buildRunShareText } from '../utils/runShareText.js';
 import SignalBadge from './SignalBadge';
 
@@ -23,6 +23,7 @@ interface RunSummaryCardProps {
 const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
     const [copied, setCopied] = useState(false);
     const analysis = getRunSummaryAnalysis(s);
+    const reflection = getRunSummaryReflectionStrip(s, analysis);
 
     const handleShare = async () => {
         try {
@@ -59,14 +60,14 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                 initial={{ opacity: 0, y: 40, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="panel-noise aether-surface-strong relative z-10 w-full max-w-[34rem] overflow-hidden rounded-[2rem] shadow-[0_36px_96px_rgba(1,6,14,0.62)]"
+                className="panel-noise aether-surface-strong relative z-10 max-h-[calc(100svh-1rem)] w-full max-w-[34rem] overflow-hidden rounded-[2rem] shadow-[0_36px_96px_rgba(1,6,14,0.62)]"
             >
                 <div
                     className="pointer-events-none absolute inset-0 opacity-60"
                     style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.05), transparent 22%), radial-gradient(circle at top right, rgba(154,138,192,0.12), transparent 28%)' }}
                 />
 
-                <div className="px-6 pb-5 pt-6">
+                <div className="custom-scrollbar relative max-h-[calc(100svh-1rem)] overflow-y-auto overflow-x-hidden px-6 pb-5 pt-6">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
@@ -99,6 +100,24 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                                 </SignalBadge>
                             )}
                         </div>
+                    </div>
+
+                    <div
+                        data-testid="run-summary-reflection-strip"
+                        data-run-tone={reflection.tone}
+                        aria-label="런 종료 원인과 다음 시도 요약"
+                        className="aether-run-reflection-strip mt-5 grid grid-cols-3 gap-2 rounded-[1.15rem] p-2"
+                    >
+                        {reflection.cells.map((cell: any) => (
+                            <div key={cell.label} className="aether-run-reflection-cell rounded-[0.8rem] px-2.5 py-2">
+                                <div className="font-fira text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400/86">
+                                    {cell.label}
+                                </div>
+                                <div className="mt-1 min-h-[2.05rem] whitespace-normal break-keep font-rajdhani text-[0.82rem] font-bold leading-[1.15] tracking-[0.04em] text-white sm:text-[0.95rem]">
+                                    {cell.value}
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     <div className="mt-5 grid grid-cols-2 gap-2.5">

@@ -40,7 +40,9 @@ test("cycle 428: RewardChips destructure에서 default accent 'blue' 제거", as
     const source = await readSrc('src/components/tabs/QuestBoardPanel.tsx');
     assert.ok(!/accent = 'blue'/.test(source),
         "RewardChips의 default `accent = 'blue'` 제거됨");
-    assert.ok(/RewardChips = \(\{ reward, accent \}/.test(source)
+    // slice 20: inline prop 추가 (메타 칩 줄과 보상 칩 줄 통합) — accent 파라미터
+    //   보존 가드는 inline 유무와 무관하게 유지.
+    assert.ok(/RewardChips = \(\{ reward, accent(?:, inline = false)? \}/.test(source)
         || /RewardChips = \(\{ accent, reward \}/.test(source),
         'destructure에서 accent 파라미터 보존');
 });
@@ -59,7 +61,7 @@ test('cycle 428: ternary 분기 (green/amber/blue fallback) 보존', async () =>
     const source = await readSrc('src/components/tabs/QuestBoardPanel.tsx');
     assert.ok(/accent === 'green'/.test(source), 'green 분기 보존');
     assert.ok(/accent === 'amber'/.test(source), 'amber 분기 보존');
-    assert.ok(/border-cyber-blue/.test(source), 'blue fallback 클래스 보존');
+    assert.ok(/border-\[#7dd4d8\]/.test(source), 'readable cyan fallback 클래스 보존');
 });
 
 test('cycle 427 회귀 가드: SignatureBadge TONE_COLORS rust 보존', async () => {

@@ -20,6 +20,28 @@ test('quest tracker prioritizes claimable rewards', () => {
     assert.equal(tracker.progressLabel, '보상 대기');
 });
 
+test('quest tracker exposes active route and mission chips', () => {
+    const player = {
+        quests: [
+            {
+                id: 1,
+                progress: 1,
+                isBounty: false,
+            }
+        ],
+    };
+
+    const tracker = getQuestTracker(player);
+
+    assert.equal(tracker.kind, 'active');
+    assert.equal(tracker.title, '슬라임 소탕');
+    assert.equal(tracker.progressPercent, 33);
+    assert.equal(tracker.routeLabel, '고요한 숲');
+    assert.match(tracker.nextStep, /고요한 숲에서 슬라임 추적/);
+    assert.ok(tracker.chips.some((chip) => chip.label === 'ROUTE' && chip.value === '고요한 숲'));
+    assert.ok(tracker.chips.some((chip) => chip.label === 'RETURN' && chip.value === 'TARGET'));
+});
+
 test('adventure guidance recommends rest in town when hp is low', () => {
     const player = {
         hp: 58,
@@ -38,6 +60,34 @@ test('adventure guidance recommends rest in town when hp is low', () => {
 
     assert.equal(guidance.primaryAction.kind, 'rest');
     assert.ok(guidance.detail.includes('휴식'));
+});
+
+test('adventure guidance keeps active quest visible from town', () => {
+    const player = {
+        hp: 160,
+        maxHp: 160,
+        mp: 44,
+        maxMp: 44,
+        gold: 200,
+        job: '전사',
+        level: 3,
+        inv: [],
+        quests: [
+            {
+                id: 1,
+                progress: 1,
+                isBounty: false,
+            }
+        ],
+        stats: { exploreState: { sinceNarrativeEvent: 0, sinceDiscovery: 0, sinceRelic: 0, quietStreak: 0 }, signaturePity: 0 },
+    };
+
+    const guidance = getAdventureGuidance(player, { maxHp: 160, maxMp: 44 }, { type: 'safe' }, 'idle');
+
+    assert.equal(guidance.title, '임무 재출발 준비');
+    assert.equal(guidance.primaryAction.kind, 'open_move');
+    assert.ok(guidance.detail.includes('슬라임 소탕'));
+    assert.ok(guidance.detail.includes('고요한 숲에서 슬라임 추적'));
 });
 
 test('exploration forecast marks boss zones clearly', () => {
@@ -88,6 +138,8 @@ test('move recommendations prioritize safe exits when hp is low', () => {
 
     assert.equal(routes[0].name, '시작의 마을');
     assert.equal(routes[0].badge, '정비');
+    assert.equal(routes[0].routePlan.returnLabel, 'SAFE');
+    assert.match(routes[0].routePlan.exitRule, /REST\/BOARD/);
 });
 
 test('move recommendations favor level-fit unexplored routes when stable', () => {
@@ -116,4 +168,6 @@ test('move recommendations favor level-fit unexplored routes when stable', () =>
     assert.equal(routes[0].name, '버려진 광산');
     assert.equal(routes[0].isRecommended, true);
     assert.equal(routes[0].badge, '개척');
+    assert.equal(routes[0].routePlan.approach, '미답 권역 조사');
+    assert.ok(routes[0].chips.some((chip) => chip.label === 'RETURN'));
 });
