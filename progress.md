@@ -1,5 +1,9 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Checked (Slice 21+22 iOS Device Gate — PASSED):
+- Slice 19-22 전부 포함 아카이브 재생성(`ARCHIVE SUCCEEDED`) → `npm run ios:device:smoke` 전체 통과 (exit 0): install (`.../DBA07570.../App.app`) → foreground launch → 60초 hold → done. 잠금/신뢰 블로커 재발 없음.
+- 실기기 수동 5분 루틴 확인 포인트: 첫 전투 4-5턴(S19) / NEXT 가이드 스트립 '첫 원정 준비→첫 교전'(S22) / 마을↔숲 지역 톤 전환(S21) / 퀘스트 보드 한국어 CTA(S22) / [치명타] 태그 로그·INTENT 단일 표시(S20).
+
 Done (First-Session Onboarding Slice 22):
 - 갭 진단: getAdventureGuidance가 상황 힌트를 계산하지만 추천 버튼 하이라이트 외 텍스트 렌더 0건 + 완전 신규 플레이어(탐험 0/처치 0) 분기 부재 → 첫 5분 시퀀스를 스스로 찾아야 했음.
 - adventureGuide 신규 분기 2종: 마을 '첫 원정 준비'(첫 방문 보상 안내, open_move) / 필드 '첫 교전'(강타 MP 10·1.5배 팁, explore). 보상 회수 분기보다 후순위, 전직/정비보다 선순위. 처치 1회 또는 탐험 이력 발생 시 기존 흐름 복귀.
