@@ -1,5 +1,9 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Checked (Slice 25 iOS Redeploy — PASSED):
+- 1·2차 시도는 기기 잠금(kAMDMobileImageMounterDeviceLocked)으로 DDI 마운트 실패 — 앱/파이프라인 이슈 아님. 잠금 해제 후 3차 시도 전체 통과 (exit 0): install (`.../E6D7253E.../App.app`) → launch → 60초 hold → done.
+- 실기기 최신 빌드 = slices 19-25 전부 포함. 시그니처 25종 픽셀 아트 + 레어리티 플레이트 + 모던 CTA 반영.
+
 Done (Item Art Cohesion & Trendy UI Slice 25):
 - 진단: 상점/도감의 시그니처(전설) 25종이 평면 도형 플레이스홀더 — 아바타/장비 family의 풍부한 픽셀 결과 충돌 (몽타주 4종 비교로 확정: family 22 ✓ / 비장비 12 ✓ / exact 21 ✓ / signature 25 ✗).
 - `scripts/generate_signature_pixel_art.py` 신설: family 아트와 동일한 원본 아이콘 풀(public/assets/items)에서 ① hue-shift 리컬러 — signatureRegistry tone(artPalette 키)으로 정체성 색, S/V 텍스처(블레이드/힐트 머티리얼 대비) 보존, 채도별 3분기(유채색 hue 0.9 견인 / 밝은 금속 틴트 / 아웃라인 보존) ② trim 컬러 전설 오라(실루엣 글로우) + 시드 결정론 스파클. 25종 전부 재생성, 파일명 유지로 코드 변경 0건.
