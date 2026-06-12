@@ -219,7 +219,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                     data-testid="quest-board-start-operation"
                     whileTap={{ scale: 0.95 }}
                     onClick={() => actions.acceptQuest(entry.quest.id)}
-                    className="mt-3 min-h-[44px] w-full rounded-[0.9rem] border border-[#7dd4d8]/28 bg-[#7dd4d8]/12 px-4 py-3 text-xs font-bold text-[#dff7f5] transition-all hover:bg-[#7dd4d8]/18"
+                    className="aether-cta-primary mt-3 min-h-[44px] w-full rounded-[0.9rem] px-4 py-3 text-xs font-bold text-[#dff7f5]"
                   >
                     작전 개시
                   </Motion.button>
@@ -315,7 +315,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   <OperationBriefRows brief={entry.brief} />
                   <RewardChips reward={quest.reward} accent="blue" />
                 </div>
-                <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-[#7dd4d8]/28 bg-[#7dd4d8]/12 px-5 py-3 text-xs font-bold text-[#dff7f5] transition-all hover:bg-[#7dd4d8]/18">
+                <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="aether-cta-primary min-h-[44px] shrink-0 rounded-[0.9rem] px-5 py-3 text-xs font-bold text-[#dff7f5]">
                   임무 수락
                 </Motion.button>
               </div>

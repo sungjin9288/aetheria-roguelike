@@ -1,5 +1,17 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (Item Art Cohesion & Trendy UI Slice 25):
+- 진단: 상점/도감의 시그니처(전설) 25종이 평면 도형 플레이스홀더 — 아바타/장비 family의 풍부한 픽셀 결과 충돌 (몽타주 4종 비교로 확정: family 22 ✓ / 비장비 12 ✓ / exact 21 ✓ / signature 25 ✗).
+- `scripts/generate_signature_pixel_art.py` 신설: family 아트와 동일한 원본 아이콘 풀(public/assets/items)에서 ① hue-shift 리컬러 — signatureRegistry tone(artPalette 키)으로 정체성 색, S/V 텍스처(블레이드/힐트 머티리얼 대비) 보존, 채도별 3분기(유채색 hue 0.9 견인 / 밝은 금속 틴트 / 아웃라인 보존) ② trim 컬러 전설 오라(실루엣 글로우) + 시드 결정론 스파클. 25종 전부 재생성, 파일명 유지로 코드 변경 0건.
+- ItemIcon 레어리티 플레이트 강화: 보더 40→66%, 래디얼 워시 18→2e, 글로우 상향 — 등급이 타일에서 즉시 읽히는 모던 수집형 문법.
+- 결정 CTA 모던화: `aether-cta-primary/gold`(그라디언트 + 인셋 하이라이트 + 프레스 스케일) — 작전 개시/임무 수락/상점 구매 적용. high-readability 모드에서 그라디언트/섀도 제거.
+- 가드: tests/slice-25-item-art-cohesion.test.js 5건 (25종 전수 160px + 플레이스홀더 크기 검출 + 스크립트 매핑 전수 + CTA 토큰/적용 + 플레이트 강화).
+
+Verification (Item Art Cohesion & Trendy UI Slice 25):
+- `npm run verify` → 2913/2913 + type-check/lint/build-guard. Playwright e2e 21/21.
+- 몽타주 실측: 시그니처 v2 그리드 — holy=황금/frost=빙백/shadow=자수정/nature=신록 정체성 + 오라/스파클, family 결 일치.
+- 브라우저 실측(390×844): 상점 레어리티 플레이트·골드 CTA·일관 픽셀 결 확인.
+
 Checked (Slice 19-24 Final iOS Redeploy — PASSED):
 - slice 24(승리 전리품 중복 마무리 + CHANGELOG) 커밋 후 전체 재배포 파이프라인 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../CB83965B.../App.app`) → foreground launch → 60초 hold → done.
 - 이 빌드가 slices 19-24 전부 포함한 실기기 최신 상태. 다음 단계는 사용자 수동 5분 루틴 — 핵심 측정: 초반 레벨 간격(감속 후 Lv2 ~5-6분, 초반 콘텐츠 소비 후 Lv4), 첫 전투 4-5턴, NEXT 온보딩 스트립, 지역 톤 전환, 한국어 CTA, 중복 없는 전투/승리 로그.

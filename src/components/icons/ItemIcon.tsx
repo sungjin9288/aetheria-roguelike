@@ -73,11 +73,13 @@ const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatur
         ? SIGNATURE_TONE_RING[getSignatureMetadata(item)?.tone] || SIGNATURE_TONE_RING.holy
         : null;
 
+    // slice 25: 레어리티 플레이트 강화 — 보더/래디얼/글로우를 한 단계 올려
+    //   등급이 타일에서 즉시 읽히게 (모던 수집형 게임 아이템 타일 문법).
     const baseShell = showBorder ? {
-        border: `1.5px solid ${color}40`,
-        borderRadius: 8,
-        background: `radial-gradient(circle at 30% 24%, ${color}18, transparent 42%), linear-gradient(180deg, rgba(20,24,30,0.98) 0%, rgba(8,10,14,1) 100%)`,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 12px ${color}14`,
+        border: `1.5px solid ${color}66`,
+        borderRadius: 10,
+        background: `radial-gradient(circle at 30% 22%, ${color}2e, transparent 52%), linear-gradient(180deg, rgba(22,26,33,0.98) 0%, rgba(8,10,14,1) 100%)`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 6px 14px ${color}24`,
     } : {
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: 8,

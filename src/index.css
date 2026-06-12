@@ -1134,6 +1134,34 @@
   outline: none;
 }
 
+/* slice 25: 결정 CTA 모던화 — 그라디언트 + 인셋 하이라이트 + 프레스 스케일.
+   행동을 확정하는 버튼(작전 개시/임무 수락/구매)에만 사용. */
+.aether-cta-primary {
+  background-image: linear-gradient(180deg, rgba(125, 212, 216, 0.24) 0%, rgba(125, 212, 216, 0.1) 52%, rgba(8, 14, 18, 0.25) 100%);
+  border: 1px solid rgba(125, 212, 216, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 10px 22px rgba(125, 212, 216, 0.12);
+  transition: transform 0.12s ease, filter 0.18s ease;
+}
+.aether-cta-primary:active:not(:disabled) {
+  transform: scale(0.97);
+  filter: brightness(1.12);
+}
+.aether-cta-gold {
+  background-image: linear-gradient(180deg, rgba(213, 177, 128, 0.26) 0%, rgba(213, 177, 128, 0.1) 52%, rgba(20, 14, 8, 0.25) 100%);
+  border: 1px solid rgba(213, 177, 128, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 10px 22px rgba(213, 177, 128, 0.12);
+  transition: transform 0.12s ease, filter 0.18s ease;
+}
+.aether-cta-gold:active:not(:disabled) {
+  transform: scale(0.97);
+  filter: brightness(1.12);
+}
+[data-readability-mode="high"] .aether-cta-primary,
+[data-readability-mode="high"] .aether-cta-gold {
+  box-shadow: none;
+  background-image: none;
+}
+
 /* slice 21: 지역별 ambient 팔레트 — MainLayout이 위치 기반으로 --region-accent /
    --region-soft를 설정. 상단 radial wash 1개로 지역 분위기만 표현 (시맨틱 컬러 불변). */
 [data-app-shell] {

@@ -263,7 +263,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             }}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
-                                            className="aether-disabled-action shrink-0 min-h-[44px] rounded-full border border-amber-400/30 px-2.5 py-1 text-[10px] font-bold text-amber-200 transition-all hover:bg-amber-400/10"
+                                            className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-2.5 py-1 text-[10px] font-bold text-amber-100"
                                         >
                                             {canBuy ? '구매' : reason}
                                         </button>
@@ -374,7 +374,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                     setPurchaseNotice(item.name);
                                                 }}
                                                 disabled={!canBuy}
-                                                className="aether-disabled-action min-h-[44px] rounded-[0.75rem] border border-[#d5b180]/24 px-2 py-1 text-[10px] font-bold text-[#f6e7c8] transition-all hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30"
+                                                className="aether-disabled-action aether-cta-gold min-h-[44px] rounded-[0.75rem] px-2 py-1 text-[10px] font-bold text-[#f6e7c8]"
                                             >
                                                 {canBuy ? '구매' : '불가'}
                                             </button>
