@@ -1,5 +1,13 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (Per-Item Consumable/Material Art Slice 27):
+- 비장비 77종(소모품 14 물약 포함 + 재료 54 + 열쇠/유물)도 아이템별 고유 아트로 — 마나 물약이 빨간 potion.png로 보이던 문제 해소.
+- `scripts/generate_nonequipment_item_art.py`: 소모품은 TYPE 기반 톤(hp→적, mp→청, cure→녹, buff→금 — 기능이 색으로 즉시 읽힘), 재료는 self-jitter(원본 고유색 유지 + 이름 시드 변주). tier 3+ 스파클/5+ 오라.
+- `src/data/consumableArtManifest.json` 신설, getItemIconAssetSrc에 비장비 family 앞 라우트 추가. 가드 2건 전수 커버 계약으로 갱신 (77/77).
+
+Verification (Per-Item Consumable/Material Art Slice 27):
+- `npm run verify` → 2913/2913, e2e 21/21. 몽타주 실측(HP 적 4종 변주/MP 청/해독 녹/버프 금/재료 변주) + 브라우저 인벤토리 `/items/auto/` 라우트 확인.
+
 Done (Per-Item Equipment Art Slice 26):
 - 사용자 확인 질문("상점 아이템 이미지 아직 수정 안 된 거지?")으로 잔여 갭 확정: 일반 장비 233종이 family PNG 22장을 공유 — '수련생의 검'과 '강철 롱소드'가 동일 그림.
 - `scripts/generate_equipment_item_art.py`: 시그니처 생성기 엔진 재사용 — family 실루엣 base + elem→tone 리컬러(화염→fire 등 8매핑, 무속성은 tier 사다리 rust→steel→earth→holy→arcane) + 이름 시드 jitter(같은 톤·실루엣끼리도 구분) + tier 4+ 스파클/5+ 오라. 233종 전수 생성 → `public/assets/equipment-exact/auto/auto-<sha1 12>.png`.

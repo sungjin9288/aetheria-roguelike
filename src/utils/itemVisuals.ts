@@ -2,6 +2,7 @@ import type { Item } from '../types/index.js';
 import { ITEMS } from '../data/items.js';
 import signatureRegistrySource from '../data/signatureRegistry.json' with { type: 'json' };
 import equipmentArtManifest from '../data/equipmentArtManifest.json' with { type: 'json' };
+import consumableArtManifest from '../data/consumableArtManifest.json' with { type: 'json' };
 import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon, isMagicWeapon } from './equipmentUtils.js';
 
 // slice 26: 장비 아이템별 고유 아트 매니페스트 — generate_equipment_item_art.py가
@@ -9,6 +10,13 @@ import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon, isMagicWeapon } fr
 //   ('수련생의 검' == '강철 롱소드') 문제 해소. signature보다는 후순위.
 const AUTO_EQUIPMENT_ART_BY_NAME: Record<string, string> = Object.freeze(
     (equipmentArtManifest as any).entries || {}
+);
+
+// slice 27: 비장비(소모품/재료) 아이템별 고유 아트 — 물약 14종이 전부 같은
+//   빨간 potion.png(마나 물약도 빨간 병)이던 문제 해소. 소모품은 type 기반
+//   톤(hp 적/mp 청/cure 녹/buff 금), 재료는 self-jitter 변주.
+const AUTO_NONEQUIP_ART_BY_NAME: Record<string, string> = Object.freeze(
+    (consumableArtManifest as any).entries || {}
 );
 
 // Signature item sprite overrides (Tier S 고유 아트). family/SPECIAL fallback보다 우선.
@@ -454,6 +462,12 @@ export const getItemIconAssetSrc = (item: Item | null | undefined) => {
     const equipmentFamilyKey = getEquipmentIllustrationFamilyKey(visualItem);
     if (equipmentFamilyKey) {
         return `/assets/equipment-family/items/${equipmentFamilyKey}.png`;
+    }
+    // slice 27: 비장비도 아이템별 고유 아트 우선 — family 그림은 매니페스트
+    //   미등록(신규 아이템) fallback.
+    const autoNonEquipKey = visualItem?.name ? AUTO_NONEQUIP_ART_BY_NAME[visualItem.name as string] : null;
+    if (autoNonEquipKey) {
+        return `/assets/items/${autoNonEquipKey}.png`;
     }
     const nonEquipmentFamilyKey = getNonEquipmentIllustrationFamilyKey(visualItem);
     if (nonEquipmentFamilyKey) {

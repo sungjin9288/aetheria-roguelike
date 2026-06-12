@@ -170,7 +170,9 @@ test('non-equipment family asset keys map readable item categories', () => {
     assert.equal(getNonEquipmentIllustrationFamilyKey({ name: '고대 유물', type: 'all' }), 'relic');
 });
 
-test('non-equipment playable item icons consistently use shared family art', async () => {
+// slice 27: 비장비도 아이템별 auto 아트 1순위 — 물약 14종 동일 그림(마나
+//   물약도 빨간 병) 문제 해소. family 그림은 매니페스트 미등록 fallback.
+test('non-equipment playable item icons use per-item auto art (type tone / self-jitter)', async () => {
     const { ITEMS } = await import('../src/data/items.js');
     const nonEquipmentItems = Object.values(ITEMS).flat().filter((item) => (
         item
@@ -179,11 +181,15 @@ test('non-equipment playable item icons consistently use shared family art', asy
     ));
 
     assert.ok(nonEquipmentItems.length > 70, 'Expected broad non-equipment item coverage');
+    let autoCount = 0;
     for (const item of nonEquipmentItems) {
         const src = getItemIconAssetSrc(item);
-        assert.match(src, /^\/assets\/items\/(potion|material|ore|crystal|scale|fang|bone|core|relic|herb|pouch|key)\.png$/);
+        assert.match(src, /^\/assets\/items\/(auto\/auto-[0-9a-f]{12}|potion|material|ore|crystal|scale|fang|bone|core|relic|herb|pouch|key)\.png$/);
+        if (/\/auto\//.test(src)) autoCount += 1;
         assert.doesNotMatch(src, /\/item-[a-z]+-\d+\./, `Expected no exact-name item art routing for ${item.name}`);
     }
+    assert.equal(autoCount, nonEquipmentItems.length,
+        `비장비 전수 auto 아트 커버 (${autoCount}/${nonEquipmentItems.length})`);
 });
 
 test('every displayable catalog item resolves into a cohesive item art system', async () => {
@@ -194,13 +200,14 @@ test('every displayable catalog item resolves into a cohesive item art system', 
     for (const item of displayableItems) {
         const src = getItemIconAssetSrc(item);
         const isSignatureArt = /^\/assets\/equipment-exact\/signature-/.test(src);
-        // slice 26: 아이템별 auto 아트 루트 합류
+        // slice 26/27: 아이템별 auto 아트 루트 합류 (장비 + 비장비)
         const isAutoEquipmentArt = /^\/assets\/equipment-exact\/auto\/auto-[0-9a-f]{12}\.png$/.test(src);
+        const isAutoNonEquipArt = /^\/assets\/items\/auto\/auto-[0-9a-f]{12}\.png$/.test(src);
         const isEquipmentFamilyArt = /^\/assets\/equipment-family\/items\//.test(src);
         const isNonEquipmentFamilyArt = /^\/assets\/items\/(potion|material|ore|crystal|scale|fang|bone|core|relic|herb|pouch|key)\.png$/.test(src);
 
         assert.equal(
-            isSignatureArt || isAutoEquipmentArt || isEquipmentFamilyArt || isNonEquipmentFamilyArt,
+            isSignatureArt || isAutoEquipmentArt || isAutoNonEquipArt || isEquipmentFamilyArt || isNonEquipmentFamilyArt,
             true,
             `Expected cohesive art route for ${item.name || item.desc || 'unknown'} (${src})`
         );
