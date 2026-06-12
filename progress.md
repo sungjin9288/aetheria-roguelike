@@ -1,5 +1,9 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Checked (Slice 25-27 iOS Redeploy — PASSED):
+- 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
+- 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
+
 Done (Per-Item Consumable/Material Art Slice 27):
 - 비장비 77종(소모품 14 물약 포함 + 재료 54 + 열쇠/유물)도 아이템별 고유 아트로 — 마나 물약이 빨간 potion.png로 보이던 문제 해소.
 - `scripts/generate_nonequipment_item_art.py`: 소모품은 TYPE 기반 톤(hp→적, mp→청, cure→녹, buff→금 — 기능이 색으로 즉시 읽힘), 재료는 self-jitter(원본 고유색 유지 + 이름 시드 변주). tier 3+ 스파클/5+ 오라.
