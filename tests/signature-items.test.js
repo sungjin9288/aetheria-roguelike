@@ -163,10 +163,11 @@ test('getEquipmentOverlayAssetSrc prefers signature wearable path for Tier S ite
     assert.equal(src, '/assets/equipment-wearable-exact/signature-weapon-ragnarok.png');
 });
 
-test('getItemIconAssetSrc falls back to family/tinted art for non-signature items', () => {
+// slice 26: 일반 장비도 아이템별 auto 아트 — 가드 의도는 "signature 아트를
+//   비-시그니처가 가로채지 않는다"이므로 signature- 경로 부재만 유지 확인.
+test('getItemIconAssetSrc routes non-signature items to per-item auto art (not signature)', () => {
     const src = getItemIconAssetSrc({ name: '녹슨 단검', type: 'weapon' });
-    assert.match(src, /^\/assets\/equipment-family\/items\//);
-    assert.doesNotMatch(src, /equipment-exact/);
+    assert.match(src, /^\/assets\/equipment-exact\/auto\/auto-[0-9a-f]{12}\.png$/);
     assert.doesNotMatch(src, /signature-/);
 });
 

@@ -1,5 +1,16 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (Per-Item Equipment Art Slice 26):
+- 사용자 확인 질문("상점 아이템 이미지 아직 수정 안 된 거지?")으로 잔여 갭 확정: 일반 장비 233종이 family PNG 22장을 공유 — '수련생의 검'과 '강철 롱소드'가 동일 그림.
+- `scripts/generate_equipment_item_art.py`: 시그니처 생성기 엔진 재사용 — family 실루엣 base + elem→tone 리컬러(화염→fire 등 8매핑, 무속성은 tier 사다리 rust→steel→earth→holy→arcane) + 이름 시드 jitter(같은 톤·실루엣끼리도 구분) + tier 4+ 스파클/5+ 오라. 233종 전수 생성 → `public/assets/equipment-exact/auto/auto-<sha1 12>.png`.
+- `src/data/equipmentArtManifest.json`(이름→경로) 신설, `itemVisuals.getItemIconAssetSrc`에 signature 다음·family 앞 라우트 추가 — family는 매니페스트 미등록(신규 아이템) fallback으로 강등.
+- 가드 3건 계약 갱신(family 강제 → per-item auto + 전수 커버 assert), 카탈로그 덤프에 shields 포함 누락 1회 수정(168/168 전수 확인).
+
+Verification (Per-Item Equipment Art Slice 26):
+- `npm run verify` → 2913/2913, Playwright e2e 21/21.
+- 몽타주 실측: 녹슨 단검(러스트)/독침 단검(독 그린)/수련생의 검/강철 롱소드/롱소드 모두 구분, 빙결 지팡이 한기 스파클.
+- 브라우저 실측: 상점 타일 전부 `/auto/` 라우트 (16건), 아이템별 차별화 렌더 확인.
+
 Checked (Slice 25 iOS Redeploy — PASSED):
 - 1·2차 시도는 기기 잠금(kAMDMobileImageMounterDeviceLocked)으로 DDI 마운트 실패 — 앱/파이프라인 이슈 아님. 잠금 해제 후 3차 시도 전체 통과 (exit 0): install (`.../E6D7253E.../App.app`) → launch → 60초 hold → done.
 - 실기기 최신 빌드 = slices 19-25 전부 포함. 시그니처 25종 픽셀 아트 + 레어리티 플레이트 + 모던 CTA 반영.

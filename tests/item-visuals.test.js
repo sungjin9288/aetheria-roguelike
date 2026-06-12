@@ -125,7 +125,10 @@ test('avatar preview item icon routing stays disabled for normal equipment item 
     assert.equal(shouldUseAvatarPreviewItemIcon({ name: '수호의 물약', type: 'hp' }), false);
 });
 
-test('non-signature equipment item icons consistently use the family art system', async () => {
+// slice 26: 일반 장비는 아이템별 auto 아트(family 실루엣 + elem/tier 리컬러)가
+//   1순위 — '수련생의 검' == '강철 롱소드' 공유 그림 문제 해소. family 경로는
+//   매니페스트 미등록(신규 아이템) fallback으로만 허용.
+test('non-signature equipment item icons use per-item auto art (family silhouette base)', async () => {
     const { ITEMS } = await import('../src/data/items.js');
     const equipItems = Object.values(ITEMS).flat().filter((item) => (
         item
@@ -134,14 +137,19 @@ test('non-signature equipment item icons consistently use the family art system'
     ));
 
     assert.ok(equipItems.length > 100, 'Expected broad non-signature equipment coverage');
+    let autoCount = 0;
     for (const item of equipItems) {
+        const src = getItemIconAssetSrc(item);
         assert.match(
-            getItemIconAssetSrc(item),
-            /^\/assets\/equipment-family\/items\//,
-            `Expected family item icon art for ${item.name}`
+            src,
+            /^\/assets\/equipment-(exact\/auto\/auto-[0-9a-f]{12}|family\/items\/[a-z-]+)\.png$/,
+            `Expected per-item auto art (or family fallback) for ${item.name} (${src})`
         );
+        if (/\/auto\//.test(src)) autoCount += 1;
         assert.equal(shouldUseAvatarPreviewItemIcon(item), false, `Expected no avatar-preview icon mix for ${item.name}`);
     }
+    assert.equal(autoCount, equipItems.length,
+        `비-시그니처 장비 전수 auto 아트 커버 (${autoCount}/${equipItems.length})`);
 });
 
 test('non-equipment family asset keys map readable item categories', () => {
@@ -186,11 +194,13 @@ test('every displayable catalog item resolves into a cohesive item art system', 
     for (const item of displayableItems) {
         const src = getItemIconAssetSrc(item);
         const isSignatureArt = /^\/assets\/equipment-exact\/signature-/.test(src);
+        // slice 26: 아이템별 auto 아트 루트 합류
+        const isAutoEquipmentArt = /^\/assets\/equipment-exact\/auto\/auto-[0-9a-f]{12}\.png$/.test(src);
         const isEquipmentFamilyArt = /^\/assets\/equipment-family\/items\//.test(src);
         const isNonEquipmentFamilyArt = /^\/assets\/items\/(potion|material|ore|crystal|scale|fang|bone|core|relic|herb|pouch|key)\.png$/.test(src);
 
         assert.equal(
-            isSignatureArt || isEquipmentFamilyArt || isNonEquipmentFamilyArt,
+            isSignatureArt || isAutoEquipmentArt || isEquipmentFamilyArt || isNonEquipmentFamilyArt,
             true,
             `Expected cohesive art route for ${item.name || item.desc || 'unknown'} (${src})`
         );

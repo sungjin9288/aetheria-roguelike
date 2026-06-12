@@ -1,7 +1,15 @@
 import type { Item } from '../types/index.js';
 import { ITEMS } from '../data/items.js';
 import signatureRegistrySource from '../data/signatureRegistry.json' with { type: 'json' };
+import equipmentArtManifest from '../data/equipmentArtManifest.json' with { type: 'json' };
 import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon, isMagicWeapon } from './equipmentUtils.js';
+
+// slice 26: 장비 아이템별 고유 아트 매니페스트 — generate_equipment_item_art.py가
+//   family 실루엣 + elem/tier 톤 리컬러로 229종 전수 생성. family 공유 그림
+//   ('수련생의 검' == '강철 롱소드') 문제 해소. signature보다는 후순위.
+const AUTO_EQUIPMENT_ART_BY_NAME: Record<string, string> = Object.freeze(
+    (equipmentArtManifest as any).entries || {}
+);
 
 // Signature item sprite overrides (Tier S 고유 아트). family/SPECIAL fallback보다 우선.
 const SIGNATURE_SPRITE_KEY_BY_NAME: any = Object.freeze(
@@ -436,6 +444,12 @@ export const getItemIconAssetSrc = (item: Item | null | undefined) => {
     const signatureEquipmentKey = visualItem?.name ? SIGNATURE_SPRITE_KEY_BY_NAME[visualItem.name as string] : null;
     if (signatureEquipmentKey) {
         return `/assets/equipment-exact/${signatureEquipmentKey}.png`;
+    }
+    // slice 26: 아이템별 고유 아트 우선 — family 공유 그림은 매니페스트 미등록
+    //   아이템(신규 추가 직후 등)의 fallback으로만 유지.
+    const autoEquipmentKey = visualItem?.name ? AUTO_EQUIPMENT_ART_BY_NAME[visualItem.name as string] : null;
+    if (autoEquipmentKey) {
+        return `/assets/equipment-exact/${autoEquipmentKey}.png`;
     }
     const equipmentFamilyKey = getEquipmentIllustrationFamilyKey(visualItem);
     if (equipmentFamilyKey) {
