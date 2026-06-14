@@ -286,7 +286,7 @@ const ControlPanel = ({
       <Motion.div
         initial={false}
         animate={{ opacity: 1 }}
-        className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center rounded-[1.9rem] border border-[#9a8ac0]/20 px-5 py-6 text-center text-[#ece5ff] shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-md"
+        className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center rounded-[1.5rem] border border-[#9a8ac0]/20 px-5 py-6 text-center text-[#ece5ff] shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-md"
       >
         NEURAL LINK ACTIVE... PROCESSING SCENARIO...
       </Motion.div>
@@ -396,7 +396,7 @@ const ControlPanel = ({
     <Motion.div
       initial={false}
       animate={{ opacity: 1 }}
-      className="relative z-10 w-full panel-noise aether-surface rounded-[1.55rem] p-1.5"
+      className="relative z-10 w-full panel-noise aether-surface rounded-[1.5rem] p-1.5"
     >
       {gameState === GS.MOVING ? (
         <div className="space-y-2">

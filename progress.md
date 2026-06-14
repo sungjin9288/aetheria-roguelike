@@ -4,6 +4,16 @@ Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
 
+Done (Design System Unification Slice 28):
+- 요청: "전체적인 디자인 통일 + 유저에게 보이는 디자인 전부 디밸롭, 대중적 게임 참고." 디자인 토큰 감사(Explore)로 핵심 불일치 확정: aether-* 클래스가 배경/보더/그림자만 정의하고 border-radius는 컴포넌트가 매번 rounded-[Xrem] 인라인 → 같은 tier 패널이 1.45/1.5/1.55/1.9/1.95/2rem 제각각이라 화면마다 다른 디자인처럼 보임. 테스트는 인라인 rounded 값 0건 가드(aether 클래스명만) → 토큰화 안전.
+- 레퍼런스(Balatro/Slay the Spire/Hades, READABILITY_TREND_RESEARCH 기재): 화면 전체가 하나의 둥근 모서리 리듬 + 누를 수 있어 보이는 촉각 피드백 공유.
+- :root에 4단계 radius 토큰(--aether-r-cell 0.72 / card 0.9 / panel 1.15 / shell 1.5rem + overlay 1.9). aether-* 클래스가 radius를 직접 소유(@tailwind utilities 이후 정의라 인라인 rounded를 cascade로 덮어씀 — 브라우저 computed로 focus-panel 24px/shop-row 14.4px 확인). 단일 CSS 편집으로 focus-panel·shop/log/route/event/choice row·strip·cell·action-button 전 표면이 일괄 수렴.
+- 버튼/CTA 상호작용 레이어: hover 살짝 떠오름(translateY -1px) + transition, high-readability 모드 무효화. focus-panel 루트 5종(Event/Shop/Quest/Crafting/JobChange) 죽은 인라인 rounded 제거, in-flow 1.9rem 패널(ControlPanel NEURAL/CombatPanel) → 1.5rem 정규화. IntroScreen 시작 버튼 → aether-cta-primary(누를 수 있는 confirm).
+
+Verification (Design System Unification Slice 28):
+- `npm run verify` → 2913/2913 + type-check/lint/build-guard. Playwright e2e 21/21. slice-28 가드 6건 신규.
+- 브라우저 실측(390×844): 시작/필드/이벤트/상점/전투 전 화면 통일된 모서리 리듬 + CTA 촉각감 확인, 콘솔 에러 0건. computed radius cascade(focus 24px / row 14.4px) 검증.
+
 Done (Per-Item Consumable/Material Art Slice 27):
 - 비장비 77종(소모품 14 물약 포함 + 재료 54 + 열쇠/유물)도 아이템별 고유 아트로 — 마나 물약이 빨간 potion.png로 보이던 문제 해소.
 - `scripts/generate_nonequipment_item_art.py`: 소모품은 TYPE 기반 톤(hp→적, mp→청, cure→녹, buff→금 — 기능이 색으로 즉시 읽힘), 재료는 self-jitter(원본 고유색 유지 + 이름 시드 변주). tier 3+ 스파클/5+ 오라.

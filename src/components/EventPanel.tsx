@@ -75,7 +75,7 @@ const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
             initial={false}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] p-3"
+            className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3"
         >
             <div
                 className="pointer-events-none absolute inset-0 opacity-60"

@@ -27,7 +27,7 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
     <Motion.div
       initial={false}
       animate={{ opacity: 1, scale: 1 }}
-      className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] border border-[#9a8ac0]/18 px-4 py-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
+      className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden border border-[#9a8ac0]/18 px-4 py-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
     >
       <FocusPanelHeader
         eyebrow="Class Circuit"

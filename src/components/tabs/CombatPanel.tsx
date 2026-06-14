@@ -176,7 +176,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
       animate={{ opacity: 1, y: 0 }}
       className={`relative z-10 w-full space-y-2 ${
         mobile
-          ? 'panel-noise aether-surface rounded-[1.9rem] p-3'
+          ? 'panel-noise aether-surface rounded-[1.5rem] p-3'
           : 'mt-2.5'
       }`}
     >

@@ -1162,6 +1162,68 @@
   background-image: none;
 }
 
+/* ──────────────────────────────────────────────────────────────────────
+   slice 28: 디자인 시스템 통일 — radius 토큰 스케일 + 상호작용 레이어.
+   레퍼런스(Balatro / Slay the Spire / Hades): 화면 전체가 하나의 일관된
+   둥근 모서리 리듬 + 누를 수 있어 보이는 촉각 피드백을 공유한다.
+   기존엔 같은 tier 패널이 1.45/1.5/1.55/1.9/1.95/2rem 제각각이라 화면마다
+   다른 디자인처럼 보였다. 4단계 토큰으로 수렴.
+   ────────────────────────────────────────────────────────────────────── */
+:root {
+  --aether-r-cell: 0.72rem;    /* 셀/뱃지 안쪽 작은 블록 */
+  --aether-r-card: 0.9rem;     /* 행/리스트 카드/작은 버튼 */
+  --aether-r-panel: 1.15rem;   /* 스트립/중간 컨테이너/액션 버튼 */
+  --aether-r-shell: 1.5rem;    /* in-flow 포커스 패널 루트/허브 */
+  --aether-r-overlay: 1.9rem;  /* 전체화면 모달 오버레이 */
+}
+
+/* radius를 aether-* 클래스가 직접 소유 — 컴포넌트가 rounded-[Xrem]을 매번
+   인라인으로 붙이던 분산을 토큰으로 흡수. (@tailwind utilities 이후 정의라
+   동일 specificity에서 후순위 승리 → 인라인 rounded를 덮어쓴다.) */
+.aether-focus-panel { border-radius: var(--aether-r-shell); }
+.aether-action-button,
+.aether-combat-action,
+.aether-mission-strip,
+.aether-route-strip,
+.aether-combat-forecast,
+.aether-result-strip,
+.aether-relic-decision-strip,
+.aether-run-reflection-strip { border-radius: var(--aether-r-panel); }
+.aether-shop-row,
+.aether-log-row,
+.aether-map-route-card,
+.aether-map-current-card,
+.aether-status-metric,
+.aether-event-choice,
+.aether-craft-row,
+.aether-locked-row,
+.aether-choice-row { border-radius: var(--aether-r-card); }
+.aether-combat-forecast-cell,
+.aether-result-cell,
+.aether-relic-decision-cell,
+.aether-run-reflection-cell { border-radius: var(--aether-r-cell); }
+
+/* 상호작용 레이어 — 버튼/CTA에 hover 살짝 떠오름 + 부드러운 transition.
+   누름(scale)은 Framer whileTap이 담당하는 곳이 많아 CSS에선 lift만. */
+.aether-action-button,
+.aether-combat-action,
+.aether-cta-primary,
+.aether-cta-gold {
+  transition: transform 0.14s ease, border-color 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.aether-action-button:hover:not(:disabled),
+.aether-combat-action:hover:not(:disabled),
+.aether-cta-primary:hover:not(:disabled),
+.aether-cta-gold:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+[data-readability-mode="high"] .aether-action-button:hover,
+[data-readability-mode="high"] .aether-combat-action:hover,
+[data-readability-mode="high"] .aether-cta-primary:hover,
+[data-readability-mode="high"] .aether-cta-gold:hover {
+  transform: none;
+}
+
 /* slice 21: 지역별 ambient 팔레트 — MainLayout이 위치 기반으로 --region-accent /
    --region-soft를 설정. 상단 radial wash 1개로 지역 분위기만 표현 (시맨틱 컬러 불변). */
 [data-app-shell] {

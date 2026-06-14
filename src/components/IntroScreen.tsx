@@ -177,7 +177,7 @@ const IntroScreen = ({ onStart }: IntroScreenProps) => {
                         whileTap={{ scale: 0.97 }}
                         onClick={handleStart}
                         disabled={!canStart}
-                        className="flex-1 rounded-[1.4rem] border border-[#7dd4d8]/24 bg-[linear-gradient(180deg,rgba(125,212,216,0.18)_0%,rgba(125,212,216,0.08)_100%)] font-rajdhani font-bold text-[#e6f6f6] transition-all hover:border-[#d5b180]/28 hover:bg-[linear-gradient(180deg,rgba(213,177,128,0.18)_0%,rgba(125,212,216,0.12)_100%)] hover:shadow-[0_22px_40px_rgba(125,212,216,0.12)] disabled:cursor-not-allowed disabled:opacity-40 py-3.5 text-[0.95rem] tracking-[0.18em]"
+                        className="aether-cta-primary flex-1 rounded-[1.15rem] font-rajdhani font-bold text-[#e6f6f6] disabled:cursor-not-allowed disabled:opacity-40 py-3.5 text-[0.95rem] tracking-[0.18em]"
                     >
                         기록 개시
                     </Motion.button>

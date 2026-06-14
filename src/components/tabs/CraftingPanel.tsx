@@ -265,7 +265,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
   return (
     <Motion.div
       initial={false} animate={{ opacity: 1, y: 0 }}
-      className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.95rem] border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
+      className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
     >
       <FocusPanelHeader
         eyebrow="Forge Circuit"

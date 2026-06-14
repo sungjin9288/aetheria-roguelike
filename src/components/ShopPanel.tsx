@@ -184,7 +184,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     const weeklySpecial = useMemo(() => getWeeklySpecial(player.level || 1), [player.level]);
 
     return (
-        <div className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.45rem] p-3">
+        <div className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3">
             <FocusPanelHeader
                 eyebrow="Broker Ledger"
                 title="MARKET"
