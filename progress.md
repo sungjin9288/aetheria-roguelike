@@ -4,6 +4,10 @@ Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
 
+Checked (Slice 28 iOS Redeploy — PASSED):
+- 디자인 시스템 통일 빌드 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../E27CA81C.../App.app`) → launch → 60초 hold → done.
+- 실기기 최신 = slices 19-28 전부. 수동 확인: 전 화면 통일된 모서리 리듬, 버튼 촉각감, 아이템별 아트, 초반 템포/감속, 온보딩.
+
 Done (Design System Unification Slice 28):
 - 요청: "전체적인 디자인 통일 + 유저에게 보이는 디자인 전부 디밸롭, 대중적 게임 참고." 디자인 토큰 감사(Explore)로 핵심 불일치 확정: aether-* 클래스가 배경/보더/그림자만 정의하고 border-radius는 컴포넌트가 매번 rounded-[Xrem] 인라인 → 같은 tier 패널이 1.45/1.5/1.55/1.9/1.95/2rem 제각각이라 화면마다 다른 디자인처럼 보임. 테스트는 인라인 rounded 값 0건 가드(aether 클래스명만) → 토큰화 안전.
 - 레퍼런스(Balatro/Slay the Spire/Hades, READABILITY_TREND_RESEARCH 기재): 화면 전체가 하나의 둥근 모서리 리듬 + 누를 수 있어 보이는 촉각 피드백 공유.
