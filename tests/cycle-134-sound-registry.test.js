@@ -30,6 +30,7 @@ const REGISTERED_KEYS = [
     'discovery_chain', // cycle 117
     'new_area',        // cycle 118
     'quest_complete',  // cycle 122
+    'crit',            // slice 32 — 크리티컬 전용 사운드
 ];
 
 test('SoundManager: 모든 등록 키가 case 분기로 정의됨', async () => {

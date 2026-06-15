@@ -87,6 +87,22 @@ class SoundManager {
                 break;
             }
 
+            // slice 32: 크리티컬 전용 사운드 — 기존엔 crit도 'attack'(100→800 saw)으로
+            //   재생돼 일반 타격과 구분 안 됨. crit 시각 연출(골드 숫자 + 스크린 펄스)과
+            //   짝이 되도록 더 밝고 날카로운 임팩트 + E6 "ching" 액센트.
+            case 'crit': {
+                const { osc, gain, now } = this._createNodes();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(1600, now + 0.07);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.start(now);
+                osc.stop(now + 0.18);
+                this._playTone(1318.51, 0.12, 0.05); // E6 액센트
+                break;
+            }
+
             case 'levelUp':
                 // Arpeggio (별도 오실레이터 생성하지 않음)
                 this._playTone(523.25, 0.1, 0);       // C5

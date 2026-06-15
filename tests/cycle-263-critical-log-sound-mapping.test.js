@@ -39,10 +39,11 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('cycle 263: useGameEngine에서 critical 로그 타입 → attack 사운드 매핑', async () => {
+test('cycle 263 / slice 32: useGameEngine에서 critical 로그 타입 → 사운드 매핑', async () => {
+    // slice 32: 'critical' → 'attack'에서 전용 'crit' 사운드로 격상 (일반 타격과 분리).
     const source = await readSrc('src/hooks/useGameEngine.ts');
-    assert.ok(/lastLog\.type === ['"]critical['"][\s\S]{0,80}soundManager\.play\(['"]attack['"]\)/.test(source),
-        "useGameEngine에 lastLog.type === 'critical' → soundManager.play('attack') 매핑 추가");
+    assert.ok(/lastLog\.type === ['"]critical['"][\s\S]{0,120}soundManager\.play\(['"]crit['"]\)/.test(source),
+        "useGameEngine에 lastLog.type === 'critical' → soundManager.play('crit') 매핑");
 });
 
 test('cycle 263: 기존 5개 사운드 매핑 동작 유지 (회귀 가드)', async () => {

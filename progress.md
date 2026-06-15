@@ -4,6 +4,16 @@ Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
 
+Done (Crit Sound Slice 32):
+- 진단: SoundManager에 'crit' 사운드가 없어 크리도 일반 'attack'(100→800 saw)으로 재생 → 강화 타격이 평타와 똑같이 들림(cycle 263이 'critical'→'attack'으로 매핑). slice 30/31이 크리 시각 연출(골드 숫자+스크린 펄스)을 추가했으므로 짝이 되는 오디오가 빠진 상태였음.
+- SoundManager 'crit' 케이스 신설: square 320→1600 임팩트 + E6(1318.51) "ching" 액센트 — attack(sawtooth)과 명확히 구분.
+- useGameEngine: 'critical' 로그 → play('crit')로 격상 (combat 평타는 attack 유지).
+- 가드: slice-32 3건(crit 케이스/square·ching, critical→crit 매핑, 기존 케이스 보존). stale 2건 갱신: cycle-263 매핑 'attack'→'crit', cycle-134 레지스트리에 'crit' 추가.
+
+Verification (Crit Sound Slice 32):
+- `npm run verify` → unit 2933/2933 + type-check/lint/build-guard. Playwright e2e 21/21.
+- 오디오는 헤드리스 청취 불가 — 배선(critical→crit) + 케이스 정의 + 레지스트리 정합성 가드로 검증. 기존 사운드 패턴과 동일 경로(_ensureReady).
+
 Done (Meter Tween & Crit Pulse Slice 31):
 - 진단: StatusMetric(HP/MP/EXP) 바 fill에 transition이 없어 값 변화가 즉시 snap(가장 자주 보는 표면인데 끊겨 보임). criticalHit 키프레임은 미사용(dead)이라 크리 화면 연출 0.
 - StatusMetric fill에 transition-[width] duration-500 ease-out — 데미지/EXP 변화가 부드럽게 차오르고 빠짐. EXP 바가 레벨업 직전까지 채워지고 → slice 29 배너로 연결.
