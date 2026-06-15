@@ -4,6 +4,16 @@ Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
 
+Done (Combat & Reward Juice Slice 29):
+- 진단(피드백 레이어 감사): levelUpGlow/criticalHit 키프레임은 정의돼 있으나 미사용(dead), DamageNumber가 참조하는 floatUp 키프레임은 아예 미정의라 float 데미지 숫자 애니메이션이 죽어 있었음. slice 23이 레벨업을 의미있게 만들었지만 화면 연출은 0(사운드+로그뿐). 레퍼런스(Hades/Balatro): 성장·타격 순간의 짧고 확실한 "한 방" 피드백.
+- floatUp 키프레임 정의(DamageNumber 버그 fix) + 위치(상단 38% 중앙)/가독성(2xl, 글로우 textShadow, heal 에메랄드/damage 로즈) 개선.
+- LevelUpBanner 신설: GameRoot가 player.level 증가를 watch(prevLevelRef, 감소/동일 무시)해 "LEVEL UP / Lv.N" 배너를 levelUpGlow(animate-levelup)와 함께 1.8s 노출 후 자동 해제. dead 키프레임 활성화.
+- 가드: slice-29 4건(floatUp 정의/DamageNumber testid/배너 계약/GameRoot 증가 감지+1.8s).
+
+Verification (Combat & Reward Juice Slice 29):
+- `npm run verify` → 2923/2923 + type-check/lint/build-guard.
+- 브라우저 실측(390×844): 전투 중 플레이어 피격 시 float 데미지 숫자 "-14" 애니메이션 확인(기존 dead → 동작), 콘솔 에러 0. 레벨업 배너는 가드+동일 오버레이 패턴(검증된 DamageNumber)으로 확인, 실기기 플레이에서 최종 확인 예정. 사망 화면(MEMORIAL LEDGER) 디자인 통일 확인.
+
 Checked (Slice 28 iOS Redeploy — PASSED):
 - 디자인 시스템 통일 빌드 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../E27CA81C.../App.app`) → launch → 60초 hold → done.
 - 실기기 최신 = slices 19-28 전부. 수동 확인: 전 화면 통일된 모서리 리듬, 버튼 촉각감, 아이템별 아트, 초반 템포/감속, 온보딩.

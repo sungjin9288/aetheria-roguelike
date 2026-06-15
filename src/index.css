@@ -124,6 +124,15 @@
   animation: damagePopup 0.8s ease-out forwards;
 }
 
+/* slice 29: DamageNumber가 참조하던 floatUp 키프레임이 미정의라 float 숫자가
+   애니메이션되지 않던 버그 수정. 중앙 정렬(-50% x)을 키프레임에 baking. */
+@keyframes floatUp {
+  0% { transform: translate(-50%, 8px) scale(0.8); opacity: 0; }
+  16% { transform: translate(-50%, -4px) scale(1.18); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate(-50%, -46px) scale(1); opacity: 0; }
+}
+
 /* 레벨업 글로우 효과 */
 @keyframes levelUpGlow {
 

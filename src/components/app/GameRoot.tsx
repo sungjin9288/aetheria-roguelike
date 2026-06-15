@@ -10,6 +10,7 @@ import { AT } from '../../reducers/actionTypes';
 import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
+import LevelUpBanner from '../LevelUpBanner';
 import LegendaryDropOverlay from '../LegendaryDropOverlay';
 import MobileGameLayout from './MobileGameLayout';
 
@@ -68,6 +69,22 @@ const GameRoot = ({
             // fallback: 일부 sound 이름은 지원 안 할 수 있음
         }
     }, [legendaryDrop]);
+    // slice 29: 레벨업 셀러브레이션 — player.level 증가 감지 시 배너 노출 후
+    //   ~1.8s 자동 해제. visualEffect 'levelUp'은 연속 레벨업에서 값이 안 바뀌어
+    //   재트리거 못 하므로 실제 level 변화를 watch (정확한 새 레벨 표시).
+    const [levelUpBanner, setLevelUpBanner] = useState<number | null>(null);
+    const prevLevelRef = useRef<any>(engine.player?.level);
+    useEffect(() => {
+        const lv = engine.player?.level;
+        if (typeof lv !== 'number') return undefined;
+        const prev = prevLevelRef.current;
+        prevLevelRef.current = lv;
+        if (typeof prev !== 'number' || lv <= prev) return undefined;
+        setLevelUpBanner(lv);
+        const timer = window.setTimeout(() => setLevelUpBanner(null), 1800);
+        return () => window.clearTimeout(timer);
+    }, [engine.player?.level]);
+
     const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
     const handleOpenEquipment = useCallback(() => {
         engine.actions.setSideTab?.('equipment');
@@ -162,6 +179,7 @@ const GameRoot = ({
 
             {/* Floating overlays */}
             {damageAmount && <DamageNumber amount={damageAmount} />}
+            <LevelUpBanner level={levelUpBanner} />
 
             {engine.pendingRelics && (
                 <Suspense fallback={null}>
