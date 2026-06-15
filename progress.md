@@ -4,6 +4,16 @@ Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
 
+Done (Meter Tween & Crit Pulse Slice 31):
+- 진단: StatusMetric(HP/MP/EXP) 바 fill에 transition이 없어 값 변화가 즉시 snap(가장 자주 보는 표면인데 끊겨 보임). criticalHit 키프레임은 미사용(dead)이라 크리 화면 연출 0.
+- StatusMetric fill에 transition-[width] duration-500 ease-out — 데미지/EXP 변화가 부드럽게 차오르고 빠짐. EXP 바가 레벨업 직전까지 채워지고 → slice 29 배너로 연결.
+- CritPulse 신설: 새 'critical' 로그 id 감지 시 화면 골드 비네트를 320ms 옅게 깜빡(pointer-events-none, reducedMotion 자동 완화). 플레이어 크리 + 보스 페이즈 reveal 순간 강조.
+- 가드: slice-31 3건(fill tween / CritPulse active+골드 / GameRoot 로그 id 감지+320ms).
+
+Verification (Meter Tween & Crit Pulse Slice 31):
+- `npm run verify` → 2930/2930 + type-check/lint/build-guard. Playwright e2e 21/21.
+- 브라우저 실측(390×844): 전투 중 크리 발생 시 crit-pulse 비네트 + 적 크리 골드 숫자(✦) 동시 확인, 미터 fill transition 적용, 콘솔 에러 0.
+
 Done (Enemy Hit Impact Slice 30):
 - 진단: 데미지 float 숫자가 플레이어 피격에만 떠 비대칭 — 내가 적을 때릴 땐 HP 바가 조용히 줄 뿐 "때리는 맛"이 없었음(Slay the Spire/Hades는 때리는 게 핵심 쾌감).
 - useHitFlash 훅 신설(useDamageFlash 일반화): 추적 값 감소 시 flash + 데미지 숫자, resetKey 변경 시 baseline만 재설정(새 적 가짜 타격 방지), meta 스냅샷(타격 시점 크리 여부 고정).

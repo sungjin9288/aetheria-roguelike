@@ -11,6 +11,7 @@ import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
 import LevelUpBanner from '../LevelUpBanner';
+import CritPulse from '../CritPulse';
 import LegendaryDropOverlay from '../LegendaryDropOverlay';
 import MobileGameLayout from './MobileGameLayout';
 
@@ -84,6 +85,20 @@ const GameRoot = ({
         const timer = window.setTimeout(() => setLevelUpBanner(null), 1800);
         return () => window.clearTimeout(timer);
     }, [engine.player?.level]);
+
+    // slice 31: 치명타 스크린 펄스 — 새 'critical' 로그 id 감지 시 잠깐 활성.
+    //   (플레이어 크리 본문 로그 + 보스 페이즈 reveal이 critical 타입)
+    const [critPulse, setCritPulse] = useState(false);
+    const lastCritLogIdRef = useRef<any>(null);
+    useEffect(() => {
+        const logs = engine.logs;
+        const last = logs?.[logs.length - 1];
+        if (!last || last.type !== 'critical' || lastCritLogIdRef.current === last.id) return undefined;
+        lastCritLogIdRef.current = last.id;
+        setCritPulse(true);
+        const timer = window.setTimeout(() => setCritPulse(false), 320);
+        return () => window.clearTimeout(timer);
+    }, [engine.logs]);
 
     const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
     const handleOpenEquipment = useCallback(() => {
@@ -183,6 +198,7 @@ const GameRoot = ({
             {/* Floating overlays */}
             {damageAmount && <DamageNumber amount={damageAmount} />}
             <LevelUpBanner level={levelUpBanner} />
+            <CritPulse active={critPulse} />
 
             {engine.pendingRelics && (
                 <Suspense fallback={null}>

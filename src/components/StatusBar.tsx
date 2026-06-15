@@ -44,8 +44,10 @@ const StatusMetric = ({ label, value, max, variant }: any) => {
         <span className="text-[10px] text-white/78">{safeValue}/{safeMax}</span>
       </div>
       <div className={`mt-1 h-[3px] overflow-hidden rounded-full border bg-black/28 ${theme.border}`}>
+        {/* slice 31: 바 fill 부드러운 tween — 기존엔 즉시 snap이라 데미지/EXP
+            변화가 끊겨 보였음. EXP 바가 레벨업 직전까지 차오르고 → slice 29 배너. */}
         <div
-          className={`h-full rounded-full ${theme.fill}`}
+          className={`h-full rounded-full ${theme.fill} transition-[width] duration-500 ease-out`}
           style={{ width: `${percentage}%` }}
         />
       </div>
