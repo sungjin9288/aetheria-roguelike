@@ -4,6 +4,10 @@ Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
 
+Checked (Slice 32 iOS Redeploy — install ok, launch lock):
+- 캐시 정리 후 `ARCHIVE SUCCEEDED` → install 성공 (`.../7553BB42.../App.app`). 자동 launch만 기기 잠금(Locked)으로 차단 — 환경 이슈, 코드/빌드 정상. 빌드는 폰에 적재됨.
+- 피드백 아크 완성: 시각(slice 29 데미지 float+레벨업 배너 / 30 적 타격 / 31 미터 tween+크리 펄스) + 청각(slice 32 크리 사운드). 실기기 수동 5분에서 크리 시 골드숫자+화면펄스+크리음 동시 체감 + 사운드 청취 확인 예정.
+
 Done (Crit Sound Slice 32):
 - 진단: SoundManager에 'crit' 사운드가 없어 크리도 일반 'attack'(100→800 saw)으로 재생 → 강화 타격이 평타와 똑같이 들림(cycle 263이 'critical'→'attack'으로 매핑). slice 30/31이 크리 시각 연출(골드 숫자+스크린 펄스)을 추가했으므로 짝이 되는 오디오가 빠진 상태였음.
 - SoundManager 'crit' 케이스 신설: square 320→1600 임팩트 + E6(1318.51) "ching" 액센트 — attack(sawtooth)과 명확히 구분.
