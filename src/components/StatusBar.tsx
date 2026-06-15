@@ -2,6 +2,7 @@ import { Volume2, VolumeX } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
 import { isSignatureItem } from '../data/signatureItems.js';
+import { useHitFlash } from '../hooks/useHitFlash';
 import type { Player, Monster } from '../types/index.js';
 
 const METER_THEME: any = {
@@ -57,15 +58,46 @@ const StatusMetric = ({ label, value, max, variant }: any) => {
 //   가지 선택. cycle 458 paired (StatusMetric 인라인) — unreachable code path lens.
 // cycle 492: 모바일 prop 자체 cascade — destructure / className ternary / 'Target
 //   Lock' 텍스트 ternary / callsite shorthand 일괄 정리. 같은 파일 cycle 491 paired.
-const EnemyStatus = ({ enemy }: any) => {
+// slice 30: 적 타격 임팩트 — 적 HP 감소 시 Target Lock 바 플래시 + 적 위에
+//   데미지 숫자 float. 기존엔 내가 맞을 때만 숫자가 떠 비대칭(때리는 맛 없음).
+//   크리(enemyHitCrit)면 숫자를 골드+크게 강조.
+const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
+  const { flash, amount } = useHitFlash(enemy?.hp, enemy?.name, { crit: !!enemyHitCrit });
   if (!enemy) return null;
 
   const safeMax = Math.max(1, enemy.maxHp || 1);
   const safeValue = Math.max(0, enemy.hp || 0);
   const percentage = Math.min(100, (safeValue / safeMax) * 100);
+  const isCritHit = amount?.meta?.crit;
 
   return (
-    <div className="relative overflow-hidden rounded-[1.1rem] border border-rose-300/18 bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_16px_36px_rgba(22,6,10,0.28),inset_0_1px_0_rgba(255,255,255,0.03)] px-2.75 py-2.5">
+    <div
+      data-testid="enemy-status"
+      data-hit-flash={flash ? 'true' : undefined}
+      className={`relative overflow-hidden rounded-[1.1rem] border bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_16px_36px_rgba(22,6,10,0.28),inset_0_1px_0_rgba(255,255,255,0.03)] px-2.75 py-2.5 transition-transform duration-150 ${flash ? 'border-rose-200/70 scale-[1.015]' : 'border-rose-300/18'}`}
+    >
+      {/* 타격 플래시 오버레이 */}
+      {flash && (
+        <div className="pointer-events-none absolute inset-0 rounded-[1.1rem] bg-rose-100/12 mix-blend-screen" />
+      )}
+      {/* 적 데미지 float 숫자 */}
+      {amount && (
+        <span
+          key={amount.key}
+          data-testid="enemy-damage-number"
+          className={`pointer-events-none absolute right-3 top-1 z-10 font-rajdhani font-black ${
+            isCritHit ? 'text-[#f6e7a2] text-xl' : 'text-rose-100 text-base'
+          }`}
+          style={{
+            animation: 'floatUp 0.9s ease-out forwards',
+            textShadow: isCritHit
+              ? '0 0 14px rgba(246,231,162,0.7), 0 2px 4px rgba(0,0,0,0.7)'
+              : '0 0 10px rgba(244,63,94,0.5), 0 2px 4px rgba(0,0,0,0.7)',
+          }}
+        >
+          {isCritHit ? '✦ ' : ''}-{amount.value}
+        </span>
+      )}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-100/22 to-transparent" />
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
@@ -84,7 +116,7 @@ const EnemyStatus = ({ enemy }: any) => {
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full border border-rose-300/20 bg-black/30">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-rose-500/60 to-rose-300"
+          className={`h-full rounded-full transition-all duration-200 ${flash ? 'bg-rose-100' : 'bg-gradient-to-r from-rose-500/60 to-rose-300'}`}
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -98,6 +130,7 @@ interface StatusBarProps {
   player?: Player | null;
   stats?: any;
   enemy?: Monster | null;
+  enemyHitCrit?: boolean;
   onCrystalClick?: (() => void) | null;
   isMuted?: boolean;
   onToggleMute?: (() => void) | null;
@@ -112,6 +145,7 @@ const StatusBar = ({
   player,
   stats,
   enemy,
+  enemyHitCrit,
   onCrystalClick,
   isMuted,
   onToggleMute,
@@ -246,7 +280,7 @@ const StatusBar = ({
           </div>
         </div>
       </div>
-      {enemy && <div className="mt-1"><EnemyStatus enemy={enemy} /></div>}
+      {enemy && <div className="mt-1"><EnemyStatus enemy={enemy} enemyHitCrit={enemyHitCrit} /></div>}
     </section>
   );
 };

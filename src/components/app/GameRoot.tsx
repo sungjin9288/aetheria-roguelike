@@ -112,6 +112,9 @@ const GameRoot = ({
                     player={engine.player}
                     stats={fullStats}
                     enemy={engine.gameState === GS.COMBAT ? engine.enemy : null}
+                    // slice 30: 가장 최근 로그가 'critical'이면 직전 타격이 크리 —
+                    //   적 데미지 숫자를 골드+크게 강조 (enemy.hp 변화와 같은 dispatch라 정합).
+                    enemyHitCrit={engine.gameState === GS.COMBAT && engine.logs?.[engine.logs.length - 1]?.type === 'critical'}
                     onCrystalClick={(engine.player?.premiumCurrency || 0) > 0 ? () => setPremiumShopOpen(true) : null}
                     isMuted={isMuted}
                     onToggleMute={handleToggleMute}

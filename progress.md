@@ -4,6 +4,17 @@ Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
 
+Done (Enemy Hit Impact Slice 30):
+- 진단: 데미지 float 숫자가 플레이어 피격에만 떠 비대칭 — 내가 적을 때릴 땐 HP 바가 조용히 줄 뿐 "때리는 맛"이 없었음(Slay the Spire/Hades는 때리는 게 핵심 쾌감).
+- useHitFlash 훅 신설(useDamageFlash 일반화): 추적 값 감소 시 flash + 데미지 숫자, resetKey 변경 시 baseline만 재설정(새 적 가짜 타격 방지), meta 스냅샷(타격 시점 크리 여부 고정).
+- EnemyStatus(Target Lock 바): 적 HP 감소 시 바 화이트 플래시 + scale 1.015 + 적 위 데미지 숫자 float. 크리(enemyHitCrit)면 ✦ 골드+xl 강조. 훅은 early-return 앞 호출(Rules of Hooks).
+- GameRoot: 최근 로그 type 'critical' → enemyHitCrit 파생(enemy.hp 변화와 동일 dispatch라 정합), StatusBar 통해 전달.
+- 가드: slice-30 4건(훅 감소-only/baseline/meta, EnemyStatus flash+숫자+크리, Rules of Hooks 순서, GameRoot 파생).
+
+Verification (Enemy Hit Impact Slice 30):
+- `npm run verify` → 2927/2927 + type-check/lint/build-guard. Playwright e2e 21/21.
+- 브라우저 실측(390×844): 내 공격 직후 Target Lock 바 플래시(data-hit-flash) + 적 데미지 숫자 "-15" float 확인, 콘솔 에러 0. 크리 골드 강조는 가드+검증된 인프라(7타 내 크리 미발생, 확률).
+
 Done (Combat & Reward Juice Slice 29):
 - 진단(피드백 레이어 감사): levelUpGlow/criticalHit 키프레임은 정의돼 있으나 미사용(dead), DamageNumber가 참조하는 floatUp 키프레임은 아예 미정의라 float 데미지 숫자 애니메이션이 죽어 있었음. slice 23이 레벨업을 의미있게 만들었지만 화면 연출은 0(사운드+로그뿐). 레퍼런스(Hades/Balatro): 성장·타격 순간의 짧고 확실한 "한 방" 피드백.
 - floatUp 키프레임 정의(DamageNumber 버그 fix) + 위치(상단 38% 중앙)/가독성(2xl, 글로우 textShadow, heal 에메랄드/damage 로즈) 개선.
