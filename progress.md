@@ -4,6 +4,16 @@ Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.
 
+Done (Boss Phase Banner Slice 33):
+- 진단: 로그라이크 클라이맥스인 보스 페이즈 전환(HP 50%/25%)이 enemy 이름 변경 + 로그 한 줄(phase2 'warning' ⚡ / phase3 'critical' 💀)이 전부. crit 펄스(slice 31)는 phase3 'critical' 로그에만 걸렸고 announcement는 없었음. 레벨업 배너/크리 펄스에 이어 보스 페이즈도 "한 방" 부여.
+- PhaseBanner 신설: phase2/3 진입 시 "PHASE N · {보스명}" 배너(phase3은 자주/💀 강한 톤, glow). LevelUpBanner 패턴 재사용.
+- GameRoot: enemy.phase2Triggered/phase3Triggered false→true 플립 감지(prevPhaseRef, enemy 소멸 시 baseline 리셋) → {n, name} 2s 노출. 일반 적/턴마다 enemy 변해도 플립만 트리거.
+- 가드: slice-33 3건(배너 null/phase3 분기, GameRoot 플립 감지+2s, CombatEngine phase 플래그 계약).
+
+Verification (Boss Phase Banner Slice 33):
+- `npm run verify` → 2936/2936 + type-check/lint/build-guard. Playwright e2e 21/21.
+- 브라우저 실측: 일반 적 전투에서 phase-banner 오발동 0 + 콘솔 에러 0(새 effect 안전). 보스 페이즈 배너 표시는 가드 + 검증된 LevelUpBanner 동일 패턴 — 실기기 보스전에서 최종 확인 예정.
+
 Checked (Slice 32 iOS Redeploy — install ok, launch lock):
 - 캐시 정리 후 `ARCHIVE SUCCEEDED` → install 성공 (`.../7553BB42.../App.app`). 자동 launch만 기기 잠금(Locked)으로 차단 — 환경 이슈, 코드/빌드 정상. 빌드는 폰에 적재됨.
 - 피드백 아크 완성: 시각(slice 29 데미지 float+레벨업 배너 / 30 적 타격 / 31 미터 tween+크리 펄스) + 청각(slice 32 크리 사운드). 실기기 수동 5분에서 크리 시 골드숫자+화면펄스+크리음 동시 체감 + 사운드 청취 확인 예정.

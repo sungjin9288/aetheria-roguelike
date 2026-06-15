@@ -12,6 +12,7 @@ import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
 import LevelUpBanner from '../LevelUpBanner';
 import CritPulse from '../CritPulse';
+import PhaseBanner from '../PhaseBanner';
 import LegendaryDropOverlay from '../LegendaryDropOverlay';
 import MobileGameLayout from './MobileGameLayout';
 
@@ -99,6 +100,26 @@ const GameRoot = ({
         const timer = window.setTimeout(() => setCritPulse(false), 320);
         return () => window.clearTimeout(timer);
     }, [engine.logs]);
+
+    // slice 33: 보스 페이즈 전환 배너 — enemy.phase2Triggered/phase3Triggered
+    //   false→true 플립 감지 시 {n, name} 노출 후 ~2s 해제. enemy 소멸 시 baseline 리셋.
+    const [phaseBanner, setPhaseBanner] = useState<{ n: number; name: string } | null>(null);
+    const prevPhaseRef = useRef<{ p2: boolean; p3: boolean }>({ p2: false, p3: false });
+    useEffect(() => {
+        const e = engine.enemy;
+        if (!e) { prevPhaseRef.current = { p2: false, p3: false }; return undefined; }
+        const p2 = !!e.phase2Triggered;
+        const p3 = !!e.phase3Triggered;
+        const prev = prevPhaseRef.current;
+        let banner: { n: number; name: string } | null = null;
+        if (p3 && !prev.p3) banner = { n: 3, name: e.name };
+        else if (p2 && !prev.p2) banner = { n: 2, name: e.name };
+        prevPhaseRef.current = { p2, p3 };
+        if (!banner) return undefined;
+        setPhaseBanner(banner);
+        const timer = window.setTimeout(() => setPhaseBanner(null), 2000);
+        return () => window.clearTimeout(timer);
+    }, [engine.enemy]);
 
     const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
     const handleOpenEquipment = useCallback(() => {
@@ -199,6 +220,7 @@ const GameRoot = ({
             {damageAmount && <DamageNumber amount={damageAmount} />}
             <LevelUpBanner level={levelUpBanner} />
             <CritPulse active={critPulse} />
+            <PhaseBanner phase={phaseBanner} />
 
             {engine.pendingRelics && (
                 <Suspense fallback={null}>
