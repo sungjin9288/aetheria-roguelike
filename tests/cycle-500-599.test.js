@@ -2523,7 +2523,8 @@ import { readFile, readdir } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 547: applyEntropyTick signature에서 activeSynergies default 0건', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // applyEntropyTick은 CombatEngine.relics.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.relics.ts');
       const fnIdx = source.indexOf('applyEntropyTick(player');
       const fnEnd = source.indexOf(')', fnIdx) + 1;
       const sig = source.slice(fnIdx, fnEnd);
@@ -2544,7 +2545,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 547: body turnCount / relics 처리 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // applyEntropyTick은 CombatEngine.relics.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.relics.ts');
       assert.ok(/const relics = \(player as any\)\?\.relics \|\| \[\]/.test(source),
           '(player as any)?.relics || [] defensive 보존');
       assert.ok(/turnCount = \(flags\.turnCount \|\| 0\) \+ 1/.test(source),
@@ -2617,7 +2619,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 548: body crit_mp_regen 분기 + getEffectiveMaxMp 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // applyCritMpRestore는 CombatEngine.relics.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.relics.ts');
       assert.ok(/relics\.find\(\(relic: any\) => relic\.effect === 'crit_mp_regen'\)/.test(source),
           'crit_mp_regen find 보존');
       assert.ok(/this\.getEffectiveMaxMp\(player, relics\)/.test(source),
@@ -2697,7 +2700,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 553: activeSynergies default 보존 (reachable, partial cleanup)', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // applyFatalProtection은 CombatEngine.relics.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.relics.ts');
       const fnIdx = source.indexOf('applyFatalProtection(player');
       const fnEnd = source.indexOf(')', fnIdx) + 1;
       const sig = source.slice(fnIdx, fnEnd);
