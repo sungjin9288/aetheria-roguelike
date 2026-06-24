@@ -4,6 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { buildGraveData } from '../src/utils/graveUtils.js';
 import { fileURLToPath } from 'node:url';
+import { readInventoryActionsSourceSync } from './helpers/inventoryActionsSource.mjs';
 import { readFile } from 'node:fs/promises';
 
 /**
@@ -86,8 +87,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 196 회귀 가드: useInventoryActions의 SEASON_XP dispatch 유지', () => {
-      const file = path.join(ROOT, 'src/hooks/useInventoryActions.ts');
-      const content = fs.readFileSync(file, 'utf-8');
+      // PR #4: SEASON_XP.codexDiscover dispatch(market/craft/synthesize)는 economy 서브파일로 이동.
+      const content = readInventoryActionsSourceSync();
       const matches = content.match(/SEASON_XP\.codexDiscover/g) || [];
       assert.ok(
           matches.length >= 3,

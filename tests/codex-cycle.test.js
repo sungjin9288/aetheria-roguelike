@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -89,7 +90,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('회귀 보존: cycle 122 completeQuest / cycle 123 claimAchievement 사운드 그대로', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       // completeQuest와 claimAchievement 둘 다 quest_complete 사운드 호출 여전히 활성
       const completeQuestIdx = source.indexOf('completeQuest:');
       const claimAchIdx = source.indexOf('claimAchievement:');
@@ -205,13 +206,13 @@ import { readFile } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
 
   test('cycle 196: useInventoryActions에 countNewCodexEntries import + 사용', async () => {
-      const src = await readFile(path.join(ROOT, 'src/hooks/useInventoryActions.ts'), 'utf8');
+      const src = await readInventoryActionsSource();
       assert.match(src, /countNewCodexEntries/);
       assert.match(src, /SEASON_XP\.codexDiscover/);
   });
 
   test('cycle 196: useInventoryActions에 codexBefore / newCodexCount 변수 3 path 적용', async () => {
-      const src = await readFile(path.join(ROOT, 'src/hooks/useInventoryActions.ts'), 'utf8');
+      const src = await readInventoryActionsSource();
       // shopBuy + craft + synth — 각각 codex 추적 패턴 1+ 회.
       const codexBeforeMatches = (src.match(/codexBefore/g) || []).length;
       const newCodexMatches = (src.match(/newCodexCount/g) || []).length;

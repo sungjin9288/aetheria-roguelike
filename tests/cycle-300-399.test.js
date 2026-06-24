@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -759,7 +760,7 @@ import { fileURLToPath } from 'node:url';
   test('cycle 314: characterActions / exploreActions / useInventoryActions의 addStoryLog 활성 사용 보존', async () => {
       const characterSrc = await readSrc('src/hooks/gameActions/characterActions.ts');
       const exploreSrc = await readSrc('src/hooks/gameActions/exploreActions.ts');
-      const invSrc = await readSrc('src/hooks/useInventoryActions.ts');
+      const invSrc = await readInventoryActionsSource();
       assert.ok(/addStoryLog\('rest'/.test(characterSrc),
           'characterActions addStoryLog rest 사용 보존');
       assert.ok(/addStoryLog\('encounter'/.test(exploreSrc),

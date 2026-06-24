@@ -1,3 +1,4 @@
+import { readInventoryActionsSource, readInventoryActionsSourceSync } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -50,7 +51,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('useInventoryActions: completeQuest에서 quest_complete 사운드 재생', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       const idx = source.indexOf('completeQuest:');
       assert.ok(idx > -1, 'completeQuest action should exist');
       // completeQuest 함수 끝(다음 액션 시작)까지 추출
@@ -64,7 +65,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('useInventoryActions: soundManager import 추가됨', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       assert.match(source, /import\s*\{[^}]*soundManager[^}]*\}\s*from/);
   });
 
@@ -491,8 +492,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('cycle 209: claimQuestReward가 reward.title을 player.titles에 push (코드 패턴 가드)', () => {
-      const file = path.join(ROOT, 'src/hooks/useInventoryActions.ts');
-      const content = fs.readFileSync(file, 'utf-8');
+      const content = readInventoryActionsSourceSync();
       // claimQuestReward 함수 내에서 reward.title 처리 패턴 존재 확인
       assert.match(
           content,
@@ -709,14 +709,14 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 272: createInventoryActions deps에서 addStoryLog 추출', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       // deps destructuring 패턴 — { ..., addStoryLog, ... }.
       assert.ok(/createInventoryActions = \(\{[^}]*addStoryLog/.test(source),
           'createInventoryActions가 addStoryLog deps 추출');
   });
 
   test('cycle 272: completeQuest가 addStoryLog("questComplete", ...) 호출', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       // completeQuest 함수 내에 addStoryLog('questComplete', ...) 패턴.
       // completeQuest 함수 본문 — 다음 함수 'claimAchievement' 직전까지.
       const fnMatch = source.match(/completeQuest:[\s\S]+?claimAchievement:/);
@@ -726,7 +726,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('cycle 272: addStoryLog questComplete payload에 questTitle 포함', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       // completeQuest 함수 본문 — 다음 함수 'claimAchievement' 직전까지.
       const fnMatch = source.match(/completeQuest:[\s\S]+?claimAchievement:/);
       assert.ok(fnMatch);
@@ -741,7 +741,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('cycle 272: 기존 quest_complete 사운드 dispatch 유지 (회귀 가드)', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       // completeQuest 함수 본문 — 다음 함수 'claimAchievement' 직전까지.
       const fnMatch = source.match(/completeQuest:[\s\S]+?claimAchievement:/);
       assert.ok(fnMatch);

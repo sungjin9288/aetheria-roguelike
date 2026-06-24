@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -182,7 +183,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 185: purchaseCosmeticTitle이 player.titles에 push (회귀 가드)', async () => {
-      const src = await readFile(path.join(ROOT, 'src/hooks/useInventoryActions.ts'), 'utf8');
+      const src = await readInventoryActionsSource();
       // 함수 내부에 'titles:' assignment가 있어야 함 — purchaseCosmeticTitle 분기.
       const idx = src.indexOf('purchaseCosmeticTitle');
       assert.ok(idx > -1);

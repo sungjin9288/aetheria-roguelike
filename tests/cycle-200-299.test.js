@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -2364,7 +2365,7 @@ import { readFile } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 261: claimWeeklyMission에 quest_complete 사운드 dispatch', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       // claimWeeklyMission 함수 내에 soundManager.play 호출.
       const fnMatch = source.match(/claimWeeklyMission:[\s\S]{0,500}?},/);
       assert.ok(fnMatch, 'claimWeeklyMission 정의 발견');
@@ -2373,7 +2374,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 261: claimSeasonReward 신규 액션 정의', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       assert.ok(/claimSeasonReward:/.test(source),
           'claimSeasonReward action 정의됨');
       // claimSeasonReward 함수 내에 dispatch + addLog + sound 모두 있어야 함.
@@ -2394,7 +2395,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 122-123 회귀 가드: 기존 quest_complete 사운드 dispatch 유지', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       const matches = source.match(/soundManager\.play\(['"]quest_complete['"]\)/g);
       // cycle 122 (completeQuest), cycle 123 (claimAchievement), cycle 261 (claimWeekly + claimSeason) → 4 expected.
       assert.ok(matches && matches.length >= 4,
@@ -3130,7 +3131,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 272-273 회귀 가드: 이전 sponsored dispatch 동작 유지', async () => {
-      const inv = await readSrc('src/hooks/useInventoryActions.ts');
+      const inv = await readInventoryActionsSource();
       const atk = await readSrc('src/hooks/combatActions/combatAttack.ts');
       assert.ok(/addStoryLog\(['"]questComplete['"]/.test(inv),
           'cycle 272 questComplete dispatch 유지');
@@ -3208,7 +3209,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 272-274 회귀 가드: 이전 sponsored dispatch 동작 유지', async () => {
-      const inv = await readSrc('src/hooks/useInventoryActions.ts');
+      const inv = await readInventoryActionsSource();
       const atk = await readSrc('src/hooks/combatActions/combatAttack.ts');
       const vic = await readSrc('src/hooks/combatActions/combatVictory.ts');
       assert.ok(/addStoryLog\(['"]questComplete['"]/.test(inv),

@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -151,7 +152,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 502: 정합성 가드 — useInventoryActions 3 callsite 호출 존재 + amount 명시 전달 0건', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       // incrementStat 호출 3건이 존재하는지 (callsite 자체 가드)
       const matches = source.match(/incrementStat\(/g) || [];
       assert.equal(matches.length, 3, 'incrementStat 호출 정확히 3건');
@@ -213,7 +214,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 503: 정합성 가드 — useInventoryActions callsite 3 args', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       const matches = source.match(/consumeInventoryItemByName\(/g) || [];
       assert.equal(matches.length, 1, 'consumeInventoryItemByName 호출 1건');
       // 3 args 호출 (player.inv, requirement.materialName, requirement.materials)
@@ -310,7 +311,8 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 504: 정합성 가드 — wrapper / leaf 호출 모두 amount 전달', async () => {
       // emitDailyProtocolLogs callsites (5건) 모두 2 args
       const allFiles = [
-          'src/hooks/useInventoryActions.ts',
+          // PR #4: emitDailyProtocolLogs 콜사이트(market/craft)는 economy 서브파일로 이동.
+          'src/hooks/useInventoryActions.economy.ts',
           'src/hooks/gameActions/_shared.ts',
           'src/hooks/gameActions/characterActions.ts',
           'src/hooks/combatActions/combatVictory.ts',
@@ -481,7 +483,8 @@ import { readFile, readdir } from 'node:fs/promises';
       const callsites = [
           'src/components/EquipmentPanel.tsx',
           'src/components/SmartInventory.tsx',
-          'src/hooks/useInventoryActions.ts',
+          // PR #4: enhanceItem(getEnhanceAvailability 콜사이트)은 equipment 서브파일로 이동.
+          'src/hooks/useInventoryActions.equipment.ts',
       ];
       for (const f of callsites) {
           const source = await readSrc(f);
@@ -1875,7 +1878,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 536: 정합성 가드 — 4 production callsite 보존', async () => {
-      const inv = await readSrc('src/hooks/useInventoryActions.ts');
+      const inv = await readInventoryActionsSource();
       assert.ok(/const pacedExp = getPacedQuestClaimExp\(updatedPlayer,\s*qData\.reward\.exp\)/.test(inv),
           'useInventoryActions quest exp pacing 보존');
       assert.ok(/CombatEngine\.applyExpGain\(updatedPlayer,\s*pacedExp\)/.test(inv),
@@ -2278,7 +2281,7 @@ import { readFile, readdir } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 543: synthesize signature에서 useProtect default 0건', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       assert.ok(!/synthesize:\s*\(itemIds:\s*any,\s*useProtect:\s*any\s*=\s*false\)/.test(source),
           'synthesize useProtect default false 제거');
       assert.ok(/synthesize:\s*\(itemIds:\s*any,\s*useProtect:\s*any\)/.test(source),
@@ -2292,7 +2295,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 543: body validation / signature guard 보존', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       assert.ok(/validateSynthesis\(items,\s*player\.gold\)/.test(source),
           'validateSynthesis 호출 보존');
       assert.ok(/SIGNATURE_INPUT/.test(source), 'SIGNATURE_INPUT 가드 보존');
@@ -2382,7 +2385,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 544: cycle 502-543 회귀 가드 — default 청소 시리즈 보존', async () => {
-      const inv = await readSrc('src/hooks/useInventoryActions.ts');
+      const inv = await readInventoryActionsSource();
       assert.ok(!/synthesize:\s*\(itemIds:\s*any,\s*useProtect:\s*any\s*=\s*false\)/.test(inv),
           'cycle 543 synthesize useProtect default 0건');
 
@@ -2480,7 +2483,7 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(!/const hasAnyJob[^=]*jobs:\s*any\[\]\s*=\s*\[\]/.test(rp),
           'cycle 544 hasAnyJob jobs default 0건');
 
-      const inv = await readSrc('src/hooks/useInventoryActions.ts');
+      const inv = await readInventoryActionsSource();
       assert.ok(!/synthesize:\s*\(itemIds:\s*any,\s*useProtect:\s*any\s*=\s*false\)/.test(inv),
           'cycle 543 synthesize useProtect default 0건');
   });
@@ -2863,7 +2866,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 556: 정합성 가드 — 6 callsite 보존', async () => {
-      const inv = await readSrc('src/hooks/useInventoryActions.ts');
+      const inv = await readInventoryActionsSource();
       assert.ok(/formatDailyProtocolReward\(mission\.reward\)/.test(inv),
           'useInventoryActions formatDailyProtocolReward 보존');
 
@@ -3818,7 +3821,7 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/countInventoryItemByName\(player\?\.inv(?: \|\| \[\])?,\s*CONSTANTS\.ENHANCE_MATERIAL_NAME\)/.test(ep),
           'EquipmentPanel countInventoryItemByName 보존');
 
-      const inv = await readSrc('src/hooks/useInventoryActions.ts');
+      const inv = await readInventoryActionsSource();
       assert.ok(/consumeInventoryItemByName\(player\.inv,\s*requirement\.materialName,\s*requirement\.materials\)/.test(inv),
           'useInventoryActions consumeInventoryItemByName 보존');
 
@@ -4657,7 +4660,7 @@ import { readFile, readdir } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 595: claimSeasonReward signature에서 rewardLabel default 0건', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       assert.ok(!/claimSeasonReward:\s*\(tier:\s*any,\s*rewardLabel:\s*string \| null\s*=\s*null\)/.test(source),
           'claimSeasonReward rewardLabel default null 제거');
       assert.ok(/claimSeasonReward:\s*\(tier:\s*any,\s*rewardLabel:\s*string \| null\)/.test(source),
@@ -4671,7 +4674,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 595: body rewardLabel ternary + dispatch 처리 보존', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       assert.ok(/const label = rewardLabel \? `\$\{rewardLabel\}` : `티어 \$\{tier\}`/.test(source),
           'rewardLabel ? ... : 티어 ternary 보존');
       assert.ok(/addLog\('success', `시즌 패스 보상 수령: \$\{label\}`\)/.test(source),
@@ -4756,7 +4759,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 596: cycle 502-595 회귀 가드 — default 청소 시리즈 보존', async () => {
-      const inv = await readSrc('src/hooks/useInventoryActions.ts');
+      const inv = await readInventoryActionsSource();
       assert.ok(!/claimSeasonReward:\s*\(tier:\s*any,\s*rewardLabel:\s*string \| null\s*=\s*null\)/.test(inv),
           'cycle 595 claimSeasonReward rewardLabel default 0건');
 
