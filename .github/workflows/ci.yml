@@ -57,7 +57,9 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        # playwright.config의 chromium-mobile 프로젝트는 devices['iPhone 12']를 사용 →
+        # iPhone 디바이스 기본 엔진은 webkit이므로 webkit도 설치해야 한다 (chromium만 설치 시 launch 실패).
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Run E2E tests
         run: npm run test:e2e
