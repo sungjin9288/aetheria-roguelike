@@ -1864,7 +1864,8 @@ import { readFile, readdir } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 536: applyExpGain signature에서 expGained default 0건', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // applyExpGain은 CombatEngine.outcome.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.outcome.ts');
       const fnIdx = source.indexOf('applyExpGain(player: Player');
       const fnEnd = source.indexOf(')', fnIdx) + 1;
       const sig = source.slice(fnIdx, fnEnd);
@@ -1888,13 +1889,14 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/CombatEngine\.applyExpGain\(updated,\s*visitReward\.exp\)/.test(mv),
           'moveActions callsite 보존');
 
-      const ce = await readSrc('src/systems/CombatEngine.ts');
+      const ce = await readSrc('src/systems/CombatEngine.outcome.ts');
       assert.ok(/this\.applyExpGain\(p,\s*expGained\)/.test(ce),
           'internal this.applyExpGain callsite 보존');
   });
 
   test('cycle 536: body level-up loop / visualEffect 처리 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // applyExpGain은 CombatEngine.outcome.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.outcome.ts');
       assert.ok(/\(player\.exp \|\| 0\) \+ expGained/.test(source),
           '(player.exp || 0) + expGained defensive 보존');
       assert.ok(/while \(p\.level < CONSTANTS\.MAX_LEVEL && p\.exp >= p\.nextExp\)/.test(source),

@@ -1136,7 +1136,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 217: applyExpGain은 visualEffect=levelUp을 set (회귀 가드)', () => {
-      const file = path.join(ROOT, 'src/systems/CombatEngine.ts');
+      // applyExpGain은 CombatEngine.outcome.ts로 분리됨 (mixin).
+      const file = path.join(ROOT, 'src/systems/CombatEngine.outcome.ts');
       const content = fs.readFileSync(file, 'utf-8');
       assert.match(
           content,
