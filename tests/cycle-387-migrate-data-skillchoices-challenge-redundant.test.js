@@ -9,7 +9,7 @@ import path from 'node:path';
  *   (cycle 222-386 silent dead config 시리즈 151번째 — cleanup lens 연속).
  *
  * 발견 (2 redundant defensive normalizations):
- * - src/utils/gameUtils.ts migrateData에 2 normalizations:
+ * - src/utils/dataMigration.ts migrateData에 2 normalizations:
  *   · target.skillChoices = target.skillChoices && typeof ... === 'object' ? : {};
  *   · target.challengeModifiers = Array.isArray(target.challengeModifiers) ? : [];
  * - 모든 consumer가 이미 fallback / optional chain 처리:
@@ -32,7 +32,7 @@ import path from 'node:path';
  * - cycle 386: dailyInvadeCount / lastInvadeDate 2 redundant.
  * - cycle 387: skillChoices / challengeModifiers 2 redundant (동일 lens 연속).
  *
- * 수정 (src/utils/gameUtils.ts):
+ * 수정 (src/utils/dataMigration.ts):
  * - 2 redundant normalizations 제거.
  *
  * 회귀 가드:
@@ -45,7 +45,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('cycle 387: target.skillChoices normalization 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -54,7 +54,7 @@ test('cycle 387: target.skillChoices normalization 0건', async () => {
 });
 
 test('cycle 387: target.challengeModifiers normalization 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -63,7 +63,7 @@ test('cycle 387: target.challengeModifiers normalization 0건', async () => {
 });
 
 test('cycle 387: target.weeklyProtocol 객체 init 보존 (회귀 가드)', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     assert.ok(/if \(!target\.weeklyProtocol\)/.test(source),
         'target.weeklyProtocol 객체 init 보존');
 });
@@ -84,7 +84,7 @@ test('cycle 387: migrateData 동작 보존 (inject 값 보존)', async () => {
 });
 
 test('cycle 386 회귀 가드: dailyInvadeCount / lastInvadeDate fallback 0건 보존', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);

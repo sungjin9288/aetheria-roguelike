@@ -9,7 +9,7 @@ import path from 'node:path';
  *   (cycle 222-382 silent dead config 시리즈 147번째 — cleanup lens 연속).
  *
  * 발견 (1 redundant defensive normalization):
- * - src/utils/gameUtils.ts migrateData에 1 array normalization:
+ * - src/utils/dataMigration.ts migrateData에 1 array normalization:
  *   · target.stats.codexClaimed = Array.isArray(...) ? ... : [];
  * - 모든 consumer가 이미 fallback 처리:
  *   · Codex.tsx:39: `player?.stats?.codexClaimed || []` ✓
@@ -23,7 +23,7 @@ import path from 'node:path';
  * - cycle 382: relics / titles normalizations 2 redundant.
  * - cycle 383: codexClaimed normalization 1 redundant (동일 lens, cosmeticTitles 가드 발견).
  *
- * 수정 (src/utils/gameUtils.ts):
+ * 수정 (src/utils/dataMigration.ts):
  * - codexClaimed normalization 1 라인 제거.
  *
  * 회귀 가드:
@@ -39,7 +39,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('cycle 383: target.stats.codexClaimed normalization 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -48,7 +48,7 @@ test('cycle 383: target.stats.codexClaimed normalization 0건', async () => {
 });
 
 test('cycle 383: target.stats.cosmeticTitles normalization 보존 (cycle 189 회귀 가드)', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -57,7 +57,7 @@ test('cycle 383: target.stats.cosmeticTitles normalization 보존 (cycle 189 회
 });
 
 test('cycle 383: 보존되어야 할 정규화 (회귀 가드)', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     // reviveTokens / synthProtects는 Math.max(0, ...) 보존 — 음수 클램핑 필요.
     assert.ok(/target\.reviveTokens = Math\.max\(0, Number/.test(source),
         'reviveTokens Math.max 보존 (음수 클램핑)');
@@ -86,7 +86,7 @@ test('cycle 383: migrateData 동작 보존 (inject 배열 보존)', async () => 
 });
 
 test('cycle 382 회귀 가드: relics / titles normalizations 0건 보존', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);

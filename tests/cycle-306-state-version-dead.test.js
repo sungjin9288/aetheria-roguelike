@@ -53,7 +53,7 @@ test('cycle 306: useFirebaseSync save 시 CONSTANTS.DATA_VERSION 직접 기록 �
 });
 
 test('cycle 306: gameUtils.migrateData savedData.version 검사 유지', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     assert.ok(/savedData\.version/.test(source),
         'migrateData savedData.version 검사 유지');
 });

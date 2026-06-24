@@ -9,7 +9,7 @@ import path from 'node:path';
  *   (cycle 222-376 silent dead config 시리즈 142번째 — cleanup lens 연속).
  *
  * 발견 (2 redundant defensive fallbacks):
- * - src/utils/gameUtils.ts migrateData에 2 stats sub-field fallback lines:
+ * - src/utils/dataMigration.ts migrateData에 2 stats sub-field fallback lines:
  *   · target.stats.rests = target.stats.rests || 0;
  *   · target.stats.bountiesCompleted = target.stats.bountiesCompleted || 0;
  * - 모든 consumer가 이미 `|| 0` fallback 처리:
@@ -25,7 +25,7 @@ import path from 'node:path';
  * - cycle 376: migrateData bounty 2 redundant normalizations.
  * - cycle 377: migrateData stats.rests / bountiesCompleted 2 redundant (동일 lens).
  *
- * 수정 (src/utils/gameUtils.ts):
+ * 수정 (src/utils/dataMigration.ts):
  * - 2 redundant fallback lines 제거.
  *
  * 회귀 가드:
@@ -40,7 +40,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('cycle 377: migrateData target.stats.rests fallback (unconditional 블록) 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -51,7 +51,7 @@ test('cycle 377: migrateData target.stats.rests fallback (unconditional 블록) 
 });
 
 test('cycle 377: migrateData target.stats.bountiesCompleted fallback 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -73,7 +73,7 @@ test('cycle 377: migrateData 동작 보존 (정의된 stats 값 보존)', async 
 });
 
 test('cycle 376 회귀 가드: bountyDate / Boolean(bountyIssued) fallback 0건 보존', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);

@@ -42,7 +42,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('cycle 386: target.stats.dailyInvadeCount fallback 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -51,7 +51,7 @@ test('cycle 386: target.stats.dailyInvadeCount fallback 0건', async () => {
 });
 
 test('cycle 386: target.stats.lastInvadeDate fallback 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -77,7 +77,7 @@ test('cycle 386: migrateData 동작 보존 (inject 값 보존)', async () => {
 });
 
 test('cycle 385 회귀 가드: discoveryChains normalization 1회만 (중복 제거)', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);

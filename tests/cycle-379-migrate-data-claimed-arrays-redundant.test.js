@@ -9,7 +9,7 @@ import path from 'node:path';
  *   (cycle 222-378 silent dead config 시리즈 144번째 — cleanup lens 연속).
  *
  * 발견 (1 redundant defensive normalization):
- * - src/utils/gameUtils.ts migrateData에 1 array normalization:
+ * - src/utils/dataMigration.ts migrateData에 1 array normalization:
  *   · target.stats.claimedAchievements = Array.isArray(...) ? ... : [];
  * - 모든 consumer가 이미 fallback / Array.isArray 체크 처리:
  *   · AchievementPanel: `player?.stats?.claimedAchievements || []` ✓
@@ -24,7 +24,7 @@ import path from 'node:path';
  * - cycle 378: migrateData 8 sub-field fallback 일괄 redundant.
  * - cycle 379: claimedAchievements normalization 1 redundant (동일 lens).
  *
- * 수정 (src/utils/gameUtils.ts):
+ * 수정 (src/utils/dataMigration.ts):
  * - claimedAchievements normalization 1 라인 제거.
  *
  * 회귀 가드:
@@ -41,7 +41,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('cycle 379: claimedAchievements normalization 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -50,7 +50,7 @@ test('cycle 379: claimedAchievements normalization 0건', async () => {
 });
 
 test('cycle 379: claimedQuestIds normalization 보존 (cycle 260 회귀 가드)', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -59,7 +59,7 @@ test('cycle 379: claimedQuestIds normalization 보존 (cycle 260 회귀 가드)'
 });
 
 test('cycle 379: visitedMaps / exploreState 정규화 보존 (회귀 가드)', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     assert.ok(/target\.stats\.visitedMaps = Array\.isArray/.test(source),
         'visitedMaps 정규화 보존 (직후 .includes/.push 직접 호출 의존)');
     assert.ok(/target\.stats\.exploreState = \{ \.\.\.DEFAULT_EXPLORE_STATE/.test(source),
@@ -85,7 +85,7 @@ test('cycle 379: migrateData 동작 보존 (inject 배열 보존)', async () => 
 });
 
 test('cycle 378 회귀 가드: 8 sub-field fallback 0건 보존', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);

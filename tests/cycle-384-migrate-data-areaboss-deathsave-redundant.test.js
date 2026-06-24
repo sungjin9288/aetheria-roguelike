@@ -9,7 +9,7 @@ import path from 'node:path';
  *   (cycle 222-383 silent dead config 시리즈 148번째 — cleanup lens 연속).
  *
  * 발견 (2 redundant defensive fallbacks):
- * - src/utils/gameUtils.ts migrateData에 2 fallbacks:
+ * - src/utils/dataMigration.ts migrateData에 2 fallbacks:
  *   · target.stats.areaBossDefeated = target.stats.areaBossDefeated || {};
  *   · target.combatFlags.deathSaveUsedCount = target.combatFlags.deathSaveUsedCount || 0;
  * - 모든 consumer가 이미 fallback / optional chain 처리:
@@ -25,7 +25,7 @@ import path from 'node:path';
  * - cycle 383: codexClaimed normalization 1 redundant.
  * - cycle 384: areaBossDefeated / deathSaveUsedCount 2 redundant (동일 lens 연속).
  *
- * 수정 (src/utils/gameUtils.ts):
+ * 수정 (src/utils/dataMigration.ts):
  * - 2 redundant fallback lines 제거.
  *
  * 회귀 가드:
@@ -39,7 +39,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('cycle 384: target.stats.areaBossDefeated fallback 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -48,7 +48,7 @@ test('cycle 384: target.stats.areaBossDefeated fallback 0건', async () => {
 });
 
 test('cycle 384: target.combatFlags.deathSaveUsedCount fallback 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -57,7 +57,7 @@ test('cycle 384: target.combatFlags.deathSaveUsedCount fallback 0건', async () 
 });
 
 test('cycle 384: combatFlags 객체 init / eventChainProgress init 보존', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     assert.ok(/target\.combatFlags = \{[\s\S]*comboCount: 0,[\s\S]*deathSaveUsed: false,/.test(source),
         'target.combatFlags 객체 init 보존');
     assert.ok(/target\.eventChainProgress = \{\}/.test(source),
@@ -80,7 +80,7 @@ test('cycle 384: migrateData 동작 보존 (inject 값 보존)', async () => {
 });
 
 test('cycle 383 회귀 가드: codexClaimed normalization 0건 보존', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);

@@ -9,7 +9,7 @@ import path from 'node:path';
  *   (cycle 222-372 silent dead config 시리즈 138번째 — cleanup lens 연속).
  *
  * 발견 (5 redundant defensive fallbacks):
- * - src/utils/gameUtils.ts migrateData에 5 lines:
+ * - src/utils/dataMigration.ts migrateData에 5 lines:
  *   `target.meta.essence = target.meta.essence || 0;`
  *   `target.meta.rank = target.meta.rank || 0;`
  *   `target.meta.bonusAtk = target.meta.bonusAtk || 0;`
@@ -27,7 +27,7 @@ import path from 'node:path';
  * - cycle 372: maps safe-zone monsters: [] 5 redundant.
  * - cycle 373: migrateData meta fallback 5 redundant defensive.
  *
- * 수정 (src/utils/gameUtils.ts):
+ * 수정 (src/utils/dataMigration.ts):
  * - 5 redundant `target.meta.X = target.meta.X || 0` lines 제거.
  *
  * 회귀 가드:
@@ -41,7 +41,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('cycle 373: migrateData target.meta.X || 0 fallback 0건', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     const fnStart = source.indexOf('export const migrateData');
     const fnEnd = source.indexOf('export const checkTitles');
     const block = source.slice(fnStart, fnEnd);
@@ -51,7 +51,7 @@ test('cycle 373: migrateData target.meta.X || 0 fallback 0건', async () => {
 });
 
 test('cycle 373: migrateData meta 객체 초기화 보존 (회귀 가드)', async () => {
-    const source = await readSrc('src/utils/gameUtils.ts');
+    const source = await readSrc('src/utils/dataMigration.ts');
     assert.ok(/target\.meta = target\.meta \|\| \{ essence: 0, rank: 0/.test(source),
         'target.meta = target.meta || {...defaults} 보존');
 });
