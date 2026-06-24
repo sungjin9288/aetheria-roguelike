@@ -4,7 +4,23 @@ const ENV: ImportMetaEnv = (typeof import.meta !== 'undefined' && import.meta.en
 // Admin UIDs — 환경변수에서 쉼표 구분으로 주입 (VITE_ADMIN_UIDS=uid1,uid2)
 export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map((s: any) => s.trim()).filter(Boolean);
 
-export const CONSTANTS: any = {
+/**
+ * 게임 전역 상수. 1차 타입화 — 핵심 키는 명시 타입, 나머지는 인덱스 시그니처로
+ * 점진 타입화(기존 접근 호환). 신규 키 추가 시 가능하면 명시 타입을 부여할 것.
+ */
+export interface GameConstants {
+    [key: string]: any;
+    DEFAULT_JOB: string;
+    START_LOCATION: string;
+    MAX_LEVEL: number;
+    START_HP: number;
+    START_MP: number;
+    START_GOLD: number;
+    START_NEXT_EXP: number;
+    DATA_VERSION: number;
+}
+
+export const CONSTANTS: GameConstants = {
     DEFAULT_JOB: '모험가',
     START_LOCATION: '시작의 마을',
     ABYSS_MAP_NAME: '혼돈의 심연',
@@ -39,7 +55,41 @@ export const CONSTANTS: any = {
 };
 
 // Game Balance Constants - Centralized magic numbers
-export const BALANCE: any = {
+/**
+ * 밸런스 상수. 1차 타입화 — 자주 참조되는 스칼라 키는 명시 타입, 나머지(배열/객체/
+ * 레코드 등 이질 구조)는 인덱스 시그니처로 호환 유지. 새 밸런스 수치는 가능한 한
+ * 명시 타입을 추가해 오타·단위 실수를 컴파일 타임에 차단할 것.
+ */
+export interface BalanceConfig {
+    [key: string]: any;
+    REST_COST: number;
+    SKILL_MP_COST: number;
+    CRIT_CHANCE: number;
+    DROP_CHANCE: number;
+    ESCAPE_CHANCE: number;
+    EVENT_CHANCE_NOTHING: number;
+    EXP_SCALE_RATE: number;
+    EXP_LEVEL_HARD_CAP: number;
+    HP_PER_LEVEL: number;
+    MP_PER_LEVEL: number;
+    ATK_PER_LEVEL: number;
+    DEF_PER_LEVEL: number;
+    MONSTER_HP_BASE: number;
+    MONSTER_HP_PER_LEVEL: number;
+    MONSTER_GOLD_BASE: number;
+    FIRST_RELIC_PITY_EXPLORES: number;
+    BOSS_PHASE2_THRESHOLD: number;
+    INV_MAX_SIZE: number;
+    STATUS_DOT_RATIO: number;
+    DAMAGE_BASE_RATIO: number;
+    DAMAGE_VARIANCE: number;
+    GUARD_DAMAGE_MULT: number;
+    ELEMENT_WEAK_MULT: number;
+    ELEMENT_RESIST_MULT: number;
+    DEFAULT_MAX_HP: number;
+}
+
+export const BALANCE: BalanceConfig = {
     REST_COST: 60,              // 경제 완화 — Lv50 기준 1-2전투로 휴식 가능 (기존 80)
     SKILL_MP_COST: 10,
     CRIT_CHANCE: 0.1,
@@ -150,6 +200,37 @@ export const BALANCE: any = {
 
     // 난이도 매니저
     DIFFICULTY_BATTLE_WINDOW: 20,   // 최근 N 전투 분석
+    // 신입 보호 (B+ 재설계 2026-06): 적을 "약화"시키지 않는다 — Lv1·첫 N전투에서
+    //   불운한 즉사만 방지하는 초미세 상한 보정. EXP/골드 강제 보너스 제거(중립).
+    //   기존(적 약화 HP×0.88/ATK×0.82)은 초반을 너무 쉽게 만들던 주원인 → 제거.
+    BEGINNER_GRACE_MAX_LEVEL: 1,    // 이 레벨 이하에서만 적용 (기존 3)
+    BEGINNER_GRACE_BATTLES: 2,      // 첫 N전투까지만 적용 (기존 5)
+    BEGINNER_GRACE_ENEMY_MULT: 0.95, // 적 HP/ATK 상한 (기존 0.88/0.82 → 거의 정상)
+
+    // 첫 죽음 메타 보상 (C-1, B+ 2026-06): 첫 사망 시 영구 메타 보너스 1회 지급 →
+    //   "죽어도 남는다"를 1회차에 학습시켜 가혹한 완전 리셋 페널티를 공정하게 완충.
+    //   메타는 RUN을 넘어 보존되어 다음 런 starter 스탯이 강해진다.
+    FIRST_DEATH_BONUS_ATK: 2,       // 첫 죽음 영구 ATK
+    FIRST_DEATH_BONUS_HP: 20,       // 첫 죽음 영구 최대 HP
+
+    // 시작 부트 (B-1, B+ 2026-06): 캐릭터 생성 직후 유물 N선택 제공 → 첫 빌드 결정을
+    //   0분에 노출(Hades 거울 / StS Neow). 느린 초반을 "내 빌드 실험"으로 전환.
+    START_BOOT_RELIC_CHOICES: 3,
+
+    // 초반 정예 (A-4, B+ 2026-06): Lv ≤ cap에서 낮은 확률로 "정예" 개체 스폰 →
+    //   "방심하면 죽는" 첫 위협 모먼트. 완전 엘리트(1.8~2.5x)는 Lv1에 불공정하므로
+    //   전용 완화 배율로 TTK를 빠듯하게(영리하면 승리 가능). 도망·첫 죽음 메타가 안전망.
+    EARLY_ELITE_LEVEL_CAP: 6,       // 이 맵 레벨 이하에서만 초반 정예 스폰
+    EARLY_ELITE_CHANCE: 0.10,       // 초반 전투당 정예 스폰 확률
+    EARLY_ELITE_MULT: 1.5,          // 정예 HP/ATK 배율 (완전 엘리트보다 완화)
+
+    // 캠프파이어 노드 (Phase 2, B+ 2026-06): 던전 탐험 중 "휴식 vs 단련" 반복 결정
+    //   (Slay the Spire 캠프파이어). 위협(A-1/A-4)이 강해진 만큼 회복은 실질 선택이 됨.
+    //   휴식=즉시 생존, 단련=다음 전투 공격 버프(다가올 위험에 베팅). 결정 밀도 ↑.
+    CAMPFIRE_CHANCE: 0.08,          // 던전 탐험당 모닥불 조우 확률
+    CAMPFIRE_HEAL_RATIO: 0.4,       // 휴식 선택 시 maxHP/maxMP 회복 비율
+    CAMPFIRE_FORGE_ATK: 0.4,        // 단련 선택 시 다음 전투 ATK 버프 비율 (+40%)
+    CAMPFIRE_FORGE_TURNS: 5,        // 단련 버프 지속 턴 (다음 전투를 대체로 커버)
 
     // 현상수배 카운트
     BOUNTY_MIN_COUNT: 5,            // 현상수배 최소 처치 수

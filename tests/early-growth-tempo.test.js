@@ -79,7 +79,10 @@ test('slice 19: INITIAL_STATE 시작 ATK 12', async () => {
         'INITIAL_STATE atk 12 / def 5');
 });
 
-test('slice 19: Lv1 슬라임 스폰 — 신입 보호 적용 시 실효 HP ≤ 75', () => {
+// B+ 재설계 (2026-06): 신입 보호가 적을 크게 약화시키지 않는다. 기존엔 hpMult
+//   0.88로 raw 81 → 71까지 깎였으나, 이제 ×0.95 상한만 적용 → 76 (거의 정상).
+//   "초반이 너무 쉽다" 해소의 핵심 레버. 5턴 처치 톤은 그대로 유지(아래 테스트).
+test('slice 19: Lv1 슬라임 스폰 — 신입 보호는 거의 정상(×0.95 상한)', () => {
     const mapData = { level: 1, monsters: ['슬라임'] };
     // Math.random 0.5: 접두어 roll(0.5 > PREFIX_CHANCE 0.2) 미발동 고정
     const { mStats: raw } = withStubbedRandom(0.5, () =>
@@ -88,8 +91,9 @@ test('slice 19: Lv1 슬라임 스폰 — 신입 보호 적용 시 실효 HP ≤ 
     assert.equal(raw.hp, 81, `슬라임 raw HP 81 (실제: ${raw.hp})`);
 
     const { mStats: graced } = applyDynamicDifficulty(raw, freshPlayer(), null);
-    // 신입 보호 hpMult 0.88: floor(81 * 0.88) = 71
-    assert.ok(graced.hp <= 75, `신입 보호 후 HP ≤ 75 (실제: ${graced.hp})`);
+    // 신입 보호 ×0.95: floor(81 * 0.95) = 76 — 약화 폭이 작아 raw에 근접
+    assert.equal(graced.hp, 76, `신입 보호 후 HP 76 (B+ ×0.95, 실제: ${graced.hp})`);
+    assert.ok(graced.hp > 75, '기존 0.88 대비 적이 더 단단함 (B+ 의도)');
 });
 
 test('slice 19: 첫 전투 강타 기준 5턴 이내 처치 가능', () => {

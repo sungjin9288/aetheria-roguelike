@@ -117,6 +117,11 @@ export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
                     updatedPlayer = { ...updatedPlayer, mp: Math.max(0, Math.min(fullStats.maxMp, updatedPlayer.mp + selectedOutcome.mp)) };
                 }
                 if (selectedOutcome.item) updatedPlayer = addItemByName(updatedPlayer, selectedOutcome.item);
+                // 캠프파이어 "단련" 등 — 다음 전투용 tempBuff 부여 (combatItem 물약과 동일 패턴).
+                //   turn-based라 전투 전까지 유지되며 다음 전투에서 소모된다.
+                if (selectedOutcome.buff) {
+                    updatedPlayer = { ...updatedPlayer, tempBuff: { atk: 0, def: 0, turn: 0, name: null, ...selectedOutcome.buff } };
+                }
                 resultText = selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT;
                 addLog('event', resultText);
             } else if (roll > 0.4) {

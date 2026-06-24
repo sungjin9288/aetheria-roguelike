@@ -204,13 +204,23 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 
     // eliteOnly 챌린지: 모든 적에게 엘리트 접두어 강제 부여
     const forceElite = player.challengeModifiers?.includes('eliteOnly') && !mStats.isBoss;
+    // A-4 (B+ 2026-06): 초반 정예 — Lv ≤ cap에서 낮은 확률로 "정예" 개체 스폰.
+    //   완전 엘리트(1.8~2.5x)는 Lv1에 불공정하므로 전용 완화 배율(EARLY_ELITE_MULT)로
+    //   TTK를 빠듯하게(영리하면 승리) → "방심하면 죽는" 첫 위협. 도망·첫 죽음 메타가 안전망.
+    const earlyElite = !mStats.isBoss && !forceElite
+        && typeof level === 'number' && level <= BALANCE.EARLY_ELITE_LEVEL_CAP
+        && Math.random() < BALANCE.EARLY_ELITE_CHANCE;
     // 접두어 부여
-    if ((forceElite || Math.random() < BALANCE.PREFIX_CHANCE) && CONSTANTS.MONSTER_PREFIXES) {
-        const elitePrefixes = forceElite
-            ? CONSTANTS.MONSTER_PREFIXES.filter((p: any) => p.isElite)
-            : CONSTANTS.MONSTER_PREFIXES;
-        const pool = elitePrefixes.length > 0 ? elitePrefixes : CONSTANTS.MONSTER_PREFIXES;
-        const prefix = pool[Math.floor(Math.random() * pool.length)];
+    if (forceElite || earlyElite || (Math.random() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES)) {
+        const prefix = earlyElite
+            ? { name: '정예', mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
+            : (() => {
+                const elitePrefixes = forceElite
+                    ? CONSTANTS.MONSTER_PREFIXES.filter((p: any) => p.isElite)
+                    : CONSTANTS.MONSTER_PREFIXES;
+                const pool = elitePrefixes.length > 0 ? elitePrefixes : CONSTANTS.MONSTER_PREFIXES;
+                return pool[Math.floor(Math.random() * pool.length)];
+            })();
         mStats.name = `${prefix.name} ${baseName}`;
         mStats.hp = Math.floor(mStats.hp * prefix.mod);
         mStats.maxHp = Math.floor(mStats.maxHp * prefix.mod);

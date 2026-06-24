@@ -92,12 +92,15 @@ test('cycle 270: enemy null 시 null 반환 (회귀 가드)', async () => {
 
 test('cycle 270: CombatPanel display 변화 없음 (회귀 가드)', async () => {
     const source = await readSrc('src/components/tabs/CombatPanel.tsx');
-    assert.ok(/tacticalProfile\?.entryHint|tacticalProfile\.entryHint/.test(source),
-        'entryHint dispatch 유지');
-    assert.ok(/tacticalProfile\?.hint|tacticalProfile\.hint/.test(source),
-        'hint dispatch 유지');
-    assert.ok(/tacticalProfile\?.phaseHint|tacticalProfile\.phaseHint/.test(source),
-        'phaseHint dispatch 유지');
+    // 리팩토링: bossBriefLine(entryHint/hint/phaseHint) 계산은 combatView.ts로 분리,
+    //   signature/counterHint 조건부 렌더는 CombatPanel JSX에 잔존.
+    const view = await readSrc('src/utils/combatView.ts');
+    assert.ok(/tacticalProfile\?.entryHint|tacticalProfile\.entryHint/.test(view),
+        'entryHint 처리 유지');
+    assert.ok(/tacticalProfile\?.hint|tacticalProfile\.hint/.test(view),
+        'hint 처리 유지');
+    assert.ok(/tacticalProfile\?.phaseHint|tacticalProfile\.phaseHint/.test(view),
+        'phaseHint 처리 유지');
     assert.ok(/tacticalProfile\?\.signature/.test(source),
         'cycle 269 signature dispatch 유지');
     assert.ok(/tacticalProfile\?\.counterHint/.test(source),

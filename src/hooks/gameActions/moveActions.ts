@@ -56,6 +56,11 @@ export const createMoveActions = (deps: any) => {
 
             if (firstVisit) {
                 addLog('event', MSG.MOVE_NEW_AREA(loc));
+                // C-2 (B+ 2026-06): 갓 진입한 위험 던전(권장 레벨 근접) 경고 — 정예/보스
+                //   readability. 하드 레벨 락으로 과진입은 불가하나, gap≤1 지역은 위협이 실재.
+                if (!isSafeDestination && ((player.level || 1) - requiredLevel) <= 1) {
+                    addLog('warn', MSG.MOVE_AREA_DANGER(requiredLevel));
+                }
                 // cycle 118: 첫 방문 sensory cue — D major triad 짧은 arpeggio.
                 // cycle 117 discovery_chain과 짝을 이루는 가벼운 audio reflection.
                 soundManager.play('new_area');

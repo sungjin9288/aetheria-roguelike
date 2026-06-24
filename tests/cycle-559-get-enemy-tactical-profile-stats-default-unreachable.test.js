@@ -53,9 +53,10 @@ test('cycle 559: getEnemyTacticalProfile signature에서 stats default 0건', as
 });
 
 test('cycle 559: 정합성 가드 — production + test callsite 보존', async () => {
-    const cp = await readSrc('src/components/tabs/CombatPanel.tsx');
+    // 리팩토링: getEnemyTacticalProfile(enemy, stats) 호출은 combatView.ts(buildCombatView)로 이동.
+    const cp = await readSrc('src/utils/combatView.ts');
     assert.ok(/getEnemyTacticalProfile\(enemy,\s*stats\)/.test(cp),
-        'CombatPanel getEnemyTacticalProfile 보존');
+        'combatView getEnemyTacticalProfile 보존');
 
     const test270 = await readSrc('tests/cycle-270-tactical-profile-dead-cleanup.test.js');
     assert.ok(/getEnemyTacticalProfile\(enemy,\s*\{ def: 10 \}\)/.test(test270),

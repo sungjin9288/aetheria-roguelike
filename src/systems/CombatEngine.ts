@@ -1656,6 +1656,15 @@ export const CombatEngine = {
         const meta = { ...this.DEFAULT_META, ...(player.meta || {}) };
         const prevStats = player.stats || starterState.stats || {};
 
+        // C-1 (B+ 2026-06): 첫 죽음에 영구 메타 보너스 — "죽어도 남는다"를 1회차에
+        //   학습시켜 완전 리셋 페널티를 공정하게 완충. 메타는 RUN을 넘어 보존되어
+        //   아래 starterState.atk/maxHp 합산 + 다음 런 buildClassVitals에도 반영된다.
+        const isFirstDeath = (prevStats.deaths || 0) === 0;
+        if (isFirstDeath) {
+            meta.bonusAtk = (meta.bonusAtk || 0) + BALANCE.FIRST_DEATH_BONUS_ATK;
+            meta.bonusHp = (meta.bonusHp || 0) + BALANCE.FIRST_DEATH_BONUS_HP;
+        }
+
         starterState.stats = {
             ...starterState.stats,
             ...prevStats,
@@ -1703,10 +1712,14 @@ export const CombatEngine = {
             starterState.weeklyProtocol = (player as any).weeklyProtocol;
         }
 
+        const defeatLogs: any[] = [{ type: 'error', text: MSG.DEFEAT }];
+        if (isFirstDeath) {
+            defeatLogs.push({ type: 'system', text: MSG.FIRST_DEATH_META(BALANCE.FIRST_DEATH_BONUS_ATK, BALANCE.FIRST_DEATH_BONUS_HP) });
+        }
         return {
             updatedPlayer: starterState,
             graveData,
-            logs: [{ type: 'error', text: MSG.DEFEAT }]
+            logs: defeatLogs
         };
     }
 };

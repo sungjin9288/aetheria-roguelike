@@ -77,13 +77,15 @@ test('combat forecast exposes reward windows without changing combat logic', () 
 
 test('CombatPanel renders INTENT RESPONSE WINDOW forecast strip', async () => {
     const source = await readSrc('src/components/tabs/CombatPanel.tsx');
+    // 리팩토링: 전투 예보 계산은 buildCombatView(combatView.ts)로 분리, 렌더는 CombatPanel.
+    const view = await readSrc('src/utils/combatView.ts');
 
-    assert.match(source, /getCombatForecast/);
+    assert.match(view, /getCombatForecast/);
     assert.match(source, /data-testid="combat-forecast-strip"/);
     assert.match(source, /data-forecast-tone=\{combatForecast\.tone\}/);
-    assert.match(source, /label:\s*'INTENT'/);
-    assert.match(source, /label:\s*'RESPONSE'/);
-    assert.match(source, /label:\s*'WINDOW'/);
+    assert.match(view, /label:\s*'INTENT'/);
+    assert.match(view, /label:\s*'RESPONSE'/);
+    assert.match(view, /label:\s*'WINDOW'/);
 });
 
 test('smoke loop verifies the combat forecast strip during combat coverage', async () => {

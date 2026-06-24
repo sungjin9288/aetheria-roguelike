@@ -57,7 +57,8 @@ test('cycle 575: 정합성 가드 — ControlPanel callsite 보존', async () =>
 });
 
 test('cycle 575: body enemy 분기 보존', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
+    // 리팩토링: tacticalProfile 계산은 combatView.ts(buildCombatView)로 이동 — enemy 분기 보존.
+    const source = await readSrc('src/utils/combatView.ts');
     assert.ok(/const tacticalProfile = enemy \? getEnemyTacticalProfile\(enemy, stats\) : null/.test(source),
         'enemy ? getEnemyTacticalProfile : null 보존');
 });

@@ -1,5 +1,6 @@
 import { DB } from '../../data/db';
 import { CLASSES } from '../../data/classes';
+import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { BALANCE, CONSTANTS } from '../../data/constants';
 import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
@@ -43,6 +44,14 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             if (mods.length > 0) {
                 const labels = mods.map((id: any) => BALANCE.CHALLENGE_MODIFIERS.find((m: any) => m.id === id)?.label || id);
                 addLog('warn', MSG.CHALLENGE_START(labels));
+            }
+            // B-1 (B+ 2026-06): 시작 부트 — 캐릭터 생성 직후 첫 유물 3선택 제공.
+            //   pendingRelics가 set되면 RelicChoicePanel이 자동 노출(GameRoot), 선택 시
+            //   ADD_RELIC이 clear. 첫 빌드 결정을 0분에 노출(Hades 거울 / StS Neow).
+            const bootRelics = pickWeightedRelics(RELICS, BALANCE.START_BOOT_RELIC_CHOICES);
+            if (bootRelics.length > 0) {
+                dispatch({ type: AT.SET_PENDING_RELICS, payload: bootRelics });
+                addLog('event', MSG.START_BOOT_RELIC);
             }
         },
 
