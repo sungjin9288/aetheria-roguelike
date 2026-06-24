@@ -252,6 +252,21 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         else if (prefix.name !== '일반적인') addLog('warning', `[${prefix.name}] 개체가 나타났습니다.`);
     }
 
+    // PR #5: 프레스티지(환생) 적 난이도 스케일링 — 최종 1회(profile/prefix 적용 후).
+    //   기존 프레스티지는 플레이어 스탯만 올려 매 승천이 쉬워졌다(anti-로그라이크).
+    //   rank당 적 스탯/보상을 곱연산 상향해 "깊을수록 어려움"을 회복. rank0은 무변경.
+    const prestigeRank = player.meta?.prestigeRank || 0;
+    if (prestigeRank > 0) {
+        const statMult = 1 + prestigeRank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK;
+        const rewardMult = 1 + prestigeRank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK;
+        mStats.hp = Math.floor(mStats.hp * statMult);
+        mStats.maxHp = Math.floor(mStats.maxHp * statMult);
+        mStats.atk = Math.floor(mStats.atk * statMult);
+        mStats.def = Math.floor(mStats.def * statMult);
+        mStats.exp = Math.floor(mStats.exp * rewardMult);
+        mStats.gold = Math.floor(mStats.gold * rewardMult);
+    }
+
     return { mStats, baseName };
 };
 

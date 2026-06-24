@@ -137,6 +137,14 @@ export const BALANCE: BalanceConfig = {
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
     PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가
     PRESTIGE_MP_BONUS: 15,          // 환생당 영구 MP 증가
+    // PR #5 (2026-06) — 프레스티지 적 난이도 스케일링. 기존 프레스티지는 플레이어
+    //   스탯만 올려(런이 점점 쉬워짐) 로그라이크 "깊을수록 어려움" 원칙에 역행했다.
+    //   환생 rank당 적 hp/atk/def를 곱연산으로 올려 매 승천이 더 단단해지게 한다.
+    //   rank0은 변화 없음(신규 플레이어/기본 곡선 불변). PER_RANK 0.05: rank5 +25%,
+    //   rank10 +50%. 플레이어 flat 보너스(+5 atk/+25 hp)와 rank10 "스탯 2배" 해금이
+    //   부분 상쇄 → net firmer하되 공정. (prestige-enemy-scaling.test.js로 가드)
+    PRESTIGE_ENEMY_STAT_PER_RANK: 0.05,   // 환생 rank당 적 hp/atk/def 증가율
+    PRESTIGE_ENEMY_REWARD_PER_RANK: 0.08, // 환생 rank당 적 exp/gold 증가율 (난도 보상)
     BOSS_PHASE2_THRESHOLD: 0.5,     // 보스 HP 50% 이하 → 패턴 전환
     BOUNTY_EXP_MULT: 2.0,           // 현상수배 EXP = 킬수 × 레벨 × 2.0
     BOUNTY_GOLD_MULT: 3.0,          // 현상수배 골드 = 킬수 × 레벨 × 3.0 (기존 2.5)
