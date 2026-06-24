@@ -64,6 +64,19 @@ export const CombatEngine = {
         };
     },
 
+    // PR #3 (2026-06): 적 DEF 비율 경감. calculateDamage는 순수 공격 roll로 유지하고,
+    //   경감은 모든 공격 배율(크리/처형/연격 등) 적용 후 finalDamage 단계에서 1회 처리.
+    //   mitigated = max(1, floor(rawDamage × K/(K+effDef))). armor_pen 유물이 effDef를 감소
+    //   (이전엔 플레이어 자신의 def를 줄이고 그마저 무시돼 완전 dead였던 회귀 fix).
+    mitigateByEnemyDef(rawDamage: number, enemyDef: number, relics: Relic[]) {
+        const def = Math.max(0, enemyDef || 0);
+        if (def === 0) return rawDamage;
+        const apRelic = relics.find((r: any) => r.effect === 'armor_pen');
+        const effDef = apRelic ? Math.floor(def * (1 - apRelic.val)) : def;
+        const K = BALANCE.ENEMY_DEF_K;
+        return Math.max(1, Math.floor(rawDamage * K / (K + Math.max(0, effDef))));
+    },
+
     getCombatFlags(player: Player) {
         return { ...this.DEFAULT_COMBAT_FLAGS, ...(player?.combatFlags || {}) };
     },
@@ -261,12 +274,11 @@ export const CombatEngine = {
         let updatedPlayer: any = { ...player, combatFlags: this.getCombatFlags(player) };
         const flags = this.getCombatFlags(player);
 
-        // 유물: 방어 무시 (armor_pen)
+        // 유물: 방어 무시 (armor_pen) — PR #3: 적 DEF 경감 단계(mitigateByEnemyDef)에서
+        //   effDef를 줄이는 방식으로 작동. 여기선 태그 표기용으로만 보유 여부 확인.
         const apRelic = relics.find((r: any) => r.effect === 'armor_pen');
-        const effectiveDef = apRelic ? Math.floor((stats.def || 0) * (1 - apRelic.val)) : (stats.def || 0);
-        const statsForAtk = apRelic ? { ...stats, def: effectiveDef } : stats;
 
-        const { damage: rawBaseDmg, isCrit } = this.calculateDamage(statsForAtk, {
+        const { damage: rawBaseDmg, isCrit } = this.calculateDamage(stats, {
             mult: 1,
             guarding: !!enemy.guarding,
             elementMultiplier,
@@ -346,6 +358,9 @@ export const CombatEngine = {
                 finalDamage = Math.floor(finalDamage * (lowHpDmgRelic.val || 1.4));
             }
         }
+
+        // PR #3: 적 DEF 비율 경감 — 모든 공격 배율 적용 후 최종 1회. armor_pen은 effDef 감소.
+        finalDamage = this.mitigateByEnemyDef(finalDamage, enemy.def ?? 0, relics);
 
         const newEnemyHp = (enemy.hp ?? 0) - finalDamage;
         // slice 19: 치명타/약점/저항/연격을 본문 태그로 통합 — 기존엔 같은 정보가
@@ -575,7 +590,9 @@ export const CombatEngine = {
         const lowHpDmgRelicSkill = relics.find((r: any) => r.effect === 'low_hp_dmg');
         const lowHpMultSkill = (lowHpDmgRelicSkill && (player.hp ?? 0) / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP) < (lowHpDmgRelicSkill.threshold || 0.4))
             ? (lowHpDmgRelicSkill.val || 1.4) : 1;
-        const totalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
+        // PR #3: 적 DEF 비율 경감 — 스킬 배율 전부 적용 후 최종 1회 (attack()과 동일 패턴).
+        const rawTotalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
+        const totalDamage = this.mitigateByEnemyDef(rawTotalDamage, enemy.def ?? 0, relics);
         const newEnemyHp = (enemy.hp ?? 0) - totalDamage;
 
         // logs 선언을 status effect 검사 이전으로 이동 (use-before-declaration 버그 수정).

@@ -76,6 +76,9 @@ export interface BalanceConfig {
     DEF_PER_LEVEL: number;
     MONSTER_HP_BASE: number;
     MONSTER_HP_PER_LEVEL: number;
+    MONSTER_DEF_BASE: number;
+    MONSTER_DEF_PER_LEVEL: number;
+    MONSTER_DEF_PER_DEPTH: number;
     MONSTER_GOLD_BASE: number;
     FIRST_RELIC_PITY_EXPLORES: number;
     BOSS_PHASE2_THRESHOLD: number;
@@ -83,6 +86,7 @@ export interface BalanceConfig {
     STATUS_DOT_RATIO: number;
     DAMAGE_BASE_RATIO: number;
     DAMAGE_VARIANCE: number;
+    ENEMY_DEF_K: number;
     GUARD_DAMAGE_MULT: number;
     ELEMENT_WEAK_MULT: number;
     ELEMENT_RESIST_MULT: number;
@@ -175,6 +179,14 @@ export const BALANCE: BalanceConfig = {
     // HP 곡선 70+32L: Lv1 -32%, Lv20 -1%, Lv50 +3% — 초반 전투 템포만 선택적 가속
     MONSTER_HP_BASE: 70,
     MONSTER_HP_PER_LEVEL: 32,
+    // PR #3 (2026-06) — 적 DEF 곡선. spawnEnemy가 이전엔 def를 아예 안 만들어
+    //   enemy.def는 항상 undefined였고 calculateDamage도 무시 → 적 방어력 완전 dead.
+    //   def = BASE + level×PER_LEVEL (+ depth×PER_DEPTH). 비율 경감 K=100과 결합 시
+    //   초반(Lv≤6 def≈4~9)은 ~4~8% 경감(무시 가능), 중후반(Lv30 def≈33 / Lv50 def≈53)은
+    //   33~35% 경감으로 firmer. mid-game-ttk-bands 밴드(2~9턴) 내 검증 완료.
+    MONSTER_DEF_BASE: 3,
+    MONSTER_DEF_PER_LEVEL: 1,
+    MONSTER_DEF_PER_DEPTH: 1,       // 무한 심연 depth당 추가 def (level 외 추가 압박)
     MONSTER_GOLD_BASE: 16,          // 초반 휴식 경제: Lv1 골드 18 → 3-4전투당 휴식 1회
 
     // slice 19 — 첫 유물 보장: 유물 0개 상태로 N탐험 경과 시 다음 전투형 탐험에서 유물 선택 보장
@@ -243,6 +255,8 @@ export const BALANCE: BalanceConfig = {
     GUARD_DAMAGE_MULT: 0.65,        // 가드 중 받는 피해 배율
     DAMAGE_BASE_RATIO: 0.9,         // 데미지 최솟값 비율 (분산 하한)
     DAMAGE_VARIANCE: 0.2,           // 데미지 분산 폭
+    ENEMY_DEF_K: 100,               // 적 DEF 비율 경감 분모: mitigated = dmg × K/(K+def).
+                                    //   def=K면 정확히 절반. flat 차감과 달리 스케일 붕괴 없음.
     // 상태이상 ATK 패널티 배율
     BLIND_ATK_MULT: 0.65,
     FEAR_ATK_MULT: 0.70,

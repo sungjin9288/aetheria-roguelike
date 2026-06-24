@@ -174,6 +174,10 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         hp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
         maxHp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
         atk: 15 + level * 4 + (depth * 3),
+        // PR #3: 적 DEF 곡선 — 이전엔 def 필드 자체가 없어 enemy.def는 항상 undefined였고
+        //   calculateDamage도 무시 → 적 방어력 완전 dead. 이제 레벨 비례 def + 비율 경감(K=100)
+        //   으로 중후반 firmer. profile.defMult로 탱키 아키타입 가중(아래 적용).
+        def: Math.floor(BALANCE.MONSTER_DEF_BASE + level * BALANCE.MONSTER_DEF_PER_LEVEL + depth * BALANCE.MONSTER_DEF_PER_DEPTH),
         exp: 10 + level * 10 + (depth * 4),
         gold: BALANCE.MONSTER_GOLD_BASE + level * 2 + (depth * 3),
         pattern: {
@@ -186,6 +190,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     if (profile) {
         if (profile.hpMult)   { mStats.hp = Math.floor(mStats.hp * profile.hpMult); mStats.maxHp = Math.floor(mStats.maxHp * profile.hpMult); }
         if (profile.atkMult)  { mStats.atk = Math.floor(mStats.atk * profile.atkMult); }
+        if (profile.defMult)  { mStats.def = Math.floor(mStats.def * profile.defMult); }
         if (profile.expMult)  { mStats.exp = Math.floor(mStats.exp * profile.expMult); }
         if (profile.goldMult) { mStats.gold = Math.floor(mStats.gold * profile.goldMult); }
         if (profile.dropMod)  mStats.dropMod = profile.dropMod;
