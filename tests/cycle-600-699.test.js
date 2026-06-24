@@ -1138,7 +1138,8 @@ import { readFile } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 624: handleVictory signature에서 passiveBonus/liveConfig defaults 0건', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // handleVictory는 CombatEngine.outcome.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.outcome.ts');
       assert.ok(!/handleVictory\([^)]*passiveBonus:\s*any\s*=\s*\{\}/.test(source),
           'handleVictory passiveBonus default {} 제거');
       assert.ok(!/handleVictory\([^)]*liveConfig:\s*any\s*=\s*\{\}/.test(source),
@@ -1154,7 +1155,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 624: handleVictory body liveConfig/passiveBonus 처리 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // handleVictory는 CombatEngine.outcome.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.outcome.ts');
       assert.ok(/liveConfig\?\.eventMultiplier/.test(source),
           'liveConfig.eventMultiplier 처리 보존');
       // passiveBonus 사용 (cycle 265 ad/passive bonus 분리)

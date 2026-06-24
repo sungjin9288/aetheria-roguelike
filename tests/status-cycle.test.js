@@ -560,7 +560,8 @@ import { readFile } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 549: tickEnemyStatus signature에서 3 defaults 0건', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // tickEnemyStatus는 CombatEngine.status.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.status.ts');
       const fnIdx = source.indexOf('tickEnemyStatus(enemy');
       const fnEnd = source.indexOf(')', fnIdx) + 1;
       const sig = source.slice(fnIdx, fnEnd);
@@ -579,7 +580,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 549: body DoT 계산 + dotMult 사용처 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // tickEnemyStatus 본문은 CombatEngine.status.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.status.ts');
       assert.ok(/BALANCE\.STATUS_DOT_RATIO \* synergyDotMult/.test(source),
           'STATUS_DOT_RATIO * synergyDotMult 보존');
   });

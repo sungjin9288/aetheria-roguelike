@@ -1844,7 +1844,8 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
   });
 
   test('cycle 551: 정합성 가드 — 4 internal callsite 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // getEffectiveMaxMp 호출 일부가 CombatEngine.relics.ts(applyCritMpRestore/FatalProtection)로 이동 — 합쳐서 카운트.
+      const source = (await readSrc('src/systems/CombatEngine.ts')) + (await readSrc('src/systems/CombatEngine.relics.ts'));
       const calls = (source.match(/this\.getEffectiveMaxMp\(/g) || []).length;
       assert.equal(calls, 4, `internal callsite 4건 보존: ${calls}건`);
   });

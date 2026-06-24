@@ -48,7 +48,10 @@ import { readFile } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
 
   test("CombatEngine.ts: cycle 153 11종 시너지 effect-name이 모두 참조됨", async () => {
-      const engineSrc = await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8');
+      // 일부 시너지는 handleVictory(outcome)·applyEntropyTick/FatalProtection(relics)으로 분리 — 합쳐 검사.
+      const engineSrc = (await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8'))
+          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.outcome.ts'), 'utf8'))
+          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.relics.ts'), 'utf8'));
       const expected = [
           'vampire_lord',
           'unbreakable',
