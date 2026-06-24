@@ -18,11 +18,14 @@
 | Charts | Chart.js + react-chartjs-2 | 4.5.1 / 5.3.1 |
 | Backend | Firebase (Auth + Firestore) | 12.8.0 |
 | Mobile | Capacitor | 8.1.0 |
-| Test | Node.js built-in `test` (no external runner) | — |
+| Language | **TypeScript** (`.ts`/`.tsx`, `strict: true`) | 5.x |
+| Test | Node.js built-in `test` (실행은 `tsx` 로더) | — |
 | Linter | ESLint | 9.39.1 |
 | Node.js | — | >=18.0.0 |
 
-> **TypeScript 미사용** — 순수 ES modules, JSDoc으로 타입 힌트 제공
+> **TypeScript 사용** — 전 소스 `.ts`/`.tsx`, `tsconfig` `strict: true`. 마이그레이션 ~85% 완료
+> (잔여 `noImplicitAny` ~156건, `as any` ~93곳). `npm run type-check`(`tsc --noEmit`)로 검증.
+> `data/`·`systems/` 등 일부 핵심 객체(`BALANCE`/`CONSTANTS`)는 점진 타입화 중 — §부록 참조.
 
 ---
 

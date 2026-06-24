@@ -57,7 +57,9 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        # playwright.config의 chromium-mobile 프로젝트는 devices['iPhone 12']를 사용 →
+        # iPhone 디바이스 기본 엔진은 webkit이므로 webkit도 설치해야 한다 (chromium만 설치 시 launch 실패).
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Run E2E tests
         run: npm run test:e2e
@@ -65,6 +67,10 @@ jobs:
           # mock 모드: Firebase 익명 인증 스킵 (헤드리스 환경 안정성).
           # cycle 58: ?e2e=1 URL 플래그가 mock 모드 활성.
           E2E_MODE: '1'
+          # 더미 Firebase config(시크릿 아님 — 가짜값). firebase.ts가 빌드 시
+          # VITE_FIREBASE_CONFIG 부재면 initializeApp({})로 앱이 부팅 못 함.
+          # e2e 모드는 실제 firebase 호출을 스킵하므로 가짜 config로 부팅만 시키면 됨.
+          VITE_FIREBASE_CONFIG: '{"apiKey":"e2e-key","authDomain":"e2e.firebaseapp.com","projectId":"e2e-proj","appId":"e2e"}'
 
       - name: Upload Playwright report
         if: failure()

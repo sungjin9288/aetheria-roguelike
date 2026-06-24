@@ -26,16 +26,17 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('CombatPanel imports getBossSignatureDrops', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
+// 리팩토링: signature 드롭 reminder 계산은 buildCombatView(combatView.ts)로 분리.
+test('combatView imports getBossSignatureDrops', async () => {
+    const source = await readSrc('src/utils/combatView.ts');
     assert.ok(
         /import\s*\{[^}]*getBossSignatureDrops[^}]*\}\s*from\s*['"][^'"]*bossSignatureHint/.test(source),
-        'CombatPanel should import getBossSignatureDrops from bossSignatureHint util'
+        'combatView should import getBossSignatureDrops from bossSignatureHint util'
     );
 });
 
-test('CombatPanel resolves enemy baseName before querying signature drops', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
+test('combatView resolves enemy baseName before querying signature drops', async () => {
+    const source = await readSrc('src/utils/combatView.ts');
     assert.ok(
         /resolveEnemyBaseName\s*\(/.test(source),
         'should normalize prefixed boss name via CombatEngine.resolveEnemyBaseName'

@@ -68,6 +68,10 @@ export const MSG: any = {
     EQUIP_LEVEL_REQUIRED: (name: any, lv: any) => `${name}은(는) Lv.${lv} 이상에서 장착할 수 있습니다.`,
     BUFF_EXPIRED: '버프 효과가 만료되었습니다.',
     DEFEAT: '전투에서 패배했습니다. 레거시 보너스는 유지됩니다.',
+    // C-1 (B+ 2026-06): 첫 죽음 영구 메타 보상 안내 — "죽음도 성장이다".
+    FIRST_DEATH_META: (atk: any, hp: any) => `[각성] 첫 죽음의 대가로 영구 힘을 얻었습니다. (ATK +${atk}, 최대 HP +${hp}) 다음 도전은 더 강하게 시작합니다.`,
+    // B-1 (B+ 2026-06): 시작 부트 — 캐릭터 생성 직후 첫 유물 선택 안내.
+    START_BOOT_RELIC: '[유산] 여정을 시작하기 전, 첫 유물을 선택하십시오. 당신의 빌드는 여기서 시작됩니다.',
 
     // --- 상태이상 (Status Effects) ---
     // cycle 107: 플레이어가 freeze/stun 상태에서 턴을 스킵할 때의 안내 — 적의
@@ -247,6 +251,8 @@ export const MSG: any = {
     MOVE_EXITS: (exits: any) => `이동 가능한 지역: ${exits}`,
     MOVE_ARRIVED: (loc: any) => `${loc}로 이동했습니다.`,
     MOVE_NEW_AREA: (loc: any) => `🗺️ 새 지역 발견: ${loc}`,
+    // C-2 (B+ 2026-06): 갓 진입한 위험 지역(권장 레벨 근접) 경고 — 정예/보스 readability.
+    MOVE_AREA_DANGER: (lv: any) => `⚠️ 권장 레벨 ${lv} 지역입니다. 아직 이곳은 당신에게 벅찹니다 — 정예와 구역 보스를 경계하고, 위태로우면 후퇴하십시오.`,
     GRAVE_FOUND_MULTI: (count: any) => `근처에서 당신의 유해 ${count}구를 발견했습니다.`,
     GRAVE_FOUND_SINGLE: '근처에서 당신의 유해를 발견했습니다.',
     START_CALLSIGN: (name: any) => `[콜사인] ${name} — 에테리아 기록이 열렸습니다.`,
@@ -255,6 +261,12 @@ export const MSG: any = {
     ABYSS_FLOOR_WARNING: (floor: any) => `🌀 심연 ${floor}층 — 강대한 적들이 기다립니다...`,
     ENEMY_APPEAR: (name: any) => `${name} 등장!`,
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',
+    // 캠프파이어 노드 (Phase 2, B+ 2026-06): 휴식 vs 단련 결정 (StS 캠프파이어).
+    CAMPFIRE_DESC: '🔥 사그라드는 모닥불을 발견했습니다. 잠시 숨을 고를 수 있습니다 — 무엇을 하시겠습니까?',
+    CAMPFIRE_REST_CHOICE: '휴식 — 체력과 마나를 회복한다',
+    CAMPFIRE_FORGE_CHOICE: '단련 — 무기를 손질해 다음 전투를 대비한다',
+    CAMPFIRE_REST_LOG: (hp: any, mp: any) => `🔥 불 곁에서 숨을 고릅니다. HP +${hp}, MP +${mp} 회복했습니다.`,
+    CAMPFIRE_FORGE_LOG: (pct: any, turns: any) => `🔥 무기를 벼립니다. 다음 전투 ${turns}턴 동안 공격력 +${pct}%.`,
     EVENT_SUCCESS_GOLD: (gold: any) => `성공! ${gold}G를 획득했습니다.`,
     EVENT_FAIL_DAMAGE: (dmg: any) => `실패... ${dmg} 피해를 입었습니다.`,
     REST_DONE_FULL: (cost: any) => `휴식 완료. HP/MP가 회복되었습니다. (-${cost}G)`,

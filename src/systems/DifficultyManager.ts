@@ -18,8 +18,6 @@ import { BALANCE } from '../data/constants.js';
 import type { Player } from '../types/index.js';
 
 const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
-const BEGINNER_GRACE_MAX_LEVEL = 3;
-const BEGINNER_GRACE_BATTLE_COUNT = 5;
 
 /**
  * 최근 전투 로그에서 성과 지표를 추출합니다.
@@ -82,17 +80,18 @@ export const getDifficultyMults = (score: any) => {
 const applyBeginnerGrace = (diff: any, player: Player) => {
     const level = Number(player?.level || 1);
     const recentBattleCount = ((player?.stats as any)?.recentBattles || []).length;
-    if (level > BEGINNER_GRACE_MAX_LEVEL || recentBattleCount >= BEGINNER_GRACE_BATTLE_COUNT) {
+    if (level > BALANCE.BEGINNER_GRACE_MAX_LEVEL || recentBattleCount >= BALANCE.BEGINNER_GRACE_BATTLES) {
         return diff;
     }
 
+    // B+ 재설계 (2026-06): 적을 약화하지 않는다. 첫 1~2전투에서 불운한 즉사만 막는
+    //   초미세 상한(HP/ATK ×0.95)만 적용하고, EXP/골드 강제 보너스는 제거(중립).
+    const cap = BALANCE.BEGINNER_GRACE_ENEMY_MULT;
     return {
         ...diff,
         label: '신입 보호',
-        hpMult: Math.min(diff.hpMult, 0.88),
-        atkMult: Math.min(diff.atkMult, 0.82),
-        goldMult: Math.max(diff.goldMult, 1.05),
-        expMult: Math.max(diff.expMult, 1.05),
+        hpMult: Math.min(diff.hpMult, cap),
+        atkMult: Math.min(diff.atkMult, cap),
     };
 };
 

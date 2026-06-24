@@ -24,6 +24,15 @@ export const startE2ERun = async (
 
     await expect(statusBar).toBeVisible({ timeout: 20_000 });
 
+    // B-1 (B+ 2026-06): 캐릭터 생성 직후 "시작 부트" 유물 선택 오버레이가 노출된다.
+    //   다운스트림 navigation(탭/상점) 진입 전 첫 유물을 골라 오버레이를 해소해야
+    //   이후 클릭이 가로채이지 않는다 (smoke startNewRun과 동일).
+    const bootRelic = page.getByTestId('relic-choice-0');
+    if (await bootRelic.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true).catch(() => false)) {
+        await bootRelic.click();
+        await expect(bootRelic).toBeHidden({ timeout: 10_000 });
+    }
+
     if (options.openStatusConsole) {
         const statusChip = page.getByTestId('status-character-chip');
         if (await statusChip.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true).catch(() => false)) {

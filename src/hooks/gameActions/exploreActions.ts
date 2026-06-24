@@ -13,6 +13,7 @@ import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
+import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { soundManager } from '../../systems/SoundManager';
 
 export const createExploreActions = (deps: any, { commitExploreOutcome }: any) => {
@@ -49,6 +50,18 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
                     _chainStep: step.step,
                 }});
                 addLog('event', `📜 [${chain.label}] ${step.event.desc}`);
+                return;
+            }
+
+            // 캠프파이어 노드 (Phase 2, B+): 던전에서 낮은 확률로 "휴식 vs 단련" 결정.
+            //   위협(A-1/A-4)이 강해진 만큼 회복은 실질 선택 — 결정 밀도를 높인다 (StS 캠프파이어).
+            if (mapData.type === 'dungeon' && Math.random() < BALANCE.CAMPFIRE_CHANCE) {
+                commitExploreOutcome('narrative_event', null);
+                const campfireEvent = buildCampfireEvent(getFullStats());
+                dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+                dispatch({ type: AT.SET_EVENT, payload: campfireEvent });
+                addLog('event', campfireEvent.desc);
+                soundManager.play('new_area');
                 return;
             }
 

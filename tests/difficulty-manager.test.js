@@ -111,16 +111,37 @@ test('getDifficultyMults: 경계값 0.84 → 우세 (압도 미만)', () => {
     assert.equal(getDifficultyMults(0.84).label, '우세');
 });
 
-test('applyDynamicDifficulty: 초반 5전 이전에는 몬스터 공격/체력을 낮추고 보상은 유지 이상으로 보정', () => {
+// B+ 재설계 (2026-06): 신입 보호는 적을 "약화"시키지 않는다. Lv1·첫 2전투에서만
+//   불운한 즉사를 막는 초미세 상한(×0.95)만 적용하고 EXP/골드 보너스는 제거(중립).
+test('applyDynamicDifficulty: Lv1 첫 전투 — 적 ×0.95 상한만, EXP/골드 보너스 없음', () => {
     const enemy = { hp: 100, maxHp: 100, atk: 20, exp: 10, gold: 10 };
     const player = { level: 1, stats: { recentBattles: [] } };
     const { mStats } = applyDynamicDifficulty(enemy, player, () => {});
 
-    assert.equal(mStats.hp, 88);
-    assert.equal(mStats.maxHp, 88);
-    assert.equal(mStats.atk, 16);
-    assert.ok(mStats.exp >= enemy.exp);
-    assert.ok(mStats.gold >= enemy.gold);
+    // 데이터 부족 score 0.5 → 박빙(0.96) → 신입보호 cap 0.95
+    assert.equal(mStats.hp, 95);
+    assert.equal(mStats.maxHp, 95);
+    assert.equal(mStats.atk, 19);
+    // 강제 보너스 제거 — exp/gold는 중립(diff 그대로, 박빙=1.0)
+    assert.equal(mStats.exp, 10);
+    assert.equal(mStats.gold, 10);
+});
+
+test('applyDynamicDifficulty: 신입 보호는 3전째부터 종료 (적 약화 안 함)', () => {
+    const enemy = { hp: 100, maxHp: 100, atk: 20, exp: 10, gold: 10 };
+    const battles = Array.from({ length: 2 }, () => ({ result: 'win', hpRatio: 1 }));
+    const player = { level: 1, stats: { recentBattles: battles } };
+    const { mStats } = applyDynamicDifficulty(enemy, player, () => {});
+    // <5 battles → score 0.5 → 박빙(0.96), 신입보호 미적용
+    assert.equal(mStats.hp, 96);
+    assert.equal(mStats.atk, 19);
+});
+
+test('applyDynamicDifficulty: Lv2부터 신입 보호 미적용', () => {
+    const enemy = { hp: 100, maxHp: 100, atk: 20, exp: 10, gold: 10 };
+    const player = { level: 2, stats: { recentBattles: [] } };
+    const { mStats } = applyDynamicDifficulty(enemy, player, () => {});
+    assert.equal(mStats.hp, 96); // 박빙 0.96, 보호 없음
 });
 
 // ── makeBattleRecord ────────────────────────────────────────────────────────
