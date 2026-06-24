@@ -1,4 +1,4 @@
-import { ArrowRight, Crown, Sparkles, ShieldAlert } from 'lucide-react';
+import { ArrowRight, Crown, Sparkles, ShieldAlert, Swords } from 'lucide-react';
 import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
@@ -40,6 +40,11 @@ const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
     const bonusAtk = (meta.bonusAtk || 0) + BALANCE.PRESTIGE_ATK_BONUS;
     const bonusHp = (meta.bonusHp || 0) + BALANCE.PRESTIGE_HP_BONUS;
     const bonusMp = (meta.bonusMp || 0) + BALANCE.PRESTIGE_MP_BONUS;
+
+    // PR #5: 환생 후 적이 더 강해진다(rank 비례). 무성한 난이도 스파이크가 아니라
+    //   "감수하는 도전 = 그만큼의 보상"임을 명시해 공정성 체감을 지킨다.
+    const enemyStatPct = Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK * 100);
+    const enemyRewardPct = Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK * 100);
 
     const statRows = [
         { label: '영구 ATK', before: `+${meta.bonusAtk || 0}`, after: `+${bonusAtk}`, tone: 'atk' },
@@ -171,6 +176,21 @@ const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
                                     </div>
                                 </div>
                             )}
+
+                            <div
+                                data-testid="ascension-enemy-scaling"
+                                className="rounded-[1.2rem] border border-[#d5b180]/24 bg-[#d5b180]/[0.07] px-4 py-3 text-[11px] font-fira text-[#f6e7c8]/92"
+                            >
+                                <div className="flex items-start gap-2">
+                                    <Swords size={14} className="mt-0.5 shrink-0" />
+                                    <div className="leading-relaxed">
+                                        <span className="font-bold">세계가 더 강해집니다</span>
+                                        <span className="ml-1 text-slate-200/82">
+                                            — 이번 환생 후 모든 적의 HP·공격·방어 +{enemyStatPct}%, 처치 보상(EXP·골드)도 +{enemyRewardPct}%. 승천할수록 도전이 깊어집니다.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div className="rounded-[1.2rem] border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-[11px] font-fira text-rose-100/92">
                                 <div className="flex items-start gap-2">
