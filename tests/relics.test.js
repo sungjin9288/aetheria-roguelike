@@ -1774,7 +1774,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const calls = (source.match(/this\.getElementMultiplier\(/g) || []).length;
       assert.equal(calls, 2, `internal callsite 2건 보존: ${calls}건`);
 
-      const test1 = await readSrc('tests/cycle-254-monster-resistance-water-typo.test.js');
+      const test1 = await readSrc('tests/monsters-cycle.test.js'); // cycle-254 통합처
       assert.ok(/CombatEngine\.getElementMultiplier\('냉기',\s*enemy,\s*\[\]\)/.test(test1),
           'test callsite (cycle 254) 보존');
   });
