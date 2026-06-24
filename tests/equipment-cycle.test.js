@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -1082,7 +1083,7 @@ import { readFile } from 'node:fs/promises';
       const ch = await readSrc('src/hooks/combatActions/_helpers.ts');
       assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(ch),
           '_helpers callsite 보존');
-      const ui = await readSrc('src/hooks/useInventoryActions.ts');
+      const ui = await readInventoryActionsSource();
       assert.ok(/getNextEquipmentState\(currentEquip,\s*inventoryItem\)/.test(ui),
           'useInventoryActions callsite 보존');
   });

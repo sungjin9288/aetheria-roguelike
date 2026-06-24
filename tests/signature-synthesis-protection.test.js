@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -105,7 +106,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('useInventoryActions.synthesize handles SIGNATURE_INPUT reason', async () => {
-    const source = await readSrc('src/hooks/useInventoryActions.ts');
+    const source = await readInventoryActionsSource();
     assert.ok(
         /SIGNATURE_INPUT/.test(source),
         'synthesize should reference the SIGNATURE_INPUT validation reason'

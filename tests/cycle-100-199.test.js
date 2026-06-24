@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -1122,7 +1123,7 @@ import { readFile, readdir } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('useInventoryActions: claimAchievement에서 quest_complete 사운드 재생', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       const idx = source.indexOf('claimAchievement:');
       assert.ok(idx > -1, 'claimAchievement action should exist');
       const blockEnd = source.indexOf('synthesize:', idx);
@@ -1135,7 +1136,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('useInventoryActions: completeQuest 회귀 보존 — 여전히 quest_complete 사운드', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       const idx = source.indexOf('completeQuest:');
       const blockEnd = source.indexOf('claimAchievement:', idx);
       const block = source.slice(idx, blockEnd);
@@ -1487,7 +1488,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('회귀 보존: cycle 122/123/133 quest_complete 호출 그대로', async () => {
-      const ic = await readSrc('src/hooks/useInventoryActions.ts');
+      const ic = await readInventoryActionsSource();
       const cdx = await readSrc('src/components/Codex.tsx');
       assert.match(ic, /play\(['"]quest_complete['"]\)/);
       assert.match(cdx, /play\(['"]quest_complete['"]\)/);
@@ -1593,7 +1594,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('useInventoryActions: 더 이상 CONSTANTS.DAILY_INVADE_LIMIT 잘못 참조 안 함', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       // CONSTANTS.DAILY_INVADE_LIMIT은 undefined여서 일일 침략 5회 제한이 작동 안 했음.
       // BALANCE.DAILY_INVADE_LIMIT로 교체되어야 함.
       assert.doesNotMatch(source, /CONSTANTS\.DAILY_INVADE_LIMIT/);

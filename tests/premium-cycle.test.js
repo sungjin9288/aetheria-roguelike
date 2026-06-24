@@ -1,3 +1,4 @@
+import { readInventoryActionsSource, readInventoryActionsSourceSync } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -93,7 +94,7 @@ import { readFile } from 'node:fs/promises';
       const { fileURLToPath } = await import('node:url');
       const HERE = path.dirname(fileURLToPath(import.meta.url));
       const ROOT = path.join(HERE, '..');
-      const src = await readFile(path.join(ROOT, 'src/hooks/useInventoryActions.ts'), 'utf8');
+      const src = await readInventoryActionsSource();
       // synthesize 함수에 useToken 변수 + synthProtects 차감 로직 명시.
       assert.match(src, /useToken/, 'cycle 186: useToken 변수 도입');
       assert.match(src, /synthProtects/, 'synthProtects 참조');
@@ -231,8 +232,7 @@ import { readFile } from 'node:fs/promises';
    */
 
   test('cycle 215: claimAchievement에 premiumCurrency 처리 코드 존재', () => {
-      const file = path.join(ROOT, 'src/hooks/useInventoryActions.ts');
-      const content = fs.readFileSync(file, 'utf-8');
+      const content = readInventoryActionsSourceSync();
       // claimAchievement 함수 내에서 premiumCurrency 보상 처리 패턴
       assert.match(
           content,
@@ -265,8 +265,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 215: 기존 reward.gold / reward.item 처리는 유지 (회귀 가드)', () => {
-      const file = path.join(ROOT, 'src/hooks/useInventoryActions.ts');
-      const content = fs.readFileSync(file, 'utf-8');
+      const content = readInventoryActionsSourceSync();
       assert.match(
           content,
           /achData\.reward\.gold/,
@@ -280,8 +279,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 209 회귀 가드: claimQuestReward의 reward.title 처리 유지', () => {
-      const file = path.join(ROOT, 'src/hooks/useInventoryActions.ts');
-      const content = fs.readFileSync(file, 'utf-8');
+      const content = readInventoryActionsSourceSync();
       assert.match(
           content,
           /qData\.reward[?\.]+title/,

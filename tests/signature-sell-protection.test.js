@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -27,7 +28,7 @@ test('MSG.SIGNATURE_SELL_BLOCKED formatter exists', async () => {
 });
 
 test('useInventoryActions sell handler guards signature items', async () => {
-    const source = await readSrc('src/hooks/useInventoryActions.ts');
+    const source = await readInventoryActionsSource();
     assert.ok(source.includes("import { isSignatureItem }"), 'should import isSignatureItem');
     assert.ok(
         /type === 'sell'[\s\S]{0,300}?isSignatureItem/.test(source),

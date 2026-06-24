@@ -1,3 +1,4 @@
+import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -56,7 +57,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 601: 정합성 가드 — useInventoryActions callsite 보존', async () => {
-      const source = await readSrc('src/hooks/useInventoryActions.ts');
+      const source = await readInventoryActionsSource();
       assert.ok(/performSynthesis\(items,\s*null,\s*useProtect\)/.test(source),
           'useInventoryActions performSynthesis(items, null, useProtect) callsite 보존');
   });
