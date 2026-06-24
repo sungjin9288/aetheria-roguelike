@@ -59,7 +59,8 @@ test('cycle 538: 정합성 가드 — production + test callsite 보존', async 
     assert.ok(/applyDailyProtocolProgress\(state\.player,\s*dpType,\s*amount\)/.test(ph),
         'protocolHandlers callsite 보존');
 
-    const tt = await readSrc('tests/cycle-232-relic-shards-conversion.test.js');
+    // cycle-232-relic-* 는 tests/relics.test.js로 통합됨 (audit #1).
+    const tt = await readSrc('tests/relics.test.js');
     const calls = (tt.match(/applyDailyProtocolProgress\(/g) || []).length;
     assert.ok(calls >= 6, `test callsite 6건 이상 보존: ${calls}건`);
 });

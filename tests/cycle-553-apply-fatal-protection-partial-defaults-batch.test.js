@@ -83,7 +83,8 @@ test('cycle 553: 정합성 가드 — production + internal + test callsite 보�
     assert.ok(/this\.applyFatalProtection\(updatedPlayer,\s*relics,\s*enemyDmg,\s*logs,\s*activeSynergies\)/.test(ce),
         'internal 5-arg callsite 보존');
 
-    const test1 = await readSrc('tests/cycle-157-relic-phoenix-devour.test.js');
+    // cycle-157-relic-* 는 tests/relics.test.js로 통합됨 (audit #1).
+    const test1 = await readSrc('tests/relics.test.js');
     assert.ok(/CombatEngine\.applyFatalProtection\(player,\s*player\.relics,\s*100,\s*\[\],\s*\[\]\)/.test(test1),
         'test 5-arg callsite (cycle 157) 보존');
 });

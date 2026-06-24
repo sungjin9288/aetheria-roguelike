@@ -53,7 +53,8 @@ test('cycle 547: 정합성 가드 — 2 internal + test callsite 보존', async 
     const calls = (source.match(/this\.applyEntropyTick\(/g) || []).length;
     assert.equal(calls, 2, `internal callsite 2건 보존: ${calls}건`);
 
-    const test1 = await readSrc('tests/cycle-159-relic-entropy-tick-brand.test.js');
+    // cycle-159-relic-* 는 tests/relics.test.js로 통합됨 (audit #1).
+    const test1 = await readSrc('tests/relics.test.js');
     assert.ok(/CombatEngine\.applyEntropyTick\(player,\s*enemy,\s*\[\]\)/.test(test1),
         'test callsite (cycle 159) 보존');
 });
