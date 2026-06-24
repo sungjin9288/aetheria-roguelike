@@ -15,7 +15,7 @@ import { clearTemporaryAdventureState, hasTemporaryAdventureState } from '../src
 import { fileURLToPath } from 'node:url';
 import { findItemByName, getAchievementCurrentValue, isAchievementUnlocked } from '../src/utils/gameUtils.js';
 import { getAdventureGuidance } from '../src/utils/adventureGuide.js';
-import { glob, readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 
 /**
  * cycle 100-199 정리 가드 (audit #1 통합 41개)
@@ -1639,11 +1639,12 @@ import { glob, readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
 
   async function listSrcFiles() {
-      const files = [];
-      for await (const file of glob(path.join(ROOT, 'src/**/*.{ts,tsx}'))) {
-          files.push(file);
-      }
-      return files;
+      // readdir({recursive:true})로 src 전체 .ts/.tsx 수집 — CI Node 호환
+      //   (fs/promises.glob은 Node 버전에 따라 export 부재 → 환경 비호환).
+      const entries = await readdir(path.join(ROOT, 'src'), { recursive: true });
+      return entries
+          .filter((f) => /\.(ts|tsx)$/.test(f))
+          .map((f) => path.join(ROOT, 'src', f));
   }
 
   async function collectRefs(prefix) {
