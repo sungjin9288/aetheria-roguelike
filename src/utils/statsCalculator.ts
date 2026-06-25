@@ -6,6 +6,7 @@ import { getEquipmentProfile, getWeaponHands, isMagicWeapon, isShield } from './
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfileUtils.js';
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
+import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 
 // cycle 449: 물리 elem 필터 제거 — items.ts elem 값에 '물리' / 'physical' 0건.
@@ -305,6 +306,8 @@ export const calculateFullStats = (player: Player) => {
     const armorVal = player.equip?.armor?.val || 0;
     const buff = player.tempBuff || {};
     const meta = player.meta || {};
+    // PR #8: 프레스티지 rank≥10 해금 "에테르 초월" — 영구 스탯 보너스 ×2.
+    const prestigeStatMult = getPrestigeUnlocks(meta.prestigeRank).statMult;
     const titlePassive = getTitlePassive(player.activeTitle) || {};
 
     const setBonus = computeSetBonus(player.equip);
@@ -331,7 +334,7 @@ export const calculateFullStats = (player: Player) => {
     const enhanceBonus = computeEnhanceBonus(player.equip);
 
     const baseAtk =
-        ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + (meta.bonusAtk || 0) + passiveBonus.atk) *
+        ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + (meta.bonusAtk || 0) * prestigeStatMult + passiveBonus.atk) *
         cls.atkMod *
         (1 + (buff.atk || 0) + abyssBonus.atk) *
         setBonus.atkMult *
