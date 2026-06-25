@@ -6,6 +6,7 @@ import { BALANCE } from '../data/constants.js';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
 import { MSG } from '../data/messages.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
+import { getPrestigeUnlocks } from './prestigeUnlocks';
 
 /**
  * 적의 기본 이름을 해석합니다 (접두사 제거).
@@ -39,6 +40,23 @@ export const processLoot = (enemy: Monster, player: Player | null, signaturePity
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
 
     const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
+
+    // PR #10: 프레스티지 rank≥3 "심연의 메아리" — 보스 처치 시 희귀(고티어) 장비 보장.
+    //   드롭 경로(enrichedList/legacy)와 무관하게 1회 보장하므로 early-return 전에 처리.
+    //   보스 한정(엘리트 제외)이라 경제 인플레 없이 하드코어 엔드게임 보상으로 작동.
+    if (enemy?.isBoss && getPrestigeUnlocks(player?.meta?.prestigeRank).guaranteedRareBossDrop) {
+        const inferredLvl = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
+        const rareTier = inferredLvl >= 50 ? 6 : inferredLvl >= 40 ? 5 : 4;
+        const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === rareTier);
+        if (pool.length > 0) {
+            const picked = pool[Math.floor(Math.random() * pool.length)];
+            const baseItem = { ...picked, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
+            const newItem = applyItemPrefix(baseItem);
+            items.push(newItem);
+            logs.push({ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name) });
+            if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+        }
+    }
 
     // 강화 드롭 테이블 우선 참조
     const enrichedList = DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string];

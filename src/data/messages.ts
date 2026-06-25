@@ -50,6 +50,7 @@ export const MSG: any = {
     VICTORY: (exp: any, gold: any) => `승리! EXP +${exp}, Gold +${gold}`,
     LOOT_GET: (name: any) => `전리품: ${name}`,
     LOOT_PREFIX: (name: any) => `접두사 부여: [${name}]`,
+    PRESTIGE_RARE_DROP: (name: any) => `✦ [심연의 메아리] 보스가 희귀 장비를 떨어뜨렸습니다: ${name}`,
     SIGNATURE_DISCOVERED: (name: any) => `✦ 전설 각인 ─ ${name} 획득!`,
     SIGNATURE_SELL_BLOCKED: (name: any) => `[${name}]은(는) 전설 각인 아이템이라 판매할 수 없습니다.`,
     SIGNATURE_SYNTH_BLOCKED: (name: any) => `[${name}]은(는) 전설 각인 아이템이라 합성 재료로 사용할 수 없습니다.`,
