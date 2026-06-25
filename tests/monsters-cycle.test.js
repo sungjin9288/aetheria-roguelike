@@ -182,12 +182,14 @@ import { readFile } from 'node:fs/promises';
       }
   });
 
-  test('cycle 167: 동굴 박쥐 등록 + 저레벨 quick striker stats', () => {
+  test('cycle 167: 동굴 박쥐 등록 + quick striker 정체성 (낮은 hpMult)', () => {
+      // PR #6: hp/atk/def 리터럴은 dead였고 spawnEnemy가 무시했음 → 상대 *Mult로 변환.
+      //   quick striker = 낮은 hpMult(약하지만) + 높은 heavyChance(빠른 강타).
       const bat = MONSTERS['동굴 박쥐'];
       assert.ok(bat);
       assert.equal(bat.weakness, '빛');
       assert.equal(bat.resistance, '어둠');
-      assert.ok(bat.hp <= 200, '저레벨 박쥐는 hp 낮음');
+      assert.ok(bat.hpMult <= 0.9, 'quick striker = 낮은 hpMult');
       assert.ok(bat.pattern.heavyChance >= 0.3, 'quick striker pattern');
   });
 
@@ -201,7 +203,7 @@ import { readFile } from 'node:fs/promises';
       const golem = MONSTERS['꽃 골렘'];
       assert.ok(golem.pattern.guardChance >= 0.25);
       assert.ok(golem.pattern.heavyChance <= 0.25);
-      assert.ok(golem.def >= 30);
+      assert.ok(golem.defMult >= 1.1, '탱커 = 높은 defMult');
   });
 }
 
@@ -254,11 +256,11 @@ import { readFile } from 'node:fs/promises';
       assert.equal(MONSTERS['생체 병기'].statusOnHit, 'poison');
   });
 
-  test('cycle 168: 최후의 수호자 보스 톤 (hp 540, exp 268+, gold 125+)', () => {
+  test('cycle 168: 최후의 수호자 보스 톤 (탱키 hpMult/defMult)', () => {
+      // PR #6: 절대 리터럴(hp 540 등) → 상대 *Mult. 보스 톤 = 평균 이상 hp + 높은 def.
       const m = MONSTERS['최후의 수호자'];
-      assert.ok(m.hp >= 500);
-      assert.ok(m.exp >= 260);
-      assert.ok(m.gold >= 120);
+      assert.ok(m.hpMult >= 1.05, '보스 톤 = 높은 hpMult');
+      assert.ok(m.defMult >= 1.2, '보스 톤 = 높은 defMult');
   });
 
   test('cycle 168: 폭주 자동인형 weakness 냉기 (대지 resistance과 분리)', () => {
@@ -299,17 +301,16 @@ import { readFile } from 'node:fs/promises';
       '차원 방랑자',
   ];
 
-  test('cycle 169: 잔존 10종 모두 MONSTERS 등록 + 필수 필드 (hp/atk/def/exp/gold)', () => {
+  test('cycle 169: 잔존 10종 모두 MONSTERS 등록 + 속성/패턴 (스탯은 formula×mult)', () => {
+      // PR #6: hp/atk/def/exp/gold 절대 리터럴은 spawnEnemy가 무시하던 dead data.
+      //   전투 스탯은 이제 레벨 공식 × 상대 *Mult로 생성. 여기선 spawnEnemy lookup이
+      //   hit하는 데 필요한 등록 + 속성/패턴 메커니즘만 가드한다.
       for (const name of FINAL_BATCH) {
           const profile = MONSTERS[name];
           assert.ok(profile, `${name} profile 누락`);
-          assert.ok(typeof profile.hp === 'number' && profile.hp > 0, `${name} hp`);
-          assert.ok(typeof profile.atk === 'number' && profile.atk > 0, `${name} atk`);
-          assert.ok(typeof profile.def === 'number' && profile.def >= 0, `${name} def`);
-          assert.ok(typeof profile.exp === 'number' && profile.exp > 0, `${name} exp`);
-          assert.ok(typeof profile.gold === 'number' && profile.gold > 0, `${name} gold`);
           assert.ok(profile.weakness, `${name} weakness`);
           assert.ok(profile.resistance, `${name} resistance`);
+          assert.ok(profile.pattern, `${name} pattern`);
       }
   });
 
@@ -327,11 +328,11 @@ import { readFile } from 'node:fs/promises';
       }
   });
 
-  test('cycle 169: 종말의 전령 보스 톤 (hp 420+, exp 268+, gold 128+)', () => {
+  test('cycle 169: 종말의 전령 공격적 herald (높은 atkMult + heavyChance)', () => {
+      // PR #6: 절대 리터럴 → 상대 *Mult. 전령은 평균 이상 atkMult의 공격형.
       const m = MONSTERS['종말의 전령'];
-      assert.ok(m.hp >= 400);
-      assert.ok(m.exp >= 260);
-      assert.ok(m.gold >= 125);
+      assert.ok(m.atkMult >= 1.1, 'herald = 공격적 atkMult');
+      assert.ok(m.pattern.heavyChance >= 0.4);
   });
 
   test('cycle 169: statusOnHit curse 매핑 (심연의 눈 / 종말의 마법사 / 혼돈의 추종자)', () => {
@@ -340,10 +341,10 @@ import { readFile } from 'node:fs/promises';
       assert.equal(MONSTERS['혼돈의 추종자'].statusOnHit, 'curse');
   });
 
-  test('cycle 169: 종말의 마법사 nuker 패턴 (heavyChance 0.6)', () => {
+  test('cycle 169: 종말의 마법사 nuker 패턴 (heavyChance 0.6 + 높은 atkMult)', () => {
       const m = MONSTERS['종말의 마법사'];
       assert.ok(m.pattern.heavyChance >= 0.6);
-      assert.ok(m.atk >= 100);
+      assert.ok(m.atkMult >= 1.1, 'nuker = 높은 atkMult');
   });
 }
 
