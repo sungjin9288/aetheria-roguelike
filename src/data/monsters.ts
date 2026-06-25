@@ -304,36 +304,36 @@ export const MONSTERS: any = {
 
     // ── Sprint 18: 신규 일반 몬스터 25종 ────────────────────────────────────
     // 공중 신전 (5종)
-    '폭풍 수호자':      { hp: 380, atk: 72, def: 28, exp: 210, gold: 95, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
-    '하늘 정령':        { hp: 290, atk: 85, def: 18, exp: 190, gold: 88, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.35 } },
-    '번개 골렘':        { hp: 450, atk: 68, def: 40, exp: 220, gold: 100, weakness: '냉기', resistance: '빛', pattern: { guardChance: 0.3, heavyChance: 0.25 } },
-    '바람 드레이크':    { hp: 340, atk: 90, def: 22, exp: 235, gold: 110, weakness: '대지', resistance: '바람', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
-    '구름 정령':        { hp: 260, atk: 78, def: 15, exp: 175, gold: 80, weakness: '화염', resistance: '바람', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
+    '폭풍 수호자':      { hpMult: 0.88, atkMult: 0.85, defMult: 0.92, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
+    '하늘 정령':        { hpMult: 0.85, defMult: 0.7, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.35 } },
+    '번개 골렘':        { hpMult: 1.04, atkMult: 0.8, defMult: 1.28, weakness: '냉기', resistance: '빛', pattern: { guardChance: 0.3, heavyChance: 0.25 } },
+    '바람 드레이크':    { hpMult: 0.85, atkMult: 1.06, defMult: 0.72, weakness: '대지', resistance: '바람', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
+    '구름 정령':        { hpMult: 0.85, atkMult: 0.92, defMult: 0.7, weakness: '화염', resistance: '바람', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
     // 영혼의 강 (5종)
-    '한 맺힌 망자':     { hp: 310, atk: 80, def: 20, exp: 200, gold: 90, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'curse' },
-    '강의 요괴':        { hp: 360, atk: 74, def: 30, exp: 195, gold: 85, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
-    '익사한 기사':      { hp: 420, atk: 82, def: 35, exp: 230, gold: 105, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.25, heavyChance: 0.35 } },
-    '흡혼 해골':        { hp: 280, atk: 88, def: 12, exp: 205, gold: 95, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
-    '저주받은 어부':    { hp: 330, atk: 76, def: 24, exp: 185, gold: 82, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.15, heavyChance: 0.35 }, statusOnHit: 'poison' },
+    '한 맺힌 망자':     { hpMult: 0.85, atkMult: 0.94, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'curse' },
+    '강의 요괴':        { hpMult: 0.85, atkMult: 0.87, defMult: 0.98, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
+    '익사한 기사':      { hpMult: 0.97, atkMult: 0.96, defMult: 1.15, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.25, heavyChance: 0.35 } },
+    '흡혼 해골':        { hpMult: 0.85, atkMult: 1.03, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
+    '저주받은 어부':    { hpMult: 0.85, atkMult: 0.89, defMult: 0.79, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.15, heavyChance: 0.35 }, statusOnHit: 'poison' },
     // 금지된 도서관 (5종)
-    '살아있는 마법서':  { hp: 240, atk: 95, def: 10, exp: 215, gold: 98, weakness: '화염', resistance: '에테르', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
-    '잉크 슬라임':      { hp: 400, atk: 60, def: 45, exp: 180, gold: 78, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.15 } },
-    '마법 감시자':      { hp: 350, atk: 86, def: 28, exp: 225, gold: 102, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
-    '분노한 마구스':    { hp: 300, atk: 100, def: 16, exp: 240, gold: 112, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.6 } },
-    '책의 정령':        { hp: 270, atk: 92, def: 14, exp: 208, gold: 93, weakness: '화염', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
+    '살아있는 마법서':  { hpMult: 0.85, atkMult: 1.12, defMult: 0.7, weakness: '화염', resistance: '에테르', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
+    '잉크 슬라임':      { hpMult: 0.93, atkMult: 0.71, defMult: 1.28, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.15 } },
+    '마법 감시자':      { hpMult: 0.85, atkMult: 1.01, defMult: 0.92, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
+    '분노한 마구스':    { hpMult: 0.85, atkMult: 1.18, defMult: 0.7, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.6 } },
+    '책의 정령':        { hpMult: 0.85, atkMult: 1.08, defMult: 0.7, weakness: '화염', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
     // 지하 미궁 (5종)
-    '함정 수호자':      { hp: 390, atk: 78, def: 35, exp: 218, gold: 96, weakness: '빛', resistance: '대지', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
-    '미궁의 마왕':      { hp: 460, atk: 88, def: 40, exp: 245, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
-    '돌 거인':          { hp: 500, atk: 70, def: 55, exp: 255, gold: 120, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
+    '함정 수호자':      { hpMult: 0.91, atkMult: 0.92, defMult: 1.15, weakness: '빛', resistance: '대지', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
+    '미궁의 마왕':      { hpMult: 1.07, atkMult: 1.03, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
+    '돌 거인':          { hpMult: 1.1, atkMult: 0.82, defMult: 1.28, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
     // cycle 253: resistance '독' → '자연' — items.ts에 elem '독' 없음, 자연 계열(독사의 송곳니/정령의 지팡이)이 elem '자연'.
-    '독 지네':          { hp: 280, atk: 82, def: 18, exp: 188, gold: 84, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'poison' },
-    '그림자 사냥꾼':    { hp: 320, atk: 96, def: 20, exp: 228, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
+    '독 지네':          { hpMult: 0.85, atkMult: 0.96, defMult: 0.7, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'poison' },
+    '그림자 사냥꾼':    { hpMult: 0.85, atkMult: 1.13, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
     // 황금 왕국 인근 필드 (5종)
-    '황금 왕국 수호자': { hp: 480, atk: 75, def: 50, exp: 250, gold: 200, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
-    '탐욕의 상인':      { hp: 290, atk: 84, def: 22, exp: 192, gold: 180, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.35 } },
-    '용병 전사':        { hp: 370, atk: 88, def: 32, exp: 215, gold: 115, weakness: '에테르', resistance: '물리', pattern: { guardChance: 0.25, heavyChance: 0.4 } },
-    '왕국 기사':        { hp: 430, atk: 80, def: 45, exp: 235, gold: 120, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.35, heavyChance: 0.3 } },
-    '사기꾼 마법사':    { hp: 260, atk: 102, def: 12, exp: 210, gold: 130, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.55 } },
+    '황금 왕국 수호자': { hpMult: 1.1, atkMult: 0.88, defMult: 1.28, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
+    '탐욕의 상인':      { hpMult: 0.85, atkMult: 0.99, defMult: 0.72, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.35 } },
+    '용병 전사':        { hpMult: 0.86, atkMult: 1.03, defMult: 1.05, weakness: '에테르', resistance: '물리', pattern: { guardChance: 0.25, heavyChance: 0.4 } },
+    '왕국 기사':        { atkMult: 0.94, defMult: 1.28, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.35, heavyChance: 0.3 } },
+    '사기꾼 마법사':    { hpMult: 0.85, atkMult: 1.2, defMult: 0.7, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.55 } },
 
     // ── Sprint 18: 숨겨진 보스 3종 ──────────────────────────────────────────
     '시간의 파수꾼': {
@@ -359,98 +359,98 @@ export const MONSTERS: any = {
     // ── Sprint 21: 신규 지역 몬스터 ─────────────────────────────────────────
 
     // 세계수 숲 (5종)
-    '세계수 수호자':    { hp: 320, atk: 68, def: 30, exp: 195, gold: 88, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.2, heavyChance: 0.25 } },
-    '자연의 정령':      { hp: 260, atk: 75, def: 18, exp: 178, gold: 80, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
-    '야생 그리핀':      { hp: 350, atk: 80, def: 22, exp: 210, gold: 95, weakness: '냉기', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
-    '고목 골렘':        { hp: 480, atk: 62, def: 50, exp: 225, gold: 100, weakness: '화염', resistance: '대지', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
-    '뿌리 포식자':      { hp: 290, atk: 85, def: 14, exp: 188, gold: 84, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'poison' },
+    '세계수 수호자':    { hpMult: 0.85, atkMult: 0.8, defMult: 0.98, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.2, heavyChance: 0.25 } },
+    '자연의 정령':      { hpMult: 0.85, atkMult: 0.88, defMult: 0.7, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
+    '야생 그리핀':      { hpMult: 0.85, atkMult: 0.94, defMult: 0.72, weakness: '냉기', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '고목 골렘':        { hpMult: 1.1, atkMult: 0.73, defMult: 1.28, weakness: '화염', resistance: '대지', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
+    '뿌리 포식자':      { hpMult: 0.85, defMult: 0.7, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'poison' },
 
     // 고대 신전 도시 (5종)
-    '신전 경비병':      { hp: 410, atk: 82, def: 38, exp: 228, gold: 105, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
-    '영겁의 수호신상':  { hp: 550, atk: 70, def: 60, exp: 255, gold: 120, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
-    '신성한 제관':      { hp: 300, atk: 90, def: 20, exp: 218, gold: 98, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
-    '시간 파편체':      { hp: 340, atk: 88, def: 24, exp: 232, gold: 108, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
-    '망령 기사단장':    { hp: 460, atk: 95, def: 42, exp: 260, gold: 125, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 } },
+    '신전 경비병':      { hpMult: 0.95, atkMult: 0.96, defMult: 1.24, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
+    '영겁의 수호신상':  { hpMult: 1.1, atkMult: 0.82, defMult: 1.28, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
+    '신성한 제관':      { hpMult: 0.85, atkMult: 1.06, defMult: 0.7, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
+    '시간 파편체':      { hpMult: 0.85, atkMult: 1.03, defMult: 0.79, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '망령 기사단장':    { hpMult: 1.07, atkMult: 1.12, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 } },
 
     // cycle 165: maps.ts 참조 누락 monster profile 추가 — baseline 점진 정리.
     //   화염/얼음 테마 8종 batch. 모두 maps.ts monsters[]에 spawn 등록돼 있으나
     //   profile 누락으로 weakness/resistance 미적용이던 generic stat-blank 회귀 fix.
 
     // 화염 테마 (5종)
-    '화염 비룡':        { hp: 360, atk: 88, def: 28, exp: 200, gold: 95, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.1, heavyChance: 0.45 }, statusOnHit: 'burn' },
-    '마그마 슬라임':    { hp: 240, atk: 65, def: 18, exp: 165, gold: 75, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.25 }, statusOnHit: 'burn' },
-    '화산 정령':        { hp: 280, atk: 80, def: 20, exp: 188, gold: 85, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.4 } },
-    '화산재 골렘':      { hp: 460, atk: 70, def: 48, exp: 218, gold: 100, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
-    '용암 거북':        { hp: 520, atk: 60, def: 55, exp: 215, gold: 98, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.4, heavyChance: 0.15 } },
+    '화염 비룡':        { hpMult: 0.85, atkMult: 1.03, defMult: 0.92, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.1, heavyChance: 0.45 }, statusOnHit: 'burn' },
+    '마그마 슬라임':    { hpMult: 0.85, atkMult: 0.76, defMult: 0.7, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.25 }, statusOnHit: 'burn' },
+    '화산 정령':        { hpMult: 0.85, atkMult: 0.94, defMult: 0.7, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.05, heavyChance: 0.4 } },
+    '화산재 골렘':      { hpMult: 1.07, atkMult: 0.82, defMult: 1.28, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
+    '용암 거북':        { hpMult: 1.1, atkMult: 0.71, defMult: 1.28, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.4, heavyChance: 0.15 } },
 
     // 얼음 테마 (3종)
-    '서리 골렘':        { hp: 480, atk: 72, def: 50, exp: 220, gold: 102, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
-    '서리 마법사':      { hp: 250, atk: 92, def: 16, exp: 195, gold: 92, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'freeze' },
-    '얼음 기사':        { hp: 420, atk: 85, def: 40, exp: 232, gold: 108, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.3, heavyChance: 0.35 } },
+    '서리 골렘':        { hpMult: 1.1, atkMult: 0.85, defMult: 1.28, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.2 } },
+    '서리 마법사':      { hpMult: 0.85, atkMult: 1.08, defMult: 0.7, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'freeze' },
+    '얼음 기사':        { hpMult: 0.97, defMult: 1.28, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.3, heavyChance: 0.35 } },
 
     // cycle 166: 언데드 / 폭풍 테마 8종 batch (cycle 165 화염/얼음 batch 연속).
     // 언데드 (5종) — weakness 빛, resistance 어둠.
-    '망자의 사제':      { hp: 280, atk: 88, def: 18, exp: 192, gold: 90, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
-    '묘지 구울':        { hp: 320, atk: 78, def: 24, exp: 188, gold: 85, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.35 }, statusOnHit: 'poison' },
-    '유령 군단':        { hp: 380, atk: 82, def: 28, exp: 215, gold: 98, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },
-    '해골 마법사':      { hp: 240, atk: 96, def: 14, exp: 198, gold: 92, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
-    '저주받은 기사':    { hp: 460, atk: 84, def: 44, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.35 }, statusOnHit: 'curse' },
+    '망자의 사제':      { hpMult: 0.85, atkMult: 1.03, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
+    '묘지 구울':        { hpMult: 0.85, atkMult: 0.92, defMult: 0.79, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.35 }, statusOnHit: 'poison' },
+    '유령 군단':        { hpMult: 0.88, atkMult: 0.96, defMult: 0.92, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },
+    '해골 마법사':      { hpMult: 0.85, atkMult: 1.13, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
+    '저주받은 기사':    { hpMult: 1.07, atkMult: 0.99, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.35 }, statusOnHit: 'curse' },
 
     // 폭풍/번개 테마 (3종) — weakness 대지, resistance 자연.
-    '뇌운 와이번':      { hp: 340, atk: 90, def: 26, exp: 218, gold: 102, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
-    '번개 정령':        { hp: 260, atk: 86, def: 18, exp: 190, gold: 88, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.45 } },
-    '폭풍 그리핀':      { hp: 400, atk: 92, def: 30, exp: 245, gold: 115, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.55 } },
+    '뇌운 와이번':      { hpMult: 0.85, atkMult: 1.06, defMult: 0.85, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
+    '번개 정령':        { hpMult: 0.85, atkMult: 1.01, defMult: 0.7, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.45 } },
+    '폭풍 그리핀':      { hpMult: 0.93, atkMult: 1.08, defMult: 0.98, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.55 } },
 
     // cycle 167: 자연/꽃 + 공허 + 동굴 8종 batch (cycle 166 언데드/폭풍 batch 연속).
     // 자연/꽃 테마 (4종) — weakness 화염, resistance 자연.
-    '봄의 정령':        { hp: 220, atk: 70, def: 16, exp: 168, gold: 78, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
-    '정원 요정':        { hp: 200, atk: 76, def: 14, exp: 172, gold: 80, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.4 }, statusOnHit: 'poison' },
-    '꽃 골렘':          { hp: 360, atk: 60, def: 36, exp: 185, gold: 84, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.3, heavyChance: 0.18 } },
-    '꽃잎 슬라임':      { hp: 180, atk: 58, def: 12, exp: 152, gold: 70, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.2 }, statusOnHit: 'poison' },
+    '봄의 정령':        { hpMult: 0.85, atkMult: 0.82, defMult: 0.7, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
+    '정원 요정':        { hpMult: 0.85, atkMult: 0.89, defMult: 0.7, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.4 }, statusOnHit: 'poison' },
+    '꽃 골렘':          { hpMult: 0.85, atkMult: 0.71, defMult: 1.18, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.3, heavyChance: 0.18 } },
+    '꽃잎 슬라임':      { hpMult: 0.85, atkMult: 0.7, defMult: 0.7, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.2 }, statusOnHit: 'poison' },
 
     // 공허 테마 (3종) — weakness 빛, resistance 어둠.
-    '공허 감시병':      { hp: 380, atk: 86, def: 32, exp: 222, gold: 102, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
-    '공허 마법사':      { hp: 270, atk: 98, def: 16, exp: 218, gold: 100, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
-    '공허의 파편':      { hp: 320, atk: 84, def: 22, exp: 205, gold: 95, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
+    '공허 감시병':      { hpMult: 0.88, atkMult: 1.01, defMult: 1.05, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
+    '공허 마법사':      { hpMult: 0.85, atkMult: 1.15, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
+    '공허의 파편':      { hpMult: 0.85, atkMult: 0.99, defMult: 0.72, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
 
     // 동굴 (1종) — weakness 빛, resistance 어둠.
-    '동굴 박쥐':        { hp: 150, atk: 62, def: 8, exp: 130, gold: 60, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.35 } },
+    '동굴 박쥐':        { hpMult: 0.85, atkMult: 0.73, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.35 } },
 
     // cycle 168: 부패/타락 + 실험실/기계 8종 batch.
     // 부패/타락 (5종) — weakness 빛, resistance 어둠.
-    '붕괴한 수호자':    { hp: 460, atk: 86, def: 44, exp: 248, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.35 }, statusOnHit: 'curse' },
-    '실험실 수호자':    { hp: 480, atk: 78, def: 48, exp: 232, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.35, heavyChance: 0.25 } },
-    '최후의 수호자':    { hp: 540, atk: 92, def: 50, exp: 268, gold: 125, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.4 } },
-    '타락한 용사':      { hp: 400, atk: 92, def: 32, exp: 240, gold: 112, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.45 } },
-    '파멸의 기사':      { hp: 500, atk: 88, def: 42, exp: 258, gold: 120, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 }, statusOnHit: 'curse' },
+    '붕괴한 수호자':    { hpMult: 1.07, atkMult: 1.01, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.35 }, statusOnHit: 'curse' },
+    '실험실 수호자':    { hpMult: 1.1, atkMult: 0.92, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.35, heavyChance: 0.25 } },
+    '최후의 수호자':    { hpMult: 1.1, atkMult: 1.08, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.4 } },
+    '타락한 용사':      { hpMult: 0.93, atkMult: 1.08, defMult: 1.05, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.45 } },
+    '파멸의 기사':      { hpMult: 1.1, atkMult: 1.03, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 }, statusOnHit: 'curse' },
 
     // 실험실/기계 (3종).
-    '생체 병기':        { hp: 380, atk: 84, def: 28, exp: 218, gold: 100, weakness: '자연', resistance: '대지', pattern: { guardChance: 0.1, heavyChance: 0.45 }, statusOnHit: 'poison' },
-    '오염된 연구원':    { hp: 280, atk: 90, def: 18, exp: 198, gold: 92, weakness: '자연', resistance: '대지', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
-    '폭주 자동인형':    { hp: 460, atk: 86, def: 36, exp: 245, gold: 115, weakness: '냉기', resistance: '대지', pattern: { guardChance: 0.2, heavyChance: 0.5 } },
+    '생체 병기':        { hpMult: 0.88, atkMult: 0.99, defMult: 0.92, weakness: '자연', resistance: '대지', pattern: { guardChance: 0.1, heavyChance: 0.45 }, statusOnHit: 'poison' },
+    '오염된 연구원':    { hpMult: 0.85, atkMult: 1.06, defMult: 0.7, weakness: '자연', resistance: '대지', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
+    '폭주 자동인형':    { hpMult: 1.07, atkMult: 1.01, defMult: 1.18, weakness: '냉기', resistance: '대지', pattern: { guardChance: 0.2, heavyChance: 0.5 } },
 
     // cycle 169 🎯: 바람 / 심연 / 에테르 / 종말 / 허무 / 차원 10종 batch — baseline 10 → 0 달성.
     // 바람 (2종) — weakness 대지, resistance 자연.
-    '광풍의 원소':      { hp: 240, atk: 80, def: 16, exp: 178, gold: 82, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
-    '바람 추적자':      { hp: 220, atk: 84, def: 14, exp: 175, gold: 80, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
+    '광풍의 원소':      { hpMult: 0.85, atkMult: 0.94, defMult: 0.7, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
+    '바람 추적자':      { hpMult: 0.85, atkMult: 0.99, defMult: 0.7, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
 
     // 심연 (1종) — weakness 빛, resistance 어둠.
-    '심연의 눈':        { hp: 320, atk: 92, def: 22, exp: 228, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
+    '심연의 눈':        { hpMult: 0.85, atkMult: 1.08, defMult: 0.72, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
 
     // 에테르 (2종) — weakness 자연, resistance 빛.
-    '에테르 잔류체':    { hp: 280, atk: 88, def: 20, exp: 215, gold: 100, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
-    '에테르 흡수체':    { hp: 360, atk: 82, def: 28, exp: 232, gold: 108, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
+    '에테르 잔류체':    { hpMult: 0.85, atkMult: 1.03, defMult: 0.7, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '에테르 흡수체':    { hpMult: 0.85, atkMult: 0.96, defMult: 0.92, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
 
     // 종말 (2종) — weakness 빛, resistance 어둠.
-    '종말의 마법사':    { hp: 290, atk: 100, def: 18, exp: 248, gold: 118, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 }, statusOnHit: 'curse' },
-    '종말의 전령':      { hp: 420, atk: 96, def: 32, exp: 268, gold: 128, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.5 } },
+    '종말의 마법사':    { hpMult: 0.85, atkMult: 1.18, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 }, statusOnHit: 'curse' },
+    '종말의 전령':      { hpMult: 0.97, atkMult: 1.13, defMult: 1.05, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.5 } },
 
     // 허무/혼돈 (2종) — weakness 빛, resistance 어둠.
-    '허무 집행관':      { hp: 480, atk: 94, def: 40, exp: 272, gold: 130, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.5 } },
-    '혼돈의 추종자':    { hp: 320, atk: 90, def: 22, exp: 228, gold: 108, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 }, statusOnHit: 'curse' },
+    '허무 집행관':      { hpMult: 1.1, atkMult: 1.1, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.5 } },
+    '혼돈의 추종자':    { hpMult: 0.85, atkMult: 1.06, defMult: 0.72, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 }, statusOnHit: 'curse' },
 
     // 차원 (1종) — weakness 빛, resistance 어둠.
-    '차원 방랑자':      { hp: 360, atk: 92, def: 28, exp: 240, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
+    '차원 방랑자':      { hpMult: 0.85, atkMult: 1.08, defMult: 0.92, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
 
     // cycle 173: 누락된 boss/bossMonsters 참조 2종 추가 — maps.ts에서 boss/bossMonsters로 등록돼 있으나
     // MONSTERS profile 누락이던 회귀. cycle 165 baseline은 monsters[]만 검사했고 boss/bossMonsters
@@ -469,11 +469,11 @@ export const MONSTERS: any = {
     },
 
     // 차원의 균열 전초기지 (5종 + 1 중보스)
-    '차원 보병':        { hp: 380, atk: 92, def: 32, exp: 235, gold: 110, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
-    '공허 포격수':      { hp: 280, atk: 108, def: 14, exp: 248, gold: 118, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },
-    '균열 감시자':      { hp: 440, atk: 88, def: 44, exp: 252, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
-    '에테르 돌격대':    { hp: 360, atk: 102, def: 26, exp: 258, gold: 122, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
-    '차원 사령관':      { hp: 520, atk: 112, def: 50, exp: 280, gold: 140, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.45 } },
+    '차원 보병':        { hpMult: 0.88, atkMult: 1.08, defMult: 1.05, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
+    '공허 포격수':      { hpMult: 0.85, atkMult: 1.27, defMult: 0.7, weakness: '대지', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.6 } },
+    '균열 감시자':      { hpMult: 1.02, atkMult: 1.03, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
+    '에테르 돌격대':    { hpMult: 0.85, atkMult: 1.2, defMult: 0.85, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.5 } },
+    '차원 사령관':      { hpMult: 1.1, atkMult: 1.32, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.45 } },
 
     // ── Sprint 21: 신규 보스 3종 ─────────────────────────────────────────────
     '타락한 세계수 영혼': {
@@ -667,9 +667,9 @@ export const MONSTERS: any = {
     // ── 신규 맵 몬스터 (Lv 31-40) ───────────────────────────────────────────
 
     // 폐기된 연구소 (Lv32) — 3 regular + 1 boss
-    '변이 실험체':     { hp: 380, atk: 48, def: 22, exp: 270, gold: 120, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.35 }, statusOnHit: 'poison' },
-    '오작동 로봇':     { hp: 420, atk: 52, def: 30, exp: 285, gold: 130, weakness: '대지', resistance: '냉기', hpMult: 1.12, pattern: { guardChance: 0.25, heavyChance: 0.25 } },
-    '부식된 골렘':     { hp: 450, atk: 45, def: 38, exp: 295, gold: 125, weakness: '냉기', resistance: '화염', hpMult: 1.18, pattern: { guardChance: 0.3, heavyChance: 0.2 } },
+    '변이 실험체':     { hpMult: 0.88, atkMult: 0.7, defMult: 0.72, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.35 }, statusOnHit: 'poison' },
+    '오작동 로봇':     { weakness: '대지', resistance: '냉기', hpMult: 1.12, pattern: { guardChance: 0.25, heavyChance: 0.25 } },
+    '부식된 골렘':     { weakness: '냉기', resistance: '화염', hpMult: 1.18, pattern: { guardChance: 0.3, heavyChance: 0.2 } },
     '프로토타입 제로': {
         isBoss: true, weakness: '대지', resistance: '냉기',
         hpMult: 1.85, atkMult: 1.35, expMult: 2.2, goldMult: 2.0, dropMod: 2.5,
@@ -678,9 +678,9 @@ export const MONSTERS: any = {
     },
 
     // 저주받은 묘지 (Lv34) — 3 regular + 1 boss
-    '망령 기사':       { hp: 400, atk: 50, def: 25, exp: 280, gold: 115, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
-    '언데드 마법사':   { hp: 350, atk: 55, def: 18, exp: 290, gold: 125, weakness: '빛', resistance: '어둠', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
-    '뼈 수집가':       { hp: 430, atk: 47, def: 32, exp: 275, gold: 135, weakness: '빛', resistance: '어둠', hpMult: 1.15, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
+    '망령 기사':       { hpMult: 0.93, atkMult: 0.7, defMult: 0.82, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
+    '언데드 마법사':   { weakness: '빛', resistance: '어둠', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
+    '뼈 수집가':       { weakness: '빛', resistance: '어둠', hpMult: 1.15, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
     '묘지기 네크론': {
         isBoss: true, weakness: '빛', resistance: '어둠',
         hpMult: 1.9, atkMult: 1.38, expMult: 2.3, goldMult: 2.1, dropMod: 2.6,
@@ -689,9 +689,9 @@ export const MONSTERS: any = {
     },
 
     // 용암 지대 (Lv36) — 3 regular + 1 boss
-    '마그마 정령':     { hp: 440, atk: 55, def: 24, exp: 310, gold: 140, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
-    '화산 도마뱀':     { hp: 470, atk: 58, def: 28, exp: 325, gold: 145, weakness: '냉기', resistance: '화염', atkMult: 1.08, pattern: { guardChance: 0.15, heavyChance: 0.35 } },
-    '용암 거인':       { hp: 520, atk: 52, def: 40, exp: 340, gold: 150, weakness: '냉기', resistance: '화염', hpMult: 1.2, pattern: { guardChance: 0.3, heavyChance: 0.25 } },
+    '마그마 정령':     { hpMult: 1.02, atkMult: 0.7, defMult: 0.79, weakness: '냉기', resistance: '화염', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '화산 도마뱀':     { weakness: '냉기', resistance: '화염', atkMult: 1.08, pattern: { guardChance: 0.15, heavyChance: 0.35 } },
+    '용암 거인':       { weakness: '냉기', resistance: '화염', hpMult: 1.2, pattern: { guardChance: 0.3, heavyChance: 0.25 } },
     '화염 군주 이프리트': {
         isBoss: true, weakness: '냉기', resistance: '화염',
         hpMult: 2.0, atkMult: 1.42, expMult: 2.5, goldMult: 2.3, dropMod: 2.8,
@@ -700,9 +700,9 @@ export const MONSTERS: any = {
     },
 
     // 바람의 고원 (Lv38) — 3 regular + 1 boss
-    '폭풍 매':         { hp: 500, atk: 65, def: 22, exp: 355, gold: 155, weakness: '대지', resistance: '빛', atkMult: 1.12, pattern: { guardChance: 0.05, heavyChance: 0.45 } },
-    '바람 정령':       { hp: 530, atk: 60, def: 26, exp: 365, gold: 150, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.35 } },
-    '뇌운의 사냥꾼':   { hp: 580, atk: 68, def: 30, exp: 390, gold: 165, weakness: '대지', resistance: '빛', hpMult: 1.1, pattern: { guardChance: 0.15, heavyChance: 0.4 } },
+    '폭풍 매':         { weakness: '대지', resistance: '빛', atkMult: 1.12, pattern: { guardChance: 0.05, heavyChance: 0.45 } },
+    '바람 정령':       { hpMult: 1.1, atkMult: 0.71, defMult: 0.85, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.35 } },
+    '뇌운의 사냥꾼':   { weakness: '대지', resistance: '빛', hpMult: 1.1, pattern: { guardChance: 0.15, heavyChance: 0.4 } },
     '천둥새 제피로스': {
         isBoss: true, weakness: '대지', resistance: '빛',
         hpMult: 2.1, atkMult: 1.45, expMult: 2.6, goldMult: 2.4, dropMod: 3.0,
@@ -713,9 +713,9 @@ export const MONSTERS: any = {
     // ── 신규 맵 몬스터 (Lv 65-75) ───────────────────────────────────────────
 
     // 에테르 폐허 (Lv65) — 3 regular + 1 boss
-    '에테르 방랑자':   { hp: 1250, atk: 145, def: 60, exp: 720, gold: 320, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
-    '차원의 포식자':   { hp: 1400, atk: 160, def: 55, exp: 780, gold: 340, weakness: '빛', resistance: '어둠', atkMult: 1.15, pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
-    '붕괴된 수호자':   { hp: 1500, atk: 140, def: 75, exp: 820, gold: 350, weakness: '대지', resistance: '빛', hpMult: 1.2, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
+    '에테르 방랑자':   { hpMult: 1.1, atkMult: 1.45, defMult: 1.28, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
+    '차원의 포식자':   { weakness: '빛', resistance: '어둠', atkMult: 1.15, pattern: { guardChance: 0.05, heavyChance: 0.5 }, statusOnHit: 'curse' },
+    '붕괴된 수호자':   { weakness: '대지', resistance: '빛', hpMult: 1.2, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
     '에테르 심판자': {
         isBoss: true, weakness: '어둠', resistance: '빛',
         hpMult: 2.2, atkMult: 1.55, expMult: 3.0, goldMult: 2.8, dropMod: 3.5,
@@ -725,9 +725,9 @@ export const MONSTERS: any = {
     },
 
     // 공허의 회랑 (Lv70) — 3 regular + 1 boss
-    '공허의 감시자':   { hp: 1450, atk: 170, def: 65, exp: 850, gold: 380, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },
-    '허무의 기사':     { hp: 1600, atk: 180, def: 72, exp: 900, gold: 400, weakness: '빛', resistance: '어둠', hpMult: 1.15, pattern: { guardChance: 0.2, heavyChance: 0.45 } },
-    '차원 균열체':     { hp: 1350, atk: 195, def: 50, exp: 880, gold: 390, weakness: '빛', resistance: '어둠', atkMult: 1.18, pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
+    '공허의 감시자':   { hpMult: 1.1, atkMult: 1.45, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },
+    '허무의 기사':     { weakness: '빛', resistance: '어둠', hpMult: 1.15, pattern: { guardChance: 0.2, heavyChance: 0.45 } },
+    '차원 균열체':     { weakness: '빛', resistance: '어둠', atkMult: 1.18, pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
     '공허의 대행자': {
         isBoss: true, weakness: '빛', resistance: '어둠',
         hpMult: 2.4, atkMult: 1.65, expMult: 3.2, goldMult: 3.0, dropMod: 4.0,
