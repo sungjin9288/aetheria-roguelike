@@ -71,8 +71,27 @@ test('calcPerformanceScore: 결과는 0~1 범위', () => {
 test('getDifficultyMults: 점수 0.85 이상 → 압도', () => {
     const result = getDifficultyMults(0.90);
     assert.equal(result.label, '압도');
-    assert.equal(result.hpMult, 1.15);
-    assert.equal(result.atkMult, 1.15);
+    // PR #7: 비대칭 재설계 — 상향 난이도 완화(1.15→1.05).
+    assert.equal(result.hpMult, 1.05);
+    assert.equal(result.atkMult, 1.05);
+});
+
+// PR #7 (2026-06): 비대칭 고무줄 재설계.
+//   기존 고무줄은 "잘하면 적 강화(+15%)"로 숙련/빌드 투자를 상쇄 → anti-로그라이크.
+//   재설계: 상향 난이도는 완만(성공 처벌 완화)하되 보상은 오히려 강화(숙련 보상),
+//   하향 안전망(struggling → 적 약화)은 그대로 보존(리텐션).
+test('PR7 비대칭: 상향 난이도 완만(≤1.05) + 보상은 강화(보상 > 난이도)', () => {
+    const dominate = getDifficultyMults(0.90);  // 압도
+    const advantage = getDifficultyMults(0.75); // 우세
+    assert.ok(dominate.hpMult <= 1.05, '압도 적 강화 완만 (성공 처벌 완화)');
+    assert.ok(dominate.goldMult >= 1.35 && dominate.expMult >= 1.35, '압도 보상 강화');
+    assert.ok(dominate.goldMult > dominate.hpMult, '보상 증가폭 > 난이도 증가폭');
+    assert.ok(advantage.hpMult <= 1.03, '우세도 완만');
+});
+
+test('PR7 비대칭: 하향 안전망 보존 (struggling → 적 약화 유지)', () => {
+    assert.equal(getDifficultyMults(0.30).hpMult, 0.90, '열세 안전망 유지');
+    assert.equal(getDifficultyMults(0.0).hpMult, 0.85, '위기 안전망 유지');
 });
 
 test('getDifficultyMults: 점수 0.72 → 우세', () => {
