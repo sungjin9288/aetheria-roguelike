@@ -5,6 +5,7 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { makeItem } from '../../utils/gameUtils';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
+import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 
 /**
  * 마왕 처치 후처리: 파편 드랍 / 진 보스 진입 / 일반 환생
@@ -87,7 +88,9 @@ export const applyAbyssFloorAdvance = (p: any, dispatch: any, addLog: any) => {
         addLog('event', MSG.ABYSS_MILESTONE(newDepth));
         if (milestone.type === 'relic_choice') {
             const available = RELICS.filter((r: any) => !(updated.relics || []).some((pr: any) => pr.id === r.id));
-            if (available.length > 0) dispatch({ type: AT.SET_PENDING_RELICS, payload: pickWeightedRelics(available, 3) });
+            // PR #8: 프레스티지 rank≥2면 선택지 4지선다.
+            const choices = getPrestigeUnlocks(updated.meta?.prestigeRank).relicChoices;
+            if (available.length > 0) dispatch({ type: AT.SET_PENDING_RELICS, payload: pickWeightedRelics(available, choices) });
         } else if (milestone.type === 'legendary_item') {
             // cycle 179: DB.ITEMS는 object — `.flat()` 호출은 TypeError. abyss 50/100/300층
             //   milestone 처리 중 예외 발생해 abyss 진행 끊기던 잠복 회귀 fix.

@@ -1923,8 +1923,10 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           'statsCalculator getActiveRelicSynergies 보존');
 
       const eu = await readSrc('src/utils/exploreUtils.ts');
-      assert.ok(/pickWeightedRelics\(available,\s*3\)/.test(eu),
-          'exploreUtils pickWeightedRelics(available, 3) 보존');
+      // PR #8: count 인자를 프레스티지 해금(relicUnlocks.relicChoices)으로 명시 전달
+      //   — default 미의존(cycle 597 가드 의도) 보존. rank≥2면 3→4지선다.
+      assert.ok(/pickWeightedRelics\(available,\s*relicUnlocks\.relicChoices\)/.test(eu),
+          'exploreUtils pickWeightedRelics 명시 count 전달 보존');
 
       const ev = await readSrc('src/hooks/gameActions/eventActions.ts');
       assert.ok(/pickWeightedRelics\(updatedPlayer\.relics \|\| \[\],\s*1\)/.test(ev),

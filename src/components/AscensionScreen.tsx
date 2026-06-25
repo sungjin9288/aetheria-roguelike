@@ -10,13 +10,14 @@ interface AscensionScreenProps {
     actions?: any;
 }
 
+// PR #8 (2026-06): 광고만 하고 미구현이던 해금을 실제 효과와 일치하도록 정리.
+//   구현된 비퇴행 해금만 표기 (getPrestigeUnlocks 단일 진실 원천). 매 rank의 영구
+//   스탯 증가·적 난이도 상승은 아래 스탯 행/적 강화 카드가 별도로 표시한다.
 const PRESTIGE_UNLOCKS: any = [
-    { rank: 1, label: '에테르 각성', desc: '허공의 심연 접근 허용 · 에센스 획득 +10%' },
+    { rank: 1, label: '에테르 각성', desc: '에센스 획득 +10% · 마왕 처치 시 원시의 파편 드롭' },
     { rank: 2, label: '강화된 유물', desc: '유물 최대 보유 6개 · 유물 선택지 4지선다' },
-    { rank: 3, label: '심연의 메아리', desc: '엘리트 몬스터 출현 확률 +25% · 희귀 아이템 보장 드롭' },
-    { rank: 5, label: '혼돈의 문', desc: '혼돈의 심연 지역 개방 · 무한 레이어 스케일링 활성화' },
-    { rank: 7, label: '전설 유물 해금', desc: '전설 등급 유물 드롭 풀 추가 (오메가 코어, 허공의 심장)' },
-    { rank: 10, label: '에테르 초월', desc: '모든 스탯 보너스 2배 적용 · 숨겨진 보스 "에테르 군주" 등장' },
+    { rank: 3, label: '심연의 메아리', desc: '엘리트 몬스터 출현 확률 +25% · 진 보스 도전 해금' },
+    { rank: 10, label: '에테르 초월', desc: '모든 영구 스탯 보너스 2배 적용' },
 ];
 
 const STAT_TONE: any = {

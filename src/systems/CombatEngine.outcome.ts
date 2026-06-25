@@ -2,6 +2,7 @@ import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { getActiveRelicSynergies } from '../data/relics.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
+import { getPrestigeUnlocks } from './prestigeUnlocks';
 import type { Player, Monster } from '../types/index.js';
 
 /**
@@ -140,7 +141,8 @@ export const outcomeMethods: any = {
         }
 
         const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
-        const essenceGain = Math.max(1, Math.floor((enemy.exp ?? 0) / 8));
+        // PR #8: 프레스티지 rank≥1 해금 — 에센스 획득 +10% (essenceMult).
+        const essenceGain = Math.max(1, Math.floor((enemy.exp ?? 0) / 8 * getPrestigeUnlocks(meta.prestigeRank).essenceMult));
         meta.essence += essenceGain;
         logs.push({ type: 'event', text: MSG.LEGACY_ESSENCE(essenceGain) });
 

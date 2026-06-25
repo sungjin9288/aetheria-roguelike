@@ -145,6 +145,14 @@ export const BALANCE: BalanceConfig = {
     //   부분 상쇄 → net firmer하되 공정. (prestige-enemy-scaling.test.js로 가드)
     PRESTIGE_ENEMY_STAT_PER_RANK: 0.05,   // 환생 rank당 적 hp/atk/def 증가율
     PRESTIGE_ENEMY_REWARD_PER_RANK: 0.08, // 환생 rank당 적 exp/gold 증가율 (난도 보상)
+    // PR #8 (2026-06) — 프레스티지 해금 효과(PRESTIGE_UNLOCKS). AscensionScreen이
+    //   광고하던 rank별 해금이 대부분 dead display text였던 것을 실제 구현.
+    //   getPrestigeUnlocks(rank)가 단일 진실 원천(systems/prestigeUnlocks.ts).
+    PRESTIGE_ESSENCE_BONUS: 0.10,    // rank≥1: 에센스 획득 +10%
+    RELIC_CHOICE_BASE: 3,            // 유물 선택지 기본 3 (rank≥2면 +1 → 4지선다)
+    PRESTIGE_RELIC_SLOT_BONUS: 1,    // rank≥2: 유물 최대 보유 +1 (5→6)
+    PRESTIGE_ELITE_BONUS: 0.25,      // rank≥3: 엘리트 몬스터 출현 확률 +25%
+    PRESTIGE_R10_STAT_MULT: 2,       // rank≥10: 영구 스탯 보너스 ×2 (에테르 초월)
     BOSS_PHASE2_THRESHOLD: 0.5,     // 보스 HP 50% 이하 → 패턴 전환
     BOUNTY_EXP_MULT: 2.0,           // 현상수배 EXP = 킬수 × 레벨 × 2.0
     BOUNTY_GOLD_MULT: 3.0,          // 현상수배 골드 = 킬수 × 레벨 × 3.0 (기존 2.5)

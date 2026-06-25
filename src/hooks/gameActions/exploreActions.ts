@@ -1,6 +1,7 @@
 import { DB } from '../../data/db';
 import { BALANCE, CONSTANTS } from '../../data/constants';
-import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../../data/relics';
+import { RELICS, pickWeightedRelics } from '../../data/relics';
+import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { AI_SERVICE } from '../../services/aiService';
 import { toArray } from '../../utils/gameUtils';
 import { rollExplorationEvent, spawnEnemy, applyBattleStartRelics } from '../../utils/exploreUtils';
@@ -128,12 +129,14 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
             //   경과 시 확률 roll 없이 보장. 첫 빌드 선택("와" 모먼트)을 첫 10분 내 제공.
             const firstRelicPity = playerRelics.length === 0
                 && (player.stats?.exploreState?.sinceRelic || 0) >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
-            if (playerRelics.length < MAX_RELICS_PER_RUN
+            // PR #8: 프레스티지 rank≥2 해금 — 보유 한도 +1 · 선택지 4지선다.
+            const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
+            if (playerRelics.length < relicUnlocks.maxRelics
                 && (firstRelicPity || Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
                 const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
                 if (available.length > 0) {
                     commitExploreOutcome('relic_found', null);
-                    const candidates = pickWeightedRelics(available, 3);
+                    const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices);
                     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
                     addLog('event', MSG.EXPLORE_RELIC_FOUND);
                     return;

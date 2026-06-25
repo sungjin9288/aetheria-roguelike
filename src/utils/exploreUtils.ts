@@ -7,7 +7,8 @@ import type { Player } from '../types/index.js';
  */
 import { DB } from '../data/db.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
-import { RELICS, pickWeightedRelics, MAX_RELICS_PER_RUN } from '../data/relics.js';
+import { RELICS, pickWeightedRelics } from '../data/relics.js';
+import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { AT } from '../reducers/actionTypes.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
@@ -101,11 +102,12 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
         return 'anomaly';
     }
 
-    // 유물 발견
-    if (playerRelics.length < MAX_RELICS_PER_RUN && Math.random() < discoveryOdds.relicChance) {
+    // 유물 발견 — PR #8: 프레스티지 rank≥2면 보유 한도 +1(6) · 선택지 4지선다.
+    const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
+    if (playerRelics.length < relicUnlocks.maxRelics && Math.random() < discoveryOdds.relicChance) {
         const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
         if (available.length > 0) {
-            const candidates = pickWeightedRelics(available, 3);
+            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices);
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
             addLog('event', '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.');
             return 'relic_found';
@@ -215,12 +217,16 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const earlyElite = !mStats.isBoss && !forceElite
         && typeof level === 'number' && level <= BALANCE.EARLY_ELITE_LEVEL_CAP
         && Math.random() < BALANCE.EARLY_ELITE_CHANCE;
+    // PR #8: 프레스티지 rank≥3 해금 — 엘리트 출현 확률 +25%. forceElite처럼 엘리트
+    //   접두어를 강제한다(고승천 플레이어에게 더 잦은 정예 위협 = 광고된 "심연의 메아리").
+    const prestigeElite = !mStats.isBoss && !forceElite && !earlyElite
+        && Math.random() < getPrestigeUnlocks(player.meta?.prestigeRank).eliteChanceBonus;
     // 접두어 부여
-    if (forceElite || earlyElite || (Math.random() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES)) {
+    if (forceElite || earlyElite || prestigeElite || (Math.random() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES)) {
         const prefix = earlyElite
             ? { name: '정예', mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
             : (() => {
-                const elitePrefixes = forceElite
+                const elitePrefixes = (forceElite || prestigeElite)
                     ? CONSTANTS.MONSTER_PREFIXES.filter((p: any) => p.isElite)
                     : CONSTANTS.MONSTER_PREFIXES;
                 const pool = elitePrefixes.length > 0 ? elitePrefixes : CONSTANTS.MONSTER_PREFIXES;
@@ -233,7 +239,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         mStats.exp = Math.floor(mStats.exp * prefix.expMod);
         mStats.gold = Math.floor(mStats.gold * prefix.expMod);
         mStats.dropMod = (mStats.dropMod || 1.0) * (prefix.dropMod || 1.0);
-        mStats.isElite = forceElite || !!prefix.isElite;
+        mStats.isElite = forceElite || prestigeElite || !!prefix.isElite;
 
         // 엘리트 몬스터 페이즈: HP 50% 이하 시 패턴 강화 (보스 제외)
         if (mStats.isElite && !mStats.isBoss && !mStats.phase2) {
