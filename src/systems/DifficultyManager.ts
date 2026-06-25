@@ -59,11 +59,18 @@ export const calcPerformanceScore = (player: Player) => {
 // ─────────────────────────────────────────────────────────────────────────
 // 2. 성과 점수 → 난이도 배율 변환
 // ─────────────────────────────────────────────────────────────────────────
+// PR #7 (2026-06): 비대칭 고무줄 재설계.
+//   기존 고무줄은 "잘하면 적 +15% 강화"로 숙련/빌드 투자를 상쇄 → anti-로그라이크
+//   (성공 처벌). 재설계 원칙: 상향(승리)은 난이도를 거의 안 올리는 대신 보상을 키워
+//   숙련을 *보상*하고, 하향(고전)은 적을 약화하는 안전망을 그대로 유지(리텐션).
+//   더 큰 도전을 원하면 프레스티지(PR #5)·심층 지역으로 가는 opt-in 축이 담당한다.
 const DIFF_TABLE: any = [
     // { minScore, label, hpMult, atkMult, goldMult, expMult }
-    { minScore: 0.85, label: '압도',   hpMult: 1.15, atkMult: 1.15, goldMult: 1.3, expMult: 1.3 },
-    { minScore: 0.72, label: '우세',   hpMult: 1.08, atkMult: 1.08, goldMult: 1.15, expMult: 1.15 },
-    { minScore: 0.55, label: '균형',   hpMult: 1.02, atkMult: 1.02, goldMult: 1.05, expMult: 1.05 },
+    // ── 상향: 적 강화 완만(성공 처벌 완화) + 보상 강화(숙련 보상) ──
+    { minScore: 0.85, label: '압도',   hpMult: 1.05, atkMult: 1.05, goldMult: 1.4,  expMult: 1.4  },
+    { minScore: 0.72, label: '우세',   hpMult: 1.03, atkMult: 1.03, goldMult: 1.2,  expMult: 1.2  },
+    { minScore: 0.55, label: '균형',   hpMult: 1.0,  atkMult: 1.0,  goldMult: 1.05, expMult: 1.05 },
+    // ── 하향: 안전망 보존(struggling → 적 약화) — 변경 없음 ──
     { minScore: 0.40, label: '박빙',   hpMult: 0.96, atkMult: 0.96, goldMult: 1.0,  expMult: 1.0  },
     { minScore: 0.25, label: '열세',   hpMult: 0.90, atkMult: 0.90, goldMult: 0.95, expMult: 0.95 },
     { minScore: 0.00, label: '위기',   hpMult: 0.85, atkMult: 0.85, goldMult: 0.9,  expMult: 0.9  },
@@ -112,7 +119,7 @@ export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any)
     // 중립에 가까우면 로그 생략
     const LABEL_VISIBLE = ['압도', '위기', '열세'];
     const GM_PREFIX_MAP: Record<string, string> = {
-        '압도': '⚔️ [GM] 도전적인 편이 더 재미있겠죠? 몬스터가 강해집니다.',
+        '압도': '⚔️ [GM] 당신의 기세가 압도적입니다 — 약간의 긴장과 함께 보상이 크게 늘어납니다.',
         '위기': '🛡️ [GM] 잠시 숨을 고를 시간입니다. 몬스터가 약해집니다.',
         '열세': '🛡️ [GM] 어려운 상황이군요. 몬스터 강도를 낮춥니다.',
     };
