@@ -31,8 +31,10 @@ test('rank2: 유물 최대 6개 + 4지선다', () => {
     assert.equal(u.relicChoices, BALANCE.RELIC_CHOICE_BASE + 1);
 });
 
-test('rank3: 엘리트 출현 +25%', () => {
+test('rank3: 엘리트 출현 +25% + 보스 희귀 보장 드롭', () => {
     assert.equal(getPrestigeUnlocks(3).eliteChanceBonus, BALANCE.PRESTIGE_ELITE_BONUS);
+    assert.equal(getPrestigeUnlocks(2).guaranteedRareBossDrop, false, 'rank2는 미해금');
+    assert.equal(getPrestigeUnlocks(3).guaranteedRareBossDrop, true, 'rank3 해금');
 });
 
 test('rank10: 영구 스탯 ×2 (에테르 초월)', () => {
@@ -79,4 +81,35 @@ test('통합: rank10 → HP/MP 보너스 ×2 (buildClassVitals)', async () => {
     const r10 = buildClassVitals(50, '전사', { bonusHp: 100, bonusMp: 60, prestigeRank: 10 });
     assert.equal(r10.maxHp - r9.maxHp, 100, 'rank10 bonusHp ×2 → +100 추가');
     assert.equal(r10.maxMp - r9.maxMp, 60, 'rank10 bonusMp ×2 → +60 추가');
+});
+
+// ── 통합: rank≥3 보스 희귀 보장 드롭 (PR #10) ────────────────────────────
+test('통합: rank≥3 보스 처치 → 희귀(tier≥4) 장비 보장 (processLoot)', async () => {
+    const { processLoot } = await import('../src/systems/CombatEngine.loot.ts');
+    const orig = Math.random;
+    Math.random = () => 0.99; // 다른 확률 드롭 억제 → 보장 블록만 검증
+    try {
+        // exp 180 → 추정 Lv34 → rareTier 4 (tier-4 장비 확실 존재). DROP_TABLES 미등록 이름.
+        const boss = { name: '시험용 보스 XYZ', isBoss: true, exp: 180 };
+        const { items } = processLoot(boss, { meta: { prestigeRank: 3 }, relics: [] }, 1);
+        assert.ok(items.filter((i) => (i.tier || 1) >= 4).length >= 1, 'rank3 보스는 tier≥4 보장');
+    } finally {
+        Math.random = orig;
+    }
+});
+
+test('통합: rank<3 보스 / rank≥3 비보스 → 보장 없음', async () => {
+    const { processLoot } = await import('../src/systems/CombatEngine.loot.ts');
+    const orig = Math.random;
+    Math.random = () => 0.99;
+    try {
+        const boss = { name: '시험용 보스 XYZ', isBoss: true, exp: 180 };
+        const r2 = processLoot(boss, { meta: { prestigeRank: 2 }, relics: [] }, 1);
+        assert.equal(r2.items.filter((i) => (i.tier || 1) >= 4).length, 0, 'rank2 보스 보장 없음');
+        const trash = { name: '시험용 잡몹 XYZ', isBoss: false, exp: 180 };
+        const r3 = processLoot(trash, { meta: { prestigeRank: 3 }, relics: [] }, 1);
+        assert.equal(r3.items.filter((i) => (i.tier || 1) >= 4).length, 0, 'rank3 비보스 보장 없음');
+    } finally {
+        Math.random = orig;
+    }
 });
