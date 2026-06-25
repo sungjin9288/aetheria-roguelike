@@ -723,6 +723,15 @@ export const MONSTERS: any = {
         phase2: { name: '각성한 에테르 심판자', atkBonus: 0.5, pattern: { guardChance: 0.05, heavyChance: 0.6 }, log: '에테르 심판자가 차원의 법칙을 재편합니다! 공간이 뒤틀리기 시작합니다!', statusEffect: 'burn' },
         phase3: { name: '에테르의 절대 심판', atkBonus: 0.85, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '심판자가 에테르의 근원과 하나가 됩니다! 모든 저항이 무력화됩니다!', statusEffect: 'curse' },
     },
+    // PR #11: 프레스티지 rank≥10 "에테르 초월" 숨겨진 보스 — 가장 강력한 3페이즈 hidden boss.
+    //   에테르 관문(Lv68)에서 rank≥10일 때만 출현. 에테르 군주 로브를 떨군다.
+    '에테르 군주': {
+        isBoss: true, weakness: '어둠', resistance: '빛',
+        hpMult: 3.0, atkMult: 1.8, expMult: 4.0, goldMult: 3.5, dropMod: 5.0,
+        pattern: { guardChance: 0.12, heavyChance: 0.55 },
+        phase2: { name: '군림하는 에테르 군주', atkBonus: 0.6, pattern: { guardChance: 0.05, heavyChance: 0.65 }, log: '에테르 군주가 초월의 권능을 드러냅니다! 에테르가 폭주합니다!', statusEffect: 'burn' },
+        phase3: { name: '에테르 그 자체', atkBonus: 1.0, defBonus: 20, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '에테르 군주가 만물의 근원과 합일합니다. 이것이 초월의 끝입니다!', statusEffect: 'curse' },
+    },
 
     // 공허의 회랑 (Lv70) — 3 regular + 1 boss
     '공허의 감시자':   { hpMult: 1.1, atkMult: 1.45, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },

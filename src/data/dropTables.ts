@@ -81,6 +81,12 @@ export const DROP_TABLES: any = {
         { item: '용비늘갑옷', rate: 0.15 },
         { item: '용의 심장', rate: 0.25 },
     ],
+    // PR #11: 에테르 군주(rank≥10 숨겨진 보스) — 시그니처 로브 + 심장 드롭.
+    '에테르 군주': [
+        { item: '에테르 군주 로브', rate: 0.5 },
+        { item: '에테르 심장', rate: 0.4 },
+        { item: '엘릭서', rate: 0.3 },
+    ],
     '레드 드래곤': [
         { item: '용의 비늘', rate: 0.5, qty: [1, 2] },
         { item: '용의 심장', rate: 0.2 },

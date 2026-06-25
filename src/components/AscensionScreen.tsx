@@ -17,7 +17,7 @@ const PRESTIGE_UNLOCKS: any = [
     { rank: 1, label: '에테르 각성', desc: '에센스 획득 +10% · 마왕 처치 시 원시의 파편 드롭' },
     { rank: 2, label: '강화된 유물', desc: '유물 최대 보유 6개 · 유물 선택지 4지선다' },
     { rank: 3, label: '심연의 메아리', desc: '엘리트 몬스터 출현 +25% · 보스 처치 시 희귀 장비 보장 · 진 보스 도전' },
-    { rank: 10, label: '에테르 초월', desc: '모든 영구 스탯 보너스 2배 적용' },
+    { rank: 10, label: '에테르 초월', desc: '모든 영구 스탯 보너스 2배 · 숨겨진 보스 "에테르 군주" 출현(에테르 관문)' },
 ];
 
 const STAT_TONE: any = {
