@@ -132,6 +132,8 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         { boss: '원한의 용사', loc: '지하 미궁', check: () => (player.eventChainProgress?.last_hero || 0) >= 3 },
         // 공허의 군주: 무한 심연 100층 클리어 (금지된 도서관)
         { boss: '공허의 군주', loc: '금지된 도서관', check: () => (player.stats?.abyssFloor || 0) >= 100 },
+        // PR #11: 에테르 군주 — 프레스티지 rank≥10 "에테르 초월" 해금 (에테르 관문)
+        { boss: '에테르 군주', loc: '에테르 관문', check: () => (player.meta?.prestigeRank || 0) >= 10 },
     ];
     // cycle 71: mapData.name은 MAPS dict에 저장될 때 설정되지 않으므로 항상 undefined.
     // hidden boss spawn이 영원히 트리거되지 않던 버그 수정 — player.loc로 비교.
