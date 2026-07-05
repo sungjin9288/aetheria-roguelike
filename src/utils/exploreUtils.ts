@@ -107,7 +107,7 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
     if (playerRelics.length < relicUnlocks.maxRelics && Math.random() < discoveryOdds.relicChance) {
         const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
         if (available.length > 0) {
-            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices);
+            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
             addLog('event', '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.');
             return 'relic_found';
