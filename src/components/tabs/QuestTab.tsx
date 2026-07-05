@@ -3,8 +3,10 @@ import { Scroll } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils';
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
+import { buildChainJournal } from '../../utils/chainJournal';
 import SignalBadge from '../SignalBadge';
 import { BALANCE } from '../../data/constants';
+import { MSG } from '../../data/messages';
 import { GS } from '../../reducers/gameStates';
 
 // ── 유틸 ──────────────────────────────────────────────
@@ -86,6 +88,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
         };
     });
     const claimableQuestCount = activeQuestEntries.filter((e: any) => e.isComplete).length;
+    const chainJournalEntries = buildChainJournal(player.eventChainProgress);
     const dp = player.stats?.dailyProtocol;
     const today = new Date().toISOString().slice(0, 10);
     const isDpToday = dp?.date === today;
@@ -175,6 +178,37 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                         </div>
                     </div>
                 )}
+                {/* 체인 저널 섹션 — 진행 중인 내러티브 이벤트 체인 표시 */}
+                {chainJournalEntries.length > 0 && (
+                    <div className="rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 mb-3 px-3 py-2.5">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-[#e3dcff] text-xs font-fira tracking-widest uppercase">{MSG.CHAIN_JOURNAL_TITLE}</span>
+                            <span className="text-xs font-fira px-1.5 py-0.5 rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 text-[#e3dcff]">
+                                {chainJournalEntries.length}
+                            </span>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                            {chainJournalEntries.map((entry: any) => {
+                                const pct = Math.min(100, (entry.currentStep / Math.max(1, entry.totalSteps)) * 100);
+                                return (
+                                    <div key={entry.chainId} className="rounded-[0.9rem] border border-white/8 bg-black/18 px-2.5 py-1.5">
+                                        <div className="flex items-center justify-between mb-0.5">
+                                            <span className="text-xs font-fira text-slate-200/84">{entry.label}</span>
+                                            <span className="text-[11px] font-fira text-[#e3dcff]">{MSG.CHAIN_JOURNAL_STEP(entry.currentStep, entry.totalSteps)}</span>
+                                        </div>
+                                        {entry.nextLoc && (
+                                            <div className="text-[11px] font-fira text-slate-400/72">{MSG.CHAIN_JOURNAL_NEXT_LOC(entry.nextLoc)}</div>
+                                        )}
+                                        <div className="mt-1 h-[2px] overflow-hidden rounded-full bg-black/30">
+                                            <div className="h-full rounded-full bg-[#9a8ac0]/60 transition-all duration-500" style={{ width: `${pct}%` }} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {/* 발견 체인 섹션 */}
                 {(() => {
                     const chains = BALANCE.DISCOVERY_CHAINS || [];

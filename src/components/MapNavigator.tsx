@@ -5,6 +5,7 @@ import type { GameMap } from '../types/index.js';
 import { getMoveRecommendations } from '../utils/adventureGuide';
 import SignalBadge from './SignalBadge';
 import { getGravesAtLoc } from '../utils/graveUtils';
+import { getExitBadges } from '../utils/mapBadges';
 import { getMapProgressState } from '../utils/mapProgress';
 import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/mapSignatureHints';
 
@@ -70,6 +71,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
         DB.MAPS,
     );
 
+    const areaBossDefeated = player?.stats?.areaBossDefeated;
     const mapEntries = useMemo(() => MAP_ORDER.map((map: any) => {
         const progress = getMapProgressState(map.name, player, DB.MAPS);
         const signatureDrops = getMapSignatureDrops(map.name);
@@ -80,8 +82,9 @@ const MapNavigator = ({ player, grave, stats }: any) => {
             graves: getGravesAtLoc(grave, map.name),
             signatureDrops,
             undiscoveredSignatures,
+            badges: getExitBadges(map, areaBossDefeated),
         };
-    }), [grave, player]);
+    }), [grave, player, areaBossDefeated]);
 
     const visibleEntries = mapEntries;
     const selectedEntry = visibleEntries.find((e: any) => e.name === selectedMapName)
@@ -256,6 +259,15 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                                     )}
                                                     {isCurrent && <span className="text-[#dff7f5]">현재 위치</span>}
                                                 </div>
+                                                {entry.badges.length > 0 && (
+                                                    <div className="mt-1.5 flex flex-wrap gap-1">
+                                                        {entry.badges.map((badge: any) => (
+                                                            <SignalBadge key={badge.id} tone={badge.id === 'boss' ? 'danger' : badge.id === 'shop' ? 'upgrade' : 'recommended'} size="sm">
+                                                                {badge.label}
+                                                            </SignalBadge>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </button>
                                         );
                                     })}

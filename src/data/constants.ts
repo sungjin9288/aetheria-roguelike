@@ -68,6 +68,7 @@ export interface BalanceConfig {
     DROP_CHANCE: number;
     ESCAPE_CHANCE: number;
     EVENT_CHANCE_NOTHING: number;
+    MAP_HIGH_EVENT_CHANCE_THRESHOLD: number;
     EXP_SCALE_RATE: number;
     EXP_LEVEL_HARD_CAP: number;
     HP_PER_LEVEL: number;
@@ -101,6 +102,7 @@ export const BALANCE: BalanceConfig = {
     ESCAPE_CHANCE: 0.5,
     DAILY_AI_LIMIT: 50,
     EVENT_CHANCE_NOTHING: 0.2,
+    MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // MapNavigator '이벤트↑' 배지 임계값 — 상위 지역군(eventChance 0.28+) 강조
     PREFIX_CHANCE: 0.2,
     ITEM_PREFIX_CHANCE: 0.12,
     SPECIAL_EVENT_BASE_MULT: 0.25,
