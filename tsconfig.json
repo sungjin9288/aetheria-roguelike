@@ -17,7 +17,7 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
 
-    /* cycle 59 phase A — noImplicitAny 풀 활성 (156 잔여 manual fix). */
+    /* strict 풀 활성 — tsc --noEmit 0 에러 유지 (2026-07 기준. 명시적 any는 점진 축소 중). */
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,

@@ -54,3 +54,4 @@ tmp/
 # Claude session artifacts
 .playwright-mcp/
 /aetheria-*.png
+__pycache__/
