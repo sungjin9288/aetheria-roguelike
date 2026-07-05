@@ -72,6 +72,9 @@ export const migrateData = (rawData: any) => {
     //   protection 또는 CombatEngine 로컬 reconstruction (DEFAULT_META 병합)으로
     //   undefined 안전. 객체 자체 초기화만 필요.
     target.meta = target.meta || { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 };
+    // 2026-07 — 에테르 거울: meta.mirror가 없는 구세이브(v5.0 이전 전부 + v5.0 일부)에서도
+    //   getMirrorEffects가 항상 객체를 참조할 수 있도록 {}로 보강. 기존 레벨은 보존.
+    target.meta.mirror = target.meta.mirror || {};
     target.settings = {
         ...(target.settings || {}),
         readabilityMode: target.settings?.readabilityMode === 'high' ? 'high' : 'standard',

@@ -39,6 +39,7 @@ const MobileGameLayout = ({
     damageFlash, healFlash,
     mobileConsoleMode,
     setMobileConsoleMode,
+    onOpenMirror,
 }: any) => {
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
@@ -78,6 +79,7 @@ const MobileGameLayout = ({
                                 isAiThinking: engine.isAiThinking,
                                 viewport: 'mobile',
                                 mobileArchiveDockVisible,
+                                onOpenMirror,
                             }}
                         />
                     </Suspense>

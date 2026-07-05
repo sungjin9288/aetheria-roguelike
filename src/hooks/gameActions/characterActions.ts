@@ -9,6 +9,7 @@ import { getJobSkills } from '../../utils/gameUtils';
 import { soundManager } from '../../systems/SoundManager';
 import { buildClassVitals } from './_shared';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
+import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 
 export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDailyProtocolLogs }: any) => {
     const { player, gameState, dispatch, addLog, addStoryLog, getFullStats } = deps;
@@ -23,7 +24,10 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             if (!trimmedName) return;
             const vitals = buildClassVitals(1, jobId, player.meta || {});
             let maxHp = vitals.maxHp;
-            let startGold = CONSTANTS.START_GOLD;
+            // 2026-07 — 에테르 거울: start_gold 노드가 레벨당 시작 골드에 가산.
+            //   noGold 챌린지 모디파이어는 의도적 페널티이므로 거울 보너스도 함께 무효화.
+            const mirrorEffects = getMirrorEffects(player.meta);
+            let startGold = CONSTANTS.START_GOLD + mirrorEffects.startGoldBonus;
             const mods = Array.isArray(challengeModifiers) ? challengeModifiers : [];
             if (mods.includes('halfHp')) maxHp = Math.max(50, Math.floor(maxHp * 0.5));
             if (mods.includes('noGold')) startGold = 0;
@@ -51,7 +55,9 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             //   ADD_RELIC이 clear. 첫 빌드 결정을 0분에 노출(Hades 거울 / StS Neow).
             // feat/prestige-rank-ladder: rank≥5 "심연의 인장" — 시작 부트 선택지 3→4지선다.
             //   prestigeRank는 RESET_GAME에도 보존되는 영구 자산이라 캐릭터 생성 시점에 유효.
-            const bootChoices = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices;
+            // 2026-07 — 에테르 거울: start_boot_extra 노드(+1)를 rank5 해금과 가산.
+            const bootChoices = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices
+                + mirrorEffects.startBootChoiceBonus;
             const bootRelics = pickWeightedRelics(RELICS, bootChoices);
             if (bootRelics.length > 0) {
                 dispatch({ type: AT.SET_PENDING_RELICS, payload: bootRelics });
@@ -89,7 +95,9 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             if (gameState !== 'idle') return;
             const mapData = DB.MAPS[player.loc];
             if (!mapData || mapData.type !== 'safe') return addLog('error', MSG.REST_SAFE_ONLY);
-            const restCost = Math.floor(BALANCE.REST_COST * (1 + (player.level || 1) / 20));
+            // 2026-07 — 에테르 거울: rest_discount 노드가 휴식 비용에 배율로 적용.
+            const restCostMult = getMirrorEffects(player.meta).restCostMult;
+            const restCost = Math.floor(BALANCE.REST_COST * (1 + (player.level || 1) / 20) * restCostMult);
             if (player.gold < restCost) return addLog('error', MSG.REST_GOLD_INSUFFICIENT(restCost));
             const stats = getFullStats();
             // cycle 112: rest 시 player.status 정리 — cycle 106-110에서 활성화된 5종 status

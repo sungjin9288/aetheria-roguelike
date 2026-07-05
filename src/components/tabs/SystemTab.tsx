@@ -212,6 +212,17 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                 )}
             </div>
 
+            {/* 에테르 거울 — 에센스 소비 영구 업그레이드 트리 진입점 */}
+            <button
+                type="button"
+                data-testid="open-mirror-panel"
+                onClick={() => runtime?.onOpenMirror?.()}
+                className="w-full min-h-[44px] rounded-[1rem] border border-[#9a8ac0]/22 bg-[#9a8ac0]/8 px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-[#9a8ac0]/12 transition-colors"
+            >
+                <span className="text-[11px] font-bold text-[#e3dcff] font-rajdhani tracking-[0.16em]">에테르 거울</span>
+                <span className="text-[10px] font-fira text-[#d9d0f3]">✦ {player.meta?.essence || 0}</span>
+            </button>
+
             <div data-testid="readability-settings" className="rounded-[1rem] border border-[#7dd4d8]/18 bg-black/18 p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-[11px] font-bold text-[#dff7f5] font-rajdhani tracking-[0.16em]">

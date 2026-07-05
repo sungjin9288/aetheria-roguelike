@@ -2,6 +2,7 @@ import { DB } from '../../data/db';
 import { BALANCE, CONSTANTS } from '../../data/constants';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
+import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { AI_SERVICE } from '../../services/aiService';
 import { toArray } from '../../utils/gameUtils';
 import { rollExplorationEvent, spawnEnemy, applyBattleStartRelics } from '../../utils/exploreUtils';
@@ -57,7 +58,10 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
             // 캠프파이어 노드 (Phase 2, B+): 던전에서 낮은 확률로 "휴식 vs 단련" 결정.
             //   위협(A-1/A-4)이 강해진 만큼 회복은 실질 선택 — 결정 밀도를 높인다 (StS 캠프파이어).
             // feat/prestige-rank-ladder: rank≥4 "재의 인장" — 캠프파이어 발견율 +4%p.
-            const campfireChance = BALANCE.CAMPFIRE_CHANCE + getPrestigeUnlocks(player.meta?.prestigeRank).campfireChanceBonus;
+            // 2026-07 — 에테르 거울: campfire_rate 노드(레벨당 +2%p)를 동일 지점에 가산.
+            const campfireChance = BALANCE.CAMPFIRE_CHANCE
+                + getPrestigeUnlocks(player.meta?.prestigeRank).campfireChanceBonus
+                + getMirrorEffects(player.meta).campfireChanceBonus;
             if (mapData.type === 'dungeon' && Math.random() < campfireChance) {
                 commitExploreOutcome('narrative_event', null);
                 const campfireEvent = buildCampfireEvent(getFullStats());

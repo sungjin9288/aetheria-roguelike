@@ -3,6 +3,7 @@
  * INITIAL_STATE를 참조하므로 gameReducer.js에서 주입받습니다.
  */
 import type { GameState, GameAction } from '../gameReducer';
+import { purchaseMirrorNode } from '../../systems/mirrorUpgrades';
 
 /**
  * makeProgressionActionMap(INITIAL_STATE) → action map
@@ -249,6 +250,29 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 ...state.player,
                 titles: merged,
                 activeTitle: state.player.activeTitle || newIds[0],
+            },
+            syncStatus: 'syncing',
+        };
+    },
+
+    // 2026-07 — 에테르 거울: 노드 1레벨 구매. 순수 함수(purchaseMirrorNode)가
+    //   레벨/비용 계산을 전담 — 여기서는 결과를 반영해 essence 차감 + mirror 갱신만.
+    //   에센스 부족/최대레벨 도달 시 success:false → state 불변 반환(no-op).
+    PURCHASE_MIRROR_NODE: (state: GameState, action: GameAction) => {
+        const { nodeId } = action.payload || {};
+        const meta: Record<string, any> = state.player.meta || {};
+        const essence = meta.essence || 0;
+        const result = purchaseMirrorNode(meta.mirror, nodeId, essence);
+        if (!result.success) return state;
+        return {
+            ...state,
+            player: {
+                ...state.player,
+                meta: {
+                    ...meta,
+                    essence: essence - result.cost,
+                    mirror: result.mirror,
+                },
             },
             syncStatus: 'syncing',
         };

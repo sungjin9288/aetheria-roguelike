@@ -1,4 +1,6 @@
 import { BALANCE } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
+import { getMirrorEffects } from './mirrorUpgrades';
 import type { Player, Relic, Monster } from '../types/index.js';
 
 /**
@@ -95,6 +97,19 @@ export const relicEffectMethods: any = {
                             };
                         }
                         logs.push({ type: 'event', text: `[불사조의 깃털] 재의 잿더미에서 부활! +${nextHp} HP, ATK +${Math.round(atkBuff * 100)}% (${duration}턴)` });
+                    } else {
+                        // 2026-07 — 에테르 거울: revive 노드(에센스 소비 영구 업그레이드) — 런당 1회,
+                        //   위 모든 유물/토큰 부활 수단이 없거나 이미 소진됐을 때의 마지막 안전망.
+                        //   pure function 원칙 유지: 부활 여부는 입력(player.mirrorReviveUsed 플래그)으로
+                        //   판정하고 새 player를 반환 — CombatEngine에 side effect 없음.
+                        //   플래그는 handleDefeat(새 런 시작)/ASCEND에서 자연 리셋(freshPlayer가
+                        //   INITIAL_STATE.player 기반이라 별도 처리 불필요).
+                        const mirrorEffects = getMirrorEffects((player as any).meta);
+                        if (mirrorEffects.reviveEnabled && !(player as any).mirrorReviveUsed) {
+                            nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * mirrorEffects.reviveHpRatio));
+                            flags.mirrorReviveUsed = true;
+                            logs.push({ type: 'event', text: MSG.MIRROR_REVIVE });
+                        }
                     }
                     } // close cycle 186 else (token-not-used path)
                 }
@@ -107,6 +122,12 @@ export const relicEffectMethods: any = {
         if (flags.reviveTokenUsed) {
             updatedPlayer.reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0) - 1;
             updatedPlayer.mp = Math.min(player.maxMp || 50, Math.floor((player.maxMp || 50) * 0.5));
+        }
+        // 2026-07 — 에테르 거울: mirrorReviveUsed는 player 최상위 필드(combatFlags 아님) —
+        //   handleDefeat/ASCEND의 freshPlayer 스프레드에서 자연 리셋되도록 top-level에 둔다
+        //   (combatFlags는 별도 보존 규칙이 있어 top-level로 분리해 리셋 계약을 명확히 함).
+        if (flags.mirrorReviveUsed) {
+            updatedPlayer.mirrorReviveUsed = true;
         }
         return {
             updatedPlayer,
