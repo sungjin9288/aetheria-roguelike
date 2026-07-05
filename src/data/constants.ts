@@ -115,6 +115,9 @@ export const BALANCE: BalanceConfig = {
     DUAL_WIELD_DEF_MULT: 0.92,
     ONE_HAND_CRIT_BONUS: 0.08,
     OFFHAND_ONE_HAND_CRIT_BONUS: 0.05,
+    // 장비 비교 점수식(getEquipmentScore) 가중치 — ShopPanel/SmartInventory 공용 (2026-07 감사 중복 제거).
+    EQUIP_SCORE_CRIT_WEIGHT: 2,
+    EQUIP_SCORE_MP_DIVISOR: 5,
     DEBOUNCE_SAVE_MS: 500,
     LOG_MAX_SIZE: 50,
     ENEMY_TURN_DELAY_MS: 450,       // 적 반격 딜레이 (ms)
