@@ -56,7 +56,9 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
 
             // 캠프파이어 노드 (Phase 2, B+): 던전에서 낮은 확률로 "휴식 vs 단련" 결정.
             //   위협(A-1/A-4)이 강해진 만큼 회복은 실질 선택 — 결정 밀도를 높인다 (StS 캠프파이어).
-            if (mapData.type === 'dungeon' && Math.random() < BALANCE.CAMPFIRE_CHANCE) {
+            // feat/prestige-rank-ladder: rank≥4 "재의 인장" — 캠프파이어 발견율 +4%p.
+            const campfireChance = BALANCE.CAMPFIRE_CHANCE + getPrestigeUnlocks(player.meta?.prestigeRank).campfireChanceBonus;
+            if (mapData.type === 'dungeon' && Math.random() < campfireChance) {
                 commitExploreOutcome('narrative_event', null);
                 const campfireEvent = buildCampfireEvent(getFullStats());
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });

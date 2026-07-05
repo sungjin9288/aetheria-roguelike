@@ -8,6 +8,7 @@ import { MSG } from '../../data/messages';
 import { getJobSkills } from '../../utils/gameUtils';
 import { soundManager } from '../../systems/SoundManager';
 import { buildClassVitals } from './_shared';
+import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 
 export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDailyProtocolLogs }: any) => {
     const { player, gameState, dispatch, addLog, addStoryLog, getFullStats } = deps;
@@ -48,7 +49,10 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             // B-1 (B+ 2026-06): 시작 부트 — 캐릭터 생성 직후 첫 유물 3선택 제공.
             //   pendingRelics가 set되면 RelicChoicePanel이 자동 노출(GameRoot), 선택 시
             //   ADD_RELIC이 clear. 첫 빌드 결정을 0분에 노출(Hades 거울 / StS Neow).
-            const bootRelics = pickWeightedRelics(RELICS, BALANCE.START_BOOT_RELIC_CHOICES);
+            // feat/prestige-rank-ladder: rank≥5 "심연의 인장" — 시작 부트 선택지 3→4지선다.
+            //   prestigeRank는 RESET_GAME에도 보존되는 영구 자산이라 캐릭터 생성 시점에 유효.
+            const bootChoices = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices;
+            const bootRelics = pickWeightedRelics(RELICS, bootChoices);
             if (bootRelics.length > 0) {
                 dispatch({ type: AT.SET_PENDING_RELICS, payload: bootRelics });
                 addLog('event', MSG.START_BOOT_RELIC);

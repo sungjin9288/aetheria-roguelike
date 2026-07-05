@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import type { GameMap, Player } from "../types/index.js";
 
 export const DEFAULT_EXPLORE_STATE = Object.freeze({
@@ -122,6 +123,9 @@ export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undef
     const profile = getMapPacingProfile(mapData);
     const pitySinceDiscovery = Math.max(0, exploreState.sinceDiscovery - 2);
     const pitySinceRelic = Math.max(0, exploreState.sinceRelic - 2);
+    // feat/prestige-rank-ladder: rank≥6 "잔향의 나침반" — 유물 발견 pity 누적 가속 ×1.5.
+    //   기본 확률(RELIC_FIND_CHANCE)은 불변, pity 누적분에만 곱해 신규 플레이어(rank0) 곡선 보존.
+    const relicPityMult = getPrestigeUnlocks(player?.meta?.prestigeRank).relicPityMult;
 
     return {
         keyEventChance: clamp(
@@ -135,7 +139,7 @@ export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undef
             BALANCE.ANOMALY_MAX_CHANCE
         ),
         relicChance: clamp(
-            (BALANCE.RELIC_FIND_CHANCE + pitySinceRelic * BALANCE.RELIC_PITY_PER_EXPLORE) * profile.relicMult,
+            (BALANCE.RELIC_FIND_CHANCE + pitySinceRelic * BALANCE.RELIC_PITY_PER_EXPLORE * relicPityMult) * profile.relicMult,
             0,
             BALANCE.RELIC_FIND_MAX_CHANCE
         ),

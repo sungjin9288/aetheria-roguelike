@@ -41,7 +41,10 @@ test('rank10: 영구 스탯 ×2 (에테르 초월)', () => {
     assert.equal(getPrestigeUnlocks(10).statMult, BALANCE.PRESTIGE_R10_STAT_MULT);
     // 누적성: rank10은 하위 해금도 모두 보유
     const u = getPrestigeUnlocks(10);
-    assert.equal(u.essenceMult, 1 + BALANCE.PRESTIGE_ESSENCE_BONUS);
+    // feat/prestige-rank-ladder: rank≥8 "에테르 심화"가 essenceMult에 +10%p를 추가로
+    //   누적시키므로(PRESTIGE_R8_ESSENCE_BONUS), rank10은 rank1(+10%)과 rank8(+10%)이
+    //   모두 적용된 1.2가 정답. 기존 1.1 기대값은 rank4~9 사다리 도입 전 스냅샷이었다.
+    assert.equal(u.essenceMult, 1 + BALANCE.PRESTIGE_ESSENCE_BONUS + BALANCE.PRESTIGE_R8_ESSENCE_BONUS);
     assert.equal(u.relicChoices, BALANCE.RELIC_CHOICE_BASE + 1);
     assert.equal(u.eliteChanceBonus, BALANCE.PRESTIGE_ELITE_BONUS);
 });
