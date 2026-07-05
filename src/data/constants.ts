@@ -134,6 +134,10 @@ export const BALANCE: BalanceConfig = {
     // cycle 195: EXP_LEVEL_CAP_50 제거 — deprecated 상태로 cycle 99에서 EXP_LEVEL_HARD_CAP으로 이행 완료.
     EXP_LEVEL_HARD_CAP: 150000,     // 레벨당 최대 EXP 요구량 상한선 반감 (기존 300K → 150K)
     RELIC_FIND_CHANCE: 0.08,        // 탐색 시 유물 발견 확률 (8%)
+    // 2026-07 감사: 시너지 소프트 pity — 보유 유물 기준 "1개만 더 모으면 완성"되는
+    //   시너지 잔여 유물이 pool에 있으면, 유물 3(4)지선다 중 이 슬롯 수만큼은 그
+    //   잔여 유물 후보군에서 가중 추첨으로 보장한다 (pickWeightedRelics owned 옵션).
+    SYNERGY_PITY_SLOT: 1,
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
     PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가
     PRESTIGE_MP_BONUS: 15,          // 환생당 영구 MP 증가

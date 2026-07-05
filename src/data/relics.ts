@@ -4,6 +4,8 @@
  * Slay the Spire 방식의 로그라이크 런 빌드 핵심.
  */
 
+import { BALANCE } from './constants.js';
+
 export const RELICS: any = [
     // ─── 공격 계열 (8개) ───────────────────────────────────────────────────
     {
@@ -567,23 +569,73 @@ export const getActiveRelicSynergies = (relics: any) => {
     return RELIC_SYNERGIES.filter((syn: any) => syn.requires.every((name: any) => ownedNames.has(name)));
 };
 
+/**
+ * remaining 배열에서 가중치 기반으로 1개를 뽑아 반환 (remaining 자체는 변경하지 않음).
+ * pickWeightedRelics의 일반 슬롯 / 시너지 pity 슬롯 추첨 로직에서 공용으로 사용.
+ */
+const drawOneWeighted = (remaining: any[]) => {
+    const totalWeight = remaining.reduce((sum: any, r: any) => sum + (RELIC_WEIGHTS[r.rarity] || 1), 0);
+    let rand = Math.random() * totalWeight;
+    let chosen = remaining[remaining.length - 1]; // fallback
+    for (let j = 0; j < remaining.length; j++) {
+        rand -= RELIC_WEIGHTS[remaining[j].rarity] || 1;
+        if (rand <= 0) { chosen = remaining[j]; break; }
+    }
+    return chosen;
+};
+
+/**
+ * owned(보유 유물) 기준 "정확히 1개만 더 모으면 완성"되는 RELIC_SYNERGIES의
+ * 잔여 유물 중, pool에 실제로 존재하는(=아직 보유하지 않은) 후보 목록을 반환.
+ * - 이미 완성된 시너지(모든 requires 보유)는 후보를 만들지 않는다.
+ * - 2개 이상 부족한 시너지도 제외 (정확히 1개 부족일 때만 "소프트 pity" 대상).
+ * - 결과는 relic id 기준 중복 제거.
+ */
+const findSynergyPityCandidates = (pool: any[], owned: any[]) => {
+    if (!owned || owned.length === 0) return [];
+    const ownedNames = new Set(owned.map((r: any) => r.name));
+    const poolByName = new Map(pool.map((r: any) => [r.name, r]));
+    const candidates = new Map<string, any>();
+
+    for (const syn of RELIC_SYNERGIES) {
+        const missingNames = syn.requires.filter((name: string) => !ownedNames.has(name));
+        if (missingNames.length !== 1) continue; // 이미 완성됐거나 2개 이상 부족
+        const missingRelic = poolByName.get(missingNames[0]);
+        if (missingRelic) candidates.set(missingRelic.id, missingRelic);
+    }
+    return Array.from(candidates.values());
+};
+
 // cycle 597: count default 3 제거 — 4 production caller (exploreUtils/
 //   eventActions/exploreActions/combatBossHandlers) + 1 test 모두 count 명시
 //   (1 또는 3) 전달이라 default 도달 불가.
-export const pickWeightedRelics = (pool: any, count: any) => {
+// 2026-07 감사: 시너지 소프트 pity — 세 번째 인자로 { owned }를 넘기면, owned 기준
+//   "1개만 더 모으면 완성"되는 시너지 잔여 유물이 pool에 있을 때 BALANCE.SYNERGY_PITY_SLOT개
+//   슬롯을 그 후보군에서 가중 추첨으로 보장한다. owned 미전달/빈 배열/해당 후보 없음 시
+//   기존 로직과 완전히 동일하게 동작 (기존 호출부 전부 무수정 하위호환).
+export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: any[] }) => {
     if (pool.length === 0) return [];
-    const result: any[] = [];
     const remaining = [...pool];
     const needed = Math.min(count, remaining.length);
+    if (needed === 0) return [];
 
-    for (let i = 0; i < needed; i++) {
-        const totalWeight = remaining.reduce((sum: any, r: any) => sum + (RELIC_WEIGHTS[r.rarity] || 1), 0);
-        let rand = Math.random() * totalWeight;
-        let chosen = remaining[remaining.length - 1]; // fallback
-        for (let j = 0; j < remaining.length; j++) {
-            rand -= RELIC_WEIGHTS[remaining[j].rarity] || 1;
-            if (rand <= 0) { chosen = remaining[j]; break; }
+    const result: any[] = [];
+    const pityCandidates = findSynergyPityCandidates(remaining, options?.owned as any[]);
+
+    if (pityCandidates.length > 0) {
+        const pitySlots = Math.min(BALANCE.SYNERGY_PITY_SLOT, needed, pityCandidates.length);
+        const pityPool = [...pityCandidates];
+        for (let i = 0; i < pitySlots; i++) {
+            const chosen = drawOneWeighted(pityPool);
+            result.push(chosen);
+            pityPool.splice(pityPool.indexOf(chosen), 1);
+            remaining.splice(remaining.indexOf(chosen), 1);
         }
+    }
+
+    const remainingNeeded = needed - result.length;
+    for (let i = 0; i < remainingNeeded; i++) {
+        const chosen = drawOneWeighted(remaining);
         result.push(chosen);
         remaining.splice(remaining.indexOf(chosen), 1);
     }

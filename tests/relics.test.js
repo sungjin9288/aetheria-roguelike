@@ -1925,8 +1925,10 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const eu = await readSrc('src/utils/exploreUtils.ts');
       // PR #8: count 인자를 프레스티지 해금(relicUnlocks.relicChoices)으로 명시 전달
       //   — default 미의존(cycle 597 가드 의도) 보존. rank≥2면 3→4지선다.
-      assert.ok(/pickWeightedRelics\(available,\s*relicUnlocks\.relicChoices\)/.test(eu),
-          'exploreUtils pickWeightedRelics 명시 count 전달 보존');
+      // feat/relic-synergy-pity: 3번째 인자로 { owned }를 추가해 시너지 소프트 pity
+      //   배선 — count가 여전히 명시 전달되는 한 가드 의도(default 미의존) 위반 아님.
+      assert.ok(/pickWeightedRelics\(available,\s*relicUnlocks\.relicChoices(,[^)]*)?\)/.test(eu),
+          'exploreUtils pickWeightedRelics 명시 count 전달 보존 (owned 옵션 인자 허용)');
 
       const ev = await readSrc('src/hooks/gameActions/eventActions.ts');
       assert.ok(/pickWeightedRelics\(updatedPlayer\.relics \|\| \[\],\s*1\)/.test(ev),

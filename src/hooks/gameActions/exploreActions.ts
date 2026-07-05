@@ -136,7 +136,7 @@ export const createExploreActions = (deps: any, { commitExploreOutcome }: any) =
                 const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
                 if (available.length > 0) {
                     commitExploreOutcome('relic_found', null);
-                    const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices);
+                    const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics });
                     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
                     addLog('event', MSG.EXPLORE_RELIC_FOUND);
                     return;
