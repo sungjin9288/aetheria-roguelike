@@ -188,3 +188,28 @@ test('통합: rank≥9 → 정예 아닌 적은 보상 불변', async () => {
     assert.equal(r9Result.goldGained, r8Result.goldGained, '정예 아닌 적은 rank9 보너스 미적용');
     assert.equal(r9Result.expGained, r8Result.expGained, '정예 아닌 적은 rank9 보너스 미적용');
 });
+
+// ── 후속 보완: rank≥7 챌린지 4슬롯의 풀 스택 보상 티어 ─────────────────────
+//   4번째 슬롯이 열려도 보상 배율이 threshold 3(×1.5)에서 멈추면
+//   "난이도만 늘고 보상은 그대로"가 되어 해금 가치가 없다.
+//   CHALLENGE_REWARD_SCALING.fullThreshold(4) → fullMult(×2.0) 상위 티어 검증.
+test('챌린지 풀 스택(4개) → 보상 ×2.0 티어 적용 (3개는 ×1.5 유지)', async () => {
+    const { CombatEngine } = await import('../src/systems/CombatEngine.ts');
+    const { BALANCE } = await import('../src/data/constants.ts');
+    assert.equal(BALANCE.CHALLENGE_REWARD_SCALING.fullThreshold, 4);
+    assert.equal(BALANCE.CHALLENGE_REWARD_SCALING.fullMult, 2.0);
+
+    const mkPlayer = (mods) => ({
+        level: 10, exp: 0, nextExp: 999999, gold: 0, maxHp: 200, hp: 200, maxMp: 50, mp: 50,
+        atk: 20, def: 10, relics: [], stats: {}, challengeModifiers: mods,
+        meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
+    });
+    const enemy = { name: '슬라임', baseName: '슬라임', exp: 100, gold: 100, isElite: false, level: 10 };
+
+    const r3 = CombatEngine.handleVictory(mkPlayer(['a', 'b', 'c']), enemy, {}, {});
+    const r4 = CombatEngine.handleVictory(mkPlayer(['a', 'b', 'c', 'd']), enemy, {}, {});
+
+    assert.equal(r3.expGained, Math.floor(100 * 1.5), '3개 스택은 기존 ×1.5 유지');
+    assert.equal(r4.expGained, Math.floor(100 * 2.0), '4개 풀 스택은 ×2.0');
+    assert.ok(r4.goldGained > r3.goldGained, `풀 스택 골드(${r4.goldGained}) > 3스택(${r3.goldGained})`);
+});

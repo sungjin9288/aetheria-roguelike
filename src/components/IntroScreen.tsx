@@ -6,7 +6,7 @@ import { BALANCE } from '../data/constants';
 import { createRandomMobileName } from '../utils/nameGenerator';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 
-const CHALLENGE_REWARD_TEXT: any = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
+const CHALLENGE_REWARD_TEXT: any = ['', '+20% 보상', '+50% 보상', '+100% 보상', '+150% 보상'];
 
 // cycle 402: `mobile?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
 //   App.tsx가 `mobile` prop pass했으나 silent dropped (paired remove).

@@ -368,8 +368,8 @@ export const BALANCE: BalanceConfig = {
     // 스킬 교체 비용
     SKILL_SWAP_COST: 50,
 
-    // 챌린지 보상 스케일링
-    CHALLENGE_REWARD_SCALING: { threshold: 3, mult: 1.5 },
+    // 챌린지 보상 스케일링 — rank≥7 해금 시 4번째 슬롯이 열리므로 풀 스택(4개) 상위 티어 필요
+    CHALLENGE_REWARD_SCALING: { threshold: 3, mult: 1.5, fullThreshold: 4, fullMult: 2.0 },
 
     // v5.0 — 진 엔딩
     PRIMAL_SHARD_DROP_CHANCE: 0.5,  // 마왕 처치 시 파편 드랍 확률 (기존 0.4 → 진 엔딩 접근성 개선)

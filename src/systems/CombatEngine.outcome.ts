@@ -92,10 +92,13 @@ export const outcomeMethods: any = {
             * eventMult * seasonXpMult;
         const goldMult = (1 + (relics.find((r: any) => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0))
             * seasonGoldMult;
-        // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배)
+        // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배, rank≥7 풀 스택 4개 → 2.0배)
         const challengeMods = p.challengeModifiers || [];
-        const challengeScale: { threshold?: number; mult?: number } = (BALANCE as any).CHALLENGE_REWARD_SCALING || {};
-        const challengeRewardMult = challengeMods.length >= (challengeScale.threshold || 3) ? (challengeScale.mult || 1.5) : 1;
+        const challengeScale: { threshold?: number; mult?: number; fullThreshold?: number; fullMult?: number } = (BALANCE as any).CHALLENGE_REWARD_SCALING || {};
+        const challengeRewardMult =
+            challengeScale.fullThreshold && challengeMods.length >= challengeScale.fullThreshold ? (challengeScale.fullMult || 2.0)
+            : challengeMods.length >= (challengeScale.threshold || 3) ? (challengeScale.mult || 1.5)
+            : 1;
         // 유물: 처치 보너스 (kill_bonus)
         const killBonusRelic = relics.find((r: any) => r.effect === 'kill_bonus');
         const killExpMult = killBonusRelic ? (1 + (killBonusRelic.val?.exp || 0)) : 1;
