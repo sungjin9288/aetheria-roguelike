@@ -23,9 +23,10 @@
 | Linter | ESLint | 9.39.1 |
 | Node.js | — | >=18.0.0 |
 
-> **TypeScript 사용** — 전 소스 `.ts`/`.tsx`, `tsconfig` `strict: true`. 마이그레이션 ~85% 완료
-> (잔여 `noImplicitAny` ~156건, `as any` ~93곳). `npm run type-check`(`tsc --noEmit`)로 검증.
-> `data/`·`systems/` 등 일부 핵심 객체(`BALANCE`/`CONSTANTS`)는 점진 타입화 중 — §부록 참조.
+> **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` ~1,535건,
+> `as any` ~107곳 잔존 (2026-07 실측). `BALANCE`/`CONSTANTS`는 1차 인터페이스 적용(인덱스 시그니처 절충),
+> `MSG`/`DB`/데이터 export(`ITEMS`/`MONSTERS`/`RELICS`/`CLASSES`)는 타입화 예정.
 
 ---
 
@@ -33,53 +34,59 @@
 
 ```
 src/
-├── components/       # React UI 컴포넌트 (~35개)
-│   ├── Dashboard.jsx         # 중앙 HUD (통계/인벤/탭)
-│   ├── TerminalView.jsx      # 로그 출력 + 명령 입력
-│   ├── ControlPanel.jsx      # 전투/이벤트/상점 버튼
-│   ├── PostCombatCard.jsx    # 전투 결과 카드
-│   ├── RelicChoicePanel.jsx  # 유물 3선택 UI
+├── components/       # React UI 컴포넌트
+│   ├── Dashboard.tsx         # 중앙 HUD (통계/인벤/탭)
+│   ├── TerminalView.tsx      # 로그 출력 + 명령 입력
+│   ├── ControlPanel.tsx      # 전투/이벤트/상점 버튼
+│   ├── PostCombatCard.tsx    # 전투 결과 카드
+│   ├── RelicChoicePanel.tsx  # 유물 3선택 UI (시너지 힌트 포함)
+│   ├── tabs/CombatPanel.tsx  # 전투 UI (로직은 utils/combatView.ts)
 │   └── ...
 ├── hooks/            # 게임 로직 + 상태 관리
-│   ├── useGameEngine.js       # 중앙 orchestrator (useReducer)
-│   ├── useGameActions.js      # 이동/탐험/휴식/명령 처리
-│   ├── useCombatActions.js    # 전투 액션 (attack/skill/escape)
-│   ├── useInventoryActions.js # 아이템 사용/장착/판매
-│   ├── useFirebaseSync.js     # 클라우드 세이브 (debounce 500ms)
-│   └── useDamageFlash.js      # 데미지 플래시 효과
+│   ├── useGameEngine.ts       # 중앙 orchestrator (useReducer)
+│   ├── useGameActions.ts      # 이동/탐험/휴식/명령 처리 (gameActions/ 하위 분할)
+│   ├── useCombatActions.ts    # 전투 액션 (attack/skill/escape)
+│   ├── useInventoryActions.ts # 오케스트레이터 (.rewards/.equipment/.economy/.premium 서브팩토리)
+│   ├── useFirebaseSync.ts     # 클라우드 세이브 (debounce 500ms)
+│   └── useDamageFlash.ts      # 데미지 플래시 효과
 ├── systems/          # 핵심 게임 시스템 (pure functions)
-│   ├── CombatEngine.js        # 전투 수식 (부수효과 없음)
-│   ├── SoundManager.js        # Web Audio API 신시사이저
-│   ├── DifficultyManager.js   # 동적 난이도 조정
-│   └── TokenQuotaManager.js   # AI API 일일 할당량 (50회)
+│   ├── CombatEngine.ts        # 전투 수식 본체 (부수효과 없음)
+│   │                          #  + mixin: .status / .loot / .relics / .outcome
+│   ├── prestigeUnlocks.ts     # 프레스티지 rank 해금 정의
+│   ├── SoundManager.ts        # Web Audio API 신시사이저
+│   ├── DifficultyManager.ts   # 동적 난이도 조정 (비대칭 고무줄)
+│   └── TokenQuotaManager.ts   # AI API 일일 할당량 (50회)
 ├── services/
-│   └── aiService.js           # AI 이벤트 생성 + 오프라인 fallback
+│   └── aiService.ts           # AI 이벤트 생성 + 오프라인 fallback
 ├── reducers/
-│   ├── gameReducer.js         # INITIAL_STATE + 40개 이상 action 처리
-│   ├── actionTypes.js         # AT 객체 (Object.freeze)
-│   └── gameStates.js          # GS 객체 (IDLE/COMBAT/EVENT/DEAD/...)
+│   ├── gameReducer.ts         # INITIAL_STATE + 타입 정의
+│   ├── handlers/              # action 처리 (bootstrap/feature/progression/reward/ui 등 8분할)
+│   ├── actionTypes.ts         # AT 객체 (Object.freeze)
+│   └── gameStates.ts          # GS 객체 (IDLE/COMBAT/EVENT/DEAD/...)
 ├── data/             # 불변 게임 데이터베이스
-│   ├── constants.js           # CONSTANTS, BALANCE (모든 magic number)
-│   ├── db.js                  # DB 통합 export (DB.ITEMS, DB.MONSTERS, ...)
-│   ├── items.js               # 장비 정의 (~1,500 LOC)
-│   ├── monsters.js            # 몬스터 + 보스 패턴
-│   ├── classes.js             # 18개 직업 + 스킬 트리 (Tier 0-3)
-│   ├── maps.js                # 42개 지역 + 레벨 락 (Lv1-55 + 무한 심연)
-│   ├── messages.js            # 한국어 로그 메시지 (MSG 객체)
-│   ├── relics.js              # 53개 유물 + 16 시너지 정의
-│   ├── eventChains.js         # 8개 내러티브 이벤트 체인
-│   ├── dropTables.js          # 강화 드롭 테이블 (몬스터별 확률/수량)
-│   ├── codexRewards.js        # 도감 보상 정의
-│   ├── seasonPass.js          # 시즌 패스 보상 정의
-│   └── quests.js / achievements.js  # 163개 퀘스트 + 업적
+│   ├── constants.ts           # CONSTANTS, BALANCE (모든 magic number)
+│   ├── db.ts                  # DB 통합 export (DB.ITEMS, DB.MONSTERS, ...)
+│   ├── items.ts               # 장비 정의 (~1,500 LOC)
+│   ├── monsters.ts            # 몬스터 + 보스 패턴
+│   ├── classes.ts             # 18개 직업 + 스킬 트리 (Tier 0-3)
+│   ├── maps.ts                # 52개 지역 + 레벨 락 (Lv1-55 + 무한 심연)
+│   ├── messages.ts            # 한국어 로그 메시지 (MSG 객체)
+│   ├── relics.ts              # 67개 유물 + 20 시너지 정의
+│   ├── eventChains.ts         # 13개 내러티브 이벤트 체인 (×3스텝)
+│   ├── dropTables.ts          # 강화 드롭 테이블 (몬스터별 확률/수량)
+│   ├── codexRewards.ts        # 도감 보상 정의 (26 마일스톤)
+│   ├── seasonPass.ts          # 시즌 패스 보상 정의 (30티어)
+│   └── quests.ts              # 143개 퀘스트 + 73개 업적 (ACHIEVEMENTS 포함)
 └── utils/            # 공유 유틸리티 (~20개)
-    ├── gameUtils.js           # makeItem, getFullStats, migrateData
-    ├── equipmentUtils.js      # 장비 프로파일 계산
-    ├── exploreUtils.js        # 적 스폰, 이벤트 결정
-    ├── graveUtils.js          # 묘비 생성/복구
-    ├── runProfileUtils.js     # 플레이스타일 분석
-    └── commandParser.js       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test)
+    ├── gameUtils.ts           # makeItem 등 공유 헬퍼 (migrateData는 dataMigration.ts로 분리)
+    ├── dataMigration.ts       # 세이브 마이그레이션 (migrateData)
+    ├── equipmentUtils.ts      # 장비 프로파일 계산
+    ├── exploreUtils.ts        # 적 스폰, 이벤트 결정
+    ├── combatView.ts          # 전투 뷰모델 (CombatPanel용 순수함수)
+    ├── graveUtils.ts          # 묘비 생성/복구
+    ├── runProfileUtils.ts     # 플레이스타일 분석
+    └── commandParser.ts       # 명령어 파싱
+tests/                # 단위 테스트 (Node.js built-in test, 117 파일 / ~3,000 케이스)
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 android/ ios/         # Capacitor 네이티브 프로젝트
 ```
@@ -117,17 +124,17 @@ npm run mobile:doctor     # Capacitor 환경 점검
 
 ### DO
 
-- **`BALANCE` 상수 사용**: 모든 수치(확률, 배율, 비용 등)는 반드시 `src/data/constants.js`의 `BALANCE` 객체에서 참조. inline magic number 절대 금지.
-- **`MSG` 객체 사용**: 한국어 로그 메시지는 반드시 `src/data/messages.js`의 `MSG` 객체에서 가져올 것. 컴포넌트/훅에 한국어 문자열 직접 작성 금지.
-- **`AT` 객체 사용**: reducer dispatch 시 action type은 반드시 `actionTypes.js`의 `AT` 상수 사용. 문자열 리터럴 사용 금지.
-- **`GS` 객체 사용**: game state 비교는 반드시 `gameStates.js`의 `GS` 상수 사용.
+- **`BALANCE` 상수 사용**: 모든 수치(확률, 배율, 비용 등)는 반드시 `src/data/constants.ts`의 `BALANCE` 객체에서 참조. inline magic number 절대 금지.
+- **`MSG` 객체 사용**: 한국어 로그 메시지는 반드시 `src/data/messages.ts`의 `MSG` 객체에서 가져올 것. 컴포넌트/훅에 한국어 문자열 직접 작성 금지.
+- **`AT` 객체 사용**: reducer dispatch 시 action type은 반드시 `actionTypes.ts`의 `AT` 상수 사용. 문자열 리터럴 사용 금지.
+- **`GS` 객체 사용**: game state 비교는 반드시 `gameStates.ts`의 `GS` 상수 사용.
 - **Immutable 업데이트**: reducer에서 state 변경 시 반드시 spread operator로 새 객체 반환. 직접 변이 금지.
-- **Pure function 유지 (CombatEngine)**: `CombatEngine.js` 함수는 입력 → 새 객체 반환. side effect 절대 금지.
+- **Pure function 유지 (CombatEngine)**: `CombatEngine.ts` 함수는 입력 → 새 객체 반환. side effect 절대 금지.
 - **`SET_PLAYER` 함수형 payload 활용**: 현재 player 상태에 의존하는 업데이트는 함수형 payload 사용:
   ```javascript
   dispatch({ type: AT.SET_PLAYER, payload: (p) => ({ ...p, hp: p.hp - damage }) });
   ```
-- **DB 통합 export 사용**: 게임 데이터 참조 시 `db.js`의 `DB` 객체를 통해 접근 (`DB.ITEMS`, `DB.MONSTERS` 등).
+- **DB 통합 export 사용**: 게임 데이터 참조 시 `db.ts`의 `DB` 객체를 통해 접근 (`DB.ITEMS`, `DB.MONSTERS` 등).
 - **`addLog(type, text)` 로그 패턴**: 게임 이벤트는 반드시 이 함수로 로그 출력.
 
 ### DON'T
@@ -136,9 +143,9 @@ npm run mobile:doctor     # Capacitor 환경 점검
 - **CombatEngine에 side effect 추가 금지**: `dispatch`, `console.log`, 외부 상태 변경 등 넣으면 테스트 불가능해짐.
 - **컴포넌트에 게임 로직 작성 금지**: 비즈니스 로직은 `hooks/`, `systems/`, `utils/`에. 컴포넌트는 렌더링만 담당.
 - **한국어 문자열 하드코딩 금지**: `MSG.BATTLE_START` 처럼 `MSG` 객체 사용. 컴포넌트 JSX 안에 한국어 직접 입력 금지.
-- **`data/` 파일 직접 수정 시 주의**: `items.js`, `monsters.js`, `constants.js` 변경 시 밸런스 전체에 영향. 반드시 테스트 후 반영.
+- **`data/` 파일 직접 수정 시 주의**: `items.ts`, `monsters.ts`, `constants.ts` 변경 시 밸런스 전체에 영향. 반드시 테스트 후 반영.
 - **`CONSTANTS.DATA_VERSION` 무단 변경 금지**: save 구조 변경 시 반드시 버전 bump + `migrateData()` 업데이트 병행.
-- **enemy turn timeout 누수 금지**: `useCombatActions.js`의 `pendingEnemyTurn` ref는 전투 중단 시 반드시 cleanup. 누락 시 stale dispatch 발생.
+- **enemy turn timeout 누수 금지**: `useCombatActions.ts`의 `pendingEnemyTurn` ref는 전투 중단 시 반드시 cleanup. 누락 시 stale dispatch 발생.
 
 ---
 
@@ -153,7 +160,7 @@ useGameEngine (useReducer)
     ├── useFirebaseSync      → 클라우드 저장
     └── useDamageFlash       → 데미지 플래시
 ```
-- **단일 진실 원천**: 모든 게임 상태는 `gameReducer.js`의 `INITIAL_STATE`에서 정의
+- **단일 진실 원천**: 모든 게임 상태는 `gameReducer.ts`의 `INITIAL_STATE`에서 정의
 - **Hooks 조합**: 각 역할별 hook으로 분리 → `useGameEngine`이 조합해서 컴포넌트에 전달
 
 ### CombatEngine 설계 패턴
@@ -162,13 +169,13 @@ useGameEngine (useReducer)
 - **독립 테스트 가능**: 게임 환경 없이 단독 테스트 가능
 
 ### 밸런스 상수 관리
-모든 수치는 `src/data/constants.js`에 집중 관리:
+모든 수치는 `src/data/constants.ts`에 집중 관리:
 
 | 상수 | 값 | 의미 |
 |------|----|------|
 | `CRIT_CHANCE` | 0.1 | 크리티컬 확률 10% |
 | `ESCAPE_CHANCE` | 0.5 | 도망 성공률 50% |
-| `EXP_SCALE_RATE` | 1.38 | 레벨업 EXP 증가 배율 (10시간 1회차 목표) |
+| `EXP_SCALE_RATE` | 1.15 | 레벨업 EXP 증가 배율 (Lv50 ~45전투/레벨 목표) |
 | `RELIC_FIND_CHANCE` | 0.08 | 유물 발견 확률 8% |
 | `BOSS_PHASE2_THRESHOLD` | 0.5 | 보스 2페이즈 전환 HP 비율 |
 | `TWO_HAND_ATK_BONUS` | 1.55 | 양손무기 ATK 배율 |
@@ -177,7 +184,7 @@ useGameEngine (useReducer)
 
 ### Roguelike 루프 구조
 1. **탐험** → 적/이벤트/유물 랜덤 발생 (pity counter로 드랍 보장)
-2. **유물 선택** → 3개 중 선택, 최대 5개 보유
+2. **유물 선택** → 3개 중 선택(프레스티지 rank≥2: 4개), 최대 5개 보유(rank≥2: 6개)
 3. **마왕 격파** → Ascension 옵션 제공
 4. **프레스티지** → 레벨/장비/유물 초기화, 영구 보너스 적립
 5. **묘비 시스템** → 사망 지점에 골드/아이템 보관, 재방문 시 회수
@@ -216,17 +223,17 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 ## 8. 주의사항
 
 ### 절대 건드리지 말 것
-- **`CombatEngine.js` 함수 시그니처**: 수많은 훅이 의존. 변경 시 전투 전체 영향.
+- **`CombatEngine.ts` 함수 시그니처**: 수많은 훅이 의존. 변경 시 전투 전체 영향.
 - **`INITIAL_STATE` 필드 제거**: 기존 Firebase 저장 데이터와 호환성 깨짐. 추가는 가능, 제거/이름변경은 `migrateData()` 없이 불가.
 - **`AT`/`GS`/`DB`/`BALANCE`/`MSG` 객체 구조 변경**: 프로젝트 전체에서 참조 중.
 
 ### 특별히 조심할 것
 
 **1. enemy turn cleanup**
-`useCombatActions.js`의 `pendingEnemyTurn` ref를 전투 중단(도망/사망/이벤트 전환) 시 반드시 `clearTimeout`. 누락 시 전투 종료 후 적이 계속 공격하는 버그 발생.
+`useCombatActions.ts`의 `pendingEnemyTurn` ref를 전투 중단(도망/사망/이벤트 전환) 시 반드시 `clearTimeout`. 누락 시 전투 종료 후 적이 계속 공격하는 버그 발생.
 
 **2. grave 호환성**
-구형 save에는 `grave.item` (단수), 신형에는 `grave.items[]` (복수). `graveUtils.js` 수정 시 양쪽 포맷 모두 처리 필요.
+구형 save에는 `grave.item` (단수), 신형에는 `grave.items[]` (복수). `graveUtils.ts` 수정 시 양쪽 포맷 모두 처리 필요.
 
 **3. Quick Slot 검증**
 앱 부팅 시 quick slot이 더 이상 인벤에 없는 아이템을 참조할 수 있음. 로드 시 sanitize 로직 유지.
