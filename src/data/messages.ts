@@ -279,6 +279,18 @@ export const MSG: any = {
     CHAIN_REWARD_RELIC: (name: any) => `✨ [체인 보상] 유물 [${name}] 획득!`,
     CHAIN_REWARD_COMBAT_BONUS: (atkPct: any, turns: any) => `⚔ [최후의 영웅] 기사의 혼령 합류! ATK +${atkPct}% ${turns}턴`,
 
+    // --- 체인 저널 (Quest 탭) ---
+    CHAIN_JOURNAL_TITLE: '진행 중인 이야기',
+    CHAIN_JOURNAL_EMPTY: '아직 진행 중인 이야기가 없습니다. 탐험 중 우연히 시작될 수 있습니다.',
+    CHAIN_JOURNAL_STEP: (current: any, total: any) => `${current}/${total} 단계`,
+    CHAIN_JOURNAL_NEXT_LOC: (loc: any) => `다음 이야기: ${loc}`,
+
+    // --- 맵 exit 배지 (MapNavigator) ---
+    MAP_BADGE_BOSS: '보스',
+    MAP_BADGE_HIGH_EVENT: '이벤트↑',
+    MAP_BADGE_SHOP: '상점',
+    MAP_BADGE_GRAVE: '유해 회수↑',
+
     // cycle 116: GM_OVERWHELM/CRISIS/UNDERDOG 제거 — 게임 마스터 톤 메시지가 0건 사용
     // (DifficultyManager가 자체 로그를 inline string으로 처리).
 
