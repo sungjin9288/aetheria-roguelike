@@ -13,10 +13,18 @@ interface AscensionScreenProps {
 // PR #8 (2026-06): 광고만 하고 미구현이던 해금을 실제 효과와 일치하도록 정리.
 //   구현된 비퇴행 해금만 표기 (getPrestigeUnlocks 단일 진실 원천). 매 rank의 영구
 //   스탯 증가·적 난이도 상승은 아래 스탯 행/적 강화 카드가 별도로 표시한다.
+// feat/prestige-rank-ladder: rank4~9 해금 추가 — PR #8/#10/#11과 동일 원칙(비퇴행·순수
+//   보너스/난이도)으로 getPrestigeUnlocks(rank)에 실제 배선된 항목만 광고한다.
 const PRESTIGE_UNLOCKS: any = [
     { rank: 1, label: '에테르 각성', desc: '에센스 획득 +10% · 마왕 처치 시 원시의 파편 드롭' },
     { rank: 2, label: '강화된 유물', desc: '유물 최대 보유 6개 · 유물 선택지 4지선다' },
     { rank: 3, label: '심연의 메아리', desc: '엘리트 몬스터 출현 +25% · 보스 처치 시 희귀 장비 보장 · 진 보스 도전' },
+    { rank: 4, label: '재의 인장', desc: '캠프파이어 발견율 +4%p' },
+    { rank: 5, label: '심연의 인장', desc: '시작 부트 유물 선택지 3→4지선다' },
+    { rank: 6, label: '잔향의 나침반', desc: '유물 발견 pity 누적 가속 ×1.5' },
+    { rank: 7, label: '심연의 서약', desc: '챌린지 모디파이어 슬롯 +1(3→4)' },
+    { rank: 8, label: '에테르 심화', desc: '에센스 획득 추가 +10%p (누적 +20%)' },
+    { rank: 9, label: '심연 사냥꾼', desc: '정예 몬스터 처치 보상 +25%' },
     { rank: 10, label: '에테르 초월', desc: '모든 영구 스탯 보너스 2배 · 숨겨진 보스 "에테르 군주" 출현(에테르 관문)' },
 ];
 

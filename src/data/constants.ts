@@ -153,6 +153,15 @@ export const BALANCE: BalanceConfig = {
     PRESTIGE_RELIC_SLOT_BONUS: 1,    // rank≥2: 유물 최대 보유 +1 (5→6)
     PRESTIGE_ELITE_BONUS: 0.25,      // rank≥3: 엘리트 몬스터 출현 확률 +25%
     PRESTIGE_R10_STAT_MULT: 2,       // rank≥10: 영구 스탯 보너스 ×2 (에테르 초월)
+    // feat/prestige-rank-ladder — rank4~9 해금 사다리. PR #8/#10/#11과 동일하게
+    //   getPrestigeUnlocks(rank)가 단일 진실 원천. 비퇴행·순수 보너스만 추가.
+    PRESTIGE_R4_CAMPFIRE_BONUS: 0.04,     // rank≥4: 캠프파이어 발견율 +4%p
+    START_BOOT_RELIC_CHOICES_BONUS: 1,    // rank≥5: 시작 부트 유물 선택지 +1 (3→4)
+    PRESTIGE_R6_RELIC_PITY_MULT: 1.5,     // rank≥6: 유물 발견 pity 누적 가속 ×1.5
+    CHALLENGE_MODIFIER_SLOTS: 3,          // 챌린지 모디파이어 동시 선택 기본 상한
+    PRESTIGE_R7_CHALLENGE_SLOT_BONUS: 1,  // rank≥7: 챌린지 모디파이어 슬롯 +1 (3→4)
+    PRESTIGE_R8_ESSENCE_BONUS: 0.10,      // rank≥8: 에센스 획득 추가 +10%p (rank1과 누적 +20%)
+    PRESTIGE_R9_ELITE_REWARD_MULT: 1.25,  // rank≥9: 정예 처치 EXP/골드 보상 ×1.25
     BOSS_PHASE2_THRESHOLD: 0.5,     // 보스 HP 50% 이하 → 패턴 전환
     BOUNTY_EXP_MULT: 2.0,           // 현상수배 EXP = 킬수 × 레벨 × 2.0
     BOUNTY_GOLD_MULT: 3.0,          // 현상수배 골드 = 킬수 × 레벨 × 3.0 (기존 2.5)

@@ -4,6 +4,7 @@ import AetherMark from './AetherMark';
 import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
 import { BALANCE } from '../data/constants';
 import { createRandomMobileName } from '../utils/nameGenerator';
+import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 
 const CHALLENGE_REWARD_TEXT: any = ['', '+20% 보상', '+50% 보상', '+100% 보상'];
 
@@ -11,16 +12,20 @@ const CHALLENGE_REWARD_TEXT: any = ['', '+20% 보상', '+50% 보상', '+100% 보
 //   App.tsx가 `mobile` prop pass했으나 silent dropped (paired remove).
 interface IntroScreenProps {
     onStart?: (...args: any[]) => void;
+    prestigeRank?: number;
 }
 
-const IntroScreen = ({ onStart }: IntroScreenProps) => {
+const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
     const [name, setName] = useState(() => createRandomMobileName(Math.random));
     const [selectedChallenges, setSelectedChallenges] = useState<any[]>([]);
     const nameInputRef = useRef<any>(null);
 
+    // feat/prestige-rank-ladder: rank≥7 "심연의 서약" — 챌린지 모디파이어 슬롯 +1(3→4).
+    const challengeSlots = BALANCE.CHALLENGE_MODIFIER_SLOTS + getPrestigeUnlocks(prestigeRank).challengeSlotBonus;
+
     const toggleChallenge = (id: any) => {
         setSelectedChallenges(prev =>
-            prev.includes(id) ? prev.filter((c: any) => c !== id) : [...prev, id].slice(0, 3)
+            prev.includes(id) ? prev.filter((c: any) => c !== id) : [...prev, id].slice(0, challengeSlots)
         );
     };
 
@@ -141,7 +146,7 @@ const IntroScreen = ({ onStart }: IntroScreenProps) => {
                         {selectedChallenges.length > 0 && (
                             <span className="text-[10px] font-fira text-[#d5b180]">{CHALLENGE_REWARD_TEXT[selectedChallenges.length]}</span>
                         )}
-                        <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500/80">Up to 3</span>
+                        <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500/80">Up to {challengeSlots}</span>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">

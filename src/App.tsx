@@ -102,7 +102,7 @@ function App() {
                         context within the flex chain so intro content can scroll freely. */}
                     <div className="relative z-10 flex-1 min-h-0 overflow-y-auto w-full">
                         <div className="flex flex-col items-center w-full gap-4 py-3">
-                            <IntroScreen onStart={engine.actions.start} />
+                            <IntroScreen onStart={engine.actions.start} prestigeRank={engine.player.meta?.prestigeRank} />
                         </div>
                     </div>
                 </MainLayout>
