@@ -275,6 +275,15 @@ export const BALANCE: BalanceConfig = {
     CAMPFIRE_FORGE_ATK: 0.4,        // 단련 선택 시 다음 전투 ATK 버프 비율 (+40%)
     CAMPFIRE_FORGE_TURNS: 5,        // 단련 버프 지속 턴 (다음 전투를 대체로 커버)
 
+    // 탐험 스카우팅 (2026-07 감사 (b)): 던전 탐험 시 사전 정찰 선택 카드 2~3장을 제시해
+    //   "정보 없는 단일 버튼 탐험"에 사전 결정 지점을 추가한다 (StS 노드맵/FTL 비콘 이식).
+    //   체인 > 캠프파이어 > 스카우팅 > 나머지 롤 순으로 우선순위. 매번 뜨면 모바일 루프
+    //   마찰이 크므로 확률형(캠프파이어보다 조금 낮게 — 결정 밀도는 늘리되 과부하 방지).
+    SCOUT_CHANCE: 0.06,                 // 던전 탐험당 스카우팅 조우 확률
+    SCOUT_ELITE_CARD_CHANCE: 0.15,      // 3번째 슬롯이 "정예의 흔적" 카드로 대체될 확률
+    SCOUT_COMBAT_REWARD_BONUS: 0.1,     // "전투의 기척" 선택 시 해당 전투 처치 보상(EXP/골드) +10%
+    SCOUT_ELITE_HP_MULT: 1.5,           // "정예의 흔적" 확정 스폰 HP/ATK 배율 (초반 정예와 동일 완화 배율)
+
     // 현상수배 카운트
     BOUNTY_MIN_COUNT: 5,            // 현상수배 최소 처치 수
     BOUNTY_COUNT_RANGE: 6,          // 현상수배 처치 수 범위 (min + 0~range-1)

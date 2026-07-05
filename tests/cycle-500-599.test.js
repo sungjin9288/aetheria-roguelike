@@ -580,11 +580,16 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 507: 정합성 가드 — 모든 callsite 명시 전달', async () => {
+      // 탐험 스카우팅(2026-07): getQuietExplorationChance 직접 호출은 exploreUtils.ts의
+      // runQuietRollAndCombat(getDiscoveryOdds 경유)으로 이동. getNarrativeEventChance는
+      // AI 이벤트 전용이라 exploreActions.ts에 그대로 유지.
       const exploreActions = await readSrc('src/hooks/gameActions/exploreActions.ts');
       assert.ok(/getNarrativeEventChance\([^)]*,[^)]*,[^)]*,[^)]*\)/.test(exploreActions),
           'exploreActions getNarrativeEventChance 4 args 보존');
-      assert.ok(/getQuietExplorationChance\([^)]*,[^)]*\)/.test(exploreActions),
-          'exploreActions getQuietExplorationChance 2 args 보존');
+
+      const exploreUtils = await readSrc('src/utils/exploreUtils.ts');
+      assert.ok(/getDiscoveryOdds\([^)]*,[^)]*\)/.test(exploreUtils),
+          'exploreUtils getDiscoveryOdds 2 args 보존 (quietChance 경유 호출)');
 
       const pacing = await readSrc('src/utils/explorationPacing.ts');
       assert.ok(/getNarrativeEventChance\(mapData\?\.eventChance \|\| 0, 0, player\?\.stats, mapData(?: \?\? null)?\)/.test(pacing),

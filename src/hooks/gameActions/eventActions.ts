@@ -1,17 +1,27 @@
 import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
+import { DB } from '../../data/db';
 import { toArray, grantGold } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { soundManager } from '../../systems/SoundManager';
+import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from '../../utils/exploreUtils';
+import { BALANCE } from '../../data/constants';
 
-export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
+export const createEventActions = (deps: any, shared: any) => {
+    const { emitUnlockedTitles } = shared;
     const { player, currentEvent, dispatch, addLog, getFullStats } = deps;
     return {
         handleEventChoice: (idx: any) => {
             if (!currentEvent) return;
+
+            // 스카우팅 카드 처리 — 같은 탐험 턴 안에서 즉시 해소 (탐험의 나머지 롤 파이프 재호출).
+            if (currentEvent.isScout) {
+                handleScoutChoice(idx, currentEvent, deps, shared);
+                return;
+            }
 
             const isChainEvent = Boolean(currentEvent._chainId);
             const selectedOutcome = isChainEvent
@@ -154,4 +164,67 @@ export const createEventActions = (deps: any, { emitUnlockedTitles }: any) => {
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
         },
     };
+};
+
+/**
+ * 스카우팅 카드 선택 처리 — 카드 4종(combat/anomaly/unknown/elite)을 같은 탐험 턴 안에서
+ * 즉시 해소한다. exploreUtils.ts의 기존 파이프 함수들(spawnEnemy/rollExplorationEvent/
+ * applyBattleStartRelics/runQuietRollAndCombat)을 재호출/재배치하는 방식 — 신규 스폰
+ * 로직을 만들지 않는다.
+ */
+const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) => {
+    const { player, dispatch, addLog, getFullStats } = deps;
+    const { commitExploreOutcome } = shared;
+    const outcome = toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null;
+    if (!outcome) {
+        dispatch({ type: AT.SET_EVENT, payload: null });
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        return;
+    }
+
+    addLog('event', outcome.log || '');
+    const mapData = DB.MAPS[player.loc];
+    const playerRelics = player.relics || [];
+
+    // 이벤트 패널을 닫고(현재 스카우팅 카드) 아래 분기에서 필요한 다음 상태를 dispatch한다.
+    dispatch({ type: AT.SET_EVENT, payload: null });
+
+    if (outcome.scoutEffect === 'combat' || outcome.scoutEffect === 'elite') {
+        const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog });
+        const isEliteCard = outcome.scoutEffect === 'elite';
+        const mStats = isEliteCard
+            ? {
+                ...rawStats,
+                name: rawStats.name?.startsWith('정예') ? rawStats.name : `정예 ${baseName}`,
+                baseName,
+                isElite: true,
+                hp: Math.floor(rawStats.hp * BALANCE.SCOUT_ELITE_HP_MULT),
+                maxHp: Math.floor(rawStats.maxHp * BALANCE.SCOUT_ELITE_HP_MULT),
+                atk: Math.floor(rawStats.atk * BALANCE.SCOUT_ELITE_HP_MULT),
+                scoutGuaranteedRelic: true,
+            }
+            : { ...rawStats, scoutRewardBonus: outcome.rewardBonus ?? BALANCE.SCOUT_COMBAT_REWARD_BONUS };
+
+        const fullStats = getFullStats();
+        commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }));
+        dispatch({ type: AT.SET_ENEMY, payload: mStats });
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+        addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+        return;
+    }
+
+    if (outcome.scoutEffect === 'anomaly') {
+        const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats });
+        commitExploreOutcome(quietResult === 'nothing' ? 'nothing' : quietResult, null);
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        if (quietResult === 'nothing') addLog('info', MSG.EXPLORE_QUIET);
+        return;
+    }
+
+    // 'unknown' — 짙은 안개: 기존 explore() 롤(quiet 롤 → 유물 보장 → 전투)로 그대로 위임.
+    // 같은 탐험 턴 안에서 결과가 나와야 하므로 runQuietRollAndCombat을 즉시 재호출 —
+    // "무슨 일이 일어날지 모른다"는 컨셉대로 신규 로직 없이 원래 파이프를 탄다. AI 서사
+    // 이벤트 단계는 건너뛴다(이미 스카우팅 카드로 결정 지점을 소비했으므로 즉시 해소 우선).
+    const { addStoryLog } = deps;
+    runQuietRollAndCombat(player, mapData, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome });
 };

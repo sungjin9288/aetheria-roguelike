@@ -11,9 +11,14 @@ import { RELICS, pickWeightedRelics } from '../data/relics.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { AT } from '../reducers/actionTypes.js';
+import { GS } from '../reducers/gameStates.js';
+import { MSG } from '../data/messages.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { soundManager } from '../systems/SoundManager.js';
 import { findItemByName } from './gameUtils.js';
+import { applyDynamicDifficulty } from '../systems/DifficultyManager';
+import { getBossSignatureDrops } from './bossSignatureHint';
+import { getSignaturePityMultiplier } from './signaturePity';
 
 // ─────────────────────────────────────────────────────────────────────────
 // 0. ISO 주차 번호 계산 (월요일 기준)
@@ -364,6 +369,109 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
     }
 
     return combatStartPlayer;
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 4.2. quiet 롤 → 유물 보장 → 전투 스폰 (AI 이벤트 제외 파이프)
+//   exploreActions.ts의 explore()가 AI 이벤트 롤 실패 후 호출하는 나머지 파이프이자,
+//   탐험 스카우팅(2026-07) "짙은 안개" 카드가 그대로 재사용하는 공유 지점이다. AI_SERVICE
+//   (firebase 의존)를 참조하지 않도록 exploreUtils.ts에 둔다 — eventActions.ts 단위 테스트가
+//   firebase import 체인 없이 이 함수를 로드할 수 있어야 하기 때문 (campfire-node.test.js와
+//   동일한 제약).
+// ─────────────────────────────────────────────────────────────────────────
+export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome }: any) => {
+    const playerRelics = player.relics || [];
+    const quietChance = getDiscoveryOdds(player, mapData).quietChance;
+
+    if (Math.random() < quietChance) {
+        const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats });
+        if (quietResult !== 'nothing') {
+            commitExploreOutcome(quietResult, null);
+            return;
+        }
+        commitExploreOutcome('nothing', null);
+        addLog('info', MSG.EXPLORE_QUIET);
+        return;
+    }
+
+    // 전투 직전 유물 발견 기회
+    const firstRelicPity = playerRelics.length === 0
+        && (player.stats?.exploreState?.sinceRelic || 0) >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
+    const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
+    if (playerRelics.length < relicUnlocks.maxRelics
+        && (firstRelicPity || Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
+        const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
+        if (available.length > 0) {
+            commitExploreOutcome('relic_found', null);
+            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics });
+            dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
+            addLog('event', MSG.EXPLORE_RELIC_FOUND);
+            return;
+        }
+    }
+
+    // 몬스터 생성
+    const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog });
+    let { mStats } = applyDynamicDifficulty(rawStats, player, addLog);
+
+    // 무한 심연 모드
+    if (mapData.level === 'infinite') {
+        const floor = (player.stats?.abyssFloor || 0) + 1;
+        const abyssScale = 1 + (floor - 1) * 0.08;
+        mStats = {
+            ...mStats,
+            hp: Math.floor(mStats.hp * abyssScale),
+            maxHp: Math.floor(mStats.maxHp * abyssScale),
+            atk: Math.floor(mStats.atk * abyssScale),
+            exp: Math.floor(mStats.exp * (1 + (floor - 1) * 0.12)),
+            gold: Math.floor(mStats.gold * (1 + (floor - 1) * 0.1)),
+            level: 50 + floor,
+        };
+        if (BALANCE.ABYSS_BOSS_FLOORS.includes(floor)) {
+            const bossName = BALANCE.ABYSS_BOSS_NAMES[floor] || '혼돈의 수호자';
+            const bossProfile = DB.MONSTERS?.[bossName];
+            mStats = {
+                ...mStats,
+                name: `[${floor}층 보스] ${bossName}`,
+                baseName: bossName,
+                isBoss: true,
+                hp: Math.floor(mStats.hp * (bossProfile?.hpMult || 2.0)),
+                maxHp: Math.floor(mStats.maxHp * (bossProfile?.hpMult || 2.0)),
+                atk: Math.floor(mStats.atk * (bossProfile?.atkMult || 1.5)),
+                exp: Math.floor(mStats.exp * (bossProfile?.expMult || 2.5)),
+                gold: Math.floor(mStats.gold * (bossProfile?.goldMult || 2.5)),
+                dropMod: bossProfile?.dropMod || 2.5,
+                weakness: bossProfile?.weakness,
+                resistance: bossProfile?.resistance,
+                phase2: bossProfile?.phase2,
+                phase3: bossProfile?.phase3,
+            };
+            addLog('critical', MSG.ABYSS_BOSS_APPEAR(bossName));
+        } else if (floor % 5 === 0) {
+            addLog('warning', MSG.ABYSS_FLOOR_WARNING(floor));
+        }
+    }
+
+    const fullStats = getFullStats();
+    commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }));
+    dispatch({ type: AT.SET_ENEMY, payload: mStats });
+    dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+    addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+    // anticipate 레이어: boss가 signature를 드롭 가능한 경우 pre-combat 예고
+    if (mStats.isBoss) {
+        const sigDrops = getBossSignatureDrops(mStats.baseName);
+        if (sigDrops.length > 0) {
+            const top = sigDrops[0];
+            const topPct = Math.max(1, Math.round(top.rate * 100));
+            addLog('legendary', MSG.SIGNATURE_BOSS_HINT(mStats.baseName, sigDrops.length, top.name, topPct));
+            const pityMult = getSignaturePityMultiplier(player.stats?.signaturePity);
+            if (pityMult > 1) {
+                const pct = Math.round((pityMult - 1) * 100);
+                addLog('legendary', MSG.SIGNATURE_PITY_RESONANCE(pct, player.stats?.signaturePity));
+            }
+        }
+    }
+    if (typeof addStoryLog === 'function') addStoryLog('encounter', { loc: player.loc, name: baseName });
 };
 
 // ─────────────────────────────────────────────────────────────────────────

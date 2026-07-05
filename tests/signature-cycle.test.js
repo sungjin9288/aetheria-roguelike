@@ -254,10 +254,12 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 282: player.stats.signaturePity dispatch 유지 (회귀 가드)', async () => {
+      // 탐험 스카우팅(2026-07): 참조가 exploreUtils.ts의 runQuietRollAndCombat으로 이동
+      // (exploreActions.ts와 eventActions.ts "짙은 안개" 카드 공유) — 경로만 갱신.
       const sources = await Promise.all([
           readSrc('src/utils/adventureGuide.ts'),
           readSrc('src/components/codex/LegendaryCodex.tsx'),
-          readSrc('src/hooks/gameActions/exploreActions.ts'),
+          readSrc('src/utils/exploreUtils.ts'),
       ]);
       sources.forEach((src, i) => {
           assert.ok(/player[\?.]+stats[\?.]+signaturePity/.test(src),

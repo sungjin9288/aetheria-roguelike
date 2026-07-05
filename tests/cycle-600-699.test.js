@@ -1427,19 +1427,27 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 628: 7 callsite null 명시 추가', async () => {
-      const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
-      assert.ok(/commitExploreOutcome\('narrative_event',\s*null\)/.test(source),
+      // 탐험 스카우팅(2026-07): quiet/유물/전투 롤 파이프가 exploreUtils.ts의
+      // runQuietRollAndCombat으로 이동(exploreActions.ts와 eventActions.ts "짙은 안개"
+      // 카드 공유) — callsite가 두 파일에 분산됐을 뿐 각 null 명시 계약은 그대로 보존.
+      const exploreActions = await readSrc('src/hooks/gameActions/exploreActions.ts');
+      assert.ok(/commitExploreOutcome\('narrative_event',\s*null\)/.test(exploreActions),
           "narrative_event callsite null 명시 (line 43)");
-      const nothingMatches = (source.match(/commitExploreOutcome\('nothing',\s*null\)/g) || []).length;
-      assert.ok(nothingMatches >= 3, `'nothing' callsite null 명시 3건 이상 (got ${nothingMatches})`);
-      assert.ok(/commitExploreOutcome\(quietResult,\s*null\)/.test(source),
-          'quietResult callsite null 명시 (line 106)');
-      assert.ok(/commitExploreOutcome\('relic_found',\s*null\)/.test(source),
-          "'relic_found' callsite null 명시 (line 117)");
+      const exploreActionsNothing = (exploreActions.match(/commitExploreOutcome\('nothing',\s*null\)/g) || []).length;
+      assert.ok(exploreActionsNothing >= 2, `exploreActions 'nothing' callsite null 명시 2건 이상 (got ${exploreActionsNothing})`);
+
+      const exploreUtils = await readSrc('src/utils/exploreUtils.ts');
+      const exploreUtilsNothing = (exploreUtils.match(/commitExploreOutcome\('nothing',\s*null\)/g) || []).length;
+      assert.ok(exploreUtilsNothing >= 1, `exploreUtils 'nothing' callsite null 명시 1건 이상 (got ${exploreUtilsNothing})`);
+      assert.ok(/commitExploreOutcome\(quietResult,\s*null\)/.test(exploreUtils),
+          'quietResult callsite null 명시 보존');
+      assert.ok(/commitExploreOutcome\('relic_found',\s*null\)/.test(exploreUtils),
+          "'relic_found' callsite null 명시 보존");
   });
 
   test('cycle 628: combat 2-arg callsite 보존 (line 168)', async () => {
-      const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
+      // 탐험 스카우팅(2026-07): combat callsite가 exploreUtils.ts로 이동 — 경로만 갱신.
+      const source = await readSrc('src/utils/exploreUtils.ts');
       assert.ok(/commitExploreOutcome\('combat',\s*\(nextPlayer:\s*any\)\s*=>/.test(source),
           "combat 2-arg callsite (applyBattleStartRelics callback) 보존");
   });

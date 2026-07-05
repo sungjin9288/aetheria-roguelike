@@ -7,7 +7,7 @@ import { addItemByName } from '../../utils/inventoryUtils';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../utils/runProfileUtils';
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { SEASON_XP } from '../../data/seasonPass';
-import { addCombatDigestLogs, getLootUpgradeHint } from './_helpers';
+import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, buildPassiveBonusWithScout } from './_helpers';
 import { applyAbyssFloorAdvance, handleDemonKingSlain } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
@@ -33,7 +33,8 @@ export const handleVictoryOutcome = ({
     extendedChecks,
     liveConfig,
 }: any) => {
-    const passiveBonus = { goldMult: stats?.passiveGoldMult || 0, expMult: stats?.passiveExpMult || 0 };
+    // 탐험 스카우팅 "전투의 기척" 카드 — 해당 전투 한정 처치 보상(EXP/골드) 배율 보너스.
+    const passiveBonus = buildPassiveBonusWithScout(stats, deadEnemy);
     const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus, liveConfig);
     let updatedPlayer = victoryResult.updatedPlayer;
     victoryResult.logs.forEach((log: any) => addLog(log.type, log.text));
@@ -222,6 +223,9 @@ export const handleVictoryOutcome = ({
         bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
     });
     dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+
+    // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
+    applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog });
 
     return { earlyReturn: false };
 };
