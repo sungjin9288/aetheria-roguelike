@@ -154,7 +154,7 @@ export const useGameEngine = () => {
                 clearPostCombat: () => dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null }),
 
                 getUid: () => uid,
-                isAdmin: () => ADMIN_UIDS.includes(uid),
+                isAdmin: () => ADMIN_UIDS.includes(uid ?? ''),
                 liveConfig,
                 leaderboard,
                 getFullStats,
