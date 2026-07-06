@@ -454,7 +454,9 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const { fileURLToPath } = await import('node:url');
       const HERE = path.dirname(fileURLToPath(import.meta.url));
       const ROOT = path.join(HERE, '..');
-      const engineSrc = await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8');
+      // cooldown_reduce 핸들러(performSkill)는 CombatEngine.actions.ts로 분리됨 — 합쳐 검사.
+      const engineSrc = (await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8'))
+          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8'));
       assert.match(engineSrc, /'cooldown_reduce'/);
       assert.match(engineSrc, /'elem_boost'/);
   });
@@ -564,7 +566,8 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const { fileURLToPath } = await import('node:url');
       const HERE = path.dirname(fileURLToPath(import.meta.url));
       const ROOT = path.join(HERE, '..');
-      const engineSrc = await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8');
+      // on_hit_freeze 핸들러(attack)는 CombatEngine.actions.ts로 분리됨 (mixin).
+      const engineSrc = await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8');
       const calcSrc = await readFile(path.join(ROOT, 'src/utils/statsCalculator.ts'), 'utf8');
       assert.match(engineSrc, /'on_hit_freeze'/);
       assert.match(calcSrc, /'reflect_crit'/);
@@ -1770,7 +1773,8 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
   });
 
   test('cycle 546: 정합성 가드 — 2 internal callsite + test 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // attack/performSkill(호출부)은 CombatEngine.actions.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.actions.ts');
       const calls = (source.match(/this\.getElementMultiplier\(/g) || []).length;
       assert.equal(calls, 2, `internal callsite 2건 보존: ${calls}건`);
 
@@ -1844,8 +1848,11 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
   });
 
   test('cycle 551: 정합성 가드 — 4 internal callsite 보존', async () => {
-      // getEffectiveMaxMp 호출 일부가 CombatEngine.relics.ts(applyCritMpRestore/FatalProtection)로 이동 — 합쳐서 카운트.
-      const source = (await readSrc('src/systems/CombatEngine.ts')) + (await readSrc('src/systems/CombatEngine.relics.ts'));
+      // getEffectiveMaxMp 호출 일부가 CombatEngine.relics.ts(applyCritMpRestore/FatalProtection) +
+      //   CombatEngine.actions.ts(performSkill의 mp_regen/extraTurn 분기)로 이동 — 합쳐서 카운트.
+      const source = (await readSrc('src/systems/CombatEngine.ts'))
+          + (await readSrc('src/systems/CombatEngine.relics.ts'))
+          + (await readSrc('src/systems/CombatEngine.actions.ts'));
       const calls = (source.match(/this\.getEffectiveMaxMp\(/g) || []).length;
       assert.equal(calls, 4, `internal callsite 4건 보존: ${calls}건`);
   });

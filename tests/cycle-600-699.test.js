@@ -1360,7 +1360,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 627: CombatEngine callsite 5 args 명시 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // attack(호출부)은 CombatEngine.actions.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.actions.ts');
       assert.ok(/MSG\.COMBAT_ATTACK_DETAIL\(enemy\.name,\s*finalDamage,\s*Math\.max\(0,\s*newEnemyHp\),\s*enemy\.maxHp,\s*tags\)/.test(source),
           'CombatEngine COMBAT_ATTACK_DETAIL 5 args 명시 보존');
   });

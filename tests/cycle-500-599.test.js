@@ -1981,7 +1981,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 537: 정합성 가드 — 2 internal callsite 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // attack/performSkill(호출부)은 CombatEngine.actions.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.actions.ts');
       const calls = (source.match(/this\.calculateDamage\(/g) || []).length;
       assert.equal(calls, 2, `this.calculateDamage 2 callsite 보존: ${calls}건`);
   });
@@ -2542,7 +2543,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 547: 정합성 가드 — 2 internal + test callsite 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // attack/performSkill(호출부)은 CombatEngine.actions.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.actions.ts');
       const calls = (source.match(/this\.applyEntropyTick\(/g) || []).length;
       assert.equal(calls, 2, `internal callsite 2건 보존: ${calls}건`);
 
@@ -2621,7 +2623,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 548: 정합성 가드 — 2 internal callsite 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // attack/performSkill(호출부)은 CombatEngine.actions.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.actions.ts');
       const calls = (source.match(/this\.applyCritMpRestore\(/g) || []).length;
       assert.equal(calls, 2, `internal callsite 2건 보존: ${calls}건`);
   });
@@ -2722,7 +2725,8 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/CombatEngine\.applyFatalProtection\(player,\s*stats\.relics \|\| \[\],\s*escapeResult\.damage \|\| 0,\s*protectionLogs\)/.test(ca),
           'combatAttack 4-arg callsite 보존 (activeSynergies 미전달)');
 
-      const ce = await readSrc('src/systems/CombatEngine.ts');
+      // enemyAttack(호출부)은 CombatEngine.enemyAI.ts로 분리됨 (mixin).
+      const ce = await readSrc('src/systems/CombatEngine.enemyAI.ts');
       assert.ok(/this\.applyFatalProtection\(updatedPlayer,\s*relics,\s*enemyDmg,\s*logs,\s*activeSynergies\)/.test(ce),
           'internal 5-arg callsite 보존');
 
