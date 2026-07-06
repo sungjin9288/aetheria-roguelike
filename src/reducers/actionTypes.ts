@@ -73,6 +73,9 @@ export const AT = Object.freeze({
 
     // v5.0 — 내러티브 이벤트 체인
     UPDATE_EVENT_CHAIN: 'UPDATE_EVENT_CHAIN',
+
+    // 2026-07 — 에테르 거울 (에센스 소비 영구 업그레이드 트리)
+    PURCHASE_MIRROR_NODE: 'PURCHASE_MIRROR_NODE',
 } as const);
 
 // cycle 301: ActionType type alias 제거 — 외부 import 0건. AT const literal types로 충분.

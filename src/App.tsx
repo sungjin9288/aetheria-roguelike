@@ -21,6 +21,7 @@ function App() {
     const [isMuted, setIsMuted] = useState(false);
     const [inventorySpotlight] = useState<any>(null);
     const [premiumShopOpen, setPremiumShopOpen] = useState(false);
+    const [mirrorPanelOpen, setMirrorPanelOpen] = useState(false);
     const fullStats = engine.getFullStats();
     const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
 
@@ -119,6 +120,8 @@ function App() {
             inventorySpotlight={inventorySpotlight}
             premiumShopOpen={premiumShopOpen}
             setPremiumShopOpen={setPremiumShopOpen}
+            mirrorPanelOpen={mirrorPanelOpen}
+            setMirrorPanelOpen={setMirrorPanelOpen}
             isMuted={isMuted}
             setIsMuted={setIsMuted}
             handleQuickSlotUse={handleQuickSlotUse}

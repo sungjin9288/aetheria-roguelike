@@ -125,6 +125,9 @@ const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
                                     </div>
                                 ))}
                             </div>
+                            <p className="text-[10px] font-fira leading-relaxed text-slate-400/72">
+                                에센스는 시스템 탭의 <span className="text-[#e3dcff]">에테르 거울</span>에서 영구 업그레이드로 투자할 수 있습니다.
+                            </p>
                         </div>
 
                         <div className="space-y-3">

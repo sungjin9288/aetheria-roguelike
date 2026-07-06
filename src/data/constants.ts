@@ -174,6 +174,17 @@ export const BALANCE: BalanceConfig = {
     PRESTIGE_R7_CHALLENGE_SLOT_BONUS: 1,  // rank≥7: 챌린지 모디파이어 슬롯 +1 (3→4)
     PRESTIGE_R8_ESSENCE_BONUS: 0.10,      // rank≥8: 에센스 획득 추가 +10%p (rank1과 누적 +20%)
     PRESTIGE_R9_ELITE_REWARD_MULT: 1.25,  // rank≥9: 정예 처치 EXP/골드 보상 ×1.25
+
+    // 2026-07 감사 — 장르 갭 (a): 에테르 거울 (에센스 소비 영구 업그레이드 트리).
+    //   노드 정의/비용은 data/mirror.ts(MIRROR_NODES), 효과 계산은
+    //   systems/mirrorUpgrades.ts(getMirrorEffects)가 단일 진실 원천.
+    //   여기 상수는 "레벨당 효과 크기"만 — 노드 존재/비용/최대레벨은 MIRROR_NODES 참조.
+    MIRROR_START_GOLD_PER_LEVEL: 100,        // start_gold: 레벨당 시작 골드 +100
+    MIRROR_CAMPFIRE_BONUS_PER_LEVEL: 0.02,   // campfire_rate: 레벨당 캠프파이어 확률 +2%p
+    MIRROR_RELIC_PITY_BONUS_PER_LEVEL: 0.25, // relic_pity: 레벨당 유물 pity 누적 +25%
+    MIRROR_REST_DISCOUNT_PER_LEVEL: 0.20,    // rest_discount: 레벨당 휴식 비용 -20%
+    MIRROR_ESSENCE_FLOW_BONUS_PER_LEVEL: 0.10, // essence_flow: 레벨당 에센스 획득 +10%
+    MIRROR_REVIVE_HP_RATIO: 0.30,            // revive: 부활 시 HP 30%로 복구
     BOSS_PHASE2_THRESHOLD: 0.5,     // 보스 HP 50% 이하 → 패턴 전환
     BOUNTY_EXP_MULT: 2.0,           // 현상수배 EXP = 킬수 × 레벨 × 2.0
     BOUNTY_GOLD_MULT: 3.0,          // 현상수배 골드 = 킬수 × 레벨 × 3.0 (기존 2.5)

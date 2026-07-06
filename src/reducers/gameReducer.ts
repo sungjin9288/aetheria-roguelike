@@ -58,7 +58,7 @@ export const INITIAL_STATE: GameState = {
         tempBuff: { atk: 0, def: 0, turn: 0, name: null }, status: [],
         skillLoadout: { selected: 0, cooldowns: {} },
         settings: { readabilityMode: 'standard' },
-        meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0, prestigeRank: 0 },
+        meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0, prestigeRank: 0, mirror: {} },
         relics: [], titles: [], activeTitle: null,
         combatFlags: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
         killStreak: 0,

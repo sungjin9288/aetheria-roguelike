@@ -21,12 +21,14 @@ const AscensionScreen  = lazy(() => import('../AscensionScreen'));
 const TrueEndingScreen = lazy(() => import('../TrueEndingScreen'));
 const PostCombatCard   = lazy(() => import('../PostCombatCard'));
 const PremiumShop      = lazy(() => import('../PremiumShop'));
+const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 
 const GameRoot = ({
     engine, fullStats,
     isPanelFocusState, mobileArchiveDockVisible,
     inventorySpotlight,
     premiumShopOpen, setPremiumShopOpen,
+    mirrorPanelOpen, setMirrorPanelOpen,
     isMuted, setIsMuted,
     handleQuickSlotUse,
     damageFlash, healFlash, damageAmount,
@@ -202,6 +204,16 @@ const GameRoot = ({
                     </Suspense>
                 )}
 
+                {mirrorPanelOpen && (
+                    <Suspense fallback={null}>
+                        <MirrorPanel
+                            player={engine.player}
+                            onClose={() => setMirrorPanelOpen(false)}
+                            onPurchase={(nodeId: any) => { engine.actions.purchaseMirrorNode?.(nodeId); }}
+                        />
+                    </Suspense>
+                )}
+
                 <MobileGameLayout
                     engine={engine}
                     fullStats={fullStats}
@@ -213,6 +225,7 @@ const GameRoot = ({
                     healFlash={healFlash}
                     mobileConsoleMode={mobileConsoleMode}
                     setMobileConsoleMode={setMobileConsoleMode}
+                    onOpenMirror={() => setMirrorPanelOpen(true)}
                 />
             </div>
 

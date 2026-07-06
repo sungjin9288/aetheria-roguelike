@@ -62,6 +62,11 @@ export const MSG: any = {
     SIGNATURE_PITY_RESONANCE: (pct: any, pity: any) => `✦ 각인 공명 +${pct}% — 보스 ${pity}회 연속 무획득 보정 적용`,
     LEGACY_ESSENCE: (n: any) => `레거시 에센스 +${n}`,
     LEGACY_RANK: (n: any) => `레거시 랭크 ${n} 달성!`,
+    // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.
+    MIRROR_REVIVE: '[에테르 수호] 거울의 가호가 치명상을 막아냈습니다!',
+    MIRROR_PURCHASE: (name: any, newLevel: any, cost: any) => `[에테르 거울] ${name} Lv.${newLevel} 각인 완료 (에센스 -${cost})`,
+    MIRROR_MAX_LEVEL: (name: any) => `${name}은(는) 이미 최대 레벨입니다.`,
+    MIRROR_ESSENCE_INSUFFICIENT: (cost: any) => `에센스가 부족합니다. (필요: ${cost})`,
     // slice 19: 스탯 상승 표기 — 레벨업이 무엇을 바꿨는지 로그에서 즉시 확인 (성장 가시화)
     LEVEL_UP: (lv: any, atk: any, hp: any) => `⬆️ 레벨 업! Lv.${lv} — ATK +${atk} / HP +${hp}`,
     LEVEL_MILESTONE: (lv: any, gold: any) => `🎖️ Lv.${lv} 달성! 골드 ${gold.toLocaleString()} 획득`,

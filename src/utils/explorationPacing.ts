@@ -1,5 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
+import { getMirrorEffects } from '../systems/mirrorUpgrades';
 import type { GameMap, Player } from "../types/index.js";
 
 export const DEFAULT_EXPLORE_STATE = Object.freeze({
@@ -126,6 +127,11 @@ export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undef
     // feat/prestige-rank-ladder: rank≥6 "잔향의 나침반" — 유물 발견 pity 누적 가속 ×1.5.
     //   기본 확률(RELIC_FIND_CHANCE)은 불변, pity 누적분에만 곱해 신규 플레이어(rank0) 곡선 보존.
     const relicPityMult = getPrestigeUnlocks(player?.meta?.prestigeRank).relicPityMult;
+    // 2026-07 — 에테르 거울: relic_pity 노드(레벨당 +25%)도 동일하게 pity 누적분에만 곱한다.
+    //   rank6 배율과는 서로 다른 소스(영구환생 vs 에센스 소비)이므로 곱연산으로 겹쳐 —
+    //   두 해금을 모두 가진 플레이어가 손해 보지 않도록 보장(단조 증가).
+    const mirrorRelicPityMult = 1 + getMirrorEffects(player?.meta).relicPityBonus;
+    const totalRelicPityMult = relicPityMult * mirrorRelicPityMult;
 
     return {
         keyEventChance: clamp(
@@ -139,7 +145,7 @@ export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undef
             BALANCE.ANOMALY_MAX_CHANCE
         ),
         relicChance: clamp(
-            (BALANCE.RELIC_FIND_CHANCE + pitySinceRelic * BALANCE.RELIC_PITY_PER_EXPLORE * relicPityMult) * profile.relicMult,
+            (BALANCE.RELIC_FIND_CHANCE + pitySinceRelic * BALANCE.RELIC_PITY_PER_EXPLORE * totalRelicPityMult) * profile.relicMult,
             0,
             BALANCE.RELIC_FIND_MAX_CHANCE
         ),

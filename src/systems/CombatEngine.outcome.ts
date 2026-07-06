@@ -3,6 +3,7 @@ import { MSG } from '../data/messages.js';
 import { getActiveRelicSynergies } from '../data/relics.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
+import { getMirrorEffects } from './mirrorUpgrades';
 import type { Player, Monster } from '../types/index.js';
 
 /**
@@ -148,7 +149,9 @@ export const outcomeMethods: any = {
 
         const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
         // PR #8: 프레스티지 rank≥1 해금 — 에센스 획득 +10% (essenceMult).
-        const essenceGain = Math.max(1, Math.floor((enemy.exp ?? 0) / 8 * getPrestigeUnlocks(meta.prestigeRank).essenceMult));
+        // 2026-07 — 에테르 거울: essence_flow 노드(레벨당 +10%)를 rank 배율과 곱연산으로 누적.
+        const essenceMult = getPrestigeUnlocks(meta.prestigeRank).essenceMult * getMirrorEffects(meta).essenceFlowMult;
+        const essenceGain = Math.max(1, Math.floor((enemy.exp ?? 0) / 8 * essenceMult));
         meta.essence += essenceGain;
         logs.push({ type: 'event', text: MSG.LEGACY_ESSENCE(essenceGain) });
 
