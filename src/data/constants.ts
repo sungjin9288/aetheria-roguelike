@@ -96,6 +96,7 @@ export interface BalanceConfig {
     ELEMENT_RESIST_MULT: number;
     DEFAULT_MAX_HP: number;
     RETURN_BRIEFING_HOURS: number;
+    ABYSS_DAILY_DIVE_MULT: number;
 }
 
 export const BALANCE: BalanceConfig = {
@@ -452,6 +453,9 @@ export const BALANCE: BalanceConfig = {
 
     // 리텐션 훅 — 복귀 브리핑 카드
     RETURN_BRIEFING_HOURS: 6,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시
+
+    // 리텐션 훅 — 심연 데일리 다이브
+    ABYSS_DAILY_DIVE_MULT: 1.5,         // 혼돈의 심연 일일 첫 다이브 EXP/골드 배율
 };
 
 Object.freeze(CONSTANTS);

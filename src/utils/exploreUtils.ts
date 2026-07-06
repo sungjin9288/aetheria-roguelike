@@ -19,6 +19,7 @@ import { findItemByName } from './gameUtils.js';
 import { applyDynamicDifficulty } from '../systems/DifficultyManager';
 import { getBossSignatureDrops } from './bossSignatureHint';
 import { getSignaturePityMultiplier } from './signaturePity';
+import { resolveAbyssDailyDive } from './abyssDailyDive';
 
 // ─────────────────────────────────────────────────────────────────────────
 // 0. ISO 주차 번호 계산 (월요일 기준)
@@ -456,6 +457,25 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
             addLog('critical', MSG.ABYSS_BOSS_APPEAR(bossName));
         } else if (floor % 5 === 0) {
             addLog('warning', MSG.ABYSS_FLOOR_WARNING(floor));
+        }
+
+        // 리텐션 훅 — 심연 데일리 다이브: 오늘 첫 심연 진입이면 EXP/골드 배율 적용
+        // (dailyProtocol과 동일한 날짜 문자열 판정 — 탐험마다 리셋 금지, CLAUDE.md §8-4).
+        // multiplierActive일 때만 dispatch — 이미 사용한 날에는 상태 변화가 없어
+        // 불필요한 SET_PLAYER(및 Firestore autosave 트리거)를 매 전투마다 반복하지 않는다.
+        const today = new Date().toISOString().slice(0, 10);
+        const { multiplierActive, nextAbyssDailyDive } = resolveAbyssDailyDive(player, today);
+        if (multiplierActive) {
+            dispatch({
+                type: AT.SET_PLAYER,
+                payload: (p: any) => ({ ...p, stats: { ...(p.stats || {}), abyssDailyDive: nextAbyssDailyDive } }),
+            });
+            mStats = {
+                ...mStats,
+                exp: Math.floor(mStats.exp * BALANCE.ABYSS_DAILY_DIVE_MULT),
+                gold: Math.floor(mStats.gold * BALANCE.ABYSS_DAILY_DIVE_MULT),
+            };
+            addLog('event', MSG.ABYSS_DAILY_DIVE_START(BALANCE.ABYSS_DAILY_DIVE_MULT));
         }
     }
 

@@ -323,6 +323,9 @@ export const MSG = {
     RETURN_BRIEFING_CHAINS_VALUE: (count: number) => `${count}건`,
     RETURN_BRIEFING_CLOSE: '탐험 계속하기',
 
+    // --- 심연 데일리 다이브 (리텐션 훅) ---
+    ABYSS_DAILY_DIVE_START: (mult: number) => `🌀 오늘의 첫 다이브 — 보상 ${mult}배 적용!`,
+
     // cycle 116: GM_OVERWHELM/CRISIS/UNDERDOG 제거 — 게임 마스터 톤 메시지가 0건 사용
     // (DifficultyManager가 자체 로그를 inline string으로 처리).
 
