@@ -294,7 +294,7 @@ const isSignatureDiscovered = (itemName: any, player: Player) => {
     ];
     const item = all.find((entry: any) => entry?.name === itemName);
     if (!item) return false;
-    const bucket = RESOLVE_BUCKET_BY_TYPE[item.type];
+    const bucket = RESOLVE_BUCKET_BY_TYPE[item.type ?? ''];
     if (!bucket) return false;
     return Boolean(codex[bucket]?.[itemName]);
 };

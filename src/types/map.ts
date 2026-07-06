@@ -18,8 +18,8 @@ export interface GameMap {
     type?: string;
     /** 입장 가능 최소 레벨 (legacy alias: level). */
     minLv?: number;
-    /** 레벨 — 숫자 또는 'infinite'. */
-    level?: number | 'infinite';
+    /** 레벨 — 숫자 / [최소, 최대] 범위 / 'infinite'(무한 심연). */
+    level?: number | number[] | 'infinite';
     desc?: string;
     /** 분위기/배경 정보 (lore). */
     lore?: string;
@@ -29,10 +29,12 @@ export interface GameMap {
     monsters?: string[];
     /** 보스 몬스터 풀. */
     bossMonsters?: string[];
-    /** 단일 보스 (legacy 단일 필드). */
-    boss?: string;
+    /** 지역 보스 존재 여부 (boolean) — 단일 보스 이름은 legacy로 bossMonsters[0] 등에 위치. */
+    boss?: boolean | string;
     /** 이벤트 발생 확률 (0~1). */
     eventChance?: number;
+    /** 시즌 이벤트 기간에만 접근 가능한 지역인지 여부. */
+    seasonOnly?: boolean;
     // cycle 284: isSignatureZone 제거 — runtime access 0건.
     /** 동적으로 추가되는 임의 필드 (런타임 확장 호환). */
     [key: string]: any;

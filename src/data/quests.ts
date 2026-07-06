@@ -11,12 +11,14 @@ const EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL: Record<number, number> = Object.freeze({
     10: 520,
 });
 
-const paceEarlyQuestReward = (quest: any) => {
+import type { Quest, Achievement } from '../types/quest.js';
+
+const paceEarlyQuestReward = (quest: Quest): Quest => {
     const exp = quest?.reward?.exp;
     const minLv = Number(quest?.minLv || 0);
     const cap = EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL[minLv];
 
-    if (!Number.isFinite(exp) || exp <= 0 || !cap || exp <= cap) {
+    if (typeof exp !== 'number' || !Number.isFinite(exp) || exp <= 0 || !cap || exp <= cap) {
         return quest;
     }
 
@@ -31,7 +33,7 @@ const paceEarlyQuestReward = (quest: any) => {
 
 export const EARLY_QUEST_EXP_CAPS = EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL;
 
-const RAW_QUESTS: any = [
+const RAW_QUESTS: Quest[] = [
     // ── 초반 퀘스트 (Lv 1-10) ────────────────────────────────────────────────
     { id: 1,  title: '슬라임 소탕',      desc: '슬라임 3마리 처치',       target: '슬라임',      goal: 3,  reward: { exp: 50,   gold: 100 },           minLv: 1 },
     { id: 2,  title: '멧돼지 사냥',      desc: '멧돼지 5마리 처치',       target: '멧돼지',      goal: 5,  reward: { exp: 80,   gold: 150 },           minLv: 2 },
@@ -219,10 +221,10 @@ const RAW_QUESTS: any = [
     { id: 204, title: '생존의 기술',    type: 'escape_count',     desc: '도주 20회 성공',          target: 'escapes',     goal: 20, reward: { exp: 6000,  gold: 8000, item: '엘릭서' }, minLv: 15 },
 ];
 
-export const QUESTS: any = RAW_QUESTS.map(paceEarlyQuestReward);
+export const QUESTS: Quest[] = RAW_QUESTS.map(paceEarlyQuestReward);
 
 
-export const ACHIEVEMENTS: any = [
+export const ACHIEVEMENTS: Achievement[] = [
     // ── 전투 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_first_blood',  title: '첫 번째 피',     desc: '첫 전투 승리',              target: 'kills',      goal: 1,    reward: { gold: 50 } },
     { id: 'ach_kill_10',      title: '초보 사냥꾼',    desc: '몬스터 10마리 처치',        target: 'kills',      goal: 10,   reward: { gold: 200 } },

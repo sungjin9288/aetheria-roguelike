@@ -164,7 +164,14 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const baseName = spawnAreaBoss
         ? areaBossName
         : encounterPool[Math.floor(Math.random() * encounterPool.length)];
-    let level = mapData.level || 1;
+    // 2026-07 타입화: GameMap.level은 number | number[] | 'infinite'. 이 함수의 스폰
+    // 스탯 계산은 항상 단일 숫자 레벨을 가정했던 기존 동작 그대로 유지 — 시즌 전용
+    // 범위형([min, max]) 맵은 도달 시 최솟값으로 취급 (array 케이스가 원래도 산술에
+    // 쓰이지 않던 latent 케이스라 동작 변경 없음).
+    const rawLevel = mapData.level;
+    let level: number | 'infinite' = typeof rawLevel === 'number'
+        ? rawLevel
+        : Array.isArray(rawLevel) ? (rawLevel[0] ?? 1) : (rawLevel ?? 1);
     let isInfinite = false;
     let depth = 0;
 
