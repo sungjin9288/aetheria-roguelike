@@ -162,12 +162,94 @@ test('feedback-validate: source exports Cloudflare Pages Functions handlers', ()
     assert.doesNotMatch(source, /\bres\.status\(/);
 });
 
-test('feedback-validate: attempting to import without firebase-admin fails fast (documents known limitation)', async () => {
-    await assert.rejects(
-        () => import('../functions/api/feedback-validate.js'),
-        (error) => {
-            assert.match(String(error?.message || error), /firebase-admin/);
-            return true;
+// (제거됨) 'firebase-admin 부재로 import 실패' 문서화 테스트 — 해당 결함이
+// REST 검증 방식으로 해소되어(아래 재작성 블록) import가 정상 성립한다.
+
+// ── feedback-validate (2026-07 재작성: firebase-admin → REST 검증) ──────────
+// 원본은 firebase-admin을 import했지만 package.json에 존재한 적 없어 배포 시
+// 동작 불가였던 결함. ai-proxy와 동일한 REST 토큰 검증 + Firestore REST 쓰기로
+// 교체됐고, 토큰 없이 userId를 신뢰하던 보안 공백도 해소됐다.
+import * as feedbackValidate from '../functions/api/feedback-validate.js';
+
+const makeFeedbackRequest = ({ method = 'POST', headers = {}, body } = {}) => {
+    const init = { method, headers };
+    if (body !== undefined) {
+        init.body = JSON.stringify(body);
+        init.headers = { 'Content-Type': 'application/json', ...headers };
+    }
+    return new Request('https://example.pages.dev/api/feedback-validate', init);
+};
+
+const FEEDBACK_ENV = { FIREBASE_WEB_API_KEY: 'test-key', FIREBASE_PROJECT_ID: 'test-project' };
+
+test('feedback-validate: onRequestPost/onRequestOptions/onRequest exported + firebase-admin 미사용', () => {
+    assert.equal(typeof feedbackValidate.onRequestPost, 'function');
+    assert.equal(typeof feedbackValidate.onRequestOptions, 'function');
+    assert.equal(typeof feedbackValidate.onRequest, 'function');
+    const src = readFileSync(path.join(__dirname, '../functions/api/feedback-validate.js'), 'utf8');
+    assert.ok(!/from 'firebase-admin/.test(src), 'firebase-admin import 제거됨 (설치된 적 없는 패키지)');
+});
+
+test('feedback-validate: missing bearer token → 401', async () => {
+    const request = makeFeedbackRequest({ body: { content: '충분히 긴 정상 피드백 내용입니다.' } });
+    const response = await feedbackValidate.onRequestPost({ request, env: FEEDBACK_ENV });
+    assert.equal(response.status, 401);
+    const json = await response.json();
+    assert.match(json.error, /missing bearer token/);
+});
+
+test('feedback-validate: invalid token (lookup 실패) → 401', async () => {
+    await withMockedFetch(async () => new Response('{}', { status: 400 }), async () => {
+        const request = makeFeedbackRequest({
+            headers: { Authorization: 'Bearer bad-token' },
+            body: { content: '충분히 긴 정상 피드백 내용입니다.' },
+        });
+        const response = await feedbackValidate.onRequestPost({ request, env: FEEDBACK_ENV });
+        assert.equal(response.status, 401);
+        const json = await response.json();
+        assert.match(json.error, /invalid token/);
+    });
+});
+
+test('feedback-validate: 유효 토큰 + 정상 내용 → 200 (uid는 토큰에서 유도)', async () => {
+    const calls = [];
+    await withMockedFetch(async (url, init) => {
+        calls.push({ url: String(url), init });
+        if (String(url).includes('identitytoolkit')) {
+            return new Response(JSON.stringify({ users: [{ localId: 'uid-from-token' }] }), { status: 200 });
         }
-    );
+        if (String(url).includes('firestore.googleapis.com')) {
+            return new Response('{}', { status: 200 });
+        }
+        throw new Error(`unexpected fetch: ${url}`);
+    }, async () => {
+        const request = makeFeedbackRequest({
+            headers: { Authorization: 'Bearer good-token' },
+            body: { content: '충분히 긴 정상 피드백 내용입니다.', type: 'general' },
+        });
+        const response = await feedbackValidate.onRequestPost({ request, env: FEEDBACK_ENV });
+        assert.equal(response.status, 200);
+        const json = await response.json();
+        assert.equal(json.success, true);
+        const firestoreCall = calls.find((c) => c.url.includes('firestore.googleapis.com'));
+        assert.ok(firestoreCall, 'Firestore REST 쓰기 발생');
+        const fields = JSON.parse(firestoreCall.init.body).fields;
+        assert.equal(fields.userId.stringValue, 'uid-from-token', '클라이언트 제공 userId가 아닌 토큰 uid 사용');
+    });
+});
+
+test('feedback-validate: 유효 토큰 + 짧은 내용 → 400', async () => {
+    await withMockedFetch(async (url) => {
+        if (String(url).includes('identitytoolkit')) {
+            return new Response(JSON.stringify({ users: [{ localId: 'uid-1' }] }), { status: 200 });
+        }
+        throw new Error(`unexpected fetch: ${url}`);
+    }, async () => {
+        const request = makeFeedbackRequest({
+            headers: { Authorization: 'Bearer good-token' },
+            body: { content: '짧음' },
+        });
+        const response = await feedbackValidate.onRequestPost({ request, env: FEEDBACK_ENV });
+        assert.equal(response.status, 400);
+    });
 });

@@ -1,15 +1,18 @@
 // Cloudflare Pages Functions 버전 (api/feedback-validate.js에서 포팅, 2026-07)
 // 파일 기반 라우팅: functions/api/feedback-validate.js → /api/feedback-validate
-// Vercel (req,res) 스타일 → Web Request/Response 스타일로 변환.
 //
-// Serverless Feedback Validation Function
-// Handles spam prevention and content validation
+// 2026-07 재작성: 원본(Vercel 시절 포함)은 firebase-admin을 import했지만
+// 이 패키지는 package.json에 존재한 적이 없어 배포 시 처음부터 동작 불가였고,
+// Cloudflare Workers 런타임에서는 firebase-admin(Node 전용)이 어차피 실행 불가.
+// ai-proxy.js와 동일한 구성으로 교체:
+//   - 인증: Firebase REST 검증 (identitytoolkit accounts:lookup) — 종전에는 토큰
+//     검증 없이 클라이언트가 보낸 userId를 그대로 신뢰하던 보안 공백도 함께 해소.
+//     userId는 이제 검증된 토큰의 uid에서 유도한다.
+//   - 레이트리밋: isolate당 인메모리 Map (ai-proxy와 동일 한계 — 주석 참조).
+//   - 저장: Firestore REST API에 사용자 본인 ID 토큰으로 기록 (admin 권한 불필요,
+//     보안 규칙은 클라이언트 직접 쓰기와 동일하게 적용됨).
 
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-
-// Rate limit: 1 feedback per 60 seconds per user
-const RATE_LIMIT_MS = 60000;
+const RATE_LIMIT_MS = 60000; // 1 feedback per 60 seconds per user
 const MIN_CONTENT_LENGTH = 10;
 const MAX_CONTENT_LENGTH = 1000;
 
@@ -23,7 +26,7 @@ const SPAM_PATTERNS = [
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 const jsonResponse = (body, status) => {
@@ -32,20 +35,96 @@ const jsonResponse = (body, status) => {
     return new Response(JSON.stringify(body), { status, headers });
 };
 
-// Firebase Admin은 요청마다 초기화 여부를 확인 (Cloudflare isolate 재사용 시 중복 초기화 방지)
-const getDb = (env) => {
-    if (!getApps().length) {
-        initializeApp({
-            projectId: env.FIREBASE_PROJECT_ID,
-        });
+// 인메모리 레이트리밋 — isolate 생명주기 동안만 유지 (ai-proxy.js와 동일 한계:
+// isolate가 재활용되지 않으면 리셋될 수 있으나, 스팸 방지 목적에는 충분).
+const rateLimitMap = new Map();
+const checkRateLimit = (uid) => {
+    const now = Date.now();
+    const last = rateLimitMap.get(uid) || 0;
+    if (now - last < RATE_LIMIT_MS) return false;
+    rateLimitMap.set(uid, now);
+    return true;
+};
+
+// Firebase ID 토큰 REST 검증 — functions/api/ai-proxy.js의 verifyFirebaseToken과
+// 동일 로직 (Pages Functions 파일 간 공유 모듈 없이 의도적 소량 중복).
+const verifyFirebaseToken = async (idToken, env) => {
+    const firebaseApiKey = env.FIREBASE_WEB_API_KEY;
+    if (!firebaseApiKey) {
+        throw new Error('Missing FIREBASE_WEB_API_KEY environment variable');
     }
-    return getFirestore();
+
+    const response = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${firebaseApiKey}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken })
+        }
+    );
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    const user = data?.users?.[0];
+    if (!user?.localId) return null;
+    return { uid: user.localId };
+};
+
+const parseBearerToken = (request) => {
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    return authHeader.slice('Bearer '.length).trim() || null;
+};
+
+// Firestore REST 쓰기 — 클라이언트 SDK와 동일 경로(artifacts/{APP_ID}/public/data/feedback)에
+// 사용자 본인 토큰으로 기록. admin 권한이 아니므로 Firestore 보안 규칙이 그대로 적용된다.
+const APP_ID = 'aetheria-rpg'; // src/data/constants.ts APP_ID와 동일 값 (functions는 src 미참조)
+const storeFeedback = async (env, idToken, { uid, content, type }) => {
+    const projectId = env.FIREBASE_PROJECT_ID;
+    if (!projectId) {
+        throw new Error('Missing FIREBASE_PROJECT_ID environment variable');
+    }
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/artifacts/${APP_ID}/public/data/feedback`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+            fields: {
+                userId: { stringValue: uid },
+                content: { stringValue: content.trim() },
+                type: { stringValue: type || 'general' },
+                createdAt: { timestampValue: new Date().toISOString() },
+                validated: { booleanValue: true },
+            }
+        })
+    });
+    return response.ok;
 };
 
 export async function onRequestPost(context) {
     const { request, env } = context;
 
     try {
+        // 인증 — 토큰 없는 요청은 컨텐츠 검증 전에 차단 (ai-proxy와 동일 순서)
+        const idToken = parseBearerToken(request);
+        if (!idToken) {
+            return jsonResponse({ error: 'Unauthorized: missing bearer token' }, 401);
+        }
+
+        let authUser;
+        try {
+            authUser = await verifyFirebaseToken(idToken, env);
+        } catch (error) {
+            console.error('Auth config error:', error.message);
+            return jsonResponse({ error: 'Auth provider is not configured' }, 500);
+        }
+        if (!authUser) {
+            return jsonResponse({ error: 'Unauthorized: invalid token' }, 401);
+        }
+
         let body;
         try {
             body = await request.json();
@@ -53,10 +132,9 @@ export async function onRequestPost(context) {
             return jsonResponse({ error: 'Invalid request body' }, 400);
         }
 
-        const { userId, content, type } = body || {};
+        const { content, type } = body || {};
 
-        // Validate required fields
-        if (!userId || !content) {
+        if (!content) {
             return jsonResponse({ error: 'Missing required fields' }, 400);
         }
 
@@ -76,38 +154,19 @@ export async function onRequestPost(context) {
             }
         }
 
-        const db = getDb(env);
-
-        // Rate limiting check
-        const rateLimitRef = db.collection('feedback_rate_limits').doc(userId);
-        const rateLimitDoc = await rateLimitRef.get();
-
-        if (rateLimitDoc.exists) {
-            const lastSubmission = rateLimitDoc.data().lastSubmission?.toMillis() || 0;
-            const now = Date.now();
-
-            if (now - lastSubmission < RATE_LIMIT_MS) {
-                const waitTime = Math.ceil((RATE_LIMIT_MS - (now - lastSubmission)) / 1000);
-                return jsonResponse({
-                    error: `잠시 후 다시 시도해주세요. (${waitTime}초 후)`
-                }, 429);
-            }
+        // Rate limiting check (검증된 uid 기준 — 클라이언트 제공 값 신뢰하지 않음)
+        if (!checkRateLimit(authUser.uid)) {
+            return jsonResponse({ error: '잠시 후 다시 시도해주세요.' }, 429);
         }
 
-        // Update rate limit timestamp
-        await rateLimitRef.set({
-            lastSubmission: new Date(),
-            userId,
-        }, { merge: true });
-
-        // Store validated feedback
-        await db.collection('feedback').add({
-            userId,
-            content: content.trim(),
-            type: type || 'general',
-            createdAt: new Date(),
-            validated: true,
+        const stored = await storeFeedback(env, idToken, {
+            uid: authUser.uid,
+            content,
+            type,
         });
+        if (!stored) {
+            return jsonResponse({ error: 'Failed to store feedback' }, 502);
+        }
 
         return jsonResponse({ success: true, message: '피드백이 제출되었습니다.' }, 200);
 
