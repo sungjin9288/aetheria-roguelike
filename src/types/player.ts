@@ -46,10 +46,13 @@ interface PlayerStats {
     [key: string]: any;
 }
 
-/** 심연 데일리 다이브 상태 — dailyProtocol과 동일한 날짜 문자열 판정 방식. */
+/** 심연 데일리 다이브 상태 — dailyProtocol과 동일한 날짜 문자열 판정 방식.
+ *  combats: 오늘 버프가 적용된 전투 수 (ABYSS_DAILY_DIVE_COMBAT_COUNT까지).
+ *  used: 구형 레코드 하위 호환 필드 (combats 도입 전 — 소진으로 간주). */
 export interface AbyssDailyDive {
     date: string;
-    used: boolean;
+    combats?: number;
+    used?: boolean;
 }
 
 interface PlayerCodex {

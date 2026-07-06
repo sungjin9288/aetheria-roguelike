@@ -97,6 +97,7 @@ export interface BalanceConfig {
     DEFAULT_MAX_HP: number;
     RETURN_BRIEFING_HOURS: number;
     ABYSS_DAILY_DIVE_MULT: number;
+    ABYSS_DAILY_DIVE_COMBAT_COUNT: number;
 }
 
 export const BALANCE: BalanceConfig = {
@@ -456,6 +457,7 @@ export const BALANCE: BalanceConfig = {
 
     // 리텐션 훅 — 심연 데일리 다이브
     ABYSS_DAILY_DIVE_MULT: 1.5,         // 혼돈의 심연 일일 첫 다이브 EXP/골드 배율
+    ABYSS_DAILY_DIVE_COMBAT_COUNT: 5,   // 배율이 적용되는 하루 첫 전투 수 (1회는 체감 없음 — 리뷰 후속)
 };
 
 Object.freeze(CONSTANTS);
