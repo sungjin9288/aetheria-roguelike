@@ -1,5 +1,5 @@
 import { ITEMS } from '../data/items.js';
-import type { Item, Player } from "../types/index.js";
+import type { Item, Player, Achievement } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { getWeaponMagicSkills } from './equipmentUtils.js';
@@ -79,7 +79,7 @@ const getAllItems = () => [
 ];
 
 /** 이름으로 아이템을 찾아 반환 */
-export const findItemByName = (name: any) => getAllItems().find((i: any) => i.name === name);
+export const findItemByName = (name: string | undefined) => getAllItems().find((i: Item) => i.name === name);
 
 /**
  * 일일 프로토콜 진행으로 이번 액션에서 막 완료될 미션 목록 반환
@@ -88,7 +88,7 @@ export const findItemByName = (name: any) => getAllItems().find((i: any) => i.na
  *   자체 amount default를 가지지만 wrapper의 외부 호출자 5건 모두 amount 명시
  *   전달. cascade로 wrapper / leaf default 모두 도달 불가.
  */
-export const getDailyProtocolCompletions = (player: Player, type: any, amount: any) => {
+export const getDailyProtocolCompletions = (player: Player, type: string, amount: number) => {
     const missions = toArray(player?.stats?.dailyProtocol?.missions);
     return missions.filter((mission: any) => (
         mission?.type === type
@@ -219,7 +219,7 @@ export const countNewCodexEntries = (player: Player) => countCodexEntries(player
  *   default 도달 불가. body의 `if (!amount) return player` defensive guard는
  *   caller가 0을 넘기는 케이스에서 활성이라 보존.
  */
-export const grantGold = (player: Player, amount: any) => {
+export const grantGold = (player: Player, amount: number) => {
     if (!amount) return player;
     const stats = player.stats || {};
     return {
@@ -254,7 +254,7 @@ export const getActiveQuestEntries = (player: Player) => (
 );
 
 /** 업적 진행값 계산 */
-export const getAchievementCurrentValue = (achievement: any, player: Player) => {
+export const getAchievementCurrentValue = (achievement: Achievement, player: Player) => {
     const stats = player?.stats || {};
     const target = achievement?.target;
     if (target === 'level') return player?.level || 0;
@@ -273,7 +273,7 @@ export const getAchievementCurrentValue = (achievement: any, player: Player) => 
     if (target === 'discoveryChains') return Array.isArray(stats?.discoveryChains) ? stats.discoveryChains.length : 0;
     if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
-    return stats?.[target] || 0;
+    return stats?.[target ?? ''] || 0;
 };
 
 const RESOLVE_BUCKET_BY_TYPE: any = Object.freeze({
@@ -285,7 +285,7 @@ const RESOLVE_BUCKET_BY_TYPE: any = Object.freeze({
 const SIGNATURE_REGISTRY_ENTRIES: Record<string, any> = signatureRegistryData?.entries || {};
 const SIGNATURE_SETS_MAP = signatureSetsData?.sets || {};
 
-const isSignatureDiscovered = (itemName: any, player: Player) => {
+const isSignatureDiscovered = (itemName: string, player: Player) => {
     const codex = player?.stats?.codex;
     if (!codex) return false;
     const all = [
@@ -322,7 +322,7 @@ const countCompletedSignatureSets = (player: Player) => {
 };
 
 /** 업적 달성 여부 */
-export const isAchievementUnlocked = (achievement: any, player: Player) => (
+export const isAchievementUnlocked = (achievement: Achievement, player: Player) => (
     getAchievementCurrentValue(achievement, player) >= (achievement?.goal || 0)
 );
 
