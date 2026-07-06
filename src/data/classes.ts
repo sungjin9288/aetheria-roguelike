@@ -9,6 +9,13 @@ export const CLASSES: Record<string, ClassDef> = {
             // 패시브
             { name: '투지', passive: true, effect: 'hp_up', val: 20, desc: '최대 HP +20 (패시브)' },
         ],
+        // cycle 2026-07: T0 직업 최초 skillBranches — 초반 학습용 단순 선택 (분기 1개만).
+        skillBranches: {
+            '강타': [
+                { choice: 'A', label: '강화 배시', desc: '데미지 +35%', override: { mult: 2.03 } },
+                { choice: 'B', label: '기절 배시', desc: '20% 확률 기절 1턴', override: { mult: 1.5, effect: 'stun', effectChance: 0.2 } },
+            ],
+        },
         next: ['전사', '마법사', '도적']
     },
 
@@ -288,6 +295,12 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '신의 은총', passive: true, effect: 'hp_up', val: 50, desc: '최대 HP +50 (패시브)' },
             { name: '신성한 학습', passive: true, effect: 'exp_up', val: 0.08, desc: '경험치 획득 +8% — 신의 가르침 (패시브)' },
         ],
+        skillBranches: {
+            '신성 광선': [
+                { choice: 'A', label: '정화의 광선', desc: '데미지 +35%', override: { mult: 2.43 } },
+                { choice: 'B', label: '기절의 빛', desc: '25% 확률 기절 1턴', override: { mult: 1.8, effect: 'stun', effectChance: 0.25 } },
+            ],
+        },
         next: ['팔라딘']
     },
 
@@ -307,6 +320,12 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '팔라딘의 맹세', passive: true, effect: 'hp_up', val: 250, desc: '최대 HP +250 (패시브)' },
             { name: '성소의 깨달음', passive: true, effect: 'exp_up', val: 0.12, desc: '경험치 획득 +12% — 성소의 축복 (패시브)' },
         ],
+        skillBranches: {
+            '신성 강타': [
+                { choice: 'A', label: '심판의 강타', desc: '데미지 +30%', override: { mult: 4.55 } },
+                { choice: 'B', label: '봉인의 강타', desc: '기절 2턴 (1→2턴)', override: { mult: 3.5, effect: 'stun', stunTurn: 2 } },
+            ],
+        },
         next: []
     },
 
@@ -324,6 +343,12 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '용의 피', passive: true, effect: 'hp_up', val: 200, desc: '최대 HP +200 (패시브)' },
             { name: '화염 속성', passive: true, effect: 'atk_up', val: 20, desc: 'ATK +20 (패시브)' },
         ],
+        skillBranches: {
+            '용의 포효': [
+                { choice: 'A', label: '폭염의 포효', desc: '데미지 +30%', override: { mult: 5.85 } },
+                { choice: 'B', label: '맹독의 숨결', desc: '화상 + 독 동시 부여', override: { mult: 4.5, secondEffect: 'poison' } },
+            ],
+        },
         next: []
     },
 
@@ -341,6 +366,12 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '마법의 정점', passive: true, effect: 'mp_up', val: 200, desc: '최대 MP +200 (패시브)' },
             { name: '완전한 원소', passive: true, effect: 'crit_up', val: 0.09, desc: '크리티컬 확률 +9% — 원소 지배 (패시브)' },
         ],
+        skillBranches: {
+            '오메가 메테오': [
+                { choice: 'A', label: '절대 소멸', desc: '데미지 +25%', override: { mult: 7.5 } },
+                { choice: 'B', label: '얼어붙는 파멸', desc: '화상 + 빙결 동시 부여', override: { mult: 6.0, secondEffect: 'freeze' } },
+            ],
+        },
         next: []
     },
 
@@ -358,6 +389,12 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '절대 어둠', passive: true, effect: 'atk_up', val: 22, desc: 'ATK +22 (패시브)' },
             { name: '그림자 처형', passive: true, effect: 'crit_up', val: 0.10, desc: '크리티컬 확률 +10% — 절대 암살 (패시브)' },
         ],
+        skillBranches: {
+            '신의 일격': [
+                { choice: 'A', label: '필멸의 일격', desc: '치명타 확률 100% 확정', override: { crit: 1.0 } },
+                { choice: 'B', label: '독혈의 일격', desc: '독 부여 + 데미지', override: { mult: 7.0, secondEffect: 'poison' } },
+            ],
+        },
         next: []
     },
 
@@ -432,6 +469,12 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '야생의 본능', passive: true, effect: 'atk_up', val: 18, desc: 'ATK +18 (패시브)' },
             { name: '풍요로운 사냥', passive: true, effect: 'gold_up', val: 0.20, desc: '골드 획득 +20% — 풍성한 수확 (패시브)' },
         ],
+        skillBranches: {
+            '신성 화살비': [
+                { choice: 'A', label: '관통 화살비', desc: '데미지 +30%', override: { mult: 7.15 } },
+                { choice: 'B', label: '표식의 화살비', desc: '기절 + 출혈 동시 부여 (30% 확률)', override: { mult: 5.5, secondEffect: 'bleed', effectChance: 0.3 } },
+            ],
+        },
         next: []
     }
 };
