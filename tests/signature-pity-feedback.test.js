@@ -33,7 +33,9 @@ test('MSG.SIGNATURE_PITY_RESONANCE is defined as a function in messages.js', asy
 });
 
 test('exploreActions imports getSignaturePityMultiplier', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
+    // 탐험 스카우팅(2026-07): 로직이 exploreUtils.ts의 runQuietRollAndCombat으로 이동
+    // (exploreActions.ts와 eventActions.ts "짙은 안개" 카드가 공유) — 경로만 갱신.
+    const source = await readSrc('src/utils/exploreUtils.ts');
     assert.ok(
         source.includes('getSignaturePityMultiplier'),
         'exploreActions should import getSignaturePityMultiplier'
@@ -41,7 +43,9 @@ test('exploreActions imports getSignaturePityMultiplier', async () => {
 });
 
 test('exploreActions emits pity resonance log as legendary type', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
+    // 탐험 스카우팅(2026-07): 로직이 exploreUtils.ts의 runQuietRollAndCombat으로 이동
+    // (exploreActions.ts와 eventActions.ts "짙은 안개" 카드가 공유) — 경로만 갱신.
+    const source = await readSrc('src/utils/exploreUtils.ts');
     assert.ok(
         /SIGNATURE_PITY_RESONANCE/.test(source),
         'should reference MSG.SIGNATURE_PITY_RESONANCE'
@@ -54,7 +58,9 @@ test('exploreActions emits pity resonance log as legendary type', async () => {
 });
 
 test('exploreActions gates pity log behind pityMult > 1 AND boss signature available', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
+    // 탐험 스카우팅(2026-07): 로직이 exploreUtils.ts의 runQuietRollAndCombat으로 이동
+    // (exploreActions.ts와 eventActions.ts "짙은 안개" 카드가 공유) — 경로만 갱신.
+    const source = await readSrc('src/utils/exploreUtils.ts');
     // pityMult > 1 가드
     assert.ok(
         /pityMult\s*>\s*1/.test(source) || /signaturePityMult\s*>\s*1/.test(source),
@@ -68,7 +74,9 @@ test('exploreActions gates pity log behind pityMult > 1 AND boss signature avail
 });
 
 test('exploreActions computes pity multiplier from player.stats.signaturePity', async () => {
-    const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
+    // 탐험 스카우팅(2026-07): 로직이 exploreUtils.ts의 runQuietRollAndCombat으로 이동
+    // (exploreActions.ts와 eventActions.ts "짙은 안개" 카드가 공유) — 경로만 갱신.
+    const source = await readSrc('src/utils/exploreUtils.ts');
     assert.ok(
         /getSignaturePityMultiplier\(\s*player\.stats\??\.?signaturePity/.test(source)
             || /getSignaturePityMultiplier\(\s*player\?\.\s*stats\?\.\s*signaturePity/.test(source),

@@ -1,6 +1,9 @@
 import { getJobSkills } from '../../utils/gameUtils';
 import { getEquipmentProfile, getNextEquipmentState } from '../../utils/equipmentUtils';
 import { MSG } from '../../data/messages';
+import { AT } from '../../reducers/actionTypes';
+import { RELICS, pickWeightedRelics } from '../../data/relics';
+import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import type { Item, Player } from '../../types/index.js';
 
 /**
@@ -99,4 +102,35 @@ export const addCombatDigestLogs = ({
     if (traitHint) {
         addLog('info', MSG.COMBAT_DIGEST_TRAIT_HINT(traitHint.name, traitHint.summary));
     }
+};
+
+/**
+ * 탐험 스카우팅 "전투의 기척" 카드 — 해당 전투 한정 처치 보상(EXP/골드) 배율 보너스.
+ * CombatEngine.handleVictory가 받는 passiveBonus 스키마(goldMult/expMult)에 합산한다 —
+ * CombatEngine 시그니처는 그대로 유지(신규 파라미터 없음). 순수 함수.
+ */
+export const buildPassiveBonusWithScout = (stats: any, deadEnemy: any) => {
+    const scoutRewardBonus = deadEnemy?.scoutRewardBonus || 0;
+    return {
+        goldMult: (stats?.passiveGoldMult || 0) + scoutRewardBonus,
+        expMult: (stats?.passiveExpMult || 0) + scoutRewardBonus,
+    };
+};
+
+/**
+ * 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
+ * exploreActions.ts의 유물 3(4)선택 큐잉 인프라(SET_PENDING_RELICS)를 그대로 재사용한다.
+ * deadEnemy.scoutGuaranteedRelic이 없거나, 유물 슬롯이 가득 찼거나 후보가 없으면 무동작.
+ */
+export const applyScoutGuaranteedRelic = (deadEnemy: any, updatedPlayer: Player, { dispatch, addLog }: any) => {
+    if (!deadEnemy?.scoutGuaranteedRelic) return;
+    const ownedRelics = (updatedPlayer as any).relics || [];
+    const relicUnlocks = getPrestigeUnlocks((updatedPlayer as any).meta?.prestigeRank);
+    if (ownedRelics.length >= relicUnlocks.maxRelics) return;
+    const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
+    if (available.length === 0) return;
+
+    const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: ownedRelics });
+    dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
+    addLog('event', MSG.EXPLORE_RELIC_FOUND);
 };
