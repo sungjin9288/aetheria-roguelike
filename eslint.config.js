@@ -78,6 +78,21 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  // Cloudflare Pages Functions (2026-07 Vercel → Cloudflare 이전).
+  // context.env로 바인딩을 받는 Workers 런타임이므로 globals.node 대신
+  // globals.worker + 최소 Node 호환(process 미사용) 조합을 쓴다.
+  {
+    files: ['functions/**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.worker, console: 'readonly' },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
   {
     files: ['aws/**/*.js'],
     extends: [js.configs.recommended],

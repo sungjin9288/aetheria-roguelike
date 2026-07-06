@@ -1,5 +1,12 @@
 # Dev/Prod Environment Separation Strategy
 
+> **2026-07: 웹 배포 플랫폼이 Vercel → Cloudflare Pages로 이전되었습니다.**
+> 아래 문서의 "Vercel" 관련 항목(서버리스 함수, env var 설정 위치)은 참고용으로 남겨두되,
+> 실제 서버 함수는 `functions/api/`의 Cloudflare Pages Functions가 담당합니다.
+> 클라이언트가 호출하는 상대 경로(`/api/ai-proxy`, `/api/feedback-validate`)는 변경 없음.
+> Firebase 프로젝트 분리(dev/prod) 전략 자체는 호스팅 플랫폼과 무관하게 그대로 유지됩니다.
+> 배포 절차는 [QUICK_DEPLOY.md](./QUICK_DEPLOY.md) 참고.
+
 ## Overview
 Aetheria RPG uses separate Firebase projects for development and production environments.
 
@@ -74,6 +81,11 @@ VITE_AI_PROXY_URL=/api/ai-proxy
 | `FIREBASE_SERVICE_ACCOUNT_PROD` | Production | Service account JSON for prod project |
 | `FIREBASE_PROJECT_ID_PROD` | Production | e.g., `aetheria-prod` |
 | `GEMINI_API_KEY` | Production | Gemini API key (server-side only) |
+
+> `GEMINI_API_KEY`, `FIREBASE_WEB_API_KEY`, `ALLOWED_ORIGINS`는 GitHub Actions가 아닌
+> **Cloudflare Pages 프로젝트의 Environment variables**에 설정합니다 (Vercel 사용 시절과
+> 동일하게 서버 전용 값이며 클라이언트 빌드에 노출되지 않습니다). 자세한 설정 위치는
+> [QUICK_DEPLOY.md](./QUICK_DEPLOY.md) 참고.
 
 ### Important: GitHub Environment Setup
 To avoid "Value 'development' is not valid" (or 'production') errors in your workflows and IDE:

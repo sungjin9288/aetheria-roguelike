@@ -1,3 +1,7 @@
+// [2026-07] Cloudflare Pages로 이전됨 — 현행 구현은 functions/api/feedback-validate.js.
+// 이 파일은 Vercel 복귀 가능성 및 참조용으로 보존한다. 신규 변경은 반드시
+// functions/api/feedback-validate.js에도 동일하게 반영할 것.
+//
 // Serverless Feedback Validation Function
 // Handles spam prevention and content validation
 // Deploy to: Netlify Functions, Vercel Functions, or similar

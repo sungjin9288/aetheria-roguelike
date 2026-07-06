@@ -1,37 +1,54 @@
-// [2026-07] Cloudflare Pages로 이전됨 — 현행 구현은 functions/api/ai-proxy.js.
-// 이 파일은 Vercel 복귀 가능성 및 참조용으로 보존한다. 신규 변경은 반드시
-// functions/api/ai-proxy.js에도 동일하게 반영할 것.
+// Cloudflare Pages Functions 버전 (api/ai-proxy.js에서 포팅, 2026-07)
+// 파일 기반 라우팅: functions/api/ai-proxy.js → /api/ai-proxy
+// Vercel (req,res) 스타일 → Web Request/Response 스타일로 변환.
+// 로직/타임아웃/레이트리밋/CORS 정책은 원본과 1:1 동일하게 유지.
+
+// 인메모리 레이트리밋(Map)은 Cloudflare의 각 isolate(엣지 로케이션/워커 인스턴스)마다
+// 별도로 유지된다. 즉 동일 사용자의 요청이 서로 다른 isolate로 라우팅되면 이 카운터를
+// 공유하지 않으므로, 전역적으로 정확한 레이트리밋이 아니라 "isolate당 근사치" 한계가 있다.
+// 강한 보장이 필요하면 Durable Objects/KV 기반 카운터로 교체가 필요하지만, 여기서는
+// 기존 Vercel 서버리스 구현과 동일한 수준(인스턴스당 인메모리)의 동작을 그대로 포팅한다.
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 40;
 const requestBuckets = new Map();
 
-const parseAllowedOrigins = () => {
-    const configured = String(process.env.ALLOWED_ORIGINS || '')
+const parseAllowedOrigins = (env) => {
+    const configured = String(env.ALLOWED_ORIGINS || '')
         .split(',')
         .map((origin) => origin.trim())
         .filter(Boolean);
     return configured.length > 0 ? configured : null;
 };
 
-const setCorsHeaders = (res, origin, allowedOrigins) => {
+const buildCorsHeaders = (origin, allowedOrigins) => {
+    const headers = new Headers();
     if (!allowedOrigins) {
-        res.setHeader('Access-Control-Allow-Origin', origin || '*');
+        headers.set('Access-Control-Allow-Origin', origin || '*');
     } else if (origin && allowedOrigins.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
+        headers.set('Access-Control-Allow-Origin', origin);
     } else if (!origin) {
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        headers.set('Access-Control-Allow-Origin', '*');
     }
-    res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    headers.set('Vary', 'Origin');
+    headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return headers;
 };
 
-const getClientAddress = (req) => {
-    const forwardedFor = req.headers['x-forwarded-for'];
+const jsonResponse = (body, status, corsHeaders) => {
+    const headers = new Headers(corsHeaders);
+    headers.set('Content-Type', 'application/json');
+    return new Response(JSON.stringify(body), { status, headers });
+};
+
+const getClientAddress = (request) => {
+    const cfConnectingIp = request.headers.get('CF-Connecting-IP');
+    if (cfConnectingIp) return cfConnectingIp;
+    const forwardedFor = request.headers.get('x-forwarded-for');
     if (typeof forwardedFor === 'string' && forwardedFor.length > 0) {
         return forwardedFor.split(',')[0].trim();
     }
-    return req.socket?.remoteAddress || 'unknown';
+    return 'unknown';
 };
 
 const checkRateLimit = (key) => {
@@ -49,14 +66,14 @@ const checkRateLimit = (key) => {
     return true;
 };
 
-const parseBearerToken = (req) => {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
+const parseBearerToken = (request) => {
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
     return authHeader.slice(7).trim();
 };
 
-const verifyFirebaseToken = async (idToken) => {
-    const firebaseApiKey = process.env.FIREBASE_WEB_API_KEY;
+const verifyFirebaseToken = async (idToken, env) => {
+    const firebaseApiKey = env.FIREBASE_WEB_API_KEY;
     if (!firebaseApiKey) {
         throw new Error('Missing FIREBASE_WEB_API_KEY environment variable');
     }
@@ -228,7 +245,7 @@ const callGemini = async (payloadConfig, apiKey) => {
     const { systemInstruction, prompt, schema } = payloadConfig;
 
     const controller = new AbortController();
-    // Vercel Serverless 10s 제한 호환: 8.5초 타임아웃
+    // Vercel Serverless 10s 제한 호환: 8.5초 타임아웃 (Cloudflare Pages Functions에서도 동일 여유 유지)
     const timeoutId = setTimeout(() => controller.abort(), 8_500);
 
     const requestBody = {
@@ -270,79 +287,101 @@ const callGemini = async (payloadConfig, apiKey) => {
     }
 };
 
-export default async function handler(req, res) {
-    const origin = req.headers.origin;
-    const allowedOrigins = parseAllowedOrigins();
-    setCorsHeaders(res, origin, allowedOrigins);
+// Cloudflare Pages Functions 라우팅: POST /api/ai-proxy
+export async function onRequestPost(context) {
+    const { request, env } = context;
+    const origin = request.headers.get('origin');
+    const allowedOrigins = parseAllowedOrigins(env);
+    const corsHeaders = buildCorsHeaders(origin, allowedOrigins);
 
     if (allowedOrigins && origin && !allowedOrigins.includes(origin)) {
-        return res.status(403).json({ error: 'Origin not allowed' });
+        return jsonResponse({ error: 'Origin not allowed' }, 403, corsHeaders);
     }
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    const token = parseBearerToken(req);
+    const token = parseBearerToken(request);
     if (!token) {
-        return res.status(401).json({ error: 'Unauthorized: missing bearer token' });
+        return jsonResponse({ error: 'Unauthorized: missing bearer token' }, 401, corsHeaders);
     }
 
     let authUser;
     try {
-        authUser = await verifyFirebaseToken(token);
+        authUser = await verifyFirebaseToken(token, env);
     } catch (error) {
         console.error('Auth config error:', error.message);
-        return res.status(500).json({ error: 'Auth provider is not configured' });
+        return jsonResponse({ error: 'Auth provider is not configured' }, 500, corsHeaders);
     }
 
     if (!authUser) {
-        return res.status(401).json({ error: 'Unauthorized: invalid token' });
+        return jsonResponse({ error: 'Unauthorized: invalid token' }, 401, corsHeaders);
     }
 
-    const clientAddress = getClientAddress(req);
+    const clientAddress = getClientAddress(request);
     const rateLimitKey = `${authUser.uid}:${clientAddress}`;
     if (!checkRateLimit(rateLimitKey)) {
-        return res.status(429).json({ error: 'Too many requests' });
+        return jsonResponse({ error: 'Too many requests' }, 429, corsHeaders);
     }
 
     try {
-        const { type, data } = req.body || {};
-        if (!type || !data) {
-            return res.status(400).json({ error: 'Invalid request body' });
+        let body;
+        try {
+            body = await request.json();
+        } catch {
+            return jsonResponse({ error: 'Invalid request body' }, 400, corsHeaders);
         }
 
-        const apiKey = process.env.GEMINI_API_KEY;
+        const { type, data } = body || {};
+        if (!type || !data) {
+            return jsonResponse({ error: 'Invalid request body' }, 400, corsHeaders);
+        }
+
+        const apiKey = env.GEMINI_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: 'API key not configured' });
+            return jsonResponse({ error: 'API key not configured' }, 500, corsHeaders);
         }
 
         const payloadConfig = buildGeminiPayload(type, data, authUser.uid);
         if (!payloadConfig) {
-            return res.status(400).json({ error: 'Invalid request type' });
+            return jsonResponse({ error: 'Invalid request type' }, 400, corsHeaders);
         }
 
         const parsedJson = await callGemini(payloadConfig, apiKey);
         if (!parsedJson) {
-            return res.status(502).json({ error: 'Empty AI response' });
+            return jsonResponse({ error: 'Empty AI response' }, 502, corsHeaders);
         }
 
         if (type === 'event') {
             const normalizedEvent = normalizeEventData(parsedJson);
             if (!normalizedEvent) {
-                return res.status(502).json({ error: 'Invalid AI event response' });
+                return jsonResponse({ error: 'Invalid AI event response' }, 502, corsHeaders);
             }
-            return res.status(200).json({ success: true, data: normalizedEvent });
+            return jsonResponse({ success: true, data: normalizedEvent }, 200, corsHeaders);
         }
 
         const narrative = parsedJson?.narrative || '신비로운 기운이 느껴집니다.';
-        return res.status(200).json({ success: true, data: { narrative } });
+        return jsonResponse({ success: true, data: { narrative } }, 200, corsHeaders);
     } catch (error) {
         console.error('Proxy error:', error);
-        return res.status(500).json({ error: 'Internal server error', details: error.message });
+        return jsonResponse({ error: 'Internal server error', details: error.message }, 500, corsHeaders);
     }
+}
+
+// CORS preflight
+export async function onRequestOptions(context) {
+    const { request, env } = context;
+    const origin = request.headers.get('origin');
+    const allowedOrigins = parseAllowedOrigins(env);
+    const corsHeaders = buildCorsHeaders(origin, allowedOrigins);
+    return new Response(null, { status: 200, headers: corsHeaders });
+}
+
+// 그 외 메서드 (GET/PUT/DELETE 등) → 405
+export async function onRequest(context) {
+    const { request } = context;
+    if (request.method === 'POST') return onRequestPost(context);
+    if (request.method === 'OPTIONS') return onRequestOptions(context);
+
+    const origin = request.headers.get('origin');
+    const allowedOrigins = parseAllowedOrigins(context.env);
+    const corsHeaders = buildCorsHeaders(origin, allowedOrigins);
+    return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
 }
