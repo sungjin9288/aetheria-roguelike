@@ -1425,27 +1425,40 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/hooks/gameActions/_shared.ts');
       assert.ok(!/commitExploreOutcome = \([^)]*transformPlayer:\s*any\s*=\s*null\)/.test(source),
           'commitExploreOutcome transformPlayer default null 제거');
-      assert.ok(/commitExploreOutcome = \(outcome:\s*any,\s*transformPlayer:\s*any\)/.test(source),
-          'commitExploreOutcome transformPlayer 파라미터 보존 (default 없이)');
+      // 2026-07 원정 보스 접근 게이지: commitExploreOutcome이 3번째 파라미터
+      // mapData?(옵셔널)를 받도록 확장됨 — 미격파 구역 보스가 있는 던전에서
+      // "탐험할 때마다" 게이지를 누적하려면 explore()의 모든 분기(체인/캠프파이어/
+      // 보스도전/스카우팅/quiet/전투)가 공통으로 거치는 이 단일 지점에서만 게이지를
+      // advance해야 하기 때문(bossGauge.ts 참조). transformPlayer 자체는 여전히
+      // default 없이 필수 인자 계약 유지 — 이 테스트가 원래 가드하던 "no default"
+      // 계약은 그대로 보존, 3번째 인자 추가만 반영.
+      assert.ok(/commitExploreOutcome = \(outcome:\s*any,\s*transformPlayer:\s*any,\s*mapData\?:\s*any\)/.test(source),
+          'commitExploreOutcome transformPlayer 파라미터 보존 (default 없이) + mapData? 3번째 인자 추가');
   });
 
-  test('cycle 628: 7 callsite null 명시 추가', async () => {
+  test('cycle 628: 7 callsite null 명시 추가 (2026-07: 다수 callsite가 mapData 3번째 인자 추가로 갱신)', async () => {
       // 탐험 스카우팅(2026-07): quiet/유물/전투 롤 파이프가 exploreUtils.ts의
       // runQuietRollAndCombat으로 이동(exploreActions.ts와 eventActions.ts "짙은 안개"
       // 카드 공유) — callsite가 두 파일에 분산됐을 뿐 각 null 명시 계약은 그대로 보존.
+      //
+      // 2026-07 원정 보스 접근 게이지 추가 갱신: exploreActions.ts의 최초 커밋 콜사이트들은
+      // 이제 3번째 인자로 mapData를 전달해 게이지를 누적한다(bossGauge.ts). 반면
+      // eventActions.ts의 스카우팅 카드 재해소 콜사이트(같은 explore() 턴 내 재호출)는
+      // 이중 누적을 막기 위해 의도적으로 mapData를 생략한다 — 아래 각 정규식이 그 구분을
+      // 반영해 갱신됨.
       const exploreActions = await readSrc('src/hooks/gameActions/exploreActions.ts');
-      assert.ok(/commitExploreOutcome\('narrative_event',\s*null\)/.test(exploreActions),
-          "narrative_event callsite null 명시 (line 43)");
-      const exploreActionsNothing = (exploreActions.match(/commitExploreOutcome\('nothing',\s*null\)/g) || []).length;
-      assert.ok(exploreActionsNothing >= 2, `exploreActions 'nothing' callsite null 명시 2건 이상 (got ${exploreActionsNothing})`);
+      assert.ok(/commitExploreOutcome\('narrative_event',\s*null,\s*mapData\)/.test(exploreActions),
+          "narrative_event callsite null + mapData 명시 (2026-07 보스 게이지 누적)");
+      const exploreActionsNothing = (exploreActions.match(/commitExploreOutcome\('nothing',\s*null,\s*mapData\)/g) || []).length;
+      assert.ok(exploreActionsNothing >= 2, `exploreActions 'nothing' callsite null+mapData 명시 2건 이상 (got ${exploreActionsNothing})`);
 
       const exploreUtils = await readSrc('src/utils/exploreUtils.ts');
-      const exploreUtilsNothing = (exploreUtils.match(/commitExploreOutcome\('nothing',\s*null\)/g) || []).length;
+      const exploreUtilsNothing = (exploreUtils.match(/commitExploreOutcome\('nothing',\s*null,\s*gaugeMapData\)/g) || []).length;
       assert.ok(exploreUtilsNothing >= 1, `exploreUtils 'nothing' callsite null 명시 1건 이상 (got ${exploreUtilsNothing})`);
-      assert.ok(/commitExploreOutcome\(quietResult,\s*null\)/.test(exploreUtils),
-          'quietResult callsite null 명시 보존');
-      assert.ok(/commitExploreOutcome\('relic_found',\s*null\)/.test(exploreUtils),
-          "'relic_found' callsite null 명시 보존");
+      assert.ok(/commitExploreOutcome\(quietResult,\s*null,\s*gaugeMapData\)/.test(exploreUtils),
+          'quietResult callsite null 명시 보존 (gaugeMapData — skipBossGaugeAdvance 시 null)');
+      assert.ok(/commitExploreOutcome\('relic_found',\s*null,\s*gaugeMapData\)/.test(exploreUtils),
+          "'relic_found' callsite null 명시 보존 (gaugeMapData)");
   });
 
   test('cycle 628: combat 2-arg callsite 보존 (line 168)', async () => {

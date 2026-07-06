@@ -9,6 +9,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { soundManager } from '../../systems/SoundManager';
 import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from '../../utils/exploreUtils';
 import { BALANCE } from '../../data/constants';
+import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 
 export const createEventActions = (deps: any, shared: any) => {
     const { emitUnlockedTitles } = shared;
@@ -20,6 +21,12 @@ export const createEventActions = (deps: any, shared: any) => {
             // 스카우팅 카드 처리 — 같은 탐험 턴 안에서 즉시 해소 (탐험의 나머지 롤 파이프 재호출).
             if (currentEvent.isScout) {
                 handleScoutChoice(idx, currentEvent, deps, shared);
+                return;
+            }
+
+            // 원정 보스 접근 게이지 만충 카드 처리 — 도전/회피 즉시 해소.
+            if (currentEvent.isBossGaugeChallenge) {
+                handleBossGaugeChoice(idx, currentEvent, deps);
                 return;
             }
 
@@ -225,6 +232,50 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
     // 같은 탐험 턴 안에서 결과가 나와야 하므로 runQuietRollAndCombat을 즉시 재호출 —
     // "무슨 일이 일어날지 모른다"는 컨셉대로 신규 로직 없이 원래 파이프를 탄다. AI 서사
     // 이벤트 단계는 건너뛴다(이미 스카우팅 카드로 결정 지점을 소비했으므로 즉시 해소 우선).
+    // skipBossGaugeAdvance: 이 explore() 턴의 게이지는 스카우팅 카드가 처음 뜬 시점에
+    // 이미 1회 누적됐으므로(exploreActions.ts) 여기서 재호출 시 중복 누적 방지.
     const { addStoryLog } = deps;
-    runQuietRollAndCombat(player, mapData, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome });
+    runQuietRollAndCombat(player, mapData, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome, skipBossGaugeAdvance: true });
+};
+
+/**
+ * 원정 보스 접근 게이지 만충 카드("도전 vs 회피") 선택 처리.
+ * - 도전: exploreUtils.spawnEnemy를 forceAreaBoss:true로 재호출해 구역 보스를 결정론적으로
+ *   스폰(기존 15% 랜덤 스폰과 동일한 스탯 산출 경로 재사용, 신규 스폰 로직 없음) + 게이지 리셋.
+ * - 회피: 게이지를 만충 상태로 유지(다음 탐험에서 재선택 가능) — 리셋하지 않는다.
+ */
+const handleBossGaugeChoice = (idx: any, currentEvent: any, deps: any) => {
+    const { player, dispatch, addLog, getFullStats } = deps;
+    const outcome = toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null;
+    dispatch({ type: AT.SET_EVENT, payload: null });
+
+    if (!outcome) {
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        return;
+    }
+
+    addLog('event', outcome.log || '');
+
+    if (outcome.gaugeEffect === 'avoid') {
+        // 회피 — 게이지는 만충 유지, 다음 탐험에서 다시 선택지가 뜬다.
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        return;
+    }
+
+    // 도전 — 게이지 리셋 + 구역 보스 결정론적 스폰.
+    const mapData = DB.MAPS[player.loc];
+    const playerRelics = player.relics || [];
+    const { mStats } = spawnEnemy(mapData, player, playerRelics, { addLog }, { forceAreaBoss: true });
+
+    const fullStats = getFullStats();
+    dispatch({
+        type: AT.SET_PLAYER,
+        payload: (p: any) => {
+            const nextPlayer = { ...p, stats: resetBossGaugeAfterChallenge(p, p.loc) };
+            return applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog });
+        },
+    });
+    dispatch({ type: AT.SET_ENEMY, payload: mStats });
+    dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+    addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
 };

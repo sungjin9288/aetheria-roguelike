@@ -72,6 +72,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
     );
 
     const areaBossDefeated = player?.stats?.areaBossDefeated;
+    const bossGauge = player?.stats?.bossGauge;
     const mapEntries = useMemo(() => MAP_ORDER.map((map: any) => {
         const progress = getMapProgressState(map.name, player, DB.MAPS);
         const signatureDrops = getMapSignatureDrops(map.name);
@@ -82,9 +83,9 @@ const MapNavigator = ({ player, grave, stats }: any) => {
             graves: getGravesAtLoc(grave, map.name),
             signatureDrops,
             undiscoveredSignatures,
-            badges: getExitBadges(map, areaBossDefeated),
+            badges: getExitBadges(map, areaBossDefeated, bossGauge),
         };
-    }), [grave, player, areaBossDefeated]);
+    }), [grave, player, areaBossDefeated, bossGauge]);
 
     const visibleEntries = mapEntries;
     const selectedEntry = visibleEntries.find((e: any) => e.name === selectedMapName)
@@ -262,7 +263,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                                 {entry.badges.length > 0 && (
                                                     <div className="mt-1.5 flex flex-wrap gap-1">
                                                         {entry.badges.map((badge: any) => (
-                                                            <SignalBadge key={badge.id} tone={badge.id === 'boss' ? 'danger' : badge.id === 'shop' ? 'upgrade' : 'recommended'} size="sm">
+                                                            <SignalBadge key={badge.id} tone={badge.id === 'boss' ? 'danger' : badge.id === 'bossGauge' ? 'warning' : badge.id === 'shop' ? 'upgrade' : 'recommended'} size="sm">
                                                                 {badge.label}
                                                             </SignalBadge>
                                                         ))}

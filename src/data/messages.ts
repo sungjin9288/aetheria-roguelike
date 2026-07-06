@@ -289,6 +289,17 @@ export const MSG = {
     SCOUT_ANOMALY_LOG: '🌀 이상 신호를 따라 주변을 조심스럽게 살핍니다.',
     SCOUT_UNKNOWN_LOG: '🌫️ 짙은 안개 속으로 발을 내딛습니다.',
     SCOUT_ELITE_LOG: '💀 정예의 흔적을 따라가 강력한 적과 마주칩니다!',
+    // 원정 보스 접근 게이지 (2026-07): 던전 진입 시 원정 목표 배너 + 만충 시 도전/회피 선택.
+    EXPEDITION_GOAL_BANNER: (bossName: string) => `🎯 원정 목표: ${bossName} — 흔적을 쫓아 접근하라.`,
+    BOSS_GAUGE_FULL_DESC: (bossName: string) => `🩸 ${bossName}의 흔적이 짙어졌습니다. 지금 정면으로 맞서시겠습니까?`,
+    BOSS_GAUGE_CHALLENGE_CHOICE: '⚔️ 도전 — 구역 보스와 정면으로 맞선다',
+    BOSS_GAUGE_AVOID_CHOICE: '🌫️ 회피 — 흔적을 피해 계속 나아간다',
+    BOSS_GAUGE_CHALLENGE_LOG: (bossName: string) => `⚔️ ${bossName}에게 정면으로 도전합니다!`,
+    BOSS_GAUGE_AVOID_LOG: '🌫️ 흔적을 피해 발걸음을 돌립니다. 기척은 여전히 짙게 남아있습니다.',
+    MAP_BADGE_BOSS_GAUGE: (pct: number) => `게이지 ${pct}%`,
+    EXPEDITION_CLEAR_RECAP: (bossName: string, kills: number, gold: number) => (
+        `🏆 [원정 완료] ${bossName} 격파! 이번 원정 처치 ${kills}마리 · 획득 ${gold}G`
+    ),
     EVENT_SUCCESS_GOLD: (gold: number) => `성공! ${gold}G를 획득했습니다.`,
     EVENT_FAIL_DAMAGE: (dmg: number) => `실패... ${dmg} 피해를 입었습니다.`,
     REST_DONE_FULL: (cost: number) => `휴식 완료. HP/MP가 회복되었습니다. (-${cost}G)`,

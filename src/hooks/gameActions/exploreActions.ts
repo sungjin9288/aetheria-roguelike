@@ -14,6 +14,7 @@ import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent } from '../../utils/scoutEvents';
+import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { soundManager } from '../../systems/SoundManager';
 
 /**
@@ -56,11 +57,11 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
                 }
             });
             if (eventData?.exhausted) {
-                commitExploreOutcome('nothing', null);
+                commitExploreOutcome('nothing', null, mapData);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 addLog('warning', eventData.message || MSG.AI_QUOTA_REACHED);
             } else if (eventData && eventData.desc) {
-                commitExploreOutcome('narrative_event', null);
+                commitExploreOutcome('narrative_event', null, mapData);
                 if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
                 const normalizedChoices = toArray(eventData.choices)
                     .map((choice: any, idx: any) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || MSG.CHOICE_DEFAULT(idx + 1)))
@@ -69,7 +70,7 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
                 dispatch({ type: AT.SET_EVENT, payload: normalized });
                 addLog('event', normalized.desc);
             } else {
-                commitExploreOutcome('nothing', null);
+                commitExploreOutcome('nothing', null, mapData);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 addLog('info', MSG.EXPLORE_NOTHING);
             }
@@ -101,7 +102,7 @@ export const createExploreActions = (deps: any, shared: any) => {
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
             const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress);
             if (chainTrigger) {
-                commitExploreOutcome('narrative_event', null);
+                commitExploreOutcome('narrative_event', null, mapData);
                 const { chain, step } = chainTrigger;
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: {
@@ -121,7 +122,7 @@ export const createExploreActions = (deps: any, shared: any) => {
                 + getPrestigeUnlocks(player.meta?.prestigeRank).campfireChanceBonus
                 + getMirrorEffects(player.meta).campfireChanceBonus;
             if (mapData.type === 'dungeon' && Math.random() < campfireChance) {
-                commitExploreOutcome('narrative_event', null);
+                commitExploreOutcome('narrative_event', null, mapData);
                 const campfireEvent = buildCampfireEvent(getFullStats());
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: campfireEvent });
@@ -130,11 +131,29 @@ export const createExploreActions = (deps: any, shared: any) => {
                 return;
             }
 
+            // 원정 보스 접근 게이지 (2026-07 감사 축4): 미격파 구역 보스가 있는 던전에서
+            //   게이지가 만충되면 "도전 vs 회피" 선택 카드를 제시한다. 체인 > 캠프파이어 >
+            //   보스 도전 선택 > 스카우팅 > 나머지 롤 순 — 만충 상태는 스카우팅보다
+            //   우선한다(이미 결정된 "위험이 눈앞에 있다"는 사실이 사전 정찰 카드보다
+            //   서사적으로 앞서야 하고, 게이지가 만충인데 스카우팅 카드에 밀려 계속
+            //   미뤄지면 "접근했는데 아무 일도 안 일어남"이 반복돼 게이지 시스템의
+            //   존재감이 사라짐).
+            if (isAreaBossUndefeated(mapData, player) && isBossGaugeFull(player, player.loc)) {
+                commitExploreOutcome('narrative_event', null, mapData);
+                const bossName = getAreaBossName(mapData) as string;
+                const challengeEvent = buildBossChallengeEvent(bossName);
+                dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+                dispatch({ type: AT.SET_EVENT, payload: challengeEvent });
+                addLog('event', challengeEvent.desc);
+                soundManager.play('new_area');
+                return;
+            }
+
             // 탐험 스카우팅 (2026-07 감사 (b)): "정보 없는 단일 버튼 탐험" 갭 대응 — 던전(비안전지대)
-            //   탐험 시 낮은 확률로 사전 정찰 카드 2~3장을 제시한다. 체인 > 캠프파이어 > 스카우팅 >
-            //   나머지 롤(AI 이벤트/quiet/전투) 순 우선순위. 선택은 eventActions.ts가 같은 턴에 해소.
+            //   탐험 시 낮은 확률로 사전 정찰 카드 2~3장을 제시한다. 체인 > 캠프파이어 > 보스 도전 선택 >
+            //   스카우팅 > 나머지 롤(AI 이벤트/quiet/전투) 순 우선순위. 선택은 eventActions.ts가 같은 턴에 해소.
             if (shouldTriggerScout(mapData, Math.random)) {
-                commitExploreOutcome('narrative_event', null);
+                commitExploreOutcome('narrative_event', null, mapData);
                 const scoutEvent = buildScoutEvent(player, mapData, Math.random);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: scoutEvent });
