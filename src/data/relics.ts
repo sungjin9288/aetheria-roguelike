@@ -5,8 +5,9 @@
  */
 
 import { BALANCE } from './constants.js';
+import type { Relic } from '../types/relic.js';
 
-export const RELICS: any = [
+export const RELICS: Relic[] = [
     // ─── 공격 계열 (8개) ───────────────────────────────────────────────────
     {
         id: 'blood_pact',

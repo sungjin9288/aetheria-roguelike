@@ -114,7 +114,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
   );
 
   const renderSynthMode = () => {
-    const outputs = validation?.valid ? validation.outputs : [];
+    const outputs = validation?.valid ? (validation.outputs ?? []) : [];
     return (
       <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2">
         {/* 슬롯 영역 */}

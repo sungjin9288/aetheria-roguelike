@@ -335,7 +335,7 @@ export const calculateFullStats = (player: Player) => {
 
     const baseAtk =
         ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + (meta.bonusAtk || 0) * prestigeStatMult + passiveBonus.atk) *
-        cls.atkMod *
+        cls.atkMod! *
         (1 + (buff.atk || 0) + abyssBonus.atk) *
         setBonus.atkMult *
         signatureSetBonus.atkMult *

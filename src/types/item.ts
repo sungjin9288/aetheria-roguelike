@@ -94,3 +94,49 @@ export interface EquipSlots {
     /** 동적으로 추가 가능한 슬롯 (런타임 확장 호환). */
     [key: string]: any;
 }
+
+/** 세트 효과 정의 (items.js의 sets 카테고리). */
+export interface ItemSetDef {
+    prefix?: string;
+    setBonus?: Record<string, number>;
+    desc?: string;
+    [key: string]: any;
+}
+
+/** 제작 레시피 정의 (items.js의 recipes 카테고리). */
+export interface ItemRecipeDef {
+    id?: string;
+    name?: string;
+    inputs?: Array<{ name?: string; qty?: number }>;
+    gold?: number;
+    [key: string]: any;
+}
+
+/** 접두사 정의 (items.js의 prefixes 카테고리 — 랜덤 강화 접두사). */
+export interface ItemPrefixDef {
+    name?: string;
+    type?: string;
+    stat?: string;
+    val?: number;
+    elem?: string;
+    price?: number;
+    [key: string]: any;
+}
+
+/**
+ * items.js 최상위 export 구조 — 카테고리별 배열 딕셔너리.
+ * 2026-07 타입화: `ITEMS: any` → 실제 데이터 구조(weapons/armors/.../recipes)를
+ * 반영한 최소 인터페이스. DB.ITEMS 소비처(36개 파일)는 대부분
+ * `Object.values(DB.ITEMS)` 또는 `DB.ITEMS.weapons` 형태로 접근.
+ */
+export interface ItemDatabase {
+    weapons: Item[];
+    armors: Item[];
+    consumables: Item[];
+    materials: Item[];
+    prefixes: ItemPrefixDef[];
+    sets: ItemSetDef[];
+    recipes: ItemRecipeDef[];
+    /** 동적으로 추가 가능한 카테고리 (런타임 확장 호환). */
+    [key: string]: Item[] | ItemPrefixDef[] | ItemSetDef[] | ItemRecipeDef[];
+}

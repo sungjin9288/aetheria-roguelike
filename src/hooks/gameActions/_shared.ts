@@ -19,8 +19,8 @@ export const buildClassVitals = (level: any, jobId: any, meta: any) => {
     const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
     // PR #8: 프레스티지 rank≥10 "에테르 초월" — 영구 스탯 보너스 ×2 (statsCalculator atk와 대칭).
     const statMult = getPrestigeUnlocks(meta.prestigeRank).statMult;
-    const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod) + Math.max(0, level - 1) * BALANCE.HP_PER_LEVEL + (meta.bonusHp || 0) * statMult;
-    const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod) + Math.max(0, level - 1) * BALANCE.MP_PER_LEVEL + (meta.bonusMp || 0) * statMult;
+    const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod!) + Math.max(0, level - 1) * BALANCE.HP_PER_LEVEL + (meta.bonusHp || 0) * statMult;
+    const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod!) + Math.max(0, level - 1) * BALANCE.MP_PER_LEVEL + (meta.bonusMp || 0) * statMult;
     return { maxHp, maxMp };
 };
 
