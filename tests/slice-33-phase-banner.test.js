@@ -41,7 +41,8 @@ test('slice 33: GameRoot — phase 플립 감지 + 배너 렌더', async () => {
 });
 
 test('slice 33: phase 플래그 계약 — CombatEngine이 phase2/3Triggered set + 이름 변경', async () => {
-    const src = await readSrc('src/systems/CombatEngine.ts');
+    // enemyAttack(phase 전환 로직)은 CombatEngine.enemyAI.ts로 분리됨 (mixin).
+    const src = await readSrc('src/systems/CombatEngine.enemyAI.ts');
     assert.ok(/phase2Triggered:\s*true/.test(src), 'phase2Triggered set');
     assert.ok(/phase3Triggered:\s*true/.test(src), 'phase3Triggered set');
     assert.ok(/name:\s*p2\.name/.test(src) && /name:\s*p3\.name/.test(src),

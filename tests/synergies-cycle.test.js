@@ -48,10 +48,13 @@ import { readFile } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
 
   test("CombatEngine.ts: cycle 153 11종 시너지 effect-name이 모두 참조됨", async () => {
-      // 일부 시너지는 handleVictory(outcome)·applyEntropyTick/FatalProtection(relics)으로 분리 — 합쳐 검사.
+      // 일부 시너지는 handleVictory(outcome)·applyEntropyTick/FatalProtection(relics)
+      //   ·attack/performSkill(actions)·enemyAttack(enemyAI)으로 분리 — 합쳐 검사.
       const engineSrc = (await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8'))
           + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.outcome.ts'), 'utf8'))
-          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.relics.ts'), 'utf8'));
+          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.relics.ts'), 'utf8'))
+          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8'))
+          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.enemyAI.ts'), 'utf8'));
       const expected = [
           'vampire_lord',
           'unbreakable',
@@ -156,13 +159,14 @@ import { readFile } from 'node:fs/promises';
       assert.ok(atkRatio >= 1.40, `expected entropy_god 트리거 후 atk ratio >= 1.40; got ${atkRatio.toFixed(3)}`);
   });
 
-  test("CombatEngine.ts: void_dragon / primordial_wrath critDmg 곱셈 분기 명시", async () => {
+  test("CombatEngine.actions.ts: void_dragon / primordial_wrath critDmg 곱셈 분기 명시", async () => {
       const { readFile } = await import('node:fs/promises');
       const path = await import('node:path');
       const { fileURLToPath } = await import('node:url');
       const HERE = path.dirname(fileURLToPath(import.meta.url));
       const ROOT = path.join(HERE, '..');
-      const engineSrc = await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8');
+      // critDmg 곱셈 분기(attack/performSkill)는 CombatEngine.actions.ts로 분리됨 (mixin).
+      const engineSrc = await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8');
       assert.match(engineSrc, /'void_dragon'/);
       assert.match(engineSrc, /critDmgSyn/);
       assert.match(engineSrc, /critDmgSynSkill/);
@@ -198,8 +202,9 @@ import { readFile } from 'node:fs/promises';
   const HERE = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.join(HERE, '..');
 
-  test("CombatEngine.ts: time_dominator / arcane_singularity effect-name 명시", async () => {
-      const src = await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8');
+  test("CombatEngine.actions.ts: time_dominator / arcane_singularity effect-name 명시", async () => {
+      // 두 시너지 핸들러(performSkill)는 CombatEngine.actions.ts로 분리됨 (mixin).
+      const src = await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8');
       assert.match(src, /'time_dominator'/);
       assert.match(src, /'arcane_singularity'/);
   });
@@ -280,7 +285,10 @@ import { readFile } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
 
   test("CombatEngine.ts: hell_reaper / annihilator / absolute_reflect effect-name 명시", async () => {
-      const src = await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8');
+      // annihilator(attack)·absolute_reflect(enemyAttack)는 actions/enemyAI mixin으로 분리 — 합쳐 검사.
+      const src = (await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8'))
+          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8'))
+          + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.enemyAI.ts'), 'utf8'));
       assert.match(src, /'hell_reaper'/);
       assert.match(src, /'annihilator'/);
       assert.match(src, /'absolute_reflect'/);

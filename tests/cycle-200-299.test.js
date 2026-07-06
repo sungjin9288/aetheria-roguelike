@@ -2473,7 +2473,11 @@ import { readFile } from 'node:fs/promises';
       //   `type: 'critical'` 수가 줄었다. crit 시 main 로그가 ternary
       //   (isCrit ? 'critical' : 'combat')로 critical 타입을 유지하므로
       //   literal + ternary 양쪽을 합산해 가드한다.
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // attack/performSkill은 CombatEngine.actions.ts로, enemyAttack의 phase3 로그는
+      //   CombatEngine.enemyAI.ts로 분리됨 (mixin) — 합쳐서 카운트.
+      const source = (await readSrc('src/systems/CombatEngine.ts'))
+          + (await readSrc('src/systems/CombatEngine.actions.ts'))
+          + (await readSrc('src/systems/CombatEngine.enemyAI.ts'));
       const literal = source.match(/type:\s*['"]critical['"]/g) || [];
       const ternary = source.match(/isCrit\s*\?\s*['"]critical['"]/g) || [];
       assert.ok(literal.length + ternary.length >= 3,

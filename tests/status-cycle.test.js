@@ -574,7 +574,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 549: 정합성 가드 — 1 internal callsite 보존', async () => {
-      const source = await readSrc('src/systems/CombatEngine.ts');
+      // enemyAttack(호출부)은 CombatEngine.enemyAI.ts로 분리됨 (mixin).
+      const source = await readSrc('src/systems/CombatEngine.enemyAI.ts');
       assert.ok(/this\.tickEnemyStatus\(updatedEnemy,\s*\[\],\s*curseAmpMult,\s*synergyDotMult\)/.test(source),
           'tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult) callsite 보존');
   });
