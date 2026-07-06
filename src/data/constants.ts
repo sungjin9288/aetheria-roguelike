@@ -1,6 +1,9 @@
 export const APP_ID = 'aetheria-rpg';
-// Vite env (test 환경에선 import.meta.env 부재 가능)
-const ENV: ImportMetaEnv = (typeof import.meta !== 'undefined' && import.meta.env) || ({} as ImportMetaEnv);
+// Vite env (test 환경에선 import.meta.env 부재 가능 — plain Node/tsx 실행 시 process.env로 폴백.
+// Vite/브라우저에선 import.meta.env가 항상 존재하므로 이 폴백은 실제 빌드 동작에 영향 없음).
+const ENV: ImportMetaEnv = (typeof import.meta !== 'undefined' && import.meta.env)
+    || (typeof process !== 'undefined' && process.env as any)
+    || ({} as ImportMetaEnv);
 // Admin UIDs — 환경변수에서 쉼표 구분으로 주입 (VITE_ADMIN_UIDS=uid1,uid2)
 export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map((s: any) => s.trim()).filter(Boolean);
 
@@ -115,6 +118,9 @@ export const BALANCE: BalanceConfig = {
     DUAL_WIELD_DEF_MULT: 0.92,
     ONE_HAND_CRIT_BONUS: 0.08,
     OFFHAND_ONE_HAND_CRIT_BONUS: 0.05,
+    // 장비 비교 점수식(getEquipmentScore) 가중치 — ShopPanel/SmartInventory 공용 (2026-07 감사 중복 제거).
+    EQUIP_SCORE_CRIT_WEIGHT: 2,
+    EQUIP_SCORE_MP_DIVISOR: 5,
     DEBOUNCE_SAVE_MS: 500,
     LOG_MAX_SIZE: 50,
     ENEMY_TURN_DELAY_MS: 450,       // 적 반격 딜레이 (ms)

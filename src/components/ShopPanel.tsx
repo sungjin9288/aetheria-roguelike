@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
-import { getEquipmentProfile, getItemStatText, getNextEquipmentState, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
@@ -71,7 +71,7 @@ const getComparisonMeta = (item: any, equip: any) => {
         if (mpDelta !== 0) deltas.push(`MP ${signedDelta(mpDelta, '')}`);
         if (!deltas.length) deltas.push('현재 장비와 동일한 효율');
 
-        const score = atkDelta + defDelta + (critDelta * 2) + Math.floor(mpDelta / 5);
+        const score = getEquipmentScore({ atk: atkDelta, def: defDelta, crit: critDelta, mp: mpDelta });
         const replacedOffhand = item.type === 'weapon' && isTwoHandWeapon(item) && equip.offhand;
 
         return {

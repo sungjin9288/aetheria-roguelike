@@ -130,6 +130,22 @@ export const getEquipmentProfile = (equip: EquipSlots) => {
     };
 };
 
+/** 장비 비교(diff) 스탯 — atk/def/crit(%)/mp 변화량. ShopPanel/SmartInventory 공용 표현. */
+export interface EquipmentStatDiff {
+    atk: number;
+    def: number;
+    /** 크리티컬 변화량 — 퍼센트 정수 (예: +3 = crit +3%p). */
+    crit: number;
+    mp: number;
+}
+
+// cycle 2026-07 감사: ShopPanel.tsx(getComparisonMeta) / SmartInventory.tsx(isEquipUpgrade)에
+//   동일하게 인라인 중복되던 장비 가치평가 공식을 단일화. 가중치는 BALANCE로 상수화
+//   (EQUIP_SCORE_CRIT_WEIGHT / EQUIP_SCORE_MP_DIVISOR) — 계산 결과는 기존과 1:1 동일.
+export const getEquipmentScore = ({ atk, def, crit, mp }: EquipmentStatDiff): number => (
+    atk + def + (crit * BALANCE.EQUIP_SCORE_CRIT_WEIGHT) + Math.floor(mp / BALANCE.EQUIP_SCORE_MP_DIVISOR)
+);
+
 // cycle 528: weapons / requiredWeapon defaults 제거 — 1 internal callsite
 //   (line 197) pickBestOneHandPair(filter(Boolean) array, item) 2 args 명시
 //   전달이라 두 default 모두 도달 불가. body의 requiredWeapon truthy 가드는

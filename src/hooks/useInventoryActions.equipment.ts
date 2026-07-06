@@ -1,6 +1,7 @@
 import { BALANCE } from '../data/constants';
 import { toArray, makeItem } from '../utils/gameUtils';
 import { getEquipmentIdentity, getNextEquipmentState, isTwoHandWeapon } from '../utils/equipmentUtils';
+import { canEquip } from '../utils/equipmentValidation';
 import { consumeInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
 import { AT } from '../reducers/actionTypes';
 import { MSG } from '../data/messages';
@@ -20,22 +21,21 @@ export const createEquipmentActions = (ctx: any) => {
             if (!inventoryItem) return addLog('error', MSG.INV_ITEM_NOT_FOUND);
 
             if (['weapon', 'armor', 'shield'].includes(inventoryItem.type)) {
-                const reqLevel = inventoryItem.reqLevel ?? (BALANCE.TIER_REQ_LEVEL?.[inventoryItem.tier] ?? 1);
-                if ((player.level || 1) < reqLevel) {
-                    return addLog('error', MSG.EQUIP_LEVEL_REQUIRED(inventoryItem.name, reqLevel));
-                }
-                if (Array.isArray(inventoryItem.jobs) && !inventoryItem.jobs.includes(player.job)) {
-                    return addLog('error', MSG.EQUIP_JOB_RESTRICT(player.job, inventoryItem.name));
-                }
-
-                const filteredInv = player.inv.filter((entry: any) => entry.id !== inventoryItem.id);
                 const currentEquip = { ...player.equip };
-                const inventoryItemKey = getEquipmentIdentity(inventoryItem);
-
-                if (inventoryItem.type === 'shield' && isTwoHandWeapon(currentEquip.weapon)) {
+                const validation = canEquip(inventoryItem, player, currentEquip);
+                if (!validation.ok) {
+                    if (validation.reason === 'level') {
+                        return addLog('error', MSG.EQUIP_LEVEL_REQUIRED(inventoryItem.name, validation.reqLevel));
+                    }
+                    if (validation.reason === 'job') {
+                        return addLog('error', MSG.EQUIP_JOB_RESTRICT(player.job, inventoryItem.name));
+                    }
                     addLog('error', MSG.EQUIP_TWO_HAND_SHIELD_BLOCK);
                     return;
                 }
+
+                const filteredInv = player.inv.filter((entry: any) => entry.id !== inventoryItem.id);
+                const inventoryItemKey = getEquipmentIdentity(inventoryItem);
 
                 const nextEquip = getNextEquipmentState(currentEquip, inventoryItem);
                 const preservedKeys = new Set(

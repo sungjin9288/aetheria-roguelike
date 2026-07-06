@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
-import { getEquipmentIdentity, getEquipmentProfile, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentIdentity, getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
 import { getEnhanceAvailability } from '../utils/enhancementUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
@@ -140,7 +140,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
     const isEquipUpgrade = useCallback((item: any) => {
         const diff = getCompareDiff(item);
         if (!diff) return false;
-        return (diff.atk + diff.def + (diff.crit * 2) + Math.floor(diff.mp / 5)) > 0;
+        return getEquipmentScore(diff) > 0;
     }, [getCompareDiff]);
 
     const handleSmartEquip = () => {
