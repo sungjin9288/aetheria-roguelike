@@ -39,6 +39,8 @@ interface PlayerStats {
     exploreState?: Record<string, any>;
     codex?: PlayerCodex;
     codexClaimed?: string[];
+    /** 마지막 플레이(저장) 시각(ms). 복귀 브리핑 카드가 경과 시간 판정에 사용. */
+    lastSeenAt?: number | null;
     [key: string]: any;
 }
 

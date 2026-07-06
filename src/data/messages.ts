@@ -312,6 +312,17 @@ export const MSG = {
     MAP_BADGE_SHOP: '상점',
     MAP_BADGE_GRAVE: '유해 회수↑',
 
+    // --- 복귀 브리핑 카드 (리텐션 훅) ---
+    RETURN_BRIEFING_TITLE: '복귀를 환영합니다',
+    RETURN_BRIEFING_AWAY: (hours: number) => `마지막 접속 이후 ${hours}시간이 지났습니다.`,
+    RETURN_BRIEFING_LOCATION_LABEL: '현재 위치',
+    RETURN_BRIEFING_STATUS_LABEL: '레벨 / HP',
+    RETURN_BRIEFING_MISSIONS_LABEL: '미완료 일일 프로토콜',
+    RETURN_BRIEFING_MISSIONS_VALUE: (count: number) => `${count}건`,
+    RETURN_BRIEFING_CHAINS_LABEL: '진행 중인 이야기',
+    RETURN_BRIEFING_CHAINS_VALUE: (count: number) => `${count}건`,
+    RETURN_BRIEFING_CLOSE: '탐험 계속하기',
+
     // cycle 116: GM_OVERWHELM/CRISIS/UNDERDOG 제거 — 게임 마스터 톤 메시지가 0건 사용
     // (DifficultyManager가 자체 로그를 inline string으로 처리).
 

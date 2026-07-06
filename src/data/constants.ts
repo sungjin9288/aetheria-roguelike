@@ -95,6 +95,7 @@ export interface BalanceConfig {
     ELEMENT_WEAK_MULT: number;
     ELEMENT_RESIST_MULT: number;
     DEFAULT_MAX_HP: number;
+    RETURN_BRIEFING_HOURS: number;
 }
 
 export const BALANCE: BalanceConfig = {
@@ -448,6 +449,9 @@ export const BALANCE: BalanceConfig = {
 
     // 인벤토리 UX 임계값
     INV_FULL_THRESHOLD: 18,             // 인벤토리 과밀 경고 임계 (최대의 ~90%)
+
+    // 리텐션 훅 — 복귀 브리핑 카드
+    RETURN_BRIEFING_HOURS: 6,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시
 };
 
 Object.freeze(CONSTANTS);
