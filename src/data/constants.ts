@@ -95,6 +95,9 @@ export interface BalanceConfig {
     ELEMENT_WEAK_MULT: number;
     ELEMENT_RESIST_MULT: number;
     DEFAULT_MAX_HP: number;
+    RETURN_BRIEFING_HOURS: number;
+    ABYSS_DAILY_DIVE_MULT: number;
+    ABYSS_DAILY_DIVE_COMBAT_COUNT: number;
 }
 
 export const BALANCE: BalanceConfig = {
@@ -455,6 +458,13 @@ export const BALANCE: BalanceConfig = {
 
     // 인벤토리 UX 임계값
     INV_FULL_THRESHOLD: 18,             // 인벤토리 과밀 경고 임계 (최대의 ~90%)
+
+    // 리텐션 훅 — 복귀 브리핑 카드
+    RETURN_BRIEFING_HOURS: 6,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시
+
+    // 리텐션 훅 — 심연 데일리 다이브
+    ABYSS_DAILY_DIVE_MULT: 1.5,         // 혼돈의 심연 일일 첫 다이브 EXP/골드 배율
+    ABYSS_DAILY_DIVE_COMBAT_COUNT: 5,   // 배율이 적용되는 하루 첫 전투 수 (1회는 체감 없음 — 리뷰 후속)
 };
 
 Object.freeze(CONSTANTS);

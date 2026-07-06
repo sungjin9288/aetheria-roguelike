@@ -5,6 +5,7 @@ import { GS } from '../../reducers/gameStates';
 import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { getRegionTheme } from '../../utils/regionTheme';
+import { buildReturnBriefing } from '../../utils/returnBriefing';
 import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
 import MainLayout from '../MainLayout';
@@ -22,6 +23,7 @@ const TrueEndingScreen = lazy(() => import('../TrueEndingScreen'));
 const PostCombatCard   = lazy(() => import('../PostCombatCard'));
 const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
+const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
 
 const GameRoot = ({
     engine, fullStats,
@@ -59,6 +61,19 @@ const GameRoot = ({
     // 재실행되면 retroactive title 부여가 매 변화마다 다시 시도되어 비효율.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [engine.bootStage, engine.player, engine.dispatch, engine.addLog]);
+
+    // 리텐션 훅 #1 — 복귀 브리핑 카드: bootStage 'ready' 진입 시점에 1회만 확인.
+    // 세션당 1회 가드(returnBriefingCheckedRef) — 이후 player 변화로 재계산되지 않음.
+    // titleCheckedRef(위)와 동일한 "ready 진입 1회 확인" 패턴. react-hooks/set-state-in-effect는
+    // eslint.config.js에서 기존 의도된 패턴과의 충돌로 warning 완화되어 있음(주석 참조).
+    const returnBriefingCheckedRef = useRef(false);
+    const [returnBriefing, setReturnBriefing] = useState<ReturnType<typeof buildReturnBriefing>>(null);
+    useEffect(() => {
+        if (returnBriefingCheckedRef.current) return;
+        if (engine.bootStage !== 'ready' || !engine.player) return;
+        returnBriefingCheckedRef.current = true;
+        setReturnBriefing(buildReturnBriefing(engine.player, Date.now()));
+    }, [engine.bootStage, engine.player]);
     const legendarySoundPlayedRef = useRef<any>(null);
     useEffect(() => {
         if (!legendaryDrop) {
@@ -252,6 +267,15 @@ const GameRoot = ({
                         onClose={() => engine.actions.clearPostCombat?.()}
                         onRest={() => engine.actions.rest?.()}
                         onSell={() => engine.actions.setSideTab?.('inventory')}
+                    />
+                </Suspense>
+            )}
+
+            {returnBriefing && (
+                <Suspense fallback={null}>
+                    <ReturnBriefingCard
+                        briefing={returnBriefing}
+                        onClose={() => setReturnBriefing(null)}
                     />
                 </Suspense>
             )}

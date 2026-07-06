@@ -39,7 +39,20 @@ interface PlayerStats {
     exploreState?: Record<string, any>;
     codex?: PlayerCodex;
     codexClaimed?: string[];
+    /** 마지막 플레이(저장) 시각(ms). 복귀 브리핑 카드가 경과 시간 판정에 사용. */
+    lastSeenAt?: number | null;
+    /** 혼돈의 심연 일일 첫 다이브 — 오늘 날짜 문자열과 사용 여부. */
+    abyssDailyDive?: AbyssDailyDive | null;
     [key: string]: any;
+}
+
+/** 심연 데일리 다이브 상태 — dailyProtocol과 동일한 날짜 문자열 판정 방식.
+ *  combats: 오늘 버프가 적용된 전투 수 (ABYSS_DAILY_DIVE_COMBAT_COUNT까지).
+ *  used: 구형 레코드 하위 호환 필드 (combats 도입 전 — 소진으로 간주). */
+export interface AbyssDailyDive {
+    date: string;
+    combats?: number;
+    used?: boolean;
 }
 
 interface PlayerCodex {
