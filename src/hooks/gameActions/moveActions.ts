@@ -28,7 +28,11 @@ export const createMoveActions = (deps: any) => {
             if (targetMap.seasonOnly && !liveConfig?.seasonEvent?.active) {
                 return addLog('warn', MSG.MOVE_SEASON_ONLY);
             }
-            const requiredLevel = targetMap.minLv ?? (Array.isArray(targetMap.level) ? targetMap.level[0] : targetMap.level) ?? 1;
+            // 2026-07 타입화: targetMap.level은 number | number[] | 'infinite'. minLv가
+            // 없는 무한 심연 진입로('마왕성' 등)는 원래도 level: 'infinite' 그대로 비교식에
+            // 들어가던 latent 케이스 — MSG.MOVE_LEVEL_REQUIRED 등 number 파라미터와
+            // 호환되도록 number | string 유니온으로 명시해 동일 런타임 동작 보존.
+            const requiredLevel: number | string = targetMap.minLv ?? (Array.isArray(targetMap.level) ? targetMap.level[0] : targetMap.level) ?? 1;
             if (player.level < requiredLevel) return addLog('error', MSG.MOVE_LEVEL_REQUIRED(requiredLevel));
             if (!targetMap.seasonOnly && !(DB.MAPS[player.loc]?.exits || []).includes(loc)) return addLog('error', MSG.MOVE_NO_EXIT);
 
@@ -58,7 +62,7 @@ export const createMoveActions = (deps: any) => {
                 addLog('event', MSG.MOVE_NEW_AREA(loc));
                 // C-2 (B+ 2026-06): 갓 진입한 위험 던전(권장 레벨 근접) 경고 — 정예/보스
                 //   readability. 하드 레벨 락으로 과진입은 불가하나, gap≤1 지역은 위협이 실재.
-                if (!isSafeDestination && ((player.level || 1) - requiredLevel) <= 1) {
+                if (!isSafeDestination && ((player.level || 1) - Number(requiredLevel)) <= 1) {
                     addLog('warn', MSG.MOVE_AREA_DANGER(requiredLevel));
                 }
                 // cycle 118: 첫 방문 sensory cue — D major triad 짧은 arpeggio.

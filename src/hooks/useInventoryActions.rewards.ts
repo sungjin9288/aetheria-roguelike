@@ -137,8 +137,8 @@ export const createRewardActions = (ctx: any) => {
                 }
             };
 
-            if (achData.reward.gold) updatedPlayer = grantGold(updatedPlayer, achData.reward.gold);
-            if (achData.reward.item) {
+            if (achData.reward?.gold) updatedPlayer = grantGold(updatedPlayer, achData.reward.gold);
+            if (achData.reward?.item) {
                 const prevInvLen = updatedPlayer.inv.length;
                 updatedPlayer = addItemByName(updatedPlayer, achData.reward.item);
                 if (updatedPlayer.inv.length > prevInvLen) {

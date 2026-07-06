@@ -1353,9 +1353,11 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 627: COMBAT_ATTACK_DETAIL signature에서 tags default [] 0건', async () => {
       const source = await readSrc('src/data/messages.ts');
-      assert.ok(!/COMBAT_ATTACK_DETAIL:[^=]*tags:\s*any\s*=\s*\[\]/.test(source),
+      // 2026-07 타입화: tags 파라미터가 any → string[]로 구체화됐지만
+      // (default 없이 파라미터가 보존된다는) 가드의 의도는 동일하게 유지.
+      assert.ok(!/COMBAT_ATTACK_DETAIL:[^=]*tags:\s*string\[\]\s*=\s*\[\]/.test(source),
           'COMBAT_ATTACK_DETAIL tags default [] 제거');
-      assert.ok(/COMBAT_ATTACK_DETAIL:[^=]+tags:\s*any\)\s*=>/.test(source),
+      assert.ok(/COMBAT_ATTACK_DETAIL:[^=]+tags:\s*string\[\]\)\s*=>/.test(source),
           'COMBAT_ATTACK_DETAIL tags 파라미터 보존 (default 없이)');
   });
 

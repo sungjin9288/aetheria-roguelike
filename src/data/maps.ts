@@ -1,4 +1,6 @@
-export const MAPS: any = {
+import type { GameMap } from '../types/map.js';
+
+export const MAPS: Record<string, GameMap> = {
     // ── 초반 지역 (Lv 1-10) ──────────────────────────────────────────────────
     '시작의 마을': {
         level: 1, type: 'safe', exits: ['고요한 숲', '서쪽 평원'],

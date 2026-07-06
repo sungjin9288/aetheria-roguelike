@@ -1,4 +1,6 @@
-export const MONSTERS: any = {
+import type { Monster } from '../types/monster.js';
+
+export const MONSTERS: Record<string, Monster> = {
     슬라임: { weakness: '화염', resistance: '대지', hpMult: 0.8, pattern: { guardChance: 0.05, heavyChance: 0.1 }, statusOnHit: 'poison' },
     늑대: { weakness: '화염', resistance: '자연', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.35 } },
     '숲의 정령': { weakness: '화염', resistance: '자연' },

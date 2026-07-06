@@ -64,18 +64,20 @@ export const createEconomyActions = (ctx: any) => {
         craft: (recipeId: any) => {
             const recipe = DB.ITEMS.recipes?.find((entry: any) => entry.id === recipeId);
             if (!recipe) return;
-            if (player.gold < recipe.gold) return addLog('error', MSG.GOLD_INSUFFICIENT);
+            // 레시피 데이터는 항상 gold/inputs/name을 명시 정의 (items.ts recipes 카테고리) —
+            // ItemRecipeDef의 optional 타입은 런타임 확장 호환용이라 non-null assertion으로 단언.
+            if (player.gold < recipe.gold!) return addLog('error', MSG.GOLD_INSUFFICIENT);
 
-            for (const input of recipe.inputs) {
+            for (const input of recipe.inputs!) {
                 const count = player.inv.filter((entry: any) => entry.name === input.name).length;
-                if (count < input.qty) return addLog('error', MSG.CRAFT_MAT_INSUFFICIENT(input.name));
+                if (count < input.qty!) return addLog('error', MSG.CRAFT_MAT_INSUFFICIENT(input.name!));
             }
 
             let newInv = [...player.inv];
-            for (const input of recipe.inputs) {
+            for (const input of recipe.inputs!) {
                 let removed = 0;
                 newInv = newInv.filter((invItem: any) => {
-                    if (invItem.name === input.name && removed < input.qty) {
+                    if (invItem.name === input.name && removed < input.qty!) {
                         removed += 1;
                         return false;
                     }
@@ -92,7 +94,7 @@ export const createEconomyActions = (ctx: any) => {
             const codexBefore = countNewCodexEntries(player);
             let updatedPlayer = incrementStat({
                 ...player,
-                gold: player.gold - recipe.gold,
+                gold: player.gold - recipe.gold!,
                 inv: [...newInv, craftedItem],
             }, 'crafts');
             // 도감 등록: 레시피 + 결과 아이템
@@ -107,7 +109,7 @@ export const createEconomyActions = (ctx: any) => {
             dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.craft });
             emitDailyProtocolLogs('goldSpend', recipe.gold);
             emitUnlockedTitles(updatedPlayer);
-            addLog('success', MSG.CRAFT_DONE(recipe.name));
+            addLog('success', MSG.CRAFT_DONE(recipe.name!));
         },
 
         // cycle 543: useProtect default false 제거 — 1 callsite (CraftingPanel

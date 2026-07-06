@@ -5,7 +5,7 @@ const ENV: ImportMetaEnv = (typeof import.meta !== 'undefined' && import.meta.en
     || (typeof process !== 'undefined' && process.env as any)
     || ({} as ImportMetaEnv);
 // Admin UIDs — 환경변수에서 쉼표 구분으로 주입 (VITE_ADMIN_UIDS=uid1,uid2)
-export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map((s: any) => s.trim()).filter(Boolean);
+export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
 
 /**
  * 게임 전역 상수. 1차 타입화 — 핵심 키는 명시 타입, 나머지는 인덱스 시그니처로
@@ -458,7 +458,7 @@ Object.freeze(BALANCE);
  * BALANCE.RARITY_COLORS는 hex 값, RARITY_CLASSES는 tailwind 클래스.
  * 두 값의 이름이 혼동되지 않도록 분리되어 있다.
  */
-export const RARITY_CLASSES: Record<string, any> = Object.freeze({
+export const RARITY_CLASSES: Record<string, string> = Object.freeze({
     common: 'text-slate-300',
     uncommon: 'text-cyan-400',
     rare: 'text-purple-400',

@@ -10,3 +10,5 @@ export type * from './monster.js';
 export type * from './map.js';
 export type * from './player.js';
 export type * from './relic.js';
+export type * from './class.js';
+export type * from './quest.js';
