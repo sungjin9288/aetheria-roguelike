@@ -2,6 +2,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
 import { BALANCE } from '../../data/constants';
+import { DB } from '../../data/db';
 import { checkMilestones, grantGold, makeItem, registerCodex, registerLootToCodex, countNewCodexEntries } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../utils/runProfileUtils';
@@ -176,6 +177,15 @@ export const handleVictoryOutcome = ({
                 ...p,
                 stats: { ...p.stats, areaBossDefeated: { ...(p.stats.areaBossDefeated || {}), [deadEnemy.baseName]: true } }
             })});
+            // 원정 완료 정산 리캡 (2026-07 감사 축4): 구역 보스(맵 데이터의 mapData.boss와
+            //   이름이 일치하는 보스) 격파 시 원정 완료 로그. 신규 추적 인프라를 만들지
+            //   않기 위해 이미 계산된 값만 조합 — killStreak(이번 원정 동안 죽지 않고 이어온
+            //   연속 처치 수, 위에서 갱신 완료)와 victoryResult.goldGained(이번 전투 획득
+            //   골드)만 사용.
+            const currentMapBoss = DB.MAPS[updatedPlayer.loc]?.boss;
+            if (typeof currentMapBoss === 'string' && currentMapBoss === deadEnemy.baseName) {
+                addLog('success', MSG.EXPEDITION_CLEAR_RECAP(deadEnemy.baseName, updatedPlayer.killStreak || 1, victoryResult.goldGained || 0));
+            }
         }
         dispatch({ type: AT.ADD_SEASON_XP, payload: isBossKill ? SEASON_XP.bossKill : SEASON_XP.kill });
         const winHpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);

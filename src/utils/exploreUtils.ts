@@ -124,8 +124,12 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
 
 // ─────────────────────────────────────────────────────────────────────────
 // 3. 몬스터 스탯 생성 + 접두어 부여 (Phase 1-B)
+// 2026-07 — 원정 보스 접근 게이지: 구역 보스의 15% 순수 랜덤 강제 조우를 제거하고
+//   (bossGauge.ts) 게이지 만충 후 "도전" 선택 시에만 forceAreaBoss:true로 결정론적
+//   스폰한다. options 미전달 시 기존 동작(구역 보스는 encounterPool에서 제외, 일반
+//   풀에서만 스폰)과 동일 — 하위 호환.
 // ─────────────────────────────────────────────────────────────────────────
-export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: any) => {
+export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: any, options: { forceAreaBoss?: boolean } = {}) => {
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
 
@@ -156,12 +160,14 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         }
     }
 
-    // 구역 보스 (15% 확률 스폰) — mapData.boss가 문자열이고 이번 런 미처치 시 보장
-    const areaBossName = typeof mapData.boss === 'string' ? mapData.boss : null;
-    const spawnAreaBoss = areaBossName
+    // 구역 보스 — 2026-07: 15% 순수 랜덤 강제 조우 제거, 원정 보스 접근 게이지
+    //   (bossGauge.ts) 만충 후 "도전" 선택 시에만 options.forceAreaBoss:true로
+    //   결정론적 스폰 (exploreActions.ts/eventActions.ts가 이 함수를 재호출).
+    const areaBossName: string | null = typeof mapData.boss === 'string' ? mapData.boss : null;
+    const spawnAreaBoss = areaBossName !== null
         && !(player.stats?.areaBossDefeated?.[areaBossName])
-        && Math.random() < 0.15;
-    const baseName = spawnAreaBoss
+        && Boolean(options.forceAreaBoss);
+    const baseName: string = (spawnAreaBoss && areaBossName !== null)
         ? areaBossName
         : encounterPool[Math.floor(Math.random() * encounterPool.length)];
     // 2026-07 타입화: GameMap.level은 number | number[] | 'infinite'. 이 함수의 스폰
@@ -385,18 +391,23 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
 //   (firebase 의존)를 참조하지 않도록 exploreUtils.ts에 둔다 — eventActions.ts 단위 테스트가
 //   firebase import 체인 없이 이 함수를 로드할 수 있어야 하기 때문 (campfire-node.test.js와
 //   동일한 제약).
+//   2026-07 — 원정 보스 접근 게이지: commitExploreOutcome에 mapData를 전달해 게이지를
+//   누적하지만, "짙은 안개"(스카우팅 unknown 카드) 경로로 재호출될 때는 이미 스카우팅
+//   카드가 뜬 시점(같은 explore() 턴)에 게이지가 1회 누적됐으므로 중복 누적을 막기 위해
+//   deps.skipBossGaugeAdvance:true를 전달받으면 mapData를 넘기지 않는다.
 // ─────────────────────────────────────────────────────────────────────────
-export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome }: any) => {
+export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome, skipBossGaugeAdvance }: any) => {
     const playerRelics = player.relics || [];
     const quietChance = getDiscoveryOdds(player, mapData).quietChance;
+    const gaugeMapData = skipBossGaugeAdvance ? null : mapData;
 
     if (Math.random() < quietChance) {
         const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats });
         if (quietResult !== 'nothing') {
-            commitExploreOutcome(quietResult, null);
+            commitExploreOutcome(quietResult, null, gaugeMapData);
             return;
         }
-        commitExploreOutcome('nothing', null);
+        commitExploreOutcome('nothing', null, gaugeMapData);
         addLog('info', MSG.EXPLORE_QUIET);
         return;
     }
@@ -409,7 +420,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
         && (firstRelicPity || Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
         const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
         if (available.length > 0) {
-            commitExploreOutcome('relic_found', null);
+            commitExploreOutcome('relic_found', null, gaugeMapData);
             const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
             addLog('event', MSG.EXPLORE_RELIC_FOUND);
@@ -460,7 +471,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
     }
 
     const fullStats = getFullStats();
-    commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }));
+    commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }), gaugeMapData);
     dispatch({ type: AT.SET_ENEMY, payload: mStats });
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));

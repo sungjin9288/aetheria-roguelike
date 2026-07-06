@@ -7,6 +7,7 @@ import { advanceExploreState } from '../../utils/explorationPacing';
 import { SEASON_XP } from '../../data/seasonPass';
 import { resetDailyProtocolIfNeeded, resetWeeklyProtocolIfNeeded } from '../../utils/exploreUtils';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
+import { advanceBossGauge } from '../../utils/bossGauge';
 
 /**
  * 클래스 기반 HP/MP 최대치 계산
@@ -38,7 +39,13 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
         });
     };
 
-    const commitExploreOutcome = (outcome: any, transformPlayer: any) => {
+    // 2026-07 — 원정 보스 접근 게이지: mapData를 3번째 인자로 받아 미격파 구역 보스가
+    //   있는 던전이면 탐험 결과 분기(체인/캠프파이어/스카우팅/quiet/전투)와 무관하게
+    //   "탐험할 때마다" 게이지를 누적한다. commitExploreOutcome은 explore()의 모든
+    //   분기가 공통으로 거치는 단일 지점이라 여기 한 곳만 수정하면 전체 파이프 커버.
+    //   보스 도전/회피 선택 해소(handleBossGaugeChoice)는 이 함수를 거치지 않고 별도로
+    //   게이지를 리셋하므로 이중 누적 없음.
+    const commitExploreOutcome = (outcome: any, transformPlayer: any, mapData?: any) => {
         resetDailyProtocolIfNeeded(player, dispatch);
         resetWeeklyProtocolIfNeeded(player, dispatch);
         dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
@@ -60,6 +67,9 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
                         exploreState: advanceExploreState(currentPlayer.stats, outcome),
                     }
                 };
+                if (mapData) {
+                    nextPlayer = { ...nextPlayer, stats: advanceBossGauge(nextPlayer, mapData) };
+                }
                 if (typeof transformPlayer === 'function') {
                     nextPlayer = transformPlayer(nextPlayer) || nextPlayer;
                 }

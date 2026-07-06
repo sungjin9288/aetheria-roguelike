@@ -303,6 +303,13 @@ export const BALANCE: BalanceConfig = {
     SCOUT_COMBAT_REWARD_BONUS: 0.1,     // "전투의 기척" 선택 시 해당 전투 처치 보상(EXP/골드) +10%
     SCOUT_ELITE_HP_MULT: 1.5,           // "정예의 흔적" 확정 스폰 HP/ATK 배율 (초반 정예와 동일 완화 배율)
 
+    // 원정 보스 접근 게이지 (2026-07 감사 축4 — 모바일 세션 정합): 구역 보스의 기존 15%
+    //   순수 랜덤 강제 조우(exploreUtils.spawnEnemy)를 제거하고, 미격파 구역 보스가 있는
+    //   던전에서 탐험할 때마다 누적되는 게이지로 대체한다. 만충 시 다음 탐험에서
+    //   "도전 vs 회피" 선택 카드(StS 위험 선택)를 제시 — 15% 기댓값(~6.7탐험당 1회)과
+    //   유사한 리듬을 유지하도록 1/0.14 ≈ 7.1탐험에 만충.
+    BOSS_GAUGE_PER_EXPLORE: 0.14,   // 미격파 구역 보스 던전 탐험당 게이지 누적량 (약 7~8탐험에 만충)
+
     // 현상수배 카운트
     BOUNTY_MIN_COUNT: 5,            // 현상수배 최소 처치 수
     BOUNTY_COUNT_RANGE: 6,          // 현상수배 처치 수 범위 (min + 0~range-1)

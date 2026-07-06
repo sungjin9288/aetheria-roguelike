@@ -7,6 +7,7 @@ import { clearTemporaryAdventureState, hasTemporaryAdventureState } from '../../
 import { checkDiscoveryChains, getFirstVisitReward } from '../../utils/exploreUtils';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { soundManager } from '../../systems/SoundManager';
+import { isAreaBossUndefeated, getAreaBossName } from '../../utils/bossGauge';
 
 // cycle 314: addStoryLog 미사용 dependency 제거 — moveActions 어디에서도 호출 0건.
 //   `void addStoryLog` 자가-suppress 라인도 함께 cleanup.
@@ -84,6 +85,13 @@ export const createMoveActions = (deps: any) => {
             }
             addLog('system', targetMap.desc);
             if (firstVisit && targetMap.lore) addLog('event', `📖 ${targetMap.lore}`);
+
+            // 원정 목표 배너 (2026-07 감사 축4 — 모바일 세션 정합): 미격파 구역 보스가 있는
+            //   던전 진입 시마다 "지역 진입 → 구역 보스 격파" 원정 프레이밍을 안내한다.
+            //   첫 방문 여부와 무관하게 매 진입마다 표시(재진입 시에도 원정 목표를 되새김).
+            if (isAreaBossUndefeated(targetMap, player)) {
+                addLog('event', MSG.EXPEDITION_GOAL_BANNER(getAreaBossName(targetMap) as string));
+            }
 
             checkDiscoveryChains(player, loc, { dispatch, addLog });
             if (shouldClearTemporaryState) addLog('info', MSG.TOWN_BUFF_CLEAR);
