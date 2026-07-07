@@ -139,7 +139,9 @@ test('getSignatureSetProgress: 1 celestial equipped → nextTier=2, not active',
     assert.ok(result.missingMembers.includes('천공 성전'));
 });
 
-test('getSignatureSetProgress: 2 celestial equipped → active at tier 2, nextTier=3', () => {
+test('getSignatureSetProgress: 2 celestial equipped → active at tier 2 (최종 티어 — 진행 완주)', () => {
+    // fix/signature-set-two-hand: celestial의 3·4티어는 합법 조합(2H는 shield와
+    // 양립 불가 + 갑옷 멤버 부재)으로 도달 불가라 제거됨 — 성검+성전이 완성형.
     const result = getSignatureSetProgress({
         weapon: { name: '성검 에테르니아' },
         offhand: { name: '천공 성전' },
@@ -148,9 +150,9 @@ test('getSignatureSetProgress: 2 celestial equipped → active at tier 2, nextTi
     assert.ok(result);
     assert.equal(result.equippedCount, 2);
     assert.equal(result.currentTier, 2);
-    assert.equal(result.nextTier, 3);
+    assert.equal(result.nextTier, null, 'tier 2가 최종 — 다음 목표 없음');
     assert.equal(result.isActive, true);
-    assert.ok(result.nextBonus);
+    assert.equal(result.nextBonus, null);
 });
 
 test('getSignatureSetProgress: shadow-lord 2-piece → active, no higher tier in some sets', () => {
@@ -166,18 +168,20 @@ test('getSignatureSetProgress: shadow-lord 2-piece → active, no higher tier in
     assert.equal(result.nextTier, 3);
 });
 
-test('getSignatureSetProgress: dimension set only has 2-tier, reaching 2 exhausts progression', () => {
-    // dimension bonuses = { 2: ... } — 2 equipped, nextTier=null
+test('getSignatureSetProgress: dimension 이지스+외투 = tier 2, 다음 목표 tier 3 안내', () => {
+    // fix/signature-set-two-hand: dimension에 갑옷 멤버(혼돈의 갑주)와 3티어가 추가됨.
+    // 이지스(방패)+외투(갑옷) = 아이템 2, 카운트 2 → tier 2 발동, nextTier 3.
+    // (구 픽스처 낫+이지스는 2H가 방패를 봉쇄해 실전 불가능한 조합이라 교체.)
     const result = getSignatureSetProgress({
-        weapon: { name: '차원 마왕의 낫' },
+        weapon: null,
         offhand: { name: '차원 방패 이지스' },
-        armor: null,
+        armor: { name: '혼돈의 갑주' },
     });
     assert.ok(result);
     assert.equal(result.key, 'dimension');
     assert.equal(result.currentTier, 2);
-    assert.equal(result.nextTier, null);
-    assert.equal(result.nextBonus, null);
+    assert.equal(result.nextTier, 3);
+    assert.ok(result.nextBonus, 'tier 3 보너스 미리보기 존재');
     assert.equal(result.isActive, true);
 });
 

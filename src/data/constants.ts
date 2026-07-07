@@ -72,6 +72,7 @@ export interface BalanceConfig {
     ESCAPE_CHANCE: number;
     EVENT_CHANCE_NOTHING: number;
     MAP_HIGH_EVENT_CHANCE_THRESHOLD: number;
+    SIGNATURE_SET_MIN_ITEMS: number;
     EXP_SCALE_RATE: number;
     EXP_LEVEL_HARD_CAP: number;
     HP_PER_LEVEL: number;
@@ -149,6 +150,10 @@ export const BALANCE: BalanceConfig = {
     //   시너지 잔여 유물이 pool에 있으면, 유물 3(4)지선다 중 이 슬롯 수만큼은 그
     //   잔여 유물 후보군에서 가중 추첨으로 보장한다 (pickWeightedRelics owned 옵션).
     SYNERGY_PITY_SLOT: 1,
+    // fix/signature-set-two-hand: 시그니처 세트 발동에 필요한 최소 "서로 다른 세트
+    //   아이템" 수. 2H 가중치(카운트 2)는 티어 도달 공정성용이고, 발동 자체는 모아야
+    //   한다 — 세트의 메리트는 수집에서 나온다는 설계 원칙 (2H 단독 발동 차단).
+    SIGNATURE_SET_MIN_ITEMS: 2,
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
     PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가
     PRESTIGE_MP_BONUS: 15,          // 환생당 영구 MP 증가

@@ -192,7 +192,8 @@
       "tier": "legendary",
       "category": "unique-weapon",
       "tone": "shadow",
-      "artNote": "plate · 가시 숄더 + 혼돈 Z-crack + 공허 코어"
+      "setGroup": "dimension",
+      "artNote": "plate · 가시 숄더 + 혼돈 Z-crack + 공허 코어 · fix/signature-set-two-hand: dimension 세트 갑옷 멤버 승격(낫 2H가 방패를 봉쇄해 죽어있던 세트에 갑옷 경로 개방, 버서커가 낫+갑주 교집합)"
     }
   }
 }
