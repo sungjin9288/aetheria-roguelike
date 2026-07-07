@@ -37,16 +37,19 @@ test('celestial 2-piece (에테르니아 + 천공 성전) triggers 2-set bonus',
     assert.ok(result.atkMult > 1);
 });
 
-test('dragon-lord 3-piece (용의 화염 + 드래곤로드 + 라그나로크) triggers 3-set', () => {
+test('dragon-lord 2H weapon + armor triggers 3-set (fix/signature-set-two-hand: 라그나로크 is 2H, counts as 2)', () => {
     const result = computeSignatureSetBonus({
         weapon: { name: '라그나로크' },
         armor: { name: '드래곤로드 갑주' },
         offhand: null,
     });
-    // Only 2 equipped via the 3 slots (weapon, armor), both dragon-lord
+    // 라그나로크(2H, weight 2) + 드래곤로드 갑주(armor, weight 1) = count 3.
+    // Previously this asserted count=2 (physical item count); the 2H-as-2-piece
+    // rule changed this to reflect the weapon occupying both weapon+offhand slots.
     assert.ok(result.activeSet);
     assert.equal(result.activeSet.key, 'dragon-lord');
-    assert.equal(result.activeSet.count, 2);
+    assert.equal(result.activeSet.count, 3);
+    assert.equal(result.activeSet.tier, 3);
 });
 
 test('shadow-lord 2-piece applies negative defMult (어둠 계약)', () => {
@@ -63,11 +66,13 @@ test('shadow-lord 2-piece applies negative defMult (어둠 계약)', () => {
 
 test('different signature sets do not combine (uses most-count set)', () => {
     const result = computeSignatureSetBonus({
-        weapon: { name: '라그나로크' }, // dragon-lord
-        armor: { name: '세계수의 로브' }, // worldtree
-        offhand: { name: '천공 성전' }, // celestial
+        weapon: { name: '세계수의 검' }, // worldtree, 1H — weight 1
+        armor: { name: '드래곤로드 갑주' }, // dragon-lord, weight 1
+        offhand: { name: '천공 성전' }, // celestial, weight 1
     });
-    // 3 different sets, each with count 1 → no set active
+    // 3 different sets, each with count 1 → no set active.
+    // NOTE: uses 1H members only (fix/signature-set-two-hand made 2H weapons count
+    // as 2 pieces, so a 2H weapon here would activate its own set alone).
     assert.equal(result.activeSet, null);
 });
 

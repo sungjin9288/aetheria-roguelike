@@ -66,6 +66,9 @@ export const MSG = {
             : `✦ [${bossName}] 전설 각인 [${topName}] 드롭 가능 — ${topPct}%`
     ),
     SIGNATURE_PITY_RESONANCE: (pct: number | string, pity: number | undefined) => `✦ 각인 공명 +${pct}% — 보스 ${pity}회 연속 무획득 보정 적용`,
+    // fix/signature-set-two-hand: 양손 시그니처 무기가 세트 카운트에 2피스로 반영됐을 때
+    // EquipmentPanel "세트 진행도" 카드에 표시하는 힌트 1줄.
+    SIGNATURE_SET_TWO_HAND_HINT: '💡 양손 무기는 보조 슬롯을 함께 차지해 2피스로 계산됩니다.',
     LEGACY_ESSENCE: (n: number) => `레거시 에센스 +${n}`,
     LEGACY_RANK: (n: number) => `레거시 랭크 ${n} 달성!`,
     // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.

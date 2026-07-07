@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 // cycle 417: Sword / Shield import 제거 — SLOT_CONFIG.icon 출력 dead 정리 cascade.
 import { Sparkles, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
+import { MSG } from '../data/messages';
 import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
 import { getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
@@ -320,6 +321,14 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         <div className="mt-1 text-[9px] font-fira text-slate-500/85 truncate">
                             필요: {setProgress.missingMembers.slice(0, 3).join(' · ')}
                             {setProgress.missingMembers.length > 3 ? ` +${setProgress.missingMembers.length - 3}` : ''}
+                        </div>
+                    )}
+                    {setProgress.twoHandCounted && (
+                        <div
+                            data-testid="signature-set-two-hand-hint"
+                            className="mt-1 text-[9px] font-fira text-slate-500/85 leading-snug"
+                        >
+                            {MSG.SIGNATURE_SET_TWO_HAND_HINT}
                         </div>
                     )}
                 </div>
