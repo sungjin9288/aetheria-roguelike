@@ -416,6 +416,24 @@ const RELIC_WEIGHTS: Record<string, any> = Object.freeze({
     legendary: 1,
 });
 
+/**
+ * 희귀도 서열 (낮음→높음). RELIC_WEIGHTS / BALANCE.RARITY_COLORS와 동일한 순서를
+ * 단일 source로 유지 — rarityCap 필터(pickWeightedRelics)가 참조하는 유일한 서열 정의.
+ */
+const RARITY_ORDER: readonly string[] = Object.freeze(['common', 'uncommon', 'rare', 'epic', 'legendary']);
+
+/**
+ * 관대함 하향 (2026-07 밸런스 감사): pool에서 rarityCap 이하 등급만 남기는 순수 필터.
+ * cap이 RARITY_ORDER에 없는 값이면 무필터(pool 그대로 반환) — 방어적 fallback.
+ * 시작 부트(START_BOOT_RARITY_CAP: 'rare')에서 epic/legendary를 제외하는 데 사용.
+ */
+const filterByRarityCap = (pool: any[], rarityCap?: string) => {
+    if (!rarityCap) return pool;
+    const capIndex = RARITY_ORDER.indexOf(rarityCap);
+    if (capIndex < 0) return pool;
+    return pool.filter((r: any) => RARITY_ORDER.indexOf(r.rarity) <= capIndex);
+};
+
 /** 런당 최대 유물 보유 수 */
 export const MAX_RELICS_PER_RUN = 5;
 
@@ -614,9 +632,13 @@ const findSynergyPityCandidates = (pool: any[], owned: any[]) => {
 //   "1개만 더 모으면 완성"되는 시너지 잔여 유물이 pool에 있을 때 BALANCE.SYNERGY_PITY_SLOT개
 //   슬롯을 그 후보군에서 가중 추첨으로 보장한다. owned 미전달/빈 배열/해당 후보 없음 시
 //   기존 로직과 완전히 동일하게 동작 (기존 호출부 전부 무수정 하위호환).
-export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: any[] }) => {
-    if (pool.length === 0) return [];
-    const remaining = [...pool];
+// 관대함 하향 (2026-07 밸런스 감사): options.rarityCap을 넘기면 pool을 해당 등급 이하로만
+//   제한한 뒤 기존 로직(시너지 pity 포함)을 그대로 태운다. 시작 부트(characterActions.ts)만
+//   'rare'를 전달 — 일반 탐험 유물 발견(exploreUtils.ts)은 전달하지 않아 기존 확률 분포 불변.
+export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: any[]; rarityCap?: string }) => {
+    const cappedPool = filterByRarityCap(pool, options?.rarityCap);
+    if (cappedPool.length === 0) return [];
+    const remaining = [...cappedPool];
     const needed = Math.min(count, remaining.length);
     if (needed === 0) return [];
 

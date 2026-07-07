@@ -107,6 +107,20 @@ export const BALANCE: BalanceConfig = {
     DROP_CHANCE: 0.4,
     ESCAPE_CHANCE: 0.5,
     DAILY_AI_LIMIT: 50,
+    // 관대함 하향 (2026-07 밸런스 감사): 큐레이션 폴백 이벤트 풀에 NPC/도박/퍼즐 등
+    //   보상이 큰 "구조화" 이벤트가 섞일 확률. 기존 30%(하드코딩) → 22%로 하향해
+    //   고보상 이벤트 조우 빈도를 낮춘다 (aiEventUtils.pickFallbackEvent).
+    STRUCTURED_EVENT_MIX: 0.22,
+    // 관대함 하향 (2026-07 밸런스 감사): FALLBACK_EVENT_POOL.structured 전수 스캔 결과
+    //   (ad-hoc 스캔 스크립트로 gold 분포 추출: 200/200/300/300/500/500/800/1000),
+    //   상위 ~10% 이상치이던 "운명의 주사위"(1000G) · "보물 상자 암호"(800G)를 각각
+    //   ~28%/~25% 하향(1000→720, 800→600). 이 상수는 하향 후 실측 상한이자 회귀 가드 —
+    //   tests/generosity-tuning.test.js가 STRUCTURED_EVENT_GOLD_CAP 이하임을 계약으로 고정한다.
+    STRUCTURED_EVENT_GOLD_CAP: 720,
+    // "보물 상자 암호" 퍼즐(기존 800G)의 하향 목표치(800→600, -25%). 위 CAP과 별도 상수인
+    // 이유: 서로 다른 이벤트(도박 vs 퍼즐)의 보상이라 우연히 같은 값이 되어도 독립적으로
+    // 조정 가능해야 함 (하나만 재조정 시 다른 하나에 영향 없도록).
+    STRUCTURED_EVENT_PUZZLE_GOLD_CAP: 600,
     EVENT_CHANCE_NOTHING: 0.2,
     MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // MapNavigator '이벤트↑' 배지 임계값 — 상위 지역군(eventChance 0.28+) 강조
     PREFIX_CHANCE: 0.2,
@@ -279,6 +293,12 @@ export const BALANCE: BalanceConfig = {
     // 시작 부트 (B-1, B+ 2026-06): 캐릭터 생성 직후 유물 N선택 제공 → 첫 빌드 결정을
     //   0분에 노출(Hades 거울 / StS Neow). 느린 초반을 "내 빌드 실험"으로 전환.
     START_BOOT_RELIC_CHOICES: 3,
+    // 관대함 하향 (2026-07 밸런스 감사): 0분에 legendary/epic이 뜨면 런 전체가 행운으로
+    //   결정됨 — 로그라이크의 "적당한 불친절함"을 해치는 최상위 이상치. 시작 부트 후보
+    //   풀만 rare 이하로 제한(파워는 그라인드가 아니라 선택/숙련에서 나와야 한다는 B+
+    //   철학). 프레스티지/거울로 얻는 "선택지 수 증가"(startBootChoices)는 이 캡과
+    //   독립 — 등급은 낮아도 더 많이 볼 수 있다.
+    START_BOOT_RARITY_CAP: 'rare',
 
     // 초반 정예 (A-4, B+ 2026-06): Lv ≤ cap에서 낮은 확률로 "정예" 개체 스폰 →
     //   "방심하면 죽는" 첫 위협 모먼트. 완전 엘리트(1.8~2.5x)는 Lv1에 불공정하므로
@@ -292,7 +312,10 @@ export const BALANCE: BalanceConfig = {
     //   휴식=즉시 생존, 단련=다음 전투 공격 버프(다가올 위험에 베팅). 결정 밀도 ↑.
     CAMPFIRE_CHANCE: 0.08,          // 던전 탐험당 모닥불 조우 확률
     CAMPFIRE_HEAL_RATIO: 0.4,       // 휴식 선택 시 maxHP/maxMP 회복 비율
-    CAMPFIRE_FORGE_ATK: 0.4,        // 단련 선택 시 다음 전투 ATK 버프 비율 (+40%)
+    // 관대함 하향 (2026-07 밸런스 감사): 단련 ATK 버프 +40% → +30%. 회복(40%)은 소모전
+    //   완충 장치라 불친절함 하향 대상이 아니므로 유지 — 단련만 "다음 전투를 거의
+    //   무료로 이기게 해주는" 수준의 관대함을 낮춘다.
+    CAMPFIRE_FORGE_ATK: 0.3,        // 단련 선택 시 다음 전투 ATK 버프 비율 (+30%, 기존 +40%)
     CAMPFIRE_FORGE_TURNS: 5,        // 단련 버프 지속 턴 (다음 전투를 대체로 커버)
 
     // 탐험 스카우팅 (2026-07 감사 (b)): 던전 탐험 시 사전 정찰 선택 카드 2~3장을 제시해
@@ -305,6 +328,11 @@ export const BALANCE: BalanceConfig = {
     SCOUT_ELITE_CARD_CHANCE: 0.15,      // 3번째 슬롯이 "정예의 흔적" 카드로 대체될 확률
     SCOUT_COMBAT_REWARD_BONUS: 0.1,     // "전투의 기척" 선택 시 해당 전투 처치 보상(EXP/골드) +10%
     SCOUT_ELITE_HP_MULT: 1.5,           // "정예의 흔적" 확정 스폰 HP/ATK 배율 (초반 정예와 동일 완화 배율)
+    // 관대함 하향 (2026-07 밸런스 감사): "이상 신호" 카드는 전투 회피 + quiet 롤(이변/유물/
+    //   이벤트)만 굴려 사실상 "안전 버튼"이었다. quiet 롤의 anomaly(중독/화상 등 부정 효과)
+    //   확률에만 ×1.5 가중해 위험을 소폭 되돌린다 — 유물/이벤트 확률은 그대로 두어
+    //   "안전하지만 완전히 안전하지는 않은" 카드로 재조정.
+    SCOUT_SIGNAL_ANOMALY_MULT: 1.5,
 
     // 원정 보스 접근 게이지 (2026-07 감사 축4 — 모바일 세션 정합): 구역 보스의 기존 15%
     //   순수 랜덤 강제 조우(exploreUtils.spawnEnemy)를 제거하고, 미격파 구역 보스가 있는

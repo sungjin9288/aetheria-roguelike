@@ -21,6 +21,10 @@ import { getBossSignatureDrops } from './bossSignatureHint';
 import { getSignaturePityMultiplier } from './signaturePity';
 import { resolveAbyssDailyDive } from './abyssDailyDive';
 
+// explorationPacing.ts의 clamp와 동일 구현 (해당 모듈은 export하지 않음) — 소규모 순수
+// 헬퍼는 모듈 간 공유보다 지역 복제가 이 코드베이스의 기존 관례(pacing/aiEventUtils 등).
+const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
+
 // ─────────────────────────────────────────────────────────────────────────
 // 0. ISO 주차 번호 계산 (월요일 기준)
 // ─────────────────────────────────────────────────────────────────────────
@@ -74,7 +78,12 @@ export const resetDailyProtocolIfNeeded = (player: Player, dispatch: any) => {
 // 2. 탐색 이벤트 롤 — 아노말리, 열쇠 이벤트, 유물 발견 처리 (Phase 1-B)
 // 반환값: 'event_triggered' | 'relic_found' | 'anomaly' | 'nothing' | null (계속 진행)
 // ─────────────────────────────────────────────────────────────────────────
-export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRelics: Relic[], { dispatch, addLog, getFullStats }: any) => {
+// 관대함 하향 (2026-07 밸런스 감사): deps.anomalyMult(기본 1 = 무변경)로 anomalyChance에
+//   곱연산 가중을 줄 수 있다. 스카우팅 "이상 신호" 카드(eventActions.ts handleScoutChoice)가
+//   BALANCE.SCOUT_SIGNAL_ANOMALY_MULT(1.5)를 전달 — 전투를 회피하는 "안전 버튼"이 부정
+//   효과(중독/화상) 확률까지 낮춰주지는 않도록 재조정. 일반 탐험 quiet 롤
+//   (runQuietRollAndCombat)은 anomalyMult 미전달 → 기존 확률 분포 완전 불변.
+export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRelics: Relic[], { dispatch, addLog, getFullStats, anomalyMult }: any) => {
     const discoveryOdds = getDiscoveryOdds(player, mapData);
     const hasKey = (player.inv || []).some((i: any) => i.name === '잊혀진 열쇠');
     if (hasKey && (typeof mapData.level === 'number' && mapData.level >= 10) && Math.random() < discoveryOdds.keyEventChance) {
@@ -91,7 +100,12 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
         return 'key_event';
     }
 
-    if (Math.random() < discoveryOdds.anomalyChance && player.loc !== '고대 보물고') {
+    const effectiveAnomalyChance = clamp(
+        discoveryOdds.anomalyChance * (anomalyMult ?? 1),
+        0,
+        BALANCE.ANOMALY_MAX_CHANCE
+    );
+    if (Math.random() < effectiveAnomalyChance && player.loc !== '고대 보물고') {
         const anomalies = [
             { effect: 'poison',    desc: '자욱한 독안개가 밀려옵니다! (중독)' },
             { effect: 'mana_regen', desc: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)' },

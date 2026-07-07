@@ -285,7 +285,9 @@ export const MSG = {
     // 탐험 스카우팅 (2026-07): 사전 정찰 카드 — 체인/캠프파이어 다음 우선순위 결정 노드.
     SCOUT_DESC: '🔭 앞길에서 낯선 기척이 느껴집니다. 어떻게 정찰하시겠습니까?',
     SCOUT_COMBAT_CHOICE: '⚔️ 전투의 기척 — 적을 확정 조우한다 (처치 보상 +10%)',
-    SCOUT_ANOMALY_CHOICE: '🌀 이상 신호 — 전투를 피해 이변/유물을 살핀다',
+    // 관대함 하향 (2026-07 밸런스 감사): "전투 회피 = 안전"으로만 읽히지 않도록 이변
+    //   위험을 문구에 명시 — anomaly 확률 실제 가중(SCOUT_SIGNAL_ANOMALY_MULT)과 정합.
+    SCOUT_ANOMALY_CHOICE: '🌀 이상 신호 — 전투는 피하지만 이변의 기운이 짙다',
     SCOUT_UNKNOWN_CHOICE: '🌫️ 짙은 안개 — 무슨 일이 일어날지 알 수 없다',
     SCOUT_ELITE_CHOICE: '💀 정예의 흔적 — 강력한 정예와 싸운다 (승리 시 유물 확정)',
     SCOUT_COMBAT_LOG: '⚔️ 기척을 쫓아 적과 정면으로 마주칩니다!',

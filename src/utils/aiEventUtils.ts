@@ -1,3 +1,5 @@
+import { BALANCE } from '../data/constants.js';
+
 const RECENT_HISTORY_LIMIT = 6;
 const RECENT_EVENT_LIMIT = 8;
 
@@ -475,11 +477,14 @@ const FALLBACK_EVENT_POOL: any = {
             ],
         },
         // 도박: 운명의 주사위
+        // 관대함 하향 (2026-07 밸런스 감사): 구조화 이벤트 풀 전수 스캔 결과 gold 상위
+        //   ~10% 이상치(1000G, 풀 내 최댓값) — BALANCE.STRUCTURED_EVENT_GOLD_CAP(720)으로
+        //   -28% 하향. 손실 분기(거절)는 무변경 — 위험-보상 대칭 유지.
         {
             desc: '가면을 쓴 광대가 "운명의 주사위 한 번, 만 골드를 걸어보시겠소?"라고 묻습니다.',
-            choices: ['주사위를 굴린다 (1000G)', '거절한다'],
+            choices: ['주사위를 굴린다 (720G)', '거절한다'],
             outcomes: [
-                { choiceIndex: 0, gold: 1000, log: '운이 따랐다! 두 배의 골드가 돌아왔다. (+1000G)' },
+                { choiceIndex: 0, gold: BALANCE.STRUCTURED_EVENT_GOLD_CAP, log: '운이 따랐다! 두 배의 골드가 돌아왔다. (+720G)' },
                 { choiceIndex: 1, log: '광대가 씩 웃으며 사라진다.' },
             ],
         },
@@ -524,13 +529,15 @@ const FALLBACK_EVENT_POOL: any = {
             ],
         },
         // 퍼즐: 잠긴 보물 상자의 암호
+        // 관대함 하향 (2026-07 밸런스 감사): 풀 내 두 번째 상위 이상치(800G) —
+        //   BALANCE.STRUCTURED_EVENT_PUZZLE_GOLD_CAP(600)으로 -25% 하향.
         {
             desc: '"1 + 2 + 3 + ... + 10 = ?" 오래된 보물 상자 자물쇠에 숫자 입력 장치가 있습니다.',
             choices: ['45', '50', '55'],
             outcomes: [
                 { choiceIndex: 0, log: '땡! 45는 아니다. 자물쇠가 더 꽉 잠긴다.' },
                 { choiceIndex: 1, log: '땡! 50도 아니다. 자물쇠에서 경고음이 울린다.' },
-                { choiceIndex: 2, gold: 800, item: '중급 체력 물약', log: '정답 55! 자물쇠가 열리며 보물이 쏟아진다. (+800G +물약)' },
+                { choiceIndex: 2, gold: BALANCE.STRUCTURED_EVENT_PUZZLE_GOLD_CAP, item: '중급 체력 물약', log: '정답 55! 자물쇠가 열리며 보물이 쏟아진다. (+600G +물약)' },
             ],
         },
     ],
@@ -545,8 +552,9 @@ export const pickFallbackEvent = (loc: string, history: any[], context: any) => 
     //   지명이라 직접 매칭 0건이었음. getPoolKeyByLocation이 유일 path.
     const poolKey = getPoolKeyByLocation(loc);
     const basePool = FALLBACK_EVENT_POOL[poolKey] || FALLBACK_EVENT_POOL.default;
-    // 30% 확률로 구조화 이벤트 풀과 혼합
-    const pool = Math.random() < 0.3
+    // 관대함 하향 (2026-07 밸런스 감사): 구조화 이벤트(고보상 NPC/도박/퍼즐) 혼합 확률
+    //   30%(하드코딩) → BALANCE.STRUCTURED_EVENT_MIX(0.22)로 상수 승격 + 하향.
+    const pool = Math.random() < BALANCE.STRUCTURED_EVENT_MIX
         ? [...basePool, ...FALLBACK_EVENT_POOL.structured]
         : basePool;
     const recentEvents = getRecentEventSet(history);
