@@ -58,7 +58,11 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             // 2026-07 — 에테르 거울: start_boot_extra 노드(+1)를 rank5 해금과 가산.
             const bootChoices = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices
                 + mirrorEffects.startBootChoiceBonus;
-            const bootRelics = pickWeightedRelics(RELICS, bootChoices);
+            // 관대함 하향 (2026-07 밸런스 감사): 시작 부트 후보 풀에서 epic/legendary 제외
+            //   (BALANCE.START_BOOT_RARITY_CAP: 'rare'). 0분에 legendary가 뜨면 런 전체가
+            //   행운으로 결정됨 — 선택지 "개수"(bootChoices, 프레스티지/거울 보너스 포함)는
+            //   이 캡과 독립적으로 그대로 유지된다.
+            const bootRelics = pickWeightedRelics(RELICS, bootChoices, { rarityCap: BALANCE.START_BOOT_RARITY_CAP });
             if (bootRelics.length > 0) {
                 dispatch({ type: AT.SET_PENDING_RELICS, payload: bootRelics });
                 addLog('event', MSG.START_BOOT_RELIC);

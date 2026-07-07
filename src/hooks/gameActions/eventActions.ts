@@ -221,7 +221,12 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
     }
 
     if (outcome.scoutEffect === 'anomaly') {
-        const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats });
+        // 관대함 하향 (2026-07 밸런스 감사): "이상 신호"는 전투를 확정 회피하고 quiet 롤만
+        //   굴리는 사실상 "안전 버튼"이었다. anomaly(부정 효과) 확률에만 ×1.5를 가중해
+        //   위험을 소폭 되돌린다 — 유물/이벤트 확률은 그대로.
+        const quietResult = rollExplorationEvent(player, mapData, playerRelics, {
+            dispatch, addLog, getFullStats, anomalyMult: BALANCE.SCOUT_SIGNAL_ANOMALY_MULT
+        });
         commitExploreOutcome(quietResult === 'nothing' ? 'nothing' : quietResult, null);
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
         if (quietResult === 'nothing') addLog('info', MSG.EXPLORE_QUIET);
