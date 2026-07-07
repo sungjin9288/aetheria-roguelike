@@ -6,10 +6,10 @@
       "name": "천공의 성좌",
       "tone": "holy",
       "members": ["성검 에테르니아", "천공 성전", "성스러운 창", "신전 도시의 지팡이"],
+      "$comment": "fix/signature-set-two-hand: 4티어 제거 — members 4개 중 무기 2개(성검/성스러운 창/신전 지팡이 — 이 중 성스러운 창·신전 지팡이는 2H)와 offhand 1개(천공 성전)뿐이라 무기 슬롯은 최대 1개만 장착 가능. 2H 시그니처 무기를 2피스로 카운트해도 무기(2)+offhand(1)=3이 상한이라 4티어는 여전히 도달 불가능.",
       "bonuses": {
         "2": { "atkMult": 1.1, "defMult": 1.05, "desc": "2세트: 모든 공격 +10%, 방어 +5%" },
-        "3": { "atkMult": 1.18, "defMult": 1.1, "hpMult": 1.05, "desc": "3세트: 공격 +18%, 방어 +10%, HP +5%" },
-        "4": { "atkMult": 1.25, "defMult": 1.18, "hpMult": 1.12, "desc": "4세트: 모든 스탯 대폭 상승" }
+        "3": { "atkMult": 1.18, "defMult": 1.1, "hpMult": 1.05, "desc": "3세트: 공격 +18%, 방어 +10%, HP +5%" }
       }
     },
     "worldtree": {

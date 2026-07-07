@@ -2601,17 +2601,25 @@ import { fileURLToPath } from 'node:url';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 348: activeSet 내부 duplicate mult 3 필드 0건', async () => {
-      const source = await readSrc('src/utils/signatureSetBonus.ts');
-      // activeSet 객체 블록만 검사.
-      const activeSetBlock = source.match(/activeSet:\s*\{[\s\S]+?\n\s+\},/);
-      assert.ok(activeSetBlock, 'activeSet 객체 블록 발견');
-      assert.ok(!/^\s+atkMult,$/m.test(activeSetBlock[0]),
-          'activeSet.atkMult 0건');
-      assert.ok(!/^\s+defMult,$/m.test(activeSetBlock[0]),
-          'activeSet.defMult 0건');
-      assert.ok(!/^\s+hpMult,$/m.test(activeSetBlock[0]),
-          'activeSet.hpMult 0건');
+  // NOTE(fix/signature-set-two-hand): cycle 348의 "duplicate 필드 제거" 결정은 cycle 426에서
+  // 명시적으로 뒤집혔다 — StatsPanel이 activeSet.atkMult/.defMult/.hpMult를 직접 read하는
+  // 것이 밝혀져 cycle 426이 3 필드를 복원했다(signatureSetBonus.ts 자체 주석 + 아래 cycle 426
+  // 섹션의 "cycle 426 회귀 가드" 테스트가 정반대를 assert). 이 테스트는 그동안 activeSetBlock
+  // regex가 (구조 변경 전) counts.reduce()의 조기 `},`에서 잘못 멈춰 실제 activeSet 리터럴을
+  // 검사하지 않는 우연으로 계속 green이었다. fix/signature-set-two-hand가 counts 계산부를
+  // 재작성하며 regex가 실제 activeSet 블록까지 도달하게 됐고, 진짜 상태(atkMult 존재)가
+  // 드러났다. cycle 426이 최신 의도이므로 이 가드는 "존재해야 함"으로 갱신한다.
+  test('cycle 426이 cycle 348을 대체: activeSet에 atkMult/defMult/hpMult 3 필드 존재', async () => {
+      const { computeSignatureSetBonus } = await import('../src/utils/signatureSetBonus.js');
+      const result = computeSignatureSetBonus({
+          weapon: { name: '성검 에테르니아' },
+          offhand: { name: '천공 성전' },
+          armor: null,
+      });
+      assert.ok(result.activeSet, 'activeSet 객체 존재');
+      assert.equal(typeof result.activeSet.atkMult, 'number', 'activeSet.atkMult 존재 (cycle 426)');
+      assert.equal(typeof result.activeSet.defMult, 'number', 'activeSet.defMult 존재 (cycle 426)');
+      assert.equal(typeof result.activeSet.hpMult, 'number', 'activeSet.hpMult 존재 (cycle 426)');
   });
 
   test('cycle 348: 부모 return의 atkMult/defMult/hpMult 보존', async () => {
@@ -2696,12 +2704,16 @@ import { fileURLToPath } from 'node:url';
       assert.equal(getSignatureSetProgress({}), null, 'empty equip null');
   });
 
-  test('cycle 348 회귀 가드: activeSet duplicate mult 0건 보존', async () => {
-      const source = await readSrc('src/utils/signatureSetBonus.ts');
-      const block = source.match(/activeSet:\s*\{[\s\S]+?\n\s+\},/);
-      assert.ok(block, 'activeSet 블록 발견');
-      assert.ok(!/^\s+atkMult,$/m.test(block[0]),
-          'cycle 348 activeSet.atkMult 0건 보존');
+  // NOTE(fix/signature-set-two-hand): 위 "cycle 426이 cycle 348을 대체" 테스트 참고 —
+  // cycle 426이 activeSet.atkMult를 복원했으므로 이 회귀 가드도 반대로 갱신한다.
+  test('cycle 426 회귀 가드: activeSet.atkMult 존재 보존', async () => {
+      const { computeSignatureSetBonus } = await import('../src/utils/signatureSetBonus.js');
+      const result = computeSignatureSetBonus({
+          weapon: { name: '성검 에테르니아' },
+          offhand: { name: '천공 성전' },
+          armor: null,
+      });
+      assert.equal(typeof result.activeSet?.atkMult, 'number', 'cycle 426 activeSet.atkMult 보존');
   });
 }
 
