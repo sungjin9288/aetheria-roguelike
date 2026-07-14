@@ -363,7 +363,7 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
                 _sortKey: score,
                 badge,
                 reason,
-                levelLabel: targetMap.level === 'infinite' ? 'Abyss' : `Lv.${targetLevel}`,
+                levelLabel: targetMap.level === 'infinite' ? '심연' : `레벨 ${targetLevel}`,
                 chips,
                 undiscoveredSignatureCount,
                 routePlan,

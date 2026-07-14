@@ -1,5 +1,21 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-14: made the actual map route readable and provable):
+- Replaced the wrapping map progress badges with a stable three-column summary and added a direct current-location-to-recommended-destination route overview.
+- Unified map and shared adventure-guide level, gold, and infinite-depth labels around `레벨`, `골드`, and `심연`, removing the visible `Lv.`, `G`, and `Abyss` vocabulary.
+- Hardened mobile smoke to wait for the real `MapNavigator`, reject the lazy loading fallback and legacy labels, and capture the first viewport after transient level/phase feedback has cleared.
+
+Verification:
+- Focused map readability contracts -> 11/11 pass.
+- Final `npm run verify:full` -> type-check, lint, unit 3245/3245, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass. The existing non-blocking `GameRoot.tsx` effect warning remains.
+- Mobile visual review -> `playtest-artifacts/mobile/08a-map-tab.png` (`2026-07-14 16:27:32 KST`) shows the real 390px map, progress summary, current position, and recommended route without loading state, clipping, or overlap.
+- `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, and signed iOS archive -> pass; Android release signing input remains missing.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-14 16:30:01 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-14 16:31:00 KST`).
+- Physical iPhone smoke -> the first 60-second recheck ended without the app process and produced no new crash log; an immediate clean reinstall and rerun passed foreground launch, pid `66581`, and the 60-second process recheck. Install URL: `file:///private/var/containers/Bundle/Application/B0559292-9434-41D3-A978-375ED5C6A358/App.app/`.
+
+Next action:
+- Run the timed 5-minute routine on this installed iPhone build and score map comprehension, progression pacing, touch behavior, and art cohesion. Android still requires release signing inputs and a physical device.
+
 Done (2026-07-14: unified secondary gameplay surfaces around player language):
 - Reworked Quest Board, Crafting, detailed Stats, and Codex copy so headings, actions, empty states, stat names, and reward units use direct Korean instead of internal English labels and abbreviations.
 - Kept domain keys and stable test ids intact while simplifying shared focus headers and extending source contracts against vocabulary regressions.

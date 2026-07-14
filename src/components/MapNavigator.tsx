@@ -20,11 +20,11 @@ const MAP_ORDER = (Object.entries(DB.MAPS) as Array<[string, any]>)
     });
 
 const BAND_CONFIG: any = [
-    { key: 'frontier', label: '변방', maxLevel: 10 },
-    { key: 'midlands', label: '중부', maxLevel: 20 },
-    { key: 'highlands', label: '고지', maxLevel: 35 },
-    { key: 'mythic', label: '신화', maxLevel: 60 },
-    { key: 'endgame', label: '종장', maxLevel: Number.POSITIVE_INFINITY },
+    { key: 'frontier', label: '변방', levelLabel: '레벨 1~10', maxLevel: 10 },
+    { key: 'midlands', label: '중부', levelLabel: '레벨 11~20', maxLevel: 20 },
+    { key: 'highlands', label: '고지', levelLabel: '레벨 21~35', maxLevel: 35 },
+    { key: 'mythic', label: '신화', levelLabel: '레벨 36~60', maxLevel: 60 },
+    { key: 'endgame', label: '종장', levelLabel: '레벨 61 이상', maxLevel: Number.POSITIVE_INFINITY },
 ];
 
 // cycle 57: 절대위치 atlas 그리드 폐기, tier별 vertical list 채택 (cycle 58 cleanup).
@@ -56,6 +56,12 @@ const getBandIndex = (map: GameMap) => {
     if (map.type === 'safe' && mapLevelRaw <= 15) return 0;
     return BAND_CONFIG.findIndex((band: any) => mapLevelRaw <= band.maxLevel);
 };
+
+const formatMapLevel = (map: any) => (
+    map?.level === 'infinite'
+        ? '심연'
+        : `레벨 ${map?.minLv ?? map?.level ?? 1}`
+);
 
 
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
@@ -96,25 +102,30 @@ const MapNavigator = ({ player, grave, stats }: any) => {
     const primaryRoute = visibleRecommendations[0] || null;
     const blindMap = player?.challengeModifiers?.includes('blindMap');
     const currentName = blindMap ? '???' : player?.loc;
-    const currentLevelLabel = currentMap?.level === 'infinite'
-        ? '심연'
-        : `Lv.${currentMap?.minLv ?? currentMap?.level ?? 1}`;
+    const currentLevelLabel = formatMapLevel(currentMap);
     const statusCounts = visibleEntries.reduce((acc: any, entry: any) => {
         acc[entry.state] += 1;
         return acc;
     }, { unexplored: 0, exploring: 0, completed: 0 });
 
     return (
-        <div className="aether-readable-surface rounded-[1rem] space-y-3 p-3">
-            <div className="flex items-center justify-between gap-3">
+        <div data-testid="map-navigator" className="aether-readable-surface rounded-[1rem] space-y-3 p-3">
+            <div className="space-y-2">
                 <div>
                     <div className="aether-label">세계 지도</div>
                     <div className="mt-0.5 text-[12px] font-readable text-slate-300/82">현재 위치와 다음 경로를 우선 표시합니다.</div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                    <SignalBadge tone="neutral" size="sm">미탐험 {statusCounts.unexplored}</SignalBadge>
-                    <SignalBadge tone="recommended" size="sm">탐험중 {statusCounts.exploring}</SignalBadge>
-                    <SignalBadge tone="equipped" size="sm">완료 {statusCounts.completed}</SignalBadge>
+                <div data-testid="map-progress-summary" className="grid grid-cols-3 gap-1.5">
+                    {[
+                        { label: '미탐험', value: statusCounts.unexplored, tone: 'text-slate-200 border-white/10 bg-black/18' },
+                        { label: '탐험 중', value: statusCounts.exploring, tone: 'text-[#dff7f5] border-[#7dd4d8]/20 bg-[#7dd4d8]/8' },
+                        { label: '완료', value: statusCounts.completed, tone: 'text-emerald-100 border-emerald-300/20 bg-emerald-300/8' },
+                    ].map((item) => (
+                        <div key={item.label} className={`flex min-w-0 items-center justify-between gap-1 rounded-[0.75rem] border px-2 py-1.5 ${item.tone}`}>
+                            <span className="truncate font-readable text-[9px]">{item.label}</span>
+                            <strong className="shrink-0 font-readable text-[11px]">{item.value}</strong>
+                        </div>
+                    ))}
                 </div>
             </div>
 
@@ -138,10 +149,10 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                         </div>
                     </div>
                     <div className="shrink-0 text-right">
-                        <div className="font-fira text-[9px] uppercase tracking-[0.08em] text-slate-300/72">
+                        <div className="font-readable text-[9px] text-slate-300/72">
                             {currentMap?.type === 'safe' ? '안전지대' : currentMap?.boss ? '보스 권역' : '탐험 지역'}
                         </div>
-                        <div className="mt-1 font-fira text-[12px] font-semibold text-[#dff7f5]">{currentLevelLabel}</div>
+                        <div className="mt-1 font-readable text-[12px] font-semibold text-[#dff7f5]">{currentLevelLabel}</div>
                     </div>
                 </div>
                 {primaryRoute && (
@@ -149,20 +160,31 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                         type="button"
                         data-testid="map-primary-route"
                         onClick={() => setSelectedMapName(primaryRoute.name)}
-                        className="mt-3 flex w-full items-center justify-between gap-2 rounded-[0.9rem] border border-[#7dd4d8]/22 bg-black/20 px-2.5 py-2 text-left"
+                        className="mt-3 grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-[0.9rem] border border-[#7dd4d8]/22 bg-black/20 px-2.5 py-2 text-left"
                     >
                         <div className="min-w-0">
-                            <div className="aether-label text-slate-400/76">추천 경로</div>
-                            <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-[#dff7f5]">{primaryRoute.name}</div>
+                            <div className="aether-label text-slate-400/76">현재</div>
+                            <div className="mt-0.5 truncate font-readable text-[12px] font-semibold text-white/88">{currentName}</div>
                         </div>
-                        <SignalBadge tone="recommended" size="sm">{primaryRoute.badge}</SignalBadge>
+                        <div data-testid="map-route-overview" className="flex items-center gap-1 text-[#b9f1ec]" aria-label="추천 이동 경로">
+                            <span className="h-px w-4 bg-[#7dd4d8]/45" />
+                            <Route size={14} />
+                            <span className="h-px w-4 bg-[#7dd4d8]/45" />
+                        </div>
+                        <div className="min-w-0 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                                <span className="aether-label text-slate-400/76">추천</span>
+                                <SignalBadge tone="recommended" size="sm">{primaryRoute.badge}</SignalBadge>
+                            </div>
+                            <div className="mt-0.5 truncate font-readable text-[12px] font-semibold text-[#dff7f5]">{primaryRoute.name}</div>
+                        </div>
                     </button>
                 )}
             </div>
 
             {visibleRecommendations.length > 0 && (
                 <div className="rounded-[0.95rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/8 px-3 py-2.5">
-                    <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.08em]">
+                    <div className="flex items-center justify-between gap-2 font-readable text-[10px]">
                         <span className="text-slate-400">추천 경로</span>
                         <span className="text-[#dff7f5]">{visibleRecommendations[0].name}</span>
                     </div>
@@ -172,7 +194,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                 key={route.name}
                                 type="button"
                                 onClick={() => setSelectedMapName(route.name)}
-                                className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-black/18 px-2.5 py-1 text-[10px] font-fira text-slate-200/84 hover:border-[#7dd4d8]/18"
+                                className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-black/18 px-2.5 py-1 font-readable text-[10px] text-slate-200/84 hover:border-[#7dd4d8]/18"
                             >
                                 <span>{route.name} · {route.levelLabel}</span>
                                 {route.undiscoveredSignatureCount > 0 && (
@@ -207,15 +229,12 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                     {BAND_CONFIG.map((band: any, bandIndex: any) => {
                         const bandEntries = visibleEntries.filter((entry: any) => getBandIndex(entry) === bandIndex);
                         if (bandEntries.length === 0) return null;
-                        const bandLevelHint = band.maxLevel === Number.POSITIVE_INFINITY
-                            ? 'Lv.60+'
-                            : `~Lv.${band.maxLevel}`;
                         return (
                             <div key={band.key} className="space-y-1.5">
                                 <div className="flex items-center justify-between px-1">
-                                    <div className="flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/72">
+                                    <div className="flex items-center gap-2 font-readable text-[10px] text-slate-400/72">
                                         <span className="text-[#dff7f5]/80">{band.label}</span>
-                                        <span className="text-slate-500">{bandLevelHint}</span>
+                                        <span className="text-slate-500">{band.levelLabel}</span>
                                     </div>
                                     <span className="text-[9px] font-fira text-slate-500">{bandEntries.length}곳</span>
                                 </div>
@@ -226,9 +245,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                         const isCurrent = entry.isCurrent;
                                         const graveCount = entry.graves.length;
                                         const graveGold = entry.graves.reduce((sum: any, item: any) => sum + Math.max(0, item?.gold || 0), 0);
-                                        const levelLabel = entry.level === 'infinite'
-                                            ? '심연'
-                                            : `Lv.${entry.minLv ?? entry.level ?? 1}`;
+                                        const levelLabel = formatMapLevel(entry);
                                         return (
                                             <button
                                                 key={entry.name}
@@ -247,7 +264,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                                             : entry.state === 'completed' ? <Check size={12} className="text-emerald-200" />
                                                             : entry.state === 'exploring' ? <Compass size={12} className="text-[#dff7f5]" />
                                                             : <Lock size={12} className="text-slate-500" />}
-                                                        <span className="text-[9px] font-fira text-slate-400/80">{levelLabel}</span>
+                                                        <span className="font-readable text-[9px] text-slate-400/80">{levelLabel}</span>
                                                     </div>
                                                 </div>
                                                 <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-fira text-slate-300/76">
@@ -256,7 +273,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                                         <span className="text-[#f6e7a2]/95">✦ 전설 {entry.undiscoveredSignatures.length}</span>
                                                     )}
                                                     {graveCount > 0 && (
-                                                        <span className="text-rose-200/85">유해 {graveCount}·{graveGold}G</span>
+                                                        <span className="text-rose-200/85">유해 {graveCount} · 골드 {graveGold}</span>
                                                     )}
                                                     {isCurrent && <span className="text-[#dff7f5]">현재 위치</span>}
                                                 </div>
@@ -293,7 +310,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                         <div className="shrink-0 text-right">
                             <div className="text-[10px] font-readable tracking-normal text-slate-400/70">{selectedEntry.type === 'safe' ? '안전' : '위험'}</div>
                             <div className="mt-1 text-[11px] font-fira text-white/86">
-                                {selectedEntry.level === 'infinite' ? '심연' : `Lv.${selectedEntry.minLv ?? selectedEntry.level ?? 1}`}
+                                {formatMapLevel(selectedEntry)}
                             </div>
                         </div>
                     </div>
@@ -314,7 +331,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                     </div>
 
                     <div className="mt-3 rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2.5 py-2">
-                        <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/72">
+                        <div className="flex items-center gap-1.5 font-readable text-[10px] text-slate-400/72">
                             <Route size={11} />
                             <span>연결 지역</span>
                         </div>
@@ -338,7 +355,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                 background: 'linear-gradient(180deg, rgba(246,231,162,0.08) 0%, rgba(20,24,30,0.6) 100%)',
                             }}
                         >
-                            <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.14em] text-[#f6e7a2]">
+                            <div className="flex items-center justify-between gap-2 font-readable text-[10px] text-[#f6e7a2]">
                                 <span className="flex items-center gap-1.5">
                                     <Sparkles size={11} />
                                     전설 각인 드롭
@@ -375,7 +392,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
 
                     {selectedEntry.lore && (
                         <div className="mt-3 rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2.5 py-2 text-[11px] font-fira leading-snug text-slate-300/74">
-                            <div className="mb-1 flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/72">
+                            <div className="mb-1 flex items-center gap-1.5 font-readable text-[10px] text-slate-400/72">
                                 <Sparkles size={11} />
                                 <span>지역 이야기</span>
                             </div>

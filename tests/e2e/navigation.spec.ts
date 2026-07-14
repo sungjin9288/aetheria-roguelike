@@ -15,10 +15,14 @@ test.describe('Navigation', () => {
         const mapTab = page.locator('[data-testid$="-tab-map"]').first();
         await expect(mapTab).toBeVisible({ timeout: 8_000 });
         await mapTab.click();
-        // tier vertical list (cycle 57)에서 적어도 시작의 마을 또는 다른 지역명 노출
+        await expect(page.getByTestId('map-navigator')).toBeVisible({ timeout: 8_000 });
         await expect(page.getByText('세계 지도', { exact: true })).toBeVisible({ timeout: 5_000 });
         await expect(page.getByText('전체 경로', { exact: true })).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-progress-summary')).toBeVisible({ timeout: 5_000 });
         await expect(page.getByTestId('map-current-location-card')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-route-overview')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-navigator')).toContainText('레벨');
+        await expect(page.getByTestId('map-navigator')).not.toContainText('불러오는 중');
     });
 
     test('SKILL 탭 진입 → 스킬 카드 + 선택 가능 안내', async ({ page }) => {

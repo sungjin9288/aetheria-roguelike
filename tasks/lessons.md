@@ -24,6 +24,7 @@
 | 2026-07-14 | 브라우저 smoke는 통과했지만 네이티브 신규 시작 화면에서 고급 도전 규칙과 영문 판단 라벨이 첫 선택보다 먼저 보임 | 기존 smoke가 게임 시작 후 핵심 루프를 중심으로 검증해 시작 CTA 직전과 다음 필수 선택의 정보 위계를 직접 보지 않았음 | 첫 세션 UI를 바꾸면 네이티브 시뮬레이터에서 시작 CTA와 그 다음 필수 화면까지 연속 확인하고, 선택 사항은 기본 접힘이며 판단 라벨은 플레이어 언어인지 검증한다 |
 | 2026-07-14 | 주요 판단 화면은 한글인데 부트, 상태바, 로그 배지, 상태 명령에는 내부 단계명과 영문 지표 약어가 반복 노출됨 | 기능별 UI를 따로 다듬어 첫 5분 전체에서 반복되는 공통 어휘 계약을 검증하지 않았음 | 첫 세션 가독성 작업은 부트, 상시 HUD, 교전 대상, 플레이 기록, 성장 피드백을 한 묶음으로 확인하고 내부 key는 data attribute에만 남긴다 |
 | 2026-07-14 | archive smoke가 탭 상태만 바꿔 성공했지만 실제 Stats와 Codex 패널 화면은 열리지 않은 과거 캡처가 증적으로 남음 | 상태 전환 성공과 사용자가 보는 패널의 render·문구·레이아웃 검증을 같은 것으로 취급했음 | 보조 패널 smoke는 실제 open action과 panel test id를 확인한 뒤 캡처하고, 제목·행동·빈 상태·수치 단위를 하나의 플레이어 어휘 계약으로 검사한다 |
+| 2026-07-14 | 지도 smoke 캡처가 실제 지도 대신 lazy loading 화면을 담고도 탭 전환 성공으로 처리됨 | 지도 상태 변경과 실제 `MapNavigator` render 완료를 분리하지 않았고, 긴 element 전체 캡처가 첫 화면 가독성 증빙으로 사용됐음 | 지도 acceptance는 실제 map root, 첫 viewport의 현재 위치·추천 경로, transient overlay 종료를 함께 확인하고 loading fallback이나 전체 element 길이만으로 통과시키지 않는다 |
 
 ---
 
@@ -100,6 +101,10 @@
 ### R18: Prove Secondary Panels Are Actually Rendered
 - **Rule:** 임무, 제작, 능력치, 도감 같은 보조 패널 smoke는 실제 open action과 panel test id를 확인한 뒤 캡처하고, 제목·행동·빈 상태·수치 단위를 같은 플레이어 어휘로 검증한다
 - **Rationale:** 내부 탭 상태만 바뀐 캡처는 사용자가 보는 패널의 가독성이나 레이아웃을 증명하지 못하며, 화면별 용어 혼용도 놓치기 쉽다
+
+### R19: Prove The Map In Its First Viewport
+- **Rule:** 지도 smoke는 실제 `MapNavigator` root가 렌더되고 transient level/phase overlay가 사라진 뒤, 첫 viewport에서 현재 위치와 추천 경로를 함께 확인하며 loading fallback과 legacy label을 거부한다
+- **Rationale:** 탭 상태나 긴 element 전체 캡처만으로는 플레이어가 지도를 열었을 때 경로를 즉시 이해할 수 있는지 증명할 수 없다
 
 ---
 

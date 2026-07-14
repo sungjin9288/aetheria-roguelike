@@ -33,7 +33,10 @@ test('first-play surfaces use player-facing Korean labels', async () => {
     assert.match(mapNavigator, /세계 지도/);
     assert.match(mapNavigator, /전체 경로/);
     assert.match(mapNavigator, /지역 이야기/);
+    assert.match(mapNavigator, /data-testid="map-navigator"/);
+    assert.match(mapNavigator, /레벨 1~10/);
     assert.doesNotMatch(mapNavigator, />\s*(Atlas Map|Current Position|World Routes|Area Lore)\s*</);
+    assert.doesNotMatch(mapNavigator, /`Lv\.\$\{|\}G<\/span>/);
 
     assert.match(mobileSummary, /label: '주무기'/);
     assert.match(mobileSummary, /fallback: '비어 있음'/);

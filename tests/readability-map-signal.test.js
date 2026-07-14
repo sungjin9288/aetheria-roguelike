@@ -26,22 +26,33 @@ test('mobile first fold preserves a readable log height', async () => {
 });
 
 test('control panel exposes a first-screen map signal and route entry points', async () => {
-    const source = await readSrc('src/components/ControlPanel.tsx');
+    const [source, guide] = await Promise.all([
+        readSrc('src/components/ControlPanel.tsx'),
+        readSrc('src/utils/adventureGuide.ts'),
+    ]);
 
     assert.match(source, /data-testid="control-map-signal"/);
     assert.match(source, /data-testid="control-map-open"/);
     assert.match(source, /onOpenArchiveConsole\?\.\('map'\)/);
     assert.match(source, /data-testid="control-route-open"/);
     assert.match(source, /setGameState\?\.\(GS\.MOVING\)/);
+    assert.match(guide, /levelLabel: targetMap\.level === 'infinite' \? '심연' : `레벨 \$\{targetLevel\}`/);
+    assert.doesNotMatch(guide, /levelLabel:[^\n]*(?:Abyss|Lv\.)/);
 });
 
 test('map navigator promotes current position and primary route above the route list', async () => {
     const source = await readSrc('src/components/MapNavigator.tsx');
 
+    assert.match(source, /data-testid="map-navigator"/);
+    assert.match(source, /data-testid="map-progress-summary"/);
+    assert.match(source, /grid grid-cols-3 gap-1\.5/);
     assert.match(source, /data-testid="map-current-location-card"/);
     assert.match(source, /현재 위치/);
     assert.match(source, /data-testid="map-primary-route"/);
+    assert.match(source, /data-testid="map-route-overview"/);
     assert.match(source, /추천 경로/);
+    assert.match(source, /const formatMapLevel/);
+    assert.doesNotMatch(source, /`Lv\.\$\{|\}G<\/span>/);
 });
 
 test('first viewport uses compact readable status and log surfaces', async () => {

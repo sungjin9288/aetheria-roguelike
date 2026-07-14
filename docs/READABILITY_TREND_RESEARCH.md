@@ -256,6 +256,7 @@ Completed after this research note:
 - Slice 11 preflight: refreshed the browser/mobile smoke baseline and Capacitor web asset sync on 2026-05-31; 2026-06-01 device-gate retry later recovered `xcdevice` availability for the target iPhone, but `devicectl` still failed because the device was locked at the Developer Disk Image mount step. Android device/signing blockers remain.
 - Slice 22: Core HUD Player Language. The first-five-minute loop now uses one vocabulary across native boot, persistent status, enemy target, field-log badges, status command, level-up feedback, boss phases, and equipment upgrade hints. Internal stage names and stable test keys remain available to automation without appearing as player copy.
 - Slice 23: Secondary Gameplay Surface Language. Quest Board, Crafting, detailed Stats, and Codex now share direct Korean headings, actions, empty states, stat names, and reward units. Browser smoke opens and verifies the real panels before taking 390px evidence instead of treating an internal tab-state change as visual proof.
+- Slice 24: Map First-Viewport Route Proof. The actual map now renders a stable three-column exploration summary and a direct current-location-to-recommended-destination route in the first 390px viewport. Map and shared route guidance use `레벨 / 골드 / 심연`, while smoke rejects loading fallback, `Lv.`, and `G` before capturing evidence.
 
 ## Recommended Next Step
 
@@ -263,4 +264,5 @@ Run the timed iPhone 5-minute manual loop on the latest installed archive.
 - Automated iPhone delivery now passes archive install, foreground launch, and the 60-second process hold. The remaining iPhone signal is player perception and touch behavior, not packaging.
 - Record action discovery time, first-combat turn count, progression pacing, reward comprehension, and visual cohesion using `docs/PLAYTEST_CHECKLIST.md`.
 - Review Quest Board, Crafting, detailed Stats, and Codex during the manual loop to confirm the verified browser vocabulary still reads naturally on the native device.
+- Open `지도` during the manual loop and confirm the progress summary stays on one line, the current-to-recommended route is visible without searching, and no loading overlay or legacy `Lv. / G` labels remain.
 - Prepare Android separately by connecting a physical device and providing release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`).

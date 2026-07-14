@@ -82,12 +82,18 @@ async function waitForState(page, predicate, description, timeout = 15000) {
   throw new Error(`Timed out waiting for ${description}`);
 }
 
-async function writeStateArtifact(name, state, page, { screenshotSelector = null, screenshotAnimations = 'disabled' } = {}) {
+async function writeStateArtifact(name, state, page, {
+  screenshotSelector = null,
+  screenshotAnimations = 'disabled',
+  screenshotFullPage = true,
+} = {}) {
   const basename = sanitizeName(name);
-  if (/^02[b-e]-/.test(basename)) {
-    await page.locator('[data-testid="level-up-banner"]').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+  if (/^(02[b-e]|08a|08b|08|09|10)-/.test(basename)) {
+    for (const testId of ['level-up-banner', 'phase-banner']) {
+      await page.locator(`[data-testid="${testId}"]`).waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    }
   }
-  if (/^(08|08b|09)-/.test(basename)) await delay(1000);
+  if (/^(08a|08|08b|09)-/.test(basename)) await delay(1000);
   const domMetrics = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getDomMetrics?.() || null);
   const artifactState = domMetrics ? { ...state, domMetrics } : state;
   await fs.mkdir(artifactDir, { recursive: true });
@@ -98,7 +104,7 @@ async function writeStateArtifact(name, state, page, { screenshotSelector = null
     animations: screenshotAnimations,
     timeout: 60000,
   };
-  if (!screenshotSelector) screenshotOptions.fullPage = true;
+  if (!screenshotSelector) screenshotOptions.fullPage = screenshotFullPage;
   await screenshotTarget.screenshot(screenshotOptions);
 }
 
@@ -992,7 +998,17 @@ async function verifyTabs(page) {
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('map'));
   const mapState = await waitForState(page, (state) => state.sideTab === 'map', 'map tab activation');
-  await writeStateArtifact('08a-map-tab', mapState, page);
+  await verifySurfaceLanguage(page, {
+    selector: '[data-testid="map-navigator"]',
+    requiredText: ['세계 지도', '현재 위치', '추천 경로', '전체 경로', '레벨'],
+    forbiddenPattern: /불러오는 중|\bLv\.|\d+G\b|ATLAS|CURRENT POSITION|WORLD ROUTES/,
+    label: 'map tab',
+  });
+  await page.locator('[data-testid="map-current-location-card"]').waitFor({ state: 'visible', timeout: 8000 });
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  await writeStateArtifact('08a-map-tab', mapState, page, {
+    screenshotFullPage: false,
+  });
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('stats'));
   const statsState = await waitForState(page, (state) => state.sideTab === 'stats', 'stats tab activation');
