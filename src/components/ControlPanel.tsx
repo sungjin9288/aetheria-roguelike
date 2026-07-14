@@ -45,12 +45,11 @@ const missionTrackerTone: Record<string, string> = {
 
 const MissionTrackerStrip = ({ tracker }: { tracker: any }) => {
   const toneClass = missionTrackerTone[tracker.kind] || missionTrackerTone.active;
-  const chipByLabel = new Map((tracker.chips || []).map((chip: any) => [chip.label, chip.value]));
-  const decisionCells = [
-    { label: 'NEXT', value: tracker.nextStep || chipByLabel.get('NEXT') || tracker.title },
-    { label: 'ROUTE', value: tracker.routeLabel || chipByLabel.get('ROUTE') || 'RUN' },
-    { label: 'REWARD', value: tracker.kind === 'claimable' ? '수령 가능' : (tracker.progressLabel || chipByLabel.get('PROG') || '진행 중') },
-    { label: 'RETURN', value: tracker.returnLabel || chipByLabel.get('RETURN') || 'RUN' },
+  const missionSteps = [
+    { label: '할 일', value: tracker.nextStep || tracker.title },
+    { label: '장소', value: tracker.routeLabel || '현재 지역' },
+    { label: '진행', value: tracker.kind === 'claimable' ? '보상 대기' : (tracker.progressLabel || '진행 중') },
+    { label: '마무리', value: tracker.returnLabel || '계속 진행' },
   ];
 
   return (
@@ -65,7 +64,7 @@ const MissionTrackerStrip = ({ tracker }: { tracker: any }) => {
       />
       <div className="relative flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className="aether-label text-slate-300/70">Mission</div>
+          <div className="aether-label text-slate-300/70">현재 임무</div>
           <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-white/94">
             {tracker.title}
           </div>
@@ -84,10 +83,10 @@ const MissionTrackerStrip = ({ tracker }: { tracker: any }) => {
         />
       </div>
       <div className="relative mt-2 grid grid-cols-4 gap-1">
-        {decisionCells.map((chip: any) => (
-          <div key={`${chip.label}-${chip.value}`} className="aether-decision-cell rounded-[0.7rem] px-1.5 py-1">
-            <div className="font-fira text-[7px] font-bold uppercase tracking-normal text-slate-500">{chip.label}</div>
-            <div className="mt-0.5 truncate font-readable text-[9px] font-semibold text-slate-100/84">{chip.value}</div>
+        {missionSteps.map((step: any) => (
+          <div key={`${step.label}-${step.value}`} className="aether-decision-cell rounded-[0.7rem] px-1.5 py-1">
+            <div className="font-readable text-[8px] font-bold tracking-normal text-slate-500">{step.label}</div>
+            <div className="mt-0.5 truncate font-readable text-[9px] font-semibold text-slate-100/84">{step.value}</div>
           </div>
         ))}
       </div>
@@ -108,10 +107,10 @@ const MapSignalStrip = ({
   const currentName = blindMap ? '???' : player?.loc;
   const routeName = blindMap ? '미확인 경로' : (recommendedRoute?.name || '경로 없음');
   const mapState = currentMap?.type === 'safe'
-    ? 'SAFE'
+    ? '안전지대'
     : currentMap?.boss
-      ? 'BOSS'
-      : 'FIELD';
+      ? '보스 권역'
+      : '탐험 지역';
   const routeBadge = recommendedRoute?.isRecommended ? '추천' : (recommendedRoute?.badge || '대기');
 
   const openMap = () => {
@@ -132,7 +131,7 @@ const MapSignalStrip = ({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className="aether-label text-[#b9f1ec]/72">Map</div>
+          <div className="aether-label text-[#b9f1ec]/72">현재 지역</div>
           <div className="mt-0.5 flex min-w-0 items-center gap-2">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.8rem] border border-[#7dd4d8]/28 bg-black/24 text-[#dff7f5]">
               <MapIcon size={14} />
@@ -163,7 +162,7 @@ const MapSignalStrip = ({
               onClick={openMap}
               className="min-h-[32px] rounded-[0.85rem] border border-[#7dd4d8]/26 bg-black/22 px-2 font-fira text-[9px] font-bold uppercase tracking-normal text-[#dff7f5]"
             >
-              Map
+              지도
             </button>
           )}
           <button
@@ -173,7 +172,7 @@ const MapSignalStrip = ({
             onClick={openRoute}
             className="min-h-[32px] rounded-[0.85rem] border border-[#d5b180]/28 bg-[#d5b180]/12 px-2 font-fira text-[9px] font-bold uppercase tracking-normal text-[#f6e7c8] disabled:opacity-45"
           >
-            Route
+            이동
           </button>
         </div>
       </div>
@@ -288,7 +287,7 @@ const ControlPanel = ({
         animate={{ opacity: 1 }}
         className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center rounded-[1.5rem] border border-[#9a8ac0]/20 px-5 py-6 text-center text-[#ece5ff] shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-md"
       >
-        NEURAL LINK ACTIVE... PROCESSING SCENARIO...
+        이야기를 준비하고 있습니다...
       </Motion.div>
     );
   }
@@ -320,7 +319,7 @@ const ControlPanel = ({
       key: 'explore',
       testId: 'control-explore',
       icon: MapIcon,
-      label: 'EXPLORE',
+      label: '탐험',
       onClick: () => {
         soundManager.play('click');
         actions.explore();
@@ -331,8 +330,8 @@ const ControlPanel = ({
       key: 'move',
       testId: 'control-move',
       icon: Route,
-      label: 'MOVE',
-      mobileLabel: 'MAP',
+      label: '이동',
+      mobileLabel: '이동',
       onClick: () => setGameState?.(GS.MOVING),
       className: 'bg-[linear-gradient(180deg,rgba(22,29,37,0.84)_0%,rgba(9,13,18,0.96)_100%)] border border-white/8 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-[#7dd4d8]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.08)]',
     },
@@ -342,8 +341,8 @@ const ControlPanel = ({
     key: 'market',
     testId: 'control-market',
     icon: ShoppingBag,
-    label: 'SHOP',
-    mobileLabel: 'SHOP',
+    label: '상점',
+    mobileLabel: '상점',
     onClick: () => {
       actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
       actions.setGameState(GS.SHOP);
@@ -355,8 +354,8 @@ const ControlPanel = ({
     key: 'rest',
     testId: 'control-rest',
     icon: Moon,
-    label: 'REST',
-    mobileLabel: 'REST',
+    label: '휴식',
+    mobileLabel: '휴식',
     onClick: () => actions?.rest?.(),
     className: 'bg-[linear-gradient(180deg,rgba(24,30,44,0.84)_0%,rgba(9,12,18,0.96)_100%)] border border-[#9a8ac0]/22 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/30',
   };
@@ -365,8 +364,8 @@ const ControlPanel = ({
     key: 'quests',
     testId: 'control-quests',
     icon: ScrollText,
-    label: 'QUESTS',
-    mobileLabel: 'QUEST',
+    label: '임무',
+    mobileLabel: '임무',
     onClick: () => {
       if (actions?.setGameState) {
         actions.setGameState(GS.QUEST_BOARD);
@@ -385,8 +384,8 @@ const ControlPanel = ({
       key: 'grave',
       testId: 'control-recover',
       icon: Ghost,
-      label: 'LOOT',
-      mobileLabel: 'LOOT',
+      label: '회수',
+      mobileLabel: '회수',
       onClick: actions.lootGrave,
       className: 'bg-[linear-gradient(180deg,rgba(26,31,38,0.85)_0%,rgba(12,15,20,0.96)_100%)] border border-white/10 text-slate-200 hover:border-[#d5b180]/16 hover:bg-white/[0.04]',
     });
@@ -406,12 +405,12 @@ const ControlPanel = ({
           >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <div className="aether-label text-[#b9f1ec]/72">Route Map</div>
+                <div className="aether-label text-[#b9f1ec]/72">이동 경로</div>
                 <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-white">{player.loc}</div>
               </div>
               {moveRecommendations[0] && (
                 <div className="shrink-0 text-right">
-                  <div className="font-fira text-[8px] uppercase tracking-normal text-slate-400/76">Recommended</div>
+                  <div className="font-readable text-[8px] tracking-normal text-slate-400/76">추천 경로</div>
                   <div className="mt-0.5 font-readable text-[12px] font-semibold text-[#dff7f5]">{moveRecommendations[0].name}</div>
                 </div>
               )}
@@ -468,11 +467,11 @@ const ControlPanel = ({
               {route.routePlan && (
                 <div className="grid w-full grid-cols-2 gap-1 pt-0.5">
                   <div className="min-w-0 rounded-lg border border-white/8 bg-black/16 px-2 py-1">
-                    <div className="text-[8px] font-fira uppercase tracking-normal text-slate-500">PLAN</div>
+                    <div className="text-[8px] font-readable tracking-normal text-slate-500">진입</div>
                     <div className="mt-0.5 truncate text-[9px] font-fira font-normal text-slate-300/80">{route.routePlan.approach}</div>
                   </div>
                   <div className="min-w-0 rounded-lg border border-white/8 bg-black/16 px-2 py-1">
-                    <div className="text-[8px] font-fira uppercase tracking-normal text-slate-500">RETURN</div>
+                    <div className="text-[8px] font-readable tracking-normal text-slate-500">귀환</div>
                     <div className="mt-0.5 truncate text-[9px] font-fira font-normal text-slate-300/80">{route.routePlan.exitRule}</div>
                   </div>
                 </div>
@@ -485,7 +484,7 @@ const ControlPanel = ({
             onClick={() => setGameState?.(GS.IDLE)}
             className="col-span-2 min-h-[42px] px-3 py-2 text-xs bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/84 rounded-[1.1rem] hover:bg-rose-400/10 font-bold tracking-wider transition-all"
           >
-            CANCEL
+            돌아가기
           </Motion.button>
           </div>
         </div>
@@ -497,7 +496,7 @@ const ControlPanel = ({
               플레이어 포함) 다음 행동 제목+이유를 같은 자리에 노출. */}
           {!questTracker && guidance?.title && (
             <div data-testid="adventure-guidance-strip" className="aether-panel-core rounded-[1.05rem] px-3 py-2">
-              <div className="aether-label text-[#7dd4d8]/72">NEXT</div>
+              <div className="aether-label text-[#7dd4d8]/72">다음 행동</div>
               <div className="mt-0.5 font-readable text-[12px] font-semibold text-white/92">{guidance.title}</div>
               <div className="mt-0.5 font-readable text-[10px] leading-snug text-slate-300/82 line-clamp-2">{guidance.detail}</div>
             </div>

@@ -18,6 +18,7 @@
 | 2026-04-08 | OpenSpace 게임 통합 시 repo wiring과 host execution 상태가 혼동되기 쉬움 | repo-local skill dir, Codex MCP config, local `search_skills`는 정상이어도 plain shell `execute_task`는 host-side auth/session/timeout에 막힐 수 있음 | 게임 repo OpenSpace smoke는 bridge skill 존재, local search discovery, MCP config 반영 여부를 우선 성공 기준으로 삼고, `execute_task` timeout은 host follow-up으로 분리 기록한다 |
 | 2026-06-01 | 모바일 visual smoke에서 Quest/Combat 패널이 실제보다 어둡게 캡처됨 | focus panel entrance animation의 initial opacity가 smoke screenshot timing과 겹쳐 첫 프레임 가독성을 떨어뜨렸음 | 실기기 acceptance 대상 패널은 첫 render부터 readable state여야 하며, QA 캡처 대상 surface에는 `initial={false}` 또는 동등한 immediate-visible contract를 적용한다 |
 | 2026-06-01 | 모바일 archive reset CTA가 하단 control panel에 pointer hit-test를 빼앗김 | archive console이 열린 상태에서도 bottom `ControlPanel`이 동시에 렌더되어 overlay CTA 아래 z-layer에서 pointer event를 가로챘음 | 모바일에서 modal/console CTA가 활성화되면 동일 영역의 underlying controls를 조건부 suppress하고, reachability source guard로 겹침 회귀를 고정한다 |
+| 2026-07-14 | 통합 Playwright가 Aetheria preview 대신 같은 포트의 다른 로컬 앱을 열어 연속 타임아웃 | preview는 `127.0.0.1`에 기동했지만 Playwright 기본 URL은 `localhost`여서 환경에 따라 서로 다른 loopback 서버로 해석됨 | preview를 기동한 스크립트는 실제 준비 확인에 사용한 정확한 URL을 모든 후속 smoke, perf, E2E 명령에 명시적으로 전달한다 |
 
 ---
 
@@ -70,6 +71,10 @@
 ### R12: Suppress Underlying Controls Under Mobile Consoles
 - **Rule:** 모바일 modal, archive console, reset confirmation처럼 CTA가 있는 상위 surface가 열려 있으면 같은 터치 영역의 bottom controls를 렌더하지 않거나 pointer target에서 제거한다
 - **Rationale:** 시각적으로는 위에 보이는 CTA라도 아래 control surface가 pointer event를 가로채면 실기기에서는 진행 불가 버그가 된다
+
+### R13: Reuse The Exact Verified Preview URL
+- **Rule:** preview를 직접 기동하는 검증 스크립트는 준비 상태를 확인한 동일한 URL을 smoke, perf, Playwright E2E에 항상 전달한다
+- **Rationale:** `localhost`와 `127.0.0.1`은 같은 포트에서도 서로 다른 loopback 서버로 연결될 수 있으므로 기본 URL 추정은 다른 로컬 앱을 검증하는 false positive와 timeout을 만든다
 
 ---
 

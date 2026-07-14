@@ -84,14 +84,16 @@ const MobileGameLayout = ({
                         />
                     </Suspense>
                 ) : (
-                    <TerminalView
-                        logs={engine.logs}
-                        gameState={engine.gameState}
-                        onCommand={engine.handleCommand}
-                        player={engine.player}
-                        quickSlots={engine.quickSlots}
-                        onQuickSlotUse={handleQuickSlotUse}
-                    />
+                    <div className="flex min-h-[240px] min-w-0 flex-1">
+                        <TerminalView
+                            logs={engine.logs}
+                            gameState={engine.gameState}
+                            onCommand={engine.handleCommand}
+                            player={engine.player}
+                            quickSlots={engine.quickSlots}
+                            onQuickSlotUse={handleQuickSlotUse}
+                        />
+                    </div>
                 )
             )}
             {!isPanelFocusState && !showArchiveConsole && archiveAvailable && (

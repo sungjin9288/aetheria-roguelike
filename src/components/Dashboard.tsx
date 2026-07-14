@@ -67,10 +67,10 @@ const TAB_ITEMS: any = [
 const MOBILE_PRIMARY_TABS: any = ['equipment', 'inventory', 'quest', 'map', 'stats'];
 const MOBILE_SECONDARY_TABS: any = ['achievements', 'skills', 'codex', 'pass', 'graves', 'system'];
 const TOWN_MENU_ACTIONS: any = [
-    { id: 'rest', label: 'REST', icon: Moon },
-    { id: 'class', label: 'CLASS', icon: GraduationCap },
-    { id: 'quest', label: 'BOARD', icon: Scroll },
-    { id: 'craft', label: 'CRAFT', icon: Hammer },
+    { id: 'rest', label: '휴식', icon: Moon },
+    { id: 'class', label: '전직', icon: GraduationCap },
+    { id: 'quest', label: '임무', icon: Scroll },
+    { id: 'craft', label: '제작', icon: Hammer },
 ];
 
 // NOTE: 이전에 AnimatePresence + tabVariants로 탭 전환 애니메이션을 처리했으나,
@@ -423,7 +423,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             <RotateCcw size={13} />
                                         </span>
                                         <div className="min-w-0">
-                                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-rose-100/58">Run Reset</div>
+                                            <div className="text-[10px] font-readable tracking-normal text-rose-100/58">진행 초기화</div>
                                             <div className="text-[11px] font-fira text-rose-100/84">현재 진행 상황을 초기화합니다.</div>
                                         </div>
                                     </div>
@@ -438,7 +438,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             className="flex min-h-[44px] items-center justify-center gap-2 rounded-[1rem] border border-rose-300/20 bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-rose-100/88 transition-colors hover:border-rose-200/28 hover:bg-rose-500/14"
                                         >
                                             <RotateCcw size={13} />
-                                            <span>RESET OK</span>
+                                            <span>초기화</span>
                                         </button>
                                         <button
                                             type="button"
@@ -447,7 +447,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             className="flex min-h-[44px] items-center justify-center gap-2 rounded-[1rem] border border-white/8 bg-black/20 px-2 py-2 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
                                         >
                                             <X size={13} />
-                                            <span>CANCEL</span>
+                                            <span>취소</span>
                                         </button>
                                     </div>
                                 </div>

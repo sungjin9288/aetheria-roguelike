@@ -20,11 +20,11 @@ const MAP_ORDER = (Object.entries(DB.MAPS) as Array<[string, any]>)
     });
 
 const BAND_CONFIG: any = [
-    { key: 'frontier', label: 'Frontier', maxLevel: 10 },
-    { key: 'midlands', label: 'Midlands', maxLevel: 20 },
-    { key: 'highlands', label: 'Highlands', maxLevel: 35 },
-    { key: 'mythic', label: 'Mythic', maxLevel: 60 },
-    { key: 'endgame', label: 'Endgame', maxLevel: Number.POSITIVE_INFINITY },
+    { key: 'frontier', label: '변방', maxLevel: 10 },
+    { key: 'midlands', label: '중부', maxLevel: 20 },
+    { key: 'highlands', label: '고지', maxLevel: 35 },
+    { key: 'mythic', label: '신화', maxLevel: 60 },
+    { key: 'endgame', label: '종장', maxLevel: Number.POSITIVE_INFINITY },
 ];
 
 // cycle 57: 절대위치 atlas 그리드 폐기, tier별 vertical list 채택 (cycle 58 cleanup).
@@ -38,13 +38,13 @@ const STATUS_THEME: any = {
         dot: 'bg-slate-500/70',
     },
     exploring: {
-        label: '탐험중',
+        label: '탐험 중',
         badge: 'recommended',
         card: 'border-[#7dd4d8]/18 bg-[#7dd4d8]/10 text-[#dff7f5]',
         dot: 'bg-[#7dd4d8]',
     },
     completed: {
-        label: '탐험완료',
+        label: '탐험 완료',
         badge: 'equipped',
         card: 'border-emerald-300/18 bg-emerald-300/10 text-emerald-100',
         dot: 'bg-emerald-300',
@@ -97,7 +97,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
     const blindMap = player?.challengeModifiers?.includes('blindMap');
     const currentName = blindMap ? '???' : player?.loc;
     const currentLevelLabel = currentMap?.level === 'infinite'
-        ? 'Abyss'
+        ? '심연'
         : `Lv.${currentMap?.minLv ?? currentMap?.level ?? 1}`;
     const statusCounts = visibleEntries.reduce((acc: any, entry: any) => {
         acc[entry.state] += 1;
@@ -108,7 +108,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
         <div className="aether-readable-surface rounded-[1rem] space-y-3 p-3">
             <div className="flex items-center justify-between gap-3">
                 <div>
-                    <div className="aether-label">Atlas Map</div>
+                    <div className="aether-label">세계 지도</div>
                     <div className="mt-0.5 text-[12px] font-readable text-slate-300/82">현재 위치와 다음 경로를 우선 표시합니다.</div>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -129,7 +129,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                 <MapPin size={15} />
                             </span>
                             <div className="min-w-0">
-                                <div className="aether-label text-[#b9f1ec]/72">Current Position</div>
+                                <div className="aether-label text-[#b9f1ec]/72">현재 위치</div>
                                 <div className="mt-0.5 truncate font-readable text-[15px] font-semibold text-white">{currentName}</div>
                             </div>
                         </div>
@@ -139,7 +139,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                     </div>
                     <div className="shrink-0 text-right">
                         <div className="font-fira text-[9px] uppercase tracking-[0.08em] text-slate-300/72">
-                            {currentMap?.type === 'safe' ? 'Safe Zone' : currentMap?.boss ? 'Boss Field' : 'Field'}
+                            {currentMap?.type === 'safe' ? '안전지대' : currentMap?.boss ? '보스 권역' : '탐험 지역'}
                         </div>
                         <div className="mt-1 font-fira text-[12px] font-semibold text-[#dff7f5]">{currentLevelLabel}</div>
                     </div>
@@ -152,7 +152,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                         className="mt-3 flex w-full items-center justify-between gap-2 rounded-[0.9rem] border border-[#7dd4d8]/22 bg-black/20 px-2.5 py-2 text-left"
                     >
                         <div className="min-w-0">
-                            <div className="aether-label text-slate-400/76">Recommended Route</div>
+                            <div className="aether-label text-slate-400/76">추천 경로</div>
                             <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-[#dff7f5]">{primaryRoute.name}</div>
                         </div>
                         <SignalBadge tone="recommended" size="sm">{primaryRoute.badge}</SignalBadge>
@@ -200,7 +200,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                 각 카드가 직업 친화 표시할 수 있도록 충분히 넓게 표시. */}
             <div className="rounded-[1rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.025)_0%,rgba(255,255,255,0.01)_100%)] px-2 py-2">
                 <div className="mb-2 flex items-center justify-between gap-2 px-1">
-                    <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">World Routes</div>
+                    <div className="text-[10px] font-readable tracking-normal text-slate-400/72">전체 경로</div>
                 </div>
 
                 <div className="space-y-3">
@@ -227,7 +227,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                                         const graveCount = entry.graves.length;
                                         const graveGold = entry.graves.reduce((sum: any, item: any) => sum + Math.max(0, item?.gold || 0), 0);
                                         const levelLabel = entry.level === 'infinite'
-                                            ? 'Abyss'
+                                            ? '심연'
                                             : `Lv.${entry.minLv ?? entry.level ?? 1}`;
                                         return (
                                             <button
@@ -291,25 +291,25 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                             <div className="mt-1 text-[11px] font-fira text-slate-300/76 leading-snug">{selectedEntry.desc}</div>
                         </div>
                         <div className="shrink-0 text-right">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/70">{selectedEntry.type === 'safe' ? 'Safe' : 'Danger'}</div>
+                            <div className="text-[10px] font-readable tracking-normal text-slate-400/70">{selectedEntry.type === 'safe' ? '안전' : '위험'}</div>
                             <div className="mt-1 text-[11px] font-fira text-white/86">
-                                {selectedEntry.level === 'infinite' ? 'Abyss' : `Lv.${selectedEntry.minLv ?? selectedEntry.level ?? 1}`}
+                                {selectedEntry.level === 'infinite' ? '심연' : `Lv.${selectedEntry.minLv ?? selectedEntry.level ?? 1}`}
                             </div>
                         </div>
                     </div>
 
                     <div className="mt-3 grid grid-cols-3 gap-2">
                         <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2.5 py-2">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/70">Codex</div>
+                            <div className="text-[10px] font-readable tracking-normal text-slate-400/70">도감</div>
                             <div className="mt-1 text-[13px] font-fira font-semibold text-white/88">{selectedEntry.progress.discovered}/{selectedEntry.progress.total || 0}</div>
                         </div>
                         <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2.5 py-2">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/70">Route</div>
+                            <div className="text-[10px] font-readable tracking-normal text-slate-400/70">연결</div>
                             <div className="mt-1 text-[13px] font-fira font-semibold text-white/88">{selectedEntry.exits?.length || 0}개</div>
                         </div>
                         <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2.5 py-2">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/70">Signal</div>
-                            <div className="mt-1 text-[13px] font-fira font-semibold text-white/88">{selectedEntry.state === 'completed' ? 'CLEAR' : selectedEntry.state === 'exploring' ? 'ACTIVE' : 'SEALED'}</div>
+                            <div className="text-[10px] font-readable tracking-normal text-slate-400/70">상태</div>
+                            <div className="mt-1 text-[13px] font-readable font-semibold text-white/88">{selectedEntry.state === 'completed' ? '완료' : selectedEntry.state === 'exploring' ? '탐험 중' : '미개방'}</div>
                         </div>
                     </div>
 
@@ -377,7 +377,7 @@ const MapNavigator = ({ player, grave, stats }: any) => {
                         <div className="mt-3 rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2.5 py-2 text-[11px] font-fira leading-snug text-slate-300/74">
                             <div className="mb-1 flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/72">
                                 <Sparkles size={11} />
-                                <span>Area Lore</span>
+                                <span>지역 이야기</span>
                             </div>
                             {selectedEntry.lore}
                         </div>

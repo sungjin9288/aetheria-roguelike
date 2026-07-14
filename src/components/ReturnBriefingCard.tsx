@@ -3,12 +3,7 @@ import { MapPin, Heart, ScrollText, ListChecks, Sparkles, X } from 'lucide-react
 import { MSG } from '../data/messages';
 import type { Briefing } from '../utils/returnBriefing';
 
-/**
- * ReturnBriefingCard — 복귀 브리핑 카드 (리텐션 훅 #1).
- *
- * bootStage 'ready' 진입 후 buildReturnBriefing()이 null이 아닐 때 1회 표시.
- * 렌더링 전용 — 로직은 utils/returnBriefing.ts에 위치 (CLAUDE.md §5 DO).
- */
+/** 게임으로 돌아온 플레이어에게 현재 상태와 남은 목표를 한 번 보여준다. */
 interface ReturnBriefingCardProps {
     briefing: Briefing;
     onClose?: () => void;
@@ -44,7 +39,7 @@ const ReturnBriefingCard = ({ briefing, onClose }: ReturnBriefingCardProps) => {
                     </button>
 
                     <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
-                        Return Briefing
+                        다시 만난 모험가에게
                     </div>
                     <div className="mt-2 text-[1.4rem] font-rajdhani font-bold tracking-[0.04em] text-[#f6e7c8]">
                         {MSG.RETURN_BRIEFING_TITLE}

@@ -1286,10 +1286,10 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/ControlPanel.tsx');
       // explore 버튼
       assert.ok(/key: 'explore'/.test(source), "explore button key 보존");
-      assert.ok(/label: 'EXPLORE'/.test(source), "EXPLORE label 보존");
+      assert.ok(/label: '탐험'/.test(source), "탐험 label 보존");
       // move 버튼
       assert.ok(/key: 'move'/.test(source), "move button key 보존");
-      assert.ok(/label: 'MOVE'/.test(source), "MOVE label 보존");
+      assert.ok(/label: '이동'/.test(source), "이동 label 보존");
   });
 
   test('cycle 423: renderActionButton destructure 정합성 가드 — sidebarLabel 미destructure', async () => {

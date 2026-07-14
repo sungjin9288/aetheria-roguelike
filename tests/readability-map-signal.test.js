@@ -18,6 +18,13 @@ test('readability foundation uses Korean-friendly readable font stack', async ()
     assert.match(tailwind, /readable:\s*\['var\(--aether-readable-font\)'\]/);
 });
 
+test('mobile first fold preserves a readable log height', async () => {
+    const mobileLayout = await readSrc('src/components/app/MobileGameLayout.tsx');
+
+    assert.match(mobileLayout, /className="flex min-h-\[240px\] min-w-0 flex-1"/);
+    assert.match(mobileLayout, /<TerminalView/);
+});
+
 test('control panel exposes a first-screen map signal and route entry points', async () => {
     const source = await readSrc('src/components/ControlPanel.tsx');
 
@@ -32,9 +39,9 @@ test('map navigator promotes current position and primary route above the route 
     const source = await readSrc('src/components/MapNavigator.tsx');
 
     assert.match(source, /data-testid="map-current-location-card"/);
-    assert.match(source, /Current Position/);
+    assert.match(source, /현재 위치/);
     assert.match(source, /data-testid="map-primary-route"/);
-    assert.match(source, /Recommended Route/);
+    assert.match(source, /추천 경로/);
 });
 
 test('first viewport uses compact readable status and log surfaces', async () => {
@@ -53,16 +60,16 @@ test('first viewport uses compact readable status and log surfaces', async () =>
     assert.match(terminal, /font-readable/);
 });
 
-test('mission tracker is expressed as NEXT ROUTE REWARD RETURN decisions', async () => {
+test('mission tracker uses natural Korean action language', async () => {
     const source = await readSrc('src/components/ControlPanel.tsx');
 
     assert.match(source, /aether-mission-strip/);
-    assert.match(source, /decisionCells/);
-    assert.match(source, /label:\s*'NEXT'/);
-    assert.match(source, /label:\s*'ROUTE'/);
-    assert.match(source, /label:\s*'REWARD'/);
-    assert.match(source, /label:\s*'RETURN'/);
-    assert.match(source, /tracker\.chips/);
+    assert.match(source, /missionSteps/);
+    assert.match(source, /label:\s*'할 일'/);
+    assert.match(source, /label:\s*'장소'/);
+    assert.match(source, /label:\s*'진행'/);
+    assert.match(source, /label:\s*'마무리'/);
+    assert.doesNotMatch(source, /tracker\.chips/);
 });
 
 test('quest board uses decision rows before heavy terminal cards', async () => {

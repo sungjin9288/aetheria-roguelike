@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
  * Playwright E2E config.
  *
  * 시나리오: 핵심 사용자 플로우 (캐릭터 생성 → 첫 전투 → 사망 → 재시작).
- * vite preview 5173 포트로 dist 결과물에 대해 실행.
+ * vite preview 4173 포트의 dist 결과물에 대해 실행.
  *
  * cycle 58: 인프라 + 핵심 플로우 2개로 시작. 실기기 회귀 방지용.
  */
@@ -17,8 +17,7 @@ export default defineConfig({
     reporter: [['list']],
     timeout: 30_000,
     use: {
-        // cycle 73: PLAYWRIGHT_BASE_URL 환경변수 우선. 기본 preview 포트(4173)
-        // 충돌로 fallback될 때 local-playtest.sh가 동적 포트를 전달.
+        // local-playtest.sh는 실제로 기동한 host와 port를 항상 전달한다.
         baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4173',
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',

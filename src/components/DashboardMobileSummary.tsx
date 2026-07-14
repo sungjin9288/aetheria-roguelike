@@ -15,9 +15,9 @@ interface DashboardMobileSummaryProps {
  */
 const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
     const loadoutEntries = [
-        { label: 'LEFT', item: player?.equip?.offhand, fallback: 'EMPTY' },
-        { label: 'RIGHT', item: player?.equip?.weapon, fallback: 'EMPTY' },
-        { label: 'ARMOR', item: player?.equip?.armor, fallback: 'EMPTY' },
+        { slot: 'offhand', label: '보조', item: player?.equip?.offhand, fallback: '비어 있음' },
+        { slot: 'weapon', label: '주무기', item: player?.equip?.weapon, fallback: '비어 있음' },
+        { slot: 'armor', label: '방어구', item: player?.equip?.armor, fallback: '비어 있음' },
     ];
 
     const statusPills = useMemo(() => {
@@ -46,7 +46,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
         }
         const passTier = player.seasonPass?.tier || 0;
         if (passTier > 0) {
-            pills.push({ key: 'pass', label: `Pass Lv.${passTier}`, tone: 'upgrade' });
+            pills.push({ key: 'pass', label: `시즌 패스 ${passTier}단계`, tone: 'upgrade' });
         }
         return pills;
     }, [player]);
@@ -72,9 +72,9 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
                         : 'min-w-0 rounded-[1rem] aether-panel-muted px-2 py-1.75';
                     return (
                         <div
-                            key={entry.label}
+                            key={entry.slot}
                             data-is-signature={isSignature ? 'true' : 'false'}
-                            data-testid={isSignature ? `mobile-summary-signature-${entry.label.toLowerCase()}` : undefined}
+                            data-testid={isSignature ? `mobile-summary-signature-${entry.slot}` : undefined}
                             style={tileStyle}
                             className={tileClassName}
                         >

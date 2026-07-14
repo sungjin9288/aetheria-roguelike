@@ -160,7 +160,10 @@ test('control panel renders active mission tracker from accepted quests', async 
 
     assert.match(source, /getQuestTracker/);
     assert.match(source, /data-testid="control-mission-tracker"/);
-    assert.match(source, /tracker\.chips/);
+    assert.match(source, /tracker\.nextStep/);
+    assert.match(source, /tracker\.routeLabel/);
+    assert.match(source, /tracker\.returnLabel/);
+    assert.doesNotMatch(source, /tracker\.chips/);
     assert.match(source, /tracker\.progressPercent/);
 });
 

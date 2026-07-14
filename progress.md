@@ -1,5 +1,24 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-14: first-play player language and mobile verification reliability):
+- Replaced mechanical English state words on the first-play surfaces with direct Korean action language across the field controls, mission tracker, route map, world map, mobile loadout summary, and return briefing.
+- Removed the duplicated quest tracker `chips` payload. The UI now reads `nextStep`, `routeLabel`, `progressLabel`, and `returnLabel` directly from one tracker contract.
+- Preserved stable action keys and `data-testid` values while updating Playwright assertions to verify the Korean accessible names players actually see.
+- Restored the mobile log panel's guarded `240px` minimum height and confirmed the archive menu remains a `44px` touch target.
+- Fixed `local-playtest.sh` so Playwright always receives the exact preview URL started by the script. This prevents `localhost` and `127.0.0.1` from resolving to different local apps on the same port.
+
+Verification:
+- Focused player-language, route, quest contracts -> 24/24 pass; follow-up local-playtest and readability contracts -> 10/10 pass.
+- `npm run verify:full` -> type-check, lint, unit 3232/3232, build guard, desktop smoke, mobile smoke, Playwright e2e 21/21 pass.
+- `playtest-artifacts/mobile/01-after-start.json` -> terminal panel height 240px, archive button height 44px.
+- Visual review -> `playtest-artifacts/mobile/01-after-start.png` and `playtest-artifacts/mobile/08a-map-tab.png` show no overlapping or clipped Korean action labels.
+- `npm run mobile:doctor` -> pass; Android release signing input remains missing.
+- `npm run cap:sync` -> pass; latest web assets copied into Android and iOS Capacitor shells.
+
+Notes:
+- Native debug/archive builds were not regenerated because this slice changed web UI, tests, and local verification routing rather than native packaging or signing code.
+- Remaining release blockers are the physical iPhone/Android 5-minute manual routines and Android release keystore input.
+
 Checked (Slice 25-27 iOS Redeploy — PASSED):
 - 아트 통일 시리즈(시그니처 25 + 장비 233 + 비장비 77 = 카탈로그 335종 전수 아이템별 아트) 포함 빌드로 재배포 1-pass 통과 (exit 0): `ARCHIVE SUCCEEDED` → install (`.../4AB69D62.../App.app`) → launch → 60초 hold → done.
 - 실기기 수동 확인 포인트: 상점/인벤토리/도감에서 아이템별 차별화 아트, 물약 기능색(HP 적/MP 청/해독 녹/버프 금), 시그니처 전설 오라, 레어리티 플레이트, 모던 CTA.

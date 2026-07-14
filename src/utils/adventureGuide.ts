@@ -38,8 +38,8 @@ const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRa
     if (isSafeTarget) {
         return {
             approach: '마을 정비',
-            exitRule: 'REST/BOARD 후 재출발',
-            returnLabel: 'SAFE',
+            exitRule: '휴식과 임무 확인 후 출발',
+            returnLabel: '안전지대',
         };
     }
 
@@ -55,7 +55,7 @@ const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRa
         return {
             approach: '교전 보류',
             exitRule: '안전지대 우선',
-            returnLabel: 'SAFE',
+            returnLabel: '안전지대',
         };
     }
 
@@ -63,7 +63,7 @@ const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRa
         return {
             approach: '전리품 회수',
             exitRule: '가방 정리 후 재진입',
-            returnLabel: 'BAG',
+            returnLabel: '가방 정리',
         };
     }
 
@@ -71,7 +71,7 @@ const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRa
         return {
             approach: '미답 권역 조사',
             exitRule: '발견/전리품 확보 후 귀환',
-            returnLabel: 'DISC',
+            returnLabel: '발견 후 귀환',
         };
     }
 
@@ -155,14 +155,14 @@ const getQuestNextStep = (entry: any, targetMaps: string[]) => {
 
 const getQuestReturnLabel = (entry: any, targetMaps: string[]) => {
     const quest = entry?.quest || {};
-    if (entry?.isComplete) return 'CLAIM';
-    if (quest.target === 'Level') return 'LEVEL';
-    if (targetMaps.length > 0) return 'TARGET';
-    if (quest.type === 'craft') return 'CRAFT';
-    if (quest.type === 'bounty_count') return 'BOUNTY';
-    if (quest.type === 'build_victory') return 'BUILD';
-    if (quest.type === 'discovery_count') return 'DISC';
-    return 'RUN';
+    if (entry?.isComplete) return '보상 받기';
+    if (quest.target === 'Level') return '성장';
+    if (targetMaps.length > 0) return '목표 지역';
+    if (quest.type === 'craft') return '제작';
+    if (quest.type === 'bounty_count') return '현상금';
+    if (quest.type === 'build_victory') return '빌드';
+    if (quest.type === 'discovery_count') return '발견';
+    return '계속 진행';
 };
 
 const buildQuestTrackerPayload = (entry: any, kind: string, progressLabel: string) => {
@@ -181,12 +181,6 @@ const buildQuestTrackerPayload = (entry: any, kind: string, progressLabel: strin
         routeLabel,
         nextStep,
         returnLabel,
-        chips: [
-            { label: 'PROG', value: `${progressPercent}%` },
-            { label: 'ROUTE', value: routeLabel },
-            { label: 'NEXT', value: nextStep },
-            { label: 'RETURN', value: returnLabel },
-        ],
     };
 };
 
