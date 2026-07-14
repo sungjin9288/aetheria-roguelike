@@ -134,6 +134,10 @@
 - **Rule:** 오프라인 게임 시작을 정상 흐름으로 제공하면 cloud payload와 호환되는 versioned local snapshot을 유지하고 reset에서 함께 제거한다
 - **Rationale:** 모바일의 앱 전환·종료는 일상적인 lifecycle이므로, 접속 실패를 허용하면서 재실행 시 런을 잃는 동작은 저장 계약의 모순이다
 
+### R25: Simulate The Actual Combat Resource Loop
+- **Rule:** 초반 전투 밸런스 회귀 테스트는 평균 피해량이나 처치 턴 공식만 비교하지 말고, 실제 전투 엔진의 페이즈 전환, 행동 확률, 상태이상, 기력 제한, 소모품 사용 후 적 행동을 결정론적 seed로 반복 검증한다
+- **Rationale:** 평균상 승리 가능한 전투도 운 나쁜 분기에서 시작 자원을 모두 고갈시키면 첫 세션 흥미를 해치며, 단순 TTK 계산은 이 꼬리 위험을 드러내지 못한다
+
 ---
 
 ## 📝 Post-Mortem Template

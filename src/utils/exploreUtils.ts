@@ -248,7 +248,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const forceElite = player.challengeModifiers?.includes('eliteOnly') && !mStats.isBoss;
     // A-4 (B+ 2026-06): 초반 정예 — Lv ≤ cap에서 낮은 확률로 "정예" 개체 스폰.
     //   완전 엘리트(1.8~2.5x)는 Lv1에 불공정하므로 전용 완화 배율(EARLY_ELITE_MULT)로
-    //   TTK를 빠듯하게(영리하면 승리) → "방심하면 죽는" 첫 위협. 도망·첫 죽음 메타가 안전망.
+    //   첫 위협은 남기되 시작 물약 2개를 모두 잃는 운 나쁜 전투는 제한한다.
     const earlyElite = !mStats.isBoss && !forceElite
         && typeof level === 'number' && level <= BALANCE.EARLY_ELITE_LEVEL_CAP
         && Math.random() < BALANCE.EARLY_ELITE_CHANCE;
@@ -278,12 +278,18 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 
         // 엘리트 몬스터 페이즈: HP 50% 이하 시 패턴 강화 (보스 제외)
         if (mStats.isElite && !mStats.isBoss && !mStats.phase2) {
+            const phaseAtkBonus = earlyElite
+                ? BALANCE.EARLY_ELITE_PHASE_ATK_BONUS
+                : BALANCE.ELITE_PHASE_ATK_BONUS;
+            const phaseHeavyBonus = earlyElite
+                ? BALANCE.EARLY_ELITE_PHASE_HEAVY_BONUS
+                : BALANCE.ELITE_PHASE_HEAVY_BONUS;
             mStats.phase2 = {
                 name: `격노한 ${baseName}`,
-                atkBonus: 0.25,
+                atkBonus: phaseAtkBonus,
                 pattern: {
                     guardChance: Math.max(0, (mStats.pattern?.guardChance || 0.12) - 0.05),
-                    heavyChance: Math.min(0.6, (mStats.pattern?.heavyChance || 0.15) + 0.15),
+                    heavyChance: Math.min(0.6, (mStats.pattern?.heavyChance || 0.15) + phaseHeavyBonus),
                 },
                 log: `${baseName}이(가) 광폭화합니다! 공격이 거세집니다!`,
             };

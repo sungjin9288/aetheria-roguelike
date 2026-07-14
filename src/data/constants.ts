@@ -86,6 +86,13 @@ export interface BalanceConfig {
     MONSTER_GOLD_BASE: number;
     FIRST_RELIC_PITY_EXPLORES: number;
     BOSS_PHASE2_THRESHOLD: number;
+    EARLY_ELITE_LEVEL_CAP: number;
+    EARLY_ELITE_CHANCE: number;
+    EARLY_ELITE_MULT: number;
+    EARLY_ELITE_PHASE_ATK_BONUS: number;
+    EARLY_ELITE_PHASE_HEAVY_BONUS: number;
+    ELITE_PHASE_ATK_BONUS: number;
+    ELITE_PHASE_HEAVY_BONUS: number;
     INV_MAX_SIZE: number;
     STATUS_DOT_RATIO: number;
     DAMAGE_BASE_RATIO: number;
@@ -302,10 +309,14 @@ export const BALANCE: BalanceConfig = {
 
     // 초반 정예 (A-4, B+ 2026-06): Lv ≤ cap에서 낮은 확률로 "정예" 개체 스폰 →
     //   "방심하면 죽는" 첫 위협 모먼트. 완전 엘리트(1.8~2.5x)는 Lv1에 불공정하므로
-    //   전용 완화 배율로 TTK를 빠듯하게(영리하면 승리 가능). 도망·첫 죽음 메타가 안전망.
+    //   자동 조우는 전용 완화 배율로 시작 자원 고갈을 제한하고, 선택형 정예는 별도 강도를 유지한다.
     EARLY_ELITE_LEVEL_CAP: 6,       // 이 맵 레벨 이하에서만 초반 정예 스폰
     EARLY_ELITE_CHANCE: 0.10,       // 초반 전투당 정예 스폰 확률
-    EARLY_ELITE_MULT: 1.5,          // 정예 HP/ATK 배율 (완전 엘리트보다 완화)
+    EARLY_ELITE_MULT: 1.4,          // 자동 등장 정예 HP/ATK 배율 — 시작 물약 2개 고갈 꼬리 완화
+    EARLY_ELITE_PHASE_ATK_BONUS: 0.20,
+    EARLY_ELITE_PHASE_HEAVY_BONUS: 0.10,
+    ELITE_PHASE_ATK_BONUS: 0.25,
+    ELITE_PHASE_HEAVY_BONUS: 0.15,
 
     // 캠프파이어 노드 (Phase 2, B+ 2026-06): 던전 탐험 중 "휴식 vs 단련" 반복 결정
     //   (Slay the Spire 캠프파이어). 위협(A-1/A-4)이 강해진 만큼 회복은 실질 선택이 됨.
@@ -327,7 +338,7 @@ export const BALANCE: BalanceConfig = {
     SCOUT_CHANCE: 0.25,                 // 던전 탐험당 스카우팅 조우 확률
     SCOUT_ELITE_CARD_CHANCE: 0.15,      // 3번째 슬롯이 "정예의 흔적" 카드로 대체될 확률
     SCOUT_COMBAT_REWARD_BONUS: 0.1,     // "전투의 기척" 선택 시 해당 전투 처치 보상(EXP/골드) +10%
-    SCOUT_ELITE_HP_MULT: 1.5,           // "정예의 흔적" 확정 스폰 HP/ATK 배율 (초반 정예와 동일 완화 배율)
+    SCOUT_ELITE_HP_MULT: 1.5,           // 선택형 전투 + 확정 유물 보상이라 자동 초반 정예보다 강하게 유지
     // 관대함 하향 (2026-07 밸런스 감사): "이상 신호" 카드는 전투 회피 + quiet 롤(이변/유물/
     //   이벤트)만 굴려 사실상 "안전 버튼"이었다. quiet 롤의 anomaly(중독/화상 등 부정 효과)
     //   확률에만 ×1.5 가중해 위험을 소폭 되돌린다 — 유물/이벤트 확률은 그대로 두어
