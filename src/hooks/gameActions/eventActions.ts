@@ -10,6 +10,7 @@ import { soundManager } from '../../systems/SoundManager';
 import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from '../../utils/exploreUtils';
 import { BALANCE } from '../../data/constants';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
+import { formatEventText } from '../../utils/eventPresentation';
 
 export const createEventActions = (deps: any, shared: any) => {
     const { emitUnlockedTitles } = shared;
@@ -41,7 +42,7 @@ export const createEventActions = (deps: any, shared: any) => {
             // 체인 이벤트 outcome 처리
             if (isChainEvent && selectedOutcome) {
                 const outcome = selectedOutcome;
-                addLog('event', outcome.log || '');
+                addLog('event', formatEventText(outcome.log || ''));
                 const rwd = outcome.reward;
                 if (rwd) {
                     if (rwd.type === 'gold' && rwd.amount) {
@@ -51,7 +52,7 @@ export const createEventActions = (deps: any, shared: any) => {
                     // chain에 정의됐으나 처리 분기 누락이라 reward.text 정보가 silent 누락이던 회귀.
                     // 단순히 reward.text를 system log로 출력 (인벤/스탯 변경 없음).
                     if (rwd.type === 'info' && rwd.text) {
-                        addLog('system', `📜 ${rwd.text}`);
+                        addLog('system', formatEventText(rwd.text));
                     }
                     if (rwd.type === 'item' && rwd.name) {
                         updatedPlayer = addItemByName(updatedPlayer, rwd.name);
@@ -94,12 +95,12 @@ export const createEventActions = (deps: any, shared: any) => {
                         }
                         updatedPlayer = next;
                         const parts = [
-                            rwd.atk && `ATK +${rwd.atk}`,
-                            rwd.def && `DEF +${rwd.def}`,
-                            rwd.hp && `HP +${rwd.hp}`,
-                            rwd.mp && `MP +${rwd.mp}`,
+                            rwd.atk && `공격력 +${rwd.atk}`,
+                            rwd.def && `방어력 +${rwd.def}`,
+                            rwd.hp && `생명 +${rwd.hp}`,
+                            rwd.mp && `기력 +${rwd.mp}`,
                         ].filter(Boolean).join(' · ');
-                        addLog('success', `[체인 보상] ${parts}`);
+                        addLog('success', `이야기 보상 · ${parts}`);
                     }
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
@@ -139,7 +140,7 @@ export const createEventActions = (deps: any, shared: any) => {
                 if (selectedOutcome.buff) {
                     updatedPlayer = { ...updatedPlayer, tempBuff: { atk: 0, def: 0, turn: 0, name: null, ...selectedOutcome.buff } };
                 }
-                resultText = selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT;
+                resultText = formatEventText(selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT);
                 addLog('event', resultText);
             } else if (roll > 0.4) {
                 const rewardGold = player.level * 50;

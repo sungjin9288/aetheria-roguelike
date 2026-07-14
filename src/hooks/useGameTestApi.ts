@@ -419,11 +419,11 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 er.dispatch({
                     type: AT.SET_EVENT,
                     payload: {
-                        desc: '[TEST EVENT] 낡은 봉인이 흔들립니다. 어떻게 대응하시겠습니까?',
+                        desc: '낡은 봉인이 흔들립니다. 틈 사이로 희미한 빛이 새어 나옵니다.',
                         choices: ['봉인을 조사한다', '안전하게 후퇴한다'],
                         outcomes: [
-                            { choiceIndex: 0, gold: 40, log: '[TEST EVENT] 봉인 조각에서 40G를 회수했습니다.' },
-                            { choiceIndex: 1, hp: 10, log: '[TEST EVENT] 안전하게 후퇴하며 호흡을 가다듬었습니다.' },
+                            { choiceIndex: 0, gold: 40, log: '봉인 조각에서 골드 40을 회수했습니다.' },
+                            { choiceIndex: 1, hp: 10, log: '안전하게 후퇴하며 호흡을 가다듬었습니다.' },
                         ],
                     },
                 });

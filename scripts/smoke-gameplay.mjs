@@ -738,6 +738,8 @@ async function verifyMobileFocusPanelFlow(page, {
   readabilitySelector = null,
   requiredText = [],
   forbiddenPattern = null,
+  artifactScreenshotSelector = undefined,
+  screenshotFullPage = true,
   closePredicate = (nextState) => nextState.gameState === 'idle',
 }) {
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
@@ -758,7 +760,10 @@ async function verifyMobileFocusPanelFlow(page, {
       label: artifactName,
     });
   }
-  await writeStateArtifact(artifactName, openState, page, { screenshotSelector: readabilitySelector });
+  const screenshotSelector = artifactScreenshotSelector === undefined
+    ? readabilitySelector
+    : artifactScreenshotSelector;
+  await writeStateArtifact(artifactName, openState, page, { screenshotSelector, screenshotFullPage });
   if (decisionSelector) {
     await verifyActionReachable(page.locator(decisionSelector).first(), `${artifactName} first-scan decision area`, {
       allowDisabled: true,
@@ -871,6 +876,18 @@ async function verifyMobileFocusPanels(page) {
     decisionSelector: '[data-testid="event-panel"]',
     primarySelector: '[data-testid="event-choice-0"], [data-testid="event-dismiss"]',
     closePredicate: (nextState) => nextState.gameState === 'idle' && !nextState.currentEvent,
+    readabilitySelector: '[data-testid="event-panel"]',
+    requiredText: [
+      '탐험 중 마주친 일',
+      '뜻밖의 조우',
+      '지금 상황',
+      '어떤 길을 택하시겠습니까?',
+      '예상 결과 · 보상 가능',
+      '예상 결과 · 회복 가능',
+    ],
+    forbiddenPattern: /Decision Window|\bEVENT\b|\bPROMPT\b|\bCHOICE\b|\bCOMMIT\b|TEST EVENT|\d+G\b|\bEXP\b|\bHP\b|\bMP\b/,
+    artifactScreenshotSelector: null,
+    screenshotFullPage: false,
   });
 }
 

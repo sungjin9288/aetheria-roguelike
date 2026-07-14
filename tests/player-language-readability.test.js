@@ -170,6 +170,24 @@ test('skill growth uses natural labels and hides internal choice codes', async (
     assert.doesNotMatch(messages, /스킬 교체:|분기 \$\{choice\}/);
 });
 
+test('event decisions use player language from situation through expected outcome', async () => {
+    const [eventPanel, eventPresentation, eventActions] = await Promise.all([
+        readSrc('src/components/EventPanel.tsx'),
+        readSrc('src/utils/eventPresentation.ts'),
+        readSrc('src/hooks/gameActions/eventActions.ts'),
+    ]);
+
+    for (const label of ['탐험 중 마주친 일', '지금 상황', '어떤 길을 택하시겠습니까?', '예상 결과']) {
+        assert.match(eventPanel, new RegExp(label));
+    }
+    for (const label of ['보상 가능', '회복 가능', '생명 손실 위험', '이야기가 다음 단계로 이어짐']) {
+        assert.match(eventPresentation, new RegExp(label));
+    }
+    assert.doesNotMatch(eventPanel, /Decision Window|>Event<|>Prompt<|Choice \{idx \+ 1\}|>\s*Commit\s*</);
+    assert.match(eventActions, /formatEventText\(selectedOutcome\.log/);
+    assert.doesNotMatch(eventActions, /`ATK \+|`DEF \+|`HP \+|`MP \+|\[체인 보상\]/);
+});
+
 test('first-visit rewards keep the first journey in natural player language', () => {
     const locations = [
         '고요한 숲', '서쪽 평원', '호수의 신전', '잊혀진 폐허', '버려진 광산',
