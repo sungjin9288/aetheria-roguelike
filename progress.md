@@ -1,5 +1,22 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-14: unified the core HUD and first-session feedback language):
+- Replaced internal boot-stage text and repeated `HP / NRG / EXP / CR / Lv` abbreviations with direct Korean labels while preserving internal state keys and test ids.
+- Unified enemy status, field-log badges, level/phase banners, equipment upgrade hints, and the `status` command around the same player vocabulary.
+- Extended source contracts and browser smoke so mechanical English labels fail verification if they return.
+- Kept the scope honest: Codex, crafting, detailed stats, and Quest Board language remain separate follow-up surfaces.
+
+Verification:
+- Core HUD language contracts -> 7/7 pass after the final status-command correction.
+- Final `npm run verify:full` -> type-check, lint, unit 3242/3242, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass. The existing non-blocking `GameRoot.tsx` effect warning remains.
+- Mobile visual review -> `01-after-start.png`, `02-status-command.png`, and `05-combat-2.png` show the Korean HUD, log badges, and enemy status without clipping or overlap.
+- `npm run mobile:doctor`, `npm run cap:sync`, iOS simulator build/run, `npm run android:debug`, and signed iOS archive -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-14 15:11:09 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-14 15:11:25 KST`).
+- Physical iPhone smoke -> install, foreground launch, pid `66140`, and 60-second process recheck pass. Install URL: `file:///private/var/containers/Bundle/Application/89A37584-5BD9-4EBE-9586-C444142A9CF0/App.app/`.
+
+Next action:
+- Run the timed 5-minute routine on the installed iPhone build. Continue the remaining player-language audit with Codex, crafting, detailed stats, and Quest Board; Android still requires release signing inputs and a physical device.
+
 Done (2026-07-14: simplified first-play decisions and native readability check):
 - Collapsed the optional challenge modifiers on the intro so a new player can name the character and start without reading six advanced difficulty rules.
 - Replaced the mandatory decision-strip labels with direct Korean across relic choice, combat forecast, post-combat review, and run reflection while preserving internal keys and gameplay behavior.

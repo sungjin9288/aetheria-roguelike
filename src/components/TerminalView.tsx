@@ -60,15 +60,15 @@ const LOG_STYLES: any = {
 
 const DEFAULT_STYLE: any = { text: 'text-slate-300', bg: 'transparent', icon: null };
 const MOBILE_LOG_BADGES: any = {
-    combat: { label: 'COMBAT', className: 'border-rose-300/24 bg-rose-400/10 text-rose-100/84' },
-    critical: { label: 'CRIT', className: 'border-red-300/28 bg-red-500/12 text-red-100/88' },
-    story: { label: 'AI', className: 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]/84' },
-    system: { label: 'SYS', className: 'border-[#7dd4d8]/20 bg-[#7dd4d8]/8 text-[#dff7f5]/76' },
-    success: { label: 'GAIN', className: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]/84' },
-    event: { label: 'EVENT', className: 'border-[#9a8ac0]/24 bg-[#9a8ac0]/12 text-[#ece5ff]/84' },
-    warning: { label: 'WARN', className: 'border-amber-300/24 bg-amber-400/10 text-amber-100/84' },
-    error: { label: 'ERROR', className: 'border-red-300/24 bg-red-500/10 text-red-100/84' },
-    legendary: { label: 'LEGEND', className: 'border-[#f6e7a2]/40 bg-[#f6e7a2]/15 text-[#f6e7a2]' },
+    combat: { label: '전투', className: 'border-rose-300/24 bg-rose-400/10 text-rose-100/84' },
+    critical: { label: '치명타', className: 'border-red-300/28 bg-red-500/12 text-red-100/88' },
+    story: { label: '이야기', className: 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]/84' },
+    system: { label: '안내', className: 'border-[#7dd4d8]/20 bg-[#7dd4d8]/8 text-[#dff7f5]/76' },
+    success: { label: '획득', className: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]/84' },
+    event: { label: '이벤트', className: 'border-[#9a8ac0]/24 bg-[#9a8ac0]/12 text-[#ece5ff]/84' },
+    warning: { label: '주의', className: 'border-amber-300/24 bg-amber-400/10 text-amber-100/84' },
+    error: { label: '오류', className: 'border-red-300/24 bg-red-500/10 text-red-100/84' },
+    legendary: { label: '전설', className: 'border-[#f6e7a2]/40 bg-[#f6e7a2]/15 text-[#f6e7a2]' },
 };
 
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system', 'legendary']);
@@ -226,7 +226,7 @@ const TerminalView = ({
                                 <Bot size={12} className="shrink-0" />
                             </div>
                             <div>
-                                <div className="mb-0.5 text-[10px] font-fira uppercase tracking-[0.18em] text-[#dff7f5]/62">Narrative Pulse</div>
+                                <div className="mb-0.5 text-[10px] font-readable text-[#dff7f5]/62">이야기 흐름</div>
                                 <p className="line-clamp-2 text-[10px] font-fira text-slate-100/82 italic leading-relaxed">{latestStory.text}</p>
                             </div>
                         </div>
@@ -242,7 +242,7 @@ const TerminalView = ({
                             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                         >
                             <Terminal size={24} className="mx-auto mb-3 opacity-45 text-[#7dd4d8]" />
-                            원정 로그 대기
+                            모험 기록을 준비하고 있습니다.
                         </Motion.div>
                     )}
 
@@ -261,7 +261,7 @@ const TerminalView = ({
                                     className={`aether-log-row rounded-[0.9rem] px-2.5 py-2 text-[13px] leading-[1.52] font-readable ${style.text} ${style.bg} transition-all break-words whitespace-pre-wrap`}
                                 >
                                     {badge && (
-                                        <span className={`aether-log-badge mr-1.5 align-[1px] ${badge.className}`}>
+                                        <span data-testid="log-type-badge" className={`aether-log-badge mr-1.5 align-[1px] ${badge.className}`}>
                                             {badge.label}
                                         </span>
                                     )}
@@ -283,7 +283,7 @@ const TerminalView = ({
                                 <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                                 <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                                 <span className="w-1.5 h-1.5 bg-cyber-blue rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                                <span className="ml-2">PROCESSING NARRATIVE...</span>
+                                <span className="ml-2 font-readable tracking-normal">이야기를 이어가는 중...</span>
                             </Motion.div>
                         )}
                     </AnimatePresence>

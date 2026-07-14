@@ -22,9 +22,13 @@ const BootScreen = ({ bootStage }: any) => (
                     AETHERIA
                 </h1>
                 <div className="mx-auto mb-4 h-px w-40 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                <div className="flex items-center justify-center gap-2 text-[#d9ecec]">
+                <div
+                    data-testid="boot-progress"
+                    data-boot-stage={bootStage}
+                    className="flex items-center justify-center gap-2 text-[#d9ecec]"
+                >
                     <span className="h-2 w-2 rounded-full bg-[#7dd4d8] animate-ping shadow-[0_0_12px_rgba(125,212,216,0.5)]" />
-                    <p className="tracking-widest text-sm">SYSTEM INITIALIZING... ({bootStage})</p>
+                    <p className="font-readable text-sm">모험을 준비하고 있습니다.</p>
                 </div>
             </Motion.div>
         </div>

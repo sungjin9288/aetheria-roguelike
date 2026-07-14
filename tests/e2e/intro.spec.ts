@@ -49,9 +49,9 @@ test.describe('Intro flow', () => {
         await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 15_000 });
     });
 
-    test('StatusBar에 Lv 표시 (게임 부트 완료)', async ({ page }) => {
+    test('StatusBar에 레벨 표시 (게임 부트 완료)', async ({ page }) => {
         await startE2ERun(page);
         const statusBar = page.getByTestId('persistent-status-bar');
-        await expect(statusBar).toContainText(/Lv\.\d+/);
+        await expect(statusBar).toContainText(/레벨 \d+/);
     });
 });

@@ -171,12 +171,18 @@ async function verifyActionReachable(locator, label, options = {}) {
 
 async function verifyCombatForecast(page) {
   const forecast = page.locator('[data-testid="combat-forecast-strip"]');
+  const enemyStatus = page.locator('[data-testid="enemy-status"]');
   await forecast.waitFor({ state: 'visible', timeout: 5000 });
+  await enemyStatus.waitFor({ state: 'visible', timeout: 5000 });
   const text = await forecast.innerText();
+  const enemyText = await enemyStatus.innerText();
   const tone = await forecast.getAttribute('data-forecast-tone');
   ensure(text.includes('적의 행동'), 'Combat forecast should expose the enemy action');
   ensure(text.includes('대응'), 'Combat forecast should expose the response');
   ensure(text.includes('기회'), 'Combat forecast should expose the opportunity');
+  ensure(enemyText.includes('교전 대상'), 'Enemy status should use the player-facing target label');
+  ensure(enemyText.includes('생명'), 'Enemy status should use the player-facing health label');
+  ensure(!/Target Lock|\bHP\b/.test(enemyText), 'Enemy status should not expose mechanical English labels');
   ensure(['pressure', 'advantage', 'reward', 'steady'].includes(tone), 'Combat forecast should expose a known tone');
 }
 
@@ -422,7 +428,22 @@ async function verifyTerminalStatus(page) {
     (nextState) => nextState.logTail?.some((log) => typeof log.text === 'string' && log.text.includes('[상태]')),
     'status command log'
   );
+  const statusLog = state.logTail.find((log) => typeof log.text === 'string' && log.text.includes('[상태]'))?.text || '';
+  ensure(
+    ['레벨', '생명:', '기력:', '골드:'].every((label) => statusLog.includes(label)),
+    `Status command should use direct Korean metric labels: ${statusLog}`
+  );
+  ensure(
+    !/(?:Lv\.|HP:|MP:|Gold:)/.test(statusLog),
+    `Status command exposed mechanical English metric labels: ${statusLog}`
+  );
   await scrollToTop(page);
+  const badgeLabels = await page.locator('[data-testid="log-type-badge"]').allTextContents();
+  ensure(badgeLabels.length > 0, 'Field log should expose at least one readable type badge');
+  ensure(
+    badgeLabels.every((label) => !['COMBAT', 'CRIT', 'AI', 'SYS', 'GAIN', 'EVENT', 'WARN', 'ERROR', 'LEGEND'].includes(label.trim())),
+    `Field log exposed a mechanical English badge: ${badgeLabels.join(', ')}`
+  );
   await writeStateArtifact('02-status-command', state, page);
 }
 
@@ -430,12 +451,14 @@ async function verifyMobileFirstFold(page) {
   if (!isMobile) return;
 
   const terminalPanel = page.locator('[data-testid="terminal-panel"]');
+  const statusBar = page.locator('[data-testid="persistent-status-bar"]');
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
   const statusCharacterChip = page.locator('[data-testid="status-character-chip"]');
   const moveButton = page.locator('[data-testid="control-move"]');
   const shopButton = page.locator('[data-testid="control-market"]');
 
   await terminalPanel.waitFor({ state: 'visible', timeout: 10000 });
+  await statusBar.waitFor({ state: 'visible', timeout: 10000 });
   await archiveOpenButton.waitFor({ state: 'visible', timeout: 10000 });
   await statusCharacterChip.waitFor({ state: 'visible', timeout: 10000 });
   await moveButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -451,6 +474,9 @@ async function verifyMobileFirstFold(page) {
 
   const terminalBox = await terminalPanel.boundingBox();
   ensure(terminalBox && terminalBox.height >= 240, 'Mobile log panel did not retain the expanded first-fold height');
+  const statusText = await statusBar.innerText();
+  ensure(['생명', '기력', '경험', '골드'].every((label) => statusText.includes(label)), 'Mobile status bar should use direct Korean metric labels');
+  ensure(!/\b(?:HP|NRG|EXP|CR)\b|Target Lock/.test(statusText), 'Mobile status bar should not expose mechanical English metric labels');
 }
 
 async function verifyMobileArchiveConsole(page) {

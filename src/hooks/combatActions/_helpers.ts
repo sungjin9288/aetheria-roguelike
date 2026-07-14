@@ -53,10 +53,10 @@ export const getLootUpgradeHint = (equip: any, lootItems: Item[]): any => {
         if (score <= 0) return;
         if (score <= bestScore) return;
         const summaryParts: any[] = [];
-        if (atkDelta > 0) summaryParts.push(`ATK +${atkDelta}`);
-        if (defDelta > 0) summaryParts.push(`DEF +${defDelta}`);
-        if (critDelta > 0) summaryParts.push(`CRIT +${critDelta}%`);
-        if (mpDelta > 0) summaryParts.push(`MP +${mpDelta}`);
+        if (atkDelta > 0) summaryParts.push(`공격력 +${atkDelta}`);
+        if (defDelta > 0) summaryParts.push(`방어력 +${defDelta}`);
+        if (critDelta > 0) summaryParts.push(`치명타 +${critDelta}%`);
+        if (mpDelta > 0) summaryParts.push(`기력 +${mpDelta}`);
         bestHint = { name: item.name, summary: summaryParts.join(' / ') || MSG.COMBAT_DIGEST_DEFAULT_SUMMARY };
         bestScore = score;
     });

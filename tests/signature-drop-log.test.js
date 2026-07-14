@@ -38,7 +38,7 @@ test('useLegendaryDropDetector emits legendary log via MSG + ADD_LOG', async () 
 test('TerminalView registers legendary log style + badge + combat visibility', async () => {
     const source = await readSrc('src/components/TerminalView.tsx');
     assert.ok(/legendary:\s*\{/.test(source), 'LOG_STYLES should define legendary style');
-    assert.ok(source.includes("label: 'LEGEND'"), 'MOBILE_LOG_BADGES should label legendary as LEGEND');
+    assert.ok(source.includes("label: '전설'"), 'MOBILE_LOG_BADGES should label legendary in player-facing Korean');
     assert.ok(
         /COMBAT_LOG_TYPES[\s\S]*?'legendary'/.test(source),
         'legendary should be in COMBAT_LOG_TYPES so summary mode shows it'

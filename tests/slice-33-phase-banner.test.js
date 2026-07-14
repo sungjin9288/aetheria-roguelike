@@ -25,8 +25,8 @@ test('slice 33: PhaseBanner — phase null이면 미렌더, phase3 강조 분기
     assert.ok(/data-testid="phase-banner"/.test(src), 'phase-banner testid');
     assert.ok(/phase\?\.n\b[\s\S]{0,20}>=\s*3/.test(src), 'phase3 isFinal 분기');
     assert.ok(/\{phase\.name\}/.test(src), '보스 이름 표시');
-    assert.ok(/Phase \$\{phase\.n\}/.test(src) && /Final Phase/.test(src),
-        'PHASE N / FINAL 라벨');
+    assert.ok(/\$\{phase\.n\}단계 진입/.test(src) && /최종 단계/.test(src),
+        '보스 단계 한국어 라벨');
 });
 
 test('slice 33: GameRoot — phase 플립 감지 + 배너 렌더', async () => {

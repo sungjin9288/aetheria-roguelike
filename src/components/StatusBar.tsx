@@ -39,7 +39,7 @@ const StatusMetric = ({ label, value, max, variant }: any) => {
 
   return (
     <div className="aether-status-metric relative overflow-hidden rounded-[0.8rem] px-2 py-1">
-      <div className="flex items-baseline justify-between gap-2 font-fira uppercase tracking-[0.08em] text-[8px]">
+      <div className="flex items-baseline justify-between gap-2 font-readable text-[8px]">
         <span className={theme.label}>{label}</span>
         <span className="text-[10px] text-white/78">{safeValue}/{safeMax}</span>
       </div>
@@ -55,14 +55,7 @@ const StatusMetric = ({ label, value, max, variant }: any) => {
   );
 };
 
-// cycle 459: 컴팩트 prop / 6 ternary 가지 제거 — 1 callsite (모바일 shorthand) 항상
-//   모바일=true 전달이라 chained ternary 첫 가지만 진입, 그 외 ternary는 모두 false
-//   가지 선택. cycle 458 paired (StatusMetric 인라인) — unreachable code path lens.
-// cycle 492: 모바일 prop 자체 cascade — destructure / className ternary / 'Target
-//   Lock' 텍스트 ternary / callsite shorthand 일괄 정리. 같은 파일 cycle 491 paired.
-// slice 30: 적 타격 임팩트 — 적 HP 감소 시 Target Lock 바 플래시 + 적 위에
-//   데미지 숫자 float. 기존엔 내가 맞을 때만 숫자가 떠 비대칭(때리는 맛 없음).
-//   크리(enemyHitCrit)면 숫자를 골드+크게 강조.
+// 적이 피해를 받으면 생명력 막대와 피해 숫자를 함께 강조한다.
 const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
   const { flash, amount } = useHitFlash(enemy?.hp, enemy?.name, { crit: !!enemyHitCrit });
   if (!enemy) return null;
@@ -103,16 +96,16 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-100/22 to-transparent" />
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-[9px] font-fira uppercase tracking-[0.18em] text-rose-100/58">
-            Target Lock
+          <div className="text-[9px] font-readable text-rose-100/58">
+            교전 대상
           </div>
           <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
             <span className="truncate font-rajdhani font-bold text-rose-50/94 text-[13px]">{enemy.name}</span>
-            {enemy.isBoss && <SignalBadge tone="danger" size="sm">Boss</SignalBadge>}
+            {enemy.isBoss && <SignalBadge tone="danger" size="sm">보스</SignalBadge>}
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-[8px] font-fira uppercase tracking-[0.16em] text-rose-100/52">HP</div>
+          <div className="text-[8px] font-readable text-rose-100/52">생명</div>
           <div className="font-rajdhani font-bold text-rose-50/90 text-[12px]">{safeValue}/{safeMax}</div>
         </div>
       </div>
@@ -182,7 +175,7 @@ const StatusBar = ({
             <div className="min-w-0 flex flex-wrap items-center gap-1.5">
               <span className="truncate font-readable text-[14px] font-semibold text-white/96">{player.name}</span>
               <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{enemy ? '전투중' : player.job}</SignalBadge>
-              <SignalBadge tone="resonance" size="sm">Lv.{player.level}</SignalBadge>
+              <SignalBadge tone="resonance" size="sm">레벨 {player.level}</SignalBadge>
               {/* cycle 176: 'blindMap' challenge modifier — 위치 표시 숨김 ('???' 라벨로 대체).
                   cycle 147 이전엔 dead modifier(handler 0건)였음 — 이제 정상 동작. */}
               {/* slice 21: 위치 점/텍스트에 지역 accent — 지역 이동이 상태 바에서도 체감되게. */}
@@ -259,14 +252,14 @@ const StatusBar = ({
                 <button
                   onClick={onToggleMute}
                   className="pointer-events-auto rounded-full border border-white/8 bg-black/20 p-1 text-slate-300/70 transition-colors hover:text-white"
-                  aria-label="Toggle Sound"
+                  aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
                 >
                   {isMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
                 </button>
               )}
               <div className="text-right">
                 <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
-                <span className="ml-0.5 text-[9px] font-fira text-slate-400/68">CR</span>
+                <span className="ml-0.5 text-[9px] font-readable text-slate-400/68">골드</span>
                 {hasPremiumCurrency && (
                   <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick || undefined}>
                     💎{player.premiumCurrency}
@@ -276,9 +269,9 @@ const StatusBar = ({
             </div>
           </div>
           <div className="mt-1 grid grid-cols-3 gap-1">
-            <StatusMetric label="HP" value={player.hp} max={stats?.maxHp} variant="hp" />
-            <StatusMetric label="NRG" value={player.mp} max={stats?.maxMp} variant="mp" />
-            <StatusMetric label="EXP" value={player.exp} max={player.nextExp} variant="exp" />
+            <StatusMetric label="생명" value={player.hp} max={stats?.maxHp} variant="hp" />
+            <StatusMetric label="기력" value={player.mp} max={stats?.maxMp} variant="mp" />
+            <StatusMetric label="경험" value={player.exp} max={player.nextExp} variant="exp" />
           </div>
         </div>
       </div>

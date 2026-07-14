@@ -371,7 +371,7 @@ import { readFile } from 'node:fs/promises';
    * - src/components/StatusBar.tsx (line 56):
    *     const EnemyStatus = ({ enemy, mobile = false }: any) => {...
    *         className={`... ${mobile ? 'px-2.75 py-2.5' : 'px-3 py-2.5'}`}
-   *         {mobile ? 'Target Lock' : 'Combat Target'}
+   *         {mobile ? '교전 대상' : '전투 대상'}
    * - 호출 사이트 분석:
    *     · StatusBar.tsx:240 — 1 callsite: <EnemyStatus enemy={enemy} mobile />
    *     · 다른 파일 import 0건 (internal const).
@@ -386,7 +386,7 @@ import { readFile } from 'node:fs/promises';
    * 수정 (src/components/StatusBar.tsx):
    * - EnemyStatus destructure에서 mobile = false 제거.
    * - className의 mobile 가지 → 'px-2.75 py-2.5' inline.
-   * - "Target Lock" 텍스트 inline.
+   * - "교전 대상" 텍스트 inline.
    * - 1 callsite의 mobile shorthand 제거.
    *
    * 회귀 가드:
@@ -421,10 +421,10 @@ import { readFile } from 'node:fs/promises';
       assert.ok(!/\bmobile\b/.test(matches[0]), 'callsite mobile 명시 0건');
   });
 
-  test('cycle 492: 본체 정적 inline (px-2.75 py-2.5 / Target Lock 텍스트)', async () => {
+  test('cycle 492: 본체 정적 inline (px-2.75 py-2.5 / 교전 대상 텍스트)', async () => {
       const source = await readSrc('src/components/StatusBar.tsx');
       assert.ok(/px-2\.75 py-2\.5/.test(source), 'mobile 가지 padding 보존');
-      assert.ok(/Target Lock/.test(source), 'Target Lock 텍스트 보존');
+      assert.ok(/교전 대상/.test(source), '교전 대상 텍스트 보존');
       assert.ok(!/Combat Target/.test(source), 'Combat Target (비-mobile 가지) 제거');
   });
 
@@ -607,9 +607,9 @@ import { readFile } from 'node:fs/promises';
    * - src/components/StatusBar.tsx (line 30):
    *     const StatusMetric = ({ label, value, max, variant = 'hp' }: any) => {...};
    * - 호출 사이트 (3 internal callers):
-   *     · StatusBar.tsx:236 — <StatusMetric label="HP" ... variant="hp" />
-   *     · StatusBar.tsx:237 — <StatusMetric label="NRG" ... variant="mp" />
-   *     · StatusBar.tsx:238 — <StatusMetric label="EXP" ... variant="exp" />
+   *     · StatusBar.tsx:236 — <StatusMetric label="생명" ... variant="hp" />
+   *     · StatusBar.tsx:237 — <StatusMetric label="기력" ... variant="mp" />
+   *     · StatusBar.tsx:238 — <StatusMetric label="경험" ... variant="exp" />
    * - 결과: variant 항상 명시 전달. default 'hp' 도달 불가.
    *
    * 패턴 (cycle 222-582 시리즈 321번째):
@@ -641,12 +641,12 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 583: 정합성 가드 — 3 internal callsite 보존', async () => {
       const source = await readSrc('src/components/StatusBar.tsx');
-      assert.ok(/<StatusMetric label="HP"[\s\S]*?variant="hp"/.test(source),
-          'HP callsite 보존');
-      assert.ok(/<StatusMetric label="NRG"[\s\S]*?variant="mp"/.test(source),
-          'NRG callsite 보존');
-      assert.ok(/<StatusMetric label="EXP"[\s\S]*?variant="exp"/.test(source),
-          'EXP callsite 보존');
+      assert.ok(/<StatusMetric label="생명"[\s\S]*?variant="hp"/.test(source),
+          '생명 callsite 보존');
+      assert.ok(/<StatusMetric label="기력"[\s\S]*?variant="mp"/.test(source),
+          '기력 callsite 보존');
+      assert.ok(/<StatusMetric label="경험"[\s\S]*?variant="exp"/.test(source),
+          '경험 callsite 보존');
   });
 
   test('cycle 583: body METER_THEME nullish fallback 보존', async () => {

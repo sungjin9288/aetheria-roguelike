@@ -101,7 +101,7 @@ export const parseCommand = (input: any, gameState: any, player: Player, actions
     case '상태':
     case 'i': {
       const stats = actions.getFullStats();
-      return `[상태] Lv.${player.level} ${player.name} (${player.job}) | HP: ${player.hp}/${stats.maxHp} | MP: ${player.mp}/${player.maxMp} | Gold: ${player.gold}G | 위치: ${player.loc}`;
+      return `[상태] 레벨 ${player.level} ${player.name} (${player.job}) | 생명: ${player.hp}/${stats.maxHp} | 기력: ${player.mp}/${player.maxMp} | 골드: ${player.gold} | 위치: ${player.loc}`;
     }
 
     case 'inventory':

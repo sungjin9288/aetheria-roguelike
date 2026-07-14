@@ -379,7 +379,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         hpLow: false,
                         mpLow: false,
                         invFull: false,
-                        upgradeHint: { name: '강철 롱소드', summary: 'ATK +4 / DEF +1' },
+                        upgradeHint: { name: '강철 롱소드', summary: '공격력 +4 / 방어력 +1' },
                         traitHint: { name: '룬 마도서', summary: '비전 성향과 잘 맞는 전리품입니다.' },
                     },
                 });

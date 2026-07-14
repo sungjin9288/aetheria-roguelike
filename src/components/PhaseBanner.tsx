@@ -1,15 +1,6 @@
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 
-/**
- * PhaseBanner — 보스 페이즈 전환 순간의 극적 연출 (slice 33).
- *
- * 로그라이크의 클라이맥스인 보스전에서 페이즈 전환(HP 50%/25%)은 enemy 이름만
- * 바뀌고 로그 한 줄이 전부였다. 성장(레벨업 배너)·크리(펄스)에 이어 보스
- * 페이즈도 "지금 무언가 달라졌다"는 한 방을 준다.
- *
- * GameRoot가 enemy.phase2Triggered/phase3Triggered 플립을 감지해 {n, name}을
- * 내려보내고 ~2s 후 해제. phase3은 더 강한 톤(자주/💀).
- */
+/** 보스의 전투 단계가 바뀌는 순간을 짧게 알린다. */
 interface PhaseBannerProps {
     phase: { n: number; name: string } | null;
 }
@@ -40,10 +31,10 @@ const PhaseBanner = ({ phase }: PhaseBannerProps) => {
                         }}
                     >
                         <div
-                            className="font-rajdhani text-[11px] font-bold uppercase tracking-[0.32em]"
+                            className="font-readable text-[11px] font-bold"
                             style={{ color: accent }}
                         >
-                            {isFinal ? '💀 Final Phase' : `⚡ Phase ${phase.n}`}
+                            {isFinal ? '💀 최종 단계' : `⚡ ${phase.n}단계 진입`}
                         </div>
                         <div
                             className="mt-0.5 font-rajdhani text-[1.55rem] font-black leading-none text-white"

@@ -254,16 +254,12 @@ Completed after this research note:
 - Slice 9: Mobile Overlay CTA Reachability Sweep with viewport, hit target, and scroll recovery guards.
 - Slice 10: Mobile Focus Panel Contrast and Disabled-State Readability.
 - Slice 11 preflight: refreshed the browser/mobile smoke baseline and Capacitor web asset sync on 2026-05-31; 2026-06-01 device-gate retry later recovered `xcdevice` availability for the target iPhone, but `devicectl` still failed because the device was locked at the Developer Disk Image mount step. Android device/signing blockers remain.
+- Slice 22: Core HUD Player Language. The first-five-minute loop now uses one vocabulary across native boot, persistent status, enemy target, field-log badges, status command, level-up feedback, boss phases, and equipment upgrade hints. Internal stage names and stable test keys remain available to automation without appearing as player copy.
 
 ## Recommended Next Step
 
-Resume Slice 11 with the actual device pass.
-- Keep the latest synced Capacitor web assets and `playtest-artifacts/mobile/*` captures as the acceptance baseline.
-- Make the target iPhone 14 Pro Max available first: unlock it, keep the cable or same-LAN connection active, confirm Developer Mode, and verify `xcrun xcdevice list` reports `available: true`. Then run `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 npm run ios:device:smoke` to install the current archive, launch the app, and confirm the process survives the hold window.
-- Run the iPhone 5-minute manual loop after CoreDevice stays responsive.
-- Capture the same high-risk surfaces on device: first viewport, Shop, Quest Board, Crafting, Event, Combat, Post Combat, Relic Choice, and Run Summary.
-- Compare device screenshots against the refreshed browser smoke captures, focusing on tap comfort, Korean body text clarity, disabled-state reasons, and whether panels still feel too dim under actual device brightness.
+Run the timed iPhone 5-minute manual loop on the latest installed archive.
+- Automated iPhone delivery now passes archive install, foreground launch, and the 60-second process hold. The remaining iPhone signal is player perception and touch behavior, not packaging.
+- Record action discovery time, first-combat turn count, progression pacing, reward comprehension, and visual cohesion using `docs/PLAYTEST_CHECKLIST.md`.
+- Continue the language audit with Codex, Crafting, detailed Stats, and Quest Board only after the manual loop identifies no release-critical first-screen regression.
 - Prepare Android separately by connecting a physical device and providing release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`).
-- Keep code changes out of this slice unless the device pass finds a reproducible app issue.
-
-This follows the remaining pre-device risk after Slice 10: browser smoke and source guards now cover the main readability failures, so the next meaningful signal is physical-device perception and touch confirmation.
