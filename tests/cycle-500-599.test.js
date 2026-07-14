@@ -2896,9 +2896,9 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/utils/gameUtils.ts');
       assert.ok(/if \(reward\.essence\) return `에센스 \$\{reward\.essence\}`/.test(source),
           'essence 분기 보존');
-      assert.ok(/if \(reward\.exp\) parts\.push\(`EXP \$\{reward\.exp\}`\)/.test(source),
+      assert.ok(/if \(reward\.exp\) parts\.push\(`경험 \$\{reward\.exp\}`\)/.test(source),
           'exp 분기 보존');
-      assert.ok(/if \(reward\.gold\) parts\.push\(`\$\{reward\.gold\}G`\)/.test(source),
+      assert.ok(/if \(reward\.gold\) parts\.push\(`골드 \$\{reward\.gold\}`\)/.test(source),
           'gold 분기 보존');
   });
 

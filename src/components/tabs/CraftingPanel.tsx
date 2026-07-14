@@ -10,9 +10,7 @@ import FocusPanelHeader from '../FocusPanelHeader';
 const TYPE_LABEL: any = { weapon: '무기', armor: '방어구', shield: '방패' };
 const RARITY_LABEL: any = { common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설' };
 
-/**
- * CraftingPanel — 제작/합성 패널 (탭 전환)
- */
+/** 제작법과 장비 합성을 한 흐름에서 다룬다. */
 // cycle 403: `mobileFocused?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
 //   ControlPanel이 prop pass했으나 silent dropped (paired remove).
 interface CraftingPanelProps {
@@ -30,11 +28,9 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
   const [selectedIds, setSelectedIds] = useState<any[]>([]);
   const [useProtect, setUseProtect] = useState(false);
 
-  // ──── 제작 모드 ────
   const recipes = DB.ITEMS.recipes || [];
   const getItemCount = (name: any) => player.inv.filter((item: any) => item.name === name).length;
 
-  // ──── 합성 모드 ────
   const synthGroups = useMemo(() => getSynthesisGroups(player.inv), [player.inv]);
 
   const toggleSlot = (itemId: any) => {
@@ -59,8 +55,8 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
   const renderCraftMode = () => (
     <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-2">
       {recipes.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-orange-500/20 bg-cyber-dark/30 px-4 py-12 text-center text-sm font-rajdhani tracking-widest text-orange-400/40">
-          NO RECIPES AVAILABLE
+        <div className="rounded-lg border border-dashed border-orange-500/20 bg-cyber-dark/30 px-4 py-12 text-center text-sm font-readable text-orange-200/55">
+          아직 발견한 제작법이 없습니다.
         </div>
       ) : recipes.map((recipe: any) => {
         const hasGold = player.gold >= recipe.gold;
@@ -70,7 +66,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
         const hasMaterials = missingInputs.length === 0;
         const canCraft = hasGold && hasMaterials;
         const lockReason = !hasGold
-          ? `골드 부족 · ${player.gold}/${recipe.gold}G`
+          ? `골드 부족 · ${player.gold}/${recipe.gold}`
           : missingInputs.length > 0
             ? `재료 부족 · ${missingInputs[0].name} ${missingInputs[0].owned}/${missingInputs[0].qty}`
             : '';
@@ -79,7 +75,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
             <div className="flex items-center justify-between gap-2">
               <div>
                 <div className="font-bold text-white font-rajdhani text-[14px]">{recipe.name}</div>
-                <div className="text-[11px] text-orange-200/86 font-fira">{recipe.gold}G</div>
+                <div className="text-[11px] text-orange-200/86 font-readable">골드 {recipe.gold}</div>
               </div>
               <Motion.button
                 data-testid="crafting-recipe-action"
@@ -88,7 +84,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                 disabled={!canCraft}
                 className="aether-disabled-action px-4 py-1.5 bg-orange-500/10 border border-orange-500/50 rounded-sm text-orange-200 text-[11px] font-bold hover:bg-orange-500/20 transition-all whitespace-nowrap tracking-wider min-h-[44px]"
               >
-                {canCraft ? 'CRAFT' : 'LOCKED'}
+                {canCraft ? '제작' : '재료 확인'}
               </Motion.button>
             </div>
             {!canCraft && lockReason && (
@@ -140,7 +136,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                     <>
                       <span className="truncate max-w-[4.5rem] text-[10px] font-bold">{item.name}</span>
                       <span className="text-[9px] mt-0.5" style={{ color: BALANCE.RARITY_COLORS[getItemRarity(item)] }}>
-                        T{item.tier} {RARITY_LABEL[getItemRarity(item)]}
+                        {item.tier}단계 · {RARITY_LABEL[getItemRarity(item)]}
                       </span>
                     </>
                   ) : (
@@ -157,7 +153,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
               <div className="flex justify-between text-purple-200">
                 <span>비용</span>
                 <span className={player.gold >= validation.goldCost ? 'text-cyber-green' : 'text-red-400'}>
-                  {validation.goldCost.toLocaleString()}G
+                  골드 {validation.goldCost.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between text-purple-200">
@@ -178,13 +174,13 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                 >
                   <ShieldCheck size={12} />
                   <span>합성 보호 ({BALANCE.SYNTHESIS_PROTECT_COST} {BALANCE.PREMIUM_CURRENCY_NAME})</span>
-                  <span className="ml-auto">{useProtect ? 'ON' : 'OFF'}</span>
+                  <span className="ml-auto">{useProtect ? '사용' : '미사용'}</span>
                 </button>
               )}
               {/* 가능한 결과물 미리보기 */}
               {outputs.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-purple-500/10">
-                  <div className="text-[10px] text-purple-400/60 mb-1.5">T{(validation.tier ?? 0) + 1} 결과 후보</div>
+                  <div className="text-[10px] text-purple-300/70 mb-1.5">{(validation.tier ?? 0) + 1}단계 결과 후보</div>
                   <div className="flex flex-wrap gap-1.5">
                     {outputs.slice(0, 6).map((o: any) => (
                       <span
@@ -215,7 +211,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
             disabled={!validation?.valid}
             className="aether-disabled-action mt-4 w-full py-3 bg-purple-500/10 border border-purple-500/50 rounded-sm text-purple-200 text-sm font-bold hover:bg-purple-500/20 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] transition-all tracking-wider min-h-[44px]"
           >
-            {validation?.valid ? 'SYNTHESIZE' : 'SELECT ITEMS'}
+            {validation?.valid ? '합성 시작' : '장비 선택'}
           </Motion.button>
           {!validation?.valid && (
             <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
@@ -226,13 +222,13 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
 
         {/* 합성 가능 장비 목록 */}
         {synthGroups.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-purple-500/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-rajdhani tracking-widest text-purple-400/40">
-            NO SYNTHESIZABLE SETS
+          <div className="rounded-lg border border-dashed border-purple-500/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-readable text-purple-200/55">
+            합성할 수 있는 장비 조합이 없습니다.
           </div>
         ) : synthGroups.map((group: any) => (
           <div key={`${group.type}_${group.tier}`} className="bg-cyber-dark/60 p-3 rounded-md border border-purple-500/15">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold font-rajdhani text-purple-300">{TYPE_LABEL[group.type]} T{group.tier}</span>
+              <span className="text-xs font-bold font-readable text-purple-300">{TYPE_LABEL[group.type]} {group.tier}단계</span>
               <span className="text-[10px] font-fira text-purple-400/50">{group.count}개 보유</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -264,12 +260,13 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
 
   return (
     <Motion.div
+      data-testid="crafting-panel"
       initial={false} animate={{ opacity: 1, y: 0 }}
       className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
     >
       <FocusPanelHeader
-        eyebrow="Forge Circuit"
-        title={mode === 'craft' ? 'FORGE MATRIX' : 'SYNTHESIS'}
+        eyebrow="장비 제작소"
+        title={mode === 'craft' ? '제작' : '장비 합성'}
         titleClassName="flex items-center gap-2 text-[1.05rem] text-orange-400"
         meta={mode === 'craft' ? '제작 가능한 레시피와 재료 수량을 즉시 비교합니다.' : '동일 티어 장비를 골라 합성 결과를 확인합니다.'}
         onBack={() => setGameState?.('idle')}
@@ -277,18 +274,18 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
         backTestId="crafting-close"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}
-        archiveLabel="INV"
+        archiveLabel="가방"
         archiveTestId="crafting-open-archive"
         rightSlot={
           <div className="flex overflow-hidden rounded-sm border border-orange-500/20 bg-cyber-dark/80">
             {[
-              { id: 'craft', label: 'CRAFT' },
-              { id: 'synth', label: 'SYNTH' },
+              { id: 'craft', label: '제작' },
+              { id: 'synth', label: '합성' },
             ].map((tab: any) => (
               <button
                 key={tab.id}
                 onClick={() => { setMode(tab.id); setSelectedIds([]); }}
-                className={`min-h-[36px] px-4 py-2 text-xs font-rajdhani font-bold tracking-wider transition-all
+                className={`min-h-[36px] px-4 py-2 text-xs font-readable font-bold transition-all
                   ${mode === tab.id
                     ? tab.id === 'craft'
                       ? 'bg-orange-500/20 text-orange-300'

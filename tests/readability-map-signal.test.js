@@ -83,8 +83,7 @@ test('quest board uses decision rows before heavy terminal cards', async () => {
     assert.match(source, /data-quest-row-kind=\{kind\}/);
     assert.match(source, /QuestObjectiveLine/);
     assert.match(source, /OperationBriefRows brief=\{entry\.brief\}/);
-    // slice 22: 결정 CTA 한국어화 — START OPERATION/ACCEPT MISSION → 작전 개시/임무 수락.
-    assert.match(source, /작전 개시/);
+    // 추천 임무와 일반 임무 모두 같은 수락 용어를 사용한다.
     assert.match(source, /임무 수락/);
 });
 

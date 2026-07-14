@@ -28,9 +28,9 @@ const TONE_ACCENT: any = Object.freeze({
 });
 
 const CATEGORY_LABEL: any = Object.freeze({
-    'unique-weapon': 'UNIQUE',
-    'boss-drop': 'BOSS DROP',
-    'set-core': 'SET CORE',
+    'unique-weapon': '고유 무기',
+    'boss-drop': '보스 전리품',
+    'set-core': '세트 핵심',
 });
 
 const DEFAULT_TONE_ACCENT = TONE_ACCENT.holy;
@@ -106,7 +106,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-[9px] font-fira text-slate-400 uppercase tracking-wider">
                     <Sparkles size={11} className="text-amber-300" />
-                    Legendary Collection
+                    전설 수집
                 </div>
                 <div className="text-[9px] font-fira text-amber-200">
                     {discoveredCount}/{entries.length}
@@ -150,7 +150,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
             {/* Set summary */}
             {setSummary.length > 0 && (
                 <div className="space-y-1.5">
-                    <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider">Sets</div>
+                    <div className="text-[9px] font-readable text-slate-400">전설 세트</div>
                     <div className="grid grid-cols-1 gap-1.5">
                         {setSummary.map(({ key, def, total, discovered, equipped }: any) => {
                             const accent = TONE_ACCENT[def.tone] || DEFAULT_TONE_ACCENT;
@@ -236,7 +236,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                                     <div className="min-w-0">
                                         <div className="font-rajdhani font-bold text-white truncate text-[10px]">{item.name}</div>
                                         <div className="text-[8px] font-fira text-amber-200/80 mt-0.5 tracking-wider">
-                                            {CATEGORY_LABEL[meta.category] || 'LEGEND'} · {accent.label}
+                                            {CATEGORY_LABEL[meta.category] || '전설'} · {accent.label}
                                         </div>
                                     </div>
                                 </div>
@@ -265,7 +265,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                         <div className="min-w-0 flex-1">
                             <div className="font-rajdhani font-bold text-white text-[13px]">{selectedEntry.item.name}</div>
                             <div className="text-[9px] font-fira text-amber-200/80 tracking-wider mt-0.5">
-                                {CATEGORY_LABEL[selectedEntry.meta.category] || 'LEGEND'}
+                                {CATEGORY_LABEL[selectedEntry.meta.category] || '전설'}
                                 <span className="mx-1 text-slate-600">·</span>
                                 {(TONE_ACCENT[selectedEntry.meta.tone] || DEFAULT_TONE_ACCENT).label}
                                 {selectedEntry.item.desc_stat ? (

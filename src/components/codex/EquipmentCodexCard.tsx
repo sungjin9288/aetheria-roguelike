@@ -131,19 +131,19 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
             <div className="space-y-1 rounded-[0.85rem] border border-white/6 bg-black/16 px-2.5 py-2">
                 <div className="text-[9px] font-fira uppercase tracking-[0.14em] text-slate-500 mb-1.5">
                     {MSG.EQUIP_STAT_COMPARE}
-                    {equipped && <span className="ml-1.5 normal-case text-slate-600">vs {equipped.name}</span>}
+                    {equipped && <span className="ml-1.5 normal-case text-slate-600">현재 {equipped.name}과 비교</span>}
                 </div>
                 {item.atk != null && (
-                    <StatRow label="ATK" value={item.atk} compareValue={equipped?.atk} />
+                    <StatRow label="공격력" value={item.atk} compareValue={equipped?.atk} />
                 )}
                 {item.def != null && (
-                    <StatRow label="DEF" value={item.def} compareValue={equipped?.def} />
+                    <StatRow label="방어력" value={item.def} compareValue={equipped?.def} />
                 )}
                 {item.hp != null && (
-                    <StatRow label="HP" value={item.hp} compareValue={equipped?.hp} />
+                    <StatRow label="생명" value={item.hp} compareValue={equipped?.hp} />
                 )}
                 {item.mp != null && (
-                    <StatRow label="MP" value={item.mp} compareValue={equipped?.mp} />
+                    <StatRow label="기력" value={item.mp} compareValue={equipped?.mp} />
                 )}
             </div>
 
@@ -168,7 +168,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
 
             {/* 가격 */}
             <div className="text-[10px] font-fira text-slate-500 text-right">
-                {item.price}G
+                골드 {item.price}
             </div>
         </Motion.div>
     );

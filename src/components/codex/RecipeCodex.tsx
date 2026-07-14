@@ -67,7 +67,7 @@ const RecipeCodex = ({ codex, player }: RecipeCodexProps) => {
                                         );
                                     })}
                                     <div className={hasGold ? 'text-amber-200' : 'text-rose-300'}>
-                                        비용: {recipe.gold}G (보유: {player?.gold || 0}G)
+                                        비용: 골드 {recipe.gold} (보유: 골드 {player?.gold || 0})
                                     </div>
                                 </div>
                             )}

@@ -43,8 +43,10 @@ test.describe('Navigation', () => {
         const codexTab = page.locator('[data-testid$="-tab-codex"]').first();
         await expect(codexTab).toBeVisible({ timeout: 8_000 });
         await codexTab.click();
-        // Codex 안에는 EQUIP/MONSTER/RECIPE 등 sub tab이 항상 노출
-        await expect(page.locator('text=/EQUIP|MONSTER|RECIPE|MATERIAL|LEGEND/').first()).toBeVisible({ timeout: 8_000 });
+        // 도감 안에는 장비/몬스터/제작법 등 세부 탭이 항상 노출
+        await expect(page.getByTestId('codex-panel')).toBeVisible({ timeout: 8_000 });
+        await expect(page.getByTestId('codex-tab-equip')).toContainText('장비');
+        await expect(page.getByTestId('codex-tab-monster')).toContainText('몬스터');
     });
 
     // cycle 64.5: 신규 콘텐츠(cycle 63 퀘스트, cycle 61 칭호)가 추가된 만큼
@@ -53,8 +55,8 @@ test.describe('Navigation', () => {
         const questTab = page.locator('[data-testid$="-tab-quest"]').first();
         await expect(questTab).toBeVisible({ timeout: 8_000 });
         await questTab.click();
-        // Quest 패널은 항상 "퀘스트" 또는 "Operations" 텍스트 노출
-        await expect(page.locator('text=/퀘스트|Operation|Mission|진행/').first()).toBeVisible({ timeout: 8_000 });
+        // Quest 패널은 항상 임무 진행 정보를 노출
+        await expect(page.locator('text=/퀘스트|임무|진행/').first()).toBeVisible({ timeout: 8_000 });
     });
 
     test('ACHV 탭 lazy-loading → 업적 패널 진입', async ({ page }) => {

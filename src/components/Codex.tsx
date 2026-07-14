@@ -24,11 +24,11 @@ interface CodexProps {
 }
 
 const SUB_TABS: any = [
-    { id: 'equip', label: 'EQUIP', icon: Sword },
-    { id: 'monster', label: 'MONSTER', icon: Bug },
-    { id: 'recipe', label: 'RECIPE', icon: Hammer },
-    { id: 'material', label: 'MATERIAL', icon: Leaf },
-    { id: 'legend', label: 'LEGEND', icon: Sparkles },
+    { id: 'equip', label: '장비', icon: Sword },
+    { id: 'monster', label: '몬스터', icon: Bug },
+    { id: 'recipe', label: '제작법', icon: Hammer },
+    { id: 'material', label: '소재', icon: Leaf },
+    { id: 'legend', label: '전설', icon: Sparkles },
 ];
 
 const Codex = ({ player, dispatch }: CodexProps) => {
@@ -98,7 +98,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="text-slate-500 text-xs font-fira tracking-[0.18em] uppercase flex items-center gap-1.5">
-                    <BookOpen size={12} /> Codex
+                    <BookOpen size={12} /> 모험 도감
                 </div>
                 <SignalBadge tone="recommended" size="sm">{discoveredAll}/{totalAll} ({pct}%)</SignalBadge>
             </div>
@@ -116,11 +116,11 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                 <div className="space-y-1.5">
                     {progress.unclaimed.map((m: any) => {
                         const rewardText = [
-                            m.reward.gold && `+${m.reward.gold}G`,
+                            m.reward.gold && `골드 +${m.reward.gold}`,
                             m.reward.premiumCurrency && `+${m.reward.premiumCurrency}💎`,
-                            m.reward.atk && `ATK+${m.reward.atk}`,
-                            m.reward.def && `DEF+${m.reward.def}`,
-                            m.reward.hp && `HP+${m.reward.hp}`,
+                            m.reward.atk && `공격력 +${m.reward.atk}`,
+                            m.reward.def && `방어력 +${m.reward.def}`,
+                            m.reward.hp && `생명 +${m.reward.hp}`,
                         ].filter(Boolean).join(' ');
                         return (
                             <div key={m.id} className="flex items-center justify-between gap-2 rounded-[0.95rem] border border-cyber-green/30 bg-cyber-green/8 px-3 py-2">
@@ -159,7 +159,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                             key={tab.id}
                             data-testid={`codex-tab-${tab.id}`}
                             onClick={() => setSubTab(tab.id)}
-                            className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[11px] font-fira uppercase tracking-wider transition-all border ${accent}`}
+                            className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[11px] font-readable transition-all border ${accent}`}
                         >
                             <Icon size={12} />
                             {tab.label}

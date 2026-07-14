@@ -25,9 +25,9 @@ const RARITY_BG: any = {
 };
 
 const CATEGORY_TABS: any = [
-    { id: 'weapons', label: 'WEAPONS' },
-    { id: 'armors', label: 'ARMORS' },
-    { id: 'shields', label: 'SHIELDS' },
+    { id: 'weapons', label: '무기' },
+    { id: 'armors', label: '방어구' },
+    { id: 'shields', label: '방패' },
 ];
 
 interface WeaponCodexProps {
@@ -73,7 +73,7 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }:
                     <button
                         key={tab.id}
                         onClick={() => { setCategory(tab.id); setSelectedItem(null); }}
-                        className={`flex-1 text-[9px] font-fira uppercase tracking-wider py-1 rounded-md border transition-all
+                        className={`flex-1 text-[9px] font-readable py-1 rounded-md border transition-all
                             ${category === tab.id
                                 ? 'bg-white/8 border-white/20 text-white'
                                 : 'border-white/6 text-slate-500 hover:text-slate-300'
@@ -89,7 +89,7 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }:
                 {grouped.map(([tier, tierItems]: any) => (
                     <div key={tier}>
                         <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider mb-1.5">
-                            Tier {tier} — {MSG.RARITY_LABEL[getItemRarity(tierItems[0])] || '일반'}
+                            {tier}단계 · {MSG.RARITY_LABEL[getItemRarity(tierItems[0])] || '일반'}
                         </div>
                         <div className="grid grid-cols-3 gap-1.5">
                             {tierItems.map((item: any) => {
@@ -139,7 +139,7 @@ const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }:
             {/* Milestones */}
             {milestones.length > 0 && (
                 <div className="space-y-1">
-                    <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider">Milestones</div>
+                    <div className="text-[9px] font-readable text-slate-400">수집 보상</div>
                     {milestones.map((ms: any) => (
                         <div
                             key={ms.id}

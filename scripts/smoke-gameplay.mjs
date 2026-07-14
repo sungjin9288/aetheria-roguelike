@@ -82,13 +82,24 @@ async function waitForState(page, predicate, description, timeout = 15000) {
   throw new Error(`Timed out waiting for ${description}`);
 }
 
-async function writeStateArtifact(name, state, page) {
+async function writeStateArtifact(name, state, page, { screenshotSelector = null, screenshotAnimations = 'disabled' } = {}) {
   const basename = sanitizeName(name);
+  if (/^02[b-e]-/.test(basename)) {
+    await page.locator('[data-testid="level-up-banner"]').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+  }
+  if (/^(08|08b|09)-/.test(basename)) await delay(1000);
   const domMetrics = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getDomMetrics?.() || null);
   const artifactState = domMetrics ? { ...state, domMetrics } : state;
   await fs.mkdir(artifactDir, { recursive: true });
   await fs.writeFile(path.join(artifactDir, `${basename}.json`), `${JSON.stringify(artifactState, null, 2)}\n`, 'utf8');
-  await page.screenshot({ path: path.join(artifactDir, `${basename}.png`), fullPage: true, timeout: 60000 });
+  const screenshotTarget = screenshotSelector ? page.locator(screenshotSelector).first() : page;
+  const screenshotOptions = {
+    path: path.join(artifactDir, `${basename}.png`),
+    animations: screenshotAnimations,
+    timeout: 60000,
+  };
+  if (!screenshotSelector) screenshotOptions.fullPage = true;
+  await screenshotTarget.screenshot(screenshotOptions);
 }
 
 async function getReachabilityMetrics(locator) {
@@ -691,6 +702,9 @@ async function verifyMobileFocusPanelFlow(page, {
   decisionSelector = null,
   primarySelector = null,
   allowDisabledPrimary = false,
+  readabilitySelector = null,
+  requiredText = [],
+  forbiddenPattern = null,
   closePredicate = (nextState) => nextState.gameState === 'idle',
 }) {
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
@@ -700,10 +714,18 @@ async function verifyMobileFocusPanelFlow(page, {
 
   await trigger();
   const openState = await waitForState(page, openPredicate, openDescription);
-  await writeStateArtifact(artifactName, openState, page);
 
   await backButton.waitFor({ state: 'visible', timeout: 5000 });
   ensure(!await archiveOpenButton.isVisible(), `${artifactName} should hide archive console trigger while open`);
+  if (readabilitySelector) {
+    await verifySurfaceLanguage(page, {
+      selector: readabilitySelector,
+      requiredText,
+      forbiddenPattern,
+      label: artifactName,
+    });
+  }
+  await writeStateArtifact(artifactName, openState, page, { screenshotSelector: readabilitySelector });
   if (decisionSelector) {
     await verifyActionReachable(page.locator(decisionSelector).first(), `${artifactName} first-scan decision area`, {
       allowDisabled: true,
@@ -730,6 +752,23 @@ async function verifyMobileFocusPanelFlow(page, {
     await returnToLogButton.click();
   }
   await archiveOpenButton.waitFor({ state: 'visible', timeout: 10000 });
+}
+
+async function verifySurfaceLanguage(page, {
+  selector,
+  requiredText = [],
+  forbiddenPattern = null,
+  label,
+}) {
+  const surface = page.locator(selector).first();
+  await surface.waitFor({ state: 'visible', timeout: 8000 });
+  const surfaceText = await surface.innerText();
+  for (const expected of requiredText) {
+    ensure(surfaceText.includes(expected), `${label} should include player-facing text: ${expected}`);
+  }
+  if (forbiddenPattern) {
+    ensure(!forbiddenPattern.test(surfaceText), `${label} should not include legacy text: ${forbiddenPattern}`);
+  }
 }
 
 async function verifyMobileFocusPanels(page) {
@@ -764,6 +803,9 @@ async function verifyMobileFocusPanels(page) {
     closeTestId: 'quest-board-close',
     decisionSelector: '[data-testid="quest-decision-row"]',
     primarySelector: '[data-testid="quest-board-start-operation"]',
+    readabilitySelector: '[data-testid="quest-board-panel"]',
+    requiredText: ['임무 선택', '추천 임무', '임무 안내', '목적지', '위험', '보상', '귀환 기준'],
+    forbiddenPattern: /MISSION|OPERATION|SCOUT|ROUTE|RISK|PAYOFF|RETURN|Lv\./,
   });
 
   await verifyMobileFocusPanelFlow(page, {
@@ -777,6 +819,9 @@ async function verifyMobileFocusPanels(page) {
     decisionSelector: '[data-testid="crafting-recipe-action"]',
     primarySelector: '[data-testid="crafting-recipe-action"]',
     allowDisabledPrimary: true,
+    readabilitySelector: '[data-testid="crafting-panel"]',
+    requiredText: ['장비 제작소', '제작', '합성', '가방'],
+    forbiddenPattern: /FORGE|CRAFT|SYNTH|LOCKED|INV/,
   });
 
   await verifyMobileFocusPanelFlow(page, {
@@ -939,13 +984,43 @@ async function verifyTabs(page) {
     await restartFromRunOver(page, '08-tabs-run-over');
   }
 
+  const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
+  if (await archiveOpenButton.isVisible().catch(() => false)) {
+    await archiveOpenButton.click();
+  }
+  await page.locator('[data-testid="mobile-archive-console-content"]').waitFor({ state: 'visible', timeout: 10000 });
+
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('map'));
   const mapState = await waitForState(page, (state) => state.sideTab === 'map', 'map tab activation');
   await writeStateArtifact('08a-map-tab', mapState, page);
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('stats'));
   const statsState = await waitForState(page, (state) => state.sideTab === 'stats', 'stats tab activation');
-  await writeStateArtifact('08-stats-tab', statsState, page);
+  await verifySurfaceLanguage(page, {
+    selector: '[data-testid="stats-panel"]',
+    requiredText: ['모험 기록', '총 처치', '사망', '레벨'],
+    forbiddenPattern: /Statistics|TOTAL KILLS|DEATHS|K\/D RATIO|LEGACY ESSENCE/,
+    label: 'stats tab',
+  });
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  await writeStateArtifact('08-stats-tab', statsState, page, {
+    screenshotSelector: '[data-testid="mobile-archive-console"]',
+    screenshotAnimations: 'allow',
+  });
+
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('codex'));
+  const codexState = await waitForState(page, (state) => state.sideTab === 'codex', 'codex tab activation');
+  await verifySurfaceLanguage(page, {
+    selector: '[data-testid="codex-panel"]',
+    requiredText: ['모험 도감', '장비', '몬스터', '제작법', '소재', '전설'],
+    forbiddenPattern: /EQUIP|MONSTER|RECIPE|MATERIAL|LEGEND|WEAPONS|ARMORS|SHIELDS/,
+    label: 'codex tab',
+  });
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  await writeStateArtifact('08b-codex-tab', codexState, page, {
+    screenshotSelector: '[data-testid="mobile-archive-console"]',
+    screenshotAnimations: 'allow',
+  });
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('system'));
   const systemState = await waitForState(page, (state) => state.sideTab === 'system', 'system tab activation');

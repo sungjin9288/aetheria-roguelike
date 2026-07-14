@@ -1,5 +1,20 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-14: unified secondary gameplay surfaces around player language):
+- Reworked Quest Board, Crafting, detailed Stats, and Codex copy so headings, actions, empty states, stat names, and reward units use direct Korean instead of internal English labels and abbreviations.
+- Kept domain keys and stable test ids intact while simplifying shared focus headers and extending source contracts against vocabulary regressions.
+- Changed browser smoke from archive state mutation to actual panel opening and rendering, with required Korean and forbidden legacy-label checks for all four surfaces.
+
+Verification:
+- Final `npm run verify:full` -> type-check, lint, unit 3245/3245, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass. The existing non-blocking `GameRoot.tsx` effect warning remains.
+- Mobile visual review -> `02c-quest-board-open.png`, `02d-craft-open.png`, `08-stats-tab.png`, and `08b-codex-tab.png` show the real 390px panels without clipping or overlap.
+- `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, and signed iOS archive -> pass; Android release signing input remains missing.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-14 15:59:28 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-14 16:00:09 KST`).
+- Physical iPhone smoke -> install, foreground launch, pid `66313`, and 60-second process recheck pass. Install URL: `file:///private/var/containers/Bundle/Application/EA5C340C-F509-4786-B3CA-DFFB72AB5453/App.app/`.
+
+Next action:
+- Run the timed 5-minute routine on this installed iPhone build and record readability, progression pacing, touch behavior, and art cohesion. Android still requires release signing inputs and a physical device.
+
 Done (2026-07-14: unified the core HUD and first-session feedback language):
 - Replaced internal boot-stage text and repeated `HP / NRG / EXP / CR / Lv` abbreviations with direct Korean labels while preserving internal state keys and test ids.
 - Unified enemy status, field-log badges, level/phase banners, equipment upgrade hints, and the `status` command around the same player vocabulary.

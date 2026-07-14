@@ -53,12 +53,12 @@ const MaterialCodex = ({ codex }: MaterialCodexProps) => {
                                     {found ? mat.name : '???'}
                                 </span>
                                 {found && (
-                                    <span className="ml-auto text-[10px] font-fira text-amber-200">{mat.price}G</span>
+                                    <span className="ml-auto text-[10px] font-fira text-amber-200">골드 {mat.price}</span>
                                 )}
                             </div>
                             {found && sources.length > 0 && (
                                 <div className="mt-1 text-[9px] font-fira text-slate-500 pl-5 truncate">
-                                    드롭: {sources.slice(0, 4).join(', ')}{sources.length > 4 ? ` +${sources.length - 4}` : ''}
+                                    획득처: {sources.slice(0, 4).join(', ')}{sources.length > 4 ? ` +${sources.length - 4}` : ''}
                                 </div>
                             )}
                         </div>

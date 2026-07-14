@@ -94,7 +94,7 @@ test('formatDailyProtocolReward summarizes reward payload', () => {
 
 test('formatRewardParts returns an array of labeled reward segments', () => {
     const parts = formatRewardParts({ exp: 10, gold: 30, item: '아이템' });
-    assert.deepEqual(parts, ['EXP 10', '30G', '아이템']);
+    assert.deepEqual(parts, ['경험 10', '골드 30', '아이템']);
     assert.deepEqual(formatRewardParts({}), []);
 });
 

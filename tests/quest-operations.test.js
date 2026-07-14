@@ -63,13 +63,13 @@ test('quest board featured operations include a town prep run plan', () => {
     const planSteps = board.featured[0].planSteps;
 
     assert.deepEqual(planSteps.map((step) => step.label), ['수락', '정비', '목표']);
-    assert.equal(planSteps[0].value, 'BOARD 계약 확정');
-    assert.equal(planSteps[1].value, 'REST 회복 우선');
+    assert.equal(planSteps[0].value, '게시판에서 임무 수락');
+    assert.equal(planSteps[1].value, '휴식으로 회복 우선');
     assert.match(planSteps[2].value, /(진입|달성|추적|확장|가동)/);
-    assert.equal(board.featured[0].brief.label, 'Scout Brief');
+    assert.equal(board.featured[0].brief.label, '임무 안내');
     assert.equal(board.featured[0].brief.riskLabel, '정비 필요');
-    assert.match(board.featured[0].brief.extraction, /REST/);
-    assert.ok(board.featured[0].brief.tags.some((tag) => tag.label === 'RETURN'));
+    assert.match(board.featured[0].brief.extraction, /휴식/);
+    assert.ok(board.featured[0].brief.tags.some((tag) => tag.label === '귀환'));
 });
 
 test('accepted quest entries retain operation brief metadata', () => {
@@ -167,7 +167,7 @@ test('control panel renders active mission tracker from accepted quests', async 
     assert.match(source, /tracker\.progressPercent/);
 });
 
-test('quest board renders scout brief rows for featured and active operations', async () => {
+test('quest board renders mission brief rows for featured and active operations', async () => {
     const source = await readFile(new URL('../src/components/tabs/QuestBoardPanel.tsx', import.meta.url), 'utf8');
 
     assert.match(source, /OperationBriefRows/);

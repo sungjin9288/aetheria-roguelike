@@ -27,8 +27,8 @@ const getQuestProgressPercent = (progress: any, goal: any) => Math.min(100, (Mat
 
 // cycle 428: default accent 값 제거 — 4 호출자 모두 명시 전달이라 default 도달
 //   불가. ternary fallback (green/amber/else) 분기는 그대로 활성.
-// slice 20: inline 모드 추가 — 추천 오퍼레이션 카드에서 메타 칩(Lv/빌드/지역)
-//   줄과 보상 칩 줄이 분리되어 'Lv 칩 한 줄 + 보상 칩 한 줄'로 어색하게 떠 보이던
+// slice 20: inline 모드 추가 — 추천 임무 카드에서 레벨/성향/지역 칩과
+//   보상 칩이 서로 다른 줄에 어색하게 흩어지던
 //   문제. inline이면 부모 flex row에 칩만 합류한다.
 const RewardChips = ({ reward, accent, inline = false }: any) => {
   const rewards = formatRewardParts(reward);
@@ -53,10 +53,10 @@ const OperationBriefRows = ({ brief }: any) => {
   if (!brief) return null;
 
   const rows = [
-    { label: 'ROUTE', value: brief.route },
-    { label: 'RISK', value: `${brief.riskLabel} · ${brief.riskDetail}` },
-    { label: 'PAYOFF', value: brief.payoff },
-    { label: 'RETURN', value: brief.extraction },
+    { label: '목적지', value: brief.route },
+    { label: '위험', value: `${brief.riskLabel} · ${brief.riskDetail}` },
+    { label: '보상', value: brief.payoff },
+    { label: '귀환 기준', value: brief.extraction },
   ];
 
   return (
@@ -134,12 +134,13 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
 
   return (
     <Motion.div
+      data-testid="quest-board-panel"
       initial={false} animate={{ opacity: 1, y: 0 }}
       className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3"
     >
       <FocusPanelHeader
-        eyebrow="Mission Grid"
-        title="MISSION TERMINAL"
+        eyebrow="마을 임무 게시판"
+        title="임무 선택"
         titleClassName="flex items-center gap-2 text-[1.15rem] leading-none"
         meta="진행 중 임무, 현상수배, 다음 수락 후보를 한 번에 점검합니다."
         onBack={() => setGameState?.('idle')}
@@ -147,13 +148,13 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
         backTestId="quest-board-close"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}
-        archiveLabel="INV"
+        archiveLabel="가방"
         archiveTestId="quest-board-open-archive"
         rightSlot={<ScrollText size={18} className="text-[#f6e7c8]/78" />}
       />
       {/* 통계 헤더 */}
       <div className="mb-3 grid grid-cols-4 overflow-hidden rounded-[1rem] border border-white/8 bg-black/14 text-center">
-        <span className="px-2 py-2 font-readable text-[11px] text-slate-200">Lv.{player.level}</span>
+        <span className="px-2 py-2 font-readable text-[11px] text-slate-200">레벨 {player.level}</span>
         <span className="border-l border-white/8 px-2 py-2 font-readable text-[11px] text-[#dff7f5]">진행 {activeQuestEntries.length}</span>
         <span className="border-l border-white/8 px-2 py-2 font-readable text-[11px] text-[#ece5ff]">수락 {availableQuestCount}</span>
         <span className="border-l border-white/8 px-2 py-2 font-readable text-[11px] text-[#f6e7c8]">보상 {claimableQuestCount}</span>
@@ -180,8 +181,8 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
         {featuredOperations.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center justify-between border-b border-white/8 pb-2">
-              <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">추천 오퍼레이션</h3>
-              <span className="aether-label">Run Composition</span>
+              <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">추천 임무</h3>
+              <span className="aether-label">현재 성장 방향</span>
             </div>
             <div className="grid gap-3">
               {featuredOperations.map((entry: any, index: any) => (
@@ -203,7 +204,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   </div>
                   <OperationBriefRows brief={entry.brief} />
                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                    <SignalBadge tone="neutral" size="sm">Lv.{entry.quest.minLv || 1}</SignalBadge>
+                    <SignalBadge tone="neutral" size="sm">레벨 {entry.quest.minLv || 1}</SignalBadge>
                     {entry.quest.buildTag && (
                       <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
                     )}
@@ -221,7 +222,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                     onClick={() => actions.acceptQuest(entry.quest.id)}
                     className="aether-cta-primary mt-3 min-h-[44px] w-full rounded-[0.9rem] px-4 py-3 text-xs font-bold text-[#dff7f5]"
                   >
-                    작전 개시
+                    임무 수락
                   </Motion.button>
                 </QuestRowShell>
               ))}
@@ -269,7 +270,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                 </div>
                 {entry.isComplete ? (
                   <Motion.button data-testid="quest-board-claim-reward" whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-emerald-300/35 bg-emerald-300/16 px-5 py-3 text-xs font-bold text-emerald-100 transition-all hover:bg-emerald-300/22">
-                    CLAIM REWARD
+                    보상 받기
                   </Motion.button>
                 ) : (
                   <div className="shrink-0 rounded-[0.85rem] border border-white/8 bg-black/18 px-4 py-3 font-readable text-[11px] text-slate-300">진행 중</div>
@@ -277,15 +278,15 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
               </div>
             </QuestRowShell>
           )) : (
-            <div className="rounded-[1rem] border border-dashed border-emerald-300/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-emerald-100/42">ACTIVE QUESTS: NONE</div>
+            <div className="rounded-[1rem] border border-dashed border-emerald-300/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-emerald-100/55">진행 중인 임무가 없습니다.</div>
           )}
         </section>
 
         {/* 수락 가능 임무 */}
         <section className="space-y-3">
           <div className="flex items-center justify-between border-b border-white/8 pb-2">
-            <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">전체 백로그</h3>
-            <span className="aether-label">recommended set 제외</span>
+            <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">다른 임무</h3>
+            <span className="aether-label">추천 목록 제외</span>
           </div>
           {backlogQuestEntries.length > 0 ? backlogQuestEntries.map((entry: any) => {
             const quest = entry.quest;
@@ -296,7 +297,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="font-readable text-base font-semibold text-white">{quest.title}</div>
-                    <span className="rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-2 py-0.5 text-[10px] font-readable text-[#ece5ff]">Lv.{quest.minLv} 필요</span>
+                    <span className="rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-2 py-0.5 text-[10px] font-readable text-[#ece5ff]">레벨 {quest.minLv} 필요</span>
                     {quest.buildTag && (
                       <SignalBadge tone="neutral" size="sm">{quest.buildLabel || quest.buildTag}</SignalBadge>
                     )}
@@ -322,7 +323,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
             </QuestRowShell>
           );
           }) : (
-            <div className="rounded-[1rem] border border-dashed border-[#7dd4d8]/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-[#dff7f5]/42">ACCEPTABLE QUESTS: NONE</div>
+            <div className="rounded-[1rem] border border-dashed border-[#7dd4d8]/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-[#dff7f5]/55">지금 받을 수 있는 다른 임무가 없습니다.</div>
           )}
         </section>
 
@@ -335,20 +336,20 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="font-readable text-base font-semibold text-slate-100">{quest.title}</div>
-                    <span className="aether-lock-note rounded-full px-2 py-0.5 text-[10px] font-readable">잠금 · Lv.{quest.minLv} 필요</span>
+                    <span className="aether-lock-note rounded-full px-2 py-0.5 text-[10px] font-readable">잠금 · 레벨 {quest.minLv} 필요</span>
                   </div>
                   <div className="mt-1">
                     <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
                   </div>
                   <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
-                    현재 Lv.{player.level} 기준 아직 수락할 수 없습니다. 레벨을 올리면 이 임무가 백로그에 열립니다.
+                    현재 레벨 {player.level}에서는 아직 수락할 수 없습니다. 레벨을 올리면 받을 수 있습니다.
                   </div>
                   <RewardChips reward={quest.reward} accent="blue" />
                 </div>
               </div>
             </div>
           )) : (
-            <div className="rounded-[1rem] border border-dashed border-[#9a8ac0]/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-[#ece5ff]/42">LOCKED QUESTS: NONE</div>
+            <div className="rounded-[1rem] border border-dashed border-[#9a8ac0]/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-[#ece5ff]/55">앞으로 열릴 임무가 없습니다.</div>
           )}
         </section>
       </div>

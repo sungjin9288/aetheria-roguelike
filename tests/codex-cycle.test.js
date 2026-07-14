@@ -738,7 +738,7 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/components/codex/EquipmentCodexCard.tsx');
       assert.ok(/const equipped =/.test(source), 'equipped 선언 보존');
       assert.ok(/equipped\?\.atk/.test(source), 'equipped?.atk 비교 보존');
-      assert.ok(/vs \{equipped\.name\}/.test(source), 'vs {equipped.name} 비교 텍스트 보존');
+      assert.ok(/현재 \{equipped\.name\}과 비교/.test(source), '현재 장비와의 비교 텍스트 보존');
   });
 }
 

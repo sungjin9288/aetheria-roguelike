@@ -80,9 +80,9 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    *
    * 계약:
    *   1. INITIAL_STATE.player.stats에 syntheses: 0 선언
-   *   2. StatsPanel statEntries에 'CRAFTS' 라벨 row 노출
-   *   3. StatsPanel statEntries에 'SYNTHESES' 라벨 row 노출
-   *   4. 기존 ESCAPES row 회귀 보존
+   *   2. StatsPanel statEntries에 '제작 횟수' 라벨 row 노출
+   *   3. StatsPanel statEntries에 '합성 횟수' 라벨 row 노출
+   *   4. 기존 '도주 횟수' row 회귀 보존
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -97,27 +97,27 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       );
   });
 
-  test('StatsPanel: CRAFTS row 노출', async () => {
+  test('StatsPanel: 제작 횟수 row 노출', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
       assert.ok(
-          /label:\s*['"]CRAFTS['"]/.test(source),
-          'StatsPanel should expose CRAFTS row'
+          /label:\s*['"]제작 횟수['"]/.test(source),
+          'StatsPanel should expose 제작 횟수 row'
       );
   });
 
-  test('StatsPanel: SYNTHESES row 노출', async () => {
+  test('StatsPanel: 합성 횟수 row 노출', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
       assert.ok(
-          /label:\s*['"]SYNTHESES['"]/.test(source),
-          'StatsPanel should expose SYNTHESES row'
+          /label:\s*['"]합성 횟수['"]/.test(source),
+          'StatsPanel should expose 합성 횟수 row'
       );
   });
 
-  test('StatsPanel: ESCAPES row 회귀 보존 (cycle 80)', async () => {
+  test('StatsPanel: 도주 횟수 row 회귀 보존 (cycle 80)', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
       assert.ok(
-          /label:\s*['"]ESCAPES['"]/.test(source),
-          'ESCAPES row from cycle 80 must be preserved'
+          /label:\s*['"]도주 횟수['"]/.test(source),
+          '도주 횟수 row from cycle 80 must be preserved'
       );
   });
 }
@@ -871,7 +871,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    * cycle 95에서 stats.maxKillStreak 누적 + ach_streak_5/10/20 + berserker 칭호를
    * 깔았다. 이번 사이클은 cycle 78/80/84/86 패턴을 따라 시각/공유 표면에도 노출:
    *
-   *   1. StatsPanel: MAX STREAK row (Flame / red-400, killStreak 시스템 톤과 매치)
+   *   1. StatsPanel: 최대 연속 처치 row (Flame / red-400, killStreak 시스템 톤과 매치)
    *   2. buildRunSummary: maxKillStreak 필드 (reflection 단계에서 사용 가능)
    *   3. buildRunShareText: max-streak > 0이면 "🔥 최대 N연속 처치" 라인
    *      (silence-over-noise — 0이면 출력 안 함)
@@ -881,12 +881,12 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('StatsPanel: MAX STREAK row 노출', async () => {
+  test('StatsPanel: 최대 연속 처치 row 노출', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
       assert.match(
           source,
-          /label:\s*['"]MAX STREAK['"]/,
-          'StatsPanel should expose MAX STREAK row'
+          /label:\s*['"]최대 연속 처치['"]/,
+          'StatsPanel should expose 최대 연속 처치 row'
       );
   });
 

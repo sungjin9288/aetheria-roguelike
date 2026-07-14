@@ -249,10 +249,10 @@ export const getTraitSkill = (player: Player, stats: any) => getTraitProfile(pla
 export const getTraitPassiveParts = (traitProfile: any) => {
     const bonus = traitProfile?.bonus || {};
     const parts: any[] = [];
-    if ((bonus.atkMult || 1) > 1) parts.push(`ATK +${toPercent((bonus.atkMult || 1) - 1)}`);
-    if ((bonus.defMult || 1) > 1) parts.push(`DEF +${toPercent((bonus.defMult || 1) - 1)}`);
-    if ((bonus.critBonus || 0) > 0) parts.push(`CRIT +${toPercent(bonus.critBonus || 0)}`);
-    if ((bonus.mpFlat || 0) > 0) parts.push(`MP +${bonus.mpFlat}`);
+    if ((bonus.atkMult || 1) > 1) parts.push(`공격력 +${toPercent((bonus.atkMult || 1) - 1)}`);
+    if ((bonus.defMult || 1) > 1) parts.push(`방어력 +${toPercent((bonus.defMult || 1) - 1)}`);
+    if ((bonus.critBonus || 0) > 0) parts.push(`치명타 +${toPercent(bonus.critBonus || 0)}`);
+    if ((bonus.mpFlat || 0) > 0) parts.push(`기력 +${bonus.mpFlat}`);
     return parts;
 };
 

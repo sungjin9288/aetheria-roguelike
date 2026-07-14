@@ -131,7 +131,7 @@ test('trait profile simplifies build identity into a readable passive + skill pa
 
     assert.equal(trait.id, 'dual');
     assert.equal(trait.name, '연계');
-    assert.ok(trait.passiveLabel.includes('CRIT'));
+    assert.ok(trait.passiveLabel.includes('치명타'));
     assert.equal(skill.fromTrait, true);
     assert.equal(skill.effect, 'bleed');
 });

@@ -21,7 +21,7 @@ test.describe('Legendary Codex empty state', () => {
         await codexTab.click();
 
         // 2. LEGEND sub tab 클릭 (Codex.tsx의 SUB_TABS에 'legend' 항목 존재)
-        const legendButton = page.locator('button', { hasText: /LEGEND/ }).first();
+        const legendButton = page.getByTestId('codex-tab-legend');
         await expect(legendButton).toBeVisible({ timeout: 8_000 });
         await legendButton.click();
 
@@ -38,7 +38,7 @@ test.describe('Legendary Codex empty state', () => {
         const codexTab = page.locator('[data-testid$="-tab-codex"]').first();
         await codexTab.click();
 
-        const legendButton = page.locator('button', { hasText: /LEGEND/ }).first();
+        const legendButton = page.getByTestId('codex-tab-legend');
         await legendButton.click();
 
         // pity status는 항상 노출 (cycle 23 anticipation hint)

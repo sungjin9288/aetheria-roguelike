@@ -95,7 +95,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
     const dpMissions = isDpToday ? (dp.missions || []) : [];
     const dpDoneCount = dpMissions.filter((m: any) => m.done).length;
 
-    // Weekly Protocol
+    // 주간 임무 진행도
     const wp = player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, claimed: [] };
     const weeklyMissions = BALANCE.WEEKLY_MISSIONS.map((m: any) => {
         const current = m.id === 'weeklyKills' ? (wp.kills || 0) : m.id === 'weeklyExplore' ? (wp.explores || 0) : (wp.bossKills || 0);
@@ -114,7 +114,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                     </SignalBadge>
                 </div>
                 <div className="mt-2 text-sm text-slate-400/78 font-fira leading-snug">
-                    새 퀘스트와 현상수배는 마을의 `QUESTS` 게시판에서만 수락할 수 있습니다. 이 탭에서는 진행 현황과 보상 수령만 확인합니다.
+                    새 임무와 현상수배는 마을 게시판에서 받을 수 있습니다. 여기서는 진행 상황과 받을 보상을 확인합니다.
                 </div>
                 {isInSafeZone && (
                     <Motion.button
@@ -124,19 +124,19 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                         onClick={() => actions?.setGameState?.(GS.QUEST_BOARD)}
                         className="mt-3 min-h-[42px] rounded-[0.95rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-4 py-2 text-xs font-rajdhani font-bold tracking-[0.14em] text-[#dff7f5] transition-colors hover:border-[#7dd4d8]/34 hover:bg-[#7dd4d8]/14"
                     >
-                        OPEN QUEST BOARD
+                        임무 게시판 열기
                     </Motion.button>
                 )}
             </div>
 
-            {/* 퀘스트 목록 + Daily Protocol */}
+            {/* 퀘스트 목록과 오늘의 임무 */}
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
-                {/* Daily Protocol 섹션 */}
+                {/* 오늘의 임무 */}
                 {dpMissions.length > 0 && (
                     <div className="mb-3 p-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                                <span className="text-[#e3dcff] text-xs font-fira tracking-widest uppercase">Daily Protocol</span>
+                                <span className="text-[#e3dcff] text-xs font-readable">오늘의 임무</span>
                                 <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${dpDoneCount === dpMissions.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-white/8 bg-black/18 text-slate-300/72'}`}>
                                     {dpDoneCount}/{dpMissions.length}
                                 </span>
@@ -218,7 +218,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                     return (
                         <div className="rounded-[1rem] border border-[#7dd4d8]/18 bg-[radial-gradient(circle_at_top_right,rgba(125,212,216,0.12),transparent_24%),linear-gradient(180deg,rgba(14,33,37,0.18)_0%,rgba(8,15,18,0.08)_100%)] mb-3 px-3 py-2.5">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-[#dff7f5] text-xs font-fira tracking-widest uppercase">Discovery Chains</span>
+                                <span className="text-[#dff7f5] text-xs font-readable">발견 여정</span>
                                 <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${completedChains.length === chains.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]'}`}>
                                     {completedChains.length}/{chains.length}
                                 </span>
@@ -251,11 +251,11 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                     );
                 })()}
 
-                {/* Weekly Protocol 섹션 */}
+                {/* 주간 임무 */}
                 {weeklyMissions.length > 0 && (
                     <div className="rounded-[1rem] border border-[#d5b180]/20 bg-[#d5b180]/6 mb-3 px-3 py-2.5">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-[#f6e7c8] text-xs font-fira tracking-widest uppercase">Weekly Mission</span>
+                            <span className="text-[#f6e7c8] text-xs font-readable">주간 임무</span>
                             <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every((m: any) => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
                                 {weeklyMissions.filter((m: any) => m.claimed).length}/{weeklyMissions.length}
                             </span>
@@ -281,7 +281,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                                 </button>
                                             ) : (
                                                 <span className={`text-[11px] font-fira ${mission.claimed ? 'text-emerald-100' : 'text-slate-500'}`}>
-                                                    {mission.claimed ? '✓ 수령됨' : `+${mission.reward.gold}G${mission.reward.premiumCurrency ? ` +${mission.reward.premiumCurrency}💎` : ''}`}
+                                                    {mission.claimed ? '✓ 수령됨' : `골드 +${mission.reward.gold}${mission.reward.premiumCurrency ? ` +${mission.reward.premiumCurrency}💎` : ''}`}
                                                 </span>
                                             )}
                                         </div>
@@ -355,7 +355,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                 ) : (
                     <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-[1rem] border border-white/8 bg-black/16 text-center flex flex-col items-center gap-2 py-10">
                         <Scroll size={24} className="opacity-20" />
-                        <span className="text-sm font-rajdhani tracking-widest text-slate-400">NO ACTIVE MISSIONS</span>
+                        <span className="text-sm font-readable text-slate-300/72">진행 중인 임무가 없습니다.</span>
                         <span className="text-sm text-slate-500 font-fira">
                             {isInSafeZone ? '마을 게시판에서 새 임무를 수락할 수 있습니다.' : '마을로 이동하면 퀘스트 게시판을 이용할 수 있습니다.'}
                         </span>

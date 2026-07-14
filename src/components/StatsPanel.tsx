@@ -73,39 +73,39 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
     const maxKill = topKills.length > 0 ? topKills[0][1] : 1;
     const kd = overview.deaths > 0 ? (overview.kills / overview.deaths).toFixed(1) : overview.kills > 0 ? '∞' : '0';
     const statEntries = [
-        { label: 'TOTAL KILLS', value: overview.kills, icon: Sword, color: 'text-red-400' },
-        { label: 'DEATHS', value: overview.deaths, icon: Skull, color: 'text-cyber-blue/60' },
-        { label: 'BOSS KILLS', value: overview.bossKills, icon: Target, color: 'text-cyber-purple' },
-        { label: 'BOUNTIES', value: overview.bountiesCompleted, icon: Target, color: 'text-cyber-blue' },
-        { label: 'K/D RATIO', value: kd, icon: Shield, color: 'text-cyber-green' },
-        { label: 'TOTAL GOLD', value: overview.totalGold.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
-        { label: 'LEVEL', value: player?.level || 1, icon: Activity, color: 'text-cyber-blue' },
-        { label: 'EXPLORES', value: player?.stats?.explores || 0, icon: Compass, color: 'text-teal-300' },
+        { label: '총 처치', value: overview.kills, icon: Sword, color: 'text-red-400' },
+        { label: '사망', value: overview.deaths, icon: Skull, color: 'text-cyber-blue/60' },
+        { label: '보스 처치', value: overview.bossKills, icon: Target, color: 'text-cyber-purple' },
+        { label: '현상수배 완료', value: overview.bountiesCompleted, icon: Target, color: 'text-cyber-blue' },
+        { label: '처치/사망', value: kd, icon: Shield, color: 'text-cyber-green' },
+        { label: '누적 골드', value: overview.totalGold.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
+        { label: '레벨', value: player?.level || 1, icon: Activity, color: 'text-cyber-blue' },
+        { label: '탐험 횟수', value: player?.stats?.explores || 0, icon: Compass, color: 'text-teal-300' },
         // cycle 83: 'discoveries' 시맨틱 통일 — visitedMaps.length(맵 발견 수).
         // 기존엔 stats.discoveries(이벤트 카운터)를 읽어 ach_discover_*("새 지역 N곳") /
         // 타이틀 cartographer("지도 제작자") 의도와 어긋났음. 모든 surface가 맵 발견 수로 일치.
-        { label: 'DISCOVERIES', value: (player?.stats?.visitedMaps || []).length, icon: Sparkles, color: 'text-fuchsia-300' },
-        { label: 'RESTS', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
+        { label: '발견 지역', value: (player?.stats?.visitedMaps || []).length, icon: Sparkles, color: 'text-fuchsia-300' },
+        { label: '휴식 횟수', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
         // cycle 80: ESCAPES — cycle 74-78에서 통합한 도주 카운터를 stats panel에도 노출.
-        { label: 'ESCAPES', value: (player?.stats as any)?.escapes || 0, icon: Footprints, color: 'text-sky-300' },
+        { label: '도주 횟수', value: (player?.stats as any)?.escapes || 0, icon: Footprints, color: 'text-sky-300' },
         // cycle 82: CRAFTS / SYNTHESES — 제작/합성 누적도 stats panel에 노출.
         // crafts는 INITIAL_STATE에 있었으나 syntheses는 누락되어 같이 선언적 추가.
         // achievement 'synths'(target='synths' → stats.syntheses) 3종이 cycle 30+부터
         // 존재하던 갭을 가시화로 닫음. orange/amber 톤으로 제작 계열 묶음.
-        { label: 'CRAFTS', value: player?.stats?.crafts || 0, icon: Hammer, color: 'text-orange-300' },
-        { label: 'SYNTHESES', value: (player?.stats as any)?.syntheses || 0, icon: FlaskConical, color: 'text-amber-300' },
+        { label: '제작 횟수', value: player?.stats?.crafts || 0, icon: Hammer, color: 'text-orange-300' },
+        { label: '합성 횟수', value: (player?.stats as any)?.syntheses || 0, icon: FlaskConical, color: 'text-amber-300' },
         // cycle 96: MAX STREAK — cycle 95에서 추가한 stats.maxKillStreak를 stats panel에도
         // 노출. killStreak 시스템 톤(red)과 매치. berserker 칭호 진행도 시각화.
-        { label: 'MAX STREAK', value: (player?.stats as any)?.maxKillStreak || 0, icon: Flame, color: 'text-red-400' },
+        { label: '최대 연속 처치', value: (player?.stats as any)?.maxKillStreak || 0, icon: Flame, color: 'text-red-400' },
         // cycle 104: CHAINS — cycle 102/103 ach_chain_*/chain_master 칭호 진행도 가시화.
         // chain_master 칭호 톤(indigo)과 매치. exploreUtils.checkDiscoveryChains에서 누적.
-        { label: 'CHAINS', value: ((player?.stats as any)?.discoveryChains || []).length, icon: Link2, color: 'text-indigo-300' },
+        { label: '완료한 발견 여정', value: ((player?.stats as any)?.discoveryChains || []).length, icon: Link2, color: 'text-indigo-300' },
     ];
     return (
-        <div className="space-y-4">
+        <div data-testid="stats-panel" className="space-y-4">
             <div className="flex items-center justify-between gap-2">
                 <div className="text-slate-400 text-xs font-fira tracking-[0.18em] flex items-center gap-1.5 uppercase">
-                    <BarChart3 size={12} /> Statistics
+                    <BarChart3 size={12} /> 모험 기록
                 </div>
             </div>
 
@@ -147,9 +147,9 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                 </div>
                 <div className="space-y-1 pt-2 border-t border-white/8 text-xs font-fira text-slate-300/74">
                     <div>→ {trait.unlockHint}</div>
-                    <div>→ 보상 포커스: {trait.rewardFocus}</div>
+                    <div>→ 보상 방향: {trait.rewardFocus}</div>
                     <div>→ 권장 임무: {trait.questFocus}</div>
-                    <div>→ 보스 운영: {trait.bossDirective}</div>
+                    <div>→ 보스 대응: {trait.bossDirective}</div>
                     {trait.skill?.desc && <div>→ {trait.skill.desc}</div>}
                 </div>
             </div>
@@ -189,7 +189,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                     <div className="grid grid-cols-3 gap-1.5 pt-1">
                         <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
                             <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
-                                <Sword size={9} /> ATK
+                                <Sword size={9} /> 공격력
                             </div>
                             <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
                                 {formatMultDelta(activeSignatureSet.atkMult)}
@@ -197,7 +197,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                         </div>
                         <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
                             <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
-                                <Shield size={9} /> DEF
+                                <Shield size={9} /> 방어력
                             </div>
                             <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
                                 {formatMultDelta(activeSignatureSet.defMult)}
@@ -205,7 +205,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                         </div>
                         <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
                             <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
-                                <Heart size={9} /> HP
+                                <Heart size={9} /> 생명
                             </div>
                             <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
                                 {formatMultDelta(activeSignatureSet.hpMult)}
@@ -253,7 +253,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
 
             {topKills.length > 0 && (
                 <div className="space-y-2">
-                    <div className="text-xs text-slate-400 font-fira uppercase tracking-[0.16em]">처치 분포 (TOP 8)</div>
+                    <div className="text-xs text-slate-400 font-readable">처치 분포 · 상위 8종</div>
                     {topKills.map(([name, count], i) => (
                         <Motion.div
                             key={name}
@@ -279,10 +279,10 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
 
             {player?.meta && (
                 <div className="rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2.5 space-y-1 text-xs font-fira text-slate-400/76">
-                    <div className="flex justify-between"><span>LEGACY ESSENCE:</span><span className="text-[#d9d0f3]">{player.meta.essence || 0}</span></div>
-                    <div className="flex justify-between"><span>LEGACY RANK:</span><span className="text-[#f6e7c8]">{player.meta.rank || 0}</span></div>
-                    <div className="flex justify-between"><span>BONUS ATK:</span><span className="text-rose-300">+{player.meta.bonusAtk || 0}</span></div>
-                    <div className="flex justify-between"><span>BONUS HP:</span><span className="text-emerald-100">+{player.meta.bonusHp || 0}</span></div>
+                    <div className="flex justify-between"><span>계승 정수</span><span className="text-[#d9d0f3]">{player.meta.essence || 0}</span></div>
+                    <div className="flex justify-between"><span>계승 단계</span><span className="text-[#f6e7c8]">{player.meta.rank || 0}</span></div>
+                    <div className="flex justify-between"><span>추가 공격력</span><span className="text-rose-300">+{player.meta.bonusAtk || 0}</span></div>
+                    <div className="flex justify-between"><span>추가 생명</span><span className="text-emerald-100">+{player.meta.bonusHp || 0}</span></div>
                 </div>
             )}
 

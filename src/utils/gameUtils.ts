@@ -119,8 +119,8 @@ export const formatDailyProtocolReward = (reward: any) => {
 //   AchievementPanel) 모두 reward 명시 전달이라 default 도달 불가.
 export const formatRewardParts = (reward: any) => {
     const parts: any[] = [];
-    if (reward.exp) parts.push(`EXP ${reward.exp}`);
-    if (reward.gold) parts.push(`${reward.gold}G`);
+    if (reward.exp) parts.push(`경험 ${reward.exp}`);
+    if (reward.gold) parts.push(`골드 ${reward.gold}`);
     if (reward.item) parts.push(reward.item);
     return parts;
 };

@@ -68,9 +68,9 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                     {encountered.length}/{total} 발견
                 </span>
                 <div className="flex gap-1.5">
-                    <SignalBadge tone="success" size="sm">HP +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.hp, 0)}</SignalBadge>
-                    <SignalBadge tone="danger" size="sm">ATK +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.atk, 0)}</SignalBadge>
-                    <SignalBadge tone="neutral" size="sm">DEF +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.def, 0)}</SignalBadge>
+                    <SignalBadge tone="success" size="sm">생명 +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.hp, 0)}</SignalBadge>
+                    <SignalBadge tone="danger" size="sm">공격력 +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.atk, 0)}</SignalBadge>
+                    <SignalBadge tone="neutral" size="sm">방어력 +{allMonsters.reduce((a: any, m: any) => a + m.bonuses.def, 0)}</SignalBadge>
                 </div>
             </div>
 
@@ -99,7 +99,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                         <span className={`font-rajdhani font-bold truncate ${m.encountered ? 'text-white' : 'text-slate-600'}`}>
                             {m.encountered ? m.name : '???'}
                         </span>
-                        {m.isBoss && m.encountered && <SignalBadge tone="danger" size="sm">Boss</SignalBadge>}
+                        {m.isBoss && m.encountered && <SignalBadge tone="danger" size="sm">보스</SignalBadge>}
                         {m.encountered && m.weakness && (
                             <SkillTypeIcon type={m.weakness} size={12} className="ml-auto shrink-0" />
                         )}
@@ -121,7 +121,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                                 <MonsterIcon name={m.name} discovered isBoss={m.isBoss} size={28} />
                                 <div className="text-sm font-rajdhani font-bold text-rose-200">{m.name}</div>
                             </div>
-                            {m.isBoss && <SignalBadge tone="danger" size="sm">Boss</SignalBadge>}
+                            {m.isBoss && <SignalBadge tone="danger" size="sm">보스</SignalBadge>}
                         </div>
                         {/* 킬 카운트 프로그레스 바 */}
                         <div className="space-y-1">
@@ -166,7 +166,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                         )}
                         {m.drops.length > 0 && (
                             <div className="space-y-0.5">
-                                <div className="text-[10px] text-slate-500 font-fira">드롭 아이템:</div>
+                                <div className="text-[10px] text-slate-500 font-fira">획득 가능 아이템:</div>
                                 {m.drops.map((d: any) => (
                                     <div key={d} className="text-[10px] text-[#f6e7c8]/72 font-fira pl-2">• {d}</div>
                                 ))}
@@ -204,9 +204,9 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                         )}
                         <div className="pt-2 border-t border-white/8">
                             <div className="text-[10px] text-slate-500 font-fira mb-1">연구 보너스:</div>
-                            <div className={`text-[10px] font-fira ${m.kills >= 10 ? 'text-emerald-100' : 'text-slate-500'}`}>• [10체] MaxHP +5 {m.kills >= 10 && '(달성)'}</div>
-                            <div className={`text-[10px] font-fira ${m.kills >= 50 ? 'text-emerald-100' : 'text-slate-500'}`}>• [50체] DEF +1 {m.kills >= 50 && '(달성)'}</div>
-                            <div className={`text-[10px] font-fira ${m.kills >= 100 ? 'text-emerald-100' : 'text-slate-500'}`}>• [100체] ATK +1 {m.kills >= 100 && '(달성)'}</div>
+                            <div className={`text-[10px] font-fira ${m.kills >= 10 ? 'text-emerald-100' : 'text-slate-500'}`}>• 10회 처치 · 최대 생명 +5 {m.kills >= 10 && '(달성)'}</div>
+                            <div className={`text-[10px] font-fira ${m.kills >= 50 ? 'text-emerald-100' : 'text-slate-500'}`}>• 50회 처치 · 방어력 +1 {m.kills >= 50 && '(달성)'}</div>
+                            <div className={`text-[10px] font-fira ${m.kills >= 100 ? 'text-emerald-100' : 'text-slate-500'}`}>• 100회 처치 · 공격력 +1 {m.kills >= 100 && '(달성)'}</div>
                         </div>
                     </div>
                 );

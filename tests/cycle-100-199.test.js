@@ -91,7 +91,7 @@ import { readFile, readdir } from 'node:fs/promises';
    * 마다 ach + 칭호 + StatsPanel row 한 짝의 일관 구조.
    *
    * 추가:
-   * - StatsPanel statEntries에 'CHAINS' label row (Map 아이콘 또는 적절한
+   * - StatsPanel statEntries에 '완료한 발견 여정' label row (Map 아이콘 또는 적절한
    *   indigo 톤 — chain_master 칭호 색과 매치).
    */
 
@@ -99,15 +99,15 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('StatsPanel: CHAINS row 노출', async () => {
+  test('StatsPanel: 완료한 발견 여정 row 노출', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
-      assert.match(source, /label:\s*['"]CHAINS['"]/);
+      assert.match(source, /label:\s*['"]완료한 발견 여정['"]/);
   });
 
-  test('StatsPanel: CHAINS row가 stats.discoveryChains 배열 길이를 읽음', async () => {
+  test('StatsPanel: 완료한 발견 여정 row가 stats.discoveryChains 배열 길이를 읽음', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
       // value 표현식에 discoveryChains와 length 둘 다 등장
-      const idx = source.indexOf("label: 'CHAINS'");
+      const idx = source.indexOf("label: '완료한 발견 여정'");
       assert.ok(idx > -1);
       const window = source.slice(idx, idx + 300);
       assert.match(window, /discoveryChains/);
@@ -116,10 +116,10 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('StatsPanel: 기존 row 회귀 보존 (cycle 80/82/96)', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
-      assert.match(source, /label:\s*['"]ESCAPES['"]/);
-      assert.match(source, /label:\s*['"]CRAFTS['"]/);
-      assert.match(source, /label:\s*['"]SYNTHESES['"]/);
-      assert.match(source, /label:\s*['"]MAX STREAK['"]/);
+      assert.match(source, /label:\s*['"]도주 횟수['"]/);
+      assert.match(source, /label:\s*['"]제작 횟수['"]/);
+      assert.match(source, /label:\s*['"]합성 횟수['"]/);
+      assert.match(source, /label:\s*['"]최대 연속 처치['"]/);
   });
 }
 

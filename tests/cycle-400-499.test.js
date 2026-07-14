@@ -535,7 +535,7 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 407: formatRewardParts 동작 (활성 분기)', async () => {
       const { formatRewardParts } = await import('../src/utils/gameUtils.js');
       const result = formatRewardParts({ exp: 100, gold: 500, item: '엘릭서' });
-      assert.deepEqual(result, ['EXP 100', '500G', '엘릭서'],
+      assert.deepEqual(result, ['경험 100', '골드 500', '엘릭서'],
           'exp/gold/item 분기 동작 보존');
   });
 

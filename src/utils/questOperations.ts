@@ -8,24 +8,24 @@ import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 //   entry.meta.label / .emphasis만 read. summary 외부 read 0건이던 dead config.
 const OPERATION_META: any = {
     story: {
-        label: 'Story Arc',
-        emphasis: '서사 축',
+        label: '이야기 임무',
+        emphasis: '이야기 진행',
     },
     build: {
-        label: 'Build Path',
-        emphasis: '빌드 축',
+        label: '장비 임무',
+        emphasis: '장비 성장',
     },
     growth: {
-        label: 'Power Spike',
-        emphasis: '성장 축',
+        label: '성장 임무',
+        emphasis: '성장 준비',
     },
     boss: {
-        label: 'Boss Hunt',
-        emphasis: '보스 축',
+        label: '보스 임무',
+        emphasis: '보스 토벌',
     },
     hunt: {
-        label: 'Field Hunt',
-        emphasis: '토벌 축',
+        label: '토벌 임무',
+        emphasis: '지역 토벌',
     },
 };
 
@@ -35,11 +35,11 @@ const OPERATION_BRIEF_LOW_HP_RATIO = 0.45;
 const OPERATION_BRIEF_BOSS_HP_RATIO = 0.75;
 const OPERATION_BRIEF_INVENTORY_BUFFER = 2;
 const RUN_PLAN_PREP_BY_LANE: any = {
-    story: 'REST 후 출발',
-    build: 'GEAR 매칭 점검',
+    story: '휴식 후 출발',
+    build: '장비 조합 점검',
     growth: '보급과 성장 확인',
-    boss: 'HP/소모품 점검',
-    hunt: '장비와 HP 점검',
+    boss: '생명과 소모품 점검',
+    hunt: '장비와 생명 점검',
 };
 
 const toArray = (value: any) => (Array.isArray(value) ? value : []);
@@ -113,27 +113,27 @@ const getQuestReason = (quest: any, lane: any, resonance: any, targetMaps: any[]
         return `서사 진행을 당겨 ${quest.minLv || 1}레벨 구간의 다음 전개를 열어 주는 임무입니다.`;
     }
     if (lane === 'build' && resonance.summary) {
-        return `${resonance.summary}. 현재 빌드 정체성을 보상으로 고정하기 좋습니다.`;
+        return `${resonance.summary}. 현재 장비 성장 방향을 보상으로 굳히기 좋습니다.`;
     }
     if (lane === 'growth') {
-        if (quest?.target === 'Level') return '전직이나 다음 권역 진입 전에 가장 직관적인 파워 스파이크를 만들어 줍니다.';
-        if (quest?.type === 'craft') return '전투 외 성장 루프를 열어 장비 체감과 보급 리듬을 같이 올려 줍니다.';
-        return '누적 성장 축을 밀어 런의 중간 목표를 또렷하게 만드는 임무입니다.';
+        if (quest?.target === 'Level') return '전직이나 다음 권역 진입 전에 성장을 확실히 체감하게 해 줍니다.';
+        if (quest?.type === 'craft') return '제작을 열어 장비 성장과 보급을 함께 준비하게 해 줍니다.';
+        return '누적 성장 목표를 밀어 모험의 중간 목표를 또렷하게 만드는 임무입니다.';
     }
     if (lane === 'boss') {
         return targetMaps[0]
             ? `${targetMaps[0]} 권역의 보스 흐름과 직접 연결됩니다.`
-            : '현재 레벨대 보스 챌린지로 런의 긴장감을 끌어올립니다.';
+            : '현재 레벨대 보스 도전으로 모험의 긴장감을 끌어올립니다.';
     }
     if (targetMaps[0]) {
         return `${targetMaps[0]} 권역 토벌과 바로 이어져 전개가 끊기지 않습니다.`;
     }
-    return '당장 밀기 좋은 기본 토벌 임무로 파밍과 전투 감각을 유지하기 쉽습니다.';
+    return '당장 진행하기 좋은 기본 토벌 임무로 전리품과 전투 감각을 함께 챙길 수 있습니다.';
 };
 
 const getOperationPlanObjective = (quest: any, targetMaps: any[]) => {
     if (targetMaps[0]) return `${targetMaps[0]} 진입`;
-    if (quest?.target === 'Level') return `Lv.${quest.goal} 달성`;
+    if (quest?.target === 'Level') return `레벨 ${quest.goal} 달성`;
     if (quest?.type === 'craft') return '제작 루프 가동';
     if (['explore_count', 'discovery_count'].includes(quest?.type)) return '탐험 루트 확장';
     if (quest?.target) return `${quest.target} 추적`;
@@ -143,12 +143,12 @@ const getOperationPlanObjective = (quest: any, targetMaps: any[]) => {
 const getOperationPrepStep = (player: Player, lane: any) => {
     const hp = player?.hp || 0;
     const maxHp = player?.maxHp || 0;
-    if (maxHp > 0 && hp / maxHp <= RUN_PLAN_LOW_HP_RATIO) return 'REST 회복 우선';
+    if (maxHp > 0 && hp / maxHp <= RUN_PLAN_LOW_HP_RATIO) return '휴식으로 회복 우선';
     return RUN_PLAN_PREP_BY_LANE[lane] || RUN_PLAN_PREP_BY_LANE.hunt;
 };
 
 const getOperationPlanSteps = (quest: any, player: Player, lane: any, targetMaps: any[]) => ([
-    { label: '수락', value: 'BOARD 계약 확정' },
+    { label: '수락', value: '게시판에서 임무 수락' },
     { label: '정비', value: getOperationPrepStep(player, lane) },
     { label: '목표', value: getOperationPlanObjective(quest, targetMaps) },
 ]);
@@ -156,7 +156,7 @@ const getOperationPlanSteps = (quest: any, player: Player, lane: any, targetMaps
 const getOperationRouteLabel = (quest: any, targetMaps: any[]) => {
     if (targetMaps[0]) return targetMaps[0];
     if (quest?.target === 'Level') return '성장 루트';
-    if (quest?.type === 'craft') return '제작/보급 루트';
+    if (quest?.type === 'craft') return '제작과 보급 경로';
     if (['explore_count', 'discovery_count'].includes(quest?.type)) return '미답사 루트';
     return '현재 권역';
 };
@@ -180,7 +180,7 @@ const getOperationRiskProfile = (quest: any, player: Player, lane: any, targetMa
         return {
             label: '정비 필요',
             tone: 'danger',
-            detail: 'HP 회복 후 출발',
+            detail: '생명 회복 후 출발',
         };
     }
 
@@ -188,7 +188,7 @@ const getOperationRiskProfile = (quest: any, player: Player, lane: any, targetMa
         return {
             label: hpRatio >= OPERATION_BRIEF_BOSS_HP_RATIO ? '보스 준비' : '보스 경계',
             tone: hpRatio >= OPERATION_BRIEF_BOSS_HP_RATIO ? 'warning' : 'danger',
-            detail: 'HP 75% 이상 유지',
+            detail: '생명 75% 이상 유지',
         };
     }
 
@@ -196,15 +196,15 @@ const getOperationRiskProfile = (quest: any, player: Player, lane: any, targetMa
         return {
             label: '도전',
             tone: 'warning',
-            detail: `Lv.${targetLevel} 권역`,
+            detail: `레벨 ${targetLevel} 권역`,
         };
     }
 
     if (lane === 'build') {
         return {
-            label: '빌드 정렬',
+            label: '성장 방향 확인',
             tone: 'resonance',
-            detail: '장비/성향 보상 확인',
+            detail: '장비와 성향 보상 확인',
         };
     }
 
@@ -226,10 +226,10 @@ const getOperationRiskProfile = (quest: any, player: Player, lane: any, targetMa
 const getOperationPayoff = (quest: any, lane: any, resonance: any) => {
     if (lane === 'story') return '서사 해금';
     if (lane === 'build' && resonance?.label) return `${resonance.label} 보상 고정`;
-    if (lane === 'growth') return quest?.target === 'Level' ? '레벨 스파이크' : '성장 자원';
+    if (lane === 'growth') return quest?.target === 'Level' ? '다음 레벨 준비' : '성장 자원';
     if (lane === 'boss') return '보스 전리품';
     if (quest?.reward?.item) return `${quest.reward.item} 확보`;
-    return '골드/EXP 회수';
+    return '골드와 경험 획득';
 };
 
 const getOperationExtractionRule = (quest: any, player: Player, lane: any, targetMaps: any[]) => {
@@ -237,21 +237,21 @@ const getOperationExtractionRule = (quest: any, player: Player, lane: any, targe
     const inventoryCap = (player as any)?.maxInv || BALANCE.INV_MAX_SIZE;
     const inventoryCount = player?.inv?.length || 0;
 
-    if (hpRatio <= OPERATION_BRIEF_LOW_HP_RATIO) return '수락 전 REST, HP 회복 후 출발';
+    if (hpRatio <= OPERATION_BRIEF_LOW_HP_RATIO) return '수락 전 휴식으로 생명을 회복한 뒤 출발';
     if (inventoryCount >= inventoryCap - OPERATION_BRIEF_INVENTORY_BUFFER) return '가방 정리 후 출발';
-    if (lane === 'boss') return '보스 조우 전 HP 75% 미만이면 귀환';
-    if (quest?.target === 'Level') return `Lv.${quest.goal} 달성 즉시 마을 회수`;
+    if (lane === 'boss') return '보스 조우 전 생명이 75% 미만이면 귀환';
+    if (quest?.target === 'Level') return `레벨 ${quest.goal} 달성 후 마을 귀환`;
     if (targetMaps[0]) return `${targetMaps[0]} 목표 ${quest.goal || 1}회 후 귀환`;
-    if (lane === 'build') return '보상 장비 확인 후 빌드 점검';
+    if (lane === 'build') return '보상 장비를 확인하고 장비 조합 점검';
     return '목표 달성 후 마을 회수';
 };
 
 const getOperationReturnTag = (extraction: string, lane: any) => {
-    if (extraction.includes('REST')) return 'REST';
-    if (extraction.includes('HP 75%')) return 'HP 75%';
-    if (extraction.includes('가방')) return 'BAG';
-    if (lane === 'growth') return 'SPIKE';
-    return '회수';
+    if (extraction.includes('휴식')) return '회복';
+    if (extraction.includes('75%')) return '생명 75%';
+    if (extraction.includes('가방')) return '가방 정리';
+    if (lane === 'growth') return '성장 완료';
+    return '마을 귀환';
 };
 
 const getOperationBrief = (quest: any, player: Player, lane: any, resonance: any, targetMaps: any[], maps: any) => {
@@ -260,7 +260,7 @@ const getOperationBrief = (quest: any, player: Player, lane: any, resonance: any
     const extraction = getOperationExtractionRule(quest, player, lane, targetMaps);
 
     return {
-        label: 'Scout Brief',
+        label: '임무 안내',
         route,
         riskLabel: risk.label,
         riskTone: risk.tone,
@@ -268,9 +268,9 @@ const getOperationBrief = (quest: any, player: Player, lane: any, resonance: any
         payoff: getOperationPayoff(quest, lane, resonance),
         extraction,
         tags: [
-            { label: 'ROUTE', value: route },
-            { label: 'RISK', value: risk.label },
-            { label: 'RETURN', value: getOperationReturnTag(extraction, lane) },
+            { label: '목적지', value: route },
+            { label: '위험', value: risk.label },
+            { label: '귀환', value: getOperationReturnTag(extraction, lane) },
         ],
     };
 };
