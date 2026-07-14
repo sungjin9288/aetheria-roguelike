@@ -599,7 +599,8 @@ async function verifyMobileFirstFold(page) {
   const terminalBox = await terminalPanel.boundingBox();
   ensure(terminalBox && terminalBox.height >= 240, 'Mobile log panel did not retain the expanded first-fold height');
   const statusText = await statusBar.innerText();
-  ensure(['모바일검증', '모험가', '레벨 1', '시작의 마을', '생명', '기력', '경험', '골드'].every((label) => statusText.includes(label)), 'Mobile status bar should expose one readable player summary');
+  ensure(['모바일검증', '모험가', '레벨 1', '시작의 마을', '장비 조화 2/3', '생명', '기력', '경험', '골드'].every((label) => statusText.includes(label)), 'Mobile status bar should expose one readable player summary');
+  ensure(!/⚔\s*\d+\/\d+|✦\s*\d+/.test(statusText), 'Mobile status signals should explain affinity and signature counts');
   ensure(!/\b(?:HP|NRG|EXP|CR)\b|Target Lock/.test(statusText), 'Mobile status bar should not expose mechanical English metric labels');
 
   await waitForVisualAssets(page);

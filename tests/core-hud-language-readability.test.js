@@ -40,6 +40,10 @@ test('persistent status separates identity, location, and readable metrics', asy
     assert.match(source, /data-testid="status-metric-value"/);
     assert.match(source, /text-\[10px\]/);
     assert.match(source, /text-\[11px\]/);
+    assert.match(source, /장비 조화 \{stats\.jobAffinity\.matchCount\}\/\{OUTFIT_SLOT_COUNT\}/);
+    assert.match(source, /전설 각인 \{equippedSignatureCount\}/);
+    assert.doesNotMatch(source, />\s*⚔\{stats\.jobAffinity\.matchCount\}/);
+    assert.doesNotMatch(source, />\s*✦\{equippedSignatureCount\}/);
 });
 
 test('field log badges explain their meaning without developer abbreviations', async () => {
@@ -93,6 +97,7 @@ test('smoke verifies the rendered status, enemy, and log vocabulary', async () =
     assert.match(smoke, /Mobile status bar should expose one readable player summary/);
     assert.match(smoke, /Mobile status avatar should finish loading before visual evidence/);
     assert.match(smoke, /Mobile status bar should not overflow horizontally/);
+    assert.match(smoke, /Mobile status signals should explain affinity and signature counts/);
     assert.match(smoke, /document\.getAnimations\(\)/);
     assert.match(smoke, /writeStateArtifact\('03-arrived-forest', state, page\)/);
     assert.match(smoke, /Enemy status should use the player-facing target label/);

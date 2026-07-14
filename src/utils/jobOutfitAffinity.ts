@@ -58,6 +58,7 @@ interface SetCatalog {
 const FULL_OUTFIT_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.30, defMult: 1.20, mpBonus: 0.15, hpBonus: 0.10 });
 const PARTIAL_2_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.15, defMult: 1.10, mpBonus: 0.05, hpBonus: 0.05 });
 const PARTIAL_1_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.05 });
+export const OUTFIT_SLOT_COUNT = 3;
 
 /**
  * 직업별 set 효과 명칭 — 정체성 + 분위기로 흥미 유발.
@@ -134,7 +135,7 @@ export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
 
     let bonus: AffinityBonus;
     let tier: AffinityTier;
-    if (matchCount >= 3) {
+    if (matchCount >= OUTFIT_SLOT_COUNT) {
         bonus = { ...FULL_OUTFIT_BONUS };
         tier = 'full';
     } else if (matchCount === 2) {
@@ -163,4 +164,3 @@ export const getJobSetCatalog = (job: string | undefined | null, items: ItemsDb 
     const offhands = (items.armors || []).filter((it: any) => it.type === 'shield' && matchesJob(it)).sort(byTier);
     return { weapon: weapons, armor: armors, offhand: offhands };
 };
-

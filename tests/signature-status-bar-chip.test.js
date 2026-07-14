@@ -16,7 +16,7 @@ import path from 'node:path';
  * 계약:
  *   1. StatusBar가 isSignatureItem import
  *   2. equip.weapon/armor/offhand 중 signature 개수 집계
- *   3. count > 0일 때만 ✦N 칩 렌더 (count === 0이면 silence)
+ *   3. count > 0일 때만 "✦ 전설 각인 N" 칩 렌더 (count === 0이면 silence)
  *   4. data-testid="status-signature-chip" + data-signature-count 속성
  *   5. gold 팔레트 (#f6e7a2 또는 246,231,162)
  *   6. ✦ 마커 사용 (다른 signature surface와 일관)
@@ -65,6 +65,12 @@ test('StatusBar uses ✦ marker for signature chip', async () => {
         /✦/.test(source),
         'signature chip should use ✦ glyph (consistent with other signature surfaces)'
     );
+});
+
+test('StatusBar explains the signature count in player-facing language', async () => {
+    const source = await readSrc('src/components/StatusBar.tsx');
+    assert.match(source, /✦ 전설 각인 \{equippedSignatureCount\}/);
+    assert.doesNotMatch(source, />\s*✦\{equippedSignatureCount\}/);
 });
 
 test('StatusBar uses gold palette for signature chip', async () => {

@@ -3,6 +3,7 @@ import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
 import MonsterIcon from './icons/MonsterIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
+import { OUTFIT_SLOT_COUNT } from '../utils/jobOutfitAffinity';
 import { useHitFlash } from '../hooks/useHitFlash';
 import type { Player, Monster } from '../types/index.js';
 
@@ -242,9 +243,9 @@ const StatusBar = ({
                       data-affinity-tier={tier}
                       className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal"
                       style={{ color: tone.color, border: `1px solid ${tone.border}`, background: tone.bg }}
-                      aria-label={`${stats.jobAffinity.label} ${stats.jobAffinity.matchCount}/${stats.jobAffinity.totalSlots || 3}`}
+                      aria-label={`장비 조화 ${stats.jobAffinity.matchCount}/${OUTFIT_SLOT_COUNT}: ${stats.jobAffinity.label}`}
                     >
-                      ⚔{stats.jobAffinity.matchCount}/{stats.jobAffinity.totalSlots || 3}
+                      장비 조화 {stats.jobAffinity.matchCount}/{OUTFIT_SLOT_COUNT}
                     </span>
                   );
                 })()}
@@ -260,7 +261,7 @@ const StatusBar = ({
                     }}
                     aria-label={`전설 각인 ${equippedSignatureCount}종 장착중`}
                   >
-                    ✦{equippedSignatureCount}
+                    ✦ 전설 각인 {equippedSignatureCount}
                   </span>
                 )}
               </div>
