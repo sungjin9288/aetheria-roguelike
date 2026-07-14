@@ -32,6 +32,7 @@ test('persistent status and enemy target use direct Korean metric labels', async
 
 test('persistent status separates identity, location, and readable metrics', async () => {
     const source = await readSrc('src/components/StatusBar.tsx');
+    const avatar = await readSrc('src/components/PixelCharacterAvatar.tsx');
 
     assert.match(source, /data-testid="status-player-summary"/);
     assert.match(source, /data-testid="status-context-line"/);
@@ -44,6 +45,21 @@ test('persistent status separates identity, location, and readable metrics', asy
     assert.match(source, /전설 각인 \{equippedSignatureCount\}/);
     assert.doesNotMatch(source, />\s*⚔\{stats\.jobAffinity\.matchCount\}/);
     assert.doesNotMatch(source, />\s*✦\{equippedSignatureCount\}/);
+    assert.match(avatar, /data-testid="avatar-enhance-badge"/);
+    assert.match(avatar, /강화 \+\{totalEnhance\}/);
+    assert.doesNotMatch(avatar, />\s*\+\{totalEnhance\}/);
+});
+
+test('avatar QA presets clamp current vitals to the rendered equipment maximums', async () => {
+    const testApi = await readSrc('src/hooks/useGameTestApi.ts');
+    const smoke = await readSrc('scripts/smoke-gameplay.mjs');
+
+    assert.match(testApi, /const previewStats = calculateFullStats\(\{ \.\.\.er\.player, \.\.\.payload \}\)!/);
+    assert.match(testApi, /payload\.hp = Math\.min\([\s\S]*?previewStats\.maxHp\)/);
+    assert.match(testApi, /payload\.mp = Math\.min\([\s\S]*?previewStats\.maxMp\)/);
+    assert.match(smoke, /nextState\.player\.hp <= nextState\.player\.maxHp/);
+    assert.match(smoke, /nextState\.player\.mp <= nextState\.player\.maxMp/);
+    assert.match(smoke, /avatar enhancement label should stay inside the avatar frame/);
 });
 
 test('field log badges explain their meaning without developer abbreviations', async () => {

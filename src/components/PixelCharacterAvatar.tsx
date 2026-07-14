@@ -111,8 +111,12 @@ const PixelCharacterAvatar = ({
                 />
             </div>
             {showEnhanceBadge && totalEnhance > 0 && (
-                <span className={`absolute bottom-1 right-1 rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 font-fira font-bold text-[#f6e7c8] shadow-[0_6px_18px_rgba(213,177,128,0.22)] ${sizeConfig.badge}`}>
-                    +{totalEnhance}
+                <span
+                    data-testid="avatar-enhance-badge"
+                    aria-label={`장비 강화 합계 ${totalEnhance}`}
+                    className={`absolute bottom-1 right-1 whitespace-nowrap rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 font-readable font-bold text-[#f6e7c8] shadow-[0_6px_18px_rgba(213,177,128,0.22)] ${sizeConfig.badge}`}
+                >
+                    강화 +{totalEnhance}
                 </span>
             )}
         </div>

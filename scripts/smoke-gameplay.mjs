@@ -713,8 +713,15 @@ async function verifyMobileArchiveConsole(page) {
     ensure(seeded, `Avatar preset ${preset.id} could not be injected`);
     const avatarState = await waitForState(
       page,
-      (nextState) => nextState.player?.job === preset.job && nextState.sideTab === 'equipment',
+      (nextState) => nextState.player?.job === preset.job
+        && nextState.sideTab === 'equipment'
+        && nextState.player.hp <= nextState.player.maxHp
+        && nextState.player.mp <= nextState.player.maxMp,
       `${preset.id} avatar scenario to load`
+    );
+    ensure(
+      avatarState.player.hp <= avatarState.player.maxHp && avatarState.player.mp <= avatarState.player.maxMp,
+      `${preset.id} avatar scenario should keep current health and energy within their maximums`
     );
     if (!await archiveConsole.isVisible().catch(() => false)) {
       const reopenedWith = await page.evaluate(() => {
@@ -734,6 +741,17 @@ async function verifyMobileArchiveConsole(page) {
     }
     await archiveConsole.waitFor({ state: 'visible', timeout: 5000 });
     await page.locator('[data-testid="equipment-character-preview"]').waitFor({ state: 'visible', timeout: 5000 });
+    const statusAvatar = page.locator('[data-testid="status-character-chip"]');
+    const enhanceBadge = statusAvatar.locator('[data-testid="avatar-enhance-badge"]');
+    await enhanceBadge.waitFor({ state: 'visible', timeout: 5000 });
+    ensure(/^강화 \+\d+$/.test((await enhanceBadge.innerText()).trim()), `${preset.id} avatar enhancement should name the upgraded gear signal`);
+    const [statusAvatarBox, enhanceBadgeBox] = await Promise.all([statusAvatar.boundingBox(), enhanceBadge.boundingBox()]);
+    ensure(
+      statusAvatarBox && enhanceBadgeBox
+        && enhanceBadgeBox.x >= statusAvatarBox.x
+        && enhanceBadgeBox.x + enhanceBadgeBox.width <= statusAvatarBox.x + statusAvatarBox.width,
+      `${preset.id} avatar enhancement label should stay inside the avatar frame`
+    );
     const avatarMeta = await page.locator('[data-testid="equipment-character-preview"]').evaluate((node) => ({
       weapon: node.getAttribute('data-avatar-weapon'),
       offhand: node.getAttribute('data-avatar-offhand'),

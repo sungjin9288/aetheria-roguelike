@@ -3,6 +3,7 @@ import { CONSTANTS } from '../data/constants';
 import { GS } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
 import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
+import { calculateFullStats } from '../utils/statsCalculator';
 
 /**
  * smoke test / dev harness용 window API 등록.
@@ -356,13 +357,16 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     job: scenario.job,
                     level: scenario.level,
                     loc: er.player.loc || scenario.loc,
-                    hp: er.player.hp,
-                    mp: er.player.mp,
                     equip: scenario.equip,
                 };
                 if (Array.isArray(scenario.inv)) {
                     payload.inv = scenario.inv;
                 }
+
+                const previewStats = calculateFullStats({ ...er.player, ...payload })!;
+                payload.hp = Math.min(Math.max(0, Number(er.player.hp) || 0), previewStats.maxHp);
+                payload.mp = Math.min(Math.max(0, Number(er.player.mp) || 0), previewStats.maxMp);
+
                 er.dispatch({ type: AT.SET_PLAYER, payload });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'equipment' });
                 return true;
