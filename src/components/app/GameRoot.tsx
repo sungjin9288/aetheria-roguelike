@@ -8,6 +8,7 @@ import { getRegionTheme } from '../../utils/regionTheme';
 import { buildReturnBriefing } from '../../utils/returnBriefing';
 import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
+import { MSG } from '../../data/messages';
 import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
@@ -55,7 +56,7 @@ const GameRoot = ({
         const newTitles = checkTitles(engine.player);
         if (newTitles.length > 0) {
             engine.dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-            newTitles.forEach((id: string) => engine.addLog?.('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
+            newTitles.forEach((id: string) => engine.addLog?.('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
         }
     // 의도적으로 entire engine 대신 사용 path만 의존 — 다른 engine 필드 변화로
     // 재실행되면 retroactive title 부여가 매 변화마다 다시 시도되어 비효율.

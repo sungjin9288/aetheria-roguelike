@@ -25,6 +25,7 @@
 | 2026-07-14 | 주요 판단 화면은 한글인데 부트, 상태바, 로그 배지, 상태 명령에는 내부 단계명과 영문 지표 약어가 반복 노출됨 | 기능별 UI를 따로 다듬어 첫 5분 전체에서 반복되는 공통 어휘 계약을 검증하지 않았음 | 첫 세션 가독성 작업은 부트, 상시 HUD, 교전 대상, 플레이 기록, 성장 피드백을 한 묶음으로 확인하고 내부 key는 data attribute에만 남긴다 |
 | 2026-07-14 | archive smoke가 탭 상태만 바꿔 성공했지만 실제 Stats와 Codex 패널 화면은 열리지 않은 과거 캡처가 증적으로 남음 | 상태 전환 성공과 사용자가 보는 패널의 render·문구·레이아웃 검증을 같은 것으로 취급했음 | 보조 패널 smoke는 실제 open action과 panel test id를 확인한 뒤 캡처하고, 제목·행동·빈 상태·수치 단위를 하나의 플레이어 어휘 계약으로 검사한다 |
 | 2026-07-14 | 지도 smoke 캡처가 실제 지도 대신 lazy loading 화면을 담고도 탭 전환 성공으로 처리됨 | 지도 상태 변경과 실제 `MapNavigator` render 완료를 분리하지 않았고, 긴 element 전체 캡처가 첫 화면 가독성 증빙으로 사용됐음 | 지도 acceptance는 실제 map root, 첫 viewport의 현재 위치·추천 경로, transient overlay 종료를 함께 확인하고 loading fallback이나 전체 element 길이만으로 통과시키지 않는다 |
+| 2026-07-14 | 새 캐릭터의 첫 기록에 이전 초기화 안내와 `EXP / Gold / HP / MP`, 잘못된 장소 조사가 섞여 첫 여정이 시스템 로그처럼 보임 | 초기화·시작·이동·보상·회고 화면을 각각 검증해 실제 첫 세션의 연속 기록과 reset 경계를 끝까지 읽지 않았음 | 첫 세션 문구는 reset 이후 시작, 첫 이동, 첫 방문, 첫 승리, 전투 후 판단, 모험 종료까지 하나의 연속 계약으로 검증하고 내부 약어·조사 오류·이전 상태 누출을 함께 거부한다 |
 
 ---
 
@@ -105,6 +106,10 @@
 ### R19: Prove The Map In Its First Viewport
 - **Rule:** 지도 smoke는 실제 `MapNavigator` root가 렌더되고 transient level/phase overlay가 사라진 뒤, 첫 viewport에서 현재 위치와 추천 경로를 함께 확인하며 loading fallback과 legacy label을 거부한다
 - **Rationale:** 탭 상태나 긴 element 전체 캡처만으로는 플레이어가 지도를 열었을 때 경로를 즉시 이해할 수 있는지 증명할 수 없다
+
+### R20: Verify First-Session Language As One Continuous Record
+- **Rule:** 신규 세션 문구를 바꾸면 reset 이후 시작, 첫 이동, 첫 방문, 첫 승리, 전투 후 판단, 모험 종료 기록을 순서대로 검증하고 이전 상태 누출, 영문 약어, 잘못된 조사, 괄호·아이콘 의존 문구를 거부한다
+- **Rationale:** 패널별 문구가 자연스러워도 실제 플레이 기록에 이전 reset 안내나 기계적 보상 표기가 하나만 남으면 첫 여정 전체가 개발 로그처럼 느껴진다
 
 ---
 

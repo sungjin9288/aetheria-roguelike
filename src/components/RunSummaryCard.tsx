@@ -70,10 +70,10 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                 <div className="custom-scrollbar relative max-h-[calc(100svh-1rem)] overflow-y-auto overflow-x-hidden px-6 pb-5 pt-6">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
+                            <div className="font-readable text-[10px] text-slate-500">
                                 모험 기록
                             </div>
-                            <div className="mt-2 text-[1.7rem] font-rajdhani font-bold tracking-[0.08em] text-[#f6e7c8]">
+                            <div className="mt-2 font-readable text-[1.7rem] font-bold text-[#f6e7c8]">
                                 {s.activeTitle
                                     ? <><span className="text-[#e3dcff]">[{getTitleLabel(s.activeTitle)}]</span> {s.job}</>
                                     : s.job
@@ -85,7 +85,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                                     {s.loc}에서 전사
                                 </span>
                                 <span className="text-slate-500">·</span>
-                                <span>Lv.{s.level}</span>
+                                <span>레벨 {s.level}</span>
                             </div>
                         </div>
 
@@ -110,7 +110,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                     >
                         {reflection.cells.map((cell: any) => (
                             <div key={cell.label} className="aether-run-reflection-cell rounded-[0.8rem] px-2.5 py-2">
-                                <div className="font-fira text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400/86">
+                                <div className="font-readable text-[9px] font-bold text-slate-400/86">
                                     {cell.label}
                                 </div>
                                 <div className="mt-1 min-h-[2.05rem] whitespace-normal break-keep font-rajdhani text-[0.82rem] font-bold leading-[1.15] tracking-[0.04em] text-white sm:text-[0.95rem]">

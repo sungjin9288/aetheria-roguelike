@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { MSG } from '../src/data/messages.js';
+import { getFirstVisitReward } from '../src/utils/exploreUtils.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -95,4 +97,59 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
     assert.match(checklist, /첫 일반 전투가 대략 4~6턴 안에 끝나는지/);
     assert.match(checklist, /캐릭터와 아이템 디자인 통일성/);
     assert.doesNotMatch(checklist, /Field Log|Status Strip|Field Actions|Archive Dock|QA READOUT|EXPORT|`RESET`/);
+});
+
+test('first-session record uses natural player language from start through growth', () => {
+    const messages = [
+        MSG.START_JOURNEY('아리아'),
+        MSG.START_SKILL('강타'),
+        MSG.START_BOOT_RELIC,
+        MSG.MOVE_ARRIVED('고요한 숲'),
+        MSG.MOVE_NEW_AREA('고요한 숲'),
+        MSG.MOVE_AREA_DANGER(1),
+        MSG.VICTORY(20, 18),
+        MSG.FIRST_BOSS_GOLD(120),
+        MSG.BLOOD_OATH_HEAL(10),
+        MSG.WORLD_DEVOUR_HEALTH(8),
+        MSG.IMMORTAL_WARRIOR_HEAL(12),
+        MSG.INFINITE_DEVOUR_HEAL(14),
+        MSG.STAR_CORE_RESTORE,
+        MSG.LEGACY_ESSENCE(2),
+        MSG.LEGACY_RANK(1),
+        MSG.LEVEL_UP(2, 3, 20),
+        MSG.LEVEL_MILESTONE(5, 250),
+        MSG.LEVEL_MAJOR_MILESTONE(10, 4, 25, 12),
+        MSG.EQUIP_LEVEL_REQUIRED('강철 검', 4),
+        MSG.SKILL_NO_MP,
+        MSG.SKILL_ON_COOLDOWN('강타', 2),
+        MSG.CAMPFIRE_REST_LOG(20, 10),
+        MSG.REST_DONE_FULL(30),
+        MSG.COMBAT_DIGEST_BOSS_REWARD(120, '전설 각인'),
+        MSG.KILL_STACK_ATTACK('허공의 왕좌', 15),
+        MSG.TITLE_UNLOCKED('첫 번째 사냥꾼'),
+        MSG.DEFEAT,
+        MSG.FIRST_DEATH_META(1, 10),
+    ];
+    const record = messages.join(' ');
+
+    for (const phrase of ['첫 여정', '첫 기술', '첫 유물', '고요한 숲에 도착', '처음 발견한 지역', '경험 +20', '골드 +18', '계승 정수', '공격력 +3', '생명 +20', '기력이 부족', '새 칭호']) {
+        assert.ok(record.includes(phrase), `첫 세션 기록에 "${phrase}"가 있어야 합니다.`);
+    }
+    assert.doesNotMatch(record, /EXP|Gold|Lv\.|ATK|HP|MP|레거시|빌드|콜사인|초기 스킬|🏆|🗺️|⚠️/);
+});
+
+test('first-visit rewards keep the first journey in natural player language', () => {
+    const locations = [
+        '고요한 숲', '서쪽 평원', '호수의 신전', '잊혀진 폐허', '버려진 광산',
+        '어둠의 동굴', '화염의 협곡', '용의 둥지', '사막 오아시스', '피라미드',
+        '얼음 성채', '빙하 심연', '북부 요새', '기계 폐도', '천공 정원',
+        '심해 회랑', '에테르 관문', '암흑 성', '마왕성', '혼돈의 심연', '고대 보물고',
+    ];
+
+    for (const location of locations) {
+        const reward = getFirstVisitReward(location, { stats: { visitedMaps: [] } });
+        assert.ok(reward, `${location} 첫 방문 보상이 있어야 합니다.`);
+        assert.match(reward.msg, /골드 [\d,]+ · 경험 \d+/);
+        assert.doesNotMatch(reward.msg, /EXP|Gold|\+\d+G|\[첫 방문\]/);
+    }
 });

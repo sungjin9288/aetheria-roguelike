@@ -151,6 +151,6 @@ test('slice 19: 레벨업 로그에 스탯 상승 표기 (성장 가시화)', ()
     const result = CombatEngine.applyExpGain(player, player.nextExp);
     const levelUpLog = result.logs.find((l) => l.type === 'system');
     assert.ok(levelUpLog, '레벨업 로그 존재');
-    assert.ok(/ATK\s*\+3/.test(levelUpLog.text),
-        `레벨업 로그에 ATK +3 표기 (실제: "${levelUpLog.text}")`);
+    assert.ok(/공격력\s*\+3/.test(levelUpLog.text),
+        `레벨 상승 로그에 공격력 +3 표기 (실제: "${levelUpLog.text}")`);
 });

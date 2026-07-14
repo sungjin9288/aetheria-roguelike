@@ -394,9 +394,9 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    *
    * 추가 advice:
    *   - escapes >= 10 AND bossKills <= 1 → "도주가 많았고 보스 진입이 적었습니다.
-   *     빌드 강화 후 보스 도전을 권장합니다."
-   *   - discoveries <= 4 AND level >= 12 → "맵 발견이 적었습니다. 새 지역을 더
-   *     탐색해 유물/이벤트 풀을 넓히세요."
+   *     장비와 성장을 보강한 뒤 보스에 도전하세요."
+   *   - discoveries <= 4 AND level >= 12 → "발견한 지역이 적었습니다. 새로운 길을
+   *     탐색해 유물과 사건을 만날 기회를 넓히세요."
    *   - discoveries >= 15 → 칭찬 라인 "탐험 폭이 넓었습니다. 같은 호기심으로
    *     다음 런도 시작하세요."
    *
@@ -426,7 +426,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       };
       const result = getRunSummaryAnalysis(summary);
       assert.ok(
-          result.focus.some((line) => /맵 발견|탐색/.test(line)),
+          result.focus.some((line) => /발견한 지역|탐색/.test(line)),
           'should advise on low-discovery high-level pattern'
       );
   });
@@ -453,7 +453,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       const result = getRunSummaryAnalysis(summary);
       // 신규 cycle 87 advice 라인 모두 부재
       assert.ok(!result.focus.some((line) => /도주.*보스/.test(line)));
-      assert.ok(!result.focus.some((line) => /맵 발견|탐색|탐험 폭|호기심/.test(line)));
+      assert.ok(!result.focus.some((line) => /발견한 지역|탐색|탐험 폭|호기심/.test(line)));
   });
 
   test('focus는 최대 3개 cap 유지 (회귀)', () => {

@@ -284,8 +284,7 @@ import { readFile } from 'node:fs/promises';
    * - cycle 191 / 188 / 202 / 203 / 119 보존 시리즈와 동일 패턴으로 META 진행도 명시 보존.
    * - RUN 진행도(gold / inv / equip / relics / hp / mp / quests)는 INITIAL_STATE로 reset 유지.
    *
-   * 주의: MSG.INIT_RECORD_APPLIED("초기 기록이 적용되었습니다. 이름을 정하고 다시 시작해 주세요.")는
-   * 그대로 — name='' reset은 handleDefeat가 이미 처리하므로 RESET_GAME에서 추가 처리 불필요.
+   * RESET_GAME은 logs를 비우며, 새 캐릭터를 시작할 때 첫 여정 기록만 다시 쌓는다.
    */
 
   const buildPlayerWithProgress = () => ({
@@ -3092,7 +3091,7 @@ import { readFile } from 'node:fs/promises';
    * - cycle 272: questComplete dispatch.
    * - cycle 273: bossPhase2 dispatch.
    * - cycle 274: levelUp dispatch (잔존 2개 중 1번째).
-   * - 'levelUp' 템플릿 (`✨ 새로운 힘이 깨어됩니다! 레벨 ${data.level} 달성!`)는 player 레벨업 시점의
+   * - 'levelUp' 템플릿은 player 레벨업 시점의
    *   narrative cue. CombatEngine.handleVictory 내부 applyExpGain이 leveledUp boolean 반환하지만
    *   hook layer는 이를 read해 addStoryLog 호출 안 함이라 dispatch 0건.
    * - 결과: 레벨업이 visual('levelUp') + sound(cycle 217) + log는 있지만 AI narrative blurb 부재.
@@ -3157,7 +3156,7 @@ import { readFile } from 'node:fs/promises';
    * - cycle 275: ruinRecap dispatch (잔존 마지막).
    * - 'ruinRecap' 템플릿 (`💀 ${name}는 레벨 ${level}에서 추락했습니다. 하지만 그 정신은 다시
    *   불타오를 것입니다...`)는 사망 후 회상 narrative cue.
-   * - 'death' 템플릿은 즉각 모먼트 ("의식이 흘려집니다")이고 'ruinRecap'은 retrospective —
+   * - 'death' 템플릿은 즉각적인 패배 순간이고 'ruinRecap'은 retrospective —
    *   둘 다 사망 시점에 dispatch하면 player에게 immediate + reflective 양쪽 narrative 제공.
    *
    * 수정 (combatAttack.ts + combatItem.ts):

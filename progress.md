@@ -1,5 +1,21 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-14: made the first journey read like a game rather than a system log):
+- Removed reset-state leakage from a new run and rewrote the start, first movement, first discovery, first-visit reward, victory, title, post-combat, and run-summary records around natural player-facing Korean.
+- Centralized reward, recovery, progression, movement, and title messages while preserving gameplay values, internal keys, save data, and automation ids.
+- Added functional and smoke contracts across all 21 first-visit rewards and the actual start-to-forest-to-victory flow, including regression guards for Korean particles and mechanical abbreviations.
+
+Verification:
+- Focused first-session contracts -> 46/46 pass.
+- Final `npm run verify:full` -> type-check, lint, unit 3249/3249, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass. The existing non-blocking `GameRoot.tsx` effect warning remains.
+- 390px visual review -> `01-after-start.png`, `03-arrived-forest.png`, `07-core-loop-complete.png`, `02d-post-combat-decision-strip.png`, and `02f-run-summary-reflection-strip.png` show natural records without clipping or overlap.
+- `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, signed iOS archive, and physical-iPhone smoke -> pass; Android release signing input remains missing.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-14 17:40:13 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-14 17:40:35 KST`).
+- Physical iPhone smoke -> install URL `file:///private/var/containers/Bundle/Application/BD9271B6-61F4-4B0A-8D09-230328C0B2DA/App.app/`, foreground pid `66741`, and 60-second process recheck pass.
+
+Next action:
+- Run the timed 5-minute routine on this installed iPhone build and record whether the rewritten first-session language, progression pacing, touch behavior, and art cohesion remain clear in hand. Android still requires release signing inputs and a physical device.
+
 Done (2026-07-14: made the actual map route readable and provable):
 - Replaced the wrapping map progress badges with a stable three-column summary and added a direct current-location-to-recommended-destination route overview.
 - Unified map and shared adventure-guide level, gold, and infinite-depth labels around `레벨`, `골드`, and `심연`, removing the visible `Lv.`, `G`, and `Abyss` vocabulary.

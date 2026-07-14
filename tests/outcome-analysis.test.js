@@ -21,7 +21,7 @@ test('post combat analysis flags risky wins and recovery actions', () => {
     assert.equal(analysis.rewardMood, '강적 제압');
     assert.ok(analysis.notes.some((note) => note.includes('정예')));
     assert.ok(analysis.actions.some((action) => action.includes('회복')));
-    assert.ok(analysis.actions.some((action) => action.includes('인벤토리')));
+    assert.ok(analysis.actions.some((action) => action.includes('가방')));
     assert.ok(analysis.rewardHighlights.some((entry) => entry.includes('정예 격파')));
 });
 

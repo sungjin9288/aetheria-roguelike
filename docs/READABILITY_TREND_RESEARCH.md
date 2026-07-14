@@ -257,6 +257,7 @@ Completed after this research note:
 - Slice 22: Core HUD Player Language. The first-five-minute loop now uses one vocabulary across native boot, persistent status, enemy target, field-log badges, status command, level-up feedback, boss phases, and equipment upgrade hints. Internal stage names and stable test keys remain available to automation without appearing as player copy.
 - Slice 23: Secondary Gameplay Surface Language. Quest Board, Crafting, detailed Stats, and Codex now share direct Korean headings, actions, empty states, stat names, and reward units. Browser smoke opens and verifies the real panels before taking 390px evidence instead of treating an internal tab-state change as visual proof.
 - Slice 24: Map First-Viewport Route Proof. The actual map now renders a stable three-column exploration summary and a direct current-location-to-recommended-destination route in the first 390px viewport. Map and shared route guidance use `레벨 / 골드 / 심연`, while smoke rejects loading fallback, `Lv.`, and `G` before capturing evidence.
+- Slice 25: First-Session Record Language. Reset no longer leaks stale guidance into the next run, and the continuous start-to-movement-to-first-visit-to-victory-to-reflection record now uses direct Korean for experience, gold, life, energy, growth direction, bag, and consumables. Smoke reads the actual record at each checkpoint and rejects mechanical abbreviations, particle errors, and legacy icon/bracket copy.
 
 ## Recommended Next Step
 
@@ -265,4 +266,5 @@ Run the timed iPhone 5-minute manual loop on the latest installed archive.
 - Record action discovery time, first-combat turn count, progression pacing, reward comprehension, and visual cohesion using `docs/PLAYTEST_CHECKLIST.md`.
 - Review Quest Board, Crafting, detailed Stats, and Codex during the manual loop to confirm the verified browser vocabulary still reads naturally on the native device.
 - Open `지도` during the manual loop and confirm the progress summary stays on one line, the current-to-recommended route is visible without searching, and no loading overlay or legacy `Lv. / G` labels remain.
+- Read the first journey record from character creation through the first victory and confirm no reset guidance, `EXP / Gold / HP / MP / Lv.`, incorrect location particle, or bracketed title copy appears.
 - Prepare Android separately by connecting a physical device and providing release signing input (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`).

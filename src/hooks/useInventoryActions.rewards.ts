@@ -86,7 +86,7 @@ export const createRewardActions = (ctx: any) => {
                         titles: [...new Set([...(updatedPlayer.titles || []), titleToken])],
                         activeTitle: updatedPlayer.activeTitle || titleToken,
                     };
-                    addLog('success', `🏆 칭호 획득: [${titleToken}]`);
+                    addLog('success', MSG.TITLE_UNLOCKED(titleToken));
                 }
             }
 

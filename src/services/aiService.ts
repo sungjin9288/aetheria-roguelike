@@ -51,17 +51,17 @@ const callProxy = async (body: any, trackLabel: any, timeoutMs: any) => {
 export const AI_SERVICE = {
     getFallback: (type: any, data: any) => {
         const templates: Record<string, any> = {
-            encounter: `⚠️ [${data.loc}]의 어둠 속에서 [${data.name}]이(가) 나타났습니다!`,
-            victory:   `🎉 [${data.name}]에게 결정타를 날렸습니다! 승리!`,
-            death:     `💠 [${data.player?.name || '당신'}]의 의식이 흘려집니다...`,
-            levelUp:   `✨ 새로운 힘이 깨어됩니다! 레벨 ${data.level} 달성!`,
-            rest:      `💤 [${data.loc}]에서 편안한 휴식을 취했습니다. 체력이 회복됩니다.`,
+            encounter: `${data.loc}의 어둠 속에서 ${data.name}의 기척이 나타났습니다.`,
+            victory:   `${data.name}에게 마지막 일격을 가해 승리했습니다.`,
+            death:     `${data.player?.name || '당신'}의 의식이 서서히 흐려집니다.`,
+            levelUp:   `새로운 힘이 깨어나 레벨 ${data.level}에 도달했습니다.`,
+            rest:      `${data.loc}에서 편안히 쉬며 생명을 회복했습니다.`,
             // Stage 1 확장 타입
-            bossPhase2:    `⚡ [${data.bossName || '보스'}]이(가) 진정한 힘을 해방합니다! 공간이 당스립니다!`,
-            questComplete: `🎖️ [퀴스트: ${data.questTitle || ''}] 완료! 에테리아의 전설에 한 페이지가 추가됩니다.`,
-            ruinRecap:     `💀 ${data.name || '용사'}는 레벨 ${data.level || 1}에서 추락했습니다. 하지만 그 정신은 다시 불타오를 것입니다...`,
+            bossPhase2:    `${data.bossName || '보스'}의 진정한 힘이 드러나며 공간이 뒤틀립니다.`,
+            questComplete: `${data.questTitle || '새로운'} 임무를 마쳤습니다. 에테리아의 기록에 새로운 이야기가 새겨집니다.`,
+            ruinRecap:     `${data.name || '모험가'}의 여정은 레벨 ${data.level || 1}에서 멈췄습니다. 남겨진 힘은 다음 도전으로 이어집니다.`,
         };
-        return templates[type] || '운명의 수레바퀴가 돈기 시작합니다.';
+        return templates[type] || '운명의 수레바퀴가 돌기 시작합니다.';
     },
 
     // cycle 606: history / uid / context 3 defaults 제거 — 1 production caller

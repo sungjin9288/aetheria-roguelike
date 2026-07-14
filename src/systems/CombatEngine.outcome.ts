@@ -144,7 +144,7 @@ export const outcomeMethods: any = {
                 goldBonus: bonusGold,
                 rewardHint: bossBrief?.rewardHint || '초회 토벌 보너스를 확보했습니다.'
             };
-            logs.push({ type: 'event', text: `🏁 초회 보스 토벌 보너스 +${bonusGold}G` });
+            logs.push({ type: 'event', text: MSG.FIRST_BOSS_GOLD(bonusGold) });
         }
 
         const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
@@ -171,7 +171,7 @@ export const outcomeMethods: any = {
         if (healRelic) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * healRelic.val);
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
-            logs.push({ type: 'heal', text: `[피의 서약] +${heal} HP` });
+            logs.push({ type: 'heal', text: MSG.BLOOD_OATH_HEAL(heal) });
         }
 
         // cycle 158: 'kill_stack_atk' (허공의 왕좌) — 적 처치 시 ATK perKill 누적, max 캡.
@@ -189,7 +189,7 @@ export const outcomeMethods: any = {
             const next = Math.min(maxStack, (flags.killStackAtkBonus || 0) + perKill);
             p.combatFlags = { ...flags, killStackAtkBonus: next };
             const sourceLabel = killStackRelic ? '[허공의 왕좌]' : '[시너지 처형 분노]';
-            logs.push({ type: 'event', text: `${sourceLabel} ATK 누적 +${Math.round(next * 100)}% (이번 전투)` });
+            logs.push({ type: 'event', text: MSG.KILL_STACK_ATTACK(sourceLabel, Math.round(next * 100)) });
         }
 
         // cycle 157: 'devour_hp' (세계 포식자) — 적 처치 시 적 maxHp의 val(=0.1)만큼 player maxHp 영구 증가.
@@ -200,7 +200,7 @@ export const outcomeMethods: any = {
             if (hpGain > 0) {
                 p.maxHp = (p.maxHp || BALANCE.DEFAULT_MAX_HP) + hpGain;
                 p.hp = (p.hp || 0) + hpGain; // 신규 HP만큼 현재 HP도 증가 (overheal 방지: maxHp 갱신 후)
-                logs.push({ type: 'heal', text: `[세계 포식자] 영혼 흡수! 최대 HP +${hpGain}` });
+                logs.push({ type: 'heal', text: MSG.WORLD_DEVOUR_HEALTH(hpGain) });
             }
         }
 
@@ -211,21 +211,21 @@ export const outcomeMethods: any = {
         if (killHealSyn) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (killHealSyn.bonus.killHeal ?? 0));
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
-            logs.push({ type: 'heal', text: `[불멸의 전사] +${heal} HP (처치 회복)` });
+            logs.push({ type: 'heal', text: MSG.IMMORTAL_WARRIOR_HEAL(heal) });
         }
         const devourSyn = victorySynergies.find((s: any) =>
             s.bonus.effect === 'infinite_devour' || s.bonus.devour);
         if (devourSyn) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (devourSyn.bonus.devour ?? 0));
             p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
-            logs.push({ type: 'heal', text: `[무한 포식] +${heal} HP (포식)` });
+            logs.push({ type: 'heal', text: MSG.INFINITE_DEVOUR_HEAL(heal) });
         }
 
         // 유물: 별의 핵 (mp_restore_battle) — 전투 종료 시 MP 전량 회복
         const starCoreRelic = relics.find((r: any) => r.effect === 'mp_restore_battle');
         if (starCoreRelic) {
             p.mp = p.maxMp || 50;
-            logs.push({ type: 'heal', text: `[별의 핵] MP 전량 회복!` });
+            logs.push({ type: 'heal', text: MSG.STAR_CORE_RESTORE });
         }
 
         const expResult = this.applyExpGain(p, expGained);

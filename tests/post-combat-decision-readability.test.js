@@ -24,10 +24,30 @@ test('post combat decision strip prioritizes recovery when HP is low', () => {
 
     assert.equal(strip.tone, 'pressure');
     assert.deepEqual(strip.cells, [
-        { label: '상태', value: 'HP 회복' },
+        { label: '상태', value: '생명 회복' },
         { label: '보상', value: '전리품 1개' },
         { label: '다음 행동', value: '휴식' },
     ]);
+});
+
+test('post combat decision strip uses player language for resource rewards', () => {
+    const strip = getPostCombatDecisionStrip({
+        enemy: '테스트 적',
+        exp: 140,
+        gold: 220,
+        items: [],
+        playerHp: 80,
+        playerMaxHp: 100,
+        playerMp: 40,
+        playerMaxMp: 60,
+    });
+
+    assert.deepEqual(strip.cells, [
+        { label: '상태', value: '진행 가능' },
+        { label: '보상', value: '골드 +220' },
+        { label: '다음 행동', value: '다음 지역' },
+    ]);
+    assert.doesNotMatch(strip.cells.map((cell) => cell.value).join(' '), /EXP|Gold|HP|MP|인벤|퀵슬롯/);
 });
 
 test('post combat decision strip promotes signature rewards without altering loot', () => {
@@ -62,6 +82,9 @@ test('PostCombatCard renders direct Korean decision labels', async () => {
     assert.match(source, /data-testid="post-combat-decision-strip"/);
     assert.match(source, /data-result-tone=\{decisionStrip\.tone\}/);
     assert.match(source, /aria-label="전투 결과 판단 요약"/);
+    assert.match(source, /기력 회복 점검/);
+    assert.match(source, /가방 정리/);
+    assert.doesNotMatch(source, />MP 회복 점검<|>인벤 정리</);
 });
 
 test('smoke loop verifies the post combat decision strip after victory', async () => {

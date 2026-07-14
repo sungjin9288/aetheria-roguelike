@@ -9,6 +9,7 @@ import { PREMIUM_SHOP } from '../data/premiumShop.js';
 import { getRunBuildProfile, getTraitSkill } from './runProfileUtils.js';
 import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager.js';
 import { AT } from '../reducers/actionTypes.js';
+import { MSG } from '../data/messages.js';
 import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSetsData from '../data/signatureSets.json' with { type: 'json' };
 
@@ -444,7 +445,7 @@ export const makeEmitTitles = (dispatch: any, addLog: any) => (updatedPlayer: an
     const newTitles = checkTitles(updatedPlayer);
     if (newTitles.length > 0) {
         dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-        newTitles.forEach((id: any) => addLog('system', `🏆 칭호 획득: [${getTitleLabel(id)}]`));
+        newTitles.forEach((id: any) => addLog('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
     }
 };
 

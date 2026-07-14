@@ -384,7 +384,7 @@ async function resetToIntro(page) {
   return waitForState(page, (nextState) => nextState.mode === 'intro', 'intro screen after reset');
 }
 
-async function startNewRun(page) {
+async function startNewRun(page, { expectFirstJourneyGuidance = false } = {}) {
   await resetToIntro(page);
   const startButton = page.locator('[data-testid="intro-start-button"]');
   const nameInput = page.locator('[data-testid="intro-name-input"]');
@@ -413,6 +413,27 @@ async function startNewRun(page) {
     await bootRelic.click();
     state = await waitForState(page, (s) => !s.pendingRelics, 'start boot relic to resolve');
   }
+
+  const startRecord = state.logTail?.map((entry) => entry.text).join(' ') || '';
+  ensure(
+    ['첫 여정이 시작됩니다', '첫 기술로', '함께할 첫 유물'].every((text) => startRecord.includes(text)),
+    `New run record did not explain the start naturally: ${startRecord}`
+  );
+  ensure(
+    !/(?:초기 기록이 적용|이름을 정하고 다시 시작|\[콜사인\]|초기 스킬|당신의 빌드)/.test(startRecord),
+    `New run record retained reset or mechanical copy: ${startRecord}`
+  );
+  const firstGuidance = await page.locator('[data-testid="adventure-guidance-strip"]').innerText();
+  if (expectFirstJourneyGuidance) {
+    ensure(
+      firstGuidance.includes('골드 100과 경험 25'),
+      `Fresh run did not show first journey reward guidance: ${firstGuidance}`
+    );
+  }
+  ensure(
+    !/(?:\+\d+G|EXP|MP)/.test(firstGuidance),
+    `New run guidance exposed mechanical reward labels: ${firstGuidance}`
+  );
 
   await scrollToTop(page);
   await writeStateArtifact('01-after-start', state, page);
@@ -855,6 +876,16 @@ async function moveToForest(page) {
     (nextState) => nextState.player?.loc === '고요한 숲',
     'arrival at 고요한 숲'
   );
+  const arrivalRecord = state.logTail?.map((entry) => entry.text).join(' ') || '';
+  ensure(
+    ['고요한 숲에 도착했습니다', '처음 발견한 지역은 고요한 숲입니다', '골드 100 · 경험 25']
+      .every((text) => arrivalRecord.includes(text)),
+    `First arrival record did not read naturally: ${arrivalRecord}`
+  );
+  ensure(
+    !/(?:고요한 숲로|\+\d+G|EXP|🗺️|⚠️|📖)/.test(arrivalRecord),
+    `First arrival record retained mechanical copy: ${arrivalRecord}`
+  );
   await writeStateArtifact('03-arrived-forest', state, page);
   return state;
 }
@@ -898,10 +929,18 @@ function hasVictorySignal(state) {
   return state.logTail?.some((entry) => (
     typeof entry.text === 'string'
     && (
-      entry.text.includes('승리!')
+      entry.text.includes('승리했습니다.')
       || entry.text.includes('전투 정리:')
     )
   ));
+}
+
+function verifyRewardRecordLanguage(state) {
+  const record = state.logTail?.map((entry) => entry.text).join(' ') || '';
+  ensure(
+    !/(?:승리! EXP|Gold \+|레거시 에센스|칭호 획득:|Lv\.|ATK|HP|MP|🏆)/.test(record),
+    `Reward record exposed mechanical labels: ${record}`
+  );
 }
 
 async function driveExploreLoop(page) {
@@ -971,11 +1010,13 @@ async function driveExploreLoop(page) {
       await writeStateArtifact('06-forced-event', forcedEventState, page);
       await resolveEvent(page, observations);
       const completedState = await readState(page);
+      verifyRewardRecordLanguage(completedState);
       await writeStateArtifact('07-core-loop-complete', completedState, page);
       return observations;
     }
 
     if (observations.event && observations.combat && observations.victory) {
+      verifyRewardRecordLanguage(state);
       await writeStateArtifact('07-core-loop-complete', state, page);
       return observations;
     }
@@ -1120,7 +1161,7 @@ async function main() {
     await waitForState(page, (state) => state.bootStage === 'ready', 'boot stage ready', 25000);
 
     logSmoke('boot ready');
-    await startNewRun(page);
+    await startNewRun(page, { expectFirstJourneyGuidance: true });
     await verifyMobileFirstFold(page);
     await verifyMobileArchiveConsole(page);
     await verifyShopFlow(page);

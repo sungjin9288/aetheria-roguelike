@@ -73,7 +73,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
     const bossRewardHint = result.bossRewardHint || null;
     const bossClearBonus = result.bossClearBonus || 0;
     const rewardSignals = [
-        bossRewardHint ? { title: '보스 보상', name: bossClearBonus > 0 ? `초회 토벌 +${bossClearBonus}G` : '보스 전리품', summary: bossRewardHint, tone: 'success' } : null,
+        bossRewardHint ? { title: '보스 보상', name: bossClearBonus > 0 ? `첫 토벌 골드 +${bossClearBonus}` : '보스 전리품', summary: bossRewardHint, tone: 'success' } : null,
         upgradeHint ? { title: '장비 갱신', name: upgradeHint.name, summary: upgradeHint.summary, tone: 'amber' } : null,
         traitHint ? { title: '성향 공명', name: traitHint.name, summary: traitHint.summary, tone: 'purple' } : null,
     ].filter(Boolean);
@@ -171,14 +171,14 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                     <div className="px-3.5 py-3 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-1.5 text-xs font-fira uppercase tracking-[0.18em] text-slate-500">
+                                <div className="flex flex-wrap items-center gap-1.5 font-readable text-xs text-slate-500">
                                     <span className="inline-flex items-center gap-1.5 text-[#dff7f5]">
                                         <Sword size={13} />
                                         전투 결과
                                     </span>
                                     {hasLevelUp && <SignalBadge tone="upgrade" size="sm">레벨 상승</SignalBadge>}
                                 </div>
-                                <div className="mt-1 text-[1.05rem] font-rajdhani font-bold tracking-[0.08em] text-[#f6e7c8]">
+                                <div className="mt-1 font-readable text-[1.05rem] font-bold text-[#f6e7c8]">
                                     {result.enemy || '적'} 전투 정리
                                 </div>
                                 <div className="mt-1 text-xs font-fira text-slate-300/72">
@@ -203,7 +203,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                             <div className="grid grid-cols-3 gap-1.5">
                                 {decisionStrip.cells.map((cell) => (
                                     <div key={cell.label} className="aether-result-cell rounded-lg px-2 py-1.5">
-                                        <div className="font-fira text-[7px] font-bold uppercase tracking-[0.1em] text-slate-400/78">
+                                        <div className="font-readable text-[7px] font-bold text-slate-400/78">
                                             {cell.label}
                                         </div>
                                         <div className="mt-0.5 line-clamp-2 font-readable text-[10px] font-semibold leading-[1.15] text-slate-100/90">
@@ -238,7 +238,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                                 </Motion.button>
                             ) : (
                                 <div className="flex min-h-[44px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-xs font-fira text-slate-300/72">
-                                    {mpLow ? 'MP 회복 점검' : '다음 행동 준비 완료'}
+                                    {mpLow ? '기력 회복 점검' : '다음 행동 준비 완료'}
                                 </div>
                             )}
 
@@ -248,7 +248,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                                     onClick={() => { onSell?.(); handleClose(); }}
                                     className="min-h-[44px] rounded-[1rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 py-2 text-xs font-rajdhani font-bold text-[#dff7f5]"
                                 >
-                                    인벤 정리
+                                    가방 정리
                                 </Motion.button>
                             ) : upgradeHint ? (
                                 <Motion.button
@@ -270,7 +270,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                                 </Motion.button>
                             ) : (
                                 <div className="flex min-h-[44px] items-center rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2 text-xs font-fira text-slate-300/72">
-                                    로그에서 전투 세부 내용을 확인하세요
+                                    플레이 기록에서 전투 내용을 확인하세요
                                 </div>
                             )}
                         </div>

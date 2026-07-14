@@ -44,27 +44,20 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
                 stats: { ...(player.stats || {}), visitedMaps: [CONSTANTS.START_LOCATION] }
             }});
             const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
-            addLog('system', MSG.START_CALLSIGN(trimmedName));
-            addLog('event', MSG.START_INITIAL_SKILL(cls.skills?.[0]?.name || '강타'));
+            addLog('system', MSG.START_JOURNEY(trimmedName));
+            addLog('event', MSG.START_SKILL(cls.skills?.[0]?.name || '강타'));
             if (mods.length > 0) {
                 const labels = mods.map((id: any) => BALANCE.CHALLENGE_MODIFIERS.find((m: any) => m.id === id)?.label || id);
                 addLog('warn', MSG.CHALLENGE_START(labels));
             }
-            // B-1 (B+ 2026-06): 시작 부트 — 캐릭터 생성 직후 첫 유물 3선택 제공.
-            //   pendingRelics가 set되면 RelicChoicePanel이 자동 노출(GameRoot), 선택 시
-            //   ADD_RELIC이 clear. 첫 빌드 결정을 0분에 노출(Hades 거울 / StS Neow).
-            // feat/prestige-rank-ladder: rank≥5 "심연의 인장" — 시작 부트 선택지 3→4지선다.
-            //   prestigeRank는 RESET_GAME에도 보존되는 영구 자산이라 캐릭터 생성 시점에 유효.
-            // 2026-07 — 에테르 거울: start_boot_extra 노드(+1)를 rank5 해금과 가산.
-            const bootChoices = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices
+            // 영구 성장에 따라 첫 유물 선택지가 늘어납니다.
+            const startingRelicChoiceCount = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices
                 + mirrorEffects.startBootChoiceBonus;
-            // 관대함 하향 (2026-07 밸런스 감사): 시작 부트 후보 풀에서 epic/legendary 제외
-            //   (BALANCE.START_BOOT_RARITY_CAP: 'rare'). 0분에 legendary가 뜨면 런 전체가
-            //   행운으로 결정됨 — 선택지 "개수"(bootChoices, 프레스티지/거울 보너스 포함)는
-            //   이 캡과 독립적으로 그대로 유지된다.
-            const bootRelics = pickWeightedRelics(RELICS, bootChoices, { rarityCap: BALANCE.START_BOOT_RARITY_CAP });
-            if (bootRelics.length > 0) {
-                dispatch({ type: AT.SET_PENDING_RELICS, payload: bootRelics });
+            const startingRelics = pickWeightedRelics(RELICS, startingRelicChoiceCount, {
+                rarityCap: BALANCE.START_BOOT_RARITY_CAP,
+            });
+            if (startingRelics.length > 0) {
+                dispatch({ type: AT.SET_PENDING_RELICS, payload: startingRelics });
                 addLog('event', MSG.START_BOOT_RELIC);
             }
         },
@@ -151,10 +144,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             addLog('info', MSG.SKILL_SWAP_COST(cost));
         },
 
-        reset: () => {
-            dispatch({ type: AT.RESET_GAME });
-            addLog('system', MSG.INIT_RECORD_APPLIED);
-        },
+        reset: () => dispatch({ type: AT.RESET_GAME }),
 
         jobChange: (jobName: any) => {
             const current = DB.CLASSES[player.job];

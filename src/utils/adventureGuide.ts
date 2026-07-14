@@ -415,14 +415,14 @@ export const getAdventureGuidance = (player: Player, stats: any, mapData: any, r
     if (safe && (player?.level || 1) <= 2 && totalExplores === 0 && totalKills === 0) {
         return {
             title: '첫 원정 준비',
-            detail: '추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상(+100G, +25 EXP)이 기다립니다.',
+            detail: '추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상으로 골드 100과 경험 25를 얻습니다.',
             primaryAction: { kind: 'open_move', label: '첫 출발' },
         };
     }
     if (!safe && (player?.level || 1) <= 2 && totalKills === 0) {
         return {
             title: '첫 교전',
-            detail: '탐험으로 적을 찾아보세요. 기본 공격에 강타(MP 10 · 피해 1.5배)를 섞으면 4-5턴이면 충분합니다.',
+            detail: '탐험으로 적을 찾아보세요. 기본 공격 사이에 기력 10을 쓰는 강타를 섞으면 4-5턴이면 충분합니다.',
             primaryAction: { kind: 'explore', label: '탐험 시작' },
         };
     }

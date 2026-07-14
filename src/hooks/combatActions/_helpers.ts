@@ -77,8 +77,8 @@ export const addCombatDigestLogs = ({
     droppedItems, upgradeHint, traitHint,
     bossRewardHint, bossClearBonus,
 }: any) => {
-    // slice 20: EXP/Gold 파트 제거 — 바로 위 MSG.VICTORY 로그("승리! EXP +N,
-    //   Gold +N")와 동일 수치가 2회 출력되던 중복. digest는 처치 + 전리품 요약
+    // slice 20: 경험/골드 파트 제거 — 바로 위 MSG.VICTORY 로그
+    //   ("승리했습니다. 경험 +N · 골드 +N")와 동일 수치가 2회 출력되던 중복. digest는 처치 + 전리품 요약
     //   + 후속 힌트 anchor 역할만 담당.
     const summaryParts = [
         MSG.COMBAT_DIGEST_KILL(enemyName),

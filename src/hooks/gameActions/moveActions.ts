@@ -84,7 +84,7 @@ export const createMoveActions = (deps: any) => {
                 }
             }
             addLog('system', targetMap.desc);
-            if (firstVisit && targetMap.lore) addLog('event', `📖 ${targetMap.lore}`);
+            if (firstVisit && targetMap.lore) addLog('event', targetMap.lore);
 
             // 원정 목표 배너 (2026-07 감사 축4 — 모바일 세션 정합): 미격파 구역 보스가 있는
             //   던전 진입 시마다 "지역 진입 → 구역 보스 격파" 원정 프레이밍을 안내한다.

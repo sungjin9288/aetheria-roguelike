@@ -41,10 +41,10 @@ export const MSG = {
     // slice 19: tags 추가 — 치명타/약점/저항을 본문에 통합 (COMBAT_ATTACK_DETAIL 동일 패턴)
     SKILL_USE: (skillName: string | undefined, dmg: number, name: string | undefined, cur: number, max: number | undefined, tags: string[]) =>
         `[${skillName}]: ${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
-    SKILL_BUFF_ACTIVE: (name: string, turns: number) => `[${name}] 버프 활성화 (${turns} 턴)`,
+    SKILL_BUFF_ACTIVE: (name: string, turns: number) => `${name} 강화 효과가 ${turns}턴 동안 적용됩니다.`,
     SKILL_STATUS_BONUS: (effect: string, dmg: number) => `[${effect}] 추가 피해 +${dmg}`,
-    SKILL_NO_MP: 'MP가 부족합니다.',
-    SKILL_ON_COOLDOWN: (name: string, turns: number) => `[${name}] 쿨타임: ${turns} 턴`,
+    SKILL_NO_MP: '기력이 부족합니다.',
+    SKILL_ON_COOLDOWN: (name: string, turns: number) => `${name} 재사용까지 ${turns}턴 남았습니다.`,
     SKILL_NONE: '사용 가능한 스킬이 없습니다.',
 
     // --- 탈출 (Escape) ---
@@ -53,7 +53,13 @@ export const MSG = {
     ESCAPE_FAIL_DMG: (name: string | undefined, dmg: number) => `${name}이(가) 뒤쫓아 ${dmg} 피해를 입혔습니다.`,
 
     // --- 전투 결과 (Victory / Defeat) ---
-    VICTORY: (exp: number, gold: number) => `승리! EXP +${exp}, Gold +${gold}`,
+    VICTORY: (exp: number, gold: number) => `승리했습니다. 경험 +${exp} · 골드 +${gold}`,
+    FIRST_BOSS_GOLD: (gold: number) => `첫 보스 토벌 보상 · 골드 +${gold}`,
+    BLOOD_OATH_HEAL: (health: number) => `피의 서약으로 생명을 ${health}만큼 회복했습니다.`,
+    WORLD_DEVOUR_HEALTH: (health: number) => `세계 포식자가 영혼을 흡수해 최대 생명이 ${health}만큼 늘었습니다.`,
+    IMMORTAL_WARRIOR_HEAL: (health: number) => `불멸의 전사 효과로 생명을 ${health}만큼 회복했습니다.`,
+    INFINITE_DEVOUR_HEAL: (health: number) => `무한 포식 효과로 생명을 ${health}만큼 회복했습니다.`,
+    STAR_CORE_RESTORE: '별의 핵이 기력을 모두 회복했습니다.',
     LOOT_GET: (name: string) => `전리품: ${name}`,
     LOOT_PREFIX: (name: string) => `접두사 부여: [${name}]`,
     PRESTIGE_RARE_DROP: (name: string) => `✦ [심연의 메아리] 보스가 희귀 장비를 떨어뜨렸습니다: ${name}`,
@@ -69,24 +75,24 @@ export const MSG = {
     // fix/signature-set-two-hand: 양손 시그니처 무기가 세트 카운트에 2피스로 반영됐을 때
     // EquipmentPanel "세트 진행도" 카드에 표시하는 힌트 1줄.
     SIGNATURE_SET_TWO_HAND_HINT: '💡 양손 무기는 보조 슬롯을 함께 차지해 2피스로 계산됩니다.',
-    LEGACY_ESSENCE: (n: number) => `레거시 에센스 +${n}`,
-    LEGACY_RANK: (n: number) => `레거시 랭크 ${n} 달성!`,
+    LEGACY_ESSENCE: (n: number) => `계승 정수 +${n}`,
+    LEGACY_RANK: (n: number) => `계승 단계 ${n} 달성`,
     // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.
     MIRROR_REVIVE: '[에테르 수호] 거울의 가호가 치명상을 막아냈습니다!',
-    MIRROR_PURCHASE: (name: string, newLevel: number, cost: number) => `[에테르 거울] ${name} Lv.${newLevel} 각인 완료 (에센스 -${cost})`,
+    MIRROR_PURCHASE: (name: string, newLevel: number, cost: number) => `에테르 거울에 ${name} ${newLevel}단계를 새겼습니다. 계승 정수 -${cost}`,
     MIRROR_MAX_LEVEL: (name: string) => `${name}은(는) 이미 최대 레벨입니다.`,
     MIRROR_ESSENCE_INSUFFICIENT: (cost: number) => `에센스가 부족합니다. (필요: ${cost})`,
     // slice 19: 스탯 상승 표기 — 레벨업이 무엇을 바꿨는지 로그에서 즉시 확인 (성장 가시화)
-    LEVEL_UP: (lv: number, atk: number, hp: number) => `⬆️ 레벨 업! Lv.${lv} — ATK +${atk} / HP +${hp}`,
-    LEVEL_MILESTONE: (lv: number, gold: number) => `🎖️ Lv.${lv} 달성! 골드 ${gold.toLocaleString()} 획득`,
-    LEVEL_MAJOR_MILESTONE: (lv: number, atk: number, hp: number, mp: number) => `✨ Lv.${lv} 메이저 마일스톤! ATK+${atk} / HP+${hp} / MP+${mp} 영구 증가`,
-    EQUIP_LEVEL_REQUIRED: (name: string, lv: number) => `${name}은(는) Lv.${lv} 이상에서 장착할 수 있습니다.`,
-    BUFF_EXPIRED: '버프 효과가 만료되었습니다.',
-    DEFEAT: '전투에서 패배했습니다. 레거시 보너스는 유지됩니다.',
+    LEVEL_UP: (level: number, attack: number, health: number) => `레벨 ${level} 상승 · 공격력 +${attack} · 생명 +${health}`,
+    LEVEL_MILESTONE: (level: number, gold: number) => `레벨 ${level} 달성 · 골드 ${gold.toLocaleString()} 획득`,
+    LEVEL_MAJOR_MILESTONE: (level: number, attack: number, health: number, energy: number) => `레벨 ${level} 성장 보너스 · 공격력 +${attack} · 생명 +${health} · 기력 +${energy}`,
+    EQUIP_LEVEL_REQUIRED: (name: string, level: number) => `${name} 장착에는 레벨 ${level} 이상이 필요합니다.`,
+    BUFF_EXPIRED: '강화 효과가 끝났습니다.',
+    DEFEAT: '전투에서 쓰러졌습니다. 계승한 힘은 다음 여정에도 남습니다.',
     // C-1 (B+ 2026-06): 첫 죽음 영구 메타 보상 안내 — "죽음도 성장이다".
-    FIRST_DEATH_META: (atk: number, hp: number) => `[각성] 첫 죽음의 대가로 영구 힘을 얻었습니다. (ATK +${atk}, 최대 HP +${hp}) 다음 도전은 더 강하게 시작합니다.`,
+    FIRST_DEATH_META: (attack: number, health: number) => `첫 패배를 딛고 영구적인 힘을 얻었습니다. 공격력 +${attack} · 최대 생명 +${health}. 다음 여정은 더 강하게 시작합니다.`,
     // B-1 (B+ 2026-06): 시작 부트 — 캐릭터 생성 직후 첫 유물 선택 안내.
-    START_BOOT_RELIC: '[유산] 여정을 시작하기 전, 첫 유물을 선택하십시오. 당신의 빌드는 여기서 시작됩니다.',
+    START_BOOT_RELIC: '여정을 떠나기 전, 함께할 첫 유물을 고르세요. 이 선택이 앞으로의 전투 방식을 만듭니다.',
 
     // --- 상태이상 (Status Effects) ---
     // cycle 107: 플레이어가 freeze/stun 상태에서 턴을 스킵할 때의 안내 — 적의
@@ -123,19 +129,19 @@ export const MSG = {
     // --- 프리미엄 (Premium) ---
     PREMIUM_PURCHASE: (name: string, cost: number) => `${name} 구매 완료 (${cost} 크리스탈)`,
     PREMIUM_NOT_ENOUGH: '에테르 크리스탈이 부족합니다.',
-    PREMIUM_INV_EXPAND: (size: number) => `인벤토리 확장! (최대 ${size}칸)`,
+    PREMIUM_INV_EXPAND: (size: number) => `가방을 ${size}칸까지 확장했습니다.`,
 
     // --- 강화 (Enhancement) ---
     ENHANCE_SUCCESS: (name: string, lv: number) => `✨ [${name}] +${lv} 강화 성공!`,
     ENHANCE_FAIL: (name: string, lv: number) => `💔 [${name}] +${lv} 강화 실패. 등급 유지.`,
     ENHANCE_MAX_LEVEL: '이미 최고 강화 등급입니다 (+10).',
-    ENHANCE_NO_GOLD: (cost: number) => `강화 비용이 부족합니다. (필요: ${cost}G)`,
+    ENHANCE_NO_GOLD: (cost: number) => `강화할 골드가 부족합니다. 필요 골드: ${cost}`,
     ENHANCE_NO_MATERIAL: (name: string, count: number) => `${name}이(가) 부족합니다. (필요: ${count}개)`,
     ENHANCE_NOT_EQUIP: '강화는 장비 아이템에만 가능합니다.',
 
     // --- 주간 미션 (Weekly Mission) ---
     // cycle 116: WEEKLY_MISSION_COMPLETE/RESET 제거 — 0건 사용. CLAIM만 active.
-    WEEKLY_MISSION_CLAIM: (gold: number, crystals?: number) => `주간 보상 수령: +${gold}G${crystals ? ` +${crystals}💎` : ''}`,
+    WEEKLY_MISSION_CLAIM: (gold: number, crystals?: number) => `주간 보상 · 골드 +${gold}${crystals ? ` · 수정 +${crystals}` : ''}`,
 
     // --- 도전 설정 ---
     // cycle 116: CHALLENGE_COMPLETE 제거 — 0건 사용. START만 active.
@@ -160,7 +166,7 @@ export const MSG = {
 
     // --- 신규 직업 스킬 (Sprint 16) ---
     SKILL_EXTRA_TURN: (name: string) => `[${name}] 시간이 흘러갑니다 — 추가 행동 획득!`,
-    SKILL_RESET_COOLDOWNS: (name: string) => `[${name}] 모든 쿨타임이 초기화되었습니다!`,
+    SKILL_RESET_COOLDOWNS: (name: string) => `${name} 효과로 모든 기술을 바로 다시 사용할 수 있습니다.`,
 
     // cycle 116: 데드 키 제거 — REST_FULL/PARTIAL(REST_DONE_FULL이 active),
     // INVENTORY_FULL(INV_FULL active), BOSS_ENCOUNTER/AREA_BOSS_ENCOUNTER,
@@ -171,17 +177,17 @@ export const MSG = {
 
     // --- 스킬 교체 ---
     SKILL_SWAP: (oldName: string, newName: string) => `스킬 교체: [${oldName}] → [${newName}]`,
-    SKILL_SWAP_COST: (gold: number) => `스킬 교체 비용: ${gold}G`,
+    SKILL_SWAP_COST: (gold: number) => `기술 교체 비용 · 골드 ${gold}`,
 
     // --- 직업/클래스 ---
     CLASS_TIER_0: '기본',
     CLASS_TIER_1: '1차 전직',
     CLASS_TIER_2: '2차 전직',
     CLASS_TIER_3: '최종 전직',
-    CLASS_STAT_HP: 'HP',
-    CLASS_STAT_MP: 'MP',
-    CLASS_STAT_ATK: 'ATK',
-    CLASS_REQ_LEVEL: (lv: number) => `Lv.${lv} 이상`,
+    CLASS_STAT_HP: '생명',
+    CLASS_STAT_MP: '기력',
+    CLASS_STAT_ATK: '공격력',
+    CLASS_REQ_LEVEL: (level: number) => `레벨 ${level} 이상`,
     CLASS_TREE_TITLE: '전직 계통도',
     CLASS_CURRENT: '현재 직업',
     CLASS_AVAILABLE: '전직 가능',
@@ -192,11 +198,11 @@ export const MSG = {
     MONSTER_WEAKNESS: '약점',
     MONSTER_RESISTANCE: '내성',
     MONSTER_KILL_COUNT: (n: number) => `처치 ${n}회`,
-    EQUIP_STAT_COMPARE: '스탯 비교',
+    EQUIP_STAT_COMPARE: '능력 비교',
     // cycle 116: EQUIP_EQUIPPED / UI_EQUIPPED 둘 다 '장착 중' 중복 정의였음. 둘 다 제거.
 
     // --- 인벤토리/장비 액션 ---
-    INV_ITEM_NOT_FOUND: '인벤토리에 없는 아이템입니다.',
+    INV_ITEM_NOT_FOUND: '가방에 없는 아이템입니다.',
     EQUIP_JOB_RESTRICT: (job: string | undefined, name: string | undefined) => `${job}은(는) ${name}을(를) 장착할 수 없습니다.`,
     EQUIP_TWO_HAND_SHIELD_BLOCK: '양손 무기 사용 중에는 방패를 장착할 수 없습니다.',
     EQUIP_TWO_HAND_OFFHAND_RELEASE: '양손 무기로 전환되어 보조 손 장비가 해제되었습니다.',
@@ -207,16 +213,16 @@ export const MSG = {
     EQUIP_OFFHAND_REPLACE: '보조 손 장비를 교체했습니다.',
     EQUIP_DONE: (name: string) => `${name} 장착.`,
     CHALLENGE_NO_CONSUMABLE: '물약 없이: 회복과 보조 아이템을 사용할 수 없습니다.',
-    ITEM_USE_BUFF: (name: string) => `${name} 사용: 버프 활성화`,
+    ITEM_USE_BUFF: (name: string) => `${name}을 사용해 강화 효과를 얻었습니다.`,
     GOLD_INSUFFICIENT: '골드가 부족합니다.',
-    INV_FULL: '인벤토리가 가득 찼습니다.',
+    INV_FULL: '가방이 가득 찼습니다.',
     SHOP_BUY_DONE: (name: string | undefined) => `${name} 구매 완료.`,
-    SHOP_SELL_DONE: (name: string | undefined, gold: number) => `${name} 판매 완료 (+${gold}G)`,
+    SHOP_SELL_DONE: (name: string | undefined, gold: number) => `${name} 판매 · 골드 +${gold}`,
     CRAFT_MAT_INSUFFICIENT: (name: string) => `재료 부족: ${name}`,
     CRAFT_DONE: (name: string) => `${name} 제작 완료`,
     QUEST_NOT_COMPLETE: '아직 완료 조건을 만족하지 못했습니다.',
     QUEST_REWARD_ITEM: (name: string) => `보상 아이템: ${name}`,
-    QUEST_TRAIT_BONUS: (title: string, gold: number) => `[${title}] 공명 보상 +${gold}G`,
+    QUEST_TRAIT_BONUS: (title: string, gold: number) => `${title} 공명 보상 · 골드 +${gold}`,
     QUEST_DONE: (title: string) => `퀘스트 완료: ${title}`,
     ACH_NOT_UNLOCKED: '아직 달성하지 못한 업적입니다.',
     ACH_ALREADY_CLAIMED: '이미 수령한 업적입니다.',
@@ -227,7 +233,7 @@ export const MSG = {
     ITEM_NOT_FOUND: '아이템을 찾을 수 없습니다.',
     SKILL_BRANCH_CHOSEN: (name: string, choice: string) => `[${name}] 분기 ${choice} 선택 완료.`,
     BULK_SELL_EMPTY: '판매할 저가 재료가 없습니다.',
-    BULK_SELL_DONE: (count: number, gold: number) => `재료 ${count}개 일괄 판매 (+${gold}G)`,
+    BULK_SELL_DONE: (count: number, gold: number) => `재료 ${count}개 판매 · 골드 +${gold}`,
 
     // --- 이동/탐험 ---
     MOVE_BLOCKED: '지금은 이동할 수 없는 상태입니다.',
@@ -235,7 +241,7 @@ export const MSG = {
     MOVE_SEASON_ONLY: '⚡ 시즌 이벤트 기간에만 접근할 수 있는 지역입니다.',
     MOVE_NO_EXIT: '갈 수 없는 곳입니다.',
     MOVE_LEVEL_REQUIRED: (lv: number | string) => `레벨 ${lv} 이상에서 입장할 수 있습니다.`,
-    TOWN_BUFF_CLEAR: '마을에 복귀하며 임시 버프와 상태이상이 정리되었습니다.',
+    TOWN_BUFF_CLEAR: '마을에 돌아와 임시 강화 효과와 상태 이상을 정리했습니다.',
     EXPLORE_BLOCKED: '탐색할 수 없는 상태입니다.',
     TOWN_PEACEFUL: '마을 주변은 평화롭습니다.',
     MAP_UNKNOWN: '알 수 없는 위치입니다. 시작 마을로 이동하세요.',
@@ -243,13 +249,12 @@ export const MSG = {
     EXPLORE_QUIET: '주변이 조용합니다.',
     EXPLORE_RELIC_FOUND: '✨ [유물 발견] 전투 직전, 고대의 유물이 눈에 들어옵니다!',
     REST_SAFE_ONLY: '휴식은 안전한 지역에서만 가능합니다.',
-    REST_GOLD_INSUFFICIENT: (cost: number) => `골드가 부족합니다. (필요: ${cost}G)`,
+    REST_GOLD_INSUFFICIENT: (cost: number) => `휴식할 골드가 부족합니다. 필요 골드: ${cost}`,
     // cycle 116: REST_DONE 제거 — REST_DONE_FULL이 active.
     SKILL_SWAP_SAFE_ONLY: '스킬 교체는 안전한 지역에서만 가능합니다.',
-    SKILL_SWAP_GOLD_INSUFFICIENT: (cost: number) => `골드 부족 (필요: ${cost}G)`,
+    SKILL_SWAP_GOLD_INSUFFICIENT: (cost: number) => `기술을 바꿀 골드가 부족합니다. 필요 골드: ${cost}`,
     SKILL_NO_BRANCH: '해당 스킬에 분기가 없습니다.',
     SKILL_INVALID_BRANCH: '유효하지 않은 분기입니다.',
-    INIT_RECORD_APPLIED: '초기 기록이 적용되었습니다. 이름을 정하고 다시 시작해 주세요.',
     JOB_CHANGE_INVALID: '전직 가능한 직업이 아닙니다.',
     JOB_CHANGE_LEVEL: '전직 레벨이 부족합니다.',
     QUEST_TOWN_ONLY: '퀘스트 수락은 마을 게시판에서만 가능합니다.',
@@ -264,23 +269,23 @@ export const MSG = {
 
     // --- 이동/탐험 동적 메시지 ---
     MOVE_EXITS: (exits: string) => `이동 가능한 지역: ${exits}`,
-    MOVE_ARRIVED: (loc: string) => `${loc}로 이동했습니다.`,
-    MOVE_NEW_AREA: (loc: string) => `🗺️ 새 지역 발견: ${loc}`,
+    MOVE_ARRIVED: (loc: string) => `${loc}에 도착했습니다.`,
+    MOVE_NEW_AREA: (loc: string) => `처음 발견한 지역은 ${loc}입니다.`,
     // C-2 (B+ 2026-06): 갓 진입한 위험 지역(권장 레벨 근접) 경고 — 정예/보스 readability.
-    MOVE_AREA_DANGER: (lv: number | string) => `⚠️ 권장 레벨 ${lv} 지역입니다. 아직 이곳은 당신에게 벅찹니다 — 정예와 구역 보스를 경계하고, 위태로우면 후퇴하십시오.`,
+    MOVE_AREA_DANGER: (lv: number | string) => `이 지역의 권장 레벨은 ${lv}입니다. 정예와 구역 보스를 주의하고, 생명이 부족하면 돌아가세요.`,
     GRAVE_FOUND_MULTI: (count: number) => `근처에서 당신의 유해 ${count}구를 발견했습니다.`,
     GRAVE_FOUND_SINGLE: '근처에서 당신의 유해를 발견했습니다.',
-    START_CALLSIGN: (name: string) => `[콜사인] ${name} — 에테리아 기록이 열렸습니다.`,
-    START_INITIAL_SKILL: (name: string) => `초기 스킬: ${name}`,
+    START_JOURNEY: (name: string) => `${name}의 첫 여정이 시작됩니다.`,
+    START_SKILL: (name: string) => `첫 기술로 익힌 능력은 ${name}입니다.`,
     AI_QUOTA_REACHED: '오늘 AI 호출 한도에 도달했습니다.',
     ABYSS_FLOOR_WARNING: (floor: number) => `🌀 심연 ${floor}층 — 강대한 적들이 기다립니다...`,
     ENEMY_APPEAR: (name: string) => `${name} 등장!`,
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',
     // 캠프파이어 노드 (Phase 2, B+ 2026-06): 휴식 vs 단련 결정 (StS 캠프파이어).
     CAMPFIRE_DESC: '🔥 사그라드는 모닥불을 발견했습니다. 잠시 숨을 고를 수 있습니다 — 무엇을 하시겠습니까?',
-    CAMPFIRE_REST_CHOICE: '휴식 — 체력과 마나를 회복한다',
+    CAMPFIRE_REST_CHOICE: '휴식 — 생명과 기력을 회복한다',
     CAMPFIRE_FORGE_CHOICE: '단련 — 무기를 손질해 다음 전투를 대비한다',
-    CAMPFIRE_REST_LOG: (hp: number, mp: number) => `🔥 불 곁에서 숨을 고릅니다. HP +${hp}, MP +${mp} 회복했습니다.`,
+    CAMPFIRE_REST_LOG: (health: number, energy: number) => `불 곁에서 숨을 고르며 생명 +${health} · 기력 +${energy} 회복했습니다.`,
     CAMPFIRE_FORGE_LOG: (pct: number, turns: number) => `🔥 무기를 벼립니다. 다음 전투 ${turns}턴 동안 공격력 +${pct}%.`,
     // 탐험 스카우팅 (2026-07): 사전 정찰 카드 — 체인/캠프파이어 다음 우선순위 결정 노드.
     SCOUT_DESC: '🔭 앞길에서 낯선 기척이 느껴집니다. 어떻게 정찰하시겠습니까?',
@@ -303,18 +308,18 @@ export const MSG = {
     BOSS_GAUGE_AVOID_LOG: '🌫️ 흔적을 피해 발걸음을 돌립니다. 기척은 여전히 짙게 남아있습니다.',
     MAP_BADGE_BOSS_GAUGE: (pct: number) => `게이지 ${pct}%`,
     EXPEDITION_CLEAR_RECAP: (bossName: string, kills: number, gold: number) => (
-        `🏆 [원정 완료] ${bossName} 격파! 이번 원정 처치 ${kills}마리 · 획득 ${gold}G`
+        `원정 완료 · ${bossName} 격파 · 적 ${kills}마리 처치 · 골드 +${gold}`
     ),
-    EVENT_SUCCESS_GOLD: (gold: number) => `성공! ${gold}G를 획득했습니다.`,
+    EVENT_SUCCESS_GOLD: (gold: number) => `선택에 성공했습니다. 골드 +${gold}`,
     EVENT_FAIL_DAMAGE: (dmg: number) => `실패... ${dmg} 피해를 입었습니다.`,
-    REST_DONE_FULL: (cost: number) => `휴식 완료. HP/MP가 회복되었습니다. (-${cost}G)`,
+    REST_DONE_FULL: (cost: number) => `휴식을 마치고 생명과 기력을 모두 회복했습니다. 골드 -${cost}`,
     JOB_CHANGE_DONE: (jobName: string) => `${jobName} 전직 완료!`,
     BOUNTY_ACCEPTED_NEW: (target: string, count: number) => `새로운 현상수배 수락: ${target} ${count}마리`,
-    TITLE_UNLOCKED: (label: string) => `🏆 칭호 획득: [${label}]`,
+    TITLE_UNLOCKED: (label: string) => `새 칭호를 얻었습니다. ${label}`,
     ASCEND_DONE: (rank: number, title: string) => `⚡ [에테르 환생 ${rank}회] ${title} 칭호 획득! 영구 보너스 적용됨.`,
     DAILY_PROTOCOL_DONE: (reward: string) => `📋 일일 프로토콜 완료: ${reward}`,
     CHAIN_REWARD_RELIC: (name: string) => `✨ [체인 보상] 유물 [${name}] 획득!`,
-    CHAIN_REWARD_COMBAT_BONUS: (atkPct: number, turns: number) => `⚔ [최후의 영웅] 기사의 혼령 합류! ATK +${atkPct}% ${turns}턴`,
+    CHAIN_REWARD_COMBAT_BONUS: (attackPercent: number, turns: number) => `최후의 영웅이 합류해 ${turns}턴 동안 공격력이 ${attackPercent}% 오릅니다.`,
 
     // --- 체인 저널 (Quest 탭) ---
     CHAIN_JOURNAL_TITLE: '진행 중인 이야기',
@@ -349,14 +354,15 @@ export const MSG = {
     COMBAT_DIGEST_KILL: (name: string) => `${name} 처치`,
     COMBAT_DIGEST_LOOT: (items: string) => `전리품 ${items}`,
     COMBAT_DIGEST: (parts: string) => `전투 정리: ${parts}`,
-    COMBAT_DIGEST_BOSS_REWARD: (bonus: number, hint: string) => `보스 보상: ${bonus > 0 ? `초회 토벌 +${bonus}G` : '보스 전리품'} · ${hint}`,
+    COMBAT_DIGEST_BOSS_REWARD: (bonus: number, hint: string) => `보스 보상: ${bonus > 0 ? `첫 토벌 골드 +${bonus}` : '보스 전리품'} · ${hint}`,
+    KILL_STACK_ATTACK: (source: string, percent: number) => `${source} 효과로 이번 전투의 공격력이 ${percent}% 올랐습니다.`,
     COMBAT_DIGEST_EQUIP_UPGRADE: (name: string, summary: string) => `장비 갱신: ${name} · ${summary}`,
     COMBAT_DIGEST_TRAIT_HINT: (name: string, summary: string) => `성향 공명: ${name} · ${summary}`,
     COMBAT_DIGEST_DEFAULT_SUMMARY: '장비 효율 상승',
 
     // --- 전투 상태 ---
     COMBAT_NOT_IN_BATTLE: '전투 상태가 아닙니다.',
-    COMBAT_ITEM_NOT_FOUND: '인벤토리에 없는 아이템입니다.',
+    COMBAT_ITEM_NOT_FOUND: '가방에 없는 아이템입니다.',
     COMBAT_CONSUMABLE_ONLY: '전투 중에는 소모품만 사용할 수 있습니다.',
     DEMON_KING_SLAIN_ASCEND: '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...',
     TRUE_GOD_SLAIN: '🌟 원시의 신이 쓰러졌습니다. 세계의 진실이 밝혀집니다...',
