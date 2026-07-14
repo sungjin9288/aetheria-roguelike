@@ -260,6 +260,7 @@ export const MSG = {
     JOB_CHANGE_LEVEL: '전직 레벨이 부족합니다.',
     QUEST_TOWN_ONLY: '퀘스트 수락은 마을 게시판에서만 가능합니다.',
     QUEST_ALREADY_ACCEPTED: '이미 수락한 퀘스트입니다.',
+    QUEST_ALREADY_COMPLETED: '이미 완료해 보상을 받은 퀘스트입니다.',
     QUEST_LEVEL_REQUIRED: (lv: number | undefined) => `레벨 ${lv} 이상부터 수락할 수 있는 퀘스트입니다.`,
     QUEST_ACCEPTED: (title: string | undefined) => `퀘스트 수락: ${title}`,
     BOUNTY_TOWN_ONLY: '현상수배 수주는 마을 게시판에서만 가능합니다.',

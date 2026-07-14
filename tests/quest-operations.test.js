@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 
 import { getAdventureGuidance } from '../src/utils/adventureGuide.js';
 import { getQuestBoardRecommendations } from '../src/utils/questOperations.js';
+import { createQuestActions } from '../src/hooks/gameActions/questActions.js';
+import { MSG } from '../src/data/messages.js';
 
 test('quest board surfaces story and build operations for a fresh run', () => {
     const player = {
@@ -35,6 +37,60 @@ test('quest board surfaces story and build operations for a fresh run', () => {
     assert.ok(featuredLanes.includes('build'));
     assert.ok(featuredIds.includes(68));
     assert.ok(board.featured.some((entry) => entry.quest.title.includes('[스토리]')));
+});
+
+test('quest board does not offer static quests that already paid their reward', () => {
+    const player = {
+        job: '모험가',
+        level: 1,
+        loc: '시작의 마을',
+        hp: 178,
+        maxHp: 178,
+        mp: 52,
+        maxMp: 52,
+        quests: [],
+        relics: [],
+        equip: { weapon: null, offhand: null },
+        inv: [],
+        stats: {
+            claimedQuestIds: [80, 81],
+            crafts: 0,
+            bountiesCompleted: 0,
+            visitedMaps: ['시작의 마을', '고요한 숲'],
+        },
+    };
+
+    const board = getQuestBoardRecommendations(player);
+    const visibleIds = [
+        ...board.featured.map((entry) => entry.quest.id),
+        ...board.backlog.map((entry) => entry.quest.id),
+        ...board.locked.map((quest) => quest.id),
+    ];
+
+    assert.ok(!visibleIds.includes(80));
+    assert.ok(!visibleIds.includes(81));
+});
+
+test('quest action rejects direct re-accept of a completed static quest', () => {
+    const logs = [];
+    let dispatchCount = 0;
+    const player = {
+        level: 1,
+        loc: '시작의 마을',
+        quests: [],
+        stats: { claimedQuestIds: [80] },
+    };
+    const actions = createQuestActions({
+        player,
+        grave: null,
+        dispatch: () => { dispatchCount += 1; },
+        addLog: (type, text) => logs.push({ type, text }),
+    }, { emitUnlockedTitles: () => {} });
+
+    actions.acceptQuest(80);
+
+    assert.equal(dispatchCount, 0);
+    assert.deepEqual(logs, [{ type: 'info', text: MSG.QUEST_ALREADY_COMPLETED }]);
 });
 
 test('quest board featured operations include a town prep run plan', () => {

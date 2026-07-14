@@ -125,7 +125,10 @@ const GameRoot = ({
     const prevPhaseRef = useRef<{ p2: boolean; p3: boolean }>({ p2: false, p3: false });
     useEffect(() => {
         const e = engine.enemy;
-        if (!e) { prevPhaseRef.current = { p2: false, p3: false }; return undefined; }
+        if (!e) {
+            prevPhaseRef.current = { p2: false, p3: false };
+            return;
+        }
         const p2 = !!e.phase2Triggered;
         const p3 = !!e.phase3Triggered;
         const prev = prevPhaseRef.current;
@@ -133,11 +136,14 @@ const GameRoot = ({
         if (p3 && !prev.p3) banner = { n: 3, name: e.name };
         else if (p2 && !prev.p2) banner = { n: 2, name: e.name };
         prevPhaseRef.current = { p2, p3 };
-        if (!banner) return undefined;
-        setPhaseBanner(banner);
+        if (banner) setPhaseBanner(banner);
+    }, [engine.enemy]);
+
+    useEffect(() => {
+        if (!phaseBanner) return undefined;
         const timer = window.setTimeout(() => setPhaseBanner(null), 2000);
         return () => window.clearTimeout(timer);
-    }, [engine.enemy]);
+    }, [phaseBanner]);
 
     const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
     const handleOpenEquipment = useCallback(() => {

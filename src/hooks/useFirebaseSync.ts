@@ -22,10 +22,21 @@ import { isMockRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
+import { clearLocalGameSnapshot, readLocalGameSnapshot, writeLocalGameSnapshot } from '../utils/localGameSnapshot';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
 const AUTH_TIMEOUT_MS = 8000;
 const makeLogPayload = (type: any, text: any) => ({ type, text, id: `${Date.now()}_${Math.random()}` });
+
+const getOfflineBootstrapData = () => {
+    const localSnapshot = readLocalGameSnapshot();
+    if (!localSnapshot) return { player: INITIAL_STATE.player };
+
+    const activeData = migrateData(localSnapshot);
+    if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
+    if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
+    return activeData;
+};
 
 /**
  * useFirebaseSync — Firebase 인증, 실시간 동기화, 리더보드, 자동 저장
@@ -46,6 +57,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
 
     const lastLoadedTimestampRef = useRef(state.lastLoadedTimestamp);
     const hasBootLogRef = useRef(state.logs.length > 0);
+    const previousLocalPlayerNameRef = useRef(player?.name);
 
     useEffect(() => {
         if (!smokeMode || syncStatus === 'offline') return;
@@ -66,7 +78,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
         const fallbackAuthOffline = (message: any) => {
             if (authResolved) return;
             authResolved = true;
-            dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
+            dispatch({ type: AT.LOAD_DATA, payload: getOfflineBootstrapData() });
             dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
             dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('warning', message) });
         };
@@ -149,7 +161,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
         const fallbackToOffline = (message: any) => {
             if (bootResolved) return;
             bootResolved = true;
-            dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
+            dispatch({ type: AT.LOAD_DATA, payload: getOfflineBootstrapData() });
             dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
             dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('warning', message) });
         };
@@ -183,7 +195,11 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
                     }
                 }
             } else {
-                dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
+                const localData = getOfflineBootstrapData();
+                dispatch({ type: AT.LOAD_DATA, payload: localData });
+                if (localData.player?.name) {
+                    dispatch({ type: AT.SET_SYNC_STATUS, payload: 'syncing' });
+                }
             }
         }, (e: any) => {
             console.warn('User data subscribe failed', e);
@@ -196,6 +212,38 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
             unsubscribe();
         };
     }, [uid, bootStage, dispatch, smokeMode]);
+
+    // Cloud sync가 지연되거나 끊겨도 모바일 런이 앱 재실행 한 번으로 사라지지 않도록
+    // 동일한 저장 payload를 로컬에 미러링한다. 기존 Firestore 문서가 있으면 원격 데이터가
+    // 기준이며, 문서가 아직 없으면 오프라인 런을 최초 cloud snapshot으로 승격한다.
+    useEffect(() => {
+        const previousPlayerName = previousLocalPlayerNameRef.current;
+        previousLocalPlayerNameRef.current = player?.name;
+        if (smokeMode) return undefined;
+        if (!player?.name) {
+            if (previousPlayerName) clearLocalGameSnapshot();
+            return undefined;
+        }
+
+        const timer = setTimeout(() => {
+            const savedAt = Date.now();
+            writeLocalGameSnapshot({
+                player: {
+                    ...player,
+                    stats: { ...player.stats, lastSeenAt: savedAt },
+                },
+                gameState,
+                enemy,
+                grave,
+                currentEvent,
+                quickSlots,
+                version: CONSTANTS.DATA_VERSION,
+                savedAt,
+            });
+        }, BALANCE.DEBOUNCE_SAVE_MS);
+
+        return () => clearTimeout(timer);
+    }, [player, gameState, enemy, grave, currentEvent, quickSlots, smokeMode]);
 
     // --- Auto Save (Debounced) ---
     useEffect(() => {

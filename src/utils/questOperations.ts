@@ -340,10 +340,19 @@ export const getQuestBoardRecommendations = (player: Player, maps: any = MAPS, q
     const activeEntries = getActiveQuestEntries(player)
         .map((entry: any) => enrichActiveQuestEntry(entry, player, traitProfile, maps));
     const activeRegularQuestIds = new Set(activeEntries.filter((entry: any) => !entry.isBounty).map((entry: any) => entry.id));
+    const claimedRegularQuestIds = new Set(
+        Array.isArray((player?.stats as any)?.claimedQuestIds)
+            ? (player.stats as any).claimedQuestIds
+            : [],
+    );
     const playerLevel = player?.level || 1;
 
     const scoredAvailable = questCatalog
-        .filter((quest: any) => !activeRegularQuestIds.has(quest.id) && playerLevel >= (quest.minLv || 1))
+        .filter((quest: any) => (
+            !activeRegularQuestIds.has(quest.id)
+            && !claimedRegularQuestIds.has(quest.id)
+            && playerLevel >= (quest.minLv || 1)
+        ))
         .map((quest: any) => scoreQuest(quest, player, traitProfile, activeEntries, maps))
         // cycle 347: _sortKey로 정렬 후 strip (score 외부 노출 0건이므로).
         .sort((left: any, right: any) => right._sortKey - left._sortKey || left.quest.title.localeCompare(right.quest.title, 'ko'))
@@ -371,7 +380,11 @@ export const getQuestBoardRecommendations = (player: Player, maps: any = MAPS, q
 
     const backlog = scoredAvailable.filter((entry: any) => !usedIds.has(entry.quest.id));
     const locked = questCatalog
-        .filter((quest: any) => !activeRegularQuestIds.has(quest.id) && playerLevel < (quest.minLv || 1))
+        .filter((quest: any) => (
+            !activeRegularQuestIds.has(quest.id)
+            && !claimedRegularQuestIds.has(quest.id)
+            && playerLevel < (quest.minLv || 1)
+        ))
         .sort((left: any, right: any) => (left.minLv || 1) - (right.minLv || 1))
         .slice(0, 6);
 

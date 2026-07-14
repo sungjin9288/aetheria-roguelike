@@ -12,6 +12,10 @@ export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
             if (player.quests.some((q: any) => q.id === qId)) return addLog('error', MSG.QUEST_ALREADY_ACCEPTED);
             const qData = DB.QUESTS.find((q: any) => q.id === qId);
             if (!qData) return;
+            const claimedQuestIds = Array.isArray(player.stats?.claimedQuestIds)
+                ? player.stats.claimedQuestIds
+                : [];
+            if (claimedQuestIds.includes(qId)) return addLog('info', MSG.QUEST_ALREADY_COMPLETED);
             if (player.level < (qData.minLv || 1)) return addLog('error', MSG.QUEST_LEVEL_REQUIRED(qData.minLv));
             dispatch({
                 type: AT.SET_PLAYER,

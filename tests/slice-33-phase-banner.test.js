@@ -38,6 +38,10 @@ test('slice 33: GameRoot — phase 플립 감지 + 배너 렌더', async () => {
         'false→true 플립만 트리거');
     assert.ok(/setTimeout\([\s\S]{0,80}setPhaseBanner\(null\)[\s\S]{0,12}2000\)/.test(src),
         '~2s 자동 해제');
+    assert.ok(/\}, \[engine\.enemy\]\);\s*useEffect\(\(\) => \{\s*if \(!phaseBanner\)/.test(src),
+        '적 상태 감지와 배너 해제 타이머가 별도 effect');
+    assert.ok(/clearTimeout\(timer\);\s*\}, \[phaseBanner\]\)/.test(src),
+        '배너 자체 변경에만 자동 해제 타이머 cleanup');
 });
 
 test('slice 33: phase 플래그 계약 — CombatEngine이 phase2/3Triggered set + 이름 변경', async () => {
