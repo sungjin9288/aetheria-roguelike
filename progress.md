@@ -1,5 +1,25 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Checked (2026-07-14: latest main iOS device delivery):
+- Synced the current `8e5c34d` web bundle into both Capacitor shells and created a new signed archive at `build/ios/Aetheria.xcarchive` (`2026-07-14 13:45:57 KST`).
+- Confirmed archive metadata `com.aetheria.roguelike` 1.1.0 (2), team `KS96VQMVHD`, and a valid local code signature. The embedded profile expires on `2026-07-21 13:45:44 KST` and contains the target iPhone UDID.
+- Installed the archive on the paired iPhone 14 Pro Max and re-read the installed app metadata. The first launch exposed an untrusted developer profile, while archive signature, entitlements, profile-device membership, pairing, and Developer Mode were all valid.
+- Updated `ios-device-smoke.sh` to recognize this response and print the exact iPhone profile-trust handoff instead of leaving the generic CoreDevice security message unexplained.
+- After the profile was trusted, reran the full device smoke successfully. Latest install URL: `file:///private/var/containers/Bundle/Application/26017529-B46B-4513-86A4-9C4C37E5B3C6/App.app/`; foreground process `/App.app/App` pid `65643` remained alive after the 60-second hold.
+
+Verification:
+- `npm run mobile:doctor` -> iOS metadata and toolchain pass; Android release signing input remains missing.
+- `npm run cap:sync` -> pass.
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> `ARCHIVE SUCCEEDED`.
+- `codesign --verify --deep --strict build/ios/Aetheria.xcarchive/Products/Applications/App.app` -> valid on disk and satisfies its designated requirement.
+- `bash -n scripts/ios-device-smoke.sh` and focused guidance test -> pass.
+- `npm run verify` -> type-check, lint, unit 3233/3233, build guard pass; the existing `GameRoot.tsx` effect warning remains non-blocking.
+- `bash scripts/local-playtest.sh` -> desktop and mobile smoke pass.
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` -> metadata, install, foreground launch, initial process check, and 60-second process recheck pass.
+
+Next action:
+- Keep the iPhone unlocked and in foreground for the manual 5-minute first-session routine. Automated iOS delivery verification is complete.
+
 Done (2026-07-14: first-play player language and mobile verification reliability):
 - Replaced mechanical English state words on the first-play surfaces with direct Korean action language across the field controls, mission tracker, route map, world map, mobile loadout summary, and return briefing.
 - Removed the duplicated quest tracker `chips` payload. The UI now reads `nextStep`, `routeLabel`, `progressLabel`, and `returnLabel` directly from one tracker contract.

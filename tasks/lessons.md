@@ -19,6 +19,7 @@
 | 2026-06-01 | 모바일 visual smoke에서 Quest/Combat 패널이 실제보다 어둡게 캡처됨 | focus panel entrance animation의 initial opacity가 smoke screenshot timing과 겹쳐 첫 프레임 가독성을 떨어뜨렸음 | 실기기 acceptance 대상 패널은 첫 render부터 readable state여야 하며, QA 캡처 대상 surface에는 `initial={false}` 또는 동등한 immediate-visible contract를 적용한다 |
 | 2026-06-01 | 모바일 archive reset CTA가 하단 control panel에 pointer hit-test를 빼앗김 | archive console이 열린 상태에서도 bottom `ControlPanel`이 동시에 렌더되어 overlay CTA 아래 z-layer에서 pointer event를 가로챘음 | 모바일에서 modal/console CTA가 활성화되면 동일 영역의 underlying controls를 조건부 suppress하고, reachability source guard로 겹침 회귀를 고정한다 |
 | 2026-07-14 | 통합 Playwright가 Aetheria preview 대신 같은 포트의 다른 로컬 앱을 열어 연속 타임아웃 | preview는 `127.0.0.1`에 기동했지만 Playwright 기본 URL은 `localhost`여서 환경에 따라 서로 다른 loopback 서버로 해석됨 | preview를 기동한 스크립트는 실제 준비 확인에 사용한 정확한 URL을 모든 후속 smoke, perf, E2E 명령에 명시적으로 전달한다 |
+| 2026-07-14 | iOS archive 설치 후 launch 보안 오류가 서명 손상과 기기 신뢰 승인 대기를 한 문장으로 함께 보고함 | CoreDevice의 보안 오류가 invalid signature, entitlement, untrusted profile 가능성을 합쳐 반환해 원인 경계가 불명확했음 | launch 보안 오류가 나면 archive 서명, entitlement, profile 만료·UDID, Developer Mode를 먼저 검증하고 모두 정상이면 기기 profile 신뢰 승인으로 분리해 정확한 설정 경로를 안내한다 |
 
 ---
 
@@ -75,6 +76,10 @@
 ### R13: Reuse The Exact Verified Preview URL
 - **Rule:** preview를 직접 기동하는 검증 스크립트는 준비 상태를 확인한 동일한 URL을 smoke, perf, Playwright E2E에 항상 전달한다
 - **Rationale:** `localhost`와 `127.0.0.1`은 같은 포트에서도 서로 다른 loopback 서버로 연결될 수 있으므로 기본 URL 추정은 다른 로컬 앱을 검증하는 false positive와 timeout을 만든다
+
+### R14: Diagnose iOS Trust Before Blaming The Archive
+- **Rule:** iOS launch가 security reason으로 거부되면 `codesign`, entitlement, embedded profile 만료·기기 UDID, Developer Mode를 확인하고, 조건이 정상이면 app regression이나 invalid archive가 아니라 device profile trust handoff로 기록한다
+- **Rationale:** CoreDevice는 서로 다른 보안 원인을 같은 오류 문장에 묶어 반환하므로 검증 없이 archive를 다시 만들면 원인을 해결하지 못한 채 signed build 이력만 반복하게 된다
 
 ---
 

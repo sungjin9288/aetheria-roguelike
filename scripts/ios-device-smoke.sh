@@ -84,11 +84,21 @@ run_timed "metadata after install" \
     --device "$DEVICE_ID" \
     --bundle-id "$BUNDLE_ID"
 
-run_timed "launch app" \
+launch_log="$(mktemp)"
+if ! run_timed "launch app" \
   xcrun devicectl device process launch \
     --device "$DEVICE_ID" \
     --terminate-existing \
-    "$BUNDLE_ID"
+    "$BUNDLE_ID" 2>&1 | tee "$launch_log"; then
+  if grep -Eq "not been explicitly trusted|Untrusted Developer" "$launch_log"; then
+    printf '%s\n' \
+      'The archive is installed, but this developer profile is not trusted on the iPhone.' \
+      'On the iPhone, open Settings > General > VPN & Device Management > Developer App, trust the profile, then rerun ios:device:smoke.' >&2
+  fi
+  rm -f "$launch_log"
+  exit 1
+fi
+rm -f "$launch_log"
 
 process_snapshot="$(mktemp)"
 run_timed "process check" \
