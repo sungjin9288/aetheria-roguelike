@@ -174,9 +174,9 @@ async function verifyCombatForecast(page) {
   await forecast.waitFor({ state: 'visible', timeout: 5000 });
   const text = await forecast.innerText();
   const tone = await forecast.getAttribute('data-forecast-tone');
-  ensure(text.includes('INTENT'), 'Combat forecast should expose INTENT');
-  ensure(text.includes('RESPONSE'), 'Combat forecast should expose RESPONSE');
-  ensure(text.includes('WINDOW'), 'Combat forecast should expose WINDOW');
+  ensure(text.includes('적의 행동'), 'Combat forecast should expose the enemy action');
+  ensure(text.includes('대응'), 'Combat forecast should expose the response');
+  ensure(text.includes('기회'), 'Combat forecast should expose the opportunity');
   ensure(['pressure', 'advantage', 'reward', 'steady'].includes(tone), 'Combat forecast should expose a known tone');
 }
 
@@ -188,9 +188,9 @@ async function verifyPostCombatDecisionStrip(page, options = {}) {
   await strip.waitFor({ state: 'visible', timeout: 5000 });
   const text = await strip.innerText();
   const tone = await strip.getAttribute('data-result-tone');
-  ensure(text.includes('STATE'), 'Post-combat decision strip should expose STATE');
-  ensure(text.includes('LOOT'), 'Post-combat decision strip should expose LOOT');
-  ensure(text.includes('NEXT'), 'Post-combat decision strip should expose NEXT');
+  ensure(text.includes('상태'), 'Post-combat decision strip should expose the current state');
+  ensure(text.includes('보상'), 'Post-combat decision strip should expose rewards');
+  ensure(text.includes('다음 행동'), 'Post-combat decision strip should expose the next action');
   ensure(['pressure', 'advantage', 'reward', 'steady'].includes(tone), 'Post-combat decision strip should expose a known tone');
   await verifyActionReachable(strip, 'Post-combat first-scan decision strip', {
     allowDisabled: true,
@@ -223,9 +223,9 @@ async function verifyRelicChoiceDecisionStrip(page, options = {}) {
   await strip.waitFor({ state: 'visible', timeout: 5000 });
   const text = await strip.innerText();
   const tone = await strip.getAttribute('data-relic-tone');
-  ensure(text.includes('PICK'), 'Relic choice decision strip should expose PICK');
-  ensure(text.includes('WHY'), 'Relic choice decision strip should expose WHY');
-  ensure(text.includes('BUILD'), 'Relic choice decision strip should expose BUILD');
+  ensure(text.includes('추천'), 'Relic choice decision strip should expose the recommendation');
+  ensure(text.includes('이유'), 'Relic choice decision strip should expose the reason');
+  ensure(text.includes('성장 방향'), 'Relic choice decision strip should expose the growth direction');
   ensure(['legendary', 'synergy', 'potential', 'steady'].includes(tone), 'Relic choice decision strip should expose a known tone');
   ensure(await page.locator('[data-relic-recommended="true"]').count() > 0, 'Relic choice should mark one recommended card');
   await verifyActionReachable(strip, 'Relic choice first-scan decision strip', {
@@ -259,9 +259,9 @@ async function verifyRunSummaryReflectionStrip(page, options = {}) {
   await strip.waitFor({ state: 'visible', timeout: 5000 });
   const text = await strip.innerText();
   const tone = await strip.getAttribute('data-run-tone');
-  ensure(text.includes('CAUSE'), 'Run summary reflection strip should expose CAUSE');
-  ensure(text.includes('LESSON'), 'Run summary reflection strip should expose LESSON');
-  ensure(text.includes('NEXT'), 'Run summary reflection strip should expose NEXT');
+  ensure(text.includes('결과'), 'Run summary reflection strip should expose the result');
+  ensure(text.includes('배운 점'), 'Run summary reflection strip should expose the lesson');
+  ensure(text.includes('다음 시도'), 'Run summary reflection strip should expose the next attempt');
   ensure(['pressure', 'growth', 'breakthrough', 'steady'].includes(tone), 'Run summary reflection strip should expose a known tone');
   await verifyActionReachable(strip, 'Run summary first-scan reflection strip', {
     allowDisabled: true,

@@ -117,7 +117,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                         <div className="flex items-start gap-2 text-xs font-fira text-slate-200/86">
                             <Package size={13} className="mt-0.5 text-[#d5b180]" />
                             <div>
-                                <div className="text-xs uppercase tracking-[0.16em] text-slate-500">Loot</div>
+                                <div className="text-xs text-slate-500">전리품</div>
                                 <div className="mt-0.5 leading-relaxed">{lootSummary}</div>
                             </div>
                         </div>
@@ -138,7 +138,7 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                 <div className="flex items-center justify-between gap-2 text-xs font-fira uppercase tracking-[0.16em] text-slate-500">
                     <span className="flex items-center gap-1.5">
                         <Radar size={11} />
-                        Field Readout
+                        전투 판단
                     </span>
                     <span className="text-[#f6e7c8]">{analysis.grade}</span>
                 </div>
@@ -174,9 +174,9 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
                                 <div className="flex flex-wrap items-center gap-1.5 text-xs font-fira uppercase tracking-[0.18em] text-slate-500">
                                     <span className="inline-flex items-center gap-1.5 text-[#dff7f5]">
                                         <Sword size={13} />
-                                        Field Report
+                                        전투 결과
                                     </span>
-                                    {hasLevelUp && <SignalBadge tone="upgrade" size="sm">Level Up</SignalBadge>}
+                                    {hasLevelUp && <SignalBadge tone="upgrade" size="sm">레벨 상승</SignalBadge>}
                                 </div>
                                 <div className="mt-1 text-[1.05rem] font-rajdhani font-bold tracking-[0.08em] text-[#f6e7c8]">
                                     {result.enemy || '적'} 전투 정리
@@ -216,11 +216,11 @@ const PostCombatCard = ({ result, onClose, onRest, onSell }: PostCombatCardProps
 
                         <div className="grid grid-cols-2 gap-2">
                             <div className={`rounded-[1rem] border px-3 py-2.5 ${METRIC_CARD_CLASS.exp}`}>
-                                <div className="text-xs font-fira uppercase tracking-[0.16em] opacity-70">EXP</div>
+                                <div className="text-xs font-readable opacity-70">경험치</div>
                                 <div className="mt-1 text-xl font-rajdhani font-bold">+{result.exp}</div>
                             </div>
                             <div className={`rounded-[1rem] border px-3 py-2.5 ${METRIC_CARD_CLASS.gold}`}>
-                                <div className="text-xs font-fira uppercase tracking-[0.16em] opacity-70">Gold</div>
+                                <div className="text-xs font-readable opacity-70">골드</div>
                                 <div className="mt-1 text-xl font-rajdhani font-bold">+{result.gold}</div>
                             </div>
                         </div>

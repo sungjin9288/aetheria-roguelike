@@ -146,7 +146,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
                 <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                         <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
-                            Relic Archive
+                            유물 선택
                         </div>
                         <h2 className="mt-1 text-[1.1rem] font-rajdhani font-bold tracking-[0.1em] text-[#f6e7c8]">
                             공명할 유물을 선택하세요
@@ -233,13 +233,13 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
                             <div className="mt-auto pt-2.5">
                                 {isLegendaryComplete ? (
                                     <div className="rounded-[1rem] border border-rose-300/22 bg-rose-400/10 px-2.5 py-2 text-[10px] font-fira">
-                                        <div className="uppercase tracking-[0.16em] text-rose-300/70">Legendary Synergy</div>
+                                        <div className="tracking-normal text-rose-300/70">전설 공명</div>
                                         <div className="mt-0.5 font-bold text-rose-100">{synergy.legendaryHint}</div>
                                         <div className="mt-0.5 text-slate-300/72">{synergy.synergies.join(' · ')}</div>
                                     </div>
                                 ) : hasSynergy ? (
                                     <div className="rounded-[1rem] border border-white/8 bg-black/20 px-2.5 py-2 text-[10px] font-fira text-slate-300/82">
-                                        <div className="uppercase tracking-[0.16em] text-slate-500">Linked Relics</div>
+                                        <div className="tracking-normal text-slate-500">함께 빛나는 유물</div>
                                         <div className="mt-0.5 leading-relaxed text-[#dff7f5]">
                                             {synergy.synergies.join(' · ')}
                                         </div>
@@ -251,7 +251,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
                                     </div>
                                 ) : hasNearLegendary ? (
                                     <div className="rounded-[1rem] border border-[#d5b180]/22 bg-[#d5b180]/8 px-2.5 py-2 text-[10px] font-fira">
-                                        <div className="uppercase tracking-[0.16em] text-[#d5b180]/60">Near Legendary</div>
+                                        <div className="tracking-normal text-[#d5b180]/60">전설 공명까지</div>
                                         <div className="mt-0.5 text-[#f6e7c8]">
                                             [{synergy.nearLegendary}] 시너지까지 1개 남음
                                         </div>

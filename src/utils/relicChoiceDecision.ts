@@ -58,9 +58,9 @@ export const getRelicChoiceDecisionStrip = (cards: any[]) => {
             recommendedIndex: -1,
             recommendedId: null,
             cells: [
-                { label: 'PICK', value: '선택 대기' },
-                { label: 'WHY', value: '후보 없음' },
-                { label: 'BUILD', value: '정비' },
+                { label: '추천', value: '선택 대기' },
+                { label: '이유', value: '후보 없음' },
+                { label: '성장 방향', value: '정비' },
             ],
         };
     }
@@ -90,9 +90,9 @@ export const getRelicChoiceDecisionStrip = (cards: any[]) => {
         recommendedIndex: best.index,
         recommendedId: bestRelic.id || null,
         cells: [
-            { label: 'PICK', value: bestRelic.name || '추천 유물' },
-            { label: 'WHY', value: best.reason },
-            { label: 'BUILD', value: best.build },
+            { label: '추천', value: bestRelic.name || '추천 유물' },
+            { label: '이유', value: best.reason },
+            { label: '성장 방향', value: best.build },
         ],
     };
 };

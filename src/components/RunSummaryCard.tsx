@@ -36,12 +36,12 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
     };
 
     const stats = [
-        { icon: <Trophy size={14} className="text-[#d5b180]" />, label: 'LEVEL', value: s.level },
-        { icon: <Sword size={14} className="text-[#7dd4d8]" />, label: 'CLASS', value: s.job },
-        { icon: <Skull size={14} className="text-rose-200" />, label: 'KILLS', value: s.kills.toLocaleString() },
-        { icon: <Skull size={14} className="text-[#e3dcff]" />, label: 'BOSSES', value: s.bossKills },
-        { icon: <Gem size={14} className="text-slate-100" />, label: 'RELICS', value: s.relicsFound },
-        { icon: <Coins size={14} className="text-[#d5b180]" />, label: 'GOLD', value: s.totalGold.toLocaleString() },
+        { icon: <Trophy size={14} className="text-[#d5b180]" />, label: '레벨', value: s.level },
+        { icon: <Sword size={14} className="text-[#7dd4d8]" />, label: '직업', value: s.job },
+        { icon: <Skull size={14} className="text-rose-200" />, label: '처치', value: s.kills.toLocaleString() },
+        { icon: <Skull size={14} className="text-[#e3dcff]" />, label: '보스 처치', value: s.bossKills },
+        { icon: <Gem size={14} className="text-slate-100" />, label: '유물', value: s.relicsFound },
+        { icon: <Coins size={14} className="text-[#d5b180]" />, label: '골드', value: s.totalGold.toLocaleString() },
     ];
 
     return (
@@ -71,7 +71,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
-                                Memorial Ledger
+                                모험 기록
                             </div>
                             <div className="mt-2 text-[1.7rem] font-rajdhani font-bold tracking-[0.08em] text-[#f6e7c8]">
                                 {s.activeTitle
@@ -90,12 +90,12 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                         </div>
 
                         <div className="flex flex-wrap gap-1.5">
-                            <SignalBadge tone="danger" size="sm">Run Ended</SignalBadge>
+                            <SignalBadge tone="danger" size="sm">모험 종료</SignalBadge>
                             {s.prestigeRank > 0 && (
                                 <SignalBadge tone="resonance" size="sm">
                                     <span className="inline-flex items-center gap-1">
                                         <Zap size={10} />
-                                        Prestige {s.prestigeRank}
+                                        승천 {s.prestigeRank}
                                     </span>
                                 </SignalBadge>
                             )}
@@ -105,7 +105,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                     <div
                         data-testid="run-summary-reflection-strip"
                         data-run-tone={reflection.tone}
-                        aria-label="런 종료 원인과 다음 시도 요약"
+                        aria-label="모험 종료 원인과 다음 시도 요약"
                         className="aether-run-reflection-strip mt-5 grid grid-cols-3 gap-2 rounded-[1.15rem] p-2"
                     >
                         {reflection.cells.map((cell: any) => (
@@ -235,7 +235,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                     </div>
 
                     <p className="mt-4 text-center text-[11px] font-fira leading-relaxed text-slate-400/76">
-                        에테르는 흩어졌지만 기록은 남습니다. 같은 죽음을 반복하지 않도록 이번 런의 패턴을 다음 시도에 반영하세요.
+                        에테르는 흩어졌지만 기록은 남습니다. 같은 죽음을 반복하지 않도록 이번 모험의 흐름을 다음 시도에 반영하세요.
                     </p>
 
                     <div className="mt-5 grid grid-cols-2 gap-3">

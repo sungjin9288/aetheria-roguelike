@@ -24,9 +24,9 @@ test('post combat decision strip prioritizes recovery when HP is low', () => {
 
     assert.equal(strip.tone, 'pressure');
     assert.deepEqual(strip.cells, [
-        { label: 'STATE', value: 'HP 회복' },
-        { label: 'LOOT', value: '전리품 1개' },
-        { label: 'NEXT', value: '휴식' },
+        { label: '상태', value: 'HP 회복' },
+        { label: '보상', value: '전리품 1개' },
+        { label: '다음 행동', value: '휴식' },
     ]);
 });
 
@@ -49,13 +49,13 @@ test('post combat decision strip promotes signature rewards without altering loo
 
     assert.equal(strip.tone, 'reward');
     assert.deepEqual(strip.cells, [
-        { label: 'STATE', value: '정비 권장' },
-        { label: 'LOOT', value: '전설 1개' },
-        { label: 'NEXT', value: '장비 확인' },
+        { label: '상태', value: '정비 권장' },
+        { label: '보상', value: '전설 1개' },
+        { label: '다음 행동', value: '장비 확인' },
     ]);
 });
 
-test('PostCombatCard renders STATE LOOT NEXT decision strip', async () => {
+test('PostCombatCard renders direct Korean decision labels', async () => {
     const source = await readSrc('src/components/PostCombatCard.tsx');
 
     assert.match(source, /getPostCombatDecisionStrip/);
@@ -69,9 +69,9 @@ test('smoke loop verifies the post combat decision strip after victory', async (
 
     assert.match(source, /verifyPostCombatDecisionStrip/);
     assert.match(source, /post-combat-decision-strip/);
-    assert.match(source, /STATE/);
-    assert.match(source, /LOOT/);
-    assert.match(source, /NEXT/);
+    assert.match(source, /상태/);
+    assert.match(source, /보상/);
+    assert.match(source, /다음 행동/);
 });
 
 test('post combat decision strip has high readability CSS coverage', async () => {

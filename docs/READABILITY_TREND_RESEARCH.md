@@ -247,10 +247,10 @@ Completed after this research note:
 - Slice 1/2: readability foundation, first viewport map signal, compact status/log/action surfaces.
 - Slice 3: Quest Board and Shop decision rows.
 - Slice 4: persisted Readability Mode with high-readability surface overrides.
-- Slice 5: Combat Forecast Strip with `INTENT / RESPONSE / WINDOW`.
-- Slice 6: Post-Combat Decision Strip with `STATE / LOOT / NEXT`.
-- Slice 7: Relic Choice Decision Strip with `PICK / WHY / BUILD`.
-- Slice 8: Run Summary Reflection Strip with `CAUSE / LESSON / NEXT`.
+- Slice 5: 전투 판단 스트립 `적의 행동 / 대응 / 기회`.
+- Slice 6: 전투 결과 스트립 `상태 / 보상 / 다음 행동`.
+- Slice 7: 유물 선택 스트립 `추천 / 이유 / 성장 방향`.
+- Slice 8: 모험 종료 스트립 `결과 / 배운 점 / 다음 시도`.
 - Slice 9: Mobile Overlay CTA Reachability Sweep with viewport, hit target, and scroll recovery guards.
 - Slice 10: Mobile Focus Panel Contrast and Disabled-State Readability.
 - Slice 11 preflight: refreshed the browser/mobile smoke baseline and Capacitor web asset sync on 2026-05-31; 2026-06-01 device-gate retry later recovered `xcdevice` availability for the target iPhone, but `devicectl` still failed because the device was locked at the Developer Disk Image mount step. Android device/signing blockers remain.

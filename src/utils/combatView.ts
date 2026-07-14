@@ -55,9 +55,9 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
     });
     const combatForecastCells = combatForecast
         ? [
-            { label: 'INTENT', value: combatForecast.intent },
-            { label: 'RESPONSE', value: combatForecast.response },
-            { label: 'WINDOW', value: combatForecast.window },
+            { label: '적의 행동', value: combatForecast.intent },
+            { label: '대응', value: combatForecast.response },
+            { label: '기회', value: combatForecast.window },
         ]
         : [];
 
@@ -72,7 +72,7 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
         comboRelic
             ? {
                 key: 'combo',
-                text: comboCount >= comboStack ? `COMBO READY ${comboCount}/${comboStack}` : `COMBO ${comboCount}/${comboStack}`,
+                text: comboCount >= comboStack ? `연속 공격 준비 ${comboCount}/${comboStack}` : `연속 공격 ${comboCount}/${comboStack}`,
                 className: comboCount >= comboStack
                     ? 'border-cyber-pink/50 bg-cyber-pink/12 text-cyber-pink'
                     : 'border-cyber-pink/18 bg-cyber-pink/6 text-cyber-pink/70',

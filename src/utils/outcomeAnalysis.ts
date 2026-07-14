@@ -15,7 +15,7 @@ export const getPostCombatAnalysis = (result: any) => {
         : clampRatio(result.playerMp, result.playerMaxMp);
     const enemyTier = result.enemyTier || 'NORMAL';
     const enemyName = result.enemy || '적';
-    const primaryBuild = result.primaryBuild || '균형형 런';
+    const primaryBuild = result.primaryBuild || '균형형 성장';
 
     let grade = '완승';
     if (hpRatio <= 0.2) grade = '붕괴 직전';
@@ -24,13 +24,13 @@ export const getPostCombatAnalysis = (result: any) => {
 
     const notes: any[] = [];
     if (enemyTier === 'BOSS') notes.push(`${enemyName} 보스전을 돌파했습니다.`);
-    else if (enemyTier === 'ELITE') notes.push(`${enemyName} 엘리트 교전을 정리했습니다.`);
+    else if (enemyTier === 'ELITE') notes.push(`${enemyName} 정예 교전을 정리했습니다.`);
     else notes.push(`${enemyName} 전투를 정리했습니다.`);
 
     notes.push(`현재 주력 빌드는 ${primaryBuild}입니다.`);
 
     if (result.difficultyLabel) {
-        notes.push(`현재 런 체감 난이도는 ${result.difficultyLabel}입니다.`);
+        notes.push(`현재 모험의 체감 난이도는 ${result.difficultyLabel}입니다.`);
     }
 
     if (result.leveledUp) notes.push('레벨업으로 다음 구간 진입 여유가 생겼습니다.');
@@ -54,12 +54,12 @@ export const getPostCombatAnalysis = (result: any) => {
     else if (hpRatio <= 0.35) rewardMood = '위험한 승리';
 
     const rewardHighlights: any[] = [];
-    if (result.leveledUp) rewardHighlights.push('LEVEL UP');
-    if (enemyTier === 'BOSS') rewardHighlights.push('BOSS');
-    else if (enemyTier === 'ELITE') rewardHighlights.push('ELITE');
-    if ((result.items?.length || 0) >= 2) rewardHighlights.push('LOOT HOT');
-    if ((result.gold || 0) >= 100) rewardHighlights.push(`GOLD +${result.gold}`);
-    if ((result.exp || 0) >= 100) rewardHighlights.push(`EXP +${result.exp}`);
+    if (result.leveledUp) rewardHighlights.push('레벨 상승');
+    if (enemyTier === 'BOSS') rewardHighlights.push('보스 격파');
+    else if (enemyTier === 'ELITE') rewardHighlights.push('정예 격파');
+    if ((result.items?.length || 0) >= 2) rewardHighlights.push('풍성한 전리품');
+    if ((result.gold || 0) >= 100) rewardHighlights.push(`골드 +${result.gold}`);
+    if ((result.exp || 0) >= 100) rewardHighlights.push(`경험치 +${result.exp}`);
 
     // cycle 336: hpRatio / mpRatio 출력 필드 제거 — analysis.hpRatio/mpRatio 외부 read 0건.
     //   내부에서만 grade/notes/actions 분기 계산용으로 사용. 출력은 dead.
@@ -123,9 +123,9 @@ export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
     return {
         tone,
         cells: [
-            { label: 'STATE', value: state },
-            { label: 'LOOT', value: loot },
-            { label: 'NEXT', value: next },
+            { label: '상태', value: state },
+            { label: '보상', value: loot },
+            { label: '다음 행동', value: next },
         ],
     };
 };
@@ -134,16 +134,16 @@ export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
 //   N test (cycle-87/97) 모두 summary 명시 전달이라 default 도달 불가.
 export const getRunSummaryAnalysis = (summary: any) => {
     const headline = summary.bossKills > 0
-        ? '보스 구간까지 닿은 런'
+        ? '보스 구간까지 닿은 모험'
         : summary.level >= 20
-            ? '중후반까지 뻗은 런'
+            ? '중후반까지 이어진 모험'
             : summary.level >= 10
-                ? '성장 축은 잡힌 런'
-                : '초반 안정화가 필요한 런';
+                ? '성장 방향을 잡은 모험'
+                : '초반 안정화가 필요한 모험';
 
     const notes: any[] = [];
     if (summary.primaryBuild) notes.push(`주력 빌드: ${summary.primaryBuild}`);
-    if (summary.difficultyLabel) notes.push(`런 난이도 판정: ${summary.difficultyLabel}`);
+    if (summary.difficultyLabel) notes.push(`모험 난이도: ${summary.difficultyLabel}`);
     if (Number.isFinite(summary.recentWinRate)) notes.push(`최근 승률: ${summary.recentWinRate}%`);
 
     const focus: any[] = [];
@@ -161,18 +161,18 @@ export const getRunSummaryAnalysis = (summary: any) => {
         focus.push('맵 발견이 적었습니다. 새 지역을 더 탐색해 유물/이벤트 풀을 넓히세요.');
     }
     if ((summary.discoveries || 0) >= 15) {
-        focus.push('탐험 폭이 넓었습니다. 같은 호기심으로 다음 런도 시작하세요.');
+        focus.push('탐험 폭이 넓었습니다. 같은 호기심으로 다음 모험도 시작하세요.');
     }
     // cycle 97: maxKillStreak (cycle 95 신규 카운터) 기반 reflection.
     // KILL_STREAK_TIERS [3,5,10,20] 중 10 이상이면 공격 운영 칭찬 — tier 3 진입.
-    // 3 미만이고 레벨 10+이면 streak 활용 권장 — 공격 호흡 미정착 시그널.
+    // 레벨 10 이상인데 최대 연속 처치가 3 미만이면 공격 흐름을 익힐 필요가 있다.
     if ((summary.maxKillStreak || 0) >= 10) {
-        focus.push('공격형 운영 — 연속 처치를 유지해 streak 보너스를 끌어내고 있습니다.');
+        focus.push('공격형 운영으로 연속 처치 보너스를 안정적으로 이어갔습니다.');
     }
     if ((summary.maxKillStreak || 0) < 3 && (summary.level || 0) >= 10) {
-        focus.push('연속 처치가 끊기는 흐름. 빌드 강화 + 안전한 적부터 정리해 streak를 쌓아보세요.');
+        focus.push('연속 처치가 자주 끊겼습니다. 장비를 보강하고 약한 적부터 정리해 흐름을 이어가세요.');
     }
-    if (focus.length === 0) focus.push('이번 런은 기반이 좋았습니다. 같은 빌드 축을 더 강하게 밀어도 됩니다.');
+    if (focus.length === 0) focus.push('이번 모험은 기반이 좋았습니다. 같은 성장 방향을 더 강하게 밀어도 됩니다.');
 
     return {
         headline,
@@ -204,7 +204,7 @@ export const getRunSummaryReflectionStrip = (summary: any, analysis: any) => {
 
     let tone = 'steady';
     let cause = '기반 안정';
-    let lesson = analysis?.headline || '런 패턴 확인';
+    let lesson = analysis?.headline || '모험 흐름 확인';
     let next = '같은 빌드 강화';
 
     if (highEscapes || /도주.*보스/.test(focusText)) {
@@ -215,8 +215,8 @@ export const getRunSummaryReflectionStrip = (summary: any, analysis: any) => {
     } else if (lowRelics || /유물/.test(focusText)) {
         tone = 'pressure';
         cause = '유물 부족';
-        lesson = '이벤트 루트 필요';
-        next = 'Map/Quest 확장';
+        lesson = '이벤트 경로 필요';
+        next = '지도·임무 확장';
     } else if (lowBossProgress || /보스 진입 전/.test(focusText)) {
         tone = 'pressure';
         cause = '보스 전 정비';
@@ -245,7 +245,7 @@ export const getRunSummaryReflectionStrip = (summary: any, analysis: any) => {
     } else if ((bossKills >= 3 && relicsFound >= 4) || strongStreak || wideDiscovery) {
         tone = 'breakthrough';
         cause = bossKills >= 3 ? '보스권 도달' : strongStreak ? '공격 흐름' : '탐험 폭 강점';
-        lesson = strongStreak ? 'streak 운영 유효' : wideDiscovery ? '루트 확장 유효' : '빌드 축 검증';
+        lesson = strongStreak ? '연속 처치 운영 유효' : wideDiscovery ? '경로 확장 유효' : '성장 방향 검증';
         next = bossKills >= 3 ? '막힌 속성 보강' : '동일 강점 유지';
     } else if (bossKills > 0 || level >= 20) {
         tone = 'growth';
@@ -257,9 +257,9 @@ export const getRunSummaryReflectionStrip = (summary: any, analysis: any) => {
     return {
         tone,
         cells: [
-            { label: 'CAUSE', value: cause },
-            { label: 'LESSON', value: lesson },
-            { label: 'NEXT', value: next },
+            { label: '결과', value: cause },
+            { label: '배운 점', value: lesson },
+            { label: '다음 시도', value: next },
         ],
     };
 };

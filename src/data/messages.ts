@@ -137,9 +137,9 @@ export const MSG = {
     // cycle 116: WEEKLY_MISSION_COMPLETE/RESET 제거 — 0건 사용. CLAIM만 active.
     WEEKLY_MISSION_CLAIM: (gold: number, crystals?: number) => `주간 보상 수령: +${gold}G${crystals ? ` +${crystals}💎` : ''}`,
 
-    // --- 챌린지 런 (Challenge Run) ---
+    // --- 도전 설정 ---
     // cycle 116: CHALLENGE_COMPLETE 제거 — 0건 사용. START만 active.
-    CHALLENGE_START: (labels: string[]) => `⚔ 챌린지 런 시작: ${labels.join(', ')}`,
+    CHALLENGE_START: (labels: string[]) => `⚔ 도전 모험 시작: ${labels.join(', ')}`,
 
     // --- 진 엔딩 (True Ending) ---
     // cycle 116: TRUE_BOSS_PHASE3 제거 — 0건 사용. UNLOCK/APPEAR만 active.
@@ -206,7 +206,7 @@ export const MSG = {
     EQUIP_MAIN_REPLACE: '주손 무기를 교체했습니다.',
     EQUIP_OFFHAND_REPLACE: '보조 손 장비를 교체했습니다.',
     EQUIP_DONE: (name: string) => `${name} 장착.`,
-    CHALLENGE_NO_CONSUMABLE: '금욕 챌린지: 소모 아이템을 사용할 수 없습니다.',
+    CHALLENGE_NO_CONSUMABLE: '물약 없이: 회복과 보조 아이템을 사용할 수 없습니다.',
     ITEM_USE_BUFF: (name: string) => `${name} 사용: 버프 활성화`,
     GOLD_INSUFFICIENT: '골드가 부족합니다.',
     INV_FULL: '인벤토리가 가득 찼습니다.',
@@ -364,14 +364,14 @@ export const MSG = {
     ABYSS_RECORD: (floor: number) => `🏆 심연 최고 기록 경신! ${floor}층 도달`,
 
     // --- 전투 아이템/스킬 ---
-    COMBAT_CHAOS_SKILL: (name: string) => `혼돈의 기술: [${name}] 발동!`,
+    COMBAT_CHAOS_SKILL: (name: string) => `뒤섞인 기술: [${name}]이(가) 발동했습니다!`,
     COMBAT_DOT_KILL: (name: string) => `[지속 피해] ${name}이(가) 쓰러졌습니다!`,
     ITEM_USE_SIMPLE: (name: string) => `${name} 사용.`,
     ITEM_USE_CURE: (name: string) => `${name} 사용: 상태이상 해제`,
 
     // --- 전투 승리 ---
     QUEST_CONDITION_MET: (count: number) => `퀘스트 조건 달성: ${count}개`,
-    KILL_STREAK_BONUS: (streak: number, atkPct: number) => `🔥 ${streak}연속 처치! ATK +${atkPct}% 보너스 발동`,
+    KILL_STREAK_BONUS: (streak: number, atkPct: number) => `🔥 ${streak}연속 처치! 공격력 +${atkPct}% 보너스 발동`,
 
     // --- 심연 ---
     ABYSS_DESCEND: (floor: number) => `심연의 더 깊은 곳으로 진입했습니다. (현재: ${floor}층)`,

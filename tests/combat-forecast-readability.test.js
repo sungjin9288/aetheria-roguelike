@@ -75,7 +75,7 @@ test('combat forecast exposes reward windows without changing combat logic', () 
     assert.equal(forecast.response, 'CD 대기');
 });
 
-test('CombatPanel renders INTENT RESPONSE WINDOW forecast strip', async () => {
+test('CombatPanel renders direct Korean forecast labels', async () => {
     const source = await readSrc('src/components/tabs/CombatPanel.tsx');
     // 리팩토링: 전투 예보 계산은 buildCombatView(combatView.ts)로 분리, 렌더는 CombatPanel.
     const view = await readSrc('src/utils/combatView.ts');
@@ -83,9 +83,10 @@ test('CombatPanel renders INTENT RESPONSE WINDOW forecast strip', async () => {
     assert.match(view, /getCombatForecast/);
     assert.match(source, /data-testid="combat-forecast-strip"/);
     assert.match(source, /data-forecast-tone=\{combatForecast\.tone\}/);
-    assert.match(view, /label:\s*'INTENT'/);
-    assert.match(view, /label:\s*'RESPONSE'/);
-    assert.match(view, /label:\s*'WINDOW'/);
+    assert.match(view, /label:\s*'적의 행동'/);
+    assert.match(view, /label:\s*'대응'/);
+    assert.match(view, /label:\s*'기회'/);
+    assert.doesNotMatch(view, /label:\s*'(INTENT|RESPONSE|WINDOW)'/);
 });
 
 test('smoke loop verifies the combat forecast strip during combat coverage', async () => {
@@ -93,9 +94,9 @@ test('smoke loop verifies the combat forecast strip during combat coverage', asy
 
     assert.match(source, /verifyCombatForecast/);
     assert.match(source, /combat-forecast-strip/);
-    assert.match(source, /INTENT/);
-    assert.match(source, /RESPONSE/);
-    assert.match(source, /WINDOW/);
+    assert.match(source, /적의 행동/);
+    assert.match(source, /대응/);
+    assert.match(source, /기회/);
 });
 
 test('combat forecast has high readability CSS coverage', async () => {

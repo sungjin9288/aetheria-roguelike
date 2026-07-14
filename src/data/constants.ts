@@ -384,12 +384,12 @@ export const BALANCE: BalanceConfig = {
 
     // v4.3 — 챌린지 런
     CHALLENGE_MODIFIERS: [
-        { id: 'halfHp', label: '반피 런', desc: '최대 HP 50% 감소' },
-        { id: 'noGold', label: '무일푼', desc: '시작 골드 0, 골드 획득 50% 감소' },
-        { id: 'randomSkills', label: '혼돈의 기술', desc: '스킬 사용 시 무작위 스킬 발동' },
-        { id: 'eliteOnly', label: '엘리트 런', desc: '모든 적이 Elite 판정' },
-        { id: 'noPotion', label: '금욕', desc: '아이템 사용 불가' },
-        { id: 'blindMap', label: '미지의 땅', desc: '위치 정보 숨김' },
+        { id: 'halfHp', label: '약한 생명력', desc: '최대 생명력이 절반으로 줄어듭니다.' },
+        { id: 'noGold', label: '빈손의 시작', desc: '시작 골드가 없고 얻는 골드도 절반으로 줄어듭니다.' },
+        { id: 'randomSkills', label: '뒤섞인 기술', desc: '기술을 쓰면 다른 기술이 무작위로 발동합니다.' },
+        { id: 'eliteOnly', label: '강적의 길', desc: '만나는 적이 모두 정예 적으로 등장합니다.' },
+        { id: 'noPotion', label: '물약 없이', desc: '회복과 보조 아이템을 사용할 수 없습니다.' },
+        { id: 'blindMap', label: '길 잃은 여행', desc: '현재 위치와 지도 정보가 숨겨집니다.' },
     ],
 
     // v4.3 — 묘비 침략

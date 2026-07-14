@@ -25,13 +25,13 @@ test('run summary reflection: high escapes produce a pressure recovery lesson', 
         escapes: 12,
         discoveries: 8,
         maxKillStreak: 4,
-        primaryBuild: '균형형 런',
+        primaryBuild: '균형형 성장',
         difficultyLabel: '열세',
         recentWinRate: 42,
     });
 
     assert.equal(reflection.tone, 'pressure');
-    assert.deepEqual(reflection.cells.map((cell) => cell.label), ['CAUSE', 'LESSON', 'NEXT']);
+    assert.deepEqual(reflection.cells.map((cell) => cell.label), ['결과', '배운 점', '다음 시도']);
     assert.equal(reflection.cells[0].value, '후퇴 누적');
     assert.match(reflection.cells[2].value, /회복|장비/);
 });
@@ -53,7 +53,7 @@ test('run summary reflection: boss progress and strong run signals become breakt
 
     assert.equal(reflection.tone, 'breakthrough');
     assert.equal(reflection.cells[0].value, '보스권 도달');
-    assert.match(reflection.cells[1].value, /빌드|streak|루트/);
+    assert.match(reflection.cells[1].value, /성장|연속 처치|경로/);
 });
 
 test('RunSummaryCard wires reflection strip without touching share or restart controls', async () => {
@@ -70,6 +70,9 @@ test('RunSummaryCard wires reflection strip without touching share or restart co
     assert.match(source, /whitespace-normal/);
     assert.match(source, /break-keep/);
     assert.doesNotMatch(source, /truncate font-rajdhani/);
+    assert.match(source, /모험 기록/);
+    assert.match(source, /모험 종료/);
+    assert.doesNotMatch(source, /Memorial Ledger|Run Ended|Prestige/);
     assert.match(source, /data-testid\s*=\s*["']run-summary-share["']/);
     assert.match(source, /data-testid\s*=\s*["']run-summary-restart["']/);
 });

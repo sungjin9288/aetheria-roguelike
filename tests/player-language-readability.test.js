@@ -46,12 +46,27 @@ test('first-play surfaces use player-facing Korean labels', async () => {
 });
 
 test('menu, settings, and device playtest use one natural Korean vocabulary', async () => {
-    const [dashboard, mobileLayout, systemTab, checklist] = await Promise.all([
+    const [intro, constants, messages, dashboard, mobileLayout, systemTab, checklist] = await Promise.all([
+        readSrc('src/components/IntroScreen.tsx'),
+        readSrc('src/data/constants.ts'),
+        readSrc('src/data/messages.ts'),
         readSrc('src/components/Dashboard.tsx'),
         readSrc('src/components/app/MobileGameLayout.tsx'),
         readSrc('src/components/tabs/SystemTab.tsx'),
         readSrc('docs/PLAYTEST_CHECKLIST.md'),
     ]);
+
+    for (const label of ['달빛 아래 펼쳐지는 모험', '도전 설정', '처음이라면 선택하지 않아도 됩니다.', '모험 시작']) {
+        assert.match(intro, new RegExp(label));
+    }
+    assert.match(intro, /<details[\s\S]*data-testid="intro-challenge-settings"/);
+    assert.doesNotMatch(intro, /MOONLIT FIELD LEDGER|Challenge Modifiers|Up to|기록 개시/);
+    assert.match(constants, /label: '약한 생명력'/);
+    assert.match(constants, /label: '빈손의 시작'/);
+    assert.match(constants, /label: '강적의 길'/);
+    assert.doesNotMatch(constants, /label: '(반피 런|엘리트 런|금욕)'|Elite 판정/);
+    assert.match(messages, /CHALLENGE_NO_CONSUMABLE: '물약 없이:/);
+    assert.match(messages, /COMBAT_CHAOS_SKILL: \(name: string\) => `뒤섞인 기술:/);
 
     for (const label of ['장비', '가방', '임무', '업적', '기술', '지도', '상태', '도감', '시즌', '무덤', '설정']) {
         assert.match(dashboard, new RegExp(`label: '${label}'`));

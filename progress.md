@@ -1,5 +1,22 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-14: simplified first-play decisions and native readability check):
+- Collapsed the optional challenge modifiers on the intro so a new player can name the character and start without reading six advanced difficulty rules.
+- Replaced the mandatory decision-strip labels with direct Korean across relic choice, combat forecast, post-combat review, and run reflection while preserving internal keys and gameplay behavior.
+- Removed adjacent mechanical player copy such as `런`, `streak`, `Elite`, and `ATK` from the touched first-session surfaces.
+- Updated smoke, focused contracts, Playwright intro coverage, the readability research ledger, and the timed device checklist together.
+
+Verification:
+- Focused readability and outcome contracts -> 43/43 pass.
+- `npm run verify:full` -> type-check, lint, unit 3235/3235, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass. The existing non-blocking `GameRoot.tsx` effect warning remains.
+- Mobile visual review -> post-combat, relic choice, run summary, and combat decision strips have no clipping or overlap.
+- `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, and the iOS simulator build/run -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-14 14:47:08 KST`). Latest signed archive: `build/ios/Aetheria.xcarchive` (`2026-07-14 14:47:28 KST`).
+- Latest physical-iPhone smoke -> blocked before install by a CoreDevice tunnel `Network.NWError error 60` timeout; classified as a device connectivity blocker, not an app regression.
+
+Next action:
+- Restore the iPhone CoreDevice connection, run the timed 5-minute routine on this archive, and record the player-facing scores. Android still requires release signing inputs and a physical device.
+
 Done (2026-07-14: menu and settings player language with timed device QA):
 - Unified the mobile menu, archive, tab, settings, admin, feedback, and QA readout labels into direct player-facing Korean while preserving internal state keys, test ids, and the raw QA JSON contract.
 - Moved raw device data behind the collapsed `자세한 기기 정보` disclosure and translated visible runtime values such as `offline` to `연결 안 됨`.

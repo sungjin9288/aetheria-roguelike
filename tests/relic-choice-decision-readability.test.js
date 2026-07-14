@@ -25,7 +25,7 @@ test('relic choice decision strip favors strong synergy over rarity-only value',
 
     assert.equal(decision.recommendedIndex, 1);
     assert.equal(decision.tone, 'synergy');
-    assert.deepEqual(decision.cells.map((cell) => cell.label), ['PICK', 'WHY', 'BUILD']);
+    assert.deepEqual(decision.cells.map((cell) => cell.label), ['추천', '이유', '성장 방향']);
     assert.equal(decision.cells[0].value, '균열의 서판');
     assert.equal(decision.cells[1].value, '강한 공명');
     assert.equal(decision.cells[2].value, '스킬 피해');
@@ -51,13 +51,15 @@ test('relic choice decision strip promotes legendary set completion first', () =
     assert.equal(decision.cells[1].value, '전설 완성');
 });
 
-test('RelicChoicePanel renders PICK WHY BUILD decision strip and recommended marker', async () => {
+test('RelicChoicePanel renders Korean decision labels and recommended marker', async () => {
     const source = await readSrc('src/components/RelicChoicePanel.tsx');
     assert.match(source, /getRelicChoiceDecisionStrip/);
     assert.match(source, /data-testid="relic-choice-decision-strip"/);
     assert.match(source, /aria-label="유물 선택 추천 요약"/);
     assert.match(source, /data-relic-recommended=\{isRecommended \? 'true' : 'false'\}/);
     assert.match(source, /추천/);
+    assert.match(source, /유물 선택/);
+    assert.doesNotMatch(source, /Relic Archive|Legendary Synergy|Linked Relics|Near Legendary/);
 });
 
 test('smoke loop verifies relic choice decision strip with deterministic injection', async () => {

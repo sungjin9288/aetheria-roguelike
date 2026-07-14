@@ -22,29 +22,29 @@ interface CombatPanelProps {
 const ACTION_BUTTONS: any = [
   {
     key: 'attack',
-    label: 'ATTACK',
-    mobileLabel: 'ATK',
+    label: '공격',
+    mobileLabel: '공격',
     icon: Sword,
     className: 'bg-[linear-gradient(180deg,rgba(82,28,37,0.72)_0%,rgba(27,12,15,0.94)_100%)] border border-rose-300/20 text-rose-100 hover:bg-rose-400/10 hover:border-rose-200/28',
   },
   {
     key: 'skill',
-    label: 'SKILL',
-    mobileLabel: 'SKL',
+    label: '기술',
+    mobileLabel: '기술',
     icon: Zap,
     className: 'bg-[linear-gradient(180deg,rgba(24,43,48,0.74)_0%,rgba(8,16,18,0.94)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:bg-[#7dd4d8]/10 hover:border-[#d5b180]/24',
   },
   {
     key: 'swap',
-    label: 'SWAP',
-    mobileLabel: 'SWAP',
+    label: '기술 변경',
+    mobileLabel: '변경',
     icon: RotateCw,
     className: 'bg-[linear-gradient(180deg,rgba(33,23,45,0.74)_0%,rgba(12,10,18,0.94)_100%)] border border-[#9a8ac0]/20 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/28',
   },
   {
     key: 'escape',
-    label: 'ESCAPE',
-    mobileLabel: 'RUN',
+    label: '도망',
+    mobileLabel: '도망',
     icon: ArrowRight,
     className: 'bg-[linear-gradient(180deg,rgba(28,31,27,0.74)_0%,rgba(10,12,10,0.94)_100%)] border border-[#d5b180]/16 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/24',
   },
@@ -58,7 +58,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
   // 전투 파생 데이터(전술 프로파일·텔레그래프·콤보·전투 예보) — 계산은 buildCombatView로 분리,
-  //   여기서는 렌더링만. (slice 20: telegraph 칩 제거 — forecast strip INTENT 셀로 통일.)
+  //   여기서는 렌더링만 한다. (slice 20: 별도 예고 칩을 제거하고 판단 요약의 '적의 행동' 셀로 통일.)
   const {
     tacticalProfile,
     bossBriefLine,
@@ -124,11 +124,11 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
             <div className="rounded-[1.1rem] aether-panel-core px-3 py-2 flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <div className="text-[13px] font-rajdhani font-bold text-white/94 truncate">
-                  {enemy?.name || 'Enemy'}와 교전 중
+                  {enemy?.name || '적'}와 교전 중
                 </div>
                 {selectedSkill && (
                   <div className="text-[10px] font-fira text-slate-300/70">
-                    {selectedSkill.name} · MP {selectedSkill.mp || 0} · CD {skillCooldown}
+                    {selectedSkill.name} · 기력 {selectedSkill.mp || 0} · 재사용 {skillCooldown}턴
                   </div>
                 )}
               </div>
@@ -180,7 +180,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
             </div>
           )}
 
-          {/* slice 20: 데스크톱 telegraph 행 제거 — forecast strip INTENT 셀과 중복. */}
+          {/* slice 20: 판단 요약의 '적의 행동' 셀과 겹치던 데스크톱 예고 행 제거. */}
 
           {/* cycle 113: 적 debuff chip — cycle 111 player debuff chip의 짝(symmetry).
               플레이어가 부여한 stun/curse/blind/fear/DoT의 활성 상태를 전투 화면에 노출.
@@ -218,11 +218,11 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                 ? 'border-cyber-pink/60 bg-cyber-pink/10 text-cyber-pink animate-pulse'
                 : 'border-cyber-pink/20 bg-cyber-pink/5 text-cyber-pink/60'
             }`}>
-              <span className="tracking-widest">COMBO </span>
+              <span>연속 공격 </span>
               {Array.from({ length: comboStack }).map((_: any, i: any) => (
                 <span key={i} className={`mx-0.5 ${i < comboCount ? 'text-cyber-pink' : 'text-cyber-pink/25'}`}>◆</span>
               ))}
-              {comboCount >= comboStack && <span className="ml-1 font-bold">READY!</span>}
+              {comboCount >= comboStack && <span className="ml-1 font-bold">준비 완료</span>}
             </div>
           )}
           {mobileCombatSignals.length > 0 && (

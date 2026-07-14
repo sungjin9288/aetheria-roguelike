@@ -19,10 +19,10 @@ test('post combat analysis flags risky wins and recovery actions', () => {
 
     assert.equal(analysis.grade, '붕괴 직전');
     assert.equal(analysis.rewardMood, '강적 제압');
-    assert.ok(analysis.notes.some((note) => note.includes('엘리트')));
+    assert.ok(analysis.notes.some((note) => note.includes('정예')));
     assert.ok(analysis.actions.some((action) => action.includes('회복')));
     assert.ok(analysis.actions.some((action) => action.includes('인벤토리')));
-    assert.ok(analysis.rewardHighlights.some((entry) => entry.includes('ELITE')));
+    assert.ok(analysis.rewardHighlights.some((entry) => entry.includes('정예 격파')));
 });
 
 test('post combat analysis respects explicit hp/mp flags when ratios are absent', () => {
@@ -49,12 +49,12 @@ test('run summary analysis recommends a next-run focus from weak runs', () => {
         bossKills: 0,
         relicsFound: 1,
         totalGold: 900,
-        primaryBuild: '균형형 런',
+        primaryBuild: '균형형 성장',
         difficultyLabel: '위기',
         recentWinRate: 42,
     });
 
-    assert.equal(analysis.headline, '초반 안정화가 필요한 런');
-    assert.ok(analysis.notes.some((note) => note.includes('균형형 런')));
+    assert.equal(analysis.headline, '초반 안정화가 필요한 모험');
+    assert.ok(analysis.notes.some((note) => note.includes('균형형 성장')));
     assert.ok(analysis.focus.some((focus) => focus.includes('유물')));
 });

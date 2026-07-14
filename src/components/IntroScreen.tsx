@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import AetherMark from './AetherMark';
 import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
 import { BALANCE } from '../data/constants';
@@ -92,7 +93,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
                         transition={{ delay: 0.8, duration: 1 }}
                         className="font-fira text-[11px] tracking-[0.26em] text-[#d7dde4]/62"
                     >
-                        MOONLIT FIELD LEDGER
+                        달빛 아래 펼쳐지는 모험
                     </Motion.p>
                 </div>
             </div>
@@ -130,32 +131,44 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
                                 </button>
                             </div>
                             <div data-testid="intro-mobile-name" className="sr-only">{selectedName}</div>
-                            <div className="mt-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/70">
-                                실제 이름 순위 패턴 기반 2~3글자 호출명을 새로 만들고 바로 수정해서 시작할 수 있습니다.
+                            <div className="mt-2 text-[10px] font-readable leading-relaxed text-slate-400/70">
+                                마음에 드는 이름으로 바꾼 뒤 바로 시작할 수 있습니다.
                             </div>
                         </div>
                     </div>
                 </Motion.div>
             </AnimatePresence>
 
-            {/* Challenge Modifiers */}
-            <div className="mt-5 rounded-[1.35rem] border border-white/8 bg-black/16 px-3 py-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/70">Challenge Modifiers</span>
-                    <div className="flex items-center gap-2">
-                        {selectedChallenges.length > 0 && (
-                            <span className="text-[10px] font-fira text-[#d5b180]">{CHALLENGE_REWARD_TEXT[selectedChallenges.length]}</span>
-                        )}
-                        <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500/80">Up to {challengeSlots}</span>
+            <details
+                data-testid="intro-challenge-settings"
+                className="group mt-5 rounded-[1.35rem] border border-white/8 bg-black/16 px-3 py-3 text-left"
+            >
+                <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                    <div>
+                        <div className="text-[11px] font-readable font-bold text-slate-200/88">도전 설정 <span className="font-normal text-slate-400/72">(선택)</span></div>
+                        <div className="mt-0.5 text-[9px] font-readable text-slate-500/82">처음이라면 선택하지 않아도 됩니다.</div>
                     </div>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
+                    <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-[9px] font-readable text-slate-400/78">{selectedChallenges.length}/{challengeSlots}</span>
+                        <ChevronDown size={14} className="text-slate-400/72 transition-transform group-open:rotate-180" />
+                    </div>
+                </summary>
+                <div className="border-t border-white/6 pt-3">
+                    <div className="mb-2 flex items-center justify-between gap-2 text-[9px] font-readable leading-relaxed">
+                        <span className="text-slate-400/76">더 어려운 규칙을 선택하면 전투 보상이 늘어납니다.</span>
+                        {selectedChallenges.length > 0 && (
+                            <span className="shrink-0 text-[#d5b180]">{CHALLENGE_REWARD_TEXT[selectedChallenges.length]}</span>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
                     {BALANCE.CHALLENGE_MODIFIERS.map((mod: any) => {
                         const isSelected = selectedChallenges.includes(mod.id);
                         return (
                             <button
                                 key={mod.id}
                                 type="button"
+                                data-testid={`intro-challenge-${mod.id}`}
+                                aria-pressed={isSelected}
                                 onClick={() => toggleChallenge(mod.id)}
                                 className={`min-h-[4.7rem] rounded-[1rem] border px-2.5 py-2 text-left transition-all ${
                                     isSelected
@@ -168,12 +181,13 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
                             </button>
                         );
                     })}
+                    </div>
                 </div>
-            </div>
+            </details>
 
             <div className="mt-5 space-y-2">
-                <p className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/65">
-                    시작 즉시 첫 지역, 목표, 추천 액션이 배정됩니다.
+                <p className="text-[10px] font-readable leading-relaxed text-slate-400/65">
+                    준비되면 첫 마을에서 바로 모험을 시작합니다.
                 </p>
                 <div className="flex">
                     <Motion.button
@@ -184,7 +198,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
                         disabled={!canStart}
                         className="aether-cta-primary flex-1 rounded-[1.15rem] font-rajdhani font-bold text-[#e6f6f6] disabled:cursor-not-allowed disabled:opacity-40 py-3.5 text-[0.95rem] tracking-[0.18em]"
                     >
-                        기록 개시
+                        모험 시작
                     </Motion.button>
                 </div>
             </div>
