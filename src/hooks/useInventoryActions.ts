@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants';
+import { CLASSES } from '../data/classes';
 import { getDailyProtocolCompletions, formatDailyProtocolReward, makeEmitTitles } from '../utils/gameUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
@@ -43,8 +44,13 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ad
         ...createPremiumActions(ctx),
 
         chooseSkillBranch: (skillName: any, choice: any) => {
+            if (player.skillChoices?.[skillName]) {
+                return addLog('warn', MSG.SKILL_BRANCH_ALREADY_CHOSEN(skillName));
+            }
+            const branch = CLASSES[player.job]?.skillBranches?.[skillName]?.find((entry: any) => entry.choice === choice);
+            if (!branch) return addLog('error', MSG.SKILL_INVALID_BRANCH);
             dispatch({ type: AT.CHOOSE_SKILL_BRANCH, payload: { skillName, choice } });
-            addLog('system', MSG.SKILL_BRANCH_CHOSEN(skillName, choice));
+            addLog('system', MSG.SKILL_BRANCH_CHOSEN(skillName, branch.label || '선택한 성장'));
         },
 
         invadeGrave: (targetGrave: any) => {

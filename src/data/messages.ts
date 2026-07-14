@@ -176,7 +176,7 @@ export const MSG = {
     // inline 메시지로 대체).
 
     // --- 스킬 교체 ---
-    SKILL_SWAP: (oldName: string, newName: string) => `스킬 교체: [${oldName}] → [${newName}]`,
+    SKILL_SWAP: (skillName: string, oldName: string, newName: string) => `${skillName} 성장 변경: ${oldName} → ${newName}`,
     SKILL_SWAP_COST: (gold: number) => `기술 교체 비용 · 골드 ${gold}`,
 
     // --- 직업/클래스 ---
@@ -231,7 +231,8 @@ export const MSG = {
     PREMIUM_INSUFFICIENT: (name: string) => `${name}이(가) 부족합니다.`,
     TITLE_ALREADY_OWNED: '이미 보유 중인 칭호입니다.',
     ITEM_NOT_FOUND: '아이템을 찾을 수 없습니다.',
-    SKILL_BRANCH_CHOSEN: (name: string, choice: string) => `[${name}] 분기 ${choice} 선택 완료.`,
+    SKILL_BRANCH_CHOSEN: (name: string, branchName: string) => `${name} 성장 선택: ${branchName}`,
+    SKILL_BRANCH_ALREADY_CHOSEN: (name: string) => `${name}의 첫 성장 선택은 끝났습니다. 안전한 지역에서 다시 선택할 수 있습니다.`,
     BULK_SELL_EMPTY: '판매할 저가 재료가 없습니다.',
     BULK_SELL_DONE: (count: number, gold: number) => `재료 ${count}개 판매 · 골드 +${gold}`,
 

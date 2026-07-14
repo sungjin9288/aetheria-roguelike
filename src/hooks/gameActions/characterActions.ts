@@ -131,7 +131,8 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             if (!branches) return addLog('error', MSG.SKILL_NO_BRANCH);
             const branch = branches.find((b: any) => b.choice === newChoice);
             if (!branch) return addLog('error', MSG.SKILL_INVALID_BRANCH);
-            const oldChoice = player.skillChoices?.[skillName] || '기본';
+            const oldChoice = player.skillChoices?.[skillName];
+            const oldLabel = branches.find((entry: any) => entry.choice === oldChoice)?.label || '기본 성장';
             dispatch({
                 type: AT.SET_PLAYER,
                 payload: (p: any) => ({
@@ -140,7 +141,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
                     skillChoices: { ...(p.skillChoices || {}), [skillName]: newChoice },
                 }),
             });
-            addLog('success', MSG.SKILL_SWAP(oldChoice, newChoice));
+            addLog('success', MSG.SKILL_SWAP(skillName, oldLabel, branch.label || '선택한 성장'));
             addLog('info', MSG.SKILL_SWAP_COST(cost));
         },
 

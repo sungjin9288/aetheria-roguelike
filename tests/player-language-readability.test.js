@@ -149,6 +149,27 @@ test('first-session record uses natural player language from start through growt
     assert.doesNotMatch(record, /EXP|Gold|Lv\.|ATK|HP|MP|레거시|빌드|콜사인|초기 스킬|🏆|🗺️|⚠️/);
 });
 
+test('skill growth uses natural labels and hides internal choice codes', async () => {
+    const [skills, classTree, messages] = await Promise.all([
+        readSrc('src/components/SkillTreePreview.tsx'),
+        readSrc('src/components/ClassTree.tsx'),
+        readSrc('src/data/messages.ts'),
+    ]);
+
+    for (const label of ['기술 구성', '현재 기술', '기력 소모 없음', '추가 효과', '다음 전직 기술 미리보기', '기술 성장 선택', '무료 선택', "buff: '강화'", "debuff: '약화'"]) {
+        assert.match(skills, new RegExp(label));
+    }
+    assert.match(skills, /formatSkillText\(branch\.desc\)/);
+    assert.match(skills, /pendingSkillBranches/);
+    assert.doesNotMatch(skills, />\s*(Skill Ledger|Current Loadout|Effect|Advancement Preview|Skill Branches)\s*</);
+    assert.doesNotMatch(skills, /\{skill\.mp\} MP|Lv\.\{jobData\.reqLv\}|\{swapCost\}G|>\{branch\.choice\}</);
+
+    assert.match(classTree, /레벨 \{node\.reqLv\}/);
+    assert.doesNotMatch(classTree, /Lv\.\{node\.reqLv\}|>\s*T\{tier\}\s*</);
+    assert.match(messages, /SKILL_BRANCH_ALREADY_CHOSEN/);
+    assert.doesNotMatch(messages, /스킬 교체:|분기 \$\{choice\}/);
+});
+
 test('first-visit rewards keep the first journey in natural player language', () => {
     const locations = [
         '고요한 숲', '서쪽 평원', '호수의 신전', '잊혀진 폐허', '버려진 광산',

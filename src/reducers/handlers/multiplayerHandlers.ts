@@ -4,6 +4,7 @@ export const multiplayerActionMap = {
     // ── Skill Branch ──────────────────────────────────────────────────────
     CHOOSE_SKILL_BRANCH: (state: GameState, action: GameAction) => {
         const { skillName, choice } = action.payload;
+        if (state.player.skillChoices?.[skillName]) return state;
         return {
             ...state,
             player: {

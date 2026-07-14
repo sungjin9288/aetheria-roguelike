@@ -886,8 +886,12 @@ async function moveToForest(page) {
     'arrival at 고요한 숲'
   );
   const arrivalRecord = state.logTail?.map((entry) => entry.text).join(' ') || '';
+  const hasNaturalArrival = [
+    '고요한 숲에 도착했습니다',
+    '고요한 숲에 처음 발을 들였습니다',
+  ].some((text) => arrivalRecord.includes(text));
   ensure(
-    ['고요한 숲에 도착했습니다', '처음 발견한 지역은 고요한 숲입니다', '골드 100 · 경험 25']
+    hasNaturalArrival && ['처음 발견한 지역은 고요한 숲입니다', '골드 100 · 경험 25']
       .every((text) => arrivalRecord.includes(text)),
     `First arrival record did not read naturally: ${arrivalRecord}`
   );
@@ -1058,6 +1062,34 @@ async function verifyTabs(page) {
   await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
   await writeStateArtifact('08a-map-tab', mapState, page, {
     screenshotFullPage: false,
+  });
+
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('skills'));
+  const skillsState = await waitForState(page, (state) => state.sideTab === 'skills', 'skills tab activation');
+  await verifySurfaceLanguage(page, {
+    selector: '[data-testid="skill-tree-preview"]',
+    requiredText: ['기술 구성', '현재 기술', '기력', '다음 전직 기술 미리보기', '기술 성장 선택'],
+    forbiddenPattern: /Skill Ledger|Current Loadout|Effect|Advancement Preview|Skill Branches|\bMP\b|\bLv\.|\d+G\b|x\d|\bBUFF\b|\bDEBUFF\b|\bESCAPE\b/,
+    label: 'skills tab',
+  });
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  await page.waitForTimeout(350);
+  await writeStateArtifact('08c-skills-tab', skillsState, page, {
+    screenshotFullPage: false,
+  });
+  const firstGrowthChoice = page.locator('[data-testid="skill-branch-choice-강타-B"]');
+  await firstGrowthChoice.waitFor({ state: 'visible', timeout: 8000 });
+  await firstGrowthChoice.click();
+  await firstGrowthChoice.waitFor({ state: 'hidden', timeout: 8000 });
+  await verifySurfaceLanguage(page, {
+    selector: '[data-testid="skill-tree-preview"]',
+    requiredText: ['성장 · 기절 배시'],
+    forbiddenPattern: /분기 B|Skill Branches/,
+    label: 'selected skill growth',
+  });
+  const selectedGrowthState = await readState(page);
+  await writeStateArtifact('08d-skills-growth-selected', selectedGrowthState, page, {
+    screenshotSelector: '[data-testid="mobile-archive-console"]',
   });
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('stats'));

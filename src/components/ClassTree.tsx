@@ -62,8 +62,8 @@ const TreeNode = ({ node, isCurrent, isAvailable, isLocked }: any) => {
                 }`}>
                     {node.name}
                 </div>
-                <div className="text-[9px] font-fira text-slate-500">
-                    {TIER_LABELS[tier]} · Lv.{node.reqLv}
+                <div className="text-[11px] text-slate-400/72">
+                    {TIER_LABELS[tier]} · 레벨 {node.reqLv}
                 </div>
             </div>
             {isCurrent && (
@@ -96,12 +96,12 @@ const ClassTree = ({ player }: ClassTreeProps) => {
 
     return (
         <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+            <div className="flex items-center gap-2 font-readable text-[12px] text-slate-300/76">
                 {MSG.CLASS_TREE_TITLE}
             </div>
 
             {/* 범례 */}
-            <div className="flex flex-wrap gap-2 text-[9px] font-fira">
+            <div className="flex flex-wrap gap-2 font-readable text-[11px] text-slate-400/76">
                 <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-cyber-blue" /> {MSG.CLASS_CURRENT}
                 </span>
@@ -119,11 +119,8 @@ const ClassTree = ({ player }: ClassTreeProps) => {
                     {[0, 1, 2, 3].map((tier: any) => (
                         <div key={tier} className="space-y-1.5">
                             {/* 티어 헤더 */}
-                            <div className="text-center mb-1">
-                                <div className="text-[9px] font-fira uppercase tracking-wider" style={{ color: TIER_COLORS[tier] }}>
-                                    T{tier}
-                                </div>
-                                <div className="text-[9px] font-fira text-slate-500">
+                            <div className="mb-1 text-center">
+                                <div className="font-readable text-[11px]" style={{ color: TIER_COLORS[tier] }}>
                                     {TIER_LABELS[tier]}
                                 </div>
                             </div>
@@ -144,14 +141,14 @@ const ClassTree = ({ player }: ClassTreeProps) => {
 
             {/* 연결선 — 현재 직업의 전직 경로 강조 */}
             {availableJobs.size > 0 && (
-                <div className="flex flex-wrap gap-1 text-[9px] font-fira text-slate-500">
+                <div className="flex flex-wrap gap-1 font-readable text-[11px] text-slate-500">
                     <span className="text-slate-400">{player.job}</span>
                     <span>→</span>
                     {[...availableJobs].map((job: any) => {
                         const meetsReq = (player.level ?? 0) >= (DB.CLASSES[job]?.reqLv || 999);
                         return (
                             <span key={job} className={meetsReq ? 'text-cyber-purple' : 'text-slate-500'}>
-                                {job}{meetsReq ? ' ✓' : ` (Lv.${DB.CLASSES[job]?.reqLv})`}
+                                {job}{meetsReq ? ' ✓' : ` (레벨 ${DB.CLASSES[job]?.reqLv})`}
                             </span>
                         );
                     })}

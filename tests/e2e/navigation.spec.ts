@@ -29,8 +29,7 @@ test.describe('Navigation', () => {
         const skillTab = page.locator('[data-testid$="-tab-skills"]').first();
         await expect(skillTab).toBeVisible({ timeout: 8_000 });
         await skillTab.click();
-        // 스킬 카드 또는 Current Loadout 텍스트 노출
-        await expect(page.locator('text=/Current Loadout|스킬|선택/').first()).toBeVisible({ timeout: 5_000 });
+        await expect(page.locator('[data-testid="skill-tree-preview"]')).toContainText('현재 기술', { timeout: 5_000 });
     });
 
     // cycle 61 phase 2: 비-default 탭이 lazy-loading 됨 → 클릭 후 콘텐츠 노출까지

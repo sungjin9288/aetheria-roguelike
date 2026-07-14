@@ -3,7 +3,6 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 // cycle 323: unused RefreshCw icon import 제거 — SkillTreePreview JSX에서 <RefreshCw> 0건.
 import { Zap, Shield, ChevronDown, ChevronRight, Sparkles, GitBranch } from 'lucide-react';
 import { DB } from '../data/db';
-import { CLASSES } from '../data/classes';
 import { getJobSkills } from '../utils/gameUtils';
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
@@ -30,12 +29,22 @@ const EFFECT_LABELS: any = {
     drain: '흡수',
     curse: '저주',
     fear: '공포',
-    atk_up: 'ATK 버프',
-    def_up: 'DEF 버프',
-    all_up: 'ATK + DEF 버프',
+    atk_up: '공격력 상승',
+    def_up: '방어력 상승',
+    all_up: '공격력과 방어력 상승',
     berserk: '광란',
     stealth: '은신',
 };
+
+const formatSkillText = (text: unknown) => String(text || '')
+    .replace(/\bATK\b/g, '공격력')
+    .replace(/\bDEF\b/g, '방어력')
+    .replace(/\bHP\b/g, '생명')
+    .replace(/\bMP\b/g, '기력')
+    .replace(/\bCRIT\b/g, '치명타')
+    .replace(/데미지/g, '피해');
+
+const formatSkillPower = (mult: number) => `위력 ${Math.round(mult * 100)}%`;
 
 const TYPE_TONE: any = {
     화염: 'warning',
@@ -47,7 +56,13 @@ const TYPE_TONE: any = {
     물리: 'neutral',
 };
 
-const SkillCard = ({ skill, cooldown = 0, selected = false, summary = false, onSelect = null }: any) => {
+const SKILL_TYPE_LABELS: Record<string, string> = {
+    buff: '강화',
+    debuff: '약화',
+    escape: '탈출',
+};
+
+const SkillCard = ({ skill, cooldown = 0, selected = false, summary = false, branchLabel = null, onSelect = null }: any) => {
     const isOnCooldown = cooldown > 0;
     const tone = TYPE_TONE[skill.type] || 'neutral';
     const interactive = Boolean(onSelect) && !selected;
@@ -80,35 +95,35 @@ const SkillCard = ({ skill, cooldown = 0, selected = false, summary = false, onS
                         <div className="text-[1rem] font-rajdhani font-bold text-slate-100">
                             {skill.name}
                         </div>
-                        {skill.type && <SignalBadge tone={tone} size="sm"><SkillTypeIcon type={skill.type} size={10} className="mr-0.5 -mt-px" />{skill.type}</SignalBadge>}
-                        {selected && <SignalBadge tone="recommended" size="sm">선택중</SignalBadge>}
+                        {skill.type && <SignalBadge tone={tone} size="sm"><SkillTypeIcon type={skill.type} size={10} className="mr-0.5 -mt-px" />{SKILL_TYPE_LABELS[skill.type] || skill.type}</SignalBadge>}
+                        {selected && <SignalBadge tone="recommended" size="sm">현재 사용</SignalBadge>}
+                        {branchLabel && <SignalBadge tone="resonance" size="sm">성장 · {branchLabel}</SignalBadge>}
                         {skill.fromWeapon && <SignalBadge tone="spotlight" size="sm">무기</SignalBadge>}
                         {skill.fromTrait && <SignalBadge tone="resonance" size="sm">성향</SignalBadge>}
-                        {isOnCooldown && <SignalBadge tone="danger" size="sm">쿨타임 {cooldown}턴</SignalBadge>}
+                        {isOnCooldown && <SignalBadge tone="danger" size="sm">재사용까지 {cooldown}턴</SignalBadge>}
                     </div>
 
                     {!summary && (
-                        <div className="mt-1 text-[11px] font-fira text-slate-300/78">
-                            {skill.desc}
+                        <div className="mt-1 text-[12px] leading-snug text-slate-300/78">
+                            {formatSkillText(skill.desc)}
                         </div>
                     )}
 
                     {skill.effect && EFFECT_LABELS[skill.effect] && !summary && (
-                        <div className="mt-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-500">
-                            Effect
-                            <span className="ml-2 text-slate-300/76 normal-case tracking-normal">{EFFECT_LABELS[skill.effect]}</span>
+                        <div className="mt-2 font-readable text-[11px] text-slate-400/72">
+                            추가 효과 · <span className="text-slate-200/82">{EFFECT_LABELS[skill.effect]}</span>
                         </div>
                     )}
                 </div>
 
                 <div className="shrink-0 text-right">
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-black/18 px-2 py-1 text-[10px] font-fira text-slate-200/82">
+                    <div className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-black/18 px-2 py-1 font-readable text-[11px] text-slate-200/82">
                         <Zap size={11} className="text-[#7dd4d8]" />
-                        {skill.mp} MP
+                        {skill.mp > 0 ? `기력 ${skill.mp}` : '기력 소모 없음'}
                     </div>
                     {skill.mult && (
-                        <div className="mt-1 text-[10px] font-fira text-[#f6e7c8]/78">
-                            x{skill.mult}
+                        <div className="mt-1 font-readable text-[11px] text-[#f6e7c8]/78">
+                            {formatSkillPower(skill.mult)}
                         </div>
                     )}
                 </div>
@@ -136,43 +151,83 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
 
     const nextJobs = currentClass.next || [];
     const selectedSkillName = allCurrentSkills[selectedIndex % Math.max(1, allCurrentSkills.length)]?.name || null;
+    const pendingSkillBranches = Object.entries(currentClass.skillBranches || {})
+        .filter(([skillName]) => !player.skillChoices?.[skillName]) as Array<[string, any[]]>;
 
     return (
-        <div className="space-y-3">
+        <div data-testid="skill-tree-preview" className="space-y-3">
             <div className="rounded-[1.2rem] border border-white/8 bg-black/18 px-4 py-3.5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
                         <ClassIcon className={player.job} size={28} tier={currentClass?.tier || 0} />
                         <div>
-                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                                Skill Ledger
+                            <div className="font-readable text-[11px] text-slate-400/72">
+                                기술 구성
                             </div>
                             <div className="mt-1 text-[1.05rem] font-rajdhani font-bold text-slate-100">
-                                {player.job} 전투 스킬
+                                {player.job} 전투 기술
                             </div>
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                        <SignalBadge tone="neutral" size="sm">{allCurrentSkills?.length || 0} skills</SignalBadge>
-                        {nextJobs.length > 0 && <SignalBadge tone="resonance" size="sm">next class {nextJobs.length}</SignalBadge>}
+                        <SignalBadge tone="neutral" size="sm">사용 기술 {allCurrentSkills?.length || 0}개</SignalBadge>
+                        {nextJobs.length > 0 && <SignalBadge tone="resonance" size="sm">다음 전직 {nextJobs.length}개</SignalBadge>}
                     </div>
                 </div>
             </div>
 
+            {pendingSkillBranches.length > 0 && (
+                <div className="rounded-[1.15rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/5 px-4 py-3.5">
+                    <div className="mb-1 flex items-center gap-2 font-readable text-[12px] text-slate-200/82">
+                        <GitBranch size={12} />
+                        기술 성장 선택
+                    </div>
+                    <div className="mb-3 text-[11px] leading-snug text-slate-400/72">
+                        첫 선택은 무료입니다. 이후에는 안전한 지역에서 골드를 사용해 바꿀 수 있습니다.
+                    </div>
+                    <div className="space-y-3">
+                        {pendingSkillBranches.map(([skillName, branches]) => (
+                            <div key={skillName}>
+                                <div className="mb-1.5 font-rajdhani text-[14px] font-bold text-slate-200/86">{skillName}</div>
+                                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                    {branches.map((branch: any) => (
+                                        <button
+                                            key={branch.choice}
+                                            type="button"
+                                            data-testid={`skill-branch-choice-${skillName}-${branch.choice}`}
+                                            onClick={() => actions?.chooseSkillBranch?.(skillName, branch.choice)}
+                                            disabled={!actions?.chooseSkillBranch}
+                                            className="min-h-[52px] rounded-[0.95rem] border border-white/8 bg-black/16 px-3 py-2.5 text-left text-slate-300 transition-all hover:border-[#7dd4d8]/24 hover:bg-[#7dd4d8]/6 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="font-rajdhani text-[14px] font-bold">{branch.label}</span>
+                                                <SignalBadge tone="recommended" size="sm">무료 선택</SignalBadge>
+                                            </div>
+                                            <div className="mt-1 text-[12px] leading-snug text-slate-400/76">{formatSkillText(branch.desc)}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="rounded-[1.15rem] border border-white/8 bg-black/16 px-4 py-3.5">
                 <div className="mb-3 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                    <div className="flex items-center gap-2 font-readable text-[12px] text-slate-300/76">
                         <Shield size={12} />
-                        Current Loadout
+                        현재 기술
                     </div>
                     {isInSafeZone && actions?.swapSkillChoice && (
-                        <SignalBadge tone="success" size="sm">스킬 교체 가능</SignalBadge>
+                        <SignalBadge tone="success" size="sm">기술 변경 가능</SignalBadge>
                     )}
                 </div>
                 <div className="space-y-2">
                     {allCurrentSkills?.map((skill: any) => {
                         const branches = currentClass?.skillBranches?.[skill.name];
                         const currentChoice = player.skillChoices?.[skill.name];
+                        const currentBranchLabel = branches?.find((branch: any) => branch.choice === currentChoice)?.label;
                         const isSwapping = swapTarget === skill.name;
                         return (
                             <div key={skill.name}>
@@ -180,27 +235,27 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
                                     skill={skill}
                                     selected={skill.name === selectedSkillName}
                                     cooldown={cooldowns[skill.name] || 0}
+                                    branchLabel={currentBranchLabel}
                                     onSelect={actions?.selectSkill || null}
                                 />
-                                {/* 스킬 분기 교체 — 안전지대 + 분기 있는 스킬 */}
-                                {isInSafeZone && branches && actions?.swapSkillChoice && (
+                                {isInSafeZone && branches && currentChoice && actions?.swapSkillChoice && (
                                     <div className="mt-1.5 rounded-[1rem] border border-[#d5b180]/14 bg-[#d5b180]/5 px-2.5 py-2">
                                         <div className="flex items-center justify-between gap-2 mb-2">
-                                            <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.14em] text-[#d5b180]/70">
+                                            <div className="flex items-center gap-1.5 font-readable text-[11px] text-[#d5b180]/76">
                                                 <GitBranch size={10} />
-                                                분기 선택 {currentChoice ? `(현재: ${branches.find((b: any) => b.choice === currentChoice)?.label || currentChoice})` : '(기본)'}
+                                                현재 성장 · {currentBranchLabel}
                                             </div>
                                             <button
                                                 onClick={() => setSwapTarget(isSwapping ? null : skill.name)}
-                                                className="text-[9px] font-fira text-slate-400 hover:text-white transition-colors"
+                                                className="min-h-[36px] rounded-full px-2.5 font-readable text-[11px] text-slate-300/76 transition-colors hover:bg-white/[0.04] hover:text-white"
                                             >
-                                                {isSwapping ? '취소' : '교체'}
+                                                {isSwapping ? '닫기' : '다시 선택'}
                                             </button>
                                         </div>
                                         {isSwapping && (
                                             <div className="space-y-1.5">
                                                 {branches.map((branch: any) => {
-                                                    const isActive = currentChoice === branch.choice || (!currentChoice && branch.choice === 'A');
+                                                    const isActive = currentChoice === branch.choice;
                                                     const canAfford = (player.gold || 0) >= swapCost;
                                                     return (
                                                         <button
@@ -210,7 +265,7 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
                                                                 actions.swapSkillChoice(skill.name, branch.choice);
                                                                 setSwapTarget(null);
                                                             }}
-                                                            className={`w-full rounded-[0.85rem] border px-2.5 py-2 text-left text-[11px] transition-all disabled:cursor-not-allowed ${
+                                                            className={`min-h-[44px] w-full rounded-[0.85rem] border px-2.5 py-2 text-left text-[12px] transition-all disabled:cursor-not-allowed ${
                                                                 isActive
                                                                     ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 text-[#dff7f5]'
                                                                     : canAfford
@@ -222,10 +277,10 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
                                                                 <span className="font-rajdhani font-bold">{branch.label}</span>
                                                                 {isActive
                                                                     ? <SignalBadge tone="recommended" size="sm">선택중</SignalBadge>
-                                                                    : <span className="text-[10px] font-fira text-[#f6e7c8]/70">{swapCost}G</span>
+                                                                    : <span className="font-readable text-[11px] text-[#f6e7c8]/76">골드 {swapCost}</span>
                                                                 }
                                                             </div>
-                                                            <div className="mt-0.5 text-[10px] font-fira text-slate-400">{branch.desc}</div>
+                                                            <div className="mt-0.5 text-[11px] leading-snug text-slate-400/76">{formatSkillText(branch.desc)}</div>
                                                         </button>
                                                     );
                                                 })}
@@ -241,9 +296,9 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
 
             {nextJobs.length > 0 && (
                     <div className="rounded-[1.15rem] border border-white/8 bg-black/16 px-4 py-3.5">
-                        <div className="mb-3 flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                        <div className="mb-3 flex items-center gap-2 font-readable text-[12px] text-slate-300/76">
                             <Sparkles size={12} />
-                            Advancement Preview
+                            다음 전직 기술 미리보기
                         </div>
 
                         <div className="space-y-2">
@@ -272,7 +327,7 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
                                                         {jobName}
                                                     </span>
                                                     <SignalBadge tone={meetsReq ? 'resonance' : 'neutral'} size="sm">
-                                                        Lv.{jobData.reqLv}
+                                                        레벨 {jobData.reqLv}
                                                     </SignalBadge>
                                                 </div>
                                                 <div className="mt-1 text-[11px] font-fira text-slate-400/76">
@@ -311,7 +366,7 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
             <div className="rounded-[1.15rem] border border-white/8 bg-black/16 px-4 py-3.5">
                 <button
                     onClick={() => setShowClassTree(v => !v)}
-                    className="flex w-full items-center justify-between text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500 hover:text-slate-300 transition-colors"
+                    className="flex min-h-[40px] w-full items-center justify-between font-readable text-[12px] text-slate-400/76 transition-colors hover:text-slate-200"
                 >
                     <span className="flex items-center gap-2">
                         <Sparkles size={12} />
@@ -326,54 +381,6 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
                 )}
             </div>
 
-            {/* 스킬 분기 선택 */}
-            {(() => {
-                const classData = CLASSES[player.job as string];
-                const skillBranches = classData?.skillBranches;
-                if (!skillBranches || Object.keys(skillBranches).length === 0) return null;
-                return (
-                    <div className="rounded-[1.15rem] border border-white/8 bg-black/16 px-4 py-3.5">
-                        <div className="mb-3 flex items-center gap-2 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                            <GitBranch size={12} />
-                            Skill Branches
-                        </div>
-                        <div className="space-y-3">
-                            {(Object.entries(skillBranches) as Array<[string, any[]]>).map(([skillName, branches]: any) => {
-                                const chosen = player.skillChoices?.[skillName];
-                                return (
-                                    <div key={skillName}>
-                                        <div className="mb-1.5 text-[11px] font-rajdhani font-bold text-slate-300/80">{skillName}</div>
-                                        <div className="grid grid-cols-2 gap-1.5">
-                                            {branches.map((branch: any) => {
-                                                const isChosen = chosen === branch.choice;
-                                                return (
-                                                    <button
-                                                        key={branch.choice}
-                                                        type="button"
-                                                        onClick={() => actions?.chooseSkillBranch?.(skillName, branch.choice)}
-                                                        disabled={!actions?.chooseSkillBranch}
-                                                        className={`rounded-[0.95rem] border px-2.5 py-2.5 text-left transition-all ${
-                                                            isChosen
-                                                                ? 'border-[#7dd4d8]/30 bg-[#7dd4d8]/12 text-[#dff7f5]'
-                                                                : 'border-white/8 bg-black/16 text-slate-400 hover:border-white/14 hover:text-slate-300'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="text-[10px] font-fira font-bold text-[#d5b180]">{branch.choice}</span>
-                                                            <span className="text-[12px] font-rajdhani font-bold">{branch.label}</span>
-                                                        </div>
-                                                        <div className="mt-0.5 text-[10px] font-fira text-slate-500 leading-snug">{branch.desc}</div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
-            })()}
         </div>
     );
 };
