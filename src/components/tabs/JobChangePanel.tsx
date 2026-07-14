@@ -25,20 +25,21 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
 
   return (
     <Motion.div
+      data-testid="job-change-panel"
       initial={false}
       animate={{ opacity: 1, scale: 1 }}
       className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden border border-[#9a8ac0]/18 px-4 py-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
     >
       <FocusPanelHeader
-        eyebrow="Class Circuit"
-        title="Class Advancement"
-        meta={`현재 ${player.job} · 다음 전직 ${avail.length || 0}개`}
+        eyebrow="성장 갈림길"
+        title="전직 선택"
+        meta={`현재 직업 ${player.job} · ${avail.length || 0}가지 선택`}
         onBack={() => setGameState?.('idle')}
         backLabel="복귀"
         backTestId="job-change-close"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}
-        archiveLabel="INV"
+        archiveLabel="가방"
         archiveTestId="job-change-open-archive"
       />
 
@@ -46,8 +47,8 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
         <div className="flex items-center gap-2.5 mb-3">
           <ClassIcon className={player.job} size={30} tier={current?.tier || 0} />
           <div>
-            <div className="text-[9px] font-fira uppercase tracking-[0.16em] text-slate-500">Current Class</div>
-            <div className="text-[15px] font-rajdhani font-bold text-slate-100">{player.job}</div>
+            <div className="text-[11px] font-readable text-slate-400/76">현재 직업</div>
+            <div className="text-[17px] font-rajdhani font-bold text-slate-100">{player.job}</div>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-2 w-full max-w-2xl justify-items-center">
@@ -59,7 +60,11 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
               disabled={player.level < (DB.CLASSES[job]?.reqLv || 999)}
             />
           ))}
-          {avail.length === 0 && <div className="text-cyber-blue/50 font-rajdhani tracking-widest text-lg">MAXIMUM POTENTIAL REACHED</div>}
+          {avail.length === 0 && (
+            <div className="w-full rounded-[1rem] border border-white/8 bg-black/16 px-4 py-8 text-center font-readable text-sm text-slate-300/76">
+              최종 전직에 도달했습니다.
+            </div>
+          )}
         </div>
       </div>
     </Motion.div>

@@ -824,6 +824,9 @@ async function verifyMobileFocusPanels(page) {
     decisionSelector: '[data-testid="job-change-option"]',
     primarySelector: '[data-testid="job-change-option"]',
     allowDisabledPrimary: true,
+    readabilitySelector: '[data-testid="job-change-panel"]',
+    requiredText: ['전직 선택', '현재 직업', '대표 기술', '사용 기술'],
+    forbiddenPattern: /Class Circuit|Class Advancement|Current Class|skills|MAXIMUM POTENTIAL|INV/,
   });
 
   await verifyMobileFocusPanelFlow(page, {

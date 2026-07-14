@@ -11,12 +11,14 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('first-play surfaces use player-facing Korean labels', async () => {
-    const [controlPanel, dashboard, mapNavigator, mobileSummary, returnBriefing, messages] = await Promise.all([
+    const [controlPanel, dashboard, mapNavigator, mobileSummary, returnBriefing, jobChangePanel, classCard, messages] = await Promise.all([
         readSrc('src/components/ControlPanel.tsx'),
         readSrc('src/components/Dashboard.tsx'),
         readSrc('src/components/MapNavigator.tsx'),
         readSrc('src/components/DashboardMobileSummary.tsx'),
         readSrc('src/components/ReturnBriefingCard.tsx'),
+        readSrc('src/components/tabs/JobChangePanel.tsx'),
+        readSrc('src/components/ClassCard.tsx'),
         readSrc('src/data/messages.ts'),
     ]);
 
@@ -48,6 +50,15 @@ test('first-play surfaces use player-facing Korean labels', async () => {
     assert.match(returnBriefing, /다시 만난 모험가에게/);
     assert.match(messages, /RETURN_BRIEFING_STATUS_LABEL: '현재 상태'/);
     assert.match(messages, /RETURN_BRIEFING_MISSIONS_LABEL: '남은 오늘의 임무'/);
+
+    for (const label of ['성장 갈림길', '전직 선택', '현재 직업', '가지 선택', '가방']) {
+        assert.match(jobChangePanel, new RegExp(label));
+    }
+    for (const label of ['전직 가능', '대표 기술', '사용 기술', '매우 높음']) {
+        assert.match(classCard, new RegExp(label));
+    }
+    assert.doesNotMatch(jobChangePanel, /Class Circuit|Class Advancement|Current Class|MAXIMUM POTENTIAL|archiveLabel="INV"/);
+    assert.doesNotMatch(classCard, /\{skillCount\} skills|>x\{value\}</);
 });
 
 test('menu, settings, and device playtest use one natural Korean vocabulary', async () => {
