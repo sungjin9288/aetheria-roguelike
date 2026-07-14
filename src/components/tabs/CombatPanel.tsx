@@ -37,7 +37,7 @@ const ACTION_BUTTONS: any = [
   {
     key: 'swap',
     label: '기술 변경',
-    mobileLabel: '변경',
+    mobileLabel: '기술 변경',
     icon: RotateCw,
     className: 'bg-[linear-gradient(180deg,rgba(33,23,45,0.74)_0%,rgba(12,10,18,0.94)_100%)] border border-[#9a8ac0]/20 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/28',
   },
@@ -127,8 +127,8 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                   {enemy?.name || '적'}와 교전 중
                 </div>
                 {selectedSkill && (
-                  <div className="text-[10px] font-fira text-slate-300/70">
-                    {selectedSkill.name} · 기력 {selectedSkill.mp || 0} · 재사용 {skillCooldown}턴
+                  <div className="text-[11px] font-readable text-slate-300/78">
+                    {selectedSkill.name} · 기력 {selectedSkill.mp || 0} · {skillCooldown > 0 ? `${skillCooldown}턴 후 사용` : '바로 사용 가능'}
                   </div>
                 )}
               </div>
@@ -188,10 +188,10 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
           {enemy && (() => {
             const dots: string[] = Array.isArray(enemy?.dots) ? enemy.dots : [];
             const debuffs: string[] = [];
-            if ((enemy?.stunnedTurns || 0) > 0) debuffs.push(`기절·${enemy.stunnedTurns}T`);
-            if ((enemy?.cursedTurns || 0) > 0) debuffs.push(`저주·${enemy.cursedTurns}T`);
-            if ((enemy?.blindTurns || 0) > 0) debuffs.push(`실명·${enemy.blindTurns}T`);
-            if ((enemy?.fearTurns || 0) > 0) debuffs.push(`공포·${enemy.fearTurns}T`);
+            if ((enemy?.stunnedTurns || 0) > 0) debuffs.push(`기절 · ${enemy.stunnedTurns}턴`);
+            if ((enemy?.cursedTurns || 0) > 0) debuffs.push(`저주 · ${enemy.cursedTurns}턴`);
+            if ((enemy?.blindTurns || 0) > 0) debuffs.push(`실명 · ${enemy.blindTurns}턴`);
+            if ((enemy?.fearTurns || 0) > 0) debuffs.push(`공포 · ${enemy.fearTurns}턴`);
             const DOT_LABEL: Record<string, string> = { poison: '독', burn: '화상', bleed: '출혈' };
             for (const dot of dots) {
               if (DOT_LABEL[dot]) debuffs.push(DOT_LABEL[dot]);
@@ -247,10 +247,10 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
               <div className="grid grid-cols-3 gap-1.5">
                 {combatForecastCells.map((cell) => (
                   <div key={cell.label} className="aether-combat-forecast-cell rounded-lg px-2 py-1.5">
-                    <div className="font-fira text-[7px] font-bold uppercase tracking-normal text-slate-400/78">
+                    <div data-testid="combat-forecast-label" className="font-readable text-[9px] font-semibold tracking-normal text-slate-300/78">
                       {cell.label}
                     </div>
-                    <div className="mt-0.5 line-clamp-2 font-readable text-[10px] font-semibold leading-[1.15] text-slate-100/90">
+                    <div data-testid="combat-forecast-value" className="mt-0.5 line-clamp-2 font-readable text-[11px] font-semibold leading-[1.2] text-slate-100/92">
                       {cell.value}
                     </div>
                   </div>
@@ -287,8 +287,8 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
 
       {combatConsumables.length > 0 && (
         <div className="space-y-2">
-          <div className="px-1 text-[10px] font-fira uppercase tracking-normal text-cyber-blue/65">
-            Combat Items
+          <div className="px-1 text-[11px] font-readable font-semibold tracking-normal text-cyan-100/72">
+            전투 소모품
           </div>
           <div className={`grid gap-2 ${mobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
             {combatConsumables.map((item: any) => (

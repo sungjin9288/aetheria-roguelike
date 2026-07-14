@@ -23,6 +23,10 @@ test('persistent status and enemy target use direct Korean metric labels', async
         assert.match(source, new RegExp(label));
     }
     assert.match(source, /isMuted \? '소리 켜기' : '소리 끄기'/);
+    assert.match(source, /data-testid="enemy-portrait"/);
+    assert.match(source, /<MonsterIcon name=\{enemy\.name\}/);
+    assert.match(source, /data-testid="enemy-status-label"/);
+    assert.match(source, /data-testid="enemy-health-value"/);
     assert.doesNotMatch(source, /Target Lock|>Boss<|label="(?:HP|NRG|EXP)"|>CR<|Toggle Sound/);
 });
 
@@ -92,6 +96,9 @@ test('smoke verifies the rendered status, enemy, and log vocabulary', async () =
     assert.match(smoke, /document\.getAnimations\(\)/);
     assert.match(smoke, /writeStateArtifact\('03-arrived-forest', state, page\)/);
     assert.match(smoke, /Enemy status should use the player-facing target label/);
+    assert.match(smoke, /Enemy portrait should remain visually identifiable/);
+    assert.match(smoke, /Enemy portrait should render a monster family shape/);
+    assert.match(smoke, /Combat forecast labels should be at least 9px/);
     assert.match(smoke, /Field log should expose at least one readable type badge/);
     assert.match(smoke, /Status command should use direct Korean metric labels/);
 });

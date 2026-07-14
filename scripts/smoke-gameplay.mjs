@@ -224,8 +224,10 @@ async function verifyActionReachable(locator, label, options = {}) {
 async function verifyCombatForecast(page) {
   const forecast = page.locator('[data-testid="combat-forecast-strip"]');
   const enemyStatus = page.locator('[data-testid="enemy-status"]');
+  const enemyPortrait = page.locator('[data-testid="enemy-portrait"]');
   await forecast.waitFor({ state: 'visible', timeout: 5000 });
   await enemyStatus.waitFor({ state: 'visible', timeout: 5000 });
+  await enemyPortrait.waitFor({ state: 'visible', timeout: 5000 });
   const text = await forecast.innerText();
   const enemyText = await enemyStatus.innerText();
   const tone = await forecast.getAttribute('data-forecast-tone');
@@ -235,7 +237,41 @@ async function verifyCombatForecast(page) {
   ensure(enemyText.includes('교전 대상'), 'Enemy status should use the player-facing target label');
   ensure(enemyText.includes('생명'), 'Enemy status should use the player-facing health label');
   ensure(!/Target Lock|\bHP\b/.test(enemyText), 'Enemy status should not expose mechanical English labels');
+  ensure(!/\b(?:HP|MP|CD)\b|Combat Items|\d+T\b/.test(text), 'Combat forecast should not expose mechanical abbreviations');
   ensure(['pressure', 'advantage', 'reward', 'steady'].includes(tone), 'Combat forecast should expose a known tone');
+
+  const layout = await page.locator('[data-testid="persistent-status-bar"]').evaluate((statusBar) => {
+    const enemy = statusBar.querySelector('[data-testid="enemy-status"]');
+    const portrait = statusBar.querySelector('[data-testid="enemy-portrait"]');
+    const portraitPath = portrait?.querySelector('svg path');
+    const enemyLabels = [
+      statusBar.querySelector('[data-testid="enemy-status-label"]'),
+      statusBar.querySelector('[data-testid="enemy-health-label"]'),
+    ].filter(Boolean);
+    const enemyValue = statusBar.querySelector('[data-testid="enemy-health-value"]');
+    const forecastLabels = [...document.querySelectorAll('[data-testid="combat-forecast-label"]')];
+    const forecastValues = [...document.querySelectorAll('[data-testid="combat-forecast-value"]')];
+    const fontSizes = (nodes) => nodes.map((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+    const portraitBox = portrait?.getBoundingClientRect();
+    return {
+      enemyClientWidth: enemy?.clientWidth || 0,
+      enemyScrollWidth: enemy?.scrollWidth || 0,
+      portraitWidth: portraitBox?.width || 0,
+      portraitHeight: portraitBox?.height || 0,
+      portraitRendered: Boolean(portraitPath?.getAttribute('d')),
+      enemyLabelSizes: fontSizes(enemyLabels),
+      enemyValueSize: enemyValue ? Number.parseFloat(getComputedStyle(enemyValue).fontSize) : 0,
+      forecastLabelSizes: fontSizes(forecastLabels),
+      forecastValueSizes: fontSizes(forecastValues),
+    };
+  });
+  ensure(layout.enemyScrollWidth <= layout.enemyClientWidth + 1, `Enemy status should not overflow horizontally: ${JSON.stringify(layout)}`);
+  ensure(layout.portraitWidth >= 44 && layout.portraitHeight >= 44, `Enemy portrait should remain visually identifiable: ${JSON.stringify(layout)}`);
+  ensure(layout.portraitRendered, `Enemy portrait should render a monster family shape: ${JSON.stringify(layout)}`);
+  ensure(layout.enemyLabelSizes.length === 2 && layout.enemyLabelSizes.every((size) => size >= 10), `Enemy labels should be at least 10px: ${JSON.stringify(layout)}`);
+  ensure(layout.enemyValueSize >= 12, `Enemy health value should be at least 12px: ${JSON.stringify(layout)}`);
+  ensure(layout.forecastLabelSizes.length === 3 && layout.forecastLabelSizes.every((size) => size >= 9), `Combat forecast labels should be at least 9px: ${JSON.stringify(layout)}`);
+  ensure(layout.forecastValueSizes.length === 3 && layout.forecastValueSizes.every((size) => size >= 11), `Combat forecast values should be at least 11px: ${JSON.stringify(layout)}`);
 }
 
 async function verifyPostCombatDecisionStrip(page, options = {}) {

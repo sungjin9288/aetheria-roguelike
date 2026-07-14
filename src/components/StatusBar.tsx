@@ -1,6 +1,7 @@
 import { Volume2, VolumeX } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
+import MonsterIcon from './icons/MonsterIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
 import { useHitFlash } from '../hooks/useHitFlash';
 import type { Player, Monster } from '../types/index.js';
@@ -98,18 +99,27 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
       )}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-100/22 to-transparent" />
       <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="text-[9px] font-readable text-rose-100/58">
-            교전 대상
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div
+            data-testid="enemy-portrait"
+            aria-hidden="true"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.85rem] border border-rose-200/18 bg-black/24 text-rose-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+          >
+            <MonsterIcon name={enemy.name} discovered isBoss={enemy.isBoss} size={34} />
           </div>
-          <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-            <span className="truncate font-rajdhani font-bold text-rose-50/94 text-[13px]">{enemy.name}</span>
-            {enemy.isBoss && <SignalBadge tone="danger" size="sm">보스</SignalBadge>}
+          <div className="min-w-0">
+            <div data-testid="enemy-status-label" className="text-[10px] font-readable text-rose-100/66">
+              교전 대상
+            </div>
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+              <span className="truncate font-readable font-semibold text-rose-50/94 text-[14px]">{enemy.name}</span>
+              {enemy.isBoss && <SignalBadge tone="danger" size="sm">보스</SignalBadge>}
+            </div>
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-[8px] font-readable text-rose-100/52">생명</div>
-          <div className="font-rajdhani font-bold text-rose-50/90 text-[12px]">{safeValue}/{safeMax}</div>
+          <div data-testid="enemy-health-label" className="text-[10px] font-readable text-rose-100/62">생명</div>
+          <div data-testid="enemy-health-value" className="font-readable font-semibold text-rose-50/92 text-[12px]">{safeValue}/{safeMax}</div>
         </div>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full border border-rose-300/20 bg-black/30">

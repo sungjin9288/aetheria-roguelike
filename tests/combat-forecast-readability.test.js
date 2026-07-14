@@ -38,7 +38,7 @@ test('combat forecast maps pressure to actual mobile actions', () => {
     });
 
     assert.equal(forecast.tone, 'pressure');
-    assert.equal(forecast.response, 'HP 아이템');
+    assert.equal(forecast.response, '회복 아이템');
     assert.equal(forecast.window, '회복 우선');
 });
 
@@ -72,7 +72,7 @@ test('combat forecast exposes reward windows without changing combat logic', () 
 
     assert.equal(forecast.tone, 'reward');
     assert.equal(forecast.window, '전설 보상');
-    assert.equal(forecast.response, 'CD 대기');
+    assert.equal(forecast.response, '재사용 대기');
 });
 
 test('CombatPanel renders direct Korean forecast labels', async () => {
@@ -83,10 +83,14 @@ test('CombatPanel renders direct Korean forecast labels', async () => {
     assert.match(view, /getCombatForecast/);
     assert.match(source, /data-testid="combat-forecast-strip"/);
     assert.match(source, /data-forecast-tone=\{combatForecast\.tone\}/);
+    assert.match(source, /data-testid="combat-forecast-label"/);
+    assert.match(source, /data-testid="combat-forecast-value"/);
     assert.match(view, /label:\s*'적의 행동'/);
     assert.match(view, /label:\s*'대응'/);
     assert.match(view, /label:\s*'기회'/);
     assert.doesNotMatch(view, /label:\s*'(INTENT|RESPONSE|WINDOW)'/);
+    assert.doesNotMatch(source, /Combat Items|\d+T/);
+    assert.doesNotMatch(view, /HP 아이템|CD 대기|MP 절약|스킬 보류/);
 });
 
 test('smoke loop verifies the combat forecast strip during combat coverage', async () => {

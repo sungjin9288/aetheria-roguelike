@@ -43,7 +43,7 @@ const getStatusLabel = (status: any) => {
 };
 
 const getSkillShortName = (skill: any) => {
-    if (!skill?.name) return '스킬';
+    if (!skill?.name) return '기술';
     return String(skill.name).replace(/\s+/g, '');
 };
 
@@ -82,7 +82,7 @@ export const getCombatForecast = ({
     if (telegraphType === 'stunned') {
         response = '공격 집중';
     } else if (playerHpRatio <= 0.35 && hasHpItem) {
-        response = 'HP 아이템';
+        response = '회복 아이템';
     } else if (playerHpRatio <= 0.35 && canUseSkill && selectedSkill?.effect === 'drain') {
         response = `${skillName} 회복`;
     } else if (playerHpRatio <= 0.35) {
@@ -96,7 +96,7 @@ export const getCombatForecast = ({
     } else if (telegraphType === 'heavy' && hasHpItem) {
         response = '회복 여지';
     } else if (telegraphType === 'guard') {
-        response = '스킬 보류';
+        response = '기술 아끼기';
     } else if (skillHitsWeakness) {
         response = `${skillName} 약점`;
     } else if (canUseSkill && enemyHpRatio <= 0.35) {
@@ -104,9 +104,9 @@ export const getCombatForecast = ({
     } else if (canUseSkill && selectedSkill?.effect === 'stun') {
         response = `${skillName} 차단`;
     } else if (selectedSkill && skillCooldown > 0) {
-        response = 'CD 대기';
+        response = '재사용 대기';
     } else if (selectedSkill && (player.mp || 0) < skillCost) {
-        response = 'MP 절약';
+        response = '기력 아끼기';
     }
 
     let window = '안정 교전';
