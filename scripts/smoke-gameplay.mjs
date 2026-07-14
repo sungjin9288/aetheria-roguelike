@@ -569,6 +569,9 @@ async function verifyMobileArchiveConsole(page) {
   await page.locator('[data-testid="archive-tab-equipment"]').click();
   await page.locator('[data-testid="equipment-slot-weapon"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="equipment-slot-armor"]').waitFor({ state: 'visible', timeout: 5000 });
+  const equipmentSurfaceText = await page.locator('[data-testid="equipment-panel"]').innerText();
+  ensure(equipmentSurfaceText.includes('공격력') && equipmentSurfaceText.includes('방어력'), 'Equipment summary should use readable Korean stat labels');
+  ensure(!/\b(?:ATK|DEF|HP|MP|CRIT)\b/.test(equipmentSurfaceText), 'Equipment panel should not expose legacy stat abbreviations');
   const weaponSlot = page.locator('[data-testid="equipment-slot-weapon"]');
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({ gold: 100, materialCount: 0, weaponEnhance: 0 }));
@@ -681,6 +684,9 @@ async function verifyShopFlow(page) {
     (nextState) => nextState.gameState === 'shop',
     'shop panel to open'
   );
+  const shopSurfaceText = await page.locator('[data-testid="shop-panel"]').innerText();
+  ensure(shopSurfaceText.includes('마을 상점') && shopSurfaceText.includes('골드'), 'Shop should expose the Korean commerce vocabulary');
+  ensure(!/Broker Ledger|MARKET|Daily Deals|Weekly Special|\bCR\b/.test(shopSurfaceText), 'Shop should not expose legacy commerce labels');
   await writeStateArtifact('02a-shop-open', openState, page);
 
   if (isMobile) {

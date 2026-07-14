@@ -25,7 +25,7 @@ interface EquipmentPanelProps {
 const SLOT_CONFIG: any = [
     { key: 'weapon', label: '주무기' },
     { key: 'armor', label: '방어구' },
-    { key: 'offhand', label: '보조장비' },
+    { key: 'offhand', label: '보조 장비' },
 ];
 
 // cycle 411: frost / arcane 제거 — signatureSets.json sets는 fire/holy/nature/shadow
@@ -88,7 +88,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const progressTone = setProgress ? (SIG_SET_TONE[setProgress.tone] || SIG_SET_TONE.holy) : null;
 
     return (
-        <div className="space-y-3">
+        <div data-testid="equipment-panel" className="space-y-3">
             <div className="overflow-hidden rounded-[1.1rem] border border-white/8 bg-black/18 p-3">
                 <div className="flex items-start gap-3">
                     <PixelCharacterAvatar
@@ -101,38 +101,34 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         showEnhanceBadge={false}
                     />
                     <div className="min-w-0 flex-1">
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                             <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                                <div className="text-[11px] font-fira uppercase text-slate-400">ATK</div>
-                                <div className="mt-0.5 text-xs font-fira font-bold text-[#dff7f5]">{stats?.atk || 0}</div>
+                                <div className="text-[11px] font-readable text-slate-400">공격력</div>
+                                <div className="mt-0.5 text-xs font-readable font-bold text-[#dff7f5]">{stats?.atk || 0}</div>
                             </div>
                             <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                                <div className="text-[11px] font-fira uppercase text-slate-400">DEF</div>
-                                <div className="mt-0.5 text-xs font-fira font-bold text-white/88">{stats?.def || 0}</div>
-                            </div>
-                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                                <div className="text-[11px] font-fira uppercase text-slate-400">강화 재료</div>
-                                <div className="mt-0.5 text-xs font-fira font-bold text-[#e3dcff]">{enhanceMaterialCount}개</div>
+                                <div className="text-[11px] font-readable text-slate-400">방어력</div>
+                                <div className="mt-0.5 text-xs font-readable font-bold text-white/88">{stats?.def || 0}</div>
                             </div>
                         </div>
-                        <div className="mt-2 grid grid-cols-3 gap-2">
+                        <div className="mt-2 flex items-center justify-between rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
+                            <span className="text-[11px] font-readable text-slate-400">강화 재료</span>
+                            <span className="text-xs font-readable font-bold text-[#e3dcff]">{enhanceMaterialCount}개</span>
+                        </div>
+                        <div className="mt-2 space-y-1.5">
                             {[
                                 { key: 'weapon', label: '주무기', name: weaponName, slot: stats?.jobAffinity?.slots?.weapon },
                                 { key: 'armor',  label: '방어구', name: armorName,  slot: stats?.jobAffinity?.slots?.armor },
-                                { key: 'offhand', label: '보조장비', name: offhandName, slot: stats?.jobAffinity?.slots?.offhand },
+                                { key: 'offhand', label: '보조 장비', name: offhandName, slot: stats?.jobAffinity?.slots?.offhand },
                             ].map((s: any) => (
                                 <div
                                     key={s.key}
-                                    className={`rounded-[0.95rem] px-2.5 py-2 transition-colors ${s.slot ? 'border border-[#d5b180]/30 bg-[#d5b180]/8' : 'aether-panel-muted'}`}
+                                    className={`flex min-w-0 items-center gap-2 rounded-[0.85rem] px-2.5 py-1.5 transition-colors ${s.slot ? 'border border-[#d5b180]/30 bg-[#d5b180]/8' : 'aether-panel-muted'}`}
                                     title={s.slot ? `${player?.job} 세트 매치 슬롯` : undefined}
                                 >
-                                    <div className="flex items-center justify-between gap-1">
-                                        <span className="text-[10px] font-fira uppercase tracking-[0.14em] text-slate-400/74">{s.label}</span>
-                                        {s.slot && (
-                                            <span aria-label="세트 매치" title="세트 매치" className="text-[9px] font-fira font-bold text-[#d5b180]">⚔</span>
-                                        )}
-                                    </div>
-                                    <div className={`mt-1 break-words text-[11px] font-fira font-semibold leading-[1.35] ${s.slot ? 'text-[#f6e7c8]' : 'text-white/88'}`}>{s.name}</div>
+                                    <span className="w-[52px] shrink-0 text-[10px] font-readable text-slate-400/74">{s.label}</span>
+                                    <span className={`min-w-0 flex-1 truncate text-[11px] font-readable font-semibold ${s.slot ? 'text-[#f6e7c8]' : 'text-white/88'}`}>{s.name}</span>
+                                    {s.slot && <Sparkles size={11} aria-label="세트 매치" className="shrink-0 text-[#d5b180]" />}
                                 </div>
                             ))}
                         </div>
@@ -150,7 +146,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                             const nextHint = matchCount === 0
                                 ? `같은 직업(${player?.job}) 호환 장비 1개 장착 시 세트 효과 발동`
                                 : matchCount < 3
-                                    ? `+${3 - matchCount}슬롯 매치 시 ${matchCount === 1 ? '2단계 (ATK +15% DEF +10%)' : '풀세트 (ATK +30% DEF +20%)'}`
+                                    ? `${3 - matchCount}개 더 맞추면 ${matchCount === 1 ? '2단계 효과 (공격력 +15%, 방어력 +10%)' : '풀세트 효과 (공격력 +30%, 방어력 +20%)'}`
                                     : '풀세트 발동 — 모든 슬롯 매치 완료';
                             return (
                                 <div
@@ -163,13 +159,13 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     <div className="flex flex-wrap items-center gap-1.5 font-bold">
                                         <span className="tracking-[0.18em]" aria-hidden="true">{dots}</span>
                                         <span>{aff.label || `${player?.job} 세트`} ({matchCount}/3)</span>
-                                        {aff.bonus?.atkMult > 1 && <span className="text-white/82">ATK +{Math.round((aff.bonus.atkMult - 1) * 100)}%</span>}
-                                        {aff.bonus?.defMult > 1 && <span className="text-white/82">DEF +{Math.round((aff.bonus.defMult - 1) * 100)}%</span>}
-                                        {aff.bonus?.hpBonus > 0 && <span className="text-white/82">HP +{Math.round(aff.bonus.hpBonus * 100)}%</span>}
-                                        {aff.bonus?.mpBonus > 0 && <span className="text-white/82">MP +{Math.round(aff.bonus.mpBonus * 100)}%</span>}
+                                        {aff.bonus?.atkMult > 1 && <span className="text-white/82">공격력 +{Math.round((aff.bonus.atkMult - 1) * 100)}%</span>}
+                                        {aff.bonus?.defMult > 1 && <span className="text-white/82">방어력 +{Math.round((aff.bonus.defMult - 1) * 100)}%</span>}
+                                        {aff.bonus?.hpBonus > 0 && <span className="text-white/82">생명 +{Math.round(aff.bonus.hpBonus * 100)}%</span>}
+                                        {aff.bonus?.mpBonus > 0 && <span className="text-white/82">기력 +{Math.round(aff.bonus.mpBonus * 100)}%</span>}
                                     </div>
                                     <div className="mt-1 text-white/70 font-normal leading-snug" style={{ color: 'rgba(255,255,255,0.66)' }}>
-                                        💡 {nextHint}
+                                        {nextHint}
                                     </div>
                                 </div>
                             );
@@ -191,9 +187,9 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         aria-expanded={showSetCatalog}
                     >
                         <div className="min-w-0">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-[#d5b180]/82">⚔ {player?.job} 세트 카탈로그</div>
+                            <div className="text-[10px] font-readable text-[#d5b180]/82">{player?.job} 세트 목록</div>
                             <div className="mt-0.5 text-[11px] font-fira text-slate-300/72 leading-snug">
-                                슬롯별 세트 매칭 후보 · ✓ 장착중 · 🎒 보유 · 미발견 = 미보유
+                                슬롯별 후보 · 장착 중 · 보유 · 미발견
                             </div>
                         </div>
                         <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-fira text-slate-400/72">
@@ -206,7 +202,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                             {[
                                 { key: 'weapon', label: '주무기', list: setCatalog.weapon },
                                 { key: 'armor',  label: '방어구', list: setCatalog.armor },
-                                { key: 'offhand', label: '보조장비', list: setCatalog.offhand },
+                                { key: 'offhand', label: '보조 장비', list: setCatalog.offhand },
                             ].map((group: any) => {
                                 if (group.list.length === 0) return null;
                                 const ownedCount = group.list.filter((it: any) => ownedItemNames.has(it.name)).length;
@@ -230,12 +226,12 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                                     <span
                                                         key={it.name}
                                                         className={cls}
-                                                        title={`${it.name} (T${it.tier || 1}) — ${(it as any).desc_stat || (it as any).desc || ''}`}
+                                                        title={`${it.name} (등급 ${it.tier || 1}) · ${getItemStatText(it)}`}
                                                         data-testid={`set-catalog-item-${it.name}`}
                                                     >
-                                                        <span>{isEquipped ? '✓' : isOwned ? '🎒' : '·'}</span>
+                                                        <span>{isEquipped ? '장착' : isOwned ? '보유' : '미발견'}</span>
                                                         <span className="truncate max-w-[100px]">{it.name}</span>
-                                                        <span className="text-slate-500/80">T{it.tier || 1}</span>
+                                                        <span className="text-slate-500/80">등급 {it.tier || 1}</span>
                                                     </span>
                                                 );
                                             })}
@@ -244,7 +240,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 );
                             })}
                             <div className="rounded-[0.85rem] border border-white/8 bg-white/[0.02] px-2.5 py-1.5 text-[10px] font-fira leading-snug text-slate-400/80">
-                                💡 위 아이템 중 주무기·방어구·보조장비 세 슬롯에 모두 장착하면 풀세트 효과 (ATK +30%, DEF +20%, HP +10%, MP +15%) 발동
+                                주무기·방어구·보조 장비를 모두 맞추면 풀세트 효과가 발동합니다. 공격력 +30%, 방어력 +20%, 생명 +10%, 기력 +15%
                             </div>
                         </div>
                     )}
@@ -400,7 +396,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                             {slot.canEnhance && slot.requirement && (
                                                 <div className="mt-2 rounded-[0.9rem] border border-white/8 bg-black/16 px-2.5 py-2 space-y-0.5 text-[11px] font-fira">
                                                     <div className="text-slate-300/86">
-                                                        {slot.requirement.gold.toLocaleString()}G · {slot.requirement.materialName} {slot.requirement.materials}개
+                                                        골드 {slot.requirement.gold.toLocaleString()} · {slot.requirement.materialName} {slot.requirement.materials}개
                                                     </div>
                                                     <div className={slot.affordable ? 'text-emerald-200/70' : 'text-amber-200/78'}>
                                                         {slot.enhanceHint}
@@ -422,7 +418,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                                 ? 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8] hover:bg-[#d5b180]/18'
                                                 : 'border-white/8 bg-black/20 text-slate-500 opacity-80'
                                         }`}
-                                        title={slot.requirement ? `다음 강화 비용 ${slot.requirement.gold.toLocaleString()}G / ${slot.requirement.materialName} ${slot.requirement.materials}개` : '강화 불가'}
+                                        title={slot.requirement ? `다음 강화 비용: 골드 ${slot.requirement.gold.toLocaleString()} · ${slot.requirement.materialName} ${slot.requirement.materials}개` : '강화 불가'}
                                     >
                                         강화
                                     </button>

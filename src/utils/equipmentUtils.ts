@@ -33,9 +33,9 @@ export const isOneHandWeapon = (weapon: any) => isWeapon(weapon) && !isTwoHandWe
 
 export const getWeaponStyleLabel = (item: Item | null | undefined) => {
     if (!item) return '미장착';
-    if (isWeapon(item)) return isTwoHandWeapon(item) ? '파쇄 2H' : '연계 1H';
-    if (isFocusOffhand(item)) return '비전 보조';
-    if (isShield(item)) return '방벽 보조';
+    if (isWeapon(item)) return isTwoHandWeapon(item) ? '양손 무기' : '한손 무기';
+    if (isFocusOffhand(item)) return '마력 보조 장비';
+    if (isShield(item)) return '방어 보조 장비';
     if (item.type === 'armor') return '방어구';
     return '장비';
 };
@@ -278,27 +278,27 @@ export const getWeaponMagicSkills = (equip: EquipSlots) => {
 export const getItemStatText = (item: Item | null | undefined) => {
     if (!item) return '';
 
-    const elemSuffix = item.elem ? `(${item.elem})` : '';
+    const elemSuffix = item.elem ? ` · ${item.elem} 속성` : '';
 
     if (isWeapon(item)) {
         if (isTwoHandWeapon(item)) {
-            return `파쇄 2H / ATK+${getWeaponAttackValue(item, 'main')}${elemSuffix} / 치명 대신 강타`;
+            return `양손 무기 · 공격력 +${getWeaponAttackValue(item, 'main')}${elemSuffix} · 강한 일격`;
         }
 
-        return `연계 1H / ATK+${getWeaponAttackValue(item, 'main')}${elemSuffix} / CRIT+${Math.round(getWeaponCritBonus(item, 'main') * 100)}%`;
+        return `한손 무기 · 공격력 +${getWeaponAttackValue(item, 'main')}${elemSuffix} · 치명타 +${Math.round(getWeaponCritBonus(item, 'main') * 100)}%`;
     }
 
     if (isShield(item)) {
-        const parts = [`DEF+${item.val || 0}${elemSuffix}`];
-        if (typeof item.mp === 'number' && item.mp > 0) parts.push(`MP+${item.mp}`);
-        if (typeof item.crit === 'number' && item.crit > 0) parts.push(`CRIT+${Math.round(item.crit * 100)}%`);
-        parts.push(isFocusOffhand(item) ? '비전 보조' : '방벽 보조');
-        return parts.join(' / ');
+        const parts = [`방어력 +${item.val || 0}${elemSuffix}`];
+        if (typeof item.mp === 'number' && item.mp > 0) parts.push(`기력 +${item.mp}`);
+        if (typeof item.crit === 'number' && item.crit > 0) parts.push(`치명타 +${Math.round(item.crit * 100)}%`);
+        parts.push(isFocusOffhand(item) ? '마력 보조 장비' : '방어 보조 장비');
+        return parts.join(' · ');
     }
 
-    if (item.type === 'armor') return `DEF+${item.val || 0}${elemSuffix}`;
-    if (item.type === 'hp') return `HP+${item.val || 0}`;
-    if (item.type === 'mp') return `MP+${item.val || 0}`;
+    if (item.type === 'armor') return `방어력 +${item.val || 0}${elemSuffix}`;
+    if (item.type === 'hp') return `생명 +${item.val || 0}`;
+    if (item.type === 'mp') return `기력 +${item.val || 0}`;
 
     return item.desc_stat || item.desc || '';
 };

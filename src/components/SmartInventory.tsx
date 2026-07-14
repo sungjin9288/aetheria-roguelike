@@ -25,15 +25,15 @@ interface SmartInventoryProps {
 }
 
 /**
- * EquipCompare — 장비 비교 미리보기 (ATK/DEF 증감)
+ * 장비 교체 시 달라지는 능력치를 보여준다.
  */
-const StatDiff = ({ val, label }: any) => {
-    if (val === 0) return <span className="text-slate-500 text-xs">{label} ±0</span>;
+const StatDiff = ({ val, label, suffix }: any) => {
+    if (val === 0) return <span className="text-slate-500 text-xs">{label} ±0{suffix}</span>;
     const up = val > 0;
     return (
         <span className={`text-xs font-bold flex items-center gap-0.5 ${up ? 'text-emerald-300' : 'text-rose-300'}`}>
             {up ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
-            {label} {up ? '+' : ''}{val}
+            {label} {up ? '+' : ''}{val}{suffix}
         </span>
     );
 };
@@ -339,11 +339,11 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
 
                                 {/* Compare diff (on hover or always for equip items) */}
                                 {diff && (hoveredItem === item.name || isCurrentEquip) && (
-                                    <div className="mt-1 flex gap-2">
-                                        {diff.atk !== 0 && <StatDiff val={diff.atk} label="ATK" />}
-                                        {diff.def !== 0 && <StatDiff val={diff.def} label="DEF" />}
-                                        {diff.crit !== 0 && <StatDiff val={diff.crit} label="CRIT%" />}
-                                        {diff.mp !== 0 && <StatDiff val={diff.mp} label="MP" />}
+                                    <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                                        {diff.atk !== 0 && <StatDiff val={diff.atk} label="공격력" suffix="" />}
+                                        {diff.def !== 0 && <StatDiff val={diff.def} label="방어력" suffix="" />}
+                                        {diff.crit !== 0 && <StatDiff val={diff.crit} label="치명타" suffix="%" />}
+                                        {diff.mp !== 0 && <StatDiff val={diff.mp} label="기력" suffix="" />}
                                         {diff.atk === 0 && diff.def === 0 && diff.crit === 0 && diff.mp === 0 && <Minus size={11} className="text-cyber-blue/30" />}
                                     </div>
                                 )}
@@ -353,7 +353,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                 {enhanceRequirement && (
                                     <div className="mt-0.5 space-y-0.5 text-[11px] font-fira">
                                         <div className="text-slate-500/88">
-                                            강화 비용 {enhanceRequirement.gold.toLocaleString()}G · 강화 재료 {enhanceRequirement.materials}
+                                            강화 비용: 골드 {enhanceRequirement.gold.toLocaleString()} · 강화 재료 {enhanceRequirement.materials}개
                                         </div>
                                         <div className={enhanceState.affordable ? 'text-emerald-200/70' : 'text-amber-200/78'}>
                                             {enhanceState.hint}

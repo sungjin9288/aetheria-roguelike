@@ -11,6 +11,7 @@ import {
     isMagicWeapon,
     getWeaponHands,
     getWeaponStyleLabel,
+    getItemStatText,
     getEquipmentIdentity,
     getWeaponAttackValue,
     getWeaponCritBonus,
@@ -65,11 +66,24 @@ test('getEquipmentIdentity returns id when available, falls back to type:name', 
 
 test('getWeaponStyleLabel returns contextual label by item type', () => {
     assert.equal(getWeaponStyleLabel(null), '미장착');
-    assert.equal(getWeaponStyleLabel({ type: 'weapon', hands: 2 }), '파쇄 2H');
-    assert.equal(getWeaponStyleLabel({ type: 'weapon', hands: 1 }), '연계 1H');
-    assert.equal(getWeaponStyleLabel({ type: 'shield', subtype: 'focus' }), '비전 보조');
-    assert.equal(getWeaponStyleLabel({ type: 'shield' }), '방벽 보조');
+    assert.equal(getWeaponStyleLabel({ type: 'weapon', hands: 2 }), '양손 무기');
+    assert.equal(getWeaponStyleLabel({ type: 'weapon', hands: 1 }), '한손 무기');
+    assert.equal(getWeaponStyleLabel({ type: 'shield', subtype: 'focus' }), '마력 보조 장비');
+    assert.equal(getWeaponStyleLabel({ type: 'shield' }), '방어 보조 장비');
     assert.equal(getWeaponStyleLabel({ type: 'armor' }), '방어구');
+});
+
+test('getItemStatText describes equipment with player-facing Korean terms', () => {
+    assert.equal(
+        getItemStatText({ type: 'weapon', hands: 2, val: 40, elem: '화염' }),
+        `양손 무기 · 공격력 +${Math.floor(40 * BALANCE.TWO_HAND_ATK_BONUS)} · 화염 속성 · 강한 일격`
+    );
+    assert.equal(
+        getItemStatText({ type: 'shield', subtype: 'focus', val: 4, mp: 20, crit: 0.04 }),
+        '방어력 +4 · 기력 +20 · 치명타 +4% · 마력 보조 장비'
+    );
+    assert.equal(getItemStatText({ type: 'hp', val: 30 }), '생명 +30');
+    assert.equal(getItemStatText({ type: 'mp', val: 15 }), '기력 +15');
 });
 
 // ─── Weapon stats ────────────────────────────────────────────────────────

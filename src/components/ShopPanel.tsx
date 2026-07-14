@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
-import { getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
@@ -47,7 +47,7 @@ const formatPercent = (value: any) => `${value >= 0 ? '+' : ''}${value}%`;
 
 const getItemTags = (item: any) => {
     const tags: any[] = [];
-    if (isWeapon(item)) tags.push(isTwoHandWeapon(item) ? '2H' : '1H');
+    if (isWeapon(item)) tags.push(getWeaponStyleLabel(item));
     return tags;
 };
 
@@ -65,10 +65,10 @@ const getComparisonMeta = (item: any, equip: any) => {
 
     if (item.type === 'armor' || item.type === 'shield' || item.type === 'weapon') {
         const deltas: any[] = [];
-        if (atkDelta !== 0) deltas.push(`ATK ${signedDelta(atkDelta, '')}`);
-        if (defDelta !== 0) deltas.push(`DEF ${signedDelta(defDelta, '')}`);
-        if (critDelta !== 0) deltas.push(`CRIT ${formatPercent(critDelta)}`);
-        if (mpDelta !== 0) deltas.push(`MP ${signedDelta(mpDelta, '')}`);
+        if (atkDelta !== 0) deltas.push(`공격력 ${signedDelta(atkDelta, '')}`);
+        if (defDelta !== 0) deltas.push(`방어력 ${signedDelta(defDelta, '')}`);
+        if (critDelta !== 0) deltas.push(`치명타 ${formatPercent(critDelta)}`);
+        if (mpDelta !== 0) deltas.push(`기력 ${signedDelta(mpDelta, '')}`);
         if (!deltas.length) deltas.push('현재 장비와 동일한 효율');
 
         const score = getEquipmentScore({ atk: atkDelta, def: defDelta, crit: critDelta, mp: mpDelta });
@@ -80,8 +80,8 @@ const getComparisonMeta = (item: any, equip: any) => {
         };
     }
 
-    if (item.type === 'hp') return { text: `HP ${item.val || 0} 회복`, tone: 'positive' };
-    if (item.type === 'mp') return { text: `MP ${item.val || 0} 회복`, tone: 'positive' };
+    if (item.type === 'hp') return { text: `생명 ${item.val || 0} 회복`, tone: 'positive' };
+    if (item.type === 'mp') return { text: `기력 ${item.val || 0} 회복`, tone: 'positive' };
     if (item.type === 'cure') return { text: `${item.effect || '상태이상'} 해제`, tone: 'neutral' };
     if (item.type === 'buff') return { text: `${item.turn || 0}턴 버프`, tone: 'positive' };
 
@@ -112,8 +112,10 @@ const getCompactComparisonText = (comparison: any) => (
 const getCompactItemSummary = (item: any) => {
     const summary = getCompactText(getItemStatText(item) || item.desc || '');
     if (!isWeapon(item)) return summary;
-    return summary.replace(/^(연계|파쇄)\s[12]H\s·\s/, '');
+    return summary.replace(/^(한손|양손) 무기\s·\s/, '');
 };
+
+const formatGold = (value: any) => `${Number(value || 0).toLocaleString()} 골드`;
 
 const MOBILE_INITIAL_BUY_LIMIT = 12;
 
@@ -184,17 +186,17 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     const weeklySpecial = useMemo(() => getWeeklySpecial(player.level || 1), [player.level]);
 
     return (
-        <div className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3">
+        <div data-testid="shop-panel" className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3">
             <FocusPanelHeader
-                eyebrow="Broker Ledger"
-                title="MARKET"
+                eyebrow="마을 거래소"
+                title="마을 상점"
                 titleClassName="text-[1.1rem] leading-none"
-                meta={`${loc} · T${maxTier} · ${(player.inv || []).length}/${player.maxInv || BALANCE.INV_MAX_SIZE}`}
+                meta={`판매 등급 ${maxTier} · 가방 ${(player.inv || []).length}/${player.maxInv || BALANCE.INV_MAX_SIZE}`}
                 onBack={() => setGameState?.('idle')}
                 backLabel="복귀"
                 backTestId="shop-close"
                 onOpenArchive={onOpenArchiveConsole}
-                archiveLabel="INV"
+                archiveLabel="가방"
                 archiveTestId="shop-open-archive"
             />
 
@@ -231,10 +233,10 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-2.5 custom-scrollbar pr-1">
-                {/* Daily Deals + Weekly Special */}
+                {/* 할인 상품 */}
                 {shopMode === 'buy' && (dailyDeals.items.length > 0 || weeklySpecial) && (
                     <div className="mb-2 space-y-2 border-b border-white/8 pb-2">
-                        <div className="aether-label text-[#f6e7c8]/70">Daily Deals - 10% OFF</div>
+                        <div className="aether-label text-[#f6e7c8]/70">오늘의 할인 · 10%</div>
                         <div className="grid grid-cols-1 gap-2">
                             {dailyDeals.items.map((item: any) => {
                                 const canStore = inventoryHasRoom;
@@ -249,8 +251,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             <div className="min-w-0">
                                                 <div className="truncate font-readable text-xs font-semibold text-white">{item.name}</div>
                                                 <div className="mt-0.5 flex items-center gap-1.5">
-                                                    <span className="text-[10px] font-fira text-amber-300 font-bold">{item.price} CR</span>
-                                                    <span className="text-[9px] font-fira text-slate-500 line-through">{item.originalPrice}</span>
+                                                    <span className="text-[10px] font-readable text-amber-300 font-bold">{formatGold(item.price)}</span>
+                                                    <span className="text-[9px] font-readable text-slate-500 line-through">{formatGold(item.originalPrice)}</span>
                                                 </div>
                                                 {/* slice 20: 본문 reason 행 제거 — 우측 버튼이 동일한
                                                     차단 사유를 표시해 같은 행에 2회 출력되던 중복. */}
@@ -276,11 +278,11 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                 <div className="min-w-0 flex items-center gap-2.5">
                                     <ItemIcon item={weeklySpecial} size={38} showBorder className="opacity-95" />
                                     <div className="min-w-0">
-                                        <div className="aether-label mb-0.5 text-[#ece5ff]/62">Weekly Special - 15% OFF</div>
+                                        <div className="aether-label mb-0.5 text-[#ece5ff]/62">이번 주 특별 상품 · 15%</div>
                                         <div className="truncate font-readable text-sm font-semibold text-white">{weeklySpecial.name}</div>
                                         <div className="mt-0.5 flex items-center gap-1.5">
-                                            <span className="text-[11px] font-fira text-purple-300 font-bold">{weeklySpecial.price} CR</span>
-                                            <span className="text-[9px] font-fira text-slate-500 line-through">{weeklySpecial.originalPrice}</span>
+                                            <span className="text-[11px] font-readable text-purple-300 font-bold">{formatGold(weeklySpecial.price)}</span>
+                                            <span className="text-[9px] font-readable text-slate-500 line-through">{formatGold(weeklySpecial.originalPrice)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -326,7 +328,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                     data-shop-state={canBuy ? 'ready' : 'blocked'}
                                     className={`aether-shop-row ${canBuy ? '' : 'is-blocked'} overflow-hidden rounded-[1.05rem] px-3 py-2.5 transition-colors hover:border-[#d5b180]/24`}
                                 >
-                                    <div className="grid grid-cols-[42px_minmax(0,1fr)_74px] items-start gap-2.5">
+                                    <div className="grid grid-cols-[42px_minmax(0,1fr)_82px] items-start gap-2.5">
                                         <ItemIcon item={item} size={42} showBorder className="mt-0.5 opacity-95" />
                                         <div className="min-w-0 flex flex-1 items-start gap-2.5">
                                             <div className="min-w-0 flex-1">
@@ -362,7 +364,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             </div>
                                         </div>
                                         <div className="flex min-w-0 shrink-0 flex-col items-stretch gap-1">
-                                            <div className="text-center font-fira text-[11px] font-bold text-[#f6e7c8]">{item.price} CR</div>
+                                            <div className="text-center font-readable text-[11px] font-bold text-[#f6e7c8]">{formatGold(item.price)}</div>
                                             {!canBuy && blockReason && (
                                                 <div className="text-center font-readable text-[9px] leading-[1.15] text-rose-200/88">{blockReason}</div>
                                             )}
@@ -411,13 +413,13 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                 <div className="mt-1 truncate font-readable text-[11px] text-slate-300/78">{summary}</div>
                                             </div>
                                         </div>
-                                        <span className="shrink-0 text-[#f6e7c8] font-fira font-bold text-sm">+{sellPrice} CR</span>
+                                        <span className="shrink-0 text-[#f6e7c8] font-readable font-bold text-sm">+{formatGold(sellPrice)}</span>
                                     </div>
 
                                     <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-readable">
-                                        <span className="px-2 py-1 rounded border border-slate-600/70 bg-slate-900/80 text-slate-300">T{item.tier || 1}</span>
+                                        <span className="px-2 py-1 rounded border border-slate-600/70 bg-slate-900/80 text-slate-300">등급 {item.tier || 1}</span>
                                         <span className="px-2 py-1 rounded border border-red-500/20 bg-red-950/20 text-red-300">
-                                            판매가 {sellPrice} CR
+                                            판매가 {formatGold(sellPrice)}
                                         </span>
                                     </div>
 

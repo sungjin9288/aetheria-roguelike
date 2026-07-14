@@ -1,5 +1,21 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-14: unified shop, equipment, and inventory readability):
+- Replaced visible `CR / G / T / ATK / DEF / HP / MP / CRIT / 1H / 2H` labels with direct Korean commerce and stat language while preserving equipment calculations, internal fields, save data, and stable test ids.
+- Reworked the equipment summary for 390px screens: attack and defense use a stable two-column row, enhancement materials use a full-width row, and equipped slots use compact label-value rows instead of six narrow cards.
+- Added source, functional, smoke, and E2E contracts that reject the legacy shop and equipment vocabulary on the rendered surfaces.
+
+Verification:
+- Focused equipment and readability contracts -> 424/424 pass.
+- Final `npm run verify:full` -> type-check, lint, unit 3251/3251, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass. The existing non-blocking `GameRoot.tsx` effect warning remains.
+- 390px visual review -> `02a-shop-open.png` and `02-archive-console-open.png` show unified gold labels, readable discount hierarchy, and stable equipment rows without clipping or overlap.
+- `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, and signed iOS archive -> pass; Android release signing input remains missing.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-14 18:07:52 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-14 18:08:03 KST`).
+- Physical iPhone smoke -> the pre-final-wrap archive passed install, foreground launch, pid `66885`, and the 60-second process recheck at install URL `file:///private/var/containers/Bundle/Application/7A1C747C-A2BB-4EFD-8C7E-0F9854A31A26/App.app/`. The final archive includes the inventory comparison wrap fix, but its delivery is currently blocked by repeated CoreDevice tunnel timeouts and `Failed to allocate RSD device` (`0xE8000003`); this is recorded as a device connectivity blocker rather than an app regression.
+
+Next action:
+- Restore the iPhone CoreDevice connection, install the final `18:08:03 KST` archive, then run the timed 5-minute routine and judge shop comparison speed, equipment readability, progression pacing, touch behavior, and art cohesion. Android still requires release signing inputs and a physical device.
+
 Done (2026-07-14: made the first journey read like a game rather than a system log):
 - Removed reset-state leakage from a new run and rewrote the start, first movement, first discovery, first-visit reward, victory, title, post-combat, and run-summary records around natural player-facing Korean.
 - Centralized reward, recovery, progression, movement, and title messages while preserving gameplay values, internal keys, save data, and automation ids.

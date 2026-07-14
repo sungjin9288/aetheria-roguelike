@@ -72,3 +72,24 @@ test('focus panel headers preserve natural casing and readable typography', asyn
     assert.match(focusPanelHeader, /font-readable/);
     assert.doesNotMatch(focusPanelHeader, /uppercase|tracking-\[/);
 });
+
+test('shop, equipment, and inventory use one readable commerce vocabulary', async () => {
+    const [shop, equipment, inventory] = await Promise.all([
+        readSrc('src/components/ShopPanel.tsx'),
+        readSrc('src/components/EquipmentPanel.tsx'),
+        readSrc('src/components/SmartInventory.tsx'),
+    ]);
+
+    for (const label of ['마을 상점', '판매 등급', '가방', '오늘의 할인', '이번 주 특별 상품', '골드']) {
+        assert.match(shop, new RegExp(label));
+    }
+    for (const label of ['공격력', '방어력', '강화 재료', '보조 장비', '세트 목록', '생명', '기력']) {
+        assert.match(equipment, new RegExp(label));
+    }
+    for (const label of ['공격력', '방어력', '치명타', '기력', '강화 비용: 골드']) {
+        assert.match(inventory, new RegExp(label));
+    }
+
+    const playerSurfaces = `${shop}\n${equipment}\n${inventory}`;
+    assert.doesNotMatch(playerSurfaces, /Broker Ledger|MARKET|Daily Deals|Weekly Special|\d+\s*CR|['"`]ATK['"`]|['"`]DEF['"`]|['"`]CRIT%?['"`]|['"`]HP['"`]|['"`]MP['"`]|\}G/);
+});
