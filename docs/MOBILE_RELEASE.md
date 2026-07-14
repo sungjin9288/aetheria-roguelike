@@ -20,14 +20,12 @@ Xcode, TestFlight, Play Console 화면 기준의 상세 순서는 `docs/STORE_SU
 실기기 투입 전 아래 검증이 모두 통과해야 합니다.
 
 ```bash
-npm run test:unit
-npm run lint
-npm run build
-./scripts/local-playtest.sh
+npm run verify:full
 npm run cap:sync
 npm run mobile:doctor
 npm run android:debug
-npm run ios:build:device
+AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive
+AETHERIA_DEVICECTL_TIMEOUT_SECONDS=180 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke
 ```
 
 ### 0-2. 실기기 QA 실행 순서
@@ -36,7 +34,7 @@ npm run ios:build:device
 2. Android 실기기 연결 후 같은 체크리스트 수행
 3. 이슈를 `P0 / P1 / P2`로 분류
 4. `P0 / P1`만 수정
-5. 위 기준 검증 8개를 다시 실행
+5. 위 기준 검증을 다시 실행
 6. signed build를 생성하고 내부 배포(TestFlight / Internal testing) 진행
 
 이슈 분류 기준:

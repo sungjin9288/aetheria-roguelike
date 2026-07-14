@@ -1,5 +1,23 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-14: menu and settings player language with timed device QA):
+- Unified the mobile menu, archive, tab, settings, admin, feedback, and QA readout labels into direct player-facing Korean while preserving internal state keys, test ids, and the raw QA JSON contract.
+- Moved raw device data behind the collapsed `자세한 기기 정보` disclosure and translated visible runtime values such as `offline` to `연결 안 됨`.
+- Separated the destructive reset action from the horizontally scrolling navigation rail. At 390px, the page and viewport widths both measure 390px and the 44px-tall reset button stays fully inside its container.
+- Rewrote the device checklist as a timed 5-minute first-session routine covering action discovery, a 4-6 turn first combat, progression pacing, reward comprehension, and character/item/map visual cohesion.
+- Hardened the iOS device-smoke timeout wrapper so macOS `EPERM` cleanup failures preserve the real timeout result instead of replacing it with a Ruby exception.
+
+Verification:
+- `npm run verify:full` -> type-check, lint, unit 3235/3235, build guard, desktop/mobile smoke, and Playwright e2e 21/21 pass.
+- `playtest-artifacts/mobile/11-system-language.png` -> 390px visual review; no horizontal overflow and the reset action is fully visible.
+- `npm run mobile:doctor` and `npm run cap:sync` -> pass; Android release signing input remains missing.
+- `npm run android:debug` -> `BUILD SUCCESSFUL`; latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-14 14:15:23 KST`).
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> `ARCHIVE SUCCEEDED`; latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-14 14:15:46 KST`).
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=180 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` -> install, launch, initial process check, and 60-second process recheck pass. Install URL: `file:///private/var/containers/Bundle/Application/F79F866B-BB2E-41F9-A8BC-823681CD6CFC/App.app/`; pid `65778`.
+
+Next action:
+- Run the timed 5-minute routine on the installed iPhone build and record the first-session scores and any P0/P1/P2 findings. Android still requires release signing inputs and a physical device.
+
 Checked (2026-07-14: latest main iOS device delivery):
 - Synced the current `8e5c34d` web bundle into both Capacitor shells and created a new signed archive at `build/ios/Aetheria.xcarchive` (`2026-07-14 13:45:57 KST`).
 - Confirmed archive metadata `com.aetheria.roguelike` 1.1.0 (2), team `KS96VQMVHD`, and a valid local code signature. The embedded profile expires on `2026-07-21 13:45:44 KST` and contains the target iPhone UDID.

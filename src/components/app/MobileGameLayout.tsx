@@ -27,7 +27,7 @@ const MobileConsoleArchiveButton = ({ onClick }: any) => (
         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/8 bg-white/[0.04]">
             <Package size={10} />
         </span>
-        Menu
+        메뉴
     </button>
 );
 

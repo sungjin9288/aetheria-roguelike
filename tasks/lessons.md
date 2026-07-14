@@ -20,6 +20,7 @@
 | 2026-06-01 | 모바일 archive reset CTA가 하단 control panel에 pointer hit-test를 빼앗김 | archive console이 열린 상태에서도 bottom `ControlPanel`이 동시에 렌더되어 overlay CTA 아래 z-layer에서 pointer event를 가로챘음 | 모바일에서 modal/console CTA가 활성화되면 동일 영역의 underlying controls를 조건부 suppress하고, reachability source guard로 겹침 회귀를 고정한다 |
 | 2026-07-14 | 통합 Playwright가 Aetheria preview 대신 같은 포트의 다른 로컬 앱을 열어 연속 타임아웃 | preview는 `127.0.0.1`에 기동했지만 Playwright 기본 URL은 `localhost`여서 환경에 따라 서로 다른 loopback 서버로 해석됨 | preview를 기동한 스크립트는 실제 준비 확인에 사용한 정확한 URL을 모든 후속 smoke, perf, E2E 명령에 명시적으로 전달한다 |
 | 2026-07-14 | iOS archive 설치 후 launch 보안 오류가 서명 손상과 기기 신뢰 승인 대기를 한 문장으로 함께 보고함 | CoreDevice의 보안 오류가 invalid signature, entitlement, untrusted profile 가능성을 합쳐 반환해 원인 경계가 불명확했음 | launch 보안 오류가 나면 archive 서명, entitlement, profile 만료·UDID, Developer Mode를 먼저 검증하고 모두 정상이면 기기 profile 신뢰 승인으로 분리해 정확한 설정 경로를 안내한다 |
+| 2026-07-14 | 실기기 체크리스트가 `Field Log`, `Archive Dock`, `QA READOUT`처럼 더 이상 화면에 없는 용어를 요구함 | UI 문구 변경과 수동 QA 문서가 별도 흐름으로 관리되어 실제 플레이 경험 대신 과거 식별자를 확인하는 절차로 남았음 | 플레이어 노출 문구를 바꿀 때 source/e2e 가드와 시간대별 실기기 루틴을 함께 갱신하고, 체크리스트는 내부 key가 아니라 현재 화면의 표현과 체감 기준을 사용한다 |
 
 ---
 
@@ -80,6 +81,10 @@
 ### R14: Diagnose iOS Trust Before Blaming The Archive
 - **Rule:** iOS launch가 security reason으로 거부되면 `codesign`, entitlement, embedded profile 만료·기기 UDID, Developer Mode를 확인하고, 조건이 정상이면 app regression이나 invalid archive가 아니라 device profile trust handoff로 기록한다
 - **Rationale:** CoreDevice는 서로 다른 보안 원인을 같은 오류 문장에 묶어 반환하므로 검증 없이 archive를 다시 만들면 원인을 해결하지 못한 채 signed build 이력만 반복하게 된다
+
+### R15: Keep Device QA In The Player's Vocabulary
+- **Rule:** 플레이어 노출 문구를 변경할 때 관련 source/e2e assertion과 시간대별 실기기 체크리스트를 같은 변경에서 갱신하고, 수동 QA는 현재 화면의 표현과 체감 acceptance를 기준으로 수행한다
+- **Rationale:** 과거 내부 용어가 문서에 남으면 정상 화면을 실패로 오판하고, 다음 행동 탐색이나 성장 속도 같은 실제 플레이 문제를 놓치게 된다
 
 ---
 

@@ -12,6 +12,31 @@ import { FeedbackValidator } from '../../systems/FeedbackValidator';
 
 const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 
+const QA_VALUE_LABELS: Record<string, string> = {
+    unknown: '확인 안 됨',
+    mobile: '모바일',
+    desktop: '데스크톱',
+    idle: '대기',
+    ready: '정상',
+    offline: '연결 안 됨',
+    synced: '저장됨',
+    thinking: '생성 중',
+    syncing: '동기화 중',
+    combat: '전투',
+    event: '이벤트',
+    moving: '이동 중',
+    shop: '상점',
+    job_change: '전직',
+    quest_board: '임무',
+    crafting: '제작',
+    dead: '쓰러짐',
+    ascension: '승천',
+    true_ending: '마지막 이야기',
+    error: '오류',
+};
+
+const getQaValueLabel = (value: unknown) => QA_VALUE_LABELS[String(value)] || String(value || '확인 안 됨');
+
 /**
  * SystemTab — Dashboard의 system 탭 콘텐츠 (#4 분리)
  * props: player, actions, stats
@@ -37,7 +62,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         actions.setReadabilityMode?.(mode);
         setFeedbackStatus({
             type: 'success',
-            text: `Readability mode: ${mode === 'high' ? 'high' : 'standard'}.`,
+            text: `화면 가독성을 ${mode === 'high' ? '선명하게' : '표준'}로 바꿨습니다.`,
         });
     }, [actions]);
 
@@ -135,15 +160,15 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     const copyQaReadout = useCallback(async () => {
         try {
             await navigator.clipboard.writeText(qaReadout);
-            setFeedbackStatus({ type: 'success', text: 'QA readout copied.' });
+            setFeedbackStatus({ type: 'success', text: '기기 점검 정보를 복사했습니다.' });
         } catch {
-            setFeedbackStatus({ type: 'error', text: 'Failed to copy QA readout.' });
+            setFeedbackStatus({ type: 'error', text: '기기 점검 정보를 복사하지 못했습니다.' });
         }
     }, [qaReadout]);
 
     const exportQaSnapshot = useCallback(() => {
         exportToJson(`aetheria_qa_snapshot_${Date.now()}.json`, qaSnapshot);
-        setFeedbackStatus({ type: 'success', text: 'QA snapshot exported.' });
+        setFeedbackStatus({ type: 'success', text: '기기 점검 파일을 저장했습니다.' });
     }, [qaSnapshot]);
 
     const updateLiveConfig = useCallback(async (partialConfig: any) => {
@@ -152,28 +177,28 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     }, []);
 
     const handleSetMultiplier = useCallback(async () => {
-        const raw = window.prompt('EXP Multiplier (1-5):', String(actions.liveConfig?.eventMultiplier || 1));
+        const raw = window.prompt('이벤트 보상 배율을 입력하세요. (1-5)', String(actions.liveConfig?.eventMultiplier || 1));
         if (raw === null) return;
         const value = Number.parseFloat(raw);
         if (!Number.isFinite(value) || value < 1 || value > 5) {
-            setFeedbackStatus({ type: 'error', text: 'Multiplier must be between 1 and 5.' });
+            setFeedbackStatus({ type: 'error', text: '배율은 1에서 5 사이여야 합니다.' });
             return;
         }
         try {
             await updateLiveConfig({ eventMultiplier: value });
-            setFeedbackStatus({ type: 'success', text: `Multiplier updated to x${value}.` });
-        } catch { setFeedbackStatus({ type: 'error', text: 'Failed to update multiplier.' }); }
+            setFeedbackStatus({ type: 'success', text: `이벤트 보상 배율을 x${value}로 바꿨습니다.` });
+        } catch { setFeedbackStatus({ type: 'error', text: '이벤트 보상 배율을 바꾸지 못했습니다.' }); }
     }, [actions.liveConfig, updateLiveConfig]);
 
     const handleBroadcast = useCallback(async () => {
-        const raw = window.prompt('Announcement (max 100 chars):', actions.liveConfig?.announcement || '');
+        const raw = window.prompt('공지 내용을 입력하세요. (최대 100자)', actions.liveConfig?.announcement || '');
         if (raw === null) return;
         const text = raw.trim();
-        if (!text) { setFeedbackStatus({ type: 'error', text: 'Announcement cannot be empty.' }); return; }
+        if (!text) { setFeedbackStatus({ type: 'error', text: '공지 내용을 입력해 주세요.' }); return; }
         try {
             await updateLiveConfig({ announcement: text.slice(0, 100) });
-            setFeedbackStatus({ type: 'success', text: 'Broadcast updated.' });
-        } catch { setFeedbackStatus({ type: 'error', text: 'Failed to update broadcast.' }); }
+            setFeedbackStatus({ type: 'success', text: '공지를 등록했습니다.' });
+        } catch { setFeedbackStatus({ type: 'error', text: '공지를 등록하지 못했습니다.' }); }
     }, [actions.liveConfig, updateLiveConfig]);
 
     const submitFeedback = useCallback(async () => {
@@ -190,8 +215,8 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             });
             FeedbackValidator.markSubmitted();
             setFeedbackText('');
-            setFeedbackStatus({ type: 'success', text: 'Transmission complete.' });
-        } catch { setFeedbackStatus({ type: 'error', text: 'Transmission failed.' }); }
+            setFeedbackStatus({ type: 'success', text: '의견을 보냈습니다.' });
+        } catch { setFeedbackStatus({ type: 'error', text: '의견을 보내지 못했습니다.' }); }
     }, [actions, feedbackText, player]);
 
     const feedbackStatusClass = feedbackStatus?.type === 'error'
@@ -203,9 +228,9 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             {/* 세션 정보 */}
             <div className="rounded-[1rem] border border-white/8 bg-black/18 text-[10px] text-slate-400/90 font-fira px-3 py-2.5">
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
-                    <p className="truncate">SESSION: {_SESSION_ID}</p>
-                    <p className="truncate">UID: {actions.getUid() || 'guest'}</p>
-                    <p className="truncate">BUILD: v{CONSTANTS.DATA_VERSION}</p>
+                    <p className="truncate">세션: {_SESSION_ID}</p>
+                    <p className="truncate">사용자: {actions.getUid() || '손님'}</p>
+                    <p className="truncate">버전: v{CONSTANTS.DATA_VERSION}</p>
                 </div>
                 {(player.meta?.prestigeRank || 0) > 0 && (
                     <p className="text-[#d9d0f3] mt-1">{MSG.UI_PRESTIGE}: {player.meta.prestigeRank}회 {MSG.UI_PRESTIGE_COMPLETE}</p>
@@ -226,16 +251,16 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             <div data-testid="readability-settings" className="rounded-[1rem] border border-[#7dd4d8]/18 bg-black/18 p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-[11px] font-bold text-[#dff7f5] font-rajdhani tracking-[0.16em]">
-                        <Eye size={12} /> READABILITY
+                        <Eye size={12} /> 화면 가독성
                     </div>
                     <span
                         data-testid="readability-mode-current"
                         className="rounded-full border border-white/8 bg-white/[0.04] px-2 py-1 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/80"
                     >
-                        {readabilityMode}
+                        {readabilityMode === 'high' ? '선명하게' : '표준'}
                     </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Readability mode">
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label="화면 가독성">
                     {(['standard', 'high'] as const).map((mode) => {
                         const active = readabilityMode === mode;
                         return (
@@ -252,7 +277,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                         : 'border-white/8 bg-black/20 text-slate-300/78 hover:border-white/14 hover:bg-white/[0.05]'
                                 }`}
                             >
-                                {mode === 'high' ? 'High Readability' : 'Standard'}
+                                {mode === 'high' ? '선명하게' : '표준'}
                             </Motion.button>
                         );
                     })}
@@ -261,40 +286,41 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
 
             <div className="rounded-[1rem] border border-white/8 bg-black/18 p-3">
                 <div className="gap-3 mb-2 flex items-center justify-between">
-                    <div className="text-[11px] font-bold text-slate-300/76 font-rajdhani tracking-[0.18em]">QA READOUT</div>
+                    <div className="text-[11px] font-bold text-slate-300/76 font-readable tracking-normal">기기 점검 기록</div>
                     <div className="flex items-center gap-2">
                         <Motion.button
                             whileTap={{ scale: 0.98 }}
                             onClick={copyQaReadout}
                             className="min-h-[34px] px-3 text-[11px] rounded-full border border-white/8 bg-black/20 text-slate-200 font-fira flex items-center gap-1.5"
                         >
-                            <Copy size={12} /> COPY
+                            <Copy size={12} /> 복사
                         </Motion.button>
                         <Motion.button
                             whileTap={{ scale: 0.98 }}
                             onClick={exportQaSnapshot}
                             className="min-h-[34px] px-3 text-[11px] rounded-full border border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5] font-fira flex items-center gap-1.5"
                         >
-                            <Save size={12} /> EXPORT
+                            <Save size={12} /> 파일 저장
                         </Motion.button>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5 text-[10px] font-fira text-slate-300/76 mb-2">
-                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">VIEWPORT: {runtime?.viewport || 'unknown'}</div>
-                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">STATE: {runtime?.gameState || 'unknown'}</div>
-                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">SYNC: {runtime?.syncStatus || 'unknown'}</div>
-                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">AI: {runtime?.isAiThinking ? 'thinking' : 'idle'}</div>
+                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">화면: {getQaValueLabel(runtime?.viewport)}</div>
+                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">상태: {getQaValueLabel(runtime?.gameState)}</div>
+                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">동기화: {getQaValueLabel(runtime?.syncStatus)}</div>
+                    <div className="rounded-[0.9rem] border border-white/8 bg-white/[0.03] px-2 py-1.5">이야기: {runtime?.isAiThinking ? '생성 중' : '대기'}</div>
                 </div>
-                <pre className="whitespace-pre-wrap break-all rounded-[0.95rem] border border-white/8 bg-black/22 px-2.5 py-2 text-[10px] font-fira text-slate-400/90">
-                    {qaReadout}
-                </pre>
+                <details className="rounded-[0.95rem] border border-white/8 bg-black/22 px-2.5 py-2 text-[10px] font-fira text-slate-400/90">
+                    <summary className="cursor-pointer text-slate-300/82">자세한 기기 정보</summary>
+                    <pre className="mt-2 whitespace-pre-wrap break-all">{qaReadout}</pre>
+                </details>
             </div>
 
             {/* 유물 */}
                     {(player.relics || []).length > 0 && (
                         <div className="rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 p-3">
                             <div className="text-[11px] font-bold text-[#e3dcff] mb-2 flex items-center gap-2 font-rajdhani tracking-[0.16em]">
-                                Relics ({player.relics.length}/5)
+                                유물 ({player.relics.length}/5)
                             </div>
                             <div className="space-y-1">
                                 {player.relics.map((r: any) => (
@@ -310,7 +336,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                     {/* 칭호 */}
                     {(player.titles || []).length > 0 && (
                         <div className="rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/8 p-3">
-                            <div className="text-[11px] font-bold text-[#f6e7c8] mb-2 flex items-center gap-2 font-rajdhani tracking-[0.16em]">Titles ({player.titles.length})</div>
+                            <div className="text-[11px] font-bold text-[#f6e7c8] mb-2 flex items-center gap-2 font-readable tracking-normal">칭호 ({player.titles.length})</div>
                             {player.activeTitle && (
                                 <div className="mb-2 rounded-[0.95rem] border border-[#d5b180]/18 bg-black/16 px-2.5 py-2 text-[10px] font-fira">
                                     <div className="text-[#f6e7c8] font-bold">활성 칭호: [{getTitleLabel(player.activeTitle)}]</div>
@@ -344,7 +370,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                         return (
                             <div className="rounded-[1rem] border border-[#7dd4d8]/18 bg-[#7dd4d8]/8 p-3">
                                 <div className="flex justify-between items-center mb-2">
-                                    <div className="text-[11px] font-bold text-[#dff7f5] font-rajdhani tracking-[0.16em]">Daily Protocol</div>
+                                    <div className="text-[11px] font-bold text-[#dff7f5] font-readable tracking-normal">오늘의 임무</div>
                                     {dp.relicShards > 0 && <span className="text-[10px] text-[#d9d0f3]">{dp.relicShards}/5 조각</span>}
                                 </div>
                                 <div className="space-y-2">
@@ -372,7 +398,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
 
                     {/* Hall of Fame */}
                     <div className="rounded-[1rem] border border-[#d5b180]/18 bg-black/18 p-3 mb-2 relative overflow-hidden">
-                        <div className="text-[11px] font-bold text-[#f6e7c8] mb-3 flex items-center gap-2 font-rajdhani tracking-[0.18em]"><Crown size={12} /> HALL OF FAME</div>
+                        <div className="text-[11px] font-bold text-[#f6e7c8] mb-3 flex items-center gap-2 font-readable tracking-normal"><Crown size={12} /> 명예의 전당</div>
                         <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
                             {actions.leaderboard?.length > 0 ? actions.leaderboard.map((ranker: any, i: any) => {
                                 const isMe = ranker.nickname === player.name;
@@ -392,7 +418,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                         </span>
                                     </div>
                                 );
-                            }) : <div className="text-xs text-slate-500 text-center font-fira animate-pulse">SYNCING NETWORK...</div>}
+                            }) : <div className="text-xs text-slate-500 text-center font-readable animate-pulse">순위를 불러오는 중…</div>}
                         </div>
                     </div>
 
@@ -411,28 +437,28 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                         }}
                         className="w-full bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 text-[#dff7f5] py-3 rounded-full border border-[#7dd4d8]/22 flex items-center justify-center gap-2 font-rajdhani font-bold tracking-[0.16em] transition-all min-h-[42px]"
                     >
-                        <Save size={16} /> DOWNLOAD LOGS
+                        <Save size={16} /> 플레이 기록 저장
                     </Motion.button>
 
                     {/* Admin */}
                     {actions.isAdmin() && (
                         <div className="bg-rose-400/10 p-3 rounded-[1rem] border border-rose-300/22 mt-4">
-                            <div className="text-[11px] font-bold text-rose-100 mb-2 font-rajdhani flex items-center gap-2 tracking-[0.16em]"><Shield size={12} /> ADMIN CONTROLS</div>
+                            <div className="text-[11px] font-bold text-rose-100 mb-2 font-readable flex items-center gap-2 tracking-normal"><Shield size={12} /> 운영 설정</div>
                             <div className="grid grid-cols-2 gap-2">
-                                <button onClick={handleSetMultiplier} className="min-h-[42px] bg-black/22 hover:bg-black/28 py-2 rounded-full text-rose-100 border border-rose-300/22 text-[11px]">SET MULTIPLIER</button>
-                                <button onClick={handleBroadcast} className="min-h-[42px] bg-black/22 hover:bg-black/28 py-2 rounded-full text-rose-100 border border-rose-300/22 text-[11px]">BROADCAST</button>
+                                <button onClick={handleSetMultiplier} className="min-h-[42px] bg-black/22 hover:bg-black/28 py-2 rounded-full text-rose-100 border border-rose-300/22 text-[11px]">보상 배율</button>
+                                <button onClick={handleBroadcast} className="min-h-[42px] bg-black/22 hover:bg-black/28 py-2 rounded-full text-rose-100 border border-rose-300/22 text-[11px]">공지 등록</button>
                             </div>
                         </div>
                     )}
 
                     {/* Feedback */}
                     <div className="bg-black/18 p-3 rounded-[1rem] border border-white/8 mt-4">
-                        <div className="text-[11px] font-bold text-slate-300/76 mb-2 font-rajdhani tracking-[0.16em]">System Feedback</div>
+                        <div className="text-[11px] font-bold text-slate-300/76 mb-2 font-readable tracking-normal">의견 보내기</div>
                         {feedbackStatus && (
                             <div className={`text-xs mb-2 px-2 py-1 rounded border ${feedbackStatusClass}`}>{feedbackStatus.text}</div>
                         )}
                         <textarea
-                            placeholder="Report anomalies..."
+                            placeholder="불편했던 점이나 이상한 동작을 적어 주세요."
                             className="w-full bg-black/24 border border-white/8 rounded-[0.95rem] p-2.5 text-sm text-slate-200/84 h-24 resize-none focus:outline-none focus:border-[#7dd4d8]/24 placeholder:text-slate-500 font-fira"
                             value={feedbackText}
                             onChange={(e: any) => setFeedbackText(e.target.value)}
@@ -443,7 +469,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                             onClick={submitFeedback}
                             className="w-full mt-2 min-h-[42px] bg-emerald-300/10 hover:bg-emerald-300/16 py-2 rounded-full text-emerald-100 text-sm border border-emerald-300/24 font-bold tracking-[0.16em]"
                         >
-                            TRANSMIT
+                            보내기
                         </Motion.button>
                     </div>
         </Motion.div>

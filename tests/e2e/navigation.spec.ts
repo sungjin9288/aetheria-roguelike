@@ -73,10 +73,10 @@ test.describe('Navigation', () => {
         await expect(page.getByTestId('readability-settings')).toBeVisible({ timeout: 8_000 });
         await page.getByTestId('readability-mode-high').click();
         await expect(page.locator('[data-app-shell]')).toHaveAttribute('data-readability-mode', 'high');
-        await expect(page.getByTestId('readability-mode-current')).toHaveText('high');
+        await expect(page.getByTestId('readability-mode-current')).toHaveText('선명하게');
 
         await page.getByTestId('readability-mode-standard').click();
         await expect(page.locator('[data-app-shell]')).toHaveAttribute('data-readability-mode', 'standard');
-        await expect(page.getByTestId('readability-mode-current')).toHaveText('standard');
+        await expect(page.getByTestId('readability-mode-current')).toHaveText('표준');
     });
 });

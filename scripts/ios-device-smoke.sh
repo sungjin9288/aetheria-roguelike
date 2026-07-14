@@ -32,12 +32,14 @@ loop do
   if Time.now > deadline
     begin
       Process.kill("TERM", -pid)
-    rescue Errno::ESRCH
+    rescue Errno::ESRCH, Errno::EPERM => error
+      warn "unable to terminate timed-out process group: #{error.message}"
     end
     sleep 1
     begin
       Process.kill("KILL", -pid)
-    rescue Errno::ESRCH
+    rescue Errno::ESRCH, Errno::EPERM => error
+      warn "unable to kill timed-out process group: #{error.message}"
     end
     warn "command timed out after #{timeout_seconds}s: #{cmd.join(' ')}"
     exit 124

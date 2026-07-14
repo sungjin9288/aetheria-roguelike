@@ -27,7 +27,7 @@ const SeasonPassPanel = lazy(() => import('./tabs/SeasonPassPanel'));
 
 const TabSpinner = () => (
     <div className="flex items-center justify-center py-8 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-        Loading…
+        불러오는 중…
     </div>
 );
 
@@ -51,17 +51,17 @@ interface DashboardProps {
 }
 
 const TAB_ITEMS: any = [
-    { id: 'equipment', icon: Shield, label: 'Equipment', mobileLabel: 'GEAR' },
-    { id: 'inventory', icon: Package, label: 'Inventory', mobileLabel: 'INV' },
-    { id: 'quest', icon: Scroll, label: 'Quest', mobileLabel: 'QUEST' },
-    { id: 'achievements', icon: Trophy, label: 'Achievements', mobileLabel: 'ACHV' },
-    { id: 'skills', icon: BookOpen, label: 'Skills', mobileLabel: 'SKILL' },
-    { id: 'map', icon: Map, label: 'Map', mobileLabel: 'MAP' },
-    { id: 'stats', icon: BarChart3, label: 'Stats', mobileLabel: 'STAT' },
-    { id: 'codex', icon: Eye, label: 'Codex', mobileLabel: 'CODEX' },
-    { id: 'pass', icon: Star, label: 'Pass', mobileLabel: 'PASS' },
-    { id: 'graves', icon: Skull, label: 'Graves', mobileLabel: 'GRAVE' },
-    { id: 'system', icon: Zap, label: 'System', mobileLabel: 'SYS' }
+    { id: 'equipment', icon: Shield, label: '장비', mobileLabel: '장비' },
+    { id: 'inventory', icon: Package, label: '가방', mobileLabel: '가방' },
+    { id: 'quest', icon: Scroll, label: '임무', mobileLabel: '임무' },
+    { id: 'achievements', icon: Trophy, label: '업적', mobileLabel: '업적' },
+    { id: 'skills', icon: BookOpen, label: '기술', mobileLabel: '기술' },
+    { id: 'map', icon: Map, label: '지도', mobileLabel: '지도' },
+    { id: 'stats', icon: BarChart3, label: '상태', mobileLabel: '상태' },
+    { id: 'codex', icon: Eye, label: '도감', mobileLabel: '도감' },
+    { id: 'pass', icon: Star, label: '시즌', mobileLabel: '시즌' },
+    { id: 'graves', icon: Skull, label: '무덤', mobileLabel: '무덤' },
+    { id: 'system', icon: Zap, label: '설정', mobileLabel: '설정' }
 ];
 
 const MOBILE_PRIMARY_TABS: any = ['equipment', 'inventory', 'quest', 'map', 'stats'];
@@ -74,7 +74,7 @@ const TOWN_MENU_ACTIONS: any = [
 ];
 
 // NOTE: 이전에 AnimatePresence + tabVariants로 탭 전환 애니메이션을 처리했으나,
-// mode="wait"가 key 전환 시 stale 상태로 고착되는 회귀가 있어 (모바일 Menu Console에서
+// mode="wait"가 key 전환 시 stale 상태로 고착되는 회귀가 있어 (모바일 메뉴 화면에서
 // INV/GEAR/CODEX 클릭 시 탭 콘텐츠가 갱신되지 않는 버그) plain div로 전환.
 // 필요 시 framer-motion 업그레이드 후 재도입 검토.
 
@@ -269,10 +269,10 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
             data-testid="menu-reset"
             onClick={() => setConfirmMenuReset(true)}
             className="flex min-h-[44px] shrink-0 items-center justify-center gap-1 rounded-full border border-rose-300/18 bg-[linear-gradient(180deg,rgba(54,18,24,0.58)_0%,rgba(18,9,12,0.92)_100%)] px-3 py-1 text-[8px] font-fira uppercase tracking-[0.1em] text-rose-100/82 transition-colors hover:border-rose-200/26 hover:bg-rose-500/12"
-            title="RESET"
+            title="진행 초기화"
         >
             <RotateCcw size={11} />
-            <span>RESET</span>
+            <span>초기화</span>
         </button>
     );
 
@@ -298,7 +298,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             <ActiveArchiveIcon size={14} />
                         </div>
                             <div className="min-w-0">
-                                <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/70">Menu Console</div>
+                                <div className="text-[10px] font-readable tracking-normal text-slate-400/70">모험 기록</div>
                                 <div className="mt-0.5 flex items-center gap-2">
                                 <span className="truncate text-[14px] font-rajdhani font-bold text-white/92">
                                     {hasInventorySpotlight
@@ -371,8 +371,8 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             {isInSafeZone && (
                                 <div className="shrink-0 rounded-[1.15rem] border border-[#d5b180]/14 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.12),transparent_22%),linear-gradient(180deg,rgba(26,20,12,0.28)_0%,rgba(12,10,8,0.18)_100%)] px-2 py-2">
                                     <div className="mb-2 flex items-center justify-between gap-2 px-1">
-                                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/72">Town Ops</div>
-                                        <SignalBadge tone="recommended" size="sm">SAFE ZONE</SignalBadge>
+                                        <div className="text-[10px] font-readable tracking-normal text-slate-400/72">마을에서 할 일</div>
+                                        <SignalBadge tone="recommended" size="sm">안전지대</SignalBadge>
                                     </div>
                                     <div className="grid grid-cols-4 gap-2">
                                         {TOWN_MENU_ACTIONS.map((action: any) => {
@@ -409,10 +409,12 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                             {...getTabExtras(tab.id)}
                                         />
                                     ))}
-                                    {renderResetRailButton()}
                                 </div>
                                 <div className="mt-2 border-t border-white/6 pt-2">
                                     {renderMobileArchiveRail(secondaryMobileTabs)}
+                                </div>
+                                <div className="mt-2 flex justify-end border-t border-white/6 pt-2">
+                                    {renderResetRailButton()}
                                 </div>
                             </div>
 
@@ -489,7 +491,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                     <ActiveArchiveIcon size={14} />
                                 </div>
                                 <div className="min-w-0 text-left">
-                                    <div className="text-[11px] font-fira uppercase tracking-[0.2em] text-slate-400/68">Archive Dock</div>
+                                    <div className="text-[11px] font-readable tracking-normal text-slate-400/68">모험 기록</div>
                                     <div className="mt-0.5 truncate text-[13px] font-rajdhani font-bold text-white/92">
                                         {hasInventorySpotlight
                                             ? (inventorySpotlight?.title || '전리품 검토')
@@ -502,7 +504,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                             </div>
                             <div className="shrink-0 rounded-full border border-white/8 bg-black/20 px-2.5 py-1 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-300/72 transition-colors group-hover:text-white">
                                 <span className="inline-flex items-center gap-1">
-                                    Open
+                                    열기
                                     <ChevronUp size={12} />
                                 </span>
                             </div>
@@ -537,7 +539,7 @@ const Dashboard = ({ player, grave, sideTab, setSideTab, actions, stats, mobileS
                                 <div className="mx-auto h-1.5 w-12 rounded-full bg-white/12" />
                                 <div className="mt-3 flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/68">Archive</div>
+                                        <div className="text-[10px] font-readable tracking-normal text-slate-400/68">모험 기록</div>
                                         <div className="mt-1 text-[16px] font-rajdhani font-bold text-white/92">
                                             {hasInventorySpotlight
                                                 ? (inventorySpotlight?.title || MSG.UI_LOOT_REVIEW)

@@ -44,3 +44,37 @@ test('first-play surfaces use player-facing Korean labels', async () => {
     assert.match(messages, /RETURN_BRIEFING_STATUS_LABEL: '현재 상태'/);
     assert.match(messages, /RETURN_BRIEFING_MISSIONS_LABEL: '남은 오늘의 임무'/);
 });
+
+test('menu, settings, and device playtest use one natural Korean vocabulary', async () => {
+    const [dashboard, mobileLayout, systemTab, checklist] = await Promise.all([
+        readSrc('src/components/Dashboard.tsx'),
+        readSrc('src/components/app/MobileGameLayout.tsx'),
+        readSrc('src/components/tabs/SystemTab.tsx'),
+        readSrc('docs/PLAYTEST_CHECKLIST.md'),
+    ]);
+
+    for (const label of ['장비', '가방', '임무', '업적', '기술', '지도', '상태', '도감', '시즌', '무덤', '설정']) {
+        assert.match(dashboard, new RegExp(`label: '${label}'`));
+    }
+    assert.match(dashboard, /모험 기록/);
+    assert.match(dashboard, /마을에서 할 일/);
+    assert.match(dashboard, /안전지대/);
+    assert.doesNotMatch(dashboard, /label: '(Equipment|Inventory|Quest|Achievements|Skills|Map|Stats|Codex|Pass|Graves|System)'/);
+    assert.doesNotMatch(dashboard, />\s*(RESET|Menu Console|Town Ops|SAFE ZONE|Archive Dock|Archive|Open)\s*</);
+
+    assert.match(mobileLayout, />\s*메뉴\s*</);
+    assert.doesNotMatch(mobileLayout, />\s*Menu\s*</);
+
+    for (const label of ['화면 가독성', '기기 점검 기록', '파일 저장', '유물', '칭호', '오늘의 임무', '명예의 전당', '플레이 기록 저장', '의견 보내기']) {
+        assert.match(systemTab, new RegExp(label));
+    }
+    assert.match(systemTab, /offline: '연결 안 됨'/);
+    assert.match(systemTab, /synced: '저장됨'/);
+    assert.match(systemTab, /<details[\s\S]*자세한 기기 정보/);
+    assert.doesNotMatch(systemTab, />\s*(READABILITY|QA READOUT|COPY|EXPORT|Relics|Titles|Daily Protocol|HALL OF FAME|DOWNLOAD LOGS|ADMIN CONTROLS|TRANSMIT)\s*</);
+
+    assert.match(checklist, /처음 보는 사람도 3초 안에 다음 행동 하나를 고를 수 있다/);
+    assert.match(checklist, /첫 일반 전투가 대략 4~6턴 안에 끝나는지/);
+    assert.match(checklist, /캐릭터와 아이템 디자인 통일성/);
+    assert.doesNotMatch(checklist, /Field Log|Status Strip|Field Actions|Archive Dock|QA READOUT|EXPORT|`RESET`/);
+});
