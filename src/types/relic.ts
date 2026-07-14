@@ -1,7 +1,7 @@
 /**
  * Relic domain type (cycle 60 phase D batch 11).
  *
- * 53개 유물의 effect-기반 다형 데이터를 망라한 permissive 인터페이스.
+ * effect마다 값의 형태가 다른 유물 데이터를 담는 호환 중심 인터페이스.
  *
  * 정착 전략: effect별 val 형태가 number / { atk, def } / { threshold, mult } /
  * { drop, gold } 등으로 매우 다양하므로 strict union 대신 [key: string]: any를

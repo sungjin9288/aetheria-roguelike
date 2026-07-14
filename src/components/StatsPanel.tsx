@@ -3,6 +3,7 @@ import { motion as Motion } from 'framer-motion';
 import { Activity, BarChart3, Coins, Compass, Flame, FlaskConical, Footprints, Hammer, Heart, Link2, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
 import type { Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
+import { formatRelicText } from '../utils/relicPresentation';
 import SignalBadge from './SignalBadge';
 
 // cycle 475: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
@@ -126,7 +127,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                     </div>
                     <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
                         <div className="text-[11px] text-slate-400 font-fira uppercase flex items-center gap-1 mb-0.5">
-                            <Zap size={9} /> 전용 스킬
+                            <Zap size={9} /> 전용 기술
                         </div>
                         <div className="font-fira font-bold text-xs text-emerald-100">{trait.skill?.name || '없음'}</div>
                     </div>
@@ -289,14 +290,14 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
             {stats?.activeSynergies?.length > 0 && (
                 <div className="space-y-1.5">
                     <div className="text-xs text-slate-400 font-fira uppercase tracking-[0.16em] flex items-center gap-1.5">
-                        <Sparkles size={10} /> 유물 시너지
+                        <Sparkles size={10} /> 유물 조합
                     </div>
                     {/* cycle 396: syn.name → syn.label — RELIC_SYNERGIES entry는 `label` 필드.
                           기존 syn.name은 항상 undefined로 React key 충돌 + UI 빈 칸 silent 결손. */}
                     {stats.activeSynergies.map((syn: any) => (
                         <div key={syn.label} className="rounded-[0.95rem] border border-fuchsia-400/20 bg-fuchsia-900/10 px-2.5 py-1.5 flex items-center justify-between gap-2">
                             <span className="text-[11px] font-fira text-fuchsia-200/90 font-bold">{syn.label}</span>
-                            <span className="text-[8px] font-fira text-fuchsia-300/60">{syn.desc}</span>
+                            <span className="text-[8px] font-readable text-fuchsia-300/60">{formatRelicText(syn.desc)}</span>
                         </div>
                     ))}
                 </div>

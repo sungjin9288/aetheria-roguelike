@@ -245,10 +245,16 @@ async function verifyRelicChoiceDecisionStrip(page, options = {}) {
   const strip = page.locator('[data-testid="relic-choice-decision-strip"]');
   await strip.waitFor({ state: 'visible', timeout: 5000 });
   const text = await strip.innerText();
+  const panelText = await page.locator('[data-testid="relic-choice-panel"]').innerText();
   const tone = await strip.getAttribute('data-relic-tone');
   ensure(text.includes('추천'), 'Relic choice decision strip should expose the recommendation');
   ensure(text.includes('이유'), 'Relic choice decision strip should expose the reason');
   ensure(text.includes('성장 방향'), 'Relic choice decision strip should expose the growth direction');
+  ensure(text.includes('황혼의 파편'), 'Relic choice should name the recommended relic');
+  ensure(text.includes('높은 등급'), 'Relic choice should explain the recommendation in player language');
+  ensure(text.includes('치명타와 기력 회복'), 'Relic choice should explain the resulting growth direction');
+  ensure(panelText.includes('전투가 시작되면 기력 12 회복'), 'Relic descriptions should use player-facing stat language');
+  ensure(!/\b(?:ATK|DEF|HP|MP|EXP|CD)\b|저HP|킬 스택|직접 공명|전설까지 -1/.test(panelText), 'Relic choice should hide legacy abbreviations and mechanical placeholders');
   ensure(['legendary', 'synergy', 'potential', 'steady'].includes(tone), 'Relic choice decision strip should expose a known tone');
   ensure(await page.locator('[data-relic-recommended="true"]').count() > 0, 'Relic choice should mark one recommended card');
   await verifyActionReachable(strip, 'Relic choice first-scan decision strip', {
@@ -263,7 +269,12 @@ async function verifyRelicChoiceDecisionStrip(page, options = {}) {
   if (options.artifactName) {
     await writeStateArtifact(options.artifactName, await readState(page), page);
   }
-  if (options.dismiss) {
+  if (options.selectRecommended) {
+    const recommended = page.locator('[data-relic-recommended="true"]');
+    await recommended.click();
+    await strip.waitFor({ state: 'hidden', timeout: 5000 });
+    await waitForState(page, (state) => state.pendingRelics === null, 'recommended relic selected', 5000);
+  } else if (options.dismiss) {
     const skipButton = page.locator('[data-testid="relic-choice-skip"]');
     await verifyActionReachable(skipButton, 'Relic choice skip CTA', {
       minHitHeight: 44,
@@ -1232,7 +1243,7 @@ async function main() {
     });
     await verifyRelicChoiceDecisionStrip(page, {
       inject: true,
-      dismiss: true,
+      selectRecommended: true,
       artifactName: '02e-relic-choice-decision-strip',
     });
     await verifyRunSummaryReflectionStrip(page, {

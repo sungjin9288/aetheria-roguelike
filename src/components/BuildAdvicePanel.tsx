@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { RELICS } from '../data/relics';
 import { TRAIT_DEFINITIONS } from '../data/traits';
 import { getRunBuildProfile } from '../utils/runProfile';
+import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
 import type { Player } from '../types/index.js';
 
 // cycle 478: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
@@ -46,7 +47,7 @@ const getRecommendedRelics = (primaryId: any, ownedRelicEffects: any) => {
 };
 
 /**
- * BuildAdvicePanel — 현재 빌드 아키타입 기반 유물 + 스킬 추천
+ * 현재 성장 방향에 맞는 유물과 기술을 추천합니다.
  * 맵 탭 하단에 배치됩니다.
  */
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
@@ -88,14 +89,14 @@ const BuildAdvicePanel = ({ player }: BuildAdvicePanelProps) => {
                         <div className="text-[10px] opacity-60 mt-1">패시브: {trait.passiveLabel}</div>
                     </div>
 
-                    {/* 성향 스킬 */}
+                    {/* 성향 기술 */}
                     {trait.skill && (
                         <div>
-                            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">성향 스킬</div>
+                            <div className="mb-1.5 text-[10px] text-slate-500">성향 기술</div>
                             <div className="rounded-[0.95rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/10 px-3 py-2">
                                 <div className="flex items-center justify-between gap-2 mb-0.5">
                                     <span className="text-sm font-bold text-[#e3dcff]">{trait.skill.name}</span>
-                                    <span className="text-[10px] text-slate-400/72">MP {trait.skill.mp} · CD {trait.skill.cooldown}</span>
+                                    <span className="text-[10px] text-slate-400/72">기력 {trait.skill.mp} · 재사용 {trait.skill.cooldown}턴</span>
                                 </div>
                                 <div className="text-[10px] text-slate-300/76">{trait.skill.desc}</div>
                             </div>
@@ -104,18 +105,18 @@ const BuildAdvicePanel = ({ player }: BuildAdvicePanelProps) => {
 
                     {/* 추천 유물 */}
                     <div>
-                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">추천 유물 (미보유)</div>
+                        <div className="mb-1.5 text-[10px] text-slate-500">아직 얻지 못한 추천 유물</div>
                         {recommended.length === 0 ? (
-                            <div className="text-[10px] text-slate-500 italic">이 빌드와 맞는 유물을 모두 보유 중입니다.</div>
+                            <div className="text-[10px] text-slate-500">현재 성장에 어울리는 유물을 모두 보유하고 있습니다.</div>
                         ) : (
                             <div className="space-y-1.5">
                                 {recommended.map((relic: any) => (
                                     <div key={relic.id} className="rounded-[0.95rem] border border-white/8 bg-black/18 px-2.5 py-2">
                                         <div className="flex items-center justify-between gap-2">
-                                            <span className={`text-xs font-bold ${RARITY_COLOR[relic.rarity] || 'text-slate-300'}`}>{relic.name}</span>
+                                            <span className={`text-xs font-bold ${RARITY_COLOR[relic.rarity] || 'text-slate-300'}`}>{getRelicDisplayName(relic.name)}</span>
                                             <span className={`text-[9px] font-fira ${RARITY_COLOR[relic.rarity] || 'text-slate-400'}`}>{RARITY_LABEL[relic.rarity]}</span>
                                         </div>
-                                        <div className="text-[10px] text-slate-400/72 mt-0.5">{relic.desc}</div>
+                                        <div className="mt-0.5 text-[10px] text-slate-400/72">{formatRelicText(relic.desc)}</div>
                                     </div>
                                 ))}
                             </div>

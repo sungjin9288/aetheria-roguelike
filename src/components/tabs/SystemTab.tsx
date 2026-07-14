@@ -9,6 +9,7 @@ import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/
 import { RARITY_COLORS } from '../../data/titles';
 import { MSG } from '../../data/messages';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
+import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
 
 const _SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -325,8 +326,8 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                             <div className="space-y-1">
                                 {player.relics.map((r: any) => (
                                     <div key={r.id} className="flex items-start gap-2 text-[11px] rounded-[0.9rem] border border-white/8 bg-black/16 px-2.5 py-2">
-                                        <span className={`font-bold shrink-0 ${RARITY_COLORS[r.rarity] || 'text-slate-300'}`}>{r.name}</span>
-                                        <span className="text-slate-300/72">{r.desc}</span>
+                                        <span className={`shrink-0 font-bold ${RARITY_COLORS[r.rarity] || 'text-slate-300'}`}>{getRelicDisplayName(r.name)}</span>
+                                        <span className="text-slate-300/72">{formatRelicText(r.desc)}</span>
                                     </div>
                                 ))}
                             </div>

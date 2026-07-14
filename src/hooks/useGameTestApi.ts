@@ -389,8 +389,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     type: AT.SET_PENDING_RELICS,
                     payload: [
                         { id: 'test_relic_amber', name: '황혼의 파편', desc: '치명타 확률 +3%, 휴식 비용 -10%', rarity: 'epic', effect: 'crit_mp_regen' },
-                        { id: 'test_relic_cyan', name: '심해의 매듭', desc: '전투 시작 시 MP 12 회복', rarity: 'uncommon', effect: 'mp_regen_turn' },
-                        { id: 'test_relic_violet', name: '균열의 서판', desc: '스킬 피해 18% 증가', rarity: 'rare', effect: 'skill_mult' },
+                        { id: 'test_relic_cyan', name: '심해의 매듭', desc: '전투가 시작되면 기력 12 회복', rarity: 'uncommon', effect: 'mp_regen_turn' },
+                        { id: 'test_relic_violet', name: '균열의 서판', desc: '기술 피해 18% 증가', rarity: 'rare', effect: 'skill_mult' },
                     ],
                 });
             },
@@ -402,7 +402,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         level: 17, job: '모험가', loc: '북부 요새',
                         kills: 142, bossKills: 3, relicsFound: 5,
                         totalGold: 1842, prestigeRank: 2, activeTitle: 'veteran',
-                        primaryBuild: '치명 MP',
+                        primaryBuild: '치명타와 기력 회복',
                         difficultyLabel: '열세',
                         recentWinRate: 42,
                         escapes: 2,
