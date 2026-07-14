@@ -301,8 +301,8 @@ import { readFile } from 'node:fs/promises';
    *
    * 회귀 가드:
    * - label / value / max / variant prop 보존.
-   * - 3 callsite 시각 출력은 cycle 74 readability pass 기준
-   *   aether-status-metric / px-2 py-1 / text-[8px] / mt-1 h-[3px]로 보존.
+   * - 3 callsite 시각 출력은 현재 mobile readability 기준
+   *   aether-status-metric / text-[10px] / value text-[11px] / mt-1 h-[3px]로 보존.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -337,14 +337,15 @@ import { readFile } from 'node:fs/promises';
       });
   });
 
-  test('cycle 491: compact 가지 className 정적 inline (aether-status-metric / px-2 py-1 / text-[8px] / mt-1 h-[3px])', async () => {
+  test('cycle 491: compact 가지 className 정적 inline (aether-status-metric / readable labels and values / mt-1 h-[3px])', async () => {
       const source = await readSrc('src/components/StatusBar.tsx');
       const fnIdx = source.indexOf('const StatusMetric =');
       const fnEnd = source.indexOf('const EnemyStatus =', fnIdx);
       const block = source.slice(fnIdx, fnEnd);
       assert.ok(/aether-status-metric/.test(block), 'readability metric surface 보존');
-      assert.ok(/px-2 py-1/.test(block), 'compact 가지 padding 보존');
-      assert.ok(/text-\[8px\]/.test(block), 'compact 가지 font size 보존');
+      assert.ok(/px-2 py-1\.5/.test(block), 'compact 가지 padding 보존');
+      assert.ok(/text-\[10px\]/.test(block), 'metric label font size 보존');
+      assert.ok(/text-\[11px\]/.test(block), 'metric value font size 보존');
       assert.ok(/mt-1 h-\[3px\]/.test(block), 'compact 가지 bar 크기 보존');
   });
 

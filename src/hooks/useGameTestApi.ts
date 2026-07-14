@@ -385,7 +385,9 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
             },
             injectRelicChoice: () => {
-                engineRef.current.dispatch({
+                const er = engineRef.current;
+                er.dispatch({ type: AT.SET_PLAYER, payload: { relics: [] } });
+                er.dispatch({
                     type: AT.SET_PENDING_RELICS,
                     payload: [
                         { id: 'test_relic_amber', name: '황혼의 파편', desc: '치명타 확률 +3%, 휴식 비용 -10%', rarity: 'epic', effect: 'crit_mp_regen' },

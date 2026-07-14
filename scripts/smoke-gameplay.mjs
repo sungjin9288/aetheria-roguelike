@@ -82,6 +82,40 @@ async function waitForState(page, predicate, description, timeout = 15000) {
   throw new Error(`Timed out waiting for ${description}`);
 }
 
+async function waitForVisualAssets(page) {
+  await page.evaluate(async () => {
+    await document.fonts?.ready;
+
+    const visibleImages = [...document.images].filter((image) => {
+      const rect = image.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+
+    await Promise.all(visibleImages.map(async (image) => {
+      if (!image.complete) {
+        await new Promise((resolve) => {
+          const finish = () => resolve();
+          image.addEventListener('load', finish, { once: true });
+          image.addEventListener('error', finish, { once: true });
+          window.setTimeout(finish, 2000);
+        });
+      }
+      await image.decode?.().catch(() => {});
+    }));
+
+    const finiteAnimations = document.getAnimations().filter((animation) => {
+      const timing = animation.effect?.getComputedTiming?.();
+      return timing && Number.isFinite(timing.endTime) && timing.endTime <= 2000;
+    });
+    await Promise.race([
+      Promise.allSettled(finiteAnimations.map((animation) => animation.finished)),
+      new Promise((resolve) => window.setTimeout(resolve, 2200)),
+    ]);
+
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+}
+
 async function writeStateArtifact(name, state, page, {
   screenshotSelector = null,
   screenshotAnimations = 'disabled',
@@ -94,6 +128,7 @@ async function writeStateArtifact(name, state, page, {
     }
   }
   if (/^(08a|08|08b|09)-/.test(basename)) await delay(1000);
+  await waitForVisualAssets(page);
   const domMetrics = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getDomMetrics?.() || null);
   const artifactState = domMetrics ? { ...state, domMetrics } : state;
   await fs.mkdir(artifactDir, { recursive: true });
@@ -503,6 +538,8 @@ async function verifyMobileFirstFold(page) {
   const statusBar = page.locator('[data-testid="persistent-status-bar"]');
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
   const statusCharacterChip = page.locator('[data-testid="status-character-chip"]');
+  const statusContextLine = page.locator('[data-testid="status-context-line"]');
+  const statusMetrics = page.locator('[data-testid="status-metrics"]');
   const moveButton = page.locator('[data-testid="control-move"]');
   const shopButton = page.locator('[data-testid="control-market"]');
 
@@ -510,6 +547,8 @@ async function verifyMobileFirstFold(page) {
   await statusBar.waitFor({ state: 'visible', timeout: 10000 });
   await archiveOpenButton.waitFor({ state: 'visible', timeout: 10000 });
   await statusCharacterChip.waitFor({ state: 'visible', timeout: 10000 });
+  await statusContextLine.waitFor({ state: 'visible', timeout: 10000 });
+  await statusMetrics.waitFor({ state: 'visible', timeout: 10000 });
   await moveButton.waitFor({ state: 'visible', timeout: 10000 });
   await shopButton.waitFor({ state: 'visible', timeout: 10000 });
   await verifyActionReachable(archiveOpenButton, 'Mobile archive open CTA', {
@@ -524,8 +563,26 @@ async function verifyMobileFirstFold(page) {
   const terminalBox = await terminalPanel.boundingBox();
   ensure(terminalBox && terminalBox.height >= 240, 'Mobile log panel did not retain the expanded first-fold height');
   const statusText = await statusBar.innerText();
-  ensure(['생명', '기력', '경험', '골드'].every((label) => statusText.includes(label)), 'Mobile status bar should use direct Korean metric labels');
+  ensure(['모바일검증', '모험가', '레벨 1', '시작의 마을', '생명', '기력', '경험', '골드'].every((label) => statusText.includes(label)), 'Mobile status bar should expose one readable player summary');
   ensure(!/\b(?:HP|NRG|EXP|CR)\b|Target Lock/.test(statusText), 'Mobile status bar should not expose mechanical English metric labels');
+
+  await waitForVisualAssets(page);
+  const statusLayout = await statusBar.evaluate((node) => {
+    const avatar = node.querySelector('[data-testid="status-character-chip"] img');
+    const metricLabels = [...node.querySelectorAll('[data-testid="status-metric-label"]')];
+    const metricValues = [...node.querySelectorAll('[data-testid="status-metric-value"]')];
+    return {
+      clientWidth: node.clientWidth,
+      scrollWidth: node.scrollWidth,
+      avatarReady: avatar instanceof HTMLImageElement && avatar.complete && avatar.naturalWidth > 0,
+      labelSizes: metricLabels.map((label) => Number.parseFloat(getComputedStyle(label).fontSize)),
+      valueSizes: metricValues.map((value) => Number.parseFloat(getComputedStyle(value).fontSize)),
+    };
+  });
+  ensure(statusLayout.scrollWidth <= statusLayout.clientWidth + 1, `Mobile status bar should not overflow horizontally: ${JSON.stringify(statusLayout)}`);
+  ensure(statusLayout.avatarReady, 'Mobile status avatar should finish loading before visual evidence');
+  ensure(statusLayout.labelSizes.length === 3 && statusLayout.labelSizes.every((size) => size >= 10), `Mobile status labels should be at least 10px: ${JSON.stringify(statusLayout.labelSizes)}`);
+  ensure(statusLayout.valueSizes.length === 3 && statusLayout.valueSizes.every((size) => size >= 11), `Mobile status values should be at least 11px: ${JSON.stringify(statusLayout.valueSizes)}`);
 }
 
 async function verifyMobileArchiveConsole(page) {
@@ -927,6 +984,7 @@ async function moveToForest(page) {
     !/(?:고요한 숲로|\+\d+G|EXP|🗺️|⚠️|📖)/.test(arrivalRecord),
     `First arrival record retained mechanical copy: ${arrivalRecord}`
   );
+  await scrollToTop(page);
   await writeStateArtifact('03-arrived-forest', state, page);
   return state;
 }

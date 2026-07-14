@@ -84,10 +84,12 @@ test('RelicChoicePanel renders Korean decision labels and recommended marker', a
 
 test('smoke loop verifies relic choice decision strip with deterministic injection', async () => {
     const source = await readSrc('scripts/smoke-gameplay.mjs');
+    const testApiSource = await readSrc('src/hooks/useGameTestApi.ts');
     assert.match(source, /verifyRelicChoiceDecisionStrip/);
     assert.match(source, /injectRelicChoice/);
     assert.match(source, /relic-choice-decision-strip/);
     assert.match(source, /02e-relic-choice-decision-strip/);
+    assert.match(testApiSource, /injectRelicChoice:[\s\S]*?SET_PLAYER, payload: \{ relics: \[\] \}/);
 });
 
 test('relic choice decision strip has high readability CSS coverage', async () => {

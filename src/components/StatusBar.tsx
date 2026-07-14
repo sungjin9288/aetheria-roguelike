@@ -38,10 +38,13 @@ const StatusMetric = ({ label, value, max, variant }: any) => {
   const percentage = Math.min(100, (safeValue / safeMax) * 100);
 
   return (
-    <div className="aether-status-metric relative overflow-hidden rounded-[0.8rem] px-2 py-1">
-      <div className="flex items-baseline justify-between gap-2 font-readable text-[8px]">
-        <span className={theme.label}>{label}</span>
-        <span className="text-[10px] text-white/78">{safeValue}/{safeMax}</span>
+    <div
+      data-testid={`status-metric-${variant}`}
+      className="aether-status-metric relative overflow-hidden rounded-[0.8rem] px-2 py-1.5"
+    >
+      <div className="flex items-baseline justify-between gap-1 font-readable text-[10px] leading-none">
+        <span data-testid="status-metric-label" className={theme.label}>{label}</span>
+        <span data-testid="status-metric-value" className="text-[11px] font-semibold text-white/82">{safeValue}/{safeMax}</span>
       </div>
       <div className={`mt-1 h-[3px] overflow-hidden rounded-full border bg-black/28 ${theme.border}`}>
         {/* slice 31: 바 fill 부드러운 tween — 기존엔 즉시 snap이라 데미지/EXP
@@ -160,7 +163,7 @@ const StatusBar = ({
       className="pointer-events-none aether-status-shell sticky top-0 z-50 w-full overflow-hidden rounded-[1.2rem] px-2.5 py-1.5"
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" style={{position:'absolute'}} />
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-start gap-2.5">
         <PixelCharacterAvatar
           player={player}
           size="sm"
@@ -171,81 +174,86 @@ const StatusBar = ({
           className="shrink-0"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex flex-wrap items-center gap-1.5">
-              <span className="truncate font-readable text-[14px] font-semibold text-white/96">{player.name}</span>
+          <div className="flex items-start justify-between gap-2">
+            <div data-testid="status-player-summary" className="min-w-0 flex flex-1 flex-wrap items-center gap-1.5">
+              <span className="min-w-0 max-w-[8.5rem] truncate font-readable text-[15px] font-semibold leading-tight text-white/96">{player.name}</span>
               <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{enemy ? '전투중' : player.job}</SignalBadge>
               <SignalBadge tone="resonance" size="sm">레벨 {player.level}</SignalBadge>
               {/* cycle 176: 'blindMap' challenge modifier — 위치 표시 숨김 ('???' 라벨로 대체).
                   cycle 147 이전엔 dead modifier(handler 0건)였음 — 이제 정상 동작. */}
               {/* slice 21: 위치 점/텍스트에 지역 accent — 지역 이동이 상태 바에서도 체감되게. */}
-              <span className="flex items-center gap-1 text-[8px] font-fira" style={{ color: 'var(--region-accent)' }}>
-                <span className="h-1 w-1 shrink-0 rounded-full animate-pulse" style={{ backgroundColor: 'var(--region-accent)' }} />
-                <span className="truncate max-w-[76px] opacity-90">
-                  {player.challengeModifiers?.includes('blindMap') ? '???' : player.loc}
-                </span>
-              </span>
-              {(player.killStreak || 0) >= 3 && (
-                <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em] text-orange-300">🔥{player.killStreak}</span>
-              )}
-              {/* cycle 111: 활성 디버프 chip — cycle 106-110에서 활성화된 5종 status
-                  (bleed/freeze/stun/curse/blind/fear)의 시각 노출. 기존엔 전투 로그에만
-                  나오고 스크롤되어 사라져 플레이어가 현재 디버프 상태를 알기 어려웠음.
-                  rose 톤(위험)으로 단일화 — 모든 5종이 player에 부정적이라 통합. */}
-              {Array.isArray(player.status) && player.status.length > 0 && (() => {
-                const DEBUFF_LABELS: Record<string, string> = {
-                  bleed: '출혈', burn: '화상', poison: '중독',
-                  freeze: '빙결', stun: '기절', curse: '저주',
-                  blind: '실명', fear: '공포',
-                };
-                const debuffs = player.status.filter((s: any) => DEBUFF_LABELS[s as string]);
-                if (debuffs.length === 0) return null;
-                const headLabel = DEBUFF_LABELS[debuffs[0] as string] || debuffs[0];
-                const showCount = debuffs.length > 1;
-                return (
-                  <span
-                    data-testid="status-debuff-chip"
-                    data-debuff-count={debuffs.length}
-                    className="shrink-0 rounded-full border border-rose-400/40 bg-rose-500/16 px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em] text-rose-200"
-                    aria-label={`디버프 ${debuffs.length}개: ${debuffs.map((d: any) => DEBUFF_LABELS[d as string] || d).join(', ')}`}
-                  >
-                    ⚠ {headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}
+              <div
+                data-testid="status-context-line"
+                className="basis-full flex min-h-[20px] min-w-0 flex-wrap items-center gap-1.5"
+              >
+                <span className="flex min-w-0 items-center gap-1 font-readable text-[10px]" style={{ color: 'var(--region-accent)' }}>
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: 'var(--region-accent)' }} />
+                  <span className="max-w-[8.5rem] truncate opacity-90">
+                    {player.challengeModifiers?.includes('blindMap') ? '???' : player.loc}
                   </span>
-                );
-              })()}
-              {stats?.jobAffinity?.matchCount > 0 && (() => {
-                const tier = stats.jobAffinity.tier;
-                const tone =
-                  tier === 'full' ? { color: '#f6e7a2', border: 'rgba(246,231,162,0.55)', bg: 'rgba(246,231,162,0.18)' } :
-                  tier === 'partial2' ? { color: '#d5b180', border: 'rgba(213,177,128,0.50)', bg: 'rgba(213,177,128,0.14)' } :
-                  { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.12)' };
-                return (
-                  <span
-                    data-testid="status-outfit-affinity-chip"
-                    data-affinity-tier={tier}
-                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-fira font-bold tracking-[0.1em]"
-                    style={{ color: tone.color, border: `1px solid ${tone.border}`, background: tone.bg }}
-                    aria-label={`${stats.jobAffinity.label} ${stats.jobAffinity.matchCount}/${stats.jobAffinity.totalSlots || 3}`}
-                  >
-                    ⚔{stats.jobAffinity.matchCount}/{stats.jobAffinity.totalSlots || 3}
-                  </span>
-                );
-              })()}
-              {equippedSignatureCount > 0 && (
-                <span
-                  data-testid="status-signature-chip"
-                  data-signature-count={equippedSignatureCount}
-                  className="shrink-0 rounded-full px-1.5 py-0.5 text-[7px] font-fira font-bold uppercase tracking-[0.12em]"
-                  style={{
-                    color: '#f6e7a2',
-                    border: '1px solid rgba(246,231,162,0.42)',
-                    background: 'rgba(246,231,162,0.12)',
-                  }}
-                  aria-label={`전설 각인 ${equippedSignatureCount}종 장착중`}
-                >
-                  ✦{equippedSignatureCount}
                 </span>
-              )}
+                {(player.killStreak || 0) >= 3 && (
+                  <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal text-orange-300">연속 처치 {player.killStreak}</span>
+                )}
+                {/* cycle 111: 활성 디버프 chip — cycle 106-110에서 활성화된 5종 status
+                    (bleed/freeze/stun/curse/blind/fear)의 시각 노출. 기존엔 전투 로그에만
+                    나오고 스크롤되어 사라져 플레이어가 현재 디버프 상태를 알기 어려웠음.
+                    rose 톤(위험)으로 단일화 — 모든 5종이 player에 부정적이라 통합. */}
+                {Array.isArray(player.status) && player.status.length > 0 && (() => {
+                  const DEBUFF_LABELS: Record<string, string> = {
+                    bleed: '출혈', burn: '화상', poison: '중독',
+                    freeze: '빙결', stun: '기절', curse: '저주',
+                    blind: '실명', fear: '공포',
+                  };
+                  const debuffs = player.status.filter((s: any) => DEBUFF_LABELS[s as string]);
+                  if (debuffs.length === 0) return null;
+                  const headLabel = DEBUFF_LABELS[debuffs[0] as string] || debuffs[0];
+                  const showCount = debuffs.length > 1;
+                  return (
+                    <span
+                      data-testid="status-debuff-chip"
+                      data-debuff-count={debuffs.length}
+                      className="shrink-0 rounded-full border border-rose-400/40 bg-rose-500/16 px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal text-rose-200"
+                      aria-label={`디버프 ${debuffs.length}개: ${debuffs.map((d: any) => DEBUFF_LABELS[d as string] || d).join(', ')}`}
+                    >
+                      {headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}
+                    </span>
+                  );
+                })()}
+                {stats?.jobAffinity?.matchCount > 0 && (() => {
+                  const tier = stats.jobAffinity.tier;
+                  const tone =
+                    tier === 'full' ? { color: '#f6e7a2', border: 'rgba(246,231,162,0.55)', bg: 'rgba(246,231,162,0.18)' } :
+                    tier === 'partial2' ? { color: '#d5b180', border: 'rgba(213,177,128,0.50)', bg: 'rgba(213,177,128,0.14)' } :
+                    { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.12)' };
+                  return (
+                    <span
+                      data-testid="status-outfit-affinity-chip"
+                      data-affinity-tier={tier}
+                      className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal"
+                      style={{ color: tone.color, border: `1px solid ${tone.border}`, background: tone.bg }}
+                      aria-label={`${stats.jobAffinity.label} ${stats.jobAffinity.matchCount}/${stats.jobAffinity.totalSlots || 3}`}
+                    >
+                      ⚔{stats.jobAffinity.matchCount}/{stats.jobAffinity.totalSlots || 3}
+                    </span>
+                  );
+                })()}
+                {equippedSignatureCount > 0 && (
+                  <span
+                    data-testid="status-signature-chip"
+                    data-signature-count={equippedSignatureCount}
+                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal"
+                    style={{
+                      color: '#f6e7a2',
+                      border: '1px solid rgba(246,231,162,0.42)',
+                      background: 'rgba(246,231,162,0.12)',
+                    }}
+                    aria-label={`전설 각인 ${equippedSignatureCount}종 장착중`}
+                  >
+                    ✦{equippedSignatureCount}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="shrink-0 flex items-center gap-1.5">
               {onToggleMute && (
@@ -268,7 +276,7 @@ const StatusBar = ({
               </div>
             </div>
           </div>
-          <div className="mt-1 grid grid-cols-3 gap-1">
+          <div data-testid="status-metrics" className="mt-1.5 grid grid-cols-3 gap-1">
             <StatusMetric label="생명" value={player.hp} max={stats?.maxHp} variant="hp" />
             <StatusMetric label="기력" value={player.mp} max={stats?.maxMp} variant="mp" />
             <StatusMetric label="경험" value={player.exp} max={player.nextExp} variant="exp" />

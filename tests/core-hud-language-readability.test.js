@@ -26,6 +26,18 @@ test('persistent status and enemy target use direct Korean metric labels', async
     assert.doesNotMatch(source, /Target Lock|>Boss<|label="(?:HP|NRG|EXP)"|>CR<|Toggle Sound/);
 });
 
+test('persistent status separates identity, location, and readable metrics', async () => {
+    const source = await readSrc('src/components/StatusBar.tsx');
+
+    assert.match(source, /data-testid="status-player-summary"/);
+    assert.match(source, /data-testid="status-context-line"/);
+    assert.match(source, /data-testid="status-metrics"/);
+    assert.match(source, /data-testid="status-metric-label"/);
+    assert.match(source, /data-testid="status-metric-value"/);
+    assert.match(source, /text-\[10px\]/);
+    assert.match(source, /text-\[11px\]/);
+});
+
 test('field log badges explain their meaning without developer abbreviations', async () => {
     const source = await readSrc('src/components/TerminalView.tsx');
 
@@ -74,7 +86,11 @@ test('status command repeats the same direct Korean metric vocabulary', async ()
 test('smoke verifies the rendered status, enemy, and log vocabulary', async () => {
     const smoke = await readSrc('scripts/smoke-gameplay.mjs');
 
-    assert.match(smoke, /Mobile status bar should use direct Korean metric labels/);
+    assert.match(smoke, /Mobile status bar should expose one readable player summary/);
+    assert.match(smoke, /Mobile status avatar should finish loading before visual evidence/);
+    assert.match(smoke, /Mobile status bar should not overflow horizontally/);
+    assert.match(smoke, /document\.getAnimations\(\)/);
+    assert.match(smoke, /writeStateArtifact\('03-arrived-forest', state, page\)/);
     assert.match(smoke, /Enemy status should use the player-facing target label/);
     assert.match(smoke, /Field log should expose at least one readable type badge/);
     assert.match(smoke, /Status command should use direct Korean metric labels/);
