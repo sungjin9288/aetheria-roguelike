@@ -36,7 +36,7 @@ test('Dashboard wires getSignatureDiscoveryProgress to codex tab badge', async (
     );
     assert.ok(source.includes('getSignatureDiscoveryProgress(player)'), 'should call helper with player');
     assert.ok(
-        /tabId === 'codex'[\s\S]{0,120}?signatureBadge/.test(source),
+        /tabId !== 'codex' \|\| !signatureBadge/.test(source),
         'getTabExtras should attach badge only for codex tab'
     );
     assert.ok(
@@ -45,11 +45,9 @@ test('Dashboard wires getSignatureDiscoveryProgress to codex tab badge', async (
     );
 });
 
-test('all four ArchiveTabButton call sites spread getTabExtras', async () => {
+test('the single production archive rail spreads getTabExtras', async () => {
     const source = await readSrc('src/components/Dashboard.tsx');
     const extrasSpread = (source.match(/\.\.\.getTabExtras\(tab\.id\)/g) || []).length;
-    assert.ok(
-        extrasSpread >= 4,
-        `expected all 4 ArchiveTabButton usages to spread getTabExtras, got ${extrasSpread}`
-    );
+    assert.equal(extrasSpread, 1, `expected one production ArchiveTabButton rail, got ${extrasSpread}`);
+    assert.doesNotMatch(source, /mobile-archive-sheet|dashboard-tab-/);
 });

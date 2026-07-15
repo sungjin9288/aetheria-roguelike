@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Package } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { GS } from '../../reducers/gameStates';
 import TerminalView from '../TerminalView';
 import ControlPanel from '../ControlPanel';
@@ -22,12 +22,12 @@ const MobileConsoleArchiveButton = ({ onClick }: any) => (
         type="button"
         data-testid="mobile-console-open-archive"
         onClick={onClick}
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-full border px-3 py-1.5 text-[9px] font-fira uppercase tracking-[0.16em] transition-all border-white/8 bg-black/18 text-slate-300/74 hover:border-[#d5b180]/18 hover:text-slate-100"
+        className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/8 bg-black/18 px-3 py-1.5 text-[10px] font-readable text-slate-300/78 transition-all hover:border-[#d5b180]/18 hover:text-slate-100"
     >
         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/8 bg-white/[0.04]">
-            <Package size={10} />
+            <BookOpen size={11} />
         </span>
-        메뉴
+        모험 기록
     </button>
 );
 
@@ -62,8 +62,6 @@ const MobileGameLayout = ({
                 showArchiveConsole ? (
                     <Suspense fallback={archiveAvailable ? <DashboardFallback /> : null}>
                         <Dashboard
-                            mobileSection="console"
-                            consoleExpanded
                             onReturnToLog={() => setMobileConsoleMode('log')}
                             player={engine.player}
                             grave={engine.grave}

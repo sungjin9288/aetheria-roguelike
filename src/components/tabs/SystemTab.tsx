@@ -224,7 +224,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         ? 'text-rose-200 border-rose-300/22 bg-rose-400/10'
         : 'text-emerald-100 border-emerald-300/24 bg-emerald-300/10';
     return (
-        <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 p-1.5">
+        <Motion.div data-testid="system-tab" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 p-1.5">
 
             {/* 세션 정보 */}
             <div className="rounded-[1rem] border border-white/8 bg-black/18 text-[10px] text-slate-400/90 font-fira px-3 py-2.5">

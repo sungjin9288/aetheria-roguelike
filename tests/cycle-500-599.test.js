@@ -3514,21 +3514,19 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 572: Dashboard signature에서 6 defaults 0건', async () => {
+  test('slice 37: Dashboard signature에서 삭제된 화면 분기와 불필요 defaults 0건', async () => {
       const source = await readSrc('src/components/Dashboard.tsx');
       const fnIdx = source.indexOf('const Dashboard = ');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(!/mobileSection\s*=\s*'full'/.test(sig),
-          "Dashboard mobileSection default 'full' 제거");
+      assert.ok(!/mobileSection/.test(source), 'Dashboard mobileSection 제거');
       assert.ok(!/quickSlots\s*=\s*\[null, null, null\]/.test(sig),
           'Dashboard quickSlots default [null,null,null] 제거');
       assert.ok(!/runtime\s*=\s*null/.test(sig),
           'Dashboard runtime default null 제거');
       assert.ok(!/inventorySpotlight\s*=\s*null/.test(sig),
           'Dashboard inventorySpotlight default null 제거');
-      assert.ok(!/consoleExpanded\s*=\s*false/.test(sig),
-          'Dashboard consoleExpanded default false 제거');
+      assert.ok(!/consoleExpanded/.test(source), 'Dashboard consoleExpanded 제거');
       assert.ok(!/onReturnToLog\s*=\s*null/.test(sig),
           'Dashboard onReturnToLog default null 제거');
   });
@@ -3542,11 +3540,11 @@ import { readFile, readdir } from 'node:fs/promises';
           'Dashboard onClearInventorySpotlight default null 보존 (MobileGameLayout 미전달이라 reachable)');
   });
 
-  test('cycle 572: 정합성 가드 — MobileGameLayout callsite 보존', async () => {
+  test('slice 37: MobileGameLayout은 단일 Dashboard 화면 계약만 전달한다', async () => {
       const source = await readSrc('src/components/app/MobileGameLayout.tsx');
-      assert.ok(/<Dashboard\s*\n\s*mobileSection="console"/.test(source),
-          'MobileGameLayout mobileSection="console" 보존');
-      assert.ok(/consoleExpanded/.test(source), 'consoleExpanded prop 보존');
+      assert.ok(/<Dashboard/.test(source), 'Dashboard callsite 보존');
+      assert.ok(!/mobileSection=/.test(source), 'mobileSection prop 0건');
+      assert.ok(!/consoleExpanded/.test(source), 'consoleExpanded prop 0건');
       assert.ok(/onReturnToLog=\{/.test(source), 'onReturnToLog prop 보존');
   });
 

@@ -1,4 +1,6 @@
 import {
+  GraduationCap,
+  Hammer,
   Map as MapIcon,
   Moon,
   Route,
@@ -376,7 +378,27 @@ const ControlPanel = ({
     className: 'bg-[linear-gradient(180deg,rgba(16,32,37,0.84)_0%,rgba(7,13,17,0.96)_100%)] border border-[#7dd4d8]/22 text-[#dff7f5] hover:bg-[#7dd4d8]/10 hover:border-[#7dd4d8]/30',
   };
 
-  const safeZoneButtons = [restButton, questButton, marketButton];
+  const classButton: Record<string, any> = {
+    key: 'class',
+    testId: 'control-class',
+    icon: GraduationCap,
+    label: '전직',
+    mobileLabel: '전직',
+    onClick: () => setGameState?.(GS.JOB_CHANGE),
+    className: 'bg-[linear-gradient(180deg,rgba(32,27,18,0.84)_0%,rgba(14,11,7,0.96)_100%)] border border-[#d5b180]/18 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/28',
+  };
+
+  const craftButton: Record<string, any> = {
+    key: 'craft',
+    testId: 'control-craft',
+    icon: Hammer,
+    label: '제작',
+    mobileLabel: '제작',
+    onClick: () => setGameState?.(GS.CRAFTING),
+    className: 'bg-[linear-gradient(180deg,rgba(25,30,34,0.84)_0%,rgba(10,13,16,0.96)_100%)] border border-white/10 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-[#7dd4d8]/8',
+  };
+
+  const safeZoneButtons = [restButton, questButton, marketButton, classButton, craftButton];
 
   const auxiliaryButtons: any[] = [];
   if (showGraveRecovery) {

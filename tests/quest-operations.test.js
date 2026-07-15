@@ -192,13 +192,11 @@ test('adventure guidance references the top recommended operation when no quest 
 });
 
 test('town quest shortcut opens the quest board focus panel, not only the progress tab', async () => {
-    const source = await readFile(new URL('../src/components/Dashboard.tsx', import.meta.url), 'utf8');
-    const branchStart = source.indexOf("if (actionId === 'quest')");
-    const branchEnd = source.indexOf("if (actionId === 'craft')", branchStart);
-    const questBranch = source.slice(branchStart, branchEnd);
+    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
 
-    assert.match(questBranch, /actions\.setGameState\?\.\(GS\.QUEST_BOARD\)/);
-    assert.doesNotMatch(questBranch, /handleTabSelect\('quest'\)/);
+    assert.match(source, /testId:\s*'control-quests'/);
+    assert.match(source, /actions\.setGameState\(GS\.QUEST_BOARD\)/);
+    assert.doesNotMatch(source, /handleTabSelect\('quest'\)/);
 });
 
 test('safe-zone control grid exposes quest board and rest actions for guidance targets', async () => {

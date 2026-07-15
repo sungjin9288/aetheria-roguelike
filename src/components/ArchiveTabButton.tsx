@@ -10,15 +10,19 @@ import { motion as Motion } from 'framer-motion';
 const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = false, rail = false, testId = null, badge = null, badgeTitle = null }: any) => {
     const Icon = icon;
     const frameClass = rail
-        ? 'flex min-h-[32px] shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1'
+        ? 'flex min-h-[44px] shrink-0 scroll-mx-3 items-center justify-center gap-1.5 rounded-full px-3 py-1.5'
         : 'flex flex-col items-center justify-center gap-1 rounded-[1.1rem]';
     const heightClass = rail ? '' : compact ? 'min-h-[40px]' : 'min-h-[52px]';
 
     return (
         <Motion.button
+            type="button"
             whileTap={{ scale: 0.95 }}
             onClick={onClick}
             data-testid={testId}
+            data-active={active ? 'true' : 'false'}
+            aria-current={active ? 'page' : undefined}
+            aria-pressed={active}
             title={label}
             className={`relative border px-2 py-1.5 transition-all backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] ${
                 active
@@ -26,8 +30,8 @@ const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = fals
                     : 'text-slate-300/65 border-white/8 hover:border-[#d5b180]/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))]'
             } ${frameClass} ${heightClass}`}
         >
-            <Icon size={rail ? 11 : 14} />
-            <span className={`${rail ? 'text-[8px] tracking-[0.1em]' : 'text-[8px] tracking-[0.14em]'} font-fira uppercase`}>
+            <Icon size={rail ? 13 : 14} />
+            <span className={`${rail ? 'text-[10px]' : 'text-[8px]'} font-readable`}>
                 {label}
             </span>
             {badge != null && (

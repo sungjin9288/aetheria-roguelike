@@ -2595,6 +2595,26 @@ Notes:
 - Native debug/archive builds were not rerun because this pass touched web UI/readability and Capacitor web asset sync, not native signing or packaging logic.
 - Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.
 
+Done (2026-07-15: archive content-first navigation, Slice 37):
+- Replaced the repeated two-row archive menus with one horizontally scrolling 11-tab rail and moved the selected record directly below it.
+- Removed the unreachable Dashboard summary/dock/sheet branches and the duplicate town menu. Rest, quests, shop, class change, and crafting remain directly reachable from `ControlPanel`; reset now appears only in settings.
+- Added archive geometry, 44px touch target, horizontal page integrity, settings-only reset, and direct town-action smoke contracts.
+- Updated legacy source guards to follow the new ownership boundary instead of preserving deleted Dashboard variants.
+- Captured and visually reviewed `playtest-artifacts/mobile-archive-content-first/02-archive-console-open.png`, `08a-map-tab.png`, `09-system-tab.png`, and `10-tabs-verified.png`.
+
+Verification:
+- Focused source contracts -> 550/550 pass
+- `npm run verify:full` -> type-check, unit 3275/3275, build guard, desktop/mobile smoke, Playwright e2e 22/22 pass; lint has 0 errors and the existing `GameRoot.tsx` warning
+- `npm run mobile:doctor` -> iOS toolchain ready; Android release signing input still missing
+- `npm run cap:sync` -> pass
+- `npm run android:debug` -> pass; `android/app/build/outputs/apk/debug/app-debug.apk` refreshed at 2026-07-15 13:21:44 KST
+- `npm run ios:archive` -> pass; signed `build/ios/Aetheria.xcarchive` refreshed at 2026-07-15 13:22:00 KST
+- `AETHERIA_IOS_PROCESS_HOLD_SECONDS=10 npm run ios:device:smoke` -> install, launch, and 10-second process hold pass at `file:///private/var/containers/Bundle/Application/33FB4A6C-32B3-4375-B674-DB0C11DD11BF/App.app/`
+
+Notes:
+- The separate 60-second device hold launched successfully but the app process was absent after the hold. A screen-on foreground rerun is still required before claiming the full 60-second gate.
+- The generic `develop-web-game` client could not launch because its separate Playwright cache lacks Chromium revision 1223; repository smoke and E2E used the configured local Chrome path and passed.
+
 Done (2026-05-28: Quest Board and Shop modernization pass):
 - Continued `docs/READABILITY_TREND_RESEARCH.md` Slice 3 for modern roguelike decision surfaces.
 - Rebuilt `QuestBoardPanel` around `aether-choice-row` decision rows instead of heavy nested terminal cards. Featured missions now prioritize title, one-line objective, Scout Brief route/risk/payoff/return, reward chips, and the accept action.

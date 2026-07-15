@@ -643,32 +643,37 @@ async function verifyMobileArchiveConsole(page) {
 
   await archiveOpenButton.click();
   await archiveConsole.waitFor({ state: 'visible', timeout: 10000 });
-  await verifyActionReachable(page.locator('[data-testid="menu-town-rest"]'), 'Town rest CTA', {
-    minHitHeight: 44,
-    minVisibleRatio: 0.85,
+  const archiveLayout = await archiveConsole.evaluate((node) => {
+    const consoleRect = node.getBoundingClientRect();
+    const rail = node.querySelector('[data-testid="archive-tab-rail"]');
+    const content = node.querySelector('[data-testid="mobile-archive-console-content"]');
+    const railRect = rail?.getBoundingClientRect();
+    const contentRect = content?.getBoundingClientRect();
+    const tabHeights = Array.from(rail?.querySelectorAll('button') || []).map((button) => button.getBoundingClientRect().height);
+    return {
+      contentOffset: contentRect ? contentRect.top - consoleRect.top : null,
+      contentHeight: contentRect?.height || 0,
+      railHeight: railRect?.height || 0,
+      tabCount: tabHeights.length,
+      tabHeights,
+      duplicateTownActions: node.querySelectorAll('[data-testid^="menu-town-"]').length,
+      resetActions: node.querySelectorAll('[data-testid="menu-reset"]').length,
+    };
   });
-  await verifyActionReachable(page.locator('[data-testid="menu-town-class"]'), 'Town class CTA', {
-    minHitHeight: 44,
-    minVisibleRatio: 0.85,
-  });
-  await verifyActionReachable(page.locator('[data-testid="menu-town-quest"]'), 'Town quest CTA', {
-    minHitHeight: 44,
-    minVisibleRatio: 0.85,
-  });
-  await verifyActionReachable(page.locator('[data-testid="menu-town-craft"]'), 'Town craft CTA', {
-    minHitHeight: 44,
-    minVisibleRatio: 0.85,
-  });
-  await verifyActionReachable(page.locator('[data-testid="menu-reset"]'), 'Town reset CTA', {
-    minHitHeight: 44,
-    minVisibleRatio: 0.85,
-  });
-  // cycle 81: 모바일 archive console의 inline rail 레이아웃에서 primary tabs(equipment /
-  // inventory / quest / map / stats)는 archive-tab-* testid를, secondary tabs(achievements /
-  // skills / codex / pass / graves / system)만 dashboard-tab-* testid를 사용한다.
-  // 이전엔 equipment/stats를 dashboard-tab-* 으로 잘못 매칭해 모바일 smoke가 archive
-  // 진입 직후 실패하던 잠재 회귀 (cycle 73의 verify:full에서 발견 — 표준 `npm run
-  // test:smoke`는 desktop만 돌려 안 잡혔음).
+  ensure(archiveLayout.tabCount === 11, `Archive rail should expose all 11 records in one row: ${JSON.stringify(archiveLayout)}`);
+  ensure(archiveLayout.tabHeights.every((height) => height >= 44), `Archive tabs should keep 44px touch targets: ${JSON.stringify(archiveLayout.tabHeights)}`);
+  ensure(archiveLayout.contentOffset != null && archiveLayout.contentOffset <= 150, `Selected archive content should begin near the top of the console: ${JSON.stringify(archiveLayout)}`);
+  ensure(archiveLayout.contentHeight >= 240, `Selected archive content should receive useful first-viewport height: ${JSON.stringify(archiveLayout)}`);
+  ensure(archiveLayout.duplicateTownActions === 0, 'Archive should not duplicate town actions from the field action surface');
+  ensure(archiveLayout.resetActions === 0, 'Progress reset should stay inside the settings record');
+  const initialPageWidth = await page.evaluate(() => ({
+    scrollX: window.scrollX,
+    viewportWidth: window.innerWidth,
+    pageWidth: document.documentElement.scrollWidth,
+  }));
+  ensure(initialPageWidth.scrollX === 0, `Archive tab rail should not move the page horizontally: ${JSON.stringify(initialPageWidth)}`);
+  ensure(initialPageWidth.pageWidth <= initialPageWidth.viewportWidth, `Archive should not create page-level horizontal overflow: ${JSON.stringify(initialPageWidth)}`);
+
   await page.locator('[data-testid="archive-tab-equipment"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="archive-tab-stats"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="archive-tab-equipment"]').click();
@@ -777,6 +782,12 @@ async function verifyMobileArchiveConsole(page) {
     'Avatar state attributes did not change between same-job equipment presets'
   );
 
+  await page.locator('[data-testid="archive-tab-system"]').click();
+  await page.locator('[data-testid="system-reset-section"]').waitFor({ state: 'visible', timeout: 5000 });
+  await verifyActionReachable(page.locator('[data-testid="menu-reset"]'), 'Settings reset CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
   await page.locator('[data-testid="menu-reset"]').click();
   await page.locator('[data-testid="menu-reset-confirm"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="menu-reset-cancel"]').waitFor({ state: 'visible', timeout: 5000 });
@@ -790,11 +801,28 @@ async function verifyMobileArchiveConsole(page) {
     minVisibleRatio: 0.85,
   });
   await page.locator('[data-testid="menu-reset-cancel"]').click();
-  await page.locator('[data-testid="menu-reset"]').waitFor({ state: 'visible', timeout: 5000 });
-  await writeStateArtifact('02-archive-console-open', await readState(page), page);
+  await page.locator('[data-testid="archive-tab-equipment"]').click();
+  await page.locator('[data-testid="equipment-panel"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  await writeStateArtifact('02-archive-console-open', await readState(page), page, {
+    screenshotSelector: '[data-testid="mobile-archive-console"]',
+    screenshotAnimations: 'disabled',
+  });
 
   await archiveReturnButton.click();
   await page.locator('[data-testid="terminal-panel"]').waitFor({ state: 'visible', timeout: 10000 });
+  await verifyActionReachable(page.locator('[data-testid="control-class"]'), 'Town class CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  await verifyActionReachable(page.locator('[data-testid="control-quests"]'), 'Town quest CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
+  await verifyActionReachable(page.locator('[data-testid="control-craft"]'), 'Town craft CTA', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
 }
 
 async function verifyShopFlow(page) {
@@ -935,15 +963,15 @@ async function verifySurfaceLanguage(page, {
 async function verifyMobileFocusPanels(page) {
   if (!isMobile) return;
 
-  const openTownMenuShortcut = async (testId) => {
-    await page.locator('[data-testid="mobile-console-open-archive"]').click();
-    await page.locator('[data-testid="mobile-archive-console"]').waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator(`[data-testid="${testId}"]`).click();
+  const openTownAction = async (testId) => {
+    const action = page.locator(`[data-testid="${testId}"]`);
+    await action.waitFor({ state: 'visible', timeout: 10000 });
+    await action.click();
   };
 
   await verifyMobileFocusPanelFlow(page, {
     trigger: async () => {
-      await openTownMenuShortcut('menu-town-class');
+      await openTownAction('control-class');
     },
     openPredicate: (nextState) => nextState.gameState === 'job_change',
     openDescription: 'job change panel to open',
@@ -959,7 +987,7 @@ async function verifyMobileFocusPanels(page) {
 
   await verifyMobileFocusPanelFlow(page, {
     trigger: async () => {
-      await openTownMenuShortcut('menu-town-quest');
+      await openTownAction('control-quests');
     },
     openPredicate: (nextState) => nextState.gameState === 'quest_board',
     openDescription: 'quest board panel to open',
@@ -974,7 +1002,7 @@ async function verifyMobileFocusPanels(page) {
 
   await verifyMobileFocusPanelFlow(page, {
     trigger: async () => {
-      await openTownMenuShortcut('menu-town-craft');
+      await openTownAction('control-craft');
     },
     openPredicate: (nextState) => nextState.gameState === 'crafting',
     openDescription: 'crafting panel to open',
@@ -1263,10 +1291,35 @@ async function verifyTabs(page) {
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('system'));
   const systemState = await waitForState(page, (state) => state.sideTab === 'system', 'system tab activation');
-  await writeStateArtifact('09-system-tab', systemState, page);
+  await verifySurfaceLanguage(page, {
+    selector: '[data-testid="system-tab"]',
+    requiredText: ['화면 가독성', '기기 점검 기록'],
+    forbiddenPattern: /QA READOUT|READABILITY|EXPORT|ADMIN CONTROLS/,
+    label: 'system tab',
+  });
+  ensure(
+    await page.locator('[data-testid="archive-tab-system"][data-active="true"]').isVisible(),
+    'System tab should stay visible and selected in the archive rail'
+  );
+  const finalPageWidth = await page.evaluate(() => ({
+    scrollX: window.scrollX,
+    viewportWidth: window.innerWidth,
+    pageWidth: document.documentElement.scrollWidth,
+  }));
+  ensure(finalPageWidth.scrollX === 0, `Archive tab changes should not move the page horizontally: ${JSON.stringify(finalPageWidth)}`);
+  ensure(finalPageWidth.pageWidth <= finalPageWidth.viewportWidth, `Archive tab changes should not create page-level horizontal overflow: ${JSON.stringify(finalPageWidth)}`);
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  await writeStateArtifact('09-system-tab', systemState, page, {
+    screenshotSelector: '[data-testid="mobile-archive-console"]',
+    screenshotAnimations: 'allow',
+  });
 
   const state = await readState(page);
-  await writeStateArtifact('10-tabs-verified', state, page);
+  await delay(500);
+  await writeStateArtifact('10-tabs-verified', state, page, {
+    screenshotAnimations: 'disabled',
+    screenshotFullPage: false,
+  });
 }
 
 async function main() {

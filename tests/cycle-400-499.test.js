@@ -68,20 +68,22 @@ import { readFile, readdir } from 'node:fs/promises';
       const ifaceEnd = source.indexOf('}', ifaceStart);
       const ifaceBlock = source.slice(ifaceStart, ifaceEnd);
       const activeFields = ['player', 'grave', 'sideTab', 'setSideTab', 'actions',
-          'stats', 'mobileSection', 'quickSlots', 'runtime', 'inventorySpotlight',
-          'onClearInventorySpotlight', 'consoleExpanded', 'onReturnToLog'];
+          'stats', 'quickSlots', 'runtime', 'inventorySpotlight',
+          'onClearInventorySpotlight', 'onReturnToLog'];
       for (const field of activeFields) {
           const re = new RegExp(`${field}[?:]`);
           assert.ok(re.test(ifaceBlock), `${field} 필드 보존`);
       }
   });
 
-  test('cycle 401: mobileSection / DashboardMobileSummary 동작 보존 (회귀 가드)', async () => {
+  test('slice 37: Dashboard는 단일 모험 기록 화면만 소유한다', async () => {
       const source = await readSrc('src/components/Dashboard.tsx');
-      assert.ok(/mobileSection/.test(source),
-          'mobileSection 별개 식별자 보존');
-      assert.ok(/DashboardMobileSummary/.test(source),
-          'DashboardMobileSummary import / 사용 보존');
+      assert.ok(!/mobileSection/.test(source),
+          '삭제된 mobileSection 분기 0건');
+      assert.ok(!/consoleExpanded/.test(source),
+          '삭제된 consoleExpanded 분기 0건');
+      assert.ok(!/DashboardMobileSummary/.test(source),
+          '삭제된 요약 화면 import / 사용 0건');
   });
 
   test('cycle 400 회귀 가드: cycle 399 QuickSlotProps onAssign 0건', async () => {
@@ -2439,43 +2441,35 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test("cycle 444: handleMenuAction에서 'reset' 분기 0건", async () => {
+  test('slice 37: Dashboard 마을 메뉴 핸들러 0건', async () => {
       const source = await readSrc('src/components/Dashboard.tsx');
-      const fnIdx = source.indexOf('const handleMenuAction');
-      const fnEnd = source.indexOf('};', fnIdx);
-      const block = source.slice(fnIdx, fnEnd);
-      assert.ok(!/actionId === 'reset'/.test(block),
-          "handleMenuAction에서 actionId === 'reset' 분기 0건");
-      assert.ok(!/actionId !== 'reset'/.test(block),
-          "handleMenuAction에서 actionId !== 'reset' 가드 0건");
+      assert.ok(!/handleMenuAction/.test(source), '중복 마을 메뉴 핸들러 0건');
   });
 
-  test('cycle 444: 활성 분기 (rest / class / quest / craft) 보존', async () => {
-      const source = await readSrc('src/components/Dashboard.tsx');
-      const fnIdx = source.indexOf('const handleMenuAction');
-      const fnEnd = source.indexOf('};', fnIdx);
-      const block = source.slice(fnIdx, fnEnd);
-      assert.ok(/actionId === 'rest'/.test(block), "rest 분기 보존");
-      assert.ok(/actionId === 'class'/.test(block), "class 분기 보존");
-      assert.ok(/actionId === 'quest'/.test(block), "quest 분기 보존");
-      assert.ok(/actionId === 'craft'/.test(block), "craft 분기 보존");
+  test('slice 37: 마을 핵심 행동은 ControlPanel에서 직접 연다', async () => {
+      const source = await readSrc('src/components/ControlPanel.tsx');
+      assert.ok(/testId: 'control-rest'/.test(source), '휴식 행동 보존');
+      assert.ok(/testId: 'control-class'/.test(source), '전직 행동 보존');
+      assert.ok(/testId: 'control-quests'/.test(source), '임무 행동 보존');
+      assert.ok(/testId: 'control-craft'/.test(source), '제작 행동 보존');
+      assert.ok(/GS\.JOB_CHANGE/.test(source), '전직 화면 이동 보존');
+      assert.ok(/GS\.QUEST_BOARD/.test(source), '임무 화면 이동 보존');
+      assert.ok(/GS\.CRAFTING/.test(source), '제작 화면 이동 보존');
   });
 
-  test('cycle 444: 정합성 가드 — TOWN_MENU_ACTIONS는 reset id 0건', async () => {
+  test('slice 37: Dashboard 중복 마을 행동 목록 0건', async () => {
       const source = await readSrc('src/components/Dashboard.tsx');
-      const constIdx = source.indexOf('const TOWN_MENU_ACTIONS');
-      const constEnd = source.indexOf('];', constIdx);
-      const block = source.slice(constIdx, constEnd);
-      assert.ok(!/id: 'reset'/.test(block), 'TOWN_MENU_ACTIONS에 reset id 0건');
+      assert.ok(!/TOWN_MENU_ACTIONS/.test(source), 'TOWN_MENU_ACTIONS 0건');
   });
 
-  test('cycle 444: confirmMenuReset state 자체는 보존 (별도 caller가 set)', async () => {
+  test('slice 37: 새 여정 초기화는 설정 탭에서만 노출한다', async () => {
       const source = await readSrc('src/components/Dashboard.tsx');
       assert.ok(/confirmMenuReset, setConfirmMenuReset/.test(source),
           'confirmMenuReset state 정의 보존');
-      // 직접 caller (별도 button onClick)는 보존
+      assert.ok(/sideTab === 'system'/.test(source), '설정 탭 조건 보존');
+      assert.ok(/data-testid="system-reset-section"/.test(source), '설정 초기화 구역 보존');
       const directCaller = source.match(/onClick={\(\) => setConfirmMenuReset\(true\)}/);
-      assert.ok(directCaller, '별도 caller 보존');
+      assert.ok(directCaller, '초기화 확인 caller 보존');
   });
 
   test('cycle 443 회귀 가드: getRunBuildProfile primary.score 0건', async () => {
@@ -4261,11 +4255,10 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(!/\biconOnly\b/.test(source), 'iconOnly 참조 0건');
   });
 
-  test('cycle 483: 정합성 가드 — 4 callsite dense / iconOnly 전달 0건', async () => {
+  test('slice 37: 단일 ArchiveTabButton 렌더에서 dense / iconOnly 전달 0건', async () => {
       const source = await readSrc('src/components/Dashboard.tsx');
-      // 모든 <ArchiveTabButton...> 호출에서 dense / iconOnly 0건
       const matches = source.match(/<ArchiveTabButton[\s\S]*?\/>/g) || [];
-      assert.ok(matches.length >= 4, 'ArchiveTabButton 호출 4건 이상');
+      assert.equal(matches.length, 1, 'TAB_ITEMS map 내부 단일 호출 보존');
       matches.forEach((m, i) => {
           assert.ok(!/\bdense\b/.test(m), `callsite ${i}에 dense 전달 0건`);
           assert.ok(!/\biconOnly\b/.test(m), `callsite ${i}에 iconOnly 전달 0건`);

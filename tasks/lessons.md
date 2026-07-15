@@ -146,6 +146,10 @@
 - **Rule:** 직업·장비·외형을 교체하는 UI fixture는 파생 최대 생명·기력을 다시 계산하고 현재 수치를 그 범위 안에 유지하며, 강화 배지는 `강화 +1`처럼 대상이 드러나는 플레이어 언어로 표시한다
 - **Rationale:** 최대치를 넘는 생명·기력과 설명 없는 `+N`은 정상 아트도 깨진 상태처럼 보이게 만들고, 해당 캡처를 acceptance evidence로 신뢰할 수 없게 한다
 
+### R28: Keep Navigation Inside Its Own Scroll Boundary
+- **Rule:** 모바일 보조 기록 화면은 선택 본문을 첫 viewport에 우선 배치하고, 가로 탭 자동 정렬은 해당 레일의 `scrollLeft`만 변경한다. 마을 행동은 주 행동 화면에 두며 문서 전체에 영향을 주는 `scrollIntoView`와 중복 메뉴를 사용하지 않는다
+- **Rationale:** 반복 탐색과 중복 행동이 본문을 아래로 밀면 기록 화면을 열 때마다 목적을 다시 찾아야 하며, 문서 전체 스크롤은 실제 터치 프레이밍과 QA 캡처를 함께 깨뜨린다
+
 ---
 
 ## 📝 Post-Mortem Template

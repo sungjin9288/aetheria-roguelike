@@ -27,10 +27,10 @@ test('first-play surfaces use player-facing Korean labels', async () => {
     assert.match(controlPanel, /이동 경로/);
     assert.doesNotMatch(controlPanel, />\s*(Mission|Route Map|Recommended|CANCEL|NEXT)\s*</);
 
-    assert.match(dashboard, /id: 'rest', label: '휴식'/);
-    assert.match(dashboard, /id: 'class', label: '전직'/);
-    assert.match(dashboard, /id: 'quest', label: '임무'/);
-    assert.match(dashboard, /id: 'craft', label: '제작'/);
+    assert.match(controlPanel, /testId: 'control-rest'[^]*label: '휴식'/);
+    assert.match(controlPanel, /testId: 'control-class'[^]*label: '전직'/);
+    assert.match(controlPanel, /testId: 'control-quests'[^]*label: '임무'/);
+    assert.match(controlPanel, /testId: 'control-craft'[^]*label: '제작'/);
     assert.match(dashboard, /<span>초기화<\/span>/);
     assert.match(dashboard, /<span>취소<\/span>/);
 
@@ -88,12 +88,13 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
         assert.match(dashboard, new RegExp(`label: '${label}'`));
     }
     assert.match(dashboard, /모험 기록/);
-    assert.match(dashboard, /마을에서 할 일/);
-    assert.match(dashboard, /안전지대/);
+    assert.match(dashboard, /data-testid="archive-tab-rail"/);
+    assert.match(dashboard, /sideTab === 'system'[^]*data-testid="system-reset-section"/);
+    assert.doesNotMatch(dashboard, /TOWN_MENU_ACTIONS|menu-town-/);
     assert.doesNotMatch(dashboard, /label: '(Equipment|Inventory|Quest|Achievements|Skills|Map|Stats|Codex|Pass|Graves|System)'/);
     assert.doesNotMatch(dashboard, />\s*(RESET|Menu Console|Town Ops|SAFE ZONE|Archive Dock|Archive|Open)\s*</);
 
-    assert.match(mobileLayout, />\s*메뉴\s*</);
+    assert.match(mobileLayout, />\s*모험 기록\s*</);
     assert.doesNotMatch(mobileLayout, />\s*Menu\s*</);
 
     for (const label of ['화면 가독성', '기기 점검 기록', '파일 저장', '유물', '칭호', '오늘의 임무', '명예의 전당', '플레이 기록 저장', '의견 보내기']) {
