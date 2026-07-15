@@ -2595,6 +2595,25 @@ Notes:
 - Native debug/archive builds were not rerun because this pass touched web UI/readability and Capacitor web asset sync, not native signing or packaging logic.
 - Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.
 
+Done (2026-07-15: iOS native five-minute rehearsal after Slice 37):
+- Built and launched the current `App` scheme on an `iPhone 17 Pro / iOS 26.5` simulator from the signed-archive source state.
+- Exercised the real Capacitor `WKWebView` path through start, recommended relic choice, direct town quest entry, story quest acceptance, forest travel, map, equipment, settings, exploration event, relic reward, first combat, victory, backgrounding, and relaunch.
+- Confirmed the content-first archive rail does not shift the page horizontally, selected content begins immediately below one rail, and reset is available only at the bottom of settings.
+- Confirmed early progression pacing on the native path: the first victory kept the character at level 1 and moved EXP from `25/200` to `45/200`.
+- Confirmed local state restoration after a 10-second Home background interval: forest location, `131/178` life, `42/52` energy, `318` gold, `45/200` EXP, and the active story quest were preserved.
+- Refreshed native evidence in `playtest-artifacts/mobile-archive-content-first/ios-simulator-map-after-relaunch.jpg`, `ios-simulator-equipment.jpg`, `ios-simulator-settings-reset.jpg`, `ios-simulator-first-combat.jpg`, `ios-simulator-first-victory.jpg`, and `ios-simulator-background-relaunch.jpg`.
+
+Verification:
+- XcodeBuildMCP `build_run_sim` -> pass; app built, installed, and launched from `/tmp/aetheria-ios-sim-slice37/Build/Products/Debug-iphonesimulator/App.app`
+- Simulator native touch rehearsal -> pass for quest, travel, map, equipment, settings, event, relic, combat, victory, and relaunch paths
+- XcodeBuildMCP Home -> 10-second wait -> `launch_app_sim` -> pass; gameplay state restored
+- Relaunch runtime log scan for `error|exception|crash|fatal|assert` -> no app failure; only the iOS 26.5 simulator WebKit accessibility duplicate-class warning was present
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke` -> install pass, launch blocked with `Locked` because the physical iPhone was not unlocked
+
+Notes:
+- The simulator rehearsal closes the automatable native interaction gap but does not replace physical-device touch, performance, art feel, or 60-second foreground validation.
+- Remaining environment blockers are the locked physical iPhone, no connected Android device, and missing Android release signing inputs.
+
 Done (2026-07-15: archive content-first navigation, Slice 37):
 - Replaced the repeated two-row archive menus with one horizontally scrolling 11-tab rail and moved the selected record directly below it.
 - Removed the unreachable Dashboard summary/dock/sheet branches and the duplicate town menu. Rest, quests, shop, class change, and crafting remain directly reachable from `ControlPanel`; reset now appears only in settings.
