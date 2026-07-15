@@ -2595,6 +2595,25 @@ Notes:
 - Native debug/archive builds were not rerun because this pass touched web UI/readability and Capacitor web asset sync, not native signing or packaging logic.
 - Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.
 
+Done (2026-07-15: return briefing state simplification and Android native preflight, Slice 39):
+- Replaced `GameRoot`'s effect-driven return briefing mirror state and session ref with a focused `ReturnBriefingGate` that computes its one-shot value in a lazy state initializer after the player is ready.
+- Added a source contract that keeps the ready/player mount boundary, lazy initialization, and absence of the former effect/ref flow explicit.
+- Installed the fresh debug APK on `Medium_Phone_API_36.1` and exercised the actual Capacitor WebView through intro, character setup, recommended relic choice, first town, route selection, and arrival at the Quiet Forest.
+- Confirmed the first travel reward leaves the character at level 1 with `25/200` EXP and refreshed Android evidence in `playtest-artifacts/mobile-archive-content-first/`.
+- Isolated duplicated blur surfaces seen with SwiftShader to the emulator renderer: the same APK stabilizes cleanly with `-gpu host`. Documented host GPU as emulator preflight only, not a physical-device acceptance substitute.
+
+Verification:
+- `node --import tsx --test tests/return-briefing.test.js` -> 12/12 pass
+- `npm run verify:full` -> type-check, lint 0 errors/0 warnings, unit 3278/3278, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass
+- `npm run cap:sync` -> pass
+- `npm run android:debug` -> pass; `android/app/build/outputs/apk/debug/app-debug.apk` refreshed at 2026-07-15 13:58:59 KST
+- `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive` -> pass; signed `build/ios/Aetheria.xcarchive` refreshed at 2026-07-15 13:59:20 KST
+- Android native interaction -> pass through first region arrival; stable captures saved as `android-emulator-intro.png`, `android-emulator-first-town.png`, and `android-emulator-first-region.png`
+
+Notes:
+- Remaining release blockers are the locked physical iPhone handoff, physical Android availability, Android release signing inputs, and TestFlight delivery.
+- Emulator rendering evidence must use host GPU on this Apple Silicon environment; physical-device touch, performance, and art feel remain unverified.
+
 Done (2026-07-15: iOS device smoke locked handoff, Slice 38):
 - Consolidated launch-failure guidance in `scripts/ios-device-smoke.sh` so developer trust and physical-device lock failures produce distinct next actions.
 - Added an explicit pre-launch reminder and a locked-device handoff: unlock the iPhone, keep the screen awake, keep the app in the foreground, and rerun the same smoke command.

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import { buildReturnBriefing } from '../src/utils/returnBriefing.js';
 
@@ -125,4 +126,13 @@ test('buildReturnBriefing defaults missing loc/level/hp fields gracefully', () =
     assert.equal(briefing.level, 1);
     assert.equal(briefing.hp, 0);
     assert.equal(briefing.maxHp, 0);
+});
+
+test('GameRoot mounts a one-shot return briefing without effect-driven mirror state', async () => {
+    const source = await readFile(new URL('../src/components/app/GameRoot.tsx', import.meta.url), 'utf8');
+
+    assert.match(source, /const ReturnBriefingGate =/);
+    assert.match(source, /useState\(\(\) => buildReturnBriefing\(player, Date\.now\(\)\)\)/);
+    assert.match(source, /engine\.bootStage === 'ready' && engine\.player/);
+    assert.doesNotMatch(source, /returnBriefingCheckedRef|setReturnBriefing/);
 });

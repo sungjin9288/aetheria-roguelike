@@ -33,6 +33,7 @@
 | 2026-07-14 | 보상을 받은 정적 퀘스트가 즉시 재노출·재수락됨 | `claimedQuestIds`를 게시판 선별과 수락 경계에서 검사하지 않았음 | 일회성 정적 content는 표시 필터와 action guard 양쪽에서 같은 완료 ledger를 검사한다 |
 | 2026-07-14 | 전투 단계 배너가 전투 종료 후에도 모든 패널을 가림 | enemy 업데이트 effect cleanup이 배너 해제 timer를 반복 취소함 | transient UI의 상태 감지와 수명 timer를 별도 effect로 분리한다 |
 | 2026-07-14 | 인증 지연 오프라인 모드에서 앱 재실행 시 전체 런이 초기화됨 | 오프라인 플레이를 허용하면서 저장은 Firestore에만 의존함 | 모바일 오프라인 플레이는 versioned local snapshot을 함께 유지하고, cloud 실패 때만 migration 후 복원하며 reset에서 제거한다 |
+| 2026-07-15 | Android headless 에뮬레이터에서 패널과 글자가 중복·누락되어 앱 레이아웃 회귀처럼 보임 | SwiftShader가 다수의 blur surface를 잘못 합성했으며 같은 APK를 host GPU로 실행하면 안정 프레임이 정상 렌더링됨 | Android 에뮬레이터 시각 QA는 host GPU로 재현성을 먼저 확인하고, 소프트웨어 렌더러 한정 증상은 실기기 회귀와 분리한다 |
 
 ---
 
@@ -149,6 +150,10 @@
 ### R28: Keep Navigation Inside Its Own Scroll Boundary
 - **Rule:** 모바일 보조 기록 화면은 선택 본문을 첫 viewport에 우선 배치하고, 가로 탭 자동 정렬은 해당 레일의 `scrollLeft`만 변경한다. 마을 행동은 주 행동 화면에 두며 문서 전체에 영향을 주는 `scrollIntoView`와 중복 메뉴를 사용하지 않는다
 - **Rationale:** 반복 탐색과 중복 행동이 본문을 아래로 밀면 기록 화면을 열 때마다 목적을 다시 찾아야 하며, 문서 전체 스크롤은 실제 터치 프레이밍과 QA 캡처를 함께 깨뜨린다
+
+### R29: Separate Emulator Renderer Artifacts From App Regressions
+- **Rule:** Android headless 에뮬레이터의 패널 중복, 글자 누락, 검은 영역은 같은 APK를 `-gpu host`로 재실행해 안정 프레임을 비교한 뒤 앱 회귀로 분류한다. 에뮬레이터 통과는 물리 Android의 터치·성능·아트 QA를 대체하지 않는다
+- **Rationale:** SwiftShader의 WebView blur 합성 결함은 정상 DOM과 앱 프로세스를 유지한 채 화면만 깨뜨릴 수 있어, 즉시 CSS를 바꾸면 실제 기기 품질을 낮추고 원인을 숨길 수 있다
 
 ---
 

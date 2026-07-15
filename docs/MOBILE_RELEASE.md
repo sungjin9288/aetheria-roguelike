@@ -39,6 +39,14 @@ AETHERIA_DEVICECTL_TIMEOUT_SECONDS=180 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm 
 5. 위 기준 검증을 다시 실행
 6. signed build를 생성하고 내부 배포(TestFlight / Internal testing) 진행
 
+Android 에뮬레이터는 실기기 투입 전 보조 확인에만 사용합니다. Apple Silicon의 headless AVD에서는 SwiftShader가 blur surface를 중복 합성할 수 있으므로 아래처럼 host GPU로 실행하고, 통과 결과가 Android 실기기 5분 루틴을 대신하지 않도록 구분합니다.
+
+```bash
+"$ANDROID_HOME/emulator/emulator" -avd <AVD_NAME> \
+  -no-window -no-audio -no-boot-anim -gpu host -no-snapshot-save
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
 이슈 분류 기준:
 
 - `P0`: 크래시, 저장 꼬임, 버튼 미동작, 오버레이 겹침, 제출 차단 이슈

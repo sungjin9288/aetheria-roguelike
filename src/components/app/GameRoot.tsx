@@ -9,6 +9,7 @@ import { buildReturnBriefing } from '../../utils/returnBriefing';
 import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
+import type { Player } from '../../types/index.js';
 import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
@@ -25,6 +26,21 @@ const PostCombatCard   = lazy(() => import('../PostCombatCard'));
 const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
+
+const ReturnBriefingGate = ({ player }: { player: Player }) => {
+    const [briefing, setBriefing] = useState(() => buildReturnBriefing(player, Date.now()));
+
+    if (!briefing) return null;
+
+    return (
+        <Suspense fallback={null}>
+            <ReturnBriefingCard
+                briefing={briefing}
+                onClose={() => setBriefing(null)}
+            />
+        </Suspense>
+    );
+};
 
 const GameRoot = ({
     engine, fullStats,
@@ -63,18 +79,6 @@ const GameRoot = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [engine.bootStage, engine.player, engine.dispatch, engine.addLog]);
 
-    // 리텐션 훅 #1 — 복귀 브리핑 카드: bootStage 'ready' 진입 시점에 1회만 확인.
-    // 세션당 1회 가드(returnBriefingCheckedRef) — 이후 player 변화로 재계산되지 않음.
-    // titleCheckedRef(위)와 동일한 "ready 진입 1회 확인" 패턴. react-hooks/set-state-in-effect는
-    // eslint.config.js에서 기존 의도된 패턴과의 충돌로 warning 완화되어 있음(주석 참조).
-    const returnBriefingCheckedRef = useRef(false);
-    const [returnBriefing, setReturnBriefing] = useState<ReturnType<typeof buildReturnBriefing>>(null);
-    useEffect(() => {
-        if (returnBriefingCheckedRef.current) return;
-        if (engine.bootStage !== 'ready' || !engine.player) return;
-        returnBriefingCheckedRef.current = true;
-        setReturnBriefing(buildReturnBriefing(engine.player, Date.now()));
-    }, [engine.bootStage, engine.player]);
     const legendarySoundPlayedRef = useRef<any>(null);
     useEffect(() => {
         if (!legendaryDrop) {
@@ -278,13 +282,8 @@ const GameRoot = ({
                 </Suspense>
             )}
 
-            {returnBriefing && (
-                <Suspense fallback={null}>
-                    <ReturnBriefingCard
-                        briefing={returnBriefing}
-                        onClose={() => setReturnBriefing(null)}
-                    />
-                </Suspense>
+            {engine.bootStage === 'ready' && engine.player && (
+                <ReturnBriefingGate player={engine.player} />
             )}
 
             {engine.gameState === GS.ASCENSION && (
