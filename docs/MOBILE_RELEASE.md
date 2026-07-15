@@ -28,6 +28,8 @@ AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive
 AETHERIA_DEVICECTL_TIMEOUT_SECONDS=180 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke
 ```
 
+`ios:device:smoke`는 archive를 설치한 뒤 실행하고, 지정한 시간 동안 foreground process가 유지되는지 확인합니다. 실행이 `Locked`로 거부되면 iPhone 잠금을 해제하고 화면을 켠 채 앱을 foreground에 둔 다음 같은 명령을 다시 실행합니다. 스크립트가 개발자 프로필 신뢰와 기기 잠금을 구분해 필요한 조치를 바로 출력합니다.
+
 ### 0-2. 실기기 QA 실행 순서
 
 1. iPhone에서 `docs/PLAYTEST_CHECKLIST.md`의 5분 루틴 수행

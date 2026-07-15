@@ -2595,6 +2595,22 @@ Notes:
 - Native debug/archive builds were not rerun because this pass touched web UI/readability and Capacitor web asset sync, not native signing or packaging logic.
 - Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.
 
+Done (2026-07-15: iOS device smoke locked handoff, Slice 38):
+- Consolidated launch-failure guidance in `scripts/ios-device-smoke.sh` so developer trust and physical-device lock failures produce distinct next actions.
+- Added an explicit pre-launch reminder and a locked-device handoff: unlock the iPhone, keep the screen awake, keep the app in the foreground, and rerun the same smoke command.
+- Added `EXIT` trap cleanup for launch and process snapshots, and made post-hold process failures report the requested hold duration and foreground requirement.
+- Updated `docs/MOBILE_RELEASE.md` with the same operational boundary and expanded `tests/ios-device-smoke-guidance.test.js` from two to four contracts.
+
+Verification:
+- `bash -n scripts/ios-device-smoke.sh` -> pass
+- `node --import tsx --test tests/ios-device-smoke-guidance.test.js` -> 4/4 pass
+- `npm run verify:full` -> type-check, unit 3277/3277, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass; lint has 0 errors and the existing `GameRoot.tsx` warning
+- `AETHERIA_DEVICECTL_TIMEOUT_SECONDS=120 AETHERIA_IOS_PROCESS_HOLD_SECONDS=10 npm run ios:device:smoke` -> archive install pass at `file:///private/var/containers/Bundle/Application/0C02986D-8E70-48CD-894F-27EDB6DF6A5C/App.app/`; launch blocked by `Locked`; new guidance printed from the real CoreDevice failure
+
+Notes:
+- The current physical-device blocker remains the locked iPhone, not app installation, signing, or the smoke script.
+- The next physical checkpoint is an unlocked 60-second foreground hold followed by the five-minute touch and art-feel routine.
+
 Done (2026-07-15: iOS native five-minute rehearsal after Slice 37):
 - Built and launched the current `App` scheme on an `iPhone 17 Pro / iOS 26.5` simulator from the signed-archive source state.
 - Exercised the real Capacitor `WKWebView` path through start, recommended relic choice, direct town quest entry, story quest acceptance, forest travel, map, equipment, settings, exploration event, relic reward, first combat, victory, backgrounding, and relaunch.
