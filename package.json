@@ -31,6 +31,7 @@
     "ios:build:device": "bash scripts/ios-build-device.sh",
     "ios:archive": "bash scripts/ios-archive.sh",
     "ios:device:smoke": "bash scripts/ios-device-smoke.sh",
+    "ios:device:launch-smoke": "AETHERIA_IOS_REUSE_INSTALLED_APP=1 bash scripts/ios-device-smoke.sh",
     "ios:open": "npx cap open ios"
   },
   "dependencies": {

@@ -216,7 +216,8 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 
 - [ ] `npm run cap:sync`로 최신 웹 번들을 네이티브 프로젝트에 반영했다
 - [ ] Android는 `npm run android:debug` 뒤 `npm run android:device:smoke`로 APK 설치·실행·60초 foreground 유지를 확인했다
-- [ ] iPhone은 Xcode에서 최신 `ios/App` 프로젝트를 실행했다
+- [ ] iPhone은 `npm run ios:device:smoke`로 최신 archive 설치·실행·60초 foreground 유지를 확인했다
+- [ ] 설치 성공 뒤 자동 잠금으로 실행만 실패했다면 잠금 해제 후 `npm run ios:device:launch-smoke`로 설치본을 재사용했다
 - [ ] 기존 앱이 설치되어 있다면 새 번들로 덮어쓴 뒤 세이브 마이그레이션 이상이 없는지 확인했다
 
 ### 공통

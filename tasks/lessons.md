@@ -203,6 +203,10 @@
 - **Rule:** 단일 맵에서만 달성할 수 있는 임무는 목표 맵보다 최대 한 레벨 먼저만 preview하고, 게시판 `minLv`, 실제 `location`, 맵 입장 레벨을 하나의 계약으로 검사한다. 후반 보상은 같은 단계의 목표 횟수와 보스 여부에 따라 증가시키되 한 임무가 EXP 하드캡 한 레벨을 즉시 넘지 않게 한다
 - **Rationale:** 도달할 수 없는 임무가 적정 추천으로 보이면 플레이어는 자신의 장비나 조작이 부족하다고 오해하고, 더 어려운 후반 임무가 이전 권역보다 적은 보상을 주면 반복 전투와 강화에 투자할 이유가 사라진다
 
+### R41: Separate Native Install Proof From Launch Retry
+- **Rule:** 실기기 archive 설치가 이미 성공한 뒤 잠금 때문에 launch만 실패했다면 다음 재시도는 설치본 bundle metadata를 확인하고 install을 생략한다. 설치본을 확인할 수 없을 때만 전체 install smoke로 돌아가며, launch-only 경로가 이전 설치를 추정해서는 안 된다
+- **Rationale:** 큰 native bundle을 매번 다시 전송하면 설치 중 자동 잠금이 반복되고 검증 시간도 낭비된다. 반대로 확인 없이 install을 생략하면 오래된 앱을 최신 RC로 오인할 수 있으므로 설치 증빙과 실행 생존 증빙을 분리하되 연결 계약은 유지해야 한다
+
 ---
 
 ## 📝 Post-Mortem Template

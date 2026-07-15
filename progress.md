@@ -1,5 +1,23 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-16: added launch-only iOS smoke for an already installed archive):
+- Reproduced the RC loop where a roughly 75-second, 200MB archive install lets the iPhone auto-lock before launch, while every full smoke retry installs the same app again.
+- Added `npm run ios:device:launch-smoke` to verify installed bundle metadata, skip install, launch Aetheria, and perform the existing process and 60-second hold checks.
+- Kept the full `ios:device:smoke` install path unchanged and made launch-only smoke fail closed when the expected bundle cannot be confirmed.
+- Updated lock, developer trust, and hold guidance to name the correct retry command and describe unlock, launch, and foreground order naturally.
+- Synchronized the mobile release guide and physical playtest checklist with the new recovery path.
+
+Verification:
+- Focused iOS delivery and upload-safety contracts -> 12/12 pass, including a process fixture that proves zero install calls and two process checks.
+- `npm run verify` -> type-check, lint, unit 3322/3322, and build guard pass.
+- `npm run verify:full` before the final documentation-only checklist guard -> type-check, lint, unit 3321/3321, build guard, desktop/mobile smoke, and Playwright e2e 25/25 pass.
+- `npm run mobile:doctor` -> iOS development toolchain ready; existing iOS Distribution and Android release-signing inputs remain unavailable.
+- Actual physical iPhone launch-only smoke -> installed `com.aetheria.roguelike` `1.1.0 (2)` metadata found, install skipped, launch reached immediately, and CoreDevice returned `Locked` with the new launch-only guidance.
+- App and native package contents were unchanged. Latest APK remains `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 03:34:01 KST`); latest archive remains `build/ios/Aetheria.xcarchive` (`2026-07-16 03:34:07 KST`, `1.1.0 (2)`).
+
+Next action:
+- Unlock and keep the physical iPhone awake, then run `npm run ios:device:launch-smoke` for the remaining 60-second hold without reinstalling. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate release blockers.
+
 Done (2026-07-16: aligned quest availability and late-game reward progression):
 - Audited single-map hunt availability and found missions unlocking up to 18 levels before their only reachable destination, while the quest board scored them from the stale unlock level.
 - Aligned 23 mission destinations and unlock levels with their actual spawn maps, preserving only the intentional one-level beginner preview.
