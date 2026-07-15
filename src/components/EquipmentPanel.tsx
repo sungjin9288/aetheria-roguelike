@@ -11,6 +11,7 @@ import { isSignatureItem } from '../data/signatureItems.js';
 import { getJobSetCatalog } from '../utils/jobOutfitAffinity.js';
 import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
+import ItemIcon from './icons/ItemIcon';
 import type { Player } from '../types/index.js';
 
 // cycle 474: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
@@ -357,6 +358,14 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                             style={slotStyle}
                         >
                             <div className="flex items-start justify-between gap-3">
+                                {item && (
+                                    <ItemIcon
+                                        item={item}
+                                        size={42}
+                                        showBorder
+                                        className="mt-0.5 opacity-95"
+                                    />
+                                )}
                                 <div className="min-w-0 flex-1">
                                     <div className="min-w-0">
                                         <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-400/68">{slot.label}</div>

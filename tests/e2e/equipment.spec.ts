@@ -15,6 +15,7 @@ test.describe('Equipment panel', () => {
         const gearTab = page.locator('[data-testid$="-tab-equipment"]').first();
         await gearTab.click();
         await expect(page.getByTestId('job-outfit-affinity')).toBeVisible({ timeout: 8_000 });
+        await expect(page.getByTestId('equipment-slot-weapon').locator('[data-item-icon-style]')).toBeVisible();
     });
 
     test('GEAR 진입 → 세트 카탈로그 토글 펼침', async ({ page }) => {

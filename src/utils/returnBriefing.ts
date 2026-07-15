@@ -47,7 +47,11 @@ const getElapsedMs = (player: Player, now: number): number | null => {
  * @param now 기준 시각(ms, 보통 Date.now())
  * @returns 6시간 미만 경과했거나 lastSeenAt 필드 부재 시 null, 그 외에는 Briefing 객체
  */
-export function buildReturnBriefing(player: Player | null | undefined, now: number): Briefing | null {
+export function buildReturnBriefing(
+    player: Player | null | undefined,
+    now: number,
+    effectiveMaxHp?: number,
+): Briefing | null {
     if (!player) return null;
 
     const elapsedMs = getElapsedMs(player, now);
@@ -58,11 +62,15 @@ export function buildReturnBriefing(player: Player | null | undefined, now: numb
 
     const activeChainCount = buildChainJournal(player.eventChainProgress).length;
 
+    const maxHp = typeof effectiveMaxHp === 'number' && Number.isFinite(effectiveMaxHp) && effectiveMaxHp > 0
+        ? effectiveMaxHp
+        : (player.maxHp ?? 0);
+
     return {
         loc: player.loc || '알 수 없는 곳',
         level: player.level || 1,
         hp: player.hp ?? 0,
-        maxHp: player.maxHp ?? 0,
+        maxHp,
         incompleteMissionCount: countIncompleteMissions(player),
         activeChainCount,
         awayHours: Math.floor(elapsedMs / MS_PER_HOUR),

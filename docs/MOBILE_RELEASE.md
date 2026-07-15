@@ -26,10 +26,10 @@ npm run mobile:doctor
 npm run android:debug
 npm run android:device:smoke
 AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive
-AETHERIA_DEVICECTL_TIMEOUT_SECONDS=180 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke
+npm run ios:device:smoke
 ```
 
-`ios:device:smoke`는 archive를 설치한 뒤 실행하고, 지정한 시간 동안 foreground process가 유지되는지 확인합니다. 잠금은 설치 전 metadata 확인, 설치, 설치 후 확인, 실행 어느 단계에서도 발생할 수 있습니다. `Locked`가 감지되면 iPhone 또는 iPad 잠금을 해제하고 화면을 켠 채 앱을 foreground에 둔 다음 같은 명령을 다시 실행합니다. 스크립트가 잠금과 개발자 프로필 신뢰를 구분하고, 실패한 단계와 필요한 조치를 바로 출력합니다.
+`ios:device:smoke`는 archive를 설치한 뒤 실행하고, 기본 120초의 CoreDevice 단계 제한과 60초 foreground hold로 설치·실행 생존을 확인합니다. 잠금은 설치 전 metadata 확인, 설치, 설치 후 확인, 실행 어느 단계에서도 발생할 수 있습니다. `Locked`가 감지되면 iPhone 또는 iPad 잠금을 해제하고 화면을 켠 채 앱을 foreground에 둔 다음 같은 명령을 다시 실행합니다. 스크립트가 잠금과 개발자 프로필 신뢰를 구분하고, 실패한 단계와 필요한 조치를 바로 출력합니다. 더 느린 연결에서만 `AETHERIA_DEVICECTL_TIMEOUT_SECONDS`를 명시해 제한을 늘립니다.
 
 ### 0-2. 실기기 QA 실행 순서
 

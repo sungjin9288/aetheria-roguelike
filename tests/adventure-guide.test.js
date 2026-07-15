@@ -170,4 +170,5 @@ test('move recommendations favor level-fit unexplored routes when stable', () =>
     assert.equal(routes[0].badge, '개척');
     assert.equal(routes[0].routePlan.approach, '미답 권역 조사');
     assert.equal(routes[0].routePlan.returnLabel, '발견 후 귀환');
+    assert.equal(routes[0].routePlan.exitRule, '발견 뒤 귀환');
 });

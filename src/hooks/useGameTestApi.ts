@@ -185,6 +185,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     name: e.player.name || '',
                     job: e.player.job,
                     level: e.player.level,
+                    exp: e.player.exp,
+                    questCount: Array.isArray(e.player.quests) ? e.player.quests.length : 0,
                     loc: e.player.loc,
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
@@ -342,6 +344,21 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     },
                 });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'equipment' });
+            },
+            seedClaimableQuestScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        loc: '시작의 마을',
+                        level: 1,
+                        exp: 0,
+                        nextExp: 200,
+                        gold: 200,
+                        quests: [{ id: 1, progress: 3, isBounty: false }],
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
             // cycle 604: preset default 'paladin-plate' 제거 — 1 production
             //   caller (scripts/smoke-gameplay:305 seedAvatarScenario?.(preset.id))

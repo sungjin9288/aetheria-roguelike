@@ -45,7 +45,11 @@ const missionTrackerTone: Record<string, string> = {
   active: 'border-[#7dd4d8]/22 bg-[linear-gradient(180deg,rgba(15,35,39,0.72)_0%,rgba(7,13,17,0.94)_100%)] text-[#dff7f5]',
 };
 
-const MissionTrackerStrip = ({ tracker }: { tracker: any }) => {
+const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
+  tracker: any;
+  canClaimReward: boolean;
+  onClaimReward?: () => void;
+}) => {
   const toneClass = missionTrackerTone[tracker.kind] || missionTrackerTone.active;
   const missionSteps = [
     { label: '할 일', value: tracker.nextStep || tracker.title },
@@ -85,12 +89,33 @@ const MissionTrackerStrip = ({ tracker }: { tracker: any }) => {
         />
       </div>
       <div className="relative mt-2 grid grid-cols-4 gap-1">
-        {missionSteps.map((step: any) => (
-          <div key={`${step.label}-${step.value}`} className="aether-decision-cell rounded-[0.7rem] px-1.5 py-1">
-            <div className="font-readable text-[8px] font-bold tracking-normal text-slate-500">{step.label}</div>
-            <div className="mt-0.5 truncate font-readable text-[9px] font-semibold text-slate-100/84">{step.value}</div>
-          </div>
-        ))}
+        {missionSteps.map((step: any, index: number) => {
+          const isClaimAction = tracker.kind === 'claimable' && index === missionSteps.length - 1;
+          if (isClaimAction) {
+            return (
+              <button
+                key={`${step.label}-${step.value}`}
+                type="button"
+                data-testid="control-claim-quest-reward"
+                disabled={!canClaimReward || !onClaimReward}
+                onClick={onClaimReward}
+                className="aether-decision-cell min-h-[38px] rounded-[0.7rem] border border-[#d5b180]/30 bg-[#d5b180]/12 px-1.5 py-1 text-left disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                <div className="font-readable text-[8px] font-bold tracking-normal text-[#d5b180]/72">{step.label}</div>
+                <div className="mt-0.5 truncate font-readable text-[9px] font-bold text-[#f6e7c8]">
+                  {canClaimReward ? '보상 받기' : '마을에서 수령'}
+                </div>
+              </button>
+            );
+          }
+
+          return (
+            <div key={`${step.label}-${step.value}`} className="aether-decision-cell rounded-[0.7rem] px-1.5 py-1">
+              <div className="font-readable text-[8px] font-bold tracking-normal text-slate-500">{step.label}</div>
+              <div className="mt-0.5 truncate font-readable text-[9px] font-semibold text-slate-100/84">{step.value}</div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -512,7 +537,15 @@ const ControlPanel = ({
         </div>
       ) : (
         <div className="space-y-1.5">
-          {questTracker && <MissionTrackerStrip tracker={questTracker} />}
+          {questTracker && (
+            <MissionTrackerStrip
+              tracker={questTracker}
+              canClaimReward={isSafeZone}
+              onClaimReward={questTracker.kind === 'claimable' && actions?.completeQuest
+                ? () => actions.completeQuest(questTracker.questId)
+                : undefined}
+            />
+          )}
           {/* slice 22: 가이드 스트립 — getAdventureGuidance가 계산만 되고 추천 버튼
               하이라이트 외엔 렌더 0건이던 갭 해소. 퀘스트 트래커 부재 시(신규
               플레이어 포함) 다음 행동 제목+이유를 같은 자리에 노출. */}

@@ -170,6 +170,14 @@
 - **Rule:** iOS archive, App Store용 local export, App Store Connect upload를 서로 다른 승인 경계로 다룬다. `destination=upload`는 명시적 opt-in 없이는 실행하지 않고, signing 및 provisioning 옵션은 archive와 export 양쪽에서 같은 의미를 유지한다
 - **Rationale:** 로컬 산출물 검증 명령이 외부 배포로 이어지거나 archive는 성공했는데 export만 다른 signing 조건으로 실패하는 일을 막고, 사람의 승인 시점을 명확하게 남겨야 한다
 
+### R33: Make Reward Labels Truthful Action Surfaces
+- **Rule:** 진행 화면에서 `보상 받기`처럼 명령형으로 표시한 요소는 실제로 누를 수 있는 action이어야 한다. 현재 위치에서 실행할 수 없다면 disabled 상태와 필요한 장소를 함께 표시하고, 깊은 보조 화면을 유일한 수령 경로로 두지 않는다
+- **Rationale:** 모바일 첫 화면의 다음 행동 신호와 실제 상호작용이 어긋나면 플레이어는 완료된 임무를 막힌 진행으로 오인하고, 보상 동선을 찾기 위해 불필요한 탐색을 반복한다
+
+### R34: Present Effective Resources And Budget Native Install Time
+- **Rule:** HP 비율과 같은 player-facing 자원 요약은 장비·패시브가 반영된 effective stat을 기준으로 계산하고 표시 범위를 제한한다. 물리 기기 설치 timeout은 현재 native bundle 크기와 실제 CoreDevice 전송 시간을 기준으로 설정한다
+- **Rationale:** raw base stat으로 만든 100% 초과 표시는 저장 상태를 불신하게 하고, 현실보다 짧은 timeout은 정상 설치를 release blocker로 잘못 분류한다
+
 ---
 
 ## 📝 Post-Mortem Template

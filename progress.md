@@ -1,5 +1,22 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-16: reflected physical iPhone first-session QA findings):
+- Ran the timed first-session path on a physical iPhone 14 Pro Max through quest acceptance, Quiet Forest travel, a five-turn first combat, town return, shop/equipment/map review, and a ten-second background relaunch.
+- Confirmed conservative early pacing at level 1 with experience `25/200 -> 47/200`, plus exact save restoration at life `142/178`, energy `22/52`, experience `47/200`, and gold `319`.
+- Fixed the return briefing's invalid `119%` life display by using equipment-derived effective max life and clamping the rendered percentage.
+- Turned the claimable mission tracker's `보상 받기` cell into a real town-only reward action, surfaced the shared per-item art in equipped slots, and shortened the clipped route exit copy.
+- Raised the default CoreDevice step timeout from 30 to 120 seconds after the current native bundle needed about one minute to install on the physical iPhone.
+
+Verification:
+- Focused return, quest, equipment-art, route, and iOS smoke contracts -> pass, including the `6/6` device-smoke guidance suite.
+- `npm run verify:full` -> type-check, lint, unit 3293/3293, build guard, desktop/mobile smoke, and Playwright e2e 23/23 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 01:19:29 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-16 01:20:01 KST`, `1.1.0 (2)`).
+- Latest physical iPhone delivery -> install URL `file:///private/var/containers/Bundle/Application/5734A23D-361E-44E5-9A11-3CD33040E91C/App.app/`, foreground pid `5319`, and the same process after the 60-second hold.
+
+Next action:
+- Reauthenticate iPhone Mirroring and capture the latest direct reward button and equipment-slot item art. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate release blockers.
+
 Done (2026-07-15: separated safe App Store export from approved upload):
 - Reinstalled the latest archive on the available physical iPhone and confirmed the installed `com.aetheria.roguelike` metadata is `1.1.0 (2)` at `file:///private/var/containers/Bundle/Application/C903F7CB-D1B3-46BD-A728-87B880204B91/App.app/`.
 - The first launch was denied while the iPhone was locked. After unlock, a direct relaunch succeeded and foreground pid `2195` remained unchanged through the 60-second hold.

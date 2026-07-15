@@ -70,7 +70,7 @@ const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRa
     if (badge === '개척') {
         return {
             approach: '미답 권역 조사',
-            exitRule: '발견/전리품 확보 후 귀환',
+            exitRule: '발견 뒤 귀환',
             returnLabel: '발견 후 귀환',
         };
     }

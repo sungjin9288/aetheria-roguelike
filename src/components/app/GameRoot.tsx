@@ -27,8 +27,8 @@ const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
 
-const ReturnBriefingGate = ({ player }: { player: Player }) => {
-    const [briefing, setBriefing] = useState(() => buildReturnBriefing(player, Date.now()));
+const ReturnBriefingGate = ({ player, maxHp }: { player: Player; maxHp?: number }) => {
+    const [briefing, setBriefing] = useState(() => buildReturnBriefing(player, Date.now(), maxHp));
 
     if (!briefing) return null;
 
@@ -283,7 +283,7 @@ const GameRoot = ({
             )}
 
             {engine.bootStage === 'ready' && engine.player && (
-                <ReturnBriefingGate player={engine.player} />
+                <ReturnBriefingGate player={engine.player} maxHp={fullStats?.maxHp} />
             )}
 
             {engine.gameState === GS.ASCENSION && (

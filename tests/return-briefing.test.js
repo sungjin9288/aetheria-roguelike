@@ -57,6 +57,26 @@ test('buildReturnBriefing returns a briefing when well beyond 6h and includes lo
     assert.equal(briefing.awayHours, 30);
 });
 
+test('buildReturnBriefing uses equipment-derived effective max hp when provided', () => {
+    const now = 1_000_000_000;
+    const player = basePlayer({ hp: 178, maxHp: 150 });
+    player.stats.lastSeenAt = now - 7 * HOUR_MS;
+
+    const briefing = buildReturnBriefing(player, now, 178);
+
+    assert.equal(briefing.hp, 178);
+    assert.equal(briefing.maxHp, 178);
+});
+
+test('buildReturnBriefing ignores invalid effective max hp values', () => {
+    const now = 1_000_000_000;
+    const player = basePlayer({ hp: 150, maxHp: 150 });
+    player.stats.lastSeenAt = now - 7 * HOUR_MS;
+
+    assert.equal(buildReturnBriefing(player, now, Number.NaN).maxHp, 150);
+    assert.equal(buildReturnBriefing(player, now, 0).maxHp, 150);
+});
+
 test('buildReturnBriefing returns null when lastSeenAt field is missing (defensive — old saves)', () => {
     const now = 1_000_000_000_000;
     const player = basePlayer({ stats: { dailyProtocol: null } });
@@ -132,7 +152,16 @@ test('GameRoot mounts a one-shot return briefing without effect-driven mirror st
     const source = await readFile(new URL('../src/components/app/GameRoot.tsx', import.meta.url), 'utf8');
 
     assert.match(source, /const ReturnBriefingGate =/);
-    assert.match(source, /useState\(\(\) => buildReturnBriefing\(player, Date\.now\(\)\)\)/);
+    assert.match(source, /useState\(\(\) => buildReturnBriefing\(player, Date\.now\(\), maxHp\)\)/);
+    assert.match(source, /<ReturnBriefingGate player=\{engine\.player\} maxHp=\{fullStats\?\.maxHp\} \/>/);
     assert.match(source, /engine\.bootStage === 'ready' && engine\.player/);
     assert.doesNotMatch(source, /returnBriefingCheckedRef|setReturnBriefing/);
+});
+
+test('return briefing card uses player-facing status language and clamps health percent', async () => {
+    const source = await readFile(new URL('../src/components/ReturnBriefingCard.tsx', import.meta.url), 'utf8');
+
+    assert.match(source, /Math\.max\(0, Math\.min\(100,/);
+    assert.match(source, /레벨 \{briefing\.level\} · 생명 \{hpPct\}%/);
+    assert.doesNotMatch(source, /Lv\.\{briefing\.level\}/);
 });

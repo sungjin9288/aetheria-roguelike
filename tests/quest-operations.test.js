@@ -219,6 +219,17 @@ test('control panel renders active mission tracker from accepted quests', async 
     assert.match(source, /tracker\.returnLabel/);
     assert.doesNotMatch(source, /tracker\.chips/);
     assert.match(source, /tracker\.progressPercent/);
+    assert.match(source, /data-testid="control-claim-quest-reward"/);
+    assert.match(source, /actions\.completeQuest\(questTracker\.questId\)/);
+    assert.match(source, /canClaimReward=\{isSafeZone\}/);
+});
+
+test('claimable mission tracker exposes a real town-only reward action', async () => {
+    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
+
+    assert.match(source, /tracker\.kind === 'claimable'/);
+    assert.match(source, /disabled=\{!canClaimReward \|\| !onClaimReward\}/);
+    assert.match(source, /\{canClaimReward \? '보상 받기' : '마을에서 수령'\}/);
 });
 
 test('quest board renders mission brief rows for featured and active operations', async () => {

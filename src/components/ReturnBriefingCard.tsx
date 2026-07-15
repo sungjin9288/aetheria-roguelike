@@ -10,7 +10,9 @@ interface ReturnBriefingCardProps {
 }
 
 const ReturnBriefingCard = ({ briefing, onClose }: ReturnBriefingCardProps) => {
-    const hpPct = briefing.maxHp > 0 ? Math.round((briefing.hp / briefing.maxHp) * 100) : 0;
+    const hpPct = briefing.maxHp > 0
+        ? Math.max(0, Math.min(100, Math.round((briefing.hp / briefing.maxHp) * 100)))
+        : 0;
 
     return (
         <Motion.div
@@ -65,7 +67,7 @@ const ReturnBriefingCard = ({ briefing, onClose }: ReturnBriefingCardProps) => {
                                 {MSG.RETURN_BRIEFING_STATUS_LABEL}
                             </div>
                             <div className="mt-2 text-[1rem] font-rajdhani font-bold text-white">
-                                Lv.{briefing.level} · {hpPct}%
+                                레벨 {briefing.level} · 생명 {hpPct}%
                             </div>
                         </div>
 

@@ -2,6 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
+test('iOS device smoke allows enough time for the current native app install', async () => {
+    const script = await readFile(new URL('../scripts/ios-device-smoke.sh', import.meta.url), 'utf8');
+
+    assert.match(script, /AETHERIA_DEVICECTL_TIMEOUT_SECONDS:-120/);
+});
+
 test('iOS device smoke explains the device trust handoff after install', async () => {
     const script = await readFile(new URL('../scripts/ios-device-smoke.sh', import.meta.url), 'utf8');
     const guidanceBlock = script.slice(script.indexOf('explain_device_failure()'));
