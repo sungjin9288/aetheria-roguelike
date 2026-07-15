@@ -1,5 +1,22 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-16: aligned quest availability and late-game reward progression):
+- Audited single-map hunt availability and found missions unlocking up to 18 levels before their only reachable destination, while the quest board scored them from the stale unlock level.
+- Aligned 23 mission destinations and unlock levels with their actual spawn maps, preserving only the intentional one-level beginner preview.
+- Corrected 16 late regional, boss, and title rewards that had fallen below earlier quest payouts and contributed too little toward 25,000-90,000 gold enhancement costs.
+- Kept every adjusted EXP reward below the 150,000 capped level requirement, including the three-boss endgame title mission at 100,000 EXP.
+- Added contracts for single-map route availability, level 47 versus level 62 quest-board visibility, the intended late reward table, and no one-quest capped-level jump.
+
+Verification:
+- Focused quest contracts -> 36/36 pass.
+- `npm run verify:full` -> type-check, lint, unit 3319/3319, build guard, desktop/mobile smoke, and Playwright e2e 25/25 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 03:34:01 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-16 03:34:07 KST`, `1.1.0 (2)`).
+- Latest physical iPhone delivery -> install and post-install metadata passed at `file:///private/var/containers/Bundle/Application/F824FA53-59BF-4FC8-8FEC-DE915CF7B46B/App.app/`; the device auto-locked during the long install, so launch and a direct retry were denied with CoreDevice `Locked` and the 60-second hold remains open.
+
+Next action:
+- Unlock and keep the physical iPhone awake, then launch the already installed build and complete the 60-second hold. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate release blockers.
+
 Done (2026-07-16: aligned hunt copy, targets, destinations, and spawn rules):
 - Audited every static quest and corrected hunt missions whose player-facing title or description did not match the actual target or spawn destination.
 - Restored six endgame monsters to their original quest targets after later content updates made those monsters reachable again.

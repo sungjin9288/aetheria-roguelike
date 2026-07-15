@@ -199,6 +199,10 @@
 - **Rule:** 토벌 임무는 실제 target 이름을 제목이나 설명에 명시하고, `location`이 있으면 해당 맵의 spawn pool과 입장 레벨까지 함께 검증한다. 전투 진행도는 target과 현재 location이 모두 일치할 때만 증가시키며, 기존 저장 progress는 감소시키지 않는다
 - **Rationale:** 임시 대체 target이나 잘못 적힌 지역이 남으면 플레이어는 안내를 따라가도 임무가 진행되지 않거나 다른 지역 전투가 목표로 계산되는 경험을 한다. copy, route, spawn, progress를 따로 관리하면 같은 결함이 콘텐츠 확장 때 반복된다
 
+### R40: Align Quest Availability And Rewards With Actual Route Commitment
+- **Rule:** 단일 맵에서만 달성할 수 있는 임무는 목표 맵보다 최대 한 레벨 먼저만 preview하고, 게시판 `minLv`, 실제 `location`, 맵 입장 레벨을 하나의 계약으로 검사한다. 후반 보상은 같은 단계의 목표 횟수와 보스 여부에 따라 증가시키되 한 임무가 EXP 하드캡 한 레벨을 즉시 넘지 않게 한다
+- **Rationale:** 도달할 수 없는 임무가 적정 추천으로 보이면 플레이어는 자신의 장비나 조작이 부족하다고 오해하고, 더 어려운 후반 임무가 이전 권역보다 적은 보상을 주면 반복 전투와 강화에 투자할 이유가 사라진다
+
 ---
 
 ## 📝 Post-Mortem Template

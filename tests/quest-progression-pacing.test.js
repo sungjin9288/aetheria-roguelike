@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { EARLY_QUEST_EXP_CAPS, QUESTS } from '../src/data/quests.js';
-import { CONSTANTS } from '../src/data/constants.js';
+import { BALANCE, CONSTANTS } from '../src/data/constants.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { getPacedQuestClaimExp } from '../src/utils/progressionPacing.js';
 
@@ -26,6 +26,12 @@ const claimQuest = (player, questId) => {
     const quest = QUESTS.find((entry) => entry.id === questId);
     assert.ok(quest, `expected quest ${questId} to exist`);
     return applyExp(player, getPacedQuestClaimExp(player, quest.reward.exp));
+};
+
+const getQuest = (questId) => {
+    const quest = QUESTS.find((entry) => entry.id === questId);
+    assert.ok(quest, `expected quest ${questId} to exist`);
+    return quest;
 };
 
 test('early quest rewards are capped by unlock level to prevent runaway leveling', () => {
@@ -106,4 +112,48 @@ test('early route pacing keeps first visits and beginner quests below runaway le
     assert.equal(player.level, 4);
     assert.equal(player.exp, 73);
     assert.equal(player.nextExp, 302);
+});
+
+test('late regional rewards rise with the actual route and encounter commitment', () => {
+    const expectedRewards = new Map([
+        [105, { exp: 14000, gold: 20000 }],
+        [106, { exp: 14000, gold: 22000 }],
+        [107, { exp: 16000, gold: 25000 }],
+        [108, { exp: 18000, gold: 28000 }],
+        [109, { exp: 30000, gold: 40000 }],
+        [127, { exp: 7000, gold: 12000 }],
+        [128, { exp: 8000, gold: 14000 }],
+        [129, { exp: 14000, gold: 24000 }],
+        [141, { exp: 4500, gold: 7500 }],
+        [146, { exp: 9000, gold: 15000 }],
+        [147, { exp: 11000, gold: 18000 }],
+        [150, { exp: 40000, gold: 55000 }],
+        [151, { exp: 50000, gold: 70000 }],
+        [152, { exp: 0, gold: 40000 }],
+        [153, { exp: 0, gold: 50000 }],
+        [154, { exp: 100000, gold: 120000 }],
+    ]);
+
+    for (const [questId, reward] of expectedRewards) {
+        const quest = getQuest(questId);
+        assert.equal(quest.reward.exp, reward.exp, `quest ${questId} exp reward drifted`);
+        assert.equal(quest.reward.gold, reward.gold, `quest ${questId} gold reward drifted`);
+    }
+});
+
+test('late quest rewards contribute to growth without granting a full capped level', () => {
+    const player = makePlayer({
+        level: 70,
+        exp: 0,
+        nextExp: BALANCE.EXP_LEVEL_HARD_CAP,
+    });
+    const questIds = [105, 106, 107, 108, 109, 127, 128, 129, 141, 146, 147, 150, 151, 152, 153, 154];
+
+    for (const questId of questIds) {
+        const quest = getQuest(questId);
+        const result = CombatEngine.applyExpGain(player, quest.reward.exp);
+
+        assert.equal(result.levelUps, 0, `quest ${questId} should not grant a full capped level`);
+        assert.ok(quest.reward.exp < BALANCE.EXP_LEVEL_HARD_CAP);
+    }
 });

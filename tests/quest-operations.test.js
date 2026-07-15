@@ -179,6 +179,47 @@ test('location quests match an existing map, its spawn pool, and its entry level
     }
 });
 
+test('single-map monster quests unlock no earlier than one level before their route', () => {
+    for (const quest of QUESTS.filter((entry) => !entry.location && !SYSTEM_QUEST_TARGETS.has(entry.target))) {
+        const targetMaps = Object.entries(MAPS)
+            .filter(([, map]) => getMapSpawnPool(map).has(quest.target));
+
+        if (targetMaps.length !== 1) continue;
+        const [mapName, map] = targetMaps[0];
+        if (!Number.isFinite(map.level)) continue;
+
+        assert.ok(
+            quest.minLv >= map.level - 1,
+            `quest ${quest.id} unlocks at Lv${quest.minLv}, too early for '${mapName}' at Lv${map.level}`,
+        );
+    }
+});
+
+test('late regional operations stay locked until their destination becomes reachable', () => {
+    const catalog = QUESTS.filter((quest) => [146, 147, 148].includes(quest.id));
+    const makePlayer = (level) => ({
+        job: '모험가', level, loc: '시작의 마을', hp: 500, maxHp: 500,
+        mp: 200, maxMp: 200, quests: [], relics: [], inv: [],
+        equip: { weapon: null, offhand: null },
+        stats: { claimedQuestIds: [], visitedMaps: ['시작의 마을'] },
+    });
+
+    const earlyBoard = getQuestBoardRecommendations(makePlayer(47), MAPS, catalog);
+    assert.deepEqual(earlyBoard.featured, []);
+    assert.deepEqual(earlyBoard.backlog, []);
+    assert.deepEqual(earlyBoard.locked.map((quest) => quest.id), [146, 147, 148]);
+    assert.ok(earlyBoard.locked.every((quest) => quest.lockLabel === '레벨 62 필요'));
+
+    const reachableBoard = getQuestBoardRecommendations(makePlayer(62), MAPS, catalog);
+    assert.deepEqual(
+        [...reachableBoard.featured, ...reachableBoard.backlog]
+            .map((entry) => entry.quest.id)
+            .sort((left, right) => left - right),
+        [146, 147, 148],
+    );
+    assert.deepEqual(reachableBoard.locked, []);
+});
+
 test('monster quest copy names the actual target', () => {
     for (const quest of QUESTS.filter((entry) => !SYSTEM_QUEST_TARGETS.has(entry.target))) {
         assert.ok(
