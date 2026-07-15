@@ -76,6 +76,7 @@ const getActiveQuestEntries = (player: Player) => (
 //   (cycle 513 재적용): wrapper getQuestBoardRecommendations의 default는
 //   외부 1-arg caller가 reachable이라 보존, inner chain은 redundant 정리.
 const getQuestTargetMaps = (quest: any, maps: any) => {
+    if (quest?.location && maps[quest.location]) return [quest.location];
     if (!quest?.target || quest.target === 'Level') return [];
 
     return (Object.entries(maps) as Array<[string, any]>)

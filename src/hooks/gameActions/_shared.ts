@@ -8,6 +8,8 @@ import { SEASON_XP } from '../../data/seasonPass';
 import { resetDailyProtocolIfNeeded, resetWeeklyProtocolIfNeeded } from '../../utils/exploreUtils';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { advanceBossGauge } from '../../utils/bossGauge';
+import { QUESTS } from '../../data/quests';
+import { syncQuestProgress } from '../../utils/questProgress';
 
 /**
  * 클래스 기반 HP/MP 최대치 계산
@@ -59,11 +61,16 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
                 // visitedMaps.length(맵 발견 수)로 통일되면서 이 이벤트 카운터는 어디서도
                 // 읽히지 않는 dead write가 되었음. 안전하게 제거 (Firebase save에 잔존하는
                 // discoveries 필드는 무시되므로 forward-compatible).
+                const exploresByLocation = { ...(currentPlayer.stats?.exploresByLocation || {}) };
+                if (currentPlayer.loc) {
+                    exploresByLocation[currentPlayer.loc] = (exploresByLocation[currentPlayer.loc] || 0) + 1;
+                }
                 let nextPlayer = {
                     ...currentPlayer,
                     stats: {
                         ...(currentPlayer.stats || {}),
                         explores: (currentPlayer.stats?.explores || 0) + 1,
+                        exploresByLocation,
                         exploreState: advanceExploreState(currentPlayer.stats, outcome),
                     }
                 };
@@ -73,7 +80,8 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
                 if (typeof transformPlayer === 'function') {
                     nextPlayer = transformPlayer(nextPlayer) || nextPlayer;
                 }
-                return nextPlayer;
+                const { updatedQuests } = syncQuestProgress(nextPlayer, '', QUESTS);
+                return { ...nextPlayer, quests: updatedQuests };
             }
         });
     };

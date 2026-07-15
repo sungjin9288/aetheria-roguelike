@@ -164,8 +164,8 @@ const RAW_QUESTS: Quest[] = [
     // ── 스토리 퀘스트 ─────────────────────────────────────────────────────────
     // 레벨은 도전 가능 시점, prerequisiteQuestId는 실제 서사 순서를 책임진다.
     // 기계 폐도(Lv28)를 거쳐 얼음 권역(Lv30)으로 이어진 뒤 마왕 추적이 시작된다.
-    { id: 80, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다',      type: 'explore_count', target: 'explores', goal: 1,  reward: { exp: 100, gold: 200 },            minLv: 1 },
-    { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
+    { id: 80, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다',      type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1,  reward: { exp: 100, gold: 200 },            minLv: 1 },
+    { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', location: '잊혀진 폐허', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
     { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 처치', target: '화염 정령',   goal: 5,  reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
     { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙결의 마녀의 정체를 밝혀라',    target: '빙결의 마녀', goal: 1,  reward: { exp: 8000, gold: 8000, item: '냉기의 결정' },    minLv: 30, prerequisiteQuestId: 84 },
     { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도의 진실을 파헤쳐라',    target: '증기 골렘',   goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 28, prerequisiteQuestId: 82 },
@@ -208,8 +208,8 @@ const RAW_QUESTS: Quest[] = [
     { id: 150, title: '공허의 대행자 격파',     desc: '공허의 대행자 처치',              target: '공허 집행관',   goal: 1,  reward: { exp: 10000, gold: 7000 },  minLv: 65 },
     { id: 151, title: '종말의 기사 정복',       desc: '종말의 기사 처치',                target: '종말의 기사',     goal: 1,  reward: { exp: 15000, gold: 10000 }, minLv: 70 },
     // Lv70+ 도전 퀘스트 (3개)
-    { id: 152, title: '에테르 폐허 완전 탐험',  desc: '에테르 폐허 20회 탐험',           type: 'explore_count', target: 'explores', goal: 20, reward: { exp: 0, gold: 5000, title: '에테르 탐험가' },   minLv: 70 },
-    { id: 153, title: '공허의 회랑 정복',       desc: '공허의 회랑 15회 탐험',           type: 'explore_count', target: 'explores', goal: 15, reward: { exp: 0, gold: 6000, title: '공허의 방랑자' },   minLv: 70 },
+    { id: 152, title: '에테르 폐허 완전 탐험',  desc: '에테르 폐허 20회 탐험',           type: 'explore_count', target: 'explores', location: '에테르 폐허', goal: 20, reward: { exp: 0, gold: 5000, title: '에테르 탐험가' },   minLv: 70 },
+    { id: 153, title: '공허의 회랑 정복',       desc: '공허의 회랑 15회 탐험',           type: 'explore_count', target: 'explores', location: '공허의 회랑', goal: 15, reward: { exp: 0, gold: 6000, title: '공허의 방랑자' },   minLv: 70 },
     { id: 154, title: '종말을 넘어서',          desc: '종말의 기사 3회 처치',            target: '종말의 기사',     goal: 3,  reward: { exp: 25000, gold: 15000, title: '종말의 정복자' }, minLv: 75 },
 
     // ── cycle 63: 신규 탐험 / 발견 챌린지 (3개) ──────────────────────────────

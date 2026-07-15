@@ -93,6 +93,11 @@ export const migrateData = (rawData: any) => {
     //   cycle-260 회귀 가드 테스트가 migrateData output 명시 검증.
     target.stats.claimedQuestIds = Array.isArray(target.stats.claimedQuestIds) ? target.stats.claimedQuestIds : [];
     target.stats.visitedMaps = Array.isArray(target.stats.visitedMaps) ? target.stats.visitedMaps : [];
+    target.stats.exploresByLocation = target.stats.exploresByLocation
+        && typeof target.stats.exploresByLocation === 'object'
+        && !Array.isArray(target.stats.exploresByLocation)
+        ? target.stats.exploresByLocation
+        : {};
     target.stats.exploreState = { ...DEFAULT_EXPLORE_STATE, ...(target.stats.exploreState || {}) };
     if (target.loc && !target.stats.visitedMaps.includes(target.loc)) {
         target.stats.visitedMaps.push(target.loc);

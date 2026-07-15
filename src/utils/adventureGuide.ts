@@ -113,6 +113,7 @@ const getQuestProgressPercent = (entry: any) => {
 };
 
 const getQuestTargetMaps = (quest: any) => {
+    if (quest?.location && MAPS[quest.location]) return [quest.location];
     const target = quest?.target;
     if (!target || target === 'Level') return [];
 
@@ -143,6 +144,9 @@ const getQuestNextStep = (entry: any, targetMaps: string[]) => {
 
     if (entry?.isComplete) return '마을에서 보상 회수';
     if (quest.target === 'Level') return `Lv.${quest.goal}까지 성장`;
+    if (quest.type === 'explore_count' && quest.location && targetMaps.length > 0) {
+        return `${targetMaps[0]}에서 탐험 ${remaining}회 진행`;
+    }
     if (targetMaps.length > 0) return `${targetMaps[0]}에서 ${quest.target} 추적`;
     if (quest.type === 'craft') return `제작 ${remaining}회 진행`;
     if (quest.type === 'bounty_count') return `현상금 ${remaining}건 완료`;

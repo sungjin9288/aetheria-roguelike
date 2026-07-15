@@ -32,6 +32,7 @@ interface PlayerStats {
     dailyProtocol?: any;
     claimedAchievements?: string[];
     explores?: number;
+    exploresByLocation?: Record<string, number>;
     lowHpWins?: number;
     // cycle 280: discoveries 제거 — cycle 83/84 deprecated (visitedMaps.length로 통일).
     buildWins?: Record<string, number>;

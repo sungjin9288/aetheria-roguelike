@@ -1,5 +1,22 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-16: aligned location exploration mission descriptions, routes, and progress):
+- Reproduced `[스토리] 폐허의 진실` completing from global exploration performed outside `잊혀진 폐허`, while its quest-board route showed `미답사 루트`.
+- Added exact locations to the four location-specific exploration missions and routed both the quest board and persistent tracker from the same location data.
+- Added per-location exploration counters and acceptance baselines so pre-acceptance activity does not complete a new mission.
+- Preserved legacy active-quest progress by deriving a compatible baseline when older saves do not contain one, then continued progress one attempt at a time in the required region.
+- Kept location-free cumulative exploration missions on the existing global counter.
+
+Verification:
+- Focused quest, guidance, and migration contracts -> 119/119 pass.
+- `npm run verify:full` -> type-check, lint, unit 3311/3311, build guard, desktop/mobile smoke, and Playwright e2e 25/25 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 02:53:54 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-16 02:54:03 KST`, `1.1.0 (2)`).
+- Latest physical iPhone delivery -> install and post-install metadata passed at `file:///private/var/containers/Bundle/Application/4C40B864-4996-4608-99E1-F29377E4F43D/App.app/`; launch was denied with CoreDevice `Locked`, so the latest build's 60-second hold remains open.
+
+Next action:
+- Unlock and keep the physical iPhone awake for the latest build's launch and 60-second hold. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate release blockers.
+
 Done (2026-07-16: enforced sequential story mission unlocks):
 - Reproduced a high-level fresh-story state where `[스토리] 세계의 끝` became the first recommendation and all eight story chapters were simultaneously available.
 - Added explicit prerequisite links for the full story sequence and shared prerequisite validation across quest-board availability and direct acceptance.

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { getAdventureGuidance } from '../src/utils/adventureGuide.js';
+import { getAdventureGuidance, getQuestTracker } from '../src/utils/adventureGuide.js';
 import { getQuestBoardRecommendations } from '../src/utils/questOperations.js';
 import { createQuestActions } from '../src/hooks/gameActions/questActions.js';
 import { MSG } from '../src/data/messages.js';
@@ -115,6 +115,66 @@ test('story mission data keeps the intended chapter sequence explicit', () => {
             `story quest ${storySequence[index]} should follow ${storySequence[index - 1]}`,
         );
     }
+});
+
+test('location exploration missions declare exact destinations and surface them as routes', () => {
+    const expectedLocations = new Map([
+        [80, '고요한 숲'],
+        [81, '잊혀진 폐허'],
+        [152, '에테르 폐허'],
+        [153, '공허의 회랑'],
+    ]);
+    for (const [questId, location] of expectedLocations) {
+        assert.equal(QUESTS.find((quest) => quest.id === questId)?.location, location);
+    }
+
+    const player = {
+        job: '모험가', level: 5, loc: '시작의 마을', hp: 200, maxHp: 200,
+        mp: 80, maxMp: 80, quests: [], relics: [], inv: [],
+        equip: { weapon: null, offhand: null },
+        stats: { claimedQuestIds: [80], exploresByLocation: {}, visitedMaps: ['시작의 마을'] },
+    };
+    const board = getQuestBoardRecommendations(player);
+    const ruinsStory = [...board.featured, ...board.backlog]
+        .find((entry) => entry.quest.id === 81);
+
+    assert.deepEqual(ruinsStory.targetMaps, ['잊혀진 폐허']);
+    assert.equal(ruinsStory.brief.route, '잊혀진 폐허');
+    assert.equal(ruinsStory.planSteps[2].value, '잊혀진 폐허 진입');
+});
+
+test('quest acceptance records the current destination exploration count as its baseline', () => {
+    let updatedPlayer;
+    const player = {
+        level: 5,
+        loc: '시작의 마을',
+        quests: [],
+        stats: { claimedQuestIds: [80], exploresByLocation: { '잊혀진 폐허': 6 } },
+    };
+    const actions = createQuestActions({
+        player,
+        grave: null,
+        dispatch: (action) => {
+            updatedPlayer = typeof action.payload === 'function' ? action.payload(player) : action.payload;
+        },
+        addLog: () => {},
+    }, { emitUnlockedTitles: () => {} });
+
+    actions.acceptQuest(81);
+
+    assert.deepEqual(updatedPlayer.quests, [{ id: 81, progress: 0, startExploreCount: 6 }]);
+});
+
+test('active location exploration guidance names the destination and remaining attempts', () => {
+    const tracker = getQuestTracker({
+        level: 5,
+        loc: '고요한 숲',
+        quests: [{ id: 81, progress: 4, startExploreCount: 0 }],
+        stats: { exploresByLocation: { '잊혀진 폐허': 4 } },
+    });
+
+    assert.equal(tracker.routeLabel, '잊혀진 폐허');
+    assert.equal(tracker.nextStep, '잊혀진 폐허에서 탐험 6회 진행');
 });
 
 test('the next story chapter unlocks only after its prerequisite reward was claimed', () => {

@@ -17,6 +17,27 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
+test('migrateData initializes missing location exploration counts and preserves existing values', () => {
+    const missingCounts = migrateData({
+        version: 5.0,
+        player: { name: '구플레이어', stats: {}, equip: {} },
+    });
+    assert.deepEqual(missingCounts.player.stats.exploresByLocation, {});
+
+    const existingCounts = migrateData({
+        version: 5.0,
+        player: {
+            name: '탐험가',
+            stats: { exploresByLocation: { '고요한 숲': 4, '잊혀진 폐허': 2 } },
+            equip: {},
+        },
+    });
+    assert.deepEqual(existingCounts.player.stats.exploresByLocation, {
+        '고요한 숲': 4,
+        '잊혀진 폐허': 2,
+    });
+});
+
 // ─── 원본: tests/cycle-120-migrate-counter-defaults.test.js ───
 /**
  * cycle 120: migrateData stats counter 기본값 정리.

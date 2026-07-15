@@ -22,10 +22,16 @@ export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
             if (unmetPrerequisite) return addLog('info', MSG.QUEST_PREREQUISITE_REQUIRED(unmetPrerequisite.title));
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => ({
-                    ...p,
-                    quests: [...p.quests, { id: qId, progress: qData.target === 'Level' ? p.level : 0 }]
-                })
+                payload: (p: any) => {
+                    const acceptedQuest: Record<string, any> = {
+                        id: qId,
+                        progress: qData.target === 'Level' ? p.level : 0,
+                    };
+                    if (qData.type === 'explore_count' && qData.target === 'explores' && qData.location) {
+                        acceptedQuest.startExploreCount = p.stats?.exploresByLocation?.[qData.location] || 0;
+                    }
+                    return { ...p, quests: [...p.quests, acceptedQuest] };
+                }
             });
             addLog('event', MSG.QUEST_ACCEPTED(qData.title));
         },

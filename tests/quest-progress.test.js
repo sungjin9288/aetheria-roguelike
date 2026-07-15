@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.js';
 import { syncQuestProgress } from '../src/utils/questProgress.js';
 
 test('quest progress syncs build-guiding and discovery quests from player stats', () => {
@@ -29,6 +30,81 @@ test('quest progress syncs build-guiding and discovery quests from player stats'
 
     assert.equal(result.updatedQuests.find((quest) => quest.id === 68)?.progress, 3);
     assert.equal(result.updatedQuests.find((quest) => quest.id === 72)?.progress, 5);
+});
+
+test('location exploration quests ignore global exploration and other regions', () => {
+    const player = {
+        level: 5,
+        loc: '고요한 숲',
+        stats: {
+            explores: 40,
+            exploresByLocation: { '고요한 숲': 12, '잊혀진 폐허': 0 },
+        },
+        quests: [{ id: 81, progress: 0, startExploreCount: 0 }],
+    };
+
+    const result = syncQuestProgress(player);
+
+    assert.equal(result.updatedQuests[0].progress, 0);
+});
+
+test('location exploration quests count only attempts after acceptance in the required region', () => {
+    const player = {
+        level: 5,
+        stats: {
+            explores: 45,
+            exploresByLocation: { '잊혀진 폐허': 7 },
+        },
+        quests: [{ id: 81, progress: 0, startExploreCount: 2 }],
+    };
+
+    const result = syncQuestProgress(player);
+
+    assert.equal(result.updatedQuests[0].progress, 5);
+});
+
+test('legacy location quests preserve saved progress and continue from the next local exploration', () => {
+    const legacyPlayer = {
+        level: 5,
+        stats: { explores: 30, exploresByLocation: { '잊혀진 폐허': 2 } },
+        quests: [{ id: 81, progress: 7 }],
+    };
+
+    const restored = syncQuestProgress(legacyPlayer).updatedQuests[0];
+    assert.equal(restored.progress, 7);
+    assert.equal(restored.startExploreCount, -5);
+
+    const continued = syncQuestProgress({
+        ...legacyPlayer,
+        stats: { ...legacyPlayer.stats, exploresByLocation: { '잊혀진 폐허': 3 } },
+        quests: [restored],
+    }).updatedQuests[0];
+
+    assert.equal(continued.progress, 8);
+});
+
+test('each exploration immediately updates the current region counter and matching quest', () => {
+    let currentPlayer = {
+        level: 1,
+        loc: '고요한 숲',
+        quests: [{ id: 80, progress: 0, startExploreCount: 0 }],
+        stats: { explores: 0, exploresByLocation: {}, exploreState: {} },
+    };
+    const helpers = makeSharedHelpers({
+        player: currentPlayer,
+        dispatch: (action) => {
+            if (typeof action.payload === 'function') {
+                currentPlayer = action.payload(currentPlayer);
+            }
+        },
+        addLog: () => {},
+    });
+
+    helpers.commitExploreOutcome('nothing', null);
+
+    assert.equal(currentPlayer.stats.explores, 1);
+    assert.equal(currentPlayer.stats.exploresByLocation['고요한 숲'], 1);
+    assert.equal(currentPlayer.quests[0].progress, 1);
 });
 
 test('quest progress derives low-hp survival counts from recent battle history thresholds', () => {

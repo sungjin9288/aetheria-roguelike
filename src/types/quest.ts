@@ -20,6 +20,7 @@ export interface Quest {
     goal?: number;
     reward?: QuestReward;
     minLv?: number;
+    location?: string;
     prerequisiteQuestId?: number | string;
     [key: string]: any;
 }

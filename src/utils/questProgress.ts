@@ -31,6 +31,19 @@ export const syncQuestProgress = (player: Player, enemyName: any, questCatalog: 
         if (!questData) return quest;
 
         if (questData.type === 'explore_count' && questData.target === 'explores') {
+            if (questData.location) {
+                const locationCount = player.stats?.exploresByLocation?.[questData.location] || 0;
+                const previousProgress = quest.progress || 0;
+                const startExploreCount = Number.isFinite(quest.startExploreCount)
+                    ? quest.startExploreCount
+                    : locationCount - previousProgress;
+                const current = Math.max(0, locationCount - startExploreCount);
+                return {
+                    ...quest,
+                    startExploreCount,
+                    progress: latch(previousProgress, current, questData.goal),
+                };
+            }
             const current = player.stats?.explores || 0;
             return { ...quest, progress: latch(quest.progress, current, questData.goal) };
         }
