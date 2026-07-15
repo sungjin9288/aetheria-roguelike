@@ -3,6 +3,7 @@ import type { Player } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { BALANCE } from '../data/constants.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
+import { getUnmetQuestPrerequisite } from './questPrerequisites.js';
 
 // cycle 356: OPERATION_META 5 lane에서 summary 필드 제거 — QuestBoardPanel은
 //   entry.meta.label / .emphasis만 read. summary 외부 read 0건이던 dead config.
@@ -353,13 +354,18 @@ export const getQuestBoardRecommendations = (player: Player, maps: any = MAPS, q
             ? (player.stats as any).claimedQuestIds
             : [],
     );
+    const claimedQuestIds = [...claimedRegularQuestIds];
     const playerLevel = player?.level || 1;
+    const isAvailable = (quest: any) => (
+        playerLevel >= (quest.minLv || 1)
+        && !getUnmetQuestPrerequisite(quest, claimedQuestIds, questCatalog)
+    );
 
     const scoredAvailable = questCatalog
         .filter((quest: any) => (
             !activeRegularQuestIds.has(quest.id)
             && !claimedRegularQuestIds.has(quest.id)
-            && playerLevel >= (quest.minLv || 1)
+            && isAvailable(quest)
         ))
         .map((quest: any) => scoreQuest(quest, player, traitProfile, activeEntries, maps))
         // cycle 347: _sortKey로 정렬 후 strip (score 외부 노출 0건이므로).
@@ -391,10 +397,26 @@ export const getQuestBoardRecommendations = (player: Player, maps: any = MAPS, q
         .filter((quest: any) => (
             !activeRegularQuestIds.has(quest.id)
             && !claimedRegularQuestIds.has(quest.id)
-            && playerLevel < (quest.minLv || 1)
+            && !isAvailable(quest)
         ))
         .sort((left: any, right: any) => (left.minLv || 1) - (right.minLv || 1))
-        .slice(0, 6);
+        .slice(0, 6)
+        .map((quest: any) => {
+            const unmetPrerequisite = getUnmetQuestPrerequisite(quest, claimedQuestIds, questCatalog);
+            if (playerLevel < (quest.minLv || 1)) {
+                return {
+                    ...quest,
+                    lockLabel: `레벨 ${quest.minLv} 필요`,
+                    lockDetail: `현재 레벨 ${playerLevel}에서는 아직 수락할 수 없습니다. 레벨을 올리면 받을 수 있습니다.`,
+                };
+            }
+
+            return {
+                ...quest,
+                lockLabel: '선행 이야기 필요',
+                lockDetail: `‘${unmetPrerequisite?.title}’ 완료 후 이어지는 이야기입니다.`,
+            };
+        });
 
     return {
         traitProfile,

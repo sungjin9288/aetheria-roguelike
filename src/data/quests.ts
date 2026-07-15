@@ -162,14 +162,16 @@ const RAW_QUESTS: Quest[] = [
     { id: 76, title: '끝없는 현상금',        type: 'bounty_count',    desc: '현상수배 30건 완료',           target: 'bountiesCompleted',  goal: 30, reward: { exp: 50000, gold: 80000, item: '영웅의 물약' }, minLv: 40 },
 
     // ── 스토리 퀘스트 ─────────────────────────────────────────────────────────
+    // 레벨은 도전 가능 시점, prerequisiteQuestId는 실제 서사 순서를 책임진다.
+    // 기계 폐도(Lv28)를 거쳐 얼음 권역(Lv30)으로 이어진 뒤 마왕 추적이 시작된다.
     { id: 80, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다',      type: 'explore_count', target: 'explores', goal: 1,  reward: { exp: 100, gold: 200 },            minLv: 1 },
-    { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5 },
-    { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 처치', target: '화염 정령',   goal: 5,  reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15 },
-    { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙결의 마녀의 정체를 밝혀라',    target: '빙결의 마녀', goal: 1,  reward: { exp: 8000, gold: 8000, item: '냉기의 결정' },    minLv: 30 },
-    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도의 진실을 파헤쳐라',    target: '증기 골렘',   goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 28 },
-    { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕의 사도를 통해 마왕의 계획을 알아라', target: '마왕의 사도', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 40 },
-    { id: 86, title: '[스토리] 에테르의 균열', desc: '에테르 관문의 균열을 조사하라', target: '에테르 파편체', goal: 10, reward: { exp: 20000, gold: 25000, item: '마나 결정' }, minLv: 50 },
-    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕을 쓰러뜨리고 세계를 구하라', target: '마왕',      goal: 1,  reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 50 },
+    { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
+    { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 처치', target: '화염 정령',   goal: 5,  reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
+    { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙결의 마녀의 정체를 밝혀라',    target: '빙결의 마녀', goal: 1,  reward: { exp: 8000, gold: 8000, item: '냉기의 결정' },    minLv: 30, prerequisiteQuestId: 84 },
+    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도의 진실을 파헤쳐라',    target: '증기 골렘',   goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 28, prerequisiteQuestId: 82 },
+    { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕의 사도를 통해 마왕의 계획을 알아라', target: '마왕의 사도', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 40, prerequisiteQuestId: 83 },
+    { id: 86, title: '[스토리] 에테르의 균열', desc: '에테르 관문의 균열을 조사하라', target: '에테르 파편체', goal: 10, reward: { exp: 20000, gold: 25000, item: '마나 결정' }, minLv: 50, prerequisiteQuestId: 85 },
+    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕을 쓰러뜨리고 세계를 구하라', target: '마왕',      goal: 1,  reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 50, prerequisiteQuestId: 86 },
 
     // ── 심연 퀘스트 라인 ─────────────────────────────────────────────────────
     { id: 88, title: '[심연] 심연으로의 첫 발걸음', desc: '혼돈의 심연에서 처음 전투 승리', target: '혼돈의 화신', goal: 1, reward: { exp: 30000, gold: 30000, item: '마나 결정' }, minLv: 55 },

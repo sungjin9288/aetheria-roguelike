@@ -6,6 +6,7 @@ import { getAdventureGuidance } from '../src/utils/adventureGuide.js';
 import { getQuestBoardRecommendations } from '../src/utils/questOperations.js';
 import { createQuestActions } from '../src/hooks/gameActions/questActions.js';
 import { MSG } from '../src/data/messages.js';
+import { QUESTS } from '../src/data/quests.js';
 
 test('quest board surfaces story and build operations for a fresh run', () => {
     const player = {
@@ -69,6 +70,68 @@ test('quest board does not offer static quests that already paid their reward', 
 
     assert.ok(!visibleIds.includes(80));
     assert.ok(!visibleIds.includes(81));
+});
+
+test('story missions unlock one chapter at a time even for a high-level player', () => {
+    const player = {
+        job: '모험가',
+        level: 50,
+        loc: '시작의 마을',
+        hp: 500,
+        maxHp: 500,
+        mp: 200,
+        maxMp: 200,
+        quests: [],
+        relics: [],
+        equip: { weapon: null, offhand: null },
+        inv: [],
+        stats: {
+            claimedQuestIds: [],
+            crafts: 0,
+            bountiesCompleted: 0,
+            visitedMaps: ['시작의 마을'],
+        },
+    };
+
+    const board = getQuestBoardRecommendations(player);
+    const availableStoryIds = [...board.featured, ...board.backlog]
+        .filter((entry) => entry.lane === 'story')
+        .map((entry) => entry.quest.id);
+
+    assert.deepEqual(availableStoryIds, [80]);
+    assert.equal(board.featured[0].quest.id, 80);
+    assert.ok(board.locked.some((quest) => quest.id === 81 && quest.lockLabel === '선행 이야기 필요'));
+});
+
+test('story mission data keeps the intended chapter sequence explicit', () => {
+    const storySequence = [80, 81, 82, 84, 83, 85, 86, 87];
+    const storyQuests = new Map(QUESTS.map((quest) => [quest.id, quest]));
+
+    assert.equal(storyQuests.get(storySequence[0]).prerequisiteQuestId, undefined);
+    for (let index = 1; index < storySequence.length; index += 1) {
+        assert.equal(
+            storyQuests.get(storySequence[index]).prerequisiteQuestId,
+            storySequence[index - 1],
+            `story quest ${storySequence[index]} should follow ${storySequence[index - 1]}`,
+        );
+    }
+});
+
+test('the next story chapter unlocks only after its prerequisite reward was claimed', () => {
+    const player = {
+        job: '모험가', level: 50, loc: '시작의 마을', hp: 500, maxHp: 500,
+        mp: 200, maxMp: 200, quests: [], relics: [], inv: [],
+        equip: { weapon: null, offhand: null },
+        stats: { claimedQuestIds: [80], crafts: 0, bountiesCompleted: 0, visitedMaps: ['시작의 마을'] },
+    };
+
+    const board = getQuestBoardRecommendations(player);
+    const availableStoryIds = [...board.featured, ...board.backlog]
+        .filter((entry) => entry.lane === 'story')
+        .map((entry) => entry.quest.id);
+
+    assert.deepEqual(availableStoryIds, [81]);
+    assert.ok(board.locked.some((quest) => quest.id === 82 && quest.lockDetail.includes('폐허의 진실')));
 });
 
 test('beginner recommendations prefer a short hunt after the first story quest', () => {
@@ -145,6 +208,28 @@ test('quest action rejects direct re-accept of a completed static quest', () => 
 
     assert.equal(dispatchCount, 0);
     assert.deepEqual(logs, [{ type: 'info', text: MSG.QUEST_ALREADY_COMPLETED }]);
+});
+
+test('quest action rejects direct acceptance of a locked story chapter', () => {
+    const logs = [];
+    let dispatchCount = 0;
+    const player = {
+        level: 50,
+        loc: '시작의 마을',
+        quests: [],
+        stats: { claimedQuestIds: [] },
+    };
+    const actions = createQuestActions({
+        player,
+        grave: null,
+        dispatch: () => { dispatchCount += 1; },
+        addLog: (type, text) => logs.push({ type, text }),
+    }, { emitUnlockedTitles: () => {} });
+
+    actions.acceptQuest(87);
+
+    assert.equal(dispatchCount, 0);
+    assert.deepEqual(logs, [{ type: 'info', text: MSG.QUEST_PREREQUISITE_REQUIRED('[스토리] 에테르의 균열') }]);
 });
 
 test('quest action abandons an incomplete mission from the town board', () => {
@@ -395,4 +480,6 @@ test('quest board renders mission brief rows for featured and active operations'
     assert.match(source, /OperationBriefRows/);
     assert.match(source, /brief\.extraction/);
     assert.match(source, /brief\.payoff/);
+    assert.match(source, /quest\.lockLabel/);
+    assert.match(source, /quest\.lockDetail/);
 });

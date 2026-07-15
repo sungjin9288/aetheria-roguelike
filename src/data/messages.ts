@@ -262,6 +262,7 @@ export const MSG = {
     QUEST_ALREADY_ACCEPTED: '이미 수락한 퀘스트입니다.',
     QUEST_ALREADY_COMPLETED: '이미 완료해 보상을 받은 퀘스트입니다.',
     QUEST_LEVEL_REQUIRED: (lv: number | undefined) => `레벨 ${lv} 이상부터 수락할 수 있는 퀘스트입니다.`,
+    QUEST_PREREQUISITE_REQUIRED: (title: string | undefined) => `‘${title}’ 임무를 먼저 완료해야 이어지는 이야기를 받을 수 있습니다.`,
     QUEST_ACCEPTED: (title: string | undefined) => `퀘스트 수락: ${title}`,
     QUEST_ABANDON_TOWN_ONLY: '임무 포기는 마을 게시판에서만 가능합니다.',
     QUEST_ABANDON_REWARD_PENDING: '완료한 임무는 보상을 받은 뒤 목록에서 정리할 수 있습니다.',

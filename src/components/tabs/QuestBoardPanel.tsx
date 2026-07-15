@@ -376,13 +376,13 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="font-readable text-base font-semibold text-slate-100">{quest.title}</div>
-                    <span className="aether-lock-note rounded-full px-2 py-0.5 text-[10px] font-readable">잠금 · 레벨 {quest.minLv} 필요</span>
+                    <span className="aether-lock-note rounded-full px-2 py-0.5 text-[10px] font-readable">잠금 · {quest.lockLabel}</span>
                   </div>
                   <div className="mt-1">
                     <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
                   </div>
                   <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
-                    현재 레벨 {player.level}에서는 아직 수락할 수 없습니다. 레벨을 올리면 받을 수 있습니다.
+                    {quest.lockDetail}
                   </div>
                   <RewardChips reward={quest.reward} accent="blue" />
                 </div>

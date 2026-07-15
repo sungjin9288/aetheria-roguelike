@@ -3,6 +3,7 @@ import { BALANCE } from '../../data/constants';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
 import { getGravesAtLoc, removeGravesAtLoc, resolveGraveRecovery } from '../../utils/graveUtils.js';
+import { getUnmetQuestPrerequisite } from '../../utils/questPrerequisites.js';
 
 export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
     const { player, grave, dispatch, addLog } = deps;
@@ -17,6 +18,8 @@ export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
                 : [];
             if (claimedQuestIds.includes(qId)) return addLog('info', MSG.QUEST_ALREADY_COMPLETED);
             if (player.level < (qData.minLv || 1)) return addLog('error', MSG.QUEST_LEVEL_REQUIRED(qData.minLv));
+            const unmetPrerequisite = getUnmetQuestPrerequisite(qData, claimedQuestIds, DB.QUESTS);
+            if (unmetPrerequisite) return addLog('info', MSG.QUEST_PREREQUISITE_REQUIRED(unmetPrerequisite.title));
             dispatch({
                 type: AT.SET_PLAYER,
                 payload: (p: any) => ({

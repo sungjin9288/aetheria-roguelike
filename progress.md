@@ -1,5 +1,21 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-16: enforced sequential story mission unlocks):
+- Reproduced a high-level fresh-story state where `[스토리] 세계의 끝` became the first recommendation and all eight story chapters were simultaneously available.
+- Added explicit prerequisite links for the full story sequence and shared prerequisite validation across quest-board availability and direct acceptance.
+- Added player-facing lock reasons that name the required prior chapter, plus regression coverage for the complete chapter chain, board filtering, direct-action rejection, and locked-state copy.
+- Reproduced concurrent spider and boar quest rewards separately; the current early EXP caps prevented an extra level-up, so no speculative active-quest restriction was added.
+
+Verification:
+- Focused quest and progression contracts -> 30/30 pass.
+- `npm run verify:full` -> type-check, lint, unit 3303/3303, build guard, desktop/mobile smoke, and Playwright e2e 25/25 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 02:37:39 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-16 02:37:50 KST`, `1.1.0 (2)`).
+- Latest physical iPhone delivery -> install URL `file:///private/var/containers/Bundle/Application/D02D95BC-4F73-4911-93E5-25D05507F94C/App.app/`; foreground pid `5752` remained alive after the 60-second hold.
+
+Next action:
+- Unlock the Mac session to capture and manually inspect the new story-lock presentation on the physical iPhone. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate release blockers.
+
 Done (2026-07-16: added a safe recovery path for unwanted long missions):
 - Added town-board abandonment for incomplete missions after the physical iPhone session exposed that an accidentally accepted ten-kill mission could not be removed.
 - Added an inline two-step confirmation that states the exact progress loss and keeps both cancel and confirm actions at mobile touch size.
