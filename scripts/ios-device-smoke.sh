@@ -7,7 +7,7 @@ BUNDLE_ID="${AETHERIA_IOS_BUNDLE_ID:-com.aetheria.roguelike}"
 APP_PATH="${AETHERIA_IOS_APP_PATH:-$ROOT_DIR/build/ios/Aetheria.xcarchive/Products/Applications/App.app}"
 DEVICECTL_TIMEOUT_SECONDS="${AETHERIA_DEVICECTL_TIMEOUT_SECONDS:-30}"
 PROCESS_HOLD_SECONDS="${AETHERIA_IOS_PROCESS_HOLD_SECONDS:-60}"
-launch_log=""
+diagnostic_log=""
 process_snapshot=""
 
 log_step() {
@@ -23,23 +23,28 @@ remove_temp_file() {
 }
 
 cleanup_temp_files() {
-  remove_temp_file "$launch_log"
+  remove_temp_file "$diagnostic_log"
   remove_temp_file "$process_snapshot"
 }
 
-explain_launch_failure() {
+device_is_locked() {
+  grep -Eqi "Locked|device was not, or could not be, unlocked" "$1"
+}
+
+explain_device_failure() {
   local output_file="$1"
+  local step="$2"
 
   if grep -Eq "not been explicitly trusted|Untrusted Developer" "$output_file"; then
     printf '%s\n' \
-      'The archive is installed, but this developer profile is not trusted on the iPhone.' \
-      'On the iPhone, open Settings > General > VPN & Device Management > Developer App, trust the profile, then rerun ios:device:smoke.' >&2
+      'The archive is installed, but this developer profile is not trusted on the iOS device.' \
+      'On the device, open Settings > General > VPN & Device Management > Developer App, trust the profile, then rerun ios:device:smoke.' >&2
   fi
 
-  if grep -Eqi "Locked|device was not, or could not be, unlocked" "$output_file"; then
+  if device_is_locked "$output_file"; then
+    printf 'iOS blocked %s because the device is locked.\n' "$step" >&2
     printf '%s\n' \
-      'The archive is installed, but iOS blocked launch because the iPhone is locked.' \
-      'Unlock the iPhone, keep the screen awake, leave the app in the foreground, then rerun ios:device:smoke.' >&2
+      'Unlock the iPhone or iPad, keep the screen awake, leave the app in the foreground, then rerun ios:device:smoke.' >&2
   fi
 }
 
@@ -83,6 +88,20 @@ end
 RUBY
 }
 
+run_required_device_step() {
+  local label="$1"
+  shift
+
+  diagnostic_log="$(mktemp)"
+  if ! run_timed "$label" "$@" 2>&1 | tee "$diagnostic_log"; then
+    explain_device_failure "$diagnostic_log" "$label"
+    return 1
+  fi
+
+  remove_temp_file "$diagnostic_log"
+  diagnostic_log=""
+}
+
 if ! command -v xcrun >/dev/null 2>&1; then
   printf 'xcrun is required for iOS device smoke.\n' >&2
   exit 1
@@ -102,35 +121,36 @@ printf 'app path: %s\n' "$APP_PATH"
 log_step "xcdevice availability"
 xcrun xcdevice list 2>/dev/null | sed -n '1,140p'
 
+diagnostic_log="$(mktemp)"
 if ! run_timed "metadata before install" \
   xcrun devicectl device info apps \
     --device "$DEVICE_ID" \
-    --bundle-id "$BUNDLE_ID"; then
+    --bundle-id "$BUNDLE_ID" 2>&1 | tee "$diagnostic_log"; then
+  if device_is_locked "$diagnostic_log"; then
+    explain_device_failure "$diagnostic_log" "metadata before install"
+    exit 1
+  fi
   printf '[ios-device-smoke] metadata before install unavailable; continuing to install attempt.\n' >&2
 fi
+remove_temp_file "$diagnostic_log"
+diagnostic_log=""
 
-run_timed "install app" \
+run_required_device_step "install app" \
   xcrun devicectl device install app \
     --device "$DEVICE_ID" \
     "$APP_PATH"
 
-run_timed "metadata after install" \
+run_required_device_step "metadata after install" \
   xcrun devicectl device info apps \
     --device "$DEVICE_ID" \
     --bundle-id "$BUNDLE_ID"
 
-launch_log="$(mktemp)"
-log_step "keep the iPhone unlocked, awake, and in the foreground"
-if ! run_timed "launch app" \
+log_step "keep the iOS device unlocked, awake, and in the foreground"
+run_required_device_step "launch app" \
   xcrun devicectl device process launch \
     --device "$DEVICE_ID" \
     --terminate-existing \
-    "$BUNDLE_ID" 2>&1 | tee "$launch_log"; then
-  explain_launch_failure "$launch_log"
-  exit 1
-fi
-remove_temp_file "$launch_log"
-launch_log=""
+    "$BUNDLE_ID"
 
 process_snapshot="$(mktemp)"
 run_timed "process check" \
@@ -156,7 +176,7 @@ run_timed "process check after hold" \
 if ! grep -E "App\\.app/App|${BUNDLE_ID}|Aetheria" "$process_snapshot"; then
   cat "$process_snapshot"
   printf 'Aetheria app process was not found after the %ss hold.\n' "$PROCESS_HOLD_SECONDS" >&2
-  printf 'Keep the iPhone unlocked, awake, and in the foreground for the full hold, then rerun ios:device:smoke.\n' >&2
+  printf 'Keep the iOS device unlocked, awake, and in the foreground for the full hold, then rerun ios:device:smoke.\n' >&2
   exit 1
 fi
 remove_temp_file "$process_snapshot"

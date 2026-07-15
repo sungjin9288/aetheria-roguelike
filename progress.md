@@ -2595,6 +2595,23 @@ Notes:
 - Native debug/archive builds were not rerun because this pass touched web UI/readability and Capacitor web asset sync, not native signing or packaging logic.
 - Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.
 
+Done (2026-07-15: iOS pre-install lock diagnosis, Slice 40):
+- Attempted the current signed archive on the USB-connected physical `iPad Pro 12.9-inch / iPadOS 26.5`; CoreDevice reached the device but failed to mount the Developer Disk Image because the device was locked.
+- Generalized the smoke diagnostic path from launch-only handling to shared metadata, install, post-install metadata, and launch handling.
+- Added an early boundary for locked pre-install metadata so the script prints the failed step and unlock handoff without repeating the same failure during install.
+- Replaced iPhone-only wording with iOS-device guidance that applies to the connected iPhone or iPad while preserving the developer-profile trust path.
+
+Verification:
+- `bash -n scripts/ios-device-smoke.sh` -> pass
+- `node --import tsx --test tests/ios-device-smoke-guidance.test.js` -> 5/5 pass
+- Locked physical iPad replay -> stopped after `metadata before install`, printed the new iPhone-or-iPad unlock guidance, and did not attempt install
+- `npm run verify:full` -> type-check, lint 0 errors/0 warnings, unit 3279/3279, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass
+- `npm run mobile:doctor` -> iOS signing/toolchain ready; existing Android release signing input blocker reported
+
+Notes:
+- App sources and native packages did not change; the latest signed archive remains `build/ios/Aetheria.xcarchive` from 2026-07-15 13:59:20 KST.
+- The iPhone is currently detected over USB but unavailable. Physical iPhone install, 60-second hold, five-minute touch/art QA, physical Android QA, Android release signing, and TestFlight remain open.
+
 Done (2026-07-15: return briefing state simplification and Android native preflight, Slice 39):
 - Replaced `GameRoot`'s effect-driven return briefing mirror state and session ref with a focused `ReturnBriefingGate` that computes its one-shot value in a lazy state initializer after the player is ready.
 - Added a source contract that keeps the ready/player mount boundary, lazy initialization, and absence of the former effect/ref flow explicit.

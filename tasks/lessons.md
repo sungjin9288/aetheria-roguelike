@@ -34,6 +34,7 @@
 | 2026-07-14 | 전투 단계 배너가 전투 종료 후에도 모든 패널을 가림 | enemy 업데이트 effect cleanup이 배너 해제 timer를 반복 취소함 | transient UI의 상태 감지와 수명 timer를 별도 effect로 분리한다 |
 | 2026-07-14 | 인증 지연 오프라인 모드에서 앱 재실행 시 전체 런이 초기화됨 | 오프라인 플레이를 허용하면서 저장은 Firestore에만 의존함 | 모바일 오프라인 플레이는 versioned local snapshot을 함께 유지하고, cloud 실패 때만 migration 후 복원하며 reset에서 제거한다 |
 | 2026-07-15 | Android headless 에뮬레이터에서 패널과 글자가 중복·누락되어 앱 레이아웃 회귀처럼 보임 | SwiftShader가 다수의 blur surface를 잘못 합성했으며 같은 APK를 host GPU로 실행하면 안정 프레임이 정상 렌더링됨 | Android 에뮬레이터 시각 QA는 host GPU로 재현성을 먼저 확인하고, 소프트웨어 렌더러 한정 증상은 실기기 회귀와 분리한다 |
+| 2026-07-15 | iOS device smoke가 잠긴 iPad의 install 전 DDI mount 실패를 긴 CoreDevice 원문으로만 종료함 | 잠금 handoff가 archive 설치 뒤 launch 실패에만 연결되어 metadata와 install 단계의 같은 오류를 분류하지 않았음 | 필수 device command는 단계와 무관하게 같은 진단 파일과 잠금·신뢰 분류를 사용하고, install 전 잠금이면 중복 install을 시도하지 않는다 |
 
 ---
 
@@ -154,6 +155,10 @@
 ### R29: Separate Emulator Renderer Artifacts From App Regressions
 - **Rule:** Android headless 에뮬레이터의 패널 중복, 글자 누락, 검은 영역은 같은 APK를 `-gpu host`로 재실행해 안정 프레임을 비교한 뒤 앱 회귀로 분류한다. 에뮬레이터 통과는 물리 Android의 터치·성능·아트 QA를 대체하지 않는다
 - **Rationale:** SwiftShader의 WebView blur 합성 결함은 정상 DOM과 앱 프로세스를 유지한 채 화면만 깨뜨릴 수 있어, 즉시 CSS를 바꾸면 실제 기기 품질을 낮추고 원인을 숨길 수 있다
+
+### R30: Diagnose Device State At Every Native Step
+- **Rule:** iOS 실기기 smoke는 metadata, install, post-install 확인, launch를 같은 오류 분류 경계로 실행하고, install 전 잠금이 확인되면 뒤 단계를 반복하지 않고 기기 잠금 해제 handoff로 종료한다
+- **Rationale:** CoreDevice는 Developer Disk Image를 요구하는 첫 명령부터 잠금으로 실패할 수 있으므로 launch만 진단하면 사용자가 같은 원인의 긴 로그와 실패를 여러 번 겪게 된다
 
 ---
 
