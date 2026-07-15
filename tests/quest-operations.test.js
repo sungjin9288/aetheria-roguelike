@@ -71,6 +71,60 @@ test('quest board does not offer static quests that already paid their reward', 
     assert.ok(!visibleIds.includes(81));
 });
 
+test('beginner recommendations prefer a short hunt after the first story quest', () => {
+    const player = {
+        job: '모험가',
+        level: 1,
+        loc: '시작의 마을',
+        hp: 178,
+        maxHp: 178,
+        mp: 52,
+        maxMp: 52,
+        quests: [],
+        relics: [],
+        equip: { weapon: null, offhand: null },
+        inv: [],
+        stats: {
+            claimedQuestIds: [80],
+            crafts: 0,
+            bountiesCompleted: 0,
+            visitedMaps: ['시작의 마을', '고요한 숲'],
+        },
+    };
+
+    const board = getQuestBoardRecommendations(player);
+    const spiderHunt = [...board.featured, ...board.backlog]
+        .find((entry) => entry.quest.id === 110);
+
+    assert.equal(board.featured[0].quest.id, 1);
+    assert.equal(board.featured[0].quest.title, '슬라임 소탕');
+    assert.equal(spiderHunt.lane, 'hunt');
+    assert.equal(spiderHunt.meta.label, '토벌 임무');
+    assert.equal(spiderHunt.brief.riskLabel, '안정');
+});
+
+test('a regular monster quest is not treated as a boss quest just because its map has a boss', () => {
+    const player = {
+        job: '모험가', level: 1, loc: '시작의 마을', hp: 178, maxHp: 178,
+        mp: 52, maxMp: 52, quests: [], relics: [], inv: [],
+        equip: { weapon: null, offhand: null },
+        stats: { crafts: 0, bountiesCompleted: 0, visitedMaps: [] },
+    };
+    const maps = {
+        '시험 숲': { level: 1, monsters: ['거미떼'], boss: '거미 여왕', bossMonsters: ['거미 여왕'] },
+    };
+    const catalog = [
+        { id: 9001, title: '거미 소탕', target: '거미떼', goal: 3, minLv: 1, reward: { exp: 20, gold: 20 } },
+        { id: 9002, title: '[보스] 거미 여왕', target: '거미 여왕', goal: 1, minLv: 1, reward: { exp: 40, gold: 40 } },
+    ];
+
+    const board = getQuestBoardRecommendations(player, maps, catalog);
+    const entries = [...board.featured, ...board.backlog];
+
+    assert.equal(entries.find((entry) => entry.quest.id === 9001).lane, 'hunt');
+    assert.equal(entries.find((entry) => entry.quest.id === 9002).lane, 'boss');
+});
+
 test('quest action rejects direct re-accept of a completed static quest', () => {
     const logs = [];
     let dispatchCount = 0;

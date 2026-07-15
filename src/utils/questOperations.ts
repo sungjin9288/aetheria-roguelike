@@ -93,8 +93,15 @@ const isBossQuest = (quest: any, maps: any) => {
     if (String(quest?.title || '').includes('[보스]')) return true;
     return getQuestTargetMaps(quest, maps).some((mapName: any) => {
         const map = maps[mapName];
-        return Boolean(map?.boss) || toArray(map?.bossMonsters).includes(quest?.target);
+        return map?.boss === quest?.target || toArray(map?.bossMonsters).includes(quest?.target);
     });
+};
+
+const getBeginnerQuestEffortScore = (quest: any, playerLevel: number) => {
+    if (playerLevel > 2 || quest?.type || typeof quest?.goal !== 'number') return 0;
+    if (quest.goal <= 3) return 12;
+    if (quest.goal <= 5) return 4;
+    return -Math.min(18, (quest.goal - 5) * 3);
 };
 
 const getQuestLane = (quest: any, resonance: any, maps: any) => {
@@ -306,6 +313,7 @@ const scoreQuest = (quest: any, player: Player, traitProfile: any, activeEntries
 
     let score = resonance.score * 10;
     score += Math.max(0, 18 - (levelGap * 4));
+    score += getBeginnerQuestEffortScore(quest, playerLevel);
 
     if (lane === 'story') score += 44;
     if (lane === 'build') score += resonance.score >= 6 ? 24 : 8;

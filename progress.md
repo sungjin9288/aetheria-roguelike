@@ -1,5 +1,24 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-16: closed physical iPhone RC QA and corrected beginner mission recommendations):
+- Confirmed the latest physical-iPhone reward action by claiming the first story reward directly from the tracker: level stayed at 1, experience moved from `47/200` to `107/200`, gold moved from `319` to `519`, and the completed quest disappeared.
+- Confirmed equipped slots render the shared item art without clipping or overlap.
+- Reached an automatic `정예 숲 요정` through normal exploration and completed its enraged phase in six turns with zero potion use and `74/178` life before the victory level-up.
+- Confirmed level 2 arrived only after the story reward and several normal, enhanced, and elite combats, so the adjusted early progression no longer jumps multiple levels from a few quest actions.
+- Fixed regular monster quests being classified as boss missions whenever their map happened to contain a different boss.
+- Added a beginner effort score so level 1-2 players see the three-kill `슬라임 소탕` before the ten-kill `거미떼 퇴치` after the first story quest.
+
+Verification:
+- Focused quest, guidance, and progression contracts -> 29/29 pass.
+- `npm run verify:full` -> type-check, lint, unit 3295/3295, build guard, desktop/mobile smoke, and Playwright e2e 24/24 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 01:50:55 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-16 01:51:06 KST`, `1.1.0 (2)`).
+- Latest physical iPhone delivery -> install URL `file:///private/var/containers/Bundle/Application/0B2875BD-EC8B-48EC-AD75-F409A13B7CB8/App.app/`; one transient CoreDevice disconnect occurred after install, then direct launch pid `5373` survived the 60-second hold without reinstall.
+- Physical evidence -> `playtest-artifacts/mobile-archive-content-first/iphone-physical-quest-reward-cta.jpg`, `iphone-physical-first-quest-claimed.jpg`, `iphone-physical-equipment-item-art.jpg`, `iphone-physical-early-elite-start.jpg`, `iphone-physical-early-elite-phase.jpg`, and `iphone-physical-early-elite-victory.jpg`.
+
+Next action:
+- Connect and authorize a physical Android for its 60-second smoke and five-minute routine, then provide Android release signing inputs. iOS distribution still requires an Apple Distribution identity/profile and explicit TestFlight upload approval.
+
 Done (2026-07-16: reflected physical iPhone first-session QA findings):
 - Ran the timed first-session path on a physical iPhone 14 Pro Max through quest acceptance, Quiet Forest travel, a five-turn first combat, town return, shop/equipment/map review, and a ten-second background relaunch.
 - Confirmed conservative early pacing at level 1 with experience `25/200 -> 47/200`, plus exact save restoration at life `142/178`, energy `22/52`, experience `47/200`, and gold `319`.

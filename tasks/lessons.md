@@ -178,6 +178,10 @@
 - **Rule:** HP 비율과 같은 player-facing 자원 요약은 장비·패시브가 반영된 effective stat을 기준으로 계산하고 표시 범위를 제한한다. 물리 기기 설치 timeout은 현재 native bundle 크기와 실제 CoreDevice 전송 시간을 기준으로 설정한다
 - **Rationale:** raw base stat으로 만든 100% 초과 표시는 저장 상태를 불신하게 하고, 현실보다 짧은 timeout은 정상 설치를 release blocker로 잘못 분류한다
 
+### R35: Match Mission Labels And Effort To The Exact Target
+- **Rule:** 보스 임무 판정은 같은 지역에 보스가 존재하는지가 아니라 quest target이 실제 boss target과 일치하는지로 결정한다. 레벨 1~2 추천은 긴 반복 목표보다 3~5회 안에 끝나는 짧은 임무를 먼저 보여 준다
+- **Rationale:** 일반 몬스터 토벌을 보스 도전처럼 경고하면 난이도 신호를 믿기 어렵고, 첫 이야기 직후 긴 반복 목표를 앞세우면 다음 성장을 체감하기 전에 피로가 먼저 쌓인다
+
 ---
 
 ## 📝 Post-Mortem Template
