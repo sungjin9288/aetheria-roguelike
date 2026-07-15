@@ -149,7 +149,7 @@ AETHERIA_ANDROID_ALLOW_EMULATOR=1 AETHERIA_ANDROID_PROCESS_HOLD_SECONDS=10 npm r
 
 - Xcode에서 `App` 타깃의 Signing & Capabilities를 설정합니다.
 - Apple Developer Team ID를 확인합니다. 이미 프로젝트에 설정돼 있으면 `ios:archive`는 그 값을 그대로 사용합니다.
-- 필요하면 `ios/ExportOptions/AppStore.plist.example`를 복사해 실제 값을 채웁니다.
+- 다른 Apple Developer Team을 사용한다면 `ios/ExportOptions/AppStore.plist.example`의 Team ID를 바꿔 별도 파일로 준비합니다.
 
 ### 3-2. unsigned sanity build
 
@@ -161,14 +161,25 @@ npm run ios:build:device
 
 ### 3-3. archive / export
 
+외부 업로드 없이 App Store용 IPA를 먼저 export합니다.
+
 ```bash
 AETHERIA_IOS_EXPORT_OPTIONS_PLIST=ios/ExportOptions/AppStore.plist \
+npm run ios:archive
+```
+
+`ios/ExportOptions.plist`는 App Store Connect에 바로 업로드하는 설정입니다. 실기기 QA와 업로드 승인이 끝난 뒤에만 아래처럼 명시적으로 허용합니다.
+
+```bash
+AETHERIA_IOS_ALLOW_UPLOAD=1 \
+AETHERIA_IOS_EXPORT_OPTIONS_PLIST=ios/ExportOptions.plist \
 npm run ios:archive
 ```
 
 선택 환경변수:
 
 - `AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES`
+- `AETHERIA_IOS_ALLOW_UPLOAD`
 - `AETHERIA_IOS_TEAM_ID`
 - `AETHERIA_IOS_ARCHIVE_PATH`
 - `AETHERIA_IOS_EXPORT_PATH`

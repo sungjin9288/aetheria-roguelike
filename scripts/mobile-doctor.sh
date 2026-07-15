@@ -73,6 +73,24 @@ else
   printf 'missing\n'
 fi
 
+printf 'iOS local distribution signing: '
+if command -v security >/dev/null 2>&1 \
+  && security find-identity -v -p codesigning 2>/dev/null | grep -Eq '"(Apple Distribution|iOS Distribution):'; then
+  printf 'yes\n'
+else
+  printf 'no\n'
+  printf 'A local App Store export needs an Apple Distribution identity and matching distribution profile.\n'
+fi
+
+printf 'iOS local App Store export profile: '
+ios_export_options="$ROOT_DIR/ios/ExportOptions/AppStore.plist"
+ios_export_destination="$(/usr/libexec/PlistBuddy -c 'Print :destination' "$ios_export_options" 2>/dev/null || true)"
+if [[ -f "$ios_export_options" && "$ios_export_destination" == "export" ]]; then
+  printf 'ok\n'
+else
+  printf 'missing or unsafe\n'
+fi
+
 printf '\nAndroid SDK dir: %s\n' "${android_sdk_dir:-missing}"
 printf 'Android SDK platform 36: '
 if [[ -n "$android_sdk_dir" && -f "$android_sdk_dir/platforms/android-36/android.jar" ]]; then

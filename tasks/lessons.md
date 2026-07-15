@@ -36,6 +36,7 @@
 | 2026-07-15 | Android headless 에뮬레이터에서 패널과 글자가 중복·누락되어 앱 레이아웃 회귀처럼 보임 | SwiftShader가 다수의 blur surface를 잘못 합성했으며 같은 APK를 host GPU로 실행하면 안정 프레임이 정상 렌더링됨 | Android 에뮬레이터 시각 QA는 host GPU로 재현성을 먼저 확인하고, 소프트웨어 렌더러 한정 증상은 실기기 회귀와 분리한다 |
 | 2026-07-15 | iOS device smoke가 잠긴 iPad의 install 전 DDI mount 실패를 긴 CoreDevice 원문으로만 종료함 | 잠금 handoff가 archive 설치 뒤 launch 실패에만 연결되어 metadata와 install 단계의 같은 오류를 분류하지 않았음 | 필수 device command는 단계와 무관하게 같은 진단 파일과 잠금·신뢰 분류를 사용하고, install 전 잠금이면 중복 install을 시도하지 않는다 |
 | 2026-07-15 | Android APK 설치 실패가 서명 충돌 가능성만 안내해 실제 AVD 저장 공간 부족을 바로 판단하기 어려웠음 | 수동 설치 절차와 generic error guidance만 있고 `adb install` 실패 유형을 release evidence로 분류하는 공통 경계가 없었음 | Android device smoke는 저장 공간 부족과 서명 충돌을 구분하고, 세이브를 보존하기 위해 앱 삭제나 data clear를 자동 수행하지 않는다 |
+| 2026-07-15 | iOS local export 안내는 존재하지 않는 파일을 가리키고 실제 설정은 승인 없이 App Store Connect upload를 요청할 수 있었음 | archive 생성, 로컬 IPA export, 외부 upload를 한 환경변수 경로로 처리하면서 destination과 provisioning 동작을 실행 전에 구분하지 않았음 | iOS 배포는 local export와 upload 설정을 분리하고, upload는 명시적 opt-in 없이는 archive 전에 차단하며 provisioning 갱신 옵션을 archive와 export에 동일하게 적용한다 |
 
 ---
 
@@ -164,6 +165,10 @@
 ### R31: Keep Android Delivery Physical-First And Save-Preserving
 - **Rule:** Android release acceptance smoke는 승인된 물리 기기를 기본으로 선택하고 에뮬레이터는 명시적 preflight opt-in으로만 허용한다. 설치는 `adb install -r`로 세이브를 보존하며 실패 시 저장 공간과 서명 원인을 구분한 뒤 앱 삭제 결정은 사용자에게 남긴다
 - **Rationale:** 에뮬레이터 성공을 물리 기기 완료로 오인하거나 자동 재설치 과정에서 플레이어 세이브를 잃는 일을 막으면서, install·launch·foreground hold를 동일한 재현 경로로 검증해야 한다
+
+### R32: Separate Local Export From External Upload
+- **Rule:** iOS archive, App Store용 local export, App Store Connect upload를 서로 다른 승인 경계로 다룬다. `destination=upload`는 명시적 opt-in 없이는 실행하지 않고, signing 및 provisioning 옵션은 archive와 export 양쪽에서 같은 의미를 유지한다
+- **Rationale:** 로컬 산출물 검증 명령이 외부 배포로 이어지거나 archive는 성공했는데 export만 다른 signing 조건으로 실패하는 일을 막고, 사람의 승인 시점을 명확하게 남겨야 한다
 
 ---
 

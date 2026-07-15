@@ -1,5 +1,20 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-15: separated safe App Store export from approved upload):
+- Reinstalled the latest archive on the available physical iPhone and confirmed the installed `com.aetheria.roguelike` metadata is `1.1.0 (2)` at `file:///private/var/containers/Bundle/Application/C903F7CB-D1B3-46BD-A728-87B880204B91/App.app/`.
+- The first launch was denied while the iPhone was locked. After unlock, a direct relaunch succeeded and foreground pid `2195` remained unchanged through the 60-second hold.
+- Added a local-only App Store export profile, blocked `destination=upload` before archive unless `AETHERIA_IOS_ALLOW_UPLOAD=1` is explicit, and applied automatic provisioning updates to both archive and export.
+- Corrected the release guide so local IPA export and approved App Store Connect upload are separate commands.
+
+Verification:
+- iOS archive safety contracts -> 3/3 pass; actual unapproved upload profile invocation stopped before archive.
+- Local-only export against the current archive -> expected signing blocker: no `iOS Distribution` certificate and no distribution profile for `com.aetheria.roguelike`.
+- Final `npm run verify:full` -> type-check, lint, unit 3287/3287, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass.
+- Native app sources were unchanged, so the latest archive remains `build/ios/Aetheria.xcarchive` (`2026-07-15 13:59:20 KST`).
+
+Next action:
+- Run the timed five-minute touch, art-cohesion, and first-elite routine on the installed iPhone build. Then prepare the iOS Distribution certificate/profile and approve the TestFlight upload. Physical Android QA and release signing inputs remain separate blockers.
+
 Done (2026-07-15: standardized physical-first Android delivery smoke):
 - Added `npm run android:device:smoke` to select one authorized physical device by default, install the chosen APK without clearing saves, cold-launch `MainActivity`, and prove process plus foreground survival for 60 seconds.
 - Added explicit no-device, unauthorized, multiple-device, emulator opt-in, insufficient-storage, and signature-conflict guidance, with a process-level mock `adb` regression test.
