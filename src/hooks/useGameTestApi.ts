@@ -378,6 +378,22 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
+            seedAbandonableQuestScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        loc: '시작의 마을',
+                        level: 2,
+                        quests: [{ id: 110, progress: 2, isBounty: false }],
+                        stats: {
+                            ...er.player.stats,
+                            claimedQuestIds: [80],
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
             // cycle 604: preset default 'paladin-plate' 제거 — 1 production
             //   caller (scripts/smoke-gameplay:305 seedAvatarScenario?.(preset.id))
             //   1 arg 명시 전달이라 default 도달 불가. cycle 593 dead exposure

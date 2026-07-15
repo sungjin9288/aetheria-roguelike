@@ -147,6 +147,109 @@ test('quest action rejects direct re-accept of a completed static quest', () => 
     assert.deepEqual(logs, [{ type: 'info', text: MSG.QUEST_ALREADY_COMPLETED }]);
 });
 
+test('quest action abandons an incomplete mission from the town board', () => {
+    const logs = [];
+    let updatedPlayer;
+    const player = {
+        level: 2,
+        loc: '시작의 마을',
+        quests: [{ id: 110, progress: 2 }],
+        stats: { claimedQuestIds: [80] },
+    };
+    const actions = createQuestActions({
+        player,
+        grave: null,
+        dispatch: (action) => {
+            updatedPlayer = typeof action.payload === 'function' ? action.payload(player) : action.payload;
+        },
+        addLog: (type, text) => logs.push({ type, text }),
+    }, { emitUnlockedTitles: () => {} });
+
+    actions.abandonQuest(110);
+
+    assert.deepEqual(updatedPlayer.quests, []);
+    assert.deepEqual(logs, [{ type: 'event', text: MSG.QUEST_ABANDONED('거미떼 퇴치') }]);
+});
+
+test('quest action protects a completed mission reward from abandonment', () => {
+    const logs = [];
+    let dispatchCount = 0;
+    const player = {
+        level: 1,
+        loc: '시작의 마을',
+        quests: [{ id: 1, progress: 3 }],
+        stats: {},
+    };
+    const actions = createQuestActions({
+        player,
+        grave: null,
+        dispatch: () => { dispatchCount += 1; },
+        addLog: (type, text) => logs.push({ type, text }),
+    }, { emitUnlockedTitles: () => {} });
+
+    actions.abandonQuest(1);
+
+    assert.equal(dispatchCount, 0);
+    assert.deepEqual(logs, [{ type: 'info', text: MSG.QUEST_ABANDON_REWARD_PENDING }]);
+});
+
+test('quest action rejects abandonment outside a safe zone', () => {
+    const logs = [];
+    let dispatchCount = 0;
+    const player = {
+        level: 2,
+        loc: '고요한 숲',
+        quests: [{ id: 110, progress: 2 }],
+        stats: {},
+    };
+    const actions = createQuestActions({
+        player,
+        grave: null,
+        dispatch: () => { dispatchCount += 1; },
+        addLog: (type, text) => logs.push({ type, text }),
+    }, { emitUnlockedTitles: () => {} });
+
+    actions.abandonQuest(110);
+
+    assert.equal(dispatchCount, 0);
+    assert.deepEqual(logs, [{ type: 'error', text: MSG.QUEST_ABANDON_TOWN_ONLY }]);
+});
+
+test('abandoning a bounty preserves its daily issuance limit', () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const logs = [];
+    let updatedPlayer;
+    const player = {
+        level: 2,
+        loc: '시작의 마을',
+        quests: [{
+            id: 'bounty_test',
+            title: '[현상수배] 슬라임 토벌',
+            target: '슬라임',
+            goal: 5,
+            progress: 1,
+            isBounty: true,
+            reward: { exp: 20, gold: 20 },
+        }],
+        stats: { bountyDate: today, bountyIssued: true },
+    };
+    const actions = createQuestActions({
+        player,
+        grave: null,
+        dispatch: (action) => {
+            updatedPlayer = typeof action.payload === 'function' ? action.payload(player) : action.payload;
+        },
+        addLog: (type, text) => logs.push({ type, text }),
+    }, { emitUnlockedTitles: () => {} });
+
+    actions.abandonQuest('bounty_test');
+
+    assert.deepEqual(updatedPlayer.quests, []);
+    assert.equal(updatedPlayer.stats.bountyDate, today);
+    assert.equal(updatedPlayer.stats.bountyIssued, true);
+    assert.deepEqual(logs, [{ type: 'event', text: MSG.BOUNTY_ABANDONED }]);
+});
+
 test('quest board featured operations include a town prep run plan', () => {
     const player = {
         job: '전사',

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ScrollText } from 'lucide-react';
 import { formatRewardParts } from '../../utils/gameUtils';
@@ -109,6 +110,7 @@ interface QuestBoardPanelProps {
 //   (ControlPanel:158) 4 props 명시 전달이라 default 도달 불가. 청소 메가
 //   시리즈 80번째 cross-file batch.
 const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: QuestBoardPanelProps) => {
+  const [confirmAbandonQuestId, setConfirmAbandonQuestId] = useState<string | number | null>(null);
   const {
     traitProfile,
     activeEntries: activeQuestEntries,
@@ -272,8 +274,46 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   <Motion.button data-testid="quest-board-claim-reward" whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-emerald-300/35 bg-emerald-300/16 px-5 py-3 text-xs font-bold text-emerald-100 transition-all hover:bg-emerald-300/22">
                     보상 받기
                   </Motion.button>
+                ) : confirmAbandonQuestId === entry.id ? (
+                  <div data-testid="quest-board-abandon-warning" className="border-t border-rose-300/18 pt-3">
+                    <div className="font-readable text-[12px] leading-[1.45] text-rose-100/88">
+                      지금까지의 진행도 {getQuestProgressText(entry.quest, entry.progress)}이 사라집니다.
+                      {entry.isBounty && ' 오늘은 새 현상수배를 다시 받을 수 없습니다.'}
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <Motion.button
+                        data-testid="quest-board-abandon-cancel"
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setConfirmAbandonQuestId(null)}
+                        className="min-h-[44px] rounded-[0.85rem] border border-white/12 bg-black/18 px-3 py-2 text-xs font-bold text-slate-200"
+                      >
+                        계속 진행
+                      </Motion.button>
+                      <Motion.button
+                        data-testid="quest-board-abandon-confirm"
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => {
+                          actions.abandonQuest(entry.id);
+                          setConfirmAbandonQuestId(null);
+                        }}
+                        className="min-h-[44px] rounded-[0.85rem] border border-rose-300/28 bg-rose-300/12 px-3 py-2 text-xs font-bold text-rose-100"
+                      >
+                        포기 확정
+                      </Motion.button>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="shrink-0 rounded-[0.85rem] border border-white/8 bg-black/18 px-4 py-3 font-readable text-[11px] text-slate-300">진행 중</div>
+                  <div className="flex min-h-[44px] items-center justify-between gap-3 border-t border-white/8 pt-3">
+                    <div className="font-readable text-[11px] text-slate-300">진행 중</div>
+                    <Motion.button
+                      data-testid="quest-board-abandon-mission"
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setConfirmAbandonQuestId(entry.id)}
+                      className="min-h-[44px] rounded-[0.85rem] border border-rose-300/20 bg-rose-300/8 px-4 py-2 text-xs font-bold text-rose-100/88"
+                    >
+                      임무 포기
+                    </Motion.button>
+                  </div>
                 )}
               </div>
             </QuestRowShell>

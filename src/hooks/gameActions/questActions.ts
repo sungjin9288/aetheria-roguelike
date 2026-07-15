@@ -27,6 +27,32 @@ export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
             addLog('event', MSG.QUEST_ACCEPTED(qData.title));
         },
 
+        abandonQuest: (qId: any) => {
+            if (DB.MAPS[player.loc]?.type !== 'safe') return addLog('error', MSG.QUEST_ABANDON_TOWN_ONLY);
+
+            const activeQuest = player.quests.find((quest: any) => quest.id === qId);
+            if (!activeQuest) return;
+
+            const questData = activeQuest.isBounty
+                ? activeQuest
+                : DB.QUESTS.find((quest: any) => quest.id === qId);
+            if (!questData) return;
+            if (activeQuest.progress >= questData.goal) {
+                return addLog('info', MSG.QUEST_ABANDON_REWARD_PENDING);
+            }
+
+            dispatch({
+                type: AT.SET_PLAYER,
+                payload: (p: any) => ({
+                    ...p,
+                    quests: p.quests.filter((quest: any) => quest.id !== qId),
+                })
+            });
+            addLog('event', activeQuest.isBounty
+                ? MSG.BOUNTY_ABANDONED
+                : MSG.QUEST_ABANDONED(questData.title));
+        },
+
         lootGrave: () => {
             const gravesAtLoc = getGravesAtLoc(grave, player.loc);
             if (gravesAtLoc.length === 0) return;

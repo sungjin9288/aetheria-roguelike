@@ -1,5 +1,21 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-16: added a safe recovery path for unwanted long missions):
+- Added town-board abandonment for incomplete missions after the physical iPhone session exposed that an accidentally accepted ten-kill mission could not be removed.
+- Added an inline two-step confirmation that states the exact progress loss and keeps both cancel and confirm actions at mobile touch size.
+- Protected completed mission rewards from abandonment and preserved daily bounty issuance state so abandoning a bounty cannot reroll it on the same day.
+- Added deterministic unit coverage plus an end-to-end cancel-and-confirm flow, and visually reviewed the 390x844 confirmation state in `playtest-artifacts/mobile-archive-content-first/quest-abandon-confirmation.png`.
+
+Verification:
+- Focused quest operations -> 17/17 pass.
+- `npm run verify:full` -> type-check, lint, unit 3299/3299, build guard, desktop/mobile smoke, and Playwright e2e 25/25 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 02:21:11 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-16 02:21:18 KST`, `1.1.0 (2)`).
+- Latest physical iPhone delivery -> install URL `file:///private/var/containers/Bundle/Application/09A71B98-C889-4EE6-9B00-CDCC0791F11D/App.app/`; foreground pid `5533` remained alive after the 60-second hold.
+
+Next action:
+- Unlock the Mac session to capture the latest mission recommendation and abandon confirmation on iPhone Mirroring. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain the release blockers.
+
 Done (2026-07-16: closed physical iPhone RC QA and corrected beginner mission recommendations):
 - Confirmed the latest physical-iPhone reward action by claiming the first story reward directly from the tracker: level stayed at 1, experience moved from `47/200` to `107/200`, gold moved from `319` to `519`, and the completed quest disappeared.
 - Confirmed equipped slots render the shared item art without clipping or overlap.
