@@ -96,7 +96,8 @@ export const syncQuestProgress = (player: Player, enemyName: any, questCatalog: 
 
         const exactMatch = questData.target === normalizedEnemyName;
         const prefixedMatch = normalizedEnemyName.includes(questData.target);
-        if (exactMatch || prefixedMatch) {
+        const isTargetLocation = !questData.location || player.loc === questData.location;
+        if (isTargetLocation && (exactMatch || prefixedMatch)) {
             return { ...quest, progress: Math.min(questData.goal, quest.progress + 1) };
         }
 

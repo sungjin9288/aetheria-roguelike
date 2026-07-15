@@ -65,9 +65,9 @@ const RAW_QUESTS: Quest[] = [
     { id: 26, title: '피라미드의 비밀',  desc: '미라 15마리 처치',        target: '미라',        goal: 15, reward: { exp: 1500, gold: 2000, item: '저주해제 주문서' }, minLv: 20 },
     { id: 27, title: '얼음 성채 정복',   desc: '얼음 거인 5마리 처치',    target: '얼음 거인',   goal: 5,  reward: { exp: 2000, gold: 2500, item: '냉기의 결정' }, minLv: 20 },
     { id: 28, title: '설원 수호자',      desc: '서리 늑대 10마리 처치',   target: '서리 늑대',   goal: 10, reward: { exp: 1800, gold: 2200 },            minLv: 22 },
-    { id: 135, title: '사막 도적단 소탕', desc: '사막 도적 8마리 처치',    target: '사막도적',   goal: 8,  reward: { exp: 2000, gold: 2600, item: '그림자 망토' },  minLv: 23 },
-    { id: 136, title: '고대 유적 탐사',   desc: '고대 골렘 6마리 처치',    target: '황금 골렘',   goal: 6,  reward: { exp: 2400, gold: 3000, item: '마나 결정' },  minLv: 25 },
-    { id: 137, title: '보물고 침입자',    desc: '보물고 수호자 5마리 처치', target: '황금 골렘', goal: 5, reward: { exp: 2600, gold: 3500, item: '잊혀진 열쇠' },   minLv: 26 },
+    { id: 135, title: '사막도적 소탕',     desc: '피라미드의 사막도적 8명을 처치하세요',      target: '사막도적', location: '피라미드', goal: 8, reward: { exp: 2000, gold: 2600, item: '그림자 망토' }, minLv: 23 },
+    { id: 136, title: '황금 골렘 격파',   desc: '고대 보물고의 황금 골렘 6기를 파괴하세요', target: '황금 골렘', location: '고대 보물고', goal: 6, reward: { exp: 2400, gold: 3000, item: '마나 결정' }, minLv: 25 },
+    { id: 137, title: '보물고 미믹 퇴치', desc: '고대 보물고의 미믹 5마리를 처치하세요',    target: '미믹', location: '고대 보물고', goal: 5, reward: { exp: 2600, gold: 3500, item: '잊혀진 열쇠' }, minLv: 26 },
     { id: 29, title: '탑 수호자 격파',   desc: '탑 수호자 5마리 처치',    target: '탑 수호자',   goal: 5,  reward: { exp: 2200, gold: 2800, item: '현자의 예복' }, minLv: 25 },
     { id: 30, title: '영웅의 길 (2차)',  desc: '레벨 30 달성',           target: 'Level',       goal: 30, reward: { exp: 0,    gold: 5000 },            minLv: 29 },
 
@@ -99,36 +99,36 @@ const RAW_QUESTS: Quest[] = [
     { id: 111, title: '멧돼지 사냥 (대규모)',    desc: '평원의 멧돼지를 대규모로 사냥하세요',             target: '멧돼지',        goal: 8,  reward: { exp: 250,   gold: 600 },                          minLv: 3 },
     { id: 112, title: '머맨 토벌',              desc: '호수에 출몰하는 머맨을 처치하세요',               target: '머맨',          goal: 8,  reward: { exp: 300,   gold: 700 },                          minLv: 5 },
     { id: 113, title: '유령 기사 퇴치',         desc: '폐허를 떠도는 유령 기사를 처치하세요',            target: '유령 기사',     goal: 6,  reward: { exp: 350,   gold: 800 },                          minLv: 5 },
-    { id: 114, title: '광석 골렘 파괴',         desc: '광산의 광석 골렘을 파괴하세요',                   target: '광석골렘',      goal: 8,  reward: { exp: 400,   gold: 900 },                          minLv: 8 },
+    { id: 114, title: '광석골렘 파괴',          desc: '버려진 광산의 광석골렘 8기를 파괴하세요',          target: '광석골렘', location: '버려진 광산', goal: 8, reward: { exp: 400, gold: 900 }, minLv: 8 },
 
     // 중반 (Lv 10-25)
     { id: 115, title: '수정 골렘 정화',         desc: '동굴의 수정 골렘을 정화하세요',                   target: '수정 골렘',     goal: 10, reward: { exp: 600,   gold: 1200 },                         minLv: 12 },
-    { id: 116, title: '동굴 트롤 소탕',         desc: '어둠의 동굴에서 트롤을 소탕하세요',               target: '동굴 트롤',     goal: 8,  reward: { exp: 700,   gold: 1500 },                         minLv: 10 },
+    { id: 116, title: '동굴 트롤 소탕',         desc: '어둠의 동굴에서 동굴 트롤 8마리를 처치하세요',     target: '동굴 트롤', location: '어둠의 동굴', goal: 8, reward: { exp: 700, gold: 1500 }, minLv: 10 },
     { id: 117, title: '암흑 마법사 처단',       desc: '위험한 암흑 마법사를 처단하세요',                 target: '암흑 마법사',   goal: 6,  reward: { exp: 800,   gold: 1800 },                         minLv: 10 },
-    { id: 118, title: '화염 정령 소멸',         desc: '화염의 협곡에서 화염 정령을 소멸시키세요',         target: '화염 정령',     goal: 10, reward: { exp: 900,   gold: 2000 },                         minLv: 15 },
-    { id: 119, title: '하피 격퇴',              desc: '고원의 하피를 격퇴하세요',                        target: '광풍의 하피',   goal: 8,  reward: { exp: 750,   gold: 1600 },                         minLv: 14 },
-    { id: 120, title: '그리핀 사냥',            desc: '고원의 그리핀을 사냥하세요',                      target: '고원 그리핀',   goal: 5,  reward: { exp: 1000,  gold: 2200 },                         minLv: 14 },
+    { id: 118, title: '화염 정령 소멸',         desc: '화염의 협곡에서 화염 정령 10마리를 처치하세요',   target: '화염 정령', location: '화염의 협곡', goal: 10, reward: { exp: 900, gold: 2000 }, minLv: 15 },
+    { id: 119, title: '광풍의 하피 격퇴',       desc: '바람의 고원에서 광풍의 하피 8마리를 처치하세요',  target: '광풍의 하피', location: '바람의 고원', goal: 8, reward: { exp: 750, gold: 1600 }, minLv: 14 },
+    { id: 120, title: '고원 그리핀 사냥',       desc: '바람의 고원에서 고원 그리핀 5마리를 처치하세요',  target: '고원 그리핀', location: '바람의 고원', goal: 5, reward: { exp: 1000, gold: 2200 }, minLv: 14 },
     { id: 121, title: '하수도 악어 퇴치',       desc: '하수도의 거대 악어를 퇴치하세요',                 target: '하수도 악어',   goal: 10, reward: { exp: 650,   gold: 1400 },                         minLv: 10 },
 
     // 고급 (Lv 25-40)
-    { id: 122, title: '빙결 정령 파괴',         desc: '얼음 성채의 빙결 정령을 파괴하세요',              target: '서리 정령',     goal: 12, reward: { exp: 1500,  gold: 3000 },                         minLv: 25 },
-    { id: 123, title: '미라 토벌',              desc: '피라미드의 미라를 토벌하세요',                    target: '미라',          goal: 10, reward: { exp: 1800,  gold: 3500 },                         minLv: 25 },
-    { id: 124, title: '강철 자동인형 해체',     desc: '기계 폐도의 자동인형을 해체하세요',               target: '강철 자동인형', goal: 10, reward: { exp: 2000,  gold: 4000 },                         minLv: 30 },
-    { id: 125, title: '가고일 격파',            desc: '고대 마법 탑의 가고일을 격파하세요',              target: '유령 기사',        goal: 8,  reward: { exp: 1900,  gold: 3800 },                         minLv: 28 },
-    { id: 126, title: '그림자 암살자 추적',     desc: '암흑 성에 숨어있는 암살자를 추적 처치하세요',      target: '다크 엘프', goal: 6,  reward: { exp: 2500,  gold: 5000,  item: '암살자의 단검' }, minLv: 35 },
+    { id: 122, title: '얼음 정령 파괴',         desc: '북부 설원에서 얼음 정령 12마리를 처치하세요',      target: '얼음 정령', location: '북부 설원', goal: 12, reward: { exp: 1500, gold: 3000 }, minLv: 25 },
+    { id: 123, title: '미라 토벌',              desc: '피라미드의 미라 10마리를 처치하세요',              target: '미라', location: '피라미드', goal: 10, reward: { exp: 1800, gold: 3500 }, minLv: 25 },
+    { id: 124, title: '강철 자동인형 해체',     desc: '기계 폐도의 강철 자동인형 10기를 해체하세요',     target: '강철 자동인형', location: '기계 폐도', goal: 10, reward: { exp: 2000, gold: 4000 }, minLv: 30 },
+    { id: 125, title: '마법 인형 격파',         desc: '고대 마법 탑의 마법 인형 8기를 파괴하세요',        target: '마법 인형', location: '고대 마법 탑', goal: 8, reward: { exp: 1900, gold: 3800 }, minLv: 28 },
+    { id: 126, title: '그림자 사냥꾼 추적',     desc: '지하 미궁의 그림자 사냥꾼 6명을 처치하세요',       target: '그림자 사냥꾼', location: '지하 미궁', goal: 6, reward: { exp: 2500, gold: 5000, item: '암살자의 단검' }, minLv: 44 },
 
     // 최종 (Lv 40+)
-    { id: 127, title: '심해 대사 처치',         desc: '심해 회랑의 거대 뱀을 처치하세요',                target: '심연의 파수꾼',     goal: 8,  reward: { exp: 4000,  gold: 8000 },                         minLv: 40 },
-    { id: 128, title: '에테르 골렘 분쇄',       desc: '에테르 관문의 골렘을 분쇄하세요',                 target: '에테르 거인',   goal: 6,  reward: { exp: 5000,  gold: 10000 },                        minLv: 45 },
-    { id: 129, title: '차원 보행자 소멸',       desc: '차원의 틈새에서 나타나는 보행자를 소멸시키세요',    target: '차원 보병',   goal: 5,  reward: { exp: 6000,  gold: 12000 },                        minLv: 45 },
+    { id: 127, title: '망각의 나가 처치',       desc: '심해 회랑의 망각의 나가 8마리를 처치하세요',       target: '망각의 나가', location: '심해 회랑', goal: 8, reward: { exp: 4000, gold: 8000 }, minLv: 52 },
+    { id: 128, title: '에테르 거인 분쇄',       desc: '붕괴된 마법 요새의 에테르 거인 6기를 처치하세요', target: '에테르 거인', location: '붕괴된 마법 요새', goal: 6, reward: { exp: 5000, gold: 10000 }, minLv: 62 },
+    { id: 129, title: '차원 균열체 소멸',       desc: '차원의 틈새에서 차원 균열체 5개를 소멸시키세요',   target: '차원 균열체', location: '차원의 틈새', goal: 5, reward: { exp: 6000, gold: 12000 }, minLv: 75 },
     { id: 130, title: '리치 재토벌',            desc: '되살아난 리치를 다시 한번 처치하세요',             target: '리치',          goal: 3,  reward: { exp: 7000,  gold: 15000, item: '혼돈의 로드' },   minLv: 40 },
-    { id: 131, title: '죽음의 기사 토벌',       desc: '마왕성의 죽음의 기사를 토벌하세요',               target: '타락 기사',   goal: 5,  reward: { exp: 4500,  gold: 9000 },                         minLv: 42 },
+    { id: 131, title: '데스나이트 토벌',        desc: '암흑 성의 데스나이트 5명을 처치하세요',            target: '데스나이트', location: '암흑 성', goal: 5, reward: { exp: 4500, gold: 9000 }, minLv: 42 },
 
     // 신규 지역 — 세계수 숲 / 고대 신전 도시 / 차원의 균열 전초기지 (Lv 33-55)
-    { id: 140, title: '세계수 수호자 사냥',     desc: '세계수 숲의 수호자를 처치하세요',                  target: '세계수 수호자', goal: 8,  reward: { exp: 3000,  gold: 5000 },                         minLv: 33 },
+    { id: 140, title: '세계수 수호자 사냥',     desc: '세계수 숲의 세계수 수호자 8명을 처치하세요',       target: '세계수 수호자', location: '세계수 숲', goal: 8, reward: { exp: 3000, gold: 5000 }, minLv: 38 },
     { id: 141, title: '자연의 정령 정화',       desc: '타락한 자연의 정령을 정화하세요',                  target: '자연의 정령',   goal: 12, reward: { exp: 2500,  gold: 4500 },                         minLv: 33 },
     { id: 142, title: '[보스] 타락한 세계수 영혼 토벌', desc: '세계수를 오염시킨 타락한 영혼을 토벌하세요', target: '타락한 세계수 영혼', goal: 1, reward: { exp: 10000, gold: 15000, item: '세계수의 지팡이' }, minLv: 35 },
-    { id: 143, title: '신전 경비병 소탕',       desc: '고대 신전 도시의 경비병을 소탕하세요',             target: '신전 경비병',   goal: 10, reward: { exp: 5000,  gold: 9000 },                         minLv: 42 },
+    { id: 143, title: '신전 경비병 소탕',       desc: '고대 신전 도시의 신전 경비병 10명을 처치하세요',  target: '신전 경비병', location: '고대 신전 도시', goal: 10, reward: { exp: 5000, gold: 9000 }, minLv: 50 },
     { id: 144, title: '시간 파편체 분쇄',       desc: '신전에 출몰하는 시간 파편체를 분쇄하세요',          target: '시간 파편체',   goal: 8,  reward: { exp: 5500,  gold: 10000 },                        minLv: 42 },
     { id: 145, title: '[보스] 수호신의 사도 처치', desc: '신전 도시를 지배하는 사도를 처치하세요',          target: '수호신의 사도', goal: 1,  reward: { exp: 15000, gold: 22000, item: '성스러운 창' }, minLv: 45 },
     { id: 146, title: '차원 보병 격멸',         desc: '균열 전초기지의 차원 보병을 격멸하세요',            target: '차원 보병',     goal: 8,  reward: { exp: 6000,  gold: 11000 },                        minLv: 47 },
@@ -138,7 +138,7 @@ const RAW_QUESTS: Quest[] = [
     // 보스 챌린지
     { id: 132, title: '[보스] 하수도 여왕 처치',      desc: '하수도의 여왕을 처치하세요',       target: '하수도의 여왕',     goal: 1, reward: { exp: 2000,  gold: 3000 },                         minLv: 10 },
     { id: 133, title: '[보스] 전초기지 사령관 격파',  desc: '전초기지 사령관을 격파하세요',     target: '전초기지 사령관',   goal: 1, reward: { exp: 3000,  gold: 5000 },                         minLv: 18 },
-    { id: 134, title: '[보스] 기계 장군 파괴',        desc: '기계 폐도의 장군을 파괴하세요',   target: '기계 장군',         goal: 1, reward: { exp: 6000,  gold: 12000, item: '기계 코어' },  minLv: 35 },
+    { id: 134, title: '[보스] 기계 장군 파괴', desc: '기계 폐도의 기계 장군을 파괴하세요', target: '기계 장군', location: '기계 폐도', goal: 1, reward: { exp: 6000, gold: 12000, item: '기계 코어' }, minLv: 35 },
 
     // ── 직업/빌드 특화 퀘스트 ────────────────────────────────────────────────
     { id: 60, title: '대장장이의 의뢰',      type: 'craft',           desc: '아이템 3개 제작',              target: 'crafts',             goal: 3,  reward: { exp: 3000,  gold: 5000,  item: '강화 재료' }, minLv: 10 },
@@ -163,18 +163,18 @@ const RAW_QUESTS: Quest[] = [
 
     // ── 스토리 퀘스트 ─────────────────────────────────────────────────────────
     // 레벨은 도전 가능 시점, prerequisiteQuestId는 실제 서사 순서를 책임진다.
-    // 기계 폐도(Lv28)를 거쳐 얼음 권역(Lv30)으로 이어진 뒤 마왕 추적이 시작된다.
+    // 기계 폐도(Lv28)를 거쳐 얼음 권역(Lv35)으로 이어진 뒤 마왕 추적이 시작된다.
     { id: 80, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다',      type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1,  reward: { exp: 100, gold: 200 },            minLv: 1 },
     { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', location: '잊혀진 폐허', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
-    { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 처치', target: '화염 정령',   goal: 5,  reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
-    { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙결의 마녀의 정체를 밝혀라',    target: '빙결의 마녀', goal: 1,  reward: { exp: 8000, gold: 8000, item: '냉기의 결정' },    minLv: 30, prerequisiteQuestId: 84 },
-    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도의 진실을 파헤쳐라',    target: '증기 골렘',   goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 28, prerequisiteQuestId: 82 },
-    { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕의 사도를 통해 마왕의 계획을 알아라', target: '마왕의 사도', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 40, prerequisiteQuestId: 83 },
-    { id: 86, title: '[스토리] 에테르의 균열', desc: '에테르 관문의 균열을 조사하라', target: '에테르 파편체', goal: 10, reward: { exp: 20000, gold: 25000, item: '마나 결정' }, minLv: 50, prerequisiteQuestId: 85 },
-    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕을 쓰러뜨리고 세계를 구하라', target: '마왕',      goal: 1,  reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 50, prerequisiteQuestId: 86 },
+    { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 5마리를 처치한다', target: '화염 정령', location: '화염의 협곡', goal: 5, reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
+    { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙하 심연에서 빙결의 마녀를 처치해 저주의 정체를 밝힌다', target: '빙결의 마녀', location: '빙하 심연', goal: 1, reward: { exp: 8000, gold: 8000, item: '냉기의 결정' }, minLv: 35, prerequisiteQuestId: 84 },
+    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도에서 증기 골렘 10기를 쓰러뜨리고 진실을 밝힌다', target: '증기 골렘', location: '기계 폐도', goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 28, prerequisiteQuestId: 82 },
+    { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕성에서 마왕의 사도 5명을 처치해 마왕의 계획을 알아낸다', target: '마왕의 사도', location: '마왕성', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 48, prerequisiteQuestId: 83 },
+    { id: 86, title: '[스토리] 에테르의 균열', desc: '에테르 관문에서 에테르 파편체 10개를 제거해 균열을 조사한다', target: '에테르 파편체', location: '에테르 관문', goal: 10, reward: { exp: 20000, gold: 25000, item: '마나 결정' }, minLv: 68, prerequisiteQuestId: 85 },
+    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕성에서 마왕을 쓰러뜨리고 세계를 구한다', target: '마왕', location: '마왕성', goal: 1, reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 50, prerequisiteQuestId: 86 },
 
     // ── 심연 퀘스트 라인 ─────────────────────────────────────────────────────
-    { id: 88, title: '[심연] 심연으로의 첫 발걸음', desc: '혼돈의 심연에서 처음 전투 승리', target: '혼돈의 화신', goal: 1, reward: { exp: 30000, gold: 30000, item: '마나 결정' }, minLv: 55 },
+    { id: 88, title: '[심연] 심연으로의 첫 발걸음', desc: '혼돈의 심연에서 혼돈의 화신을 처치한다', target: '혼돈의 화신', location: '혼돈의 심연', goal: 1, reward: { exp: 30000, gold: 30000, item: '마나 결정' }, minLv: 55 },
     { id: 89, title: '[심연] 혼돈의 문지기',        desc: '혼돈의 수호자(10층)를 처치하라', target: '혼돈의 수호자', goal: 1, reward: { exp: 60000, gold: 60000, item: '영웅의 물약' }, minLv: 60 },
     { id: 95, title: '[심연] 심연의 절반',          desc: '심연의 파수꾼(20층)을 쓰러뜨려라', target: '심연의 파수꾼', goal: 1, reward: { exp: 100000, gold: 100000, item: '수호의 물약' }, minLv: 65 },
     { id: 96, title: '[심연] 공허의 문턱',          desc: '무한의 화신(50층)을 정복하라', target: '무한의 화신', goal: 1, reward: { exp: 200000, gold: 200000, item: '마나 결정' }, minLv: 70 },
@@ -197,15 +197,15 @@ const RAW_QUESTS: Quest[] = [
     { id: 103, title: '레벨 70 달성',       desc: '레벨 70 달성 — 전설의 영역',  target: 'Level', goal: 70, reward: { exp: 0, gold: 50000, item: '영웅의 물약' }, minLv: 69 },
     { id: 104, title: '레벨 80 달성',       desc: '레벨 80 달성 — 초월의 경지',  target: 'Level', goal: 80, reward: { exp: 0, gold: 100000, item: '영웅의 물약' }, minLv: 79 },
 
-    // ── Lv50+ 확장 퀘스트 ────────────────────────────────────────────────────
-    // Lv50-60 킬 퀘스트 (4개)
-    { id: 105, title: '에테르 폐허 정화',       desc: '에테르 방랑자 10마리 처치',       target: '에테르 잔류체',   goal: 10, reward: { exp: 3000,  gold: 2000 },  minLv: 50 },
-    { id: 106, title: '차원의 포식자 사냥',     desc: '차원의 포식자 8마리 처치',        target: '차원 포식자',   goal: 8,  reward: { exp: 3500,  gold: 2500 },  minLv: 50 },
-    { id: 107, title: '공허의 감시자 제거',     desc: '공허의 감시자 10마리 처치',       target: '공허 감시병',   goal: 10, reward: { exp: 4000,  gold: 3000 },  minLv: 55 },
-    { id: 108, title: '허무의 기사단 섬멸',     desc: '허무의 기사 12마리 처치',         target: '허무 집행관',     goal: 12, reward: { exp: 4500,  gold: 3500 },  minLv: 55 },
-    // Lv60-75 보스 퀘스트 (3개)
-    { id: 109, title: '에테르 심판자 토벌',     desc: '에테르 심판자 처치',              target: '에테르 드래곤',   goal: 1,  reward: { exp: 8000,  gold: 5000 },  minLv: 60 },
-    { id: 150, title: '공허의 대행자 격파',     desc: '공허의 대행자 처치',              target: '공허 집행관',   goal: 1,  reward: { exp: 10000, gold: 7000 },  minLv: 65 },
+    // ── Lv65+ 확장 퀘스트 ────────────────────────────────────────────────────
+    // Lv65-70 킬 퀘스트 (4개)
+    { id: 105, title: '에테르 폐허 정화',       desc: '에테르 폐허의 에테르 방랑자 10명을 처치한다', target: '에테르 방랑자', location: '에테르 폐허', goal: 10, reward: { exp: 3000, gold: 2000 }, minLv: 65 },
+    { id: 106, title: '차원의 포식자 사냥',     desc: '공허의 회랑에서 차원의 포식자 8마리를 처치한다', target: '차원의 포식자', location: '공허의 회랑', goal: 8, reward: { exp: 3500, gold: 2500 }, minLv: 70 },
+    { id: 107, title: '공허의 감시자 제거',     desc: '공허의 회랑에서 공허의 감시자 10명을 처치한다', target: '공허의 감시자', location: '공허의 회랑', goal: 10, reward: { exp: 4000, gold: 3000 }, minLv: 70 },
+    { id: 108, title: '허무의 기사단 섬멸',     desc: '공허의 회랑에서 허무의 기사 12명을 처치한다', target: '허무의 기사', location: '공허의 회랑', goal: 12, reward: { exp: 4500, gold: 3500 }, minLv: 70 },
+    // Lv65-70 보스 퀘스트 (3개)
+    { id: 109, title: '에테르 심판자 토벌',     desc: '에테르 폐허의 에테르 심판자를 처치한다', target: '에테르 심판자', location: '에테르 폐허', goal: 1, reward: { exp: 8000, gold: 5000 }, minLv: 65 },
+    { id: 150, title: '공허의 대행자 격파',     desc: '공허의 회랑에서 공허의 대행자를 처치한다', target: '공허의 대행자', location: '공허의 회랑', goal: 1, reward: { exp: 10000, gold: 7000 }, minLv: 70 },
     { id: 151, title: '종말의 기사 정복',       desc: '종말의 기사 처치',                target: '종말의 기사',     goal: 1,  reward: { exp: 15000, gold: 10000 }, minLv: 70 },
     // Lv70+ 도전 퀘스트 (3개)
     { id: 152, title: '에테르 폐허 완전 탐험',  desc: '에테르 폐허 20회 탐험',           type: 'explore_count', target: 'explores', location: '에테르 폐허', goal: 20, reward: { exp: 0, gold: 5000, title: '에테르 탐험가' },   minLv: 70 },

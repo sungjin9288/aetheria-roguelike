@@ -5,8 +5,23 @@ import { readFile } from 'node:fs/promises';
 import { getAdventureGuidance, getQuestTracker } from '../src/utils/adventureGuide.js';
 import { getQuestBoardRecommendations } from '../src/utils/questOperations.js';
 import { createQuestActions } from '../src/hooks/gameActions/questActions.js';
+import { MAPS } from '../src/data/maps.js';
 import { MSG } from '../src/data/messages.js';
 import { QUESTS } from '../src/data/quests.js';
+
+const SYSTEM_QUEST_TARGETS = new Set([
+    'Level', 'level', 'kills', 'explores', 'deaths', 'rests', 'crafts', 'synths',
+    'bossKills', 'bountiesCompleted', 'discoveries', 'discoveryChains',
+    'maxKillStreak', 'prestige', 'relicCount', 'abyssRecord', 'demonKingSlain',
+    'escapes', 'signaturesDiscovered', 'signatureSetsCompleted', 'total_gold',
+    'arcane', 'crusher', 'dual', 'fortress', 'lowHpWins',
+]);
+
+const getMapSpawnPool = (map) => new Set([
+    ...(map.monsters || []),
+    ...(map.bossMonsters || []),
+    ...(typeof map.boss === 'string' ? [map.boss] : []),
+]);
 
 test('quest board surfaces story and build operations for a fresh run', () => {
     const player = {
@@ -141,6 +156,49 @@ test('location exploration missions declare exact destinations and surface them 
     assert.deepEqual(ruinsStory.targetMaps, ['잊혀진 폐허']);
     assert.equal(ruinsStory.brief.route, '잊혀진 폐허');
     assert.equal(ruinsStory.planSteps[2].value, '잊혀진 폐허 진입');
+});
+
+test('location quests match an existing map, its spawn pool, and its entry level', () => {
+    for (const quest of QUESTS.filter((entry) => entry.location)) {
+        const map = MAPS[quest.location];
+        assert.ok(map, `quest ${quest.id} location '${quest.location}' should exist`);
+
+        if (!SYSTEM_QUEST_TARGETS.has(quest.target)) {
+            assert.ok(
+                getMapSpawnPool(map).has(quest.target),
+                `quest ${quest.id} target '${quest.target}' should spawn in '${quest.location}'`,
+            );
+        }
+
+        if (Number.isFinite(map.level)) {
+            assert.ok(
+                quest.minLv >= map.level,
+                `quest ${quest.id} minLv ${quest.minLv} should reach '${quest.location}' at Lv${map.level}`,
+            );
+        }
+    }
+});
+
+test('monster quest copy names the actual target', () => {
+    for (const quest of QUESTS.filter((entry) => !SYSTEM_QUEST_TARGETS.has(entry.target))) {
+        assert.ok(
+            `${quest.title} ${quest.desc}`.includes(quest.target),
+            `quest ${quest.id} copy should name target '${quest.target}'`,
+        );
+    }
+});
+
+test('quest descriptions that name a map use the same destination', () => {
+    for (const quest of QUESTS) {
+        const namedMaps = Object.keys(MAPS).filter((mapName) => quest.desc.includes(mapName));
+        for (const mapName of namedMaps) {
+            assert.equal(
+                quest.location,
+                mapName,
+                `quest ${quest.id} description and destination should agree`,
+            );
+        }
+    }
 });
 
 test('quest acceptance records the current destination exploration count as its baseline', () => {

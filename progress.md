@@ -1,5 +1,21 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-16: aligned hunt copy, targets, destinations, and spawn rules):
+- Audited every static quest and corrected hunt missions whose player-facing title or description did not match the actual target or spawn destination.
+- Restored six endgame monsters to their original quest targets after later content updates made those monsters reachable again.
+- Added exact destinations and map-level gates to 33 story, regular, and boss hunts, then required matching victories to occur in the declared destination without resetting saved progress.
+- Added full-catalog contracts for target copy, destination existence, location spawn pools, map entry levels, and description-route agreement.
+
+Verification:
+- Focused quest contracts -> 129/129 pass.
+- `npm run verify:full` -> type-check, lint, unit 3315/3315, build guard, desktop/mobile smoke, and Playwright e2e 25/25 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 03:14:05 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-16 03:14:12 KST`, `1.1.0 (2)`).
+- Latest physical iPhone delivery -> install and post-install metadata passed at `file:///private/var/containers/Bundle/Application/39EC731B-A24B-4A7D-B3CD-FD9B33F1E7F0/App.app/`; launch and a direct retry were denied with CoreDevice `Locked`, so the 60-second hold remains open.
+
+Next action:
+- Unlock and keep the physical iPhone awake, then launch the already installed build and complete the 60-second hold. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate release blockers.
+
 Done (2026-07-16: aligned location exploration mission descriptions, routes, and progress):
 - Reproduced `[스토리] 폐허의 진실` completing from global exploration performed outside `잊혀진 폐허`, while its quest-board route showed `미답사 루트`.
 - Added exact locations to the four location-specific exploration missions and routed both the quest board and persistent tracker from the same location data.

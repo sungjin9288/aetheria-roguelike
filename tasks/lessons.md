@@ -37,6 +37,7 @@
 | 2026-07-15 | iOS device smoke가 잠긴 iPad의 install 전 DDI mount 실패를 긴 CoreDevice 원문으로만 종료함 | 잠금 handoff가 archive 설치 뒤 launch 실패에만 연결되어 metadata와 install 단계의 같은 오류를 분류하지 않았음 | 필수 device command는 단계와 무관하게 같은 진단 파일과 잠금·신뢰 분류를 사용하고, install 전 잠금이면 중복 install을 시도하지 않는다 |
 | 2026-07-15 | Android APK 설치 실패가 서명 충돌 가능성만 안내해 실제 AVD 저장 공간 부족을 바로 판단하기 어려웠음 | 수동 설치 절차와 generic error guidance만 있고 `adb install` 실패 유형을 release evidence로 분류하는 공통 경계가 없었음 | Android device smoke는 저장 공간 부족과 서명 충돌을 구분하고, 세이브를 보존하기 위해 앱 삭제나 data clear를 자동 수행하지 않는다 |
 | 2026-07-15 | iOS local export 안내는 존재하지 않는 파일을 가리키고 실제 설정은 승인 없이 App Store Connect upload를 요청할 수 있었음 | archive 생성, 로컬 IPA export, 외부 upload를 한 환경변수 경로로 처리하면서 destination과 provisioning 동작을 실행 전에 구분하지 않았음 | iOS 배포는 local export와 upload 설정을 분리하고, upload는 명시적 opt-in 없이는 archive 전에 차단하며 provisioning 갱신 옵션을 archive와 export에 동일하게 적용한다 |
+| 2026-07-16 | 여러 토벌 임무의 제목·설명·실제 target·스폰 지역이 서로 달라 지도를 따라가도 진행 의도를 예측하기 어려웠음 | 과거 미등록 몬스터를 임시 target으로 교체한 뒤 원래 몬스터가 추가되어도 복원하지 않았고, quest copy와 map spawn을 함께 검사하는 계약이 없었음 | 토벌 임무는 target, 설명, location, 지역 spawn pool, 입장 레벨을 하나의 데이터 계약으로 검증하고, 지정 지역 밖의 처치는 진행도로 인정하지 않는다 |
 
 ---
 
@@ -193,6 +194,10 @@
 ### R38: Make Location Objectives Use Location Progress
 - **Rule:** 특정 지역을 이름으로 요구하는 임무는 전역 탐험 통계가 아니라 지역별 카운터를 사용하고, 수락 시점의 카운터를 기준선으로 저장한다. 기존 활성 임무에 기준선이 없으면 저장된 진행도를 보존하는 기준선을 역산하며, 게시판과 상시 안내도 같은 지역 데이터를 목적지로 사용한다
 - **Rationale:** 설명과 실제 완료 조건이 다르면 플레이어는 지도를 따라갈 이유와 임무 신뢰를 동시에 잃는다. 전역 누적값을 그대로 사용하면 수락 즉시 완료되거나 다른 지역 행동이 목표 지역 진행으로 오인되고, 단순 초기화는 기존 세이브의 진행을 지운다
+
+### R39: Keep Hunt Copy, Target, And Spawn In One Contract
+- **Rule:** 토벌 임무는 실제 target 이름을 제목이나 설명에 명시하고, `location`이 있으면 해당 맵의 spawn pool과 입장 레벨까지 함께 검증한다. 전투 진행도는 target과 현재 location이 모두 일치할 때만 증가시키며, 기존 저장 progress는 감소시키지 않는다
+- **Rationale:** 임시 대체 target이나 잘못 적힌 지역이 남으면 플레이어는 안내를 따라가도 임무가 진행되지 않거나 다른 지역 전투가 목표로 계산되는 경험을 한다. copy, route, spawn, progress를 따로 관리하면 같은 결함이 콘텐츠 확장 때 반복된다
 
 ---
 

@@ -292,20 +292,14 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    * - 6 quests 발견 — quest 105/106/107/108/109/150이 spawn pool 미참여 monster
    *   타겟. cycle 173 baseline 보강과 같은 카테고리의 잠복 회귀.
    *
-   * 수정 (perl batch):
+   * 당시에는 spawn pool에 있던 대체 몬스터로 목표를 바꿨지만, 이후 콘텐츠 확장으로
+   * 원래 몬스터 6종이 정식 지역에 배치됐다. 플레이어가 읽는 제목·설명과 실제 목표를
+   * 다시 일치시키기 위해 원래 목표를 복원하고 지정 지역까지 함께 잠근다.
    *
-   * | Quest ID | 기존 target          | → 교체 (map-reachable)             |
-   * |----------|----------------------|------------------------------------|
-   * | 105      | 에테르 방랑자        | 에테르 잔류체 (에테르 폐허 monsters) |
-   * | 106      | 차원의 포식자        | 차원 포식자 (공허의 회랑 monsters/boss) |
-   * | 107      | 공허의 감시자        | 공허 감시병 (에테르 폐허 monsters) |
-   * | 108      | 허무의 기사          | 허무 집행관 (공허의 회랑 monsters) |
-   * | 109      | 에테르 심판자        | 에테르 드래곤 (에테르 관문 boss)   |
-   * | 150      | 공허의 대행자        | 공허 집행관 (에테르 관문 monsters) |
-   *
-   * cycle 164 quest target → MONSTERS 정합성 가드와 같이 lock — 두 단계:
+   * cycle 164 quest target → MONSTERS 정합성 가드와 같이 lock — 세 단계:
    * 1. monster name이 MONSTERS keys에 존재 (cycle 164).
    * 2. monster가 어떤 map의 spawn pool에 포함됨 (cycle 184, 본 사이클).
+   * 3. 지정 location이 있으면 해당 map의 spawn pool에 포함됨.
    */
 
   const SYSTEM_TARGETS = new Set([
@@ -347,14 +341,14 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
           `unreachable quest targets:\n  ${unreachable.join('\n  ')}`);
   });
 
-  test('cycle 184: 6 quest 매핑 명시 가드', () => {
+  test('restored endgame quests keep their original targets', () => {
       const findQuest = (id) => QUESTS.find((q) => q.id === id);
-      assert.equal(findQuest(105)?.target, '에테르 잔류체');
-      assert.equal(findQuest(106)?.target, '차원 포식자');
-      assert.equal(findQuest(107)?.target, '공허 감시병');
-      assert.equal(findQuest(108)?.target, '허무 집행관');
-      assert.equal(findQuest(109)?.target, '에테르 드래곤');
-      assert.equal(findQuest(150)?.target, '공허 집행관');
+      assert.equal(findQuest(105)?.target, '에테르 방랑자');
+      assert.equal(findQuest(106)?.target, '차원의 포식자');
+      assert.equal(findQuest(107)?.target, '공허의 감시자');
+      assert.equal(findQuest(108)?.target, '허무의 기사');
+      assert.equal(findQuest(109)?.target, '에테르 심판자');
+      assert.equal(findQuest(150)?.target, '공허의 대행자');
   });
 }
 

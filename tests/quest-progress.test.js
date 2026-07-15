@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { QUESTS } from '../src/data/quests.js';
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.js';
 import { syncQuestProgress } from '../src/utils/questProgress.js';
 
@@ -81,6 +82,27 @@ test('legacy location quests preserve saved progress and continue from the next 
     }).updatedQuests[0];
 
     assert.equal(continued.progress, 8);
+});
+
+test('monster quests count victories only in their declared destination', () => {
+    const activeQuest = { id: 119, progress: 3 };
+    const wrongRegion = syncQuestProgress({
+        level: 14,
+        loc: '화염의 협곡',
+        stats: {},
+        quests: [activeQuest],
+    }, '광풍의 하피', QUESTS).updatedQuests[0];
+
+    assert.equal(wrongRegion.progress, 3);
+
+    const targetRegion = syncQuestProgress({
+        level: 14,
+        loc: '바람의 고원',
+        stats: {},
+        quests: [wrongRegion],
+    }, '광풍의 하피', QUESTS).updatedQuests[0];
+
+    assert.equal(targetRegion.progress, 4);
 });
 
 test('each exploration immediately updates the current region counter and matching quest', () => {
