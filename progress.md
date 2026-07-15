@@ -1,5 +1,22 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-15: standardized physical-first Android delivery smoke):
+- Added `npm run android:device:smoke` to select one authorized physical device by default, install the chosen APK without clearing saves, cold-launch `MainActivity`, and prove process plus foreground survival for 60 seconds.
+- Added explicit no-device, unauthorized, multiple-device, emulator opt-in, insufficient-storage, and signature-conflict guidance, with a process-level mock `adb` regression test.
+- Updated the mobile release guide and timed playtest checklist so Android delivery uses the same repeatable entrypoint before the manual five-minute routine.
+
+Verification:
+- Focused Android smoke contracts -> 5/5 pass.
+- Actual no-device run and default emulator rejection -> expected guided failure.
+- Host-GPU `Medium_Phone_API_36.1` opt-in run -> install, launch, foreground pid `3559`, and same pid after a 5-second hold; prior level 1, experience `25/200`, and gold `300` save restored.
+- Visual evidence -> `playtest-artifacts/mobile-archive-content-first/android-device-smoke-hold.png` shows the restored `고요한 숲` session without layout corruption.
+- Final `npm run verify:full` -> type-check, lint, unit 3284/3284, build guard, desktop/mobile smoke, and Playwright e2e 22/22 pass.
+- `npm run mobile:doctor` -> iOS toolchain ready; Android release signing inputs remain missing. No Android device remains attached after the preflight.
+- Native app sources were unchanged, so the latest APK remains `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-15 13:58:59 KST`) and the latest archive remains `build/ios/Aetheria.xcarchive` (`2026-07-15 13:59:20 KST`).
+
+Next action:
+- Connect and authorize a physical Android, run the default 60-second smoke and timed five-minute routine, then provide release signing inputs. The physical iPhone connectivity/unlock QA and TestFlight upload also remain release-critical.
+
 Done (2026-07-14: unified shop, equipment, and inventory readability):
 - Replaced visible `CR / G / T / ATK / DEF / HP / MP / CRIT / 1H / 2H` labels with direct Korean commerce and stat language while preserving equipment calculations, internal fields, save data, and stable test ids.
 - Reworked the equipment summary for 390px screens: attack and defense use a stable two-column row, enhancement materials use a full-width row, and equipped slots use compact label-value rows instead of six narrow cards.

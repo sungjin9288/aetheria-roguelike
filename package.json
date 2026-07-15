@@ -23,6 +23,7 @@
     "cap:sync": "npm run build && npx cap sync",
     "android:sync": "npm run build && npx cap sync android",
     "android:debug": "bash scripts/android-gradle.sh assembleDebug",
+    "android:device:smoke": "bash scripts/android-device-smoke.sh",
     "android:release:apk": "bash scripts/android-gradle.sh assembleRelease",
     "android:release": "bash scripts/android-gradle.sh bundleRelease",
     "android:open": "npx cap open android",

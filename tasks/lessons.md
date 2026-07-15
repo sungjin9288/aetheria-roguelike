@@ -35,6 +35,7 @@
 | 2026-07-14 | 인증 지연 오프라인 모드에서 앱 재실행 시 전체 런이 초기화됨 | 오프라인 플레이를 허용하면서 저장은 Firestore에만 의존함 | 모바일 오프라인 플레이는 versioned local snapshot을 함께 유지하고, cloud 실패 때만 migration 후 복원하며 reset에서 제거한다 |
 | 2026-07-15 | Android headless 에뮬레이터에서 패널과 글자가 중복·누락되어 앱 레이아웃 회귀처럼 보임 | SwiftShader가 다수의 blur surface를 잘못 합성했으며 같은 APK를 host GPU로 실행하면 안정 프레임이 정상 렌더링됨 | Android 에뮬레이터 시각 QA는 host GPU로 재현성을 먼저 확인하고, 소프트웨어 렌더러 한정 증상은 실기기 회귀와 분리한다 |
 | 2026-07-15 | iOS device smoke가 잠긴 iPad의 install 전 DDI mount 실패를 긴 CoreDevice 원문으로만 종료함 | 잠금 handoff가 archive 설치 뒤 launch 실패에만 연결되어 metadata와 install 단계의 같은 오류를 분류하지 않았음 | 필수 device command는 단계와 무관하게 같은 진단 파일과 잠금·신뢰 분류를 사용하고, install 전 잠금이면 중복 install을 시도하지 않는다 |
+| 2026-07-15 | Android APK 설치 실패가 서명 충돌 가능성만 안내해 실제 AVD 저장 공간 부족을 바로 판단하기 어려웠음 | 수동 설치 절차와 generic error guidance만 있고 `adb install` 실패 유형을 release evidence로 분류하는 공통 경계가 없었음 | Android device smoke는 저장 공간 부족과 서명 충돌을 구분하고, 세이브를 보존하기 위해 앱 삭제나 data clear를 자동 수행하지 않는다 |
 
 ---
 
@@ -159,6 +160,10 @@
 ### R30: Diagnose Device State At Every Native Step
 - **Rule:** iOS 실기기 smoke는 metadata, install, post-install 확인, launch를 같은 오류 분류 경계로 실행하고, install 전 잠금이 확인되면 뒤 단계를 반복하지 않고 기기 잠금 해제 handoff로 종료한다
 - **Rationale:** CoreDevice는 Developer Disk Image를 요구하는 첫 명령부터 잠금으로 실패할 수 있으므로 launch만 진단하면 사용자가 같은 원인의 긴 로그와 실패를 여러 번 겪게 된다
+
+### R31: Keep Android Delivery Physical-First And Save-Preserving
+- **Rule:** Android release acceptance smoke는 승인된 물리 기기를 기본으로 선택하고 에뮬레이터는 명시적 preflight opt-in으로만 허용한다. 설치는 `adb install -r`로 세이브를 보존하며 실패 시 저장 공간과 서명 원인을 구분한 뒤 앱 삭제 결정은 사용자에게 남긴다
+- **Rationale:** 에뮬레이터 성공을 물리 기기 완료로 오인하거나 자동 재설치 과정에서 플레이어 세이브를 잃는 일을 막으면서, install·launch·foreground hold를 동일한 재현 경로로 검증해야 한다
 
 ---
 

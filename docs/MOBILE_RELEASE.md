@@ -24,6 +24,7 @@ npm run verify:full
 npm run cap:sync
 npm run mobile:doctor
 npm run android:debug
+npm run android:device:smoke
 AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive
 AETHERIA_DEVICECTL_TIMEOUT_SECONDS=180 AETHERIA_IOS_PROCESS_HOLD_SECONDS=60 npm run ios:device:smoke
 ```
@@ -123,6 +124,24 @@ APK가 필요하면:
 ```bash
 npm run android:release:apk
 ```
+
+### 2-4. 실기기 smoke
+
+USB debugging을 승인한 물리 Android를 연결한 뒤 debug APK의 설치, 실행, foreground 60초 유지를 확인합니다.
+
+```bash
+npm run android:debug
+npm run android:device:smoke
+```
+
+기기가 여러 대면 `AETHERIA_ANDROID_DEVICE_SERIAL`로 하나를 지정합니다. 기본 동작은 물리 기기만 허용하며, 에뮬레이터 보조 검증은 release acceptance와 섞이지 않도록 명시적으로 허용해야 합니다.
+
+```bash
+AETHERIA_ANDROID_DEVICE_SERIAL=<SERIAL> npm run android:device:smoke
+AETHERIA_ANDROID_ALLOW_EMULATOR=1 AETHERIA_ANDROID_PROCESS_HOLD_SECONDS=10 npm run android:device:smoke
+```
+
+기본 APK 외의 서명된 APK를 검증할 때는 `AETHERIA_ANDROID_APK_PATH`를 지정합니다. smoke는 기존 세이브를 보존하도록 `install -r`만 사용하며, 서명 충돌 시 앱 삭제를 자동으로 수행하지 않습니다.
 
 ## 3. iOS 릴리즈
 
