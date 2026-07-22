@@ -306,8 +306,8 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 4. `npm run verify:full`
 5. 390x844 screenshot과 geometry assertion
 6. `mobile:doctor -> cap:sync -> android:debug -> ios:archive`
-7. 물리 iPhone 60초 hold와 5분 fresh-save route
+7. 물리 iPhone 60초 hold, 5분 fresh-save route, 재료 보유 세이브 2분 정비 route
 
 ## 다음 결정점
 
-Slice 66은 browser와 native packaging, 최신 iPhone 설치까지 통과했다. 먼저 기기를 잠금 해제하고 화면을 켠 상태에서 `npm run ios:device:launch-smoke`의 60초 foreground hold를 다시 실행한다. 이어서 새 세이브 첫 5분에서 집중 임무, Map marker, 전투, 정상 귀환의 단일 정비 action, 강화 decision과 취소·확정, 제작·합성 결과 비교, milestone story, standard/high readability를 실제 터치로 확인한다. 이 evidence에서 정비 흐름을 방해하는 회귀가 없고 이야기 재확인 수요가 확인될 때만 Slice 67 Adventure Chronicle을 검토하며, 난이도·EXP·Map 재조정은 실기기 피드백 전에는 착수하지 않는다.
+Slice 66은 browser와 native packaging, 최신 iPhone 설치까지 통과했다. 먼저 기기를 잠금 해제하고 화면을 켠 상태에서 `npm run ios:device:launch-smoke`의 60초 foreground hold를 다시 실행한다. 이어서 신규 세이브 5분에서 자동 배정 첫 이야기, 집중 임무, Map marker, 전투, 정상 귀환의 단일 정비 action, milestone story, standard/high readability를 실제 터치로 확인한다. 강화 취소·확정과 제작·합성 결과 비교는 필요한 재료를 자연스럽게 얻기 어려운 첫 5분에 억지로 넣지 않고 재료 보유 QA 세이브의 별도 2분 정비 route에서 검증한다. 이 evidence에서 정비 흐름을 방해하는 회귀가 없고 이야기 재확인 수요가 확인될 때만 Slice 67 Adventure Chronicle을 검토하며, 난이도·EXP·Map 재조정은 실기기 피드백 전에는 착수하지 않는다.
