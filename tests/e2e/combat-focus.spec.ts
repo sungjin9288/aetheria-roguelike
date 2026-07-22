@@ -54,6 +54,29 @@ test.describe('Combat focus mode', () => {
         expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(1);
     });
 
+    test('기력이 부족한 기술은 필요한 비용을 보여주고 무반응 입력을 막는다', async ({ page }) => {
+        const seeded = await page.evaluate(() => (
+            window.__AETHERIA_TEST_API__?.seedCombatSkillReadinessScenario?.(2)
+        ));
+        expect(seeded).toBe(true);
+
+        const readiness = page.getByTestId('combat-skill-readiness');
+        const skillAction = page.getByTestId('combat-action-skill');
+        await expect(readiness).toHaveAttribute('data-skill-state', 'energy');
+        await expect(readiness).toContainText('강타 · 필요 기력 10 · 현재 2');
+        await expect(skillAction).toBeDisabled();
+        await expect(skillAction).toContainText('기력 부족');
+        await page.screenshot({ path: 'playtest-artifacts/mobile-combat-focus/skill-energy-blocked.png' });
+
+        const restored = await page.evaluate(() => (
+            window.__AETHERIA_TEST_API__?.seedCombatSkillReadinessScenario?.(10)
+        ));
+        expect(restored).toBe(true);
+        await expect(readiness).toHaveAttribute('data-skill-state', 'ready');
+        await expect(skillAction).toBeEnabled();
+        await expect(skillAction).toContainText('기술');
+    });
+
     test('보스 기믹과 대응도 행동을 밀어내지 않는다', async ({ page }) => {
         const seeded = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(true));
         expect(seeded).toBe(true);

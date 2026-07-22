@@ -1,5 +1,23 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-22: made combat skill availability match the engine rule):
+- Followed a fresh-save player route through the first relic, forest arrival, story choice, first combat, town return, and Quest Board instead of relying only on fixtures.
+- Reproduced a misleading combat state where `강타` still said `사용 가능` and accepted a no-op tap with 2 energy against a 10-energy cost.
+- Added one shared skill-readiness calculation for default cost, cooldown, current energy, status copy, forecast, and action availability.
+- Disabled unaffordable or cooling-down skill actions while keeping skill cycling available, then restored the action at the exact cost boundary.
+
+Verification:
+- Focused readiness and combat-forecast contracts -> 11/11 pass.
+- Focused mobile Combat E2E -> 4/4 pass; blocked-state rerun -> 1/1 pass.
+- `npm run verify:full` -> type-check, lint, unit 3362/3362, build guard, desktop/mobile smoke, and Playwright E2E 37/37 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Visual evidence: `playtest-artifacts/mobile-combat-focus/skill-energy-blocked.png` at 390x844.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-22 23:22:38 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-22 23:22:48 KST`, `1.1.0 (2)`).
+- Physical iPhone delivery installed the archive at `file:///private/var/containers/Bundle/Application/2F5B9780-5B06-4603-BFF7-D7B16B792314/App.app/` and confirmed metadata, but launch was denied because the device was locked.
+
+Next action:
+- Unlock the installed iPhone and run `npm run ios:device:launch-smoke`, then finish the physical fresh-save route through the early Lv3 pacing checkpoint. Android release signing, physical Android QA, Apple Distribution identity, and approved TestFlight upload remain separate blockers.
+
 Done (2026-07-22: reduced the first-town decision surface without removing access):
 - Connected the existing adventure guidance to one primary town action for first departure, mission selection, reward claim, recovery, class change, inventory cleanup, or exploration.
 - Limited the open town surface to the primary action plus at most three contextual or free actions, then moved the remaining rest, quest, shop, class, and crafting entries behind one visible `마을 시설` disclosure.

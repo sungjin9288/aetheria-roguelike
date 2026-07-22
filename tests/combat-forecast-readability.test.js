@@ -75,6 +75,21 @@ test('combat forecast exposes reward windows without changing combat logic', () 
     assert.equal(forecast.response, '재사용 대기');
 });
 
+test('combat forecast uses the engine default skill cost when the skill omits mp', () => {
+    const forecast = getCombatForecast({
+        player: { ...basePlayer, mp: 2 },
+        enemy: { ...baseEnemy, hp: 20 },
+        stats: { maxHp: 100 },
+        selectedSkill: { name: '기본 기술' },
+        skillCooldown: 0,
+        enemyTelegraph: { type: 'normal', label: '일반 공격 예상' },
+        combatConsumables: [],
+    });
+
+    assert.equal(forecast.response, '기력 아끼기');
+    assert.equal(forecast.window, '마무리권');
+});
+
 test('CombatPanel renders direct Korean forecast labels', async () => {
     const source = await readSrc('src/components/tabs/CombatPanel.tsx');
     // 리팩토링: 전투 예보 계산은 buildCombatView(combatView.ts)로 분리, 렌더는 CombatPanel.

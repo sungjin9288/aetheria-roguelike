@@ -487,6 +487,16 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
                 return true;
             },
+            seedCombatSkillReadinessScenario: (mp: any) => {
+                const er = engineRef.current;
+                if (er.gameState !== GS.COMBAT || !er.enemy) return false;
+
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { mp: Math.max(0, Number(mp) || 0) },
+                });
+                return true;
+            },
             // cycle 604: preset default 'paladin-plate' 제거 — 1 production
             //   caller (scripts/smoke-gameplay:305 seedAvatarScenario?.(preset.id))
             //   1 arg 명시 전달이라 default 도달 불가. cycle 593 dead exposure

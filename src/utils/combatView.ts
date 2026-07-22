@@ -2,6 +2,7 @@ import { getEnemyTacticalProfile } from './runProfileUtils';
 import { getCombatForecast } from './combatForecast';
 import { CombatEngine } from '../systems/CombatEngine';
 import { getBossSignatureDrops } from './bossSignatureHint.js';
+import { getCombatSkillReadiness } from './combatSkillReadiness';
 
 /**
  * CombatPanel의 파생 데이터(전술 프로파일·예측·콤보·전투 예보 등)를 한곳에서 계산한다.
@@ -9,6 +10,7 @@ import { getBossSignatureDrops } from './bossSignatureHint.js';
  * (리팩토링: 컴포넌트에서 새어나간 전투 계산 로직 분리 — 행동 보존.)
  */
 export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCooldown, mobile }: any) => {
+    const skillReadiness = getCombatSkillReadiness({ player, selectedSkill, skillCooldown });
     const tacticalProfile = enemy ? getEnemyTacticalProfile(enemy, stats) : null;
     const bossBriefLine = enemy?.isBoss
         ? tacticalProfile?.entryHint || tacticalProfile?.hint || tacticalProfile?.phaseHint
@@ -92,5 +94,6 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
         combatForecast,
         combatForecastCells,
         mobileCombatSignals,
+        skillReadiness,
     };
 };

@@ -39,6 +39,7 @@
 | 2026-07-15 | iOS local export 안내는 존재하지 않는 파일을 가리키고 실제 설정은 승인 없이 App Store Connect upload를 요청할 수 있었음 | archive 생성, 로컬 IPA export, 외부 upload를 한 환경변수 경로로 처리하면서 destination과 provisioning 동작을 실행 전에 구분하지 않았음 | iOS 배포는 local export와 upload 설정을 분리하고, upload는 명시적 opt-in 없이는 archive 전에 차단하며 provisioning 갱신 옵션을 archive와 export에 동일하게 적용한다 |
 | 2026-07-16 | 여러 토벌 임무의 제목·설명·실제 target·스폰 지역이 서로 달라 지도를 따라가도 진행 의도를 예측하기 어려웠음 | 과거 미등록 몬스터를 임시 target으로 교체한 뒤 원래 몬스터가 추가되어도 복원하지 않았고, quest copy와 map spawn을 함께 검사하는 계약이 없었음 | 토벌 임무는 target, 설명, location, 지역 spawn pool, 입장 레벨을 하나의 데이터 계약으로 검증하고, 지정 지역 밖의 처치는 진행도로 인정하지 않는다 |
 | 2026-07-21 | 양손무기와 방어구를 맞춰도 직업 세트가 `2/3`에서 멈춰 풀세트가 발동하지 않음 | 전설 각인 세트에는 양손 2피스 규칙을 적용했지만 직업 호환 세트는 장착 아이템 개수만 세어, 실제로 잠기는 보조 손 슬롯을 계산과 UI에서 누락했음 | 슬롯을 추가로 점유하는 장비는 모든 세트 계산에서 같은 기여도를 사용하고, 대체된 슬롯과 발동 근거를 장비 화면에 직접 표시한다 |
+| 2026-07-22 | 기력이 부족한 기술이 `사용 가능`으로 보이고 활성 버튼을 눌러도 아무 반응이 없었음 | engine은 기본 비용과 현재 기력을 검사했지만 CombatPanel은 cooldown만 표시하고 버튼 availability를 별도로 계산했음 | 플레이어가 누르는 전투 행동은 engine과 같은 비용·cooldown rule에서 상태를 파생하고, 실행 불가 사유를 버튼 옆에 보여 주며 enabled no-op 상태를 허용하지 않는다 |
 
 ---
 

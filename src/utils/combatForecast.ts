@@ -1,4 +1,5 @@
 import type { Monster, Player } from '../types/index.js';
+import { getCombatSkillReadiness } from './combatSkillReadiness';
 
 type ForecastTone = 'pressure' | 'advantage' | 'reward' | 'steady';
 
@@ -63,10 +64,10 @@ export const getCombatForecast = ({
     const enemyMaxHp = Math.max(1, enemy.maxHp || enemy.hp || 1);
     const playerHpRatio = clampRatio((player.hp || 0) / playerMaxHp);
     const enemyHpRatio = clampRatio((enemy.hp || 0) / enemyMaxHp);
-    const skillCost = selectedSkill?.mp || 0;
+    const skillReadiness = getCombatSkillReadiness({ player, selectedSkill, skillCooldown });
     const hasHpItem = hasItemType(combatConsumables, 'hp');
     const hasCureItem = hasItemType(combatConsumables, 'cure');
-    const canUseSkill = Boolean(selectedSkill && skillCooldown <= 0 && (player.mp || 0) >= skillCost);
+    const canUseSkill = skillReadiness.canUse;
     const skillName = getSkillShortName(selectedSkill);
     const skillHitsWeakness = Boolean(canUseSkill && selectedSkill?.type && enemy.weakness && selectedSkill.type === enemy.weakness);
     const skillIsDefensive = Boolean(canUseSkill && (selectedSkill?.type === 'buff' || DEFENSIVE_EFFECTS.has(selectedSkill?.effect)));
@@ -103,9 +104,9 @@ export const getCombatForecast = ({
         response = `${skillName} 마무리`;
     } else if (canUseSkill && selectedSkill?.effect === 'stun') {
         response = `${skillName} 차단`;
-    } else if (selectedSkill && skillCooldown > 0) {
+    } else if (skillReadiness.state === 'cooldown') {
         response = '재사용 대기';
-    } else if (selectedSkill && (player.mp || 0) < skillCost) {
+    } else if (skillReadiness.state === 'energy') {
         response = '기력 아끼기';
     }
 

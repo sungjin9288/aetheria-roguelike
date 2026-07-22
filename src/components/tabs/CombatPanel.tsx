@@ -73,6 +73,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
     combatForecast,
     combatForecastCells,
     mobileCombatSignals,
+    skillReadiness,
   } = buildCombatView({ player, enemy, stats, selectedSkill, skillCooldown, mobile });
 
   const handleAction = (key: any) => {
@@ -129,8 +130,13 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                 <div className="text-[10px] font-readable text-slate-300/64">
                   준비한 기술
                 </div>
-                <div className="truncate text-[12px] font-readable font-semibold text-white/94">
-                  {selectedSkill.name} · 기력 {selectedSkill.mp || 0} · {skillCooldown > 0 ? `${skillCooldown}턴 후` : '사용 가능'}
+                <div
+                  id="combat-skill-readiness"
+                  data-testid="combat-skill-readiness"
+                  data-skill-state={skillReadiness.state}
+                  className="truncate text-[12px] font-readable font-semibold text-white/94"
+                >
+                  {selectedSkill.name} · {skillReadiness.detailLabel}
                 </div>
               </div>
               <button
@@ -285,8 +291,11 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
         {ACTION_BUTTONS.map((action: any) => {
           const Icon = action.icon;
           const isDisabled = isAiThinking
-            || (action.key === 'skill' && !selectedSkill)
+            || (action.key === 'skill' && !skillReadiness.canUse)
             || (action.key === 'item' && combatConsumables.length === 0);
+          const actionLabel = action.key === 'skill'
+            ? skillReadiness.buttonLabel
+            : action.mobileLabel || action.label;
 
           return (
             <Motion.button
@@ -294,6 +303,8 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
               type="button"
               data-testid={`combat-action-${action.key}`}
               aria-expanded={action.key === 'item' ? itemsOpen : undefined}
+              aria-describedby={action.key === 'skill' && selectedSkill ? 'combat-skill-readiness' : undefined}
+              title={action.key === 'skill' && !skillReadiness.canUse ? skillReadiness.buttonLabel : undefined}
               whileTap={{ scale: 0.95 }}
               disabled={isDisabled}
               onClick={() => handleAction(action.key)}
@@ -303,7 +314,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                 <Icon size={13} className={action.key === 'swap' ? 'transition-transform group-hover:rotate-180' : ''} />
               </span>
               <span className="text-[12px] font-readable tracking-normal text-white/94">
-                {action.mobileLabel || action.label}
+                {actionLabel}
               </span>
             </Motion.button>
           );
