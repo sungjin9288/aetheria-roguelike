@@ -5,15 +5,15 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 ## 결론
 
-기존 경쟁작 계획의 `Map -> Combat -> Quest -> Equipment -> Encounter Art`는 Slice 53~57에서 모두 구현됐다. 현재 Aetheria에 필요한 다음 변화는 새 메뉴나 통화를 늘리는 것이 아니라, 이미 존재하는 퀘스트·탐험·전투·전리품·마을 정비를 하나의 반복 가능한 원정으로 묶는 것이다.
+기존 경쟁작 계획의 `Map -> Combat -> Quest -> Equipment -> Encounter Art`와 후속 원정·귀환·가독성·아이템 투자 흐름은 Slice 53~66에서 구현됐다. 현재 Aetheria의 다음 checkpoint는 새 메뉴나 통화를 늘리는 것이 아니라, 최신 설치본이 실제 iPhone에서 첫 원정과 귀환 정비까지 자연스럽게 이어지는지 확정하는 것이다.
 
 권장 순서는 다음과 같다.
 
-1. 구현된 Slice 62의 `마을 출발 -> 탐험 -> 마을 귀환` 흐름을 실기기에서 확정한다.
-2. 새 기능을 더 쌓기 전에 핵심 mobile surface의 11px 미만 텍스트와 4열 micro-cell 밀도를 제거한다.
-3. 수락한 임무를 삭제하거나 제한하지 않고, 이번 원정에서 집중할 임무만 최대 3개로 선택한다.
-4. 귀환 정산에서 보상 수령·장비 교체·휴식·제작 중 가장 중요한 다음 행동 하나를 연결한다.
-5. 첫 사망과 첫 보스 귀환처럼 의미 있는 시점에만 짧은 마을 이야기 변화를 추가한다.
+1. 최신 Slice 66 설치본의 launch와 60초 foreground hold를 물리 iPhone에서 확정한다.
+2. `첫 출발 -> 집중 임무 -> Map -> 전투 -> 정상 귀환` 5분 route를 실제 터치로 확인한다.
+3. 귀환 정비에서 강화 decision의 취소·확정과 제작·합성 결과 비교가 흐름을 막지 않는지 기록한다.
+4. 실제 사용자가 milestone 이야기를 다시 보고 싶어 하는 evidence가 있을 때만 Slice 67 Chronicle을 검토한다.
+5. 난이도·EXP·Map 수치는 최신 실기기 체감에서 구체적인 문제가 재현될 때만 조정한다.
 
 ## 현재 코드 기준 진단
 
@@ -256,13 +256,15 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 목표: 강화·제작·합성 전에 결과와 위험을 읽고 납득한 뒤 확정하게 한다.
 
+상태: 구현·browser/native packaging·최신 iPhone 설치 완료. 기기 잠금으로 최신 설치본 launch·60초 foreground hold·수동 정비 흐름 확인만 대기한다.
+
 구현 방향:
 
 - 공용 pure preview model에서 대상 item의 현재 단계, 다음 강화 단계, 주요 stat delta, 성공률, gold/material 비용, 실패 시 손실을 계산한다.
 - 강화 첫 tap은 상세 decision surface를 열고, 실제 소비는 명시적인 `강화 시도` action에서만 수행한다.
 - 제작 row에 기존 `ItemIcon`, tier/type, 주요 stat, 현재 장비 대비, 착용 가능 조건, material/cost를 표시한다.
 - 합성은 기존 성공률과 후보 규칙을 유지하면서 후보 icon과 핵심 stat을 함께 보여 준다.
-- 기존 강화율·가격·재료·아이템 데이터·save schema는 바꾸지 않는다.
+- 기존 강화율·가격·재료·아이템 데이터·save schema는 바꾸지 않는다. 다만 preview에서 실제 비용을 소비하고도 능력치가 `+0`인 저수치 장비를 확인하면 무효 투자를 없애는 최소 보정은 허용한다.
 
 완료 기준:
 
@@ -271,6 +273,15 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - 390x844에서 대상, 결과, 위험, 최종 action이 확대 없이 읽히고 가로 overflow가 없다.
 - pure contract가 preview와 실제 실행의 rate/cost/stat parity 및 재료 부족·최대 강화·착용 불가 edge를 검증한다.
 - focused mobile E2E와 screenshot 증빙 뒤 `verify:full`, native packaging, 실기기 확인 순서로 닫는다.
+
+구현 결과(2026-07-23):
+
+- `getEnhancePreview`가 현재/다음 강화 단계, 실제 주 능력치, 성공률, 골드·재료, 부족 사유, 실패 손실을 계산하고 Equipment·Inventory의 decision modal과 실제 강화 action, `statsCalculator`가 같은 계산 source를 사용한다.
+- 첫 tap은 portal 기반 `EnhanceDecisionCard`만 열며 취소 시 재화가 유지되고, 명시적인 `강화 시도`에서만 비용을 소비한다. modal을 root stacking context로 올려 전투 damage number가 decision surface 위에 겹치던 시각 회귀도 제거했다.
+- 제작 60개 recipe는 실제 결과 `ItemIcon`, tier/type, 주 능력치, 현재 장비 대비, 착용 가능 여부, 보유/필요 재료를 표시한다. 합성은 골드가 부족해도 성공률·비용·실패 손실·실제 보호 자산·결과 후보 icon/stat/delta를 숨기지 않는다.
+- 공용 preview를 전체 장비에 적용하는 과정에서 저수치 장비 강화가 골드와 재료를 쓰고도 `+0`이 되는 no-op을 발견했다. 기존 비율 scaling은 유지하되 강화 단계마다 주 능력치가 최소 `+1` 오르도록 보정하고 전 장비·최대 강화 단계 contract로 고정했다.
+- focused pure contract `27/27`, focused mobile E2E `2/2`, 최종 type-check·lint·unit `3401/3401`·build guard·desktop/mobile smoke·E2E `48/48`이 통과했다. 시각 증빙은 `playtest-artifacts/item-investment-preview/`의 강화 decision, 제작 결과, 합성 후보 3개 PNG다.
+- `mobile:doctor`, `cap:sync`, Android debug, Apple Development signed iOS archive가 통과했다. 최신 APK는 `2026-07-23 03:48:56 KST`의 199437873 bytes, archive는 `03:49:03 KST`의 201M·`1.1.0 (2)`다. 최신 archive는 iPhone에 재설치되고 metadata까지 확인됐지만 launch 시점 기기 `Locked`로 차단됐으며, 직전 기존 설치본 launch는 성공했으나 60초 foreground process 유지에는 실패했다. 같은 시각의 Aetheria crash report는 없어 device 상태 blocker와 앱 crash를 구분한다.
 
 ### Slice 67 - Adventure Chronicle
 
@@ -284,7 +295,7 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 착수 조건:
 
-- Slice 65 최신 설치본의 60초 hold와 fresh-save 5분 루트가 완료되고, 실제 사용자가 이야기 재확인을 원한다는 evidence가 있을 것.
+- Slice 66 최신 설치본의 60초 hold와 fresh-save 5분 루트가 완료되고, 실제 사용자가 이야기 재확인을 원한다는 evidence가 있을 것.
 - Slice 66의 item decision surface가 실기기에서 귀환 후 정비 흐름을 방해하지 않을 것.
 
 ## 검증 순서
@@ -299,4 +310,4 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 ## 다음 결정점
 
-Slice 65는 browser와 native packaging, 최신 iPhone 설치까지 통과했다. 먼저 기기를 잠금 해제하고 화면을 켠 상태에서 `npm run ios:device:smoke`의 launch·60초 foreground hold를 다시 실행한다. 이어서 새 세이브 첫 5분에서 집중 임무, Map marker, 전투, 정상 귀환의 단일 정비 action, milestone story, standard/high readability를 실제 터치로 확인한다. 이 evidence에서 치명적인 동선 회귀가 없을 때만 Slice 66 Item Investment Preview를 구현하며, Slice 67 Chronicle과 난이도·EXP·Map 재조정은 실기기 피드백 전에는 착수하지 않는다.
+Slice 66은 browser와 native packaging, 최신 iPhone 설치까지 통과했다. 먼저 기기를 잠금 해제하고 화면을 켠 상태에서 `npm run ios:device:launch-smoke`의 60초 foreground hold를 다시 실행한다. 이어서 새 세이브 첫 5분에서 집중 임무, Map marker, 전투, 정상 귀환의 단일 정비 action, 강화 decision과 취소·확정, 제작·합성 결과 비교, milestone story, standard/high readability를 실제 터치로 확인한다. 이 evidence에서 정비 흐름을 방해하는 회귀가 없고 이야기 재확인 수요가 확인될 때만 Slice 67 Adventure Chronicle을 검토하며, 난이도·EXP·Map 재조정은 실기기 피드백 전에는 착수하지 않는다.

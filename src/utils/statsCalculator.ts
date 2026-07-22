@@ -8,6 +8,7 @@ import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
+import { getItemEnhanceBonus } from './enhancementUtils.js';
 
 // cycle 449: 물리 elem 필터 제거 — items.ts elem 값에 '물리' / 'physical' 0건.
 //   weaponElem 있는 무기는 항상 magic elem이라 필터 redundant.
@@ -198,22 +199,19 @@ const computeEnhanceBonus = (equip: any) => {
     const weaponEnhance = equip.weapon?.enhance || 0;
     const armorEnhance = equip.armor?.enhance || 0;
     const offhandEnhance = equip.offhand?.enhance || 0;
-    const weaponBaseVal = equip.weapon?.val || 0;
-    const armorBaseVal = equip.armor?.val || 0;
-    const offhandBaseVal = equip.offhand?.val || 0;
     // cycle 264: offhand 슬롯 분기 — shield면 def 기여, weapon면 atk 기여 (dual-wield × 0.5).
     //   기존엔 모든 offhand가 atk × 0.5에 가산되어 방패 enhance가 atk를 늘리고 def는 0이던 회귀.
     //   ENHANCE_ITEM은 offhand shield도 enhance += 1 처리하므로 paired dispatch fix.
     const offhandIsShield = isShield(equip.offhand);
     const offhandAtkBonus = offhandIsShield
         ? 0
-        : Math.floor(offhandBaseVal * BALANCE.ENHANCE_STAT_BONUS * offhandEnhance * 0.5);
+        : getItemEnhanceBonus(equip.offhand, offhandEnhance, 'offhand');
     const offhandDefBonus = offhandIsShield
-        ? Math.floor(offhandBaseVal * BALANCE.ENHANCE_STAT_BONUS * offhandEnhance)
+        ? getItemEnhanceBonus(equip.offhand, offhandEnhance, 'offhand')
         : 0;
 
-    const atk = Math.floor(weaponBaseVal * BALANCE.ENHANCE_STAT_BONUS * weaponEnhance) + offhandAtkBonus;
-    const def = Math.floor(armorBaseVal * BALANCE.ENHANCE_STAT_BONUS * armorEnhance) + offhandDefBonus;
+    const atk = getItemEnhanceBonus(equip.weapon, weaponEnhance, 'weapon') + offhandAtkBonus;
+    const def = getItemEnhanceBonus(equip.armor, armorEnhance, 'armor') + offhandDefBonus;
 
     return { atk, def };
 };

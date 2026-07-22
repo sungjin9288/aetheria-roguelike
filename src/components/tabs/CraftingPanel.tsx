@@ -5,7 +5,10 @@ import { DB } from '../../data/db';
 import { BALANCE } from '../../data/constants';
 import { getSynthesisGroups, validateSynthesis } from '../../utils/synthesisUtils';
 import { getItemRarity } from '../../utils/gameUtils';
+import { getCraftingInvestmentPreview, getSynthesisOutcomePreviews } from '../../utils/itemInvestmentPreview';
 import FocusPanelHeader from '../FocusPanelHeader';
+import ItemIcon from '../icons/ItemIcon';
+import SignalBadge from '../SignalBadge';
 
 const TYPE_LABEL: any = { weapon: '무기', armor: '방어구', shield: '방패' };
 const RARITY_LABEL: any = { common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설' };
@@ -29,7 +32,6 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
   const [useProtect, setUseProtect] = useState(false);
 
   const recipes = DB.ITEMS.recipes || [];
-  const getItemCount = (name: any) => player.inv.filter((item: any) => item.name === name).length;
 
   const synthGroups = useMemo(() => getSynthesisGroups(player.inv), [player.inv]);
 
@@ -59,23 +61,39 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
           아직 발견한 제작법이 없습니다.
         </div>
       ) : recipes.map((recipe: any) => {
-        const hasGold = player.gold >= recipe.gold;
-        const missingInputs = recipe.inputs
-          .map((input: any) => ({ ...input, owned: getItemCount(input.name) }))
-          .filter((input: any) => input.owned < input.qty);
-        const hasMaterials = missingInputs.length === 0;
-        const canCraft = hasGold && hasMaterials;
-        const lockReason = !hasGold
-          ? `골드 부족 · ${player.gold}/${recipe.gold}`
-          : missingInputs.length > 0
-            ? `재료 부족 · ${missingInputs[0].name} ${missingInputs[0].owned}/${missingInputs[0].qty}`
-            : '';
+        const preview = getCraftingInvestmentPreview(player, recipe);
+        const output = preview.output;
+        const decision = output?.equipmentDecision;
+        const canCraft = preview.canCraft;
         return (
-          <div key={recipe.id} data-craft-state={canCraft ? 'ready' : 'locked'} className={`aether-craft-row px-3 py-2.5 rounded-md flex flex-col gap-2 transition-colors hover:border-orange-500/40 ${canCraft ? '' : 'aether-locked-row'}`}>
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <div className="font-bold text-white font-rajdhani text-[14px]">{recipe.name}</div>
-                <div className="text-[11px] text-orange-200/86 font-readable">골드 {recipe.gold}</div>
+          <div
+            key={recipe.id}
+            data-testid={`crafting-recipe-${recipe.id}`}
+            data-craft-state={canCraft ? 'ready' : 'locked'}
+            className={`aether-craft-row flex flex-col gap-2 rounded-md px-3 py-2.5 transition-colors hover:border-orange-500/40 ${canCraft ? '' : 'aether-locked-row'}`}
+          >
+            <div className="flex items-start gap-3">
+              {output && <ItemIcon item={output.item} size={42} showBorder className="mt-0.5 shrink-0" />}
+              <div data-testid={`crafting-output-${recipe.id}`} className="min-w-0 flex-1">
+                <div className="break-words font-rajdhani text-[14px] font-bold text-white">{recipe.name}</div>
+                {output && (
+                  <>
+                    <div className="aether-type-label mt-0.5 font-readable text-orange-200/78">
+                      {[output.tierLabel, output.typeLabel].filter(Boolean).join(' · ')}
+                    </div>
+                    <div className="aether-type-body mt-1 font-readable leading-snug text-slate-300/82">{output.statText}</div>
+                    {decision && (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        <SignalBadge tone={decision.equipable ? 'success' : 'danger'} size="sm">
+                          {decision.equipable ? '장착 가능' : '직업 제한'}
+                        </SignalBadge>
+                        <SignalBadge tone={decision.score > 0 ? 'recommended' : decision.score < 0 ? 'warning' : 'neutral'} size="sm">
+                          {decision.primaryDelta.text}
+                        </SignalBadge>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
               <Motion.button
                 data-testid="crafting-recipe-action"
@@ -87,18 +105,17 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                 {canCraft ? '제작' : '재료 확인'}
               </Motion.button>
             </div>
-            {!canCraft && lockReason && (
+            <div className="aether-type-label font-readable text-orange-200/86">골드 {recipe.gold.toLocaleString('ko-KR')}</div>
+            {!canCraft && preview.lockReason && (
               <div className="aether-lock-note rounded-[0.65rem] px-2 py-1 font-readable text-[11px] leading-snug">
-                {lockReason}
+                {preview.lockReason}
               </div>
             )}
             <div className="flex flex-wrap gap-1.5 text-[11px] font-fira">
-              {recipe.inputs.map((input: any) => {
-                const owned = getItemCount(input.name);
-                const enough = owned >= input.qty;
+              {preview.inputs.map((input) => {
                 return (
-                  <span key={`${recipe.id}_${input.name}`} className={`px-2 py-1 rounded border ${enough ? 'border-cyber-green/30 text-cyber-green bg-cyber-green/10' : 'border-red-500/30 text-red-400 bg-red-950/20'}`}>
-                    {input.name} {owned}/{input.qty}
+                  <span key={`${recipe.id}_${input.name}`} className={`rounded border px-2 py-1 ${input.enough ? 'border-cyber-green/30 bg-cyber-green/10 text-cyber-green' : 'border-red-500/30 bg-red-950/20 text-red-400'}`}>
+                    {input.name} {input.owned}/{input.required}
                   </span>
                 );
               })}
@@ -110,32 +127,51 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
   );
 
   const renderSynthMode = () => {
-    const outputs = validation?.valid ? (validation.outputs ?? []) : [];
+    const synthesisPreview = validation && 'outputs' in validation ? validation : null;
+    const outputs = synthesisPreview?.outputs ?? [];
+    const outcomePreviews = getSynthesisOutcomePreviews(player, outputs);
+    const protectionTokens = player.stats?.synthProtects || 0;
+    const protectionCurrency = player.premiumCurrency || 0;
+    const canUseProtection = protectionTokens > 0 || protectionCurrency >= BALANCE.SYNTHESIS_PROTECT_COST;
+    const protectionCost = protectionTokens > 0
+      ? `보호권 1개 · 보유 ${protectionTokens}개`
+      : `${BALANCE.PREMIUM_CURRENCY_NAME} ${BALANCE.SYNTHESIS_PROTECT_COST}개 · 보유 ${protectionCurrency}개`;
+    const canSynthesize = Boolean(validation?.valid) && (!useProtect || canUseProtection);
+    const lockReason = validation?.reason === 'NO_GOLD' && synthesisPreview
+      ? `골드 부족 · ${player.gold}/${synthesisPreview.goldCost}`
+      : useProtect && !canUseProtection
+        ? `합성 보호 자산 부족 · ${protectionCost}`
+        : `동일 타입·동일 티어 장비 ${BALANCE.SYNTHESIS_INPUT_COUNT}개를 선택해야 합성할 수 있습니다.`;
+    const failureText = useProtect
+      ? `실패해도 장비 ${BALANCE.SYNTHESIS_INPUT_COUNT}개는 모두 돌아오며 골드와 보호 자산은 소모됩니다.`
+      : `실패하면 장비 ${BALANCE.SYNTHESIS_INPUT_COUNT}개 중 ${BALANCE.SYNTHESIS_FAIL_RETURN}개만 돌아오며 골드는 소모됩니다.`;
+
     return (
-      <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-2">
-        {/* 슬롯 영역 */}
-        <div className="bg-cyber-dark/60 p-4 rounded-md border border-purple-500/20">
-          <div className="text-xs text-purple-300/70 font-fira mb-3">
+      <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-2">
+        <div className="rounded-md border border-purple-500/20 bg-cyber-dark/60 p-4">
+          <div className="aether-type-body mb-3 font-readable text-purple-200/78">
             {BALANCE.SYNTHESIS_INPUT_COUNT}개 동일 타입 · 동일 티어 장비 선택
           </div>
-          <div className="flex gap-2 justify-center mb-3">
-            {Array.from({ length: BALANCE.SYNTHESIS_INPUT_COUNT }).map((_: any, i: any) => {
-              const item = selectedItems[i];
+          <div className="mb-3 flex justify-center gap-2">
+            {Array.from({ length: BALANCE.SYNTHESIS_INPUT_COUNT }).map((_: any, index: number) => {
+              const item = selectedItems[index];
               return (
                 <Motion.button
-                  key={i}
-                  whileTap={item ? { scale: 0.9 } : undefined}
+                  key={index}
+                  data-testid={`synthesis-slot-${index}`}
+                  whileTap={item ? { scale: 0.96 } : undefined}
                   onClick={() => item && toggleSlot(item.id)}
-                  className={`w-20 h-20 rounded-lg border-2 flex flex-col items-center justify-center text-xs font-fira transition-all
+                  className={`flex h-24 w-[5.5rem] flex-col items-center justify-center rounded-lg border-2 px-1 font-readable transition-all
                     ${item
                       ? 'border-purple-400/60 bg-purple-950/40 text-white'
-                      : 'border-dashed border-purple-500/20 bg-cyber-dark/40 text-purple-500/30'
+                      : 'border-dashed border-purple-500/20 bg-cyber-dark/40 text-purple-500/40'
                     }`}
                 >
                   {item ? (
                     <>
-                      <span className="truncate max-w-[4.5rem] text-[10px] font-bold">{item.name}</span>
-                      <span className="text-[9px] mt-0.5" style={{ color: BALANCE.RARITY_COLORS[getItemRarity(item)] }}>
+                      <ItemIcon item={item} size={34} showBorder />
+                      <span className="aether-type-label mt-1 w-full truncate font-readable font-bold">{item.name}</span>
+                      <span className="aether-type-label mt-0.5" style={{ color: BALANCE.RARITY_COLORS[getItemRarity(item)] }}>
                         {item.tier}단계 · {RARITY_LABEL[getItemRarity(item)]}
                       </span>
                     </>
@@ -147,107 +183,124 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
             })}
           </div>
 
-          {/* 합성 정보 */}
-          {validation?.valid && (
-            <div className="space-y-2 text-xs font-fira">
-              <div className="flex justify-between text-purple-200">
-                <span>비용</span>
-                <span className={player.gold >= validation.goldCost ? 'text-cyber-green' : 'text-red-400'}>
-                  골드 {validation.goldCost.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between text-purple-200">
-                <span>성공률</span>
-                <span className={validation.successRate >= 0.85 ? 'text-cyber-green' : validation.successRate >= 0.7 ? 'text-yellow-400' : 'text-red-400'}>
-                  {Math.round(validation.successRate * 100)}%
-                </span>
-              </div>
-              {/* 보호 토글 */}
-              {validation.successRate < 1 && (
-                <button
-                  onClick={() => setUseProtect((p: any) => !p)}
-                  className={`flex items-center gap-1.5 w-full py-2 px-3 rounded border text-[10px] transition-all
-                    ${useProtect
-                      ? 'border-amber-400/50 bg-amber-950/30 text-amber-300'
-                      : 'border-slate-600 bg-cyber-dark/40 text-slate-400 hover:border-slate-500'
-                    }`}
-                >
-                  <ShieldCheck size={12} />
-                  <span>합성 보호 ({BALANCE.SYNTHESIS_PROTECT_COST} {BALANCE.PREMIUM_CURRENCY_NAME})</span>
-                  <span className="ml-auto">{useProtect ? '사용' : '미사용'}</span>
-                </button>
-              )}
-              {/* 가능한 결과물 미리보기 */}
-              {outputs.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-purple-500/10">
-                  <div className="text-[10px] text-purple-300/70 mb-1.5">{(validation.tier ?? 0) + 1}단계 결과 후보</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {outputs.slice(0, 6).map((o: any) => (
-                      <span
-                        key={o.name}
-                        className="px-2 py-0.5 rounded text-[9px] border"
-                        style={{
-                          borderColor: BALANCE.RARITY_COLORS[getItemRarity(o)] + '40',
-                          color: BALANCE.RARITY_COLORS[getItemRarity(o)],
-                        }}
-                      >
-                        {o.name}
-                      </span>
-                    ))}
-                    {outputs.length > 6 && (
-                      <span className="text-[9px] text-purple-400/40">+{outputs.length - 6}</span>
-                    )}
+          {outputs.length > 0 && synthesisPreview && (
+            <div data-testid="synthesis-investment-preview" className="space-y-3 border-t border-purple-500/14 pt-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="aether-type-label font-readable text-purple-300/68">비용</div>
+                  <div className={`aether-type-body mt-0.5 font-readable font-bold ${player.gold >= synthesisPreview.goldCost ? 'text-cyber-green' : 'text-red-300'}`}>
+                    골드 {synthesisPreview.goldCost.toLocaleString('ko-KR')}
                   </div>
                 </div>
+                <div>
+                  <div className="aether-type-label font-readable text-purple-300/68">성공률</div>
+                  <div className={`aether-type-body mt-0.5 font-readable font-bold ${synthesisPreview.successRate >= 0.85 ? 'text-cyber-green' : synthesisPreview.successRate >= 0.7 ? 'text-yellow-300' : 'text-red-300'}`}>
+                    {Math.round(synthesisPreview.successRate * 100)}%
+                  </div>
+                </div>
+              </div>
+
+              {synthesisPreview.successRate < 1 && (
+                <button
+                  type="button"
+                  data-testid="synthesis-protection-toggle"
+                  disabled={!canUseProtection}
+                  onClick={() => setUseProtect((current) => !current)}
+                  className={`aether-type-body flex min-h-[44px] w-full items-center gap-2 rounded-lg border px-3 py-2 font-readable transition-colors disabled:cursor-not-allowed disabled:opacity-55
+                    ${useProtect
+                      ? 'border-amber-400/50 bg-amber-950/30 text-amber-200'
+                      : 'border-white/10 bg-black/18 text-slate-300 hover:border-white/18'
+                    }`}
+                >
+                  <ShieldCheck size={14} />
+                  <span className="min-w-0 text-left">합성 보호 · {protectionCost}</span>
+                  <span className="ml-auto shrink-0 font-bold">{useProtect ? '사용' : '미사용'}</span>
+                </button>
               )}
+
+              <p data-testid="synthesis-failure-consequence" className="aether-type-body font-readable leading-relaxed text-slate-300/78">
+                {failureText}
+              </p>
+
+              <div className="border-t border-purple-500/14 pt-3">
+                <div className="aether-type-label mb-2 font-readable font-semibold text-purple-200/78">
+                  {(synthesisPreview.tier ?? 0) + 1}단계 결과 후보
+                </div>
+                <div className="space-y-1.5">
+                  {outcomePreviews.slice(0, 6).map((outcome) => {
+                    const decision = outcome.equipmentDecision;
+                    return (
+                      <div
+                        key={outcome.item.name}
+                        data-testid="synthesis-output-candidate"
+                        className="flex items-center gap-2 rounded-lg border border-white/8 bg-black/16 px-2.5 py-2"
+                      >
+                        <ItemIcon item={outcome.item} size={34} showBorder className="shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="aether-type-body break-words font-readable font-bold text-white">{outcome.item.name}</div>
+                          <div className="aether-type-label mt-0.5 font-readable text-slate-300/72">{outcome.statText}</div>
+                        </div>
+                        {decision && (
+                          <span className={`aether-type-label shrink-0 font-readable font-bold ${decision.score > 0 ? 'text-emerald-200' : decision.score < 0 ? 'text-rose-200' : 'text-slate-300'}`}>
+                            {decision.primaryDelta.text}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {outcomePreviews.length > 6 && (
+                    <div className="aether-type-label font-readable text-purple-300/60">그 외 {outcomePreviews.length - 6}개 후보</div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* 합성 버튼 */}
           <Motion.button
             data-testid="crafting-synthesize-action"
-            whileTap={{ scale: 0.95 }}
+            whileTap={canSynthesize ? { scale: 0.98 } : undefined}
             onClick={handleSynthesize}
-            disabled={!validation?.valid}
-            className="aether-disabled-action mt-4 w-full py-3 bg-purple-500/10 border border-purple-500/50 rounded-sm text-purple-200 text-sm font-bold hover:bg-purple-500/20 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)] transition-all tracking-wider min-h-[44px]"
+            disabled={!canSynthesize}
+            className="aether-disabled-action mt-4 min-h-[44px] w-full rounded-sm border border-purple-500/50 bg-purple-500/10 py-3 text-sm font-bold tracking-wider text-purple-200 transition-all hover:bg-purple-500/20 hover:shadow-[0_0_15px_rgba(168,85,247,0.25)]"
           >
-            {validation?.valid ? '합성 시작' : '장비 선택'}
+            {canSynthesize ? '합성 시작' : '합성 준비 필요'}
           </Motion.button>
-          {!validation?.valid && (
+          {!canSynthesize && (
             <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
-              동일 타입·동일 티어 장비 {BALANCE.SYNTHESIS_INPUT_COUNT}개를 선택해야 합성할 수 있습니다.
+              {lockReason}
             </div>
           )}
         </div>
 
-        {/* 합성 가능 장비 목록 */}
         {synthGroups.length === 0 ? (
           <div className="rounded-lg border border-dashed border-purple-500/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-readable text-purple-200/55">
             합성할 수 있는 장비 조합이 없습니다.
           </div>
         ) : synthGroups.map((group: any) => (
-          <div key={`${group.type}_${group.tier}`} className="bg-cyber-dark/60 p-3 rounded-md border border-purple-500/15">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold font-readable text-purple-300">{TYPE_LABEL[group.type]} {group.tier}단계</span>
-              <span className="text-[10px] font-fira text-purple-400/50">{group.count}개 보유</span>
+          <div key={`${group.type}_${group.tier}`} className="rounded-md border border-purple-500/15 bg-cyber-dark/60 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="aether-type-body font-readable font-bold text-purple-200">{TYPE_LABEL[group.type]} {group.tier}단계</span>
+              <span className="aether-type-label font-readable text-purple-300/58">{group.count}개 보유</span>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
               {group.items.map((item: any) => {
                 const isSelected = selectedIds.includes(item.id);
                 const rarity = getItemRarity(item);
                 return (
                   <Motion.button
                     key={item.id}
-                    whileTap={{ scale: 0.92 }}
+                    data-testid={`synthesis-input-${item.id}`}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => toggleSlot(item.id)}
-                    className={`px-2.5 py-1.5 rounded text-[10px] font-fira border transition-all min-h-[44px]
+                    className={`flex min-h-[48px] items-center gap-2 rounded-lg border px-2 py-1.5 text-left font-readable transition-all
                       ${isSelected
                         ? 'border-purple-400/70 bg-purple-900/50 text-white ring-1 ring-purple-400/30'
                         : 'border-white/8 bg-black/20 text-slate-300 hover:border-purple-500/30'
                       }`}
                     style={isSelected ? {} : { borderLeftColor: BALANCE.RARITY_COLORS[rarity], borderLeftWidth: 2 }}
                   >
-                    {item.name}
+                    <ItemIcon item={item} size={30} showBorder className="shrink-0" />
+                    <span className="aether-type-label min-w-0 break-words font-readable font-semibold">{item.name}</span>
                   </Motion.button>
                 );
               })}
@@ -284,7 +337,12 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
             ].map((tab: any) => (
               <button
                 key={tab.id}
-                onClick={() => { setMode(tab.id); setSelectedIds([]); }}
+                data-testid={`crafting-mode-${tab.id}`}
+                onClick={() => {
+                  setMode(tab.id);
+                  setSelectedIds([]);
+                  setUseProtect(false);
+                }}
                 className={`min-h-[36px] px-4 py-2 text-xs font-readable font-bold transition-all
                   ${mode === tab.id
                     ? tab.id === 'craft'

@@ -479,17 +479,16 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/\binventory\b/.test(sig), 'inventory 파라미터 자체는 보존');
   });
 
-  test('cycle 506: 정합성 가드 — 3 callsite 모두 3 args 전달', async () => {
+  test('cycle 506: 정합성 가드 — 강화 소비 3곳은 공용 preview를 명시 인자로 사용', async () => {
       const callsites = [
           'src/components/EquipmentPanel.tsx',
           'src/components/SmartInventory.tsx',
-          // PR #4: enhanceItem(getEnhanceAvailability 콜사이트)은 equipment 서브파일로 이동.
           'src/hooks/useInventoryActions.equipment.ts',
       ];
       for (const f of callsites) {
           const source = await readSrc(f);
-          const matches = source.match(/getEnhanceAvailability\(/g) || [];
-          assert.ok(matches.length >= 1, `${f} getEnhanceAvailability 호출 발견`);
+          const matches = source.match(/getEnhancePreview\(/g) || [];
+          assert.ok(matches.length >= 1, `${f} getEnhancePreview 호출 발견`);
       }
   });
 

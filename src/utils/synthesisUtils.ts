@@ -70,20 +70,20 @@ export const validateSynthesis = (items: Item[] | null | undefined, playerGold: 
     }
 
     const goldCost = BALANCE.SYNTHESIS_GOLD_COSTS[tier] || 0;
-    if (playerGold < goldCost) {
-        return { valid: false, reason: 'NO_GOLD', goldCost };
-    }
-
     const outputs = getSynthesisOutputs(type, tier);
     if (outputs.length === 0) {
         return { valid: false, reason: 'NO_OUTPUT' };
     }
 
     const successRate = BALANCE.SYNTHESIS_SUCCESS_RATES[tier] || 0.5;
+    const preview = { tier, outputs, goldCost, successRate };
+    if (playerGold < goldCost) {
+        return { valid: false, reason: 'NO_GOLD', ...preview };
+    }
 
     // cycle 338: type 필드 제거 — validation.type read 0건이던 dead output.
     //   CraftingPanel은 outputs/goldCost/successRate/tier만 사용.
-    return { valid: true, tier, outputs, goldCost, successRate };
+    return { valid: true, ...preview };
 };
 
 /**

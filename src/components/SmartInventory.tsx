@@ -3,13 +3,14 @@ import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle, ListTree } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
 import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentIdentity, getItemStatText, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
-import { getEnhanceAvailability } from '../utils/enhancementUtils';
+import { getEnhanceAvailability, getEnhancePreview, type EnhanceItemSlot } from '../utils/enhancementUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
 import { BALANCE } from '../data/constants';
 import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 import ItemIcon from './icons/ItemIcon';
+import EnhanceDecisionCard from './EnhanceDecisionCard';
 import type { Player } from '../types/index.js';
 
 // cycle 482: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
@@ -75,8 +76,14 @@ const getItemTags = (item: any) => {
 const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotlight, onClearSpotlight }: SmartInventoryProps) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [detailOverride, setDetailOverride] = React.useState<boolean | null>(null);
+    const [enhanceTarget, setEnhanceTarget] = React.useState<{ item: any; slot: EnhanceItemSlot } | null>(null);
     const disclosure = getEquipmentDisclosure(player);
     const showDetails = detailOverride ?? disclosure.showDetails;
+    const enhancePreview = useMemo(() => (
+        enhanceTarget
+            ? getEnhancePreview(enhanceTarget.item, player.gold ?? 0, player.inv || [], enhanceTarget.slot)
+            : null
+    ), [enhanceTarget, player.gold, player.inv]);
     const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
     const spotlightSet = useMemo(() => new Set(spotlightNames), [spotlightNames]);
     const traitProfile = useMemo(
@@ -128,6 +135,14 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
         const decision = getEquipmentDecision(player, item);
         return Boolean(decision?.equipable && decision.score > 0);
     }, [player]);
+
+    const confirmEnhancement = () => {
+        if (!enhanceTarget || !enhancePreview?.affordable) return;
+
+        const itemId = enhanceTarget.item.id || (enhanceTarget.slot ? `equip:${enhanceTarget.slot}` : null);
+        if (itemId) actions?.enhanceItem?.(itemId);
+        setEnhanceTarget(null);
+    };
 
     const handleSmartEquip = () => {
         if (bestWeapon && isEquipUpgrade(bestWeapon)) actions.useItem(bestWeapon);
@@ -412,11 +427,11 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                     <Motion.button
                                         whileTap={{ scale: 0.95 }}
                                         disabled={!enhanceState.affordable}
-                                        onClick={() => actions.enhanceItem(item.id)}
+                                        onClick={() => setEnhanceTarget({ item, slot: null })}
                                         className={`rounded-full border font-bold font-fira ${enhanceState.affordable ? 'bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] border-[#d5b180]/22' : 'border-white/8 bg-black/20 text-slate-500'} min-h-[38px] px-2.5 py-2 text-xs`}
                                         title={`강화 +${(item.enhance || 0) + 1}`}
                                     >
-                                        +강화
+                                        강화 보기
                                     </Motion.button>
                                 )}
                                 <Motion.button
@@ -432,6 +447,14 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                     );
                 })}
             </div>
+
+            {enhancePreview && (
+                <EnhanceDecisionCard
+                    preview={enhancePreview}
+                    onCancel={() => setEnhanceTarget(null)}
+                    onConfirm={confirmEnhancement}
+                />
+            )}
         </div>
     );
 };

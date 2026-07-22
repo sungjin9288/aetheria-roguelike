@@ -2043,8 +2043,11 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 337: getEnhanceAvailability return에서 materialCount 0건', async () => {
       const source = await readSrc('src/utils/enhancementUtils.ts');
+      const start = source.indexOf('export const getEnhanceAvailability');
+      const end = source.indexOf('export const getEnhancePreview', start);
+      const availabilitySource = source.slice(start, end);
       // return 객체 안의 materialCount 0건 (내부 변수는 별개).
-      assert.ok(!/^\s+materialCount[,:]/m.test(source),
+      assert.ok(!/^\s+materialCount[,:]/m.test(availabilitySource),
           'return 객체에서 materialCount 필드 0건');
   });
 
@@ -2144,7 +2147,10 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 337 회귀 가드: getEnhanceAvailability materialCount 0건', async () => {
       const source = await readSrc('src/utils/enhancementUtils.ts');
-      assert.ok(!/^\s+materialCount[,:]/m.test(source),
+      const start = source.indexOf('export const getEnhanceAvailability');
+      const end = source.indexOf('export const getEnhancePreview', start);
+      const availabilitySource = source.slice(start, end);
+      assert.ok(!/^\s+materialCount[,:]/m.test(availabilitySource),
           'cycle 337 materialCount 출력 0건 보존');
   });
 }

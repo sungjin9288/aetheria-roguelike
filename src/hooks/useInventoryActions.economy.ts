@@ -1,12 +1,13 @@
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
-import { makeItem, findItemByName, grantGold, registerCodex, registerLootToCodex, countNewCodexEntries } from '../utils/gameUtils';
+import { makeItem, grantGold, registerCodex, registerLootToCodex, countNewCodexEntries } from '../utils/gameUtils';
 import { incrementStat } from '../utils/playerStateUtils';
 import { validateSynthesis, performSynthesis } from '../utils/synthesisUtils';
 import { SEASON_XP } from '../data/seasonPass';
 import { AT } from '../reducers/actionTypes';
 import { MSG } from '../data/messages';
 import { isSignatureItem } from '../data/signatureItems.js';
+import { getCraftingInvestmentPreview } from '../utils/itemInvestmentPreview.js';
 import type { Item } from '../types/index.js';
 
 /**
@@ -64,14 +65,11 @@ export const createEconomyActions = (ctx: any) => {
         craft: (recipeId: any) => {
             const recipe = DB.ITEMS.recipes?.find((entry: any) => entry.id === recipeId);
             if (!recipe) return;
-            // 레시피 데이터는 항상 gold/inputs/name을 명시 정의 (items.ts recipes 카테고리) —
-            // ItemRecipeDef의 optional 타입은 런타임 확장 호환용이라 non-null assertion으로 단언.
-            if (player.gold < recipe.gold!) return addLog('error', MSG.GOLD_INSUFFICIENT);
-
-            for (const input of recipe.inputs!) {
-                const count = player.inv.filter((entry: any) => entry.name === input.name).length;
-                if (count < input.qty!) return addLog('error', MSG.CRAFT_MAT_INSUFFICIENT(input.name!));
-            }
+            const preview = getCraftingInvestmentPreview(player, recipe);
+            if (!preview.output) return addLog('error', MSG.ITEM_NOT_FOUND);
+            if (!preview.hasGold) return addLog('error', MSG.GOLD_INSUFFICIENT);
+            const missingInput = preview.inputs.find((input) => !input.enough);
+            if (missingInput) return addLog('error', MSG.CRAFT_MAT_INSUFFICIENT(missingInput.name));
 
             let newInv = [...player.inv];
             for (const input of recipe.inputs!) {
@@ -85,10 +83,7 @@ export const createEconomyActions = (ctx: any) => {
                 });
             }
 
-            const craftedTemplate = findItemByName(recipe.name);
-            const craftedItem = craftedTemplate
-                ? makeItem(craftedTemplate)
-                : makeItem({ name: recipe.name, type: 'mat', price: 0, desc: 'Crafted item', desc_stat: 'CRAFTED' });
+            const craftedItem = makeItem(preview.output.item);
 
             // cycle 196: codex 신규 등록 수 추적 — SEASON_XP.codexDiscover dispatch (cycle 193 패턴).
             const codexBefore = countNewCodexEntries(player);

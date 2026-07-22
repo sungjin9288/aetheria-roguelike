@@ -1,8 +1,7 @@
-import { BALANCE } from '../data/constants';
 import { toArray, makeItem } from '../utils/gameUtils';
 import { getEquipmentIdentity, getNextEquipmentState, isTwoHandWeapon } from '../utils/equipmentUtils';
 import { canEquip } from '../utils/equipmentValidation';
-import { consumeInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
+import { consumeInventoryItemByName, getEnhancePreview } from '../utils/enhancementUtils';
 import { AT } from '../reducers/actionTypes';
 import { MSG } from '../data/messages';
 import type { Item } from '../types/index.js';
@@ -148,25 +147,32 @@ export const createEquipmentActions = (ctx: any) => {
 
         // ── 아이템 강화 ──────────────────────────────────────────────────
         enhanceItem: (itemId: any) => {
-            const equipSlot = typeof itemId === 'string' && itemId.startsWith('equip:')
+            const fallbackEquipSlot = typeof itemId === 'string' && itemId.startsWith('equip:')
                 ? itemId.split(':')[1]
                 : null;
+            const equippedItemSlot = (['weapon', 'armor', 'offhand'] as const).find((slotName) => (
+                player.equip?.[slotName]?.id === itemId
+            ));
+            const equipSlot = fallbackEquipSlot || equippedItemSlot || null;
             const item = player.inv.find((i: any) => i.id === itemId)
                 || (equipSlot ? player.equip?.[equipSlot] : null)
                 || player.equip.weapon?.id === itemId && player.equip.weapon
                 || player.equip.armor?.id === itemId && player.equip.armor
                 || player.equip.offhand?.id === itemId && player.equip.offhand;
             if (!item) return addLog('error', MSG.ITEM_NOT_FOUND);
-            const availability = getEnhanceAvailability(item, player.gold, player.inv);
-            if (availability.missing === 'invalid') return addLog('warn', MSG.ENHANCE_NOT_EQUIP);
-            if (availability.missing === 'max') return addLog('warn', MSG.ENHANCE_MAX_LEVEL);
+            const slot = equipSlot === 'weapon' || equipSlot === 'armor' || equipSlot === 'offhand'
+                ? equipSlot
+                : null;
+            const preview = getEnhancePreview(item, player.gold, player.inv, slot);
+            if (!preview) return addLog('warn', MSG.ENHANCE_NOT_EQUIP);
+            if (preview.missing === 'max') return addLog('warn', MSG.ENHANCE_MAX_LEVEL);
 
-            const requirement = availability.requirement;
-            const nextLevel = (item.enhance || 0) + 1;
+            const requirement = preview.requirement;
+            const nextLevel = preview.nextLevel;
             if (!requirement) return addLog('warn', MSG.ENHANCE_NOT_EQUIP);
 
-            if (availability.missing === 'gold') return addLog('warn', MSG.ENHANCE_NO_GOLD(requirement.gold));
-            if (availability.missing === 'material') {
+            if (preview.missing === 'gold') return addLog('warn', MSG.ENHANCE_NO_GOLD(requirement.gold));
+            if (preview.missing === 'material') {
                 return addLog('warn', MSG.ENHANCE_NO_MATERIAL(requirement.materialName, requirement.materials));
             }
 
@@ -174,8 +180,7 @@ export const createEquipmentActions = (ctx: any) => {
             if (removed < requirement.materials) {
                 return addLog('warn', MSG.ENHANCE_NO_MATERIAL(requirement.materialName, requirement.materials));
             }
-            const rate = BALANCE.ENHANCE_RATES[item.enhance || 0];
-            const success = Math.random() < rate;
+            const success = Math.random() < preview.successRate;
             dispatch({
                 type: AT.SET_PLAYER,
                 payload: (p: any) => ({

@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Sparkles, Target, ChevronDown, ChevronUp, ListTree } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
 import { MSG } from '../data/messages';
-import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
+import { countInventoryItemByName, getEnhancePreview, type EnhanceItemSlot } from '../utils/enhancementUtils';
 import { getEquipmentDisclosure, getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getSignatureSetProgress } from '../utils/signatureSetBonus.js';
@@ -12,6 +12,7 @@ import { getJobSetCatalog } from '../utils/jobOutfitAffinity.js';
 import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import ItemIcon from './icons/ItemIcon';
+import EnhanceDecisionCard from './EnhanceDecisionCard';
 import type { Player } from '../types/index.js';
 
 // cycle 474: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
@@ -42,6 +43,7 @@ const SIG_SET_TONE: any = Object.freeze({
 const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const [showSetCatalog, setShowSetCatalog] = useState(false);
     const [detailOverride, setDetailOverride] = useState<boolean | null>(null);
+    const [enhanceTarget, setEnhanceTarget] = useState<{ item: any; slot: EnhanceItemSlot; itemId: string } | null>(null);
     const disclosure = getEquipmentDisclosure(player);
     const showDetails = detailOverride ?? disclosure.showDetails;
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip || {}), [player?.equip]);
@@ -67,19 +69,30 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const slotEntries = useMemo(() => SLOT_CONFIG.map((slot: any) => {
         const equipMap = (player?.equip || {}) as Record<string, any>;
         const item = equipMap[slot.key] || null;
-        const availability = getEnhanceAvailability(item, player?.gold || 0, player?.inv || []);
+        const preview = getEnhancePreview(item, player?.gold || 0, player?.inv || [], slot.key as EnhanceItemSlot);
         const isSignature = item ? isSignatureItem(item) : false;
 
         return {
             ...slot,
             item,
             isSignature,
-            requirement: availability.requirement,
-            canEnhance: availability.canEnhance,
-            affordable: availability.affordable,
-            enhanceHint: availability.hint,
+            requirement: preview?.requirement || null,
+            canEnhance: preview?.canEnhance || false,
+            affordable: preview?.affordable || false,
+            enhanceHint: preview?.hint || '강화 불가',
         };
     }), [player?.equip, player?.gold, player?.inv]);
+    const enhancePreview = useMemo(() => (
+        enhanceTarget
+            ? getEnhancePreview(enhanceTarget.item, player?.gold || 0, player?.inv || [], enhanceTarget.slot)
+            : null
+    ), [enhanceTarget, player?.gold, player?.inv]);
+
+    const confirmEnhancement = () => {
+        if (!enhanceTarget || !enhancePreview?.affordable) return;
+        actions?.enhanceItem?.(enhanceTarget.itemId);
+        setEnhanceTarget(null);
+    };
 
     const weaponName = equipProfile.mainWeapon?.name || '없음';
     const offhandName = equipProfile.offhandItem?.name || '없음';
@@ -458,7 +471,11 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     <button
                                         type="button"
                                         data-testid={`equipment-enhance-${slot.key}`}
-                                        onClick={() => actions.enhanceItem(item.id || `equip:${slotKey}`)}
+                                        onClick={() => setEnhanceTarget({
+                                            item,
+                                            slot: slotKey as EnhanceItemSlot,
+                                            itemId: item.id || `equip:${slotKey}`,
+                                        })}
                                         disabled={!slot.affordable}
                                         className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-fira font-bold transition-colors ${
                                             slot.affordable
@@ -467,7 +484,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                         }`}
                                         title={slot.requirement ? `다음 강화 비용: 골드 ${slot.requirement.gold.toLocaleString()} · ${slot.requirement.materialName} ${slot.requirement.materials}개` : '강화 불가'}
                                     >
-                                        강화
+                                        강화 보기
                                     </button>
                                 )}
                             </div>
@@ -475,6 +492,14 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                     );
                 })}
             </div>}
+
+            {enhancePreview && (
+                <EnhanceDecisionCard
+                    preview={enhancePreview}
+                    onCancel={() => setEnhanceTarget(null)}
+                    onConfirm={confirmEnhancement}
+                />
+            )}
         </div>
     );
 };

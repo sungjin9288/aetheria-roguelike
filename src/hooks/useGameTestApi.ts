@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { CONSTANTS } from '../data/constants';
+import { DB } from '../data/db';
 import { GS } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
 import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
@@ -384,6 +385,54 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     },
                 });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'equipment' });
+            },
+            seedItemInvestmentScenario: () => {
+                const er = engineRef.current;
+                const recipe = DB.ITEMS.recipes.find((entry: any) => entry.id === 'r1');
+                const recipeMaterials = (recipe?.inputs || []).flatMap((input: any) => (
+                    Array.from({ length: input.qty }, (_: any, index: number) => ({
+                        id: `investment-${input.name}-${index}`,
+                        name: input.name,
+                        type: 'mat',
+                    }))
+                ));
+                const enhanceMaterials = Array.from({ length: 5 }, (_: any, index: number) => ({
+                    id: `investment-enhance-${index}`,
+                    name: CONSTANTS.ENHANCE_MATERIAL_NAME,
+                    type: 'mat',
+                }));
+                const synthesisItems = DB.ITEMS.weapons
+                    .filter((item: any) => item.tier === 2)
+                    .slice(0, 3)
+                    .map((item: any, index: number) => ({ ...item, id: `investment-synth-${index}` }));
+
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        job: '모험가',
+                        gold: 5_000,
+                        premiumCurrency: 0,
+                        inv: [...recipeMaterials, ...enhanceMaterials, ...synthesisItems],
+                        equip: {
+                            ...er.player.equip,
+                            weapon: {
+                                id: 'investment-equipped-weapon',
+                                name: '낡은 단검',
+                                type: 'weapon',
+                                hands: 1,
+                                tier: 1,
+                                val: 4,
+                                enhance: 0,
+                                jobs: ['모험가'],
+                            },
+                        },
+                        stats: {
+                            ...(er.player.stats || {}),
+                            synthProtects: 1,
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.CRAFTING });
             },
             seedClaimableQuestScenario: () => {
                 const er = engineRef.current;
