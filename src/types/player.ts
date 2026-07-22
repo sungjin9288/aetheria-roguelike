@@ -156,6 +156,7 @@ export interface ExpeditionSnapshot {
     explores: number;
     inventory: ExpeditionInventoryCheckpoint[];
     quests: ExpeditionQuestCheckpoint[];
+    focusQuestIds: Array<string | number>;
 }
 
 export interface ExpeditionSummary {
@@ -213,6 +214,7 @@ export interface Player {
     inv?: Item[];
     equip?: EquipSlots;
     quests?: any[];
+    expeditionFocusQuestIds?: Array<string | number>;
     achievements?: string[];
     stats?: PlayerStats & { [key: string]: any };
     premiumCurrency?: number;

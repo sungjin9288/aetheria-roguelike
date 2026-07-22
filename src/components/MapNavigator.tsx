@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ArrowRight, Check, Compass, LockKeyhole, Route, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
 import type { GameMap } from '../types/index.js';
-import { getMoveRecommendations, getQuestTracker } from '../utils/adventureGuide';
+import { getMoveRecommendations } from '../utils/adventureGuide';
 import { getGravesAtLoc } from '../utils/graveUtils';
 import { getExitBadges } from '../utils/mapBadges';
 import { getMapProgressState } from '../utils/mapProgress';
@@ -10,6 +10,7 @@ import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/map
 import { getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
 import RouteTopology, { type RouteTopologyEntry } from './RouteTopology';
 import SignalBadge from './SignalBadge';
+import { getExpeditionFocusRouteTargets, getFocusedExpeditionQuestEntries } from '../utils/expeditionMissionFocus';
 
 type MapState = 'unexplored' | 'exploring' | 'completed';
 
@@ -171,13 +172,11 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         currentMap,
         DB.MAPS,
     );
-    const questTracker = getQuestTracker(player);
-    const questTarget = questTracker?.routeLabel && DB.MAPS[questTracker.routeLabel]
-        ? questTracker.routeLabel
-        : null;
-    const questNextStep = questTarget
-        ? getNextMapTowardTarget(DB.MAPS, player.loc, questTarget)
-        : null;
+    const focusedQuestEntries = getFocusedExpeditionQuestEntries(player);
+    const questTargets = getExpeditionFocusRouteTargets(player).filter((target) => DB.MAPS[target]);
+    const questNextSteps = new Set(questTargets
+        .map((target) => getNextMapTowardTarget(DB.MAPS, player.loc, target))
+        .filter(Boolean));
     const areaBossDefeated = player.stats?.areaBossDefeated;
     const bossGauge = player.stats?.bossGauge;
 
@@ -202,7 +201,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         const entry = entriesByName.get(route.name);
         return {
             ...route,
-            isMissionRoute: route.name === questNextStep,
+            isMissionRoute: questNextSteps.has(route.name),
             isBoss: Boolean(entry?.boss),
             isLocked: playerLevel < getMapRequiredLevel(entry, playerLevel),
         };
@@ -221,6 +220,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
     const selectedDescription = blindMap && selectedIsDirectExit
         ? '이동하면 지역 정보가 드러납니다.'
         : selectedEntry?.desc;
+    const selectedMissionCount = focusedQuestEntries.filter((entry) => entry.targetMaps.includes(selectedEntry?.name)).length;
     const statusCounts = mapEntries.reduce<Record<MapState, number>>((counts, entry) => {
         counts[entry.state] += 1;
         return counts;
@@ -285,8 +285,8 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                                         {MAP_STATE[selectedEntry.state].label}
                                     </SignalBadge>
                                 )}
-                                {!blindMap && questTarget === selectedEntry.name && (
-                                    <SignalBadge tone="recommended" size="sm">임무 목적지</SignalBadge>
+                                {!blindMap && selectedMissionCount > 0 && (
+                                    <SignalBadge tone="recommended" size="sm">집중 임무 {selectedMissionCount}</SignalBadge>
                                 )}
                             </div>
                             <p className="aether-type-body mt-1 font-readable text-slate-300/78">

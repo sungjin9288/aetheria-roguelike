@@ -50,6 +50,7 @@ export const INITIAL_STATE: GameState = {
         name: '', job: '모험가', gender: 'male', level: 1, hp: CONSTANTS.START_HP, maxHp: CONSTANTS.START_HP, mp: CONSTANTS.START_MP, maxMp: CONSTANTS.START_MP, atk: 12, def: 5, exp: 0, nextExp: CONSTANTS.START_NEXT_EXP, gold: CONSTANTS.START_GOLD, loc: '시작의 마을',
         inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0], offhand: null },
         quests: [], achievements: [],
+        expeditionFocusQuestIds: [],
         stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0, bountyDate: null, bountyIssued: false, bountiesCompleted: 0, relicCount: 0, crafts: 0, syntheses: 0, maxKillStreak: 0, abyssFloor: 0, abyssRecord: 0, demonKingSlain: 0, dailyProtocol: null, claimedAchievements: [], claimedQuestIds: [], explores: 0, exploresByLocation: {}, escapes: 0, buildWins: {}, discoveryChains: [], visitedMaps: ['시작의 마을'], exploreState: { ...DEFAULT_EXPLORE_STATE }, codex: { weapons: {}, armors: {}, shields: {}, monsters: {}, recipes: {}, materials: {} }, codexClaimed: [], lastSeenAt: null, abyssDailyDive: null },
         premiumCurrency: 0,
         seasonPass: { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' },

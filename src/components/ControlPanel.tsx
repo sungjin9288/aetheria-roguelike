@@ -31,6 +31,7 @@ import CraftingPanel from './tabs/CraftingPanel';
 import { ACTION_KIND_TO_BUTTON } from './controlPanelConfig';
 import type { Player, Monster } from '../types/index.js';
 import { getTownActionPresentation } from '../utils/townActionPresentation';
+import { getExpeditionFocusRouteTargets, MAX_EXPEDITION_FOCUS_QUESTS } from '../utils/expeditionMissionFocus';
 
 interface ControlPanelProps {
   gameState?: string;
@@ -77,7 +78,7 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
       />
       <div className="relative flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <div className="aether-label text-slate-300/70">현재 임무</div>
+          <div className="aether-label text-slate-300/70">이번 원정 · {tracker.focusCount}/{MAX_EXPEDITION_FOCUS_QUESTS}</div>
           <div className="aether-type-title mt-0.5 font-readable font-semibold text-white/94">
             {tracker.title}
           </div>
@@ -94,6 +95,14 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
           className="h-full rounded-full bg-[#7dd4d8]"
           style={{ width: `${Math.max(0, Math.min(100, tracker.progressPercent || 0))}%` }}
         />
+      </div>
+      <div className="relative mt-2 grid gap-1 min-[401px]:grid-cols-3" data-testid="control-expedition-focus-list">
+        {tracker.focusQuests?.map((quest: any) => (
+          <div key={quest.questId} className="aether-decision-cell min-h-[38px] rounded-[0.7rem] px-2 py-1.5">
+            <div className="aether-type-meta break-words font-readable font-semibold text-slate-100/88">{quest.title}</div>
+            <div className="aether-type-label mt-0.5 font-readable text-slate-400">{quest.progressLabel}</div>
+          </div>
+        ))}
       </div>
       <div className="relative mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-4">
         {missionSteps.map((step: any, index: number) => {
@@ -138,11 +147,12 @@ const townPrimaryIcons: Record<string, any> = {
   rest: Moon,
 };
 
-const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction }: {
+const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction, onEditFocus }: {
   preparation: any;
   guidance: any;
   primary: any;
   onPrimaryAction: () => void;
+  onEditFocus: () => void;
 }) => {
   const PrimaryIcon = townPrimaryIcons[primary.kind] || Route;
   const checks = [
@@ -181,6 +191,23 @@ const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction }
         </div>
       )}
 
+      {preparation.focusQuests.length > 0 && (
+        <div className="mt-2" data-testid="control-expedition-focus-list">
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <div className="aether-label">이번 원정 임무</div>
+            <span className="aether-type-meta font-readable text-[#b9f1ec]">{preparation.focusQuests.length}/{MAX_EXPEDITION_FOCUS_QUESTS}</span>
+          </div>
+          <div className="grid gap-1 min-[401px]:grid-cols-3">
+            {preparation.focusQuests.map((quest: any) => (
+              <div key={quest.questId} className="aether-expedition-check min-w-0 px-2 py-1.5">
+                <div className="aether-type-meta break-words font-readable font-semibold text-slate-100/90">{quest.title}</div>
+                <div className="aether-type-label mt-0.5 font-readable text-slate-400">{quest.progressLabel}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-2 grid grid-cols-2 gap-1">
         {checks.map((check) => (
           <div key={check.label} className="aether-expedition-check min-w-0 px-2 py-1.5">
@@ -192,16 +219,28 @@ const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction }
         ))}
       </div>
 
-      <div data-testid="control-town-primary" data-town-primary-kind={primary.kind}>
+      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+        <div data-testid="control-town-primary" data-town-primary-kind={primary.kind}>
+          <button
+            type="button"
+            data-testid={primary.testId}
+            disabled={primary.disabled}
+            onClick={onPrimaryAction}
+            className={`${primary.tone === 'reward' ? 'aether-cta-gold text-[#f6e7c8]' : 'aether-cta-primary text-[#dff7f5]'} flex min-h-[48px] w-full items-center justify-center gap-2 px-3 font-readable text-xs font-bold disabled:cursor-not-allowed disabled:opacity-55`}
+          >
+            <PrimaryIcon size={14} />
+            {primary.label}
+          </button>
+        </div>
         <button
           type="button"
-          data-testid={primary.testId}
-          disabled={primary.disabled}
-          onClick={onPrimaryAction}
-          className={`${primary.tone === 'reward' ? 'aether-cta-gold text-[#f6e7c8]' : 'aether-cta-primary text-[#dff7f5]'} mt-2 flex min-h-[48px] w-full items-center justify-center gap-2 px-3 font-readable text-xs font-bold disabled:cursor-not-allowed disabled:opacity-55`}
+          data-testid="control-edit-expedition-focus"
+          title="원정 임무 구성"
+          onClick={onEditFocus}
+          className="aether-action-button flex min-h-[48px] min-w-[48px] items-center justify-center rounded-[0.75rem] border border-white/10 text-[#b9f1ec]"
         >
-          <PrimaryIcon size={14} />
-          {primary.label}
+          <ScrollText size={16} />
+          <span className="sr-only">원정 임무 구성</span>
         </button>
       </div>
     </section>
@@ -327,15 +366,13 @@ const ControlPanel = ({
     mapData,
     DB.MAPS,
   );
-  const questTarget = questTracker?.routeLabel && DB.MAPS[questTracker.routeLabel]
-    ? questTracker.routeLabel
-    : null;
-  const questNextStep = questTarget ? getNextMapTowardTarget(DB.MAPS, currentLocation, questTarget) : null;
+  const questTargets = getExpeditionFocusRouteTargets(player).filter((target) => DB.MAPS[target]);
+  const questNextSteps = new Set(questTargets.map((target) => getNextMapTowardTarget(DB.MAPS, currentLocation, target)).filter(Boolean));
   const routeTopologyEntries: RouteTopologyEntry[] = moveRecommendations.map((route: any) => {
     const targetMap = DB.MAPS[route.name];
     return {
       ...route,
-      isMissionRoute: route.name === questNextStep,
+      isMissionRoute: questNextSteps.has(route.name),
       isBoss: Boolean(targetMap?.boss),
       isLocked: playerLevel < getMapRequiredLevel(targetMap, playerLevel),
     };
@@ -661,6 +698,7 @@ const ControlPanel = ({
                 guidance={guidance}
                 primary={townPresentation.primary}
                 onPrimaryAction={runTownPrimaryAction}
+                onEditFocus={() => setGameState?.(GS.QUEST_BOARD)}
               />
             </div>
           ) : questTracker ? (

@@ -21,6 +21,7 @@ export const AT = Object.freeze({
 
     // Entities
     SET_PLAYER: 'SET_PLAYER',
+    SET_EXPEDITION_FOCUS: 'SET_EXPEDITION_FOCUS',
     SET_ENEMY: 'SET_ENEMY',
     SET_EVENT: 'SET_EVENT',
     SET_GRAVE: 'SET_GRAVE',

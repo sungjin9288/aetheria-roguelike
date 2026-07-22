@@ -6,6 +6,7 @@ import type {
     ExpeditionSummary,
     Player,
 } from '../types/player.js';
+import { getActiveExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
 
 const numberOr = (value: unknown, fallback = 0) => (
     Number.isFinite(Number(value)) ? Number(value) : fallback
@@ -100,7 +101,7 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
     if (typeof candidate.origin !== 'string' || typeof candidate.destination !== 'string') return null;
     if (!Number.isFinite(Number(candidate.startedAt))) return null;
 
-    return {
+    const normalized = {
         id: candidate.id,
         startedAt: nonNegative(candidate.startedAt),
         origin: candidate.origin,
@@ -130,6 +131,12 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
                 }]
                 : []
         )),
+    };
+    return {
+        ...normalized,
+        focusQuestIds: getActiveExpeditionFocusQuestIds({
+            activeExpedition: { ...normalized, focusQuestIds: candidate.focusQuestIds },
+        }) || [],
     };
 };
 
@@ -192,6 +199,7 @@ export const startExpedition = (player: Player, destination: string, now: number
         explores: nonNegative(player.stats?.explores),
         inventory: (Array.isArray(player.inv) ? player.inv : []).map(inventoryCheckpoint),
         quests: questCheckpoints(player, questCatalog),
+        focusQuestIds: getPreparedExpeditionFocusQuestIds(player, destination, questCatalog),
     };
     return { ...player, activeExpedition: snapshot };
 };

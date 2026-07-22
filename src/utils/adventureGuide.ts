@@ -1,34 +1,15 @@
 import { BALANCE } from '../data/constants.js';
 import type { GameMap, Player } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
-import { QUESTS } from '../data/quests.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
 import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
 import { getMapRequiredLevel, getNextMapTowardTarget } from './mapTopology.js';
-
-const toArray = (value: any) => (Array.isArray(value) ? value : []);
-
-const getActiveQuestEntries = (player: Player) => (
-    toArray(player?.quests)
-        .map((questState: any) => {
-            const quest = questState?.isBounty
-                ? questState
-                : QUESTS.find((entry: any) => entry.id === questState?.id);
-            if (!quest) return null;
-
-            const progress = questState?.progress || 0;
-            return {
-                id: questState.id,
-                quest,
-                progress,
-                isBounty: Boolean(questState?.isBounty),
-                isComplete: progress >= (quest.goal || 0),
-            };
-        })
-        .filter(Boolean)
-);
+import {
+    getExpeditionQuestTargetMaps,
+    getFocusedExpeditionQuestEntries,
+} from './expeditionMissionFocus.js';
 
 const clampPercent = (value: any) => Math.max(0, Math.min(100, Math.round(value * 100)));
 const ROUTE_PLAN_LOW_HP_RATIO = 0.35;
@@ -113,20 +94,6 @@ const getQuestProgressPercent = (entry: any) => {
     return Math.max(0, Math.min(100, Math.round(((entry.progress || 0) / Math.max(1, entry.quest.goal)) * 100)));
 };
 
-const getQuestTargetMaps = (quest: any) => {
-    if (quest?.location && MAPS[quest.location]) return [quest.location];
-    const target = quest?.target;
-    if (!target || target === 'Level') return [];
-
-    return Object.entries(MAPS)
-        .filter(([, map]: any) => (
-            toArray(map?.monsters).includes(target)
-            || toArray(map?.bossMonsters).includes(target)
-            || map?.boss === target
-        ))
-        .map(([name]) => name);
-};
-
 const getQuestRouteLabel = (quest: any, targetMaps: string[]) => {
     if (targetMaps.length > 0) return targetMaps[0];
     if (quest?.target === 'Level') return '성장 루트';
@@ -171,7 +138,7 @@ const getQuestReturnLabel = (entry: any, targetMaps: string[]) => {
 };
 
 const buildQuestTrackerPayload = (entry: any, kind: string, progressLabel: string) => {
-    const targetMaps = getQuestTargetMaps(entry.quest);
+    const targetMaps = getExpeditionQuestTargetMaps(entry.quest);
     const routeLabel = getQuestRouteLabel(entry.quest, targetMaps);
     const nextStep = getQuestNextStep(entry, targetMaps);
     const returnLabel = getQuestReturnLabel(entry, targetMaps);
@@ -190,13 +157,33 @@ const buildQuestTrackerPayload = (entry: any, kind: string, progressLabel: strin
 };
 
 export const getQuestTracker = (player: Player) => {
-    const entries = getActiveQuestEntries(player);
+    const entries = getFocusedExpeditionQuestEntries(player);
     if (!entries.length) return null;
+
+    const withFocusSummary = (payload: any) => ({
+        ...payload,
+        focusCount: entries.length,
+        focusQuests: entries.map((entry: any) => {
+            const summary = buildQuestTrackerPayload(
+                entry,
+                entry.isComplete ? 'claimable' : entry.isBounty ? 'bounty' : 'active',
+                entry.isComplete ? '보상 대기' : getQuestProgressLabel(entry),
+            );
+            return {
+                questId: summary.questId,
+                title: summary.title,
+                progressLabel: summary.progressLabel,
+                routeLabel: summary.routeLabel,
+                nextStep: summary.nextStep,
+                isComplete: entry.isComplete,
+            };
+        }),
+    });
 
     // cycle 334: detail 필드 제거 — getQuestTracker 외부 read 0건이던 dead field.
     const claimable = entries.find((entry: any) => entry.isComplete);
     if (claimable) {
-        return buildQuestTrackerPayload(claimable, 'claimable', '보상 대기');
+        return withFocusSummary(buildQuestTrackerPayload(claimable, 'claimable', '보상 대기'));
     }
 
     const ranked = [...entries].sort((left: any, right: any) => {
@@ -206,7 +193,7 @@ export const getQuestTracker = (player: Player) => {
     });
 
     const focus: any = ranked[0];
-    return buildQuestTrackerPayload(focus, focus.isBounty ? 'bounty' : 'active', getQuestProgressLabel(focus));
+    return withFocusSummary(buildQuestTrackerPayload(focus, focus.isBounty ? 'bounty' : 'active', getQuestProgressLabel(focus)));
 };
 
 // cycle 334: description 필드 제거 — getExplorationForecast 외부 read 0건이던 dead field.
@@ -439,6 +426,7 @@ export const getExpeditionPreparation = (
         readinessLabel,
         missionTitle: tracker?.title || '자유 원정',
         missionStatus: tracker?.progressLabel || '임무 선택 전',
+        focusQuests: tracker?.focusQuests || [],
         destination: departure?.name || '이동 경로 없음',
         resourceLabel: `HP ${hpPercent}% · NRG ${mpPercent}%`,
         equipmentLabel: equipmentWarnings.length > 0 ? equipmentWarnings.join(' · ') : '주요 장비 확인',

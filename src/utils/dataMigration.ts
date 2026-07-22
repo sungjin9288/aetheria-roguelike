@@ -2,6 +2,7 @@ import { ITEMS } from '../data/items.js';
 import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
 import { isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils.js';
 import { normalizeActiveExpedition, normalizeExpeditionSummary } from './expeditionLedger.js';
+import { getDefaultExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
 
 // gameUtils.ts에서 분리 (저장 데이터 마이그레이션) — 행동 보존 리팩토링.
 //   순환 의존을 피하려 toArray(1줄 헬퍼)는 인라인.
@@ -105,6 +106,9 @@ export const migrateData = (rawData: any) => {
     target.stats.exploreState = { ...DEFAULT_EXPLORE_STATE, ...(target.stats.exploreState || {}) };
     target.activeExpedition = normalizeActiveExpedition(target.activeExpedition);
     target.lastExpeditionSummary = normalizeExpeditionSummary(target.lastExpeditionSummary);
+    target.expeditionFocusQuestIds = Array.isArray(target.expeditionFocusQuestIds)
+        ? getPreparedExpeditionFocusQuestIds({ ...target, activeExpedition: null })
+        : getDefaultExpeditionFocusQuestIds(target, target.activeExpedition?.destination);
     if (target.loc && !target.stats.visitedMaps.includes(target.loc)) {
         target.stats.visitedMaps.push(target.loc);
     }

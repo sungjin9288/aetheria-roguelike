@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { ChevronDown, ScrollText } from 'lucide-react';
+import { ChevronDown, ScrollText, Target } from 'lucide-react';
 import { formatRewardParts } from '../../utils/gameUtils';
 import { getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { getQuestBoardRecommendations } from '../../utils/questOperations.js';
 import SignalBadge from '../SignalBadge';
 import FocusPanelHeader from '../FocusPanelHeader';
+import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus.js';
 
 const getQuestObjectiveText = (quest: any) => {
   if (quest?.objective) return quest.objective;
@@ -165,6 +166,9 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
     locked: lockedQuestEntries,
   } = getQuestBoardRecommendations(player);
   const claimableQuestCount = activeQuestEntries.filter((e: any) => e.isComplete).length;
+  const focusedQuestIds = getPreparedExpeditionFocusQuestIds(player);
+  const isFocusedQuest = (questId: string | number) => focusedQuestIds.some((id) => String(id) === String(questId));
+  const focusLimitReached = focusedQuestIds.length >= MAX_EXPEDITION_FOCUS_QUESTS;
 
   const today = new Date().toISOString().slice(0, 10);
   const hasActiveBounty = activeQuestEntries.some((e: any) => e.isBounty);
@@ -277,7 +281,13 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
         {/* 진행 중 임무 */}
         <section className="space-y-3">
           <div className="flex items-center justify-between border-b border-white/8 pb-2">
-            <h3 className="font-readable text-sm font-semibold text-emerald-100">진행 중 임무</h3>
+            <div>
+              <h3 className="font-readable text-sm font-semibold text-emerald-100">이번 원정 임무</h3>
+              <div className="aether-type-meta mt-0.5 font-readable text-slate-400">진행 중 임무는 유지되며 최대 3개를 추적</div>
+            </div>
+            <SignalBadge tone={focusLimitReached ? 'recommended' : 'neutral'} size="sm">
+              {focusedQuestIds.length}/{MAX_EXPEDITION_FOCUS_QUESTS}
+            </SignalBadge>
           </div>
           {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry: any) => (
             <QuestRowShell key={`active_${entry.id}`} kind={entry.isComplete ? 'reward' : entry.isBounty ? 'bounty' : 'active'} testId="quest-active-row">
@@ -287,6 +297,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                     <div className={`font-readable text-base font-semibold ${entry.isComplete ? 'text-emerald-100' : 'text-white'}`}>{entry.quest.title}</div>
                     {entry.isBounty && <span className="aether-type-meta rounded-full border border-[#d5b180]/28 bg-[#d5b180]/10 px-2 py-0.5 font-readable text-[#f6e7c8]">현상수배</span>}
                     {entry.isComplete && <span className="aether-type-meta rounded-full border border-emerald-300/24 bg-emerald-300/10 px-2 py-0.5 font-readable text-emerald-100">보상 수령 가능</span>}
+                    {isFocusedQuest(entry.id) && <SignalBadge tone="recommended" size="sm">이번 원정</SignalBadge>}
                     {entry.quest.buildTag && (
                       <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
                     )}
@@ -313,9 +324,23 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   </div>
                 </div>
                 {entry.isComplete ? (
-                  <Motion.button data-testid="quest-board-claim-reward" whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-emerald-300/35 bg-emerald-300/16 px-5 py-3 text-xs font-bold text-emerald-100 transition-all hover:bg-emerald-300/22">
-                    보상 받기
-                  </Motion.button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Motion.button
+                      type="button"
+                      data-testid="quest-board-toggle-expedition-focus"
+                      data-focus-selected={isFocusedQuest(entry.id)}
+                      title={isFocusedQuest(entry.id) ? '이번 원정에서 제외' : '이번 원정에 추가'}
+                      whileTap={{ scale: 0.97 }}
+                      disabled={!isFocusedQuest(entry.id) && focusLimitReached}
+                      onClick={() => actions.toggleExpeditionFocusQuest(entry.id)}
+                      className="aether-disabled-action flex min-h-[44px] items-center justify-center gap-1.5 border border-[#7dd4d8]/24 bg-[#7dd4d8]/8 px-3 text-xs font-bold text-[#dff7f5]"
+                    >
+                      <Target size={13} />{isFocusedQuest(entry.id) ? '원정 제외' : '원정 추가'}
+                    </Motion.button>
+                    <Motion.button data-testid="quest-board-claim-reward" whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-emerald-300/35 bg-emerald-300/16 px-4 py-3 text-xs font-bold text-emerald-100 transition-all hover:bg-emerald-300/22">
+                      보상 받기
+                    </Motion.button>
+                  </div>
                 ) : confirmAbandonQuestId === entry.id ? (
                   <div data-testid="quest-board-abandon-warning" className="border-t border-rose-300/18 pt-3">
                     <div className="font-readable text-[12px] leading-[1.45] text-rose-100/88">
@@ -346,13 +371,19 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   </div>
                 ) : (
                   <div className="flex min-h-[44px] items-center justify-between gap-3 border-t border-white/8 pt-3">
-                    <div className="font-readable text-[11px] text-slate-300">진행 중</div>
                     <Motion.button
-                      data-testid="quest-board-abandon-mission"
+                      type="button"
+                      data-testid="quest-board-toggle-expedition-focus"
+                      data-focus-selected={isFocusedQuest(entry.id)}
+                      title={isFocusedQuest(entry.id) ? '이번 원정에서 제외' : '이번 원정에 추가'}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setConfirmAbandonQuestId(entry.id)}
-                      className="min-h-[44px] rounded-[0.85rem] border border-rose-300/20 bg-rose-300/8 px-4 py-2 text-xs font-bold text-rose-100/88"
+                      disabled={!isFocusedQuest(entry.id) && focusLimitReached}
+                      onClick={() => actions.toggleExpeditionFocusQuest(entry.id)}
+                      className="aether-disabled-action flex min-h-[44px] items-center gap-1.5 border border-[#7dd4d8]/24 bg-[#7dd4d8]/8 px-3 text-xs font-bold text-[#dff7f5]"
                     >
+                      <Target size={13} />{isFocusedQuest(entry.id) ? '원정 제외' : '원정 추가'}
+                    </Motion.button>
+                    <Motion.button data-testid="quest-board-abandon-mission" whileTap={{ scale: 0.97 }} onClick={() => setConfirmAbandonQuestId(entry.id)} className="min-h-[44px] rounded-[0.85rem] border border-rose-300/20 bg-rose-300/8 px-4 py-2 text-xs font-bold text-rose-100/88">
                       임무 포기
                     </Motion.button>
                   </div>

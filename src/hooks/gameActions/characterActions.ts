@@ -12,6 +12,7 @@ import { buildClassVitals } from './_shared';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { createQuestProgressState } from '../../utils/questProgress';
+import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus';
 
 const getStartingQuests = (player: any) => {
     const quests = Array.isArray(player.quests) ? player.quests : [];
@@ -53,6 +54,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             const tempPlayer = { ...player, job: jobId, maxHp, maxMp: vitals.maxMp };
             const fullStartStats = getFullStats(tempPlayer);
             const startingQuests = getStartingQuests(player);
+            const expeditionFocusQuestIds = getDefaultExpeditionFocusQuestIds({ ...player, quests: startingQuests });
             dispatch({ type: AT.SET_PLAYER, payload: {
                 name: trimmedName, gender, job: jobId,
                 level: 1, exp: 0, nextExp: CONSTANTS.START_NEXT_EXP,
@@ -61,6 +63,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
                 gold: startGold,
                 challengeModifiers: mods,
                 quests: startingQuests,
+                expeditionFocusQuestIds,
                 stats: { ...(player.stats || {}), visitedMaps: [CONSTANTS.START_LOCATION] }
             }});
             const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];

@@ -20,6 +20,7 @@ import { applyDynamicDifficulty } from '../systems/DifficultyManager';
 import { getBossSignatureDrops } from './bossSignatureHint';
 import { getSignaturePityMultiplier } from './signaturePity';
 import { resolveAbyssDailyDive } from './abyssDailyDive';
+import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
 
 // explorationPacing.ts의 clamp와 동일 구현 (해당 모듈은 export하지 않음) — 소규모 순수
 // 헬퍼는 모듈 간 공유보다 지역 복제가 이 코드베이스의 기존 관례(pacing/aiEventUtils 등).
@@ -27,13 +28,11 @@ const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, va
 
 const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
     const mapMonsters = Array.isArray(mapData.monsters) ? mapData.monsters : [];
-    if (mapMonsters.length === 0 || !Array.isArray(player.quests)) return [];
+    if (mapMonsters.length === 0) return [];
 
-    const targets = player.quests.flatMap((questState: any) => {
-        const quest = questState?.isBounty
-            ? questState
-            : DB.QUESTS.find((entry: any) => entry.id === questState?.id);
-        if (!quest || (questState.progress || 0) >= (quest.goal || 0)) return [];
+    const targets = getFocusedExpeditionQuestEntries(player).flatMap((entry: any) => {
+        const quest = entry.quest;
+        if (entry.isComplete) return [];
         if (quest.location && quest.location !== player.loc) return [];
         return mapMonsters.includes(quest.target) ? [quest.target] : [];
     });

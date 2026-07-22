@@ -5,6 +5,12 @@ import { MSG } from '../../data/messages';
 import { getGravesAtLoc, removeGravesAtLoc, resolveGraveRecovery } from '../../utils/graveUtils.js';
 import { getUnmetQuestPrerequisite } from '../../utils/questPrerequisites.js';
 import { createQuestProgressState } from '../../utils/questProgress.js';
+import {
+    appendExpeditionFocusQuest,
+    getPreparedExpeditionFocusQuestIds,
+    MAX_EXPEDITION_FOCUS_QUESTS,
+    removeExpeditionFocusQuest,
+} from '../../utils/expeditionMissionFocus.js';
 
 export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
     const { player, grave, dispatch, addLog } = deps;
@@ -25,7 +31,7 @@ export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
                 type: AT.SET_PLAYER,
                 payload: (p: any) => {
                     const acceptedQuest = createQuestProgressState(qData, p);
-                    return { ...p, quests: [...p.quests, acceptedQuest] };
+                    return appendExpeditionFocusQuest({ ...p, quests: [...p.quests, acceptedQuest] }, qId);
                 }
             });
             addLog('event', MSG.QUEST_ACCEPTED(qData.title));
@@ -47,10 +53,10 @@ export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
 
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => ({
+                payload: (p: any) => removeExpeditionFocusQuest({
                     ...p,
                     quests: p.quests.filter((quest: any) => quest.id !== qId),
-                })
+                }, qId)
             });
             addLog('event', activeQuest.isBounty
                 ? MSG.BOUNTY_ABANDONED
@@ -96,13 +102,42 @@ export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
             };
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => ({
+                payload: (p: any) => appendExpeditionFocusQuest({
                     ...p,
                     quests: [...p.quests, newBounty],
                     stats: { ...(p.stats || {}), bountyDate: today, bountyIssued: true }
-                })
+                }, bId)
             });
             addLog('event', MSG.BOUNTY_ACCEPTED_NEW(target, count));
+        },
+
+        toggleExpeditionFocusQuest: (qId: string | number) => {
+            if (DB.MAPS[player.loc]?.type !== 'safe' || player.activeExpedition) {
+                return addLog('error', MSG.EXPEDITION_FOCUS_TOWN_ONLY);
+            }
+            const questState = player.quests.find((quest: any) => String(quest.id) === String(qId));
+            if (!questState) return;
+            const questData = questState.isBounty
+                ? questState
+                : DB.QUESTS.find((quest: any) => String(quest.id) === String(qId));
+            if (!questData) return;
+
+            const selected = getPreparedExpeditionFocusQuestIds(player);
+            const selectedIndex = selected.findIndex((id) => String(id) === String(qId));
+            if (selectedIndex >= 0 && selected.length === 1) {
+                return addLog('info', MSG.EXPEDITION_FOCUS_REQUIRED);
+            }
+            if (selectedIndex < 0 && selected.length >= MAX_EXPEDITION_FOCUS_QUESTS) {
+                return addLog('info', MSG.EXPEDITION_FOCUS_LIMIT);
+            }
+
+            const next = selectedIndex >= 0
+                ? selected.filter((id) => String(id) !== String(qId))
+                : [...selected, qId];
+            dispatch({ type: AT.SET_EXPEDITION_FOCUS, payload: next });
+            addLog('system', selectedIndex >= 0
+                ? MSG.EXPEDITION_FOCUS_REMOVED(questData.title)
+                : MSG.EXPEDITION_FOCUS_ADDED(questData.title));
         },
     };
 };

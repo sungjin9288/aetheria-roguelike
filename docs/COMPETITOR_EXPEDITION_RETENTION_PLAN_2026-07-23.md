@@ -179,9 +179,11 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 목표: 활성 임무가 많아져도 이번 원정의 목적을 최대 3개로 유지한다.
 
+상태: browser와 native packaging 구현·검증 완료. 물리 iPhone은 CoreDevice 기준 offline이라 최신 archive 설치·launch를 대기한다.
+
 구현 방향:
 
-- 기존 `player.quests`는 그대로 유지하고 `activeExpedition.focusQuestIds`만 최대 3개로 제한한다.
+- 기존 `player.quests`는 그대로 유지하고, 마을 편성안은 `player.expeditionFocusQuestIds`, 출발 시점의 변경 불가 snapshot은 `activeExpedition.focusQuestIds`에 최대 3개로 저장한다.
 - 기본 선택은 `보상 대기 > 스토리 > 현재 목적지와 같은 지역 > 진행률 높은 임무` 순서다.
 - 별도 출발 modal을 만들지 않고 기존 원정 준비와 Quest Board에서 한 번에 교체하며, 필드에서는 읽기 전용으로 표시한다.
 - tracker와 hunt encounter focus는 선택된 임무를 우선한다.
@@ -193,6 +195,15 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - tracker, Map mission marker, encounter focus가 같은 focus list를 사용한다.
 - 첫 세션은 자동 배정된 이야기 임무 하나로 추가 설정 없이 출발한다.
 - 3개를 넘는 선택은 UI와 reducer/action 경계 양쪽에서 거부한다.
+
+구현 결과(2026-07-23):
+
+- Quest Board에서 활성 임무를 최대 3개까지 추가·제외하며, 출정 준비·필드 Mission Tracker·Map mission marker·encounter focus가 같은 편성 결과를 사용한다.
+- 출발 전에는 편성안을 바꿀 수 있지만 출발 후에는 `activeExpedition.focusQuestIds` snapshot을 읽기 전용으로 유지해 원정 중 목적이 흔들리지 않는다.
+- 첫 이야기 자동 편성, 보상 대기·스토리·목적지·진행률 순 기본 ranking, 빈 편성·중복·존재하지 않는 임무·3개 초과 reducer 거부, 구세이브 fallback을 pure contract로 고정했다.
+- 집중하지 않은 활성 임무도 기존 quest sync를 통해 계속 진행되며 완료·보상·귀환 ledger에서 제거되지 않는다.
+- `npm run verify:full`은 type-check, lint, unit `3379/3379`, build guard, desktop/mobile smoke, E2E `44/44`을 통과했다. 390x844 증빙은 `playtest-artifacts/expedition-mission-loadout/`의 Quest Board, 원정 준비, 필드 tracker, Map 4개 PNG다.
+- `mobile:doctor`, `cap:sync`, Android debug, Apple Development signed iOS archive가 통과했다. 최신 APK는 `2026-07-23 02:28:10 KST`의 199434013 bytes, archive는 `02:28:26 KST`의 201M·`1.1.0 (2)`다. `xctrace` 기준 iPhone과 iPad가 offline이므로 device install·launch·60초 hold는 환경 blocker로 분리한다.
 
 ### Slice 65 - Return Action and Milestone Story Beat
 
@@ -224,4 +235,4 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 ## 다음 결정점
 
-Slice 63 checkpoint가 browser와 native packaging 기준으로 통과했으므로 다음 구현은 Slice 64 Expedition Mission Loadout이다. 물리 iPhone은 연결·잠금 해제·신뢰 상태를 복구한 뒤 최신 archive 설치부터 `npm run ios:device:smoke`로 재검증하고, 새 세이브 첫 5분에서 standard/high readability와 정상 귀환 debrief의 실제 터치·가독성을 함께 확인한다. 이후 Slice 65 Return Action/Milestone Story Beat로 진행한다.
+Slice 64 checkpoint가 browser와 native packaging 기준으로 통과했으므로 다음 구현은 Slice 65 Return Action/Milestone Story Beat다. 물리 iPhone은 연결·잠금 해제·신뢰 상태를 복구한 뒤 최신 archive 설치부터 `npm run ios:device:smoke`로 재검증하고, 새 세이브 첫 5분에서 집중 임무 편성·Map marker·필드 tracker·encounter focus와 standard/high readability, 정상 귀환 debrief의 실제 터치·가독성을 함께 확인한다.

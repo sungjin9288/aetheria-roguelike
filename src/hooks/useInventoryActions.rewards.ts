@@ -9,6 +9,7 @@ import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
 import { soundManager } from '../systems/SoundManager';
+import { removeExpeditionFocusQuest } from '../utils/expeditionMissionFocus';
 
 /**
  * createRewardActions — 보상 수령 도메인 (퀘스트/업적/주간/시즌패스).
@@ -33,6 +34,7 @@ export const createRewardActions = (ctx: any) => {
                 ...player,
                 quests: player.quests.filter((quest: any) => quest.id !== qId)
             };
+            updatedPlayer = removeExpeditionFocusQuest(updatedPlayer, qId);
 
             // cycle 260: stats.claimedQuestIds 영구 ledger 추적 — checkTitles questReward
             //   fallback이 저장 손실 / 마이그레이션 등 복구 케이스에서 칭호 복원 가능. cycle

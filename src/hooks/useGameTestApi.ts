@@ -203,6 +203,12 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     level: e.player.level,
                     exp: e.player.exp,
                     questCount: Array.isArray(e.player.quests) ? e.player.quests.length : 0,
+                    expeditionFocusQuestIds: Array.isArray(e.player.expeditionFocusQuestIds)
+                        ? e.player.expeditionFocusQuestIds
+                        : [],
+                    activeExpeditionFocusQuestIds: Array.isArray(e.player.activeExpedition?.focusQuestIds)
+                        ? e.player.activeExpedition.focusQuestIds
+                        : [],
                     loc: e.player.loc,
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
@@ -465,6 +471,31 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         stats: {
                             ...er.player.stats,
                             claimedQuestIds: [80],
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
+            seedExpeditionMissionLoadoutScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        loc: '시작의 마을',
+                        level: 4,
+                        hp: er.player.maxHp,
+                        quests: [
+                            { id: 80, progress: 0, isBounty: false },
+                            { id: 1, progress: 1, isBounty: false },
+                            { id: 2, progress: 1, isBounty: false },
+                            { id: 3, progress: 0, isBounty: false },
+                        ],
+                        expeditionFocusQuestIds: [80, 1, 2],
+                        activeExpedition: null,
+                        stats: {
+                            ...er.player.stats,
+                            claimedQuestIds: [],
+                            visitedMaps: ['시작의 마을', '고요한 숲'],
                         },
                     },
                 });

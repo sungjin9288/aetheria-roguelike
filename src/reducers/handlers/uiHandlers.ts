@@ -2,6 +2,7 @@ import { BALANCE } from '../../data/constants';
 import { sanitizeQuickSlots } from './helpers';
 import type { GameState, GameAction } from '../gameReducer';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
+import { replaceExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus';
 
 export const uiActionMap = {
     SET_SYNC_STATUS: (state: GameState, action: GameAction) =>
@@ -48,6 +49,12 @@ export const uiActionMap = {
 };
 
 export const entityActionMap = {
+    SET_EXPEDITION_FOCUS: (state: GameState, action: GameAction) => {
+        const player = replaceExpeditionFocusQuestIds(state.player, action.payload);
+        if (player === state.player) return state;
+        return { ...state, player, syncStatus: 'syncing' };
+    },
+
     SET_PLAYER: (state: GameState, action: GameAction) => {
         const nextPlayer = typeof action.payload === 'function' ? action.payload(state.player) : action.payload;
         const mergedPlayer = trackExpeditionVitals({ ...state.player, ...nextPlayer });
