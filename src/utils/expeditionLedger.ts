@@ -7,6 +7,7 @@ import type {
     Player,
 } from '../types/player.js';
 import { getActiveExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
+import { queueMilestoneStoryBeat } from './milestoneStory.js';
 
 const numberOr = (value: unknown, fallback = 0) => (
     Number.isFinite(Number(value)) ? Number(value) : fallback
@@ -238,8 +239,14 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
         reviewedAt: null,
     };
 
+    const returnedPlayer = queueMilestoneStoryBeat({
+        ...player,
+        activeExpedition: null,
+        lastExpeditionSummary: summary,
+    }, 'first_safe_return');
+
     return {
-        player: { ...player, activeExpedition: null, lastExpeditionSummary: summary },
+        player: returnedPlayer,
         summary,
     };
 };

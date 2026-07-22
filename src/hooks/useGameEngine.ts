@@ -8,6 +8,7 @@ import { AT } from '../reducers/actionTypes';
 import { GS } from '../reducers/gameStates';
 import { calculateFullStats } from '../utils/statsCalculator';
 import { getRunBuildProfile } from '../utils/runProfileUtils';
+import { acknowledgeMilestoneStoryBeat } from '../utils/milestoneStory';
 
 import { useFirebaseSync } from './useFirebaseSync';
 import { createGameActions } from './useGameActions';
@@ -133,6 +134,10 @@ export const useGameEngine = () => {
                 setSideTab: (val: any) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
                 setGameState: (val: any) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
                 setShopItems: (val: any) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
+                acknowledgeMilestoneStoryBeat: (id: any) => dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (currentPlayer: any) => acknowledgeMilestoneStoryBeat(currentPlayer, id),
+                }),
                 openExpeditionDebrief: () => dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: true }),
                 closeExpeditionDebrief: () => {
                     const summaryId = player.lastExpeditionSummary?.id;

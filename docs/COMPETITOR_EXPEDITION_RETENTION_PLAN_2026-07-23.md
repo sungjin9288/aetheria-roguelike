@@ -209,6 +209,8 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 목표: 귀환 결과가 마을 정비와 다음 이야기로 이어지게 한다.
 
+상태: 구현·browser/native packaging·최신 iPhone 설치 완료. 기기 잠금으로 launch·60초 foreground hold·수동 5분 체감 확인만 대기한다.
+
 구현 방향:
 
 - debrief 결과에서 `보상 받기 > 생명 회복 > 추천 장비 확인 > 가방 정리 > 제작 > 다음 임무` 중 하나만 primary action으로 계산한다.
@@ -223,10 +225,72 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - 이야기 skip, 오프라인 저장, 앱 재실행 후에도 reward와 진행은 동일하다.
 - 기존 AI service 실패가 귀환 흐름을 막지 않는다.
 
+구현 결과(2026-07-23):
+
+- 귀환 결과에서 `보상 받기 > 생명 회복 > 추천 장비 확인 > 가방 정리 > 제작 > 다음 임무` 우선순위로 한 행동만 계산하고, 기존 Quest·Rest·Inventory·Shop·Craft·Equipment 경로를 그대로 연다.
+- 권장 action을 먼저 실행한 뒤 debrief를 확인 처리하도록 순서를 고쳐, quest 보상 수령의 closure state가 닫힌 debrief를 다시 여는 stale-state 회귀를 방지했다.
+- `첫 안전 귀환 / 첫 사망 / 첫 구역 보스 / 첫 전직`을 `meta.storyMilestones.seen/pending` ledger로 기록하고 reset·죽음·승천·구세이브 migration 뒤에도 한 번만 노출한다.
+- 첫 사망 이야기를 Run Summary에서 확인하고 `다시 시작` 뒤에도 seen ledger가 유지되는 E2E를 추가했으며, Run Summary의 9~10px legacy label과 `RUN READOUT`을 11px semantic typography와 `이번 모험 분석`으로 정리했다.
+- focused pure contract `26/26`, focused mobile E2E `3/3`, `npm run verify:full`의 type-check·lint·unit `3395/3395`·build guard·desktop/mobile smoke·E2E `46/46`이 통과했다. 시각 증빙은 `playtest-artifacts/expedition-return-flow/`의 귀환 action·첫 전직·첫 사망 3개 PNG다.
+- `mobile:doctor`, `cap:sync`, Android debug, Apple Development signed iOS archive가 통과했다. 최신 APK는 `2026-07-23 02:56:22 KST`의 199435877 bytes, archive는 `02:56:35 KST`의 201M·`1.1.0 (2)`다. 최신 iPhone 설치와 metadata 재확인까지 성공했지만 launch는 기기 `Locked`로 차단돼 앱 회귀와 분리한다.
+
+## 4차 GitHub·웹 조사 결론
+
+2026-07-23 현재 공개 저장소와 공식 제품 자료를 Slice 65 이후 코드에 다시 대조했다.
+
+- [Shattered Pixel Dungeon](https://github.com/00-Evan/shattered-pixel-dungeon)은 모바일·데스크톱을 함께 지원하면서 많은 아이템과 run 정보를 시각적으로 분류한다. 공식 [Journal Overhaul](https://shatteredpixel.com/blog/coming-soon-to-shattered-a-journal-overhaul.html)은 비슷한 목록을 compact visual grid와 선택 상세로 바꾸고, 업그레이드 소비 전에 대상 효과를 명확히 보여 준다.
+- [Hades FAQ](https://www.supergiantgames.com/blog/hades-faq/)와 [Hades II FAQ](https://www.supergiantgames.com/blog/hades2-faq/)는 반복 실패·성공 뒤 영구 성장과 인물 이야기가 이어지되 서사 확인은 플레이어 흐름을 막지 않는 구조를 설명한다. Slice 65의 milestone ledger와 선택적 story card가 이 원칙을 이미 충족한다.
+- [Moonlighter](https://moonlighterthegame.com/)는 원정 loot을 마을의 제작·강화로 전환하는 판단을 핵심 루프로 삼고, [Loop Hero](https://store.steampowered.com/app/1282730/Loop_Hero/)는 출발 준비·원정 획득·camp 재투자의 경계를 명확히 한다. Aetheria도 귀환 action까지는 연결됐지만 실제 투자 결과를 누르기 전에 비교하기 어렵다.
+- [Buriedbornes2 Contracts](https://sites.google.com/view/bb2-help-en/world-map/start-adventure/contracts)는 모험 전 제한된 contract 선택으로 한 run의 목적을 고정한다. Aetheria의 최대 3개 집중 임무 snapshot이 같은 역할을 이미 수행한다.
+
+코드 감사에서는 다음 격차만 후속 구현 가치가 높은 것으로 판단했다.
+
+1. `SmartInventory`의 강화 action은 비용과 짧은 hint만 보여 주며, `BALANCE.ENHANCE_RATES`의 실제 성공률·현재/다음 단계 수치·실패 손실을 최종 실행 전에 한 화면에서 비교하지 못한다.
+2. `CraftingPanel` recipe row는 이름·비용·재료 중심이라 완성 아이템의 icon·tier/type·주요 stat·현재 장비 대비를 판단하기 어렵다.
+3. 합성은 성공률과 후보 이름은 제공하지만 결과 후보의 시각적 identity와 stat 변화가 약하다.
+4. 반대로 초반 EXP, 전투 난이도, Map, 임무 편성, 귀환 흐름은 이미 회귀 계약이 있고 최신 실기기 체감 증거가 없다. 이 수치를 다시 바꾸면 검증된 학습 구간을 추측으로 흔들게 된다.
+
+따라서 Slice 66은 새 economy나 balance 조정이 아니라 기존 소비 action의 의사결정 가시화로 제한한다. Slice 67은 실기기 피드백 뒤에만 검토한다.
+
+### Slice 66 - Item Investment Preview
+
+목표: 강화·제작·합성 전에 결과와 위험을 읽고 납득한 뒤 확정하게 한다.
+
+구현 방향:
+
+- 공용 pure preview model에서 대상 item의 현재 단계, 다음 강화 단계, 주요 stat delta, 성공률, gold/material 비용, 실패 시 손실을 계산한다.
+- 강화 첫 tap은 상세 decision surface를 열고, 실제 소비는 명시적인 `강화 시도` action에서만 수행한다.
+- 제작 row에 기존 `ItemIcon`, tier/type, 주요 stat, 현재 장비 대비, 착용 가능 조건, material/cost를 표시한다.
+- 합성은 기존 성공률과 후보 규칙을 유지하면서 후보 icon과 핵심 stat을 함께 보여 준다.
+- 기존 강화율·가격·재료·아이템 데이터·save schema는 바꾸지 않는다.
+
+완료 기준:
+
+- 강화 실행 전 표시된 성공률·비용·다음 stat이 실제 reducer 결과와 같은 source of truth를 사용한다.
+- 취소·panel close·앱 background에서는 재화나 재료가 소비되지 않는다.
+- 390x844에서 대상, 결과, 위험, 최종 action이 확대 없이 읽히고 가로 overflow가 없다.
+- pure contract가 preview와 실제 실행의 rate/cost/stat parity 및 재료 부족·최대 강화·착용 불가 edge를 검증한다.
+- focused mobile E2E와 screenshot 증빙 뒤 `verify:full`, native packaging, 실기기 확인 순서로 닫는다.
+
+### Slice 67 - Adventure Chronicle
+
+목표: 이미 본 milestone 이야기를 강제 modal 없이 다시 확인할 수 있게 한다.
+
+구현 방향:
+
+- 새 top-level 메뉴를 만들지 않고 기존 Archive/Codex에 seen milestone story와 최근 원정 결과를 연결한다.
+- unseen story를 반복 강제하지 않고, 확인한 기록만 시간·지역·결과와 함께 읽기 전용으로 제공한다.
+- 생성형 AI, 새 보상, 새 save economy는 추가하지 않는다.
+
+착수 조건:
+
+- Slice 65 최신 설치본의 60초 hold와 fresh-save 5분 루트가 완료되고, 실제 사용자가 이야기 재확인을 원한다는 evidence가 있을 것.
+- Slice 66의 item decision surface가 실기기에서 귀환 후 정비 흐름을 방해하지 않을 것.
+
 ## 검증 순서
 
-1. pure unit: expedition start/delta/end, old-save fallback, focus ranking, duplicate prevention
-2. cumulative route: 첫 출발 -> 숲 탐험/전투 -> 마을 귀환 -> 보상/장비 action
+1. pure unit: expedition start/delta/end, old-save fallback, focus ranking, milestone duplicate prevention, item preview/execution parity
+2. cumulative route: 첫 출발 -> 숲 탐험/전투 -> 마을 귀환 -> 보상/장비 action -> 강화·제작 decision preview
 3. persistence: field background/relaunch와 return debrief one-shot
 4. `npm run verify:full`
 5. 390x844 screenshot과 geometry assertion
@@ -235,4 +299,4 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 ## 다음 결정점
 
-Slice 64 checkpoint가 browser와 native packaging 기준으로 통과했으므로 다음 구현은 Slice 65 Return Action/Milestone Story Beat다. 물리 iPhone은 연결·잠금 해제·신뢰 상태를 복구한 뒤 최신 archive 설치부터 `npm run ios:device:smoke`로 재검증하고, 새 세이브 첫 5분에서 집중 임무 편성·Map marker·필드 tracker·encounter focus와 standard/high readability, 정상 귀환 debrief의 실제 터치·가독성을 함께 확인한다.
+Slice 65는 browser와 native packaging, 최신 iPhone 설치까지 통과했다. 먼저 기기를 잠금 해제하고 화면을 켠 상태에서 `npm run ios:device:smoke`의 launch·60초 foreground hold를 다시 실행한다. 이어서 새 세이브 첫 5분에서 집중 임무, Map marker, 전투, 정상 귀환의 단일 정비 action, milestone story, standard/high readability를 실제 터치로 확인한다. 이 evidence에서 치명적인 동선 회귀가 없을 때만 Slice 66 Item Investment Preview를 구현하며, Slice 67 Chronicle과 난이도·EXP·Map 재조정은 실기기 피드백 전에는 착수하지 않는다.

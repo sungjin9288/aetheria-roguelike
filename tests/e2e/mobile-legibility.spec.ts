@@ -166,7 +166,7 @@ for (const viewport of VIEWPORTS) {
             await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedExpeditionDebriefScenario?.());
             const debrief = page.getByTestId('expedition-debrief-card');
             await expectReadableSurface(page, debrief);
-            await expectTouchTarget(page.getByTestId('expedition-debrief-close'));
+            await expectTouchTarget(page.getByTestId('expedition-debrief-primary-action'));
             await expect(debrief).toHaveCSS('opacity', '1');
             await expect(debrief.locator('..')).toHaveCSS('opacity', '1');
 

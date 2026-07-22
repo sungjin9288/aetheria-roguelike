@@ -14,6 +14,7 @@ import { outcomeMethods } from './CombatEngine.outcome.js';
 import { relicEffectMethods } from './CombatEngine.relics.js';
 import { actionMethods } from './CombatEngine.actions.js';
 import { enemyAIMethods } from './CombatEngine.enemyAI.js';
+import { queueMilestoneStoryBeat } from '../utils/milestoneStory.js';
 
 /**
  * CombatEngine - Pure functions for combat calculations
@@ -321,8 +322,11 @@ export const CombatEngine = {
         if (isFirstDeath) {
             defeatLogs.push({ type: 'system', text: MSG.FIRST_DEATH_META(BALANCE.FIRST_DEATH_BONUS_ATK, BALANCE.FIRST_DEATH_BONUS_HP) });
         }
+        const updatedPlayer = isFirstDeath
+            ? queueMilestoneStoryBeat(starterState, 'first_death')
+            : starterState;
         return {
-            updatedPlayer: starterState,
+            updatedPlayer,
             graveData,
             logs: defeatLogs
         };

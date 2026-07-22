@@ -1,6 +1,8 @@
 import { motion as Motion } from 'framer-motion';
 import {
+    ArrowRight,
     Backpack,
+    BookOpen,
     CheckCircle2,
     Coins,
     Compass,
@@ -11,10 +13,15 @@ import {
     X,
 } from 'lucide-react';
 import type { ExpeditionSummary } from '../types/player.js';
+import type { ExpeditionReturnAction } from '../utils/expeditionReturnFlow.js';
+import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 
 interface ExpeditionDebriefCardProps {
     summary: ExpeditionSummary;
+    recommendation: ExpeditionReturnAction;
+    storyBeat?: MilestoneStoryBeat | null;
     onClose: () => void;
+    onPrimaryAction: () => void;
 }
 
 const formatDuration = (durationMs: number) => {
@@ -34,7 +41,13 @@ const summarizeItems = (items: string[]) => {
     return [...counts.entries()].map(([name, count]) => count > 1 ? `${name} x${count}` : name);
 };
 
-const ExpeditionDebriefCard = ({ summary, onClose }: ExpeditionDebriefCardProps) => {
+const ExpeditionDebriefCard = ({
+    summary,
+    recommendation,
+    storyBeat,
+    onClose,
+    onPrimaryAction,
+}: ExpeditionDebriefCardProps) => {
     const itemLabels = summarizeItems(summary.newItems);
     const levelLabel = summary.endLevel > summary.startLevel
         ? `LV ${summary.startLevel} → ${summary.endLevel}`
@@ -138,18 +151,38 @@ const ExpeditionDebriefCard = ({ summary, onClose }: ExpeditionDebriefCardProps)
                             </div>
                         </section>
                     </div>
+
+                    {storyBeat && (
+                        <section
+                            data-testid="expedition-debrief-story"
+                            data-story-id={storyBeat.id}
+                            className="mt-4 border-t border-white/8 pt-4"
+                        >
+                            <div className="flex items-center gap-2 text-[#f6e7c8]">
+                                <BookOpen size={14} />
+                                <span className="aether-type-label font-readable font-semibold">{storyBeat.eyebrow}</span>
+                            </div>
+                            <h3 className="aether-type-title mt-1 font-readable font-bold text-white">{storyBeat.title}</h3>
+                            <p className="aether-type-body mt-2 font-readable leading-relaxed text-slate-200/84">{storyBeat.body}</p>
+                        </section>
+                    )}
                 </div>
 
                 <footer className="border-t border-white/8 p-3">
+                    <div data-testid="expedition-return-recommendation" className="mb-2 px-1">
+                        <div className="aether-type-label font-readable font-semibold text-[#b9f1ec]">이어서 할 일</div>
+                        <div className="aether-type-meta mt-0.5 font-readable text-slate-300/78">{recommendation.detail}</div>
+                    </div>
                     <Motion.button
                         type="button"
-                        data-testid="expedition-debrief-close"
+                        data-testid="expedition-debrief-primary-action"
+                        data-return-action={recommendation.kind}
                         whileTap={{ scale: 0.98 }}
-                        onClick={onClose}
+                        onClick={onPrimaryAction}
                         className="aether-cta-primary aether-type-body flex min-h-[48px] w-full items-center justify-center gap-2 px-4 font-readable font-bold text-[#dff7f5]"
                     >
-                        <CheckCircle2 size={15} />
-                        마을 정비 계속
+                        <ArrowRight size={15} />
+                        {recommendation.label}
                     </Motion.button>
                 </footer>
             </Motion.section>

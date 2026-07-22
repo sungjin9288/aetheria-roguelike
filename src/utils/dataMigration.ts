@@ -3,6 +3,7 @@ import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
 import { isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils.js';
 import { normalizeActiveExpedition, normalizeExpeditionSummary } from './expeditionLedger.js';
 import { getDefaultExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
+import { normalizeMilestoneStoryState } from './milestoneStory.js';
 
 // gameUtils.ts에서 분리 (저장 데이터 마이그레이션) — 행동 보존 리팩토링.
 //   순환 의존을 피하려 toArray(1줄 헬퍼)는 인라인.
@@ -77,6 +78,7 @@ export const migrateData = (rawData: any) => {
     // 2026-07 — 에테르 거울: meta.mirror가 없는 구세이브(v5.0 이전 전부 + v5.0 일부)에서도
     //   getMirrorEffects가 항상 객체를 참조할 수 있도록 {}로 보강. 기존 레벨은 보존.
     target.meta.mirror = target.meta.mirror || {};
+    target.meta.storyMilestones = normalizeMilestoneStoryState(target.meta.storyMilestones);
     target.settings = {
         ...(target.settings || {}),
         readabilityMode: target.settings?.readabilityMode === 'high' ? 'high' : 'standard',

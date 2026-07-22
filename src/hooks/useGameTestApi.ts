@@ -209,6 +209,10 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     activeExpeditionFocusQuestIds: Array.isArray(e.player.activeExpedition?.focusQuestIds)
                         ? e.player.activeExpedition.focusQuestIds
                         : [],
+                    claimedQuestIds: Array.isArray(e.player.stats?.claimedQuestIds)
+                        ? e.player.stats.claimedQuestIds
+                        : [],
+                    storyMilestones: e.player.meta?.storyMilestones || { seen: [], pending: [] },
                     loc: e.player.loc,
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
@@ -270,6 +274,20 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         //   동일 lens 회귀.
         // cycle 329: getState / clearPostCombat / injectAscensionPreview 3 dead methods 제거.
         //   scripts/, tests/, docs 어디에서도 호출 0건. Playwright QA 훅 잔존이었던 것 정리.
+        const runSummaryScenario = {
+            level: 17, job: '모험가', loc: '북부 요새',
+            kills: 142, bossKills: 3, relicsFound: 5,
+            totalGold: 1842, prestigeRank: 2, activeTitle: 'veteran',
+            primaryBuild: '치명타와 기력 회복',
+            difficultyLabel: '열세',
+            recentWinRate: 42,
+            escapes: 2,
+            discoveries: 16,
+            maxKillStreak: 12,
+            signaturesAcquired: 1,
+            signatureNames: ['성검 에테르니아'],
+        };
+
         window.__AETHERIA_TEST_API__ = {
             getDomMetrics: () => {
                 const rect = (node: any) => {
@@ -429,6 +447,12 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     payload: {
                         loc: '시작의 마을',
                         activeExpedition: null,
+                        quests: [{ id: 80, progress: 1, isBounty: false }],
+                        expeditionFocusQuestIds: [80],
+                        meta: {
+                            ...er.player.meta,
+                            storyMilestones: { seen: [], pending: ['first_safe_return'] },
+                        },
                         lastExpeditionSummary: {
                             id: 'smoke-expedition-debrief',
                             startedAt: endedAt - (11 * 60_000),
@@ -459,6 +483,37 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: true });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
+            seedMilestoneStoryScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        loc: '시작의 마을',
+                        activeExpedition: null,
+                        lastExpeditionSummary: null,
+                        meta: {
+                            ...er.player.meta,
+                            storyMilestones: { seen: [], pending: ['first_job_change'] },
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: false });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
+            seedFirstDeathStoryScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        meta: {
+                            ...er.player.meta,
+                            storyMilestones: { seen: [], pending: ['first_death'] },
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_RUN_SUMMARY, payload: runSummaryScenario });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
             },
             seedAbandonableQuestScenario: () => {
                 const er = engineRef.current;
@@ -626,22 +681,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             },
             injectRunSummary: () => {
                 const er = engineRef.current;
-                er.dispatch({
-                    type: AT.SET_RUN_SUMMARY,
-                    payload: {
-                        level: 17, job: '모험가', loc: '북부 요새',
-                        kills: 142, bossKills: 3, relicsFound: 5,
-                        totalGold: 1842, prestigeRank: 2, activeTitle: 'veteran',
-                        primaryBuild: '치명타와 기력 회복',
-                        difficultyLabel: '열세',
-                        recentWinRate: 42,
-                        escapes: 2,
-                        discoveries: 16,
-                        maxKillStreak: 12,
-                        signaturesAcquired: 1,
-                        signatureNames: ['성검 에테르니아'],
-                    },
-                });
+                er.dispatch({ type: AT.SET_RUN_SUMMARY, payload: runSummaryScenario });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
             },
             injectEvent: () => {

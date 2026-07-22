@@ -6,6 +6,7 @@ import { useGameEngine } from './hooks/useGameEngine';
 import { useDamageFlash } from './hooks/useDamageFlash';
 import { useGameTestApi } from './hooks/useGameTestApi';
 import { markPerfOnce, measurePerfOnce, markPerf } from './utils/performanceMarks';
+import { getPendingMilestoneStoryBeat } from './utils/milestoneStory';
 
 import MainLayout from './components/MainLayout';
 import IntroScreen from './components/IntroScreen';
@@ -84,11 +85,21 @@ function App() {
     if (engine.bootStage !== 'ready') return <BootScreen bootStage={engine.bootStage} />;
 
     if (engine.gameState === GS.DEAD && engine.runSummary) {
+        const firstDeathStory = getPendingMilestoneStoryBeat(engine.player, ['first_death']);
         return (
             <MotionConfig reducedMotion="user">
                 <MainLayout visualEffect={null}>
                     <Suspense fallback={null}>
-                        <RunSummaryCard runSummary={engine.runSummary} onRestart={() => engine.actions.reset?.()} />
+                        <RunSummaryCard
+                            runSummary={engine.runSummary}
+                            storyBeat={firstDeathStory?.id === 'first_death' ? firstDeathStory : null}
+                            onRestart={() => {
+                                if (firstDeathStory?.id === 'first_death') {
+                                    engine.actions.acknowledgeMilestoneStoryBeat?.(firstDeathStory.id);
+                                }
+                                engine.actions.reset?.();
+                            }}
+                        />
                     </Suspense>
                 </MainLayout>
             </MotionConfig>

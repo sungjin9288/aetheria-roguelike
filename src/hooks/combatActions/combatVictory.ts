@@ -13,6 +13,7 @@ import { applyAbyssFloorAdvance, handleDemonKingSlain } from './combatBossHandle
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
 import { soundManager } from '../../systems/SoundManager';
+import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 
 /**
  * 전투 승리 공통 후처리.
@@ -173,17 +174,32 @@ export const handleVictoryOutcome = ({
 
     if (extendedChecks) {
         if (isBossKill && deadEnemy?.baseName) {
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
-                ...p,
-                stats: { ...p.stats, areaBossDefeated: { ...(p.stats.areaBossDefeated || {}), [deadEnemy.baseName]: true } }
-            })});
+            const currentMapBoss = DB.MAPS[updatedPlayer.loc]?.boss;
+            const isAreaBossKill = typeof currentMapBoss === 'string' && currentMapBoss === deadEnemy.baseName;
+            dispatch({
+                type: AT.SET_PLAYER,
+                payload: (p: any) => {
+                    const playerWithBossClear = {
+                        ...p,
+                        stats: {
+                            ...p.stats,
+                            areaBossDefeated: {
+                                ...(p.stats.areaBossDefeated || {}),
+                                [deadEnemy.baseName]: true,
+                            },
+                        },
+                    };
+                    return isAreaBossKill
+                        ? queueMilestoneStoryBeat(playerWithBossClear, 'first_area_boss')
+                        : playerWithBossClear;
+                },
+            });
             // 원정 완료 정산 리캡 (2026-07 감사 축4): 구역 보스(맵 데이터의 mapData.boss와
             //   이름이 일치하는 보스) 격파 시 원정 완료 로그. 신규 추적 인프라를 만들지
             //   않기 위해 이미 계산된 값만 조합 — killStreak(이번 원정 동안 죽지 않고 이어온
             //   연속 처치 수, 위에서 갱신 완료)와 victoryResult.goldGained(이번 전투 획득
             //   골드)만 사용.
-            const currentMapBoss = DB.MAPS[updatedPlayer.loc]?.boss;
-            if (typeof currentMapBoss === 'string' && currentMapBoss === deadEnemy.baseName) {
+            if (isAreaBossKill) {
                 addLog('success', MSG.EXPEDITION_CLEAR_RECAP(deadEnemy.baseName, updatedPlayer.killStreak || 1, victoryResult.goldGained || 0));
             }
         }

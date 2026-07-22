@@ -13,6 +13,8 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { createQuestProgressState } from '../../utils/questProgress';
 import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus';
+import { getRestCost } from '../../utils/expeditionReturnFlow';
+import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 
 const getStartingQuests = (player: any) => {
     const quests = Array.isArray(player.quests) ? player.quests : [];
@@ -116,8 +118,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             const mapData = DB.MAPS[player.loc];
             if (!mapData || mapData.type !== 'safe') return addLog('error', MSG.REST_SAFE_ONLY);
             // 2026-07 — 에테르 거울: rest_discount 노드가 휴식 비용에 배율로 적용.
-            const restCostMult = getMirrorEffects(player.meta).restCostMult;
-            const restCost = Math.floor(BALANCE.REST_COST * (1 + (player.level || 1) / 20) * restCostMult);
+            const restCost = getRestCost(player);
             if (player.gold < restCost) return addLog('error', MSG.REST_GOLD_INSUFFICIENT(restCost));
             const stats = getFullStats();
             // cycle 112: rest 시 player.status 정리 — cycle 106-110에서 활성화된 5종 status
@@ -177,7 +178,15 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             const vitals = buildClassVitals(player.level, jobName, player.meta || {});
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: { job: jobName, maxHp: vitals.maxHp, hp: vitals.maxHp, maxMp: vitals.maxMp, mp: vitals.maxMp, skillLoadout: { selected: 0, cooldowns: {} } }
+                payload: (currentPlayer: any) => queueMilestoneStoryBeat({
+                    ...currentPlayer,
+                    job: jobName,
+                    maxHp: vitals.maxHp,
+                    hp: vitals.maxHp,
+                    maxMp: vitals.maxMp,
+                    mp: vitals.maxMp,
+                    skillLoadout: { selected: 0, cooldowns: {} },
+                }, 'first_job_change'),
             });
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             addLog('success', MSG.JOB_CHANGE_DONE(jobName));

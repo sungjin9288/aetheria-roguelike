@@ -6,6 +6,8 @@ import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { getRegionTheme } from '../../utils/regionTheme';
 import { buildReturnBriefing } from '../../utils/returnBriefing';
+import { getExpeditionReturnAction } from '../../utils/expeditionReturnFlow';
+import { getPendingMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
@@ -27,6 +29,7 @@ const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
 const ExpeditionDebriefCard = lazy(() => import('../ExpeditionDebriefCard'));
+const MilestoneStoryCard = lazy(() => import('../MilestoneStoryCard'));
 
 const ReturnBriefingGate = ({ player, maxHp }: { player: Player; maxHp?: number }) => {
     const [briefing, setBriefing] = useState(() => buildReturnBriefing(player, Date.now(), maxHp));
@@ -57,6 +60,21 @@ const GameRoot = ({
     const expeditionSummary = engine.player?.lastExpeditionSummary || null;
     const showExpeditionDebrief = Boolean(
         expeditionSummary && (engine.expeditionDebriefOpen || !expeditionSummary.reviewedAt),
+    );
+    const expeditionReturnAction = expeditionSummary
+        ? getExpeditionReturnAction(engine.player, expeditionSummary, fullStats)
+        : null;
+    const debriefStoryBeat = showExpeditionDebrief
+        ? getPendingMilestoneStoryBeat(engine.player, ['first_safe_return', 'first_area_boss'])
+        : null;
+    const standaloneStoryBeat = !showExpeditionDebrief
+        ? getPendingMilestoneStoryBeat(engine.player)
+        : null;
+    const showStandaloneStory = Boolean(
+        standaloneStoryBeat
+        && engine.gameState === GS.IDLE
+        && !engine.pendingRelics
+        && !engine.postCombatResult,
     );
     const readabilityMode = engine.player?.settings?.readabilityMode === 'high' ? 'high' : 'standard';
     // slice 21: 지역별 ambient 팔레트 — 위치 기반 accent/wash CSS 변수.
@@ -155,11 +173,60 @@ const GameRoot = ({
     }, [phaseBanner]);
 
     const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
-    const handleOpenEquipment = useCallback(() => {
-        engine.actions.setSideTab?.('equipment');
+    const handleOpenArchiveTab = useCallback((tab: string) => {
+        engine.actions.setSideTab?.(tab);
         engine.actions.setGameState?.(GS.IDLE);
         setMobileConsoleMode('archive');
     }, [engine.actions]);
+    const handleOpenEquipment = useCallback(() => {
+        handleOpenArchiveTab('equipment');
+    }, [handleOpenArchiveTab]);
+
+    const acknowledgeStoryBeat = (storyBeat: any) => {
+        if (storyBeat?.id) engine.actions.acknowledgeMilestoneStoryBeat?.(storyBeat.id);
+    };
+
+    const closeExpeditionDebrief = () => {
+        acknowledgeStoryBeat(debriefStoryBeat);
+        engine.actions.closeExpeditionDebrief?.();
+    };
+
+    const runExpeditionReturnAction = () => {
+        if (!expeditionReturnAction) return;
+
+        switch (expeditionReturnAction.kind) {
+            case 'claim_quest':
+                engine.actions.completeQuest?.(expeditionReturnAction.questId);
+                break;
+            case 'rest':
+                engine.actions.rest?.();
+                break;
+            case 'open_equipment':
+                handleOpenArchiveTab('equipment');
+                break;
+            case 'open_inventory':
+                handleOpenArchiveTab('inventory');
+                break;
+            case 'open_shop':
+                engine.actions.setShopItems?.([
+                    ...DB.ITEMS.consumables,
+                    ...DB.ITEMS.weapons,
+                    ...DB.ITEMS.armors,
+                ]);
+                engine.actions.setGameState?.(GS.SHOP);
+                break;
+            case 'open_crafting':
+                engine.actions.setGameState?.(GS.CRAFTING);
+                break;
+            case 'open_quest_board':
+                engine.actions.setGameState?.(GS.QUEST_BOARD);
+                break;
+            default:
+                return;
+        }
+
+        closeExpeditionDebrief();
+    };
 
     return (
     <MotionConfig reducedMotion="user">
@@ -287,16 +354,28 @@ const GameRoot = ({
                 </Suspense>
             )}
 
-            {showExpeditionDebrief && expeditionSummary && (
+            {showExpeditionDebrief && expeditionSummary && expeditionReturnAction && (
                 <Suspense fallback={null}>
                     <ExpeditionDebriefCard
                         summary={expeditionSummary}
-                        onClose={() => engine.actions.closeExpeditionDebrief?.()}
+                        recommendation={expeditionReturnAction}
+                        storyBeat={debriefStoryBeat}
+                        onClose={closeExpeditionDebrief}
+                        onPrimaryAction={runExpeditionReturnAction}
                     />
                 </Suspense>
             )}
 
-            {engine.bootStage === 'ready' && engine.player && !showExpeditionDebrief && (
+            {showStandaloneStory && standaloneStoryBeat && (
+                <Suspense fallback={null}>
+                    <MilestoneStoryCard
+                        story={standaloneStoryBeat}
+                        onClose={() => acknowledgeStoryBeat(standaloneStoryBeat)}
+                    />
+                </Suspense>
+            )}
+
+            {engine.bootStage === 'ready' && engine.player && !showExpeditionDebrief && !showStandaloneStory && (
                 <ReturnBriefingGate player={engine.player} maxHp={fullStats?.maxHp} />
             )}
 

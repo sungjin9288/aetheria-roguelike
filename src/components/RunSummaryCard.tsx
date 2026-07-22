@@ -5,6 +5,7 @@ import { getTitleLabel } from '../utils/gameUtils';
 import { getRunSummaryAnalysis, getRunSummaryReflectionStrip } from '../utils/outcomeAnalysis';
 import { buildRunShareText } from '../utils/runShareText.js';
 import SignalBadge from './SignalBadge';
+import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 
 const STAT_CARD_STYLE: any = [
     'text-[#f6e7c8] border-[#d5b180]/18 bg-[#d5b180]/10',
@@ -17,10 +18,11 @@ const STAT_CARD_STYLE: any = [
 
 interface RunSummaryCardProps {
     runSummary?: any;
+    storyBeat?: MilestoneStoryBeat | null;
     onRestart?: () => void;
 }
 
-const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
+const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardProps) => {
     const [copied, setCopied] = useState(false);
     const analysis = getRunSummaryAnalysis(s);
     const reflection = getRunSummaryReflectionStrip(s, analysis);
@@ -70,7 +72,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                 <div className="custom-scrollbar relative max-h-[calc(100svh-1rem)] overflow-y-auto overflow-x-hidden px-6 pb-5 pt-6">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <div className="font-readable text-[10px] text-slate-500">
+                            <div className="aether-type-label font-readable text-slate-500">
                                 모험 기록
                             </div>
                             <div className="mt-2 font-readable text-[1.7rem] font-bold text-[#f6e7c8]">
@@ -110,7 +112,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                     >
                         {reflection.cells.map((cell: any) => (
                             <div key={cell.label} className="aether-run-reflection-cell rounded-[0.8rem] px-2.5 py-2">
-                                <div className="font-readable text-[9px] font-bold text-slate-400/86">
+                                <div className="aether-type-label font-readable font-bold text-slate-400/86">
                                     {cell.label}
                                 </div>
                                 <div className="mt-1 min-h-[2.05rem] whitespace-normal break-keep font-rajdhani text-[0.82rem] font-bold leading-[1.15] tracking-[0.04em] text-white sm:text-[0.95rem]">
@@ -123,7 +125,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                     <div className="mt-5 grid grid-cols-2 gap-2.5">
                         {stats.map((st: any, index: any) => (
                             <div key={st.label} className={`rounded-[1rem] border px-3 py-3 ${STAT_CARD_STYLE[index]}`}>
-                                <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] opacity-76">
+                                <div className="aether-type-label flex items-center gap-1.5 font-readable opacity-76">
                                     {st.icon}
                                     {st.label}
                                 </div>
@@ -144,7 +146,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                             }}
                         >
                             <div
-                                className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.18em]"
+                                className="aether-type-label flex items-center gap-1.5 font-readable"
                                 style={{ color: '#f6e7a2' }}
                             >
                                 <Sparkles size={11} />
@@ -154,7 +156,7 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                                 {(s.signatureNames || []).map((name: any) => (
                                     <span
                                         key={name}
-                                        className="rounded-full px-2 py-0.5 text-[10px] font-fira"
+                                        className="aether-type-label rounded-full px-2 py-0.5 font-readable"
                                         style={{
                                             color: '#f6e7a2',
                                             border: '1px solid rgba(246,231,162,0.42)',
@@ -213,10 +215,10 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                     )}
 
                     <div className="mt-5 rounded-[1.25rem] border border-white/8 bg-black/18 px-4 py-3.5">
-                        <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                        <div className="aether-type-label flex items-center justify-between gap-3 font-readable text-slate-500">
                             <span className="inline-flex items-center gap-1.5">
                                 <Radar size={11} />
-                                Run Readout
+                                이번 모험 분석
                             </span>
                             <span className="text-[#f6e7c8]">{analysis.headline}</span>
                         </div>
@@ -237,6 +239,19 @@ const RunSummaryCard = ({ runSummary: s, onRestart }: RunSummaryCardProps) => {
                     <p className="mt-4 text-center text-[11px] font-fira leading-relaxed text-slate-400/76">
                         에테르는 흩어졌지만 기록은 남습니다. 같은 죽음을 반복하지 않도록 이번 모험의 흐름을 다음 시도에 반영하세요.
                     </p>
+
+                    {storyBeat && (
+                        <section
+                            data-testid="run-summary-milestone-story"
+                            data-story-id={storyBeat.id}
+                            className="mt-4 border-y border-white/8 py-4"
+                        >
+                            <div className="aether-type-label font-readable font-semibold text-[#b9f1ec]">{storyBeat.eyebrow}</div>
+                            <h2 className="aether-type-title mt-1 font-readable font-bold text-white">{storyBeat.title}</h2>
+                            <p className="aether-type-body mt-2 font-readable leading-relaxed text-slate-200/84">{storyBeat.body}</p>
+                            <p className="aether-type-body mt-2 font-readable text-[#f6e7c8]/84">{storyBeat.closing}</p>
+                        </section>
+                    )}
 
                     <div className="mt-5 grid grid-cols-2 gap-3">
                         <Motion.button

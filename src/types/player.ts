@@ -92,6 +92,10 @@ interface PlayerMeta {
     //   runtime read 0건 + saved 데이터 잔존 필드는 무시되지만 무해 (runtime access 안 함).
     // 2026-07 — 에테르 거울: 노드id → 레벨. getMirrorEffects(meta)가 단일 진실 원천.
     mirror?: Record<string, number>;
+    storyMilestones?: {
+        seen?: string[];
+        pending?: string[];
+    };
 }
 
 interface CombatFlags {
