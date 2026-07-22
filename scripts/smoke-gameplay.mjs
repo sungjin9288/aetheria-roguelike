@@ -736,15 +736,24 @@ async function verifyMobileArchiveConsole(page) {
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({ gold: 100, materialCount: 0, weaponEnhance: 0 }));
   await weaponSlot.getByText('골드 부족').waitFor({ state: 'visible', timeout: 5000 });
-  ensure(await page.locator('[data-testid="equipment-enhance-weapon"]').isDisabled(), 'Equipment enhance button should be disabled when gold is insufficient');
+  const enhancePreviewButton = page.locator('[data-testid="equipment-enhance-weapon"]');
+  ensure(!await enhancePreviewButton.isDisabled(), 'Enhancement preview should stay available when gold is insufficient');
+  await enhancePreviewButton.click();
+  await page.locator('[data-testid="enhance-decision-card"]').getByText('골드 부족').waitFor({ state: 'visible', timeout: 5000 });
+  ensure(await page.locator('[data-testid="enhance-decision-confirm"]').isDisabled(), 'Enhancement execution should stay blocked when gold is insufficient');
+  await page.locator('[data-testid="enhance-decision-cancel"]').click();
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({ gold: 500, materialCount: 0, weaponEnhance: 0 }));
   await weaponSlot.getByText('재료 부족').waitFor({ state: 'visible', timeout: 5000 });
-  ensure(await page.locator('[data-testid="equipment-enhance-weapon"]').isDisabled(), 'Equipment enhance button should be disabled when material is insufficient');
+  ensure(!await enhancePreviewButton.isDisabled(), 'Enhancement preview should stay available when material is insufficient');
+  await enhancePreviewButton.click();
+  await page.locator('[data-testid="enhance-decision-card"]').getByText('재료 부족').waitFor({ state: 'visible', timeout: 5000 });
+  ensure(await page.locator('[data-testid="enhance-decision-confirm"]').isDisabled(), 'Enhancement execution should stay blocked when material is insufficient');
+  await page.locator('[data-testid="enhance-decision-cancel"]').click();
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({ gold: 500, materialCount: 1, weaponEnhance: 0 }));
   await weaponSlot.getByText('강화 가능').waitFor({ state: 'visible', timeout: 5000 });
-  ensure(!await page.locator('[data-testid="equipment-enhance-weapon"]').isDisabled(), 'Equipment enhance button should be enabled when requirements are met');
+  ensure(!await enhancePreviewButton.isDisabled(), 'Enhancement preview should stay available when requirements are met');
 
   await page.locator('[data-testid="archive-tab-inventory"]').click();
   await page.locator('[data-testid="mobile-archive-console-content"]').waitFor({ state: 'visible', timeout: 5000 });

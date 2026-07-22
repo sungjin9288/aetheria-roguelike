@@ -256,7 +256,7 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 목표: 강화·제작·합성 전에 결과와 위험을 읽고 납득한 뒤 확정하게 한다.
 
-상태: 구현·browser/native packaging·최신 iPhone 설치 완료. 기기 잠금으로 최신 설치본 launch·60초 foreground hold·수동 정비 흐름 확인만 대기한다.
+상태: 구현·browser/native packaging·iOS Simulator 실제 터치 검증·최신 물리 iPhone 설치 완료. 물리 iPhone이 현재 offline이어서 최신 설치본 launch·60초 foreground hold·수동 정비 흐름 확인만 대기한다.
 
 구현 방향:
 
@@ -280,8 +280,9 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - 첫 tap은 portal 기반 `EnhanceDecisionCard`만 열며 취소 시 재화가 유지되고, 명시적인 `강화 시도`에서만 비용을 소비한다. modal을 root stacking context로 올려 전투 damage number가 decision surface 위에 겹치던 시각 회귀도 제거했다.
 - 제작 60개 recipe는 실제 결과 `ItemIcon`, tier/type, 주 능력치, 현재 장비 대비, 착용 가능 여부, 보유/필요 재료를 표시한다. 합성은 골드가 부족해도 성공률·비용·실패 손실·실제 보호 자산·결과 후보 icon/stat/delta를 숨기지 않는다.
 - 공용 preview를 전체 장비에 적용하는 과정에서 저수치 장비 강화가 골드와 재료를 쓰고도 `+0`이 되는 no-op을 발견했다. 기존 비율 scaling은 유지하되 강화 단계마다 주 능력치가 최소 `+1` 오르도록 보정하고 전 장비·최대 강화 단계 contract로 고정했다.
-- focused pure contract `27/27`, focused mobile E2E `2/2`, 최종 type-check·lint·unit `3401/3401`·build guard·desktop/mobile smoke·E2E `48/48`이 통과했다. 시각 증빙은 `playtest-artifacts/item-investment-preview/`의 강화 decision, 제작 결과, 합성 후보 3개 PNG다.
-- `mobile:doctor`, `cap:sync`, Android debug, Apple Development signed iOS archive가 통과했다. 최신 APK는 `2026-07-23 03:48:56 KST`의 199437873 bytes, archive는 `03:49:03 KST`의 201M·`1.1.0 (2)`다. 최신 archive는 iPhone에 재설치되고 metadata까지 확인됐지만 launch 시점 기기 `Locked`로 차단됐으며, 직전 기존 설치본 launch는 성공했으나 60초 foreground process 유지에는 실패했다. 같은 시각의 Aetheria crash report는 없어 device 상태 blocker와 앱 crash를 구분한다.
+- iOS Simulator 실제 화면에서 재료 `0/1`인 장착 무기의 `강화 보기`가 비활성화되어, 실행 불가 상태에서 결과 자체도 학습할 수 없는 P1을 확인했다. Equipment·Inventory의 preview action은 affordability와 분리해 항상 열고, decision card의 `강화 시도`만 골드·재료 조건으로 차단한다. 부족 사유와 실행 비활성화를 smoke와 E2E로 고정했다.
+- focused pure contract `27/27`, focused mobile E2E `5/5`, 최종 `verify:full`의 type-check·lint·unit `3401/3401`·build guard·desktop/mobile smoke·E2E `49/49`이 통과했다. browser 시각 증빙은 `playtest-artifacts/item-investment-preview/`의 3개 PNG이며 native 증빙은 `playtest-artifacts/slice66-simulator/01-native-craft-preview.png`와 `02-native-enhance-preview-no-material.png`다.
+- `cap:sync`, Android debug, Apple Development signed iOS archive가 통과했다. 최신 APK는 `2026-07-23 04:20:01 KST`의 199437875 bytes, archive는 `04:20:09 KST`의 201M·`1.1.0 (2)`다. 같은 bundle의 iOS Simulator process는 60초 이상 유지됐고 실제 터치로 제작 정보와 재료 부족 강화 preview·비활성 실행을 확인했다. 물리 iPhone은 최신 archive 설치와 metadata 확인 뒤 현재 `Devices Offline` 상태이므로 device 상태 blocker와 앱 회귀를 구분한다.
 
 ### Slice 67 - Adventure Chronicle
 
@@ -310,4 +311,4 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 ## 다음 결정점
 
-Slice 66은 browser와 native packaging, 최신 iPhone 설치까지 통과했다. 먼저 기기를 잠금 해제하고 화면을 켠 상태에서 `npm run ios:device:launch-smoke`의 60초 foreground hold를 다시 실행한다. 이어서 신규 세이브 5분에서 자동 배정 첫 이야기, 집중 임무, Map marker, 전투, 정상 귀환의 단일 정비 action, milestone story, standard/high readability를 실제 터치로 확인한다. 강화 취소·확정과 제작·합성 결과 비교는 필요한 재료를 자연스럽게 얻기 어려운 첫 5분에 억지로 넣지 않고 재료 보유 QA 세이브의 별도 2분 정비 route에서 검증한다. 이 evidence에서 정비 흐름을 방해하는 회귀가 없고 이야기 재확인 수요가 확인될 때만 Slice 67 Adventure Chronicle을 검토하며, 난이도·EXP·Map 재조정은 실기기 피드백 전에는 착수하지 않는다.
+Slice 66은 browser, native packaging, iOS Simulator 실제 터치 검증, 최신 물리 iPhone 설치까지 통과했다. 먼저 offline인 iPhone 연결을 복구하고 잠금 해제·화면 켜짐을 유지한 상태에서 `npm run ios:device:launch-smoke`의 60초 foreground hold를 다시 실행한다. 이어서 신규 세이브 5분에서 자동 배정 첫 이야기, 집중 임무, Map marker, 전투, 정상 귀환의 단일 정비 action, milestone story, standard/high readability를 실제 터치로 확인한다. 강화 취소·확정과 제작·합성 결과 비교는 필요한 재료를 자연스럽게 얻기 어려운 첫 5분에 억지로 넣지 않고 재료 보유 QA 세이브의 별도 2분 정비 route에서 검증한다. 이 evidence에서 정비 흐름을 방해하는 회귀가 없고 이야기 재확인 수요가 확인될 때만 Slice 67 Adventure Chronicle을 검토하며, 난이도·EXP·Map 재조정은 실기기 피드백 전에는 착수하지 않는다.

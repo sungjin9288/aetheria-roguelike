@@ -476,13 +476,9 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                             slot: slotKey as EnhanceItemSlot,
                                             itemId: item.id || `equip:${slotKey}`,
                                         })}
-                                        disabled={!slot.affordable}
-                                        className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-fira font-bold transition-colors ${
-                                            slot.affordable
-                                                ? 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8] hover:bg-[#d5b180]/18'
-                                                : 'border-white/8 bg-black/20 text-slate-500 opacity-80'
-                                        }`}
-                                        title={slot.requirement ? `다음 강화 비용: 골드 ${slot.requirement.gold.toLocaleString()} · ${slot.requirement.materialName} ${slot.requirement.materials}개` : '강화 불가'}
+                                        aria-label={`${item.name} 강화 결과와 비용 보기`}
+                                        className="shrink-0 rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-3 py-1.5 text-[11px] font-fira font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
+                                        title="강화 결과와 비용 보기"
                                     >
                                         강화 보기
                                     </button>

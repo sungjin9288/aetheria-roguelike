@@ -18,8 +18,8 @@ test.describe('Item investment preview', () => {
     test('강화 비용을 소비하기 전에 결과와 실패 손실을 확인한다', async ({ page }) => {
         await startE2ERun(page, { openStatusConsole: true });
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({
-            gold: 500,
-            materialCount: 1,
+            gold: 100,
+            materialCount: 0,
             weaponEnhance: 0,
         }));
 
@@ -35,6 +35,29 @@ test.describe('Item investment preview', () => {
 
         const decision = page.getByTestId('enhance-decision-card');
         await expect(decision).toBeVisible();
+        await expect(decision).toContainText('골드 부족');
+        await expect(page.getByTestId('enhance-decision-confirm')).toBeDisabled();
+        await page.getByTestId('enhance-decision-cancel').click();
+
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({
+            gold: 500,
+            materialCount: 0,
+            weaponEnhance: 0,
+        }));
+        await expect(openDecision).toBeEnabled();
+        await openDecision.click();
+        await expect(decision).toContainText('재료 부족');
+        await expect(page.getByTestId('enhance-decision-confirm')).toBeDisabled();
+        await page.getByTestId('enhance-decision-cancel').click();
+
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({
+            gold: 500,
+            materialCount: 1,
+            weaponEnhance: 0,
+        }));
+        await expect(openDecision).toBeEnabled();
+        await openDecision.click();
+
         await expect(decision).toContainText('+0');
         await expect(decision).toContainText('+1');
         await expect(page.getByTestId('enhance-success-rate')).toHaveText('100%');

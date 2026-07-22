@@ -47,4 +47,25 @@ test.describe('가방 화면', () => {
             path: 'playtest-artifacts/mobile-equipment-disclosure/inventory-summary.png',
         });
     });
+
+    test('강화 재료가 없어도 결과는 확인하고 실행만 보류한다', async ({ page }) => {
+        const seeded = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAvatarScenario?.('early-gear-choice'));
+        expect(seeded).toBe(true);
+
+        await page.locator('[data-testid$="-tab-inventory"]').first().click();
+        await page.getByTestId('inventory-detail-toggle').click();
+
+        const previewButton = page.getByTestId('inventory-enhance-smoke-early-bow');
+        await expect(previewButton).toBeVisible();
+        await expect(previewButton).toBeEnabled();
+        await previewButton.click();
+
+        const decision = page.getByTestId('enhance-decision-card');
+        await expect(decision).toBeVisible();
+        await expect(decision).toContainText('재료 부족');
+        await expect(page.getByTestId('enhance-decision-confirm')).toBeDisabled();
+
+        await page.getByTestId('enhance-decision-cancel').click();
+        await expect(decision).toBeHidden();
+    });
 });

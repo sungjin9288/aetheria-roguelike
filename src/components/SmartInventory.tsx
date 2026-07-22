@@ -426,10 +426,11 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                 {showDetails && enhanceState.canEnhance && actions.enhanceItem && (
                                     <Motion.button
                                         whileTap={{ scale: 0.95 }}
-                                        disabled={!enhanceState.affordable}
+                                        data-testid={`inventory-enhance-${item.id || item.name}`}
                                         onClick={() => setEnhanceTarget({ item, slot: null })}
-                                        className={`rounded-full border font-bold font-fira ${enhanceState.affordable ? 'bg-[#d5b180]/10 hover:bg-[#d5b180]/18 text-[#f6e7c8] border-[#d5b180]/22' : 'border-white/8 bg-black/20 text-slate-500'} min-h-[38px] px-2.5 py-2 text-xs`}
-                                        title={`강화 +${(item.enhance || 0) + 1}`}
+                                        aria-label={`${item.name} 강화 결과와 비용 보기`}
+                                        className="min-h-[38px] rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2.5 py-2 text-xs font-bold font-fira text-[#f6e7c8] hover:bg-[#d5b180]/18"
+                                        title="강화 결과와 비용 보기"
                                     >
                                         강화 보기
                                     </Motion.button>
