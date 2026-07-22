@@ -6,6 +6,7 @@ import {
     resetDailyProtocolIfNeeded,
     resetWeeklyProtocolIfNeeded,
     applyBattleStartRelics,
+    selectEncounterMonster,
     spawnEnemy,
 } from '../src/utils/exploreUtils.js';
 
@@ -153,6 +154,63 @@ test('applyBattleStartRelics deducts hp on a cursed_power relic but never below 
 });
 
 // ─── spawnEnemy ──────────────────────────────────────────────────────────
+test('selectEncounterMonster focuses an incomplete hunt target in the current map', () => {
+    const mapData = { level: 1, monsters: ['슬라임', '늑대', '거미떼'] };
+    const player = {
+        loc: '고요한 숲',
+        quests: [{ id: 1, progress: 1 }],
+    };
+
+    const selected = selectEncounterMonster(mapData.monsters, mapData, player, () => 0.1);
+
+    assert.equal(selected, '슬라임');
+});
+
+test('selectEncounterMonster preserves the regional pool outside the focus roll', () => {
+    const rolls = [0.9, 0.99];
+    const mapData = { level: 1, monsters: ['슬라임', '늑대', '거미떼'] };
+    const player = {
+        loc: '고요한 숲',
+        quests: [{ id: 1, progress: 1 }],
+    };
+
+    const selected = selectEncounterMonster(mapData.monsters, mapData, player, () => rolls.shift());
+
+    assert.equal(selected, '거미떼');
+});
+
+test('selectEncounterMonster ignores completed, off-location, and non-monster quests', () => {
+    const mapData = { level: 1, monsters: ['늑대', '거미떼', '슬라임'] };
+    const player = {
+        loc: '고요한 숲',
+        quests: [
+            { id: 1, progress: 3 },
+            { id: 'bounty_off_location', target: '슬라임', goal: 2, progress: 0, isBounty: true, location: '서쪽 평원' },
+            { id: 80, progress: 0 },
+        ],
+    };
+
+    const selected = selectEncounterMonster(mapData.monsters, mapData, player, () => 0.1);
+
+    assert.equal(selected, '늑대');
+});
+
+test('selectEncounterMonster shares focus across multiple active targets', () => {
+    const rolls = [0.1, 0.75];
+    const mapData = { level: 1, monsters: ['슬라임', '늑대', '거미떼'] };
+    const player = {
+        loc: '고요한 숲',
+        quests: [
+            { id: 1, progress: 0 },
+            { id: 'bounty_spider', target: '거미떼', goal: 4, progress: 0, isBounty: true },
+        ],
+    };
+
+    const selected = selectEncounterMonster(mapData.monsters, mapData, player, () => rolls.shift());
+
+    assert.equal(selected, '거미떼');
+});
+
 test('spawnEnemy produces a monster with stats scaled by map level', () => {
     const mapData = {
         name: '초원',

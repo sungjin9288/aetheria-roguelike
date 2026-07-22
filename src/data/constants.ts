@@ -84,6 +84,7 @@ export interface BalanceConfig {
     MONSTER_DEF_PER_LEVEL: number;
     MONSTER_DEF_PER_DEPTH: number;
     MONSTER_GOLD_BASE: number;
+    HUNT_TARGET_FOCUS_CHANCE: number;
     FIRST_RELIC_PITY_EXPLORES: number;
     BOSS_PHASE2_THRESHOLD: number;
     EARLY_ELITE_LEVEL_CAP: number;
@@ -129,6 +130,9 @@ export const BALANCE: BalanceConfig = {
     // 조정 가능해야 함 (하나만 재조정 시 다른 하나에 영향 없도록).
     STRUCTURED_EVENT_PUZZLE_GOLD_CAP: 600,
     EVENT_CHANCE_NOTHING: 0.2,
+    // 활성 토벌 임무의 목표 조우를 돕되 지역 몬스터 다양성은 절반가량 유지한다.
+    // 목표가 7종 풀에 하나라면 실질 조우율은 약 53%(45% 집중 + 일반 풀 55%/7).
+    HUNT_TARGET_FOCUS_CHANCE: 0.45,
     MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // MapNavigator '이벤트↑' 배지 임계값 — 상위 지역군(eventChance 0.28+) 강조
     PREFIX_CHANCE: 0.2,
     ITEM_PREFIX_CHANCE: 0.12,

@@ -25,6 +25,30 @@ import { resolveAbyssDailyDive } from './abyssDailyDive';
 // 헬퍼는 모듈 간 공유보다 지역 복제가 이 코드베이스의 기존 관례(pacing/aiEventUtils 등).
 const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
 
+const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
+    const mapMonsters = Array.isArray(mapData.monsters) ? mapData.monsters : [];
+    if (mapMonsters.length === 0 || !Array.isArray(player.quests)) return [];
+
+    const targets = player.quests.flatMap((questState: any) => {
+        const quest = questState?.isBounty
+            ? questState
+            : DB.QUESTS.find((entry: any) => entry.id === questState?.id);
+        if (!quest || (questState.progress || 0) >= (quest.goal || 0)) return [];
+        if (quest.location && quest.location !== player.loc) return [];
+        return mapMonsters.includes(quest.target) ? [quest.target] : [];
+    });
+
+    return [...new Set(targets)];
+};
+
+export const selectEncounterMonster = (encounterPool: string[], mapData: GameMap, player: Player, random: () => number) => {
+    const huntTargets = getActiveHuntTargets(mapData, player);
+    if (huntTargets.length > 0 && random() < BALANCE.HUNT_TARGET_FOCUS_CHANCE) {
+        return huntTargets[Math.floor(random() * huntTargets.length)];
+    }
+    return encounterPool[Math.floor(random() * encounterPool.length)];
+};
+
 // ─────────────────────────────────────────────────────────────────────────
 // 0. ISO 주차 번호 계산 (월요일 기준)
 // ─────────────────────────────────────────────────────────────────────────
@@ -184,7 +208,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         && Boolean(options.forceAreaBoss);
     const baseName: string = (spawnAreaBoss && areaBossName !== null)
         ? areaBossName
-        : encounterPool[Math.floor(Math.random() * encounterPool.length)];
+        : selectEncounterMonster(encounterPool, mapData, player, Math.random);
     // 2026-07 타입화: GameMap.level은 number | number[] | 'infinite'. 이 함수의 스폰
     // 스탯 계산은 항상 단일 숫자 레벨을 가정했던 기존 동작 그대로 유지 — 시즌 전용
     // 범위형([min, max]) 맵은 도달 시 최솟값으로 취급 (array 케이스가 원래도 산술에
