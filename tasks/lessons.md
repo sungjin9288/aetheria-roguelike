@@ -245,6 +245,10 @@
 - **Rule:** 출발 준비, 임무 focus, 필드 획득, 정상 귀환은 하나의 저장 가능한 expedition identity로 묶고, 귀환 결과는 시작 snapshot과 현재 player의 delta로 계산한다. 사망 run summary와 정상 귀환 debrief는 별도 outcome으로 보존한다
 - **Rationale:** 개별 시스템이 모두 있어도 출발과 귀환 사이의 성과가 정리되지 않으면 플레이어는 한 세션에서 무엇을 얻었고 다음에 무엇을 바꿔야 하는지 체감하기 어렵다. 기존 카운터를 행동마다 중복 갱신하기보다 경계 snapshot으로 계산해야 결합도와 save migration 위험도 낮다
 
+### R51: Contain Decorative Overflow Inside Scroll Surfaces
+- **Rule:** viewport scroll container 안의 absolute 장식은 크기가 고정된 `overflow-hidden` presentation layer에 가두고, 핵심 flex chain에는 `min-w-0`을 명시한다. 모바일 E2E는 document뿐 아니라 app shell의 `scrollWidth <= clientWidth`와 `scrollLeft = 0`도 검사한다
+- **Rationale:** `overflow-x: hidden`만으로는 바깥으로 뻗은 장식이 내부 scroll width에 포함되는 것을 막지 못한다. focus 이동이 숨겨진 가로축을 programmatic scroll하면 문서 폭은 정상이어도 게임 전체가 잘려 보일 수 있으므로 content geometry와 scroll-container state를 함께 고정해야 한다
+
 ---
 
 ## 📝 Post-Mortem Template

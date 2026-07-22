@@ -119,7 +119,7 @@ const WorldRouteList = ({
 
                     return (
                         <section key={band.key} className="space-y-1.5">
-                            <div className="flex items-center justify-between px-1 font-readable text-[10px] text-slate-500">
+                            <div className="aether-type-meta flex items-center justify-between px-1 font-readable text-slate-500">
                                 <span className="text-slate-300/80">{band.label}</span>
                                 <span>{band.levelLabel}</span>
                             </div>
@@ -136,8 +136,8 @@ const WorldRouteList = ({
                                             className={`flex min-h-[44px] w-full items-center gap-2 px-1.5 py-2 text-left ${selected ? 'bg-[#7dd4d8]/8' : 'hover:bg-white/[0.025]'}`}
                                         >
                                             <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} />
-                                            <span className="min-w-0 flex-1 truncate font-readable text-[11px] font-semibold text-slate-100/90">{entry.name}</span>
-                                            <span className="shrink-0 font-readable text-[9px] text-slate-500">{formatMapLevel(entry, playerLevel)}</span>
+                                            <span className="aether-type-body min-w-0 flex-1 font-readable font-semibold text-slate-100/90">{entry.name}</span>
+                                            <span className="aether-type-meta shrink-0 font-readable text-slate-500">{formatMapLevel(entry, playerLevel)}</span>
                                             {entry.state === 'completed'
                                                 ? <Check size={12} className="shrink-0 text-emerald-200" aria-label="탐험 완료" />
                                                 : entry.state === 'exploring'
@@ -244,7 +244,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
             <header className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <div className="aether-label">세계 지도</div>
-                    <h2 className="mt-0.5 truncate font-readable text-[15px] font-semibold text-white">
+                    <h2 className="aether-type-title mt-0.5 font-readable font-semibold text-white">
                         {blindMap ? '현재 위치에서 이어진 길' : `${player.loc}에서 이어진 길`}
                     </h2>
                 </div>
@@ -255,8 +255,8 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                         { label: '완료', value: statusCounts.completed },
                     ].map((item) => (
                         <div key={item.label} className="min-w-[34px] text-center font-readable">
-                            <div className="text-[8px] text-slate-500">{item.label}</div>
-                            <strong className="text-[10px] text-slate-200/88">{item.value}</strong>
+                            <div className="aether-type-label text-slate-500">{item.label}</div>
+                            <strong className="aether-type-metric text-slate-200/88">{item.value}</strong>
                         </div>
                     ))}
                 </div>
@@ -279,7 +279,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-1.5">
-                                <h3 className="font-readable text-[13px] font-semibold text-white/94">{selectedDisplayName}</h3>
+                                <h3 className="aether-type-title font-readable font-semibold text-white/94">{selectedDisplayName}</h3>
                                 {!blindMap && (
                                     <SignalBadge tone={MAP_STATE[selectedEntry.state].badge} size="sm">
                                         {MAP_STATE[selectedEntry.state].label}
@@ -289,16 +289,16 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                                     <SignalBadge tone="recommended" size="sm">임무 목적지</SignalBadge>
                                 )}
                             </div>
-                            <p className="mt-1 line-clamp-2 font-readable text-[11px] leading-snug text-slate-300/78">
+                            <p className="aether-type-body mt-1 font-readable text-slate-300/78">
                                 {selectedDescription}
                             </p>
                         </div>
-                        <span className="shrink-0 font-readable text-[10px] font-semibold text-[#dff7f5]">
+                        <span className="aether-type-meta shrink-0 font-readable font-semibold text-[#dff7f5]">
                             {blindMap && selectedIsDirectExit ? '정보 없음' : formatMapLevel(selectedEntry, playerLevel)}
                         </span>
                     </div>
 
-                    <div className="mt-2 grid grid-cols-4 gap-1" data-testid="map-route-forecast">
+                    <div className="mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-4" data-testid="map-route-forecast">
                         {[
                             { label: '위험', value: blindMap && selectedIsDirectExit ? '미확인' : getRiskLabel(selectedEntry, playerLevel) },
                             { label: '예상', value: blindMap && selectedIsDirectExit ? '미확인' : getEncounterLabel(selectedEntry, selectedRoute) },
@@ -306,14 +306,14 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                             { label: '귀환', value: selectedRoute?.routePlan?.returnLabel || (selectedIsCurrent ? '현재 위치' : '경로 확인') },
                         ].map((item) => (
                             <div key={item.label} className="aether-map-forecast-cell min-w-0 px-1.5 py-1.5">
-                                <div className="font-readable text-[8px] text-slate-500">{item.label}</div>
-                                <div className="mt-0.5 line-clamp-2 font-readable text-[9px] font-semibold leading-tight text-slate-100/86">{item.value}</div>
+                                <div className="aether-type-label font-readable text-slate-500">{item.label}</div>
+                                <div className="aether-type-meta mt-0.5 break-words font-readable font-semibold text-slate-100/86">{item.value}</div>
                             </div>
                         ))}
                     </div>
 
                     {selectedRoute && !blindMap && (
-                        <p className="mt-2 font-readable text-[10px] leading-snug text-slate-300/72">
+                        <p className="aether-type-meta mt-2 font-readable text-slate-300/72">
                             {selectedRoute.reason}
                         </p>
                     )}
@@ -323,7 +323,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                         data-testid="map-move-selected"
                         disabled={!canMove}
                         onClick={moveToSelectedMap}
-                        className="aether-cta-primary mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[0.5rem] px-3 font-readable text-[11px] font-semibold text-[#dff7f5] disabled:cursor-not-allowed disabled:border-white/8 disabled:bg-white/[0.03] disabled:text-slate-500"
+                        className="aether-cta-primary aether-type-body mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[0.5rem] px-3 font-readable font-semibold text-[#dff7f5] disabled:cursor-not-allowed disabled:border-white/8 disabled:bg-white/[0.03] disabled:text-slate-500"
                     >
                         <span>{moveButtonLabel}</span>
                         {canMove && <ArrowRight size={14} aria-hidden="true" />}
@@ -341,13 +341,13 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
 
                     {!blindMap && selectedEntry.signatureDrops.length > 0 && (
                         <details className="mt-2 border-t border-white/6 pt-2">
-                            <summary className="flex min-h-[32px] cursor-pointer items-center justify-between gap-2 font-readable text-[10px] text-[#f6e7a2]">
+                            <summary className="aether-type-body flex min-h-[44px] cursor-pointer items-center justify-between gap-2 font-readable text-[#f6e7a2]">
                                 <span className="flex items-center gap-1.5"><Sparkles size={11} />전설 각인</span>
                                 <span>미발견 {selectedEntry.undiscoveredSignatures.length}/{selectedEntry.signatureDrops.length}</span>
                             </summary>
                             <div className="flex flex-wrap gap-1.5 pb-1 pt-2">
                                 {selectedEntry.signatureDrops.map(({ name, rate }) => (
-                                    <span key={name} className="rounded-full border border-[#f6e7a2]/20 px-2 py-0.5 font-readable text-[9px] text-[#f6e7a2]/86">
+                                    <span key={name} className="aether-type-meta rounded-full border border-[#f6e7a2]/20 px-2 py-0.5 font-readable text-[#f6e7a2]/86">
                                         {name} · {Math.max(1, Math.round(rate * 100))}%
                                     </span>
                                 ))}
@@ -357,10 +357,10 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
 
                     {!blindMap && selectedEntry.lore && (
                         <details className="mt-1 border-t border-white/6 pt-1">
-                            <summary className="flex min-h-[36px] cursor-pointer items-center gap-1.5 font-readable text-[10px] text-slate-400">
+                            <summary className="aether-type-body flex min-h-[44px] cursor-pointer items-center gap-1.5 font-readable text-slate-400">
                                 <Route size={11} />지역 이야기
                             </summary>
-                            <p className="pb-1 font-readable text-[10px] leading-relaxed text-slate-300/70">{selectedEntry.lore}</p>
+                            <p className="aether-type-body pb-1 font-readable text-slate-300/70">{selectedEntry.lore}</p>
                         </details>
                     )}
                 </section>

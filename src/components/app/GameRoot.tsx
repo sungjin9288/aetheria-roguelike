@@ -176,7 +176,7 @@ const GameRoot = ({
                 />
             </div>
 
-            <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-1.5">
+            <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-1.5">
                 <StatusBar
                     player={engine.player}
                     stats={fullStats}

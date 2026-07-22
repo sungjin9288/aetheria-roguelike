@@ -32,6 +32,15 @@
   --aether-route-strong: #b9f1ec;
   --aether-warning: #f0c36a;
   --aether-surface-glow: rgba(246, 217, 140, 0.08);
+  --aether-type-label: 0.6875rem;
+  --aether-type-meta: 0.6875rem;
+  --aether-type-body: 0.75rem;
+  --aether-type-title: 0.875rem;
+  --aether-type-metric: 1rem;
+  --aether-leading-label: 1.3;
+  --aether-leading-meta: 1.4;
+  --aether-leading-body: 1.48;
+  --aether-leading-title: 1.35;
 }
 
 @layer base {
@@ -532,10 +541,36 @@
   line-height: 1.48;
 }
 
+.aether-type-label {
+  font-size: var(--aether-type-label);
+  line-height: var(--aether-leading-label);
+}
+
+.aether-type-meta {
+  font-size: var(--aether-type-meta);
+  line-height: var(--aether-leading-meta);
+}
+
+.aether-type-body {
+  font-size: var(--aether-type-body);
+  line-height: var(--aether-leading-body);
+}
+
+.aether-type-title {
+  font-size: var(--aether-type-title);
+  line-height: var(--aether-leading-title);
+}
+
+.aether-type-metric {
+  font-size: var(--aether-type-metric);
+  line-height: 1.2;
+}
+
 .aether-label {
   font-family: var(--aether-code-font);
-  font-size: 0.625rem;
+  font-size: var(--aether-type-label);
   font-weight: 700;
+  line-height: var(--aether-leading-label);
   letter-spacing: 0;
   text-transform: uppercase;
   color: var(--aether-readable-muted);
@@ -985,8 +1020,9 @@
   color: rgba(223, 247, 245, 0.96);
   box-shadow: inset 0 0 0 1px rgba(185, 241, 236, 0.06);
   font-family: var(--aether-readable-font);
-  font-size: 0.75rem;
+  font-size: var(--aether-type-body);
   font-weight: 700;
+  line-height: var(--aether-leading-body);
 }
 
 .aether-route-region-art {
@@ -1050,6 +1086,24 @@
   scroll-snap-align: start;
 }
 
+@media (max-width: 430px) {
+  .aether-route-topology-branches {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow-x: visible;
+  }
+
+  .aether-route-topology-branch {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .aether-route-topology-branch:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
 .aether-route-topology-branch::before {
   content: "";
   position: absolute;
@@ -1111,10 +1165,9 @@
 }
 
 .aether-route-topology.is-compact .aether-route-topology-current {
-  min-height: 32px;
+  min-height: 44px;
   min-width: min(9rem, 68%);
   padding: 0.35rem 0.6rem;
-  font-size: 0.6875rem;
 }
 
 .aether-route-topology.is-compact .aether-route-region-art {
@@ -1451,6 +1504,14 @@
   --aether-readable-faint: #9fb0bf;
   --aether-readable-panel: rgba(13, 18, 25, 0.99);
   --aether-readable-panel-strong: rgba(18, 26, 36, 1);
+  --aether-type-label: 0.75rem;
+  --aether-type-meta: 0.75rem;
+  --aether-type-body: 0.8125rem;
+  --aether-type-title: 0.9375rem;
+  --aether-type-metric: 1.0625rem;
+  --aether-leading-label: 1.35;
+  --aether-leading-meta: 1.45;
+  --aether-leading-body: 1.52;
   color: var(--aether-readable-ink);
 }
 

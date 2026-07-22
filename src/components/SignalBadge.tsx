@@ -2,7 +2,7 @@
 // cycle 419: md / lg 제거 — SignalBadge 73 호출 사이트 모두 size="sm" 명시.
 //   default param도 'sm'로 변경 + fallback도 SIZE_CLASS.sm.
 const SIZE_CLASS: any = {
-    sm: 'min-h-[20px] px-1.5 py-0.5 text-[9px] tracking-[0.16em]',
+    sm: 'min-h-[24px] px-2 py-0.5 aether-type-label tracking-normal',
 };
 
 const TONE_CLASS: any = {

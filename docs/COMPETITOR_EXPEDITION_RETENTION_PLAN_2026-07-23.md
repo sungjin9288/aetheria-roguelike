@@ -147,6 +147,8 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 목표: 첫 세션과 반복 원정의 핵심 정보를 iPhone에서 확대 없이 읽고 누를 수 있게 한다.
 
+상태: browser와 native packaging 구현·검증 완료. 물리 iPhone 최신 archive 설치·launch만 CoreDevice timeout으로 대기한다.
+
 구현 방향:
 
 - `label`, `meta`, `body`, `title`, `metric` semantic typography token을 만들고 핵심 surface의 arbitrary 8~10px class를 치환한다.
@@ -163,6 +165,15 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - 첫 출발, Map 이동, Quest 비교, Combat 선택, 귀환 debrief에 horizontal overflow와 incoherent overlap이 없다.
 - E2E가 font floor, 주요 44px target, viewport geometry를 검증하고 screenshot evidence를 남긴다.
 - gameplay 수치, 보상, save contract는 변경하지 않는다.
+
+구현 결과(2026-07-23):
+
+- `label / meta / body / title / metric` semantic type token을 추가하고 원정 준비·Mission Tracker·Map·Quest Board·Combat·Expedition Debrief의 핵심 문구를 standard mode computed 11px 이상으로 통일했다.
+- high readability는 transform/zoom 없이 실제 font size와 line-height를 높이며, 390px 이하의 mission·route·quest summary와 map branch를 2x2 또는 전체 폭 summary row로 재배치했다.
+- MainLayout 장식 레이어가 scroll container를 64px 넓혀 Quest focus 시 게임 전체를 왼쪽으로 미는 결함을 overflow containment와 flex `min-w-0`으로 수정했다.
+- 새 `mobile-legibility.spec.ts`가 375x667·390x844·430x932에서 font floor, 44px action, 28px icon, responsive column, map branch, app-shell horizontal scroll, high mode scale을 검증하고 `playtest-artifacts/mobile-legibility/`에 8개 PNG를 남긴다.
+- 최종 `npm run verify:full`은 type-check, lint, unit `3372/3372`, build guard, desktop/mobile smoke, E2E `43/43`을 통과했다. `mobile:doctor`, `cap:sync`, Android debug, Apple Development signed iOS archive도 통과했다.
+- 최신 APK는 `2026-07-23 01:50:54 KST`의 199432737 bytes, iOS archive는 `01:51:05 KST`의 201M·`1.1.0 (2)`다. iPhone metadata와 install이 각각 120초 timeout으로 종료돼 device delivery와 60초 hold는 환경 blocker로 분리한다.
 
 ### Slice 64 - Expedition Mission Loadout
 
@@ -213,4 +224,4 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 ## 다음 결정점
 
-Slice 62 최신 설치본의 launch와 첫 5분 수동 동선을 끝내 정상 귀환 debrief의 실제 터치·가독성을 확인한다. 기기 `Locked` blocker와 병행해 Slice 63 Mobile Legibility Baseline을 먼저 구현하고, 그 checkpoint가 통과한 뒤 Slice 64 Mission Loadout과 Slice 65 Return Action/Milestone Story Beat를 각각 진행한다.
+Slice 63 checkpoint가 browser와 native packaging 기준으로 통과했으므로 다음 구현은 Slice 64 Expedition Mission Loadout이다. 물리 iPhone은 연결·잠금 해제·신뢰 상태를 복구한 뒤 최신 archive 설치부터 `npm run ios:device:smoke`로 재검증하고, 새 세이브 첫 5분에서 standard/high readability와 정상 귀환 debrief의 실제 터치·가독성을 함께 확인한다. 이후 Slice 65 Return Action/Milestone Story Beat로 진행한다.

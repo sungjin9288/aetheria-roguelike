@@ -71,9 +71,9 @@ const ExpeditionDebriefCard = ({ summary, onClose }: ExpeditionDebriefCardProps)
                     >
                         <X size={17} />
                     </button>
-                    <div className="font-fira text-[11px] font-bold uppercase tracking-normal text-[#b9f1ec]/72">원정 기록</div>
+                    <div className="aether-type-label font-fira font-bold uppercase tracking-normal text-[#b9f1ec]/72">원정 기록</div>
                     <h2 className="mt-1 font-rajdhani text-[1.45rem] font-bold tracking-normal text-white">원정 귀환</h2>
-                    <div className="mt-2 flex min-w-0 items-center gap-2 font-readable text-xs text-slate-300/82">
+                    <div className="aether-type-body mt-2 flex min-w-0 items-center gap-2 font-readable text-slate-300/82">
                         <MapPin size={13} className="shrink-0 text-[#7dd4d8]" />
                         <span className="min-w-0 truncate">{summary.destination} · {formatDuration(summary.durationMs)}</span>
                         <span className="ml-auto shrink-0 text-[#d5b180]">{levelLabel}</span>
@@ -84,18 +84,18 @@ const ExpeditionDebriefCard = ({ summary, onClose }: ExpeditionDebriefCardProps)
                     <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[0.75rem] border border-white/8 bg-white/8">
                         {metrics.map(({ label, value, icon: Icon, tone }) => (
                             <div key={label} className="bg-[#0b1118] px-3 py-3">
-                                <div className="flex items-center gap-1.5 font-readable text-[11px] font-semibold text-slate-400">
+                                <div className="aether-type-label flex items-center gap-1.5 font-readable font-semibold text-slate-400">
                                     <Icon size={12} className={tone} />
                                     {label}
                                 </div>
-                                <div className={`mt-1 font-rajdhani text-[1.05rem] font-bold ${tone}`}>{value}</div>
+                                <div className={`aether-type-metric mt-1 font-rajdhani font-bold ${tone}`}>{value}</div>
                             </div>
                         ))}
                     </div>
 
                     <div className="mt-4 border-y border-white/8 py-3">
                         <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2 font-readable text-[11px] font-semibold text-slate-300">
+                            <div className="aether-type-body flex items-center gap-2 font-readable font-semibold text-slate-300">
                                 <HeartPulse size={13} className="text-rose-300" />
                                 가장 위험했던 순간
                             </div>
@@ -115,13 +115,13 @@ const ExpeditionDebriefCard = ({ summary, onClose }: ExpeditionDebriefCardProps)
                         <section data-testid="expedition-debrief-items" className="flex items-start gap-3">
                             <Backpack size={14} className="mt-0.5 shrink-0 text-[#d5b180]" />
                             <div className="min-w-0 flex-1">
-                                <div className="font-readable text-[11px] font-semibold text-slate-400">새로 챙긴 것</div>
-                                <div className="mt-1 font-readable text-xs leading-relaxed text-slate-100">
+                                <div className="aether-type-label font-readable font-semibold text-slate-400">새로 챙긴 것</div>
+                                <div className="aether-type-body mt-1 font-readable text-slate-100">
                                     {itemLabels.length > 0 ? itemLabels.slice(0, 3).join(' · ') : '새 아이템 없음'}
                                     {itemLabels.length > 3 ? ` 외 ${itemLabels.length - 3}종` : ''}
                                 </div>
                                 {summary.lostItemCount > 0 && (
-                                    <div className="mt-0.5 font-readable text-[11px] text-slate-500">사용·소모 {summary.lostItemCount}개</div>
+                                    <div className="aether-type-meta mt-0.5 font-readable text-slate-500">사용·소모 {summary.lostItemCount}개</div>
                                 )}
                             </div>
                         </section>
@@ -129,8 +129,8 @@ const ExpeditionDebriefCard = ({ summary, onClose }: ExpeditionDebriefCardProps)
                         <section data-testid="expedition-debrief-quests" className="flex items-start gap-3">
                             <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-[#7dd4d8]" />
                             <div className="min-w-0 flex-1">
-                                <div className="font-readable text-[11px] font-semibold text-slate-400">달성한 임무</div>
-                                <div className="mt-1 font-readable text-xs leading-relaxed text-slate-100">
+                                <div className="aether-type-label font-readable font-semibold text-slate-400">달성한 임무</div>
+                                <div className="aether-type-body mt-1 font-readable text-slate-100">
                                     {summary.completedQuests.length > 0
                                         ? summary.completedQuests.slice(0, 2).join(' · ')
                                         : '이번 원정에서 새로 달성한 임무 없음'}
@@ -146,7 +146,7 @@ const ExpeditionDebriefCard = ({ summary, onClose }: ExpeditionDebriefCardProps)
                         data-testid="expedition-debrief-close"
                         whileTap={{ scale: 0.98 }}
                         onClick={onClose}
-                        className="aether-cta-primary flex min-h-[48px] w-full items-center justify-center gap-2 px-4 font-readable text-xs font-bold text-[#dff7f5]"
+                        className="aether-cta-primary aether-type-body flex min-h-[48px] w-full items-center justify-center gap-2 px-4 font-readable font-bold text-[#dff7f5]"
                     >
                         <CheckCircle2 size={15} />
                         마을 정비 계속

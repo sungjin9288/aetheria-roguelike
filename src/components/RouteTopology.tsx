@@ -72,7 +72,7 @@ const RouteTopology = ({
                     ) : (
                         <MapPin size={compact ? 13 : 15} aria-hidden="true" />
                     )}
-                    <span className="min-w-0 truncate">{blindMap ? '현재 위치' : currentName}</span>
+                    <span className="min-w-0 break-words">{blindMap ? '현재 위치' : currentName}</span>
                 </div>
             </div>
 
@@ -111,18 +111,18 @@ const RouteTopology = ({
                                     )}
                                     <span className="min-w-0 flex-1">
                                         <span className="flex min-w-0 items-center justify-between gap-1.5">
-                                            <strong className="min-w-0 truncate font-readable text-[11px] font-semibold text-white/92">
+                                            <strong className="aether-type-body min-w-0 break-words font-readable font-semibold text-white/92">
                                                 {displayName}
                                             </strong>
                                             {marker && (
-                                                <span className="inline-flex shrink-0 items-center gap-1 font-readable text-[8px] font-semibold text-slate-300/80">
+                                                <span className="aether-type-label inline-flex shrink-0 items-center gap-1 font-readable font-semibold text-slate-300/80">
                                                     <marker.Icon size={10} aria-hidden="true" />
                                                     {marker.label}
                                                 </span>
                                             )}
                                         </span>
-                                        <span className="mt-1 flex min-w-0 items-center justify-between gap-1.5 font-readable text-[9px] text-slate-400/82">
-                                            <span className="truncate">
+                                        <span className="aether-type-meta mt-1 flex min-w-0 items-center justify-between gap-1.5 font-readable text-slate-400/82">
+                                            <span className="break-words">
                                                 {blindMap ? '정보 없음' : [route.levelLabel, route.badge].filter(Boolean).join(' · ')}
                                             </span>
                                             {!blindMap && (route.undiscoveredSignatureCount || 0) > 0 && (

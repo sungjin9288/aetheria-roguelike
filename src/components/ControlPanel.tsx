@@ -78,14 +78,14 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
       <div className="relative flex items-center justify-between gap-2">
         <div className="min-w-0">
           <div className="aether-label text-slate-300/70">현재 임무</div>
-          <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-white/94">
+          <div className="aether-type-title mt-0.5 font-readable font-semibold text-white/94">
             {tracker.title}
           </div>
-          <div className="mt-0.5 line-clamp-1 font-readable text-[11px] leading-snug text-slate-300/76">
+          <div className="aether-type-body mt-0.5 font-readable text-slate-300/76">
             {tracker.nextStep}
           </div>
         </div>
-        <div className="shrink-0 rounded-full border border-white/10 bg-black/18 px-2 py-1 font-fira text-[9px] font-bold text-white/82">
+        <div className="aether-type-meta shrink-0 rounded-full border border-white/10 bg-black/18 px-2 py-1 font-fira font-bold text-white/82">
           {tracker.progressLabel}
         </div>
       </div>
@@ -95,7 +95,7 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
           style={{ width: `${Math.max(0, Math.min(100, tracker.progressPercent || 0))}%` }}
         />
       </div>
-      <div className="relative mt-2 grid grid-cols-4 gap-1">
+      <div className="relative mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-4">
         {missionSteps.map((step: any, index: number) => {
           const isClaimAction = tracker.kind === 'claimable' && index === missionSteps.length - 1;
           if (isClaimAction) {
@@ -106,10 +106,10 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
                 data-testid="control-claim-quest-reward"
                 disabled={!canClaimReward || !onClaimReward}
                 onClick={onClaimReward}
-                className="aether-decision-cell min-h-[38px] rounded-[0.7rem] border border-[#d5b180]/30 bg-[#d5b180]/12 px-1.5 py-1 text-left disabled:cursor-not-allowed disabled:opacity-55"
+                className="aether-decision-cell min-h-[44px] rounded-[0.7rem] border border-[#d5b180]/30 bg-[#d5b180]/12 px-2 py-1.5 text-left disabled:cursor-not-allowed disabled:opacity-55"
               >
-                <div className="font-readable text-[8px] font-bold tracking-normal text-[#d5b180]/72">{step.label}</div>
-                <div className="mt-0.5 truncate font-readable text-[9px] font-bold text-[#f6e7c8]">
+                <div className="aether-type-label font-readable font-bold tracking-normal text-[#d5b180]/72">{step.label}</div>
+                <div className="aether-type-meta mt-0.5 break-words font-readable font-bold text-[#f6e7c8]">
                   {canClaimReward ? '보상 받기' : '마을에서 수령'}
                 </div>
               </button>
@@ -117,9 +117,9 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
           }
 
           return (
-            <div key={`${step.label}-${step.value}`} className="aether-decision-cell rounded-[0.7rem] px-1.5 py-1">
-              <div className="font-readable text-[8px] font-bold tracking-normal text-slate-500">{step.label}</div>
-              <div className="mt-0.5 truncate font-readable text-[9px] font-semibold text-slate-100/84">{step.value}</div>
+            <div key={`${step.label}-${step.value}`} className="aether-decision-cell min-h-[44px] rounded-[0.7rem] px-2 py-1.5">
+              <div className="aether-type-label font-readable font-bold tracking-normal text-slate-500">{step.label}</div>
+              <div className="aether-type-meta mt-0.5 break-words font-readable font-semibold text-slate-100/84">{step.value}</div>
             </div>
           );
         })}
@@ -162,10 +162,10 @@ const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction }
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="aether-label text-[#b9f1ec]/72">원정 준비</div>
-          <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-white">
+          <div className="aether-type-title mt-0.5 font-readable font-semibold text-white">
             {preparation.missionTitle}
           </div>
-          <div className="mt-0.5 font-readable text-[10px] text-slate-300/76">
+          <div className="aether-type-body mt-0.5 font-readable text-slate-300/76">
             {preparation.missionStatus}
           </div>
         </div>
@@ -176,16 +176,16 @@ const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction }
 
       {!preparation.tracker && guidance?.title && (
         <div data-testid="adventure-guidance-strip" className="mt-2 border-t border-white/8 pt-2">
-          <div className="font-readable text-[10px] font-semibold text-[#dff7f5]">{guidance.title}</div>
-          <div className="mt-0.5 line-clamp-2 font-readable text-[9px] leading-snug text-slate-300/82">{guidance.detail}</div>
+          <div className="aether-type-body font-readable font-semibold text-[#dff7f5]">{guidance.title}</div>
+          <div className="aether-type-meta mt-0.5 font-readable text-slate-300/82">{guidance.detail}</div>
         </div>
       )}
 
       <div className="mt-2 grid grid-cols-2 gap-1">
         {checks.map((check) => (
           <div key={check.label} className="aether-expedition-check min-w-0 px-2 py-1.5">
-            <div className="font-readable text-[8px] font-bold text-slate-400">{check.label}</div>
-            <div className="mt-0.5 truncate font-readable text-[10px] font-semibold text-slate-100/90" title={check.value}>
+            <div className="aether-type-label font-readable font-bold text-slate-400">{check.label}</div>
+            <div className="aether-type-body mt-0.5 break-words font-readable font-semibold text-slate-100/90" title={check.value}>
               {check.value}
             </div>
           </div>
@@ -251,8 +251,8 @@ const MapSignalStrip = ({
               <MapIcon size={14} />
             </span>
             <div className="min-w-0">
-              <div className="truncate font-readable text-[13px] font-semibold text-white">{currentName}</div>
-              <div className="font-fira text-[9px] uppercase tracking-normal text-slate-300/70">{mapState}</div>
+              <div className="aether-type-title font-readable font-semibold text-white">{currentName}</div>
+              <div className="aether-type-meta font-fira uppercase tracking-normal text-slate-300/70">{mapState}</div>
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ const MapSignalStrip = ({
           </div>
           <div className="mt-1 flex min-w-0 items-center justify-center gap-1.5">
             <SignalBadge tone="recommended" size="sm">{routeBadge}</SignalBadge>
-            <span className="truncate font-readable text-[12px] font-semibold text-[#dff7f5]">{routeName}</span>
+            <span className="aether-type-body min-w-0 font-readable font-semibold text-[#dff7f5]">{routeName}</span>
           </div>
         </div>
 
@@ -274,7 +274,7 @@ const MapSignalStrip = ({
               type="button"
               data-testid="control-map-open"
               onClick={openMap}
-              className="min-h-[32px] rounded-[0.85rem] border border-[#7dd4d8]/26 bg-black/22 px-2 font-fira text-[9px] font-bold uppercase tracking-normal text-[#dff7f5]"
+              className="aether-type-meta min-h-[44px] rounded-[0.85rem] border border-[#7dd4d8]/26 bg-black/22 px-2 font-fira font-bold uppercase tracking-normal text-[#dff7f5]"
             >
               지도
             </button>
@@ -284,7 +284,7 @@ const MapSignalStrip = ({
             data-testid="control-route-open"
             disabled={isAiThinking || !recommendedRoute}
             onClick={openRoute}
-            className="min-h-[32px] rounded-[0.85rem] border border-[#d5b180]/28 bg-[#d5b180]/12 px-2 font-fira text-[9px] font-bold uppercase tracking-normal text-[#f6e7c8] disabled:opacity-45"
+            className="aether-type-meta min-h-[44px] rounded-[0.85rem] border border-[#d5b180]/28 bg-[#d5b180]/12 px-2 font-fira font-bold uppercase tracking-normal text-[#f6e7c8] disabled:opacity-45"
           >
             이동
           </button>
@@ -356,7 +356,7 @@ const ControlPanel = ({
 
   const actionGridClass = 'grid grid-cols-3 gap-2';
   const actionButtonBase = 'aether-action-button relative min-h-[48px] overflow-hidden rounded-[1rem] px-2.5 flex items-center gap-2 text-left disabled:opacity-50 transition-all group';
-  const actionLabelClass = 'text-[10px] font-readable font-bold uppercase tracking-normal text-left leading-tight';
+  const actionLabelClass = 'aether-type-body font-readable font-bold uppercase tracking-normal text-left';
 
   const getRecommendedClass = (buttonKey: any) => (
     recommendedButton === buttonKey
@@ -617,7 +617,7 @@ const ControlPanel = ({
           >
             <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
               <div className="aether-label text-[#b9f1ec]/72">이동 경로</div>
-              <div className="font-readable text-[9px] text-slate-400">지역을 눌러 이동</div>
+              <div className="aether-type-meta font-readable text-slate-400">지역을 눌러 이동</div>
             </div>
             <RouteTopology
               compact
@@ -633,11 +633,11 @@ const ControlPanel = ({
             />
             {moveRecommendations[0] && (
               <div data-testid="control-route-guide" className="mt-2 border-t border-white/8 px-0.5 pt-2">
-                <div className="flex items-center justify-between gap-2 font-readable text-[9px]">
+                <div className="aether-type-meta flex flex-wrap items-center justify-between gap-2 font-readable">
                   <span className="text-[#b9f1ec]">추천 · {moveRecommendations[0].name}</span>
                   <span className="text-slate-400">귀환 · {moveRecommendations[0].routePlan.returnLabel}</span>
                 </div>
-                <p className="mt-1 line-clamp-2 font-readable text-[9px] leading-snug text-slate-300/68">
+                <p className="aether-type-meta mt-1 font-readable text-slate-300/68">
                   {moveRecommendations[0].reason}
                 </p>
               </div>
@@ -678,8 +678,8 @@ const ControlPanel = ({
           {!isSafeZone && !questTracker && guidance?.title && (
             <div data-testid="adventure-guidance-strip" className="aether-panel-core rounded-[1.05rem] px-3 py-2">
               <div className="aether-label text-[#7dd4d8]/72">다음 행동</div>
-              <div className="mt-0.5 font-readable text-[12px] font-semibold text-white/92">{guidance.title}</div>
-              <div className="mt-0.5 font-readable text-[10px] leading-snug text-slate-300/82 line-clamp-2">{guidance.detail}</div>
+              <div className="aether-type-body mt-0.5 font-readable font-semibold text-white/92">{guidance.title}</div>
+              <div className="aether-type-meta mt-0.5 font-readable text-slate-300/82">{guidance.detail}</div>
             </div>
           )}
           {!isSafeZone && (
@@ -703,14 +703,14 @@ const ControlPanel = ({
                 >
                   <History size={14} className="shrink-0 text-[#d5b180]" />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-readable text-xs font-semibold text-slate-100">
+                    <div className="aether-type-body font-readable font-semibold text-slate-100">
                       지난 원정 · {player.lastExpeditionSummary.destination}
                     </div>
-                    <div className="mt-0.5 truncate font-readable text-[11px] text-slate-400">
+                    <div className="aether-type-meta mt-0.5 font-readable text-slate-400">
                       전투 {player.lastExpeditionSummary.battles} · 탐험 {player.lastExpeditionSummary.explores} · +{player.lastExpeditionSummary.expGained.toLocaleString('ko-KR')} EXP
                     </div>
                   </div>
-                  <span className="shrink-0 font-readable text-[11px] font-semibold text-[#b9f1ec]">보기</span>
+                  <span className="aether-type-body shrink-0 font-readable font-semibold text-[#b9f1ec]">보기</span>
                 </button>
               )}
               <div data-testid="control-town-quick-actions" className={actionGridClass}>
@@ -723,8 +723,8 @@ const ControlPanel = ({
                 >
                   <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 px-3 py-2 text-left [&::-webkit-details-marker]:hidden">
                     <Landmark size={14} className="shrink-0 text-[#d5b180]" />
-                    <span className="font-readable text-[11px] font-semibold text-slate-100">마을 시설</span>
-                    <span className="min-w-0 flex-1 truncate text-right font-readable text-[9px] text-slate-400">
+                    <span className="aether-type-body font-readable font-semibold text-slate-100">마을 시설</span>
+                    <span className="aether-type-meta min-w-0 flex-1 text-right font-readable text-slate-400">
                       {townPresentation.facilitySummary}
                     </span>
                     <ChevronDown size={14} className="shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
