@@ -1,5 +1,24 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-23: connected the first story mission before the first exploration and planned the next expedition loop):
+- Reproduced a fresh-player flow where the forest had already been explored before the Quest Board offered `[스토리] 첫 번째 여정` at 0/1, forcing the player to repeat the action the game had just taught.
+- Auto-assigned the first story mission at new-run start through the same progress-state factory as normal acceptance, while preventing duplicates for active and completed saves.
+- Preserved the direct `고요한 숲으로 첫 출발` primary action and two-action first-town surface; unrelated active missions still retain Quest quick access.
+- Extended smoke and E2E through first departure, forest exploration, event resolution, and the resulting reward-pending state.
+- Compared the live systems with Shattered Pixel Dungeon, Buriedbornes2, Loop Hero, Moonlighter, Darkest Dungeon, and Hades, then recorded the next bounded plan in `docs/COMPETITOR_EXPEDITION_RETENTION_PLAN_2026-07-23.md`.
+
+Verification:
+- Focused quest-start, progress, and town-presentation unit contracts -> pass; related mobile E2E -> 14/14 pass.
+- `npm run verify:full` with the compatible Playwright Chromium -> type-check, lint, unit 3366/3366, build guard, desktop/mobile smoke, and Playwright E2E 38/38 pass.
+- Dedicated 390x844 mobile smoke -> pass; artifact `playtest-artifacts/first-story-auto-assignment-mobile/`.
+- `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, and `npm run ios:archive` -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-23 00:08:51 KST`, 199431507 bytes).
+- Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-23 00:09:08 KST`, `1.1.0 (2)`, Apple Development signed).
+- Physical iPhone archive installation and metadata recheck -> pass at `file:///private/var/containers/Bundle/Application/E612420A-68E9-4503-9E4B-CD81A2996743/App.app/`; launch was denied because the device locked before the launch step.
+
+Next action:
+- Unlock the installed iPhone and run `npm run ios:device:launch-smoke` without reinstalling, then complete the fresh-save five-minute route. If that checkpoint is clean, start Slice 62 Expedition Ledger and Return Debrief. Physical Android QA/release signing, Apple Distribution identity, and approved TestFlight upload remain separate blockers.
+
 Done (2026-07-22: made combat skill availability match the engine rule):
 - Followed a fresh-save player route through the first relic, forest arrival, story choice, first combat, town return, and Quest Board instead of relying only on fixtures.
 - Reproduced a misleading combat state where `강타` still said `사용 가능` and accepted a no-op tap with 2 energy against a 10-energy cost.

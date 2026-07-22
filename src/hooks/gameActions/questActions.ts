@@ -4,6 +4,7 @@ import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
 import { getGravesAtLoc, removeGravesAtLoc, resolveGraveRecovery } from '../../utils/graveUtils.js';
 import { getUnmetQuestPrerequisite } from '../../utils/questPrerequisites.js';
+import { createQuestProgressState } from '../../utils/questProgress.js';
 
 export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
     const { player, grave, dispatch, addLog } = deps;
@@ -23,13 +24,7 @@ export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
             dispatch({
                 type: AT.SET_PLAYER,
                 payload: (p: any) => {
-                    const acceptedQuest: Record<string, any> = {
-                        id: qId,
-                        progress: qData.target === 'Level' ? p.level : 0,
-                    };
-                    if (qData.type === 'explore_count' && qData.target === 'explores' && qData.location) {
-                        acceptedQuest.startExploreCount = p.stats?.exploresByLocation?.[qData.location] || 0;
-                    }
+                    const acceptedQuest = createQuestProgressState(qData, p);
                     return { ...p, quests: [...p.quests, acceptedQuest] };
                 }
             });

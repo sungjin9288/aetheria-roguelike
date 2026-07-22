@@ -1,5 +1,6 @@
 import { DB } from '../../data/db';
 import { CLASSES } from '../../data/classes';
+import { FIRST_STORY_QUEST_ID } from '../../data/quests';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { BALANCE, CONSTANTS } from '../../data/constants';
 import { AT } from '../../reducers/actionTypes';
@@ -10,6 +11,23 @@ import { soundManager } from '../../systems/SoundManager';
 import { buildClassVitals } from './_shared';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
+import { createQuestProgressState } from '../../utils/questProgress';
+
+const getStartingQuests = (player: any) => {
+    const quests = Array.isArray(player.quests) ? player.quests : [];
+    const claimedQuestIds = Array.isArray(player.stats?.claimedQuestIds)
+        ? player.stats.claimedQuestIds
+        : [];
+    const firstStoryQuest = DB.QUESTS.find((quest: any) => quest.id === FIRST_STORY_QUEST_ID);
+
+    if (!firstStoryQuest
+        || claimedQuestIds.includes(FIRST_STORY_QUEST_ID)
+        || quests.some((quest: any) => quest.id === FIRST_STORY_QUEST_ID)) {
+        return quests;
+    }
+
+    return [...quests, createQuestProgressState(firstStoryQuest, player)];
+};
 
 export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDailyProtocolLogs }: any) => {
     const { player, gameState, dispatch, addLog, addStoryLog, getFullStats } = deps;
@@ -34,6 +52,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             // Compute full starting HP/MP including passive skill bonuses for the chosen job
             const tempPlayer = { ...player, job: jobId, maxHp, maxMp: vitals.maxMp };
             const fullStartStats = getFullStats(tempPlayer);
+            const startingQuests = getStartingQuests(player);
             dispatch({ type: AT.SET_PLAYER, payload: {
                 name: trimmedName, gender, job: jobId,
                 level: 1, exp: 0, nextExp: CONSTANTS.START_NEXT_EXP,
@@ -41,6 +60,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
                 maxMp: vitals.maxMp, mp: fullStartStats.maxMp,
                 gold: startGold,
                 challengeModifiers: mods,
+                quests: startingQuests,
                 stats: { ...(player.stats || {}), visitedMaps: [CONSTANTS.START_LOCATION] }
             }});
             const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];

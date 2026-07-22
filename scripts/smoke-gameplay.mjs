@@ -487,7 +487,7 @@ async function resetToIntro(page) {
   return waitForState(page, (nextState) => nextState.mode === 'intro', 'intro screen after reset');
 }
 
-async function startNewRun(page, { expectFirstJourneyGuidance = false } = {}) {
+async function startNewRun(page, { expectFirstStoryMission = false } = {}) {
   await resetToIntro(page);
   const startButton = page.locator('[data-testid="intro-start-button"]');
   const nameInput = page.locator('[data-testid="intro-name-input"]');
@@ -526,16 +526,23 @@ async function startNewRun(page, { expectFirstJourneyGuidance = false } = {}) {
     !/(?:초기 기록이 적용|이름을 정하고 다시 시작|\[콜사인\]|초기 스킬|당신의 빌드)/.test(startRecord),
     `New run record retained reset or mechanical copy: ${startRecord}`
   );
-  const firstGuidance = await page.locator('[data-testid="adventure-guidance-strip"]').innerText();
-  if (expectFirstJourneyGuidance) {
+  const firstPreparation = await page.locator('[data-testid="control-expedition-prep"]').innerText();
+  const firstPrimary = page.locator('[data-testid="control-town-primary"]');
+  const firstPrimaryKind = await firstPrimary.getAttribute('data-town-primary-kind');
+  const firstPrimaryText = await firstPrimary.innerText();
+  if (expectFirstStoryMission) {
     ensure(
-      firstGuidance.includes('골드 100과 경험 25'),
-      `Fresh run did not show first journey reward guidance: ${firstGuidance}`
+      ['[스토리] 첫 번째 여정', '0/1', '고요한 숲'].every((text) => firstPreparation.includes(text)),
+      `Fresh run did not connect its first story mission to the forest: ${firstPreparation}`
+    );
+    ensure(
+      firstPrimaryKind === 'open_move' && firstPrimaryText.includes('고요한 숲으로 첫 출발'),
+      `Fresh run did not keep one direct forest departure: ${firstPrimaryText}`
     );
   }
   ensure(
-    !/(?:\+\d+G|EXP|MP)/.test(firstGuidance),
-    `New run guidance exposed mechanical reward labels: ${firstGuidance}`
+    !/(?:\+\d+G|EXP|MP)/.test(firstPreparation),
+    `New run preparation exposed mechanical reward labels: ${firstPreparation}`
   );
 
   await scrollToTop(page);
@@ -1476,7 +1483,7 @@ async function main() {
     await waitForState(page, (state) => state.bootStage === 'ready', 'boot stage ready', 25000);
 
     logSmoke('boot ready');
-    await startNewRun(page, { expectFirstJourneyGuidance: true });
+    await startNewRun(page, { expectFirstStoryMission: true });
     await verifyMobileFirstFold(page);
     await verifyMobileArchiveConsole(page);
     await verifyShopFlow(page);

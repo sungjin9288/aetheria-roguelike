@@ -237,6 +237,14 @@
 - **Rule:** 첫 세션의 지역 marker와 해당 enemy portrait는 같은 region family registry를 사용하고 exact asset coverage를 데이터 목록과 대조한다. 미발견 정보와 미제작 범위는 명시적 fallback으로 남기며, 생성 원본과 crop/alpha 처리 규칙을 재현 가능하게 보존한다
 - **Rationale:** 지도와 전투가 서로 다른 visual language를 쓰거나 이름 alias가 generic icon으로 되돌아가면 플레이어는 장소와 적의 관계를 매번 다시 해석한다. runtime 결과만 저장하면 art 수정 때 출처와 처리 기준도 잃으므로 family mapping, 정보 공개 경계, asset lineage를 하나의 계약으로 검증해야 한다
 
+### R49: Assign The First Mission Before Its Qualifying Action
+- **Rule:** 첫 세션의 필수 이야기 임무는 플레이어가 목표 행동을 하기 전에 자동 배정하고, 일반 수락과 같은 progress factory를 사용한다. 이미 활성 또는 완료한 세이브는 완료 ledger와 active state를 모두 검사해 중복 배정하지 않는다
+- **Rationale:** 탐험을 먼저 가르친 뒤 게시판에서 같은 탐험을 0부터 다시 요구하면 튜토리얼이 반복 작업으로 느껴지고 임무 진행을 신뢰하기 어렵다. 자동 배정만 별도 방식으로 구현하면 지역 기준선과 구세이브 보호 규칙도 다시 갈라진다
+
+### R50: Bound Adventure Progress With An Expedition Ledger
+- **Rule:** 출발 준비, 임무 focus, 필드 획득, 정상 귀환은 하나의 저장 가능한 expedition identity로 묶고, 귀환 결과는 시작 snapshot과 현재 player의 delta로 계산한다. 사망 run summary와 정상 귀환 debrief는 별도 outcome으로 보존한다
+- **Rationale:** 개별 시스템이 모두 있어도 출발과 귀환 사이의 성과가 정리되지 않으면 플레이어는 한 세션에서 무엇을 얻었고 다음에 무엇을 바꿔야 하는지 체감하기 어렵다. 기존 카운터를 행동마다 중복 갱신하기보다 경계 snapshot으로 계산해야 결합도와 save migration 위험도 낮다
+
 ---
 
 ## 📝 Post-Mortem Template

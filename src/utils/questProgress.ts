@@ -7,6 +7,19 @@ const findQuestDefinition = (quest: any, questCatalog: any = QUESTS) => (
     quest?.isBounty ? quest : questCatalog.find((entry: any) => entry.id === quest.id)
 );
 
+export const createQuestProgressState = (quest: any, player: Player) => {
+    const progressState: Record<string, any> = {
+        id: quest.id,
+        progress: quest.target === 'Level' ? player.level : 0,
+    };
+
+    if (quest.type === 'explore_count' && quest.target === 'explores' && quest.location) {
+        progressState.startExploreCount = player.stats?.exploresByLocation?.[quest.location] || 0;
+    }
+
+    return progressState;
+};
+
 // cycle 508: enemyName / questCatalog default 제거 — 1 callsite (CombatEngine
 //   :1571) 항상 3 args 전달이라 default 도달 불가. util default 청소 메가
 //   시리즈 7번째 (cycle 502-507).

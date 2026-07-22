@@ -3,7 +3,23 @@ import assert from 'node:assert/strict';
 
 import { QUESTS } from '../src/data/quests.js';
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.js';
-import { syncQuestProgress } from '../src/utils/questProgress.js';
+import { createQuestProgressState, syncQuestProgress } from '../src/utils/questProgress.js';
+
+test('quest progress starts from the current level or local exploration baseline', () => {
+    const player = {
+        level: 7,
+        stats: { exploresByLocation: { '고요한 숲': 3 } },
+    };
+
+    assert.deepEqual(
+        createQuestProgressState(QUESTS.find((quest) => quest.id === 80), player),
+        { id: 80, progress: 0, startExploreCount: 3 },
+    );
+    assert.deepEqual(
+        createQuestProgressState(QUESTS.find((quest) => quest.id === 10), player),
+        { id: 10, progress: 7 },
+    );
+});
 
 test('quest progress syncs build-guiding and discovery quests from player stats', () => {
     // cycle 83: discovery_count quest는 visitedMaps.length로 통일 — 기존엔

@@ -32,6 +32,7 @@ const paceEarlyQuestReward = (quest: Quest): Quest => {
 };
 
 export const EARLY_QUEST_EXP_CAPS = EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL;
+export const FIRST_STORY_QUEST_ID = 80;
 
 const RAW_QUESTS: Quest[] = [
     // ── 초반 퀘스트 (Lv 1-10) ────────────────────────────────────────────────
@@ -164,7 +165,7 @@ const RAW_QUESTS: Quest[] = [
     // ── 스토리 퀘스트 ─────────────────────────────────────────────────────────
     // 레벨은 도전 가능 시점, prerequisiteQuestId는 실제 서사 순서를 책임진다.
     // 기계 폐도(Lv28)를 거쳐 얼음 권역(Lv35)으로 이어진 뒤 마왕 추적이 시작된다.
-    { id: 80, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다',      type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1,  reward: { exp: 100, gold: 200 },            minLv: 1 },
+    { id: FIRST_STORY_QUEST_ID, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다', type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1, reward: { exp: 100, gold: 200 }, minLv: 1 },
     { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', location: '잊혀진 폐허', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
     { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 5마리를 처치한다', target: '화염 정령', location: '화염의 협곡', goal: 5, reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
     { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙하 심연에서 빙결의 마녀를 처치해 저주의 정체를 밝힌다', target: '빙결의 마녀', location: '빙하 심연', goal: 1, reward: { exp: 8000, gold: 8000, item: '냉기의 결정' }, minLv: 35, prerequisiteQuestId: 84 },

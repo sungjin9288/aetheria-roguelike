@@ -54,4 +54,26 @@ test.describe('Intro flow', () => {
         const statusBar = page.getByTestId('persistent-status-bar');
         await expect(statusBar).toContainText(/레벨 \d+/);
     });
+
+    test('첫 출발 전에 첫 스토리 임무가 자동으로 이어진다', async ({ page }) => {
+        await startE2ERun(page);
+
+        const preparation = page.getByTestId('control-expedition-prep');
+        await expect(preparation).toContainText('[스토리] 첫 번째 여정');
+        await expect(preparation).toContainText('0/1');
+
+        const primary = page.getByTestId('control-town-primary');
+        await expect(primary).toHaveAttribute('data-town-primary-kind', 'open_move');
+        await expect(primary).toContainText('고요한 숲으로 첫 출발');
+
+        await primary.getByRole('button').click();
+        await expect(page.getByTestId('control-mission-tracker')).toContainText('0/1');
+
+        await page.getByTestId('control-explore').click();
+        await expect(page.getByTestId('event-panel')).toBeVisible({ timeout: 8_000 });
+        await page.getByTestId('event-choice-0').click();
+        const completedMission = page.getByTestId('control-mission-tracker');
+        await expect(completedMission).toContainText('보상 대기');
+        await expect(completedMission).toContainText('마을에서 보상 회수');
+    });
 });

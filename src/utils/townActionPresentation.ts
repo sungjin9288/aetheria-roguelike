@@ -1,4 +1,5 @@
 import type { Player } from '../types/index.js';
+import { FIRST_STORY_QUEST_ID } from '../data/quests.js';
 
 export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'grave';
 
@@ -78,15 +79,20 @@ const getPrimaryKind = (guidance: any, preparation: any): TownPrimaryKind => {
     return preparation?.tracker ? 'open_move' : 'open_quest_board';
 };
 
+const isFirstStoryDeparture = (guidance: any, preparation: any) => (
+    (guidance?.title === '첫 원정 준비' || guidance?.primaryAction?.label === '첫 출발')
+    && (!preparation?.tracker || preparation.tracker.questId === FIRST_STORY_QUEST_ID)
+);
+
 const getPrimaryLabel = (kind: TownPrimaryKind, guidance: any, preparation: any) => {
     switch (kind) {
         case 'claim_quest':
             return '임무 보상 받기';
         case 'open_move':
             if (!preparation?.canDepart) return '출발 경로 확인';
-            return preparation?.tracker
-                ? `${preparation.destination}으로 출발`
-                : `${preparation.destination}으로 첫 출발`;
+            return isFirstStoryDeparture(guidance, preparation)
+                ? `${preparation.destination}으로 첫 출발`
+                : `${preparation.destination}으로 출발`;
         case 'open_quest_board':
             return '임무 고르기';
         case 'rest':
@@ -140,9 +146,12 @@ export const getTownActionPresentation = ({
     );
     const needsSupply = recoveryItems.length <= 1 && (player.gold || 0) >= cheapestSupply;
     const questNeedsAttention = Boolean(
-        preparation?.tracker
-        || primaryKind === 'claim_quest'
-        || primaryKind === 'open_quest_board',
+        !isFirstStoryDeparture(guidance, preparation)
+        && (
+            preparation?.tracker
+            || primaryKind === 'claim_quest'
+            || primaryKind === 'open_quest_board'
+        ),
     );
 
     const contextualKeys: TownActionKey[] = [];
