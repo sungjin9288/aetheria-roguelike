@@ -1,5 +1,24 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-22: reduced the first-town decision surface without removing access):
+- Connected the existing adventure guidance to one primary town action for first departure, mission selection, reward claim, recovery, class change, inventory cleanup, or exploration.
+- Limited the open town surface to the primary action plus at most three contextual or free actions, then moved the remaining rest, quest, shop, class, and crafting entries behind one visible `마을 시설` disclosure.
+- Promoted recovery, active mission, available class change, craftable recipe, supply need, and grave recovery only when the current player state makes them relevant.
+- Preserved direct route selection and every existing town panel, including their original test IDs and back navigation.
+
+Verification:
+- Focused town, adventure-guide, and onboarding contracts -> 24/24 pass.
+- Related 390x844 Playwright flows -> 14/14 pass.
+- Full mobile smoke -> pass, including collapsed-facility access to Shop, Quest, Class, and Craft panels.
+- `npm run verify:full` -> type-check, lint, unit 3355/3355, build guard, desktop/mobile smoke, and Playwright E2E 36/36 pass; final `npm run verify` after two added edge contracts -> unit 3357/3357 and build guard pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Visual evidence: `playtest-artifacts/mobile-town-hierarchy/first-town.png`, `facilities-open.png`, and `playtest-artifacts/slice59-town-hierarchy/01-after-start.png`.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-22 22:58:16 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-22 22:58:23 KST`, `1.1.0 (2)`).
+- Physical iPhone delivery installed the archive at `file:///private/var/containers/Bundle/Application/6FB2EA44-0EE1-4C3A-8939-FE30B034CE55/App.app/` and confirmed metadata, but launch was denied after the device locked.
+
+Next action:
+- Unlock the installed iPhone and run `npm run ios:device:launch-smoke`, then complete the fresh-save first-session route. Android release signing, physical Android QA, Apple Distribution identity, and approved TestFlight upload remain separate blockers.
+
 Done (2026-07-22: completed the shared encounter and region visual language):
 - Replaced the first-session generic enemy silhouettes with 23 exact chibi pixel-art portraits across forest, plains, ruins, and fire families, including the two planned fire bosses.
 - Connected elite and boss-phase aliases to the same source monster, then made combat portraits and map markers share one region-family registry while preserving undiscovered and unsupported-enemy fallbacks.

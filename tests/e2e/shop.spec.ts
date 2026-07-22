@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { openTownFacilities, startE2ERun } from './testHelpers';
 
 /**
  * E2E: 상점 패널 진입 + 구매 사유 표시 (cycle 56).
@@ -12,12 +12,14 @@ test.describe('Shop panel', () => {
     });
 
     test('상점 버튼 노출', async ({ page }) => {
+        await openTownFacilities(page);
         const shopButton = page.getByTestId('control-market');
         await expect(shopButton).toBeVisible({ timeout: 8_000 });
         await expect(shopButton).toHaveAccessibleName('상점');
     });
 
     test('상점 진입 → 패널 헤더 또는 구매/판매 토글 노출', async ({ page }) => {
+        await openTownFacilities(page);
         const shopButton = page.getByTestId('control-market');
         await shopButton.click();
         // ShopPanel 안에 "구매" 또는 "판매" 토글이 있어야 함

@@ -1266,12 +1266,12 @@ import { readFile } from 'node:fs/promises';
    *   동시 정리 + inner destructure default 보존.
    *
    * 수정:
-   * - ControlPanel.tsx:284/285/286 — 3 callsite 모두 (button, '', {}) 명시.
+   * - ControlPanel.tsx의 모든 callsite가 (button, '', {})를 명시.
    * - ControlPanel.tsx:76 — extraClass '' / outer {} defaults 제거 (inner
    *   `hideLabel = false`는 보존).
    *
    * 회귀 가드:
-   * - 3 internal callsite 동작 그대로.
+   * - internal callsite가 추가돼도 explicit argument 계약 유지.
    * - body className `${extraClass}` / `hideLabel ?` 처리 보존.
    * - inner destructure default 보존 (caller {} 시 hideLabel false 적용).
    */
@@ -1294,10 +1294,12 @@ import { readFile } from 'node:fs/promises';
           'renderActionButton 3-arg 시그니처 보존 (outer defaults 없이, inner hideLabel = false 보존)');
   });
 
-  test("cycle 626: 3 callsite 명시 추가 (button, '', {})", async () => {
+  test("cycle 626: 모든 callsite가 (button, '', {})를 명시", async () => {
       const source = await readSrc('src/components/ControlPanel.tsx');
-      const matches = (source.match(/renderActionButton\(button,\s*'',\s*\{\}\)/g) || []).length;
-      assert.equal(matches, 3, '3 callsite 모두 명시 (button, \'\', {})');
+      const callsites = source.match(/renderActionButton\([^)]*\)/g) || [];
+      assert.ok(callsites.length > 0, 'renderActionButton callsite 존재');
+      assert.ok(callsites.every((call) => /renderActionButton\(button,\s*'',\s*\{\}\)/.test(call)),
+          '모든 callsite가 explicit arguments를 전달');
   });
 
   test('cycle 626: body extraClass / hideLabel 처리 보존', async () => {

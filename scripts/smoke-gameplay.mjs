@@ -597,8 +597,9 @@ async function verifyMobileFirstFold(page) {
   const statusCharacterChip = page.locator('[data-testid="status-character-chip"]');
   const statusContextLine = page.locator('[data-testid="status-context-line"]');
   const statusMetrics = page.locator('[data-testid="status-metrics"]');
+  const townPrimary = page.locator('[data-testid="control-town-primary"]');
+  const townFacilities = page.locator('[data-testid="control-town-facilities"]');
   const moveButton = page.locator('[data-testid="control-move"]');
-  const shopButton = page.locator('[data-testid="control-market"]');
 
   await terminalPanel.waitFor({ state: 'visible', timeout: 10000 });
   await statusBar.waitFor({ state: 'visible', timeout: 10000 });
@@ -606,8 +607,14 @@ async function verifyMobileFirstFold(page) {
   await statusCharacterChip.waitFor({ state: 'visible', timeout: 10000 });
   await statusContextLine.waitFor({ state: 'visible', timeout: 10000 });
   await statusMetrics.waitFor({ state: 'visible', timeout: 10000 });
+  await townPrimary.waitFor({ state: 'visible', timeout: 10000 });
+  await townFacilities.waitFor({ state: 'visible', timeout: 10000 });
   await moveButton.waitFor({ state: 'visible', timeout: 10000 });
-  await shopButton.waitFor({ state: 'visible', timeout: 10000 });
+  ensure(!await page.locator('[data-testid="control-market"]').isVisible(), 'Town facilities should begin collapsed');
+  await verifyActionReachable(townPrimary.locator('button'), 'Town primary CTA', {
+    minHitHeight: 48,
+    minVisibleRatio: 0.85,
+  });
   await verifyActionReachable(archiveOpenButton, 'Mobile archive open CTA', {
     minHitHeight: 44,
     minVisibleRatio: 0.85,
@@ -641,6 +648,15 @@ async function verifyMobileFirstFold(page) {
   ensure(statusLayout.avatarReady, 'Mobile status avatar should finish loading before visual evidence');
   ensure(statusLayout.labelSizes.length === 3 && statusLayout.labelSizes.every((size) => size >= 10), `Mobile status labels should be at least 10px: ${JSON.stringify(statusLayout.labelSizes)}`);
   ensure(statusLayout.valueSizes.length === 3 && statusLayout.valueSizes.every((size) => size >= 11), `Mobile status values should be at least 11px: ${JSON.stringify(statusLayout.valueSizes)}`);
+}
+
+async function openTownFacilities(page) {
+  const facilities = page.locator('[data-testid="control-town-facilities"]');
+  await facilities.waitFor({ state: 'visible', timeout: 10000 });
+  if (await facilities.getAttribute('open') === null) {
+    await facilities.locator('summary').click();
+  }
+  await page.waitForFunction(() => document.querySelector('[data-testid="control-town-facilities"]')?.hasAttribute('open'));
 }
 
 async function verifyMobileArchiveConsole(page) {
@@ -838,6 +854,7 @@ async function verifyMobileArchiveConsole(page) {
 
   await archiveReturnButton.click();
   await page.locator('[data-testid="terminal-panel"]').waitFor({ state: 'visible', timeout: 10000 });
+  await openTownFacilities(page);
   await verifyActionReachable(page.locator('[data-testid="control-class"]'), 'Town class CTA', {
     minHitHeight: 44,
     minVisibleRatio: 0.85,
@@ -853,6 +870,7 @@ async function verifyMobileArchiveConsole(page) {
 }
 
 async function verifyShopFlow(page) {
+  await openTownFacilities(page);
   const marketButton = page.locator('[data-testid="control-market"]');
   if (!await marketButton.count()) return;
 
@@ -991,6 +1009,7 @@ async function verifyMobileFocusPanels(page) {
   if (!isMobile) return;
 
   const openTownAction = async (testId) => {
+    await openTownFacilities(page);
     const action = page.locator(`[data-testid="${testId}"]`);
     await action.waitFor({ state: 'visible', timeout: 10000 });
     await action.click();

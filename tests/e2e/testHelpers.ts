@@ -40,3 +40,12 @@ export const startE2ERun = async (
         }
     }
 };
+
+export const openTownFacilities = async (page: Page) => {
+    const facilities = page.getByTestId('control-town-facilities');
+    await expect(facilities).toBeVisible({ timeout: 8_000 });
+    if (await facilities.getAttribute('open') === null) {
+        await facilities.locator('summary').click();
+    }
+    await expect(facilities).toHaveAttribute('open', '');
+};

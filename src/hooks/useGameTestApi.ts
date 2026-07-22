@@ -389,6 +389,27 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         stats: {
                             ...er.player.stats,
                             claimedQuestIds: [80],
+                            kills: 1,
+                            explores: 2,
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
+            seedTownRecoveryScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        loc: '시작의 마을',
+                        level: 2,
+                        hp: Math.max(1, Math.floor((er.player.maxHp || 180) * 0.4)),
+                        gold: 500,
+                        quests: [{ id: 1, progress: 1, isBounty: false }],
+                        stats: {
+                            ...er.player.stats,
+                            kills: 1,
+                            explores: 2,
                         },
                     },
                 });

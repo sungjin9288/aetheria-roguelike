@@ -1,6 +1,9 @@
 import {
+  Backpack,
+  ChevronDown,
   GraduationCap,
   Hammer,
+  Landmark,
   Map as MapIcon,
   Moon,
   Route,
@@ -26,6 +29,7 @@ import QuestBoardPanel from './tabs/QuestBoardPanel';
 import CraftingPanel from './tabs/CraftingPanel';
 import { ACTION_KIND_TO_BUTTON } from './controlPanelConfig';
 import type { Player, Monster } from '../types/index.js';
+import { getTownActionPresentation } from '../utils/townActionPresentation';
 
 interface ControlPanelProps {
   gameState?: string;
@@ -123,12 +127,23 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
   );
 };
 
-const ExpeditionPrepStrip = ({ preparation, guidance, onDepart, onClaimReward }: {
+const townPrimaryIcons: Record<string, any> = {
+  claim_quest: ScrollText,
+  explore: MapIcon,
+  open_class: GraduationCap,
+  open_inventory: Backpack,
+  open_move: Route,
+  open_quest_board: ScrollText,
+  rest: Moon,
+};
+
+const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction }: {
   preparation: any;
   guidance: any;
-  onDepart: () => void;
-  onClaimReward?: () => void;
+  primary: any;
+  onPrimaryAction: () => void;
 }) => {
+  const PrimaryIcon = townPrimaryIcons[primary.kind] || Route;
   const checks = [
     { label: '목적지', value: preparation.destination },
     { label: '자원', value: preparation.resourceLabel },
@@ -176,28 +191,18 @@ const ExpeditionPrepStrip = ({ preparation, guidance, onDepart, onClaimReward }:
         ))}
       </div>
 
-      {preparation.isClaimable ? (
+      <div data-testid="control-town-primary" data-town-primary-kind={primary.kind}>
         <button
           type="button"
-          data-testid="control-claim-quest-reward"
-          disabled={!onClaimReward}
-          onClick={onClaimReward}
-          className="aether-cta-gold mt-2 min-h-[48px] w-full px-3 font-readable text-xs font-bold text-[#f6e7c8] disabled:cursor-not-allowed disabled:opacity-55"
+          data-testid={primary.testId}
+          disabled={primary.disabled}
+          onClick={onPrimaryAction}
+          className={`${primary.tone === 'reward' ? 'aether-cta-gold text-[#f6e7c8]' : 'aether-cta-primary text-[#dff7f5]'} mt-2 flex min-h-[48px] w-full items-center justify-center gap-2 px-3 font-readable text-xs font-bold disabled:cursor-not-allowed disabled:opacity-55`}
         >
-          임무 보상 받기
+          <PrimaryIcon size={14} />
+          {primary.label}
         </button>
-      ) : (
-        <button
-          type="button"
-          data-testid="control-expedition-start"
-          disabled={!preparation.canDepart}
-          onClick={onDepart}
-          className="aether-cta-primary mt-2 flex min-h-[48px] w-full items-center justify-center gap-2 px-3 font-readable text-xs font-bold text-[#dff7f5] disabled:cursor-not-allowed disabled:opacity-55"
-        >
-          <Route size={14} />
-          {preparation.canDepart ? `${preparation.destination}으로 출발` : '출발 경로 확인'}
-        </button>
-      )}
+      </div>
     </section>
   );
 };
@@ -337,6 +342,16 @@ const ControlPanel = ({
   const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind as any] || null;
   const isSafeZone = mapData.type === 'safe';
   const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
+  const townPresentation = getTownActionPresentation({
+    player,
+    stats: stats || { maxHp: player.maxHp, maxMp: player.maxMp },
+    guidance,
+    preparation: expeditionPreparation,
+    hasGrave: showGraveRecovery,
+    classes: DB.CLASSES,
+    recipes: DB.ITEMS.recipes || [],
+    consumables: DB.ITEMS.consumables || [],
+  });
 
   const actionGridClass = 'grid grid-cols-3 gap-2';
   const actionButtonBase = 'aether-action-button relative min-h-[48px] overflow-hidden rounded-[1rem] px-2.5 flex items-center gap-2 text-left disabled:opacity-50 transition-all group';
@@ -540,6 +555,53 @@ const ControlPanel = ({
     });
   }
 
+  const buttonByKey = new Map(
+    [...coreButtons, ...safeZoneButtons, ...auxiliaryButtons].map((button) => [button.key, button]),
+  );
+  const townQuickButtons = townPresentation.quickKeys
+    .map((key) => buttonByKey.get(key))
+    .filter(Boolean);
+  const townFacilityButtons = townPresentation.facilityKeys
+    .map((key) => buttonByKey.get(key))
+    .filter(Boolean);
+
+  const runTownPrimaryAction = () => {
+    soundManager.play('click');
+    switch (townPresentation.primary.kind) {
+      case 'claim_quest':
+        actions?.completeQuest?.(expeditionPreparation.tracker?.questId);
+        return;
+      case 'explore':
+        actions?.explore?.();
+        return;
+      case 'open_class':
+        setGameState?.(GS.JOB_CHANGE);
+        return;
+      case 'open_inventory':
+        onOpenArchiveConsole?.('inventory');
+        return;
+      case 'open_quest_board':
+        if (actions?.setGameState) {
+          actions.setGameState(GS.QUEST_BOARD);
+          return;
+        }
+        setGameState?.(GS.QUEST_BOARD);
+        return;
+      case 'rest':
+        actions?.rest?.();
+        return;
+      case 'open_move':
+        if (expeditionPreparation.departure) {
+          actions?.move?.(expeditionPreparation.departure.name);
+          return;
+        }
+        setGameState?.(GS.MOVING);
+        return;
+      default:
+        return;
+    }
+  };
+
   return (
     <Motion.div
       initial={false}
@@ -596,14 +658,8 @@ const ControlPanel = ({
               <ExpeditionPrepStrip
                 preparation={expeditionPreparation}
                 guidance={guidance}
-                onDepart={() => {
-                  if (!expeditionPreparation.departure) return;
-                  soundManager.play('click');
-                  actions.move(expeditionPreparation.departure.name);
-                }}
-                onClaimReward={expeditionPreparation.isClaimable && actions?.completeQuest
-                  ? () => actions.completeQuest(expeditionPreparation.tracker?.questId)
-                  : undefined}
+                primary={townPresentation.primary}
+                onPrimaryAction={runTownPrimaryAction}
               />
             </div>
           ) : questTracker ? (
@@ -635,11 +691,36 @@ const ControlPanel = ({
               isAiThinking={isAiThinking}
             />
           )}
-          <div className={actionGridClass}>
-            {coreButtons.map((button: any) => renderActionButton(button, '', {}))}
-            {isSafeZone && safeZoneButtons.map((button: any) => renderActionButton(button, '', {}))}
-            {auxiliaryButtons.map((button: any) => renderActionButton(button, '', {}))}
-          </div>
+          {isSafeZone ? (
+            <>
+              <div data-testid="control-town-quick-actions" className={actionGridClass}>
+                {townQuickButtons.map((button: any) => renderActionButton(button, '', {}))}
+              </div>
+              {townFacilityButtons.length > 0 && (
+                <details
+                  data-testid="control-town-facilities"
+                  className="group rounded-[1rem] border border-white/8 bg-black/16"
+                >
+                  <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 px-3 py-2 text-left [&::-webkit-details-marker]:hidden">
+                    <Landmark size={14} className="shrink-0 text-[#d5b180]" />
+                    <span className="font-readable text-[11px] font-semibold text-slate-100">마을 시설</span>
+                    <span className="min-w-0 flex-1 truncate text-right font-readable text-[9px] text-slate-400">
+                      {townPresentation.facilitySummary}
+                    </span>
+                    <ChevronDown size={14} className="shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div data-testid="control-town-facility-actions" className="grid grid-cols-2 gap-2 border-t border-white/8 p-2">
+                    {townFacilityButtons.map((button: any) => renderActionButton(button, '', {}))}
+                  </div>
+                </details>
+              )}
+            </>
+          ) : (
+            <div className={actionGridClass}>
+              {coreButtons.map((button: any) => renderActionButton(button, '', {}))}
+              {auxiliaryButtons.map((button: any) => renderActionButton(button, '', {}))}
+            </div>
+          )}
         </div>
       )}
     </Motion.div>
