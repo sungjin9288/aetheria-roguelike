@@ -415,6 +415,45 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
+            seedExpeditionDebriefScenario: () => {
+                const er = engineRef.current;
+                const endedAt = Date.now();
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        loc: '시작의 마을',
+                        activeExpedition: null,
+                        lastExpeditionSummary: {
+                            id: 'smoke-expedition-debrief',
+                            startedAt: endedAt - (11 * 60_000),
+                            endedAt,
+                            origin: '시작의 마을',
+                            destination: '고요한 숲',
+                            lastLocation: '고요한 숲',
+                            returnLocation: '시작의 마을',
+                            returnReason: 'safe_return',
+                            durationMs: 11 * 60_000,
+                            startLevel: 1,
+                            endLevel: 2,
+                            expGained: 185,
+                            goldDelta: 76,
+                            battles: 4,
+                            bossBattles: 0,
+                            explores: 6,
+                            newItems: ['숲지기 활', '초급 회복 물약', '초급 회복 물약'],
+                            lostItemCount: 1,
+                            completedQuests: ['첫 숲길 조사'],
+                            lowestHp: 38,
+                            lowestHpPercent: 21,
+                            returnHp: 92,
+                            maxHpAtReturn: 205,
+                            reviewedAt: null,
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: true });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
             seedAbandonableQuestScenario: () => {
                 const er = engineRef.current;
                 er.dispatch({

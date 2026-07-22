@@ -34,6 +34,7 @@ export interface GameState {
     postCombatResult: any;
     pendingRelics: any;
     runSummary: any;
+    expeditionDebriefOpen: boolean;
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,
     //   UI read 0건. INVADE_GRAVE 핸들러의 filter도 항상 [] 입력 → no-op.
 }
@@ -63,7 +64,9 @@ export const INITIAL_STATE: GameState = {
         combatFlags: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
         killStreak: 0,
         history: [], archivedHistory: [],
-        eventChainProgress: {}
+        eventChainProgress: {},
+        activeExpedition: null,
+        lastExpeditionSummary: null,
     },
 
     // Runtime State
@@ -90,6 +93,7 @@ export const INITIAL_STATE: GameState = {
     postCombatResult: null,
     pendingRelics: null,
     runSummary: null,
+    expeditionDebriefOpen: false,
 };
 
 // --- REDUCER ---

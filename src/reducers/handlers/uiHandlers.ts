@@ -1,6 +1,7 @@
 import { BALANCE } from '../../data/constants';
 import { sanitizeQuickSlots } from './helpers';
 import type { GameState, GameAction } from '../gameReducer';
+import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 
 export const uiActionMap = {
     SET_SYNC_STATUS: (state: GameState, action: GameAction) =>
@@ -20,6 +21,9 @@ export const uiActionMap = {
 
     SET_SHOP_ITEMS: (state: GameState, action: GameAction) =>
         ({ ...state, shopItems: action.payload }),
+
+    SET_EXPEDITION_DEBRIEF_OPEN: (state: GameState, action: GameAction) =>
+        ({ ...state, expeditionDebriefOpen: action.payload === true }),
 
     ADD_LOG: (state: GameState, action: GameAction) =>
         ({ ...state, logs: [...state.logs, action.payload].slice(-BALANCE.LOG_MAX_SIZE) }),
@@ -46,7 +50,7 @@ export const uiActionMap = {
 export const entityActionMap = {
     SET_PLAYER: (state: GameState, action: GameAction) => {
         const nextPlayer = typeof action.payload === 'function' ? action.payload(state.player) : action.payload;
-        const mergedPlayer = { ...state.player, ...nextPlayer };
+        const mergedPlayer = trackExpeditionVitals({ ...state.player, ...nextPlayer });
         return {
             ...state,
             player: mergedPlayer,

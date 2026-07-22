@@ -36,6 +36,7 @@ export const useGameEngine = () => {
         postCombatResult,
         pendingRelics,
         runSummary,
+        expeditionDebriefOpen,
     } = state;
 
     // --- Firebase Sync ---
@@ -132,6 +133,24 @@ export const useGameEngine = () => {
                 setSideTab: (val: any) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
                 setGameState: (val: any) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
                 setShopItems: (val: any) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
+                openExpeditionDebrief: () => dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: true }),
+                closeExpeditionDebrief: () => {
+                    const summaryId = player.lastExpeditionSummary?.id;
+                    if (summaryId) {
+                        dispatch({
+                            type: AT.SET_PLAYER,
+                            payload: (currentPlayer: any) => currentPlayer.lastExpeditionSummary?.id === summaryId
+                                ? {
+                                    lastExpeditionSummary: {
+                                        ...currentPlayer.lastExpeditionSummary,
+                                        reviewedAt: currentPlayer.lastExpeditionSummary.reviewedAt || Date.now(),
+                                    },
+                                }
+                                : {},
+                        });
+                    }
+                    dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: false });
+                },
                 // cycle 406: setAiThinking 제거 — actions.setAiThinking 호출 0건이라 dead.
                 //   AT.SET_AI_THINKING reducer handler는 보존 (다른 dispatch path 의존).
                 setActiveTitle: (val: any) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
@@ -202,6 +221,7 @@ export const useGameEngine = () => {
         postCombatResult,
         pendingRelics,
         runSummary,
+        expeditionDebriefOpen,
         dispatch,
         addLog,
     };

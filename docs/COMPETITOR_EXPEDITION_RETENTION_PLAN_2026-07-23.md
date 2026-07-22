@@ -9,8 +9,8 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 권장 순서는 다음과 같다.
 
-1. Slice 61의 첫 이야기 자동 배정과 첫 출발 연결을 실기기에서 확정한다.
-2. `마을 출발 -> 탐험 -> 마을 귀환`을 저장 가능한 원정 단위로 기록하고 귀환 정산을 제공한다.
+1. 구현된 Slice 62의 `마을 출발 -> 탐험 -> 마을 귀환` 흐름을 실기기에서 확정한다.
+2. 새 기능을 더 쌓기 전에 핵심 mobile surface의 11px 미만 텍스트와 4열 micro-cell 밀도를 제거한다.
 3. 수락한 임무를 삭제하거나 제한하지 않고, 이번 원정에서 집중할 임무만 최대 3개로 선택한다.
 4. 귀환 정산에서 보상 수령·장비 교체·휴식·제작 중 가장 중요한 다음 행동 하나를 연결한다.
 5. 첫 사망과 첫 보스 귀환처럼 의미 있는 시점에만 짧은 마을 이야기 변화를 추가한다.
@@ -35,6 +35,16 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 4. 마을은 다음 주 행동을 잘 추천하지만, 귀환 직후 무엇이 달라졌고 그 결과 어떤 시설을 써야 하는지는 하나의 흐름으로 연결되지 않는다.
 5. 첫 사망은 수치 보너스와 종료 분석을 제공하지만, 반복 플레이의 서사가 마을 변화로 이어지는 빈도는 낮다.
 
+## 추가 디자인·플랫폼 감사
+
+2026-07-23에 공개 GitHub와 공식 자료를 다시 비교한 결과, 다음 feature보다 먼저 처리할 가독성 부채가 확인됐다.
+
+- [Shattered Pixel Dungeon GitHub](https://github.com/00-Evan/shattered-pixel-dungeon)는 `ui`, `windows`, `scenes`를 분리하고 화면 크기에 따라 journal·window·toolbar 배치를 달리한다. 공식 소개도 large/small screen용 interface mode를 명시한다.
+- Shattered의 [Journal Overhaul](https://shatteredpixel.com/blog/coming-soon-to-shattered-a-journal-overhaul.html)은 비슷한 모양의 긴 list가 한눈에 읽히지 않는 문제를 compact visual grid와 선택 후 detail로 바꿨다. Aetheria도 한 화면에 모든 설명을 축소해 넣기보다 `요약 -> 선택 -> 상세` 순서를 써야 한다.
+- [Apple Typography HIG](https://developer.apple.com/design/human-interface-guidelines/typography)는 iOS 기본 17pt, 최소 11pt를 권고하고 game text를 실제 platform마다 검증하라고 안내한다. 현재 `aether-label`은 10px이고 `ControlPanel`, `MapNavigator`, `QuestBoardPanel`, `CombatPanel`, `ExpeditionDebriefCard`에 명시적인 8~10px class가 56곳 남아 있다.
+- [Apple Designing for Games](https://developer.apple.com/design/human-interface-guidelines/designing-for-games/)는 자주 쓰는 iOS control 44x44pt, 보조 control 최소 28x28pt와 화면 비율별 adaptive menu를 권고한다. [WCAG 2.2 Target Size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)의 web 최소 기준은 24x24 CSS px다.
+- 현재 `high readability`는 대비와 장식을 조절하지만 typography 크기는 바꾸지 않는다. 이름과 실제 동작이 어긋나므로 전체 색상을 다시 칠하는 것보다 semantic type scale과 responsive density를 먼저 정착시켜야 한다.
+
 ## 경쟁작에서 가져올 원칙
 
 | 레퍼런스 | 확인한 구조 | Aetheria 적용 판단 |
@@ -53,6 +63,7 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - 현재 성장 곡선과 Slice 52의 `Lv1 -> Lv1 -> Lv2 -> early Lv3` 계약
 - 모든 기존 퀘스트 진행, 전리품, 장비, 지도, 프레스티지 데이터
 - 자유 이동과 언제든 안전지대로 돌아갈 수 있는 구조
+- single primary action, 44px 주요 action, safe-area 처리와 high-contrast palette
 - browser smoke를 빠른 피드백으로, native 실기기를 release evidence로 쓰는 검증 경계
 
 ### ADAPT
@@ -61,6 +72,9 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - quest acceptance와 expedition focus를 분리한다.
 - 귀환 화면은 숫자 나열보다 `이번 성과 -> 손실/위험 -> 다음 한 행동` 순서로 구성한다.
 - 서사는 모든 귀환에 강제하지 않고 최초 milestone에서만 짧게 노출한다.
+- 핵심 UI는 11px를 최소선으로 삼고 label/body/title semantic token을 사용한다.
+- 좁은 화면에서 4열 micro-cell을 2x2 또는 요약 row로 바꾸고, 상세 정보는 선택 후 연다.
+- `high readability`가 대비뿐 아니라 글자 크기와 line-height도 한 단계 높이도록 만든다.
 
 ### DEFER
 
@@ -75,6 +89,7 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - 기존 활성 퀘스트를 삭제하거나 hard cap해 구세이브 진행을 잃는 방식
 - 모든 귀환마다 modal을 강제해 짧은 플레이를 느리게 만드는 방식
 - 난이도를 숨겨서 낮추거나 초반 EXP를 다시 빠르게 만드는 보정
+- 정보를 유지한다는 이유로 8~10px 글자와 4열 축약 cell을 핵심 동선에 남기는 방식
 
 ## 실행 계획
 
@@ -89,12 +104,14 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 ### Slice 62 - Expedition Ledger and Return Debrief
 
+상태: 구현·browser/native 전달 완료, 최신 설치본 launch 및 수동 체감 확인 대기
+
 목표: 정상 귀환을 측정 가능한 플레이 단위와 보상 회수 순간으로 만든다.
 
 구현 방향:
 
 - 안전지대에서 위험 지역으로 이동할 때 `activeExpedition` snapshot을 시작한다.
-- snapshot은 시작 위치·시간·레벨·EXP·골드·HP/NRG·가방 item identity·kills·explores·focus quest ids만 저장한다.
+- snapshot은 시작 위치·시간·레벨·EXP·골드·HP·가방 item identity·kills·explores·활성 quest checkpoint만 저장한다.
 - 전투·탐험마다 별도 카운터를 중복 갱신하지 않고, 귀환 시 현재 player와 시작 snapshot의 delta로 결과를 계산한다.
 - 안전지대 귀환 시 `lastExpeditionSummary`를 한 번 생성하고 active snapshot을 종료한다.
 - 요약은 지역, 경과 시간, 전투/탐험, 골드/EXP, 새 장비, 완료 임무, 최저 HP, 귀환 이유를 보여 준다.
@@ -117,7 +134,37 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - 귀환 UI가 390x844 첫 viewport에서 성과와 다음 action을 함께 보여 준다.
 - 기존 성장 수치, loot 확률, quest reward는 변경하지 않는다.
 
-### Slice 63 - Expedition Mission Loadout
+구현 결과(2026-07-23):
+
+- `activeExpedition`과 `lastExpeditionSummary`를 Player save 경계에 추가하고 구세이브·손상 데이터 migration을 적용했다.
+- 안전지대 출발과 귀환 이동을 start/end 경계로 사용하며, delta 계산으로 전투·탐험·EXP·골드·가방·임무 성과를 한 번만 확정한다.
+- 첫 귀환 overlay와 마을 `지난 원정` 다시 보기를 추가하고 390x844 geometry 및 가로 overflow를 E2E로 고정했다.
+- `npm run verify:full` 기준 unit `3372/3372`, desktop/mobile smoke, E2E `39/39`, native sync·Android debug·iOS archive가 통과했다.
+- 추가 감사에서 발견한 typography 기준을 현재 debrief부터 적용해 의미 있는 text를 computed 11px 이상으로 높였고, focused E2E `1/1`과 최종 `npm run verify`의 unit `3372/3372`를 재통과했다.
+- 최종 source 기준 APK는 `2026-07-23 01:01:13 KST`, iOS archive는 `01:01:33 KST`에 재생성했다. 최신 iPhone 설치와 `1.1.0 (2)` metadata 확인은 완료됐지만 launch/60초 hold는 기기 `Locked`로 남아 있어 앱 회귀와 분리한다.
+
+### Slice 63 - Mobile Legibility Baseline
+
+목표: 첫 세션과 반복 원정의 핵심 정보를 iPhone에서 확대 없이 읽고 누를 수 있게 한다.
+
+구현 방향:
+
+- `label`, `meta`, `body`, `title`, `metric` semantic typography token을 만들고 핵심 surface의 arbitrary 8~10px class를 치환한다.
+- standard mode의 의미 있는 text는 11px 미만을 허용하지 않고, 주요 안내와 action은 12~14px를 사용한다.
+- 기존 `readabilityMode: high`는 type size와 line-height를 한 단계 높인다. global transform/zoom은 사용하지 않는다.
+- `MissionTrackerStrip`, `ExpeditionPrepStrip`, `MapNavigator`, `Quest Board`, `Combat`, `ExpeditionDebrief`의 4열 micro-cell을 390px 이하에서 2x2 또는 요약 row로 재배치한다.
+- Shattered journal처럼 목록은 이름·상태·핵심 수치만 먼저 보여 주고 설명은 선택·확장 후 표시한다.
+- 자주 쓰는 action은 44px target을 유지하고 icon-only secondary action도 28px 아래로 내려가지 않게 한다.
+
+완료 기준:
+
+- 375x667, 390x844, 430x932에서 핵심 동선의 computed font size가 11px 미만으로 내려가지 않는다.
+- high readability가 standard보다 실제로 큰 type scale을 사용하며, 같은 핵심 정보가 잘리거나 겹치지 않는다.
+- 첫 출발, Map 이동, Quest 비교, Combat 선택, 귀환 debrief에 horizontal overflow와 incoherent overlap이 없다.
+- E2E가 font floor, 주요 44px target, viewport geometry를 검증하고 screenshot evidence를 남긴다.
+- gameplay 수치, 보상, save contract는 변경하지 않는다.
+
+### Slice 64 - Expedition Mission Loadout
 
 목표: 활성 임무가 많아져도 이번 원정의 목적을 최대 3개로 유지한다.
 
@@ -125,7 +172,7 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 - 기존 `player.quests`는 그대로 유지하고 `activeExpedition.focusQuestIds`만 최대 3개로 제한한다.
 - 기본 선택은 `보상 대기 > 스토리 > 현재 목적지와 같은 지역 > 진행률 높은 임무` 순서다.
-- 출발 전 원정 준비에서 한 번에 교체할 수 있고, 필드에서는 읽기 전용으로 표시한다.
+- 별도 출발 modal을 만들지 않고 기존 원정 준비와 Quest Board에서 한 번에 교체하며, 필드에서는 읽기 전용으로 표시한다.
 - tracker와 hunt encounter focus는 선택된 임무를 우선한다.
 - 선택되지 않은 임무도 기존 규칙대로 진행되며 보상과 완료 ledger를 잃지 않는다.
 
@@ -136,7 +183,7 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 - 첫 세션은 자동 배정된 이야기 임무 하나로 추가 설정 없이 출발한다.
 - 3개를 넘는 선택은 UI와 reducer/action 경계 양쪽에서 거부한다.
 
-### Slice 64 - Return Action and Milestone Story Beat
+### Slice 65 - Return Action and Milestone Story Beat
 
 목표: 귀환 결과가 마을 정비와 다음 이야기로 이어지게 한다.
 
@@ -166,4 +213,4 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 
 ## 다음 결정점
 
-Slice 61 최신 설치본의 launch와 첫 5분 수동 동선을 먼저 끝낸다. 그 결과에서 신규 앱 회귀가 없으면 Slice 62만 구현해 원정 단위의 가치가 실제로 올라가는지 검증한 뒤, Slice 63과 64는 각각 별도 checkpoint로 진행한다.
+Slice 62 최신 설치본의 launch와 첫 5분 수동 동선을 끝내 정상 귀환 debrief의 실제 터치·가독성을 확인한다. 기기 `Locked` blocker와 병행해 Slice 63 Mobile Legibility Baseline을 먼저 구현하고, 그 checkpoint가 통과한 뒤 Slice 64 Mission Loadout과 Slice 65 Return Action/Milestone Story Beat를 각각 진행한다.

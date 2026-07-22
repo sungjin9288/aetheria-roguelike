@@ -127,6 +127,64 @@ interface PlayerSettings {
     [key: string]: any;
 }
 
+export interface ExpeditionInventoryCheckpoint {
+    key: string;
+    name: string;
+}
+
+export interface ExpeditionQuestCheckpoint {
+    id: string | number;
+    title: string;
+    progress: number;
+    goal: number;
+}
+
+export interface ExpeditionSnapshot {
+    id: string;
+    startedAt: number;
+    origin: string;
+    destination: string;
+    startLevel: number;
+    startExp: number;
+    startNextExp: number;
+    startGold: number;
+    startHp: number;
+    maxHpAtStart: number;
+    lowestHp: number;
+    kills: number;
+    bossKills: number;
+    explores: number;
+    inventory: ExpeditionInventoryCheckpoint[];
+    quests: ExpeditionQuestCheckpoint[];
+}
+
+export interface ExpeditionSummary {
+    id: string;
+    startedAt: number;
+    endedAt: number;
+    origin: string;
+    destination: string;
+    lastLocation: string;
+    returnLocation: string;
+    returnReason: 'safe_return';
+    durationMs: number;
+    startLevel: number;
+    endLevel: number;
+    expGained: number;
+    goldDelta: number;
+    battles: number;
+    bossBattles: number;
+    explores: number;
+    newItems: string[];
+    lostItemCount: number;
+    completedQuests: string[];
+    lowestHp: number;
+    lowestHpPercent: number;
+    returnHp: number;
+    maxHpAtReturn: number;
+    reviewedAt: number | null;
+}
+
 /**
  * Player 도메인 타입 — 모든 필드가 optional.
  *
@@ -175,6 +233,8 @@ export interface Player {
     history?: any[];
     archivedHistory?: any[];
     eventChainProgress?: Record<string, any>;
+    activeExpedition?: ExpeditionSnapshot | null;
+    lastExpeditionSummary?: ExpeditionSummary | null;
     // cycle 282: signaturePity top-level 필드 제거 — top-level access 0건.
     //   active dispatch는 player.stats.signaturePity (nested, number 형식).
     maxInv?: number;

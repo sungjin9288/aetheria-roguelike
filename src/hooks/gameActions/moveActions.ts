@@ -8,6 +8,7 @@ import { checkDiscoveryChains, getFirstVisitReward } from '../../utils/exploreUt
 import { CombatEngine } from '../../systems/CombatEngine';
 import { soundManager } from '../../systems/SoundManager';
 import { isAreaBossUndefeated, getAreaBossName } from '../../utils/bossGauge';
+import { finishExpedition, normalizeActiveExpedition, startExpedition } from '../../utils/expeditionLedger';
 
 // cycle 314: addStoryLog 미사용 dependency 제거 — moveActions 어디에서도 호출 0건.
 //   `void addStoryLog` 자가-suppress 라인도 함께 cleanup.
@@ -38,14 +39,26 @@ export const createMoveActions = (deps: any) => {
             if (!targetMap.seasonOnly && !(DB.MAPS[player.loc]?.exits || []).includes(loc)) return addLog('error', MSG.MOVE_NO_EXIT);
 
             const firstVisit = !(player.stats?.visitedMaps || []).includes(loc);
+            const isSafeOrigin = DB.MAPS[player.loc]?.type === 'safe';
             const isSafeDestination = targetMap.type === 'safe';
+            const activeExpedition = normalizeActiveExpedition(player.activeExpedition);
+            const shouldStartExpedition = isSafeOrigin && !isSafeDestination && !activeExpedition;
+            const shouldFinishExpedition = isSafeDestination && Boolean(activeExpedition);
             const shouldClearTemporaryState = isSafeDestination && hasTemporaryAdventureState(player);
             const gravesAtDestination = getGravesAtLoc(grave, loc);
+            const movedAt = Date.now();
 
             dispatch({
                 type: AT.SET_PLAYER,
                 payload: (p: any) => {
-                    const nextPlayer = isSafeDestination ? clearTemporaryAdventureState(p) : { ...p };
+                    let nextPlayer = { ...p };
+                    if (shouldFinishExpedition) {
+                        nextPlayer = finishExpedition(nextPlayer, loc, movedAt, DB.QUESTS).player;
+                    }
+                    if (isSafeDestination) nextPlayer = clearTemporaryAdventureState(nextPlayer);
+                    if (shouldStartExpedition) {
+                        nextPlayer = startExpedition(nextPlayer, loc, movedAt, DB.QUESTS);
+                    }
                     return {
                         ...nextPlayer,
                         loc,
@@ -56,6 +69,9 @@ export const createMoveActions = (deps: any) => {
                     };
                 }
             });
+            if (shouldFinishExpedition) {
+                dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: true });
+            }
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             addLog('success', MSG.MOVE_ARRIVED(loc));
 

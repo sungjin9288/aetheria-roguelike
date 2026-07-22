@@ -26,6 +26,7 @@ const PostCombatCard   = lazy(() => import('../PostCombatCard'));
 const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
+const ExpeditionDebriefCard = lazy(() => import('../ExpeditionDebriefCard'));
 
 const ReturnBriefingGate = ({ player, maxHp }: { player: Player; maxHp?: number }) => {
     const [briefing, setBriefing] = useState(() => buildReturnBriefing(player, Date.now(), maxHp));
@@ -53,6 +54,10 @@ const GameRoot = ({
     damageFlash, healFlash, damageAmount,
 }: any) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
+    const expeditionSummary = engine.player?.lastExpeditionSummary || null;
+    const showExpeditionDebrief = Boolean(
+        expeditionSummary && (engine.expeditionDebriefOpen || !expeditionSummary.reviewedAt),
+    );
     const readabilityMode = engine.player?.settings?.readabilityMode === 'high' ? 'high' : 'standard';
     // slice 21: 지역별 ambient 팔레트 — 위치 기반 accent/wash CSS 변수.
     const regionTheme = getRegionTheme(engine.player?.loc, DB.MAPS?.[engine.player?.loc]);
@@ -282,7 +287,16 @@ const GameRoot = ({
                 </Suspense>
             )}
 
-            {engine.bootStage === 'ready' && engine.player && (
+            {showExpeditionDebrief && expeditionSummary && (
+                <Suspense fallback={null}>
+                    <ExpeditionDebriefCard
+                        summary={expeditionSummary}
+                        onClose={() => engine.actions.closeExpeditionDebrief?.()}
+                    />
+                </Suspense>
+            )}
+
+            {engine.bootStage === 'ready' && engine.player && !showExpeditionDebrief && (
                 <ReturnBriefingGate player={engine.player} maxHp={fullStats?.maxHp} />
             )}
 

@@ -9,6 +9,7 @@ import {
   Route,
   ShoppingBag,
   Ghost,
+  History,
   ScrollText,
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -693,6 +694,25 @@ const ControlPanel = ({
           )}
           {isSafeZone ? (
             <>
+              {player.lastExpeditionSummary && (
+                <button
+                  type="button"
+                  data-testid="control-last-expedition"
+                  onClick={() => actions?.openExpeditionDebrief?.()}
+                  className="flex min-h-[44px] w-full items-center gap-2 border-y border-white/8 px-2.5 py-2 text-left transition-colors hover:bg-white/[0.035]"
+                >
+                  <History size={14} className="shrink-0 text-[#d5b180]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-readable text-xs font-semibold text-slate-100">
+                      지난 원정 · {player.lastExpeditionSummary.destination}
+                    </div>
+                    <div className="mt-0.5 truncate font-readable text-[11px] text-slate-400">
+                      전투 {player.lastExpeditionSummary.battles} · 탐험 {player.lastExpeditionSummary.explores} · +{player.lastExpeditionSummary.expGained.toLocaleString('ko-KR')} EXP
+                    </div>
+                  </div>
+                  <span className="shrink-0 font-readable text-[11px] font-semibold text-[#b9f1ec]">보기</span>
+                </button>
+              )}
               <div data-testid="control-town-quick-actions" className={actionGridClass}>
                 {townQuickButtons.map((button: any) => renderActionButton(button, '', {}))}
               </div>
