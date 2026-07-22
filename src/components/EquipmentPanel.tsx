@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 // cycle 417: Sword / Shield import 제거 — SLOT_CONFIG.icon 출력 dead 정리 cascade.
-import { Sparkles, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Target, ChevronDown, ChevronUp, ListTree } from 'lucide-react';
 import { CONSTANTS } from '../data/constants';
 import { MSG } from '../data/messages';
 import { countInventoryItemByName, getEnhanceAvailability } from '../utils/enhancementUtils';
-import { getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
+import { getEquipmentDisclosure, getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getSignatureSetProgress } from '../utils/signatureSetBonus.js';
 import { isSignatureItem } from '../data/signatureItems.js';
@@ -41,6 +41,9 @@ const SIG_SET_TONE: any = Object.freeze({
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
 const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const [showSetCatalog, setShowSetCatalog] = useState(false);
+    const [detailOverride, setDetailOverride] = useState<boolean | null>(null);
+    const disclosure = getEquipmentDisclosure(player);
+    const showDetails = detailOverride ?? disclosure.showDetails;
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip || {}), [player?.equip]);
     const setCatalog = useMemo(() => getJobSetCatalog(player?.job, DB.ITEMS), [player?.job]);
     // 인벤토리 + 장착 중 보유 아이템 이름 set (카탈로그에서 ✓/💼 표시용)
@@ -81,6 +84,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const weaponName = equipProfile.mainWeapon?.name || '없음';
     const offhandName = equipProfile.offhandItem?.name || '없음';
     const armorName = player?.equip?.armor?.name || '없음';
+    const twoHandSetCounted = Boolean(stats?.jobAffinity?.twoHandCounted);
     const activeSignatureSet = stats?.activeSignatureSet || null;
     const sigSetTone = activeSignatureSet ? (SIG_SET_TONE[activeSignatureSet.tone] || SIG_SET_TONE.holy) : null;
     const setProgress = useMemo(() => getSignatureSetProgress(player?.equip), [player?.equip]);
@@ -89,7 +93,29 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const progressTone = setProgress ? (SIG_SET_TONE[setProgress.tone] || SIG_SET_TONE.holy) : null;
 
     return (
-        <div data-testid="equipment-panel" className="space-y-3">
+        <div
+            data-testid="equipment-panel"
+            data-equipment-view={showDetails ? 'full' : 'summary'}
+            className="space-y-3"
+        >
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-black/18 px-3 py-2">
+                <div className="min-w-0">
+                    <div className="text-[11px] font-readable font-bold text-white/88">장비 판단</div>
+                    <div className="mt-0.5 text-[10px] font-readable text-slate-400/78">
+                        {showDetails ? '보너스와 강화 조건까지 표시 중' : '착용 상태와 세트 조건만 표시 중'}
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    data-testid="equipment-detail-toggle"
+                    aria-expanded={showDetails}
+                    onClick={() => setDetailOverride(!showDetails)}
+                    className="inline-flex min-h-[38px] shrink-0 items-center gap-1.5 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[10px] font-readable font-bold text-[#f6e7c8]"
+                >
+                    <ListTree size={13} />
+                    {showDetails ? '간단히 보기' : '상세 보기'}
+                </button>
+            </div>
             <div className="overflow-hidden rounded-[1.1rem] border border-white/8 bg-black/18 p-3">
                 <div className="flex items-start gap-3">
                     <PixelCharacterAvatar
@@ -120,7 +146,12 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                             {[
                                 { key: 'weapon', label: '주무기', name: weaponName, slot: stats?.jobAffinity?.slots?.weapon },
                                 { key: 'armor',  label: '방어구', name: armorName,  slot: stats?.jobAffinity?.slots?.armor },
-                                { key: 'offhand', label: '보조 장비', name: offhandName, slot: stats?.jobAffinity?.slots?.offhand },
+                                {
+                                    key: 'offhand',
+                                    label: '보조 장비',
+                                    name: twoHandSetCounted ? MSG.OUTFIT_SET_TWO_HAND_SLOT : offhandName,
+                                    slot: stats?.jobAffinity?.slots?.offhand,
+                                },
                             ].map((s: any) => (
                                 <div
                                     key={s.key}
@@ -148,7 +179,9 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 ? `같은 직업(${player?.job}) 호환 장비 1개 장착 시 세트 효과 발동`
                                 : matchCount < 3
                                     ? `${3 - matchCount}개 더 맞추면 ${matchCount === 1 ? '2단계 효과 (공격력 +15%, 방어력 +10%)' : '풀세트 효과 (공격력 +30%, 방어력 +20%)'}`
-                                    : '풀세트 발동 — 모든 슬롯 매치 완료';
+                                    : aff.twoHandCounted
+                                        ? '풀세트 발동 — 양손 무기 2피스와 방어구 매치 완료'
+                                        : '풀세트 발동 — 모든 슬롯 매치 완료';
                             return (
                                 <div
                                     data-testid="job-outfit-affinity"
@@ -160,14 +193,19 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     <div className="flex flex-wrap items-center gap-1.5 font-bold">
                                         <span className="tracking-[0.18em]" aria-hidden="true">{dots}</span>
                                         <span>{aff.label || `${player?.job} 세트`} ({matchCount}/3)</span>
-                                        {aff.bonus?.atkMult > 1 && <span className="text-white/82">공격력 +{Math.round((aff.bonus.atkMult - 1) * 100)}%</span>}
-                                        {aff.bonus?.defMult > 1 && <span className="text-white/82">방어력 +{Math.round((aff.bonus.defMult - 1) * 100)}%</span>}
-                                        {aff.bonus?.hpBonus > 0 && <span className="text-white/82">생명 +{Math.round(aff.bonus.hpBonus * 100)}%</span>}
-                                        {aff.bonus?.mpBonus > 0 && <span className="text-white/82">기력 +{Math.round(aff.bonus.mpBonus * 100)}%</span>}
+                                        {showDetails && aff.bonus?.atkMult > 1 && <span className="text-white/82">공격력 +{Math.round((aff.bonus.atkMult - 1) * 100)}%</span>}
+                                        {showDetails && aff.bonus?.defMult > 1 && <span className="text-white/82">방어력 +{Math.round((aff.bonus.defMult - 1) * 100)}%</span>}
+                                        {showDetails && aff.bonus?.hpBonus > 0 && <span className="text-white/82">생명 +{Math.round(aff.bonus.hpBonus * 100)}%</span>}
+                                        {showDetails && aff.bonus?.mpBonus > 0 && <span className="text-white/82">기력 +{Math.round(aff.bonus.mpBonus * 100)}%</span>}
                                     </div>
                                     <div className="mt-1 text-white/70 font-normal leading-snug" style={{ color: 'rgba(255,255,255,0.66)' }}>
                                         {nextHint}
                                     </div>
+                                    {showDetails && aff.twoHandCounted && (
+                                        <div data-testid="job-outfit-two-hand-hint" className="mt-1 text-white/70 font-normal leading-snug">
+                                            {MSG.OUTFIT_SET_TWO_HAND_HINT}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })()}
@@ -178,7 +216,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
             {/* cycle 58: 직업 세트 카탈로그 — 어떤 아이템이 세트에 포함되는지 명시.
                 사용자 피드백: "세트 효과마다 어떤 아이템들이 세트로 포함되는지를 알려줘야
                 유저들이 그걸 보고 세트아이템을 맞추지". 펼침 토글로 인벤 가시성 보존. */}
-            {(setCatalog.weapon.length + setCatalog.armor.length + setCatalog.offhand.length) > 0 && (
+            {showDetails && (setCatalog.weapon.length + setCatalog.armor.length + setCatalog.offhand.length) > 0 && (
                 <div className="rounded-[1rem] border border-white/8 bg-black/16 px-3 py-2.5">
                     <button
                         type="button"
@@ -241,7 +279,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 );
                             })}
                             <div className="rounded-[0.85rem] border border-white/8 bg-white/[0.02] px-2.5 py-1.5 text-[10px] font-fira leading-snug text-slate-400/80">
-                                주무기·방어구·보조 장비를 모두 맞추면 풀세트 효과가 발동합니다. 공격력 +30%, 방어력 +20%, 생명 +10%, 기력 +15%
+                                한손 무기·방어구·보조 장비 또는 양손 무기(2피스)·방어구를 맞추면 풀세트 효과가 발동합니다. 공격력 +30%, 방어력 +20%, 생명 +10%, 기력 +15%
                             </div>
                         </div>
                     )}
@@ -272,7 +310,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                             {activeSignatureSet.tier}세트 활성
                         </span>
                     </div>
-                    {activeSignatureSet.desc && (
+                    {showDetails && activeSignatureSet.desc && (
                         <div className="mt-1 text-[10px] font-fira leading-[1.4] text-slate-300/85">
                             {activeSignatureSet.desc}
                         </div>
@@ -280,7 +318,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                 </div>
             )}
 
-            {showProgressHint && progressTone && (
+            {showDetails && showProgressHint && progressTone && (
                 <div
                     data-testid="signature-set-progress-hint"
                     data-signature-set-key={setProgress.key}
@@ -331,7 +369,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                 </div>
             )}
 
-            <div className="space-y-1.5">
+            {showDetails && <div className="space-y-1.5">
                 {slotEntries.map((slot: any) => {
                     const item = slot.item;
                     const slotKey = slot.key;
@@ -436,7 +474,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         </div>
                     );
                 })}
-            </div>
+            </div>}
         </div>
     );
 };

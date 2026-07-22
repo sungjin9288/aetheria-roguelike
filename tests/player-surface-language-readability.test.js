@@ -86,6 +86,9 @@ test('shop, equipment, and inventory use one readable commerce vocabulary', asyn
     for (const label of ['공격력', '방어력', '강화 재료', '보조 장비', '세트 목록', '생명', '기력']) {
         assert.match(equipment, new RegExp(label));
     }
+    assert.match(equipment, /양손 무기\(2피스\)/);
+    assert.match(equipment, /MSG\.OUTFIT_SET_TWO_HAND_SLOT/);
+    assert.match(equipment, /MSG\.OUTFIT_SET_TWO_HAND_HINT/);
     for (const label of ['공격력', '방어력', '치명타', '기력', '강화 비용: 골드']) {
         assert.match(inventory, new RegExp(label));
     }

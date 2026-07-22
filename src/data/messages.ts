@@ -75,6 +75,8 @@ export const MSG = {
     // fix/signature-set-two-hand: 양손 시그니처 무기가 세트 카운트에 2피스로 반영됐을 때
     // EquipmentPanel "세트 진행도" 카드에 표시하는 힌트 1줄.
     SIGNATURE_SET_TWO_HAND_HINT: '💡 양손 무기는 보조 슬롯을 함께 차지해 2피스로 계산됩니다.',
+    OUTFIT_SET_TWO_HAND_SLOT: '양손 무기가 함께 사용',
+    OUTFIT_SET_TWO_HAND_HINT: '양손 무기는 보조 장비 칸까지 2피스로 계산됩니다.',
     LEGACY_ESSENCE: (n: number) => `계승 정수 +${n}`,
     LEGACY_RANK: (n: number) => `계승 단계 ${n} 달성`,
     // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.

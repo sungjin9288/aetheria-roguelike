@@ -957,6 +957,206 @@
     0 12px 24px rgba(3, 8, 16, 0.22);
 }
 
+.aether-route-topology {
+  position: relative;
+  overflow: hidden;
+  padding: 0.55rem;
+  border: 1px solid rgba(228, 238, 247, 0.1);
+  border-radius: 0.5rem;
+  background-color: rgba(8, 13, 19, 0.92);
+  background-image:
+    linear-gradient(rgba(228, 238, 247, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(228, 238, 247, 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.aether-route-topology-current {
+  display: inline-flex;
+  min-height: 38px;
+  min-width: min(10rem, 72%);
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(125, 212, 216, 0.44);
+  border-radius: 0.5rem;
+  background: rgba(24, 50, 53, 0.86);
+  color: rgba(223, 247, 245, 0.96);
+  box-shadow: inset 0 0 0 1px rgba(185, 241, 236, 0.06);
+  font-family: var(--aether-readable-font);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.aether-route-region-art {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 6px rgba(2, 8, 14, 0.36));
+}
+
+.aether-route-region-art.is-branch {
+  width: 2rem;
+  height: 2rem;
+}
+
+.aether-monster-art img {
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 7px rgba(4, 8, 14, 0.42));
+}
+
+.aether-route-topology-connector {
+  position: relative;
+  height: 24px;
+}
+
+.aether-route-topology-connector::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 8px;
+  width: 1px;
+  background: rgba(185, 241, 236, 0.56);
+}
+
+.aether-route-topology-connector > span {
+  position: absolute;
+  left: 1.25rem;
+  right: 1.25rem;
+  bottom: 8px;
+  height: 1px;
+  background: rgba(125, 212, 216, 0.3);
+}
+
+.aether-route-topology-branches {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 0 0 0.2rem;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+.aether-route-topology-branch {
+  position: relative;
+  flex: 1 0 7.25rem;
+  min-width: 0;
+  max-width: 10rem;
+  padding-top: 8px;
+  scroll-snap-align: start;
+}
+
+.aether-route-topology-branch::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  height: 8px;
+  width: 1px;
+  background: rgba(125, 212, 216, 0.34);
+}
+
+.aether-route-topology-node {
+  display: block;
+  width: 100%;
+  min-height: 60px;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid rgba(228, 238, 247, 0.13);
+  border-radius: 0.5rem;
+  background: rgba(19, 26, 35, 0.92);
+  text-align: left;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.aether-route-topology-node:hover:not(:disabled),
+.aether-route-topology-node:focus-visible {
+  border-color: rgba(185, 241, 236, 0.42);
+  background: rgba(25, 38, 47, 0.96);
+}
+
+.aether-route-topology-node.is-selected {
+  border-color: rgba(213, 177, 128, 0.58);
+  box-shadow: inset 0 -2px 0 rgba(213, 177, 128, 0.5);
+}
+
+.aether-route-topology-node.is-recommended {
+  border-color: rgba(125, 212, 216, 0.48);
+  background: rgba(18, 44, 47, 0.94);
+}
+
+.aether-route-topology-node.is-mission {
+  border-color: rgba(213, 177, 128, 0.62);
+  background: rgba(48, 37, 22, 0.94);
+}
+
+.aether-route-topology-node.is-boss {
+  border-color: rgba(251, 113, 133, 0.48);
+  background: rgba(51, 24, 31, 0.94);
+}
+
+.aether-route-topology-node.is-locked,
+.aether-route-topology-node:disabled {
+  border-color: rgba(148, 163, 184, 0.1);
+  background: rgba(18, 22, 28, 0.84);
+  color: rgba(148, 163, 184, 0.64);
+}
+
+.aether-route-topology.is-compact {
+  padding: 0.4rem;
+  background-size: 20px 20px;
+}
+
+.aether-route-topology.is-compact .aether-route-topology-current {
+  min-height: 32px;
+  min-width: min(9rem, 68%);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.6875rem;
+}
+
+.aether-route-topology.is-compact .aether-route-region-art {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.aether-route-topology.is-compact .aether-route-region-art.is-branch {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.aether-route-topology.is-compact .aether-route-topology-connector {
+  height: 18px;
+}
+
+.aether-route-topology.is-compact .aether-route-topology-connector::before {
+  bottom: 5px;
+}
+
+.aether-route-topology.is-compact .aether-route-topology-connector > span {
+  bottom: 5px;
+}
+
+.aether-route-topology.is-compact .aether-route-topology-node {
+  min-height: 54px;
+  padding: 0.45rem 0.5rem;
+}
+
+.aether-map-forecast-cell {
+  border-left: 1px solid rgba(228, 238, 247, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.aether-map-forecast-cell:first-child {
+  border-left: 0;
+}
+
+.aether-map-world-list {
+  border-top: 1px solid rgba(228, 238, 247, 0.08);
+}
+
 .aether-map-route-card {
   border: 1px solid rgba(238, 244, 249, 0.13);
   background:
@@ -1314,13 +1514,36 @@
 [data-readability-mode="high"] .aether-shop-row,
 [data-readability-mode="high"] .aether-route-strip,
 [data-readability-mode="high"] .aether-map-current-card,
-[data-readability-mode="high"] .aether-map-node.is-current {
+[data-readability-mode="high"] .aether-map-node.is-current,
+[data-readability-mode="high"] .aether-route-topology-current,
+[data-readability-mode="high"] .aether-route-topology-node.is-recommended {
   border-color: rgba(185, 241, 236, 0.34);
   background:
     linear-gradient(90deg, rgba(125, 212, 216, 0.16) 0%, rgba(17, 25, 34, 0.98) 34%, rgba(8, 12, 18, 1) 100%);
   box-shadow:
     inset 3px 0 0 rgba(185, 241, 236, 0.86),
     0 8px 18px rgba(2, 8, 14, 0.22);
+}
+
+[data-readability-mode="high"] .aether-route-topology {
+  border-color: rgba(228, 238, 247, 0.2);
+  background-color: rgba(7, 11, 16, 0.98);
+  background-image: none;
+}
+
+[data-readability-mode="high"] .aether-route-topology-node {
+  border-color: rgba(228, 238, 247, 0.2);
+  background: rgba(26, 33, 42, 0.98);
+}
+
+[data-readability-mode="high"] .aether-route-topology-node.is-mission {
+  border-color: rgba(246, 231, 200, 0.54);
+  background: rgba(54, 40, 22, 0.98);
+}
+
+[data-readability-mode="high"] .aether-route-topology-node.is-boss {
+  border-color: rgba(254, 205, 211, 0.5);
+  background: rgba(58, 24, 33, 0.98);
 }
 
 [data-readability-mode="high"] .aether-choice-row.is-reward {
@@ -1389,4 +1612,127 @@
   outline: 3px solid var(--aether-route-strong);
   outline-offset: 3px;
   box-shadow: 0 0 0 5px rgba(125, 212, 216, 0.18);
+}
+
+/* Slice 54: combat keeps the enemy and the current turn ahead of history. */
+.aether-status-shell[data-status-mode="combat"],
+.aether-status-shell[data-status-mode="combat"] .aether-encounter-stage,
+.aether-combat-control,
+.aether-combat-control .aether-combat-loadout,
+.aether-combat-control .aether-combat-forecast,
+.aether-combat-control .aether-combat-forecast-cell,
+.aether-combat-control .aether-combat-action,
+.aether-combat-log,
+.aether-combat-log .aether-log-row {
+  border-radius: 8px;
+}
+
+.aether-status-shell[data-status-mode="combat"] {
+  position: relative;
+  background:
+    linear-gradient(90deg, rgba(244, 114, 182, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(30, 39, 50, 0.99), rgba(9, 13, 19, 1));
+}
+
+.aether-combat-player-status {
+  border-bottom: 1px solid rgba(238, 244, 249, 0.1);
+}
+
+.aether-encounter-stage {
+  min-height: 76px;
+}
+
+.aether-combat-control {
+  border: 1px solid rgba(244, 165, 202, 0.2);
+  background:
+    linear-gradient(90deg, rgba(244, 114, 182, 0.06), transparent 45%),
+    linear-gradient(180deg, rgba(23, 29, 38, 0.98), rgba(8, 12, 18, 0.995));
+  box-shadow: 0 10px 22px rgba(1, 5, 11, 0.22);
+}
+
+.aether-combat-control .aether-combat-action {
+  min-width: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.aether-combat-log {
+  border-color: rgba(238, 244, 249, 0.12);
+  background: linear-gradient(180deg, rgba(21, 28, 37, 0.97), rgba(8, 12, 18, 0.99));
+  box-shadow: none;
+}
+
+.aether-combat-log .aether-log-row {
+  padding-block: 0.45rem;
+  font-size: 0.75rem;
+  line-height: 1.42;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aether-status-shell[data-status-mode="combat"],
+  .aether-combat-control,
+  .aether-combat-log {
+    transition: none;
+  }
+}
+
+/* Slice 55: compare missions first, then leave town through one preparation gate. */
+.aether-expedition-prep,
+.aether-expedition-check,
+.aether-quest-board,
+.aether-quest-board .aether-choice-row,
+.aether-quest-board .aether-choice-cell,
+.aether-quest-board .aether-quest-detail,
+.aether-quest-board button {
+  border-radius: 8px;
+}
+
+.aether-expedition-prep {
+  border: 1px solid rgba(185, 241, 236, 0.28);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.08), transparent 48%),
+    linear-gradient(180deg, rgba(24, 34, 43, 0.98), rgba(8, 13, 18, 0.995));
+  box-shadow: inset 3px 0 0 rgba(125, 212, 216, 0.72);
+}
+
+.aether-expedition-check {
+  border: 1px solid rgba(238, 244, 249, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.aether-quest-board .aether-choice-row {
+  border-color: rgba(238, 244, 249, 0.13);
+  background: rgba(18, 25, 33, 0.96);
+  box-shadow: none;
+}
+
+.aether-quest-board .aether-choice-row[data-quest-row-kind="featured"] {
+  border-color: rgba(125, 212, 216, 0.22);
+  background:
+    linear-gradient(90deg, rgba(125, 212, 216, 0.06), transparent 42%),
+    rgba(16, 23, 31, 0.98);
+}
+
+.aether-quest-board .aether-choice-row[data-quest-row-kind="locked-preview"] {
+  border-color: rgba(213, 177, 128, 0.2);
+  background: rgba(27, 24, 20, 0.88);
+}
+
+.aether-quest-detail {
+  border: 1px solid rgba(213, 177, 128, 0.22);
+  background: rgba(24, 21, 17, 0.72);
+}
+
+[data-readability-mode="high"] .aether-expedition-prep,
+[data-readability-mode="high"] .aether-quest-board .aether-choice-row,
+[data-readability-mode="high"] .aether-quest-detail {
+  border-color: rgba(228, 238, 247, 0.3);
+  background: rgba(14, 20, 27, 1);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aether-expedition-prep,
+  .aether-quest-board [data-testid="quest-board-detail-toggle"] svg {
+    transition: none;
+  }
 }

@@ -154,7 +154,7 @@ const Dashboard = ({
             {sideTab === 'map' && (
                 <Suspense fallback={<TabSpinner />}>
                     <div className="space-y-3">
-                        <MapNavigator player={player} grave={grave} stats={stats} />
+                        <MapNavigator player={player} grave={grave} stats={stats} actions={actions} />
                         <BuildAdvicePanel player={player} />
                     </div>
                 </Suspense>

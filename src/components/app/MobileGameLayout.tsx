@@ -41,6 +41,7 @@ const MobileGameLayout = ({
     setMobileConsoleMode,
     onOpenMirror,
 }: any) => {
+    const isCombat = engine.gameState === GS.COMBAT;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
     const openArchiveConsole = (tab: any) => {
@@ -82,7 +83,7 @@ const MobileGameLayout = ({
                         />
                     </Suspense>
                 ) : (
-                    <div className="flex min-h-[240px] min-w-0 flex-1">
+                    <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-2 min-h-[132px]' : 'min-h-[240px]'}`}>
                         <TerminalView
                             logs={engine.logs}
                             gameState={engine.gameState}
@@ -119,7 +120,7 @@ const MobileGameLayout = ({
                     onOpenArchiveConsole={openArchiveConsole}
                 />
             ) : !showArchiveConsole ? (
-                <div className="shrink-0">
+                <div className={isCombat ? 'order-1 shrink-0' : 'shrink-0'}>
                     <ControlPanel
                         gameState={engine.gameState}
                         player={engine.player}

@@ -38,6 +38,7 @@
 | 2026-07-15 | Android APK 설치 실패가 서명 충돌 가능성만 안내해 실제 AVD 저장 공간 부족을 바로 판단하기 어려웠음 | 수동 설치 절차와 generic error guidance만 있고 `adb install` 실패 유형을 release evidence로 분류하는 공통 경계가 없었음 | Android device smoke는 저장 공간 부족과 서명 충돌을 구분하고, 세이브를 보존하기 위해 앱 삭제나 data clear를 자동 수행하지 않는다 |
 | 2026-07-15 | iOS local export 안내는 존재하지 않는 파일을 가리키고 실제 설정은 승인 없이 App Store Connect upload를 요청할 수 있었음 | archive 생성, 로컬 IPA export, 외부 upload를 한 환경변수 경로로 처리하면서 destination과 provisioning 동작을 실행 전에 구분하지 않았음 | iOS 배포는 local export와 upload 설정을 분리하고, upload는 명시적 opt-in 없이는 archive 전에 차단하며 provisioning 갱신 옵션을 archive와 export에 동일하게 적용한다 |
 | 2026-07-16 | 여러 토벌 임무의 제목·설명·실제 target·스폰 지역이 서로 달라 지도를 따라가도 진행 의도를 예측하기 어려웠음 | 과거 미등록 몬스터를 임시 target으로 교체한 뒤 원래 몬스터가 추가되어도 복원하지 않았고, quest copy와 map spawn을 함께 검사하는 계약이 없었음 | 토벌 임무는 target, 설명, location, 지역 spawn pool, 입장 레벨을 하나의 데이터 계약으로 검증하고, 지정 지역 밖의 처치는 진행도로 인정하지 않는다 |
+| 2026-07-21 | 양손무기와 방어구를 맞춰도 직업 세트가 `2/3`에서 멈춰 풀세트가 발동하지 않음 | 전설 각인 세트에는 양손 2피스 규칙을 적용했지만 직업 호환 세트는 장착 아이템 개수만 세어, 실제로 잠기는 보조 손 슬롯을 계산과 UI에서 누락했음 | 슬롯을 추가로 점유하는 장비는 모든 세트 계산에서 같은 기여도를 사용하고, 대체된 슬롯과 발동 근거를 장비 화면에 직접 표시한다 |
 
 ---
 
@@ -206,6 +207,34 @@
 ### R41: Separate Native Install Proof From Launch Retry
 - **Rule:** 실기기 archive 설치가 이미 성공한 뒤 잠금 때문에 launch만 실패했다면 다음 재시도는 설치본 bundle metadata를 확인하고 install을 생략한다. 설치본을 확인할 수 없을 때만 전체 install smoke로 돌아가며, launch-only 경로가 이전 설치를 추정해서는 안 된다
 - **Rationale:** 큰 native bundle을 매번 다시 전송하면 설치 중 자동 잠금이 반복되고 검증 시간도 낭비된다. 반대로 확인 없이 install을 생략하면 오래된 앱을 최신 RC로 오인할 수 있으므로 설치 증빙과 실행 생존 증빙을 분리하되 연결 계약은 유지해야 한다
+
+### R42: Count Occupied Equipment Slots Consistently Across Sets
+- **Rule:** 양손무기처럼 다른 장비 슬롯을 함께 점유하는 아이템은 직업 세트와 전설 세트에서 같은 피스 기여도를 사용한다. 계산 결과뿐 아니라 대체된 슬롯과 2피스 규칙을 장비 화면에 표시한다
+- **Rationale:** 물리적으로 사용할 수 없는 보조 손을 빈 피스로 요구하면 양손 빌드의 풀세트가 영구적으로 도달 불가능해지고, 화면의 진행도와 실제 장착 제약도 서로 모순된다
+
+### R43: Validate Progression As A Cumulative Player Route
+- **Rule:** 초반 성장 pacing은 단일 퀘스트나 단일 전투 보상만 제한하지 말고, 첫 방문·처치·연속 퀘스트를 실제 수령 순서로 합산해 주요 지역별 레벨과 잔여 EXP를 계약으로 고정한다
+- **Rationale:** 각 보상이 개별 상한을 지켜도 같은 행동의 처치 EXP와 완료 EXP가 중첩되면 몇 분 안에 여러 레벨을 건너뛸 수 있다. 느슨한 최종 레벨 범위는 적응 구간 스킵을 정상으로 승인하므로 중간 체크포인트가 필요하다
+
+### R44: Show Local Topology Before The World Index
+- **Rule:** 모바일 지도 첫 viewport는 현재 위치와 실제 인접 출구를 공간 관계로 먼저 보여 주고, 활성 임무가 멀리 있으면 shortest path의 다음 이동을 표시한다. 전체 세계 목록과 lore는 같은 이동 계약을 유지하는 접힌 text fallback으로 둔다
+- **Rationale:** 전체 지역을 카드 목록이나 고정 좌표 atlas로 한 번에 배치하면 현재 선택과 다음 행동이 묻히거나 작은 화면에서 겹친다. 플레이어가 지금 갈 수 있는 길을 먼저 읽게 해야 지도 정보와 실제 이동 동작이 일치한다
+
+### R45: Put The Current Turn Before Combat History
+- **Rule:** 전투 첫 viewport는 플레이어 자원, 적 정체와 HP, 현재 의도, 권장 대응, 주요 행동 순으로 배치한다. 긴 기록은 최근 2~3줄과 확장 history로 낮추고, boss hint도 행동 버튼을 첫 화면 밖으로 밀어내지 않는 밀도로 제한한다
+- **Rationale:** 정확한 전투 정보가 sticky status, encounter, log, action에 흩어져 있으면 플레이어는 매 턴 scroll하며 현재 판단을 다시 조립해야 한다. 기록은 원인 추적에 필요하지만 현재 턴의 선택보다 먼저 보여야 할 정보는 아니다
+
+### R46: Preview Locked Choices Without Bypassing Their Gates
+- **Rule:** 첫 viewport의 비교 대상 수가 부족해도 레벨이나 선행 임무 제한을 임의로 열지 않는다. 다음 해금 선택지를 동일한 비교 행에 preview하되 `잠금`, 필요 조건, disabled CTA를 텍스트와 함께 표시한다
+- **Rationale:** 선택지 수를 맞추기 위해 진행 gate를 약화하면 서사 순서와 난이도가 깨진다. 반대로 두 개만 보여 주면 플레이어가 다음 목표를 알 수 없으므로, 접근 권한과 미래 계획을 분리해야 한다
+
+### R47: Disclose Equipment Depth In Decision Order
+- **Rule:** 초반 장비 후보는 추천 여부, 대표 능력치 변화, 장착 가능 여부, 세트 기여도를 먼저 보여 주고 전체 계산·공명·강화 조건은 한 번의 명시적 상세 action 뒤에 둔다. 화면마다 같은 공용 판단 함수를 사용하며 양손 장비의 슬롯 기여도를 별도로 추정하지 않는다
+- **Rationale:** 정확한 정보도 동시에 모두 노출하면 신규 플레이어가 교체 결정을 내리기 전에 시스템을 학습해야 한다. 반대로 화면별 요약 공식이 다르면 같은 아이템이 가방과 상점에서 다른 가치로 보이므로 깊이를 삭제하지 않고 노출 순서와 계산 authority만 통일해야 한다
+
+### R48: Share One Visual Family Between Route And Encounter
+- **Rule:** 첫 세션의 지역 marker와 해당 enemy portrait는 같은 region family registry를 사용하고 exact asset coverage를 데이터 목록과 대조한다. 미발견 정보와 미제작 범위는 명시적 fallback으로 남기며, 생성 원본과 crop/alpha 처리 규칙을 재현 가능하게 보존한다
+- **Rationale:** 지도와 전투가 서로 다른 visual language를 쓰거나 이름 alias가 generic icon으로 되돌아가면 플레이어는 장소와 적의 관계를 매번 다시 해석한다. runtime 결과만 저장하면 art 수정 때 출처와 처리 기준도 잃으므로 family mapping, 정보 공개 경계, asset lineage를 하나의 계약으로 검증해야 한다
 
 ---
 

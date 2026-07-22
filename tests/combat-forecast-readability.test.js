@@ -85,9 +85,9 @@ test('CombatPanel renders direct Korean forecast labels', async () => {
     assert.match(source, /data-forecast-tone=\{combatForecast\.tone\}/);
     assert.match(source, /data-testid="combat-forecast-label"/);
     assert.match(source, /data-testid="combat-forecast-value"/);
-    assert.match(view, /label:\s*'적의 행동'/);
-    assert.match(view, /label:\s*'대응'/);
-    assert.match(view, /label:\s*'기회'/);
+    assert.match(view, /label:\s*'위협'/);
+    assert.match(view, /label:\s*'권장 대응'/);
+    assert.match(view, /label:\s*'예상 흐름'/);
     assert.doesNotMatch(view, /label:\s*'(INTENT|RESPONSE|WINDOW)'/);
     assert.doesNotMatch(source, /Combat Items|\d+T/);
     assert.doesNotMatch(view, /HP 아이템|CD 대기|MP 절약|스킬 보류/);
@@ -98,9 +98,9 @@ test('smoke loop verifies the combat forecast strip during combat coverage', asy
 
     assert.match(source, /verifyCombatForecast/);
     assert.match(source, /combat-forecast-strip/);
-    assert.match(source, /적의 행동/);
-    assert.match(source, /대응/);
-    assert.match(source, /기회/);
+    assert.match(source, /위협/);
+    assert.match(source, /권장 대응/);
+    assert.match(source, /예상 흐름/);
 });
 
 test('combat forecast has high readability CSS coverage', async () => {

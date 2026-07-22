@@ -1,4 +1,5 @@
-import { Sword, Zap, ArrowRight, RotateCw, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Sword, Zap, ArrowRight, RotateCw, Sparkles, Backpack } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { soundManager } from '../../systems/SoundManager';
 import { buildCombatView } from '../../utils/combatView';
@@ -35,10 +36,10 @@ const ACTION_BUTTONS: any = [
     className: 'bg-[linear-gradient(180deg,rgba(24,43,48,0.74)_0%,rgba(8,16,18,0.94)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:bg-[#7dd4d8]/10 hover:border-[#d5b180]/24',
   },
   {
-    key: 'swap',
-    label: '기술 변경',
-    mobileLabel: '기술 변경',
-    icon: RotateCw,
+    key: 'item',
+    label: '아이템',
+    mobileLabel: '아이템',
+    icon: Backpack,
     className: 'bg-[linear-gradient(180deg,rgba(33,23,45,0.74)_0%,rgba(12,10,18,0.94)_100%)] border border-[#9a8ac0]/20 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/28',
   },
   {
@@ -55,6 +56,7 @@ const ACTION_BUTTONS: any = [
 //   ternary 분기는 별개 보존 (caller가 enemy: null 명시 전달하는 path).
 //   청소 메가 시리즈 67번째 single-cycle 3-default batch.
 const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: CombatPanelProps) => {
+  const [itemsOpen, setItemsOpen] = useState(false);
   const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
   // 전투 파생 데이터(전술 프로파일·텔레그래프·콤보·전투 예보) — 계산은 buildCombatView로 분리,
@@ -85,8 +87,8 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
       return;
     }
 
-    if (key === 'swap') {
-      actions.cycleSkill(1);
+    if (key === 'item') {
+      setItemsOpen((open) => !open);
       return;
     }
 
@@ -113,25 +115,35 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
     <Motion.div
       initial={false}
       animate={{ opacity: 1, y: 0 }}
-      className={`relative z-10 w-full space-y-2 ${
+      data-testid="combat-focus-panel"
+      className={`aether-combat-control relative z-10 w-full space-y-2 ${
         mobile
-          ? 'panel-noise aether-surface rounded-[1.5rem] p-3'
+          ? 'panel-noise aether-surface rounded-lg p-2.5'
           : 'mt-2.5'
       }`}
     >
       <>
-          {mobile && (
-            <div className="rounded-[1.1rem] aether-panel-core px-3 py-2 flex items-center justify-between gap-2">
+          {selectedSkill && (
+            <div className="aether-combat-loadout flex min-h-11 items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/18 px-3 py-1.5">
               <div className="min-w-0">
-                <div className="text-[13px] font-rajdhani font-bold text-white/94 truncate">
-                  {enemy?.name || '적'}와 교전 중
+                <div className="text-[10px] font-readable text-slate-300/64">
+                  준비한 기술
                 </div>
-                {selectedSkill && (
-                  <div className="text-[11px] font-readable text-slate-300/78">
-                    {selectedSkill.name} · 기력 {selectedSkill.mp || 0} · {skillCooldown > 0 ? `${skillCooldown}턴 후 사용` : '바로 사용 가능'}
-                  </div>
-                )}
+                <div className="truncate text-[12px] font-readable font-semibold text-white/94">
+                  {selectedSkill.name} · 기력 {selectedSkill.mp || 0} · {skillCooldown > 0 ? `${skillCooldown}턴 후` : '사용 가능'}
+                </div>
               </div>
+              <button
+                type="button"
+                data-testid="combat-skill-cycle"
+                title="다음 기술"
+                aria-label="다음 기술"
+                disabled={isAiThinking}
+                onClick={() => actions.cycleSkill(1)}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#9a8ac0]/24 bg-[#9a8ac0]/10 text-[#ece5ff] disabled:opacity-45"
+              >
+                <RotateCw size={15} />
+              </button>
             </div>
           )}
           {!mobile && bossBriefLine && (
@@ -142,29 +154,37 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
           {/* cycle 269: tacticalProfile.signature(보스 mechanic) / counterHint(대응) 추가 dispatch.
               getEnemyTacticalProfile은 14+ 필드 반환했지만 CombatPanel이 entryHint/hint/phaseHint
               3종만 read이라 signature/counterHint 등 in-combat 핵심 정보 영원히 invisible. */}
-          {!mobile && enemy?.isBoss && tacticalProfile?.signature && (
-            <div
-              data-testid="combat-boss-signature"
-              className="rounded-[1rem] border border-rose-300/24 bg-rose-300/[0.08] px-3 py-1.5 text-[10px] font-fira"
-            >
-              <span className="text-rose-200 font-bold">기믹</span>
-              <span className="text-slate-300/80"> · {tacticalProfile.signature}</span>
-            </div>
-          )}
-          {!mobile && enemy?.isBoss && tacticalProfile?.counterHint && (
-            <div
-              data-testid="combat-boss-counter"
-              className="rounded-[1rem] border border-emerald-300/24 bg-emerald-300/[0.08] px-3 py-1.5 text-[10px] font-fira"
-            >
-              <span className="text-emerald-200 font-bold">대응</span>
-              <span className="text-slate-300/80"> · {tacticalProfile.counterHint}</span>
+          {enemy?.isBoss && (tacticalProfile?.signature || tacticalProfile?.counterHint) && (
+            <div className="aether-boss-tactics grid grid-cols-2 gap-1">
+              {tacticalProfile?.signature && (
+                <div
+                  data-testid="combat-boss-signature"
+                  className="min-w-0 rounded-lg border border-rose-300/24 bg-rose-300/[0.08] px-2.5 py-2 font-readable"
+                >
+                  <div className="text-[10px] font-bold text-rose-200">보스 기믹</div>
+                  <div className="mt-0.5 line-clamp-3 text-[10px] leading-[1.3] text-slate-200/82" title={tacticalProfile.signature}>
+                    {tacticalProfile.signature}
+                  </div>
+                </div>
+              )}
+              {tacticalProfile?.counterHint && (
+                <div
+                  data-testid="combat-boss-counter"
+                  className="min-w-0 rounded-lg border border-emerald-300/24 bg-emerald-300/[0.08] px-2.5 py-2 font-readable"
+                >
+                  <div className="text-[10px] font-bold text-emerald-200">권장 대응</div>
+                  <div className="mt-0.5 line-clamp-3 text-[10px] leading-[1.3] text-slate-200/82" title={tacticalProfile.counterHint}>
+                    {tacticalProfile.counterHint}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {primarySignatureDrop && (
             <div
               data-testid="combat-signature-drop-hint"
-              className="flex items-center justify-center gap-1.5 rounded-[1rem] px-3 py-1.5 text-[10px] font-fira"
+              className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-readable"
               style={{
                 border: '1px solid rgba(246,231,162,0.42)',
                 background: 'linear-gradient(180deg, rgba(246,231,162,0.12) 0%, rgba(18,16,10,0.72) 100%)',
@@ -203,7 +223,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
               <div
                 data-testid="combat-enemy-debuff-chip"
                 data-enemy-debuff-count={debuffs.length}
-                className="flex flex-wrap items-center justify-center gap-1.5 rounded-[1rem] border border-emerald-300/30 bg-emerald-400/8 px-3 py-1 text-[10px] font-fira text-emerald-200"
+                className="flex flex-wrap items-center justify-center gap-1.5 rounded-lg border border-emerald-300/30 bg-emerald-400/8 px-3 py-1 text-[10px] font-readable text-emerald-200"
                 aria-label={`적 디버프: ${debuffs.join(', ')}`}
               >
                 <span className="uppercase tracking-normal text-emerald-300/80">적 디버프</span>
@@ -225,7 +245,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
               {comboCount >= comboStack && <span className="ml-1 font-bold">준비 완료</span>}
             </div>
           )}
-          {mobileCombatSignals.length > 0 && (
+          {mobileCombatSignals.length > 0 && !enemy?.isBoss && (
             <div className="flex flex-wrap gap-1.5">
               {mobileCombatSignals.map((signal: any) => (
                 <span
@@ -242,15 +262,15 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
               data-testid="combat-forecast-strip"
               data-forecast-tone={combatForecast.tone}
               aria-label="전투 판단 요약"
-              className="aether-combat-forecast rounded-lg px-3 py-2"
+              className="aether-combat-forecast rounded-lg px-2.5 py-2"
             >
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-3 gap-1">
                 {combatForecastCells.map((cell) => (
                   <div key={cell.label} className="aether-combat-forecast-cell rounded-lg px-2 py-1.5">
-                    <div data-testid="combat-forecast-label" className="font-readable text-[9px] font-semibold tracking-normal text-slate-300/78">
+                    <div data-testid="combat-forecast-label" className="font-readable text-[10px] font-semibold tracking-normal text-slate-300/78">
                       {cell.label}
                     </div>
-                    <div data-testid="combat-forecast-value" className="mt-0.5 line-clamp-2 font-readable text-[11px] font-semibold leading-[1.2] text-slate-100/92">
+                    <div data-testid="combat-forecast-value" className="mt-0.5 line-clamp-2 font-readable text-[11px] font-semibold leading-[1.25] text-slate-100/92">
                       {cell.value}
                     </div>
                   </div>
@@ -264,15 +284,20 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
       <div className="grid grid-cols-2 gap-1.5">
         {ACTION_BUTTONS.map((action: any) => {
           const Icon = action.icon;
-          const isDisabled = isAiThinking || ((action.key === 'skill' || action.key === 'swap') && !selectedSkill);
+          const isDisabled = isAiThinking
+            || (action.key === 'skill' && !selectedSkill)
+            || (action.key === 'item' && combatConsumables.length === 0);
 
           return (
             <Motion.button
               key={action.key}
+              type="button"
+              data-testid={`combat-action-${action.key}`}
+              aria-expanded={action.key === 'item' ? itemsOpen : undefined}
               whileTap={{ scale: 0.95 }}
               disabled={isDisabled}
               onClick={() => handleAction(action.key)}
-              className={`aether-combat-action min-h-[50px] overflow-hidden rounded-[1rem] px-2.5 flex items-center gap-2 font-bold transition-all backdrop-blur-md disabled:opacity-45 ${action.className}`}
+              className={`aether-combat-action min-h-[48px] overflow-hidden rounded-lg px-2.5 flex items-center gap-2 font-bold transition-all backdrop-blur-md disabled:opacity-45 ${action.className}`}
             >
               <span className="aether-combat-action-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem]">
                 <Icon size={13} className={action.key === 'swap' ? 'transition-transform group-hover:rotate-180' : ''} />
@@ -285,7 +310,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
         })}
       </div>
 
-      {combatConsumables.length > 0 && (
+      {combatConsumables.length > 0 && (!mobile || itemsOpen) && (
         <div className="space-y-2">
           <div className="px-1 text-[11px] font-readable font-semibold tracking-normal text-cyan-100/72">
             전투 소모품
@@ -297,7 +322,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                 whileTap={{ scale: 0.97 }}
                 disabled={isAiThinking}
                 onClick={() => handleConsumableUse(item)}
-                className={`rounded-[1rem] border ${mobile ? 'px-3 py-2.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type)}`}
+                className={`min-h-11 rounded-lg border ${mobile ? 'px-3 py-2.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type)}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-[11px] font-rajdhani font-bold leading-tight">{item.name}</span>

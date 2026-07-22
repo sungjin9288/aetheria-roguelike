@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getAdventureGuidance, getExplorationForecast, getMoveRecommendations, getQuestTracker } from '../src/utils/adventureGuide.js';
+import { getAdventureGuidance, getExpeditionPreparation, getExplorationForecast, getMoveRecommendations, getQuestTracker } from '../src/utils/adventureGuide.js';
 
 test('quest tracker prioritizes claimable rewards', () => {
     const player = {
@@ -171,4 +171,77 @@ test('move recommendations favor level-fit unexplored routes when stable', () =>
     assert.equal(routes[0].routePlan.approach, '미답 권역 조사');
     assert.equal(routes[0].routePlan.returnLabel, '발견 후 귀환');
     assert.equal(routes[0].routePlan.exitRule, '발견 뒤 귀환');
+});
+
+test('expedition preparation connects an active mission to one direct departure', () => {
+    const player = {
+        hp: 150,
+        maxHp: 150,
+        mp: 50,
+        maxMp: 50,
+        level: 2,
+        loc: '시작의 마을',
+        inv: [],
+        equip: {
+            weapon: { name: '녹슨 단검', type: 'weapon', val: 5 },
+            armor: { name: '천 옷', type: 'armor', val: 2 },
+        },
+        quests: [{ id: 1, progress: 0, isBounty: false }],
+        stats: {
+            visitedMaps: ['시작의 마을'],
+            exploreState: { sinceNarrativeEvent: 0, sinceDiscovery: 0, sinceRelic: 0, quietStreak: 0 },
+        },
+    };
+    const maps = {
+        '시작의 마을': { type: 'safe', level: 1, exits: ['고요한 숲'] },
+        '고요한 숲': { type: 'dungeon', level: 1, exits: ['시작의 마을'], eventChance: 0.18 },
+    };
+
+    const preparation = getExpeditionPreparation(
+        player,
+        { maxHp: 150, maxMp: 50 },
+        maps['시작의 마을'],
+        maps,
+    );
+
+    assert.equal(preparation.missionTitle, '슬라임 소탕');
+    assert.equal(preparation.destination, '고요한 숲');
+    assert.equal(preparation.resourceLabel, 'HP 100% · NRG 100%');
+    assert.equal(preparation.equipmentLabel, '주요 장비 확인');
+    assert.equal(preparation.readinessLabel, '출발 가능');
+    assert.equal(preparation.canDepart, true);
+    assert.match(preparation.returnLabel, /귀환/);
+});
+
+test('expedition preparation exposes resource and equipment warnings without hiding departure', () => {
+    const player = {
+        hp: 45,
+        maxHp: 150,
+        mp: 15,
+        maxMp: 50,
+        level: 2,
+        loc: '시작의 마을',
+        inv: [],
+        equip: {},
+        quests: [],
+        stats: {
+            visitedMaps: ['시작의 마을'],
+            exploreState: { sinceNarrativeEvent: 0, sinceDiscovery: 0, sinceRelic: 0, quietStreak: 0 },
+        },
+    };
+    const maps = {
+        '시작의 마을': { type: 'safe', level: 1, exits: ['고요한 숲'] },
+        '고요한 숲': { type: 'dungeon', level: 1, exits: ['시작의 마을'], eventChance: 0.18 },
+    };
+
+    const preparation = getExpeditionPreparation(
+        player,
+        { maxHp: 150, maxMp: 50 },
+        maps['시작의 마을'],
+        maps,
+    );
+
+    assert.equal(preparation.readinessLabel, '휴식 권장');
+    assert.equal(preparation.equipmentLabel, '무기 미장착 · 방어구 미장착');
+    assert.equal(preparation.canDepart, true);
 });

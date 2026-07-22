@@ -123,6 +123,7 @@ interface WeeklyProtocol {
 
 interface PlayerSettings {
     readabilityMode?: 'standard' | 'high' | string;
+    equipmentDetailMode?: 'auto' | 'summary' | 'full' | string;
     [key: string]: any;
 }
 

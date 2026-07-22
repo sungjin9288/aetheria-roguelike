@@ -4,6 +4,7 @@ import { getActiveRelicSynergies } from '../data/relics.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getMirrorEffects } from './mirrorUpgrades';
+import { getPacedCombatExp } from '../utils/progressionPacing.js';
 import type { Player, Monster } from '../types/index.js';
 
 /**
@@ -112,7 +113,8 @@ export const outcomeMethods: any = {
         const enemyLevel = enemy.level || 1;
         const levelGap = Math.max(0, playerLevel - enemyLevel - 9);
         const levelPenalty = Math.max(0.3, 1 - levelGap * 0.07);
-        const expGained = Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult * eliteRewardMult);
+        const rawExpGained = Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult * eliteRewardMult);
+        const expGained = getPacedCombatExp(p, rawExpGained);
         const noGold = p.challengeModifiers?.includes('noGold');
         const goldGained = Math.floor((enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty * (noGold ? 0.5 : 1) * challengeRewardMult * eliteRewardMult);
 

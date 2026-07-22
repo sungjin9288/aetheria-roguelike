@@ -422,9 +422,9 @@ import { readFile } from 'node:fs/promises';
       assert.ok(!/\bmobile\b/.test(matches[0]), 'callsite mobile 명시 0건');
   });
 
-  test('cycle 492: 본체 정적 inline (px-2.75 py-2.5 / 교전 대상 텍스트)', async () => {
+  test('cycle 492: 본체 정적 inline (compact encounter padding / 교전 대상 텍스트)', async () => {
       const source = await readSrc('src/components/StatusBar.tsx');
-      assert.ok(/px-2\.75 py-2\.5/.test(source), 'mobile 가지 padding 보존');
+      assert.ok(/px-2\.5 py-2/.test(source), 'compact encounter padding 보존');
       assert.ok(/교전 대상/.test(source), '교전 대상 텍스트 보존');
       assert.ok(!/Combat Target/.test(source), 'Combat Target (비-mobile 가지) 제거');
   });

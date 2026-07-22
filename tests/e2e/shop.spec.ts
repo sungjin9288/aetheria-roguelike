@@ -22,5 +22,7 @@ test.describe('Shop panel', () => {
         await shopButton.click();
         // ShopPanel 안에 "구매" 또는 "판매" 토글이 있어야 함
         await expect(page.locator('text=/마을 상점|구매|판매|오늘의 할인/').first()).toBeVisible({ timeout: 8_000 });
+        await expect(page.getByTestId('shop-equipment-disclosure')).toHaveAttribute('data-equipment-view', 'summary');
+        await expect(page.getByTestId('shop-equipment-detail-toggle')).toContainText('상세 보기');
     });
 });

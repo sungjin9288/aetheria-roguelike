@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CONSTANTS } from '../src/data/constants.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { getFirstVisitReward } from '../src/utils/exploreUtils.js';
-import { getPacedQuestClaimExp } from '../src/utils/progressionPacing.js';
+import { getPacedCombatExp, getPacedQuestClaimExp } from '../src/utils/progressionPacing.js';
 import { QUESTS } from '../src/data/quests.js';
 
 /**
@@ -21,11 +21,11 @@ import { QUESTS } from '../src/data/quests.js';
  * 느긋하게 — 레벨당 전투 수(=연습량)를 늘린다.
  * - START_NEXT_EXP 150 → 200 (Lv1→5 누적 요구 745 → 998, +34%)
  * - 초반(맵 Lv≤10) 첫 방문 EXP 절반 — 골드는 유지 (경제 불변)
- * - 몬스터/퀘스트 EXP 불변 — 전투가 주 성장원, 퀘스트 캡(slice 17) 그대로
+ * - Lv1~4 전투 EXP 60% — 처치 보상과 퀘스트 보상의 중복 급성장 완화
+ * - Lv1~10 퀘스트 EXP 상한 하향 — 단일 수령뿐 아니라 누적 동선도 제어
  *
- * 계약: slice 17-18 가드 루트와 동일한 초반 콘텐츠(첫 방문 2회 + 초반
- * 퀘스트 4종 + 슬라임/멧돼지/거미 18킬)를 전부 소비해도 Lv4에서 멈춘다 —
- * 전직(Lv5)은 추가 사냥의 보상.
+ * 계약: 첫 이야기와 슬라임 임무 뒤 Lv1, 멧돼지 임무 뒤 Lv2, 거미 임무까지
+ * 완료한 뒤 Lv3 초반에 머문다. 전직(Lv5)은 4~5개 지역을 익힌 뒤의 보상이다.
  */
 
 const EARLY_FIRST_VISIT_EXP_CAPS = {
@@ -51,6 +51,8 @@ const freshVitals = () => ({
 });
 
 const applyExp = (player, exp) => CombatEngine.applyExpGain(player, exp).updatedPlayer;
+
+const awardCombatExp = (player, rawExp) => applyExp(player, getPacedCombatExp(player, rawExp));
 
 const claimQuest = (player, questId) => {
     const quest = QUESTS.find((entry) => entry.id === questId);
@@ -78,23 +80,63 @@ test('slice 23: 초반 첫 방문 EXP 절반 — 골드는 유지', () => {
     assert.equal(forest.gold, 100, '첫 방문 골드 보상 유지');
 });
 
-test('slice 23: 초반 콘텐츠 전체 소비 루트 — Lv4에서 멈춤 (전직 전)', () => {
+test('slice 52: 초반 누적 성장 동선 — 멧돼지 후 Lv2, 거미 후 Lv3 초반', () => {
     let player = freshVitals();
 
     player = applyExp(player, visitExp('고요한 숲'));   // 첫 방문 (감속 후)
     player = claimQuest(player, 80);                     // [스토리] 첫 번째 여정
-    player = applyExp(player, 63);                       // 슬라임 3킬 (신입 보호 21/킬)
+    player = awardCombatExp(player, 60);                 // 슬라임 3킬 (20/킬)
     player = claimQuest(player, 1);                      // 슬라임 소탕
+    assert.equal(player.level, 1, '첫 이야기와 슬라임 임무 뒤 학습 구간 Lv1 유지');
+
     player = applyExp(player, visitExp('서쪽 평원'));    // 첫 방문 (감속 후)
-    player = applyExp(player, 200);                      // 멧돼지 5킬 (40/킬)
+    player = awardCombatExp(player, 200);                // 멧돼지 5킬 (40/킬)
     player = claimQuest(player, 2);                      // 멧돼지 사냥
-    player = applyExp(player, 200);                      // 거미떼 10킬 (20/킬)
+    assert.equal(player.level, 2, '멧돼지 임무 뒤 Lv3 조기 진입 금지');
+
+    player = awardCombatExp(player, 200);                // 거미떼 10킬 (20/킬)
     player = claimQuest(player, 110);                    // 거미떼 퇴치
 
-    assert.ok(player.level <= 4,
-        `초반 콘텐츠 전부 소비 후 Lv ≤ 4 (실제: Lv${player.level} ${player.exp}/${player.nextExp})`);
-    assert.ok(player.level >= 3,
-        `과감속 방지 — Lv ≥ 3 유지 (실제: Lv${player.level})`);
+    assert.equal(player.level, 3, '거미 임무 뒤 Lv3 진입');
+    assert.ok(player.exp <= Math.floor(player.nextExp * 0.4),
+        `거미 임무 뒤 Lv3 초반 40% 이내 (실제: ${player.exp}/${player.nextExp})`);
+});
+
+test('slice 52: Lv1~4 전투 EXP는 60%, Lv5부터 원래 보상', () => {
+    assert.equal(getPacedCombatExp({ level: 1 }, 20), 12);
+    assert.equal(getPacedCombatExp({ level: 4 }, 101), 60);
+    assert.equal(getPacedCombatExp({ level: 5 }, 101), 101);
+});
+
+test('slice 52: 실제 전투 승리 보상에도 초반 pacing 적용', () => {
+    const player = {
+        ...freshVitals(),
+        relics: [],
+        meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
+        combatFlags: {},
+        status: [],
+        challengeModifiers: [],
+        inv: [],
+        equip: {},
+        titles: [],
+        skillChoices: {},
+    };
+    const enemy = {
+        name: '슬라임',
+        baseName: '슬라임',
+        hp: 0,
+        maxHp: 81,
+        atk: 19,
+        def: 1,
+        exp: 20,
+        gold: 18,
+        level: 1,
+    };
+
+    const result = CombatEngine.handleVictory(player, enemy, {}, {});
+
+    assert.equal(result.expGained, 12);
+    assert.equal(result.updatedPlayer.exp, 12);
 });
 
 test('slice 23: 퀘스트 1회 수령 = 최대 1레벨 캡 보존 (slice 17 계약)', () => {

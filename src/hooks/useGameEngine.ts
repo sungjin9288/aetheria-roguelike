@@ -144,6 +144,15 @@ export const useGameEngine = () => {
                         },
                     }),
                 }),
+                setEquipmentDetailMode: (val: any) => dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (currentPlayer: any) => ({
+                        settings: {
+                            ...(currentPlayer.settings || {}),
+                            equipmentDetailMode: ['summary', 'full'].includes(val) ? val : 'auto',
+                        },
+                    }),
+                }),
                 dismissEvent: () => {
                     dispatch({ type: AT.SET_EVENT, payload: null });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });

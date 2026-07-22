@@ -139,6 +139,28 @@ export interface EquipmentStatDiff {
     mp: number;
 }
 
+export type EquipmentDetailMode = 'auto' | 'summary' | 'full';
+
+interface EquipmentDisclosurePlayer {
+    level?: number;
+    job?: string;
+    settings?: { equipmentDetailMode?: string };
+}
+
+export const getEquipmentDisclosure = (player: EquipmentDisclosurePlayer | null | undefined) => {
+    const requestedMode = player?.settings?.equipmentDetailMode;
+    const mode: EquipmentDetailMode = requestedMode === 'summary' || requestedMode === 'full'
+        ? requestedMode
+        : 'auto';
+    const isEarlyJourney = (player?.level || 1) < 5 && (!player?.job || player.job === '모험가');
+
+    return {
+        mode,
+        isEarlyJourney,
+        showDetails: mode === 'full' || (mode === 'auto' && !isEarlyJourney),
+    };
+};
+
 // cycle 2026-07 감사: ShopPanel.tsx(getComparisonMeta) / SmartInventory.tsx(isEquipUpgrade)에
 //   동일하게 인라인 중복되던 장비 가치평가 공식을 단일화. 가중치는 BALANCE로 상수화
 //   (EQUIP_SCORE_CRIT_WEIGHT / EQUIP_SCORE_MP_DIVISOR) — 계산 결과는 기존과 1:1 동일.
@@ -221,6 +243,69 @@ export const getNextEquipmentState = (equip: EquipSlots, item: Item | null | und
     nextEquip.weapon = mainWeapon || item;
     nextEquip.offhand = offhandWeapon || null;
     return nextEquip;
+};
+
+const getPrimaryEquipmentDelta = (item: Item, diff: EquipmentStatDiff) => {
+    const orderedStats = item.type === 'weapon'
+        ? [
+            { key: 'atk', label: '공격력', suffix: '' },
+            { key: 'crit', label: '치명타', suffix: '%' },
+            { key: 'mp', label: '기력', suffix: '' },
+            { key: 'def', label: '방어력', suffix: '' },
+        ]
+        : [
+            { key: 'def', label: '방어력', suffix: '' },
+            { key: 'atk', label: '공격력', suffix: '' },
+            { key: 'mp', label: '기력', suffix: '' },
+            { key: 'crit', label: '치명타', suffix: '%' },
+        ];
+    const primary = orderedStats.find(({ key }) => diff[key as keyof EquipmentStatDiff] !== 0) || orderedStats[0];
+    const value = diff[primary.key as keyof EquipmentStatDiff];
+
+    return {
+        ...primary,
+        value,
+        text: `${primary.label} ${value > 0 ? '+' : ''}${value}${primary.suffix}`,
+    };
+};
+
+interface EquipmentDecisionPlayer {
+    job?: string;
+    equip?: EquipSlots;
+}
+
+export const getEquipmentDecision = (
+    player: EquipmentDecisionPlayer | null | undefined,
+    item: Item | null | undefined
+) => {
+    const isEquipment = Boolean(item && ['weapon', 'armor', 'shield'].includes(item.type as string));
+    if (!item || !isEquipment) return null;
+
+    const equip = player?.equip || {};
+    const currentProfile = getEquipmentProfile(equip);
+    const nextEquip = getNextEquipmentState(equip, item);
+    const nextProfile = getEquipmentProfile(nextEquip);
+    const diff: EquipmentStatDiff = {
+        atk: (nextProfile.mainAttack + nextProfile.offhandAttack) - (currentProfile.mainAttack + currentProfile.offhandAttack),
+        def: ((nextEquip.armor?.val || 0) + nextProfile.shieldDef) - ((equip.armor?.val || 0) + currentProfile.shieldDef),
+        crit: Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100),
+        mp: nextProfile.mpBonus - currentProfile.mpBonus,
+    };
+    const equipable = !Array.isArray(item.jobs) || item.jobs.includes(player?.job as string);
+    const score = getEquipmentScore(diff);
+    const matchesJob = equipable && Array.isArray(item.jobs) && item.jobs.includes(player?.job as string);
+    const setContribution = matchesJob ? (isTwoHandWeapon(item) ? 2 : 1) : 0;
+
+    return {
+        diff,
+        equipable,
+        score,
+        recommendation: !equipable ? '직업 제한' : score > 0 ? '추천 교체' : score < 0 ? '능력치 하락' : '비슷한 성능',
+        tone: !equipable ? 'blocked' : score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral',
+        primaryDelta: getPrimaryEquipmentDelta(item, diff),
+        setContribution,
+        setContributionText: setContribution > 0 ? `${player?.job} 세트 +${setContribution}` : '세트 기여 없음',
+    };
 };
 
 export const isMagicWeapon = (weapon: any) => {

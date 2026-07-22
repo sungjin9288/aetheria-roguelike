@@ -28,9 +28,9 @@ import { CombatEngine } from '../src/systems/CombatEngine.js';
  *   다음 전투형 탐험에서 유물 선택 보장
  *
  * 보존 (회귀 금지):
- * - EXP 곡선 (START_NEXT_EXP 150 / EXP_SCALE_RATE 1.15) — Slice 17-18
- *   quest pacing 가드 (tests/quest-progression-pacing.test.js) 그대로.
- * - 몬스터 ATK/EXP 곡선 (15+4L / 10+10L) 불변.
+ * - EXP 곡선 (START_NEXT_EXP 200 / EXP_SCALE_RATE 1.15)과 Slice 52의
+ *   Lv1~4 전투 EXP 60%·초반 quest cap은 progression pacing 테스트가 소유한다.
+ * - 몬스터 ATK/raw EXP 곡선 (15+4L / 10+10L) 불변.
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));

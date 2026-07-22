@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Copy, Crown, Eye, Skull, Shield, Save } from 'lucide-react';
+import { Copy, Crown, Eye, ListTree, Skull, Shield, Save } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -58,6 +58,9 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     const [feedbackText, setFeedbackText] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState<any>(null);
     const readabilityMode = player.settings?.readabilityMode === 'high' ? 'high' : 'standard';
+    const equipmentDetailMode = ['summary', 'full'].includes(player.settings?.equipmentDetailMode)
+        ? player.settings.equipmentDetailMode
+        : 'auto';
 
     const handleSetReadabilityMode = useCallback((mode: 'standard' | 'high') => {
         actions.setReadabilityMode?.(mode);
@@ -65,6 +68,12 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             type: 'success',
             text: `화면 가독성을 ${mode === 'high' ? '선명하게' : '표준'}로 바꿨습니다.`,
         });
+    }, [actions]);
+
+    const handleSetEquipmentDetailMode = useCallback((mode: 'auto' | 'summary' | 'full') => {
+        actions.setEquipmentDetailMode?.(mode);
+        const label = mode === 'auto' ? '자동' : mode === 'summary' ? '간단히' : '상세';
+        setFeedbackStatus({ type: 'success', text: `장비 정보를 ${label} 표시로 바꿨습니다.` });
     }, [actions]);
 
     const qaContext = useMemo(() => {
@@ -87,9 +96,10 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             level: player.level,
             loc: player.loc,
             readability: readabilityMode,
+            equipmentDetail: equipmentDetailMode,
             session: _SESSION_ID,
         };
-    }, [player.job, player.level, player.loc, player.name, readabilityMode, runtime]);
+    }, [equipmentDetailMode, player.job, player.level, player.loc, player.name, readabilityMode, runtime]);
 
     const qaReadout = useMemo(() => {
         return [
@@ -105,6 +115,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             `LV=${qaContext.level}`,
             `LOC=${qaContext.loc}`,
             `READABILITY=${qaContext.readability}`,
+            `EQUIPMENT_DETAIL=${qaContext.equipmentDetail}`,
             `SESSION=${qaContext.session}`,
         ].join('\n');
     }, [qaContext]);
@@ -128,6 +139,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                 loc: player.loc,
                 activeTitle: player.activeTitle || null,
                 readabilityMode,
+                equipmentDetailMode,
             },
             runtime: runtime || null,
             combatStats: stats
@@ -156,7 +168,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             meta: player.meta || null,
             dailyProtocol: player.stats?.dailyProtocol || null,
         };
-    }, [player, qaContext, readabilityMode, runtime, stats]);
+    }, [equipmentDetailMode, player, qaContext, readabilityMode, runtime, stats]);
 
     const copyQaReadout = useCallback(async () => {
         try {
@@ -282,6 +294,42 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                             </Motion.button>
                         );
                     })}
+                </div>
+            </div>
+
+            <div data-testid="equipment-detail-settings" className="rounded-lg border border-[#d5b180]/18 bg-black/18 p-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-[#f6e7c8] font-readable">
+                        <ListTree size={13} /> 장비 정보 표시
+                    </div>
+                    <span data-testid="equipment-detail-mode-current" className="rounded-md border border-white/8 bg-white/[0.04] px-2 py-1 text-[9px] font-fira text-slate-300/80">
+                        {equipmentDetailMode === 'auto' ? '자동' : equipmentDetailMode === 'summary' ? '간단히' : '상세'}
+                    </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2" role="group" aria-label="장비 정보 표시">
+                    {(['auto', 'summary', 'full'] as const).map((mode) => {
+                        const active = equipmentDetailMode === mode;
+                        return (
+                            <Motion.button
+                                key={mode}
+                                type="button"
+                                whileTap={{ scale: 0.98 }}
+                                data-testid={`equipment-detail-mode-${mode}`}
+                                aria-pressed={active}
+                                onClick={() => handleSetEquipmentDetailMode(mode)}
+                                className={`min-h-[42px] rounded-md border px-2 text-[10px] font-readable font-bold transition-colors ${
+                                    active
+                                        ? 'border-[#d5b180]/34 bg-[#d5b180]/14 text-[#f6e7c8]'
+                                        : 'border-white/8 bg-black/20 text-slate-300/78 hover:border-white/14 hover:bg-white/[0.05]'
+                                }`}
+                            >
+                                {mode === 'auto' ? '자동' : mode === 'summary' ? '간단히' : '상세'}
+                            </Motion.button>
+                        );
+                    })}
+                </div>
+                <div className="mt-2 text-[10px] font-readable leading-[1.4] text-slate-400/78">
+                    자동은 레벨 5 또는 첫 전직 이후 상세 정보를 기본으로 표시합니다.
                 </div>
             </div>
 

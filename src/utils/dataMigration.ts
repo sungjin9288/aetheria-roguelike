@@ -78,6 +78,9 @@ export const migrateData = (rawData: any) => {
     target.settings = {
         ...(target.settings || {}),
         readabilityMode: target.settings?.readabilityMode === 'high' ? 'high' : 'standard',
+        equipmentDetailMode: ['summary', 'full'].includes(target.settings?.equipmentDetailMode)
+            ? target.settings.equipmentDetailMode
+            : 'auto',
     };
     target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0 };
     // cycle 376: bountyDate / bountyIssued normalizations 제거 — 모든 consumer가

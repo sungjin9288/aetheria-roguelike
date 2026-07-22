@@ -1,8 +1,7 @@
 
-/**
- * 몬스터 실루엣 SVG 아이콘
- * 발견: 컬러 표시, 미발견: 검은 실루엣 + 물음표
- */
+import { getMonsterVisual } from '../../utils/monsterVisuals';
+
+/** 발견한 주요 몬스터는 고유 art를, 나머지는 계열 silhouette을 사용한다. */
 
 const SILHOUETTE_PATHS: any = {
     // 기본 (슬라임류)
@@ -28,7 +27,7 @@ const SILHOUETTE_PATHS: any = {
 /**
  * 몬스터 이름에서 실루엣 타입 추론
  */
-const getMonsterType = (name: any) => {
+const getMonsterType = (name: string) => {
     if (!name) return 'humanoid';
     if (name.includes('슬라임')) return 'slime';
     if (name.includes('드래곤') || name.includes('와이번')) return 'dragon';
@@ -55,40 +54,60 @@ const getMonsterType = (name: any) => {
 //   caller (MonsterCodex:98/121) 모두 4 props 명시 전달이라 default 도달
 //   불가. components/icons/ 시리즈 4번째 (cycle 567-569). single-cycle
 //   3-default batch.
-const MonsterIcon = ({ name, discovered, isBoss, size }: any) => {
+interface MonsterIconProps {
+    name: string;
+    discovered: boolean;
+    isBoss: boolean;
+    size: number;
+}
+
+const MonsterIcon = ({ name, discovered, isBoss, size }: MonsterIconProps) => {
+    const visual = discovered ? getMonsterVisual(name) : null;
     const type = isBoss ? 'boss' : getMonsterType(name);
     const path = SILHOUETTE_PATHS[type] || SILHOUETTE_PATHS.humanoid;
 
     return (
         <div
-            className="inline-flex items-center justify-center shrink-0"
+            data-monster-art={!discovered ? 'undiscovered' : visual ? 'exact' : 'family-fallback'}
+            data-monster-key={visual?.key}
+            data-region-family={visual?.regionKey}
+            className="aether-monster-art inline-flex shrink-0 items-center justify-center"
             style={{ width: size, height: size }}
         >
-            <svg
-                width={size * 0.85}
-                height={size * 0.85}
-                viewBox="0 0 24 24"
-                fill={discovered ? 'none' : '#1e293b'}
-                stroke={discovered ? '#e2e8f0' : '#334155'}
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path d={path} />
-                {!discovered && (
-                    <text
-                        x="12"
-                        y="14"
-                        textAnchor="middle"
-                        fill="#64748b"
-                        fontSize="10"
-                        fontWeight="bold"
-                        stroke="none"
-                    >
-                        ?
-                    </text>
-                )}
-            </svg>
+            {visual ? (
+                <img
+                    src={visual.src}
+                    alt=""
+                    draggable={false}
+                    className="h-full w-full object-contain"
+                />
+            ) : (
+                <svg
+                    width={size * 0.85}
+                    height={size * 0.85}
+                    viewBox="0 0 24 24"
+                    fill={discovered ? 'none' : '#1e293b'}
+                    stroke={discovered ? '#e2e8f0' : '#334155'}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path d={path} />
+                    {!discovered && (
+                        <text
+                            x="12"
+                            y="14"
+                            textAnchor="middle"
+                            fill="#64748b"
+                            fontSize="10"
+                            fontWeight="bold"
+                            stroke="none"
+                        >
+                            ?
+                        </text>
+                    )}
+                </svg>
+            )}
         </div>
     );
 };

@@ -11,7 +11,7 @@ test.describe('Navigation', () => {
         await startE2ERun(page, { openStatusConsole: true });
     });
 
-    test('MAP 탭 진입 → 지역 카드 노출', async ({ page }) => {
+    test('MAP 탭 진입 → 현재 위치와 두 갈래 경로가 첫 화면에 노출', async ({ page }) => {
         const mapTab = page.locator('[data-testid$="-tab-map"]').first();
         await expect(mapTab).toBeVisible({ timeout: 8_000 });
         await mapTab.click();
@@ -19,8 +19,50 @@ test.describe('Navigation', () => {
         await expect(page.getByText('세계 지도', { exact: true })).toBeVisible({ timeout: 5_000 });
         await expect(page.getByText('전체 경로', { exact: true })).toBeVisible({ timeout: 5_000 });
         await expect(page.getByTestId('map-progress-summary')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-topology')).toBeVisible({ timeout: 5_000 });
         await expect(page.getByTestId('map-current-location-card')).toBeVisible({ timeout: 5_000 });
         await expect(page.getByTestId('map-route-overview')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-primary-route')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-topology-route-1')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-primary-route')).toHaveAttribute('data-region-family', 'forest');
+        await expect(page.getByTestId('map-topology-route-1')).toHaveAttribute('data-region-family', 'plains');
+        await expect(page.getByTestId('map-topology').locator('img.aether-route-region-art')).toHaveCount(2);
+        await expect(page.getByTestId('map-selected-detail')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('map-route-forecast')).toContainText('위험');
+        await expect(page.getByTestId('map-route-forecast')).toContainText('예상');
+        await expect(page.getByTestId('map-route-forecast')).toContainText('보상');
+        await expect(page.getByTestId('map-route-forecast')).toContainText('귀환');
+        await expect(page.getByTestId('map-move-selected')).toBeEnabled();
+
+        const firstViewport = await page.evaluate(() => {
+            const read = (testId: string) => {
+                const node = document.querySelector(`[data-testid="${testId}"]`);
+                if (!node) return null;
+                const rect = node.getBoundingClientRect();
+                return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right };
+            };
+            return {
+                height: window.innerHeight,
+                width: window.innerWidth,
+                current: read('map-current-location-card'),
+                primary: read('map-primary-route'),
+                secondary: read('map-topology-route-1'),
+            };
+        });
+
+        for (const node of [firstViewport.current, firstViewport.primary, firstViewport.secondary]) {
+            expect(node).not.toBeNull();
+            expect(node!.top).toBeGreaterThanOrEqual(0);
+            expect(node!.bottom).toBeLessThanOrEqual(firstViewport.height);
+            expect(node!.left).toBeGreaterThanOrEqual(0);
+            expect(node!.right).toBeLessThanOrEqual(firstViewport.width);
+        }
+        await page.screenshot({ path: 'playtest-artifacts/monster-region-art/map-region-markers.png' });
+
+        const destination = (await page.getByTestId('map-primary-route').locator('strong').innerText()).trim();
+        await page.getByTestId('map-move-selected').click();
+        await expect(page.getByTestId('map-current-location-card')).toContainText(destination, { timeout: 8_000 });
+
         await expect(page.getByTestId('map-navigator')).toContainText('레벨');
         await expect(page.getByTestId('map-navigator')).not.toContainText('불러오는 중');
     });

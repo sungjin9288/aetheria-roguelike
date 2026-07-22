@@ -1050,12 +1050,12 @@ import { readFile, readdir } from 'node:fs/promises';
       }
   });
 
-  test('cycle 416: ACTION_BUTTONS 4 entry 보존 (attack/skill/swap/escape)', async () => {
+  test('cycle 416: ACTION_BUTTONS 4 entry 보존 (attack/skill/item/escape)', async () => {
       const source = await readSrc('src/components/tabs/CombatPanel.tsx');
       const blockStart = source.indexOf('const ACTION_BUTTONS');
       const blockEnd = source.indexOf('];', blockStart);
       const block = source.slice(blockStart, blockEnd);
-      for (const key of ['attack', 'skill', 'swap', 'escape']) {
+      for (const key of ['attack', 'skill', 'item', 'escape']) {
           const re = new RegExp(`key:\\s*'${key}'`);
           assert.ok(re.test(block), `${key} entry 보존`);
       }

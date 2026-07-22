@@ -6,6 +6,7 @@ import { getDiscoveryOdds } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
 import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
+import { getMapRequiredLevel, getNextMapTowardTarget } from './mapTopology.js';
 
 const toArray = (value: any) => (Array.isArray(value) ? value : []);
 
@@ -381,6 +382,68 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
             void _sortKey;
             return { ...exposed, isRecommended: index === 0 };
         });
+};
+
+export const getExpeditionPreparation = (
+    player: Player,
+    stats: any,
+    currentMap: GameMap | null | undefined,
+    maps: Record<string, GameMap>,
+) => {
+    const tracker = getQuestTracker(player);
+    const routes = getMoveRecommendations(player, stats, currentMap, maps);
+    const currentLocation = player?.loc || '';
+    const targetLocation = tracker?.routeLabel && maps[tracker.routeLabel]
+        ? tracker.routeLabel
+        : null;
+    const missionStep = targetLocation
+        ? getNextMapTowardTarget(maps, currentLocation, targetLocation)
+        : null;
+    const departure = routes.find((route: any) => route.name === missionStep) || routes[0] || null;
+    const destinationMap = departure ? maps[departure.name] : null;
+    const playerLevel = player?.level || 1;
+    const hpPercent = Math.max(0, Math.min(100, Math.round(
+        ((player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1)) * 100,
+    )));
+    const mpPercent = Math.max(0, Math.min(100, Math.round(
+        ((player?.mp || 0) / Math.max(1, stats?.maxMp || player?.maxMp || 1)) * 100,
+    )));
+    const equipmentWarnings = [];
+    if (!player?.equip?.weapon) equipmentWarnings.push('무기 미장착');
+    if (!player?.equip?.armor) equipmentWarnings.push('방어구 미장착');
+
+    const isClaimable = tracker?.kind === 'claimable';
+    const canDepart = Boolean(
+        currentMap?.type === 'safe'
+        && departure
+        && destinationMap
+        && playerLevel >= getMapRequiredLevel(destinationMap, playerLevel),
+    );
+    const readinessLabel = isClaimable
+        ? '보상 대기'
+        : !canDepart
+            ? '경로 확인 필요'
+            : hpPercent < 65
+                ? '휴식 권장'
+                : !player?.equip?.weapon
+                    ? '무기 필요'
+                    : equipmentWarnings.length > 0
+                        ? '장비 확인'
+                        : '출발 가능';
+
+    return {
+        tracker,
+        departure,
+        canDepart,
+        isClaimable,
+        readinessLabel,
+        missionTitle: tracker?.title || '자유 원정',
+        missionStatus: tracker?.progressLabel || '임무 선택 전',
+        destination: departure?.name || '이동 경로 없음',
+        resourceLabel: `HP ${hpPercent}% · NRG ${mpPercent}%`,
+        equipmentLabel: equipmentWarnings.length > 0 ? equipmentWarnings.join(' · ') : '주요 장비 확인',
+        returnLabel: departure?.routePlan?.exitRule || tracker?.returnLabel || '임무 목표 후 마을 복귀',
+    };
 };
 
 // cycle 509: runtimeState default 제거 — 1 callsite (ControlPanel:57) 항상

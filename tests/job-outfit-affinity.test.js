@@ -41,6 +41,57 @@ test('전사 + 롱소드 + 가죽 갑옷(전사 jobs 포함) → 2/2 부분', ()
     assert.ok(aff.bonus.atkMult >= 1.15);
 });
 
+test('호환 양손무기 단독은 주무기와 보조 손을 차지해 2/3으로 계산', () => {
+    const aff = getJobOutfitAffinity({
+        job: '레인저',
+        equip: {
+            weapon: { name: '사냥꾼의 활', type: 'weapon', hands: 2, jobs: ['레인저'] },
+            armor: null,
+            offhand: null,
+        },
+    });
+
+    assert.equal(aff.matchCount, 2);
+    assert.equal(aff.tier, 'partial2');
+    assert.equal(aff.slots.weapon, true);
+    assert.equal(aff.slots.offhand, true);
+    assert.equal(aff.twoHandCounted, true);
+});
+
+test('호환 양손무기와 방어구는 3/3 풀세트 효과를 발동', () => {
+    const aff = getJobOutfitAffinity({
+        job: '레인저',
+        equip: {
+            weapon: { name: '사냥꾼의 활', type: 'weapon', hands: 2, jobs: ['레인저'] },
+            armor: { name: '사냥꾼의 갑옷', type: 'armor', jobs: ['레인저'] },
+            offhand: null,
+        },
+    });
+
+    assert.equal(aff.matchCount, 3);
+    assert.equal(aff.tier, 'full');
+    assert.equal(aff.bonus.atkMult, 1.30);
+    assert.equal(aff.bonus.defMult, 1.20);
+    assert.equal(aff.bonus.hpBonus, 0.10);
+    assert.equal(aff.bonus.mpBonus, 0.15);
+});
+
+test('직업과 맞지 않는 양손무기는 보조 손 피스를 대신 채우지 않음', () => {
+    const aff = getJobOutfitAffinity({
+        job: '전사',
+        equip: {
+            weapon: { name: '사냥꾼의 활', type: 'weapon', hands: 2, jobs: ['레인저'] },
+            armor: { name: '판금 갑옷', type: 'armor', jobs: ['전사'] },
+            offhand: null,
+        },
+    });
+
+    assert.equal(aff.matchCount, 1);
+    assert.equal(aff.tier, 'partial1');
+    assert.equal(aff.slots.offhand, false);
+    assert.equal(aff.twoHandCounted, false);
+});
+
 test('전사 풀 outfit (weapon + armor + offhand 모두 jobs 매칭) → full', () => {
     const aff = getJobOutfitAffinity({
         job: '전사',

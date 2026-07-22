@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle, ListTree } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
-import { getEquipmentIdentity, getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentIdentity, getItemStatText, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
 import { getEnhanceAvailability } from '../utils/enhancementUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
@@ -74,7 +74,9 @@ const getItemTags = (item: any) => {
 //   (Dashboard:162) 모두 명시 전달이라 도달 불가. 청소 메가 시리즈 66번째.
 const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotlight, onClearSpotlight }: SmartInventoryProps) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
-    const [hoveredItem, setHoveredItem] = React.useState<any>(null);
+    const [detailOverride, setDetailOverride] = React.useState<boolean | null>(null);
+    const disclosure = getEquipmentDisclosure(player);
+    const showDetails = detailOverride ?? disclosure.showDetails;
     const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
     const spotlightSet = useMemo(() => new Set(spotlightNames), [spotlightNames]);
     const traitProfile = useMemo(
@@ -105,18 +107,9 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
 
     // 추천 장착 계산 (최고 val 기준)
     const getEquipPreview = useCallback((item: any) => {
-        const currentProfile = getEquipmentProfile(player.equip || {});
-        const nextEquip = getNextEquipmentState(player.equip || {}, item);
-        const nextProfile = getEquipmentProfile(nextEquip);
-
-        return {
-            atk: (nextProfile.mainAttack + nextProfile.offhandAttack) - (currentProfile.mainAttack + currentProfile.offhandAttack),
-            def: ((nextEquip.armor?.val || 0) + nextProfile.shieldDef) - ((player.equip?.armor?.val || 0) + currentProfile.shieldDef),
-            crit: Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100),
-            mp: nextProfile.mpBonus - currentProfile.mpBonus,
-            score: (nextProfile.mainAttack + nextProfile.offhandAttack) + (nextProfile.critBonus * 120) + (nextProfile.mpBonus * 0.3),
-        };
-    }, [player.equip]);
+        const decision = getEquipmentDecision(player, item);
+        return decision ? { ...decision.diff, score: decision.score } : { atk: 0, def: 0, crit: 0, mp: 0, score: 0 };
+    }, [player]);
 
     const bestWeapon = useMemo(() =>
         (player.inv || [])
@@ -131,17 +124,10 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
         [player.inv, player.job]
     );
 
-    const getCompareDiff = useCallback((item: any) => {
-        if (!item) return null;
-        if (['weapon', 'armor', 'shield'].includes(item.type)) return getEquipPreview(item);
-        return null;
-    }, [getEquipPreview]);
-
     const isEquipUpgrade = useCallback((item: any) => {
-        const diff = getCompareDiff(item);
-        if (!diff) return false;
-        return getEquipmentScore(diff) > 0;
-    }, [getCompareDiff]);
+        const decision = getEquipmentDecision(player, item);
+        return Boolean(decision?.equipable && decision.score > 0);
+    }, [player]);
 
     const handleSmartEquip = () => {
         if (bestWeapon && isEquipUpgrade(bestWeapon)) actions.useItem(bestWeapon);
@@ -187,6 +173,29 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                     )}
                 </Motion.div>
             )}
+
+            <div
+                data-testid="inventory-equipment-disclosure"
+                data-equipment-view={showDetails ? 'full' : 'summary'}
+                className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-black/18 px-3 py-2"
+            >
+                <div className="min-w-0">
+                    <div className="text-[11px] font-readable font-bold text-white/88">장비 비교</div>
+                    <div className="mt-0.5 text-[10px] font-readable text-slate-400/78">
+                        {showDetails ? '전체 능력치와 강화 조건 표시' : '추천·대표 변화·장착·세트만 표시'}
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    data-testid="inventory-detail-toggle"
+                    aria-expanded={showDetails}
+                    onClick={() => setDetailOverride(!showDetails)}
+                    className="inline-flex min-h-[38px] shrink-0 items-center gap-1.5 rounded-md border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 text-[10px] font-readable font-bold text-[#dff7f5]"
+                >
+                    <ListTree size={13} />
+                    {showDetails ? '간단히 보기' : '상세 보기'}
+                </button>
+            </div>
 
             {/* Filter Bar */}
             <div className="rounded-[1rem] border border-white/8 bg-black/16 px-2 py-2">
@@ -250,8 +259,10 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                     </div>
                 )}
                 {filtered.map(({ item, count }, i) => {
-                    const diff = getCompareDiff(item);
-                    const canEquip = !['weapon', 'armor', 'shield'].includes(item.type) || canEquipItem(item, player.job);
+                    const decision = getEquipmentDecision(player, item);
+                    const diff = decision?.diff || null;
+                    const isEquipment = Boolean(decision);
+                    const canEquip = decision?.equipable ?? true;
                     const itemIdentity = getEquipmentIdentity(item);
                     const isCurrentEquip =
                         getEquipmentIdentity(player.equip?.weapon) === itemIdentity ||
@@ -285,8 +296,6 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.04 }}
-                            onMouseEnter={() => setHoveredItem(item.name)}
-                            onMouseLeave={() => setHoveredItem(null)}
                             data-is-signature={isSignature ? 'true' : 'false'}
                             style={rowStyle}
                             className={`min-h-[54px] p-3 rounded-[1rem] flex justify-between items-center group transition-all cursor-pointer ${rowClass}`}
@@ -319,9 +328,9 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                     )}
                                     {isSpotlighted && <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
-                                    {resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
+                                    {showDetails && resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
                                     {!canEquip && <SignalBadge tone="danger" size="sm">직업 제한</SignalBadge>}
-                                    {canEquip && Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
+                                    {showDetails && canEquip && Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
                                         <span
                                             data-testid={`inventory-job-affinity-${item.id || item.name}`}
                                             title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
@@ -337,8 +346,31 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                     )}
                                 </div>
 
-                                {/* Compare diff (on hover or always for equip items) */}
-                                {diff && (hoveredItem === item.name || isCurrentEquip) && (
+                                {decision && (
+                                    <div
+                                        data-testid={`inventory-equipment-decision-${item.id || item.name}`}
+                                        className="mt-1.5 flex flex-wrap items-center gap-1.5"
+                                    >
+                                        <SignalBadge tone={isCurrentEquip ? 'equipped' : decision.tone === 'positive' ? 'recommended' : decision.tone === 'negative' ? 'warning' : decision.tone === 'blocked' ? 'danger' : 'neutral'} size="sm">
+                                            {isCurrentEquip ? '장착 중' : decision.recommendation}
+                                        </SignalBadge>
+                                        <span className={`text-[10px] font-readable font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
+                                            {decision.primaryDelta.text}
+                                        </span>
+                                        <SignalBadge tone={decision.equipable ? 'success' : 'danger'} size="sm">
+                                            {decision.equipable ? '장착 가능' : '장착 불가'}
+                                        </SignalBadge>
+                                        <SignalBadge
+                                            data-testid={`inventory-set-contribution-${item.id || item.name}`}
+                                            tone={decision.setContribution > 0 ? 'upgrade' : 'neutral'}
+                                            size="sm"
+                                        >
+                                            {decision.setContributionText}
+                                        </SignalBadge>
+                                    </div>
+                                )}
+
+                                {showDetails && diff && (
                                     <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1">
                                         {diff.atk !== 0 && <StatDiff val={diff.atk} label="공격력" suffix="" />}
                                         {diff.def !== 0 && <StatDiff val={diff.def} label="방어력" suffix="" />}
@@ -347,10 +379,10 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                         {diff.atk === 0 && diff.def === 0 && diff.crit === 0 && diff.mp === 0 && <Minus size={11} className="text-cyber-blue/30" />}
                                     </div>
                                 )}
-                                {(getItemStatText(item) || item.desc_stat) && (
+                                {(!isEquipment || showDetails) && (getItemStatText(item) || item.desc_stat) && (
                                     <div className="mt-0.5 truncate font-fira text-slate-400/72 text-sm">{getItemStatText(item) || item.desc_stat}</div>
                                 )}
-                                {enhanceRequirement && (
+                                {showDetails && enhanceRequirement && (
                                     <div className="mt-0.5 space-y-0.5 text-[11px] font-fira">
                                         <div className="text-slate-500/88">
                                             강화 비용: 골드 {enhanceRequirement.gold.toLocaleString()} · 강화 재료 {enhanceRequirement.materials}개
@@ -360,7 +392,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                         </div>
                                     </div>
                                 )}
-                                {getItemTags(item).length > 0 && (
+                                {showDetails && getItemTags(item).length > 0 && (
                                     <div className="mt-1 flex flex-wrap gap-1">
                                         {getItemTags(item).map((tag: any) => (
                                             <SignalBadge key={`${item.name}_${tag}`} tone="neutral" size="sm">{tag}</SignalBadge>
@@ -376,7 +408,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                 )}
                             </div>
                             <div className="flex items-center gap-1 ml-2 shrink-0">
-                                {enhanceState.canEnhance && actions.enhanceItem && (
+                                {showDetails && enhanceState.canEnhance && actions.enhanceItem && (
                                     <Motion.button
                                         whileTap={{ scale: 0.95 }}
                                         disabled={!enhanceState.affordable}

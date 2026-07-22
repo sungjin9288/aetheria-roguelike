@@ -6,6 +6,7 @@
  *
  * 기존 데이터 활용: items.js의 모든 장비에 `jobs: [...]` 배열이 있음.
  * weapon, armor, offhand 각 장비의 jobs[]에 player.job이 포함되는지 검사.
+ * 양손무기는 보조 손까지 점유하므로 호환 무기라면 2피스로 계산한다.
  * 매칭 카운트(0~3)에 따라 누적 보너스 — partial1 / partial2 / full.
  *
  * Pure 함수, side effect 없음.
@@ -29,6 +30,7 @@ interface OutfitAffinity {
     label: string | null;
     tier: AffinityTier;
     slots: { weapon: boolean; armor: boolean; offhand: boolean };
+    twoHandCounted: boolean;
 }
 
 interface ItemLike {
@@ -37,12 +39,14 @@ interface ItemLike {
     tier?: number;
     price?: number;
     jobs?: string[];
+    hands?: number;
 }
 
 // cycle 60 phase D: Player 도메인 타입 사용 (any 대신).
 // 이 함수는 player.job + player.equip.{weapon,armor,offhand}만 보면 되므로
 // Player의 부분 인터페이스로 충분.
 import type { Player } from '../types/index.js';
+import { isTwoHandWeapon } from './equipmentUtils.js';
 
 interface ItemsDb {
     weapons?: ItemLike[];
@@ -115,14 +119,17 @@ export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
         label: null,
         tier: 'none',
         slots: { weapon: false, armor: false, offhand: false },
+        twoHandCounted: false,
     };
     if (!player?.job) return empty;
 
     const job = player.job;
+    const weaponMatches = isJobMatch(player.equip?.weapon, job);
+    const twoHandCounted = weaponMatches && isTwoHandWeapon(player.equip?.weapon);
     const slots = {
-        weapon: isJobMatch(player.equip?.weapon, job),
+        weapon: weaponMatches,
         armor: isJobMatch(player.equip?.armor, job),
-        offhand: isJobMatch(player.equip?.offhand, job),
+        offhand: isJobMatch(player.equip?.offhand, job) || twoHandCounted,
     };
     const matchCount =
         (slots.weapon ? 1 : 0) +
@@ -130,7 +137,7 @@ export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
         (slots.offhand ? 1 : 0);
 
     if (matchCount === 0) {
-        return { ...empty, slots };
+        return { ...empty, slots, twoHandCounted };
     }
 
     let bonus: AffinityBonus;
@@ -147,7 +154,7 @@ export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
     }
     const label = buildAffinityLabel(job, tier);
 
-    return { matchCount, bonus, label, tier, slots };
+    return { matchCount, bonus, label, tier, slots, twoHandCounted };
 };
 
 /**

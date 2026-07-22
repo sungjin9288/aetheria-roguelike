@@ -55,9 +55,9 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
     });
     const combatForecastCells = combatForecast
         ? [
-            { label: '적의 행동', value: combatForecast.intent },
-            { label: '대응', value: combatForecast.response },
-            { label: '기회', value: combatForecast.window },
+            { label: '위협', value: combatForecast.intent },
+            { label: '권장 대응', value: combatForecast.response },
+            { label: '예상 흐름', value: combatForecast.window },
         ]
         : [];
 

@@ -1042,7 +1042,8 @@ import { readFile } from 'node:fs/promises';
    *     export const getNextEquipmentState = (equip: EquipSlots = {}, item: Item | null | undefined) => {...}
    * - 호출 사이트 모두 명시 인자 전달:
    *     · ShopPanel.tsx:59 — getNextEquipmentState(equip, item).
-   *     · SmartInventory.tsx:109 — getNextEquipmentState(player.equip, item).
+   *     · SmartInventory.tsx → getEquipmentDecision(player, item) →
+   *       equipmentUtils.ts — getNextEquipmentState(equip, item).
    *     · _helpers.ts:41 — getNextEquipmentState(equip, item).
    *     · useInventoryActions.ts:62 — getNextEquipmentState(currentEquip, inventoryItem).
    *     · tests/equipment-utils.test.js — 모두 {} 또는 명시 객체 전달.
@@ -1073,13 +1074,16 @@ import { readFile } from 'node:fs/promises';
           'getNextEquipmentState equip 파라미터 보존 (default 없이)');
   });
 
-  test('cycle 633: 4 production callsite 명시 보존', async () => {
+  test('cycle 633: 4 production path의 명시 인자 보존', async () => {
       const sp = await readSrc('src/components/ShopPanel.tsx');
       assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(sp),
           'ShopPanel callsite 보존');
       const si = await readSrc('src/components/SmartInventory.tsx');
-      assert.ok(/getNextEquipmentState\(player\.equip(?: \|\| \{\})?,\s*item\)/.test(si),
-          'SmartInventory callsite 보존');
+      assert.ok(/getEquipmentDecision\(player,\s*item\)/.test(si),
+          'SmartInventory 공용 장비 판단 path 보존');
+      const eu = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(eu),
+          '공용 장비 판단 내부 explicit callsite 보존');
       const ch = await readSrc('src/hooks/combatActions/_helpers.ts');
       assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(ch),
           '_helpers callsite 보존');

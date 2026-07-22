@@ -1,5 +1,143 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-07-22: completed the shared encounter and region visual language):
+- Replaced the first-session generic enemy silhouettes with 23 exact chibi pixel-art portraits across forest, plains, ruins, and fire families, including the two planned fire bosses.
+- Connected elite and boss-phase aliases to the same source monster, then made combat portraits and map markers share one region-family registry while preserving undiscovered and unsupported-enemy fallbacks.
+- Retained all five generated source sheets, explicit crop coordinates, checkerboard-removal processing, fixed 160px/96px RGBA outputs, and a generated contact sheet for reproducible art review.
+- Kept blind-map information hidden and did not change encounter data, difficulty, drops, item art, story order, or progression pacing.
+
+Verification:
+- Focused art and legacy contracts -> 636/636 pass.
+- `npm run verify:full` -> type-check, lint, unit 3345/3345, build guard, desktop/mobile smoke, and Playwright E2E 32/32 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, and Apple Development signed iOS archive -> pass.
+- Visual evidence: `playtest-artifacts/monster-region-art/contact-sheet.png`, `combat-forest.png`, and `map-region-markers.png`.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-22 21:33:20 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-22 21:33:44 KST`, `1.1.0 (2)`).
+- Physical iPhone delivery installed the latest archive and rechecked metadata, but launch was denied after the device auto-locked. The installed-app launch/60-second hold remains pending without another install.
+
+Next action:
+- Unlock the installed iPhone and run `npm run ios:device:launch-smoke`, then complete the fresh-save first-session pacing and visual-readability route. Physical Android QA/release signing, Apple Distribution identity, and approved TestFlight upload remain separate blockers.
+
+Done (2026-07-22: progressively disclosed equipment decisions without removing depth):
+- Added one shared equipment decision model for recommendation, primary stat delta, equipability, and job-set contribution across Gear, Inventory, and Shop.
+- Started level 1-4 adventurers in a summary view, switched level 5 or first-job-change players to full detail by default, and preserved explicit `auto / summary / full` preferences through save migration.
+- Kept affinity bonuses, resonance, signature-set guidance, catalog, complete comparisons, and enhancement requirements behind one visible detail action instead of deleting or weakening them.
+- Kept two-hand job equipment at two set contributions and one-hand, armor, and offhand equipment at one contribution in both summary and full views.
+
+Verification:
+- Focused disclosure, migration, and affinity contracts -> 22/22 pass.
+- `npm run verify:full` -> type-check, lint, unit 3340/3340, build guard, desktop/mobile smoke, and Playwright E2E 32/32 pass.
+- Isolated Equipment, Inventory, and Shop E2E -> 7/7 pass, including 390x844 summary/full behavior, two-hand `set +2`, and page-width assertions.
+- `npm run mobile:doctor` and `npm run cap:sync` -> pass; Android release signing and iOS Distribution identity remain unavailable.
+- Visual evidence: `playtest-artifacts/mobile-equipment-disclosure/equipment-summary.png` and `inventory-summary.png`. Latest native archive remains the Slice 52 `build/ios/Aetheria.xcarchive` until the grouped UI rebuild.
+
+Next action:
+- Complete Slice 57 Encounter and Region Art Pass, then rebuild grouped native packages and rerun physical-device QA.
+
+Done (2026-07-22: connected mission comparison to one expedition departure):
+- Replaced repeated full quest cards with three compact comparison rows for objective, destination, risk, reward, and action state; moved lore, resonance, and full route planning into a selected detail sheet.
+- Preserved early story and level gates by filling a short recommendation set with an explicit locked preview instead of unlocking a third mission.
+- Added a town expedition-preparation surface for the active mission, shortest-path next destination, HP/NRG, missing weapon or armor, return rule, and one direct departure action.
+- Kept claimable rewards ahead of departure and preserved the existing map-signal and first-session guidance contracts inside the preparation surface.
+
+Verification:
+- Focused quest, adventure, and readability contracts -> 52/52 pass.
+- `npm run verify:full` -> type-check, lint, unit 3335/3335, build guard, desktop/mobile smoke, and Playwright E2E 31/31 pass.
+- Isolated Quest/Explore E2E -> 7/7 pass, including 390x844 three-row geometry and accepted-mission departure to `고요한 숲`.
+- `npm run mobile:doctor` and `npm run cap:sync` -> pass; Android release signing and iOS Distribution identity remain unavailable.
+- Visual evidence: `playtest-artifacts/mobile-quest-expedition/quest-board-compact.png` and `playtest-artifacts/mobile-quest-expedition/expedition-prep.png`. Latest native archive remains the Slice 52 `build/ios/Aetheria.xcarchive` until the grouped UI rebuild.
+
+Next action:
+- Implement Slice 56 Progressive Equipment Disclosure, then complete encounter and region art before rebuilding native packages and rerunning physical-device QA.
+
+Done (2026-07-22: put the current combat decision before history):
+- Compressed the in-combat player status to level, HP, and NRG, then grouped enemy art, identity, HP, intent, and boss tactics into the encounter stage.
+- Simplified the forecast to `위협 -> 권장 대응 -> 예상 흐름` and kept attack, skill, item, and escape as four stable 48px primary actions in the first mobile viewport.
+- Reduced the default combat history to the latest three entries after the actions, with an explicit expansion control that preserves action position and state.
+- Added deterministic regular-enemy and boss fixtures plus 390x844 geometry coverage for the first viewport, item/log expansion, signature, counter, and escape paths.
+
+Verification:
+- Focused Combat Focus contract -> 6/6 pass.
+- `npm run verify:full` -> type-check, lint, unit 3333/3333, build guard, desktop/mobile smoke, and Playwright E2E 29/29 pass.
+- Isolated Combat Focus E2E -> 3/3 pass.
+- `npm run mobile:doctor` and `npm run cap:sync` -> pass; Android release signing and iOS Distribution identity remain unavailable.
+- Visual evidence: `playtest-artifacts/mobile-combat-focus/05-combat-3.png` and `playtest-artifacts/mobile-combat-focus/boss-focus.png`. Latest native archive remains the Slice 52 `build/ios/Aetheria.xcarchive` until the grouped UI rebuild.
+
+Next action:
+- Implement Slice 55 Compact Quest Board and Expedition Prep, then continue progressive equipment disclosure and encounter art before rebuilding native packages and rerunning physical-device QA.
+
+Done (2026-07-22: replaced the map card list with a first-viewport route topology):
+- Rebuilt `MAP` around the current region and its actual adjacent exits, with a shared topology renderer used by both the archive map and the field movement surface.
+- Marked the recommended exit, the next step toward the active mission, bosses, locks, and regional signatures with text and icons instead of color alone.
+- Added a shortest-path helper so a distant mission points to the correct next branch rather than pretending the destination is directly reachable.
+- Kept danger, encounter, reward, return guidance, and the direct move action immediately below the topology; preserved the full world route and lore as collapsed text fallbacks.
+- Preserved blind-map information limits and disabled movement for non-adjacent or level-locked destinations.
+
+Verification:
+- Focused map and readability contracts -> 34/34 pass.
+- `npm run verify:full` -> type-check, lint, unit 3327/3327, build guard, desktop/mobile smoke, and Playwright E2E 26/26 pass.
+- Isolated mobile navigation E2E -> 7/7 pass, including 390x844 viewport geometry and current-node change after moving.
+- `npm run mobile:doctor` and `npm run cap:sync` -> pass; Android release signing and iOS Distribution identity remain unavailable.
+- Visual evidence: `playtest-artifacts/mobile/08a-map-tab.png`. Latest native archive remains `build/ios/Aetheria.xcarchive` (`2026-07-22 17:48:30 KST`, `1.1.0 (2)`) until the planned UI group is complete.
+
+Next action:
+- Implement Slice 54 Combat Focus Mode, then continue Quest/Expedition prep, progressive equipment disclosure, and encounter art before rebuilding the grouped native package and rerunning physical-device QA.
+
+Done (2026-07-22: restored Slice 52 iPhone delivery and established competitor-informed design plan):
+- Restored the Apple Development account/profile path and regenerated `build/ios/Aetheria.xcarchive` from the current Slice 52 web bundle at `2026-07-22 17:48:30 KST`.
+- Installed `Aetheria Roguelike 1.1.0 (2)` on the paired iPhone 14 Pro Max, then reran the installed-app launch path after the developer profile was trusted.
+- `npm run ios:device:launch-smoke` launched PID `39611` and confirmed the same process after the 60-second foreground hold.
+- Researched Shattered Pixel Dungeon, Buriedbornes2, Slice & Dice, Darkest Dungeon, and Loop Hero against the current mobile captures and existing completed readability roadmap.
+- Added `docs/COMPETITOR_FLOW_DESIGN_PLAN_2026-07-22.md` with the implementation order `Map topology -> Combat focus -> Quest/Expedition prep -> Equipment disclosure -> Encounter art`, target files, non-goals, and 390x844 acceptance criteria.
+
+Next action:
+- Implement Slice 53 Map Navigator V2 first, then rerun the fresh-save physical iPhone route to validate both the Slice 52 pacing contract and first-viewport readability. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate blockers.
+
+Done (2026-07-22: rebalanced cumulative early-game leveling):
+- Reproduced the first-session route that reached Lv3 after the boar quest and Lv4 after the spider quest because combat, first-visit, and quest EXP stacked without a cumulative pacing contract.
+- Applied 60% combat EXP pacing through Lv4 after reward multipliers, then restored full combat EXP from Lv5 onward.
+- Lowered the Lv1-10 quest EXP caps from `60-520` to `40-440` while preserving the existing one-quest maximum level-up guard.
+- Fixed the acceptance route at Lv1 after the first story and slime quests, Lv2 after the boar quest, and early Lv3 (`82/263`) after the spider quest.
+
+Verification:
+- Focused progression contracts -> 13/13 pass.
+- Type-check, lint, unit 3327/3327, build guard, desktop/mobile smoke, and Playwright E2E 26/26 -> pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, and Android debug build -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-22 17:38:20 KST`).
+- iOS archive -> blocked after both normal and automatic-provisioning attempts: Xcode has no configured account and no `com.aetheria.roguelike` Development provisioning profile. Existing archive remains the Slice 51 artifact from `2026-07-21 11:40:31 KST` and does not contain Slice 52.
+
+Next action:
+- Restore the Apple account and Development profile in Xcode, rebuild the archive, then run the early quest route on a fresh physical-device session. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate release blockers.
+
+Done (2026-07-21: made two-hand weapons complete job outfit sets fairly):
+- Reproduced the job outfit path where a compatible two-hand weapon plus compatible armor stopped at `2/3`, even though the weapon also prevents use of the offhand slot.
+- Counted a job-compatible two-hand weapon as the weapon and offhand contributions, so it reaches `2/3` alone and `3/3` with compatible armor.
+- Preserved the existing one-hand three-item path and prevented an incompatible two-hand weapon from contributing the extra piece.
+- Replaced the misleading empty offhand row with `양손 무기가 함께 사용` and explained the two-piece rule in the progress card and set catalog.
+
+Verification:
+- Focused affinity, language, and existing signature two-hand contracts -> 40/40 pass.
+- `npm run verify:full` -> type-check, lint, unit 3325/3325, build guard, desktop/mobile smoke, and Playwright e2e 26/26 pass.
+- New rendered E2E -> ranger bow plus compatible armor reports `3/3`, `full`, full-set activation, and two-hand offhand occupancy.
+- `npm run mobile:doctor`, `npm run cap:sync`, Android debug build, Apple Development signed iOS archive, and physical iPhone install/launch/60-second hold -> pass.
+- Latest APK: `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-21 11:41:46 KST`). Latest archive: `build/ios/Aetheria.xcarchive` (`2026-07-21 11:40:31 KST`, `1.1.0 (2)`).
+- Physical iPhone delivery -> install URL `file:///private/var/containers/Bundle/Application/57E3E93D-C732-42BA-870A-2A79F76F4E6F/App.app/`; foreground PID `33529` remained alive after the 60-second hold.
+
+Next action:
+- Manually confirm the `3/3` set presentation with a compatible bow, spear, or staff plus armor on the installed iPhone build. Physical Android QA/release signing and iOS Distribution/TestFlight approval remain separate release blockers.
+
+Done (2026-07-21: completed physical iPhone launch-only delivery verification):
+- Ran `npm run ios:device:launch-smoke` after the target iPhone was unlocked.
+- Confirmed installed `com.aetheria.roguelike` metadata at version `1.1.0 (2)` and skipped archive installation as designed.
+- Launched the installed app successfully and confirmed foreground PID `33234` remained alive after the 60-second hold.
+- Closed the Slice 50 iPhone launch blocker without changing app or native package contents.
+
+Verification:
+- `npm run ios:device:launch-smoke` -> pass: metadata, launch, initial process check, 60-second hold, and final process check all completed.
+- Latest APK remains `android/app/build/outputs/apk/debug/app-debug.apk` (`2026-07-16 03:34:01 KST`); latest archive remains `build/ios/Aetheria.xcarchive` (`2026-07-16 03:34:07 KST`, `1.1.0 (2)`).
+
+Next action:
+- Connect and authorize a physical Android for its 60-second smoke and manual 5-minute QA, then provide Android release signing inputs. iOS Distribution identity/profile and explicit TestFlight upload approval remain separate release blockers.
+
 Done (2026-07-16: added launch-only iOS smoke for an already installed archive):
 - Reproduced the RC loop where a roughly 75-second, 200MB archive install lets the iPhone auto-lock before launch, while every full smoke retry installs the same app again.
 - Added `npm run ios:device:launch-smoke` to verify installed bundle metadata, skip install, launch Aetheria, and perform the existing process and 60-second hold checks.

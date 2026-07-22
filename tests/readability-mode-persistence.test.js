@@ -9,6 +9,7 @@ const clone = (value) => JSON.parse(JSON.stringify(value));
 
 test('initial player state persists standard readability mode by default', () => {
     assert.equal(INITIAL_STATE.player.settings?.readabilityMode, 'standard');
+    assert.equal(INITIAL_STATE.player.settings?.equipmentDetailMode, 'auto');
 });
 
 test('legacy saves receive a standard readability mode during migration', () => {
@@ -18,6 +19,19 @@ test('legacy saves receive a standard readability mode during migration', () => 
     const migrated = migrateData(legacySave);
 
     assert.equal(migrated.player.settings.readabilityMode, 'standard');
+    assert.equal(migrated.player.settings.equipmentDetailMode, 'auto');
+});
+
+test('equipment detail mode is sanitized and preserves explicit choices during migration', () => {
+    const invalidSave = clone(INITIAL_STATE);
+    invalidSave.player.settings = { equipmentDetailMode: 'everything' };
+    assert.equal(migrateData(invalidSave).player.settings.equipmentDetailMode, 'auto');
+
+    for (const mode of ['summary', 'full']) {
+        const save = clone(INITIAL_STATE);
+        save.player.settings.equipmentDetailMode = mode;
+        assert.equal(migrateData(save).player.settings.equipmentDetailMode, mode);
+    }
 });
 
 test('invalid readability mode values are sanitized during migration', () => {

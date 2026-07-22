@@ -10,13 +10,15 @@ import {
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
-import { getAdventureGuidance, getMoveRecommendations, getQuestTracker } from '../utils/adventureGuide';
+import { getAdventureGuidance, getExpeditionPreparation, getMoveRecommendations, getQuestTracker } from '../utils/adventureGuide';
 import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
 import { soundManager } from '../systems/SoundManager';
 import { GS } from '../reducers/gameStates';
 import SignalBadge from './SignalBadge';
 import { getGravesAtLoc } from '../utils/graveUtils';
+import { getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
+import RouteTopology, { type RouteTopologyEntry } from './RouteTopology';
 
 import CombatPanel from './tabs/CombatPanel';
 import JobChangePanel from './tabs/JobChangePanel';
@@ -117,6 +119,85 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
           );
         })}
       </div>
+    </section>
+  );
+};
+
+const ExpeditionPrepStrip = ({ preparation, guidance, onDepart, onClaimReward }: {
+  preparation: any;
+  guidance: any;
+  onDepart: () => void;
+  onClaimReward?: () => void;
+}) => {
+  const checks = [
+    { label: '목적지', value: preparation.destination },
+    { label: '자원', value: preparation.resourceLabel },
+    { label: '장비', value: preparation.equipmentLabel },
+    { label: '귀환 기준', value: preparation.returnLabel },
+  ];
+
+  return (
+    <section
+      data-testid="control-expedition-prep"
+      data-expedition-readiness={preparation.readinessLabel}
+      aria-label="원정 준비"
+      className="aether-expedition-prep overflow-hidden px-3 py-2.5"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="aether-label text-[#b9f1ec]/72">원정 준비</div>
+          <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-white">
+            {preparation.missionTitle}
+          </div>
+          <div className="mt-0.5 font-readable text-[10px] text-slate-300/76">
+            {preparation.missionStatus}
+          </div>
+        </div>
+        <SignalBadge tone={preparation.readinessLabel === '출발 가능' ? 'recommended' : 'neutral'} size="sm">
+          {preparation.readinessLabel}
+        </SignalBadge>
+      </div>
+
+      {!preparation.tracker && guidance?.title && (
+        <div data-testid="adventure-guidance-strip" className="mt-2 border-t border-white/8 pt-2">
+          <div className="font-readable text-[10px] font-semibold text-[#dff7f5]">{guidance.title}</div>
+          <div className="mt-0.5 line-clamp-2 font-readable text-[9px] leading-snug text-slate-300/82">{guidance.detail}</div>
+        </div>
+      )}
+
+      <div className="mt-2 grid grid-cols-2 gap-1">
+        {checks.map((check) => (
+          <div key={check.label} className="aether-expedition-check min-w-0 px-2 py-1.5">
+            <div className="font-readable text-[8px] font-bold text-slate-400">{check.label}</div>
+            <div className="mt-0.5 truncate font-readable text-[10px] font-semibold text-slate-100/90" title={check.value}>
+              {check.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {preparation.isClaimable ? (
+        <button
+          type="button"
+          data-testid="control-claim-quest-reward"
+          disabled={!onClaimReward}
+          onClick={onClaimReward}
+          className="aether-cta-gold mt-2 min-h-[48px] w-full px-3 font-readable text-xs font-bold text-[#f6e7c8] disabled:cursor-not-allowed disabled:opacity-55"
+        >
+          임무 보상 받기
+        </button>
+      ) : (
+        <button
+          type="button"
+          data-testid="control-expedition-start"
+          disabled={!preparation.canDepart}
+          onClick={onDepart}
+          className="aether-cta-primary mt-2 flex min-h-[48px] w-full items-center justify-center gap-2 px-3 font-readable text-xs font-bold text-[#dff7f5] disabled:cursor-not-allowed disabled:opacity-55"
+        >
+          <Route size={14} />
+          {preparation.canDepart ? `${preparation.destination}으로 출발` : '출발 경로 확인'}
+        </button>
+      )}
     </section>
   );
 };
@@ -229,9 +310,30 @@ const ControlPanel = ({
   //   (QuestBoardPanel/ShopPanel/EventPanel) cascade 정리. 본체 변수 read 0건이라
   //   destructure에서 완전 제거. interface도 정리.
   const mapData = DB.MAPS[player.loc as string];
+  const currentLocation = player.loc || '';
+  const playerLevel = player.level || 1;
   const questTracker = getQuestTracker(player);
   const guidance = getAdventureGuidance(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, gameState);
   const moveRecommendations = getMoveRecommendations(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, DB.MAPS);
+  const expeditionPreparation = getExpeditionPreparation(
+    player,
+    stats || { maxHp: player.maxHp, maxMp: player.maxMp },
+    mapData,
+    DB.MAPS,
+  );
+  const questTarget = questTracker?.routeLabel && DB.MAPS[questTracker.routeLabel]
+    ? questTracker.routeLabel
+    : null;
+  const questNextStep = questTarget ? getNextMapTowardTarget(DB.MAPS, currentLocation, questTarget) : null;
+  const routeTopologyEntries: RouteTopologyEntry[] = moveRecommendations.map((route: any) => {
+    const targetMap = DB.MAPS[route.name];
+    return {
+      ...route,
+      isMissionRoute: route.name === questNextStep,
+      isBoss: Boolean(targetMap?.boss),
+      isLocked: playerLevel < getMapRequiredLevel(targetMap, playerLevel),
+    };
+  });
   const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind as any] || null;
   const isSafeZone = mapData.type === 'safe';
   const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
@@ -448,96 +550,63 @@ const ControlPanel = ({
         <div className="space-y-2">
           <div
             data-testid="control-route-board"
-            className="aether-map-current-card rounded-[1.05rem] px-3 py-2"
+            className="aether-map-current-card rounded-[0.75rem] px-2.5 py-2"
           >
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <div className="aether-label text-[#b9f1ec]/72">이동 경로</div>
-                <div className="mt-0.5 truncate font-readable text-[13px] font-semibold text-white">{player.loc}</div>
-              </div>
-              {moveRecommendations[0] && (
-                <div className="shrink-0 text-right">
-                  <div className="font-readable text-[8px] tracking-normal text-slate-400/76">추천 경로</div>
-                  <div className="mt-0.5 font-readable text-[12px] font-semibold text-[#dff7f5]">{moveRecommendations[0].name}</div>
-                </div>
-              )}
+            <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
+              <div className="aether-label text-[#b9f1ec]/72">이동 경로</div>
+              <div className="font-readable text-[9px] text-slate-400">지역을 눌러 이동</div>
             </div>
+            <RouteTopology
+              compact
+              disableLockedRoutes
+              testId="control-route-topology"
+              currentTestId="control-route-current"
+              connectorTestId="control-route-connector"
+              currentName={currentLocation}
+              routes={routeTopologyEntries}
+              blindMap={player.challengeModifiers?.includes('blindMap')}
+              onSelect={(route) => actions.move(route.name)}
+              routeTestId={(route) => `control-route-option-${route.name}`}
+            />
+            {moveRecommendations[0] && (
+              <div data-testid="control-route-guide" className="mt-2 border-t border-white/8 px-0.5 pt-2">
+                <div className="flex items-center justify-between gap-2 font-readable text-[9px]">
+                  <span className="text-[#b9f1ec]">추천 · {moveRecommendations[0].name}</span>
+                  <span className="text-slate-400">귀환 · {moveRecommendations[0].routePlan.returnLabel}</span>
+                </div>
+                <p className="mt-1 line-clamp-2 font-readable text-[9px] leading-snug text-slate-300/68">
+                  {moveRecommendations[0].reason}
+                </p>
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-2">
-          {moveRecommendations.map((route: any) => (
-            <Motion.button
-              whileTap={{ scale: 0.95 }}
-              key={route.name}
-              data-testid={`control-route-option-${route.name}`}
-              disabled={isAiThinking}
-              onClick={() => actions.move(route.name)}
-              className={`aether-map-route-card ${route.isRecommended ? 'is-recommended' : ''} rounded-[1rem] px-3 py-2.5 text-xs ${
-                route.isRecommended
-                  ? 'shadow-[0_16px_28px_rgba(125,212,216,0.12)]'
-                  : ''
-              } text-left hover:border-[#d5b180]/20 hover:bg-[#d5b180]/8 flex flex-col items-start gap-1.5 disabled:opacity-50 font-readable font-semibold transition-all`}
-            >
-              <div className="flex w-full items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-[#e4f7f5] min-w-0">
-                  <span className="flex shrink-0 items-center justify-center rounded-[0.75rem] border border-white/8 bg-black/18 h-7 w-7">
-                    <MapIcon size={14} />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="truncate text-[12px]">{route.name}</div>
-                    <div className="font-fira text-slate-400/72 text-[9px] font-normal">{route.levelLabel}</div>
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <SignalBadge tone={route.isRecommended ? 'recommended' : 'neutral'} size="sm">
-                    {route.isRecommended ? '추천' : route.badge}
-                  </SignalBadge>
-                  {route.undiscoveredSignatureCount > 0 && (
-                    <span
-                      data-testid={`move-recommendation-signature-${route.name}`}
-                      data-signature-count={route.undiscoveredSignatureCount}
-                      className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-fira font-bold leading-none"
-                      style={{
-                        color: '#f6e7a2',
-                        border: '1px solid rgba(246,231,162,0.42)',
-                        background: 'rgba(246,231,162,0.12)',
-                      }}
-                      aria-label={`미발견 전설 각인 ${route.undiscoveredSignatureCount}종`}
-                    >
-                      ✦{route.undiscoveredSignatureCount}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="text-[9px] font-fira text-slate-300/60 leading-snug line-clamp-2">
-                {route.reason}
-              </div>
-              {route.routePlan && (
-                <div className="grid w-full grid-cols-2 gap-1 pt-0.5">
-                  <div className="min-w-0 rounded-lg border border-white/8 bg-black/16 px-2 py-1">
-                    <div className="text-[8px] font-readable tracking-normal text-slate-500">진입</div>
-                    <div className="mt-0.5 truncate text-[9px] font-fira font-normal text-slate-300/80">{route.routePlan.approach}</div>
-                  </div>
-                  <div className="min-w-0 rounded-lg border border-white/8 bg-black/16 px-2 py-1">
-                    <div className="text-[8px] font-readable tracking-normal text-slate-500">귀환</div>
-                    <div className="mt-0.5 truncate text-[9px] font-fira font-normal text-slate-300/80">{route.routePlan.exitRule}</div>
-                  </div>
-                </div>
-              )}
-            </Motion.button>
-          ))}
           <Motion.button
             data-testid="control-move-cancel"
             whileTap={{ scale: 0.95 }}
             onClick={() => setGameState?.(GS.IDLE)}
-            className="col-span-2 min-h-[42px] px-3 py-2 text-xs bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] border border-rose-300/18 text-rose-100/84 rounded-[1.1rem] hover:bg-rose-400/10 font-bold tracking-wider transition-all"
+            className="min-h-[44px] w-full rounded-[0.5rem] border border-rose-300/18 bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] px-3 py-2 font-readable text-xs font-bold text-rose-100/84 transition-all hover:bg-rose-400/10"
           >
             돌아가기
           </Motion.button>
-          </div>
         </div>
       ) : (
         <div className="space-y-1.5">
-          {questTracker && (
+          {isSafeZone ? (
+            <div data-testid="control-map-signal" data-map-signal-mode="expedition-prep">
+              <ExpeditionPrepStrip
+                preparation={expeditionPreparation}
+                guidance={guidance}
+                onDepart={() => {
+                  if (!expeditionPreparation.departure) return;
+                  soundManager.play('click');
+                  actions.move(expeditionPreparation.departure.name);
+                }}
+                onClaimReward={expeditionPreparation.isClaimable && actions?.completeQuest
+                  ? () => actions.completeQuest(expeditionPreparation.tracker?.questId)
+                  : undefined}
+              />
+            </div>
+          ) : questTracker ? (
             <MissionTrackerStrip
               tracker={questTracker}
               canClaimReward={isSafeZone}
@@ -545,25 +614,27 @@ const ControlPanel = ({
                 ? () => actions.completeQuest(questTracker.questId)
                 : undefined}
             />
-          )}
+          ) : null}
           {/* slice 22: 가이드 스트립 — getAdventureGuidance가 계산만 되고 추천 버튼
               하이라이트 외엔 렌더 0건이던 갭 해소. 퀘스트 트래커 부재 시(신규
               플레이어 포함) 다음 행동 제목+이유를 같은 자리에 노출. */}
-          {!questTracker && guidance?.title && (
+          {!isSafeZone && !questTracker && guidance?.title && (
             <div data-testid="adventure-guidance-strip" className="aether-panel-core rounded-[1.05rem] px-3 py-2">
               <div className="aether-label text-[#7dd4d8]/72">다음 행동</div>
               <div className="mt-0.5 font-readable text-[12px] font-semibold text-white/92">{guidance.title}</div>
               <div className="mt-0.5 font-readable text-[10px] leading-snug text-slate-300/82 line-clamp-2">{guidance.detail}</div>
             </div>
           )}
-          <MapSignalStrip
-            player={player}
-            currentMap={mapData}
-            routes={moveRecommendations}
-            setGameState={setGameState}
-            onOpenArchiveConsole={onOpenArchiveConsole}
-            isAiThinking={isAiThinking}
-          />
+          {!isSafeZone && (
+            <MapSignalStrip
+              player={player}
+              currentMap={mapData}
+              routes={moveRecommendations}
+              setGameState={setGameState}
+              onOpenArchiveConsole={onOpenArchiveConsole}
+              isAiThinking={isAiThinking}
+            />
+          )}
           <div className={actionGridClass}>
             {coreButtons.map((button: any) => renderActionButton(button, '', {}))}
             {isSafeZone && safeZoneButtons.map((button: any) => renderActionButton(button, '', {}))}

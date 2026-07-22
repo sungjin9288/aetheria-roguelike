@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { EARLY_QUEST_EXP_CAPS, QUESTS } from '../src/data/quests.js';
 import { BALANCE, CONSTANTS } from '../src/data/constants.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
-import { getPacedQuestClaimExp } from '../src/utils/progressionPacing.js';
+import { getPacedCombatExp, getPacedQuestClaimExp } from '../src/utils/progressionPacing.js';
 
 const makePlayer = (overrides = {}) => ({
     level: 8,
@@ -97,21 +97,21 @@ test('early route pacing keeps first visits and beginner quests below runaway le
         def: 5,
     });
 
-    // slice 23: 첫 방문 EXP 절반(25/30) + START_NEXT_EXP 200 감속 반영 —
-    //   같은 초반 콘텐츠를 전부 소비해도 전직 레벨(Lv5) 직전에서 멈춘다.
+    // slice 52: 첫 방문 감속 + 전투 EXP 60% + 퀘스트 상한 하향을 함께 반영한다.
     player = applyExp(player, 25); // 고요한 숲 first-visit discovery.
     player = claimQuest(player, 80); // [스토리] 첫 번째 여정.
-    player = applyExp(player, 60); // 슬라임 3회 처치.
+    player = applyExp(player, getPacedCombatExp(player, 60)); // 슬라임 3회 처치.
     player = claimQuest(player, 1); // 슬라임 소탕.
     player = applyExp(player, 30); // 서쪽 평원 first-visit discovery.
-    player = applyExp(player, 200); // 멧돼지 5회 처치.
+    player = applyExp(player, getPacedCombatExp(player, 200)); // 멧돼지 5회 처치.
     player = claimQuest(player, 2); // 멧돼지 사냥.
-    player = applyExp(player, 200); // 거미떼 10회 처치.
+    assert.equal(player.level, 2);
+    player = applyExp(player, getPacedCombatExp(player, 200)); // 거미떼 10회 처치.
     player = claimQuest(player, 110); // 거미떼 퇴치.
 
-    assert.equal(player.level, 4);
-    assert.equal(player.exp, 73);
-    assert.equal(player.nextExp, 302);
+    assert.equal(player.level, 3);
+    assert.equal(player.exp, 82);
+    assert.equal(player.nextExp, 263);
 });
 
 test('late regional rewards rise with the actual route and encounter commitment', () => {

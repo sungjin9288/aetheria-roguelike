@@ -231,9 +231,9 @@ async function verifyCombatForecast(page) {
   const text = await forecast.innerText();
   const enemyText = await enemyStatus.innerText();
   const tone = await forecast.getAttribute('data-forecast-tone');
-  ensure(text.includes('적의 행동'), 'Combat forecast should expose the enemy action');
-  ensure(text.includes('대응'), 'Combat forecast should expose the response');
-  ensure(text.includes('기회'), 'Combat forecast should expose the opportunity');
+  ensure(text.includes('위협'), 'Combat forecast should expose the current threat');
+  ensure(text.includes('권장 대응'), 'Combat forecast should expose the recommended response');
+  ensure(text.includes('예상 흐름'), 'Combat forecast should expose the expected flow');
   ensure(enemyText.includes('교전 대상'), 'Enemy status should use the player-facing target label');
   ensure(enemyText.includes('생명'), 'Enemy status should use the player-facing health label');
   ensure(!/Target Lock|\bHP\b/.test(enemyText), 'Enemy status should not expose mechanical English labels');
@@ -244,6 +244,7 @@ async function verifyCombatForecast(page) {
     const enemy = statusBar.querySelector('[data-testid="enemy-status"]');
     const portrait = statusBar.querySelector('[data-testid="enemy-portrait"]');
     const portraitPath = portrait?.querySelector('svg path');
+    const portraitImage = portrait?.querySelector('img');
     const enemyLabels = [
       statusBar.querySelector('[data-testid="enemy-status-label"]'),
       statusBar.querySelector('[data-testid="enemy-health-label"]'),
@@ -258,7 +259,10 @@ async function verifyCombatForecast(page) {
       enemyScrollWidth: enemy?.scrollWidth || 0,
       portraitWidth: portraitBox?.width || 0,
       portraitHeight: portraitBox?.height || 0,
-      portraitRendered: Boolean(portraitPath?.getAttribute('d')),
+      portraitRendered: Boolean(
+        portraitPath?.getAttribute('d')
+        || (portraitImage?.complete && portraitImage.naturalWidth > 0 && portraitImage.naturalHeight > 0)
+      ),
       enemyLabelSizes: fontSizes(enemyLabels),
       enemyValueSize: enemyValue ? Number.parseFloat(getComputedStyle(enemyValue).fontSize) : 0,
       forecastLabelSizes: fontSizes(forecastLabels),
@@ -272,6 +276,23 @@ async function verifyCombatForecast(page) {
   ensure(layout.enemyValueSize >= 12, `Enemy health value should be at least 12px: ${JSON.stringify(layout)}`);
   ensure(layout.forecastLabelSizes.length === 3 && layout.forecastLabelSizes.every((size) => size >= 9), `Combat forecast labels should be at least 9px: ${JSON.stringify(layout)}`);
   ensure(layout.forecastValueSizes.length === 3 && layout.forecastValueSizes.every((size) => size >= 11), `Combat forecast values should be at least 11px: ${JSON.stringify(layout)}`);
+
+  if (isMobile) {
+    const combatSurface = page.locator('[data-testid="combat-focus-panel"]');
+    const actionKeys = ['attack', 'skill', 'item', 'escape'];
+    const mobileViewport = page.viewportSize();
+    await combatSurface.waitFor({ state: 'visible', timeout: 5000 });
+    for (const key of actionKeys) {
+      const action = page.locator(`[data-testid="combat-action-${key}"]`);
+      await action.waitFor({ state: 'visible', timeout: 5000 });
+      const box = await action.boundingBox();
+      ensure(box && mobileViewport && box.y >= 0 && box.y + box.height <= mobileViewport.height + 1, `Combat ${key} action should stay in the first viewport: ${JSON.stringify(box)}`);
+      ensure(box && box.height >= 44, `Combat ${key} action should retain a 44px touch target: ${JSON.stringify(box)}`);
+    }
+    const encounterBox = await enemyStatus.boundingBox();
+    const forecastBox = await forecast.boundingBox();
+    ensure(encounterBox && forecastBox && encounterBox.y < forecastBox.y, 'Enemy stage should appear before the turn forecast');
+  }
 }
 
 async function verifyPostCombatDecisionStrip(page, options = {}) {
@@ -677,11 +698,17 @@ async function verifyMobileArchiveConsole(page) {
   await page.locator('[data-testid="archive-tab-equipment"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="archive-tab-stats"]').waitFor({ state: 'visible', timeout: 5000 });
   await page.locator('[data-testid="archive-tab-equipment"]').click();
-  await page.locator('[data-testid="equipment-slot-weapon"]').waitFor({ state: 'visible', timeout: 5000 });
-  await page.locator('[data-testid="equipment-slot-armor"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="equipment-detail-toggle"]').waitFor({ state: 'visible', timeout: 5000 });
+  ensure(
+    await page.locator('[data-testid="equipment-panel"]').getAttribute('data-equipment-view') === 'summary',
+    'Early equipment panel should begin with the summary decision surface'
+  );
   const equipmentSurfaceText = await page.locator('[data-testid="equipment-panel"]').innerText();
   ensure(equipmentSurfaceText.includes('공격력') && equipmentSurfaceText.includes('방어력'), 'Equipment summary should use readable Korean stat labels');
   ensure(!/\b(?:ATK|DEF|HP|MP|CRIT)\b/.test(equipmentSurfaceText), 'Equipment panel should not expose legacy stat abbreviations');
+  await page.locator('[data-testid="equipment-detail-toggle"]').click();
+  await page.locator('[data-testid="equipment-slot-weapon"]').waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator('[data-testid="equipment-slot-armor"]').waitFor({ state: 'visible', timeout: 5000 });
   const weaponSlot = page.locator('[data-testid="equipment-slot-weapon"]');
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({ gold: 100, materialCount: 0, weaponEnhance: 0 }));
@@ -1221,14 +1248,48 @@ async function verifyTabs(page) {
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('map'));
   const mapState = await waitForState(page, (state) => state.sideTab === 'map', 'map tab activation');
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
   await verifySurfaceLanguage(page, {
     selector: '[data-testid="map-navigator"]',
-    requiredText: ['세계 지도', '현재 위치', '추천 경로', '전체 경로', '레벨'],
+    requiredText: ['세계 지도', '전체 경로', '레벨', '위험', '예상', '보상', '귀환'],
     forbiddenPattern: /불러오는 중|\bLv\.|\d+G\b|ATLAS|CURRENT POSITION|WORLD ROUTES/,
     label: 'map tab',
   });
+  await page.locator('[data-testid="map-topology"]').waitFor({ state: 'visible', timeout: 8000 });
   await page.locator('[data-testid="map-current-location-card"]').waitFor({ state: 'visible', timeout: 8000 });
-  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  await page.locator('[data-testid="map-primary-route"]').waitFor({ state: 'visible', timeout: 8000 });
+  await page.locator('[data-testid="map-topology-route-1"]').waitFor({ state: 'visible', timeout: 8000 });
+  const mapGeometry = await page.evaluate(() => {
+    const readRect = (testId) => {
+      const node = document.querySelector(`[data-testid="${testId}"]`);
+      if (!node) return null;
+      const rect = node.getBoundingClientRect();
+      return {
+        top: Math.round(rect.top),
+        bottom: Math.round(rect.bottom),
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+      };
+    };
+    return {
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      current: readRect('map-current-location-card'),
+      primary: readRect('map-primary-route'),
+      secondary: readRect('map-topology-route-1'),
+    };
+  });
+  for (const [label, rect] of Object.entries({
+    current: mapGeometry.current,
+    primary: mapGeometry.primary,
+    secondary: mapGeometry.secondary,
+  })) {
+    ensure(rect, `Map ${label} node should exist: ${JSON.stringify(mapGeometry)}`);
+    ensure(rect.top >= 0 && rect.bottom <= mapGeometry.viewportHeight,
+      `Map ${label} node should be inside first viewport: ${JSON.stringify(mapGeometry)}`);
+    ensure(rect.left >= 0 && rect.right <= mapGeometry.viewportWidth,
+      `Map ${label} node should not overflow horizontally: ${JSON.stringify(mapGeometry)}`);
+  }
   await writeStateArtifact('08a-map-tab', mapState, page, {
     screenshotFullPage: false,
   });

@@ -14,6 +14,22 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         if (typeof window === 'undefined') return undefined;
 
         const avatarScenarioMap: Record<string, any> = {
+            'early-gear-choice': {
+                name: '첫 여정',
+                job: '모험가',
+                level: 1,
+                loc: '시작의 마을',
+                equip: {
+                    weapon: { id: 'smoke-early-dagger', name: '낡은 단검', type: 'weapon', hands: 1, val: 4, jobs: ['모험가'] },
+                    offhand: null,
+                    armor: { id: 'smoke-early-clothes', name: '낡은 여행복', type: 'armor', val: 2, jobs: ['모험가'] },
+                },
+                inv: [
+                    { id: 'smoke-early-bow', name: '길잡이 활', type: 'weapon', hands: 2, val: 12, jobs: ['모험가'] },
+                    { id: 'smoke-early-armor', name: '튼튼한 여행복', type: 'armor', val: 8, jobs: ['모험가'] },
+                    { id: 'smoke-early-potion', name: '초급 회복 물약', type: 'hp', val: 30, price: 20 },
+                ],
+            },
             'paladin-plate': {
                 name: '성광 기사',
                 job: '팔라딘',
@@ -53,9 +69,9 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 level: 22,
                 loc: '고요한 숲',
                 equip: {
-                    weapon: { id: 'smoke-ranger-bow', name: '바람 사냥활', type: 'weapon', hands: 2, elem: '자연', enhance: 3 },
+                    weapon: { id: 'smoke-ranger-bow', name: '바람 사냥활', type: 'weapon', hands: 2, elem: '자연', enhance: 3, jobs: ['레인저'] },
                     offhand: null,
-                    armor: { id: 'smoke-ranger-coat', name: '전설의 사냥꾼 외투', type: 'armor', elem: '자연', enhance: 3 },
+                    armor: { id: 'smoke-ranger-coat', name: '전설의 사냥꾼 외투', type: 'armor', elem: '자연', enhance: 3, jobs: ['레인저'] },
                 },
             },
             'berserker-plate': {
@@ -393,6 +409,62 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
+            seedCombatFocusScenario: (bossMode: any) => {
+                const er = engineRef.current;
+                const isBoss = bossMode === true;
+                const testPotion = {
+                    id: 'smoke-combat-heal',
+                    name: '회복 물약',
+                    type: 'hp',
+                    heal: 50,
+                    desc: '생명 50 회복',
+                    desc_stat: '생명 50 회복',
+                };
+                const inv = (er.player.inv || []).some((item: any) => item.id === testPotion.id)
+                    ? er.player.inv
+                    : [...(er.player.inv || []), testPotion];
+
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        loc: isBoss ? '신성한 호수' : '고요한 숲',
+                        level: isBoss ? 35 : er.player.level,
+                        hp: Math.max(1, er.player.hp || 1),
+                        mp: Math.max(10, er.player.mp || 0),
+                        inv,
+                    },
+                });
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: {
+                        name: isBoss ? '고대 호수의 수호신' : '정예 숲의 정령',
+                        baseName: isBoss ? '고대 호수의 수호신' : '숲의 정령',
+                        level: isBoss ? 35 : 2,
+                        hp: isBoss ? 3200 : 134,
+                        maxHp: isBoss ? 3200 : 134,
+                        atk: isBoss ? 120 : 16,
+                        def: isBoss ? 54 : 5,
+                        exp: isBoss ? 2400 : 24,
+                        gold: isBoss ? 1800 : 18,
+                        isElite: !isBoss,
+                        isBoss,
+                        pattern: { heavyChance: isBoss ? 0.4 : 0.2, guardChance: isBoss ? 0.45 : 0.1 },
+                    },
+                });
+                [
+                    ['event', '숲의 기운이 짙어집니다.'],
+                    ['warning', '정예 개체가 길을 막았습니다.'],
+                    ['combat', `${isBoss ? '고대 호수의 수호신' : '정예 숲의 정령'} 등장!`],
+                    ['combat', '적의 움직임을 살핍니다.'],
+                ].forEach(([type, text], index) => {
+                    er.dispatch({
+                        type: AT.ADD_LOG,
+                        payload: { id: `combat-focus-${Date.now()}-${index}`, type, text },
+                    });
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
             },
             // cycle 604: preset default 'paladin-plate' 제거 — 1 production
             //   caller (scripts/smoke-gameplay:305 seedAvatarScenario?.(preset.id))

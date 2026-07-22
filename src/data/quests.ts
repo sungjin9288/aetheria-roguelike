@@ -1,14 +1,14 @@
 const EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL: Record<number, number> = Object.freeze({
-    1: 60,
-    2: 80,
-    3: 105,
-    4: 130,
-    5: 170,
-    6: 220,
-    7: 270,
-    8: 330,
-    9: 410,
-    10: 520,
+    1: 40,
+    2: 60,
+    3: 80,
+    4: 105,
+    5: 140,
+    6: 180,
+    7: 225,
+    8: 280,
+    9: 350,
+    10: 440,
 });
 
 import type { Quest, Achievement } from '../types/quest.js';

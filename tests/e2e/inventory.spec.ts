@@ -17,4 +17,34 @@ test.describe('가방 화면', () => {
         await invTab.click();
         await expect(page.getByText('가방', { exact: true }).first()).toBeVisible({ timeout: 5_000 });
     });
+
+    test('초반 장비 후보는 추천·대표 변화·장착·세트 기여를 바로 표시', async ({ page }) => {
+        const seeded = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAvatarScenario?.('early-gear-choice'));
+        expect(seeded).toBe(true);
+
+        await page.locator('[data-testid$="-tab-inventory"]').first().click();
+        await expect(page.getByTestId('inventory-equipment-disclosure')).toHaveAttribute('data-equipment-view', 'summary');
+
+        const decision = page.locator('[data-testid^="inventory-equipment-decision-"]').first();
+        await expect(decision).toBeVisible({ timeout: 5_000 });
+        await expect(decision).toContainText('추천 교체');
+        await expect(decision).toContainText('장착 가능');
+        await expect(decision).toContainText('모험가 세트 +2');
+
+        const widthMetrics = await page.evaluate(() => ({
+            viewport: window.innerWidth,
+            page: document.documentElement.scrollWidth,
+            scrollX: window.scrollX,
+        }));
+        expect(widthMetrics.page).toBeLessThanOrEqual(widthMetrics.viewport);
+        expect(widthMetrics.scrollX).toBe(0);
+
+        await page.getByTestId('damage-number').waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => undefined);
+        await decision.evaluate((node) => node.scrollIntoView({ block: 'center', inline: 'nearest' }));
+        await page.evaluate(() => window.scrollTo(0, 0));
+
+        await page.screenshot({
+            path: 'playtest-artifacts/mobile-equipment-disclosure/inventory-summary.png',
+        });
+    });
 });

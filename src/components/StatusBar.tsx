@@ -74,7 +74,7 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
     <div
       data-testid="enemy-status"
       data-hit-flash={flash ? 'true' : undefined}
-      className={`relative overflow-hidden rounded-[1.1rem] border bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_16px_36px_rgba(22,6,10,0.28),inset_0_1px_0_rgba(255,255,255,0.03)] px-2.75 py-2.5 transition-transform duration-150 ${flash ? 'border-rose-200/70 scale-[1.015]' : 'border-rose-300/18'}`}
+      className={`aether-encounter-stage relative mt-1.5 overflow-hidden rounded-lg border bg-[radial-gradient(circle_at_85%_10%,rgba(244,114,182,0.12),transparent_22%),linear-gradient(180deg,rgba(58,20,29,0.52)_0%,rgba(18,9,12,0.82)_100%)] shadow-[0_12px_26px_rgba(22,6,10,0.24),inset_0_1px_0_rgba(255,255,255,0.03)] px-2.5 py-2 transition-transform duration-150 ${flash ? 'border-rose-200/70 scale-[1.01]' : 'border-rose-300/18'}`}
     >
       {/* 타격 플래시 오버레이 */}
       {flash && (
@@ -104,9 +104,9 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
           <div
             data-testid="enemy-portrait"
             aria-hidden="true"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.85rem] border border-rose-200/18 bg-black/24 text-rose-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-rose-200/18 bg-black/24 text-rose-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
           >
-            <MonsterIcon name={enemy.name} discovered isBoss={enemy.isBoss} size={34} />
+            <MonsterIcon name={enemy.name} discovered isBoss={enemy.isBoss} size={46} />
           </div>
           <div className="min-w-0">
             <div data-testid="enemy-status-label" className="text-[10px] font-readable text-rose-100/66">
@@ -168,6 +168,41 @@ const StatusBar = ({
     player?.equip?.armor,
     player?.equip?.offhand,
   ].filter((item: any) => item && isSignatureItem(item)).length;
+
+  if (enemy) {
+    return (
+      <section
+        data-testid="persistent-status-bar"
+        data-status-mode="combat"
+        className="pointer-events-none aether-status-shell sticky top-0 z-50 w-full overflow-hidden px-2.5 py-2"
+      >
+        <div className="aether-combat-player-status flex min-h-[42px] items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate font-readable text-[13px] font-semibold text-white/94">{player.name}</span>
+              <SignalBadge tone="danger" size="sm">전투 중</SignalBadge>
+              <SignalBadge tone="resonance" size="sm">레벨 {player.level}</SignalBadge>
+            </div>
+            <div className="mt-1 flex items-center gap-3 font-readable text-[11px]">
+              <span className="text-rose-100"><span className="text-rose-100/60">생명</span> {Math.max(0, player.hp || 0)}/{Math.max(1, stats?.maxHp || player.maxHp || 1)}</span>
+              <span className="text-cyan-100"><span className="text-cyan-100/60">기력</span> {Math.max(0, player.mp || 0)}/{Math.max(1, stats?.maxMp || player.maxMp || 1)}</span>
+            </div>
+          </div>
+          {onToggleMute && (
+            <button
+              onClick={onToggleMute}
+              className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20 text-slate-300/72 transition-colors hover:text-white"
+              aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
+            >
+              {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+            </button>
+          )}
+        </div>
+        <EnemyStatus enemy={enemy} enemyHitCrit={enemyHitCrit} />
+      </section>
+    );
+  }
+
   return (
     <section
       data-testid="persistent-status-bar"
@@ -294,7 +329,6 @@ const StatusBar = ({
           </div>
         </div>
       </div>
-      {enemy && <div className="mt-1"><EnemyStatus enemy={enemy} enemyHitCrit={enemyHitCrit} /></div>}
     </section>
   );
 };

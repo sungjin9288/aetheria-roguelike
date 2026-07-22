@@ -72,7 +72,7 @@ const MOBILE_LOG_BADGES: any = {
 };
 
 const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system', 'legendary']);
-const SUMMARY_LOG_COUNT = 8; // 요약 모드에서 표시할 최근 로그 수
+const SUMMARY_LOG_COUNT = 3;
 
 // slice 20: 로그 핵심 숫자 강조 — 데미지/HP/보상 수치(+21, 16, 73/89, 35%)를
 //   본문보다 한 단계 밝고 굵게 렌더. "라벨보다 숫자가 먼저 읽혀야 한다"는
@@ -196,17 +196,25 @@ const TerminalView = ({
     return (
         <div
             data-testid="terminal-panel"
-            className={`aether-log-panel min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.35rem] px-3 py-2 relative overflow-hidden transition-all duration-500 flex flex-col`}
+            data-combat-mode={isCombat ? 'true' : undefined}
+            data-log-expanded={logExpanded ? 'true' : 'false'}
+            className={`aether-log-panel min-w-0 min-h-0 flex-1 ${bgClass} rounded-[1.35rem] px-3 py-2 relative overflow-hidden transition-all duration-500 flex flex-col ${isCombat ? 'aether-combat-log' : ''}`}
         >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/16 to-transparent" />
 
             <div ref={logViewportRef} className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-0.5 min-h-0">
                 {showToolbar && (
-                    <div className="mb-2 flex items-center justify-end px-1 gap-2">
+                    <div className="mb-2 flex min-h-8 items-center justify-between px-1 gap-2">
+                        {isCombat && (
+                            <span className="font-readable text-[11px] font-semibold text-slate-200/78">최근 전투</span>
+                        )}
                         {showExpandToggle && (
                             <button
+                                type="button"
+                                data-testid="combat-log-toggle"
+                                aria-expanded={logExpanded}
                                 onClick={() => setLogExpanded((open: any) => !open)}
-                                className="shrink-0 rounded-full border border-white/8 bg-black/20 px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] text-slate-300/72"
+                                className="inline-flex min-h-8 shrink-0 items-center rounded-lg border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-readable text-slate-200/78"
                             >
                                 {isCombat
                                     ? (logExpanded

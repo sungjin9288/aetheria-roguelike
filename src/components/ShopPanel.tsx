@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
-import { getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
@@ -117,6 +117,31 @@ const getCompactItemSummary = (item: any) => {
 
 const formatGold = (value: any) => `${Number(value || 0).toLocaleString()} 골드`;
 
+const ShopEquipmentDecisionStrip = ({ player, item, scope }: any) => {
+    const decision = getEquipmentDecision(player, item);
+    if (!decision) return null;
+
+    return (
+        <div
+            data-testid={`shop-equipment-decision-${scope}-${item.id || item.name}`}
+            className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[9px] font-readable"
+        >
+            <span className={`rounded border px-1.5 py-0.5 font-bold ${decision.tone === 'positive' ? 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100' : decision.tone === 'negative' ? 'border-amber-300/24 bg-amber-300/10 text-amber-100' : decision.tone === 'blocked' ? 'border-rose-300/24 bg-rose-400/10 text-rose-100' : 'border-white/8 bg-white/[0.03] text-slate-300'}`}>
+                {decision.recommendation}
+            </span>
+            <span className={`font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
+                {decision.primaryDelta.text}
+            </span>
+            <span
+                data-testid={`shop-set-contribution-${scope}-${item.id || item.name}`}
+                className={`rounded border px-1.5 py-0.5 ${decision.setContribution > 0 ? 'border-[#d5b180]/30 bg-[#d5b180]/10 text-[#f6e7c8]' : 'border-white/8 bg-white/[0.03] text-slate-400'}`}
+            >
+                {decision.setContributionText}
+            </span>
+        </div>
+    );
+};
+
 const MOBILE_INITIAL_BUY_LIMIT = 12;
 
 // cycle 573: stats / onOpenArchiveConsole defaults 제거 — 1 production caller
@@ -127,6 +152,9 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     const [sellConfirmId, setSellConfirmId] = useState<any>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
     const [purchaseNotice, setPurchaseNotice] = useState('');
+    const [detailOverride, setDetailOverride] = useState<boolean | null>(null);
+    const disclosure = getEquipmentDisclosure(player);
+    const showDetails = detailOverride ?? disclosure.showDetails;
     const loc = player.loc || '';
     const expansionKey = `${loc}:${shopMode}`;
 
@@ -232,6 +260,30 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                 </div>
             </div>
 
+            {shopMode === 'buy' && (
+                <div
+                    data-testid="shop-equipment-disclosure"
+                    data-equipment-view={showDetails ? 'full' : 'summary'}
+                    className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-black/18 px-3 py-2"
+                >
+                    <div className="min-w-0">
+                        <div className="text-[11px] font-readable font-bold text-white/88">구매 판단</div>
+                        <div className="mt-0.5 text-[10px] font-readable text-slate-400/78">
+                            {showDetails ? '전체 효과와 비교값 표시' : '추천·대표 변화·세트 기여만 표시'}
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        data-testid="shop-equipment-detail-toggle"
+                        aria-expanded={showDetails}
+                        onClick={() => setDetailOverride(!showDetails)}
+                        className="min-h-[38px] shrink-0 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[10px] font-readable font-bold text-[#f6e7c8]"
+                    >
+                        {showDetails ? '간단히 보기' : '상세 보기'}
+                    </button>
+                </div>
+            )}
+
             <div className="flex-1 overflow-y-auto space-y-2.5 custom-scrollbar pr-1">
                 {/* 할인 상품 */}
                 {shopMode === 'buy' && (dailyDeals.items.length > 0 || weeklySpecial) && (
@@ -254,6 +306,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                     <span className="text-[10px] font-readable text-amber-300 font-bold">{formatGold(item.price)}</span>
                                                     <span className="text-[9px] font-readable text-slate-500 line-through">{formatGold(item.originalPrice)}</span>
                                                 </div>
+                                                <ShopEquipmentDecisionStrip player={player} item={item} scope="daily" />
                                                 {/* slice 20: 본문 reason 행 제거 — 우측 버튼이 동일한
                                                     차단 사유를 표시해 같은 행에 2회 출력되던 중복. */}
                                             </div>
@@ -284,6 +337,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             <span className="text-[11px] font-readable text-purple-300 font-bold">{formatGold(weeklySpecial.price)}</span>
                                             <span className="text-[9px] font-readable text-slate-500 line-through">{formatGold(weeklySpecial.originalPrice)}</span>
                                         </div>
+                                        <ShopEquipmentDecisionStrip player={player} item={weeklySpecial} scope="weekly" />
                                     </div>
                                 </div>
                                 {(() => {
@@ -339,7 +393,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                             {typeTag}
                                                         </span>
                                                     )}
-                                                    {Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
+                                                    {showDetails && Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
                                                         <span
                                                             title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
                                                             className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-readable font-bold"
@@ -353,8 +407,11 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="mt-1 line-clamp-2 font-readable text-[11px] leading-[1.35] text-slate-300/78">{summary}</div>
-                                                {comparison && (
+                                                {(!isEquipmentItem(item) || showDetails) && (
+                                                    <div className="mt-1 line-clamp-2 font-readable text-[11px] leading-[1.35] text-slate-300/78">{summary}</div>
+                                                )}
+                                                <ShopEquipmentDecisionStrip player={player} item={item} scope="list" />
+                                                {showDetails && comparison && (
                                                     <div className="mt-1.5">
                                                         <div className={`aether-shop-delta inline-flex max-w-full items-center rounded-[0.65rem] px-2 py-1 font-readable text-[10px] leading-[1.2] ${getToneClass(comparison.tone)}`}>
                                                             <span className="break-words">{comparisonText}</span>

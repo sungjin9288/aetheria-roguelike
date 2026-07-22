@@ -21,7 +21,7 @@ test('readability foundation uses Korean-friendly readable font stack', async ()
 test('mobile first fold preserves a readable log height', async () => {
     const mobileLayout = await readSrc('src/components/app/MobileGameLayout.tsx');
 
-    assert.match(mobileLayout, /className="flex min-h-\[240px\] min-w-0 flex-1"/);
+    assert.match(mobileLayout, /isCombat \? 'order-2 min-h-\[132px\]' : 'min-h-\[240px\]'/);
     assert.match(mobileLayout, /<TerminalView/);
 });
 
@@ -41,17 +41,28 @@ test('control panel exposes a first-screen map signal and route entry points', a
 });
 
 test('map navigator promotes current position and primary route above the route list', async () => {
-    const source = await readSrc('src/components/MapNavigator.tsx');
+    const [source, topology, topologyUtils] = await Promise.all([
+        readSrc('src/components/MapNavigator.tsx'),
+        readSrc('src/components/RouteTopology.tsx'),
+        readSrc('src/utils/mapTopology.ts'),
+    ]);
 
     assert.match(source, /data-testid="map-navigator"/);
     assert.match(source, /data-testid="map-progress-summary"/);
-    assert.match(source, /grid grid-cols-3 gap-1\.5/);
-    assert.match(source, /data-testid="map-current-location-card"/);
-    assert.match(source, /현재 위치/);
-    assert.match(source, /data-testid="map-primary-route"/);
-    assert.match(source, /data-testid="map-route-overview"/);
-    assert.match(source, /추천 경로/);
+    assert.match(source, /testId="map-topology"/);
+    assert.match(source, /currentTestId="map-current-location-card"/);
+    assert.match(source, /connectorTestId="map-route-overview"/);
+    assert.match(source, /'map-primary-route'/);
+    assert.match(source, /data-testid="map-selected-detail"/);
+    assert.match(source, /data-testid="map-route-forecast"/);
+    assert.match(source, /data-testid="map-move-selected"/);
+    assert.match(source, /getNextMapTowardTarget/);
     assert.match(source, /const formatMapLevel/);
+    assert.match(topology, /aether-route-topology-current/);
+    assert.match(topology, /aether-route-topology-branches/);
+    assert.match(topology, /isMissionRoute/);
+    assert.match(topologyUtils, /export const findMapPath/);
+    assert.match(topologyUtils, /export const getNextMapTowardTarget/);
     assert.doesNotMatch(source, /`Lv\.\$\{|\}G<\/span>/);
 });
 
