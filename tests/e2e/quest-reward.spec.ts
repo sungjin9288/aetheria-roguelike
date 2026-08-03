@@ -72,7 +72,16 @@ test('현상수배는 정확한 보상과 진행 수치를 임무 안내 안에 
     await expect(bounty).toContainText('보상');
     await expect(bounty).toContainText('경험 16 · 골드 24');
     await expect(bounty).toContainText('귀환 기준');
-    await expect(bounty.getByTestId('quest-operation-progress')).toHaveText('0/8');
+    const progress = bounty.getByTestId('quest-operation-progress');
+    await expect(progress).toHaveText('0/8');
+    await expect(progress.locator('xpath=..')).toContainText('귀환 기준');
+    const [returnLabelBox, progressBox] = await Promise.all([
+        progress.locator('xpath=preceding-sibling::*[1]').boundingBox(),
+        progress.boundingBox(),
+    ]);
+    expect(returnLabelBox).not.toBeNull();
+    expect(progressBox).not.toBeNull();
+    expect(progressBox!.x - (returnLabelBox!.x + returnLabelBox!.width)).toBeLessThanOrEqual(12);
     await expect(bounty).not.toContainText('골드와 경험 획득');
     await bounty.screenshot({ path: 'playtest-artifacts/mobile-quest-expedition/active-bounty-compact.png' });
 });

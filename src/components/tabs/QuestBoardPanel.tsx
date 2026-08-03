@@ -49,15 +49,15 @@ const OperationBriefRows = ({ brief, reward, progress, goal }: any) => {
       <div className="grid grid-cols-2 overflow-hidden rounded-[0.95rem] border border-white/8 bg-black/12">
         {rows.map((row: any) => (
           <div key={`${brief.route}_${row.label}`} className="aether-choice-cell px-2.5 py-2">
-            <div className="aether-label">{row.label}</div>
-            <div className="mt-0.5 flex min-w-0 items-start justify-between gap-2">
-              <div className="aether-type-body min-w-0 break-words font-readable text-slate-200/90">{row.value}</div>
+            <div className="flex items-center gap-2">
+              <div className="aether-label">{row.label}</div>
               {row.trailing && (
-                <span data-testid="quest-operation-progress" className="aether-type-body shrink-0 font-readable font-semibold text-[#dff7f5]">
+                <span data-testid="quest-operation-progress" className="aether-label shrink-0 font-semibold text-[#dff7f5]">
                   {row.trailing}
                 </span>
               )}
             </div>
+            <div className="aether-type-body mt-0.5 min-w-0 break-words font-readable text-slate-200/90">{row.value}</div>
           </div>
         ))}
       </div>
