@@ -3434,12 +3434,14 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 568: 정합성 가드 — 4 production callsite 보존', async () => {
       const stp = await readSrc('src/components/SkillTreePreview.tsx');
-      assert.ok(/<ClassIcon className=\{player\.job\} size=\{28\} tier=\{currentClass\?\.tier \|\| 0\}/.test(stp),
+      assert.ok(/<ClassIcon className=\{player\.job as string\} size=\{34\} tier=\{currentClass\.tier \|\| 0\}/.test(stp),
           'SkillTreePreview <ClassIcon> callsite 보존');
 
       const ct = await readSrc('src/components/ClassTree.tsx');
-      assert.ok(/<ClassIcon className=\{node\.name\} size=\{24\} tier=\{tier\}/.test(ct),
-          'ClassTree <ClassIcon> callsite 보존');
+      assert.ok(/<ClassIcon className=\{currentName\} size=\{30\} tier=\{currentClass\?\.tier \|\| 0\}/.test(ct),
+          'ClassTree 현재 직업 <ClassIcon> callsite 보존');
+      assert.ok(/<ClassIcon className=\{jobName\} size=\{30\} tier=\{job\.tier \|\| 0\}/.test(ct),
+          'ClassTree 다음 직업 <ClassIcon> callsite 보존');
 
       const cc = await readSrc('src/components/ClassCard.tsx');
       assert.ok(/<ClassIcon className=\{jobName\} size=\{28\} tier=\{tier\}/.test(cc),

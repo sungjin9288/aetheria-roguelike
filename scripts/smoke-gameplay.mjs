@@ -1337,7 +1337,7 @@ async function verifyTabs(page) {
   const skillsState = await waitForState(page, (state) => state.sideTab === 'skills', 'skills tab activation');
   await verifySurfaceLanguage(page, {
     selector: '[data-testid="skill-tree-preview"]',
-    requiredText: ['기술 구성', '현재 기술', '기력', '다음 전직 기술 미리보기', '기술 성장 선택'],
+    requiredText: ['기술 구성', '현재 기술', '기력', '기술 성장 선택', '선택 결과', '전직 계보', '다음 전직 기술 미리보기'],
     forbiddenPattern: /Skill Ledger|Current Loadout|Effect|Advancement Preview|Skill Branches|\bMP\b|\bLv\.|\d+G\b|x\d|\bBUFF\b|\bDEBUFF\b|\bESCAPE\b/,
     label: 'skills tab',
   });
@@ -1349,7 +1349,11 @@ async function verifyTabs(page) {
   const firstGrowthChoice = page.locator('[data-testid="skill-branch-choice-강타-B"]');
   await firstGrowthChoice.waitFor({ state: 'visible', timeout: 8000 });
   await firstGrowthChoice.click();
-  await firstGrowthChoice.waitFor({ state: 'hidden', timeout: 8000 });
+  ensure(await firstGrowthChoice.getAttribute('data-selected') === 'true', 'Skill growth preview should update before commit');
+  const firstGrowthConfirm = page.locator('[data-testid="skill-growth-confirm-강타"]');
+  await firstGrowthConfirm.waitFor({ state: 'visible', timeout: 8000 });
+  await firstGrowthConfirm.click();
+  await firstGrowthConfirm.waitFor({ state: 'hidden', timeout: 8000 });
   await verifySurfaceLanguage(page, {
     selector: '[data-testid="skill-tree-preview"]',
     requiredText: ['성장 · 기절 배시'],

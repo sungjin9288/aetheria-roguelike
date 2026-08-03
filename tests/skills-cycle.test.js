@@ -1780,10 +1780,11 @@ import { readFile } from 'node:fs/promises';
           'Dashboard <SkillTreePreview> callsite 보존');
   });
 
-  test('cycle 565: SkillTreePreviewProps interface 보존', async () => {
+  test('cycle 565: SkillTreePreviewProps typed actions interface 보존', async () => {
       const source = await readSrc('src/components/SkillTreePreview.tsx');
-      assert.ok(/actions\?:\s*any/.test(source),
-          'SkillTreePreviewProps actions?: any 보존');
+      assert.ok(/interface SkillActions/.test(source), 'SkillActions interface 보존');
+      assert.ok(/actions\?:\s*SkillActions/.test(source),
+          'SkillTreePreviewProps actions typed contract 보존');
   });
 
   test('cycle 565: cycle 502-564 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -1856,7 +1857,7 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 569: 정합성 가드 — 4 production callsite 보존', async () => {
       const stp = await readSrc('src/components/SkillTreePreview.tsx');
-      assert.ok(/<SkillTypeIcon type=\{skill\.type\} size=\{10\} className="mr-0\.5 -mt-px"/.test(stp),
+      assert.ok(/<SkillTypeIcon type=\{skill\.type \|\| '물리'\} size=\{15\}/.test(stp),
           'SkillTreePreview <SkillTypeIcon> callsite 보존');
 
       const mc = await readSrc('src/components/codex/MonsterCodex.tsx');

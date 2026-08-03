@@ -2941,34 +2941,24 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 453: buildTree return에서 nodes / edges 0건', async () => {
+  test('cycle 453: 전체 직업 matrix용 nodes / edges / buildTree 0건', async () => {
       const source = await readSrc('src/components/ClassTree.tsx');
-      const fnIdx = source.indexOf('const buildTree =');
-      // buildTree 함수 끝 (TreeNode 시작 직전)까지 슬라이스.
-      const fnEnd = source.indexOf('const TreeNode', fnIdx);
-      const block = source.slice(fnIdx, fnEnd);
-      const returnIdx = block.lastIndexOf('return ');
-      const returnBlock = block.slice(returnIdx);
-      assert.ok(!/\bnodes\b/.test(returnBlock), 'return에 nodes 0건');
-      assert.ok(!/\bedges\b/.test(returnBlock), 'return에 edges 0건');
-      assert.ok(/\btiers\b/.test(returnBlock), 'tiers 보존');
+      assert.ok(!/const buildTree/.test(source), '전체 matrix buildTree 0건');
+      assert.ok(!/\bnodes\b|\bedges\b/.test(source), 'nodes / edges 0건');
   });
 
-  test('cycle 453: 정합성 가드 — buildTree() 호출자가 tiers만 destructure', async () => {
+  test('cycle 453: 현재 직업의 직접 다음 계보만 읽는다', async () => {
       const source = await readSrc('src/components/ClassTree.tsx');
-      assert.ok(/const \{ tiers \} = useMemo\(\(\) => buildTree\(\)/.test(source),
-          'tiers만 destructure');
-      // edges/nodes external read 0건 검증
-      const fnEndIdx = source.indexOf('const TreeNode');
-      const consumerSource = source.slice(fnEndIdx);
-      assert.ok(!/\bedges\b/.test(consumerSource), '본체 edges 참조 0건');
+      assert.ok(/const nextJobs = currentClass\?\.next \|\| \[\]/.test(source), '직접 다음 계보 사용');
+      assert.ok(/nextJobs\.map\(/.test(source), '다음 후보 렌더');
+      assert.ok(!/Object\.entries\(DB\.CLASSES\)/.test(source), '전체 직업 순회 0건');
   });
 
-  test('cycle 453: tier 4 그룹 (T0/T1/T2/T3) 동작 보존', async () => {
-      // ClassTree는 React 컴포넌트 — runtime 검증은 어려우니 source-level 가드
+  test('cycle 453: tier 4 고정 grid 대신 focused route를 사용한다', async () => {
       const source = await readSrc('src/components/ClassTree.tsx');
-      assert.ok(/tiers: Record<number, any\[\]> = \{ 0: \[\], 1: \[\], 2: \[\], 3: \[\] \}/.test(source),
-          '4 tier 그룹 보존');
+      assert.ok(!/tiers: Record|\[0, 1, 2, 3\]/.test(source), '고정 tier matrix 0건');
+      assert.ok(/data-testid="class-growth-current"/.test(source), '현재 직업 기준점 보존');
+      assert.ok(/data-testid="class-growth-option"/.test(source), '다음 성장 후보 보존');
   });
 
   test('cycle 452 회귀 가드: Dashboard 6 panel default compact 0건', async () => {
@@ -3013,38 +3003,29 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 455: buildTree node 객체에 desc 필드 0건', async () => {
+  test('cycle 455: synthetic node description copy 0건', async () => {
       const source = await readSrc('src/components/ClassTree.tsx');
-      const fnIdx = source.indexOf('const buildTree =');
-      const fnEnd = source.indexOf('const TreeNode', fnIdx);
-      const block = source.slice(fnIdx, fnEnd);
-      assert.ok(!/desc:\s*data\.desc/.test(block), 'buildTree nodes 객체에 desc 필드 0건');
-      assert.ok(!/\bdesc\b/.test(block), 'buildTree 블록 전체에 desc 0건');
+      assert.ok(!/desc:\s*data\.desc/.test(source), 'synthetic desc copy 0건');
+      assert.ok(/getClassIdentity\(job\.desc\)/.test(source), 'canonical class description 사용');
   });
 
-  test('cycle 455: 정합성 가드 — node.desc / data.desc read 0건 (전체 ClassTree)', async () => {
+  test('cycle 455: 정합성 가드 — legacy node.desc / data.desc read 0건', async () => {
       const source = await readSrc('src/components/ClassTree.tsx');
-      // node.desc 또는 data.desc 참조 0건
       assert.ok(!/node\.desc/.test(source), 'node.desc read 0건');
       assert.ok(!/data\.desc/.test(source), 'data.desc read 0건');
   });
 
-  test('cycle 455: name / tier / reqLv 활성 read 보존', async () => {
+  test('cycle 455: job name / tier / requirement 활성 read 보존', async () => {
       const source = await readSrc('src/components/ClassTree.tsx');
-      assert.ok(/node\.name/.test(source), 'node.name read 보존');
-      assert.ok(/node\.tier/.test(source), 'node.tier read 보존');
-      assert.ok(/node\.reqLv/.test(source), 'node.reqLv read 보존');
+      assert.ok(/jobName/.test(source), 'jobName read 보존');
+      assert.ok(/job\.tier/.test(source), 'job.tier read 보존');
+      assert.ok(/const requirement = job\.reqLv/.test(source), 'job.reqLv requirement 보존');
   });
 
-  test('cycle 453 회귀 가드: buildTree return은 tiers만 노출', async () => {
+  test('cycle 453 회귀 가드: full matrix 대신 direct route contract 보존', async () => {
       const source = await readSrc('src/components/ClassTree.tsx');
-      const fnIdx = source.indexOf('const buildTree =');
-      const fnEnd = source.indexOf('const TreeNode', fnIdx);
-      const block = source.slice(fnIdx, fnEnd);
-      const returnBlock = block.slice(block.lastIndexOf('return '));
-      assert.ok(!/\bnodes\b/.test(returnBlock), 'cycle 453 nodes 제거 보존');
-      assert.ok(!/\bedges\b/.test(returnBlock), 'cycle 453 edges 제거 보존');
-      assert.ok(/\btiers\b/.test(returnBlock), 'tiers 보존');
+      assert.ok(!/const buildTree|\bnodes\b|\bedges\b|\btiers\b/.test(source), 'matrix 계산 제거 보존');
+      assert.ok(/currentClass\?\.next/.test(source), '현재 직업 direct route 보존');
   });
 }
 

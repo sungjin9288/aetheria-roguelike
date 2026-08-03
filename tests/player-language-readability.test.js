@@ -152,22 +152,26 @@ test('first-session record uses natural player language from start through growt
 });
 
 test('skill growth uses natural labels and hides internal choice codes', async () => {
-    const [skills, classTree, messages] = await Promise.all([
+    const [skills, classTree, skillPresentation, messages] = await Promise.all([
         readSrc('src/components/SkillTreePreview.tsx'),
         readSrc('src/components/ClassTree.tsx'),
+        readSrc('src/utils/skillPresentation.ts'),
         readSrc('src/data/messages.ts'),
     ]);
 
-    for (const label of ['기술 구성', '현재 기술', '기력 소모 없음', '추가 효과', '다음 전직 기술 미리보기', '기술 성장 선택', '무료 선택', "buff: '강화'", "debuff: '약화'"]) {
-        assert.match(skills, new RegExp(label));
+    for (const label of ['기술 구성', '현재 기술', '다음 전직 기술 미리보기', '기술 성장 선택', '첫 선택은 무료', '선택 결과', '성장 확정', "buff: '강화'", "debuff: '약화'"]) {
+        assert.match(`${skills}\n${classTree}`, new RegExp(label));
     }
+    assert.match(skillPresentation, /기력 소모 없음/);
+    assert.match(skillPresentation, /추가 효과|EFFECT_LABELS/);
     assert.match(skills, /formatSkillText\(branch\.desc\)/);
-    assert.match(skills, /pendingSkillBranches/);
+    assert.match(skills, /pendingGrowth/);
+    assert.match(skills, /skill-growth-confirm-/);
     assert.doesNotMatch(skills, />\s*(Skill Ledger|Current Loadout|Effect|Advancement Preview|Skill Branches)\s*</);
     assert.doesNotMatch(skills, /\{skill\.mp\} MP|Lv\.\{jobData\.reqLv\}|\{swapCost\}G|>\{branch\.choice\}</);
 
-    assert.match(classTree, /레벨 \{node\.reqLv\}/);
-    assert.doesNotMatch(classTree, /Lv\.\{node\.reqLv\}|>\s*T\{tier\}\s*</);
+    assert.match(classTree, /`레벨 \$\{requirement\}`/);
+    assert.doesNotMatch(classTree, /Lv\.\{job\.reqLv\}|>\s*T\{tier\}\s*</);
     assert.match(messages, /SKILL_BRANCH_ALREADY_CHOSEN/);
     assert.doesNotMatch(messages, /스킬 교체:|분기 \$\{choice\}/);
 });
