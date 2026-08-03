@@ -94,7 +94,7 @@ export const MSG = {
     // C-1 (B+ 2026-06): 첫 죽음 영구 메타 보상 안내 — "죽음도 성장이다".
     FIRST_DEATH_META: (attack: number, health: number) => `첫 패배를 딛고 영구적인 힘을 얻었습니다. 공격력 +${attack} · 최대 생명 +${health}. 다음 여정은 더 강하게 시작합니다.`,
     // B-1 (B+ 2026-06): 시작 부트 — 캐릭터 생성 직후 첫 유물 선택 안내.
-    START_BOOT_RELIC: '여정을 떠나기 전, 함께할 첫 유물을 고르세요. 이 선택이 앞으로의 전투 방식을 만듭니다.',
+    START_BOOT_RELIC: '새 여정의 유물 선택지가 열렸습니다. 지금 고르지 않아도 모험 중 다시 발견할 수 있습니다.',
 
     // --- 상태이상 (Status Effects) ---
     // cycle 107: 플레이어가 freeze/stun 상태에서 턴을 스킵할 때의 안내 — 적의

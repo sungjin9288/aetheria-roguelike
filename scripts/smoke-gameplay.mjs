@@ -504,10 +504,8 @@ async function startNewRun(page, { expectFirstStoryMission = false } = {}) {
     'new game state after intro start'
   );
 
-  // B-1 (B+ 2026-06): 캐릭터 생성 직후 "시작 부트" 유물 선택이 오버레이로 노출된다
-  //   (Hades 거울 / StS Neow). 다운스트림(상점/탭) 진입 전 첫 유물을 골라 오버레이를
-  //   해소해야 이후 클릭이 가로채이지 않는다. mode:game이 pendingRelics 렌더보다 먼저
-  //   resolve되는 경합을 피하려 상태를 먼저 기다린 뒤 클릭한다.
+  // 재도전 기록이 있으면 시작 유물 선택을 제공할 수 있다.
+  // 신규 세이브는 바로 첫 출발로 이어지고, 이 분기는 재도전 smoke에서만 방어적으로 정리한다.
   const sawBootRelics = await waitForState(page, (s) => Boolean(s.pendingRelics), 'start boot relics to appear', 6000)
     .then(() => true).catch(() => false);
   if (sawBootRelics) {
@@ -519,7 +517,7 @@ async function startNewRun(page, { expectFirstStoryMission = false } = {}) {
 
   const startRecord = state.logTail?.map((entry) => entry.text).join(' ') || '';
   ensure(
-    ['첫 여정이 시작됩니다', '첫 기술로', '함께할 첫 유물'].every((text) => startRecord.includes(text)),
+    ['첫 여정이 시작됩니다', '첫 기술로'].every((text) => startRecord.includes(text)),
     `New run record did not explain the start naturally: ${startRecord}`
   );
   ensure(
@@ -560,6 +558,11 @@ async function restartFromRunOver(page, label = 'recovery') {
   logSmoke(`restart after run-over (${label})`);
   await resetToIntro(page);
   const state = await startNewRun(page);
+  const storyClose = page.locator('[data-testid="milestone-story-close"]');
+  if (await storyClose.waitFor({ state: 'visible', timeout: 2000 }).then(() => true).catch(() => false)) {
+    await storyClose.click();
+    await storyClose.waitFor({ state: 'hidden', timeout: 5000 });
+  }
   await writeStateArtifact(`${label}-restart`, state, page);
   await moveToForest(page);
   return readState(page);

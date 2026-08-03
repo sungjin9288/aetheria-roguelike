@@ -32,6 +32,17 @@ const getStartingQuests = (player: any) => {
     return [...quests, createQuestProgressState(firstStoryQuest, player)];
 };
 
+const hasPreviousRunExperience = (player: any) => {
+    const stats = player.stats || {};
+    return [
+        player.meta?.prestigeRank,
+        stats.deaths,
+        stats.kills,
+        stats.explores,
+        stats.relicCount,
+    ].some((value) => Number(value) > 0);
+};
+
 export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDailyProtocolLogs }: any) => {
     const { player, gameState, dispatch, addLog, addStoryLog, getFullStats } = deps;
     return {
@@ -75,15 +86,16 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
                 const labels = mods.map((id: any) => BALANCE.CHALLENGE_MODIFIERS.find((m: any) => m.id === id)?.label || id);
                 addLog('warn', MSG.CHALLENGE_START(labels));
             }
-            // 영구 성장에 따라 첫 유물 선택지가 늘어납니다.
-            const startingRelicChoiceCount = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices
-                + mirrorEffects.startBootChoiceBonus;
-            const startingRelics = pickWeightedRelics(RELICS, startingRelicChoiceCount, {
-                rarityCap: BALANCE.START_BOOT_RARITY_CAP,
-            });
-            if (startingRelics.length > 0) {
-                dispatch({ type: AT.SET_PENDING_RELICS, payload: startingRelics });
-                addLog('event', MSG.START_BOOT_RELIC);
+            if (hasPreviousRunExperience(player)) {
+                const startingRelicChoiceCount = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices
+                    + mirrorEffects.startBootChoiceBonus;
+                const startingRelics = pickWeightedRelics(RELICS, startingRelicChoiceCount, {
+                    rarityCap: BALANCE.START_BOOT_RARITY_CAP,
+                });
+                if (startingRelics.length > 0) {
+                    dispatch({ type: AT.SET_PENDING_RELICS, payload: startingRelics });
+                    addLog('event', MSG.START_BOOT_RELIC);
+                }
             }
         },
 

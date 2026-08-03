@@ -47,6 +47,8 @@ test.describe('Intro flow', () => {
         // Intro 입력창 사라지고 게임 진입
         await expect(introInput).toBeHidden({ timeout: 15_000 });
         await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId('relic-choice-panel')).toBeHidden();
+        await expect(page.getByTestId('control-town-primary')).toContainText('고요한 숲으로 첫 출발');
     });
 
     test('StatusBar에 레벨 표시 (게임 부트 완료)', async ({ page }) => {
@@ -75,5 +77,27 @@ test.describe('Intro flow', () => {
         const completedMission = page.getByTestId('control-mission-tracker');
         await expect(completedMission).toContainText('보상 대기');
         await expect(completedMission).toContainText('마을에서 보상 회수');
+
+        const geometry = await page.evaluate(() => {
+            const shell = document.querySelector<HTMLElement>('[data-app-shell]');
+            if (!shell) throw new Error('App shell not found');
+            const shellBounds = shell.getBoundingClientRect();
+            return {
+                pageX: window.scrollX,
+                documentWidth: document.documentElement.scrollWidth,
+                viewportWidth: window.innerWidth,
+                shellLeft: shellBounds.left,
+                shellRight: shellBounds.right,
+                shellScrollLeft: shell.scrollLeft,
+                shellWidth: shell.scrollWidth,
+                shellViewport: shell.clientWidth,
+            };
+        });
+        expect(geometry.pageX).toBe(0);
+        expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+        expect(geometry.shellLeft).toBeGreaterThanOrEqual(-1);
+        expect(geometry.shellRight).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+        expect(geometry.shellScrollLeft).toBe(0);
+        expect(geometry.shellWidth).toBeLessThanOrEqual(geometry.shellViewport);
     });
 });

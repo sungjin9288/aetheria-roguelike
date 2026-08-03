@@ -24,6 +24,11 @@ const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme }: an
           soundManager.play('click');
         }
       }}
+      onScroll={(event: any) => {
+        if (event.currentTarget.scrollLeft !== 0) {
+          event.currentTarget.scrollLeft = 0;
+        }
+      }}
     >
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(213,177,128,0.12),transparent_24%),radial-gradient(circle_at_80%_14%,rgba(125,212,216,0.10),transparent_20%),linear-gradient(180deg,rgba(8,11,16,0.9)_0%,rgba(5,7,11,0.98)_100%)]" />

@@ -66,7 +66,7 @@ test('pickWeightedRelics: rarityCap 미전달(기존 호출부) 시 epic/legenda
 test('characterActions.start: 시작 부트 유물 후보에 epic/legendary가 없음 (통합 배선 검증)', () => {
     const dispatches = [];
     const deps = {
-        player: { meta: {}, stats: {} },
+        player: { meta: {}, stats: { explores: 1 } },
         gameState: 'idle',
         dispatch: (a) => dispatches.push(a),
         addLog: () => {},

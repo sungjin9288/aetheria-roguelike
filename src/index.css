@@ -44,6 +44,14 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
   html {
     background:
       linear-gradient(145deg, rgba(240, 195, 106, 0.1) 0%, transparent 32%),
@@ -52,7 +60,7 @@
   }
 
   body {
-    @apply text-slate-200 font-readable overflow-x-hidden selection:bg-cyan-200/20 selection:text-white;
+    @apply text-slate-200 font-readable selection:bg-cyan-200/20 selection:text-white;
     background:
       linear-gradient(150deg, rgba(246, 217, 140, 0.09) 0%, rgba(246, 217, 140, 0) 28%),
       linear-gradient(220deg, rgba(125, 212, 216, 0.1) 0%, rgba(125, 212, 216, 0) 26%),

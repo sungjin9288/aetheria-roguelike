@@ -115,7 +115,6 @@ test('first-session record uses natural player language from start through growt
     const messages = [
         MSG.START_JOURNEY('아리아'),
         MSG.START_SKILL('강타'),
-        MSG.START_BOOT_RELIC,
         MSG.MOVE_ARRIVED('고요한 숲'),
         MSG.MOVE_NEW_AREA('고요한 숲'),
         MSG.MOVE_AREA_DANGER(1),
@@ -144,7 +143,7 @@ test('first-session record uses natural player language from start through growt
     ];
     const record = messages.join(' ');
 
-    for (const phrase of ['첫 여정', '첫 기술', '첫 유물', '고요한 숲에 도착', '처음 발견한 지역', '경험 +20', '골드 +18', '계승 정수', '공격력 +3', '생명 +20', '기력이 부족', '새 칭호']) {
+    for (const phrase of ['첫 여정', '첫 기술', '고요한 숲에 도착', '처음 발견한 지역', '경험 +20', '골드 +18', '계승 정수', '공격력 +3', '생명 +20', '기력이 부족', '새 칭호']) {
         assert.ok(record.includes(phrase), `첫 세션 기록에 "${phrase}"가 있어야 합니다.`);
     }
     assert.doesNotMatch(record, /EXP|Gold|Lv\.|ATK|HP|MP|레거시|빌드|콜사인|초기 스킬|🏆|🗺️|⚠️/);

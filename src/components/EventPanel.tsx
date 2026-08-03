@@ -56,7 +56,10 @@ const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
                         <button
                             key={`${choice}_${idx}`}
                             data-testid={`event-choice-${idx}`}
-                            onClick={() => actions.handleEventChoice(idx)}
+                            onClick={(event) => {
+                                event.currentTarget.blur();
+                                actions.handleEventChoice(idx);
+                            }}
                             className="group min-h-[72px] rounded-[1rem] aether-event-choice px-3.5 py-3 text-left transition-all hover:border-[#d5b180]/28 hover:bg-[#d5b180]/10 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]"
                         >
                             <div className="flex items-center gap-3">
