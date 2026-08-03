@@ -1,6 +1,7 @@
 import { motion as Motion } from 'framer-motion';
 import { ArrowRight, Coins, Gem, ShieldAlert, Sparkles, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { useRef } from 'react';
 import type { EnhancePreview } from '../utils/enhancementUtils.js';
 import ItemIcon from './icons/ItemIcon';
 
@@ -15,6 +16,12 @@ const formatRate = (rate: number) => `${Math.round(rate * 100)}%`;
 const EnhanceDecisionCard = ({ preview, onCancel, onConfirm }: EnhanceDecisionCardProps) => {
     const requirement = preview.requirement;
     const canConfirm = preview.canEnhance && preview.affordable && Boolean(requirement);
+    const submittedRef = useRef(false);
+    const handleConfirm = () => {
+        if (!canConfirm || submittedRef.current) return;
+        submittedRef.current = true;
+        onConfirm();
+    };
 
     return createPortal(
         <Motion.div
@@ -120,7 +127,7 @@ const EnhanceDecisionCard = ({ preview, onCancel, onConfirm }: EnhanceDecisionCa
                         data-testid="enhance-decision-confirm"
                         whileTap={canConfirm ? { scale: 0.98 } : undefined}
                         disabled={!canConfirm}
-                        onClick={onConfirm}
+                        onClick={handleConfirm}
                         className="aether-cta-primary aether-type-body min-h-[48px] rounded-lg px-3 font-readable font-bold text-[#dff7f5] disabled:cursor-not-allowed disabled:opacity-45"
                     >
                         강화 시도

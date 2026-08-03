@@ -60,8 +60,11 @@ test.describe('Item investment preview', () => {
 
         await expect(decision).toContainText('+0');
         await expect(decision).toContainText('+1');
-        await expect(page.getByTestId('enhance-success-rate')).toHaveText('100%');
+        await expect(page.getByTestId('enhance-success-rate')).toHaveText('90%');
         await expect(page.getByTestId('enhance-stat-change')).toContainText('→');
+        const statChangeText = await page.getByTestId('enhance-stat-change').innerText();
+        const nextStat = statChangeText.match(/→\s*(\d+)/)?.[1];
+        expect(nextStat).toBeTruthy();
         await expect(page.getByTestId('enhance-failure-consequence')).toContainText('강화 단계는 유지');
         await expect(page.getByTestId('enhance-failure-consequence')).toContainText('골드와 강화 재료는 소모');
         expect(await findUndersizedText(decision)).toEqual([]);
@@ -79,9 +82,15 @@ test.describe('Item investment preview', () => {
         expect(goldAfterCancel).toBe(goldBeforeCancel);
 
         await openDecision.click();
-        await page.getByTestId('enhance-decision-confirm').click();
+        await page.evaluate(() => {
+            Math.random = () => 0;
+            const confirm = document.querySelector<HTMLElement>('[data-testid="enhance-decision-confirm"]');
+            confirm?.click();
+            confirm?.click();
+        });
         await expect(decision).toBeHidden();
         await expect(page.getByTestId('equipment-slot-weapon')).toContainText('+1');
+        await expect(page.getByTestId('equipment-slot-weapon')).toContainText(`공격력 +${nextStat}`);
         const goldAfterEnhance = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player.gold);
         expect(goldAfterEnhance).toBe(350);
     });

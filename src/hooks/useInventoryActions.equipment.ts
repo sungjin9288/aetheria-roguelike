@@ -12,6 +12,7 @@ import type { Item } from '../types/index.js';
  */
 export const createEquipmentActions = (ctx: any) => {
     const { player, dispatch, addLog, getFullStats } = ctx;
+    const enhanceAttemptLock = ctx.enhanceAttemptLock || { until: 0 };
 
     return ({
 
@@ -176,20 +177,27 @@ export const createEquipmentActions = (ctx: any) => {
                 return addLog('warn', MSG.ENHANCE_NO_MATERIAL(requirement.materialName, requirement.materials));
             }
 
-            const { nextInventory, removed } = consumeInventoryItemByName(player.inv, requirement.materialName, requirement.materials);
+            const now = Date.now();
+            if (now < enhanceAttemptLock.until) return;
+            enhanceAttemptLock.until = now + 1_000;
+
+            const { removed } = consumeInventoryItemByName(player.inv, requirement.materialName, requirement.materials);
             if (removed < requirement.materials) {
                 return addLog('warn', MSG.ENHANCE_NO_MATERIAL(requirement.materialName, requirement.materials));
             }
             const success = Math.random() < preview.successRate;
             dispatch({
-                type: AT.SET_PLAYER,
-                payload: (p: any) => ({
-                    ...p,
-                    gold: p.gold - requirement.gold,
-                    inv: nextInventory,
-                })
+                type: AT.ENHANCE_ITEM,
+                payload: {
+                    itemId,
+                    slot: equipSlot,
+                    success,
+                    expectedLevel: preview.currentLevel,
+                    goldCost: requirement.gold,
+                    materialName: requirement.materialName,
+                    materialCount: requirement.materials,
+                },
             });
-            dispatch({ type: AT.ENHANCE_ITEM, payload: { itemId, slot: equipSlot, success } });
             if (success) {
                 addLog('success', MSG.ENHANCE_SUCCESS(item.name, nextLevel));
             } else {

@@ -1,8 +1,13 @@
 import type { Item } from '../types/index.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
-import { getWeaponAttackValue, isWeapon } from './equipmentUtils.js';
+import {
+    getItemEnhanceBonus,
+    getWeaponAttackValue,
+    isWeapon,
+    type EquipmentEnhanceSlot,
+} from './equipmentUtils.js';
 
-export type EnhanceItemSlot = 'weapon' | 'armor' | 'offhand' | null;
+export type EnhanceItemSlot = EquipmentEnhanceSlot;
 
 export interface EnhancePreview {
     item: Item;
@@ -44,14 +49,6 @@ export const getEnhanceMaterialCount = (inventory: Item[]) => (
     countInventoryItemByName(inventory, CONSTANTS.ENHANCE_MATERIAL_NAME)
 );
 
-export const getItemEnhanceBonus = (item: Item | null | undefined, level: number, slot: EnhanceItemSlot) => {
-    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return 0;
-
-    const offhandRatio = isWeapon(item) && slot === 'offhand' ? BALANCE.OFFHAND_WEAPON_RATIO : 1;
-    const scaledBonus = Math.floor((item.val || 0) * BALANCE.ENHANCE_STAT_BONUS * level * offhandRatio);
-    return level > 0 ? Math.max(level, scaledBonus) : 0;
-};
-
 const getEnhanceStat = (item: Item, level: number, slot: EnhanceItemSlot) => {
     const weaponSlot = slot === 'offhand' ? 'offhand' : 'main';
     const baseStat = isWeapon(item)
@@ -60,6 +57,8 @@ const getEnhanceStat = (item: Item, level: number, slot: EnhanceItemSlot) => {
 
     return baseStat + getItemEnhanceBonus(item, level, slot);
 };
+
+export { getItemEnhanceBonus } from './equipmentUtils.js';
 
 // cycle 503: 누적량 default 제거 — 1 callsite (useInventoryActions:559) 항상
 //   3 args (count 명시) 전달이라 default 1 도달 불가. cycle 502 incrementStat

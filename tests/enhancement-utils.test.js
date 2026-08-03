@@ -7,6 +7,7 @@ import {
     countInventoryItemByName,
     getEnhanceAvailability,
     getEnhanceMaterialCount,
+    getEnhancePreview,
     getEnhanceRequirement,
 } from '../src/utils/enhancementUtils.js';
 
@@ -19,6 +20,22 @@ test('enhance requirement scales gold and material cost by current level', () =>
     assert.equal(early.materials, 1);
     assert.equal(late.gold, 25000);
     assert.equal(late.materials, 4);
+});
+
+test('enhance success rates are non-guaranteed and decline by level', () => {
+    const materials = Array.from({ length: 10 }, (_, index) => ({
+        id: `mat-${index}`,
+        name: CONSTANTS.ENHANCE_MATERIAL_NAME,
+    }));
+    const early = getEnhancePreview({ type: 'weapon', val: 25, enhance: 0 }, 100_000, materials, 'weapon');
+    const mid = getEnhancePreview({ type: 'weapon', val: 25, enhance: 4 }, 100_000, materials, 'weapon');
+    const late = getEnhancePreview({ type: 'weapon', val: 25, enhance: 9 }, 100_000, materials, 'weapon');
+
+    assert.equal(early.successRate, 0.9);
+    assert.equal(mid.successRate, 0.5);
+    assert.equal(late.successRate, 0.18);
+    assert.ok(early.successRate > mid.successRate);
+    assert.ok(mid.successRate > late.successRate);
 });
 
 test('enhance material count only counts the configured reinforcement material', () => {

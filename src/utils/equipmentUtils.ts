@@ -45,6 +45,20 @@ export const getEquipmentIdentity = (item: Item | null | undefined) => {
     return item.id || `${item.type}:${item.name}`;
 };
 
+export type EquipmentEnhanceSlot = 'weapon' | 'armor' | 'offhand' | null;
+
+export const getItemEnhanceBonus = (
+    item: Item | null | undefined,
+    level: number,
+    slot: EquipmentEnhanceSlot,
+) => {
+    if (!item || !['weapon', 'armor', 'shield'].includes(item.type as string)) return 0;
+
+    const offhandRatio = isWeapon(item) && slot === 'offhand' ? BALANCE.OFFHAND_WEAPON_RATIO : 1;
+    const scaledBonus = Math.floor((item.val || 0) * BALANCE.ENHANCE_STAT_BONUS * level * offhandRatio);
+    return level > 0 ? Math.max(level, scaledBonus) : 0;
+};
+
 // cycle 511: slot default 제거 — 모든 callsite 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 9번째 (cycle 502-510).
 export const getWeaponAttackValue = (weapon: any, slot: any) => {
@@ -62,6 +76,17 @@ export const getWeaponAttackValue = (weapon: any, slot: any) => {
     return Math.floor(baseVal * BALANCE.ONE_HAND_ATK_RATIO);
 };
 
+export const getEnhancedEquipmentStatValue = (
+    item: Item | null | undefined,
+    slot: EquipmentEnhanceSlot,
+) => {
+    if (!item) return 0;
+    const baseStat = isWeapon(item)
+        ? getWeaponAttackValue(item, slot === 'offhand' ? 'offhand' : 'main')
+        : (item.val || 0);
+    return baseStat + getItemEnhanceBonus(item, item.enhance || 0, slot);
+};
+
 // cycle 511: slot default 제거 — 모든 callsite 명시 전달이라 default 도달 불가.
 export const getWeaponCritBonus = (weapon: any, slot: any) => {
     if (!isOneHandWeapon(weapon)) return 0;
@@ -74,7 +99,9 @@ export const getWeaponCritBonus = (weapon: any, slot: any) => {
 //   (mainWeapon, 'main' / offhandWeapon, 'offhand')이라 default 도달 불가.
 //   util default 청소 메가 시리즈 16번째 (cycle 502-517).
 const getWeaponEquipScore = (weapon: any, slot: any) => (
-    getWeaponAttackValue(weapon, slot) + Math.round(getWeaponCritBonus(weapon, slot) * 100)
+    getWeaponAttackValue(weapon, slot)
+    + getItemEnhanceBonus(weapon, weapon?.enhance || 0, slot === 'offhand' ? 'offhand' : 'weapon')
+    + Math.round(getWeaponCritBonus(weapon, slot) * 100)
 );
 
 export const getOffhandCritBonus = (item: Item | null | undefined) => {
@@ -127,6 +154,16 @@ export const getEquipmentProfile = (equip: EquipSlots) => {
         hpBonus: getItemHpContribution(mainWeapon)
             + getItemHpContribution(equip.armor as any)
             + getItemHpContribution(offhandItem),
+    };
+};
+
+const getEnhancedEquipmentTotals = (equip: EquipSlots) => {
+    const profile = getEquipmentProfile(equip);
+    return {
+        atk: getEnhancedEquipmentStatValue(profile.mainWeapon, 'weapon')
+            + getEnhancedEquipmentStatValue(profile.offhandWeapon, 'offhand'),
+        def: getEnhancedEquipmentStatValue(equip.armor, 'armor')
+            + getEnhancedEquipmentStatValue(profile.offhandShield, 'offhand'),
     };
 };
 
@@ -285,9 +322,11 @@ export const getEquipmentDecision = (
     const currentProfile = getEquipmentProfile(equip);
     const nextEquip = getNextEquipmentState(equip, item);
     const nextProfile = getEquipmentProfile(nextEquip);
+    const currentEnhanced = getEnhancedEquipmentTotals(equip);
+    const nextEnhanced = getEnhancedEquipmentTotals(nextEquip);
     const diff: EquipmentStatDiff = {
-        atk: (nextProfile.mainAttack + nextProfile.offhandAttack) - (currentProfile.mainAttack + currentProfile.offhandAttack),
-        def: ((nextEquip.armor?.val || 0) + nextProfile.shieldDef) - ((equip.armor?.val || 0) + currentProfile.shieldDef),
+        atk: nextEnhanced.atk - currentEnhanced.atk,
+        def: nextEnhanced.def - currentEnhanced.def,
         crit: Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100),
         mp: nextProfile.mpBonus - currentProfile.mpBonus,
     };
@@ -366,22 +405,23 @@ export const getItemStatText = (item: Item | null | undefined) => {
     const elemSuffix = item.elem ? ` · ${item.elem} 속성` : '';
 
     if (isWeapon(item)) {
+        const attack = getEnhancedEquipmentStatValue(item, 'weapon');
         if (isTwoHandWeapon(item)) {
-            return `양손 무기 · 공격력 +${getWeaponAttackValue(item, 'main')}${elemSuffix} · 강한 일격`;
+            return `양손 무기 · 공격력 +${attack}${elemSuffix} · 강한 일격`;
         }
 
-        return `한손 무기 · 공격력 +${getWeaponAttackValue(item, 'main')}${elemSuffix} · 치명타 +${Math.round(getWeaponCritBonus(item, 'main') * 100)}%`;
+        return `한손 무기 · 공격력 +${attack}${elemSuffix} · 치명타 +${Math.round(getWeaponCritBonus(item, 'main') * 100)}%`;
     }
 
     if (isShield(item)) {
-        const parts = [`방어력 +${item.val || 0}${elemSuffix}`];
+        const parts = [`방어력 +${getEnhancedEquipmentStatValue(item, 'offhand')}${elemSuffix}`];
         if (typeof item.mp === 'number' && item.mp > 0) parts.push(`기력 +${item.mp}`);
         if (typeof item.crit === 'number' && item.crit > 0) parts.push(`치명타 +${Math.round(item.crit * 100)}%`);
         parts.push(isFocusOffhand(item) ? '마력 보조 장비' : '방어 보조 장비');
         return parts.join(' · ');
     }
 
-    if (item.type === 'armor') return `방어력 +${item.val || 0}${elemSuffix}`;
+    if (item.type === 'armor') return `방어력 +${getEnhancedEquipmentStatValue(item, 'armor')}${elemSuffix}`;
     if (item.type === 'hp') return `생명 +${item.val || 0}`;
     if (item.type === 'mp') return `기력 +${item.val || 0}`;
 

@@ -12,6 +12,7 @@ import {
     getWeaponHands,
     getWeaponStyleLabel,
     getItemStatText,
+    getEquipmentDecision,
     getEquipmentIdentity,
     getWeaponAttackValue,
     getWeaponCritBonus,
@@ -84,6 +85,23 @@ test('getItemStatText describes equipment with player-facing Korean terms', () =
     );
     assert.equal(getItemStatText({ type: 'hp', val: 30 }), '생명 +30');
     assert.equal(getItemStatText({ type: 'mp', val: 15 }), '기력 +15');
+});
+
+test('enhanced equipment displays and compares its current primary stat', () => {
+    const enhancedSword = { id: 'steel', type: 'weapon', hands: 1, val: 25, enhance: 4 };
+    assert.match(getItemStatText(enhancedSword), /공격력 \+21/);
+
+    const player = {
+        job: '모험가',
+        equip: {
+            weapon: { id: 'starter', type: 'weapon', hands: 1, val: 4, enhance: 0 },
+            armor: null,
+            offhand: null,
+        },
+    };
+    const baseDecision = getEquipmentDecision(player, { ...enhancedSword, enhance: 0 });
+    const enhancedDecision = getEquipmentDecision(player, enhancedSword);
+    assert.equal(enhancedDecision?.diff.atk - baseDecision?.diff.atk, 10);
 });
 
 // ─── Weapon stats ────────────────────────────────────────────────────────

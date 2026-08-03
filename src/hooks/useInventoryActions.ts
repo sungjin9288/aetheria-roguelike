@@ -16,7 +16,15 @@ import { createPremiumActions } from './useInventoryActions.premium';
  *   여기서 공유 클로저 + deps(ctx)를 주입해 조합한다. 단건 액션
  *   (chooseSkillBranch/invadeGrave)만 본 파일에 잔류.
  */
-export const createInventoryActions = ({ player, gameState, dispatch, addLog, addStoryLog, getFullStats }: any) => {
+export const createInventoryActions = ({
+    player,
+    gameState,
+    dispatch,
+    addLog,
+    addStoryLog,
+    getFullStats,
+    enhanceAttemptLock,
+}: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
     // cycle 504: amount default 1 제거 — 호출자 5건 모두 amount 명시 전달.
@@ -34,7 +42,18 @@ export const createInventoryActions = ({ player, gameState, dispatch, addLog, ad
 
     // PR #4: 도메인별 sub-factory 조합. 공유 클로저 + deps를 ctx로 주입해
     //   각 도메인 파일이 동일 player 참조/헬퍼를 공유 (동작 보존).
-    const ctx = { player, gameState, dispatch, addLog, addStoryLog, getFullStats, emitUnlockedTitles, emitDailyProtocolLogs, syncLevelQuests };
+    const ctx = {
+        player,
+        gameState,
+        dispatch,
+        addLog,
+        addStoryLog,
+        getFullStats,
+        enhanceAttemptLock,
+        emitUnlockedTitles,
+        emitDailyProtocolLogs,
+        syncLevelQuests,
+    };
 
     return ({
 

@@ -2,13 +2,12 @@ import { CONSTANTS, BALANCE } from '../data/constants.js';
 import type { Player } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { getActiveRelicSynergies } from '../data/relics.js';
-import { getEquipmentProfile, getWeaponHands, isMagicWeapon, isShield } from './equipmentUtils.js';
+import { getEquipmentProfile, getItemEnhanceBonus, getWeaponHands, isMagicWeapon, isShield } from './equipmentUtils.js';
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfileUtils.js';
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
-import { getItemEnhanceBonus } from './enhancementUtils.js';
 
 // cycle 449: 물리 elem 필터 제거 — items.ts elem 값에 '물리' / 'physical' 0건.
 //   weaponElem 있는 무기는 항상 magic elem이라 필터 redundant.

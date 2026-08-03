@@ -85,13 +85,35 @@ export const rewardActionMap = {
 
     // ── Item Enhancement ──────────────────────────────────────────────────
     ENHANCE_ITEM: (state: GameState, action: GameAction) => {
-        const { itemId, slot: slotName, success } = action.payload;
-        const newInv = (state.player.inv || []).map((item: any) => {
+        const {
+            itemId,
+            slot: slotName,
+            success,
+            expectedLevel,
+            goldCost,
+            materialName,
+            materialCount,
+        } = action.payload;
+        const equip: Record<string, any> = state.player.equip || {};
+        const currentItem = (state.player.inv || []).find((item: any) => item.id === itemId)
+            || (slotName ? equip[slotName] : null)
+            || Object.values(equip).find((item: any) => item?.id === itemId);
+        if (!currentItem || (currentItem.enhance || 0) !== expectedLevel) return state;
+        if ((state.player.gold || 0) < goldCost) return state;
+
+        let removedMaterials = 0;
+        const inventoryAfterCost = (state.player.inv || []).filter((item: any) => {
+            if (item?.name !== materialName || removedMaterials >= materialCount) return true;
+            removedMaterials += 1;
+            return false;
+        });
+        if (removedMaterials < materialCount) return state;
+
+        const newInv = inventoryAfterCost.map((item: any) => {
             if (item.id !== itemId) return item;
             if (!success) return item;
             return { ...item, enhance: (item.enhance || 0) + 1 };
         });
-        const equip: Record<string, any> = state.player.equip || {};
         const newEquip: Record<string, any> = {};
         for (const key of ['weapon', 'armor', 'offhand']) {
             const shouldEnhance = success && (
@@ -104,7 +126,12 @@ export const rewardActionMap = {
         }
         return {
             ...state,
-            player: { ...state.player, inv: newInv, equip: newEquip },
+            player: {
+                ...state.player,
+                gold: (state.player.gold || 0) - goldCost,
+                inv: newInv,
+                equip: newEquip,
+            },
             syncStatus: 'syncing',
         };
     },
