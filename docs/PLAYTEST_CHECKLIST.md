@@ -215,7 +215,14 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 
 ### 재료 보유 세이브 2분 정비 루틴
 
-강화 재료와 골드, 제작·합성 재료를 보유한 기존 QA 세이브를 사용합니다. 조건이 없는 항목은 실패로 처리하지 않고 준비되지 않은 입력을 정확히 기록합니다.
+운영 세이브를 바꾸지 않는 별도 QA bundle을 사용합니다. `com.aetheria.roguelike.freshqa`는 이미 provision된 QA container이며 production `com.aetheria.roguelike`와 데이터가 분리됩니다.
+
+1. `npm run test:device-qa:item-investment`로 강화·제작·합성 소비와 브라우저 재실행 저장 contract를 먼저 확인한다.
+2. `npm run ios:archive:material-qa`로 `build/ios/AetheriaMaterialQA.xcarchive`를 만든다. 이 명령은 QA web assets를 archive한 뒤 iOS project를 production web assets로 자동 복구한다.
+3. iPhone을 USB로 연결하고 잠금 해제한 뒤 `npm run ios:device:material-qa:smoke`로 별도 QA 앱 설치·실행·60초 process 생존을 확인한다.
+4. 같은 기기에서 아래 2분 루틴을 수행한 뒤 앱을 종료·재실행해 결과가 유지되는지 확인한다. QA 결과는 `aetheria.device-qa.item-investment.snapshot.v1`에만 저장된다.
+
+실기기 루틴:
 
 1. `0:00-0:40` `장비` 또는 `가방`에서 강화 가능한 장비의 `강화 보기`를 연다. 현재/다음 단계, 주 능력치 변화, 성공률, 골드·재료 비용, 실패 결과가 한 화면에서 읽히는지 확인한다.
 2. `0:40-1:10` 먼저 취소해 골드와 재료가 그대로인지 확인한다. 다시 열어 `강화 시도`를 누르고 표시된 비용과 실제 소비가 같은지, 성공 또는 실패 결과가 미리 안내된 규칙과 맞는지 확인한다.
@@ -226,6 +233,7 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 - 강화 실행 전 정보와 실제 비용·결과 규칙이 일치한다.
 - 제작·합성 결과의 정체성과 가치가 실행 전에 보이며, 재료가 부족하면 부족한 입력이 구체적으로 표시된다.
 - 강화·제작·합성 화면이 귀환 후 다음 행동을 가리거나 막지 않는다.
+- 앱 종료·재실행 뒤 강화 단계, 골드, 제작·합성 결과가 유지되고 production 앱의 캐릭터와 세이브는 바뀌지 않는다.
 
 #### Android
 

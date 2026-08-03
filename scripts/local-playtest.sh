@@ -76,7 +76,7 @@ if [[ "${PORT}" != "${REQUESTED_PORT}" ]]; then
 fi
 
 log_step "build"
-npm run build:guard
+VITE_ENABLE_TEST_API=1 npm run build:guard
 log_step "preview:start (${URL})"
 npm run preview -- --host "${HOST}" --port "${PORT}" --strictPort >"${PREVIEW_LOG}" 2>&1 &
 PREVIEW_PID=$!

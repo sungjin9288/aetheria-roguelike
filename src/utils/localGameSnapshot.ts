@@ -1,4 +1,5 @@
 export const LOCAL_GAME_SNAPSHOT_KEY = 'aetheria.game.snapshot.v1';
+export const DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.item-investment.snapshot.v1';
 
 type SnapshotStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
@@ -10,13 +11,14 @@ const getBrowserStorage = (): SnapshotStorage | null => {
     }
 };
 
-export const readLocalGameSnapshot = (
+const readSnapshot = (
+    key: string,
     storage: SnapshotStorage | null = getBrowserStorage(),
 ): Record<string, any> | null => {
     if (!storage) return null;
 
     try {
-        const raw = storage.getItem(LOCAL_GAME_SNAPSHOT_KEY);
+        const raw = storage.getItem(key);
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object' || !parsed.player) return null;
@@ -26,29 +28,55 @@ export const readLocalGameSnapshot = (
     }
 };
 
-export const writeLocalGameSnapshot = (
+const writeSnapshot = (
+    key: string,
     snapshot: Record<string, any>,
     storage: SnapshotStorage | null = getBrowserStorage(),
 ) => {
     if (!storage || !snapshot?.player) return false;
 
     try {
-        storage.setItem(LOCAL_GAME_SNAPSHOT_KEY, JSON.stringify(snapshot));
+        storage.setItem(key, JSON.stringify(snapshot));
         return true;
     } catch {
         return false;
     }
 };
 
-export const clearLocalGameSnapshot = (
+const clearSnapshot = (
+    key: string,
     storage: SnapshotStorage | null = getBrowserStorage(),
 ) => {
     if (!storage) return false;
 
     try {
-        storage.removeItem(LOCAL_GAME_SNAPSHOT_KEY);
+        storage.removeItem(key);
         return true;
     } catch {
         return false;
     }
 };
+
+export const readLocalGameSnapshot = (storage?: SnapshotStorage | null) => (
+    readSnapshot(LOCAL_GAME_SNAPSHOT_KEY, storage)
+);
+
+export const writeLocalGameSnapshot = (snapshot: Record<string, any>, storage?: SnapshotStorage | null) => (
+    writeSnapshot(LOCAL_GAME_SNAPSHOT_KEY, snapshot, storage)
+);
+
+export const clearLocalGameSnapshot = (storage?: SnapshotStorage | null) => (
+    clearSnapshot(LOCAL_GAME_SNAPSHOT_KEY, storage)
+);
+
+export const readDeviceQaSnapshot = (storage?: SnapshotStorage | null) => (
+    readSnapshot(DEVICE_QA_SNAPSHOT_KEY, storage)
+);
+
+export const writeDeviceQaSnapshot = (snapshot: Record<string, any>, storage?: SnapshotStorage | null) => (
+    writeSnapshot(DEVICE_QA_SNAPSHOT_KEY, snapshot, storage)
+);
+
+export const clearDeviceQaSnapshot = (storage?: SnapshotStorage | null) => (
+    clearSnapshot(DEVICE_QA_SNAPSHOT_KEY, storage)
+);

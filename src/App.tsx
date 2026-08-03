@@ -15,6 +15,10 @@ import GameRoot from './components/app/GameRoot';
 
 const RunSummaryCard = lazy(() => import('./components/RunSummaryCard'));
 
+const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'item-investment';
+const useRuntimeGameTestApi = TEST_API_BUILD ? useGameTestApi : () => undefined;
+
 const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
 
 function App() {
@@ -39,7 +43,7 @@ function App() {
     const inventorySpotlightRef = useRef(inventorySpotlight);
     /* eslint-disable-next-line react-hooks/refs */
     inventorySpotlightRef.current = inventorySpotlight;
-    useGameTestApi(engineRef, fullStatsRef, inventorySpotlightRef);
+    useRuntimeGameTestApi(engineRef, fullStatsRef, inventorySpotlightRef);
 
     // Performance marks
     useEffect(() => {

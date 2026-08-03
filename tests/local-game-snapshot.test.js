@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import {
+    DEVICE_QA_SNAPSHOT_KEY,
     LOCAL_GAME_SNAPSHOT_KEY,
+    clearDeviceQaSnapshot,
     clearLocalGameSnapshot,
+    readDeviceQaSnapshot,
     readLocalGameSnapshot,
+    writeDeviceQaSnapshot,
     writeLocalGameSnapshot,
 } from '../src/utils/localGameSnapshot.js';
 
@@ -51,14 +55,31 @@ test('local game snapshot can be cleared explicitly', () => {
     assert.equal(readLocalGameSnapshot(storage), null);
 });
 
+test('device QA snapshot is isolated from the production offline save', () => {
+    const storage = makeStorage();
+    const production = { player: { name: '루비아' }, gameState: 'idle' };
+    const deviceQa = { player: { name: '정비 검증' }, gameState: 'crafting' };
+
+    assert.equal(writeLocalGameSnapshot(production, storage), true);
+    assert.equal(writeDeviceQaSnapshot(deviceQa, storage), true);
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.deepEqual(readDeviceQaSnapshot(storage), deviceQa);
+    assert.ok(storage.values.has(LOCAL_GAME_SNAPSHOT_KEY));
+    assert.ok(storage.values.has(DEVICE_QA_SNAPSHOT_KEY));
+
+    assert.equal(clearDeviceQaSnapshot(storage), true);
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.equal(readDeviceQaSnapshot(storage), null);
+});
+
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {
     const source = await readFile(new URL('../src/hooks/useFirebaseSync.ts', import.meta.url), 'utf8');
 
     assert.match(source, /fallbackAuthOffline[\s\S]+?getOfflineBootstrapData\(\)/);
     assert.match(source, /fallbackToOffline[\s\S]+?getOfflineBootstrapData\(\)/);
     assert.match(source, /previousLocalPlayerNameRef/);
-    assert.match(source, /if \(previousPlayerName\) clearLocalGameSnapshot\(\)/);
-    assert.match(source, /writeLocalGameSnapshot\(\{/);
+    assert.match(source, /if \(previousPlayerName\) \{[\s\S]+?else clearLocalGameSnapshot\(\)/);
+    assert.match(source, /else writeLocalGameSnapshot\(snapshot\)/);
     assert.match(source, /version: CONSTANTS\.DATA_VERSION/);
 });
 
@@ -68,4 +89,12 @@ test('firebase sync promotes a local run only when the cloud document is absent'
     assert.match(source, /if \(docSnap\.exists\(\)\)[\s\S]+?migrateData\(remoteData\)/);
     assert.match(source, /else \{\s*const localData = getOfflineBootstrapData\(\)/);
     assert.match(source, /if \(localData\.player\?\.name\)[\s\S]+?payload: 'syncing'/);
+});
+
+test('device QA runtime stays offline and persists only to its isolated snapshot', async () => {
+    const source = await readFile(new URL('../src/hooks/useFirebaseSync.ts', import.meta.url), 'utf8');
+
+    assert.match(source, /deviceQaMode \? getDeviceQaBootstrapData\(\)/);
+    assert.match(source, /if \(deviceQaMode\) writeDeviceQaSnapshot\(snapshot\)/);
+    assert.match(source, /if \(mockMode\) return undefined;[\s\S]+?Auto Save/);
 });

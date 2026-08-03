@@ -12,6 +12,8 @@ interface ImportMetaEnv {
     readonly VITE_USE_AI_PROXY?: string;
     readonly VITE_AI_PROXY_URL?: string;
     readonly VITE_REMOTE_CONFIG?: string;
+    readonly VITE_ENABLE_TEST_API?: string;
+    readonly VITE_DEVICE_QA_SCENARIO?: string;
     [key: string]: string | undefined;
 }
 

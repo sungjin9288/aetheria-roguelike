@@ -18,11 +18,18 @@ import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { migrateData } from '../utils/gameUtils';
 import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
-import { isMockRuntime } from '../utils/runtimeMode';
+import { isDeviceQaRuntime, isMockRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
-import { clearLocalGameSnapshot, readLocalGameSnapshot, writeLocalGameSnapshot } from '../utils/localGameSnapshot';
+import {
+    clearDeviceQaSnapshot,
+    clearLocalGameSnapshot,
+    readDeviceQaSnapshot,
+    readLocalGameSnapshot,
+    writeDeviceQaSnapshot,
+    writeLocalGameSnapshot,
+} from '../utils/localGameSnapshot';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
 const AUTH_TIMEOUT_MS = 8000;
@@ -38,11 +45,22 @@ const getOfflineBootstrapData = () => {
     return activeData;
 };
 
+const getDeviceQaBootstrapData = () => {
+    const localSnapshot = readDeviceQaSnapshot();
+    if (!localSnapshot) return { player: INITIAL_STATE.player };
+
+    const activeData = migrateData(localSnapshot);
+    if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
+    if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
+    return activeData;
+};
+
 /**
  * useFirebaseSync — Firebase 인증, 실시간 동기화, 리더보드, 자동 저장
  */
 export const useFirebaseSync = (state: any, dispatch: any) => {
-    const smokeMode = isMockRuntime();
+    const mockMode = isMockRuntime();
+    const deviceQaMode = isDeviceQaRuntime();
     const {
         player,
         gameState,
@@ -60,14 +78,17 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
     const previousLocalPlayerNameRef = useRef(player?.name);
 
     useEffect(() => {
-        if (!smokeMode || syncStatus === 'offline') return;
+        if (!mockMode || syncStatus === 'offline') return;
         dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
-    }, [dispatch, smokeMode, syncStatus]);
+    }, [dispatch, mockMode, syncStatus]);
 
     // --- Auth ---
     useEffect(() => {
-        if (smokeMode) {
-            dispatch({ type: AT.LOAD_DATA, payload: { player: INITIAL_STATE.player } });
+        if (mockMode) {
+            dispatch({
+                type: AT.LOAD_DATA,
+                payload: deviceQaMode ? getDeviceQaBootstrapData() : { player: INITIAL_STATE.player },
+            });
             dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
             return undefined;
         }
@@ -113,7 +134,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
                 fallbackAuthOffline(MSG.SYNC_AUTH_FAIL);
             });
         return () => clearTimeout(authTimer);
-    }, [dispatch, smokeMode]);
+    }, [deviceQaMode, dispatch, mockMode]);
 
     useEffect(() => {
         lastLoadedTimestampRef.current = state.lastLoadedTimestamp;
@@ -121,7 +142,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
 
     // --- Config & Leaderboard ---
     useEffect(() => {
-        if (smokeMode) return undefined;
+        if (mockMode) return undefined;
         if (bootStage !== 'config') return;
 
         const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
@@ -148,11 +169,11 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
         fetchLeaderboard();
         dispatch({ type: AT.SET_BOOT_STAGE, payload: 'data' });
         return () => unsubConfig();
-    }, [bootStage, dispatch, smokeMode]);
+    }, [bootStage, dispatch, mockMode]);
 
     // --- User Data Listener ---
     useEffect(() => {
-        if (smokeMode) return undefined;
+        if (mockMode) return undefined;
         if (bootStage !== 'data' || !uid) return;
 
         const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
@@ -211,7 +232,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
             clearTimeout(bootstrapTimer);
             unsubscribe();
         };
-    }, [uid, bootStage, dispatch, smokeMode]);
+    }, [uid, bootStage, dispatch, mockMode]);
 
     // Cloud sync가 지연되거나 끊겨도 모바일 런이 앱 재실행 한 번으로 사라지지 않도록
     // 동일한 저장 payload를 로컬에 미러링한다. 기존 Firestore 문서가 있으면 원격 데이터가
@@ -219,15 +240,18 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
     useEffect(() => {
         const previousPlayerName = previousLocalPlayerNameRef.current;
         previousLocalPlayerNameRef.current = player?.name;
-        if (smokeMode) return undefined;
+        if (mockMode && !deviceQaMode) return undefined;
         if (!player?.name) {
-            if (previousPlayerName) clearLocalGameSnapshot();
+            if (previousPlayerName) {
+                if (deviceQaMode) clearDeviceQaSnapshot();
+                else clearLocalGameSnapshot();
+            }
             return undefined;
         }
 
         const timer = setTimeout(() => {
             const savedAt = Date.now();
-            writeLocalGameSnapshot({
+            const snapshot = {
                 player: {
                     ...player,
                     stats: { ...player.stats, lastSeenAt: savedAt },
@@ -239,15 +263,17 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
                 quickSlots,
                 version: CONSTANTS.DATA_VERSION,
                 savedAt,
-            });
+            };
+            if (deviceQaMode) writeDeviceQaSnapshot(snapshot);
+            else writeLocalGameSnapshot(snapshot);
         }, BALANCE.DEBOUNCE_SAVE_MS);
 
         return () => clearTimeout(timer);
-    }, [player, gameState, enemy, grave, currentEvent, quickSlots, smokeMode]);
+    }, [player, gameState, enemy, grave, currentEvent, quickSlots, deviceQaMode, mockMode]);
 
     // --- Auto Save (Debounced) ---
     useEffect(() => {
-        if (smokeMode) return undefined;
+        if (mockMode) return undefined;
         if (syncStatus !== 'syncing' || !uid) return;
 
         const saveData = async () => {
@@ -305,7 +331,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
 
         const timer = setTimeout(saveData, BALANCE.DEBOUNCE_SAVE_MS);
         return () => clearTimeout(timer);
-    }, [player, gameState, enemy, grave, currentEvent, quickSlots, syncStatus, uid, dispatch, smokeMode]);
+    }, [player, gameState, enemy, grave, currentEvent, quickSlots, syncStatus, uid, dispatch, mockMode]);
 
     // Update boot log ref
     useEffect(() => {
@@ -314,7 +340,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
 
     // --- Public Grave Upload on Death ---
     useEffect(() => {
-        if (smokeMode || !uid || !hasFirebaseConfig) return;
+        if (mockMode || !uid || !hasFirebaseConfig) return;
         if (gameState !== 'dead') return;
         const graveEntries = normalizeGraves(grave);
         const allItems = graveEntries.flatMap((g: any) => getGraveItems(g)).slice(0, 3);

@@ -5,6 +5,11 @@ import { GS } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
 import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
 import { calculateFullStats } from '../utils/statsCalculator';
+import {
+    getDeviceQaScenario,
+    isMockRuntime,
+    ITEM_INVESTMENT_DEVICE_QA_SCENARIO,
+} from '../utils/runtimeMode';
 
 /**
  * smoke test / dev harness용 window API 등록.
@@ -12,7 +17,9 @@ import { calculateFullStats } from '../utils/statsCalculator';
  */
 export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotlightRef: any) => {
     useEffect(() => {
-        if (typeof window === 'undefined') return undefined;
+        if (typeof window === 'undefined' || !isMockRuntime()) return undefined;
+
+        const deviceQaScenario = getDeviceQaScenario();
 
         const avatarScenarioMap: Record<string, any> = {
             'early-gear-choice': {
@@ -289,7 +296,25 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             signatureNames: ['성검 에테르니아'],
         };
 
-        window.__AETHERIA_TEST_API__ = {
+        const testApi: any = {
+            getInvestmentSnapshot: () => {
+                const player = engineRef.current.player;
+                return {
+                    name: player.name || '',
+                    gold: player.gold || 0,
+                    weaponEnhance: player.equip?.weapon?.enhance || 0,
+                    crafts: player.stats?.crafts || 0,
+                    syntheses: player.stats?.syntheses || 0,
+                    synthProtects: player.stats?.synthProtects || 0,
+                    inventory: (player.inv || []).map((item: any) => ({
+                        id: item.id,
+                        name: item.name,
+                        type: item.type,
+                        tier: item.tier || 0,
+                        enhance: item.enhance || 0,
+                    })),
+                };
+            },
             getDomMetrics: () => {
                 const rect = (node: any) => {
                     if (!(node instanceof HTMLElement)) return null;
@@ -409,7 +434,10 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 er.dispatch({
                     type: AT.SET_PLAYER,
                     payload: {
+                        name: er.player.name || '정비 검증',
                         job: '모험가',
+                        level: Math.max(2, er.player.level || 1),
+                        loc: '시작의 마을',
                         gold: 5_000,
                         premiumCurrency: 0,
                         inv: [...recipeMaterials, ...enhanceMaterials, ...synthesisItems],
@@ -772,7 +800,25 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             },
         };
 
+        window.__AETHERIA_TEST_API__ = testApi;
+
+        let deviceQaSeedTimer: ReturnType<typeof setTimeout> | undefined;
+        if (deviceQaScenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO) {
+            let attempts = 0;
+            const seedWhenReady = () => {
+                const engine = engineRef.current;
+                if (engine.bootStage === 'ready') {
+                    if (!String(engine.player?.name || '').trim()) testApi.seedItemInvestmentScenario();
+                    return;
+                }
+                attempts += 1;
+                if (attempts < 100) deviceQaSeedTimer = setTimeout(seedWhenReady, 100);
+            };
+            deviceQaSeedTimer = setTimeout(seedWhenReady, 0);
+        }
+
         return () => {
+            if (deviceQaSeedTimer) clearTimeout(deviceQaSeedTimer);
             delete window.render_game_to_text;
             // cycle 593: window.advanceTime delete paired removal (정의 자체 제거됨).
             delete window.__AETHERIA_TEST_API__;

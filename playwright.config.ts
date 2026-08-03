@@ -30,7 +30,7 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'npm run build && npx vite preview --port 4173',
+        command: 'VITE_ENABLE_TEST_API=1 npm run build && npx vite preview --port 4173',
         port: 4173,
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,

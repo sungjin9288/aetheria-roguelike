@@ -16,6 +16,7 @@
     "type-check": "tsc --noEmit",
     "test:smoke": "node scripts/smoke-gameplay.mjs",
     "test:e2e": "playwright test",
+    "test:device-qa:item-investment": "playwright test --config playwright.device-qa.config.ts",
     "verify": "npm run type-check && npm run lint && npm run test:unit && npm run build:guard",
     "verify:full": "npm run verify && AETHERIA_RUN_E2E=1 bash scripts/local-playtest.sh",
     "preview": "vite preview",
@@ -31,10 +32,13 @@
     "ios:build:device": "bash scripts/ios-build-device.sh",
     "ios:archive": "bash scripts/ios-archive.sh",
     "ios:archive:fresh-qa": "AETHERIA_IOS_ARCHIVE_PATH=build/ios/AetheriaFreshQA.xcarchive AETHERIA_IOS_DERIVED_DATA_PATH=/tmp/aetheria-ios-fresh-qa AETHERIA_IOS_PRODUCT_BUNDLE_IDENTIFIER=com.aetheria.roguelike.freshqa AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 bash scripts/ios-archive.sh",
+    "ios:archive:material-qa": "bash scripts/ios-material-qa.sh",
     "ios:device:smoke": "bash scripts/ios-device-smoke.sh",
     "ios:device:launch-smoke": "AETHERIA_IOS_REUSE_INSTALLED_APP=1 bash scripts/ios-device-smoke.sh",
     "ios:device:fresh-qa:smoke": "AETHERIA_IOS_APP_PATH=build/ios/AetheriaFreshQA.xcarchive/Products/Applications/App.app AETHERIA_IOS_BUNDLE_ID=com.aetheria.roguelike.freshqa bash scripts/ios-device-smoke.sh",
     "ios:device:fresh-qa:launch-smoke": "AETHERIA_IOS_BUNDLE_ID=com.aetheria.roguelike.freshqa AETHERIA_IOS_REUSE_INSTALLED_APP=1 bash scripts/ios-device-smoke.sh",
+    "ios:device:material-qa:smoke": "AETHERIA_IOS_APP_PATH=build/ios/AetheriaMaterialQA.xcarchive/Products/Applications/App.app AETHERIA_IOS_BUNDLE_ID=com.aetheria.roguelike.freshqa bash scripts/ios-device-smoke.sh",
+    "ios:device:material-qa:launch-smoke": "AETHERIA_IOS_BUNDLE_ID=com.aetheria.roguelike.freshqa AETHERIA_IOS_REUSE_INSTALLED_APP=1 bash scripts/ios-device-smoke.sh",
     "ios:open": "npx cap open ios"
   },
   "dependencies": {
