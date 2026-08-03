@@ -236,6 +236,7 @@ test('expedition preparation connects an active mission to one direct departure'
 
     assert.equal(preparation.missionTitle, '슬라임 소탕');
     assert.equal(preparation.destination, '고요한 숲');
+    assert.equal(preparation.goalLabel, '고요한 숲에서 슬라임 추적');
     assert.equal(preparation.resourceLabel, 'HP 100% · NRG 100%');
     assert.equal(preparation.equipmentLabel, '주요 장비 확인');
     assert.equal(preparation.readinessLabel, '출발 가능');

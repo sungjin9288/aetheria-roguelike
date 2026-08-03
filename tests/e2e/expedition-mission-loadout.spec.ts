@@ -31,10 +31,11 @@ test('마을에서 고른 원정 임무 3개가 출정 snapshot, 필드 tracker,
 
     await page.getByTestId('quest-board-close').click();
     const preparation = page.getByTestId('control-expedition-prep');
-    await expect(preparation.getByTestId('control-expedition-focus-list')).toContainText('첫 번째 여정');
-    await expect(preparation.getByTestId('control-expedition-focus-list')).toContainText('슬라임 소탕');
-    await expect(preparation.getByTestId('control-expedition-focus-list')).toContainText('광산의 위협');
-    await expect(preparation.getByTestId('control-expedition-focus-list')).not.toContainText('멧돼지 사냥');
+    await expect(preparation).toContainText('목적지');
+    await expect(preparation).toContainText('목표');
+    await expect(preparation).toContainText('고요한 숲에서 슬라임 추적 · 외 2건');
+    await expect(preparation).not.toContainText('멧돼지 사냥');
+    await expect(preparation.getByTestId('control-expedition-focus-list')).toHaveCount(0);
     await page.screenshot({ path: 'playtest-artifacts/expedition-mission-loadout/expedition-prep.png' });
 
     await page.getByTestId('control-expedition-start').click();

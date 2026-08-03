@@ -580,6 +580,28 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
+            seedActiveBountyPresentationScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        loc: '시작의 마을',
+                        level: 1,
+                        quests: [{
+                            id: 'bounty-presentation',
+                            title: '[현상수배] 물의 정령 토벌',
+                            desc: '물의 정령 8마리를 처치하라.',
+                            target: '물의 정령',
+                            goal: 8,
+                            progress: 0,
+                            reward: { exp: 16, gold: 24 },
+                            isBounty: true,
+                        }],
+                        expeditionFocusQuestIds: ['bounty-presentation'],
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
             seedExpeditionMissionLoadoutScenario: () => {
                 const er = engineRef.current;
                 er.dispatch({

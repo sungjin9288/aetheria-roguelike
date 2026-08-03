@@ -1,5 +1,5 @@
 import { LockKeyhole, MapPin, Route, ScrollText, ShieldAlert, Sparkles } from 'lucide-react';
-import { getRegionVisual } from '../utils/monsterVisuals';
+import { getLocationVisual } from '../utils/locationVisuals';
 
 export interface RouteTopologyEntry {
     name: string;
@@ -47,7 +47,7 @@ const RouteTopology = ({
     connectorTestId,
     routeTestId,
 }: RouteTopologyProps) => {
-    const currentVisual = blindMap ? null : getRegionVisual(currentName);
+    const currentVisual = blindMap ? null : getLocationVisual(currentName);
 
     return (
         <div
@@ -58,7 +58,7 @@ const RouteTopology = ({
             <div className="flex justify-center">
                 <div
                     data-testid={currentTestId}
-                    data-region-family={currentVisual?.key}
+                    data-location-visual={currentVisual?.key}
                     className="aether-route-topology-current"
                     aria-label={`현재 위치 ${blindMap ? '미확인' : currentName}`}
                 >
@@ -83,7 +83,7 @@ const RouteTopology = ({
             <div className="aether-route-topology-branches" aria-label="연결된 이동 경로">
                 {routes.map((route, index) => {
                     const marker = getRouteMarker(route);
-                    const regionVisual = blindMap ? null : getRegionVisual(route.name);
+                    const locationVisual = blindMap ? null : getLocationVisual(route.name);
                     const displayName = blindMap ? `미확인 경로 ${index + 1}` : route.name;
                     const disabled = Boolean(route.isLocked && disableLockedRoutes);
 
@@ -93,7 +93,7 @@ const RouteTopology = ({
                                 type="button"
                                 data-testid={routeTestId?.(route, index)}
                                 data-route-index={index}
-                                data-region-family={regionVisual?.key}
+                                data-location-visual={locationVisual?.key}
                                 aria-pressed={selectedName === route.name}
                                 aria-label={`${displayName}${marker ? `, ${marker.label}` : ''}`}
                                 disabled={disabled}
@@ -101,9 +101,9 @@ const RouteTopology = ({
                                 className={`aether-route-topology-node ${selectedName === route.name ? 'is-selected' : ''} ${route.isRecommended ? 'is-recommended' : ''} ${route.isMissionRoute ? 'is-mission' : ''} ${route.isBoss ? 'is-boss' : ''} ${route.isLocked ? 'is-locked' : ''}`}
                             >
                                 <span className="flex min-w-0 items-center gap-2">
-                                    {regionVisual && (
+                                    {locationVisual && (
                                         <img
-                                            src={regionVisual.src}
+                                            src={locationVisual.src}
                                             alt=""
                                             draggable={false}
                                             className="aether-route-region-art is-branch"

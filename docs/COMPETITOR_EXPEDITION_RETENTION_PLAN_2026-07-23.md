@@ -312,3 +312,20 @@ Scope: 첫 세션 연결 이후, 실기기 RC 검증과 병행할 다음 gamepla
 ## 다음 결정점
 
 Slice 66은 browser, native packaging, iOS Simulator 실제 터치 검증, 최신 물리 iPhone 설치까지 통과했다. 먼저 offline인 iPhone 연결을 복구하고 잠금 해제·화면 켜짐을 유지한 상태에서 `npm run ios:device:launch-smoke`의 60초 foreground hold를 다시 실행한다. 이어서 신규 세이브 5분에서 자동 배정 첫 이야기, 집중 임무, Map marker, 전투, 정상 귀환의 단일 정비 action, milestone story, standard/high readability를 실제 터치로 확인한다. 강화 취소·확정과 제작·합성 결과 비교는 필요한 재료를 자연스럽게 얻기 어려운 첫 5분에 억지로 넣지 않고 재료 보유 QA 세이브의 별도 2분 정비 route에서 검증한다. 이 evidence에서 정비 흐름을 방해하는 회귀가 없고 이야기 재확인 수요가 확인될 때만 Slice 67 Adventure Chronicle을 검토하며, 난이도·EXP·Map 재조정은 실기기 피드백 전에는 착수하지 않는다.
+
+## 5차 지역 식별·Compact UI 적용 (2026-08-03)
+
+최신 390x844 화면을 기준으로 기능 추가보다 `scan -> decide -> detail` 순서를 방해하는 중복 정보와 지역 시각 정체성의 공백을 다시 감사했다.
+
+- Shattered Pixel Dungeon의 공식 [Journal Overhaul](https://shatteredpixel.com/blog/coming-soon-to-shattered-a-journal-overhaul.html)은 비슷한 긴 목록을 compact visual grid와 선택 후 detail로 전환했고, [v2.5.0](https://shatteredpixel.com/blog/shattered-pixel-dungeon-v250.html)은 지역 splash art와 compact catalog를 보강했다. Aetheria에는 `이름·상태·핵심 수치 우선, 상세는 선택 후` 원칙만 적용한다.
+- Supergiant의 [Hades Updates](https://www.supergiantgames.com/blog/hades-updates/)와 [Welcome to Hell patch notes](https://www.supergiantgames.com/blog/hades-welcome-to-hell-update-patch-notes/)는 구역·잠긴 출구의 구분, text size와 menu navigation 개선을 반복적으로 다룬다. Aetheria Map도 generic region marker 대신 목적지별 고유 landmark를 사용한다.
+- Motion Twin의 [Dead Cells Update 29](https://dead-cells.com/patchnotes/29), [Update 25](https://dead-cells.com/patchnotes/25), [전체 patch notes](https://dead-cells.com/patchnotes)는 icon 정리, HUD/text size 옵션, world map 대비와 출구 구분을 지속적으로 개선했다. Aetheria는 영구 HUD를 identity·위치·핵심 자원으로 제한하고 장비 상세는 장비 화면에 둔다.
+
+적용 결과:
+
+1. `MAPS`의 52개 지역과 unknown fallback에 각각 다른 96px pixel medallion을 연결했다. 시작의 마을, 신성한 호수, 호수의 신전처럼 이전에 비어 있던 위치도 exact name registry로 고정하며 생성 source sheet와 crop/alpha pipeline을 보존한다.
+2. 원정 준비는 `목적지·목표`와 출발 action만 남기고 자원·장비·귀환 기준·임무 목록 중복을 제거했다. readiness 계산과 gate 자체는 유지한다.
+3. 추천 기본 토벌은 `멧돼지 사냥 (0/5)`처럼 제목에 progress를 합치고 반복 objective 문장을 숨긴다. 현상수배는 exact reward와 progress를 기존 operation brief 안에 합친다.
+4. 기본 상태창은 닉네임·직업·레벨·위치를 한 줄에 두며 장비 조화와 signature 정보는 owning Equipment panel에서만 제공한다.
+
+경쟁작의 asset, 문구, 수치, 코드는 복제하지 않는다. 이번 변경은 기존 progression·난이도·save schema를 바꾸지 않고 정보 위계와 location identity만 보강한다.

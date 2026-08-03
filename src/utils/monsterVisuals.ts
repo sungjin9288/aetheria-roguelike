@@ -6,11 +6,6 @@ export interface MonsterVisual {
     src: string;
 }
 
-export interface RegionVisual {
-    key: RegionVisualKey;
-    src: string;
-}
-
 const monster = (regionKey: RegionVisualKey, key: string): MonsterVisual => ({
     key,
     regionKey,
@@ -45,31 +40,10 @@ const MONSTER_VISUALS: Record<string, MonsterVisual> = {
 
 const MONSTER_ALIASES = Object.keys(MONSTER_VISUALS).sort((left, right) => right.length - left.length);
 
-const REGION_FAMILIES: Record<string, RegionVisualKey> = {
-    '고요한 숲': 'forest',
-    '서쪽 평원': 'plains',
-    '바람의 고원': 'plains',
-    '여행자의 쉼터': 'plains',
-    '잊혀진 폐허': 'ruins',
-    '버려진 광산': 'ruins',
-    '고대 하수도': 'ruins',
-    '고대 마법 탑': 'ruins',
-    '몰락한 전초기지': 'ruins',
-    '화염의 협곡': 'fire',
-    '화염의 사원': 'fire',
-    '용의 둥지': 'fire',
-    '용암 지대': 'fire',
-};
-
 export const getMonsterVisual = (name: string): MonsterVisual | null => {
     const exact = MONSTER_VISUALS[name];
     if (exact) return exact;
 
     const alias = MONSTER_ALIASES.find((candidate) => name.includes(candidate));
     return alias ? MONSTER_VISUALS[alias] : null;
-};
-
-export const getRegionVisual = (name: string): RegionVisual | null => {
-    const key = REGION_FAMILIES[name];
-    return key ? { key, src: `/assets/regions/${key}.png` } : null;
 };

@@ -253,6 +253,14 @@
 - **Rule:** 이동 추천은 진입 가능한 경로를 잠긴 경로보다 항상 먼저 정렬하고, 잠긴 경로에는 필요 레벨과 현재 할 일을 표시하되 추천 표식을 주지 않는다. 모바일 지도 첫 상세는 직접 연결된 진입 가능 임무 경로가 있을 때만 그 경로를 선택하고, 그 외에는 현재 위치에서 시작한다
 - **Rationale:** 체력과 기력이 충분하다는 이유로 고레벨 보스 지역이 추천되면 신규 플레이어는 잠금과 진행 방향을 동시에 오해한다. 잠긴 지역의 preview는 장기 목표로 유용하지만 현재 행동과 미래 정보를 같은 우선순위로 보여 주면 지도의 방향성이 사라진다
 
+### R53: Give Every Reachable Location An Exact Visual Identity
+- **Rule:** 데이터에 등록된 모든 이동 가능 지역은 exact name registry를 통해 고유한 location asset을 가져야 하며, fallback은 unknown 데이터에만 사용한다. 생성 원본, crop 순서, alpha 처리와 전체 데이터 대비 unique asset coverage를 함께 보존한다
+- **Rationale:** 지역 family icon을 여러 목적지에 재사용하면 경로 이름을 읽기 전에는 장소를 구분할 수 없고 신규 지역의 asset 누락도 눈에 띄지 않는다. 데이터 목록과 visual registry를 일대일 계약으로 검증해야 지도 확장 때 정체성 공백이 다시 생기지 않는다
+
+### R54: Keep Persistent HUD Information Within Its Owner Boundary
+- **Rule:** 상시 HUD에는 캐릭터 identity, 현재 위치, 생명·기력·경험과 즉시 필요한 전투 상태만 둔다. 장비 조화, 세트, signature 같은 정비 정보는 Equipment panel에서 제공하고 임무·원정 상세도 각각의 owning surface에서 비교한다
+- **Rationale:** 여러 시스템의 상세 상태를 상시 HUD에 누적하면 첫 viewport를 차지하면서도 현재 행동에는 도움이 적다. 정보를 삭제하는 대신 소유 화면으로 이동하면 깊이는 유지하면서 탐험·전투 화면의 scan time과 세로 공간을 줄일 수 있다
+
 ---
 
 ## 📝 Post-Mortem Template

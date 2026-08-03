@@ -30,21 +30,18 @@ test('persistent status and enemy target use direct Korean metric labels', async
     assert.doesNotMatch(source, /Target Lock|>Boss<|label="(?:HP|NRG|EXP)"|>CR<|Toggle Sound/);
 });
 
-test('persistent status separates identity, location, and readable metrics', async () => {
+test('persistent status keeps identity and location on one compact line above readable metrics', async () => {
     const source = await readSrc('src/components/StatusBar.tsx');
     const avatar = await readSrc('src/components/PixelCharacterAvatar.tsx');
 
     assert.match(source, /data-testid="status-player-summary"/);
-    assert.match(source, /data-testid="status-context-line"/);
+    assert.match(source, /data-testid="status-location"/);
     assert.match(source, /data-testid="status-metrics"/);
     assert.match(source, /data-testid="status-metric-label"/);
     assert.match(source, /data-testid="status-metric-value"/);
     assert.match(source, /text-\[10px\]/);
     assert.match(source, /text-\[11px\]/);
-    assert.match(source, /장비 조화 \{stats\.jobAffinity\.matchCount\}\/\{OUTFIT_SLOT_COUNT\}/);
-    assert.match(source, /전설 각인 \{equippedSignatureCount\}/);
-    assert.doesNotMatch(source, />\s*⚔\{stats\.jobAffinity\.matchCount\}/);
-    assert.doesNotMatch(source, />\s*✦\{equippedSignatureCount\}/);
+    assert.doesNotMatch(source, /status-outfit-affinity-chip|status-signature-chip|장비 조화|전설 각인/);
     assert.match(avatar, /data-testid="avatar-enhance-badge"/);
     assert.match(avatar, /강화 \+\{totalEnhance\}/);
     assert.doesNotMatch(avatar, />\s*\+\{totalEnhance\}/);
@@ -113,7 +110,7 @@ test('smoke verifies the rendered status, enemy, and log vocabulary', async () =
     assert.match(smoke, /Mobile status bar should expose one readable player summary/);
     assert.match(smoke, /Mobile status avatar should finish loading before visual evidence/);
     assert.match(smoke, /Mobile status bar should not overflow horizontally/);
-    assert.match(smoke, /Mobile status signals should explain affinity and signature counts/);
+    assert.match(smoke, /Mobile status should keep equipment detail in the equipment console/);
     assert.match(smoke, /document\.getAnimations\(\)/);
     assert.match(smoke, /writeStateArtifact\('03-arrived-forest', state, page\)/);
     assert.match(smoke, /Enemy status should use the player-facing target label/);

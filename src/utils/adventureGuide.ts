@@ -427,6 +427,10 @@ export const getExpeditionPreparation = (
                     : equipmentWarnings.length > 0
                         ? '장비 확인'
                         : '출발 가능';
+    const additionalGoalCount = Math.max(0, (tracker?.focusQuests?.length || 0) - 1);
+    const goalLabel = tracker?.nextStep
+        ? `${tracker.nextStep}${additionalGoalCount > 0 ? ` · 외 ${additionalGoalCount}건` : ''}`
+        : '임무를 고르거나 자유 탐험';
 
     return {
         tracker,
@@ -436,6 +440,7 @@ export const getExpeditionPreparation = (
         readinessLabel,
         missionTitle: tracker?.title || '자유 원정',
         missionStatus: tracker?.progressLabel || '임무 선택 전',
+        goalLabel,
         focusQuests: tracker?.focusQuests || [],
         destination: departure?.name || '이동 경로 없음',
         resourceLabel: `HP ${hpPercent}% · NRG ${mpPercent}%`,

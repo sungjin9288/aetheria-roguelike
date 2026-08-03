@@ -32,8 +32,9 @@ test('첫 이야기 다음에는 짧은 일반 토벌을 먼저 추천한다', a
     await expect(page.getByTestId('quest-board-panel')).toBeVisible({ timeout: 8_000 });
 
     const firstRecommendation = page.getByTestId('quest-decision-row').first();
-    await expect(firstRecommendation).toContainText('토벌 임무');
-    await expect(firstRecommendation).toContainText('슬라임 소탕');
+    await expect(firstRecommendation).toContainText('추천');
+    await expect(firstRecommendation).toContainText('슬라임 소탕 (0/3)');
+    await expect(firstRecommendation).not.toContainText('슬라임 3마리 처치');
     await expect(firstRecommendation).not.toContainText('보스 임무');
     await expect(firstRecommendation).not.toContainText('거미떼 퇴치');
 });
@@ -60,6 +61,20 @@ test('진행 중인 긴 임무를 손실 확인 후 포기할 수 있다', async
         const state = window.render_game_to_text?.();
         return state ? JSON.parse(state).player?.questCount : null;
     })).toBe(0);
+});
+
+test('현상수배는 정확한 보상과 진행 수치를 임무 안내 안에 모은다', async ({ page }) => {
+    await startE2ERun(page);
+    await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedActiveBountyPresentationScenario?.());
+
+    await page.getByTestId('control-quests').click();
+    const bounty = page.getByTestId('quest-active-row').filter({ hasText: '[현상수배] 물의 정령 토벌' });
+    await expect(bounty).toContainText('보상');
+    await expect(bounty).toContainText('경험 16 · 골드 24');
+    await expect(bounty).toContainText('귀환 기준');
+    await expect(bounty.getByTestId('quest-operation-progress')).toHaveText('0/8');
+    await expect(bounty).not.toContainText('골드와 경험 획득');
+    await bounty.screenshot({ path: 'playtest-artifacts/mobile-quest-expedition/active-bounty-compact.png' });
 });
 
 test('모바일 게시판 첫 화면에 추천 임무 3개의 핵심 판단 정보가 보인다', async ({ page }) => {
@@ -105,11 +120,12 @@ test('추천 임무 수락 후 하나의 출발 버튼으로 목적 권역에 �
 
     const preparation = page.getByTestId('control-expedition-prep');
     await expect(preparation).toBeVisible({ timeout: 8_000 });
-    await expect(preparation).toContainText('슬라임 소탕');
     await expect(preparation).toContainText('고요한 숲');
-    await expect(preparation).toContainText('자원');
-    await expect(preparation).toContainText('장비');
-    await expect(preparation).toContainText('귀환 기준');
+    await expect(preparation).toContainText('목적지');
+    await expect(preparation).toContainText('목표');
+    await expect(preparation).not.toContainText('자원');
+    await expect(preparation).not.toContainText('장비');
+    await expect(preparation).not.toContainText('귀환 기준');
 
     const startButton = page.getByTestId('control-expedition-start');
     await expect(startButton).toBeVisible();

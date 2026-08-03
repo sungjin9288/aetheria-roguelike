@@ -147,9 +147,8 @@ const townPrimaryIcons: Record<string, any> = {
   rest: Moon,
 };
 
-const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction, onEditFocus }: {
+const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocus }: {
   preparation: any;
-  guidance: any;
   primary: any;
   onPrimaryAction: () => void;
   onEditFocus: () => void;
@@ -157,9 +156,7 @@ const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction, 
   const PrimaryIcon = townPrimaryIcons[primary.kind] || Route;
   const checks = [
     { label: '목적지', value: preparation.destination },
-    { label: '자원', value: preparation.resourceLabel },
-    { label: '장비', value: preparation.equipmentLabel },
-    { label: '귀환 기준', value: preparation.returnLabel },
+    { label: '목표', value: preparation.goalLabel },
   ];
 
   return (
@@ -169,44 +166,12 @@ const ExpeditionPrepStrip = ({ preparation, guidance, primary, onPrimaryAction, 
       aria-label="원정 준비"
       className="aether-expedition-prep overflow-hidden px-3 py-2.5"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="aether-label text-[#b9f1ec]/72">원정 준비</div>
-          <div className="aether-type-title mt-0.5 font-readable font-semibold text-white">
-            {preparation.missionTitle}
-          </div>
-          <div className="aether-type-body mt-0.5 font-readable text-slate-300/76">
-            {preparation.missionStatus}
-          </div>
-        </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="aether-label text-[#b9f1ec]/72">원정 준비</div>
         <SignalBadge tone={preparation.readinessLabel === '출발 가능' ? 'recommended' : 'neutral'} size="sm">
           {preparation.readinessLabel}
         </SignalBadge>
       </div>
-
-      {!preparation.tracker && guidance?.title && (
-        <div data-testid="adventure-guidance-strip" className="mt-2 border-t border-white/8 pt-2">
-          <div className="aether-type-body font-readable font-semibold text-[#dff7f5]">{guidance.title}</div>
-          <div className="aether-type-meta mt-0.5 font-readable text-slate-300/82">{guidance.detail}</div>
-        </div>
-      )}
-
-      {preparation.focusQuests.length > 0 && (
-        <div className="mt-2" data-testid="control-expedition-focus-list">
-          <div className="mb-1 flex items-center justify-between gap-2">
-            <div className="aether-label">이번 원정 임무</div>
-            <span className="aether-type-meta font-readable text-[#b9f1ec]">{preparation.focusQuests.length}/{MAX_EXPEDITION_FOCUS_QUESTS}</span>
-          </div>
-          <div className="grid gap-1 min-[401px]:grid-cols-3">
-            {preparation.focusQuests.map((quest: any) => (
-              <div key={quest.questId} className="aether-expedition-check min-w-0 px-2 py-1.5">
-                <div className="aether-type-meta break-words font-readable font-semibold text-slate-100/90">{quest.title}</div>
-                <div className="aether-type-label mt-0.5 font-readable text-slate-400">{quest.progressLabel}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="mt-2 grid grid-cols-2 gap-1">
         {checks.map((check) => (
@@ -695,7 +660,6 @@ const ControlPanel = ({
             <div data-testid="control-map-signal" data-map-signal-mode="expedition-prep">
               <ExpeditionPrepStrip
                 preparation={expeditionPreparation}
-                guidance={guidance}
                 primary={townPresentation.primary}
                 onPrimaryAction={runTownPrimaryAction}
                 onEditFocus={() => setGameState?.(GS.QUEST_BOARD)}

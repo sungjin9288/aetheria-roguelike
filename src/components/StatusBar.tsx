@@ -2,8 +2,6 @@ import { Volume2, VolumeX } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
 import MonsterIcon from './icons/MonsterIcon';
-import { isSignatureItem } from '../data/signatureItems.js';
-import { OUTFIT_SLOT_COUNT } from '../utils/jobOutfitAffinity';
 import { useHitFlash } from '../hooks/useHitFlash';
 import type { Player, Monster } from '../types/index.js';
 
@@ -162,12 +160,6 @@ const StatusBar = ({
 }: StatusBarProps) => {
   if (!player?.name) return null;
   const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
-  // 장착중인 signature 개수 — sticky HUD에 ✦N 칩으로 상시 노출
-  const equippedSignatureCount = [
-    player?.equip?.weapon,
-    player?.equip?.armor,
-    player?.equip?.offhand,
-  ].filter((item: any) => item && isSignatureItem(item)).length;
 
   if (enemy) {
     return (
@@ -220,24 +212,39 @@ const StatusBar = ({
           className="shrink-0"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div data-testid="status-player-summary" className="min-w-0 flex flex-1 flex-wrap items-center gap-1.5">
-              <span className="min-w-0 max-w-[8.5rem] truncate font-readable text-[15px] font-semibold leading-tight text-white/96">{player.name}</span>
-              <SignalBadge tone={enemy ? 'danger' : 'neutral'} size="sm">{enemy ? '전투중' : player.job}</SignalBadge>
-              <SignalBadge tone="resonance" size="sm">레벨 {player.level}</SignalBadge>
-              {/* cycle 176: 'blindMap' challenge modifier — 위치 표시 숨김 ('???' 라벨로 대체).
-                  cycle 147 이전엔 dead modifier(handler 0건)였음 — 이제 정상 동작. */}
-              {/* slice 21: 위치 점/텍스트에 지역 accent — 지역 이동이 상태 바에서도 체감되게. */}
-              <div
-                data-testid="status-context-line"
-                className="basis-full flex min-h-[20px] min-w-0 flex-wrap items-center gap-1.5"
-              >
-                <span className="flex min-w-0 items-center gap-1 font-readable text-[10px]" style={{ color: 'var(--region-accent)' }}>
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: 'var(--region-accent)' }} />
-                  <span className="max-w-[8.5rem] truncate opacity-90">
-                    {player.challengeModifiers?.includes('blindMap') ? '???' : player.loc}
-                  </span>
-                </span>
+          <div className="flex items-center justify-between gap-2">
+            <div data-testid="status-player-summary" className="flex min-w-0 flex-1 items-baseline gap-1 font-readable">
+              <span className="max-w-[6.5rem] shrink truncate text-[14px] font-semibold leading-tight text-white/96">{player.name}</span>
+              <span className="shrink-0 text-[10px] text-slate-300/82">{player.job}</span>
+              <span className="shrink-0 text-[10px] text-[#cfc4ee]">레벨 {player.level}</span>
+              <span aria-hidden="true" className="shrink-0 text-slate-500">·</span>
+              <span data-testid="status-location" className="min-w-0 truncate text-[10px]" style={{ color: 'var(--region-accent)' }}>
+                {player.challengeModifiers?.includes('blindMap') ? '???' : player.loc}
+              </span>
+            </div>
+            <div className="shrink-0 flex items-center gap-1.5">
+              {onToggleMute && (
+                <button
+                  onClick={onToggleMute}
+                  className="pointer-events-auto rounded-full border border-white/8 bg-black/20 p-1 text-slate-300/70 transition-colors hover:text-white"
+                  aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
+                >
+                  {isMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
+                </button>
+              )}
+              <div className="text-right">
+                <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
+                <span className="ml-0.5 text-[9px] font-readable text-slate-400/68">골드</span>
+                {hasPremiumCurrency && (
+                  <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick || undefined}>
+                    💎{player.premiumCurrency}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {((player.killStreak || 0) >= 3 || (Array.isArray(player.status) && player.status.length > 0)) && (
+            <div data-testid="status-context-line" className="mt-1 flex min-h-[18px] min-w-0 flex-wrap items-center gap-1.5">
                 {(player.killStreak || 0) >= 3 && (
                   <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal text-orange-300">연속 처치 {player.killStreak}</span>
                 )}
@@ -266,62 +273,8 @@ const StatusBar = ({
                     </span>
                   );
                 })()}
-                {stats?.jobAffinity?.matchCount > 0 && (() => {
-                  const tier = stats.jobAffinity.tier;
-                  const tone =
-                    tier === 'full' ? { color: '#f6e7a2', border: 'rgba(246,231,162,0.55)', bg: 'rgba(246,231,162,0.18)' } :
-                    tier === 'partial2' ? { color: '#d5b180', border: 'rgba(213,177,128,0.50)', bg: 'rgba(213,177,128,0.14)' } :
-                    { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.12)' };
-                  return (
-                    <span
-                      data-testid="status-outfit-affinity-chip"
-                      data-affinity-tier={tier}
-                      className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal"
-                      style={{ color: tone.color, border: `1px solid ${tone.border}`, background: tone.bg }}
-                      aria-label={`장비 조화 ${stats.jobAffinity.matchCount}/${OUTFIT_SLOT_COUNT}: ${stats.jobAffinity.label}`}
-                    >
-                      장비 조화 {stats.jobAffinity.matchCount}/{OUTFIT_SLOT_COUNT}
-                    </span>
-                  );
-                })()}
-                {equippedSignatureCount > 0 && (
-                  <span
-                    data-testid="status-signature-chip"
-                    data-signature-count={equippedSignatureCount}
-                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal"
-                    style={{
-                      color: '#f6e7a2',
-                      border: '1px solid rgba(246,231,162,0.42)',
-                      background: 'rgba(246,231,162,0.12)',
-                    }}
-                    aria-label={`전설 각인 ${equippedSignatureCount}종 장착중`}
-                  >
-                    ✦ 전설 각인 {equippedSignatureCount}
-                  </span>
-                )}
-              </div>
             </div>
-            <div className="shrink-0 flex items-center gap-1.5">
-              {onToggleMute && (
-                <button
-                  onClick={onToggleMute}
-                  className="pointer-events-auto rounded-full border border-white/8 bg-black/20 p-1 text-slate-300/70 transition-colors hover:text-white"
-                  aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
-                >
-                  {isMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
-                </button>
-              )}
-              <div className="text-right">
-                <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
-                <span className="ml-0.5 text-[9px] font-readable text-slate-400/68">골드</span>
-                {hasPremiumCurrency && (
-                  <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick || undefined}>
-                    💎{player.premiumCurrency}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          )}
           <div data-testid="status-metrics" className="mt-1.5 grid grid-cols-3 gap-1">
             <StatusMetric label="생명" value={player.hp} max={stats?.maxHp} variant="hp" />
             <StatusMetric label="기력" value={player.mp} max={stats?.maxMp} variant="mp" />

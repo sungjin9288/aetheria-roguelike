@@ -530,7 +530,7 @@ async function startNewRun(page, { expectFirstStoryMission = false } = {}) {
   const firstPrimaryText = await firstPrimary.innerText();
   if (expectFirstStoryMission) {
     ensure(
-      ['[스토리] 첫 번째 여정', '0/1', '고요한 숲'].every((text) => firstPreparation.includes(text)),
+      ['목적지', '고요한 숲', '목표', '탐험 1회 진행'].every((text) => firstPreparation.includes(text)),
       `Fresh run did not connect its first story mission to the forest: ${firstPreparation}`
     );
     ensure(
@@ -605,7 +605,8 @@ async function verifyMobileFirstFold(page) {
   const statusBar = page.locator('[data-testid="persistent-status-bar"]');
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
   const statusCharacterChip = page.locator('[data-testid="status-character-chip"]');
-  const statusContextLine = page.locator('[data-testid="status-context-line"]');
+  const statusPlayerSummary = page.locator('[data-testid="status-player-summary"]');
+  const statusLocation = page.locator('[data-testid="status-location"]');
   const statusMetrics = page.locator('[data-testid="status-metrics"]');
   const townPrimary = page.locator('[data-testid="control-town-primary"]');
   const townFacilities = page.locator('[data-testid="control-town-facilities"]');
@@ -615,7 +616,8 @@ async function verifyMobileFirstFold(page) {
   await statusBar.waitFor({ state: 'visible', timeout: 10000 });
   await archiveOpenButton.waitFor({ state: 'visible', timeout: 10000 });
   await statusCharacterChip.waitFor({ state: 'visible', timeout: 10000 });
-  await statusContextLine.waitFor({ state: 'visible', timeout: 10000 });
+  await statusPlayerSummary.waitFor({ state: 'visible', timeout: 10000 });
+  await statusLocation.waitFor({ state: 'visible', timeout: 10000 });
   await statusMetrics.waitFor({ state: 'visible', timeout: 10000 });
   await townPrimary.waitFor({ state: 'visible', timeout: 10000 });
   await townFacilities.waitFor({ state: 'visible', timeout: 10000 });
@@ -637,8 +639,8 @@ async function verifyMobileFirstFold(page) {
   const terminalBox = await terminalPanel.boundingBox();
   ensure(terminalBox && terminalBox.height >= 240, 'Mobile log panel did not retain the expanded first-fold height');
   const statusText = await statusBar.innerText();
-  ensure(['모바일검증', '모험가', '레벨 1', '시작의 마을', '장비 조화 2/3', '생명', '기력', '경험', '골드'].every((label) => statusText.includes(label)), 'Mobile status bar should expose one readable player summary');
-  ensure(!/⚔\s*\d+\/\d+|✦\s*\d+/.test(statusText), 'Mobile status signals should explain affinity and signature counts');
+  ensure(['모바일검증', '모험가', '레벨 1', '시작의 마을', '생명', '기력', '경험', '골드'].every((label) => statusText.includes(label)), 'Mobile status bar should expose one readable player summary');
+  ensure(!/장비 조화|전설 각인|⚔\s*\d+\/\d+|✦\s*\d+/.test(statusText), 'Mobile status should keep equipment detail in the equipment console');
   ensure(!/\b(?:HP|NRG|EXP|CR)\b|Target Lock/.test(statusText), 'Mobile status bar should not expose mechanical English metric labels');
 
   await waitForVisualAssets(page);

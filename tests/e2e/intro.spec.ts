@@ -61,8 +61,7 @@ test.describe('Intro flow', () => {
         await startE2ERun(page);
 
         const preparation = page.getByTestId('control-expedition-prep');
-        await expect(preparation).toContainText('[스토리] 첫 번째 여정');
-        await expect(preparation).toContainText('0/1');
+        await expect(preparation).toContainText('고요한 숲에서 탐험 1회 진행');
 
         const primary = page.getByTestId('control-town-primary');
         await expect(primary).toHaveAttribute('data-town-primary-kind', 'open_move');

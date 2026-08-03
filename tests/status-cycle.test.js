@@ -63,9 +63,9 @@ import { readFile } from 'node:fs/promises';
       }
   });
 
-  test('StatusBar: 기존 signature 칩 / killStreak 칩 회귀 보존', async () => {
+  test('StatusBar: 장비 신호는 제거하고 전투 연속 처치 신호는 보존', async () => {
       const source = await readSrc('src/components/StatusBar.tsx');
-      assert.match(source, /data-testid\s*=\s*["']status-signature-chip["']/);
+      assert.doesNotMatch(source, /data-testid\s*=\s*["']status-signature-chip["']/);
       assert.match(source, /killStreak/);
   });
 }

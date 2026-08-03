@@ -24,9 +24,9 @@ test.describe('Navigation', () => {
         await expect(page.getByTestId('map-route-overview')).toBeVisible({ timeout: 5_000 });
         await expect(page.getByTestId('map-primary-route')).toBeVisible({ timeout: 5_000 });
         await expect(page.getByTestId('map-topology-route-1')).toBeVisible({ timeout: 5_000 });
-        await expect(page.getByTestId('map-primary-route')).toHaveAttribute('data-region-family', 'forest');
-        await expect(page.getByTestId('map-topology-route-1')).toHaveAttribute('data-region-family', 'plains');
-        await expect(page.getByTestId('map-topology').locator('img.aether-route-region-art')).toHaveCount(2);
+        await expect(page.getByTestId('map-primary-route')).toHaveAttribute('data-location-visual', 'quiet-forest');
+        await expect(page.getByTestId('map-topology-route-1')).toHaveAttribute('data-location-visual', 'western-plains');
+        await expect(page.getByTestId('map-topology').locator('img.aether-route-region-art')).toHaveCount(3);
         await expect(page.getByTestId('map-selected-detail')).toBeVisible({ timeout: 5_000 });
         await expect(page.getByTestId('map-route-forecast')).toContainText('위험');
         await expect(page.getByTestId('map-route-forecast')).toContainText('예상');
