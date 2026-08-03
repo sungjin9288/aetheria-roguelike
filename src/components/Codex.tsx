@@ -1,13 +1,17 @@
 import { useState, useMemo, useCallback } from 'react';
-// cycle 323: unused Shield icon import 제거 — Codex.tsx JSX에서 <Shield> 0건.
-import { BookOpen, Sword, Bug, Hammer, Leaf, Sparkles } from 'lucide-react';
+import { BookOpen, Bug, Gift, Hammer, Leaf, Sparkles, Sword } from 'lucide-react';
 // cycle 321: unused BALANCE / MSG imports 제거 — Codex.tsx 어디에서도 참조 0건.
 import { DB } from '../data/db';
 import { getCodexProgress } from '../data/codexRewards';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { AT } from '../reducers/actionTypes';
 import { soundManager } from '../systems/SoundManager';
-import SignalBadge from './SignalBadge';
+import {
+    CODEX_CATEGORY_LABELS,
+    formatCodexRewardParts,
+    getNextCodexGoals,
+    type CodexCategoryId,
+} from '../utils/codexPresentation';
 import WeaponCodex from './codex/WeaponCodex';
 import MonsterCodex from './codex/MonsterCodex';
 import RecipeCodex from './codex/RecipeCodex';
@@ -23,7 +27,9 @@ interface CodexProps {
     dispatch: (action: any) => void;
 }
 
-const SUB_TABS: any = [
+type CodexTabId = 'equip' | 'monster' | 'recipe' | 'material' | 'legend';
+
+const SUB_TABS: Array<{ id: CodexTabId; label: string; icon: typeof Sword }> = [
     { id: 'equip', label: '장비', icon: Sword },
     { id: 'monster', label: '몬스터', icon: Bug },
     { id: 'recipe', label: '제작법', icon: Hammer },
@@ -32,7 +38,7 @@ const SUB_TABS: any = [
 ];
 
 const Codex = ({ player, dispatch }: CodexProps) => {
-    const [subTab, setSubTab] = useState('equip');
+    const [subTab, setSubTab] = useState<CodexTabId>('equip');
     const [discoveryEntry, setDiscoveryEntry] = useState<any>(null);
     const dismissDiscovery = useCallback(() => setDiscoveryEntry(null), []);
     const progress = useMemo(() => {
@@ -93,110 +99,159 @@ const Codex = ({ player, dispatch }: CodexProps) => {
         return { total, discovered };
     }, [codex]);
 
+    const nextGoals = useMemo(() => getNextCodexGoals(
+        progress.milestones,
+        discoveredCounts as Partial<Record<CodexCategoryId, number>>,
+    ), [discoveredCounts, progress.milestones]);
+
+    const tabProgress = useMemo(() => ({
+        equip: {
+            discovered: discoveredCounts.weapons + discoveredCounts.armors + discoveredCounts.shields,
+            total: totalCounts.weapons + totalCounts.armors + totalCounts.shields,
+        },
+        monster: { discovered: discoveredCounts.monsters, total: totalCounts.monsters },
+        recipe: { discovered: discoveredCounts.recipes, total: totalCounts.recipes },
+        material: { discovered: discoveredCounts.materials, total: totalCounts.materials },
+        legend: legendaryCount,
+    }), [discoveredCounts, legendaryCount, totalCounts]);
+
     return (
-        <div data-testid="codex-panel" className="space-y-2.5">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="text-slate-500 text-xs font-fira tracking-[0.18em] uppercase flex items-center gap-1.5">
-                    <BookOpen size={12} /> 모험 도감
+        <div data-testid="codex-panel" className="font-readable">
+            <header data-testid="codex-summary" className="border-b border-white/10 pb-4">
+                <div className="flex items-start gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#7dd4d8]/24 bg-[#7dd4d8]/10">
+                        <BookOpen size={20} className="text-[#dff7f5]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-3">
+                            <h2 className="aether-type-title font-semibold text-slate-100">모험 도감</h2>
+                            <span className="aether-type-body shrink-0 font-semibold text-[#dff7f5]">
+                                {discoveredAll}/{totalAll}
+                            </span>
+                        </div>
+                        <p className="aether-type-meta mt-0.5 text-slate-400/76">
+                            발견한 장비와 생물, 제작 기록을 오래 보존합니다
+                        </p>
+                    </div>
                 </div>
-                <SignalBadge tone="recommended" size="sm">{discoveredAll}/{totalAll} ({pct}%)</SignalBadge>
-            </div>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.07]">
+                    <div
+                        style={{ width: `${pct}%` }}
+                        className="h-full rounded-full bg-[linear-gradient(90deg,#7dd4d8_0%,#d5b180_100%)] transition-all duration-700"
+                    />
+                </div>
+            </header>
 
-            {/* Total Progress Bar */}
-            <div className="w-full h-1.5 bg-black/24 rounded-full overflow-hidden">
-                <div
-                    style={{ width: `${pct}%` }}
-                    className="h-full bg-gradient-to-r from-cyber-blue to-cyber-purple rounded-full transition-all duration-700"
-                />
-            </div>
-
-            {/* Unclaimed milestones */}
             {progress.unclaimed.length > 0 && (
-                <div className="space-y-1.5">
-                    {progress.unclaimed.map((m: any) => {
-                        const rewardText = [
-                            m.reward.gold && `골드 +${m.reward.gold}`,
-                            m.reward.premiumCurrency && `+${m.reward.premiumCurrency}💎`,
-                            m.reward.atk && `공격력 +${m.reward.atk}`,
-                            m.reward.def && `방어력 +${m.reward.def}`,
-                            m.reward.hp && `생명 +${m.reward.hp}`,
-                        ].filter(Boolean).join(' ');
-                        return (
-                            <div key={m.id} className="flex items-center justify-between gap-2 rounded-[0.95rem] border border-cyber-green/30 bg-cyber-green/8 px-3 py-2">
-                                <div className="min-w-0">
-                                    <div className="text-[10px] font-fira text-cyber-green truncate">{m.label}</div>
-                                    <div className="text-[9px] font-fira text-slate-400 mt-0.5">{rewardText}</div>
+                <section data-testid="codex-claimable" className="border-b border-[#d5b180]/20 py-4">
+                    <div className="flex items-center gap-2">
+                        <Gift size={16} className="text-[#f6e7c8]" />
+                        <h3 className="aether-type-title font-semibold text-slate-100">받을 수집 보상</h3>
+                        <span className="aether-type-meta text-[#d5b180]">{progress.unclaimed.length}개</span>
+                    </div>
+                    <div className="mt-2 divide-y divide-white/8">
+                        {progress.unclaimed.map((milestone: any) => (
+                            <div key={milestone.id} className="flex min-h-14 items-center gap-3 py-2">
+                                <div className="min-w-0 flex-1">
+                                    <div className="aether-type-body font-semibold text-slate-100">{milestone.label}</div>
+                                    <div className="aether-type-meta mt-0.5 text-[#d5b180]">
+                                        {formatCodexRewardParts(milestone.reward).join(' · ')}
+                                    </div>
                                 </div>
                                 <button
-                                    data-testid={`codex-claim-${m.id}`}
+                                    type="button"
+                                    data-testid={`codex-claim-${milestone.id}`}
                                     onClick={() => {
-                                        dispatch?.({ type: AT.CLAIM_CODEX_REWARD, payload: { milestoneId: m.id, reward: m.reward } });
-                                        // cycle 133: codex milestone 수령 sensory cue — cycle 122/123 quest_complete
-                                        // 사운드 재사용. completeQuest / claimAchievement / claimCodex 3종이 동일
-                                        // "달성/회수" 음악적 정체성(E major) 공유.
+                                        dispatch?.({ type: AT.CLAIM_CODEX_REWARD, payload: { milestoneId: milestone.id, reward: milestone.reward } });
                                         soundManager.play('quest_complete');
                                     }}
-                                    className="shrink-0 rounded-[0.7rem] border border-cyber-green/50 bg-cyber-green/15 px-2.5 py-1 text-[9px] font-fira text-cyber-green transition-all hover:bg-cyber-green/25"
+                                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[#d5b180]/32 bg-[#d5b180]/12 px-3 text-sm font-semibold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
                                 >
-                                    수령
+                                    <Gift size={15} />
+                                    받기
                                 </button>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            <section data-testid="codex-next-goals" className="border-b border-white/10 py-4">
+                <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="aether-type-title font-semibold text-slate-100">다음 수집 목표</h3>
+                    <span className="aether-type-meta text-slate-400/76">가장 가까운 보상</span>
+                </div>
+                <div className="mt-2 divide-y divide-white/8">
+                    {nextGoals.map((goal) => {
+                        const goalPct = Math.min(100, (goal.current / Math.max(1, goal.count)) * 100);
+                        return (
+                            <div key={goal.id} data-testid={`codex-next-goal-${goal.id}`} className="py-2.5">
+                                <div className="flex items-baseline justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <span className="aether-type-body font-semibold text-slate-100">{goal.label}</span>
+                                        <span className="aether-type-meta ml-2 text-slate-400/76">
+                                            {CODEX_CATEGORY_LABELS[goal.category]}
+                                        </span>
+                                    </div>
+                                    <span className="aether-type-body shrink-0 text-[#dff7f5]">{goal.current}/{goal.count}</span>
+                                </div>
+                                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+                                    <div className="h-full rounded-full bg-[#7dd4d8]" style={{ width: `${goalPct}%` }} />
+                                </div>
+                                <div className="aether-type-meta mt-1.5 text-[#d5b180]">
+                                    {formatCodexRewardParts(goal.reward).join(' · ')} · {goal.remaining}개 남음
+                                </div>
                             </div>
                         );
                     })}
                 </div>
-            )}
+            </section>
 
-            {/* Sub Tabs */}
-            <div className="grid grid-cols-3 gap-1.5">
-                {SUB_TABS.map((tab: any) => {
+            <nav aria-label="도감 분류" className="grid grid-cols-5 gap-1 py-4" data-testid="codex-category-tabs">
+                {SUB_TABS.map((tab) => {
                     const Icon = tab.icon;
                     const active = subTab === tab.id;
-                    const isLegend = tab.id === 'legend';
-                    const accent = isLegend && active ? 'bg-amber-300/15 border-amber-300/45 text-amber-200' : active ? 'bg-cyber-blue/15 border-cyber-blue/40 text-cyber-blue' : 'border-white/8 text-slate-500 hover:text-slate-300 hover:border-white/14';
+                    const count = tabProgress[tab.id];
+                    const activeTone = tab.id === 'legend'
+                        ? 'border-[#d5b180]/38 bg-[#d5b180]/12 text-[#f6e7c8]'
+                        : 'border-[#7dd4d8]/38 bg-[#7dd4d8]/12 text-slate-100';
                     return (
                         <button
                             key={tab.id}
+                            type="button"
                             data-testid={`codex-tab-${tab.id}`}
+                            aria-current={active ? 'page' : undefined}
                             onClick={() => setSubTab(tab.id)}
-                            className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-lg text-[11px] font-readable transition-all border ${accent}`}
+                            className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border px-1 text-[11px] font-semibold transition-colors ${
+                                active ? activeTone : 'border-white/8 bg-white/[0.03] text-slate-400 hover:text-slate-200'
+                            }`}
                         >
-                            <Icon size={12} />
-                            {tab.label}
-                            {isLegend && (
-                                <span className="text-[8px] font-fira text-amber-200/75 leading-none">
-                                    {legendaryCount.discovered}/{legendaryCount.total}
-                                </span>
-                            )}
+                            <span className="inline-flex items-center gap-1">
+                                <Icon size={14} />
+                                {tab.label}
+                            </span>
+                            <span className="text-[11px] font-normal opacity-75">{count.discovered}/{count.total}</span>
                         </button>
                     );
                 })}
-            </div>
+            </nav>
 
-            {/* Tab Content */}
-            {subTab === 'equip' && (
-                <WeaponCodex
-                    codex={codex}
-                    totalCounts={totalCounts}
-                    discoveredCounts={discoveredCounts}
-                    progress={progress}
-                    player={player}
-                />
-            )}
-            {subTab === 'monster' && (
-                <MonsterCodex player={player} />
-            )}
-            {subTab === 'recipe' && (
-                <RecipeCodex codex={codex} player={player} />
-            )}
-            {subTab === 'material' && (
-                <MaterialCodex codex={codex} />
-            )}
-            {subTab === 'legend' && (
-                <LegendaryCodex player={player} />
-            )}
+            <section data-testid={`codex-content-${subTab}`} className="border-t border-white/10 pt-4">
+                {subTab === 'equip' && (
+                    <WeaponCodex
+                        codex={codex}
+                        totalCounts={totalCounts}
+                        discoveredCounts={discoveredCounts}
+                        progress={progress}
+                        player={player}
+                    />
+                )}
+                {subTab === 'monster' && <MonsterCodex player={player} />}
+                {subTab === 'recipe' && <RecipeCodex codex={codex} player={player} />}
+                {subTab === 'material' && <MaterialCodex codex={codex} />}
+                {subTab === 'legend' && <LegendaryCodex player={player} />}
+            </section>
 
-            {/* 도감 발견 오버레이 */}
             <CodexDiscoveryOverlay entry={discoveryEntry} onDismiss={dismissDiscovery} />
         </div>
     );

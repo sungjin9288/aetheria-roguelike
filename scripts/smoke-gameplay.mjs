@@ -1427,15 +1427,55 @@ async function verifyTabs(page) {
   const codexState = await waitForState(page, (state) => state.sideTab === 'codex', 'codex tab activation');
   await verifySurfaceLanguage(page, {
     selector: '[data-testid="codex-panel"]',
-    requiredText: ['모험 도감', '장비', '몬스터', '제작법', '소재', '전설'],
+    requiredText: ['모험 도감', '다음 수집 목표', '장비', '몬스터', '제작법', '소재', '전설'],
     forbiddenPattern: /EQUIP|MONSTER|RECIPE|MATERIAL|LEGEND|WEAPONS|ARMORS|SHIELDS/,
     label: 'codex tab',
   });
   await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  const codexLayout = await page.locator('[data-testid="codex-panel"]').evaluate((root) => {
+    const leaves = [...root.querySelectorAll('*')]
+      .filter((node) => node.children.length === 0 && (node.textContent || '').trim());
+    const fontSizes = leaves.map((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+    const visibleButtonHeights = [...root.querySelectorAll('button')]
+      .map((button) => button.getBoundingClientRect().height)
+      .filter((height) => height > 0);
+    const categoryButtons = [...root.querySelectorAll('[data-testid^="codex-tab-"]')];
+    const bounds = root.getBoundingClientRect();
+    return {
+      panelHeight: Math.round(bounds.height),
+      minFont: Math.min(...fontSizes),
+      minButtonHeight: Math.min(...visibleButtonHeights),
+      nextGoalCount: root.querySelectorAll('[data-testid^="codex-next-goal-"]').length,
+      categoryCount: categoryButtons.length,
+      categoriesInside: categoryButtons.every((button) => {
+        const rect = button.getBoundingClientRect();
+        return rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1;
+      }),
+      openEquipmentTierCount: root.querySelectorAll('[data-testid^="codex-equipment-tier-"][open]').length,
+      nestedScrollCount: root.querySelectorAll('.custom-scrollbar').length,
+    };
+  });
+  ensure(codexLayout.panelHeight < 1500, `Codex should prioritize goals instead of rendering all 599 records: ${JSON.stringify(codexLayout)}`);
+  ensure(codexLayout.minFont >= 11, `Codex text should keep the mobile 11px floor: ${JSON.stringify(codexLayout)}`);
+  ensure(codexLayout.minButtonHeight >= 44, `Codex actions should keep 44px touch targets: ${JSON.stringify(codexLayout)}`);
+  ensure(codexLayout.nextGoalCount === 3, `Codex should expose three near-term collection goals: ${JSON.stringify(codexLayout)}`);
+  ensure(codexLayout.categoryCount === 5 && codexLayout.categoriesInside, `All codex categories should fit in one row: ${JSON.stringify(codexLayout)}`);
+  ensure(codexLayout.openEquipmentTierCount === 0, `Codex equipment records should stay collapsed until requested: ${JSON.stringify(codexLayout)}`);
+  ensure(codexLayout.nestedScrollCount === 0, `Codex should rely on the archive scroll instead of nested lists: ${JSON.stringify(codexLayout)}`);
   await writeStateArtifact('08b-codex-tab', codexState, page, {
     screenshotSelector: '[data-testid="mobile-archive-console"]',
-    screenshotAnimations: 'allow',
+    screenshotAnimations: 'disabled',
   });
+
+  await page.locator('[data-testid="codex-tab-monster"]').click();
+  await page.locator('[data-testid="codex-monster-research-goals"]').waitFor({ state: 'visible', timeout: 8000 });
+  const monsterCodexLayout = await page.locator('[data-testid="codex-monsters"]').evaluate((root) => ({
+    undiscoveredSummaryCount: root.querySelectorAll('[data-testid="codex-monster-undiscovered"]').length,
+    renderedMonsterButtons: root.querySelectorAll('[data-testid^="codex-monster-detail-"] button').length,
+    totalButtons: root.querySelectorAll('button').length,
+  }));
+  ensure(monsterCodexLayout.undiscoveredSummaryCount === 1, `Monster codex should summarize undiscovered records once: ${JSON.stringify(monsterCodexLayout)}`);
+  ensure(monsterCodexLayout.totalButtons < 40, `Monster codex should not render the 254-record unknown wall: ${JSON.stringify(monsterCodexLayout)}`);
 
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('system'));
   const systemState = await waitForState(page, (state) => state.sideTab === 'system', 'system tab activation');

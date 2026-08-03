@@ -1420,10 +1420,10 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 571: 정합성 가드 — 2 production callsite 보존', async () => {
       const source = await readSrc('src/components/codex/MonsterCodex.tsx');
-      assert.ok(/<MonsterIcon name=\{m\.name\} discovered=\{m\.encountered\} isBoss=\{m\.isBoss\} size=\{24\}/.test(source),
-          'MonsterCodex:98 <MonsterIcon> callsite 보존');
-      assert.ok(/<MonsterIcon name=\{m\.name\} discovered isBoss=\{m\.isBoss\} size=\{28\}/.test(source),
-          'MonsterCodex:121 <MonsterIcon> callsite 보존');
+      assert.ok(/<MonsterIcon name=\{monster\.name\} discovered isBoss=\{monster\.isBoss\} size=\{32\}/.test(source),
+          'MonsterCodex detail <MonsterIcon> callsite 보존');
+      assert.ok(/<MonsterIcon name=\{monster\.name\} discovered isBoss=\{monster\.isBoss\} size=\{28\}/.test(source),
+          'MonsterCodex list <MonsterIcon> callsite 보존');
   });
 
   test('cycle 571: body SILHOUETTE_PATHS 분기 보존', async () => {

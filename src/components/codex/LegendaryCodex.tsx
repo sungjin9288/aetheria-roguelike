@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Lock, Sparkles } from 'lucide-react';
+import { ChevronDown, Lock, Sparkles } from 'lucide-react';
 import { DB } from '../../data/db';
 import { SIGNATURE_ITEM_REGISTRY } from '../../data/signatureItems.js';
 import { getSignatureSetDefinitions } from '../../utils/signatureSetBonus.js';
@@ -101,16 +101,13 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
     }, [codex, entries, player?.equip]);
 
     return (
-        <div className="space-y-2">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-[9px] font-fira text-slate-400 uppercase tracking-wider">
-                    <Sparkles size={11} className="text-amber-300" />
-                    전설 수집
+        <div data-testid="codex-legendary" className="space-y-4">
+            <div className="flex items-baseline justify-between gap-3">
+                <div>
+                    <h3 className="aether-type-title font-semibold text-slate-100">전설 수집</h3>
+                    <p className="aether-type-meta mt-0.5 text-slate-400/76">보스 전리품과 세트 핵심 장비를 기록합니다</p>
                 </div>
-                <div className="text-[9px] font-fira text-amber-200">
-                    {discoveredCount}/{entries.length}
-                </div>
+                <div className="aether-type-body shrink-0 text-amber-200">{discoveredCount}/{entries.length}</div>
             </div>
 
             {/* Pity resonance status */}
@@ -118,7 +115,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                 data-testid="legendary-codex-pity-status"
                 data-pity={pity}
                 data-pity-mult={pityMult}
-                className="rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2"
+                className="flex min-h-14 items-center justify-between gap-2 rounded-lg px-3 py-2"
                 style={{
                     border: `1px solid ${pityActive ? 'rgba(246,231,162,0.42)' : 'rgba(255,255,255,0.08)'}`,
                     background: pityActive
@@ -128,10 +125,10 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
             >
                 <div className="flex items-center gap-1.5 min-w-0">
                     <Sparkles size={11} className={pityActive ? 'text-amber-300' : 'text-slate-500'} />
-                    <span className="font-rajdhani font-bold text-[11px]" style={{ color: pityActive ? '#f6e7a2' : '#c8cdd6' }}>
+                    <span className="text-sm font-semibold" style={{ color: pityActive ? '#f6e7a2' : '#c8cdd6' }}>
                         각인 공명
                     </span>
-                    <span className="text-[9px] font-fira text-slate-400/80 truncate">
+                    <span className="truncate text-[11px] text-slate-400/80">
                         {pityActive
                             ? (pityCapped ? '상한 도달' : `보스 ${pity}회 누적`)
                             : (pity > 0
@@ -140,18 +137,22 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                     </span>
                 </div>
                 <span
-                    className="shrink-0 text-[10px] font-fira font-bold"
+                    className="shrink-0 text-sm font-semibold"
                     style={{ color: pityActive ? '#f6e7a2' : '#6b7280' }}
                 >
                     {pityActive ? `+${pityPct}%` : '+0%'}
                 </span>
             </div>
 
-            {/* Set summary */}
             {setSummary.length > 0 && (
-                <div className="space-y-1.5">
-                    <div className="text-[9px] font-readable text-slate-400">전설 세트</div>
-                    <div className="grid grid-cols-1 gap-1.5">
+                <details data-testid="legendary-codex-sets" className="group border-y border-white/10">
+                    <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-3 [&::-webkit-details-marker]:hidden">
+                        <Sparkles size={16} className="text-amber-200" />
+                        <span className="aether-type-body flex-1 font-semibold text-slate-100">전설 세트</span>
+                        <span className="aether-type-meta text-slate-400/76">{setSummary.length}개</span>
+                        <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="grid grid-cols-1 gap-1.5 pb-3">
                         {setSummary.map(({ key, def, total, discovered, equipped }: any) => {
                             const accent = TONE_ACCENT[def.tone] || DEFAULT_TONE_ACCENT;
                             const activeBonus = equipped >= 2
@@ -160,7 +161,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                             return (
                                 <div
                                     key={key}
-                                    className="rounded-lg px-2.5 py-1.5 flex flex-col gap-0.5"
+                                    className="flex min-h-14 flex-col justify-center gap-0.5 rounded-lg px-3 py-2"
                                     style={{
                                         border: `1px solid ${equipped >= 2 ? accent.border : 'rgba(255,255,255,0.08)'}`,
                                         background: equipped >= 2
@@ -168,14 +169,14 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                                             : 'linear-gradient(180deg, rgba(14,17,22,0.9) 0%, rgba(8,10,14,1) 100%)',
                                     }}
                                 >
-                                    <div className="flex items-center justify-between text-[10px] font-fira">
-                                        <span className="font-rajdhani font-bold text-white text-[11px]">{def.name}</span>
+                                    <div className="flex items-center justify-between gap-3 text-[11px]">
+                                        <span className="font-semibold text-white">{def.name}</span>
                                         <span className={equipped >= 2 ? 'text-amber-200' : 'text-slate-500'}>
                                             {equipped > 0 ? `장착 ${equipped}` : '미장착'} · 수집 {discovered}/{total}
                                         </span>
                                     </div>
                                     {activeBonus && (
-                                        <div className="text-[9px] font-fira text-amber-200/90">
+                                        <div className="text-[11px] text-amber-200/90">
                                             {activeBonus.desc}
                                         </div>
                                     )}
@@ -183,23 +184,21 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                             );
                         })}
                     </div>
-                </div>
+                </details>
             )}
 
             {/* Empty-state educational hint — 발견 0개일 때 어디서 어떻게 시작하는지 안내 */}
             {discoveredCount === 0 && (
                 <div
                     data-testid="legendary-codex-empty-hint"
-                    className="rounded-[1rem] px-3 py-2.5 text-[11px] font-fira leading-relaxed"
+                    className="rounded-lg px-3 py-3 text-[11px] leading-relaxed"
                     style={{
                         border: '1px solid rgba(246,231,162,0.42)',
                         background: 'linear-gradient(180deg, rgba(246,231,162,0.10) 0%, rgba(18,16,10,0.62) 100%)',
                         color: '#f6e7a2',
                     }}
                 >
-                    <div className="text-[10px] uppercase tracking-[0.18em] mb-1">
-                        ✦ 첫 발견까지
-                    </div>
+                    <div className="mb-1 font-semibold">첫 발견까지</div>
                     <div className="text-slate-200/86">
                         보스를 토벌하면 전설 각인이 떨어질 수 있습니다. 이동 패널의
                         <span className="mx-1" style={{ color: '#f6e7a2' }}>✦N</span>
@@ -208,8 +207,14 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                 </div>
             )}
 
-            {/* Grid */}
-            <div className="grid grid-cols-3 gap-1.5 max-h-[45dvh] overflow-y-auto custom-scrollbar">
+            <details data-testid="legendary-codex-collection" className="group border-y border-white/10">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-3 [&::-webkit-details-marker]:hidden">
+                    <Sparkles size={16} className="text-amber-200" />
+                    <span className="aether-type-body flex-1 font-semibold text-slate-100">전설 장비 기록</span>
+                    <span className="aether-type-meta text-slate-400/76">{discoveredCount}/{entries.length}</span>
+                    <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="grid grid-cols-2 gap-1.5 pb-3">
                 {entries.map(({ item, meta }: any) => {
                     const bucket = resolveDiscoveryBucket(item);
                     const found = bucket ? Boolean(codex[bucket]?.[item.name]) : false;
@@ -221,7 +226,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                             key={item.name}
                             type="button"
                             onClick={() => found && setSelected(isSelected ? null : item.name)}
-                            className={`relative p-2 rounded-lg text-left transition-all text-[10px] ${found ? 'hover:brightness-125' : 'opacity-30 cursor-default'} ${isSelected ? 'ring-1 ring-amber-300/60' : ''}`}
+                            className={`relative min-h-16 rounded-lg p-2.5 text-left text-[11px] transition-all ${found ? 'hover:brightness-125' : 'cursor-default'} ${isSelected ? 'ring-1 ring-amber-300/60' : ''}`}
                             style={{
                                 border: `1px solid ${found ? accent.border : 'rgba(255,255,255,0.08)'}`,
                                 background: found
@@ -234,8 +239,8 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                                 <div className="flex items-start gap-1.5">
                                     <ItemIcon item={item} size={28} hideSignatureBadge />
                                     <div className="min-w-0">
-                                        <div className="font-rajdhani font-bold text-white truncate text-[10px]">{item.name}</div>
-                                        <div className="text-[8px] font-fira text-amber-200/80 mt-0.5 tracking-wider">
+                                        <div className="truncate text-sm font-semibold text-white">{item.name}</div>
+                                        <div className="mt-0.5 text-[11px] text-amber-200/80">
                                             {CATEGORY_LABEL[meta.category] || '전설'} · {accent.label}
                                         </div>
                                     </div>
@@ -243,13 +248,14 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                             ) : (
                                 <div className="flex items-center gap-1.5">
                                     <Lock size={12} className="text-slate-600" />
-                                    <div className="font-rajdhani font-bold text-slate-600 text-[10px]">???</div>
+                                    <div className="text-[11px] font-semibold text-slate-500">미발견 전설</div>
                                 </div>
                             )}
                         </button>
                     );
                 })}
-            </div>
+                </div>
+            </details>
 
             {/* Detail */}
             {selectedEntry && (
@@ -264,7 +270,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                         <ItemIcon item={selectedEntry.item} size={48} hideSignatureBadge />
                         <div className="min-w-0 flex-1">
                             <div className="font-rajdhani font-bold text-white text-[13px]">{selectedEntry.item.name}</div>
-                            <div className="text-[9px] font-fira text-amber-200/80 tracking-wider mt-0.5">
+                            <div className="mt-0.5 text-[11px] text-amber-200/80">
                                 {CATEGORY_LABEL[selectedEntry.meta.category] || '전설'}
                                 <span className="mx-1 text-slate-600">·</span>
                                 {(TONE_ACCENT[selectedEntry.meta.tone] || DEFAULT_TONE_ACCENT).label}
@@ -276,11 +282,11 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                                 ) : null}
                             </div>
                             {selectedEntry.item.desc && (
-                                <div className="text-[10px] font-fira text-slate-400 mt-1.5 leading-relaxed">
+                                <div className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
                                     {selectedEntry.item.desc}
                                 </div>
                             )}
-                            <div className="text-[9px] font-fira text-slate-500 mt-1.5 italic">
+                            <div className="mt-1.5 text-[11px] italic text-slate-500">
                                 {selectedEntry.meta.artNote}
                             </div>
                             {(() => {
@@ -288,14 +294,14 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                                 if (sources.length === 0) return null;
                                 return (
                                     <div className="mt-2 pt-2 border-t border-white/5">
-                                        <div className="text-[8px] font-fira text-slate-500 uppercase tracking-wider mb-1">
+                                        <div className="mb-1 text-[11px] text-slate-500">
                                             획득처
                                         </div>
                                         <div className="flex flex-wrap gap-1">
                                             {sources.map(({ monster, rate }: any) => (
                                                 <span
                                                     key={monster}
-                                                    className="inline-flex items-center gap-1 rounded-full border border-amber-300/25 bg-amber-300/5 px-1.5 py-0.5 text-[9px] font-fira text-amber-100/90"
+                                                    className="inline-flex min-h-7 items-center gap-1 rounded-lg border border-amber-300/25 bg-amber-300/5 px-2 text-[11px] text-amber-100/90"
                                                 >
                                                     <span className="text-slate-200">{monster}</span>
                                                     <span className="text-amber-300/80">{Math.max(1, Math.round(rate * 100))}%</span>

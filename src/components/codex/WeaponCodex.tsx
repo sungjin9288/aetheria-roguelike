@@ -1,14 +1,13 @@
-// cycle 321: unused BALANCE import 제거 — WeaponCodex 어디에서도 BALANCE 참조 0건.
 import { useMemo, useState } from 'react';
-import { Lock } from 'lucide-react';
+import { ChevronDown, CircleCheck, Lock } from 'lucide-react';
 import { DB } from '../../data/db';
 import { MSG } from '../../data/messages';
+import { getItemStatText } from '../../utils/equipmentUtils';
 import { getItemRarity } from '../../utils/gameUtils';
-import SignalBadge from '../SignalBadge';
 import ItemIcon from '../icons/ItemIcon';
 import EquipmentCodexCard from './EquipmentCodexCard';
 
-const RARITY_BORDER: any = {
+const RARITY_BORDER: Record<string, string> = {
     common: 'border-slate-500/30',
     uncommon: 'border-emerald-400/40',
     rare: 'border-blue-400/40',
@@ -16,7 +15,7 @@ const RARITY_BORDER: any = {
     legendary: 'border-amber-400/50',
 };
 
-const RARITY_BG: any = {
+const RARITY_BG: Record<string, string> = {
     common: 'bg-slate-500/8',
     uncommon: 'bg-emerald-400/8',
     rare: 'bg-blue-400/8',
@@ -24,7 +23,9 @@ const RARITY_BG: any = {
     legendary: 'bg-amber-400/10',
 };
 
-const CATEGORY_TABS: any = [
+type EquipmentCategory = 'weapons' | 'armors' | 'shields';
+
+const CATEGORY_TABS: Array<{ id: EquipmentCategory; label: string }> = [
     { id: 'weapons', label: '무기' },
     { id: 'armors', label: '방어구' },
     { id: 'shields', label: '방패' },
@@ -38,124 +39,151 @@ interface WeaponCodexProps {
     player?: any;
 }
 
-const WeaponCodex = ({ codex, totalCounts, discoveredCounts, progress, player }: WeaponCodexProps) => {
-    const [category, setCategory] = useState('weapons');
-    const [selectedItem, setSelectedItem] = useState<any>(null);
+const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, progress, player }: WeaponCodexProps) => {
+    const [category, setCategory] = useState<EquipmentCategory>('weapons');
+    const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
     const items = useMemo(() => {
         if (category === 'weapons') return DB.ITEMS.weapons || [];
-        if (category === 'armors') return (DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor');
-        if (category === 'shields') return (DB.ITEMS.armors || []).filter((a: any) => a.type === 'shield');
-        return [];
+        if (category === 'armors') return (DB.ITEMS.armors || []).filter((item: any) => item.type === 'armor');
+        return (DB.ITEMS.armors || []).filter((item: any) => item.type === 'shield');
     }, [category]);
 
-    const catCodex = codex[category] || {};
-
-    // 티어별 그룹핑
+    const categoryCodex = codex[category] || {};
     const grouped = useMemo(() => {
-        const groups: Record<number, any[]> = {};
-        items.forEach((item: any) => {
+        const groups = new Map<number, any[]>();
+        for (const item of items) {
             const tier = item.tier || 1;
-            if (!groups[tier]) groups[tier] = [];
-            groups[tier].push(item);
-        });
-        return (Object.entries(groups) as Array<[string, any[]]>).sort(([a], [b]) => Number(a) - Number(b));
+            groups.set(tier, [...(groups.get(tier) || []), item]);
+        }
+        return [...groups.entries()].sort(([left], [right]) => left - right);
     }, [items]);
 
-    // 마일스톤 보상 (해당 카테고리)
-    const milestones = progress.milestones.filter((ms: any) => ms.category === category);
+    const milestones = (progress?.milestones || []).filter((milestone: any) => milestone.category === category);
+    const nextMilestone = milestones.find((milestone: any) => !milestone.claimed) || milestones[milestones.length - 1];
+    const selected = selectedItem ? items.find((item: any) => item.name === selectedItem) : null;
 
     return (
-        <div className="space-y-2">
-            {/* Category toggle */}
-            <div className="flex gap-1">
-                {CATEGORY_TABS.map((tab: any) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => { setCategory(tab.id); setSelectedItem(null); }}
-                        className={`flex-1 text-[9px] font-readable py-1 rounded-md border transition-all
-                            ${category === tab.id
-                                ? 'bg-white/8 border-white/20 text-white'
-                                : 'border-white/6 text-slate-500 hover:text-slate-300'
+        <div data-testid="codex-equipment" className="space-y-4">
+            <div className="grid grid-cols-3 gap-1" role="tablist" aria-label="장비 종류">
+                {CATEGORY_TABS.map((tab) => {
+                    const active = category === tab.id;
+                    return (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={active}
+                            data-testid={`codex-equipment-category-${tab.id}`}
+                            onClick={() => {
+                                setCategory(tab.id);
+                                setSelectedItem(null);
+                            }}
+                            className={`min-h-11 rounded-lg border px-2 text-sm font-semibold transition-colors ${
+                                active
+                                    ? 'border-[#7dd4d8]/38 bg-[#7dd4d8]/12 text-slate-100'
+                                    : 'border-white/8 bg-white/[0.03] text-slate-400 hover:text-slate-200'
                             }`}
-                    >
-                        {tab.label} ({discoveredCounts[tab.id]}/{totalCounts[tab.id]})
-                    </button>
-                ))}
-            </div>
-
-            {/* Item Grid by Tier */}
-            <div className="space-y-3 max-h-[45dvh] overflow-y-auto custom-scrollbar">
-                {grouped.map(([tier, tierItems]: any) => (
-                    <div key={tier}>
-                        <div className="text-[9px] font-fira text-slate-500 uppercase tracking-wider mb-1.5">
-                            {tier}단계 · {MSG.RARITY_LABEL[getItemRarity(tierItems[0])] || '일반'}
-                        </div>
-                        <div className="grid grid-cols-3 gap-1.5">
-                            {tierItems.map((item: any) => {
-                                const found = !!catCodex[item.name];
-                                const rarity = getItemRarity(item);
-                                return (
-                                    <button
-                                        key={item.name}
-                                        onClick={() => found && setSelectedItem(selectedItem === item.name ? null : item.name)}
-                                        className={`p-2 rounded-lg border text-left transition-all text-[10px]
-                                            ${found
-                                                ? `${RARITY_BORDER[rarity]} ${RARITY_BG[rarity]} hover:brightness-125`
-                                                : 'border-white/6 bg-black/10 opacity-25 cursor-default'
-                                            }
-                                            ${selectedItem === item.name ? 'ring-1 ring-cyber-blue/50' : ''}
-                                        `}
-                                    >
-                                        {found ? (
-                                            <div className="flex items-start gap-1.5">
-                                                <ItemIcon item={item} size={22} />
-                                                <div className="min-w-0">
-                                                    <div className="font-rajdhani font-bold text-white truncate text-[10px]">{item.name}</div>
-                                                    <div className="text-[8px] font-fira text-slate-400 mt-0.5">{item.desc_stat}</div>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-1.5">
-                                                <Lock size={10} className="text-slate-600" />
-                                                <div className="font-rajdhani font-bold text-slate-600 text-[10px]">???</div>
-                                            </div>
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Detail Panel — EquipmentCodexCard */}
-            {selectedItem && (() => {
-                const item = items.find((i: any) => i.name === selectedItem);
-                if (!item) return null;
-                return <EquipmentCodexCard item={item} player={player} />;
-            })()}
-
-            {/* Milestones */}
-            {milestones.length > 0 && (
-                <div className="space-y-1">
-                    <div className="text-[9px] font-readable text-slate-400">수집 보상</div>
-                    {milestones.map((ms: any) => (
-                        <div
-                            key={ms.id}
-                            className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-[10px] font-fira
-                                ${ms.reached && !ms.claimed
-                                    ? 'border-cyber-green/30 bg-cyber-green/8 text-cyber-green'
-                                    : ms.claimed
-                                        ? 'border-white/8 bg-black/10 text-slate-500 line-through'
-                                        : 'border-white/6 bg-black/10 text-slate-500'
-                                }`}
                         >
-                            <span>{ms.label} ({ms.count}개)</span>
-                            {ms.reached && !ms.claimed && <span>수령 가능</span>}
-                            {ms.claimed && <span>수령 완료</span>}
+                            {tab.label} {discoveredCounts[tab.id] || 0}/{totalCounts[tab.id] || 0}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {nextMilestone && (
+                <div data-testid="codex-equipment-next-reward" className="border-y border-white/10 py-3">
+                    <div className="flex items-baseline justify-between gap-3">
+                        <div>
+                            <div className="aether-type-meta text-slate-400/76">다음 장비 수집 보상</div>
+                            <div className="aether-type-body mt-0.5 font-semibold text-slate-100">{nextMilestone.label}</div>
                         </div>
-                    ))}
+                        <span className="aether-type-body shrink-0 text-[#dff7f5]">
+                            {Math.min(discoveredCounts[category] || 0, nextMilestone.count)}/{nextMilestone.count}
+                        </span>
+                    </div>
+                    {nextMilestone.reached && !nextMilestone.claimed && (
+                        <div className="aether-type-meta mt-1 text-[#d5b180]">상단에서 보상을 받을 수 있습니다</div>
+                    )}
+                </div>
+            )}
+
+            {selected && <EquipmentCodexCard item={selected} player={player} />}
+
+            <div className="divide-y divide-white/10 border-y border-white/10">
+                {grouped.map(([tier, tierItems]) => {
+                    const discovered = tierItems.filter((item) => categoryCodex[item.name]).length;
+                    const tierPct = (discovered / Math.max(1, tierItems.length)) * 100;
+
+                    return (
+                        <details
+                            key={`${category}-${tier}`}
+                            data-testid={`codex-equipment-tier-${tier}`}
+                            className="group"
+                        >
+                            <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <span className="aether-type-body font-semibold text-slate-100">
+                                            {tier}단계 · {MSG.RARITY_LABEL[getItemRarity(tierItems[0])] || '일반'}
+                                        </span>
+                                        <span className="aether-type-meta shrink-0 text-slate-400/76">
+                                            {discovered}/{tierItems.length}
+                                        </span>
+                                    </div>
+                                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+                                        <div className="h-full rounded-full bg-[#7dd4d8]" style={{ width: `${tierPct}%` }} />
+                                    </div>
+                                </div>
+                                <ChevronDown size={16} className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
+                            </summary>
+
+                            <div className="grid grid-cols-2 gap-1.5 pb-3">
+                                {tierItems.map((item: any) => {
+                                    const found = Boolean(categoryCodex[item.name]);
+                                    const itemRarity = getItemRarity(item);
+                                    const active = selectedItem === item.name;
+                                    return (
+                                        <button
+                                            key={item.name}
+                                            type="button"
+                                            disabled={!found}
+                                            data-testid={found ? `codex-equipment-item-${item.name}` : undefined}
+                                            onClick={() => setSelectedItem(active ? null : item.name)}
+                                            className={`min-h-[60px] rounded-lg border p-2.5 text-left transition-colors ${
+                                                found
+                                                    ? `${RARITY_BORDER[itemRarity]} ${RARITY_BG[itemRarity]} hover:brightness-125`
+                                                    : 'cursor-default border-white/6 bg-black/10 text-slate-500'
+                                            } ${active ? 'ring-1 ring-[#7dd4d8]/50' : ''}`}
+                                        >
+                                            {found ? (
+                                                <div className="flex items-start gap-2">
+                                                    <ItemIcon item={item} size={28} />
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="truncate text-sm font-semibold text-slate-100">{item.name}</div>
+                                                        <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-400/76">
+                                                            {getItemStatText(item)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-[11px]">
+                                                    <Lock size={14} className="shrink-0 text-slate-600" />
+                                                    미발견 장비
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </details>
+                    );
+                })}
+            </div>
+
+            {milestones.length > 0 && milestones.every((milestone: any) => milestone.claimed) && (
+                <div className="flex min-h-11 items-center gap-2 text-sm text-emerald-200">
+                    <CircleCheck size={16} /> 모든 장비 수집 보상을 받았습니다
                 </div>
             )}
         </div>

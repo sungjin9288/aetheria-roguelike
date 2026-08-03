@@ -4179,7 +4179,7 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 585: 정합성 가드 — sample callsites 보존', async () => {
       const wc = await readSrc('src/components/codex/WeaponCodex.tsx');
-      assert.ok(/<ItemIcon item=\{item\} size=\{22\} \/>/.test(wc),
+      assert.ok(/<ItemIcon item=\{item\} size=\{28\} \/>/.test(wc),
           'WeaponCodex callsite 보존 (size only)');
 
       const sp = await readSrc('src/components/ShopPanel.tsx');

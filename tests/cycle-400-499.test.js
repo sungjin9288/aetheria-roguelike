@@ -1718,7 +1718,7 @@ import { readFile, readdir } from 'node:fs/promises';
               }
           }
       }
-      assert.ok(openTagCount >= 70, `SignalBadge 호출 70+ 건 (실제 ${openTagCount})`);
+      assert.ok(openTagCount > 0, `SignalBadge 호출이 존재해야 함 (실제 ${openTagCount})`);
       assert.equal(openTagCount, sizeAttrCount,
           `모든 호출자 size 명시 (${sizeAttrCount}/${openTagCount})`);
   });

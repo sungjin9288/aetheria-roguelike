@@ -65,14 +65,14 @@ const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps)
                             <Sparkles size={28} className="text-cyber-blue drop-shadow-[0_0_8px_rgba(0,204,255,0.8)]" />
                         </Motion.div>
 
-                        <div className="text-[9px] font-fira uppercase tracking-[0.2em] text-cyber-blue/80">
-                            New Discovery
+                        <div className="text-[11px] font-fira font-semibold text-cyber-blue/80">
+                            새 기록 발견
                         </div>
                         <div className="text-lg font-rajdhani font-bold text-white drop-shadow-[0_0_12px_rgba(0,204,255,0.5)]">
                             {entry.name}
                         </div>
                         {entry.category && (
-                            <div className="text-[10px] font-fira text-slate-400/80">
+                            <div className="text-[11px] font-fira text-slate-400/80">
                                 {entry.category}
                             </div>
                         )}

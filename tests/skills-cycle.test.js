@@ -1861,12 +1861,12 @@ import { readFile } from 'node:fs/promises';
           'SkillTreePreview <SkillTypeIcon> callsite 보존');
 
       const mc = await readSrc('src/components/codex/MonsterCodex.tsx');
-      assert.ok(/<SkillTypeIcon type=\{m\.weakness\} size=\{12\} className="ml-auto shrink-0"/.test(mc),
-          'MonsterCodex:104 <SkillTypeIcon> callsite 보존');
-      assert.ok(/<SkillTypeIcon type=\{m\.weakness\} size=\{11\} \/>/.test(mc),
-          'MonsterCodex:155 <SkillTypeIcon> callsite 보존 (className 미전달)');
-      assert.ok(/<SkillTypeIcon type=\{m\.resistance\} size=\{11\} \/>/.test(mc),
-          'MonsterCodex:161 <SkillTypeIcon> callsite 보존 (className 미전달)');
+      assert.ok(/<SkillTypeIcon type=\{monster\.weakness\} size=\{13\} \/>/.test(mc),
+          'MonsterCodex list <SkillTypeIcon> callsite 보존');
+      assert.ok(/<SkillTypeIcon type=\{monster\.weakness\} size=\{12\} \/>/.test(mc),
+          'MonsterCodex detail weakness <SkillTypeIcon> callsite 보존');
+      assert.ok(/<SkillTypeIcon type=\{monster\.resistance\} size=\{12\} \/>/.test(mc),
+          'MonsterCodex detail resistance <SkillTypeIcon> callsite 보존');
   });
 
   test('cycle 569: cycle 502-568 회귀 가드 — default 청소 시리즈 보존', async () => {

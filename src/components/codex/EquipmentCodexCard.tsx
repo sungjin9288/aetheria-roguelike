@@ -54,7 +54,7 @@ const CornerOrnament = ({ color, position }: any) => {
 const StatRow = ({ label, value, compareValue }: any) => {
     const diff = compareValue != null ? value - compareValue : null;
     return (
-        <div className="flex items-center justify-between text-[10px] font-fira">
+        <div className="flex items-center justify-between text-[11px]">
             <span className="text-slate-500">{label}</span>
             <div className="flex items-center gap-1.5">
                 <span className="text-slate-200">{value}</span>
@@ -101,7 +101,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
         <Motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative rounded-[1.05rem] p-3 space-y-2.5 overflow-hidden"
+            className="relative space-y-2.5 overflow-hidden rounded-lg p-3"
             style={{
                 border: `1.5px solid ${frame.border}40`,
                 background: `${frame.border}08`,
@@ -119,7 +119,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
                     <ItemIcon item={item} size={32} showBorder />
                     <div className="min-w-0">
                         <div className="text-[13px] font-rajdhani font-bold text-white truncate">{item.name}</div>
-                        <div className="text-[9px] font-fira text-slate-400 mt-0.5">{item.desc}</div>
+                        <div className="mt-0.5 text-[11px] text-slate-400">{item.desc}</div>
                     </div>
                 </div>
                 <SignalBadge tone={tone} size="sm">
@@ -128,8 +128,8 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
             </div>
 
             {/* 스탯 */}
-            <div className="space-y-1 rounded-[0.85rem] border border-white/6 bg-black/16 px-2.5 py-2">
-                <div className="text-[9px] font-fira uppercase tracking-[0.14em] text-slate-500 mb-1.5">
+            <div className="space-y-1 rounded-lg border border-white/6 bg-black/16 px-2.5 py-2">
+                <div className="mb-1.5 text-[11px] text-slate-500">
                     {MSG.EQUIP_STAT_COMPARE}
                     {equipped && <span className="ml-1.5 normal-case text-slate-600">현재 {equipped.name}과 비교</span>}
                 </div>
@@ -148,7 +148,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
             </div>
 
             {/* 추가 정보 */}
-            <div className="flex flex-wrap gap-1.5 text-[10px] font-fira">
+            <div className="flex flex-wrap gap-1.5 text-[11px]">
                 {item.elem && (
                     <span className="rounded-full border border-amber-300/20 bg-amber-300/8 px-2 py-0.5 text-amber-200">
                         {item.elem}
@@ -167,7 +167,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
             </div>
 
             {/* 가격 */}
-            <div className="text-[10px] font-fira text-slate-500 text-right">
+            <div className="text-right text-[11px] text-slate-500">
                 골드 {item.price}
             </div>
         </Motion.div>
