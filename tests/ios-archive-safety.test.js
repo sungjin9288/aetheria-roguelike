@@ -45,3 +45,19 @@ test('automatic provisioning is applied to both archive and export commands', as
     assert.match(doctorScript, /iOS local distribution signing/);
     assert.match(doctorScript, /iOS local App Store export profile/);
 });
+
+test('fresh iPhone QA uses an isolated bundle and archive without replacing the player app', async () => {
+    const [packageJson, archiveScript] = await Promise.all([
+        readFile(new URL('package.json', root), 'utf8'),
+        readFile(new URL('scripts/ios-archive.sh', root), 'utf8'),
+    ]);
+
+    assert.match(packageJson, /"ios:archive:fresh-qa"/);
+    assert.match(packageJson, /AetheriaFreshQA\.xcarchive/);
+    assert.match(packageJson, /com\.aetheria\.roguelike\.freshqa/);
+    assert.match(packageJson, /"ios:device:fresh-qa:smoke"/);
+    assert.match(packageJson, /"ios:device:fresh-qa:launch-smoke"/);
+    assert.match(archiveScript, /AETHERIA_IOS_PRODUCT_BUNDLE_IDENTIFIER/);
+    assert.match(archiveScript, /PRODUCT_BUNDLE_IDENTIFIER="\$PRODUCT_BUNDLE_IDENTIFIER"/);
+    assert.doesNotMatch(packageJson, /AETHERIA_IOS_DISPLAY_NAME/);
+});

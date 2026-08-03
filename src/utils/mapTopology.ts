@@ -2,6 +2,12 @@ import type { GameMap } from '../types/index.js';
 
 type MapIndex = Record<string, GameMap>;
 
+interface MapSelectionRoute {
+    name: string;
+    isMissionRoute?: boolean;
+    isLocked?: boolean;
+}
+
 export const getMapRequiredLevel = (map: GameMap | null | undefined, playerLevel: number) => {
     if (map?.level === 'infinite') return Math.max(playerLevel + 8, 50);
     if (typeof map?.minLv === 'number') return map.minLv;
@@ -36,4 +42,8 @@ export const findMapPath = (maps: MapIndex, start: string, target: string) => {
 
 export const getNextMapTowardTarget = (maps: MapIndex, start: string, target: string) => (
     findMapPath(maps, start, target)[1] || null
+);
+
+export const getDefaultMapSelection = (currentName: string, routes: MapSelectionRoute[]) => (
+    routes.find((route) => route.isMissionRoute && !route.isLocked)?.name || currentName
 );

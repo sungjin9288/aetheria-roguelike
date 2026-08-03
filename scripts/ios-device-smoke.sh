@@ -49,7 +49,7 @@ explain_device_failure() {
 
   if device_is_locked "$output_file"; then
     printf 'iOS blocked %s because the device is locked.\n' "$step" >&2
-    printf 'Unlock the iPhone or iPad, keep the screen awake, then run %s and leave Aetheria in the foreground after it opens.\n' "$RERUN_COMMAND" >&2
+    printf 'Unlock the iPhone or iPad, keep the screen awake, then run %s. Confirm foreground visibility separately on the device or through iPhone Mirroring.\n' "$RERUN_COMMAND" >&2
   fi
 }
 
@@ -173,7 +173,7 @@ else
       --bundle-id "$BUNDLE_ID"
 fi
 
-log_step "keep the iOS device unlocked and awake; leave Aetheria in the foreground after launch"
+log_step "keep the iOS device unlocked and awake; this command verifies launch and process survival"
 run_required_device_step "launch app" \
   xcrun devicectl device process launch \
     --device "$DEVICE_ID" \
@@ -193,7 +193,7 @@ fi
 remove_temp_file "$process_snapshot"
 process_snapshot=""
 
-log_step "hold ${PROCESS_HOLD_SECONDS}s"
+log_step "process hold ${PROCESS_HOLD_SECONDS}s"
 sleep "$PROCESS_HOLD_SECONDS"
 
 process_snapshot="$(mktemp)"
@@ -203,11 +203,13 @@ run_timed "process check after hold" \
 
 if ! grep -E "App\\.app/App|${BUNDLE_ID}|Aetheria" "$process_snapshot"; then
   cat "$process_snapshot"
-  printf 'Aetheria app process was not found after the %ss hold.\n' "$PROCESS_HOLD_SECONDS" >&2
-  printf 'Keep the iOS device unlocked, awake, and in the foreground for the full hold, then run %s.\n' "$RERUN_COMMAND" >&2
+  printf 'Aetheria app process was not found after the %ss process hold.\n' "$PROCESS_HOLD_SECONDS" >&2
+  printf 'Keep the iOS device unlocked and awake, then run %s again.\n' "$RERUN_COMMAND" >&2
   exit 1
 fi
 remove_temp_file "$process_snapshot"
 process_snapshot=""
 
+log_step "process hold passed"
+printf '[ios-device-smoke] devicectl cannot prove foreground visibility; record a physical-device or iPhone Mirroring screen check separately.\n'
 log_step "done"

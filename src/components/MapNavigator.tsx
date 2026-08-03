@@ -7,7 +7,7 @@ import { getGravesAtLoc } from '../utils/graveUtils';
 import { getExitBadges } from '../utils/mapBadges';
 import { getMapProgressState } from '../utils/mapProgress';
 import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/mapSignatureHints';
-import { getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
+import { getDefaultMapSelection, getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
 import RouteTopology, { type RouteTopologyEntry } from './RouteTopology';
 import SignalBadge from './SignalBadge';
 import { getExpeditionFocusRouteTargets, getFocusedExpeditionQuestEntries } from '../utils/expeditionMissionFocus';
@@ -207,7 +207,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         };
     });
 
-    const defaultSelection = topologyRoutes[0]?.name || player.loc;
+    const defaultSelection = getDefaultMapSelection(player.loc, topologyRoutes);
     const selectedName = selectedMapName || defaultSelection;
     const selectedEntry = entriesByName.get(selectedName) || entriesByName.get(player.loc) || mapEntries[0];
     const selectedRoute = moveRecommendations.find((route: any) => route.name === selectedEntry?.name);

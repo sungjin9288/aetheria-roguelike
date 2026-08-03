@@ -29,9 +29,18 @@ AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive
 npm run ios:device:smoke
 ```
 
-`ios:device:smoke`는 archive를 설치한 뒤 실행하고, 기본 120초의 CoreDevice 단계 제한과 60초 foreground hold로 설치·실행 생존을 확인합니다. 잠금은 설치 전 metadata 확인, 설치, 설치 후 확인, 실행 어느 단계에서도 발생할 수 있습니다. 스크립트가 잠금과 개발자 프로필 신뢰를 구분하고, 실패한 단계와 필요한 조치를 바로 출력합니다. 더 느린 연결에서만 `AETHERIA_DEVICECTL_TIMEOUT_SECONDS`를 명시해 제한을 늘립니다.
+`ios:device:smoke`는 archive를 설치한 뒤 실행하고, 기본 120초의 CoreDevice 단계 제한과 60초 process hold로 설치·실행 생존을 확인합니다. `devicectl`의 process 목록은 앱이 화면 앞에 있는지 증명하지 못하므로, 시작과 60초 뒤의 foreground 화면은 실제 기기 또는 iPhone 미러링으로 별도 확인합니다. 잠금은 설치 전 metadata 확인, 설치, 설치 후 확인, 실행 어느 단계에서도 발생할 수 있습니다. 스크립트가 잠금과 개발자 프로필 신뢰를 구분하고, 실패한 단계와 필요한 조치를 바로 출력합니다. 더 느린 연결에서만 `AETHERIA_DEVICECTL_TIMEOUT_SECONDS`를 명시해 제한을 늘립니다.
 
-설치는 성공했지만 장시간 전송 중 기기가 자동 잠금되어 실행만 실패했다면 archive를 다시 설치하지 않습니다. 잠금을 해제하고 화면을 켠 채 아래 명령으로 설치된 bundle을 확인한 뒤 실행과 60초 hold만 재검증합니다.
+기존 플레이어 세이브를 지우지 않고 신규 세이브 동선을 확인할 때는 production app을 초기화하지 않습니다. 아래 명령은 같은 source를 `com.aetheria.roguelike.freshqa` bundle로 별도 archive·설치하므로 기존 `com.aetheria.roguelike` data container를 건드리지 않습니다. 화면의 앱 이름은 production과 같을 수 있으므로 install·launch·제거 대상은 bundle ID로 구분합니다.
+
+```bash
+npm run ios:archive:fresh-qa
+npm run ios:device:fresh-qa:smoke
+```
+
+신규 세이브 QA가 끝나면 fresh QA bundle만 제거하고 production 앱의 기존 세이브가 그대로 열리는지 확인합니다. Fresh QA app은 release artifact나 App Store upload 대상으로 사용하지 않습니다.
+
+설치는 성공했지만 장시간 전송 중 기기가 자동 잠금되어 실행만 실패했다면 archive를 다시 설치하지 않습니다. 잠금을 해제하고 화면을 켠 채 아래 명령으로 설치된 bundle을 확인한 뒤 실행과 60초 process hold를 재검증하고, foreground 화면은 따로 확인합니다.
 
 ```bash
 npm run ios:device:launch-smoke

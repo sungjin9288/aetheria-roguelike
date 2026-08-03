@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { findMapPath, getMapRequiredLevel, getNextMapTowardTarget } from '../src/utils/mapTopology.js';
+import { findMapPath, getDefaultMapSelection, getMapRequiredLevel, getNextMapTowardTarget } from '../src/utils/mapTopology.js';
 
 const maps = {
     '시작의 마을': { level: 1, exits: ['고요한 숲', '서쪽 평원'] },
@@ -30,4 +30,20 @@ test('getMapRequiredLevel keeps numeric, ranged, and abyss requirements explicit
     assert.equal(getMapRequiredLevel({ level: 5 }, 2), 5);
     assert.equal(getMapRequiredLevel({ level: [12, 18] }, 8), 12);
     assert.equal(getMapRequiredLevel({ level: 'infinite' }, 48), 56);
+});
+
+test('getDefaultMapSelection starts from the current location unless an unlocked mission route is direct', () => {
+    const routes = [
+        { name: '신성한 호수', isMissionRoute: true, isLocked: true },
+        { name: '시작의 마을', isMissionRoute: false, isLocked: false },
+    ];
+
+    assert.equal(getDefaultMapSelection('고요한 숲', routes), '고요한 숲');
+    assert.equal(
+        getDefaultMapSelection('시작의 마을', [
+            { name: '고요한 숲', isMissionRoute: true, isLocked: false },
+            { name: '서쪽 평원', isMissionRoute: false, isLocked: false },
+        ]),
+        '고요한 숲',
+    );
 });

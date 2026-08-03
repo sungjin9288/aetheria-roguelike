@@ -167,7 +167,7 @@
 
 ### R31: Keep Android Delivery Physical-First And Save-Preserving
 - **Rule:** Android release acceptance smoke는 승인된 물리 기기를 기본으로 선택하고 에뮬레이터는 명시적 preflight opt-in으로만 허용한다. 설치는 `adb install -r`로 세이브를 보존하며 실패 시 저장 공간과 서명 원인을 구분한 뒤 앱 삭제 결정은 사용자에게 남긴다
-- **Rationale:** 에뮬레이터 성공을 물리 기기 완료로 오인하거나 자동 재설치 과정에서 플레이어 세이브를 잃는 일을 막으면서, install·launch·foreground hold를 동일한 재현 경로로 검증해야 한다
+- **Rationale:** 에뮬레이터 성공을 물리 기기 완료로 오인하거나 자동 재설치 과정에서 플레이어 세이브를 잃는 일을 막아야 한다. iOS `devicectl`은 install·launch·process 생존까지만 증명하므로 foreground 화면은 실제 기기 또는 iPhone 미러링으로 별도 확인한다
 
 ### R32: Separate Local Export From External Upload
 - **Rule:** iOS archive, App Store용 local export, App Store Connect upload를 서로 다른 승인 경계로 다룬다. `destination=upload`는 명시적 opt-in 없이는 실행하지 않고, signing 및 provisioning 옵션은 archive와 export 양쪽에서 같은 의미를 유지한다
@@ -248,6 +248,10 @@
 ### R51: Contain Decorative Overflow Inside Scroll Surfaces
 - **Rule:** viewport scroll container 안의 absolute 장식은 크기가 고정된 `overflow-hidden` presentation layer에 가두고, 핵심 flex chain에는 `min-w-0`을 명시한다. 모바일 E2E는 document뿐 아니라 app shell의 `scrollWidth <= clientWidth`와 `scrollLeft = 0`도 검사한다
 - **Rationale:** `overflow-x: hidden`만으로는 바깥으로 뻗은 장식이 내부 scroll width에 포함되는 것을 막지 못한다. focus 이동이 숨겨진 가로축을 programmatic scroll하면 문서 폭은 정상이어도 게임 전체가 잘려 보일 수 있으므로 content geometry와 scroll-container state를 함께 고정해야 한다
+
+### R52: Never Recommend A Route The Player Cannot Enter
+- **Rule:** 이동 추천은 진입 가능한 경로를 잠긴 경로보다 항상 먼저 정렬하고, 잠긴 경로에는 필요 레벨과 현재 할 일을 표시하되 추천 표식을 주지 않는다. 모바일 지도 첫 상세는 직접 연결된 진입 가능 임무 경로가 있을 때만 그 경로를 선택하고, 그 외에는 현재 위치에서 시작한다
+- **Rationale:** 체력과 기력이 충분하다는 이유로 고레벨 보스 지역이 추천되면 신규 플레이어는 잠금과 진행 방향을 동시에 오해한다. 잠긴 지역의 preview는 장기 목표로 유용하지만 현재 행동과 미래 정보를 같은 우선순위로 보여 주면 지도의 방향성이 사라진다
 
 ---
 

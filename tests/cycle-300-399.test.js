@@ -1817,11 +1817,11 @@ import { fileURLToPath } from 'node:url';
       const source = await readSrc('src/utils/adventureGuide.ts');
       // 반환 객체 (return { ... })에 4 dead 필드 0건. 단, isSafeTarget/isVisited/isBoss는
       // 내부 변수로 계산용 유지 — 출력에 포함되지 않으면 OK.
-      // _sortKey 사용 패턴 확인 (정렬용 임시 키).
+      // _sortKey / _isLocked 사용 패턴 확인 (정렬용 임시 키).
       assert.ok(/_sortKey/.test(source), '_sortKey 정렬용 키 도입');
       // 외부 노출 strip 패턴 확인.
-      assert.ok(/const \{ _sortKey, \.\.\.exposed \}/.test(source),
-          '_sortKey 정렬 후 strip 패턴');
+      assert.ok(/const \{ _sortKey, _isLocked, \.\.\.exposed \}/.test(source),
+          '내부 정렬 키 2종 정렬 후 strip 패턴');
   });
 
   test('cycle 333: getMoveRecommendations 출력 동작 보존', async () => {

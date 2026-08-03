@@ -173,6 +173,36 @@ test('move recommendations favor level-fit unexplored routes when stable', () =>
     assert.equal(routes[0].routePlan.exitRule, '발견 뒤 귀환');
 });
 
+test('move recommendations keep level-locked boss routes out of the primary recommendation', () => {
+    const player = {
+        hp: 150,
+        maxHp: 150,
+        mp: 50,
+        maxMp: 50,
+        level: 1,
+        loc: '고요한 숲',
+        inv: [],
+        stats: {
+            visitedMaps: ['시작의 마을', '고요한 숲'],
+            exploreState: { sinceNarrativeEvent: 0, sinceDiscovery: 0, sinceRelic: 0, quietStreak: 0 },
+        },
+    };
+
+    const routes = getMoveRecommendations(player, { maxHp: 150, maxMp: 50 }, {
+        exits: ['시작의 마을', '신성한 호수'],
+    }, {
+        '시작의 마을': { type: 'safe', level: 1, eventChance: 0 },
+        '신성한 호수': { type: 'dungeon', level: 7, boss: '고대 호수의 수호신', eventChance: 0.2 },
+    });
+
+    assert.equal(routes[0].name, '시작의 마을');
+    assert.equal(routes[0].isRecommended, true);
+    assert.equal(routes[1].name, '신성한 호수');
+    assert.equal(routes[1].badge, '잠김');
+    assert.equal(routes[1].isRecommended, false);
+    assert.match(routes[1].reason, /레벨 7/);
+});
+
 test('expedition preparation connects an active mission to one direct departure', () => {
     const player = {
         hp: 150,

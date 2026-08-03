@@ -30,8 +30,11 @@
     "ios:sync": "npm run build && npx cap sync ios",
     "ios:build:device": "bash scripts/ios-build-device.sh",
     "ios:archive": "bash scripts/ios-archive.sh",
+    "ios:archive:fresh-qa": "AETHERIA_IOS_ARCHIVE_PATH=build/ios/AetheriaFreshQA.xcarchive AETHERIA_IOS_DERIVED_DATA_PATH=/tmp/aetheria-ios-fresh-qa AETHERIA_IOS_PRODUCT_BUNDLE_IDENTIFIER=com.aetheria.roguelike.freshqa AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 bash scripts/ios-archive.sh",
     "ios:device:smoke": "bash scripts/ios-device-smoke.sh",
     "ios:device:launch-smoke": "AETHERIA_IOS_REUSE_INSTALLED_APP=1 bash scripts/ios-device-smoke.sh",
+    "ios:device:fresh-qa:smoke": "AETHERIA_IOS_APP_PATH=build/ios/AetheriaFreshQA.xcarchive/Products/Applications/App.app AETHERIA_IOS_BUNDLE_ID=com.aetheria.roguelike.freshqa bash scripts/ios-device-smoke.sh",
+    "ios:device:fresh-qa:launch-smoke": "AETHERIA_IOS_BUNDLE_ID=com.aetheria.roguelike.freshqa AETHERIA_IOS_REUSE_INSTALLED_APP=1 bash scripts/ios-device-smoke.sh",
     "ios:open": "npx cap open ios"
   },
   "dependencies": {

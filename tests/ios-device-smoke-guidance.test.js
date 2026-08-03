@@ -40,7 +40,8 @@ test('iOS device smoke explains a locked device at every required step', async (
 
     assert.match(guidanceBlock, /Locked\|device was not, or could not be, unlocked/);
     assert.match(guidanceBlock, /iOS blocked %s because the device is locked/);
-    assert.match(guidanceBlock, /Unlock the iPhone or iPad, keep the screen awake, then run %s and leave Aetheria in the foreground after it opens/);
+    assert.match(guidanceBlock, /Unlock the iPhone or iPad, keep the screen awake, then run %s/);
+    assert.match(guidanceBlock, /Confirm foreground visibility separately/);
     assert.match(guidanceBlock, /run_required_device_step "install app"/);
     assert.match(guidanceBlock, /run_required_device_step "metadata after install"/);
     assert.match(guidanceBlock, /run_required_device_step "launch app"/);
@@ -113,6 +114,9 @@ fi
         assert.equal(result.status, 0, result.stderr || result.stdout);
         assert.match(result.stdout, /delivery mode: reuse installed app/);
         assert.match(result.stdout, /\[ios-device-smoke\] reuse installed app/);
+        assert.match(result.stdout, /\[ios-device-smoke\] process hold 0s/);
+        assert.match(result.stdout, /\[ios-device-smoke\] process hold passed/);
+        assert.match(result.stdout, /devicectl cannot prove foreground visibility/);
         assert.match(result.stdout, /\[ios-device-smoke\] done/);
         assert.doesNotMatch(commands, /device install app/);
         assert.equal((commands.match(/device info processes/g) || []).length, 2);

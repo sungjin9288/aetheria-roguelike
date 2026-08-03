@@ -271,6 +271,7 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
 
             const targetLevel = getMapLevel(targetMap, playerLevel);
             const levelGap = targetLevel - playerLevel;
+            const isLocked = targetLevel > playerLevel;
             const isSafeTarget = targetMap.type === 'safe';
             const isVisited = visitedMaps.has(exitName);
             const forecast = getExplorationForecast(player, targetMap);
@@ -344,6 +345,11 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
                 }
             }
 
+            if (isLocked) {
+                badge = '잠김';
+                reason = `레벨 ${targetLevel}부터 진입할 수 있습니다. 현재 지역의 임무와 탐험을 먼저 진행하세요.`;
+            }
+
             const routePlan = getRoutePlan(targetMap, isSafeTarget, badge, hpRatio, inventoryCount, inventoryCap);
             chips.push({ label: 'RETURN', value: routePlan.returnLabel });
 
@@ -353,6 +359,7 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
             return {
                 name: exitName,
                 _sortKey: score,
+                _isLocked: isLocked,
                 badge,
                 reason,
                 levelLabel: targetMap.level === 'infinite' ? '심연' : `레벨 ${targetLevel}`,
@@ -362,12 +369,15 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
             };
         })
         .filter(Boolean)
-        .sort((left: any, right: any) => right._sortKey - left._sortKey)
+        .sort((left: any, right: any) => (
+            Number(left._isLocked) - Number(right._isLocked)
+            || right._sortKey - left._sortKey
+        ))
         .map((entry: any, index: any) => {
-            // cycle 333: _sortKey 정렬 후 strip — 외부 노출 없음.
-            const { _sortKey, ...exposed } = entry;
+            // 내부 정렬용 필드는 UI 계약에 노출하지 않는다.
+            const { _sortKey, _isLocked, ...exposed } = entry;
             void _sortKey;
-            return { ...exposed, isRecommended: index === 0 };
+            return { ...exposed, isRecommended: index === 0 && !_isLocked };
         });
 };
 
