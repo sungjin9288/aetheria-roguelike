@@ -102,6 +102,10 @@ async function waitForState(page, predicate, description, timeout = 15000) {
 
 async function sendTerminalCommand(page, command) {
   const input = page.locator('[data-terminal-input]');
+  if (!await input.count()) {
+    await sendGameCommand(page, command);
+    return;
+  }
   await input.click();
   await input.fill(command);
   await input.press('Enter');
@@ -117,6 +121,13 @@ async function markAndDomClick(locator, markName) {
     window.__AETHERIA_TEST_API__?.markPerf?.(payload.markName);
     node.click();
   }, { markName });
+}
+
+async function revealTownMarket(page) {
+  const facilities = page.locator('[data-testid="control-town-facilities"]');
+  if (await facilities.count() && !await facilities.getAttribute('open')) {
+    await facilities.locator('summary').click();
+  }
 }
 
 async function capturePerfMetrics(page) {
@@ -198,6 +209,7 @@ async function main() {
     );
     metrics.firstInteractionMs = Number((performance.now() - interactionStartedAt).toFixed(1));
 
+    await revealTownMarket(page);
     const marketButton = page.locator('[data-testid="control-market"]');
     const marketStartedAt = performance.now();
     await markAndDomClick(marketButton, 'aetheria:test-market-open');

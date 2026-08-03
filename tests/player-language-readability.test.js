@@ -72,7 +72,7 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
         readSrc('docs/PLAYTEST_CHECKLIST.md'),
     ]);
 
-    for (const label of ['달빛 아래 펼쳐지는 모험', '도전 설정', '처음이라면 선택하지 않아도 됩니다.', '모험 시작']) {
+    for (const label of ['달빛 아래 펼쳐지는 모험', '첫 여정', '시작의 마을', '모험가의 이름', '도전 규칙', '모험 시작']) {
         assert.match(intro, new RegExp(label));
     }
     assert.match(intro, /<details[\s\S]*data-testid="intro-challenge-settings"/);

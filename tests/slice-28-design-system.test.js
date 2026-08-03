@@ -86,8 +86,10 @@ test('slice 28: in-flow 패널 1.9/1.95rem 잔존 0건 (전체화면 오버레�
     }
 });
 
-test('slice 28: IntroScreen 시작 버튼 → aether-cta-primary', async () => {
+test('slice 28: IntroScreen 시작 버튼은 immersive 화면의 단일 primary action이다', async () => {
     const src = await readSrc('src/components/IntroScreen.tsx');
-    assert.ok(/data-testid="intro-start-button"[\s\S]{0,400}aether-cta-primary/.test(src),
-        '시작 버튼이 CTA primary 사용');
+    assert.ok(/data-testid="intro-start-button"[\s\S]{0,500}min-h-12[\s\S]{0,300}w-full/.test(src),
+        '시작 버튼이 48px 이상 full-width primary action 사용');
+    assert.ok(/data-testid="intro-start-button"[\s\S]{0,700}모험 시작/.test(src),
+        '시작 버튼의 player-facing action 보존');
 });

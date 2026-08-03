@@ -13,7 +13,36 @@ test.describe('Intro flow', () => {
         const introInput = page.getByTestId('intro-name-input');
         await expect(introInput).toBeVisible({ timeout: 15_000 });
         await expect(page.getByText('달빛 아래 펼쳐지는 모험', { exact: true })).toBeVisible();
+        await expect(page.getByTestId('intro-location')).toHaveText('시작의 마을');
         await expect(page.getByTestId('intro-start-button')).toHaveText('모험 시작');
+
+        const background = page.getByTestId('intro-background');
+        await expect(background).toBeVisible();
+        await expect.poll(() => background.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+
+        const layout = await page.evaluate(() => {
+            const intro = document.querySelector<HTMLElement>('[data-testid="intro-screen"]');
+            const controls = document.querySelector<HTMLElement>('[data-testid="intro-controls"]');
+            const startButton = document.querySelector<HTMLElement>('[data-testid="intro-start-button"]');
+            if (!intro || !controls || !startButton) throw new Error('Intro layout not ready');
+
+            const introBounds = intro.getBoundingClientRect();
+            const controlsBounds = controls.getBoundingClientRect();
+            const buttonBounds = startButton.getBoundingClientRect();
+            return {
+                introHeight: introBounds.height,
+                controlsBottom: controlsBounds.bottom,
+                buttonHeight: buttonBounds.height,
+                documentWidth: document.documentElement.scrollWidth,
+                viewportWidth: window.innerWidth,
+                viewportHeight: window.innerHeight,
+            };
+        });
+
+        expect(layout.introHeight).toBeGreaterThanOrEqual(layout.viewportHeight - 1);
+        expect(layout.controlsBottom).toBeLessThanOrEqual(layout.viewportHeight + 1);
+        expect(layout.buttonHeight).toBeGreaterThanOrEqual(48);
+        expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
 
         const challengeSettings = page.getByTestId('intro-challenge-settings');
         await expect(challengeSettings).not.toHaveAttribute('open', '');
