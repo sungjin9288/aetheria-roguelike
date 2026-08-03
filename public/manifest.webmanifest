@@ -1,13 +1,13 @@
 {
-  "name": "Aetheria Roguelike",
+  "name": "Aetheria",
   "short_name": "Aetheria",
-  "description": "사이버펑크 판타지 텍스트 기반 로그라이크 RPG. 클라우드 세이브, AI 이벤트, 모바일/데스크톱 지원.",
+  "description": "픽셀 판타지 로그라이크 RPG. 원정을 준비하고, 살아 돌아와 장비와 이야기를 이어갑니다.",
   "lang": "ko",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#0f172a",
+  "background_color": "#03070d",
+  "theme_color": "#03070d",
   "orientation": "portrait",
   "categories": ["games", "entertainment"],
   "icons": [

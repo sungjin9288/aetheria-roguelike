@@ -4,7 +4,6 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17105"/>
-        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -12,11 +11,30 @@
         <scene sceneID="EHf-IW-A2E">
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
-                    <imageView key="view" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" id="snD-IY-ifK">
+                    <view key="view" contentMode="scaleToFill" id="snD-IY-ifK">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                    </imageView>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" translatesAutoresizingMaskIntoConstraints="NO" id="NzI-DK-HPD">
+                                <rect key="frame" x="78.5" y="202" width="218" height="218"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="AETHERIA" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MoO-i4-jR9">
+                                <rect key="frame" x="121.5" y="438" width="132" height="34"/>
+                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="28"/>
+                                <color key="textColor" red="0.72549019607843135" green="0.94509803921568625" blue="0.92549019607843142" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="0.011764705882352941" green="0.027450980392156862" blue="0.050980392156862744" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="NzI-DK-HPD" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="0Fc-lM-sai"/>
+                            <constraint firstItem="NzI-DK-HPD" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" constant="-22" id="LVa-Lp-YXS"/>
+                            <constraint firstItem="MoO-i4-jR9" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="NMy-nf-TCA"/>
+                            <constraint firstItem="MoO-i4-jR9" firstAttribute="top" secondItem="NzI-DK-HPD" secondAttribute="bottom" constant="18" id="U38-Di-68o"/>
+                            <constraint firstItem="NzI-DK-HPD" firstAttribute="width" secondItem="snD-IY-ifK" secondAttribute="width" multiplier="0.58" id="Yai-nq-qII"/>
+                            <constraint firstItem="NzI-DK-HPD" firstAttribute="height" secondItem="NzI-DK-HPD" secondAttribute="width" id="xJ9-e7-gIA"/>
+                        </constraints>
+                    </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -25,8 +43,5 @@
     </scenes>
     <resources>
         <image name="Splash" width="1366" height="1366"/>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
     </resources>
 </document>

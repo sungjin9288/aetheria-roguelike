@@ -1,5 +1,6 @@
 {
   "appId": "com.aetheria.roguelike",
-  "appName": "Aetheria Roguelike",
-  "webDir": "dist"
+  "appName": "Aetheria",
+  "webDir": "dist",
+  "backgroundColor": "#03070D"
 }

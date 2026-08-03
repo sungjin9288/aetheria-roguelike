@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "assets:brand": "python3 scripts/generate_app_brand_assets.py",
     "build:guard": "node scripts/build-guard.mjs",
     "lint": "eslint .",
     "perf:guard": "node scripts/perf-guard.mjs",
