@@ -3772,12 +3772,13 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(!/\bcompact\b/.test(jsx), 'Dashboard <AchievementPanel> compact 전달 0건');
   });
 
-  test('cycle 473: player / actions / unlocked / locked 핵심 로직 보존', async () => {
+  test('cycle 473: player / actions / 진행·여정 핵심 로직 보존', async () => {
       const source = await readSrc('src/components/AchievementPanel.tsx');
       assert.ok(/player\b/.test(source), 'player prop 보존');
       assert.ok(/actions\?\.claimAchievement/.test(source), 'claimAchievement 로직 보존');
-      assert.ok(/const unlocked =/.test(source), 'unlocked 계산 보존');
-      assert.ok(/const locked =/.test(source), 'locked 계산 보존');
+      assert.ok(/const unlockedCount =/.test(source), 'unlocked 계산 보존');
+      assert.ok(/const claimable =/.test(source), 'claimable 계산 보존');
+      assert.ok(/buildAchievementJourneys/.test(source), '여정 그룹 계산 보존');
   });
 }
 

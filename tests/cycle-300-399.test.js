@@ -3808,15 +3808,12 @@ import { fileURLToPath } from 'node:url';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 397: THEME_BY_TARGET에서 abyssFloor 0건', async () => {
-      const source = await readSrc('src/components/AchievementPanel.tsx');
-      const blockStart = source.indexOf('const THEME_BY_TARGET');
-      const blockEnd = source.indexOf('};', blockStart);
-      const block = source.slice(blockStart, blockEnd);
-      assert.ok(!/abyssFloor:/.test(block),
-          'THEME_BY_TARGET에서 abyssFloor 0건');
-      assert.ok(/abyssRecord:/.test(block),
-          'abyssRecord 단일 entry 보존');
+  test('cycle 397: 업적 분야에서 abyssFloor 0건', async () => {
+      const source = await readSrc('src/utils/achievementPresentation.ts');
+      assert.ok(!/['"]abyssFloor['"]/.test(source),
+          '업적 분야에서 abyssFloor 0건');
+      assert.ok(/['"]abyssRecord['"]/.test(source),
+          'abyssRecord 단일 target 보존');
   });
 
   test('cycle 397: 정합성 가드 — DB.ACHIEVEMENTS abyss target은 abyssRecord 단일', async () => {
@@ -3831,7 +3828,7 @@ import { fileURLToPath } from 'node:url';
   });
 
   test('cycle 397: AchievementPanel 19 entry 보존 (회귀 가드)', async () => {
-      const source = await readSrc('src/components/AchievementPanel.tsx');
+      const source = `${await readSrc('src/components/AchievementPanel.tsx')}\n${await readSrc('src/utils/achievementPresentation.ts')}`;
       const preservedKeys = [
           'kills', 'bossKills', 'deaths', 'total_gold', 'level',
           'escapes', 'explores', 'discoveries', 'relicCount', 'crafts',
@@ -3840,8 +3837,7 @@ import { fileURLToPath } from 'node:url';
           'maxKillStreak', 'discoveryChains',
       ];
       for (const key of preservedKeys) {
-          const re = new RegExp(`^\\s+${key}:\\s+\\{`, 'm');
-          assert.ok(re.test(source), `${key} entry 보존`);
+          assert.ok(source.includes(key), `${key} entry 보존`);
       }
   });
 
@@ -3924,12 +3920,9 @@ import { fileURLToPath } from 'node:url';
       assert.equal(trait.label, undefined, 'trait.label은 미정의');
   });
 
-  test('cycle 397 회귀 가드: THEME_BY_TARGET abyssFloor 0건', async () => {
-      const source = await readSrc('src/components/AchievementPanel.tsx');
-      const blockStart = source.indexOf('const THEME_BY_TARGET');
-      const blockEnd = source.indexOf('};', blockStart);
-      const block = source.slice(blockStart, blockEnd);
-      assert.ok(!/abyssFloor:/.test(block),
+  test('cycle 397 회귀 가드: achievement category abyssFloor 0건', async () => {
+      const source = await readSrc('src/utils/achievementPresentation.ts');
+      assert.ok(!/['"]abyssFloor['"]/.test(source),
           'cycle 397 abyssFloor 0건 보존');
   });
 }

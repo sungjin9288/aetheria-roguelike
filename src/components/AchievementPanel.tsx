@@ -1,192 +1,328 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Trophy, Star, Skull, Swords, Crown, Gift, Footprints, Shield, BookOpen, Compass, Hammer, Sparkles, Coins, RefreshCcw, Flame, Link2 } from 'lucide-react';
+import {
+    Anvil,
+    ChevronDown,
+    CircleCheck,
+    Coins,
+    Compass,
+    Crown,
+    Flame,
+    Footprints,
+    Gift,
+    Hammer,
+    Link2,
+    LockKeyhole,
+    RefreshCcw,
+    Shield,
+    Skull,
+    Sparkles,
+    Star,
+    Swords,
+    Target,
+    Trophy,
+} from 'lucide-react';
 import { DB } from '../data/db';
 import type { Player } from '../types/index.js';
+import {
+    ACHIEVEMENT_CATEGORIES,
+    buildAchievementJourneys,
+    getRecommendedAchievementGoals,
+    type AchievementCategoryId,
+    type AchievementProgress,
+} from '../utils/achievementPresentation';
 import { formatRewardParts, getAchievementCurrentValue, isAchievementUnlocked } from '../utils/gameUtils';
-import SignalBadge from './SignalBadge';
 
-// cycle 473: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
-//   제거 후 caller 0건. cascade로 토글 상태 / 요약 useMemo / className ternary
-//   까지 일괄 정리 (cycle 472 paired).
-interface AchievementPanelProps {
-    player: Player;
-    actions?: any;
+interface AchievementActions {
+    claimAchievement?: (achievementId: string) => void;
 }
 
-const THEME_BY_TARGET: any = {
-    kills: { icon: Swords, titleClass: 'text-rose-100', iconTone: 'text-rose-200', card: 'border-rose-300/18 bg-rose-400/10' },
-    bossKills: { icon: Trophy, titleClass: 'text-[#e3dcff]', iconTone: 'text-[#e3dcff]', card: 'border-[#9a8ac0]/24 bg-[#9a8ac0]/10' },
-    deaths: { icon: Skull, titleClass: 'text-slate-200', iconTone: 'text-slate-300', card: 'border-white/8 bg-white/[0.04]' },
-    total_gold: { icon: Crown, titleClass: 'text-[#f6e7c8]', iconTone: 'text-[#f6e7c8]', card: 'border-[#d5b180]/22 bg-[#d5b180]/10' },
-    level: { icon: Star, titleClass: 'text-[#dff7f5]', iconTone: 'text-[#dff7f5]', card: 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10' },
-    // cycle 79: 신규 target별 시각 톤. 기존엔 모두 kills(붉은) 폴백이라
-    // escape/discoveries/relics 등이 공격적 분위기로 보였음.
-    escapes:           { icon: Footprints, titleClass: 'text-sky-100', iconTone: 'text-sky-200', card: 'border-sky-300/22 bg-sky-400/10' },
-    explores:          { icon: Compass, titleClass: 'text-teal-100', iconTone: 'text-teal-200', card: 'border-teal-300/22 bg-teal-400/10' },
-    discoveries:       { icon: Compass, titleClass: 'text-emerald-100', iconTone: 'text-emerald-200', card: 'border-emerald-300/22 bg-emerald-400/10' },
-    relicCount:        { icon: Sparkles, titleClass: 'text-violet-100', iconTone: 'text-violet-200', card: 'border-violet-300/22 bg-violet-400/10' },
-    crafts:            { icon: Hammer, titleClass: 'text-orange-100', iconTone: 'text-orange-200', card: 'border-orange-300/22 bg-orange-400/10' },
-    rests:             { icon: BookOpen, titleClass: 'text-slate-100', iconTone: 'text-slate-300', card: 'border-white/8 bg-white/[0.04]' },
-    bountiesCompleted: { icon: Coins, titleClass: 'text-yellow-100', iconTone: 'text-yellow-200', card: 'border-yellow-300/22 bg-yellow-400/10' },
-    // cycle 397: abyssFloor entry 제거 — DB.ACHIEVEMENTS의 6 abyss target은 모두 abyssRecord.
-    //   getTheme[achievement.target] lookup은 'abyssFloor'로 hit 0건이라 unreachable.
-    abyssRecord:       { icon: Shield, titleClass: 'text-fuchsia-100', iconTone: 'text-fuchsia-200', card: 'border-fuchsia-300/22 bg-fuchsia-400/10' },
-    demonKingSlain:    { icon: Trophy, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
-    prestige:          { icon: RefreshCcw, titleClass: 'text-cyan-100', iconTone: 'text-cyan-200', card: 'border-cyan-300/22 bg-cyan-400/10' },
-    signaturesDiscovered:    { icon: Sparkles, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
-    signatureSetsCompleted:  { icon: Trophy, titleClass: 'text-amber-100', iconTone: 'text-amber-200', card: 'border-amber-300/24 bg-amber-400/10' },
-    synths:            { icon: Hammer, titleClass: 'text-orange-100', iconTone: 'text-orange-200', card: 'border-orange-300/22 bg-orange-400/10' },
-    // cycle 105: cycle 95(maxKillStreak) / cycle 102(discoveryChains)에서 추가된 신규
-    // achievement target에 짝을 이루는 테마. 각각 StatsPanel cycle 96(red Flame) /
-    // cycle 104(indigo Link2) 톤과 일치.
-    maxKillStreak:     { icon: Flame, titleClass: 'text-red-100', iconTone: 'text-red-200', card: 'border-red-300/22 bg-red-400/10' },
-    discoveryChains:   { icon: Link2, titleClass: 'text-indigo-100', iconTone: 'text-indigo-200', card: 'border-indigo-300/22 bg-indigo-400/10' },
+interface AchievementPanelProps {
+    player: Player;
+    actions?: AchievementActions;
+}
+
+const CATEGORY_PRESENTATION = {
+    battle: { icon: Swords, iconTone: 'text-rose-200', progress: 'bg-rose-300/85' },
+    adventure: { icon: Compass, iconTone: 'text-emerald-200', progress: 'bg-emerald-300/85' },
+    growth: { icon: Star, iconTone: 'text-[#f6e7c8]', progress: 'bg-[#d5b180]' },
+    collection: { icon: Anvil, iconTone: 'text-violet-200', progress: 'bg-violet-300/85' },
+    survival: { icon: Shield, iconTone: 'text-sky-200', progress: 'bg-sky-300/85' },
+} as const;
+
+const TARGET_ICONS: Record<string, typeof Trophy> = {
+    kills: Swords,
+    bossKills: Trophy,
+    total_gold: Coins,
+    level: Star,
+    deaths: Skull,
+    explores: Compass,
+    crafts: Hammer,
+    rests: Shield,
+    bountiesCompleted: Target,
+    abyssRecord: Crown,
+    relicCount: Sparkles,
+    synths: Anvil,
+    discoveries: Compass,
+    prestige: RefreshCcw,
+    demonKingSlain: Trophy,
+    signaturesDiscovered: Sparkles,
+    signatureSetsCompleted: Crown,
+    escapes: Footprints,
+    maxKillStreak: Flame,
+    discoveryChains: Link2,
 };
 
-const getTheme = (achievement: any) => {
-    const base = THEME_BY_TARGET[achievement?.target] || THEME_BY_TARGET.kills;
-    if (achievement?.goal >= 100) {
-        return { ...base, icon: Crown, titleClass: 'text-[#f6e7c8]', iconTone: 'text-[#f6e7c8]', card: 'border-[#d5b180]/22 bg-[#d5b180]/10' };
-    }
-    if (achievement?.goal >= 50) {
-        return { ...base, icon: Skull, titleClass: 'text-orange-100', iconTone: 'text-orange-200', card: 'border-orange-300/20 bg-orange-400/10' };
-    }
-    return base;
+const AchievementProgressBar = ({ achievement, tone }: { achievement: AchievementProgress; tone: string }) => {
+    const value = Math.min(achievement.current, achievement.goal);
+    const ratio = Math.min(100, (value / Math.max(1, achievement.goal)) * 100);
+
+    return (
+        <div className="mt-2 flex items-center gap-2">
+            <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-white/[0.07]">
+                <Motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${ratio}%` }}
+                    transition={{ duration: 0.45, ease: 'easeOut' }}
+                    className={`h-full rounded-full ${tone}`}
+                />
+            </div>
+            <span className="aether-type-meta shrink-0 font-readable text-slate-300">
+                {value}/{achievement.goal}
+            </span>
+        </div>
+    );
 };
 
-// cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
+const RewardText = ({ children }: { children: string }) => (
+    <div className="aether-type-meta mt-1 font-readable text-[#d5b180]">
+        보상 · {children || '기록 달성'}
+    </div>
+);
+
 const AchievementPanel = ({ player, actions }: AchievementPanelProps) => {
-    const achievements = useMemo(() => {
-        const claimed = player?.stats?.claimedAchievements || [];
-        return (DB.ACHIEVEMENTS || []).map((achievement: any) => {
-            const current = getAchievementCurrentValue(achievement, player);
-            return {
-                ...achievement,
-                ...getTheme(achievement),
-                current,
-                rewardText: formatRewardParts(achievement.reward || {}).join(' · '),
-                unlocked: isAchievementUnlocked(achievement, player),
-                claimed: claimed.includes(achievement.id),
-            };
-        });
+    const [category, setCategory] = useState<AchievementCategoryId>('battle');
+
+    const achievements = useMemo<AchievementProgress[]>(() => {
+        const claimed = player.stats?.claimedAchievements || [];
+
+        return DB.ACHIEVEMENTS.map((achievement) => ({
+            ...achievement,
+            id: achievement.id || '',
+            title: achievement.title || '이름 없는 업적',
+            desc: achievement.desc || '모험 기록을 달성하세요.',
+            target: achievement.target || 'level',
+            goal: achievement.goal || 1,
+            current: getAchievementCurrentValue(achievement, player),
+            rewardText: formatRewardParts(achievement.reward || {}).join(' · '),
+            unlocked: isAchievementUnlocked(achievement, player),
+            claimed: claimed.includes(achievement.id || ''),
+        }));
     }, [player]);
 
-    const unlocked = achievements.filter((a: any) => a.unlocked);
-    const locked = achievements.filter((a: any) => !a.unlocked);
-    const claimableCount = unlocked.filter((a: any) => !a.claimed).length;
-    const completionRatio = (unlocked.length / Math.max(1, achievements.length)) * 100;
+    const journeys = useMemo(() => buildAchievementJourneys(achievements), [achievements]);
+    const recommendedGoals = useMemo(() => getRecommendedAchievementGoals(journeys), [journeys]);
+    const activeJourneys = journeys.filter((journey) => journey.category === category);
+    const claimable = achievements.filter((achievement) => achievement.unlocked && !achievement.claimed);
+    const unlockedCount = achievements.filter((achievement) => achievement.unlocked).length;
+    const claimedCount = achievements.filter((achievement) => achievement.claimed).length;
+    const completionRatio = (unlockedCount / Math.max(1, achievements.length)) * 100;
 
-    const handleClaim = (ach: any) => {
-        if (ach.claimed) return;
-        if (actions?.claimAchievement) actions.claimAchievement(ach.id);
+    const claim = (achievement: AchievementProgress) => {
+        if (achievement.claimed || !achievement.unlocked) return;
+        actions?.claimAchievement?.(achievement.id);
     };
 
     return (
-        <div data-testid="achievement-panel" className="space-y-3">
-            <div className="rounded-[1.2rem] border border-white/8 bg-black/18 px-4 py-3.5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                            Achievement Ledger
-                        </div>
-                        <div className="mt-1 text-[1.05rem] font-rajdhani font-bold text-slate-100">
-                            누적 기록과 보상
-                        </div>
+        <div data-testid="achievement-panel" className="font-readable">
+            <header data-testid="achievement-summary" className="border-b border-white/10 pb-4">
+                <div className="flex items-start gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#d5b180]/24 bg-[#d5b180]/10">
+                        <Trophy size={20} className="text-[#f6e7c8]" />
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                        <SignalBadge tone="neutral" size="sm">{unlocked.length}/{achievements.length} unlocked</SignalBadge>
-                        {claimableCount > 0 && <SignalBadge tone="upgrade" size="sm">수령 대기 {claimableCount}</SignalBadge>}
+                    <div className="min-w-0 flex-1">
+                        <h2 className="aether-type-title font-semibold text-slate-100">업적</h2>
+                        <p className="aether-type-body mt-0.5 text-slate-400/76">
+                            달성 {unlockedCount}/{achievements.length} · 보상 수령 {claimedCount}/{achievements.length}
+                        </p>
                     </div>
                 </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
                     <Motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${completionRatio}%` }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
-                        className="h-full rounded-full bg-[linear-gradient(90deg,rgba(213,177,128,0.9)_0%,rgba(125,212,216,0.92)_100%)]"
+                        transition={{ duration: 0.55, ease: 'easeOut' }}
+                        className="h-full rounded-full bg-[linear-gradient(90deg,#d5b180_0%,#7dd4d8_100%)]"
                     />
                 </div>
-            </div>
+            </header>
 
-            {unlocked.length > 0 && (
-                <div className="space-y-2">
-                    {unlocked.map((a: any, i: any) => {
-                        const Icon = a.icon;
-                        return (
-                            <Motion.div
-                                key={a.id}
-                                data-testid={`achievement-card-${a.id}`}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.04 }}
-                                className={`rounded-[1.15rem] border px-3.5 py-3 ${a.card}`}
-                            >
-                                <div className="flex items-start gap-3">
-                                    <div className="mt-0.5 rounded-full border border-white/8 bg-black/20 p-2">
-                                        <Icon size={16} className={a.iconTone} />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <div className={`text-[1rem] font-rajdhani font-bold ${a.titleClass}`}>{a.title}</div>
-                                            {a.claimed
-                                                ? <SignalBadge tone="neutral" size="sm">수령 완료</SignalBadge>
-                                                : <SignalBadge tone="upgrade" size="sm">claim</SignalBadge>}
-                                        </div>
-                                        <div className="mt-1 text-[11px] font-fira text-slate-200/80">{a.desc}</div>
-                                        <div className="mt-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-500">Reward</div>
-                                        <div className="mt-1 text-[11px] font-fira text-slate-300/76">{a.rewardText}</div>
-                                    </div>
-                                    {a.claimed ? (
-                                        <div className="shrink-0 rounded-full border border-white/8 bg-black/16 px-3 py-2 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400/70">
-                                            Claimed
-                                        </div>
-                                    ) : (
-                                        <Motion.button
-                                            data-testid={`achievement-claim-${a.id}`}
-                                            whileTap={{ scale: 0.96 }}
-                                            onClick={() => handleClaim(a)}
-                                            className="shrink-0 rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-2 text-[10px] font-rajdhani font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/14"
-                                        >
-                                            <span className="inline-flex items-center gap-1">
-                                                <Gift size={12} />
-                                                수령
-                                            </span>
-                                        </Motion.button>
-                                    )}
+            {claimable.length > 0 && (
+                <section data-testid="achievement-claimable" className="border-b border-[#d5b180]/20 py-4">
+                    <div className="flex items-center gap-2">
+                        <Gift size={16} className="text-[#f6e7c8]" />
+                        <h3 className="aether-type-title font-semibold text-slate-100">받을 보상</h3>
+                        <span className="aether-type-meta text-[#d5b180]">{claimable.length}개</span>
+                    </div>
+                    <div className="mt-2 divide-y divide-white/8">
+                        {claimable.map((achievement) => (
+                            <div key={achievement.id} className="flex min-h-14 items-center gap-3 py-2">
+                                <div className="min-w-0 flex-1">
+                                    <div className="aether-type-body font-semibold text-slate-100">{achievement.title}</div>
+                                    <RewardText>{achievement.rewardText}</RewardText>
                                 </div>
-                            </Motion.div>
+                                <button
+                                    type="button"
+                                    data-testid={`achievement-claim-${achievement.id}`}
+                                    onClick={() => claim(achievement)}
+                                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[#d5b180]/32 bg-[#d5b180]/12 px-3 font-readable text-sm font-semibold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
+                                >
+                                    <Gift size={15} />
+                                    받기
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            <section data-testid="achievement-next-goals" className="border-b border-white/10 py-4">
+                <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="aether-type-title font-semibold text-slate-100">다음 목표</h3>
+                    <span className="aether-type-meta text-slate-400/76">가장 가까운 기록</span>
+                </div>
+                <div className="mt-2 divide-y divide-white/8">
+                    {recommendedGoals.map((achievement) => {
+                        const journey = journeys.find((entry) => entry.target === achievement.target);
+                        const theme = CATEGORY_PRESENTATION[journey?.category || 'growth'];
+                        const Icon = TARGET_ICONS[achievement.target] || Trophy;
+
+                        return (
+                            <div
+                                key={achievement.id}
+                                data-testid={`achievement-next-goal-${achievement.id}`}
+                                className="flex min-h-[76px] items-start gap-3 py-2.5"
+                            >
+                                <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04]">
+                                    <Icon size={17} className={theme.iconTone} />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="aether-type-body truncate font-semibold text-slate-100">{achievement.title}</div>
+                                    <div className="aether-type-meta mt-0.5 text-slate-300/76">{achievement.desc}</div>
+                                    <AchievementProgressBar achievement={achievement} tone={theme.progress} />
+                                    <RewardText>{achievement.rewardText}</RewardText>
+                                </div>
+                            </div>
                         );
                     })}
                 </div>
-            )}
+            </section>
 
-            {locked.length > 0 && (
-                <div className="rounded-[1.15rem] border border-white/8 bg-black/16 px-4 py-3.5">
-                    <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                        Locked Records
-                    </div>
-                    <div className="mt-3 space-y-2">
-                        {locked.map((a: any) => {
-                            const Icon = a.icon;
-                            return (
-                                <div key={a.id} className="flex items-center gap-3 rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-3 py-2.5 opacity-72">
-                                    <div className="rounded-full border border-white/8 bg-black/18 p-2">
-                                        <Icon size={14} className="text-slate-500" />
+            <section className="pt-4">
+                <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="aether-type-title font-semibold text-slate-100">업적 여정</h3>
+                    <span className="aether-type-meta text-slate-400/76">단계를 눌러 전체 기록 보기</span>
+                </div>
+
+                <div role="tablist" aria-label="업적 분야" className="mt-3 grid grid-cols-5 gap-1">
+                    {ACHIEVEMENT_CATEGORIES.map((entry) => {
+                        const active = category === entry.id;
+                        const theme = CATEGORY_PRESENTATION[entry.id];
+                        const Icon = theme.icon;
+
+                        return (
+                            <button
+                                key={entry.id}
+                                type="button"
+                                role="tab"
+                                aria-selected={active}
+                                data-testid={`achievement-category-${entry.id}`}
+                                onClick={() => setCategory(entry.id)}
+                                className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-lg border px-1 text-sm font-semibold transition-colors ${
+                                    active
+                                        ? 'border-[#7dd4d8]/38 bg-[#7dd4d8]/12 text-slate-100'
+                                        : 'border-white/8 bg-white/[0.03] text-slate-400 hover:text-slate-200'
+                                }`}
+                            >
+                                <Icon size={15} className={active ? theme.iconTone : 'text-slate-500'} />
+                                {entry.label}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <div className="mt-2 divide-y divide-white/10 border-y border-white/10">
+                    {activeJourneys.map((journey) => {
+                        const achievement = journey.nextMilestone;
+                        const theme = CATEGORY_PRESENTATION[journey.category];
+                        const Icon = TARGET_ICONS[journey.target] || Trophy;
+
+                        return (
+                            <details key={journey.target} data-testid={`achievement-journey-${journey.target}`} className="group">
+                                <summary className="flex min-h-[78px] cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
+                                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04]">
+                                        <Icon size={17} className={theme.iconTone} />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-sm font-rajdhani font-bold text-slate-300">{a.title}</div>
-                                        <div className="mt-0.5 text-[10px] font-fira text-slate-500">{a.desc}</div>
+                                        <div className="flex items-baseline justify-between gap-2">
+                                            <div className="aether-type-body font-semibold text-slate-100">{journey.label}</div>
+                                            <span className="aether-type-meta shrink-0 text-slate-400/76">
+                                                {journey.claimedCount}/{journey.milestones.length} 단계
+                                            </span>
+                                        </div>
+                                        <div className="aether-type-meta mt-0.5 truncate text-slate-300/76">
+                                            {journey.completed ? '모든 기록 완료' : `다음 · ${achievement.title}`}
+                                        </div>
+                                        {!journey.completed && <AchievementProgressBar achievement={achievement} tone={theme.progress} />}
                                     </div>
-                                    <div className="shrink-0 text-[10px] font-fira text-slate-400">
-                                        {Math.min(a.current, a.goal)}/{a.goal}
-                                    </div>
+                                    <ChevronDown size={16} className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
+                                </summary>
+
+                                <div className="border-t border-white/8 pb-2 pl-12">
+                                    {journey.milestones.map((milestone) => (
+                                        <div
+                                            key={milestone.id}
+                                            data-testid={`achievement-milestone-${milestone.id}`}
+                                            className="border-b border-white/8 py-3 last:border-b-0"
+                                        >
+                                            <div className="flex items-start gap-2.5">
+                                                {milestone.claimed ? (
+                                                    <CircleCheck size={16} className="mt-0.5 shrink-0 text-emerald-200" />
+                                                ) : milestone.unlocked ? (
+                                                    <Gift size={16} className="mt-0.5 shrink-0 text-[#f6e7c8]" />
+                                                ) : (
+                                                    <LockKeyhole size={15} className="mt-0.5 shrink-0 text-slate-500" />
+                                                )}
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                                        <div className="aether-type-body font-semibold text-slate-100">{milestone.title}</div>
+                                                        <span className="aether-type-meta text-slate-400/76">
+                                                            {milestone.claimed ? '보상 수령 완료' : `${Math.min(milestone.current, milestone.goal)}/${milestone.goal}`}
+                                                        </span>
+                                                    </div>
+                                                    <div className="aether-type-meta mt-0.5 text-slate-300/76">{milestone.desc}</div>
+                                                    <RewardText>{milestone.rewardText}</RewardText>
+                                                </div>
+                                            </div>
+                                            {milestone.unlocked && !milestone.claimed && (
+                                                <button
+                                                    type="button"
+                                                    data-testid={`achievement-claim-detail-${milestone.id}`}
+                                                    onClick={() => claim(milestone)}
+                                                    className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-[#d5b180]/32 bg-[#d5b180]/12 px-3 text-sm font-semibold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
+                                                >
+                                                    <Gift size={15} />
+                                                    보상 받기
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            );
-                        })}
-                    </div>
+                            </details>
+                        );
+                    })}
                 </div>
-            )}
+            </section>
         </div>
     );
 };

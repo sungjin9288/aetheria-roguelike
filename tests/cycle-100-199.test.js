@@ -146,36 +146,30 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('THEME_BY_TARGET: maxKillStreak entry 등록됨', async () => {
+  test('TARGET_ICONS: maxKillStreak entry 등록됨', async () => {
       const source = await readSrc('src/components/AchievementPanel.tsx');
-      assert.match(source, /maxKillStreak\s*:\s*\{[^}]*Flame/);
+      assert.match(source, /maxKillStreak\s*:\s*Flame/);
   });
 
-  test('THEME_BY_TARGET: discoveryChains entry 등록됨', async () => {
+  test('TARGET_ICONS: discoveryChains entry 등록됨', async () => {
       const source = await readSrc('src/components/AchievementPanel.tsx');
-      assert.match(source, /discoveryChains\s*:\s*\{[^}]*Link2/);
+      assert.match(source, /discoveryChains\s*:\s*Link2/);
   });
 
-  test('THEME_BY_TARGET: maxKillStreak가 red 계열 톤', async () => {
-      const source = await readSrc('src/components/AchievementPanel.tsx');
-      const idx = source.indexOf('maxKillStreak:');
-      const window = source.slice(idx, idx + 300);
-      assert.match(window, /red-/);
+  test('maxKillStreak가 전투 분야에 포함됨', async () => {
+      const source = await readSrc('src/utils/achievementPresentation.ts');
+      assert.match(source, /id: 'battle'[^]*targets: \[[^\]]*'maxKillStreak'/);
   });
 
-  test('THEME_BY_TARGET: discoveryChains가 indigo 계열 톤', async () => {
-      const source = await readSrc('src/components/AchievementPanel.tsx');
-      const idx = source.indexOf('discoveryChains:');
-      const window = source.slice(idx, idx + 300);
-      assert.match(window, /indigo-/);
+  test('discoveryChains가 탐험 분야에 포함됨', async () => {
+      const source = await readSrc('src/utils/achievementPresentation.ts');
+      assert.match(source, /id: 'adventure'[^]*targets: \[[^\]]*'discoveryChains'/);
   });
 
   test('lucide imports: Flame / Link2 추가됨', async () => {
       const source = await readSrc('src/components/AchievementPanel.tsx');
-      const importLine = source.split('\n').find((l) => l.includes("from 'lucide-react'"));
-      assert.ok(importLine, 'should have lucide-react import');
-      assert.ok(importLine.includes('Flame'), 'Flame import missing');
-      assert.ok(importLine.includes('Link2'), 'Link2 import missing');
+      assert.match(source, /Flame,/);
+      assert.match(source, /Link2,/);
   });
 
   test('기존 cycle 79 테마 14종 회귀 보존', async () => {
@@ -1245,9 +1239,9 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.match(source, /data-testid\s*=\s*["']achievement-panel["']/);
   });
 
-  test('AchievementPanel: dynamic achievement-card-{id} testid 노출', async () => {
+  test('AchievementPanel: dynamic achievement-milestone-{id} testid 노출', async () => {
       const source = await readSrc('src/components/AchievementPanel.tsx');
-      assert.match(source, /data-testid\s*=\s*\{`achievement-card-\$\{[^}]+\}`\}/);
+      assert.match(source, /data-testid\s*=\s*\{`achievement-milestone-\$\{[^}]+\}`\}/);
   });
 
   test('AchievementPanel: dynamic achievement-claim-{id} testid 노출', async () => {

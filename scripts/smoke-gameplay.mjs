@@ -1365,6 +1365,50 @@ async function verifyTabs(page) {
     screenshotSelector: '[data-testid="mobile-archive-console"]',
   });
 
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('achievements'));
+  const achievementState = await waitForState(page, (state) => state.sideTab === 'achievements', 'achievement tab activation');
+  await verifySurfaceLanguage(page, {
+    selector: '[data-testid="achievement-panel"]',
+    requiredText: ['업적', '다음 목표', '업적 여정', '전투', '탐험', '성장', '수집', '생존'],
+    forbiddenPattern: /Achievement Ledger|Unlocked|Locked Records|Claimed|Reward|>claim</,
+    label: 'achievement tab',
+  });
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  const achievementLayout = await page.locator('[data-testid="achievement-panel"]').evaluate((root) => {
+    const leaves = [...root.querySelectorAll('*')]
+      .filter((node) => node.children.length === 0 && (node.textContent || '').trim());
+    const fontSizes = leaves.map((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+    const visibleButtonHeights = [...root.querySelectorAll('button')]
+      .map((button) => button.getBoundingClientRect().height)
+      .filter((height) => height > 0);
+    const categoryButtons = [...root.querySelectorAll('[data-testid^="achievement-category-"]')];
+    const bounds = root.getBoundingClientRect();
+    return {
+      panelHeight: Math.round(bounds.height),
+      minFont: Math.min(...fontSizes),
+      minButtonHeight: Math.min(...visibleButtonHeights),
+      nextGoalCount: root.querySelectorAll('[data-testid^="achievement-next-goal-"]').length,
+      journeyCount: root.querySelectorAll('[data-testid^="achievement-journey-"]').length,
+      categoryCount: categoryButtons.length,
+      categoriesInside: categoryButtons.every((button) => {
+        const rect = button.getBoundingClientRect();
+        return rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1;
+      }),
+      openJourneyCount: root.querySelectorAll('details[open]').length,
+    };
+  });
+  ensure(achievementLayout.panelHeight < 1800, `Achievement panel should group milestones instead of rendering all 73 rows: ${JSON.stringify(achievementLayout)}`);
+  ensure(achievementLayout.minFont >= 11, `Achievement text should keep the mobile 11px floor: ${JSON.stringify(achievementLayout)}`);
+  ensure(achievementLayout.minButtonHeight >= 44, `Achievement actions should keep 44px touch targets: ${JSON.stringify(achievementLayout)}`);
+  ensure(achievementLayout.nextGoalCount === 3, `Achievement panel should expose three near-term goals: ${JSON.stringify(achievementLayout)}`);
+  ensure(achievementLayout.journeyCount <= 5, `Achievement panel should expose only the selected journey category: ${JSON.stringify(achievementLayout)}`);
+  ensure(achievementLayout.categoryCount === 5 && achievementLayout.categoriesInside, `All achievement categories should fit without horizontal hunting: ${JSON.stringify(achievementLayout)}`);
+  ensure(achievementLayout.openJourneyCount === 0, `Achievement milestones should stay collapsed until requested: ${JSON.stringify(achievementLayout)}`);
+  await writeStateArtifact('08e-achievements-tab', achievementState, page, {
+    screenshotSelector: '[data-testid="mobile-archive-console"]',
+    screenshotAnimations: 'disabled',
+  });
+
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('stats'));
   const statsState = await waitForState(page, (state) => state.sideTab === 'stats', 'stats tab activation');
   await verifySurfaceLanguage(page, {

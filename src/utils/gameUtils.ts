@@ -123,6 +123,7 @@ export const formatRewardParts = (reward: any) => {
     if (reward.exp) parts.push(`경험 ${reward.exp}`);
     if (reward.gold) parts.push(`골드 ${reward.gold}`);
     if (reward.item) parts.push(reward.item);
+    if (reward.premiumCurrency) parts.push(`에테르 크리스탈 ${reward.premiumCurrency}`);
     return parts;
 };
 
