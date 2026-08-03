@@ -37,6 +37,7 @@ test('deterministic overlay smoke checks reachable primary and close CTAs', asyn
         'control-craft',
         'menu-reset-cancel',
         'job-change-close',
+        'job-change-confirm',
         'quest-board-close',
         'crafting-close',
         'event-close',
@@ -73,6 +74,7 @@ test('mobile focus panels expose explicit close and primary CTA test ids', async
     assert.match(dashboard, /data-testid="menu-reset-cancel"[\s\S]*min-h-\[44px\]/);
     assert.match(classCard, /data-testid="job-change-option"/);
     assert.match(job, /backTestId="job-change-close"/);
+    assert.match(job, /data-testid="job-change-confirm"/);
     assert.match(quest, /backTestId="quest-board-close"/);
     assert.match(quest, /data-testid="quest-board-start-operation"/);
     assert.match(quest, /data-testid="quest-board-accept-mission"/);

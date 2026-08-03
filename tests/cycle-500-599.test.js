@@ -3446,8 +3446,10 @@ import { readFile, readdir } from 'node:fs/promises';
           'ClassCard <ClassIcon> callsite 보존');
 
       const jcp = await readSrc('src/components/tabs/JobChangePanel.tsx');
-      assert.ok(/<ClassIcon className=\{player\.job\} size=\{30\} tier=\{current\?\.tier \|\| 0\}/.test(jcp),
-          'JobChangePanel <ClassIcon> callsite 보존');
+      assert.ok(/<ClassIcon className=\{currentJob\} size=\{34\} tier=\{current\?\.tier \|\| 0\}/.test(jcp),
+          'JobChangePanel 현재 직업 <ClassIcon> callsite 보존');
+      assert.ok(/<ClassIcon className=\{selectedName\} size=\{38\} tier=\{selected\.tier \|\| 0\}/.test(jcp),
+          'JobChangePanel 선택 직업 <ClassIcon> callsite 보존');
   });
 
   test('cycle 568: body TIER_COLORS nullish fallback 보존', async () => {
@@ -4028,7 +4030,7 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 582: 정합성 가드 — JobChangePanel callsite 보존', async () => {
       const source = await readSrc('src/components/tabs/JobChangePanel.tsx');
-      assert.ok(/<ClassCard[\s\S]*?disabled=\{player\.level < \(DB\.CLASSES\[job\]\?\.reqLv \|\| 999\)\}/.test(source),
+      assert.ok(/<ClassCard[\s\S]*?disabled=\{level < \(DB\.CLASSES\[jobName\]\?\.reqLv \|\| 1\)\}/.test(source),
           'JobChangePanel <ClassCard disabled={...} /> callsite 보존');
   });
 

@@ -11,7 +11,7 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('first-play surfaces use player-facing Korean labels', async () => {
-    const [controlPanel, dashboard, mapNavigator, mobileSummary, returnBriefing, jobChangePanel, classCard, messages] = await Promise.all([
+    const [controlPanel, dashboard, mapNavigator, mobileSummary, returnBriefing, jobChangePanel, classCard, classPresentation, messages] = await Promise.all([
         readSrc('src/components/ControlPanel.tsx'),
         readSrc('src/components/Dashboard.tsx'),
         readSrc('src/components/MapNavigator.tsx'),
@@ -19,6 +19,7 @@ test('first-play surfaces use player-facing Korean labels', async () => {
         readSrc('src/components/ReturnBriefingCard.tsx'),
         readSrc('src/components/tabs/JobChangePanel.tsx'),
         readSrc('src/components/ClassCard.tsx'),
+        readSrc('src/utils/classPresentation.ts'),
         readSrc('src/data/messages.ts'),
     ]);
 
@@ -54,9 +55,10 @@ test('first-play surfaces use player-facing Korean labels', async () => {
     for (const label of ['성장 갈림길', '전직 선택', '현재 직업', '가지 선택', '가방']) {
         assert.match(jobChangePanel, new RegExp(label));
     }
-    for (const label of ['전직 가능', '대표 기술', '사용 기술', '매우 높음']) {
-        assert.match(classCard, new RegExp(label));
+    for (const label of ['전직 가능', '대표 기술', '사용 기술', '다음 계보']) {
+        assert.match(`${classCard}\n${jobChangePanel}`, new RegExp(label));
     }
+    assert.match(classPresentation, /매우 높음/);
     assert.doesNotMatch(jobChangePanel, /Class Circuit|Class Advancement|Current Class|MAXIMUM POTENTIAL|archiveLabel="INV"/);
     assert.doesNotMatch(classCard, /\{skillCount\} skills|>x\{value\}</);
 });

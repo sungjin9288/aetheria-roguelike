@@ -262,7 +262,7 @@ import { readFile } from 'node:fs/promises';
       const idx = source.indexOf('<ClassCard');
       const jsxEnd = source.indexOf('/>', idx);
       const jsx = source.slice(idx, jsxEnd);
-      assert.ok(/jobName=\{job\}/.test(jsx), 'jobName 보존');
+      assert.ok(/jobName=\{jobName\}/.test(jsx), 'jobName 보존');
       assert.ok(/onSelect=\{/.test(jsx), 'onSelect 보존');
       assert.ok(/disabled=\{/.test(jsx), 'disabled 보존');
   });

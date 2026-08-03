@@ -263,6 +263,10 @@
 - **Rule:** 상시 HUD에는 캐릭터 identity, 현재 위치, 생명·기력·경험과 즉시 필요한 전투 상태만 둔다. 장비 조화, 세트, signature 같은 정비 정보는 Equipment panel에서 제공하고 임무·원정 상세도 각각의 owning surface에서 비교한다
 - **Rationale:** 여러 시스템의 상세 상태를 상시 HUD에 누적하면 첫 viewport를 차지하면서도 현재 행동에는 도움이 적다. 정보를 삭제하는 대신 소유 화면으로 이동하면 깊이는 유지하면서 탐험·전투 화면의 scan time과 세로 공간을 줄일 수 있다
 
+### R55: Separate Growth Preview From Irreversible Commitment
+- **Rule:** 전직처럼 플레이 결과를 크게 바꾸는 성장 선택은 후보 비교와 실제 적용 action을 분리한다. 잠긴 후보도 identity, 능력 경향, 대표 기술을 미리 볼 수 있게 하되 조건 충족 전에는 확정 action만 비활성화한다
+- **Rationale:** 후보 카드를 누르는 즉시 적용되면 비교를 위한 탐색이 위험한 행동이 되고, 잠긴 선택의 정보를 모두 가리면 장기 성장 목표를 세울 수 없다. preview는 자유롭게, commit은 명시적으로 설계해야 선택 학습과 오조작 방지를 함께 만족한다
+
 ---
 
 ## 📝 Post-Mortem Template

@@ -1045,10 +1045,9 @@ async function verifyMobileFocusPanels(page) {
     artifactName: '02b-class-open',
     closeTestId: 'job-change-close',
     decisionSelector: '[data-testid="job-change-option"]',
-    primarySelector: '[data-testid="job-change-option"]',
-    allowDisabledPrimary: true,
+    primarySelector: '[data-testid="job-change-confirm"]',
     readabilitySelector: '[data-testid="job-change-panel"]',
-    requiredText: ['전직 선택', '현재 직업', '대표 기술', '사용 기술'],
+    requiredText: ['전직 선택', '현재 직업', '다음 성장', '대표 기술', '다음 계보'],
     forbiddenPattern: /Class Circuit|Class Advancement|Current Class|skills|MAXIMUM POTENTIAL|INV/,
   });
 
