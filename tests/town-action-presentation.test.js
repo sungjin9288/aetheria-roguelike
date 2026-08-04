@@ -40,12 +40,12 @@ const baseContext = (overrides = {}) => ({
     ...overrides,
 });
 
-test('첫 마을은 추천 출발 하나와 탐험·이동 보조 행동만 먼저 보여준다', () => {
+test('첫 마을은 추천 출발과 실제 경로 선택 행동만 먼저 보여준다', () => {
     const result = getTownActionPresentation(baseContext());
 
     assert.equal(result.primary.kind, 'open_move');
     assert.equal(result.primary.label, '고요한 숲으로 첫 출발');
-    assert.deepEqual(result.quickKeys, ['explore', 'move']);
+    assert.deepEqual(result.quickKeys, ['move']);
     assert.deepEqual(result.facilityKeys, ['rest', 'quests', 'market', 'class', 'craft']);
 });
 
@@ -61,7 +61,7 @@ test('첫 스토리 임무가 활성화되어도 첫 출발 문구를 유지한�
     }));
 
     assert.equal(result.primary.label, '고요한 숲으로 첫 출발');
-    assert.deepEqual(result.quickKeys, ['explore', 'move']);
+    assert.deepEqual(result.quickKeys, ['move']);
     assert.ok(result.facilityKeys.includes('quests'));
 });
 
@@ -77,7 +77,7 @@ test('첫 탐험 전이라도 일반 임무가 활성화되어 있으면 게시�
     }));
 
     assert.equal(result.primary.label, '고요한 숲으로 출발');
-    assert.deepEqual(result.quickKeys, ['quests', 'explore', 'move']);
+    assert.deepEqual(result.quickKeys, ['quests', 'move']);
 });
 
 test('진행 중인 임무가 없으면 게시판을 주 행동으로 올린다', () => {
@@ -88,7 +88,7 @@ test('진행 중인 임무가 없으면 게시판을 주 행동으로 올린다'
     assert.equal(result.primary.kind, 'open_quest_board');
     assert.equal(result.primary.testId, 'control-quests');
     assert.ok(!result.facilityKeys.includes('quests'));
-    assert.deepEqual(result.quickKeys, ['explore', 'move']);
+    assert.deepEqual(result.quickKeys, ['move']);
 });
 
 test('체력이 낮은 진행 중 임무는 휴식을 주 행동으로 올리고 임무 접근을 남긴다', () => {
@@ -104,7 +104,7 @@ test('체력이 낮은 진행 중 임무는 휴식을 주 행동으로 올리고
     }));
 
     assert.equal(result.primary.kind, 'rest');
-    assert.deepEqual(result.quickKeys, ['quests', 'explore', 'move']);
+    assert.deepEqual(result.quickKeys, ['quests', 'move']);
     assert.equal(result.facilityStatus.rest, '회복 가능');
 });
 
@@ -133,7 +133,7 @@ test('재료와 골드가 갖춰지면 제작을 보조 행동으로 끌어올�
         }),
     }));
 
-    assert.deepEqual(result.quickKeys, ['craft', 'explore', 'move']);
+    assert.deepEqual(result.quickKeys, ['craft', 'move']);
     assert.equal(result.facilityStatus.craft, '제작 가능');
     assert.ok(!result.facilityKeys.includes('craft'));
 });
@@ -145,7 +145,7 @@ test('회복 소모품이 부족하면 상점을 보조 행동으로 끌어올�
         }),
     }));
 
-    assert.deepEqual(result.quickKeys, ['market', 'explore', 'move']);
+    assert.deepEqual(result.quickKeys, ['market', 'move']);
     assert.equal(result.facilityStatus.market, '보급 권장');
     assert.ok(!result.facilityKeys.includes('market'));
 });
@@ -174,5 +174,5 @@ test('완료 보상과 시체 회수는 각각 주 행동과 최우선 보조 �
 
     assert.equal(result.primary.kind, 'claim_quest');
     assert.equal(result.primary.tone, 'reward');
-    assert.deepEqual(result.quickKeys, ['grave', 'explore', 'move']);
+    assert.deepEqual(result.quickKeys, ['grave', 'move']);
 });

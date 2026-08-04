@@ -3288,17 +3288,25 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 277: bonusAtk/Hp/Mp 활성 필드 유지 (회귀 가드)', async () => {
-      const source = await readSrc('src/hooks/gameActions/ascensionActions.ts');
-      assert.ok(/bonusAtk:\s+\(meta\.bonusAtk/.test(source), 'ASCEND bonusAtk 누적 유지');
-      assert.ok(/bonusHp:\s+\(meta\.bonusHp/.test(source), 'ASCEND bonusHp 누적 유지');
-      assert.ok(/bonusMp:\s+\(meta\.bonusMp/.test(source), 'ASCEND bonusMp 누적 유지');
+      const [action, outcome] = await Promise.all([
+          readSrc('src/hooks/gameActions/ascensionActions.ts'),
+          readSrc('src/utils/ascensionPreview.ts'),
+      ]);
+      assert.ok(/getAscensionOutcome\(player\.meta\)/.test(action), 'ASCEND가 공용 outcome 사용');
+      assert.ok(/bonusAtk:\s*toNonNegativeNumber\(currentMeta\.bonusAtk\)/.test(outcome), 'ASCEND bonusAtk 누적 유지');
+      assert.ok(/bonusHp:\s*toNonNegativeNumber\(currentMeta\.bonusHp\)/.test(outcome), 'ASCEND bonusHp 누적 유지');
+      assert.ok(/bonusMp:\s*toNonNegativeNumber\(currentMeta\.bonusMp\)/.test(outcome), 'ASCEND bonusMp 누적 유지');
   });
 
   test('cycle 277: ASCEND prestigeRank / essence / titles 동작 유지 (회귀 가드)', async () => {
-      const source = await readSrc('src/hooks/gameActions/ascensionActions.ts');
-      assert.ok(/prestigeRank:\s+rank/.test(source), 'prestigeRank dispatch 유지');
-      assert.ok(/essence:\s+\(meta\.essence/.test(source), 'essence 누적 유지');
-      assert.ok(/titles:\s+\[\.\.\./.test(source), 'titles unique merge 유지');
+      const [action, outcome] = await Promise.all([
+          readSrc('src/hooks/gameActions/ascensionActions.ts'),
+          readSrc('src/utils/ascensionPreview.ts'),
+      ]);
+      assert.ok(/prestigeRank:\s*nextRank/.test(outcome), 'prestigeRank 누적 유지');
+      assert.ok(/essence:\s*toNonNegativeNumber\(currentMeta\.essence\)/.test(outcome), 'essence 누적 유지');
+      assert.ok(/payload:\s*\{ meta: outcome\.meta, newTitle: outcome\.title \}/.test(action), '공용 outcome dispatch 유지');
+      assert.ok(/titles:\s*\[\.\.\./.test(action), 'titles unique merge 유지');
   });
 }
 

@@ -6,6 +6,7 @@ import { AT } from '../reducers/actionTypes';
 import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
 import { calculateFullStats } from '../utils/statsCalculator';
 import {
+    ASCENSION_JOURNEY_DEVICE_QA_SCENARIO,
     GRAVE_RECOVERY_DEVICE_QA_SCENARIO,
     getDeviceQaScenario,
     isMockRuntime,
@@ -316,6 +317,22 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     })),
                 };
             },
+            getAscensionSnapshot: () => {
+                const er = engineRef.current;
+                return {
+                    gameState: er.gameState,
+                    name: er.player.name || '',
+                    level: er.player.level || 0,
+                    prestigeRank: er.player.meta?.prestigeRank || 0,
+                    essence: er.player.meta?.essence || 0,
+                    bonusAtk: er.player.meta?.bonusAtk || 0,
+                    bonusHp: er.player.meta?.bonusHp || 0,
+                    bonusMp: er.player.meta?.bonusMp || 0,
+                    inventoryCount: er.player.inv?.length || 0,
+                    inventoryIds: (er.player.inv || []).map((item: any) => item.id),
+                    relicCount: er.player.relics?.length || 0,
+                };
+            },
             getDomMetrics: () => {
                 const rect = (node: any) => {
                     if (!(node instanceof HTMLElement)) return null;
@@ -517,6 +534,35 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'graves' });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
+            seedAscensionJourneyScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        name: '리베아',
+                        gender: er.player.gender || 'female',
+                        job: '팔라딘',
+                        level: 50,
+                        loc: '마왕성',
+                        gold: 12_480,
+                        inv: [
+                            { id: 'ascension-smoke-blade', name: '성검 에테르니아', type: 'weapon', tier: 5 },
+                            { id: 'ascension-smoke-potion', name: '대회복 물약', type: 'hp', tier: 3 },
+                        ],
+                        relics: [{ id: 'ascension-smoke-relic', name: '용기의 문장', rarity: 'legendary' }],
+                        meta: {
+                            ...er.player.meta,
+                            prestigeRank: 2,
+                            essence: 180,
+                            bonusAtk: 10,
+                            bonusHp: 50,
+                            bonusMp: 30,
+                            mirror: { start_gold: 2 },
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.ASCENSION });
             },
             seedClaimableQuestScenario: () => {
                 const er = engineRef.current;
@@ -862,6 +908,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         if (
             deviceQaScenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO
             || deviceQaScenario === GRAVE_RECOVERY_DEVICE_QA_SCENARIO
+            || deviceQaScenario === ASCENSION_JOURNEY_DEVICE_QA_SCENARIO
         ) {
             let attempts = 0;
             const seedWhenReady = () => {
@@ -869,8 +916,10 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 if (engine.bootStage === 'ready') {
                     if (deviceQaScenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO) {
                         if (!String(engine.player?.name || '').trim()) testApi.seedItemInvestmentScenario();
-                    } else {
+                    } else if (deviceQaScenario === GRAVE_RECOVERY_DEVICE_QA_SCENARIO) {
                         testApi.seedGraveRecoveryScenario();
+                    } else {
+                        testApi.seedAscensionJourneyScenario();
                     }
                     return;
                 }

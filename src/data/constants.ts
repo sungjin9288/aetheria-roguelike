@@ -177,6 +177,7 @@ export const BALANCE: BalanceConfig = {
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
     PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가
     PRESTIGE_MP_BONUS: 15,          // 환생당 영구 MP 증가
+    PRESTIGE_ESSENCE_REWARD: 200,    // 환생 완료 시 지급되는 계승 정수
     // PR #5 (2026-06) — 프레스티지 적 난이도 스케일링. 기존 프레스티지는 플레이어
     //   스탯만 올려(런이 점점 쉬워짐) 로그라이크 "깊을수록 어려움" 원칙에 역행했다.
     //   환생 rank당 적 hp/atk/def를 곱연산으로 올려 매 승천이 더 단단해지게 한다.

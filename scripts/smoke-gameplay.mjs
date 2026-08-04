@@ -1282,6 +1282,10 @@ async function verifyTabs(page) {
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
   if (await archiveOpenButton.isVisible().catch(() => false)) {
     await archiveOpenButton.click();
+  } else {
+    const fieldMapButton = page.locator('[data-testid="control-map-open"]');
+    await fieldMapButton.waitFor({ state: 'visible', timeout: 10000 });
+    await fieldMapButton.click();
   }
   await page.locator('[data-testid="mobile-archive-console-content"]').waitFor({ state: 'visible', timeout: 10000 });
 

@@ -1,5 +1,6 @@
 import {
   Backpack,
+  BookOpen,
   ChevronDown,
   GraduationCap,
   Hammer,
@@ -147,11 +148,12 @@ const townPrimaryIcons: Record<string, any> = {
   rest: Moon,
 };
 
-const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocus }: {
+const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocus, onOpenArchive }: {
   preparation: any;
   primary: any;
   onPrimaryAction: () => void;
   onEditFocus: () => void;
+  onOpenArchive?: () => void;
 }) => {
   const PrimaryIcon = townPrimaryIcons[primary.kind] || Route;
   const checks = [
@@ -168,9 +170,22 @@ const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocu
     >
       <div className="flex items-center justify-between gap-2">
         <div className="aether-label text-[#b9f1ec]/72">원정 준비</div>
-        <SignalBadge tone={preparation.readinessLabel === '출발 가능' ? 'recommended' : 'neutral'} size="sm">
-          {preparation.readinessLabel}
-        </SignalBadge>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <SignalBadge tone={preparation.readinessLabel === '출발 가능' ? 'recommended' : 'neutral'} size="sm">
+            {preparation.readinessLabel}
+          </SignalBadge>
+          {onOpenArchive && (
+            <button
+              type="button"
+              data-testid="mobile-console-open-archive"
+              onClick={onOpenArchive}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[0.75rem] border border-white/10 bg-black/18 px-2.5 font-readable text-[11px] font-semibold text-slate-200/84 transition-colors hover:border-[#7dd4d8]/24 hover:text-white"
+            >
+              <BookOpen size={14} />
+              모험 기록
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-2 grid grid-cols-2 gap-1">
@@ -605,6 +620,19 @@ const ControlPanel = ({
     }
   };
 
+  const openTownArchive = onOpenArchiveConsole
+    ? () => {
+        soundManager.play('click');
+        onOpenArchiveConsole('inventory');
+      }
+    : undefined;
+
+  const townQuickGridClass = townQuickButtons.length >= 3
+    ? 'grid grid-cols-3 gap-2'
+    : townQuickButtons.length === 2
+      ? 'grid grid-cols-2 gap-2'
+      : 'grid grid-cols-1 gap-2';
+
   return (
     <Motion.div
       initial={false}
@@ -663,6 +691,7 @@ const ControlPanel = ({
                 primary={townPresentation.primary}
                 onPrimaryAction={runTownPrimaryAction}
                 onEditFocus={() => setGameState?.(GS.QUEST_BOARD)}
+                onOpenArchive={openTownArchive}
               />
             </div>
           ) : questTracker ? (
@@ -715,7 +744,7 @@ const ControlPanel = ({
                   <span className="aether-type-body shrink-0 font-readable font-semibold text-[#b9f1ec]">보기</span>
                 </button>
               )}
-              <div data-testid="control-town-quick-actions" className={actionGridClass}>
+              <div data-testid="control-town-quick-actions" className={townQuickGridClass}>
                 {townQuickButtons.map((button: any) => renderActionButton(button, '', {}))}
               </div>
               {townFacilityButtons.length > 0 && (

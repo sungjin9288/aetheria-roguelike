@@ -12,14 +12,17 @@ test.describe('Explore flow', () => {
         await startE2ERun(page);
     });
 
-    test('하단 ControlPanel에 탐험과 이동 버튼 노출', async ({ page }) => {
+    test('마을에서는 결과 없는 탐험을 숨기고 이동만 노출', async ({ page }) => {
         const explore = page.getByTestId('control-explore');
         const move = page.getByTestId('control-move');
-        await expect(explore).toBeVisible({ timeout: 8_000 });
+        await expect(explore).toHaveCount(0);
         await expect(move).toBeVisible({ timeout: 5_000 });
-        await expect(explore).toHaveAccessibleName('탐험');
         await expect(move).toHaveAccessibleName('이동');
         await expect(page.getByTestId('control-map-signal')).toBeVisible({ timeout: 5_000 });
+
+        await page.getByTestId('control-expedition-start').click();
+        await expect(explore).toBeVisible({ timeout: 5_000 });
+        await expect(explore).toHaveAccessibleName('탐험');
     });
 
     test('이동 버튼 클릭 → 이동 가능 지역 노출', async ({ page }) => {

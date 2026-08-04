@@ -1,238 +1,196 @@
-import { ArrowRight, Crown, Sparkles, ShieldAlert, Swords } from 'lucide-react';
-import { BALANCE } from '../data/constants';
-import { PRESTIGE_TITLES } from '../data/titles';
+import {
+    ArrowRight,
+    BookOpenCheck,
+    Crown,
+    RotateCcw,
+    ShieldAlert,
+    Sparkles,
+    Swords,
+} from 'lucide-react';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
-import SignalBadge from './SignalBadge';
 import type { Player } from '../types/index.js';
+import { getAscensionOutcome } from '../utils/ascensionPreview';
 
 interface AscensionScreenProps {
     player: Player;
     actions?: any;
 }
 
-// PR #8 (2026-06): 광고만 하고 미구현이던 해금을 실제 효과와 일치하도록 정리.
-//   구현된 비퇴행 해금만 표기 (getPrestigeUnlocks 단일 진실 원천). 매 rank의 영구
-//   스탯 증가·적 난이도 상승은 아래 스탯 행/적 강화 카드가 별도로 표시한다.
-// feat/prestige-rank-ladder: rank4~9 해금 추가 — PR #8/#10/#11과 동일 원칙(비퇴행·순수
-//   보너스/난이도)으로 getPrestigeUnlocks(rank)에 실제 배선된 항목만 광고한다.
-const PRESTIGE_UNLOCKS: any = [
-    { rank: 1, label: '에테르 각성', desc: '에센스 획득 +10% · 마왕 처치 시 원시의 파편 드롭' },
-    { rank: 2, label: '강화된 유물', desc: '유물 최대 보유 6개 · 유물 선택지 4지선다' },
-    { rank: 3, label: '심연의 메아리', desc: '엘리트 몬스터 출현 +25% · 보스 처치 시 희귀 장비 보장 · 진 보스 도전' },
-    { rank: 4, label: '재의 인장', desc: '캠프파이어 발견율 +4%p' },
-    { rank: 5, label: '심연의 인장', desc: '시작 부트 유물 선택지 3→4지선다' },
-    { rank: 6, label: '잔향의 나침반', desc: '유물 발견 pity 누적 가속 ×1.5' },
-    { rank: 7, label: '심연의 서약', desc: '챌린지 모디파이어 슬롯 +1(3→4)' },
-    { rank: 8, label: '에테르 심화', desc: '에센스 획득 추가 +10%p (누적 +20%)' },
-    { rank: 9, label: '심연 사냥꾼', desc: '정예 몬스터 처치 보상 +25%' },
-    { rank: 10, label: '에테르 초월', desc: '모든 영구 스탯 보너스 2배 · 숨겨진 보스 "에테르 군주" 출현(에테르 관문)' },
-];
-
-const STAT_TONE: any = {
-    atk: 'text-rose-100 border-rose-300/22 bg-rose-400/10',
-    hp: 'text-emerald-100 border-emerald-300/22 bg-emerald-300/10',
-    mp: 'text-[#dff7f5] border-[#7dd4d8]/22 bg-[#7dd4d8]/10',
-    essence: 'text-[#e3dcff] border-[#9a8ac0]/24 bg-[#9a8ac0]/10',
-};
-
 const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
-    const meta = player.meta || {};
-    const currentRank = meta.prestigeRank || 0;
-    // codex는 ASCEND reducer에서 보존되지만 UI에 명시되지 않아 trust 모먼트가 빈다
+    const outcome = getAscensionOutcome(player.meta);
     const signatureProgress = getSignatureDiscoveryProgress(player);
-    const nextRank = currentRank + 1;
-    const nextTitle = PRESTIGE_TITLES[Math.min(nextRank - 1, PRESTIGE_TITLES.length - 1)];
-
-    const nextUnlock = PRESTIGE_UNLOCKS.find((u: any) => u.rank === nextRank);
-    const upcomingUnlocks = PRESTIGE_UNLOCKS.filter((u: any) => u.rank > nextRank).slice(0, 2);
-
-    const bonusAtk = (meta.bonusAtk || 0) + BALANCE.PRESTIGE_ATK_BONUS;
-    const bonusHp = (meta.bonusHp || 0) + BALANCE.PRESTIGE_HP_BONUS;
-    const bonusMp = (meta.bonusMp || 0) + BALANCE.PRESTIGE_MP_BONUS;
-
-    // PR #5: 환생 후 적이 더 강해진다(rank 비례). 무성한 난이도 스파이크가 아니라
-    //   "감수하는 도전 = 그만큼의 보상"임을 명시해 공정성 체감을 지킨다.
-    const enemyStatPct = Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK * 100);
-    const enemyRewardPct = Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK * 100);
-
     const statRows = [
-        { label: '영구 ATK', before: `+${meta.bonusAtk || 0}`, after: `+${bonusAtk}`, tone: 'atk' },
-        { label: '영구 HP', before: `+${meta.bonusHp || 0}`, after: `+${bonusHp}`, tone: 'hp' },
-        { label: '영구 MP', before: `+${meta.bonusMp || 0}`, after: `+${bonusMp}`, tone: 'mp' },
-        { label: '에센스', before: `${meta.essence || 0}`, after: `${(meta.essence || 0) + 200}`, tone: 'essence' },
+        { label: '공격력', before: player.meta?.bonusAtk || 0, after: outcome.meta.bonusAtk, tone: 'text-rose-100' },
+        { label: '생명', before: player.meta?.bonusHp || 0, after: outcome.meta.bonusHp, tone: 'text-emerald-100' },
+        { label: '기력', before: player.meta?.bonusMp || 0, after: outcome.meta.bonusMp, tone: 'text-[#dff7f5]' },
+        { label: '계승 정수', before: player.meta?.essence || 0, after: outcome.meta.essence, tone: 'text-[#e3dcff]' },
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-[max(env(safe-area-inset-top),0.5rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]">
-            <div className="aether-overlay" />
-            <div
-                className="pointer-events-none absolute inset-0 opacity-70"
-                style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(213,177,128,0.12), transparent 30%), radial-gradient(circle at bottom right, rgba(125,212,216,0.08), transparent 24%)' }}
-            />
-
-            <div className="panel-noise aether-surface-strong relative z-10 w-full max-w-[40rem] overflow-hidden rounded-[2rem] shadow-[0_36px_96px_rgba(1,6,14,0.62)]">
-                <div
-                    className="pointer-events-none absolute inset-0 opacity-60"
-                    style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.05), transparent 22%), radial-gradient(circle at top right, rgba(154,138,192,0.12), transparent 28%)' }}
-                />
-
-                <div className="px-6 pb-6 pt-6">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
+        <div
+            data-testid="ascension-screen"
+            className="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4"
+        >
+            <section className="panel-noise aether-surface-strong relative z-10 flex min-h-0 w-full max-w-[40rem] flex-col overflow-hidden border-white/10 sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl sm:border">
+                <header className="shrink-0 border-b border-white/8 px-4 pb-3 pt-[max(env(safe-area-inset-top),1rem)] sm:px-5 sm:pt-5">
+                    <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
-                                Ether Ascension
-                            </div>
-                            <h1 className="mt-2 text-[1.7rem] font-rajdhani font-bold tracking-[0.08em] text-[#f6e7c8]">
-                                에테르 환생
-                            </h1>
-                            <p className="mt-2 max-w-[32rem] text-[11px] font-fira leading-relaxed text-slate-300/76">
-                                마왕을 쓰러뜨린 기록은 사라지지 않습니다. 이번 환생은 현재 런을 닫는 대신 영구 성장과 새로운 해금 축을 엽니다.
+                            <div className="text-[11px] font-readable text-[#d5b180]">마왕을 쓰러뜨린 뒤</div>
+                            <h1 className="mt-1 text-[22px] font-readable font-bold text-white">다음 여정으로 계승</h1>
+                            <p className="mt-1 text-[12px] font-readable leading-relaxed text-slate-300/82">
+                                이번 여정을 마치고 더 강한 세계에서 다시 시작합니다.
                             </p>
                         </div>
-
-                        <div className="flex flex-wrap gap-1.5">
-                            <SignalBadge tone="resonance" size="sm">Prestige {nextRank}</SignalBadge>
-                            <SignalBadge tone="danger" size="sm">런 초기화</SignalBadge>
+                        <div className="shrink-0 rounded-lg border border-[#9a8ac0]/30 bg-[#9a8ac0]/10 px-3 py-2 text-center">
+                            <div className="text-[11px] font-readable text-slate-300">계승 단계</div>
+                            <div className="mt-0.5 text-[17px] font-readable font-bold text-[#e3dcff]">
+                                {outcome.currentRank} <ArrowRight className="inline" size={13} /> {outcome.nextRank}
+                            </div>
                         </div>
                     </div>
+                </header>
 
-                    <div className="mt-5 grid gap-3">
-                        <div className="space-y-3">
-                            <div className="rounded-[1.25rem] border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-4 py-3.5">
-                                <div className="flex items-center justify-between gap-3 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                                    <span className="inline-flex items-center gap-1.5">
-                                        <Crown size={11} />
-                                        Next Title
-                                    </span>
-                                    <span className="text-[#e3dcff]">Rank {nextRank}</span>
-                                </div>
-                                <div className="mt-2 text-[1.3rem] font-rajdhani font-bold text-[#f3e7ff]">
-                                    [{nextTitle}]
-                                </div>
+                <main
+                    data-testid="ascension-scroll-region"
+                    className="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:px-5 sm:py-4"
+                >
+                    <section
+                        data-testid="ascension-primary-reward"
+                        className="rounded-lg border border-[#d5b180]/26 bg-[#d5b180]/8 p-3.5"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d5b180]/24 bg-black/22 text-[#f6e7c8]">
+                                <Crown size={18} />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2.5">
-                                {statRows.map((row: any) => (
-                                    <div key={row.label} className={`rounded-[1rem] border px-3 py-3 ${STAT_TONE[row.tone]}`}>
-                                        <div className="text-[10px] font-fira uppercase tracking-[0.16em] opacity-76">
-                                            {row.label}
+                            <div className="min-w-0 flex-1">
+                                <div className="text-[11px] font-readable text-[#d5b180]">새 칭호</div>
+                                <div className="mt-0.5 text-[18px] font-readable font-bold text-[#f6e7c8]">
+                                    {outcome.title}
+                                </div>
+                                {outcome.milestone && (
+                                    <div data-testid="ascension-current-unlock" className="mt-2 border-t border-[#d5b180]/16 pt-2">
+                                        <div className="flex items-center gap-1.5 text-[12px] font-readable font-bold text-white">
+                                            <Sparkles size={13} className="text-[#d5b180]" />
+                                            {outcome.milestone.name}
                                         </div>
-                                        <div className="mt-2 flex items-center gap-2 text-[1.05rem] font-rajdhani font-bold text-white">
-                                            <span className="opacity-55">{row.before}</span>
-                                            <ArrowRight size={13} className="opacity-55" />
-                                            <span>{row.after}</span>
-                                        </div>
+                                        <p className="mt-1 text-[11px] font-readable leading-relaxed text-slate-300/82">
+                                            {outcome.milestone.description}
+                                        </p>
                                     </div>
-                                ))}
+                                )}
                             </div>
-                            <p className="text-[10px] font-fira leading-relaxed text-slate-400/72">
-                                에센스는 시스템 탭의 <span className="text-[#e3dcff]">에테르 거울</span>에서 영구 업그레이드로 투자할 수 있습니다.
-                            </p>
                         </div>
+                    </section>
 
-                        <div className="space-y-3">
-                            {nextUnlock && (
-                                <div className="rounded-[1.2rem] border border-[#d5b180]/22 bg-[#d5b180]/10 px-4 py-3.5">
-                                    <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                                        <Sparkles size={11} />
-                                        이번 환생 해금
-                                    </div>
-                                    <div className="mt-2 text-[1.05rem] font-rajdhani font-bold text-[#f6e7c8]">
-                                        {nextUnlock.label}
-                                    </div>
-                                    <div className="mt-1 text-[11px] font-fira leading-relaxed text-slate-200/82">
-                                        {nextUnlock.desc}
+                    <section data-testid="ascension-permanent-growth">
+                        <h2 className="flex items-center gap-1.5 text-[12px] font-readable font-bold text-white">
+                            <Sparkles size={13} className="text-[#9a8ac0]" />
+                            영구 성장
+                        </h2>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                            {statRows.map((row) => (
+                                <div key={row.label} className="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5">
+                                    <div className="text-[11px] font-readable text-slate-400">{row.label}</div>
+                                    <div className={`mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold ${row.tone}`}>
+                                        <span className="text-slate-400">+{row.before}</span>
+                                        <ArrowRight size={12} />
+                                        <span>+{row.after}</span>
                                     </div>
                                 </div>
-                            )}
+                            ))}
+                        </div>
+                        <p className="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">
+                            계승 정수는 마을의 에테르 거울에서 원하는 영구 능력에 투자할 수 있습니다.
+                        </p>
+                    </section>
 
-                            {upcomingUnlocks.length > 0 && (
-                                <div className="rounded-[1.2rem] border border-white/8 bg-black/18 px-4 py-3.5">
-                                    <div className="text-[10px] font-fira uppercase tracking-[0.18em] text-slate-500">
-                                        다음 해금 예정
+                    <section
+                        data-testid="ascension-enemy-scaling"
+                        className="rounded-lg border border-amber-300/20 bg-amber-300/[0.06] p-3"
+                    >
+                        <div className="flex items-start gap-2.5">
+                            <Swords size={16} className="mt-0.5 shrink-0 text-amber-100" />
+                            <div className="min-w-0 flex-1">
+                                <h2 className="text-[12px] font-readable font-bold text-amber-50">다음 세계는 더 강하고 보상도 큽니다</h2>
+                                <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] font-readable">
+                                    <div className="rounded-md bg-black/18 px-2.5 py-2 text-slate-300">
+                                        적 능력치
+                                        <div className="mt-0.5 font-bold text-white">
+                                            +{outcome.currentEnemyStatPercent}% <ArrowRight className="inline" size={11} /> +{outcome.nextEnemyStatPercent}%
+                                        </div>
                                     </div>
-                                    <div className="mt-3 space-y-2">
-                                        {upcomingUnlocks.map((u: any) => (
-                                            <div key={u.rank} className="rounded-[0.95rem] border border-white/8 bg-white/[0.03] px-3 py-2.5">
-                                                <div className="flex items-center justify-between gap-2 text-[10px] font-fira uppercase tracking-[0.16em]">
-                                                    <span className="text-[#f6e7c8]">Rank {u.rank}</span>
-                                                    <span className="text-slate-500">Locked</span>
-                                                </div>
-                                                <div className="mt-1 text-[12px] font-rajdhani font-bold text-slate-100">
-                                                    {u.label}
-                                                </div>
-                                                <div className="mt-1 text-[10px] font-fira leading-relaxed text-slate-400/76">
-                                                    {u.desc}
-                                                </div>
-                                            </div>
-                                        ))}
+                                    <div className="rounded-md bg-black/18 px-2.5 py-2 text-slate-300">
+                                        처치 보상
+                                        <div className="mt-0.5 font-bold text-emerald-100">
+                                            +{outcome.currentEnemyRewardPercent}% <ArrowRight className="inline" size={11} /> +{outcome.nextEnemyRewardPercent}%
+                                        </div>
                                     </div>
                                 </div>
-                            )}
+                            </div>
+                        </div>
+                    </section>
 
+                    <section className="grid gap-2 sm:grid-cols-2">
+                        <div data-testid="ascension-preserved-summary" className="rounded-lg border border-emerald-300/18 bg-emerald-300/[0.06] p-3">
+                            <h2 className="flex items-center gap-1.5 text-[12px] font-readable font-bold text-emerald-100">
+                                <BookOpenCheck size={14} /> 그대로 남는 것
+                            </h2>
+                            <p className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">
+                                영구 능력 · 칭호 · 업적과 누적 기록 · 도감 · 시즌 진행
+                            </p>
                             {signatureProgress.discovered > 0 && (
-                                <div
+                                <p
                                     data-testid="ascension-signature-preserve"
-                                    className="rounded-[1.2rem] px-4 py-3 text-[11px] font-fira"
-                                    style={{
-                                        border: '1px solid rgba(246,231,162,0.42)',
-                                        background: 'linear-gradient(180deg, rgba(246,231,162,0.10) 0%, rgba(18,16,10,0.62) 100%)',
-                                    }}
+                                    className="mt-2 border-t border-[#f6e7a2]/20 pt-2 text-[11px] font-readable text-[#f6e7a2]"
                                 >
-                                    <div className="flex items-start gap-2" style={{ color: '#f6e7a2' }}>
-                                        <Sparkles size={14} className="mt-0.5 shrink-0" />
-                                        <div className="leading-relaxed">
-                                            <span className="font-bold">✦ 전설 각인 도감 {signatureProgress.discovered}/{signatureProgress.total} 보존</span>
-                                            <span className="ml-1 text-slate-200/82">— 환생 후에도 발견 기록과 도감 진행도는 그대로 유지됩니다.</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                    ✦ 전설 각인 도감 {signatureProgress.discovered}/{signatureProgress.total} 보존
+                                </p>
                             )}
-
-                            <div
-                                data-testid="ascension-enemy-scaling"
-                                className="rounded-[1.2rem] border border-[#d5b180]/24 bg-[#d5b180]/[0.07] px-4 py-3 text-[11px] font-fira text-[#f6e7c8]/92"
-                            >
-                                <div className="flex items-start gap-2">
-                                    <Swords size={14} className="mt-0.5 shrink-0" />
-                                    <div className="leading-relaxed">
-                                        <span className="font-bold">세계가 더 강해집니다</span>
-                                        <span className="ml-1 text-slate-200/82">
-                                            — 이번 환생 후 모든 적의 HP·공격·방어 +{enemyStatPct}%, 처치 보상(EXP·골드)도 +{enemyRewardPct}%. 승천할수록 도전이 깊어집니다.
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="rounded-[1.2rem] border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-[11px] font-fira text-rose-100/92">
-                                <div className="flex items-start gap-2">
-                                    <ShieldAlert size={14} className="mt-0.5 shrink-0" />
-                                    <div className="leading-relaxed">
-                                        레벨, 인벤토리, 유물, 런 진행도는 초기화됩니다. 영구 보너스, 칭호, 누적 통계는 유지됩니다.
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                    </div>
 
-                    <div className="mt-5 grid grid-cols-2 gap-3">
+                        <div data-testid="ascension-reset-summary" className="rounded-lg border border-rose-300/18 bg-rose-300/[0.06] p-3">
+                            <h2 className="flex items-center gap-1.5 text-[12px] font-readable font-bold text-rose-100">
+                                <ShieldAlert size={14} /> 새로 시작하는 것
+                            </h2>
+                            <p className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">
+                                레벨 · 장비와 가방 · 유물 · 임무 · 현재 원정과 유해
+                            </p>
+                        </div>
+                    </section>
+
+                    {outcome.upcomingMilestone && (
+                        <details data-testid="ascension-upcoming-unlock" className="rounded-lg border border-white/8 bg-black/16 px-3 py-2.5">
+                            <summary className="cursor-pointer text-[11px] font-readable font-bold text-slate-200">
+                                다음 계승 목표 · {outcome.upcomingMilestone.rank}단계 {outcome.upcomingMilestone.name}
+                            </summary>
+                            <p className="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">
+                                {outcome.upcomingMilestone.description}
+                            </p>
+                        </details>
+                    )}
+                </main>
+
+                <footer className="shrink-0 border-t border-white/8 bg-[#0a1018]/98 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 sm:px-5">
+                    <div className="grid grid-cols-2 gap-2.5">
                         <button
+                            type="button"
                             data-testid="ascension-cancel"
-                            onClick={() => actions.cancelAscension()}
-                            className="min-h-[48px] rounded-[1rem] border border-white/8 bg-black/18 px-4 text-sm font-rajdhani font-bold text-slate-100 transition-colors hover:bg-white/[0.05]"
+                            onClick={() => actions?.cancelAscension?.()}
+                            className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-white/12 bg-black/18 px-3 text-[13px] font-readable font-bold text-slate-100 transition-colors hover:bg-white/[0.05]"
                         >
-                            계속 플레이
+                            <RotateCcw size={15} /> 이 여정 계속
                         </button>
                         <button
+                            type="button"
                             data-testid="ascension-confirm"
-                            onClick={() => actions.confirmAscension()}
-                            className="min-h-[48px] rounded-[1rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-4 text-sm font-rajdhani font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/14"
+                            onClick={() => actions?.confirmAscension?.()}
+                            className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-[#d5b180]/36 bg-[#d5b180]/14 px-3 text-[13px] font-readable font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/20"
                         >
-                            에테르 환생
+                            <Crown size={15} /> 계승하고 새 여정
                         </button>
                     </div>
-                </div>
-            </div>
+                </footer>
+            </section>
         </div>
     );
 };

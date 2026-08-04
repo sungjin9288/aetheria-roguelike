@@ -7,16 +7,17 @@ test.describe('Town decision hierarchy', () => {
         await startE2ERun(page);
     });
 
-    test('첫 화면에는 주 행동 하나와 두 개의 자유 행동만 먼저 보인다', async ({ page }) => {
+    test('첫 화면은 원정 준비와 실제 결과가 있는 마을 행동만 먼저 보인다', async ({ page }) => {
         const primary = page.getByTestId('control-town-primary');
         const quickActions = page.getByTestId('control-town-quick-actions').locator('button');
         const facilities = page.getByTestId('control-town-facilities');
 
         await expect(primary).toHaveAttribute('data-town-primary-kind', 'open_move');
         await expect(primary.getByRole('button')).toContainText('고요한 숲으로 첫 출발');
-        await expect(quickActions).toHaveCount(2);
-        await expect(page.getByTestId('control-explore')).toBeVisible();
+        await expect(quickActions).toHaveCount(1);
+        await expect(page.getByTestId('control-explore')).toHaveCount(0);
         await expect(page.getByTestId('control-move')).toBeVisible();
+        await expect(page.getByTestId('mobile-console-open-archive')).toBeVisible();
         await expect(facilities).not.toHaveAttribute('open', '');
         await expect(page.getByTestId('control-market')).toBeHidden();
 
@@ -24,6 +25,21 @@ test.describe('Town decision hierarchy', () => {
         expect(primaryBounds).not.toBeNull();
         expect(primaryBounds!.y).toBeGreaterThanOrEqual(0);
         expect(primaryBounds!.y + primaryBounds!.height).toBeLessThanOrEqual(844);
+
+        const archive = page.getByTestId('mobile-console-open-archive');
+        const readiness = page.getByTestId('control-expedition-prep').getByText('출발 가능', { exact: true });
+        const [archiveBounds, readinessBounds] = await Promise.all([
+            archive.boundingBox(),
+            readiness.boundingBox(),
+        ]);
+        expect(archiveBounds).not.toBeNull();
+        expect(readinessBounds).not.toBeNull();
+        expect(Math.abs(archiveBounds!.y - readinessBounds!.y)).toBeLessThan(16);
+        expect(await archive.evaluate((node) => node.closest('[data-testid="control-expedition-prep"]') !== null)).toBe(true);
+
+        const terminalBounds = await page.getByTestId('terminal-panel').boundingBox();
+        expect(terminalBounds).not.toBeNull();
+        expect(terminalBounds!.height).toBeGreaterThanOrEqual(280);
 
         const pageWidth = await page.evaluate(() => ({
             viewport: window.innerWidth,

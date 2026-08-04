@@ -21,7 +21,7 @@ test('readability foundation uses Korean-friendly readable font stack', async ()
 test('mobile first fold preserves a readable log height', async () => {
     const mobileLayout = await readSrc('src/components/app/MobileGameLayout.tsx');
 
-    assert.match(mobileLayout, /isCombat \? 'order-2 min-h-\[132px\]' : 'min-h-\[240px\]'/);
+    assert.match(mobileLayout, /isCombat \? 'order-2 min-h-\[132px\]' : 'min-h-\[240px\] min-\[740px\]:min-h-\[280px\]'/);
     assert.match(mobileLayout, /<TerminalView/);
 });
 

@@ -4293,49 +4293,30 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(!/\bsummary\b/.test(sig), 'destructure에 summary 0건');
   });
 
-  test('cycle 484: MobileConsoleArchiveButton destructure에서 active 0건', async () => {
-      const source = await readSrc('src/components/app/MobileGameLayout.tsx');
-      const fnIdx = source.indexOf('const MobileConsoleArchiveButton =');
-      const fnEnd = source.indexOf('=>', fnIdx);
-      const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(!/\bactive\b/.test(sig), 'destructure에 active 0건');
-  });
-
-  test('cycle 484: 본체에서 summary / active ternary 0건', async () => {
+  test('cycle 484: DashboardFallback 본체에서 summary ternary 0건', async () => {
       const source = await readSrc('src/components/app/MobileGameLayout.tsx');
       const fbIdx = source.indexOf('const DashboardFallback =');
-      const fbEnd = source.indexOf('const MobileConsoleArchiveButton =');
+      const fbEnd = source.indexOf('const MobileGameLayout =');
       const fbBlock = source.slice(fbIdx, fbEnd);
       assert.ok(!/\bsummary\b/.test(fbBlock), 'DashboardFallback 본체 summary 0건');
-
-      const btnIdx = source.indexOf('const MobileConsoleArchiveButton =');
-      // 함수 끝까지 — 본체 끝 표시는 `;\n)`. 안전하게 다음 export까지로 슬라이스.
-      const btnEnd = source.indexOf('export ', btnIdx) >= 0 ? source.indexOf('export ', btnIdx) : source.length;
-      const btnBlock = source.slice(btnIdx, btnEnd);
-      // active는 destructure에서 제거됐으니 본체 active 참조도 0건이어야 함.
-      // 그러나 'inactive' 같은 단어 리터럴이 있을 수 있음 — \bactive\b 단독 단어만 체크.
-      const matches = btnBlock.match(/\bactive\b/g) || [];
-      assert.equal(matches.length, 0, 'MobileConsoleArchiveButton 본체 active 참조 0건');
   });
 
-  test('cycle 484: 정합성 가드 — 1 callsite 각각 prop 전달 0건', async () => {
+  test('cycle 484: 정합성 가드 — DashboardFallback callsite summary 전달 0건', async () => {
       const source = await readSrc('src/components/app/MobileGameLayout.tsx');
       const fbCall = source.match(/<DashboardFallback[^/]*\/>/);
       assert.ok(fbCall, '<DashboardFallback /> 호출 존재');
       assert.ok(!/\bsummary\b/.test(fbCall[0]), 'DashboardFallback callsite summary 전달 0건');
-
-      const btnCall = source.match(/<MobileConsoleArchiveButton[^/]*\/>/);
-      assert.ok(btnCall, '<MobileConsoleArchiveButton /> 호출 존재');
-      assert.ok(!/\bactive\b/.test(btnCall[0]), 'MobileConsoleArchiveButton callsite active 전달 0건');
   });
 
-  test('cycle 484: onClick / data-testid 핵심 props 보존', async () => {
-      const source = await readSrc('src/components/app/MobileGameLayout.tsx');
-      const btnIdx = source.indexOf('const MobileConsoleArchiveButton =');
-      const btnEnd = source.indexOf('export ', btnIdx) >= 0 ? source.indexOf('export ', btnIdx) : source.length;
-      const block = source.slice(btnIdx, btnEnd);
-      assert.ok(/onClick/.test(block), 'onClick 보존');
-      assert.ok(/data-testid="mobile-console-open-archive"/.test(block), 'testid 보존');
+  test('cycle 484 후속: 모험 기록 CTA는 원정 준비에 통합하고 핵심 계약을 보존', async () => {
+      const [layout, controlPanel] = await Promise.all([
+          readSrc('src/components/app/MobileGameLayout.tsx'),
+          readSrc('src/components/ControlPanel.tsx'),
+      ]);
+      assert.ok(!/MobileConsoleArchiveButton/.test(layout), '별도 기록 행 제거');
+      assert.match(controlPanel, /data-testid="control-expedition-prep"[\s\S]*data-testid="mobile-console-open-archive"/);
+      assert.match(controlPanel, /data-testid="mobile-console-open-archive"[\s\S]*onClick=\{onOpenArchive\}/);
+      assert.match(controlPanel, /data-testid="mobile-console-open-archive"[\s\S]*min-h-\[44px\]/);
   });
 }
 

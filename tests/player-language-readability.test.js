@@ -64,12 +64,12 @@ test('first-play surfaces use player-facing Korean labels', async () => {
 });
 
 test('menu, settings, and device playtest use one natural Korean vocabulary', async () => {
-    const [intro, constants, messages, dashboard, mobileLayout, systemTab, checklist] = await Promise.all([
+    const [intro, constants, messages, dashboard, controlPanel, systemTab, checklist] = await Promise.all([
         readSrc('src/components/IntroScreen.tsx'),
         readSrc('src/data/constants.ts'),
         readSrc('src/data/messages.ts'),
         readSrc('src/components/Dashboard.tsx'),
-        readSrc('src/components/app/MobileGameLayout.tsx'),
+        readSrc('src/components/ControlPanel.tsx'),
         readSrc('src/components/tabs/SystemTab.tsx'),
         readSrc('docs/PLAYTEST_CHECKLIST.md'),
     ]);
@@ -96,8 +96,8 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
     assert.doesNotMatch(dashboard, /label: '(Equipment|Inventory|Quest|Achievements|Skills|Map|Stats|Codex|Pass|Graves|System)'/);
     assert.doesNotMatch(dashboard, />\s*(RESET|Menu Console|Town Ops|SAFE ZONE|Archive Dock|Archive|Open)\s*</);
 
-    assert.match(mobileLayout, />\s*모험 기록\s*</);
-    assert.doesNotMatch(mobileLayout, />\s*Menu\s*</);
+    assert.match(controlPanel, />\s*모험 기록\s*</);
+    assert.doesNotMatch(controlPanel, />\s*Menu\s*</);
 
     for (const label of ['화면 가독성', '기기 점검 기록', '파일 저장', '유물', '칭호', '오늘의 임무', '명예의 전당', '플레이 기록 저장', '의견 보내기']) {
         assert.match(systemTab, new RegExp(label));

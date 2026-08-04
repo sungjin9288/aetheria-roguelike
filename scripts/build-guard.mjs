@@ -66,7 +66,7 @@ child.on('close', async (code) => {
     const assetsDir = path.join(rootDir, 'dist', 'assets');
     const assetNames = await readdir(assetsDir);
     const javascriptAssets = assetNames.filter((name) => name.endsWith('.js'));
-    const debugApiPattern = /__AETHERIA_TEST_API__|seedItemInvestmentScenario|seedGraveRecoveryScenario|investment-synth|grave-smoke/;
+    const debugApiPattern = /__AETHERIA_TEST_API__|seedItemInvestmentScenario|seedGraveRecoveryScenario|seedAscensionJourneyScenario|investment-synth|grave-smoke|ascension-smoke/;
     const debugApiAssets = [];
 
     for (const assetName of javascriptAssets) {

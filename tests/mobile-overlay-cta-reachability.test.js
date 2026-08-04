@@ -17,6 +17,7 @@ test('smoke helper verifies viewport reachability with scroll recovery', async (
     assert.match(smoke, /scrollIntoViewIfNeeded/);
     assert.match(smoke, /minHitHeight/);
     assert.match(smoke, /pointerEvents !== 'none'/);
+    assert.match(smoke, /archiveOpenButton\.isVisible[\s\S]*control-map-open/);
 });
 
 test('deterministic overlay smoke checks reachable primary and close CTAs', async () => {
@@ -56,7 +57,7 @@ test('deterministic overlay smoke checks reachable primary and close CTAs', asyn
 test('mobile focus panels expose explicit close and primary CTA test ids', async () => {
     const focusHeader = await readSrc('src/components/FocusPanelHeader.tsx');
     const postCombat = await readSrc('src/components/PostCombatCard.tsx');
-    const mobileLayout = await readSrc('src/components/app/MobileGameLayout.tsx');
+    const controlPanel = await readSrc('src/components/ControlPanel.tsx');
     const dashboard = await readSrc('src/components/Dashboard.tsx');
     const classCard = await readSrc('src/components/ClassCard.tsx');
     const job = await readSrc('src/components/tabs/JobChangePanel.tsx');
@@ -67,7 +68,7 @@ test('mobile focus panels expose explicit close and primary CTA test ids', async
     assert.match(focusHeader, /min-h-\[44px\]/);
     assert.match(postCombat, /data-testid="post-combat-close"/);
     assert.match(postCombat, /min-h-\[44px\] min-w-\[44px\]/);
-    assert.match(mobileLayout, /data-testid="mobile-console-open-archive"[\s\S]*min-h-\[44px\]/);
+    assert.match(controlPanel, /data-testid="mobile-console-open-archive"[\s\S]*min-h-\[44px\]/);
     assert.match(dashboard, /mobile-console-return-log[\s\S]*min-h-\[44px\]/);
     assert.match(dashboard, /data-testid="menu-reset"[\s\S]*min-h-\[44px\]/);
     assert.match(dashboard, /data-testid="menu-reset-confirm"[\s\S]*min-h-\[44px\]/);

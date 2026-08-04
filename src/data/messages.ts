@@ -279,7 +279,7 @@ export const MSG = {
     BOUNTY_ALREADY_ACTIVE: '이미 진행 중인 현상수배가 있습니다. (퀘스트 완료 후 수주 가능)',
     BOUNTY_DAILY_LIMIT: '오늘 현상수배는 이미 발급되었습니다. 내일 다시 요청하세요.',
     // cycle 116: BOUNTY_ACCEPTED 제거 — BOUNTY_ACCEPTED_NEW가 active.
-    ASCEND_CANCEL: '환생을 취소했습니다. 여정을 계속합니다.',
+    ASCEND_CANCEL: '계승을 미루고 현재 여정을 계속합니다.',
 
     // --- 이동/탐험 동적 메시지 ---
     MOVE_EXITS: (exits: string) => `이동 가능한 지역: ${exits}`,
@@ -330,7 +330,7 @@ export const MSG = {
     JOB_CHANGE_DONE: (jobName: string) => `${jobName} 전직 완료!`,
     BOUNTY_ACCEPTED_NEW: (target: string, count: number) => `새로운 현상수배 수락: ${target} ${count}마리`,
     TITLE_UNLOCKED: (label: string) => `새 칭호를 얻었습니다. ${label}`,
-    ASCEND_DONE: (rank: number, title: string) => `⚡ [에테르 환생 ${rank}회] ${title} 칭호 획득! 영구 보너스 적용됨.`,
+    ASCEND_DONE: (rank: number, title: string) => `에테르 계승 ${rank}단계에 도달했습니다. 새 칭호 '${title}'와 영구 성장이 다음 여정에 적용됩니다.`,
     DAILY_PROTOCOL_DONE: (reward: string) => `📋 일일 프로토콜 완료: ${reward}`,
     CHAIN_REWARD_RELIC: (name: string) => `이야기 보상 · 유물 ${name}을 얻었습니다.`,
     CHAIN_REWARD_COMBAT_BONUS: (attackPercent: number, turns: number) => `최후의 영웅이 합류해 ${turns}턴 동안 공격력이 ${attackPercent}% 오릅니다.`,

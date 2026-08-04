@@ -162,7 +162,9 @@ export const getTownActionPresentation = ({
     if (canCraft && primaryKey !== 'craft') contextualKeys.push('craft');
     if (needsSupply && primaryKey !== 'market') contextualKeys.push('market');
 
-    const quickKeys = [...contextualKeys.slice(0, 1), 'explore', 'move'] as TownActionKey[];
+    // 시작 마을의 explore action은 이벤트 없이 안내 로그만 남긴다. 실제 이동과
+    // 구별되는 결과가 있는 행동만 첫 화면에 남겨 선택 비용을 줄인다.
+    const quickKeys = [...contextualKeys.slice(0, 1), 'move'] as TownActionKey[];
     const visibleKeys = new Set<TownActionKey>([...quickKeys, ...(primaryKey ? [primaryKey] : [])]);
     const facilityKeys = FACILITY_KEYS.filter((key) => !visibleKeys.has(key));
 

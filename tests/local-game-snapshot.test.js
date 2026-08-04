@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import {
+    ASCENSION_JOURNEY_DEVICE_QA_SNAPSHOT_KEY,
     DEVICE_QA_SNAPSHOT_KEY,
     GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY,
     LOCAL_GAME_SNAPSHOT_KEY,
@@ -88,6 +89,27 @@ test('grave recovery QA keeps a separate snapshot from item investment QA', () =
     assert.equal(clearDeviceQaSnapshot(storage, 'grave-recovery'), true);
     assert.deepEqual(readDeviceQaSnapshot(storage), itemInvestment);
     assert.equal(readDeviceQaSnapshot(storage, 'grave-recovery'), null);
+});
+
+test('ascension journey QA keeps a separate snapshot from other device scenarios', () => {
+    const storage = makeStorage();
+    const itemInvestment = { player: { name: '정비 검증' }, gameState: 'crafting' };
+    const graveRecovery = { player: { name: '유해 검증' }, gameState: 'idle' };
+    const ascensionJourney = { player: { name: '계승 검증' }, gameState: 'ascension' };
+
+    writeDeviceQaSnapshot(itemInvestment, storage);
+    writeDeviceQaSnapshot(graveRecovery, storage, 'grave-recovery');
+    writeDeviceQaSnapshot(ascensionJourney, storage, 'ascension-journey');
+
+    assert.deepEqual(readDeviceQaSnapshot(storage), itemInvestment);
+    assert.deepEqual(readDeviceQaSnapshot(storage, 'grave-recovery'), graveRecovery);
+    assert.deepEqual(readDeviceQaSnapshot(storage, 'ascension-journey'), ascensionJourney);
+    assert.ok(storage.values.has(ASCENSION_JOURNEY_DEVICE_QA_SNAPSHOT_KEY));
+
+    clearDeviceQaSnapshot(storage, 'ascension-journey');
+    assert.deepEqual(readDeviceQaSnapshot(storage), itemInvestment);
+    assert.deepEqual(readDeviceQaSnapshot(storage, 'grave-recovery'), graveRecovery);
+    assert.equal(readDeviceQaSnapshot(storage, 'ascension-journey'), null);
 });
 
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {

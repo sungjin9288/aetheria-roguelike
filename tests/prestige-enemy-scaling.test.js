@@ -68,8 +68,11 @@ test('prestige: rank 단조 증가 — 높은 rank일수록 적이 더 강함', 
 
 test('prestige: AscensionScreen이 적 강화를 명시 (silent 난이도 스파이크 방지)', async () => {
     const src = await readFile(path.join(ROOT, 'src/components/AscensionScreen.tsx'), 'utf8');
-    assert.match(src, /PRESTIGE_ENEMY_STAT_PER_RANK/, '실제 스케일 상수에 연동');
-    assert.match(src, /PRESTIGE_ENEMY_REWARD_PER_RANK/, '보상 스케일도 표시');
+    const preview = await readFile(path.join(ROOT, 'src/utils/ascensionPreview.ts'), 'utf8');
+    assert.match(preview, /PRESTIGE_ENEMY_STAT_PER_RANK/, '공용 preview가 실제 스케일 상수에 연동');
+    assert.match(preview, /PRESTIGE_ENEMY_REWARD_PER_RANK/, '공용 preview가 보상 스케일도 계산');
+    assert.match(src, /currentEnemyStatPercent/, '화면이 현재 난이도를 표시');
+    assert.match(src, /nextEnemyRewardPercent/, '화면이 다음 보상을 표시');
     assert.match(src, /data-testid="ascension-enemy-scaling"/, '디스클로저 카드 testid 존재');
 });
 
