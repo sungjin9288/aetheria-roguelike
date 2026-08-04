@@ -8,6 +8,7 @@ import {
     GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY,
     LOCAL_GAME_SNAPSHOT_KEY,
     MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY,
+    CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY,
     clearDeviceQaSnapshot,
     clearLocalGameSnapshot,
     readDeviceQaSnapshot,
@@ -131,6 +132,26 @@ test('mirror journey QA keeps purchases away from production and other QA saves'
     clearDeviceQaSnapshot(storage, 'mirror-journey');
     assert.deepEqual(readLocalGameSnapshot(storage), production);
     assert.equal(readDeviceQaSnapshot(storage, 'mirror-journey'), null);
+});
+
+test('crystal exchange QA keeps exchanges away from production and other QA saves', () => {
+    const storage = makeStorage();
+    const production = { player: { name: '루비아', premiumCurrency: 12 }, gameState: 'idle' };
+    const exchange = {
+        player: { name: '교환 검증', premiumCurrency: 130, maxInv: 30 },
+        gameState: 'idle',
+    };
+
+    writeLocalGameSnapshot(production, storage);
+    writeDeviceQaSnapshot(exchange, storage, 'crystal-exchange');
+
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.deepEqual(readDeviceQaSnapshot(storage, 'crystal-exchange'), exchange);
+    assert.ok(storage.values.has(CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY));
+
+    clearDeviceQaSnapshot(storage, 'crystal-exchange');
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.equal(readDeviceQaSnapshot(storage, 'crystal-exchange'), null);
 });
 
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {

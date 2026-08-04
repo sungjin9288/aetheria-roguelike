@@ -77,7 +77,7 @@ export const relicEffectMethods: any = {
                         nextHp = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * 0.5);
                         // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
                         flags.reviveTokenUsed = true;
-                        logs.push({ type: 'event', text: `[즉시 부활] 프리미엄 부활권 사용 — HP/MP 50% 회복!` });
+                        logs.push({ type: 'event', text: '[에테르 부활석] 저장된 에테르가 생명과 기력을 절반까지 되돌렸습니다.' });
                     } else {
                     // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
                     // cycle 162: atkBuff/duration tempBuff 적용 추가 — 부활 직후 N턴 동안 ATK 증폭.

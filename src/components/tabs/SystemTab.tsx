@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Copy, Crown, Eye, ListTree, Skull, Shield, Save } from 'lucide-react';
+import { Copy, Crown, Eye, Gem, ListTree, Skull, Shield, Save } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -259,6 +259,18 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             >
                 <span className="text-[11px] font-bold text-[#e3dcff] font-rajdhani tracking-[0.16em]">에테르 거울</span>
                 <span className="text-[10px] font-fira text-[#d9d0f3]">✦ {player.meta?.essence || 0}</span>
+            </button>
+
+            <button
+                type="button"
+                data-testid="open-crystal-exchange"
+                onClick={() => runtime?.onOpenCrystalExchange?.()}
+                className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-[1rem] border border-cyan-300/20 bg-cyan-300/8 px-3 py-2.5 transition-colors hover:bg-cyan-300/12"
+            >
+                <span className="flex items-center gap-2 text-[11px] font-rajdhani font-bold text-cyan-50">
+                    <Gem size={14} /> 에테르 교환소
+                </span>
+                <span className="text-[11px] font-fira text-cyan-100/72">{player.premiumCurrency || 0} 크리스탈</span>
             </button>
 
             <div data-testid="readability-settings" className="rounded-[1rem] border border-[#7dd4d8]/18 bg-black/18 p-3">

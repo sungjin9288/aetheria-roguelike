@@ -7,6 +7,7 @@ import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
 import { calculateFullStats } from '../utils/statsCalculator';
 import {
     ASCENSION_JOURNEY_DEVICE_QA_SCENARIO,
+    CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO,
     GRAVE_RECOVERY_DEVICE_QA_SCENARIO,
     getDeviceQaScenario,
     isMockRuntime,
@@ -341,6 +342,17 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     mirror: { ...(player.meta?.mirror || {}) },
                 };
             },
+            getCrystalExchangeSnapshot: () => {
+                const player = engineRef.current.player;
+                return {
+                    premiumCurrency: player.premiumCurrency || 0,
+                    maxInv: player.maxInv || 20,
+                    synthProtects: player.stats?.synthProtects || 0,
+                    reviveTokens: player.reviveTokens || 0,
+                    cosmeticTitles: [...(player.stats?.cosmeticTitles || [])],
+                    titles: [...(player.titles || [])],
+                };
+            },
             getDomMetrics: () => {
                 const rect = (node: any) => {
                     if (!(node instanceof HTMLElement)) return null;
@@ -588,6 +600,30 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                                 start_gold: 1,
                                 campfire_rate: 1,
                             },
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'system' });
+            },
+            seedCrystalExchangeScenario: (balance: any) => {
+                const er = engineRef.current;
+                const premiumCurrency = Math.max(0, Number(balance) || 0);
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        name: '리베아',
+                        job: '모험가',
+                        level: er.player.level || 1,
+                        loc: '시작의 마을',
+                        premiumCurrency,
+                        maxInv: 25,
+                        reviveTokens: 1,
+                        titles: [],
+                        stats: {
+                            ...(er.player.stats || {}),
+                            synthProtects: 2,
+                            cosmeticTitles: [],
                         },
                     },
                 });
@@ -940,6 +976,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             || deviceQaScenario === GRAVE_RECOVERY_DEVICE_QA_SCENARIO
             || deviceQaScenario === ASCENSION_JOURNEY_DEVICE_QA_SCENARIO
             || deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO
+            || deviceQaScenario === CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO
         ) {
             let attempts = 0;
             const seedWhenReady = () => {
@@ -951,6 +988,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         testApi.seedGraveRecoveryScenario();
                     } else if (deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO) {
                         testApi.seedMirrorJourneyScenario();
+                    } else if (deviceQaScenario === CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO) {
+                        testApi.seedCrystalExchangeScenario(180);
                     } else {
                         testApi.seedAscensionJourneyScenario();
                     }

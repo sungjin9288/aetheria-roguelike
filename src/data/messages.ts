@@ -129,7 +129,7 @@ export const MSG = {
     SYNTHESIS_NOT_ENOUGH_GOLD: '합성에 필요한 골드가 부족합니다.',
 
     // --- 프리미엄 (Premium) ---
-    PREMIUM_PURCHASE: (name: string, cost: number) => `${name} 구매 완료 (${cost} 크리스탈)`,
+    PREMIUM_PURCHASE: (name: string, cost: number) => `${name} 교환 완료 (에테르 크리스탈 ${cost}개)`,
     PREMIUM_NOT_ENOUGH: '에테르 크리스탈이 부족합니다.',
     PREMIUM_INV_EXPAND: (size: number) => `가방을 ${size}칸까지 확장했습니다.`,
 

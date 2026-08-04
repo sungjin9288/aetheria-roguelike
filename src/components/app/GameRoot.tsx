@@ -324,6 +324,7 @@ const GameRoot = ({
                     mobileConsoleMode={mobileConsoleMode}
                     setMobileConsoleMode={setMobileConsoleMode}
                     onOpenMirror={() => setMirrorPanelOpen(true)}
+                    onOpenCrystalExchange={() => setPremiumShopOpen(true)}
                 />
             </div>
 

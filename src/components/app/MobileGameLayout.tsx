@@ -22,6 +22,7 @@ const MobileGameLayout = ({
     mobileConsoleMode,
     setMobileConsoleMode,
     onOpenMirror,
+    onOpenCrystalExchange,
 }: any) => {
     const isCombat = engine.gameState === GS.COMBAT;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
@@ -61,6 +62,7 @@ const MobileGameLayout = ({
                                 viewport: 'mobile',
                                 mobileArchiveDockVisible,
                                 onOpenMirror,
+                                onOpenCrystalExchange,
                             }}
                         />
                     </Suspense>

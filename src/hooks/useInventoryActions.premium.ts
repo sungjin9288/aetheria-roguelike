@@ -28,14 +28,14 @@ export const createPremiumActions = (ctx: any) => {
                 premiumCurrency: p.premiumCurrency - cost,
                 stats: { ...(p.stats || {}), synthProtects: (p.stats?.synthProtects || 0) + 1 },
             }) });
-            addLog('system', MSG.PREMIUM_PURCHASE('합성 보호권', cost));
+            addLog('system', MSG.PREMIUM_PURCHASE('합성 보호석', cost));
         },
 
         purchaseRevive: () => {
             const cost = BALANCE.REVIVE_COST;
             if ((player.premiumCurrency || 0) < cost) return addLog('warn', MSG.PREMIUM_NOT_ENOUGH);
             dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, premiumCurrency: p.premiumCurrency - cost, reviveTokens: (p.reviveTokens || 0) + 1 }) });
-            addLog('system', MSG.PREMIUM_PURCHASE('즉시 부활권', cost));
+            addLog('system', MSG.PREMIUM_PURCHASE('에테르 부활석', cost));
         },
 
         // 2026-07 — 에테르 거울: 에센스 소비 영구 업그레이드 노드 구매. 레벨/비용/캡 판정은

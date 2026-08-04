@@ -61,12 +61,18 @@ child.on('close', async (code) => {
   }
 
   const isQaBuild = process.env.VITE_ENABLE_TEST_API === '1'
-    || ['item-investment', 'grave-recovery'].includes(process.env.VITE_DEVICE_QA_SCENARIO || '');
+    || [
+      'item-investment',
+      'grave-recovery',
+      'ascension-journey',
+      'mirror-journey',
+      'crystal-exchange',
+    ].includes(process.env.VITE_DEVICE_QA_SCENARIO || '');
   if (!isQaBuild) {
     const assetsDir = path.join(rootDir, 'dist', 'assets');
     const assetNames = await readdir(assetsDir);
     const javascriptAssets = assetNames.filter((name) => name.endsWith('.js'));
-    const debugApiPattern = /__AETHERIA_TEST_API__|seedItemInvestmentScenario|seedGraveRecoveryScenario|seedAscensionJourneyScenario|seedMirrorJourneyScenario|investment-synth|grave-smoke|ascension-smoke/;
+    const debugApiPattern = /__AETHERIA_TEST_API__|seedItemInvestmentScenario|seedGraveRecoveryScenario|seedAscensionJourneyScenario|seedMirrorJourneyScenario|seedCrystalExchangeScenario|investment-synth|grave-smoke|ascension-smoke/;
     const debugApiAssets = [];
 
     for (const assetName of javascriptAssets) {
