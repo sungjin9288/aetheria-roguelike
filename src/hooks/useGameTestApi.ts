@@ -13,6 +13,7 @@ import {
     isMockRuntime,
     ITEM_INVESTMENT_DEVICE_QA_SCENARIO,
     MIRROR_JOURNEY_DEVICE_QA_SCENARIO,
+    SYSTEM_SETTINGS_DEVICE_QA_SCENARIO,
 } from '../utils/runtimeMode';
 
 /**
@@ -630,6 +631,46 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'system' });
             },
+            seedSystemSettingsScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        name: '리베아',
+                        job: '레인저',
+                        level: 18,
+                        loc: '시작의 마을',
+                        premiumCurrency: 65,
+                        settings: {
+                            readabilityMode: 'standard',
+                            equipmentDetailMode: 'auto',
+                        },
+                        titles: ['wanderer', 'cartographer', 'chain_master'],
+                        activeTitle: 'cartographer',
+                        relics: [
+                            {
+                                id: 'system-settings-smoke-compass',
+                                name: '길잡이의 나침반',
+                                rarity: 'rare',
+                                desc: '탐험 보상 +12%, 첫 이동 시 기력 8 회복',
+                            },
+                            {
+                                id: 'system-settings-smoke-feather',
+                                name: '바람깃 부적',
+                                rarity: 'uncommon',
+                                desc: '회피율 +4%',
+                            },
+                        ],
+                        meta: {
+                            ...er.player.meta,
+                            essence: 220,
+                            prestigeRank: 2,
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'system' });
+            },
             seedClaimableQuestScenario: () => {
                 const er = engineRef.current;
                 er.dispatch({
@@ -977,6 +1018,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             || deviceQaScenario === ASCENSION_JOURNEY_DEVICE_QA_SCENARIO
             || deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO
             || deviceQaScenario === CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO
+            || deviceQaScenario === SYSTEM_SETTINGS_DEVICE_QA_SCENARIO
         ) {
             let attempts = 0;
             const seedWhenReady = () => {
@@ -990,6 +1032,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         testApi.seedMirrorJourneyScenario();
                     } else if (deviceQaScenario === CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO) {
                         testApi.seedCrystalExchangeScenario(180);
+                    } else if (deviceQaScenario === SYSTEM_SETTINGS_DEVICE_QA_SCENARIO) {
+                        testApi.seedSystemSettingsScenario();
                     } else {
                         testApi.seedAscensionJourneyScenario();
                     }

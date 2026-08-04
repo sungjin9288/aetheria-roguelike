@@ -99,12 +99,13 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
     assert.match(controlPanel, />\s*모험 기록\s*</);
     assert.doesNotMatch(controlPanel, />\s*Menu\s*</);
 
-    for (const label of ['화면 가독성', '기기 점검 기록', '파일 저장', '유물', '칭호', '오늘의 임무', '명예의 전당', '플레이 기록 저장', '의견 보내기']) {
+    for (const label of ['플레이 설정', '화면 선명도', '장비 설명', '장기 성장', '에테르 거울', '에테르 교환소', '유물', '칭호', '명예의 전당', '플레이 기록 저장', '의견 보내기', '저장과 기기 점검']) {
         assert.match(systemTab, new RegExp(label));
     }
     assert.match(systemTab, /offline: '연결 안 됨'/);
     assert.match(systemTab, /synced: '저장됨'/);
-    assert.match(systemTab, /<details[\s\S]*자세한 기기 정보/);
+    assert.match(systemTab, /testId="system-support-tools"/);
+    assert.doesNotMatch(systemTab, /오늘의 임무/);
     assert.doesNotMatch(systemTab, />\s*(READABILITY|QA READOUT|COPY|EXPORT|Relics|Titles|Daily Protocol|HALL OF FAME|DOWNLOAD LOGS|ADMIN CONTROLS|TRANSMIT)\s*</);
 
     assert.match(checklist, /처음 보는 사람도 3초 안에 다음 행동 하나를 고를 수 있다/);

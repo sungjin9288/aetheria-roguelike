@@ -292,7 +292,7 @@ const Dashboard = ({
                         <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
                                 <h3 className="text-[12px] font-readable font-bold text-rose-100/88">진행 초기화</h3>
-                                <p className="mt-1 text-[10px] font-readable text-slate-400/78">
+                                <p className="mt-1 text-[11px] font-readable text-slate-400/78">
                                     현재 모험을 지우고 처음부터 시작합니다.
                                 </p>
                             </div>
@@ -300,7 +300,7 @@ const Dashboard = ({
                                 type="button"
                                 data-testid="menu-reset"
                                 onClick={() => setConfirmMenuReset(true)}
-                                className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-rose-300/18 bg-rose-950/28 px-3 py-1.5 text-[10px] font-readable text-rose-100/84 transition-colors hover:border-rose-200/28 hover:bg-rose-900/34"
+                                className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-[0.65rem] border border-rose-300/18 bg-rose-950/28 px-3 py-1.5 text-[11px] font-readable text-rose-100/84 transition-colors hover:border-rose-200/28 hover:bg-rose-900/34"
                                 title="진행 초기화"
                             >
                                 <RotateCcw size={13} />
@@ -321,7 +321,7 @@ const Dashboard = ({
                                             setConfirmMenuReset(false);
                                             actions.reset?.();
                                         }}
-                                        className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.9rem] border border-rose-300/20 bg-rose-950/48 px-2 py-2 text-[10px] font-readable text-rose-100/88 transition-colors hover:border-rose-200/30 hover:bg-rose-900/54"
+                                        className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-rose-300/20 bg-rose-950/48 px-2 py-2 text-[11px] font-readable text-rose-100/88 transition-colors hover:border-rose-200/30 hover:bg-rose-900/54"
                                     >
                                         <RotateCcw size={13} />
                                         <span>초기화</span>
@@ -330,7 +330,7 @@ const Dashboard = ({
                                         type="button"
                                         data-testid="menu-reset-cancel"
                                         onClick={() => setConfirmMenuReset(false)}
-                                        className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.9rem] border border-white/8 bg-black/20 px-2 py-2 text-[10px] font-readable text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
+                                        className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-white/8 bg-black/20 px-2 py-2 text-[11px] font-readable text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
                                     >
                                         <X size={13} />
                                         <span>취소</span>

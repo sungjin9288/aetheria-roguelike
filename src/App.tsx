@@ -20,7 +20,8 @@ const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'grave-recovery'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'ascension-journey'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'mirror-journey'
-    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'crystal-exchange';
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'crystal-exchange'
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'system-settings';
 const useRuntimeGameTestApi = TEST_API_BUILD ? useGameTestApi : () => undefined;
 
 const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);

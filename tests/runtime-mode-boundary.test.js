@@ -13,6 +13,7 @@ test('URL test flags require an explicit harness build and device QA is allow-li
     assert.match(source, /ASCENSION_JOURNEY_DEVICE_QA_SCENARIO/);
     assert.match(source, /MIRROR_JOURNEY_DEVICE_QA_SCENARIO/);
     assert.match(source, /CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO/);
+    assert.match(source, /SYSTEM_SETTINGS_DEVICE_QA_SCENARIO/);
     assert.match(source, /isDeviceQaRuntime\(\)/);
 });
 
@@ -26,10 +27,12 @@ test('test API registration is closed outside mock or isolated device QA runtime
     assert.match(source, /deviceQaScenario === ASCENSION_JOURNEY_DEVICE_QA_SCENARIO/);
     assert.match(source, /deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO/);
     assert.match(source, /deviceQaScenario === CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO/);
+    assert.match(source, /deviceQaScenario === SYSTEM_SETTINGS_DEVICE_QA_SCENARIO/);
     assert.match(source, /if \(!String\(engine\.player\?\.name \|\| ''\)\.trim\(\)\) testApi\.seedItemInvestmentScenario\(\)/);
     assert.match(app, /const TEST_API_BUILD = import\.meta\.env\.VITE_ENABLE_TEST_API === '1'/);
     assert.match(app, /VITE_DEVICE_QA_SCENARIO === 'mirror-journey'/);
     assert.match(app, /VITE_DEVICE_QA_SCENARIO === 'crystal-exchange'/);
+    assert.match(app, /VITE_DEVICE_QA_SCENARIO === 'system-settings'/);
     assert.match(app, /const useRuntimeGameTestApi = TEST_API_BUILD \? useGameTestApi : \(\) => undefined/);
 });
 
@@ -46,6 +49,6 @@ test('production build guard rejects bundled test and device QA API code', async
     const source = await readFile(new URL('../scripts/build-guard.mjs', import.meta.url), 'utf8');
 
     assert.match(source, /const isQaBuild = process\.env\.VITE_ENABLE_TEST_API === '1'/);
-    assert.match(source, /__AETHERIA_TEST_API__\|seedItemInvestmentScenario\|seedGraveRecoveryScenario\|seedAscensionJourneyScenario\|seedMirrorJourneyScenario\|seedCrystalExchangeScenario\|investment-synth\|grave-smoke\|ascension-smoke/);
+    assert.match(source, /__AETHERIA_TEST_API__\|seedItemInvestmentScenario\|seedGraveRecoveryScenario\|seedAscensionJourneyScenario\|seedMirrorJourneyScenario\|seedCrystalExchangeScenario\|seedSystemSettingsScenario\|investment-synth\|grave-smoke\|ascension-smoke\|system-settings-smoke/);
     assert.match(source, /production bundle contains device\/test QA API code/);
 });

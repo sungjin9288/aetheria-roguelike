@@ -1548,7 +1548,7 @@ async function verifyTabs(page) {
   const systemState = await waitForState(page, (state) => state.sideTab === 'system', 'system tab activation');
   await verifySurfaceLanguage(page, {
     selector: '[data-testid="system-tab"]',
-    requiredText: ['화면 가독성', '기기 점검 기록'],
+    requiredText: ['화면 선명도', '저장과 기기 점검'],
     forbiddenPattern: /QA READOUT|READABILITY|EXPORT|ADMIN CONTROLS/,
     label: 'system tab',
   });

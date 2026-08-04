@@ -4,6 +4,7 @@ export const GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.grave-r
 export const ASCENSION_JOURNEY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.ascension-journey.snapshot.v1';
 export const MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.mirror-journey.snapshot.v1';
 export const CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.crystal-exchange.snapshot.v1';
+export const SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.system-settings.snapshot.v1';
 
 type SnapshotStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
@@ -78,6 +79,7 @@ const getDeviceQaSnapshotKey = (scenario?: string | null) => {
     if (scenario === 'ascension-journey') return ASCENSION_JOURNEY_DEVICE_QA_SNAPSHOT_KEY;
     if (scenario === 'mirror-journey') return MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY;
     if (scenario === 'crystal-exchange') return CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY;
+    if (scenario === 'system-settings') return SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY;
     return DEVICE_QA_SNAPSHOT_KEY;
 };
 

@@ -9,6 +9,7 @@ import {
     LOCAL_GAME_SNAPSHOT_KEY,
     MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY,
     CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY,
+    SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY,
     clearDeviceQaSnapshot,
     clearLocalGameSnapshot,
     readDeviceQaSnapshot,
@@ -152,6 +153,26 @@ test('crystal exchange QA keeps exchanges away from production and other QA save
     clearDeviceQaSnapshot(storage, 'crystal-exchange');
     assert.deepEqual(readLocalGameSnapshot(storage), production);
     assert.equal(readDeviceQaSnapshot(storage, 'crystal-exchange'), null);
+});
+
+test('system settings QA keeps visual preferences away from production saves', () => {
+    const storage = makeStorage();
+    const production = { player: { name: '루비아', settings: { readabilityMode: 'high' } }, gameState: 'idle' };
+    const settingsQa = {
+        player: { name: '설정 검증', settings: { readabilityMode: 'standard', equipmentDetailMode: 'auto' } },
+        gameState: 'idle',
+    };
+
+    writeLocalGameSnapshot(production, storage);
+    writeDeviceQaSnapshot(settingsQa, storage, 'system-settings');
+
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.deepEqual(readDeviceQaSnapshot(storage, 'system-settings'), settingsQa);
+    assert.ok(storage.values.has(SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY));
+
+    clearDeviceQaSnapshot(storage, 'system-settings');
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.equal(readDeviceQaSnapshot(storage, 'system-settings'), null);
 });
 
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {

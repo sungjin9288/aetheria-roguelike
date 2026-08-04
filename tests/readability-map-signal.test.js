@@ -144,7 +144,7 @@ test('readability mode is wired from saved player setting to app shell and syste
     assert.match(engine, /setReadabilityMode:/);
     assert.match(engine, /readabilityMode: val === 'high' \? 'high' : 'standard'/);
     assert.match(systemTab, /data-testid="readability-settings"/);
-    assert.match(systemTab, /data-testid=\{`readability-mode-\$\{mode\}`\}/);
+    assert.match(systemTab, /data-testid=\{`readability-mode-\$\{option\.value\}`\}/);
     assert.match(systemTab, /aria-pressed=\{active\}/);
     assert.match(systemTab, /READABILITY=\$\{qaContext\.readability\}/);
 });

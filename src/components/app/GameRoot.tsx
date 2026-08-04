@@ -56,7 +56,9 @@ const GameRoot = ({
     handleQuickSlotUse,
     damageFlash, healFlash, damageAmount,
 }: any) => {
-    const [mobileConsoleMode, setMobileConsoleMode] = useState('log');
+    const [mobileConsoleMode, setMobileConsoleMode] = useState(
+        import.meta.env.VITE_DEVICE_QA_SCENARIO === 'system-settings' ? 'archive' : 'log',
+    );
     const expeditionSummary = engine.player?.lastExpeditionSummary || null;
     const showExpeditionDebrief = Boolean(
         expeditionSummary && (engine.expeditionDebriefOpen || !expeditionSummary.reviewedAt),
