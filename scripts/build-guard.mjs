@@ -61,12 +61,12 @@ child.on('close', async (code) => {
   }
 
   const isQaBuild = process.env.VITE_ENABLE_TEST_API === '1'
-    || process.env.VITE_DEVICE_QA_SCENARIO === 'item-investment';
+    || ['item-investment', 'grave-recovery'].includes(process.env.VITE_DEVICE_QA_SCENARIO || '');
   if (!isQaBuild) {
     const assetsDir = path.join(rootDir, 'dist', 'assets');
     const assetNames = await readdir(assetsDir);
     const javascriptAssets = assetNames.filter((name) => name.endsWith('.js'));
-    const debugApiPattern = /__AETHERIA_TEST_API__|seedItemInvestmentScenario|investment-synth/;
+    const debugApiPattern = /__AETHERIA_TEST_API__|seedItemInvestmentScenario|seedGraveRecoveryScenario|investment-synth|grave-smoke/;
     const debugApiAssets = [];
 
     for (const assetName of javascriptAssets) {

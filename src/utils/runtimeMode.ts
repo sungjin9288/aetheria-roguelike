@@ -10,6 +10,12 @@
  */
 
 export const ITEM_INVESTMENT_DEVICE_QA_SCENARIO = 'item-investment';
+export const GRAVE_RECOVERY_DEVICE_QA_SCENARIO = 'grave-recovery';
+
+const DEVICE_QA_SCENARIOS = new Set([
+    ITEM_INVESTMENT_DEVICE_QA_SCENARIO,
+    GRAVE_RECOVERY_DEVICE_QA_SCENARIO,
+]);
 
 const isTestHarnessBuild = (): boolean => {
     if (import.meta.env) return import.meta.env.VITE_ENABLE_TEST_API === '1';
@@ -32,7 +38,7 @@ const isE2ERuntime = (): boolean => isTestHarnessBuild() && hasFlag('e2e');
 
 export const getDeviceQaScenario = (): string | null => {
     const scenario = String(import.meta.env?.VITE_DEVICE_QA_SCENARIO || '').trim();
-    return scenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO ? scenario : null;
+    return DEVICE_QA_SCENARIOS.has(scenario) ? scenario : null;
 };
 
 export const isDeviceQaRuntime = (): boolean => getDeviceQaScenario() !== null;

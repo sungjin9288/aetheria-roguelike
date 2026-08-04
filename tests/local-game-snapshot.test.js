@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import {
     DEVICE_QA_SNAPSHOT_KEY,
+    GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY,
     LOCAL_GAME_SNAPSHOT_KEY,
     clearDeviceQaSnapshot,
     clearLocalGameSnapshot,
@@ -72,6 +73,23 @@ test('device QA snapshot is isolated from the production offline save', () => {
     assert.equal(readDeviceQaSnapshot(storage), null);
 });
 
+test('grave recovery QA keeps a separate snapshot from item investment QA', () => {
+    const storage = makeStorage();
+    const itemInvestment = { player: { name: '정비 검증' }, gameState: 'crafting' };
+    const graveRecovery = { player: { name: '유해 검증' }, gameState: 'idle' };
+
+    assert.equal(writeDeviceQaSnapshot(itemInvestment, storage), true);
+    assert.equal(writeDeviceQaSnapshot(graveRecovery, storage, 'grave-recovery'), true);
+    assert.deepEqual(readDeviceQaSnapshot(storage), itemInvestment);
+    assert.deepEqual(readDeviceQaSnapshot(storage, 'grave-recovery'), graveRecovery);
+    assert.ok(storage.values.has(DEVICE_QA_SNAPSHOT_KEY));
+    assert.ok(storage.values.has(GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY));
+
+    assert.equal(clearDeviceQaSnapshot(storage, 'grave-recovery'), true);
+    assert.deepEqual(readDeviceQaSnapshot(storage), itemInvestment);
+    assert.equal(readDeviceQaSnapshot(storage, 'grave-recovery'), null);
+});
+
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {
     const source = await readFile(new URL('../src/hooks/useFirebaseSync.ts', import.meta.url), 'utf8');
 
@@ -94,7 +112,7 @@ test('firebase sync promotes a local run only when the cloud document is absent'
 test('device QA runtime stays offline and persists only to its isolated snapshot', async () => {
     const source = await readFile(new URL('../src/hooks/useFirebaseSync.ts', import.meta.url), 'utf8');
 
-    assert.match(source, /deviceQaMode \? getDeviceQaBootstrapData\(\)/);
-    assert.match(source, /if \(deviceQaMode\) writeDeviceQaSnapshot\(snapshot\)/);
+    assert.match(source, /deviceQaMode \? getDeviceQaBootstrapData\(deviceQaScenario\)/);
+    assert.match(source, /if \(deviceQaMode\) writeDeviceQaSnapshot\(snapshot, undefined, deviceQaScenario\)/);
     assert.match(source, /if \(mockMode\) return undefined;[\s\S]+?Auto Save/);
 });

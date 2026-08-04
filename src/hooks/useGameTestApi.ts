@@ -6,6 +6,7 @@ import { AT } from '../reducers/actionTypes';
 import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
 import { calculateFullStats } from '../utils/statsCalculator';
 import {
+    GRAVE_RECOVERY_DEVICE_QA_SCENARIO,
     getDeviceQaScenario,
     isMockRuntime,
     ITEM_INVESTMENT_DEVICE_QA_SCENARIO,
@@ -478,6 +479,45 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'pass' });
             },
+            seedGraveRecoveryScenario: () => {
+                const er = engineRef.current;
+                const now = Date.now();
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        name: er.player.name || '이리엘',
+                        job: er.player.job || '모험가',
+                        loc: '시작의 마을',
+                        gold: 120,
+                        stats: {
+                            ...er.player.stats,
+                            deaths: Math.max(3, er.player.stats?.deaths || 0),
+                        },
+                    },
+                });
+                er.dispatch({
+                    type: AT.SET_GRAVE,
+                    payload: [
+                        {
+                            loc: '고요한 숲',
+                            gold: 72,
+                            items: [
+                                { id: 'grave-smoke-bow', name: '숲길 사냥활', type: 'weapon', tier: 2 },
+                                { id: 'grave-smoke-potion', name: '초급 회복 물약', type: 'hp', tier: 1 },
+                            ],
+                            timestamp: now - 60_000,
+                        },
+                        {
+                            loc: '시작의 마을',
+                            gold: 24,
+                            items: [{ id: 'grave-smoke-ring', name: '여행자의 반지', type: 'accessory', tier: 2 }],
+                            timestamp: now,
+                        },
+                    ],
+                });
+                er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'graves' });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
             seedClaimableQuestScenario: () => {
                 const er = engineRef.current;
                 er.dispatch({
@@ -819,12 +859,19 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         window.__AETHERIA_TEST_API__ = testApi;
 
         let deviceQaSeedTimer: ReturnType<typeof setTimeout> | undefined;
-        if (deviceQaScenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO) {
+        if (
+            deviceQaScenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO
+            || deviceQaScenario === GRAVE_RECOVERY_DEVICE_QA_SCENARIO
+        ) {
             let attempts = 0;
             const seedWhenReady = () => {
                 const engine = engineRef.current;
                 if (engine.bootStage === 'ready') {
-                    if (!String(engine.player?.name || '').trim()) testApi.seedItemInvestmentScenario();
+                    if (deviceQaScenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO) {
+                        if (!String(engine.player?.name || '').trim()) testApi.seedItemInvestmentScenario();
+                    } else {
+                        testApi.seedGraveRecoveryScenario();
+                    }
                     return;
                 }
                 attempts += 1;

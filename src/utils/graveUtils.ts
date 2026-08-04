@@ -76,6 +76,37 @@ export const getGraveItems = (grave: any) => (
             : []
 );
 
+export const getGraveRecoveryGroups = (grave: any, currentLoc: any) => {
+    const groups = new Map<string, any>();
+
+    normalizeGraves(grave).forEach((graveEntry: any) => {
+        const existing = groups.get(graveEntry.loc) || {
+            loc: graveEntry.loc,
+            graves: [],
+            gold: 0,
+            items: [],
+            latestTimestamp: 0,
+        };
+
+        existing.graves.push(graveEntry);
+        existing.gold += Math.max(0, graveEntry.gold || 0);
+        existing.items.push(...getGraveItems(graveEntry));
+        existing.latestTimestamp = Math.max(existing.latestTimestamp, graveEntry.timestamp || 0);
+        groups.set(graveEntry.loc, existing);
+    });
+
+    return [...groups.values()]
+        .map((group: any) => ({
+            ...group,
+            count: group.graves.length,
+            atCurrentLocation: group.loc === currentLoc,
+        }))
+        .sort((a: any, b: any) => (
+            Number(b.atCurrentLocation) - Number(a.atCurrentLocation)
+            || b.latestTimestamp - a.latestTimestamp
+        ));
+};
+
 export const calcInvasionChance = (playerAtk: any, guardPower: any) => {
     const atk = Math.max(1, playerAtk);
     const guard = Math.max(1, guardPower);

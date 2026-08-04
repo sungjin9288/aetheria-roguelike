@@ -18,7 +18,7 @@ import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { migrateData } from '../utils/gameUtils';
 import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
-import { isDeviceQaRuntime, isMockRuntime } from '../utils/runtimeMode';
+import { getDeviceQaScenario, isMockRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
@@ -45,8 +45,8 @@ const getOfflineBootstrapData = () => {
     return activeData;
 };
 
-const getDeviceQaBootstrapData = () => {
-    const localSnapshot = readDeviceQaSnapshot();
+const getDeviceQaBootstrapData = (scenario: string | null) => {
+    const localSnapshot = readDeviceQaSnapshot(undefined, scenario);
     if (!localSnapshot) return { player: INITIAL_STATE.player };
 
     const activeData = migrateData(localSnapshot);
@@ -60,7 +60,8 @@ const getDeviceQaBootstrapData = () => {
  */
 export const useFirebaseSync = (state: any, dispatch: any) => {
     const mockMode = isMockRuntime();
-    const deviceQaMode = isDeviceQaRuntime();
+    const deviceQaScenario = getDeviceQaScenario();
+    const deviceQaMode = deviceQaScenario !== null;
     const {
         player,
         gameState,
@@ -87,7 +88,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
         if (mockMode) {
             dispatch({
                 type: AT.LOAD_DATA,
-                payload: deviceQaMode ? getDeviceQaBootstrapData() : { player: INITIAL_STATE.player },
+                payload: deviceQaMode ? getDeviceQaBootstrapData(deviceQaScenario) : { player: INITIAL_STATE.player },
             });
             dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
             return undefined;
@@ -134,7 +135,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
                 fallbackAuthOffline(MSG.SYNC_AUTH_FAIL);
             });
         return () => clearTimeout(authTimer);
-    }, [deviceQaMode, dispatch, mockMode]);
+    }, [deviceQaMode, deviceQaScenario, dispatch, mockMode]);
 
     useEffect(() => {
         lastLoadedTimestampRef.current = state.lastLoadedTimestamp;
@@ -243,7 +244,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
         if (mockMode && !deviceQaMode) return undefined;
         if (!player?.name) {
             if (previousPlayerName) {
-                if (deviceQaMode) clearDeviceQaSnapshot();
+                if (deviceQaMode) clearDeviceQaSnapshot(undefined, deviceQaScenario);
                 else clearLocalGameSnapshot();
             }
             return undefined;
@@ -264,12 +265,12 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
                 version: CONSTANTS.DATA_VERSION,
                 savedAt,
             };
-            if (deviceQaMode) writeDeviceQaSnapshot(snapshot);
+            if (deviceQaMode) writeDeviceQaSnapshot(snapshot, undefined, deviceQaScenario);
             else writeLocalGameSnapshot(snapshot);
         }, BALANCE.DEBOUNCE_SAVE_MS);
 
         return () => clearTimeout(timer);
-    }, [player, gameState, enemy, grave, currentEvent, quickSlots, deviceQaMode, mockMode]);
+    }, [player, gameState, enemy, grave, currentEvent, quickSlots, deviceQaMode, deviceQaScenario, mockMode]);
 
     // --- Auto Save (Debounced) ---
     useEffect(() => {

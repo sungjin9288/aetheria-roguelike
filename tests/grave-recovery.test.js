@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { appendGrave, buildGraveData, getGravesAtLoc, removeGravesAtLoc, resolveGraveRecovery } from '../src/utils/graveUtils.js';
+import {
+    appendGrave,
+    buildGraveData,
+    getGraveRecoveryGroups,
+    getGravesAtLoc,
+    removeGravesAtLoc,
+    resolveGraveRecovery,
+} from '../src/utils/graveUtils.js';
 
 const BASE_PLAYER = {
     name: '',
@@ -129,4 +136,24 @@ test('grave utilities preserve multiple corpses and recover by location', () => 
     const remaining = removeGravesAtLoc(merged, '고요한 숲');
     assert.equal(remaining.length, 1);
     assert.equal(remaining[0].loc, '버려진 동굴');
+});
+
+test('grave recovery groups prioritize the current location and keep exact rewards', () => {
+    const graves = [
+        { loc: '고요한 숲', gold: 35, items: [{ name: '숲길 사냥활' }], timestamp: 300 },
+        { loc: '시작의 마을', gold: 12, items: [{ name: '여행자의 반지' }], timestamp: 100 },
+        { loc: '고요한 숲', gold: 20, item: { name: '초급 회복 물약' }, timestamp: 200 },
+    ];
+
+    const groups = getGraveRecoveryGroups(graves, '시작의 마을');
+
+    assert.equal(groups.length, 2);
+    assert.equal(groups[0].loc, '시작의 마을');
+    assert.equal(groups[0].atCurrentLocation, true);
+    assert.equal(groups[0].gold, 12);
+    assert.deepEqual(groups[0].items.map((item) => item.name), ['여행자의 반지']);
+    assert.equal(groups[1].loc, '고요한 숲');
+    assert.equal(groups[1].count, 2);
+    assert.equal(groups[1].gold, 55);
+    assert.deepEqual(groups[1].items.map((item) => item.name), ['숲길 사냥활', '초급 회복 물약']);
 });

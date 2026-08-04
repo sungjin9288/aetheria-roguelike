@@ -184,7 +184,12 @@ const Dashboard = ({
 
             {sideTab === 'graves' && (
                 <Suspense fallback={<TabSpinner />}>
-                    <GravePanel player={player} actions={actions} />
+                    <GravePanel
+                        player={player}
+                        grave={grave}
+                        actions={actions}
+                        onOpenMap={() => selectTab('map')}
+                    />
                 </Suspense>
             )}
 

@@ -1,5 +1,6 @@
 export const LOCAL_GAME_SNAPSHOT_KEY = 'aetheria.game.snapshot.v1';
 export const DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.item-investment.snapshot.v1';
+export const GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.grave-recovery.snapshot.v1';
 
 type SnapshotStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
@@ -69,14 +70,20 @@ export const clearLocalGameSnapshot = (storage?: SnapshotStorage | null) => (
     clearSnapshot(LOCAL_GAME_SNAPSHOT_KEY, storage)
 );
 
-export const readDeviceQaSnapshot = (storage?: SnapshotStorage | null) => (
-    readSnapshot(DEVICE_QA_SNAPSHOT_KEY, storage)
+const getDeviceQaSnapshotKey = (scenario?: string | null) => (
+    scenario === 'grave-recovery'
+        ? GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY
+        : DEVICE_QA_SNAPSHOT_KEY
 );
 
-export const writeDeviceQaSnapshot = (snapshot: Record<string, any>, storage?: SnapshotStorage | null) => (
-    writeSnapshot(DEVICE_QA_SNAPSHOT_KEY, snapshot, storage)
+export const readDeviceQaSnapshot = (storage?: SnapshotStorage | null, scenario?: string | null) => (
+    readSnapshot(getDeviceQaSnapshotKey(scenario), storage)
 );
 
-export const clearDeviceQaSnapshot = (storage?: SnapshotStorage | null) => (
-    clearSnapshot(DEVICE_QA_SNAPSHOT_KEY, storage)
+export const writeDeviceQaSnapshot = (snapshot: Record<string, any>, storage?: SnapshotStorage | null, scenario?: string | null) => (
+    writeSnapshot(getDeviceQaSnapshotKey(scenario), snapshot, storage)
+);
+
+export const clearDeviceQaSnapshot = (storage?: SnapshotStorage | null, scenario?: string | null) => (
+    clearSnapshot(getDeviceQaSnapshotKey(scenario), storage)
 );
