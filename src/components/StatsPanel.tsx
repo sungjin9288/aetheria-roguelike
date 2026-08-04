@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { Activity, BarChart3, Coins, Compass, Flame, FlaskConical, Footprints, Hammer, Heart, Link2, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
+import { Activity, BarChart3, ChevronDown, Coins, Compass, Flame, FlaskConical, Footprints, Hammer, Heart, Link2, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
 import type { Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import { formatRelicText } from '../utils/relicPresentation';
@@ -102,67 +102,74 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
         // chain_master 칭호 톤(indigo)과 매치. exploreUtils.checkDiscoveryChains에서 누적.
         { label: '완료한 발견 여정', value: ((player?.stats as any)?.discoveryChains || []).length, icon: Link2, color: 'text-indigo-300' },
     ];
-    return (
-        <div data-testid="stats-panel" className="space-y-4">
-            <div className="flex items-center justify-between gap-2">
-                <div className="text-slate-400 text-xs font-fira tracking-[0.18em] flex items-center gap-1.5 uppercase">
-                    <BarChart3 size={12} /> 모험 기록
-                </div>
-            </div>
+    const coreRecordLabels = new Set(['레벨', '총 처치', '보스 처치', '최대 연속 처치']);
+    const coreRecordEntries = statEntries.filter((entry) => coreRecordLabels.has(entry.label));
+    const detailRecordEntries = statEntries.filter((entry) => !coreRecordLabels.has(entry.label));
 
-            <div className="overflow-hidden rounded-[1.1rem] border border-white/8 bg-black/18 p-3 space-y-2.5">
-                <div className="flex items-center justify-between gap-3 text-xs font-fira uppercase tracking-[0.18em] text-slate-400/72">
-                    <span className="flex items-center gap-1.5">
-                        <Sparkles size={10} />
-                        성향
-                    </span>
+    return (
+        <div data-testid="stats-panel" className="space-y-3 pb-2">
+            <header className="flex items-center justify-between gap-3 px-0.5">
+                <div>
+                    <div className="flex items-center gap-1.5 text-[11px] font-readable text-slate-400">
+                        <BarChart3 size={13} /> 모험 기록
+                    </div>
+                    <h3 className="mt-0.5 text-[15px] font-readable font-bold text-white/92">현재 성장과 누적 기록</h3>
+                </div>
+                <SignalBadge tone="resonance" size="sm">레벨 {player?.level || 1}</SignalBadge>
+            </header>
+
+            <section data-testid="stats-current-growth" className="border-y border-white/10 py-3">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                        <Sparkles size={14} className="shrink-0 text-[#f6e7a2]" />
+                        <div className="min-w-0">
+                            <div className="text-[11px] font-readable text-slate-400">현재 성장</div>
+                            <div className={`truncate text-[14px] font-readable font-bold ${trait.accent}`}>{trait.name}</div>
+                        </div>
+                    </div>
                     <SignalBadge tone="resonance" size="sm">{trait.title}</SignalBadge>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                    <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                        <div className="text-[11px] text-slate-400 font-fira uppercase flex items-center gap-1 mb-0.5">
-                            <Sparkles size={9} /> 현재 성향
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="aether-panel-muted rounded-lg px-3 py-2.5">
+                        <div className="flex items-center gap-1 text-[11px] font-readable text-slate-400">
+                            <Zap size={11} /> 전용 기술
                         </div>
-                        <div className={`font-fira font-bold text-xs ${trait.accent}`}>{trait.name}</div>
+                        <div className="mt-1 text-xs font-readable font-bold text-emerald-100">
+                            {trait.skill?.name || '없음'}
+                        </div>
                     </div>
-                    <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                        <div className="text-[11px] text-slate-400 font-fira uppercase flex items-center gap-1 mb-0.5">
-                            <Zap size={9} /> 전용 기술
+                    <div className="aether-panel-muted rounded-lg px-3 py-2.5">
+                        <div className="flex items-center gap-1 text-[11px] font-readable text-slate-400">
+                            <Shield size={11} /> 패시브
                         </div>
-                        <div className="font-fira font-bold text-xs text-emerald-100">{trait.skill?.name || '없음'}</div>
-                    </div>
-                    <div className="col-span-2 rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                        <div className="text-[11px] text-slate-400 font-fira uppercase flex items-center gap-1 mb-0.5">
-                            <Shield size={9} /> 패시브
-                        </div>
-                        <div className="font-fira font-bold text-xs text-slate-200/88">
+                        <div className="mt-1 text-xs font-readable font-bold text-slate-100/90">
                             {passiveParts.length > 0 ? passiveParts.join(' / ') : trait.passiveLabel}
                         </div>
                     </div>
                 </div>
-                <div className="text-xs font-fira text-slate-300/76 leading-snug">
-                    {trait.desc}
+
+                <p className="mt-3 text-xs font-readable leading-relaxed text-slate-300/82">{trait.desc}</p>
+                <div className="mt-3 grid gap-2 border-t border-white/8 pt-3 text-[11px] font-readable">
+                    <div className="flex items-start gap-2">
+                        <span className="w-14 shrink-0 text-[#d5b180]">다음 성장</span>
+                        <span className="text-slate-200/84">{trait.rewardFocus}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <span className="w-14 shrink-0 text-[#8fd6cf]">추천 임무</span>
+                        <span className="text-slate-200/84">{trait.questFocus}</span>
+                    </div>
                 </div>
-                <div className="text-xs font-fira text-slate-400">
-                    성향 판단: {trait.reasons.join(' · ')}
-                </div>
-                <div className="space-y-1 pt-2 border-t border-white/8 text-xs font-fira text-slate-300/74">
-                    <div>→ {trait.unlockHint}</div>
-                    <div>→ 보상 방향: {trait.rewardFocus}</div>
-                    <div>→ 권장 임무: {trait.questFocus}</div>
-                    <div>→ 보스 대응: {trait.bossDirective}</div>
-                    {trait.skill?.desc && <div>→ {trait.skill.desc}</div>}
-                </div>
-            </div>
+            </section>
 
             {activeSignatureSet && sigSetTone && (
                 <div
                     data-testid="stats-active-signature-set"
                     data-signature-set-key={activeSignatureSet.key}
-                    className="relative overflow-hidden rounded-[1.1rem] px-3 py-2.5 space-y-2"
+                    className="rounded-lg px-3 py-3 space-y-2"
                     style={{
                         border: `1px solid ${sigSetTone.border}`,
-                        background: `radial-gradient(circle at 20% 38%, ${sigSetTone.glow}, transparent 58%), linear-gradient(180deg, rgba(20,24,30,0.92) 0%, rgba(10,12,16,1) 100%)`,
+                        background: 'rgba(16, 20, 26, 0.94)',
                     }}
                 >
                     <div className="flex items-center justify-between gap-2">
@@ -176,7 +183,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                             </span>
                         </div>
                         <span
-                            className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-fira uppercase tracking-[0.14em]"
+                            className="shrink-0 rounded-full px-2 py-1 text-[11px] font-readable"
                             style={{ color: sigSetTone.text, border: `1px solid ${sigSetTone.border}` }}
                         >
                             {activeSignatureSet.tier}세트 활성
@@ -188,24 +195,24 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                         </div>
                     )}
                     <div className="grid grid-cols-3 gap-1.5 pt-1">
-                        <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
-                            <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
+                        <div className="rounded-lg aether-panel-muted px-2.5 py-1.5">
+                            <div className="text-[11px] font-readable text-slate-400 flex items-center gap-1">
                                 <Sword size={9} /> 공격력
                             </div>
                             <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
                                 {formatMultDelta(activeSignatureSet.atkMult)}
                             </div>
                         </div>
-                        <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
-                            <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
+                        <div className="rounded-lg aether-panel-muted px-2.5 py-1.5">
+                            <div className="text-[11px] font-readable text-slate-400 flex items-center gap-1">
                                 <Shield size={9} /> 방어력
                             </div>
                             <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
                                 {formatMultDelta(activeSignatureSet.defMult)}
                             </div>
                         </div>
-                        <div className="rounded-[0.9rem] aether-panel-muted px-2.5 py-1.5">
-                            <div className="text-[10px] font-fira uppercase text-slate-400 flex items-center gap-1">
+                        <div className="rounded-lg aether-panel-muted px-2.5 py-1.5">
+                            <div className="text-[11px] font-readable text-slate-400 flex items-center gap-1">
                                 <Heart size={9} /> 생명
                             </div>
                             <div className="mt-0.5 text-xs font-fira font-bold" style={{ color: sigSetTone.text }}>
@@ -222,86 +229,141 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                 <div
                     data-testid="stats-active-set"
                     data-active-set-prefix={activeSet.prefix}
-                    className="rounded-[1rem] border border-amber-300/24 bg-amber-300/[0.06] px-3 py-2 space-y-1"
+                    className="rounded-lg border border-amber-300/24 bg-amber-300/[0.06] px-3 py-2.5 space-y-1"
                 >
                     <div className="flex items-center gap-1.5 min-w-0">
                         <Sparkles size={11} className="text-amber-200 shrink-0" />
-                        <span className="font-rajdhani font-bold text-[12px] text-amber-100 truncate">
+                        <span className="font-readable font-bold text-xs text-amber-100 truncate">
                             {activeSet.prefix} 세트
                         </span>
                     </div>
                     {activeSet.desc && (
-                        <div className="text-[10.5px] font-fira leading-[1.45] text-amber-50/80">
+                        <div className="text-[11px] font-readable leading-relaxed text-amber-50/80">
                             {activeSet.desc}
                         </div>
                     )}
                 </div>
             )}
 
-            <div className="grid grid-cols-2 gap-1.5">
-                {statEntries.map((entry: any) => {
-                    const Icon = entry.icon;
-                    return (
-                        <div key={entry.label} className="aether-panel-muted rounded-[0.95rem] px-2.5 py-2">
-                            <div className="text-[11px] text-slate-400 font-fira uppercase flex items-center gap-1 mb-0.5">
-                                <Icon size={9} /> {entry.label}
-                            </div>
-                            <div className={`font-fira font-bold text-xs ${entry.color}`}>{entry.value}</div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {topKills.length > 0 && (
-                <div className="space-y-2">
-                    <div className="text-xs text-slate-400 font-readable">처치 분포 · 상위 8종</div>
-                    {topKills.map(([name, count], i) => (
-                        <Motion.div
-                            key={name}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.03 }}
-                            className="flex items-center gap-2"
-                        >
-                            <span className="text-xs text-slate-300/76 font-fira w-20 truncate">{name}</span>
-                            <div className="flex-1 h-2 bg-black/24 rounded-full overflow-hidden">
-                                <Motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${(count / maxKill) * 100}%` }}
-                                    transition={{ duration: 0.5, delay: i * 0.03 }}
-                                    className="h-full bg-gradient-to-r from-rose-400/70 to-[#d5b180]/70 rounded-full"
-                                />
-                            </div>
-                            <span className="text-xs text-slate-400 font-fira w-8 text-right">{count}</span>
-                        </Motion.div>
-                    ))}
-                </div>
-            )}
-
-            {player?.meta && (
-                <div className="rounded-[1rem] border border-white/8 bg-black/18 px-3 py-2.5 space-y-1 text-xs font-fira text-slate-400/76">
-                    <div className="flex justify-between"><span>계승 정수</span><span className="text-[#d9d0f3]">{player.meta.essence || 0}</span></div>
-                    <div className="flex justify-between"><span>계승 단계</span><span className="text-[#f6e7c8]">{player.meta.rank || 0}</span></div>
-                    <div className="flex justify-between"><span>추가 공격력</span><span className="text-rose-300">+{player.meta.bonusAtk || 0}</span></div>
-                    <div className="flex justify-between"><span>추가 생명</span><span className="text-emerald-100">+{player.meta.bonusHp || 0}</span></div>
-                </div>
-            )}
-
             {stats?.activeSynergies?.length > 0 && (
-                <div className="space-y-1.5">
-                    <div className="text-xs text-slate-400 font-fira uppercase tracking-[0.16em] flex items-center gap-1.5">
-                        <Sparkles size={10} /> 유물 조합
+                <section data-testid="stats-active-synergies" className="border-y border-fuchsia-300/14 py-3">
+                    <div className="mb-2 flex items-center gap-1.5 text-xs font-readable font-bold text-fuchsia-100/90">
+                        <Sparkles size={12} /> 활성 유물 조합
                     </div>
-                    {/* cycle 396: syn.name → syn.label — RELIC_SYNERGIES entry는 `label` 필드.
-                          기존 syn.name은 항상 undefined로 React key 충돌 + UI 빈 칸 silent 결손. */}
-                    {stats.activeSynergies.map((syn: any) => (
-                        <div key={syn.label} className="rounded-[0.95rem] border border-fuchsia-400/20 bg-fuchsia-900/10 px-2.5 py-1.5 flex items-center justify-between gap-2">
-                            <span className="text-[11px] font-fira text-fuchsia-200/90 font-bold">{syn.label}</span>
-                            <span className="text-[8px] font-readable text-fuchsia-300/60">{formatRelicText(syn.desc)}</span>
-                        </div>
-                    ))}
-                </div>
+                    <div className="space-y-2">
+                        {stats.activeSynergies.map((syn: any) => (
+                            <div key={syn.label} className="flex items-start justify-between gap-3 rounded-lg bg-fuchsia-900/10 px-3 py-2">
+                                <span className="shrink-0 text-[11px] font-readable font-bold text-fuchsia-200/90">{syn.label}</span>
+                                <span className="text-right text-[11px] font-readable leading-relaxed text-fuchsia-100/70">{formatRelicText(syn.desc)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
             )}
+
+            <section data-testid="stats-core-records">
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-readable font-bold text-slate-200/88">
+                    <Activity size={13} className="text-[#8fd6cf]" /> 핵심 기록
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                    {coreRecordEntries.map((entry: any) => {
+                        const Icon = entry.icon;
+                        return (
+                            <div key={entry.label} className="aether-panel-muted rounded-lg px-3 py-2.5">
+                                <div className="flex items-center gap-1 text-[11px] font-readable text-slate-400">
+                                    <Icon size={11} /> {entry.label}
+                                </div>
+                                <div className={`mt-1 font-readable font-bold text-sm ${entry.color}`}>{entry.value}</div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+
+            <div className="divide-y divide-white/8 border-y border-white/10">
+                <details data-testid="stats-lifetime-records" className="group">
+                    <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-2 font-readable [&::-webkit-details-marker]:hidden">
+                        <BarChart3 size={14} className="text-[#d5b180]" />
+                        <span className="flex-1 text-xs font-bold text-slate-200/90">세부 기록</span>
+                        <span className="text-[11px] text-slate-500">{detailRecordEntries.length}개</span>
+                        <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="grid grid-cols-2 gap-2 pb-3">
+                        {detailRecordEntries.map((entry: any) => {
+                            const Icon = entry.icon;
+                            return (
+                                <div key={entry.label} className="aether-panel-muted rounded-lg px-3 py-2.5">
+                                    <div className="flex items-center gap-1 text-[11px] font-readable text-slate-400">
+                                        <Icon size={11} /> {entry.label}
+                                    </div>
+                                    <div className={`mt-1 text-xs font-readable font-bold ${entry.color}`}>{entry.value}</div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </details>
+
+                <details data-testid="stats-top-kills" className="group">
+                    <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-2 font-readable [&::-webkit-details-marker]:hidden">
+                        <Sword size={14} className="text-rose-300" />
+                        <span className="flex-1 text-xs font-bold text-slate-200/90">처치 분포</span>
+                        <span className="text-[11px] text-slate-500">상위 {topKills.length}종</span>
+                        <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="space-y-3 pb-4">
+                        {topKills.length === 0 && (
+                            <p className="text-[11px] font-readable text-slate-400">아직 처치 기록이 없습니다.</p>
+                        )}
+                        {topKills.map(([name, count], i) => (
+                            <Motion.div
+                                key={name}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.03 }}
+                                className="flex items-center gap-2"
+                            >
+                                <span className="w-20 truncate text-xs font-readable text-slate-300/76">{name}</span>
+                                <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/24">
+                                    <Motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${(count / maxKill) * 100}%` }}
+                                        transition={{ duration: 0.5, delay: i * 0.03 }}
+                                        className="h-full rounded-full bg-rose-300/70"
+                                    />
+                                </div>
+                                <span className="w-8 text-right text-xs font-readable text-slate-400">{count}</span>
+                            </Motion.div>
+                        ))}
+                    </div>
+                </details>
+
+                <details data-testid="stats-legacy-records" className="group">
+                    <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-2 font-readable [&::-webkit-details-marker]:hidden">
+                        <Sparkles size={14} className="text-[#d9d0f3]" />
+                        <span className="flex-1 text-xs font-bold text-slate-200/90">계승 기록</span>
+                        <span className="text-[11px] text-slate-500">단계 {player?.meta?.rank || 0}</span>
+                        <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="grid grid-cols-2 gap-2 pb-3 text-xs font-readable">
+                        <div className="aether-panel-muted rounded-lg px-3 py-2.5">
+                            <div className="text-[11px] text-slate-400">계승 정수</div>
+                            <div className="mt-1 font-bold text-[#d9d0f3]">{player?.meta?.essence || 0}</div>
+                        </div>
+                        <div className="aether-panel-muted rounded-lg px-3 py-2.5">
+                            <div className="text-[11px] text-slate-400">계승 단계</div>
+                            <div className="mt-1 font-bold text-[#f6e7c8]">{player?.meta?.rank || 0}</div>
+                        </div>
+                        <div className="aether-panel-muted rounded-lg px-3 py-2.5">
+                            <div className="text-[11px] text-slate-400">추가 공격력</div>
+                            <div className="mt-1 font-bold text-rose-300">+{player?.meta?.bonusAtk || 0}</div>
+                        </div>
+                        <div className="aether-panel-muted rounded-lg px-3 py-2.5">
+                            <div className="text-[11px] text-slate-400">추가 생명</div>
+                            <div className="mt-1 font-bold text-emerald-100">+{player?.meta?.bonusHp || 0}</div>
+                        </div>
+                    </div>
+                </details>
+            </div>
         </div>
     );
 };

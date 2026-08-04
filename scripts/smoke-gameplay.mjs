@@ -1413,11 +1413,34 @@ async function verifyTabs(page) {
   const statsState = await waitForState(page, (state) => state.sideTab === 'stats', 'stats tab activation');
   await verifySurfaceLanguage(page, {
     selector: '[data-testid="stats-panel"]',
-    requiredText: ['모험 기록', '총 처치', '사망', '레벨'],
+    requiredText: ['모험 기록', '현재 성장', '다음 성장', '추천 임무', '총 처치', '보스 처치'],
     forbiddenPattern: /Statistics|TOTAL KILLS|DEATHS|K\/D RATIO|LEGACY ESSENCE/,
     label: 'stats tab',
   });
   await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  const statsLayout = await page.locator('[data-testid="stats-panel"]').evaluate((root) => {
+    const leaves = [...root.querySelectorAll('*')]
+      .filter((node) => node.children.length === 0 && (node.textContent || '').trim());
+    const fontSizes = leaves.map((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+    const summaryHeights = [...root.querySelectorAll('summary')]
+      .map((summary) => summary.getBoundingClientRect().height)
+      .filter((height) => height > 0);
+    const bounds = root.getBoundingClientRect();
+    return {
+      panelHeight: Math.round(bounds.height),
+      minFont: Math.min(...fontSizes),
+      minSummaryHeight: Math.min(...summaryHeights),
+      detailCount: root.querySelectorAll('details').length,
+      openDetailCount: root.querySelectorAll('details[open]').length,
+      nestedScrollCount: root.querySelectorAll('.custom-scrollbar').length,
+      horizontalOverflow: root.scrollWidth - root.clientWidth,
+    };
+  });
+  ensure(statsLayout.panelHeight < 900, `Stats panel should prioritize current growth over lifetime telemetry: ${JSON.stringify(statsLayout)}`);
+  ensure(statsLayout.minFont >= 11, `Stats text should keep the mobile 11px floor: ${JSON.stringify(statsLayout)}`);
+  ensure(statsLayout.minSummaryHeight >= 44, `Stats disclosure actions should keep 44px touch targets: ${JSON.stringify(statsLayout)}`);
+  ensure(statsLayout.detailCount === 3 && statsLayout.openDetailCount === 0, `Stats details should stay collapsed until requested: ${JSON.stringify(statsLayout)}`);
+  ensure(statsLayout.nestedScrollCount === 0 && statsLayout.horizontalOverflow <= 1, `Stats panel should avoid nested or horizontal scrolling: ${JSON.stringify(statsLayout)}`);
   await writeStateArtifact('08-stats-tab', statsState, page, {
     screenshotSelector: '[data-testid="mobile-archive-console"]',
     screenshotAnimations: 'allow',
