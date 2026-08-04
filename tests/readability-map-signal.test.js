@@ -88,11 +88,11 @@ test('mission tracker uses natural Korean action language', async () => {
     const source = await readSrc('src/components/ControlPanel.tsx');
 
     assert.match(source, /aether-mission-strip/);
-    assert.match(source, /missionSteps/);
-    assert.match(source, /label:\s*'할 일'/);
-    assert.match(source, /label:\s*'장소'/);
-    assert.match(source, /label:\s*'진행'/);
-    assert.match(source, /label:\s*'마무리'/);
+    assert.match(source, /data-testid="control-mission-context"/);
+    assert.match(source, />장소<\/span>/);
+    assert.match(source, />귀환<\/span>/);
+    assert.match(source, /tracker\.focusQuests\?\.length > 1/);
+    assert.doesNotMatch(source, /missionSteps/);
     assert.doesNotMatch(source, /tracker\.chips/);
 });
 

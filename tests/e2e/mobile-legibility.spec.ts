@@ -131,8 +131,13 @@ for (const viewport of VIEWPORTS) {
 
             const missionTracker = page.getByTestId('control-mission-tracker');
             await expectReadableSurface(page, missionTracker);
-            const missionGrid = missionTracker.locator('.grid').last();
-            expect(await columnCount(missionGrid)).toBe(viewport.width <= 390 ? 2 : 4);
+            await expect(missionTracker.getByText('0/3', { exact: true })).toHaveCount(1);
+            await expect(missionTracker.getByTestId('control-expedition-focus-list')).toHaveCount(0);
+            await expect(missionTracker.getByTestId('control-mission-context')).toContainText(/장소\s*고요한 숲/);
+            await expect(missionTracker.getByTestId('control-mission-context')).toContainText(/귀환\s*목표 지역/);
+            const missionBounds = await missionTracker.boundingBox();
+            expect(missionBounds).not.toBeNull();
+            expect(missionBounds!.height).toBeLessThanOrEqual(180);
             if (viewport.width === 390) {
                 await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/mission-tracker-390x844.png' });
             }

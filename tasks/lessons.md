@@ -319,6 +319,10 @@
 - **Rule:** 긴 E2E가 동일한 순번의 navigation에서 반복 정지하고 개별 spec은 통과한다면 retry를 추가하지 않는다. canonical suite를 deterministic sequential shard로 나눠 중간에 browser lifecycle을 새로 만들고, 각 shard의 전체 통과를 하나의 gate로 유지한다
 - **Rationale:** 누적된 browser state나 WebKit resource가 원인일 때 retry는 실패 시점을 늦추고 비결정성을 숨긴다. 독립 shard는 테스트 의미와 실패 가시성을 유지하면서 누적 자원을 해제해 전체 회귀 검증을 안정화한다
 
+### R69: Show Each Mission Fact Once
+- **Rule:** 필드의 현재 임무 surface에서는 제목, 다음 목표, 진행률, 장소, 귀환 조건을 각각 한 번만 보여 준다. 하나의 집중 임무는 별도 목록으로 다시 반복하지 않고, 여러 임무를 편성했을 때만 전체 편성 목록을 추가한다
+- **Rationale:** 같은 진행률과 목표를 badge, 카드, 요약 cell에 반복하면 정보가 늘지 않아도 행동 버튼이 아래로 밀린다. 임무의 authority와 세부 정보는 보존하면서 중복 표현만 줄여야 플레이어가 현재 목표를 읽고 곧바로 탐험을 선택할 수 있다
+
 ---
 
 ## 📝 Post-Mortem Template

@@ -60,12 +60,9 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
   onClaimReward?: () => void;
 }) => {
   const toneClass = missionTrackerTone[tracker.kind] || missionTrackerTone.active;
-  const missionSteps = [
-    { label: '할 일', value: tracker.nextStep || tracker.title },
-    { label: '장소', value: tracker.routeLabel || '현재 지역' },
-    { label: '진행', value: tracker.kind === 'claimable' ? '보상 대기' : (tracker.progressLabel || '진행 중') },
-    { label: '마무리', value: tracker.returnLabel || '계속 진행' },
-  ];
+  const focusQuests = tracker.focusQuests || [];
+  const showFocusOverview = tracker.focusQuests?.length > 1;
+  const isClaimable = tracker.kind === 'claimable';
 
   return (
     <section
@@ -97,43 +94,43 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
           style={{ width: `${Math.max(0, Math.min(100, tracker.progressPercent || 0))}%` }}
         />
       </div>
-      <div className="relative mt-2 grid gap-1 min-[401px]:grid-cols-3" data-testid="control-expedition-focus-list">
-        {tracker.focusQuests?.map((quest: any) => (
-          <div key={quest.questId} className="aether-decision-cell min-h-[38px] rounded-[0.7rem] px-2 py-1.5">
-            <div className="aether-type-meta break-words font-readable font-semibold text-slate-100/88">{quest.title}</div>
-            <div className="aether-type-label mt-0.5 font-readable text-slate-400">{quest.progressLabel}</div>
-          </div>
-        ))}
-      </div>
-      <div className="relative mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-4">
-        {missionSteps.map((step: any, index: number) => {
-          const isClaimAction = tracker.kind === 'claimable' && index === missionSteps.length - 1;
-          if (isClaimAction) {
-            return (
-              <button
-                key={`${step.label}-${step.value}`}
-                type="button"
-                data-testid="control-claim-quest-reward"
-                disabled={!canClaimReward || !onClaimReward}
-                onClick={onClaimReward}
-                className="aether-decision-cell min-h-[44px] rounded-[0.7rem] border border-[#d5b180]/30 bg-[#d5b180]/12 px-2 py-1.5 text-left disabled:cursor-not-allowed disabled:opacity-55"
-              >
-                <div className="aether-type-label font-readable font-bold tracking-normal text-[#d5b180]/72">{step.label}</div>
-                <div className="aether-type-meta mt-0.5 break-words font-readable font-bold text-[#f6e7c8]">
-                  {canClaimReward ? '보상 받기' : '마을에서 수령'}
-                </div>
-              </button>
-            );
-          }
-
-          return (
-            <div key={`${step.label}-${step.value}`} className="aether-decision-cell min-h-[44px] rounded-[0.7rem] px-2 py-1.5">
-              <div className="aether-type-label font-readable font-bold tracking-normal text-slate-500">{step.label}</div>
-              <div className="aether-type-meta mt-0.5 break-words font-readable font-semibold text-slate-100/84">{step.value}</div>
+      {showFocusOverview && (
+        <div className="relative mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-3" data-testid="control-expedition-focus-list">
+          {focusQuests.map((quest: any) => (
+            <div key={quest.questId} className="aether-decision-cell flex min-h-[38px] min-w-0 items-center justify-between gap-2 rounded-[0.7rem] px-2 py-1.5">
+              <div className="aether-type-meta min-w-0 break-words font-readable font-semibold text-slate-100/88">{quest.title}</div>
+              <div className="aether-type-label shrink-0 font-readable text-slate-400">{quest.progressLabel}</div>
             </div>
-          );
-        })}
+          ))}
+        </div>
+      )}
+      <div
+        data-testid="control-mission-context"
+        className="relative mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/8 pt-2 font-readable"
+      >
+        <div className="aether-type-meta text-slate-200/84">
+          <span className="mr-1 text-slate-500">장소</span>
+          {tracker.routeLabel || '현재 지역'}
+        </div>
+        <div className="aether-type-meta text-slate-200/84">
+          <span className="mr-1 text-slate-500">귀환</span>
+          {tracker.returnLabel || '계속 진행'}
+        </div>
       </div>
+      {isClaimable && (
+        <button
+          type="button"
+          data-testid="control-claim-quest-reward"
+          disabled={!canClaimReward || !onClaimReward}
+          onClick={onClaimReward}
+          className="aether-decision-cell relative mt-2 flex min-h-[44px] w-full items-center justify-between rounded-[0.7rem] border border-[#d5b180]/30 bg-[#d5b180]/12 px-3 text-left disabled:cursor-not-allowed disabled:opacity-55"
+        >
+          <span className="aether-type-label font-readable font-bold text-[#d5b180]/72">임무 완료</span>
+          <span className="aether-type-meta font-readable font-bold text-[#f6e7c8]">
+            {canClaimReward ? '보상 받기' : '마을에서 수령'}
+          </span>
+        </button>
+      )}
     </section>
   );
 };
