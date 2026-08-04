@@ -311,6 +311,14 @@
 - **Rule:** 물리 기기에서 되돌릴 수 없는 보상이나 유해 회수를 검증할 때는 실행 전후의 canonical 재화·수령 이력·물품을 기록하고, 같은 설치 bundle을 재실행해 자원이 유지되며 같은 보상 action이 다시 나타나지 않는지 확인한 뒤 안전 지역으로 복귀한다
 - **Rationale:** 즉시 재화가 오르고 버튼이 사라지는 것만으로는 저장 지속성이나 중복 수령 차단을 증명하지 못한다. 재실행 검증은 local save와 동기화 경계의 누락을 잡고, 안전 지역 복귀는 다음 acceptance가 이전 테스트의 위치·전투 상태에 오염되는 것을 막는다
 
+### R67: Recover Against Derived Resource Maxima
+- **Rule:** 전직, 장비, 영구 성장처럼 최대 생명·기력을 바꾸는 transition은 저장된 base max를 현재 자원에 직접 복사하지 않는다. 변경 후 player로 canonical `fullStats`를 계산하고 그 파생 최대치까지 회복하며, HUD와 transition test도 같은 계산 결과를 기준으로 검증한다
+- **Rationale:** base max만 회복하면 저장 state는 정상처럼 보여도 장비·유물·직업 보정이 반영된 HUD에서는 즉시 결손 상태가 된다. 현재값과 표시 최대값의 authority를 같은 계산에 묶어야 성장 직후의 보이지 않는 손실을 막을 수 있다
+
+### R68: Reset Browser Lifecycle Before Long E2E Accumulation
+- **Rule:** 긴 E2E가 동일한 순번의 navigation에서 반복 정지하고 개별 spec은 통과한다면 retry를 추가하지 않는다. canonical suite를 deterministic sequential shard로 나눠 중간에 browser lifecycle을 새로 만들고, 각 shard의 전체 통과를 하나의 gate로 유지한다
+- **Rationale:** 누적된 browser state나 WebKit resource가 원인일 때 retry는 실패 시점을 늦추고 비결정성을 숨긴다. 독립 shard는 테스트 의미와 실패 가시성을 유지하면서 누적 자원을 해제해 전체 회귀 검증을 안정화한다
+
 ---
 
 ## 📝 Post-Mortem Template

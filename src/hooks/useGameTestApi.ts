@@ -13,6 +13,7 @@ import {
     isMockRuntime,
     ITEM_INVESTMENT_DEVICE_QA_SCENARIO,
     MIRROR_JOURNEY_DEVICE_QA_SCENARIO,
+    PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO,
     SYSTEM_SETTINGS_DEVICE_QA_SCENARIO,
 } from '../utils/runtimeMode';
 import { readDeviceQaSnapshot } from '../utils/localGameSnapshot';
@@ -355,6 +356,24 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     titles: [...(player.titles || [])],
                 };
             },
+            getProgressionAcceptanceSnapshot: () => {
+                const player = engineRef.current.player;
+                const fullStats = fullStatsRef.current;
+                return {
+                    job: player.job || '',
+                    level: player.level || 0,
+                    hp: player.hp || 0,
+                    maxHp: fullStats?.maxHp || player.maxHp || 0,
+                    mp: player.mp || 0,
+                    maxMp: fullStats?.maxMp || player.maxMp || 0,
+                    gold: player.gold || 0,
+                    skillChoices: { ...(player.skillChoices || {}) },
+                    codexClaimed: [...(player.stats?.codexClaimed || [])],
+                    codexBonusAtk: player.stats?.codexBonusAtk || 0,
+                    signatureSet: fullStats?.activeSignatureSet?.name || '',
+                    relicSynergies: (fullStats?.activeSynergies || []).map((synergy: any) => synergy.label),
+                };
+            },
             getDomMetrics: () => {
                 const rect = (node: any) => {
                     if (!(node instanceof HTMLElement)) return null;
@@ -671,6 +690,64 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'system' });
+            },
+            seedProgressionAcceptanceScenario: () => {
+                const er = engineRef.current;
+                const signatureWeapon = DB.ITEMS.weapons.find((item: any) => item.name === '마왕의 대낫');
+                const signatureArmor = DB.ITEMS.armors.find((item: any) => item.name === '암흑 군주의 망토');
+                if (!signatureWeapon || !signatureArmor) return false;
+
+                const discoveredWeapons = Object.fromEntries(
+                    DB.ITEMS.weapons.slice(0, 5).map((item: any) => [item.name, { discovered: true }]),
+                );
+                const relics = ['고대의 분노', '드래곤 발톱', '광전사의 분노'].map((name, index) => ({
+                    id: `progression-acceptance-relic-${index}`,
+                    name,
+                    rarity: 'legendary',
+                }));
+
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        name: '성장 검증',
+                        gender: er.player.gender || 'female',
+                        job: '모험가',
+                        level: 5,
+                        exp: 0,
+                        loc: '시작의 마을',
+                        gold: 400,
+                        hp: 120,
+                        maxHp: 180,
+                        mp: 25,
+                        maxMp: 70,
+                        equip: {
+                            weapon: { ...signatureWeapon, id: 'progression-acceptance-weapon' },
+                            armor: { ...signatureArmor, id: 'progression-acceptance-armor' },
+                            offhand: null,
+                        },
+                        relics,
+                        skillChoices: {},
+                        stats: {
+                            ...(er.player.stats || {}),
+                            relicCount: relics.length,
+                            codex: {
+                                weapons: discoveredWeapons,
+                                armors: {},
+                                shields: {},
+                                monsters: {},
+                                recipes: {},
+                                materials: {},
+                            },
+                            codexClaimed: [],
+                            codexBonusAtk: 0,
+                            codexBonusDef: 0,
+                            codexBonusHp: 0,
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'stats' });
+                return true;
             },
             seedClaimableQuestScenario: () => {
                 const er = engineRef.current;
@@ -1020,6 +1097,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             || deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO
             || deviceQaScenario === CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO
             || deviceQaScenario === SYSTEM_SETTINGS_DEVICE_QA_SCENARIO
+            || deviceQaScenario === PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO
         ) {
             let attempts = 0;
             const seedWhenReady = () => {
@@ -1039,6 +1117,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         testApi.seedCrystalExchangeScenario(180);
                     } else if (deviceQaScenario === SYSTEM_SETTINGS_DEVICE_QA_SCENARIO) {
                         testApi.seedSystemSettingsScenario();
+                    } else if (deviceQaScenario === PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO) {
+                        testApi.seedProgressionAcceptanceScenario();
                     } else {
                         testApi.seedAscensionJourneyScenario();
                     }

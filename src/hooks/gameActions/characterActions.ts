@@ -188,15 +188,21 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             if (!current?.next?.includes(jobName)) return addLog('error', MSG.JOB_CHANGE_INVALID);
             if (player.level < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);
             const vitals = buildClassVitals(player.level, jobName, player.meta || {});
+            const nextStats = getFullStats({
+                ...player,
+                job: jobName,
+                maxHp: vitals.maxHp,
+                maxMp: vitals.maxMp,
+            });
             dispatch({
                 type: AT.SET_PLAYER,
                 payload: (currentPlayer: any) => queueMilestoneStoryBeat({
                     ...currentPlayer,
                     job: jobName,
                     maxHp: vitals.maxHp,
-                    hp: vitals.maxHp,
+                    hp: nextStats.maxHp,
                     maxMp: vitals.maxMp,
-                    mp: vitals.maxMp,
+                    mp: nextStats.maxMp,
                     skillLoadout: { selected: 0, cooldowns: {} },
                 }, 'first_job_change'),
             });

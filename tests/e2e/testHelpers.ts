@@ -4,7 +4,7 @@ export const startE2ERun = async (
     page: Page,
     options: { openStatusConsole?: boolean } = {},
 ) => {
-    await page.goto('/?e2e=1');
+    await page.goto('/?e2e=1', { waitUntil: 'domcontentloaded' });
 
     const statusBar = page.getByTestId('persistent-status-bar');
     const startButton = page.getByTestId('intro-start-button');

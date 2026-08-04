@@ -127,6 +127,9 @@ test('첫 전직 action은 직업 변경과 함께 story beat를 queue한다', (
 
     assert.equal(changedPlayer.job, '전사');
     assert.equal(getPendingMilestoneStoryBeat(changedPlayer).id, 'first_job_change');
+    const changedStats = calculateFullStats(changedPlayer);
+    assert.equal(changedPlayer.hp, changedStats.maxHp);
+    assert.equal(changedPlayer.mp, changedStats.maxMp);
 });
 
 test('실제 현재 지역의 첫 구역 보스 승리는 area boss story beat를 queue한다', () => {

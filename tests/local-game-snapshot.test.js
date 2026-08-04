@@ -10,6 +10,7 @@ import {
     MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY,
     CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY,
     SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY,
+    PROGRESSION_ACCEPTANCE_DEVICE_QA_SNAPSHOT_KEY,
     clearDeviceQaSnapshot,
     clearLocalGameSnapshot,
     readDeviceQaSnapshot,
@@ -173,6 +174,32 @@ test('system settings QA keeps visual preferences away from production saves', (
     clearDeviceQaSnapshot(storage, 'system-settings');
     assert.deepEqual(readLocalGameSnapshot(storage), production);
     assert.equal(readDeviceQaSnapshot(storage, 'system-settings'), null);
+});
+
+test('progression acceptance QA keeps rewards and growth choices away from production saves', () => {
+    const storage = makeStorage();
+    const production = { player: { name: '루비아', job: '모험가', gold: 1046 }, gameState: 'idle' };
+    const progression = {
+        player: {
+            name: '성장 검증',
+            job: '전사',
+            gold: 350,
+            skillChoices: { 파워배시: 'A' },
+            stats: { codexClaimed: ['weapons_5'], codexBonusAtk: 2 },
+        },
+        gameState: 'idle',
+    };
+
+    writeLocalGameSnapshot(production, storage);
+    writeDeviceQaSnapshot(progression, storage, 'progression-acceptance');
+
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.deepEqual(readDeviceQaSnapshot(storage, 'progression-acceptance'), progression);
+    assert.ok(storage.values.has(PROGRESSION_ACCEPTANCE_DEVICE_QA_SNAPSHOT_KEY));
+
+    clearDeviceQaSnapshot(storage, 'progression-acceptance');
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.equal(readDeviceQaSnapshot(storage, 'progression-acceptance'), null);
 });
 
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {
