@@ -206,6 +206,9 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
   const previewedLockedQuestIds = new Set(
     featuredDisplayOperations.filter((entry: any) => entry.isLockedPreview).map((entry: any) => entry.quest.id),
   );
+  const remainingLockedQuestEntries = lockedQuestEntries.filter(
+    (quest: any) => !previewedLockedQuestIds.has(quest.id),
+  );
   const selectedOperation = featuredDisplayOperations.find((entry: any) => entry.quest.id === selectedQuestId) || null;
 
   const acceptFeaturedMission = (questId: any) => {
@@ -428,79 +431,75 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
           </div>
         </section>
 
-        {/* 수락 가능 임무 */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between border-b border-white/8 pb-2">
-            <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">다른 임무</h3>
-            <span className="aether-label">추천 목록 제외</span>
-          </div>
-          {backlogQuestEntries.length > 0 ? backlogQuestEntries.map((entry: any) => {
-            const quest = entry.quest;
-            const resonance = entry.resonance.label ? entry.resonance : getTraitQuestResonance(quest, traitProfile);
-            return (
-            <QuestRowShell key={`available_${quest.id}`} kind="available" testId="quest-decision-row">
-              <div className="flex flex-col gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="font-readable text-base font-semibold text-white">{quest.title}</div>
-                    <span className="aether-type-meta rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-2 py-0.5 font-readable text-[#ece5ff]">레벨 {quest.minLv} 필요</span>
-                    {quest.buildTag && (
-                      <SignalBadge tone="neutral" size="sm">{quest.buildLabel || quest.buildTag}</SignalBadge>
-                    )}
-                    <SignalBadge tone="neutral" size="sm">{entry.meta.emphasis}</SignalBadge>
-                    {resonance.label && (
-                      <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>
-                    )}
-                    {entry.targetMaps[0] && (
-                      <SignalBadge tone="upgrade" size="sm">{entry.targetMaps[0]}</SignalBadge>
-                    )}
-                  </div>
-                  <div className="mt-1">
-                    <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
-                  </div>
-                  <div className="mt-2 font-readable text-[12px] leading-[1.42] text-slate-300/82">{entry.reason}</div>
-                  <OperationBriefRows brief={entry.brief} reward={quest.reward} />
-                </div>
-                <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="aether-cta-primary min-h-[44px] shrink-0 rounded-[0.9rem] px-5 py-3 text-xs font-bold text-[#dff7f5]">
-                  임무 수락
-                </Motion.button>
-              </div>
-            </QuestRowShell>
-          );
-          }) : (
-            <div className="rounded-[1rem] border border-dashed border-[#7dd4d8]/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-[#dff7f5]/55">지금 받을 수 있는 다른 임무가 없습니다.</div>
-          )}
-        </section>
-
-        {/* 잠긴 임무 */}
-        <section className="space-y-3">
-          <h3 className="border-b border-white/8 pb-2 font-readable text-sm font-semibold text-[#ece5ff]">곧 열릴 임무</h3>
-          {lockedQuestEntries.some((quest: any) => !previewedLockedQuestIds.has(quest.id)) ? lockedQuestEntries
-            .filter((quest: any) => !previewedLockedQuestIds.has(quest.id))
-            .map((quest: any) => (
-            <div key={`locked_${quest.id}`} className="aether-locked-row rounded-[1.05rem] px-3 py-3">
-              <div className="flex flex-col gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="font-readable text-base font-semibold text-slate-100">{quest.title}</div>
-                    <span className="aether-lock-note aether-type-meta rounded-full px-2 py-0.5 font-readable">잠금 · {quest.lockLabel}</span>
-                  </div>
-                  <div className="mt-1">
-                    <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
-                  </div>
-                  <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
-                    {quest.lockDetail}
-                  </div>
-                  <div className="aether-type-meta mt-2 font-readable text-[#dff7f5]">
-                    보상 · {getRewardSummary(quest.reward)}
-                  </div>
-                </div>
-              </div>
+        {backlogQuestEntries.length > 0 && (
+          <section data-testid="quest-board-backlog" className="space-y-3">
+            <div className="flex items-center justify-between border-b border-white/8 pb-2">
+              <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">다른 임무</h3>
+              <span className="aether-label">추천 목록 제외</span>
             </div>
-          )) : (
-            <div className="rounded-[1rem] border border-dashed border-[#9a8ac0]/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-[#ece5ff]/55">앞으로 열릴 임무가 없습니다.</div>
-          )}
-        </section>
+            {backlogQuestEntries.map((entry: any) => {
+              const quest = entry.quest;
+              const resonance = entry.resonance.label ? entry.resonance : getTraitQuestResonance(quest, traitProfile);
+              return (
+                <QuestRowShell key={`available_${quest.id}`} kind="available" testId="quest-decision-row">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="font-readable text-base font-semibold text-white">{quest.title}</div>
+                        <span className="aether-type-meta rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-2 py-0.5 font-readable text-[#ece5ff]">레벨 {quest.minLv} 필요</span>
+                        {quest.buildTag && (
+                          <SignalBadge tone="neutral" size="sm">{quest.buildLabel || quest.buildTag}</SignalBadge>
+                        )}
+                        <SignalBadge tone="neutral" size="sm">{entry.meta.emphasis}</SignalBadge>
+                        {resonance.label && (
+                          <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>
+                        )}
+                        {entry.targetMaps[0] && (
+                          <SignalBadge tone="upgrade" size="sm">{entry.targetMaps[0]}</SignalBadge>
+                        )}
+                      </div>
+                      <div className="mt-1">
+                        <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
+                      </div>
+                      <div className="mt-2 font-readable text-[12px] leading-[1.42] text-slate-300/82">{entry.reason}</div>
+                      <OperationBriefRows brief={entry.brief} reward={quest.reward} />
+                    </div>
+                    <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="aether-cta-primary min-h-[44px] shrink-0 rounded-[0.9rem] px-5 py-3 text-xs font-bold text-[#dff7f5]">
+                      임무 수락
+                    </Motion.button>
+                  </div>
+                </QuestRowShell>
+              );
+            })}
+          </section>
+        )}
+
+        {remainingLockedQuestEntries.length > 0 && (
+          <section data-testid="quest-board-locked" className="space-y-3">
+            <h3 className="border-b border-white/8 pb-2 font-readable text-sm font-semibold text-[#ece5ff]">곧 열릴 임무</h3>
+            {remainingLockedQuestEntries.map((quest: any) => (
+              <div key={`locked_${quest.id}`} className="aether-locked-row rounded-[1.05rem] px-3 py-3">
+                <div className="flex flex-col gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="font-readable text-base font-semibold text-slate-100">{quest.title}</div>
+                      <span className="aether-lock-note aether-type-meta rounded-full px-2 py-0.5 font-readable">잠금 · {quest.lockLabel}</span>
+                    </div>
+                    <div className="mt-1">
+                      <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
+                    </div>
+                    <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
+                      {quest.lockDetail}
+                    </div>
+                    <div className="aether-type-meta mt-2 font-readable text-[#dff7f5]">
+                      보상 · {getRewardSummary(quest.reward)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
       </div>
 
     </Motion.div>

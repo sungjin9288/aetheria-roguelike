@@ -120,10 +120,16 @@ for (const viewport of VIEWPORTS) {
             expect(emptyActiveBounds!.height).toBeLessThanOrEqual(56);
             const bountySection = questBoard.getByTestId('quest-board-bounty');
             await expect(bountySection).toBeVisible();
+            await expect(questBoard.getByTestId('quest-board-backlog')).toHaveCount(0);
+            const lockedMissions = questBoard.getByTestId('quest-board-locked');
+            await expect(lockedMissions).toBeVisible();
             if (viewport.width === 390) {
                 const bountyBounds = await bountySection.boundingBox();
+                const lockedBounds = await lockedMissions.boundingBox();
                 expect(bountyBounds).not.toBeNull();
+                expect(lockedBounds).not.toBeNull();
                 expect(bountyBounds!.y + bountyBounds!.height).toBeLessThanOrEqual(viewport.height);
+                expect(lockedBounds!.y).toBeLessThan(viewport.height);
             }
             await expectTransientEffectsSettled(page);
             if (viewport.width === 390) {
