@@ -307,6 +307,10 @@
 - **Rule:** 설정 화면의 첫 흐름에는 화면·정보 표시 설정과 실제 성장 진입점을 먼저 둔다. 순위, 의견, 저장, QA·session·admin 진단은 기본 접힘으로 보존하고, 중복 콘텐츠는 owning surface에만 두어 설정이 다른 화면의 축소판이 되지 않게 한다
 - **Rationale:** session·기기 진단·export가 플레이 설정보다 먼저 보이면 설정 화면이 개발자 콘솔처럼 보이고, 작은 운영 정보가 핵심 판단을 밀어낸다. progressive disclosure로 지원·감사 기능은 유지하면서 플레이어의 즉시 선택과 성장 흐름을 먼저 읽히게 해야 한다
 
+### R66: Verify Persistent Rewards Through Relaunch
+- **Rule:** 물리 기기에서 되돌릴 수 없는 보상이나 유해 회수를 검증할 때는 실행 전후의 canonical 재화·수령 이력·물품을 기록하고, 같은 설치 bundle을 재실행해 자원이 유지되며 같은 보상 action이 다시 나타나지 않는지 확인한 뒤 안전 지역으로 복귀한다
+- **Rationale:** 즉시 재화가 오르고 버튼이 사라지는 것만으로는 저장 지속성이나 중복 수령 차단을 증명하지 못한다. 재실행 검증은 local save와 동기화 경계의 누락을 잡고, 안전 지역 복귀는 다음 acceptance가 이전 테스트의 위치·전투 상태에 오염되는 것을 막는다
+
 ---
 
 ## 📝 Post-Mortem Template
