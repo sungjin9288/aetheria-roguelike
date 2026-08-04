@@ -112,7 +112,7 @@ interface CombatFlags {
 interface SeasonPassState {
     xp?: number;
     tier?: number;
-    claimed?: string[];
+    claimed?: Array<number | string>;
     isPremium?: boolean;
     seasonId?: string;
 }

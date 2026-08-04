@@ -1409,6 +1409,46 @@ async function verifyTabs(page) {
     screenshotAnimations: 'disabled',
   });
 
+  await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('pass'));
+  const seasonState = await waitForState(page, (state) => state.sideTab === 'pass', 'season tab activation');
+  await verifySurfaceLanguage(page, {
+    selector: '[data-testid="season-journey-panel"]',
+    requiredText: ['시즌 여정', '다음 보상', '성장하는 방법', '전체 여정', '여정의 시작', '깊어지는 모험', '시즌의 완성'],
+    forbiddenPattern: /SEASON PASS|PREMIUM|FREE|추후 업데이트 예정/,
+    label: 'season journey tab',
+  });
+  await page.locator('[data-testid="mobile-archive-console-content"]').evaluate((node) => { node.scrollTop = 0; });
+  const seasonLayout = await page.locator('[data-testid="season-journey-panel"]').evaluate((root) => {
+    const leaves = [...root.querySelectorAll('*')]
+      .filter((node) => node.children.length === 0 && (node.textContent || '').trim());
+    const fontSizes = leaves.map((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+    const summaryHeights = [...root.querySelectorAll('summary')]
+      .map((summary) => summary.getBoundingClientRect().height)
+      .filter((height) => height > 0);
+    return {
+      panelHeight: Math.round(root.getBoundingClientRect().height),
+      minFont: Math.min(...fontSizes),
+      minSummaryHeight: Math.min(...summaryHeights),
+      nextRewardCount: root.querySelectorAll('[data-testid^="season-next-reward-"]').length,
+      chapterCount: root.querySelectorAll('[data-testid^="season-chapter-"]').length,
+      activityCount: root.querySelectorAll('[data-testid="season-activity-sources"] > div:last-child > div').length,
+      openChapterCount: root.querySelectorAll('details[open]').length,
+      nestedScrollCount: root.querySelectorAll('.custom-scrollbar').length,
+      horizontalOverflow: root.scrollWidth - root.clientWidth,
+    };
+  });
+  ensure(seasonLayout.panelHeight < 1200, `Season journey should prioritize current and nearby rewards: ${JSON.stringify(seasonLayout)}`);
+  ensure(seasonLayout.minFont >= 11, `Season journey text should keep the mobile 11px floor: ${JSON.stringify(seasonLayout)}`);
+  ensure(seasonLayout.minSummaryHeight >= 44, `Season chapter disclosures should keep 44px touch targets: ${JSON.stringify(seasonLayout)}`);
+  ensure(seasonLayout.nextRewardCount > 0 && seasonLayout.nextRewardCount <= 3, `Season journey should expose up to three nearby rewards: ${JSON.stringify(seasonLayout)}`);
+  ensure(seasonLayout.chapterCount === 3 && seasonLayout.openChapterCount === 0, `Season rewards should stay in three collapsed chapters: ${JSON.stringify(seasonLayout)}`);
+  ensure(seasonLayout.activityCount === 7, `Season journey should explain all seven normal-play XP sources: ${JSON.stringify(seasonLayout)}`);
+  ensure(seasonLayout.nestedScrollCount === 0 && seasonLayout.horizontalOverflow <= 1, `Season journey should avoid nested or horizontal scrolling: ${JSON.stringify(seasonLayout)}`);
+  await writeStateArtifact('08f-season-tab', seasonState, page, {
+    screenshotSelector: '[data-testid="mobile-archive-console"]',
+    screenshotAnimations: 'disabled',
+  });
+
   await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('stats'));
   const statsState = await waitForState(page, (state) => state.sideTab === 'stats', 'stats tab activation');
   await verifySurfaceLanguage(page, {

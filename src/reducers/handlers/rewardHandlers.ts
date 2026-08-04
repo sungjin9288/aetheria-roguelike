@@ -1,5 +1,6 @@
 import { findItemByName, makeItem } from '../../utils/gameUtils';
 import { SEASON_TIER_XP, SEASON_REWARDS } from '../../data/seasonPass';
+import { normalizeClaimedSeasonTiers, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
 import type { GameState, GameAction } from '../gameReducer';
 
 export const rewardActionMap = {
@@ -29,8 +30,13 @@ export const rewardActionMap = {
     // ── Season Pass ───────────────────────────────────────────────────────
     ADD_SEASON_XP: (state: GameState, action: GameAction) => {
         const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
-        const newXp = sp.xp + (action.payload || 0);
-        const newTier = Math.min(30, Math.floor(newXp / SEASON_TIER_XP));
+        const earnedXp = Number(action.payload);
+        if (!Number.isFinite(earnedXp) || earnedXp <= 0) return state;
+
+        const currentXp = Math.max(0, Number(sp.xp) || 0);
+        const newXp = Math.min(SEASON_MAX_XP, currentXp + earnedXp);
+        if (newXp === currentXp) return state;
+        const newTier = Math.min(SEASON_MAX_TIER, Math.floor(newXp / SEASON_TIER_XP));
         return {
             ...state,
             player: { ...state.player, seasonPass: { ...sp, xp: newXp, tier: newTier } },
@@ -39,10 +45,17 @@ export const rewardActionMap = {
     },
 
     CLAIM_SEASON_REWARD: (state: GameState, action: GameAction) => {
-        const { tier: claimTier } = action.payload;
+        const claimTier = Number(action.payload?.tier);
         const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
-        if ((sp.claimed || []).includes(claimTier)) return state;
-        const rewardRow = SEASON_REWARDS.find((r: any) => r.tier === claimTier);
+        const unlockedTier = Math.min(SEASON_MAX_TIER, Math.max(
+            0,
+            Math.floor(Number(sp.tier) || 0),
+            Math.floor(Math.max(0, Number(sp.xp) || 0) / SEASON_TIER_XP),
+        ));
+        const claimedTiers = normalizeClaimedSeasonTiers(sp.claimed);
+        if (!Number.isInteger(claimTier) || claimTier < 1 || claimTier > unlockedTier) return state;
+        if (claimedTiers.includes(claimTier)) return state;
+        const rewardRow = SEASON_REWARDS.find((row) => row.tier === claimTier);
         if (!rewardRow) return state;
         const tracks = [rewardRow.free, sp.isPremium ? rewardRow.premium : null].filter(Boolean);
         let nextPlayer = {

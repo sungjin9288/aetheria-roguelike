@@ -462,6 +462,22 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.CRAFTING });
             },
+            seedSeasonJourneyScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        seasonPass: {
+                            xp: 650,
+                            tier: 3,
+                            claimed: [1, 2],
+                            isPremium: false,
+                            seasonId: 'S1',
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'pass' });
+            },
             seedClaimableQuestScenario: () => {
                 const er = engineRef.current;
                 er.dispatch({
