@@ -15,6 +15,7 @@ import {
     MIRROR_JOURNEY_DEVICE_QA_SCENARIO,
     SYSTEM_SETTINGS_DEVICE_QA_SCENARIO,
 } from '../utils/runtimeMode';
+import { readDeviceQaSnapshot } from '../utils/localGameSnapshot';
 
 /**
  * smoke test / dev harness용 window API 등록.
@@ -1024,8 +1025,12 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             const seedWhenReady = () => {
                 const engine = engineRef.current;
                 if (engine.bootStage === 'ready') {
+                    // 첫 설치에만 scenario seed를 주입한다. 이후 실행은 실제 저장된 결과를
+                    // 복원해야 재화 차감과 성장 확정의 persistence를 검증할 수 있다.
+                    if (readDeviceQaSnapshot(undefined, deviceQaScenario)) return;
+
                     if (deviceQaScenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO) {
-                        if (!String(engine.player?.name || '').trim()) testApi.seedItemInvestmentScenario();
+                        testApi.seedItemInvestmentScenario();
                     } else if (deviceQaScenario === GRAVE_RECOVERY_DEVICE_QA_SCENARIO) {
                         testApi.seedGraveRecoveryScenario();
                     } else if (deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO) {

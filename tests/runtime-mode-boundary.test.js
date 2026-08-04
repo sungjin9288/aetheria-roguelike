@@ -28,7 +28,9 @@ test('test API registration is closed outside mock or isolated device QA runtime
     assert.match(source, /deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO/);
     assert.match(source, /deviceQaScenario === CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO/);
     assert.match(source, /deviceQaScenario === SYSTEM_SETTINGS_DEVICE_QA_SCENARIO/);
-    assert.match(source, /if \(!String\(engine\.player\?\.name \|\| ''\)\.trim\(\)\) testApi\.seedItemInvestmentScenario\(\)/);
+    assert.match(source, /readDeviceQaSnapshot\(undefined, deviceQaScenario\)/);
+    assert.match(source, /if \(readDeviceQaSnapshot\(undefined, deviceQaScenario\)\) return;/);
+    assert.match(source, /testApi\.seedItemInvestmentScenario\(\)/);
     assert.match(app, /const TEST_API_BUILD = import\.meta\.env\.VITE_ENABLE_TEST_API === '1'/);
     assert.match(app, /VITE_DEVICE_QA_SCENARIO === 'mirror-journey'/);
     assert.match(app, /VITE_DEVICE_QA_SCENARIO === 'crystal-exchange'/);
