@@ -41,6 +41,25 @@ test.describe('Town decision hierarchy', () => {
         expect(terminalBounds).not.toBeNull();
         expect(terminalBounds!.height).toBeGreaterThanOrEqual(280);
 
+        const locationVisual = page.getByTestId('terminal-location-visual');
+        await expect(locationVisual).toHaveAttribute('data-location-visual', 'start-village');
+        await expect.poll(() => locationVisual.locator('img').evaluate((image) => (
+            image instanceof HTMLImageElement
+            && image.complete
+            && image.naturalWidth === 96
+            && image.naturalHeight === 96
+        ))).toBe(true);
+        const locationBounds = await locationVisual.boundingBox();
+        expect(locationBounds).not.toBeNull();
+        expect(locationBounds!.x).toBeGreaterThanOrEqual(terminalBounds!.x);
+        expect(locationBounds!.x + locationBounds!.width).toBeLessThanOrEqual(terminalBounds!.x + terminalBounds!.width);
+        expect(locationBounds!.y + locationBounds!.height).toBeLessThanOrEqual(terminalBounds!.y + terminalBounds!.height);
+        const terminalScroll = await page.getByTestId('terminal-panel').locator('.custom-scrollbar').evaluate((viewport) => ({
+            clientHeight: viewport.clientHeight,
+            scrollHeight: viewport.scrollHeight,
+        }));
+        expect(terminalScroll.scrollHeight).toBeLessThanOrEqual(terminalScroll.clientHeight + 1);
+
         const pageWidth = await page.evaluate(() => ({
             viewport: window.innerWidth,
             document: document.documentElement.scrollWidth,
@@ -51,6 +70,10 @@ test.describe('Town decision hierarchy', () => {
             path: 'playtest-artifacts/mobile-town-hierarchy/first-town.png',
             fullPage: false,
         });
+
+        await page.getByTestId('control-expedition-start').click();
+        await expect(locationVisual).toHaveAttribute('data-location-visual', 'quiet-forest');
+        await expect(locationVisual.locator('img')).toHaveAttribute('src', '/assets/locations/quiet-forest.png');
     });
 
     test('접힌 마을 시설을 열면 기존 기능을 모두 사용할 수 있다', async ({ page }) => {
@@ -64,6 +87,13 @@ test.describe('Town decision hierarchy', () => {
             path: 'playtest-artifacts/mobile-town-hierarchy/facilities-open.png',
             fullPage: false,
         });
+    });
+
+    test('전투 중에는 지역 장식보다 교전 정보가 우선한다', async ({ page }) => {
+        const seeded = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false));
+        expect(seeded).toBe(true);
+        await expect(page.getByTestId('combat-focus-panel')).toBeVisible({ timeout: 8_000 });
+        await expect(page.getByTestId('terminal-location-visual')).toHaveCount(0);
     });
 
     test('회복이 필요한 임무 복귀자는 휴식 후 곧바로 재출발 흐름으로 돌아간다', async ({ page }) => {

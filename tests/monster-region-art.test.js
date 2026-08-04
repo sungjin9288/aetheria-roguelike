@@ -71,9 +71,10 @@ test('every world location has one unique fixed 96px RGBA medallion', async () =
 });
 
 test('runtime components expose exact and fallback art states without revealing blind routes', async () => {
-    const [monsterIcon, routeTopology] = await Promise.all([
+    const [monsterIcon, routeTopology, terminalView] = await Promise.all([
         readFile(path.join(ROOT, 'src/components/icons/MonsterIcon.tsx'), 'utf8'),
         readFile(path.join(ROOT, 'src/components/RouteTopology.tsx'), 'utf8'),
+        readFile(path.join(ROOT, 'src/components/TerminalView.tsx'), 'utf8'),
     ]);
 
     assert.match(monsterIcon, /data-monster-art=/);
@@ -81,6 +82,12 @@ test('runtime components expose exact and fallback art states without revealing 
     assert.match(monsterIcon, /data-region-family=\{visual\?\.regionKey\}/);
     assert.match(routeTopology, /blindMap \? null : getLocationVisual/);
     assert.match(routeTopology, /data-location-visual=\{locationVisual\?\.key\}/);
+    assert.match(terminalView, /getLocationVisual\(player\.loc\)/);
+    assert.match(terminalView, /data-testid="terminal-location-visual"/);
+    assert.match(terminalView, /data-location-visual=\{locationVisual\.key\}/);
+    assert.match(terminalView, /src=\{locationVisual\.src\}/);
+    assert.match(terminalView, /gameState === GS\.IDLE[\s\S]*?&& locationVisual/);
+    assert.match(terminalView, /min-h-0 flex-1 items-center justify-center overflow-hidden/);
 });
 
 test('source sheets and explicit crop coordinates remain reproducible', async () => {

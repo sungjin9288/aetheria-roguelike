@@ -4,6 +4,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import QuickSlot from './QuickSlot';
 import type { Player } from '../types/index.js';
 import { GS } from '../reducers/gameStates';
+import { getLocationVisual } from '../utils/locationVisuals';
 
 const LOG_STYLES: any = {
     combat: {
@@ -179,6 +180,8 @@ const TerminalView = ({
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
     const showExpandToggle = isCombat || logs.length > compactMobileLogCount;
     const showNarrativePulse = Boolean(latestStory) && gameState !== GS.COMBAT && (logExpanded || logs.length > compactMobileLogCount);
+    const locationVisual = player?.loc ? getLocationVisual(player.loc) : null;
+    const showLocationVisual = Boolean(gameState === GS.IDLE && locationVisual);
 
     useEffect(() => {
         const viewport = logViewportRef.current;
@@ -202,9 +205,9 @@ const TerminalView = ({
         >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/16 to-transparent" />
 
-            <div ref={logViewportRef} className="flex-1 relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-0.5 min-h-0">
+            <div ref={logViewportRef} className="flex min-h-0 flex-1 flex-col relative z-10 w-full overflow-y-auto overflow-x-hidden custom-scrollbar pr-0.5">
                 {showToolbar && (
-                    <div className="mb-2 flex min-h-8 items-center justify-between px-1 gap-2">
+                    <div className="mb-2 flex min-h-8 shrink-0 items-center justify-between px-1 gap-2">
                         {isCombat && (
                             <span className="font-readable text-[11px] font-semibold text-slate-200/78">최근 전투</span>
                         )}
@@ -227,7 +230,7 @@ const TerminalView = ({
                 )}
 
                 {showNarrativePulse && (
-                    <div className="relative mb-2 overflow-hidden rounded-[1.05rem] aether-panel-core px-2.5 py-2">
+                    <div className="relative mb-2 shrink-0 overflow-hidden rounded-[1.05rem] aether-panel-core px-2.5 py-2">
                         <div className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 38%)' }} />
                         <div className="relative flex items-start gap-2">
                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.9rem] border border-[#7dd4d8]/18 bg-black/18 text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
@@ -241,7 +244,7 @@ const TerminalView = ({
                     </div>
                 )}
 
-                <div className="space-y-1.5">
+                <div className="shrink-0 space-y-1.5">
                     {logs.length === 0 && (
                         <Motion.div
                             className="flex flex-col items-center py-3 text-center font-readable text-[13px] text-slate-300/78"
@@ -296,6 +299,23 @@ const TerminalView = ({
                         )}
                     </AnimatePresence>
                 </div>
+
+                {showLocationVisual && locationVisual && (
+                    <Motion.div
+                        data-testid="terminal-location-visual"
+                        data-location-visual={locationVisual.key}
+                        aria-hidden="true"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="pointer-events-none mt-3 flex min-h-0 flex-1 items-center justify-center overflow-hidden"
+                    >
+                        <img
+                            src={locationVisual.src}
+                            alt=""
+                            className="h-36 w-36 max-h-full max-w-full object-contain opacity-80 drop-shadow-[0_10px_20px_rgba(0,0,0,0.42)] [image-rendering:pixelated]"
+                        />
+                    </Motion.div>
+                )}
             </div>
 
             {/* QuickSlot footer */}
