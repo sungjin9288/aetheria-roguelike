@@ -107,6 +107,9 @@ test('quest board uses decision rows before heavy terminal cards', async () => {
     assert.match(source, /data-quest-row-kind=\{kind\}/);
     assert.match(source, /QuestObjectiveLine/);
     assert.match(source, /OperationBriefRows brief=\{entry\.brief\}/);
+    assert.match(source, /data-testid="quest-board-empty-active"/);
+    assert.match(source, /data-testid="quest-board-bounty"/);
+    assert.doesNotMatch(source, /py-8 text-center[^>]*>진행 중인 임무가 없습니다/);
     // 추천 임무와 일반 임무 모두 같은 수락 용어를 사용한다.
     assert.match(source, /임무 수락/);
 });

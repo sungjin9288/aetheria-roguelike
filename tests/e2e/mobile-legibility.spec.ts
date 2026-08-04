@@ -113,6 +113,18 @@ for (const viewport of VIEWPORTS) {
             const questBoard = page.getByTestId('quest-board-panel');
             await expectReadableSurface(page, questBoard);
             await expectTouchTarget(page.getByTestId('quest-board-start-operation').first());
+            const emptyActiveMissions = questBoard.getByTestId('quest-board-empty-active');
+            await expect(emptyActiveMissions).toBeVisible();
+            const emptyActiveBounds = await emptyActiveMissions.boundingBox();
+            expect(emptyActiveBounds).not.toBeNull();
+            expect(emptyActiveBounds!.height).toBeLessThanOrEqual(56);
+            const bountySection = questBoard.getByTestId('quest-board-bounty');
+            await expect(bountySection).toBeVisible();
+            if (viewport.width === 390) {
+                const bountyBounds = await bountySection.boundingBox();
+                expect(bountyBounds).not.toBeNull();
+                expect(bountyBounds!.y + bountyBounds!.height).toBeLessThanOrEqual(viewport.height);
+            }
             await expectTransientEffectsSettled(page);
             if (viewport.width === 390) {
                 await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/quest-board-390x844.png' });

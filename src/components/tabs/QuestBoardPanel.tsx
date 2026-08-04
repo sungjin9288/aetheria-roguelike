@@ -284,15 +284,17 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
 
         {/* 진행 중 임무 */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between border-b border-white/8 pb-2">
-            <div>
-              <h3 className="font-readable text-sm font-semibold text-emerald-100">이번 원정 임무</h3>
-              <div className="aether-type-meta mt-0.5 font-readable text-slate-400">진행 중 임무는 유지되며 최대 3개를 추적</div>
+          {activeQuestEntries.length > 0 && (
+            <div className="flex items-center justify-between border-b border-white/8 pb-2">
+              <div>
+                <h3 className="font-readable text-sm font-semibold text-emerald-100">이번 원정 임무</h3>
+                <div className="aether-type-meta mt-0.5 font-readable text-slate-400">진행 중 임무는 유지되며 최대 3개를 추적</div>
+              </div>
+              <SignalBadge tone={focusLimitReached ? 'recommended' : 'neutral'} size="sm">
+                {focusedQuestIds.length}/{MAX_EXPEDITION_FOCUS_QUESTS}
+              </SignalBadge>
             </div>
-            <SignalBadge tone={focusLimitReached ? 'recommended' : 'neutral'} size="sm">
-              {focusedQuestIds.length}/{MAX_EXPEDITION_FOCUS_QUESTS}
-            </SignalBadge>
-          </div>
+          )}
           {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry: any) => (
             <QuestRowShell key={`active_${entry.id}`} kind={entry.isComplete ? 'reward' : entry.isBounty ? 'bounty' : 'active'} testId="quest-active-row">
               <div className="flex flex-col gap-3">
@@ -390,11 +392,20 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
               </div>
             </QuestRowShell>
           )) : (
-            <div className="rounded-[1rem] border border-dashed border-emerald-300/18 bg-black/14 px-4 py-8 text-center font-readable text-sm text-emerald-100/55">진행 중인 임무가 없습니다.</div>
+            <div
+              data-testid="quest-board-empty-active"
+              className="flex min-h-[52px] items-center justify-between gap-3 border-y border-white/8 py-2 font-readable"
+            >
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-emerald-100">이번 원정 임무</h3>
+                <div className="aether-type-meta mt-0.5 text-slate-400">아직 없음</div>
+              </div>
+              <SignalBadge tone="neutral" size="sm">0/{MAX_EXPEDITION_FOCUS_QUESTS}</SignalBadge>
+            </div>
           )}
         </section>
 
-        <section className="space-y-2">
+        <section data-testid="quest-board-bounty" className="space-y-2">
           <div className="flex items-center justify-between border-b border-white/8 pb-1.5">
             <h3 className="font-readable text-sm font-semibold text-[#f6e7c8]">현상수배</h3>
             <span className="aether-label">레벨 {player.level} 기준</span>
