@@ -11,6 +11,7 @@ import {
     getDeviceQaScenario,
     isMockRuntime,
     ITEM_INVESTMENT_DEVICE_QA_SCENARIO,
+    MIRROR_JOURNEY_DEVICE_QA_SCENARIO,
 } from '../utils/runtimeMode';
 
 /**
@@ -333,6 +334,13 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     relicCount: er.player.relics?.length || 0,
                 };
             },
+            getMirrorSnapshot: () => {
+                const player = engineRef.current.player;
+                return {
+                    essence: player.meta?.essence || 0,
+                    mirror: { ...(player.meta?.mirror || {}) },
+                };
+            },
             getDomMetrics: () => {
                 const rect = (node: any) => {
                     if (!(node instanceof HTMLElement)) return null;
@@ -563,6 +571,28 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.ASCENSION });
+            },
+            seedMirrorJourneyScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        name: '리베아',
+                        job: '모험가',
+                        level: er.player.level || 1,
+                        loc: '시작의 마을',
+                        meta: {
+                            ...er.player.meta,
+                            essence: 220,
+                            mirror: {
+                                start_gold: 1,
+                                campfire_rate: 1,
+                            },
+                        },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'system' });
             },
             seedClaimableQuestScenario: () => {
                 const er = engineRef.current;
@@ -909,6 +939,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             deviceQaScenario === ITEM_INVESTMENT_DEVICE_QA_SCENARIO
             || deviceQaScenario === GRAVE_RECOVERY_DEVICE_QA_SCENARIO
             || deviceQaScenario === ASCENSION_JOURNEY_DEVICE_QA_SCENARIO
+            || deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO
         ) {
             let attempts = 0;
             const seedWhenReady = () => {
@@ -918,6 +949,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         if (!String(engine.player?.name || '').trim()) testApi.seedItemInvestmentScenario();
                     } else if (deviceQaScenario === GRAVE_RECOVERY_DEVICE_QA_SCENARIO) {
                         testApi.seedGraveRecoveryScenario();
+                    } else if (deviceQaScenario === MIRROR_JOURNEY_DEVICE_QA_SCENARIO) {
+                        testApi.seedMirrorJourneyScenario();
                     } else {
                         testApi.seedAscensionJourneyScenario();
                     }

@@ -18,7 +18,8 @@ const RunSummaryCard = lazy(() => import('./components/RunSummaryCard'));
 const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'item-investment'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'grave-recovery'
-    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'ascension-journey';
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'ascension-journey'
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'mirror-journey';
 const useRuntimeGameTestApi = TEST_API_BUILD ? useGameTestApi : () => undefined;
 
 const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
@@ -28,7 +29,9 @@ function App() {
     const [isMuted, setIsMuted] = useState(false);
     const [inventorySpotlight] = useState<any>(null);
     const [premiumShopOpen, setPremiumShopOpen] = useState(false);
-    const [mirrorPanelOpen, setMirrorPanelOpen] = useState(false);
+    const [mirrorPanelOpen, setMirrorPanelOpen] = useState(
+        import.meta.env.VITE_DEVICE_QA_SCENARIO === 'mirror-journey',
+    );
     const fullStats = engine.getFullStats();
     const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
 

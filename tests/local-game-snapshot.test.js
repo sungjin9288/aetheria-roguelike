@@ -7,6 +7,7 @@ import {
     DEVICE_QA_SNAPSHOT_KEY,
     GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY,
     LOCAL_GAME_SNAPSHOT_KEY,
+    MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY,
     clearDeviceQaSnapshot,
     clearLocalGameSnapshot,
     readDeviceQaSnapshot,
@@ -110,6 +111,26 @@ test('ascension journey QA keeps a separate snapshot from other device scenarios
     assert.deepEqual(readDeviceQaSnapshot(storage), itemInvestment);
     assert.deepEqual(readDeviceQaSnapshot(storage, 'grave-recovery'), graveRecovery);
     assert.equal(readDeviceQaSnapshot(storage, 'ascension-journey'), null);
+});
+
+test('mirror journey QA keeps purchases away from production and other QA saves', () => {
+    const storage = makeStorage();
+    const production = { player: { name: '루비아' }, gameState: 'idle' };
+    const mirrorJourney = {
+        player: { name: '거울 검증', meta: { essence: 100, mirror: { start_gold: 2 } } },
+        gameState: 'idle',
+    };
+
+    writeLocalGameSnapshot(production, storage);
+    writeDeviceQaSnapshot(mirrorJourney, storage, 'mirror-journey');
+
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.deepEqual(readDeviceQaSnapshot(storage, 'mirror-journey'), mirrorJourney);
+    assert.ok(storage.values.has(MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY));
+
+    clearDeviceQaSnapshot(storage, 'mirror-journey');
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.equal(readDeviceQaSnapshot(storage, 'mirror-journey'), null);
 });
 
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {

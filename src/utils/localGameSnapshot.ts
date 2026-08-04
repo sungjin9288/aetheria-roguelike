@@ -2,6 +2,7 @@ export const LOCAL_GAME_SNAPSHOT_KEY = 'aetheria.game.snapshot.v1';
 export const DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.item-investment.snapshot.v1';
 export const GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.grave-recovery.snapshot.v1';
 export const ASCENSION_JOURNEY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.ascension-journey.snapshot.v1';
+export const MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.mirror-journey.snapshot.v1';
 
 type SnapshotStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
@@ -74,6 +75,7 @@ export const clearLocalGameSnapshot = (storage?: SnapshotStorage | null) => (
 const getDeviceQaSnapshotKey = (scenario?: string | null) => {
     if (scenario === 'grave-recovery') return GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY;
     if (scenario === 'ascension-journey') return ASCENSION_JOURNEY_DEVICE_QA_SNAPSHOT_KEY;
+    if (scenario === 'mirror-journey') return MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY;
     return DEVICE_QA_SNAPSHOT_KEY;
 };
 
