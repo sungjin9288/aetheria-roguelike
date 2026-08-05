@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { RELICS } from '../data/relics';
 import { TRAIT_DEFINITIONS } from '../data/traits';
 import { getRunBuildProfile } from '../utils/runProfile';
+import { getRecommendedRelicsForBuild } from '../utils/relicBuildFit';
 import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
 import RelicIcon from './icons/RelicIcon';
 import type { Player } from '../types/index.js';
@@ -12,18 +13,6 @@ import type { Player } from '../types/index.js';
 interface BuildAdvicePanelProps {
     player?: Player | null;
 }
-
-/** 아키타입별 추천 유물 효과 목록 (우선순위 순) */
-const BUILD_RELIC_HINTS: any = {
-    crusher:  ['double_strike', 'execute_bonus', 'ancient_power', 'combo_stack', 'low_hp_atk'],
-    dual:     ['double_strike', 'combo_stack', 'execute_bonus', 'armor_pen', 'ancient_power'],
-    fortress: ['fortress', 'reflect', 'stone_skin', 'battle_start_heal', 'crit_block'],
-    arcane:   ['skill_mult', 'free_skill', 'mp_regen_turn', 'skill_lifesteal', 'crit_mp_regen'],
-    explorer: ['drop_rate', 'gold_mult', 'event_chance', 'boss_hunter', 'exp_mult'],
-    risk:     ['low_hp_atk', 'execute_bonus', 'ancient_power', 'death_save', 'double_strike'],
-    status:   ['dot_mult', 'armor_pen', 'execute_bonus', 'skill_mult', 'ancient_power'],
-    balanced: ['battle_start_heal', 'stone_skin', 'gold_mult', 'exp_mult', 'ancient_power'],
-};
 
 const RARITY_COLOR: any = {
     common:    'text-slate-400',
@@ -35,16 +24,6 @@ const RARITY_COLOR: any = {
 
 const RARITY_LABEL: any = {
     common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설',
-};
-
-const getRecommendedRelics = (primaryId: any, ownedRelicEffects: any) => {
-    const hints = BUILD_RELIC_HINTS[primaryId] || BUILD_RELIC_HINTS.balanced;
-    const owned = new Set(ownedRelicEffects);
-    // Filter relics matching hint effects, not already owned
-    const candidates = hints
-        .flatMap((effect: any) => RELICS.filter((r: any) => r.effect === effect && !owned.has(r.effect)))
-        .filter((r: any, idx: any, arr: any) => arr.findIndex((x: any) => x.id === r.id) === idx); // dedupe
-    return candidates.slice(0, 4);
 };
 
 /**
@@ -62,7 +41,7 @@ const BuildAdvicePanel = ({ player }: BuildAdvicePanelProps) => {
     const trait = TRAIT_DEFINITIONS[primaryId] || TRAIT_DEFINITIONS.balanced;
     const ownedEffects = (player?.relics || []).map((r: any) => r.effect);
     const recommended = useMemo(
-        () => getRecommendedRelics(primaryId, ownedEffects),
+        () => getRecommendedRelicsForBuild(RELICS, primaryId, ownedEffects, 4),
         [primaryId, ownedEffects]
     );
 

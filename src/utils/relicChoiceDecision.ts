@@ -1,4 +1,5 @@
 import { getRelicDisplayName } from './relicPresentation';
+import { getRelicBuildFit } from './relicBuildFit';
 
 const RARITY_SCORE: any = {
     common: 0,
@@ -32,15 +33,18 @@ const EFFECT_BUILD_LABEL: any = {
     drop_rate: '전리품 획득',
     exp_mult: '빠른 성장',
     boss_hunter: '보스 사냥',
+    event_chance: '이벤트 탐색',
 };
 
 const getBuildLabel = (effect: any) => EFFECT_BUILD_LABEL[effect] || '균형 성장';
 
-const getReasonLabel = (relic: any, synergy: any) => {
+const getReasonLabel = (relic: any, synergy: any, buildFit: any) => {
     if (synergy?.legendaryHint) return '전설 조합 완성';
     if ((synergy?.score || 0) >= 80) return '현재 유물과 잘 맞음';
     if ((synergy?.score || 0) > 0) return '현재 유물과 이어짐';
     if (synergy?.nearLegendary) return '전설 조합에 가까움';
+    if (buildFit.rank >= 0 && buildFit.rank <= 1) return '현재 성장과 잘 맞음';
+    if (buildFit.matched) return '현재 성장 보완';
     if (relic?.rarity === 'legendary') return '가장 높은 등급';
     if (relic?.rarity === 'epic') return '높은 등급';
     return '현재 성장 보완';
@@ -53,7 +57,13 @@ const getTone = (relic: any, synergy: any) => {
     return 'steady';
 };
 
-export const getRelicChoiceDecisionStrip = (cards: any[]) => {
+const getSynergyScore = (synergy: any) => {
+    if (synergy.legendaryHint) return 160;
+    if ((synergy.score || 0) >= 80) return 110;
+    return synergy.score || 0;
+};
+
+export const getRelicChoiceDecisionStrip = (cards: any[], buildId: string) => {
     if (!Array.isArray(cards) || cards.length === 0) {
         return {
             tone: 'steady',
@@ -71,12 +81,13 @@ export const getRelicChoiceDecisionStrip = (cards: any[]) => {
         const relic = card.relic || {};
         const synergy = card.synergy || {};
         const rarityScore = RARITY_SCORE[relic.rarity] || 0;
-        const synergyScore = synergy.legendaryHint ? 160 : (synergy.score || 0);
+        const synergyScore = getSynergyScore(synergy);
         const nearLegendaryScore = synergy.nearLegendary ? 18 : 0;
+        const buildFit = getRelicBuildFit(buildId, relic.effect);
         return {
             ...card,
-            score: synergyScore + nearLegendaryScore + rarityScore,
-            reason: getReasonLabel(relic, synergy),
+            score: synergyScore + nearLegendaryScore + rarityScore + buildFit.score,
+            reason: getReasonLabel(relic, synergy, buildFit),
             build: getBuildLabel(relic.effect),
         };
     }).sort((a: any, b: any) => {

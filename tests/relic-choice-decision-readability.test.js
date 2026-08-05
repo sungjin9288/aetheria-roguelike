@@ -4,6 +4,11 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { getRelicChoiceDecisionStrip } from '../src/utils/relicChoiceDecision.ts';
+import {
+    getRecommendedRelicsForBuild,
+    getRelicBuildFit,
+    RELIC_EFFECTS_BY_BUILD,
+} from '../src/utils/relicBuildFit.ts';
 import { formatRelicText, getRelicDisplayName } from '../src/utils/relicPresentation.ts';
 import { RELICS, RELIC_SYNERGIES } from '../src/data/relics.ts';
 
@@ -23,7 +28,7 @@ test('relic choice decision strip favors strong synergy over rarity-only value',
             relic: { id: 'rare_skill', name: '균열의 서판', rarity: 'rare', effect: 'skill_mult' },
             synergy: { score: 80, label: '완벽한 시너지', synergies: ['심해의 매듭'] },
         },
-    ]);
+    ], 'balanced');
 
     assert.equal(decision.recommendedIndex, 1);
     assert.equal(decision.tone, 'synergy');
@@ -31,6 +36,24 @@ test('relic choice decision strip favors strong synergy over rarity-only value',
     assert.equal(decision.cells[0].value, '균열의 서판');
     assert.equal(decision.cells[1].value, '현재 유물과 잘 맞음');
     assert.equal(decision.cells[2].value, '기술 공격');
+});
+
+test('strong synergy remains ahead of a legendary build fit', () => {
+    const decision = getRelicChoiceDecisionStrip([
+        {
+            index: 0,
+            relic: { id: 'common_synergy', name: '연결된 검', rarity: 'common', effect: 'on_kill_heal' },
+            synergy: { score: 80, label: '강한 조합', synergies: ['피의 서약'] },
+        },
+        {
+            index: 1,
+            relic: { id: 'legend_fit', name: '불멸의 성벽', rarity: 'legendary', effect: 'fortress' },
+            synergy: { score: 0, synergies: [] },
+        },
+    ], 'fortress');
+
+    assert.equal(decision.recommendedIndex, 0);
+    assert.equal(decision.cells[1].value, '현재 유물과 잘 맞음');
 });
 
 test('relic choice decision strip promotes legendary set completion first', () => {
@@ -45,12 +68,53 @@ test('relic choice decision strip promotes legendary set completion first', () =
             relic: { id: 'legend_piece', name: '별의 왕관', rarity: 'uncommon', effect: 'boss_hunter' },
             synergy: { score: 120, label: '전설 시너지 완성!', synergies: ['달의 검', '태양의 방패'], legendaryHint: '천체 군주' },
         },
-    ]);
+    ], 'balanced');
 
     assert.equal(decision.recommendedIndex, 2);
     assert.equal(decision.recommendedId, 'legend_piece');
     assert.equal(decision.tone, 'legendary');
     assert.equal(decision.cells[1].value, '전설 조합 완성');
+});
+
+test('relic choice favors a strong build fit over rarity alone', () => {
+    const decision = getRelicChoiceDecisionStrip([
+        {
+            index: 0,
+            relic: { id: 'epic_crit', name: '황혼의 파편', rarity: 'epic', effect: 'crit_mp_regen' },
+            synergy: { score: 0, synergies: [] },
+        },
+        {
+            index: 1,
+            relic: { id: 'healing_core', name: '재생 코어', rarity: 'uncommon', effect: 'battle_start_heal' },
+            synergy: { score: 0, synergies: [] },
+        },
+    ], 'balanced');
+
+    assert.equal(decision.recommendedIndex, 1);
+    assert.equal(decision.cells[1].value, '현재 성장과 잘 맞음');
+    assert.equal(decision.cells[2].value, '전투 회복');
+});
+
+test('relic build guidance uses one valid effect order for every archetype', () => {
+    const catalogEffects = new Set(RELICS.map((relic) => relic.effect));
+
+    for (const [buildId, effects] of Object.entries(RELIC_EFFECTS_BY_BUILD)) {
+        assert.equal(effects.length, 5, `${buildId} should have five ordered effects`);
+        effects.forEach((effect) => assert.ok(catalogEffects.has(effect), `${buildId}: ${effect} should exist`));
+        assert.equal(getRelicBuildFit(buildId, effects[0]).score, 40);
+    }
+
+    const recommendations = getRecommendedRelicsForBuild(
+        RELICS,
+        'fortress',
+        ['fortress'],
+        4,
+    );
+    assert.equal(recommendations.length, 4);
+    assert.ok(recommendations.every((relic) => relic.effect !== 'fortress'));
+    assert.equal(recommendations[0].effect, 'reflect');
+    assert.equal(new Set(recommendations.map((relic) => relic.effect)).size, recommendations.length);
+    assert.deepEqual(getRecommendedRelicsForBuild(RELICS, 'balanced', [], 0), []);
 });
 
 test('relic language remains natural for current data and legacy saves', () => {
@@ -70,6 +134,7 @@ test('relic language remains natural for current data and legacy saves', () => {
 test('RelicChoicePanel renders Korean decision labels and recommended marker', async () => {
     const source = await readSrc('src/components/RelicChoicePanel.tsx');
     assert.match(source, /getRelicChoiceDecisionStrip/);
+    assert.match(source, /getRunBuildProfile/);
     assert.match(source, /data-testid="relic-choice-decision-strip"/);
     assert.match(source, /data-testid="relic-choice-panel"/);
     assert.match(source, /data-testid="relic-choice-options"/);
@@ -93,7 +158,7 @@ test('smoke loop verifies relic choice decision strip with deterministic injecti
     assert.match(source, /injectRelicChoice/);
     assert.match(source, /relic-choice-decision-strip/);
     assert.match(source, /02e-relic-choice-decision-strip/);
-    assert.match(testApiSource, /injectRelicChoice:[\s\S]*?SET_PLAYER, payload: \{ relics: \[\] \}/);
+    assert.match(testApiSource, /injectRelicChoice:[\s\S]*?test_relic_build_weapon[\s\S]*?hands: 1[\s\S]*?offhand: null/);
 });
 
 test('relic choice decision strip has high readability CSS coverage', async () => {

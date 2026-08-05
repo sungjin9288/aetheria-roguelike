@@ -1055,7 +1055,23 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             },
             injectRelicChoice: () => {
                 const er = engineRef.current;
-                er.dispatch({ type: AT.SET_PLAYER, payload: { relics: [] } });
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        relics: [],
+                        equip: {
+                            weapon: {
+                                id: 'test_relic_build_weapon',
+                                name: '여행자의 검',
+                                type: 'weapon',
+                                hands: 1,
+                                elem: '물리',
+                            },
+                            offhand: null,
+                            armor: null,
+                        },
+                    },
+                });
                 er.dispatch({
                     type: AT.SET_PENDING_RELICS,
                     payload: [

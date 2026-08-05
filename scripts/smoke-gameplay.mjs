@@ -363,9 +363,9 @@ async function verifyRelicChoiceDecisionStrip(page, options = {}) {
   ensure(text.includes('추천'), 'Relic choice decision strip should expose the recommendation');
   ensure(text.includes('이유'), 'Relic choice decision strip should expose the reason');
   ensure(text.includes('성장 방향'), 'Relic choice decision strip should expose the growth direction');
-  ensure(text.includes('황혼의 파편'), 'Relic choice should name the recommended relic');
-  ensure(text.includes('높은 등급'), 'Relic choice should explain the recommendation in player language');
-  ensure(text.includes('치명타와 기력 회복'), 'Relic choice should explain the resulting growth direction');
+  ensure(text.includes('심해의 매듭'), 'Relic choice should name the build-aligned relic');
+  ensure(text.includes('현재 성장과 잘 맞음'), 'Relic choice should explain the build fit in player language');
+  ensure(text.includes('전투 회복'), 'Relic choice should explain the resulting growth direction');
   ensure(panelText.includes('전투가 시작되면 생명 12% 회복'), 'Relic descriptions should use player-facing stat language');
   ensure(!/\b(?:ATK|DEF|HP|MP|EXP|CD)\b|저HP|킬 스택|직접 공명|전설까지 -1/.test(panelText), 'Relic choice should hide legacy abbreviations and mechanical placeholders');
   ensure(['legendary', 'synergy', 'potential', 'steady'].includes(tone), 'Relic choice decision strip should expose a known tone');

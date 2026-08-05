@@ -4,6 +4,7 @@ import { RARITY_COLORS } from '../data/titles';
 import { RELIC_SYNERGIES } from '../data/relics';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getRelicChoiceDecisionStrip } from '../utils/relicChoiceDecision';
+import { getRunBuildProfile } from '../utils/runProfile';
 import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
 import RelicIcon from './icons/RelicIcon';
 import SignalBadge from './SignalBadge';
@@ -127,7 +128,8 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
         index,
         synergy: getRelicSynergyScore(relic, ownedRelics),
     }));
-    const relicDecision = getRelicChoiceDecisionStrip(relicCards);
+    const buildId = getRunBuildProfile(player || {}, {}).primary.id;
+    const relicDecision = getRelicChoiceDecisionStrip(relicCards, buildId);
     const relicCapacity = getPrestigeUnlocks(player?.meta?.prestigeRank).maxRelics;
 
     const handleSelect = (relic: Relic) => {
