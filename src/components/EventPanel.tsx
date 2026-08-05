@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, CircleHelp, Gift, HeartPulse, ShieldAlert } from 
 import SignalBadge from './SignalBadge';
 import FocusPanelHeader from './FocusPanelHeader';
 import { formatEventText, getEventChoicePreview, getEventPanelCopy } from '../utils/eventPresentation';
+import { getLocationVisual } from '../utils/locationVisuals';
 
 /**
  * EventPanel - Dynamic event choice UI
@@ -13,14 +14,16 @@ import { formatEventText, getEventChoicePreview, getEventPanelCopy } from '../ut
 interface EventPanelProps {
     currentEvent?: any;
     actions?: any;
+    location?: string;
 }
 
 // cycle 437: 모바일 포커스 default 값 제거 — 호출자 ControlPanel:192이 명시
 //   전달이라 default 도달 불가 (cycle 364-368 redundant default annotation lens).
-const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
+const EventPanel = ({ currentEvent, actions, location }: EventPanelProps) => {
     if (!currentEvent) return null;
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
     const panelCopy = getEventPanelCopy(currentEvent);
+    const locationVisual = location ? getLocationVisual(location) : null;
     const previewStyle = {
         reward: { icon: Gift, className: 'text-[#f6e7c8]' },
         recovery: { icon: HeartPulse, className: 'text-emerald-200' },
@@ -29,7 +32,7 @@ const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
         unknown: { icon: CircleHelp, className: 'text-slate-300/76' },
     };
     const panelBody = (
-        <div data-testid="event-panel" className="relative flex flex-1 min-h-0 flex-col overflow-y-auto custom-scrollbar">
+        <div data-testid="event-panel" className="relative flex flex-1 min-h-0 flex-col overflow-x-hidden overflow-y-auto custom-scrollbar">
             <FocusPanelHeader
                 eyebrow="탐험 중 마주친 일"
                 title={panelCopy.title}
@@ -40,15 +43,15 @@ const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
                 rightSlot={<SignalBadge tone="resonance" size="sm">{panelCopy.kind}</SignalBadge>}
             />
 
-            <div data-testid="event-situation" className="border-l-2 border-[#7dd4d8]/45 bg-[#7dd4d8]/[0.05] px-3 py-3 text-white">
+            <div data-testid="event-situation" className="shrink-0 border-l-2 border-[#7dd4d8]/45 bg-[#7dd4d8]/[0.05] px-3 py-3 text-white">
                 <div className="font-readable text-[11px] text-[#bce8e8]/82">지금 상황</div>
                 <div className="mt-1.5 text-[0.95rem] font-readable leading-relaxed text-slate-50">
                     {formatEventText(currentEvent.desc)}
                 </div>
             </div>
 
-            <div className="mt-3 font-readable text-[12px] text-slate-300/82">어떤 길을 택하시겠습니까?</div>
-            <div className="mt-2 flex flex-col gap-2">
+            <div className="mt-3 shrink-0 font-readable text-[12px] text-slate-300/82">어떤 길을 택하시겠습니까?</div>
+            <div data-testid="event-choice-list" className="mt-2 flex shrink-0 flex-col gap-2">
                 {choices.length > 0 ? choices.map((choice: any, idx: any) => {
                     const preview = getEventChoicePreview(currentEvent, idx);
                     const PreviewIcon = previewStyle[preview.tone].icon;
@@ -90,6 +93,23 @@ const EventPanel = ({ currentEvent, actions }: EventPanelProps) => {
                     </button>
                 )}
             </div>
+
+            {locationVisual && (
+                <Motion.div
+                    data-testid="event-location-visual"
+                    data-location-visual={locationVisual.key}
+                    aria-hidden="true"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="pointer-events-none flex min-h-0 flex-1 items-center justify-center overflow-hidden"
+                >
+                    <img
+                        src={locationVisual.src}
+                        alt=""
+                        className="h-32 w-32 max-h-full max-w-full object-contain opacity-80 drop-shadow-[0_10px_20px_rgba(0,0,0,0.42)] [image-rendering:pixelated]"
+                    />
+                </Motion.div>
+            )}
         </div>
     );
 

@@ -29,7 +29,6 @@ const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, G
 
 function App() {
     const engine = useGameEngine();
-    const [isMuted, setIsMuted] = useState(false);
     const [inventorySpotlight] = useState<any>(null);
     const [premiumShopOpen, setPremiumShopOpen] = useState(
         import.meta.env.VITE_DEVICE_QA_SCENARIO === 'crystal-exchange',
@@ -141,8 +140,6 @@ function App() {
             setPremiumShopOpen={setPremiumShopOpen}
             mirrorPanelOpen={mirrorPanelOpen}
             setMirrorPanelOpen={setMirrorPanelOpen}
-            isMuted={isMuted}
-            setIsMuted={setIsMuted}
             handleQuickSlotUse={handleQuickSlotUse}
             damageFlash={damageFlash}
             healFlash={healFlash}

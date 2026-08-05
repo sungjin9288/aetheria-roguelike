@@ -331,6 +331,14 @@
 - **Rule:** 로그와 행동을 담는 가변 높이 surface에 지역 아트를 넣을 때는 별도 고정 영역을 예약하지 않는다. 텍스트와 도구를 shrink하지 않는 content로 두고 아트가 남는 공간만 flex로 사용하게 하며, 위치 변경 시 canonical visual source에서 갱신하고 전투처럼 판단 정보가 우선인 상태에서는 숨긴다
 - **Rationale:** 비어 있는 게임 화면은 세계의 인상을 약하게 만들지만, 장식이 로그를 스크롤시키거나 행동을 아래로 밀면 플레이성이 더 나빠진다. 콘텐츠가 먼저 공간을 갖고 아트가 나머지를 채우는 구조라야 작은 기기와 긴 세이브에서도 분위기와 정보 위계를 함께 유지할 수 있다
 
+### R72: Carry Location Identity Into Decisions
+- **Rule:** 탐험 중 선택을 요구하는 focus surface는 현재 위치의 canonical visual identity를 이어 받는다. 상황, 질문, 결과 preview와 선택지가 먼저 공간을 차지하고 지역 아트는 남는 영역만 사용하며, animation이 끝난 최종 geometry와 overflow를 모바일 viewport에서 검증한다
+- **Rationale:** 이벤트 진입 때 화면이 텍스트 전용으로 바뀌면 사용자는 장소 안에서 결정을 내린다는 감각을 잃는다. 반대로 아트가 선택지를 밀면 결정 비용이 커지므로, 세계 연속성과 행동 우선순위를 같은 adaptive layout 계약으로 묶어야 한다
+
+### R73: Hide Capabilities Until Their Experience Is Ready
+- **Rule:** 임시 media provider를 제품 경험에서 제거할 때는 UI control과 자동 초기화를 함께 없애고 provider boundary를 fail-closed로 잠근다. 향후 정식 provider가 사용할 semantic event callsite는 보존할 수 있지만, 비활성 capability를 조작하는 버튼이나 암묵적 AudioContext 생성은 노출하지 않는다
+- **Rationale:** 장소 구분이 없는 임시 효과음과 작동하지 않는 제어는 완성된 사운드 기능처럼 보이면서도 세계의 분위기를 전달하지 못한다. 출력 경계를 명시적으로 닫아 두면 현재 경험은 정직하게 무음으로 유지되고, 이후 마을·탐험 soundscape는 gameplay action을 다시 결합하지 않고 교체할 수 있다
+
 ---
 
 ## 📝 Post-Mortem Template

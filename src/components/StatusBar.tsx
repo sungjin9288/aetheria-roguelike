@@ -1,4 +1,3 @@
-import { Volume2, VolumeX } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
 import MonsterIcon from './icons/MonsterIcon';
@@ -139,23 +138,15 @@ interface StatusBarProps {
   enemy?: Monster | null;
   enemyHitCrit?: boolean;
   onCrystalClick?: (() => void) | null;
-  isMuted?: boolean;
-  onToggleMute?: (() => void) | null;
   onOpenEquipment?: (() => void) | null;
 }
 
-// cycle 586: 5 defaults batch 제거 (enemy/onCrystalClick/isMuted/onToggleMute/
-//   onOpenEquipment) — 1 production caller (GameRoot:89) 7 props 모두 명시
-//   전달이라 5 defaults 모두 도달 불가. 청소 메가 시리즈 77번째 single-cycle
-//   5-default batch (cycle 572 6-default partial 다음으로 큰 batch).
 const StatusBar = ({
   player,
   stats,
   enemy,
   enemyHitCrit,
   onCrystalClick,
-  isMuted,
-  onToggleMute,
   onOpenEquipment,
 }: StatusBarProps) => {
   if (!player?.name) return null;
@@ -180,15 +171,6 @@ const StatusBar = ({
               <span className="text-cyan-100"><span className="text-cyan-100/60">기력</span> {Math.max(0, player.mp || 0)}/{Math.max(1, stats?.maxMp || player.maxMp || 1)}</span>
             </div>
           </div>
-          {onToggleMute && (
-            <button
-              onClick={onToggleMute}
-              className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20 text-slate-300/72 transition-colors hover:text-white"
-              aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
-            >
-              {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-            </button>
-          )}
         </div>
         <EnemyStatus enemy={enemy} enemyHitCrit={enemyHitCrit} />
       </section>
@@ -223,15 +205,6 @@ const StatusBar = ({
               </span>
             </div>
             <div className="shrink-0 flex items-center gap-1.5">
-              {onToggleMute && (
-                <button
-                  onClick={onToggleMute}
-                  className="pointer-events-auto rounded-full border border-white/8 bg-black/20 p-1 text-slate-300/70 transition-colors hover:text-white"
-                  aria-label={isMuted ? '소리 켜기' : '소리 끄기'}
-                >
-                  {isMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
-                </button>
-              )}
               <div className="text-right">
                 <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
                 <span className="ml-0.5 text-[9px] font-readable text-slate-400/68">골드</span>

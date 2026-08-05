@@ -1,5 +1,3 @@
-import { soundManager } from '../systems/SoundManager';
-
 // slice 21: regionTheme — 위치 기반 ambient 팔레트. accent/soft를 CSS 변수로
 //   내려보내고, 상단 radial wash 1개 레이어로 지역 분위기를 표현한다.
 //   시맨틱 컬러(행동/위험/보상)는 불변 — ambient 전용.
@@ -20,14 +18,6 @@ const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, imme
         '--region-soft': regionTheme?.soft || 'rgba(213, 177, 128, 0.10)',
       } as any}
       className={`relative flex h-[100dvh] w-full flex-col overflow-x-hidden overflow-y-auto bg-[#03070d] font-mono text-slate-200 ${shellSpacing} ${visualEffect === 'shake' ? 'animate-shake' : ''}`}
-      onClick={(e: any) => {
-        // 첫 클릭 시 AudioContext 초기화 (브라우저 정책)
-        soundManager.init();
-        // 버튼 클릭만 사운드 (버블링 방지)
-        if ((e.target as HTMLElement).closest('button')) {
-          soundManager.play('click');
-        }
-      }}
       onScroll={(event: any) => {
         if (event.currentTarget.scrollLeft !== 0) {
           event.currentTarget.scrollLeft = 0;

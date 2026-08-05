@@ -22,7 +22,7 @@ test('persistent status and enemy target use direct Korean metric labels', async
     for (const label of ['생명', '기력', '경험', '골드', '교전 대상', '보스', '레벨']) {
         assert.match(source, new RegExp(label));
     }
-    assert.match(source, /isMuted \? '소리 켜기' : '소리 끄기'/);
+    assert.doesNotMatch(source, /소리 켜기|소리 끄기|Volume2|VolumeX|onToggleMute|isMuted/);
     assert.match(source, /data-testid="enemy-portrait"/);
     assert.match(source, /<MonsterIcon name=\{enemy\.name\}/);
     assert.match(source, /data-testid="enemy-status-label"/);

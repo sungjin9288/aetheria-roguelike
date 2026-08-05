@@ -2,6 +2,8 @@
  * SoundManager - Web Audio API 기반 사운드 엔진
  * 오실레이터를 이용한 레트로 효과음 생성 (외부 파일 불필요)
  */
+const LEGACY_SYNTH_AUDIO_ENABLED = false;
+
 class SoundManager {
     ctx: AudioContext | null;
     muted: boolean;
@@ -9,11 +11,12 @@ class SoundManager {
 
     constructor() {
         this.ctx = null;
-        this.muted = false;
+        this.muted = true;
         this.initialized = false;
     }
 
     init() {
+        if (!LEGACY_SYNTH_AUDIO_ENABLED) return;
         if (this.initialized) return;
         try {
             const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -25,11 +28,13 @@ class SoundManager {
     }
 
     toggleMute() {
+        if (!LEGACY_SYNTH_AUDIO_ENABLED) return true;
         this.muted = !this.muted;
         return this.muted;
     }
 
     _ensureReady() {
+        if (!LEGACY_SYNTH_AUDIO_ENABLED) return false;
         if (!this.initialized) this.init();
         if (this.muted || !this.ctx) return false;
         if (this.ctx.state === 'suspended') this.ctx.resume();

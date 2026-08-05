@@ -517,8 +517,8 @@ import { readFile } from 'node:fs/promises';
       assert.ok(/\bstats\b/.test(block), 'stats prop 보존');
       assert.ok(/\benemy\b/.test(block), 'enemy prop 보존');
       assert.ok(/onCrystalClick/.test(block), 'onCrystalClick prop 보존');
-      assert.ok(/isMuted/.test(block), 'isMuted prop 보존');
-      assert.ok(/onToggleMute/.test(block), 'onToggleMute prop 보존');
+      assert.ok(!/isMuted/.test(block), '임시 비활성 사운드 상태 prop 제거');
+      assert.ok(!/onToggleMute/.test(block), '임시 비활성 사운드 제어 prop 제거');
       assert.ok(/onOpenEquipment/.test(block), 'onOpenEquipment prop 보존');
   });
 }
@@ -726,8 +726,8 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/components/app/GameRoot.tsx');
       assert.ok(/<StatusBar[\s\S]*?enemy=\{engine\.gameState === GS\.COMBAT \? engine\.enemy : null\}/.test(source),
           'GameRoot StatusBar enemy 명시 전달 보존');
-      assert.ok(/isMuted=\{isMuted\}/.test(source), 'isMuted 명시 보존');
-      assert.ok(/onToggleMute=\{handleToggleMute\}/.test(source), 'onToggleMute 명시 보존');
+      assert.ok(!/isMuted=/.test(source), '임시 비활성 사운드 상태 전달 제거');
+      assert.ok(!/onToggleMute=/.test(source), '임시 비활성 사운드 제어 전달 제거');
   });
 
   test('cycle 586: cycle 502-585 회귀 가드 — default 청소 시리즈 보존', async () => {

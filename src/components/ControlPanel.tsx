@@ -452,7 +452,7 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.EVENT && !isAiThinking) {
-    return <EventPanel currentEvent={currentEvent} actions={actions} />;
+    return <EventPanel currentEvent={currentEvent} actions={actions} location={player.loc} />;
   }
 
   if (gameState === GS.SHOP) {

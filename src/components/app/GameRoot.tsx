@@ -52,7 +52,6 @@ const GameRoot = ({
     inventorySpotlight,
     premiumShopOpen, setPremiumShopOpen,
     mirrorPanelOpen, setMirrorPanelOpen,
-    isMuted, setIsMuted,
     handleQuickSlotUse,
     damageFlash, healFlash, damageAmount,
 }: any) => {
@@ -177,7 +176,6 @@ const GameRoot = ({
         return () => window.clearTimeout(timer);
     }, [phaseBanner]);
 
-    const handleToggleMute = useCallback(() => setIsMuted(soundManager.toggleMute()), [setIsMuted]);
     const handleOpenArchiveTab = useCallback((tab: string) => {
         engine.actions.setSideTab?.(tab);
         engine.actions.setGameState?.(GS.IDLE);
@@ -257,8 +255,6 @@ const GameRoot = ({
                     //   적 데미지 숫자를 골드+크게 강조 (enemy.hp 변화와 같은 dispatch라 정합).
                     enemyHitCrit={engine.gameState === GS.COMBAT && engine.logs?.[engine.logs.length - 1]?.type === 'critical'}
                     onCrystalClick={(engine.player?.premiumCurrency || 0) > 0 ? () => setPremiumShopOpen(true) : null}
-                    isMuted={isMuted}
-                    onToggleMute={handleToggleMute}
                     onOpenEquipment={engine.gameState === GS.COMBAT ? null : handleOpenEquipment}
                 />
 

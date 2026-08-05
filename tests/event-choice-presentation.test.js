@@ -102,3 +102,19 @@ test('event screen and result log keep the same natural player vocabulary', asyn
     assert.doesNotMatch(actions, /`ATK \+|`DEF \+|`HP \+|`MP \+|\[체인 보상\]/);
     assert.doesNotMatch(smokeInjector, /\[TEST EVENT\]/);
 });
+
+test('event decisions keep location identity in leftover space without displacing choices', async () => {
+    const [panel, controlPanel] = await Promise.all([
+        readSrc('src/components/EventPanel.tsx'),
+        readSrc('src/components/ControlPanel.tsx'),
+    ]);
+
+    assert.match(panel, /getLocationVisual\(location\)/);
+    assert.match(panel, /data-testid="event-location-visual"/);
+    assert.match(panel, /data-location-visual=\{locationVisual\.key\}/);
+    assert.match(panel, /src=\{locationVisual\.src\}/);
+    assert.match(panel, /min-h-0 flex-1 items-center justify-center overflow-hidden/);
+    assert.match(panel, /data-testid="event-situation"[\s\S]*?shrink-0/);
+    assert.match(panel, /data-testid="event-choice-list"[\s\S]*?shrink-0/);
+    assert.match(controlPanel, /<EventPanel[\s\S]*?location=\{player\.loc\}/);
+});
