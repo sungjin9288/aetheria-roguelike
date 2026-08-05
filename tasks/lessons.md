@@ -383,6 +383,10 @@
 - **Rule:** 구매·판매·제작·합성 action은 상품, 아이템, recipe 식별자와 필요한 entropy·expected snapshot token만 전달한다. reducer가 최신 inventory, 재화, 장소, canonical 가격·재료·결과를 다시 검증하고 소비·지급·도감·시즌·일일 목표·칭호·로그·quick slot 정리를 한 transition에서 확정한다. 성공 UI는 accepted receipt만 소비한다
 - **Rationale:** 렌더 snapshot으로 player 전체를 덮어쓰고 side effect를 여러 dispatch로 나누면 rapid tap과 연속 거래가 이전 아이템을 되살리거나 골드·진행·로그를 서로 다르게 만든다. 현재 상태 기반 단일 commit과 idempotent replay가 장기 inventory·economy 신뢰를 지킨다
 
+### R85: Resolve Equipment Changes From Current Inventory
+- **Rule:** 장착·소모품·강화 action은 item identity와 필요한 stale snapshot token·entropy만 전달한다. reducer가 최신 inventory·equip, 장착 제한, 가방 한도와 canonical 강화 비용·재료·확률을 다시 확인하고 mutation, quick slot 정리와 결과 로그를 한 transition에서 확정한다
+- **Rationale:** render snapshot 전체 저장과 UI가 만든 성공·비용 payload는 연속 입력에서 이전 장비를 되살리거나 재화를 중복 소모하고 거부된 시도도 성공처럼 보이게 한다. current-state commit과 accepted feedback이 장기 장비 투자 신뢰를 지킨다
+
 ---
 
 ## 📝 Post-Mortem Template

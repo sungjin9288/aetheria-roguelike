@@ -222,8 +222,7 @@ src/
 │   ├── useAutoExplore.js
 │   └── useDamageFlash.js
 ├── systems/             # 코어 시스템
-│   ├── CombatEngine.js  # 순수 함수 기반 전투 로직 (DoT 포함)
-│   └── SoundManager.js  # Web Audio API 합성 음향
+│   └── CombatEngine.js  # 순수 함수 기반 전투 로직 (DoT 포함)
 ├── services/            # 외부 서비스
 │   └── aiService.js     # AI 이벤트 생성 + 폴백 풀
 ├── reducers/

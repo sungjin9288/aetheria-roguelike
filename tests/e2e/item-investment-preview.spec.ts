@@ -81,6 +81,9 @@ test.describe('Item investment preview', () => {
         const goldAfterCancel = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player.gold);
         expect(goldAfterCancel).toBe(goldBeforeCancel);
 
+        const investmentBeforeEnhance = await page.evaluate(() => (
+            window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.()
+        ));
         await openDecision.click();
         await page.evaluate(() => {
             Math.random = () => 0;
@@ -93,6 +96,12 @@ test.describe('Item investment preview', () => {
         await expect(page.getByTestId('equipment-slot-weapon')).toContainText(`공격력 +${nextStat}`);
         const goldAfterEnhance = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player.gold);
         expect(goldAfterEnhance).toBe(350);
+        const investmentAfterEnhance = await page.evaluate(() => (
+            window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.()
+        ));
+        expect(investmentAfterEnhance.inventory).toHaveLength(investmentBeforeEnhance.inventory.length - 1);
+        const renderSnapshot = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+        expect(renderSnapshot.logTail.filter((log: { text: string }) => log.text.includes('강화 성공'))).toHaveLength(1);
     });
 
     test('제작과 합성 결과를 아이콘·수치·현재 장비 대비로 비교한다', async ({ page }) => {

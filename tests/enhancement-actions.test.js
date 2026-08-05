@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { createInventoryActions } from '../src/hooks/useInventoryActions.js';
 import { AT } from '../src/reducers/actionTypes.js';
-import { rewardActionMap } from '../src/reducers/handlers/rewardHandlers.js';
+import { equipmentActionMap } from '../src/reducers/handlers/equipmentHandlers.js';
 
 const makePlayer = () => ({
     gold: 500,
@@ -15,23 +15,29 @@ const makePlayer = () => ({
     },
 });
 
-test('enhancement reducer applies cost and level atomically only once', () => {
-    const state = { player: makePlayer(), syncStatus: 'synced' };
+test('enhancement reducer applies canonical cost and level atomically only once', () => {
+    const state = {
+        player: makePlayer(),
+        gameState: 'idle',
+        logs: [],
+        quickSlots: [null, null, null],
+        syncStatus: 'synced',
+    };
     const action = {
         type: AT.ENHANCE_ITEM,
         payload: {
             itemId: 'weapon-1',
             slot: 'weapon',
-            success: true,
+            expectedItemIdentity: 'weapon-1',
             expectedLevel: 0,
-            goldCost: 150,
-            materialName: '강화 재료',
-            materialCount: 1,
+            expectedGold: 500,
+            roll: 0,
+            relicRoll: 0.5,
         },
     };
 
-    const enhanced = rewardActionMap.ENHANCE_ITEM(state, action);
-    const replayed = rewardActionMap.ENHANCE_ITEM(enhanced, action);
+    const enhanced = equipmentActionMap.ENHANCE_ITEM(state, action);
+    const replayed = equipmentActionMap.ENHANCE_ITEM(enhanced, action);
 
     assert.equal(enhanced.player.gold, 350);
     assert.equal(enhanced.player.inv.length, 0);
@@ -39,9 +45,8 @@ test('enhancement reducer applies cost and level atomically only once', () => {
     assert.equal(replayed, enhanced);
 });
 
-test('enhancement action lock survives action recreation during rapid input', () => {
+test('enhancement rapid input is collapsed by the reducer snapshot token', () => {
     const dispatched = [];
-    const lock = { until: 0 };
     const buildActions = (player) => createInventoryActions({
         player,
         gameState: 'idle',
@@ -49,13 +54,24 @@ test('enhancement action lock survives action recreation during rapid input', ()
         addLog: () => {},
         addStoryLog: () => {},
         getFullStats: () => ({}),
-        enhanceAttemptLock: lock,
     });
     const player = makePlayer();
 
     buildActions(player).enhanceItem('weapon-1');
     buildActions(player).enhanceItem('weapon-1');
 
-    assert.equal(dispatched.length, 1);
+    assert.equal(dispatched.length, 2);
     assert.equal(dispatched[0].type, AT.ENHANCE_ITEM);
+    assert.equal(dispatched[0].payload.expectedGold, dispatched[1].payload.expectedGold);
+
+    const state = {
+        player,
+        gameState: 'idle',
+        logs: [],
+        quickSlots: [null, null, null],
+        syncStatus: 'synced',
+    };
+    const first = equipmentActionMap.ENHANCE_ITEM(state, dispatched[0]);
+    const replayed = equipmentActionMap.ENHANCE_ITEM(first, dispatched[1]);
+    assert.equal(replayed, first);
 });

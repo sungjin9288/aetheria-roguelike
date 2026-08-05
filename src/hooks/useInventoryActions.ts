@@ -23,7 +23,6 @@ export const createInventoryActions = ({
     addLog,
     addStoryLog,
     getFullStats,
-    enhanceAttemptLock,
 }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
@@ -41,7 +40,6 @@ export const createInventoryActions = ({
         addLog,
         addStoryLog,
         getFullStats,
-        enhanceAttemptLock,
         emitUnlockedTitles,
         syncLevelQuests,
     };

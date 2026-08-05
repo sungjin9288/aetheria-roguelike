@@ -16,7 +16,6 @@ import { createInventoryActions } from './useInventoryActions';
 
 export const useGameEngine = () => {
     const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
-    const enhanceAttemptLock = useMemo(() => ({ until: 0 }), []);
     const {
         player,
         gameState,
@@ -101,7 +100,7 @@ export const useGameEngine = () => {
     // --- Compose Actions from Extracted Hooks ---
     const actions = useMemo(
         () => {
-            const deps = { player, gameState, uid, grave, currentEvent, isAiThinking, enemy, liveConfig, dispatch, addLog, addStoryLog, getFullStats, enhanceAttemptLock };
+            const deps = { player, gameState, uid, grave, currentEvent, isAiThinking, enemy, liveConfig, dispatch, addLog, addStoryLog, getFullStats };
             const gameActions = createGameActions(deps);
             const combatActions = createCombatActions(deps);
             const inventoryActions = createInventoryActions(deps);
@@ -177,7 +176,7 @@ export const useGameEngine = () => {
                 dispatch,
             };
         },
-        [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, enhanceAttemptLock, economyReceipt]
+        [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, economyReceipt]
     );
 
     const handleCommand = useCallback((text: any) => {

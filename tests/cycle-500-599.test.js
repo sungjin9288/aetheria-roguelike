@@ -212,11 +212,11 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/\bcount\b/.test(sig), 'count 파라미터 자체는 보존');
   });
 
-  test('cycle 503: 정합성 가드 — useInventoryActions callsite 3 args', async () => {
-      const source = await readInventoryActionsSource();
+  test('cycle 503: 정합성 가드 — equipment reducer callsite 3 args', async () => {
+      const source = await readSrc('src/reducers/handlers/equipmentHandlers.ts');
       const matches = source.match(/consumeInventoryItemByName\(/g) || [];
       assert.equal(matches.length, 1, 'consumeInventoryItemByName 호출 1건');
-      // 3 args 호출 (player.inv, requirement.materialName, requirement.materials)
+      // 3 args 호출 (latest inventory, canonical material name/count)
       assert.ok(/consumeInventoryItemByName\([^)]*?,[^)]*?,[^)]*?\)/.test(source),
           '3 args 호출 보존');
   });
@@ -478,7 +478,7 @@ import { readFile, readdir } from 'node:fs/promises';
       const callsites = [
           'src/components/EquipmentPanel.tsx',
           'src/components/SmartInventory.tsx',
-          'src/hooks/useInventoryActions.equipment.ts',
+          'src/reducers/handlers/equipmentHandlers.ts',
       ];
       for (const f of callsites) {
           const source = await readSrc(f);
@@ -3788,9 +3788,9 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/countInventoryItemByName\(player\?\.inv(?: \|\| \[\])?,\s*CONSTANTS\.ENHANCE_MATERIAL_NAME\)/.test(ep),
           'EquipmentPanel countInventoryItemByName 보존');
 
-      const inv = await readInventoryActionsSource();
-      assert.ok(/consumeInventoryItemByName\(player\.inv,\s*requirement\.materialName,\s*requirement\.materials\)/.test(inv),
-          'useInventoryActions consumeInventoryItemByName 보존');
+      const handler = await readSrc('src/reducers/handlers/equipmentHandlers.ts');
+      assert.ok(/consumeInventoryItemByName\([\s\S]*?preview\.requirement\.materialName,[\s\S]*?preview\.requirement\.materials/.test(handler),
+          'equipment reducer consumeInventoryItemByName 보존');
 
       const eu = await readSrc('src/utils/enhancementUtils.ts');
       assert.ok(/countInventoryItemByName\(inventory,\s*CONSTANTS\.ENHANCE_MATERIAL_NAME\)/.test(eu),
