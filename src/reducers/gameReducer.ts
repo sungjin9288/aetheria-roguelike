@@ -4,7 +4,7 @@ import { DEFAULT_EXPLORE_STATE } from '../utils/explorationPacing';
 import { bootstrapActionMap } from './handlers/bootstrapHandlers';
 import { uiActionMap, entityActionMap } from './handlers/uiHandlers';
 import { makeProgressionActionMap } from './handlers/progressionHandlers';
-import { featureActionMap } from './handlers/featureHandlers';
+import { makeFeatureActionMap } from './handlers/featureHandlers';
 import type { Player } from '../types';
 import { createCurrentRunProgress } from '../utils/runProgress';
 
@@ -126,7 +126,7 @@ const ACTION_MAP: ActionMap = {
     ...uiActionMap,
     ...entityActionMap,
     ...makeProgressionActionMap(INITIAL_STATE),
-    ...featureActionMap,
+    ...makeFeatureActionMap(INITIAL_STATE.player),
 };
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {

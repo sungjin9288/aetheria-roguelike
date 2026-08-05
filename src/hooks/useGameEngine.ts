@@ -16,6 +16,23 @@ import { createInventoryActions } from './useInventoryActions';
 
 export const useGameEngine = () => {
     const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
+    const combatPendingRef = useRef<any>(null);
+    const combatItemLocksRef = useRef<Set<string>>(new Set());
+    const clearPendingCombat = useCallback(() => {
+        if (combatPendingRef.current) clearTimeout(combatPendingRef.current);
+        combatPendingRef.current = null;
+    }, []);
+    const schedulePendingCombat = useCallback((callback: () => void, delay: number) => {
+        combatPendingRef.current = setTimeout(() => {
+            combatPendingRef.current = null;
+            callback();
+        }, delay);
+    }, []);
+    const claimCombatItem = useCallback((itemId: string) => {
+        if (combatItemLocksRef.current.has(itemId)) return false;
+        combatItemLocksRef.current.add(itemId);
+        return true;
+    }, []);
     const {
         player,
         gameState,
@@ -43,6 +60,12 @@ export const useGameEngine = () => {
 
     // --- Firebase Sync ---
     useFirebaseSync(state, dispatch);
+
+    useEffect(() => {
+        combatItemLocksRef.current.clear();
+    }, [player.inv, gameState, enemy]);
+
+    useEffect(() => () => clearPendingCombat(), [clearPendingCombat]);
 
     // --- Shared Helpers ---
     const addLog = useCallback(
@@ -100,9 +123,27 @@ export const useGameEngine = () => {
     // --- Compose Actions from Extracted Hooks ---
     const actions = useMemo(
         () => {
-            const deps = { player, gameState, uid, grave, currentEvent, isAiThinking, enemy, liveConfig, dispatch, addLog, addStoryLog, getFullStats };
+            const deps = {
+                player,
+                gameState,
+                uid,
+                grave,
+                currentEvent,
+                isAiThinking,
+                enemy,
+                liveConfig,
+                dispatch,
+                addLog,
+                addStoryLog,
+                getFullStats,
+            };
             const gameActions = createGameActions(deps);
-            const combatActions = createCombatActions(deps);
+            const combatActions = createCombatActions({
+                ...deps,
+                clearPendingCombat,
+                schedulePendingCombat,
+                claimCombatItem,
+            });
             const inventoryActions = createInventoryActions(deps);
 
             return {
@@ -176,7 +217,7 @@ export const useGameEngine = () => {
                 dispatch,
             };
         },
-        [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, economyReceipt]
+        [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, economyReceipt, clearPendingCombat, schedulePendingCombat, claimCombatItem]
     );
 
     const handleCommand = useCallback((text: any) => {

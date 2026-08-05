@@ -10,12 +10,12 @@ import { appendGrave } from '../../utils/graveUtils.js';
 import { getSelectedSkill } from './_helpers';
 import { handleVictoryOutcome } from './combatVictory';
 
-export const createCombatAttackActions = (deps: any, { emitUnlockedTitles }: any, pendingRef: any) => {
+export const createCombatAttackActions = (deps: any, { emitUnlockedTitles }: any, pendingControl: any) => {
     const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats, liveConfig } = deps;
 
     return {
         combat: (type: any) => {
-            if (pendingRef.current) { clearTimeout(pendingRef.current); pendingRef.current = null; }
+            pendingControl.clear();
             if (gameState !== GS.COMBAT || !enemy) return addLog('error', MSG.COMBAT_NOT_IN_BATTLE);
 
             const stats = getFullStats();
@@ -93,8 +93,7 @@ export const createCombatAttackActions = (deps: any, { emitUnlockedTitles }: any
                     return;
                 }
 
-                pendingRef.current = setTimeout(() => {
-                    pendingRef.current = null;
+                pendingControl.schedule(() => {
                     const turnTick = CombatEngine.tickCombatState(playerAfterAction);
                     turnTick.logs.forEach((log: any) => addLog(log.type, log.text));
                     const playerForEnemyTurn = turnTick.updatedPlayer;

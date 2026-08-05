@@ -251,12 +251,14 @@ export const CombatEngine = {
         return _processLoot(enemy, player, signaturePityMult);
     },
 
-    handleDefeat(player: Player, INITIAL_PLAYER: any) {
+    handleDefeat(player: Player, INITIAL_PLAYER: any, rng?: () => number, now?: () => number) {
         // cycle 609: buildGraveData에 Math.random / Date.now 명시 추가 — caller
         //   에 explicit args 추가하여 buildGraveData defaults reachable →
         //   unreachable conversion (cycle 608 explicit default-elimination
         //   pattern 2번째 적용).
-        const graveData = buildGraveData(player, Math.random, Date.now);
+        const graveData = rng && now
+            ? buildGraveData(player, rng, now)
+            : buildGraveData(player, Math.random, Date.now);
 
         const starterState: any = { ...INITIAL_PLAYER };
         const meta = { ...this.DEFAULT_META, ...(player.meta || {}) };

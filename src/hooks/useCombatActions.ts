@@ -13,12 +13,24 @@ export const createCombatActions = (deps: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
     const shared = { emitUnlockedTitles };
 
-    // pendingEnemyTurn을 ref 객체로 래핑하여 combatUseItem과 공유
-    const pendingRef: { current: any } = { current: null };
+    // 공격과 아이템 사용이 같은 지연 적 턴을 취소하거나 예약하도록 공유한다.
+    let fallbackPending: any = null;
+    const pendingControl = {
+        clear: deps.clearPendingCombat || (() => {
+            if (fallbackPending) clearTimeout(fallbackPending);
+            fallbackPending = null;
+        }),
+        schedule: deps.schedulePendingCombat || ((callback: () => void, delay: number) => {
+            fallbackPending = setTimeout(() => {
+                fallbackPending = null;
+                callback();
+            }, delay);
+        }),
+    };
 
     return {
-        ...createCombatAttackActions(deps, shared, pendingRef),
-        ...createCombatItemActions(deps, shared, pendingRef),
+        ...createCombatAttackActions(deps, shared, pendingControl),
+        ...createCombatItemActions(deps, shared, pendingControl),
         getSelectedSkill: () => getSelectedSkill(player)?.skill || null,
     };
 };

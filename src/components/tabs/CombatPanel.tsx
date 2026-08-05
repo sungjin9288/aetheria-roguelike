@@ -327,6 +327,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
             {combatConsumables.map((item: any) => (
               <Motion.button
                 key={`${item.type}:${item.name}`}
+                data-testid={`combat-consumable-${item.id}`}
                 whileTap={{ scale: 0.97 }}
                 disabled={isAiThinking}
                 onClick={() => handleConsumableUse(item)}

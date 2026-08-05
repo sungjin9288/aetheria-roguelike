@@ -1,72 +1,71 @@
-import { CombatEngine } from '../../systems/CombatEngine';
 import { INITIAL_STATE } from '../../reducers/gameReducer';
 import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
-import { toArray, buildRunSummary } from '../../utils/gameUtils';
-import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
-import { appendGrave } from '../../utils/graveUtils.js';
+import { resolveCombatItemTurn } from '../../systems/combatItemTurn';
 import { handleVictoryOutcome } from './combatVictory';
 import type { Item } from '../../types/index.js';
 
-export const createCombatItemActions = (deps: any, { emitUnlockedTitles }: any, pendingRef: any) => {
-    const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats, liveConfig } = deps;
+export const createCombatItemActions = (deps: any, { emitUnlockedTitles }: any, pendingControl: any) => {
+    const {
+        player,
+        gameState,
+        enemy,
+        dispatch,
+        addLog,
+        addStoryLog,
+        liveConfig,
+        claimCombatItem,
+    } = deps;
+    const fallbackItemLocks = new Set<string>();
 
     return {
         combatUseItem: (item: Item) => {
-            if (pendingRef.current) { clearTimeout(pendingRef.current); pendingRef.current = null; }
-            if (gameState !== GS.COMBAT || !enemy) return addLog('error', MSG.COMBAT_NOT_IN_BATTLE);
+            pendingControl.clear();
+            if (gameState !== GS.COMBAT || !enemy) {
+                addLog('error', MSG.COMBAT_NOT_IN_BATTLE);
+                return;
+            }
 
             const inventoryItem = player.inv.find((entry: any) => entry.id === item?.id);
-            if (!inventoryItem) return addLog('error', MSG.COMBAT_ITEM_NOT_FOUND);
+            if (!inventoryItem) {
+                addLog('error', MSG.COMBAT_ITEM_NOT_FOUND);
+                return;
+            }
             if (!['hp', 'mp', 'cure', 'buff'].includes(inventoryItem.type)) {
-                return addLog('error', MSG.COMBAT_CONSUMABLE_ONLY);
+                addLog('error', MSG.COMBAT_CONSUMABLE_ONLY);
+                return;
             }
+            const accepted = claimCombatItem
+                ? claimCombatItem(inventoryItem.id)
+                : !fallbackItemLocks.has(inventoryItem.id);
+            if (!accepted) return;
+            fallbackItemLocks.add(inventoryItem.id);
 
-            let updatedPlayer = player;
-            const stats = getFullStats(player);
+            const seed = Math.floor(Math.random() * 4294967296);
+            const now = Date.now();
+            const result = resolveCombatItemTurn({
+                player,
+                enemy,
+                item: inventoryItem,
+                initialPlayer: INITIAL_STATE.player,
+                seed,
+                now,
+            });
 
-            if (inventoryItem.type === 'hp') {
-                updatedPlayer = { ...player, hp: Math.min(stats.maxHp, player.hp + (inventoryItem.val || 0)), inv: player.inv.filter((e: any) => e.id !== inventoryItem.id) };
-                addLog('success', MSG.ITEM_USE_SIMPLE(inventoryItem.name));
-            } else if (inventoryItem.type === 'mp') {
-                updatedPlayer = { ...player, mp: Math.min(stats.maxMp, player.mp + (inventoryItem.val || 0)), inv: player.inv.filter((e: any) => e.id !== inventoryItem.id) };
-                addLog('success', MSG.ITEM_USE_SIMPLE(inventoryItem.name));
-            } else if (inventoryItem.type === 'cure') {
-                updatedPlayer = { ...player, status: toArray(player.status).filter((s: any) => s !== inventoryItem.effect), inv: player.inv.filter((e: any) => e.id !== inventoryItem.id) };
-                addLog('success', MSG.ITEM_USE_CURE(inventoryItem.name));
-            } else if (inventoryItem.type === 'buff') {
-                updatedPlayer = {
-                    ...player,
-                    tempBuff: {
-                        atk: inventoryItem.effect === 'atk_up' || inventoryItem.effect === 'all_up' ? (inventoryItem.val || 1.3) - 1 : 0,
-                        def: inventoryItem.effect === 'def_up' || inventoryItem.effect === 'all_up' ? (inventoryItem.val || 1.3) - 1 : 0,
-                        turn: inventoryItem.turn || 3, name: inventoryItem.name
-                    },
-                    inv: player.inv.filter((e: any) => e.id !== inventoryItem.id)
-                };
-                addLog('success', MSG.ITEM_USE_BUFF(inventoryItem.name));
-            }
+            dispatch({
+                type: AT.USE_COMBAT_ITEM,
+                payload: { itemId: inventoryItem.id, seed, now },
+            });
 
-            dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
-
-            const turnTick = CombatEngine.tickCombatState(updatedPlayer);
-            turnTick.logs.forEach((log: any) => addLog(log.type, log.text));
-            const playerForEnemyTurn = turnTick.updatedPlayer;
-            dispatch({ type: AT.SET_PLAYER, payload: playerForEnemyTurn });
-
-            const counterStats = getFullStats(playerForEnemyTurn);
-            const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, enemy, counterStats);
-            counterResult.logs.forEach((log: any) => addLog(log.type, log.text));
-
-            if (counterResult.isEnemyDead) {
-                dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
-                dispatch({ type: AT.SET_ENEMY, payload: null });
-                addLog('success', MSG.COMBAT_DOT_KILL(enemy.name));
+            if (result.kind === 'victory') {
                 handleVictoryOutcome({
-                    playerAfterCombat: counterResult.updatedPlayer,
+                    playerAfterCombat: result.player,
                     deadEnemy: enemy,
-                    stats: counterStats, dispatch, addLog, addStoryLog,
+                    stats: result.victoryStats,
+                    dispatch,
+                    addLog,
+                    addStoryLog,
                     emitUnlockedTitles,
                     extendedChecks: false,
                     liveConfig,
@@ -74,28 +73,10 @@ export const createCombatItemActions = (deps: any, { emitUnlockedTitles }: any, 
                 return;
             }
 
-            if (counterResult.isDead) {
-                const deadPlayer = { ...counterResult.updatedPlayer, killStreak: 0 };
-                const defeatResult = CombatEngine.handleDefeat(deadPlayer, INITIAL_STATE.player);
-                const deathRecordPlayer = { ...defeatResult.updatedPlayer, stats: pushBattleRecord(defeatResult.updatedPlayer.stats, makeBattleRecord('death', 0)) };
-                dispatch({ type: AT.SET_RUN_SUMMARY, payload: buildRunSummary(deadPlayer, playerForEnemyTurn.loc) });
-                dispatch({ type: AT.SET_GRAVE, payload: appendGrave(grave, defeatResult.graveData) });
-                dispatch({ type: AT.SET_PLAYER, payload: deathRecordPlayer });
-                dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
-                dispatch({ type: AT.SET_ENEMY, payload: null });
-                emitUnlockedTitles(deathRecordPlayer);
-                defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
-                addStoryLog('death', { loc: playerForEnemyTurn.loc });
-                // cycle 275: 'ruinRecap' 회상 narrative — story 템플릿 시리즈 마무리.
-                if (typeof addStoryLog === 'function') {
-                    addStoryLog('ruinRecap', { name: deadPlayer.name, level: deadPlayer.level });
-                }
-                return;
+            if (result.kind === 'defeat' && typeof addStoryLog === 'function') {
+                void addStoryLog('death', { loc: player.loc });
+                void addStoryLog('ruinRecap', { name: player.name, level: player.level });
             }
-
-            dispatch({ type: AT.SET_ENEMY, payload: counterResult.updatedEnemy });
-            dispatch({ type: AT.SET_PLAYER, payload: counterResult.updatedPlayer });
-            dispatch({ type: AT.SET_VISUAL_EFFECT, payload: counterResult.isCrit ? 'shake' : null });
         },
     };
 };

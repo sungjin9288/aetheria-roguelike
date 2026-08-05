@@ -1024,7 +1024,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     id: 'smoke-combat-heal',
                     name: '회복 물약',
                     type: 'hp',
-                    heal: 50,
+                    val: 50,
                     desc: '생명 50 회복',
                     desc_stat: '생명 50 회복',
                 };

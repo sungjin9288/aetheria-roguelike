@@ -391,6 +391,10 @@
 - **Rule:** 크리스탈·계승 정수처럼 여러 여정에 보존되는 재화의 구매 action은 offer/node identity와 사용자가 본 잔액·단계 token만 전달한다. reducer가 최신 재화·보유 ledger와 canonical 상품 데이터를 확인하고 비용, 지급, 단계와 성공 기록을 한 transition에서 확정하며 같은 snapshot의 재전송은 exact no-op으로 처리한다
 - **Rationale:** UI가 비용·상품명·성공 로그를 만들거나 repeatable 성장을 단순 dispatch하면 빠른 두 번 입력이 영구 재화를 중복 차감하고 플레이어가 의도하지 않은 다음 단계까지 구매할 수 있다. 영구 투자일수록 현재 상태 검증과 accepted feedback을 한 authority에 모아야 오래 쌓은 진행을 신뢰할 수 있다
 
+### R87: Resolve A Combat Item As One Turn
+- **Rule:** 전투 소모품 action은 item identity와 explicit entropy만 전달한다. reducer가 최신 전투 상태, 적과 inventory를 확인하고 아이템 소비, 상태 tick, 적 행동, quick slot, 전투 지속·패배·DoT 종료를 한 transition에서 확정한다. 같은 입력의 replay는 아이템 부재로 exact no-op이어야 하며, 지연 적 턴과 비동기 후처리도 render마다 새로 만들어지는 지역 변수에 의존하지 않는다
+- **Rationale:** 전투 소모품은 단순 회복이 아니라 적에게 한 턴을 넘기는 행동이다. 소비와 반격·승패를 여러 snapshot dispatch로 나누면 rapid tap에서 물약, 피해, 유해와 보상이 서로 다른 횟수로 반영될 수 있으므로, 결정적 turn resolver와 current-state commit을 같은 권한 경계로 묶어야 전투 결과를 신뢰할 수 있다
+
 ---
 
 ## 📝 Post-Mortem Template

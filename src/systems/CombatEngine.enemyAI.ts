@@ -9,7 +9,8 @@ import type { Monster, Player } from '../types/index.js';
  * this 교차호출(tickEnemyStatus / applyFatalProtection)은 호출 시점 바인딩 → 객체 any.
  */
 export const enemyAIMethods: any = {
-    enemyAttack(player: Player, enemy: Monster, stats: any) {
+    enemyAttack(player: Player, enemy: Monster, stats: any, rng?: () => number) {
+        const random = typeof rng === 'function' ? rng : Math.random;
         let updatedEnemy = { ...enemy };
         let updatedPlayer: any = { ...player };
         const logs: any[] = [];
@@ -49,7 +50,7 @@ export const enemyAIMethods: any = {
         //   stealth(skill) 후순위로 평가 — 은신은 명시적 발동, evasion은 passive armor 효과.
         //   cycle 222-225 silent dead config 시리즈 마지막 합류.
         const armorEvasion = (updatedPlayer.equip?.armor as any)?.evasion || 0;
-        if (armorEvasion > 0 && Math.random() < armorEvasion) {
+        if (armorEvasion > 0 && random() < armorEvasion) {
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
                 logs: [...logs, { type: 'success', text: `[회피] ${enemy.name}의 공격을 회피했습니다!` }]
@@ -82,10 +83,10 @@ export const enemyAIMethods: any = {
                         const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
                         const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
                         const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-                        if (!currentStatus.includes(p3.statusEffect) && Math.random() >= resistChance) {
+                        if (!currentStatus.includes(p3.statusEffect) && random() >= resistChance) {
                             updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p3.statusEffect] };
                             logs.push({ type: 'warning', text: `[Phase 3] [${statusLabels[p3.statusEffect] || p3.statusEffect}] 상태이상 부여!` });
-                        } else if (resistRelic && Math.random() < resistChance) {
+                        } else if (resistRelic && random() < resistChance) {
                             logs.push({ type: 'success', text: `[고대의 봉인] 상태이상을 저항했습니다!` });
                         }
                     }
@@ -95,7 +96,7 @@ export const enemyAIMethods: any = {
             // Phase 2 (threshold: BALANCE.BOSS_PHASE2_THRESHOLD ± 10% 랜덤)
             if (updatedEnemy.phase2 && !updatedEnemy.phase2Triggered) {
                 const baseThreshold = updatedEnemy.phase2.threshold ?? BALANCE.BOSS_PHASE2_THRESHOLD;
-                const jitter = (Math.random() - 0.5) * 0.2;
+                const jitter = (random() - 0.5) * 0.2;
                 const threshold = Math.max(0.2, Math.min(0.7, baseThreshold + jitter));
                 if (hpRatio <= threshold) {
                     const p2 = updatedEnemy.phase2;
@@ -111,10 +112,10 @@ export const enemyAIMethods: any = {
                         const resistRelic2 = relics.find((r: any) => r.effect === 'status_resist');
                         const resistChance2 = resistRelic2 ? (resistRelic2.val || 0) : 0;
                         const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-                        if (!currentStatus.includes(p2.statusEffect) && Math.random() >= resistChance2) {
+                        if (!currentStatus.includes(p2.statusEffect) && random() >= resistChance2) {
                             updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p2.statusEffect] };
                             logs.push({ type: 'warning', text: `[Phase 2] [${statusLabels[p2.statusEffect] || p2.statusEffect}] 상태이상 부여!` });
-                        } else if (resistRelic2 && Math.random() < resistChance2) {
+                        } else if (resistRelic2 && random() < resistChance2) {
                             logs.push({ type: 'success', text: `[고대의 봉인] 상태이상을 저항했습니다!` });
                         }
                     }
@@ -139,7 +140,7 @@ export const enemyAIMethods: any = {
             : (updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
 
         const pattern = effectivePattern;
-        const roll = Math.random();
+        const roll = random();
         if (roll < pattern.guardChance) {
             return {
                 updatedPlayer,
@@ -153,7 +154,7 @@ export const enemyAIMethods: any = {
         const heavy = roll < pattern.guardChance + pattern.heavyChance;
         let mult = heavy ? 1.4 : 1;
         const critBlockRelic = relics.find((relic: any) => relic.effect === 'crit_block');
-        if (heavy && critBlockRelic && Math.random() < critBlockRelic.val) {
+        if (heavy && critBlockRelic && random() < critBlockRelic.val) {
             mult = 1;
             logs.push({ type: 'event', text: '[강철 의지] 강타를 흘려냈습니다!' });
         }
@@ -171,7 +172,7 @@ export const enemyAIMethods: any = {
             updatedEnemy = { ...updatedEnemy, hp: enemyHpAfterReflect };
             logs.push({ type: 'event', text: `[반사] 반사 피해 ${reflectDmg}!` });
             // 스턴 확률
-            if (absoluteReflectSyn && Math.random() < (absoluteReflectSyn.bonus.stunOnReflect || 0)) {
+            if (absoluteReflectSyn && random() < (absoluteReflectSyn.bonus.stunOnReflect || 0)) {
                 updatedEnemy = { ...updatedEnemy, stunnedTurns: Math.max(updatedEnemy.stunnedTurns ?? 0, 1) };
                 logs.push({ type: 'event', text: '[절대 반사] 반사 충격으로 적이 기절!' });
             }
@@ -215,12 +216,12 @@ export const enemyAIMethods: any = {
         }
 
         // 몬스터 공격 시 상태이상 부여 (pattern.statusEffect + pattern.statusChance 지원)
-        if (heavy && updatedEnemy.pattern?.statusEffect && Math.random() < (updatedEnemy.pattern.statusChance || 0.25)) {
+        if (heavy && updatedEnemy.pattern?.statusEffect && random() < (updatedEnemy.pattern.statusChance || 0.25)) {
             const sEff = updatedEnemy.pattern.statusEffect;
             const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
             const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
             const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-            if (!currentStatus.includes(sEff) && Math.random() >= resistChance) {
+            if (!currentStatus.includes(sEff) && random() >= resistChance) {
                 const statusLabels: Record<string, string> = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주', bleed: '출혈' };
                 updatedPlayer = { ...updatedPlayer, status: [...currentStatus, sEff] };
                 logs.push({ type: 'warning', text: `[${updatedEnemy.name}] [${statusLabels[sEff] || sEff}] 부여!` });
@@ -241,7 +242,7 @@ export const enemyAIMethods: any = {
             const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
             const currentStatus = Array.isArray(protectedResult.updatedPlayer.status) ? protectedResult.updatedPlayer.status : [];
             if (!currentStatus.includes(enemyStatusOnHit)) {
-                if (Math.random() >= resistChance) {
+                if (random() >= resistChance) {
                     const statusLabels: Record<string, string> = {
                         poison: '독', burn: '화상', freeze: '빙결', curse: '저주',
                         bleed: '출혈', stun: '기절', blind: '실명', fear: '공포',
@@ -267,7 +268,7 @@ export const enemyAIMethods: any = {
         if (playerBuff?.counterChance > 0 && playerBuff.turn > 0
             && !protectedResult.isDead
             && (finalEnemy.hp ?? 0) > 0
-            && Math.random() < playerBuff.counterChance) {
+            && random() < playerBuff.counterChance) {
             const counterDmg = Math.max(1, Math.floor(stats.atk));
             finalEnemy = { ...finalEnemy, hp: Math.max(0, (finalEnemy.hp ?? 0) - counterDmg) };
             logs.push({ type: 'event', text: `[${playerBuff.name}] 반격! ${finalEnemy.name}에게 ${counterDmg} 피해!` });

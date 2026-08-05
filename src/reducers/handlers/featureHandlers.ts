@@ -5,13 +5,15 @@ import { questActionMap } from './questHandlers';
 import { economyActionMap } from './economyHandlers';
 import { equipmentActionMap } from './equipmentHandlers';
 import { premiumActionMap } from './premiumHandlers';
+import { makeCombatActionMap } from './combatHandlers';
 
-export const featureActionMap = {
+export const makeFeatureActionMap = (initialPlayer: any) => ({
     ...protocolActionMap,
     ...rewardActionMap,
     ...questActionMap,
     ...economyActionMap,
     ...equipmentActionMap,
     ...premiumActionMap,
+    ...makeCombatActionMap(initialPlayer),
     ...multiplayerActionMap,
-};
+});

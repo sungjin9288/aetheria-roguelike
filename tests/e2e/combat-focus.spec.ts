@@ -54,6 +54,24 @@ test.describe('Combat focus mode', () => {
         expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(1);
     });
 
+    test('전투 소모품 연속 입력은 한 번의 아이템 턴만 확정한다', async ({ page }) => {
+        await page.getByTestId('combat-action-item').click();
+        const potion = page.getByTestId('combat-consumable-smoke-combat-heal');
+        await expect(potion).toBeVisible();
+
+        await potion.evaluate((button: HTMLButtonElement) => {
+            button.click();
+            button.click();
+        });
+
+        await expect(potion).toBeHidden();
+        await expect.poll(async () => {
+            const snapshot = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+            return snapshot.logTail.filter((log: { text: string }) => log.text.includes('회복 물약')).length;
+        }).toBe(1);
+        await expect(page.getByTestId('combat-focus-panel')).toBeVisible();
+    });
+
     test('기력이 부족한 기술은 필요한 비용을 보여주고 무반응 입력을 막는다', async ({ page }) => {
         const seeded = await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.seedCombatSkillReadinessScenario?.(2)
