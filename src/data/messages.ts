@@ -261,7 +261,6 @@ export const MSG = {
     JOB_CHANGE_INVALID: '전직 가능한 직업이 아닙니다.',
     JOB_CHANGE_LEVEL: '전직 레벨이 부족합니다.',
     QUEST_TOWN_ONLY: '퀘스트 수락은 마을 게시판에서만 가능합니다.',
-    QUEST_ALREADY_ACCEPTED: '이미 수락한 퀘스트입니다.',
     QUEST_ALREADY_COMPLETED: '이미 완료해 보상을 받은 퀘스트입니다.',
     QUEST_LEVEL_REQUIRED: (lv: number | undefined) => `레벨 ${lv} 이상부터 수락할 수 있는 퀘스트입니다.`,
     QUEST_PREREQUISITE_REQUIRED: (title: string | undefined) => `‘${title}’ 임무를 먼저 완료해야 이어지는 이야기를 받을 수 있습니다.`,
@@ -276,7 +275,6 @@ export const MSG = {
     EXPEDITION_FOCUS_REMOVED: (title: string) => `이번 원정 임무 제외: ${title}`,
     BOUNTY_TOWN_ONLY: '현상수배 수주는 마을 게시판에서만 가능합니다.',
     BOUNTY_ABANDONED: '현상수배 임무를 포기했습니다. 오늘은 새 현상수배를 받을 수 없습니다.',
-    BOUNTY_ALREADY_ACTIVE: '이미 진행 중인 현상수배가 있습니다. (퀘스트 완료 후 수주 가능)',
     BOUNTY_DAILY_LIMIT: '오늘 현상수배는 이미 발급되었습니다. 내일 다시 요청하세요.',
     // cycle 116: BOUNTY_ACCEPTED 제거 — BOUNTY_ACCEPTED_NEW가 active.
     ASCEND_CANCEL: '계승을 미루고 현재 여정을 계속합니다.',

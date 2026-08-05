@@ -44,20 +44,37 @@ test('명시적으로 고른 원정 임무는 자동 우선순위보다 앞서�
     assert.deepEqual(getFocusedExpeditionQuestEntries(player).map((entry) => entry.id), [3, 1]);
 });
 
-test('reducer는 유효한 1~3개 편성만 받고 4개, 중복, 없는 임무는 거부한다', () => {
+test('reducer는 유효한 1~3개 편성만 받고 4번째, 중복 목표 상태, 없는 임무는 거부한다', () => {
     const state = { ...INITIAL_STATE, player: makePlayer({ expeditionFocusQuestIds: [80] }) };
-    const valid = gameReducer(state, { type: AT.SET_EXPEDITION_FOCUS, payload: [80, 1, 3] });
-    const overLimit = gameReducer(valid, { type: AT.SET_EXPEDITION_FOCUS, payload: [80, 1, 2, 3] });
-    const duplicate = gameReducer(valid, { type: AT.SET_EXPEDITION_FOCUS, payload: [80, 80] });
-    const unknown = gameReducer(valid, { type: AT.SET_EXPEDITION_FOCUS, payload: [99999] });
+    const withSecond = gameReducer(state, {
+        type: AT.UPDATE_EXPEDITION_FOCUS_QUEST,
+        payload: { questId: 1, selected: true },
+    });
+    const valid = gameReducer(withSecond, {
+        type: AT.UPDATE_EXPEDITION_FOCUS_QUEST,
+        payload: { questId: 3, selected: true },
+    });
+    const overLimit = gameReducer(valid, {
+        type: AT.UPDATE_EXPEDITION_FOCUS_QUEST,
+        payload: { questId: 2, selected: true },
+    });
+    const duplicate = gameReducer(valid, {
+        type: AT.UPDATE_EXPEDITION_FOCUS_QUEST,
+        payload: { questId: 3, selected: true },
+    });
+    const unknown = gameReducer(valid, {
+        type: AT.UPDATE_EXPEDITION_FOCUS_QUEST,
+        payload: { questId: 99999, selected: true },
+    });
 
     assert.deepEqual(valid.player.expeditionFocusQuestIds, [80, 1, 3]);
-    assert.equal(overLimit, valid);
+    assert.deepEqual(overLimit.player.expeditionFocusQuestIds, valid.player.expeditionFocusQuestIds);
+    assert.match(overLimit.logs.at(-1).text, /최대 3개/);
     assert.equal(duplicate, valid);
     assert.equal(unknown, valid);
 });
 
-test('quest action은 마을에서도 4번째 원정 임무 선택을 dispatch하지 않는다', () => {
+test('quest action의 4번째 원정 임무 요청은 reducer가 최신 편성에서 거부한다', () => {
     const dispatches = [];
     const logs = [];
     const player = makePlayer({ expeditionFocusQuestIds: [80, 1, 2] });
@@ -70,8 +87,13 @@ test('quest action은 마을에서도 4번째 원정 임무 선택을 dispatch�
 
     actions.toggleExpeditionFocusQuest(3);
 
-    assert.equal(dispatches.length, 0);
-    assert.match(logs[0].text, /최대 3개/);
+    assert.equal(dispatches.length, 1);
+    assert.equal(dispatches[0].type, AT.UPDATE_EXPEDITION_FOCUS_QUEST);
+    const state = { ...INITIAL_STATE, player, logs: [] };
+    const next = gameReducer(state, dispatches[0]);
+    assert.deepEqual(next.player.expeditionFocusQuestIds, [80, 1, 2]);
+    assert.match(next.logs[0].text, /최대 3개/);
+    assert.deepEqual(logs, []);
 });
 
 test('출정 시 편성이 snapshot으로 고정되어 이후 마을 draft 변경과 분리된다', () => {

@@ -45,6 +45,36 @@ test('첫 이야기 다음에는 짧은 일반 토벌을 먼저 추천한다', a
     await expect(firstRecommendation).not.toContainText('거미떼 퇴치');
 });
 
+test('추천 임무 버튼이 같은 frame에 두 번 눌려도 임무와 안내는 한 번만 추가된다', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await startE2ERun(page);
+    await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedPostFirstStoryScenario?.());
+
+    await page.getByTestId('control-quests').click();
+    const acceptButton = page.getByTestId('quest-featured-list')
+        .getByTestId('quest-decision-row')
+        .first()
+        .getByTestId('quest-board-start-operation');
+    await expect(acceptButton).toBeVisible({ timeout: 8_000 });
+    await acceptButton.evaluate((button) => {
+        if (!(button instanceof HTMLElement)) return;
+        button.click();
+        button.click();
+    });
+
+    await expect(page.getByTestId('quest-board-panel')).toBeHidden({ timeout: 8_000 });
+    await expect.poll(async () => page.evaluate(() => {
+        const state = window.render_game_to_text?.();
+        if (!state) return null;
+        const parsed = JSON.parse(state);
+        return {
+            questCount: parsed.player?.questCount,
+            expeditionFocusQuestIds: parsed.player?.expeditionFocusQuestIds,
+            acceptedLogs: parsed.logTail?.filter((log: { text: string }) => log.text === '퀘스트 수락: 슬라임 소탕').length,
+        };
+    })).toEqual({ questCount: 1, expeditionFocusQuestIds: [1], acceptedLogs: 1 });
+});
+
 test('진행 중인 긴 임무를 손실 확인 후 포기할 수 있다', async ({ page }) => {
     await startE2ERun(page);
     await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAbandonableQuestScenario?.());

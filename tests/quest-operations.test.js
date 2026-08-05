@@ -8,6 +8,39 @@ import { createQuestActions } from '../src/hooks/gameActions/questActions.js';
 import { MAPS } from '../src/data/maps.js';
 import { MSG } from '../src/data/messages.js';
 import { QUESTS } from '../src/data/quests.js';
+import { AT } from '../src/reducers/actionTypes.js';
+import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
+import { getProtocolDayKey } from '../src/utils/protocolCycle.js';
+
+const runQuestAction = (player, invoke) => {
+    let state = {
+        ...INITIAL_STATE,
+        player: {
+            ...structuredClone(INITIAL_STATE.player),
+            ...player,
+            stats: {
+                ...structuredClone(INITIAL_STATE.player.stats),
+                ...(player.stats || {}),
+            },
+        },
+        logs: [],
+        syncStatus: 'synced',
+    };
+    const actions = createQuestActions({
+        player: state.player,
+        grave: null,
+        dispatch: (action) => { state = gameReducer(state, action); },
+        addLog: (type, text) => {
+            state = gameReducer(state, {
+                type: AT.ADD_LOG,
+                payload: { type, text, id: `test-${state.logs.length}` },
+            });
+        },
+    }, { emitUnlockedTitles: () => {} });
+
+    invoke(actions);
+    return state;
+};
 
 const SYSTEM_QUEST_TARGETS = new Set([
     'Level', 'level', 'kills', 'explores', 'deaths', 'rests', 'crafts', 'synths',
@@ -243,25 +276,15 @@ test('quest descriptions that name a map use the same destination', () => {
 });
 
 test('quest acceptance records the current destination exploration count as its baseline', () => {
-    let updatedPlayer;
     const player = {
         level: 5,
         loc: '시작의 마을',
         quests: [],
         stats: { claimedQuestIds: [80], exploresByLocation: { '잊혀진 폐허': 6 } },
     };
-    const actions = createQuestActions({
-        player,
-        grave: null,
-        dispatch: (action) => {
-            updatedPlayer = typeof action.payload === 'function' ? action.payload(player) : action.payload;
-        },
-        addLog: () => {},
-    }, { emitUnlockedTitles: () => {} });
+    const state = runQuestAction(player, (actions) => actions.acceptQuest(81));
 
-    actions.acceptQuest(81);
-
-    assert.deepEqual(updatedPlayer.quests, [{ id: 81, progress: 0, startExploreCount: 6 }]);
+    assert.deepEqual(state.player.quests, [{ id: 81, progress: 0, startExploreCount: 6 }]);
 });
 
 test('active location exploration guidance names the destination and remaining attempts', () => {
@@ -389,121 +412,86 @@ test('a regular monster quest is not treated as a boss quest just because its ma
 });
 
 test('quest action rejects direct re-accept of a completed static quest', () => {
-    const logs = [];
-    let dispatchCount = 0;
     const player = {
         level: 1,
         loc: '시작의 마을',
         quests: [],
         stats: { claimedQuestIds: [80] },
     };
-    const actions = createQuestActions({
-        player,
-        grave: null,
-        dispatch: () => { dispatchCount += 1; },
-        addLog: (type, text) => logs.push({ type, text }),
-    }, { emitUnlockedTitles: () => {} });
+    const state = runQuestAction(player, (actions) => actions.acceptQuest(80));
 
-    actions.acceptQuest(80);
-
-    assert.equal(dispatchCount, 0);
-    assert.deepEqual(logs, [{ type: 'info', text: MSG.QUEST_ALREADY_COMPLETED }]);
+    assert.deepEqual(state.player.quests, []);
+    assert.equal(state.logs.length, 1);
+    assert.deepEqual({ type: state.logs[0].type, text: state.logs[0].text }, { type: 'info', text: MSG.QUEST_ALREADY_COMPLETED });
 });
 
 test('quest action rejects direct acceptance of a locked story chapter', () => {
-    const logs = [];
-    let dispatchCount = 0;
     const player = {
         level: 50,
         loc: '시작의 마을',
         quests: [],
         stats: { claimedQuestIds: [] },
     };
-    const actions = createQuestActions({
-        player,
-        grave: null,
-        dispatch: () => { dispatchCount += 1; },
-        addLog: (type, text) => logs.push({ type, text }),
-    }, { emitUnlockedTitles: () => {} });
+    const state = runQuestAction(player, (actions) => actions.acceptQuest(87));
 
-    actions.acceptQuest(87);
-
-    assert.equal(dispatchCount, 0);
-    assert.deepEqual(logs, [{ type: 'info', text: MSG.QUEST_PREREQUISITE_REQUIRED('[스토리] 에테르의 균열') }]);
+    assert.deepEqual(state.player.quests, []);
+    assert.equal(state.logs.length, 1);
+    assert.deepEqual(
+        { type: state.logs[0].type, text: state.logs[0].text },
+        { type: 'info', text: MSG.QUEST_PREREQUISITE_REQUIRED('[스토리] 에테르의 균열') },
+    );
 });
 
 test('quest action abandons an incomplete mission from the town board', () => {
-    const logs = [];
-    let updatedPlayer;
     const player = {
         level: 2,
         loc: '시작의 마을',
         quests: [{ id: 110, progress: 2 }],
         stats: { claimedQuestIds: [80] },
     };
-    const actions = createQuestActions({
-        player,
-        grave: null,
-        dispatch: (action) => {
-            updatedPlayer = typeof action.payload === 'function' ? action.payload(player) : action.payload;
-        },
-        addLog: (type, text) => logs.push({ type, text }),
-    }, { emitUnlockedTitles: () => {} });
+    const state = runQuestAction(player, (actions) => actions.abandonQuest(110));
 
-    actions.abandonQuest(110);
-
-    assert.deepEqual(updatedPlayer.quests, []);
-    assert.deepEqual(logs, [{ type: 'event', text: MSG.QUEST_ABANDONED('거미떼 퇴치') }]);
+    assert.deepEqual(state.player.quests, []);
+    assert.deepEqual(
+        { type: state.logs[0].type, text: state.logs[0].text },
+        { type: 'event', text: MSG.QUEST_ABANDONED('거미떼 퇴치') },
+    );
 });
 
 test('quest action protects a completed mission reward from abandonment', () => {
-    const logs = [];
-    let dispatchCount = 0;
     const player = {
         level: 1,
         loc: '시작의 마을',
         quests: [{ id: 1, progress: 3 }],
         stats: {},
     };
-    const actions = createQuestActions({
-        player,
-        grave: null,
-        dispatch: () => { dispatchCount += 1; },
-        addLog: (type, text) => logs.push({ type, text }),
-    }, { emitUnlockedTitles: () => {} });
+    const state = runQuestAction(player, (actions) => actions.abandonQuest(1));
 
-    actions.abandonQuest(1);
-
-    assert.equal(dispatchCount, 0);
-    assert.deepEqual(logs, [{ type: 'info', text: MSG.QUEST_ABANDON_REWARD_PENDING }]);
+    assert.equal(state.player.quests.length, 1);
+    assert.deepEqual(
+        { type: state.logs[0].type, text: state.logs[0].text },
+        { type: 'info', text: MSG.QUEST_ABANDON_REWARD_PENDING },
+    );
 });
 
 test('quest action rejects abandonment outside a safe zone', () => {
-    const logs = [];
-    let dispatchCount = 0;
     const player = {
         level: 2,
         loc: '고요한 숲',
         quests: [{ id: 110, progress: 2 }],
         stats: {},
     };
-    const actions = createQuestActions({
-        player,
-        grave: null,
-        dispatch: () => { dispatchCount += 1; },
-        addLog: (type, text) => logs.push({ type, text }),
-    }, { emitUnlockedTitles: () => {} });
+    const state = runQuestAction(player, (actions) => actions.abandonQuest(110));
 
-    actions.abandonQuest(110);
-
-    assert.equal(dispatchCount, 0);
-    assert.deepEqual(logs, [{ type: 'error', text: MSG.QUEST_ABANDON_TOWN_ONLY }]);
+    assert.equal(state.player.quests.length, 1);
+    assert.deepEqual(
+        { type: state.logs[0].type, text: state.logs[0].text },
+        { type: 'error', text: MSG.QUEST_ABANDON_TOWN_ONLY },
+    );
 });
 
 test('abandoning a bounty preserves its daily issuance limit', () => {
-    const today = new Date().toISOString().slice(0, 10);
-    const logs = [];
-    let updatedPlayer;
+    const today = getProtocolDayKey(new Date());
     const player = {
         level: 2,
         loc: '시작의 마을',
@@ -518,21 +506,15 @@ test('abandoning a bounty preserves its daily issuance limit', () => {
         }],
         stats: { bountyDate: today, bountyIssued: true },
     };
-    const actions = createQuestActions({
-        player,
-        grave: null,
-        dispatch: (action) => {
-            updatedPlayer = typeof action.payload === 'function' ? action.payload(player) : action.payload;
-        },
-        addLog: (type, text) => logs.push({ type, text }),
-    }, { emitUnlockedTitles: () => {} });
+    const state = runQuestAction(player, (actions) => actions.abandonQuest('bounty_test'));
 
-    actions.abandonQuest('bounty_test');
-
-    assert.deepEqual(updatedPlayer.quests, []);
-    assert.equal(updatedPlayer.stats.bountyDate, today);
-    assert.equal(updatedPlayer.stats.bountyIssued, true);
-    assert.deepEqual(logs, [{ type: 'event', text: MSG.BOUNTY_ABANDONED }]);
+    assert.deepEqual(state.player.quests, []);
+    assert.equal(state.player.stats.bountyDate, today);
+    assert.equal(state.player.stats.bountyIssued, true);
+    assert.deepEqual(
+        { type: state.logs[0].type, text: state.logs[0].text },
+        { type: 'event', text: MSG.BOUNTY_ABANDONED },
+    );
 });
 
 test('quest board featured operations include a town prep run plan', () => {

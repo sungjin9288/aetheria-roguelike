@@ -375,6 +375,10 @@
 - **Rule:** 수동 보상 수령의 골드, 경험, 아이템, 칭호, 진행 ledger와 동기 feedback은 reducer의 한 accepted transition에서 함께 확정한다. AI 서사처럼 reducer 밖에서 실행해야 하는 비동기 효과는 accepted transition이 만든 식별 가능한 receipt만 한 번 소비하며, 버튼의 렌더 snapshot이나 클릭 횟수에서 성공을 추측하지 않는다
 - **Rationale:** 오래 열린 화면이 player 전체를 다시 저장하면 그 사이의 최신 진행을 덮어쓰고, 보상·시즌 경험·서사를 별도 dispatch하면 빠른 두 번 탭이 일부 효과만 중복시킬 수 있다. 동기 mutation을 원자적으로 묶고 비동기 효과를 결과 receipt에 연결해야 재전송은 무해하면서 기존 이야기 흐름도 보존된다
 
+### R83: Send Desired Mission State, Not Toggle Intent
+- **Rule:** 임무 수락·포기·발급은 식별자만, 편성 변경은 식별자와 최종 선택 상태만 action에 담는다. reducer가 최신 위치, 진행, 영구 ledger와 제한을 확인하고 mutation과 feedback을 함께 확정하며, 무작위 임무는 entropy만 받아 canonical 목표와 보상을 계산한다
+- **Rationale:** 렌더 snapshot에서 성공을 판단하거나 `toggle`을 보내면 같은 frame의 두 입력이 임무를 중복 추가하거나 첫 결과를 다시 뒤집을 수 있다. 목표 상태를 idempotent하게 적용하고 보상 값을 authority 경계 안에서 만들면 rapid tap과 오래 열린 화면 모두 최신 game state를 보존한다
+
 ---
 
 ## 📝 Post-Mortem Template

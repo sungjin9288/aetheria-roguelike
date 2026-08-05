@@ -129,18 +129,6 @@ export const getExpeditionFocusRouteTargets = (player: Player) => {
     return [...new Set(targets)];
 };
 
-export const replaceExpeditionFocusQuestIds = (player: Player, requestedIds: unknown): Player => {
-    if (!Array.isArray(requestedIds) || requestedIds.length === 0 || requestedIds.length > MAX_EXPEDITION_FOCUS_QUESTS) {
-        return player;
-    }
-    if (player.activeExpedition) return player;
-
-    const entries = getExpeditionQuestEntries(player);
-    const normalized = validUniqueIds(requestedIds, entries);
-    if (normalized.length !== requestedIds.length) return player;
-    return { ...player, expeditionFocusQuestIds: normalized };
-};
-
 export const appendExpeditionFocusQuest = (player: Player, questId: string | number): Player => {
     const selected = getPreparedExpeditionFocusQuestIds(player);
     if (selected.some((id) => sameQuestId(id, questId)) || selected.length >= MAX_EXPEDITION_FOCUS_QUESTS) {

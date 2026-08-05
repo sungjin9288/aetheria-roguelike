@@ -7,6 +7,7 @@ import { getQuestBoardRecommendations } from '../../utils/questOperations.js';
 import SignalBadge from '../SignalBadge';
 import FocusPanelHeader from '../FocusPanelHeader';
 import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus.js';
+import { getProtocolDayKey } from '../../utils/protocolCycle.js';
 
 const getQuestObjectiveText = (quest: any) => {
   if (quest?.objective) return quest.objective;
@@ -175,7 +176,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
   const isFocusedQuest = (questId: string | number) => focusedQuestIds.some((id) => String(id) === String(questId));
   const focusLimitReached = focusedQuestIds.length >= MAX_EXPEDITION_FOCUS_QUESTS;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getProtocolDayKey(new Date());
   const hasActiveBounty = activeQuestEntries.some((e: any) => e.isBounty);
   const bountyIssuedToday = player?.stats?.bountyDate === today && player?.stats?.bountyIssued;
   const canRequestBounty = !hasActiveBounty && !bountyIssuedToday;
