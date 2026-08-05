@@ -64,6 +64,59 @@ test('migrateData restores accepted cumulative combat missions from permanent st
     ]);
 });
 
+test('migrateData restores every accepted cumulative mission without advancing local hunts', () => {
+    const migrated = migrateData({
+        version: 5.0,
+        player: {
+            name: '오래된 모험가',
+            stats: {
+                crafts: 9,
+                explores: 44,
+                bountiesCompleted: 4,
+                buildWins: { crusher: 3 },
+                visitedMaps: ['시작의 마을', '고요한 숲', '서쪽 평원', '잊혀진 폐허', '버려진 광산'],
+                escapes: 4,
+                recentBattles: [
+                    { result: 'win', hpRatio: 0.15 },
+                    { result: 'win', hpRatio: 0.08 },
+                ],
+                codex: {
+                    weapons: { '성검 에테르니아': true, '마왕의 대낫': true },
+                    armors: { '드래곤로드 갑주': true },
+                    shields: {},
+                },
+            },
+            quests: [
+                { id: 60, progress: 0 },
+                { id: 61, progress: 0 },
+                { id: 62, progress: 0 },
+                { id: 66, progress: 0 },
+                { id: 68, progress: 0 },
+                { id: 72, progress: 0 },
+                { id: 202, progress: 0 },
+                { id: 203, progress: 0 },
+                { id: 1, progress: 2 },
+                { id: 81, progress: 3, startExploreCount: 7 },
+            ],
+            equip: {},
+        },
+    });
+    const progressById = new Map(migrated.player.quests.map((quest) => [quest.id, quest.progress]));
+
+    assert.deepEqual(Object.fromEntries(progressById), {
+        1: 2,
+        60: 3,
+        61: 20,
+        62: 2,
+        66: 4,
+        68: 3,
+        72: 5,
+        81: 3,
+        202: 3,
+        203: 4,
+    });
+});
+
 // ─── 원본: tests/cycle-120-migrate-counter-defaults.test.js ───
 /**
  * cycle 120: migrateData stats counter 기본값 정리.

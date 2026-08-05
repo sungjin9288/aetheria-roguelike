@@ -1042,7 +1042,7 @@ import { readFile } from 'node:fs/promises';
    * - src/systems/DifficultyManager.ts:149:
    *     export const countLowHpWins = (stats: any, threshold: any = 0.2) => {...}
    * - 호출 사이트 모두 명시 인자 전달:
-   *     · questProgress.ts:44 — countLowHpWins(player.stats, questData.threshold || 0.2).
+   *     · cumulativeQuestProgress.ts — countLowHpWins(stats, quest.threshold || 0.2).
    *     · runProfile.ts:161 — countLowHpWins(player?.stats, 0.2).
    *     · runProfile.ts:212 — countLowHpWins(behaviorStats, 0.2).
    * - default 0.2 이미 도달 불가.
@@ -1073,9 +1073,9 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 623: 3 callsite threshold 명시 보존', async () => {
-      const qp = await readSrc('src/utils/questProgress.ts');
-      assert.ok(/countLowHpWins\(player\.stats,\s*questData\.threshold\s*\|\|\s*0\.2\)/.test(qp),
-          "questProgress callsite 'questData.threshold || 0.2' 보존");
+      const qp = await readSrc('src/utils/cumulativeQuestProgress.ts');
+      assert.ok(/countLowHpWins\(stats,\s*quest\.threshold\s*\|\|\s*0\.2\)/.test(qp),
+          "cumulativeQuestProgress callsite 'quest.threshold || 0.2' 보존");
 
       const rp = await readSrc('src/utils/runProfile.ts');
       const matches = (rp.match(/countLowHpWins\([^,]+,\s*0\.2\)/g) || []).length;

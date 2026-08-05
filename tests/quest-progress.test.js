@@ -60,6 +60,48 @@ test('cumulative kill quests follow permanent kill and boss counters', () => {
     assert.equal(result.completedCount, 1);
 });
 
+test('every cumulative quest starts from its canonical player record', () => {
+    const player = {
+        level: 40,
+        stats: {
+            crafts: 9,
+            explores: 44,
+            bountiesCompleted: 4,
+            buildWins: { crusher: 3 },
+            visitedMaps: ['시작의 마을', '고요한 숲', '서쪽 평원', '잊혀진 폐허', '버려진 광산'],
+            escapes: 4,
+            recentBattles: [
+                { result: 'win', hpRatio: 0.15 },
+                { result: 'win', hpRatio: 0.08 },
+                { result: 'win', hpRatio: 0.5 },
+            ],
+            codex: {
+                weapons: { '성검 에테르니아': true, '마왕의 대낫': true },
+                armors: { '드래곤로드 갑주': true },
+                shields: {},
+            },
+        },
+    };
+    const expectedProgress = new Map([
+        [60, 3],
+        [61, 20],
+        [62, 2],
+        [66, 4],
+        [68, 3],
+        [72, 5],
+        [202, 3],
+        [203, 4],
+    ]);
+
+    for (const [questId, progress] of expectedProgress) {
+        assert.deepEqual(
+            createQuestProgressState(QUESTS.find((quest) => quest.id === questId), player),
+            { id: questId, progress },
+            `quest ${questId} should begin at ${progress}`,
+        );
+    }
+});
+
 test('quest progress syncs build-guiding and discovery quests from player stats', () => {
     // cycle 83: discovery_count quest는 visitedMaps.length로 통일 — 기존엔
     // stats.discoveries(이벤트 카운터)를 잘못 읽던 회귀 수정.

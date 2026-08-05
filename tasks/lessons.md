@@ -352,8 +352,8 @@
 - **Rationale:** 선택 전 카드에는 이름·설명·effect만 있어도 보이지만, 선택 후 계산기는 `val`의 중첩 필드처럼 전체 runtime 계약을 요구할 수 있다. 표시만 통과하는 불완전 fixture는 실제 선택 경로에서 앱을 중단시키고 QA가 제품과 다른 데이터를 검증하게 만든다
 
 ### R77: Derive Cumulative Missions From Permanent Records
-- **Rule:** 누적 처치처럼 수락 전 행동까지 인정하는 임무는 전용 domain type을 사용하고, 수락·진행 동기화·save migration이 같은 pure progress 계산을 공유한다. 표시 문구도 target key가 아니라 실제 행동 범위와 남은 횟수를 설명한다
-- **Rationale:** 누적 목표를 지역 탐험이나 단일 적 처치 type으로 대신 표현하면 카운터가 영원히 오르지 않거나 과거 성과가 사라질 수 있다. runtime만 고치면 기존 active save는 다음 행동 전까지 잘못된 수치를 유지하므로, 영구 기록을 authority로 삼아 로드 직후부터 보상까지 같은 진행률을 보여 줘야 한다
+- **Rule:** 수락 전 행동까지 인정하는 전역 누적 임무는 전용 domain type을 사용하고, 수락·진행 동기화·save migration이 하나의 pure progress 계산과 영구 player record를 공유한다. 지역 탐험이나 특정 적 사냥처럼 수락 이후 행동만 세는 목표는 이 계산에서 명시적으로 제외하고 독립 baseline을 유지한다. 표시 문구도 target key가 아니라 실제 행동 범위와 남은 횟수를 설명한다
+- **Rationale:** 누적 목표의 계산이 화면별로 흩어지면 수락 직후 0으로 보이다 다음 행동에서 과거 수치로 뛰거나, 재실행 뒤 active save가 오래된 진행률을 유지한다. 반대로 모든 임무를 영구 기록에 연결하면 지역·사냥 목표가 과거 행동으로 자동 완료된다. 누적 여부를 domain 경계로 구분하고 로드 직후부터 보상까지 같은 authority를 사용해야 진행률을 신뢰할 수 있다
 
 ---
 

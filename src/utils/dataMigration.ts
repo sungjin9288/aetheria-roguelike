@@ -1,6 +1,6 @@
 import { ITEMS } from '../data/items.js';
 import { QUESTS } from '../data/quests.js';
-import { getCombatQuestProgress } from './combatQuestProgress.js';
+import { getCumulativeQuestProgress } from './cumulativeQuestProgress.js';
 import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
 import { isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils.js';
 import { normalizeActiveExpedition, normalizeExpeditionSummary } from './expeditionLedger.js';
@@ -112,11 +112,11 @@ export const migrateData = (rawData: any) => {
     const questCatalog = new Map(QUESTS.map((quest) => [quest.id, quest]));
     target.quests = toArray(target.quests).map((questState: any) => {
         const quest = questCatalog.get(questState?.id);
-        const combatProgress = getCombatQuestProgress(quest, target);
-        if (combatProgress === null) return questState;
+        const cumulativeProgress = getCumulativeQuestProgress(quest, target);
+        if (cumulativeProgress === null) return questState;
         return {
             ...questState,
-            progress: Math.max(Number(questState.progress) || 0, combatProgress),
+            progress: Math.max(Number(questState.progress) || 0, cumulativeProgress),
         };
     });
     target.activeExpedition = normalizeActiveExpedition(target.activeExpedition);

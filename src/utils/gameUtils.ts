@@ -10,9 +10,14 @@ import { getRunBuildProfile, getTraitSkill } from './runProfileUtils.js';
 import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager.js';
 import { AT } from '../reducers/actionTypes.js';
 import { MSG } from '../data/messages.js';
-import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
-import signatureSetsData from '../data/signatureSets.json' with { type: 'json' };
 import { getCurrentRunSnapshot } from './runProgress.js';
+import {
+    countCompletedSignatureSets,
+    countDiscoveredSignatures,
+    isSignatureName,
+} from './signatureDiscovery.js';
+
+export { countDiscoveredSignatures } from './signatureDiscovery.js';
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
@@ -279,51 +284,6 @@ export const getAchievementCurrentValue = (achievement: Achievement, player: Pla
     return stats?.[target ?? ''] || 0;
 };
 
-const RESOLVE_BUCKET_BY_TYPE: any = Object.freeze({
-    weapon: 'weapons',
-    shield: 'shields',
-    armor: 'armors',
-});
-
-const SIGNATURE_REGISTRY_ENTRIES: Record<string, any> = signatureRegistryData?.entries || {};
-const SIGNATURE_SETS_MAP = signatureSetsData?.sets || {};
-
-const isSignatureDiscovered = (itemName: string, player: Player) => {
-    const codex = player?.stats?.codex;
-    if (!codex) return false;
-    const all = [
-        ...(DB.ITEMS?.weapons || []),
-        ...(DB.ITEMS?.armors || []),
-    ];
-    const item = all.find((entry: any) => entry?.name === itemName);
-    if (!item) return false;
-    const bucket = RESOLVE_BUCKET_BY_TYPE[item.type ?? ''];
-    if (!bucket) return false;
-    return Boolean(codex[bucket]?.[itemName]);
-};
-
-// cycle 75: export — checkTitles / questProgress의 signature_collect 핸들러가
-// codex.{weapons,armors,shields} 합집합 크기로 근사하던 것을 정확한
-// SIGNATURE_REGISTRY 교집합 카운트로 교체할 수 있도록 노출.
-export const countDiscoveredSignatures = (player: Player) => {
-    let count = 0;
-    for (const name of Object.keys(SIGNATURE_REGISTRY_ENTRIES)) {
-        if (isSignatureDiscovered(name, player)) count += 1;
-    }
-    return count;
-};
-
-const countCompletedSignatureSets = (player: Player) => {
-    let count = 0;
-    for (const setDef of Object.values(SIGNATURE_SETS_MAP) as any[]) {
-        const members = setDef?.members || [];
-        if (members.length === 0) continue;
-        const allFound = members.every((name: any) => isSignatureDiscovered(name, player));
-        if (allFound) count += 1;
-    }
-    return count;
-};
-
 /** 업적 달성 여부 */
 export const isAchievementUnlocked = (achievement: Achievement, player: Player) => (
     getAchievementCurrentValue(achievement, player) >= (achievement?.goal || 0)
@@ -463,9 +423,9 @@ export const buildRunSummary = (player: Player, loc: any) => {
     const currentRun = getCurrentRunSnapshot(player.stats || {});
 
     // 이 런에서 획득한 signature — inventory + equip 합산, 중복 제거
-    const signatureSet = new Set();
+    const signatureSet = new Set<string>();
     const collectSignature = (item: any) => {
-        if (item?.name && SIGNATURE_REGISTRY_ENTRIES[item.name]) signatureSet.add(item.name);
+        if (isSignatureName(item?.name)) signatureSet.add(item.name);
     };
     (player?.inv || []).forEach(collectSignature);
     collectSignature(player?.equip?.weapon);
