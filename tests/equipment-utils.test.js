@@ -9,6 +9,8 @@ import {
     isTwoHandWeapon,
     isOneHandWeapon,
     isMagicWeapon,
+    isCasterWeapon,
+    isRangedWeapon,
     getWeaponHands,
     getWeaponStyleLabel,
     getItemStatText,
@@ -241,6 +243,13 @@ test('isMagicWeapon detects elemental and keyword-based magic weapons', () => {
     assert.equal(isMagicWeapon({ type: 'weapon', name: '강철 롱소드' }), false);
     assert.equal(isMagicWeapon(null), false);
     assert.equal(isMagicWeapon({ type: 'armor', name: '지팡이' }), false);
+});
+
+test('weapon role helpers separate caster and ranged weapons from heavy melee weapons', () => {
+    assert.equal(isCasterWeapon({ type: 'weapon', name: '빙결 지팡이', elem: '냉기' }), true);
+    assert.equal(isCasterWeapon({ type: 'weapon', name: '용암 대검', elem: '화염' }), false);
+    assert.equal(isRangedWeapon({ type: 'weapon', name: '사냥꾼의 활', hands: 2 }), true);
+    assert.equal(isRangedWeapon({ type: 'weapon', name: '심연 파쇄창', hands: 2 }), false);
 });
 
 test('getEquippedWeapons returns only weapon slots', () => {

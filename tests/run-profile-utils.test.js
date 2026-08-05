@@ -86,6 +86,90 @@ test('run build profile recognizes arcane setups with focus and mana relics', ()
     assert.ok(profile.primary.reasons.includes('주문서/마도서'));
 });
 
+test('run build profile gives every class a readable identity before equipment defines the run', () => {
+    const expected = {
+        모험가: 'explorer',
+        전사: 'crusher',
+        마법사: 'arcane',
+        도적: 'dual',
+        나이트: 'fortress',
+        버서커: 'crusher',
+        아크메이지: 'arcane',
+        흑마법사: 'status',
+        어쌔신: 'dual',
+        레인저: 'status',
+        성직자: 'arcane',
+        팔라딘: 'fortress',
+        '드래곤 나이트': 'crusher',
+        대마법사: 'arcane',
+        '그림자 주군': 'dual',
+        무당: 'status',
+        시간술사: 'arcane',
+        '사냥의 군주': 'status',
+    };
+
+    for (const [job, buildId] of Object.entries(expected)) {
+        const profile = getRunBuildProfile({
+            job,
+            hp: 100,
+            maxHp: 100,
+            equip: { weapon: null, armor: null, offhand: null },
+            relics: [],
+        }, { maxHp: 100, isMagic: false });
+
+        assert.equal(profile.primary.id, buildId, `${job} 기본 성장 성향`);
+        assert.deepEqual(profile.primary.reasons, [`${job} 기본 전투 성향`]);
+        assert.equal(profile.primary.score, undefined);
+    }
+});
+
+test('run build profile keeps equipment choices above the class fallback', () => {
+    const mageWithGreatsword = getRunBuildProfile({
+        job: '마법사',
+        hp: 100,
+        maxHp: 100,
+        equip: {
+            weapon: { type: 'weapon', name: '훈련용 대검', hands: 2, elem: '물리' },
+            armor: null,
+            offhand: null,
+        },
+        relics: [],
+    }, { maxHp: 100, isMagic: true });
+
+    assert.equal(mageWithGreatsword.primary.id, 'crusher');
+    assert.ok(mageWithGreatsword.primary.reasons.includes('양손 무기'));
+});
+
+test('caster staves and bows are not mislabeled as crusher builds', () => {
+    const mageWithStaff = getRunBuildProfile({
+        job: '마법사',
+        hp: 100,
+        maxHp: 100,
+        equip: {
+            weapon: { type: 'weapon', name: '빙결 지팡이', hands: 2, elem: '냉기' },
+            armor: null,
+            offhand: null,
+        },
+        relics: [],
+    }, { maxHp: 100, isMagic: true });
+    const rangerWithBow = getRunBuildProfile({
+        job: '레인저',
+        hp: 100,
+        maxHp: 100,
+        equip: {
+            weapon: { type: 'weapon', name: '사냥꾼의 활', hands: 2, elem: '물리' },
+            armor: null,
+            offhand: null,
+        },
+        relics: [],
+    }, { maxHp: 100, isMagic: false });
+
+    assert.equal(mageWithStaff.primary.id, 'arcane');
+    assert.equal(rangerWithBow.primary.id, 'status');
+    assert.equal(mageWithStaff.tags.some((tag) => tag.id === 'crusher'), false);
+    assert.equal(rangerWithBow.tags.some((tag) => tag.id === 'crusher'), false);
+});
+
 // cycle 271: 'class build compatibility and bonus' 테스트 제거 — getClassBuildCompatibility /
 //   getClassBuildBonus dead exports cleanup. getRunBuildProfile primary.id 'crusher' 검증은
 //   기존 'build profile detects crusher 양손 setup' 테스트(별도)에서 이미 커버.

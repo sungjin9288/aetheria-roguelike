@@ -341,6 +341,7 @@ const GameRoot = ({
                         pendingRelics={engine.pendingRelics}
                         dispatch={engine.dispatch}
                         player={engine.player}
+                        stats={fullStats}
                     />
                 </Suspense>
             )}

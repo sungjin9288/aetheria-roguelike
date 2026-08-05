@@ -2347,7 +2347,7 @@ import { readFile, readdir } from 'node:fs/promises';
    * - body 동작 보존.
    *
    * 회귀 가드:
-   * - 16 internal callsite 동작 그대로.
+   * - 15 internal callsite 동작 그대로.
    * - body Array.isArray / .some / .includes 처리 보존.
    */
 
@@ -2373,10 +2373,10 @@ import { readFile, readdir } from 'node:fs/promises';
           'hasAnyJob jobs default [] 제거');
   });
 
-  test('cycle 544: 정합성 가드 — 16 internal callsite 보존', async () => {
+  test('cycle 544: 정합성 가드 — 15 internal callsite 보존', async () => {
       const source = await readSrc('src/utils/runProfile.ts');
       const scoreTagCalls = (source.match(/scoreTag\(/g) || []).length;
-      assert.equal(scoreTagCalls, 8, `scoreTag callsite 8건 보존: ${scoreTagCalls}건`);
+      assert.equal(scoreTagCalls, 7, `scoreTag callsite 7건 보존: ${scoreTagCalls}건`);
       const hasAnyJobCalls = (source.match(/hasAnyJob\(/g) || []).length;
       assert.equal(hasAnyJobCalls, 8, `hasAnyJob callsite 8건 보존: ${hasAnyJobCalls}건`);
   });

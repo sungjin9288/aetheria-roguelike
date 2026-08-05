@@ -12,6 +12,7 @@ import type { Player } from '../types/index.js';
 //   제거 후 caller 0건. cascade로 19 ternary 가지 정리 (cycle 472-477 paired).
 interface BuildAdvicePanelProps {
     player?: Player | null;
+    stats?: any;
 }
 
 const RARITY_COLOR: any = {
@@ -31,12 +32,13 @@ const RARITY_LABEL: any = {
  * 맵 탭 하단에 배치됩니다.
  */
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-const BuildAdvicePanel = ({ player }: BuildAdvicePanelProps) => {
+const BuildAdvicePanel = ({ player, stats }: BuildAdvicePanelProps) => {
     const [open, setOpen] = useState(false);
 
-    // cycle 612: stats 인자 명시 추가 — explicit default-elimination
-    //   pattern (cycle 608/609/611에 이은 4번째 적용).
-    const profile = useMemo(() => getRunBuildProfile(player || {}, {}), [player]);
+    const profile = useMemo(
+        () => stats?.buildProfile || getRunBuildProfile(player || {}, stats || {}),
+        [player, stats]
+    );
     const primaryId = profile?.primary?.id || 'balanced';
     const trait = TRAIT_DEFINITIONS[primaryId] || TRAIT_DEFINITIONS.balanced;
     const ownedEffects = (player?.relics || []).map((r: any) => r.effect);
@@ -54,16 +56,16 @@ const BuildAdvicePanel = ({ player }: BuildAdvicePanelProps) => {
             >
                 <span className="flex items-center gap-2 tracking-widest uppercase">
                     <span className={trait.accent}>◈</span>
-                    빌드 조언 — <span className={`font-bold ${trait.accent}`}>{trait.title}</span>
+                    성장 조언 — <span className={`font-bold ${trait.accent}`}>{trait.title}</span>
                 </span>
                 {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
 
             {open && (
                 <div className="border-t border-white/8 space-y-3 px-3 pb-3">
-                    {/* 아키타입 요약 */}
+                    {/* 성장 성향 요약 */}
                     <div className={`mt-2 rounded-[0.95rem] border px-3 py-2 ${trait.chipClass}`}>
-                        <div className="text-[10px] uppercase tracking-widest opacity-60 mb-0.5">현재 아키타입</div>
+                        <div className="text-[10px] opacity-60 mb-0.5">현재 성장 성향</div>
                         <div className="font-bold text-sm">{trait.name} — {trait.title}</div>
                         <div className="text-[10px] opacity-75 mt-0.5">{trait.desc}</div>
                         <div className="text-[10px] opacity-60 mt-1">패시브: {trait.passiveLabel}</div>

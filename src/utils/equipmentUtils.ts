@@ -3,6 +3,7 @@ import type { EquipSlots, Item } from '../types/index.js';
 import { BALANCE } from '../data/constants.js';
 
 const MAGIC_WEAPON_KEYWORDS: any = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
+const RANGED_WEAPON_KEYWORDS: any = ['활', '석궁'];
 
 const WEAPON_SKILL_BY_ELEM: any = {
     화염: { name: '이그니스 버스트', effect: 'burn', mp: 28, mult: 2.9, cooldown: 2 },
@@ -353,6 +354,18 @@ export const isMagicWeapon = (weapon: any) => {
 
     const name = String(weapon.name || '');
     return MAGIC_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
+};
+
+export const isCasterWeapon = (weapon: any) => {
+    if (!isWeapon(weapon)) return false;
+    const name = String(weapon.name || '');
+    return MAGIC_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
+};
+
+export const isRangedWeapon = (weapon: any) => {
+    if (!isWeapon(weapon)) return false;
+    const name = String(weapon.name || '');
+    return RANGED_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
 };
 
 export const getEquippedWeapons = (equip: EquipSlots) => {

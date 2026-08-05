@@ -83,6 +83,23 @@ test('calculateFullStats returns base stats shape with required keys', () => {
     }
 });
 
+test('calculateFullStats applies class identity to the canonical build and trait profiles', () => {
+    const mage = calculateFullStats(makePlayer({
+        job: '시간술사',
+        equip: { weapon: null, armor: null, offhand: null },
+    }));
+    const knight = calculateFullStats(makePlayer({
+        job: '나이트',
+        equip: { weapon: null, armor: null, offhand: null },
+    }));
+
+    assert.equal(mage.isMagic, true);
+    assert.equal(mage.buildProfile.primary.id, 'arcane');
+    assert.equal(mage.traitProfile.id, 'arcane');
+    assert.equal(knight.buildProfile.primary.id, 'fortress');
+    assert.equal(knight.traitProfile.id, 'fortress');
+});
+
 test('calculateFullStats includes equipment attack in base atk', () => {
     const bare = calculateFullStats(makePlayer({
         equip: { weapon: null, armor: null, offhand: null },

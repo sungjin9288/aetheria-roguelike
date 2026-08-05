@@ -559,10 +559,10 @@ import { readFile } from 'node:fs/promises';
           'getRunBuildProfile stats default {} 제거');
   });
 
-  test('cycle 612: 정합성 가드 — caller 명시 {} 추가 (BuildAdvicePanel + cycle-345)', async () => {
+  test('cycle 612: 정합성 가드 — caller가 계산된 stats 또는 명시 fallback 전달', async () => {
       const bap = await readSrc('src/components/BuildAdvicePanel.tsx');
-      assert.ok(/getRunBuildProfile\(player \|\| \{\},\s*\{\}\)/.test(bap),
-          'BuildAdvicePanel getRunBuildProfile(player || {}, {}) 명시');
+      assert.ok(/stats\?\.buildProfile\s*\|\|\s*getRunBuildProfile\(player \|\| \{\},\s*stats \|\| \{\}\)/.test(bap),
+          'BuildAdvicePanel canonical stats profile 우선, 명시 fallback 전달');
 
       const test1 = await readSrc('tests/cycle-300-399.test.js');
       assert.ok(/getRunBuildProfile\(player,\s*\{\}\)/.test(test1),

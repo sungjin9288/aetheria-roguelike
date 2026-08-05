@@ -4,7 +4,7 @@ import type { Player } from "../types/index.js";
 // cycle 271: getDifficultyMults / calcPerformanceScore / getExploreState / CLASS_BUILD_IDENTITIES /
 //   hasProfileTag — getRunDiagnostics + 3 class-build helpers 제거 후 dead imports cleanup.
 import { countLowHpWins } from '../systems/DifficultyManager.js';
-import { isFocusOffhand, isMagicWeapon, isShield, isTwoHandWeapon, isWeapon } from './equipmentUtils.js';
+import { isCasterWeapon, isFocusOffhand, isMagicWeapon, isRangedWeapon, isShield, isTwoHandWeapon, isWeapon } from './equipmentUtils.js';
 import {
     ARCHETYPE_LABELS,
     TRAIT_DEFINITIONS,
@@ -39,6 +39,41 @@ const hasAnyJob = (item: Item | null | undefined, jobs: any[]) => Array.isArray(
 const isConsumableType = (item: Item | null | undefined) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type as string);
 const hasElement = (item: Item | null | undefined) => Boolean(item?.elem && item.elem !== '물리');
 
+const CLASS_BUILD_PREFERENCES: Record<string, string[]> = Object.freeze({
+    모험가: ['explorer', 'balanced'],
+    전사: ['crusher', 'fortress'],
+    마법사: ['arcane', 'status'],
+    도적: ['dual', 'risk'],
+    나이트: ['fortress', 'arcane'],
+    버서커: ['crusher', 'risk'],
+    아크메이지: ['arcane', 'status'],
+    흑마법사: ['status', 'risk'],
+    어쌔신: ['dual', 'status'],
+    레인저: ['status', 'explorer'],
+    성직자: ['arcane', 'fortress'],
+    팔라딘: ['fortress', 'arcane'],
+    '드래곤 나이트': ['crusher', 'risk'],
+    대마법사: ['arcane', 'status'],
+    '그림자 주군': ['dual', 'risk', 'status'],
+    무당: ['status', 'risk'],
+    시간술사: ['arcane', 'status'],
+    '사냥의 군주': ['status', 'explorer'],
+});
+
+const getClassBuildPreferences = (job: string | undefined) => CLASS_BUILD_PREFERENCES[job || ''] || ['balanced'];
+const getClassPreferenceRank = (job: string | undefined, buildId: string) => {
+    const rank = getClassBuildPreferences(job).indexOf(buildId);
+    return rank >= 0 ? rank : Number.MAX_SAFE_INTEGER;
+};
+const getClassFallback = (job: string | undefined) => {
+    const id = getClassBuildPreferences(job)[0] || 'balanced';
+    return {
+        id,
+        name: labelTag(id),
+        reasons: job ? [`${job} 기본 전투 성향`] : ['다양한 선택 가능'],
+    };
+};
+
 // cycle 271: getClassBuildIdentity / getClassBuildCompatibility / getClassBuildBonus 3 dead exports 제거.
 //   미완성 diagnostics 기능의 일부였으나 production 호출 0건이라 dead. getRunDiagnostics 함께 제거.
 
@@ -52,7 +87,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     const mainWeapon = player?.equip?.weapon || null;
     const offhand = player?.equip?.offhand || null;
     const dualWield = isWeapon(mainWeapon) && isWeapon(offhand) && !isTwoHandWeapon(mainWeapon);
-    const twoHand = isTwoHandWeapon(mainWeapon);
+    const twoHand = isTwoHandWeapon(mainWeapon) && !isCasterWeapon(mainWeapon) && !isRangedWeapon(mainWeapon);
     const shield = isShield(offhand) && !isFocusOffhand(offhand);
     const focus = isFocusOffhand(offhand);
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
@@ -138,13 +173,14 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     //   tag.name / tag.id / tag.reasons만 read). cycle 347 _sortKey strip 패턴.
     const ranked = tags
         .filter((tag: any) => tag.score >= 3)
-        .sort((a: any, b: any) => b.score - a.score || a.name.localeCompare(b.name, 'ko'))
+        .sort((a: any, b: any) => (
+            b.score - a.score
+            || getClassPreferenceRank(player?.job, a.id) - getClassPreferenceRank(player?.job, b.id)
+            || a.name.localeCompare(b.name, 'ko')
+        ))
         .map(({ score: _score, ...rest }: any) => { void _score; return rest; });
 
-    const fallbackPrimary = scoreTag('balanced', '균형형 런', 0, ['다양한 선택 가능']);
-    const { score: _ps, ...fallbackPrimaryStripped } = fallbackPrimary;
-    void _ps;
-    const primary = ranked[0] || fallbackPrimaryStripped;
+    const primary = ranked[0] || getClassFallback(player?.job);
 
     return {
         primary,

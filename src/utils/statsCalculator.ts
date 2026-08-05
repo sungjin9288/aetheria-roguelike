@@ -12,7 +12,7 @@ import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 // cycle 449: 물리 elem 필터 제거 — items.ts elem 값에 '물리' / 'physical' 0건.
 //   weaponElem 있는 무기는 항상 magic elem이라 필터 redundant.
 //   isMagic 체크는 `weaponElem`(truthy)로 단순화.
-const MAGIC_JOBS: any = ['마법사', '아크메이지', '흑마법사', '성직자'];
+const MAGIC_JOBS: any = ['마법사', '아크메이지', '흑마법사', '성직자', '대마법사', '무당', '시간술사'];
 
 /**
  * @param {object} equip

@@ -155,7 +155,7 @@ const Dashboard = ({
                 <Suspense fallback={<TabSpinner />}>
                     <div className="space-y-3">
                         <MapNavigator player={player} grave={grave} stats={stats} actions={actions} />
-                        <BuildAdvicePanel player={player} />
+                        <BuildAdvicePanel player={player} stats={stats} />
                     </div>
                 </Suspense>
             )}

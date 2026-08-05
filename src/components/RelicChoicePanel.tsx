@@ -14,6 +14,7 @@ interface RelicChoicePanelProps {
     pendingRelics?: Relic[] | null;
     dispatch: (action: any) => void;
     player?: Player | null;
+    stats?: any;
 }
 
 /**
@@ -119,7 +120,7 @@ const RARITY_BADGE_TONE: any = {
  * RelicChoicePanel — 유물 3지선다 선택 오버레이
  * `pendingRelics` 가 null 이 아닐 때 ControlPanel 위에 표시됨
  */
-const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelProps) => {
+const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoicePanelProps) => {
     if (!pendingRelics || pendingRelics.length === 0) return null;
 
     const ownedRelics = player?.relics || [];
@@ -128,7 +129,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
         index,
         synergy: getRelicSynergyScore(relic, ownedRelics),
     }));
-    const buildId = getRunBuildProfile(player || {}, {}).primary.id;
+    const buildId = (stats?.buildProfile || getRunBuildProfile(player || {}, stats || {})).primary.id;
     const relicDecision = getRelicChoiceDecisionStrip(relicCards, buildId);
     const relicCapacity = getPrestigeUnlocks(player?.meta?.prestigeRank).maxRelics;
 

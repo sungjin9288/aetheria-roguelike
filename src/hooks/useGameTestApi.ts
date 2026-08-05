@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
+import { RELICS } from '../data/relics';
 import { GS } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
 import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
@@ -1055,9 +1056,12 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             },
             injectRelicChoice: () => {
                 const er = engineRef.current;
+                const fortressRelic = RELICS.find((relic: any) => relic.effect === 'fortress');
+                if (!fortressRelic) return false;
                 er.dispatch({
                     type: AT.SET_PLAYER,
                     payload: {
+                        job: '나이트',
                         relics: [],
                         equip: {
                             weapon: {
@@ -1076,7 +1080,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     type: AT.SET_PENDING_RELICS,
                     payload: [
                         { id: 'test_relic_amber', name: '황혼의 파편', desc: '치명타 확률 +3%, 휴식 비용 -10%', rarity: 'epic', effect: 'crit_mp_regen' },
-                        { id: 'test_relic_cyan', name: '심해의 매듭', desc: '전투가 시작되면 생명 12% 회복', rarity: 'uncommon', effect: 'battle_start_heal' },
+                        fortressRelic,
                         { id: 'test_relic_violet', name: '균열의 서판', desc: '기술 피해 18% 증가', rarity: 'rare', effect: 'skill_mult' },
                     ],
                 });

@@ -135,6 +135,7 @@ test('RelicChoicePanel renders Korean decision labels and recommended marker', a
     const source = await readSrc('src/components/RelicChoicePanel.tsx');
     assert.match(source, /getRelicChoiceDecisionStrip/);
     assert.match(source, /getRunBuildProfile/);
+    assert.match(source, /stats\?\.buildProfile \|\| getRunBuildProfile\(player \|\| \{\}, stats \|\| \{\}\)/);
     assert.match(source, /data-testid="relic-choice-decision-strip"/);
     assert.match(source, /data-testid="relic-choice-panel"/);
     assert.match(source, /data-testid="relic-choice-options"/);
@@ -158,7 +159,8 @@ test('smoke loop verifies relic choice decision strip with deterministic injecti
     assert.match(source, /injectRelicChoice/);
     assert.match(source, /relic-choice-decision-strip/);
     assert.match(source, /02e-relic-choice-decision-strip/);
-    assert.match(testApiSource, /injectRelicChoice:[\s\S]*?test_relic_build_weapon[\s\S]*?hands: 1[\s\S]*?offhand: null/);
+    assert.match(testApiSource, /injectRelicChoice:[\s\S]*?job: '나이트'[\s\S]*?test_relic_build_weapon[\s\S]*?hands: 1[\s\S]*?offhand: null/);
+    assert.match(testApiSource, /RELICS\.find\(\(relic: any\) => relic\.effect === 'fortress'\)/);
 });
 
 test('relic choice decision strip has high readability CSS coverage', async () => {

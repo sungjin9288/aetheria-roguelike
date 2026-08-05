@@ -343,6 +343,14 @@
 - **Rule:** 결과 화면의 추천은 현재 위치와 game state에서 실행 가능한 action만 가리켜야 한다. 상세 확인 action은 selected tab만 바꾸지 말고 해당 owning surface를 실제로 열며, 상태·보상·추천은 각각 한 번만 보여 준다
 - **Rationale:** 안전지대 전용 휴식을 필드 결과에서 추천하거나 숨겨진 tab만 전환하면 버튼을 눌러도 플레이어가 결과를 확인할 수 없다. 추천 계산과 CTA target을 하나의 계약으로 묶고 smoke가 최종 화면 노출까지 검증해야 안내 문구와 실제 권한이 다시 갈라지지 않는다
 
+### R75: Use Class Identity As A Fallback, Not A Constraint
+- **Rule:** 장비와 유물이 아직 성장 방향을 만들지 않은 초반에는 직업 선호 성향을 fallback으로 사용하고, 실제 장비·유물 점수가 생기면 플레이어의 선택을 우선한다. 추천 화면과 trait 계산은 별도 추론하지 않고 같은 canonical build profile을 사용하며, 무기 역할은 손 수만이 아니라 caster·ranged 같은 실제 운용 방식까지 구분한다
+- **Rationale:** 모든 직업이 초반에 같은 균형형으로 보이면 전직 정체성과 성장 기대가 약해지고, 반대로 직업이 빌드를 강제하면 실험할 이유가 사라진다. 초기 방향과 선택 자유를 순서로 분리하고 한 계산 결과를 공유해야 패시브·기술·추천이 서로 다른 이야기를 하지 않는다
+
+### R76: Seed Persistent QA State With Complete Domain Objects
+- **Rule:** smoke나 E2E fixture가 reducer를 거쳐 실제 player state에 저장되는 장비·유물·보상은 축약 객체를 새로 만들지 않고 canonical data object를 사용한다. 불가피한 fixture 전용 객체는 선택 뒤 파생 stats 재계산과 화면 종료까지 검증한다
+- **Rationale:** 선택 전 카드에는 이름·설명·effect만 있어도 보이지만, 선택 후 계산기는 `val`의 중첩 필드처럼 전체 runtime 계약을 요구할 수 있다. 표시만 통과하는 불완전 fixture는 실제 선택 경로에서 앱을 중단시키고 QA가 제품과 다른 데이터를 검증하게 만든다
+
 ---
 
 ## 📝 Post-Mortem Template
