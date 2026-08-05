@@ -53,7 +53,7 @@ export const buildRunShareText = (s: any) => {
     // cycle 84: 맵 발견 수 — cycle 83에서 'discoveries' 시맨틱을 visitedMaps.length로
     // 통일한 후속. 0이면 silent, >0이면 탐험 폭 자랑 라인. escapeLine과 같은 패턴.
     const discoveryCount = s?.discoveries ?? 0;
-    const discoveryLine = discoveryCount > 0 ? `\n🗺️ 지도 발견 ${discoveryCount}곳` : '';
+    const discoveryLine = discoveryCount > 0 ? `\n🗺️ 새 지역 ${discoveryCount}곳` : '';
 
     // cycle 96: 최대 연속 처치 — cycle 95의 stats.maxKillStreak를 share text reflection.
     // 0이면 silent, >0이면 공격형 운영 자랑 라인.
@@ -67,7 +67,7 @@ ${titlePrefix}${job} Lv.${level}
 
 🗡️ 처치: ${kills}마리 (보스 ${bossKills}회)
 💎 유물: ${relicsFound}개 수집
-💰 총 골드: ${totalGold}
+💰 획득 골드: ${totalGold}
 ⚡ 프레스티지: ${prestigeRank}랭크${buildLine}${escapeLine}${discoveryLine}${maxStreakLine}${signatureLine}
 
 #에테리아 #AetheriaRPG #로그라이크`;

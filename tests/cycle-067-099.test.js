@@ -231,15 +231,20 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('buildRunSummary: discoveries = visitedMaps.length', () => {
+  test('buildRunSummary: discoveries = 이번 회차 신규 visitedMaps 수', () => {
       const player = {
           level: 30, job: '검사', stats: {
               kills: 100, deaths: 0, total_gold: 5000,
               visitedMaps: ['시작의 마을', '평원', '숲', '동굴', '사막', '오아시스', '피라미드'],
+              currentRun: {
+                  startedAt: 1, complete: true, killsAtStart: 80, bossKillsAtStart: 0,
+                  totalGoldAtStart: 4000, escapesAtStart: 0,
+                  visitedMapsAtStart: ['시작의 마을', '평원'], maxKillStreak: 0,
+              },
           }, equip: {}, inv: [], relics: [],
       };
       const summary = buildRunSummary(player, '시작의 마을');
-      assert.equal(summary.discoveries, 7, 'summary.discoveries should be visitedMaps.length');
+      assert.equal(summary.discoveries, 5, 'summary.discoveries should count locations first found in this run');
   });
 
   test('buildRunSummary: visitedMaps 미설정 → discoveries = 0', () => {
@@ -393,11 +398,11 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    *   있어 reflection의 가치가 일부 누락된 상태.
    *
    * 추가 advice:
-   *   - escapes >= 10 AND bossKills <= 1 → "도주가 많았고 보스 진입이 적었습니다.
+   *   - escapes >= 3 AND bossKills <= 1 → "도주가 많았고 보스 진입이 적었습니다.
    *     장비와 성장을 보강한 뒤 보스에 도전하세요."
-   *   - discoveries <= 4 AND level >= 12 → "발견한 지역이 적었습니다. 새로운 길을
+   *   - discoveries <= 1 AND level >= 10 → "발견한 지역이 적었습니다. 새로운 길을
    *     탐색해 유물과 사건을 만날 기회를 넓히세요."
-   *   - discoveries >= 15 → 칭찬 라인 "탐험 폭이 넓었습니다. 같은 호기심으로
+   *   - discoveries >= 5 → 칭찬 라인 "탐험 폭이 넓었습니다. 같은 호기심으로
    *     다음 런도 시작하세요."
    *
    * 모든 advice는 silence-over-noise: 조건 미충족 시 추가 안 됨.
@@ -422,7 +427,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       const summary = {
           level: 20, kills: 300, bossKills: 2, relicsFound: 5, totalGold: 12000,
           primaryBuild: '검사 중심', difficultyLabel: 'HARD',
-          escapes: 0, discoveries: 3,
+          escapes: 0, discoveries: 1,
       };
       const result = getRunSummaryAnalysis(summary);
       assert.ok(
@@ -444,9 +449,9 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       );
   });
 
-  test('escapes/discoveries 모두 0 → 새 advice 추가 안 됨 (silence)', () => {
+  test('낮은 레벨에서 escapes/discoveries 모두 0 → 새 advice 추가 안 됨 (silence)', () => {
       const summary = {
-          level: 10, kills: 100, bossKills: 1, relicsFound: 3, totalGold: 5000,
+          level: 5, kills: 100, bossKills: 1, relicsFound: 3, totalGold: 5000,
           primaryBuild: '균형', difficultyLabel: 'EASY',
           escapes: 0, discoveries: 0,
       };
@@ -896,11 +901,16 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
           stats: {
               kills: 200, deaths: 0, total_gold: 5000,
               maxKillStreak: 18,
+              currentRun: {
+                  startedAt: 1, complete: true, killsAtStart: 150, bossKillsAtStart: 0,
+                  totalGoldAtStart: 3000, escapesAtStart: 0,
+                  visitedMapsAtStart: [], maxKillStreak: 7,
+              },
           },
           equip: {}, inv: [], relics: [],
       };
       const summary = buildRunSummary(player, '심연');
-      assert.equal(summary.maxKillStreak, 18);
+      assert.equal(summary.maxKillStreak, 7);
   });
 
   test('buildRunSummary: maxKillStreak 누락 → 0', () => {
@@ -944,7 +954,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       };
       const text = buildRunShareText(summary);
       assert.match(text, /🏃 도주 7회/);
-      assert.match(text, /🗺️ 지도 발견 8곳/);
+      assert.match(text, /🗺️ 새 지역 8곳/);
   });
 }
 

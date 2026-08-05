@@ -3510,10 +3510,10 @@ import { readFile } from 'node:fs/promises';
           'combatFlags.comboCount default 유지 (active 카운터)');
   });
 
-  test('cycle 280: buildRunSummary의 discoveries 계산 유지 (회귀 가드)', async () => {
+  test('cycle 280 후속: buildRunSummary가 회차별 discoveries snapshot 사용', async () => {
       const source = await readSrc('src/utils/gameUtils.ts');
-      assert.ok(/discoveries:\s*\(\(player\.stats\s+as\s+any\)\?\.visitedMaps\s*\|\|\s*\[\]\)\.length/.test(source),
-          'buildRunSummary discoveries = visitedMaps.length 계산 유지');
+      assert.ok(/discoveries:\s*currentRun\.discoveries/.test(source),
+          'buildRunSummary discoveries = current run delta 계산 유지');
   });
 
   test('cycle 280: Stats 인터페이스 다른 필드 유지 (회귀 가드)', async () => {

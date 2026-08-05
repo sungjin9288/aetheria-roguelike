@@ -172,13 +172,13 @@ export const getRunSummaryAnalysis = (summary: any) => {
     // cycle 87: cycle 78/84의 escapes/discoveries 시그널을 reflection focus로 연결.
     // 도주가 많은데 보스 진입이 적으면 성장 보강 권장, 탐험이 좁으면 지역 확장 권장,
     // 탐험이 넓으면 칭찬 라인. silence-over-noise — 조건 미충족 시 추가 안 됨.
-    if ((summary.escapes || 0) >= 10 && (summary.bossKills || 0) <= 1) {
+    if ((summary.escapes || 0) >= 3 && (summary.bossKills || 0) <= 1) {
         focus.push('도주가 많았고 보스 진입이 적었습니다. 장비와 성장을 보강한 뒤 보스에 도전하세요.');
     }
-    if ((summary.discoveries || 0) <= 4 && (summary.level || 0) >= 12) {
+    if ((summary.discoveries || 0) <= 1 && (summary.level || 0) >= 10) {
         focus.push('발견한 지역이 적었습니다. 새로운 길을 탐색해 유물과 사건을 만날 기회를 넓히세요.');
     }
-    if ((summary.discoveries || 0) >= 15) {
+    if ((summary.discoveries || 0) >= 5) {
         focus.push('탐험 폭이 넓었습니다. 같은 호기심으로 다음 모험도 시작하세요.');
     }
     // cycle 97: maxKillStreak (cycle 95 신규 카운터) 기반 reflection.
@@ -210,13 +210,13 @@ export const getRunSummaryReflectionStrip = (summary: any, analysis: any) => {
     const maxKillStreak = Number.isFinite(summary.maxKillStreak) ? summary.maxKillStreak : 0;
     const focusText = Array.isArray(analysis?.focus) ? analysis.focus.join(' ') : '';
 
-    const highEscapes = escapes >= 10 && bossKills <= 1;
+    const highEscapes = escapes >= 3 && bossKills <= 1;
     const lowRelics = relicsFound <= 1;
     const lowBossProgress = bossKills === 0 && level >= 12;
     const lowKills = kills < 30;
     const lowGold = totalGold > 0 && totalGold < 1500;
-    const lowDiscovery = discoveries <= 4 && level >= 12;
-    const wideDiscovery = discoveries >= 15;
+    const lowDiscovery = discoveries <= 1 && level >= 10;
+    const wideDiscovery = discoveries >= 5;
     const strongStreak = maxKillStreak >= 10;
     const lowStreak = maxKillStreak < 3 && level >= 10;
 

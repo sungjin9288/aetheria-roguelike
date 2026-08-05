@@ -14,6 +14,7 @@ import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
 import { soundManager } from '../../systems/SoundManager';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
+import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 
 /**
  * 전투 승리 공통 후처리.
@@ -154,10 +155,10 @@ export const handleVictoryOutcome = ({
         ...updatedPlayer,
         killStreak: newStreak,
         lastKillAt: now,
-        stats: {
+        stats: recordCurrentRunMaxKillStreak({
             ...(updatedPlayer.stats || {}),
             maxKillStreak: Math.max(prevMaxStreak, newStreak),
-        },
+        }, newStreak),
     };
 
     dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });

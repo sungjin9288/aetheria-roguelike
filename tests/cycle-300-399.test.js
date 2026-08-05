@@ -2417,7 +2417,13 @@ import { fileURLToPath } from 'node:url';
   test('cycle 344: buildRunSummary 다른 활성 필드 보존', async () => {
       const { buildRunSummary } = await import('../src/utils/gameUtils.js');
       const player = {
-          level: 5, job: '검사', stats: { kills: 10 }, relics: [], inv: [], equip: {},
+          level: 5, job: '검사', stats: {
+              kills: 10,
+              currentRun: {
+                  startedAt: 1, complete: true, killsAtStart: 0, bossKillsAtStart: 0,
+                  totalGoldAtStart: 0, escapesAtStart: 0, visitedMapsAtStart: [], maxKillStreak: 0,
+              },
+          }, relics: [], inv: [], equip: {},
           meta: { prestigeRank: 0 },
       };
       const summary = buildRunSummary(player, '시작의 마을');

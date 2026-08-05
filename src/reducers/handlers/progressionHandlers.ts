@@ -4,6 +4,7 @@
  */
 import type { GameState, GameAction } from '../gameReducer';
 import { purchaseMirrorNode } from '../../systems/mirrorUpgrades';
+import { createCurrentRunProgress } from '../../utils/runProgress';
 
 /**
  * makeProgressionActionMap(INITIAL_STATE) → action map
@@ -89,6 +90,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                     // cycle 216: 일일 grave invasion ledger 보존 — 5회 일일 제한 우회 방지.
                     dailyInvadeCount: prevStats.dailyInvadeCount || 0,
                     lastInvadeDate: prevStats.lastInvadeDate ?? null,
+                    currentRun: createCurrentRunProgress(prevStats),
                 },
             },
         };
@@ -220,6 +222,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 //   (BALANCE.DAILY_INVADE_LIMIT) 우회 방지. cycle 213 동일 lens.
                 dailyInvadeCount: prevStats.dailyInvadeCount || 0,
                 lastInvadeDate: prevStats.lastInvadeDate ?? null,
+                currentRun: createCurrentRunProgress(prevStats),
             },
             premiumCurrency: state.player.premiumCurrency || 0,
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,

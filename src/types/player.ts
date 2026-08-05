@@ -37,6 +37,16 @@ interface PlayerStats {
     // cycle 280: discoveries 제거 — cycle 83/84 deprecated (visitedMaps.length로 통일).
     buildWins?: Record<string, number>;
     visitedMaps?: string[];
+    currentRun?: {
+        startedAt: number | null;
+        complete: boolean;
+        killsAtStart: number;
+        bossKillsAtStart: number;
+        totalGoldAtStart: number;
+        escapesAtStart: number;
+        visitedMapsAtStart: string[];
+        maxKillStreak: number;
+    };
     exploreState?: Record<string, any>;
     codex?: PlayerCodex;
     codexClaimed?: string[];

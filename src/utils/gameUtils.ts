@@ -12,6 +12,7 @@ import { AT } from '../reducers/actionTypes.js';
 import { MSG } from '../data/messages.js';
 import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSetsData from '../data/signatureSets.json' with { type: 'json' };
+import { getCurrentRunSnapshot } from './runProgress.js';
 
 // --- 공유 유틸리티 (Shared Utilities) ---
 /** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
@@ -459,6 +460,7 @@ export const makeEmitTitles = (dispatch: any, addLog: any) => (updatedPlayer: an
 export const buildRunSummary = (player: Player, loc: any) => {
     const buildProfile = getRunBuildProfile(player, { maxHp: player.maxHp });
     const recentBattles = (player.stats?.recentBattles || []).slice(-20);
+    const currentRun = getCurrentRunSnapshot(player.stats || {});
 
     // 이 런에서 획득한 signature — inventory + equip 합산, 중복 제거
     const signatureSet = new Set();
@@ -474,13 +476,13 @@ export const buildRunSummary = (player: Player, loc: any) => {
     return {
         level:        player.level,
         job:          player.job || '모험가',
-        kills:        player.stats?.kills || 0,
-        bossKills:    player.stats?.bossKills || 0,
+        kills:        currentRun.kills,
+        bossKills:    currentRun.bossKills,
         relicsFound:  player.relics?.length || 0,
         activeTitle:  player.activeTitle || null,
         loc:          loc || player.loc || '???',
         prestigeRank: player.meta?.prestigeRank || 0,
-        totalGold:    player.stats?.total_gold || 0,
+        totalGold:    currentRun.totalGold,
         primaryBuild: buildProfile.primary.name,
         // cycle 344: buildTags 필드 제거 — RunSummaryCard / runShareText / outcomeAnalysis
         //   어디에서도 summary.buildTags read 0건이던 dead output.
@@ -493,13 +495,14 @@ export const buildRunSummary = (player: Player, loc: any) => {
         // cycle 78: 도주 누적 카운트 — RunSummary가 cycle 74의 stats.escapes를
         // reflection 단계에서 노출. RunShareText는 cycle 65 phase 4의
         // primaryBuild/difficulty 라인 다음에 자연스럽게 한 라인 추가 가능.
-        escapes: (player.stats as any)?.escapes || 0,
+        escapes: currentRun.escapes,
         // cycle 84: 맵 발견 수 — cycle 83에서 'discoveries' 시맨틱을 visitedMaps.length로
         // 통일한 후속 작업. reflection/share 단계에 탐험 폭 자랑 라인을 silence-over-noise
         // 패턴으로 노출.
-        discoveries: ((player.stats as any)?.visitedMaps || []).length,
+        discoveries: currentRun.discoveries,
         // cycle 96: 최대 연속 처치 — cycle 95에서 누적된 stats.maxKillStreak를 reflection
         // 으로 노출. berserker 칭호와 같은 데이터 소스.
-        maxKillStreak: (player.stats as any)?.maxKillStreak || 0,
+        maxKillStreak: currentRun.maxKillStreak,
+        runTrackingComplete: currentRun.complete,
     };
 };

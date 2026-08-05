@@ -4,6 +4,7 @@ import { isTwoHandWeapon, isShield, isWeapon } from './equipmentUtils.js';
 import { normalizeActiveExpedition, normalizeExpeditionSummary } from './expeditionLedger.js';
 import { getDefaultExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
 import { normalizeMilestoneStoryState } from './milestoneStory.js';
+import { normalizeCurrentRunProgress } from './runProgress.js';
 
 // gameUtils.ts에서 분리 (저장 데이터 마이그레이션) — 행동 보존 리팩토링.
 //   순환 의존을 피하려 toArray(1줄 헬퍼)는 인라인.
@@ -147,6 +148,7 @@ export const migrateData = (rawData: any) => {
     target.stats.syntheses       = target.stats.syntheses       || 0;
     target.stats.maxKillStreak   = target.stats.maxKillStreak   || 0;
     target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
+    target.stats.currentRun = normalizeCurrentRunProgress(target.stats);
     // pendingRelics는 런타임 전용 — 저장 불필요, 로드 시 null로 초기화
     savedData.pendingRelics = null;
 
