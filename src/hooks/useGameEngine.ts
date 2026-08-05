@@ -1,6 +1,5 @@
-import { useEffect, useReducer, useMemo, useCallback } from 'react';
+import { useReducer, useMemo, useCallback } from 'react';
 import { ADMIN_UIDS } from '../data/constants';
-import { soundManager } from '../systems/SoundManager';
 import { AI_SERVICE } from '../services/aiService';
 import { parseCommand } from '../utils/commandParser';
 import { gameReducer, INITIAL_STATE } from '../reducers/gameReducer';
@@ -43,34 +42,6 @@ export const useGameEngine = () => {
 
     // --- Firebase Sync ---
     useFirebaseSync(state, dispatch);
-
-    // --- Sound Integration ---
-    useEffect(() => {
-        const lastLog = logs[logs.length - 1];
-        if (lastLog) {
-            if (lastLog.type === 'combat') soundManager.play('attack');
-            // cycle 263: 'critical' 로그 타입 sensory cue — crit hit 시 'critical' 로그가
-            //   'combat' 직후 push되어 lastLog가 'critical'이라 attack 사운드 dispatch 실패하던
-            //   silent 회귀. cycle 122/123 패턴.
-            // slice 32: 'critical' → 전용 'crit' 사운드로 격상 — 일반 타격과 동일하던
-            //   crit 사운드를 분리해 시각 연출(골드 숫자+펄스)과 짝을 맞춤.
-            if (lastLog.type === 'critical') soundManager.play('crit');
-            if (lastLog.type === 'levelUp') soundManager.play('levelUp');
-            if (lastLog.type === 'error') soundManager.play('error');
-            if (lastLog.type === 'item') soundManager.play('item');
-            if (lastLog.type === 'legendary') soundManager.play('legendary');
-        }
-    }, [logs]);
-
-    // cycle 217: 레벨업 sensory cue 누락 fix — applyExpGain은 visualEffect='levelUp'을 set하지만
-    //   levelup 로그는 type:'system'이라 위 mapping이 절대 trigger 안 됨. visualEffect 변화를
-    //   watch해 levelUp 사운드를 직접 dispatch. cycle 117/118/122/123 sensory cue 시리즈 합류.
-    //   'shake' 등 다른 visualEffect는 false-positive 방지 위해 명시 비교.
-    useEffect(() => {
-        if (visualEffect === 'levelUp') {
-            soundManager.play('levelUp');
-        }
-    }, [visualEffect]);
 
     // --- Shared Helpers ---
     const addLog = useCallback(

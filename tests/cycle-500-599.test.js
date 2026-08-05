@@ -4662,7 +4662,7 @@ import { readFile, readdir } from 'node:fs/promises';
    *
    * 회귀 가드:
    * - 1 production callsite (SeasonPassPanel) 동작 그대로.
-   * - body dispatch / addLog / soundManager 처리 보존.
+   * - body dispatch / addLog 처리 보존.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));

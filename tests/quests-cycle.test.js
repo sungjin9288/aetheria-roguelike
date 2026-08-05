@@ -20,63 +20,6 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
  * 기존 22개 cycle-*.test.js 통합 (audit #1). 각 원본 본문을 블록 { } 으로 격리 — 행동/커버리지 동일.
  */
 
-// ─── 원본: tests/cycle-122-quest-complete-sound.test.js ───
-{
-  /**
-   * cycle 122: 퀘스트 완료 사운드 큐 — cycle 117(discovery_chain) / 118(new_area)
-   * sound 시리즈 연장.
-   *
-   * 발견:
-   * - useInventoryActions.completeQuest는 'success' 로그만 출력 ("퀘스트 완료: ...").
-   * - 'success'는 useGameEngine 사운드 매핑에 없어 audio cue 없음.
-   * - 퀘스트 완료는 보상 (exp/gold/item) + 가능하면 칭호 해금까지 발생하는 의미
-   *   있는 모먼트인데 audio 차원이 비어있음.
-   *
-   * 추가:
-   * - SoundManager case 'quest_complete' — E5/G#5/B5/E6 E major arpeggio.
-   *   victory(C major) / discovery_chain(G major) / new_area(D major)와 구분되는
-   *   E major 색채. 음악적 다양성으로 surface 정체성.
-   * - useInventoryActions.completeQuest: SET_PLAYER dispatch 후 soundManager.play
-   *   ('quest_complete') 직접 호출. cycle 88(escape) / 117(discovery_chain) /
-   *   118(new_area) 패턴.
-   */
-
-  const HERE = path.dirname(fileURLToPath(import.meta.url));
-  const ROOT = path.join(HERE, '..');
-  const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
-
-  test('SoundManager: case "quest_complete" 분기 존재', async () => {
-      const source = await readSrc('src/systems/SoundManager.ts');
-      assert.match(source, /case\s+['"]quest_complete['"]\s*:/);
-  });
-
-  test('useInventoryActions: completeQuest에서 quest_complete 사운드 재생', async () => {
-      const source = await readInventoryActionsSource();
-      const idx = source.indexOf('completeQuest:');
-      assert.ok(idx > -1, 'completeQuest action should exist');
-      // completeQuest 함수 끝(다음 액션 시작)까지 추출
-      const blockEnd = source.indexOf('claimAchievement:', idx);
-      const block = source.slice(idx, blockEnd);
-      assert.match(
-          block,
-          /soundManager.*\(['"]quest_complete['"]\)|play\(['"]quest_complete['"]\)/,
-          'completeQuest should call soundManager.play("quest_complete")'
-      );
-  });
-
-  test('useInventoryActions: soundManager import 추가됨', async () => {
-      const source = await readInventoryActionsSource();
-      assert.match(source, /import\s*\{[^}]*soundManager[^}]*\}\s*from/);
-  });
-
-  test('SoundManager: cycle 117/118 사운드 회귀 보존', async () => {
-      const source = await readSrc('src/systems/SoundManager.ts');
-      assert.match(source, /case\s+['"]discovery_chain['"]\s*:/);
-      assert.match(source, /case\s+['"]new_area['"]\s*:/);
-      assert.match(source, /case\s+['"]escape['"]\s*:/);
-  });
-}
-
 // ─── 원본: tests/cycle-141-quest-reward-content-check.test.js ───
 {
   /**
@@ -678,12 +621,10 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    *   encounter / victory / death / rest (활성) + levelUp / bossPhase2 / questComplete /
    *   ruinRecap (모두 dispatch 0건).
    * - addStoryLog 사용 4건 (encounter/victory/death/rest)만 매칭, 나머지 4 템플릿은 dead.
-   * - completeQuest는 quest_complete 사운드는 재생하지만 addStoryLog 미호출 → AI narrative
-   *   blurb 부재. quest 보상 모먼트가 sound만 있고 narrative 없음.
+   * - completeQuest는 보상 로그는 남기지만 addStoryLog 미호출 → AI narrative
+   *   blurb 부재.
    *
    * 패턴 (cycle 222-271 silent dead config 시리즈 43번째):
-   * - cycle 217-220: SoundManager 미사용 사운드 dispatch.
-   * - cycle 261: claim 액션 sensory cue paired completion.
    * - cycle 272: addStoryLog 'questComplete' 템플릿 dispatch.
    *
    * 수정:
@@ -693,7 +634,6 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    * 2) src/hooks/useGameEngine.ts: addStoryLog가 deps로 이미 전달되고 있으므로 변화 없음.
    *
    * 회귀 가드:
-   * - 기존 quest_complete 사운드 dispatch 유지.
    * - quest 보상 grant / addLog 동작 변화 없음.
    * - aiService 다른 템플릿 dispatch 동작 유지 (encounter/victory/death/rest).
    */
@@ -734,14 +674,6 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
           'aiService questComplete 템플릿 유지');
   });
 
-  test('cycle 272: 기존 quest_complete 사운드 dispatch 유지 (회귀 가드)', async () => {
-      const source = await readInventoryActionsSource();
-      // completeQuest 함수 본문 — 다음 함수 'claimAchievement' 직전까지.
-      const fnMatch = source.match(/completeQuest:[\s\S]+?claimAchievement:/);
-      assert.ok(fnMatch);
-      assert.ok(/soundManager\.play\(['"]quest_complete['"]\)/.test(fnMatch[0]),
-          'cycle 122 quest_complete 사운드 dispatch 유지');
-  });
 }
 
 // ─── 원본: tests/cycle-313-quest-reward-chips-private.test.js ───

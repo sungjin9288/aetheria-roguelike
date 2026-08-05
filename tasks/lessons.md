@@ -336,8 +336,8 @@
 - **Rationale:** 이벤트 진입 때 화면이 텍스트 전용으로 바뀌면 사용자는 장소 안에서 결정을 내린다는 감각을 잃는다. 반대로 아트가 선택지를 밀면 결정 비용이 커지므로, 세계 연속성과 행동 우선순위를 같은 adaptive layout 계약으로 묶어야 한다
 
 ### R73: Hide Capabilities Until Their Experience Is Ready
-- **Rule:** 임시 media provider를 제품 경험에서 제거할 때는 UI control과 자동 초기화를 함께 없애고 provider boundary를 fail-closed로 잠근다. 향후 정식 provider가 사용할 semantic event callsite는 보존할 수 있지만, 비활성 capability를 조작하는 버튼이나 암묵적 AudioContext 생성은 노출하지 않는다
-- **Rationale:** 장소 구분이 없는 임시 효과음과 작동하지 않는 제어는 완성된 사운드 기능처럼 보이면서도 세계의 분위기를 전달하지 못한다. 출력 경계를 명시적으로 닫아 두면 현재 경험은 정직하게 무음으로 유지되고, 이후 마을·탐험 soundscape는 gameplay action을 다시 결합하지 않고 교체할 수 있다
+- **Rule:** 임시 media capability를 제품에서 제거하기로 결정하면 UI control과 자동 초기화뿐 아니라 provider, playback callsite, asset, 그 존재를 강제하는 테스트까지 함께 없앤다. 미래 구현을 위한 경계는 실제 설계가 시작될 때 현재 domain event에서 새로 연결하고, 그 전에는 dead capability를 제품 코드에 남기지 않는다
+- **Rationale:** 출력만 막은 provider는 사용자에게는 보이지 않아도 코드와 테스트가 폐기된 구조를 계속 권위로 만든다. 아직 정해지지 않은 미래 사운드를 위해 과거 합성 엔진을 보존하면 마을·탐험 soundscape 설계가 기존 API에 끌려가므로, 현재는 완전한 무음 계약을 유지하고 정식 미디어 요구가 생길 때 의도에 맞는 경계를 새로 만드는 편이 더 명확하다
 
 ### R74: Recommend Only Actions That Open Their Owning Surface
 - **Rule:** 결과 화면의 추천은 현재 위치와 game state에서 실행 가능한 action만 가리켜야 한다. 상세 확인 action은 selected tab만 바꾸지 말고 해당 owning surface를 실제로 열며, 상태·보상·추천은 각각 한 번만 보여 준다

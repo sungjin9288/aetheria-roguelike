@@ -14,7 +14,6 @@ import { AT } from '../reducers/actionTypes.js';
 import { GS } from '../reducers/gameStates.js';
 import { MSG } from '../data/messages.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
-import { soundManager } from '../systems/SoundManager.js';
 import { findItemByName } from './gameUtils.js';
 import { applyDynamicDifficulty } from '../systems/DifficultyManager';
 import { getBossSignatureDrops } from './bossSignatureHint';
@@ -580,10 +579,6 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
 
         addLog('event', `🔍 ${chain.desc}`);
         addLog('success', `🏆 [발견 체인 완료] ${chain.label}! 보상: ${rewardParts.join(', ')}`);
-        // cycle 117: 체인 완료 sensory cue — G major arpeggio. cycle 88 escape sound /
-        // cycle 95+ maxKillStreak chain과 같은 결의 audio reflection.
-        soundManager.play('discovery_chain');
-
         dispatch({
             type: AT.SET_PLAYER,
             payload: (p: any) => {

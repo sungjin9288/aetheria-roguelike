@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Sword, Zap, ArrowRight, RotateCw, Sparkles, Backpack } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
-import { soundManager } from '../../systems/SoundManager';
 import { buildCombatView } from '../../utils/combatView';
 import type { Player, Monster } from '../../types/index.js';
 
@@ -78,7 +77,6 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
 
   const handleAction = (key: any) => {
     if (key === 'attack') {
-      soundManager.play('attack');
       actions.combat('attack');
       return;
     }
@@ -97,7 +95,6 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
   };
 
   const handleConsumableUse = (item: any) => {
-    soundManager.play('item');
     if (actions.combatUseItem) {
       actions.combatUseItem(item);
       return;

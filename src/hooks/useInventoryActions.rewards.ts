@@ -8,12 +8,11 @@ import { getTraitProfile, getTraitQuestResonance } from '../utils/runProfileUtil
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
-import { soundManager } from '../systems/SoundManager';
 import { removeExpeditionFocusQuest } from '../utils/expeditionMissionFocus';
 
 /**
  * createRewardActions — 보상 수령 도메인 (퀘스트/업적/주간/시즌패스).
- *   네 액션 모두 "달성/회수" 모먼트로 quest_complete 사운드를 공유한다.
+ *   네 액션의 보상 지급, 로그, 후속 narrative를 한 경계에서 처리한다.
  *   useInventoryActions.ts에서 공유 클로저(emitUnlockedTitles/syncLevelQuests)와
  *   deps를 ctx로 받아 조합된다.
  */
@@ -112,11 +111,8 @@ export const createRewardActions = (ctx: any) => {
             dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.questComplete });
             emitUnlockedTitles(updatedPlayer);
             addLog('success', MSG.QUEST_DONE(qData.title));
-            // cycle 122: 퀘스트 완료 sensory cue — E major arpeggio. cycle 117/118 사운드
-            // 시리즈 패턴. 보상 / 칭호 해금이 동반되는 의미 있는 모먼트의 audio reflection.
-            soundManager.play('quest_complete');
-            // cycle 272: aiService 'questComplete' 스토리 템플릿 dispatch — cycle 122 sound와 paired
-            //   narrative cue. 8 스토리 템플릿 중 levelUp/bossPhase2/questComplete/ruinRecap 4종 dead였던
+            // cycle 272: aiService 'questComplete' 스토리 템플릿 dispatch.
+            //   8 스토리 템플릿 중 levelUp/bossPhase2/questComplete/ruinRecap 4종 dead였던
             //   회귀 fix (questComplete 먼저). AI narrative blurb 또는 fallback 텍스트 표시.
             if (typeof addStoryLog === 'function') {
                 addStoryLog('questComplete', { questTitle: qData.title });
@@ -164,24 +160,16 @@ export const createRewardActions = (ctx: any) => {
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);
             addLog('success', MSG.ACH_DONE(achData.title));
-            // cycle 123: 업적 청구 sensory cue — cycle 122 quest_complete 사운드 재사용.
-            // 퀘스트 완료와 업적 청구는 같은 결의 "달성/회수" 모먼트라 동일 음악적
-            // 정체성(E major) 부여.
-            soundManager.play('quest_complete');
         },
 
         // ── 주간 미션 수령 ────────────────────────────────────────────────
         claimWeeklyMission: (missionId: any, reward: any) => {
             dispatch({ type: AT.CLAIM_WEEKLY_MISSION, payload: { missionId, reward } });
             addLog('success', MSG.WEEKLY_MISSION_CLAIM(reward.gold || 0, reward.premiumCurrency));
-            // cycle 261: claim 액션 sensory cue paired completion (cycle 122-123 패턴).
-            //   "달성/회수" 모먼트 audio reflection — quest/achievement 사운드 재사용.
-            soundManager.play('quest_complete');
         },
 
         // ── 시즌 패스 보상 수령 ──────────────────────────────────────────
-        // cycle 261: SeasonPassPanel claimReward가 dispatch만 있고 addLog/sound 0건이던 UX
-        //   dead path fix. quest/achievement/weekly와 동일 sensory cue.
+        // cycle 261: SeasonPassPanel claimReward의 사용자 피드백을 addLog로 보완.
         // cycle 595: rewardLabel default null 제거 — 1 caller (SeasonPassPanel:32
         //   onClaimSeasonReward(rewardTier, label)) 명시 전달이라 default 도달
         //   불가. body의 rewardLabel ternary는 별개 보존 (caller가 null/empty
@@ -190,7 +178,6 @@ export const createRewardActions = (ctx: any) => {
             dispatch({ type: AT.CLAIM_SEASON_REWARD, payload: { tier } });
             const label = rewardLabel ? `${rewardLabel}` : `티어 ${tier}`;
             addLog('success', `시즌 패스 보상 수령: ${label}`);
-            soundManager.play('quest_complete');
         },
     });
 };

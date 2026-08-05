@@ -9,7 +9,6 @@ import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyMana
 import { appendGrave } from '../../utils/graveUtils.js';
 import { getSelectedSkill } from './_helpers';
 import { handleVictoryOutcome } from './combatVictory';
-import { soundManager } from '../../systems/SoundManager';
 
 export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
     const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats, liveConfig } = deps;
@@ -40,17 +39,14 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     }
                     result = CombatEngine.performSkill(playerAtActionStart, enemyAtActionStart, stats, selected?.skill);
                     if (!result.success) return addLog('error', result.logs[0]?.text || MSG.SKILL_NO_MP);
-                    // cycle 219: 스킬 발동 sensory cue — sweep tone (600→1800→900Hz) 정의 있으나
-                    //   dispatch 0건이던 dead path. 스킬 사용을 일반 공격과 청각적으로 차별화.
-                    soundManager.play('skill');
                     playerAfterAction = result.updatedPlayer;
                     dispatch({ type: AT.SET_PLAYER, payload: result.updatedPlayer });
                     if (result.forceEscape) {
                         result.logs.forEach((log: any) => addLog(log.type, log.text));
                         // cycle 89: 도주 스킬(escape_100) 코드 패스를 cycle 74-88 escape feedback
                         // chain에 합류. 이전엔 forceEscape 분기가 단순 SET_ENEMY=null + GS.IDLE만
-                        // 처리해 stats.escapes 증분 / recentBattles record / escape 사운드를
-                        // 모두 누락했음. '공허의 문'(시간술사) / '순간 이동'(차원술사) 사용자가
+                        // 처리해 stats.escapes 증분과 recentBattles record를 모두 누락했음.
+                        // '공허의 문'(시간술사) / '순간 이동'(차원술사) 사용자가
                         // 정상 도주 분기 사용자와 동일한 보상 체인을 받지 못하던 회귀 수정.
                         const escHpRatio = (playerAfterAction?.hp || player.hp || 0)
                             / Math.max(1, playerAfterAction?.maxHp || player.maxHp || 1);
@@ -63,7 +59,6 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         }) });
                         dispatch({ type: AT.SET_ENEMY, payload: null });
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
-                        soundManager.play('escape');
                         return;
                     }
                 } else {
@@ -148,8 +143,6 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         dispatch({ type: AT.SET_PLAYER, payload: deathRecordPlayer });
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                         dispatch({ type: AT.SET_ENEMY, payload: null });
-                        // cycle 218: 사망 sensory cue — descending tone (400→100Hz). cycle 217 lens 확장.
-                        soundManager.play('death');
                         emitUnlockedTitles(deathRecordPlayer);
                         defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                         addStoryLog('death', { loc: playerForEnemyTurn.loc });
@@ -180,10 +173,6 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                     }) });
                     dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                     dispatch({ type: AT.SET_ENEMY, payload: null });
-                    // cycle 88: 도주 성공 sensory cue — cycle 74-87 feedback chain의 마지막
-                    // 채널. 'info' 로그는 useGameEngine의 sound 매핑에 없으므로 직접 호출
-                    // (CombatPanel의 'attack'/'item' 패턴과 동일).
-                    soundManager.play('escape');
                 } else {
                     const protectionLogs: any[] = [];
                     const protectedResult = CombatEngine.applyFatalProtection(player, stats.relics || [], escapeResult.damage || 0, protectionLogs);
@@ -196,8 +185,6 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         dispatch({ type: AT.SET_PLAYER, payload: defeatResult.updatedPlayer });
                         dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
                         dispatch({ type: AT.SET_ENEMY, payload: null });
-                        // cycle 218: 도주 실패 후 사망 sensory cue — same death sound as combat death.
-                        soundManager.play('death');
                         emitUnlockedTitles(defeatResult.updatedPlayer);
                         defeatResult.logs.forEach((log: any) => addLog(log.type, log.text));
                         addStoryLog('death', { loc: player.loc });

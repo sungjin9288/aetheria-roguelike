@@ -1,5 +1,4 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { soundManager } from '../../systems/SoundManager';
 import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
@@ -106,20 +105,6 @@ const GameRoot = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [engine.bootStage, engine.player, engine.dispatch, engine.addLog]);
 
-    const legendarySoundPlayedRef = useRef<any>(null);
-    useEffect(() => {
-        if (!legendaryDrop) {
-            legendarySoundPlayedRef.current = null;
-            return;
-        }
-        if (legendarySoundPlayedRef.current === legendaryDrop.name) return;
-        legendarySoundPlayedRef.current = legendaryDrop.name;
-        try {
-            soundManager.play?.('levelUp');
-        } catch {
-            // fallback: 일부 sound 이름은 지원 안 할 수 있음
-        }
-    }, [legendaryDrop]);
     // slice 29: 레벨업 셀러브레이션 — player.level 증가 감지 시 배너 노출 후
     //   ~1.8s 자동 해제. visualEffect 'levelUp'은 연속 레벨업에서 값이 안 바뀌어
     //   재트리거 못 하므로 실제 level 변화를 watch (정확한 새 레벨 표시).

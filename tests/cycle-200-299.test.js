@@ -1092,51 +1092,12 @@ import { readFile } from 'node:fs/promises';
   });
 }
 
-// ─── cycle-217-level-up-sound.test.js ───
+// ─── cycle-217-level-up-visual-effect.test.js ───
 {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.resolve(__dirname, '..');
 
-  /**
-   * cycle 217: 레벨업 sound 누락 회귀 fix — visualEffect='levelUp' 시점에 sound trigger.
-   *
-   * 발견 (silent level-up moment):
-   * - SoundManager에 'levelUp' sound 정의됨 (case 'levelUp' branch).
-   * - useGameEngine.ts:49: `if (lastLog.type === 'levelUp') soundManager.play('levelUp')` — log type
-   *   기반 mapping 존재.
-   * - 그러나 CombatEngine.applyExpGain은 levelup 로그를 `type: 'system'`으로 기록 (line 1232).
-   * - 따라서 type==='levelUp' 비교는 절대 true가 안 됨 → 'levelUp' sound 영원히 dispatch 안 됨.
-   * - visualEffect='levelUp'은 dispatch되지만 MainLayout은 'shake'만 처리 → 시각 효과도 nothing.
-   *
-   * 결과: 플레이어가 레벨업해도 audio/visual 피드백 0건. 레벨업이 의미 있는 모먼트인데
-   *   "system 로그 한 줄"만 보임 — UX 회귀 (SoundManager + visualEffect 양쪽이 dead path).
-   *
-   * 패턴 (sensory cue 시리즈 lens):
-   * - cycle 117/118: 사운드 디자인 시리즈.
-   * - cycle 122/123: quest_complete / 업적 청구 sensory cue.
-   * - cycle 217: 레벨업 sensory cue 누락 보강.
-   *
-   * 수정 (src/hooks/useGameEngine.ts):
-   * - useEffect로 state.visualEffect를 watch — 'levelUp'으로 transition 시 soundManager.play('levelUp').
-   * - useGameEngine.ts:49 dead 'levelUp' log type mapping은 유지 (LOG_STYLES에 'levelUp'
-   *   style이 없어 LOG TYPE 변경은 visual regression 위험 — visualEffect 기반 fix가 안전).
-   *
-   * 회귀 가드: 다른 visualEffect ('shake' 등)는 sound 재생 안 함. null transition 무시.
-   */
-
-  test('cycle 217: useGameEngine에 visualEffect levelUp watcher 추가', () => {
-      const file = path.join(ROOT, 'src/hooks/useGameEngine.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      // visualEffect를 watch하는 useEffect 패턴 + 'levelUp' sound 호출
-      assert.match(
-          content,
-          /visualEffect[\s\S]*?soundManager\.play\(\s*['"]levelUp['"]/,
-          'useGameEngine에 visualEffect===levelUp 시 levelUp sound 재생 코드 필요',
-      );
-  });
-
   test('cycle 217: applyExpGain은 visualEffect=levelUp을 set (회귀 가드)', () => {
-      // applyExpGain은 CombatEngine.outcome.ts로 분리됨 (mixin).
       const file = path.join(ROOT, 'src/systems/CombatEngine.outcome.ts');
       const content = fs.readFileSync(file, 'utf-8');
       assert.match(
@@ -1144,232 +1105,6 @@ import { readFile } from 'node:fs/promises';
           /visualEffect\s*=\s*['"]levelUp['"]/,
           "CombatEngine.applyExpGain의 visualEffect='levelUp' 설정은 보존되어야 함",
       );
-  });
-
-  test('cycle 217: SoundManager에 levelUp case 정의 (회귀 가드)', () => {
-      const file = path.join(ROOT, 'src/systems/SoundManager.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(
-          content,
-          /case\s+['"]levelUp['"]/,
-          "SoundManager의 case 'levelUp' branch 보존되어야 함",
-      );
-  });
-
-  test('cycle 217: useGameEngine의 기존 log-type sound mapping은 유지 (회귀 가드)', () => {
-      const file = path.join(ROOT, 'src/hooks/useGameEngine.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      // combat / error / legendary 매핑은 그대로 (단일 라인 if문 형태)
-      assert.match(content, /lastLog\.type\s*===\s*['"]combat['"][^\n]*soundManager\.play\(\s*['"]attack['"]/);
-      assert.match(content, /lastLog\.type\s*===\s*['"]error['"][^\n]*soundManager\.play\(\s*['"]error['"]/);
-      assert.match(content, /lastLog\.type\s*===\s*['"]legendary['"][^\n]*soundManager\.play\(\s*['"]legendary['"]/);
-  });
-
-  test('cycle 217: levelUp transition 외 visualEffect 변화는 sound 재생 안 함 (코드 패턴 가드)', () => {
-      const file = path.join(ROOT, 'src/hooks/useGameEngine.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      // visualEffect === 'levelUp' 비교 명시 (다른 효과 false-positive 방지)
-      assert.match(
-          content,
-          /visualEffect\s*===?\s*['"]levelUp['"]/,
-          "visualEffect === 'levelUp' 비교 가드 필요 ('shake' 등 false-positive 방지)",
-      );
-  });
-}
-
-// ─── cycle-218-death-victory-sounds.test.js ───
-{
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const ROOT = path.resolve(__dirname, '..');
-
-  /**
-   * cycle 218: 'death' + 'victory' sound dispatch 누락 fix (cycle 217 sensory cue 시리즈 확장).
-   *
-   * 발견 (silent moments):
-   * - SoundManager에 6 sound 정의됐지만 dispatch 0건: hover / heal / death / skill / explore / victory.
-   * - 본 cycle은 가장 영향 큰 2종 fix:
-   *   · death: player 사망 모먼트 — descending tone (400→300→200→100 Hz) 정의 있으나
-   *     combatAttack/combatItem의 GS.DEAD dispatch 시점에 sound 미호출.
-   *   · victory: 보스 처치 모먼트 — 5-tone arpeggio (C5→E5→G5→C6→E6) 정의 있으나
-   *     combatVictory의 보스 처치 분기에서 sound 미호출.
-   *
-   * 결과 (UX 회귀):
-   * - 사망: GS.DEAD 전환 + RunSummary 모달만 보임. 음향 피드백 0건.
-   * - 보스 처치: legendary 드롭 시에만 'levelUp' 사운드(GameRoot:61). 일반 보스 처치 무음.
-   *
-   * 패턴 (sensory cue 시리즈):
-   * - cycle 117/118: 사운드 디자인 시리즈.
-   * - cycle 122/123: quest_complete / 업적 청구.
-   * - cycle 217: 레벨업 sensory cue.
-   * - cycle 218: 사망 / 보스 승리 sensory cue.
-   *
-   * 수정:
-   * 1. src/hooks/combatActions/combatAttack.ts: GS.DEAD dispatch 직전 soundManager.play('death').
-   * 2. src/hooks/combatActions/combatItem.ts: 동일.
-   * 3. src/hooks/combatActions/combatVictory.ts: isBossKill 분기에서 soundManager.play('victory').
-   *
-   * 회귀 가드: 일반 몹 처치는 victory 사운드 안 울림 (boss 전용 — 큰 모먼트).
-   *           사망 사운드는 GS.DEAD 전환 시 1회만 (중복 dispatch 안 됨).
-   */
-
-  test('cycle 218: combatAttack에 death sound dispatch 추가', () => {
-      const file = path.join(ROOT, 'src/hooks/combatActions/combatAttack.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(
-          content,
-          /soundManager\.play\(\s*['"]death['"]/,
-          'combatAttack.ts에 GS.DEAD dispatch 시 soundManager.play(death) 호출 필요',
-      );
-  });
-
-  test('cycle 218: combatItem에 death sound dispatch 추가', () => {
-      const file = path.join(ROOT, 'src/hooks/combatActions/combatItem.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(
-          content,
-          /soundManager\.play\(\s*['"]death['"]/,
-          'combatItem.ts에 GS.DEAD dispatch 시 soundManager.play(death) 호출 필요',
-      );
-  });
-
-  test('cycle 218: combatVictory에 victory sound dispatch 추가 (boss kill)', () => {
-      const file = path.join(ROOT, 'src/hooks/combatActions/combatVictory.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(
-          content,
-          /soundManager\.play\(\s*['"]victory['"]/,
-          'combatVictory.ts에 isBossKill 시 soundManager.play(victory) 호출 필요',
-      );
-  });
-
-  test('cycle 218: SoundManager의 death / victory case 보존 (회귀 가드)', () => {
-      const file = path.join(ROOT, 'src/systems/SoundManager.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(content, /case\s+['"]death['"]/, "SoundManager의 case 'death' branch 보존");
-      assert.match(content, /case\s+['"]victory['"]/, "SoundManager의 case 'victory' branch 보존");
-  });
-
-  test('cycle 218: combatVictory에 isBossKill 가드 (일반 몹 처치 false-positive 방지)', () => {
-      const file = path.join(ROOT, 'src/hooks/combatActions/combatVictory.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      // isBossKill 또는 deadEnemy?.isBoss 컨텍스트 안에서 soundManager.play('victory')
-      assert.match(
-          content,
-          /isBossKill[\s\S]{0,800}?soundManager\.play\(\s*['"]victory['"]/,
-          "victory 사운드는 isBossKill 컨텍스트에서만 dispatch (일반 몹 처치 무음 유지)",
-      );
-  });
-
-  test('cycle 217 회귀 가드: useGameEngine의 visualEffect levelUp watcher 유지', () => {
-      const file = path.join(ROOT, 'src/hooks/useGameEngine.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(content, /visualEffect\s*===\s*['"]levelUp['"]/);
-  });
-}
-
-// ─── cycle-220-explore-sound.test.js ───
-{
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const ROOT = path.resolve(__dirname, '..');
-
-  /**
-   * cycle 220: 'explore' sound dispatch 누락 fix (cycle 217-219 sensory cue 시리즈 마지막 합류).
-   *
-   * 발견 (silent explore tick):
-   * - cycle 217-219에서 levelUp / death / victory / skill / heal 5종 fix.
-   * - 남은 dead sound dispatch: hover / explore (2종).
-   * - 본 cycle은 explore fix:
-   *   · explore: 탐험 tick 모먼트 — sine wave 800→1200→800Hz arc, 0.16s 짧은 cue (gain 0.04).
-   *     subtle 디자인 — 의도적으로 'tick' 느낌. 정의 있으나 dispatch 0건.
-   * - 'hover'는 button hover 빈도가 너무 높아 UX noise 위험 → 보류.
-   *
-   * 결과 (UX 회귀):
-   * - 탐험 액션 후 narrative event / 적 spawn / 발견 이벤트 등 결과 도착 전까지 무음.
-   * - 사용자가 탐험을 트리거했는지 청각적 피드백 없음.
-   *
-   * 패턴:
-   * - cycle 117/118: 사운드 디자인.
-   * - cycle 122/123/217/218/219: sensory cue dispatch 보강.
-   * - cycle 220: explore tick cue 마지막 합류.
-   *
-   * 수정 (src/hooks/gameActions/exploreActions.ts):
-   * - explore 액션 진입 검증 통과 후 (gameState idle + 시작 마을 아님 + mapData 존재) sound dispatch.
-   * - 결과 (event/combat/nothing) 분기 전 trigger feedback.
-   *
-   * 회귀 가드: validation 실패(town/blocked map)는 sound 안 울림. explore 트리거 시점에만.
-   */
-
-  test('cycle 220: exploreActions에 explore sound dispatch 추가', () => {
-      const file = path.join(ROOT, 'src/hooks/gameActions/exploreActions.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(
-          content,
-          /soundManager\.play\(\s*['"]explore['"]/,
-          'exploreActions.ts에 explore 액션 시 soundManager.play(explore) 호출 필요',
-      );
-  });
-
-  test('cycle 220: SoundManager의 explore case 보존 (회귀 가드)', () => {
-      const file = path.join(ROOT, 'src/systems/SoundManager.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(content, /case\s+['"]explore['"]/, "SoundManager의 case 'explore' branch 보존");
-  });
-
-  test('cycle 220: explore sound는 validation 통과 후 dispatch (실패 시 false-positive 방지)', () => {
-      const file = path.join(ROOT, 'src/hooks/gameActions/exploreActions.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      // EXPLORE_BLOCKED / TOWN_PEACEFUL / MAP_UNKNOWN 검증 분기 이후 sound dispatch
-      // 검증 분기는 early return이므로 분기 후 위치한 sound는 자연스럽게 가드됨.
-      assert.match(
-          content,
-          /if\s*\(\s*!mapData\s*\)[\s\S]{0,500}?soundManager\.play\(\s*['"]explore['"]/,
-          'explore sound는 mapData 검증 통과 후 dispatch (early return 가드 활용)',
-      );
-  });
-
-  test('cycle 217-219 회귀 가드: 기존 sensory cue 5종 모두 유지', () => {
-      const useGameEngine = fs.readFileSync(path.join(ROOT, 'src/hooks/useGameEngine.ts'), 'utf-8');
-      assert.match(useGameEngine, /visualEffect\s*===\s*['"]levelUp['"]/, 'cycle 217 levelUp');
-
-      const combatVictory = fs.readFileSync(path.join(ROOT, 'src/hooks/combatActions/combatVictory.ts'), 'utf-8');
-      assert.match(combatVictory, /soundManager\.play\(\s*['"]victory['"]/, 'cycle 218 victory');
-
-      const combatAttack = fs.readFileSync(path.join(ROOT, 'src/hooks/combatActions/combatAttack.ts'), 'utf-8');
-      assert.match(combatAttack, /soundManager\.play\(\s*['"]death['"]/, 'cycle 218 death');
-      assert.match(combatAttack, /soundManager\.play\(\s*['"]skill['"]/, 'cycle 219 skill');
-
-      const characterActions = fs.readFileSync(path.join(ROOT, 'src/hooks/gameActions/characterActions.ts'), 'utf-8');
-      assert.match(characterActions, /soundManager\.play\(\s*['"]heal['"]/, 'cycle 219 heal');
-  });
-
-  test('cycle 220: SoundManager의 모든 등록 case는 dispatch path 존재 (cycle 325 hover 정리 후)', () => {
-      // cycle 325: 'hover' case 제거 — SoundManager에 정의된 모든 case는 dispatch path 보유.
-      const SRC_DIR = path.join(ROOT, 'src');
-      const files = [];
-      const walk = (dir) => {
-          for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-              const p = path.join(dir, e.name);
-              if (e.isDirectory()) walk(p);
-              else if (/\.(ts|tsx|js|jsx)$/.test(e.name)) files.push(p);
-          }
-      };
-      walk(SRC_DIR);
-
-      const dispatched = new Set();
-      for (const f of files) {
-          const c = fs.readFileSync(f, 'utf-8');
-          for (const m of c.matchAll(/soundManager\.play\??\(\s*['"]([a-zA-Z_]+)['"]/g)) {
-              dispatched.add(m[1]);
-          }
-      }
-      // 등록된 sound (정의된 case)
-      const soundDef = fs.readFileSync(path.join(ROOT, 'src/systems/SoundManager.ts'), 'utf-8');
-      const defined = new Set(
-          [...soundDef.matchAll(/case\s+['"]([a-zA-Z_]+)['"]/g)].map((m) => m[1]),
-      );
-      const undispatched = [...defined].filter((s) => !dispatched.has(s));
-      assert.deepEqual(undispatched, [],
-          `cycle 325 시점 dead sound 0건 — 모든 case dispatch path 존재. 그 외 발견 시 회귀: ${JSON.stringify(undispatched)}`);
   });
 }
 
@@ -2328,77 +2063,40 @@ import { readFile } from 'node:fs/promises';
   });
 }
 
-// ─── cycle-261-claim-sensory-cue-coverage.test.js ───
+// ─── cycle-261-claim-feedback-coverage.test.js ───
 {
   /**
-   * cycle 261: claim 액션 sensory cue 누락 (cycle 122-123 paired completion)
-   *   (cycle 222-260 silent dead config 시리즈 32번째).
-   *
-   * 발견 (cycle 122/123 sensory cue 시리즈 잔존 누락):
-   * - cycle 122: quest_complete 사운드 도입 (퀘스트 완료 / 업적 청구).
-   * - cycle 123: 업적 청구도 동일 사운드 재사용.
-   * - 그러나 동일 결의 "달성/회수" 모먼트 2건 잔존:
-   *   1) claimWeeklyMission (useInventoryActions): 보상 grant + addLog 있지만 sound 0건.
-   *   2) SeasonPassPanel claimReward: dispatch만 있고 addLog/sound 모두 0건 — UX dead path.
-   *
-   * 패턴 (cycle 222-260 silent dead config 시리즈 32번째):
-   * - cycle 122: quest_complete 사운드 도입.
-   * - cycle 123: 업적 paired.
-   * - cycle 217-220: levelUp/death/victory/skill/heal/explore 사운드 시리즈.
-   * - cycle 261: claim 액션 sensory cue 누락 paired completion.
-   *
-   * 수정:
-   * 1) src/hooks/useInventoryActions.ts:
-   *    - claimWeeklyMission에 soundManager.play('quest_complete') 추가.
-   *    - claimSeasonReward 신규 action 추가 — dispatch + addLog + sound 통합.
-   * 2) src/components/tabs/SeasonPassPanel.tsx: useGameEngine actions 사용으로 refactor.
-   *
-   * 회귀 가드:
-   * - claimWeeklyMission addLog 동작 유지.
-   * - 기존 quest / achievement quest_complete 사운드 dispatch 유지.
-   * - CLAIM_SEASON_REWARD reducer 핸들러 변화 없음.
+   * 주간 임무와 시즌 패스 보상은 동일한 reward action 경계에서 dispatch와
+   * 사용자 로그를 함께 남긴다. 사운드 제거 이후에도 이 가시적 피드백은 유지한다.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 261: claimWeeklyMission에 quest_complete 사운드 dispatch', async () => {
+  test('cycle 261: claimWeeklyMission은 보상 로그를 남긴다', async () => {
       const source = await readInventoryActionsSource();
-      // claimWeeklyMission 함수 내에 soundManager.play 호출.
       const fnMatch = source.match(/claimWeeklyMission:[\s\S]{0,500}?},/);
       assert.ok(fnMatch, 'claimWeeklyMission 정의 발견');
-      assert.ok(/soundManager\.play\(['"]quest_complete['"]\)/.test(fnMatch[0]),
-          'claimWeeklyMission 내부에 soundManager.play("quest_complete") 호출');
+      assert.ok(/addLog/.test(fnMatch[0]), 'claimWeeklyMission 내부에 addLog 호출');
   });
 
   test('cycle 261: claimSeasonReward 신규 액션 정의', async () => {
       const source = await readInventoryActionsSource();
       assert.ok(/claimSeasonReward:/.test(source),
           'claimSeasonReward action 정의됨');
-      // claimSeasonReward 함수 내에 dispatch + addLog + sound 모두 있어야 함.
       const fnMatch = source.match(/claimSeasonReward:[\s\S]{0,800}?},/);
       assert.ok(fnMatch, 'claimSeasonReward 정의 발견');
       assert.ok(/CLAIM_SEASON_REWARD/.test(fnMatch[0]),
           'claimSeasonReward 내부에 CLAIM_SEASON_REWARD dispatch');
       assert.ok(/addLog/.test(fnMatch[0]),
           'claimSeasonReward 내부에 addLog 호출');
-      assert.ok(/soundManager\.play\(['"]quest_complete['"]\)/.test(fnMatch[0]),
-          'claimSeasonReward 내부에 quest_complete 사운드');
   });
 
   test('cycle 261: SeasonPassPanel이 actions.claimSeasonReward 사용', async () => {
       const source = await readSrc('src/components/tabs/SeasonPassPanel.tsx');
       assert.ok(/claimSeasonReward/.test(source),
           'SeasonPassPanel은 claimSeasonReward action 사용');
-  });
-
-  test('cycle 122-123 회귀 가드: 기존 quest_complete 사운드 dispatch 유지', async () => {
-      const source = await readInventoryActionsSource();
-      const matches = source.match(/soundManager\.play\(['"]quest_complete['"]\)/g);
-      // cycle 122 (completeQuest), cycle 123 (claimAchievement), cycle 261 (claimWeekly + claimSeason) → 4 expected.
-      assert.ok(matches && matches.length >= 4,
-          `quest_complete 사운드 dispatch ≥4개 (cycle 122/123 + cycle 261 추가, 실제: ${matches?.length || 0})`);
   });
 
   test('cycle 261: 기존 CLAIM_SEASON_REWARD reducer 변화 없음 (회귀 가드)', async () => {
@@ -2408,64 +2106,11 @@ import { readFile } from 'node:fs/promises';
   });
 }
 
-// ─── cycle-263-critical-log-sound-mapping.test.js ───
+// ─── cycle-263-critical-log-contract.test.js ───
 {
-  /**
-   * cycle 263: 'critical' 로그 타입 sensory cue 누락 dead config
-   *   (cycle 222-262 silent dead config 시리즈 34번째).
-   *
-   * 발견 (sensory cue gap):
-   * - useGameEngine.tsx:48-52에서 lastLog.type → soundManager.play 매핑:
-   *   combat→attack / levelUp→levelUp / error→error / item→item / legendary→legendary.
-   * - 그러나 'critical' 로그 타입(crit hit 시 MSG.COMBAT_CRIT, 보스 reveal 등 14건)에 대한
-   *   sound 매핑 누락.
-   * - 결과: 일반 공격은 'attack' 사운드 재생되지만 크리티컬 hit은 무음 — 전투 피드백
-   *   퇴행. 강화된 hit이 약화된 hit처럼 들림.
-   *
-   * 발생 경로:
-   * - CombatEngine: isCrit 시 logs.push({ type: 'critical', text: MSG.COMBAT_CRIT }) — 일반
-   *   공격 'combat' 로그 직후 'critical' 추가 → lastLog는 'critical' → 매핑 X → 무음.
-   * - executeAtkTriggered (예언의 돌판), phase3 보스 변신 등도 'critical' 로그.
-   *
-   * 패턴 (cycle 222-262 silent dead config 시리즈 34번째):
-   * - cycle 122-123: quest_complete 사운드 도입.
-   * - cycle 217-220: levelUp/death/victory/skill/heal/explore 사운드.
-   * - cycle 261: claim 액션 sensory cue paired completion.
-   * - cycle 263: 'critical' 로그 sensory cue paired completion.
-   *
-   * 수정 (src/hooks/useGameEngine.ts):
-   * - lastLog 사운드 매핑에 'critical' → 'attack' 추가 (combat과 동일 — 강화된 hit도 attack 결).
-   *
-   * 회귀 가드:
-   * - 기존 5개 매핑 (combat/levelUp/error/item/legendary) 동작 유지.
-   * - lastLog 의존성 그대로.
-   */
-
   const HERE = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
-
-  test('cycle 263 / slice 32: useGameEngine에서 critical 로그 타입 → 사운드 매핑', async () => {
-      // slice 32: 'critical' → 'attack'에서 전용 'crit' 사운드로 격상 (일반 타격과 분리).
-      const source = await readSrc('src/hooks/useGameEngine.ts');
-      assert.ok(/lastLog\.type === ['"]critical['"][\s\S]{0,120}soundManager\.play\(['"]crit['"]\)/.test(source),
-          "useGameEngine에 lastLog.type === 'critical' → soundManager.play('crit') 매핑");
-  });
-
-  test('cycle 263: 기존 5개 사운드 매핑 동작 유지 (회귀 가드)', async () => {
-      const source = await readSrc('src/hooks/useGameEngine.ts');
-      const mappings = [
-          ['combat', 'attack'],
-          ['levelUp', 'levelUp'],
-          ['error', 'error'],
-          ['item', 'item'],
-          ['legendary', 'legendary'],
-      ];
-      mappings.forEach(([logType, sound]) => {
-          const re = new RegExp(`lastLog\\.type === ['"]${logType}['"][\\s\\S]{0,60}soundManager\\.play\\(['"]${sound}['"]\\)`);
-          assert.ok(re.test(source), `'${logType}' → '${sound}' 매핑 유지`);
-      });
-  });
 
   test('cycle 263: critical 로그 타입이 CombatEngine에서 사용 (회귀 가드)', async () => {
       // slice 19: 중복 COMBAT_CRIT 별도 로그가 본문 태그로 통합되면서 literal
@@ -2654,7 +2299,7 @@ import { readFile } from 'node:fs/promises';
    * 패턴 (cycle 222-264 silent dead config 시리즈 36번째 — UX 광고 vs 실제 동작 모순):
    * - cycle 245: BOSS_BRIEFS UI dispatch.
    * - cycle 250: stats.activeSet UI dispatch.
-   * - cycle 261: claim 액션 sensory cue.
+   * - cycle 261: claim 액션 사용자 피드백.
    * - cycle 265: liveConfig 보너스 dispatch (가장 큰 영향 — 시즌 이벤트 시스템 전체 활성화).
    *
    * 수정 (src/systems/CombatEngine.ts handleVictory):

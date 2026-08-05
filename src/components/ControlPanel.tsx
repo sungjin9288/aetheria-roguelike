@@ -18,7 +18,6 @@ import { DB } from '../data/db';
 import { getAdventureGuidance, getExpeditionPreparation, getMoveRecommendations, getQuestTracker } from '../utils/adventureGuide';
 import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
-import { soundManager } from '../systems/SoundManager';
 import { GS } from '../reducers/gameStates';
 import SignalBadge from './SignalBadge';
 import { getGravesAtLoc } from '../utils/graveUtils';
@@ -244,12 +243,10 @@ const MapSignalStrip = ({
   const routeBadge = recommendedRoute?.isRecommended ? '추천' : (recommendedRoute?.badge || '대기');
 
   const openMap = () => {
-    soundManager.play('click');
     onOpenArchiveConsole?.('map');
   };
 
   const openRoute = () => {
-    soundManager.play('click');
     setGameState?.(GS.MOVING);
   };
 
@@ -479,10 +476,7 @@ const ControlPanel = ({
       testId: 'control-explore',
       icon: MapIcon,
       label: '탐험',
-      onClick: () => {
-        soundManager.play('click');
-        actions.explore();
-      },
+      onClick: () => actions.explore(),
       className: 'bg-[linear-gradient(180deg,rgba(18,34,41,0.82)_0%,rgba(8,14,18,0.96)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.1)]',
     },
     {
@@ -581,7 +575,6 @@ const ControlPanel = ({
     .filter(Boolean);
 
   const runTownPrimaryAction = () => {
-    soundManager.play('click');
     switch (townPresentation.primary.kind) {
       case 'claim_quest':
         actions?.completeQuest?.(expeditionPreparation.tracker?.questId);
@@ -618,10 +611,7 @@ const ControlPanel = ({
   };
 
   const openTownArchive = onOpenArchiveConsole
-    ? () => {
-        soundManager.play('click');
-        onOpenArchiveConsole('inventory');
-      }
+    ? () => onOpenArchiveConsole('inventory')
     : undefined;
 
   const townQuickGridClass = townQuickButtons.length >= 3

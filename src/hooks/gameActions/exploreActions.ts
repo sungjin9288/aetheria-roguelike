@@ -15,7 +15,6 @@ import { getChainEventForLoc } from '../../data/eventChains';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent } from '../../utils/scoutEvents';
 import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
-import { soundManager } from '../../systems/SoundManager';
 
 /**
  * 캠프파이어/스카우팅 이후 AI 랜덤 이벤트 체크 (explore() 전용 — AI_SERVICE는 firebase에
@@ -93,12 +92,6 @@ export const createExploreActions = (deps: any, shared: any) => {
 
             const mapData = DB.MAPS[player.loc];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
-            // cycle 220: 탐험 tick sensory cue — sine wave 800→1200→800Hz arc, 0.16s 짧은 cue
-            //   (gain 0.04 subtle). 정의 있으나 dispatch 0건이던 dead path. 탐험 트리거 시점에
-            //   1회 — narrative event / combat / nothing 분기 전 사용자 입력 confirmation.
-            //   cycle 217-219 sensory cue 시리즈 마지막 합류.
-            soundManager.play('explore');
-
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
             const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress);
             if (chainTrigger) {
@@ -127,7 +120,6 @@ export const createExploreActions = (deps: any, shared: any) => {
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: campfireEvent });
                 addLog('event', campfireEvent.desc);
-                soundManager.play('new_area');
                 return;
             }
 
@@ -145,7 +137,6 @@ export const createExploreActions = (deps: any, shared: any) => {
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: challengeEvent });
                 addLog('event', challengeEvent.desc);
-                soundManager.play('new_area');
                 return;
             }
 
@@ -158,7 +149,6 @@ export const createExploreActions = (deps: any, shared: any) => {
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: scoutEvent });
                 addLog('event', scoutEvent.desc);
-                soundManager.play('new_area');
                 return;
             }
 

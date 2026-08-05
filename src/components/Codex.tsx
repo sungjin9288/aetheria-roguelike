@@ -5,7 +5,6 @@ import { DB } from '../data/db';
 import { getCodexProgress } from '../data/codexRewards';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { AT } from '../reducers/actionTypes';
-import { soundManager } from '../systems/SoundManager';
 import {
     CODEX_CATEGORY_LABELS,
     formatCodexRewardParts,
@@ -161,10 +160,10 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                                 <button
                                     type="button"
                                     data-testid={`codex-claim-${milestone.id}`}
-                                    onClick={() => {
-                                        dispatch?.({ type: AT.CLAIM_CODEX_REWARD, payload: { milestoneId: milestone.id, reward: milestone.reward } });
-                                        soundManager.play('quest_complete');
-                                    }}
+                                    onClick={() => dispatch?.({
+                                        type: AT.CLAIM_CODEX_REWARD,
+                                        payload: { milestoneId: milestone.id, reward: milestone.reward },
+                                    })}
                                     className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[#d5b180]/32 bg-[#d5b180]/12 px-3 text-sm font-semibold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
                                 >
                                     <Gift size={15} />

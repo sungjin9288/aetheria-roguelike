@@ -12,7 +12,6 @@ import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, bui
 import { applyAbyssFloorAdvance, handleDemonKingSlain } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
-import { soundManager } from '../../systems/SoundManager';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 
@@ -44,7 +43,7 @@ export const handleVictoryOutcome = ({
     if (victoryResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: victoryResult.visualEffect });
 
     // cycle 274: 레벨업 시 addStoryLog('levelUp', ...) — aiService 8 스토리 템플릿 dead 시리즈
-    //   (cycle 272-273 paired). visualEffect / sound (cycle 217) / log는 있지만 narrative cue 부재였음.
+    //   (cycle 272-273 paired). visualEffect와 log만 있던 상태에 narrative cue를 보완했다.
     if (victoryResult.leveledUp && typeof addStoryLog === 'function') {
         addStoryLog('levelUp', { level: updatedPlayer.level });
     }
@@ -167,10 +166,6 @@ export const handleVictoryOutcome = ({
     const isBossKill = deadEnemy?.isBoss || false;
     if (isBossKill) {
         dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills' } });
-        // cycle 218: 보스 처치 sensory cue — 5-tone arpeggio (C5→E5→G5→C6→E6) celebratory chord.
-        //   cycle 217 lens 확장 — defined sound but never dispatched. 일반 몹은 무음 유지
-        //   (큰 모먼트만 cue).
-        soundManager.play('victory');
     }
 
     if (extendedChecks) {

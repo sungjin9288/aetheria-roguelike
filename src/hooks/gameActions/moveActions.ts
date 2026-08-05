@@ -6,7 +6,6 @@ import { getGravesAtLoc } from '../../utils/graveUtils.js';
 import { clearTemporaryAdventureState, hasTemporaryAdventureState } from '../../utils/playerStateUtils.js';
 import { checkDiscoveryChains, getFirstVisitReward } from '../../utils/exploreUtils';
 import { CombatEngine } from '../../systems/CombatEngine';
-import { soundManager } from '../../systems/SoundManager';
 import { isAreaBossUndefeated, getAreaBossName } from '../../utils/bossGauge';
 import { finishExpedition, normalizeActiveExpedition, startExpedition } from '../../utils/expeditionLedger';
 
@@ -82,9 +81,6 @@ export const createMoveActions = (deps: any) => {
                 if (!isSafeDestination && ((player.level || 1) - Number(requiredLevel)) <= 1) {
                     addLog('warn', MSG.MOVE_AREA_DANGER(requiredLevel));
                 }
-                // cycle 118: 첫 방문 sensory cue — D major triad 짧은 arpeggio.
-                // cycle 117 discovery_chain과 짝을 이루는 가벼운 audio reflection.
-                soundManager.play('new_area');
                 const visitReward = getFirstVisitReward(loc, player);
                 if (visitReward) {
                     addLog('system', visitReward.msg);
