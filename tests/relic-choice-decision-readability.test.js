@@ -72,12 +72,16 @@ test('RelicChoicePanel renders Korean decision labels and recommended marker', a
     assert.match(source, /getRelicChoiceDecisionStrip/);
     assert.match(source, /data-testid="relic-choice-decision-strip"/);
     assert.match(source, /data-testid="relic-choice-panel"/);
+    assert.match(source, /data-testid="relic-choice-options"/);
     assert.match(source, /aria-label="유물 선택 추천 요약"/);
     assert.match(source, /data-relic-recommended=\{isRecommended \? 'true' : 'false'\}/);
     assert.match(source, /추천/);
     assert.match(source, /유물 선택/);
     assert.match(source, /getRelicDisplayName/);
     assert.match(source, /formatRelicText/);
+    assert.match(source, /<RelicIcon relic=\{relic\}/);
+    assert.match(source, /grid-cols-\[50px_minmax\(0,1fr\)_18px\]/);
+    assert.match(source, /max-h-\[calc\(100dvh-1rem\)\]/);
     assert.doesNotMatch(source, /현재 보유 유물과 직접 공명하는 효과는 없습니다|전설까지 -1|★ 전설 시너지/);
     assert.doesNotMatch(source, /Relic Archive|Legendary Synergy|Linked Relics|Near Legendary/);
 });

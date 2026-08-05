@@ -4,6 +4,7 @@ import { RELICS } from '../data/relics';
 import { TRAIT_DEFINITIONS } from '../data/traits';
 import { getRunBuildProfile } from '../utils/runProfile';
 import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
+import RelicIcon from './icons/RelicIcon';
 import type { Player } from '../types/index.js';
 
 // cycle 478: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
@@ -111,12 +112,15 @@ const BuildAdvicePanel = ({ player }: BuildAdvicePanelProps) => {
                         ) : (
                             <div className="space-y-1.5">
                                 {recommended.map((relic: any) => (
-                                    <div key={relic.id} className="rounded-[0.95rem] border border-white/8 bg-black/18 px-2.5 py-2">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <span className={`text-xs font-bold ${RARITY_COLOR[relic.rarity] || 'text-slate-300'}`}>{getRelicDisplayName(relic.name)}</span>
-                                            <span className={`text-[9px] font-fira ${RARITY_COLOR[relic.rarity] || 'text-slate-400'}`}>{RARITY_LABEL[relic.rarity]}</span>
+                                    <div key={relic.id} className="flex items-center gap-2.5 rounded-[0.95rem] border border-white/8 bg-black/18 px-2.5 py-2">
+                                        <RelicIcon relic={relic} size={42} />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className={`text-xs font-bold ${RARITY_COLOR[relic.rarity] || 'text-slate-300'}`}>{getRelicDisplayName(relic.name)}</span>
+                                                <span className={`shrink-0 text-[9px] font-fira ${RARITY_COLOR[relic.rarity] || 'text-slate-400'}`}>{RARITY_LABEL[relic.rarity]}</span>
+                                            </div>
+                                            <div className="mt-0.5 text-[10px] text-slate-400/72">{formatRelicText(relic.desc)}</div>
                                         </div>
-                                        <div className="mt-0.5 text-[10px] text-slate-400/72">{formatRelicText(relic.desc)}</div>
                                     </div>
                                 ))}
                             </div>

@@ -19,11 +19,13 @@ import { motion as Motion } from 'framer-motion';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { APP_ID, CONSTANTS } from '../../data/constants';
+import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { exportToJson } from '../../utils/fileUtils';
 import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/gameUtils';
 import { RARITY_COLORS } from '../../data/titles';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
+import RelicIcon from '../icons/RelicIcon';
 
 const SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -97,6 +99,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         : 'auto';
     const titles = useMemo(() => player.titles || [], [player.titles]);
     const relics = useMemo(() => player.relics || [], [player.relics]);
+    const relicCapacity = getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics;
     const leaderboard = actions.leaderboard || [];
     const activeTitleLabel = player.activeTitle ? getTitleLabel(player.activeTitle) : '선택 안 함';
     const activeTitlePassive = player.activeTitle ? getTitlePassiveLabel(player.activeTitle) : '칭호를 선택하면 고유 효과가 적용됩니다.';
@@ -493,16 +496,19 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                     <SettingsDisclosure
                         testId="system-relic-list"
                         icon={Sparkles}
-                        title={`보유 유물 ${relics.length}/5`}
+                        title={`보유 유물 ${relics.length}/${relicCapacity}`}
                         summary="현재 여정에서 얻은 유물과 효과를 확인합니다."
                     >
                         <div className="space-y-2">
                             {relics.map((relic: any) => (
-                                <div key={relic.id} className="border-b border-white/6 px-1 pb-2 last:border-b-0 last:pb-0">
-                                    <div className={`font-readable text-xs font-bold ${RARITY_COLORS[relic.rarity] || 'text-slate-200'}`}>
-                                        {getRelicDisplayName(relic.name)}
+                                <div key={relic.id} className="flex items-center gap-2.5 border-b border-white/6 px-1 pb-2 last:border-b-0 last:pb-0">
+                                    <RelicIcon relic={relic} size={42} />
+                                    <div className="min-w-0 flex-1">
+                                        <div className={`font-readable text-xs font-bold ${RARITY_COLORS[relic.rarity] || 'text-slate-200'}`}>
+                                            {getRelicDisplayName(relic.name)}
+                                        </div>
+                                        <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">{formatRelicText(relic.desc)}</p>
                                     </div>
-                                    <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">{formatRelicText(relic.desc)}</p>
                                 </div>
                             ))}
                         </div>

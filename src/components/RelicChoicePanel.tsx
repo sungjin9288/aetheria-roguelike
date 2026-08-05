@@ -1,8 +1,11 @@
+import { ChevronRight } from 'lucide-react';
 import { AT } from '../reducers/actionTypes';
 import { RARITY_COLORS } from '../data/titles';
 import { RELIC_SYNERGIES } from '../data/relics';
+import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getRelicChoiceDecisionStrip } from '../utils/relicChoiceDecision';
 import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
+import RelicIcon from './icons/RelicIcon';
 import SignalBadge from './SignalBadge';
 import type { Player, Relic } from '../types/index.js';
 
@@ -125,6 +128,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
         synergy: getRelicSynergyScore(relic, ownedRelics),
     }));
     const relicDecision = getRelicChoiceDecisionStrip(relicCards);
+    const relicCapacity = getPrestigeUnlocks(player?.meta?.prestigeRank).maxRelics;
 
     const handleSelect = (relic: Relic) => {
         dispatch({ type: AT.ADD_RELIC, payload: relic });
@@ -143,47 +147,44 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
             />
             <div
                 data-testid="relic-choice-panel"
-                className="panel-noise aether-surface-strong relative mx-4 w-full max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[2rem] p-4 shadow-[0_34px_90px_rgba(1,6,14,0.6)]"
+                className="panel-noise aether-surface-strong relative mx-auto flex max-h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] p-3 shadow-[0_34px_90px_rgba(1,6,14,0.6)]"
             >
                 <div className="pointer-events-none absolute inset-0 opacity-60" style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04), transparent 24%), radial-gradient(circle at top right, rgba(154,138,192,0.1), transparent 26%)' }} />
 
-                <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                <div className="relative mb-2 flex shrink-0 items-start justify-between gap-2">
                     <div className="min-w-0">
                         <div className="text-[10px] font-readable text-slate-500">
                             유물 선택
                         </div>
-                        <h2 className="mt-1 text-[1.1rem] font-readable font-bold text-[#f6e7c8]">
-                            이번 모험에 어울리는 유물을 고르세요
+                        <h2 className="mt-0.5 text-[1rem] font-readable font-bold text-[#f6e7c8]">
+                            이번 모험의 힘을 고르세요
                         </h2>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                        <SignalBadge tone="spotlight" size="sm">하나 선택</SignalBadge>
-                        <SignalBadge tone="neutral" size="sm">현재 {ownedRelics.length}개</SignalBadge>
-                    </div>
+                    <SignalBadge tone="neutral" size="sm">{ownedRelics.length}/{relicCapacity}</SignalBadge>
                 </div>
 
                 <div
                     data-testid="relic-choice-decision-strip"
                     data-relic-tone={relicDecision.tone}
                     aria-label="유물 선택 추천 요약"
-                    className="aether-relic-decision-strip mb-3 grid grid-cols-2 gap-1.5 rounded-[1rem] p-1.5"
+                    className="aether-relic-decision-strip relative mb-2 grid shrink-0 grid-cols-3 gap-1 rounded-[1rem] p-1"
                 >
-                    {relicDecision.cells.map((cell: any, index: number) => (
+                    {relicDecision.cells.map((cell: any) => (
                         <div
                             key={cell.label}
-                            className={`aether-relic-decision-cell rounded-lg px-2.5 py-2 ${index === 0 ? 'col-span-2' : ''}`}
+                            className="aether-relic-decision-cell min-h-[54px] rounded-lg px-2 py-1.5"
                         >
                             <div className="text-[9px] font-readable text-slate-400/78">
                                 {cell.label}
                             </div>
-                            <div className="mt-0.5 text-[12px] font-readable font-semibold leading-snug text-[#f8ecd4]">
+                            <div className="mt-0.5 text-[11px] font-readable font-semibold leading-snug text-[#f8ecd4]">
                                 {cell.value}
                             </div>
                         </div>
                     ))}
                 </div>
 
-                <div className="mb-3 grid grid-cols-1 gap-2">
+                <div data-testid="relic-choice-options" className="relative min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-0.5">
                     {relicCards.map(({ relic, index, synergy }: any) => {
                         const hasSynergy = synergy.score > 0;
                         const isLegendaryComplete = synergy.legendaryHint != null;
@@ -195,85 +196,55 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player }: RelicChoicePanelP
                             data-testid={`relic-choice-${index}`}
                             data-relic-recommended={isRecommended ? 'true' : 'false'}
                             onClick={() => handleSelect(relic)}
+                            aria-label={`${getRelicDisplayName(relic.name)} 선택`}
                             className={`
-                                group flex flex-col rounded-[1.35rem] border p-3 text-left
+                                group grid min-h-[82px] w-full grid-cols-[50px_minmax(0,1fr)_18px] items-center gap-2.5 rounded-[1rem] border p-2.5 text-left
                                 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0
                                 ${RARITY_CARD[relic.rarity] || RARITY_CARD.common}
                                 ${isRecommended ? 'aether-relic-card-recommended' : ''}
                                 ${isLegendaryComplete ? 'shadow-[0_18px_40px_rgba(251,113,133,0.15)]' : hasSynergy ? 'shadow-[0_18px_34px_rgba(125,212,216,0.08)]' : 'shadow-[0_14px_26px_rgba(1,6,14,0.28)]'}
                             `}
                         >
-                            <div className="flex items-start justify-between gap-2 flex-wrap">
-                                {isRecommended && (
-                                    <SignalBadge tone="spotlight" size="sm">
-                                        추천
-                                    </SignalBadge>
-                                )}
-                                <SignalBadge tone={RARITY_BADGE_TONE[relic.rarity] || 'neutral'} size="sm">
-                                    {RARITY_LABEL[relic.rarity] || relic.rarity}
-                                </SignalBadge>
-                                {isLegendaryComplete && (
-                                    <SignalBadge tone="danger" size="sm">
-                                        전설 조합 완성
-                                    </SignalBadge>
-                                )}
-                                {!isLegendaryComplete && hasSynergy && (
-                                    <SignalBadge tone={synergy.score >= 80 ? 'success' : 'recommended'} size="sm">
-                                        {synergy.label}
-                                    </SignalBadge>
-                                )}
-                                {!isLegendaryComplete && !hasSynergy && hasNearLegendary && (
-                                    <SignalBadge tone="upgrade" size="sm">
-                                        전설 조합에 가까움
-                                    </SignalBadge>
-                                )}
-                            </div>
+                            <RelicIcon relic={relic} size={50} completesLegendary={isLegendaryComplete} />
 
-                            <div className={`mt-2 text-[1rem] font-readable font-bold leading-tight ${RARITY_COLORS[relic.rarity] || 'text-white'} group-hover:text-white`}>
-                                {getRelicDisplayName(relic.name)}
-                            </div>
-
-                            <div className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-200/82">
-                                {formatRelicText(relic.desc)}
-                            </div>
-
-                            <div className="mt-auto pt-2.5">
+                            <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-1">
+                                    {isRecommended && <SignalBadge tone="spotlight" size="sm">추천</SignalBadge>}
+                                    <SignalBadge tone={RARITY_BADGE_TONE[relic.rarity] || 'neutral'} size="sm">
+                                        {RARITY_LABEL[relic.rarity] || relic.rarity}
+                                    </SignalBadge>
+                                    {isLegendaryComplete && <SignalBadge tone="danger" size="sm">전설 조합</SignalBadge>}
+                                    {!isLegendaryComplete && hasSynergy && (
+                                        <SignalBadge tone={synergy.score >= 80 ? 'success' : 'recommended'} size="sm">{synergy.label}</SignalBadge>
+                                    )}
+                                </div>
+                                <div className={`mt-1 text-[13px] font-readable font-bold leading-tight ${RARITY_COLORS[relic.rarity] || 'text-white'} group-hover:text-white`}>
+                                    {getRelicDisplayName(relic.name)}
+                                </div>
+                                <div className="mt-0.5 text-[11px] font-readable leading-snug text-slate-200/82">
+                                    {formatRelicText(relic.desc)}
+                                </div>
                                 {isLegendaryComplete ? (
-                                    <div className="rounded-[1rem] border border-rose-300/22 bg-rose-400/10 px-2.5 py-2 text-[10px] font-fira">
-                                        <div className="tracking-normal text-rose-300/70">전설 조합</div>
-                                        <div className="mt-0.5 font-bold text-rose-100">{synergy.legendaryHint}</div>
-                                        <div className="mt-0.5 text-slate-300/72">{synergy.synergies.map(getRelicDisplayName).join(' · ')}</div>
-                                    </div>
+                                    <div className="mt-1 text-[10px] font-readable text-rose-100">{synergy.legendaryHint} 완성</div>
                                 ) : hasSynergy ? (
-                                    <div className="rounded-[1rem] border border-white/8 bg-black/20 px-2.5 py-2 text-[10px] font-fira text-slate-300/82">
-                                        <div className="tracking-normal text-slate-500">잘 맞는 보유 유물</div>
-                                        <div className="mt-0.5 leading-relaxed text-[#dff7f5]">
-                                            {synergy.synergies.map(getRelicDisplayName).join(' · ')}
-                                        </div>
-                                        {hasNearLegendary && (
-                                            <div className="mt-1 text-[#d5b180]/80">
-                                                전설 조합 {synergy.nearLegendary}까지 유물 1개
-                                            </div>
-                                        )}
+                                    <div className="mt-1 truncate text-[10px] font-readable text-[#dff7f5]">
+                                        함께 쓰기 · {synergy.synergies.map(getRelicDisplayName).join(' · ')}
                                     </div>
                                 ) : hasNearLegendary ? (
-                                    <div className="rounded-[1rem] border border-[#d5b180]/22 bg-[#d5b180]/8 px-2.5 py-2 text-[10px] font-fira">
-                                        <div className="tracking-normal text-[#d5b180]/60">전설 조합에 가까움</div>
-                                        <div className="mt-0.5 text-[#f6e7c8]">
-                                            {synergy.nearLegendary}까지 유물 1개 남음
-                                        </div>
-                                    </div>
+                                    <div className="mt-1 text-[10px] font-readable text-[#f6e7c8]">{synergy.nearLegendary}까지 1개 남음</div>
                                 ) : null}
                             </div>
+
+                            <ChevronRight size={17} aria-hidden="true" className="text-slate-500 transition-colors group-hover:text-white" />
                         </button>
                     );})}
                 </div>
 
-                <div className="flex flex-col gap-2 border-t border-white/8 pt-3 text-center">
+                <div className="relative mt-2 shrink-0 border-t border-white/8 pt-2 text-center">
                     <button
                         data-testid="relic-choice-skip"
                         onClick={handleDecline}
-                        className="min-h-[44px] rounded-full border border-white/8 bg-black/18 px-4 text-[10px] font-fira uppercase tracking-[0.18em] text-slate-300/76 transition-colors hover:bg-white/[0.04] hover:text-white"
+                        className="min-h-[44px] w-full rounded-full border border-white/8 bg-black/18 px-4 text-[11px] font-readable text-slate-300/76 transition-colors hover:bg-white/[0.04] hover:text-white"
                     >
                         이번에는 고르지 않기
                     </button>

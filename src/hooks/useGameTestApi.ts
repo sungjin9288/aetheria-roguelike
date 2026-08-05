@@ -1060,7 +1060,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     type: AT.SET_PENDING_RELICS,
                     payload: [
                         { id: 'test_relic_amber', name: '황혼의 파편', desc: '치명타 확률 +3%, 휴식 비용 -10%', rarity: 'epic', effect: 'crit_mp_regen' },
-                        { id: 'test_relic_cyan', name: '심해의 매듭', desc: '전투가 시작되면 기력 12 회복', rarity: 'uncommon', effect: 'mp_regen_turn' },
+                        { id: 'test_relic_cyan', name: '심해의 매듭', desc: '전투가 시작되면 생명 12% 회복', rarity: 'uncommon', effect: 'battle_start_heal' },
                         { id: 'test_relic_violet', name: '균열의 서판', desc: '기술 피해 18% 증가', rarity: 'rare', effect: 'skill_mult' },
                     ],
                 });
