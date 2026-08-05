@@ -38,6 +38,32 @@ test('migrateData initializes missing location exploration counts and preserves 
     });
 });
 
+test('migrateData restores accepted cumulative combat missions from permanent stats', () => {
+    const migrated = migrateData({
+        version: 5.0,
+        player: {
+            name: '장기 모험가',
+            stats: { kills: 537, bossKills: 7 },
+            quests: [
+                { id: 90, progress: 0 },
+                { id: 91, progress: 12 },
+                { id: 92, progress: 0 },
+                { id: 93, progress: 0 },
+                { id: 1, progress: 2 },
+            ],
+            equip: {},
+        },
+    });
+
+    assert.deepEqual(migrated.player.quests, [
+        { id: 90, progress: 100 },
+        { id: 91, progress: 500 },
+        { id: 92, progress: 537 },
+        { id: 93, progress: 7 },
+        { id: 1, progress: 2 },
+    ]);
+});
+
 // ─── 원본: tests/cycle-120-migrate-counter-defaults.test.js ───
 /**
  * cycle 120: migrateData stats counter 기본값 정리.

@@ -1,6 +1,7 @@
 import { QUESTS } from '../data/quests.js';
 import type { Player } from "../types/index.js";
 import { countLowHpWins } from '../systems/DifficultyManager.js';
+import { getCombatQuestProgress } from './combatQuestProgress.js';
 import { countDiscoveredSignatures } from './gameUtils.js';
 
 const findQuestDefinition = (quest: any, questCatalog: any = QUESTS) => (
@@ -8,9 +9,12 @@ const findQuestDefinition = (quest: any, questCatalog: any = QUESTS) => (
 );
 
 export const createQuestProgressState = (quest: any, player: Player) => {
+    const combatCount = getCombatQuestProgress(quest, player);
     const progressState: Record<string, any> = {
         id: quest.id,
-        progress: quest.target === 'Level' ? player.level : 0,
+        progress: combatCount === null
+            ? (quest.target === 'Level' ? player.level : 0)
+            : combatCount,
     };
 
     if (quest.type === 'explore_count' && quest.target === 'explores' && quest.location) {
@@ -74,6 +78,11 @@ export const syncQuestProgress = (player: Player, enemyName: any, questCatalog: 
         if (questData.type === 'bounty_count' && questData.target === 'bountiesCompleted') {
             const current = player.stats?.bountiesCompleted || 0;
             return { ...quest, progress: latch(quest.progress, current, questData.goal) };
+        }
+
+        const combatCount = getCombatQuestProgress(questData, player);
+        if (combatCount !== null) {
+            return { ...quest, progress: latch(quest.progress, combatCount, questData.goal) };
         }
 
         if (questData.type === 'build_victory') {

@@ -184,10 +184,10 @@ const RAW_QUESTS: Quest[] = [
     { id: 205, title: '[심연] 혼돈 속의 생존자',     desc: '심연에서 심연의 수호자 10마리 처치', target: '심연의 수호자', goal: 10, reward: { exp: 50000, gold: 50000, item: '기계 코어' }, minLv: 55 },
 
     // ── 반복/수집 퀘스트 ─────────────────────────────────────────────────────
-    { id: 90, title: '몬스터 100격파',   desc: '누적 몬스터 100마리 처치', type: 'explore_count', target: 'kills',  goal: 100,  reward: { exp: 5000,  gold: 10000 },           minLv: 10 },
-    { id: 91, title: '몬스터 500격파',   desc: '누적 몬스터 500마리 처치', type: 'explore_count', target: 'kills',  goal: 500,  reward: { exp: 20000, gold: 30000, item: '분노의 물약' }, minLv: 25 },
-    { id: 92, title: '몬스터 1000격파',  desc: '누적 몬스터 1000마리 처치', type: 'explore_count', target: 'kills', goal: 1000, reward: { exp: 50000, gold: 80000, item: '분노의 물약' }, minLv: 40 },
-    { id: 93, title: '보스 사냥꾼',      desc: '보스 몬스터 10회 처치',    type: 'explore_count', target: 'bossKills', goal: 10, reward: { exp: 30000, gold: 50000, item: '영웅의 물약' }, minLv: 25 },
+    { id: 90, title: '몬스터 100격파',   desc: '누적 몬스터 100마리 처치', type: 'combat_count', target: 'kills',  goal: 100,  reward: { exp: 5000,  gold: 10000 },           minLv: 10 },
+    { id: 91, title: '몬스터 500격파',   desc: '누적 몬스터 500마리 처치', type: 'combat_count', target: 'kills',  goal: 500,  reward: { exp: 20000, gold: 30000, item: '분노의 물약' }, minLv: 25 },
+    { id: 92, title: '몬스터 1000격파',  desc: '누적 몬스터 1000마리 처치', type: 'combat_count', target: 'kills', goal: 1000, reward: { exp: 50000, gold: 80000, item: '분노의 물약' }, minLv: 40 },
+    { id: 93, title: '보스 사냥꾼',      desc: '보스 몬스터 10회 처치',    type: 'combat_count', target: 'bossKills', goal: 10, reward: { exp: 30000, gold: 50000, item: '영웅의 물약' }, minLv: 25 },
     { id: 94, title: '제작 마스터',      type: 'craft', desc: '총 50회 제작',  target: 'crafts', goal: 50, reward: { exp: 60000, gold: 80000, item: '강화 재료' }, minLv: 50 },
     { id: 206, title: '세계 탐험가',      type: 'explore_count', desc: '총 200번 탐색', target: 'explores', goal: 200, reward: { exp: 40000, gold: 60000, item: '사냥꾼의 외투' }, minLv: 35 },
 

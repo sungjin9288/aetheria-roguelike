@@ -12,6 +12,17 @@ export interface QuestReward {
     [key: string]: any;
 }
 
+export type QuestType =
+    | 'bounty_count'
+    | 'build_victory'
+    | 'combat_count'
+    | 'craft'
+    | 'discovery_count'
+    | 'escape_count'
+    | 'explore_count'
+    | 'signature_collect'
+    | 'survive_low_hp';
+
 export interface Quest {
     id?: number | string;
     title?: string;
@@ -22,6 +33,7 @@ export interface Quest {
     minLv?: number;
     location?: string;
     prerequisiteQuestId?: number | string;
+    type?: QuestType;
     [key: string]: any;
 }
 

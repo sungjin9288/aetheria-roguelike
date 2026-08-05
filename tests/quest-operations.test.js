@@ -325,6 +325,47 @@ test('beginner recommendations prefer a short hunt after the first story quest',
     assert.equal(spiderHunt.brief.riskLabel, '안정');
 });
 
+test('cumulative combat missions use a global combat route instead of exploration copy', () => {
+    const player = {
+        job: '전사', level: 25, loc: '시작의 마을', hp: 320, maxHp: 320,
+        mp: 90, maxMp: 90, quests: [], relics: [], inv: [],
+        equip: { weapon: null, offhand: null },
+        stats: { kills: 137, bossKills: 4, claimedQuestIds: [], visitedMaps: ['시작의 마을'] },
+    };
+    const catalog = QUESTS.filter((quest) => [91, 93].includes(quest.id));
+
+    const board = getQuestBoardRecommendations(player, MAPS, catalog);
+    const entries = [...board.featured, ...board.backlog];
+    const killMission = entries.find((entry) => entry.quest.id === 91);
+    const bossMission = entries.find((entry) => entry.quest.id === 93);
+
+    assert.equal(killMission.lane, 'growth');
+    assert.equal(killMission.brief.route, '모든 권역');
+    assert.equal(killMission.planSteps[2].value, '누적 처치 500회 달성');
+    assert.equal(bossMission.brief.route, '보스 권역');
+    assert.equal(bossMission.planSteps[2].value, '보스 처치 10회 달성');
+});
+
+test('active cumulative combat guidance names the remaining combat goal', () => {
+    const killTracker = getQuestTracker({
+        level: 25,
+        quests: [{ id: 91, progress: 137 }],
+        stats: { kills: 137, bossKills: 4 },
+    });
+    const bossTracker = getQuestTracker({
+        level: 25,
+        quests: [{ id: 93, progress: 4 }],
+        stats: { kills: 137, bossKills: 4 },
+    });
+
+    assert.equal(killTracker.routeLabel, '모든 권역');
+    assert.equal(killTracker.nextStep, '일반 몬스터 363회 더 처치');
+    assert.equal(killTracker.returnLabel, '누적 토벌');
+    assert.equal(bossTracker.routeLabel, '보스 권역');
+    assert.equal(bossTracker.nextStep, '보스 6회 더 처치');
+    assert.equal(bossTracker.returnLabel, '보스 토벌');
+});
+
 test('a regular monster quest is not treated as a boss quest just because its map has a boss', () => {
     const player = {
         job: '모험가', level: 1, loc: '시작의 마을', hp: 178, maxHp: 178,

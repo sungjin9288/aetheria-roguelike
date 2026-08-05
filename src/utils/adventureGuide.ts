@@ -98,6 +98,7 @@ const getQuestRouteLabel = (quest: any, targetMaps: string[]) => {
     if (targetMaps.length > 0) return targetMaps[0];
     if (quest?.target === 'Level') return '성장 루트';
     if (quest?.type === 'craft') return '제작소';
+    if (quest?.type === 'combat_count') return quest.target === 'bossKills' ? '보스 권역' : '모든 권역';
     if (quest?.type === 'bounty_count') return '현상금';
     if (quest?.type === 'build_victory') return quest?.buildLabel || '빌드 전투';
     if (quest?.type === 'discovery_count') return '미답 권역';
@@ -117,6 +118,11 @@ const getQuestNextStep = (entry: any, targetMaps: string[]) => {
     }
     if (targetMaps.length > 0) return `${targetMaps[0]}에서 ${quest.target} 추적`;
     if (quest.type === 'craft') return `제작 ${remaining}회 진행`;
+    if (quest.type === 'combat_count') {
+        return quest.target === 'bossKills'
+            ? `보스 ${remaining}회 더 처치`
+            : `일반 몬스터 ${remaining}회 더 처치`;
+    }
     if (quest.type === 'bounty_count') return `현상금 ${remaining}건 완료`;
     if (quest.type === 'build_victory') return `${quest.buildLabel || '지정 빌드'} ${remaining}승`;
     if (quest.type === 'discovery_count') return `발견 ${remaining}회 확보`;
@@ -131,6 +137,7 @@ const getQuestReturnLabel = (entry: any, targetMaps: string[]) => {
     if (quest.target === 'Level') return '성장';
     if (targetMaps.length > 0) return '목표 지역';
     if (quest.type === 'craft') return '제작';
+    if (quest.type === 'combat_count') return quest.target === 'bossKills' ? '보스 토벌' : '누적 토벌';
     if (quest.type === 'bounty_count') return '현상금';
     if (quest.type === 'build_victory') return '빌드';
     if (quest.type === 'discovery_count') return '발견';

@@ -109,7 +109,7 @@ const getBeginnerQuestEffortScore = (quest: any, playerLevel: number) => {
 const getQuestLane = (quest: any, resonance: any, maps: any) => {
     if (isStoryQuest(quest)) return 'story';
     if (quest?.buildTag || quest?.type === 'build_victory' || (quest?.type === 'survive_low_hp' && resonance.score >= 3)) return 'build';
-    if (quest?.target === 'Level' || ['craft', 'explore_count', 'discovery_count', 'bounty_count'].includes(quest?.type)) return 'growth';
+    if (quest?.target === 'Level' || ['craft', 'combat_count', 'explore_count', 'discovery_count', 'bounty_count'].includes(quest?.type)) return 'growth';
     if (isBossQuest(quest, maps)) return 'boss';
     return 'hunt';
 };
@@ -144,6 +144,11 @@ const getOperationPlanObjective = (quest: any, targetMaps: any[]) => {
     if (targetMaps[0]) return `${targetMaps[0]} 진입`;
     if (quest?.target === 'Level') return `레벨 ${quest.goal} 달성`;
     if (quest?.type === 'craft') return '제작 루프 가동';
+    if (quest?.type === 'combat_count') {
+        return quest.target === 'bossKills'
+            ? `보스 처치 ${quest.goal}회 달성`
+            : `누적 처치 ${quest.goal}회 달성`;
+    }
     if (['explore_count', 'discovery_count'].includes(quest?.type)) return '탐험 루트 확장';
     if (quest?.target) return `${quest.target} 추적`;
     return '임무 목표 추적';
@@ -166,6 +171,7 @@ const getOperationRouteLabel = (quest: any, targetMaps: any[]) => {
     if (targetMaps[0]) return targetMaps[0];
     if (quest?.target === 'Level') return '성장 루트';
     if (quest?.type === 'craft') return '제작과 보급 경로';
+    if (quest?.type === 'combat_count') return quest.target === 'bossKills' ? '보스 권역' : '모든 권역';
     if (['explore_count', 'discovery_count'].includes(quest?.type)) return '미답사 루트';
     return '현재 권역';
 };
@@ -250,6 +256,10 @@ const getOperationExtractionRule = (quest: any, player: Player, lane: any, targe
     if (inventoryCount >= inventoryCap - OPERATION_BRIEF_INVENTORY_BUFFER) return '가방 정리 후 출발';
     if (lane === 'boss') return '보스 조우 전 생명이 75% 미만이면 귀환';
     if (quest?.target === 'Level') return `레벨 ${quest.goal} 달성 후 마을 귀환`;
+    if (quest?.type === 'combat_count') {
+        const label = quest.target === 'bossKills' ? '보스 처치' : '누적 처치';
+        return `${label} ${quest.goal}회 달성 후 마을 귀환`;
+    }
     if (targetMaps[0]) return `${targetMaps[0]} 목표 ${quest.goal || 1}회 후 귀환`;
     if (lane === 'build') return '보상 장비를 확인하고 장비 조합 점검';
     return '목표 달성 후 마을 회수';

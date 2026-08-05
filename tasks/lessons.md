@@ -351,6 +351,10 @@
 - **Rule:** smoke나 E2E fixture가 reducer를 거쳐 실제 player state에 저장되는 장비·유물·보상은 축약 객체를 새로 만들지 않고 canonical data object를 사용한다. 불가피한 fixture 전용 객체는 선택 뒤 파생 stats 재계산과 화면 종료까지 검증한다
 - **Rationale:** 선택 전 카드에는 이름·설명·effect만 있어도 보이지만, 선택 후 계산기는 `val`의 중첩 필드처럼 전체 runtime 계약을 요구할 수 있다. 표시만 통과하는 불완전 fixture는 실제 선택 경로에서 앱을 중단시키고 QA가 제품과 다른 데이터를 검증하게 만든다
 
+### R77: Derive Cumulative Missions From Permanent Records
+- **Rule:** 누적 처치처럼 수락 전 행동까지 인정하는 임무는 전용 domain type을 사용하고, 수락·진행 동기화·save migration이 같은 pure progress 계산을 공유한다. 표시 문구도 target key가 아니라 실제 행동 범위와 남은 횟수를 설명한다
+- **Rationale:** 누적 목표를 지역 탐험이나 단일 적 처치 type으로 대신 표현하면 카운터가 영원히 오르지 않거나 과거 성과가 사라질 수 있다. runtime만 고치면 기존 active save는 다음 행동 전까지 잘못된 수치를 유지하므로, 영구 기록을 authority로 삼아 로드 직후부터 보상까지 같은 진행률을 보여 줘야 한다
+
 ---
 
 ## 📝 Post-Mortem Template

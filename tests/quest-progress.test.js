@@ -21,6 +21,45 @@ test('quest progress starts from the current level or local exploration baseline
     );
 });
 
+test('cumulative kill quests start from the player permanent combat record', () => {
+    const player = {
+        level: 25,
+        stats: { kills: 137, bossKills: 4 },
+    };
+
+    assert.deepEqual(
+        createQuestProgressState(QUESTS.find((quest) => quest.id === 90), player),
+        { id: 90, progress: 100 },
+    );
+    assert.deepEqual(
+        createQuestProgressState(QUESTS.find((quest) => quest.id === 91), player),
+        { id: 91, progress: 137 },
+    );
+    assert.deepEqual(
+        createQuestProgressState(QUESTS.find((quest) => quest.id === 93), player),
+        { id: 93, progress: 4 },
+    );
+});
+
+test('cumulative kill quests follow permanent kill and boss counters', () => {
+    const player = {
+        level: 25,
+        stats: { kills: 142, bossKills: 6 },
+        quests: [
+            { id: 90, progress: 99 },
+            { id: 91, progress: 130 },
+            { id: 93, progress: 5 },
+        ],
+    };
+
+    const result = syncQuestProgress(player, '슬라임', QUESTS);
+
+    assert.equal(result.updatedQuests.find((quest) => quest.id === 90)?.progress, 100);
+    assert.equal(result.updatedQuests.find((quest) => quest.id === 91)?.progress, 142);
+    assert.equal(result.updatedQuests.find((quest) => quest.id === 93)?.progress, 6);
+    assert.equal(result.completedCount, 1);
+});
+
 test('quest progress syncs build-guiding and discovery quests from player stats', () => {
     // cycle 83: discovery_count quest는 visitedMaps.length로 통일 — 기존엔
     // stats.discoveries(이벤트 카운터)를 잘못 읽던 회귀 수정.
