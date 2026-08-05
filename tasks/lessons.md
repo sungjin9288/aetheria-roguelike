@@ -379,6 +379,10 @@
 - **Rule:** 임무 수락·포기·발급은 식별자만, 편성 변경은 식별자와 최종 선택 상태만 action에 담는다. reducer가 최신 위치, 진행, 영구 ledger와 제한을 확인하고 mutation과 feedback을 함께 확정하며, 무작위 임무는 entropy만 받아 canonical 목표와 보상을 계산한다
 - **Rationale:** 렌더 snapshot에서 성공을 판단하거나 `toggle`을 보내면 같은 frame의 두 입력이 임무를 중복 추가하거나 첫 결과를 다시 뒤집을 수 있다. 목표 상태를 idempotent하게 적용하고 보상 값을 authority 경계 안에서 만들면 rapid tap과 오래 열린 화면 모두 최신 game state를 보존한다
 
+### R84: Commit Economy Changes As One Current-State Transaction
+- **Rule:** 구매·판매·제작·합성 action은 상품, 아이템, recipe 식별자와 필요한 entropy·expected snapshot token만 전달한다. reducer가 최신 inventory, 재화, 장소, canonical 가격·재료·결과를 다시 검증하고 소비·지급·도감·시즌·일일 목표·칭호·로그·quick slot 정리를 한 transition에서 확정한다. 성공 UI는 accepted receipt만 소비한다
+- **Rationale:** 렌더 snapshot으로 player 전체를 덮어쓰고 side effect를 여러 dispatch로 나누면 rapid tap과 연속 거래가 이전 아이템을 되살리거나 골드·진행·로그를 서로 다르게 만든다. 현재 상태 기반 단일 commit과 idempotent replay가 장기 inventory·economy 신뢰를 지킨다
+
 ---
 
 ## 📝 Post-Mortem Template

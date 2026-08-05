@@ -1,22 +1,12 @@
-import { resolveDailyProtocolProgress } from './helpers';
-import type { DailyProtocolReward } from './helpers';
+import { advanceDailyProtocol, getDailyProtocolRewardLogs } from './helpers';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 import {
-    getCurrentDailyProtocol,
     getCurrentWeeklyProtocol,
     getWeeklyMissionProgress,
 } from '../../utils/protocolCycle';
 import type { GameState, GameAction } from '../gameReducer';
-
-const formatDailyReward = (reward: DailyProtocolReward) => {
-    const parts: string[] = [];
-    if (reward.essence > 0) parts.push(`에센스 +${reward.essence}`);
-    reward.items.forEach((name: string) => parts.push(`${name} 획득`));
-    if (reward.relicShards > 0) parts.push(`유물 파편 +${reward.relicShards}`);
-    return parts.join(' · ');
-};
 
 export const protocolActionMap = {
     // ── Daily Protocol ────────────────────────────────────────────────────
@@ -33,26 +23,12 @@ export const protocolActionMap = {
         const { type: dpType, amount: rawAmount = 0 } = action.payload || {};
         if (!['kills', 'explores', 'goldSpend'].includes(dpType)) return state;
         const amount = dpType === 'goldSpend' ? Math.max(0, Number(rawAmount) || 0) : 1;
-        const dailyProtocol = getCurrentDailyProtocol(state.player, new Date());
-        const player = {
-            ...state.player,
-            stats: { ...state.player.stats, dailyProtocol },
-        };
-        const result = resolveDailyProtocolProgress(player, dpType, amount);
-        const rewardText = formatDailyReward(result.reward);
-        const notices: string[] = [];
-        if (result.reward.completedCount > 0 && rewardText) {
-            notices.push(MSG.DAILY_PROTOCOL_DONE(result.reward.completedCount, rewardText));
-        }
-        if (result.reward.convertedRelic) {
-            const relicName = result.reward.convertedRelic.name || '새 유물';
-            notices.push(MSG.DAILY_PROTOCOL_RELIC_COMPLETE(relicName));
-        }
+        const result = advanceDailyProtocol(state.player, dpType, amount);
 
         return {
             ...state,
             player: result.player,
-            logs: appendRewardLogs(state.logs, notices),
+            logs: appendRewardLogs(state.logs, getDailyProtocolRewardLogs(result.reward)),
             syncStatus: 'syncing',
         };
     },

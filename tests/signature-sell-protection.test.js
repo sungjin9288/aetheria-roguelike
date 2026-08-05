@@ -1,4 +1,3 @@
-import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -27,11 +26,11 @@ test('MSG.SIGNATURE_SELL_BLOCKED formatter exists', async () => {
     );
 });
 
-test('useInventoryActions sell handler guards signature items', async () => {
-    const source = await readInventoryActionsSource();
+test('economy reducer sell handler guards signature items', async () => {
+    const source = await readSrc('src/reducers/handlers/economyHandlers.ts');
     assert.ok(source.includes("import { isSignatureItem }"), 'should import isSignatureItem');
     assert.ok(
-        /type === 'sell'[\s\S]{0,300}?isSignatureItem/.test(source),
+        /sellInventoryItem[\s\S]{0,500}?isSignatureItem/.test(source),
         'sell branch should call isSignatureItem guard before deleting'
     );
     assert.ok(

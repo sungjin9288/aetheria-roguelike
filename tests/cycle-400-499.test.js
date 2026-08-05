@@ -516,10 +516,11 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 407: 오늘의 임무 보상 표시는 reducer 지급 결과를 사용', async () => {
       const source = await readSrc('src/reducers/handlers/protocolHandlers.ts');
-      assert.ok(/resolveDailyProtocolProgress\(player, dpType, amount\)/.test(source),
+      assert.ok(/advanceDailyProtocol\(state\.player, dpType, amount\)/.test(source),
           'reducer가 지급 결과를 확정');
-      assert.ok(/reward\.essence/.test(source), '실제 에센스 지급량 표시');
-      assert.ok(/reward\.relicShards/.test(source), '실제 유물 파편 지급량 표시');
+      const helpers = await readSrc('src/reducers/handlers/helpers.ts');
+      assert.ok(/reward\.essence/.test(helpers), '실제 에센스 지급량 표시');
+      assert.ok(/reward\.relicShards/.test(helpers), '실제 유물 파편 지급량 표시');
   });
 
   test('cycle 407: 정합성 가드 — quests/achievements는 essence/relicShard 0건', async () => {

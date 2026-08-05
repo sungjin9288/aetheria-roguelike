@@ -1,8 +1,6 @@
 import { DB } from '../../data/db';
 import {
-    checkTitles,
     findItemByName,
-    getTitleLabel,
     grantGold,
     isAchievementUnlocked,
     makeItem,
@@ -19,34 +17,10 @@ import { removeExpeditionFocusQuest } from '../../utils/expeditionMissionFocus';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
+import { addNewTitles, addSeasonXp } from './helpers';
 import type { GameState, GameAction } from '../gameReducer';
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
-
-const addSeasonXp = (player: any, amount: number) => {
-    const seasonPass = player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
-    const currentXp = Math.max(0, Number(seasonPass.xp) || 0);
-    const nextXp = Math.min(SEASON_MAX_XP, currentXp + amount);
-    const nextTier = Math.min(SEASON_MAX_TIER, Math.floor(nextXp / SEASON_TIER_XP));
-    return {
-        ...player,
-        seasonPass: { ...seasonPass, xp: nextXp, tier: nextTier },
-    };
-};
-
-const addNewTitles = (player: any, logs: Array<{ type: string; text: string }>) => {
-    const newTitles = checkTitles(player);
-    if (newTitles.length === 0) return player;
-
-    newTitles.forEach((title) => {
-        logs.push({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(title)) });
-    });
-    return {
-        ...player,
-        titles: [...new Set([...(player.titles || []), ...newTitles])],
-        activeTitle: player.activeTitle || newTitles[0],
-    };
-};
 
 export const rewardActionMap = {
     // ── Codex ─────────────────────────────────────────────────────────────

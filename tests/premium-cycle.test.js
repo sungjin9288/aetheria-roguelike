@@ -1,4 +1,3 @@
-import { readInventoryActionsSource, readInventoryActionsSourceSync } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -94,7 +93,7 @@ import { readFile } from 'node:fs/promises';
       const { fileURLToPath } = await import('node:url');
       const HERE = path.dirname(fileURLToPath(import.meta.url));
       const ROOT = path.join(HERE, '..');
-      const src = await readInventoryActionsSource();
+      const src = await readFile(path.join(ROOT, 'src/reducers/handlers/economyHandlers.ts'), 'utf8');
       // synthesize 함수에 useToken 변수 + synthProtects 차감 로직 명시.
       assert.match(src, /useToken/, 'cycle 186: useToken 변수 도입');
       assert.match(src, /synthProtects/, 'synthProtects 참조');

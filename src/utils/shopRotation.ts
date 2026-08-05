@@ -52,6 +52,24 @@ const getWeekKey = () => {
     return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
 };
 
+export const getShopMaxTier = (location: string) => {
+    const mapData: any = DB.MAPS?.[location] || {};
+    const mapLevel = typeof mapData.level === 'number' ? mapData.level : 1;
+    const tierFromLevel = mapLevel < 10 ? 1 : mapLevel < 20 ? 2 : mapLevel < 30 ? 3 : mapLevel < 40 ? 4 : mapLevel < 50 ? 5 : 6;
+    const safeBonus = mapData.type === 'safe' && mapLevel > 1 ? 1 : 0;
+    const shopBonus = mapData.shopBonus ? 1 : 0;
+    return Math.min(6, tierFromLevel + safeBonus + shopBonus);
+};
+
+export const getShopCatalog = (location: string) => {
+    const maxTier = getShopMaxTier(location);
+    return [
+        ...(DB.ITEMS.consumables || []),
+        ...(DB.ITEMS.weapons || []),
+        ...(DB.ITEMS.armors || []),
+    ].filter((item: any) => (item.tier || 1) <= maxTier);
+};
+
 /**
  * 일일 추천 아이템 3개 (10% 할인 — item.price에 이미 적용됨)
  * @param {number} playerLevel
@@ -122,3 +140,26 @@ export const getWeeklySpecial = (playerLevel: any) => {
     };
 };
 
+export const getCanonicalShopOffer = (
+    source: string,
+    itemName: string,
+    playerLevel: number,
+    location: string,
+) => {
+    if (source === 'daily') {
+        const deal = getDailyDeals(playerLevel).items.find((item: any) => item.name === itemName);
+        if (!deal) return null;
+        const { originalPrice, ...item } = deal;
+        return { item: { ...item, price: originalPrice }, price: deal.price };
+    }
+    if (source === 'weekly') {
+        const special = getWeeklySpecial(playerLevel);
+        if (!special || special.name !== itemName) return null;
+        const { originalPrice, ...item } = special;
+        return { item: { ...item, price: originalPrice }, price: special.price };
+    }
+    if (source !== 'stock') return null;
+
+    const item = getShopCatalog(location).find((entry: any) => entry.name === itemName);
+    return item ? { item, price: item.price || 0 } : null;
+};

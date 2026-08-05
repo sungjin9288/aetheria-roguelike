@@ -3,7 +3,7 @@ import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
 import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
-import { getDailyDeals, getWeeklySpecial } from '../utils/shopRotation';
+import { getDailyDeals, getShopMaxTier, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
@@ -19,17 +19,6 @@ interface ShopPanelProps {
     stats?: any;
     onOpenArchiveConsole?: any;
 }
-
-/** 맵 레벨을 기준으로 상점 최대 아이템 티어 계산 */
-const getShopMaxTier = (loc: string) => {
-    const mapData = DB.MAPS?.[loc] || {};
-    const mapLevel = typeof mapData.level === 'number' ? mapData.level : 1;
-    const isSafe = mapData.type === 'safe';
-    const tierFromLevel = mapLevel < 10 ? 1 : mapLevel < 20 ? 2 : mapLevel < 30 ? 3 : mapLevel < 40 ? 4 : mapLevel < 50 ? 5 : 6;
-    const safeBonus = (isSafe && mapLevel > 1) ? 1 : 0;   // 시작의 마을 제외하고 safe 맵 +1
-    const shopBonus = mapData.shopBonus ? 1 : 0;           // 황금 왕국 등 프리미엄 상점 +1
-    return Math.min(6, tierFromLevel + safeBonus + shopBonus);
-};
 
 const isEquipmentItem = (item: any) => ['weapon', 'armor', 'shield'].includes(item?.type);
 
@@ -151,7 +140,6 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState<any>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
-    const [purchaseNotice, setPurchaseNotice] = useState('');
     const [detailOverride, setDetailOverride] = useState<boolean | null>(null);
     const disclosure = getEquipmentDisclosure(player);
     const showDetails = detailOverride ?? disclosure.showDetails;
@@ -170,11 +158,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     const inventoryHasRoom = (player.inv?.length || 0) < (player.maxInv || BALANCE.INV_MAX_SIZE);
     const buyItemsExpanded = buyItemsExpansion.key === expansionKey && buyItemsExpansion.expanded;
 
+    const purchaseReceipt = actions?.economyReceipt?.type === 'buy' ? actions.economyReceipt : null;
     useEffect(() => {
-        if (!purchaseNotice) return undefined;
-        const timer = window.setTimeout(() => setPurchaseNotice(''), 1800);
+        if (!purchaseReceipt) return undefined;
+        const timer = window.setTimeout(() => actions.clearEconomyReceipt?.(), 1800);
         return () => window.clearTimeout(timer);
-    }, [purchaseNotice]);
+    }, [actions, purchaseReceipt]);
 
     const buyItems = useMemo(() => {
         return (shopItems || [])
@@ -228,9 +217,9 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                 archiveTestId="shop-open-archive"
             />
 
-            {purchaseNotice && (
+            {purchaseReceipt && (
                 <div className="mb-2 rounded-[1rem] border border-emerald-300/22 bg-emerald-400/10 px-3 py-2 text-[11px] font-fira font-semibold text-emerald-100">
-                    구매 완료 · {purchaseNotice}
+                    구매 완료 · {purchaseReceipt.itemName}
                 </div>
             )}
 
@@ -312,10 +301,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => {
-                                                actions.market('buy', item);
-                                                setPurchaseNotice(item.name);
-                                            }}
+                                            onClick={() => actions.market('buy', item, 'daily')}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
                                             className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-2.5 py-1 text-[10px] font-bold text-amber-100"
@@ -348,10 +334,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                     const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
                                     return (
                                         <button
-                                            onClick={() => {
-                                                actions.market('buy', weeklySpecial);
-                                                setPurchaseNotice(weeklySpecial.name);
-                                            }}
+                                            onClick={() => actions.market('buy', weeklySpecial, 'weekly')}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
                                             className="aether-disabled-action shrink-0 min-h-[44px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-200 transition-all hover:bg-purple-400/10"
@@ -428,9 +411,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             <button
                                                 data-testid="shop-buy-inline"
                                                 onClick={() => {
-                                                    if (!canBuy) return;
-                                                    actions.market('buy', item);
-                                                    setPurchaseNotice(item.name);
+                                                    if (canBuy) actions.market('buy', item, 'stock');
                                                 }}
                                                 disabled={!canBuy}
                                                 className="aether-disabled-action aether-cta-gold min-h-[44px] rounded-[0.75rem] px-2 py-1 text-[10px] font-bold text-[#f6e7c8]"

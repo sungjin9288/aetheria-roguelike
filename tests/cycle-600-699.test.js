@@ -56,10 +56,10 @@ import { readFile } from 'node:fs/promises';
           'performSynthesis useProtect default false 제거');
   });
 
-  test('cycle 601: 정합성 가드 — useInventoryActions callsite 보존', async () => {
-      const source = await readInventoryActionsSource();
-      assert.ok(/performSynthesis\(items,\s*null,\s*useProtect\)/.test(source),
-          'useInventoryActions performSynthesis(items, null, useProtect) callsite 보존');
+  test('cycle 601: 정합성 가드 — reducer deterministic synthesis callsite 보존', async () => {
+      const source = await readSrc('src/reducers/handlers/economyHandlers.ts');
+      assert.ok(/resolveSynthesis\(items,\s*null,\s*useProtect,\s*successRoll,\s*outputRoll\)/.test(source),
+          'economy reducer가 명시적 entropy로 synthesis outcome을 확정');
   });
 
   test('cycle 601: cycle 502-600 회귀 가드 — default 청소 시리즈 보존', async () => {

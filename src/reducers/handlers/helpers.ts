@@ -1,7 +1,11 @@
-import { findItemByName, makeItem } from '../../utils/gameUtils';
+import { checkTitles, findItemByName, getTitleLabel, makeItem } from '../../utils/gameUtils';
 import { RELICS, MAX_RELICS_PER_RUN } from '../../data/relics';
+import { SEASON_TIER_XP } from '../../data/seasonPass';
+import { MSG } from '../../data/messages';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
+import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
+import { SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
 import type { Player } from '../../types/index.js';
 import type { Relic } from '../../types/relic.js';
 
@@ -17,6 +21,37 @@ export const sanitizeQuickSlots = (slots: any, inventory: any) => {
     const ids = new Set((inventory || []).map((item: any) => item?.id).filter(Boolean));
     const normalized = Array.from({ length: 3 }, (_: any, i: any) => (Array.isArray(slots) ? slots[i] : undefined) ?? null);
     return normalized.map((slot: any) => (slot?.id && ids.has(slot.id) ? slot : null));
+};
+
+export const addSeasonXp = (player: Player, amount: number): Player => {
+    if (!Number.isFinite(amount) || amount <= 0) return player;
+    const seasonPass = player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+    const currentXp = Math.max(0, Number(seasonPass.xp) || 0);
+    const nextXp = Math.min(SEASON_MAX_XP, currentXp + amount);
+    if (nextXp === currentXp) return player;
+
+    return {
+        ...player,
+        seasonPass: {
+            ...seasonPass,
+            xp: nextXp,
+            tier: Math.min(SEASON_MAX_TIER, Math.floor(nextXp / SEASON_TIER_XP)),
+        },
+    };
+};
+
+export const addNewTitles = (player: Player, logs: Array<{ type: string; text: string }>): Player => {
+    const newTitles = checkTitles(player);
+    if (newTitles.length === 0) return player;
+
+    newTitles.forEach((title) => {
+        logs.push({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(title)) });
+    });
+    return {
+        ...player,
+        titles: [...new Set([...(player.titles || []), ...newTitles])],
+        activeTitle: player.activeTitle || newTitles[0],
+    };
 };
 
 export interface DailyProtocolReward {
@@ -39,7 +74,7 @@ const emptyDailyProtocolReward = (): DailyProtocolReward => ({
  * 오늘의 임무 진행과 보상을 한 번에 확정합니다.
  * UI는 이 결과만 읽어 실제 지급량과 유물 변환 결과를 안내합니다.
  */
-export const resolveDailyProtocolProgress = (player: Player, type: any, amount: any) => {
+export const resolveDailyProtocolProgress = (player: Player, type: any, amount: any, relicRoll?: number) => {
     const dp = (player.stats as any)?.dailyProtocol;
     if (!dp) return { player, reward: emptyDailyProtocolReward() };
 
@@ -75,7 +110,10 @@ export const resolveDailyProtocolProgress = (player: Player, type: any, amount: 
         const ownedIds = new Set((player.relics || []).map((r: any) => r?.id));
         const candidates = RELICS.filter((r: any) => !ownedIds.has(r.id));
         if (candidates.length > 0) {
-            const pick = candidates[Math.floor(Math.random() * candidates.length)];
+            const roll = Number.isFinite(relicRoll)
+                ? Math.min(0.999999, Math.max(0, relicRoll as number))
+                : Math.random();
+            const pick = candidates[Math.floor(roll * candidates.length)];
             convertedRelicAdded = pick;
             postConvertShards = newShards - 5;
         }
@@ -147,4 +185,32 @@ export const resolveDailyProtocolProgress = (player: Player, type: any, amount: 
             convertedRelic: convertedRelicAdded,
         },
     };
+};
+
+export const advanceDailyProtocol = (player: Player, type: any, amount: any, relicRoll?: number) => {
+    const dailyProtocol = getCurrentDailyProtocol(player, new Date());
+    const currentPlayer = {
+        ...player,
+        stats: { ...player.stats, dailyProtocol },
+    };
+    return resolveDailyProtocolProgress(currentPlayer, type, amount, relicRoll);
+};
+
+export const getDailyProtocolRewardLogs = (reward: DailyProtocolReward) => {
+    const parts: string[] = [];
+    if (reward.essence > 0) parts.push(`에센스 +${reward.essence}`);
+    reward.items.forEach((name) => parts.push(`${name} 획득`));
+    if (reward.relicShards > 0) parts.push(`유물 파편 +${reward.relicShards}`);
+
+    const logs: Array<{ type: string; text: string }> = [];
+    if (reward.completedCount > 0 && parts.length > 0) {
+        logs.push({ type: 'success', text: MSG.DAILY_PROTOCOL_DONE(reward.completedCount, parts.join(' · ')) });
+    }
+    if (reward.convertedRelic) {
+        logs.push({
+            type: 'success',
+            text: MSG.DAILY_PROTOCOL_RELIC_COMPLETE(reward.convertedRelic.name || '새 유물'),
+        });
+    }
+    return logs;
 };

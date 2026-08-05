@@ -4,7 +4,6 @@ import path from 'node:path';
 import test from 'node:test';
 import { buildGraveData } from '../src/utils/graveUtils.js';
 import { fileURLToPath } from 'node:url';
-import { readInventoryActionsSourceSync } from './helpers/inventoryActionsSource.mjs';
 import { readFile } from 'node:fs/promises';
 
 /**
@@ -86,13 +85,12 @@ import { readFile } from 'node:fs/promises';
       );
   });
 
-  test('cycle 196 회귀 가드: useInventoryActions의 SEASON_XP dispatch 유지', () => {
-      // PR #4: SEASON_XP.codexDiscover dispatch(market/craft/synthesize)는 economy 서브파일로 이동.
-      const content = readInventoryActionsSourceSync();
+  test('cycle 196 회귀 가드: economy reducer의 SEASON_XP 적용 유지', () => {
+      const content = fs.readFileSync(path.join(ROOT, 'src/reducers/handlers/economyHandlers.ts'), 'utf-8');
       const matches = content.match(/SEASON_XP\.codexDiscover/g) || [];
       assert.ok(
           matches.length >= 3,
-          `useInventoryActions에 SEASON_XP.codexDiscover dispatch는 3건 이상 유지되어야 함 (cycle 196). actual: ${matches.length}`,
+          `economy reducer에 SEASON_XP.codexDiscover 적용은 3건 이상 유지되어야 함. actual: ${matches.length}`,
       );
   });
 }

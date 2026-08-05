@@ -37,6 +37,7 @@ export interface GameState {
     runSummary: any;
     expeditionDebriefOpen: boolean;
     questClaimReceipt: { key: string; questId: string | number; title: string } | null;
+    economyReceipt: { key: string; type: 'buy'; itemName: string } | null;
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,
     //   UI read 0건. INVADE_GRAVE 핸들러의 filter도 항상 [] 입력 → no-op.
 }
@@ -107,6 +108,7 @@ export const INITIAL_STATE: GameState = {
     runSummary: null,
     expeditionDebriefOpen: false,
     questClaimReceipt: null,
+    economyReceipt: null,
 };
 
 // --- REDUCER ---

@@ -39,6 +39,7 @@ export const useGameEngine = () => {
         runSummary,
         expeditionDebriefOpen,
         questClaimReceipt,
+        economyReceipt,
     } = state;
 
     // --- Firebase Sync ---
@@ -165,6 +166,8 @@ export const useGameEngine = () => {
                 // Feature Actions
                 setQuickSlot: (index: any, item: any) => dispatch({ type: AT.SET_QUICK_SLOT, payload: { index, item } }),
                 clearPostCombat: () => dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null }),
+                clearEconomyReceipt: () => dispatch({ type: AT.CLEAR_ECONOMY_RECEIPT }),
+                economyReceipt,
 
                 getUid: () => uid,
                 isAdmin: () => ADMIN_UIDS.includes(uid ?? ''),
@@ -174,7 +177,7 @@ export const useGameEngine = () => {
                 dispatch,
             };
         },
-        [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, enhanceAttemptLock]
+        [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, enhanceAttemptLock, economyReceipt]
     );
 
     const handleCommand = useCallback((text: any) => {

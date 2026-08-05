@@ -96,21 +96,26 @@ export const validateSynthesis = (items: Item[] | null | undefined, playerGold: 
 // cycle 601: selectedOutput / useProtect defaults 제거 — 1 production caller
 //   (useInventoryActions:430 performSynthesis(items, null, useProtect)) 3 args
 //   명시 전달이라 두 default 모두 도달 불가. 600사이클 milestone 후 첫 cycle.
-export const performSynthesis = (items: any, selectedOutput: any, useProtect: any) => {
+export const resolveSynthesis = (
+    items: any,
+    selectedOutput: any,
+    useProtect: any,
+    successRoll: number,
+    outputRoll: number,
+) => {
     const type = items[0].type;
     const tier = items[0].tier;
     const goldCost = BALANCE.SYNTHESIS_GOLD_COSTS[tier] || 0;
     const successRate = BALANCE.SYNTHESIS_SUCCESS_RATES[tier] || 0.5;
     const premiumSpent = useProtect ? BALANCE.SYNTHESIS_PROTECT_COST : 0;
 
-    const roll = Math.random();
-    const success = roll < successRate;
+    const success = successRoll < successRate;
 
     if (success) {
         const outputs = getSynthesisOutputs(type, tier);
         const output = selectedOutput && outputs.find((o: any) => o.name === selectedOutput.name)
             ? selectedOutput
-            : outputs[Math.floor(Math.random() * outputs.length)];
+            : outputs[Math.floor(outputRoll * outputs.length)];
 
         return {
             success: true,
@@ -133,6 +138,10 @@ export const performSynthesis = (items: any, selectedOutput: any, useProtect: an
         premiumSpent,
     };
 };
+
+export const performSynthesis = (items: any, selectedOutput: any, useProtect: any) => (
+    resolveSynthesis(items, selectedOutput, useProtect, Math.random(), Math.random())
+);
 
 /**
  * 인벤토리에서 합성 가능한 그룹 목록

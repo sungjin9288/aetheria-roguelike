@@ -151,9 +151,8 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/\+\s*1\b/.test(block), '+ 1 정적 inline 보존');
   });
 
-  test('cycle 502: 정합성 가드 — useInventoryActions callsite는 amount를 전달하지 않는다', async () => {
-      const source = await readInventoryActionsSource();
-      // 임무 보상은 reducer 단일 전이로 이동했고, 제작/합성 2개 호출만 남는다.
+  test('cycle 502: 정합성 가드 — economy reducer callsite는 amount를 전달하지 않는다', async () => {
+      const source = await readSrc('src/reducers/handlers/economyHandlers.ts');
       const matches = source.match(/incrementStat\(/g) || [];
       assert.equal(matches.length, 2, 'incrementStat 호출 정확히 2건');
       // amount(3번째 인자로 숫자 리터럴)를 명시 전달하는 패턴 0건
@@ -314,7 +313,10 @@ import { readFile, readdir } from 'node:fs/promises';
           progressCalls += (source.match(/UPDATE_DAILY_PROTOCOL/g) || []).length;
           assert.ok(!/emitDailyProtocolLogs/.test(source), `${f} 예측 로그 0건`);
       }
-      assert.ok(progressCalls >= 5, `일일 임무 진행 action 5건 이상 (실제: ${progressCalls})`);
+      const economy = await readSrc('src/reducers/handlers/economyHandlers.ts');
+      const economyCalls = (economy.match(/advanceDailyProtocol\(/g) || []).length;
+      assert.ok(progressCalls >= 3, `hook 일일 임무 action 3건 이상 (실제: ${progressCalls})`);
+      assert.ok(economyCalls >= 3, `경제 전이 내부 일일 진행 3건 이상 (실제: ${economyCalls})`);
   });
 
   test('cycle 504: 본체 동작 보존 — amount 사용 + missions filter', async () => {
@@ -396,7 +398,9 @@ import { readFile, readdir } from 'node:fs/promises';
           const calls = src.match(/grantGold\(/g) || [];
           totalCalls += calls.length;
       }
-      assert.ok(totalCalls >= 5, `grantGold 호출 5건 이상 (실제: ${totalCalls})`);
+      const economy = await readSrc('src/reducers/handlers/economyHandlers.ts');
+      totalCalls += (economy.match(/grantGold\(/g) || []).length;
+      assert.ok(totalCalls >= 6, `grantGold 호출 6건 이상 (실제: ${totalCalls})`);
   });
 
   test('cycle 505: cycle 502/503/504 회귀 가드 — 이전 default 정리 보존', async () => {
@@ -2020,8 +2024,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 538: 정합성 가드 — production + test callsite 보존', async () => {
-      const ph = await readSrc('src/reducers/handlers/protocolHandlers.ts');
-      assert.ok(/resolveDailyProtocolProgress\(player,\s*dpType,\s*amount\)/.test(ph),
+      const helpers = await readSrc('src/reducers/handlers/helpers.ts');
+      assert.ok(/resolveDailyProtocolProgress\(currentPlayer,\s*type,\s*amount,\s*relicRoll\)/.test(helpers),
           '현재 일일 주기로 정규화된 지급 결과 callsite 보존');
 
       // cycle-232-relic-* 는 tests/relics.test.js로 통합됨 (audit #1).
@@ -2260,8 +2264,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 543: body validation / signature guard 보존', async () => {
-      const source = await readInventoryActionsSource();
-      assert.ok(/validateSynthesis\(items,\s*player\.gold\)/.test(source),
+      const source = await readSrc('src/reducers/handlers/economyHandlers.ts');
+      assert.ok(/validateSynthesis\(items,\s*state\.player\.gold\)/.test(source),
           'validateSynthesis 호출 보존');
       assert.ok(/SIGNATURE_INPUT/.test(source), 'SIGNATURE_INPUT 가드 보존');
   });
@@ -2838,7 +2842,7 @@ import { readFile, readdir } from 'node:fs/promises';
           'QuestTab formatRewardParts 보존');
 
       const protocol = await readSrc('src/reducers/handlers/protocolHandlers.ts');
-      assert.ok(/formatDailyReward\(result\.reward\)/.test(protocol),
+      assert.ok(/getDailyProtocolRewardLogs\(result\.reward\)/.test(protocol),
           'reducer 지급 결과 formatter 보존');
   });
 
@@ -2849,9 +2853,9 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/if \(reward\.gold\) parts\.push\(`골드 \$\{reward\.gold\}`\)/.test(source),
           'gold 분기 보존');
 
-      const protocol = await readSrc('src/reducers/handlers/protocolHandlers.ts');
-      assert.ok(/reward\.essence > 0/.test(protocol), '실제 essence 분기 보존');
-      assert.ok(/reward\.items\.forEach/.test(protocol), '실제 item 분기 보존');
+      const helpers = await readSrc('src/reducers/handlers/helpers.ts');
+      assert.ok(/reward\.essence > 0/.test(helpers), '실제 essence 분기 보존');
+      assert.ok(/reward\.items\.forEach/.test(helpers), '실제 item 분기 보존');
   });
 
   test('cycle 556: cycle 502-555 회귀 가드 — default 청소 시리즈 보존', async () => {

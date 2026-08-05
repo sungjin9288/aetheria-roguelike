@@ -7,8 +7,12 @@ export const uiActionMap = {
     SET_SYNC_STATUS: (state: GameState, action: GameAction) =>
         ({ ...state, syncStatus: action.payload }),
 
-    SET_GAME_STATE: (state: GameState, action: GameAction) =>
-        ({ ...state, gameState: action.payload, syncStatus: 'syncing' }),
+    SET_GAME_STATE: (state: GameState, action: GameAction) => ({
+        ...state,
+        gameState: action.payload,
+        economyReceipt: action.payload === 'shop' ? state.economyReceipt : null,
+        syncStatus: 'syncing',
+    }),
 
     SET_AI_THINKING: (state: GameState, action: GameAction) =>
         ({ ...state, isAiThinking: action.payload }),
@@ -24,6 +28,10 @@ export const uiActionMap = {
 
     SET_EXPEDITION_DEBRIEF_OPEN: (state: GameState, action: GameAction) =>
         ({ ...state, expeditionDebriefOpen: action.payload === true }),
+
+    CLEAR_ECONOMY_RECEIPT: (state: GameState) => state.economyReceipt
+        ? { ...state, economyReceipt: null }
+        : state,
 
     ADD_LOG: (state: GameState, action: GameAction) =>
         ({ ...state, logs: [...state.logs, action.payload].slice(-BALANCE.LOG_MAX_SIZE) }),
