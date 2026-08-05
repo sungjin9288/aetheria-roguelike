@@ -1947,11 +1947,11 @@ import { fileURLToPath } from 'node:url';
    *
    * 발견 (dead output fields):
    * - getPostCombatAnalysis 반환에 hpRatio / mpRatio 필드 정의.
-   * - 내부에서 grade/notes/actions 분기 계산용으로만 사용. 외부 read 0건.
+   * - 내부에서 grade 분기 계산용으로만 사용. 외부 read 0건.
    * - PostCombatCard / RunSummaryCard / test 어디에서도 analysis.hpRatio /
    *   analysis.mpRatio 접근 0건.
    *
-   * 활성 출력 필드: grade / rewardMood / rewardHighlights / notes / actions.
+   * 현재 활성 출력 필드: grade / rewardMood / rewardHighlights / notes.
    *
    * 패턴 (cycle 222-335 silent dead config 시리즈 105번째):
    * - cycle 335: getMapPacingProfile.note 5회 cleanup.
@@ -1962,9 +1962,8 @@ import { fileURLToPath } from 'node:url';
    * - 내부 변수는 분기 계산용으로 그대로 유지.
    *
    * 회귀 가드:
-   * - grade / rewardMood / rewardHighlights / notes / actions 보존.
-   * - PostCombatCard analysis.grade / analysis.notes / analysis.actions /
-   *   analysis.rewardMood / analysis.rewardHighlights 사용 그대로.
+   * - grade / rewardMood / rewardHighlights / notes 보존.
+   * - 실행 추천은 getPostCombatRecommendation 단일 계약으로 분리.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -1991,7 +1990,7 @@ import { fileURLToPath } from 'node:url';
       assert.ok(typeof result.rewardMood === 'string', 'rewardMood 보존');
       assert.ok(Array.isArray(result.rewardHighlights), 'rewardHighlights 보존');
       assert.ok(Array.isArray(result.notes), 'notes 보존');
-      assert.ok(Array.isArray(result.actions), 'actions 보존');
+      assert.equal(result.actions, undefined, 'dead actions 출력 0건');
       // dead 필드 0건.
       assert.equal(result.hpRatio, undefined, 'hpRatio 출력 0건');
       assert.equal(result.mpRatio, undefined, 'mpRatio 출력 0건');
@@ -2001,7 +2000,8 @@ import { fileURLToPath } from 'node:url';
       const source = await readSrc('src/components/PostCombatCard.tsx');
       assert.ok(/analysis\.grade/.test(source), 'analysis.grade read 보존');
       assert.ok(/analysis\.notes/.test(source), 'analysis.notes read 보존');
-      assert.ok(/analysis\.actions/.test(source), 'analysis.actions read 보존');
+      assert.ok(!/analysis\.actions/.test(source), 'dead analysis.actions read 0건');
+      assert.ok(/getPostCombatRecommendation/.test(source), '실행 추천 helper 사용 보존');
   });
 
   test('cycle 335 회귀 가드: getMapPacingProfile.note 5회 제거 보존', async () => {

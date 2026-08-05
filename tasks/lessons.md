@@ -339,6 +339,10 @@
 - **Rule:** 임시 media provider를 제품 경험에서 제거할 때는 UI control과 자동 초기화를 함께 없애고 provider boundary를 fail-closed로 잠근다. 향후 정식 provider가 사용할 semantic event callsite는 보존할 수 있지만, 비활성 capability를 조작하는 버튼이나 암묵적 AudioContext 생성은 노출하지 않는다
 - **Rationale:** 장소 구분이 없는 임시 효과음과 작동하지 않는 제어는 완성된 사운드 기능처럼 보이면서도 세계의 분위기를 전달하지 못한다. 출력 경계를 명시적으로 닫아 두면 현재 경험은 정직하게 무음으로 유지되고, 이후 마을·탐험 soundscape는 gameplay action을 다시 결합하지 않고 교체할 수 있다
 
+### R74: Recommend Only Actions That Open Their Owning Surface
+- **Rule:** 결과 화면의 추천은 현재 위치와 game state에서 실행 가능한 action만 가리켜야 한다. 상세 확인 action은 selected tab만 바꾸지 말고 해당 owning surface를 실제로 열며, 상태·보상·추천은 각각 한 번만 보여 준다
+- **Rationale:** 안전지대 전용 휴식을 필드 결과에서 추천하거나 숨겨진 tab만 전환하면 버튼을 눌러도 플레이어가 결과를 확인할 수 없다. 추천 계산과 CTA target을 하나의 계약으로 묶고 smoke가 최종 화면 노출까지 검증해야 안내 문구와 실제 권한이 다시 갈라지지 않는다
+
 ---
 
 ## 📝 Post-Mortem Template

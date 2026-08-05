@@ -174,15 +174,16 @@ import { readFile, readdir } from 'node:fs/promises';
           'IntroScreen JSX에서 mobile prop 0건');
   });
 
-  test('cycle 402: PostCombatCard 활성 props 보존 (회귀 가드)', async () => {
+  test('cycle 402: PostCombatCard 활성 action props 보존 (회귀 가드)', async () => {
       const source = await readSrc('src/components/PostCombatCard.tsx');
       const ifaceStart = source.indexOf('interface PostCombatCardProps');
       const ifaceEnd = source.indexOf('}', ifaceStart);
       const ifaceBlock = source.slice(ifaceStart, ifaceEnd);
-      for (const field of ['result', 'onClose', 'onRest', 'onSell']) {
+      for (const field of ['result', 'onClose', 'onOpenInventory']) {
           const re = new RegExp(`${field}\\?:`);
           assert.ok(re.test(ifaceBlock), `${field} 필드 보존`);
       }
+      assert.ok(!/onRest\?:|onSell\?:/.test(ifaceBlock), '실행 불가능하거나 모호한 action prop 0건');
   });
 
   test('cycle 401 회귀 가드: DashboardProps mobile 0건', async () => {

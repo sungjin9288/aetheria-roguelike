@@ -297,6 +297,9 @@ async function verifyCombatForecast(page) {
 
 async function verifyPostCombatDecisionStrip(page, options = {}) {
   if (options.inject) {
+    if (options.openRecommendation) {
+      await page.evaluate(() => window.__AETHERIA_TEST_API__?.setSideTab?.('stats'));
+    }
     await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectPostCombatResult?.());
   }
   const strip = page.locator('[data-testid="post-combat-decision-strip"]');
@@ -304,8 +307,7 @@ async function verifyPostCombatDecisionStrip(page, options = {}) {
   const text = await strip.innerText();
   const tone = await strip.getAttribute('data-result-tone');
   ensure(text.includes('상태'), 'Post-combat decision strip should expose the current state');
-  ensure(text.includes('보상'), 'Post-combat decision strip should expose rewards');
-  ensure(text.includes('다음 행동'), 'Post-combat decision strip should expose the next action');
+  ensure(text.includes('추천'), 'Post-combat decision strip should expose the recommended action');
   ensure(['pressure', 'advantage', 'reward', 'steady'].includes(tone), 'Post-combat decision strip should expose a known tone');
   await verifyActionReachable(strip, 'Post-combat first-scan decision strip', {
     allowDisabled: true,
@@ -316,10 +318,28 @@ async function verifyPostCombatDecisionStrip(page, options = {}) {
     minHitHeight: 44,
     minHitWidth: 44,
   });
+  await verifyActionReachable(page.locator('[data-testid="post-combat-reward-summary"]'), 'Post-combat reward summary', {
+    allowDisabled: true,
+    minHitHeight: 32,
+    minVisibleRatio: 0.8,
+  });
+  await verifyActionReachable(page.locator('[data-testid="post-combat-primary-action"]'), 'Post-combat primary action', {
+    minHitHeight: 44,
+    minVisibleRatio: 0.85,
+  });
   if (options.artifactName) {
     await writeStateArtifact(options.artifactName, await readState(page), page);
   }
-  if (options.dismiss) {
+  if (options.openRecommendation) {
+    const primaryAction = page.locator('[data-testid="post-combat-primary-action"]');
+    ensure(
+      (await primaryAction.innerText()).includes('장비 확인'),
+      'Post-combat reward recommendation should offer equipment review'
+    );
+    await primaryAction.click();
+    await strip.waitFor({ state: 'hidden', timeout: 5000 });
+    await page.locator('[data-testid="inventory-equipment-disclosure"]').waitFor({ state: 'visible', timeout: 5000 });
+  } else if (options.dismiss) {
     const continueButton = page.locator('[data-testid="post-combat-continue"]');
     await verifyActionReachable(continueButton, 'Post-combat continue CTA', {
       minHitHeight: 44,
@@ -1659,7 +1679,7 @@ async function main() {
     await verifyTerminalStatus(page);
     await verifyPostCombatDecisionStrip(page, {
       inject: true,
-      dismiss: true,
+      openRecommendation: true,
       artifactName: '02d-post-combat-decision-strip',
     });
     await verifyRelicChoiceDecisionStrip(page, {

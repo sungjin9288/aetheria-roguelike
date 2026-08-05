@@ -787,12 +787,6 @@
     0 10px 22px rgba(2, 8, 14, 0.2);
 }
 
-.aether-result-cell {
-  min-width: 0;
-  border: 1px solid rgba(212, 227, 239, 0.08);
-  background: rgba(0, 0, 0, 0.16);
-}
-
 .aether-relic-decision-strip {
   border: 1px solid rgba(125, 212, 216, 0.2);
   background:
@@ -1469,7 +1463,6 @@
 .aether-locked-row,
 .aether-choice-row { border-radius: var(--aether-r-card); }
 .aether-combat-forecast-cell,
-.aether-result-cell,
 .aether-relic-decision-cell,
 .aether-run-reflection-cell { border-radius: var(--aether-r-cell); }
 
@@ -1558,7 +1551,6 @@
 [data-readability-mode="high"] .aether-log-row,
 [data-readability-mode="high"] .aether-decision-cell,
 [data-readability-mode="high"] .aether-combat-forecast-cell,
-[data-readability-mode="high"] .aether-result-cell,
 [data-readability-mode="high"] .aether-relic-decision-cell,
 [data-readability-mode="high"] .aether-run-reflection-cell,
 [data-readability-mode="high"] .aether-choice-cell,

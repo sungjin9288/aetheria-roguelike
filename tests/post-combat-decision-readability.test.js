@@ -10,7 +10,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('post combat decision strip prioritizes recovery when HP is low', () => {
+test('post combat decision strip routes low HP recovery to an available inventory action', () => {
     const strip = getPostCombatDecisionStrip({
         enemy: '테스트 적',
         exp: 24,
@@ -26,7 +26,7 @@ test('post combat decision strip prioritizes recovery when HP is low', () => {
     assert.deepEqual(strip.cells, [
         { label: '상태', value: '생명 회복' },
         { label: '보상', value: '전리품 1개' },
-        { label: '다음 행동', value: '휴식' },
+        { label: '다음 행동', value: '회복 아이템 확인' },
     ]);
 });
 
@@ -45,7 +45,7 @@ test('post combat decision strip uses player language for resource rewards', () 
     assert.deepEqual(strip.cells, [
         { label: '상태', value: '진행 가능' },
         { label: '보상', value: '골드 +220' },
-        { label: '다음 행동', value: '다음 지역' },
+        { label: '다음 행동', value: '계속 탐험' },
     ]);
     assert.doesNotMatch(strip.cells.map((cell) => cell.value).join(' '), /EXP|Gold|HP|MP|인벤|퀵슬롯/);
 });
@@ -75,33 +75,38 @@ test('post combat decision strip promotes signature rewards without altering loo
     ]);
 });
 
-test('PostCombatCard renders direct Korean decision labels', async () => {
+test('PostCombatCard renders a compact reward summary and executable recommendation', async () => {
     const source = await readSrc('src/components/PostCombatCard.tsx');
+    const outcomeSource = await readSrc('src/utils/outcomeAnalysis.ts');
+    const rootSource = await readSrc('src/components/app/GameRoot.tsx');
 
     assert.match(source, /getPostCombatDecisionStrip/);
     assert.match(source, /data-testid="post-combat-decision-strip"/);
+    assert.match(source, /data-testid="post-combat-reward-summary"/);
+    assert.match(source, /data-testid="post-combat-primary-action"/);
     assert.match(source, /data-result-tone=\{decisionStrip\.tone\}/);
     assert.match(source, /aria-label="전투 결과 판단 요약"/);
-    assert.match(source, /기력 회복 점검/);
-    assert.match(source, /가방 정리/);
-    assert.doesNotMatch(source, />MP 회복 점검<|>인벤 정리</);
+    assert.match(outcomeSource, /회복 아이템 확인/);
+    assert.match(outcomeSource, /가방 정리/);
+    assert.match(rootSource, /onOpenInventory=\{\(\) => handleOpenArchiveTab\('inventory'\)\}/);
+    assert.doesNotMatch(source, /onRest|휴식 우선|>MP 회복 점검<|>인벤 정리/);
 });
 
-test('smoke loop verifies the post combat decision strip after victory', async () => {
+test('smoke loop verifies the compact post combat summary after victory', async () => {
     const source = await readSrc('scripts/smoke-gameplay.mjs');
 
     assert.match(source, /verifyPostCombatDecisionStrip/);
     assert.match(source, /post-combat-decision-strip/);
+    assert.match(source, /post-combat-reward-summary/);
+    assert.match(source, /post-combat-primary-action/);
     assert.match(source, /상태/);
-    assert.match(source, /보상/);
-    assert.match(source, /다음 행동/);
+    assert.match(source, /추천/);
 });
 
 test('post combat decision strip has high readability CSS coverage', async () => {
     const css = await readSrc('src/index.css');
 
     assert.match(css, /\.aether-result-strip/);
-    assert.match(css, /\.aether-result-cell/);
     assert.match(css, /\[data-readability-mode="high"\]\s+\.aether-result-strip/);
-    assert.match(css, /\[data-readability-mode="high"\]\s+\.aether-result-cell/);
+    assert.doesNotMatch(css, /\.aether-result-cell/);
 });

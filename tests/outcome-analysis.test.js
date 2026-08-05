@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getPostCombatAnalysis, getRunSummaryAnalysis } from '../src/utils/outcomeAnalysis.js';
+import {
+    getPostCombatAnalysis,
+    getPostCombatRecommendation,
+    getRunSummaryAnalysis,
+} from '../src/utils/outcomeAnalysis.js';
 
 test('post combat analysis flags risky wins and recovery actions', () => {
     const analysis = getPostCombatAnalysis({
@@ -16,12 +20,19 @@ test('post combat analysis flags risky wins and recovery actions', () => {
         invFull: true,
         items: ['검은 수정'],
     });
+    const recommendation = getPostCombatRecommendation({
+        playerHp: 28,
+        playerMaxHp: 180,
+        playerMp: 12,
+        playerMaxMp: 80,
+        invFull: true,
+        items: ['검은 수정'],
+    });
 
     assert.equal(analysis.grade, '붕괴 직전');
     assert.equal(analysis.rewardMood, '강적 제압');
     assert.ok(analysis.notes.some((note) => note.includes('정예')));
-    assert.ok(analysis.actions.some((action) => action.includes('회복')));
-    assert.ok(analysis.actions.some((action) => action.includes('가방')));
+    assert.deepEqual(recommendation, { target: 'inventory', label: '회복 아이템 확인' });
     assert.ok(analysis.rewardHighlights.some((entry) => entry.includes('정예 격파')));
 });
 
@@ -34,12 +45,17 @@ test('post combat analysis respects explicit hp/mp flags when ratios are absent'
         hpLow: false,
         mpLow: false,
     });
+    const recommendation = getPostCombatRecommendation({
+        enemy: '테스트 골렘',
+        exp: 22,
+        gold: 18,
+        items: [],
+        hpLow: false,
+        mpLow: false,
+    });
 
     assert.equal(analysis.grade, '완승');
-    assert.ok(
-        analysis.actions.some((action) => action.includes('다음 지역')),
-        'explicit non-low flags should not fall back to recovery copy'
-    );
+    assert.deepEqual(recommendation, { target: 'continue', label: '계속 탐험' });
 });
 
 test('run summary analysis recommends a next-run focus from weak runs', () => {

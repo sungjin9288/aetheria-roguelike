@@ -350,8 +350,7 @@ const GameRoot = ({
                     <PostCombatCard
                         result={engine.postCombatResult}
                         onClose={() => engine.actions.clearPostCombat?.()}
-                        onRest={() => engine.actions.rest?.()}
-                        onSell={() => engine.actions.setSideTab?.('inventory')}
+                        onOpenInventory={() => handleOpenArchiveTab('inventory')}
                     />
                 </Suspense>
             )}

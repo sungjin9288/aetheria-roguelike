@@ -10,9 +10,6 @@ export const getPostCombatAnalysis = (result: any) => {
     const hpRatio = typeof result.hpLow === 'boolean'
         ? result.hpLow ? 0.2 : 1
         : clampRatio(result.playerHp, result.playerMaxHp);
-    const mpRatio = typeof result.mpLow === 'boolean'
-        ? result.mpLow ? 0.2 : 1
-        : clampRatio(result.playerMp, result.playerMaxMp);
     const enemyTier = result.enemyTier || 'NORMAL';
     const enemyName = result.enemy || '적';
     const growthDirection = result.primaryBuild || '균형 잡힌 성장';
@@ -37,15 +34,6 @@ export const getPostCombatAnalysis = (result: any) => {
     if (result.enemyWeakness) notes.push(`이 적은 ${result.enemyWeakness} 약점을 가졌습니다.`);
     if (result.enemyResistance) notes.push(`${result.enemyResistance} 내성이 있어 속성 선택을 조정하는 편이 좋습니다.`);
 
-    const actions: any[] = [];
-    if (hpRatio <= 0.35) actions.push('휴식 또는 회복 아이템을 우선 사용하세요.');
-    else if (enemyTier === 'BOSS' || enemyTier === 'ELITE') actions.push('다음 전투 전 장비와 소모품을 한 번 정리하세요.');
-    else actions.push('현재 상태라면 다음 지역으로 이동해도 좋습니다.');
-
-    if (mpRatio <= 0.3) actions.push('기력을 회복한 뒤 기술을 활용하세요.');
-    if (result.invFull) actions.push('가방이 가득 찼습니다. 상점에서 정리한 뒤 이동하는 편이 안전합니다.');
-    if (result.items?.length > 0) actions.push('새 전리품이 현재 성장 방향에 맞는지 장비 비교에서 확인하세요.');
-
     let rewardMood = '안정 정리';
     if (result.leveledUp && (result.items?.length || 0) > 0) rewardMood = '성장 도약';
     else if (enemyTier === 'BOSS') rewardMood = '보스 돌파';
@@ -68,8 +56,43 @@ export const getPostCombatAnalysis = (result: any) => {
         rewardMood,
         rewardHighlights: rewardHighlights.slice(0, 3),
         notes: notes.slice(0, 4),
-        actions: actions.slice(0, 3),
     };
+};
+
+export const getPostCombatRecommendation = (result: any, context: any = {}) => {
+    const hpLow = typeof result.hpLow === 'boolean'
+        ? result.hpLow
+        : clampRatio(result.playerHp, result.playerMaxHp) <= 0.35;
+    const mpLow = typeof result.mpLow === 'boolean'
+        ? result.mpLow
+        : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3;
+    const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
+    const enemyTier = result.enemyTier || 'NORMAL';
+    const droppedItems = Array.isArray(result.items)
+        ? result.items
+        : Array.isArray(result.loot)
+            ? result.loot
+            : [];
+    const nonSignatureLootCount = Number.isFinite(context.nonSignatureLootCount)
+        ? context.nonSignatureLootCount
+        : droppedItems.length;
+    const signatureLootCount = Number.isFinite(context.signatureLootCount)
+        ? context.signatureLootCount
+        : 0;
+    const hasUpgradeHint = Boolean(result.upgradeHint);
+    const hasTraitHint = Boolean(result.traitHint);
+
+    if (hpLow) return { target: 'inventory', label: '회복 아이템 확인' };
+    if (invFull) return { target: 'inventory', label: '가방 정리' };
+    if (mpLow) return { target: 'inventory', label: '기력 회복 확인' };
+    if (signatureLootCount > 0 || hasUpgradeHint || hasTraitHint) {
+        return { target: 'inventory', label: '장비 확인' };
+    }
+    if (nonSignatureLootCount > 0) return { target: 'inventory', label: '전리품 확인' };
+    if (enemyTier === 'BOSS' || enemyTier === 'ELITE') {
+        return { target: 'inventory', label: '소모품 확인' };
+    }
+    return { target: 'continue', label: '계속 탐험' };
 };
 
 export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
@@ -94,6 +117,7 @@ export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
         : 0;
     const hasUpgradeHint = Boolean(result.upgradeHint);
     const hasTraitHint = Boolean(result.traitHint);
+    const recommendation = getPostCombatRecommendation(result, context);
 
     let state = '진행 가능';
     if (hpLow) state = '생명 회복';
@@ -109,12 +133,6 @@ export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
     else if ((result.gold || 0) >= 100) loot = `골드 +${result.gold}`;
     else if ((result.exp || 0) >= 100) loot = `경험 +${result.exp}`;
 
-    let next = '다음 지역';
-    if (hpLow) next = '휴식';
-    else if (invFull) next = '가방 정리';
-    else if (signatureLootCount > 0 || nonSignatureLootCount > 0 || hasUpgradeHint || hasTraitHint) next = '장비 확인';
-    else if (enemyTier === 'BOSS' || enemyTier === 'ELITE') next = '소모품 점검';
-
     let tone = 'steady';
     if (hpLow || invFull) tone = 'pressure';
     else if (signatureLootCount > 0 || hasUpgradeHint || hasTraitHint || result.leveledUp) tone = 'reward';
@@ -125,7 +143,7 @@ export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
         cells: [
             { label: '상태', value: state },
             { label: '보상', value: loot },
-            { label: '다음 행동', value: next },
+            { label: '다음 행동', value: recommendation.label },
         ],
     };
 };
