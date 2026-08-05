@@ -1,4 +1,3 @@
-import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -182,13 +181,13 @@ import { readFile } from 'node:fs/promises';
           `PREMIUM_SHOP cosmetic title not in TITLES:\n  ${missing.join('\n  ')}`);
   });
 
-  test('cycle 185: purchaseCosmeticTitle이 player.titles에 push (회귀 가드)', async () => {
-      const src = await readInventoryActionsSource();
-      // 함수 내부에 'titles:' assignment가 있어야 함 — purchaseCosmeticTitle 분기.
-      const idx = src.indexOf('purchaseCosmeticTitle');
+  test('cycle 185: cosmetic title transaction이 player.titles에 push (회귀 가드)', async () => {
+      const src = await readFile(path.join(ROOT, 'src/reducers/handlers/premiumHandlers.ts'), 'utf8');
+      const idx = src.indexOf('const purchaseCosmeticTitle');
       assert.ok(idx > -1);
       const fnSlice = src.slice(idx, idx + 2000);
-      assert.match(fnSlice, /titles:\s*nextTitles/, 'cycle 185: titles 배열 갱신 명시');
+      assert.match(fnSlice, /titles:\s*titles\.includes\(title\.name\)/, 'cycle 185: titles 배열 갱신 명시');
+      assert.match(fnSlice, /cosmeticTitles:\s*\[\.\.\.cosmeticTitles, title\.id\]/, 'cycle 185: 보유 ledger 갱신 명시');
   });
 
   test('cycle 174 회귀 가드: TITLES id 유일성 (cosmetic 추가 후에도 0 dup)', () => {

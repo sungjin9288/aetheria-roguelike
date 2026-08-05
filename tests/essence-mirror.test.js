@@ -130,12 +130,21 @@ test('③ purchaseMirrorNode: immutable — 원본 mirror 객체를 변이하지
 });
 
 // ── ③ PURCHASE_MIRROR_NODE reducer 액션 ────────────────────────────────────
+const mirrorPurchaseAction = (state, nodeId) => ({
+    type: AT.PURCHASE_MIRROR_NODE,
+    payload: {
+        nodeId,
+        expectedEssence: Math.max(0, Number(state.player.meta?.essence) || 0),
+        expectedLevel: Math.max(0, Number(state.player.meta?.mirror?.[nodeId]) || 0),
+    },
+});
+
 test('③ reducer PURCHASE_MIRROR_NODE: 에센스 차감 + 레벨 증가 (immutable)', () => {
     const state = {
         ...INITIAL_STATE,
         player: { ...INITIAL_STATE.player, meta: { ...INITIAL_STATE.player.meta, essence: 1000, mirror: {} } },
     };
-    const next = gameReducer(state, { type: AT.PURCHASE_MIRROR_NODE, payload: { nodeId: 'start_gold' } });
+    const next = gameReducer(state, mirrorPurchaseAction(state, 'start_gold'));
     const node = MIRROR_NODES.find((n) => n.id === 'start_gold');
 
     assert.equal(next.player.meta.mirror.start_gold, 1);
@@ -150,7 +159,7 @@ test('③ reducer PURCHASE_MIRROR_NODE: 에센스 부족 시 no-op (state 그대
         ...INITIAL_STATE,
         player: { ...INITIAL_STATE.player, meta: { ...INITIAL_STATE.player.meta, essence: 10, mirror: {} } },
     };
-    const next = gameReducer(state, { type: AT.PURCHASE_MIRROR_NODE, payload: { nodeId: 'start_gold' } });
+    const next = gameReducer(state, mirrorPurchaseAction(state, 'start_gold'));
     assert.equal(next.player.meta.essence, 10, '에센스 변동 없음');
     assert.equal(next.player.meta.mirror.start_gold, undefined, '레벨 변동 없음');
 });
@@ -163,7 +172,7 @@ test('③ reducer PURCHASE_MIRROR_NODE: 최대레벨 도달 시 no-op (캡)', ()
             meta: { ...INITIAL_STATE.player.meta, essence: 99999, mirror: { start_boot_extra: 1 } },
         },
     };
-    const next = gameReducer(state, { type: AT.PURCHASE_MIRROR_NODE, payload: { nodeId: 'start_boot_extra' } });
+    const next = gameReducer(state, mirrorPurchaseAction(state, 'start_boot_extra'));
     assert.equal(next.player.meta.mirror.start_boot_extra, 1, '최대레벨 유지');
     assert.equal(next.player.meta.essence, 99999, '에센스 차감 없음');
 });
@@ -173,7 +182,7 @@ test('③ reducer PURCHASE_MIRROR_NODE: meta.mirror가 undefined인 구세이브
         ...INITIAL_STATE,
         player: { ...INITIAL_STATE.player, meta: { essence: 1000 } }, // mirror 필드 없음
     };
-    const next = gameReducer(state, { type: AT.PURCHASE_MIRROR_NODE, payload: { nodeId: 'start_gold' } });
+    const next = gameReducer(state, mirrorPurchaseAction(state, 'start_gold'));
     assert.equal(next.player.meta.mirror.start_gold, 1);
 });
 
@@ -182,13 +191,13 @@ test('③ reducer PURCHASE_MIRROR_NODE: 순차 구매로 레벨이 누적됨', (
         ...INITIAL_STATE,
         player: { ...INITIAL_STATE.player, meta: { ...INITIAL_STATE.player.meta, essence: 1000, mirror: {} } },
     };
-    state = gameReducer(state, { type: AT.PURCHASE_MIRROR_NODE, payload: { nodeId: 'campfire_rate' } });
+    state = gameReducer(state, mirrorPurchaseAction(state, 'campfire_rate'));
     assert.equal(state.player.meta.mirror.campfire_rate, 1);
-    state = gameReducer(state, { type: AT.PURCHASE_MIRROR_NODE, payload: { nodeId: 'campfire_rate' } });
+    state = gameReducer(state, mirrorPurchaseAction(state, 'campfire_rate'));
     assert.equal(state.player.meta.mirror.campfire_rate, 2);
     // maxLevel 2 도달 후 추가 구매 시도 → no-op
     const essenceAfterTwo = state.player.meta.essence;
-    state = gameReducer(state, { type: AT.PURCHASE_MIRROR_NODE, payload: { nodeId: 'campfire_rate' } });
+    state = gameReducer(state, mirrorPurchaseAction(state, 'campfire_rate'));
     assert.equal(state.player.meta.mirror.campfire_rate, 2, '최대레벨 캡');
     assert.equal(state.player.meta.essence, essenceAfterTwo, '초과 구매 시도는 에센스 미차감');
 });

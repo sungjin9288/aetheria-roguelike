@@ -64,7 +64,10 @@ test.describe('에테르 거울 영구 성장', () => {
         expect(afterSelection).toEqual(before);
 
         await page.getByTestId('mirror-node-select-start_gold').click();
-        await page.getByTestId('mirror-confirm').click();
+        await page.getByTestId('mirror-confirm').evaluate((button: HTMLButtonElement) => {
+            button.click();
+            button.click();
+        });
 
         await expect(page.getByTestId('mirror-current-effect')).toHaveText('시작 골드 +200');
         await expect(page.getByTestId('mirror-confirm')).toContainText('계승 정수 140 부족');
@@ -72,5 +75,7 @@ test.describe('에테르 거울 영구 성장', () => {
         expect(afterPurchase.essence).toBe(100);
         expect(afterPurchase.mirror.start_gold).toBe(2);
         expect(afterPurchase.mirror.campfire_rate).toBe(1);
+        const renderSnapshot = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+        expect(renderSnapshot.logTail.filter((log: { text: string }) => log.text.includes('유산의 금고 2단계')).length).toBe(1);
     });
 });

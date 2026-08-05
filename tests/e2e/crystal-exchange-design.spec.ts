@@ -69,7 +69,10 @@ test.describe('에테르 교환소', () => {
         expect(afterSelection).toEqual(before);
 
         await page.getByTestId('premium-buy-inv_expand').click();
-        await page.getByTestId('crystal-exchange-confirm').click();
+        await page.getByTestId('crystal-exchange-confirm').evaluate((button: HTMLButtonElement) => {
+            button.click();
+            button.click();
+        });
 
         await expect(page.getByTestId('crystal-exchange-balance')).toContainText('30');
         await expect(page.getByTestId('crystal-current-state')).toHaveText('30칸');
@@ -77,6 +80,8 @@ test.describe('에테르 교환소', () => {
         const afterExchange = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getCrystalExchangeSnapshot?.());
         expect(afterExchange.premiumCurrency).toBe(30);
         expect(afterExchange.maxInv).toBe(30);
+        const renderSnapshot = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+        expect(renderSnapshot.logTail.filter((log: { text: string }) => log.text.includes('가방을 30칸')).length).toBe(1);
     });
 
     test('크리스탈이 없어도 획득 목표를 확인할 수 있다', async ({ page }) => {

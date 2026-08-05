@@ -387,6 +387,10 @@
 - **Rule:** 장착·소모품·강화 action은 item identity와 필요한 stale snapshot token·entropy만 전달한다. reducer가 최신 inventory·equip, 장착 제한, 가방 한도와 canonical 강화 비용·재료·확률을 다시 확인하고 mutation, quick slot 정리와 결과 로그를 한 transition에서 확정한다
 - **Rationale:** render snapshot 전체 저장과 UI가 만든 성공·비용 payload는 연속 입력에서 이전 장비를 되살리거나 재화를 중복 소모하고 거부된 시도도 성공처럼 보이게 한다. current-state commit과 accepted feedback이 장기 장비 투자 신뢰를 지킨다
 
+### R86: Spend Permanent Currency From Canonical Offers
+- **Rule:** 크리스탈·계승 정수처럼 여러 여정에 보존되는 재화의 구매 action은 offer/node identity와 사용자가 본 잔액·단계 token만 전달한다. reducer가 최신 재화·보유 ledger와 canonical 상품 데이터를 확인하고 비용, 지급, 단계와 성공 기록을 한 transition에서 확정하며 같은 snapshot의 재전송은 exact no-op으로 처리한다
+- **Rationale:** UI가 비용·상품명·성공 로그를 만들거나 repeatable 성장을 단순 dispatch하면 빠른 두 번 입력이 영구 재화를 중복 차감하고 플레이어가 의도하지 않은 다음 단계까지 구매할 수 있다. 영구 투자일수록 현재 상태 검증과 accepted feedback을 한 authority에 모아야 오래 쌓은 진행을 신뢰할 수 있다
+
 ---
 
 ## 📝 Post-Mortem Template
