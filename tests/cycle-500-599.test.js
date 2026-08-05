@@ -151,11 +151,11 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/\+\s*1\b/.test(block), '+ 1 정적 inline 보존');
   });
 
-  test('cycle 502: 정합성 가드 — useInventoryActions 3 callsite 호출 존재 + amount 명시 전달 0건', async () => {
+  test('cycle 502: 정합성 가드 — useInventoryActions callsite는 amount를 전달하지 않는다', async () => {
       const source = await readInventoryActionsSource();
-      // incrementStat 호출 3건이 존재하는지 (callsite 자체 가드)
+      // 임무 보상은 reducer 단일 전이로 이동했고, 제작/합성 2개 호출만 남는다.
       const matches = source.match(/incrementStat\(/g) || [];
-      assert.equal(matches.length, 3, 'incrementStat 호출 정확히 3건');
+      assert.equal(matches.length, 2, 'incrementStat 호출 정확히 2건');
       // amount(3번째 인자로 숫자 리터럴)를 명시 전달하는 패턴 0건
       // 즉 incrementStat(..., 'field_literal', <number>) 형태가 0건이어야 함
       assert.ok(!/incrementStat\([\s\S]+?,\s*'[^']+',\s*\d+\)/.test(source),
@@ -1873,11 +1873,11 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 536: 정합성 가드 — 4 production callsite 보존', async () => {
-      const inv = await readInventoryActionsSource();
-      assert.ok(/const pacedExp = getPacedQuestClaimExp\(updatedPlayer,\s*qData\.reward\.exp\)/.test(inv),
-          'useInventoryActions quest exp pacing 보존');
-      assert.ok(/CombatEngine\.applyExpGain\(updatedPlayer,\s*pacedExp\)/.test(inv),
-          'useInventoryActions paced applyExpGain callsite 보존');
+      const rewards = await readSrc('src/reducers/handlers/rewardHandlers.ts');
+      assert.ok(/const pacedExp = getPacedQuestClaimExp\(nextPlayer,\s*quest\.reward\.exp\)/.test(rewards),
+          'quest reward reducer exp pacing 보존');
+      assert.ok(/CombatEngine\.applyExpGain\(nextPlayer,\s*pacedExp\)/.test(rewards),
+          'quest reward reducer paced applyExpGain callsite 보존');
 
       const ev = await readSrc('src/hooks/gameActions/eventActions.ts');
       assert.ok(/CombatEngine\.applyExpGain\(updatedPlayer,\s*selectedOutcome\.exp\)/.test(ev),

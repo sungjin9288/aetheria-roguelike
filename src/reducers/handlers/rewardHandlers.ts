@@ -1,12 +1,52 @@
-import { findItemByName, makeItem } from '../../utils/gameUtils';
-import { SEASON_TIER_XP, SEASON_REWARDS } from '../../data/seasonPass';
+import { DB } from '../../data/db';
+import {
+    checkTitles,
+    findItemByName,
+    getTitleLabel,
+    grantGold,
+    isAchievementUnlocked,
+    makeItem,
+} from '../../utils/gameUtils';
+import { addItemByName } from '../../utils/inventoryUtils';
+import { SEASON_TIER_XP, SEASON_REWARDS, SEASON_XP } from '../../data/seasonPass';
 import { getClaimableCodexMilestone } from '../../data/codexRewards';
 import { formatCodexRewardParts } from '../../utils/codexPresentation';
 import { normalizeClaimedSeasonTiers, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
+import { getPacedQuestClaimExp } from '../../utils/progressionPacing';
+import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
+import { calculateFullStats } from '../../utils/statsCalculator';
+import { removeExpeditionFocusQuest } from '../../utils/expeditionMissionFocus';
+import { CombatEngine } from '../../systems/CombatEngine';
+import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 import type { GameState, GameAction } from '../gameReducer';
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
+
+const addSeasonXp = (player: any, amount: number) => {
+    const seasonPass = player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+    const currentXp = Math.max(0, Number(seasonPass.xp) || 0);
+    const nextXp = Math.min(SEASON_MAX_XP, currentXp + amount);
+    const nextTier = Math.min(SEASON_MAX_TIER, Math.floor(nextXp / SEASON_TIER_XP));
+    return {
+        ...player,
+        seasonPass: { ...seasonPass, xp: nextXp, tier: nextTier },
+    };
+};
+
+const addNewTitles = (player: any, logs: Array<{ type: string; text: string }>) => {
+    const newTitles = checkTitles(player);
+    if (newTitles.length === 0) return player;
+
+    newTitles.forEach((title) => {
+        logs.push({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(title)) });
+    });
+    return {
+        ...player,
+        titles: [...new Set([...(player.titles || []), ...newTitles])],
+        activeTitle: player.activeTitle || newTitles[0],
+    };
+};
 
 export const rewardActionMap = {
     // ── Codex ─────────────────────────────────────────────────────────────
@@ -45,6 +85,150 @@ export const rewardActionMap = {
         return {
             ...state,
             player: { ...state.player, seasonPass: { ...sp, xp: newXp, tier: newTier } },
+            syncStatus: 'syncing',
+        };
+    },
+
+    CLAIM_QUEST_REWARD: (state: GameState, action: GameAction) => {
+        const questId = action.payload?.questId;
+        const activeQuest = (state.player.quests || []).find((quest: any) => quest.id === questId);
+        if (!activeQuest) return state;
+
+        const quest = activeQuest.isBounty
+            ? activeQuest
+            : DB.QUESTS.find((entry: any) => entry.id === questId);
+        if (!quest || (activeQuest.progress || 0) < (quest.goal || 0)) return state;
+
+        const claimedQuestIds = Array.isArray(state.player.stats?.claimedQuestIds)
+            ? state.player.stats.claimedQuestIds
+            : [];
+        if (!activeQuest.isBounty && claimedQuestIds.includes(questId)) return state;
+
+        const logs: Array<{ type: string; text: string }> = [];
+        let nextPlayer: any = removeExpeditionFocusQuest({
+            ...state.player,
+            quests: (state.player.quests || []).filter((entry: any) => entry.id !== questId),
+            stats: {
+                ...state.player.stats,
+                claimedQuestIds: activeQuest.isBounty
+                    ? claimedQuestIds
+                    : [...claimedQuestIds, questId],
+                bountiesCompleted: activeQuest.isBounty
+                    ? (state.player.stats?.bountiesCompleted || 0) + 1
+                    : state.player.stats?.bountiesCompleted || 0,
+            },
+        }, questId);
+
+        if (quest.reward?.gold) nextPlayer = grantGold(nextPlayer, quest.reward.gold);
+
+        let visualEffect = state.visualEffect;
+        if (quest.reward?.exp) {
+            const pacedExp = getPacedQuestClaimExp(nextPlayer, quest.reward.exp);
+            const expResult = CombatEngine.applyExpGain(nextPlayer, pacedExp);
+            nextPlayer = expResult.updatedPlayer;
+            logs.push(...expResult.logs);
+            if (expResult.visualEffect) visualEffect = expResult.visualEffect;
+        }
+
+        if (quest.reward?.item) {
+            const inventorySize = (nextPlayer.inv || []).length;
+            nextPlayer = addItemByName(nextPlayer, quest.reward.item);
+            if ((nextPlayer.inv || []).length > inventorySize) {
+                logs.push({ type: 'success', text: MSG.QUEST_REWARD_ITEM(quest.reward.item) });
+            }
+        }
+
+        if (quest.reward?.title && !(nextPlayer.titles || []).includes(quest.reward.title)) {
+            nextPlayer = {
+                ...nextPlayer,
+                titles: [...(nextPlayer.titles || []), quest.reward.title],
+                activeTitle: nextPlayer.activeTitle || quest.reward.title,
+            };
+            logs.push({ type: 'success', text: MSG.TITLE_UNLOCKED(quest.reward.title) });
+        }
+
+        if (quest.buildTag && quest.reward?.gold) {
+            const fullStats = calculateFullStats(nextPlayer);
+            const traitProfile = getTraitProfile(nextPlayer, {
+                ...fullStats,
+                maxHp: nextPlayer.maxHp,
+                maxMp: nextPlayer.maxMp,
+            });
+            const resonance = getTraitQuestResonance(quest, traitProfile);
+            if (resonance.score >= 6) {
+                const bonusGold = Math.max(100, Math.floor(quest.reward.gold * 0.15));
+                nextPlayer = grantGold(nextPlayer, bonusGold);
+                logs.push({ type: 'event', text: MSG.QUEST_TRAIT_BONUS(traitProfile.title, bonusGold) });
+            }
+        }
+
+        const questProgress = CombatEngine.updateQuestProgress(nextPlayer, '');
+        nextPlayer = { ...nextPlayer, quests: questProgress.updatedQuests };
+        nextPlayer = addSeasonXp(nextPlayer, SEASON_XP.questComplete);
+        nextPlayer = addNewTitles(nextPlayer, logs);
+        logs.push({ type: 'success', text: MSG.QUEST_DONE(quest.title) });
+
+        const receiptKey = [
+            String(questId),
+            nextPlayer.stats?.claimedQuestIds?.length || 0,
+            nextPlayer.stats?.bountiesCompleted || 0,
+        ].join(':');
+
+        return {
+            ...state,
+            player: nextPlayer,
+            logs: appendRewardLogs(state.logs, logs),
+            visualEffect,
+            questClaimReceipt: { key: receiptKey, questId, title: quest.title },
+            syncStatus: 'syncing',
+        };
+    },
+
+    CLAIM_ACHIEVEMENT_REWARD: (state: GameState, action: GameAction) => {
+        const achievementId = action.payload?.achievementId;
+        const achievement = DB.ACHIEVEMENTS.find((entry: any) => entry.id === achievementId);
+        if (!achievement || !isAchievementUnlocked(achievement, state.player)) return state;
+
+        const claimedAchievements = Array.isArray(state.player.stats?.claimedAchievements)
+            ? state.player.stats.claimedAchievements
+            : [];
+        if (claimedAchievements.includes(achievementId)) return state;
+
+        const logs: Array<{ type: string; text: string }> = [];
+        let nextPlayer: any = {
+            ...state.player,
+            stats: {
+                ...state.player.stats,
+                claimedAchievements: [...claimedAchievements, achievementId],
+            },
+        };
+
+        if (achievement.reward?.gold) nextPlayer = grantGold(nextPlayer, achievement.reward.gold);
+        if (achievement.reward?.item) {
+            const inventorySize = (nextPlayer.inv || []).length;
+            nextPlayer = addItemByName(nextPlayer, achievement.reward.item);
+            if ((nextPlayer.inv || []).length > inventorySize) {
+                logs.push({ type: 'success', text: MSG.ACH_REWARD_ITEM(achievement.reward.item) });
+            }
+        }
+        if (achievement.reward?.premiumCurrency) {
+            const premiumCurrency = Math.max(0, Number(achievement.reward.premiumCurrency) || 0);
+            nextPlayer = {
+                ...nextPlayer,
+                premiumCurrency: (nextPlayer.premiumCurrency || 0) + premiumCurrency,
+            };
+            if (premiumCurrency > 0) {
+                logs.push({ type: 'success', text: `에테르 크리스탈 +${formatNumber(premiumCurrency)}` });
+            }
+        }
+
+        nextPlayer = addNewTitles(nextPlayer, logs);
+        logs.push({ type: 'success', text: MSG.ACH_DONE(achievement.title) });
+
+        return {
+            ...state,
+            player: nextPlayer,
+            logs: appendRewardLogs(state.logs, logs),
             syncStatus: 'syncing',
         };
     },

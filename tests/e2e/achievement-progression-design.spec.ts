@@ -84,11 +84,18 @@ test.describe('업적 성장 화면', () => {
         });
 
         const goldBefore = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player.gold);
-        await claim.click();
+        await claim.evaluate((button) => {
+            if (!(button instanceof HTMLElement)) return;
+            button.click();
+            button.click();
+        });
 
         await expect(claim).toBeHidden();
         await expect(page.getByTestId('achievement-summary')).toContainText('보상 수령 1/73');
         const goldAfter = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player.gold);
         expect(goldAfter).toBe(goldBefore + 50);
+        const snapshot = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+        expect(snapshot.player.claimedAchievements).toEqual(['ach_first_blood']);
+        expect(snapshot.logTail.filter((log: { text: string }) => log.text === '업적 달성: 첫 번째 피')).toHaveLength(1);
     });
 });

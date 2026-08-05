@@ -250,7 +250,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 272 회귀 가드: questComplete dispatch 동작 유지', async () => {
-      const source = await readInventoryActionsSource();
+      const source = await readSrc('src/hooks/useGameEngine.ts');
       assert.ok(/addStoryLog\(['"]questComplete['"]/.test(source),
           'cycle 272 questComplete addStoryLog 유지');
   });

@@ -429,18 +429,18 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('cycle 209: claimQuestReward가 reward.title을 player.titles에 push (코드 패턴 가드)', () => {
-      const content = readInventoryActionsSourceSync();
+      const content = fs.readFileSync(path.join(ROOT, 'src/reducers/handlers/rewardHandlers.ts'), 'utf8');
       // claimQuestReward 함수 내에서 reward.title 처리 패턴 존재 확인
       assert.match(
           content,
-          /qData\.reward[?\.]+title/,
+          /quest\.reward[?\.]+title/,
           'claimQuestReward에 qData.reward?.title 처리 코드 필요',
       );
       // titles 배열에 push하는 패턴
       assert.match(
           content,
-          /titles:\s*\[\s*\.\.\.new\s+Set\(\s*\[\s*\.\.\.[\s\S]+title/,
-          'reward.title을 titles 배열에 push (Set으로 dedup)하는 패턴 필요',
+          /titles:\s*\[\.\.\.\(nextPlayer\.titles \|\| \[\]\), quest\.reward\.title\]/,
+          'reward.title을 titles 배열에 한 번만 추가하는 패턴 필요',
       );
   });
 
@@ -650,21 +650,14 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('cycle 272: completeQuest가 addStoryLog("questComplete", ...) 호출', async () => {
-      const source = await readInventoryActionsSource();
-      // completeQuest 함수 내에 addStoryLog('questComplete', ...) 패턴.
-      // completeQuest 함수 본문 — 다음 함수 'claimAchievement' 직전까지.
-      const fnMatch = source.match(/completeQuest:[\s\S]+?claimAchievement:/);
-      assert.ok(fnMatch, 'completeQuest 정의 발견');
-      assert.ok(/addStoryLog\(['"]questComplete['"]/.test(fnMatch[0]),
-          "completeQuest 내부에 addStoryLog('questComplete', ...) 호출");
+      const source = await readSrc('src/hooks/useGameEngine.ts');
+      assert.ok(/addStoryLog\(['"]questComplete['"]/.test(source),
+          "quest claim receipt가 addStoryLog('questComplete', ...)를 호출");
   });
 
   test('cycle 272: addStoryLog questComplete payload에 questTitle 포함', async () => {
-      const source = await readInventoryActionsSource();
-      // completeQuest 함수 본문 — 다음 함수 'claimAchievement' 직전까지.
-      const fnMatch = source.match(/completeQuest:[\s\S]+?claimAchievement:/);
-      assert.ok(fnMatch);
-      assert.ok(/addStoryLog\(['"]questComplete['"]\s*,\s*\{[\s\S]{0,100}?questTitle/.test(fnMatch[0]),
+      const source = await readSrc('src/hooks/useGameEngine.ts');
+      assert.ok(/addStoryLog\(['"]questComplete['"]\s*,\s*\{[\s\S]{0,100}?questTitle/.test(source),
           'questTitle 포함된 payload (template "${data.questTitle}" 정합)');
   });
 

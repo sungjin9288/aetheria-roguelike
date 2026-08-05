@@ -9,7 +9,11 @@ test('마을의 완료 임무 트래커에서 보상을 바로 수령한다', as
     await expect(claimButton).toBeVisible({ timeout: 8_000 });
     await expect(claimButton).toBeEnabled();
     await expect(claimButton).toContainText('보상 받기');
-    await claimButton.click();
+    await claimButton.evaluate((button) => {
+        if (!(button instanceof HTMLElement)) return;
+        button.click();
+        button.click();
+    });
 
     await expect(claimButton).toBeHidden({ timeout: 8_000 });
     await expect.poll(async () => page.evaluate(() => {
@@ -20,8 +24,10 @@ test('마을의 완료 임무 트래커에서 보상을 바로 수령한다', as
             exp: parsed.player?.exp,
             gold: parsed.player?.gold,
             questCount: parsed.player?.questCount,
+            seasonXp: parsed.player?.seasonXp,
+            completionLogs: parsed.logTail?.filter((log: { text: string }) => log.text === '퀘스트 완료: 슬라임 소탕').length,
         };
-    })).toEqual({ exp: 40, gold: 300, questCount: 0 });
+    })).toEqual({ exp: 40, gold: 300, questCount: 0, seasonXp: 30, completionLogs: 1 });
 });
 
 test('첫 이야기 다음에는 짧은 일반 토벌을 먼저 추천한다', async ({ page }) => {

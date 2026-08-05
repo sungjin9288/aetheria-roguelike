@@ -1,4 +1,4 @@
-import { useReducer, useMemo, useCallback } from 'react';
+import { useReducer, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ADMIN_UIDS } from '../data/constants';
 import { AI_SERVICE } from '../services/aiService';
 import { parseCommand } from '../utils/commandParser';
@@ -38,6 +38,7 @@ export const useGameEngine = () => {
         pendingRelics,
         runSummary,
         expeditionDebriefOpen,
+        questClaimReceipt,
     } = state;
 
     // --- Firebase Sync ---
@@ -88,6 +89,13 @@ export const useGameEngine = () => {
         },
         [player, uid, getFullStats]
     );
+
+    const narratedQuestClaimRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!questClaimReceipt || narratedQuestClaimRef.current === questClaimReceipt.key) return;
+        narratedQuestClaimRef.current = questClaimReceipt.key;
+        void addStoryLog('questComplete', { questTitle: questClaimReceipt.title });
+    }, [addStoryLog, questClaimReceipt]);
 
     // --- Compose Actions from Extracted Hooks ---
     const actions = useMemo(

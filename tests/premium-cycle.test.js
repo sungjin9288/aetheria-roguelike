@@ -232,11 +232,11 @@ import { readFile } from 'node:fs/promises';
    */
 
   test('cycle 215: claimAchievement에 premiumCurrency 처리 코드 존재', () => {
-      const content = readInventoryActionsSourceSync();
+      const content = fs.readFileSync(path.join(ROOT, 'src/reducers/handlers/rewardHandlers.ts'), 'utf8');
       // claimAchievement 함수 내에서 premiumCurrency 보상 처리 패턴
       assert.match(
           content,
-          /achData\.reward[?\.]+premiumCurrency/,
+          /achievement\.reward[?\.]+premiumCurrency/,
           'claimAchievement에 achData.reward?.premiumCurrency 처리 코드 필요',
       );
   });
@@ -265,24 +265,24 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 215: 기존 reward.gold / reward.item 처리는 유지 (회귀 가드)', () => {
-      const content = readInventoryActionsSourceSync();
+      const content = fs.readFileSync(path.join(ROOT, 'src/reducers/handlers/rewardHandlers.ts'), 'utf8');
       assert.match(
           content,
-          /achData\.reward\.gold/,
+          /achievement\.reward[?\.]\.gold/,
           'claimAchievement의 reward.gold 처리 유지',
       );
       assert.match(
           content,
-          /achData\.reward\.item/,
+          /achievement\.reward[?\.]\.item/,
           'claimAchievement의 reward.item 처리 유지',
       );
   });
 
   test('cycle 209 회귀 가드: claimQuestReward의 reward.title 처리 유지', () => {
-      const content = readInventoryActionsSourceSync();
+      const content = fs.readFileSync(path.join(ROOT, 'src/reducers/handlers/rewardHandlers.ts'), 'utf8');
       assert.match(
           content,
-          /qData\.reward[?\.]+title/,
+          /quest\.reward[?\.]+title/,
           'claimQuestReward의 reward.title 처리 유지 (cycle 209)',
       );
   });

@@ -274,6 +274,10 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     claimedQuestIds: Array.isArray(e.player.stats?.claimedQuestIds)
                         ? e.player.stats.claimedQuestIds
                         : [],
+                    claimedAchievements: Array.isArray(e.player.stats?.claimedAchievements)
+                        ? e.player.stats.claimedAchievements
+                        : [],
+                    seasonXp: e.player.seasonPass?.xp || 0,
                     storyMilestones: e.player.meta?.storyMilestones || { seen: [], pending: [] },
                     loc: e.player.loc,
                     hp: e.player.hp,

@@ -2787,9 +2787,9 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 272-273 회귀 가드: 이전 sponsored dispatch 동작 유지', async () => {
-      const inv = await readInventoryActionsSource();
+      const engine = await readSrc('src/hooks/useGameEngine.ts');
       const atk = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      assert.ok(/addStoryLog\(['"]questComplete['"]/.test(inv),
+      assert.ok(/addStoryLog\(['"]questComplete['"]/.test(engine),
           'cycle 272 questComplete dispatch 유지');
       assert.ok(/addStoryLog\(['"]bossPhase2['"]/.test(atk),
           'cycle 273 bossPhase2 dispatch 유지');
@@ -2865,10 +2865,10 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 272-274 회귀 가드: 이전 sponsored dispatch 동작 유지', async () => {
-      const inv = await readInventoryActionsSource();
+      const engine = await readSrc('src/hooks/useGameEngine.ts');
       const atk = await readSrc('src/hooks/combatActions/combatAttack.ts');
       const vic = await readSrc('src/hooks/combatActions/combatVictory.ts');
-      assert.ok(/addStoryLog\(['"]questComplete['"]/.test(inv),
+      assert.ok(/addStoryLog\(['"]questComplete['"]/.test(engine),
           'cycle 272 questComplete dispatch 유지');
       assert.ok(/addStoryLog\(['"]bossPhase2['"]/.test(atk),
           'cycle 273 bossPhase2 dispatch 유지');

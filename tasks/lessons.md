@@ -371,6 +371,10 @@
 - **Rule:** 명시적으로 받는 보상의 action payload에는 tier나 milestone id 같은 식별자만 담는다. reducer가 현재 진행과 수령 ledger를 확인하고 canonical table에서 보상을 찾은 뒤, 실제 지급과 성공 안내를 한 transition에서 확정한다
 - **Rationale:** UI가 보상 수치나 성공 문구를 함께 보내면 잠긴 보상을 위조하거나 거부된 action 뒤에도 수령했다고 안내할 수 있다. 받을 자격, 지급 값, 중복 방지와 기록이 한 authority를 공유해야 장기 성장의 숫자를 믿을 수 있다
 
+### R82: Trigger Claim Side Effects From Accepted Receipts
+- **Rule:** 수동 보상 수령의 골드, 경험, 아이템, 칭호, 진행 ledger와 동기 feedback은 reducer의 한 accepted transition에서 함께 확정한다. AI 서사처럼 reducer 밖에서 실행해야 하는 비동기 효과는 accepted transition이 만든 식별 가능한 receipt만 한 번 소비하며, 버튼의 렌더 snapshot이나 클릭 횟수에서 성공을 추측하지 않는다
+- **Rationale:** 오래 열린 화면이 player 전체를 다시 저장하면 그 사이의 최신 진행을 덮어쓰고, 보상·시즌 경험·서사를 별도 dispatch하면 빠른 두 번 탭이 일부 효과만 중복시킬 수 있다. 동기 mutation을 원자적으로 묶고 비동기 효과를 결과 receipt에 연결해야 재전송은 무해하면서 기존 이야기 흐름도 보존된다
+
 ---
 
 ## 📝 Post-Mortem Template

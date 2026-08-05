@@ -757,18 +757,18 @@ import { fileURLToPath } from 'node:url';
           'MOVE_ARRIVED 로그 dispatch 보존');
   });
 
-  test('cycle 314: characterActions / exploreActions / useInventoryActions의 addStoryLog 활성 사용 보존', async () => {
+  test('cycle 314: characterActions / exploreActions / quest receipt의 addStoryLog 활성 사용 보존', async () => {
       // 탐험 스카우팅(2026-07): encounter 로그가 exploreUtils.ts의 runQuietRollAndCombat으로
       // 이동(exploreActions.ts와 eventActions.ts "짙은 안개" 카드 공유) — 경로만 갱신.
       const characterSrc = await readSrc('src/hooks/gameActions/characterActions.ts');
       const exploreSrc = await readSrc('src/utils/exploreUtils.ts');
-      const invSrc = await readInventoryActionsSource();
+      const engineSrc = await readSrc('src/hooks/useGameEngine.ts');
       assert.ok(/addStoryLog\('rest'/.test(characterSrc),
           'characterActions addStoryLog rest 사용 보존');
       assert.ok(/addStoryLog\('encounter'/.test(exploreSrc),
           'exploreActions addStoryLog encounter 사용 보존');
-      assert.ok(/addStoryLog\('questComplete'/.test(invSrc),
-          'useInventoryActions addStoryLog questComplete 사용 보존');
+      assert.ok(/addStoryLog\('questComplete'/.test(engineSrc),
+          'quest claim receipt addStoryLog questComplete 사용 보존');
   });
 
   test('cycle 313 회귀 가드: QuestRewardChips private 유지', async () => {
