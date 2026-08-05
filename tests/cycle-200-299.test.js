@@ -841,7 +841,7 @@ import { readFile } from 'node:fs/promises';
    *
    * 발견 (mid-week 재발급 exploit + 주간 진행도 손실):
    * - weeklyProtocol (root level): { kills, explores, bossKills, lastResetWeek, claimed }.
-   * - CLAIM_WEEKLY_MISSION(protocolHandlers.ts:38): 'wp.claimed.includes(missionId)' 가드만 사용.
+   * - CLAIM_WEEKLY_MISSION은 canonical mission, 완료 진행도, claimed ledger를 함께 검증한다.
    * - resetWeeklyProtocolIfNeeded(exploreUtils.ts): lastResetWeek !== currentWeek일 때 자동 reset.
    *
    * 시나리오 (exploit + 회귀):

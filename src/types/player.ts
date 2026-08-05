@@ -131,7 +131,7 @@ interface WeeklyProtocol {
     kills?: number;
     explores?: number;
     bossKills?: number;
-    lastResetWeek?: number;
+    lastResetWeek?: number | string;
     claimed?: string[];
 }
 

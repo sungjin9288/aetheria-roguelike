@@ -355,6 +355,10 @@
 - **Rule:** 수락 전 행동까지 인정하는 전역 누적 임무는 전용 domain type을 사용하고, 수락·진행 동기화·save migration이 하나의 pure progress 계산과 영구 player record를 공유한다. 지역 탐험이나 특정 적 사냥처럼 수락 이후 행동만 세는 목표는 이 계산에서 명시적으로 제외하고 독립 baseline을 유지한다. 표시 문구도 target key가 아니라 실제 행동 범위와 남은 횟수를 설명한다
 - **Rationale:** 누적 목표의 계산이 화면별로 흩어지면 수락 직후 0으로 보이다 다음 행동에서 과거 수치로 뛰거나, 재실행 뒤 active save가 오래된 진행률을 유지한다. 반대로 모든 임무를 영구 기록에 연결하면 지역·사냥 목표가 과거 행동으로 자동 완료된다. 누적 여부를 domain 경계로 구분하고 로드 직후부터 보상까지 같은 authority를 사용해야 진행률을 신뢰할 수 있다
 
+### R78: Advance Recurring Goals At The Reducer Boundary
+- **Rule:** 일일·주간 목표 progress action은 증가 전에 현재 local day 또는 ISO year-week 주기를 확정하고, UI도 같은 current-cycle projection을 사용한다. event counter는 호출자가 넘긴 임의 수량을 신뢰하지 않으며, 보상 claim은 canonical mission의 완료 조건과 정식 reward를 reducer에서 다시 검증한다
+- **Rationale:** reset이 특정 화면 action에만 있으면 새 주기의 첫 전투가 이전 주기에 기록됐다가 사라지고, 연도 없는 주차 key는 다음 해 같은 주를 구분하지 못한다. UI guard와 payload reward만 믿으면 손상 save나 잘못된 호출이 진행률과 경제를 왜곡하므로 주기·진행·보상 권한을 state transition 경계에 모아야 한다
+
 ---
 
 ## 📝 Post-Mortem Template

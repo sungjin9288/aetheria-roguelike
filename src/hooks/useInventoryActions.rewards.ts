@@ -9,6 +9,7 @@ import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
 import { removeExpeditionFocusQuest } from '../utils/expeditionMissionFocus';
+import { getCurrentWeeklyProtocol, getWeeklyMissionRows } from '../utils/protocolCycle';
 
 /**
  * createRewardActions — 보상 수령 도메인 (퀘스트/업적/주간/시즌패스).
@@ -163,9 +164,13 @@ export const createRewardActions = (ctx: any) => {
         },
 
         // ── 주간 미션 수령 ────────────────────────────────────────────────
-        claimWeeklyMission: (missionId: any, reward: any) => {
-            dispatch({ type: AT.CLAIM_WEEKLY_MISSION, payload: { missionId, reward } });
-            addLog('success', MSG.WEEKLY_MISSION_CLAIM(reward.gold || 0, reward.premiumCurrency));
+        claimWeeklyMission: (missionId: any) => {
+            const weeklyProtocol = getCurrentWeeklyProtocol(player.weeklyProtocol, new Date());
+            const mission = getWeeklyMissionRows(weeklyProtocol).find((entry: any) => entry.id === missionId);
+            if (!mission?.done || mission.claimed) return;
+
+            dispatch({ type: AT.CLAIM_WEEKLY_MISSION, payload: { missionId } });
+            addLog('success', MSG.WEEKLY_MISSION_CLAIM(mission.reward.gold || 0, mission.reward.premiumCurrency));
         },
 
         // ── 시즌 패스 보상 수령 ──────────────────────────────────────────

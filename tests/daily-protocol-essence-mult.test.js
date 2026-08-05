@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { applyDailyProtocolProgress } from '../src/reducers/handlers/helpers.ts';
 import { BALANCE } from '../src/data/constants.ts';
+import { getProtocolDayKey } from '../src/utils/protocolCycle.ts';
 
 /**
  * 일일 프로토콜 에센스 지급 배율 일관성 (2026-07, 에테르 거울 PR #17 후속).
@@ -17,7 +18,7 @@ const mkPlayer = (meta = {}, essenceReward = 10) => ({
     name: '테스터', level: 10, hp: 100, maxHp: 100, mp: 50, maxMp: 50,
     inv: [], relics: [], stats: {
         dailyProtocol: {
-            date: new Date().toISOString().slice(0, 10),
+            date: getProtocolDayKey(new Date()),
             relicShards: 0,
             missions: [
                 { type: 'kills', goal: 1, progress: 0, done: false, reward: { essence: essenceReward } },

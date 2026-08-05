@@ -1,4 +1,10 @@
 import { applyDailyProtocolProgress } from './helpers';
+import { BALANCE } from '../../data/constants';
+import {
+    getCurrentDailyProtocol,
+    getCurrentWeeklyProtocol,
+    getWeeklyMissionProgress,
+} from '../../utils/protocolCycle';
 import type { GameState, GameAction } from '../gameReducer';
 
 export const protocolActionMap = {
@@ -13,32 +19,42 @@ export const protocolActionMap = {
     }),
 
     UPDATE_DAILY_PROTOCOL: (state: GameState, action: GameAction) => {
-        const { type: dpType, amount = 1 } = action.payload;
-        if (!state.player.stats?.dailyProtocol) return state;
+        const { type: dpType, amount: rawAmount = 0 } = action.payload || {};
+        if (!['kills', 'explores', 'goldSpend'].includes(dpType)) return state;
+        const amount = dpType === 'goldSpend' ? Math.max(0, Number(rawAmount) || 0) : 1;
+        const dailyProtocol = getCurrentDailyProtocol(state.player, new Date());
+        const player = {
+            ...state.player,
+            stats: { ...state.player.stats, dailyProtocol },
+        };
         return {
             ...state,
-            player: applyDailyProtocolProgress(state.player, dpType, amount),
+            player: applyDailyProtocolProgress(player, dpType, amount),
             syncStatus: 'syncing',
         };
     },
 
     // ── Weekly Protocol ───────────────────────────────────────────────────
     UPDATE_WEEKLY_PROTOCOL: (state: GameState, action: GameAction) => {
-        const { type: wpType, amount: wpAmount = 1 } = action.payload;
-        const wp = state.player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] };
+        const wpType = action.payload?.type;
+        const wp = getCurrentWeeklyProtocol(state.player.weeklyProtocol, new Date());
         const key = wpType === 'kills' ? 'kills' : wpType === 'explores' ? 'explores' : wpType === 'bossKills' ? 'bossKills' : null;
         if (!key) return state;
         return {
             ...state,
-            player: { ...state.player, weeklyProtocol: { ...wp, [key]: (wp[key] || 0) + wpAmount } },
+            player: { ...state.player, weeklyProtocol: { ...wp, [key]: (wp[key] || 0) + 1 } },
             syncStatus: 'syncing',
         };
     },
 
     CLAIM_WEEKLY_MISSION: (state: GameState, action: GameAction) => {
-        const { missionId, reward } = action.payload;
-        const wp = state.player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] };
-        if ((wp.claimed || []).includes(missionId)) return state;
+        const missionId = action.payload?.missionId;
+        const mission = BALANCE.WEEKLY_MISSIONS.find((entry: any) => entry.id === missionId);
+        const wp = getCurrentWeeklyProtocol(state.player.weeklyProtocol, new Date());
+        if (!mission || (wp.claimed || []).includes(missionId)) return state;
+        if (getWeeklyMissionProgress(wp, missionId) < mission.target) return state;
+
+        const reward = mission.reward || {};
         let p = {
             ...state.player,
             weeklyProtocol: { ...wp, claimed: [...(wp.claimed || []), missionId] },

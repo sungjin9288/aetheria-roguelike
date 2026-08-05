@@ -9,6 +9,7 @@ import {
     selectEncounterMonster,
     spawnEnemy,
 } from '../src/utils/exploreUtils.js';
+import { createDailyProtocol, getProtocolWeekKey } from '../src/utils/protocolCycle.js';
 
 // ─── Mock dispatch/addLog helpers ────────────────────────────────────────
 const makeDispatchSpy = () => {
@@ -48,11 +49,11 @@ test('resetDailyProtocolIfNeeded dispatches SET_DAILY_PROTOCOL on a new day', ()
 });
 
 test('resetDailyProtocolIfNeeded is a no-op when dailyProtocol is already today', () => {
-    const today = new Date().toISOString().slice(0, 10);
     const player = {
         level: 5,
-        stats: { dailyProtocol: { date: today, missions: [] } },
+        stats: {},
     };
+    player.stats.dailyProtocol = createDailyProtocol(player, new Date());
     const { dispatch, calls } = makeDispatchSpy();
 
     resetDailyProtocolIfNeeded(player, dispatch);
@@ -89,12 +90,7 @@ test('resetWeeklyProtocolIfNeeded resets when the stored week is stale', () => {
 });
 
 test('resetWeeklyProtocolIfNeeded is a no-op when the stored week matches', () => {
-    // Compute ISO week number to simulate "current week"
-    const now = new Date();
-    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const currentWeek = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    const currentWeek = getProtocolWeekKey(new Date());
 
     const player = {
         weeklyProtocol: { kills: 3, explores: 1, bossKills: 0, lastResetWeek: currentWeek, claimed: [] },

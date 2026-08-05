@@ -2041,7 +2041,7 @@ import { readFile, readdir } from 'node:fs/promises';
    * - body 동작 보존.
    *
    * 회귀 가드:
-   * - 7 callsite (1 production + 6 test) 동작 그대로.
+   * - production callsite와 6개 이상의 test callsite 동작 보존.
    * - body dp 가드 / essenceGain / newShards / itemRewards 처리 보존.
    */
 
@@ -2061,8 +2061,8 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 538: 정합성 가드 — production + test callsite 보존', async () => {
       const ph = await readSrc('src/reducers/handlers/protocolHandlers.ts');
-      assert.ok(/applyDailyProtocolProgress\(state\.player,\s*dpType,\s*amount\)/.test(ph),
-          'protocolHandlers callsite 보존');
+      assert.ok(/applyDailyProtocolProgress\(player,\s*dpType,\s*amount\)/.test(ph),
+          '현재 일일 주기로 정규화된 player callsite 보존');
 
       // cycle-232-relic-* 는 tests/relics.test.js로 통합됨 (audit #1).
       const tt = await readSrc('tests/relics.test.js');

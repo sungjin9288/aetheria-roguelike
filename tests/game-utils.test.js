@@ -18,6 +18,7 @@ import {
     registerCodex,
     registerLootToCodex,
 } from '../src/utils/gameUtils.js';
+import { getProtocolDayKey } from '../src/utils/protocolCycle.js';
 
 // ─── toArray ────────────────────────────────────────────────────────────
 test('toArray returns the original array or an empty array fallback', () => {
@@ -66,6 +67,7 @@ test('getDailyProtocolCompletions returns only missions that will finish now', (
     const player = {
         stats: {
             dailyProtocol: {
+                date: getProtocolDayKey(new Date()),
                 missions: [
                     { id: 'kills', type: 'kills', progress: 9, goal: 10, done: false },
                     { id: 'explores', type: 'explores', progress: 2, goal: 5, done: false },

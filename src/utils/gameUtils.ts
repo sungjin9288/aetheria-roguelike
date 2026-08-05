@@ -16,6 +16,7 @@ import {
     countDiscoveredSignatures,
     isSignatureName,
 } from './signatureDiscovery.js';
+import { getCurrentDailyProtocol } from './protocolCycle.js';
 
 export { countDiscoveredSignatures } from './signatureDiscovery.js';
 
@@ -96,7 +97,7 @@ export const findItemByName = (name: string | undefined) => getAllItems().find((
  *   전달. cascade로 wrapper / leaf default 모두 도달 불가.
  */
 export const getDailyProtocolCompletions = (player: Player, type: string, amount: number) => {
-    const missions = toArray(player?.stats?.dailyProtocol?.missions);
+    const missions = toArray(getCurrentDailyProtocol(player, new Date()).missions);
     return missions.filter((mission: any) => (
         mission?.type === type
         && !mission.done

@@ -8,6 +8,11 @@ import SignalBadge from '../SignalBadge';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { GS } from '../../reducers/gameStates';
+import {
+    getCurrentDailyProtocol,
+    getCurrentWeeklyProtocol,
+    getWeeklyMissionRows,
+} from '../../utils/protocolCycle';
 
 // ── 유틸 ──────────────────────────────────────────────
 const getQuestObjectiveText = (quest: any) => (
@@ -89,18 +94,13 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
     });
     const claimableQuestCount = activeQuestEntries.filter((e: any) => e.isComplete).length;
     const chainJournalEntries = buildChainJournal(player.eventChainProgress);
-    const dp = player.stats?.dailyProtocol;
-    const today = new Date().toISOString().slice(0, 10);
-    const isDpToday = dp?.date === today;
-    const dpMissions = isDpToday ? (dp.missions || []) : [];
+    const dp = getCurrentDailyProtocol(player, new Date());
+    const dpMissions = dp.missions;
     const dpDoneCount = dpMissions.filter((m: any) => m.done).length;
 
     // 주간 임무 진행도
-    const wp = player.weeklyProtocol || { kills: 0, explores: 0, bossKills: 0, claimed: [] };
-    const weeklyMissions = BALANCE.WEEKLY_MISSIONS.map((m: any) => {
-        const current = m.id === 'weeklyKills' ? (wp.kills || 0) : m.id === 'weeklyExplore' ? (wp.explores || 0) : (wp.bossKills || 0);
-        return { ...m, current, done: current >= m.target, claimed: (wp.claimed || []).includes(m.id) };
-    });
+    const weeklyProtocol = getCurrentWeeklyProtocol(player.weeklyProtocol, new Date());
+    const weeklyMissions = getWeeklyMissionRows(weeklyProtocol);
 
     return (
         <div className="flex flex-col h-full">
@@ -274,7 +274,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                             </span>
                                             {mission.done && !mission.claimed ? (
                                                 <button
-                                                    onClick={() => actions.claimWeeklyMission?.(mission.id, mission.reward)}
+                                                    onClick={() => actions.claimWeeklyMission?.(mission.id)}
                                                     className="text-[11px] font-fira font-bold text-[#f6e7c8] bg-[#d5b180]/18 border border-[#d5b180]/30 rounded-full px-2 py-0.5 hover:bg-[#d5b180]/28 transition-colors"
                                                 >
                                                     수령

@@ -20,6 +20,11 @@ import { getBossSignatureDrops } from './bossSignatureHint';
 import { getSignaturePityMultiplier } from './signaturePity';
 import { resolveAbyssDailyDive } from './abyssDailyDive';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
+import {
+    createDailyProtocol,
+    getCurrentWeeklyProtocol,
+    getProtocolDayKey,
+} from './protocolCycle';
 
 // explorationPacing.ts의 clamp와 동일 구현 (해당 모듈은 export하지 않음) — 소규모 순수
 // 헬퍼는 모듈 간 공유보다 지역 복제가 이 코드베이스의 기존 관례(pacing/aiEventUtils 등).
@@ -48,32 +53,16 @@ export const selectEncounterMonster = (encounterPool: string[], mapData: GameMap
 };
 
 // ─────────────────────────────────────────────────────────────────────────
-// 0. ISO 주차 번호 계산 (월요일 기준)
-// ─────────────────────────────────────────────────────────────────────────
-// cycle 618: date default new Date() 제거 — explicit default-elimination
-//   pattern (cycle 608-617 lens 정착, 10번째 적용 — double-digit milestone).
-//   resetWeeklyProtocolIfNeeded:31 caller에 new Date() 명시 추가 후 default
-//   unreachable.
-const getISOWeekNumber = (date: Date) => {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil(((((d as any) - (yearStart as any)) / 86400000) + 1) / 7);
-};
-
-// ─────────────────────────────────────────────────────────────────────────
 // 0.5. 주간 프로토콜 리셋
 // ─────────────────────────────────────────────────────────────────────────
 export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: any) => {
-    // cycle 618: new Date() 명시 추가 — explicit default-elimination cascade.
-    const currentWeek = getISOWeekNumber(new Date());
-    const wp = player.weeklyProtocol;
-    if (!wp || wp.lastResetWeek !== currentWeek) {
+    const weeklyProtocol = getCurrentWeeklyProtocol(player.weeklyProtocol, new Date());
+    if (player.weeklyProtocol?.lastResetWeek !== weeklyProtocol.lastResetWeek) {
         dispatch({
             type: AT.SET_PLAYER,
             payload: (p: any) => ({
                 ...p,
-                weeklyProtocol: { kills: 0, explores: 0, bossKills: 0, lastResetWeek: currentWeek, claimed: [] },
+                weeklyProtocol,
             }),
         });
     }
@@ -83,16 +72,10 @@ export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: any) => {
 // 1. 일일 프로토콜 리셋 & 카운트 업 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
 export const resetDailyProtocolIfNeeded = (player: Player, dispatch: any) => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getProtocolDayKey(new Date());
     const dp = player.stats?.dailyProtocol;
     if (!dp || dp.date !== today) {
-        const lvl = player.level || 1;
-        const missions = [
-            { id: 'kill_n',    type: 'kills',    goal: Math.max(10, lvl * 2),    reward: { essence: Math.floor(lvl * 5) }, progress: 0, done: false },
-            { id: 'explore_n', type: 'explores', goal: 10,                        reward: { item: '중급 체력 물약' },          progress: 0, done: false },
-            { id: 'gold_n',    type: 'goldSpend', goal: Math.max(300, lvl * 20), reward: { relicShard: 1 },                  progress: 0, done: false },
-        ];
-        dispatch({ type: AT.SET_DAILY_PROTOCOL, payload: { date: today, missions, relicShards: dp?.relicShards || 0 } });
+        dispatch({ type: AT.SET_DAILY_PROTOCOL, payload: createDailyProtocol(player, new Date()) });
     }
 };
 
@@ -517,7 +500,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
         // CLAUDE.md §8-4). multiplierActive일 때만 dispatch — 카운트 소진 후에는 상태 변화가
         // 없어 불필요한 SET_PLAYER(및 Firestore autosave 트리거)를 매 전투마다 반복하지 않는다.
         // 안내 로그는 오늘 첫 버프 전투(isFirstOfDay)에 1회만 (5연속 스팸 방지).
-        const today = new Date().toISOString().slice(0, 10);
+        const today = getProtocolDayKey(new Date());
         const { multiplierActive, isFirstOfDay, nextAbyssDailyDive } = resolveAbyssDailyDive(player, today);
         if (multiplierActive) {
             dispatch({

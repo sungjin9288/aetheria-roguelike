@@ -785,15 +785,15 @@ import { readFile } from 'node:fs/promises';
 // ─── cycle-618-get-iso-week-number-explicit-elimination.test.js ───
 {
   /**
-   * cycle 618: getISOWeekNumber date explicit default-elimination
+   * cycle 618: weekly cycle date explicit default-elimination
    *   (cycle 222-617 silent dead config 시리즈 358번째 — explicit default-elimination
    *   pattern 10번째 적용).
    *
    * 발견 (1 default reachable → unreachable conversion):
-   * - src/utils/exploreUtils.ts (line 20):
-   *     const getISOWeekNumber = (date = new Date()) => {...};
+   * - src/utils/protocolCycle.ts:
+   *     const getProtocolWeekKey = (date: Date) => {...};
    * - 호출 사이트:
-   *     · resetWeeklyProtocolIfNeeded:31 — getISOWeekNumber() — 0 args.
+   *     · resetWeeklyProtocolIfNeeded — current cycle helper에 new Date() 명시.
    * - 기존 상태: caller가 date 미전달 → default `new Date()` 활성.
    *
    * 패턴 (cycle 222-617 시리즈 358번째):
@@ -802,30 +802,30 @@ import { readFile } from 'node:fs/promises';
    *   double-digit milestone (10번째 적용).
    *
    * 수정:
-   * - exploreUtils.ts:31 — getISOWeekNumber() → getISOWeekNumber(new Date()).
-   * - exploreUtils.ts:20 — date default new Date() 제거.
+   * - protocolCycle.ts — date default 없이 year-week key 계산.
+   * - exploreUtils.ts — current cycle helper에 new Date() 명시.
    *
    * 회귀 가드:
    * - 1 internal callsite 동작 그대로.
-   * - body Date.UTC / setUTCDate / Math.ceil 처리 보존.
+   * - body Date.UTC / setUTCDate / Math.ceil 처리 보존 및 ISO year 포함.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 618: getISOWeekNumber signature에서 date default 0건', async () => {
-      const source = await readSrc('src/utils/exploreUtils.ts');
-      assert.ok(!/getISOWeekNumber = \(date = new Date\(\)\)/.test(source),
-          'getISOWeekNumber date default new Date() 제거');
-      assert.ok(/getISOWeekNumber = \(date(?::\s*Date)?\)/.test(source),
-          'getISOWeekNumber date 파라미터 보존');
+  test('cycle 618: getProtocolWeekKey signature에서 date default 0건', async () => {
+      const source = await readSrc('src/utils/protocolCycle.ts');
+      assert.ok(!/getProtocolWeekKey = \(date:\s*Date\s*=\s*new Date\(\)\)/.test(source),
+          'getProtocolWeekKey date default new Date() 제거');
+      assert.ok(/getProtocolWeekKey = \(date:\s*Date\)/.test(source),
+          'getProtocolWeekKey date 파라미터 보존');
   });
 
   test('cycle 618: 정합성 가드 — caller new Date() 명시 추가', async () => {
       const source = await readSrc('src/utils/exploreUtils.ts');
-      assert.ok(/getISOWeekNumber\(new Date\(\)\)/.test(source),
-          'resetWeeklyProtocolIfNeeded getISOWeekNumber(new Date()) 명시');
+      assert.ok(/getCurrentWeeklyProtocol\(player\.weeklyProtocol,\s*new Date\(\)\)/.test(source),
+          'resetWeeklyProtocolIfNeeded current cycle date 명시');
   });
 
   test('cycle 618: cycle 502-617 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -892,9 +892,9 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 619: cycle 502-618 회귀 가드 — default 청소 시리즈 보존', async () => {
-      const eu = await readSrc('src/utils/exploreUtils.ts');
-      assert.ok(!/getISOWeekNumber = \(date\s*=\s*new Date\(\)\)/.test(eu),
-          'cycle 618 getISOWeekNumber date default 0건');
+      const pc = await readSrc('src/utils/protocolCycle.ts');
+      assert.ok(!/getProtocolWeekKey = \(date:\s*Date\s*=\s*new Date\(\)\)/.test(pc),
+          'cycle 618 getProtocolWeekKey date default 0건');
       const ut = await readSrc('src/hooks/useGameTestApi.ts');
       assert.ok(!/safeList = \(items: any, fallback:\s*any\s*=\s*'\[item\]'\)/.test(ut),
           "cycle 617 safeList fallback default 0건");
