@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
+import { BALANCE } from '../src/data/constants.js';
 import { buildReturnBriefing } from '../src/utils/returnBriefing.js';
+import { getProtocolDayKey, getProtocolWeekKey } from '../src/utils/protocolCycle.js';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -95,13 +97,14 @@ test('buildReturnBriefing returns null when player itself is null/undefined', ()
     assert.equal(buildReturnBriefing(undefined, now), null);
 });
 
-test('buildReturnBriefing counts incomplete daily protocol missions', () => {
-    const now = 1_000_000_000_000;
+test('buildReturnBriefing shows progress from the current daily protocol', () => {
+    const nowDate = new Date(2026, 7, 5, 12, 0);
+    const now = nowDate.getTime();
     const player = basePlayer({
         stats: {
             lastSeenAt: now - (HOUR_MS * 10),
             dailyProtocol: {
-                date: '2026-07-01',
+                date: getProtocolDayKey(nowDate),
                 missions: [
                     { id: 'kill_n', done: true },
                     { id: 'explore_n', done: false },
@@ -112,15 +115,59 @@ test('buildReturnBriefing counts incomplete daily protocol missions', () => {
     });
     const briefing = buildReturnBriefing(player, now);
     assert.ok(briefing);
-    assert.equal(briefing.incompleteMissionCount, 2);
+    assert.equal(briefing.dailyCompletedCount, 1);
+    assert.equal(briefing.dailyMissionCount, 3);
 });
 
-test('buildReturnBriefing reports 0 incomplete missions when dailyProtocol is null/missing', () => {
-    const now = 1_000_000_000_000;
-    const player = basePlayer({ stats: { lastSeenAt: now - (HOUR_MS * 10), dailyProtocol: null } });
+test('buildReturnBriefing replaces stale daily progress with today goals', () => {
+    const nowDate = new Date(2026, 7, 5, 12, 0);
+    const now = nowDate.getTime();
+    const player = basePlayer({
+        stats: {
+            lastSeenAt: now - (HOUR_MS * 10),
+            dailyProtocol: {
+                date: getProtocolDayKey(new Date(2026, 7, 4, 12, 0)),
+                missions: [
+                    { id: 'kill_n', done: true },
+                    { id: 'explore_n', done: true },
+                    { id: 'gold_n', done: false },
+                ],
+            },
+        },
+    });
     const briefing = buildReturnBriefing(player, now);
+
     assert.ok(briefing);
-    assert.equal(briefing.incompleteMissionCount, 0);
+    assert.equal(briefing.dailyCompletedCount, 0);
+    assert.equal(briefing.dailyMissionCount, 3);
+});
+
+test('buildReturnBriefing counts claimable quest and current weekly rewards', () => {
+    const nowDate = new Date(2026, 7, 5, 12, 0);
+    const now = nowDate.getTime();
+    const weeklyMission = BALANCE.WEEKLY_MISSIONS[0];
+    const player = basePlayer({
+        quests: [{
+            id: 'return_bounty',
+            isBounty: true,
+            title: '귀환 현상수배',
+            goal: 1,
+            progress: 1,
+            reward: { gold: 100 },
+        }],
+        weeklyProtocol: {
+            kills: weeklyMission.target,
+            explores: 0,
+            bossKills: 0,
+            lastResetWeek: getProtocolWeekKey(nowDate),
+            claimed: [],
+        },
+        stats: { lastSeenAt: now - (HOUR_MS * 10), dailyProtocol: null },
+    });
+    const briefing = buildReturnBriefing(player, now);
+
+    assert.ok(briefing);
+    assert.equal(briefing.claimableRewardCount, 2);
 });
 
 test('buildReturnBriefing counts in-progress event chains via buildChainJournal reuse', () => {
@@ -153,7 +200,7 @@ test('GameRoot mounts a one-shot return briefing without effect-driven mirror st
 
     assert.match(source, /const ReturnBriefingGate =/);
     assert.match(source, /useState\(\(\) => buildReturnBriefing\(player, Date\.now\(\), maxHp\)\)/);
-    assert.match(source, /<ReturnBriefingGate player=\{engine\.player\} maxHp=\{fullStats\?\.maxHp\} \/>/);
+    assert.match(source, /onOpenGoals=\{\(\) => handleOpenArchiveTab\('quest'\)\}/);
     assert.match(source, /engine\.bootStage === 'ready' && engine\.player/);
     assert.doesNotMatch(source, /returnBriefingCheckedRef|setReturnBriefing/);
 });
@@ -163,5 +210,7 @@ test('return briefing card uses player-facing status language and clamps health 
 
     assert.match(source, /Math\.max\(0, Math\.min\(100,/);
     assert.match(source, /레벨 \{briefing\.level\} · 생명 \{hpPct\}%/);
+    assert.match(source, /briefing\.claimableRewardCount > 0/);
+    assert.match(source, /onOpenGoals/);
     assert.doesNotMatch(source, /Lv\.\{briefing\.level\}/);
 });

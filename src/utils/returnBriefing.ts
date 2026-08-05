@@ -7,6 +7,12 @@
  */
 import { BALANCE } from '../data/constants';
 import { buildChainJournal } from './chainJournal';
+import { getActiveQuestEntries } from './gameUtils';
+import {
+    getCurrentDailyProtocol,
+    getCurrentWeeklyProtocol,
+    getWeeklyMissionRows,
+} from './protocolCycle';
 import type { Player } from '../types/index.js';
 
 export interface Briefing {
@@ -14,22 +20,14 @@ export interface Briefing {
     level: number;
     hp: number;
     maxHp: number;
-    incompleteMissionCount: number;
+    dailyCompletedCount: number;
+    dailyMissionCount: number;
+    claimableRewardCount: number;
     activeChainCount: number;
     awayHours: number;
 }
 
 const MS_PER_HOUR = 60 * 60 * 1000;
-
-/**
- * player.stats.dailyProtocol.missions 중 아직 완료되지 않은 미션 수.
- * dailyProtocol이 없거나 missions가 배열이 아니면 0.
- */
-const countIncompleteMissions = (player: Player): number => {
-    const missions = player?.stats?.dailyProtocol?.missions;
-    if (!Array.isArray(missions)) return 0;
-    return missions.filter((mission: any) => !mission?.done).length;
-};
 
 /**
  * 마지막 플레이로부터 now까지 경과한 시간(ms) — lastSeenAt이 없으면 null.
@@ -60,6 +58,17 @@ export function buildReturnBriefing(
     const thresholdMs = BALANCE.RETURN_BRIEFING_HOURS * MS_PER_HOUR;
     if (elapsedMs < thresholdMs) return null;
 
+    const currentDate = new Date(now);
+    const dailyMissions = getCurrentDailyProtocol(player, currentDate).missions;
+    const weeklyMissions = getWeeklyMissionRows(
+        getCurrentWeeklyProtocol(player.weeklyProtocol, currentDate),
+    );
+    const claimableQuestCount = getActiveQuestEntries(player)
+        .filter((entry: any) => entry.isComplete)
+        .length;
+    const claimableWeeklyCount = weeklyMissions
+        .filter((mission: any) => mission.done && !mission.claimed)
+        .length;
     const activeChainCount = buildChainJournal(player.eventChainProgress).length;
 
     const maxHp = typeof effectiveMaxHp === 'number' && Number.isFinite(effectiveMaxHp) && effectiveMaxHp > 0
@@ -71,7 +80,9 @@ export function buildReturnBriefing(
         level: player.level || 1,
         hp: player.hp ?? 0,
         maxHp,
-        incompleteMissionCount: countIncompleteMissions(player),
+        dailyCompletedCount: dailyMissions.filter((mission: any) => mission.done).length,
+        dailyMissionCount: dailyMissions.length,
+        claimableRewardCount: claimableQuestCount + claimableWeeklyCount,
         activeChainCount,
         awayHours: Math.floor(elapsedMs / MS_PER_HOUR),
     };

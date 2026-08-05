@@ -352,11 +352,14 @@ export const MSG = {
     RETURN_BRIEFING_AWAY: (hours: number) => `마지막 접속 이후 ${hours}시간이 지났습니다.`,
     RETURN_BRIEFING_LOCATION_LABEL: '현재 위치',
     RETURN_BRIEFING_STATUS_LABEL: '현재 상태',
-    RETURN_BRIEFING_MISSIONS_LABEL: '남은 오늘의 임무',
-    RETURN_BRIEFING_MISSIONS_VALUE: (count: number) => `${count}건`,
+    RETURN_BRIEFING_DAILY_LABEL: '오늘의 진행',
+    RETURN_BRIEFING_DAILY_VALUE: (completed: number, total: number) => `${completed}/${total} 완료`,
+    RETURN_BRIEFING_REWARDS_LABEL: '받을 임무 보상',
+    RETURN_BRIEFING_REWARDS_VALUE: (count: number) => `${count}건`,
     RETURN_BRIEFING_CHAINS_LABEL: '진행 중인 이야기',
     RETURN_BRIEFING_CHAINS_VALUE: (count: number) => `${count}건`,
-    RETURN_BRIEFING_CLOSE: '탐험 계속하기',
+    RETURN_BRIEFING_OPEN_REWARDS: '임무 보상 확인',
+    RETURN_BRIEFING_CONTINUE: '현재 여정 이어가기',
 
     // --- 심연 데일리 다이브 (리텐션 훅) ---
     ABYSS_DAILY_DIVE_START: (mult: number) => `🌀 오늘의 첫 다이브 — 보상 ${mult}배 적용!`,

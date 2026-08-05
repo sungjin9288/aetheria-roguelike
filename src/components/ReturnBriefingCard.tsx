@@ -1,5 +1,5 @@
 import { motion as Motion } from 'framer-motion';
-import { MapPin, Heart, ScrollText, ListChecks, Sparkles, X } from 'lucide-react';
+import { Gift, MapPin, Heart, ScrollText, ListChecks, Sparkles, X } from 'lucide-react';
 import { MSG } from '../data/messages';
 import type { Briefing } from '../utils/returnBriefing';
 
@@ -7,12 +7,21 @@ import type { Briefing } from '../utils/returnBriefing';
 interface ReturnBriefingCardProps {
     briefing: Briefing;
     onClose?: () => void;
+    onOpenGoals?: () => void;
 }
 
-const ReturnBriefingCard = ({ briefing, onClose }: ReturnBriefingCardProps) => {
+const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCardProps) => {
     const hpPct = briefing.maxHp > 0
         ? Math.max(0, Math.min(100, Math.round((briefing.hp / briefing.maxHp) * 100)))
         : 0;
+    const hasClaimableRewards = briefing.claimableRewardCount > 0;
+    const handlePrimaryAction = () => {
+        if (hasClaimableRewards && onOpenGoals) {
+            onOpenGoals();
+            return;
+        }
+        onClose?.();
+    };
 
     return (
         <Motion.div
@@ -74,10 +83,10 @@ const ReturnBriefingCard = ({ briefing, onClose }: ReturnBriefingCardProps) => {
                         <div className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3">
                             <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400">
                                 <ListChecks size={12} className="text-[#d5b180]" />
-                                {MSG.RETURN_BRIEFING_MISSIONS_LABEL}
+                                {MSG.RETURN_BRIEFING_DAILY_LABEL}
                             </div>
                             <div className="mt-2 text-[1rem] font-rajdhani font-bold text-white">
-                                {MSG.RETURN_BRIEFING_MISSIONS_VALUE(briefing.incompleteMissionCount)}
+                                {MSG.RETURN_BRIEFING_DAILY_VALUE(briefing.dailyCompletedCount, briefing.dailyMissionCount)}
                             </div>
                         </div>
 
@@ -92,15 +101,27 @@ const ReturnBriefingCard = ({ briefing, onClose }: ReturnBriefingCardProps) => {
                         </div>
                     </div>
 
+                    {hasClaimableRewards && (
+                        <div className="mt-3 flex items-center justify-between gap-3 border-y border-[#d5b180]/18 py-2.5 text-xs font-fira">
+                            <span className="flex items-center gap-2 text-slate-300/82">
+                                <Gift size={14} className="text-[#d5b180]" />
+                                {MSG.RETURN_BRIEFING_REWARDS_LABEL}
+                            </span>
+                            <span className="font-bold text-[#f6e7c8]">
+                                {MSG.RETURN_BRIEFING_REWARDS_VALUE(briefing.claimableRewardCount)}
+                            </span>
+                        </div>
+                    )}
+
                     <Motion.button
-                        data-testid="return-briefing-close"
+                        data-testid="return-briefing-primary"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}
-                        onClick={onClose}
+                        onClick={handlePrimaryAction}
                         className="mt-5 flex w-full items-center justify-center gap-2 rounded-[1rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 py-3 text-sm font-rajdhani font-bold text-[#dff7f5] transition-all hover:bg-[#7dd4d8]/14"
                     >
                         <Sparkles size={15} />
-                        {MSG.RETURN_BRIEFING_CLOSE}
+                        {hasClaimableRewards ? MSG.RETURN_BRIEFING_OPEN_REWARDS : MSG.RETURN_BRIEFING_CONTINUE}
                     </Motion.button>
                 </div>
             </Motion.div>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { CONSTANTS } from '../data/constants';
+import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
 import { RELICS } from '../data/relics';
 import { GS } from '../reducers/gameStates';
@@ -18,6 +18,52 @@ import {
     SYSTEM_SETTINGS_DEVICE_QA_SCENARIO,
 } from '../utils/runtimeMode';
 import { readDeviceQaSnapshot } from '../utils/localGameSnapshot';
+import { getProtocolDayKey, getProtocolWeekKey } from '../utils/protocolCycle';
+
+const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
+
+const buildReturnBriefingScenarioPlayer = (player: any, now: Date) => {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const weeklyMission = BALANCE.WEEKLY_MISSIONS[0];
+
+    return {
+        ...player,
+        quests: [{
+            id: 'return_bounty',
+            isBounty: true,
+            title: '귀환 현상수배',
+            goal: 1,
+            progress: 1,
+            reward: { gold: 100 },
+        }],
+        weeklyProtocol: {
+            kills: weeklyMission.target,
+            explores: 0,
+            bossKills: 0,
+            lastResetWeek: getProtocolWeekKey(now),
+            claimed: [],
+        },
+        stats: {
+            ...player.stats,
+            lastSeenAt: now.getTime() - (7 * 60 * 60 * 1000),
+            dailyProtocol: {
+                date: getProtocolDayKey(yesterday),
+                relicShards: 0,
+                missions: [
+                    { id: 'kill_n', type: 'kills', goal: 10, progress: 10, done: true, reward: { essence: 5 } },
+                    { id: 'explore_n', type: 'explores', goal: 10, progress: 10, done: true, reward: { item: '중급 체력 물약' } },
+                    { id: 'gold_n', type: 'goldSpend', goal: 300, progress: 0, done: false, reward: { relicShard: 1 } },
+                ],
+            },
+        },
+        meta: {
+            ...player.meta,
+            storyMilestones: { seen: [], pending: [] },
+        },
+        lastExpeditionSummary: null,
+    };
+};
 
 /**
  * smoke test / dev harness용 window API 등록.
@@ -1104,6 +1150,26 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+            },
+            showReturnBriefingScenario: () => {
+                const er = engineRef.current;
+                const now = new Date();
+
+                er.dispatch({ type: AT.SET_BOOT_STAGE, payload: 'data' });
+                setTimeout(() => {
+                    const current = engineRef.current;
+                    current.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                    current.dispatch({ type: AT.SET_PENDING_RELICS, payload: null });
+                    current.dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+                    current.dispatch({
+                        type: AT.SET_PLAYER,
+                        payload: (player: any) => buildReturnBriefingScenarioPlayer(player, now),
+                    });
+
+                    setTimeout(() => {
+                        engineRef.current.dispatch({ type: AT.SET_BOOT_STAGE, payload: 'ready' });
+                    }, RETURN_BRIEFING_RENDER_DELAY_MS);
+                }, RETURN_BRIEFING_RENDER_DELAY_MS);
             },
         };
 

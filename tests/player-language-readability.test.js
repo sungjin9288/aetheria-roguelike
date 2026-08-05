@@ -50,7 +50,8 @@ test('first-play surfaces use player-facing Korean labels', async () => {
 
     assert.match(returnBriefing, /다시 만난 모험가에게/);
     assert.match(messages, /RETURN_BRIEFING_STATUS_LABEL: '현재 상태'/);
-    assert.match(messages, /RETURN_BRIEFING_MISSIONS_LABEL: '남은 오늘의 임무'/);
+    assert.match(messages, /RETURN_BRIEFING_DAILY_LABEL: '오늘의 진행'/);
+    assert.match(messages, /RETURN_BRIEFING_REWARDS_LABEL: '받을 임무 보상'/);
 
     for (const label of ['성장 갈림길', '전직 선택', '현재 직업', '가지 선택', '가방']) {
         assert.match(jobChangePanel, new RegExp(label));

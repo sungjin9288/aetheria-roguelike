@@ -30,7 +30,15 @@ const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
 const ExpeditionDebriefCard = lazy(() => import('../ExpeditionDebriefCard'));
 const MilestoneStoryCard = lazy(() => import('../MilestoneStoryCard'));
 
-const ReturnBriefingGate = ({ player, maxHp }: { player: Player; maxHp?: number }) => {
+const ReturnBriefingGate = ({
+    player,
+    maxHp,
+    onOpenGoals,
+}: {
+    player: Player;
+    maxHp?: number;
+    onOpenGoals: () => void;
+}) => {
     const [briefing, setBriefing] = useState(() => buildReturnBriefing(player, Date.now(), maxHp));
 
     if (!briefing) return null;
@@ -40,6 +48,10 @@ const ReturnBriefingGate = ({ player, maxHp }: { player: Player; maxHp?: number 
             <ReturnBriefingCard
                 briefing={briefing}
                 onClose={() => setBriefing(null)}
+                onOpenGoals={() => {
+                    setBriefing(null);
+                    onOpenGoals();
+                }}
             />
         </Suspense>
     );
@@ -363,7 +375,11 @@ const GameRoot = ({
             )}
 
             {engine.bootStage === 'ready' && engine.player && !showExpeditionDebrief && !showStandaloneStory && (
-                <ReturnBriefingGate player={engine.player} maxHp={fullStats?.maxHp} />
+                <ReturnBriefingGate
+                    player={engine.player}
+                    maxHp={fullStats?.maxHp}
+                    onOpenGoals={() => handleOpenArchiveTab('quest')}
+                />
             )}
 
             {engine.gameState === GS.ASCENSION && (

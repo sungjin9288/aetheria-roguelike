@@ -359,6 +359,10 @@
 - **Rule:** 일일·주간 목표 progress action은 증가 전에 현재 local day 또는 ISO year-week 주기를 확정하고, UI도 같은 current-cycle projection을 사용한다. event counter는 호출자가 넘긴 임의 수량을 신뢰하지 않으며, 보상 claim은 canonical mission의 완료 조건과 정식 reward를 reducer에서 다시 검증한다
 - **Rationale:** reset이 특정 화면 action에만 있으면 새 주기의 첫 전투가 이전 주기에 기록됐다가 사라지고, 연도 없는 주차 key는 다음 해 같은 주를 구분하지 못한다. UI guard와 payload reward만 믿으면 손상 save나 잘못된 호출이 진행률과 경제를 왜곡하므로 주기·진행·보상 권한을 state transition 경계에 모아야 한다
 
+### R79: Rebuild Return Guidance From Current State
+- **Rule:** 복귀 안내는 마지막 저장 당시의 목표 문구를 재생하지 않고 현재 날짜·주차, 완료 상태와 수령 ledger에서 다시 계산한다. 받을 보상이 있으면 그 owning surface를 실제로 여는 한 행동만 강조하고, 보상이 없으면 플레이어가 하던 여정을 그대로 이어 가게 한다
+- **Rationale:** 오래 쉰 플레이어에게 만료된 목표나 이미 끝난 보상을 보여 주면 복귀 순간부터 진행 상태를 신뢰할 수 없다. 반대로 매 복귀마다 새 의무나 출석 보상을 강요하면 장기 플레이가 숙제가 되므로, 현재 상태 복원과 실제 다음 행동만 연결해야 한다
+
 ---
 
 ## 📝 Post-Mortem Template
