@@ -27,6 +27,7 @@ const makeState = ({ tier = 3, xp = 650, claimed = [1, 2], isPremium = false } =
         titles: [],
         seasonPass: { tier, xp, claimed, isPremium, seasonId: 'S1' },
     },
+    logs: [],
     syncStatus: 'synced',
 });
 
@@ -86,12 +87,16 @@ test('해금된 시즌 보상은 한 번만 지급되고 기존 프리미엄 저
 
     assert.equal(claimed.player.gold, 900);
     assert.deepEqual(claimed.player.seasonPass.claimed, [1, 2, 3]);
+    assert.deepEqual(claimed.logs.map((log) => log.text), ['시즌 3단계 보상 · 골드 800']);
     assert.equal(replayed, claimed);
 
     const premiumState = makeState({ isPremium: true });
     const premiumClaimed = rewardActionMap.CLAIM_SEASON_REWARD(premiumState, action);
     assert.equal(premiumClaimed.player.gold, 900);
     assert.equal(premiumClaimed.player.premiumCurrency, 5);
+    assert.deepEqual(premiumClaimed.logs.map((log) => log.text), [
+        '시즌 3단계 보상 · 골드 800 · 에테르 크리스탈 5',
+    ]);
 });
 
 test('시즌 경험은 양수만 반영하고 마지막 단계에서 고정된다', () => {

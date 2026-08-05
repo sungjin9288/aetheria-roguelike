@@ -217,6 +217,9 @@ test('weekly rewards require canonical completion and ignore payload reward data
     assert.equal(claimed.player.gold, 100 + mission.reward.gold);
     assert.equal(claimed.player.premiumCurrency, 2 + mission.reward.premiumCurrency);
     assert.deepEqual(claimed.player.weeklyProtocol.claimed, [mission.id]);
+    assert.deepEqual(claimed.logs.map((log) => log.text), [
+        `주간 보상 · 골드 +${mission.reward.gold} · 에테르 크리스탈 +${mission.reward.premiumCurrency}`,
+    ]);
 
     assert.equal(gameReducer(claimed, forgedAction), claimed);
     assert.equal(gameReducer(completeState, {

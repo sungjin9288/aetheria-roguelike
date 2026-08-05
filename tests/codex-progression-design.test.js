@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { DB } from '../src/data/db.js';
 import { getCodexProgress } from '../src/data/codexRewards.js';
+import { AT } from '../src/reducers/actionTypes.js';
+import { rewardActionMap } from '../src/reducers/handlers/rewardHandlers.js';
 import {
     CODEX_CATEGORY_LABELS,
     formatCodexRewardParts,
@@ -23,6 +25,22 @@ const EMPTY_CODEX = {
     recipes: {},
     materials: {},
 };
+
+const makeCodexState = (codex = EMPTY_CODEX) => ({
+    player: {
+        gold: 100,
+        premiumCurrency: 0,
+        stats: {
+            codex,
+            codexClaimed: [],
+            codexBonusAtk: 0,
+            codexBonusDef: 0,
+            codexBonusHp: 0,
+        },
+    },
+    logs: [],
+    syncStatus: 'synced',
+});
 
 test('도감은 599개 기록을 여섯 수집 범주로 정확히 계산한다', () => {
     const monsters = new Set();
@@ -82,6 +100,43 @@ test('도감 고유 능력치 보상을 빈칸 없이 플레이어 문구로 표
         formatCodexRewardParts({ hp: 30, def: 3, premiumCurrency: 10 }),
         ['방어력 +3', '생명 +30', '에테르 크리스탈 10'],
     );
+});
+
+test('도감 보상은 달성한 canonical 마일스톤만 실제 수치로 지급한다', () => {
+    const unreachedState = makeCodexState();
+    const forgedAction = {
+        type: AT.CLAIM_CODEX_REWARD,
+        payload: {
+            milestoneId: 'weapons_80',
+            reward: { atk: 999, gold: 999999 },
+        },
+    };
+
+    assert.equal(rewardActionMap.CLAIM_CODEX_REWARD(unreachedState, forgedAction), unreachedState);
+
+    const codex = {
+        ...EMPTY_CODEX,
+        weapons: Object.fromEntries(Array.from({ length: 5 }, (_, index) => [
+            `weapon-${index}`,
+            { discovered: true },
+        ])),
+    };
+    const reachedState = makeCodexState(codex);
+    const claimed = rewardActionMap.CLAIM_CODEX_REWARD(reachedState, {
+        type: AT.CLAIM_CODEX_REWARD,
+        payload: {
+            milestoneId: 'weapons_5',
+            reward: { atk: 999, gold: 999999 },
+        },
+    });
+
+    assert.equal(claimed.player.stats.codexBonusAtk, 2);
+    assert.equal(claimed.player.gold, 100);
+    assert.deepEqual(claimed.player.stats.codexClaimed, ['weapons_5']);
+    assert.deepEqual(claimed.logs.map((log) => log.text), [
+        '도감 보상 · 무기 수집가 I · 공격력 +2',
+    ]);
+    assert.equal(rewardActionMap.CLAIM_CODEX_REWARD(claimed, forgedAction), claimed);
 });
 
 test('도감 화면은 다음 수집 목표와 펼쳐 보는 기록 구조를 사용한다', async () => {

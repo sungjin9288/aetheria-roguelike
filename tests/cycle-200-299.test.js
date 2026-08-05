@@ -2066,19 +2066,23 @@ import { readFile } from 'node:fs/promises';
 // ─── cycle-261-claim-feedback-coverage.test.js ───
 {
   /**
-   * 주간 임무와 시즌 패스 보상은 동일한 reward action 경계에서 dispatch와
-   * 사용자 로그를 함께 남긴다. 사운드 제거 이후에도 이 가시적 피드백은 유지한다.
+   * 주간 임무와 시즌 보상은 hook이 지급 성공을 예측하지 않는다.
+   * reducer가 canonical reward를 실제 지급한 뒤 사용자 로그를 함께 남긴다.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 261: claimWeeklyMission은 보상 로그를 남긴다', async () => {
-      const source = await readInventoryActionsSource();
-      const fnMatch = source.match(/claimWeeklyMission:[\s\S]{0,500}?},/);
+  test('cycle 261 후속: claimWeeklyMission hook은 식별자만 전달한다', async () => {
+      const hook = await readInventoryActionsSource();
+      const fnMatch = hook.match(/claimWeeklyMission:[\s\S]{0,500}?},/);
       assert.ok(fnMatch, 'claimWeeklyMission 정의 발견');
-      assert.ok(/addLog/.test(fnMatch[0]), 'claimWeeklyMission 내부에 addLog 호출');
+      assert.ok(/CLAIM_WEEKLY_MISSION/.test(fnMatch[0]), 'weekly claim dispatch 보존');
+      assert.ok(!/addLog/.test(fnMatch[0]), 'hook success predictor 제거');
+
+      const reducer = await readSrc('src/reducers/handlers/protocolHandlers.ts');
+      assert.ok(/MSG\.WEEKLY_MISSION_CLAIM/.test(reducer), 'reducer 확정 로그 보존');
   });
 
   test('cycle 261: claimSeasonReward 신규 액션 정의', async () => {
@@ -2089,8 +2093,12 @@ import { readFile } from 'node:fs/promises';
       assert.ok(fnMatch, 'claimSeasonReward 정의 발견');
       assert.ok(/CLAIM_SEASON_REWARD/.test(fnMatch[0]),
           'claimSeasonReward 내부에 CLAIM_SEASON_REWARD dispatch');
-      assert.ok(/addLog/.test(fnMatch[0]),
-          'claimSeasonReward 내부에 addLog 호출');
+      assert.ok(!/addLog/.test(fnMatch[0]),
+          'claimSeasonReward hook success predictor 제거');
+
+      const reducer = await readSrc('src/reducers/handlers/rewardHandlers.ts');
+      assert.ok(/시즌 \$\{claimTier\}단계 보상/.test(reducer),
+          'season reducer 실제 지급 로그 보존');
   });
 
   test('cycle 261: SeasonPassPanel이 actions.claimSeasonReward 사용', async () => {
@@ -2099,7 +2107,7 @@ import { readFile } from 'node:fs/promises';
           'SeasonPassPanel은 claimSeasonReward action 사용');
   });
 
-  test('cycle 261: 기존 CLAIM_SEASON_REWARD reducer 변화 없음 (회귀 가드)', async () => {
+  test('cycle 261 후속: CLAIM_SEASON_REWARD reducer 권한 경계 보존', async () => {
       const source = await readSrc('src/reducers/handlers/rewardHandlers.ts');
       assert.ok(/CLAIM_SEASON_REWARD: \(state: GameState, action: GameAction\) => \{/.test(source),
           'CLAIM_SEASON_REWARD handler 시그니처 유지');

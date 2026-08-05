@@ -162,7 +162,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                                     data-testid={`codex-claim-${milestone.id}`}
                                     onClick={() => dispatch?.({
                                         type: AT.CLAIM_CODEX_REWARD,
-                                        payload: { milestoneId: milestone.id, reward: milestone.reward },
+                                        payload: { milestoneId: milestone.id },
                                     })}
                                     className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[#d5b180]/32 bg-[#d5b180]/12 px-3 text-sm font-semibold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
                                 >

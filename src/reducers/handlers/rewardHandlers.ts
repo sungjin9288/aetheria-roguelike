@@ -1,7 +1,12 @@
 import { findItemByName, makeItem } from '../../utils/gameUtils';
 import { SEASON_TIER_XP, SEASON_REWARDS } from '../../data/seasonPass';
+import { getClaimableCodexMilestone } from '../../data/codexRewards';
+import { formatCodexRewardParts } from '../../utils/codexPresentation';
 import { normalizeClaimedSeasonTiers, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
+import { appendRewardLogs } from './rewardLog';
 import type { GameState, GameAction } from '../gameReducer';
+
+const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
 export const rewardActionMap = {
     // ── Codex ─────────────────────────────────────────────────────────────
@@ -58,29 +63,69 @@ export const rewardActionMap = {
         const rewardRow = SEASON_REWARDS.find((row) => row.tier === claimTier);
         if (!rewardRow) return state;
         const tracks = [rewardRow.free, sp.isPremium ? rewardRow.premium : null].filter(Boolean);
+        let goldGain = 0;
+        let premiumCurrencyGain = 0;
+        const grantedItems: string[] = [];
+        const grantedTitles: string[] = [];
         let nextPlayer = {
             ...state.player,
             seasonPass: { ...sp, claimed: [...(sp.claimed || []), claimTier] },
         };
         for (const track of tracks as Array<any>) {
-            if (track.gold) nextPlayer = { ...nextPlayer, gold: (nextPlayer.gold || 0) + track.gold };
-            if (track.premiumCurrency) nextPlayer = { ...nextPlayer, premiumCurrency: (nextPlayer.premiumCurrency || 0) + track.premiumCurrency };
+            if (track.gold) goldGain += track.gold;
+            if (track.premiumCurrency) premiumCurrencyGain += track.premiumCurrency;
             if (track.title) {
                 const tl = nextPlayer.titles || [];
-                if (!tl.includes(track.title)) nextPlayer = { ...nextPlayer, titles: [...tl, track.title] };
+                if (!tl.includes(track.title)) {
+                    grantedTitles.push(track.title);
+                    nextPlayer = { ...nextPlayer, titles: [...tl, track.title] };
+                }
             }
             if (track.item) {
                 const itemTemplate = findItemByName(track.item);
-                if (itemTemplate) nextPlayer = { ...nextPlayer, inv: [...(nextPlayer.inv || []), makeItem(itemTemplate)] };
+                if (itemTemplate) {
+                    grantedItems.push(track.item);
+                    nextPlayer = { ...nextPlayer, inv: [...(nextPlayer.inv || []), makeItem(itemTemplate)] };
+                }
             }
         }
-        return { ...state, player: nextPlayer, syncStatus: 'syncing' };
+        if (goldGain > 0) nextPlayer = { ...nextPlayer, gold: (nextPlayer.gold || 0) + goldGain };
+        if (premiumCurrencyGain > 0) {
+            nextPlayer = {
+                ...nextPlayer,
+                premiumCurrency: (nextPlayer.premiumCurrency || 0) + premiumCurrencyGain,
+            };
+        }
+
+        const rewardParts = [
+            goldGain > 0 ? `골드 ${formatNumber(goldGain)}` : null,
+            premiumCurrencyGain > 0 ? `에테르 크리스탈 ${formatNumber(premiumCurrencyGain)}` : null,
+            ...grantedItems,
+            ...grantedTitles.map((title) => `칭호 ${title}`),
+        ].filter((part): part is string => Boolean(part));
+
+        return {
+            ...state,
+            player: nextPlayer,
+            logs: appendRewardLogs(state.logs, [
+                `시즌 ${claimTier}단계 보상 · ${rewardParts.join(' · ') || '수령 완료'}`,
+            ]),
+            syncStatus: 'syncing',
+        };
     },
 
     CLAIM_CODEX_REWARD: (state: GameState, action: GameAction) => {
-        const { milestoneId, reward } = action.payload;
+        const milestoneId = action.payload?.milestoneId;
         const prevClaimed = state.player.stats?.codexClaimed || [];
         if (prevClaimed.includes(milestoneId)) return state;
+        const milestone = getClaimableCodexMilestone(
+            state.player.stats?.codex || {},
+            prevClaimed,
+            milestoneId,
+        );
+        if (!milestone) return state;
+
+        const reward = milestone.reward || {};
         let p = {
             ...state.player,
             stats: {
@@ -93,7 +138,15 @@ export const rewardActionMap = {
         };
         if (reward.gold) p = { ...p, gold: (p.gold || 0) + reward.gold };
         if (reward.premiumCurrency) p = { ...p, premiumCurrency: (p.premiumCurrency || 0) + reward.premiumCurrency };
-        return { ...state, player: p, syncStatus: 'syncing' };
+        const rewardText = formatCodexRewardParts(reward).join(' · ');
+        return {
+            ...state,
+            player: p,
+            logs: appendRewardLogs(state.logs, [
+                `도감 보상 · ${milestone.label} · ${rewardText}`,
+            ]),
+            syncStatus: 'syncing',
+        };
     },
 
     // ── Item Enhancement ──────────────────────────────────────────────────

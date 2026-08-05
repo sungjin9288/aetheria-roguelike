@@ -367,6 +367,10 @@
 - **Rule:** 자동 지급 보상의 완료 안내는 action 전 player snapshot으로 예측하지 않는다. reducer가 진행, 실제 지급량, 배율, 변환 결과를 확정한 뒤 그 outcome에서 로그와 화면 피드백을 만든다
 - **Rationale:** 지급과 안내의 계산 시점이 다르면 직접 action 경로에서 로그가 빠지거나 배율 전 수치와 실제 획득물이 다르게 보인다. 경제 mutation과 player-facing feedback이 같은 transition 결과를 공유해야 플레이어가 보상과 기록을 신뢰할 수 있다
 
+### R81: Let Claim Actions Carry Identity, Not Value
+- **Rule:** 명시적으로 받는 보상의 action payload에는 tier나 milestone id 같은 식별자만 담는다. reducer가 현재 진행과 수령 ledger를 확인하고 canonical table에서 보상을 찾은 뒤, 실제 지급과 성공 안내를 한 transition에서 확정한다
+- **Rationale:** UI가 보상 수치나 성공 문구를 함께 보내면 잠긴 보상을 위조하거나 거부된 action 뒤에도 수령했다고 안내할 수 있다. 받을 자격, 지급 값, 중복 방지와 기록이 한 authority를 공유해야 장기 성장의 숫자를 믿을 수 있다
+
 ---
 
 ## 📝 Post-Mortem Template

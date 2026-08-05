@@ -48,6 +48,9 @@ test.describe('물리 성장 acceptance 시나리오', () => {
         ));
         expect(after.codexBonusAtk).toBe(2);
         expect(after.codexClaimed).toEqual(['weapons_5']);
+        await expect.poll(async () => (
+            page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').logTail?.at(-1)?.text)
+        )).toBe('도감 보상 · 무기 수집가 I · 공격력 +2');
     });
 
     test('전직과 기술 성장은 후보 선택이 아니라 확정할 때만 적용된다', async ({ page }) => {

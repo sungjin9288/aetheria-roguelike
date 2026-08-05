@@ -143,7 +143,7 @@ export const MSG = {
 
     // --- 주간 미션 (Weekly Mission) ---
     // cycle 116: WEEKLY_MISSION_COMPLETE/RESET 제거 — 0건 사용. CLAIM만 active.
-    WEEKLY_MISSION_CLAIM: (gold: number, crystals?: number) => `주간 보상 · 골드 +${gold}${crystals ? ` · 수정 +${crystals}` : ''}`,
+    WEEKLY_MISSION_CLAIM: (gold: number, crystals?: number) => `주간 보상 · 골드 +${gold}${crystals ? ` · 에테르 크리스탈 +${crystals}` : ''}`,
 
     // --- 도전 설정 ---
     // cycle 116: CHALLENGE_COMPLETE 제거 — 0건 사용. START만 active.

@@ -2,6 +2,7 @@ import { resolveDailyProtocolProgress } from './helpers';
 import type { DailyProtocolReward } from './helpers';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
+import { appendRewardLogs } from './rewardLog';
 import {
     getCurrentDailyProtocol,
     getCurrentWeeklyProtocol,
@@ -16,12 +17,6 @@ const formatDailyReward = (reward: DailyProtocolReward) => {
     if (reward.relicShards > 0) parts.push(`유물 파편 +${reward.relicShards}`);
     return parts.join(' · ');
 };
-
-const makeRewardLog = (text: string, index: number) => ({
-    id: `daily-reward-${Date.now()}-${index}-${Math.random()}`,
-    type: 'success',
-    text,
-});
 
 export const protocolActionMap = {
     // ── Daily Protocol ────────────────────────────────────────────────────
@@ -57,10 +52,7 @@ export const protocolActionMap = {
         return {
             ...state,
             player: result.player,
-            logs: [
-                ...state.logs,
-                ...notices.map(makeRewardLog),
-            ].slice(-BALANCE.LOG_MAX_SIZE),
+            logs: appendRewardLogs(state.logs, notices),
             syncStatus: 'syncing',
         };
     },
@@ -92,6 +84,13 @@ export const protocolActionMap = {
         };
         if (reward.gold) p = { ...p, gold: (p.gold || 0) + reward.gold };
         if (reward.premiumCurrency) p = { ...p, premiumCurrency: (p.premiumCurrency || 0) + reward.premiumCurrency };
-        return { ...state, player: p, syncStatus: 'syncing' };
+        return {
+            ...state,
+            player: p,
+            logs: appendRewardLogs(state.logs, [
+                MSG.WEEKLY_MISSION_CLAIM(reward.gold || 0, reward.premiumCurrency),
+            ]),
+            syncStatus: 'syncing',
+        };
     },
 };

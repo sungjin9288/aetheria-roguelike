@@ -170,19 +170,11 @@ export const createRewardActions = (ctx: any) => {
             if (!mission?.done || mission.claimed) return;
 
             dispatch({ type: AT.CLAIM_WEEKLY_MISSION, payload: { missionId } });
-            addLog('success', MSG.WEEKLY_MISSION_CLAIM(mission.reward.gold || 0, mission.reward.premiumCurrency));
         },
 
-        // ── 시즌 패스 보상 수령 ──────────────────────────────────────────
-        // cycle 261: SeasonPassPanel claimReward의 사용자 피드백을 addLog로 보완.
-        // cycle 595: rewardLabel default null 제거 — 1 caller (SeasonPassPanel:32
-        //   onClaimSeasonReward(rewardTier, label)) 명시 전달이라 default 도달
-        //   불가. body의 rewardLabel ternary는 별개 보존 (caller가 null/empty
-        //   넘기는 path 활성).
-        claimSeasonReward: (tier: any, rewardLabel: string | null) => {
+        // ── 시즌 여정 수령 ──────────────────────────────────────────────
+        claimSeasonReward: (tier: any) => {
             dispatch({ type: AT.CLAIM_SEASON_REWARD, payload: { tier } });
-            const label = rewardLabel ? `${rewardLabel}` : `티어 ${tier}`;
-            addLog('success', `시즌 패스 보상 수령: ${label}`);
         },
     });
 };

@@ -4613,35 +4613,40 @@ import { readFile, readdir } from 'node:fs/promises';
    * - rewardLabel: string | null = null → rewardLabel: string | null.
    * - body의 rewardLabel ternary 보존.
    *
-   * 회귀 가드:
-   * - 1 production callsite (SeasonPassPanel) 동작 그대로.
-   * - body dispatch / addLog 처리 보존.
+   * 후속 정리:
+   * - 보상 문구를 UI가 예측해 hook으로 전달하지 않는다.
+   * - reducer가 실제 지급된 canonical reward에서 성공 로그를 만든다.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 595: claimSeasonReward signature에서 rewardLabel default 0건', async () => {
+  test('cycle 595 후속: claimSeasonReward는 보상 식별자인 tier만 전달한다', async () => {
       const source = await readInventoryActionsSource();
-      assert.ok(!/claimSeasonReward:\s*\(tier:\s*any,\s*rewardLabel:\s*string \| null\s*=\s*null\)/.test(source),
-          'claimSeasonReward rewardLabel default null 제거');
-      assert.ok(/claimSeasonReward:\s*\(tier:\s*any,\s*rewardLabel:\s*string \| null\)/.test(source),
-          'claimSeasonReward rewardLabel 파라미터 자체는 보존');
+      assert.ok(/claimSeasonReward:\s*\(tier:\s*any\)/.test(source),
+          'claimSeasonReward tier-only signature 보존');
+      assert.ok(!/rewardLabel/.test(source),
+          'hook의 예측 보상 문구 제거');
   });
 
-  test('cycle 595: 정합성 가드 — SeasonPassPanel callsite 보존', async () => {
+  test('cycle 595 후속: SeasonPassPanel도 tier만 전달한다', async () => {
       const source = await readSrc('src/components/tabs/SeasonPassPanel.tsx');
-      assert.ok(/onClaimSeasonReward\(rewardTier, label\)/.test(source),
-          'SeasonPassPanel onClaimSeasonReward(rewardTier, label) callsite 보존');
+      assert.ok(/onClaimSeasonReward\(rewardTier\)/.test(source),
+          'SeasonPassPanel tier-only callsite 보존');
   });
 
-  test('cycle 595: body rewardLabel ternary + dispatch 처리 보존', async () => {
-      const source = await readInventoryActionsSource();
-      assert.ok(/const label = rewardLabel \? `\$\{rewardLabel\}` : `티어 \$\{tier\}`/.test(source),
-          'rewardLabel ? ... : 티어 ternary 보존');
-      assert.ok(/addLog\('success', `시즌 패스 보상 수령: \$\{label\}`\)/.test(source),
-          'addLog success 보존');
+  test('cycle 595 후속: 성공 안내는 reducer의 실제 지급 결과에서만 생성한다', async () => {
+      const [hook, reducer] = await Promise.all([
+          readInventoryActionsSource(),
+          readSrc('src/reducers/handlers/rewardHandlers.ts'),
+      ]);
+      assert.ok(/dispatch\(\{ type: AT\.CLAIM_SEASON_REWARD, payload: \{ tier \} \}\)/.test(hook),
+          'season claim dispatch 보존');
+      assert.ok(!/시즌 패스 보상 수령/.test(hook),
+          'hook success predictor 제거');
+      assert.ok(/logs: appendRewardLogs/.test(reducer),
+          'reducer 확정 로그 보존');
   });
 
   test('cycle 595: cycle 502-594 회귀 가드 — default/dead 청소 시리즈 보존', async () => {

@@ -79,5 +79,19 @@ test.describe('시즌 여정 화면', () => {
         await expect(page.getByTestId('season-chapter-opening')).toContainText('수령 3/10');
         const goldAfter = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player.gold);
         expect(goldAfter).toBe(goldBefore + 800);
+
+        await expect.poll(async () => (
+            page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').logTail?.at(-1)?.text)
+        )).toBe('시즌 3단계 보상 · 골드 800');
+
+        await page.getByTestId('mobile-console-return-log').click();
+        const rewardLog = page.getByTestId('terminal-panel').locator('[data-log-type="success"]', {
+            hasText: '시즌 3단계 보상 · 골드 800',
+        });
+        await expect(rewardLog).toBeVisible();
+        await page.screenshot({
+            path: 'playtest-artifacts/mobile/reward-claim-authority.png',
+            fullPage: false,
+        });
     });
 });

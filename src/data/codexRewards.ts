@@ -74,3 +74,11 @@ export const getCodexProgress = (codex: any, claimed: any) => {
     // 전체 도감 아이템 수 (DB 기반으로 계산은 UI에서)
     return { milestones, unclaimed };
 };
+
+export const getClaimableCodexMilestone = (
+    codex: any,
+    claimed: string[],
+    milestoneId: string,
+) => getCodexProgress(codex, claimed).unclaimed.find((milestone: any) => (
+    milestone.id === milestoneId
+)) || null;

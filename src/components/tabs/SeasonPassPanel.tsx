@@ -17,7 +17,7 @@ import SignalBadge from '../SignalBadge';
 interface SeasonPassPanelProps {
     player?: Player;
     dispatch?: (action: any) => void;
-    onClaimSeasonReward?: (tier: number, rewardLabel: string) => void;
+    onClaimSeasonReward?: (tier: number) => void;
 }
 
 const getSeasonName = (seasonId?: string) => {
@@ -49,10 +49,9 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
     const claimReward = (row: SeasonRewardRow) => {
         if (row.tier > progress.tier || claimedTiers.includes(row.tier)) return;
         const rewardTier = row.tier;
-        const label = getVisibleRewardParts(row, isPremium).join(' · ');
 
         if (typeof claimSeasonReward === 'function' && onClaimSeasonReward) {
-            onClaimSeasonReward(rewardTier, label);
+            onClaimSeasonReward(rewardTier);
         } else {
             dispatch?.({ type: AT.CLAIM_SEASON_REWARD, payload: { tier: rewardTier } });
         }
