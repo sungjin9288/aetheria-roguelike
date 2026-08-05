@@ -9,7 +9,7 @@ import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { DB } from '../src/data/db.js';
 import { RELICS } from '../src/data/relics.js';
 import { applyBattleStartRelics } from '../src/utils/exploreUtils.js';
-import { applyDailyProtocolProgress } from '../src/reducers/handlers/helpers.js';
+import { resolveDailyProtocolProgress } from '../src/reducers/handlers/helpers.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
 import { getAchievementCurrentValue, isAchievementUnlocked } from '../src/utils/gameUtils.js';
 import { readdir } from 'node:fs/promises';
@@ -1423,13 +1423,13 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
    *
    * 발견 (relicShards dead):
    * - 일일 프로토콜 'gold_n' 미션 완료 시 reward.relicShard: 1 부여.
-   * - applyDailyProtocolProgress에서 dp.relicShards 누적.
+   * - resolveDailyProtocolProgress에서 dp.relicShards 누적.
    * - SystemTab: 'X/5 조각' 표시 — 5개 도달 시 변환 의도 명백.
    * - 그러나 5개 도달 시 변환 코드 0건. 무한 누적되는 dead reward.
    * - cycle 215 (claimAchievement premiumCurrency 미처리) / cycle 222-229 (defined-but-unused
    *   data) lens와 같은 결.
    *
-   * 수정 (src/reducers/handlers/helpers.ts applyDailyProtocolProgress):
+   * 수정 (src/reducers/handlers/helpers.ts resolveDailyProtocolProgress):
    * - newShards >= 5 시 5개 소모 + 1 random 유물 player.relics에 추가.
    * - 단, player.relics.length < MAX_RELICS_PER_RUN(5) 일 때만 변환 — cap 시 shards 유지.
    * - 이미 보유 중인 유물은 제외(중복 방지).
@@ -1457,7 +1457,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
               },
           },
       };
-      const updated = applyDailyProtocolProgress(player, 'goldSpend', 1);
+      const updated = resolveDailyProtocolProgress(player, 'goldSpend', 1).player;
       // 변환 후 shards = 0 (5 소모), relics +1
       assert.equal(updated.stats.dailyProtocol.relicShards, 0,
           '5 shards 소모되어야 함');
@@ -1480,7 +1480,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
               },
           },
       };
-      const updated = applyDailyProtocolProgress(player, 'goldSpend', 1);
+      const updated = resolveDailyProtocolProgress(player, 'goldSpend', 1).player;
       assert.equal(updated.stats.dailyProtocol.relicShards, 3, '5 미만이면 변환 안 함');
       assert.equal((updated.relics || []).length, 0, 'relic 추가 안 됨');
   });
@@ -1500,7 +1500,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
               },
           },
       };
-      const updated = applyDailyProtocolProgress(player, 'goldSpend', 1);
+      const updated = resolveDailyProtocolProgress(player, 'goldSpend', 1).player;
       assert.equal(updated.stats.dailyProtocol.relicShards, 1,
           '6 shards → 5 소모, 1 잔존');
       assert.equal((updated.relics || []).length, 1);
@@ -1523,7 +1523,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
               },
           },
       };
-      const updated = applyDailyProtocolProgress(player, 'goldSpend', 1);
+      const updated = resolveDailyProtocolProgress(player, 'goldSpend', 1).player;
       // cap 도달 시 변환 안 됨, shards 5로 유지
       assert.equal(updated.stats.dailyProtocol.relicShards, 5,
           'cap 도달 시 변환 안 함, shards 5로 유지');
@@ -1546,7 +1546,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
               },
           },
       };
-      const updated = applyDailyProtocolProgress(player, 'goldSpend', 1);
+      const updated = resolveDailyProtocolProgress(player, 'goldSpend', 1).player;
       assert.equal(updated.stats.relicCount, 1,
           'relicCount는 cycle 101 single source — 변환 시 동기 증분');
   });
@@ -1566,7 +1566,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
               },
           },
       };
-      const updated = applyDailyProtocolProgress(player, 'kills', 1);
+      const updated = resolveDailyProtocolProgress(player, 'kills', 1).player;
       // essence 50 boost → 변경 확인
       assert.equal(updated.meta.essence, 50, 'essence 보상 동작 유지');
   });

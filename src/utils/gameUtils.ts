@@ -16,7 +16,6 @@ import {
     countDiscoveredSignatures,
     isSignatureName,
 } from './signatureDiscovery.js';
-import { getCurrentDailyProtocol } from './protocolCycle.js';
 
 export { countDiscoveredSignatures } from './signatureDiscovery.js';
 
@@ -89,39 +88,11 @@ const getAllItems = () => [
 /** 이름으로 아이템을 찾아 반환 */
 export const findItemByName = (name: string | undefined) => getAllItems().find((i: Item) => i.name === name);
 
-/**
- * 일일 프로토콜 진행으로 이번 액션에서 막 완료될 미션 목록 반환
- *
- * cycle 504: amount default 1 제거 — 3 wrapper (emitDailyProtocolLogs)가 모두
- *   자체 amount default를 가지지만 wrapper의 외부 호출자 5건 모두 amount 명시
- *   전달. cascade로 wrapper / leaf default 모두 도달 불가.
- */
-export const getDailyProtocolCompletions = (player: Player, type: string, amount: number) => {
-    const missions = toArray(getCurrentDailyProtocol(player, new Date()).missions);
-    return missions.filter((mission: any) => (
-        mission?.type === type
-        && !mission.done
-        && ((mission.progress || 0) + amount) >= mission.goal
-    ));
-};
-
-/** 일일 프로토콜 보상 텍스트 포맷 */
-// cycle 556: reward default {} 제거 — 3 callers (useInventoryActions/_shared/
-//   useCombatActions) 모두 mission.reward 명시 전달이라 default 도달 불가.
-//   gameUtils.ts 같은 모듈 batch (cycle 502-555 default 청소 50번째).
-export const formatDailyProtocolReward = (reward: any) => {
-    if (reward.essence) return `에센스 ${reward.essence}`;
-    if (reward.item) return reward.item;
-    if (reward.relicShard) return `유물 조각 ${reward.relicShard}`;
-    return '보상';
-};
-
 /** 일반 보상 텍스트 배열 포맷
  *
  *  cycle 407: essence / relicShard 분기 제거 — 호출 사이트
  *  (AchievementPanel / QuestTab / QuestBoardPanel)는 quest/achievement
  *  reward만 전달. quests.ts/achievements에 essence/relicShard 0건이라 unreachable.
- *  daily protocol mission reward는 formatDailyProtocolReward로 별도 처리.
  */
 // cycle 556: reward default {} 제거 — 3 callers (QuestBoardPanel/QuestTab/
 //   AchievementPanel) 모두 reward 명시 전달이라 default 도달 불가.

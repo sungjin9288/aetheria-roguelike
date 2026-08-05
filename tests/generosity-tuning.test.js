@@ -73,7 +73,7 @@ test('characterActions.start: 시작 부트 유물 후보에 epic/legendary가 �
         addStoryLog: () => {},
         getFullStats: () => ({ maxHp: 178, maxMp: 52 }),
     };
-    const actions = createCharacterActions(deps, { emitUnlockedTitles: () => {}, emitDailyProtocolLogs: () => {} });
+    const actions = createCharacterActions(deps, { emitUnlockedTitles: () => {} });
 
     // 여러 시드로 반복 — pity/가중 추첨 경로가 실행되어도 캡이 항상 적용되는지 확인.
     for (let i = 0; i < 30; i += 1) {

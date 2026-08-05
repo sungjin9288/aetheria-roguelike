@@ -331,7 +331,10 @@ export const MSG = {
     BOUNTY_ACCEPTED_NEW: (target: string, count: number) => `새로운 현상수배 수락: ${target} ${count}마리`,
     TITLE_UNLOCKED: (label: string) => `새 칭호를 얻었습니다. ${label}`,
     ASCEND_DONE: (rank: number, title: string) => `에테르 계승 ${rank}단계에 도달했습니다. 새 칭호 '${title}'와 영구 성장이 다음 여정에 적용됩니다.`,
-    DAILY_PROTOCOL_DONE: (reward: string) => `📋 일일 프로토콜 완료: ${reward}`,
+    DAILY_PROTOCOL_DONE: (count: number, reward: string) => (
+        `${count > 1 ? `오늘의 임무 ${count}개 완료` : '오늘의 임무 완료'} · ${reward}`
+    ),
+    DAILY_PROTOCOL_RELIC_COMPLETE: (name: string) => `유물 파편 완성 · ${name} 획득`,
     CHAIN_REWARD_RELIC: (name: string) => `이야기 보상 · 유물 ${name}을 얻었습니다.`,
     CHAIN_REWARD_COMBAT_BONUS: (attackPercent: number, turns: number) => `최후의 영웅이 합류해 ${turns}턴 동안 공격력이 ${attackPercent}% 오릅니다.`,
 

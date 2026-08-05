@@ -9,7 +9,7 @@ import { appendGrave } from '../../utils/graveUtils.js';
 import { handleVictoryOutcome } from './combatVictory';
 import type { Item } from '../../types/index.js';
 
-export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
+export const createCombatItemActions = (deps: any, { emitUnlockedTitles }: any, pendingRef: any) => {
     const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats, liveConfig } = deps;
 
     return {
@@ -67,7 +67,7 @@ export const createCombatItemActions = (deps: any, { emitDailyProtocolLogs, emit
                     playerAfterCombat: counterResult.updatedPlayer,
                     deadEnemy: enemy,
                     stats: counterStats, dispatch, addLog, addStoryLog,
-                    emitDailyProtocolLogs, emitUnlockedTitles,
+                    emitUnlockedTitles,
                     extendedChecks: false,
                     liveConfig,
                 });

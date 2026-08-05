@@ -307,7 +307,7 @@ test('⑤ start_boot_extra + rank5 startBootChoices 가산 (characterActions.ts 
         };
         return { deps, dispatches };
     };
-    const noopHooks = { emitUnlockedTitles: () => {}, emitDailyProtocolLogs: () => {} };
+    const noopHooks = { emitUnlockedTitles: () => {} };
 
     // rank5 (+1) + mirror lv1 (+1) = base(3) + 2 = 5
     const { deps, dispatches } = makeDeps({ prestigeRank: 5, mirror: { start_boot_extra: 1 } });
@@ -329,7 +329,7 @@ test('⑤ start_gold + 챌린지 모디파이어와 공존 (거울 보너스는 
         addStoryLog: () => {},
         getFullStats: () => ({ maxHp: 178, maxMp: 52 }),
     };
-    const noopHooks = { emitUnlockedTitles: () => {}, emitDailyProtocolLogs: () => {} };
+    const noopHooks = { emitUnlockedTitles: () => {} };
     createCharacterActions(deps, noopHooks).start('테스터', 'male', '모험가', []);
     const setPlayer = dispatches.find((d) => d.type === 'SET_PLAYER');
     assert.equal(setPlayer.payload.gold, CONSTANTS.START_GOLD + 200, 'start_gold Lv2 → +200 가산');
@@ -385,7 +385,7 @@ test('⑤ rest_discount → characterActions.rest() 휴식 비용 실제 차감�
         };
         return { deps, dispatches };
     };
-    const noopHooks = { emitUnlockedTitles: () => {}, emitDailyProtocolLogs: () => {} };
+    const noopHooks = { emitUnlockedTitles: () => {} };
 
     const { deps: depsNoDiscount, dispatches: dNoDiscount } = makeDeps({});
     createCharacterActions(depsNoDiscount, noopHooks).rest();

@@ -514,17 +514,12 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/reward\.item/.test(fnBlock), 'reward.item 분기 보존');
   });
 
-  test('cycle 407: formatDailyProtocolReward 동작 보존 (별도 함수)', async () => {
-      const source = await readSrc('src/utils/gameUtils.ts');
-      assert.ok(/export const formatDailyProtocolReward/.test(source),
-          'formatDailyProtocolReward 함수 보존');
-      const fnStart = source.indexOf('export const formatDailyProtocolReward');
-      const fnEnd = source.indexOf('};', fnStart);
-      const fnBlock = source.slice(fnStart, fnEnd);
-      assert.ok(/reward\.essence/.test(fnBlock),
-          'formatDailyProtocolReward의 essence 분기 보존');
-      assert.ok(/reward\.relicShard/.test(fnBlock),
-          'formatDailyProtocolReward의 relicShard 분기 보존');
+  test('cycle 407: 오늘의 임무 보상 표시는 reducer 지급 결과를 사용', async () => {
+      const source = await readSrc('src/reducers/handlers/protocolHandlers.ts');
+      assert.ok(/resolveDailyProtocolProgress\(player, dpType, amount\)/.test(source),
+          'reducer가 지급 결과를 확정');
+      assert.ok(/reward\.essence/.test(source), '실제 에센스 지급량 표시');
+      assert.ok(/reward\.relicShards/.test(source), '실제 유물 파편 지급량 표시');
   });
 
   test('cycle 407: 정합성 가드 — quests/achievements는 essence/relicShard 0건', async () => {

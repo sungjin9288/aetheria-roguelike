@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { applyDailyProtocolProgress } from '../src/reducers/handlers/helpers.ts';
+import { resolveDailyProtocolProgress } from '../src/reducers/handlers/helpers.ts';
 import { BALANCE } from '../src/data/constants.ts';
 import { getProtocolDayKey } from '../src/utils/protocolCycle.ts';
 
@@ -10,7 +10,7 @@ import { getProtocolDayKey } from '../src/utils/protocolCycle.ts';
  *
  * 전투/승천 경로(CombatEngine.outcome.ts)는 프레스티지 rank essenceMult ×
  * 거울 essence_flow 배율을 곱연산 적용하는데, 일일 프로토콜 지급 경로
- * (applyDailyProtocolProgress)만 배율 없이 원액 지급하던 지급처 간 불일치를
+ * (resolveDailyProtocolProgress)만 배율 없이 원액 지급하던 지급처 간 불일치를
  * 고정한다. 공식은 전투 경로와 동일: max(1, floor(gain × rankMult × mirrorMult)).
  */
 
@@ -29,7 +29,7 @@ const mkPlayer = (meta = {}, essenceReward = 10) => ({
 });
 
 const essenceAfter = (meta, reward = 10) =>
-    applyDailyProtocolProgress(mkPlayer(meta, reward), 'kills', 1).meta.essence;
+    resolveDailyProtocolProgress(mkPlayer(meta, reward), 'kills', 1).player.meta.essence;
 
 test('rank0 + 거울 없음 → 배율 1 (기존 지급량 불변)', () => {
     assert.equal(essenceAfter({}), 10);
@@ -65,6 +65,6 @@ test('에센스 미보상 미션(essenceGain 0)은 meta 무변화 경로 유지'
     player.stats.dailyProtocol.missions = [
         { type: 'kills', goal: 1, progress: 0, done: false, reward: { relicShard: 1 } },
     ];
-    const next = applyDailyProtocolProgress(player, 'kills', 1);
+    const next = resolveDailyProtocolProgress(player, 'kills', 1).player;
     assert.equal(next.meta.essence, 0);
 });

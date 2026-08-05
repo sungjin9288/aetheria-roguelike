@@ -363,6 +363,10 @@
 - **Rule:** 복귀 안내는 마지막 저장 당시의 목표 문구를 재생하지 않고 현재 날짜·주차, 완료 상태와 수령 ledger에서 다시 계산한다. 받을 보상이 있으면 그 owning surface를 실제로 여는 한 행동만 강조하고, 보상이 없으면 플레이어가 하던 여정을 그대로 이어 가게 한다
 - **Rationale:** 오래 쉰 플레이어에게 만료된 목표나 이미 끝난 보상을 보여 주면 복귀 순간부터 진행 상태를 신뢰할 수 없다. 반대로 매 복귀마다 새 의무나 출석 보상을 강요하면 장기 플레이가 숙제가 되므로, 현재 상태 복원과 실제 다음 행동만 연결해야 한다
 
+### R80: Record Rewards After The Authoritative Transition
+- **Rule:** 자동 지급 보상의 완료 안내는 action 전 player snapshot으로 예측하지 않는다. reducer가 진행, 실제 지급량, 배율, 변환 결과를 확정한 뒤 그 outcome에서 로그와 화면 피드백을 만든다
+- **Rationale:** 지급과 안내의 계산 시점이 다르면 직접 action 경로에서 로그가 빠지거나 배율 전 수치와 실제 획득물이 다르게 보인다. 경제 mutation과 player-facing feedback이 같은 transition 결과를 공유해야 플레이어가 보상과 기록을 신뢰할 수 있다
+
 ---
 
 ## 📝 Post-Mortem Template

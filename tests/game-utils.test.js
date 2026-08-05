@@ -6,8 +6,6 @@ import {
     getItemRarity,
     makeItem,
     findItemByName,
-    getDailyProtocolCompletions,
-    formatDailyProtocolReward,
     formatRewardParts,
     getTitleLabel,
     getTitleColor,
@@ -18,7 +16,6 @@ import {
     registerCodex,
     registerLootToCodex,
 } from '../src/utils/gameUtils.js';
-import { getProtocolDayKey } from '../src/utils/protocolCycle.js';
 
 // ─── toArray ────────────────────────────────────────────────────────────
 test('toArray returns the original array or an empty array fallback', () => {
@@ -60,38 +57,6 @@ test('findItemByName retrieves an item from the global DB', () => {
     assert.equal(potion.name, '하급 체력 물약');
 
     assert.equal(findItemByName('존재하지 않는 아이템'), undefined);
-});
-
-// ─── Daily protocol helpers ─────────────────────────────────────────────
-test('getDailyProtocolCompletions returns only missions that will finish now', () => {
-    const player = {
-        stats: {
-            dailyProtocol: {
-                date: getProtocolDayKey(new Date()),
-                missions: [
-                    { id: 'kills', type: 'kills', progress: 9, goal: 10, done: false },
-                    { id: 'explores', type: 'explores', progress: 2, goal: 5, done: false },
-                    { id: 'goldSpend', type: 'goldSpend', progress: 10, goal: 10, done: true }, // already done
-                ],
-            },
-        },
-    };
-
-    const completed = getDailyProtocolCompletions(player, 'kills', 1);
-    assert.equal(completed.length, 1);
-    assert.equal(completed[0].id, 'kills');
-
-    // not enough progress yet
-    assert.equal(getDailyProtocolCompletions(player, 'explores', 1).length, 0);
-    // already done → excluded
-    assert.equal(getDailyProtocolCompletions(player, 'goldSpend', 100).length, 0);
-});
-
-test('formatDailyProtocolReward summarizes reward payload', () => {
-    assert.equal(formatDailyProtocolReward({ essence: 50 }), '에센스 50');
-    assert.equal(formatDailyProtocolReward({ item: '체력 물약' }), '체력 물약');
-    assert.equal(formatDailyProtocolReward({ relicShard: 2 }), '유물 조각 2');
-    assert.equal(formatDailyProtocolReward({}), '보상');
 });
 
 test('formatRewardParts returns an array of labeled reward segments', () => {

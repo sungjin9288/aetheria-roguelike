@@ -3,6 +3,7 @@ import { RELICS, MAX_RELICS_PER_RUN } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import type { Player } from '../../types/index.js';
+import type { Relic } from '../../types/relic.js';
 
 /**
  * 퀵슬롯을 현재 인벤토리 기준으로 정리합니다.
@@ -18,18 +19,33 @@ export const sanitizeQuickSlots = (slots: any, inventory: any) => {
     return normalized.map((slot: any) => (slot?.id && ids.has(slot.id) ? slot : null));
 };
 
+export interface DailyProtocolReward {
+    completedCount: number;
+    essence: number;
+    items: string[];
+    relicShards: number;
+    convertedRelic: Relic | null;
+}
+
+const emptyDailyProtocolReward = (): DailyProtocolReward => ({
+    completedCount: 0,
+    essence: 0,
+    items: [],
+    relicShards: 0,
+    convertedRelic: null,
+});
+
 /**
- * 데일리 프로토콜 미션 진행도를 업데이트하고, 완료 시 에센스/아이템 보상을 지급합니다.
+ * 오늘의 임무 진행과 보상을 한 번에 확정합니다.
+ * UI는 이 결과만 읽어 실제 지급량과 유물 변환 결과를 안내합니다.
  */
-// cycle 538: amount default 1 제거 — 1 production caller (protocolHandlers
-//   :20) + 6 test caller 모두 명시 전달 (1)이라 default 도달 불가.
-//   util/component/hook/system/reducer default 청소 메가 시리즈 34번째,
-//   reducers/ 진입.
-export const applyDailyProtocolProgress = (player: Player, type: any, amount: any) => {
+export const resolveDailyProtocolProgress = (player: Player, type: any, amount: any) => {
     const dp = (player.stats as any)?.dailyProtocol;
-    if (!dp) return player;
+    if (!dp) return { player, reward: emptyDailyProtocolReward() };
 
     let essenceGain = 0;
+    let relicShardGain = 0;
+    let completedCount = 0;
     let newShards = dp.relicShards || 0;
     const itemRewards: any[] = [];
 
@@ -39,9 +55,13 @@ export const applyDailyProtocolProgress = (player: Player, type: any, amount: an
         const progress = Math.min(mission.goal, (mission.progress || 0) + amount);
         const justDone = progress >= mission.goal && !mission.done;
         if (justDone) {
+            completedCount += 1;
             if (mission.reward?.essence) essenceGain += mission.reward.essence;
             if (mission.reward?.item) itemRewards.push(mission.reward.item);
-            if (mission.reward?.relicShard) newShards += mission.reward.relicShard;
+            if (mission.reward?.relicShard) {
+                relicShardGain += mission.reward.relicShard;
+                newShards += mission.reward.relicShard;
+            }
         }
 
         return { ...mission, progress, done: progress >= mission.goal };
@@ -49,7 +69,7 @@ export const applyDailyProtocolProgress = (player: Player, type: any, amount: an
 
     // cycle 232: relicShards 5/5 conversion 메커니즘 — UI에 'X/5 조각' 표시되지만 변환 코드 0건
     //   이던 dead reward chain. 5개 도달 시 1 random 유물 자동 변환 (cap 도달 시 보존).
-    let convertedRelicAdded = null;
+    let convertedRelicAdded: Relic | null = null;
     let postConvertShards = newShards;
     if (newShards >= 5 && (player.relics || []).length < MAX_RELICS_PER_RUN) {
         const ownedIds = new Set((player.relics || []).map((r: any) => r?.id));
@@ -81,6 +101,7 @@ export const applyDailyProtocolProgress = (player: Player, type: any, amount: an
         };
     }
 
+    let grantedEssence = 0;
     if (essenceGain > 0) {
         // 지급처 간 일관성 (2026-07, 에테르 거울 후속): 전투/승천 경로
         // (CombatEngine.outcome.ts)와 동일하게 프레스티지 rank essenceMult ×
@@ -88,7 +109,7 @@ export const applyDailyProtocolProgress = (player: Player, type: any, amount: an
         const baseMeta: Record<string, any> = nextPlayer.meta || {};
         const essenceMult = getPrestigeUnlocks(baseMeta.prestigeRank).essenceMult
             * getMirrorEffects(baseMeta).essenceFlowMult;
-        const grantedEssence = Math.max(1, Math.floor(essenceGain * essenceMult));
+        grantedEssence = Math.max(1, Math.floor(essenceGain * essenceMult));
         const nextMeta: Record<string, any> = {
             ...baseMeta,
             essence: (baseMeta.essence || 0) + grantedEssence,
@@ -108,15 +129,22 @@ export const applyDailyProtocolProgress = (player: Player, type: any, amount: an
         nextPlayer.meta = nextMeta;
     }
 
-    if (itemRewards.length > 0) {
-        const rewardedItems = itemRewards
-            .map((name: any) => findItemByName(name))
-            .filter(Boolean)
-            .map((item: any) => makeItem(item));
-        if (rewardedItems.length > 0) {
-            nextPlayer.inv = [...(nextPlayer.inv || []), ...rewardedItems];
-        }
+    const rewardedItems = itemRewards
+        .map((name: any) => findItemByName(name))
+        .filter(Boolean)
+        .map((item: any) => makeItem(item));
+    if (rewardedItems.length > 0) {
+        nextPlayer.inv = [...(nextPlayer.inv || []), ...rewardedItems];
     }
 
-    return nextPlayer;
+    return {
+        player: nextPlayer as Player,
+        reward: {
+            completedCount,
+            essence: grantedEssence,
+            items: rewardedItems.map((item: any) => item.name),
+            relicShards: relicShardGain,
+            convertedRelic: convertedRelicAdded,
+        },
+    };
 };

@@ -21,7 +21,7 @@ const makeDeps = (player = { meta: {}, stats: {}, quests: [] }) => {
     return { deps, dispatches, logs };
 };
 
-const noopHooks = { emitUnlockedTitles: () => {}, emitDailyProtocolLogs: () => {} };
+const noopHooks = { emitUnlockedTitles: () => {} };
 
 test('첫 플레이는 유물 선택 없이 첫 이야기와 출발 흐름을 먼저 보여 준다', () => {
     const { deps, dispatches, logs } = makeDeps();

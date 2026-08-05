@@ -31,7 +31,7 @@ import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 export const handleVictoryOutcome = ({
     playerAfterCombat, deadEnemy, stats,
     dispatch, addLog, addStoryLog,
-    emitDailyProtocolLogs, emitUnlockedTitles,
+    emitUnlockedTitles,
     extendedChecks,
     liveConfig,
 }: any) => {
@@ -204,7 +204,6 @@ export const handleVictoryOutcome = ({
         dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
     }
 
-    emitDailyProtocolLogs('kills', 1);
     emitUnlockedTitles(updatedPlayer);
 
     if (extendedChecks) {

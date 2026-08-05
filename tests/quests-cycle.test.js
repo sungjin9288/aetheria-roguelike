@@ -1366,8 +1366,8 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
           'cycle 539 callProxy trackLabel default 0건');
 
       const helpers = await readSrc('src/reducers/handlers/helpers.ts');
-      assert.ok(!/applyDailyProtocolProgress[^=]*amount:\s*any\s*=\s*1/.test(helpers),
-          'cycle 538 applyDailyProtocolProgress amount default 0건');
+      assert.ok(!/resolveDailyProtocolProgress[^=]*amount:\s*any\s*=\s*1/.test(helpers),
+          'cycle 538 resolveDailyProtocolProgress amount default 0건');
   });
 }
 

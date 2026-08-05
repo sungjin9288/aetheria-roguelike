@@ -1,7 +1,6 @@
 import { BALANCE, CONSTANTS } from '../../data/constants';
 import { CLASSES } from '../../data/classes';
-import { getDailyProtocolCompletions, formatDailyProtocolReward, makeEmitTitles } from '../../utils/gameUtils';
-import { MSG } from '../../data/messages';
+import { makeEmitTitles } from '../../utils/gameUtils';
 import { AT } from '../../reducers/actionTypes';
 import { advanceExploreState } from '../../utils/explorationPacing';
 import { SEASON_XP } from '../../data/seasonPass';
@@ -28,18 +27,10 @@ export const buildClassVitals = (level: any, jobId: any, meta: any) => {
 };
 
 /**
- * 공유 헬퍼 팩토리 — emitUnlockedTitles, emitDailyProtocolLogs, commitExploreOutcome
+ * 공유 헬퍼 팩토리 — emitUnlockedTitles, commitExploreOutcome
  */
 export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
-
-    // cycle 504: amount default 1 제거 — 호출자 5건 모두 amount 명시 전달.
-    const emitDailyProtocolLogs = (type: any, amount: any) => {
-        const completed = getDailyProtocolCompletions(player, type, amount);
-        completed.forEach((mission: any) => {
-            addLog('system', MSG.DAILY_PROTOCOL_DONE(formatDailyProtocolReward(mission.reward)));
-        });
-    };
 
     // 2026-07 — 원정 보스 접근 게이지: mapData를 3번째 인자로 받아 미격파 구역 보스가
     //   있는 던전이면 탐험 결과 분기(체인/캠프파이어/스카우팅/quiet/전투)와 무관하게
@@ -52,7 +43,6 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
         resetWeeklyProtocolIfNeeded(player, dispatch);
         dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'explores' } });
         dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'explores' } });
-        emitDailyProtocolLogs('explores', 1);
         dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.explore });
         dispatch({
             type: AT.SET_PLAYER,
@@ -86,5 +76,5 @@ export const makeSharedHelpers = ({ player, dispatch, addLog }: any) => {
         });
     };
 
-    return { emitUnlockedTitles, emitDailyProtocolLogs, commitExploreOutcome };
+    return { emitUnlockedTitles, commitExploreOutcome };
 };

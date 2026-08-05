@@ -283,16 +283,13 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 504: getDailyProtocolCompletions amount default 0건', async () => {
+  test('cycle 504: 지급 전 완료를 추측하는 helper 0건', async () => {
       const source = await readSrc('src/utils/gameUtils.ts');
-      const fnIdx = source.indexOf('export const getDailyProtocolCompletions');
-      const fnEnd = source.indexOf('=>', fnIdx);
-      const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(!/amount:\s*any\s*=\s*1/.test(sig), 'amount default 1 제거');
-      assert.ok(/\bamount\b/.test(sig), 'amount 파라미터 자체는 보존');
+      assert.ok(!/getDailyProtocolCompletions/.test(source),
+          '지급 전 상태 예측 helper 제거');
   });
 
-  test('cycle 504: 3 wrapper emitDailyProtocolLogs amount default 0건', async () => {
+  test('cycle 504: 3 hook의 중복 완료 로그 wrapper 0건', async () => {
       const files = [
           'src/hooks/useCombatActions.ts',
           'src/hooks/gameActions/_shared.ts',
@@ -300,36 +297,30 @@ import { readFile, readdir } from 'node:fs/promises';
       ];
       for (const f of files) {
           const source = await readSrc(f);
-          const fnIdx = source.indexOf('emitDailyProtocolLogs = (type');
-          assert.ok(fnIdx >= 0, `${f}에 emitDailyProtocolLogs wrapper 존재`);
-          const fnEnd = source.indexOf('=>', fnIdx);
-          const sig = source.slice(fnIdx, fnEnd);
-          assert.ok(!/amount:\s*any\s*=\s*1/.test(sig), `${f} amount default 1 제거`);
+          assert.ok(!/emitDailyProtocolLogs/.test(source), `${f} 중복 완료 로그 제거`);
       }
   });
 
-  test('cycle 504: 정합성 가드 — wrapper / leaf 호출 모두 amount 전달', async () => {
-      // emitDailyProtocolLogs callsites (5건) 모두 2 args
+  test('cycle 504: 정합성 가드 — 모든 hook은 진행 action만 전달', async () => {
       const allFiles = [
-          // PR #4: emitDailyProtocolLogs 콜사이트(market/craft)는 economy 서브파일로 이동.
           'src/hooks/useInventoryActions.economy.ts',
           'src/hooks/gameActions/_shared.ts',
           'src/hooks/gameActions/characterActions.ts',
           'src/hooks/combatActions/combatVictory.ts',
       ];
-      let totalCalls = 0;
+      let progressCalls = 0;
       for (const f of allFiles) {
           const source = await readSrc(f);
-          const matches = source.match(/emitDailyProtocolLogs\(/g) || [];
-          totalCalls += matches.length;
+          progressCalls += (source.match(/UPDATE_DAILY_PROTOCOL/g) || []).length;
+          assert.ok(!/emitDailyProtocolLogs/.test(source), `${f} 예측 로그 0건`);
       }
-      assert.ok(totalCalls >= 5, `emitDailyProtocolLogs 호출 5건 이상 (실제: ${totalCalls})`);
+      assert.ok(progressCalls >= 5, `일일 임무 진행 action 5건 이상 (실제: ${progressCalls})`);
   });
 
   test('cycle 504: 본체 동작 보존 — amount 사용 + missions filter', async () => {
-      const source = await readSrc('src/utils/gameUtils.ts');
+      const source = await readSrc('src/reducers/handlers/helpers.ts');
       assert.ok(/mission\.progress.*\+ amount/.test(source), 'amount 사용 보존');
-      assert.ok(/mission\?\.type === type/.test(source), 'type 필터 보존');
+      assert.ok(/mission\.type !== type/.test(source), 'type 필터 보존');
   });
 }
 
@@ -2007,66 +1998,35 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 }
 
-// ─── cycle-538-apply-daily-protocol-progress-amount-default-unreachable.test.js ───
+// ─── cycle-538-resolve-daily-protocol-progress-amount-contract.test.js ───
 {
   /**
-   * cycle 538: applyDailyProtocolProgress `amount = 1` default unreachable
-   *   (cycle 222-537 silent dead config 시리즈 281번째 — redundant default annotation
-   *   util/component/hook/system/reducer default 청소 메가 시리즈 34번째).
-   *   reducers/ 진입.
-   *
-   * 발견 (1 default unreachable):
-   * - src/reducers/handlers/helpers.ts (line 18):
-   *     export const applyDailyProtocolProgress = (player: Player, type: any,
-   *         amount: any = 1) => {
-   *         const dp = (player.stats as any)?.dailyProtocol;
-   *         if (!dp) return player;
-   *         ...
-   *     };
-   * - 호출 사이트:
-   *     · 1 production caller: protocolHandlers.ts:20 — applyDailyProtocolProgress
-   *       (state.player, dpType, amount) — 3 args 명시.
-   *     · 6 test caller: tests/cycle-232-relic-shards-conversion.test.js — 모두
-   *       3 args 명시 ('goldSpend' / 'kills', 1).
-   *     · 다른 caller 0건.
-   * - 결과: amount 항상 명시 전달. default 1 도달 불가.
-   *
-   * 패턴 (cycle 222-537 시리즈 281번째):
-   * - cycle 502-537: util/component/hook/system default 청소 메가 시리즈 34사이클.
-   * - cycle 538: reducers/ 진입 — utils/ + components/ + hooks/ + systems/ 외
-   *   reducers/까지 lens 확장.
-   *
-   * 수정 (src/reducers/handlers/helpers.ts):
-   * - signature에서 amount: any = 1 → amount: any.
-   * - body 동작 보존.
-   *
-   * 회귀 가드:
-   * - production callsite와 6개 이상의 test callsite 동작 보존.
-   * - body dp 가드 / essenceGain / newShards / itemRewards 처리 보존.
+   * 오늘의 임무 진행량과 실제 지급 결과는 하나의 resolver가 확정한다.
+   * production과 테스트 모두 amount를 명시하고 같은 결과 객체를 사용한다.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 538: applyDailyProtocolProgress signature에서 amount default 0건', async () => {
+  test('cycle 538: resolveDailyProtocolProgress signature에서 amount default 0건', async () => {
       const source = await readSrc('src/reducers/handlers/helpers.ts');
-      const fnIdx = source.indexOf('export const applyDailyProtocolProgress');
+      const fnIdx = source.indexOf('export const resolveDailyProtocolProgress');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
       assert.ok(!/amount:\s*any\s*=\s*1/.test(sig),
-          'applyDailyProtocolProgress amount default 1 제거');
+          'resolveDailyProtocolProgress amount default 1 제거');
       assert.ok(/\bamount\b/.test(sig), 'amount 파라미터 자체는 보존');
   });
 
   test('cycle 538: 정합성 가드 — production + test callsite 보존', async () => {
       const ph = await readSrc('src/reducers/handlers/protocolHandlers.ts');
-      assert.ok(/applyDailyProtocolProgress\(player,\s*dpType,\s*amount\)/.test(ph),
-          '현재 일일 주기로 정규화된 player callsite 보존');
+      assert.ok(/resolveDailyProtocolProgress\(player,\s*dpType,\s*amount\)/.test(ph),
+          '현재 일일 주기로 정규화된 지급 결과 callsite 보존');
 
       // cycle-232-relic-* 는 tests/relics.test.js로 통합됨 (audit #1).
       const tt = await readSrc('tests/relics.test.js');
-      const calls = (tt.match(/applyDailyProtocolProgress\(/g) || []).length;
+      const calls = (tt.match(/resolveDailyProtocolProgress\(/g) || []).length;
       assert.ok(calls >= 6, `test callsite 6건 이상 보존: ${calls}건`);
   });
 
@@ -2074,8 +2034,8 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/reducers/handlers/helpers.ts');
       assert.ok(/const dp = \(player\.stats as any\)\?\.dailyProtocol/.test(source),
           'dp 추출 보존');
-      assert.ok(/if \(!dp\) return player/.test(source),
-          'dp 가드 early return 보존');
+      assert.ok(/if \(!dp\) return \{ player, reward: emptyDailyProtocolReward\(\) \}/.test(source),
+          'dp 가드와 빈 지급 결과 보존');
       assert.ok(/let newShards = dp\.relicShards \|\| 0/.test(source),
           'newShards 초기화 보존');
   });
@@ -2156,8 +2116,8 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 539: cycle 502-538 회귀 가드 — util/component/hook/system/reducer default 청소 시리즈 보존', async () => {
       const helpers = await readSrc('src/reducers/handlers/helpers.ts');
-      assert.ok(!/applyDailyProtocolProgress[^=]*amount:\s*any\s*=\s*1/.test(helpers),
-          'cycle 538 applyDailyProtocolProgress amount default 0건');
+      assert.ok(!/resolveDailyProtocolProgress[^=]*amount:\s*any\s*=\s*1/.test(helpers),
+          'cycle 538 resolveDailyProtocolProgress amount default 0건');
 
       const ce = await readSrc('src/systems/CombatEngine.ts');
       assert.ok(!/calculateDamage\(stats: any, options:\s*any\s*=\s*\{\}\)/.test(ce),
@@ -2860,28 +2820,15 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 556: 2 defaults 0건', async () => {
+  test('cycle 556: 일반 보상 formatter default 0건', async () => {
       const source = await readSrc('src/utils/gameUtils.ts');
-      const dailySig = source.slice(source.indexOf('export const formatDailyProtocolReward'),
-                                      source.indexOf('=>', source.indexOf('export const formatDailyProtocolReward')));
-      assert.ok(!/reward:\s*any\s*=\s*\{\}/.test(dailySig),
-          'formatDailyProtocolReward reward default {} 제거');
-
       const partsSig = source.slice(source.indexOf('export const formatRewardParts'),
                                       source.indexOf('=>', source.indexOf('export const formatRewardParts')));
       assert.ok(!/reward:\s*any\s*=\s*\{\}/.test(partsSig),
           'formatRewardParts reward default {} 제거');
   });
 
-  test('cycle 556: 정합성 가드 — 6 callsite 보존', async () => {
-      const inv = await readInventoryActionsSource();
-      assert.ok(/formatDailyProtocolReward\(mission\.reward\)/.test(inv),
-          'useInventoryActions formatDailyProtocolReward 보존');
-
-      const sh = await readSrc('src/hooks/gameActions/_shared.ts');
-      assert.ok(/formatDailyProtocolReward\(mission\.reward\)/.test(sh),
-          '_shared.ts formatDailyProtocolReward 보존');
-
+  test('cycle 556: 정합성 가드 — 일반 보상 callsite와 일일 지급 formatter 보존', async () => {
       const ap = await readSrc('src/components/AchievementPanel.tsx');
       assert.ok(/formatRewardParts\(achievement\.reward \|\| \{\}\)/.test(ap),
           'AchievementPanel formatRewardParts 보존');
@@ -2889,16 +2836,22 @@ import { readFile, readdir } from 'node:fs/promises';
       const qt = await readSrc('src/components/tabs/QuestTab.tsx');
       assert.ok(/formatRewardParts\(reward\)/.test(qt),
           'QuestTab formatRewardParts 보존');
+
+      const protocol = await readSrc('src/reducers/handlers/protocolHandlers.ts');
+      assert.ok(/formatDailyReward\(result\.reward\)/.test(protocol),
+          'reducer 지급 결과 formatter 보존');
   });
 
-  test('cycle 556: body essence/item/exp/gold 분기 보존', async () => {
+  test('cycle 556: body exp/gold와 실제 essence/item 분기 보존', async () => {
       const source = await readSrc('src/utils/gameUtils.ts');
-      assert.ok(/if \(reward\.essence\) return `에센스 \$\{reward\.essence\}`/.test(source),
-          'essence 분기 보존');
       assert.ok(/if \(reward\.exp\) parts\.push\(`경험 \$\{reward\.exp\}`\)/.test(source),
           'exp 분기 보존');
       assert.ok(/if \(reward\.gold\) parts\.push\(`골드 \$\{reward\.gold\}`\)/.test(source),
           'gold 분기 보존');
+
+      const protocol = await readSrc('src/reducers/handlers/protocolHandlers.ts');
+      assert.ok(/reward\.essence > 0/.test(protocol), '실제 essence 분기 보존');
+      assert.ok(/reward\.items\.forEach/.test(protocol), '실제 item 분기 보존');
   });
 
   test('cycle 556: cycle 502-555 회귀 가드 — default 청소 시리즈 보존', async () => {

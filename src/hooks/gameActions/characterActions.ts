@@ -42,7 +42,7 @@ const hasPreviousRunExperience = (player: any) => {
     ].some((value) => Number(value) > 0);
 };
 
-export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDailyProtocolLogs }: any) => {
+export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) => {
     const { player, gameState, dispatch, addLog, addStoryLog, getFullStats } = deps;
     return {
         // cycle 566: gender / jobId / challengeModifiers 3 defaults 제거 —
@@ -146,7 +146,6 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles, emitDail
             };
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
             dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: restCost } });
-            emitDailyProtocolLogs('goldSpend', restCost);
             emitUnlockedTitles(updatedPlayer);
             addLog('success', MSG.REST_DONE_FULL(restCost));
             addStoryLog('rest', { loc: player.loc });

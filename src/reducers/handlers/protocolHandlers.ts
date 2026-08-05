@@ -1,11 +1,27 @@
-import { applyDailyProtocolProgress } from './helpers';
+import { resolveDailyProtocolProgress } from './helpers';
+import type { DailyProtocolReward } from './helpers';
 import { BALANCE } from '../../data/constants';
+import { MSG } from '../../data/messages';
 import {
     getCurrentDailyProtocol,
     getCurrentWeeklyProtocol,
     getWeeklyMissionProgress,
 } from '../../utils/protocolCycle';
 import type { GameState, GameAction } from '../gameReducer';
+
+const formatDailyReward = (reward: DailyProtocolReward) => {
+    const parts: string[] = [];
+    if (reward.essence > 0) parts.push(`에센스 +${reward.essence}`);
+    reward.items.forEach((name: string) => parts.push(`${name} 획득`));
+    if (reward.relicShards > 0) parts.push(`유물 파편 +${reward.relicShards}`);
+    return parts.join(' · ');
+};
+
+const makeRewardLog = (text: string, index: number) => ({
+    id: `daily-reward-${Date.now()}-${index}-${Math.random()}`,
+    type: 'success',
+    text,
+});
 
 export const protocolActionMap = {
     // ── Daily Protocol ────────────────────────────────────────────────────
@@ -27,9 +43,24 @@ export const protocolActionMap = {
             ...state.player,
             stats: { ...state.player.stats, dailyProtocol },
         };
+        const result = resolveDailyProtocolProgress(player, dpType, amount);
+        const rewardText = formatDailyReward(result.reward);
+        const notices: string[] = [];
+        if (result.reward.completedCount > 0 && rewardText) {
+            notices.push(MSG.DAILY_PROTOCOL_DONE(result.reward.completedCount, rewardText));
+        }
+        if (result.reward.convertedRelic) {
+            const relicName = result.reward.convertedRelic.name || '새 유물';
+            notices.push(MSG.DAILY_PROTOCOL_RELIC_COMPLETE(relicName));
+        }
+
         return {
             ...state,
-            player: applyDailyProtocolProgress(player, dpType, amount),
+            player: result.player,
+            logs: [
+                ...state.logs,
+                ...notices.map(makeRewardLog),
+            ].slice(-BALANCE.LOG_MAX_SIZE),
             syncStatus: 'syncing',
         };
     },

@@ -10,7 +10,7 @@ import { appendGrave } from '../../utils/graveUtils.js';
 import { getSelectedSkill } from './_helpers';
 import { handleVictoryOutcome } from './combatVictory';
 
-export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, emitUnlockedTitles }: any, pendingRef: any) => {
+export const createCombatAttackActions = (deps: any, { emitUnlockedTitles }: any, pendingRef: any) => {
     const { player, gameState, enemy, grave, dispatch, addLog, addStoryLog, getFullStats, liveConfig } = deps;
 
     return {
@@ -77,7 +77,7 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                         playerAfterCombat: playerAfterAction,
                         deadEnemy: enemyAtActionStart,
                         stats, dispatch, addLog, addStoryLog,
-                        emitDailyProtocolLogs, emitUnlockedTitles,
+                        emitUnlockedTitles,
                         extendedChecks: true,
                         liveConfig,
                     });
@@ -127,7 +127,7 @@ export const createCombatAttackActions = (deps: any, { emitDailyProtocolLogs, em
                             playerAfterCombat: counterResult.updatedPlayer,
                             deadEnemy: result.updatedEnemy,
                             stats, dispatch, addLog, addStoryLog,
-                            emitDailyProtocolLogs, emitUnlockedTitles,
+                            emitUnlockedTitles,
                             extendedChecks: false,
                             liveConfig,
                         });

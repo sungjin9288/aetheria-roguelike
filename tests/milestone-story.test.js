@@ -118,7 +118,6 @@ test('첫 전직 action은 직업 변경과 함께 story beat를 queue한다', (
         getFullStats: (candidate = player) => calculateFullStats(candidate),
     }, {
         emitUnlockedTitles: () => {},
-        emitDailyProtocolLogs: () => {},
     });
 
     actions.jobChange('전사');
@@ -178,7 +177,6 @@ test('실제 현재 지역의 첫 구역 보스 승리는 area boss story beat�
         dispatch,
         addLog: () => {},
         addStoryLog: () => {},
-        emitDailyProtocolLogs: () => {},
         emitUnlockedTitles: () => {},
         extendedChecks: true,
         liveConfig: { eventMultiplier: 1 },

@@ -18,7 +18,7 @@ import {
     SYSTEM_SETTINGS_DEVICE_QA_SCENARIO,
 } from '../utils/runtimeMode';
 import { readDeviceQaSnapshot } from '../utils/localGameSnapshot';
-import { getProtocolDayKey, getProtocolWeekKey } from '../utils/protocolCycle';
+import { createDailyProtocol, getProtocolDayKey, getProtocolWeekKey } from '../utils/protocolCycle';
 
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
 
@@ -849,6 +849,30 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
+            seedDailyMissionRewardScenario: () => {
+                const er = engineRef.current;
+                const dailyProtocol = createDailyProtocol(er.player, new Date());
+                dailyProtocol.relicShards = 4;
+                dailyProtocol.missions = dailyProtocol.missions.map((mission: any) => (
+                    mission.type === 'goldSpend'
+                        ? { ...mission, progress: mission.goal - 1 }
+                        : mission
+                ));
+
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (player: any) => ({
+                        ...player,
+                        stats: { ...player.stats, dailyProtocol },
+                    }),
+                });
+                er.dispatch({
+                    type: AT.UPDATE_DAILY_PROTOCOL,
+                    payload: { type: 'goldSpend', amount: 1 },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                return true;
             },
             seedExpeditionDebriefScenario: () => {
                 const er = engineRef.current;

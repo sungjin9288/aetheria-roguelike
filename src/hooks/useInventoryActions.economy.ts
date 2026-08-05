@@ -15,7 +15,7 @@ import type { Item } from '../types/index.js';
  *   골드·재료·코덱스·시즌XP 흐름을 공유. ctx로 deps + 공유 클로저를 받는다.
  */
 export const createEconomyActions = (ctx: any) => {
-    const { player, gameState, dispatch, addLog, emitUnlockedTitles, emitDailyProtocolLogs } = ctx;
+    const { player, gameState, dispatch, addLog, emitUnlockedTitles } = ctx;
 
     return ({
 
@@ -43,7 +43,6 @@ export const createEconomyActions = (ctx: any) => {
                     dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.codexDiscover * newCodexCount });
                 }
                 dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: itemPrice } });
-                emitDailyProtocolLogs('goldSpend', itemPrice);
                 addLog('success', MSG.SHOP_BUY_DONE(item.name));
             } else if (type === 'sell') {
                 // 전설 각인 아이템은 우발적 판매 방지 — 드롭률이 낮고 세트 효과 기반이라
@@ -102,7 +101,6 @@ export const createEconomyActions = (ctx: any) => {
             }
             dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: recipe.gold } });
             dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.craft });
-            emitDailyProtocolLogs('goldSpend', recipe.gold);
             emitUnlockedTitles(updatedPlayer);
             addLog('success', MSG.CRAFT_DONE(recipe.name!));
         },

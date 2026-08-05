@@ -1,6 +1,6 @@
 import { BALANCE } from '../data/constants';
 import { CLASSES } from '../data/classes';
-import { getDailyProtocolCompletions, formatDailyProtocolReward, makeEmitTitles } from '../utils/gameUtils';
+import { makeEmitTitles } from '../utils/gameUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
@@ -27,14 +27,6 @@ export const createInventoryActions = ({
 }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
-    // cycle 504: amount default 1 제거 — 호출자 5건 모두 amount 명시 전달.
-    const emitDailyProtocolLogs = (type: any, amount: any) => {
-        const completed = getDailyProtocolCompletions(player, type, amount);
-        completed.forEach((mission: any) => {
-            addLog('system', `📋 일일 프로토콜 완료: ${formatDailyProtocolReward(mission.reward)}`);
-        });
-    };
-
     const syncLevelQuests = (updatedPlayer: any) => {
         const questResult = CombatEngine.updateQuestProgress(updatedPlayer, '');
         return { ...updatedPlayer, quests: questResult.updatedQuests };
@@ -51,7 +43,6 @@ export const createInventoryActions = ({
         getFullStats,
         enhanceAttemptLock,
         emitUnlockedTitles,
-        emitDailyProtocolLogs,
         syncLevelQuests,
     };
 

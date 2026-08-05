@@ -120,7 +120,7 @@ test('통합: rank≥5 → 캐릭터 생성 시 시작 부트 유물 4선택 dis
         };
         return { deps, dispatches, logs };
     };
-    const noopHooks = { emitUnlockedTitles: () => {}, emitDailyProtocolLogs: () => {} };
+    const noopHooks = { emitUnlockedTitles: () => {} };
 
     const { deps: deps5, dispatches: dispatches5 } = makeDeps(5);
     createCharacterActions(deps5, noopHooks).start('테스터', 'male', '모험가', []);

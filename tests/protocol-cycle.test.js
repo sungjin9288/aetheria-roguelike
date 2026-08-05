@@ -70,6 +70,92 @@ test('current daily protocol exposes today goals before the first action without
     assert.equal(player.stats.dailyProtocol, null);
 });
 
+test('daily mission completion records the essence amount actually granted by the reducer', () => {
+    const player = buildState({ level: 2 }).player;
+    const dailyProtocol = getCurrentDailyProtocol(player, new Date());
+    dailyProtocol.missions = dailyProtocol.missions.map((mission) => (
+        mission.type === 'kills'
+            ? { ...mission, progress: mission.goal - 1 }
+            : mission
+    ));
+    const state = buildState({
+        level: 2,
+        meta: {
+            ...INITIAL_STATE.player.meta,
+            prestigeRank: 1,
+        },
+        stats: {
+            ...INITIAL_STATE.player.stats,
+            dailyProtocol,
+        },
+    });
+
+    const next = gameReducer(state, {
+        type: AT.UPDATE_DAILY_PROTOCOL,
+        payload: { type: 'kills' },
+    });
+
+    assert.equal(next.player.meta.essence, 11);
+    assert.equal(next.logs.length, 1);
+    assert.equal(next.logs[0].type, 'success');
+    assert.equal(next.logs[0].text, '오늘의 임무 완료 · 에센스 +11');
+});
+
+test('daily relic shard completion names the relic created from five shards', () => {
+    const player = buildState().player;
+    const dailyProtocol = getCurrentDailyProtocol(player, new Date());
+    dailyProtocol.relicShards = 4;
+    dailyProtocol.missions = dailyProtocol.missions.map((mission) => (
+        mission.type === 'goldSpend'
+            ? { ...mission, progress: mission.goal - 1 }
+            : mission
+    ));
+    const state = buildState({
+        relics: [],
+        stats: {
+            ...INITIAL_STATE.player.stats,
+            dailyProtocol,
+        },
+    });
+    const originalRandom = Math.random;
+    Math.random = () => 0;
+
+    try {
+        const next = gameReducer(state, {
+            type: AT.UPDATE_DAILY_PROTOCOL,
+            payload: { type: 'goldSpend', amount: 1 },
+        });
+        const relicName = next.player.relics[0].name;
+
+        assert.equal(next.player.stats.dailyProtocol.relicShards, 0);
+        assert.deepEqual(next.logs.map((log) => log.text), [
+            '오늘의 임무 완료 · 유물 파편 +1',
+            `유물 파편 완성 · ${relicName} 획득`,
+        ]);
+    } finally {
+        Math.random = originalRandom;
+    }
+});
+
+test('daily mission progress does not add a reward log before completion', () => {
+    const player = buildState().player;
+    const dailyProtocol = getCurrentDailyProtocol(player, new Date());
+    const state = buildState({
+        stats: {
+            ...INITIAL_STATE.player.stats,
+            dailyProtocol,
+        },
+    });
+
+    const next = gameReducer(state, {
+        type: AT.UPDATE_DAILY_PROTOCOL,
+        payload: { type: 'kills' },
+    });
+
+    assert.equal(next.player.stats.dailyProtocol.missions.find((mission) => mission.type === 'kills').progress, 1);
+    assert.deepEqual(next.logs, []);
+});
+
 test('first combat action of a new weekly cycle resets stale progress before counting', () => {
     const state = buildState({
         weeklyProtocol: {
