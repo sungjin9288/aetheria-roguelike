@@ -592,9 +592,9 @@ export const getActiveRelicSynergies = (relics: any) => {
  * remaining 배열에서 가중치 기반으로 1개를 뽑아 반환 (remaining 자체는 변경하지 않음).
  * pickWeightedRelics의 일반 슬롯 / 시너지 pity 슬롯 추첨 로직에서 공용으로 사용.
  */
-const drawOneWeighted = (remaining: any[]) => {
+const drawOneWeighted = (remaining: any[], random: () => number) => {
     const totalWeight = remaining.reduce((sum: any, r: any) => sum + (RELIC_WEIGHTS[r.rarity] || 1), 0);
-    let rand = Math.random() * totalWeight;
+    let rand = random() * totalWeight;
     let chosen = remaining[remaining.length - 1]; // fallback
     for (let j = 0; j < remaining.length; j++) {
         rand -= RELIC_WEIGHTS[remaining[j].rarity] || 1;
@@ -635,7 +635,8 @@ const findSynergyPityCandidates = (pool: any[], owned: any[]) => {
 // 관대함 하향 (2026-07 밸런스 감사): options.rarityCap을 넘기면 pool을 해당 등급 이하로만
 //   제한한 뒤 기존 로직(시너지 pity 포함)을 그대로 태운다. 시작 부트(characterActions.ts)만
 //   'rare'를 전달 — 일반 탐험 유물 발견(exploreUtils.ts)은 전달하지 않아 기존 확률 분포 불변.
-export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: any[]; rarityCap?: string }) => {
+export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: any[]; rarityCap?: string; rng?: () => number }) => {
+    const random = typeof options?.rng === 'function' ? options.rng : Math.random;
     const cappedPool = filterByRarityCap(pool, options?.rarityCap);
     if (cappedPool.length === 0) return [];
     const remaining = [...cappedPool];
@@ -649,7 +650,7 @@ export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: an
         const pitySlots = Math.min(BALANCE.SYNERGY_PITY_SLOT, needed, pityCandidates.length);
         const pityPool = [...pityCandidates];
         for (let i = 0; i < pitySlots; i++) {
-            const chosen = drawOneWeighted(pityPool);
+            const chosen = drawOneWeighted(pityPool, random);
             result.push(chosen);
             pityPool.splice(pityPool.indexOf(chosen), 1);
             remaining.splice(remaining.indexOf(chosen), 1);
@@ -658,7 +659,7 @@ export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: an
 
     const remainingNeeded = needed - result.length;
     for (let i = 0; i < remainingNeeded; i++) {
-        const chosen = drawOneWeighted(remaining);
+        const chosen = drawOneWeighted(remaining, random);
         result.push(chosen);
         remaining.splice(remaining.indexOf(chosen), 1);
     }

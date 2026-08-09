@@ -1,5 +1,21 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-08-06: atomic combat action transaction continuation):
+- Restored the interrupted cross-thread work for attack, skill, escape, and combat-item turn authority.
+- Moved one player action, enemy response, victory/defeat settlement, grave/run summary, protocol rewards, and story receipts behind one reducer transition with `combatTurn` replay protection.
+- Passed one seeded RNG stream through combat resolution and victory rewards; added deterministic reward-log entropy so identical state, seed, and time produce identical reducer state.
+- Added regression coverage for atomic victory, deterministic skill/reward results, failed-escape defeat, and rapid repeated input.
+
+Verification:
+- Focused combat transaction and cycle 500-599 contracts -> 256/256 pass.
+- `npm run verify:full` -> type-check, lint, unit 3480/3480, build guard, desktop/mobile smoke, and Playwright E2E 92/92 pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, and `git diff --check` -> pass; local Distribution and Android release signing inputs remain unavailable.
+- Visually reviewed `playtest-artifacts/mobile-legibility/combat-390x844.png`, `playtest-artifacts/mobile/02d-post-combat-decision-strip.png`, and `playtest-artifacts/mobile-combat-focus/boss-focus.png`; combat actions and victory presentation remain readable without clipping.
+- The generic `develop-web-game` client remains blocked before app launch by its missing Chromium revision 1223; the repository-configured Playwright smoke/E2E path passed in full.
+
+Next action:
+- Preserve this verified checkpoint for commit review. Physical Android acceptance, Apple Distribution signing, Android release signing, and device delivery remain separate release work.
+
 Done (2026-07-23: connected the first story mission before the first exploration and planned the next expedition loop):
 - Reproduced a fresh-player flow where the forest had already been explored before the Quest Board offered `[스토리] 첫 번째 여정` at 0/1, forcing the player to repeat the action the game had just taught.
 - Auto-assigned the first story mission at new-run start through the same progress-state factory as normal acceptance, while preventing duplicates for active and completed saves.

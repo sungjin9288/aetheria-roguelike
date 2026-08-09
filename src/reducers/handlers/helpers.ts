@@ -187,8 +187,17 @@ export const resolveDailyProtocolProgress = (player: Player, type: any, amount: 
     };
 };
 
-export const advanceDailyProtocol = (player: Player, type: any, amount: any, relicRoll?: number) => {
-    const dailyProtocol = getCurrentDailyProtocol(player, new Date());
+export const advanceDailyProtocol = (
+    player: Player,
+    type: any,
+    amount: any,
+    relicRoll?: number,
+    now?: number,
+) => {
+    const dailyProtocol = getCurrentDailyProtocol(
+        player,
+        Number.isFinite(now) ? new Date(now as number) : new Date(),
+    );
     const currentPlayer = {
         ...player,
         stats: { ...player.stats, dailyProtocol },

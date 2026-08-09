@@ -225,21 +225,21 @@ import { readFile } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 273: combatAttack가 phase2 transition 감지', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatAttack.ts');
+      const source = await readSrc('src/systems/combatActionTurn.ts');
       // result.updatedEnemy.phase2Triggered (이전) vs counterResult.updatedEnemy.phase2Triggered (후) 비교.
       assert.ok(/phase2Triggered/.test(source),
           'combatAttack.ts에서 phase2Triggered 비교');
   });
 
   test('cycle 273: combatAttack가 addStoryLog("bossPhase2", ...) 호출', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      assert.ok(/addStoryLog\(['"]bossPhase2['"]/.test(source),
-          "addStoryLog('bossPhase2', ...) 호출");
+      const source = await readSrc('src/systems/combatActionTurn.ts');
+      assert.ok(/type:\s*['"]bossPhase2['"]/.test(source),
+          'bossPhase2 story receipt 생성');
   });
 
   test('cycle 273: bossPhase2 payload에 bossName 포함', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      assert.ok(/addStoryLog\(['"]bossPhase2['"]\s*,\s*\{[\s\S]{0,80}?bossName/.test(source),
+      const source = await readSrc('src/systems/combatActionTurn.ts');
+      assert.ok(/type:\s*['"]bossPhase2['"][\s\S]{0,100}?bossName/.test(source),
           'bossName 포함된 payload (template "${data.bossName}" 정합)');
   });
 

@@ -282,13 +282,16 @@ export const enemyAIMethods: any = {
             isCrit: heavyResolved,
             logs: [...logs, {
                 type: heavyResolved ? 'critical' : 'warning',
-                text: heavyResolved ? MSG.COMBAT_ENEMY_HEAVY_HIT(updatedEnemy.name, enemyDmg) : MSG.COMBAT_ENEMY_HIT(updatedEnemy.name, enemyDmg)
+                text: heavyResolved
+                    ? MSG.COMBAT_ENEMY_HEAVY_HIT(updatedEnemy.name, enemyDmg, random)
+                    : MSG.COMBAT_ENEMY_HIT(updatedEnemy.name, enemyDmg, random)
             }]
         };
     },
 
-    attemptEscape(enemy: Monster, stats: any) {
-        const success = Math.random() > BALANCE.ESCAPE_CHANCE;
+    attemptEscape(enemy: Monster, stats: any, rng?: () => number) {
+        const random = typeof rng === 'function' ? rng : Math.random;
+        const success = random() > BALANCE.ESCAPE_CHANCE;
         if (success) {
             return { success: true, logs: [{ type: 'info', text: MSG.ESCAPE_SUCCESS }] };
         }

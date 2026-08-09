@@ -71,9 +71,13 @@ const TIER_TO_RARITY: any = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 
 export const getItemRarity = (item: Item | null | undefined) => item?.rarity || TIER_TO_RARITY[item?.tier ?? 0] || 'common';
 
 /** 아이템 인스턴스 생성 (고유 ID 부여) */
-export const makeItem = (template: Item | null | undefined): Item => ({
+export const makeItem = (
+    template: Item | null | undefined,
+    rng: () => number = Math.random,
+    now: () => number = Date.now,
+): Item => ({
     ...template,
-    id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`
+    id: `${now()}_${rng().toString(16).slice(2, 8)}`
 });
 
 /** 전체 DB 아이템 목록을 하나의 배열로 반환 */

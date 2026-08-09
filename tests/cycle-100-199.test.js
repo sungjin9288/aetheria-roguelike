@@ -1251,13 +1251,13 @@ import { readFile, readdir } from 'node:fs/promises';
       );
   });
 
-  test('combatVictory: Date.now() 기반 시간 비교 패턴 존재', async () => {
+  test('combatVictory: 주입된 currentTime 기반 시간 비교 패턴 존재', async () => {
       const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
-      // lastKillAt 변수 근처에 Date.now() 비교
+      // transaction replay가 같은 시각을 사용하도록 주입된 currentTime을 비교한다.
       const idx = source.indexOf('lastKillAt');
       assert.ok(idx > -1);
       const window = source.slice(idx, idx + 600);
-      assert.match(window, /Date\.now\(\)/);
+      assert.match(window, /resolvedAt\s*=\s*currentTime\(\)/);
   });
 }
 

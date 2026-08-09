@@ -34,7 +34,11 @@ export const handleVictoryOutcome = ({
     emitUnlockedTitles,
     extendedChecks,
     liveConfig,
+    rng,
+    now,
 }: any) => {
+    const random = typeof rng === 'function' ? rng : Math.random;
+    const currentTime = typeof now === 'function' ? now : Date.now;
     // 탐험 스카우팅 "전투의 기척" 카드 — 해당 전투 한정 처치 보상(EXP/골드) 배율 보너스.
     const passiveBonus = buildPassiveBonusWithScout(stats, deadEnemy);
     const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus, liveConfig);
@@ -66,7 +70,13 @@ export const handleVictoryOutcome = ({
 
     // loot — signature pity 배율 적용 (bad-luck 보호막)
     const signaturePityMult = getSignaturePityMultiplier(updatedPlayer.stats?.signaturePity);
-    const lootResult = CombatEngine.processLoot(deadEnemy, updatedPlayer, signaturePityMult);
+    const lootResult = CombatEngine.processLoot(
+        deadEnemy,
+        updatedPlayer,
+        signaturePityMult,
+        random,
+        currentTime,
+    );
     lootResult.logs.forEach((log: any) => addLog(log.type, log.text));
     // cycle 193: 신규 codex 등록 수 추적 — SEASON_XP.codexDiscover dispatch용.
     const codexBefore = countNewCodexEntries(updatedPlayer);
@@ -126,15 +136,15 @@ export const handleVictoryOutcome = ({
         }
     }
 
-    updatedPlayer = applyAbyssFloorAdvance(updatedPlayer, dispatch, addLog);
+    updatedPlayer = applyAbyssFloorAdvance(updatedPlayer, dispatch, addLog, random, currentTime);
 
     // Kill Streak 갱신
     // cycle 136: BALANCE.KILL_STREAK_DECAY_MS(30초) 기반 시간 감쇠 구현 — 기존엔
     // constant 정의만 있고 실제 decay 로직 없어 사망 외엔 streak가 영원히 누적되던 갭.
     // 마지막 킬 timestamp(lastKillAt)와 비교해 elapsed > DECAY_MS이면 새 streak 시작.
-    const now = Date.now();
+    const resolvedAt = currentTime();
     const lastKillAt = (updatedPlayer as any).lastKillAt;
-    const decayed = typeof lastKillAt === 'number' && (now - lastKillAt) > BALANCE.KILL_STREAK_DECAY_MS;
+    const decayed = typeof lastKillAt === 'number' && (resolvedAt - lastKillAt) > BALANCE.KILL_STREAK_DECAY_MS;
     const prevStreak = decayed ? 0 : (updatedPlayer.killStreak || 0);
     const newStreak = prevStreak + 1;
     const tierThresholds = BALANCE.KILL_STREAK_TIERS;
@@ -153,7 +163,7 @@ export const handleVictoryOutcome = ({
     updatedPlayer = {
         ...updatedPlayer,
         killStreak: newStreak,
-        lastKillAt: now,
+        lastKillAt: resolvedAt,
         stats: recordCurrentRunMaxKillStreak({
             ...(updatedPlayer.stats || {}),
             maxKillStreak: Math.max(prevMaxStreak, newStreak),
@@ -161,11 +171,20 @@ export const handleVictoryOutcome = ({
     };
 
     dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
-    dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'kills', amount: 1 } });
-    dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'kills' } });
+    dispatch({
+        type: AT.UPDATE_DAILY_PROTOCOL,
+        payload: {
+            type: 'kills',
+            amount: 1,
+            now: resolvedAt,
+            relicRoll: random(),
+            logSeed: Math.floor(random() * 4294967296),
+        },
+    });
+    dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'kills', now: resolvedAt } });
     const isBossKill = deadEnemy?.isBoss || false;
     if (isBossKill) {
-        dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills' } });
+        dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills', now: resolvedAt } });
     }
 
     if (extendedChecks) {
@@ -208,18 +227,26 @@ export const handleVictoryOutcome = ({
 
     if (extendedChecks) {
         if (victoryResult.isDemonKingSlain) {
-            handleDemonKingSlain(updatedPlayer, dispatch, addLog);
+            handleDemonKingSlain(updatedPlayer, dispatch, addLog, random, currentTime);
             return { earlyReturn: true };
         }
         if (deadEnemy.baseName === '원시의 신' || deadEnemy.name?.includes('원시의 신') || deadEnemy.name?.includes('원초적 혼돈')) {
-            const heartItem = makeItem({ name: '원시의 심장', type: 'key', price: 0, tier: 6, desc: '원시의 신의 심장.' });
+            const heartItem = makeItem(
+                { name: '원시의 심장', type: 'key', price: 0, tier: 6, desc: '원시의 신의 심장.' },
+                random,
+                currentTime,
+            );
             dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
             dispatch({ type: AT.TRIGGER_TRUE_ENDING });
             addLog('critical', MSG.TRUE_GOD_SLAIN);
             return { earlyReturn: true };
         }
         if (deadEnemy.baseName === '공허의 신' || deadEnemy.name?.includes('공허의 신') || deadEnemy.name?.includes('절대 공허')) {
-            const voidCore = makeItem({ name: '공허의 핵심', type: 'key', price: 0, tier: 6, desc: '심연 100층을 정복한 자에게만 허락된 공허의 본질. 세상의 어떤 힘도 이것을 무너뜨릴 수 없다.' });
+            const voidCore = makeItem(
+                { name: '공허의 핵심', type: 'key', price: 0, tier: 6, desc: '심연 100층을 정복한 자에게만 허락된 공허의 본질. 세상의 어떤 힘도 이것을 무너뜨릴 수 없다.' },
+                random,
+                currentTime,
+            );
             dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
                 ...p,
                 inv: [...(p.inv || []), voidCore],
@@ -246,7 +273,7 @@ export const handleVictoryOutcome = ({
     dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
 
     // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
-    applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog });
+    applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });
 
     return { earlyReturn: false };
 };

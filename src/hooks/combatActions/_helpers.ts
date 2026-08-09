@@ -122,7 +122,11 @@ export const buildPassiveBonusWithScout = (stats: any, deadEnemy: any) => {
  * exploreActions.ts의 유물 3(4)선택 큐잉 인프라(SET_PENDING_RELICS)를 그대로 재사용한다.
  * deadEnemy.scoutGuaranteedRelic이 없거나, 유물 슬롯이 가득 찼거나 후보가 없으면 무동작.
  */
-export const applyScoutGuaranteedRelic = (deadEnemy: any, updatedPlayer: Player, { dispatch, addLog }: any) => {
+export const applyScoutGuaranteedRelic = (
+    deadEnemy: any,
+    updatedPlayer: Player,
+    { dispatch, addLog, rng }: any,
+) => {
     if (!deadEnemy?.scoutGuaranteedRelic) return;
     const ownedRelics = (updatedPlayer as any).relics || [];
     const relicUnlocks = getPrestigeUnlocks((updatedPlayer as any).meta?.prestigeRank);
@@ -130,7 +134,10 @@ export const applyScoutGuaranteedRelic = (deadEnemy: any, updatedPlayer: Player,
     const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
     if (available.length === 0) return;
 
-    const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: ownedRelics });
+    const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, {
+        owned: ownedRelics,
+        rng,
+    });
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
     addLog('event', MSG.EXPLORE_RELIC_FOUND);
 };

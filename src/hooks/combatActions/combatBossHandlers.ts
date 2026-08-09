@@ -11,7 +11,13 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
  * 마왕 처치 후처리: 파편 드랍 / 진 보스 진입 / 일반 환생
  * @returns {boolean} true이면 호출자가 즉시 return해야 함
  */
-export const handleDemonKingSlain = (updatedPlayer: any, dispatch: any, addLog: any) => {
+export const handleDemonKingSlain = (
+    updatedPlayer: any,
+    dispatch: any,
+    addLog: any,
+    rng: () => number = Math.random,
+    now: () => number = Date.now,
+) => {
     const prestigeRank = updatedPlayer.meta?.prestigeRank || 0;
     const shardCount = (updatedPlayer.inv || []).filter((i: any) => i?.name === '원시의 파편').length;
 
@@ -20,8 +26,12 @@ export const handleDemonKingSlain = (updatedPlayer: any, dispatch: any, addLog: 
     // → 진엔딩 unlock 경로의 shard가 절대 드랍 안 되던 잠복 버그 수정.
     // 또한 hardcoded 3 → BALANCE.PRIMAL_SHARD_REQUIRED로 교체 (DRY).
     const SHARD_REQ = BALANCE.PRIMAL_SHARD_REQUIRED || 3;
-    if (prestigeRank >= 1 && shardCount < SHARD_REQ && Math.random() < BALANCE.PRIMAL_SHARD_DROP_CHANCE) {
-        const shardItem = makeItem({ name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편.' });
+    if (prestigeRank >= 1 && shardCount < SHARD_REQ && rng() < BALANCE.PRIMAL_SHARD_DROP_CHANCE) {
+        const shardItem = makeItem(
+            { name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편.' },
+            rng,
+            now,
+        );
         dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
         addLog('event', MSG.PRIMAL_SHARD_DROP(shardCount + 1));
     }
@@ -70,7 +80,13 @@ export const handleDemonKingSlain = (updatedPlayer: any, dispatch: any, addLog: 
  * 무한 심연 층 진행. 현재 위치가 심연 맵이 아니면 player를 그대로 반환.
  * @returns {object} 업데이트된 player
  */
-export const applyAbyssFloorAdvance = (p: any, dispatch: any, addLog: any) => {
+export const applyAbyssFloorAdvance = (
+    p: any,
+    dispatch: any,
+    addLog: any,
+    rng: () => number = Math.random,
+    now: () => number = Date.now,
+) => {
     if (p.loc !== CONSTANTS.ABYSS_MAP_NAME) return p;
     const newDepth = (p.stats?.abyssFloor || 1) + 1;
     const prevRecord = p.stats?.abyssRecord || 0;
@@ -90,14 +106,23 @@ export const applyAbyssFloorAdvance = (p: any, dispatch: any, addLog: any) => {
             const available = RELICS.filter((r: any) => !(updated.relics || []).some((pr: any) => pr.id === r.id));
             // PR #8: 프레스티지 rank≥2면 선택지 4지선다.
             const choices = getPrestigeUnlocks(updated.meta?.prestigeRank).relicChoices;
-            if (available.length > 0) dispatch({ type: AT.SET_PENDING_RELICS, payload: pickWeightedRelics(available, choices) });
+            if (available.length > 0) {
+                dispatch({
+                    type: AT.SET_PENDING_RELICS,
+                    payload: pickWeightedRelics(available, choices, { rng }),
+                });
+            }
         } else if (milestone.type === 'legendary_item') {
             // cycle 179: DB.ITEMS는 object — `.flat()` 호출은 TypeError. abyss 50/100/300층
             //   milestone 처리 중 예외 발생해 abyss 진행 끊기던 잠복 회귀 fix.
             const allItems: any[] = (Object.values(DB.ITEMS) as any[]).flat().filter((i: any) => i && typeof i === 'object');
             const legendaryPool = allItems.filter((i: any) => i.tier === 5);
             if (legendaryPool.length > 0) {
-                const item = makeItem(legendaryPool[Math.floor(Math.random() * legendaryPool.length)] as any);
+                const item = makeItem(
+                    legendaryPool[Math.floor(rng() * legendaryPool.length)] as any,
+                    rng,
+                    now,
+                );
                 updated = { ...updated, inv: [...(updated.inv || []), item] };
                 addLog('success', MSG.ABYSS_LEGENDARY_ITEM(item.name));
             }

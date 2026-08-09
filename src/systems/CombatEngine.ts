@@ -55,11 +55,12 @@ export const CombatEngine = {
             mult = 1,
             guarding = false,
             elementMultiplier = 1,
-            critChance = BALANCE.CRIT_CHANCE
+            critChance = BALANCE.CRIT_CHANCE,
+            rng = Math.random,
         } = options;
         const guardMult = guarding ? BALANCE.GUARD_DAMAGE_MULT : 1;
-        const baseDamage = Math.floor(stats.atk * (BALANCE.DAMAGE_BASE_RATIO + Math.random() * BALANCE.DAMAGE_VARIANCE) * mult * guardMult * elementMultiplier);
-        const isCrit = Math.random() < critChance;
+        const baseDamage = Math.floor(stats.atk * (BALANCE.DAMAGE_BASE_RATIO + rng() * BALANCE.DAMAGE_VARIANCE) * mult * guardMult * elementMultiplier);
+        const isCrit = rng() < critChance;
         return {
             damage: Math.max(1, isCrit ? baseDamage * 2 : baseDamage),
             isCrit
@@ -247,8 +248,8 @@ export const CombatEngine = {
     //   CombatEngine.loot.ts의 별개 export된 processLoot (1 arg 호출)이라
     //   별개. method의 두 default 모두 도달 불가. systems/CombatEngine method
     //   시리즈 6번째.
-    processLoot(enemy: Monster, player: any, signaturePityMult: any) {
-        return _processLoot(enemy, player, signaturePityMult);
+    processLoot(enemy: Monster, player: any, signaturePityMult: any, rng?: () => number, now?: () => number) {
+        return _processLoot(enemy, player, signaturePityMult, rng, now);
     },
 
     handleDefeat(player: Player, INITIAL_PLAYER: any, rng?: () => number, now?: () => number) {

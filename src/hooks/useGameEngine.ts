@@ -18,6 +18,7 @@ export const useGameEngine = () => {
     const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
     const combatPendingRef = useRef<any>(null);
     const combatItemLocksRef = useRef<Set<string>>(new Set());
+    const combatActionLocksRef = useRef<Set<string>>(new Set());
     const clearPendingCombat = useCallback(() => {
         if (combatPendingRef.current) clearTimeout(combatPendingRef.current);
         combatPendingRef.current = null;
@@ -31,6 +32,11 @@ export const useGameEngine = () => {
     const claimCombatItem = useCallback((itemId: string) => {
         if (combatItemLocksRef.current.has(itemId)) return false;
         combatItemLocksRef.current.add(itemId);
+        return true;
+    }, []);
+    const claimCombatAction = useCallback((key: string) => {
+        if (combatActionLocksRef.current.has(key)) return false;
+        combatActionLocksRef.current.add(key);
         return true;
     }, []);
     const {
@@ -56,6 +62,8 @@ export const useGameEngine = () => {
         expeditionDebriefOpen,
         questClaimReceipt,
         economyReceipt,
+        combatTurn,
+        combatReceipt,
     } = state;
 
     // --- Firebase Sync ---
@@ -63,7 +71,8 @@ export const useGameEngine = () => {
 
     useEffect(() => {
         combatItemLocksRef.current.clear();
-    }, [player.inv, gameState, enemy]);
+        combatActionLocksRef.current.clear();
+    }, [player.inv, gameState, enemy, combatTurn]);
 
     useEffect(() => () => clearPendingCombat(), [clearPendingCombat]);
 
@@ -120,6 +129,15 @@ export const useGameEngine = () => {
         void addStoryLog('questComplete', { questTitle: questClaimReceipt.title });
     }, [addStoryLog, questClaimReceipt]);
 
+    const narratedCombatReceiptRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!combatReceipt || narratedCombatReceiptRef.current === combatReceipt.key) return;
+        narratedCombatReceiptRef.current = combatReceipt.key;
+        combatReceipt.stories.forEach((story: any) => {
+            void addStoryLog(story.type, story.data);
+        });
+    }, [addStoryLog, combatReceipt]);
+
     // --- Compose Actions from Extracted Hooks ---
     const actions = useMemo(
         () => {
@@ -143,6 +161,8 @@ export const useGameEngine = () => {
                 clearPendingCombat,
                 schedulePendingCombat,
                 claimCombatItem,
+                claimCombatAction,
+                combatTurn,
             });
             const inventoryActions = createInventoryActions(deps);
 
@@ -217,7 +237,7 @@ export const useGameEngine = () => {
                 dispatch,
             };
         },
-        [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, economyReceipt, clearPendingCombat, schedulePendingCombat, claimCombatItem]
+        [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, economyReceipt, clearPendingCombat, schedulePendingCombat, claimCombatItem, claimCombatAction, combatTurn]
     );
 
     const handleCommand = useCallback((text: any) => {

@@ -2788,10 +2788,10 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 272-273 회귀 가드: 이전 sponsored dispatch 동작 유지', async () => {
       const engine = await readSrc('src/hooks/useGameEngine.ts');
-      const atk = await readSrc('src/hooks/combatActions/combatAttack.ts');
+      const atk = await readSrc('src/systems/combatActionTurn.ts');
       assert.ok(/addStoryLog\(['"]questComplete['"]/.test(engine),
           'cycle 272 questComplete dispatch 유지');
-      assert.ok(/addStoryLog\(['"]bossPhase2['"]/.test(atk),
+      assert.ok(/type:\s*['"]bossPhase2['"]/.test(atk),
           'cycle 273 bossPhase2 dispatch 유지');
   });
 }
@@ -2832,24 +2832,24 @@ import { readFile } from 'node:fs/promises';
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 275: combatAttack가 addStoryLog("ruinRecap", ...) 호출', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      assert.ok(/addStoryLog\(['"]ruinRecap['"]/.test(source),
-          "combatAttack.ts에 addStoryLog('ruinRecap', ...) 호출");
+      const source = await readSrc('src/systems/combatActionTurn.ts');
+      assert.ok(/type:\s*['"]ruinRecap['"]/.test(source),
+          'combat transaction에 ruinRecap story receipt 생성');
   });
 
   test('cycle 275: combatItem이 addStoryLog("ruinRecap", ...) 호출', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatItem.ts');
-      assert.ok(/addStoryLog\(['"]ruinRecap['"]/.test(source),
-          "combatItem.ts에 addStoryLog('ruinRecap', ...) 호출");
+      const source = await readSrc('src/reducers/handlers/combatHandlers.ts');
+      assert.ok(/type:\s*['"]ruinRecap['"]/.test(source),
+          'combat item defeat에 ruinRecap story receipt 생성');
   });
 
   test('cycle 275: ruinRecap payload에 name + level 포함', async () => {
       const sources = await Promise.all([
-          readSrc('src/hooks/combatActions/combatAttack.ts'),
-          readSrc('src/hooks/combatActions/combatItem.ts'),
+          readSrc('src/systems/combatActionTurn.ts'),
+          readSrc('src/reducers/handlers/combatHandlers.ts'),
       ]);
       sources.forEach((src, i) => {
-          const matches = src.match(/addStoryLog\(['"]ruinRecap['"]\s*,\s*\{[^}]*\}/g);
+          const matches = src.match(/type:\s*['"]ruinRecap['"]\s*,\s*data:\s*\{[^}]*\}/g);
           assert.ok(matches && matches.length > 0, `[file ${i}] ruinRecap payload 발견`);
           matches.forEach((match) => {
               assert.ok(/name/.test(match), `[file ${i}] name field 포함`);
@@ -2866,25 +2866,21 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 272-274 회귀 가드: 이전 sponsored dispatch 동작 유지', async () => {
       const engine = await readSrc('src/hooks/useGameEngine.ts');
-      const atk = await readSrc('src/hooks/combatActions/combatAttack.ts');
+      const atk = await readSrc('src/systems/combatActionTurn.ts');
       const vic = await readSrc('src/hooks/combatActions/combatVictory.ts');
       assert.ok(/addStoryLog\(['"]questComplete['"]/.test(engine),
           'cycle 272 questComplete dispatch 유지');
-      assert.ok(/addStoryLog\(['"]bossPhase2['"]/.test(atk),
+      assert.ok(/type:\s*['"]bossPhase2['"]/.test(atk),
           'cycle 273 bossPhase2 dispatch 유지');
       assert.ok(/addStoryLog\(['"]levelUp['"]/.test(vic),
           'cycle 274 levelUp dispatch 유지');
   });
 
   test('cycle 275: 기존 death dispatch 유지 (회귀 가드)', async () => {
-      const atk = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      const itm = await readSrc('src/hooks/combatActions/combatItem.ts');
-      const atkDeathMatches = atk.match(/addStoryLog\(['"]death['"]/g);
-      const itmDeathMatches = itm.match(/addStoryLog\(['"]death['"]/g);
-      assert.ok(atkDeathMatches && atkDeathMatches.length >= 2,
-          `combatAttack에 'death' addStoryLog ≥2 (실제: ${atkDeathMatches?.length || 0})`);
-      assert.ok(itmDeathMatches && itmDeathMatches.length >= 1,
-          `combatItem에 'death' addStoryLog ≥1 (실제: ${itmDeathMatches?.length || 0})`);
+      const atk = await readSrc('src/systems/combatActionTurn.ts');
+      const itm = await readSrc('src/reducers/handlers/combatHandlers.ts');
+      assert.ok(/type:\s*['"]death['"]/.test(atk), 'combat action death receipt 보존');
+      assert.ok(/type:\s*['"]death['"]/.test(itm), 'combat item death receipt 보존');
   });
 }
 
@@ -3606,13 +3602,12 @@ import { readFile } from 'node:fs/promises';
           'BALANCE.ITEM_PREFIX_CHANCE 참조 유지');
   });
 
-  test('cycle 290: CombatEngine.loot.ts 3 호출 사이트 인자 1개', async () => {
+  test('cycle 290: CombatEngine.loot.ts 3 호출 사이트가 transaction RNG를 전달', async () => {
       const source = await readSrc('src/systems/CombatEngine.loot.ts');
       const matches = source.match(/applyItemPrefix\([^)]*\)/g) || [];
       assert.ok(matches.length >= 3, `applyItemPrefix 호출 ${matches.length}회 (최소 3)`);
       matches.forEach((call) => {
-          // 인자 1개 — 콤마 0개
-          assert.ok(!call.includes(','), `${call} 인자 1개`);
+          assert.ok(call.includes(', random'), `${call} transaction RNG 전달`);
       });
   });
 

@@ -1,21 +1,18 @@
-import { INITIAL_STATE } from '../../reducers/gameReducer';
 import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
-import { resolveCombatItemTurn } from '../../systems/combatItemTurn';
-import { handleVictoryOutcome } from './combatVictory';
 import type { Item } from '../../types/index.js';
 
-export const createCombatItemActions = (deps: any, { emitUnlockedTitles }: any, pendingControl: any) => {
+export const createCombatItemActions = (deps: any, _shared: any, pendingControl: any) => {
     const {
         player,
         gameState,
         enemy,
         dispatch,
         addLog,
-        addStoryLog,
-        liveConfig,
         claimCombatItem,
+        claimCombatAction,
+        combatTurn = 0,
     } = deps;
     const fallbackItemLocks = new Set<string>();
 
@@ -41,42 +38,15 @@ export const createCombatItemActions = (deps: any, { emitUnlockedTitles }: any, 
                 : !fallbackItemLocks.has(inventoryItem.id);
             if (!accepted) return;
             fallbackItemLocks.add(inventoryItem.id);
+            const combatClaimKey = `combat:${combatTurn}`;
+            if (claimCombatAction && !claimCombatAction(combatClaimKey)) return;
 
             const seed = Math.floor(Math.random() * 4294967296);
             const now = Date.now();
-            const result = resolveCombatItemTurn({
-                player,
-                enemy,
-                item: inventoryItem,
-                initialPlayer: INITIAL_STATE.player,
-                seed,
-                now,
-            });
-
             dispatch({
                 type: AT.USE_COMBAT_ITEM,
-                payload: { itemId: inventoryItem.id, seed, now },
+                payload: { itemId: inventoryItem.id, expectedTurn: combatTurn, seed, now },
             });
-
-            if (result.kind === 'victory') {
-                handleVictoryOutcome({
-                    playerAfterCombat: result.player,
-                    deadEnemy: enemy,
-                    stats: result.victoryStats,
-                    dispatch,
-                    addLog,
-                    addStoryLog,
-                    emitUnlockedTitles,
-                    extendedChecks: false,
-                    liveConfig,
-                });
-                return;
-            }
-
-            if (result.kind === 'defeat' && typeof addStoryLog === 'function') {
-                void addStoryLog('death', { loc: player.loc });
-                void addStoryLog('ruinRecap', { name: player.name, level: player.level });
-            }
         },
     };
 };

@@ -2684,8 +2684,8 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 553: 정합성 가드 — production + internal + test callsite 보존', async () => {
-      const ca = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      assert.ok(/CombatEngine\.applyFatalProtection\(player,\s*stats\.relics \|\| \[\],\s*escapeResult\.damage \|\| 0,\s*protectionLogs\)/.test(ca),
+      const ca = await readSrc('src/systems/combatActionTurn.ts');
+      assert.ok(/CombatEngine\.applyFatalProtection\([\s\S]{0,180}?player,[\s\S]{0,80}?stats\?\.relics \|\| \[\],[\s\S]{0,80}?escapeResult\.damage \|\| 0,[\s\S]{0,80}?protectionLogs/.test(ca),
           'combatAttack 4-arg callsite 보존 (activeSynergies 미전달)');
 
       // enemyAttack(호출부)은 CombatEngine.enemyAI.ts로 분리됨 (mixin).
@@ -4416,16 +4416,12 @@ import { readFile, readdir } from 'node:fs/promises';
           'handleVictoryOutcome liveConfig default {} 제거');
   });
 
-  test('cycle 592: 정합성 가드 — 3 production callsite 보존', async () => {
-      const ca = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      assert.ok(/extendedChecks: true/.test(ca),
-          'combatAttack:81 extendedChecks: true 명시 보존');
-      const cafalse = (ca.match(/extendedChecks: false/g) || []).length;
-      assert.ok(cafalse >= 1, `combatAttack extendedChecks: false 명시 보존: ${cafalse}건`);
-
-      const ci = await readSrc('src/hooks/combatActions/combatItem.ts');
-      assert.ok(/extendedChecks: false/.test(ci),
-          'combatItem extendedChecks: false 명시 보존');
+  test('cycle 592: 정합성 가드 — reducer transaction callsite 보존', async () => {
+      const ca = await readSrc('src/reducers/handlers/combatHandlers.ts');
+      assert.ok(/extendedChecks:\s*result\.extendedVictoryChecks\s*===\s*true/.test(ca),
+          'direct combat victory extendedChecks 전파 보존');
+      const cafalse = (ca.match(/extendedChecks:\s*false/g) || []).length;
+      assert.ok(cafalse >= 1, `combat item/DoT extendedChecks: false 명시 보존: ${cafalse}건`);
   });
 
   test('cycle 592: body CombatEngine.handleVictory liveConfig 전달 보존', async () => {

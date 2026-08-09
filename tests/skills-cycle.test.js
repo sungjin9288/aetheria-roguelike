@@ -1249,10 +1249,30 @@ import { readFile } from 'node:fs/promises';
           'return shape { skill: skills[index] }만 노출');
   });
 
-  test('cycle 353: combatAttack 재할당 shape 동기화', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      assert.ok(/selected = \{ skill: randomSkill \};/.test(source),
-          'randomSkill 재할당 shape 단순화');
+  test('cycle 353: randomSkills 선택은 transaction 안에서 결정적으로 처리', async () => {
+      const { resolveCombatActionTurn } = await import('../src/systems/combatActionTurn.js');
+      const { INITIAL_STATE } = await import('../src/reducers/gameReducer.js');
+      const player = {
+          ...structuredClone(INITIAL_STATE.player),
+          job: '모험가',
+          mp: 100,
+          challengeModifiers: ['randomSkills'],
+      };
+      const enemy = {
+          name: '훈련용 정령', baseName: '훈련용 정령', level: 1,
+          hp: 500, maxHp: 500, atk: 1, def: 0, exp: 1, gold: 1,
+          pattern: { guardChance: 0, heavyChance: 0 },
+      };
+      const input = {
+          player, enemy, kind: 'skill', initialPlayer: INITIAL_STATE.player,
+          seed: 353, now: 1_700_000_000_353,
+      };
+
+      const first = resolveCombatActionTurn(input);
+      const replay = resolveCombatActionTurn(input);
+
+      assert.deepEqual(replay, first);
+      assert.ok(first.logs.some((log) => log.type === 'warn' && log.text.includes('뒤섞인 기술')));
   });
 
   test('cycle 353: getSelectedSkill 동작 보존', async () => {
@@ -1972,38 +1992,49 @@ import { readFile } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('combatAttack.ts forceEscape 분기가 stats.escapes 증분 처리', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      // forceEscape 블록 안에 escapes 누적 패턴이 있어야 함.
-      // 단순한 grep — forceEscape 등장 이후 200자 이내에 escapes: ... + 1 패턴.
-      const idx = source.indexOf('result.forceEscape');
-      assert.ok(idx > -1, 'forceEscape branch should exist');
-      const window = source.slice(idx, idx + 1600);
-      assert.match(
-          window,
-          /escapes:\s*\(p\.stats\?\.escapes\s*\|\|\s*0\)\s*\+\s*1/,
-          'forceEscape branch should increment stats.escapes (parity with cycle 74 normal escape path)'
-      );
+  test('escape_100 스킬은 일반 도주와 같은 통계·전투 기록을 남긴다', async () => {
+      const { resolveCombatActionTurn } = await import('../src/systems/combatActionTurn.js');
+      const { INITIAL_STATE } = await import('../src/reducers/gameReducer.js');
+      const player = {
+          ...structuredClone(INITIAL_STATE.player),
+          job: '무당',
+          mp: 100,
+          skillLoadout: { selected: 5, cooldowns: {} },
+      };
+      const enemy = {
+          name: '훈련용 정령', baseName: '훈련용 정령', level: 1,
+          hp: 100, maxHp: 100, atk: 1, def: 0, exp: 1, gold: 1,
+          pattern: { guardChance: 0, heavyChance: 0 },
+      };
+
+      const escaped = resolveCombatActionTurn({
+          player, enemy, kind: 'skill', initialPlayer: INITIAL_STATE.player,
+          seed: 89, now: 1_700_000_000_089,
+      });
+
+      assert.equal(escaped.kind, 'escape');
+      assert.equal(escaped.player.stats.escapes, 1);
+      assert.equal(escaped.player.stats.recentBattles.at(-1)?.result, 'escape');
   });
 
-  test('combatAttack.ts forceEscape 분기가 recentBattles escape record 푸시', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      const idx = source.indexOf('result.forceEscape');
-      const window = source.slice(idx, idx + 1600);
-      assert.match(
-          window,
-          /pushBattleRecord\([^)]+makeBattleRecord\(['"]escape['"]/,
-          'forceEscape branch should push escape battle record (parity with cycle 74)'
-      );
-  });
+  test('일반 escape 성공도 통계·전투 기록을 한 번만 남긴다', async () => {
+      const { resolveCombatActionTurn } = await import('../src/systems/combatActionTurn.js');
+      const { INITIAL_STATE } = await import('../src/reducers/gameReducer.js');
+      const player = structuredClone(INITIAL_STATE.player);
+      const enemy = {
+          name: '훈련용 정령', baseName: '훈련용 정령', level: 1,
+          hp: 100, maxHp: 100, atk: 1, def: 0, exp: 1, gold: 1,
+          pattern: { guardChance: 0, heavyChance: 0 },
+      };
 
-  test('일반 escape 분기 회귀 보존 — stats 처리 그대로', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatAttack.ts');
-      // 일반 escape 분기 (escapeResult.success)가 stats.escapes를 계속 기록한다.
-      const idx = source.indexOf("if (type === 'escape')");
-      assert.ok(idx > -1, 'normal escape branch should exist');
-      const window = source.slice(idx, idx + 2000);
-      assert.match(window, /escapes:\s*\(p\.stats\?\.escapes\s*\|\|\s*0\)\s*\+\s*1/);
+      const escaped = resolveCombatActionTurn({
+          player, enemy, kind: 'escape', initialPlayer: INITIAL_STATE.player,
+          seed: 1, now: 1_700_000_000_001,
+      });
+
+      assert.equal(escaped.kind, 'escape');
+      assert.equal(escaped.player.stats.escapes, 1);
+      assert.equal(escaped.player.stats.recentBattles.length, 1);
   });
 
   test('escape_100 스킬은 여전히 등록됨 (회귀 가드)', async () => {

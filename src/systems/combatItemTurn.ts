@@ -82,6 +82,7 @@ export const resolveCombatItemTurn = ({
     initialPlayer,
     seed,
     now,
+    rng,
 }: {
     player: Player;
     enemy: Monster;
@@ -89,8 +90,9 @@ export const resolveCombatItemTurn = ({
     initialPlayer: Player;
     seed: number;
     now: number;
+    rng?: () => number;
 }): CombatItemTurnResult => {
-    const random = createSeededRandom(seed);
+    const random = rng || createSeededRandom(seed);
     const itemStats = calculateFullStats(player);
     const consumed = consumeItem(player, item, itemStats);
     const turnTick = CombatEngine.tickCombatState(consumed.player);

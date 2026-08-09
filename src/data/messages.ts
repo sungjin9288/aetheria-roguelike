@@ -15,21 +15,21 @@ export const MSG = {
     // cycle 116: COMBAT_ATTACK 제거 — COMBAT_ATTACK_DETAIL이 active.
     COMBAT_ATTACK_DETAIL: (name: string | undefined, dmg: number, cur: number, max: number | undefined, tags: string[]) =>
         `${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
-    COMBAT_ENEMY_HIT: (name: string | undefined, dmg: number) => {
+    COMBAT_ENEMY_HIT: (name: string | undefined, dmg: number, rng: () => number = Math.random) => {
         const variants = [
             `${name}이(가) ${dmg} 피해를 가했습니다.`,
             `${name}의 공격! ${dmg} 피해를 받았습니다.`,
             `${name}에게 가격당했습니다. (${dmg})`,
         ];
-        return variants[Math.floor(Math.random() * variants.length)];
+        return variants[Math.floor(rng() * variants.length)];
     },
-    COMBAT_ENEMY_HEAVY_HIT: (name: string | undefined, dmg: number) => {
+    COMBAT_ENEMY_HEAVY_HIT: (name: string | undefined, dmg: number, rng: () => number = Math.random) => {
         const variants = [
             `${name}의 강타! ${dmg} 피해를 입었습니다.`,
             `${name}이(가) 맹렬하게 공격합니다! ${dmg} 피해!`,
             `강력한 일격! ${name}의 공격에 ${dmg} 피해를 받았습니다.`,
         ];
-        return variants[Math.floor(Math.random() * variants.length)];
+        return variants[Math.floor(rng() * variants.length)];
     },
     COMBAT_ENEMY_GUARD: (name: string | undefined) => `${name}이(가) 방어 자세를 취했습니다.`,
     COMBAT_ENEMY_STUNNED: (name: string | undefined) => `${name}이(가) 기절하여 턴을 잃습니다.`,

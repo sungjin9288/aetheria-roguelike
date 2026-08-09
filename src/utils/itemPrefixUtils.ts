@@ -57,15 +57,16 @@ const applyPrefixStats = (item: Item, prefix: any) => {
     return next;
 };
 
-export const applyItemPrefix = (item: any): any => {
+export const applyItemPrefix = (item: any, rng?: () => number): any => {
+    const random = typeof rng === 'function' ? rng : Math.random;
     if (!item || item.prefixed) return item;
 
-    if (Math.random() >= BALANCE.ITEM_PREFIX_CHANCE) return item;
+    if (random() >= BALANCE.ITEM_PREFIX_CHANCE) return item;
 
     const candidates = getPrefixCandidates(item);
     if (!candidates.length) return item;
 
-    const prefix = candidates[Math.floor(Math.random() * candidates.length)];
+    const prefix = candidates[Math.floor(random() * candidates.length)];
     const withStats = applyPrefixStats(item, prefix);
     const normalizedType = normalizeItemType(withStats.type);
     const statText = formatStatText(withStats, normalizedType);

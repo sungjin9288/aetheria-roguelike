@@ -387,20 +387,20 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 552: 정합성 가드 — production callsite 보존', async () => {
       const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
-      assert.ok(/CombatEngine\.processLoot\(deadEnemy,\s*updatedPlayer,\s*signaturePityMult\)/.test(source),
+      assert.ok(/CombatEngine\.processLoot\([\s\S]{0,220}?deadEnemy,[\s\S]{0,80}?updatedPlayer,[\s\S]{0,80}?signaturePityMult,[\s\S]{0,80}?random,[\s\S]{0,80}?currentTime/.test(source),
           'combatVictory CombatEngine.processLoot callsite 보존');
   });
 
   test('cycle 552: body _processLoot wrapper 보존', async () => {
       const source = await readSrc('src/systems/CombatEngine.ts');
-      assert.ok(/return _processLoot\(enemy,\s*player,\s*signaturePityMult\)/.test(source),
+      assert.ok(/return _processLoot\(enemy,\s*player,\s*signaturePityMult,\s*rng,\s*now\)/.test(source),
           '_processLoot(enemy, player, signaturePityMult) delegate 보존');
   });
 
   test('cycle 552: CombatEngine.loot.ts processLoot 시그니처 보존 (cycle 629 explicit elimination)', async () => {
       const source = await readSrc('src/systems/CombatEngine.loot.ts');
-      assert.ok(/export const processLoot = \(enemy: Monster, player: Player \| null, signaturePityMult: any\)/.test(source),
-          'CombatEngine.loot.ts processLoot 3-arg 시그니처 보존 (cycle 629에서 defaults 제거됨)');
+      assert.ok(/export const processLoot = \([\s\S]{0,220}?enemy:\s*Monster,[\s\S]{0,80}?player:\s*Player \| null,[\s\S]{0,80}?signaturePityMult:\s*any,[\s\S]{0,80}?rng\?:[\s\S]{0,80}?now\?:/.test(source),
+          'CombatEngine.loot.ts canonical args + optional entropy 시그니처 보존');
   });
 
   test('cycle 552: cycle 502-551 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -530,17 +530,17 @@ import { readFile } from 'node:fs/promises';
           'processLoot player default null 제거');
       assert.ok(!/processLoot = \([^)]*signaturePityMult:\s*any\s*=\s*1\.0/.test(source),
           'processLoot signaturePityMult default 1.0 제거');
-      assert.ok(/processLoot = \(enemy:\s*Monster,\s*player:\s*Player\s*\|\s*null,\s*signaturePityMult:\s*any\)/.test(source),
-          'processLoot 3-arg 시그니처 보존 (defaults 없이)');
+      assert.ok(/processLoot = \([\s\S]{0,220}?enemy:\s*Monster,[\s\S]{0,80}?player:\s*Player\s*\|\s*null,[\s\S]{0,80}?signaturePityMult:\s*any,[\s\S]{0,80}?rng\?:[\s\S]{0,80}?now\?:/.test(source),
+          'processLoot canonical args + optional entropy 시그니처 보존');
   });
 
-  test('cycle 629: production callsite 3 args 명시 보존', async () => {
+  test('cycle 629: production callsite가 canonical args와 entropy를 명시', async () => {
       const cv = await readSrc('src/hooks/combatActions/combatVictory.ts');
-      assert.ok(/CombatEngine\.processLoot\(deadEnemy,\s*updatedPlayer,\s*signaturePityMult\)/.test(cv),
-          'combatVictory.ts processLoot 3 args 명시 보존');
+      assert.ok(/CombatEngine\.processLoot\([\s\S]{0,220}?deadEnemy,[\s\S]{0,80}?updatedPlayer,[\s\S]{0,80}?signaturePityMult,[\s\S]{0,80}?random,[\s\S]{0,80}?currentTime/.test(cv),
+          'combatVictory.ts processLoot canonical args + entropy 명시');
       const ce = await readSrc('src/systems/CombatEngine.ts');
-      assert.ok(/_processLoot\(enemy,\s*player,\s*signaturePityMult\)/.test(ce),
-          'CombatEngine wrapper _processLoot 3 args 명시 보존');
+      assert.ok(/_processLoot\(enemy,\s*player,\s*signaturePityMult,\s*rng,\s*now\)/.test(ce),
+          'CombatEngine wrapper _processLoot canonical args + entropy 명시');
   });
 
   test('cycle 629: cycle-171 fixture 3 callers 명시 추가', async () => {

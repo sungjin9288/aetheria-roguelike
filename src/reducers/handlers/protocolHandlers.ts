@@ -23,12 +23,22 @@ export const protocolActionMap = {
         const { type: dpType, amount: rawAmount = 0 } = action.payload || {};
         if (!['kills', 'explores', 'goldSpend'].includes(dpType)) return state;
         const amount = dpType === 'goldSpend' ? Math.max(0, Number(rawAmount) || 0) : 1;
-        const result = advanceDailyProtocol(state.player, dpType, amount);
+        const result = advanceDailyProtocol(
+            state.player,
+            dpType,
+            amount,
+            action.payload?.relicRoll,
+            action.payload?.now,
+        );
 
         return {
             ...state,
             player: result.player,
-            logs: appendRewardLogs(state.logs, getDailyProtocolRewardLogs(result.reward)),
+            logs: appendRewardLogs(
+                state.logs,
+                getDailyProtocolRewardLogs(result.reward),
+                { now: action.payload?.now, seed: action.payload?.logSeed },
+            ),
             syncStatus: 'syncing',
         };
     },
@@ -36,7 +46,11 @@ export const protocolActionMap = {
     // ── Weekly Protocol ───────────────────────────────────────────────────
     UPDATE_WEEKLY_PROTOCOL: (state: GameState, action: GameAction) => {
         const wpType = action.payload?.type;
-        const wp = getCurrentWeeklyProtocol(state.player.weeklyProtocol, new Date());
+        const requestedAt = Number(action.payload?.now);
+        const wp = getCurrentWeeklyProtocol(
+            state.player.weeklyProtocol,
+            Number.isFinite(requestedAt) ? new Date(requestedAt) : new Date(),
+        );
         const key = wpType === 'kills' ? 'kills' : wpType === 'explores' ? 'explores' : wpType === 'bossKills' ? 'bossKills' : null;
         if (!key) return state;
         return {

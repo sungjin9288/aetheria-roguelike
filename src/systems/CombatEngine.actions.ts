@@ -11,7 +11,8 @@ import type { Monster, Player } from '../types/index.js';
  * 호출 시점 바인딩 → 객체 any.
  */
 export const actionMethods: any = {
-    attack(player: Player, enemy: Monster, stats: any) {
+    attack(player: Player, enemy: Monster, stats: any, rng?: () => number) {
+        const random = typeof rng === 'function' ? rng : Math.random;
         // cycle 107: freeze/stun 상태이상 턴 스킵 — 보스 phase 2/3가 부여하는
         // freeze/stun이 player 쪽에서 처리되지 않아 정상 공격되던 회귀 fix.
         // 적의 stunnedTurns 처리와 짝을 이룸 (one-turn effect — status 제거 후 진행).
@@ -30,7 +31,7 @@ export const actionMethods: any = {
 
         // cycle 109: blind 상태이상 — 매 공격마다 BLIND_PLAYER_MISS_CHANCE roll.
         // freeze/stun(1턴 effect)과 달리 status 유지 — 저주해제/purify/휴식까지 지속.
-        if (incomingStatus.includes('blind') && Math.random() < (BALANCE.BLIND_PLAYER_MISS_CHANCE || 0.30)) {
+        if (incomingStatus.includes('blind') && random() < (BALANCE.BLIND_PLAYER_MISS_CHANCE || 0.30)) {
             return {
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
@@ -42,7 +43,7 @@ export const actionMethods: any = {
 
         // cycle 110: fear 상태이상 — flinch 확률(FEAR_PLAYER_FLINCH_CHANCE).
         // blind와 같은 모델이지만 의미는 "두려움에 움츠림"으로 차별화. status 유지.
-        if (incomingStatus.includes('fear') && Math.random() < (BALANCE.FEAR_PLAYER_FLINCH_CHANCE || 0.25)) {
+        if (incomingStatus.includes('fear') && random() < (BALANCE.FEAR_PLAYER_FLINCH_CHANCE || 0.25)) {
             return {
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
@@ -66,6 +67,7 @@ export const actionMethods: any = {
             mult: 1,
             guarding: !!enemy.guarding,
             elementMultiplier,
+            rng: random,
             // cycle 242: stats.critChance dispatch — finalCritChance(equipment / relic / 칭호 /
             //   심연 / 시너지 / killStreak / 트레이트 합산)가 SystemTab에 표시만 되고 실제
             //   attack/skill에는 dispatch 0건이던 dead config fix. 미정의 시 default(0.1) fallback.
@@ -197,7 +199,7 @@ export const actionMethods: any = {
         // cycle 152: 'on_hit_freeze' (frost_anchor) — val 확률로 적 1턴 빙결.
         let postHitEnemy: any = { ...enemy, hp: newEnemyHp, guarding: false };
         const freezeRelic = relics.find((r: any) => r.effect === 'on_hit_freeze');
-        if (freezeRelic && newEnemyHp > 0 && Math.random() < (freezeRelic.val || 0)) {
+        if (freezeRelic && newEnemyHp > 0 && random() < (freezeRelic.val || 0)) {
             postHitEnemy = this.applyStatusEffectToEnemy(postHitEnemy, 'freeze');
             logs.push({ type: 'event', text: `[동결의 닻] ${enemy.name} 빙결!` });
         }
@@ -217,7 +219,8 @@ export const actionMethods: any = {
         };
     },
 
-    performSkill(player: Player, enemy: Monster, stats: any, skill: any) {
+    performSkill(player: Player, enemy: Monster, stats: any, skill: any, rng?: () => number) {
+        const random = typeof rng === 'function' ? rng : Math.random;
         if (!skill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
@@ -239,7 +242,7 @@ export const actionMethods: any = {
         }
 
         // cycle 109: blind miss — attack()와 동일. miss 시 MP 소비 안 됨, status 유지.
-        if (incomingStatusSkill.includes('blind') && Math.random() < (BALANCE.BLIND_PLAYER_MISS_CHANCE || 0.30)) {
+        if (incomingStatusSkill.includes('blind') && random() < (BALANCE.BLIND_PLAYER_MISS_CHANCE || 0.30)) {
             return {
                 success: true,
                 updatedPlayer: { ...player },
@@ -251,7 +254,7 @@ export const actionMethods: any = {
         }
 
         // cycle 110: fear flinch — attack()와 동일. flinch 시 MP 소비 안 됨, status 유지.
-        if (incomingStatusSkill.includes('fear') && Math.random() < (BALANCE.FEAR_PLAYER_FLINCH_CHANCE || 0.25)) {
+        if (incomingStatusSkill.includes('fear') && random() < (BALANCE.FEAR_PLAYER_FLINCH_CHANCE || 0.25)) {
             return {
                 success: true,
                 updatedPlayer: { ...player },
@@ -318,7 +321,7 @@ export const actionMethods: any = {
         const firstFreeAvailable = cdRelicForFree?.val?.firstFree && !playerFlags.firstSkillUsed;
         const actualMpCost = firstFreeAvailable
             ? 0
-            : (freeChance > 0 && Math.random() < freeChance) ? 0 : mpCost;
+            : (freeChance > 0 && random() < freeChance) ? 0 : mpCost;
 
         const skillElem = skill.type || stats.elem;
         const elementMultiplier = this.getElementMultiplier(skillElem, enemy, relics);
@@ -336,6 +339,7 @@ export const actionMethods: any = {
             mult: (skill.mult || 1.5) + skillMultBonus,
             guarding: !!enemy.guarding,
             elementMultiplier,
+            rng: random,
             ...(typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
         });
 
@@ -406,7 +410,7 @@ export const actionMethods: any = {
         // cycle 244: skill.curseTurn override — '지속 저주' branch B (curseTurn 3) 등 cursedTurns 카운터 override.
         //   미정의 시 default 3 (applyStatusEffectToEnemy curse case와 동일). max(prev, curseTurn) 단축 방지.
         const curseTurn = Math.max(1, Math.floor(skill.curseTurn || 3));
-        if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect) && Math.random() < effectChance) {
+        if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect) && random() < effectChance) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
             if (skill.effect === 'stun' || skill.effect === 'freeze') {
                 postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
@@ -419,7 +423,7 @@ export const actionMethods: any = {
             }
         }
         // 분기 선택으로 추가된 2차 상태이상 (effectChance 동일 적용)
-        if (skill.secondEffect && STATUS_EFFECTS_TO_ENEMY.includes(skill.secondEffect) && Math.random() < effectChance) {
+        if (skill.secondEffect && STATUS_EFFECTS_TO_ENEMY.includes(skill.secondEffect) && random() < effectChance) {
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.secondEffect);
             if (skill.secondEffect === 'stun' || skill.secondEffect === 'freeze') {
                 postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
@@ -569,7 +573,7 @@ export const actionMethods: any = {
             s.bonus.effect === 'time_master' || s.bonus.effect === 'time_dominator'
             || s.bonus.extraTurnChance || s.bonus.extraAction);
         const extraChance = (timeMasterSyn?.bonus.extraTurnChance || timeMasterSyn?.bonus.extraAction || 0);
-        if (timeMasterSyn && !updatedPlayer.extraTurnGranted && Math.random() < extraChance) {
+        if (timeMasterSyn && !updatedPlayer.extraTurnGranted && random() < extraChance) {
             updatedPlayer.extraTurnGranted = true;
             logs.push({ type: 'event', text: `[시간 지배자] 시간이 멈춥니다 — 추가 행동!` });
         }

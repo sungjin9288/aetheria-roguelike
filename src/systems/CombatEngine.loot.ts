@@ -30,7 +30,15 @@ export const resolveEnemyBaseName = (enemy: Monster) => {
  * @param {number} [signaturePityMult=1.0] - signature 드롭에만 적용되는 pity 배율
  * @returns {{ items: Object[], logs: Object[] }}
  */
-export const processLoot = (enemy: Monster, player: Player | null, signaturePityMult: any) => {
+export const processLoot = (
+    enemy: Monster,
+    player: Player | null,
+    signaturePityMult: any,
+    rng?: () => number,
+    now?: () => number,
+) => {
+    const random = typeof rng === 'function' ? rng : Math.random;
+    const currentTime = typeof now === 'function' ? now : Date.now;
     const items: any[] = [];
     const logs: any[] = [];
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
@@ -49,9 +57,9 @@ export const processLoot = (enemy: Monster, player: Player | null, signaturePity
         const rareTier = inferredLvl >= 50 ? 6 : inferredLvl >= 40 ? 5 : 4;
         const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === rareTier);
         if (pool.length > 0) {
-            const picked = pool[Math.floor(Math.random() * pool.length)];
-            const baseItem = { ...picked, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
-            const newItem = applyItemPrefix(baseItem);
+            const picked = pool[Math.floor(random() * pool.length)];
+            const baseItem = { ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+            const newItem = applyItemPrefix(baseItem, random);
             items.push(newItem);
             logs.push({ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name) });
             if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
@@ -66,13 +74,13 @@ export const processLoot = (enemy: Monster, player: Player | null, signaturePity
             const isSignature = Boolean(SIGNATURE_ITEM_REGISTRY[entry.item]);
             const entryPityMult = isSignature ? pityMult : 1;
             const chance = Math.min(1, entry.rate * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult * entryPityMult);
-            if (Math.random() < chance) {
+            if (random() < chance) {
                 const itemData = allItems.find((i: any) => i.name === entry.item);
                 if (!itemData) return;
-                const qty = entry.qty ? (entry.qty[0] + Math.floor(Math.random() * (entry.qty[1] - entry.qty[0] + 1))) : 1;
+                const qty = entry.qty ? (entry.qty[0] + Math.floor(random() * (entry.qty[1] - entry.qty[0] + 1))) : 1;
                 for (let q = 0; q < qty; q++) {
-                    const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
-                    const newItem = applyItemPrefix(baseItem);
+                    const baseItem = { ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                    const newItem = applyItemPrefix(baseItem, random);
                     items.push(newItem);
                     logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
                     if (newItem.prefixed) {
@@ -91,12 +99,12 @@ export const processLoot = (enemy: Monster, player: Player | null, signaturePity
     if (lootList && lootList.length > 0) {
         lootList.forEach((itemName: any) => {
             const chance = Math.min(1, BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
-            if (Math.random() < chance) {
+            if (random() < chance) {
                 const itemData = allItems.find((i: any) => i.name === itemName);
                 if (!itemData) return;
 
-                const baseItem = { ...itemData, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
-                const newItem = applyItemPrefix(baseItem);
+                const baseItem = { ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                const newItem = applyItemPrefix(baseItem, random);
                 items.push(newItem);
                 logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
                 if (newItem.prefixed) {
@@ -111,12 +119,12 @@ export const processLoot = (enemy: Monster, player: Player | null, signaturePity
     if (inferredLevel >= BALANCE.LOOT_BONUS_MIN_LEVEL) {
         const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
-        if (Math.random() < bonusChance * dropRateMult * bossDropMult) {
+        if (random() < bonusChance * dropRateMult * bossDropMult) {
             const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
-                const picked = tierPool[Math.floor(Math.random() * tierPool.length)];
-                const baseItem = { ...picked, id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` };
-                const newItem = applyItemPrefix(baseItem);
+                const picked = tierPool[Math.floor(random() * tierPool.length)];
+                const baseItem = { ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                const newItem = applyItemPrefix(baseItem, random);
                 items.push(newItem);
                 logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
                 if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
