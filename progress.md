@@ -1,3 +1,19 @@
+Done (2026-08-09: Task 4 reproducible equipment-art pipeline readiness):
+- Added a deterministic 233-row equipment catalog dump with explicit Unicode code-point sorting, current runtime paths, pure family/signature cohort mapping, and live totals of armor 83, offhand/headgear 22, signature mythic 25, weapon core 44, and weapon ranged/magic 59.
+- Replaced the legacy generator's fixed temporary catalog dependency with explicit input/output arguments and a genuine no-write dry run, while retaining all Task 2 manifest metadata when generated entries are replaced.
+- Added fixed-order six-identity 2x3 prompt batches using the Art Bible family, Tier, and element language; the matching processor fail-closes on a mismatched declared identity list before writes, normalizes transparent 160x160 cells, and records stable source/export hashes only in the caller-selected provenance ledger.
+
+Verification:
+- TDD reproduced the absent catalog dump/processor and fixed `/tmp` legacy dependency, then passed catalog, generator, prompt, processor, declaration mismatch, transparent-normalization, provenance, and dry-run/no-write contracts. Focused pipeline plus current item-visual coverage is GREEN `27/27`.
+- The ignored `output/equipment-catalog.json` dump produced 233 rows. The explicit legacy generator dry run validated all 233 rows and left both requested output and manifest targets absent.
+- `npm run type-check`, `npm run lint`, and `npm run verify` are GREEN; the final unit suite is `3512/3512` with build guard.
+
+Scope:
+- This is pipeline readiness only. No runtime equipment PNG, character asset, source sheet, provenance record, `build/` artifact, styleVersion 2 closure, or approved full `art:verify` report was created.
+
+Next action:
+- Continue Task 5 visual equipment-family execution using the declared pipeline; retain the accepted character lineage and this Task 4 no-repaint boundary.
+
 Done (2026-08-09: canonical 18-job character art and Job Change portrait integration):
 - Generated and curated one lineage-coherent master for every live job from the manifest/design-bible prompt contract. Deterministic edge-connected cleanup converted opaque checkerboard working outputs to true-alpha tracked masters without accepting opaque source files.
 - Normalized 18 unique runtime exports to 768x768, maximum 600x630 opaque bounds, centered margin, and shared foot baseline y=708. Known jobs now resolve to their first-and-only canonical manifest path; Adventurer is only the unknown-job fallback.
@@ -10,7 +26,7 @@ Verification:
 - Equipment art Tasks 4–8 and approved full-surface `npm run art:verify` remain separate; this checkpoint does not mark them complete.
 
 Next action:
-- Continue Task 4 equipment-family art without changing the accepted character source lineage or the closed Task 3 blind record.
+- Task 4 pipeline readiness is recorded above; continue the next visual equipment-family task without changing the accepted character source lineage or the closed Task 3 blind record.
 
 Checkpoint (2026-08-09: reproducible art catalog and contract baseline, independent-review fixes):
 - Added a deterministic `buildArtCatalog` for the live 18-class / 233-equipment inventory (`weapon 119`, `armor 93`, `shield 21`, 22 defined families, 18 used families, 8 elements) with explicit Unicode code-point sorting, catalog SHA-256 `79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6`, and duplicate/missing-family rejection. The live hash is unchanged because current rows already share the same order.

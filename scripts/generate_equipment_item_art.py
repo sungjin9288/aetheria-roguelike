@@ -1,23 +1,8 @@
-"""Slice 26: 일반 장비 전수(~229종) 아이템별 고유 픽셀 아트 생성.
+"""Generate reproducible per-item equipment art from an explicit catalog."""
 
-문제: 일반 장비 229종이 family PNG 22장을 공유 — '수련생의 검'과
-'강철 롱소드'가 완전히 같은 그림이라 상점/인벤이 미완성처럼 보였다.
-
-기법 (시그니처 생성기와 동일 엔진):
-- base = 해당 아이템의 family 실루엣 (등급/타입 인지 가능성 유지)
-- 톤 = elem → artPalette tone (화염→fire, 빛→holy ...), 무속성은 tier 사다리
-  (1 rust → 2-3 steel → 4 earth → 5 holy → 6 arcane)
-- 이름 시드 결정론 jitter(hue ±0.05, sat ±) — 같은 톤·실루엣끼리도 구분
-- tier 4+ 스파클, 5+ 옅은 오라 — 상위 티어 신호 (시그니처 오라보다 약하게)
-
-출력: public/assets/equipment-exact/auto/auto-<sha1 12>.png +
-src/data/equipmentArtManifest.json (이름 → 경로 매니페스트, itemVisuals가 읽음).
-
-입력 카탈로그는 node로 덤프:
-  node --import tsx scripts/dump-equipment-catalog.mjs  (또는 /tmp 경유)
-"""
 from __future__ import annotations
 
+import argparse
 import colorsys
 import hashlib
 import json
@@ -34,11 +19,11 @@ from generate_signature_pixel_art import (  # noqa: E402
     seed_rng,
 )
 
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FAMILY_DIR = REPO_ROOT / "public" / "assets" / "equipment-family" / "items"
 OUTPUT_DIR = REPO_ROOT / "public" / "assets" / "equipment-exact" / "auto"
 MANIFEST = REPO_ROOT / "src" / "data" / "equipmentArtManifest.json"
-CATALOG = Path("/tmp/equipment-catalog.json")
 
 CANVAS = 160
 CONTRACT_METADATA_KEYS = ("$comment", "version", "catalogSha256", "styleVersion", "art")
@@ -58,31 +43,31 @@ TONE_BY_TIER = {1: "rust", 2: "steel", 3: "steel", 4: "earth", 5: "holy", 6: "ar
 
 
 def jittered_hue_shift(image: Image.Image, target_rgb, rng) -> Image.Image:
-    """시그니처 hue_shift와 동일 3분기 + 이름 시드 jitter."""
-    th, ts, tv = colorsys.rgb_to_hsv(*(c / 255.0 for c in target_rgb))
+    """Preserve material value while applying deterministic item-specific hue jitter."""
+    th, ts, _ = colorsys.rgb_to_hsv(*(channel / 255.0 for channel in target_rgb))
     th = (th + (rng() - 0.5) * 0.1) % 1.0
     sat_scale = 0.9 + rng() * 0.3
     out = image.copy()
-    px = out.load()
+    pixels = out.load()
     for y in range(out.height):
         for x in range(out.width):
-            r, g, b, a = px[x, y]
-            if a == 0:
+            red, green, blue, alpha = pixels[x, y]
+            if alpha == 0:
                 continue
-            h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
-            if s > 0.08:
-                dh = ((th - h + 0.5) % 1.0) - 0.5
-                nh = (h + dh * 0.9) % 1.0
-                ns = min(1.0, (s * 0.82 + ts * 0.3) * sat_scale)
-                nv = v
-            elif v > 0.35:
-                nh = th
-                ns = min(1.0, ts * 0.4 * v * sat_scale)
-                nv = v
+            hue, saturation, value = colorsys.rgb_to_hsv(red / 255.0, green / 255.0, blue / 255.0)
+            if saturation > 0.08:
+                hue_delta = ((th - hue + 0.5) % 1.0) - 0.5
+                next_hue = (hue + hue_delta * 0.9) % 1.0
+                next_saturation = min(1.0, (saturation * 0.82 + ts * 0.3) * sat_scale)
+                next_value = value
+            elif value > 0.35:
+                next_hue = th
+                next_saturation = min(1.0, ts * 0.4 * value * sat_scale)
+                next_value = value
             else:
-                nh, ns, nv = h, s, v
-            nr, ng, nb = colorsys.hsv_to_rgb(nh, ns, nv)
-            px[x, y] = (int(nr * 255), int(ng * 255), int(nb * 255), a)
+                next_hue, next_saturation, next_value = hue, saturation, value
+            next_red, next_green, next_blue = colorsys.hsv_to_rgb(next_hue, next_saturation, next_value)
+            pixels[x, y] = (int(next_red * 255), int(next_green * 255), int(next_blue * 255), alpha)
     return out
 
 
@@ -90,30 +75,71 @@ def art_slug(name: str) -> str:
     return "auto-" + hashlib.sha1(name.encode("utf-8")).hexdigest()[:12]
 
 
+def require_file(path: Path) -> Path:
+    resolved = path.expanduser().resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(f"Missing input path: {resolved}")
+    return resolved
+
+
+def require_directory(path: Path) -> Path:
+    resolved = path.expanduser().resolve()
+    if not resolved.is_dir():
+        raise FileNotFoundError(f"Missing input path: {resolved}")
+    return resolved
+
+
+def load_contract_metadata(contract_source: Path) -> dict:
+    source_path = require_file(contract_source)
+    source = json.loads(source_path.read_text(encoding="utf-8"))
+    missing = [key for key in CONTRACT_METADATA_KEYS if key not in source]
+    if missing:
+        raise ValueError(f"Missing art contract metadata: {', '.join(missing)}")
+    return source
+
+
 def write_manifest(
     entries: dict[str, str],
     manifest_path: Path = MANIFEST,
     contract_source: Path = MANIFEST,
 ) -> None:
-    """Replace generated entry values without discarding the art contract."""
-    source = json.loads(contract_source.read_text(encoding="utf-8"))
-    missing = [key for key in CONTRACT_METADATA_KEYS if key not in source]
-    if missing:
-        raise ValueError(f"Missing art contract metadata: {', '.join(missing)}")
-
+    """Replace generated entries while retaining all Task 2 contract metadata."""
+    source = load_contract_metadata(contract_source)
     manifest = {
-        **{key: source[key] for key in CONTRACT_METADATA_KEYS},
+        **{key: value for key, value in source.items() if key != "entries"},
         "entries": dict(sorted(entries.items())),
     }
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    destination = manifest_path.expanduser().resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
-def build_item(entry: dict, palettes) -> Image.Image:
-    base = Image.open(FAMILY_DIR / f"{entry['familyKey']}.png").convert("RGBA")
-    bbox = base.getchannel("A").getbbox()
-    if bbox:
-        base = base.crop(bbox)
+def load_catalog(path: Path, source_dir: Path) -> list[dict]:
+    catalog_path = require_file(path)
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    if not isinstance(catalog, list):
+        raise ValueError(f"Catalog must be a JSON array: {catalog_path}")
+
+    rows: list[dict] = []
+    for entry in catalog:
+        if not isinstance(entry, dict):
+            raise ValueError(f"Catalog entry must be an object: {catalog_path}")
+        name = entry.get("name")
+        family_key = entry.get("familyKey")
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"Catalog entry is missing a name: {catalog_path}")
+        if not isinstance(family_key, str) or not family_key:
+            raise ValueError(f"Catalog entry is missing familyKey: {name}")
+        require_file(source_dir / f"{family_key}.png")
+        rows.append(entry)
+    return rows
+
+
+def build_item(entry: dict, palettes, source_dir: Path = FAMILY_DIR) -> Image.Image:
+    base = Image.open(source_dir / f"{entry['familyKey']}.png").convert("RGBA")
+    bounds = base.getchannel("A").getbbox()
+    if bounds:
+        base = base.crop(bounds)
 
     tier = int(entry.get("tier") or 1)
     tone_key = TONE_BY_ELEM.get(entry.get("elem") or "", TONE_BY_TIER.get(tier, "steel"))
@@ -121,34 +147,58 @@ def build_item(entry: dict, palettes) -> Image.Image:
     rng = seed_rng(entry["name"])
 
     sprite = jittered_hue_shift(base, tone["mid"], rng)
-    sprite.thumbnail((132, 132), Image.NEAREST)
-    pos = ((CANVAS - sprite.width) // 2, (CANVAS - sprite.height) // 2)
+    sprite.thumbnail((132, 132), Image.Resampling.NEAREST)
+    position = ((CANVAS - sprite.width) // 2, (CANVAS - sprite.height) // 2)
 
     canvas = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
     if tier >= 5:
-        add_aura(canvas, sprite, pos, tone["trim"])
-    canvas.alpha_composite(sprite, pos)
+        add_aura(canvas, sprite, position, tone["trim"])
+    canvas.alpha_composite(sprite, position)
     if tier >= 4:
         add_sparkles(canvas, rng, tone["trim"], count=min(4, tier - 2))
     return canvas
 
 
-def main() -> None:
-    catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
-    palettes = load_palettes()
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate per-item equipment art from an explicit catalog.")
+    parser.add_argument("--catalog", required=True, type=Path)
+    parser.add_argument("--source-dir", required=True, type=Path)
+    parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--manifest", required=True, type=Path)
+    parser.add_argument("--dry-run", action="store_true")
+    return parser.parse_args(argv)
 
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
+    source_dir = require_directory(args.source_dir)
+    catalog = load_catalog(args.catalog, source_dir)
+    manifest_path = args.manifest.expanduser().resolve()
+    contract_source = manifest_path if manifest_path.is_file() else MANIFEST
+    load_contract_metadata(contract_source)
+
+    if args.dry_run:
+        print(f"dry run: validated {len(catalog)} equipment catalog rows")
+        return
+
+    output_dir = args.output_dir.expanduser().resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    palettes = load_palettes()
     entries: dict[str, str] = {}
     for entry in catalog:
         slug = art_slug(entry["name"])
-        image = build_item(entry, palettes)
-        image.save(OUTPUT_DIR / f"{slug}.png")
+        image = build_item(entry, palettes, source_dir)
+        image.save(output_dir / f"{slug}.png")
         entries[entry["name"]] = f"auto/{slug}"
 
-    write_manifest(entries)
-    print(f"{len(entries)} item arts generated → {OUTPUT_DIR}")
-    print(f"manifest → {MANIFEST}")
+    write_manifest(entries, manifest_path, contract_source)
+    print(f"{len(entries)} item arts generated → {output_dir}")
+    print(f"manifest → {manifest_path}")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (FileNotFoundError, ValueError, OSError, json.JSONDecodeError) as error:
+        print(error, file=sys.stderr)
+        raise SystemExit(1) from error

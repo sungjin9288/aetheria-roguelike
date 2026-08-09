@@ -34,6 +34,26 @@
    "weapon-whip": { "runtimePath": "/assets/equipment-family/items/weapon-whip.png", "styleVersion": 1 }
   }
  },
+ "pipeline": {
+  "version": 1,
+  "catalog": {
+   "rowFields": ["name", "type", "tier", "elem", "familyKey", "runtimePath", "cohort"],
+   "sort": "unicode-code-point"
+  },
+  "batch": {
+   "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": ["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"]
+   },
+   "identityDeclaration": "identityNames"
+  },
+  "provenance": {
+   "version": 1,
+   "sourceRoot": "scripts/art_sources/equipment/v2",
+   "recordPath": "docs/evidence/art/equipment-provenance.json"
+  }
+ },
  "entries": {
   "가죽 갑옷": "auto/auto-bd28001bebfa",
   "가죽 장화": "auto/auto-d292a43f2b89",

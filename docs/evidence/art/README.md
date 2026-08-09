@@ -22,6 +22,26 @@ This directory records reproducible art-contract evidence. Task 3 completes the 
 - Defined illustration families: `22`; used by the current catalog: `18`
 - Elements: `냉기`, `대지`, `바람`, `빛`, `어둠`, `에테르`, `자연`, `화염`
 
+## Task 4 equipment pipeline readiness
+
+- `scripts/dump-equipment-catalog.mjs` emits the live, Unicode-code-point-sorted 233-row catalog with the exact row fields `name`, `type`, `tier`, `elem`, `familyKey`, `runtimePath`, and `cohort`. The current deterministic cohort totals are `armor 83`, `offhand-headgear 22`, `signature-mythic 25`, `weapon-core 44`, and `weapon-ranged-magic 59`.
+- `scripts/generate_equipment_item_art.py` now accepts only explicit `--catalog`, `--source-dir`, `--output-dir`, and `--manifest` inputs. Its `--dry-run` validates those inputs without creating either output target, and a normal legacy generation preserves every top-level manifest metadata field while replacing only generated entries.
+- `scripts/generate_equipment_art_prompts.mjs` creates one declared, cohort-consistent six-identity source request at a time. It fixes the 2x3 row-major order to `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right` and includes family, Tier, and element language from the Art Bible.
+- `scripts/process_equipment_art_batch.py` verifies the matching six-name source declaration before any write, crops the fixed cells, normalizes transparent exports to `160x160` current runtime paths, and appends stable source/export SHA-256 provenance. Its `--dry-run` performs the same validation without creating exports or provenance.
+
+Typical readiness flow (all output paths are caller-chosen):
+
+```sh
+node --import tsx scripts/dump-equipment-catalog.mjs --output output/equipment-catalog.json
+node --import tsx scripts/generate_equipment_art_prompts.mjs --catalog output/equipment-catalog.json --batch-id equipment-v2-001 --names 'name-1,name-2,name-3,name-4,name-5,name-6' --output output/equipment-v2-001.json
+python3 scripts/process_equipment_art_batch.py --batch output/equipment-v2-001.json --source-sheet /chosen/source-sheet.png --source-declaration /chosen/source-declaration.json --public-root /chosen/public-root --equipment-manifest src/data/equipmentArtManifest.json --provenance /chosen/equipment-provenance.json --dry-run
+```
+
+This is pipeline readiness only: no Task 4 source sheet, runtime equipment PNG, `equipment-provenance.json`, style-version closure, or full equipment visual approval has been claimed or written by this checkpoint.
+
+- `node --import tsx --test tests/equipment-art-pipeline.test.js tests/item-visuals.test.js` — GREEN (`27/27`).
+- `npm run type-check`, `npm run lint`, and `npm run verify` — GREEN (`npm run verify`: unit `3512/3512` and build guard).
+
 ## Contract verification
 
 - The catalog and report use an explicit Unicode code-point comparator rather than ICU collation. The current live order preserves the SHA-256 above across Node environments.
