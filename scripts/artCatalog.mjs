@@ -9,8 +9,27 @@ import { getEquipmentIllustrationFamilyKey } from '../src/utils/itemVisuals.ts';
 const EQUIPMENT_TYPES = new Set(['weapon', 'armor', 'shield']);
 const FAMILY_ITEMS_DIRECTORY = new URL('../public/assets/equipment-family/items/', import.meta.url);
 
-const byName = (left, right) => left.name.localeCompare(right.name, 'ko');
-const byValue = (left, right) => left.localeCompare(right, 'ko');
+export const compareCodePoints = (left, right) => {
+    const leftText = String(left);
+    const rightText = String(right);
+    let leftIndex = 0;
+    let rightIndex = 0;
+
+    while (leftIndex < leftText.length && rightIndex < rightText.length) {
+        const leftCodePoint = leftText.codePointAt(leftIndex);
+        const rightCodePoint = rightText.codePointAt(rightIndex);
+        if (leftCodePoint !== rightCodePoint) return leftCodePoint < rightCodePoint ? -1 : 1;
+        leftIndex += leftCodePoint > 0xffff ? 2 : 1;
+        rightIndex += rightCodePoint > 0xffff ? 2 : 1;
+    }
+
+    return leftIndex === leftText.length && rightIndex === rightText.length
+        ? 0
+        : leftIndex === leftText.length ? -1 : 1;
+};
+
+const byName = (left, right) => compareCodePoints(left.name, right.name);
+const byValue = compareCodePoints;
 
 const assertUniqueNames = (entries, label) => {
     const names = new Set();

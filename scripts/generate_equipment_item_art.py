@@ -41,6 +41,7 @@ MANIFEST = REPO_ROOT / "src" / "data" / "equipmentArtManifest.json"
 CATALOG = Path("/tmp/equipment-catalog.json")
 
 CANVAS = 160
+CONTRACT_METADATA_KEYS = ("$comment", "version", "catalogSha256", "styleVersion", "art")
 
 TONE_BY_ELEM = {
     "화염": "fire",
@@ -89,6 +90,25 @@ def art_slug(name: str) -> str:
     return "auto-" + hashlib.sha1(name.encode("utf-8")).hexdigest()[:12]
 
 
+def write_manifest(
+    entries: dict[str, str],
+    manifest_path: Path = MANIFEST,
+    contract_source: Path = MANIFEST,
+) -> None:
+    """Replace generated entry values without discarding the art contract."""
+    source = json.loads(contract_source.read_text(encoding="utf-8"))
+    missing = [key for key in CONTRACT_METADATA_KEYS if key not in source]
+    if missing:
+        raise ValueError(f"Missing art contract metadata: {', '.join(missing)}")
+
+    manifest = {
+        **{key: source[key] for key in CONTRACT_METADATA_KEYS},
+        "entries": dict(sorted(entries.items())),
+    }
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
 def build_item(entry: dict, palettes) -> Image.Image:
     base = Image.open(FAMILY_DIR / f"{entry['familyKey']}.png").convert("RGBA")
     bbox = base.getchannel("A").getbbox()
@@ -125,12 +145,7 @@ def main() -> None:
         image.save(OUTPUT_DIR / f"{slug}.png")
         entries[entry["name"]] = f"auto/{slug}"
 
-    manifest = {
-        "$comment": "slice 26: 장비 아이템별 고유 아트 매니페스트 — scripts/generate_equipment_item_art.py가 생성. 수동 편집 금지.",
-        "version": 1,
-        "entries": dict(sorted(entries.items())),
-    }
-    MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    write_manifest(entries)
     print(f"{len(entries)} item arts generated → {OUTPUT_DIR}")
     print(f"manifest → {MANIFEST}")
 

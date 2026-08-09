@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import warnings
 from pathlib import Path
 
 from PIL import Image
@@ -18,7 +19,13 @@ def inspect_png(path: Path, margin: int, foot_baseline: int | None) -> dict[str,
 
     alpha = image.getchannel("A")
     bounds = alpha.getbbox()
-    transparent_pixels = any(value == 0 for value in alpha.getdata())
+    try:
+        alpha_values = alpha.get_flattened_data()
+    except AttributeError:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            alpha_values = alpha.getdata()
+    transparent_pixels = any(value == 0 for value in alpha_values)
 
     opaque_bounds = None
     bounds_within_margin = False

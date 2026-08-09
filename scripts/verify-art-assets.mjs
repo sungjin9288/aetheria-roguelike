@@ -4,7 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildArtCatalog } from './artCatalog.mjs';
+import { buildArtCatalog, compareCodePoints } from './artCatalog.mjs';
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const REPO_ROOT = dirname(fileURLToPath(new URL('../package.json', import.meta.url)));
@@ -13,7 +13,7 @@ const DEFAULT_EQUIPMENT_MANIFEST = resolve(REPO_ROOT, 'src/data/equipmentArtMani
 const DEFAULT_INSPECTOR = resolve(REPO_ROOT, 'scripts/inspect_art_pixels.py');
 const DEFAULT_PUBLIC_ROOT = resolve(REPO_ROOT, 'public');
 
-const byValue = (left, right) => left.localeCompare(right, 'ko');
+const byValue = compareCodePoints;
 const sortValues = (values) => [...new Set(values)].sort(byValue);
 
 const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'));
@@ -182,8 +182,16 @@ export const verifyArtAssets = async ({
     const resolvedCharacterManifest = characterManifest || await readJson(characterManifestPath);
     const resolvedEquipmentManifest = equipmentManifest || await readJson(equipmentManifestPath);
     const resolvedInspectorPath = inspectorPath instanceof URL ? fileURLToPath(inspectorPath) : inspectorPath;
+    const verifyCharacters = scope === 'all' || scope === 'characters';
+    const verifyEquipment = scope === 'all' || scope === 'equipment';
+    const verifiedSurfaces = Object.freeze([
+        ...(verifyCharacters ? ['characters'] : []),
+        ...(verifyEquipment ? ['equipment'] : []),
+    ]);
     const report = {
         ok: false,
+        scope,
+        verifiedSurfaces,
         catalogSha256: resolvedCatalog.catalogSha256,
         counts: {
             classes: resolvedCatalog.classes.length,
@@ -200,11 +208,14 @@ export const verifyArtAssets = async ({
         invalidStyleVersion: [],
         exports: [],
     };
+    Object.defineProperties(report, {
+        scope: { value: scope, enumerable: true, writable: false, configurable: false },
+        verifiedSurfaces: { value: verifiedSurfaces, enumerable: true, writable: false, configurable: false },
+    });
 
-    const verifyCharacters = scope === 'all' || scope === 'characters';
-    const verifyEquipment = scope === 'all' || scope === 'equipment';
     const characterEntries = resolvedCharacterManifest?.entries || {};
     const equipmentEntries = resolvedEquipmentManifest?.entries || {};
+    const selectedAssets = [];
 
     if (verifyCharacters) {
         addSetDifference({
@@ -221,24 +232,11 @@ export const verifyArtAssets = async ({
         if (!metadata) {
             report.missing.push('character:art metadata');
         } else {
-            const assets = Object.entries(characterEntries).map(([name, entry]) => ({
+            selectedAssets.push(...Object.entries(characterEntries).map(([name, entry]) => ({
                 identity: `character:${name}`,
                 runtimePath: entry?.runtimePath,
-            }));
-            addDuplicateRuntimePaths(assets, report.duplicates);
-            for (const asset of assets) {
-                await validateAsset({
-                    ...asset,
-                    metadata,
-                    publicRoot,
-                    inspectorPath: resolvedInspectorPath,
-                    pythonCommand,
-                    invalidPng: report.invalidPng,
-                    invalidAlpha: report.invalidAlpha,
-                    invalidBounds: report.invalidBounds,
-                    exports: report.exports,
-                });
-            }
+                metadata,
+            })));
         }
     }
 
@@ -260,31 +258,32 @@ export const verifyArtAssets = async ({
         if (!metadata) {
             report.missing.push('equipment:art metadata');
         } else {
-            const assets = Object.entries(equipmentEntries).map(([name, entry]) => ({
+            selectedAssets.push(...Object.entries(equipmentEntries).map(([name, entry]) => ({
                 identity: `equipment:${name}`,
                 runtimePath: getEquipmentRuntimePath(entry),
-            }));
-            addDuplicateRuntimePaths(assets, report.duplicates);
-            for (const asset of assets) {
-                await validateAsset({
-                    ...asset,
-                    metadata,
-                    publicRoot,
-                    inspectorPath: resolvedInspectorPath,
-                    pythonCommand,
-                    invalidPng: report.invalidPng,
-                    invalidAlpha: report.invalidAlpha,
-                    invalidBounds: report.invalidBounds,
-                    exports: report.exports,
-                });
-            }
+                metadata,
+            })));
         }
+    }
+
+    addDuplicateRuntimePaths(selectedAssets, report.duplicates);
+    for (const asset of selectedAssets) {
+        await validateAsset({
+            ...asset,
+            publicRoot,
+            inspectorPath: resolvedInspectorPath,
+            pythonCommand,
+            invalidPng: report.invalidPng,
+            invalidAlpha: report.invalidAlpha,
+            invalidBounds: report.invalidBounds,
+            exports: report.exports,
+        });
     }
 
     for (const key of ['missing', 'extra', 'duplicates', 'invalidPng', 'invalidAlpha', 'invalidBounds', 'invalidStyleVersion']) {
         report[key] = sortValues(report[key]);
     }
-    report.exports.sort((left, right) => left.identity.localeCompare(right.identity, 'ko') || left.path.localeCompare(right.path));
+    report.exports.sort((left, right) => compareCodePoints(left.identity, right.identity) || compareCodePoints(left.path, right.path));
     report.ok = !report.missing.length
         && !report.extra.length
         && !report.duplicates.length
@@ -297,6 +296,9 @@ export const verifyArtAssets = async ({
 
 export const writeArtVerificationReport = async (report, path) => {
     if (!report.ok) throw new Error('Refusing to write failing art verification as approved evidence');
+    if (report.scope !== 'all' || report.verifiedSurfaces?.join(',') !== 'characters,equipment') {
+        throw new Error('Refusing to write partial-scope art verification as approved evidence');
+    }
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 };
@@ -305,15 +307,22 @@ const parseCli = (args) => {
     const options = {};
     for (let index = 0; index < args.length; index += 1) {
         const argument = args[index];
-        if (argument === '--scope') {
-            options.scope = args[index + 1];
-            index += 1;
-        } else if (argument === '--write-report') {
-            options.writeReport = args[index + 1];
-            index += 1;
-        } else {
-            throw new Error(`Unknown art verifier argument: ${argument}`);
+        const optionName = {
+            '--scope': 'scope',
+            '--write-report': 'writeReport',
+            '--character-manifest': 'characterManifestPath',
+            '--equipment-manifest': 'equipmentManifestPath',
+            '--public-root': 'publicRoot',
+        }[argument];
+        if (!optionName) throw new Error(`Unknown art verifier argument: ${argument}`);
+
+        const value = args[index + 1];
+        if (!value || value.startsWith('--')) throw new Error(`Missing value for ${argument}`);
+        if (argument === '--scope' && !['all', 'characters', 'equipment'].includes(value)) {
+            throw new Error(`Invalid value for --scope: ${value}`);
         }
+        options[optionName] = value;
+        index += 1;
     }
     return options;
 };
@@ -323,16 +332,17 @@ const isCli = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(impo
 if (isCli) {
     try {
         const options = parseCli(process.argv.slice(2));
-        const report = await verifyArtAssets({ scope: options.scope || 'all' });
+        const report = await verifyArtAssets({
+            scope: options.scope || 'all',
+            ...(options.characterManifestPath ? { characterManifestPath: resolve(options.characterManifestPath) } : {}),
+            ...(options.equipmentManifestPath ? { equipmentManifestPath: resolve(options.equipmentManifestPath) } : {}),
+            ...(options.publicRoot ? { publicRoot: resolve(options.publicRoot) } : {}),
+        });
         process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
         if (options.writeReport) {
-            if (!report.ok) {
-                process.stderr.write('Refusing to write failing art verification as approved evidence\n');
-            } else {
-                await writeArtVerificationReport(report, resolve(options.writeReport));
-            }
+            await writeArtVerificationReport(report, resolve(options.writeReport));
         }
-        if (!report.ok || (options.writeReport && !report.ok)) process.exitCode = 1;
+        if (!report.ok) process.exitCode = 1;
     } catch (error) {
         process.stderr.write(`${error.message}\n`);
         process.exitCode = 1;

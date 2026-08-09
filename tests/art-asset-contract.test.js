@@ -1,15 +1,22 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
 
 import { buildArtCatalog } from '../scripts/artCatalog.mjs';
 import { verifyArtAssets, writeArtVerificationReport } from '../scripts/verify-art-assets.mjs';
 
 const FIXTURE_CATALOG_SHA256 = 'a'.repeat(64);
+const LIVE_CATALOG_SHA256 = '79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6';
+const VERIFY_ART_ASSETS_SCRIPT = fileURLToPath(new URL('../scripts/verify-art-assets.mjs', import.meta.url));
+const PIXEL_INSPECTOR_SCRIPT = fileURLToPath(new URL('../scripts/inspect_art_pixels.py', import.meta.url));
+const EQUIPMENT_GENERATOR_SCRIPT = fileURLToPath(new URL('../scripts/generate_equipment_item_art.py', import.meta.url));
+const EQUIPMENT_MANIFEST_PATH = fileURLToPath(new URL('../src/data/equipmentArtManifest.json', import.meta.url));
 
 const crc32 = (buffer) => {
     let crc = 0xffffffff;
@@ -113,6 +120,54 @@ const verifyFixture = async (options) => verifyArtAssets({
     inspectorPath: new URL('../scripts/inspect_art_pixels.py', import.meta.url),
 });
 
+const runArtVerifierCli = (args) => spawnSync(process.execPath, ['--import', 'tsx', VERIFY_ART_ASSETS_SCRIPT, ...args], {
+    encoding: 'utf8',
+});
+
+const createCliScopeFixture = async () => {
+    const catalog = await buildArtCatalog();
+    const publicRoot = await mkdtemp(join(tmpdir(), 'aetheria-art-cli-'));
+    const characterEntries = {};
+    for (const [index, entry] of catalog.classes.entries()) {
+        const slug = `class-${index + 1}`;
+        const runtimePath = `/assets/avatars/canonical/${slug}.png`;
+        characterEntries[entry.name] = { slug, runtimePath };
+        await writeFixturePng(publicRoot, runtimePath, {
+            width: 768,
+            height: 768,
+            opaquePixels: [{ x: 16, y: 708 }],
+        });
+    }
+
+    const characterManifest = {
+        catalogSha256: catalog.catalogSha256,
+        art: { width: 768, height: 768, margin: 16, footBaseline: 708 },
+        entries: characterEntries,
+    };
+    const equipmentManifest = {
+        catalogSha256: catalog.catalogSha256,
+        styleVersion: 1,
+        art: { width: 4, height: 4, margin: 1 },
+        entries: {},
+    };
+    const characterManifestPath = join(publicRoot, 'character-manifest.json');
+    const equipmentManifestPath = join(publicRoot, 'equipment-manifest.json');
+    await writeFile(characterManifestPath, `${JSON.stringify(characterManifest)}\n`);
+    await writeFile(equipmentManifestPath, `${JSON.stringify(equipmentManifest)}\n`);
+
+    return {
+        catalog,
+        characterManifest,
+        equipmentManifest,
+        characterManifestPath,
+        equipmentManifestPath,
+        publicRoot,
+        async dispose() {
+            await rm(publicRoot, { recursive: true, force: true });
+        },
+    };
+};
+
 test('art catalog records the complete current player-facing inventory', async () => {
     const report = await buildArtCatalog();
 
@@ -122,7 +177,18 @@ test('art catalog records the complete current player-facing inventory', async (
     assert.equal(report.definedFamilies.length, 22);
     assert.equal(report.usedFamilies.length, 18);
     assert.deepEqual(report.elements, ['냉기', '대지', '바람', '빛', '어둠', '에테르', '자연', '화염']);
-    assert.match(report.catalogSha256, /^[0-9a-f]{64}$/);
+    assert.equal(report.catalogSha256, LIVE_CATALOG_SHA256);
+});
+
+test('art catalog uses code-point order for shuffled identity rows', async () => {
+    const report = await buildArtCatalog({
+        classes: [{ name: 'a', tier: 0 }, { name: 'B', tier: 1 }],
+        items: [],
+        definedFamilies: [],
+    });
+
+    assert.deepEqual(report.classes, [{ name: 'B', tier: 1 }, { name: 'a', tier: 0 }]);
+    assert.equal(report.catalogSha256, '1c67cbfa3a5025f1da32bccad93c615ba8e40ea819116a6adb688039add59575');
 });
 
 test('art catalog rejects duplicate identities and missing illustration families', async () => {
@@ -164,6 +230,8 @@ test('art verifier matches the catalog in both directions and records every expo
         assert.deepEqual(report.missing, []);
         assert.deepEqual(report.extra, []);
         assert.equal(report.catalogSha256, FIXTURE_CATALOG_SHA256);
+        assert.equal(report.scope, 'all');
+        assert.deepEqual(report.verifiedSurfaces, ['characters', 'equipment']);
         assert.equal(report.exports.length, 2);
         assert.deepEqual(report.exports.map((entry) => entry.identity), ['character:모험가', 'equipment:나무 검']);
         for (const entry of report.exports) {
@@ -208,6 +276,48 @@ test('art verifier reports duplicate runtime paths', async () => {
         const report = await verifyFixture(fixture);
 
         assert.deepEqual(report.duplicates, [`runtime-path:${sharedPath}`]);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('art verifier reports a duplicate runtime path shared by character and equipment identities', async () => {
+    const sharedPath = '/assets/equipment-exact/item-wooden-sword.png';
+    const fixture = await createFixture({
+        characterEntries: {
+            '모험가': { slug: 'adventurer', runtimePath: sharedPath },
+        },
+    });
+    try {
+        const report = await verifyFixture(fixture);
+
+        assert.deepEqual(report.duplicates, [`runtime-path:${sharedPath}`]);
+        assert.equal(report.ok, false);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('art verifier uses code-point order for stable export reports', async () => {
+    const fixture = await createFixture({
+        catalog: {
+            classes: [{ name: 'a', tier: 0 }, { name: 'B', tier: 1 }],
+            equipment: [],
+            definedFamilies: [],
+            usedFamilies: [],
+            elements: [],
+            catalogSha256: FIXTURE_CATALOG_SHA256,
+        },
+        characterEntries: {
+            a: { slug: 'a', runtimePath: '/assets/avatars/canonical/a.png' },
+            B: { slug: 'b', runtimePath: '/assets/avatars/canonical/b.png' },
+        },
+        equipmentEntries: {},
+    });
+    try {
+        const report = await verifyFixture(fixture);
+
+        assert.deepEqual(report.exports.map((entry) => entry.identity), ['character:B', 'character:a']);
     } finally {
         await fixture.dispose();
     }
@@ -267,12 +377,127 @@ test('only a passing stable report can be written as evidence', async () => {
     const fixture = await createFixture();
     const passingPath = join(fixture.publicRoot, 'evidence', 'passing-report.json');
     const failingPath = join(fixture.publicRoot, 'evidence', 'failing-report.json');
+    const partialPath = join(fixture.publicRoot, 'evidence', 'partial-report.json');
     try {
         const report = await verifyFixture(fixture);
         await writeArtVerificationReport(report, passingPath);
         assert.deepEqual(JSON.parse(await readFile(passingPath, 'utf8')), report);
+
+        const partialReport = await verifyFixture({ ...fixture, scope: 'characters' });
+        assert.equal(partialReport.ok, true);
+        assert.equal(partialReport.scope, 'characters');
+        assert.deepEqual(partialReport.verifiedSurfaces, ['characters']);
+        assert.equal(Object.getOwnPropertyDescriptor(partialReport, 'scope').writable, false);
+        assert.equal(Object.isFrozen(partialReport.verifiedSurfaces), true);
+        await assert.rejects(writeArtVerificationReport(partialReport, partialPath), /partial-scope art verification/);
+        await assert.rejects(readFile(partialPath), { code: 'ENOENT' });
+
         await assert.rejects(writeArtVerificationReport({ ...report, ok: false }, failingPath), /Refusing to write failing art verification/);
         await assert.rejects(readFile(failingPath), { code: 'ENOENT' });
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('art verifier CLI refuses to approve a passing characters-only scope', async () => {
+    const fixture = await createCliScopeFixture();
+    const reportPath = join(fixture.publicRoot, 'evidence', 'partial-report.json');
+    try {
+        const fullReport = await verifyFixture({
+            catalog: fixture.catalog,
+            characterManifest: fixture.characterManifest,
+            equipmentManifest: fixture.equipmentManifest,
+            publicRoot: fixture.publicRoot,
+        });
+        assert.equal(fullReport.ok, false);
+        assert.ok(fullReport.missing.includes('equipment:나무곤봉'));
+
+        const result = runArtVerifierCli([
+            '--scope', 'characters',
+            '--character-manifest', fixture.characterManifestPath,
+            '--equipment-manifest', fixture.equipmentManifestPath,
+            '--public-root', fixture.publicRoot,
+            '--write-report', reportPath,
+        ]);
+
+        assert.equal(result.status, 1, result.stderr);
+        assert.equal(JSON.parse(result.stdout).ok, true);
+        assert.match(result.stderr, /Refusing to write partial-scope art verification as approved evidence/);
+        await assert.rejects(readFile(reportPath), { code: 'ENOENT' });
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('art verifier CLI rejects missing and invalid option values without a report file', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-art-cli-options-'));
+    const reportPath = join(directory, 'must-not-exist.json');
+    try {
+        const missingScope = runArtVerifierCli(['--write-report', reportPath, '--scope']);
+        assert.equal(missingScope.status, 1);
+        assert.match(missingScope.stderr, /Missing value for --scope/);
+        await assert.rejects(readFile(reportPath), { code: 'ENOENT' });
+
+        const missingWriteReport = runArtVerifierCli(['--write-report']);
+        assert.equal(missingWriteReport.status, 1);
+        assert.match(missingWriteReport.stderr, /Missing value for --write-report/);
+
+        const invalidScope = runArtVerifierCli(['--write-report', reportPath, '--scope', 'not-a-scope']);
+        assert.equal(invalidScope.status, 1);
+        assert.match(invalidScope.stderr, /Invalid value for --scope: not-a-scope/);
+        await assert.rejects(readFile(reportPath), { code: 'ENOENT' });
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('equipment manifest writer preserves complete contract metadata and all legacy entry values', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-manifest-writer-'));
+    const outputPath = join(directory, 'equipmentArtManifest.json');
+    try {
+        const sourceManifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
+        const script = [
+            'import importlib.util',
+            'import json',
+            'from pathlib import Path',
+            `spec = importlib.util.spec_from_file_location('equipment_generator', ${JSON.stringify(EQUIPMENT_GENERATOR_SCRIPT)})`,
+            'module = importlib.util.module_from_spec(spec)',
+            'spec.loader.exec_module(module)',
+            `entries = json.loads(${JSON.stringify(JSON.stringify(sourceManifest.entries))})`,
+            `module.write_manifest(entries, Path(${JSON.stringify(outputPath)}), Path(${JSON.stringify(EQUIPMENT_MANIFEST_PATH)}))`,
+        ].join('\n');
+        const result = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+
+        assert.equal(result.status, 0, result.stderr);
+        const regenerated = JSON.parse(await readFile(outputPath, 'utf8'));
+        assert.equal(regenerated.$comment, sourceManifest.$comment);
+        assert.equal(regenerated.version, sourceManifest.version);
+        assert.equal(regenerated.catalogSha256, LIVE_CATALOG_SHA256);
+        assert.equal(regenerated.styleVersion, sourceManifest.styleVersion);
+        assert.deepEqual(regenerated.art, sourceManifest.art);
+        assert.equal(Object.keys(regenerated.entries).length, 233);
+        assert.deepEqual(regenerated.entries, sourceManifest.entries);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('pixel inspector emits JSON without a Pillow deprecation warning', async () => {
+    const fixture = await createFixture();
+    try {
+        const result = spawnSync('python3', [
+            PIXEL_INSPECTOR_SCRIPT,
+            '--path', join(fixture.publicRoot, 'assets/avatars/canonical/adventurer.png'),
+            '--margin', '1',
+            '--foot-baseline', '2',
+        ], {
+            encoding: 'utf8',
+            env: { ...process.env, PYTHONWARNINGS: 'default' },
+        });
+
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(result.stderr, '');
+        assert.equal(JSON.parse(result.stdout).footBaseline, 2);
     } finally {
         await fixture.dispose();
     }
