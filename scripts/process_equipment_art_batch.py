@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and atomically publish one declared six-icon equipment source sheet."""
+"""Validate and atomically publish one declared equipment source sheet."""
 
 from __future__ import annotations
 
@@ -210,10 +210,10 @@ def validate_batch(
         raise ValueError(f"Batch cohort is unsupported: {batch_id}")
     if grid != {"columns": 3, "rows": 2, "cellOrder": list(CELL_ORDER)}:
         raise ValueError(f"Batch manifest has an invalid fixed 2x3 grid: {batch_id}")
-    if not isinstance(identities, list) or len(identities) != len(CELL_ORDER):
-        raise ValueError(f"Batch manifest requires exactly six identities: {batch_id}")
-    if not isinstance(identity_names, list) or len(identity_names) != len(CELL_ORDER):
-        raise ValueError(f"Batch manifest requires six declared identity names: {batch_id}")
+    if not isinstance(identities, list) or not 1 <= len(identities) <= len(CELL_ORDER):
+        raise ValueError(f"Batch manifest requires one to six identities: {batch_id}")
+    if not isinstance(identity_names, list) or len(identity_names) != len(identities):
+        raise ValueError(f"Batch manifest identity names must match the declared identities: {batch_id}")
 
     names: list[str] = []
     runtime_paths: set[str] = set()
@@ -327,6 +327,17 @@ def build_outputs(
             payload,
             sha256_bytes(payload),
         ))
+
+    for index in range(len(identities), len(CELL_ORDER)):
+        column = index % 3
+        row = index // 3
+        left = column * CELL_SIZE[0]
+        top = row * CELL_SIZE[1]
+        cell = source.crop((left, top, left + CELL_SIZE[0], top + CELL_SIZE[1]))
+        if cell.getchannel("A").getextrema()[1] != 0:
+            raise ValueError(
+                f"Source sheet unused trailing cell {CELL_ORDER[index]} must be completely transparent"
+            )
     return outputs
 
 
@@ -343,7 +354,7 @@ def validate_provenance_record(
     catalog_by_name: dict[str, dict],
     catalog_sha256: str,
     catalog_rows_sha256: str,
-) -> str:
+) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
     if not isinstance(record, dict) or set(record) != PROVENANCE_RECORD_FIELDS:
         raise ValueError
     batch_id = record["batchId"]
@@ -363,9 +374,9 @@ def validate_provenance_record(
         raise ValueError
     if (
         not isinstance(identity_names, list)
-        or len(identity_names) != len(CELL_ORDER)
+        or not 1 <= len(identity_names) <= len(CELL_ORDER)
         or any(not isinstance(name, str) or not name.strip() for name in identity_names)
-        or len(set(identity_names)) != len(CELL_ORDER)
+        or len(set(identity_names)) != len(identity_names)
     ):
         raise ValueError
     source_sheet = record["sourceSheet"]
@@ -381,7 +392,7 @@ def validate_provenance_record(
         raise ValueError
 
     exports = record["exports"]
-    if not isinstance(exports, list) or len(exports) != len(CELL_ORDER):
+    if not isinstance(exports, list) or len(exports) != len(identity_names):
         raise ValueError
     runtime_paths: set[str] = set()
     for index, export in enumerate(exports):
@@ -399,7 +410,7 @@ def validate_provenance_record(
         runtime_paths.add(runtime_path)
         if not SHA256_PATTERN.fullmatch(export["exportSha256"] or ""):
             raise ValueError
-    return batch_id
+    return batch_id, tuple(identity_names), tuple(runtime_paths)
 
 
 def read_provenance(
@@ -418,8 +429,10 @@ def read_provenance(
         if not isinstance(batches, list):
             raise ValueError
         batch_ids: set[str] = set()
+        identity_names: set[str] = set()
+        runtime_paths: set[str] = set()
         for record in batches:
-            batch_id = validate_provenance_record(
+            batch_id, record_names, record_paths = validate_provenance_record(
                 record,
                 catalog_by_name,
                 catalog_sha256,
@@ -427,7 +440,11 @@ def read_provenance(
             )
             if batch_id in batch_ids:
                 raise ValueError
+            if identity_names.intersection(record_names) or runtime_paths.intersection(record_paths):
+                raise ValueError
             batch_ids.add(batch_id)
+            identity_names.update(record_names)
+            runtime_paths.update(record_paths)
         return provenance
     except (json.JSONDecodeError, OSError, TypeError, ValueError) as error:
         raise ValueError(f"Invalid provenance ledger: {path}") from error
@@ -478,6 +495,14 @@ def prepare_next_provenance(
             if not destination.is_file() or sha256_file(destination) != export_sha256:
                 raise ValueError(f"Exact replay output does not match provenance: {destination}")
         return True, None
+
+    new_names = set(record["identityNames"])
+    new_runtime_paths = {entry["runtimePath"] for entry in record["exports"]}
+    for prior in provenance["batches"]:
+        prior_names = set(prior["identityNames"])
+        prior_runtime_paths = {entry["runtimePath"] for entry in prior["exports"]}
+        if new_names.intersection(prior_names) or new_runtime_paths.intersection(prior_runtime_paths):
+            raise ValueError(f"Batch identity or runtime path is already declared by prior provenance: {record['batchId']}")
 
     next_provenance = dict(provenance)
     next_provenance["batches"] = [*provenance["batches"], record]

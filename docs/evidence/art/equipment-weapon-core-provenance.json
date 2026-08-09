@@ -1,0 +1,441 @@
+{
+  "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+  "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+  "cohort": "weapon-core",
+  "generationReview": {
+    "tool": "OpenAI built-in image_gen imagegen",
+    "accepted": [
+      { "batchId": "weapon-core-sword-01", "rawImage": "exec-aaf34ee2-1ce0-42ae-a749-2af5d064b1fc.png", "rawSha256": "85d1b1168ec899b8196beac7ce3debdca5db7d9c59403bcd5c932f705f1fd0e6" },
+      { "batchId": "weapon-core-sword-02", "rawImage": "exec-afdb7279-bf24-4af3-aa97-46549a5c497e.png", "rawSha256": "3bd5dc318693d679bce8c660dc47a4bb0810764a10324b347bd0a647b2a650f9" },
+      { "batchId": "weapon-core-sword-03", "rawImage": "exec-bf4b5ca7-f04e-47f1-aff0-2e10526297e0.png", "rawSha256": "47467a3f7cde3dc2173778eeb2d478067147a27fd619dd6e04d45e7d4a42ea9a" },
+      { "batchId": "weapon-core-dagger-01", "rawImage": "exec-335ca309-b45d-4e8a-a98e-2f8f20e8868b.png", "rawSha256": "a49d9f108df5fda8b3b2cc28fb1cc2350c240bf1e70f00198418878707d60a8e" },
+      { "batchId": "weapon-core-dagger-02", "rawImage": "exec-e3c016b1-0bce-48ca-9cba-5b497ea09755.png", "rawSha256": "36197502dca7272ddfa8fd1e5b82078ae75852b5fd997217914a6e2cd5292ea8" },
+      { "batchId": "weapon-core-dagger-03", "rawImage": "exec-fd2cf43d-2f7d-4a75-8005-ed02b17a4c76.png", "rawSha256": "e73a259abc1a84d8aecb05eb59acf89551dce3c8743b92fb27a2dfec5b91f2e0" },
+      { "batchId": "weapon-core-heavy-01", "rawImage": "exec-aab9a4d4-7c9a-48ea-a864-df4d776d2638.png", "rawSha256": "00f7ad8ed5333c967575e95e674740d8f9c08d47b2f43158fc2ad31cfe51b039" },
+      { "batchId": "weapon-core-heavy-02", "rawImage": "exec-ff961ef8-7789-4b50-8689-445234310b38.png", "rawSha256": "7669dad2c111ccfe65aa80f300dfd729f2b02a1355c784ec9dc3094a38799da9" }
+    ],
+    "rejected": [
+      { "batchId": "weapon-core-sword-01", "rawImage": "exec-8af1aa56-89fe-454d-ac82-e78c1a8bd216.png", "rawSha256": "2933dd2687d6b379282ffeb003bc9f7ac63eaadf47c0802fa3281abe0517001d", "reason": "cell 4 lacked transparent boundary padding" },
+      { "batchId": "weapon-core-sword-02", "rawImage": "exec-ec70147d-ccdc-44a9-ba44-4ce6c4243f15.png", "rawSha256": "ef46a9e8acebb6edcd348127febda29dfbb80e1d8232e62f8a35d35158519b0a", "reason": "cell 3 crossed its declared boundary" },
+      { "batchId": "weapon-core-sword-03", "rawImage": "exec-c88ed94d-9fcf-446e-8d44-1902ac72e769.png", "rawSha256": "c2faf5a90111823bf86ec389d1faca4a7c39908f872f0d60d22a99fba16ae3ca", "reason": "cell 1 lacked transparent boundary padding" },
+      { "batchId": "weapon-core-sword-03", "rawImage": "exec-b50081f6-6b06-4015-a697-00c7fed79578.png", "rawSha256": "eda0eedf6cd77bea2bd8989df7d872c7fa8428d2e3870ccb01e893ee5e8bf6bc", "reason": "cell 3 crossed into an unused trailing cell" },
+      { "batchId": "weapon-core-heavy-01", "rawImage": "exec-e219f1af-7f51-4589-a462-57fc2a47ccec.png", "rawSha256": "eb30c224f8900c95ad93605ebae73bf469b97aa732bbfa6ffb00a1362292e004", "reason": "cell 5 lacked transparent boundary padding" },
+      { "batchId": "weapon-core-heavy-01", "rawImage": "exec-dda6c6e2-e5a3-4b88-8bee-344269f58c9e.png", "rawSha256": "4eafd9acf88caf05ce3870ccb61e48365f18686e8b11f042d256bdbee1a5a8e8", "reason": "cell 6 pommel crossed into cell 5" }
+    ]
+  },
+  "batches": [
+    {
+      "batchId": "weapon-core-sword-01",
+      "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+      "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+      "cohort": "weapon-core",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "fb342689946f78be1900158af0816fbe3d801addee800a01b4ee61b4de66100f",
+          "name": "강철 롱소드",
+          "runtimePath": "/assets/equipment-exact/auto/auto-e1d7dee4462c.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "e8fb31fef7446cf6484ee9d404f03921fb7b2ea132828d71676d0243ead0a24f",
+          "name": "기계식 레이피어",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a17c1ffc7cd4.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "456517d002b48331efc2f834d0049916e7be6fa3d44702a3897e413e0db1be49",
+          "name": "기사의 검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-4edcce577d36.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "77f9e9257b038f77e050cd8ad049a864786a107db5251218d2a8c391dff456f4",
+          "name": "날카로운",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f75d86a53a7b.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "587c555b4d98e989f9b92eca3ac030bb69a8f5ef5752cf016a329e94b45e8699",
+          "name": "농부의 포크",
+          "runtimePath": "/assets/equipment-exact/auto/auto-aeefaa514270.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "337a3c3a240240b31e664062734d423d2f96c9e79d9a60b186b4d9ac5fbe455b",
+          "name": "롱소드",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a62da3020160.png"
+        }
+      ],
+      "identityNames": [
+        "강철 롱소드",
+        "기계식 레이피어",
+        "기사의 검",
+        "날카로운",
+        "농부의 포크",
+        "롱소드"
+      ],
+      "replayKey": "85c431056c9fa3d873730f98ba2aec42095bd741fa46e43a19410c6a07328ed8",
+      "sourceSheet": "weapon-core-sword-01.png",
+      "sourceSheetSha256": "6b2574d5f0faa6b70741f2e5b5f347bd57215a6cdcc876615f63a3cd598845f1"
+    },
+    {
+      "batchId": "weapon-core-sword-02",
+      "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+      "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+      "cohort": "weapon-core",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "8fbbc6a9931fdd21ab8bfe3f0c58a6fc09219edc50cf9c95c086c7e67aeda79c",
+          "name": "묵직한",
+          "runtimePath": "/assets/equipment-exact/auto/auto-b93b4d19ae2a.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "8c7778071ee0625ae3c4eb752914af118d21c61cf81d2b47f74f2918fe4cba06",
+          "name": "미스릴검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-712653558d1c.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "b4403f99f6fe9e7f76b1caec2f8745fce96cb7d9f3b35e6986f509ab55e9e0b9",
+          "name": "사냥칼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-994f11957368.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "a35e8f73e855488fb7e96d549feb0971b0912a3937d93e57ab9f0ca304f0a33c",
+          "name": "사막의 시미터",
+          "runtimePath": "/assets/equipment-exact/auto/auto-29eb8ffc5ac3.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "527b9e7d874a8f901e82e28ac1ec8acc0ef0f9ca7589593bdd1087848fbf3fb9",
+          "name": "수련생의 검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-41877b74c6fa.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "8d6169fbe78e0c6b2ab6ac2253a4cab84e5794859fe2494813d39705749577bc",
+          "name": "양손검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-faf398318db3.png"
+        }
+      ],
+      "identityNames": [
+        "묵직한",
+        "미스릴검",
+        "사냥칼",
+        "사막의 시미터",
+        "수련생의 검",
+        "양손검"
+      ],
+      "replayKey": "aab5e66f2fbaf03e038fef6bcc95dc68e9990a42bb6288ab9772658bbc21fae0",
+      "sourceSheet": "weapon-core-sword-02.png",
+      "sourceSheetSha256": "31ac77a1104fd0f9c42927dec51e22f6f38ab11bc370aa5976aee38335a6a7b2"
+    },
+    {
+      "batchId": "weapon-core-sword-03",
+      "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+      "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+      "cohort": "weapon-core",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "adcb8615041895bbfd4508dac1430955d51d9df4bc7e4aa78dbf7781e1c66b69",
+          "name": "어둠의 팔치온",
+          "runtimePath": "/assets/equipment-exact/auto/auto-de012dfa9c16.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "e72897d8d2fc799b07b3932ded907e96cdb288ba870a62160d891d79ee839435",
+          "name": "에테르 세이버",
+          "runtimePath": "/assets/equipment-exact/auto/auto-79d434bacd61.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "cae3c14a16a2ec074b39627073bdd1600cf97368948a1c84fa7a42db14ee09bf",
+          "name": "영겁의 세이버",
+          "runtimePath": "/assets/equipment-exact/auto/auto-65243ae13fcf.png"
+        }
+      ],
+      "identityNames": [
+        "어둠의 팔치온",
+        "에테르 세이버",
+        "영겁의 세이버"
+      ],
+      "replayKey": "2b8d609db8ce4a122a339bf34fa7cbc91571d6ba1bf6e77b77bf1dc1e74b5766",
+      "sourceSheet": "weapon-core-sword-03.png",
+      "sourceSheetSha256": "9c64020a0bf39f32dd29fd727f56699fac86b3aeae273d03d6ff09daedb04d25"
+    },
+    {
+      "batchId": "weapon-core-dagger-01",
+      "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+      "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+      "cohort": "weapon-core",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "d1f897531bea0f6a1773dee532cd2739eb3c3a6424ca04aa582f0b72b9bfce5d",
+          "name": "견습생의 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-d1c12f6f90b9.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "0ce7a112205ccb50ddd0d16bfb6fd90a886f21dd7d7202178b097c8519c1477e",
+          "name": "녹슨 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-12f3fd7fbfb6.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "13f9994352e8b6ea7187f231a4ab183e7404be832fe0532b0abb987732e67844",
+          "name": "독사의 송곳니",
+          "runtimePath": "/assets/equipment-exact/auto/auto-4d5063e9d334.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "2b9bd86f7efe3e0101c885705352e1690df2c7dbef87e0e4a8128004f74cc594",
+          "name": "독아 채찍",
+          "runtimePath": "/assets/equipment-exact/auto/auto-879d5c28d6b5.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "a58cede0123faa80688a7f8371d8e2797523ffbf04a6471919636330a661bf54",
+          "name": "독침 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-8842c4bfd07b.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "686ea683006ab1460820f60455952e94c141092a5be9ac9c64eb82de4a4203bc",
+          "name": "뼈 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-d96e1176c32d.png"
+        }
+      ],
+      "identityNames": [
+        "견습생의 단검",
+        "녹슨 단검",
+        "독사의 송곳니",
+        "독아 채찍",
+        "독침 단검",
+        "뼈 단검"
+      ],
+      "replayKey": "9aec7f1900f7a0b231cbdd393c720cb6af95c41640f23bc274e365abe7a5903d",
+      "sourceSheet": "weapon-core-dagger-01.png",
+      "sourceSheetSha256": "c81cebe90c9805a011c13c61ab28e1b7b7bb60126eea5babcc1d5416648ebdac"
+    },
+    {
+      "batchId": "weapon-core-dagger-02",
+      "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+      "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+      "cohort": "weapon-core",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "1115458ef3846a17942f57775e9dc81cc0ad80a3db928a2d418af1ede978869d",
+          "name": "성수 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-e3a2ac762dd8.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "4019e33cf1102f2d6c07630f25214d0e51207e54617838e2c23c064a120beaa7",
+          "name": "쌍칼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-d14c8c08f691.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "546681c32d365f44dbd706fdc535cb3e6a0bdcb7547e1c331858919d64650108",
+          "name": "암살의 표창",
+          "runtimePath": "/assets/equipment-exact/auto/auto-18fe01a70b57.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "22b6d3547685ad5b937e27d2b72ad485b55af5a0035da29c284624e59821a535",
+          "name": "암살자의 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-0636274ff350.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "e8b56545f99f2639d32ac082e20ad531d319cafeed9238b4960ad470c8f08b01",
+          "name": "암흑 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-7338e701d345.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "bd053622443a5bd3ffac0e8411aacbca6b2cdc498859e790796c1ffcfbcb3757",
+          "name": "어둠 감옥 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-e78cd4490f2c.png"
+        }
+      ],
+      "identityNames": [
+        "성수 단검",
+        "쌍칼",
+        "암살의 표창",
+        "암살자의 단검",
+        "암흑 단검",
+        "어둠 감옥 단검"
+      ],
+      "replayKey": "a913615a75b7ca2ed8dbf6225d4d7c9505da2a825e15352151949c46e387045d",
+      "sourceSheet": "weapon-core-dagger-02.png",
+      "sourceSheetSha256": "8049fe67f87f1162688f8868522662056b8a4b8195186d3585e279da6165ae32"
+    },
+    {
+      "batchId": "weapon-core-dagger-03",
+      "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+      "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+      "cohort": "weapon-core",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "ef180d560afb1cd4e511a3cfaef08fa500931c318a70d44efead992d60e98b85",
+          "name": "용아 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-4e1e50c86bcc.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "98e9466200039dbfd91c44ebbed5e1ee90445a7b89390f18e8dbf71674cc84f5",
+          "name": "질풍의 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-8c4c87f1786d.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "94a1abb97e18457ab853826de9d63180f04e1acc3118b50dee812abe1505adc4",
+          "name": "청해 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-dcfd06b794ac.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "c4d358e6d1f580ad747a2a6a0c4c2ae3b932e6308aa77b46c42360ef47602fdd",
+          "name": "투척용 단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-befa10bbace0.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "f1b9a444bc4d6e614a0e29e3237a3515a3886d52eb0f61968e0cf92aa0f08a9b",
+          "name": "혼돈 절멸기",
+          "runtimePath": "/assets/equipment-exact/auto/auto-e9ece94f2f24.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "ebc7fb40c64f11a40b94b732227150e086aee325c3bbedd9358faf3be6589313",
+          "name": "흑요석단검",
+          "runtimePath": "/assets/equipment-exact/auto/auto-c1f6032fcdc8.png"
+        }
+      ],
+      "identityNames": [
+        "용아 단검",
+        "질풍의 단검",
+        "청해 단검",
+        "투척용 단검",
+        "혼돈 절멸기",
+        "흑요석단검"
+      ],
+      "replayKey": "49a241bc1d55f525df0e8cb66e344ed6ccdc610b5ae8688d52ac12ceaa2d1b7d",
+      "sourceSheet": "weapon-core-dagger-03.png",
+      "sourceSheetSha256": "478354c372a33586ac7a4ad8e9fd767a63119791676b188eddab863aca566cd8"
+    },
+    {
+      "batchId": "weapon-core-heavy-01",
+      "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+      "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+      "cohort": "weapon-core",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "d4e46f342243a662355f2224fcaf3800c3077340cc3701e07cacf15d1b6f7198",
+          "name": "광기의 도끼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-8c3d7a804819.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "f1c5a1ed48b4104a5b9003951a98a34ddc025968f21dceb9cfdac6b060de9ee4",
+          "name": "광전사의 도끼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-6ed99a36a622.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "284350b0de4ae6f518137f3f1adcebeacb498cc7e5dddfa7912479249c0668db",
+          "name": "나무곤봉",
+          "runtimePath": "/assets/equipment-exact/auto/auto-2c0caf97cc68.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "831e7f0c359e63289482fc4749725628229ca24a295fd22675bd9b9169d27794",
+          "name": "낡은 철퇴",
+          "runtimePath": "/assets/equipment-exact/auto/auto-70de6e67343f.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "55bc8823af2790ddd66b904234de2d843fe01d733a223adffa3925d6cdd876f8",
+          "name": "녹슨 도끼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-1a757e6a6cd3.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "3bc2f84984075891062eeeb990e82d6deb50f889f0076abfe20d64b840c90ea7",
+          "name": "대지의 메이스",
+          "runtimePath": "/assets/equipment-exact/auto/auto-cc9dcab53ba5.png"
+        }
+      ],
+      "identityNames": [
+        "광기의 도끼",
+        "광전사의 도끼",
+        "나무곤봉",
+        "낡은 철퇴",
+        "녹슨 도끼",
+        "대지의 메이스"
+      ],
+      "replayKey": "92993340f44abb19fab56cdd27df690bf07956be4136f9868b40be5b1092f81b",
+      "sourceSheet": "weapon-core-heavy-01.png",
+      "sourceSheetSha256": "9b03fc05ec7f076105455da60526f2861a9a84adcfee6efecb78aaf72a8af65b"
+    },
+    {
+      "batchId": "weapon-core-heavy-02",
+      "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+      "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+      "cohort": "weapon-core",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "eae0fbdafa23b0b10f786e78609daf9364cfe0610ac9f80eec7451577fffc898",
+          "name": "돌망치",
+          "runtimePath": "/assets/equipment-exact/auto/auto-6482ed7d2e82.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "92077a0b66dbbeb24a4c1071b708fd79dec52c3da3549f29d265b18953d5c4e2",
+          "name": "드워프의 망치",
+          "runtimePath": "/assets/equipment-exact/auto/auto-2fa172484dc2.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "2f6a8eec3f57b36214c0e55d563bb85bc7f357743da41c386c49c62b6962e1dc",
+          "name": "전투도끼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-931db88d2baa.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "b2df25d48ed91342290d978bd0f8888f6995891fb3871b16a83c224658cb8ee6",
+          "name": "철퇴장",
+          "runtimePath": "/assets/equipment-exact/auto/auto-559770dc1710.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "f44f04e8b11f30c810fa8e937f81354e96cb7239add71e6ee188497540bd8494",
+          "name": "타이탄 해머",
+          "runtimePath": "/assets/equipment-exact/auto/auto-6cf88873011d.png"
+        }
+      ],
+      "identityNames": [
+        "돌망치",
+        "드워프의 망치",
+        "전투도끼",
+        "철퇴장",
+        "타이탄 해머"
+      ],
+      "replayKey": "6f14dea3e5daa4d152dc03857ab4efb8353c1888b1d19e9a6e3392b57984a3b2",
+      "sourceSheet": "weapon-core-heavy-02.png",
+      "sourceSheetSha256": "7e4994e2a0a34cbca4b3339d0c3b212a6abcd313fb17e809fee805383df27cf7"
+    }
+  ],
+  "version": 1
+}

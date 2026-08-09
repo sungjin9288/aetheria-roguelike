@@ -429,6 +429,81 @@ test('art verifier CLI refuses to approve a passing characters-only scope', asyn
     }
 });
 
+test('art verifier CLI validates one equipment cohort without approving partial evidence', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-art-cohort-'));
+    const reportPath = join(directory, 'weapon-core-report.json');
+    try {
+        const result = runArtVerifierCli(['--cohort', 'weapon-core']);
+        assert.equal(result.status, 0, result.stderr);
+        const report = JSON.parse(result.stdout);
+        assert.equal(report.ok, true);
+        assert.equal(report.scope, 'equipment');
+        assert.equal(report.cohort, 'weapon-core');
+        assert.equal(report.counts.equipment, 44);
+        assert.equal(report.exports.length, 44);
+
+        const refused = runArtVerifierCli([
+            '--cohort', 'weapon-core',
+            '--write-report', reportPath,
+        ]);
+        assert.equal(refused.status, 1);
+        assert.match(refused.stderr, /partial-scope art verification/);
+        await assert.rejects(readFile(reportPath), { code: 'ENOENT' });
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('art verifier rejects weapon-core artwork metadata that is not bound to tracked evidence', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-art-cohort-evidence-'));
+    const manifestPath = join(directory, 'equipment-manifest.json');
+    try {
+        const manifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
+        manifest.artwork['강철 롱소드'] = {
+            ...manifest.artwork['강철 롱소드'],
+            batchId: 'fabricated-batch',
+            sourcePath: 'scripts/art_sources/equipment/v2/weapon-core/missing.png',
+            sourceSha256: '1'.repeat(64),
+            exportSha256: '0'.repeat(64),
+        };
+        await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+        const result = runArtVerifierCli([
+            '--cohort', 'weapon-core',
+            '--equipment-manifest', manifestPath,
+        ]);
+
+        assert.equal(result.status, 1, result.stderr);
+        const report = JSON.parse(result.stdout);
+        assert.equal(report.ok, false);
+        assert.ok(report.invalidArtwork.some((entry) => entry.startsWith('equipment:강철 롱소드:')));
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('art verifier rejects weapon-core player-facing runtime routing drift', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-art-cohort-route-'));
+    const manifestPath = join(directory, 'equipment-manifest.json');
+    try {
+        const manifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
+        manifest.entries['강철 롱소드'] = manifest.entries['여행자 튜닉'];
+        await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+        const result = runArtVerifierCli([
+            '--cohort', 'weapon-core',
+            '--equipment-manifest', manifestPath,
+        ]);
+
+        assert.equal(result.status, 1, result.stderr);
+        const report = JSON.parse(result.stdout);
+        assert.equal(report.ok, false);
+        assert.ok(report.invalidArtwork.some((entry) => entry.startsWith('equipment:강철 롱소드:')));
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
 test('art verifier CLI rejects missing and invalid option values without a report file', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-art-cli-options-'));
     const reportPath = join(directory, 'must-not-exist.json');
@@ -446,6 +521,10 @@ test('art verifier CLI rejects missing and invalid option values without a repor
         assert.equal(invalidScope.status, 1);
         assert.match(invalidScope.stderr, /Invalid value for --scope: not-a-scope/);
         await assert.rejects(readFile(reportPath), { code: 'ENOENT' });
+
+        const invalidCohort = runArtVerifierCli(['--cohort', 'not-a-cohort']);
+        assert.equal(invalidCohort.status, 1);
+        assert.match(invalidCohort.stderr, /Invalid value for --cohort: not-a-cohort/);
     } finally {
         await rm(directory, { recursive: true, force: true });
     }

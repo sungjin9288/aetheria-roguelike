@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { buildEquipmentCatalogRows } from '../scripts/dump-equipment-catalog.mjs';
 
 import {
     EXACT_ITEM_ICON_KEYS,
@@ -29,10 +33,21 @@ const itemAssetDir = path.resolve(__dirname, '../public/assets/items');
 const equipmentFamilyItemDir = path.resolve(__dirname, '../public/assets/equipment-family/items');
 const equipmentFamilyOverlayDir = path.resolve(__dirname, '../public/assets/equipment-family/overlays');
 const equipmentExactDir = path.resolve(__dirname, '../public/assets/equipment-exact');
+const equipmentManifestPath = path.resolve(__dirname, '../src/data/equipmentArtManifest.json');
+const weaponCoreProvenancePath = path.resolve(__dirname, '../docs/evidence/art/equipment-weapon-core-provenance.json');
 const hasItemAsset = (key) => existsSync(path.join(itemAssetDir, `${key}.png`)) || existsSync(path.join(itemAssetDir, `${key}.svg`));
 const hasEquipmentFamilyItemAsset = (key) => existsSync(path.join(equipmentFamilyItemDir, `${key}.png`));
 const hasEquipmentFamilyOverlayAsset = (key) => existsSync(path.join(equipmentFamilyOverlayDir, `${key}.png`));
 const hasEquipmentExactAsset = (key) => existsSync(path.join(equipmentExactDir, `${key}.png`));
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+
+const readPngSize = (data) => {
+    assert.deepEqual([...data.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+    return {
+        width: data.readUInt32BE(16),
+        height: data.readUInt32BE(20),
+    };
+};
 
 test('getEquipmentVisualKey maps representative equipment families to distinct asset keys', () => {
     assert.equal(getEquipmentVisualKey({ name: '시험용 중형 도끼', type: 'weapon', hands: 2 }), 'greataxe');
@@ -261,6 +276,47 @@ test('every equippable item has an exact avatar-style equipment illustration ass
         const key = getExactEquipmentItemAssetKey(item);
         assert.ok(key, `Expected exact equipment asset key for ${item.name}`);
         assert.equal(hasEquipmentExactAsset(key), true, `Expected exact avatar-style equipment asset for ${item.name} (${key})`);
+    }
+});
+
+test('weapon-core exact illustrations are v2, provenance-bound, 160px and unique within each family', async () => {
+    const catalog = (await buildEquipmentCatalogRows()).filter((entry) => entry.cohort === 'weapon-core');
+    const manifest = JSON.parse(await readFile(equipmentManifestPath, 'utf8'));
+    const provenance = JSON.parse(await readFile(weaponCoreProvenancePath, 'utf8'));
+    const exportsByName = new Map(
+        provenance.batches.flatMap((batch) => batch.exports.map((entry) => [entry.name, { ...entry, batch }]))
+    );
+    const hashesByFamily = new Map();
+
+    assert.equal(catalog.length, 44);
+    assert.equal(provenance.cohort, 'weapon-core');
+    assert.equal(provenance.catalogSha256, manifest.catalogSha256);
+
+    for (const entry of catalog) {
+        const artwork = manifest.artwork?.[entry.name];
+        assert.ok(artwork, `Expected v2 artwork metadata for ${entry.name}`);
+        assert.equal(artwork.styleVersion, 2, `Expected styleVersion 2 for ${entry.name}`);
+        assert.equal(artwork.familyKey, entry.familyKey, `Expected family identity for ${entry.name}`);
+        assert.match(artwork.sourcePath, /^scripts\/art_sources\/equipment\/v2\/weapon-core\/.+\.png$/);
+        assert.match(artwork.sourceSha256, /^[0-9a-f]{64}$/);
+        assert.match(artwork.exportSha256, /^[0-9a-f]{64}$/);
+
+        const source = await readFile(path.resolve(__dirname, '..', artwork.sourcePath));
+        const runtime = await readFile(path.resolve(__dirname, '..', 'public', entry.runtimePath.replace(/^\//, '')));
+        assert.equal(sha256(source), artwork.sourceSha256, `Expected source hash match for ${entry.name}`);
+        assert.equal(sha256(runtime), artwork.exportSha256, `Expected export hash match for ${entry.name}`);
+        assert.deepEqual(readPngSize(runtime), { width: 160, height: 160 }, `Expected 160px runtime art for ${entry.name}`);
+
+        const provenExport = exportsByName.get(entry.name);
+        assert.ok(provenExport, `Expected provenance export for ${entry.name}`);
+        assert.equal(provenExport.batch.batchId, artwork.batchId);
+        assert.equal(provenExport.batch.sourceSheetSha256, artwork.sourceSha256);
+        assert.equal(provenExport.exportSha256, artwork.exportSha256);
+
+        const familyHashes = hashesByFamily.get(entry.familyKey) || new Set();
+        assert.equal(familyHashes.has(artwork.exportSha256), false, `Duplicate exact illustration in ${entry.familyKey}: ${entry.name}`);
+        familyHashes.add(artwork.exportSha256);
+        hashesByFamily.set(entry.familyKey, familyHashes);
     }
 });
 

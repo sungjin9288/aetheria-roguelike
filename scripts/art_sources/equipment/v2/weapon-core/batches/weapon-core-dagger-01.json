@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "weapon-core-dagger-01",
+  "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+  "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+  "cohort": "weapon-core",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "견습생의 단검",
+    "녹슨 단검",
+    "독사의 송곳니",
+    "독아 채찍",
+    "독침 단검",
+    "뼈 단검"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "견습생의 단검",
+      "type": "weapon",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-d1c12f6f90b9.png",
+      "cohort": "weapon-core",
+      "prompt": "견습생의 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-center",
+      "name": "녹슨 단검",
+      "type": "weapon",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-12f3fd7fbfb6.png",
+      "cohort": "weapon-core",
+      "prompt": "녹슨 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "독사의 송곳니",
+      "type": "weapon",
+      "tier": 3,
+      "elem": "자연",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-4d5063e9d334.png",
+      "cohort": "weapon-core",
+      "prompt": "독사의 송곳니; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T3: regional craft character expressed through the form and material treatment; element 자연: wood, leather, living material, vines, and teal life light."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "독아 채찍",
+      "type": "weapon",
+      "tier": 3,
+      "elem": "자연",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-879d5c28d6b5.png",
+      "cohort": "weapon-core",
+      "prompt": "독아 채찍; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T3: regional craft character expressed through the form and material treatment; element 자연: wood, leather, living material, vines, and teal life light."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "독침 단검",
+      "type": "weapon",
+      "tier": 2,
+      "elem": "자연",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-8842c4bfd07b.png",
+      "cohort": "weapon-core",
+      "prompt": "독침 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 자연: wood, leather, living material, vines, and teal life light."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "뼈 단검",
+      "type": "weapon",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-d96e1176c32d.png",
+      "cohort": "weapon-core",
+      "prompt": "뼈 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 견습생의 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 녹슨 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 독사의 송곳니; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T3: regional craft character expressed through the form and material treatment; element 자연: wood, leather, living material, vines, and teal life light.\nbottom-left: 독아 채찍; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T3: regional craft character expressed through the form and material treatment; element 자연: wood, leather, living material, vines, and teal life light.\nbottom-center: 독침 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 자연: wood, leather, living material, vines, and teal life light.\nbottom-right: 뼈 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}

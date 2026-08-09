@@ -40,6 +40,7 @@ const FAMILY_LANGUAGE = Object.freeze({
 });
 
 const TIER_LANGUAGE = Object.freeze({
+    0: 'plain training-grade construction with one honest material and an immediately readable purpose',
     1: 'worn wood, iron, or cloth with simple practical construction',
     2: 'orderly craftsmanship with two materials and a small functional ornament',
     3: 'regional craft character expressed through the form and material treatment',
@@ -98,8 +99,12 @@ const makeCellPrompt = (entry) => {
 
 export const buildEquipmentPromptBatch = async ({ catalogPath, batchId, names }) => {
     const requestedNames = parseNames(names);
-    if (requestedNames.length !== CELL_ORDER.length || new Set(requestedNames).size !== CELL_ORDER.length) {
-        throw new Error('Equipment prompt batches require exactly six unique catalog identities');
+    if (
+        requestedNames.length < 1
+        || requestedNames.length > CELL_ORDER.length
+        || new Set(requestedNames).size !== requestedNames.length
+    ) {
+        throw new Error('Equipment prompt batches require one to six unique catalog identities');
     }
 
     const catalog = await readCatalog(catalogPath);
@@ -127,12 +132,19 @@ export const buildEquipmentPromptBatch = async ({ catalogPath, batchId, names })
         prompt: makeCellPrompt(entry),
     }));
     const identityNames = identities.map((entry) => entry.name);
+    const unusedCells = CELL_ORDER.slice(identities.length);
     const grid = { columns: 3, rows: 2, cellOrder: CELL_ORDER };
+    const iconCount = identities.length === CELL_ORDER.length ? 'six' : String(identities.length);
     const prompt = [
         'Aetheria Roguelike equipment pixel-art source sheet.',
-        'Create a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.',
+        `Create a transparent 2x3 grid with ${iconCount} isolated icon${identities.length === 1 ? '' : 's'}, no labels, no text, no border, and equal cell padding.`,
         `Use this fixed row-major cell order: ${CELL_ORDER.join(', ')}.`,
         'Use upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.',
+        'Keep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.',
+        'Within the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.',
+        ...(unusedCells.length
+            ? [`Leave all unused trailing cells completely transparent and empty: ${unusedCells.join(', ')}.`]
+            : []),
         ...identities.map((entry) => `${entry.cell}: ${entry.prompt}`),
     ].join('\n');
 

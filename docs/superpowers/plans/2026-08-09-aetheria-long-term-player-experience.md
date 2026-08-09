@@ -477,11 +477,11 @@ Commit and push the reproducible pipeline without repainting runtime assets in t
 - Consumes: Task 4 catalog and six-cell batch processor
 - Produces: styleVersion 2 for every `weapon-sword`, `weapon-dagger`, `weapon-heavy` item
 
-- [ ] **Step 1: Add a failing cohort contract**
+- [x] **Step 1: Add a failing cohort contract**
 
 Assert every catalog item in the three families has `styleVersion: 2`, source hash, export hash, correct `160x160` runtime PNG and no duplicate export hash inside the same family.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```bash
 npm run art:verify -- --cohort weapon-core
@@ -489,15 +489,15 @@ npm run art:verify -- --cohort weapon-core
 
 Expected: FAIL because the current recolor assets have no v2 provenance.
 
-- [ ] **Step 3: Generate exact six-item source sheets**
+- [x] **Step 3: Generate exact six-item source sheets**
 
 Use the generated batch prompts. A sheet is accepted only when all six silhouettes remain inside their cells, light comes from upper left, background is transparent, and each same-family pair differs in at least two of blade/body shape, handle, central ornament and material.
 
-- [ ] **Step 4: Process, review and regenerate rejected sheets**
+- [x] **Step 4: Process, review and regenerate rejected sheets**
 
 Run the processor, build the tracked contact sheet grouped by family then Tier, inspect at 32px and 160px, and regenerate only failed batches. Do not patch poor icons with arbitrary glow.
 
-- [ ] **Step 5: Run task gate, commit and push**
+- [x] **Step 5: Run task gate, commit and push**
 
 ```bash
 npm run art:verify -- --cohort weapon-core

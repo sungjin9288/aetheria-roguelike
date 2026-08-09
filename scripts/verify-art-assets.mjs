@@ -5,6 +5,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildArtCatalog, compareCodePoints } from './artCatalog.mjs';
+import { buildEquipmentCatalogRows, getEquipmentCohort } from './dump-equipment-catalog.mjs';
+import { validateEquipmentArtEvidence } from './equipmentArtEvidence.mjs';
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const REPO_ROOT = dirname(fileURLToPath(new URL('../package.json', import.meta.url)));
@@ -12,6 +14,13 @@ const DEFAULT_CHARACTER_MANIFEST = resolve(REPO_ROOT, 'src/data/characterArtMani
 const DEFAULT_EQUIPMENT_MANIFEST = resolve(REPO_ROOT, 'src/data/equipmentArtManifest.json');
 const DEFAULT_INSPECTOR = resolve(REPO_ROOT, 'scripts/inspect_art_pixels.py');
 const DEFAULT_PUBLIC_ROOT = resolve(REPO_ROOT, 'public');
+const EQUIPMENT_COHORTS = new Set([
+    'armor',
+    'offhand-headgear',
+    'signature-mythic',
+    'weapon-core',
+    'weapon-ranged-magic',
+]);
 
 const byValue = compareCodePoints;
 const sortValues = (values) => [...new Set(values)].sort(byValue);
@@ -173,9 +182,15 @@ export const verifyArtAssets = async ({
     publicRoot = DEFAULT_PUBLIC_ROOT,
     pythonCommand = 'python3',
     scope = 'all',
+    cohort = null,
+    equipmentProvenancePath = null,
+    equipmentSourceDir = null,
 } = {}) => {
     if (!['all', 'characters', 'equipment'].includes(scope)) {
         throw new Error(`Unknown art verification scope: ${scope}`);
+    }
+    if (cohort !== null && (!EQUIPMENT_COHORTS.has(cohort) || scope !== 'equipment')) {
+        throw new Error(`Unknown or incompatible equipment art cohort: ${String(cohort)}`);
     }
 
     const resolvedCatalog = catalog || await buildArtCatalog();
@@ -184,6 +199,9 @@ export const verifyArtAssets = async ({
     const resolvedInspectorPath = inspectorPath instanceof URL ? fileURLToPath(inspectorPath) : inspectorPath;
     const verifyCharacters = scope === 'all' || scope === 'characters';
     const verifyEquipment = scope === 'all' || scope === 'equipment';
+    const equipmentCatalog = cohort
+        ? resolvedCatalog.equipment.filter((entry) => getEquipmentCohort({ name: entry.name, familyKey: entry.family }) === cohort)
+        : resolvedCatalog.equipment;
     const verifiedSurfaces = Object.freeze([
         ...(verifyCharacters ? ['characters'] : []),
         ...(verifyEquipment ? ['equipment'] : []),
@@ -191,11 +209,12 @@ export const verifyArtAssets = async ({
     const report = {
         ok: false,
         scope,
+        cohort,
         verifiedSurfaces,
         catalogSha256: resolvedCatalog.catalogSha256,
         counts: {
             classes: resolvedCatalog.classes.length,
-            equipment: resolvedCatalog.equipment.length,
+            equipment: equipmentCatalog.length,
             definedFamilies: resolvedCatalog.definedFamilies.length,
             usedFamilies: resolvedCatalog.usedFamilies.length,
         },
@@ -206,10 +225,12 @@ export const verifyArtAssets = async ({
         invalidAlpha: [],
         invalidBounds: [],
         invalidStyleVersion: [],
+        invalidArtwork: [],
         exports: [],
     };
     Object.defineProperties(report, {
         scope: { value: scope, enumerable: true, writable: false, configurable: false },
+        cohort: { value: cohort, enumerable: true, writable: false, configurable: false },
         verifiedSurfaces: { value: verifiedSurfaces, enumerable: true, writable: false, configurable: false },
     });
 
@@ -241,9 +262,13 @@ export const verifyArtAssets = async ({
     }
 
     if (verifyEquipment) {
+        const expectedEquipmentNames = equipmentCatalog.map((entry) => entry.name);
+        const expectedEquipmentNameSet = new Set(expectedEquipmentNames);
         addSetDifference({
-            expected: resolvedCatalog.equipment.map((entry) => entry.name),
-            actual: Object.keys(equipmentEntries),
+            expected: expectedEquipmentNames,
+            actual: cohort
+                ? Object.keys(equipmentEntries).filter((name) => expectedEquipmentNameSet.has(name))
+                : Object.keys(equipmentEntries),
             prefix: 'equipment',
             missing: report.missing,
             extra: report.extra,
@@ -251,16 +276,42 @@ export const verifyArtAssets = async ({
         if (resolvedEquipmentManifest?.catalogSha256 !== resolvedCatalog.catalogSha256) {
             report.missing.push('equipment:catalogSha256 mismatch');
         }
-        if (resolvedEquipmentManifest?.styleVersion !== 2) {
+        if (!cohort && resolvedEquipmentManifest?.styleVersion !== 2) {
             report.invalidStyleVersion.push(`equipment:expected styleVersion 2, got ${String(resolvedEquipmentManifest?.styleVersion)}`);
+        }
+        if (cohort) {
+            for (const entry of equipmentCatalog) {
+                const styleVersion = resolvedEquipmentManifest?.artwork?.[entry.name]?.styleVersion;
+                if (styleVersion !== 2) {
+                    report.invalidStyleVersion.push(`equipment:${entry.name}:expected styleVersion 2, got ${String(styleVersion)}`);
+                }
+            }
+            try {
+                const provenancePath = equipmentProvenancePath
+                    || resolve(REPO_ROOT, `docs/evidence/art/equipment-${cohort}-provenance.json`);
+                const sourceDir = equipmentSourceDir
+                    || resolve(REPO_ROOT, `scripts/art_sources/equipment/v2/${cohort}`);
+                await validateEquipmentArtEvidence({
+                    catalog: await buildEquipmentCatalogRows(),
+                    manifest: resolvedEquipmentManifest,
+                    provenance: await readJson(provenancePath),
+                    cohort,
+                    sourceDir,
+                    publicRoot,
+                    repoRoot: REPO_ROOT,
+                    requireManifestArtwork: true,
+                });
+            } catch (error) {
+                report.invalidArtwork.push(`equipment:${error.message}`);
+            }
         }
         const metadata = parseArtMetadata(resolvedEquipmentManifest, 'equipment');
         if (!metadata) {
             report.missing.push('equipment:art metadata');
         } else {
-            selectedAssets.push(...Object.entries(equipmentEntries).map(([name, entry]) => ({
+            selectedAssets.push(...equipmentCatalog.map(({ name }) => ({
                 identity: `equipment:${name}`,
-                runtimePath: getEquipmentRuntimePath(entry),
+                runtimePath: getEquipmentRuntimePath(equipmentEntries[name]),
                 metadata,
             })));
         }
@@ -280,7 +331,7 @@ export const verifyArtAssets = async ({
         });
     }
 
-    for (const key of ['missing', 'extra', 'duplicates', 'invalidPng', 'invalidAlpha', 'invalidBounds', 'invalidStyleVersion']) {
+    for (const key of ['missing', 'extra', 'duplicates', 'invalidPng', 'invalidAlpha', 'invalidBounds', 'invalidStyleVersion', 'invalidArtwork']) {
         report[key] = sortValues(report[key]);
     }
     report.exports.sort((left, right) => compareCodePoints(left.identity, right.identity) || compareCodePoints(left.path, right.path));
@@ -290,7 +341,8 @@ export const verifyArtAssets = async ({
         && !report.invalidPng.length
         && !report.invalidAlpha.length
         && !report.invalidBounds.length
-        && !report.invalidStyleVersion.length;
+        && !report.invalidStyleVersion.length
+        && !report.invalidArtwork.length;
     return report;
 };
 
@@ -309,9 +361,12 @@ const parseCli = (args) => {
         const argument = args[index];
         const optionName = {
             '--scope': 'scope',
+            '--cohort': 'cohort',
             '--write-report': 'writeReport',
             '--character-manifest': 'characterManifestPath',
             '--equipment-manifest': 'equipmentManifestPath',
+            '--equipment-provenance': 'equipmentProvenancePath',
+            '--equipment-source-dir': 'equipmentSourceDir',
             '--public-root': 'publicRoot',
         }[argument];
         if (!optionName) throw new Error(`Unknown art verifier argument: ${argument}`);
@@ -321,8 +376,14 @@ const parseCli = (args) => {
         if (argument === '--scope' && !['all', 'characters', 'equipment'].includes(value)) {
             throw new Error(`Invalid value for --scope: ${value}`);
         }
+        if (argument === '--cohort' && !EQUIPMENT_COHORTS.has(value)) {
+            throw new Error(`Invalid value for --cohort: ${value}`);
+        }
         options[optionName] = value;
         index += 1;
+    }
+    if (options.cohort && options.scope && options.scope !== 'equipment') {
+        throw new Error('--cohort can only be used with --scope equipment');
     }
     return options;
 };
@@ -333,9 +394,12 @@ if (isCli) {
     try {
         const options = parseCli(process.argv.slice(2));
         const report = await verifyArtAssets({
-            scope: options.scope || 'all',
+            scope: options.scope || (options.cohort ? 'equipment' : 'all'),
+            cohort: options.cohort || null,
             ...(options.characterManifestPath ? { characterManifestPath: resolve(options.characterManifestPath) } : {}),
             ...(options.equipmentManifestPath ? { equipmentManifestPath: resolve(options.equipmentManifestPath) } : {}),
+            ...(options.equipmentProvenancePath ? { equipmentProvenancePath: resolve(options.equipmentProvenancePath) } : {}),
+            ...(options.equipmentSourceDir ? { equipmentSourceDir: resolve(options.equipmentSourceDir) } : {}),
             ...(options.publicRoot ? { publicRoot: resolve(options.publicRoot) } : {}),
         });
         process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

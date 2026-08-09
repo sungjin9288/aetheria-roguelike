@@ -63,7 +63,9 @@ const createFixture = async () => {
     assert.equal(dump.status, 0, dump.stderr);
     const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
     const selected = catalog.filter((row) => row.cohort === 'weapon-core').slice(0, 6);
+    const priorIdentities = catalog.filter((row) => row.cohort === 'weapon-core').slice(6, 12);
     assert.equal(selected.length, 6);
+    assert.equal(priorIdentities.length, 6);
     const prompt = runNodeScript(PROMPT_SCRIPT, [
         '--catalog', catalogPath,
         '--batch-id', 'active-batch',
@@ -86,6 +88,7 @@ const createFixture = async () => {
         declarationPath,
         directory,
         manifestPath,
+        priorIdentities,
         sourceSheetPath,
         async dispose() {
             await rm(directory, { recursive: true, force: true });
@@ -93,17 +96,17 @@ const createFixture = async () => {
     };
 };
 
-const canonicalPriorRecord = (batch) => {
+const canonicalPriorRecord = (batch, identities) => {
     const record = {
         batchId: 'prior-batch',
         catalogSha256: batch.catalogSha256,
         catalogRowsSha256: batch.catalogRowsSha256,
         cohort: batch.cohort,
-        identityNames: [...batch.identityNames],
+        identityNames: identities.map((identity) => identity.name),
         sourceSheet: 'prior-source-sheet.png',
         sourceSheetSha256: '1'.repeat(64),
         replayKey: '',
-        exports: batch.identities.map((identity, index) => ({
+        exports: identities.map((identity, index) => ({
             cell: CELL_ORDER[index],
             name: identity.name,
             runtimePath: identity.runtimePath,
@@ -180,7 +183,7 @@ test('processor rejects every malformed prior version-1 provenance record withou
                 const current = caseFixture(fixture, index);
                 const paths = await seedExistingOutputs(current);
                 const beforeOutputs = await readSnapshot(paths);
-                const record = structuredClone(canonicalPriorRecord(fixture.batch));
+                const record = structuredClone(canonicalPriorRecord(fixture.batch, fixture.priorIdentities));
                 mutate(record);
                 const ledgerBytes = Buffer.from(`${JSON.stringify({ version: 1, batches: [record] })}\n`);
                 await writeFile(current.provenancePath, ledgerBytes);
@@ -202,7 +205,7 @@ test('processor accepts a canonical active-catalog prior record and appends one 
     const fixture = await createFixture();
     const current = caseFixture(fixture, 'canonical');
     try {
-        const prior = canonicalPriorRecord(fixture.batch);
+        const prior = canonicalPriorRecord(fixture.batch, fixture.priorIdentities);
         await mkdir(dirname(current.provenancePath), { recursive: true });
         await writeFile(current.provenancePath, `${JSON.stringify({ version: 1, batches: [prior] })}\n`);
 
@@ -212,6 +215,55 @@ test('processor accepts a canonical active-catalog prior record and appends one 
         const ledger = JSON.parse(await readFile(current.provenancePath, 'utf8'));
         assert.equal(ledger.batches.length, 2);
         assert.deepEqual(ledger.batches[0], prior);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('processor rejects duplicate identities and runtime paths across prior batch records without byte changes', async () => {
+    const fixture = await createFixture();
+    const current = caseFixture(fixture, 'duplicate-prior-records');
+    try {
+        const paths = await seedExistingOutputs(current);
+        const beforeOutputs = await readSnapshot(paths);
+        const first = canonicalPriorRecord(fixture.batch, fixture.priorIdentities);
+        const duplicate = structuredClone(first);
+        duplicate.batchId = 'prior-batch-duplicate';
+        duplicate.sourceSheet = 'prior-source-sheet-duplicate.png';
+        duplicate.sourceSheetSha256 = '9'.repeat(64);
+        duplicate.replayKey = replayKey(duplicate);
+        const ledgerBytes = Buffer.from(`${JSON.stringify({ version: 1, batches: [first, duplicate] })}\n`);
+        await mkdir(dirname(current.provenancePath), { recursive: true });
+        await writeFile(current.provenancePath, ledgerBytes);
+
+        const result = runProcessor(current);
+
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /Invalid provenance ledger/);
+        assert.deepEqual(await readSnapshot(paths), beforeOutputs);
+        assert.deepEqual(await readFile(current.provenancePath), ledgerBytes);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('processor refuses a new batch that redeclares a prior identity or runtime path', async () => {
+    const fixture = await createFixture();
+    const current = caseFixture(fixture, 'duplicate-active-record');
+    try {
+        const paths = await seedExistingOutputs(current);
+        const beforeOutputs = await readSnapshot(paths);
+        const prior = canonicalPriorRecord(fixture.batch, fixture.batch.identities);
+        const ledgerBytes = Buffer.from(`${JSON.stringify({ version: 1, batches: [prior] })}\n`);
+        await mkdir(dirname(current.provenancePath), { recursive: true });
+        await writeFile(current.provenancePath, ledgerBytes);
+
+        const result = runProcessor(current);
+
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /already declared by prior provenance/i);
+        assert.deepEqual(await readSnapshot(paths), beforeOutputs);
+        assert.deepEqual(await readFile(current.provenancePath), ledgerBytes);
     } finally {
         await fixture.dispose();
     }

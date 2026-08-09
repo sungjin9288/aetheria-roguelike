@@ -12,10 +12,15 @@ import { getItemIconAssetSrc } from '../src/utils/itemVisuals.js';
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DUMP_SCRIPT = resolve(REPO_ROOT, 'scripts/dump-equipment-catalog.mjs');
 const PROMPT_SCRIPT = resolve(REPO_ROOT, 'scripts/generate_equipment_art_prompts.mjs');
+const SOURCE_PREPARER_SCRIPT = resolve(REPO_ROOT, 'scripts/prepare_equipment_source_sheet.py');
 const BATCH_PROCESSOR_SCRIPT = resolve(REPO_ROOT, 'scripts/process_equipment_art_batch.py');
+const MANIFEST_SYNC_SCRIPT = resolve(REPO_ROOT, 'scripts/sync-equipment-art-manifest.mjs');
 const LEGACY_GENERATOR_SCRIPT = resolve(REPO_ROOT, 'scripts/generate_equipment_item_art.py');
 const FAMILY_SOURCE_DIR = resolve(REPO_ROOT, 'public/assets/equipment-family/items');
 const EQUIPMENT_MANIFEST_PATH = resolve(REPO_ROOT, 'src/data/equipmentArtManifest.json');
+const WEAPON_CORE_BATCH_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-core/batches');
+const WEAPON_CORE_SOURCE_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-core');
+const WEAPON_CORE_PROVENANCE_PATH = resolve(REPO_ROOT, 'docs/evidence/art/equipment-weapon-core-provenance.json');
 const CELL_ORDER = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 
 const compareCodePoints = (left, right) => {
@@ -53,6 +58,10 @@ const runBatchProcessor = (args) => spawnSync('python3', [BATCH_PROCESSOR_SCRIPT
     encoding: 'utf8',
 });
 
+const runManifestSync = (args) => spawnSync(process.execPath, [MANIFEST_SYNC_SCRIPT, ...args], {
+    encoding: 'utf8',
+});
+
 const expectedEquipmentRuntimePaths = new Map(
     Object.values(ITEMS)
         .flat()
@@ -81,6 +90,74 @@ test('equipment catalog dump writes the sorted current 233-row runtime catalog w
         for (const row of rows) {
             assert.equal(row.runtimePath, expectedEquipmentRuntimePaths.get(row.name), `Current runtime path for ${row.name}`);
         }
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('equipment manifest sync rejects provenance order, cell and batch identity drift before writing', async (context) => {
+    const mutations = [
+        ['identity order', (provenance) => { provenance.batches[0].identityNames[0] = '위조된 정체성'; }],
+        ['cell order', (provenance) => { provenance.batches[0].exports[0].cell = 'bottom-right'; }],
+        ['duplicate batch id', (provenance) => { provenance.batches[1].batchId = provenance.batches[0].batchId; }],
+    ];
+
+    for (const [label, mutate] of mutations) {
+        await context.test(label, async () => {
+            const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-manifest-sync-'));
+            const catalogPath = join(directory, 'catalog.json');
+            const provenancePath = join(directory, 'provenance.json');
+            const outputPath = join(directory, 'manifest.json');
+            try {
+                const dump = runDump(['--output', catalogPath]);
+                assert.equal(dump.status, 0, dump.stderr);
+                const provenance = JSON.parse(await readFile(WEAPON_CORE_PROVENANCE_PATH, 'utf8'));
+                mutate(provenance);
+                await writeFile(provenancePath, `${JSON.stringify(provenance, null, 2)}\n`);
+
+                const result = runManifestSync([
+                    '--catalog', catalogPath,
+                    '--manifest', EQUIPMENT_MANIFEST_PATH,
+                    '--provenance', provenancePath,
+                    '--source-dir', WEAPON_CORE_SOURCE_DIR,
+                    '--public-root', resolve(REPO_ROOT, 'public'),
+                    '--output', outputPath,
+                ]);
+
+                assert.notEqual(result.status, 0, 'Tampered provenance must fail manifest sync');
+                assert.match(result.stderr, /provenance/i);
+                await assert.rejects(readFile(outputPath), { code: 'ENOENT' });
+            } finally {
+                await rm(directory, { recursive: true, force: true });
+            }
+        });
+    }
+});
+
+test('equipment manifest sync rejects player-facing manifest runtime routing drift before writing', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-manifest-route-'));
+    const catalogPath = join(directory, 'catalog.json');
+    const manifestPath = join(directory, 'equipment-manifest.json');
+    const outputPath = join(directory, 'synced-manifest.json');
+    try {
+        const dump = runDump(['--output', catalogPath]);
+        assert.equal(dump.status, 0, dump.stderr);
+        const manifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
+        manifest.entries['강철 롱소드'] = manifest.entries['여행자 튜닉'];
+        await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+        const result = runManifestSync([
+            '--catalog', catalogPath,
+            '--manifest', manifestPath,
+            '--provenance', WEAPON_CORE_PROVENANCE_PATH,
+            '--source-dir', WEAPON_CORE_SOURCE_DIR,
+            '--public-root', resolve(REPO_ROOT, 'public'),
+            '--output', outputPath,
+        ]);
+
+        assert.notEqual(result.status, 0, 'Player-facing runtime routing drift must fail manifest sync');
+        assert.match(result.stderr, /manifest runtime path/i);
+        await assert.rejects(readFile(outputPath), { code: 'ENOENT' });
     } finally {
         await rm(directory, { recursive: true, force: true });
     }
@@ -171,7 +248,7 @@ test('equipment prompt batch uses the fixed six-cell order and Art Bible languag
     const catalogPath = join(directory, 'catalog.json');
     const outputPath = join(directory, 'weapon-core-001.json');
     const rows = [
-        { name: '가람의 검', type: 'weapon', tier: 1, elem: '', familyKey: 'weapon-sword', runtimePath: '/assets/equipment-exact/auto/garam.png', cohort: 'weapon-core' },
+        { name: '가람의 검', type: 'weapon', tier: 0, elem: '', familyKey: 'weapon-sword', runtimePath: '/assets/equipment-exact/auto/garam.png', cohort: 'weapon-core' },
         { name: '나래의 검', type: 'weapon', tier: 2, elem: '냉기', familyKey: 'weapon-sword', runtimePath: '/assets/equipment-exact/auto/narae.png', cohort: 'weapon-core' },
         { name: '다온의 검', type: 'weapon', tier: 3, elem: '자연', familyKey: 'weapon-sword', runtimePath: '/assets/equipment-exact/auto/daon.png', cohort: 'weapon-core' },
         { name: '라온의 검', type: 'weapon', tier: 4, elem: '화염', familyKey: 'weapon-sword', runtimePath: '/assets/equipment-exact/auto/raon.png', cohort: 'weapon-core' },
@@ -198,10 +275,12 @@ test('equipment prompt batch uses the fixed six-cell order and Art Bible languag
         assert.match(batch.prompt, /six isolated icons/i);
         assert.match(batch.prompt, /no labels/i);
         assert.match(batch.prompt, /equal cell padding/i);
+        assert.match(batch.prompt, /readable at 32px/i);
+        assert.match(batch.prompt, /at least two of blade or body shape, handle, central ornament, and material/i);
         assert.match(batch.identities[0].prompt, /가람의 검/);
         assert.match(batch.identities[0].prompt, /weapon-sword/);
-        assert.match(batch.identities[0].prompt, /T1/);
-        assert.match(batch.identities[0].prompt, /worn wood, iron, or cloth/i);
+        assert.match(batch.identities[0].prompt, /T0/);
+        assert.match(batch.identities[0].prompt, /plain training-grade construction/i);
         assert.match(batch.identities[3].prompt, /dark-red metal, cracked surface/i);
         assert.match(batch.identities[5].prompt, /separated pieces, grid structure/i);
     } finally {
@@ -209,7 +288,222 @@ test('equipment prompt batch uses the fixed six-cell order and Art Bible languag
     }
 });
 
-const createSourceSheet = (path, { kind = 'valid', colorOffset = 0 } = {}) => {
+test('tracked weapon-core batches declare every authoritative identity exactly once with partial final sheets', async () => {
+    const catalogResult = runDump(['--stdout']);
+    assert.equal(catalogResult.status, 0, catalogResult.stderr);
+    const expected = JSON.parse(catalogResult.stdout)
+        .filter((entry) => entry.cohort === 'weapon-core')
+        .map((entry) => entry.name)
+        .sort(compareCodePoints);
+    const batchFiles = [
+        'weapon-core-sword-01.json',
+        'weapon-core-sword-02.json',
+        'weapon-core-sword-03.json',
+        'weapon-core-dagger-01.json',
+        'weapon-core-dagger-02.json',
+        'weapon-core-dagger-03.json',
+        'weapon-core-heavy-01.json',
+        'weapon-core-heavy-02.json',
+    ];
+    const batches = await Promise.all(batchFiles.map(async (file) => (
+        JSON.parse(await readFile(join(WEAPON_CORE_BATCH_DIR, file), 'utf8'))
+    )));
+    const declared = batches.flatMap((batch) => batch.identityNames);
+
+    assert.equal(declared.length, 44);
+    assert.equal(new Set(declared).size, 44);
+    assert.deepEqual([...declared].sort(compareCodePoints), expected);
+    assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-sword-03').identityNames.length, 3);
+    assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-heavy-02').identityNames.length, 5);
+});
+
+test('equipment source preparer removes only edge-connected working background and fixes the 600x400 grid', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-source-'));
+    const workingPath = join(directory, 'working.png');
+    const sourcePath = join(directory, 'source.png');
+    try {
+        const fixture = spawnSync('python3', ['-c', [
+            'from PIL import Image, ImageDraw',
+            'image = Image.new("RGB", (900, 600), (245, 245, 245))',
+            'draw = ImageDraw.Draw(image)',
+            'for y in range(0, 600, 24):',
+            '    for x in range(0, 900, 24):',
+            '        if (x // 24 + y // 24) % 2:',
+            '            draw.rectangle((x, y, x + 23, y + 23), fill=(225, 225, 225))',
+            'for index in range(6):',
+            '    column = index % 3',
+            '    row = index // 3',
+            '    left = column * 300 + (4 if index == 4 else 90)',
+            '    top = row * 300 + 54',
+            '    draw.polygon(((left, top + 132), (left + 54, top), (left + 84, top + 144), (left + 42, top + 210)), fill=(40 + index * 20, 70, 110))',
+            '    draw.rectangle((left + 24, top + 150, left + 66, top + 180), fill=(255, 255, 255))',
+            `image.save(${JSON.stringify(workingPath)})`,
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(fixture.status, 0, fixture.stderr);
+
+        const result = spawnSync('python3', [
+            SOURCE_PREPARER_SCRIPT,
+            '--input', workingPath,
+            '--output', sourcePath,
+        ], { encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr);
+
+        const inspection = spawnSync('python3', ['-c', [
+            'from PIL import Image',
+            'import json',
+            `path = ${JSON.stringify(sourcePath)}`,
+            'with Image.open(path) as image:',
+            '    alpha = image.getchannel("A")',
+            '    cells = []',
+            '    for index in range(6):',
+            '        column = index % 3',
+            '        row = index // 3',
+            '        cell = alpha.crop((column * 200, row * 200, column * 200 + 200, row * 200 + 200))',
+            '        cells.append({"extrema": cell.getextrema(), "bounds": cell.getbbox()})',
+            '    print(json.dumps({"mode": image.mode, "size": image.size, "cells": cells}))',
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(inspection.status, 0, inspection.stderr);
+        const prepared = JSON.parse(inspection.stdout);
+        assert.deepEqual(prepared.size, [600, 400]);
+        assert.equal(prepared.mode, 'RGBA');
+        assert.ok(prepared.cells.every((cell) => cell.extrema[0] === 0 && cell.extrema[1] === 255));
+        assert.ok(prepared.cells.every((cell) => cell.bounds[0] > 0 && cell.bounds[1] > 0 && cell.bounds[2] < 200 && cell.bounds[3] < 200));
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('equipment source preparer rejects real icon pixels on a working cell boundary before resampling', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-source-boundary-'));
+    const workingPath = join(directory, 'working.png');
+    const sourcePath = join(directory, 'source.png');
+    try {
+        const fixture = spawnSync('python3', ['-c', [
+            'from PIL import Image, ImageDraw',
+            'image = Image.new("RGB", (900, 600), (245, 245, 245))',
+            'draw = ImageDraw.Draw(image)',
+            'for y in range(0, 600, 24):',
+            '    for x in range(0, 900, 24):',
+            '        if (x // 24 + y // 24) % 2:',
+            '            draw.rectangle((x, y, x + 23, y + 23), fill=(225, 225, 225))',
+            'for index in range(6):',
+            '    column = index % 3',
+            '    row = index // 3',
+            '    left = column * 300 + (0 if index == 1 else 80)',
+            '    top = row * 300 + 70',
+            '    draw.rectangle((left, top, left + 90, top + 150), fill=(55 + index * 20, 75, 115))',
+            `image.save(${JSON.stringify(workingPath)})`,
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(fixture.status, 0, fixture.stderr);
+
+        const result = spawnSync('python3', [
+            SOURCE_PREPARER_SCRIPT,
+            '--input', workingPath,
+            '--output', sourcePath,
+        ], { encoding: 'utf8' });
+
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /working source cell 2 requires transparent boundary padding/);
+        await assert.rejects(stat(sourcePath), { code: 'ENOENT' });
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('equipment source preparer preserves completely blank trailing cells for a partial batch', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-source-partial-'));
+    const workingPath = join(directory, 'working.png');
+    const sourcePath = join(directory, 'source.png');
+    try {
+        const fixture = spawnSync('python3', ['-c', [
+            'from PIL import Image, ImageDraw',
+            'image = Image.new("RGB", (900, 600), (245, 245, 245))',
+            'draw = ImageDraw.Draw(image)',
+            'for index in range(3):',
+            '    left = index * 300 + 80',
+            '    draw.rectangle((left, 70, left + 90, 220), fill=(55 + index * 30, 75, 115))',
+            `image.save(${JSON.stringify(workingPath)})`,
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(fixture.status, 0, fixture.stderr);
+
+        const result = spawnSync('python3', [
+            SOURCE_PREPARER_SCRIPT,
+            '--input', workingPath,
+            '--output', sourcePath,
+            '--used-cells', '3',
+        ], { encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr);
+
+        const inspection = spawnSync('python3', ['-c', [
+            'from PIL import Image',
+            'import json',
+            `path = ${JSON.stringify(sourcePath)}`,
+            'with Image.open(path) as image:',
+            '    maxima = []',
+            '    for index in range(6):',
+            '        column = index % 3',
+            '        row = index // 3',
+            '        alpha = image.crop((column * 200, row * 200, column * 200 + 200, row * 200 + 200)).getchannel("A")',
+            '        maxima.append(alpha.getextrema()[1])',
+            '    print(json.dumps(maxima))',
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(inspection.status, 0, inspection.stderr);
+        assert.deepEqual(JSON.parse(inspection.stdout), [255, 255, 255, 0, 0, 0]);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('equipment source preparer removes edge-connected chroma variation without erasing enclosed green detail', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-source-chroma-'));
+    const workingPath = join(directory, 'working.png');
+    const sourcePath = join(directory, 'source.png');
+    try {
+        const fixture = spawnSync('python3', ['-c', [
+            'from PIL import Image, ImageDraw',
+            'image = Image.new("RGB", (900, 600), (24, 230, 145))',
+            'draw = ImageDraw.Draw(image)',
+            'for y in range(600):',
+            '    draw.line((0, y, 899, y), fill=(20 + y % 9, 224 + y % 13, 138 + y % 11))',
+            'for index in range(6):',
+            '    column = index % 3',
+            '    row = index // 3',
+            '    left = column * 300 + 80',
+            '    top = row * 300 + 55',
+            '    draw.rectangle((left, top, left + 140, top + 180), fill=(18, 20, 28))',
+            '    draw.rectangle((left + 35, top + 45, left + 105, top + 125), fill=(22, 210, 118))',
+            `image.save(${JSON.stringify(workingPath)})`,
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(fixture.status, 0, fixture.stderr);
+
+        const result = spawnSync('python3', [
+            SOURCE_PREPARER_SCRIPT,
+            '--input', workingPath,
+            '--output', sourcePath,
+        ], { encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr);
+
+        const inspection = spawnSync('python3', ['-c', [
+            'from PIL import Image',
+            'import json',
+            `path = ${JSON.stringify(sourcePath)}`,
+            'with Image.open(path) as image:',
+            '    alpha = image.getchannel("A")',
+            '    print(json.dumps({"corner": alpha.getpixel((0, 0)), "detail": alpha.getpixel((100, 90))}))',
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(inspection.status, 0, inspection.stderr);
+        assert.deepEqual(JSON.parse(inspection.stdout), { corner: 0, detail: 255 });
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+const createSourceSheet = (path, {
+    kind = 'valid',
+    colorOffset = 0,
+    usedCells = 6,
+    paintUnusedCell = false,
+} = {}) => {
     const script = [
         'from PIL import Image, ImageDraw',
         `kind = ${JSON.stringify(kind)}`,
@@ -225,11 +519,15 @@ const createSourceSheet = (path, { kind = 'valid', colorOffset = 0 } = {}) => {
         'draw = ImageDraw.Draw(image)',
         'if kind not in {"opaque-rgb", "opaque-rgba"}:',
         '    cell_height = image.height // 2',
+        `    used_cells = ${JSON.stringify(usedCells)}`,
+        `    paint_unused_cell = ${paintUnusedCell ? 'True' : 'False'}`,
         '    for index in range(6):',
         '        column = index % 3',
         '        row = index // 3',
         '        left = column * 200 + 48',
         '        top = row * cell_height + 20',
+        '        if index >= used_cells and not (paint_unused_cell and index == used_cells):',
+        '            continue',
         '        if kind == "empty-cell" and index == 5:',
         '            continue',
         '        if kind == "one-pixel-cell" and index == 5:',
@@ -245,7 +543,10 @@ const createSourceSheet = (path, { kind = 'valid', colorOffset = 0 } = {}) => {
     assert.equal(result.status, 0, result.stderr);
 };
 
-const createProcessorFixture = async ({ batchId = 'equipment-pipeline-test-001' } = {}) => {
+const createProcessorFixture = async ({
+    batchId = 'equipment-pipeline-test-001',
+    identityCount = 6,
+} = {}) => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-batch-'));
     const sourceManifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
     const catalogPath = join(directory, 'equipment-catalog.json');
@@ -258,8 +559,8 @@ const createProcessorFixture = async ({ batchId = 'equipment-pipeline-test-001' 
     const dumpResult = runDump(['--output', catalogPath]);
     assert.equal(dumpResult.status, 0, dumpResult.stderr);
     const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
-    const selected = catalog.filter((row) => row.cohort === 'weapon-core').slice(0, 6);
-    assert.equal(selected.length, 6, 'The live catalog must supply one complete real prompt cohort fixture');
+    const selected = catalog.filter((row) => row.cohort === 'weapon-core').slice(0, identityCount);
+    assert.equal(selected.length, identityCount, 'The live catalog must supply the requested real prompt cohort fixture');
     const promptResult = runPromptGenerator([
         '--catalog', catalogPath,
         '--batch-id', batchId,
@@ -270,7 +571,7 @@ const createProcessorFixture = async ({ batchId = 'equipment-pipeline-test-001' 
     const batch = JSON.parse(await readFile(batchPath, 'utf8'));
     await writeFile(declarationPath, `${JSON.stringify({ batchId: batch.batchId, identityNames: batch.identityNames })}\n`);
     await writeFile(manifestPath, `${JSON.stringify(sourceManifest)}\n`);
-    createSourceSheet(sourceSheetPath);
+    createSourceSheet(sourceSheetPath, { usedCells: identityCount });
 
     return {
         batch,
@@ -415,6 +716,47 @@ test('equipment batch processor crops six cells into existing runtime paths and 
         assert.deepEqual(provenance.batches[0].exports.map((entry) => entry.runtimePath), fixture.batch.identities.map((entry) => entry.runtimePath));
         assert.ok(provenance.batches[0].exports.every((entry) => /^[0-9a-f]{64}$/.test(entry.exportSha256)));
         assert.match(provenance.batches[0].sourceSheetSha256, /^[0-9a-f]{64}$/);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('partial equipment batch publishes only declared cells and exact replay remains byte-identical', async () => {
+    const fixture = await createProcessorFixture({ batchId: 'partial-batch', identityCount: 3 });
+    try {
+        assert.equal(fixture.batch.identities.length, 3);
+        assert.deepEqual(fixture.batch.identities.map((identity) => identity.cell), CELL_ORDER.slice(0, 3));
+        assert.match(fixture.batch.prompt, /unused trailing cells.*completely transparent/i);
+
+        const first = runBatchProcessor(processorArgs(fixture));
+        assert.equal(first.status, 0, first.stderr);
+        const paths = runtimeOutputPaths(fixture);
+        const beforeOutputs = await readByteSnapshot(paths);
+        const beforeLedger = await readFile(fixture.provenancePath);
+        const provenance = JSON.parse(beforeLedger);
+        assert.equal(provenance.batches.length, 1);
+        assert.equal(provenance.batches[0].identityNames.length, 3);
+        assert.equal(provenance.batches[0].exports.length, 3);
+
+        const replay = runBatchProcessor(processorArgs(fixture));
+        assert.equal(replay.status, 0, replay.stderr);
+        assert.deepEqual(await readByteSnapshot(paths), beforeOutputs);
+        assert.deepEqual(await readFile(fixture.provenancePath), beforeLedger);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('partial equipment batch rejects content in every unused trailing cell before writes', async () => {
+    const fixture = await createProcessorFixture({ batchId: 'partial-unused-cell', identityCount: 3 });
+    try {
+        createSourceSheet(fixture.sourceSheetPath, { usedCells: 3, paintUnusedCell: true });
+
+        const result = runBatchProcessor(processorArgs(fixture, ['--dry-run']));
+
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /unused trailing cell bottom-left must be completely transparent/i);
+        await assertNoProcessorWrites(fixture);
     } finally {
         await fixture.dispose();
     }

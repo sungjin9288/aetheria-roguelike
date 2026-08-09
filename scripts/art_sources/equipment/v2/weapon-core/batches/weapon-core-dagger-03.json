@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "weapon-core-dagger-03",
+  "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+  "catalogRowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc",
+  "cohort": "weapon-core",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "용아 단검",
+    "질풍의 단검",
+    "청해 단검",
+    "투척용 단검",
+    "혼돈 절멸기",
+    "흑요석단검"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "용아 단검",
+      "type": "weapon",
+      "tier": 3,
+      "elem": "",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-4e1e50c86bcc.png",
+      "cohort": "weapon-core",
+      "prompt": "용아 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-center",
+      "name": "질풍의 단검",
+      "type": "weapon",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-8c4c87f1786d.png",
+      "cohort": "weapon-core",
+      "prompt": "질풍의 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "청해 단검",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "냉기",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-dcfd06b794ac.png",
+      "cohort": "weapon-core",
+      "prompt": "청해 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T4: an elemental core and magical fabrication integrated into the structure; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "투척용 단검",
+      "type": "weapon",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-befa10bbace0.png",
+      "cohort": "weapon-core",
+      "prompt": "투척용 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "혼돈 절멸기",
+      "type": "weapon",
+      "tier": 6,
+      "elem": "어둠",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-e9ece94f2f24.png",
+      "cohort": "weapon-core",
+      "prompt": "혼돈 절멸기; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "흑요석단검",
+      "type": "weapon",
+      "tier": 3,
+      "elem": "",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-exact/auto/auto-c1f6032fcdc8.png",
+      "cohort": "weapon-core",
+      "prompt": "흑요석단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 용아 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 질풍의 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 청해 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T4: an elemental core and magical fabrication integrated into the structure; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light.\nbottom-left: 투척용 단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-center: 혼돈 절멸기; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze.\nbottom-right: 흑요석단검; family weapon-dagger: weapon-dagger family: a compact blade, asymmetric grip, and readable point; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}
