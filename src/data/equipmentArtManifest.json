@@ -38,7 +38,8 @@
   "version": 1,
   "catalog": {
    "rowFields": ["name", "type", "tier", "elem", "familyKey", "runtimePath", "cohort"],
-   "sort": "unicode-code-point"
+   "sort": "unicode-code-point",
+   "rowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc"
   },
   "batch": {
    "grid": {

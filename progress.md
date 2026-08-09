@@ -1,3 +1,16 @@
+Done (2026-08-09: Task 4 independent-review integrity fixes):
+- Bound every generated six-identity batch to the authoritative catalog hash and the complete seven-field equipment-row hash. The processor now requires the dumped catalog and rejects catalog, cohort, family, Tier, element, or manifest-derived runtime-path drift before any write.
+- Restricted source sheets to true RGBA `600x400` fixed 3x2 input with transparent and opaque pixels, non-degenerate icon bounds, and transparent cell padding.
+- Prevalidates stable provenance, treats an exact replay key as a no-op, rejects conflicting `batchId` reuse, and stages/verifies all six PNGs plus the next ledger before rollback-safe publication. The legacy all-row generator now stages and rolls back its complete output set plus manifest through the same integrity boundary.
+
+Verification:
+- Adversarial RED: focused pipeline `5/39` pass and `34/39` fail before implementation; failures covered missing catalog binding, strict source validation, ledger prevalidation, replay/conflict handling, and atomic publication.
+- Final focused pipeline `40/40` and focused+item visual `59/59` are GREEN, including monkeypatched `os.replace` rollback for the batch processor and the executable legacy generator path.
+- Live catalog dump remains 233 unique names and 233 unique runtime paths; legacy dry-run validates all 233 rows with no output or manifest target. `npm run verify` is GREEN with unit `3544/3544`, type-check, lint, and build guard; `git diff --check` is GREEN.
+
+Scope:
+- No runtime equipment PNG, character asset, source sheet, provenance ledger, `build/` artifact, styleVersion 2 closure, smoke/native artifact, or approved full `art:verify` report was created. Task 5–8 painting and full visual approval remain open.
+
 Done (2026-08-09: Task 4 reproducible equipment-art pipeline readiness):
 - Added a deterministic 233-row equipment catalog dump with explicit Unicode code-point sorting, current runtime paths, pure family/signature cohort mapping, and live totals of armor 83, offhand/headgear 22, signature mythic 25, weapon core 44, and weapon ranged/magic 59.
 - Replaced the legacy generator's fixed temporary catalog dependency with explicit input/output arguments and a genuine no-write dry run, while retaining all Task 2 manifest metadata when generated entries are replaced.

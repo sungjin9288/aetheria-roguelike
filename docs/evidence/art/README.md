@@ -26,21 +26,24 @@ This directory records reproducible art-contract evidence. Task 3 completes the 
 
 - `scripts/dump-equipment-catalog.mjs` emits the live, Unicode-code-point-sorted 233-row catalog with the exact row fields `name`, `type`, `tier`, `elem`, `familyKey`, `runtimePath`, and `cohort`. The current deterministic cohort totals are `armor 83`, `offhand-headgear 22`, `signature-mythic 25`, `weapon-core 44`, and `weapon-ranged-magic 59`.
 - `scripts/generate_equipment_item_art.py` now accepts only explicit `--catalog`, `--source-dir`, `--output-dir`, and `--manifest` inputs. Its `--dry-run` validates those inputs without creating either output target, and a normal legacy generation preserves every top-level manifest metadata field while replacing only generated entries.
-- `scripts/generate_equipment_art_prompts.mjs` creates one declared, cohort-consistent six-identity source request at a time. It fixes the 2x3 row-major order to `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right` and includes family, Tier, and element language from the Art Bible.
-- `scripts/process_equipment_art_batch.py` verifies the matching six-name source declaration before any write, crops the fixed cells, normalizes transparent exports to `160x160` current runtime paths, and appends stable source/export SHA-256 provenance. Its `--dry-run` performs the same validation without creating exports or provenance.
+- `scripts/generate_equipment_art_prompts.mjs` creates one declared, cohort-consistent six-identity source request at a time. It binds the batch to the authoritative catalog SHA-256 and complete seven-field row SHA-256, fixes the 2x3 row-major order to `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`, and includes family, Tier, and element language from the Art Bible.
+- `scripts/process_equipment_art_batch.py` requires the dumped catalog and verifies its pinned full-row hash, all batch row fields, cohort, and manifest-derived runtime paths before any write. It accepts only true RGBA `600x400` sheets with six isolated non-degenerate cells, normalizes each export to transparent `160x160`, prevalidates a stable replay ledger, and publishes all six PNGs plus the next ledger through a staged rollback boundary. Exact replay is a no-op; conflicting `batchId` reuse fails before publication.
+- `scripts/generate_equipment_item_art.py` retains its explicit no-write dry run and now stages/verifies the entire legacy output set plus manifest before rollback-safe publication.
 
 Typical readiness flow (all output paths are caller-chosen):
 
 ```sh
 node --import tsx scripts/dump-equipment-catalog.mjs --output output/equipment-catalog.json
 node --import tsx scripts/generate_equipment_art_prompts.mjs --catalog output/equipment-catalog.json --batch-id equipment-v2-001 --names 'name-1,name-2,name-3,name-4,name-5,name-6' --output output/equipment-v2-001.json
-python3 scripts/process_equipment_art_batch.py --batch output/equipment-v2-001.json --source-sheet /chosen/source-sheet.png --source-declaration /chosen/source-declaration.json --public-root /chosen/public-root --equipment-manifest src/data/equipmentArtManifest.json --provenance /chosen/equipment-provenance.json --dry-run
+python3 scripts/process_equipment_art_batch.py --batch output/equipment-v2-001.json --catalog output/equipment-catalog.json --source-sheet /chosen/source-sheet.png --source-declaration /chosen/source-declaration.json --public-root /chosen/public-root --equipment-manifest src/data/equipmentArtManifest.json --provenance /chosen/equipment-provenance.json --dry-run
 ```
 
 This is pipeline readiness only: no Task 4 source sheet, runtime equipment PNG, `equipment-provenance.json`, style-version closure, or full equipment visual approval has been claimed or written by this checkpoint.
 
-- `node --import tsx --test tests/equipment-art-pipeline.test.js tests/item-visuals.test.js` — GREEN (`27/27`).
-- `npm run type-check`, `npm run lint`, and `npm run verify` — GREEN (`npm run verify`: unit `3512/3512` and build guard).
+- Adversarial focused RED before the integrity fix — `5/39` pass and `34/39` fail on the missing safeguards.
+- `node --import tsx --test tests/equipment-art-pipeline.test.js tests/item-visuals.test.js` — GREEN (`59/59`).
+- Live dump — `233` rows, `233` unique names, and `233` unique runtime paths; legacy dry-run validates all rows without either requested output target.
+- `npm run type-check`, `npm run lint`, and `npm run verify` — GREEN (`npm run verify`: unit `3544/3544` and build guard); `git diff --check` — GREEN.
 
 ## Contract verification
 

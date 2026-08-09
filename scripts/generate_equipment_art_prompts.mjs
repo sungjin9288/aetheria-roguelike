@@ -1,8 +1,9 @@
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { compareCodePoints } from './artCatalog.mjs';
+import { buildArtCatalog, compareCodePoints } from './artCatalog.mjs';
 
 export const CELL_ORDER = Object.freeze([
     'top-left',
@@ -59,12 +60,29 @@ const ELEMENT_LANGUAGE = Object.freeze({
     '에테르': 'separated pieces, grid structure, and purple-teal spatial cracks',
 });
 
+const CATALOG_ROW_FIELDS = Object.freeze([
+    'name',
+    'type',
+    'tier',
+    'elem',
+    'familyKey',
+    'runtimePath',
+    'cohort',
+]);
+
 const parseNames = (value) => value.split(',').map((name) => name.trim()).filter(Boolean);
 
 const readCatalog = async (path) => {
     const catalog = JSON.parse(await readFile(path, 'utf8'));
     if (!Array.isArray(catalog)) throw new Error(`Catalog must be a JSON array: ${path}`);
     return catalog;
+};
+
+const catalogRowsSha256 = (catalog) => {
+    const rows = catalog.map((entry) => Object.fromEntries(
+        CATALOG_ROW_FIELDS.map((field) => [field, entry?.[field]])
+    ));
+    return createHash('sha256').update(JSON.stringify(rows)).digest('hex');
 };
 
 const makeCellPrompt = (entry) => {
@@ -85,6 +103,7 @@ export const buildEquipmentPromptBatch = async ({ catalogPath, batchId, names })
     }
 
     const catalog = await readCatalog(catalogPath);
+    const authoritativeCatalog = await buildArtCatalog();
     const byName = new Map(catalog.map((entry) => [entry?.name, entry]));
     const selected = requestedNames.map((name) => {
         const entry = byName.get(name);
@@ -120,6 +139,8 @@ export const buildEquipmentPromptBatch = async ({ catalogPath, batchId, names })
     return {
         version: 1,
         batchId,
+        catalogSha256: authoritativeCatalog.catalogSha256,
+        catalogRowsSha256: catalogRowsSha256(catalog),
         cohort,
         grid,
         identityNames,

@@ -5,8 +5,11 @@ from __future__ import annotations
 import argparse
 import colorsys
 import hashlib
+import io
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 from PIL import Image
@@ -104,14 +107,18 @@ def write_manifest(
     contract_source: Path = MANIFEST,
 ) -> None:
     """Replace generated entries while retaining all Task 2 contract metadata."""
+    destination = manifest_path.expanduser().resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(build_manifest_bytes(entries, contract_source))
+
+
+def build_manifest_bytes(entries: dict[str, str], contract_source: Path) -> bytes:
     source = load_contract_metadata(contract_source)
     manifest = {
         **{key: value for key, value in source.items() if key != "entries"},
         "entries": dict(sorted(entries.items())),
     }
-    destination = manifest_path.expanduser().resolve()
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return (json.dumps(manifest, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
 
 
 def load_catalog(path: Path, source_dir: Path) -> list[dict]:
@@ -121,6 +128,7 @@ def load_catalog(path: Path, source_dir: Path) -> list[dict]:
         raise ValueError(f"Catalog must be a JSON array: {catalog_path}")
 
     rows: list[dict] = []
+    names: set[str] = set()
     for entry in catalog:
         if not isinstance(entry, dict):
             raise ValueError(f"Catalog entry must be an object: {catalog_path}")
@@ -128,6 +136,9 @@ def load_catalog(path: Path, source_dir: Path) -> list[dict]:
         family_key = entry.get("familyKey")
         if not isinstance(name, str) or not name:
             raise ValueError(f"Catalog entry is missing a name: {catalog_path}")
+        if name in names:
+            raise ValueError(f"Catalog contains a duplicate name: {name}")
+        names.add(name)
         if not isinstance(family_key, str) or not family_key:
             raise ValueError(f"Catalog entry is missing familyKey: {name}")
         require_file(source_dir / f"{family_key}.png")
@@ -159,6 +170,107 @@ def build_item(entry: dict, palettes, source_dir: Path = FAMILY_DIR) -> Image.Im
     return canvas
 
 
+def encode_png(image: Image.Image) -> bytes:
+    output = io.BytesIO()
+    image.save(output, format="PNG", optimize=False)
+    return output.getvalue()
+
+
+def stage_bytes(destination: Path, payload: bytes) -> Path:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, stage_name = tempfile.mkstemp(
+        prefix=f".{destination.name}.",
+        suffix=".stage",
+        dir=destination.parent,
+    )
+    stage_path = Path(stage_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stage:
+            stage.write(payload)
+            stage.flush()
+            os.fsync(stage.fileno())
+        if stage_path.read_bytes() != payload:
+            raise OSError(f"Staged artifact verification failed: {destination}")
+        return stage_path
+    except BaseException:
+        stage_path.unlink(missing_ok=True)
+        raise
+
+
+def restore_destination(destination: Path, original: bytes | None) -> None:
+    if original is None:
+        destination.unlink(missing_ok=True)
+        return
+    with destination.open("wb") as target:
+        target.write(original)
+        target.flush()
+        os.fsync(target.fileno())
+
+
+def publish_staged_generation(
+    staged_outputs: list[tuple[Path, Path]],
+    staged_manifest: Path,
+    manifest_path: Path,
+) -> None:
+    publications = [*staged_outputs, (staged_manifest, manifest_path)]
+    destinations = [destination for _stage, destination in publications]
+    if len(set(destinations)) != len(destinations):
+        raise ValueError("Legacy generator publication destinations must be unique")
+    originals = {
+        destination: destination.read_bytes() if destination.is_file() else None
+        for destination in destinations
+    }
+    published: list[Path] = []
+    try:
+        for stage_path, destination in publications:
+            os.replace(stage_path, destination)
+            published.append(destination)
+    except OSError as publish_error:
+        rollback_errors: list[OSError] = []
+        for destination in reversed(published):
+            try:
+                restore_destination(destination, originals[destination])
+            except OSError as rollback_error:
+                rollback_errors.append(rollback_error)
+        if rollback_errors:
+            raise OSError(
+                f"Legacy generator publication failed and rollback was incomplete: {publish_error}"
+            ) from rollback_errors[0]
+        raise
+    finally:
+        for stage_path, _destination in publications:
+            stage_path.unlink(missing_ok=True)
+
+
+def stage_and_publish_generation(
+    outputs: list[tuple[Path, bytes]],
+    manifest_path: Path,
+    manifest_payload: bytes,
+) -> None:
+    staged_outputs: list[tuple[Path, Path]] = []
+    staged_manifest: Path | None = None
+    try:
+        for destination, payload in outputs:
+            stage_path = stage_bytes(destination, payload)
+            staged_outputs.append((stage_path, destination))
+            if hashlib.sha256(stage_path.read_bytes()).digest() != hashlib.sha256(payload).digest():
+                raise OSError(f"Staged export hash verification failed: {destination}")
+            with Image.open(stage_path) as staged_image:
+                if staged_image.mode != "RGBA" or staged_image.size != (CANVAS, CANVAS):
+                    raise OSError(f"Staged export PNG verification failed: {destination}")
+        staged_manifest = stage_bytes(manifest_path, manifest_payload)
+        if json.loads(staged_manifest.read_text(encoding="utf-8")) != json.loads(
+            manifest_payload.decode("utf-8")
+        ):
+            raise OSError(f"Staged manifest verification failed: {manifest_path}")
+        publish_staged_generation(staged_outputs, staged_manifest, manifest_path)
+    finally:
+        for stage_path, _destination in staged_outputs:
+            stage_path.unlink(missing_ok=True)
+        if staged_manifest is not None:
+            staged_manifest.unlink(missing_ok=True)
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate per-item equipment art from an explicit catalog.")
     parser.add_argument("--catalog", required=True, type=Path)
@@ -182,16 +294,17 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     output_dir = args.output_dir.expanduser().resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
     palettes = load_palettes()
     entries: dict[str, str] = {}
+    outputs: list[tuple[Path, bytes]] = []
     for entry in catalog:
         slug = art_slug(entry["name"])
         image = build_item(entry, palettes, source_dir)
-        image.save(output_dir / f"{slug}.png")
+        outputs.append((output_dir / f"{slug}.png", encode_png(image)))
         entries[entry["name"]] = f"auto/{slug}"
 
-    write_manifest(entries, manifest_path, contract_source)
+    manifest_payload = build_manifest_bytes(entries, contract_source)
+    stage_and_publish_generation(outputs, manifest_path, manifest_payload)
     print(f"{len(entries)} item arts generated → {output_dir}")
     print(f"manifest → {manifest_path}")
 

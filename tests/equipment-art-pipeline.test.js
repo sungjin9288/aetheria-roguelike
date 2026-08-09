@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
@@ -209,47 +209,65 @@ test('equipment prompt batch uses the fixed six-cell order and Art Bible languag
     }
 });
 
-const createSourceSheet = (path) => {
+const createSourceSheet = (path, { kind = 'valid', colorOffset = 0 } = {}) => {
     const script = [
         'from PIL import Image, ImageDraw',
-        'image = Image.new("RGBA", (600, 400), (0, 0, 0, 0))',
+        `kind = ${JSON.stringify(kind)}`,
+        `color_offset = ${JSON.stringify(colorOffset)}`,
+        'if kind == "opaque-rgb":',
+        '    image = Image.new("RGB", (600, 400), (48, 72, 96))',
+        'elif kind == "opaque-rgba":',
+        '    image = Image.new("RGBA", (600, 400), (48, 72, 96, 255))',
+        'elif kind == "malformed-dimensions":',
+        '    image = Image.new("RGBA", (600, 200), (0, 0, 0, 0))',
+        'else:',
+        '    image = Image.new("RGBA", (600, 400), (0, 0, 0, 0))',
         'draw = ImageDraw.Draw(image)',
-        'for index in range(6):',
-        '    column = index % 3',
-        '    row = index // 3',
-        '    left = column * 200 + 48',
-        '    top = row * 200 + 40',
-        '    draw.rectangle((left, top, left + 92, top + 118), fill=(40 + index * 30, 90, 170, 255))',
+        'if kind not in {"opaque-rgb", "opaque-rgba"}:',
+        '    cell_height = image.height // 2',
+        '    for index in range(6):',
+        '        column = index % 3',
+        '        row = index // 3',
+        '        left = column * 200 + 48',
+        '        top = row * cell_height + 20',
+        '        if kind == "empty-cell" and index == 5:',
+        '            continue',
+        '        if kind == "one-pixel-cell" and index == 5:',
+        '            image.putpixel((left, top), (255, 255, 255, 255))',
+        '            continue',
+        '        if kind == "touching-cell-boundary" and index == 5:',
+        '            draw.rectangle((column * 200, row * cell_height, column * 200 + 92, row * cell_height + 118), fill=(255, 255, 255, 255))',
+        '            continue',
+        '        draw.rectangle((left, top, left + 92, top + min(118, cell_height - 28)), fill=(40 + index * 30 + color_offset, 90, 170, 255))',
         `image.save(${JSON.stringify(path)})`,
     ].join('\n');
     const result = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
 };
 
-const createProcessorFixture = async () => {
+const createProcessorFixture = async ({ batchId = 'equipment-pipeline-test-001' } = {}) => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-batch-'));
     const sourceManifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
-    const selectedEntries = Object.entries(sourceManifest.entries).slice(0, 6);
-    const identities = selectedEntries.map(([name, entry], index) => ({
-        cell: CELL_ORDER[index],
-        name,
-        runtimePath: `/assets/equipment-exact/${entry}.png`,
-    }));
-    const batch = {
-        version: 1,
-        batchId: 'equipment-pipeline-test-001',
-        cohort: 'weapon-core',
-        grid: { columns: 3, rows: 2, cellOrder: CELL_ORDER },
-        identityNames: identities.map((entry) => entry.name),
-        identities,
-    };
+    const catalogPath = join(directory, 'equipment-catalog.json');
     const batchPath = join(directory, 'batch.json');
     const declarationPath = join(directory, 'source-declaration.json');
     const sourceSheetPath = join(directory, 'source-sheet.png');
     const publicRoot = join(directory, 'public');
     const manifestPath = join(directory, 'equipmentArtManifest.json');
     const provenancePath = join(directory, 'provenance.json');
-    await writeFile(batchPath, `${JSON.stringify(batch)}\n`);
+    const dumpResult = runDump(['--output', catalogPath]);
+    assert.equal(dumpResult.status, 0, dumpResult.stderr);
+    const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
+    const selected = catalog.filter((row) => row.cohort === 'weapon-core').slice(0, 6);
+    assert.equal(selected.length, 6, 'The live catalog must supply one complete real prompt cohort fixture');
+    const promptResult = runPromptGenerator([
+        '--catalog', catalogPath,
+        '--batch-id', batchId,
+        '--names', selected.map((row) => row.name).reverse().join(','),
+        '--output', batchPath,
+    ]);
+    assert.equal(promptResult.status, 0, promptResult.stderr);
+    const batch = JSON.parse(await readFile(batchPath, 'utf8'));
     await writeFile(declarationPath, `${JSON.stringify({ batchId: batch.batchId, identityNames: batch.identityNames })}\n`);
     await writeFile(manifestPath, `${JSON.stringify(sourceManifest)}\n`);
     createSourceSheet(sourceSheetPath);
@@ -257,6 +275,8 @@ const createProcessorFixture = async () => {
     return {
         batch,
         batchPath,
+        catalog,
+        catalogPath,
         declarationPath,
         directory,
         manifestPath,
@@ -272,6 +292,7 @@ const createProcessorFixture = async () => {
 
 const processorArgs = (fixture, extra = []) => [
     '--batch', fixture.batchPath,
+    '--catalog', fixture.catalogPath,
     '--source-sheet', fixture.sourceSheetPath,
     '--source-declaration', fixture.declarationPath,
     '--public-root', fixture.publicRoot,
@@ -279,6 +300,59 @@ const processorArgs = (fixture, extra = []) => [
     '--provenance', fixture.provenancePath,
     ...extra,
 ];
+
+const rewriteDeclaration = async (fixture) => {
+    await writeFile(fixture.declarationPath, `${JSON.stringify({
+        batchId: fixture.batch.batchId,
+        identityNames: fixture.batch.identityNames,
+    })}\n`);
+};
+
+const regeneratePromptBatch = async (fixture) => {
+    const result = runPromptGenerator([
+        '--catalog', fixture.catalogPath,
+        '--batch-id', fixture.batch.batchId,
+        '--names', fixture.batch.identityNames.slice().reverse().join(','),
+        '--output', fixture.batchPath,
+    ]);
+    assert.equal(result.status, 0, result.stderr);
+    fixture.batch = JSON.parse(await readFile(fixture.batchPath, 'utf8'));
+    await rewriteDeclaration(fixture);
+};
+
+const runtimeOutputPaths = (fixture) => fixture.batch.identities.map((identity) => (
+    join(fixture.publicRoot, identity.runtimePath.slice(1))
+));
+
+const assertNoProcessorWrites = async (fixture) => {
+    await assert.rejects(stat(fixture.publicRoot), { code: 'ENOENT' });
+    await assert.rejects(stat(fixture.provenancePath), { code: 'ENOENT' });
+};
+
+const writeExistingOutputs = async (fixture) => {
+    const paths = runtimeOutputPaths(fixture);
+    for (const [index, path] of paths.entries()) {
+        await mkdir(dirname(path), { recursive: true });
+        await writeFile(path, `existing-output-${index}`);
+    }
+    return paths;
+};
+
+const readByteSnapshot = async (paths) => Promise.all(paths.map((path) => readFile(path)));
+
+test('actual prompt-generator batch is bound to the authoritative catalog hash and full catalog rows', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        assert.equal(fixture.batch.catalogSha256, fixture.sourceManifest.catalogSha256);
+        const catalogByName = new Map(fixture.catalog.map((row) => [row.name, row]));
+        assert.deepEqual(
+            fixture.batch.identities.map(({ cell, prompt, ...row }) => row),
+            fixture.batch.identityNames.map((name) => catalogByName.get(name)),
+        );
+    } finally {
+        await fixture.dispose();
+    }
+});
 
 test('equipment batch processor dry-run refuses a mismatched six-identity declaration before writes', async () => {
     const fixture = await createProcessorFixture();
@@ -343,5 +417,341 @@ test('equipment batch processor crops six cells into existing runtime paths and 
         assert.match(provenance.batches[0].sourceSheetSha256, /^[0-9a-f]{64}$/);
     } finally {
         await fixture.dispose();
+    }
+});
+
+test('equipment batch processor rejects a prompt batch whose catalog projection is tampered before writes', async (t) => {
+    const catalogMutations = [
+        {
+            name: 'catalog row tier',
+            mutate(rows, names) {
+                rows.find((row) => row.name === names[0]).tier = 6;
+            },
+        },
+        {
+            name: 'catalog cohort',
+            mutate(rows, names) {
+                for (const row of rows.filter((row) => names.includes(row.name))) row.cohort = 'armor';
+            },
+        },
+        {
+            name: 'catalog family',
+            mutate(rows, names) {
+                rows.find((row) => row.name === names[0]).familyKey = 'weapon-dagger';
+            },
+        },
+        {
+            name: 'catalog element',
+            mutate(rows, names) {
+                rows.find((row) => row.name === names[0]).elem = '화염';
+            },
+        },
+        {
+            name: 'catalog runtime path',
+            mutate(rows, names) {
+                rows.find((row) => row.name === names[0]).runtimePath = '/assets/equipment-exact/auto/tampered-runtime.png';
+            },
+        },
+    ];
+
+    for (const mutation of catalogMutations) {
+        await t.test(mutation.name, async () => {
+            const fixture = await createProcessorFixture();
+            try {
+                const rows = JSON.parse(await readFile(fixture.catalogPath, 'utf8'));
+                mutation.mutate(rows, fixture.batch.identityNames);
+                await writeFile(fixture.catalogPath, `${JSON.stringify(rows)}\n`);
+                await regeneratePromptBatch(fixture);
+
+                const result = runBatchProcessor(processorArgs(fixture, ['--dry-run']));
+
+                assert.equal(result.status, 1);
+                assert.match(result.stderr, /catalogSha256/i);
+                await assertNoProcessorWrites(fixture);
+            } finally {
+                await fixture.dispose();
+            }
+        });
+    }
+});
+
+test('equipment batch processor rejects every tampered identity field before writes', async (t) => {
+    const mutations = [
+        { name: 'unsupported batch cohort', mutate: (batch) => { batch.cohort = 'unsupported-cohort'; } },
+        { name: 'batch cohort mismatch', mutate: (batch) => { batch.cohort = 'armor'; } },
+        { name: 'identity type', mutate: (batch) => { batch.identities[0].type = 'armor'; } },
+        { name: 'identity tier', mutate: (batch) => { batch.identities[0].tier = 6; } },
+        { name: 'identity element', mutate: (batch) => { batch.identities[0].elem = '화염'; } },
+        { name: 'identity family', mutate: (batch) => { batch.identities[0].familyKey = 'armor-plate'; } },
+        { name: 'identity runtime path', mutate: (batch) => { batch.identities[0].runtimePath = '/assets/equipment-exact/auto/tampered-path.png'; } },
+        { name: 'identity cohort', mutate: (batch) => { batch.identities[0].cohort = 'armor'; } },
+        {
+            name: 'duplicate identity name',
+            mutate: (batch) => {
+                batch.identities[1].name = batch.identities[0].name;
+                batch.identityNames[1] = batch.identityNames[0];
+            },
+        },
+        {
+            name: 'duplicate runtime path',
+            mutate: (batch) => { batch.identities[1].runtimePath = batch.identities[0].runtimePath; },
+        },
+        {
+            name: 'runtime traversal',
+            mutate: (batch) => { batch.identities[0].runtimePath = '/assets/equipment-exact/../escaped.png'; },
+        },
+    ];
+
+    for (const mutation of mutations) {
+        await t.test(mutation.name, async () => {
+            const fixture = await createProcessorFixture();
+            try {
+                mutation.mutate(fixture.batch);
+                await writeFile(fixture.batchPath, `${JSON.stringify(fixture.batch)}\n`);
+                await rewriteDeclaration(fixture);
+
+                const result = runBatchProcessor(processorArgs(fixture, ['--dry-run']));
+
+                assert.equal(result.status, 1);
+                assert.match(result.stderr, /Batch|catalog/i);
+                await assertNoProcessorWrites(fixture);
+            } finally {
+                await fixture.dispose();
+            }
+        });
+    }
+});
+
+test('equipment batch processor rejects opaque or degenerate source sheets before writes', async (t) => {
+    const sourceCases = [
+        { name: 'opaque RGB source', kind: 'opaque-rgb', error: /true RGBA/i },
+        { name: 'fully opaque RGBA source', kind: 'opaque-rgba', error: /transparent and opaque/i },
+        { name: 'malformed declared dimensions', kind: 'malformed-dimensions', error: /600x400/i },
+        { name: 'empty cell', kind: 'empty-cell', error: /empty|opaque icon pixels/i },
+        { name: 'one pixel cell', kind: 'one-pixel-cell', error: /degenerate/i },
+        { name: 'cell content touches grid boundary', kind: 'touching-cell-boundary', error: /bounds|padding|boundary/i },
+    ];
+
+    for (const sourceCase of sourceCases) {
+        await t.test(sourceCase.name, async () => {
+            const fixture = await createProcessorFixture();
+            try {
+                createSourceSheet(fixture.sourceSheetPath, { kind: sourceCase.kind });
+
+                const result = runBatchProcessor(processorArgs(fixture, ['--dry-run']));
+
+                assert.equal(result.status, 1);
+                assert.match(result.stderr, sourceCase.error);
+                await assertNoProcessorWrites(fixture);
+            } finally {
+                await fixture.dispose();
+            }
+        });
+    }
+});
+
+test('equipment batch processor rejects an invalid provenance ledger without replacing existing outputs', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        const paths = await writeExistingOutputs(fixture);
+        const beforeOutputs = await readByteSnapshot(paths);
+        const invalidLedger = Buffer.from('{"version":2,"batches":[]}\n');
+        await writeFile(fixture.provenancePath, invalidLedger);
+
+        const result = runBatchProcessor(processorArgs(fixture));
+
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /Invalid provenance ledger/);
+        assert.deepEqual(await readByteSnapshot(paths), beforeOutputs);
+        assert.deepEqual(await readFile(fixture.provenancePath), invalidLedger);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('equipment batch processor treats an exact batch replay as a no-op without duplicate provenance', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        const first = runBatchProcessor(processorArgs(fixture));
+        assert.equal(first.status, 0, first.stderr);
+        const paths = runtimeOutputPaths(fixture);
+        const beforeOutputs = await readByteSnapshot(paths);
+        const beforeLedger = await readFile(fixture.provenancePath);
+
+        const replay = runBatchProcessor(processorArgs(fixture));
+
+        assert.equal(replay.status, 0, replay.stderr);
+        assert.deepEqual(await readByteSnapshot(paths), beforeOutputs);
+        assert.deepEqual(await readFile(fixture.provenancePath), beforeLedger);
+        const provenance = JSON.parse(beforeLedger);
+        assert.equal(provenance.batches.length, 1);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('equipment batch processor keys exact replay by source bytes rather than the source filename', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        const first = runBatchProcessor(processorArgs(fixture));
+        assert.equal(first.status, 0, first.stderr);
+        const paths = runtimeOutputPaths(fixture);
+        const beforeOutputs = await readByteSnapshot(paths);
+        const beforeLedger = await readFile(fixture.provenancePath);
+        const renamedSource = join(fixture.directory, 'renamed-source-sheet.png');
+        await writeFile(renamedSource, await readFile(fixture.sourceSheetPath));
+        fixture.sourceSheetPath = renamedSource;
+
+        const replay = runBatchProcessor(processorArgs(fixture));
+
+        assert.equal(replay.status, 0, replay.stderr);
+        assert.deepEqual(await readByteSnapshot(paths), beforeOutputs);
+        assert.deepEqual(await readFile(fixture.provenancePath), beforeLedger);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('equipment batch processor rejects conflicting reuse of a batchId before writes', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        const first = runBatchProcessor(processorArgs(fixture));
+        assert.equal(first.status, 0, first.stderr);
+        const paths = runtimeOutputPaths(fixture);
+        const beforeOutputs = await readByteSnapshot(paths);
+        const beforeLedger = await readFile(fixture.provenancePath);
+        createSourceSheet(fixture.sourceSheetPath, { colorOffset: 70 });
+
+        const replay = runBatchProcessor(processorArgs(fixture));
+
+        assert.equal(replay.status, 1);
+        assert.match(replay.stderr, /Conflicting batchId/);
+        assert.deepEqual(await readByteSnapshot(paths), beforeOutputs);
+        assert.deepEqual(await readFile(fixture.provenancePath), beforeLedger);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('publish_staged_batch rolls back every destination after a monkeypatched os.replace failure', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-rollback-'));
+    try {
+        const destinations = Array.from({ length: 6 }, (_, index) => join(directory, 'public', 'assets', `icon-${index}.png`));
+        const script = [
+            'import importlib.util',
+            'import json',
+            'from pathlib import Path',
+            `spec = importlib.util.spec_from_file_location('equipment_batch_processor', ${JSON.stringify(BATCH_PROCESSOR_SCRIPT)})`,
+            'module = importlib.util.module_from_spec(spec)',
+            'spec.loader.exec_module(module)',
+            `root = Path(${JSON.stringify(directory)})`,
+            `destinations = [Path(value) for value in json.loads(${JSON.stringify(JSON.stringify(destinations))})]`,
+            'staged = []',
+            'for index, destination in enumerate(destinations):',
+            '    destination.parent.mkdir(parents=True, exist_ok=True)',
+            '    destination.write_bytes(f"old-output-{index}".encode())',
+            '    staged_path = root / f"staged-{index}.png"',
+            '    staged_path.write_bytes(f"new-output-{index}".encode())',
+            '    staged.append((staged_path, destination))',
+            'provenance = root / "provenance.json"',
+            'provenance.write_bytes(b"old-ledger")',
+            'staged_provenance = root / "staged-provenance.json"',
+            'staged_provenance.write_bytes(b"new-ledger")',
+            'before_outputs = [path.read_bytes() for path in destinations]',
+            'before_ledger = provenance.read_bytes()',
+            'real_replace = module.os.replace',
+            'failed = False',
+            'def fail_once(source, destination):',
+            '    global failed',
+            '    if not failed and Path(source) == staged[2][0] and Path(destination) == staged[2][1]:',
+            '        failed = True',
+            '        raise OSError("injected replace failure")',
+            '    return real_replace(source, destination)',
+            'module.os.replace = fail_once',
+            'try:',
+            '    module.publish_staged_batch(staged, staged_provenance, provenance)',
+            'except OSError as error:',
+            '    assert str(error) == "injected replace failure"',
+            'else:',
+            '    raise AssertionError("publish failure was not raised")',
+            'assert [path.read_bytes() for path in destinations] == before_outputs',
+            'assert provenance.read_bytes() == before_ledger',
+            'print("rollback-ok")',
+        ].join('\n');
+        const result = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(result.stdout, 'rollback-ok\n');
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('legacy generator main rolls back generated outputs and manifest after a monkeypatched os.replace failure', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-legacy-rollback-'));
+    try {
+        const catalogPath = join(directory, 'catalog.json');
+        const outputDir = join(directory, 'generated');
+        const manifestPath = join(directory, 'equipment-manifest.json');
+        const catalog = [
+            { name: '검증용 검', type: 'weapon', tier: 1, elem: '', familyKey: 'weapon-sword', runtimePath: '/assets/equipment-exact/auto/unused-1.png', cohort: 'weapon-core' },
+            { name: '검증용 단검', type: 'weapon', tier: 2, elem: '', familyKey: 'weapon-dagger', runtimePath: '/assets/equipment-exact/auto/unused-2.png', cohort: 'weapon-core' },
+        ];
+        const sourceManifest = {
+            $comment: 'rollback fixture',
+            version: 1,
+            catalogSha256: 'a'.repeat(64),
+            styleVersion: 1,
+            art: { width: 160, height: 160, margin: 8 },
+            entries: { previous: 'auto/previous' },
+        };
+        await mkdir(outputDir, { recursive: true });
+        await writeFile(catalogPath, `${JSON.stringify(catalog)}\n`);
+        await writeFile(manifestPath, `${JSON.stringify(sourceManifest)}\n`);
+
+        const script = [
+            'import importlib.util',
+            'from pathlib import Path',
+            `spec = importlib.util.spec_from_file_location('legacy_equipment_generator', ${JSON.stringify(LEGACY_GENERATOR_SCRIPT)})`,
+            'module = importlib.util.module_from_spec(spec)',
+            'spec.loader.exec_module(module)',
+            `output_dir = Path(${JSON.stringify(outputDir)})`,
+            `manifest = Path(${JSON.stringify(manifestPath)})`,
+            'names = ["검증용 검", "검증용 단검"]',
+            'destinations = [output_dir / f"{module.art_slug(name)}.png" for name in names]',
+            'for index, destination in enumerate(destinations):',
+            '    destination.write_bytes(f"old-output-{index}".encode())',
+            'before_outputs = [path.read_bytes() for path in destinations]',
+            'before_manifest = manifest.read_bytes()',
+            'real_replace = module.os.replace',
+            'replace_count = 0',
+            'def fail_once(source, destination):',
+            '    global replace_count',
+            '    replace_count += 1',
+            '    if replace_count == 2:',
+            '        raise OSError("injected legacy replace failure")',
+            '    return real_replace(source, destination)',
+            'module.os.replace = fail_once',
+            'try:',
+            '    module.main([',
+            `        "--catalog", ${JSON.stringify(catalogPath)},`,
+            `        "--source-dir", ${JSON.stringify(FAMILY_SOURCE_DIR)},`,
+            `        "--output-dir", ${JSON.stringify(outputDir)},`,
+            `        "--manifest", ${JSON.stringify(manifestPath)},`,
+            '    ])',
+            'except OSError as error:',
+            '    assert str(error) == "injected legacy replace failure"',
+            'else:',
+            '    raise AssertionError("legacy publish failure was not raised")',
+            'assert [path.read_bytes() for path in destinations] == before_outputs',
+            'assert manifest.read_bytes() == before_manifest',
+            'print("legacy-rollback-ok")',
+        ].join('\n');
+        const result = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(result.stdout, 'legacy-rollback-ok\n');
+    } finally {
+        await rm(directory, { recursive: true, force: true });
     }
 });
