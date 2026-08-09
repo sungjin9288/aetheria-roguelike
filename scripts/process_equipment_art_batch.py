@@ -47,6 +47,23 @@ SUPPORTED_COHORTS = {
     "weapon-ranged-magic",
 }
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+PROVENANCE_RECORD_FIELDS = frozenset({
+    "batchId",
+    "catalogSha256",
+    "catalogRowsSha256",
+    "cohort",
+    "identityNames",
+    "sourceSheet",
+    "sourceSheetSha256",
+    "replayKey",
+    "exports",
+})
+PROVENANCE_EXPORT_FIELDS = frozenset({
+    "cell",
+    "name",
+    "runtimePath",
+    "exportSha256",
+})
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -321,7 +338,76 @@ def replay_key(batch_id: str, source_sheet_sha256: str, identity_names: list[str
     }))
 
 
-def read_provenance(path: Path) -> dict:
+def validate_provenance_record(
+    record: object,
+    catalog_by_name: dict[str, dict],
+    catalog_sha256: str,
+    catalog_rows_sha256: str,
+) -> str:
+    if not isinstance(record, dict) or set(record) != PROVENANCE_RECORD_FIELDS:
+        raise ValueError
+    batch_id = record["batchId"]
+    identity_names = record["identityNames"]
+    source_sheet_sha256 = record["sourceSheetSha256"]
+    if not isinstance(batch_id, str) or not batch_id.strip():
+        raise ValueError
+    if (
+        not SHA256_PATTERN.fullmatch(record["catalogSha256"] or "")
+        or record["catalogSha256"] != catalog_sha256
+        or not SHA256_PATTERN.fullmatch(record["catalogRowsSha256"] or "")
+        or record["catalogRowsSha256"] != catalog_rows_sha256
+    ):
+        raise ValueError
+    cohort = record["cohort"]
+    if cohort not in SUPPORTED_COHORTS:
+        raise ValueError
+    if (
+        not isinstance(identity_names, list)
+        or len(identity_names) != len(CELL_ORDER)
+        or any(not isinstance(name, str) or not name.strip() for name in identity_names)
+        or len(set(identity_names)) != len(CELL_ORDER)
+    ):
+        raise ValueError
+    source_sheet = record["sourceSheet"]
+    if not isinstance(source_sheet, str) or not source_sheet.strip():
+        raise ValueError
+    if not SHA256_PATTERN.fullmatch(source_sheet_sha256 or ""):
+        raise ValueError
+    stored_replay_key = record["replayKey"]
+    if (
+        not SHA256_PATTERN.fullmatch(stored_replay_key or "")
+        or stored_replay_key != replay_key(batch_id, source_sheet_sha256, identity_names)
+    ):
+        raise ValueError
+
+    exports = record["exports"]
+    if not isinstance(exports, list) or len(exports) != len(CELL_ORDER):
+        raise ValueError
+    runtime_paths: set[str] = set()
+    for index, export in enumerate(exports):
+        if not isinstance(export, dict) or set(export) != PROVENANCE_EXPORT_FIELDS:
+            raise ValueError
+        name = export["name"]
+        if export["cell"] != CELL_ORDER[index] or name != identity_names[index]:
+            raise ValueError
+        catalog_identity = catalog_by_name.get(name)
+        if catalog_identity is None or catalog_identity["cohort"] != cohort:
+            raise ValueError
+        runtime_path = validate_runtime_path(export["runtimePath"], name)
+        if runtime_path != catalog_identity["runtimePath"] or runtime_path in runtime_paths:
+            raise ValueError
+        runtime_paths.add(runtime_path)
+        if not SHA256_PATTERN.fullmatch(export["exportSha256"] or ""):
+            raise ValueError
+    return batch_id
+
+
+def read_provenance(
+    path: Path,
+    catalog_by_name: dict[str, dict],
+    catalog_sha256: str,
+    catalog_rows_sha256: str,
+) -> dict:
     if not path.is_file():
         return {"version": 1, "batches": []}
     try:
@@ -333,32 +419,15 @@ def read_provenance(path: Path) -> dict:
             raise ValueError
         batch_ids: set[str] = set()
         for record in batches:
-            if not isinstance(record, dict):
-                raise ValueError
-            batch_id = record.get("batchId")
-            identity_names = record.get("identityNames")
-            exports = record.get("exports")
-            if not isinstance(batch_id, str) or not batch_id or batch_id in batch_ids:
+            batch_id = validate_provenance_record(
+                record,
+                catalog_by_name,
+                catalog_sha256,
+                catalog_rows_sha256,
+            )
+            if batch_id in batch_ids:
                 raise ValueError
             batch_ids.add(batch_id)
-            if (
-                not isinstance(identity_names, list)
-                or len(identity_names) != len(CELL_ORDER)
-                or len(set(identity_names)) != len(CELL_ORDER)
-            ):
-                raise ValueError
-            if not SHA256_PATTERN.fullmatch(record.get("sourceSheetSha256") or ""):
-                raise ValueError
-            if not SHA256_PATTERN.fullmatch(record.get("replayKey") or ""):
-                raise ValueError
-            if not isinstance(exports, list) or len(exports) != len(CELL_ORDER):
-                raise ValueError
-            if any(
-                not isinstance(export, dict)
-                or not SHA256_PATTERN.fullmatch(export.get("exportSha256") or "")
-                for export in exports
-            ):
-                raise ValueError
         return provenance
     except (json.JSONDecodeError, OSError, TypeError, ValueError) as error:
         raise ValueError(f"Invalid provenance ledger: {path}") from error
@@ -542,13 +611,19 @@ def main(argv: list[str] | None = None) -> None:
     )
     validate_declaration(batch, read_json(args.source_declaration))
 
+    provenance_path = args.provenance.expanduser().resolve()
+    provenance = read_provenance(
+        provenance_path,
+        catalog_by_name,
+        catalog_sha256,
+        catalog_rows_sha256,
+    )
+
     source_sheet = require_file(args.source_sheet)
     public_root = args.public_root.expanduser().resolve()
     outputs = build_outputs(source_sheet, identities, public_root)
     source_sheet_sha256 = sha256_file(source_sheet)
     record = build_provenance_record(batch, source_sheet, source_sheet_sha256, outputs)
-    provenance_path = args.provenance.expanduser().resolve()
-    provenance = read_provenance(provenance_path)
     exact_replay, provenance_payload = prepare_next_provenance(provenance, record, outputs)
 
     if exact_replay:
