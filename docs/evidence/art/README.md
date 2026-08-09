@@ -12,7 +12,7 @@ This directory records reproducible art-contract evidence. Task 3 completes the 
 - `node --import tsx --test tests/character-appearance.test.js tests/avatar-sprite-priority.test.js tests/art-asset-contract.test.js` — GREEN (`42/42`).
 - `npm run art:verify -- --scope characters` — GREEN: 18 exports, no missing/extra/duplicate/PNG/alpha/bounds/style errors.
 
-The row-by-row review in `character-review-2026-08.md` is deliberately provisional. The sheet was inspected after the lineage order was already known, so it is not an independent anonymous 16/18 identification pass and does not claim that gate.
+`character-review-2026-08.md` preserves the original provisional self-review and now records the immutable independent blind result: exact identity `18/18` and combat-promise match `17/18`, both PASS. Row 16 preserves the `그림자 주군` promise miss and correction from clone-led multi-hit control to darkness-stacking guaranteed execution.
 
 ## Catalog identity
 

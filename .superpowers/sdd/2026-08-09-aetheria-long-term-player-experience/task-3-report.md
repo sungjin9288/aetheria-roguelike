@@ -14,7 +14,7 @@ Status at report snapshot: implementation and all Task 3 verification gates comp
 - Added deterministic import/normalization tooling. Opaque tracked masters fail closed; an opaque working import may use only edge-connected background cleanup before acceptance.
 - Produced 18 true-alpha tracked masters and unique normalized `768x768` runtime exports. Every export is centered, bounded to `<=600x630`, and aligned to foot baseline `y=708`.
 - Reused `PixelCharacterAvatar` in Job Change and removed Adventurer fallback from every known job candidate list.
-- Produced deterministic labeled/anonymous 6x3 contact sheets and a row-by-row provisional visual review.
+- Produced deterministic labeled/anonymous 6x3 contact sheets, preserved the provisional self-review, and closed the independent blind thresholds at exact identity `18/18` and combat-promise match `17/18`.
 
 ## TDD evidence
 
@@ -23,7 +23,7 @@ Status at report snapshot: implementation and all Task 3 verification gates comp
 3. Processor GREEN: both tests passed; the first Adventurer source/export passed true alpha, bounds, margin, and baseline before further generation started.
 4. Prompt GREEN: 18 manifest roles, shared direction/hash, role fields, lineage order, and flat-background fallback passed.
 5. Mobile E2E RED: `job-change-selected-avatar` was absent.
-6. Mobile E2E GREEN: the selected canonical portrait changed from Warrior to Mage and remained inside the 390x844 viewport.
+6. Mobile E2E GREEN: the selected canonical portrait changed from Warrior to Mage, the adjacent identity changed from `전선을 지키는 용사` to `원소의 학도`, and both remained inside the 390x844 viewport. Temporarily emptying the sentence produced the expected mutation RED before restoration.
 
 ## Generation and edit attempts
 
@@ -78,15 +78,15 @@ The machine-readable canonical record is `docs/evidence/art/character-provenance
 
 ## Visual review
 
-The labeled and anonymous sheets were both inspected at original resolution. All rows visibly change face detail, primary weapon, and shoulder silhouette rather than palette alone. Rogue's poison-vial cue is the weakest secondary signal at 40px; the twin daggers remain distinct. The complete provisional row record is `docs/evidence/art/character-review-2026-08.md`.
+The labeled and anonymous sheets were both inspected at original resolution. All rows visibly change face detail, primary weapon, and shoulder silhouette rather than palette alone. Rogue's poison-vial cue is the weakest secondary signal at 40px; the twin daggers remain distinct. The original non-blind implementation review is preserved in `docs/evidence/art/character-review-2026-08.md` as provisional history.
 
-This reviewer knew the lineage ordering. No independent anonymous `>=16/18` identification claim is made; that human review remains an open acceptance step.
+The later independent reviewer recorded immutable guesses before seeing the labels/design references and scored exact identity `18/18` and combat-promise match `17/18`, both above the `>=16/18` threshold. Row 16 identified `그림자 주군` exactly but inferred clone-led multi-hit battlefield control; the authoritative correction is darkness-stacking toward guaranteed execution.
 
 ## Validation record
 
 - Focused character/unit contract: `42/42` GREEN.
 - `npm run art:verify -- --scope characters`: GREEN with 18 exports and zero missing, extra, duplicate, PNG, alpha, bounds, or style errors.
-- Focused Playwright Job Change portrait flow: RED for missing avatar, then GREEN `1/1` on Chromium Mobile.
+- Focused Playwright Job Change portrait flow: RED for missing identity locator and again for a deliberately emptied identity sentence, then GREEN `1/1` on Chromium Mobile after restoration.
 - `npm run verify`: GREEN — type-check, lint, unit `3503/3503`, and production/test-harness build guard.
 - Full focused `tests/e2e/job-change-design.spec.ts`: GREEN `4/4` on Chromium Mobile through the repository Playwright harness.
 - `git diff --check`: GREEN.
@@ -102,6 +102,6 @@ This reviewer knew the lineage ordering. No independent anonymous `>=16/18` iden
 ## Scope and residual risk
 
 - Equipment art is not complete. Tasks 4–8, equipment styleVersion 2, full-surface verifier approval, and `art-contract-report.json` remain open.
-- Independent blind anonymous identification remains open.
+- The independent blind character gate is closed at identity `18/18` and combat promise `17/18`; row 16's promise miss remains recorded evidence rather than an open blocker.
 - No native package or signed archive was created; the latest native artifact remains unchanged.
 - `build/` is explicitly excluded from this Task 3 change and staging scope.

@@ -143,7 +143,10 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
                     <div className="min-w-0 flex-1">
                       <div className="aether-type-meta font-readable text-[#7dd4d8]/82">선택한 성장</div>
                       <h3 className="font-readable text-lg font-semibold text-white">{selectedName}</h3>
-                      <p className="aether-type-body mt-0.5 font-readable leading-snug text-slate-300/82">
+                      <p
+                        data-testid="job-change-selected-identity"
+                        className="aether-type-body mt-0.5 font-readable leading-snug text-slate-300/82"
+                      >
                         {identity.identity}
                       </p>
                     </div>
