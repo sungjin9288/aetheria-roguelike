@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+  "styleVersion": 1,
+  "art": {
+    "width": 768,
+    "height": 768,
+    "margin": 16,
+    "footBaseline": 708
+  },
+  "entries": {
+    "그림자 주군": {
+      "slug": "shadow-lord",
+      "runtimePath": "/assets/avatars/canonical/shadow-lord.png"
+    },
+    "나이트": {
+      "slug": "knight",
+      "runtimePath": "/assets/avatars/canonical/knight.png"
+    },
+    "대마법사": {
+      "slug": "grand-mage",
+      "runtimePath": "/assets/avatars/canonical/grand-mage.png"
+    },
+    "도적": {
+      "slug": "rogue",
+      "runtimePath": "/assets/avatars/canonical/rogue.png"
+    },
+    "드래곤 나이트": {
+      "slug": "dragon-knight",
+      "runtimePath": "/assets/avatars/canonical/dragon-knight.png"
+    },
+    "레인저": {
+      "slug": "ranger",
+      "runtimePath": "/assets/avatars/canonical/ranger.png"
+    },
+    "마법사": {
+      "slug": "mage",
+      "runtimePath": "/assets/avatars/canonical/mage.png"
+    },
+    "모험가": {
+      "slug": "adventurer",
+      "runtimePath": "/assets/avatars/canonical/adventurer.png"
+    },
+    "무당": {
+      "slug": "shaman",
+      "runtimePath": "/assets/avatars/canonical/shaman.png"
+    },
+    "버서커": {
+      "slug": "berserker",
+      "runtimePath": "/assets/avatars/canonical/berserker.png"
+    },
+    "사냥의 군주": {
+      "slug": "hunt-lord",
+      "runtimePath": "/assets/avatars/canonical/hunt-lord.png"
+    },
+    "성직자": {
+      "slug": "cleric",
+      "runtimePath": "/assets/avatars/canonical/cleric.png"
+    },
+    "시간술사": {
+      "slug": "chronomancer",
+      "runtimePath": "/assets/avatars/canonical/chronomancer.png"
+    },
+    "아크메이지": {
+      "slug": "archmage",
+      "runtimePath": "/assets/avatars/canonical/archmage.png"
+    },
+    "어쌔신": {
+      "slug": "assassin",
+      "runtimePath": "/assets/avatars/canonical/assassin.png"
+    },
+    "전사": {
+      "slug": "warrior",
+      "runtimePath": "/assets/avatars/canonical/warrior.png"
+    },
+    "팔라딘": {
+      "slug": "paladin",
+      "runtimePath": "/assets/avatars/canonical/paladin.png"
+    },
+    "흑마법사": {
+      "slug": "warlock",
+      "runtimePath": "/assets/avatars/canonical/warlock.png"
+    }
+  }
+}

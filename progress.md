@@ -1,3 +1,12 @@
+Checkpoint (2026-08-09: reproducible art catalog and contract baseline):
+- Added a deterministic `buildArtCatalog` for the live 18-class / 233-equipment inventory (`weapon 119`, `armor 93`, `shield 21`, 22 defined families, 18 used families, 8 elements) with catalog SHA-256 `79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6` and duplicate/missing-family rejection.
+- Added the 18-entry canonical character declaration, additive equipment manifest metadata, Node IHDR verifier, Pillow alpha/transparent/bounds/foot-baseline inspector, stable sorted export hashes, and `art:catalog` / `art:verify` commands. The existing runtime `entries` mapping remains unchanged.
+- Contract fixtures and item-visual regression are GREEN. Full `npm run art:verify` is intentionally RED (`exit 1`): no catalog differences, duplicate paths, or alpha defects; 18 canonical character files are absent; 6 named equipment exports exceed the declared 8px margin; and equipment remains `styleVersion: 1` pending Task 4–8 closure. It hashes 233 existing equipment exports.
+- No failing `art-contract-report.json` was written or treated as approved evidence. This is a contract checkpoint only, not completion of the 18-character or 233-equipment visual goals.
+
+Next action:
+- Task 3 supplies the canonical character masters/runtime exports; Tasks 4–8 repair provenance, exact asset pipelines, bounds, and styleVersion 2 closure before a report can be approved.
+
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
 Done (2026-08-09: combat replay authority and deterministic daily item reward review follow-up):

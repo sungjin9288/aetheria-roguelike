@@ -10,6 +10,8 @@
     "dev": "vite",
     "build": "vite build",
     "assets:brand": "python3 scripts/generate_app_brand_assets.py",
+    "art:catalog": "node --import tsx scripts/artCatalog.mjs --stdout",
+    "art:verify": "node --import tsx scripts/verify-art-assets.mjs",
     "build:guard": "node scripts/build-guard.mjs",
     "lint": "eslint .",
     "perf:guard": "node scripts/perf-guard.mjs",
