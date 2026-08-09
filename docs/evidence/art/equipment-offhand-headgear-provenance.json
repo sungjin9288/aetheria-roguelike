@@ -1,0 +1,306 @@
+{
+  "version": 1,
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "offhand-headgear",
+  "generationReview": {
+    "tool": "OpenAI built-in image_gen imagegen",
+    "accepted": [
+      {
+        "batchId": "offhand-headgear-book-01",
+        "rawImage": "exec-70f90e08-f300-4f43-9525-88f7c8a49754.png",
+        "rawSha256": "6de0ff3052c39eede18f71d250cdddb05bf18d8e95d9c7034a51b3bfa1754350"
+      },
+      {
+        "batchId": "offhand-headgear-shield-01",
+        "rawImage": "exec-d600b4b8-9b9e-4c23-a706-39d39474b4cf.png",
+        "rawSha256": "b03c77384ed3f2361a9012865931346d8efc1b6346a68a8e4d51e638e5c1d48c"
+      },
+      {
+        "batchId": "offhand-headgear-shield-02",
+        "rawImage": "exec-3b31bb4c-a46e-4534-baa8-462c41d03538.png",
+        "rawSha256": "1ae140b229698f5dac478632f666098781ed336fdcce8b6dfb248daf4671828d"
+      },
+      {
+        "batchId": "offhand-headgear-shield-03",
+        "rawImage": "exec-b7d9f5f9-bf39-450c-844a-315aa281b00e.png",
+        "rawSha256": "59ce64ce6d1ac0623b02e316cf97900ca00fb52e7e13cbe8e90a7b97c68b16d0"
+      },
+      {
+        "batchId": "offhand-headgear-hood-01",
+        "rawImage": "exec-68ef68e6-a5e0-44ae-b351-dbcb1b0551f7.png",
+        "rawSha256": "dd9da107d4fc302b4238135484a092ae95355926b47aa2ad9bc35df915cfe14d"
+      },
+      {
+        "batchId": "offhand-headgear-straw-hat-01",
+        "rawImage": "exec-1f7c3afb-872f-4c51-a320-509c1b066e2d.png",
+        "rawSha256": "a661a626200de31784b55aa01d236425ec99711ae174bf5e24048e239b2e0af2"
+      },
+      {
+        "batchId": "offhand-headgear-wizard-hat-01",
+        "rawImage": "exec-a8213e74-0df4-42a2-869e-5e6e24358382.png",
+        "rawSha256": "5a6983d4df8d9097f918a1921e4e40af837f47770d93b9105a1b10844c64007d"
+      }
+    ],
+    "rejected": [
+      {
+        "batchId": "offhand-headgear-book-01",
+        "rawImage": "exec-011a27a8-91b6-4007-aaa0-d64f92bccf37.png",
+        "rawSha256": "c13c5dab603ae25a33627ba1894e89b282d410aae1bc93f82923054b5e19e5b1",
+        "reason": "cell 2 touched its declared boundary before the accepted recenter edit"
+      },
+      {
+        "batchId": "offhand-headgear-shield-01",
+        "rawImage": "exec-b23804b2-8cff-4445-8795-9fd213bd884f.png",
+        "rawSha256": "967ae7225a9217b14802bc956e376845d48214758585d6833f2be55dca414d4e",
+        "reason": "cell 2 touched its declared boundary before the accepted recenter edit"
+      },
+      {
+        "batchId": "offhand-headgear-shield-03",
+        "rawImage": "exec-30de0fd6-7ae8-41c6-b979-390e2dbec91d.png",
+        "rawSha256": "2a96cb90d849942c79734de5a2ec54e894e3f137661be500cc6b62a907513045",
+        "reason": "cell 1 touched its declared boundary before the accepted recenter edit"
+      }
+    ]
+  },
+  "batches": [
+    {
+      "batchId": "offhand-headgear-book-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "offhand-headgear",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "1ac74dbe5f336a5367a83a3d6c1e135fcdf72f45c4d95c369560abd343c5ca74",
+          "name": "견습 주문서",
+          "runtimePath": "/assets/equipment-exact/auto/auto-18d5eb52ee3e.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "cff6e0a3862029929d63991714ae17c1c76fb2114aa2a9453e83a641bc6a8272",
+          "name": "룬 마도서",
+          "runtimePath": "/assets/equipment-exact/auto/auto-0ecdac0b9532.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "808ecfd1bdb2c55e0b5b7d2e9dfba7c95afd3386a467cb4a29614af64b7be62d",
+          "name": "심연의 마도서",
+          "runtimePath": "/assets/equipment-exact/auto/auto-3215fc4ebfe6.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "e3871a17ca15f0908720ec8672c22b61e10df3ff8ca4dbfe510ca84dfc5382c1",
+          "name": "쌍두 마도서",
+          "runtimePath": "/assets/equipment-exact/auto/auto-9f7c5b552271.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "e2f8357635c7f59e2adaf10d64f9885425c5d299b8d1a39b1b0ff355df3cef42",
+          "name": "현자의 서판",
+          "runtimePath": "/assets/equipment-exact/auto/auto-065c659a4d9a.png"
+        }
+      ],
+      "identityNames": [
+        "견습 주문서",
+        "룬 마도서",
+        "심연의 마도서",
+        "쌍두 마도서",
+        "현자의 서판"
+      ],
+      "replayKey": "a93b24f96b8a82b82176eb1f9794654fffc22586372234ac14cca459483d36b6",
+      "sourceSheet": "offhand-headgear-book-01.png",
+      "sourceSheetSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd"
+    },
+    {
+      "batchId": "offhand-headgear-hood-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "offhand-headgear",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "a9722a59f0d639e0d2442a414b803d4bbe9d866785ec72536d3aa9f2be2b0029",
+          "name": "도적의 두건",
+          "runtimePath": "/assets/equipment-exact/auto/auto-53fb3aa395de.png"
+        }
+      ],
+      "identityNames": [
+        "도적의 두건"
+      ],
+      "replayKey": "50290ffc714797580c4d3b7f7a55886daf84ceb00cbcd347307c13018b0fa433",
+      "sourceSheet": "offhand-headgear-hood-01.png",
+      "sourceSheetSha256": "7eb8cc6ac88f5d73e2ec86a6fb8fe41a6aaccd2b686529ff958460516832edc7"
+    },
+    {
+      "batchId": "offhand-headgear-shield-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "offhand-headgear",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "58cf5c487f3c18196af31502a9918705a5a91f80090bd6d4a0506c1d9b3f0dda",
+          "name": "균열 차단 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a65382954675.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "8fb17cd0285f29609cc4cb958159b77df2e2785835ace24f933b5ffb9e63ffce",
+          "name": "냉기 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f7d6e79316ae.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "9ff32be7cfbf4f1c26267a958ee1775bfc416c45b3a56ce022877776c3e2a399",
+          "name": "대지 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-45df1ce786ed.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "3ddc114cd9db03713841299acceefc93af39a06367c93ad3defed76890b49ce6",
+          "name": "목재 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-dad1d9c979c8.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "c873e5e6cfc7370d90d7c95a6cda8c7096753c86ced450d6de30dab174bb6721",
+          "name": "성광 방벽",
+          "runtimePath": "/assets/equipment-exact/auto/auto-82a80489862b.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "b7075e12a26a9d9986631e8e056ae49e1f154bf54a4428b794c85ee18e3c7e88",
+          "name": "세계수 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-2bfa87ea75ee.png"
+        }
+      ],
+      "identityNames": [
+        "균열 차단 방패",
+        "냉기 방패",
+        "대지 방패",
+        "목재 방패",
+        "성광 방벽",
+        "세계수 방패"
+      ],
+      "replayKey": "ea7d9420f40cc8e73d27c8c88366f4618e4021755c4e98398474f59e9bd91a27",
+      "sourceSheet": "offhand-headgear-shield-01.png",
+      "sourceSheetSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17"
+    },
+    {
+      "batchId": "offhand-headgear-shield-02",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "offhand-headgear",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "15f8e38d78667c7d96811d39c82c113fe717afc11cee2d0b04ee07cb600248c6",
+          "name": "세계의 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-00330b0c4f69.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "23ebcb4794f5a3c451b284b366eae1c680debb92566042de300987657ae8869c",
+          "name": "수호자의 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-e288fa11dc06.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "ed9b6977f5ced2a48534a4f8e2de94680eecd22b1852b1bcfff91d090f255853",
+          "name": "어둠 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f116975c4019.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "b2d34e1f534b58cee57c87156781fdccc21a0de5145650209ab45c60dbfd0815",
+          "name": "원시의 이지스",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a39b8b0ebf0f.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "da454ff9678c84625971ca326ee9536cc11bc4fb181237d948049cb932385fb6",
+          "name": "자연 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-bfbb8191807a.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "2f4e8e7847f0f6a7aa3c349f2bcae1228482ed227126eed304aa8c9cdf1d55ab",
+          "name": "철제 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-412458001e61.png"
+        }
+      ],
+      "identityNames": [
+        "세계의 방패",
+        "수호자의 방패",
+        "어둠 방패",
+        "원시의 이지스",
+        "자연 방패",
+        "철제 방패"
+      ],
+      "replayKey": "167a2b1f233336e1eaa0bf2309c4f6ec2bcfcfa70ea1778bc240274d593c5685",
+      "sourceSheet": "offhand-headgear-shield-02.png",
+      "sourceSheetSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d"
+    },
+    {
+      "batchId": "offhand-headgear-shield-03",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "offhand-headgear",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "4451a972dce8cb14efea30c459b09899a958a9f4e4da57a41c04b37a90a9e987",
+          "name": "화염 방패",
+          "runtimePath": "/assets/equipment-exact/auto/auto-7dd4904c94a3.png"
+        }
+      ],
+      "identityNames": [
+        "화염 방패"
+      ],
+      "replayKey": "a825976a38f1b5918d4610c4d3104effa0a99ca4c0d5440e59a6c2c0c7216193",
+      "sourceSheet": "offhand-headgear-shield-03.png",
+      "sourceSheetSha256": "205db54724094768fd5b64cb44c1d4e301d829a473a6bc9929da08932eb937c4"
+    },
+    {
+      "batchId": "offhand-headgear-straw-hat-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "offhand-headgear",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "eadc2b4802aa2130a4a46808f6ec6dcd21ec44ecd788ffb990a602e25305e70e",
+          "name": "짚 모자",
+          "runtimePath": "/assets/equipment-exact/auto/auto-5ef0e48c5b7e.png"
+        }
+      ],
+      "identityNames": [
+        "짚 모자"
+      ],
+      "replayKey": "776c039705f4a6792813ab710f403201392a62c95d1bf0aaf5060b5a0a7283b0",
+      "sourceSheet": "offhand-headgear-straw-hat-01.png",
+      "sourceSheetSha256": "a632a5bf8c9b65e4b9debc44ffcfc1921756df74af3477d7d14dc70c169e4ebf"
+    },
+    {
+      "batchId": "offhand-headgear-wizard-hat-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "offhand-headgear",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "f8fc7829cd19b49c804b31e24662f713a1c622f6dbe2d3a3accec91488bfef8a",
+          "name": "마법 모자",
+          "runtimePath": "/assets/equipment-exact/auto/auto-087b2fde8f7c.png"
+        }
+      ],
+      "identityNames": [
+        "마법 모자"
+      ],
+      "replayKey": "eeb0fd7bec2451fcdba79a88947c82fea5e56d47995d7db9e1fccb0b61150af5",
+      "sourceSheet": "offhand-headgear-wizard-hat-01.png",
+      "sourceSheetSha256": "f0cf1e63ffc034f173b120aff8b78ece438a3aa4b38674cadb1a5726bb984aa1"
+    }
+  ]
+}

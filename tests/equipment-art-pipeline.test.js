@@ -25,6 +25,7 @@ const WEAPON_CORE_PROVENANCE_PATH = resolve(REPO_ROOT, 'docs/evidence/art/equipm
 const WEAPON_RANGED_MAGIC_BATCH_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-ranged-magic/batches');
 const WEAPON_RANGED_MAGIC_SOURCE_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-ranged-magic');
 const WEAPON_RANGED_MAGIC_PROVENANCE_PATH = resolve(REPO_ROOT, 'docs/evidence/art/equipment-weapon-ranged-magic-provenance.json');
+const OFFHAND_HEADGEAR_BATCH_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/offhand-headgear/batches');
 const CELL_ORDER = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 
 const compareCodePoints = (left, right) => {
@@ -71,13 +72,12 @@ const runArtVerifier = (args) => spawnSync(process.execPath, ['--import', 'tsx',
 });
 
 const expectedEquipmentRuntimePaths = new Map(
-    Object.values(ITEMS)
-        .flat()
+    [...ITEMS.weapons, ...ITEMS.armors]
         .filter((item) => item && ['weapon', 'armor', 'shield'].includes(item.type))
         .map((item) => [item.name, getItemIconAssetSrc(item)])
 );
 
-test('equipment catalog dump writes the sorted current 233-row runtime catalog without a temporary path', async () => {
+test('equipment catalog dump writes only the sorted 229 player equipment rows', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-dump-'));
     const outputPath = join(directory, 'equipment-catalog.json');
     try {
@@ -89,8 +89,12 @@ test('equipment catalog dump writes the sorted current 233-row runtime catalog w
         const rows = JSON.parse(await readFile(outputPath, 'utf8'));
         const stdoutRows = JSON.parse(stdoutResult.stdout);
         assert.deepEqual(stdoutRows, rows);
-        assert.equal(rows.length, 233);
-        assert.equal(new Set(rows.map((row) => row.name)).size, 233);
+        assert.equal(rows.length, 229);
+        assert.equal(new Set(rows.map((row) => row.name)).size, 229);
+        assert.deepEqual(
+            rows.filter((row) => ['날카로운', '묵직한', '단단한', '수호의'].includes(row.name)),
+            [],
+        );
         assert.ok(rows.every((row) => row.familyKey), 'Every used equipment identity needs a family key');
         assert.ok(rows.every((row, index) => index === 0 || compareCodePoints(rows[index - 1].name, row.name) < 0));
         assert.doesNotMatch(JSON.stringify(rows), /\/tmp\//);
@@ -443,6 +447,59 @@ test('equipment prompt preserves the curved scythe identity inside the weapon-la
     }
 });
 
+test('equipment prompt rejects a same-cohort batch that mixes illustration families', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-family-pure-prompt-'));
+    const catalogPath = join(directory, 'catalog.json');
+    const outputPath = join(directory, 'mixed.json');
+    try {
+        const rows = [
+            { name: '가람의 검', type: 'weapon', tier: 1, elem: '', familyKey: 'weapon-sword', runtimePath: '/assets/equipment-exact/auto/sword.png', cohort: 'weapon-core' },
+            { name: '나래의 단검', type: 'weapon', tier: 1, elem: '', familyKey: 'weapon-dagger', runtimePath: '/assets/equipment-exact/auto/dagger.png', cohort: 'weapon-core' },
+        ];
+        await writeFile(catalogPath, `${JSON.stringify(rows)}\n`);
+
+        const result = runPromptGenerator([
+            '--catalog', catalogPath,
+            '--batch-id', 'mixed-family',
+            '--names', '가람의 검,나래의 단검',
+            '--output', outputPath,
+        ]);
+
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /share one illustration family/i);
+        await assert.rejects(stat(outputPath), { code: 'ENOENT' });
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('equipment prompt carries exact offhand and armor morphology from live item semantics', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-morphology-prompt-'));
+    const catalogPath = join(directory, 'catalog.json');
+    try {
+        assert.equal(runDump(['--output', catalogPath]).status, 0);
+        for (const [name, pattern] of [
+            ['견습 주문서', /parchment scroll/i],
+            ['현자의 서판', /stone tablet/i],
+            ['성광 방벽', /tower shield/i],
+            ['암살자 장갑', /pair of leather gloves/i],
+        ]) {
+            const outputPath = join(directory, `${encodeURIComponent(name)}.json`);
+            const result = runPromptGenerator([
+                '--catalog', catalogPath,
+                '--batch-id', `morphology-${encodeURIComponent(name)}`,
+                '--names', name,
+                '--output', outputPath,
+            ]);
+            assert.equal(result.status, 0, result.stderr);
+            const batch = JSON.parse(await readFile(outputPath, 'utf8'));
+            assert.match(batch.identities[0].prompt, pattern, name);
+        }
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
 test('tracked weapon-core batches declare every authoritative identity exactly once with partial final sheets', async () => {
     const catalogResult = runDump(['--stdout']);
     assert.equal(catalogResult.status, 0, catalogResult.stderr);
@@ -468,14 +525,59 @@ test('tracked weapon-core batches declare every authoritative identity exactly o
     )));
     const declared = batches.flatMap((batch) => batch.identityNames);
 
-    assert.equal(declared.length, 56);
-    assert.equal(new Set(declared).size, 56);
+    assert.equal(declared.length, 54);
+    assert.equal(new Set(declared).size, 54);
     assert.deepEqual([...declared].sort(compareCodePoints), expected);
+    assert.deepEqual(batches.find((batch) => batch.batchId === 'weapon-core-sword-01').identityNames, [
+        '강철 롱소드', '기계식 레이피어', '기사의 검', '농부의 포크', '롱소드',
+    ]);
+    assert.deepEqual(batches.find((batch) => batch.batchId === 'weapon-core-sword-02').identityNames, [
+        '미스릴검', '사냥칼', '사막의 시미터', '수련생의 검', '양손검',
+    ]);
     assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-sword-03').identityNames.length, 3);
     assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-sword-05').identityNames.length, 5);
     assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-dagger-01').identityNames.length, 5);
     assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-dagger-04').identityNames.length, 2);
     assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-heavy-02').identityNames.length, 5);
+});
+
+test('tracked offhand-headgear batches cover all 21 identities in seven family-pure sheets', async () => {
+    const catalogResult = runDump(['--stdout']);
+    assert.equal(catalogResult.status, 0, catalogResult.stderr);
+    const catalog = JSON.parse(catalogResult.stdout).filter((entry) => entry.cohort === 'offhand-headgear');
+    const expected = catalog.map((entry) => entry.name).sort(compareCodePoints);
+    const files = [
+        'offhand-headgear-book-01.json',
+        'offhand-headgear-shield-01.json',
+        'offhand-headgear-shield-02.json',
+        'offhand-headgear-shield-03.json',
+        'offhand-headgear-hood-01.json',
+        'offhand-headgear-straw-hat-01.json',
+        'offhand-headgear-wizard-hat-01.json',
+    ];
+    const batches = await Promise.all(files.map(async (file) => JSON.parse(await readFile(
+        join(OFFHAND_HEADGEAR_BATCH_DIR, file), 'utf8'
+    ))));
+    const declared = batches.flatMap((batch) => batch.identityNames);
+
+    assert.equal(catalog.length, 21);
+    assert.deepEqual(Object.fromEntries([
+        'offhand-book', 'offhand-shield', 'headgear-hood', 'headgear-straw-hat', 'headgear-wizard-hat',
+    ].map((familyKey) => [familyKey, catalog.filter((entry) => entry.familyKey === familyKey).length])), {
+        'offhand-book': 5,
+        'offhand-shield': 13,
+        'headgear-hood': 1,
+        'headgear-straw-hat': 1,
+        'headgear-wizard-hat': 1,
+    });
+    assert.equal(new Set(declared).size, 21);
+    assert.deepEqual([...declared].sort(compareCodePoints), expected);
+    assert.deepEqual(batches.map((batch) => batch.identityNames.length), [5, 6, 6, 1, 1, 1, 1]);
+    assert.deepEqual(batches.map((batch) => batch.identities[0].familyKey), [
+        'offhand-book', 'offhand-shield', 'offhand-shield', 'offhand-shield',
+        'headgear-hood', 'headgear-straw-hat', 'headgear-wizard-hat',
+    ]);
+    assert.ok(batches.every((batch) => new Set(batch.identities.map((identity) => identity.familyKey)).size === 1));
 });
 
 test('tracked weapon-ranged-magic batches declare all 47 identities with family-pure partial sheets', async () => {
@@ -742,7 +844,7 @@ const createProcessorFixture = async ({
     const dumpResult = runDump(['--output', catalogPath]);
     assert.equal(dumpResult.status, 0, dumpResult.stderr);
     const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
-    const selected = catalog.filter((row) => row.cohort === 'weapon-core').slice(0, identityCount);
+    const selected = catalog.filter((row) => row.cohort === 'weapon-core' && row.familyKey === 'weapon-sword').slice(0, identityCount);
     assert.equal(selected.length, identityCount, 'The live catalog must supply the requested real prompt cohort fixture');
     const promptResult = runPromptGenerator([
         '--catalog', catalogPath,
@@ -960,12 +1062,6 @@ test('equipment batch processor rejects a prompt batch whose catalog projection 
             },
         },
         {
-            name: 'catalog family',
-            mutate(rows, names) {
-                rows.find((row) => row.name === names[0]).familyKey = 'weapon-dagger';
-            },
-        },
-        {
             name: 'catalog element',
             mutate(rows, names) {
                 rows.find((row) => row.name === names[0]).elem = '화염';
@@ -1044,6 +1140,33 @@ test('equipment batch processor rejects every tampered identity field before wri
                 await fixture.dispose();
             }
         });
+    }
+});
+
+test('equipment batch processor rejects a catalog-valid mixed-family batch without writes', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        const replacement = fixture.catalog.find((row) => (
+            row.cohort === fixture.batch.cohort
+            && row.familyKey !== fixture.batch.identities[0].familyKey
+        ));
+        assert.ok(replacement);
+        fixture.batch.identities[5] = {
+            cell: CELL_ORDER[5],
+            ...replacement,
+            prompt: `${replacement.name} prompt`,
+        };
+        fixture.batch.identityNames[5] = replacement.name;
+        await writeFile(fixture.batchPath, `${JSON.stringify(fixture.batch)}\n`);
+        await rewriteDeclaration(fixture);
+
+        const result = runBatchProcessor(processorArgs(fixture, ['--dry-run']));
+
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /share one illustration family/i);
+        await assertNoProcessorWrites(fixture);
+    } finally {
+        await fixture.dispose();
     }
 });
 

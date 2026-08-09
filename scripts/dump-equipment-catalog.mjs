@@ -32,8 +32,7 @@ export const getEquipmentCohort = ({ name, familyKey }) => {
 };
 
 const currentEquipmentByName = () => new Map(
-    Object.values(ITEMS)
-        .flat()
+    [...ITEMS.weapons, ...ITEMS.armors]
         .filter((item) => item && EQUIPMENT_TYPES.has(item.type))
         .map((item) => [item.name, item])
 );

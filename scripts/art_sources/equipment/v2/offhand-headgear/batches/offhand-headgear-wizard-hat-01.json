@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "batchId": "offhand-headgear-wizard-hat-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "offhand-headgear",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "마법 모자"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "마법 모자",
+      "type": "armor",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "headgear-wizard-hat",
+      "runtimePath": "/assets/equipment-exact/auto/auto-087b2fde8f7c.png",
+      "cohort": "offhand-headgear",
+      "prompt": "마법 모자; family headgear-wizard-hat: headgear-wizard-hat family: a tall shaped brim and magical crown; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with 1 isolated icon, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\nLeave all unused trailing cells completely transparent and empty: top-center, top-right, bottom-left, bottom-center, bottom-right.\ntop-left: 마법 모자; family headgear-wizard-hat: headgear-wizard-hat family: a tall shaped brim and magical crown; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}

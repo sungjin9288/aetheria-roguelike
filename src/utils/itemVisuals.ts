@@ -235,6 +235,8 @@ export const getArmorStyleFromItem = (armor: any, fallback: any) => {
     if (!armor || armor.type !== 'armor') return fallback;
     const name = String(armor.name || '');
 
+    if (name === '암살자 장갑') return 'leather';
+    if (['드래곤 임페리얼', '화염 방어복', '냉기 방어복', '심해의 수호복'].includes(name)) return 'plate';
     if (name.includes('로브') || name.includes('예복') || name.includes('성의')) return 'robe';
     if (name.includes('가죽') || name.includes('경갑') || name.includes('조끼') || name.includes('외피') || name.includes('야복')) return 'leather';
     if (name.includes('망토') || name.includes('외투') || name.includes('튜닉') || name.includes('전투복')) return 'coat';
@@ -335,6 +337,7 @@ export const getEquipmentVisualKey = (item: Item | null | undefined) => {
 };
 
 const HEADGEAR_PATTERN = /(모자|두건|후드|투구|헬름|왕관|관|면갑|복면)/;
+const BODY_GARMENT_PATTERN = /(갑|로브|예복|성의|외투|망토|튜닉|조끼|도복|전투복|잠수복|경갑|야복|방어복|슈트)/;
 
 export const getEquipmentIllustrationFamilyKey = (item: Item | null | undefined) => {
     const visualItem = getTypedVisualItem(item);
@@ -357,13 +360,14 @@ export const getEquipmentIllustrationFamilyKey = (item: Item | null | undefined)
     }
 
     const name = String(visualItem.name || '');
-    if (name.includes('짚')) return 'headgear-straw-hat';
-    if (name.includes('마법 모자') || name.includes('현자의 관')) return 'headgear-wizard-hat';
-    if (name.includes('제관') || name.includes('왕관') || name.includes('관')) return 'headgear-circlet';
-    if (name.includes('복면')) return 'headgear-mask';
-    if (name.includes('두건') || name.includes('후드')) return 'headgear-hood';
-    if (name.includes('투구') || name.includes('헬름')) return 'headgear-helm';
-    if (name.includes('모자')) return 'headgear-cap';
+    const isBodyGarment = BODY_GARMENT_PATTERN.test(name);
+    if (!isBodyGarment && name.includes('짚')) return 'headgear-straw-hat';
+    if (!isBodyGarment && (name.includes('마법 모자') || name.includes('현자의 관'))) return 'headgear-wizard-hat';
+    if (!isBodyGarment && (name.includes('왕관') || name.includes('관'))) return 'headgear-circlet';
+    if (!isBodyGarment && name.includes('복면')) return 'headgear-mask';
+    if (!isBodyGarment && (name.includes('두건') || name.includes('후드'))) return 'headgear-hood';
+    if (!isBodyGarment && (name.includes('투구') || name.includes('헬름'))) return 'headgear-helm';
+    if (!isBodyGarment && name.includes('모자')) return 'headgear-cap';
     if (name.includes('장화') || name.includes('부츠')) return 'armor-boots';
     if (HEADGEAR_PATTERN.test(name) && !name.includes('갑') && !name.includes('로브') && !name.includes('예복') && !name.includes('성의') && !name.includes('외투') && !name.includes('망토') && !name.includes('튜닉') && !name.includes('조끼') && !name.includes('전투복') && !name.includes('경갑') && !name.includes('야복')) {
         return 'headgear-cap';

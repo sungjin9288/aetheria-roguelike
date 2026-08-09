@@ -10,9 +10,10 @@ import { deflateSync } from 'node:zlib';
 
 import { buildArtCatalog } from '../scripts/artCatalog.mjs';
 import { verifyArtAssets, writeArtVerificationReport } from '../scripts/verify-art-assets.mjs';
+import { ITEMS } from '../src/data/items.js';
 
 const FIXTURE_CATALOG_SHA256 = 'a'.repeat(64);
-const LIVE_CATALOG_SHA256 = 'c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef';
+const LIVE_CATALOG_SHA256 = 'c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0';
 const VERIFY_ART_ASSETS_SCRIPT = fileURLToPath(new URL('../scripts/verify-art-assets.mjs', import.meta.url));
 const PIXEL_INSPECTOR_SCRIPT = fileURLToPath(new URL('../scripts/inspect_art_pixels.py', import.meta.url));
 const EQUIPMENT_GENERATOR_SCRIPT = fileURLToPath(new URL('../scripts/generate_equipment_item_art.py', import.meta.url));
@@ -172,10 +173,14 @@ test('art catalog records the complete current player-facing inventory', async (
     const report = await buildArtCatalog();
 
     assert.equal(report.classes.length, 18);
-    assert.equal(report.equipment.length, 233);
-    assert.deepEqual(report.equipmentByType, { weapon: 119, armor: 93, shield: 21 });
+    assert.equal(report.equipment.length, 229);
+    assert.deepEqual(report.equipmentByType, { weapon: 117, armor: 91, shield: 21 });
     assert.equal(report.definedFamilies.length, 22);
-    assert.equal(report.usedFamilies.length, 19);
+    assert.equal(report.usedFamilies.length, 18);
+    assert.deepEqual(
+        report.equipment.filter((entry) => ['날카로운', '묵직한', '단단한', '수호의'].includes(entry.name)),
+        [],
+    );
     assert.deepEqual(report.elements, ['냉기', '대지', '바람', '빛', '어둠', '에테르', '자연', '화염']);
     assert.equal(report.catalogSha256, LIVE_CATALOG_SHA256);
 });
@@ -189,6 +194,16 @@ test('art catalog uses code-point order for shuffled identity rows', async () =>
 
     assert.deepEqual(report.classes, [{ name: 'B', tier: 1 }, { name: 'a', tier: 0 }]);
     assert.equal(report.catalogSha256, '1c67cbfa3a5025f1da32bccad93c615ba8e40ea819116a6adb688039add59575');
+});
+
+test('art catalog object input accepts only canonical player equipment buckets', async () => {
+    const report = await buildArtCatalog({ items: ITEMS });
+
+    assert.equal(report.equipment.length, 229);
+    assert.deepEqual(
+        report.equipment.filter((entry) => ['날카로운', '묵직한', '단단한', '수호의'].includes(entry.name)),
+        [],
+    );
 });
 
 test('art catalog rejects duplicate identities and missing illustration families', async () => {
@@ -439,8 +454,8 @@ test('art verifier CLI validates one equipment cohort without approving partial 
         assert.equal(report.ok, true);
         assert.equal(report.scope, 'equipment');
         assert.equal(report.cohort, 'weapon-core');
-        assert.equal(report.counts.equipment, 56);
-        assert.equal(report.exports.length, 56);
+        assert.equal(report.counts.equipment, 54);
+        assert.equal(report.exports.length, 54);
 
         const refused = runArtVerifierCli([
             '--cohort', 'weapon-core',
@@ -530,7 +545,7 @@ test('art verifier CLI rejects missing and invalid option values without a repor
     }
 });
 
-test('equipment manifest writer preserves complete contract metadata and all legacy entry values', async () => {
+test('equipment manifest writer preserves complete contract metadata and all canonical entry values', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-manifest-writer-'));
     const outputPath = join(directory, 'equipmentArtManifest.json');
     try {
@@ -554,7 +569,7 @@ test('equipment manifest writer preserves complete contract metadata and all leg
         assert.equal(regenerated.catalogSha256, LIVE_CATALOG_SHA256);
         assert.equal(regenerated.styleVersion, sourceManifest.styleVersion);
         assert.deepEqual(regenerated.art, sourceManifest.art);
-        assert.equal(Object.keys(regenerated.entries).length, 233);
+        assert.equal(Object.keys(regenerated.entries).length, 229);
         assert.deepEqual(regenerated.entries, sourceManifest.entries);
     } finally {
         await rm(directory, { recursive: true, force: true });

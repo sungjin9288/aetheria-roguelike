@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
   "promptSet": {
     "generator": "scripts/generate_job_sprite_prompts.mjs",
     "generationTool": "OpenAI built-in image_gen imagegen",

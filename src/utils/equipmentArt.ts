@@ -72,6 +72,9 @@ const getToneKey = (item: Item | null | undefined, slot: any) => {
     if (containsAny(name, ['가죽', '조끼', '외피', '야복', '잠수복'])) return 'leather';
     if (containsAny(name, ['로브', '예복', '성의', '마도서', '주문서', '완드', '지팡이', '스태프', '로드'])) return item.elem ? (ELEMENT_TONE_KEY[item.elem] || 'arcane') : 'arcane';
     if (item.elem && ELEMENT_TONE_KEY[item.elem]) return ELEMENT_TONE_KEY[item.elem];
+    const armorStyle = slot === 'armor' ? getArmorStyleFromItem(item, 'coat') : null;
+    if (armorStyle === 'leather') return 'leather';
+    if (armorStyle === 'plate') return 'steel';
     if (slot === 'armor') return 'cloth';
     if (slot === 'offhand' && isFocusOffhand(item)) return 'arcane';
     return 'steel';
@@ -80,10 +83,11 @@ const getToneKey = (item: Item | null | undefined, slot: any) => {
 const getArmorHeadgearStyle = (item: Item | null | undefined) => {
     if (!item || item.type !== 'armor') return 'none';
     const name = String(item.name || '');
+    if (containsAny(name, ['갑', '로브', '예복', '성의', '외투', '망토', '튜닉', '조끼', '도복', '전투복', '잠수복', '경갑', '야복', '방어복', '슈트'])) return 'none';
 
     if (name.includes('짚')) return 'straw-hat';
     if (containsAny(name, ['마법 모자', '현자의 관'])) return 'wizard-hat';
-    if (containsAny(name, ['제관', '왕관', '관'])) return 'circlet';
+    if (containsAny(name, ['왕관', '관'])) return 'circlet';
     if (containsAny(name, ['복면'])) return 'mask';
     if (containsAny(name, ['두건', '후드', '복면'])) return 'hood';
     if (containsAny(name, ['투구', '헬름', '왕관', '관'])) return 'helm';
@@ -104,6 +108,7 @@ const getArmorBodyStyle = (item: Item | null | undefined, fallback: any) => {
         return 'none';
     }
     if (name.includes('장화')) return 'boots';
+    if (name.includes('장갑')) return 'leather';
     if (containsAny(name, ['로브', '예복', '성의'])) return 'robe';
     if (containsAny(name, ['망토', '외투'])) return 'cloak';
     if (containsAny(name, ['튜닉', '수련복', '도복', '전투복', '잠수복'])) return 'tunic';
@@ -123,7 +128,7 @@ const getOffhandStyle = (item: Item | null | undefined) => {
 
     if (isFocusOffhand(item)) {
         if (containsAny(name, ['서판', '석판'])) return 'tablet';
-        if (containsAny(name, ['주문서', '성전'])) return 'scroll';
+        if (name.includes('주문서')) return 'scroll';
         if (containsAny(name, ['그리모어'])) return 'grimoire';
         return 'tome';
     }

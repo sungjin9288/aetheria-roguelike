@@ -4,6 +4,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildArtCatalog, compareCodePoints } from './artCatalog.mjs';
+import { ITEMS } from '../src/data/items.ts';
+import { getEquipmentArtProfile } from '../src/utils/equipmentArt.ts';
 
 export const CELL_ORDER = Object.freeze([
     'top-left',
@@ -71,6 +73,34 @@ const CATALOG_ROW_FIELDS = Object.freeze([
     'cohort',
 ]);
 
+const liveEquipmentByName = new Map(
+    [...ITEMS.weapons, ...ITEMS.armors].map((item) => [item.name, item])
+);
+
+const exactFormLanguage = (entry) => {
+    const item = liveEquipmentByName.get(entry.name);
+    if (!item) return '';
+    if (entry.name === '암살자 장갑') {
+        return 'exact form: one matched pair of leather gloves with articulated fingers, wrist straps, and no breastplate';
+    }
+    const profile = getEquipmentArtProfile(item, item.type === 'shield' ? 'offhand' : item.type, 'coat');
+    const form = {
+        scroll: 'exact form: an unfurled parchment scroll with rolled ends and a readable central spell diagram',
+        tablet: 'exact form: a solid carved stone tablet with beveled edges and a centered rune',
+        tome: 'exact form: a closed bound tome with a rigid cover, visible spine, and centered scripture emblem',
+        grimoire: 'exact form: a chained arcane grimoire with a heavy cover and rune lock',
+        'tower-shield': 'exact form: a tall tower shield with a protective vertical contour, reinforced rim, and central boss',
+        'kite-shield': 'exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss',
+        plate: 'exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams',
+        leather: 'exact form: fitted leather armor with flexible panels, straps, and stitched seams',
+        robe: 'exact form: a flowing robe with sleeves, layered hem, and ceremonial trim',
+        cloak: 'exact form: a draped cloak or coat with a clasp, collar, and flowing hem',
+        tunic: 'exact form: a practical fitted tunic or combat suit with a collar, belt, and split hem',
+        boots: 'exact form: one matched pair of boots with visible soles and ankle construction',
+    }[profile.style || profile.bodyStyle];
+    return form || '';
+};
+
 const parseNames = (value) => value.split(',').map((name) => name.trim()).filter(Boolean);
 
 const readCatalog = async (path) => {
@@ -96,7 +126,8 @@ const makeCellPrompt = (entry) => {
     if (!family || !tierLanguage || !elementLanguage) {
         throw new Error(`Art Bible language is missing for ${entry.name}`);
     }
-    return `${entry.name}; family ${entry.familyKey}: ${family}; Tier T${tier}: ${tierLanguage}; element ${entry.elem || 'none'}: ${elementLanguage}.`;
+    const form = exactFormLanguage(entry);
+    return `${entry.name}; family ${entry.familyKey}: ${family};${form ? ` ${form};` : ''} Tier T${tier}: ${tierLanguage}; element ${entry.elem || 'none'}: ${elementLanguage}.`;
 };
 
 export const buildEquipmentPromptBatch = async ({ catalogPath, batchId, names }) => {
@@ -120,6 +151,10 @@ export const buildEquipmentPromptBatch = async ({ catalogPath, batchId, names })
     const cohort = selected[0].cohort;
     if (!cohort || selected.some((entry) => entry.cohort !== cohort)) {
         throw new Error('Equipment prompt batch identities must share one cohort');
+    }
+    const familyKey = selected[0].familyKey;
+    if (!familyKey || selected.some((entry) => entry.familyKey !== familyKey)) {
+        throw new Error('Equipment prompt batch identities must share one illustration family');
     }
 
     const identities = selected.map((entry, index) => ({

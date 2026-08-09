@@ -62,8 +62,11 @@ const createFixture = async () => {
     const dump = runNodeScript(DUMP_SCRIPT, ['--output', catalogPath]);
     assert.equal(dump.status, 0, dump.stderr);
     const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
-    const selected = catalog.filter((row) => row.cohort === 'weapon-core').slice(0, 6);
-    const priorIdentities = catalog.filter((row) => row.cohort === 'weapon-core').slice(6, 12);
+    const swordIdentities = catalog.filter((row) => (
+        row.cohort === 'weapon-core' && row.familyKey === 'weapon-sword'
+    ));
+    const selected = swordIdentities.slice(0, 6);
+    const priorIdentities = swordIdentities.slice(6, 12);
     assert.equal(selected.length, 6);
     assert.equal(priorIdentities.length, 6);
     const prompt = runNodeScript(PROMPT_SCRIPT, [

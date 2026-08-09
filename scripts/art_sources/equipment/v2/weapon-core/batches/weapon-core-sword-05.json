@@ -1,8 +1,8 @@
 {
   "version": 1,
   "batchId": "weapon-core-sword-05",
-  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
-  "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
   "cohort": "weapon-core",
   "grid": {
     "columns": 3,

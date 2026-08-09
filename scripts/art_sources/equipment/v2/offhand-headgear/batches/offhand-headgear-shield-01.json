@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "offhand-headgear-shield-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "offhand-headgear",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "균열 차단 방패",
+    "냉기 방패",
+    "대지 방패",
+    "목재 방패",
+    "성광 방벽",
+    "세계수 방패"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "균열 차단 방패",
+      "type": "shield",
+      "tier": 4,
+      "elem": "빛",
+      "familyKey": "offhand-shield",
+      "runtimePath": "/assets/equipment-exact/auto/auto-a65382954675.png",
+      "cohort": "offhand-headgear",
+      "prompt": "균열 차단 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T4: an elemental core and magical fabrication integrated into the structure; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "top-center",
+      "name": "냉기 방패",
+      "type": "shield",
+      "tier": 2,
+      "elem": "냉기",
+      "familyKey": "offhand-shield",
+      "runtimePath": "/assets/equipment-exact/auto/auto-f7d6e79316ae.png",
+      "cohort": "offhand-headgear",
+      "prompt": "냉기 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light."
+    },
+    {
+      "cell": "top-right",
+      "name": "대지 방패",
+      "type": "shield",
+      "tier": 3,
+      "elem": "대지",
+      "familyKey": "offhand-shield",
+      "runtimePath": "/assets/equipment-exact/auto/auto-45df1ce786ed.png",
+      "cohort": "offhand-headgear",
+      "prompt": "대지 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T3: regional craft character expressed through the form and material treatment; element 대지: stone, brass, angular crystal, heavy fragments, and low sheen."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "목재 방패",
+      "type": "shield",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "offhand-shield",
+      "runtimePath": "/assets/equipment-exact/auto/auto-dad1d9c979c8.png",
+      "cohort": "offhand-headgear",
+      "prompt": "목재 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "성광 방벽",
+      "type": "shield",
+      "tier": 4,
+      "elem": "빛",
+      "familyKey": "offhand-shield",
+      "runtimePath": "/assets/equipment-exact/auto/auto-82a80489862b.png",
+      "cohort": "offhand-headgear",
+      "prompt": "성광 방벽; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a tall tower shield with a protective vertical contour, reinforced rim, and central boss; Tier T4: an elemental core and magical fabrication integrated into the structure; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "세계수 방패",
+      "type": "shield",
+      "tier": 4,
+      "elem": "자연",
+      "familyKey": "offhand-shield",
+      "runtimePath": "/assets/equipment-exact/auto/auto-2bfa87ea75ee.png",
+      "cohort": "offhand-headgear",
+      "prompt": "세계수 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T4: an elemental core and magical fabrication integrated into the structure; element 자연: wood, leather, living material, vines, and teal life light."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 균열 차단 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T4: an elemental core and magical fabrication integrated into the structure; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\ntop-center: 냉기 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light.\ntop-right: 대지 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T3: regional craft character expressed through the form and material treatment; element 대지: stone, brass, angular crystal, heavy fragments, and low sheen.\nbottom-left: 목재 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-center: 성광 방벽; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a tall tower shield with a protective vertical contour, reinforced rim, and central boss; Tier T4: an elemental core and magical fabrication integrated into the structure; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\nbottom-right: 세계수 방패; family offhand-shield: offhand-shield family: a protective outer contour, central boss, and rim material; exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss; Tier T4: an elemental core and magical fabrication integrated into the structure; element 자연: wood, leather, living material, vines, and teal life light."
+}

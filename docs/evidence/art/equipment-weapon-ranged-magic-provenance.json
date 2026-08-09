@@ -2,8 +2,8 @@
   "batches": [
     {
       "batchId": "weapon-ranged-magic-bow-01",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -57,8 +57,8 @@
     },
     {
       "batchId": "weapon-ranged-magic-bow-02",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -105,8 +105,8 @@
     },
     {
       "batchId": "weapon-ranged-magic-staff-01",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -160,8 +160,8 @@
     },
     {
       "batchId": "weapon-ranged-magic-staff-02",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -215,8 +215,8 @@
     },
     {
       "batchId": "weapon-ranged-magic-staff-03",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -270,8 +270,8 @@
     },
     {
       "batchId": "weapon-ranged-magic-staff-04",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -325,8 +325,8 @@
     },
     {
       "batchId": "weapon-ranged-magic-lance-01",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -380,8 +380,8 @@
     },
     {
       "batchId": "weapon-ranged-magic-lance-02",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -428,8 +428,8 @@
     },
     {
       "batchId": "weapon-ranged-magic-whip-01",
-      "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-      "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
       "cohort": "weapon-ranged-magic",
       "exports": [
         {
@@ -447,8 +447,8 @@
       "sourceSheetSha256": "dfb90a862c613620da0ace227b62442a389b6d81677cb117f530d55e0fbbfba7"
     }
   ],
-  "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
-  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
   "cohort": "weapon-ranged-magic",
   "generationReview": {
     "accepted": [

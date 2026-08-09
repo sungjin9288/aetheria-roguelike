@@ -52,12 +52,19 @@ const normalizeClasses = (classes) => {
     return Object.entries(classes || {}).map(([name, value]) => ({ name, tier: value?.tier }));
 };
 
-const normalizeEquipment = (items) => (Array.isArray(items) ? items : Object.values(items || {}).flat())
-    .filter((item) => item && EQUIPMENT_TYPES.has(item.type));
+const normalizeEquipment = (items) => {
+    const entries = Array.isArray(items)
+        ? items
+        : Array.isArray(items?.weapons) && Array.isArray(items?.armors)
+            ? [...items.weapons, ...items.armors]
+            : null;
+    if (!entries) throw new Error('Equipment input must be an array or canonical weapons and armors buckets');
+    return entries.filter((item) => item && EQUIPMENT_TYPES.has(item.type));
+};
 
 export const buildArtCatalog = async ({
     classes = CLASSES,
-    items = ITEMS,
+    items = [...ITEMS.weapons, ...ITEMS.armors],
     getFamilyKey = getEquipmentIllustrationFamilyKey,
     definedFamilies = defaultDefinedFamilies(),
 } = {}) => {

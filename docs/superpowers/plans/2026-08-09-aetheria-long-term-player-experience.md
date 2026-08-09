@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 18개 직업의 플레이 정체성과 캐릭터 아트를 완성하고, 장비 233개의 일러스트를 하나의 Art Bible로 통일하며, 직업별 원정 기억을 기존 귀환 흐름에 연결한다.
+**Goal:** 18개 직업의 플레이 정체성과 캐릭터 아트를 완성하고, canonical player 장비 229개의 일러스트를 하나의 Art Bible로 통일하며, 직업별 원정 기억을 기존 귀환 흐름에 연결한다.
 
 **Architecture:** 현재 전투와 원정 구조를 유지하면서 art catalog와 runtime asset 사이에 재현 가능한 manifest/verifier 경계를 먼저 둔다. 캐릭터와 장비 자산은 tracked source, deterministic processing, runtime export, provenance hash를 한 흐름으로 관리하고, 직업별 기록은 기존 expedition ID를 idempotency key로 쓰는 optional save ledger로 추가한다.
 
@@ -31,7 +31,7 @@
 - Branch: `main`
 - Plan base HEAD: `8db1106`
 - Dirty worktree: 이전 일반 공격·기술·도주 combat transaction 변경 30개 tracked 파일, 새 `src/systems/combatActionTurn.ts`, 새 `tests/combat-action-transaction-authority.test.js`, untracked `build/`
-- Current catalog: 직업 18개, 장비 233개(`weapon 119`, `armor 93`, `shield 21`), 정의된 illustration family 22개, 현재 catalog에서 실제 사용하는 family 18개, 속성 8개
+- Current catalog: 직업 18개, 장비 229개(`weapon 117`, `armor 91`, `shield 21`), 정의된 illustration family 22개, 현재 catalog에서 실제 사용하는 family 18개, 속성 8개. 장비 수는 `ITEMS.weapons + ITEMS.armors`만 세며 modifier template 네 개를 player identity로 만들지 않는다.
 - Known pipeline debt:
   - `scripts/generate_job_sprite_prompts.mjs`가 삭제된 `JOB_TYPICAL_LOADOUT`을 import한다.
   - `scripts/generate_equipment_item_art.py`가 존재하지 않는 dump script와 고정 `/tmp/equipment-catalog.json`에 의존한다.
@@ -171,8 +171,8 @@ Add a real behavior test that imports `buildArtCatalog` and expects the current 
 test('art catalog records the complete current player-facing inventory', async () => {
   const report = await buildArtCatalog();
   assert.equal(report.classes.length, 18);
-  assert.equal(report.equipment.length, 233);
-  assert.deepEqual(report.equipmentByType, { weapon: 119, armor: 93, shield: 21 });
+  assert.equal(report.equipment.length, 229);
+  assert.deepEqual(report.equipmentByType, { weapon: 117, armor: 91, shield: 21 });
   assert.equal(report.definedFamilies.length, 22);
   assert.equal(report.usedFamilies.length, 18);
   assert.deepEqual(report.elements, ['냉기', '대지', '바람', '빛', '어둠', '에테르', '자연', '화염']);
@@ -214,7 +214,7 @@ Reject duplicate class names, duplicate equipment names and missing family value
 node --import tsx --test tests/art-asset-contract.test.js
 ```
 
-Expected: PASS with `18/233/22/18/8` snapshot.
+Expected: PASS with `18/229/22/18/8` snapshot.
 
 - [ ] **Step 5: Write the failing manifest verifier tests**
 
@@ -412,7 +412,7 @@ Commit source masters, runtime exports, manifest, code, tests and evidence as on
 
 - [ ] **Step 1: Write failing pipeline tests**
 
-Test that the dump command returns 233 unique names, no missing family among used items, no `/tmp` dependency, stable ordering, and current runtime paths. Test that `--dry-run` processing refuses a source sheet whose declared six identities do not match the batch manifest.
+Test that the dump command returns 229 unique player names, excludes all four modifier templates, has no missing family among used items or `/tmp` dependency, preserves stable ordering, and uses current runtime paths. Test that `--dry-run` processing refuses a source sheet whose declaration or family differs from the batch manifest.
 
 - [ ] **Step 2: Verify RED**
 
@@ -545,21 +545,21 @@ Run cohort verifier, item visual tests, `npm run verify`, diff check; commit the
 **Interfaces:**
 - Produces: styleVersion 2 for shield/book, seven headgear families and six armor families
 
-- [ ] **Step 1: Add failing contracts for both cohorts**
+- [x] **Step 1: Correct the canonical player catalog and add the offhand/headgear contract**
 
-Verify exact item coverage and also all 22 defined family exemplar assets, including four families not currently used by the catalog. Unused families need one Art Bible exemplar but no invented catalog item.
+Use `ITEMS.weapons + ITEMS.armors` as the only player-equipment authority. Remove `날카로운`, `묵직한`, `단단한`, `수호의`; correct robe, glove, plate, scripture, and material morphology; pin catalog `c15c4e6f...` and row hash `23f584c8...`. Verify the 21 offhand/headgear identities in seven family-pure batches.
 
-- [ ] **Step 2: Generate and process offhand/headgear batches**
+- [x] **Step 2: Generate and process offhand/headgear batches**
 
 At 32px, shield vs book and all seven headgear silhouettes must remain distinct without relying on the rarity frame.
 
-- [ ] **Step 3: Run the offhand/headgear gate, commit and push**
+- [ ] **Step 3: Run the offhand/headgear gate, review, commit and push**
 
-Keep this commit separate from armor for review and rollback.
+The cohort verifier and visual review are GREEN. Keep this commit separate from armor for review and rollback; stage, commit, and push only after independent review approval.
 
-- [ ] **Step 4: Generate and process armor batches**
+- [ ] **Step 4: Add all 22 family exemplars, then generate and process armor batches**
 
-At 32px, coat, leather, robe, plate, cloak and boots must be distinguishable by outer contour and material break.
+All 22 defined families need one Art Bible exemplar. The four currently unused headgear families need exemplars without invented catalog items. Then generate the 82 armor identities; at 32px, coat, leather, robe, plate, cloak and boots must be distinguishable by outer contour and material break.
 
 - [ ] **Step 5: Run the armor gate, commit and push**
 
@@ -567,7 +567,7 @@ Run cohort verifier, item visual tests, `npm run verify`, diff check; commit sou
 
 ---
 
-### Task 8: Normalize Signature and Mythic Art and Close the 233-Item Manifest
+### Task 8: Normalize Signature and Mythic Art and Close the 229-Item Manifest
 
 **Files:**
 - Modify: signature/mythic source and runtime assets
@@ -576,11 +576,11 @@ Run cohort verifier, item visual tests, `npm run verify`, diff check; commit sou
 - Create: final equipment contact sheets and provenance report under `docs/evidence/art/`
 
 **Interfaces:**
-- Produces: full `art:verify` PASS for all 233 equipment entries, 22 defined families and signature overlays
+- Produces: full `art:verify` PASS for all 229 equipment entries, 22 defined families and signature overlays
 
 - [ ] **Step 1: Write the failing final contract**
 
-Require empty catalog/manifest two-way difference, 233 unique item identities, 233 existing runtime paths, 233 export hashes, no duplicate equipment names, all signature registry item/overlay paths, and catalog hash equality.
+Require empty catalog/manifest two-way difference, 229 unique item identities, 229 existing runtime paths, 229 export hashes, no duplicate equipment names, all signature registry item/overlay paths, and catalog hash equality.
 
 - [ ] **Step 2: Verify RED**
 
@@ -816,7 +816,7 @@ Create a table in the tracked QA summary with one row for:
 - player-facing long-term loop;
 - all 18 job designs;
 - canonical no-fallback runtime mapping;
-- all 233 equipment illustrations;
+- all 229 equipment illustrations;
 - unified Art Bible and 22 family exemplars;
 - class journey replay/idempotency;
 - old save preservation;

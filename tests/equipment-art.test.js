@@ -21,14 +21,14 @@ test('getEquipmentArtProfile keeps tunic armor on the body instead of treating i
     assert.equal(profile.bodyStyle, 'tunic');
 });
 
-test('getEquipmentArtProfile recognizes cap and circlet style headgear correctly', () => {
+test('getEquipmentArtProfile keeps priest robes out of the circlet-only headgear route', () => {
     const capProfile = getEquipmentArtProfile({ name: '천 모자', type: 'armor' }, 'armor', 'coat');
-    const circletProfile = getEquipmentArtProfile({ name: '신전 제관 예복', type: 'armor' }, 'armor', 'robe');
+    const priestRobeProfile = getEquipmentArtProfile({ name: '신전 제관 예복', type: 'armor' }, 'armor', 'robe');
 
     assert.equal(capProfile.headgearStyle, 'cap');
     assert.equal(capProfile.bodyStyle, 'none');
-    assert.equal(circletProfile.headgearStyle, 'circlet');
-    assert.equal(circletProfile.bodyStyle, 'robe');
+    assert.equal(priestRobeProfile.headgearStyle, 'none');
+    assert.equal(priestRobeProfile.bodyStyle, 'robe');
 });
 
 test('getEquipmentArtProfile distinguishes focus books from shields', () => {
@@ -39,6 +39,19 @@ test('getEquipmentArtProfile distinguishes focus books from shields', () => {
     assert.equal(focusProfile.style, 'scroll');
     assert.equal(shieldProfile.style, 'kite-shield');
     assert.equal(grimoireProfile.style, 'grimoire');
+});
+
+test('getEquipmentArtProfile preserves exact armor material and scripture morphology', () => {
+    const gloves = getEquipmentArtProfile({ name: '암살자 장갑', type: 'armor' }, 'armor', 'coat');
+    const dragonPlate = getEquipmentArtProfile({ name: '드래곤 임페리얼', type: 'armor' }, 'armor', 'coat');
+    const plainPlate = getEquipmentArtProfile({ name: '병사 갑옷', type: 'armor' }, 'armor', 'coat');
+    const scripture = getEquipmentArtProfile({ name: '천공 성전', type: 'shield', subtype: 'focus' }, 'offhand');
+
+    assert.equal(gloves.bodyStyle, 'leather');
+    assert.equal(gloves.toneKey, 'leather');
+    assert.equal(dragonPlate.bodyStyle, 'plate');
+    assert.equal(plainPlate.toneKey, 'steel');
+    assert.equal(scripture.style, 'tome');
 });
 
 test('getEquipmentArtProfile differentiates weapon tones by exact item naming', () => {

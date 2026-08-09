@@ -1,7 +1,7 @@
 {
-  "$comment": "slice 26 entries remain runtime-compatible; the top-level art contract metadata preserves reproducible catalog identity.",
+  "$comment": "The manifest covers the canonical 229 player equipment identities and keeps exact runtime routing evidence.",
   "version": 1,
-  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
   "styleVersion": 1,
   "art": {
     "width": 160,
@@ -113,7 +113,7 @@
         "cohort"
       ],
       "sort": "unicode-code-point",
-      "rowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466"
+      "rowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed"
     },
     "batch": {
       "grid": {
@@ -136,10 +136,13 @@
       "recordPath": "docs/evidence/art/equipment-provenance.json",
       "cohorts": {
         "weapon-core": {
-          "generationReviewSha256": "c471fc7e36aa9835f6cf492b6ae6f47a1cd38d8ebe068547030b8baad801c124"
+          "generationReviewSha256": "8b2c3cc269125725b86e8d96b7892e56f41e914658012e442528cd8c4db592ee"
         },
         "weapon-ranged-magic": {
           "generationReviewSha256": "63b6f4b98ec070ba4b36d8478e54a957e32227e482259d4e6b1691c3e7bac208"
+        },
+        "offhand-headgear": {
+          "generationReviewSha256": "7793e60093df928d2a3993b3afc4b278a6312bff4fa6a4f4e96aac6a0d655d6d"
         }
       }
     }
@@ -174,7 +177,6 @@
     "나무곤봉": "auto/auto-2c0caf97cc68",
     "나무지팡이": "auto/auto-c8326da35aa4",
     "나뭇가지 활": "auto/auto-1acb9448ba0d",
-    "날카로운": "auto/auto-f75d86a53a7b",
     "낡은 철퇴": "auto/auto-70de6e67343f",
     "냉기 방어복": "auto/auto-9a96452fb468",
     "냉기 방패": "auto/auto-f7d6e79316ae",
@@ -182,7 +184,6 @@
     "녹슨 도끼": "auto/auto-1a757e6a6cd3",
     "농부의 포크": "auto/auto-aeefaa514270",
     "단궁": "auto/auto-63213b4d6a57",
-    "단단한": "auto/auto-5b4eba7ee98d",
     "대마법사로브": "auto/auto-e1b5ad823e67",
     "대지 방패": "auto/auto-45df1ce786ed",
     "대지의 메이스": "auto/auto-cc9dcab53ba5",
@@ -211,7 +212,6 @@
     "마법지팡이": "auto/auto-1cff983f5fef",
     "마왕의 대낫": "auto/auto-c2a3a7899973",
     "목재 방패": "auto/auto-dad1d9c979c8",
-    "묵직한": "auto/auto-b93b4d19ae2a",
     "미스릴 갑옷": "auto/auto-3a7ff1fb451d",
     "미스릴검": "auto/auto-712653558d1c",
     "바람의 궁극": "auto/auto-6c839de1aecf",
@@ -267,7 +267,6 @@
     "수정 갑옷": "auto/auto-71508942572c",
     "수정 완드": "auto/auto-20d567980add",
     "수정 창": "auto/auto-6cc4f9f4d087",
-    "수호의": "auto/auto-3b163db1b112",
     "수호자의 방패": "auto/auto-e288fa11dc06",
     "시간 파편 소드": "auto/auto-80015aed3005",
     "신전 도시의 성의": "auto/auto-a9ebb2b6a9c7",
@@ -385,96 +384,80 @@
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
-      "sourceSha256": "6b2574d5f0faa6b70741f2e5b5f347bd57215a6cdcc876615f63a3cd598845f1",
-      "exportSha256": "fb342689946f78be1900158af0816fbe3d801addee800a01b4ee61b4de66100f"
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "3f664333949f5bce522dc9fbb1053a10ed4187401424577791ecc7ad7ddf953f"
     },
     "기계식 레이피어": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
-      "sourceSha256": "6b2574d5f0faa6b70741f2e5b5f347bd57215a6cdcc876615f63a3cd598845f1",
-      "exportSha256": "e8fb31fef7446cf6484ee9d404f03921fb7b2ea132828d71676d0243ead0a24f"
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "dfac38d198e00a19ddf177e18098b800167c742bd291fd4af4275d8763ea2f90"
     },
     "기사의 검": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
-      "sourceSha256": "6b2574d5f0faa6b70741f2e5b5f347bd57215a6cdcc876615f63a3cd598845f1",
-      "exportSha256": "456517d002b48331efc2f834d0049916e7be6fa3d44702a3897e413e0db1be49"
-    },
-    "날카로운": {
-      "styleVersion": 2,
-      "familyKey": "weapon-sword",
-      "batchId": "weapon-core-sword-01",
-      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
-      "sourceSha256": "6b2574d5f0faa6b70741f2e5b5f347bd57215a6cdcc876615f63a3cd598845f1",
-      "exportSha256": "77f9e9257b038f77e050cd8ad049a864786a107db5251218d2a8c391dff456f4"
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "1d4f82f33b15a6c1d7ee2e516be3b944560bf93106e93dcf2894d34136a5b357"
     },
     "농부의 포크": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
-      "sourceSha256": "6b2574d5f0faa6b70741f2e5b5f347bd57215a6cdcc876615f63a3cd598845f1",
-      "exportSha256": "587c555b4d98e989f9b92eca3ac030bb69a8f5ef5752cf016a329e94b45e8699"
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "7847aefeb3256fd7276789b89fe81de244f49d2a1ba9a09af4a6322459f1daab"
     },
     "롱소드": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
-      "sourceSha256": "6b2574d5f0faa6b70741f2e5b5f347bd57215a6cdcc876615f63a3cd598845f1",
-      "exportSha256": "337a3c3a240240b31e664062734d423d2f96c9e79d9a60b186b4d9ac5fbe455b"
-    },
-    "묵직한": {
-      "styleVersion": 2,
-      "familyKey": "weapon-sword",
-      "batchId": "weapon-core-sword-02",
-      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
-      "sourceSha256": "31ac77a1104fd0f9c42927dec51e22f6f38ab11bc370aa5976aee38335a6a7b2",
-      "exportSha256": "8fbbc6a9931fdd21ab8bfe3f0c58a6fc09219edc50cf9c95c086c7e67aeda79c"
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "17f2eb0d25e44b281e61a8abe20d942d265d4b1a1ca755b5077ab71a217de302"
     },
     "미스릴검": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-02",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
-      "sourceSha256": "31ac77a1104fd0f9c42927dec51e22f6f38ab11bc370aa5976aee38335a6a7b2",
-      "exportSha256": "8c7778071ee0625ae3c4eb752914af118d21c61cf81d2b47f74f2918fe4cba06"
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "4ef8f6fa2658a0d6eb0475411c113ace6b13e4f6ee6d37875bca2a7005950dc3"
     },
     "사냥칼": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-02",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
-      "sourceSha256": "31ac77a1104fd0f9c42927dec51e22f6f38ab11bc370aa5976aee38335a6a7b2",
-      "exportSha256": "b4403f99f6fe9e7f76b1caec2f8745fce96cb7d9f3b35e6986f509ab55e9e0b9"
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "ba4d926c0f7ee618d28ff660fc42a2ea84aaff3dc5e1e7d97370e09c4f36e3ac"
     },
     "사막의 시미터": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-02",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
-      "sourceSha256": "31ac77a1104fd0f9c42927dec51e22f6f38ab11bc370aa5976aee38335a6a7b2",
-      "exportSha256": "a35e8f73e855488fb7e96d549feb0971b0912a3937d93e57ab9f0ca304f0a33c"
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "34ac704446a355e320bf849fbf5641f3e1710ad3bedea68fadeb141219046227"
     },
     "수련생의 검": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-02",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
-      "sourceSha256": "31ac77a1104fd0f9c42927dec51e22f6f38ab11bc370aa5976aee38335a6a7b2",
-      "exportSha256": "527b9e7d874a8f901e82e28ac1ec8acc0ef0f9ca7589593bdd1087848fbf3fb9"
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "f474930712dca0ff2b686b2c8aaaeb071ded3e5bac0a79a4c98ce8282137d99a"
     },
     "양손검": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-02",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
-      "sourceSha256": "31ac77a1104fd0f9c42927dec51e22f6f38ab11bc370aa5976aee38335a6a7b2",
-      "exportSha256": "8d6169fbe78e0c6b2ab6ac2253a4cab84e5794859fe2494813d39705749577bc"
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "e980dd910b3bf12bf2d09d62208168cccf39dea918c80135dc7e34786beba8d8"
     },
     "어둠의 팔치온": {
       "styleVersion": 2,
@@ -1203,6 +1186,174 @@
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
       "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
       "exportSha256": "61f9dd6469cd0414dc5520d29972a4e964bc6e0b20ae83e9f9f2e7a375605ee3"
+    },
+    "견습 주문서": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "1ac74dbe5f336a5367a83a3d6c1e135fcdf72f45c4d95c369560abd343c5ca74"
+    },
+    "룬 마도서": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "cff6e0a3862029929d63991714ae17c1c76fb2114aa2a9453e83a641bc6a8272"
+    },
+    "심연의 마도서": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "808ecfd1bdb2c55e0b5b7d2e9dfba7c95afd3386a467cb4a29614af64b7be62d"
+    },
+    "쌍두 마도서": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "e3871a17ca15f0908720ec8672c22b61e10df3ff8ca4dbfe510ca84dfc5382c1"
+    },
+    "현자의 서판": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "e2f8357635c7f59e2adaf10d64f9885425c5d299b8d1a39b1b0ff355df3cef42"
+    },
+    "도적의 두건": {
+      "styleVersion": 2,
+      "familyKey": "headgear-hood",
+      "batchId": "offhand-headgear-hood-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-hood-01.png",
+      "sourceSha256": "7eb8cc6ac88f5d73e2ec86a6fb8fe41a6aaccd2b686529ff958460516832edc7",
+      "exportSha256": "a9722a59f0d639e0d2442a414b803d4bbe9d866785ec72536d3aa9f2be2b0029"
+    },
+    "균열 차단 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "58cf5c487f3c18196af31502a9918705a5a91f80090bd6d4a0506c1d9b3f0dda"
+    },
+    "냉기 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "8fb17cd0285f29609cc4cb958159b77df2e2785835ace24f933b5ffb9e63ffce"
+    },
+    "대지 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "9ff32be7cfbf4f1c26267a958ee1775bfc416c45b3a56ce022877776c3e2a399"
+    },
+    "목재 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "3ddc114cd9db03713841299acceefc93af39a06367c93ad3defed76890b49ce6"
+    },
+    "성광 방벽": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "c873e5e6cfc7370d90d7c95a6cda8c7096753c86ced450d6de30dab174bb6721"
+    },
+    "세계수 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "b7075e12a26a9d9986631e8e056ae49e1f154bf54a4428b794c85ee18e3c7e88"
+    },
+    "세계의 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "15f8e38d78667c7d96811d39c82c113fe717afc11cee2d0b04ee07cb600248c6"
+    },
+    "수호자의 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "23ebcb4794f5a3c451b284b366eae1c680debb92566042de300987657ae8869c"
+    },
+    "어둠 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "ed9b6977f5ced2a48534a4f8e2de94680eecd22b1852b1bcfff91d090f255853"
+    },
+    "원시의 이지스": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "b2d34e1f534b58cee57c87156781fdccc21a0de5145650209ab45c60dbfd0815"
+    },
+    "자연 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "da454ff9678c84625971ca326ee9536cc11bc4fb181237d948049cb932385fb6"
+    },
+    "철제 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "2f4e8e7847f0f6a7aa3c349f2bcae1228482ed227126eed304aa8c9cdf1d55ab"
+    },
+    "화염 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-03.png",
+      "sourceSha256": "205db54724094768fd5b64cb44c1d4e301d829a473a6bc9929da08932eb937c4",
+      "exportSha256": "4451a972dce8cb14efea30c459b09899a958a9f4e4da57a41c04b37a90a9e987"
+    },
+    "짚 모자": {
+      "styleVersion": 2,
+      "familyKey": "headgear-straw-hat",
+      "batchId": "offhand-headgear-straw-hat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-straw-hat-01.png",
+      "sourceSha256": "a632a5bf8c9b65e4b9debc44ffcfc1921756df74af3477d7d14dc70c169e4ebf",
+      "exportSha256": "eadc2b4802aa2130a4a46808f6ec6dcd21ec44ecd788ffb990a602e25305e70e"
+    },
+    "마법 모자": {
+      "styleVersion": 2,
+      "familyKey": "headgear-wizard-hat",
+      "batchId": "offhand-headgear-wizard-hat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-wizard-hat-01.png",
+      "sourceSha256": "f0cf1e63ffc034f173b120aff8b78ece438a3aa4b38674cadb1a5726bb984aa1",
+      "exportSha256": "f8fc7829cd19b49c804b31e24662f713a1c622f6dbe2d3a3accec91488bfef8a"
     }
   }
 }

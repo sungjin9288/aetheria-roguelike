@@ -1,8 +1,8 @@
 {
   "version": 1,
   "batchId": "weapon-core-sword-01",
-  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
-  "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
   "cohort": "weapon-core",
   "grid": {
     "columns": 3,
@@ -20,7 +20,6 @@
     "강철 롱소드",
     "기계식 레이피어",
     "기사의 검",
-    "날카로운",
     "농부의 포크",
     "롱소드"
   ],
@@ -60,17 +59,6 @@
     },
     {
       "cell": "bottom-left",
-      "name": "날카로운",
-      "type": "weapon",
-      "tier": 0,
-      "elem": "",
-      "familyKey": "weapon-sword",
-      "runtimePath": "/assets/equipment-exact/auto/auto-f75d86a53a7b.png",
-      "cohort": "weapon-core",
-      "prompt": "날카로운; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T0: plain training-grade construction with one honest material and an immediately readable purpose; element none: no elemental effect; preserve the material and silhouette without a background glow."
-    },
-    {
-      "cell": "bottom-center",
       "name": "농부의 포크",
       "type": "weapon",
       "tier": 1,
@@ -81,7 +69,7 @@
       "prompt": "농부의 포크; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
     },
     {
-      "cell": "bottom-right",
+      "cell": "bottom-center",
       "name": "롱소드",
       "type": "weapon",
       "tier": 1,
@@ -92,5 +80,5 @@
       "prompt": "롱소드; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
     }
   ],
-  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 강철 롱소드; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 기계식 레이피어; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 기사의 검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-left: 날카로운; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T0: plain training-grade construction with one honest material and an immediately readable purpose; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-center: 농부의 포크; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-right: 롱소드; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with 5 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\nLeave all unused trailing cells completely transparent and empty: bottom-right.\ntop-left: 강철 롱소드; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 기계식 레이피어; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 기사의 검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-left: 농부의 포크; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-center: 롱소드; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
 }

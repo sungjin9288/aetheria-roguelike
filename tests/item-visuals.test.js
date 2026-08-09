@@ -38,6 +38,7 @@ const equipmentExactDir = path.resolve(__dirname, '../public/assets/equipment-ex
 const equipmentManifestPath = path.resolve(__dirname, '../src/data/equipmentArtManifest.json');
 const weaponCoreProvenancePath = path.resolve(__dirname, '../docs/evidence/art/equipment-weapon-core-provenance.json');
 const weaponRangedMagicProvenancePath = path.resolve(__dirname, '../docs/evidence/art/equipment-weapon-ranged-magic-provenance.json');
+const offhandHeadgearProvenancePath = path.resolve(__dirname, '../docs/evidence/art/equipment-offhand-headgear-provenance.json');
 const hasItemAsset = (key) => existsSync(path.join(itemAssetDir, `${key}.png`)) || existsSync(path.join(itemAssetDir, `${key}.svg`));
 const hasEquipmentFamilyItemAsset = (key) => existsSync(path.join(equipmentFamilyItemDir, `${key}.png`));
 const hasEquipmentFamilyOverlayAsset = (key) => existsSync(path.join(equipmentFamilyOverlayDir, `${key}.png`));
@@ -161,6 +162,10 @@ test('getArmorStyleFromItem recognizes armor naming used in late-game items', ()
     assert.equal(getArmorStyleFromItem({ name: '균열 외피갑옷', type: 'armor' }, 'coat'), 'leather');
     assert.equal(getArmorStyleFromItem({ name: '세계수 갑주', type: 'armor' }, 'coat'), 'plate');
     assert.equal(getArmorStyleFromItem({ name: '신전 제관 예복', type: 'armor' }, 'coat'), 'robe');
+    assert.equal(getArmorStyleFromItem({ name: '암살자 장갑', type: 'armor' }, 'coat'), 'leather');
+    for (const name of ['드래곤 임페리얼', '화염 방어복', '냉기 방어복', '심해의 수호복']) {
+        assert.equal(getArmorStyleFromItem({ name, type: 'armor' }, 'coat'), 'plate', name);
+    }
 });
 
 test('getAvatarLoadoutStyle groups weapon families into readable avatar silhouettes', () => {
@@ -184,6 +189,11 @@ test('equipment family asset keys map representative gear into avatar-style illu
     assert.equal(getEquipmentIllustrationFamilyKey({ name: '짚 모자', type: 'armor' }), 'headgear-straw-hat');
     assert.equal(getEquipmentIllustrationFamilyKey({ name: '여행자 튜닉', type: 'armor' }), 'armor-coat');
     assert.equal(getEquipmentIllustrationFamilyKey({ name: '기사의 흉갑', type: 'armor' }), 'armor-plate');
+    assert.equal(getEquipmentIllustrationFamilyKey({ name: '신전 제관 예복', type: 'armor' }), 'armor-robe');
+    assert.equal(getEquipmentIllustrationFamilyKey({ name: '암살자 장갑', type: 'armor' }), 'armor-leather');
+    for (const name of ['드래곤 임페리얼', '화염 방어복', '냉기 방어복', '심해의 수호복']) {
+        assert.equal(getEquipmentIllustrationFamilyKey({ name, type: 'armor' }), 'armor-plate', name);
+    }
     assert.equal(getEquipmentWearableFamilyKey({ name: '목재 방패', type: 'shield' }), 'offhand-shield');
     assert.equal(getEquipmentWearableFamilyKey({ name: '견습 주문서', type: 'shield', subtype: 'focus' }), 'offhand-book');
     assert.equal(getEquipmentWearableFamilyKey({ name: '롱소드', type: 'weapon', hands: 1 }), 'weapon-sword');
@@ -207,7 +217,7 @@ test('avatar preview item icon routing stays disabled for normal equipment item 
 //   매니페스트 미등록(신규 아이템) fallback으로만 허용.
 test('non-signature equipment item icons use per-item auto art (family silhouette base)', async () => {
     const { ITEMS } = await import('../src/data/items.js');
-    const equipItems = Object.values(ITEMS).flat().filter((item) => (
+    const equipItems = [...ITEMS.weapons, ...ITEMS.armors].filter((item) => (
         item
         && ['weapon', 'armor', 'shield'].includes(item.type)
         && !SPECIAL_ITEM_ICON_KEYS[item.name]
@@ -332,7 +342,8 @@ test('avatar-style equipment family assets exist for item illustrations and wear
 
 test('every equippable item has an exact avatar-style equipment illustration asset', async () => {
     const { ITEMS } = await import('../src/data/items.js');
-    const equipItems = Object.values(ITEMS).flat().filter((item) => item && ['weapon', 'armor', 'shield'].includes(item.type));
+    const equipItems = [...ITEMS.weapons, ...ITEMS.armors]
+        .filter((item) => item && ['weapon', 'armor', 'shield'].includes(item.type));
 
     for (const item of equipItems) {
         const key = getExactEquipmentItemAssetKey(item);
@@ -350,7 +361,7 @@ test('weapon-core exact illustrations are v2, provenance-bound, 160px and unique
     );
     const hashesByFamily = new Map();
 
-    assert.equal(catalog.length, 56);
+    assert.equal(catalog.length, 54);
     assert.equal(provenance.cohort, 'weapon-core');
     assert.equal(provenance.catalogSha256, manifest.catalogSha256);
 
@@ -411,6 +422,46 @@ test('weapon-ranged-magic exact illustrations cover all 47 identities with v2 tr
         assert.match(artwork.sourcePath, /^scripts\/art_sources\/equipment\/v2\/weapon-ranged-magic\/.+\.png$/);
         assert.match(artwork.sourceSha256, /^[0-9a-f]{64}$/);
         assert.match(artwork.exportSha256, /^[0-9a-f]{64}$/);
+
+        const source = await readFile(path.resolve(__dirname, '..', artwork.sourcePath));
+        const runtime = await readFile(path.resolve(__dirname, '..', 'public', entry.runtimePath.replace(/^\//, '')));
+        assert.equal(sha256(source), artwork.sourceSha256, `Expected source hash match for ${entry.name}`);
+        assert.equal(sha256(runtime), artwork.exportSha256, `Expected export hash match for ${entry.name}`);
+        assert.deepEqual(readPngSize(runtime), { width: 160, height: 160 }, `Expected 160px runtime art for ${entry.name}`);
+
+        const provenExport = exportsByName.get(entry.name);
+        assert.ok(provenExport, `Expected provenance export for ${entry.name}`);
+        assert.equal(provenExport.batch.batchId, artwork.batchId);
+        assert.equal(provenExport.batch.sourceSheetSha256, artwork.sourceSha256);
+        assert.equal(provenExport.exportSha256, artwork.exportSha256);
+
+        const familyHashes = hashesByFamily.get(entry.familyKey) || new Set();
+        assert.equal(familyHashes.has(artwork.exportSha256), false, `Duplicate exact illustration in ${entry.familyKey}: ${entry.name}`);
+        familyHashes.add(artwork.exportSha256);
+        hashesByFamily.set(entry.familyKey, familyHashes);
+    }
+});
+
+test('offhand-headgear exact illustrations cover all 21 identities with v2 tracked art and family-unique exports', async () => {
+    const catalog = (await buildEquipmentCatalogRows()).filter((entry) => entry.cohort === 'offhand-headgear');
+    const manifest = JSON.parse(await readFile(equipmentManifestPath, 'utf8'));
+    const provenance = JSON.parse(await readFile(offhandHeadgearProvenancePath, 'utf8'));
+    const exportsByName = new Map(
+        provenance.batches.flatMap((batch) => batch.exports.map((entry) => [entry.name, { ...entry, batch }]))
+    );
+    const hashesByFamily = new Map();
+
+    assert.equal(catalog.length, 21);
+    assert.equal(provenance.cohort, 'offhand-headgear');
+    assert.equal(provenance.catalogSha256, manifest.catalogSha256);
+    assert.equal(exportsByName.size, 21);
+
+    for (const entry of catalog) {
+        const artwork = manifest.artwork?.[entry.name];
+        assert.ok(artwork, `Expected v2 artwork metadata for ${entry.name}`);
+        assert.equal(artwork.styleVersion, 2, `Expected styleVersion 2 for ${entry.name}`);
+        assert.equal(artwork.familyKey, entry.familyKey, `Expected family identity for ${entry.name}`);
+        assert.match(artwork.sourcePath, /^scripts\/art_sources\/equipment\/v2\/offhand-headgear\/.+\.png$/);
 
         const source = await readFile(path.resolve(__dirname, '..', artwork.sourcePath));
         const runtime = await readFile(path.resolve(__dirname, '..', 'public', entry.runtimePath.replace(/^\//, '')));

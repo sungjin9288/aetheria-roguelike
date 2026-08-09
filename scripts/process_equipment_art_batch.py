@@ -217,6 +217,7 @@ def validate_batch(
 
     names: list[str] = []
     runtime_paths: set[str] = set()
+    family_keys: set[str] = set()
     for index, identity in enumerate(identities):
         if not isinstance(identity, dict):
             raise ValueError(f"Batch identity must be an object: {batch_id}")
@@ -232,6 +233,7 @@ def validate_batch(
             raise ValueError(f"Batch identity does not match the authoritative catalog row: {name}")
         if identity.get("cohort") != cohort:
             raise ValueError(f"Batch identity cohort does not match batch cohort: {name}")
+        family_keys.add(identity["familyKey"])
         manifest_entry = entries.get(name)
         if not isinstance(manifest_entry, str) or not manifest_entry or ".." in PurePosixPath(manifest_entry).parts:
             raise ValueError(f"Equipment manifest is missing batch identity: {name}")
@@ -245,6 +247,8 @@ def validate_batch(
 
     if names != identity_names or len(set(names)) != len(names) or len(runtime_paths) != len(names):
         raise ValueError(f"Batch manifest identities are not unique and ordered: {batch_id}")
+    if len(family_keys) != 1:
+        raise ValueError(f"Batch identities must share one illustration family: {batch_id}")
     return identities
 
 

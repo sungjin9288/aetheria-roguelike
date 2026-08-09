@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "batchId": "offhand-headgear-book-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "offhand-headgear",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "견습 주문서",
+    "룬 마도서",
+    "심연의 마도서",
+    "쌍두 마도서",
+    "현자의 서판"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "견습 주문서",
+      "type": "shield",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "offhand-book",
+      "runtimePath": "/assets/equipment-exact/auto/auto-18d5eb52ee3e.png",
+      "cohort": "offhand-headgear",
+      "prompt": "견습 주문서; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: an unfurled parchment scroll with rolled ends and a readable central spell diagram; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-center",
+      "name": "룬 마도서",
+      "type": "shield",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "offhand-book",
+      "runtimePath": "/assets/equipment-exact/auto/auto-0ecdac0b9532.png",
+      "cohort": "offhand-headgear",
+      "prompt": "룬 마도서; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: a closed bound tome with a rigid cover, visible spine, and centered scripture emblem; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "심연의 마도서",
+      "type": "shield",
+      "tier": 4,
+      "elem": "어둠",
+      "familyKey": "offhand-book",
+      "runtimePath": "/assets/equipment-exact/auto/auto-3215fc4ebfe6.png",
+      "cohort": "offhand-headgear",
+      "prompt": "심연의 마도서; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: a closed bound tome with a rigid cover, visible spine, and centered scripture emblem; Tier T4: an elemental core and magical fabrication integrated into the structure; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "쌍두 마도서",
+      "type": "shield",
+      "tier": 3,
+      "elem": "빛",
+      "familyKey": "offhand-book",
+      "runtimePath": "/assets/equipment-exact/auto/auto-9f7c5b552271.png",
+      "cohort": "offhand-headgear",
+      "prompt": "쌍두 마도서; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: a closed bound tome with a rigid cover, visible spine, and centered scripture emblem; Tier T3: regional craft character expressed through the form and material treatment; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "현자의 서판",
+      "type": "shield",
+      "tier": 3,
+      "elem": "",
+      "familyKey": "offhand-book",
+      "runtimePath": "/assets/equipment-exact/auto/auto-065c659a4d9a.png",
+      "cohort": "offhand-headgear",
+      "prompt": "현자의 서판; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: a solid carved stone tablet with beveled edges and a centered rune; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with 5 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\nLeave all unused trailing cells completely transparent and empty: bottom-right.\ntop-left: 견습 주문서; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: an unfurled parchment scroll with rolled ends and a readable central spell diagram; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 룬 마도서; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: a closed bound tome with a rigid cover, visible spine, and centered scripture emblem; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 심연의 마도서; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: a closed bound tome with a rigid cover, visible spine, and centered scripture emblem; Tier T4: an elemental core and magical fabrication integrated into the structure; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze.\nbottom-left: 쌍두 마도서; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: a closed bound tome with a rigid cover, visible spine, and centered scripture emblem; Tier T3: regional craft character expressed through the form and material treatment; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\nbottom-center: 현자의 서판; family offhand-book: offhand-book family: a readable cover, binding, and central page or rune detail; exact form: a solid carved stone tablet with beveled edges and a centered rune; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}
