@@ -529,7 +529,7 @@ Keep bow string/readability, staff head shape, lance tip and whip curve inside t
 
 Record every rejected batch and replacement source hash in provenance.
 
-- [ ] **Step 4: Run gate, commit and push**
+- [x] **Step 4: Run gate, commit and push**
 
 Run cohort verifier, item visual tests, `npm run verify`, diff check; commit the entire cohort once and push.
 
