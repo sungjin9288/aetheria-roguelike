@@ -2025,8 +2025,8 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 538: 정합성 가드 — production + test callsite 보존', async () => {
       const helpers = await readSrc('src/reducers/handlers/helpers.ts');
-      assert.ok(/resolveDailyProtocolProgress\(currentPlayer,\s*type,\s*amount,\s*relicRoll\)/.test(helpers),
-          '현재 일일 주기로 정규화된 지급 결과 callsite 보존');
+      assert.ok(/resolveDailyProtocolProgress\([\s\S]{0,180}?currentPlayer,\s*type,\s*amount,\s*relicRoll,\s*\{[\s\S]{0,120}?rng:\s*itemRng/.test(helpers),
+          '현재 일일 주기와 item entropy를 전달하는 지급 결과 callsite 보존');
 
       // cycle-232-relic-* 는 tests/relics.test.js로 통합됨 (audit #1).
       const tt = await readSrc('tests/relics.test.js');

@@ -179,6 +179,7 @@ export const handleVictoryOutcome = ({
             now: resolvedAt,
             relicRoll: random(),
             logSeed: Math.floor(random() * 4294967296),
+            itemRng: random,
         },
     });
     dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'kills', now: resolvedAt } });

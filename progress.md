@@ -1,5 +1,19 @@
 Original prompt: 좋아. 추천사항 전부 다 반영해줘.
 
+Done (2026-08-09: combat replay authority and deterministic daily item reward review follow-up):
+- Closed the independent review gaps by requiring a finite `USE_COMBAT_ITEM.expectedTurn` that exactly matches reducer-owned `state.combatTurn`, and typed the production combat-item caller so every accepted item action carries the turn claim.
+- Reused the combat transaction's seeded RNG and fixed resolution time when `makeItem` creates an accepted daily protocol item reward, preserving exact state replay for identical state, seed, and time.
+- Extracted the existing combat-receipt key guard into a small pure consumer and behaviorally protected same-key suppression, new-key narration, and empty-story inertness without widening the victory adapter.
+
+Verification:
+- RED probes reproduced all three review gaps: an item action without `expectedTurn` mutated post-attack state, identical victory replays produced different daily reward item IDs, and no directly testable receipt consumer existed.
+- Narrow transaction/receipt suites -> 13/13 pass; coupled combat, daily protocol, loot, boss, skill, relic, and cycle contracts -> 794/794 pass; affected cycle-307 static guards -> 2/2 pass.
+- `npm run verify:full` -> type-check, lint, unit 3483/3483, build guard, desktop/mobile smoke, and Playwright E2E 47/47 + 45/45 pass. Desktop smoke still reports the pre-existing non-blocking `browser.close timeout` shutdown warning after its assertions pass.
+- `npm run mobile:doctor`, `npm run cap:sync`, and `git diff --check` -> pass. Apple Distribution identity and Android release signing inputs remain unavailable environment blockers.
+
+Next action:
+- Submit this narrow review fix for independent re-review. Physical Android acceptance, signed distribution, and device delivery remain separate release work.
+
 Done (2026-08-06: atomic combat action transaction continuation):
 - Restored the interrupted cross-thread work for attack, skill, escape, and combat-item turn authority.
 - Moved one player action, enemy response, victory/defeat settlement, grave/run summary, protocol rewards, and story receipts behind one reducer transition with `combatTurn` replay protection.

@@ -9,6 +9,7 @@ import { handleVictoryOutcome } from '../../hooks/combatActions/combatVictory';
 import { protocolActionMap } from './protocolHandlers';
 import { rewardActionMap } from './rewardHandlers';
 import type { GameAction, GameState } from '../gameReducer';
+import type { UseCombatItemPayload } from '../actionTypes';
 import { addNewTitles, sanitizeQuickSlots } from './helpers';
 
 const appendCombatLogs = (
@@ -216,11 +217,13 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
     USE_COMBAT_ITEM: (state: GameState, action: GameAction): GameState => {
         if (state.gameState !== GS.COMBAT || !state.enemy) return state;
 
-        const itemId = typeof action.payload?.itemId === 'string' ? action.payload.itemId : '';
-        const seed = Number(action.payload?.seed);
-        const now = Number(action.payload?.now);
-        const expectedTurn = action.payload?.expectedTurn;
-        if (expectedTurn !== undefined && Number(expectedTurn) !== (state.combatTurn || 0)) return state;
+        const payload = action.payload as Partial<UseCombatItemPayload> | undefined;
+        const itemId = typeof payload?.itemId === 'string' ? payload.itemId : '';
+        const seed = Number(payload?.seed);
+        const now = Number(payload?.now);
+        const expectedTurn = payload?.expectedTurn;
+        if (typeof expectedTurn !== 'number' || !Number.isFinite(expectedTurn)) return state;
+        if (expectedTurn !== state.combatTurn) return state;
         if (!itemId || !Number.isFinite(seed) || !Number.isFinite(now)) return state;
 
         const item = (state.player.inv || []).find((entry: any) => entry.id === itemId);

@@ -45,7 +45,7 @@ test('combat item turn consumes one item and replay is an exact no-op', () => {
     const state = makeState();
     const action = {
         type: AT.USE_COMBAT_ITEM,
-        payload: { itemId: potion.id, seed: 1234, now: 1_700_000_000_000 },
+        payload: { itemId: potion.id, expectedTurn: 0, seed: 1234, now: 1_700_000_000_000 },
     };
 
     const consumed = actionMap.USE_COMBAT_ITEM(state, action);
@@ -57,6 +57,27 @@ test('combat item turn consumes one item and replay is an exact no-op', () => {
     assert.equal(consumed.gameState, 'combat');
     assert.equal(consumed.logs.filter((log) => log.text.includes('전투 회복 물약')).length, 1);
     assert.equal(replayed, consumed);
+});
+
+test('combat item action without an expected turn is an exact no-op after attack advances the turn', () => {
+    const state = makeState();
+    const afterAttack = actionMap.RESOLVE_COMBAT_ACTION(state, {
+        type: AT.RESOLVE_COMBAT_ACTION,
+        payload: {
+            kind: 'attack',
+            expectedTurn: 0,
+            seed: 20260809,
+            now: 1_700_000_000_050,
+        },
+    });
+
+    const rejected = actionMap.USE_COMBAT_ITEM(afterAttack, {
+        type: AT.USE_COMBAT_ITEM,
+        payload: { itemId: potion.id, seed: 20260810, now: 1_700_000_000_051 },
+    });
+
+    assert.equal(afterAttack.combatTurn, 1);
+    assert.equal(rejected, afterAttack);
 });
 
 test('combat item turn commits defeat and grave data in the same state transition', () => {
@@ -75,7 +96,7 @@ test('combat item turn commits defeat and grave data in the same state transitio
 
     const defeated = actionMap.USE_COMBAT_ITEM(state, {
         type: AT.USE_COMBAT_ITEM,
-        payload: { itemId: potion.id, seed: 7, now: 1_700_000_000_123 },
+        payload: { itemId: potion.id, expectedTurn: 0, seed: 7, now: 1_700_000_000_123 },
     });
 
     assert.equal(defeated.gameState, 'dead');
@@ -96,7 +117,7 @@ test('a damage-over-time kill closes combat once before victory rewards resolve'
     });
     const action = {
         type: AT.USE_COMBAT_ITEM,
-        payload: { itemId: potion.id, seed: 99, now: 1_700_000_000_456 },
+        payload: { itemId: potion.id, expectedTurn: 0, seed: 99, now: 1_700_000_000_456 },
     };
 
     const won = actionMap.USE_COMBAT_ITEM(state, action);
@@ -138,6 +159,7 @@ test('combat hook sends identity and entropy once for rapid repeated input', () 
         enemy: state.enemy,
         grave: state.grave,
         liveConfig: state.liveConfig,
+        combatTurn: state.combatTurn,
         dispatch: (action) => dispatched.push(action),
         addLog: () => {},
         addStoryLog: async () => {},
@@ -157,6 +179,7 @@ test('combat hook sends identity and entropy once for rapid repeated input', () 
     assert.equal(dispatched.length, 1);
     assert.equal(dispatched[0].type, AT.USE_COMBAT_ITEM);
     assert.equal(dispatched[0].payload.itemId, potion.id);
+    assert.equal(dispatched[0].payload.expectedTurn, state.combatTurn);
     assert.equal(typeof dispatched[0].payload.seed, 'number');
     assert.equal(typeof dispatched[0].payload.now, 'number');
     assert.equal('player' in dispatched[0].payload, false);

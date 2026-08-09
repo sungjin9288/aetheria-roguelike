@@ -2,7 +2,7 @@ import { useReducer, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ADMIN_UIDS } from '../data/constants';
 import { AI_SERVICE } from '../services/aiService';
 import { parseCommand } from '../utils/commandParser';
-import { gameReducer, INITIAL_STATE } from '../reducers/gameReducer';
+import { gameReducer, INITIAL_STATE, type GameState } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
 import { GS } from '../reducers/gameStates';
 import { calculateFullStats } from '../utils/statsCalculator';
@@ -13,6 +13,17 @@ import { useFirebaseSync } from './useFirebaseSync';
 import { createGameActions } from './useGameActions';
 import { createCombatActions } from './useCombatActions';
 import { createInventoryActions } from './useInventoryActions';
+
+export const consumeCombatReceiptStories = (
+    receipt: GameState['combatReceipt'],
+    consumedKey: string | null,
+) => {
+    if (!receipt || consumedKey === receipt.key) {
+        const stories: NonNullable<GameState['combatReceipt']>['stories'] = [];
+        return { consumedKey, stories };
+    }
+    return { consumedKey: receipt.key, stories: receipt.stories };
+};
 
 export const useGameEngine = () => {
     const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
@@ -131,9 +142,12 @@ export const useGameEngine = () => {
 
     const narratedCombatReceiptRef = useRef<string | null>(null);
     useEffect(() => {
-        if (!combatReceipt || narratedCombatReceiptRef.current === combatReceipt.key) return;
-        narratedCombatReceiptRef.current = combatReceipt.key;
-        combatReceipt.stories.forEach((story: any) => {
+        const consumption = consumeCombatReceiptStories(
+            combatReceipt,
+            narratedCombatReceiptRef.current,
+        );
+        narratedCombatReceiptRef.current = consumption.consumedKey;
+        consumption.stories.forEach((story: any) => {
             void addStoryLog(story.type, story.data);
         });
     }, [addStoryLog, combatReceipt]);

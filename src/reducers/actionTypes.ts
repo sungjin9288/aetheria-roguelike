@@ -2,6 +2,13 @@
  * Game Action Type Constants
  * 모든 reducer action type을 상수로 관리하여 오타를 방지합니다.
  */
+export type UseCombatItemPayload = {
+    itemId: string;
+    expectedTurn: number;
+    seed: number;
+    now: number;
+};
+
 export const AT = Object.freeze({
     // Boot / Auth
     SET_BOOT_STAGE: 'SET_BOOT_STAGE',

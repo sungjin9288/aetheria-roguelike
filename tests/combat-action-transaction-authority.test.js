@@ -89,6 +89,27 @@ test('victory reward logs are deterministic for the same state, seed, and time',
     assert.ok(first.logs.some((log) => log.text.includes('에센스 +5')));
 });
 
+test('victory daily item reward is deterministic for the same state, seed, and time', () => {
+    const now = 1_700_000_000_100;
+    const state = makeState();
+    state.player.stats.dailyProtocol = {
+        date: getProtocolDayKey(new Date(now)),
+        relicShards: 0,
+        missions: [
+            { id: 'kill_n', type: 'kills', goal: 1, reward: { item: '중급 체력 물약' }, progress: 0, done: false },
+            { id: 'explore_n', type: 'explores', goal: 10, reward: { essence: 5 }, progress: 0, done: false },
+            { id: 'gold_n', type: 'goldSpend', goal: 300, reward: { relicShard: 1 }, progress: 0, done: false },
+        ],
+    };
+    const action = makeAction('attack', 92, now);
+
+    const first = actionMap.RESOLVE_COMBAT_ACTION(structuredClone(state), action);
+    const second = actionMap.RESOLVE_COMBAT_ACTION(structuredClone(state), action);
+
+    assert.ok(first.player.inv.some((item) => item.name === '중급 체력 물약'));
+    assert.deepEqual(first, second);
+});
+
 test('skill combat action is deterministic for the same state, seed, and time', () => {
     const state = makeState({
         enemy: {
@@ -175,4 +196,41 @@ test('combat hook claims one action for rapid repeated input', () => {
         Object.keys(dispatched[0].payload).sort(),
         ['expectedTurn', 'kind', 'now', 'seed'],
     );
+});
+
+test('combat receipt consumer narrates each key once and leaves empty stories inert', async () => {
+    const engineModule = await import('../src/hooks/useGameEngine.js');
+    assert.equal(
+        typeof engineModule.consumeCombatReceiptStories,
+        'function',
+        'useGameEngine must expose the receipt consumer used by its effect guard',
+    );
+
+    const narrated = [];
+    let consumedKey = null;
+    const firstReceipt = {
+        key: 'combat:1',
+        stories: [{ type: 'victory', data: { name: '훈련용 정령' } }],
+    };
+    const secondReceipt = {
+        key: 'combat:2',
+        stories: [{ type: 'bossPhase2', data: { bossName: '훈련용 군주' } }],
+    };
+
+    const consume = (receipt) => {
+        const consumption = engineModule.consumeCombatReceiptStories(receipt, consumedKey);
+        consumedKey = consumption.consumedKey;
+        narrated.push(...consumption.stories);
+    };
+
+    consume(firstReceipt);
+    consume(firstReceipt);
+    consume(secondReceipt);
+    consume({ key: 'combat:3', stories: [] });
+
+    assert.deepEqual(narrated, [
+        { type: 'victory', data: { name: '훈련용 정령' } },
+        { type: 'bossPhase2', data: { bossName: '훈련용 군주' } },
+    ]);
+    assert.equal(consumedKey, 'combat:3');
 });

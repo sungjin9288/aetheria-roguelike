@@ -1,4 +1,4 @@
-import { AT } from '../../reducers/actionTypes';
+import { AT, type UseCombatItemPayload } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import type { Item } from '../../types/index.js';
@@ -43,9 +43,15 @@ export const createCombatItemActions = (deps: any, _shared: any, pendingControl:
 
             const seed = Math.floor(Math.random() * 4294967296);
             const now = Date.now();
+            const payload: UseCombatItemPayload = {
+                itemId: inventoryItem.id,
+                expectedTurn: combatTurn,
+                seed,
+                now,
+            };
             dispatch({
                 type: AT.USE_COMBAT_ITEM,
-                payload: { itemId: inventoryItem.id, expectedTurn: combatTurn, seed, now },
+                payload,
             });
         },
     };

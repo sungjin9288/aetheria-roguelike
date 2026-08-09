@@ -62,6 +62,11 @@ export interface DailyProtocolReward {
     convertedRelic: Relic | null;
 }
 
+type DailyProtocolItemEntropy = {
+    rng?: () => number;
+    now?: () => number;
+};
+
 const emptyDailyProtocolReward = (): DailyProtocolReward => ({
     completedCount: 0,
     essence: 0,
@@ -74,7 +79,13 @@ const emptyDailyProtocolReward = (): DailyProtocolReward => ({
  * 오늘의 임무 진행과 보상을 한 번에 확정합니다.
  * UI는 이 결과만 읽어 실제 지급량과 유물 변환 결과를 안내합니다.
  */
-export const resolveDailyProtocolProgress = (player: Player, type: any, amount: any, relicRoll?: number) => {
+export const resolveDailyProtocolProgress = (
+    player: Player,
+    type: any,
+    amount: any,
+    relicRoll?: number,
+    itemEntropy?: DailyProtocolItemEntropy,
+) => {
     const dp = (player.stats as any)?.dailyProtocol;
     if (!dp) return { player, reward: emptyDailyProtocolReward() };
 
@@ -170,7 +181,7 @@ export const resolveDailyProtocolProgress = (player: Player, type: any, amount: 
     const rewardedItems = itemRewards
         .map((name: any) => findItemByName(name))
         .filter(Boolean)
-        .map((item: any) => makeItem(item));
+        .map((item: any) => makeItem(item, itemEntropy?.rng, itemEntropy?.now));
     if (rewardedItems.length > 0) {
         nextPlayer.inv = [...(nextPlayer.inv || []), ...rewardedItems];
     }
@@ -193,6 +204,7 @@ export const advanceDailyProtocol = (
     amount: any,
     relicRoll?: number,
     now?: number,
+    itemRng?: () => number,
 ) => {
     const dailyProtocol = getCurrentDailyProtocol(
         player,
@@ -202,7 +214,10 @@ export const advanceDailyProtocol = (
         ...player,
         stats: { ...player.stats, dailyProtocol },
     };
-    return resolveDailyProtocolProgress(currentPlayer, type, amount, relicRoll);
+    return resolveDailyProtocolProgress(currentPlayer, type, amount, relicRoll, {
+        rng: itemRng,
+        now: Number.isFinite(now) ? () => now as number : undefined,
+    });
 };
 
 export const getDailyProtocolRewardLogs = (reward: DailyProtocolReward) => {

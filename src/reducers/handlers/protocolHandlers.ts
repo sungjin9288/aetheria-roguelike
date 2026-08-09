@@ -29,6 +29,7 @@ export const protocolActionMap = {
             amount,
             action.payload?.relicRoll,
             action.payload?.now,
+            typeof action.payload?.itemRng === 'function' ? action.payload.itemRng : undefined,
         );
 
         return {
