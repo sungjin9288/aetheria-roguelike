@@ -59,10 +59,23 @@ const PixelCharacterAvatar = ({
     dataTestId,
     label,
 }: any) => {
-    const appearance = useMemo(
-        () => providedAppearance || deriveCharacterAppearance(player),
-        [player, providedAppearance]
-    );
+    const appearance = useMemo(() => {
+        const appearancePlayer = providedAppearance?.job
+            ? { ...player, job: providedAppearance.job }
+            : player;
+        const derivedAppearance = deriveCharacterAppearance(appearancePlayer);
+
+        if (!providedAppearance) return derivedAppearance;
+
+        return {
+            ...derivedAppearance,
+            ...providedAppearance,
+            palette: {
+                ...derivedAppearance.palette,
+                ...providedAppearance.palette,
+            },
+        };
+    }, [player, providedAppearance]);
 
     const sizeConfig = SIZE_MAP[size] || SIZE_MAP.sm;
     const totalEnhance = (appearance.weapon?.enhance || 0) + (appearance.offhand?.enhance || 0) + (appearance.armor?.enhance || 0);

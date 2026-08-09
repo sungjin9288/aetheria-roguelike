@@ -1,3 +1,17 @@
+Done (2026-08-09: canonical 18-job character art and Job Change portrait integration):
+- Generated and curated one lineage-coherent master for every live job from the manifest/design-bible prompt contract. Deterministic edge-connected cleanup converted opaque checkerboard working outputs to true-alpha tracked masters without accepting opaque source files.
+- Normalized 18 unique runtime exports to 768x768, maximum 600x630 opaque bounds, centered margin, and shared foot baseline y=708. Known jobs now resolve to their first-and-only canonical manifest path; Adventurer is only the unknown-job fallback.
+- Added reproducible prompt/source/export hashes, labeled and anonymous 6x3 contact sheets, and an honest row-by-row provisional review. Because lineage order was known before inspection, no independent anonymous 16/18 pass is claimed.
+- Reused `PixelCharacterAvatar` for the selected Job Change portrait and made partial job appearances derive a complete safe appearance before rendering.
+
+Verification:
+- Character-focused Node suites -> 42/42 pass; `npm run art:verify -- --scope characters` -> 18 exports with zero mapping, PNG, alpha, bounds, style, or duplicate errors.
+- Focused 390x844 Playwright portrait test reproduced the missing portrait RED and then passed with Warrior-to-Mage canonical asset replacement and viewport containment.
+- Equipment art Tasks 4–8 and approved full-surface `npm run art:verify` remain separate; this checkpoint does not mark them complete.
+
+Next action:
+- Run an independent human anonymous 18-row identification/combat-promise review, then continue Task 4 equipment-family art without changing the accepted character source lineage.
+
 Checkpoint (2026-08-09: reproducible art catalog and contract baseline, independent-review fixes):
 - Added a deterministic `buildArtCatalog` for the live 18-class / 233-equipment inventory (`weapon 119`, `armor 93`, `shield 21`, 22 defined families, 18 used families, 8 elements) with explicit Unicode code-point sorting, catalog SHA-256 `79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6`, and duplicate/missing-family rejection. The live hash is unchanged because current rows already share the same order.
 - Added the 18-entry canonical character declaration, additive equipment manifest metadata, Node IHDR verifier, Pillow alpha/transparent/bounds/foot-baseline inspector, stable sorted export hashes, and `art:catalog` / `art:verify` commands. The existing runtime `entries` mapping remains unchanged, and the owning generator now preserves contract metadata when it rewrites entries.

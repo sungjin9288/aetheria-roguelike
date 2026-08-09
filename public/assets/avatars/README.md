@@ -1,57 +1,28 @@
-Drop externally generated pixel sprite portraits here to override the code fallback avatar.
+# Character avatar assets
 
-Expected filenames:
+`canonical/` contains the only runtime portrait for each of Aetheria's 18 known jobs. The mapping is owned by `src/data/characterArtManifest.json`; a known job must resolve to exactly one `/assets/avatars/canonical/<slug>.png` path and must not fall back to Adventurer.
 
-- `adventurer.png`
-- `warrior.png`
-- `knight.png`
-- `berserker.png`
-- `rogue.png`
-- `assassin.png`
-- `ranger.png`
-- `mage.png`
-- `archmage.png`
-- `warlock.png`
-- `paladin.png`
-- `chronomancer.png`
-- `shadow-lord.png`
-- `grand-mage.png`
+## Runtime contract
 
-Optional armor-style variants:
+- PNG RGBA with real transparent pixels; a baked checkerboard is invalid.
+- Canvas: `768x768`.
+- Opaque character bounds: at most `600x630`, centered inside the declared `16px` margin.
+- Shared foot baseline: `y=708`.
+- Every job export has a unique SHA-256.
+- Face, primary weapon, and shoulder silhouette must remain readable at the 40px avatar use case.
 
-- `<slug>-coat.png`
-- `<slug>-robe.png`
-- `<slug>-plate.png`
-- `<slug>-leather.png`
+The legacy files in this directory remain available only for unknown/corrupt-job fallback and equipment-preview compatibility. They are not candidates for a known canonical job.
 
-Optional loadout-style variants:
+## Reproduction
 
-- `<slug>-sword.png`
-- `<slug>-heavy.png`
-- `<slug>-archer.png`
-- `<slug>-caster.png`
-- `<slug>-guardian.png`
-- `<slug>-dagger.png`
-- `<slug>-lancer.png`
+Tracked source masters live in `scripts/art_sources/characters/`. Regenerate prompts and normalized exports with:
 
-Highest-priority combined variants:
+```sh
+node scripts/generate_job_sprite_prompts.mjs
+python3 scripts/process_character_art.py
+npm run art:verify -- --scope characters
+```
 
-- `<slug>-<armorStyle>-<loadoutStyle>.png`
+`scripts/process_character_art.py --import-source <slug>=<path>` may clean an opaque working import only through deterministic edge-connected background removal. It never accepts an opaque tracked master.
 
-Selection priority:
-
-- `<job>-<armorStyle>-<loadoutStyle>.png`
-- `<job>-<loadoutStyle>.png`
-- `<job>-<armorStyle>.png`
-- `<job>.png`
-- `adventurer-<loadoutStyle>.png`
-- `adventurer-<armorStyle>.png`
-- `adventurer.png`
-
-Guidelines:
-
-- transparent background
-- 32x32 or 48x48 source sprite
-- cute 2D pixel full-body or bust portrait
-- readable at very small sizes
-- keep silhouette centered with generous padding
+Provenance and the deterministic labeled/anonymous 6x3 contact sheets are recorded in `docs/evidence/art/`.

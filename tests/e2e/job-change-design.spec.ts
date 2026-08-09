@@ -92,4 +92,33 @@ test.describe('전직 선택 흐름', () => {
             animations: 'disabled',
         });
     });
+
+    test('선택한 직업의 canonical portrait가 직업별로 바뀌고 모바일 안에 머문다', async ({ page }) => {
+        const portrait = page.getByTestId('job-change-selected-avatar');
+        const portraitImage = portrait.locator('img');
+
+        await expect(portrait).toBeVisible();
+        await expect(portraitImage).toHaveAttribute('src', /\/assets\/avatars\/canonical\/warrior\.png$/);
+        await expect(page.getByTestId('job-change-decision')).toContainText('선택한 성장');
+
+        await page.getByTestId('job-change-option').filter({ hasText: '마법사' }).click();
+        await expect(portraitImage).toHaveAttribute('src', /\/assets\/avatars\/canonical\/mage\.png$/);
+
+        const geometry = await portrait.evaluate((node) => {
+            const bounds = node.getBoundingClientRect();
+            return {
+                left: bounds.left,
+                right: bounds.right,
+                top: bounds.top,
+                bottom: bounds.bottom,
+                viewportWidth: window.innerWidth,
+                viewportHeight: window.innerHeight,
+            };
+        });
+
+        expect(geometry.left).toBeGreaterThanOrEqual(0);
+        expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
+        expect(geometry.top).toBeGreaterThanOrEqual(0);
+        expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight);
+    });
 });

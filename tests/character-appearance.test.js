@@ -1,16 +1,227 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
+import { copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { deriveCharacterAppearance } from '../src/utils/characterAppearance.js';
 import { getAvatarEquipmentPreviewCandidates, getAvatarSpriteCandidates, JOB_SPRITE_SLUG_MAP } from '../src/utils/avatarSpriteCandidates.js';
 import { buildEquipmentPreviewAppearance, getEquipmentPreviewStage } from '../src/utils/avatarEquipmentPreview.js';
+import { CLASSES } from '../src/data/classes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const avatarAssetDir = path.resolve(__dirname, '../public/assets/avatars');
+const characterProcessorPath = path.resolve(__dirname, '../scripts/process_character_art.py');
+const characterPromptGeneratorPath = path.resolve(__dirname, '../scripts/generate_job_sprite_prompts.mjs');
+const pixelInspectorPath = path.resolve(__dirname, '../scripts/inspect_art_pixels.py');
+const characterManifest = JSON.parse(
+    readFileSync(path.resolve(__dirname, '../src/data/characterArtManifest.json'), 'utf8')
+);
+const canonicalSharedDirection = 'Aetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.';
+
+const readPngCanvas = (assetPath) => {
+    const png = readFileSync(assetPath);
+    assert.deepEqual(
+        [...png.subarray(0, 8)],
+        [137, 80, 78, 71, 13, 10, 26, 10],
+        `Expected a PNG signature at ${assetPath}`,
+    );
+    return {
+        width: png.readUInt32BE(16),
+        height: png.readUInt32BE(20),
+    };
+};
+
+const createOpaqueCheckerboardFixture = (assetPath) => spawnSync('python3', [
+    '-c',
+    [
+        'from PIL import Image, ImageDraw',
+        'import sys',
+        'image = Image.new("RGB", (24, 24))',
+        'pixels = image.load()',
+        'for y in range(24):',
+        '    for x in range(24):',
+        '        tone = 250 if ((x // 4) + (y // 4)) % 2 == 0 else 238',
+        '        pixels[x, y] = (tone, tone, tone)',
+        'draw = ImageDraw.Draw(image)',
+        'draw.rectangle((6, 3, 17, 21), fill=(42, 31, 46))',
+        'draw.rectangle((7, 4, 16, 20), fill=(64, 112, 180))',
+        'draw.rectangle((9, 8, 11, 10), fill=(255, 255, 255))',
+        'image.save(sys.argv[1])',
+    ].join('\n'),
+    assetPath,
+], { encoding: 'utf8' });
+
+const runCharacterProcessor = (args) => spawnSync('python3', [characterProcessorPath, ...args], {
+    encoding: 'utf8',
+});
+
+test('all 18 canonical jobs resolve to their only manifest sprite on a normalized canvas', () => {
+    const classNames = Object.keys(CLASSES).sort();
+    assert.deepEqual(Object.keys(characterManifest.entries).sort(), classNames);
+
+    for (const job of classNames) {
+        const entry = characterManifest.entries[job];
+        const candidates = getAvatarSpriteCandidates({ job });
+        assert.deepEqual(
+            candidates,
+            [entry.runtimePath],
+            `${job} must use only its canonical manifest sprite`,
+        );
+        if (job !== '모험가') {
+            assert.equal(
+                candidates.some((candidate) => candidate.endsWith('/adventurer.png')),
+                false,
+                `${job} must not include the adventurer fallback`,
+            );
+        }
+
+        const assetPath = path.resolve(__dirname, `../public${entry.runtimePath}`);
+        assert.equal(existsSync(assetPath), true, `Missing canonical sprite for ${job}: ${assetPath}`);
+        assert.deepEqual(readPngCanvas(assetPath), { width: 768, height: 768 });
+    }
+});
+
+test('character processor rejects opaque tracked masters before runtime export', async () => {
+    const fixtureRoot = await mkdtemp(path.join(tmpdir(), 'aetheria-character-art-'));
+    try {
+        const rawPath = path.join(fixtureRoot, 'raw.png');
+        const sourceDir = path.join(fixtureRoot, 'sources');
+        const runtimeDir = path.join(fixtureRoot, 'runtime');
+        await mkdir(sourceDir, { recursive: true });
+        const fixture = createOpaqueCheckerboardFixture(rawPath);
+        assert.equal(fixture.status, 0, fixture.stderr);
+        await copyFile(rawPath, path.join(sourceDir, 'adventurer.png'));
+
+        const result = runCharacterProcessor([
+            '--source-dir', sourceDir,
+            '--runtime-dir', runtimeDir,
+            '--only', 'adventurer',
+        ]);
+
+        assert.notEqual(result.status, 0);
+        assert.match(result.stderr, /tracked source master must contain transparent pixels/);
+        assert.equal(existsSync(path.join(runtimeDir, 'adventurer.png')), false);
+    } finally {
+        await rm(fixtureRoot, { recursive: true, force: true });
+    }
+});
+
+test('character processor imports edge-connected checkerboards without erasing enclosed whites', async () => {
+    const fixtureRoot = await mkdtemp(path.join(tmpdir(), 'aetheria-character-art-'));
+    try {
+        const rawPath = path.join(fixtureRoot, 'raw.png');
+        const sourceDir = path.join(fixtureRoot, 'sources');
+        const runtimeDir = path.join(fixtureRoot, 'runtime');
+        const fixture = createOpaqueCheckerboardFixture(rawPath);
+        assert.equal(fixture.status, 0, fixture.stderr);
+
+        const result = runCharacterProcessor([
+            '--source-dir', sourceDir,
+            '--runtime-dir', runtimeDir,
+            '--only', 'adventurer',
+            '--import-source', `adventurer=${rawPath}`,
+        ]);
+        assert.equal(result.status, 0, result.stderr || result.stdout);
+
+        const cleanedSource = path.join(sourceDir, 'adventurer.png');
+        const runtimeExport = path.join(runtimeDir, 'adventurer.png');
+        const sourceInspection = spawnSync('python3', [
+            '-c',
+            [
+                'from PIL import Image',
+                'import json, sys',
+                'image = Image.open(sys.argv[1]).convert("RGBA")',
+                'print(json.dumps({"corner": image.getpixel((0, 0)), "highlight": image.getpixel((10, 9))}))',
+            ].join('\n'),
+            cleanedSource,
+        ], { encoding: 'utf8' });
+        assert.equal(sourceInspection.status, 0, sourceInspection.stderr);
+        assert.deepEqual(JSON.parse(sourceInspection.stdout), {
+            corner: [250, 250, 250, 0],
+            highlight: [255, 255, 255, 255],
+        });
+        assert.deepEqual(readPngCanvas(runtimeExport), { width: 768, height: 768 });
+
+        const runtimeInspection = spawnSync('python3', [
+            pixelInspectorPath,
+            '--path', runtimeExport,
+            '--margin', '16',
+            '--foot-baseline', '708',
+        ], { encoding: 'utf8' });
+        assert.equal(runtimeInspection.status, 0, runtimeInspection.stderr);
+        assert.deepEqual(
+            {
+                hasAlpha: JSON.parse(runtimeInspection.stdout).hasAlpha,
+                hasTransparentPixels: JSON.parse(runtimeInspection.stdout).hasTransparentPixels,
+                boundsWithinMargin: JSON.parse(runtimeInspection.stdout).boundsWithinMargin,
+                footBaselineMatches: JSON.parse(runtimeInspection.stdout).footBaselineMatches,
+            },
+            {
+                hasAlpha: true,
+                hasTransparentPixels: true,
+                boundsWithinMargin: true,
+                footBaselineMatches: true,
+            },
+        );
+    } finally {
+        await rm(fixtureRoot, { recursive: true, force: true });
+    }
+});
+
+test('character prompt generator emits one approved manifest-driven prompt for every lineage role', async () => {
+    const fixtureRoot = await mkdtemp(path.join(tmpdir(), 'aetheria-character-prompts-'));
+    try {
+        const outputPath = path.join(fixtureRoot, 'prompts.json');
+        const provenancePath = path.join(fixtureRoot, 'provenance.json');
+        const result = spawnSync(process.execPath, [
+            characterPromptGeneratorPath,
+            '--output', outputPath,
+            '--provenance', provenancePath,
+        ], { encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr || result.stdout);
+
+        const prompts = JSON.parse(readFileSync(outputPath, 'utf8'));
+        const provenance = JSON.parse(readFileSync(provenancePath, 'utf8'));
+        assert.equal(prompts.sharedDirection, canonicalSharedDirection);
+        assert.equal(
+            prompts.sharedDirectionSha256,
+            createHash('sha256').update(canonicalSharedDirection).digest('hex'),
+        );
+        assert.equal(prompts.entries.length, 18);
+        assert.deepEqual(
+            new Set(prompts.entries.map((entry) => entry.job)),
+            new Set(Object.keys(CLASSES)),
+        );
+        assert.deepEqual(
+            prompts.entries.map((entry) => entry.slug),
+            [
+                'adventurer', 'warrior', 'knight', 'dragon-knight', 'berserker',
+                'mage', 'archmage', 'grand-mage', 'warlock', 'cleric', 'paladin',
+                'shaman', 'chronomancer', 'rogue', 'assassin', 'shadow-lord',
+                'ranger', 'hunt-lord',
+            ],
+        );
+        for (const entry of prompts.entries) {
+            assert.ok(entry.prompt.startsWith('Use case: stylized-concept\nAsset type: canonical game character master'));
+            assert.ok(entry.prompt.includes(canonicalSharedDirection));
+            assert.match(entry.prompt, /Role silhouette:/);
+            assert.match(entry.prompt, /Primary weapon:/);
+            assert.match(entry.prompt, /Palette:/);
+            assert.match(entry.prompt, /flat solid #00FF7F chroma background/);
+            assert.equal(entry.promptSha256, createHash('sha256').update(entry.prompt).digest('hex'));
+        }
+        assert.equal(provenance.promptSet.sharedDirection, canonicalSharedDirection);
+        assert.equal(provenance.promptSet.entries.length, 18);
+    } finally {
+        await rm(fixtureRoot, { recursive: true, force: true });
+    }
+});
 
 test('deriveCharacterAppearance falls back to a stable adventurer silhouette', () => {
     const appearance = deriveCharacterAppearance({
@@ -112,19 +323,14 @@ test('deriveCharacterAppearance derives distinct loadout styles from equipped we
     assert.equal(lancerAppearance.loadoutStyle, 'lancer');
 });
 
-test('getAvatarSpriteCandidates uses job-only default sprite (cycle 46)', () => {
+test('getAvatarSpriteCandidates uses the job-only canonical manifest sprite', () => {
     const candidates = getAvatarSpriteCandidates({
         job: '팔라딘',
         armorStyle: 'plate',
         loadoutStyle: 'guardian',
     });
 
-    // cycle 46: 직업만이 sprite 결정. armor/loadout 무시. JOB_DEFAULT_SPRITE 매핑 우선.
-    assert.deepEqual(candidates, [
-        '/assets/avatars/paladin-plate-guardian.png',
-        '/assets/avatars/paladin.png',
-        '/assets/avatars/adventurer.png',
-    ]);
+    assert.deepEqual(candidates, ['/assets/avatars/canonical/paladin.png']);
 });
 
 test('shadow-lord uses dedicated default sprite regardless of equipment', () => {
@@ -133,12 +339,7 @@ test('shadow-lord uses dedicated default sprite regardless of equipment', () => 
         armorStyle: 'plate',  // 비전공 armor
         loadoutStyle: 'sword', // 비전공 weapon
     });
-    // cycle 46: 장비와 무관하게 shadow-lord-leather-dagger 첫번째
-    assert.deepEqual(candidates, [
-        '/assets/avatars/shadow-lord-leather-dagger.png',
-        '/assets/avatars/shadow-lord.png',
-        '/assets/avatars/adventurer.png',
-    ]);
+    assert.deepEqual(candidates, ['/assets/avatars/canonical/shadow-lord.png']);
 });
 
 test('unknown job falls back to adventurer (jobSlug = adventurer)', () => {
@@ -162,7 +363,7 @@ test('cycle 46: 모험가는 어떤 장비를 입든 항상 같은 sprite', () =
         cases.map((c) => getAvatarSpriteCandidates({ job: '모험가', ...c })[0])
     );
     assert.equal(sprites.size, 1, 'should always pick the same sprite');
-    assert.equal([...sprites][0], '/assets/avatars/adventurer.png');
+    assert.equal([...sprites][0], '/assets/avatars/canonical/adventurer.png');
 });
 
 test('buildEquipmentPreviewAppearance derives robe previews from the same avatar family path', () => {

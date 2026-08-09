@@ -3389,7 +3389,7 @@ import { readFile, readdir } from 'node:fs/promises';
           'ClassIcon tier default 0 제거');
   });
 
-  test('cycle 568: 정합성 가드 — 4 production callsite 보존', async () => {
+  test('cycle 568: 정합성 가드 — ClassIcon callsite와 canonical 선택 portrait 보존', async () => {
       const stp = await readSrc('src/components/SkillTreePreview.tsx');
       assert.ok(/<ClassIcon className=\{player\.job as string\} size=\{34\} tier=\{currentClass\.tier \|\| 0\}/.test(stp),
           'SkillTreePreview <ClassIcon> callsite 보존');
@@ -3407,8 +3407,8 @@ import { readFile, readdir } from 'node:fs/promises';
       const jcp = await readSrc('src/components/tabs/JobChangePanel.tsx');
       assert.ok(/<ClassIcon className=\{currentJob\} size=\{34\} tier=\{current\?\.tier \|\| 0\}/.test(jcp),
           'JobChangePanel 현재 직업 <ClassIcon> callsite 보존');
-      assert.ok(/<ClassIcon className=\{selectedName\} size=\{38\} tier=\{selected\.tier \|\| 0\}/.test(jcp),
-          'JobChangePanel 선택 직업 <ClassIcon> callsite 보존');
+      assert.ok(/<PixelCharacterAvatar[\s\S]*appearance=\{\{ job: selectedName \}\}[\s\S]*dataTestId="job-change-selected-avatar"/.test(jcp),
+          'JobChangePanel 선택 직업 canonical PixelCharacterAvatar 보존');
   });
 
   test('cycle 568: body TIER_COLORS nullish fallback 보존', async () => {

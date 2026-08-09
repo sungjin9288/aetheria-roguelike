@@ -11,6 +11,7 @@ import {
 import ClassCard from '../ClassCard';
 import ClassIcon from '../icons/ClassIcon';
 import FocusPanelHeader from '../FocusPanelHeader';
+import PixelCharacterAvatar from '../PixelCharacterAvatar';
 
 interface JobChangeActions {
   jobChange: (jobName: string) => void;
@@ -130,7 +131,15 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
                   aria-live="polite"
                 >
                   <div className="flex items-start gap-2.5">
-                    <ClassIcon className={selectedName} size={38} tier={selected.tier || 0} />
+                    <PixelCharacterAvatar
+                      player={player}
+                      appearance={{ job: selectedName }}
+                      size="sm"
+                      className="shrink-0"
+                      showEnhanceBadge={false}
+                      dataTestId="job-change-selected-avatar"
+                      label={`${selectedName} 대표 외형`}
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="aether-type-meta font-readable text-[#7dd4d8]/82">선택한 성장</div>
                       <h3 className="font-readable text-lg font-semibold text-white">{selectedName}</h3>

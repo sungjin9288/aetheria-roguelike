@@ -1,6 +1,18 @@
 # Art Contract Checkpoint — 2026-08-09
 
-This directory records the reproducible art-contract baseline only. It does **not** certify the 18-character or 233-equipment visual goals as complete.
+This directory records reproducible art-contract evidence. Task 3 completes the canonical 18-character surface only; it does **not** certify the 233-equipment visual goal as complete.
+
+## Task 3 character checkpoint
+
+- `character-provenance.json` binds the approved shared prompt and all 18 role prompts to SHA-256 values, then binds each tracked source master and normalized runtime export to its own SHA-256.
+- `character-contact-sheet.png` and `character-contact-sheet-anonymous.png` are deterministic 6x3 lineage-order sheets produced by `scripts/process_character_art.py`.
+- All 18 tracked masters are RGBA with real transparent pixels. All runtime exports are unique `768x768` PNGs, use no more than `600x630` opaque bounds, remain inside the declared margin, and place the feet on `y=708`.
+- Known jobs resolve to their first-and-only manifest candidate. The Adventurer fallback remains only for unknown/corrupt job data.
+- The Job Change decision surface reuses `PixelCharacterAvatar`; the focused 390x844 Playwright flow verifies Warrior-to-Mage portrait replacement and viewport containment.
+- `node --import tsx --test tests/character-appearance.test.js tests/avatar-sprite-priority.test.js tests/art-asset-contract.test.js` — GREEN (`42/42`).
+- `npm run art:verify -- --scope characters` — GREEN: 18 exports, no missing/extra/duplicate/PNG/alpha/bounds/style errors.
+
+The row-by-row review in `character-review-2026-08.md` is deliberately provisional. The sheet was inspected after the lineage order was already known, so it is not an independent anonymous 16/18 identification pass and does not claim that gate.
 
 ## Catalog identity
 

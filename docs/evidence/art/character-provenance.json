@@ -1,0 +1,536 @@
+{
+  "version": 1,
+  "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+  "promptSet": {
+    "generator": "scripts/generate_job_sprite_prompts.mjs",
+    "generationTool": "OpenAI built-in image_gen imagegen",
+    "sharedDirection": "Aetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.",
+    "sharedDirectionSha256": "fc8a16173aba38ce75bf8a98cf135e40a3092cfddadc0ef83ea2fbe7d422b4bd",
+    "sourceDesign": "docs/LONG_TERM_PLAYER_EXPERIENCE_AND_ART_DESIGN_2026-08-06.md",
+    "entries": [
+      {
+        "job": "모험가",
+        "slug": "adventurer",
+        "lineageParent": null,
+        "combatPromise": "상황에 맞춰 배우고 적응한다",
+        "silhouette": "one-handed sword, small round shield, and practical travel cloak",
+        "primaryWeapon": "plain one-handed sword with a compact round shield",
+        "palette": "leather brown and clear blue",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 상황에 맞춰 배우고 적응한다.\nRole silhouette: one-handed sword, small round shield, and practical travel cloak.\nPrimary weapon: plain one-handed sword with a compact round shield.\nPalette: leather brown and clear blue.\nLineage continuity: establish the restrained base face proportions, pixel density, outline, and body scale for all later Aetheria jobs.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "b41b0943a3ee4438bf3abf35c339648ad1747b62cfecdea29283d485a2ce9451"
+      },
+      {
+        "job": "전사",
+        "slug": "warrior",
+        "lineageParent": "adventurer",
+        "combatPromise": "맞으면서 전선을 밀어낸다",
+        "silhouette": "broad sword, thick squared pauldrons, and a visible battle scar",
+        "primaryWeapon": "wide heavy-edged sword held forward",
+        "palette": "iron gray and martial red",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 맞으면서 전선을 밀어낸다.\nRole silhouette: broad sword, thick squared pauldrons, and a visible battle scar.\nPrimary weapon: wide heavy-edged sword held forward.\nPalette: iron gray and martial red.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as adventurer, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "05150c416b168d1631f864311b71aca9c36ac15e9fb4f8e5a36fd6bd1054939e"
+      },
+      {
+        "job": "나이트",
+        "slug": "knight",
+        "lineageParent": "warrior",
+        "combatPromise": "방패로 적의 공격 흐름을 통제한다",
+        "silhouette": "enormous shield, longsword, and fortress-like plate armor",
+        "primaryWeapon": "longsword paired with an oversized defensive shield",
+        "palette": "steel gray and royal blue",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 방패로 적의 공격 흐름을 통제한다.\nRole silhouette: enormous shield, longsword, and fortress-like plate armor.\nPrimary weapon: longsword paired with an oversized defensive shield.\nPalette: steel gray and royal blue.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as warrior, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "49ec99a9279fadbcaa096ffbc423b418ed8d0b554a8496c57741544fd96d7a63"
+      },
+      {
+        "job": "드래곤 나이트",
+        "slug": "dragon-knight",
+        "lineageParent": "knight",
+        "combatPromise": "용의 힘으로 위험을 감수하고 돌파한다",
+        "silhouette": "dragon-scale armor, dragon-blade lance, and a small controlled flame-breath motif",
+        "primaryWeapon": "long dragon-blade lance with a distinct draconic spearhead",
+        "palette": "obsidian black and molten lava orange",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 용의 힘으로 위험을 감수하고 돌파한다.\nRole silhouette: dragon-scale armor, dragon-blade lance, and a small controlled flame-breath motif.\nPrimary weapon: long dragon-blade lance with a distinct draconic spearhead.\nPalette: obsidian black and molten lava orange.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as knight, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "56b53e40e40cb403b4edcf8174777e7c0832c119f5c57a62d38fd567ee49ffb7"
+      },
+      {
+        "job": "버서커",
+        "slug": "berserker",
+        "lineageParent": "warrior",
+        "combatPromise": "방어를 버리고 폭발적인 피해를 선택한다",
+        "silhouette": "massive axe, exposed muscular arms, and a torn battle cape",
+        "primaryWeapon": "oversized two-handed execution axe",
+        "palette": "blood red and black",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 방어를 버리고 폭발적인 피해를 선택한다.\nRole silhouette: massive axe, exposed muscular arms, and a torn battle cape.\nPrimary weapon: oversized two-handed execution axe.\nPalette: blood red and black.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as warrior, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "0407c8853b56bbead6af5fc5d355f656009586e436c0d88c13d7beaa6363bcc0"
+      },
+      {
+        "job": "마법사",
+        "slug": "mage",
+        "lineageParent": "adventurer",
+        "combatPromise": "원소와 상태이상을 조합한다",
+        "silhouette": "training staff and three clearly separated elemental crystals",
+        "primaryWeapon": "simple apprentice staff crowned by three elemental crystals",
+        "palette": "navy, orange, and sky blue",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 원소와 상태이상을 조합한다.\nRole silhouette: training staff and three clearly separated elemental crystals.\nPrimary weapon: simple apprentice staff crowned by three elemental crystals.\nPalette: navy, orange, and sky blue.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as adventurer, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "7a631bd217f6713b5ff0efb2b484c7430d21753d34cb88b306e66baac363df13"
+      },
+      {
+        "job": "아크메이지",
+        "slug": "archmage",
+        "lineageParent": "mage",
+        "combatPromise": "강한 원소 주문의 순서를 설계한다",
+        "silhouette": "large staff and three rotating elemental crystals around the shoulder line",
+        "primaryWeapon": "large elemental staff with an open circular head",
+        "palette": "white, navy, and restrained multicolor light",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 강한 원소 주문의 순서를 설계한다.\nRole silhouette: large staff and three rotating elemental crystals around the shoulder line.\nPrimary weapon: large elemental staff with an open circular head.\nPalette: white, navy, and restrained multicolor light.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as mage, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "25684cbe7f24d77ac6660b8f2a1c8d0231ea111f366388b2ddf114b27b7487c8"
+      },
+      {
+        "job": "대마법사",
+        "slug": "grand-mage",
+        "lineageParent": "archmage",
+        "combatPromise": "모든 원소와 시간의 경계를 지배한다",
+        "silhouette": "ritual staff, multiple compact magic circles, and a star-covered mantle",
+        "primaryWeapon": "tall ritual staff with a prismatic core",
+        "palette": "midnight blue, white, and prismatic accents",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 모든 원소와 시간의 경계를 지배한다.\nRole silhouette: ritual staff, multiple compact magic circles, and a star-covered mantle.\nPrimary weapon: tall ritual staff with a prismatic core.\nPalette: midnight blue, white, and prismatic accents.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as archmage, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "4c4929d4ce4376f5c09e54363a705899ce9a0e120c53fbb89c081ee6d8cb100c"
+      },
+      {
+        "job": "흑마법사",
+        "slug": "warlock",
+        "lineageParent": "mage",
+        "combatPromise": "저주와 흡수로 전투를 잠식한다",
+        "silhouette": "curved staff, forbidden tome, and one spectral dark hand",
+        "primaryWeapon": "crooked curse staff paired with an open forbidden tome",
+        "palette": "purple, black, and sickly green",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 저주와 흡수로 전투를 잠식한다.\nRole silhouette: curved staff, forbidden tome, and one spectral dark hand.\nPrimary weapon: crooked curse staff paired with an open forbidden tome.\nPalette: purple, black, and sickly green.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as mage, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "609ef9cb54a4b90634f8d530e0a6e953b97b9720cce2f771d3f93455e443b465"
+      },
+      {
+        "job": "성직자",
+        "slug": "cleric",
+        "lineageParent": "mage",
+        "combatPromise": "정화와 빛으로 위험을 되돌린다",
+        "silhouette": "relic staff, long vestments, and a clean light sigil behind one shoulder",
+        "primaryWeapon": "slender relic staff with a sun-shaped head",
+        "palette": "ivory, gold, and sky blue",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 정화와 빛으로 위험을 되돌린다.\nRole silhouette: relic staff, long vestments, and a clean light sigil behind one shoulder.\nPrimary weapon: slender relic staff with a sun-shaped head.\nPalette: ivory, gold, and sky blue.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as mage, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "b16da63c022db1617524ca172556e4005f54594854c15d860f6545fdd1266dce"
+      },
+      {
+        "job": "팔라딘",
+        "slug": "paladin",
+        "lineageParent": "cleric",
+        "combatPromise": "방어와 치유를 공격으로 연결한다",
+        "silhouette": "crusader hammer, tower shield, and a compact halo of light",
+        "primaryWeapon": "one-handed holy war hammer paired with a tall tower shield",
+        "palette": "white, gold, and blue",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 방어와 치유를 공격으로 연결한다.\nRole silhouette: crusader hammer, tower shield, and a compact halo of light.\nPrimary weapon: one-handed holy war hammer paired with a tall tower shield.\nPalette: white, gold, and blue.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as cleric, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "b8fcbe64bfd378af2d840d55563917b02e3485e1e6a060f856e022748f8d2bed"
+      },
+      {
+        "job": "무당",
+        "slug": "shaman",
+        "lineageParent": "mage",
+        "combatPromise": "저주, 독, 소환을 겹쳐 위기를 힘으로 바꾼다",
+        "silhouette": "bell staff, hanging talismans, and two small wandering spirits",
+        "primaryWeapon": "ritual bell staff with visible paper talismans",
+        "palette": "teal, earthy brown, and purple",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 저주, 독, 소환을 겹쳐 위기를 힘으로 바꾼다.\nRole silhouette: bell staff, hanging talismans, and two small wandering spirits.\nPrimary weapon: ritual bell staff with visible paper talismans.\nPalette: teal, earthy brown, and purple.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as mage, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "65472fc637f24734275a21dfed86e511115b9c4271902a44c179cca5a6911dd2"
+      },
+      {
+        "job": "시간술사",
+        "slug": "chronomancer",
+        "lineageParent": "shaman",
+        "combatPromise": "행동 순서와 턴 자체를 바꾼다",
+        "silhouette": "clock orb, time sword, and a cape split into two floating panels",
+        "primaryWeapon": "short time sword paired with a clearly visible clock orb",
+        "palette": "blue, gold, and white",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 행동 순서와 턴 자체를 바꾼다.\nRole silhouette: clock orb, time sword, and a cape split into two floating panels.\nPrimary weapon: short time sword paired with a clearly visible clock orb.\nPalette: blue, gold, and white.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as shaman, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "ee50e200c0924001b2ead0744e6e216abcb92ae08cea5a6a1aa5c5e3340aaa4c"
+      },
+      {
+        "job": "도적",
+        "slug": "rogue",
+        "lineageParent": "adventurer",
+        "combatPromise": "빠른 치명타와 독으로 빈틈을 공략한다",
+        "silhouette": "twin daggers, low hood, and a visible poison vial at the belt",
+        "primaryWeapon": "two short asymmetrical daggers",
+        "palette": "charcoal black and poison green",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 빠른 치명타와 독으로 빈틈을 공략한다.\nRole silhouette: twin daggers, low hood, and a visible poison vial at the belt.\nPrimary weapon: two short asymmetrical daggers.\nPalette: charcoal black and poison green.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as adventurer, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "535f16206a594595e7cc22e44852631dddbe5b91f6824a48a5ec40761e4661a0"
+      },
+      {
+        "job": "어쌔신",
+        "slug": "assassin",
+        "lineageParent": "rogue",
+        "combatPromise": "은신 뒤 한 번의 처형을 완성한다",
+        "silhouette": "slender twin blades, lower-face mask, and one restrained shadow afterimage",
+        "primaryWeapon": "two long narrow execution blades",
+        "palette": "black, silver, and magenta",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 은신 뒤 한 번의 처형을 완성한다.\nRole silhouette: slender twin blades, lower-face mask, and one restrained shadow afterimage.\nPrimary weapon: two long narrow execution blades.\nPalette: black, silver, and magenta.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as rogue, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "8cbae165622176ee7e040d7b2e5f5b2e134c11e6de85887e75f8e4bddc95c64d"
+      },
+      {
+        "job": "그림자 주군",
+        "slug": "shadow-lord",
+        "lineageParent": "assassin",
+        "combatPromise": "어둠을 쌓아 확정적인 처형을 완성한다",
+        "silhouette": "long shadow blade, crown-shaped horns, and a black trailing afterimage",
+        "primaryWeapon": "single elongated shadow sword",
+        "palette": "black, purple, and blood red",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 어둠을 쌓아 확정적인 처형을 완성한다.\nRole silhouette: long shadow blade, crown-shaped horns, and a black trailing afterimage.\nPrimary weapon: single elongated shadow sword.\nPalette: black, purple, and blood red.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as assassin, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "01d452a10dfb45e01a3561c7b33210a038748123b6f6158fd01cc518fa36d96b"
+      },
+      {
+        "job": "레인저",
+        "slug": "ranger",
+        "lineageParent": "rogue",
+        "combatPromise": "거리와 화살 종류를 선택한다",
+        "silhouette": "longbow and a divided quiver showing several distinct arrow types",
+        "primaryWeapon": "tall practical longbow with one nocked arrow",
+        "palette": "forest green and tawny brown",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 거리와 화살 종류를 선택한다.\nRole silhouette: longbow and a divided quiver showing several distinct arrow types.\nPrimary weapon: tall practical longbow with one nocked arrow.\nPalette: forest green and tawny brown.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as rogue, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "340eb08fb89fa906e4c2a41f134c361933c0cda27e1495f2c2372ef238eac8b4"
+      },
+      {
+        "job": "사냥의 군주",
+        "slug": "hunt-lord",
+        "lineageParent": "ranger",
+        "combatPromise": "자연과 사격을 결합해 사냥을 완성한다",
+        "silhouette": "enormous longbow, horn ornaments, and a broad beast-hide cloak",
+        "primaryWeapon": "oversized ceremonial hunting longbow",
+        "palette": "deep green, gold, and ivory",
+        "prompt": "Use case: stylized-concept\nAsset type: canonical game character master\nAetheria Roguelike canonical full-body chibi pixel-art hero, transparent square canvas, front three-quarter pose facing right, feet on one shared baseline, head-to-body ratio 1:3, two-level dark plum outline, light from upper left, shadow to lower right, no scenery, no text, no border, face and primary weapon unobscured, readable at 40 pixels.\nCombat promise: 자연과 사격을 결합해 사냥을 완성한다.\nRole silhouette: enormous longbow, horn ornaments, and a broad beast-hide cloak.\nPrimary weapon: oversized ceremonial hunting longbow.\nPalette: deep green, gold, and ivory.\nLineage continuity: retain the same Aetheria face proportions, pixel density, outline, and body scale as ranger, while changing the face detail, primary weapon, and shoulder silhouette for this role.\nWorking delivery fallback: if true transparent PNG cannot be returned, use one perfectly flat solid #00FF7F chroma background with no texture, gradient, shadow, checkerboard, scenery, or background-colored effect touching the hero.\nAvoid: palette-only differentiation, hidden face, hidden weapon, cropped feet, floor shadow, environmental glow, labels, logo, watermark, faux transparency checkerboard.",
+        "promptSha256": "662c55698a0bfa41383ee594ded80671071eb2e0b47c28f5c033026228dec0bb"
+      }
+    ]
+  },
+  "styleVersion": 2,
+  "processing": {
+    "script": "scripts/process_character_art.py",
+    "canvas": {
+      "width": 768,
+      "height": 768,
+      "margin": 16,
+      "footBaseline": 708
+    },
+    "maxCharacterBounds": {
+      "width": 600,
+      "height": 630
+    },
+    "lineageOrder": [
+      "adventurer",
+      "warrior",
+      "knight",
+      "dragon-knight",
+      "berserker",
+      "mage",
+      "archmage",
+      "grand-mage",
+      "warlock",
+      "cleric",
+      "paladin",
+      "shaman",
+      "chronomancer",
+      "rogue",
+      "assassin",
+      "shadow-lord",
+      "ranger",
+      "hunt-lord"
+    ],
+    "contactSheetGrid": "6x3"
+  },
+  "entries": [
+    {
+      "job": "모험가",
+      "slug": "adventurer",
+      "sourcePath": "scripts/art_sources/characters/adventurer.png",
+      "runtimePath": "/assets/avatars/canonical/adventurer.png",
+      "sourceSha256": "79e39b4f3ffb01cdfafc623b3ed8c672973f8c3424b3795d3b1a692d86185c33",
+      "exportSha256": "be788aaf1b5b18cd152878ad46596a7aa1f4bf75d58c1eb35d858c447416b586",
+      "opaqueBounds": {
+        "left": 129,
+        "top": 79,
+        "right": 637,
+        "bottom": 708,
+        "width": 509,
+        "height": 630
+      }
+    },
+    {
+      "job": "전사",
+      "slug": "warrior",
+      "sourcePath": "scripts/art_sources/characters/warrior.png",
+      "runtimePath": "/assets/avatars/canonical/warrior.png",
+      "sourceSha256": "508682d70b55171203c9232494c9f7d85d2e89e5b4a4027c0e809f7cb08e34d6",
+      "exportSha256": "b05581e536bfb1e3ce2519320151b593a5c6ca2d88ba486db02867a395f38d49",
+      "opaqueBounds": {
+        "left": 84,
+        "top": 92,
+        "right": 683,
+        "bottom": 708,
+        "width": 600,
+        "height": 617
+      }
+    },
+    {
+      "job": "나이트",
+      "slug": "knight",
+      "sourcePath": "scripts/art_sources/characters/knight.png",
+      "runtimePath": "/assets/avatars/canonical/knight.png",
+      "sourceSha256": "4b85aaa3754aafcc472b7b3e443ecd5a9c7ace2b602ef506279afa607bd5dbb5",
+      "exportSha256": "c79383abb4993c485d17e37d98e7f0a5dd1e9d69fbb15c2348c67397d91cd835",
+      "opaqueBounds": {
+        "left": 84,
+        "top": 92,
+        "right": 683,
+        "bottom": 708,
+        "width": 600,
+        "height": 617
+      }
+    },
+    {
+      "job": "드래곤 나이트",
+      "slug": "dragon-knight",
+      "sourcePath": "scripts/art_sources/characters/dragon-knight.png",
+      "runtimePath": "/assets/avatars/canonical/dragon-knight.png",
+      "sourceSha256": "81c06959a2b53d7032f3dc7282c2e25d7a3ac16198540d19ad275992a37eb91a",
+      "exportSha256": "666cc4d7d9350fc76f256bb154ebcb26a01af6911fb038e2995bdf682ff8ea02",
+      "opaqueBounds": {
+        "left": 84,
+        "top": 111,
+        "right": 683,
+        "bottom": 708,
+        "width": 600,
+        "height": 598
+      }
+    },
+    {
+      "job": "버서커",
+      "slug": "berserker",
+      "sourcePath": "scripts/art_sources/characters/berserker.png",
+      "runtimePath": "/assets/avatars/canonical/berserker.png",
+      "sourceSha256": "dfada977b9bfe5353e5b9b735142e2e44baba03f5c4c896ecddbcef8fb106167",
+      "exportSha256": "c31138ae52169d0dac27435525e4029714aa845bfa04979f49bff11e1008ebc5",
+      "opaqueBounds": {
+        "left": 84,
+        "top": 193,
+        "right": 683,
+        "bottom": 708,
+        "width": 600,
+        "height": 516
+      }
+    },
+    {
+      "job": "마법사",
+      "slug": "mage",
+      "sourcePath": "scripts/art_sources/characters/mage.png",
+      "runtimePath": "/assets/avatars/canonical/mage.png",
+      "sourceSha256": "40960d0e9b9fb3803db60906326509d81357df2260d4d90b3f7b77909c5f01a9",
+      "exportSha256": "c0052602625b3c4e1211b17be234ed872540af4f2cc7087c7e6f643aece5e5b6",
+      "opaqueBounds": {
+        "left": 133,
+        "top": 79,
+        "right": 633,
+        "bottom": 708,
+        "width": 501,
+        "height": 630
+      }
+    },
+    {
+      "job": "아크메이지",
+      "slug": "archmage",
+      "sourcePath": "scripts/art_sources/characters/archmage.png",
+      "runtimePath": "/assets/avatars/canonical/archmage.png",
+      "sourceSha256": "380c3eaab7be17e5417f45be1d9a9675be858518e6e357749096a2a2efc66fde",
+      "exportSha256": "65f739cdfa262b58c574e62c3fab6a1587b08c66564c5e452561ef86b6104ed9",
+      "opaqueBounds": {
+        "left": 129,
+        "top": 79,
+        "right": 638,
+        "bottom": 708,
+        "width": 510,
+        "height": 630
+      }
+    },
+    {
+      "job": "대마법사",
+      "slug": "grand-mage",
+      "sourcePath": "scripts/art_sources/characters/grand-mage.png",
+      "runtimePath": "/assets/avatars/canonical/grand-mage.png",
+      "sourceSha256": "af8614afe2550fbcbd51697e2a1934e7720d422cbf72aae7ccd8dc03ff1a005e",
+      "exportSha256": "1b9a30ce75fdaac3151d6ce5be4137e234906b6d4ee05ad74cb96d95f5776a7c",
+      "opaqueBounds": {
+        "left": 103,
+        "top": 79,
+        "right": 664,
+        "bottom": 708,
+        "width": 562,
+        "height": 630
+      }
+    },
+    {
+      "job": "흑마법사",
+      "slug": "warlock",
+      "sourcePath": "scripts/art_sources/characters/warlock.png",
+      "runtimePath": "/assets/avatars/canonical/warlock.png",
+      "sourceSha256": "bb0896f90f98f361fbb67f056246298d05494984904d3077c8dcc6f34689da3c",
+      "exportSha256": "b7ce61adf7adb20413e0e408aa9acc159e6b1e2c3796d5bc8af5b96e93101a7c",
+      "opaqueBounds": {
+        "left": 106,
+        "top": 79,
+        "right": 660,
+        "bottom": 708,
+        "width": 555,
+        "height": 630
+      }
+    },
+    {
+      "job": "성직자",
+      "slug": "cleric",
+      "sourcePath": "scripts/art_sources/characters/cleric.png",
+      "runtimePath": "/assets/avatars/canonical/cleric.png",
+      "sourceSha256": "735134f201e1667e1dc7e07f1fee1a54b45af6f1f0c8dc338e70228f3f861368",
+      "exportSha256": "3c02d238c87dc22b8e7e4d4b7636959360348c059e1ec8a647cb0bedad16efd0",
+      "opaqueBounds": {
+        "left": 115,
+        "top": 79,
+        "right": 651,
+        "bottom": 708,
+        "width": 537,
+        "height": 630
+      }
+    },
+    {
+      "job": "팔라딘",
+      "slug": "paladin",
+      "sourcePath": "scripts/art_sources/characters/paladin.png",
+      "runtimePath": "/assets/avatars/canonical/paladin.png",
+      "sourceSha256": "5b271f68b480d744b70bb9df2e89524aae296f99080208ec4762208b6a65f63f",
+      "exportSha256": "19d0a637df0d17637380f0710c3536716cead94fd6fea4d2bb3347d064d2bf77",
+      "opaqueBounds": {
+        "left": 121,
+        "top": 79,
+        "right": 645,
+        "bottom": 708,
+        "width": 525,
+        "height": 630
+      }
+    },
+    {
+      "job": "무당",
+      "slug": "shaman",
+      "sourcePath": "scripts/art_sources/characters/shaman.png",
+      "runtimePath": "/assets/avatars/canonical/shaman.png",
+      "sourceSha256": "26d6a4f8e4e9d353dde6aa809a67f6e97df0d34794ef384a3b4ed0916a87bf87",
+      "exportSha256": "59668e025666e3ff94337d17d4d6100e08dfca7a65f6f743f2f33ac54d320611",
+      "opaqueBounds": {
+        "left": 84,
+        "top": 96,
+        "right": 683,
+        "bottom": 708,
+        "width": 600,
+        "height": 613
+      }
+    },
+    {
+      "job": "시간술사",
+      "slug": "chronomancer",
+      "sourcePath": "scripts/art_sources/characters/chronomancer.png",
+      "runtimePath": "/assets/avatars/canonical/chronomancer.png",
+      "sourceSha256": "e955f86166786d9c4af813590cea9c3f3f371e91ac072df5444242bc69741a80",
+      "exportSha256": "fe1b1ffe3951f4012eab3cf5b556bd544859107bf6af15df86900db8b17e3362",
+      "opaqueBounds": {
+        "left": 84,
+        "top": 81,
+        "right": 683,
+        "bottom": 708,
+        "width": 600,
+        "height": 628
+      }
+    },
+    {
+      "job": "도적",
+      "slug": "rogue",
+      "sourcePath": "scripts/art_sources/characters/rogue.png",
+      "runtimePath": "/assets/avatars/canonical/rogue.png",
+      "sourceSha256": "5cbd88413f2a2578c5cbb1c5e7563afd7fbab5f8b2912d1ae0b2506921ecf855",
+      "exportSha256": "eec955262b355772ab77d2cc0497b322bfb1027a95a30f0ba087177986f0c554",
+      "opaqueBounds": {
+        "left": 137,
+        "top": 79,
+        "right": 629,
+        "bottom": 708,
+        "width": 493,
+        "height": 630
+      }
+    },
+    {
+      "job": "어쌔신",
+      "slug": "assassin",
+      "sourcePath": "scripts/art_sources/characters/assassin.png",
+      "runtimePath": "/assets/avatars/canonical/assassin.png",
+      "sourceSha256": "74059528103ca2b8732b17efa11664ebb78897f9458afbe019d6caa13dc14c56",
+      "exportSha256": "b3d36cf41bd13015116612f1a2a713675206a02dba647390f84ed775e1526b94",
+      "opaqueBounds": {
+        "left": 84,
+        "top": 173,
+        "right": 683,
+        "bottom": 708,
+        "width": 600,
+        "height": 536
+      }
+    },
+    {
+      "job": "그림자 주군",
+      "slug": "shadow-lord",
+      "sourcePath": "scripts/art_sources/characters/shadow-lord.png",
+      "runtimePath": "/assets/avatars/canonical/shadow-lord.png",
+      "sourceSha256": "e99a4579692f52173c7a41b814a41899722ea0d5d5caeda854aee8b573355708",
+      "exportSha256": "40b44fb8478f5a0fa77ec25d7667399c33391226e43182d5a017b5e7513f0649",
+      "opaqueBounds": {
+        "left": 84,
+        "top": 216,
+        "right": 683,
+        "bottom": 708,
+        "width": 600,
+        "height": 493
+      }
+    },
+    {
+      "job": "레인저",
+      "slug": "ranger",
+      "sourcePath": "scripts/art_sources/characters/ranger.png",
+      "runtimePath": "/assets/avatars/canonical/ranger.png",
+      "sourceSha256": "6adaecfe4a7e16a48d4afe802b786050d10ca853a9c8d3b80ca134addd842a8f",
+      "exportSha256": "437ae033c20d404a159b89c12e74b7635ce50240ea0769e853be1836f5789253",
+      "opaqueBounds": {
+        "left": 164,
+        "top": 79,
+        "right": 603,
+        "bottom": 708,
+        "width": 440,
+        "height": 630
+      }
+    },
+    {
+      "job": "사냥의 군주",
+      "slug": "hunt-lord",
+      "sourcePath": "scripts/art_sources/characters/hunt-lord.png",
+      "runtimePath": "/assets/avatars/canonical/hunt-lord.png",
+      "sourceSha256": "8afa1b80e71972f81fc2445054f40ff947fc7d584e24d7f76e27be45b31f1e9b",
+      "exportSha256": "6dba952811fc8e73b2d2d41d1be565d2d48c649753a63c06958b3f96e476a804",
+      "opaqueBounds": {
+        "left": 126,
+        "top": 80,
+        "right": 641,
+        "bottom": 708,
+        "width": 516,
+        "height": 629
+      }
+    }
+  ]
+}
