@@ -16,15 +16,15 @@ This directory records reproducible art-contract evidence. Task 3 completes the 
 
 ## Catalog identity
 
-- Catalog SHA-256: `79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6`
+- Catalog SHA-256: `c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef`
 - Classes: `18`
 - Equipment: `233` (`weapon 119`, `armor 93`, `shield 21`)
-- Defined illustration families: `22`; used by the current catalog: `18`
+- Defined illustration families: `22`; used by the current catalog: `19`
 - Elements: `냉기`, `대지`, `바람`, `빛`, `어둠`, `에테르`, `자연`, `화염`
 
 ## Task 4 equipment pipeline readiness
 
-- `scripts/dump-equipment-catalog.mjs` emits the live, Unicode-code-point-sorted 233-row catalog with the exact row fields `name`, `type`, `tier`, `elem`, `familyKey`, `runtimePath`, and `cohort`. The current deterministic cohort totals are `armor 83`, `offhand-headgear 22`, `signature-mythic 25`, `weapon-core 44`, and `weapon-ranged-magic 59`.
+- `scripts/dump-equipment-catalog.mjs` emits the live, Unicode-code-point-sorted 233-row catalog with the exact row fields `name`, `type`, `tier`, `elem`, `familyKey`, `runtimePath`, and `cohort`. After the Task 6 physical-shape routing correction, the current deterministic cohort totals are `armor 83`, `offhand-headgear 22`, `signature-mythic 25`, `weapon-core 56`, and `weapon-ranged-magic 47`.
 - `scripts/generate_equipment_item_art.py` now accepts only explicit `--catalog`, `--source-dir`, `--output-dir`, and `--manifest` inputs. Its `--dry-run` validates those inputs without creating either output target, and a normal legacy generation preserves every top-level manifest metadata field while replacing only generated entries.
 - `scripts/generate_equipment_art_prompts.mjs` creates one declared, cohort-consistent six-identity source request at a time. It binds the batch to the authoritative catalog SHA-256 and complete seven-field row SHA-256, fixes the 2x3 row-major order to `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`, and includes family, Tier, and element language from the Art Bible.
 - `scripts/process_equipment_art_batch.py` requires the dumped catalog and verifies its pinned full-row hash, all batch row fields, cohort, and manifest-derived runtime paths before any write. It accepts only true RGBA `600x400` sheets with six isolated non-degenerate cells, normalizes each export to transparent `160x160`, prevalidates a stable replay ledger, and publishes all six PNGs plus the next ledger through a staged rollback boundary. Exact replay is a no-op; conflicting `batchId` reuse fails before publication.
@@ -45,19 +45,25 @@ This is pipeline readiness only: no Task 4 source sheet, runtime equipment PNG, 
 - Live dump — `233` rows, `233` unique names, and `233` unique runtime paths; legacy dry-run validates all rows without either requested output target.
 - `npm run type-check`, `npm run lint`, and `npm run verify` — GREEN (`npm run verify`: unit `3544/3544` and build guard); `git diff --check` — GREEN.
 
-## Task 5 weapon-core checkpoint
+## Current Task 5 weapon-core evidence
 
-- The `weapon-core` cohort contains exactly `44` catalog identities: sword `15`, dagger `18`, and heavy weapon `11`. Eight accepted source sheets cover them once each in authoritative order: sword `6 + 6 + 3`, dagger `6 + 6 + 6`, and heavy `6 + 5`. Partial final sheets keep every unused trailing cell fully transparent.
+- The corrected `weapon-core` cohort contains `56` identities: sword `26`, dagger `19`, and heavy `11`. Eleven source sheets cover sword `6 + 6 + 3 + 6 + 5`, dagger `5 + 6 + 6 + 2`, and heavy `6 + 5`; the former dagger sheet was repacked after `독아 채찍` moved to its physical whip family.
 - `scripts/prepare_equipment_source_sheet.py` converts accepted image-generation output into a strict true-RGBA `600x400` sheet without repainting the icons. It removes only edge-connected checkerboard or chroma-key background, resamples each cell independently, and rejects source artwork that crosses a declared cell boundary.
 - `scripts/process_equipment_art_batch.py` now accepts one to six declared identities, rejects non-transparent unused cells, and checks identity/runtime-path uniqueness across the complete prior ledger before publication. A later batch therefore cannot silently overwrite an earlier cohort export.
-- `scripts/sync-equipment-art-manifest.mjs` binds all `44` manifest artwork rows to the authoritative catalog, source-sheet SHA-256, and runtime export SHA-256. Every selected row has `styleVersion: 2`; the manifest's top-level style version remains `1` until all equipment cohorts are complete.
+- `scripts/sync-equipment-art-manifest.mjs` binds all `56` current core artwork rows to the authoritative catalog, source-sheet SHA-256, and runtime export SHA-256. Every selected row has `styleVersion: 2`; the manifest's top-level style version remains `1` until all equipment cohorts are complete.
 - `scripts/equipmentArtEvidence.mjs` is shared by manifest sync and cohort verification. It rejects provenance order/cell/replay drift, duplicate batches or identities, source/runtime hash drift, and any mismatch between the catalog runtime path, the player-facing manifest entry, provenance export, and artwork metadata before evidence can be treated as green.
-- `equipment-weapon-core-provenance.json` records eight accepted and six rejected generated candidates, the rejection reason and raw hash, each tracked source hash, and all `44` ordered export hashes. The eight accepted source sheets and all `44` runtime exports have unique SHA-256 values.
+- `equipment-weapon-core-provenance.json` now covers all `56` corrected identities and records the repacked/new source candidates plus rejection reasons and hashes.
 - `equipment-weapon-core-contact-sheet.png` is the tracked family/Tier review surface. It presents each icon at native `160px` and a `32px` inset for readability inspection.
-- `npm run art:verify -- --cohort weapon-core` — GREEN: `44` exports with no missing, extra, duplicate, PNG, alpha, bounds, or style-version error.
-- `node --import tsx --test tests/art-asset-contract.test.js tests/equipment-art-pipeline.test.js tests/equipment-provenance-integrity.test.js tests/item-visuals.test.js` — GREEN (`126/126`).
+- `npm run art:verify -- --cohort weapon-core` — GREEN: `56` exports with no missing, extra, duplicate, PNG, alpha, bounds, style-version, or artwork-evidence error.
 
-This checkpoint certifies only `weapon-core`. Tasks 6–8 still own ranged/magic weapons, armor, offhand/headgear, and signature/mythic equipment. Full equipment `styleVersion: 2`, full-surface `npm run art:verify`, and `art-contract-report.json` therefore remain open.
+## Task 6 weapon-ranged-magic checkpoint
+
+- Physical-shape-first routing corrects 23 elemental blade/whip identities without changing gameplay `isMagicWeapon`; `weapon-ranged-magic` is now bow `11`, staff `24`, lance `11`, whip `1` (`47` total).
+- Nine family-pure source sheets cover bow `6 + 5`, staff `6 + 6 + 6 + 6`, lance `6 + 5`, and whip `1`; every unused trailing cell is transparent. `죽음의 낫` stays in lance/polearm with a curved scythe prompt and silhouette.
+- `equipment-weapon-ranged-magic-provenance.json` binds accepted/rejected raw candidate hashes, nine tracked source hashes, and 47 runtime export hashes. `equipment-weapon-ranged-magic-contact-sheet.png` shows every export at `160px` with a `32px` inset.
+- Both core56 and ranged47 cohort verifiers are GREEN. Focused art/pipeline/provenance/item tests are `143/143`; `npm run verify` passes type-check, lint, unit `3612/3612`, build guard; `git diff --check` is GREEN.
+
+These checkpoints certify `weapon-core` and `weapon-ranged-magic`. Tasks 7–8 still own armor, offhand/headgear, and signature/mythic equipment. Full equipment `styleVersion: 2`, full-surface `npm run art:verify`, and `art-contract-report.json` remain open.
 
 ## Contract verification
 

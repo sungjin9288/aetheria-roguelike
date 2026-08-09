@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "weapon-ranged-magic-staff-01",
+  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+  "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
+  "cohort": "weapon-ranged-magic",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "고대 마탑 스태프",
+    "나무지팡이",
+    "대지의 지팡이",
+    "마녀의 지팡이",
+    "마법봉",
+    "마법지팡이"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "고대 마탑 스태프",
+      "type": "weapon",
+      "tier": 3,
+      "elem": "빛",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-b8132cd23fa2.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "고대 마탑 스태프; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T3: regional craft character expressed through the form and material treatment; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "top-center",
+      "name": "나무지팡이",
+      "type": "weapon",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-c8326da35aa4.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "나무지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "대지의 지팡이",
+      "type": "weapon",
+      "tier": 2,
+      "elem": "대지",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-ae64afc35c68.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "대지의 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 대지: stone, brass, angular crystal, heavy fragments, and low sheen."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "마녀의 지팡이",
+      "type": "weapon",
+      "tier": 2,
+      "elem": "어둠",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-ec9651c6ec57.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "마녀의 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "마법봉",
+      "type": "weapon",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-adb5a87cda71.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "마법봉; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "마법지팡이",
+      "type": "weapon",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-1cff983f5fef.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "마법지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 고대 마탑 스태프; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T3: regional craft character expressed through the form and material treatment; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\ntop-center: 나무지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 대지의 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 대지: stone, brass, angular crystal, heavy fragments, and low sheen.\nbottom-left: 마녀의 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze.\nbottom-center: 마법봉; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-right: 마법지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}

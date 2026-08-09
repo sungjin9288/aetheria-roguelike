@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "weapon-ranged-magic-staff-02",
+  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+  "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
+  "cohort": "weapon-ranged-magic",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "번개 지팡이",
+    "빙결 지팡이",
+    "빙하의 지팡이",
+    "성운 지팡이",
+    "세이지 로드",
+    "수정 완드"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "번개 지팡이",
+      "type": "weapon",
+      "tier": 2,
+      "elem": "빛",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-e6d6d33d1595.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "번개 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "top-center",
+      "name": "빙결 지팡이",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "냉기",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-81d619f64560.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "빙결 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T4: an elemental core and magical fabrication integrated into the structure; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light."
+    },
+    {
+      "cell": "top-right",
+      "name": "빙하의 지팡이",
+      "type": "weapon",
+      "tier": 5,
+      "elem": "냉기",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-b01fa5e6bc3b.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "빙하의 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T5: a memorable signature silhouette with legendary materials and ornament density; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "성운 지팡이",
+      "type": "weapon",
+      "tier": 5,
+      "elem": "빛",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-49fa66b8b959.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "성운 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T5: a memorable signature silhouette with legendary materials and ornament density; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "세이지 로드",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-31885beb700c.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "세이지 로드; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T4: an elemental core and magical fabrication integrated into the structure; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "수정 완드",
+      "type": "weapon",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-exact/auto/auto-20d567980add.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "수정 완드; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 번개 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\ntop-center: 빙결 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T4: an elemental core and magical fabrication integrated into the structure; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light.\ntop-right: 빙하의 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T5: a memorable signature silhouette with legendary materials and ornament density; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light.\nbottom-left: 성운 지팡이; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T5: a memorable signature silhouette with legendary materials and ornament density; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\nbottom-center: 세이지 로드; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T4: an elemental core and magical fabrication integrated into the structure; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-right: 수정 완드; family weapon-staff: weapon-staff family: a vertical shaft, distinctive head, and central focus; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}

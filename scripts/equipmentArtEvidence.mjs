@@ -4,6 +4,7 @@ import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 const CELL_ORDER = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 const CATALOG_FIELDS = ['name', 'type', 'tier', 'elem', 'familyKey', 'runtimePath', 'cohort'];
+const PROVENANCE_FIELDS = ['version', 'catalogSha256', 'catalogRowsSha256', 'cohort', 'generationReview', 'batches'];
 const RECORD_FIELDS = [
     'batchId',
     'catalogSha256',
@@ -16,10 +17,19 @@ const RECORD_FIELDS = [
     'exports',
 ];
 const EXPORT_FIELDS = ['cell', 'name', 'runtimePath', 'exportSha256'];
+const GENERATION_REVIEW_FIELDS = ['tool', 'accepted', 'rejected'];
+const ACCEPTED_GENERATION_FIELDS = ['batchId', 'rawImage', 'rawSha256'];
+const REJECTED_GENERATION_FIELDS = [...ACCEPTED_GENERATION_FIELDS, 'reason'];
 const ARTWORK_FIELDS = ['styleVersion', 'familyKey', 'batchId', 'sourcePath', 'sourceSha256', 'exportSha256'];
 const SHA256 = /^[0-9a-f]{64}$/;
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const canonicalize = (value) => {
+    if (Array.isArray(value)) return value.map(canonicalize);
+    if (!value || typeof value !== 'object') return value;
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
+};
+const hashCanonicalJson = (value) => hash(JSON.stringify(canonicalize(value)));
 const compareCodePoints = (left, right) => {
     const leftPoints = [...String(left)];
     const rightPoints = [...String(right)];
@@ -49,6 +59,10 @@ const requireChildPath = (root, path, label, { allowLeadingSlash = false } = {})
 
 const requireHash = (value, label) => {
     if (!SHA256.test(value || '')) throw new Error(`${label} is not a SHA-256 value`);
+};
+
+const requireText = (value, label) => {
+    if (typeof value !== 'string' || !value.trim()) throw new Error(`${label} is invalid`);
 };
 
 const buildReplayKey = (batchId, sourceSheetSha256, identityNames) => hash(JSON.stringify({
@@ -100,6 +114,54 @@ const validateCatalog = (catalog, manifest, provenance, cohort) => {
     return { rowsSha256, rows };
 };
 
+const validateGenerationReview = ({ manifest, provenance, cohort, preparedBatches }) => {
+    const review = provenance.generationReview;
+    if (!sameKeys(review, GENERATION_REVIEW_FIELDS)
+        || !Array.isArray(review.accepted)
+        || !Array.isArray(review.rejected)) {
+        throw new Error('Equipment generation review schema is invalid');
+    }
+    requireText(review.tool, 'Equipment generation review tool');
+
+    const rawCandidates = new Set();
+    const acceptedBatches = new Set();
+    const validateCandidate = (candidate, fields, label) => {
+        if (!sameKeys(candidate, fields)) throw new Error(`Equipment generation review ${label} schema is invalid`);
+        requireText(candidate.batchId, `Equipment generation review ${label} batch id`);
+        requireText(candidate.rawImage, `Equipment generation review ${label} raw image`);
+        requireHash(candidate.rawSha256, `Equipment generation review ${label} raw hash`);
+        if (rawCandidates.has(candidate.rawSha256)) {
+            throw new Error(`Equipment generation review raw candidate is duplicated: ${candidate.rawSha256}`);
+        }
+        rawCandidates.add(candidate.rawSha256);
+    };
+
+    for (const candidate of review.accepted) {
+        validateCandidate(candidate, ACCEPTED_GENERATION_FIELDS, 'accepted record');
+        if (!preparedBatches.has(candidate.batchId) || acceptedBatches.has(candidate.batchId)) {
+            throw new Error(`Equipment generation review accepted batch is invalid: ${candidate.batchId}`);
+        }
+        acceptedBatches.add(candidate.batchId);
+    }
+    if (acceptedBatches.size !== preparedBatches.size) {
+        throw new Error(`Equipment generation review accepted batch coverage is incomplete: ${acceptedBatches.size}/${preparedBatches.size}`);
+    }
+
+    for (const candidate of review.rejected) {
+        validateCandidate(candidate, REJECTED_GENERATION_FIELDS, 'rejected record');
+        if (!preparedBatches.has(candidate.batchId)) {
+            throw new Error(`Equipment generation review rejected batch is outside the active cohort: ${candidate.batchId}`);
+        }
+        requireText(candidate.reason, 'Equipment generation review rejection reason');
+    }
+
+    const pinnedHash = manifest?.pipeline?.provenance?.cohorts?.[cohort]?.generationReviewSha256;
+    requireHash(pinnedHash, `Equipment generation review pin for ${cohort}`);
+    if (hashCanonicalJson(review) !== pinnedHash) {
+        throw new Error(`Equipment generation review hash does not match the ${cohort} manifest pin`);
+    }
+};
+
 export const validateEquipmentArtEvidence = async ({
     catalog,
     manifest,
@@ -110,8 +172,8 @@ export const validateEquipmentArtEvidence = async ({
     repoRoot,
     requireManifestArtwork = false,
 }) => {
-    if (!provenance || provenance.version !== 1 || !Array.isArray(provenance.batches)) {
-        throw new Error('Equipment provenance shape is invalid');
+    if (!sameKeys(provenance, PROVENANCE_FIELDS) || provenance.version !== 1 || !Array.isArray(provenance.batches)) {
+        throw new Error('Equipment provenance top-level schema is invalid');
     }
     const { rows, rowsSha256 } = validateCatalog(catalog, manifest, provenance, cohort);
     const rowsByName = new Map(rows.map((row) => [row.name, row]));
@@ -184,6 +246,13 @@ export const validateEquipmentArtEvidence = async ({
         }
         batchIds.add(batchId);
     }
+
+    validateGenerationReview({
+        manifest,
+        provenance,
+        cohort,
+        preparedBatches: batchIds,
+    });
 
     if (names.size !== rows.length || rows.some((row) => !names.has(row.name))) {
         throw new Error(`Equipment provenance coverage is incomplete: ${names.size}/${rows.length}`);

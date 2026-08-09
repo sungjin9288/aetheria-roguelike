@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "weapon-core-sword-04",
+  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+  "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
+  "cohort": "weapon-core",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "공허의 대검",
+    "성기사의 검",
+    "시간 파편 소드",
+    "심판자의 검",
+    "암흑의 대검",
+    "에테르 검"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "공허의 대검",
+      "type": "weapon",
+      "tier": 6,
+      "elem": "어둠",
+      "familyKey": "weapon-sword",
+      "runtimePath": "/assets/equipment-exact/auto/auto-251a338b0ba5.png",
+      "cohort": "weapon-core",
+      "prompt": "공허의 대검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+    },
+    {
+      "cell": "top-center",
+      "name": "성기사의 검",
+      "type": "weapon",
+      "tier": 3,
+      "elem": "빛",
+      "familyKey": "weapon-sword",
+      "runtimePath": "/assets/equipment-exact/auto/auto-1587374b9be8.png",
+      "cohort": "weapon-core",
+      "prompt": "성기사의 검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T3: regional craft character expressed through the form and material treatment; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "top-right",
+      "name": "시간 파편 소드",
+      "type": "weapon",
+      "tier": 6,
+      "elem": "빛",
+      "familyKey": "weapon-sword",
+      "runtimePath": "/assets/equipment-exact/auto/auto-80015aed3005.png",
+      "cohort": "weapon-core",
+      "prompt": "시간 파편 소드; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "심판자의 검",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "빛",
+      "familyKey": "weapon-sword",
+      "runtimePath": "/assets/equipment-exact/auto/auto-ff3c57933ce4.png",
+      "cohort": "weapon-core",
+      "prompt": "심판자의 검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T4: an elemental core and magical fabrication integrated into the structure; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "암흑의 대검",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "어둠",
+      "familyKey": "weapon-sword",
+      "runtimePath": "/assets/equipment-exact/auto/auto-4473919467f6.png",
+      "cohort": "weapon-core",
+      "prompt": "암흑의 대검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T4: an elemental core and magical fabrication integrated into the structure; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "에테르 검",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "에테르",
+      "familyKey": "weapon-sword",
+      "runtimePath": "/assets/equipment-exact/auto/auto-8cee767ee6ab.png",
+      "cohort": "weapon-core",
+      "prompt": "에테르 검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T4: an elemental core and magical fabrication integrated into the structure; element 에테르: separated pieces, grid structure, and purple-teal spatial cracks."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 공허의 대검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze.\ntop-center: 성기사의 검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T3: regional craft character expressed through the form and material treatment; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\ntop-right: 시간 파편 소드; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\nbottom-left: 심판자의 검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T4: an elemental core and magical fabrication integrated into the structure; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\nbottom-center: 암흑의 대검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T4: an elemental core and magical fabrication integrated into the structure; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze.\nbottom-right: 에테르 검; family weapon-sword: weapon-sword family: a distinct blade profile, guard, grip, and central ornament; Tier T4: an elemental core and magical fabrication integrated into the structure; element 에테르: separated pieces, grid structure, and purple-teal spatial cracks."
+}

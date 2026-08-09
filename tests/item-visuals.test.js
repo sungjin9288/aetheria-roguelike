@@ -7,6 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildEquipmentCatalogRows } from '../scripts/dump-equipment-catalog.mjs';
+import { deriveCharacterAppearance } from '../src/utils/characterAppearance.js';
+import { isMagicWeapon } from '../src/utils/equipmentUtils.js';
 
 import {
     EXACT_ITEM_ICON_KEYS,
@@ -35,6 +37,7 @@ const equipmentFamilyOverlayDir = path.resolve(__dirname, '../public/assets/equi
 const equipmentExactDir = path.resolve(__dirname, '../public/assets/equipment-exact');
 const equipmentManifestPath = path.resolve(__dirname, '../src/data/equipmentArtManifest.json');
 const weaponCoreProvenancePath = path.resolve(__dirname, '../docs/evidence/art/equipment-weapon-core-provenance.json');
+const weaponRangedMagicProvenancePath = path.resolve(__dirname, '../docs/evidence/art/equipment-weapon-ranged-magic-provenance.json');
 const hasItemAsset = (key) => existsSync(path.join(itemAssetDir, `${key}.png`)) || existsSync(path.join(itemAssetDir, `${key}.svg`));
 const hasEquipmentFamilyItemAsset = (key) => existsSync(path.join(equipmentFamilyItemDir, `${key}.png`));
 const hasEquipmentFamilyOverlayAsset = (key) => existsSync(path.join(equipmentFamilyOverlayDir, `${key}.png`));
@@ -81,6 +84,65 @@ test('getWeaponVisualKey separates one-hand and two-hand subfamilies with readab
     assert.equal(getWeaponVisualKey({ name: '빙결 장궁', type: 'weapon', hands: 2 }), 'longbow');
     assert.equal(getWeaponVisualKey({ name: '빙원의 장창', type: 'weapon', hands: 2 }), 'lance');
     assert.equal(getWeaponVisualKey({ name: '에테르 플럭스 로드', type: 'weapon', hands: 2, elem: '빛' }), 'rod');
+});
+
+test('elemental weapons keep 23 exact physical silhouettes through family and avatar routing', async () => {
+    const { ITEMS } = await import('../src/data/items.js');
+    const itemsByName = new Map(ITEMS.weapons.map((item) => [item.name, item]));
+    const expected = [
+        ['공허의 대검', 'greatsword', 'weapon-sword', 'heavy'],
+        ['성기사의 검', 'sword', 'weapon-sword', 'sword'],
+        ['시간 파편 소드', 'sword', 'weapon-sword', 'sword'],
+        ['심판자의 검', 'sword', 'weapon-sword', 'sword'],
+        ['암흑의 대검', 'greatsword', 'weapon-sword', 'heavy'],
+        ['에테르 검', 'sword', 'weapon-sword', 'sword'],
+        ['용암 대검', 'greatsword', 'weapon-sword', 'heavy'],
+        ['차원절단자', 'sword', 'weapon-sword', 'sword'],
+        ['타락 기사의 검', 'sword', 'weapon-sword', 'sword'],
+        ['파멸의 검', 'sword', 'weapon-sword', 'sword'],
+        ['화염 사원의 검', 'sword', 'weapon-sword', 'sword'],
+        ['균열의 날', 'dagger', 'weapon-dagger', 'dagger'],
+        ['서리칼날', 'dagger', 'weapon-dagger', 'dagger'],
+        ['빙결의 왕관검', 'sword', 'weapon-sword', 'sword'],
+        ['세계수의 검', 'sword', 'weapon-sword', 'sword'],
+        ['에테르 거인의 대검', 'greatsword', 'weapon-sword', 'heavy'],
+        ['영혼 절단자', 'dagger', 'weapon-dagger', 'dagger'],
+        ['성검 에테르니아', 'sword', 'weapon-sword', 'sword'],
+        ['라그나로크', 'greatsword', 'weapon-sword', 'heavy'],
+        ['용의 화염', 'greatsword', 'weapon-sword', 'heavy'],
+        ['대지의 심판', 'greatsword', 'weapon-sword', 'heavy'],
+        ['그림자 절단기', 'dagger', 'weapon-dagger', 'dagger'],
+        ['독아 채찍', 'whip', 'weapon-whip', 'dagger'],
+    ];
+
+    assert.equal(expected.length, 23);
+    for (const [name, visualKey, familyKey, loadoutStyle] of expected) {
+        const item = itemsByName.get(name);
+        assert.ok(item, `Expected live catalog item ${name}`);
+        assert.equal(isMagicWeapon(item), true, `Gameplay magic semantics must remain active for ${name}`);
+        assert.equal(getWeaponVisualKey(item), visualKey, `Expected physical weapon silhouette for ${name}`);
+        assert.equal(getEquipmentIllustrationFamilyKey(item), familyKey, `Expected illustration family for ${name}`);
+
+        const appearance = deriveCharacterAppearance({ job: '모험가', equip: { weapon: item } });
+        assert.equal(appearance.weapon.type, visualKey, `Expected avatar weapon routing for ${name}`);
+        assert.equal(appearance.loadoutStyle, loadoutStyle, `Expected avatar loadout silhouette for ${name}`);
+    }
+
+    for (const [name, visualKey] of [
+        ['화염의 지팡이', 'staff'],
+        ['에테르 플럭스 로드', 'rod'],
+        ['유성 완드', 'wand'],
+    ]) {
+        const item = itemsByName.get(name);
+        assert.ok(item, `Expected live magic-weapon control ${name}`);
+        assert.equal(getWeaponVisualKey(item), visualKey);
+        assert.equal(getEquipmentIllustrationFamilyKey(item), 'weapon-staff');
+        assert.equal(deriveCharacterAppearance({ job: '마법사', equip: { weapon: item } }).loadoutStyle, 'caster');
+    }
+
+    const adjectiveControl = { name: '검은 마력 완드', type: 'weapon', elem: '어둠', hands: 1 };
+    assert.equal(getWeaponVisualKey(adjectiveControl), 'wand');
+    assert.equal(getEquipmentIllustrationFamilyKey(adjectiveControl), 'weapon-staff');
 });
 
 test('getEquipmentVisualKey prefers exact named-art keys for tier 5+ signature gear', () => {
@@ -288,7 +350,7 @@ test('weapon-core exact illustrations are v2, provenance-bound, 160px and unique
     );
     const hashesByFamily = new Map();
 
-    assert.equal(catalog.length, 44);
+    assert.equal(catalog.length, 56);
     assert.equal(provenance.cohort, 'weapon-core');
     assert.equal(provenance.catalogSha256, manifest.catalogSha256);
 
@@ -298,6 +360,55 @@ test('weapon-core exact illustrations are v2, provenance-bound, 160px and unique
         assert.equal(artwork.styleVersion, 2, `Expected styleVersion 2 for ${entry.name}`);
         assert.equal(artwork.familyKey, entry.familyKey, `Expected family identity for ${entry.name}`);
         assert.match(artwork.sourcePath, /^scripts\/art_sources\/equipment\/v2\/weapon-core\/.+\.png$/);
+        assert.match(artwork.sourceSha256, /^[0-9a-f]{64}$/);
+        assert.match(artwork.exportSha256, /^[0-9a-f]{64}$/);
+
+        const source = await readFile(path.resolve(__dirname, '..', artwork.sourcePath));
+        const runtime = await readFile(path.resolve(__dirname, '..', 'public', entry.runtimePath.replace(/^\//, '')));
+        assert.equal(sha256(source), artwork.sourceSha256, `Expected source hash match for ${entry.name}`);
+        assert.equal(sha256(runtime), artwork.exportSha256, `Expected export hash match for ${entry.name}`);
+        assert.deepEqual(readPngSize(runtime), { width: 160, height: 160 }, `Expected 160px runtime art for ${entry.name}`);
+
+        const provenExport = exportsByName.get(entry.name);
+        assert.ok(provenExport, `Expected provenance export for ${entry.name}`);
+        assert.equal(provenExport.batch.batchId, artwork.batchId);
+        assert.equal(provenExport.batch.sourceSheetSha256, artwork.sourceSha256);
+        assert.equal(provenExport.exportSha256, artwork.exportSha256);
+
+        const familyHashes = hashesByFamily.get(entry.familyKey) || new Set();
+        assert.equal(familyHashes.has(artwork.exportSha256), false, `Duplicate exact illustration in ${entry.familyKey}: ${entry.name}`);
+        familyHashes.add(artwork.exportSha256);
+        hashesByFamily.set(entry.familyKey, familyHashes);
+    }
+});
+
+test('weapon-ranged-magic exact illustrations cover all 47 identities with v2 tracked art and family-unique exports', async () => {
+    const catalog = (await buildEquipmentCatalogRows()).filter((entry) => entry.cohort === 'weapon-ranged-magic');
+    const manifest = JSON.parse(await readFile(equipmentManifestPath, 'utf8'));
+    const provenance = JSON.parse(await readFile(weaponRangedMagicProvenancePath, 'utf8'));
+    const exportsByName = new Map(
+        provenance.batches.flatMap((batch) => batch.exports.map((entry) => [entry.name, { ...entry, batch }]))
+    );
+    const hashesByFamily = new Map();
+
+    assert.equal(catalog.length, 47);
+    assert.deepEqual(
+        Object.fromEntries(['weapon-bow', 'weapon-lance', 'weapon-staff', 'weapon-whip'].map((familyKey) => [
+            familyKey,
+            catalog.filter((entry) => entry.familyKey === familyKey).length,
+        ])),
+        { 'weapon-bow': 11, 'weapon-lance': 11, 'weapon-staff': 24, 'weapon-whip': 1 }
+    );
+    assert.equal(provenance.cohort, 'weapon-ranged-magic');
+    assert.equal(provenance.catalogSha256, manifest.catalogSha256);
+    assert.equal(exportsByName.size, 47);
+
+    for (const entry of catalog) {
+        const artwork = manifest.artwork?.[entry.name];
+        assert.ok(artwork, `Expected v2 artwork metadata for ${entry.name}`);
+        assert.equal(artwork.styleVersion, 2, `Expected styleVersion 2 for ${entry.name}`);
+        assert.equal(artwork.familyKey, entry.familyKey, `Expected family identity for ${entry.name}`);
+        assert.match(artwork.sourcePath, /^scripts\/art_sources\/equipment\/v2\/weapon-ranged-magic\/.+\.png$/);
         assert.match(artwork.sourceSha256, /^[0-9a-f]{64}$/);
         assert.match(artwork.exportSha256, /^[0-9a-f]{64}$/);
 

@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "batchId": "weapon-ranged-magic-bow-02",
+  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+  "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
+  "cohort": "weapon-ranged-magic",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "사냥꾼의 장궁",
+    "사냥꾼의 활",
+    "에테르 심판궁",
+    "엘프의활",
+    "천공의 활"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "사냥꾼의 장궁",
+      "type": "weapon",
+      "tier": 3,
+      "elem": "",
+      "familyKey": "weapon-bow",
+      "runtimePath": "/assets/equipment-exact/auto/auto-424aa241a9e6.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "사냥꾼의 장궁; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-center",
+      "name": "사냥꾼의 활",
+      "type": "weapon",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "weapon-bow",
+      "runtimePath": "/assets/equipment-exact/auto/auto-8a4a78fe557a.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "사냥꾼의 활; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "에테르 심판궁",
+      "type": "weapon",
+      "tier": 6,
+      "elem": "빛",
+      "familyKey": "weapon-bow",
+      "runtimePath": "/assets/equipment-exact/auto/auto-9d8887283ab4.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "에테르 심판궁; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "엘프의활",
+      "type": "weapon",
+      "tier": 3,
+      "elem": "",
+      "familyKey": "weapon-bow",
+      "runtimePath": "/assets/equipment-exact/auto/auto-2597c45a69fa.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "엘프의활; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "천공의 활",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "빛",
+      "familyKey": "weapon-bow",
+      "runtimePath": "/assets/equipment-exact/auto/auto-28800bd38fa6.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "천공의 활; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T4: an elemental core and magical fabrication integrated into the structure; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with 5 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\nLeave all unused trailing cells completely transparent and empty: bottom-right.\ntop-left: 사냥꾼의 장궁; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 사냥꾼의 활; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 에테르 심판궁; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays.\nbottom-left: 엘프의활; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-center: 천공의 활; family weapon-bow: weapon-bow family: a clear bow curve, string, limb tips, and grip; Tier T4: an elemental core and magical fabrication integrated into the structure; element 빛: ivory metal, gold engraving, sky-blue light points, and clean rays."
+}

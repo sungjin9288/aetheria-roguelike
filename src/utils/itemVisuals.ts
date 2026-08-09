@@ -245,6 +245,7 @@ export const getArmorStyleFromItem = (armor: any, fallback: any) => {
 export const getWeaponVisualKey = (weapon: any) => {
     if (!isWeapon(weapon)) return 'none';
     const name = String(weapon.name || '');
+    const description = String(weapon.desc || '');
 
     if (name.includes('표창')) return 'throwing-blade';
     if (name.includes('활') || name.includes('궁')) return (name.includes('장궁') || name.includes('심판궁') || name.includes('궁극')) ? 'longbow' : 'bow';
@@ -253,14 +254,20 @@ export const getWeaponVisualKey = (weapon: any) => {
     if (name.includes('도끼')) return isTwoHandWeapon(weapon) ? 'greataxe' : 'axe';
     if (name.includes('해머') || name.includes('망치')) return 'hammer';
     if (name.includes('철퇴') || name.includes('메이스') || name.includes('곤봉')) return 'mace';
-    if (name.includes('단검') || name.includes('절멸기')) return 'dagger';
-    if (name.includes('송곳니') || name.includes('독아')) return 'fang-dagger';
     if (name.includes('채찍')) return 'whip';
+    if (name.includes('단검') || name.includes('절멸기') || description.includes('단검') || name === '서리칼날' || name === '그림자 절단기') return 'dagger';
+    if (name.includes('송곳니') || name.includes('독아')) return 'fang-dagger';
     if (name.includes('레이피어')) return 'rapier';
     if (name.includes('세이버') || name.includes('시미터')) return 'saber';
     if (name.includes('팔치온')) return 'falchion';
     if (name.includes('포크')) return 'fork';
     if (name.includes('쌍칼')) return 'twinblade';
+    const hasSwordName = name.includes('소드') || name.endsWith('검') || name.includes('대검') || name.includes('성검');
+    const descriptionOnlySword = ['라그나로크', '차원절단자', '용의 화염', '대지의 심판'].includes(name)
+        && description.includes('검');
+    if (hasSwordName || descriptionOnlySword) {
+        return isTwoHandWeapon(weapon) ? 'greatsword' : 'sword';
+    }
     if (isMagicWeapon(weapon)) {
         if (name.includes('로드')) return 'rod';
         return isTwoHandWeapon(weapon) ? 'staff' : 'wand';
@@ -497,7 +504,7 @@ export const getAvatarLoadoutStyle = (weaponVisualKey: any, offhandVisualKey: an
     if (offhandVisualKey === 'shield') return 'guardian';
     if (weaponVisualKey === 'bow' || weaponVisualKey === 'longbow') return 'archer';
     if (weaponVisualKey === 'staff' || weaponVisualKey === 'rod' || weaponVisualKey === 'wand' || offhandVisualKey === 'book') return 'caster';
-    if (['dagger', 'fang-dagger', 'throwing-blade', 'twinblade'].includes(weaponVisualKey) || offhandVisualKey === 'dagger') return 'dagger';
+    if (['dagger', 'fang-dagger', 'throwing-blade', 'twinblade', 'whip'].includes(weaponVisualKey) || offhandVisualKey === 'dagger') return 'dagger';
     if (weaponVisualKey === 'spear' || weaponVisualKey === 'lance' || weaponVisualKey === 'scythe') return 'lancer';
     if (['axe', 'greataxe', 'hammer', 'mace', 'greatsword'].includes(weaponVisualKey)) return 'heavy';
     return 'sword';

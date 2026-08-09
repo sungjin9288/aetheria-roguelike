@@ -517,15 +517,15 @@ Commit source sheets, runtime exports, manifest metadata, tests and evidence as 
 **Interfaces:**
 - Produces: styleVersion 2 for `weapon-bow`, `weapon-staff`, `weapon-lance`, `weapon-whip`
 
-- [ ] **Step 1: Add and observe the failing cohort contract**
+- [x] **Step 1: Add and observe the failing cohort contract**
 
 Run `npm run art:verify -- --cohort weapon-ranged-magic`; expect missing v2 provenance.
 
-- [ ] **Step 2: Generate and process sorted six-item sheets**
+- [x] **Step 2: Generate and process sorted six-item sheets**
 
 Keep bow string/readability, staff head shape, lance tip and whip curve inside the same silhouette grammar. Apply element through material and surface, not color alone.
 
-- [ ] **Step 3: Inspect 32px and 160px contact sheets**
+- [x] **Step 3: Inspect 32px and 160px contact sheets**
 
 Record every rejected batch and replacement source hash in provenance.
 

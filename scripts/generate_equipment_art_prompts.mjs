@@ -88,7 +88,9 @@ const catalogRowsSha256 = (catalog) => {
 
 const makeCellPrompt = (entry) => {
     const tier = Number(entry.tier);
-    const family = FAMILY_LANGUAGE[entry.familyKey];
+    const family = entry.familyKey === 'weapon-lance' && entry.name.includes('낫')
+        ? 'weapon-lance polearm family: a long shaft, curved scythe blade, and balanced counterweight'
+        : FAMILY_LANGUAGE[entry.familyKey];
     const tierLanguage = TIER_LANGUAGE[tier];
     const elementLanguage = ELEMENT_LANGUAGE[entry.elem || ''];
     if (!family || !tierLanguage || !elementLanguage) {

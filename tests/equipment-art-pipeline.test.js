@@ -15,12 +15,16 @@ const PROMPT_SCRIPT = resolve(REPO_ROOT, 'scripts/generate_equipment_art_prompts
 const SOURCE_PREPARER_SCRIPT = resolve(REPO_ROOT, 'scripts/prepare_equipment_source_sheet.py');
 const BATCH_PROCESSOR_SCRIPT = resolve(REPO_ROOT, 'scripts/process_equipment_art_batch.py');
 const MANIFEST_SYNC_SCRIPT = resolve(REPO_ROOT, 'scripts/sync-equipment-art-manifest.mjs');
+const ART_VERIFIER_SCRIPT = resolve(REPO_ROOT, 'scripts/verify-art-assets.mjs');
 const LEGACY_GENERATOR_SCRIPT = resolve(REPO_ROOT, 'scripts/generate_equipment_item_art.py');
 const FAMILY_SOURCE_DIR = resolve(REPO_ROOT, 'public/assets/equipment-family/items');
 const EQUIPMENT_MANIFEST_PATH = resolve(REPO_ROOT, 'src/data/equipmentArtManifest.json');
 const WEAPON_CORE_BATCH_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-core/batches');
 const WEAPON_CORE_SOURCE_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-core');
 const WEAPON_CORE_PROVENANCE_PATH = resolve(REPO_ROOT, 'docs/evidence/art/equipment-weapon-core-provenance.json');
+const WEAPON_RANGED_MAGIC_BATCH_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-ranged-magic/batches');
+const WEAPON_RANGED_MAGIC_SOURCE_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-ranged-magic');
+const WEAPON_RANGED_MAGIC_PROVENANCE_PATH = resolve(REPO_ROOT, 'docs/evidence/art/equipment-weapon-ranged-magic-provenance.json');
 const CELL_ORDER = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 
 const compareCodePoints = (left, right) => {
@@ -59,6 +63,10 @@ const runBatchProcessor = (args) => spawnSync('python3', [BATCH_PROCESSOR_SCRIPT
 });
 
 const runManifestSync = (args) => spawnSync(process.execPath, [MANIFEST_SYNC_SCRIPT, ...args], {
+    encoding: 'utf8',
+});
+
+const runArtVerifier = (args) => spawnSync(process.execPath, ['--import', 'tsx', ART_VERIFIER_SCRIPT, ...args], {
     encoding: 'utf8',
 });
 
@@ -160,6 +168,122 @@ test('equipment manifest sync rejects player-facing manifest runtime routing dri
         await assert.rejects(readFile(outputPath), { code: 'ENOENT' });
     } finally {
         await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('equipment manifest sync preserves canonical generation review pins for active weapon cohorts', async (context) => {
+    const cohorts = [
+        ['weapon-core', WEAPON_CORE_PROVENANCE_PATH, WEAPON_CORE_SOURCE_DIR],
+        ['weapon-ranged-magic', WEAPON_RANGED_MAGIC_PROVENANCE_PATH, WEAPON_RANGED_MAGIC_SOURCE_DIR],
+    ];
+
+    for (const [cohort, provenancePath, sourceDir] of cohorts) {
+        await context.test(cohort, async () => {
+            const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-generation-review-sync-'));
+            const catalogPath = join(directory, 'catalog.json');
+            const outputPath = join(directory, 'synced-manifest.json');
+            try {
+                const dump = runDump(['--output', catalogPath]);
+                assert.equal(dump.status, 0, dump.stderr);
+
+                const result = runManifestSync([
+                    '--catalog', catalogPath,
+                    '--manifest', EQUIPMENT_MANIFEST_PATH,
+                    '--provenance', provenancePath,
+                    '--source-dir', sourceDir,
+                    '--public-root', resolve(REPO_ROOT, 'public'),
+                    '--output', outputPath,
+                ]);
+                assert.equal(result.status, 0, result.stderr);
+
+                const [manifest, synced] = await Promise.all([
+                    readFile(EQUIPMENT_MANIFEST_PATH, 'utf8').then(JSON.parse),
+                    readFile(outputPath, 'utf8').then(JSON.parse),
+                ]);
+                assert.deepEqual(
+                    synced.pipeline.provenance.cohorts[cohort],
+                    manifest.pipeline.provenance.cohorts[cohort],
+                );
+            } finally {
+                await rm(directory, { recursive: true, force: true });
+            }
+        });
+    }
+});
+
+test('equipment generation review rejects tampering before sync or cohort verification writes', async (context) => {
+    const mutations = [
+        ['accepted raw hash', (provenance) => { provenance.generationReview.accepted[0].rawSha256 = '0'.repeat(64); }],
+        ['fabricated rejected reason', (provenance) => { provenance.generationReview.rejected[0].reason = 'fabricated review reason'; }],
+        ['blank rejected reason', (provenance) => { provenance.generationReview.rejected[0].reason = ''; }],
+        ['rejected record shape', (provenance) => { delete provenance.generationReview.rejected[0].rawImage; }],
+        ['rejected batch id', (provenance) => { provenance.generationReview.rejected[0].batchId = 'outside-active-cohort'; }],
+        ['duplicate raw candidate', (provenance) => { provenance.generationReview.rejected[0].rawSha256 = provenance.generationReview.accepted[0].rawSha256; }],
+        ['duplicate accepted batch', (provenance) => { provenance.generationReview.accepted[1].batchId = provenance.generationReview.accepted[0].batchId; }],
+        ['unexpected accepted field', (provenance) => { provenance.generationReview.accepted[0].unexpected = true; }],
+        ['unexpected top-level field', (provenance) => { provenance.unexpected = true; }],
+    ];
+
+    for (const [label, mutate] of mutations) {
+        await context.test(label, async () => {
+            const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-generation-review-'));
+            const catalogPath = join(directory, 'catalog.json');
+            const manifestPath = join(directory, 'equipment-manifest.json');
+            const provenancePath = join(directory, 'provenance.json');
+            const outputPath = join(directory, 'synced-manifest.json');
+            const reportPath = join(directory, 'report.json');
+            try {
+                const dump = runDump(['--output', catalogPath]);
+                assert.equal(dump.status, 0, dump.stderr);
+
+                const manifestBytes = await readFile(EQUIPMENT_MANIFEST_PATH);
+                const provenance = JSON.parse(await readFile(WEAPON_RANGED_MAGIC_PROVENANCE_PATH, 'utf8'));
+                const runtimePath = provenance.batches[0].exports[0].runtimePath;
+                const runtime = resolve(REPO_ROOT, 'public', runtimePath.slice(1));
+                const runtimeBytes = await readFile(runtime);
+                const outputBytes = Buffer.from('existing synced manifest');
+                const reportBytes = Buffer.from('existing verifier report');
+
+                mutate(provenance);
+                await Promise.all([
+                    writeFile(manifestPath, manifestBytes),
+                    writeFile(provenancePath, `${JSON.stringify(provenance, null, 2)}\n`),
+                    writeFile(outputPath, outputBytes),
+                    writeFile(reportPath, reportBytes),
+                ]);
+
+                const sync = runManifestSync([
+                    '--catalog', catalogPath,
+                    '--manifest', manifestPath,
+                    '--provenance', provenancePath,
+                    '--source-dir', WEAPON_RANGED_MAGIC_SOURCE_DIR,
+                    '--public-root', resolve(REPO_ROOT, 'public'),
+                    '--output', outputPath,
+                ]);
+                assert.equal(sync.status, 1, `Sync accepted ${label}: ${sync.stderr}`);
+                assert.deepEqual(await readFile(outputPath), outputBytes);
+                assert.deepEqual(await readFile(manifestPath), manifestBytes);
+                assert.deepEqual(await readFile(runtime), runtimeBytes);
+
+                const verification = runArtVerifier([
+                    '--cohort', 'weapon-ranged-magic',
+                    '--equipment-manifest', manifestPath,
+                    '--equipment-provenance', provenancePath,
+                    '--equipment-source-dir', WEAPON_RANGED_MAGIC_SOURCE_DIR,
+                    '--public-root', resolve(REPO_ROOT, 'public'),
+                    '--write-report', reportPath,
+                ]);
+                assert.equal(verification.status, 1, `Verifier accepted ${label}: ${verification.stderr}`);
+                const report = JSON.parse(verification.stdout);
+                assert.equal(report.ok, false);
+                assert.equal(report.invalidArtwork.length, 1);
+                assert.deepEqual(await readFile(reportPath), reportBytes);
+                assert.deepEqual(await readFile(manifestPath), manifestBytes);
+                assert.deepEqual(await readFile(runtime), runtimeBytes);
+            } finally {
+                await rm(directory, { recursive: true, force: true });
+            }
+        });
     }
 });
 
@@ -288,6 +412,37 @@ test('equipment prompt batch uses the fixed six-cell order and Art Bible languag
     }
 });
 
+test('equipment prompt preserves the curved scythe identity inside the weapon-lance cohort', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-scythe-prompt-'));
+    const catalogPath = join(directory, 'catalog.json');
+    const outputPath = join(directory, 'weapon-ranged-magic-lance-01.json');
+    try {
+        await writeFile(catalogPath, `${JSON.stringify([{
+            name: '죽음의 낫',
+            type: 'weapon',
+            tier: 4,
+            elem: '어둠',
+            familyKey: 'weapon-lance',
+            runtimePath: '/assets/equipment-exact/auto/death-scythe.png',
+            cohort: 'weapon-ranged-magic',
+        }])}\n`);
+        const result = runPromptGenerator([
+            '--catalog', catalogPath,
+            '--batch-id', 'weapon-ranged-magic-lance-01',
+            '--names', '죽음의 낫',
+            '--output', outputPath,
+        ]);
+
+        assert.equal(result.status, 0, result.stderr);
+        const batch = JSON.parse(await readFile(outputPath, 'utf8'));
+        assert.match(batch.identities[0].prompt, /curved scythe blade/i);
+        assert.doesNotMatch(batch.identities[0].prompt, /readable spearhead/i);
+        assert.match(batch.prompt, /curved scythe blade/i);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
 test('tracked weapon-core batches declare every authoritative identity exactly once with partial final sheets', async () => {
     const catalogResult = runDump(['--stdout']);
     assert.equal(catalogResult.status, 0, catalogResult.stderr);
@@ -299,9 +454,12 @@ test('tracked weapon-core batches declare every authoritative identity exactly o
         'weapon-core-sword-01.json',
         'weapon-core-sword-02.json',
         'weapon-core-sword-03.json',
+        'weapon-core-sword-04.json',
+        'weapon-core-sword-05.json',
         'weapon-core-dagger-01.json',
         'weapon-core-dagger-02.json',
         'weapon-core-dagger-03.json',
+        'weapon-core-dagger-04.json',
         'weapon-core-heavy-01.json',
         'weapon-core-heavy-02.json',
     ];
@@ -310,11 +468,36 @@ test('tracked weapon-core batches declare every authoritative identity exactly o
     )));
     const declared = batches.flatMap((batch) => batch.identityNames);
 
-    assert.equal(declared.length, 44);
-    assert.equal(new Set(declared).size, 44);
+    assert.equal(declared.length, 56);
+    assert.equal(new Set(declared).size, 56);
     assert.deepEqual([...declared].sort(compareCodePoints), expected);
     assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-sword-03').identityNames.length, 3);
+    assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-sword-05').identityNames.length, 5);
+    assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-dagger-01').identityNames.length, 5);
+    assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-dagger-04').identityNames.length, 2);
     assert.equal(batches.find((batch) => batch.batchId === 'weapon-core-heavy-02').identityNames.length, 5);
+});
+
+test('tracked weapon-ranged-magic batches declare all 47 identities with family-pure partial sheets', async () => {
+    const catalogResult = runDump(['--stdout']);
+    assert.equal(catalogResult.status, 0, catalogResult.stderr);
+    const expected = JSON.parse(catalogResult.stdout)
+        .filter((entry) => entry.cohort === 'weapon-ranged-magic')
+        .map((entry) => entry.name)
+        .sort(compareCodePoints);
+    const ids = ['bow-01', 'bow-02', 'staff-01', 'staff-02', 'staff-03', 'staff-04', 'lance-01', 'lance-02', 'whip-01'];
+    const batches = await Promise.all(ids.map(async (id) => JSON.parse(await readFile(
+        join(WEAPON_RANGED_MAGIC_BATCH_DIR, `weapon-ranged-magic-${id}.json`), 'utf8'
+    ))));
+    const declared = batches.flatMap((batch) => batch.identityNames);
+    assert.equal(declared.length, 47);
+    assert.equal(new Set(declared).size, 47);
+    assert.deepEqual([...declared].sort(compareCodePoints), expected);
+    assert.deepEqual(batches.map((batch) => batch.identities[0].familyKey), [
+        'weapon-bow', 'weapon-bow', 'weapon-staff', 'weapon-staff', 'weapon-staff',
+        'weapon-staff', 'weapon-lance', 'weapon-lance', 'weapon-whip',
+    ]);
+    assert.deepEqual(batches.map((batch) => batch.identityNames.length), [6, 5, 6, 6, 6, 6, 6, 5, 1]);
 });
 
 test('equipment source preparer removes only edge-connected working background and fixes the 600x400 grid', async () => {

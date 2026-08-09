@@ -1,7 +1,7 @@
 {
   "$comment": "slice 26 entries remain runtime-compatible; the top-level art contract metadata preserves reproducible catalog identity.",
   "version": 1,
-  "catalogSha256": "79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6",
+  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
   "styleVersion": 1,
   "art": {
     "width": 160,
@@ -113,7 +113,7 @@
         "cohort"
       ],
       "sort": "unicode-code-point",
-      "rowsSha256": "f6d72d09d357554ac8da87544ad6538c728c9aa24893f38fcabd17a4e1f57adc"
+      "rowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466"
     },
     "batch": {
       "grid": {
@@ -133,7 +133,15 @@
     "provenance": {
       "version": 1,
       "sourceRoot": "scripts/art_sources/equipment/v2",
-      "recordPath": "docs/evidence/art/equipment-provenance.json"
+      "recordPath": "docs/evidence/art/equipment-provenance.json",
+      "cohorts": {
+        "weapon-core": {
+          "generationReviewSha256": "c471fc7e36aa9835f6cf492b6ae6f47a1cd38d8ebe068547030b8baad801c124"
+        },
+        "weapon-ranged-magic": {
+          "generationReviewSha256": "63b6f4b98ec070ba4b36d8478e54a957e32227e482259d4e6b1691c3e7bac208"
+        }
+      }
     }
   },
   "entries": {
@@ -497,48 +505,48 @@
       "familyKey": "weapon-dagger",
       "batchId": "weapon-core-dagger-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
-      "sourceSha256": "c81cebe90c9805a011c13c61ab28e1b7b7bb60126eea5babcc1d5416648ebdac",
-      "exportSha256": "d1f897531bea0f6a1773dee532cd2739eb3c3a6424ca04aa582f0b72b9bfce5d"
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "46712c149541d8a174903a6b6325f924a6c44858ac8d5202a12417b8e3497495"
     },
     "녹슨 단검": {
       "styleVersion": 2,
       "familyKey": "weapon-dagger",
       "batchId": "weapon-core-dagger-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
-      "sourceSha256": "c81cebe90c9805a011c13c61ab28e1b7b7bb60126eea5babcc1d5416648ebdac",
-      "exportSha256": "0ce7a112205ccb50ddd0d16bfb6fd90a886f21dd7d7202178b097c8519c1477e"
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "42b271a913fbe795e1edfcdc9b5fd6d9eab306bd7f34a7b6c266abd5cf8c3085"
     },
     "독사의 송곳니": {
       "styleVersion": 2,
       "familyKey": "weapon-dagger",
       "batchId": "weapon-core-dagger-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
-      "sourceSha256": "c81cebe90c9805a011c13c61ab28e1b7b7bb60126eea5babcc1d5416648ebdac",
-      "exportSha256": "13f9994352e8b6ea7187f231a4ab183e7404be832fe0532b0abb987732e67844"
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "441667532b8a0ee32f20f5e41035ef45c417f00d0896db2969eb36bbb6f9d955"
     },
     "독아 채찍": {
       "styleVersion": 2,
-      "familyKey": "weapon-dagger",
-      "batchId": "weapon-core-dagger-01",
-      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
-      "sourceSha256": "c81cebe90c9805a011c13c61ab28e1b7b7bb60126eea5babcc1d5416648ebdac",
-      "exportSha256": "2b9bd86f7efe3e0101c885705352e1690df2c7dbef87e0e4a8128004f74cc594"
+      "familyKey": "weapon-whip",
+      "batchId": "weapon-ranged-magic-whip-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-whip-01.png",
+      "sourceSha256": "dfb90a862c613620da0ace227b62442a389b6d81677cb117f530d55e0fbbfba7",
+      "exportSha256": "8e5f08fd39918c4f14e74893a12bcbf193c51a3a702f904dfd1352b736328acc"
     },
     "독침 단검": {
       "styleVersion": 2,
       "familyKey": "weapon-dagger",
       "batchId": "weapon-core-dagger-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
-      "sourceSha256": "c81cebe90c9805a011c13c61ab28e1b7b7bb60126eea5babcc1d5416648ebdac",
-      "exportSha256": "a58cede0123faa80688a7f8371d8e2797523ffbf04a6471919636330a661bf54"
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "faf2d28bacb8aa64367b95ab5f02d0ecbfb064c1d6210667b269a7f41fb80d23"
     },
     "뼈 단검": {
       "styleVersion": 2,
       "familyKey": "weapon-dagger",
       "batchId": "weapon-core-dagger-01",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
-      "sourceSha256": "c81cebe90c9805a011c13c61ab28e1b7b7bb60126eea5babcc1d5416648ebdac",
-      "exportSha256": "686ea683006ab1460820f60455952e94c141092a5be9ac9c64eb82de4a4203bc"
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "ba6f35f4eafc5e419775ac15f723a4d54b2e532242a55672b0dd68c004c89599"
     },
     "성수 단검": {
       "styleVersion": 2,
@@ -723,6 +731,478 @@
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-02.png",
       "sourceSha256": "7e4994e2a0a34cbca4b3339d0c3b212a6abcd313fb17e809fee805383df27cf7",
       "exportSha256": "f44f04e8b11f30c810fa8e937f81354e96cb7239add71e6ee188497540bd8494"
+    },
+    "공허의 대검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "998d00a82cb9bb559c3c962cbe4b5f958ced2e710e9fe1c1a13a907c1000d8fa"
+    },
+    "성기사의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "ef0dcd8a2aa892e327f9ee336f38de93bd08af9bf1441f316214f4cdb33a1dee"
+    },
+    "시간 파편 소드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "124ced5bd56338e9b0cf75de1ad3f1e672498de575fc4c5f47b6bf1a4e9946ec"
+    },
+    "심판자의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "d5b6f6cedfd99f745d29ef466c040f31a4fd20c2379fcc0a78e859732d197a73"
+    },
+    "암흑의 대검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "f7ba4e202df3c21da330971cfd9112c03b12eda59c1f834fb70db5f48672af6a"
+    },
+    "에테르 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "5c45aaadbc14e5269faea526250800c46b01c7a0cb2a1a1c42b909e30f13b6f6"
+    },
+    "용암 대검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "27ed02fad1673af121ffb68243d494352911d41425a6e45964b0c008a371ddd8"
+    },
+    "차원절단자": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "2089679d7683d22d5fab58191bf797a39f7624c69692ee92f59dacdbeb995da1"
+    },
+    "타락 기사의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "85b2e5f0e33a677856f28ce4af6fb88146b3a02e39d563dcec01a566c34c0f5d"
+    },
+    "파멸의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "9fe59d6fadef3f26021576759e08076582a717508305e9c3c7edb4284b86b2ec"
+    },
+    "화염 사원의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "9982b7b1cea3ef6674efb6ce882271848c931d1785405b6ede259fc65a294e2b"
+    },
+    "균열의 날": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-04.png",
+      "sourceSha256": "fe567ee92d0e9970282f56005e681e6f41bc788a99b59674d8ad7f5c4ff530bf",
+      "exportSha256": "3caf7ecb6599ec2dc0d5e4adf6e8e54586c1e80943babfcc219364cbf4defd51"
+    },
+    "서리칼날": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-04.png",
+      "sourceSha256": "fe567ee92d0e9970282f56005e681e6f41bc788a99b59674d8ad7f5c4ff530bf",
+      "exportSha256": "e0585ad997b3bd4cba6645a277680f075e4cade01daa8f40d082bd90eec6a5fc"
+    },
+    "나뭇가지 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "46e28bdf043b39556d21b99ea86a53f84bc34ac016d97eb173518107675897ac"
+    },
+    "단궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "da614aa9143338fc0050aafce8d272d0b7cd49e713a5ab0cdd5ce4a3aab7b4b5"
+    },
+    "바람의 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "caff8006751a299ce20dd8727bb80af2fe630fe7f7df97fb1cdf55e98dae4718"
+    },
+    "복합궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "8c035605750eb569509c5e8efdea12beb2e09cae8697bb47e271213889ef045b"
+    },
+    "불사조의 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "37fa4efe35513c0a9a327ca510656443210882b73f8700f05d8ac143637f392d"
+    },
+    "빙결 장궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "177700eb90c703c62524b4523520147e2a8f991850d5eaf9f5edd6d9a418c36c"
+    },
+    "사냥꾼의 장궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "b4d6f1bcfaf9be989eef89ad05060eea93f417805e86aba3dc04b70de66b6f7a"
+    },
+    "사냥꾼의 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "e43478dfcabf2b92a9fc240748875b65ae783a5eda24421fa02cdd4d9c846f82"
+    },
+    "에테르 심판궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "8968b984784e3ec8939e0595df661d94c2282a4ee7e41d3639307e66a718a205"
+    },
+    "엘프의활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "d3e6ab60eb88bb55bdb56df3a8034c4044965164f0112cc6c803404b21613217"
+    },
+    "천공의 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "43addc1bf3e49182daa0748131f5824406fbfec09aff3f2f5b7d20803266589c"
+    },
+    "고대 마탑 스태프": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "e92a1b2f24caf9080dd2a039952deacc2fe4ffb2589c274646f8f8cfabdcf30b"
+    },
+    "나무지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "27f99d2db840cf4693364103ced53938eb20f480a2aef1ca657dcf5b967659c9"
+    },
+    "대지의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "eb66182a40adc9161d42ee6b51e33e30d6a64477996731ec28c65cd2169608fb"
+    },
+    "마녀의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "3093a7db4bceefcb61f2d3fab11ca98044911a0bb136596ce499e1eeeaecef6e"
+    },
+    "마법봉": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "4f49ffe9744a34fb822604c4a4519462c329091ae50a4d67b96b33a9c565405f"
+    },
+    "마법지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "fbe59b506d4ce78aeb870c871681bbabaed7b57010baf1eee75f212e857d6f8d"
+    },
+    "번개 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "2abe07bf3635816ab52be00c065e9dcd256a32c96e73be82c64c48594282358c"
+    },
+    "빙결 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "fdb2bd36681d9d77263d63dc2d5723ac3049bf0c14a2cc13acdd9408a031c8ef"
+    },
+    "빙하의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "5513c3438e0d64e094bf802087dd5a03e3f7b909aa3baab3a355bf30a7d3de47"
+    },
+    "성운 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "ae24bbff6718d0f89817d975f4908760234334df6418fc08331e151dad2c8956"
+    },
+    "세이지 로드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "a9557ebe8a9d81efe1dc7945d338369a0455d101f2b69e912c806b93fa9deb47"
+    },
+    "수정 완드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "2f39557ee761ae8668cb310c1a4d26e9cbc471e186fa8e0ca32915a45ff0c07a"
+    },
+    "아크스태프": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "13489eea7bea36a9904a1153365e503db4d288806f667a8a9cda218b84dfb666"
+    },
+    "얼음 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "a9c07450796c8cd85bc7c5d51c4284e5ec329c004e8b39d5f9af88b4bcd01456"
+    },
+    "에테르 플럭스 로드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "9d76e44a49bd0386064ae74d5814d770a2c8ecd988a0f16a44565e4334f53438"
+    },
+    "유성 완드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "3073745be8f353470b6bb68a29d740d01518eb5623c5d111b245a19cecc5fa7b"
+    },
+    "정령의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "709b150bc4c6664f71832b27acbd5141b21f2fef408ca1bc8b14e2391aa68ab3"
+    },
+    "차원 균열 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "c90e023b9b61d9c099af46c010d69a0e3225f07e095f739820ac8bcba53b8e32"
+    },
+    "폭풍 스태프": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "d00738e1dc7b042c6f275bd7d4f9c2e7107500e0e5e79cf14ba3ba5232cb9973"
+    },
+    "허공의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "76e7fa92ef1ca9f34bbead67fe938dd15b8f29265b998032bad95c0bcdf11205"
+    },
+    "호신용 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "fe1f1e6db1a20ece278ecb39a4d5da74993634dc20db5c654616cb4dc8f9d156"
+    },
+    "혼돈의 로드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "114381cb1158cd8101dd68a1f280c1aaca70673fb88d3c8d162c75c4da26b642"
+    },
+    "혼돈의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "25a4f71c6c46c4540b28040e9c95d17679c907d8a520a13ed5a936405f839fde"
+    },
+    "화염의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "00d8ecaa26016567675b523530e509c60daf3368d67bf2a6d4e5f40bfab485ac"
+    },
+    "병사의 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "a32e4fc90a56663a053bca863128156df83a5881c489683abc50aa18aa7a8929"
+    },
+    "빙원의 장창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "8b3419ddf8a421c7e47dd35c745e0c1bf8b3fd9764d876f91f53aea3790f643b"
+    },
+    "세계수 절멸창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "7c1fc06610a3d0606000d3f9408551184f38cf3a76f4b1f04652bce9f7676074"
+    },
+    "수정 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "0da27d1b8733ca198c6ca08ceacd83498a71ba97e00b4c0f2b9327989c29dcbe"
+    },
+    "심연 파쇄창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "fd99f71c22ed9c5a62bc56bf74b51192ecf46b9d90255d3169b7f76bced67d2c"
+    },
+    "심해의 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "050f3bf74af4fbfde57bd5577f8055c559699adeced41fbeac5bc07e161d13dc"
+    },
+    "용살자의창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "11c7502996f510df93e71d91b509a61139addd3b493d5d651f82a3aa6b4e6f48"
+    },
+    "정예병의 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "640d43d5e1cf5c4b09f2a4f27b1489e9202097f2284631f308d62269794ce697"
+    },
+    "죽음의 낫": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "46c9ac7232ed22ec96a86b5baaec1843a5195e00943651545df2564708e2e5d9"
+    },
+    "차원 붕괴창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "f14c8137259c1ff5eab1f3a56603805a2b9c586c5a2d789517fbeda5e2d2c0de"
+    },
+    "폭풍의 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "61f9dd6469cd0414dc5520d29972a4e964bc6e0b20ae83e9f9f2e7a375605ee3"
     }
   }
 }

@@ -12,7 +12,7 @@ import { buildArtCatalog } from '../scripts/artCatalog.mjs';
 import { verifyArtAssets, writeArtVerificationReport } from '../scripts/verify-art-assets.mjs';
 
 const FIXTURE_CATALOG_SHA256 = 'a'.repeat(64);
-const LIVE_CATALOG_SHA256 = '79c20f4fd65c8ac323c80f4da13aceabb0d558755828ba8d02bcf3557bc610e6';
+const LIVE_CATALOG_SHA256 = 'c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef';
 const VERIFY_ART_ASSETS_SCRIPT = fileURLToPath(new URL('../scripts/verify-art-assets.mjs', import.meta.url));
 const PIXEL_INSPECTOR_SCRIPT = fileURLToPath(new URL('../scripts/inspect_art_pixels.py', import.meta.url));
 const EQUIPMENT_GENERATOR_SCRIPT = fileURLToPath(new URL('../scripts/generate_equipment_item_art.py', import.meta.url));
@@ -175,7 +175,7 @@ test('art catalog records the complete current player-facing inventory', async (
     assert.equal(report.equipment.length, 233);
     assert.deepEqual(report.equipmentByType, { weapon: 119, armor: 93, shield: 21 });
     assert.equal(report.definedFamilies.length, 22);
-    assert.equal(report.usedFamilies.length, 18);
+    assert.equal(report.usedFamilies.length, 19);
     assert.deepEqual(report.elements, ['냉기', '대지', '바람', '빛', '어둠', '에테르', '자연', '화염']);
     assert.equal(report.catalogSha256, LIVE_CATALOG_SHA256);
 });
@@ -439,8 +439,8 @@ test('art verifier CLI validates one equipment cohort without approving partial 
         assert.equal(report.ok, true);
         assert.equal(report.scope, 'equipment');
         assert.equal(report.cohort, 'weapon-core');
-        assert.equal(report.counts.equipment, 44);
-        assert.equal(report.exports.length, 44);
+        assert.equal(report.counts.equipment, 56);
+        assert.equal(report.exports.length, 56);
 
         const refused = runArtVerifierCli([
             '--cohort', 'weapon-core',

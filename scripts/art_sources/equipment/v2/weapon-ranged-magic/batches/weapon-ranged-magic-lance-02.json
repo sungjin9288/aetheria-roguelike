@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "batchId": "weapon-ranged-magic-lance-02",
+  "catalogSha256": "c0f90046ac95f39d4f46411ab835a8460e48bed6d409937425af585b9c5bd9ef",
+  "catalogRowsSha256": "2ae6e2b9333c03e73f5883d5bd3cdf0ece0b7bc2a6a862e91c7a301536877466",
+  "cohort": "weapon-ranged-magic",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "용살자의창",
+    "정예병의 창",
+    "죽음의 낫",
+    "차원 붕괴창",
+    "폭풍의 창"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "용살자의창",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "",
+      "familyKey": "weapon-lance",
+      "runtimePath": "/assets/equipment-exact/auto/auto-5534b9c2d7a8.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "용살자의창; family weapon-lance: weapon-lance family: a long shaft, readable spearhead, and balanced counterweight; Tier T4: an elemental core and magical fabrication integrated into the structure; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-center",
+      "name": "정예병의 창",
+      "type": "weapon",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "weapon-lance",
+      "runtimePath": "/assets/equipment-exact/auto/auto-c42edcb54fc4.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "정예병의 창; family weapon-lance: weapon-lance family: a long shaft, readable spearhead, and balanced counterweight; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "죽음의 낫",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "어둠",
+      "familyKey": "weapon-lance",
+      "runtimePath": "/assets/equipment-exact/auto/auto-c8ef29d55493.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "죽음의 낫; family weapon-lance: weapon-lance polearm family: a long shaft, curved scythe blade, and balanced counterweight; Tier T4: an elemental core and magical fabrication integrated into the structure; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "차원 붕괴창",
+      "type": "weapon",
+      "tier": 6,
+      "elem": "대지",
+      "familyKey": "weapon-lance",
+      "runtimePath": "/assets/equipment-exact/auto/auto-ea524ba771cb.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "차원 붕괴창; family weapon-lance: weapon-lance family: a long shaft, readable spearhead, and balanced counterweight; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 대지: stone, brass, angular crystal, heavy fragments, and low sheen."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "폭풍의 창",
+      "type": "weapon",
+      "tier": 4,
+      "elem": "바람",
+      "familyKey": "weapon-lance",
+      "runtimePath": "/assets/equipment-exact/auto/auto-af4db2f9aa40.png",
+      "cohort": "weapon-ranged-magic",
+      "prompt": "폭풍의 창; family weapon-lance: weapon-lance family: a long shaft, readable spearhead, and balanced counterweight; Tier T4: an elemental core and magical fabrication integrated into the structure; element 바람: thin curved lines, an open structure, and pale teal flow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with 5 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\nLeave all unused trailing cells completely transparent and empty: bottom-right.\ntop-left: 용살자의창; family weapon-lance: weapon-lance family: a long shaft, readable spearhead, and balanced counterweight; Tier T4: an elemental core and magical fabrication integrated into the structure; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 정예병의 창; family weapon-lance: weapon-lance family: a long shaft, readable spearhead, and balanced counterweight; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 죽음의 낫; family weapon-lance: weapon-lance polearm family: a long shaft, curved scythe blade, and balanced counterweight; Tier T4: an elemental core and magical fabrication integrated into the structure; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze.\nbottom-left: 차원 붕괴창; family weapon-lance: weapon-lance family: a long shaft, readable spearhead, and balanced counterweight; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 대지: stone, brass, angular crystal, heavy fragments, and low sheen.\nbottom-center: 폭풍의 창; family weapon-lance: weapon-lance family: a long shaft, readable spearhead, and balanced counterweight; Tier T4: an elemental core and magical fabrication integrated into the structure; element 바람: thin curved lines, an open structure, and pale teal flow."
+}
