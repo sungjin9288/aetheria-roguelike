@@ -2,7 +2,7 @@
 
 Date: 2026-08-06
 
-Status: Draft for repository review; product direction approved on 2026-08-06
+Status: Approved for implementation on 2026-08-09
 
 Scope: 직업 판타지, 장기 반복 플레이, 캐릭터 아트, 장비 일러스트, 검증과 증빙
 
