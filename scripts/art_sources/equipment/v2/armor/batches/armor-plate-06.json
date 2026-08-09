@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "batchId": "armor-plate-06",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "armor",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "판금갑옷",
+    "화염 방어복"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "판금갑옷",
+      "type": "armor",
+      "tier": 3,
+      "elem": "",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-f300e0d7e5d5.png",
+      "cohort": "armor",
+      "prompt": "판금갑옷; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-center",
+      "name": "화염 방어복",
+      "type": "armor",
+      "tier": 2,
+      "elem": "화염",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-ff8b6df40e8e.png",
+      "cohort": "armor",
+      "prompt": "화염 방어복; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 화염: dark-red metal, cracked surface, orange fissures, and small embers."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with 2 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\nLeave all unused trailing cells completely transparent and empty: top-right, bottom-left, bottom-center, bottom-right.\ntop-left: 판금갑옷; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 화염 방어복; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 화염: dark-red metal, cracked surface, orange fissures, and small embers."
+}

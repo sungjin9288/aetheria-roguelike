@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
+import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
+import { promisify } from 'node:util';
+
+import { buildEquipmentPromptBatchFromRows } from './equipmentPromptContract.mjs';
 
 const CELL_ORDER = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 const CATALOG_FIELDS = ['name', 'type', 'tier', 'elem', 'familyKey', 'runtimePath', 'cohort'];
@@ -22,6 +26,8 @@ const ACCEPTED_GENERATION_FIELDS = ['batchId', 'rawImage', 'rawSha256'];
 const REJECTED_GENERATION_FIELDS = [...ACCEPTED_GENERATION_FIELDS, 'reason'];
 const ARTWORK_FIELDS = ['styleVersion', 'familyKey', 'batchId', 'sourcePath', 'sourceSha256', 'exportSha256'];
 const SHA256 = /^[0-9a-f]{64}$/;
+const PNG_BASENAME = /^[^/\\]+\.png$/;
+const execFileAsync = promisify(execFile);
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const canonicalize = (value) => {
@@ -65,11 +71,56 @@ const requireText = (value, label) => {
     if (typeof value !== 'string' || !value.trim()) throw new Error(`${label} is invalid`);
 };
 
+const requirePngBasename = (value, label) => {
+    if (typeof value !== 'string' || !PNG_BASENAME.test(value) || value === '.' || value === '..') {
+        throw new Error(`${label} must be a safe PNG basename`);
+    }
+};
+
+export const validateStyleV2ExportHashUniqueness = (
+    manifest,
+    { artworkOverrides = {}, familyOverrides = {} } = {},
+) => {
+    const hashes = new Map();
+    const surfaces = [
+        ['equipment', { ...(manifest?.artwork || {}), ...artworkOverrides }],
+        ['family', { ...(manifest?.art?.families || {}), ...familyOverrides }],
+    ];
+    for (const [surface, entries] of surfaces) {
+        for (const [identity, entry] of Object.entries(entries)) {
+            if (entry?.styleVersion !== 2) continue;
+            requireHash(entry.exportSha256, `${surface}:${identity} export hash`);
+            const prior = hashes.get(entry.exportSha256);
+            if (prior) {
+                throw new Error(`StyleVersion 2 export hash is duplicated: ${prior} and ${surface}:${identity}`);
+            }
+            hashes.set(entry.exportSha256, `${surface}:${identity}`);
+        }
+    }
+};
+
 const buildReplayKey = (batchId, sourceSheetSha256, identityNames) => hash(JSON.stringify({
     batchId,
     sourceSheetSha256,
     identityNames,
 }));
+
+const inspectTrackedSource = async ({ repoRoot, trackedBatchPath, source }) => {
+    const inspector = resolve(repoRoot, 'scripts/inspect_equipment_source_sheet.py');
+    try {
+        const { stdout } = await execFileAsync('python3', [
+            inspector,
+            '--batch', trackedBatchPath,
+            '--source-sheet', source,
+        ], { maxBuffer: 1024 * 1024 });
+        const exports = JSON.parse(stdout);
+        if (!Array.isArray(exports)) throw new Error('invalid inspector output');
+        return exports;
+    } catch (error) {
+        const detail = error?.stderr?.trim() || error.message;
+        throw new Error(`Equipment source reconstruction failed: ${detail}`);
+    }
+};
 
 const validateCatalog = (catalog, manifest, provenance, cohort) => {
     if (!Array.isArray(catalog)) throw new Error('Equipment catalog must be an array');
@@ -124,16 +175,19 @@ const validateGenerationReview = ({ manifest, provenance, cohort, preparedBatche
     requireText(review.tool, 'Equipment generation review tool');
 
     const rawCandidates = new Set();
+    const rawImages = new Set();
     const acceptedBatches = new Set();
     const validateCandidate = (candidate, fields, label) => {
         if (!sameKeys(candidate, fields)) throw new Error(`Equipment generation review ${label} schema is invalid`);
         requireText(candidate.batchId, `Equipment generation review ${label} batch id`);
         requireText(candidate.rawImage, `Equipment generation review ${label} raw image`);
+        requirePngBasename(candidate.rawImage, `Equipment generation review ${label} raw image`);
         requireHash(candidate.rawSha256, `Equipment generation review ${label} raw hash`);
-        if (rawCandidates.has(candidate.rawSha256)) {
-            throw new Error(`Equipment generation review raw candidate is duplicated: ${candidate.rawSha256}`);
+        if (rawCandidates.has(candidate.rawSha256) || rawImages.has(candidate.rawImage)) {
+            throw new Error(`Equipment generation review raw candidate is duplicated: ${candidate.rawImage}`);
         }
         rawCandidates.add(candidate.rawSha256);
+        rawImages.add(candidate.rawImage);
     };
 
     for (const candidate of review.accepted) {
@@ -180,8 +234,23 @@ export const validateEquipmentArtEvidence = async ({
     const batchIds = new Set();
     const names = new Set();
     const runtimePaths = new Set();
-    const familyHashes = new Map();
+    const exportHashes = new Set();
+    const sourceSheets = new Set();
+    const sourceHashes = new Set();
     const artwork = {};
+    const declaredBatchIds = new Set();
+    for (const batch of provenance.batches) {
+        if (typeof batch?.batchId !== 'string' || !batch.batchId || declaredBatchIds.has(batch.batchId)) {
+            throw new Error(`Equipment provenance batch id is invalid: ${String(batch?.batchId)}`);
+        }
+        declaredBatchIds.add(batch.batchId);
+    }
+    validateGenerationReview({
+        manifest,
+        provenance,
+        cohort,
+        preparedBatches: declaredBatchIds,
+    });
 
     for (const batch of provenance.batches) {
         if (!sameKeys(batch, RECORD_FIELDS)) throw new Error('Equipment provenance batch schema is invalid');
@@ -200,13 +269,61 @@ export const validateEquipmentArtEvidence = async ({
             throw new Error(`Equipment provenance identity order is invalid: ${batchId}`);
         }
         requireHash(sourceSheetSha256, `${batchId} source hash`);
+        requirePngBasename(batch.sourceSheet, `${batchId} source sheet`);
+        if (batch.sourceSheet !== `${batchId}.png`) {
+            throw new Error(`Equipment source sheet is not bound to its tracked batch: ${batchId}`);
+        }
+        if (sourceSheets.has(batch.sourceSheet) || sourceHashes.has(sourceSheetSha256)) {
+            throw new Error(`Equipment source provenance is duplicated: ${batchId}`);
+        }
         if (batch.replayKey !== buildReplayKey(batchId, sourceSheetSha256, identityNames)) {
             throw new Error(`Equipment provenance replay key is invalid: ${batchId}`);
+        }
+
+        const trackedBatchPath = resolve(sourceDir, 'batches', `${batchId}.json`);
+        const trackedBatch = JSON.parse(await readFile(trackedBatchPath, 'utf8'));
+        const expectedTrackedBatch = buildEquipmentPromptBatchFromRows({
+            catalog,
+            catalogSha256: provenance.catalogSha256,
+            batchId,
+            names: identityNames.join(','),
+        });
+        const trackedIdentities = trackedBatch?.identities;
+        if (hashCanonicalJson(trackedBatch) !== hashCanonicalJson(expectedTrackedBatch)
+            || trackedBatch?.version !== 1
+            || trackedBatch.batchId !== batchId
+            || trackedBatch.catalogSha256 !== provenance.catalogSha256
+            || trackedBatch.catalogRowsSha256 !== rowsSha256
+            || trackedBatch.cohort !== cohort
+            || trackedBatch?.grid?.columns !== 3
+            || trackedBatch?.grid?.rows !== 2
+            || trackedBatch?.grid?.cellOrder?.join('\0') !== CELL_ORDER.join('\0')
+            || trackedBatch?.identityNames?.join('\0') !== identityNames.join('\0')
+            || !Array.isArray(trackedIdentities)
+            || trackedIdentities.length !== identityNames.length) {
+            throw new Error(`Equipment provenance is not bound to its tracked batch: ${batchId}`);
+        }
+        for (const [index, identity] of trackedIdentities.entries()) {
+            const row = rowsByName.get(identityNames[index]);
+            if (!row
+                || identity.cell !== CELL_ORDER[index]
+                || identity.name !== identityNames[index]
+                || CATALOG_FIELDS.some((field) => identity[field] !== row[field])) {
+                throw new Error(`Equipment tracked batch identity is invalid: ${batchId}`);
+            }
         }
 
         const source = requireChildPath(sourceDir, batch.sourceSheet, `${batchId} source sheet`);
         const sourceBytes = await readFile(source);
         if (hash(sourceBytes) !== sourceSheetSha256) throw new Error(`Equipment source hash mismatch: ${batchId}`);
+        const reconstructedExports = await inspectTrackedSource({
+            repoRoot,
+            trackedBatchPath,
+            source,
+        });
+        if (reconstructedExports.length !== exports.length) {
+            throw new Error(`Equipment source export count mismatch: ${batchId}`);
+        }
 
         for (const [index, entry] of exports.entries()) {
             if (!sameKeys(entry, EXPORT_FIELDS)
@@ -219,6 +336,12 @@ export const validateEquipmentArtEvidence = async ({
                 throw new Error(`Equipment provenance export is not a unique catalog identity: ${entry.name}`);
             }
             requireHash(entry.exportSha256, `${entry.name} export hash`);
+            const reconstructed = reconstructedExports[index];
+            if (reconstructed?.cell !== entry.cell
+                || reconstructed?.name !== entry.name
+                || reconstructed?.exportSha256 !== entry.exportSha256) {
+                throw new Error(`Equipment source does not reproduce its runtime export: ${entry.name}`);
+            }
             const runtime = requireChildPath(
                 publicRoot,
                 entry.runtimePath,
@@ -228,10 +351,8 @@ export const validateEquipmentArtEvidence = async ({
             const runtimeBytes = await readFile(runtime);
             if (hash(runtimeBytes) !== entry.exportSha256) throw new Error(`Equipment runtime hash mismatch: ${entry.name}`);
 
-            const hashes = familyHashes.get(row.familyKey) || new Set();
-            if (hashes.has(entry.exportSha256)) throw new Error(`Equipment family export is duplicated: ${entry.name}`);
-            hashes.add(entry.exportSha256);
-            familyHashes.set(row.familyKey, hashes);
+            if (exportHashes.has(entry.exportSha256)) throw new Error(`Equipment export is duplicated: ${entry.name}`);
+            exportHashes.add(entry.exportSha256);
 
             names.add(entry.name);
             runtimePaths.add(entry.runtimePath);
@@ -244,15 +365,10 @@ export const validateEquipmentArtEvidence = async ({
                 exportSha256: entry.exportSha256,
             };
         }
+        sourceSheets.add(batch.sourceSheet);
+        sourceHashes.add(sourceSheetSha256);
         batchIds.add(batchId);
     }
-
-    validateGenerationReview({
-        manifest,
-        provenance,
-        cohort,
-        preparedBatches: batchIds,
-    });
 
     if (names.size !== rows.length || rows.some((row) => !names.has(row.name))) {
         throw new Error(`Equipment provenance coverage is incomplete: ${names.size}/${rows.length}`);
@@ -266,5 +382,6 @@ export const validateEquipmentArtEvidence = async ({
             }
         }
     }
+    validateStyleV2ExportHashUniqueness(manifest, { artworkOverrides: artwork });
     return artwork;
 };

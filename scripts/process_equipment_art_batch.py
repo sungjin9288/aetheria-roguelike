@@ -64,6 +64,28 @@ PROVENANCE_EXPORT_FIELDS = frozenset({
     "runtimePath",
     "exportSha256",
 })
+PROVENANCE_FIELDS = frozenset({"version", "batches"})
+FINALIZED_PROVENANCE_FIELDS = PROVENANCE_FIELDS | {
+    "catalogSha256",
+    "catalogRowsSha256",
+    "cohort",
+    "generationReview",
+}
+GENERATION_REVIEW_FIELDS = frozenset({"tool", "accepted", "rejected"})
+ACCEPTED_REVIEW_FIELDS = frozenset({"batchId", "rawImage", "rawSha256"})
+REJECTED_REVIEW_FIELDS = ACCEPTED_REVIEW_FIELDS | {"reason"}
+
+
+def is_safe_png_basename(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value)
+        and value.endswith(".png")
+        and value == PurePosixPath(value).name
+        and "/" not in value
+        and "\\" not in value
+        and value not in {".", ".."}
+    )
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -298,6 +320,50 @@ def normalize_cell(cell: Image.Image, cell_name: str) -> Image.Image:
     return canvas
 
 
+def validate_armor_chroma(cell: Image.Image, identity: dict) -> None:
+    if identity.get("cohort") != "armor":
+        return
+
+    green_pixels = {
+        index
+        for index, (red, green, blue, alpha) in enumerate(cell.get_flattened_data())
+        if alpha > 0 and green >= 180 and green >= red + 50 and green >= blue + 50
+    }
+    if identity.get("elem") != "자연" and green_pixels:
+        raise ValueError(
+            f"Armor source contains chroma-green residual: {identity['name']} ({len(green_pixels)} pixels)"
+        )
+
+    if identity.get("elem") == "자연" and green_pixels:
+        remaining = set(green_pixels)
+        largest_component = 0
+        while remaining:
+            pending = [remaining.pop()]
+            component_size = 0
+            while pending:
+                pixel = pending.pop()
+                component_size += 1
+                x = pixel % CELL_SIZE[0]
+                y = pixel // CELL_SIZE[0]
+                neighbors = (
+                    pixel - 1 if x > 0 else -1,
+                    pixel + 1 if x < CELL_SIZE[0] - 1 else -1,
+                    pixel - CELL_SIZE[0] if y > 0 else -1,
+                    pixel + CELL_SIZE[0] if y < CELL_SIZE[1] - 1 else -1,
+                )
+                for neighbor in neighbors:
+                    if neighbor in remaining:
+                        remaining.remove(neighbor)
+                        pending.append(neighbor)
+            largest_component = max(largest_component, component_size)
+
+        if len(green_pixels) > 400 or largest_component > 200:
+            raise ValueError(
+                "Armor nature source contains excessive chroma-green region: "
+                f"{identity['name']} ({len(green_pixels)} pixels, component {largest_component})"
+            )
+
+
 def encode_png(image: Image.Image) -> bytes:
     output = io.BytesIO()
     image.save(output, format="PNG", optimize=False)
@@ -324,6 +390,7 @@ def build_outputs(
         left = column * CELL_SIZE[0]
         top = row * CELL_SIZE[1]
         cell = source.crop((left, top, left + CELL_SIZE[0], top + CELL_SIZE[1]))
+        validate_armor_chroma(cell, identity)
         payload = encode_png(normalize_cell(cell, identity["cell"]))
         outputs.append((
             identity,
@@ -384,7 +451,7 @@ def validate_provenance_record(
     ):
         raise ValueError
     source_sheet = record["sourceSheet"]
-    if not isinstance(source_sheet, str) or not source_sheet.strip():
+    if not is_safe_png_basename(source_sheet):
         raise ValueError
     if not SHA256_PATTERN.fullmatch(source_sheet_sha256 or ""):
         raise ValueError
@@ -417,17 +484,89 @@ def validate_provenance_record(
     return batch_id, tuple(identity_names), tuple(runtime_paths)
 
 
+def validate_generation_review(
+    review: object,
+    manifest: dict,
+    cohort: str,
+    active_batch_ids: set[str],
+) -> None:
+    if not isinstance(review, dict) or set(review) != GENERATION_REVIEW_FIELDS:
+        raise ValueError
+    if not isinstance(review.get("tool"), str) or not review["tool"].strip():
+        raise ValueError
+    accepted = review.get("accepted")
+    rejected = review.get("rejected")
+    if not isinstance(accepted, list) or not isinstance(rejected, list):
+        raise ValueError
+
+    raw_hashes: set[str] = set()
+    raw_images: set[str] = set()
+    accepted_batches: set[str] = set()
+    for candidate, fields, rejected_candidate in (
+        *((candidate, ACCEPTED_REVIEW_FIELDS, False) for candidate in accepted),
+        *((candidate, REJECTED_REVIEW_FIELDS, True) for candidate in rejected),
+    ):
+        if not isinstance(candidate, dict) or set(candidate) != fields:
+            raise ValueError
+        batch_id = candidate.get("batchId")
+        raw_image = candidate.get("rawImage")
+        raw_hash = candidate.get("rawSha256")
+        if (
+            not isinstance(batch_id, str)
+            or not batch_id.strip()
+            or batch_id not in active_batch_ids
+            or not is_safe_png_basename(raw_image)
+            or not isinstance(raw_hash, str)
+            or not SHA256_PATTERN.fullmatch(raw_hash)
+            or raw_hash in raw_hashes
+            or raw_image in raw_images
+            or (not rejected_candidate and batch_id in accepted_batches)
+            or (rejected_candidate and (
+                not isinstance(candidate.get("reason"), str)
+                or not candidate["reason"].strip()
+            ))
+        ):
+            raise ValueError
+        raw_hashes.add(raw_hash)
+        raw_images.add(raw_image)
+        if not rejected_candidate:
+            accepted_batches.add(batch_id)
+
+    if accepted_batches != active_batch_ids:
+        raise ValueError
+    pin = (
+        manifest.get("pipeline", {})
+        .get("provenance", {})
+        .get("cohorts", {})
+        .get(cohort, {})
+        .get("generationReviewSha256")
+    )
+    review_hash = sha256_bytes(json.dumps(
+        review,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8"))
+    if not isinstance(pin, str) or not SHA256_PATTERN.fullmatch(pin) or pin != review_hash:
+        raise ValueError
+
+
 def read_provenance(
     path: Path,
     catalog_by_name: dict[str, dict],
     catalog_sha256: str,
     catalog_rows_sha256: str,
+    manifest: dict,
 ) -> dict:
     if not path.is_file():
         return {"version": 1, "batches": []}
     try:
         provenance = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(provenance, dict) or provenance.get("version") != 1:
+        if (
+            not isinstance(provenance, dict)
+            or set(provenance) not in (PROVENANCE_FIELDS, FINALIZED_PROVENANCE_FIELDS)
+            or provenance.get("version") != 1
+        ):
             raise ValueError
         batches = provenance.get("batches")
         if not isinstance(batches, list):
@@ -435,6 +574,9 @@ def read_provenance(
         batch_ids: set[str] = set()
         identity_names: set[str] = set()
         runtime_paths: set[str] = set()
+        source_sheets: set[str] = set()
+        source_hashes: set[str] = set()
+        cohorts: set[str] = set()
         for record in batches:
             batch_id, record_names, record_paths = validate_provenance_record(
                 record,
@@ -446,9 +588,29 @@ def read_provenance(
                 raise ValueError
             if identity_names.intersection(record_names) or runtime_paths.intersection(record_paths):
                 raise ValueError
+            if record["sourceSheet"] in source_sheets or record["sourceSheetSha256"] in source_hashes:
+                raise ValueError
             batch_ids.add(batch_id)
             identity_names.update(record_names)
             runtime_paths.update(record_paths)
+            source_sheets.add(record["sourceSheet"])
+            source_hashes.add(record["sourceSheetSha256"])
+            cohorts.add(record["cohort"])
+        if set(provenance) == FINALIZED_PROVENANCE_FIELDS:
+            cohort = provenance.get("cohort")
+            if (
+                provenance.get("catalogSha256") != catalog_sha256
+                or provenance.get("catalogRowsSha256") != catalog_rows_sha256
+                or cohort not in SUPPORTED_COHORTS
+                or cohorts != {cohort}
+            ):
+                raise ValueError
+            validate_generation_review(
+                provenance["generationReview"],
+                manifest,
+                cohort,
+                batch_ids,
+            )
         return provenance
     except (json.JSONDecodeError, OSError, TypeError, ValueError) as error:
         raise ValueError(f"Invalid provenance ledger: {path}") from error
@@ -500,6 +662,9 @@ def prepare_next_provenance(
                 raise ValueError(f"Exact replay output does not match provenance: {destination}")
         return True, None
 
+    if "generationReview" in provenance:
+        raise ValueError(f"Finalized provenance ledger cannot append batch: {record['batchId']}")
+
     new_names = set(record["identityNames"])
     new_runtime_paths = {entry["runtimePath"] for entry in record["exports"]}
     for prior in provenance["batches"]:
@@ -507,6 +672,11 @@ def prepare_next_provenance(
         prior_runtime_paths = {entry["runtimePath"] for entry in prior["exports"]}
         if new_names.intersection(prior_names) or new_runtime_paths.intersection(prior_runtime_paths):
             raise ValueError(f"Batch identity or runtime path is already declared by prior provenance: {record['batchId']}")
+        if (
+            record["sourceSheet"] == prior["sourceSheet"]
+            or record["sourceSheetSha256"] == prior["sourceSheetSha256"]
+        ):
+            raise ValueError(f"Batch source provenance is already declared by prior provenance: {record['batchId']}")
 
     next_provenance = dict(provenance)
     next_provenance["batches"] = [*provenance["batches"], record]
@@ -646,6 +816,7 @@ def main(argv: list[str] | None = None) -> None:
         catalog_by_name,
         catalog_sha256,
         catalog_rows_sha256,
+        manifest,
     )
 
     source_sheet = require_file(args.source_sheet)

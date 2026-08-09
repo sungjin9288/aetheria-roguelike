@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { buildArtCatalog, compareCodePoints } from './artCatalog.mjs';
 import { buildEquipmentCatalogRows, getEquipmentCohort } from './dump-equipment-catalog.mjs';
 import { validateEquipmentArtEvidence } from './equipmentArtEvidence.mjs';
+import { validateEquipmentFamilyArtEvidence } from './equipmentFamilyArtEvidence.mjs';
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const REPO_ROOT = dirname(fileURLToPath(new URL('../package.json', import.meta.url)));
@@ -186,7 +187,7 @@ export const verifyArtAssets = async ({
     equipmentProvenancePath = null,
     equipmentSourceDir = null,
 } = {}) => {
-    if (!['all', 'characters', 'equipment'].includes(scope)) {
+    if (!['all', 'characters', 'equipment', 'families'].includes(scope)) {
         throw new Error(`Unknown art verification scope: ${scope}`);
     }
     if (cohort !== null && (!EQUIPMENT_COHORTS.has(cohort) || scope !== 'equipment')) {
@@ -199,12 +200,14 @@ export const verifyArtAssets = async ({
     const resolvedInspectorPath = inspectorPath instanceof URL ? fileURLToPath(inspectorPath) : inspectorPath;
     const verifyCharacters = scope === 'all' || scope === 'characters';
     const verifyEquipment = scope === 'all' || scope === 'equipment';
+    const verifyFamilies = scope === 'families';
     const equipmentCatalog = cohort
         ? resolvedCatalog.equipment.filter((entry) => getEquipmentCohort({ name: entry.name, familyKey: entry.family }) === cohort)
         : resolvedCatalog.equipment;
     const verifiedSurfaces = Object.freeze([
         ...(verifyCharacters ? ['characters'] : []),
         ...(verifyEquipment ? ['equipment'] : []),
+        ...(verifyFamilies ? ['families'] : []),
     ]);
     const report = {
         ok: false,
@@ -217,6 +220,7 @@ export const verifyArtAssets = async ({
             equipment: equipmentCatalog.length,
             definedFamilies: resolvedCatalog.definedFamilies.length,
             usedFamilies: resolvedCatalog.usedFamilies.length,
+            families: resolvedCatalog.definedFamilies.length,
         },
         missing: [],
         extra: [],
@@ -317,6 +321,51 @@ export const verifyArtAssets = async ({
         }
     }
 
+    if (verifyFamilies) {
+        const familyEntries = resolvedEquipmentManifest?.art?.families || {};
+        addSetDifference({
+            expected: resolvedCatalog.definedFamilies,
+            actual: Object.keys(familyEntries),
+            prefix: 'family',
+            missing: report.missing,
+            extra: report.extra,
+        });
+        if (resolvedEquipmentManifest?.catalogSha256 !== resolvedCatalog.catalogSha256) {
+            report.missing.push('family:catalogSha256 mismatch');
+        }
+        for (const familyKey of resolvedCatalog.definedFamilies) {
+            if (familyEntries[familyKey]?.styleVersion !== 2) {
+                report.invalidStyleVersion.push(`family:${familyKey}:expected styleVersion 2, got ${String(familyEntries[familyKey]?.styleVersion)}`);
+            }
+        }
+        try {
+            await validateEquipmentFamilyArtEvidence({
+                catalogSha256: resolvedCatalog.catalogSha256,
+                definedFamilies: resolvedCatalog.definedFamilies,
+                manifest: resolvedEquipmentManifest,
+                provenance: await readJson(equipmentProvenancePath
+                    || resolve(REPO_ROOT, 'docs/evidence/art/equipment-family-exemplars-provenance.json')),
+                sourceDir: equipmentSourceDir
+                    || resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/family-exemplars'),
+                publicRoot,
+                repoRoot: REPO_ROOT,
+                requireManifestArtwork: true,
+            });
+        } catch (error) {
+            report.invalidArtwork.push(`family:${error.message}`);
+        }
+        const metadata = parseArtMetadata(resolvedEquipmentManifest, 'equipment');
+        if (!metadata) {
+            report.missing.push('family:art metadata');
+        } else {
+            selectedAssets.push(...resolvedCatalog.definedFamilies.map((familyKey) => ({
+                identity: `family:${familyKey}`,
+                runtimePath: familyEntries[familyKey]?.runtimePath,
+                metadata,
+            })));
+        }
+    }
+
     addDuplicateRuntimePaths(selectedAssets, report.duplicates);
     for (const asset of selectedAssets) {
         await validateAsset({
@@ -373,7 +422,7 @@ const parseCli = (args) => {
 
         const value = args[index + 1];
         if (!value || value.startsWith('--')) throw new Error(`Missing value for ${argument}`);
-        if (argument === '--scope' && !['all', 'characters', 'equipment'].includes(value)) {
+        if (argument === '--scope' && !['all', 'characters', 'equipment', 'families'].includes(value)) {
             throw new Error(`Invalid value for --scope: ${value}`);
         }
         if (argument === '--cohort' && !EQUIPMENT_COHORTS.has(value)) {

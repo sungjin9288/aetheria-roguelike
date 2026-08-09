@@ -553,17 +553,19 @@ Use `ITEMS.weapons + ITEMS.armors` as the only player-equipment authority. Remov
 
 At 32px, shield vs book and all seven headgear silhouettes must remain distinct without relying on the rarity frame.
 
-- [ ] **Step 3: Run the offhand/headgear gate, review, commit and push**
+- [x] **Step 3: Run the offhand/headgear gate, review, commit and push**
 
-The cohort verifier and visual review are GREEN. Keep this commit separate from armor for review and rollback; stage, commit, and push only after independent review approval.
+The cohort verifier and visual review are GREEN. Independent review approved the separate rollback boundary, and Task 7A was pushed as `01e76c1`.
 
-- [ ] **Step 4: Add all 22 family exemplars, then generate and process armor batches**
+- [x] **Step 4: Add all 22 family exemplars, then generate and process armor batches**
 
-All 22 defined families need one Art Bible exemplar. The four currently unused headgear families need exemplars without invented catalog items. Then generate the 82 armor identities; at 32px, coat, leather, robe, plate, cloak and boots must be distinguishable by outer contour and material break.
+All 22 defined families now have one Art Bible exemplar. The four currently unused headgear families are represented without invented catalog items. Seventeen family-pure sheets publish all 82 armor identities; coat, leather, robe, plate, cloak and boots remain distinct at both 160px and 32px. Finalized review evidence records accepted and rejected raw sources, source/export hashes, deterministic prompt binding, and the independent APPROVE result.
 
 - [ ] **Step 5: Run the armor gate, commit and push**
 
 Run cohort verifier, item visual tests, `npm run verify`, diff check; commit source/runtime/manifest/evidence together and push.
+
+The armor/family implementation and independent review are complete. Keep this step open until the cohesive Task 7B commit is created and pushed after final gate review.
 
 ---
 

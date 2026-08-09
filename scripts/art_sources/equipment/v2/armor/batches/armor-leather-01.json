@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "armor-leather-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "armor",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "가죽 갑옷",
+    "가죽 조끼",
+    "강화가죽갑옷",
+    "광전사의 조끼",
+    "균열 외피갑옷",
+    "도적 가죽갑옷"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "가죽 갑옷",
+      "type": "armor",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "armor-leather",
+      "runtimePath": "/assets/equipment-exact/auto/auto-bd28001bebfa.png",
+      "cohort": "armor",
+      "prompt": "가죽 갑옷; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-center",
+      "name": "가죽 조끼",
+      "type": "armor",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "armor-leather",
+      "runtimePath": "/assets/equipment-exact/auto/auto-f293406dda29.png",
+      "cohort": "armor",
+      "prompt": "가죽 조끼; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "강화가죽갑옷",
+      "type": "armor",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "armor-leather",
+      "runtimePath": "/assets/equipment-exact/auto/auto-6dd186c9980e.png",
+      "cohort": "armor",
+      "prompt": "강화가죽갑옷; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "광전사의 조끼",
+      "type": "armor",
+      "tier": 3,
+      "elem": "",
+      "familyKey": "armor-leather",
+      "runtimePath": "/assets/equipment-exact/auto/auto-f330f21e336a.png",
+      "cohort": "armor",
+      "prompt": "광전사의 조끼; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "균열 외피갑옷",
+      "type": "armor",
+      "tier": 5,
+      "elem": "어둠",
+      "familyKey": "armor-leather",
+      "runtimePath": "/assets/equipment-exact/auto/auto-12ac317d8b8e.png",
+      "cohort": "armor",
+      "prompt": "균열 외피갑옷; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T5: a memorable signature silhouette with legendary materials and ornament density; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "도적 가죽갑옷",
+      "type": "armor",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "armor-leather",
+      "runtimePath": "/assets/equipment-exact/auto/auto-17fb1c907b35.png",
+      "cohort": "armor",
+      "prompt": "도적 가죽갑옷; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 가죽 갑옷; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-center: 가죽 조끼; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 강화가죽갑옷; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-left: 광전사의 조끼; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-center: 균열 외피갑옷; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T5: a memorable signature silhouette with legendary materials and ornament density; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze.\nbottom-right: 도적 가죽갑옷; family armor-leather: armor-leather family: fitted leather panels, straps, and flexible seams; exact form: fitted leather armor with flexible panels, straps, and stitched seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}

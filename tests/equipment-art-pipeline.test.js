@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
@@ -26,6 +27,9 @@ const WEAPON_RANGED_MAGIC_BATCH_DIR = resolve(REPO_ROOT, 'scripts/art_sources/eq
 const WEAPON_RANGED_MAGIC_SOURCE_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/weapon-ranged-magic');
 const WEAPON_RANGED_MAGIC_PROVENANCE_PATH = resolve(REPO_ROOT, 'docs/evidence/art/equipment-weapon-ranged-magic-provenance.json');
 const OFFHAND_HEADGEAR_BATCH_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/offhand-headgear/batches');
+const ARMOR_BATCH_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/armor/batches');
+const ARMOR_SOURCE_DIR = resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/armor');
+const ARMOR_PROVENANCE_PATH = resolve(REPO_ROOT, 'docs/evidence/art/equipment-armor-provenance.json');
 const CELL_ORDER = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
 
 const compareCodePoints = (left, right) => {
@@ -46,6 +50,19 @@ const compareCodePoints = (left, right) => {
         ? 0
         : leftIndex === leftText.length ? -1 : 1;
 };
+
+const canonicalize = (value) => {
+    if (Array.isArray(value)) return value.map(canonicalize);
+    if (!value || typeof value !== 'object') return value;
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
+};
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+const hashCanonicalJson = (value) => sha256(JSON.stringify(canonicalize(value)));
+const equipmentReplayKey = (record) => sha256(JSON.stringify({
+    batchId: record.batchId,
+    sourceSheetSha256: record.sourceSheetSha256,
+    identityNames: record.identityNames,
+}));
 
 const runDump = (args) => spawnSync(process.execPath, ['--import', 'tsx', DUMP_SCRIPT, ...args], {
     encoding: 'utf8',
@@ -226,6 +243,18 @@ test('equipment generation review rejects tampering before sync or cohort verifi
         ['duplicate accepted batch', (provenance) => { provenance.generationReview.accepted[1].batchId = provenance.generationReview.accepted[0].batchId; }],
         ['unexpected accepted field', (provenance) => { provenance.generationReview.accepted[0].unexpected = true; }],
         ['unexpected top-level field', (provenance) => { provenance.unexpected = true; }],
+        ['repinned accepted raw traversal', (provenance, manifest) => {
+            provenance.generationReview.accepted[0].rawImage = '../escaped.png';
+            manifest.pipeline.provenance.cohorts['weapon-ranged-magic'].generationReviewSha256 = hashCanonicalJson(provenance.generationReview);
+        }],
+        ['repinned rejected raw traversal', (provenance, manifest) => {
+            provenance.generationReview.rejected[0].rawImage = 'nested/escaped.png';
+            manifest.pipeline.provenance.cohorts['weapon-ranged-magic'].generationReviewSha256 = hashCanonicalJson(provenance.generationReview);
+        }],
+        ['repinned duplicate raw image name', (provenance, manifest) => {
+            provenance.generationReview.rejected[0].rawImage = provenance.generationReview.accepted[0].rawImage;
+            manifest.pipeline.provenance.cohorts['weapon-ranged-magic'].generationReviewSha256 = hashCanonicalJson(provenance.generationReview);
+        }],
     ];
 
     for (const [label, mutate] of mutations) {
@@ -240,7 +269,7 @@ test('equipment generation review rejects tampering before sync or cohort verifi
                 const dump = runDump(['--output', catalogPath]);
                 assert.equal(dump.status, 0, dump.stderr);
 
-                const manifestBytes = await readFile(EQUIPMENT_MANIFEST_PATH);
+                const manifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
                 const provenance = JSON.parse(await readFile(WEAPON_RANGED_MAGIC_PROVENANCE_PATH, 'utf8'));
                 const runtimePath = provenance.batches[0].exports[0].runtimePath;
                 const runtime = resolve(REPO_ROOT, 'public', runtimePath.slice(1));
@@ -248,7 +277,8 @@ test('equipment generation review rejects tampering before sync or cohort verifi
                 const outputBytes = Buffer.from('existing synced manifest');
                 const reportBytes = Buffer.from('existing verifier report');
 
-                mutate(provenance);
+                mutate(provenance, manifest);
+                const manifestBytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
                 await Promise.all([
                     writeFile(manifestPath, manifestBytes),
                     writeFile(provenancePath, `${JSON.stringify(provenance, null, 2)}\n`),
@@ -287,6 +317,191 @@ test('equipment generation review rejects tampering before sync or cohort verifi
             } finally {
                 await rm(directory, { recursive: true, force: true });
             }
+        });
+    }
+});
+
+test('armor evidence rejects export hash collisions across the full styleVersion 2 art surface', async (context) => {
+    for (const collision of ['cross-family', 'cross-cohort', 'family-exemplar']) {
+        await context.test(collision, async () => {
+            const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-export-duplicate-'));
+            const catalogPath = join(directory, 'catalog.json');
+            const manifestPath = join(directory, 'equipment-manifest.json');
+            const provenancePath = join(directory, 'armor-provenance.json');
+            const publicRoot = join(directory, 'public');
+            const outputPath = join(directory, 'synced-manifest.json');
+            const reportPath = join(directory, 'verification-report.json');
+            try {
+                const dump = runDump(['--output', catalogPath]);
+                assert.equal(dump.status, 0, dump.stderr);
+                const manifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
+                const provenance = JSON.parse(await readFile(ARMOR_PROVENANCE_PATH, 'utf8'));
+                const exports = provenance.batches.flatMap((record) => record.exports);
+                for (const entry of exports) {
+                    const source = resolve(REPO_ROOT, 'public', entry.runtimePath.slice(1));
+                    const destination = resolve(publicRoot, entry.runtimePath.slice(1));
+                    await mkdir(dirname(destination), { recursive: true });
+                    await writeFile(destination, await readFile(source));
+                }
+
+                const target = provenance.batches.find((record) => record.batchId === 'armor-cloak-01').exports[0];
+                let duplicatePath;
+                let duplicateHash;
+                if (collision === 'cross-family') {
+                    const boots = provenance.batches.find((record) => record.batchId === 'armor-boots-01').exports[0];
+                    duplicatePath = boots.runtimePath;
+                    duplicateHash = boots.exportSha256;
+                } else if (collision === 'cross-cohort') {
+                    const other = JSON.parse(await readFile(WEAPON_CORE_PROVENANCE_PATH, 'utf8')).batches[0].exports[0];
+                    duplicatePath = other.runtimePath;
+                    duplicateHash = other.exportSha256;
+                } else {
+                    const family = manifest.art.families['armor-boots'];
+                    duplicatePath = family.runtimePath;
+                    duplicateHash = family.exportSha256;
+                }
+                const targetRuntime = resolve(publicRoot, target.runtimePath.slice(1));
+                await writeFile(targetRuntime, await readFile(resolve(REPO_ROOT, 'public', duplicatePath.slice(1))));
+                target.exportSha256 = duplicateHash;
+                manifest.artwork[target.name].exportSha256 = duplicateHash;
+
+                const outputBytes = Buffer.from('existing synced manifest');
+                const reportBytes = Buffer.from('existing verification report');
+                await Promise.all([
+                    writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`),
+                    writeFile(provenancePath, `${JSON.stringify(provenance, null, 2)}\n`),
+                    writeFile(outputPath, outputBytes),
+                    writeFile(reportPath, reportBytes),
+                ]);
+                const runtimePaths = exports.map((entry) => resolve(publicRoot, entry.runtimePath.slice(1)));
+                const runtimeBefore = await readByteSnapshot(runtimePaths);
+                const manifestBefore = await readFile(manifestPath);
+                const provenanceBefore = await readFile(provenancePath);
+
+                const sync = runManifestSync([
+                    '--catalog', catalogPath,
+                    '--manifest', manifestPath,
+                    '--provenance', provenancePath,
+                    '--source-dir', ARMOR_SOURCE_DIR,
+                    '--public-root', publicRoot,
+                    '--output', outputPath,
+                ]);
+                assert.equal(sync.status, 1);
+                assert.match(sync.stderr, /(duplicat|reproduce)/i);
+                assert.deepEqual(await readFile(outputPath), outputBytes);
+
+                const verification = runArtVerifier([
+                    '--scope', 'equipment',
+                    '--cohort', 'armor',
+                    '--equipment-manifest', manifestPath,
+                    '--equipment-provenance', provenancePath,
+                    '--equipment-source-dir', ARMOR_SOURCE_DIR,
+                    '--public-root', publicRoot,
+                    '--write-report', reportPath,
+                ]);
+                assert.equal(verification.status, 1);
+                const verificationReport = JSON.parse(verification.stdout);
+                assert.equal(verificationReport.ok, false);
+                assert.match(verificationReport.invalidArtwork.join('\n'), /(duplicat|reproduce)/i);
+                assert.deepEqual(await readFile(reportPath), reportBytes);
+                assert.deepEqual(await readByteSnapshot(runtimePaths), runtimeBefore);
+                assert.deepEqual(await readFile(manifestPath), manifestBefore);
+                assert.deepEqual(await readFile(provenancePath), provenanceBefore);
+            } finally {
+                await rm(directory, { recursive: true, force: true });
+            }
+        });
+    }
+});
+
+test('armor evidence binds unique source provenance and ordered identities to tracked family-pure batches', async (context) => {
+    const mutations = [
+        ['duplicate source path', async ({ provenance }) => {
+            const boots = provenance.batches.find((record) => record.batchId === 'armor-boots-01');
+            const cloak = provenance.batches.find((record) => record.batchId === 'armor-cloak-01');
+            cloak.sourceSheet = boots.sourceSheet;
+        }],
+        ['duplicate source bytes', async ({ manifest, provenance, sourceDir }) => {
+            const boots = provenance.batches.find((record) => record.batchId === 'armor-boots-01');
+            const cloak = provenance.batches.find((record) => record.batchId === 'armor-cloak-01');
+            await writeFile(join(sourceDir, cloak.sourceSheet), await readFile(join(sourceDir, boots.sourceSheet)));
+            cloak.sourceSheetSha256 = boots.sourceSheetSha256;
+            cloak.replayKey = equipmentReplayKey(cloak);
+            for (const name of cloak.identityNames) {
+                manifest.artwork[name].sourceSha256 = cloak.sourceSheetSha256;
+            }
+        }],
+        ['cross-family batch swap', async ({ provenance }) => {
+            const cloak = provenance.batches.find((record) => record.batchId === 'armor-cloak-01');
+            const coat = provenance.batches.find((record) => record.batchId === 'armor-coat-01');
+            [cloak.identityNames, coat.identityNames] = [coat.identityNames, cloak.identityNames];
+            [cloak.exports, coat.exports] = [coat.exports, cloak.exports];
+            cloak.replayKey = equipmentReplayKey(cloak);
+            coat.replayKey = equipmentReplayKey(coat);
+        }],
+        ['within-family identity order swap', async ({ provenance }) => {
+            const cloak = provenance.batches.find((record) => record.batchId === 'armor-cloak-01');
+            [cloak.identityNames[0], cloak.identityNames[1]] = [cloak.identityNames[1], cloak.identityNames[0]];
+            [cloak.exports[0], cloak.exports[1]] = [cloak.exports[1], cloak.exports[0]];
+            cloak.exports[0].cell = CELL_ORDER[0];
+            cloak.exports[1].cell = CELL_ORDER[1];
+            cloak.replayKey = equipmentReplayKey(cloak);
+        }],
+        ['tracked batch prompt tamper', async ({ sourceDir }) => {
+            const batchPath = join(sourceDir, 'batches', 'armor-cloak-01.json');
+            const batch = JSON.parse(await readFile(batchPath, 'utf8'));
+            batch.prompt = 'forged batch prompt';
+            await writeFile(batchPath, `${JSON.stringify(batch, null, 2)}\n`);
+        }],
+        ['tracked identity prompt tamper', async ({ sourceDir }) => {
+            const batchPath = join(sourceDir, 'batches', 'armor-cloak-01.json');
+            const batch = JSON.parse(await readFile(batchPath, 'utf8'));
+            batch.identities[0].prompt = 'forged identity prompt';
+            await writeFile(batchPath, `${JSON.stringify(batch, null, 2)}\n`);
+        }],
+    ];
+    for (const [label, mutate] of mutations) {
+        await context.test(label, async () => {
+            await assertArmorEvidenceMutationRejected({ label, mutate, copySources: true });
+        });
+    }
+});
+
+test('armor evidence reconstructs tracked source cells before accepting their runtime lineage', async (context) => {
+    const mutations = [
+        ['non-PNG source bytes', async ({ manifest, provenance, sourceDir }) => {
+            const record = provenance.batches.find((batch) => batch.batchId === 'armor-boots-01');
+            const sourcePath = join(sourceDir, record.sourceSheet);
+            await writeFile(sourcePath, 'not a PNG source sheet');
+            record.sourceSheetSha256 = sha256(await readFile(sourcePath));
+            record.replayKey = equipmentReplayKey(record);
+            manifest.artwork[record.identityNames[0]].sourceSha256 = record.sourceSheetSha256;
+        }],
+        ['source cell swap', async ({ manifest, provenance, sourceDir }) => {
+            const record = provenance.batches.find((batch) => batch.batchId === 'armor-cloak-01');
+            const sourcePath = join(sourceDir, record.sourceSheet);
+            const script = [
+                'from PIL import Image',
+                `path = ${JSON.stringify(sourcePath)}`,
+                'image = Image.open(path).convert("RGBA")',
+                'first = image.crop((0, 0, 200, 200))',
+                'second = image.crop((200, 0, 400, 200))',
+                'image.paste(second, (0, 0))',
+                'image.paste(first, (200, 0))',
+                'image.save(path)',
+            ].join('\n');
+            const swap = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+            assert.equal(swap.status, 0, swap.stderr);
+            record.sourceSheetSha256 = sha256(await readFile(sourcePath));
+            record.replayKey = equipmentReplayKey(record);
+            for (const name of record.identityNames) {
+                manifest.artwork[name].sourceSha256 = record.sourceSheetSha256;
+            }
+        }],
+    ];
+    for (const [label, mutate] of mutations) {
+        await context.test(label, async () => {
+            await assertArmorEvidenceMutationRejected({ label, mutate, copySources: true });
         });
     }
 });
@@ -783,6 +998,106 @@ test('equipment source preparer removes edge-connected chroma variation without 
     }
 });
 
+test('equipment source preparer does not resample removed chroma into visible edge pixels', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-source-despill-'));
+    const workingPath = join(directory, 'working.png');
+    const sourcePath = join(directory, 'source.png');
+    try {
+        const fixture = spawnSync('python3', ['-c', [
+            'from PIL import Image, ImageDraw',
+            'image = Image.new("RGB", (900, 600), (0, 255, 0))',
+            'draw = ImageDraw.Draw(image)',
+            'draw.rectangle((88, 68, 232, 232), fill=(8, 160, 16))',
+            'draw.rectangle((96, 76, 224, 224), fill=(30, 34, 42))',
+            'image.putpixel((96, 76), (0, 255, 0))',
+            'image.putpixel((97, 77), (6, 196, 12))',
+            'image.putpixel((98, 76), (5, 45, 3))',
+            `image.save(${JSON.stringify(workingPath)})`,
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(fixture.status, 0, fixture.stderr);
+
+        const result = spawnSync('python3', [
+            SOURCE_PREPARER_SCRIPT,
+            '--input', workingPath,
+            '--output', sourcePath,
+            '--used-cells', '1',
+        ], { encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr);
+
+        const inspection = spawnSync('python3', ['-c', [
+            'from PIL import Image',
+            'import json',
+            `image = Image.open(${JSON.stringify(sourcePath)}).convert("RGBA")`,
+            'green = [pixel for pixel in image.getdata() if pixel[3] > 0 and pixel[1] > pixel[0] and pixel[1] > pixel[2]]',
+            'print(json.dumps({"visibleGreen": len(green), "opaqueGreen": sum(pixel[3] == 255 for pixel in green)}))',
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(inspection.status, 0, inspection.stderr);
+        assert.deepEqual(JSON.parse(inspection.stdout), { visibleGreen: 0, opaqueGreen: 0 });
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('equipment source preparer removes enclosed chroma only from explicitly declared neutral cells', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-source-enclosed-chroma-'));
+    const workingPath = join(directory, 'working.png');
+    const sourcePath = join(directory, 'source.png');
+    try {
+        const fixture = spawnSync('python3', ['-c', [
+            'from PIL import Image, ImageDraw',
+            'image = Image.new("RGB", (900, 600), (0, 255, 0))',
+            'draw = ImageDraw.Draw(image)',
+            'for index in range(6):',
+            '    column = index % 3',
+            '    row = index // 3',
+            '    left = column * 300 + 70',
+            '    top = row * 300 + 55',
+            '    draw.rectangle((left, top, left + 160, top + 185), fill=(28, 31, 38))',
+            'draw.rectangle((410, 390, 450, 455), fill=(22, 210, 118))',
+            'draw.rectangle((710, 390, 750, 455), fill=(0, 255, 0))',
+            `image.save(${JSON.stringify(workingPath)})`,
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(fixture.status, 0, fixture.stderr);
+
+        const result = spawnSync('python3', [
+            SOURCE_PREPARER_SCRIPT,
+            '--input', workingPath,
+            '--output', sourcePath,
+            '--remove-enclosed-green-cells', '6',
+        ], { encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr);
+
+        const inspection = spawnSync('python3', ['-c', [
+            'from PIL import Image',
+            'import json',
+            `image = Image.open(${JSON.stringify(sourcePath)}).convert("RGBA")`,
+            'def strong_green(cell):',
+            '    column = (cell - 1) % 3',
+            '    row = (cell - 1) // 3',
+            '    pixels = image.crop((column * 200, row * 200, column * 200 + 200, row * 200 + 200)).getdata()',
+            '    return sum(1 for red, green, blue, alpha in pixels if alpha > 0 and green >= 180 and green >= red + 50 and green >= blue + 50)',
+            'print(json.dumps({"preserved": strong_green(5), "removed": strong_green(6)}))',
+        ].join('\n')], { encoding: 'utf8' });
+        assert.equal(inspection.status, 0, inspection.stderr);
+        const counts = JSON.parse(inspection.stdout);
+        assert.ok(counts.preserved > 0);
+        assert.equal(counts.removed, 0);
+
+        for (const invalidCells of ['0', '7', '1,7']) {
+            const invalid = spawnSync('python3', [
+                SOURCE_PREPARER_SCRIPT,
+                '--input', workingPath,
+                '--output', join(directory, `invalid-${invalidCells.replace(',', '-')}.png`),
+                '--remove-enclosed-green-cells', invalidCells,
+            ], { encoding: 'utf8' });
+            assert.equal(invalid.status, 2);
+            assert.match(invalid.stderr, /remove-enclosed-green-cells must reference used cells/);
+        }
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
 const createSourceSheet = (path, {
     kind = 'valid',
     colorOffset = 0,
@@ -822,6 +1137,8 @@ const createSourceSheet = (path, {
         '            draw.rectangle((column * 200, row * cell_height, column * 200 + 92, row * cell_height + 118), fill=(255, 255, 255, 255))',
         '            continue',
         '        draw.rectangle((left, top, left + 92, top + min(118, cell_height - 28)), fill=(40 + index * 30 + color_offset, 90, 170, 255))',
+        '        if kind == "chroma-residual":',
+        '            draw.line((left - 3, top + 20, left - 3, top + 80), fill=(0, 255, 0, 255), width=2)',
         `image.save(${JSON.stringify(path)})`,
     ].join('\n');
     const result = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
@@ -831,6 +1148,8 @@ const createSourceSheet = (path, {
 const createProcessorFixture = async ({
     batchId = 'equipment-pipeline-test-001',
     identityCount = 6,
+    cohort = 'weapon-core',
+    familyKey = 'weapon-sword',
 } = {}) => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-batch-'));
     const sourceManifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
@@ -844,7 +1163,7 @@ const createProcessorFixture = async ({
     const dumpResult = runDump(['--output', catalogPath]);
     assert.equal(dumpResult.status, 0, dumpResult.stderr);
     const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
-    const selected = catalog.filter((row) => row.cohort === 'weapon-core' && row.familyKey === 'weapon-sword').slice(0, identityCount);
+    const selected = catalog.filter((row) => row.cohort === cohort && row.familyKey === familyKey).slice(0, identityCount);
     assert.equal(selected.length, identityCount, 'The live catalog must supply the requested real prompt cohort fixture');
     const promptResult = runPromptGenerator([
         '--catalog', catalogPath,
@@ -925,6 +1244,68 @@ const writeExistingOutputs = async (fixture) => {
 };
 
 const readByteSnapshot = async (paths) => Promise.all(paths.map((path) => readFile(path)));
+
+const assertArmorEvidenceMutationRejected = async ({ label, mutate, copySources = false }) => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-armor-evidence-mutation-'));
+    try {
+        const catalogPath = join(directory, 'catalog.json');
+        const manifestPath = join(directory, 'manifest.json');
+        const provenancePath = join(directory, 'provenance.json');
+        const outputPath = join(directory, 'synced-manifest.json');
+        const reportPath = join(directory, 'report.json');
+        const sourceDir = copySources ? join(directory, 'sources') : ARMOR_SOURCE_DIR;
+        const dump = runDump(['--output', catalogPath]);
+        assert.equal(dump.status, 0, dump.stderr);
+        if (copySources) await cp(ARMOR_SOURCE_DIR, sourceDir, { recursive: true });
+        const manifest = JSON.parse(await readFile(EQUIPMENT_MANIFEST_PATH, 'utf8'));
+        const provenance = JSON.parse(await readFile(ARMOR_PROVENANCE_PATH, 'utf8'));
+        await mutate({ manifest, provenance, sourceDir });
+        const manifestBytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
+        const provenanceBytes = Buffer.from(`${JSON.stringify(provenance, null, 2)}\n`);
+        const outputBytes = Buffer.from('existing synced manifest');
+        const reportBytes = Buffer.from('existing verifier report');
+        await Promise.all([
+            writeFile(manifestPath, manifestBytes),
+            writeFile(provenancePath, provenanceBytes),
+            writeFile(outputPath, outputBytes),
+            writeFile(reportPath, reportBytes),
+        ]);
+        const runtimePaths = provenance.batches.flatMap((record) => record.exports)
+            .map((entry) => resolve(REPO_ROOT, 'public', entry.runtimePath.slice(1)));
+        const runtimeBefore = await readByteSnapshot(runtimePaths);
+
+        const sync = runManifestSync([
+            '--catalog', catalogPath,
+            '--manifest', manifestPath,
+            '--provenance', provenancePath,
+            '--source-dir', sourceDir,
+            '--public-root', resolve(REPO_ROOT, 'public'),
+            '--output', outputPath,
+        ]);
+        assert.equal(sync.status, 1, `Sync accepted ${label}: ${sync.stderr}`);
+        assert.deepEqual(await readFile(outputPath), outputBytes);
+
+        const verification = runArtVerifier([
+            '--scope', 'equipment',
+            '--cohort', 'armor',
+            '--equipment-manifest', manifestPath,
+            '--equipment-provenance', provenancePath,
+            '--equipment-source-dir', sourceDir,
+            '--public-root', resolve(REPO_ROOT, 'public'),
+            '--write-report', reportPath,
+        ]);
+        assert.equal(verification.status, 1, `Verifier accepted ${label}: ${verification.stderr}`);
+        const report = JSON.parse(verification.stdout);
+        assert.equal(report.ok, false);
+        assert.equal(report.invalidArtwork.length, 1);
+        assert.deepEqual(await readFile(reportPath), reportBytes);
+        assert.deepEqual(await readFile(manifestPath), manifestBytes);
+        assert.deepEqual(await readFile(provenancePath), provenanceBytes);
+        assert.deepEqual(await readByteSnapshot(runtimePaths), runtimeBefore);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+};
 
 test('actual prompt-generator batch is bound to the authoritative catalog hash and full catalog rows', async () => {
     const fixture = await createProcessorFixture();
@@ -1198,6 +1579,72 @@ test('equipment batch processor rejects opaque or degenerate source sheets befor
     }
 });
 
+test('armor processor rejects visible chroma-green residual before writes', async () => {
+    const fixture = await createProcessorFixture({ cohort: 'armor', familyKey: 'armor-coat' });
+    try {
+        createSourceSheet(fixture.sourceSheetPath, { kind: 'chroma-residual' });
+
+        const result = runBatchProcessor(processorArgs(fixture, ['--dry-run']));
+
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /chroma-green residual/i);
+        await assertNoProcessorWrites(fixture);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('armor processor preserves reviewed nature accents but rejects a large chroma-key region without writes', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-armor-nature-chroma-'));
+    const catalogPath = join(directory, 'catalog.json');
+    const sourcePath = join(directory, 'armor-cloak-01.png');
+    const declarationPath = join(directory, 'declaration.json');
+    const publicRoot = join(directory, 'public');
+    const provenancePath = join(directory, 'provenance.json');
+    const batchPath = join(ARMOR_BATCH_DIR, 'armor-cloak-01.json');
+    try {
+        const dump = runDump(['--output', catalogPath]);
+        assert.equal(dump.status, 0, dump.stderr);
+        const batch = JSON.parse(await readFile(batchPath, 'utf8'));
+        await writeFile(sourcePath, await readFile(join(ARMOR_SOURCE_DIR, 'armor-cloak-01.png')));
+        await writeFile(declarationPath, `${JSON.stringify({
+            batchId: batch.batchId,
+            identityNames: batch.identityNames,
+        })}\n`);
+        const script = [
+            'from PIL import Image, ImageDraw',
+            `path = ${JSON.stringify(sourcePath)}`,
+            'image = Image.open(path).convert("RGBA")',
+            'draw = ImageDraw.Draw(image)',
+            'draw.rectangle((19, 219, 79, 279), fill=(0, 255, 0, 255))',
+            'image.save(path)',
+        ].join('\n');
+        const inject = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+        assert.equal(inject.status, 0, inject.stderr);
+
+        const result = runBatchProcessor([
+            '--batch', batchPath,
+            '--catalog', catalogPath,
+            '--source-sheet', sourcePath,
+            '--source-declaration', declarationPath,
+            '--public-root', publicRoot,
+            '--equipment-manifest', EQUIPMENT_MANIFEST_PATH,
+            '--provenance', provenancePath,
+            '--dry-run',
+        ]);
+        assert.equal(result.status, 1);
+        assert.match(result.stderr, /nature source contains excessive chroma-green region/i);
+        await assert.rejects(stat(publicRoot), { code: 'ENOENT' });
+        await assert.rejects(stat(provenancePath), { code: 'ENOENT' });
+
+        const actual = runArtVerifier(['--scope', 'equipment', '--cohort', 'armor']);
+        assert.equal(actual.status, 0, actual.stderr || actual.stdout);
+        assert.equal(JSON.parse(actual.stdout).ok, true);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
 test('equipment batch processor rejects an invalid provenance ledger without replacing existing outputs', async () => {
     const fixture = await createProcessorFixture();
     try {
@@ -1235,6 +1682,88 @@ test('equipment batch processor treats an exact batch replay as a no-op without 
         assert.equal(provenance.batches.length, 1);
     } finally {
         await fixture.dispose();
+    }
+});
+
+test('equipment batch processor validates finalized generation review before an exact armor replay', async (context) => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-finalized-replay-'));
+    const catalogPath = join(directory, 'catalog.json');
+    const declarationPath = join(directory, 'source-declaration.json');
+    const batchPath = join(ARMOR_BATCH_DIR, 'armor-boots-01.json');
+    const sourcePath = join(ARMOR_SOURCE_DIR, 'armor-boots-01.png');
+    try {
+        const dump = runDump(['--output', catalogPath]);
+        assert.equal(dump.status, 0, dump.stderr);
+        const batch = JSON.parse(await readFile(batchPath, 'utf8'));
+        const provenance = JSON.parse(await readFile(ARMOR_PROVENANCE_PATH, 'utf8'));
+        await writeFile(declarationPath, `${JSON.stringify({
+            batchId: batch.batchId,
+            identityNames: batch.identityNames,
+        })}\n`);
+        const runtimePaths = provenance.batches.flatMap((record) => record.exports)
+            .map((entry) => resolve(REPO_ROOT, 'public', entry.runtimePath.slice(1)));
+        const runtimeBefore = await readByteSnapshot(runtimePaths);
+        const manifestBefore = await readFile(EQUIPMENT_MANIFEST_PATH);
+        const provenanceBefore = await readFile(ARMOR_PROVENANCE_PATH);
+        const argsFor = (provenancePath, manifestPath = EQUIPMENT_MANIFEST_PATH) => [
+            '--batch', batchPath,
+            '--catalog', catalogPath,
+            '--source-sheet', sourcePath,
+            '--source-declaration', declarationPath,
+            '--public-root', resolve(REPO_ROOT, 'public'),
+            '--equipment-manifest', manifestPath,
+            '--provenance', provenancePath,
+        ];
+
+        const replay = runBatchProcessor(argsFor(ARMOR_PROVENANCE_PATH));
+        assert.equal(replay.status, 0, replay.stderr);
+        assert.match(replay.stdout, /replay no-op/i);
+        assert.deepEqual(await readByteSnapshot(runtimePaths), runtimeBefore);
+        assert.deepEqual(await readFile(EQUIPMENT_MANIFEST_PATH), manifestBefore);
+        assert.deepEqual(await readFile(ARMOR_PROVENANCE_PATH), provenanceBefore);
+
+        const mutations = [
+            ['foreign accepted batch', (ledger) => { ledger.generationReview.accepted[0].batchId = 'foreign-batch'; }],
+            ['incomplete accepted coverage', (ledger) => { ledger.generationReview.accepted.pop(); }],
+            ['foreign rejected batch', (ledger) => { ledger.generationReview.rejected[0].batchId = 'foreign-batch'; }],
+            ['unexpected accepted field', (ledger) => { ledger.generationReview.accepted[0].unexpected = true; }],
+            ['unexpected top-level field', (ledger) => { ledger.unexpected = true; }],
+            ['traversal source sheet', (ledger) => { ledger.batches[0].sourceSheet = '../escaped.png'; }],
+            ['absolute source sheet', (ledger) => { ledger.batches[0].sourceSheet = '/tmp/escaped.png'; }],
+            ['nested source sheet', (ledger) => { ledger.batches[0].sourceSheet = 'nested/source.png'; }],
+            ['dot source sheet', (ledger) => { ledger.batches[0].sourceSheet = '.'; }],
+            ['accepted raw traversal', (ledger) => { ledger.generationReview.accepted[0].rawImage = '../escaped.png'; }, true],
+            ['rejected raw traversal', (ledger) => { ledger.generationReview.rejected[0].rawImage = 'nested/escaped.png'; }, true],
+            ['duplicate raw image name', (ledger) => {
+                ledger.generationReview.rejected[0].rawImage = ledger.generationReview.accepted[0].rawImage;
+            }, true],
+        ];
+        for (const [label, mutate, repinReview = false] of mutations) {
+            await context.test(label, async () => {
+                const mutated = structuredClone(provenance);
+                mutate(mutated);
+                const mutatedPath = join(directory, `${label.replaceAll(' ', '-')}.json`);
+                const mutatedBytes = Buffer.from(`${JSON.stringify(mutated, null, 2)}\n`);
+                await writeFile(mutatedPath, mutatedBytes);
+                const mutatedManifest = JSON.parse(manifestBefore.toString('utf8'));
+                if (repinReview) {
+                    mutatedManifest.pipeline.provenance.cohorts.armor.generationReviewSha256 = hashCanonicalJson(mutated.generationReview);
+                }
+                const mutatedManifestPath = join(directory, `${label.replaceAll(' ', '-')}-manifest.json`);
+                await writeFile(mutatedManifestPath, `${JSON.stringify(mutatedManifest, null, 2)}\n`);
+
+                const result = runBatchProcessor(argsFor(mutatedPath, mutatedManifestPath));
+
+                assert.equal(result.status, 1);
+                assert.match(result.stderr, /Invalid provenance ledger/);
+                assert.deepEqual(await readFile(mutatedPath), mutatedBytes);
+                assert.deepEqual(await readByteSnapshot(runtimePaths), runtimeBefore);
+                assert.deepEqual(await readFile(EQUIPMENT_MANIFEST_PATH), manifestBefore);
+                assert.deepEqual(await readFile(ARMOR_PROVENANCE_PATH), provenanceBefore);
+            });
+        }
+    } finally {
+        await rm(directory, { recursive: true, force: true });
     }
 });
 

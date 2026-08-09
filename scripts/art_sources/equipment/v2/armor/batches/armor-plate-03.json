@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "armor-plate-03",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "armor",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "설원 갑주",
+    "성기사의 갑주",
+    "세계수 갑주",
+    "세계수 뿌리 갑옷",
+    "수정 갑옷",
+    "어둠 감옥 갑주"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "설원 갑주",
+      "type": "armor",
+      "tier": 3,
+      "elem": "냉기",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-f90cb89fae84.png",
+      "cohort": "armor",
+      "prompt": "설원 갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T3: regional craft character expressed through the form and material treatment; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light."
+    },
+    {
+      "cell": "top-center",
+      "name": "성기사의 갑주",
+      "type": "armor",
+      "tier": 4,
+      "elem": "",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-7136ce54a797.png",
+      "cohort": "armor",
+      "prompt": "성기사의 갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T4: an elemental core and magical fabrication integrated into the structure; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "세계수 갑주",
+      "type": "armor",
+      "tier": 5,
+      "elem": "자연",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-572733d86ead.png",
+      "cohort": "armor",
+      "prompt": "세계수 갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T5: a memorable signature silhouette with legendary materials and ornament density; element 자연: wood, leather, living material, vines, and teal life light."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "세계수 뿌리 갑옷",
+      "type": "armor",
+      "tier": 6,
+      "elem": "자연",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-adfc8b26f381.png",
+      "cohort": "armor",
+      "prompt": "세계수 뿌리 갑옷; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 자연: wood, leather, living material, vines, and teal life light."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "수정 갑옷",
+      "type": "armor",
+      "tier": 2,
+      "elem": "대지",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-71508942572c.png",
+      "cohort": "armor",
+      "prompt": "수정 갑옷; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 대지: stone, brass, angular crystal, heavy fragments, and low sheen."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "어둠 감옥 갑주",
+      "type": "armor",
+      "tier": 4,
+      "elem": "어둠",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-48daaeb8d985.png",
+      "cohort": "armor",
+      "prompt": "어둠 감옥 갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T4: an elemental core and magical fabrication integrated into the structure; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 설원 갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T3: regional craft character expressed through the form and material treatment; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light.\ntop-center: 성기사의 갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T4: an elemental core and magical fabrication integrated into the structure; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 세계수 갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T5: a memorable signature silhouette with legendary materials and ornament density; element 자연: wood, leather, living material, vines, and teal life light.\nbottom-left: 세계수 뿌리 갑옷; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 자연: wood, leather, living material, vines, and teal life light.\nbottom-center: 수정 갑옷; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 대지: stone, brass, angular crystal, heavy fragments, and low sheen.\nbottom-right: 어둠 감옥 갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T4: an elemental core and magical fabrication integrated into the structure; element 어둠: black material, inward-fading planes, purple inner light, and flowing haze."
+}

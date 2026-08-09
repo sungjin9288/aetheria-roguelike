@@ -1,6 +1,6 @@
 # Art Contract Checkpoint — 2026-08-09
 
-This directory records reproducible art-contract evidence. Character, core weapon, ranged/magic weapon, and offhand/headgear cohorts are complete; armor, family exemplars, and signature/mythic work remain open, so the 229-equipment visual goal is not yet complete.
+This directory records reproducible art-contract evidence. Character, core weapon, ranged/magic weapon, offhand/headgear, armor, and all 22 family exemplars are complete; signature/mythic work remains open, so the 229-equipment visual goal is not yet complete.
 
 ## Task 3 character checkpoint
 
@@ -71,7 +71,17 @@ This is pipeline readiness only: no Task 4 source sheet, runtime equipment PNG, 
 - `npm run art:verify -- --cohort offhand-headgear` — GREEN: `21` exports with empty missing, extra, duplicate, PNG, alpha, bounds, style-version, and artwork-evidence errors.
 - Current Task 7A regression gates are GREEN: focused art suite `120/120`; `npm run verify` type-check, lint, unit `3618/3618`, and build guard; actual verifiers for core `54`, ranged/magic `47`, characters `18`, and offhand/headgear `21`; `git diff --check`.
 
-These checkpoints certify `weapon-core`, `weapon-ranged-magic`, and `offhand-headgear`. Task 7 armor and all 22 family exemplars remain a separate commit boundary; Task 8 still owns signature/mythic closure. Top-level equipment `styleVersion: 2`, full-surface `npm run art:verify`, and `art-contract-report.json` remain open.
+## Task 7B armor and family exemplar checkpoint
+
+- Six family-only source sheets publish one neutral Art Bible exemplar for every defined family. The four unused catalog families `headgear-cap`, `headgear-circlet`, `headgear-helm`, and `headgear-mask` are represented without inventing player items. `equipment-family-exemplars-provenance.json` records six accepted and four rejected raw candidates, 22 unique exports, and the independently pinned review hash `62be8e3f...`.
+- Seventeen family-pure armor sheets publish the exact 82 armor identities: boots `1`, cloak `12`, coat `7`, leather `10`, plate `32`, and robe `20`. `equipment-armor-provenance.json` records 17 accepted and 30 rejected raw candidates, 17 unique tracked sources, 82 unique runtime exports, and review pin `9633a8cc...`.
+- The 160px and 32px contacts preserve paired gloves, priest robe, combat suit, plate, robe, cloak, boots, holy/material cues, and transparent partial cells. Independent original-size review approved all 17 armor sources, the 82-card armor contact, all six exemplar sources, and the 22-card family contact.
+- Shared sync and verification now bind a finalized record to its safe source/evidence basenames, unique source bytes, exact tracked family-pure batch, deterministic Art Bible prompts, reproducible RGBA `600x400` cell normalization, and unique styleVersion 2 export hashes across the complete `204 item + 22 family` surface. Repinned path, prompt, identity-order, source, runtime, raw-review, cross-family, cross-cohort, and family-exemplar collision mutations all fail before protected output writes.
+- Contact SHA-256: armor `c7f95647...`; family exemplars `846da6f9...`. The synchronized manifest SHA-256 is `9835abef...`; plain-Node cohort sync reproduces that byte-for-byte for core `54`, ranged/magic `47`, offhand/headgear `21`, and armor `82`.
+- Independent Phase 2 review is APPROVED: focused art suites `217/217`, full unit `3680/3680`, 226/226 styleVersion 2 export hashes unique, all four equipment cohorts, characters `18`, and family exemplars `22` GREEN.
+- Final user-facing and native reproducibility gates are GREEN: `npm run verify:full` repeats type-check, lint, unit `3680/3680`, and build guard, then passes desktop/mobile smoke and E2E shards `48/48 + 45/45`; `npm run mobile:doctor` and `npm run cap:sync` complete. Distribution signing remains an environment boundary: no local Apple Distribution identity and no Android release keystore inputs.
+
+These checkpoints certify `weapon-core`, `weapon-ranged-magic`, `offhand-headgear`, `armor`, and all 22 family exemplars. Task 8 still owns signature/mythic closure. Top-level equipment `styleVersion: 2`, full-surface `npm run art:verify`, and `art-contract-report.json` remain open until the 25 signature/mythic identities are normalized.
 
 ## Contract verification
 

@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "batchId": "family-exemplars-headgear-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "familyKeys": [
+    "headgear-cap",
+    "headgear-circlet",
+    "headgear-helm",
+    "headgear-hood",
+    "headgear-mask",
+    "headgear-straw-hat"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "familyKey": "headgear-cap",
+      "runtimePath": "/assets/equipment-family/items/headgear-cap.png",
+      "prompt": "headgear-cap neutral Art Bible exemplar; exact form: a compact fitted cloth cap with a short brim and readable crown seam; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "top-center",
+      "familyKey": "headgear-circlet",
+      "runtimePath": "/assets/equipment-family/items/headgear-circlet.png",
+      "prompt": "headgear-circlet neutral Art Bible exemplar; exact form: an open metal forehead band with a centered jewel, exposed crown, and slender side arms; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "top-right",
+      "familyKey": "headgear-helm",
+      "runtimePath": "/assets/equipment-family/items/headgear-helm.png",
+      "prompt": "headgear-helm neutral Art Bible exemplar; exact form: a protective metal dome with cheek guards, face opening, and modest crest; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-left",
+      "familyKey": "headgear-hood",
+      "runtimePath": "/assets/equipment-family/items/headgear-hood.png",
+      "prompt": "headgear-hood neutral Art Bible exemplar; exact form: a deep cloth hood with a dark face opening, folded edge, and short shoulder drape; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-center",
+      "familyKey": "headgear-mask",
+      "runtimePath": "/assets/equipment-family/items/headgear-mask.png",
+      "prompt": "headgear-mask neutral Art Bible exemplar; exact form: a face-covering plate with two eye openings, clear jaw edge, and fastening straps; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-right",
+      "familyKey": "headgear-straw-hat",
+      "runtimePath": "/assets/equipment-family/items/headgear-straw-hat.png",
+      "prompt": "headgear-straw-hat neutral Art Bible exemplar; exact form: a woven straw hat with a very wide circular brim, low crown, and visible weave; honest material colors only, no elemental effect, no rarity frame."
+    }
+  ],
+  "prompt": "Aetheria Roguelike neutral equipment-family pixel-art exemplar sheet.\nCreate a transparent 2x3 grid with 6 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, dark-plum two-level outline, at most three internal shades, hard pixel edges, and no gradient, blur, drop shadow, full-canvas glow, rarity frame, or invented item name.\nThese are family-only Art Bible exemplars, not player equipment identities. Each silhouette must communicate its family at both 160px and 32px through form and material rather than color alone.\ntop-left: headgear-cap neutral Art Bible exemplar; exact form: a compact fitted cloth cap with a short brim and readable crown seam; honest material colors only, no elemental effect, no rarity frame.\ntop-center: headgear-circlet neutral Art Bible exemplar; exact form: an open metal forehead band with a centered jewel, exposed crown, and slender side arms; honest material colors only, no elemental effect, no rarity frame.\ntop-right: headgear-helm neutral Art Bible exemplar; exact form: a protective metal dome with cheek guards, face opening, and modest crest; honest material colors only, no elemental effect, no rarity frame.\nbottom-left: headgear-hood neutral Art Bible exemplar; exact form: a deep cloth hood with a dark face opening, folded edge, and short shoulder drape; honest material colors only, no elemental effect, no rarity frame.\nbottom-center: headgear-mask neutral Art Bible exemplar; exact form: a face-covering plate with two eye openings, clear jaw edge, and fastening straps; honest material colors only, no elemental effect, no rarity frame.\nbottom-right: headgear-straw-hat neutral Art Bible exemplar; exact form: a woven straw hat with a very wide circular brim, low crown, and visible weave; honest material colors only, no elemental effect, no rarity frame."
+}

@@ -1,0 +1,1075 @@
+{
+  "batches": [
+    {
+      "batchId": "armor-boots-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "c34b49d0bdb3a4d5a71b520aa3c30da0be6ecebeb1f96e80eeecd81a92c90202",
+          "name": "가죽 장화",
+          "runtimePath": "/assets/equipment-exact/auto/auto-d292a43f2b89.png"
+        }
+      ],
+      "identityNames": [
+        "가죽 장화"
+      ],
+      "replayKey": "17982c3a2a5574de6a5c37252a5ee22fb93980816a86101e5f1316fd9d1818af",
+      "sourceSheet": "armor-boots-01.png",
+      "sourceSheetSha256": "467750807c73092ca102c59c3f1b5ccb82427753bcd8ca1a12ea258026304583"
+    },
+    {
+      "batchId": "armor-cloak-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "4310966146aa8e02ea6352729f4fe270d2c1a149b2e80782056b146cd796b1b9",
+          "name": "공허의 외투",
+          "runtimePath": "/assets/equipment-exact/auto/auto-7aedd333f3a7.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "503d02a6eac2980935f2f6d9b6c3da99c0bc32590b753ee8d416b6f6eb7f0605",
+          "name": "공허의 전투 외투",
+          "runtimePath": "/assets/equipment-exact/auto/auto-471edd7ca347.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "de8db8db17bf0acee62658c4d98b064bc98beffc7d8ebe3c781494674f906885",
+          "name": "그림자 망토",
+          "runtimePath": "/assets/equipment-exact/auto/auto-6a3d22c34747.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "1983cbd7f0884a8bd7dd7d05ae4ef8c3d80e2ef7f81b8423727b0f5c1381337f",
+          "name": "독안개 망토",
+          "runtimePath": "/assets/equipment-exact/auto/auto-8c4783289cb6.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "5b04098be809048d394d280ebc7915a1c8f3fe1c0725e91166d995317102e98d",
+          "name": "레인저 외투",
+          "runtimePath": "/assets/equipment-exact/auto/auto-28a67a4cd0e2.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "82046442d79f03528bff3258a33d4098086814dc3cbe1b1136dfa8042fa59de4",
+          "name": "바람의 외투",
+          "runtimePath": "/assets/equipment-exact/auto/auto-84731b254f80.png"
+        }
+      ],
+      "identityNames": [
+        "공허의 외투",
+        "공허의 전투 외투",
+        "그림자 망토",
+        "독안개 망토",
+        "레인저 외투",
+        "바람의 외투"
+      ],
+      "replayKey": "952fc38772e97c2184c0e2ba515fe0ea4deb878c3191a8934520cc1fa3073915",
+      "sourceSheet": "armor-cloak-01.png",
+      "sourceSheetSha256": "5294931aba4d639b782e4d9baf1d3bbcade59be92a5f5fb89ed94d9d5bed2a8a"
+    },
+    {
+      "batchId": "armor-cloak-02",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "13ce5d6e87467263441104ae5b6a6b63258db0460bc870e353895db28275c64a",
+          "name": "사냥꾼 망토",
+          "runtimePath": "/assets/equipment-exact/auto/auto-656ea9a9dea9.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "c9aac93261f6c3d33878676f40c6f6d95f8f4939e28e2830ba44441826a9352c",
+          "name": "사냥꾼의 외투",
+          "runtimePath": "/assets/equipment-exact/auto/auto-ff0852c0bdd4.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "bdf42aef6b77c0cd04d1ce8cde56c63e72d33770eda34e411eaafac8ad90d861",
+          "name": "심해 외투",
+          "runtimePath": "/assets/equipment-exact/auto/auto-49097a0a179c.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "a32f2325aa5a7fcbc3b243e4dfd419ee46a4337c1ba97f4a0eed45f1db4b725c",
+          "name": "암영 망토",
+          "runtimePath": "/assets/equipment-exact/auto/auto-3e5264e98c9b.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "2cd8fe18ac8c48a68a97fb812e7c0d264765efda5c6ea21d7789ccb426d67374",
+          "name": "어둠의 망토",
+          "runtimePath": "/assets/equipment-exact/auto/auto-8ce0d098f7f1.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "0ccd6278778c501505be3e49805c41480e9afea074d4f2293f080706a56124fa",
+          "name": "전설의 사냥꾼 외투",
+          "runtimePath": "/assets/equipment-exact/auto/auto-b66b779b949d.png"
+        }
+      ],
+      "identityNames": [
+        "사냥꾼 망토",
+        "사냥꾼의 외투",
+        "심해 외투",
+        "암영 망토",
+        "어둠의 망토",
+        "전설의 사냥꾼 외투"
+      ],
+      "replayKey": "ad7c1864173693562cbd2c3bdd850e8ab31100cf37f9f60d23ddafca3bb95d46",
+      "sourceSheet": "armor-cloak-02.png",
+      "sourceSheetSha256": "79c1b6bb1e721c8533fb31bdff5b6d012d8f29fc5921b095f44aa75fb5111b03"
+    },
+    {
+      "batchId": "armor-coat-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "89cffe8dee1b7dc0d377a3693a736a3327b6dbe85598932b8c689b930bdca693",
+          "name": "수련복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-e5e86573ace6.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "353675a6a47e3d55c4fd7aeeb7bcc9343e77436b220227a5e966b27a95b8f3cf",
+          "name": "수련생 도복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-64cdb8f1ac4c.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "e694ee0b7fdcf3db5dcd11dc5b647af6736cefd02254f46411157321b1e1f962",
+          "name": "심연 잠수복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-4417a78e970f.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "7e6b82b847a0767c9bf58712282dfcd0f68aad12b5191ceb9e0a5b5e5d3c1b20",
+          "name": "에테르 전투복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-fc8a9bd31773.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "40ca1bfa035f30b2e96b7d38232614010e6bf330e420c0b270b7a6b8801b5712",
+          "name": "여행자 튜닉",
+          "runtimePath": "/assets/equipment-exact/auto/auto-2e394a311182.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "bb4ac94df28dc15d4dbe39ae177861a427479c22e0b8a45e4ca1d3c502c6e23c",
+          "name": "정밀 사격복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-fda4ff543c1c.png"
+        }
+      ],
+      "identityNames": [
+        "수련복",
+        "수련생 도복",
+        "심연 잠수복",
+        "에테르 전투복",
+        "여행자 튜닉",
+        "정밀 사격복"
+      ],
+      "replayKey": "5f43423f0e242d3ea839362ddcc5b0f7bab6e16b20e488a485def32be332371e",
+      "sourceSheet": "armor-coat-01.png",
+      "sourceSheetSha256": "26fc0a8a63fe197eb929ec4045a3143e094833c10bdcb4c3ac9d617d7b405392"
+    },
+    {
+      "batchId": "armor-coat-02",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "ed06d5c36b7635367f8e5e17adde80cc4eb97bc69f2739d589b49ba97119d814",
+          "name": "차원 사냥꾼 슈트",
+          "runtimePath": "/assets/equipment-exact/auto/auto-bbc1e9dca806.png"
+        }
+      ],
+      "identityNames": [
+        "차원 사냥꾼 슈트"
+      ],
+      "replayKey": "74956afe8c2fc0c9cd5b447cdc37a06e42275342f46bce5cbcdc7277ff9665e7",
+      "sourceSheet": "armor-coat-02.png",
+      "sourceSheetSha256": "3ff3f8bc296788b957c9d5bb716201d07cdb964d47b008726824237863951d16"
+    },
+    {
+      "batchId": "armor-leather-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "39794702c976e974b09de3bcd44daae639d30f530f5cdf958d4ee826ef58bf41",
+          "name": "가죽 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-bd28001bebfa.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "6376128dd1030856e3d4abcc3b2bc7b185e21939da6b8f14a0b194014e77eb8b",
+          "name": "가죽 조끼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f293406dda29.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "0a040b0770633645c9eb9e58923eead123a3135e55761c105459f5b8a58bcb79",
+          "name": "강화가죽갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-6dd186c9980e.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "7814b95c1d450d6d89352b58ec055f8895e9d01eb0ce00ff59c63912f1a45092",
+          "name": "광전사의 조끼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f330f21e336a.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "9140dfe7beb1b0ea9330133b79882423984658680b75f48a10cd72fece1796da",
+          "name": "균열 외피갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-12ac317d8b8e.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "464714cb61f664f26193879879307ac7e93a188b7906321369372fa2e78c9f54",
+          "name": "도적 가죽갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-17fb1c907b35.png"
+        }
+      ],
+      "identityNames": [
+        "가죽 갑옷",
+        "가죽 조끼",
+        "강화가죽갑옷",
+        "광전사의 조끼",
+        "균열 외피갑옷",
+        "도적 가죽갑옷"
+      ],
+      "replayKey": "73bfdea5df6123512fe42c307ec5280efa594c24bd427c2ed667ed0727a3357d",
+      "sourceSheet": "armor-leather-01.png",
+      "sourceSheetSha256": "7dd96ba8d33e9d4a9799b9dee5030a8edf48887ed16dd98efb598252f32e655f"
+    },
+    {
+      "batchId": "armor-leather-02",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "bf80742e6a037bb9bf374a46cb0f9220c99eed5e3115dd466ccb74528ce716af",
+          "name": "별빛 경갑",
+          "runtimePath": "/assets/equipment-exact/auto/auto-4bdb0e1372c8.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "f85fbe44df5416730541bd5d408ad237a5f101c33b84c44f6a2a943fdff3d548",
+          "name": "빙화 경갑",
+          "runtimePath": "/assets/equipment-exact/auto/auto-63ece76c6105.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "fce85b76e0ccec7efd86517ef9160cad90bcfc01041301489601a6714b6b78ea",
+          "name": "암살자 장갑",
+          "runtimePath": "/assets/equipment-exact/auto/auto-aacf9897ccd0.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "61adc6bfc8a4a2142b8614fd8d6cb3f1e5fed9e3e885fd9130613ba6664885e0",
+          "name": "암살자의 야복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-8f52a96a52b5.png"
+        }
+      ],
+      "identityNames": [
+        "별빛 경갑",
+        "빙화 경갑",
+        "암살자 장갑",
+        "암살자의 야복"
+      ],
+      "replayKey": "7bec9d52f28a54b82a7ce72150fa1a9831b266cac025eada1bade889fa545cad",
+      "sourceSheet": "armor-leather-02.png",
+      "sourceSheetSha256": "9023394265516496d4b71ccb67c00ea405e69899c355a8c3c28695ae42f55fa9"
+    },
+    {
+      "batchId": "armor-plate-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "6963bb067604a6d7f01a06dde037a35d8f7430d6f595f4b9ea2e8ffd6c5d5ad5",
+          "name": "광기의 대갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-5ba94275be04.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "c94c03a6ab06d5b2f1f3a5debb4b3b45fc9c1aeebf83996033e82548c24fdbb3",
+          "name": "기계식 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-89386cf1316a.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "7755bd1d061a187bed3e6947ba2123992ec8be29621338cbcc904fe9ea2c2274",
+          "name": "기사의 흉갑",
+          "runtimePath": "/assets/equipment-exact/auto/auto-07639734e68d.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "7bf9ed4c103d9d6cb9e1882e86b3f7944530408436d54717c60bf9db1d7ee744",
+          "name": "냉기 방어복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-9a96452fb468.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "2efadd353e630926585793e8a94fd2b22ee945ea1925f702cb5b9be089b9fb77",
+          "name": "드래곤 임페리얼",
+          "runtimePath": "/assets/equipment-exact/auto/auto-ff11604925f8.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "58fd0e4becba4f37b49f63791e38262688ecb35609ebcf815644c25b8a696d07",
+          "name": "드워프 흉갑",
+          "runtimePath": "/assets/equipment-exact/auto/auto-654289f46c21.png"
+        }
+      ],
+      "identityNames": [
+        "광기의 대갑주",
+        "기계식 갑옷",
+        "기사의 흉갑",
+        "냉기 방어복",
+        "드래곤 임페리얼",
+        "드워프 흉갑"
+      ],
+      "replayKey": "9e64703607993c385e0a3e91b85f4475cab678afaabc9036d9359f695de82f3d",
+      "sourceSheet": "armor-plate-01.png",
+      "sourceSheetSha256": "b891a09ccc4e9bd8ff967ceb8def1d574a56fa966b1ce502ed53a4b40ed17032"
+    },
+    {
+      "batchId": "armor-plate-02",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "8fb0e1fa1c7e7ec8348d42fdd89b2478934973b6eec855e57b65b7a67c26900c",
+          "name": "미스릴 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-3a7ff1fb451d.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "02dc72d2429ef9000580ac49b7dc20ed16780c2cc37c0b9000d2724934957971",
+          "name": "병사 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-1e3c11b5a29c.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "fe0955723a7a0da7f4111d9a9b5300efdfa4c84408504076123ff1a0863d3f7a",
+          "name": "불사조 흉갑",
+          "runtimePath": "/assets/equipment-exact/auto/auto-b8f5a16d21f1.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "d9128102a18982a6e43910071e745952b0225f6fd6168aa4bc066eaffd23da06",
+          "name": "빙결의 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-e66563877252.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "20ac7191e796b82d358e9b160cc96a5d91b50813ce051c1217db27a266d7d0d3",
+          "name": "뼈 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a98066f61448.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "71f125e644e980a6ef6dc31d7afe1931ed28649b919c302e1ab32eb0719bcfb1",
+          "name": "사슬 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-b9a7c1700ee3.png"
+        }
+      ],
+      "identityNames": [
+        "미스릴 갑옷",
+        "병사 갑옷",
+        "불사조 흉갑",
+        "빙결의 갑주",
+        "뼈 갑옷",
+        "사슬 갑옷"
+      ],
+      "replayKey": "a36de38d7b323ab8b159feb30d20ecc043e16b5ecdaa1e83095ce60e79bc574b",
+      "sourceSheet": "armor-plate-02.png",
+      "sourceSheetSha256": "12fb233701b5756a2e2ff86a1641e40dc1cfb10a61204a43bc761aaa10971ddd"
+    },
+    {
+      "batchId": "armor-plate-03",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "ba3a879527bcfe6bed91d2cb6690c4a7fa5ff3c8fe4ecac6c6dd349b73a308eb",
+          "name": "설원 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f90cb89fae84.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "f0f7e616aa5d367179369ce97fe176dd1fd1e54c5f2ec98ed54a34bb08f96097",
+          "name": "성기사의 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-7136ce54a797.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "46a3aa40e2d040ad4818dd4712fd8dda24fe45fa968210aebdbbb68c4919212a",
+          "name": "세계수 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-572733d86ead.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "7f931b04c45db6a79a759023bfd9ae927124bc4f0f9fe8001127f66bc8563933",
+          "name": "세계수 뿌리 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-adfc8b26f381.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "31ff7521e8f7e7f120d1dba34d3eb5e8ca104aff27a51ac3019310a8da28ccef",
+          "name": "수정 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-71508942572c.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "eb3539f58a6f0fc2026879cf495b20a14c09fce536b7079de2d3c5d7509046bb",
+          "name": "어둠 감옥 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-48daaeb8d985.png"
+        }
+      ],
+      "identityNames": [
+        "설원 갑주",
+        "성기사의 갑주",
+        "세계수 갑주",
+        "세계수 뿌리 갑옷",
+        "수정 갑옷",
+        "어둠 감옥 갑주"
+      ],
+      "replayKey": "f6dfbc855db2200475655d5cecba8db7a616e4253dfb56d778603b6ba631e64e",
+      "sourceSheet": "armor-plate-03.png",
+      "sourceSheetSha256": "030e76222812c440a2b26942c2942fc9daf0345c96520ca0a0794e6a6baff5f0"
+    },
+    {
+      "batchId": "armor-plate-04",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "196ab1ac93cff441f0b6c67a6d684766dd0c33cf05e77ee1e2353dc666e16849",
+          "name": "어둠의 왕 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-ae6099ef374b.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "a9611f7a605d94f01cf19bf9c4edd3dadfeb7dc7262747b4582017f7b91206df",
+          "name": "에테르 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-5fdc8681e154.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "b81f13b3eb1b76be5dfe273ceb3100f1bd15d9d93509fae521a614c0272ca9ea",
+          "name": "엘프의 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-b8028e50b423.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "2197723b13895fac5190b87d30f274afa65e086be27e66b28d470107691b572e",
+          "name": "용비늘 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-8e31f3cb6492.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "815ea8233406babe312e5a9fde9301001b0d6365daca8daba7493a008bf1af59",
+          "name": "용비늘갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-181a9b03291e.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "1b3bb0475fa8ebd9a9d92716a5d62c6f4a248b86b053cdd276a6427c29a288e7",
+          "name": "용암 판금갑",
+          "runtimePath": "/assets/equipment-exact/auto/auto-99c8c681ea28.png"
+        }
+      ],
+      "identityNames": [
+        "어둠의 왕 갑주",
+        "에테르 갑옷",
+        "엘프의 갑옷",
+        "용비늘 갑주",
+        "용비늘갑옷",
+        "용암 판금갑"
+      ],
+      "replayKey": "c6fae61e49a6c85b0bc8d833869717def77c7623315271f4acaeb30bbf576257",
+      "sourceSheet": "armor-plate-04.png",
+      "sourceSheetSha256": "7dae71d7e865576a78918f5bb42b5079da0d43aca58ed1fc5d52363970414f51"
+    },
+    {
+      "batchId": "armor-plate-05",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "4a6382dc8a292bf20a97271bfc782bf1aa4389a9e3186ece4cb6b4043295fdbd",
+          "name": "원시의 전투갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f82a912587f7.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "84ae59e117765fcd6154fd30d4a1e2ecfb584101911b86aadc96ae413dae6a19",
+          "name": "차원 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-09fa71ce3217.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "ad4deda76207bad3f17ccffe4cad0f0d238bee360c3c52163c509c8fafa432e7",
+          "name": "천공의 갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-fe84cb1f624c.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "9ca91330490c2887c9c520d2623c148a9608f6ee67ddb1a779bc3d4fd1066f32",
+          "name": "천상의 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-3c4db2c11f50.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "61a09f9eac0a47906ed296cc5114d9ec8250e5c6ef93b3ecf0d60a9613193087",
+          "name": "천상의갑주",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a3ddd653381f.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "05733307645426cc4712dae36a1a1b734cb59c2999b3f16abfa862ae4d41f8e5",
+          "name": "축복받은 갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-35e7916cc62f.png"
+        }
+      ],
+      "identityNames": [
+        "원시의 전투갑주",
+        "차원 갑주",
+        "천공의 갑주",
+        "천상의 갑옷",
+        "천상의갑주",
+        "축복받은 갑옷"
+      ],
+      "replayKey": "521d57ec62dddacedef60b5a00025922536a59fefb99ac4818d0e9275972b3d4",
+      "sourceSheet": "armor-plate-05.png",
+      "sourceSheetSha256": "02700104bd7af0f80723b5bfdda4a1dfd259bcf0f7036c12af6f83da28eb000c"
+    },
+    {
+      "batchId": "armor-plate-06",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "9a115aea4b3dcbc53fa151b7779a638c29fbd9e8157d2188a9399537556273dc",
+          "name": "판금갑옷",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f300e0d7e5d5.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "e48f8db3bde65aab17d3bae25f40ab09a876b6001ac49d18ae4492c0c42c6bd7",
+          "name": "화염 방어복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-ff8b6df40e8e.png"
+        }
+      ],
+      "identityNames": [
+        "판금갑옷",
+        "화염 방어복"
+      ],
+      "replayKey": "8aa1b089038f36c31cb94981d8ded7df18a6f4aa77311309f3870db5764fb3a9",
+      "sourceSheet": "armor-plate-06.png",
+      "sourceSheetSha256": "b138b0ba4b8d82e692f69328ab29d0c0d6104a9f9b92554cddbb1714dd96adcd"
+    },
+    {
+      "batchId": "armor-robe-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "8e2c6547e2d54ec44ecb43cf3fd2f7363086a070368f4687154cb4c6c8dfe8ee",
+          "name": "고대 마탑 예복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-923eea9745cf.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "4412c6f7e6da145f94448d72c8cba56426daf79db373223834ac942f617e19f7",
+          "name": "대마법사로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-e1b5ad823e67.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "7d948dd250bf9be3989a578d4e32d8f25cbcb7d1c7ab9ebab1a84bbdf26434f2",
+          "name": "마력천로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-6164cb5fb893.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "aed6a48cec7966ade01d3f0eae921f6602c201f179a1d2240eae306b84b003df",
+          "name": "마법로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-0c8457d4447a.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "4f8f68aa5964c0163a54772ac590ecb322a68f21a3cdac0824151bd30b9bb3b1",
+          "name": "상급 폭풍 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a296c98aca88.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "92c79154585f6efb98ead4d7ac09b50ced7e2471c00892736e0c70c90a123f79",
+          "name": "성수 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-f8be5076c3d9.png"
+        }
+      ],
+      "identityNames": [
+        "고대 마탑 예복",
+        "대마법사로브",
+        "마력천로브",
+        "마법로브",
+        "상급 폭풍 로브",
+        "성수 로브"
+      ],
+      "replayKey": "337f37461c8a3db5707d13972b845c65c7b012c3543aebb2fa77504297e42da2",
+      "sourceSheet": "armor-robe-01.png",
+      "sourceSheetSha256": "8803820a1f12fdc190dbe5b803573a7ed7accce2ad7270c51082092495548799"
+    },
+    {
+      "batchId": "armor-robe-02",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "0945221d915a894f81723bad1f88945641f0e9dbf6f1fb91afbf8f8ea602af52",
+          "name": "수련생 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-db46b6ef1d39.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "b2acbb8d96be5cb8c116307ea15acb706793665639b34edfe699c493bdce7dcf",
+          "name": "신전 도시의 성의",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a9ebb2b6a9c7.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "8215c32b49fae6ea94b5bbe27b1d50e62a749ae66274ea2dc85e35ccb64a0d5b",
+          "name": "신전 제관 예복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-b547a0635ab3.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "d00508e238bde12595ba9dca6f51920ad960fd96f1f311d751a5bcf98aa818db",
+          "name": "암흑 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-7142cd8579e3.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "88873ec74e13dc5d06d7f37a159526e9921477335380df8b9c1367a5be7b2323",
+          "name": "에테르 군주 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-464261153d00.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "044670ee73a14b5b80fade2d72a478fa4bba2bb952281d27c8249332d687d562",
+          "name": "에테르 로브 오브 아포칼립스",
+          "runtimePath": "/assets/equipment-exact/auto/auto-d8e9564f5f3c.png"
+        }
+      ],
+      "identityNames": [
+        "수련생 로브",
+        "신전 도시의 성의",
+        "신전 제관 예복",
+        "암흑 로브",
+        "에테르 군주 로브",
+        "에테르 로브 오브 아포칼립스"
+      ],
+      "replayKey": "5674315efb76381db48b73cb066c4ce5ce1a1908b77be4762ee026252c708e4f",
+      "sourceSheet": "armor-robe-02.png",
+      "sourceSheetSha256": "8f128e1eff4a13a8c032e58e113966b3fb5ba92645c436905f3064aecc5369a7"
+    },
+    {
+      "batchId": "armor-robe-03",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "ba7d842010bba9aab2e966ca8aa0298ad17e4b5d58c9771310c5ffe175741ac4",
+          "name": "은빛 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-b9cd0d0bcaf4.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "5498608bcd6c501f9fa40c05550bc14f04c1c362c691d11f9736274a678a0fbd",
+          "name": "정령의 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-0cc44f6d625d.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "88f100c4e977238db02e62c40627e74f37ac0f01eecd6a65e7e0fb796bfcd21b",
+          "name": "차원의 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-498560c203e7.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "29f4a5a7432bb89baeb0a4fd97147758c7d73b923cd1cd2a932d8d36274b3283",
+          "name": "천 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-7045919e23d0.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "7ea21fcc7bfd7b9e2a03d7c0244b5a879617aaaea24b7b0d0e5a93cdf8fab4d5",
+          "name": "폭풍 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a4bc2ae5a97a.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "d1dc625a2c668eebfd54c0abd2aab53605fe46e35068b60d02d8737692ccf46d",
+          "name": "현자의 예복",
+          "runtimePath": "/assets/equipment-exact/auto/auto-c77410b15728.png"
+        }
+      ],
+      "identityNames": [
+        "은빛 로브",
+        "정령의 로브",
+        "차원의 로브",
+        "천 로브",
+        "폭풍 로브",
+        "현자의 예복"
+      ],
+      "replayKey": "dbe6cfdc97f525574c3516df473cc3aff62590e7e2df3318392d359f8def5144",
+      "sourceSheet": "armor-robe-03.png",
+      "sourceSheetSha256": "746d49889e5958f60bc6e9502146edcab600895f1e9c2907733377eece284764"
+    },
+    {
+      "batchId": "armor-robe-04",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "armor",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "87f4b39f3465d6a335b4402ea8890c8993eb861a5fc3ca7e8999e4399d778bca",
+          "name": "화염 사원 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-a200f6daed61.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "f7cdf215e56e587d16de48b7cd9bd2ae0bc80f0f0b824a791a67a0d403ac0379",
+          "name": "화염술사 로브",
+          "runtimePath": "/assets/equipment-exact/auto/auto-49f60f9d1b54.png"
+        }
+      ],
+      "identityNames": [
+        "화염 사원 로브",
+        "화염술사 로브"
+      ],
+      "replayKey": "6b87a50ce733934f787f02d9a00f9a8f626b5f3bc49ce69b5de88e7c296289cb",
+      "sourceSheet": "armor-robe-04.png",
+      "sourceSheetSha256": "f5ddcd41c381fbf48b373149840b0c0dbe1c59893f3a4fae65660396a47c753b"
+    }
+  ],
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "cohort": "armor",
+  "generationReview": {
+    "tool": "OpenAI built-in image_gen imagegen",
+    "accepted": [
+      {
+        "batchId": "armor-boots-01",
+        "rawImage": "exec-ce362815-0f1f-4c0d-a07c-eca9fdf9b53e.png",
+        "rawSha256": "9d1d4088a7f6f5e18d6a5cf56e5f6de9dbe8589f366cc3965c3708ee797ef6f9"
+      },
+      {
+        "batchId": "armor-cloak-01",
+        "rawImage": "exec-b074d246-ba99-4511-b5a7-8083390957d5.png",
+        "rawSha256": "780830d8c465d52515240c5a9454ff8640f0b3009b10ea2783ed7e4fbd3bf94e"
+      },
+      {
+        "batchId": "armor-cloak-02",
+        "rawImage": "exec-2a79561a-9596-44b4-bf5d-394cd95a1121.png",
+        "rawSha256": "7dd6faa6d0de7608037421006579410b1a6972505263baf00fec28264ecdd237"
+      },
+      {
+        "batchId": "armor-coat-01",
+        "rawImage": "exec-ccdf99a3-28f4-4de6-8008-d41a8644ab44.png",
+        "rawSha256": "1ddec697025ab2a0d3f916f8cdef7f02f8ba4e736aeb5323017ecc506344f492"
+      },
+      {
+        "batchId": "armor-coat-02",
+        "rawImage": "exec-f8673e0e-6041-4d78-85e8-889783369e90.png",
+        "rawSha256": "937145545ffcd58dcf8059b01252004f097e138e14392e0bb958000752eb4bba"
+      },
+      {
+        "batchId": "armor-leather-01",
+        "rawImage": "exec-00466b2b-0a00-4739-b9bc-999f03cb0467.png",
+        "rawSha256": "dba12905c2ab08088a309f50f0fdcd689ef3a1a83224b00d4d06abf6231ea8e9"
+      },
+      {
+        "batchId": "armor-leather-02",
+        "rawImage": "exec-b5520e25-95b5-4c2d-bb1d-8fba5b667210.png",
+        "rawSha256": "17b3a236798477c7440c2c71daafdf230819af48f82273d21fb966570be56d6b"
+      },
+      {
+        "batchId": "armor-plate-01",
+        "rawImage": "exec-16fd5ff1-71b0-42f9-9af6-87c7033453a7.png",
+        "rawSha256": "2021748965021f3ca8cd9decafe0faa55ef9773d68ca6b3f1948dd9223d1a4ba"
+      },
+      {
+        "batchId": "armor-plate-02",
+        "rawImage": "exec-84caeeba-a64a-45e9-ab44-96a1ba3e8a49.png",
+        "rawSha256": "e28c775cbe67de0c76a57dec43d478fb864f90b83ebf95d9de21e9e5408a923f"
+      },
+      {
+        "batchId": "armor-plate-03",
+        "rawImage": "exec-0a6806f6-ae08-42f0-8bbc-78a56ed91e85.png",
+        "rawSha256": "5411c08f1e8b5813621382104f90a8634f8d636b3297e52bc2b785fb47362ffe"
+      },
+      {
+        "batchId": "armor-plate-04",
+        "rawImage": "exec-c78a9f8f-06bf-4b9b-8f47-3585b0f79396.png",
+        "rawSha256": "df7f6176a84b8a2ef51ba4f35e24c5a842771c4b884749825d58fcbaeeb496f2"
+      },
+      {
+        "batchId": "armor-plate-05",
+        "rawImage": "exec-c91035dd-8554-4578-8473-b2d13d7dc07b.png",
+        "rawSha256": "e8f4b2dd58a588ba552934c76be2e31ea5a7df8e68865acdabda36226b655678"
+      },
+      {
+        "batchId": "armor-plate-06",
+        "rawImage": "exec-080b1e6f-704e-4e20-b507-c524b4687965.png",
+        "rawSha256": "0e742ce43a006b82f0e32dd1ad51e86b15b0d49dee4c64b00b12f88b4e622e22"
+      },
+      {
+        "batchId": "armor-robe-01",
+        "rawImage": "exec-4944d948-b606-4b56-a920-789424b352e5.png",
+        "rawSha256": "1549c80b7a5d6e2b35d1e55d7c6a966290af8d5f60d83b30bf7eab344dec0199"
+      },
+      {
+        "batchId": "armor-robe-02",
+        "rawImage": "exec-9b73cef0-0bb4-4bd7-893c-29b769f218c2.png",
+        "rawSha256": "e9ee00453deba86a4582203ed0b9cb30a343642bc522d6b41704095d3e10f246"
+      },
+      {
+        "batchId": "armor-robe-03",
+        "rawImage": "exec-385e3248-6c8b-48c2-a52b-78f8459af397.png",
+        "rawSha256": "41b748d3aaebb777641e399bc17b17c753836b68a6abeff4fa5064038c1129da"
+      },
+      {
+        "batchId": "armor-robe-04",
+        "rawImage": "exec-96bcc62a-b415-49db-83ed-bb8386c44509.png",
+        "rawSha256": "5b4d7a221c237adbad73cb3f5b6a345d6ac8bb64dbc8f6448f145fb9ef5fafe7"
+      }
+    ],
+    "rejected": [
+      {
+        "batchId": "armor-boots-01",
+        "rawImage": "exec-59d9ee56-2d5c-4292-a468-3e33b8dc8ff1.png",
+        "rawSha256": "4e19a63d42753dcc87820bb4ee9016d493bfcbfc120ff19abe3efcb0b116be32",
+        "reason": "simulated transparency left checker residue and unsafe source edges"
+      },
+      {
+        "batchId": "armor-boots-01",
+        "rawImage": "exec-c6359985-285c-4109-bd37-d516f28365c7.png",
+        "rawSha256": "28379c704aff73502b6db4e6209661f637ccad92ef4f147f10c785ed24132d0a",
+        "reason": "replacement retained visible background contamination"
+      },
+      {
+        "batchId": "armor-boots-01",
+        "rawImage": "exec-183fcf25-57e8-48f6-9e3a-5791d0dfc393.png",
+        "rawSha256": "5518a10cd4042f6435cdc8af405eabcc04949e26be009126424b327429b395f4",
+        "reason": "background edit introduced a visible magenta edge halo"
+      },
+      {
+        "batchId": "armor-cloak-01",
+        "rawImage": "exec-fa17d4ac-2674-4ef7-b822-4430373d983a.png",
+        "rawSha256": "3da24e98f907fee37853feb83e34b2432b0de3b6305875f336951adac99ac9bf",
+        "reason": "non-poison cloak cells retained visible chroma-green edge contamination"
+      },
+      {
+        "batchId": "armor-cloak-01",
+        "rawImage": "exec-09720742-a1b6-47bb-803f-cafd85648d1c.png",
+        "rawSha256": "c11579308c9f420ba07af1d0a9c03b5039c3cc44ab078183bec123070ac93b3e",
+        "reason": "simulated transparency left checker residue around every silhouette"
+      },
+      {
+        "batchId": "armor-cloak-01",
+        "rawImage": "exec-131fabaf-e45b-469a-be48-34583b5982d7.png",
+        "rawSha256": "01a8496eb7008b90ec50898bd4a6e59c9ee70857e85b778bf23ffb9c83a9d72e",
+        "reason": "background edit introduced opaque magenta halo pixels"
+      },
+      {
+        "batchId": "armor-cloak-01",
+        "rawImage": "exec-0e298224-bc27-4782-9cbf-3016bfbe1b26.png",
+        "rawSha256": "058d7ca30ac891e144e3dfce49899533bd13567c0cf070df74cba049ee99a18d",
+        "reason": "replacement still contained non-semantic green points outside the poison cell"
+      },
+      {
+        "batchId": "armor-cloak-02",
+        "rawImage": "exec-4cfe4de5-f1c9-45ef-9082-e4dcf1a7e020.png",
+        "rawSha256": "3ec5a74dfdbd3af141b0648d52aad238526bf23e2d9d208df800cb201b9ea5bd",
+        "reason": "cloak edges retained visible chroma-green contamination"
+      },
+      {
+        "batchId": "armor-cloak-02",
+        "rawImage": "exec-ad1e929d-6bd7-4b29-b66b-8e1671383053.png",
+        "rawSha256": "3e21e4d47436c5c4b0759c944c1e543108bdae2317b8c8f7af6f6dbf1837ac50",
+        "reason": "simulated transparency left boundary and checker residue"
+      },
+      {
+        "batchId": "armor-cloak-02",
+        "rawImage": "exec-506003c0-eeeb-4b35-a356-69b3cae83441.png",
+        "rawSha256": "5a4df017a12d51d62ec899e796f78b0fbd70caae4c555583e0cab19b64e01a05",
+        "reason": "replacement retained visible background contamination"
+      },
+      {
+        "batchId": "armor-cloak-02",
+        "rawImage": "exec-2c0bf5d5-57ef-4925-ae5c-d9c2967bac81.png",
+        "rawSha256": "06d1a18b11b56f7adf59620c2288be0cbdce2009cdd414962921fa06a75c61b5",
+        "reason": "dark cloak contained a bright non-semantic green artifact"
+      },
+      {
+        "batchId": "armor-coat-01",
+        "rawImage": "exec-ad0d13d8-7a37-465a-9af1-bcadafd5c42a.png",
+        "rawSha256": "4eca52d573e24d32ea9c8563efa0bfaff22f2cae9c4eca016744574d16c8ec4e",
+        "reason": "garment cells contained trapped chroma and plate-like semantic drift"
+      },
+      {
+        "batchId": "armor-coat-01",
+        "rawImage": "exec-3df50979-81a2-4e38-9a48-3c84b397ccd2.png",
+        "rawSha256": "fd1b226dc4f8caeaad1a4a0c70eefabec95fab36fb1fadb7363cd9b443225be3",
+        "reason": "corrected silhouettes still failed boundary and chroma cleanup"
+      },
+      {
+        "batchId": "armor-coat-01",
+        "rawImage": "exec-08f0230e-ed8a-4c4d-b804-acba6ad20591.png",
+        "rawSha256": "d7056580f606099b42426069c01ad8581012a280ed2104899a960c0aa427c675",
+        "reason": "replacement retained visible background contamination"
+      },
+      {
+        "batchId": "armor-coat-01",
+        "rawImage": "exec-7900e2b9-bf42-4d45-83db-2f2270e654d7.png",
+        "rawSha256": "7241bf5b7fbcb4f9037530ded66d8b38ae71e23a0f21f410975e0df03a3223ba",
+        "reason": "background edit introduced magenta halo contamination"
+      },
+      {
+        "batchId": "armor-coat-01",
+        "rawImage": "exec-830c6e09-6e1f-4171-81a7-1d1da2247ed6.png",
+        "rawSha256": "b56606ed287d0eb808227dbbb4b599214bdd842deff94469ec22ef8a2a01d008",
+        "reason": "deep-sea suit touched its declared cell boundary"
+      },
+      {
+        "batchId": "armor-coat-01",
+        "rawImage": "exec-d95f266f-6e1e-46e3-b71f-9db5fde6adda.png",
+        "rawSha256": "67ec25602462616fd4999d8019839c38367fe9a803be480324aae12547542493",
+        "reason": "marksman coat retained a trapped green island and ivory coat green specks"
+      },
+      {
+        "batchId": "armor-coat-01",
+        "rawImage": "exec-e4ccdb52-b482-4b25-b2fa-d947ca6b0b25.png",
+        "rawSha256": "e8b7ef61deb287dafa06be08c041939d9ea12767e2ae4cc0b44777f00298e69a",
+        "reason": "targeted repaint still retained the trapped green island"
+      },
+      {
+        "batchId": "armor-coat-02",
+        "rawImage": "exec-cb5786d9-a0af-4731-89ea-f22539476819.png",
+        "rawSha256": "631380bfae3256f740ef506179e7ea7f3df4ca949ff6fcb7e77a35e1fb5b374d",
+        "reason": "dimension hunter suit read as a ceremonial robe or plate"
+      },
+      {
+        "batchId": "armor-coat-02",
+        "rawImage": "exec-f0b78519-8c56-4818-b744-684806544085.png",
+        "rawSha256": "289a91f42c92b8fbe0d1564a7f6b548f054b88774b275cead0b43fb2240ff21f",
+        "reason": "otherwise-correct hunter suit touched its declared cell boundary"
+      },
+      {
+        "batchId": "armor-leather-01",
+        "rawImage": "exec-7c14d9f8-d67a-4f7b-9ecc-58caa35493ed.png",
+        "rawSha256": "887645e64d784a8544471803b53e5f68aa2580937f9b2682e369ccacb30c670a",
+        "reason": "leather silhouettes retained visible chroma edge contamination"
+      },
+      {
+        "batchId": "armor-leather-01",
+        "rawImage": "exec-67119ced-0b0b-4087-86a7-680f5baac964.png",
+        "rawSha256": "28cb9d4ef77203cfc697dc23a839fa161d3820b8f2050748d05d80ffd32d8b2c",
+        "reason": "rift armor contained excessive green effects and residual edge specks"
+      },
+      {
+        "batchId": "armor-leather-01",
+        "rawImage": "exec-eba0361a-28a0-4815-972e-0d174a569a5b.png",
+        "rawSha256": "f1770972439bb7dcb3cdb597d2e398af918f3bfa0043f8281564d5b51b748fb8",
+        "reason": "replacement retained visible background contamination"
+      },
+      {
+        "batchId": "armor-leather-01",
+        "rawImage": "exec-c618fe91-6f6f-4c2a-ad6e-16b795ef215e.png",
+        "rawSha256": "17b26d7242cfa64efbb3a15a0a7303225ec7e84482bce6a8137cf595c7de5368",
+        "reason": "rift armor still contained non-essential green tendrils"
+      },
+      {
+        "batchId": "armor-plate-01",
+        "rawImage": "exec-db80b966-6663-4368-861d-3b8cc85d1f0d.png",
+        "rawSha256": "e7d08ef5e1eb6bcbd4265c61ad76976d5cb6185badb6f68b9c1e5e41b46eed55",
+        "reason": "mechanical plate touched its declared cell boundary"
+      },
+      {
+        "batchId": "armor-plate-03",
+        "rawImage": "exec-e4dd23f6-93b5-476d-89f3-056fe7df935e.png",
+        "rawSha256": "6eab11252728357c9a539710e4d2a035f5f65df5a093c46118a1c2dad27447f5",
+        "reason": "world-tree root armor crossed the horizontal row boundary"
+      },
+      {
+        "batchId": "armor-plate-03",
+        "rawImage": "exec-fbf556c5-6dfe-4125-98dc-1e8d4cdfb586.png",
+        "rawSha256": "0d7f682237da831284988a4e46ae289f52ab9c7b6f9c2e8bb809885bf996ffdc",
+        "reason": "first recenter edit still crossed the horizontal row boundary"
+      },
+      {
+        "batchId": "armor-plate-04",
+        "rawImage": "exec-e92549a0-220c-44b7-a7c3-6168ea6c212f.png",
+        "rawSha256": "4771900b3b875919650335f86cbbdabd3f0f168492d0cef34c7b4b67cfc3de4d",
+        "reason": "dark king plate touched its boundary and lava-forged plate lacked its material cue"
+      },
+      {
+        "batchId": "armor-plate-04",
+        "rawImage": "exec-e1b9e00a-bb51-4733-abc5-e8f6f3c026e7.png",
+        "rawSha256": "2be346efe04c7e298c97473ebfbed74d9d89ae8518a7b26ff598ae5b7f2777aa",
+        "reason": "lava-forged plate remained generic black steel after the padding fix"
+      },
+      {
+        "batchId": "armor-robe-02",
+        "rawImage": "exec-bffdbb64-196a-4efa-8967-397d90981033.png",
+        "rawSha256": "36a5784b2eb93b1b5423e21ff7c48a79b84829cbc46147a99f9042e2996e6cf4",
+        "reason": "aether lord robe crossed the horizontal row boundary"
+      }
+    ]
+  },
+  "version": 1
+}

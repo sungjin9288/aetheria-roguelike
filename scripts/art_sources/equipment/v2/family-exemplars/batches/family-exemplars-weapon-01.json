@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "batchId": "family-exemplars-weapon-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "familyKeys": [
+    "weapon-bow",
+    "weapon-dagger",
+    "weapon-heavy",
+    "weapon-lance",
+    "weapon-staff",
+    "weapon-sword"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "familyKey": "weapon-bow",
+      "runtimePath": "/assets/equipment-family/items/weapon-bow.png",
+      "prompt": "weapon-bow neutral Art Bible exemplar; exact form: a recurved bow with visible string, separated limb tips, wrapped grip, and balanced open silhouette; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "top-center",
+      "familyKey": "weapon-dagger",
+      "runtimePath": "/assets/equipment-family/items/weapon-dagger.png",
+      "prompt": "weapon-dagger neutral Art Bible exemplar; exact form: a compact single-edged dagger with sharp point, small guard, wrapped grip, and pommel; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "top-right",
+      "familyKey": "weapon-heavy",
+      "runtimePath": "/assets/equipment-family/items/weapon-heavy.png",
+      "prompt": "weapon-heavy neutral Art Bible exemplar; exact form: a weighty war hammer with broad metal head, reinforced haft, grip, and clear material mass; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-left",
+      "familyKey": "weapon-lance",
+      "runtimePath": "/assets/equipment-family/items/weapon-lance.png",
+      "prompt": "weapon-lance neutral Art Bible exemplar; exact form: a long spear with narrow steel head, straight shaft, grip wrap, and balanced counterweight; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-center",
+      "familyKey": "weapon-staff",
+      "runtimePath": "/assets/equipment-family/items/weapon-staff.png",
+      "prompt": "weapon-staff neutral Art Bible exemplar; exact form: a vertical mage staff with wooden shaft, open arcane head, suspended focus, and lower ferrule; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-right",
+      "familyKey": "weapon-sword",
+      "runtimePath": "/assets/equipment-family/items/weapon-sword.png",
+      "prompt": "weapon-sword neutral Art Bible exemplar; exact form: a straight longsword with distinct blade, crossguard, wrapped grip, pommel, and central fuller; honest material colors only, no elemental effect, no rarity frame."
+    }
+  ],
+  "prompt": "Aetheria Roguelike neutral equipment-family pixel-art exemplar sheet.\nCreate a transparent 2x3 grid with 6 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, dark-plum two-level outline, at most three internal shades, hard pixel edges, and no gradient, blur, drop shadow, full-canvas glow, rarity frame, or invented item name.\nThese are family-only Art Bible exemplars, not player equipment identities. Each silhouette must communicate its family at both 160px and 32px through form and material rather than color alone.\ntop-left: weapon-bow neutral Art Bible exemplar; exact form: a recurved bow with visible string, separated limb tips, wrapped grip, and balanced open silhouette; honest material colors only, no elemental effect, no rarity frame.\ntop-center: weapon-dagger neutral Art Bible exemplar; exact form: a compact single-edged dagger with sharp point, small guard, wrapped grip, and pommel; honest material colors only, no elemental effect, no rarity frame.\ntop-right: weapon-heavy neutral Art Bible exemplar; exact form: a weighty war hammer with broad metal head, reinforced haft, grip, and clear material mass; honest material colors only, no elemental effect, no rarity frame.\nbottom-left: weapon-lance neutral Art Bible exemplar; exact form: a long spear with narrow steel head, straight shaft, grip wrap, and balanced counterweight; honest material colors only, no elemental effect, no rarity frame.\nbottom-center: weapon-staff neutral Art Bible exemplar; exact form: a vertical mage staff with wooden shaft, open arcane head, suspended focus, and lower ferrule; honest material colors only, no elemental effect, no rarity frame.\nbottom-right: weapon-sword neutral Art Bible exemplar; exact form: a straight longsword with distinct blade, crossguard, wrapped grip, pommel, and central fuller; honest material colors only, no elemental effect, no rarity frame."
+}

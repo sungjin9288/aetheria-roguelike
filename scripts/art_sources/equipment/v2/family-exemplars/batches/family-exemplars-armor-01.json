@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "batchId": "family-exemplars-armor-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "familyKeys": [
+    "armor-boots",
+    "armor-cloak",
+    "armor-coat",
+    "armor-leather",
+    "armor-plate",
+    "armor-robe"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "familyKey": "armor-boots",
+      "runtimePath": "/assets/equipment-family/items/armor-boots.png",
+      "prompt": "armor-boots neutral Art Bible exemplar; exact form: one matched pair of sturdy travel boots, visible soles, reinforced toes, and ankle seams; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "top-center",
+      "familyKey": "armor-cloak",
+      "runtimePath": "/assets/equipment-family/items/armor-cloak.png",
+      "prompt": "armor-cloak neutral Art Bible exemplar; exact form: a broad draped mantle with a shoulder clasp, open front, and long flowing split hem; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "top-right",
+      "familyKey": "armor-coat",
+      "runtimePath": "/assets/equipment-family/items/armor-coat.png",
+      "prompt": "armor-coat neutral Art Bible exemplar; exact form: a fitted adventurer coat or tunic with collar, belt, sleeves, and practical split hem; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-left",
+      "familyKey": "armor-leather",
+      "runtimePath": "/assets/equipment-family/items/armor-leather.png",
+      "prompt": "armor-leather neutral Art Bible exemplar; exact form: flexible torso armor with fitted leather panels, stitched seams, straps, and no rigid breastplate; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-center",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-family/items/armor-plate.png",
+      "prompt": "armor-plate neutral Art Bible exemplar; exact form: rigid steel breastplate with pauldrons, articulated metal panels, rivets, and hard reflective seams; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "bottom-right",
+      "familyKey": "armor-robe",
+      "runtimePath": "/assets/equipment-family/items/armor-robe.png",
+      "prompt": "armor-robe neutral Art Bible exemplar; exact form: full-length cloth caster robe with wide sleeves, layered flowing hem, sash, and ceremonial trim; honest material colors only, no elemental effect, no rarity frame."
+    }
+  ],
+  "prompt": "Aetheria Roguelike neutral equipment-family pixel-art exemplar sheet.\nCreate a transparent 2x3 grid with 6 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, dark-plum two-level outline, at most three internal shades, hard pixel edges, and no gradient, blur, drop shadow, full-canvas glow, rarity frame, or invented item name.\nThese are family-only Art Bible exemplars, not player equipment identities. Each silhouette must communicate its family at both 160px and 32px through form and material rather than color alone.\ntop-left: armor-boots neutral Art Bible exemplar; exact form: one matched pair of sturdy travel boots, visible soles, reinforced toes, and ankle seams; honest material colors only, no elemental effect, no rarity frame.\ntop-center: armor-cloak neutral Art Bible exemplar; exact form: a broad draped mantle with a shoulder clasp, open front, and long flowing split hem; honest material colors only, no elemental effect, no rarity frame.\ntop-right: armor-coat neutral Art Bible exemplar; exact form: a fitted adventurer coat or tunic with collar, belt, sleeves, and practical split hem; honest material colors only, no elemental effect, no rarity frame.\nbottom-left: armor-leather neutral Art Bible exemplar; exact form: flexible torso armor with fitted leather panels, stitched seams, straps, and no rigid breastplate; honest material colors only, no elemental effect, no rarity frame.\nbottom-center: armor-plate neutral Art Bible exemplar; exact form: rigid steel breastplate with pauldrons, articulated metal panels, rivets, and hard reflective seams; honest material colors only, no elemental effect, no rarity frame.\nbottom-right: armor-robe neutral Art Bible exemplar; exact form: full-length cloth caster robe with wide sleeves, layered flowing hem, sash, and ceremonial trim; honest material colors only, no elemental effect, no rarity frame."
+}

@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "batchId": "armor-plate-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "armor",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "광기의 대갑주",
+    "기계식 갑옷",
+    "기사의 흉갑",
+    "냉기 방어복",
+    "드래곤 임페리얼",
+    "드워프 흉갑"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "광기의 대갑주",
+      "type": "armor",
+      "tier": 6,
+      "elem": "화염",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-5ba94275be04.png",
+      "cohort": "armor",
+      "prompt": "광기의 대갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 화염: dark-red metal, cracked surface, orange fissures, and small embers."
+    },
+    {
+      "cell": "top-center",
+      "name": "기계식 갑옷",
+      "type": "armor",
+      "tier": 3,
+      "elem": "",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-89386cf1316a.png",
+      "cohort": "armor",
+      "prompt": "기계식 갑옷; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "top-right",
+      "name": "기사의 흉갑",
+      "type": "armor",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-07639734e68d.png",
+      "cohort": "armor",
+      "prompt": "기사의 흉갑; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-left",
+      "name": "냉기 방어복",
+      "type": "armor",
+      "tier": 2,
+      "elem": "냉기",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-9a96452fb468.png",
+      "cohort": "armor",
+      "prompt": "냉기 방어복; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light."
+    },
+    {
+      "cell": "bottom-center",
+      "name": "드래곤 임페리얼",
+      "type": "armor",
+      "tier": 6,
+      "elem": "",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-ff11604925f8.png",
+      "cohort": "armor",
+      "prompt": "드래곤 임페리얼; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    },
+    {
+      "cell": "bottom-right",
+      "name": "드워프 흉갑",
+      "type": "armor",
+      "tier": 2,
+      "elem": "",
+      "familyKey": "armor-plate",
+      "runtimePath": "/assets/equipment-exact/auto/auto-654289f46c21.png",
+      "cohort": "armor",
+      "prompt": "드워프 흉갑; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with six isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\ntop-left: 광기의 대갑주; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element 화염: dark-red metal, cracked surface, orange fissures, and small embers.\ntop-center: 기계식 갑옷; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T3: regional craft character expressed through the form and material treatment; element none: no elemental effect; preserve the material and silhouette without a background glow.\ntop-right: 기사의 흉갑; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-left: 냉기 방어복; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element 냉기: blue-white crystal, sharp edges, frost, and cold reflected light.\nbottom-center: 드래곤 임페리얼; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T6: a mythic structure changed by aether, void, or dimensional technology; element none: no elemental effect; preserve the material and silhouette without a background glow.\nbottom-right: 드워프 흉갑; family armor-plate: armor-plate family: hard plate panels, shoulder mass, and metal seams; exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams; Tier T2: orderly craftsmanship with two materials and a small functional ornament; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}

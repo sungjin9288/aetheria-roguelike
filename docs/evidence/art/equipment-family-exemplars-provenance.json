@@ -1,0 +1,294 @@
+{
+  "batches": [
+    {
+      "batchId": "family-exemplars-armor-01",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "5a4969964722fcff80a6b5dcc31c771a3f285188eb09b39e6f9f4d0f81b66207",
+          "familyKey": "armor-boots",
+          "runtimePath": "/assets/equipment-family/items/armor-boots.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "a50678f92d5c52787fdf2f88ac1e61dcecd09aaa1b2f91a26d8e1f45903be5d8",
+          "familyKey": "armor-cloak",
+          "runtimePath": "/assets/equipment-family/items/armor-cloak.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "39c40f82357296cf933e37611e07fa5b33051c3b425e62ca1a0a933c088dd819",
+          "familyKey": "armor-coat",
+          "runtimePath": "/assets/equipment-family/items/armor-coat.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "b7181a2b9cd4be70e679b8215ee5032c141c65d126963eed6a9dd6426563acf3",
+          "familyKey": "armor-leather",
+          "runtimePath": "/assets/equipment-family/items/armor-leather.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "d91668c82cab46f280713a97be64fd867331c663321640ebcd584ad1e3ab861b",
+          "familyKey": "armor-plate",
+          "runtimePath": "/assets/equipment-family/items/armor-plate.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "810feea524c1e7261e0598adbd613d91472fd6deab93131d25c97c46be7d76c8",
+          "familyKey": "armor-robe",
+          "runtimePath": "/assets/equipment-family/items/armor-robe.png"
+        }
+      ],
+      "familyKeys": [
+        "armor-boots",
+        "armor-cloak",
+        "armor-coat",
+        "armor-leather",
+        "armor-plate",
+        "armor-robe"
+      ],
+      "replayKey": "ceb9ffe6087dd3b8d1684558be594c2648dd19fa602c45c9ae335f438f7f9cd1",
+      "sourceSheet": "family-exemplars-armor-01.png",
+      "sourceSheetSha256": "3ea15d0bbb7d1ffdc8657a3487bb292fa75b788d9d141e25f53cb51a9fd24f0a"
+    },
+    {
+      "batchId": "family-exemplars-headgear-01",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "7dfb8e642a447af29da1a8accb6d72f89a1ae9fc585797e7acd345c18e82ea96",
+          "familyKey": "headgear-cap",
+          "runtimePath": "/assets/equipment-family/items/headgear-cap.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "2623f50dfed0c97c54e4bc8e2f1765cfdecda8772bb2a056dd1bcde1b752501e",
+          "familyKey": "headgear-circlet",
+          "runtimePath": "/assets/equipment-family/items/headgear-circlet.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "7f330393826eb7fc3aed9fdbedc09cb147398194629c83069bf49ef04ec07220",
+          "familyKey": "headgear-helm",
+          "runtimePath": "/assets/equipment-family/items/headgear-helm.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "f7db146e1ffe03e8f94d2c4e786c45f5baa5a1d884084d912d0d98f07a792099",
+          "familyKey": "headgear-hood",
+          "runtimePath": "/assets/equipment-family/items/headgear-hood.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "9cc753a2da8c5a485335e17c61ee47d7027ac195761ea054fea7436150365ec5",
+          "familyKey": "headgear-mask",
+          "runtimePath": "/assets/equipment-family/items/headgear-mask.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "f7e2c7d08d118ac52430c7cc874760eedd59214a1c27b76fc5585444ccf34b17",
+          "familyKey": "headgear-straw-hat",
+          "runtimePath": "/assets/equipment-family/items/headgear-straw-hat.png"
+        }
+      ],
+      "familyKeys": [
+        "headgear-cap",
+        "headgear-circlet",
+        "headgear-helm",
+        "headgear-hood",
+        "headgear-mask",
+        "headgear-straw-hat"
+      ],
+      "replayKey": "bb3dab3c74d76d5039414651224c55ae00386c770b02fecf173e475ffe7091d4",
+      "sourceSheet": "family-exemplars-headgear-01.png",
+      "sourceSheetSha256": "fe12f0fc445a6cacb63e2c75f81a7561dddfb30bf5076fbc08d50b02d23a47fd"
+    },
+    {
+      "batchId": "family-exemplars-headgear-02",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "0aafd89a4fd011310ec564ab015a63f6e66dbe4543defdcb0993d84ef8f0e2d8",
+          "familyKey": "headgear-wizard-hat",
+          "runtimePath": "/assets/equipment-family/items/headgear-wizard-hat.png"
+        }
+      ],
+      "familyKeys": [
+        "headgear-wizard-hat"
+      ],
+      "replayKey": "2f63621389a598ec2f321e969140a260d2b2471456778d8b187cb94f81207403",
+      "sourceSheet": "family-exemplars-headgear-02.png",
+      "sourceSheetSha256": "1fbdedea7507eb1d139f968881330e52672215dbf622b0dda2c3dbe5efdb4cbe"
+    },
+    {
+      "batchId": "family-exemplars-offhand-01",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "5495206b19b5c262cd4ed7d79631d99c67eacbadec802370979af2c8d4a7c378",
+          "familyKey": "offhand-book",
+          "runtimePath": "/assets/equipment-family/items/offhand-book.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "77eae3b07e63b733caa5ef5f59a794f35dc84a577fe6a325e8b468e0cfa028f7",
+          "familyKey": "offhand-shield",
+          "runtimePath": "/assets/equipment-family/items/offhand-shield.png"
+        }
+      ],
+      "familyKeys": [
+        "offhand-book",
+        "offhand-shield"
+      ],
+      "replayKey": "e41f7eede4c88e28681ae2b025c30820809f5a99f4f2395032205c544e3b3a96",
+      "sourceSheet": "family-exemplars-offhand-01.png",
+      "sourceSheetSha256": "5b07f1fbac409b051d0253ac5766ba8d447f5018b9eacc20d70d8de29049d26e"
+    },
+    {
+      "batchId": "family-exemplars-weapon-01",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "f786e78272d072bce93ee21a1be8f9be0ae7907d7207312be1f4fc0cdd34013c",
+          "familyKey": "weapon-bow",
+          "runtimePath": "/assets/equipment-family/items/weapon-bow.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "b67a261637ca97d47318e874db79a300338ca1781aebca49ca1390d77af58c3c",
+          "familyKey": "weapon-dagger",
+          "runtimePath": "/assets/equipment-family/items/weapon-dagger.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "d0b2c1fb51a144f985fa181ec96dd11595b3cdb601fba47734e0aede0786f70e",
+          "familyKey": "weapon-heavy",
+          "runtimePath": "/assets/equipment-family/items/weapon-heavy.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "b486f948f22ccc998af659f56f0e1793779a7465fec95b135967866883a356f8",
+          "familyKey": "weapon-lance",
+          "runtimePath": "/assets/equipment-family/items/weapon-lance.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "1abce4a61cbfdeb86c99d26c9b76277482a6568ee783cdb39c7a50535bc3fbdf",
+          "familyKey": "weapon-staff",
+          "runtimePath": "/assets/equipment-family/items/weapon-staff.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "4b2298a7acb74551e9fc34296a7b762f072ec713c6edc1e3166b64f18d1b9027",
+          "familyKey": "weapon-sword",
+          "runtimePath": "/assets/equipment-family/items/weapon-sword.png"
+        }
+      ],
+      "familyKeys": [
+        "weapon-bow",
+        "weapon-dagger",
+        "weapon-heavy",
+        "weapon-lance",
+        "weapon-staff",
+        "weapon-sword"
+      ],
+      "replayKey": "642263f67993b056a69fc5dfd28b986d223b87d31733980e327e1cf52138109c",
+      "sourceSheet": "family-exemplars-weapon-01.png",
+      "sourceSheetSha256": "65bd207cbe766bd8663f05610574c6f7cb1bdfaf401758a16f3ceeae6d5ca383"
+    },
+    {
+      "batchId": "family-exemplars-weapon-02",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+      "exports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "7b1181bccc5606456f9fdb08a4ca7ba44a3b2d8b7e3b2fd3615f00b84fb50dcb",
+          "familyKey": "weapon-whip",
+          "runtimePath": "/assets/equipment-family/items/weapon-whip.png"
+        }
+      ],
+      "familyKeys": [
+        "weapon-whip"
+      ],
+      "replayKey": "eb09f9189034affc0a20bc49854b9215393b09db552a4713fd889970628e5ae3",
+      "sourceSheet": "family-exemplars-weapon-02.png",
+      "sourceSheetSha256": "6428681e8ed7e74b8fc9b4296078054fddee547fe48f14c7445ac405529908c2"
+    }
+  ],
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+  "generationReview": {
+    "tool": "OpenAI built-in image_gen imagegen with strict source preparer and original-size visual review",
+    "accepted": [
+      {
+        "batchId": "family-exemplars-armor-01",
+        "rawImage": "exec-b45336e4-ec03-4123-8abf-afd7a47c2219.png",
+        "rawSha256": "f974cef5e9842f6183909b2b0de2f4c2c9bb8eeafccdaf397c972e197e972931"
+      },
+      {
+        "batchId": "family-exemplars-headgear-01",
+        "rawImage": "exec-cb106dda-319f-492e-87f0-da6d027d66eb.png",
+        "rawSha256": "6eb4a62355b7b70442a076c6b6073d20420fffd75a140259f8a8218642190831"
+      },
+      {
+        "batchId": "family-exemplars-headgear-02",
+        "rawImage": "exec-517083c4-6627-435f-a3c6-b415a4d7399f.png",
+        "rawSha256": "9cbc3b1b439208835832fd373ff20b5d640d0661d2858ab521578dcbd4797f42"
+      },
+      {
+        "batchId": "family-exemplars-offhand-01",
+        "rawImage": "exec-2dc91169-89cd-43c0-8564-b42108c75753.png",
+        "rawSha256": "fe0c3a604191cfeb46c3a2b71995b556959fe050723c914dbb69bd37b401c384"
+      },
+      {
+        "batchId": "family-exemplars-weapon-01",
+        "rawImage": "exec-12c4f2d8-5945-4175-b119-f41fd77d7690.png",
+        "rawSha256": "d5dd41e055093ee8155c84271530c133ddabd434b0294d139632ed1cbf9015f0"
+      },
+      {
+        "batchId": "family-exemplars-weapon-02",
+        "rawImage": "exec-97110288-7d63-48d8-9219-d85a63303f91.png",
+        "rawSha256": "2c43d6b2bc51a80518888f089384e2aa2043efb999725f1f251b76adfd5f4c1b"
+      }
+    ],
+    "rejected": [
+      {
+        "batchId": "family-exemplars-armor-01",
+        "rawImage": "exec-1b3d2782-467b-4bee-be4f-0a031d7010ee.png",
+        "rawSha256": "7da51be1ba4ee439e63ce55bebcdc876cea15487792c6cce7e6643cfacf555b2",
+        "reason": "cell 4 touched its declared boundary before the accepted scale-and-recenter edit"
+      },
+      {
+        "batchId": "family-exemplars-headgear-01",
+        "rawImage": "exec-84656f9c-742b-46c5-a95d-f11e2b8d4363.png",
+        "rawSha256": "4be87d1e19d85980792507fa4a2d51a37dbd8a119861dabe9ac410ce6c01294c",
+        "reason": "mask straps touched the cell 5 boundary before the accepted scale-and-recenter edit"
+      },
+      {
+        "batchId": "family-exemplars-headgear-02",
+        "rawImage": "exec-f9423ce3-d1a6-46dd-86af-6efe5f406d52.png",
+        "rawSha256": "da5ddac7072ae800bdbd66de4b8839c9fd18bc098b1e05d962c857cdeca821bc",
+        "reason": "wizard-hat brim touched the top-left cell boundary before the accepted scale-and-recenter edit"
+      },
+      {
+        "batchId": "family-exemplars-weapon-01",
+        "rawImage": "exec-3b75a006-55f6-4185-9e89-dcdded906ac4.png",
+        "rawSha256": "0225afb9e2db208ee0ccf824b1689296cb1060330c363b5f510b75aeb9d62c01",
+        "reason": "closed bow string trapped 2966 fully opaque chroma-green pixels in the prepared top-left cell"
+      }
+    ]
+  },
+  "version": 1
+}

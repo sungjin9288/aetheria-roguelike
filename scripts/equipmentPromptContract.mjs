@@ -1,0 +1,203 @@
+import { createHash } from 'node:crypto';
+
+export const CELL_ORDER = Object.freeze([
+    'top-left',
+    'top-center',
+    'top-right',
+    'bottom-left',
+    'bottom-center',
+    'bottom-right',
+]);
+
+const FAMILY_LANGUAGE = Object.freeze({
+    'weapon-sword': 'weapon-sword family: a distinct blade profile, guard, grip, and central ornament',
+    'weapon-dagger': 'weapon-dagger family: a compact blade, asymmetric grip, and readable point',
+    'weapon-heavy': 'weapon-heavy family: a weighty head or broad blade, reinforced handle, and material mass',
+    'weapon-bow': 'weapon-bow family: a clear bow curve, string, limb tips, and grip',
+    'weapon-staff': 'weapon-staff family: a vertical shaft, distinctive head, and central focus',
+    'weapon-lance': 'weapon-lance family: a long shaft, readable spearhead, and balanced counterweight',
+    'weapon-whip': 'weapon-whip family: a curved flexible lash, handle, and controlled tip',
+    'offhand-shield': 'offhand-shield family: a protective outer contour, central boss, and rim material',
+    'offhand-book': 'offhand-book family: a readable cover, binding, and central page or rune detail',
+    'headgear-straw-hat': 'headgear-straw-hat family: a wide woven brim and crown',
+    'headgear-cap': 'headgear-cap family: a compact cap silhouette and clear material break',
+    'headgear-wizard-hat': 'headgear-wizard-hat family: a tall shaped brim and magical crown',
+    'headgear-circlet': 'headgear-circlet family: an open metal band and centered jewel or crest',
+    'headgear-helm': 'headgear-helm family: a protective dome, face opening, and crest',
+    'headgear-hood': 'headgear-hood family: a deep cloth opening, folded edge, and drape',
+    'headgear-mask': 'headgear-mask family: a face-covering plate, eye opening, and edge silhouette',
+    'armor-coat': 'armor-coat family: a layered coat body, collar, and hem',
+    'armor-leather': 'armor-leather family: fitted leather panels, straps, and flexible seams',
+    'armor-robe': 'armor-robe family: a flowing cloth body, sleeves, and ceremonial trim',
+    'armor-plate': 'armor-plate family: hard plate panels, shoulder mass, and metal seams',
+    'armor-cloak': 'armor-cloak family: a broad draped outer contour, clasp, and flowing hem',
+    'armor-boots': 'armor-boots family: paired boot silhouette, sole, and ankle material break',
+});
+
+const TIER_LANGUAGE = Object.freeze({
+    0: 'plain training-grade construction with one honest material and an immediately readable purpose',
+    1: 'worn wood, iron, or cloth with simple practical construction',
+    2: 'orderly craftsmanship with two materials and a small functional ornament',
+    3: 'regional craft character expressed through the form and material treatment',
+    4: 'an elemental core and magical fabrication integrated into the structure',
+    5: 'a memorable signature silhouette with legendary materials and ornament density',
+    6: 'a mythic structure changed by aether, void, or dimensional technology',
+});
+
+const ELEMENT_LANGUAGE = Object.freeze({
+    '': 'no elemental effect; preserve the material and silhouette without a background glow',
+    '화염': 'dark-red metal, cracked surface, orange fissures, and small embers',
+    '냉기': 'blue-white crystal, sharp edges, frost, and cold reflected light',
+    '빛': 'ivory metal, gold engraving, sky-blue light points, and clean rays',
+    '어둠': 'black material, inward-fading planes, purple inner light, and flowing haze',
+    '대지': 'stone, brass, angular crystal, heavy fragments, and low sheen',
+    '자연': 'wood, leather, living material, vines, and teal life light',
+    '바람': 'thin curved lines, an open structure, and pale teal flow',
+    '에테르': 'separated pieces, grid structure, and purple-teal spatial cracks',
+});
+
+const CATALOG_ROW_FIELDS = Object.freeze([
+    'name',
+    'type',
+    'tier',
+    'elem',
+    'familyKey',
+    'runtimePath',
+    'cohort',
+]);
+
+const compareCodePoints = (left, right) => {
+    const leftPoints = [...String(left)];
+    const rightPoints = [...String(right)];
+    const length = Math.min(leftPoints.length, rightPoints.length);
+    for (let index = 0; index < length; index += 1) {
+        const difference = leftPoints[index].codePointAt(0) - rightPoints[index].codePointAt(0);
+        if (difference !== 0) return difference;
+    }
+    return leftPoints.length - rightPoints.length;
+};
+
+const exactFormLanguage = (entry) => {
+    if (entry.name === '암살자 장갑') {
+        return 'exact form: one matched pair of leather gloves with articulated fingers, wrist straps, and no breastplate';
+    }
+    if (entry.familyKey === 'offhand-book') {
+        if (entry.name.includes('서판') || entry.name.includes('석판')) {
+            return 'exact form: a solid carved stone tablet with beveled edges and a centered rune';
+        }
+        if (entry.name.includes('주문서')) {
+            return 'exact form: an unfurled parchment scroll with rolled ends and a readable central spell diagram';
+        }
+        if (entry.name.includes('그리모어')) {
+            return 'exact form: a chained arcane grimoire with a heavy cover and rune lock';
+        }
+        return 'exact form: a closed bound tome with a rigid cover, visible spine, and centered scripture emblem';
+    }
+    if (entry.familyKey === 'offhand-shield') {
+        if (entry.name.includes('이지스') || entry.name.includes('방벽')) {
+            return 'exact form: a tall tower shield with a protective vertical contour, reinforced rim, and central boss';
+        }
+        if (!entry.name.includes('원형') && !entry.name.includes('버클러')) {
+            return 'exact form: a kite shield with a pointed lower edge, reinforced rim, and central boss';
+        }
+        return '';
+    }
+    if (entry.familyKey === 'armor-coat') {
+        const tunicNames = ['튜닉', '수련복', '도복', '전투복', '잠수복'];
+        return tunicNames.some((part) => entry.name.includes(part))
+            ? 'exact form: a practical fitted tunic or combat suit with a collar, belt, and split hem'
+            : 'exact form: a draped cloak or coat with a clasp, collar, and flowing hem';
+    }
+    return {
+        'armor-plate': 'exact form: rigid plate armor with readable breastplate, pauldrons, and metal seams',
+        'armor-leather': 'exact form: fitted leather armor with flexible panels, straps, and stitched seams',
+        'armor-robe': 'exact form: a flowing robe with sleeves, layered hem, and ceremonial trim',
+        'armor-cloak': 'exact form: a draped cloak or coat with a clasp, collar, and flowing hem',
+        'armor-boots': 'exact form: one matched pair of boots with visible soles and ankle construction',
+    }[entry.familyKey] || '';
+};
+
+const makeCellPrompt = (entry) => {
+    const tier = Number(entry.tier);
+    const family = entry.familyKey === 'weapon-lance' && entry.name.includes('낫')
+        ? 'weapon-lance polearm family: a long shaft, curved scythe blade, and balanced counterweight'
+        : FAMILY_LANGUAGE[entry.familyKey];
+    const tierLanguage = TIER_LANGUAGE[tier];
+    const elementLanguage = ELEMENT_LANGUAGE[entry.elem || ''];
+    if (!family || !tierLanguage || !elementLanguage) {
+        throw new Error(`Art Bible language is missing for ${entry.name}`);
+    }
+    const form = exactFormLanguage(entry);
+    return `${entry.name}; family ${entry.familyKey}: ${family};${form ? ` ${form};` : ''} Tier T${tier}: ${tierLanguage}; element ${entry.elem || 'none'}: ${elementLanguage}.`;
+};
+
+const catalogRowsSha256 = (catalog) => {
+    const rows = catalog.map((entry) => Object.fromEntries(
+        CATALOG_ROW_FIELDS.map((field) => [field, entry?.[field]])
+    ));
+    return createHash('sha256').update(JSON.stringify(rows)).digest('hex');
+};
+
+export const buildEquipmentPromptBatchFromRows = ({ catalog, catalogSha256, batchId, names }) => {
+    const requestedNames = String(names).split(',').map((name) => name.trim()).filter(Boolean);
+    if (!Array.isArray(catalog)
+        || requestedNames.length < 1
+        || requestedNames.length > CELL_ORDER.length
+        || new Set(requestedNames).size !== requestedNames.length) {
+        throw new Error('Equipment prompt batches require one to six unique catalog identities');
+    }
+    const byName = new Map(catalog.map((entry) => [entry?.name, entry]));
+    const selected = requestedNames.map((name) => {
+        const entry = byName.get(name);
+        if (!entry) throw new Error(`Catalog identity is missing from prompt batch: ${name}`);
+        return entry;
+    }).sort((left, right) => compareCodePoints(left.name, right.name));
+    const cohort = selected[0].cohort;
+    if (!cohort || selected.some((entry) => entry.cohort !== cohort)) {
+        throw new Error('Equipment prompt batch identities must share one cohort');
+    }
+    const familyKey = selected[0].familyKey;
+    if (!familyKey || selected.some((entry) => entry.familyKey !== familyKey)) {
+        throw new Error('Equipment prompt batch identities must share one illustration family');
+    }
+
+    const identities = selected.map((entry, index) => ({
+        cell: CELL_ORDER[index],
+        name: entry.name,
+        type: entry.type,
+        tier: entry.tier,
+        elem: entry.elem || '',
+        familyKey: entry.familyKey,
+        runtimePath: entry.runtimePath,
+        cohort: entry.cohort,
+        prompt: makeCellPrompt(entry),
+    }));
+    const identityNames = identities.map((entry) => entry.name);
+    const unusedCells = CELL_ORDER.slice(identities.length);
+    const grid = { columns: 3, rows: 2, cellOrder: CELL_ORDER };
+    const iconCount = identities.length === CELL_ORDER.length ? 'six' : String(identities.length);
+    const prompt = [
+        'Aetheria Roguelike equipment pixel-art source sheet.',
+        `Create a transparent 2x3 grid with ${iconCount} isolated icon${identities.length === 1 ? '' : 's'}, no labels, no text, no border, and equal cell padding.`,
+        `Use this fixed row-major cell order: ${CELL_ORDER.join(', ')}.`,
+        'Use upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.',
+        'Keep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.',
+        'Within the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.',
+        ...(unusedCells.length
+            ? [`Leave all unused trailing cells completely transparent and empty: ${unusedCells.join(', ')}.`]
+            : []),
+        ...identities.map((entry) => `${entry.cell}: ${entry.prompt}`),
+    ].join('\n');
+
+    return {
+        version: 1,
+        batchId,
+        catalogSha256,
+        catalogRowsSha256: catalogRowsSha256(catalog),
+        cohort,
+        grid,
+        identityNames,
+        identities,
+        prompt,
+    };
+};

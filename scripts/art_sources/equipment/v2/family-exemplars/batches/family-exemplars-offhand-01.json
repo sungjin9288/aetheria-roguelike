@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "batchId": "family-exemplars-offhand-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "definedFamiliesSha256": "752930b7e3d2e5fd6d86a931245602e0b112190b7348bb90b497f44f7832c85f",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "familyKeys": [
+    "offhand-book",
+    "offhand-shield"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "familyKey": "offhand-book",
+      "runtimePath": "/assets/equipment-family/items/offhand-book.png",
+      "prompt": "offhand-book neutral Art Bible exemplar; exact form: a closed bound spellbook with rigid cover, visible spine, page block, and centered rune clasp; honest material colors only, no elemental effect, no rarity frame."
+    },
+    {
+      "cell": "top-center",
+      "familyKey": "offhand-shield",
+      "runtimePath": "/assets/equipment-family/items/offhand-shield.png",
+      "prompt": "offhand-shield neutral Art Bible exemplar; exact form: a protective kite shield with reinforced rim, central boss, grip mass, and readable metal-and-wood structure; honest material colors only, no elemental effect, no rarity frame."
+    }
+  ],
+  "prompt": "Aetheria Roguelike neutral equipment-family pixel-art exemplar sheet.\nCreate a transparent 2x3 grid with 2 isolated icons, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, dark-plum two-level outline, at most three internal shades, hard pixel edges, and no gradient, blur, drop shadow, full-canvas glow, rarity frame, or invented item name.\nThese are family-only Art Bible exemplars, not player equipment identities. Each silhouette must communicate its family at both 160px and 32px through form and material rather than color alone.\nLeave all unused trailing cells completely transparent and empty: top-right, bottom-left, bottom-center, bottom-right.\ntop-left: offhand-book neutral Art Bible exemplar; exact form: a closed bound spellbook with rigid cover, visible spine, page block, and centered rune clasp; honest material colors only, no elemental effect, no rarity frame.\ntop-center: offhand-shield neutral Art Bible exemplar; exact form: a protective kite shield with reinforced rim, central boss, grip mass, and readable metal-and-wood structure; honest material colors only, no elemental effect, no rarity frame."
+}

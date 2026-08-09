@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "batchId": "armor-boots-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "armor",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "가죽 장화"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "가죽 장화",
+      "type": "armor",
+      "tier": 1,
+      "elem": "",
+      "familyKey": "armor-boots",
+      "runtimePath": "/assets/equipment-exact/auto/auto-d292a43f2b89.png",
+      "cohort": "armor",
+      "prompt": "가죽 장화; family armor-boots: armor-boots family: paired boot silhouette, sole, and ankle material break; exact form: one matched pair of boots with visible soles and ankle construction; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+    }
+  ],
+  "prompt": "Aetheria Roguelike equipment pixel-art source sheet.\nCreate a transparent 2x3 grid with 1 isolated icon, no labels, no text, no border, and equal cell padding.\nUse this fixed row-major cell order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nUse upper-left light, lower-right shadow, two-level dark outline, transparent background, and no full-canvas glow.\nKeep every silhouette readable at 32px as well as 160px, with no part crossing or touching its cell boundary.\nWithin the same family, every pair must differ in at least two of blade or body shape, handle, central ornament, and material; color alone never counts.\nLeave all unused trailing cells completely transparent and empty: top-center, top-right, bottom-left, bottom-center, bottom-right.\ntop-left: 가죽 장화; family armor-boots: armor-boots family: paired boot silhouette, sole, and ankle material break; exact form: one matched pair of boots with visible soles and ankle construction; Tier T1: worn wood, iron, or cloth with simple practical construction; element none: no elemental effect; preserve the material and silhouette without a background glow."
+}
