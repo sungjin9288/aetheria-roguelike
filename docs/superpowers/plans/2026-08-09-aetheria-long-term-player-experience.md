@@ -561,11 +561,11 @@ The cohort verifier and visual review are GREEN. Independent review approved the
 
 All 22 defined families now have one Art Bible exemplar. The four currently unused headgear families are represented without invented catalog items. Seventeen family-pure sheets publish all 82 armor identities; coat, leather, robe, plate, cloak and boots remain distinct at both 160px and 32px. Finalized review evidence records accepted and rejected raw sources, source/export hashes, deterministic prompt binding, and the independent APPROVE result.
 
-- [ ] **Step 5: Run the armor gate, commit and push**
+- [x] **Step 5: Run the armor gate, commit and push**
 
 Run cohort verifier, item visual tests, `npm run verify`, diff check; commit source/runtime/manifest/evidence together and push.
 
-The armor/family implementation and independent review are complete. Keep this step open until the cohesive Task 7B commit is created and pushed after final gate review.
+The armor/family implementation, independent review and release gate are complete. The cohesive Task 7B commit was pushed as `f5208b7` after the full verification pass.
 
 ---
 
