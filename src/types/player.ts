@@ -7,6 +7,7 @@
 
 // cycle 319: ConsumableItem 미사용 import 제거 — player.ts는 Item / EquipSlots만 참조.
 import type { EquipSlots, Item } from './item.js';
+import type { ProgressionProfile } from './progression.js';
 
 /**
  * PlayerStats — `[key: string]: any` 인덱스 시그니처로 ad-hoc 필드 허용.
@@ -192,6 +193,7 @@ export interface ExpeditionSnapshot {
     equipmentNames?: string[];
     bossNames?: string[];
     signatureItems?: string[];
+    progressionProfile: ProgressionProfile;
 }
 
 export interface ExpeditionSummary {
@@ -224,6 +226,16 @@ export interface ExpeditionSummary {
     equipmentNames?: string[];
     bossNames?: string[];
     signatureItems?: string[];
+    progressionProfile: ProgressionProfile;
+}
+
+export interface ReturnSupplyRewardReceipt {
+    status: 'pending' | 'delivered';
+}
+
+export interface ReturnSupplyRewardLedger {
+    version: 1;
+    receipts: Record<string, ReturnSupplyRewardReceipt>;
 }
 
 /**
@@ -278,6 +290,8 @@ export interface Player {
     activeExpedition?: ExpeditionSnapshot | null;
     lastExpeditionSummary?: ExpeditionSummary | null;
     classJourney?: ClassJourneyLedger;
+    expeditionSequence?: number;
+    returnSupplyRewards?: ReturnSupplyRewardLedger;
     // cycle 282: signaturePity top-level 필드 제거 — top-level access 0건.
     //   active dispatch는 player.stats.signaturePity (nested, number 형식).
     maxInv?: number;

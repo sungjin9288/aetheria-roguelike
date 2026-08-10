@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useRef } from 'react';
 import type { EnhancePreview } from '../utils/enhancementUtils.js';
 import ItemIcon from './icons/ItemIcon';
+import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
 interface EnhanceDecisionCardProps {
     preview: EnhancePreview;
@@ -14,6 +15,7 @@ interface EnhanceDecisionCardProps {
 const formatRate = (rate: number) => `${Math.round(rate * 100)}%`;
 
 const EnhanceDecisionCard = ({ preview, onCancel, onConfirm }: EnhanceDecisionCardProps) => {
+    usePlatformBackHandler(true, onCancel, 76);
     const requirement = preview.requirement;
     const canConfirm = preview.canEnhance && preview.affordable && Boolean(requirement);
     const submittedRef = useRef(false);
@@ -28,7 +30,7 @@ const EnhanceDecisionCard = ({ preview, onCancel, onConfirm }: EnhanceDecisionCa
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             data-testid="enhance-decision-overlay"
-            className="fixed inset-0 z-[76] flex items-center justify-center px-3 py-[max(env(safe-area-inset-top),0.5rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]"
+            className="fixed inset-0 z-[76] flex items-center justify-center px-3 py-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)]"
         >
             <button type="button" aria-label="강화 확인 닫기" onClick={onCancel} className="aether-overlay" />
             <Motion.section

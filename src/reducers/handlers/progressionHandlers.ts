@@ -40,6 +40,11 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
                 reviveTokens: Math.max(0, Number(prevPlayer.reviveTokens) || 0),
                 ...(prevPlayer.maxInv !== undefined ? { maxInv: Math.max(20, Number(prevPlayer.maxInv) || 20) } : {}),
                 seasonPass: prevPlayer.seasonPass || INITIAL_STATE.player.seasonPass,
+                expeditionSequence: Number.isSafeInteger(prevPlayer.expeditionSequence)
+                    ? prevPlayer.expeditionSequence
+                    : 0,
+                returnSupplyRewards: prevPlayer.returnSupplyRewards
+                    || INITIAL_STATE.player.returnSupplyRewards,
                 // cycle 214: 주간 미션 진행도 / claimed ledger 보존 — mid-week RESET_GAME 시
                 //   재청구 exploit 방지. ASCEND와 동일 lens.
                 weeklyProtocol: prevPlayer.weeklyProtocol || INITIAL_STATE.player.weeklyProtocol,
@@ -232,6 +237,11 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
             //   재청구 exploit 방지. lastResetWeek 자동 reset 로직(exploreUtils.resetWeeklyProtocolIfNeeded)은
             //   그대로 — 새 주 시작 시 정상 reset.
             weeklyProtocol: (state.player as any).weeklyProtocol || INITIAL_STATE.player.weeklyProtocol,
+            expeditionSequence: Number.isSafeInteger(state.player.expeditionSequence)
+                ? state.player.expeditionSequence
+                : 0,
+            returnSupplyRewards: state.player.returnSupplyRewards
+                || INITIAL_STATE.player.returnSupplyRewards,
         };
         return {
             ...INITIAL_STATE,

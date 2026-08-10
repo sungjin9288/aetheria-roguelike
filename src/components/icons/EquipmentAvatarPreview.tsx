@@ -16,7 +16,7 @@ const EquipmentAvatarPreview = ({ item, size, className, variant }: any) => {
     const spriteSignature = spriteCandidates.join('|');
     const [spriteState, setSpriteState] = useState({ signature: '', index: 0 });
     const activeSpriteState = spriteState.signature === spriteSignature ? spriteState : { signature: spriteSignature, index: 0 };
-    const activeSpriteSrc = spriteCandidates[Math.min(activeSpriteState.index, spriteCandidates.length - 1)] || '/assets/avatars/adventurer.png';
+    const activeSpriteSrc = spriteCandidates[Math.min(activeSpriteState.index, spriteCandidates.length - 1)] || '/assets/avatars/canonical/adventurer.png';
 
     const glowColor = appearance.frameTone === '빛' ? 'rgba(246,231,200,0.12)' : 'rgba(125,212,216,0.12)';
     const stageTransform = `translate(${previewStage.translateX}px, ${previewStage.translateY}px) scale(${previewStage.scale})`;

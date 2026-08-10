@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 :root {
+  --aether-safe-area-top: env(safe-area-inset-top, 0px);
+  --aether-safe-area-right: env(safe-area-inset-right, 0px);
+  --aether-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --aether-safe-area-left: env(safe-area-inset-left, 0px);
   --aether-bg-0: #070a10;
   --aether-bg-1: #111821;
   --aether-bg-2: #1d2834;

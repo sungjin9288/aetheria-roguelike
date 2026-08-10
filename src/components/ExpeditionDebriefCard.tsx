@@ -16,6 +16,8 @@ import type { ClassJourneyRecord, ExpeditionSummary } from '../types/player.js';
 import type { ExpeditionReturnAction } from '../utils/expeditionReturnFlow.js';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 import ClassJourneySummary from './ClassJourneySummary';
+import { usePlatformBackHandler } from '../platform/platformBackRegistry';
+import type { ReturnSupplyRewardViewModel } from '../hooks/useReturnSupplyRewardedAd';
 
 interface ExpeditionDebriefCardProps {
     summary: ExpeditionSummary;
@@ -25,6 +27,7 @@ interface ExpeditionDebriefCardProps {
     storyBeat?: MilestoneStoryBeat | null;
     onClose: () => void;
     onPrimaryAction: () => void;
+    returnSupplyReward?: ReturnSupplyRewardViewModel;
 }
 
 const formatDuration = (durationMs: number) => {
@@ -52,7 +55,9 @@ const ExpeditionDebriefCard = ({
     storyBeat,
     onClose,
     onPrimaryAction,
+    returnSupplyReward,
 }: ExpeditionDebriefCardProps) => {
+    usePlatformBackHandler(true, onClose, 70);
     const itemLabels = summarizeItems(summary.newItems);
     const levelLabel = summary.endLevel > summary.startLevel
         ? `LV ${summary.startLevel} → ${summary.endLevel}`
@@ -68,7 +73,7 @@ const ExpeditionDebriefCard = ({
         <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center px-3 py-[max(env(safe-area-inset-top),0.5rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]"
+            className="fixed inset-0 z-[70] flex items-center justify-center px-3 py-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)]"
         >
             <div className="aether-overlay" />
             <Motion.section
@@ -187,6 +192,22 @@ const ExpeditionDebriefCard = ({
                         <div className="aether-type-label font-readable font-semibold text-[#b9f1ec]">이어서 할 일</div>
                         <div className="aether-type-meta mt-0.5 font-readable text-slate-300/78">{recommendation.detail}</div>
                     </div>
+                    {returnSupplyReward?.visible && (
+                        <div data-testid="return-supply-reward" className="mb-2 min-w-0 rounded-xl border border-[#d5b180]/20 bg-[#d5b180]/6 p-2.5">
+                            <button
+                                type="button"
+                                data-testid="return-supply-reward-action"
+                                disabled={returnSupplyReward.disabled}
+                                onClick={returnSupplyReward.onPress}
+                                className="aether-type-body min-h-[44px] w-full rounded-lg border border-[#d5b180]/28 px-3 font-readable font-bold text-[#f6e7c8] disabled:cursor-default disabled:opacity-60"
+                            >
+                                {returnSupplyReward.label}
+                            </button>
+                            <p className="aether-type-meta mt-1 break-words px-1 font-readable text-slate-300/78">
+                                {returnSupplyReward.detail}
+                            </p>
+                        </div>
+                    )}
                     <Motion.button
                         type="button"
                         data-testid="expedition-debrief-primary-action"

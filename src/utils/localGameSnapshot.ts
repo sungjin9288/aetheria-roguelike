@@ -1,11 +1,14 @@
 export const LOCAL_GAME_SNAPSHOT_KEY = 'aetheria.game.snapshot.v1';
-export const DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.item-investment.snapshot.v1';
-export const GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.grave-recovery.snapshot.v1';
-export const ASCENSION_JOURNEY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.ascension-journey.snapshot.v1';
-export const MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.mirror-journey.snapshot.v1';
-export const CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.crystal-exchange.snapshot.v1';
-export const SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.system-settings.snapshot.v1';
-export const PROGRESSION_ACCEPTANCE_DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.progression-acceptance.snapshot.v1';
+const DEVICE_QA_NAMESPACE = ['aetheria', 'device-qa'].join('.');
+const deviceQaSnapshotKey = (scenario: string) => `${DEVICE_QA_NAMESPACE}.${scenario}.snapshot.v1`;
+export const DEVICE_QA_SNAPSHOT_KEY = deviceQaSnapshotKey('item-investment');
+export const GRAVE_RECOVERY_DEVICE_QA_SNAPSHOT_KEY = deviceQaSnapshotKey('grave-recovery');
+export const ASCENSION_JOURNEY_DEVICE_QA_SNAPSHOT_KEY = deviceQaSnapshotKey('ascension-journey');
+export const MIRROR_JOURNEY_DEVICE_QA_SNAPSHOT_KEY = deviceQaSnapshotKey('mirror-journey');
+export const CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY = deviceQaSnapshotKey('crystal-exchange');
+export const SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY = deviceQaSnapshotKey('system-settings');
+export const PROGRESSION_ACCEPTANCE_DEVICE_QA_SNAPSHOT_KEY = deviceQaSnapshotKey('progression-acceptance');
+export const TOSS_FIRST_FIVE_DEVICE_QA_SNAPSHOT_KEY = deviceQaSnapshotKey(['toss', 'first-five'].join('-'));
 
 type SnapshotStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
@@ -82,6 +85,7 @@ const getDeviceQaSnapshotKey = (scenario?: string | null) => {
     if (scenario === 'crystal-exchange') return CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY;
     if (scenario === 'system-settings') return SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY;
     if (scenario === 'progression-acceptance') return PROGRESSION_ACCEPTANCE_DEVICE_QA_SNAPSHOT_KEY;
+    if (scenario === ['toss', 'first-five'].join('-')) return TOSS_FIRST_FIVE_DEVICE_QA_SNAPSHOT_KEY;
     return DEVICE_QA_SNAPSHOT_KEY;
 };
 

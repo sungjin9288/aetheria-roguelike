@@ -16,6 +16,8 @@ import { MSG } from '../data/messages.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { findItemByName } from './gameUtils.js';
 import { applyDynamicDifficulty } from '../systems/DifficultyManager';
+import { CombatEngine } from '../systems/CombatEngine';
+import { scaleProgressionExpReward } from '../data/progressionProfiles';
 import { getBossSignatureDrops } from './bossSignatureHint';
 import { getSignaturePityMultiplier } from './signaturePity';
 import { resolveAbyssDailyDive } from './abyssDailyDive';
@@ -88,10 +90,10 @@ export const resetDailyProtocolIfNeeded = (player: Player, dispatch: any) => {
 //   BALANCE.SCOUT_SIGNAL_ANOMALY_MULT(1.5)를 전달 — 전투를 회피하는 "안전 버튼"이 부정
 //   효과(중독/화상) 확률까지 낮춰주지는 않도록 재조정. 일반 탐험 quiet 롤
 //   (runQuietRollAndCombat)은 anomalyMult 미전달 → 기존 확률 분포 완전 불변.
-export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRelics: Relic[], { dispatch, addLog, getFullStats, anomalyMult }: any) => {
+export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRelics: Relic[], { dispatch, addLog, getFullStats, anomalyMult, rng = Math.random }: any) => {
     const discoveryOdds = getDiscoveryOdds(player, mapData);
     const hasKey = (player.inv || []).some((i: any) => i.name === '잊혀진 열쇠');
-    if (hasKey && (typeof mapData.level === 'number' && mapData.level >= 10) && Math.random() < discoveryOdds.keyEventChance) {
+    if (hasKey && (typeof mapData.level === 'number' && mapData.level >= 10) && rng() < discoveryOdds.keyEventChance) {
         dispatch({
             type: AT.SET_PLAYER,
             payload: (p: any) => {
@@ -110,13 +112,13 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
         0,
         BALANCE.ANOMALY_MAX_CHANCE
     );
-    if (Math.random() < effectiveAnomalyChance && player.loc !== '고대 보물고') {
+    if (rng() < effectiveAnomalyChance && player.loc !== '고대 보물고') {
         const anomalies = [
             { effect: 'poison',    desc: '자욱한 독안개가 밀려옵니다! (중독)' },
             { effect: 'mana_regen', desc: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)' },
             { effect: 'burn',      desc: '피부를 찌르는 산성비가 내립니다. (화상)' }
         ];
-        const anomaly = anomalies[Math.floor(Math.random() * anomalies.length)];
+        const anomaly = anomalies[Math.floor(rng() * anomalies.length)];
         addLog('warning', `[기상 이변] ${anomaly.desc}`);
         if (anomaly.effect === 'mana_regen') {
             const stats = getFullStats();
@@ -129,10 +131,10 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
 
     // 유물 발견 — PR #8: 프레스티지 rank≥2면 보유 한도 +1(6) · 선택지 4지선다.
     const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
-    if (playerRelics.length < relicUnlocks.maxRelics && Math.random() < discoveryOdds.relicChance) {
+    if (playerRelics.length < relicUnlocks.maxRelics && rng() < discoveryOdds.relicChance) {
         const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
         if (available.length > 0) {
-            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics });
+            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
             addLog('event', '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.');
             return 'relic_found';
@@ -149,7 +151,8 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
 //   스폰한다. options 미전달 시 기존 동작(구역 보스는 encounterPool에서 제외, 일반
 //   풀에서만 스폰)과 동일 — 하위 호환.
 // ─────────────────────────────────────────────────────────────────────────
-export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: any, options: { forceAreaBoss?: boolean } = {}) => {
+export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: any, options: { forceAreaBoss?: boolean; rng?: () => number } = {}) => {
+    const rng = options.rng || Math.random;
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
 
@@ -189,7 +192,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         && Boolean(options.forceAreaBoss);
     const baseName: string = (spawnAreaBoss && areaBossName !== null)
         ? areaBossName
-        : selectEncounterMonster(encounterPool, mapData, player, Math.random);
+        : selectEncounterMonster(encounterPool, mapData, player, rng);
     // 2026-07 타입화: GameMap.level은 number | number[] | 'infinite'. 이 함수의 스폰
     // 스탯 계산은 항상 단일 숫자 레벨을 가정했던 기존 동작 그대로 유지 — 시즌 전용
     // 범위형([min, max]) 맵은 도달 시 최솟값으로 취급 (array 케이스가 원래도 산술에
@@ -213,6 +216,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const mStats: any = {
         name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
         baseName,
+        level,
         hp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
         maxHp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
         atk: 15 + level * 4 + (depth * 3),
@@ -256,13 +260,13 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     //   첫 위협은 남기되 시작 물약 2개를 모두 잃는 운 나쁜 전투는 제한한다.
     const earlyElite = !mStats.isBoss && !forceElite
         && typeof level === 'number' && level <= BALANCE.EARLY_ELITE_LEVEL_CAP
-        && Math.random() < BALANCE.EARLY_ELITE_CHANCE;
+        && rng() < BALANCE.EARLY_ELITE_CHANCE;
     // PR #8: 프레스티지 rank≥3 해금 — 엘리트 출현 확률 +25%. forceElite처럼 엘리트
     //   접두어를 강제한다(고승천 플레이어에게 더 잦은 정예 위협 = 광고된 "심연의 메아리").
     const prestigeElite = !mStats.isBoss && !forceElite && !earlyElite
-        && Math.random() < getPrestigeUnlocks(player.meta?.prestigeRank).eliteChanceBonus;
+        && rng() < getPrestigeUnlocks(player.meta?.prestigeRank).eliteChanceBonus;
     // 접두어 부여
-    if (forceElite || earlyElite || prestigeElite || (Math.random() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES)) {
+    if (forceElite || earlyElite || prestigeElite || (rng() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES)) {
         const prefix = earlyElite
             ? { name: '정예', mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
             : (() => {
@@ -270,7 +274,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
                     ? CONSTANTS.MONSTER_PREFIXES.filter((p: any) => p.isElite)
                     : CONSTANTS.MONSTER_PREFIXES;
                 const pool = elitePrefixes.length > 0 ? elitePrefixes : CONSTANTS.MONSTER_PREFIXES;
-                return pool[Math.floor(Math.random() * pool.length)];
+                return pool[Math.floor(rng() * pool.length)];
             })();
         mStats.name = `${prefix.name} ${baseName}`;
         mStats.hp = Math.floor(mStats.hp * prefix.mod);
@@ -325,7 +329,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 // ─────────────────────────────────────────────────────────────────────────
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog }: any) => {
+export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog, rng = Math.random }: any) => {
     const combatStartPlayer: any = {
         ...player,
         combatFlags: {
@@ -376,7 +380,7 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
     // 유물: 혼돈의 심장 (chaos_relic) — 전투 시작 시 랜덤 효과 발동
     const chaosRelic = playerRelics.find((r: any) => r.effect === 'chaos_relic');
     if (chaosRelic) {
-        const roll = Math.floor(Math.random() * 3);
+        const roll = Math.floor(rng() * 3);
         if (roll === 0) {
             const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * 0.1));
             combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
@@ -395,7 +399,7 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
     const chaosBuffRelic = playerRelics.find((r: any) => r.effect === 'chaos_buff');
     if (chaosBuffRelic) {
         const existingBuff = { atk: 0, def: 0, turn: 0, name: null, ...(combatStartPlayer.tempBuff || {}) };
-        const rollAtk = Math.random() < 0.5;
+        const rollAtk = rng() < 0.5;
         const baseAtk = existingBuff.name === '혼돈의 보석' ? 0 : existingBuff.atk;
         const baseDef = existingBuff.name === '혼돈의 보석' ? 0 : existingBuff.def;
         combatStartPlayer.tempBuff = {
@@ -422,13 +426,13 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
 //   카드가 뜬 시점(같은 explore() 턴)에 게이지가 1회 누적됐으므로 중복 누적을 막기 위해
 //   deps.skipBossGaugeAdvance:true를 전달받으면 mapData를 넘기지 않는다.
 // ─────────────────────────────────────────────────────────────────────────
-export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome, skipBossGaugeAdvance }: any) => {
+export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome, skipBossGaugeAdvance, rng = Math.random }: any) => {
     const playerRelics = player.relics || [];
     const quietChance = getDiscoveryOdds(player, mapData).quietChance;
     const gaugeMapData = skipBossGaugeAdvance ? null : mapData;
 
-    if (Math.random() < quietChance) {
-        const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats });
+    if (rng() < quietChance) {
+        const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats, rng });
         if (quietResult !== 'nothing') {
             commitExploreOutcome(quietResult, null, gaugeMapData);
             return;
@@ -443,11 +447,11 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
         && (player.stats?.exploreState?.sinceRelic || 0) >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
     const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
     if (playerRelics.length < relicUnlocks.maxRelics
-        && (firstRelicPity || Math.random() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
+        && (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
         const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
         if (available.length > 0) {
             commitExploreOutcome('relic_found', null, gaugeMapData);
-            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics });
+            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
             addLog('event', MSG.EXPLORE_RELIC_FOUND);
             return;
@@ -455,7 +459,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
     }
 
     // 몬스터 생성
-    const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog });
+    const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog }, { rng });
     let { mStats } = applyDynamicDifficulty(rawStats, player, addLog);
 
     // 무한 심연 모드
@@ -519,7 +523,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
     }
 
     const fullStats = getFullStats();
-    commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }), gaugeMapData);
+    commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog, rng }), gaugeMapData);
     dispatch({ type: AT.SET_ENEMY, payload: mStats });
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
@@ -567,7 +571,11 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
             payload: (p: any) => {
                 const updated = { ...p };
                 updated.gold = (updated.gold || 0) + (chain.reward.gold || 0);
-                updated.exp = (updated.exp || 0) + (chain.reward.exp || 0);
+                const expResult = CombatEngine.applyExpGain(
+                    updated,
+                    scaleProgressionExpReward(updated, chain.reward.exp || 0),
+                );
+                Object.assign(updated, expResult.updatedPlayer);
                 if (chain.reward.premiumCurrency) {
                     updated.premiumCurrency = (updated.premiumCurrency || 0) + chain.reward.premiumCurrency;
                 }

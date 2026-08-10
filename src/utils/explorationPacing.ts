@@ -95,12 +95,25 @@ export const getMapPacingProfile = (mapData: GameMap | null | undefined) => {
 
 // cycle 507: 4 default 제거 — 2 callsite 모두 4 args 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 6번째 (cycle 502-506 lens).
-export const getNarrativeEventChance = (baseChance: any, bonusMultiplier: any, stats: any, mapData: GameMap | null) => {
+export const getNarrativeEventChance = (
+    baseChance: any,
+    bonusMultiplier: any,
+    stats: any,
+    mapData: GameMap | null,
+    progressionMultiplier?: number,
+) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
+    const configuredMultiplier = Number.isFinite(progressionMultiplier) && Number(progressionMultiplier) > 0
+        ? Number(progressionMultiplier)
+        : 1;
     const base = Math.min(
         BALANCE.SPECIAL_EVENT_MAX_CHANCE,
-        (baseChance || 0) * BALANCE.SPECIAL_EVENT_BASE_MULT * profile.narrativeMult * (1 + bonusMultiplier)
+        (baseChance || 0)
+            * BALANCE.SPECIAL_EVENT_BASE_MULT
+            * profile.narrativeMult
+            * (1 + bonusMultiplier)
+            * configuredMultiplier,
     );
     const pitySteps = Math.max(0, exploreState.sinceNarrativeEvent - 2);
     const pity = pitySteps * BALANCE.SPECIAL_EVENT_PITY_PER_EXPLORE;

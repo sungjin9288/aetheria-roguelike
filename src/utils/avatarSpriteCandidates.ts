@@ -118,7 +118,7 @@ export const getAvatarSpriteCandidates = (appearance: any) => {
     if (canonicalEntry) return [canonicalEntry.runtimePath];
 
     // Unknown/corrupt legacy save data is the only remaining safe-placeholder path.
-    return ['/assets/avatars/adventurer.png'];
+    return ['/assets/avatars/canonical/adventurer.png'];
 };
 
 export const getAvatarEquipmentPreviewCandidates = (appearance: any) => {

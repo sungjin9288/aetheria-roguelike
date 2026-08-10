@@ -205,11 +205,11 @@ test('progression acceptance QA keeps rewards and growth choices away from produ
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {
     const source = await readFile(new URL('../src/hooks/useFirebaseSync.ts', import.meta.url), 'utf8');
 
-    assert.match(source, /fallbackAuthOffline[\s\S]+?getOfflineBootstrapData\(\)/);
-    assert.match(source, /fallbackToOffline[\s\S]+?getOfflineBootstrapData\(\)/);
+    assert.match(source, /fallbackAuthOffline[\s\S]+?await getOfflineBootstrapData\(\)/);
+    assert.match(source, /fallbackToOffline[\s\S]+?await getOfflineBootstrapData\(\)/);
     assert.match(source, /previousLocalPlayerNameRef/);
-    assert.match(source, /if \(previousPlayerName\) \{[\s\S]+?else clearLocalGameSnapshot\(\)/);
-    assert.match(source, /else writeLocalGameSnapshot\(snapshot\)/);
+    assert.match(source, /if \(previousPlayerName\) \{[\s\S]+?getRuntimeGameStorage\(\)\.remove\(\)/);
+    assert.match(source, /localSavePromiseRef\.current = \(async \(\) =>[\s\S]+?const saved = await storage\.save\(snapshot\)/);
     assert.match(source, /version: CONSTANTS\.DATA_VERSION/);
 });
 
@@ -217,14 +217,27 @@ test('firebase sync promotes a local run only when the cloud document is absent'
     const source = await readFile(new URL('../src/hooks/useFirebaseSync.ts', import.meta.url), 'utf8');
 
     assert.match(source, /if \(docSnap\.exists\(\)\)[\s\S]+?migrateData\(remoteData\)/);
-    assert.match(source, /else \{\s*const localData = getOfflineBootstrapData\(\)/);
-    assert.match(source, /if \(localData\.player\?\.name\)[\s\S]+?payload: 'syncing'/);
+    assert.match(source, /resolveCloudBootstrapAuthority\(localRecord, remoteData\)[\s\S]+?payload: 'syncing'/);
+    assert.match(source, /else \{\s*const localResult = await getOfflineBootstrapData\(\)/);
+    assert.match(source, /if \(localResult\.data\.player\?\.name\)[\s\S]+?payload: 'syncing'/);
+    assert.match(source, /saveSchemaVersion: localRecord\?\.saveVersion \?\? 1/);
+    assert.match(source, /saveRevision: localRecord\?\.revision \?\? 0/);
+    assert.match(source, /importCloudRecordAuthority\([\s\S]+?getRuntimeGameStorage\(\)[\s\S]+?remoteRecord/);
+    assert.match(source, /const importedRecord = importResult\.record[\s\S]+?activeData = migrateData\(importedRecord\.payload\)/);
+    assert.match(source, /localImportFailed[\s\S]+?LOAD_DATA, payload: activeData[\s\S]+?SET_SYNC_STATUS, payload: 'offline'/);
+    assert.match(source, /pendingCloudRecordRef/);
+    assert.match(source, /cloudRevisionFloorRef/);
+    assert.match(source, /cloudRevisionAdvanceRequiredRef/);
+    assert.match(source, /localRecord\.revision < cloudRevisionFloorRef\.current/);
+    assert.match(source, /localRecord\.revision <= cloudRevisionFloorRef\.current/);
+    assert.match(source, /callbackSequence/);
+    assert.match(source, /sequence !== callbackSequence/);
 });
 
 test('device QA runtime stays offline and persists only to its isolated snapshot', async () => {
     const source = await readFile(new URL('../src/hooks/useFirebaseSync.ts', import.meta.url), 'utf8');
 
-    assert.match(source, /deviceQaMode \? getDeviceQaBootstrapData\(deviceQaScenario\)/);
-    assert.match(source, /if \(deviceQaMode\) writeDeviceQaSnapshot\(snapshot, undefined, deviceQaScenario\)/);
+    assert.match(source, /deviceQaMode\s*\? getDeviceQaBootstrapData\(deviceQaScenario\)/);
+    assert.match(source, /if \(deviceQaMode\) \{[\s\S]+?writeDeviceQaSnapshot\(snapshot, undefined, deviceQaScenario\)/);
     assert.match(source, /if \(mockMode\) return undefined;[\s\S]+?Auto Save/);
 });

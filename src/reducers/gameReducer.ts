@@ -1,5 +1,5 @@
 import { DB } from '../data/db';
-import { CONSTANTS } from '../data/constants';
+import { BALANCE, CONSTANTS } from '../data/constants';
 import { DEFAULT_EXPLORE_STATE } from '../utils/explorationPacing';
 import { bootstrapActionMap } from './handlers/bootstrapHandlers';
 import { uiActionMap, entityActionMap } from './handlers/uiHandlers';
@@ -7,6 +7,8 @@ import { makeProgressionActionMap } from './handlers/progressionHandlers';
 import { makeFeatureActionMap } from './handlers/featureHandlers';
 import type { Player } from '../types';
 import { createCurrentRunProgress } from '../utils/runProgress';
+import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
+import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 
 /**
  * Game state shape — cycle 60 phase D — Player 도메인 타입 적용.
@@ -86,6 +88,8 @@ export const INITIAL_STATE: GameState = {
         eventChainProgress: {},
         activeExpedition: null,
         lastExpeditionSummary: null,
+        expeditionSequence: 0,
+        returnSupplyRewards: { version: 1, receipts: {} },
     },
 
     // Runtime State
@@ -102,7 +106,12 @@ export const INITIAL_STATE: GameState = {
 
     // Shared Data
     leaderboard: [],
-    liveConfig: { eventMultiplier: 1, announcement: '', seasonEvent: null },
+    liveConfig: {
+        eventMultiplier: 1,
+        progressionProfile: { id: 'baseline', version: 1 },
+        announcement: '',
+        seasonEvent: null,
+    },
 
     // Sync Guard
     lastLoadedTimestamp: 0,
@@ -135,9 +144,25 @@ const ACTION_MAP: ActionMap = {
     ...entityActionMap,
     ...makeProgressionActionMap(INITIAL_STATE),
     ...makeFeatureActionMap(INITIAL_STATE.player),
+    ...returnSupplyRewardActionMap,
 };
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
     const handler = ACTION_MAP[action.type];
-    return handler ? handler(state, action) : state;
+    if (!handler) return state;
+    const nextState = handler(state, action);
+    if (nextState === state) return state;
+    const delivery = deliverPendingReturnSupplyRewards(nextState.player);
+    if (delivery.player === nextState.player) return nextState;
+    const deliveryLogs = delivery.deliveredExpeditionIds.map((expeditionId) => ({
+        id: `return-supply:${expeditionId}`,
+        type: 'success',
+        text: '귀환 보급 지급 · 하급 체력 물약 1개',
+    }));
+    return {
+        ...nextState,
+        player: delivery.player,
+        logs: [...nextState.logs, ...deliveryLogs].slice(-BALANCE.LOG_MAX_SIZE),
+        syncStatus: 'syncing',
+    };
 };

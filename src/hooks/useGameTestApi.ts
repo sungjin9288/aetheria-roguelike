@@ -308,6 +308,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     seasonXp: e.player.seasonPass?.xp || 0,
                     storyMilestones: e.player.meta?.storyMilestones || { seen: [], pending: [] },
                     classJourneySequence: e.player.classJourney?.sequence || 0,
+                    activeExpeditionId: e.player.activeExpedition?.id || '',
+                    lastExpeditionSummaryId: e.player.lastExpeditionSummary?.id || '',
                     loc: e.player.loc,
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
@@ -476,6 +478,15 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 const scrollStyle = scrollViewport instanceof HTMLElement ? window.getComputedStyle(scrollViewport) : null;
 
                 return {
+                    viewport: {
+                        width: window.innerWidth,
+                        height: window.innerHeight,
+                        documentWidth: document.documentElement.scrollWidth,
+                    },
+                    safeArea: {
+                        top: getComputedStyle(document.documentElement).getPropertyValue('--aether-safe-area-top').trim(),
+                        bottom: getComputedStyle(document.documentElement).getPropertyValue('--aether-safe-area-bottom').trim(),
+                    },
                     panel: rect(panel),
                     scrollViewport: rect(scrollViewport),
                     archiveButton: rect(archiveButton),
@@ -511,6 +522,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             getPerfSnapshot: () => getPerfSnapshot(),
             markPerf: (name: any) => markPerf(name),
             resetGame: () => engineRef.current.actions.reset?.(),
+            flushLocalSave: () => engineRef.current.flushLocalSave(),
             sendCommand: (command: any) => engineRef.current.handleCommand(command),
             setSideTab: (tab: any) => engineRef.current.actions.setSideTab?.(tab),
             // cycle 605: 4 defaults batch 제거 (gold/materialCount/weaponEnhance

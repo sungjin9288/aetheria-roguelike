@@ -1,17 +1,20 @@
 import { motion as Motion } from 'framer-motion';
 import { BookOpen, CheckCircle2, X } from 'lucide-react';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
+import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
 interface MilestoneStoryCardProps {
     story: MilestoneStoryBeat;
     onClose: () => void;
 }
 
-const MilestoneStoryCard = ({ story, onClose }: MilestoneStoryCardProps) => (
+const MilestoneStoryCard = ({ story, onClose }: MilestoneStoryCardProps) => {
+    usePlatformBackHandler(true, onClose, 72);
+    return (
     <Motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 z-[72] flex items-center justify-center px-3 py-[max(env(safe-area-inset-top),0.5rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]"
+        className="fixed inset-0 z-[72] flex items-center justify-center px-3 py-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)]"
     >
         <div className="aether-overlay" />
         <Motion.section
@@ -57,6 +60,7 @@ const MilestoneStoryCard = ({ story, onClose }: MilestoneStoryCardProps) => (
             </div>
         </Motion.section>
     </Motion.div>
-);
+    );
+};
 
 export default MilestoneStoryCard;

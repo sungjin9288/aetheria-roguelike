@@ -32,7 +32,7 @@ const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
             className="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4"
         >
             <section className="panel-noise aether-surface-strong relative z-10 flex min-h-0 w-full max-w-[40rem] flex-col overflow-hidden border-white/10 sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl sm:border">
-                <header className="shrink-0 border-b border-white/8 px-4 pb-3 pt-[max(env(safe-area-inset-top),1rem)] sm:px-5 sm:pt-5">
+                <header className="shrink-0 border-b border-white/8 px-4 pb-3 pt-[max(var(--aether-safe-area-top),1rem)] sm:px-5 sm:pt-5">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="text-[11px] font-readable text-[#d5b180]">마왕을 쓰러뜨린 뒤</div>
@@ -170,7 +170,7 @@ const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
                     )}
                 </main>
 
-                <footer className="shrink-0 border-t border-white/8 bg-[#0a1018]/98 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 sm:px-5">
+                <footer className="shrink-0 border-t border-white/8 bg-[#0a1018]/98 px-4 pb-[max(var(--aether-safe-area-bottom),0.75rem)] pt-3 sm:px-5">
                     <div className="grid grid-cols-2 gap-2.5">
                         <button
                             type="button"

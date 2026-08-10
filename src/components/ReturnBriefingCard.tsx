@@ -2,15 +2,17 @@ import { motion as Motion } from 'framer-motion';
 import { Gift, MapPin, Heart, ScrollText, ListChecks, Sparkles, X } from 'lucide-react';
 import { MSG } from '../data/messages';
 import type { Briefing } from '../utils/returnBriefing';
+import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
 /** 게임으로 돌아온 플레이어에게 현재 상태와 남은 목표를 한 번 보여준다. */
 interface ReturnBriefingCardProps {
     briefing: Briefing;
-    onClose?: () => void;
-    onOpenGoals?: () => void;
+    onClose: () => void;
+    onOpenGoals: () => void;
 }
 
 const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCardProps) => {
+    usePlatformBackHandler(true, onClose, 50);
     const hpPct = briefing.maxHp > 0
         ? Math.max(0, Math.min(100, Math.round((briefing.hp / briefing.maxHp) * 100)))
         : 0;
@@ -20,14 +22,14 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
             onOpenGoals();
             return;
         }
-        onClose?.();
+        onClose();
     };
 
     return (
         <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-4 py-[max(env(safe-area-inset-top),0.5rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 py-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)]"
         >
             <div className="aether-overlay" />
 

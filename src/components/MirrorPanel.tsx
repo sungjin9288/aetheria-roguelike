@@ -17,6 +17,7 @@ import {
     MIRROR_PATHS,
     type MirrorPathId,
 } from '../utils/mirrorJourney';
+import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
 interface MirrorPanelProps {
     player?: Player | null;
@@ -34,6 +35,7 @@ const PATH_ICONS: Record<MirrorPathId, LucideIcon> = {
 const EssenceMark = () => <Sparkles size={14} aria-hidden="true" />;
 
 const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
+    usePlatformBackHandler(Boolean(onClose), () => onClose?.(), 200);
     const meta = player?.meta || {};
     const essence = Math.max(0, Number(meta.essence) || 0);
     const mirror = meta.mirror || {};
@@ -67,7 +69,7 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
             <section
                 data-testid="mirror-panel"
                 aria-label="에테르 거울 영구 성장"
-                className="panel-noise aether-surface relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-x border-[#9a8ac0]/18 bg-[#0b111a] pt-[env(safe-area-inset-top)]"
+                className="panel-noise aether-surface relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-x border-[#9a8ac0]/18 bg-[#0b111a] pt-[var(--aether-safe-area-top)]"
                 style={{ backgroundColor: '#0b111a' }}
                 onClick={(event) => event.stopPropagation()}
             >
@@ -213,7 +215,7 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                     )}
                 </div>
 
-                <footer data-testid="mirror-action-footer" className="shrink-0 border-t border-white/10 bg-[#0b111a]/96 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
+                <footer data-testid="mirror-action-footer" className="shrink-0 border-t border-white/10 bg-[#0b111a]/96 px-4 pb-[max(12px,var(--aether-safe-area-bottom))] pt-3">
                     <div className="grid grid-cols-[104px_1fr] gap-2">
                         <button
                             type="button"

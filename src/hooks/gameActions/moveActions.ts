@@ -8,6 +8,7 @@ import { checkDiscoveryChains, getFirstVisitReward } from '../../utils/exploreUt
 import { CombatEngine } from '../../systems/CombatEngine';
 import { isAreaBossUndefeated, getAreaBossName } from '../../utils/bossGauge';
 import { finishExpedition, normalizeActiveExpedition, startExpedition } from '../../utils/expeditionLedger';
+import { resolveProgressionProfile, scaleProgressionExpReward } from '../../data/progressionProfiles';
 
 // cycle 314: addStoryLog 미사용 dependency 제거 — moveActions 어디에서도 호출 0건.
 //   `void addStoryLog` 자가-suppress 라인도 함께 cleanup.
@@ -56,7 +57,13 @@ export const createMoveActions = (deps: any) => {
                     }
                     if (isSafeDestination) nextPlayer = clearTemporaryAdventureState(nextPlayer);
                     if (shouldStartExpedition) {
-                        nextPlayer = startExpedition(nextPlayer, loc, movedAt, DB.QUESTS);
+                        nextPlayer = startExpedition(
+                            nextPlayer,
+                            loc,
+                            movedAt,
+                            DB.QUESTS,
+                            resolveProgressionProfile(liveConfig?.progressionProfile),
+                        );
                     }
                     return {
                         ...nextPlayer,
@@ -89,7 +96,10 @@ export const createMoveActions = (deps: any) => {
                         payload: (p: any) => {
                             let updated = isSafeDestination ? clearTemporaryAdventureState(p) : { ...p };
                             updated = { ...updated, gold: (updated.gold || 0) + visitReward.gold };
-                            const expResult = CombatEngine.applyExpGain(updated, visitReward.exp);
+                            const expResult = CombatEngine.applyExpGain(
+                                updated,
+                                scaleProgressionExpReward(updated, visitReward.exp),
+                            );
                             return expResult.updatedPlayer;
                         }
                     });

@@ -9,6 +9,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:toss:web": "node scripts/build-toss-web.mjs",
+    "toss:assets:stage": "node scripts/stage-toss-assets.mjs",
+    "toss:verify": "node scripts/verify-toss-bundle.mjs",
+    "toss:build": "npm run build:toss:web && ait build",
+    "toss:rehearse:first-five": "bash scripts/toss-first-five-rehearsal.sh",
+    "toss:evidence:verify": "node scripts/verify-toss-release-evidence.mjs",
+    "toss:soft-launch:report": "node scripts/generate-toss-soft-launch-report.mjs",
+    "toss:soft-launch:verify": "node scripts/verify-toss-soft-launch-report.mjs",
+    "progression:simulate": "node --import tsx scripts/simulate-progression.mjs",
+    "progression:compare": "node --import tsx scripts/compare-progression.mjs",
     "assets:brand": "python3 scripts/generate_app_brand_assets.py",
     "art:catalog": "node --import tsx scripts/artCatalog.mjs --stdout",
     "art:verify": "node --import tsx scripts/verify-art-assets.mjs",
@@ -47,6 +57,7 @@
     "ios:open": "npx cap open ios"
   },
   "dependencies": {
+    "@apps-in-toss/web-framework": "3.0.3",
     "@capacitor/android": "^8.1.0",
     "@capacitor/cli": "^8.1.0",
     "@capacitor/core": "^8.1.0",

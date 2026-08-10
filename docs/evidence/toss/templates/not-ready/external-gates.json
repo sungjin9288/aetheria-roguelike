@@ -1,0 +1,19 @@
+{
+  "app_name": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "sdk3_nonrollback": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "cors": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "game_navigation": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "business": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "settlement": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "grac_rating": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "privacy_policy": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "support_channel": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "event_collector": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "sentry_release": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "console_assets_review": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "ad_group": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "review_request_approval": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "review_accepted": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "public_release_approval": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null },
+  "ad_activation_approval": { "status": "unverified", "candidateId": null, "releaseId": null, "evidenceRef": null, "evidenceSha256": null, "verifiedAt": null, "expiresAt": null, "approverRole": null }
+}

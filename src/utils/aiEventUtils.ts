@@ -546,7 +546,7 @@ const FALLBACK_EVENT_POOL: any = {
 // cycle 545: history / context defaults 제거 — 3 production caller (aiService
 //   :69/74/108) + 5 test caller 모두 3 args 명시이라 두 default 모두 도달
 //   불가. 청소 메가 시리즈 40번째 cross-file batch (cycle 502-544).
-export const pickFallbackEvent = (loc: string, history: any[], context: any) => {
+export const pickFallbackEvent = (loc: string, history: any[], context: any, rng: () => number = Math.random) => {
     // cycle 425: 직접 loc lookup 분기 제거 — cycle 357 이후 FALLBACK_EVENT_POOL은
     //   English category 키만 (forest/ruins/cave/...). loc 파라미터는 항상 Korean
     //   지명이라 직접 매칭 0건이었음. getPoolKeyByLocation이 유일 path.
@@ -554,7 +554,7 @@ export const pickFallbackEvent = (loc: string, history: any[], context: any) => 
     const basePool = FALLBACK_EVENT_POOL[poolKey] || FALLBACK_EVENT_POOL.default;
     // 관대함 하향 (2026-07 밸런스 감사): 구조화 이벤트(고보상 NPC/도박/퍼즐) 혼합 확률
     //   30%(하드코딩) → BALANCE.STRUCTURED_EVENT_MIX(0.22)로 상수 승격 + 하향.
-    const pool = Math.random() < BALANCE.STRUCTURED_EVENT_MIX
+    const pool = rng() < BALANCE.STRUCTURED_EVENT_MIX
         ? [...basePool, ...FALLBACK_EVENT_POOL.structured]
         : basePool;
     const recentEvents = getRecentEventSet(history);
@@ -565,7 +565,7 @@ export const pickFallbackEvent = (loc: string, history: any[], context: any) => 
     const candidates = withoutImmediateRepeat.length > 0
         ? withoutImmediateRepeat
         : (filteredPool.length > 0 ? filteredPool : pool);
-    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+    const picked = candidates[Math.floor(rng() * candidates.length)];
     return buildEventPackage(
         { ...picked, source: 'fallback' },
         { ...context, location: loc, source: 'fallback' }

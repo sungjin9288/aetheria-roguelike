@@ -7,6 +7,7 @@ import { applyItemPrefix } from '../utils/itemPrefixUtils';
 import { MSG } from '../data/messages.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
+import { getProgressionLootMultiplier } from '../data/progressionProfiles.js';
 
 /**
  * 적의 기본 이름을 해석합니다 (접두사 제거).
@@ -46,6 +47,7 @@ export const processLoot = (
     const dropRateMult = 1 + (relics.find((relic: any) => relic.effect === 'drop_rate')?.val || 0);
     const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic: any) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
+    const progressionLootMult = getProgressionLootMultiplier(player);
 
     const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
 
@@ -73,7 +75,15 @@ export const processLoot = (
             // Signature 아이템에만 pity 배율 적용 (일반 아이템 드롭률은 변동 없음)
             const isSignature = Boolean(SIGNATURE_ITEM_REGISTRY[entry.item]);
             const entryPityMult = isSignature ? pityMult : 1;
-            const chance = Math.min(1, entry.rate * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult * entryPityMult);
+            const chance = Math.min(
+                1,
+                entry.rate
+                    * (enemy.dropMod || 1.0)
+                    * dropRateMult
+                    * bossDropMult
+                    * progressionLootMult
+                    * entryPityMult,
+            );
             if (random() < chance) {
                 const itemData = allItems.find((i: any) => i.name === entry.item);
                 if (!itemData) return;
@@ -98,7 +108,14 @@ export const processLoot = (
     const lootList = LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string];
     if (lootList && lootList.length > 0) {
         lootList.forEach((itemName: any) => {
-            const chance = Math.min(1, BALANCE.DROP_CHANCE * (enemy.dropMod || 1.0) * dropRateMult * bossDropMult);
+            const chance = Math.min(
+                1,
+                BALANCE.DROP_CHANCE
+                    * (enemy.dropMod || 1.0)
+                    * dropRateMult
+                    * bossDropMult
+                    * progressionLootMult,
+            );
             if (random() < chance) {
                 const itemData = allItems.find((i: any) => i.name === itemName);
                 if (!itemData) return;
@@ -119,7 +136,7 @@ export const processLoot = (
     if (inferredLevel >= BALANCE.LOOT_BONUS_MIN_LEVEL) {
         const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
-        if (random() < bonusChance * dropRateMult * bossDropMult) {
+        if (random() < Math.min(1, bonusChance * dropRateMult * bossDropMult * progressionLootMult)) {
             const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
                 const picked = tierPool[Math.floor(random() * tierPool.length)];

@@ -8,6 +8,7 @@ import {
 } from '../utils/outcomeAnalysis';
 import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
+import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
 const toneClassForSignal = (tone: any) => {
     if (tone === 'amber') return 'text-[#f6e7c8] border-[#d5b180]/20 bg-[#d5b180]/10';
@@ -24,6 +25,7 @@ interface PostCombatCardProps {
 
 const PostCombatCard = ({ result, onClose, onOpenInventory }: PostCombatCardProps) => {
     const [isClosing, setIsClosing] = useState(false);
+    usePlatformBackHandler(Boolean(result && onClose), () => onClose?.(), 40);
 
     if (!result) return null;
 
@@ -97,7 +99,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory }: PostCombatCardProp
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="panel-noise aether-surface-strong fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.8rem)] z-40 max-h-[calc(100dvh-env(safe-area-inset-top)-1.6rem)] overflow-y-auto overscroll-contain rounded-[1.55rem] border-white/12 backdrop-blur-2xl"
+                    className="panel-noise aether-surface-strong fixed inset-x-3 bottom-[calc(var(--aether-safe-area-bottom)+0.8rem)] z-40 max-h-[calc(100dvh-var(--aether-safe-area-top)-1.6rem)] overflow-y-auto overscroll-contain rounded-[1.55rem] border-white/12 backdrop-blur-2xl"
                 >
                     <div
                         className="pointer-events-none absolute inset-0 opacity-60"

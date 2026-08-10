@@ -342,14 +342,13 @@ test('shadow-lord uses dedicated default sprite regardless of equipment', () => 
     assert.deepEqual(candidates, ['/assets/avatars/canonical/shadow-lord.png']);
 });
 
-test('unknown job falls back to adventurer (jobSlug = adventurer)', () => {
+test('unknown job falls back to the canonical adventurer sprite', () => {
     const candidates = getAvatarSpriteCandidates({
         job: '미확인 직업',
         armorStyle: 'robe',
         loadoutStyle: 'caster',
     });
-    // cycle 46: jobSlug='adventurer' 폴백. JOB_DEFAULT_SPRITE.adventurer = 'adventurer'
-    assert.deepEqual(candidates, ['/assets/avatars/adventurer.png']);
+    assert.deepEqual(candidates, ['/assets/avatars/canonical/adventurer.png']);
 });
 
 test('cycle 46: 모험가는 어떤 장비를 입든 항상 같은 sprite', () => {

@@ -10,6 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-toss
+.toss/
+*.ait
 *.local
 
 # Editor directories and files
@@ -31,6 +34,7 @@ dist-ssr
 android/key.properties
 build/ios
 build/android
+/build/toss-soft-launch/
 playtest-artifacts/
 
 # Build logs (Windows 잔여물 방지)
@@ -54,4 +58,5 @@ tmp/
 # Claude session artifacts
 .playwright-mcp/
 /aetheria-*.png
+/dist-toss-rehearsal/
 __pycache__/

@@ -193,17 +193,10 @@ test('handleScoutChoice: "이상 신호"(scoutEffect=anomaly) 선택 시 rollExp
             if (typeof transform === 'function') transform(deps.player);
         },
     };
-    const actions = createEventActions(deps, shared);
-
     // ANOMALY_BASE_CHANCE(0.12)*1.2 = 0.144 는 base 미만에서 미발동하지만 ×1.5 가중(0.18) 시 발동하는 지점.
     const probe = BALANCE.ANOMALY_BASE_CHANCE * 1.2;
-    const orig = Math.random;
-    Math.random = () => probe;
-    try {
-        actions.handleEventChoice(1); // 이상 신호 카드 (choiceIndex 1)
-    } finally {
-        Math.random = orig;
-    }
+    const actions = createEventActions({ ...deps, rng: () => probe }, shared);
+    actions.handleEventChoice(1); // 이상 신호 카드 (choiceIndex 1)
 
     const commit = [...dispatches].reverse().find((d) => d.type === 'COMMIT_EXPLORE_OUTCOME');
     assert.ok(commit, 'COMMIT_EXPLORE_OUTCOME dispatch 존재');

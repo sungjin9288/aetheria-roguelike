@@ -7,6 +7,13 @@ import { useDamageFlash } from './hooks/useDamageFlash';
 import { useGameTestApi } from './hooks/useGameTestApi';
 import { markPerfOnce, measurePerfOnce, markPerf } from './utils/performanceMarks';
 import { getPendingMilestoneStoryBeat } from './utils/milestoneStory';
+import { bindLifecycleBridge } from './platform/lifecycleBridge';
+import { resolvePlatformBackAction } from './platform/platformBack';
+import { getRuntimeEnvironment } from './platform/runtimeEnvironment';
+import {
+    createPlatformBackRegistry,
+    PlatformBackProvider,
+} from './platform/platformBackRegistry';
 
 import MainLayout from './components/MainLayout';
 import IntroScreen from './components/IntroScreen';
@@ -22,7 +29,8 @@ const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'mirror-journey'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'crystal-exchange'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'system-settings'
-    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'progression-acceptance';
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'progression-acceptance'
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'toss-first-five';
 const useRuntimeGameTestApi = TEST_API_BUILD ? useGameTestApi : () => undefined;
 
 const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
@@ -52,7 +60,60 @@ function App() {
     const inventorySpotlightRef = useRef(inventorySpotlight);
     /* eslint-disable-next-line react-hooks/refs */
     inventorySpotlightRef.current = inventorySpotlight;
+    const premiumShopOpenRef = useRef(premiumShopOpen);
+    /* eslint-disable-next-line react-hooks/refs */
+    premiumShopOpenRef.current = premiumShopOpen;
+    const mirrorPanelOpenRef = useRef(mirrorPanelOpen);
+    /* eslint-disable-next-line react-hooks/refs */
+    mirrorPanelOpenRef.current = mirrorPanelOpen;
+    const [platformBackRegistry] = useState(createPlatformBackRegistry);
     useRuntimeGameTestApi(engineRef, fullStatsRef, inventorySpotlightRef);
+
+    useEffect(() => bindLifecycleBridge({
+        environment: getRuntimeEnvironment(),
+        callbacks: {
+            onBackground: () => {
+                void engineRef.current.flushLocalSave();
+            },
+            onBack: () => {
+                if (platformBackRegistry.handleBack()) return true;
+                const currentEngine = engineRef.current;
+                const summary = currentEngine.player?.lastExpeditionSummary;
+                const action = resolvePlatformBackAction({
+                    premiumShopOpen: premiumShopOpenRef.current,
+                    mirrorPanelOpen: mirrorPanelOpenRef.current,
+                    expeditionDebriefOpen: Boolean(
+                        summary && (currentEngine.expeditionDebriefOpen || !summary.reviewedAt),
+                    ),
+                    postCombatOpen: Boolean(currentEngine.postCombatResult),
+                    gameState: currentEngine.gameState,
+                });
+                switch (action) {
+                    case 'close-premium':
+                        setPremiumShopOpen(false);
+                        return true;
+                    case 'close-mirror':
+                        setMirrorPanelOpen(false);
+                        return true;
+                    case 'close-debrief':
+                        currentEngine.actions.closeExpeditionDebrief?.();
+                        return true;
+                    case 'close-post-combat':
+                        currentEngine.actions.clearPostCombat?.();
+                        return true;
+                    case 'dismiss-event':
+                        currentEngine.actions.dismissEvent?.();
+                        return true;
+                    case 'close-focus-panel':
+                        currentEngine.actions.setGameState?.(GS.IDLE);
+                        return true;
+                    case 'close-app':
+                        return false;
+                }
+            },
+            onError: (error) => console.warn('Platform lifecycle bridge unavailable', error),
+        },
+    }), [platformBackRegistry]);
 
     // Performance marks
     useEffect(() => {
@@ -130,7 +191,8 @@ function App() {
     }
 
     return (
-        <GameRoot
+        <PlatformBackProvider registry={platformBackRegistry}>
+            <GameRoot
             engine={engine}
             fullStats={fullStats}
             isPanelFocusState={isPanelFocusState}
@@ -144,7 +206,8 @@ function App() {
             damageFlash={damageFlash}
             healFlash={healFlash}
             damageAmount={damageAmount}
-        />
+            />
+        </PlatformBackProvider>
     );
 }
 

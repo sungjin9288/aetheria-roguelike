@@ -25,6 +25,8 @@ import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/
 import { RARITY_COLORS } from '../../data/titles';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
+import { trackRuntimeProductEvent } from '../../platform/productEventCoordinator';
+import { normalizeProductEventJob } from '../../platform/productEvents';
 import RelicIcon from '../icons/RelicIcon';
 
 const SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
@@ -283,8 +285,20 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     }, [actions.liveConfig, updateLiveConfig]);
 
     const submitFeedback = useCallback(async () => {
+        const trackFeedbackOutcome = (
+            outcome: 'success' | 'validation_failed' | 'transport_failed',
+        ) => trackRuntimeProductEvent({
+            receipt: `feedback:${Date.now()}:${outcome}`,
+            name: 'feedback_submission',
+            fields: {
+                job: String(player.name || '').trim() ? normalizeProductEventJob(player.job) : 'unknown',
+                level: Number(player.level) || 1,
+                outcome,
+            },
+        });
         const validation = FeedbackValidator.validate(feedbackText);
         if (!validation.valid) {
+            trackFeedbackOutcome('validation_failed');
             setFeedbackStatus({ type: 'error', text: validation.error });
             return;
         }
@@ -299,9 +313,11 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                 timestamp: serverTimestamp(),
             });
             FeedbackValidator.markSubmitted();
+            trackFeedbackOutcome('success');
             setFeedbackText('');
             setFeedbackStatus({ type: 'success', text: '의견을 보냈습니다.' });
         } catch {
+            trackFeedbackOutcome('transport_failed');
             setFeedbackStatus({ type: 'error', text: '의견을 보내지 못했습니다.' });
         }
     }, [actions, feedbackText, player]);

@@ -19,6 +19,8 @@ import CritPulse from '../CritPulse';
 import PhaseBanner from '../PhaseBanner';
 import LegendaryDropOverlay from '../LegendaryDropOverlay';
 import MobileGameLayout from './MobileGameLayout';
+import { usePlatformBackHandler } from '../../platform/platformBackRegistry';
+import { useReturnSupplyRewardedAd } from '../../hooks/useReturnSupplyRewardedAd';
 
 const RelicChoicePanel = lazy(() => import('../RelicChoicePanel'));
 const AscensionScreen  = lazy(() => import('../AscensionScreen'));
@@ -89,6 +91,13 @@ const GameRoot = ({
     const expeditionReturnAction = expeditionSummary
         ? getExpeditionReturnAction(engine.player, expeditionSummary, fullStats)
         : null;
+    const returnSupplyReward = useReturnSupplyRewardedAd({
+        summary: expeditionSummary,
+        debriefOpen: showExpeditionDebrief,
+        player: engine.player,
+        dispatch: engine.dispatch,
+        flushLocalSave: engine.flushLocalSave,
+    });
     const debriefStoryBeat = showExpeditionDebrief
         ? getPendingMilestoneStoryBeat(engine.player, ['first_safe_return', 'first_area_boss'])
         : null;
@@ -191,6 +200,8 @@ const GameRoot = ({
     const handleOpenEquipment = useCallback(() => {
         handleOpenArchiveTab('equipment');
     }, [handleOpenArchiveTab]);
+    const closeMobileArchive = useCallback(() => setMobileConsoleMode('log'), []);
+    usePlatformBackHandler(mobileConsoleMode === 'archive', closeMobileArchive, 30);
 
     const acknowledgeStoryBeat = (storyBeat: any) => {
         if (storyBeat?.id) engine.actions.acknowledgeMilestoneStoryBeat?.(storyBeat.id);
@@ -373,6 +384,7 @@ const GameRoot = ({
                         storyBeat={debriefStoryBeat}
                         onClose={closeExpeditionDebrief}
                         onPrimaryAction={runExpeditionReturnAction}
+                        returnSupplyReward={returnSupplyReward}
                     />
                 </Suspense>
             )}

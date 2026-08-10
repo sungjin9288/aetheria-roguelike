@@ -6,6 +6,7 @@ import { toArray, grantGold } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
+import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from '../../utils/exploreUtils';
 import { BALANCE } from '../../data/constants';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
@@ -14,19 +15,20 @@ import { formatEventText } from '../../utils/eventPresentation';
 export const createEventActions = (deps: any, shared: any) => {
     const { emitUnlockedTitles } = shared;
     const { player, currentEvent, dispatch, addLog, getFullStats } = deps;
+    const rng = typeof deps.rng === 'function' ? deps.rng : Math.random;
     return {
         handleEventChoice: (idx: any) => {
             if (!currentEvent) return;
 
             // 스카우팅 카드 처리 — 같은 탐험 턴 안에서 즉시 해소 (탐험의 나머지 롤 파이프 재호출).
             if (currentEvent.isScout) {
-                handleScoutChoice(idx, currentEvent, deps, shared);
+                handleScoutChoice(idx, currentEvent, { ...deps, rng }, shared);
                 return;
             }
 
             // 원정 보스 접근 게이지 만충 카드 처리 — 도전/회피 즉시 해소.
             if (currentEvent.isBossGaugeChallenge) {
-                handleBossGaugeChoice(idx, currentEvent, deps);
+                handleBossGaugeChoice(idx, currentEvent, { ...deps, rng });
                 return;
             }
 
@@ -34,7 +36,7 @@ export const createEventActions = (deps: any, shared: any) => {
             const selectedOutcome = isChainEvent
                 ? (toArray(currentEvent.outcomes)[idx] || null)
                 : (toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null);
-            const roll = Math.random();
+            const roll = rng();
             let updatedPlayer = player;
             const fullStats = getFullStats();
 
@@ -68,7 +70,7 @@ export const createEventActions = (deps: any, shared: any) => {
                         }
                     }
                     if (rwd.type === 'relic') {
-                        const pickedRelics = pickWeightedRelics(updatedPlayer.relics || [], 1);
+                        const pickedRelics = pickWeightedRelics(updatedPlayer.relics || [], 1, { rng });
                         if (pickedRelics.length > 0) {
                             updatedPlayer = { ...updatedPlayer, relics: [...(updatedPlayer.relics || []), pickedRelics[0]] };
                             addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name));
@@ -117,7 +119,10 @@ export const createEventActions = (deps: any, shared: any) => {
             if (selectedOutcome) {
                 if (selectedOutcome.gold) updatedPlayer = grantGold(updatedPlayer, selectedOutcome.gold);
                 if (selectedOutcome.exp) {
-                    const expResult = CombatEngine.applyExpGain(updatedPlayer, selectedOutcome.exp);
+                    const expResult = CombatEngine.applyExpGain(
+                        updatedPlayer,
+                        scaleProgressionExpReward(updatedPlayer, selectedOutcome.exp),
+                    );
                     updatedPlayer = expResult.updatedPlayer;
                     expResult.logs.forEach((log: any) => addLog(log.type, log.text));
                     if (expResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: expResult.visualEffect });
@@ -175,7 +180,7 @@ export const createEventActions = (deps: any, shared: any) => {
  * 로직을 만들지 않는다.
  */
 const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) => {
-    const { player, dispatch, addLog, getFullStats } = deps;
+    const { player, dispatch, addLog, getFullStats, rng = Math.random } = deps;
     const { commitExploreOutcome } = shared;
     const outcome = toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null;
     if (!outcome) {
@@ -192,7 +197,13 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
     dispatch({ type: AT.SET_EVENT, payload: null });
 
     if (outcome.scoutEffect === 'combat' || outcome.scoutEffect === 'elite') {
-        const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog });
+        const { mStats: rawStats, baseName } = spawnEnemy(
+            mapData,
+            player,
+            playerRelics,
+            { addLog },
+            { rng },
+        );
         const isEliteCard = outcome.scoutEffect === 'elite';
         const mStats = isEliteCard
             ? {
@@ -208,7 +219,12 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
             : { ...rawStats, scoutRewardBonus: outcome.rewardBonus ?? BALANCE.SCOUT_COMBAT_REWARD_BONUS };
 
         const fullStats = getFullStats();
-        commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog }));
+        commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(
+            nextPlayer,
+            nextPlayer.relics || [],
+            fullStats,
+            { addLog, rng },
+        ));
         dispatch({ type: AT.SET_ENEMY, payload: mStats });
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
         addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
@@ -220,7 +236,11 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
         //   굴리는 사실상 "안전 버튼"이었다. anomaly(부정 효과) 확률에만 ×1.5를 가중해
         //   위험을 소폭 되돌린다 — 유물/이벤트 확률은 그대로.
         const quietResult = rollExplorationEvent(player, mapData, playerRelics, {
-            dispatch, addLog, getFullStats, anomalyMult: BALANCE.SCOUT_SIGNAL_ANOMALY_MULT
+            dispatch,
+            addLog,
+            getFullStats,
+            anomalyMult: BALANCE.SCOUT_SIGNAL_ANOMALY_MULT,
+            rng,
         });
         commitExploreOutcome(quietResult === 'nothing' ? 'nothing' : quietResult, null);
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
@@ -235,7 +255,15 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
     // skipBossGaugeAdvance: 이 explore() 턴의 게이지는 스카우팅 카드가 처음 뜬 시점에
     // 이미 1회 누적됐으므로(exploreActions.ts) 여기서 재호출 시 중복 누적 방지.
     const { addStoryLog } = deps;
-    runQuietRollAndCombat(player, mapData, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome, skipBossGaugeAdvance: true });
+    runQuietRollAndCombat(player, mapData, {
+        dispatch,
+        addLog,
+        addStoryLog,
+        getFullStats,
+        commitExploreOutcome,
+        skipBossGaugeAdvance: true,
+        rng,
+    });
 };
 
 /**
@@ -245,7 +273,7 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
  * - 회피: 게이지를 만충 상태로 유지(다음 탐험에서 재선택 가능) — 리셋하지 않는다.
  */
 const handleBossGaugeChoice = (idx: any, currentEvent: any, deps: any) => {
-    const { player, dispatch, addLog, getFullStats } = deps;
+    const { player, dispatch, addLog, getFullStats, rng = Math.random } = deps;
     const outcome = toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null;
     dispatch({ type: AT.SET_EVENT, payload: null });
 
@@ -265,14 +293,20 @@ const handleBossGaugeChoice = (idx: any, currentEvent: any, deps: any) => {
     // 도전 — 게이지 리셋 + 구역 보스 결정론적 스폰.
     const mapData = DB.MAPS[player.loc];
     const playerRelics = player.relics || [];
-    const { mStats } = spawnEnemy(mapData, player, playerRelics, { addLog }, { forceAreaBoss: true });
+    const { mStats } = spawnEnemy(
+        mapData,
+        player,
+        playerRelics,
+        { addLog },
+        { forceAreaBoss: true, rng },
+    );
 
     const fullStats = getFullStats();
     dispatch({
         type: AT.SET_PLAYER,
         payload: (p: any) => {
             const nextPlayer = { ...p, stats: resetBossGaugeAfterChallenge(p, p.loc) };
-            return applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog });
+            return applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog, rng });
         },
     });
     dispatch({ type: AT.SET_ENEMY, payload: mStats });

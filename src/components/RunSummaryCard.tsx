@@ -54,7 +54,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
         <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-3 py-[max(env(safe-area-inset-top),0.5rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)] sm:px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center px-3 py-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)] sm:px-4"
         >
             <div className="aether-overlay" />
             <Motion.div
@@ -184,7 +184,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                     )}
                 </div>
 
-                <footer className="relative grid grid-cols-[3.25rem_1fr] gap-2.5 border-t border-white/10 bg-[#07101a]/94 px-5 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] sm:px-6">
+                <footer className="relative grid grid-cols-[3.25rem_1fr] gap-2.5 border-t border-white/10 bg-[#07101a]/94 px-5 py-3 pb-[max(var(--aether-safe-area-bottom),0.75rem)] sm:px-6">
                     <Motion.button
                         data-testid="run-summary-share"
                         whileTap={{ scale: 0.95 }}

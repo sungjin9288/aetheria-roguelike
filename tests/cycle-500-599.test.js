@@ -1878,18 +1878,18 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 536: 정합성 가드 — 4 production callsite 보존', async () => {
       const rewards = await readSrc('src/reducers/handlers/rewardHandlers.ts');
-      assert.ok(/const pacedExp = getPacedQuestClaimExp\(nextPlayer,\s*quest\.reward\.exp\)/.test(rewards),
-          'quest reward reducer exp pacing 보존');
+      assert.ok(/const pacedExp = getPacedQuestClaimExp\(\s*nextPlayer,\s*scaleProgressionExpReward\(nextPlayer,\s*quest\.reward\.exp\),?\s*\)/.test(rewards),
+          'quest reward reducer profile scaling 후 exp pacing 보존');
       assert.ok(/CombatEngine\.applyExpGain\(nextPlayer,\s*pacedExp\)/.test(rewards),
           'quest reward reducer paced applyExpGain callsite 보존');
 
       const ev = await readSrc('src/hooks/gameActions/eventActions.ts');
-      assert.ok(/CombatEngine\.applyExpGain\(updatedPlayer,\s*selectedOutcome\.exp\)/.test(ev),
-          'eventActions callsite 보존');
+      assert.ok(/CombatEngine\.applyExpGain\(\s*updatedPlayer,\s*scaleProgressionExpReward\(updatedPlayer,\s*selectedOutcome\.exp\),?\s*\)/.test(ev),
+          'eventActions profile-scaled callsite 보존');
 
       const mv = await readSrc('src/hooks/gameActions/moveActions.ts');
-      assert.ok(/CombatEngine\.applyExpGain\(updated,\s*visitReward\.exp\)/.test(mv),
-          'moveActions callsite 보존');
+      assert.ok(/CombatEngine\.applyExpGain\(\s*updated,\s*scaleProgressionExpReward\(updated,\s*visitReward\.exp\),?\s*\)/.test(mv),
+          'moveActions profile-scaled callsite 보존');
 
       const ce = await readSrc('src/systems/CombatEngine.outcome.ts');
       assert.ok(/this\.applyExpGain\(p,\s*expGained\)/.test(ce),
@@ -2424,10 +2424,16 @@ import { readFile, readdir } from 'node:fs/promises';
           'getQuestReason targetMaps default [] 제거');
   });
 
-  test('cycle 545: 정합성 가드 — pickFallbackEvent + getQuestReason callsite 보존', async () => {
+  test('cycle 545: 정합성 가드 — pickFallbackEvent RNG + getQuestReason callsite 보존', async () => {
       const ai = await readSrc('src/services/aiService.ts');
-      const calls = (ai.match(/pickFallbackEvent\(loc,\s*history,\s*context\)/g) || []).length;
-      assert.ok(calls >= 2, `aiService pickFallbackEvent callsite 보존: ${calls}건`);
+      assert.ok(
+          /typeof rng === 'function'\) return pickFallbackEvent\(loc,\s*history,\s*context,\s*rng\)/.test(ai),
+          'aiService seeded pickFallbackEvent callsite 보존',
+      );
+      assert.ok(
+          /return pickFallbackEvent\(loc,\s*history,\s*context\)/.test(ai),
+          'aiService default pickFallbackEvent behavior 보존',
+      );
 
       const qo = await readSrc('src/utils/questOperations.ts');
       assert.ok(/getQuestReason\(quest,\s*lane,\s*resonance,\s*targetMaps\)/.test(qo),

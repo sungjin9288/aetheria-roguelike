@@ -11,6 +11,7 @@ import { getClaimableCodexMilestone } from '../../data/codexRewards';
 import { formatCodexRewardParts } from '../../utils/codexPresentation';
 import { normalizeClaimedSeasonTiers, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
 import { getPacedQuestClaimExp } from '../../utils/progressionPacing';
+import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { removeExpeditionFocusQuest } from '../../utils/expeditionMissionFocus';
@@ -97,7 +98,10 @@ export const rewardActionMap = {
 
         let visualEffect = state.visualEffect;
         if (quest.reward?.exp) {
-            const pacedExp = getPacedQuestClaimExp(nextPlayer, quest.reward.exp);
+            const pacedExp = getPacedQuestClaimExp(
+                nextPlayer,
+                scaleProgressionExpReward(nextPlayer, quest.reward.exp),
+            );
             const expResult = CombatEngine.applyExpGain(nextPlayer, pacedExp);
             nextPlayer = expResult.updatedPlayer;
             logs.push(...expResult.logs);

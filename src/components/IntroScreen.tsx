@@ -75,7 +75,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
                 className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(3,7,13,0.82)_0%,rgba(3,7,13,0.08)_30%,rgba(3,7,13,0.1)_55%,rgba(3,7,13,0.95)_82%,#03070d_100%)]"
             />
 
-            <div className="relative z-10 flex min-h-full flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-[calc(env(safe-area-inset-top)+1.25rem)] sm:px-7">
+            <div className="relative z-10 flex min-h-full flex-col px-5 pb-[calc(var(--aether-safe-area-bottom)+1rem)] pt-[calc(var(--aether-safe-area-top)+1.25rem)] sm:px-7">
                 <header className="flex items-center gap-3">
                     <AetherMark size="md" />
                     <div>

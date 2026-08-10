@@ -69,6 +69,7 @@ child.on('close', async (code) => {
       'crystal-exchange',
       'system-settings',
       'progression-acceptance',
+      'toss-first-five',
     ].includes(process.env.VITE_DEVICE_QA_SCENARIO || '');
   if (!isQaBuild) {
     const assetsDir = path.join(rootDir, 'dist', 'assets');

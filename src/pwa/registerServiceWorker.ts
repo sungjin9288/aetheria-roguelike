@@ -1,8 +1,12 @@
-import { Capacitor } from '@capacitor/core';
+import {
+  allowsServiceWorker,
+  getRuntimeEnvironment,
+  type RuntimeEnvironment,
+} from '../platform/runtimeEnvironment';
 
-export function registerServiceWorker() {
+export function registerServiceWorker(environment: RuntimeEnvironment = getRuntimeEnvironment()) {
   if (!('serviceWorker' in navigator)) return;
-  if (Capacitor.isNativePlatform()) return;
+  if (!allowsServiceWorker(environment)) return;
 
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error: any) => {

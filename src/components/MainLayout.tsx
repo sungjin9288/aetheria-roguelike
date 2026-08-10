@@ -5,7 +5,7 @@ const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, imme
   const normalizedReadabilityMode = readabilityMode === 'high' ? 'high' : 'standard';
   const shellSpacing = immersive
     ? ''
-    : 'p-2 pt-[calc(env(safe-area-inset-top)+0.1rem)] pb-[calc(env(safe-area-inset-bottom)+0.5rem)]';
+    : 'p-2 pt-[calc(var(--aether-safe-area-top)+0.1rem)] pb-[calc(var(--aether-safe-area-bottom)+0.5rem)]';
 
   return (
     <div
@@ -33,7 +33,7 @@ const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, imme
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#d5b180]/8 via-white/[0.02] to-transparent" />
           <div className="absolute left-[-3rem] top-[18%] h-48 w-48 rounded-full bg-[#d5b180]/8 blur-3xl" />
           <div className="absolute right-[-4rem] top-[8%] h-56 w-56 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
-          <div className="absolute bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] left-1/2 h-16 w-16 -translate-x-1/2 rounded-full border border-white/8 bg-[radial-gradient(circle,rgba(125,212,216,0.08),transparent_70%)] blur-xl" />
+          <div className="absolute bottom-[calc(var(--aether-safe-area-bottom)+0.4rem)] left-1/2 h-16 w-16 -translate-x-1/2 rounded-full border border-white/8 bg-[radial-gradient(circle,rgba(125,212,216,0.08),transparent_70%)] blur-xl" />
         </div>
       )}
       <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">

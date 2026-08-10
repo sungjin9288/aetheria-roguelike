@@ -10,6 +10,7 @@ import { getRunBuildProfile } from '../utils/runProfileUtils';
 import { acknowledgeMilestoneStoryBeat } from '../utils/milestoneStory';
 
 import { useFirebaseSync } from './useFirebaseSync';
+import { useProductTelemetry } from './useProductTelemetry';
 import { createGameActions } from './useGameActions';
 import { createCombatActions } from './useCombatActions';
 import { createInventoryActions } from './useInventoryActions';
@@ -27,6 +28,7 @@ export const consumeCombatReceiptStories = (
 
 export const useGameEngine = () => {
     const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
+    useProductTelemetry(state);
     const combatPendingRef = useRef<any>(null);
     const combatItemLocksRef = useRef<Set<string>>(new Set());
     const combatActionLocksRef = useRef<Set<string>>(new Set());
@@ -78,7 +80,7 @@ export const useGameEngine = () => {
     } = state;
 
     // --- Firebase Sync ---
-    useFirebaseSync(state, dispatch);
+    const { flushLocalSave } = useFirebaseSync(state, dispatch);
 
     useEffect(() => {
         combatItemLocksRef.current.clear();
@@ -286,5 +288,6 @@ export const useGameEngine = () => {
         expeditionDebriefOpen,
         dispatch,
         addLog,
+        flushLocalSave,
     };
 };

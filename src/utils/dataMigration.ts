@@ -8,6 +8,7 @@ import { getDefaultExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds }
 import { normalizeMilestoneStoryState } from './milestoneStory.js';
 import { normalizeCurrentRunProgress } from './runProgress.js';
 import { normalizeClassJourneyLedger } from './classJourney.js';
+import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward.js';
 
 // gameUtils.ts에서 분리 (저장 데이터 마이그레이션) — 행동 보존 리팩토링.
 //   순환 의존을 피하려 toArray(1줄 헬퍼)는 인라인.
@@ -123,6 +124,11 @@ export const migrateData = (rawData: any) => {
     target.activeExpedition = normalizeActiveExpedition(target.activeExpedition);
     target.lastExpeditionSummary = normalizeExpeditionSummary(target.lastExpeditionSummary);
     target.classJourney = normalizeClassJourneyLedger(target.classJourney);
+    target.expeditionSequence = Number.isSafeInteger(target.expeditionSequence)
+        && target.expeditionSequence >= 0
+        ? target.expeditionSequence
+        : 0;
+    target.returnSupplyRewards = normalizeReturnSupplyRewardLedger(target.returnSupplyRewards);
     target.expeditionFocusQuestIds = Array.isArray(target.expeditionFocusQuestIds)
         ? getPreparedExpeditionFocusQuestIds({ ...target, activeExpedition: null })
         : getDefaultExpeditionFocusQuestIds(target, target.activeExpedition?.destination);

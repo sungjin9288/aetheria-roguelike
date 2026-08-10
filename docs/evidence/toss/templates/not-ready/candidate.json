@@ -1,0 +1,16 @@
+{
+  "candidateId": "UNSET",
+  "gitCommit": "UNSET",
+  "gitTree": "UNSET",
+  "cleanTree": false,
+  "sdkVersion": "3.0.3",
+  "aitPath": "UNSET",
+  "aitSha256": "UNSET",
+  "aitBytes": 0,
+  "distRoot": "UNSET",
+  "distTreeSha256": "UNSET",
+  "distBytes": 0,
+  "verifierReportPath": "UNSET",
+  "verifierReportSha256": "UNSET",
+  "builtAt": "UNSET"
+}

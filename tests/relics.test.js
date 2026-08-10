@@ -1938,8 +1938,8 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           'exploreUtils pickWeightedRelics 명시 count 전달 보존 (owned 옵션 인자 허용)');
 
       const ev = await readSrc('src/hooks/gameActions/eventActions.ts');
-      assert.ok(/pickWeightedRelics\(updatedPlayer\.relics \|\| \[\],\s*1\)/.test(ev),
-          'eventActions pickWeightedRelics(..., 1) 보존');
+      assert.ok(/pickWeightedRelics\(updatedPlayer\.relics \|\| \[\],\s*1,\s*\{\s*rng\s*\}\)/.test(ev),
+          'eventActions pickWeightedRelics(..., 1, { rng }) deterministic seam 보존');
   });
 
   test('cycle 597: cycle 502-596 회귀 가드 — default 청소 시리즈 보존', async () => {

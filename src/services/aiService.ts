@@ -64,18 +64,22 @@ export const AI_SERVICE = {
         return templates[type] || '운명의 수레바퀴가 돌기 시작합니다.';
     },
 
-    // cycle 606: history / uid / context 3 defaults 제거 — 1 production caller
-    //   (exploreActions:71 AI_SERVICE.generateEvent(player.loc, player.history,
-    //   uid, {...context})) 4 args 명시 전달이라 3 defaults 모두 도달 불가.
+    // cycle 606: history / uid / context 3 defaults 제거 — production caller가
+    //   모두 명시 전달한다. optional rng는 deterministic action/test 경로에서만
+    //   주입하며 미전달 production behavior는 Math.random을 보존한다.
     //   cycle 539 callProxy paired completion (동일 모듈).
-    generateEvent: async (loc: any, history: any[], uid: any, context: any) => {
-        if (isSmokeRuntime()) {
+    generateEvent: async (loc: any, history: any[], uid: any, context: any, rng?: () => number) => {
+        const pickEventFallback = () => {
+            if (typeof rng === 'function') return pickFallbackEvent(loc, history, context, rng);
             return pickFallbackEvent(loc, history, context);
+        };
+        if (isSmokeRuntime()) {
+            return pickEventFallback();
         }
 
         if (!TokenQuotaManager.canMakeAICall()) {
             return {
-                ...pickFallbackEvent(loc, history, context),
+                ...pickEventFallback(),
                 fallbackReason: 'quota',
                 fallbackMessage: TokenQuotaManager.getExhaustedMessage()
             };
@@ -109,7 +113,7 @@ export const AI_SERVICE = {
         }
 
         // Fallback: 오프라인 이벤트 풀 사용
-        return pickFallbackEvent(loc, history, context);
+        return pickEventFallback();
     },
 
     generateStory: async (type: any, data: any, uid: any) => {

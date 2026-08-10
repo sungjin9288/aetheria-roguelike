@@ -15,6 +15,7 @@ import { getChainEventForLoc } from '../../data/eventChains';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent } from '../../utils/scoutEvents';
 import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
+import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
 
 /**
  * 캠프파이어/스카우팅 이후 AI 랜덤 이벤트 체크 (explore() 전용 — AI_SERVICE는 firebase에
@@ -24,15 +25,22 @@ import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChalle
  */
 const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExploreOutcome }: any) => {
     const { player, uid, dispatch, addLog, addStoryLog, getFullStats } = deps;
+    const rng = typeof deps.rng === 'function' ? deps.rng : Math.random;
     const playerRelics = player.relics || [];
     const eventChanceBonus = playerRelics.reduce((acc: any, relic: any) => (
         relic.effect === 'event_chance' ? acc + relic.val : acc
     ), 0);
     const pacingProfile = getMapPacingProfile(mapData);
-    const effectiveEventChance = getNarrativeEventChance(mapData.eventChance || 0, eventChanceBonus, player.stats, mapData);
+    const effectiveEventChance = getNarrativeEventChance(
+        mapData.eventChance || 0,
+        eventChanceBonus,
+        player.stats,
+        mapData,
+        getProgressionEventMultiplier(player),
+    );
 
     // AI 랜덤 이벤트 체크
-    if (Math.random() < effectiveEventChance) {
+    if (rng() < effectiveEventChance) {
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
         dispatch({ type: AT.SET_AI_THINKING, payload: true });
         try {
@@ -54,7 +62,7 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
                     exits: toArray(mapData.exits).slice(0, 3), boss: Boolean(mapData.boss),
                     rhythm: pacingProfile.label
                 }
-            });
+            }, rng);
             if (eventData?.exhausted) {
                 commitExploreOutcome('nothing', null, mapData);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
@@ -79,12 +87,15 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
         return;
     }
 
-    runQuietRollAndCombat(player, mapData, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome });
+    runQuietRollAndCombat(player, mapData, {
+        dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome, rng,
+    });
 };
 
 export const createExploreActions = (deps: any, shared: any) => {
     const { commitExploreOutcome } = shared;
     const { player, gameState, dispatch, addLog, getFullStats } = deps;
+    const rng = typeof deps.rng === 'function' ? deps.rng : Math.random;
     return {
         explore: async () => {
             if (gameState !== GS.IDLE) return addLog('error', MSG.EXPLORE_BLOCKED);
@@ -114,7 +125,7 @@ export const createExploreActions = (deps: any, shared: any) => {
             const campfireChance = BALANCE.CAMPFIRE_CHANCE
                 + getPrestigeUnlocks(player.meta?.prestigeRank).campfireChanceBonus
                 + getMirrorEffects(player.meta).campfireChanceBonus;
-            if (mapData.type === 'dungeon' && Math.random() < campfireChance) {
+            if (mapData.type === 'dungeon' && rng() < campfireChance) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const campfireEvent = buildCampfireEvent(getFullStats());
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
@@ -143,9 +154,9 @@ export const createExploreActions = (deps: any, shared: any) => {
             // 탐험 스카우팅 (2026-07 감사 (b)): "정보 없는 단일 버튼 탐험" 갭 대응 — 던전(비안전지대)
             //   탐험 시 낮은 확률로 사전 정찰 카드 2~3장을 제시한다. 체인 > 캠프파이어 > 보스 도전 선택 >
             //   스카우팅 > 나머지 롤(AI 이벤트/quiet/전투) 순 우선순위. 선택은 eventActions.ts가 같은 턴에 해소.
-            if (shouldTriggerScout(mapData, Math.random)) {
+            if (shouldTriggerScout(mapData, rng)) {
                 commitExploreOutcome('narrative_event', null, mapData);
-                const scoutEvent = buildScoutEvent(player, mapData, Math.random);
+                const scoutEvent = buildScoutEvent(player, mapData, rng);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: scoutEvent });
                 addLog('event', scoutEvent.desc);

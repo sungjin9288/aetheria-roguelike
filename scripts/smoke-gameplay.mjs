@@ -9,6 +9,7 @@ const DEFAULT_CHROME_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Goog
 const ALLOWED_404_PATHS = new Set(['/favicon.ico', '/api/ai-proxy']);
 const args = process.argv.slice(2);
 const isMobile = args.includes('--mobile');
+const firstFiveOnly = args.includes('--first-five');
 const viewportLabel = isMobile ? 'mobile' : 'desktop';
 const ensure = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -1231,7 +1232,7 @@ function verifyRewardRecordLanguage(state) {
   );
 }
 
-async function driveExploreLoop(page) {
+async function driveExploreLoop(page, { requireEvent = true } = {}) {
   const observations = {
     event: false,
     relic: false,
@@ -1287,6 +1288,12 @@ async function driveExploreLoop(page) {
       observations.victory = true;
     }
 
+    if (observations.combat && observations.victory && !requireEvent) {
+      verifyRewardRecordLanguage(state);
+      await writeStateArtifact('07-core-loop-complete', state, page);
+      return observations;
+    }
+
     if (observations.combat && observations.victory && !observations.event) {
       await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectEvent?.());
       const forcedEventState = await waitForState(
@@ -1311,6 +1318,113 @@ async function driveExploreLoop(page) {
   }
 
   throw new Error(`Core loop smoke did not observe all required states: ${JSON.stringify(observations)}`);
+}
+
+async function verifyTossFirstFiveReturnAndRestore(page) {
+  const beforeReturn = await readState(page);
+  ensure(beforeReturn.player?.activeExpeditionId, 'Toss first-five run did not retain an active expedition');
+
+  await sendGameCommand(page, 'move 시작의 마을');
+  const returned = await waitForState(
+    page,
+    (state) => state.player?.loc === '시작의 마을'
+      && !state.player?.activeExpeditionId
+      && Boolean(state.player?.lastExpeditionSummaryId),
+    'safe expedition return with summary',
+    15000,
+  );
+  const expected = {
+    name: returned.player.name,
+    location: returned.player.loc,
+    summaryId: returned.player.lastExpeditionSummaryId,
+  };
+  const productionSnapshotBefore = await page.evaluate(() => ({
+    legacy: localStorage.getItem('aetheria.game.snapshot.v1'),
+    primary: localStorage.getItem('aetheria.game.snapshot.v2.primary'),
+    staged: localStorage.getItem('aetheria.game.snapshot.v2.staged'),
+  }));
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'hidden',
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.waitForFunction(({ summaryId }) => {
+    const raw = localStorage.getItem('aetheria.device-qa.toss-first-five.snapshot.v1');
+    if (!raw) return false;
+    try {
+      return JSON.parse(raw)?.player?.lastExpeditionSummary?.id === summaryId;
+    } catch {
+      return false;
+    }
+  }, { summaryId: expected.summaryId }, { timeout: 10000 });
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'visible',
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  const productionSnapshotAfter = await page.evaluate(() => ({
+    legacy: localStorage.getItem('aetheria.game.snapshot.v1'),
+    primary: localStorage.getItem('aetheria.game.snapshot.v2.primary'),
+    staged: localStorage.getItem('aetheria.game.snapshot.v2.staged'),
+  }));
+  ensure(
+    JSON.stringify(productionSnapshotAfter) === JSON.stringify(productionSnapshotBefore),
+    'Toss first-five rehearsal changed the production browser snapshot',
+  );
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => typeof window.render_game_to_text === 'function', undefined, { timeout: 10000 });
+  const restored = await waitForState(
+    page,
+    (state) => state.bootStage === 'ready'
+      && state.player?.name === expected.name
+      && state.player?.loc === expected.location
+      && state.player?.lastExpeditionSummaryId === expected.summaryId,
+    'restored Toss first-five snapshot',
+    10000,
+  );
+  await page.locator('[data-testid="expedition-debrief-card"]').waitFor({ state: 'visible', timeout: 10000 });
+  await page.locator('[data-testid="expedition-debrief-primary-action"]').waitFor({ state: 'visible', timeout: 10000 });
+  const surface = await page.evaluate(() => {
+    const modal = document.querySelector('[data-testid="expedition-debrief-card"]');
+    const primary = document.querySelector('[data-testid="expedition-debrief-primary-action"]');
+    const modalBounds = modal?.getBoundingClientRect();
+    const primaryBounds = primary?.getBoundingClientRect();
+    return {
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      safeTop: getComputedStyle(document.documentElement).getPropertyValue('--aether-safe-area-top').trim(),
+      safeBottom: getComputedStyle(document.documentElement).getPropertyValue('--aether-safe-area-bottom').trim(),
+      modal: modalBounds ? {
+        top: modalBounds.top,
+        right: modalBounds.right,
+        bottom: modalBounds.bottom,
+        left: modalBounds.left,
+      } : null,
+      primary: primaryBounds ? { width: primaryBounds.width, height: primaryBounds.height } : null,
+    };
+  });
+  ensure(surface.innerWidth === 390 && surface.innerHeight === 844, `Unexpected Toss rehearsal viewport: ${JSON.stringify(surface)}`);
+  ensure(surface.scrollWidth <= surface.clientWidth, `Toss rehearsal overflowed horizontally: ${JSON.stringify(surface)}`);
+  ensure(surface.safeTop === '47px' && surface.safeBottom === '34px', `Toss rehearsal safe area was not applied: ${JSON.stringify(surface)}`);
+  ensure(
+    surface.modal && surface.modal.top >= 0 && surface.modal.left >= 0
+      && surface.modal.right <= surface.innerWidth && surface.modal.bottom <= surface.innerHeight,
+    `Toss return modal crossed the viewport: ${JSON.stringify(surface)}`,
+  );
+  ensure(
+    surface.primary && surface.primary.width >= 44 && surface.primary.height >= 44,
+    `Toss return action missed the touch target: ${JSON.stringify(surface)}`,
+  );
+  await writeStateArtifact('08-safe-return-restored', restored, page, {
+    screenshotFullPage: false,
+  });
+  logSmoke('restored Toss first-five snapshot');
 }
 
 async function verifyTabs(page) {
@@ -1619,6 +1733,7 @@ async function verifyTabs(page) {
 
 async function main() {
   logSmoke('start');
+  const navigationStartedAt = Date.now();
   const browser = await launchBrowser();
   let context;
   const errors = [];
@@ -1630,12 +1745,34 @@ async function main() {
     context = isMobile
       ? await browser.newContext({
           ...devices['iPhone 13'],
+          ...(firstFiveOnly ? {
+            viewport: { width: 390, height: 844 },
+            screen: { width: 390, height: 844 },
+          } : {}),
         })
       : await browser.newContext({
           viewport: desktopViewport,
         });
 
     const page = await context.newPage();
+    if (firstFiveOnly) {
+      await page.addInitScript(() => {
+        const marker = 'aetheria.toss-first-five.rehearsal.initialized';
+        if (!sessionStorage.getItem(marker)) {
+          localStorage.removeItem('aetheria.device-qa.toss-first-five.snapshot.v1');
+          localStorage.setItem('aetheria.game.snapshot.v1', 'first-five-production-legacy-sentinel');
+          localStorage.setItem('aetheria.game.snapshot.v2.primary', 'first-five-production-primary-sentinel');
+          localStorage.setItem('aetheria.game.snapshot.v2.staged', 'first-five-production-staged-sentinel');
+          sessionStorage.setItem(marker, '1');
+        }
+        const applyInsets = () => {
+          document.documentElement?.style.setProperty('--aether-safe-area-top', '47px');
+          document.documentElement?.style.setProperty('--aether-safe-area-bottom', '34px');
+        };
+        applyInsets();
+        document.addEventListener('DOMContentLoaded', applyInsets, { once: true });
+      });
+    }
     page.on('pageerror', (error) => {
       errors.push(error.stack || error.message || String(error));
     });
@@ -1690,8 +1827,31 @@ async function main() {
     await page.waitForFunction(() => typeof window.render_game_to_text === 'function', undefined, { timeout: 25000 });
     await waitForState(page, (state) => state.bootStage === 'ready', 'boot stage ready', 25000);
 
+    if (firstFiveOnly) {
+      const firstScreenElapsed = Date.now() - navigationStartedAt;
+      ensure(firstScreenElapsed <= 10000, `first screen exceeded 10 seconds: ${firstScreenElapsed}ms`);
+      await page.locator('[data-testid="intro-start-button"]').waitFor({ state: 'visible', timeout: 10000 });
+      const firstActionElapsed = Date.now() - navigationStartedAt;
+      ensure(firstActionElapsed <= 10000, `first action exceeded 10 seconds: ${firstActionElapsed}ms`);
+      logSmoke(`first screen ${firstScreenElapsed}ms; first action ${firstActionElapsed}ms`);
+    }
+
     logSmoke('boot ready');
     await startNewRun(page, { expectFirstStoryMission: true });
+    if (firstFiveOnly) {
+      await verifyMobileFirstFold(page);
+      await moveToForest(page);
+      const observations = await driveExploreLoop(page, { requireEvent: false });
+      ensure(observations.combat, 'Toss first-five rehearsal did not cover combat');
+      ensure(observations.victory, 'Toss first-five rehearsal did not finish combat');
+      await verifyTossFirstFiveReturnAndRestore(page);
+      ensure(errors.length === 0, `Page errors detected:\n${errors.join('\n')}`);
+      ensure(responseFailures.length === 0, `HTTP failures detected:\n${responseFailures.join('\n')}`);
+      ensure(requestFailures.length === 0, `Request failures detected:\n${requestFailures.join('\n')}`);
+      ensure(consoleErrors.length === 0, `Console errors detected:\n${consoleErrors.join('\n')}`);
+      console.log(`[smoke:${viewportLabel}] first-five ok`);
+      return;
+    }
     await verifyMobileFirstFold(page);
     await verifyMobileArchiveConsole(page);
     await verifyShopFlow(page);

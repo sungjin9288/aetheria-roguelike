@@ -6,6 +6,7 @@ import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getMirrorEffects } from './mirrorUpgrades';
 import { getPacedCombatExp } from '../utils/progressionPacing.js';
 import type { Player, Monster } from '../types/index.js';
+import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
 
 /**
  * CombatEngine 결과(경험치/승리) 메서드 — mixin으로 CombatEngine에 spread.
@@ -113,7 +114,10 @@ export const outcomeMethods: any = {
         const enemyLevel = enemy.level || 1;
         const levelGap = Math.max(0, playerLevel - enemyLevel - 9);
         const levelPenalty = Math.max(0.3, 1 - levelGap * 0.07);
-        const rawExpGained = Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult * eliteRewardMult);
+        const rawExpGained = scaleProgressionExpReward(
+            p,
+            Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult * eliteRewardMult),
+        );
         const expGained = getPacedCombatExp(p, rawExpGained);
         const noGold = p.challengeModifiers?.includes('noGold');
         const goldGained = Math.floor((enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty * (noGold ? 0.5 : 1) * challengeRewardMult * eliteRewardMult);

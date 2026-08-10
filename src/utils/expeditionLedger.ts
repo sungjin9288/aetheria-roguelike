@@ -1,5 +1,11 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { CLASSES } from '../data/classes.js';
+import {
+    BASELINE_PROGRESSION_PROFILE,
+    normalizeProgressionProfile,
+    getActiveProgressionProfile,
+    resolveProgressionProfile,
+} from '../data/progressionProfiles.js';
 import type {
     ExpeditionInventoryCheckpoint,
     ExpeditionQuestCheckpoint,
@@ -7,6 +13,7 @@ import type {
     ExpeditionSummary,
     Player,
 } from '../types/player.js';
+import type { ProgressionProfile, ProgressionProfileRef } from '../types/progression.js';
 import { getActiveExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
 import { recordClassJourneyExpedition } from './classJourney.js';
 import { queueMilestoneStoryBeat } from './milestoneStory.js';
@@ -197,6 +204,8 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
         equipmentNames: uniqueNames(candidate.equipmentNames),
         bossNames: uniqueNames(candidate.bossNames),
         signatureItems: uniqueNames(candidate.signatureItems).filter(isSignatureName),
+        progressionProfile: normalizeProgressionProfile(candidate.progressionProfile)
+            || { ...BASELINE_PROGRESSION_PROFILE },
     };
     return {
         ...normalized,
@@ -248,15 +257,35 @@ export const normalizeExpeditionSummary = (value: unknown): ExpeditionSummary | 
         equipmentNames: uniqueNames(candidate.equipmentNames),
         bossNames: uniqueNames(candidate.bossNames),
         signatureItems: uniqueNames(candidate.signatureItems).filter(isSignatureName),
+        progressionProfile: normalizeProgressionProfile(candidate.progressionProfile)
+            || { ...BASELINE_PROGRESSION_PROFILE },
     };
 };
 
-export const startExpedition = (player: Player, destination: string, now: number, questCatalog: any[]) => {
+export const resolvePlayerProgressionProfile = (
+    player: Player,
+    currentReference: ProgressionProfileRef,
+): Readonly<ProgressionProfile> => (
+    (player.activeExpedition ? getActiveProgressionProfile(player) : null)
+    || resolveProgressionProfile(currentReference)
+);
+
+export const startExpedition = (
+    player: Player,
+    destination: string,
+    now: number,
+    questCatalog: any[],
+    progressionProfile: ProgressionProfile = { ...BASELINE_PROGRESSION_PROFILE },
+) => {
     if (normalizeActiveExpedition(player.activeExpedition)) return player;
     const hp = nonNegative(player.hp);
+    const expeditionSequence = Number.isSafeInteger(player.expeditionSequence)
+        && (player.expeditionSequence as number) >= 0
+        ? (player.expeditionSequence as number) + 1
+        : 1;
     const job = typeof player.job === 'string' && player.job.trim() ? player.job.trim() : undefined;
     const snapshot: ExpeditionSnapshot = {
-        id: `expedition-${Math.max(0, Math.floor(now))}`,
+        id: `expedition-${Math.max(0, Math.floor(now))}-${expeditionSequence}`,
         startedAt: Math.max(0, Math.floor(now)),
         origin: player.loc || '',
         destination,
@@ -278,8 +307,10 @@ export const startExpedition = (player: Player, destination: string, now: number
         equipmentNames: equipmentNames(player),
         bossNames: [],
         signatureItems: ownedSignatureNames(player),
+        progressionProfile: normalizeProgressionProfile(progressionProfile)
+            || { ...BASELINE_PROGRESSION_PROFILE },
     };
-    return { ...player, activeExpedition: snapshot };
+    return { ...player, expeditionSequence, activeExpedition: snapshot };
 };
 
 export const finishExpedition = (player: Player, returnLocation: string, now: number, questCatalog: any[]) => {
@@ -320,6 +351,7 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
         equipmentNames: equipmentNames(player),
         bossNames: snapshot.bossNames || [],
         signatureItems,
+        progressionProfile: { ...snapshot.progressionProfile },
     };
 
     const playerWithJourney = snapshot.job

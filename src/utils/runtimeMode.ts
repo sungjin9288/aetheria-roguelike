@@ -16,6 +16,7 @@ export const MIRROR_JOURNEY_DEVICE_QA_SCENARIO = 'mirror-journey';
 export const CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO = 'crystal-exchange';
 export const SYSTEM_SETTINGS_DEVICE_QA_SCENARIO = 'system-settings';
 export const PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO = 'progression-acceptance';
+export const TOSS_FIRST_FIVE_DEVICE_QA_SCENARIO = ['toss', 'first-five'].join('-');
 
 const DEVICE_QA_SCENARIOS = new Set([
     ITEM_INVESTMENT_DEVICE_QA_SCENARIO,
@@ -25,6 +26,7 @@ const DEVICE_QA_SCENARIOS = new Set([
     CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO,
     SYSTEM_SETTINGS_DEVICE_QA_SCENARIO,
     PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO,
+    TOSS_FIRST_FIVE_DEVICE_QA_SCENARIO,
 ]);
 
 const isTestHarnessBuild = (): boolean => {

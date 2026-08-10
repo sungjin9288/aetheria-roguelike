@@ -17,6 +17,7 @@ import {
     type CrystalExchangeCategory,
     type CrystalExchangeOffer,
 } from '../utils/crystalExchange';
+import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
 interface PremiumShopProps {
     player?: Player | null;
@@ -46,6 +47,7 @@ const PremiumShop = ({
     onPurchaseRevive,
     onPurchaseTitle,
 }: PremiumShopProps) => {
+    usePlatformBackHandler(Boolean(onClose), () => onClose?.(), 200);
     const crystals = Math.max(0, Number(player?.premiumCurrency) || 0);
     const [category, setCategory] = useState<CrystalExchangeCategory>('preparation');
     const [selectedId, setSelectedId] = useState('inv_expand');
@@ -121,7 +123,7 @@ const PremiumShop = ({
             <section
                 data-testid="premium-shop"
                 aria-label="에테르 교환소"
-                className="panel-noise aether-surface relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-x border-cyan-300/16 bg-[#091218] pt-[env(safe-area-inset-top)]"
+                className="panel-noise aether-surface relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-x border-cyan-300/16 bg-[#091218] pt-[var(--aether-safe-area-top)]"
                 style={{ backgroundColor: '#091218' }}
                 onClick={(event) => event.stopPropagation()}
             >
@@ -259,7 +261,7 @@ const PremiumShop = ({
                     </section>
                 </div>
 
-                <footer data-testid="crystal-exchange-action-footer" className="shrink-0 border-t border-white/10 bg-[#091218]/96 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
+                <footer data-testid="crystal-exchange-action-footer" className="shrink-0 border-t border-white/10 bg-[#091218]/96 px-4 pb-[max(12px,var(--aether-safe-area-bottom))] pt-3">
                     <div className="grid grid-cols-[104px_1fr] gap-2">
                         <button
                             type="button"
