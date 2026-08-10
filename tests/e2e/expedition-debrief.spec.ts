@@ -29,6 +29,21 @@ test.describe('Expedition return debrief', () => {
         await expect(page.getByTestId('expedition-debrief-quests')).toContainText('첫 숲길 조사');
         await expect(page.getByTestId('expedition-debrief-story')).toContainText('돌아오는 것도 모험이다');
 
+        const journey = page.getByTestId('class-journey-summary');
+        await expect(journey).toContainText('이 직업으로 남긴 것');
+        await expect(journey).toContainText('전사');
+        await expect(journey).toContainText('강화 배시');
+        await expect(journey).not.toContainText('기절 배시');
+        await expect(journey).toContainText('성검 에테르니아');
+        await expect(journey).toContainText('고대 호수의 수호신');
+        await expect(journey).toContainText('신성한 호수');
+
+        const player = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player);
+        expect(player.job).toBe('전사');
+        expect(player.level).toBe(20);
+        expect(player.hp).toBe(703);
+        expect(player.maxHp).toBe(703);
+
         const recommendation = page.getByTestId('expedition-return-recommendation');
         await expect(recommendation).toContainText('이어서 할 일');
         await expect(recommendation).toContainText('[스토리] 첫 번째 여정의 보상이 기다리고 있습니다.');
@@ -49,10 +64,14 @@ test.describe('Expedition return debrief', () => {
         expect(widths.document).toBeLessThanOrEqual(widths.viewport);
         expect(await findUndersizedText(debrief)).toEqual([]);
 
-        await page.screenshot({
+        await debrief.screenshot({
             path: 'playtest-artifacts/expedition-return-flow/mobile-return-action.png',
-            fullPage: false,
+            animations: 'disabled',
         });
+
+        const sequenceBeforeClose = await page.evaluate(() => (
+            JSON.parse(window.render_game_to_text?.() || '{}').player.classJourneySequence
+        ));
 
         await primaryAction.click();
         await expect(debrief).toBeHidden();
@@ -72,6 +91,11 @@ test.describe('Expedition return debrief', () => {
         await expect(debrief).toBeVisible();
         await expect(page.getByTestId('expedition-debrief-story')).toHaveCount(0);
         await expect(page.getByTestId('expedition-debrief-primary-action')).toHaveAttribute('data-return-action', 'open_quest_board');
+
+        const sequenceAfterReopen = await page.evaluate(() => (
+            JSON.parse(window.render_game_to_text?.() || '{}').player.classJourneySequence
+        ));
+        expect(sequenceAfterReopen).toBe(sequenceBeforeClose);
     });
 
     test('전직 milestone 이야기를 한 번만 보여 준다', async ({ page }) => {

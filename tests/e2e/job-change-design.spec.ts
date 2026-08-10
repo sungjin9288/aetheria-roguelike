@@ -6,6 +6,7 @@ test.describe('전직 선택 흐름', () => {
         await page.setViewportSize({ width: 390, height: 844 });
         await startE2ERun(page);
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAvatarScenario?.('adventurer-travel-tunic'));
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedClassJourneyScenario?.());
         await openTownFacilities(page);
         await page.getByTestId('control-class').click();
         await expect(page.getByTestId('job-change-panel')).toBeVisible();
@@ -52,6 +53,25 @@ test.describe('전직 선택 흐름', () => {
         expect(stateAfterConfirm.player.job).toBe('마법사');
     });
 
+    test('선택한 직업의 지난 발견과 첫 여정 안내를 같은 자리에서 읽는다', async ({ page }) => {
+        const journey = page.getByTestId('class-journey-summary');
+        await expect(journey).toContainText('이 직업으로 남긴 것');
+        await expect(journey).toContainText('전사');
+        await expect(journey).toContainText('기절 배시');
+        await expect(journey).toContainText('성검 에테르니아');
+        await expect(journey).toContainText('고대 호수의 수호신');
+        await expect(journey).toContainText('신성한 호수');
+
+        await page.getByTestId('job-change-option').filter({ hasText: '마법사' }).click();
+        await expect(journey).toContainText('마법사');
+        await expect(journey).toContainText('첫 원정을 떠나 이 직업의 여정을 남겨보세요.');
+
+        const sequence = await page.evaluate(() => (
+            JSON.parse(window.render_game_to_text?.() || '{}').player.classJourneySequence
+        ));
+        expect(sequence).toBe(7);
+    });
+
     test('선택지와 확정 버튼은 모바일 화면 폭을 벗어나지 않는다', async ({ page }) => {
         const panel = page.getByTestId('job-change-panel');
         const confirm = page.getByTestId('job-change-confirm');
@@ -66,11 +86,13 @@ test.describe('전직 선택 흐름', () => {
         });
 
         await confirm.scrollIntoViewIfNeeded();
+        await expect(confirm).toBeInViewport();
 
         const geometry = await page.evaluate(() => {
             const root = document.querySelector<HTMLElement>('[data-testid="job-change-panel"]');
             const button = document.querySelector<HTMLElement>('[data-testid="job-change-confirm"]');
-            if (!root || !button) throw new Error('Job change decision is not ready');
+            const journey = document.querySelector<HTMLElement>('[data-testid="class-journey-summary"]');
+            if (!root || !button || !journey) throw new Error('Job change decision is not ready');
             const rootBounds = root.getBoundingClientRect();
             const buttonBounds = button.getBoundingClientRect();
             return {
@@ -79,6 +101,10 @@ test.describe('전직 선택 흐름', () => {
                 rootLeft: rootBounds.left,
                 rootRight: rootBounds.right,
                 buttonHeight: buttonBounds.height,
+                buttonTop: buttonBounds.top,
+                buttonBottom: buttonBounds.bottom,
+                journeyClientWidth: journey.clientWidth,
+                journeyScrollWidth: journey.scrollWidth,
             };
         });
 
@@ -86,6 +112,9 @@ test.describe('전직 선택 흐름', () => {
         expect(geometry.rootLeft).toBeGreaterThanOrEqual(-1);
         expect(geometry.rootRight).toBeLessThanOrEqual(geometry.viewportWidth + 1);
         expect(geometry.buttonHeight).toBeGreaterThanOrEqual(48);
+        expect(geometry.buttonTop).toBeGreaterThanOrEqual(0);
+        expect(geometry.buttonBottom).toBeLessThanOrEqual(844);
+        expect(geometry.journeyScrollWidth).toBeLessThanOrEqual(geometry.journeyClientWidth);
 
         await panel.screenshot({
             path: 'playtest-artifacts/job-change-design/mobile-job-change-decision.png',

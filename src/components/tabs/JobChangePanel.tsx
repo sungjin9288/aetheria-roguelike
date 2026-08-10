@@ -12,6 +12,7 @@ import ClassCard from '../ClassCard';
 import ClassIcon from '../icons/ClassIcon';
 import FocusPanelHeader from '../FocusPanelHeader';
 import PixelCharacterAvatar from '../PixelCharacterAvatar';
+import ClassJourneySummary from '../ClassJourneySummary';
 
 interface JobChangeActions {
   jobChange: (jobName: string) => void;
@@ -170,6 +171,10 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
                       </div>
                       <div className="aether-type-meta mt-0.5 text-slate-400">사용 기술 {getActiveClassSkillNames(selected, Number.POSITIVE_INFINITY).length}개</div>
                     </div>
+                    <ClassJourneySummary
+                      job={selectedName}
+                      record={player.classJourney?.byJob[selectedName]}
+                    />
                     <div>
                       <div className="aether-type-meta text-slate-400/76">다음 계보</div>
                       <div className="aether-type-body mt-0.5 text-slate-100">

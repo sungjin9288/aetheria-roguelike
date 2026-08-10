@@ -19,8 +19,20 @@ import {
 } from '../utils/runtimeMode';
 import { readDeviceQaSnapshot } from '../utils/localGameSnapshot';
 import { createDailyProtocol, getProtocolDayKey, getProtocolWeekKey } from '../utils/protocolCycle';
+import { buildClassVitals } from './gameActions/_shared';
 
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
+
+const getLevelExpRequirement = (level: number) => {
+    let requirement = CONSTANTS.START_NEXT_EXP;
+    for (let currentLevel = 1; currentLevel < level; currentLevel += 1) {
+        requirement = Math.min(
+            Math.floor(requirement * BALANCE.EXP_SCALE_RATE),
+            BALANCE.EXP_LEVEL_HARD_CAP,
+        );
+    }
+    return requirement;
+};
 
 const buildReturnBriefingScenarioPlayer = (player: any, now: Date) => {
     const yesterday = new Date(now);
@@ -189,6 +201,22 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             },
         };
 
+        const classJourneyScenario = (lastPlayedAt = Date.now()) => ({
+            version: 1,
+            sequence: 7,
+            byJob: {
+                '전사': {
+                    expeditionIds: ['smoke-expedition-debrief'],
+                    skillBranches: ['파워배시:A', '파워배시:B'],
+                    signatureItems: ['성검 에테르니아'],
+                    bossNames: ['고대 호수의 수호신'],
+                    regions: ['고요한 숲', '신성한 호수'],
+                    representativeExpeditionId: 'smoke-expedition-debrief',
+                    lastPlayedAt,
+                },
+            },
+        });
+
         // cycle 616: fallback default '' 제거 — explicit default-elimination
         //   pattern (cycle 608-615 lens 정착, 8번째 적용). 3 callers (line
         //   200/207/214)에 '' 명시 추가 후 default unreachable.
@@ -279,6 +307,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         : [],
                     seasonXp: e.player.seasonPass?.xp || 0,
                     storyMilestones: e.player.meta?.storyMilestones || { seen: [], pending: [] },
+                    classJourneySequence: e.player.classJourney?.sequence || 0,
                     loc: e.player.loc,
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
@@ -881,13 +910,51 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             seedExpeditionDebriefScenario: () => {
                 const er = engineRef.current;
                 const endedAt = Date.now();
+                const signatureWeapon = DB.ITEMS.weapons.find((item: any) => item.name === '성검 에테르니아');
+                const armor = DB.ITEMS.armors.find((item: any) => item.name === '기사의 흉갑');
+                if (!signatureWeapon || !armor) return false;
+
+                const level = 20;
+                const skillChoices = { '파워배시': 'A' };
+                const baseVitals = buildClassVitals(level, '전사', er.player.meta || {});
+                const startVitals = buildClassVitals(level - 1, '전사', er.player.meta || {});
+                const equip = {
+                    weapon: { ...signatureWeapon, id: 'smoke-journey-signature' },
+                    armor: { ...armor, id: 'smoke-journey-armor' },
+                    offhand: null,
+                };
+                const journeyPlayer = {
+                    ...er.player,
+                    job: '전사',
+                    level,
+                    exp: 0,
+                    nextExp: getLevelExpRequirement(level),
+                    maxHp: baseVitals.maxHp,
+                    maxMp: baseVitals.maxMp,
+                    skillChoices,
+                    equip,
+                };
+                const journeyStats = calculateFullStats(journeyPlayer)!;
+                const lowestHp = Math.floor(startVitals.maxHp * 0.3);
+                const returnHp = journeyStats.maxHp;
                 er.dispatch({
                     type: AT.SET_PLAYER,
                     payload: {
+                        job: journeyPlayer.job,
+                        level: journeyPlayer.level,
+                        exp: journeyPlayer.exp,
+                        nextExp: journeyPlayer.nextExp,
+                        maxHp: journeyPlayer.maxHp,
+                        maxMp: journeyPlayer.maxMp,
+                        skillChoices,
+                        equip,
+                        hp: returnHp,
+                        mp: journeyStats.maxMp,
                         loc: '시작의 마을',
                         activeExpedition: null,
                         quests: [{ id: 80, progress: 1, isBounty: false }],
                         expeditionFocusQuestIds: [80],
+                        classJourney: classJourneyScenario(endedAt),
                         meta: {
                             ...er.player.meta,
                             storyMilestones: { seen: [], pending: ['first_safe_return'] },
@@ -898,25 +965,30 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                             endedAt,
                             origin: '시작의 마을',
                             destination: '고요한 숲',
-                            lastLocation: '고요한 숲',
+                            lastLocation: '신성한 호수',
                             returnLocation: '시작의 마을',
                             returnReason: 'safe_return',
                             durationMs: 11 * 60_000,
-                            startLevel: 1,
-                            endLevel: 2,
+                            startLevel: 19,
+                            endLevel: 20,
                             expGained: 185,
                             goldDelta: 76,
                             battles: 4,
-                            bossBattles: 0,
+                            bossBattles: 1,
                             explores: 6,
-                            newItems: ['숲지기 활', '초급 회복 물약', '초급 회복 물약'],
+                            newItems: ['초급 회복 물약', '초급 회복 물약'],
                             lostItemCount: 1,
                             completedQuests: ['첫 숲길 조사'],
-                            lowestHp: 38,
-                            lowestHpPercent: 21,
-                            returnHp: 92,
-                            maxHpAtReturn: 205,
+                            lowestHp,
+                            lowestHpPercent: Math.round((lowestHp / startVitals.maxHp) * 100),
+                            returnHp,
+                            maxHpAtReturn: baseVitals.maxHp,
                             reviewedAt: null,
+                            job: '전사',
+                            skillChoices,
+                            equipmentNames: ['성검 에테르니아', '기사의 흉갑'],
+                            bossNames: ['고대 호수의 수호신'],
+                            signatureItems: ['성검 에테르니아'],
                         },
                     },
                 });
@@ -939,6 +1011,14 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 });
                 er.dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: false });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            },
+            seedClassJourneyScenario: () => {
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { classJourney: classJourneyScenario() },
+                });
+                return true;
             },
             seedFirstDeathStoryScenario: () => {
                 const er = engineRef.current;

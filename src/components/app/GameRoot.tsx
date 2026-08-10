@@ -10,7 +10,7 @@ import { getPendingMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
-import type { Player } from '../../types/index.js';
+import type { ExpeditionSummary, Player } from '../../types/index.js';
 import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
@@ -29,6 +29,15 @@ const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
 const ExpeditionDebriefCard = lazy(() => import('../ExpeditionDebriefCard'));
 const MilestoneStoryCard = lazy(() => import('../MilestoneStoryCard'));
+
+const resolveExpeditionJob = (player: Player, summary: ExpeditionSummary | null) => {
+    if (summary?.job) return summary.job;
+    if (!summary?.id) return null;
+
+    return Object.entries(player.classJourney?.byJob || {}).find(([, record]) => (
+        record.expeditionIds.includes(summary.id)
+    ))?.[0] || null;
+};
 
 const ReturnBriefingGate = ({
     player,
@@ -73,6 +82,7 @@ const GameRoot = ({
             : 'log',
     );
     const expeditionSummary = engine.player?.lastExpeditionSummary || null;
+    const expeditionJob = resolveExpeditionJob(engine.player, expeditionSummary);
     const showExpeditionDebrief = Boolean(
         expeditionSummary && (engine.expeditionDebriefOpen || !expeditionSummary.reviewedAt),
     );
@@ -358,6 +368,8 @@ const GameRoot = ({
                     <ExpeditionDebriefCard
                         summary={expeditionSummary}
                         recommendation={expeditionReturnAction}
+                        journeyJob={expeditionJob}
+                        journey={expeditionJob ? engine.player.classJourney?.byJob[expeditionJob] : undefined}
                         storyBeat={debriefStoryBeat}
                         onClose={closeExpeditionDebrief}
                         onPrimaryAction={runExpeditionReturnAction}

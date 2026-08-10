@@ -724,7 +724,7 @@ Commit types, pure logic, migration, authority integration and tests together. D
 - Consumes: `ClassJourneyRecord` and latest `ExpeditionSummary`
 - Produces: compact “이 직업으로 남긴 것” section and one next-run suggestion without a new modal or currency
 
-- [ ] **Step 1: Write failing E2E scenarios**
+- [x] **Step 1: Write failing E2E scenarios**
 
 Seed a representative class journey and assert:
 
@@ -734,11 +734,11 @@ Seed a representative class journey and assert:
 - closing/reopening does not mutate sequence;
 - 390x844 viewport has no horizontal overflow and primary action remains reachable.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run the two focused specs and confirm selectors are missing for the expected reason.
 
-- [ ] **Step 3: Implement one reusable summary component**
+- [x] **Step 3: Implement one reusable summary component**
 
 `ClassJourneySummary` receives plain data and renders at most three lines:
 
@@ -748,11 +748,11 @@ Run the two focused specs and confirm selectors are missing for the expected rea
 
 It never writes state. Reducer/ledger authority remains in Task 9.
 
-- [ ] **Step 4: Connect the existing surfaces**
+- [x] **Step 4: Connect the existing surfaces**
 
 Insert the summary inside the scrollable debrief body before the story beat and inside the selected-job decision card after representative skills. Do not add a global tab, new modal or new currency.
 
-- [ ] **Step 5: Run focused visual and behavior gates**
+- [x] **Step 5: Run focused visual and behavior gates**
 
 ```bash
 npx playwright test tests/e2e/expedition-debrief.spec.ts tests/e2e/job-change-design.spec.ts
@@ -762,7 +762,7 @@ git diff --check
 
 Copy selected desktop/mobile screenshots and the exact command result into tracked evidence.
 
-- [ ] **Step 6: Commit and push UI plus evidence**
+- [x] **Step 6: Commit and push UI plus evidence**
 
 Commit component, owning surfaces, test API fixtures, E2E tests and evidence together.
 

@@ -12,13 +12,16 @@ import {
     Swords,
     X,
 } from 'lucide-react';
-import type { ExpeditionSummary } from '../types/player.js';
+import type { ClassJourneyRecord, ExpeditionSummary } from '../types/player.js';
 import type { ExpeditionReturnAction } from '../utils/expeditionReturnFlow.js';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
+import ClassJourneySummary from './ClassJourneySummary';
 
 interface ExpeditionDebriefCardProps {
     summary: ExpeditionSummary;
     recommendation: ExpeditionReturnAction;
+    journeyJob?: string | null;
+    journey?: ClassJourneyRecord;
     storyBeat?: MilestoneStoryBeat | null;
     onClose: () => void;
     onPrimaryAction: () => void;
@@ -44,6 +47,8 @@ const summarizeItems = (items: string[]) => {
 const ExpeditionDebriefCard = ({
     summary,
     recommendation,
+    journeyJob,
+    journey,
     storyBeat,
     onClose,
     onPrimaryAction,
@@ -151,6 +156,15 @@ const ExpeditionDebriefCard = ({
                             </div>
                         </section>
                     </div>
+
+                    {journeyJob && (
+                        <ClassJourneySummary
+                            job={journeyJob}
+                            record={journey}
+                            latestSummary={summary}
+                            className="mt-4"
+                        />
+                    )}
 
                     {storyBeat && (
                         <section

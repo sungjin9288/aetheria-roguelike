@@ -396,6 +396,14 @@
 - **Rule:** 전투 소모품 action은 item identity와 explicit entropy만 전달한다. reducer가 최신 전투 상태, 적과 inventory를 확인하고 아이템 소비, 상태 tick, 적 행동, quick slot, 전투 지속·패배·DoT 종료를 한 transition에서 확정한다. 같은 입력의 replay는 아이템 부재로 exact no-op이어야 하며, 지연 적 턴과 비동기 후처리도 render마다 새로 만들어지는 지역 변수에 의존하지 않는다
 - **Rationale:** 전투 소모품은 단순 회복이 아니라 적에게 한 턴을 넘기는 행동이다. 소비와 반격·승패를 여러 snapshot dispatch로 나누면 rapid tap에서 물약, 피해, 유해와 보상이 서로 다른 횟수로 반영될 수 있으므로, 결정적 turn resolver와 current-state commit을 같은 권한 경계로 묶어야 전투 결과를 신뢰할 수 있다
 
+### R88: Do Not Reconstruct One Event From Independent Aggregates
+- **Rule:** 누적 지역, 보스, 장비, 분기처럼 서로 독립적으로 쌓이는 collection은 같은 index나 마지막 값이라는 이유로 하나의 원정 결과처럼 묶지 않는다. Event-specific copy는 exact event ID로 bind된 summary만 사용하고, aggregate-only 화면은 `누적 발견`임을 명시한다
+- **Rationale:** 서로 다른 원정에서 발견한 지역과 보스를 한 문장에 붙이면 플레이어의 실제 여정과 증빙이 달라진다. 영구 기록 UI는 exact event와 cumulative history를 구분해야 오래 쌓인 기억을 신뢰할 수 있다
+
+### R89: Seed Player Evidence Through Production Progression Rules
+- **Rule:** E2E와 screenshot fixture가 직업, 레벨, 장비, 스킬 선택을 바꾸면 production class-vitals, EXP requirement와 derived-stat authority를 사용해 base/current stats와 summary를 함께 만든다. 획득 목록, 장착 목록, signature discovery도 실제 transaction이 만들 수 있는 상태로 맞춘다
+- **Rationale:** 화면 문구만 맞고 HP, MP, 장비 소유와 원정 요약이 서로 모순이면 visual proof가 존재하지 않는 플레이 상태를 승인하게 된다. Player-facing 증빙은 production state transition으로 재현 가능한 fixture에서만 신뢰할 수 있다
+
 ---
 
 ## 📝 Post-Mortem Template
