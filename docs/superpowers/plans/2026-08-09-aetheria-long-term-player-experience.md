@@ -779,7 +779,7 @@ Commit component, owning surfaces, test API fixtures, E2E tests and evidence tog
 - Consumes: all prior task commits
 - Produces: current, replayable completion evidence and explicit external blockers
 
-- [ ] **Step 1: Run canonical application verification**
+- [x] **Step 1: Run canonical application verification**
 
 ```bash
 npx tsc --noEmit
@@ -792,7 +792,7 @@ npm run mobile:doctor
 npm run cap:sync
 ```
 
-- [ ] **Step 2: Run native packaging appropriate to the touched surfaces**
+- [x] **Step 2: Run native packaging appropriate to the touched surfaces**
 
 ```bash
 npm run android:debug
@@ -802,11 +802,11 @@ npm run ios:archive
 
 Android release signing and App Store/TestFlight operations remain separate and require their real keystore/identity plus explicit publish authority.
 
-- [ ] **Step 3: Inspect actual artifacts**
+- [x] **Step 3: Inspect actual artifacts**
 
 Open the character contact sheet, equipment family/Tier sheets, 32px sheet and selected 390x844 screenshots. Record clipping, duplicate silhouette, unreadable family, broken transparency or style mismatch as failures and return to the owning cohort.
 
-- [ ] **Step 4: Update the ledger through actual evidence**
+- [x] **Step 4: Update the ledger through actual evidence**
 
 `tasks/todo.md` records:
 
@@ -817,7 +817,7 @@ Open the character contact sheet, equipment family/Tier sheets, 32px sheet and s
 
 `progress.md` receives the concise durable checkpoint. Do not duplicate the full design document.
 
-- [ ] **Step 5: Audit every goal requirement**
+- [x] **Step 5: Audit every goal requirement**
 
 Create a table in the tracked QA summary with one row for:
 
@@ -835,7 +835,7 @@ Create a table in the tracked QA summary with one row for:
 
 Each row links to current file, test, artifact or blocker. “No issue found” is not evidence.
 
-- [ ] **Step 6: Commit and push final evidence**
+- [x] **Step 6: Commit and push final evidence**
 
 Commit only ledger and evidence changes with a detailed `test:` or `chore:` message and push. Mark the active goal complete only if every non-external requirement is proven and no requested implementation remains.
 

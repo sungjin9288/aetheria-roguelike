@@ -91,7 +91,13 @@ This is pipeline readiness only: no Task 4 source sheet, runtime equipment PNG, 
 - Independent review also closed a CLI authority gap: an explicit `--signature-registry` is now forwarded to verification, and an invalid override exits nonzero without replacing an existing report.
 - Final Task 8 gates are GREEN: focused `178/178`; `npm run verify` unit `3706/3706`; `npm run verify:full` desktop/mobile smoke and Playwright `48/48 + 45/45`; `npm run mobile:doctor`; and `npm run cap:sync`.
 
-These checkpoints certify the complete 18-character, 229-equipment, 22-family, and 25-signature-overlay art surface. Independent review is approved; the only remaining Task 8 boundary is the cohesive commit and push.
+These checkpoints certify the complete 18-character, 229-equipment, 22-family, and 25-signature-overlay art surface. Task 8 was independently approved and delivered as `aa8f181`; the current final-RC audit is recorded in `../qa/final-rc-completion-audit.md`.
+
+## Final RC art replay — 2026-08-10
+
+- `npm run art:verify -- --write-report docs/evidence/art/art-contract-report.json` is GREEN across all four surfaces with `294` exports and every error array empty. Report SHA-256: `60bc0e5e8261a3ca991a5bc23a9385ea1a5146ee504eec20fc11e7de34b73837`.
+- All tracked character and equipment contact sheets were regenerated in a temporary output tree and compared byte-for-byte with the committed evidence.
+- Original-size review covers the 18-character sheet, every equipment family/Tier sheet, embedded 32px insets, family exemplars, signature item/overlay pairs, and the two 390x844 class-journey captures. No clipping, duplicate silhouette, unreadable family, broken transparency, or style mismatch was found.
 
 ## Contract verification
 
