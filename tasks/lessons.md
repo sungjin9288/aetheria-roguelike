@@ -42,6 +42,7 @@
 | 2026-07-22 | 기력이 부족한 기술이 `사용 가능`으로 보이고 활성 버튼을 눌러도 아무 반응이 없었음 | engine은 기본 비용과 현재 기력을 검사했지만 CombatPanel은 cooldown만 표시하고 버튼 availability를 별도로 계산했음 | 플레이어가 누르는 전투 행동은 engine과 같은 비용·cooldown rule에서 상태를 파생하고, 실행 불가 사유를 버튼 옆에 보여 주며 enabled no-op 상태를 허용하지 않는다 |
 | 2026-08-03 | 브라우저 검증용 URL flag와 test API 구현이 production bundle에도 포함되고 일반 mock runtime은 재실행 저장을 검증할 수 없었음 | test harness 활성 조건과 build boundary가 분리되지 않았고 smoke/e2e Firebase 차단이 local persistence까지 함께 차단했음 | test API는 명시적 build-time gate 뒤에서만 bundle에 포함하고, 실기기 QA는 provision된 별도 bundle과 전용 local snapshot key를 사용해 production 데이터 차단과 재실행 검증을 동시에 보장한다 |
 | 2026-08-03 | 첫 화면 변경 뒤 perf guard가 사라진 terminal input과 접힌 상점 버튼을 기다리며 실제 측정 전에 중단됨 | 자동화가 현재 플레이어 동선이 아니라 과거 desktop 전용 UI 구조를 직접 가정했음 | 성능·smoke 자동화도 사용자가 보는 최신 경로를 따라야 하며, 숨겨진 test API는 입력 fallback으로만 사용하고 접힌 행동은 실제 summary를 먼저 열어 도달성을 검증한다 |
+| 2026-08-10 | 원정 중 획득한 signature를 즉시 장착하거나 기존 signature를 inventory와 equip 사이에서 옮기면 이름 기반 delta가 발견을 놓치거나 중복 기록할 수 있었음 | loot prefix가 registry 이름을 바꾸고 inventory-only 비교가 현재 장착 슬롯을 소유 자산에서 제외했음 | 영구 수집 기록은 inventory와 모든 장착 슬롯의 canonical identity 집합을 출발 snapshot과 비교하고, 접두사는 명시 metadata로 제거한 뒤 registry에서 다시 검증한다 |
 
 ---
 

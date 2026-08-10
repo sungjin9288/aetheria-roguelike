@@ -14,6 +14,7 @@ import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
+import { appendExpeditionBoss } from '../../utils/expeditionLedger';
 
 /**
  * 전투 승리 공통 후처리.
@@ -107,6 +108,7 @@ export const handleVictoryOutcome = ({
 
     // codex
     const baseName = CombatEngine.resolveEnemyBaseName(deadEnemy);
+    if (deadEnemy?.isBoss) updatedPlayer = appendExpeditionBoss(updatedPlayer, baseName);
     updatedPlayer = registerCodex(updatedPlayer, 'monsters', baseName);
 
     // cycle 193: 신규 codex 등록 수만큼 SEASON_XP.codexDiscover 적용. 기존엔 SEASON_XP.codexDiscover

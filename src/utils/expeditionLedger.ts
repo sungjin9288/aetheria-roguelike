@@ -1,4 +1,5 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
+import { CLASSES } from '../data/classes.js';
 import type {
     ExpeditionInventoryCheckpoint,
     ExpeditionQuestCheckpoint,
@@ -7,13 +8,45 @@ import type {
     Player,
 } from '../types/player.js';
 import { getActiveExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
+import { recordClassJourneyExpedition } from './classJourney.js';
 import { queueMilestoneStoryBeat } from './milestoneStory.js';
+import { isSignatureName } from './signatureDiscovery.js';
 
 const numberOr = (value: unknown, fallback = 0) => (
     Number.isFinite(Number(value)) ? Number(value) : fallback
 );
 
 const nonNegative = (value: unknown, fallback = 0) => Math.max(0, numberOr(value, fallback));
+
+const EQUIPMENT_SLOTS = ['weapon', 'armor', 'offhand'] as const;
+
+const uniqueNames = (value: unknown) => {
+    if (!Array.isArray(value)) return [];
+    return [...new Set(value.flatMap((entry) => (
+        typeof entry === 'string' && entry.trim() ? [entry.trim()] : []
+    )))];
+};
+
+const equippedItems = (player: Player) => EQUIPMENT_SLOTS.flatMap((slot) => {
+    const item = player.equip?.[slot];
+    return item ? [item] : [];
+});
+
+const skillChoicesForJob = (value: unknown, job: string | undefined) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || !job) return {};
+    const branchSkills = CLASSES[job]?.skillBranches || {};
+    return Object.fromEntries(Object.entries(value).flatMap(([skillName, choice]) => {
+        const selectedChoice = typeof choice === 'string' ? choice.trim() : '';
+        const choices = branchSkills[skillName];
+        return Array.isArray(choices) && choices.some((branch: any) => branch.choice === selectedChoice)
+            ? [[skillName, selectedChoice]]
+            : [];
+    }));
+};
+
+const equipmentNames = (player: Player) => equippedItems(player).flatMap((item) => (
+    typeof item.name === 'string' && item.name.trim() ? [item.name.trim()] : []
+));
 
 const inventoryCheckpoint = (item: any): ExpeditionInventoryCheckpoint => {
     const name = typeof item?.name === 'string' && item.name.trim() ? item.name : '이름 없는 아이템';
@@ -81,6 +114,32 @@ const itemDelta = (before: ExpeditionInventoryCheckpoint[], currentInventory: an
     };
 };
 
+const canonicalSignatureName = (item: any) => {
+    const name = typeof item?.name === 'string' ? item.name.trim() : '';
+    if (isSignatureName(name)) return name;
+
+    const prefix = typeof item?.prefixName === 'string' ? item.prefixName.trim() : '';
+    if (item?.prefixed !== true || !prefix || !name.startsWith(`${prefix} `)) return null;
+    const baseName = name.slice(prefix.length + 1).trim();
+    return isSignatureName(baseName) ? baseName : null;
+};
+
+const ownedSignatureNames = (player: Player) => {
+    const items = [
+        ...(Array.isArray(player.inv) ? player.inv : []),
+        ...equippedItems(player),
+    ];
+    return [...new Set(items.flatMap((item) => {
+        const name = canonicalSignatureName(item);
+        return name ? [name] : [];
+    }))];
+};
+
+const signatureDelta = (snapshot: ExpeditionSnapshot, player: Player) => {
+    const ownedBefore = new Set(snapshot.signatureItems || []);
+    return ownedSignatureNames(player).filter((name) => !ownedBefore.has(name));
+};
+
 const completedQuestTitles = (snapshot: ExpeditionSnapshot, player: Player, questCatalog: any[]) => {
     const current = new Map((Array.isArray(player.quests) ? player.quests : []).map((quest: any) => [String(quest.id), quest]));
     const claimed = new Set((Array.isArray(player.stats?.claimedQuestIds) ? player.stats.claimedQuestIds : []).map(String));
@@ -102,6 +161,7 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
     if (typeof candidate.origin !== 'string' || typeof candidate.destination !== 'string') return null;
     if (!Number.isFinite(Number(candidate.startedAt))) return null;
 
+    const job = typeof candidate.job === 'string' && candidate.job.trim() ? candidate.job.trim() : undefined;
     const normalized = {
         id: candidate.id,
         startedAt: nonNegative(candidate.startedAt),
@@ -132,6 +192,11 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
                 }]
                 : []
         )),
+        job,
+        skillChoices: skillChoicesForJob(candidate.skillChoices, job),
+        equipmentNames: uniqueNames(candidate.equipmentNames),
+        bossNames: uniqueNames(candidate.bossNames),
+        signatureItems: uniqueNames(candidate.signatureItems).filter(isSignatureName),
     };
     return {
         ...normalized,
@@ -148,6 +213,7 @@ export const normalizeExpeditionSummary = (value: unknown): ExpeditionSummary | 
     if (typeof candidate.destination !== 'string' || typeof candidate.returnLocation !== 'string') return null;
     if (!Number.isFinite(Number(candidate.startedAt)) || !Number.isFinite(Number(candidate.endedAt))) return null;
 
+    const job = typeof candidate.job === 'string' && candidate.job.trim() ? candidate.job.trim() : undefined;
     return {
         id: candidate.id,
         startedAt: nonNegative(candidate.startedAt),
@@ -177,12 +243,18 @@ export const normalizeExpeditionSummary = (value: unknown): ExpeditionSummary | 
             && Number.isFinite(Number(candidate.reviewedAt))
             ? Number(candidate.reviewedAt)
             : null,
+        job,
+        skillChoices: skillChoicesForJob(candidate.skillChoices, job),
+        equipmentNames: uniqueNames(candidate.equipmentNames),
+        bossNames: uniqueNames(candidate.bossNames),
+        signatureItems: uniqueNames(candidate.signatureItems).filter(isSignatureName),
     };
 };
 
 export const startExpedition = (player: Player, destination: string, now: number, questCatalog: any[]) => {
     if (normalizeActiveExpedition(player.activeExpedition)) return player;
     const hp = nonNegative(player.hp);
+    const job = typeof player.job === 'string' && player.job.trim() ? player.job.trim() : undefined;
     const snapshot: ExpeditionSnapshot = {
         id: `expedition-${Math.max(0, Math.floor(now))}`,
         startedAt: Math.max(0, Math.floor(now)),
@@ -201,6 +273,11 @@ export const startExpedition = (player: Player, destination: string, now: number
         inventory: (Array.isArray(player.inv) ? player.inv : []).map(inventoryCheckpoint),
         quests: questCheckpoints(player, questCatalog),
         focusQuestIds: getPreparedExpeditionFocusQuestIds(player, destination, questCatalog),
+        job,
+        skillChoices: skillChoicesForJob(player.skillChoices, job),
+        equipmentNames: equipmentNames(player),
+        bossNames: [],
+        signatureItems: ownedSignatureNames(player),
     };
     return { ...player, activeExpedition: snapshot };
 };
@@ -211,6 +288,7 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
 
     const endedAt = Math.max(snapshot.startedAt, Math.floor(now));
     const { newItems, lostItemCount } = itemDelta(snapshot.inventory, Array.isArray(player.inv) ? player.inv : []);
+    const signatureItems = signatureDelta(snapshot, player);
     const lowestHp = Math.min(snapshot.lowestHp, nonNegative(player.hp, snapshot.lowestHp));
     const summary: ExpeditionSummary = {
         id: snapshot.id,
@@ -237,10 +315,26 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
         returnHp: nonNegative(player.hp),
         maxHpAtReturn: Math.max(1, nonNegative(player.maxHp, snapshot.maxHpAtStart)),
         reviewedAt: null,
+        job: snapshot.job,
+        skillChoices: snapshot.skillChoices,
+        equipmentNames: equipmentNames(player),
+        bossNames: snapshot.bossNames || [],
+        signatureItems,
     };
 
+    const playerWithJourney = snapshot.job
+        ? recordClassJourneyExpedition(player, {
+            job: snapshot.job,
+            expeditionId: snapshot.id,
+            skillBranches: Object.entries(snapshot.skillChoices || {}).map(([skillName, choice]) => `${skillName}:${choice}`),
+            signatureItems,
+            bossNames: snapshot.bossNames,
+            regions: [snapshot.destination, player.loc || snapshot.destination],
+            endedAt,
+        })
+        : player;
     const returnedPlayer = queueMilestoneStoryBeat({
-        ...player,
+        ...playerWithJourney,
         activeExpedition: null,
         lastExpeditionSummary: summary,
     }, 'first_safe_return');
@@ -248,6 +342,19 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
     return {
         player: returnedPlayer,
         summary,
+    };
+};
+
+export const appendExpeditionBoss = (player: Player, bossName: string): Player => {
+    const name = typeof bossName === 'string' ? bossName.trim() : '';
+    const snapshot = normalizeActiveExpedition(player.activeExpedition);
+    if (!snapshot || !name || snapshot.bossNames?.includes(name)) return player;
+    return {
+        ...player,
+        activeExpedition: {
+            ...snapshot,
+            bossNames: [...(snapshot.bossNames || []), name],
+        },
     };
 };
 

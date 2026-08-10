@@ -6,6 +6,7 @@ import path from 'node:path';
 import { AT } from '../src/reducers/actionTypes.js';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { migrateData } from '../src/utils/gameUtils.js';
+import { recordClassJourneyExpedition } from '../src/utils/classJourney.js';
 
 /**
  * 저장 데이터 마이그레이션 (migrateData / dataMigration.ts) 테스트 — 통합본.
@@ -16,6 +17,80 @@ import { migrateData } from '../src/utils/gameUtils.js';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
+
+test('legacy save의 장비·보상·원정 identity를 보존하며 직업 여정을 정규화한다', () => {
+    const migrated = migrateData({
+        version: 5,
+        player: {
+            name: '오래된 전사',
+            job: '전사',
+            stats: {},
+            inv: [{ id: 'reward-1', name: '라그나로크', type: 'weapon' }],
+            equip: {
+                weapon: '강철 롱소드',
+                armor: '가죽 갑옷',
+                offhand: null,
+            },
+            lastExpeditionSummary: {
+                id: 'expedition-1000',
+                startedAt: 1_000,
+                endedAt: 2_000,
+                destination: '고요한 숲',
+                returnLocation: '시작의 마을',
+                newItems: ['라그나로크'],
+                signatureItems: ['라그나로크'],
+                job: '전사',
+            },
+            classJourney: {
+                version: 9,
+                sequence: 0,
+                byJob: {
+                    ' 전사 ': {
+                        expeditionIds: ['expedition-1000', 'expedition-1000'],
+                        skillBranches: ['파워배시:A', '파워배시:A'],
+                        signatureItems: ['라그나로크'],
+                        bossNames: ['숲의 군주'],
+                        regions: ['고요한 숲'],
+                        representativeExpeditionId: '없는 원정',
+                        lastPlayedAt: null,
+                    },
+                },
+            },
+        },
+    });
+
+    assert.equal(migrated.player.inv[0].id, 'reward-1');
+    assert.equal(migrated.player.equip.weapon.name, '강철 롱소드');
+    assert.equal(migrated.player.equip.armor.name, '가죽 갑옷');
+    assert.equal(migrated.player.lastExpeditionSummary.id, 'expedition-1000');
+    assert.deepEqual(migrated.player.lastExpeditionSummary.newItems, ['라그나로크']);
+    assert.deepEqual(migrated.player.classJourney, {
+        version: 1,
+        sequence: 1,
+        byJob: {
+            '전사': {
+                expeditionIds: ['expedition-1000'],
+                skillBranches: ['파워배시:A'],
+                signatureItems: ['라그나로크'],
+                bossNames: ['숲의 군주'],
+                regions: ['고요한 숲'],
+                representativeExpeditionId: 'expedition-1000',
+                lastPlayedAt: null,
+            },
+        },
+    });
+
+    const replay = recordClassJourneyExpedition(migrated.player, {
+        job: '전사',
+        expeditionId: migrated.player.lastExpeditionSummary.id,
+        signatureItems: migrated.player.lastExpeditionSummary.signatureItems,
+        regions: [migrated.player.lastExpeditionSummary.destination],
+        endedAt: migrated.player.lastExpeditionSummary.endedAt,
+    });
+    assert.equal(replay, migrated.player);
+    assert.equal(replay.classJourney, migrated.player.classJourney);
+    assert.equal(replay.classJourney.sequence, 1);
+});
 
 test('migrateData initializes missing location exploration counts and preserves existing values', () => {
     const missingCounts = migrateData({

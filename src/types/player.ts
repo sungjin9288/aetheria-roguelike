@@ -153,6 +153,22 @@ export interface ExpeditionQuestCheckpoint {
     goal: number;
 }
 
+export interface ClassJourneyRecord {
+    expeditionIds: string[];
+    skillBranches: string[];
+    signatureItems: string[];
+    bossNames: string[];
+    regions: string[];
+    representativeExpeditionId: string | null;
+    lastPlayedAt: number | null;
+}
+
+export interface ClassJourneyLedger {
+    version: 1;
+    sequence: number;
+    byJob: Record<string, ClassJourneyRecord>;
+}
+
 export interface ExpeditionSnapshot {
     id: string;
     startedAt: number;
@@ -171,6 +187,11 @@ export interface ExpeditionSnapshot {
     inventory: ExpeditionInventoryCheckpoint[];
     quests: ExpeditionQuestCheckpoint[];
     focusQuestIds: Array<string | number>;
+    job?: string;
+    skillChoices?: Record<string, string>;
+    equipmentNames?: string[];
+    bossNames?: string[];
+    signatureItems?: string[];
 }
 
 export interface ExpeditionSummary {
@@ -198,6 +219,11 @@ export interface ExpeditionSummary {
     returnHp: number;
     maxHpAtReturn: number;
     reviewedAt: number | null;
+    job?: string;
+    skillChoices?: Record<string, string>;
+    equipmentNames?: string[];
+    bossNames?: string[];
+    signatureItems?: string[];
 }
 
 /**
@@ -251,6 +277,7 @@ export interface Player {
     eventChainProgress?: Record<string, any>;
     activeExpedition?: ExpeditionSnapshot | null;
     lastExpeditionSummary?: ExpeditionSummary | null;
+    classJourney?: ClassJourneyLedger;
     // cycle 282: signaturePity top-level 필드 제거 — top-level access 0건.
     //   active dispatch는 player.stats.signaturePity (nested, number 형식).
     maxInv?: number;

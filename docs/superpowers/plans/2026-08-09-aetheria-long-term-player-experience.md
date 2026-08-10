@@ -652,7 +652,7 @@ export interface ClassJourneyLedger {
 classJourney?: ClassJourneyLedger;
 ```
 
-- [ ] **Step 1: Write failing pure ledger tests**
+- [x] **Step 1: Write failing pure ledger tests**
 
 Cover:
 
@@ -662,7 +662,7 @@ Cover:
 - branch, signature, boss and region identities are unique and sorted by first discovery;
 - malformed old data normalizes without losing valid entries.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```bash
 node --import tsx --test tests/class-journey.test.js
@@ -670,7 +670,7 @@ node --import tsx --test tests/class-journey.test.js
 
 Expected: FAIL because `classJourney.ts` does not exist.
 
-- [ ] **Step 3: Implement the smallest pure ledger**
+- [x] **Step 3: Implement the smallest pure ledger**
 
 The first branch in `recordClassJourneyExpedition` is:
 
@@ -682,7 +682,7 @@ if (current.expeditionIds.includes(input.expeditionId)) return player;
 
 Only accepted new expedition IDs increment sequence.
 
-- [ ] **Step 4: Extend expedition snapshots additively**
+- [x] **Step 4: Extend expedition snapshots additively**
 
 Add optional normalized fields to snapshot and summary:
 
@@ -696,18 +696,18 @@ signatureItems?: string[];
 
 Start snapshot captures job, current branches and equipped item names. Combat victory appends a canonical boss name once when the defeated enemy is a boss. Finish derives newly acquired signature names from item delta and records the class journey before clearing `activeExpedition`.
 
-- [ ] **Step 5: Add save migration tests before migration code**
+- [x] **Step 5: Add save migration tests before migration code**
 
 Use a literal legacy fixture with inventory, equipment, reward and expedition identity. Assert migration preserves all of them and adds a normalized optional class journey. Replay the returned summary and assert sequence and record count do not change.
 
-- [ ] **Step 6: Run focused and full gates**
+- [x] **Step 6: Run focused and full gates**
 
 ```bash
 node --import tsx --test tests/class-journey.test.js tests/expedition-ledger.test.js tests/data-migration.test.js
 npm run verify
 ```
 
-- [ ] **Step 7: Commit and push the save-safe ledger**
+- [x] **Step 7: Commit and push the save-safe ledger**
 
 Commit types, pure logic, migration, authority integration and tests together. Do not include UI in this commit.
 

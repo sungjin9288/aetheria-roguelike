@@ -6,6 +6,8 @@ import { AT } from '../src/reducers/actionTypes.js';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { makeCombatActionMap } from '../src/reducers/handlers/combatHandlers.js';
 import { getProtocolDayKey } from '../src/utils/protocolCycle.js';
+import { DB } from '../src/data/db.js';
+import { startExpedition } from '../src/utils/expeditionLedger.js';
 
 const makeState = (overrides = {}) => ({
     ...structuredClone(INITIAL_STATE),
@@ -65,6 +67,24 @@ test('attack victory commits rewards and replay protection in one reducer transi
     assert.ok(won.logs.some((log) => log.type === 'success' && log.text.includes('승리')));
     assert.equal(won.combatTurn, 1);
     assert.equal(won.combatReceipt?.kind, 'victory');
+    assert.equal(replayed, won);
+});
+
+test('boss victory commits one expedition boss and rejects the same reducer action replay', () => {
+    const state = makeState();
+    state.player = startExpedition({ ...state.player, job: '전사' }, '고요한 숲', 1_000, DB.QUESTS);
+    state.enemy = {
+        ...state.enemy,
+        name: '분노한 숲의 군주',
+        baseName: '숲의 군주',
+        isBoss: true,
+    };
+    const action = makeAction('attack', 13, 1_500);
+
+    const won = actionMap.RESOLVE_COMBAT_ACTION(state, action);
+    const replayed = actionMap.RESOLVE_COMBAT_ACTION(won, action);
+
+    assert.deepEqual(won.player.activeExpedition.bossNames, ['숲의 군주']);
     assert.equal(replayed, won);
 });
 
