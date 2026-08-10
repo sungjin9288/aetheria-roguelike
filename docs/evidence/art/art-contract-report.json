@@ -1,0 +1,1500 @@
+{
+  "ok": true,
+  "scope": "all",
+  "cohort": null,
+  "verifiedSurfaces": [
+    "characters",
+    "equipment",
+    "families",
+    "signature-overlays"
+  ],
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "counts": {
+    "classes": 18,
+    "equipment": 229,
+    "definedFamilies": 22,
+    "usedFamilies": 18,
+    "families": 22,
+    "signatureOverlays": 25
+  },
+  "missing": [],
+  "extra": [],
+  "duplicates": [],
+  "invalidPng": [],
+  "invalidAlpha": [],
+  "invalidBounds": [],
+  "invalidStyleVersion": [],
+  "invalidArtwork": [],
+  "exports": [
+    {
+      "identity": "character:그림자 주군",
+      "path": "/assets/avatars/canonical/shadow-lord.png",
+      "sha256": "40b44fb8478f5a0fa77ec25d7667399c33391226e43182d5a017b5e7513f0649"
+    },
+    {
+      "identity": "character:나이트",
+      "path": "/assets/avatars/canonical/knight.png",
+      "sha256": "c79383abb4993c485d17e37d98e7f0a5dd1e9d69fbb15c2348c67397d91cd835"
+    },
+    {
+      "identity": "character:대마법사",
+      "path": "/assets/avatars/canonical/grand-mage.png",
+      "sha256": "1b9a30ce75fdaac3151d6ce5be4137e234906b6d4ee05ad74cb96d95f5776a7c"
+    },
+    {
+      "identity": "character:도적",
+      "path": "/assets/avatars/canonical/rogue.png",
+      "sha256": "eec955262b355772ab77d2cc0497b322bfb1027a95a30f0ba087177986f0c554"
+    },
+    {
+      "identity": "character:드래곤 나이트",
+      "path": "/assets/avatars/canonical/dragon-knight.png",
+      "sha256": "666cc4d7d9350fc76f256bb154ebcb26a01af6911fb038e2995bdf682ff8ea02"
+    },
+    {
+      "identity": "character:레인저",
+      "path": "/assets/avatars/canonical/ranger.png",
+      "sha256": "437ae033c20d404a159b89c12e74b7635ce50240ea0769e853be1836f5789253"
+    },
+    {
+      "identity": "character:마법사",
+      "path": "/assets/avatars/canonical/mage.png",
+      "sha256": "c0052602625b3c4e1211b17be234ed872540af4f2cc7087c7e6f643aece5e5b6"
+    },
+    {
+      "identity": "character:모험가",
+      "path": "/assets/avatars/canonical/adventurer.png",
+      "sha256": "be788aaf1b5b18cd152878ad46596a7aa1f4bf75d58c1eb35d858c447416b586"
+    },
+    {
+      "identity": "character:무당",
+      "path": "/assets/avatars/canonical/shaman.png",
+      "sha256": "59668e025666e3ff94337d17d4d6100e08dfca7a65f6f743f2f33ac54d320611"
+    },
+    {
+      "identity": "character:버서커",
+      "path": "/assets/avatars/canonical/berserker.png",
+      "sha256": "c31138ae52169d0dac27435525e4029714aa845bfa04979f49bff11e1008ebc5"
+    },
+    {
+      "identity": "character:사냥의 군주",
+      "path": "/assets/avatars/canonical/hunt-lord.png",
+      "sha256": "6dba952811fc8e73b2d2d41d1be565d2d48c649753a63c06958b3f96e476a804"
+    },
+    {
+      "identity": "character:성직자",
+      "path": "/assets/avatars/canonical/cleric.png",
+      "sha256": "3c02d238c87dc22b8e7e4d4b7636959360348c059e1ec8a647cb0bedad16efd0"
+    },
+    {
+      "identity": "character:시간술사",
+      "path": "/assets/avatars/canonical/chronomancer.png",
+      "sha256": "fe1b1ffe3951f4012eab3cf5b556bd544859107bf6af15df86900db8b17e3362"
+    },
+    {
+      "identity": "character:아크메이지",
+      "path": "/assets/avatars/canonical/archmage.png",
+      "sha256": "65f739cdfa262b58c574e62c3fab6a1587b08c66564c5e452561ef86b6104ed9"
+    },
+    {
+      "identity": "character:어쌔신",
+      "path": "/assets/avatars/canonical/assassin.png",
+      "sha256": "b3d36cf41bd13015116612f1a2a713675206a02dba647390f84ed775e1526b94"
+    },
+    {
+      "identity": "character:전사",
+      "path": "/assets/avatars/canonical/warrior.png",
+      "sha256": "b05581e536bfb1e3ce2519320151b593a5c6ca2d88ba486db02867a395f38d49"
+    },
+    {
+      "identity": "character:팔라딘",
+      "path": "/assets/avatars/canonical/paladin.png",
+      "sha256": "19d0a637df0d17637380f0710c3536716cead94fd6fea4d2bb3347d064d2bf77"
+    },
+    {
+      "identity": "character:흑마법사",
+      "path": "/assets/avatars/canonical/warlock.png",
+      "sha256": "b7ce61adf7adb20413e0e408aa9acc159e6b1e2c3796d5bc8af5b96e93101a7c"
+    },
+    {
+      "identity": "equipment:가죽 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-bd28001bebfa.png",
+      "sha256": "39794702c976e974b09de3bcd44daae639d30f530f5cdf958d4ee826ef58bf41"
+    },
+    {
+      "identity": "equipment:가죽 장화",
+      "path": "/assets/equipment-exact/auto/auto-d292a43f2b89.png",
+      "sha256": "c34b49d0bdb3a4d5a71b520aa3c30da0be6ecebeb1f96e80eeecd81a92c90202"
+    },
+    {
+      "identity": "equipment:가죽 조끼",
+      "path": "/assets/equipment-exact/auto/auto-f293406dda29.png",
+      "sha256": "6376128dd1030856e3d4abcc3b2bc7b185e21939da6b8f14a0b194014e77eb8b"
+    },
+    {
+      "identity": "equipment:강철 롱소드",
+      "path": "/assets/equipment-exact/auto/auto-e1d7dee4462c.png",
+      "sha256": "3f664333949f5bce522dc9fbb1053a10ed4187401424577791ecc7ad7ddf953f"
+    },
+    {
+      "identity": "equipment:강화가죽갑옷",
+      "path": "/assets/equipment-exact/auto/auto-6dd186c9980e.png",
+      "sha256": "0a040b0770633645c9eb9e58923eead123a3135e55761c105459f5b8a58bcb79"
+    },
+    {
+      "identity": "equipment:견습 주문서",
+      "path": "/assets/equipment-exact/auto/auto-18d5eb52ee3e.png",
+      "sha256": "1ac74dbe5f336a5367a83a3d6c1e135fcdf72f45c4d95c369560abd343c5ca74"
+    },
+    {
+      "identity": "equipment:견습생의 단검",
+      "path": "/assets/equipment-exact/auto/auto-d1c12f6f90b9.png",
+      "sha256": "46712c149541d8a174903a6b6325f924a6c44858ac8d5202a12417b8e3497495"
+    },
+    {
+      "identity": "equipment:고대 마탑 스태프",
+      "path": "/assets/equipment-exact/auto/auto-b8132cd23fa2.png",
+      "sha256": "e92a1b2f24caf9080dd2a039952deacc2fe4ffb2589c274646f8f8cfabdcf30b"
+    },
+    {
+      "identity": "equipment:고대 마탑 예복",
+      "path": "/assets/equipment-exact/auto/auto-923eea9745cf.png",
+      "sha256": "8e2c6547e2d54ec44ecb43cf3fd2f7363086a070368f4687154cb4c6c8dfe8ee"
+    },
+    {
+      "identity": "equipment:공허의 대검",
+      "path": "/assets/equipment-exact/auto/auto-251a338b0ba5.png",
+      "sha256": "998d00a82cb9bb559c3c962cbe4b5f958ced2e710e9fe1c1a13a907c1000d8fa"
+    },
+    {
+      "identity": "equipment:공허의 외투",
+      "path": "/assets/equipment-exact/auto/auto-7aedd333f3a7.png",
+      "sha256": "4310966146aa8e02ea6352729f4fe270d2c1a149b2e80782056b146cd796b1b9"
+    },
+    {
+      "identity": "equipment:공허의 전투 외투",
+      "path": "/assets/equipment-exact/auto/auto-471edd7ca347.png",
+      "sha256": "503d02a6eac2980935f2f6d9b6c3da99c0bc32590b753ee8d416b6f6eb7f0605"
+    },
+    {
+      "identity": "equipment:광기의 갑주",
+      "path": "/assets/equipment-exact/signature-armor-mad-armor.png",
+      "sha256": "94bbc7d8bc76f2906c735adcab320c50a60a0a9ab699805bfdef351493785ed6"
+    },
+    {
+      "identity": "equipment:광기의 대갑주",
+      "path": "/assets/equipment-exact/auto/auto-5ba94275be04.png",
+      "sha256": "6963bb067604a6d7f01a06dde037a35d8f7430d6f595f4b9ea2e8ffd6c5d5ad5"
+    },
+    {
+      "identity": "equipment:광기의 도끼",
+      "path": "/assets/equipment-exact/auto/auto-8c3d7a804819.png",
+      "sha256": "d4e46f342243a662355f2224fcaf3800c3077340cc3701e07cacf15d1b6f7198"
+    },
+    {
+      "identity": "equipment:광전사의 도끼",
+      "path": "/assets/equipment-exact/auto/auto-6ed99a36a622.png",
+      "sha256": "f1c5a1ed48b4104a5b9003951a98a34ddc025968f21dceb9cfdac6b060de9ee4"
+    },
+    {
+      "identity": "equipment:광전사의 조끼",
+      "path": "/assets/equipment-exact/auto/auto-f330f21e336a.png",
+      "sha256": "7814b95c1d450d6d89352b58ec055f8895e9d01eb0ce00ff59c63912f1a45092"
+    },
+    {
+      "identity": "equipment:균열 외피갑옷",
+      "path": "/assets/equipment-exact/auto/auto-12ac317d8b8e.png",
+      "sha256": "9140dfe7beb1b0ea9330133b79882423984658680b75f48a10cd72fece1796da"
+    },
+    {
+      "identity": "equipment:균열 차단 방패",
+      "path": "/assets/equipment-exact/auto/auto-a65382954675.png",
+      "sha256": "58cf5c487f3c18196af31502a9918705a5a91f80090bd6d4a0506c1d9b3f0dda"
+    },
+    {
+      "identity": "equipment:균열의 날",
+      "path": "/assets/equipment-exact/auto/auto-f9d11e5d1637.png",
+      "sha256": "3caf7ecb6599ec2dc0d5e4adf6e8e54586c1e80943babfcc219364cbf4defd51"
+    },
+    {
+      "identity": "equipment:그림자 망토",
+      "path": "/assets/equipment-exact/auto/auto-6a3d22c34747.png",
+      "sha256": "de8db8db17bf0acee62658c4d98b064bc98beffc7d8ebe3c781494674f906885"
+    },
+    {
+      "identity": "equipment:그림자 절단기",
+      "path": "/assets/equipment-exact/signature-weapon-shadow-cutter.png",
+      "sha256": "2d493fb01d1abbe5df7e1a795b313c8a45e1052b167bcdf71db968b4923c1b23"
+    },
+    {
+      "identity": "equipment:기계식 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-89386cf1316a.png",
+      "sha256": "c94c03a6ab06d5b2f1f3a5debb4b3b45fc9c1aeebf83996033e82548c24fdbb3"
+    },
+    {
+      "identity": "equipment:기계식 레이피어",
+      "path": "/assets/equipment-exact/auto/auto-a17c1ffc7cd4.png",
+      "sha256": "dfac38d198e00a19ddf177e18098b800167c742bd291fd4af4275d8763ea2f90"
+    },
+    {
+      "identity": "equipment:기사의 검",
+      "path": "/assets/equipment-exact/auto/auto-4edcce577d36.png",
+      "sha256": "1d4f82f33b15a6c1d7ee2e516be3b944560bf93106e93dcf2894d34136a5b357"
+    },
+    {
+      "identity": "equipment:기사의 흉갑",
+      "path": "/assets/equipment-exact/auto/auto-07639734e68d.png",
+      "sha256": "7755bd1d061a187bed3e6947ba2123992ec8be29621338cbcc904fe9ea2c2274"
+    },
+    {
+      "identity": "equipment:나무곤봉",
+      "path": "/assets/equipment-exact/auto/auto-2c0caf97cc68.png",
+      "sha256": "284350b0de4ae6f518137f3f1adcebeacb498cc7e5dddfa7912479249c0668db"
+    },
+    {
+      "identity": "equipment:나무지팡이",
+      "path": "/assets/equipment-exact/auto/auto-c8326da35aa4.png",
+      "sha256": "27f99d2db840cf4693364103ced53938eb20f480a2aef1ca657dcf5b967659c9"
+    },
+    {
+      "identity": "equipment:나뭇가지 활",
+      "path": "/assets/equipment-exact/auto/auto-1acb9448ba0d.png",
+      "sha256": "46e28bdf043b39556d21b99ea86a53f84bc34ac016d97eb173518107675897ac"
+    },
+    {
+      "identity": "equipment:낡은 철퇴",
+      "path": "/assets/equipment-exact/auto/auto-70de6e67343f.png",
+      "sha256": "831e7f0c359e63289482fc4749725628229ca24a295fd22675bd9b9169d27794"
+    },
+    {
+      "identity": "equipment:냉기 방어복",
+      "path": "/assets/equipment-exact/auto/auto-9a96452fb468.png",
+      "sha256": "7bf9ed4c103d9d6cb9e1882e86b3f7944530408436d54717c60bf9db1d7ee744"
+    },
+    {
+      "identity": "equipment:냉기 방패",
+      "path": "/assets/equipment-exact/auto/auto-f7d6e79316ae.png",
+      "sha256": "8fb17cd0285f29609cc4cb958159b77df2e2785835ace24f933b5ffb9e63ffce"
+    },
+    {
+      "identity": "equipment:녹슨 단검",
+      "path": "/assets/equipment-exact/auto/auto-12f3fd7fbfb6.png",
+      "sha256": "42b271a913fbe795e1edfcdc9b5fd6d9eab306bd7f34a7b6c266abd5cf8c3085"
+    },
+    {
+      "identity": "equipment:녹슨 도끼",
+      "path": "/assets/equipment-exact/auto/auto-1a757e6a6cd3.png",
+      "sha256": "55bc8823af2790ddd66b904234de2d843fe01d733a223adffa3925d6cdd876f8"
+    },
+    {
+      "identity": "equipment:농부의 포크",
+      "path": "/assets/equipment-exact/auto/auto-aeefaa514270.png",
+      "sha256": "7847aefeb3256fd7276789b89fe81de244f49d2a1ba9a09af4a6322459f1daab"
+    },
+    {
+      "identity": "equipment:단궁",
+      "path": "/assets/equipment-exact/auto/auto-63213b4d6a57.png",
+      "sha256": "da614aa9143338fc0050aafce8d272d0b7cd49e713a5ab0cdd5ce4a3aab7b4b5"
+    },
+    {
+      "identity": "equipment:대마법사로브",
+      "path": "/assets/equipment-exact/auto/auto-e1b5ad823e67.png",
+      "sha256": "4412c6f7e6da145f94448d72c8cba56426daf79db373223834ac942f617e19f7"
+    },
+    {
+      "identity": "equipment:대지 방패",
+      "path": "/assets/equipment-exact/auto/auto-45df1ce786ed.png",
+      "sha256": "9ff32be7cfbf4f1c26267a958ee1775bfc416c45b3a56ce022877776c3e2a399"
+    },
+    {
+      "identity": "equipment:대지의 메이스",
+      "path": "/assets/equipment-exact/auto/auto-cc9dcab53ba5.png",
+      "sha256": "3bc2f84984075891062eeeb990e82d6deb50f889f0076abfe20d64b840c90ea7"
+    },
+    {
+      "identity": "equipment:대지의 심판",
+      "path": "/assets/equipment-exact/signature-weapon-earth-verdict.png",
+      "sha256": "c721c88c45fd864a398bb975d7b82097438d469ed2dbfc67988297bf6bf4d9ea"
+    },
+    {
+      "identity": "equipment:대지의 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-ae64afc35c68.png",
+      "sha256": "eb66182a40adc9161d42ee6b51e33e30d6a64477996731ec28c65cd2169608fb"
+    },
+    {
+      "identity": "equipment:도적 가죽갑옷",
+      "path": "/assets/equipment-exact/auto/auto-17fb1c907b35.png",
+      "sha256": "464714cb61f664f26193879879307ac7e93a188b7906321369372fa2e78c9f54"
+    },
+    {
+      "identity": "equipment:도적의 두건",
+      "path": "/assets/equipment-exact/auto/auto-53fb3aa395de.png",
+      "sha256": "a9722a59f0d639e0d2442a414b803d4bbe9d866785ec72536d3aa9f2be2b0029"
+    },
+    {
+      "identity": "equipment:독사의 송곳니",
+      "path": "/assets/equipment-exact/auto/auto-4d5063e9d334.png",
+      "sha256": "441667532b8a0ee32f20f5e41035ef45c417f00d0896db2969eb36bbb6f9d955"
+    },
+    {
+      "identity": "equipment:독아 채찍",
+      "path": "/assets/equipment-exact/auto/auto-879d5c28d6b5.png",
+      "sha256": "8e5f08fd39918c4f14e74893a12bcbf193c51a3a702f904dfd1352b736328acc"
+    },
+    {
+      "identity": "equipment:독안개 망토",
+      "path": "/assets/equipment-exact/auto/auto-8c4783289cb6.png",
+      "sha256": "1983cbd7f0884a8bd7dd7d05ae4ef8c3d80e2ef7f81b8423727b0f5c1381337f"
+    },
+    {
+      "identity": "equipment:독침 단검",
+      "path": "/assets/equipment-exact/auto/auto-8842c4bfd07b.png",
+      "sha256": "faf2d28bacb8aa64367b95ab5f02d0ecbfb064c1d6210667b269a7f41fb80d23"
+    },
+    {
+      "identity": "equipment:돌망치",
+      "path": "/assets/equipment-exact/auto/auto-6482ed7d2e82.png",
+      "sha256": "eae0fbdafa23b0b10f786e78609daf9364cfe0610ac9f80eec7451577fffc898"
+    },
+    {
+      "identity": "equipment:드래곤 임페리얼",
+      "path": "/assets/equipment-exact/auto/auto-ff11604925f8.png",
+      "sha256": "2efadd353e630926585793e8a94fd2b22ee945ea1925f702cb5b9be089b9fb77"
+    },
+    {
+      "identity": "equipment:드래곤로드 갑주",
+      "path": "/assets/equipment-exact/signature-armor-dragon-lord.png",
+      "sha256": "2df548f5d26c5f1825d578699a5a185d494a170e243b5aaf69e9a56ff95db65d"
+    },
+    {
+      "identity": "equipment:드워프 흉갑",
+      "path": "/assets/equipment-exact/auto/auto-654289f46c21.png",
+      "sha256": "58fd0e4becba4f37b49f63791e38262688ecb35609ebcf815644c25b8a696d07"
+    },
+    {
+      "identity": "equipment:드워프의 망치",
+      "path": "/assets/equipment-exact/auto/auto-2fa172484dc2.png",
+      "sha256": "92077a0b66dbbeb24a4c1071b708fd79dec52c3da3549f29d265b18953d5c4e2"
+    },
+    {
+      "identity": "equipment:라그나로크",
+      "path": "/assets/equipment-exact/signature-weapon-ragnarok.png",
+      "sha256": "3efc33c62a99839611e6420c0325ada0c382345165c8fb034824201e7d9c1edc"
+    },
+    {
+      "identity": "equipment:레인저 외투",
+      "path": "/assets/equipment-exact/auto/auto-28a67a4cd0e2.png",
+      "sha256": "5b04098be809048d394d280ebc7915a1c8f3fe1c0725e91166d995317102e98d"
+    },
+    {
+      "identity": "equipment:롱소드",
+      "path": "/assets/equipment-exact/auto/auto-a62da3020160.png",
+      "sha256": "17f2eb0d25e44b281e61a8abe20d942d265d4b1a1ca755b5077ab71a217de302"
+    },
+    {
+      "identity": "equipment:룬 마도서",
+      "path": "/assets/equipment-exact/auto/auto-0ecdac0b9532.png",
+      "sha256": "cff6e0a3862029929d63991714ae17c1c76fb2114aa2a9453e83a641bc6a8272"
+    },
+    {
+      "identity": "equipment:마녀의 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-ec9651c6ec57.png",
+      "sha256": "3093a7db4bceefcb61f2d3fab11ca98044911a0bb136596ce499e1eeeaecef6e"
+    },
+    {
+      "identity": "equipment:마력천로브",
+      "path": "/assets/equipment-exact/auto/auto-6164cb5fb893.png",
+      "sha256": "7d948dd250bf9be3989a578d4e32d8f25cbcb7d1c7ab9ebab1a84bbdf26434f2"
+    },
+    {
+      "identity": "equipment:마법 모자",
+      "path": "/assets/equipment-exact/auto/auto-087b2fde8f7c.png",
+      "sha256": "f8fc7829cd19b49c804b31e24662f713a1c622f6dbe2d3a3accec91488bfef8a"
+    },
+    {
+      "identity": "equipment:마법로브",
+      "path": "/assets/equipment-exact/auto/auto-0c8457d4447a.png",
+      "sha256": "aed6a48cec7966ade01d3f0eae921f6602c201f179a1d2240eae306b84b003df"
+    },
+    {
+      "identity": "equipment:마법봉",
+      "path": "/assets/equipment-exact/auto/auto-adb5a87cda71.png",
+      "sha256": "4f49ffe9744a34fb822604c4a4519462c329091ae50a4d67b96b33a9c565405f"
+    },
+    {
+      "identity": "equipment:마법지팡이",
+      "path": "/assets/equipment-exact/auto/auto-1cff983f5fef.png",
+      "sha256": "fbe59b506d4ce78aeb870c871681bbabaed7b57010baf1eee75f212e857d6f8d"
+    },
+    {
+      "identity": "equipment:마왕의 대낫",
+      "path": "/assets/equipment-exact/signature-weapon-demon-scythe.png",
+      "sha256": "142dfd75e545db164ddd5ec387578af262ffef15e80520566b03150192160540"
+    },
+    {
+      "identity": "equipment:목재 방패",
+      "path": "/assets/equipment-exact/auto/auto-dad1d9c979c8.png",
+      "sha256": "3ddc114cd9db03713841299acceefc93af39a06367c93ad3defed76890b49ce6"
+    },
+    {
+      "identity": "equipment:미스릴 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-3a7ff1fb451d.png",
+      "sha256": "8fb0e1fa1c7e7ec8348d42fdd89b2478934973b6eec855e57b65b7a67c26900c"
+    },
+    {
+      "identity": "equipment:미스릴검",
+      "path": "/assets/equipment-exact/auto/auto-712653558d1c.png",
+      "sha256": "4ef8f6fa2658a0d6eb0475411c113ace6b13e4f6ee6d37875bca2a7005950dc3"
+    },
+    {
+      "identity": "equipment:바람의 궁극",
+      "path": "/assets/equipment-exact/signature-weapon-wind-ultimate-bow.png",
+      "sha256": "b40b06e1829191b82e048830eb04148b8aa12fc85850c51eb19aa752a8d5bfac"
+    },
+    {
+      "identity": "equipment:바람의 외투",
+      "path": "/assets/equipment-exact/auto/auto-84731b254f80.png",
+      "sha256": "82046442d79f03528bff3258a33d4098086814dc3cbe1b1136dfa8042fa59de4"
+    },
+    {
+      "identity": "equipment:바람의 활",
+      "path": "/assets/equipment-exact/auto/auto-1a5f2419d7aa.png",
+      "sha256": "caff8006751a299ce20dd8727bb80af2fe630fe7f7df97fb1cdf55e98dae4718"
+    },
+    {
+      "identity": "equipment:번개 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-e6d6d33d1595.png",
+      "sha256": "2abe07bf3635816ab52be00c065e9dcd256a32c96e73be82c64c48594282358c"
+    },
+    {
+      "identity": "equipment:별빛 경갑",
+      "path": "/assets/equipment-exact/auto/auto-4bdb0e1372c8.png",
+      "sha256": "bf80742e6a037bb9bf374a46cb0f9220c99eed5e3115dd466ccb74528ce716af"
+    },
+    {
+      "identity": "equipment:병사 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-1e3c11b5a29c.png",
+      "sha256": "02dc72d2429ef9000580ac49b7dc20ed16780c2cc37c0b9000d2724934957971"
+    },
+    {
+      "identity": "equipment:병사의 창",
+      "path": "/assets/equipment-exact/auto/auto-a42f4a105278.png",
+      "sha256": "a32e4fc90a56663a053bca863128156df83a5881c489683abc50aa18aa7a8929"
+    },
+    {
+      "identity": "equipment:복합궁",
+      "path": "/assets/equipment-exact/auto/auto-22a09d3534e6.png",
+      "sha256": "8c035605750eb569509c5e8efdea12beb2e09cae8697bb47e271213889ef045b"
+    },
+    {
+      "identity": "equipment:불사조 흉갑",
+      "path": "/assets/equipment-exact/auto/auto-b8f5a16d21f1.png",
+      "sha256": "fe0955723a7a0da7f4111d9a9b5300efdfa4c84408504076123ff1a0863d3f7a"
+    },
+    {
+      "identity": "equipment:불사조의 활",
+      "path": "/assets/equipment-exact/auto/auto-25ab45d2596e.png",
+      "sha256": "37fa4efe35513c0a9a327ca510656443210882b73f8700f05d8ac143637f392d"
+    },
+    {
+      "identity": "equipment:빙결 장궁",
+      "path": "/assets/equipment-exact/auto/auto-7749616e12ab.png",
+      "sha256": "177700eb90c703c62524b4523520147e2a8f991850d5eaf9f5edd6d9a418c36c"
+    },
+    {
+      "identity": "equipment:빙결 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-81d619f64560.png",
+      "sha256": "fdb2bd36681d9d77263d63dc2d5723ac3049bf0c14a2cc13acdd9408a031c8ef"
+    },
+    {
+      "identity": "equipment:빙결의 갑주",
+      "path": "/assets/equipment-exact/auto/auto-e66563877252.png",
+      "sha256": "d9128102a18982a6e43910071e745952b0225f6fd6168aa4bc066eaffd23da06"
+    },
+    {
+      "identity": "equipment:빙결의 왕관검",
+      "path": "/assets/equipment-exact/signature-weapon-frost-crown-sword.png",
+      "sha256": "6bd0fea1bf86b964b11d5be656907fabb7f5931440062d3e9c6b29e6fa122b73"
+    },
+    {
+      "identity": "equipment:빙원의 장창",
+      "path": "/assets/equipment-exact/auto/auto-b124f0959d47.png",
+      "sha256": "8b3419ddf8a421c7e47dd35c745e0c1bf8b3fd9764d876f91f53aea3790f643b"
+    },
+    {
+      "identity": "equipment:빙하의 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-b01fa5e6bc3b.png",
+      "sha256": "5513c3438e0d64e094bf802087dd5a03e3f7b909aa3baab3a355bf30a7d3de47"
+    },
+    {
+      "identity": "equipment:빙화 경갑",
+      "path": "/assets/equipment-exact/auto/auto-63ece76c6105.png",
+      "sha256": "f85fbe44df5416730541bd5d408ad237a5f101c33b84c44f6a2a943fdff3d548"
+    },
+    {
+      "identity": "equipment:뼈 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-a98066f61448.png",
+      "sha256": "20ac7191e796b82d358e9b160cc96a5d91b50813ce051c1217db27a266d7d0d3"
+    },
+    {
+      "identity": "equipment:뼈 단검",
+      "path": "/assets/equipment-exact/auto/auto-d96e1176c32d.png",
+      "sha256": "ba6f35f4eafc5e419775ac15f723a4d54b2e532242a55672b0dd68c004c89599"
+    },
+    {
+      "identity": "equipment:사냥꾼 망토",
+      "path": "/assets/equipment-exact/auto/auto-656ea9a9dea9.png",
+      "sha256": "13ce5d6e87467263441104ae5b6a6b63258db0460bc870e353895db28275c64a"
+    },
+    {
+      "identity": "equipment:사냥꾼의 외투",
+      "path": "/assets/equipment-exact/auto/auto-ff0852c0bdd4.png",
+      "sha256": "c9aac93261f6c3d33878676f40c6f6d95f8f4939e28e2830ba44441826a9352c"
+    },
+    {
+      "identity": "equipment:사냥꾼의 장궁",
+      "path": "/assets/equipment-exact/auto/auto-424aa241a9e6.png",
+      "sha256": "b4d6f1bcfaf9be989eef89ad05060eea93f417805e86aba3dc04b70de66b6f7a"
+    },
+    {
+      "identity": "equipment:사냥꾼의 활",
+      "path": "/assets/equipment-exact/auto/auto-8a4a78fe557a.png",
+      "sha256": "e43478dfcabf2b92a9fc240748875b65ae783a5eda24421fa02cdd4d9c846f82"
+    },
+    {
+      "identity": "equipment:사냥칼",
+      "path": "/assets/equipment-exact/auto/auto-994f11957368.png",
+      "sha256": "ba4d926c0f7ee618d28ff660fc42a2ea84aaff3dc5e1e7d97370e09c4f36e3ac"
+    },
+    {
+      "identity": "equipment:사막의 시미터",
+      "path": "/assets/equipment-exact/auto/auto-29eb8ffc5ac3.png",
+      "sha256": "34ac704446a355e320bf849fbf5641f3e1710ad3bedea68fadeb141219046227"
+    },
+    {
+      "identity": "equipment:사슬 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-b9a7c1700ee3.png",
+      "sha256": "71f125e644e980a6ef6dc31d7afe1931ed28649b919c302e1ab32eb0719bcfb1"
+    },
+    {
+      "identity": "equipment:상급 폭풍 로브",
+      "path": "/assets/equipment-exact/auto/auto-a296c98aca88.png",
+      "sha256": "4f8f68aa5964c0163a54772ac590ecb322a68f21a3cdac0824151bd30b9bb3b1"
+    },
+    {
+      "identity": "equipment:서리칼날",
+      "path": "/assets/equipment-exact/auto/auto-8de568bd4ccf.png",
+      "sha256": "e0585ad997b3bd4cba6645a277680f075e4cade01daa8f40d082bd90eec6a5fc"
+    },
+    {
+      "identity": "equipment:설원 갑주",
+      "path": "/assets/equipment-exact/auto/auto-f90cb89fae84.png",
+      "sha256": "ba3a879527bcfe6bed91d2cb6690c4a7fa5ff3c8fe4ecac6c6dd349b73a308eb"
+    },
+    {
+      "identity": "equipment:성검 에테르니아",
+      "path": "/assets/equipment-exact/signature-weapon-ethernia.png",
+      "sha256": "bda55ffbad64c11e9c15eec8610ae2f77d79b9dc84c5e9ba26617e4f21149e78"
+    },
+    {
+      "identity": "equipment:성광 방벽",
+      "path": "/assets/equipment-exact/auto/auto-82a80489862b.png",
+      "sha256": "c873e5e6cfc7370d90d7c95a6cda8c7096753c86ced450d6de30dab174bb6721"
+    },
+    {
+      "identity": "equipment:성기사의 갑주",
+      "path": "/assets/equipment-exact/auto/auto-7136ce54a797.png",
+      "sha256": "f0f7e616aa5d367179369ce97fe176dd1fd1e54c5f2ec98ed54a34bb08f96097"
+    },
+    {
+      "identity": "equipment:성기사의 검",
+      "path": "/assets/equipment-exact/auto/auto-1587374b9be8.png",
+      "sha256": "ef0dcd8a2aa892e327f9ee336f38de93bd08af9bf1441f316214f4cdb33a1dee"
+    },
+    {
+      "identity": "equipment:성수 단검",
+      "path": "/assets/equipment-exact/auto/auto-e3a2ac762dd8.png",
+      "sha256": "1115458ef3846a17942f57775e9dc81cc0ad80a3db928a2d418af1ede978869d"
+    },
+    {
+      "identity": "equipment:성수 로브",
+      "path": "/assets/equipment-exact/auto/auto-f8be5076c3d9.png",
+      "sha256": "92c79154585f6efb98ead4d7ac09b50ced7e2471c00892736e0c70c90a123f79"
+    },
+    {
+      "identity": "equipment:성스러운 창",
+      "path": "/assets/equipment-exact/signature-weapon-holy-spear.png",
+      "sha256": "abb5c42ab48d776d4d8a3df478eebf131ea8ea0635e00969824389fbdf069fb9"
+    },
+    {
+      "identity": "equipment:성운 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-49fa66b8b959.png",
+      "sha256": "ae24bbff6718d0f89817d975f4908760234334df6418fc08331e151dad2c8956"
+    },
+    {
+      "identity": "equipment:세계수 갑주",
+      "path": "/assets/equipment-exact/auto/auto-572733d86ead.png",
+      "sha256": "46a3aa40e2d040ad4818dd4712fd8dda24fe45fa968210aebdbbb68c4919212a"
+    },
+    {
+      "identity": "equipment:세계수 방패",
+      "path": "/assets/equipment-exact/auto/auto-2bfa87ea75ee.png",
+      "sha256": "b7075e12a26a9d9986631e8e056ae49e1f154bf54a4428b794c85ee18e3c7e88"
+    },
+    {
+      "identity": "equipment:세계수 뿌리 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-adfc8b26f381.png",
+      "sha256": "7f931b04c45db6a79a759023bfd9ae927124bc4f0f9fe8001127f66bc8563933"
+    },
+    {
+      "identity": "equipment:세계수 절멸창",
+      "path": "/assets/equipment-exact/auto/auto-842645e5831a.png",
+      "sha256": "7c1fc06610a3d0606000d3f9408551184f38cf3a76f4b1f04652bce9f7676074"
+    },
+    {
+      "identity": "equipment:세계수의 검",
+      "path": "/assets/equipment-exact/signature-weapon-worldtree-sword.png",
+      "sha256": "20886319ab2c1886638defdab71841ed2c792935ff5f42b016787d0807a26d2c"
+    },
+    {
+      "identity": "equipment:세계수의 로브",
+      "path": "/assets/equipment-exact/signature-armor-worldtree-robe.png",
+      "sha256": "4229a23b77a88911cf846ba18fddb3258b8ce89cb2c3e8ff631caf0d9dff9104"
+    },
+    {
+      "identity": "equipment:세계수의 지팡이",
+      "path": "/assets/equipment-exact/signature-weapon-worldtree-staff.png",
+      "sha256": "640b618d75837dee05b91c892ed64f4cac8d6b6a3073cae79729b5c444bfd58b"
+    },
+    {
+      "identity": "equipment:세계의 방패",
+      "path": "/assets/equipment-exact/auto/auto-00330b0c4f69.png",
+      "sha256": "15f8e38d78667c7d96811d39c82c113fe717afc11cee2d0b04ee07cb600248c6"
+    },
+    {
+      "identity": "equipment:세이지 로드",
+      "path": "/assets/equipment-exact/auto/auto-31885beb700c.png",
+      "sha256": "a9557ebe8a9d81efe1dc7945d338369a0455d101f2b69e912c806b93fa9deb47"
+    },
+    {
+      "identity": "equipment:수련복",
+      "path": "/assets/equipment-exact/auto/auto-e5e86573ace6.png",
+      "sha256": "89cffe8dee1b7dc0d377a3693a736a3327b6dbe85598932b8c689b930bdca693"
+    },
+    {
+      "identity": "equipment:수련생 도복",
+      "path": "/assets/equipment-exact/auto/auto-64cdb8f1ac4c.png",
+      "sha256": "353675a6a47e3d55c4fd7aeeb7bcc9343e77436b220227a5e966b27a95b8f3cf"
+    },
+    {
+      "identity": "equipment:수련생 로브",
+      "path": "/assets/equipment-exact/auto/auto-db46b6ef1d39.png",
+      "sha256": "0945221d915a894f81723bad1f88945641f0e9dbf6f1fb91afbf8f8ea602af52"
+    },
+    {
+      "identity": "equipment:수련생의 검",
+      "path": "/assets/equipment-exact/auto/auto-41877b74c6fa.png",
+      "sha256": "f474930712dca0ff2b686b2c8aaaeb071ded3e5bac0a79a4c98ce8282137d99a"
+    },
+    {
+      "identity": "equipment:수정 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-71508942572c.png",
+      "sha256": "31ff7521e8f7e7f120d1dba34d3eb5e8ca104aff27a51ac3019310a8da28ccef"
+    },
+    {
+      "identity": "equipment:수정 완드",
+      "path": "/assets/equipment-exact/auto/auto-20d567980add.png",
+      "sha256": "2f39557ee761ae8668cb310c1a4d26e9cbc471e186fa8e0ca32915a45ff0c07a"
+    },
+    {
+      "identity": "equipment:수정 창",
+      "path": "/assets/equipment-exact/auto/auto-6cc4f9f4d087.png",
+      "sha256": "0da27d1b8733ca198c6ca08ceacd83498a71ba97e00b4c0f2b9327989c29dcbe"
+    },
+    {
+      "identity": "equipment:수호자의 방패",
+      "path": "/assets/equipment-exact/auto/auto-e288fa11dc06.png",
+      "sha256": "23ebcb4794f5a3c451b284b366eae1c680debb92566042de300987657ae8869c"
+    },
+    {
+      "identity": "equipment:시간 파편 소드",
+      "path": "/assets/equipment-exact/auto/auto-80015aed3005.png",
+      "sha256": "124ced5bd56338e9b0cf75de1ad3f1e672498de575fc4c5f47b6bf1a4e9946ec"
+    },
+    {
+      "identity": "equipment:신전 도시의 성의",
+      "path": "/assets/equipment-exact/auto/auto-a9ebb2b6a9c7.png",
+      "sha256": "b2acbb8d96be5cb8c116307ea15acb706793665639b34edfe699c493bdce7dcf"
+    },
+    {
+      "identity": "equipment:신전 도시의 지팡이",
+      "path": "/assets/equipment-exact/signature-weapon-temple-city-staff.png",
+      "sha256": "d4e90020d70f0d2dd94ee96cea2c1191e397342e36b9a86b4520eb3a89504311"
+    },
+    {
+      "identity": "equipment:신전 제관 예복",
+      "path": "/assets/equipment-exact/auto/auto-b547a0635ab3.png",
+      "sha256": "8215c32b49fae6ea94b5bbe27b1d50e62a749ae66274ea2dc85e35ccb64a0d5b"
+    },
+    {
+      "identity": "equipment:심연 잠수복",
+      "path": "/assets/equipment-exact/auto/auto-4417a78e970f.png",
+      "sha256": "e694ee0b7fdcf3db5dcd11dc5b647af6736cefd02254f46411157321b1e1f962"
+    },
+    {
+      "identity": "equipment:심연 파쇄창",
+      "path": "/assets/equipment-exact/auto/auto-fc7d43c53641.png",
+      "sha256": "fd99f71c22ed9c5a62bc56bf74b51192ecf46b9d90255d3169b7f76bced67d2c"
+    },
+    {
+      "identity": "equipment:심연의 마도서",
+      "path": "/assets/equipment-exact/auto/auto-3215fc4ebfe6.png",
+      "sha256": "808ecfd1bdb2c55e0b5b7d2e9dfba7c95afd3386a467cb4a29614af64b7be62d"
+    },
+    {
+      "identity": "equipment:심판자의 검",
+      "path": "/assets/equipment-exact/auto/auto-ff3c57933ce4.png",
+      "sha256": "d5b6f6cedfd99f745d29ef466c040f31a4fd20c2379fcc0a78e859732d197a73"
+    },
+    {
+      "identity": "equipment:심해 외투",
+      "path": "/assets/equipment-exact/auto/auto-49097a0a179c.png",
+      "sha256": "bdf42aef6b77c0cd04d1ce8cde56c63e72d33770eda34e411eaafac8ad90d861"
+    },
+    {
+      "identity": "equipment:심해의 수호복",
+      "path": "/assets/equipment-exact/signature-armor-abyssal-guardian.png",
+      "sha256": "a9b8fc109eb5069a5d30184abeaf9bd5a4e69331249369b3448f35ad611260e3"
+    },
+    {
+      "identity": "equipment:심해의 창",
+      "path": "/assets/equipment-exact/auto/auto-5b981e47b80c.png",
+      "sha256": "050f3bf74af4fbfde57bd5577f8055c559699adeced41fbeac5bc07e161d13dc"
+    },
+    {
+      "identity": "equipment:쌍두 마도서",
+      "path": "/assets/equipment-exact/auto/auto-9f7c5b552271.png",
+      "sha256": "e3871a17ca15f0908720ec8672c22b61e10df3ff8ca4dbfe510ca84dfc5382c1"
+    },
+    {
+      "identity": "equipment:쌍칼",
+      "path": "/assets/equipment-exact/auto/auto-d14c8c08f691.png",
+      "sha256": "4019e33cf1102f2d6c07630f25214d0e51207e54617838e2c23c064a120beaa7"
+    },
+    {
+      "identity": "equipment:아크스태프",
+      "path": "/assets/equipment-exact/auto/auto-fdf53e96ccd4.png",
+      "sha256": "13489eea7bea36a9904a1153365e503db4d288806f667a8a9cda218b84dfb666"
+    },
+    {
+      "identity": "equipment:암살의 표창",
+      "path": "/assets/equipment-exact/auto/auto-18fe01a70b57.png",
+      "sha256": "546681c32d365f44dbd706fdc535cb3e6a0bdcb7547e1c331858919d64650108"
+    },
+    {
+      "identity": "equipment:암살자 장갑",
+      "path": "/assets/equipment-exact/auto/auto-aacf9897ccd0.png",
+      "sha256": "fce85b76e0ccec7efd86517ef9160cad90bcfc01041301489601a6714b6b78ea"
+    },
+    {
+      "identity": "equipment:암살자의 단검",
+      "path": "/assets/equipment-exact/auto/auto-0636274ff350.png",
+      "sha256": "22b6d3547685ad5b937e27d2b72ad485b55af5a0035da29c284624e59821a535"
+    },
+    {
+      "identity": "equipment:암살자의 야복",
+      "path": "/assets/equipment-exact/auto/auto-8f52a96a52b5.png",
+      "sha256": "61adc6bfc8a4a2142b8614fd8d6cb3f1e5fed9e3e885fd9130613ba6664885e0"
+    },
+    {
+      "identity": "equipment:암영 망토",
+      "path": "/assets/equipment-exact/auto/auto-3e5264e98c9b.png",
+      "sha256": "a32f2325aa5a7fcbc3b243e4dfd419ee46a4337c1ba97f4a0eed45f1db4b725c"
+    },
+    {
+      "identity": "equipment:암흑 군주의 망토",
+      "path": "/assets/equipment-exact/signature-armor-dark-lord-cloak.png",
+      "sha256": "fe62a2831768cb135f6a9df0289068a8ea42729a8a27511d7ee9c1703884a487"
+    },
+    {
+      "identity": "equipment:암흑 단검",
+      "path": "/assets/equipment-exact/auto/auto-7338e701d345.png",
+      "sha256": "e8b56545f99f2639d32ac082e20ad531d319cafeed9238b4960ad470c8f08b01"
+    },
+    {
+      "identity": "equipment:암흑 로브",
+      "path": "/assets/equipment-exact/auto/auto-7142cd8579e3.png",
+      "sha256": "d00508e238bde12595ba9dca6f51920ad960fd96f1f311d751a5bcf98aa818db"
+    },
+    {
+      "identity": "equipment:암흑의 대검",
+      "path": "/assets/equipment-exact/auto/auto-4473919467f6.png",
+      "sha256": "f7ba4e202df3c21da330971cfd9112c03b12eda59c1f834fb70db5f48672af6a"
+    },
+    {
+      "identity": "equipment:양손검",
+      "path": "/assets/equipment-exact/auto/auto-faf398318db3.png",
+      "sha256": "e980dd910b3bf12bf2d09d62208168cccf39dea918c80135dc7e34786beba8d8"
+    },
+    {
+      "identity": "equipment:어둠 감옥 갑주",
+      "path": "/assets/equipment-exact/auto/auto-48daaeb8d985.png",
+      "sha256": "eb3539f58a6f0fc2026879cf495b20a14c09fce536b7079de2d3c5d7509046bb"
+    },
+    {
+      "identity": "equipment:어둠 감옥 단검",
+      "path": "/assets/equipment-exact/auto/auto-e78cd4490f2c.png",
+      "sha256": "bd053622443a5bd3ffac0e8411aacbca6b2cdc498859e790796c1ffcfbcb3757"
+    },
+    {
+      "identity": "equipment:어둠 방패",
+      "path": "/assets/equipment-exact/auto/auto-f116975c4019.png",
+      "sha256": "ed9b6977f5ced2a48534a4f8e2de94680eecd22b1852b1bcfff91d090f255853"
+    },
+    {
+      "identity": "equipment:어둠의 망토",
+      "path": "/assets/equipment-exact/auto/auto-8ce0d098f7f1.png",
+      "sha256": "2cd8fe18ac8c48a68a97fb812e7c0d264765efda5c6ea21d7789ccb426d67374"
+    },
+    {
+      "identity": "equipment:어둠의 왕 갑주",
+      "path": "/assets/equipment-exact/auto/auto-ae6099ef374b.png",
+      "sha256": "196ab1ac93cff441f0b6c67a6d684766dd0c33cf05e77ee1e2353dc666e16849"
+    },
+    {
+      "identity": "equipment:어둠의 팔치온",
+      "path": "/assets/equipment-exact/auto/auto-de012dfa9c16.png",
+      "sha256": "adcb8615041895bbfd4508dac1430955d51d9df4bc7e4aa78dbf7781e1c66b69"
+    },
+    {
+      "identity": "equipment:얼음 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-04392b5132cd.png",
+      "sha256": "a9c07450796c8cd85bc7c5d51c4284e5ec329c004e8b39d5f9af88b4bcd01456"
+    },
+    {
+      "identity": "equipment:에테르 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-5fdc8681e154.png",
+      "sha256": "a9611f7a605d94f01cf19bf9c4edd3dadfeb7dc7262747b4582017f7b91206df"
+    },
+    {
+      "identity": "equipment:에테르 거인의 대검",
+      "path": "/assets/equipment-exact/signature-weapon-ether-giant-greatsword.png",
+      "sha256": "f21883f6c4cb39f20528790920ae6601cba0cad089c6cfc4e679dc4456646d86"
+    },
+    {
+      "identity": "equipment:에테르 검",
+      "path": "/assets/equipment-exact/auto/auto-8cee767ee6ab.png",
+      "sha256": "5c45aaadbc14e5269faea526250800c46b01c7a0cb2a1a1c42b909e30f13b6f6"
+    },
+    {
+      "identity": "equipment:에테르 군주 로브",
+      "path": "/assets/equipment-exact/auto/auto-464261153d00.png",
+      "sha256": "88873ec74e13dc5d06d7f37a159526e9921477335380df8b9c1367a5be7b2323"
+    },
+    {
+      "identity": "equipment:에테르 그리모어",
+      "path": "/assets/equipment-exact/signature-shield-ether-grimoire.png",
+      "sha256": "784d63aa0de8aec39e5cdcedafab99be1e964c2e29a765f553995c8b1d6e27b9"
+    },
+    {
+      "identity": "equipment:에테르 로브 오브 아포칼립스",
+      "path": "/assets/equipment-exact/auto/auto-d8e9564f5f3c.png",
+      "sha256": "044670ee73a14b5b80fade2d72a478fa4bba2bb952281d27c8249332d687d562"
+    },
+    {
+      "identity": "equipment:에테르 세이버",
+      "path": "/assets/equipment-exact/auto/auto-79d434bacd61.png",
+      "sha256": "e72897d8d2fc799b07b3932ded907e96cdb288ba870a62160d891d79ee839435"
+    },
+    {
+      "identity": "equipment:에테르 심판궁",
+      "path": "/assets/equipment-exact/auto/auto-9d8887283ab4.png",
+      "sha256": "8968b984784e3ec8939e0595df661d94c2282a4ee7e41d3639307e66a718a205"
+    },
+    {
+      "identity": "equipment:에테르 전투복",
+      "path": "/assets/equipment-exact/auto/auto-fc8a9bd31773.png",
+      "sha256": "7e6b82b847a0767c9bf58712282dfcd0f68aad12b5191ceb9e0a5b5e5d3c1b20"
+    },
+    {
+      "identity": "equipment:에테르 플럭스 로드",
+      "path": "/assets/equipment-exact/auto/auto-ad0c43658553.png",
+      "sha256": "9d76e44a49bd0386064ae74d5814d770a2c8ecd988a0f16a44565e4334f53438"
+    },
+    {
+      "identity": "equipment:엘프의 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-b8028e50b423.png",
+      "sha256": "b81f13b3eb1b76be5dfe273ceb3100f1bd15d9d93509fae521a614c0272ca9ea"
+    },
+    {
+      "identity": "equipment:엘프의활",
+      "path": "/assets/equipment-exact/auto/auto-2597c45a69fa.png",
+      "sha256": "d3e6ab60eb88bb55bdb56df3a8034c4044965164f0112cc6c803404b21613217"
+    },
+    {
+      "identity": "equipment:여행자 튜닉",
+      "path": "/assets/equipment-exact/auto/auto-2e394a311182.png",
+      "sha256": "40ca1bfa035f30b2e96b7d38232614010e6bf330e420c0b270b7a6b8801b5712"
+    },
+    {
+      "identity": "equipment:영겁의 세이버",
+      "path": "/assets/equipment-exact/auto/auto-65243ae13fcf.png",
+      "sha256": "cae3c14a16a2ec074b39627073bdd1600cf97368948a1c84fa7a42db14ee09bf"
+    },
+    {
+      "identity": "equipment:영혼 절단자",
+      "path": "/assets/equipment-exact/signature-weapon-soul-reaper.png",
+      "sha256": "73aaddd822849a11eafe63845dd77e2b770210e7edf9d78ca1a16d6aa4db9502"
+    },
+    {
+      "identity": "equipment:용비늘 갑주",
+      "path": "/assets/equipment-exact/auto/auto-8e31f3cb6492.png",
+      "sha256": "2197723b13895fac5190b87d30f274afa65e086be27e66b28d470107691b572e"
+    },
+    {
+      "identity": "equipment:용비늘갑옷",
+      "path": "/assets/equipment-exact/auto/auto-181a9b03291e.png",
+      "sha256": "815ea8233406babe312e5a9fde9301001b0d6365daca8daba7493a008bf1af59"
+    },
+    {
+      "identity": "equipment:용살자의창",
+      "path": "/assets/equipment-exact/auto/auto-5534b9c2d7a8.png",
+      "sha256": "11c7502996f510df93e71d91b509a61139addd3b493d5d651f82a3aa6b4e6f48"
+    },
+    {
+      "identity": "equipment:용아 단검",
+      "path": "/assets/equipment-exact/auto/auto-4e1e50c86bcc.png",
+      "sha256": "ef180d560afb1cd4e511a3cfaef08fa500931c318a70d44efead992d60e98b85"
+    },
+    {
+      "identity": "equipment:용암 대검",
+      "path": "/assets/equipment-exact/auto/auto-bf26ba4dcfab.png",
+      "sha256": "27ed02fad1673af121ffb68243d494352911d41425a6e45964b0c008a371ddd8"
+    },
+    {
+      "identity": "equipment:용암 판금갑",
+      "path": "/assets/equipment-exact/auto/auto-99c8c681ea28.png",
+      "sha256": "1b3bb0475fa8ebd9a9d92716a5d62c6f4a248b86b053cdd276a6427c29a288e7"
+    },
+    {
+      "identity": "equipment:용의 화염",
+      "path": "/assets/equipment-exact/signature-weapon-dragon-flame.png",
+      "sha256": "c21470f6fd5bd19ff79e105a69e490f40b8df11140bfebea103d766d0d97bea5"
+    },
+    {
+      "identity": "equipment:원시의 이지스",
+      "path": "/assets/equipment-exact/auto/auto-a39b8b0ebf0f.png",
+      "sha256": "b2d34e1f534b58cee57c87156781fdccc21a0de5145650209ab45c60dbfd0815"
+    },
+    {
+      "identity": "equipment:원시의 전투갑주",
+      "path": "/assets/equipment-exact/auto/auto-f82a912587f7.png",
+      "sha256": "4a6382dc8a292bf20a97271bfc782bf1aa4389a9e3186ece4cb6b4043295fdbd"
+    },
+    {
+      "identity": "equipment:유성 완드",
+      "path": "/assets/equipment-exact/auto/auto-6f9350599156.png",
+      "sha256": "3073745be8f353470b6bb68a29d740d01518eb5623c5d111b245a19cecc5fa7b"
+    },
+    {
+      "identity": "equipment:은빛 로브",
+      "path": "/assets/equipment-exact/auto/auto-b9cd0d0bcaf4.png",
+      "sha256": "ba7d842010bba9aab2e966ca8aa0298ad17e4b5d58c9771310c5ffe175741ac4"
+    },
+    {
+      "identity": "equipment:자연 방패",
+      "path": "/assets/equipment-exact/auto/auto-bfbb8191807a.png",
+      "sha256": "da454ff9678c84625971ca326ee9536cc11bc4fb181237d948049cb932385fb6"
+    },
+    {
+      "identity": "equipment:전설의 사냥꾼 외투",
+      "path": "/assets/equipment-exact/auto/auto-b66b779b949d.png",
+      "sha256": "0ccd6278778c501505be3e49805c41480e9afea074d4f2293f080706a56124fa"
+    },
+    {
+      "identity": "equipment:전투도끼",
+      "path": "/assets/equipment-exact/auto/auto-931db88d2baa.png",
+      "sha256": "2f6a8eec3f57b36214c0e55d563bb85bc7f357743da41c386c49c62b6962e1dc"
+    },
+    {
+      "identity": "equipment:정령의 로브",
+      "path": "/assets/equipment-exact/auto/auto-0cc44f6d625d.png",
+      "sha256": "5498608bcd6c501f9fa40c05550bc14f04c1c362c691d11f9736274a678a0fbd"
+    },
+    {
+      "identity": "equipment:정령의 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-6fe82208ff69.png",
+      "sha256": "709b150bc4c6664f71832b27acbd5141b21f2fef408ca1bc8b14e2391aa68ab3"
+    },
+    {
+      "identity": "equipment:정밀 사격복",
+      "path": "/assets/equipment-exact/auto/auto-fda4ff543c1c.png",
+      "sha256": "bb4ac94df28dc15d4dbe39ae177861a427479c22e0b8a45e4ca1d3c502c6e23c"
+    },
+    {
+      "identity": "equipment:정예병의 창",
+      "path": "/assets/equipment-exact/auto/auto-c42edcb54fc4.png",
+      "sha256": "640d43d5e1cf5c4b09f2a4f27b1489e9202097f2284631f308d62269794ce697"
+    },
+    {
+      "identity": "equipment:죽음의 낫",
+      "path": "/assets/equipment-exact/auto/auto-c8ef29d55493.png",
+      "sha256": "46c9ac7232ed22ec96a86b5baaec1843a5195e00943651545df2564708e2e5d9"
+    },
+    {
+      "identity": "equipment:질풍의 단검",
+      "path": "/assets/equipment-exact/auto/auto-8c4c87f1786d.png",
+      "sha256": "98e9466200039dbfd91c44ebbed5e1ee90445a7b89390f18e8dbf71674cc84f5"
+    },
+    {
+      "identity": "equipment:짚 모자",
+      "path": "/assets/equipment-exact/auto/auto-5ef0e48c5b7e.png",
+      "sha256": "eadc2b4802aa2130a4a46808f6ec6dcd21ec44ecd788ffb990a602e25305e70e"
+    },
+    {
+      "identity": "equipment:차원 갑주",
+      "path": "/assets/equipment-exact/auto/auto-09fa71ce3217.png",
+      "sha256": "84ae59e117765fcd6154fd30d4a1e2ecfb584101911b86aadc96ae413dae6a19"
+    },
+    {
+      "identity": "equipment:차원 균열 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-72c24c469127.png",
+      "sha256": "c90e023b9b61d9c099af46c010d69a0e3225f07e095f739820ac8bcba53b8e32"
+    },
+    {
+      "identity": "equipment:차원 마왕의 낫",
+      "path": "/assets/equipment-exact/signature-weapon-dimension-scythe.png",
+      "sha256": "fe529d4afe2a2098d2f5f4a1f70e8982317796815f1874e30c7fa9d1c2724b6e"
+    },
+    {
+      "identity": "equipment:차원 방패 이지스",
+      "path": "/assets/equipment-exact/signature-shield-aegis-dimension.png",
+      "sha256": "1e7d667755c35e89c7a076e82f6e6940a45159517077306df4067008c3f5d87b"
+    },
+    {
+      "identity": "equipment:차원 붕괴창",
+      "path": "/assets/equipment-exact/auto/auto-ea524ba771cb.png",
+      "sha256": "f14c8137259c1ff5eab1f3a56603805a2b9c586c5a2d789517fbeda5e2d2c0de"
+    },
+    {
+      "identity": "equipment:차원 사냥꾼 슈트",
+      "path": "/assets/equipment-exact/auto/auto-bbc1e9dca806.png",
+      "sha256": "ed06d5c36b7635367f8e5e17adde80cc4eb97bc69f2739d589b49ba97119d814"
+    },
+    {
+      "identity": "equipment:차원의 로브",
+      "path": "/assets/equipment-exact/auto/auto-498560c203e7.png",
+      "sha256": "88f100c4e977238db02e62c40627e74f37ac0f01eecd6a65e7e0fb796bfcd21b"
+    },
+    {
+      "identity": "equipment:차원절단자",
+      "path": "/assets/equipment-exact/auto/auto-ce9faeed673f.png",
+      "sha256": "2089679d7683d22d5fab58191bf797a39f7624c69692ee92f59dacdbeb995da1"
+    },
+    {
+      "identity": "equipment:천 로브",
+      "path": "/assets/equipment-exact/auto/auto-7045919e23d0.png",
+      "sha256": "29f4a5a7432bb89baeb0a4fd97147758c7d73b923cd1cd2a932d8d36274b3283"
+    },
+    {
+      "identity": "equipment:천공 성전",
+      "path": "/assets/equipment-exact/signature-shield-celestial-tome.png",
+      "sha256": "08b2d16375a91b191dfaf2b5be9179c1e69e99fc328b59f5ba7ba0e2aee63433"
+    },
+    {
+      "identity": "equipment:천공의 갑주",
+      "path": "/assets/equipment-exact/auto/auto-fe84cb1f624c.png",
+      "sha256": "ad4deda76207bad3f17ccffe4cad0f0d238bee360c3c52163c509c8fafa432e7"
+    },
+    {
+      "identity": "equipment:천공의 활",
+      "path": "/assets/equipment-exact/auto/auto-28800bd38fa6.png",
+      "sha256": "43addc1bf3e49182daa0748131f5824406fbfec09aff3f2f5b7d20803266589c"
+    },
+    {
+      "identity": "equipment:천벌의 지팡이",
+      "path": "/assets/equipment-exact/signature-weapon-divine-wrath-staff.png",
+      "sha256": "a54263201bfacb57946082f821db616b2affb1d4724f57c25cf996f316b178f8"
+    },
+    {
+      "identity": "equipment:천상의 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-3c4db2c11f50.png",
+      "sha256": "9ca91330490c2887c9c520d2623c148a9608f6ee67ddb1a779bc3d4fd1066f32"
+    },
+    {
+      "identity": "equipment:천상의갑주",
+      "path": "/assets/equipment-exact/auto/auto-a3ddd653381f.png",
+      "sha256": "61a09f9eac0a47906ed296cc5114d9ec8250e5c6ef93b3ecf0d60a9613193087"
+    },
+    {
+      "identity": "equipment:철제 방패",
+      "path": "/assets/equipment-exact/auto/auto-412458001e61.png",
+      "sha256": "2f4e8e7847f0f6a7aa3c349f2bcae1228482ed227126eed304aa8c9cdf1d55ab"
+    },
+    {
+      "identity": "equipment:철퇴장",
+      "path": "/assets/equipment-exact/auto/auto-559770dc1710.png",
+      "sha256": "b2df25d48ed91342290d978bd0f8888f6995891fb3871b16a83c224658cb8ee6"
+    },
+    {
+      "identity": "equipment:청해 단검",
+      "path": "/assets/equipment-exact/auto/auto-dcfd06b794ac.png",
+      "sha256": "94a1abb97e18457ab853826de9d63180f04e1acc3118b50dee812abe1505adc4"
+    },
+    {
+      "identity": "equipment:축복받은 갑옷",
+      "path": "/assets/equipment-exact/auto/auto-35e7916cc62f.png",
+      "sha256": "05733307645426cc4712dae36a1a1b734cb59c2999b3f16abfa862ae4d41f8e5"
+    },
+    {
+      "identity": "equipment:타락 기사의 검",
+      "path": "/assets/equipment-exact/auto/auto-a29847b020f2.png",
+      "sha256": "85b2e5f0e33a677856f28ce4af6fb88146b3a02e39d563dcec01a566c34c0f5d"
+    },
+    {
+      "identity": "equipment:타이탄 해머",
+      "path": "/assets/equipment-exact/auto/auto-6cf88873011d.png",
+      "sha256": "f44f04e8b11f30c810fa8e937f81354e96cb7239add71e6ee188497540bd8494"
+    },
+    {
+      "identity": "equipment:투척용 단검",
+      "path": "/assets/equipment-exact/auto/auto-befa10bbace0.png",
+      "sha256": "c4d358e6d1f580ad747a2a6a0c4c2ae3b932e6308aa77b46c42360ef47602fdd"
+    },
+    {
+      "identity": "equipment:파멸의 검",
+      "path": "/assets/equipment-exact/auto/auto-79b196ebcb36.png",
+      "sha256": "9fe59d6fadef3f26021576759e08076582a717508305e9c3c7edb4284b86b2ec"
+    },
+    {
+      "identity": "equipment:판금갑옷",
+      "path": "/assets/equipment-exact/auto/auto-f300e0d7e5d5.png",
+      "sha256": "9a115aea4b3dcbc53fa151b7779a638c29fbd9e8157d2188a9399537556273dc"
+    },
+    {
+      "identity": "equipment:폭풍 로브",
+      "path": "/assets/equipment-exact/auto/auto-a4bc2ae5a97a.png",
+      "sha256": "7ea21fcc7bfd7b9e2a03d7c0244b5a879617aaaea24b7b0d0e5a93cdf8fab4d5"
+    },
+    {
+      "identity": "equipment:폭풍 스태프",
+      "path": "/assets/equipment-exact/auto/auto-7235edcdd869.png",
+      "sha256": "d00738e1dc7b042c6f275bd7d4f9c2e7107500e0e5e79cf14ba3ba5232cb9973"
+    },
+    {
+      "identity": "equipment:폭풍의 창",
+      "path": "/assets/equipment-exact/auto/auto-af4db2f9aa40.png",
+      "sha256": "61f9dd6469cd0414dc5520d29972a4e964bc6e0b20ae83e9f9f2e7a375605ee3"
+    },
+    {
+      "identity": "equipment:허공의 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-17a299e101f7.png",
+      "sha256": "76e7fa92ef1ca9f34bbead67fe938dd15b8f29265b998032bad95c0bcdf11205"
+    },
+    {
+      "identity": "equipment:현자의 서판",
+      "path": "/assets/equipment-exact/auto/auto-065c659a4d9a.png",
+      "sha256": "e2f8357635c7f59e2adaf10d64f9885425c5d299b8d1a39b1b0ff355df3cef42"
+    },
+    {
+      "identity": "equipment:현자의 예복",
+      "path": "/assets/equipment-exact/auto/auto-c77410b15728.png",
+      "sha256": "d1dc625a2c668eebfd54c0abd2aab53605fe46e35068b60d02d8737692ccf46d"
+    },
+    {
+      "identity": "equipment:호신용 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-c968bece9913.png",
+      "sha256": "fe1f1e6db1a20ece278ecb39a4d5da74993634dc20db5c654616cb4dc8f9d156"
+    },
+    {
+      "identity": "equipment:혼돈 절멸기",
+      "path": "/assets/equipment-exact/auto/auto-e9ece94f2f24.png",
+      "sha256": "f1b9a444bc4d6e614a0e29e3237a3515a3886d52eb0f61968e0cf92aa0f08a9b"
+    },
+    {
+      "identity": "equipment:혼돈의 갑주",
+      "path": "/assets/equipment-exact/signature-armor-chaos-armor.png",
+      "sha256": "673158ff70d6967be6a5c4fad425965a107a2da3e3cf00fa3c9eede4ea6268fd"
+    },
+    {
+      "identity": "equipment:혼돈의 로드",
+      "path": "/assets/equipment-exact/auto/auto-9fb4f0b3e01c.png",
+      "sha256": "114381cb1158cd8101dd68a1f280c1aaca70673fb88d3c8d162c75c4da26b642"
+    },
+    {
+      "identity": "equipment:혼돈의 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-538ca1897068.png",
+      "sha256": "25a4f71c6c46c4540b28040e9c95d17679c907d8a520a13ed5a936405f839fde"
+    },
+    {
+      "identity": "equipment:화염 방어복",
+      "path": "/assets/equipment-exact/auto/auto-ff8b6df40e8e.png",
+      "sha256": "e48f8db3bde65aab17d3bae25f40ab09a876b6001ac49d18ae4492c0c42c6bd7"
+    },
+    {
+      "identity": "equipment:화염 방패",
+      "path": "/assets/equipment-exact/auto/auto-7dd4904c94a3.png",
+      "sha256": "4451a972dce8cb14efea30c459b09899a958a9f4e4da57a41c04b37a90a9e987"
+    },
+    {
+      "identity": "equipment:화염 사원 로브",
+      "path": "/assets/equipment-exact/auto/auto-a200f6daed61.png",
+      "sha256": "87f4b39f3465d6a335b4402ea8890c8993eb861a5fc3ca7e8999e4399d778bca"
+    },
+    {
+      "identity": "equipment:화염 사원의 검",
+      "path": "/assets/equipment-exact/auto/auto-f2f5dfecb2d7.png",
+      "sha256": "9982b7b1cea3ef6674efb6ce882271848c931d1785405b6ede259fc65a294e2b"
+    },
+    {
+      "identity": "equipment:화염술사 로브",
+      "path": "/assets/equipment-exact/auto/auto-49f60f9d1b54.png",
+      "sha256": "f7cdf215e56e587d16de48b7cd9bd2ae0bc80f0f0b824a791a67a0d403ac0379"
+    },
+    {
+      "identity": "equipment:화염의 지팡이",
+      "path": "/assets/equipment-exact/auto/auto-767b6916c154.png",
+      "sha256": "00d8ecaa26016567675b523530e509c60daf3368d67bf2a6d4e5f40bfab485ac"
+    },
+    {
+      "identity": "equipment:흑요석단검",
+      "path": "/assets/equipment-exact/auto/auto-c1f6032fcdc8.png",
+      "sha256": "ebc7fb40c64f11a40b94b732227150e086aee325c3bbedd9358faf3be6589313"
+    },
+    {
+      "identity": "family:armor-boots",
+      "path": "/assets/equipment-family/items/armor-boots.png",
+      "sha256": "5a4969964722fcff80a6b5dcc31c771a3f285188eb09b39e6f9f4d0f81b66207"
+    },
+    {
+      "identity": "family:armor-cloak",
+      "path": "/assets/equipment-family/items/armor-cloak.png",
+      "sha256": "a50678f92d5c52787fdf2f88ac1e61dcecd09aaa1b2f91a26d8e1f45903be5d8"
+    },
+    {
+      "identity": "family:armor-coat",
+      "path": "/assets/equipment-family/items/armor-coat.png",
+      "sha256": "39c40f82357296cf933e37611e07fa5b33051c3b425e62ca1a0a933c088dd819"
+    },
+    {
+      "identity": "family:armor-leather",
+      "path": "/assets/equipment-family/items/armor-leather.png",
+      "sha256": "b7181a2b9cd4be70e679b8215ee5032c141c65d126963eed6a9dd6426563acf3"
+    },
+    {
+      "identity": "family:armor-plate",
+      "path": "/assets/equipment-family/items/armor-plate.png",
+      "sha256": "d91668c82cab46f280713a97be64fd867331c663321640ebcd584ad1e3ab861b"
+    },
+    {
+      "identity": "family:armor-robe",
+      "path": "/assets/equipment-family/items/armor-robe.png",
+      "sha256": "810feea524c1e7261e0598adbd613d91472fd6deab93131d25c97c46be7d76c8"
+    },
+    {
+      "identity": "family:headgear-cap",
+      "path": "/assets/equipment-family/items/headgear-cap.png",
+      "sha256": "7dfb8e642a447af29da1a8accb6d72f89a1ae9fc585797e7acd345c18e82ea96"
+    },
+    {
+      "identity": "family:headgear-circlet",
+      "path": "/assets/equipment-family/items/headgear-circlet.png",
+      "sha256": "2623f50dfed0c97c54e4bc8e2f1765cfdecda8772bb2a056dd1bcde1b752501e"
+    },
+    {
+      "identity": "family:headgear-helm",
+      "path": "/assets/equipment-family/items/headgear-helm.png",
+      "sha256": "7f330393826eb7fc3aed9fdbedc09cb147398194629c83069bf49ef04ec07220"
+    },
+    {
+      "identity": "family:headgear-hood",
+      "path": "/assets/equipment-family/items/headgear-hood.png",
+      "sha256": "f7db146e1ffe03e8f94d2c4e786c45f5baa5a1d884084d912d0d98f07a792099"
+    },
+    {
+      "identity": "family:headgear-mask",
+      "path": "/assets/equipment-family/items/headgear-mask.png",
+      "sha256": "9cc753a2da8c5a485335e17c61ee47d7027ac195761ea054fea7436150365ec5"
+    },
+    {
+      "identity": "family:headgear-straw-hat",
+      "path": "/assets/equipment-family/items/headgear-straw-hat.png",
+      "sha256": "f7e2c7d08d118ac52430c7cc874760eedd59214a1c27b76fc5585444ccf34b17"
+    },
+    {
+      "identity": "family:headgear-wizard-hat",
+      "path": "/assets/equipment-family/items/headgear-wizard-hat.png",
+      "sha256": "0aafd89a4fd011310ec564ab015a63f6e66dbe4543defdcb0993d84ef8f0e2d8"
+    },
+    {
+      "identity": "family:offhand-book",
+      "path": "/assets/equipment-family/items/offhand-book.png",
+      "sha256": "5495206b19b5c262cd4ed7d79631d99c67eacbadec802370979af2c8d4a7c378"
+    },
+    {
+      "identity": "family:offhand-shield",
+      "path": "/assets/equipment-family/items/offhand-shield.png",
+      "sha256": "77eae3b07e63b733caa5ef5f59a794f35dc84a577fe6a325e8b468e0cfa028f7"
+    },
+    {
+      "identity": "family:weapon-bow",
+      "path": "/assets/equipment-family/items/weapon-bow.png",
+      "sha256": "f786e78272d072bce93ee21a1be8f9be0ae7907d7207312be1f4fc0cdd34013c"
+    },
+    {
+      "identity": "family:weapon-dagger",
+      "path": "/assets/equipment-family/items/weapon-dagger.png",
+      "sha256": "b67a261637ca97d47318e874db79a300338ca1781aebca49ca1390d77af58c3c"
+    },
+    {
+      "identity": "family:weapon-heavy",
+      "path": "/assets/equipment-family/items/weapon-heavy.png",
+      "sha256": "d0b2c1fb51a144f985fa181ec96dd11595b3cdb601fba47734e0aede0786f70e"
+    },
+    {
+      "identity": "family:weapon-lance",
+      "path": "/assets/equipment-family/items/weapon-lance.png",
+      "sha256": "b486f948f22ccc998af659f56f0e1793779a7465fec95b135967866883a356f8"
+    },
+    {
+      "identity": "family:weapon-staff",
+      "path": "/assets/equipment-family/items/weapon-staff.png",
+      "sha256": "1abce4a61cbfdeb86c99d26c9b76277482a6568ee783cdb39c7a50535bc3fbdf"
+    },
+    {
+      "identity": "family:weapon-sword",
+      "path": "/assets/equipment-family/items/weapon-sword.png",
+      "sha256": "4b2298a7acb74551e9fc34296a7b762f072ec713c6edc1e3166b64f18d1b9027"
+    },
+    {
+      "identity": "family:weapon-whip",
+      "path": "/assets/equipment-family/items/weapon-whip.png",
+      "sha256": "7b1181bccc5606456f9fdb08a4ca7ba44a3b2d8b7e3b2fd3615f00b84fb50dcb"
+    },
+    {
+      "identity": "signature-overlay:광기의 갑주",
+      "path": "/assets/equipment-wearable-exact/signature-armor-mad-armor.png",
+      "sha256": "5f42489bd79ea63fd33023fad17e035dfc0bb6dde6c93266235e18054185248e"
+    },
+    {
+      "identity": "signature-overlay:그림자 절단기",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-shadow-cutter.png",
+      "sha256": "9e49591c532a200a1f0612e078802648a4c575c8c0480296e5e18edac5005e8c"
+    },
+    {
+      "identity": "signature-overlay:대지의 심판",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-earth-verdict.png",
+      "sha256": "4a6665f3e02c764aea8bbed70477205cfc06f08b221f1b5729a59ba105936bd7"
+    },
+    {
+      "identity": "signature-overlay:드래곤로드 갑주",
+      "path": "/assets/equipment-wearable-exact/signature-armor-dragon-lord.png",
+      "sha256": "03682c44dbaf5650cb4cf63c6adcaae21444dea33c60bb67bdea1a7b389f3824"
+    },
+    {
+      "identity": "signature-overlay:라그나로크",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-ragnarok.png",
+      "sha256": "3758d504cb17a1b4316e0c0395fcb7ab49068d609b18ec94c69bd76b51d18e32"
+    },
+    {
+      "identity": "signature-overlay:마왕의 대낫",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-demon-scythe.png",
+      "sha256": "3886ecc34b1f524455fcb2edbcd7efa478136a453c870137465b7bd45d124e0f"
+    },
+    {
+      "identity": "signature-overlay:바람의 궁극",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-wind-ultimate-bow.png",
+      "sha256": "5ec6c2b4c2330e0b656e2559137daeedc1e41a77c8e2495e79620e397449d042"
+    },
+    {
+      "identity": "signature-overlay:빙결의 왕관검",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-frost-crown-sword.png",
+      "sha256": "0652338d7b08841a6d763cb1ca5d444199e522d8cfbc5da6ccee2f5d13b53a8e"
+    },
+    {
+      "identity": "signature-overlay:성검 에테르니아",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-ethernia.png",
+      "sha256": "1798d5aa47e9f4096bf5e8f2bcf00e66b62134c547c21dbe8ed8298a4b53a012"
+    },
+    {
+      "identity": "signature-overlay:성스러운 창",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-holy-spear.png",
+      "sha256": "45efcdea95b420d135272add8f8719ebc8803dd516ff53c0bcece9db885574b4"
+    },
+    {
+      "identity": "signature-overlay:세계수의 검",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-worldtree-sword.png",
+      "sha256": "8d592bbe0741d8fa384fedcc774658515fd736e0e17fd71af95a216322e775a1"
+    },
+    {
+      "identity": "signature-overlay:세계수의 로브",
+      "path": "/assets/equipment-wearable-exact/signature-armor-worldtree-robe.png",
+      "sha256": "0203840155114a0efcfaf278c59c7759305bea95ba91af39a121b8e2b96e199c"
+    },
+    {
+      "identity": "signature-overlay:세계수의 지팡이",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-worldtree-staff.png",
+      "sha256": "98f5ae9d6799de90c75a179b4ec1a34396821c1345e7b9a2515dc1440ef853ff"
+    },
+    {
+      "identity": "signature-overlay:신전 도시의 지팡이",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-temple-city-staff.png",
+      "sha256": "21386fa89cb8c10a8c74088697d121b3e2ba529216ecc6bda1249dc4f1d0f6a1"
+    },
+    {
+      "identity": "signature-overlay:심해의 수호복",
+      "path": "/assets/equipment-wearable-exact/signature-armor-abyssal-guardian.png",
+      "sha256": "79d667cfce90754720efe705ae6e3ef1438eac5d70a1d0d551f84659b5c82554"
+    },
+    {
+      "identity": "signature-overlay:암흑 군주의 망토",
+      "path": "/assets/equipment-wearable-exact/signature-armor-dark-lord-cloak.png",
+      "sha256": "ae3a8491124165d24b2f0ce0ba2b42287cb9b0e0e07066fc3bd43aa9199af62d"
+    },
+    {
+      "identity": "signature-overlay:에테르 거인의 대검",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-ether-giant-greatsword.png",
+      "sha256": "3201b8c35e87e05464b55e2db8f9de1d4468f0c8ea7650b8905761b7c4fc63b8"
+    },
+    {
+      "identity": "signature-overlay:에테르 그리모어",
+      "path": "/assets/equipment-wearable-exact/signature-shield-ether-grimoire.png",
+      "sha256": "5911ebfa0338a6e2902b5fab760fe5e18ed88160965276a541ee99a06deb7620"
+    },
+    {
+      "identity": "signature-overlay:영혼 절단자",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-soul-reaper.png",
+      "sha256": "bbbfa928b5e769be217f3745305ead46a4ccfb858b8d6e64b0b20ff9dfe6460c"
+    },
+    {
+      "identity": "signature-overlay:용의 화염",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-dragon-flame.png",
+      "sha256": "b939d0afda8f925f03c896afa525f4f128ff98337510e0a21601596ad8a7ca34"
+    },
+    {
+      "identity": "signature-overlay:차원 마왕의 낫",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-dimension-scythe.png",
+      "sha256": "ec0f4848ecaa6440eb8850f8b5766cb48a4dfcf16a19291c7d5932c01e25573e"
+    },
+    {
+      "identity": "signature-overlay:차원 방패 이지스",
+      "path": "/assets/equipment-wearable-exact/signature-shield-aegis-dimension.png",
+      "sha256": "138989237edabd2615b16455baa71dae26a3685c7c13f2479ffdd0698f3ebc8a"
+    },
+    {
+      "identity": "signature-overlay:천공 성전",
+      "path": "/assets/equipment-wearable-exact/signature-shield-celestial-tome.png",
+      "sha256": "df5cc27501fc397572078cab6f7f3d37a7f6ed64ab85fabfac6bbbb0440d732b"
+    },
+    {
+      "identity": "signature-overlay:천벌의 지팡이",
+      "path": "/assets/equipment-wearable-exact/signature-weapon-divine-wrath-staff.png",
+      "sha256": "d8eabb005da76e98d78e1f00ac23250a4d8fa2809f6330910a024699f7f0d4c8"
+    },
+    {
+      "identity": "signature-overlay:혼돈의 갑주",
+      "path": "/assets/equipment-wearable-exact/signature-armor-chaos-armor.png",
+      "sha256": "def4d4a0ff403ff721e4abbc333ed4458e811b48bf14ec043dd0e96bcf1cbec5"
+    }
+  ]
+}

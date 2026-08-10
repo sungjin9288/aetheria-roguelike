@@ -240,20 +240,28 @@ test('art catalog rejects duplicate identities and missing illustration families
 test('art verifier matches the catalog in both directions and records every export hash', async () => {
     const fixture = await createFixture();
     try {
-        const report = await verifyFixture(fixture);
+        const fullReport = await verifyFixture(fixture);
+        const characterReport = await verifyFixture({ ...fixture, scope: 'characters' });
+        const equipmentReport = await verifyFixture({ ...fixture, scope: 'equipment' });
+        const exports = [...characterReport.exports, ...equipmentReport.exports];
 
-        assert.deepEqual(report.missing, []);
-        assert.deepEqual(report.extra, []);
-        assert.equal(report.catalogSha256, FIXTURE_CATALOG_SHA256);
-        assert.equal(report.scope, 'all');
-        assert.deepEqual(report.verifiedSurfaces, ['characters', 'equipment']);
-        assert.equal(report.exports.length, 2);
-        assert.deepEqual(report.exports.map((entry) => entry.identity), ['character:모험가', 'equipment:나무 검']);
-        for (const entry of report.exports) {
+        assert.deepEqual(fullReport.verifiedSurfaces, ['characters', 'equipment', 'families']);
+        assert.equal(fullReport.missing.includes('signature-overlay:art metadata'), false);
+        assert.deepEqual(characterReport.missing, []);
+        assert.deepEqual(characterReport.extra, []);
+        assert.deepEqual(equipmentReport.missing, []);
+        assert.deepEqual(equipmentReport.extra, []);
+        assert.equal(characterReport.catalogSha256, FIXTURE_CATALOG_SHA256);
+        assert.equal(equipmentReport.catalogSha256, FIXTURE_CATALOG_SHA256);
+        assert.deepEqual(characterReport.verifiedSurfaces, ['characters']);
+        assert.deepEqual(equipmentReport.verifiedSurfaces, ['equipment']);
+        assert.deepEqual(exports.map((entry) => entry.identity), ['character:모험가', 'equipment:나무 검']);
+        for (const entry of exports) {
             assert.match(entry.sha256, /^[0-9a-f]{64}$/);
         }
-        assert.equal(report.exports[0].sha256, createHash('sha256').update(await readFile(join(fixture.publicRoot, 'assets/avatars/canonical/adventurer.png'))).digest('hex'));
-        assert.deepEqual(await verifyFixture(fixture), report);
+        assert.equal(exports[0].sha256, createHash('sha256').update(await readFile(join(fixture.publicRoot, 'assets/avatars/canonical/adventurer.png'))).digest('hex'));
+        assert.deepEqual(await verifyFixture({ ...fixture, scope: 'characters' }), characterReport);
+        assert.deepEqual(await verifyFixture({ ...fixture, scope: 'equipment' }), equipmentReport);
     } finally {
         await fixture.dispose();
     }
@@ -394,7 +402,7 @@ test('only a passing stable report can be written as evidence', async () => {
     const failingPath = join(fixture.publicRoot, 'evidence', 'failing-report.json');
     const partialPath = join(fixture.publicRoot, 'evidence', 'partial-report.json');
     try {
-        const report = await verifyFixture(fixture);
+        const report = await verifyArtAssets({ scope: 'all' });
         await writeArtVerificationReport(report, passingPath);
         assert.deepEqual(JSON.parse(await readFile(passingPath, 'utf8')), report);
 

@@ -580,11 +580,11 @@ The armor/family implementation, independent review and release gate are complet
 **Interfaces:**
 - Produces: full `art:verify` PASS for all 229 equipment entries, 22 defined families and signature overlays
 
-- [ ] **Step 1: Write the failing final contract**
+- [x] **Step 1: Write the failing final contract**
 
 Require empty catalog/manifest two-way difference, 229 unique item identities, 229 existing runtime paths, 229 export hashes, no duplicate equipment names, all signature registry item/overlay paths, and catalog hash equality.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```bash
 npm run art:verify
@@ -592,15 +592,17 @@ npm run art:verify
 
 Expected: FAIL until signature/mythic and any remaining cohort rows reach styleVersion 2.
 
-- [ ] **Step 3: Normalize signature and mythic assets**
+- [x] **Step 3: Normalize signature and mythic assets**
 
 Keep their unique silhouettes. Match shared `160x160` canvas, upper-left light, two-level outline, pixel density and transparent padding. Do not replace signature identity with ordinary family art.
 
-- [ ] **Step 4: Generate final evidence**
+- [x] **Step 4: Generate final evidence**
 
 Create family/Tier contact sheets, one 32px sheet, full provenance JSON and the final `art-contract-report.json`. Inspect named and anonymous sheets before approval.
 
-- [ ] **Step 5: Run full gate, commit and push**
+The completed Task 8 pipeline publishes 25 identity-specific item icons and 25 paired wearable overlays from 11 family-pure batches. Final evidence contains accepted `22` and rejected `16` raw candidates, deterministic source-to-runtime reconstruction, named and anonymous full contact sheets, a separate answer key, and a corrected two-card staff comparison. The first blind pass scored `23/25`; the revised staff comparison scored exact identity `2/2` and gameplay role `2/2`. The approved full report now covers characters `18`, equipment `229`, families `22`, and signature overlays `25` with `294` unique exports.
+
+- [x] **Step 5a: Run the full gate**
 
 ```bash
 npm run art:verify
@@ -609,7 +611,11 @@ npm run verify:full
 git diff --check
 ```
 
-Commit and push the final equipment manifest closure.
+The final reviewed snapshot passes focused `178/178`, `npm run verify` with unit `3706/3706`, full art verification with `294` unique exports, `npm run verify:full` with desktop/mobile smoke and Playwright shards `48/48 + 45/45`, `npm run mobile:doctor`, and `npm run cap:sync`. Independent review also proved that an explicit invalid signature-registry override fails without replacing its report.
+
+- [x] **Step 5b: Commit and push the final equipment manifest closure**
+
+Implementation, visual review, verification, independent review, and the cohesive Task 8 delivery are complete.
 
 ---
 

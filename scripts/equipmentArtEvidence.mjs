@@ -79,12 +79,13 @@ const requirePngBasename = (value, label) => {
 
 export const validateStyleV2ExportHashUniqueness = (
     manifest,
-    { artworkOverrides = {}, familyOverrides = {} } = {},
+    { artworkOverrides = {}, familyOverrides = {}, overlayOverrides = {} } = {},
 ) => {
     const hashes = new Map();
     const surfaces = [
         ['equipment', { ...(manifest?.artwork || {}), ...artworkOverrides }],
         ['family', { ...(manifest?.art?.families || {}), ...familyOverrides }],
+        ['signature-overlay', { ...(manifest?.art?.signatureOverlays || {}), ...overlayOverrides }],
     ];
     for (const [surface, entries] of surfaces) {
         for (const [identity, entry] of Object.entries(entries)) {

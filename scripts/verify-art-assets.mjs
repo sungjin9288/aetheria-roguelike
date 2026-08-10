@@ -8,11 +8,13 @@ import { buildArtCatalog, compareCodePoints } from './artCatalog.mjs';
 import { buildEquipmentCatalogRows, getEquipmentCohort } from './dump-equipment-catalog.mjs';
 import { validateEquipmentArtEvidence } from './equipmentArtEvidence.mjs';
 import { validateEquipmentFamilyArtEvidence } from './equipmentFamilyArtEvidence.mjs';
+import { validateSignatureArtEvidence } from './signatureArtEvidence.mjs';
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const REPO_ROOT = dirname(fileURLToPath(new URL('../package.json', import.meta.url)));
 const DEFAULT_CHARACTER_MANIFEST = resolve(REPO_ROOT, 'src/data/characterArtManifest.json');
 const DEFAULT_EQUIPMENT_MANIFEST = resolve(REPO_ROOT, 'src/data/equipmentArtManifest.json');
+const DEFAULT_SIGNATURE_REGISTRY = resolve(REPO_ROOT, 'src/data/signatureRegistry.json');
 const DEFAULT_INSPECTOR = resolve(REPO_ROOT, 'scripts/inspect_art_pixels.py');
 const DEFAULT_PUBLIC_ROOT = resolve(REPO_ROOT, 'public');
 const EQUIPMENT_COHORTS = new Set([
@@ -186,6 +188,7 @@ export const verifyArtAssets = async ({
     cohort = null,
     equipmentProvenancePath = null,
     equipmentSourceDir = null,
+    signatureRegistryPath = DEFAULT_SIGNATURE_REGISTRY,
 } = {}) => {
     if (!['all', 'characters', 'equipment', 'families'].includes(scope)) {
         throw new Error(`Unknown art verification scope: ${scope}`);
@@ -200,14 +203,21 @@ export const verifyArtAssets = async ({
     const resolvedInspectorPath = inspectorPath instanceof URL ? fileURLToPath(inspectorPath) : inspectorPath;
     const verifyCharacters = scope === 'all' || scope === 'characters';
     const verifyEquipment = scope === 'all' || scope === 'equipment';
-    const verifyFamilies = scope === 'families';
+    const verifyFamilies = scope === 'all' || scope === 'families';
     const equipmentCatalog = cohort
         ? resolvedCatalog.equipment.filter((entry) => getEquipmentCohort({ name: entry.name, familyKey: entry.family }) === cohort)
         : resolvedCatalog.equipment;
+    const signatureCatalog = resolvedCatalog.equipment.filter(
+        (entry) => getEquipmentCohort({ name: entry.name, familyKey: entry.family }) === 'signature-mythic',
+    );
+    const verifySignatureOverlays = verifyEquipment
+        && signatureCatalog.length > 0
+        && (scope === 'all' || cohort === 'signature-mythic');
     const verifiedSurfaces = Object.freeze([
         ...(verifyCharacters ? ['characters'] : []),
         ...(verifyEquipment ? ['equipment'] : []),
         ...(verifyFamilies ? ['families'] : []),
+        ...(verifySignatureOverlays ? ['signature-overlays'] : []),
     ]);
     const report = {
         ok: false,
@@ -221,6 +231,7 @@ export const verifyArtAssets = async ({
             definedFamilies: resolvedCatalog.definedFamilies.length,
             usedFamilies: resolvedCatalog.usedFamilies.length,
             families: resolvedCatalog.definedFamilies.length,
+            signatureOverlays: verifySignatureOverlays ? signatureCatalog.length : 0,
         },
         missing: [],
         extra: [],
@@ -295,18 +306,60 @@ export const verifyArtAssets = async ({
                     || resolve(REPO_ROOT, `docs/evidence/art/equipment-${cohort}-provenance.json`);
                 const sourceDir = equipmentSourceDir
                     || resolve(REPO_ROOT, `scripts/art_sources/equipment/v2/${cohort}`);
-                await validateEquipmentArtEvidence({
-                    catalog: await buildEquipmentCatalogRows(),
-                    manifest: resolvedEquipmentManifest,
-                    provenance: await readJson(provenancePath),
-                    cohort,
-                    sourceDir,
-                    publicRoot,
-                    repoRoot: REPO_ROOT,
-                    requireManifestArtwork: true,
-                });
+                if (cohort === 'signature-mythic') {
+                    await validateSignatureArtEvidence({
+                        catalog: await buildEquipmentCatalogRows(),
+                        manifest: resolvedEquipmentManifest,
+                        registryDocument: await readJson(signatureRegistryPath),
+                        provenance: await readJson(provenancePath),
+                        sourceDir,
+                        publicRoot,
+                        repoRoot: REPO_ROOT,
+                        requireManifestArtwork: true,
+                    });
+                } else {
+                    await validateEquipmentArtEvidence({
+                        catalog: await buildEquipmentCatalogRows(),
+                        manifest: resolvedEquipmentManifest,
+                        provenance: await readJson(provenancePath),
+                        cohort,
+                        sourceDir,
+                        publicRoot,
+                        repoRoot: REPO_ROOT,
+                        requireManifestArtwork: true,
+                    });
+                }
             } catch (error) {
                 report.invalidArtwork.push(`equipment:${error.message}`);
+            }
+        }
+        if (verifySignatureOverlays) {
+            if (cohort !== 'signature-mythic') {
+                try {
+                    await validateSignatureArtEvidence({
+                        catalog: await buildEquipmentCatalogRows(),
+                        manifest: resolvedEquipmentManifest,
+                        registryDocument: await readJson(signatureRegistryPath),
+                        provenance: await readJson(resolve(REPO_ROOT, 'docs/evidence/art/equipment-signature-mythic-provenance.json')),
+                        sourceDir: resolve(REPO_ROOT, 'scripts/art_sources/equipment/v2/signature-mythic'),
+                        publicRoot,
+                        repoRoot: REPO_ROOT,
+                        requireManifestArtwork: true,
+                    });
+                } catch (error) {
+                    report.invalidArtwork.push(`equipment:${error.message}`);
+                }
+            }
+            const metadata = parseArtMetadata({ art: resolvedEquipmentManifest?.art?.signatureOverlay }, 'equipment');
+            const overlays = resolvedEquipmentManifest?.art?.signatureOverlays || {};
+            if (!metadata) {
+                report.missing.push('signature-overlay:art metadata');
+            } else {
+                selectedAssets.push(...signatureCatalog.map(({ name }) => ({
+                    identity: `signature-overlay:${name}`,
+                    runtimePath: overlays[name]?.runtimePath,
+                    metadata,
+                })));
             }
         }
         const metadata = parseArtMetadata(resolvedEquipmentManifest, 'equipment');
@@ -397,7 +450,10 @@ export const verifyArtAssets = async ({
 
 export const writeArtVerificationReport = async (report, path) => {
     if (!report.ok) throw new Error('Refusing to write failing art verification as approved evidence');
-    if (report.scope !== 'all' || report.verifiedSurfaces?.join(',') !== 'characters,equipment') {
+    if (
+        report.scope !== 'all'
+        || report.verifiedSurfaces?.join(',') !== 'characters,equipment,families,signature-overlays'
+    ) {
         throw new Error('Refusing to write partial-scope art verification as approved evidence');
     }
     await mkdir(dirname(path), { recursive: true });
@@ -417,6 +473,7 @@ const parseCli = (args) => {
             '--equipment-provenance': 'equipmentProvenancePath',
             '--equipment-source-dir': 'equipmentSourceDir',
             '--public-root': 'publicRoot',
+            '--signature-registry': 'signatureRegistryPath',
         }[argument];
         if (!optionName) throw new Error(`Unknown art verifier argument: ${argument}`);
 
@@ -450,6 +507,7 @@ if (isCli) {
             ...(options.equipmentProvenancePath ? { equipmentProvenancePath: resolve(options.equipmentProvenancePath) } : {}),
             ...(options.equipmentSourceDir ? { equipmentSourceDir: resolve(options.equipmentSourceDir) } : {}),
             ...(options.publicRoot ? { publicRoot: resolve(options.publicRoot) } : {}),
+            ...(options.signatureRegistryPath ? { signatureRegistryPath: resolve(options.signatureRegistryPath) } : {}),
         });
         process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
         if (options.writeReport) {

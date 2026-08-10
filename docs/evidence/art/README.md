@@ -1,6 +1,6 @@
 # Art Contract Checkpoint — 2026-08-09
 
-This directory records reproducible art-contract evidence. Character, core weapon, ranged/magic weapon, offhand/headgear, armor, and all 22 family exemplars are complete; signature/mythic work remains open, so the 229-equipment visual goal is not yet complete.
+This directory records reproducible art-contract evidence. Character art, all 229 exact equipment icons, all 22 family exemplars, and all 25 signature wearable overlays are complete under the shared style-version 2 contract.
 
 ## Task 3 character checkpoint
 
@@ -81,7 +81,17 @@ This is pipeline readiness only: no Task 4 source sheet, runtime equipment PNG, 
 - Independent Phase 2 review is APPROVED: focused art suites `217/217`, full unit `3680/3680`, 226/226 styleVersion 2 export hashes unique, all four equipment cohorts, characters `18`, and family exemplars `22` GREEN.
 - Final user-facing and native reproducibility gates are GREEN: `npm run verify:full` repeats type-check, lint, unit `3680/3680`, and build guard, then passes desktop/mobile smoke and E2E shards `48/48 + 45/45`; `npm run mobile:doctor` and `npm run cap:sync` complete. Distribution signing remains an environment boundary: no local Apple Distribution identity and no Android release keystore inputs.
 
-These checkpoints certify `weapon-core`, `weapon-ranged-magic`, `offhand-headgear`, `armor`, and all 22 family exemplars. Task 8 still owns signature/mythic closure. Top-level equipment `styleVersion: 2`, full-surface `npm run art:verify`, and `art-contract-report.json` remain open until the 25 signature/mythic identities are normalized.
+## Task 8 signature and mythic checkpoint
+
+- The live signature registry and catalog have exact two-way coverage for 25 identities. Eleven family-pure batches own 22 tracked source sheets: paired item and wearable-overlay masters for every batch.
+- All 25 item icons use identity-specific `160x160` art instead of generic recolors. All 25 overlays use paired `72x72` wearable art and exact registry routes. The generation review records accepted `22` and rejected `16` candidates and is pinned by SHA-256 `6661866d...`.
+- Named and anonymous 25-card sheets cover item `160/32` and overlay `72/32`; their hashes are `2367047e...` and `b88f8826...`. The answer key remains separate at `7e909dfa...`.
+- The first no-context blind review scored exact identity and gameplay promise `23/25`; it swapped only the two light staffs. After a silhouette-specific revision, the isolated staff comparison scored exact identity `2/2` and role match `2/2` at every display size. The complete review and hashes are recorded in `task8-signature-mythic-report.md`.
+- The final manifest has top-level `styleVersion: 2`, `229` artwork rows, `22` family exemplars, and `25` signature overlays. `art-contract-report.json` is GREEN across `characters`, `equipment`, `families`, and `signature-overlays`, with `294` unique exports and every error list empty.
+- Independent review also closed a CLI authority gap: an explicit `--signature-registry` is now forwarded to verification, and an invalid override exits nonzero without replacing an existing report.
+- Final Task 8 gates are GREEN: focused `178/178`; `npm run verify` unit `3706/3706`; `npm run verify:full` desktop/mobile smoke and Playwright `48/48 + 45/45`; `npm run mobile:doctor`; and `npm run cap:sync`.
+
+These checkpoints certify the complete 18-character, 229-equipment, 22-family, and 25-signature-overlay art surface. Independent review is approved; the only remaining Task 8 boundary is the cohesive commit and push.
 
 ## Contract verification
 

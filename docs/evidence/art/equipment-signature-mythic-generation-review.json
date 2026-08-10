@@ -1,0 +1,251 @@
+{
+  "tool": "OpenAI built-in image_gen imagegen with paired strict source preparation and original-size 160px/72px visual review",
+  "accepted": [
+    {
+      "batchId": "signature-mythic-armor-cloak-01",
+      "surface": "item",
+      "rawImage": "exec-733b6ef9-c60f-4bfc-81da-add6ee9e05b0.png",
+      "rawSha256": "36705bb0a82d6640acf5fe78fc67dcbdcf05e429f27c7b979c68f308281de706"
+    },
+    {
+      "batchId": "signature-mythic-armor-cloak-01",
+      "surface": "overlay",
+      "rawImage": "exec-b1981c46-c85e-4c47-bf77-97f75ab8efd5.png",
+      "rawSha256": "c28784bff6429123da31c8cc21ac15c65069de6ba4cc64378288eb3907db94b7"
+    },
+    {
+      "batchId": "signature-mythic-armor-plate-01",
+      "surface": "item",
+      "rawImage": "exec-b8e05234-d217-4667-a835-168d6bc0b587.png",
+      "rawSha256": "e58537705ef7ecee80ae56262e5a786835e502343f87d7bb82c451f6cae26a23"
+    },
+    {
+      "batchId": "signature-mythic-armor-plate-01",
+      "surface": "overlay",
+      "rawImage": "exec-14fffe81-8825-4668-acab-f7e862bb85f2.png",
+      "rawSha256": "557cfe1924469bae1f69fb9444ee33a88cdd9d3cd8588e45dbdafd2ba3550058"
+    },
+    {
+      "batchId": "signature-mythic-armor-robe-01",
+      "surface": "item",
+      "rawImage": "exec-91823470-eb61-4636-b4be-e76dd84f9464.png",
+      "rawSha256": "2d561e82296cbf814b70b4cb1c9a5ec378563d48455cb68a2f1d9b9e195e4ec1"
+    },
+    {
+      "batchId": "signature-mythic-armor-robe-01",
+      "surface": "overlay",
+      "rawImage": "exec-e2b4e8b8-64b9-4a45-9daf-2aaf83a760fc.png",
+      "rawSha256": "67004da9ce22827915d91fef7e36654dfc22cddedefe6ec065a7a57198aeccf9"
+    },
+    {
+      "batchId": "signature-mythic-weapon-lance-01",
+      "surface": "item",
+      "rawImage": "exec-e989c6e1-de49-4ced-8b99-c9733b00949c.png",
+      "rawSha256": "388834b351d1c03071982c6ab93f38cf40e47139e5af271ee720db37a1699a20"
+    },
+    {
+      "batchId": "signature-mythic-weapon-lance-01",
+      "surface": "overlay",
+      "rawImage": "exec-8d2cc35e-bf71-4b85-a8c9-9f956da40dff.png",
+      "rawSha256": "cbb636ef58725779d862cd22c87144dc8ccecc132f2e7d5d3a52a0b27fc501ef"
+    },
+    {
+      "batchId": "signature-mythic-weapon-staff-01",
+      "surface": "item",
+      "rawImage": "exec-9c7d0723-e778-4aa8-b359-94eb24a484ab.png",
+      "rawSha256": "a61aa1bcd18889ad9d3c47868e74ff0371909e34cb26f9e953c6c667a78c4453"
+    },
+    {
+      "batchId": "signature-mythic-weapon-staff-01",
+      "surface": "overlay",
+      "rawImage": "exec-80b6d63d-1253-41d4-becd-ef4897cfbc99.png",
+      "rawSha256": "73b4092228b2fe693faf38d92f2b5d5ca3dae8f0acba03055cadf6834b930d5f"
+    },
+    {
+      "batchId": "signature-mythic-offhand-book-01",
+      "surface": "item",
+      "rawImage": "exec-244d6d36-1579-4d33-a382-4142eadca0f3.png",
+      "rawSha256": "5c86c3e126adb97263154e5f0c9a49d40db4a917171208e98a1a388b1b6de4af"
+    },
+    {
+      "batchId": "signature-mythic-offhand-book-01",
+      "surface": "overlay",
+      "rawImage": "exec-108eb76d-6a81-41b0-af66-28fbf7e74a45.png",
+      "rawSha256": "4089df4c59c6dda8206b64a50901f17abff17dd25cde98e90505ad8c9195fa37"
+    },
+    {
+      "batchId": "signature-mythic-offhand-shield-01",
+      "surface": "item",
+      "rawImage": "exec-eaf93485-ebc7-478e-bcf7-b48215c94637.png",
+      "rawSha256": "163675ba0b3e7c83a6f33c03354e10e26896cd301ce22ab32d6e944056257f49"
+    },
+    {
+      "batchId": "signature-mythic-offhand-shield-01",
+      "surface": "overlay",
+      "rawImage": "exec-fa621136-e83a-4b0e-8777-409016703873.png",
+      "rawSha256": "09c16becade00f46bbe6c55bf7ffc8b262cd2899cf73337694922207c48c7462"
+    },
+    {
+      "batchId": "signature-mythic-weapon-dagger-01",
+      "surface": "item",
+      "rawImage": "exec-dce825fe-aa6c-4dad-82cf-4fdbeda894e5.png",
+      "rawSha256": "c019af4fb5e8910b2d66f8da0e0927f5b59697f850e63a5402408e32643d526f"
+    },
+    {
+      "batchId": "signature-mythic-weapon-dagger-01",
+      "surface": "overlay",
+      "rawImage": "exec-55f85208-36ca-4bd0-b386-b4e1af8e4910.png",
+      "rawSha256": "d01d9cd006c7699f8ed3363031e50742a401c4fb8f104f12561a802d5e6ba9d9"
+    },
+    {
+      "batchId": "signature-mythic-weapon-bow-01",
+      "surface": "item",
+      "rawImage": "exec-83c5131d-7fd0-44bb-affa-554561d67d14.png",
+      "rawSha256": "3f6f691d0ece232c1a815227c58dc9221378812c7e461e85e3ed259b76127deb"
+    },
+    {
+      "batchId": "signature-mythic-weapon-bow-01",
+      "surface": "overlay",
+      "rawImage": "exec-494afa6d-cd22-45cf-a194-f051410fde0b.png",
+      "rawSha256": "2a49db6dfb43d6057b4bafed372167c1d96d43c47f9d4f548d72ea3d532e297c"
+    },
+    {
+      "batchId": "signature-mythic-weapon-sword-01",
+      "surface": "item",
+      "rawImage": "exec-9d5b0c2d-b556-4875-84fb-af63a85d8307.png",
+      "rawSha256": "a4b9906f54a707d3e7b07043c4f434c787f34e635e0fd916049e4ff28c40f660"
+    },
+    {
+      "batchId": "signature-mythic-weapon-sword-01",
+      "surface": "overlay",
+      "rawImage": "exec-42ca4855-5685-4c20-8fa1-7ddc832c57c1.png",
+      "rawSha256": "cdb05754e218aefde709f15d617d36cfd598fdc2a898fecb67841cab9833e21a"
+    },
+    {
+      "batchId": "signature-mythic-weapon-sword-02",
+      "surface": "item",
+      "rawImage": "exec-15916ab0-241a-4e31-9e17-ef9eda256c80.png",
+      "rawSha256": "f1c64cd6650ebbfb8185aeb9095705a139bfa9f1ede7cd2ef3c56bd3bd932a6a"
+    },
+    {
+      "batchId": "signature-mythic-weapon-sword-02",
+      "surface": "overlay",
+      "rawImage": "exec-ef52b33d-319c-48c5-a5af-658128f29907.png",
+      "rawSha256": "4d5f6ad0af9836806ea57b1e211b3cf1d3f13d05069244d0f4f6e6179fbdafc0"
+    }
+  ],
+  "rejected": [
+    {
+      "batchId": "signature-mythic-armor-cloak-01",
+      "surface": "item",
+      "rawImage": "exec-006592c0-6381-43ae-866b-abc203f0df7b.png",
+      "rawSha256": "ac35a98cd327da2b67ce051863a03be002c700cfd4d94181c2176771734784e9",
+      "reason": "raw candidate is RGB with a baked checkerboard instead of true alpha, so strict source preparation cannot establish transparent cell padding"
+    },
+    {
+      "batchId": "signature-mythic-armor-cloak-01",
+      "surface": "overlay",
+      "rawImage": "exec-77d1b15c-76a9-4dc8-9653-df9823a6d587.png",
+      "rawSha256": "3f20b3ed50176743d73de01a8bd38f68c87a9badd80d143b9ffb998dac668b78",
+      "reason": "wearable silhouette crosses the top-left cell boundary, so strict source preparation cannot prove isolated cell padding"
+    },
+    {
+      "batchId": "signature-mythic-armor-cloak-01",
+      "surface": "overlay",
+      "rawImage": "exec-6fd67e8e-de6d-44ac-8a59-f594da8c9c42.png",
+      "rawSha256": "635d244ee7415e3f1d5bce5ed6971015f321e4164f5b3587de8958a343182a77",
+      "reason": "candidate draws opaque white grid lines across cell boundaries, so strict preparation cannot establish transparent boundary padding or blank trailing cells"
+    },
+    {
+      "batchId": "signature-mythic-armor-plate-01",
+      "surface": "item",
+      "rawImage": "prepared-signature-mythic-armor-plate-01-item-preclean.png",
+      "rawSha256": "b408340d59b9adb55506eb621dbc4f41c09a20650abf4bad9ff30c0e15b68cd9",
+      "reason": "default preparation left 324, 269, 240, and 235 strong chroma-green pixels in closed armor gaps; explicit reviewed enclosed-green cleanup was required"
+    },
+    {
+      "batchId": "signature-mythic-armor-plate-01",
+      "surface": "overlay",
+      "rawImage": "prepared-signature-mythic-armor-plate-01-overlay-preclean.png",
+      "rawSha256": "fb8892b18550328c0d189178a9094569527eeedb5a1e325dafc3fd98fab48ffe",
+      "reason": "default preparation left strong chroma-green pixels in three closed wearable gaps; explicit reviewed enclosed-green cleanup was required"
+    },
+    {
+      "batchId": "signature-mythic-armor-robe-01",
+      "surface": "item",
+      "rawImage": "exec-01da8541-eba7-47fb-b225-1c877e3b73d9.png",
+      "rawSha256": "28346c54b228064ecf6469d86f9abb05217628ae7345355aefc64fb019da325a",
+      "reason": "the right leaf sleeve crosses the top-left cell boundary, so strict preparation cannot establish isolated cell padding"
+    },
+    {
+      "batchId": "signature-mythic-armor-robe-01",
+      "surface": "overlay",
+      "rawImage": "exec-b12fa078-36af-46d6-9075-21429e81d596.png",
+      "rawSha256": "0112c1173f338b2ca73c77a3f25750636434e5d87aa2474840192d392453680f",
+      "reason": "the wearable leaf sleeves extend across the top-left cell boundary, so strict preparation cannot prove an isolated overlay layer"
+    },
+    {
+      "batchId": "signature-mythic-armor-robe-01",
+      "surface": "overlay",
+      "rawImage": "exec-2a0bc175-0b17-43ce-b886-76437bd0f5a1.png",
+      "rawSha256": "48ec1487895b47e87141f590aea32cc9790eb6c202b2ff0bc0209042386ee4b1",
+      "reason": "the edited wearable still crosses the top-left right boundary, so strict preparation continues to reject the candidate"
+    },
+    {
+      "batchId": "signature-mythic-armor-robe-01",
+      "surface": "item",
+      "rawImage": "prepared-signature-mythic-armor-robe-01-item-preclean.png",
+      "rawSha256": "327bf320b2268393dc8b63b12eed3d84ce5e27c008799e65fc0d5e3bff1e7394",
+      "reason": "geometry-valid preparation retained a continuous exterior magenta fringe; explicit reviewed exterior-magenta cleanup was required"
+    },
+    {
+      "batchId": "signature-mythic-armor-robe-01",
+      "surface": "overlay",
+      "rawImage": "prepared-signature-mythic-armor-robe-01-overlay-preclean.png",
+      "rawSha256": "faeb898f274f06806c2cf0eb0b02cec26883920700b5fd60920a72b5d8aec856",
+      "reason": "geometry-valid preparation retained an exterior magenta halo and one large trapped torso background component; explicit reviewed cleanup was required"
+    },
+    {
+      "batchId": "signature-mythic-weapon-dagger-01",
+      "surface": "item",
+      "rawImage": "prepared-signature-mythic-weapon-dagger-01-item-split.png",
+      "rawSha256": "82582a1349b2e6b4f0c219a4575d0eeebe279e5c49ef6eba2d68c95a5a406eb4",
+      "reason": "column-crop preparation split the first dagger hilt into the second cell; the candidate was rejected until the complete connected silhouettes were normalized independently"
+    },
+    {
+      "batchId": "signature-mythic-weapon-sword-01",
+      "surface": "item",
+      "rawImage": "prepared-signature-mythic-weapon-sword-01-item-preclean.png",
+      "rawSha256": "a6bcdab6e5583994a26cb6f119a768c14bd380c2a73a0de3ad8f3bfd5e36a6b0",
+      "reason": "strict preparation retained a detached white sparkle in the frost-crown cell; explicit reviewed tiny-island cleanup was required"
+    },
+    {
+      "batchId": "signature-mythic-armor-cloak-01",
+      "surface": "item",
+      "rawImage": "prepared-signature-mythic-armor-cloak-01-item-preclean.png",
+      "rawSha256": "c2a19692dea2f185061a6669512c4f6309ba6a6e0df3e46ab7e4309d8fcc93f0",
+      "reason": "canonical combined dry-run found 18 fully opaque non-semantic chroma-green pixels at the lower-right hem; explicit reviewed cleanup was required"
+    },
+    {
+      "batchId": "signature-mythic-armor-cloak-01",
+      "surface": "overlay",
+      "rawImage": "prepared-signature-mythic-armor-cloak-01-overlay-preclean.png",
+      "rawSha256": "e383851c1f628ce22571d9a404f29180909b97b606749b57d9444f346bfdb043",
+      "reason": "canonical combined dry-run found 52 non-semantic chroma-green pixels along the lower wearable hem; explicit reviewed cleanup was required"
+    },
+    {
+      "batchId": "signature-mythic-weapon-staff-01",
+      "surface": "item",
+      "rawImage": "exec-645ad069-11f3-49ee-afd4-b544236782cd.png",
+      "rawSha256": "83dd3c00ce2daf111f868476e538cb179eb1afff48bb43265961ffdfd3bcee80",
+      "reason": "blind identity review swapped 신전 도시의 지팡이 and 천벌의 지팡이; approved source 95d0ee45eb86bba9112b5603a69209b350b630616280fb8d635fbdf99d803548 was superseded by a silhouette-specific revision"
+    },
+    {
+      "batchId": "signature-mythic-weapon-staff-01",
+      "surface": "overlay",
+      "rawImage": "exec-989cd985-5799-4c10-84ca-a5d8d0dc5bf7.png",
+      "rawSha256": "361c7b184e062ca19eb37fe828247811dfd0908c7f650ed0affe92c23ede21b3",
+      "reason": "blind identity review swapped 신전 도시의 지팡이 and 천벌의 지팡이; approved source 43e446848e24d79acf366ee2f6b27336c7b69430d918dd1cb2d44dff7071ae48 was superseded by a silhouette-specific revision"
+    }
+  ]
+}

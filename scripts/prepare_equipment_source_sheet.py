@@ -124,6 +124,122 @@ def strip_low_alpha_green(image: Image.Image) -> Image.Image:
     return rgba
 
 
+def is_magenta(red: int, green: int, blue: int, alpha: int) -> bool:
+    return alpha > 0 and red >= 100 and blue >= 100 and red >= green + 18 and blue >= green + 18
+
+
+def remove_boundary_chroma_magenta(image: Image.Image) -> Image.Image:
+    rgba = image.convert("RGBA")
+    pixels = rgba.load()
+    width, height = rgba.size
+    pending: deque[tuple[int, int]] = deque()
+    visited = bytearray(width * height)
+
+    def touches_transparency(x: int, y: int) -> bool:
+        return any(
+            pixels[neighbor_x, neighbor_y][3] == 0
+            for neighbor_y in range(max(0, y - 1), min(height, y + 2))
+            for neighbor_x in range(max(0, x - 1), min(width, x + 2))
+            if neighbor_x != x or neighbor_y != y
+        )
+
+    def enqueue(x: int, y: int) -> None:
+        index = y * width + x
+        if visited[index]:
+            return
+        if is_magenta(*pixels[x, y]):
+            visited[index] = 1
+            pending.append((x, y))
+
+    for y in range(height):
+        for x in range(width):
+            if is_magenta(*pixels[x, y]) and touches_transparency(x, y):
+                enqueue(x, y)
+
+    while pending:
+        x, y = pending.popleft()
+        pixels[x, y] = (0, 0, 0, 0)
+        for neighbor_y in range(max(0, y - 1), min(height, y + 2)):
+            for neighbor_x in range(max(0, x - 1), min(width, x + 2)):
+                if neighbor_x != x or neighbor_y != y:
+                    enqueue(neighbor_x, neighbor_y)
+    return rgba
+
+
+def strip_low_alpha_magenta(image: Image.Image) -> Image.Image:
+    rgba = image.convert("RGBA")
+    pixels = rgba.load()
+    for y in range(rgba.height):
+        for x in range(rgba.width):
+            red, green, blue, alpha = pixels[x, y]
+            if 0 < alpha < 96 and red > green and blue > green:
+                pixels[x, y] = (0, 0, 0, 0)
+    return rgba
+
+
+def remove_large_enclosed_magenta(image: Image.Image, minimum_size: int = 50) -> Image.Image:
+    rgba = image.convert("RGBA")
+    pixels = rgba.load()
+    width, height = rgba.size
+    remaining = {
+        y * width + x
+        for y in range(height)
+        for x in range(width)
+        if is_magenta(*pixels[x, y])
+    }
+    while remaining:
+        component = {remaining.pop()}
+        pending = list(component)
+        while pending:
+            pixel = pending.pop()
+            x = pixel % width
+            y = pixel // width
+            for neighbor in (
+                pixel - 1 if x > 0 else -1,
+                pixel + 1 if x < width - 1 else -1,
+                pixel - width if y > 0 else -1,
+                pixel + width if y < height - 1 else -1,
+            ):
+                if neighbor in remaining:
+                    remaining.remove(neighbor)
+                    component.add(neighbor)
+                    pending.append(neighbor)
+        if len(component) >= minimum_size:
+            for pixel in component:
+                pixels[pixel % width, pixel // width] = (0, 0, 0, 0)
+    return rgba
+
+
+def remove_tiny_islands(image: Image.Image, minimum_size: int = 20) -> Image.Image:
+    rgba = image.convert("RGBA")
+    pixels = rgba.load()
+    width, height = rgba.size
+    remaining = {
+        y * width + x
+        for y in range(height)
+        for x in range(width)
+        if pixels[x, y][3] > 0
+    }
+    while remaining:
+        component = {remaining.pop()}
+        pending = list(component)
+        while pending:
+            pixel = pending.pop()
+            x = pixel % width
+            y = pixel // width
+            for neighbor_y in range(max(0, y - 1), min(height, y + 2)):
+                for neighbor_x in range(max(0, x - 1), min(width, x + 2)):
+                    neighbor = neighbor_y * width + neighbor_x
+                    if neighbor in remaining:
+                        remaining.remove(neighbor)
+                        component.add(neighbor)
+                        pending.append(neighbor)
+        if len(component) < minimum_size:
+            for pixel in component:
+                pixels[pixel % width, pixel // width] = (0, 0, 0, 0)
+    return rgba
+
+
 def remove_enclosed_chroma_green(image: Image.Image) -> Image.Image:
     rgba = image.convert("RGBA")
     pixels = rgba.load()
@@ -191,6 +307,40 @@ def despill_exterior_green(image: Image.Image, depth: int = 2) -> Image.Image:
     return rgba
 
 
+def shrink_single_cell_source(image: Image.Image) -> Image.Image:
+    bounds = image.getchannel("A").getbbox()
+    if bounds is None:
+        raise ValueError("working source has no visible silhouette to shrink")
+    cell_width = image.width // 3
+    cell_height = image.height // 2
+    maximum_width = round(cell_width * 0.7)
+    maximum_height = round(cell_height * 0.7)
+    cropped = image.crop(bounds)
+    scale = min(maximum_width / cropped.width, maximum_height / cropped.height, 1.0)
+    width = max(1, round(cropped.width * scale))
+    height = max(1, round(cropped.height * scale))
+    resized = cropped.convert("RGBa").resize((width, height), Image.Resampling.LANCZOS).convert("RGBA")
+    fitted = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    fitted.alpha_composite(resized, ((cell_width - width) // 2, (cell_height - height) // 2))
+    return normalize_transparent_rgb(fitted)
+
+
+def shrink_cell_content(cell: Image.Image) -> Image.Image:
+    bounds = cell.getchannel("A").getbbox()
+    if bounds is None:
+        raise ValueError("working source selected shrink cell has no visible silhouette")
+    cropped = cell.crop(bounds)
+    maximum_width = round(cell.width * 0.7)
+    maximum_height = round(cell.height * 0.7)
+    scale = min(maximum_width / cropped.width, maximum_height / cropped.height, 1.0)
+    width = max(1, round(cropped.width * scale))
+    height = max(1, round(cropped.height * scale))
+    resized = cropped.convert("RGBa").resize((width, height), Image.Resampling.LANCZOS).convert("RGBA")
+    fitted = Image.new("RGBA", cell.size, (0, 0, 0, 0))
+    fitted.alpha_composite(resized, ((cell.width - width) // 2, (cell.height - height) // 2))
+    return normalize_transparent_rgb(fitted)
+
+
 def prepare_source(
     input_path: Path,
     output_path: Path,
@@ -199,6 +349,12 @@ def prepare_source(
     preserve_green_cells: frozenset[int],
     remove_enclosed_green_cells: frozenset[int],
     strip_low_alpha_green_edges: bool,
+    shrink_cells: frozenset[int],
+    remove_enclosed_magenta_cells: frozenset[int],
+    strip_low_alpha_magenta_edges: bool,
+    remove_tiny_islands_cells: frozenset[int],
+    approved_source_path: Path | None,
+    preserved_cells: frozenset[int],
 ) -> list[dict[str, object]]:
     if not input_path.is_file():
         raise ValueError(f"working source does not exist: {input_path}")
@@ -217,8 +373,19 @@ def prepare_source(
         )
     image = normalize_transparent_rgb(image)
 
+    approved_source = None
+    if approved_source_path is not None:
+        with Image.open(approved_source_path) as approved:
+            approved.load()
+            if approved.size != SOURCE_SIZE or approved.mode != "RGBA":
+                raise ValueError("approved source must be a 600x400 RGBA PNG")
+            approved_source = normalize_transparent_rgb(approved.copy())
+
     if image.width % 3 or image.height % 2:
         raise ValueError(f"working source must divide into an exact 3x2 grid: {image.size}")
+    fit_entire_source = used_cells == 1 and shrink_cells == frozenset({1})
+    if fit_entire_source:
+        image = shrink_single_cell_source(image)
 
     working_cell_width = image.width // 3
     working_cell_height = image.height // 2
@@ -232,6 +399,8 @@ def prepare_source(
             (column + 1) * working_cell_width,
             (row + 1) * working_cell_height,
         ))
+        if index + 1 in shrink_cells and not fit_entire_source:
+            working_cell = shrink_cell_content(working_cell)
         working_alpha = working_cell.getchannel("A")
         working_bounds = working_alpha.getbbox()
         working_extrema = working_alpha.getextrema()
@@ -255,6 +424,13 @@ def prepare_source(
         )
         if index + 1 in remove_enclosed_green_cells:
             prepared_cell = remove_enclosed_chroma_green(prepared_cell)
+        if index + 1 in remove_enclosed_magenta_cells:
+            prepared_cell = remove_large_enclosed_magenta(prepared_cell)
+        if strip_low_alpha_magenta_edges:
+            prepared_cell = remove_boundary_chroma_magenta(prepared_cell)
+            prepared_cell = strip_low_alpha_magenta(prepared_cell)
+        if index + 1 in remove_tiny_islands_cells:
+            prepared_cell = remove_tiny_islands(prepared_cell)
         if index + 1 not in preserve_green_cells:
             prepared_cell = remove_boundary_chroma_green(prepared_cell)
             prepared_cell = despill_exterior_green(prepared_cell)
@@ -264,6 +440,10 @@ def prepare_source(
         prepared_cell.paste((0, 0, 0, 0), (0, CELL_SIZE[1] - 1, CELL_SIZE[0], CELL_SIZE[1]))
         prepared_cell.paste((0, 0, 0, 0), (0, 0, 1, CELL_SIZE[1]))
         prepared_cell.paste((0, 0, 0, 0), (CELL_SIZE[0] - 1, 0, CELL_SIZE[0], CELL_SIZE[1]))
+        if index + 1 in preserved_cells:
+            left = column * CELL_SIZE[0]
+            top = row * CELL_SIZE[1]
+            prepared_cell = approved_source.crop((left, top, left + CELL_SIZE[0], top + CELL_SIZE[1]))
         source.alpha_composite(prepared_cell, (column * CELL_SIZE[0], row * CELL_SIZE[1]))
     cells: list[dict[str, object]] = []
     for index in range(6):
@@ -299,7 +479,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--preserve-green-cells", default="")
     parser.add_argument("--remove-enclosed-green-cells", default="")
     parser.add_argument("--strip-low-alpha-green", action="store_true")
+    parser.add_argument("--shrink-cells", default="")
+    parser.add_argument("--remove-enclosed-magenta-cells", default="")
+    parser.add_argument("--strip-low-alpha-magenta", action="store_true")
+    parser.add_argument("--remove-tiny-islands-cells", default="")
+    parser.add_argument("--preserve-cells-from", type=Path)
+    parser.add_argument("--preserve-cells", default="")
     return parser
+
+
+def parse_used_cells(value: str, option: str, used_cells: int) -> frozenset[int]:
+    try:
+        cells = frozenset(int(cell) for cell in value.split(",") if cell)
+    except ValueError as error:
+        raise ValueError(f"{option} must be a comma-separated cell list") from error
+    if any(cell < 1 or cell > used_cells for cell in cells):
+        raise ValueError(f"{option} must reference used cells")
+    return cells
 
 
 def main() -> int:
@@ -311,31 +507,28 @@ def main() -> int:
         print("--used-cells must be between 1 and 6", file=sys.stderr)
         return 2
     try:
-        preserve_green_cells = frozenset(
-            int(value)
-            for value in args.preserve_green_cells.split(",")
-            if value
+        preserve_green_cells = parse_used_cells(
+            args.preserve_green_cells, "--preserve-green-cells", args.used_cells,
         )
-    except ValueError:
-        print("--preserve-green-cells must be a comma-separated cell list", file=sys.stderr)
-        return 2
-    if any(cell < 1 or cell > args.used_cells for cell in preserve_green_cells):
-        print("--preserve-green-cells must reference used cells", file=sys.stderr)
-        return 2
-    try:
-        remove_enclosed_green_cells = frozenset(
-            int(value)
-            for value in args.remove_enclosed_green_cells.split(",")
-            if value
+        remove_enclosed_green_cells = parse_used_cells(
+            args.remove_enclosed_green_cells, "--remove-enclosed-green-cells", args.used_cells,
         )
-    except ValueError:
-        print("--remove-enclosed-green-cells must be a comma-separated cell list", file=sys.stderr)
-        return 2
-    if any(cell < 1 or cell > args.used_cells for cell in remove_enclosed_green_cells):
-        print("--remove-enclosed-green-cells must reference used cells", file=sys.stderr)
+        shrink_cells = parse_used_cells(args.shrink_cells, "--shrink-cells", args.used_cells)
+        remove_enclosed_magenta_cells = parse_used_cells(
+            args.remove_enclosed_magenta_cells, "--remove-enclosed-magenta-cells", args.used_cells,
+        )
+        remove_tiny_islands_cells = parse_used_cells(
+            args.remove_tiny_islands_cells, "--remove-tiny-islands-cells", args.used_cells,
+        )
+        preserved_cells = parse_used_cells(args.preserve_cells, "--preserve-cells", args.used_cells)
+    except ValueError as error:
+        print(error, file=sys.stderr)
         return 2
     if preserve_green_cells.intersection(remove_enclosed_green_cells):
         print("green cell preservation and enclosed removal cannot overlap", file=sys.stderr)
+        return 2
+    if bool(preserved_cells) != bool(args.preserve_cells_from):
+        print("--preserve-cells and --preserve-cells-from must be used together", file=sys.stderr)
         return 2
     try:
         cells = prepare_source(
@@ -346,6 +539,12 @@ def main() -> int:
             preserve_green_cells,
             remove_enclosed_green_cells,
             args.strip_low_alpha_green,
+            shrink_cells,
+            remove_enclosed_magenta_cells,
+            args.strip_low_alpha_magenta,
+            remove_tiny_islands_cells,
+            args.preserve_cells_from.expanduser().resolve() if args.preserve_cells_from else None,
+            preserved_cells,
         )
     except (OSError, ValueError) as error:
         print(f"equipment source preparation failed: {error}", file=sys.stderr)

@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "order": "row-major",
+  "entries": [
+    {
+      "index": 1,
+      "name": "암흑 군주의 망토",
+      "artNote": "wide cloak · 어둠 트림 + 그림자 tendril hem"
+    },
+    {
+      "index": 2,
+      "name": "광기의 갑주",
+      "artNote": "plate · 가시 숄더 + 분노 crack + rage eye"
+    },
+    {
+      "index": 3,
+      "name": "드래곤로드 갑주",
+      "artNote": "plate · 용비늘 텍스처 + 뿔 숄더"
+    },
+    {
+      "index": 4,
+      "name": "심해의 수호복",
+      "artNote": "plate · 비늘 표면 + 산호 숄더 + 심해 진주 코어"
+    },
+    {
+      "index": 5,
+      "name": "혼돈의 갑주",
+      "artNote": "plate · 가시 숄더 + 혼돈 Z-crack + 공허 코어"
+    },
+    {
+      "index": 6,
+      "name": "세계수의 로브",
+      "artNote": "robe · 잎 소매 + 가지 허리띠 + 넝쿨 중앙 트림"
+    },
+    {
+      "index": 7,
+      "name": "에테르 그리모어",
+      "artNote": "focus grimoire · 체인 잠금 + 룬 커버"
+    },
+    {
+      "index": 8,
+      "name": "천공 성전",
+      "artNote": "focus offhand · 황금 십자가 엠블럼 성서"
+    },
+    {
+      "index": 9,
+      "name": "차원 방패 이지스",
+      "artNote": "hex tower shield · 프리즘 중앙 균열"
+    },
+    {
+      "index": 10,
+      "name": "바람의 궁극",
+      "artNote": "2H longbow · 바람 깃털 액센트"
+    },
+    {
+      "index": 11,
+      "name": "그림자 절단기",
+      "artNote": "1H · 곡선 falchion + 어둠 rim"
+    },
+    {
+      "index": 12,
+      "name": "영혼 절단자",
+      "artNote": "1H dagger · 훅형 블레이드 + 영혼 오브 + 혼 연기"
+    },
+    {
+      "index": 13,
+      "name": "마왕의 대낫",
+      "artNote": "어둠 2H · 상단 단일 곡선 블레이드"
+    },
+    {
+      "index": 14,
+      "name": "성스러운 창",
+      "artNote": "2H spear · 황금 창촉 + 옆 나부끼는 깃발"
+    },
+    {
+      "index": 15,
+      "name": "차원 마왕의 낫",
+      "artNote": "어둠 2H · 상하 이중 블레이드(차원 균열)"
+    },
+    {
+      "index": 16,
+      "name": "세계수의 지팡이",
+      "artNote": "2H staff · 가지형 상단 + 잎 액센트"
+    },
+    {
+      "index": 17,
+      "name": "신전 도시의 지팡이",
+      "artNote": "2H staff · 제관 원반 + 중앙 십자 레이"
+    },
+    {
+      "index": 18,
+      "name": "천벌의 지팡이",
+      "artNote": "2H staff · 십자 상단 + 후광 링"
+    },
+    {
+      "index": 19,
+      "name": "대지의 심판",
+      "artNote": "2H warhammer · 네모 대형 헤드 + 대지 룬 + 중앙 코어"
+    },
+    {
+      "index": 20,
+      "name": "라그나로크",
+      "artNote": "화염 2H · 넓은 블레이드 + flared crossguard"
+    },
+    {
+      "index": 21,
+      "name": "빙결의 왕관검",
+      "artNote": "1H · 크리스탈 블레이드 + 왕관 펌멜"
+    },
+    {
+      "index": 22,
+      "name": "성검 에테르니아",
+      "artNote": "빛 1H · 황금 십자가드 + 펌멜 보석"
+    },
+    {
+      "index": 23,
+      "name": "세계수의 검",
+      "artNote": "1H · 잎사귀형 블레이드 + 넝쿨 감긴 grip"
+    },
+    {
+      "index": 24,
+      "name": "에테르 거인의 대검",
+      "artNote": "2H greatsword · 거인 룬 슬릿 블레이드 + 2겹 crossguard"
+    },
+    {
+      "index": 25,
+      "name": "용의 화염",
+      "artNote": "2H · 불꽃 형상 블레이드 + 드래곤 발톱 crossguard"
+    }
+  ]
+}

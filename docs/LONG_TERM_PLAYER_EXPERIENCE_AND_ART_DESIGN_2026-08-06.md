@@ -251,12 +251,12 @@ Tier는 glow의 세기로만 표현하지 않는다. 형태, 재질, 장식 밀�
 - 18개 exact mapping과 fallback 방지 테스트를 추가한다.
 - 직업 선택, 상태, 전투 화면을 desktop/mobile에서 검증한다.
 
-### Phase 3 — 233개 장비 art
+### Phase 3 — 229개 player 장비 art
 
 - 22개 illustration family의 대표 silhouette를 확정한다.
 - 일반 장비를 family와 Tier cohort로 나눠 통일한다.
 - signature와 mythic 장비를 같은 광원과 export 규격으로 맞춘다.
-- 233개 exact manifest, contact sheet, 축소 가독성 검사를 통과한다.
+- `ITEMS.weapons + ITEMS.armors`의 229개 exact manifest, contact sheet, 축소 가독성 검사를 통과한다. Modifier prefix template은 player 장비로 세지 않는다.
 - signature overlay와 일반 장비의 job/loadout preview가 기존 runtime 결정과 일치하는지 확인한다.
 
 ### Phase 4 — 직업 발견 기록과 귀환 연결
@@ -283,7 +283,7 @@ Tier는 glow의 세기로만 표현하지 않는다. 형태, 재질, 장식 밀�
 5. 활, 지팡이, 창, 채찍 cohort
 6. 방패, 마도서, 머리 장비 cohort
 7. 방어구 cohort
-8. signature, mythic, exact manifest 전수 정합
+8. signature, mythic, 229-item exact manifest 전수 정합
 9. 직업 발견 기록과 귀환 연결
 10. RC 검증과 release evidence
 

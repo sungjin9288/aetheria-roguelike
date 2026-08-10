@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "batchId": "signature-mythic-offhand-shield-01",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "cohort": "signature-mythic",
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "cellOrder": [
+      "top-left",
+      "top-center",
+      "top-right",
+      "bottom-left",
+      "bottom-center",
+      "bottom-right"
+    ]
+  },
+  "identityNames": [
+    "차원 방패 이지스"
+  ],
+  "identities": [
+    {
+      "cell": "top-left",
+      "name": "차원 방패 이지스",
+      "type": "shield",
+      "tier": 6,
+      "elem": "빛",
+      "familyKey": "offhand-shield",
+      "runtimePath": "/assets/equipment-exact/signature-shield-aegis-dimension.png",
+      "cohort": "signature-mythic",
+      "spriteKey": "signature-shield-aegis-dimension",
+      "signatureTier": "legendary",
+      "tone": "holy",
+      "category": "set-core",
+      "setGroup": "dimension",
+      "artNote": "hex tower shield · 프리즘 중앙 균열",
+      "itemPrompt": "Signature item illustration for 차원 방패 이지스. Live identity: type shield, family offhand-shield, tier 6, element 빛. Registry art direction: hex tower shield · 프리즘 중앙 균열. Preserve that named silhouette and material construction; this must not read as a generic family recolor. One isolated equipment icon only, upper-left light, lower-right shadow, two-level dark outline, transparent background, no text, no frame, no full-canvas aura. Keep the complete silhouette readable at both 160px and 32px with transparent padding on every side.",
+      "overlayPrompt": "Signature wearable overlay for 차원 방패 이지스. Live identity: type shield, family offhand-shield, tier 6, element 빛. Registry art direction: hex tower shield · 프리즘 중앙 균열. Draw only the isolated wearable equipment layer that can be composited over the existing 72x72 character avatar; never draw a body, face, hands, base character, text, frame, or background. Preserve the same named silhouette, material, upper-left light, lower-right shadow, and two-level dark outline as the item illustration. Keep transparent padding on every side and avoid detached decorative particles that would float away from the equipped object."
+    }
+  ],
+  "itemPrompt": "Aetheria Roguelike signature equipment source sheet.\nCreate a transparent 2x3 grid with 1 isolated identity in fixed row-major order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nNo labels, text, border, character body, shared pedestal, or object may touch or cross a cell boundary.\nEvery used cell must contain transparent padding and every identity must differ by silhouette and construction, not color alone.\nLeave unused trailing cells completely transparent: top-center, top-right, bottom-left, bottom-center, bottom-right.\nSurface: item icon master. Use the full equipment silhouette with upper-left light and readable 160px/32px detail.\ntop-left: Signature item illustration for 차원 방패 이지스. Live identity: type shield, family offhand-shield, tier 6, element 빛. Registry art direction: hex tower shield · 프리즘 중앙 균열. Preserve that named silhouette and material construction; this must not read as a generic family recolor. One isolated equipment icon only, upper-left light, lower-right shadow, two-level dark outline, transparent background, no text, no frame, no full-canvas aura. Keep the complete silhouette readable at both 160px and 32px with transparent padding on every side.",
+  "overlayPrompt": "Aetheria Roguelike signature equipment source sheet.\nCreate a transparent 2x3 grid with 1 isolated identity in fixed row-major order: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.\nNo labels, text, border, character body, shared pedestal, or object may touch or cross a cell boundary.\nEvery used cell must contain transparent padding and every identity must differ by silhouette and construction, not color alone.\nLeave unused trailing cells completely transparent: top-center, top-right, bottom-left, bottom-center, bottom-right.\nSurface: wearable overlay master. Draw isolated wearable overlay layers for the existing 72x72 avatar and no character body.\ntop-left: Signature wearable overlay for 차원 방패 이지스. Live identity: type shield, family offhand-shield, tier 6, element 빛. Registry art direction: hex tower shield · 프리즘 중앙 균열. Draw only the isolated wearable equipment layer that can be composited over the existing 72x72 character avatar; never draw a body, face, hands, base character, text, frame, or background. Preserve the same named silhouette, material, upper-left light, lower-right shadow, and two-level dark outline as the item illustration. Keep transparent padding on every side and avoid detached decorative particles that would float away from the equipped object."
+}
