@@ -245,6 +245,12 @@ test('explore action carries the injected RNG through AI fallback selection', as
             loc: '버려진 광산',
             history: [],
             eventChainProgress: {},
+            activeExpedition: { id: 'expedition-rng-test', explores: 0 },
+            stats: {
+                ...structuredClone(INITIAL_STATE.player.stats),
+                explores: 1,
+                exploreState: { ...structuredClone(INITIAL_STATE.player.stats.exploreState), sinceNarrativeEvent: 1 },
+            },
         };
         const draws = [0.99, 0.99, 0, 0.99, 0];
         let drawCount = 0;

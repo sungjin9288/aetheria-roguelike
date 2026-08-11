@@ -19,6 +19,8 @@
     "toss:soft-launch:verify": "node scripts/verify-toss-soft-launch-report.mjs",
     "progression:simulate": "node --import tsx scripts/simulate-progression.mjs",
     "progression:compare": "node --import tsx scripts/compare-progression.mjs",
+    "content:verify": "node --import tsx scripts/verify-content-reachability.mjs --verify docs/evidence/qa/release-complete-core/content-reachability.json",
+    "pacing:verify": "node --import tsx scripts/compare-exploration-rhythm.mjs --seed-start 20260810 --seed-count 64 --verify docs/evidence/qa/release-complete-core/exploration-rhythm.json",
     "assets:brand": "python3 scripts/generate_app_brand_assets.py",
     "art:catalog": "node --import tsx scripts/artCatalog.mjs --stdout",
     "art:verify": "node --import tsx scripts/verify-art-assets.mjs",

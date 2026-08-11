@@ -45,8 +45,17 @@ export const BASELINE_PROGRESSION_PROFILE: Readonly<ProgressionProfile> = Object
     eventMultiplier: 1,
 });
 
+export const EXPLORATION_RHYTHM_PROFILE: Readonly<ProgressionProfile> = Object.freeze({
+    id: 'exploration-rhythm',
+    version: 2,
+    expMultiplier: 1,
+    lootMultiplier: 1,
+    eventMultiplier: 0.8,
+});
+
 const PROFILE_REGISTRY: Readonly<Record<string, Readonly<ProgressionProfile>>> = Object.freeze({
     'baseline@1': BASELINE_PROGRESSION_PROFILE,
+    'exploration-rhythm@2': EXPLORATION_RHYTHM_PROFILE,
 });
 
 export const resolveProgressionProfile = (reference: unknown): Readonly<ProgressionProfile> => {
