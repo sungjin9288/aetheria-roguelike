@@ -41,6 +41,7 @@ const EventPanel = ({ currentEvent, actions, location }: EventPanelProps) => {
                 backLabel="복귀"
                 backTestId="event-close"
                 rightSlot={<SignalBadge tone="resonance" size="sm">{panelCopy.kind}</SignalBadge>}
+                bleedClassName=""
             />
 
             <div data-testid="event-situation" className="shrink-0 border-l-2 border-[#7dd4d8]/45 bg-[#7dd4d8]/[0.05] px-3 py-3 text-white">

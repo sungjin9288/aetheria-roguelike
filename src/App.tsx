@@ -1,4 +1,4 @@
-import { useState, useRef, lazy, Suspense, useEffect } from 'react';
+import { useState, useRef, lazy, Suspense, useCallback, useEffect } from 'react';
 import { MotionConfig } from 'framer-motion';
 
 import { GS } from './reducers/gameStates';
@@ -64,7 +64,45 @@ function App() {
     /* eslint-disable-next-line react-hooks/refs */
     mirrorPanelOpenRef.current = mirrorPanelOpen;
     const [platformBackRegistry] = useState(createPlatformBackRegistry);
-    useRuntimeGameTestApi(engineRef, fullStatsRef, platformBackRegistry);
+
+    const handlePlatformBack = useCallback(() => {
+        if (platformBackRegistry.handleBack()) return true;
+        const currentEngine = engineRef.current;
+        const summary = currentEngine.player?.lastExpeditionSummary;
+        const action = resolvePlatformBackAction({
+            premiumShopOpen: premiumShopOpenRef.current,
+            mirrorPanelOpen: mirrorPanelOpenRef.current,
+            expeditionDebriefOpen: Boolean(
+                summary && (currentEngine.expeditionDebriefOpen || !summary.reviewedAt),
+            ),
+            postCombatOpen: Boolean(currentEngine.postCombatResult),
+            gameState: currentEngine.gameState,
+        });
+        switch (action) {
+            case 'close-premium':
+                setPremiumShopOpen(false);
+                return true;
+            case 'close-mirror':
+                setMirrorPanelOpen(false);
+                return true;
+            case 'close-debrief':
+                currentEngine.actions.closeExpeditionDebrief?.();
+                return true;
+            case 'close-post-combat':
+                currentEngine.actions.clearPostCombat?.();
+                return true;
+            case 'dismiss-event':
+                currentEngine.actions.dismissEvent?.();
+                return true;
+            case 'close-focus-panel':
+                currentEngine.actions.setGameState?.(GS.IDLE);
+                return true;
+            case 'close-app':
+                return false;
+        }
+    }, [platformBackRegistry]);
+
+    useRuntimeGameTestApi(engineRef, fullStatsRef, handlePlatformBack);
 
     useEffect(() => bindLifecycleBridge({
         environment: getRuntimeEnvironment(),
@@ -72,45 +110,10 @@ function App() {
             onBackground: () => {
                 void engineRef.current.flushLocalSave();
             },
-            onBack: () => {
-                if (platformBackRegistry.handleBack()) return true;
-                const currentEngine = engineRef.current;
-                const summary = currentEngine.player?.lastExpeditionSummary;
-                const action = resolvePlatformBackAction({
-                    premiumShopOpen: premiumShopOpenRef.current,
-                    mirrorPanelOpen: mirrorPanelOpenRef.current,
-                    expeditionDebriefOpen: Boolean(
-                        summary && (currentEngine.expeditionDebriefOpen || !summary.reviewedAt),
-                    ),
-                    postCombatOpen: Boolean(currentEngine.postCombatResult),
-                    gameState: currentEngine.gameState,
-                });
-                switch (action) {
-                    case 'close-premium':
-                        setPremiumShopOpen(false);
-                        return true;
-                    case 'close-mirror':
-                        setMirrorPanelOpen(false);
-                        return true;
-                    case 'close-debrief':
-                        currentEngine.actions.closeExpeditionDebrief?.();
-                        return true;
-                    case 'close-post-combat':
-                        currentEngine.actions.clearPostCombat?.();
-                        return true;
-                    case 'dismiss-event':
-                        currentEngine.actions.dismissEvent?.();
-                        return true;
-                    case 'close-focus-panel':
-                        currentEngine.actions.setGameState?.(GS.IDLE);
-                        return true;
-                    case 'close-app':
-                        return false;
-                }
-            },
+            onBack: handlePlatformBack,
             onError: (error) => console.warn('Platform lifecycle bridge unavailable', error),
         },
-    }), [platformBackRegistry]);
+    }), [handlePlatformBack]);
 
     // Performance marks
     useEffect(() => {

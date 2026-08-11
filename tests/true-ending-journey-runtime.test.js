@@ -26,7 +26,7 @@ test('true ending journey test API exposes bounded state, boss weakening, save a
     assert.match(source, /armNextExploreSeed/);
     assert.match(source, /weakenTrueBossForJourney/);
     assert.match(source, /enemy\?\.baseName !== '원시의 신'/);
-    assert.match(source, /triggerPlatformBack:\s*\(\)\s*=>\s*platformBackRegistry\?\.handleBack\(\) \?\? false/);
+    assert.match(source, /triggerPlatformBack:\s*\(\)\s*=>\s*handlePlatformBack\?\.\(\) \?\? false/);
     assert.match(source, /flushLocalSave:\s*\(\)\s*=>\s*engineRef\.current\.flushLocalSave\(\)/);
-    assert.match(app, /useRuntimeGameTestApi\(engineRef, fullStatsRef, platformBackRegistry\)/);
+    assert.match(app, /useRuntimeGameTestApi\(engineRef, fullStatsRef, handlePlatformBack\)/);
 });

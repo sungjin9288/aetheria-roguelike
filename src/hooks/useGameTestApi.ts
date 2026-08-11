@@ -22,6 +22,11 @@ import {
 import { readDeviceQaSnapshot } from '../utils/localGameSnapshot';
 import { createDailyProtocol, getProtocolDayKey, getProtocolWeekKey } from '../utils/protocolCycle';
 import { buildClassVitals } from './gameActions/_shared';
+import { BOUNDED_ENCOUNTERS } from '../data/boundedEncounters';
+import { buildBoundedEncounterEvent } from '../utils/boundedEncounterEvent';
+import { startExpedition } from '../utils/expeditionLedger';
+import { EXPLORATION_RHYTHM_PROFILE } from '../data/progressionProfiles';
+import { advanceExploreState } from '../utils/explorationPacing';
 
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
 
@@ -86,7 +91,7 @@ const buildReturnBriefingScenarioPlayer = (player: any, now: Date) => {
 export const useGameTestApi = (
     engineRef: any,
     fullStatsRef: any,
-    platformBackRegistry?: { handleBack: () => boolean },
+    handlePlatformBack?: () => boolean,
 ) => {
     useEffect(() => {
         if (typeof window === 'undefined' || !isMockRuntime()) return undefined;
@@ -315,6 +320,9 @@ export const useGameTestApi = (
                     classJourneySequence: e.player.classJourney?.sequence || 0,
                     activeExpeditionId: e.player.activeExpedition?.id || '',
                     lastExpeditionSummaryId: e.player.lastExpeditionSummary?.id || '',
+                    boundedEncounterReceiptKeys: Object.keys(
+                        e.player.eventChainProgress?.boundedEncounterReceipts || {},
+                    ),
                     loc: e.player.loc,
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
@@ -336,6 +344,8 @@ export const useGameTestApi = (
                     ? {
                         desc: safeText(e.currentEvent.desc, ''),
                         choices: safeList(e.currentEvent.choices, '[choice]'),
+                        boundedEncounterId: e.currentEvent.boundedEncounterId || '',
+                        boundedOccurrenceSequence: e.currentEvent.boundedOccurrenceSequence || 0,
                     }
                     : null,
                 pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((r: any) => r.name) : null,
@@ -555,7 +565,7 @@ export const useGameTestApi = (
             markPerf: (name: any) => markPerf(name),
             resetGame: () => engineRef.current.actions.reset?.(),
             flushLocalSave: () => engineRef.current.flushLocalSave(),
-            triggerPlatformBack: () => platformBackRegistry?.handleBack() ?? false,
+            triggerPlatformBack: () => handlePlatformBack?.() ?? false,
             armNextCombatSeed: (seed: any) => {
                 if (!Number.isSafeInteger(seed) || seed < 0 || seed > 0xffffffff) return false;
                 document.documentElement.dataset.aetheriaCombatSeed = String(seed);
@@ -1417,6 +1427,67 @@ export const useGameTestApi = (
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+            },
+            seedBoundedEncounterScenario: (region: any, encounterId: any) => {
+                const er = engineRef.current;
+                const encounter = BOUNDED_ENCOUNTERS.find((entry: any) => (
+                    entry.id === encounterId && entry.region === region
+                ));
+                if (!encounter) return false;
+                const basePlayer = structuredClone(INITIAL_STATE.player);
+                const classJourney = classJourneyScenario();
+                const seededPlayer: any = {
+                    ...basePlayer,
+                    name: er.player.name || '지역 사건 검증',
+                    job: encounter.id === 'plain-bandit-banner' ? '전사' : '모험가',
+                    loc: region,
+                    hp: encounter.id === 'forest-mutated-trail' ? 80 : 120,
+                    maxHp: 150,
+                    mp: 40,
+                    maxMp: 60,
+                    stats: {
+                        ...(basePlayer.stats || {}),
+                        explores: 0,
+                        exploreState: { ...(basePlayer.stats?.exploreState || {}), sinceNarrativeEvent: 0 },
+                    },
+                    eventChainProgress: { lost_wizard: 99 },
+                    classJourney,
+                    activeExpedition: null,
+                };
+                const expeditionPlayer = startExpedition(
+                    seededPlayer,
+                    region,
+                    Date.now(),
+                    DB.QUESTS,
+                    EXPLORATION_RHYTHM_PROFILE,
+                );
+                const occurrenceSequence = Number(expeditionPlayer.stats?.explores || 0) + 1;
+                const eventPlayer = {
+                    ...expeditionPlayer,
+                    stats: {
+                        ...expeditionPlayer.stats,
+                        explores: occurrenceSequence,
+                        exploreState: advanceExploreState(
+                            expeditionPlayer.stats,
+                            'narrative_event',
+                        ),
+                    },
+                };
+                er.dispatch({ type: AT.SET_PLAYER, payload: eventPlayer });
+                er.dispatch({ type: AT.SET_EVENT, payload: buildBoundedEncounterEvent(encounter, occurrenceSequence) });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+                return true;
+            },
+            resolveBoundedEncounterChoice: (
+                encounterId: string,
+                choiceId: string,
+                expeditionId: string,
+                occurrenceSequence: number,
+            ) => {
+                engineRef.current.dispatch({
+                    type: AT.RESOLVE_BOUNDED_ENCOUNTER_CHOICE,
+                    payload: { encounterId, choiceId, expeditionId, occurrenceSequence },
+                });
             },
             showReturnBriefingScenario: () => {
                 const er = engineRef.current;
