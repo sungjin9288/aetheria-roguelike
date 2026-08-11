@@ -1,27 +1,32 @@
-Checkpoint (2026-08-11: release-complete core repository implementation and full gate):
+Checkpoint (2026-08-11: content pacing, bounded encounters, and local packages):
 - Apps in Toss setup and publication remain on HOLD while the game core is completed first. A shared permanent-player-state authority now preserves class journey, accessibility/detail settings, the canonical endgame ledger, expedition sequence, and return-supply receipts across defeat, manual reset, and ascension while run-only state resets.
 - Migrated legacy primal shards into a permanent bounded ledger and moved Demon King shard acquisition, final-shard unlock, true-boss spawn/consume, and receipt replay into the reducer-owned combat transaction. The natural True Ending route now works without keeping shard items in run inventory.
 - Kept own-grave recovery, disabled the unsafe client-only public-grave invasion behind a production-false capability, and closed True Ending/New Game+ mobile behavior with immediate skip, reduced motion, safe-area scrolling, deterministic presentation, back consumption, 44px actions, duplicate-click protection, and reload.
-- Removed only behavior-proven dead `inventorySpotlight` and `archivedHistory` runtime plumbing. Added a fail-closed bounded-encounter schema/eligibility/receipt foundation and observation-bound region selector, but left production data empty and disabled because no final-candidate human observations exist.
+- Removed only behavior-proven dead `inventorySpotlight` and `archivedHistory` runtime plumbing. Activated four bounded encounters in `고요한 숲` and `서쪽 평원`; canonical choice binding, effective-HP eligibility, atomic cost/reward settlement, receipt replay, and save migration fail closed.
+- Reduced scout probability to `0.15`, required one ordinary exploration result between optional decisions, and pinned `exploration-rhythm@2` to an event-only multiplier of `0.8`. No EXP or loot multiplier changed.
 - Exercised the production UI journey from fresh start through move, story event, seeded production explore/combat, safe return, equipment decision, job change, and skill branch. Exercised final shard through true boss, True Ending, New Game+, and reload through real combat/reducer actions.
 
 Verification:
 - Focused Plan A-C integration -> `1276/1276` pass; combined release-complete/True Ending/grave/ascension E2E -> `11/11` pass.
 - Final-review regressions -> runtime-mode production boundary `6/6`; exact Demon King and combat outcome dependencies `197/197` pass.
-- Observation evidence RED→GREEN -> schema-v2 selector/runbook requires five complete candidate-bound human journeys, unique attachment hashes, save/background restore, mobile back results, contiguous accepted actions, bidirectional issue links, and P0 0/blocking P1 0. Focused observation/encounter tests `22/22`; the pending summary exits `1` and writes no selection.
-- `npm run verify` -> type-check, lint, unit `3946/3946`, build guard pass.
-- `npm run verify:full` -> repository gate, desktop/mobile smoke, E2E `51/51 + 48/48` pass. Desktop smoke retained the existing post-assertion `browser.close timeout` best-effort shutdown log; the mobile smoke and both E2E shards passed.
+- Content/pacing focused suite -> `61/61` pass with two independent reviews, Important `0`.
+- `npm run content:verify` -> report SHA-256 `a662637574c9cdd51d4be1aa02e7c9176beff9ad66c618647ac4344b34b4f0e8`; checkpoint reachability `1/5/5/6/13/18/18`, job snapshots `18`.
+- `npm run pacing:verify` -> report SHA-256 `7d903b8219911946378703421f4c6cf6f90c9e524d2a6abdb2066eab4072bfe2`; predecessor gap p10/p50/p90 `1/2/6`, candidate `2/4/9`.
+- Observation schema v2 still requires five complete candidate-bound human journeys, unique attachment hashes, save/background restore, mobile back results, contiguous accepted actions, bidirectional issue links, and P0 0/blocking P1 0. The new summary is unbound `0/5` and writes no selection.
+- `npm run verify` -> type-check, lint, unit `3973/3973`, build guard pass.
+- `npm run verify:full` -> repository gate, desktop/mobile smoke, E2E `52/52 + 50/50` pass. Desktop smoke retained the existing post-assertion `browser.close timeout` best-effort shutdown log; the mobile smoke and both E2E shards passed.
 - `AETHERIA_RUN_PERF=1 bash scripts/local-playtest.sh` -> fresh QA build, desktop/mobile smoke and performance guards pass. Desktop intro/start/first-action/market measured `398.3/100.6/25.4/42.6 ms`; mobile measured `414.6/129.7/6.8/67.8 ms`.
 - `npm run art:verify` -> character `18`, equipment `229`, family `22`, signature overlay `25`; every error array empty.
 - `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, `npm run ios:build:device`, and `git diff --check` -> pass. Android recovered an initial shared Gradle-cache metadata failure through the repository clean-cache retry.
-- Latest Android debug APK: `214642610` bytes, SHA-256 `4c20b80200f88cafcae560c254c8903766a358bf81dc37f72fb8093c2555d46f`. Unsigned iOS `.app` aggregate: `1804` files / `218762955` bytes, SHA-256 `e337d06c0402f2f5912ed2e80952269ee9fc9b82f6b1b6a13b14259b64f55196`. Tracked Android/iOS drift is zero.
+- Content implementation commits are `ea28b09`, `f10f66a`, and `ca9e1d0`. Latest Android debug APK: `214646216` bytes, SHA-256 `5b36d5fbf1153a60eef5dda291b2c5b1f1490c3e50364b5f81ea6f8f8f8e2f3a`. Unsigned iOS arm64 executable: `102376` bytes, SHA-256 `6372d559d57e897c21f87244863be80a792e7db279c8d9e1deef6ec53306292f`. Tracked Android/iOS drift is zero.
 - The paired iPhone is currently USB-available, but `npm run ios:archive:fresh-qa` stopped before archive creation with Xcode exit `65` (`No Accounts`; no profile for `com.aetheria.roguelike.freshqa`). No stale archive is counted. No Android device is attached.
-- The updated explicit-path temporary-index rehearsal selected exactly `90` release-complete paths, contained `0` `build/android/ios/historical Toss` paths, and passed cached diff check. The real repository index remains empty.
+- The earlier release-core commit `f9d463a` used the historical 90-path boundary. This close-out starts with an empty index and stages only the nine current tracked code/test/screenshot/ledger paths; `build/`, `android/`, `ios/`, and the untracked Toss release tree stay excluded.
 
 Boundary and next action:
-- The working tree is uncommitted and is not a final candidate. `observation-summary.json` has no candidate binding or human rows; the region selector exits 1 and writes no `region-selection.json`.
-- Therefore no regions or encounter families were guessed, the encounter pack remains false/empty, and prior Toss artifacts are superseded audit-only evidence. No Toss console, Sandbox, upload, review, publication, ad activation, signing, staging, commit, or push action was performed.
-- After explicit cohesive commit approval: bind candidate packages, collect at least five fresh human observations with P0 0/blocking P1 0, then select exactly two regions and author four bounded encounter families before repeating full gates.
+- `observation-summary.json` is reset to an unbound `0/5`. The old `1/5` session belongs to superseded commit `f9d463a` and is historical only.
+- The approved two regions and four encounter families are implemented and browser-verified. Push and tuning acceptance remain HOLD until five fresh candidate-bound human journeys complete with P0 0/blocking P1 0.
+- No Toss console, Sandbox, upload, review, publication, ad activation, signed distribution, or push action was performed.
+- Next: commit this ledger close-out, bind its exact source/artifact digests, and collect five fresh human observations before using the result as a tuning baseline.
 
 Original prompt: 설계 승인
 

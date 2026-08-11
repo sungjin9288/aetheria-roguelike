@@ -8,16 +8,17 @@ Status vocabulary is deliberately narrow:
 - `physical observed`: a human observed the exact candidate on a physical device.
 - `external blocker`: the named evidence cannot be produced inside the repository.
 
-The current branch is `codex/release-complete-core`, based on Git commit
-`8db86a2354730588c0243d33f7a81f3e76dbb60c`. The working tree is intentionally
-uncommitted, so there is no final candidate/source-tree binding yet. All prior Toss
-candidate and deployment evidence is superseded for this source and remains audit-only.
-The last repository-owned gate was executed on 2026-08-11 KST.
+The current branch is `codex/release-complete-core`. The content implementation is
+represented by commits `ea28b09`, `f10f66a`, and `ca9e1d0`. The observation candidate
+is deliberately unbound until the ledger close-out commit exists, so no previous
+human session is counted for these bytes. All prior Toss candidate and deployment
+evidence is superseded and remains audit-only. The last repository-owned gate was
+executed on 2026-08-11 KST.
 
 | Requirement | Current state | Direct evidence | Remaining gate |
 | --- | --- | --- | --- |
-| Fresh creation and first action | browser verified; final candidate pending | `tests/e2e/release-complete-core.spec.ts`, full smoke | fresh human candidate observation |
-| First move, explore, combat and safe return | browser verified; final candidate pending | production UI journey E2E, full smoke | fresh human candidate observation |
+| Fresh creation and first action | browser verified | `tests/e2e/release-complete-core.spec.ts`, full smoke | bind the ledger-closeout candidate and run fresh human observation |
+| First move, explore, combat and safe return | browser verified | production UI journey E2E, full smoke | fresh human candidate observation |
 | Equipment decision and level-5 job change | browser verified | `tests/e2e/release-complete-core.spec.ts` | fresh human candidate observation |
 | Skill branch and Class Journey | browser verified | production UI journey E2E and class-journey contracts | fresh human candidate observation |
 | Death preserves permanent progress | implemented | `tests/permanent-progress.test.js`, `tests/permanent-progress-copy.test.js` | physical-device observation |
@@ -35,21 +36,23 @@ The last repository-owned gate was executed on 2026-08-11 KST.
 | 375×667 geometry | browser verified | reduced-motion True Ending E2E | physical-device observation |
 | 390×844 geometry | browser verified | journey/True Ending/grave E2E; tracked screenshots below | physical-device observation |
 | 430×932 geometry | browser verified | skip/CTA True Ending E2E | physical-device observation |
-| Bounded encounter region selection | fail-closed tooling implemented | schema-v2 selector/runbook and `tests/encounter-region-selection.test.js` | five final-candidate complete human observations, P0 0/blocking P1 0 |
-| Bounded encounter schema, eligibility and receipt settlement | implemented but disabled | `tests/bounded-encounters.test.js`; production flag false and data empty | evidence-selected regions and content authoring |
-| Four bounded encounter families | blocked by evidence gate | none; intentionally not guessed | exactly two evidence-selected regions |
-| Repository gate | verified | focused `1276/1276`; final-review affected regressions `6/6 + 197/197`; observation/encounter `22/22`; unit `3946/3946`; E2E `51/51 + 48/48`; desktop/mobile perf pass; art errors 0 | final-candidate binding |
+| Bounded encounter region selection | implemented for the approved early slice | `고요한 숲`, `서쪽 평원`; schema-v2 selector/runbook and `tests/encounter-region-selection.test.js` | five final-candidate complete human observations before tuning acceptance |
+| Bounded encounter schema, eligibility and receipt settlement | implemented/browser verified | canonical catalog binding, eligibility, effective-HP settlement, receipt replay tests | candidate-bound human observation |
+| Four bounded encounter families | implemented/browser verified | four catalog entries, rendered choice/settlement/replay E2E at 375/390/430 widths | candidate-bound human observation |
+| Content reachability | verified | report SHA `a6626375...b4f0e8`; checkpoints `1/5/5/6/13/18/18`, job snapshots `18` | use live funnel before further expansion |
+| Exploration rhythm | verified | report SHA `7d903b82...72bfe2`; predecessor p10/p50/p90 `1/2/6`, candidate `2/4/9` | five human sessions before tuning acceptance |
+| Repository gate | verified on implementation bytes | focused content/pacing `61/61`; unit `3973/3973`; E2E `52/52 + 50/50`; desktop/mobile smoke; art errors 0; independent Important 0 | five human observations |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
 
 ## Current artifacts
 
-- Android debug APK: `214642610` bytes, SHA-256
-  `4c20b80200f88cafcae560c254c8903766a358bf81dc37f72fb8093c2555d46f`.
+- Android debug APK: `214646216` bytes, SHA-256
+  `5b36d5fbf1153a60eef5dda291b2c5b1f1490c3e50364b5f81ea6f8f8f8e2f3a`.
 - Unsigned iOS arm64 executable: `102376` bytes, SHA-256
   `6372d559d57e897c21f87244863be80a792e7db279c8d9e1deef6ec53306292f`.
-- Unsigned iOS `.app` aggregate: `1804` files, `218762955` bytes, SHA-256
-  `e337d06c0402f2f5912ed2e80952269ee9fc9b82f6b1b6a13b14259b64f55196`.
+- Content-pacing screenshots: `375x667 e834a4c0...8f28957`,
+  `390x844 00aa403d...0abad0`, `430x932 0a15d8fd...172ddc`.
 - True Ending/New Game+ 390×844 screenshot: SHA-256
   `0aec6b148d9ce09f11ed0ac3f1cebed9feb0eebc1035c755789f79971e6aabeb`.
 - Own-grave recovery 390×844 screenshot: SHA-256
@@ -69,6 +72,7 @@ The last repository-owned gate was executed on 2026-08-11 KST.
 - A source or artifact change invalidates prior region counts and physical observations.
 - `implemented`, `browser verified`, `native packaged`, `physical observed`, and
   `Toss resume eligible` are independent claims.
-- `region-selection.json` is intentionally absent. The selector currently exits `1`
-  with `INVALID_OBSERVATION_SUMMARY` and performs no write because the final
-  candidate and five fresh human observations do not exist.
+- `region-selection.json` is intentionally absent. The current summary is unbound and
+  contains `0/5` observations. The previous `1/5` record belongs to superseded commit
+  `f9d463a` and is historical only. Five fresh observations are required before push or
+  tuning acceptance; no selector output is written before that gate.

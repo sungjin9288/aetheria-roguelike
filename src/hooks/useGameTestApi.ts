@@ -1438,7 +1438,7 @@ export const useGameTestApi = (
                 const classJourney = classJourneyScenario();
                 const seededPlayer: any = {
                     ...basePlayer,
-                    name: er.player.name || '지역 사건 검증',
+                    name: '지역 사건 검증',
                     job: encounter.id === 'plain-bandit-banner' ? '전사' : '모험가',
                     loc: region,
                     hp: encounter.id === 'forest-mutated-trail' ? 80 : 120,

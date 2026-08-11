@@ -2746,7 +2746,7 @@ import { readFile, readdir } from 'node:fs/promises';
    * - body의 stats?.exploreState 가드 보존.
    *
    * 회귀 가드:
-   * - 4 internal callsite 동작 그대로.
+   * - optional spacing predicate를 포함한 5 internal callsite 동작 보존.
    * - body Math.max / DEFAULT_EXPLORE_STATE.lastOutcome 처리 보존.
    */
 
@@ -2764,10 +2764,10 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/\bstats\b/.test(sig), 'stats 파라미터 자체는 보존');
   });
 
-  test('cycle 554: 정합성 가드 — 4 internal callsite 보존', async () => {
+  test('cycle 554: 정합성 가드 — 5 internal callsite 보존', async () => {
       const source = await readSrc('src/utils/explorationPacing.ts');
       const calls = (source.match(/getExploreState\(/g) || []).length;
-      assert.equal(calls, 4, `getExploreState 사용처 4건 보존: ${calls}건`);
+      assert.equal(calls, 5, `getExploreState 사용처 5건 보존: ${calls}건`);
       assert.ok(/const getExploreState = \(stats/.test(source),
           'getExploreState 정의 보존');
   });
