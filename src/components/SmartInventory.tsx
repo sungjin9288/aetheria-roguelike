@@ -21,8 +21,6 @@ interface SmartInventoryProps {
     actions?: any;
     quickSlots?: any[];
     onAssignQuickSlot?: any;
-    spotlight?: any;
-    onClearSpotlight?: any;
 }
 
 /**
@@ -70,10 +68,7 @@ const getItemTags = (item: any) => {
 };
 
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-// cycle 574: quickSlots / spotlight / onClearSpotlight 3 defaults batch 제거 —
-//   cycle 452 주석의 future-proof 보존이 audit 결과 1 production caller
-//   (Dashboard:162) 모두 명시 전달이라 도달 불가. 청소 메가 시리즈 66번째.
-const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotlight, onClearSpotlight }: SmartInventoryProps) => {
+const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: SmartInventoryProps) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [detailOverride, setDetailOverride] = React.useState<boolean | null>(null);
     const [enhanceTarget, setEnhanceTarget] = React.useState<{ item: any; slot: EnhanceItemSlot } | null>(null);
@@ -84,8 +79,6 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
             ? getEnhancePreview(enhanceTarget.item, player.gold ?? 0, player.inv || [], enhanceTarget.slot)
             : null
     ), [enhanceTarget, player.gold, player.inv]);
-    const spotlightNames = useMemo(() => spotlight?.names || [], [spotlight]);
-    const spotlightSet = useMemo(() => new Set(spotlightNames), [spotlightNames]);
     const traitProfile = useMemo(
         () => getTraitProfile(player, { maxHp: player.maxHp, maxMp: player.maxMp }),
         [player]
@@ -158,37 +151,6 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
 
     return (
         <div className="space-y-3">
-            {spotlightNames.length > 0 && (
-                <Motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    data-testid="inventory-spotlight-detail"
-                    className="flex items-start justify-between gap-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[radial-gradient(circle_at_top_right,rgba(154,138,192,0.16),transparent_24%),linear-gradient(180deg,rgba(33,22,46,0.22)_0%,rgba(16,10,20,0.1)_100%)] px-3 py-2.5"
-                >
-                    <div className="min-w-0">
-                        <div className="text-xs font-fira uppercase tracking-[0.16em] text-[#e3dcff]/72">
-                            {spotlight?.title || MSG.UI_LOOT_FOCUS}
-                        </div>
-                        <div className="mt-1 text-sm font-fira text-slate-200/82 leading-snug">
-                            {spotlight?.detail || MSG.UI_LOOT_FOCUS_HINT}
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-1">
-                            {spotlightNames.slice(0, 3).map((name: any) => (
-                                <SignalBadge key={`spotlight_${name}`} tone="spotlight" size="sm">{name}</SignalBadge>
-                            ))}
-                        </div>
-                    </div>
-                    {onClearSpotlight && (
-                        <button
-                            onClick={() => onClearSpotlight()}
-                            className="shrink-0 rounded-full border border-white/8 bg-black/18 px-2.5 py-1 text-xs font-fira text-slate-300/76 hover:bg-white/[0.04]"
-                        >
-                            {MSG.UI_CLOSE}
-                        </button>
-                    )}
-                </Motion.div>
-            )}
-
             <div
                 data-testid="inventory-equipment-disclosure"
                 data-equipment-view={showDetails ? 'full' : 'summary'}
@@ -283,22 +245,18 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                         getEquipmentIdentity(player.equip?.weapon) === itemIdentity ||
                         getEquipmentIdentity(player.equip?.armor) === itemIdentity ||
                         getEquipmentIdentity(player.equip?.offhand) === itemIdentity;
-                    const isSpotlighted = spotlightSet.has(item.name);
                     const isSignature = isSignatureItem(item);
                     const resonance = getTraitItemResonance(item, traitProfile, player);
                     const enhanceState = getEnhanceAvailability(item, player.gold ?? 0, (player.inv || []));
                     const enhanceRequirement = enhanceState.requirement;
 
-                    // 우선순위: spotlight > signature > currentEquip > default
-                    const rowClass = isSpotlighted
-                        ? 'border border-[#9a8ac0]/30 bg-[#9a8ac0]/10 shadow-[0_0_16px_rgba(154,138,192,0.12)]'
-                        : isSignature
-                            ? 'border shadow-[0_0_14px_rgba(246,231,162,0.10)]'
-                            : isCurrentEquip
-                                ? 'border border-emerald-300/24 bg-emerald-300/[0.06]'
-                                : 'border border-white/8 aether-panel-muted hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]';
+                    const rowClass = isSignature
+                        ? 'border shadow-[0_0_14px_rgba(246,231,162,0.10)]'
+                        : isCurrentEquip
+                            ? 'border border-emerald-300/24 bg-emerald-300/[0.06]'
+                            : 'border border-white/8 aether-panel-muted hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]';
 
-                    const rowStyle = !isSpotlighted && isSignature
+                    const rowStyle = isSignature
                         ? {
                             borderColor: 'rgba(246,231,162,0.42)',
                             background: 'linear-gradient(180deg, rgba(246,231,162,0.08) 0%, rgba(18,16,10,0.72) 100%)',
@@ -341,7 +299,6 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
                                             ✦ 전설 각인
                                         </span>
                                     )}
-                                    {isSpotlighted && <SignalBadge tone="spotlight" size="sm">주목</SignalBadge>}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
                                     {showDetails && resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
                                     {!canEquip && <SignalBadge tone="danger" size="sm">직업 제한</SignalBadge>}

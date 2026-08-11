@@ -46,7 +46,7 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
                         data-testid="return-briefing-close-icon"
                         onClick={onClose}
                         aria-label={MSG.UI_CLOSE}
-                        className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+                        className="absolute right-3 top-3 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
                     >
                         <X size={16} />
                     </button>

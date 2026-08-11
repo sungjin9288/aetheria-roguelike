@@ -15,6 +15,8 @@ import { relicEffectMethods } from './CombatEngine.relics.js';
 import { actionMethods } from './CombatEngine.actions.js';
 import { enemyAIMethods } from './CombatEngine.enemyAI.js';
 import { queueMilestoneStoryBeat } from '../utils/milestoneStory.js';
+import { pickPermanentPlayerState } from '../utils/permanentProgress.js';
+import { createCurrentRunProgress } from '../utils/runProgress.js';
 
 /**
  * CombatEngine - Pure functions for combat calculations
@@ -261,9 +263,10 @@ export const CombatEngine = {
             ? buildGraveData(player, rng, now)
             : buildGraveData(player, Math.random, Date.now);
 
-        const starterState: any = { ...INITIAL_PLAYER };
-        const meta = { ...this.DEFAULT_META, ...(player.meta || {}) };
-        const prevStats = player.stats || starterState.stats || {};
+        const permanent = pickPermanentPlayerState(player, INITIAL_PLAYER);
+        const starterState: any = { ...INITIAL_PLAYER, ...permanent };
+        const meta = { ...this.DEFAULT_META, ...(permanent.meta || {}) };
+        const prevStats = permanent.stats || starterState.stats || {};
 
         // C-1 (B+ 2026-06): 첫 죽음에 영구 메타 보너스 — "죽어도 남는다"를 1회차에
         //   학습시켜 완전 리셋 페널티를 공정하게 완충. 메타는 RUN을 넘어 보존되어
@@ -284,6 +287,7 @@ export const CombatEngine = {
             //   영구 차단 → 같은 area의 signature 회수 봉인 + signaturePity counter도
             //   climb 불가 (보스 kill에서만 +=1). ASCEND/RESET_GAME과 정합성 align.
             areaBossDefeated: {},
+            currentRun: createCurrentRunProgress(prevStats),
         };
         starterState.meta = meta;
         starterState.achievements = Array.isArray(player.achievements) ? [...player.achievements] : [];
@@ -299,28 +303,6 @@ export const CombatEngine = {
             { ...DB.ITEMS.consumables[0], id: 'starter_1' },
             { ...DB.ITEMS.consumables[0], id: 'starter_2' }
         ];
-        // cycle 191: 죽음은 RUN 진행도 reset이지만 META 진행도(premium 자산 / 영구 칭호)는 보존.
-        //   cycle 119(6 영구 카운터) / cycle 188(ASCEND premium preserve) 패턴 확장 — 죽음에도 동일.
-        //   기존엔 INITIAL_PLAYER spread로 모두 reset되어 premium currency / 칭호 / 부활권 / 인벤
-        //   확장 슬롯이 사라지던 회귀.
-        starterState.titles = Array.isArray(player.titles) ? [...player.titles] : [];
-        starterState.activeTitle = player.activeTitle || null;
-        starterState.premiumCurrency = Math.max(0, Number((player as any).premiumCurrency) || 0);
-        starterState.reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0);
-        if ((player as any).maxInv !== undefined) {
-            starterState.maxInv = Math.max(20, Number((player as any).maxInv) || 20);
-        }
-        // seasonPass도 RUN 무관 — premium tier 진행도 보존.
-        if ((player as any).seasonPass) {
-            starterState.seasonPass = (player as any).seasonPass;
-        }
-        // cycle 214: 주간 미션 진행도 / claimed ledger 보존 — cycle 191 META preserve 시리즈 보강.
-        //   사망 후 mid-week 진행도(kills 35/50 등)와 claimed 미션이 wipe되던 회귀.
-        //   주 경계 자동 reset(exploreUtils.resetWeeklyProtocolIfNeeded)은 그대로 동작.
-        if ((player as any).weeklyProtocol) {
-            starterState.weeklyProtocol = (player as any).weeklyProtocol;
-        }
-
         const defeatLogs: any[] = [{ type: 'error', text: MSG.DEFEAT }];
         if (isFirstDeath) {
             defeatLogs.push({ type: 'system', text: MSG.FIRST_DEATH_META(BALANCE.FIRST_DEATH_BONUS_ATK, BALANCE.FIRST_DEATH_BONUS_HP) });

@@ -41,6 +41,7 @@ import { readFile } from 'node:fs/promises';
    */
 
   const buildAscendingState = (claimedAchievements) => ({
+      gameState: 'ascension',
       player: {
           name: 'Test',
           gender: 'male',
@@ -65,8 +66,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   const ASCEND_PAYLOAD = {
-      meta: { essence: 100, rank: 1, prestigeRank: 1, bonusAtk: 5, bonusHp: 50, bonusMp: 25 },
-      newTitle: '각성자',
+      expectedPrestigeRank: 0,
+      sourceReceiptKey: null,
   };
 
   test('cycle 202: ASCEND가 claimedAchievements를 보존', () => {
@@ -110,8 +111,8 @@ import { readFile } from 'node:fs/promises';
       assert.equal(next.player.stats.bossKills, 5);
       assert.equal(next.player.stats.total_gold, 5000);
       assert.equal(next.player.stats.deaths, 2);
-      // demonKingSlain은 +1
-      assert.equal(next.player.stats.demonKingSlain, 1);
+      // 처치 settlement에서 이미 수락된 값만 보존
+      assert.equal(next.player.stats.demonKingSlain, 0);
   });
 }
 
@@ -143,6 +144,7 @@ import { readFile } from 'node:fs/promises';
    */
 
   const buildAscendingState = (statsOverrides = {}) => ({
+      gameState: 'ascension',
       player: {
           name: 'Test',
           gender: 'male',
@@ -165,8 +167,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   const ASCEND_PAYLOAD = {
-      meta: { essence: 100, rank: 1, prestigeRank: 1, bonusAtk: 5, bonusHp: 50, bonusMp: 25 },
-      newTitle: '각성자',
+      expectedPrestigeRank: 0,
+      sourceReceiptKey: null,
   };
 
   test('cycle 203: ASCEND가 explores 카운터 보존', () => {
@@ -505,14 +507,14 @@ import { readFile } from 'node:fs/promises';
           `trueEndingFragments는 dead field이므로 src/ 어디에서도 참조되면 안 됨. offender: ${JSON.stringify(offenders)}`);
   });
 
-  test('cycle 206: 진 엔딩 inv-based 메커니즘 회귀 가드 (combatBossHandlers는 inv counting 유지)', () => {
-      // 별도 import 검증 — 진 엔딩 기능 자체는 inv 기반으로 정상 작동.
-      const file = path.join(ROOT, 'src/hooks/combatActions/combatBossHandlers.ts');
+  test('cycle 206: 진 엔딩은 permanent endgame ledger를 authority로 사용', () => {
+      const file = path.join(ROOT, 'src/systems/endgameSettlement.ts');
       const content = fs.readFileSync(file, 'utf-8');
       assert.ok(
-          content.includes(`'원시의 파편'`),
-          'combatBossHandlers.ts는 inv 기반 shard counting 유지',
+          content.includes('normalizeEndgameProgress') && content.includes('endgame.primalShards'),
+          'endgameSettlement.ts는 canonical meta ledger를 사용',
       );
+      assert.doesNotMatch(content, /inv[^\n]*원시의 파편|원시의 파편[^\n]*inv/);
   });
 }
 
@@ -741,6 +743,7 @@ import { readFile } from 'node:fs/promises';
 
   const buildState = (statsOverrides = {}) => ({
       ...INITIAL_STATE,
+      gameState: 'ascension',
       player: {
           ...INITIAL_STATE.player,
           name: 'Test',
@@ -758,8 +761,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   const ASCEND_PAYLOAD = {
-      meta: { essence: 100, rank: 1, prestigeRank: 1, bonusAtk: 5, bonusHp: 50, bonusMp: 25 },
-      newTitle: '각성자',
+      expectedPrestigeRank: 0,
+      sourceReceiptKey: null,
   };
 
   test('cycle 213: ASCEND가 bountyDate 보존', () => {
@@ -870,6 +873,7 @@ import { readFile } from 'node:fs/promises';
 
   const buildState = (weeklyProtocolOverride) => ({
       ...INITIAL_STATE,
+      gameState: 'ascension',
       player: {
           ...INITIAL_STATE.player,
           name: 'Test',
@@ -883,8 +887,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   const ASCEND_PAYLOAD = {
-      meta: { essence: 100, rank: 1, prestigeRank: 1, bonusAtk: 5, bonusHp: 50, bonusMp: 25 },
-      newTitle: '각성자',
+      expectedPrestigeRank: 0,
+      sourceReceiptKey: null,
   };
 
   const SAMPLE_WP = {
@@ -1001,6 +1005,7 @@ import { readFile } from 'node:fs/promises';
 
   const buildState = (statsOverrides = {}) => ({
       ...INITIAL_STATE,
+      gameState: 'ascension',
       player: {
           ...INITIAL_STATE.player,
           name: 'Test',
@@ -1018,8 +1023,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   const ASCEND_PAYLOAD = {
-      meta: { essence: 100, rank: 1, prestigeRank: 1, bonusAtk: 5, bonusHp: 50, bonusMp: 25 },
-      newTitle: '각성자',
+      expectedPrestigeRank: 0,
+      sourceReceiptKey: null,
   };
 
   const today = new Date().toDateString();
@@ -2954,7 +2959,8 @@ import { readFile } from 'node:fs/promises';
       ]);
       assert.ok(/prestigeRank:\s*nextRank/.test(outcome), 'prestigeRank 누적 유지');
       assert.ok(/essence:\s*toNonNegativeNumber\(currentMeta\.essence\)/.test(outcome), 'essence 누적 유지');
-      assert.ok(/payload:\s*\{ meta: outcome\.meta, newTitle: outcome\.title \}/.test(action), '공용 outcome dispatch 유지');
+      assert.ok(/expectedPrestigeRank:\s*outcome\.currentRank/.test(action), 'reducer recalculation rank contract 유지');
+      assert.ok(/sourceReceiptKey:/.test(action), 'accepted endgame receipt contract 유지');
       assert.ok(/titles:\s*\[\.\.\./.test(action), 'titles unique merge 유지');
   });
 }

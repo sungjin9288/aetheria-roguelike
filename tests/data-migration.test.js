@@ -338,6 +338,7 @@ test('legacy save → migrate → 진행 → ASCEND 후 카운터 보존', () =>
     // 3. 게임 진행 시뮬레이션 — 카운터 누적
     const inProgressState = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...migrated.player,
             stats: {
@@ -354,8 +355,8 @@ test('legacy save → migrate → 진행 → ASCEND 후 카운터 보존', () =>
     const afterAscend = gameReducer(inProgressState, {
         type: AT.ASCEND,
         payload: {
-            meta: { ...inProgressState.player.meta, prestigeRank: 1 },
-            newTitle: 'reborn',
+            expectedPrestigeRank: 0,
+            sourceReceiptKey: inProgressState.player.meta?.endgame?.lastEndgameReceiptKey ?? null,
         },
     });
 
@@ -366,7 +367,7 @@ test('legacy save → migrate → 진행 → ASCEND 후 카운터 보존', () =>
     assert.deepEqual(afterAscend.player.stats.discoveryChains, ['fire_convergence']);
     // 기존 보존 카운터도 정상
     assert.equal(afterAscend.player.stats.kills, 500);
-    assert.equal(afterAscend.player.stats.demonKingSlain, 1, 'demonKingSlain 증분');
+    assert.equal(afterAscend.player.stats.demonKingSlain, 0, 'accepted demonKingSlain 보존');
 });
 
 test('신규 플레이어: INITIAL_STATE → 진행 → ASCEND', () => {
@@ -380,6 +381,7 @@ test('신규 플레이어: INITIAL_STATE → 진행 → ASCEND', () => {
     // 진행 후 ASCEND
     const inProgressState = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...INITIAL_STATE.player,
             level: 50,
@@ -395,7 +397,7 @@ test('신규 플레이어: INITIAL_STATE → 진행 → ASCEND', () => {
 
     const afterAscend = gameReducer(inProgressState, {
         type: AT.ASCEND,
-        payload: { meta: { prestigeRank: 1 }, newTitle: 'reborn' },
+        payload: { expectedPrestigeRank: 0, sourceReceiptKey: null },
     });
 
     assert.equal(afterAscend.player.stats.escapes, 7);
@@ -403,9 +405,10 @@ test('신규 플레이어: INITIAL_STATE → 진행 → ASCEND', () => {
     assert.deepEqual(afterAscend.player.stats.discoveryChains, ['fire_convergence', 'frozen_truth']);
 });
 
-test('연속 ASCEND: 두 번 환생해도 카운터 보존 (regression — preserve 자체 회귀 방지)', () => {
+test('연속 ASCEND: 두 번 환생해도 accepted 처치 카운터만 보존', () => {
     let state = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...INITIAL_STATE.player,
             level: 50,
@@ -414,6 +417,7 @@ test('연속 ASCEND: 두 번 환생해도 카운터 보존 (regression — prese
                 escapes: 10,
                 maxKillStreak: 30,
                 discoveryChains: ['fire_convergence'],
+                demonKingSlain: 3,
             },
         },
     };
@@ -421,19 +425,19 @@ test('연속 ASCEND: 두 번 환생해도 카운터 보존 (regression — prese
     // 첫 번째 ASCEND
     state = gameReducer(state, {
         type: AT.ASCEND,
-        payload: { meta: { prestigeRank: 1 }, newTitle: 'reborn' },
+        payload: { expectedPrestigeRank: 0, sourceReceiptKey: null },
     });
     assert.equal(state.player.stats.escapes, 10);
     assert.equal(state.player.stats.maxKillStreak, 30);
 
     // 두 번째 ASCEND (변화 없이 바로 환생)
-    state = gameReducer(state, {
+    state = gameReducer({ ...state, gameState: 'ascension' }, {
         type: AT.ASCEND,
-        payload: { meta: { prestigeRank: 2 }, newTitle: 'transcendent' },
+        payload: { expectedPrestigeRank: 1, sourceReceiptKey: null },
     });
     assert.equal(state.player.stats.escapes, 10, '연속 환생 후에도 보존');
     assert.equal(state.player.stats.maxKillStreak, 30);
-    assert.equal(state.player.stats.demonKingSlain, 2, '연속 환생마다 +1');
+    assert.equal(state.player.stats.demonKingSlain, 3, '환생 자체는 처치 횟수를 늘리지 않음');
 });
 
 // ─── 원본: tests/cycle-189-migrate-premium-asset-default.test.js ───

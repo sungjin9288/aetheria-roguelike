@@ -136,7 +136,7 @@ const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
                                 <BookOpenCheck size={14} /> 그대로 남는 것
                             </h2>
                             <p className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">
-                                영구 능력 · 칭호 · 업적과 누적 기록 · 도감 · 시즌 진행
+                                영구 능력 · 직업 여정 · 설정 · 도감 · 칭호 · 업적과 누적 기록 · 시즌 진행
                             </p>
                             {signatureProgress.discovered > 0 && (
                                 <p

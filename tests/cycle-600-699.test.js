@@ -692,14 +692,14 @@ import { readFile } from 'node:fs/promises';
           "safeText fallback default '' 제거");
   });
 
-  test('cycle 616: 정합성 가드 — 3 callsite \'\' 명시 추가', async () => {
+  test('cycle 616: 정합성 가드 — active callsite는 fallback을 명시하고 dead spotlight 호출은 제거', async () => {
       const source = await readSrc('src/hooks/useGameTestApi.ts');
       assert.ok(/safeText\(e\.currentEvent\.desc,\s*''\)/.test(source),
           "currentEvent.desc safeText '' 명시");
       assert.ok(/safeText\(e\.postCombatResult\.enemy,\s*''\)/.test(source),
           "postCombatResult.enemy safeText '' 명시");
-      assert.ok(/safeText\(is\.title,\s*''\)/.test(source),
-          "is.title safeText '' 명시");
+      assert.ok(!/safeText\(is\.title,\s*''\)/.test(source),
+          'removed inventory spotlight title stays absent');
   });
 
   test('cycle 616: cycle 502-615 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -759,12 +759,12 @@ import { readFile } from 'node:fs/promises';
           "safeList fallback default '[item]' 제거");
   });
 
-  test("cycle 617: 정합성 가드 — 2 callsite '[item]' 명시 추가", async () => {
+  test("cycle 617: 정합성 가드 — active item caller는 fallback을 명시하고 dead spotlight 호출은 제거", async () => {
       const source = await readSrc('src/hooks/useGameTestApi.ts');
       assert.ok(/safeList\(e\.postCombatResult\.items,\s*'\[item\]'\)/.test(source),
           "postCombatResult.items safeList '[item]' 명시");
-      assert.ok(/safeList\(is\.names,\s*'\[item\]'\)/.test(source),
-          "is.names safeList '[item]' 명시");
+      assert.ok(!/safeList\(is\.names,\s*'\[item\]'\)/.test(source),
+          'removed inventory spotlight names stay absent');
   });
 
   test("cycle 617: '[choice]' caller (currentEvent.choices) 보존", async () => {

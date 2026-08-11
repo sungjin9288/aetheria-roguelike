@@ -16,6 +16,20 @@ import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent } from '../../utils/scoutEvents';
 import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
+import { resolveExploreActionRandom } from '../../utils/exploreActionSeed';
+
+const takeHarnessExploreSeed = (): number | undefined => {
+    if (import.meta.env?.VITE_ENABLE_TEST_API !== '1' || typeof document === 'undefined') {
+        return undefined;
+    }
+    const raw = document.documentElement.dataset.aetheriaExploreSeed;
+    delete document.documentElement.dataset.aetheriaExploreSeed;
+    if (raw === undefined || !/^\d{1,10}$/.test(raw)) return undefined;
+    const seed = Number(raw);
+    return Number.isSafeInteger(seed) && seed >= 0 && seed <= 0xffffffff
+        ? seed
+        : undefined;
+};
 
 /**
  * 캠프파이어/스카우팅 이후 AI 랜덤 이벤트 체크 (explore() 전용 — AI_SERVICE는 firebase에
@@ -101,6 +115,8 @@ export const createExploreActions = (deps: any, shared: any) => {
             if (gameState !== GS.IDLE) return addLog('error', MSG.EXPLORE_BLOCKED);
             if (player.loc === CONSTANTS.START_LOCATION) return addLog('info', MSG.TOWN_PEACEFUL);
 
+            const actionRng = resolveExploreActionRandom(rng, takeHarnessExploreSeed());
+
             const mapData = DB.MAPS[player.loc];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
@@ -125,7 +141,7 @@ export const createExploreActions = (deps: any, shared: any) => {
             const campfireChance = BALANCE.CAMPFIRE_CHANCE
                 + getPrestigeUnlocks(player.meta?.prestigeRank).campfireChanceBonus
                 + getMirrorEffects(player.meta).campfireChanceBonus;
-            if (mapData.type === 'dungeon' && rng() < campfireChance) {
+            if (mapData.type === 'dungeon' && actionRng() < campfireChance) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const campfireEvent = buildCampfireEvent(getFullStats());
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
@@ -154,16 +170,16 @@ export const createExploreActions = (deps: any, shared: any) => {
             // 탐험 스카우팅 (2026-07 감사 (b)): "정보 없는 단일 버튼 탐험" 갭 대응 — 던전(비안전지대)
             //   탐험 시 낮은 확률로 사전 정찰 카드 2~3장을 제시한다. 체인 > 캠프파이어 > 보스 도전 선택 >
             //   스카우팅 > 나머지 롤(AI 이벤트/quiet/전투) 순 우선순위. 선택은 eventActions.ts가 같은 턴에 해소.
-            if (shouldTriggerScout(mapData, rng)) {
+            if (shouldTriggerScout(mapData, actionRng)) {
                 commitExploreOutcome('narrative_event', null, mapData);
-                const scoutEvent = buildScoutEvent(player, mapData, rng);
+                const scoutEvent = buildScoutEvent(player, mapData, actionRng);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: scoutEvent });
                 addLog('event', scoutEvent.desc);
                 return;
             }
 
-            await runExplorePostDecisionRoll(mapData, deps, shared);
+            await runExplorePostDecisionRoll(mapData, { ...deps, rng: actionRng }, shared);
         },
     };
 };

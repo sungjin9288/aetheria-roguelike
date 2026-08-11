@@ -8,6 +8,10 @@
  * 0 = 미시작, 1 = 1단계 완료, 2 = 2단계 완료, 3 = 완료
  */
 
+import { BALANCE } from './constants';
+
+const PRIMAL_SHARD_DROP_PERCENT = Math.round(BALANCE.PRIMAL_SHARD_DROP_CHANCE * 100);
+
 export const EVENT_CHAINS: any = [
     {
         id: 'ancient_prophecy',
@@ -34,7 +38,7 @@ export const EVENT_CHAINS: any = [
                     desc: '탑 안에서 예언의 학자 노인을 만났습니다. "당신이 돌판을 보셨군요. 원시의 파편을 3개 모아 마왕을 세 번 이상 쓰러뜨리면... 진짜가 나타납니다."',
                     choices: ['학자의 말에 귀 기울인다', '시간이 없다, 돌아간다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '진실에 한 발짝 다가섰습니다. 파편 수집의 방법을 알게 되었습니다.', reward: { type: 'info', text: '원시의 파편: 프레스티지 후 마왕 처치 시 40% 확률로 획득' } },
+                        { type: 'chain_advance', log: '진실에 한 발짝 다가섰습니다. 파편 수집의 방법을 알게 되었습니다.', reward: { type: 'info', text: `원시의 파편: 계승 1단계부터 마왕 처치 시 ${PRIMAL_SHARD_DROP_PERCENT}% 확률로 획득` } },
                         { type: 'nothing', log: '무언가 중요한 것을 놓쳤을지도 모릅니다.', reward: null },
                     ],
                 },

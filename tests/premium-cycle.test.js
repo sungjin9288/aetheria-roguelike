@@ -125,12 +125,13 @@ import { readFile } from 'node:fs/promises';
    */
 
   const ASCEND_PAYLOAD = {
-      meta: { essence: 0, rank: 1, bonusAtk: 0, bonusHp: 0, bonusMp: 0, prestigeRank: 1 },
-      newTitle: '각성자',
+      expectedPrestigeRank: 0,
+      sourceReceiptKey: null,
   };
 
   const buildState = (overrides = {}) => ({
       ...INITIAL_STATE,
+      gameState: 'ascension',
       player: {
           ...INITIAL_STATE.player,
           name: 'tester',

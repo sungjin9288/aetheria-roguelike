@@ -71,7 +71,6 @@ const ReturnBriefingGate = ({
 const GameRoot = ({
     engine, fullStats,
     isPanelFocusState, mobileArchiveDockVisible,
-    inventorySpotlight,
     premiumShopOpen, setPremiumShopOpen,
     mirrorPanelOpen, setMirrorPanelOpen,
     handleQuickSlotUse,
@@ -336,7 +335,6 @@ const GameRoot = ({
                     fullStats={fullStats}
                     isPanelFocusState={isPanelFocusState}
                     mobileArchiveDockVisible={mobileArchiveDockVisible}
-                    inventorySpotlight={inventorySpotlight}
                     handleQuickSlotUse={handleQuickSlotUse}
                     damageFlash={damageFlash}
                     healFlash={healFlash}

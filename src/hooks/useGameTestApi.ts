@@ -4,6 +4,7 @@ import { DB } from '../data/db';
 import { RELICS } from '../data/relics';
 import { GS } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
+import { INITIAL_STATE } from '../reducers/gameReducer';
 import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
 import { calculateFullStats } from '../utils/statsCalculator';
 import {
@@ -16,6 +17,7 @@ import {
     MIRROR_JOURNEY_DEVICE_QA_SCENARIO,
     PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO,
     SYSTEM_SETTINGS_DEVICE_QA_SCENARIO,
+    TRUE_ENDING_JOURNEY_DEVICE_QA_SCENARIO,
 } from '../utils/runtimeMode';
 import { readDeviceQaSnapshot } from '../utils/localGameSnapshot';
 import { createDailyProtocol, getProtocolDayKey, getProtocolWeekKey } from '../utils/protocolCycle';
@@ -79,9 +81,13 @@ const buildReturnBriefingScenarioPlayer = (player: any, now: Date) => {
 
 /**
  * smoke test / dev harness용 window API 등록.
- * engineRef, fullStatsRef, inventorySpotlightRef 는 render 중 동기 갱신된 ref여야 한다.
+ * engineRef와 fullStatsRef는 render 중 동기 갱신된 ref여야 한다.
  */
-export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotlightRef: any) => {
+export const useGameTestApi = (
+    engineRef: any,
+    fullStatsRef: any,
+    platformBackRegistry?: { handleBack: () => boolean },
+) => {
     useEffect(() => {
         if (typeof window === 'undefined' || !isMockRuntime()) return undefined;
 
@@ -276,7 +282,6 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         window.render_game_to_text = () => {
             const e = engineRef.current;
             const fs = fullStatsRef.current;
-            const is = inventorySpotlightRef.current;
             return JSON.stringify(sanitizeValue({
                 bootStage: e.bootStage,
                 mode: e.gameState === GS.DEAD && e.runSummary
@@ -342,9 +347,6 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         items: safeList(e.postCombatResult.items, '[item]'),
                     }
                     : null,
-                inventorySpotlight: is
-                    ? { token: is.token, title: safeText(is.title, ''), names: safeList(is.names, '[item]') }
-                    : null,
                 runSummary: e.runSummary
                     ? {
                         level: e.runSummary.level,
@@ -386,6 +388,36 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         };
 
         const testApi: any = {
+            getTrueEndingJourneySnapshot: () => {
+                const er = engineRef.current;
+                const endgame = er.player.meta?.endgame || {};
+                const heartIds = (er.player.inv || [])
+                    .filter((item: any) => item?.name === '원시의 심장')
+                    .map((item: any) => item.id);
+                return {
+                    gameState: er.gameState,
+                    combatTurn: er.combatTurn || 0,
+                    enemy: er.enemy ? {
+                        name: er.enemy.name,
+                        baseName: er.enemy.baseName || er.enemy.name,
+                        hp: er.enemy.hp,
+                        maxHp: er.enemy.maxHp,
+                    } : null,
+                    name: er.player.name || '',
+                    level: er.player.level || 0,
+                    prestigeRank: er.player.meta?.prestigeRank || 0,
+                    primalShards: endgame.primalShards || 0,
+                    trueEndingSeen: endgame.trueEndingSeen === true,
+                    endgameReceiptKey: endgame.lastEndgameReceiptKey || null,
+                    heartIds,
+                    heartCount: heartIds.length,
+                    classJourney: structuredClone(er.player.classJourney || null),
+                    settings: { ...(er.player.settings || {}) },
+                    titles: [...(er.player.titles || [])],
+                    activeTitle: er.player.activeTitle || null,
+                    demonKingSlain: er.player.stats?.demonKingSlain || 0,
+                };
+            },
             getInvestmentSnapshot: () => {
                 const player = engineRef.current.player;
                 return {
@@ -523,6 +555,17 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             markPerf: (name: any) => markPerf(name),
             resetGame: () => engineRef.current.actions.reset?.(),
             flushLocalSave: () => engineRef.current.flushLocalSave(),
+            triggerPlatformBack: () => platformBackRegistry?.handleBack() ?? false,
+            armNextCombatSeed: (seed: any) => {
+                if (!Number.isSafeInteger(seed) || seed < 0 || seed > 0xffffffff) return false;
+                document.documentElement.dataset.aetheriaCombatSeed = String(seed);
+                return true;
+            },
+            armNextExploreSeed: (seed: any) => {
+                if (!Number.isSafeInteger(seed) || seed < 0 || seed > 0xffffffff) return false;
+                document.documentElement.dataset.aetheriaExploreSeed = String(seed);
+                return true;
+            },
             sendCommand: (command: any) => engineRef.current.handleCommand(command),
             setSideTab: (tab: any) => engineRef.current.actions.setSideTab?.(tab),
             // cycle 605: 4 defaults batch 제거 (gold/materialCount/weaponEnhance
@@ -696,6 +739,110 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.ASCENSION });
+            },
+            seedTrueEndingJourneyScenario: () => {
+                const er = engineRef.current;
+                const basePlayer = structuredClone(INITIAL_STATE.player);
+                const signatureWeapon = DB.ITEMS.weapons.find((item: any) => item.name === '성검 에테르니아');
+                if (!signatureWeapon) return false;
+                const meta = {
+                    ...(basePlayer.meta || {}),
+                    prestigeRank: 3,
+                    essence: 640,
+                    bonusAtk: 45,
+                    bonusHp: 180,
+                    bonusMp: 90,
+                    storyMilestones: { seen: ['first_death', 'first_job_change'], pending: [] },
+                    endgame: {
+                        version: 1,
+                        primalShards: 2,
+                        legacyInventoryMigrated: true,
+                        lastEndgameReceiptKey: null,
+                        trueEndingSeen: false,
+                    },
+                };
+                const level = 75;
+                const vitals = buildClassVitals(level, '전사', meta);
+                const classJourney = {
+                    version: 1,
+                    sequence: 3,
+                    byJob: {
+                        전사: {
+                            expeditionIds: ['true-ending-expedition-1'],
+                            skillBranches: ['파워배시:A'],
+                            signatureItems: ['성검 에테르니아'],
+                            bossNames: ['마왕'],
+                            regions: ['마왕성'],
+                            representativeExpeditionId: 'true-ending-expedition-1',
+                            lastPlayedAt: 1_786_406_400_000,
+                        },
+                    },
+                };
+                const player = {
+                    ...basePlayer,
+                    name: '종언 검증',
+                    gender: 'female',
+                    job: '전사',
+                    level,
+                    hp: vitals.maxHp,
+                    maxHp: vitals.maxHp,
+                    mp: vitals.maxMp,
+                    maxMp: vitals.maxMp,
+                    atk: 1_000_000,
+                    def: 1_000,
+                    exp: 0,
+                    nextExp: getLevelExpRequirement(level),
+                    loc: '마왕성',
+                    inv: [],
+                    equip: {
+                        weapon: { ...signatureWeapon, id: 'true-ending-ethernia' },
+                        armor: structuredClone(basePlayer.equip?.armor || null),
+                        offhand: null,
+                    },
+                    settings: { readabilityMode: 'high', equipmentDetailMode: 'full' },
+                    classJourney,
+                    meta,
+                    stats: {
+                        ...(basePlayer.stats || {}),
+                        kills: 320,
+                        bossKills: 24,
+                        demonKingSlain: 3,
+                        visitedMaps: ['시작의 마을', '마왕성'],
+                        killRegistry: { 마왕: 3 },
+                    },
+                };
+                const demonKing = {
+                    ...structuredClone(DB.MONSTERS['마왕']),
+                    name: '마왕',
+                    baseName: '마왕',
+                    level: 70,
+                    hp: 1,
+                    maxHp: 1,
+                    atk: 1,
+                    def: 0,
+                    exp: 5_000,
+                    gold: 9_999,
+                    isBoss: true,
+                    pattern: { guardChance: 0, heavyChance: 0 },
+                };
+
+                er.dispatch({ type: AT.RESET_GAME });
+                er.dispatch({
+                    type: AT.LOAD_DATA,
+                    payload: { player, gameState: GS.IDLE, enemy: null, quickSlots: [null, null, null] },
+                });
+                er.dispatch({ type: AT.SET_ENEMY, payload: demonKing });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
+            weakenTrueBossForJourney: () => {
+                const er = engineRef.current;
+                if (er.gameState !== GS.COMBAT || er.enemy?.baseName !== '원시의 신') return false;
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: (enemy: any) => ({ ...enemy, hp: 1 }),
+                });
+                return true;
             },
             seedMirrorJourneyScenario: () => {
                 const er = engineRef.current;
@@ -1304,6 +1451,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             || deviceQaScenario === CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO
             || deviceQaScenario === SYSTEM_SETTINGS_DEVICE_QA_SCENARIO
             || deviceQaScenario === PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO
+            || deviceQaScenario === TRUE_ENDING_JOURNEY_DEVICE_QA_SCENARIO
         ) {
             let attempts = 0;
             const seedWhenReady = () => {
@@ -1325,6 +1473,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                         testApi.seedSystemSettingsScenario();
                     } else if (deviceQaScenario === PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO) {
                         testApi.seedProgressionAcceptanceScenario();
+                    } else if (deviceQaScenario === TRUE_ENDING_JOURNEY_DEVICE_QA_SCENARIO) {
+                        testApi.seedTrueEndingJourneyScenario();
                     } else {
                         testApi.seedAscensionJourneyScenario();
                     }
@@ -1337,6 +1487,8 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
         }
 
         return () => {
+            delete document.documentElement.dataset.aetheriaCombatSeed;
+            delete document.documentElement.dataset.aetheriaExploreSeed;
             if (deviceQaSeedTimer) clearTimeout(deviceQaSeedTimer);
             delete window.render_game_to_text;
             // cycle 593: window.advanceTime delete paired removal (정의 자체 제거됨).

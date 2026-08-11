@@ -124,7 +124,7 @@ export const outcomeMethods: any = {
 
         p.gold += goldGained;
 
-        const isDemonKingSlain = baseName === '마왕' || baseName.includes('마왕');
+        const isDemonKingSlain = baseName === '마왕';
         const prevStats = p.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 };
         p.stats = {
             ...prevStats,

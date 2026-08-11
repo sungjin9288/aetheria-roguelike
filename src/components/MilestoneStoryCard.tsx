@@ -31,7 +31,7 @@ const MilestoneStoryCard = ({ story, onClose }: MilestoneStoryCardProps) => {
                 data-testid="milestone-story-close-icon"
                 onClick={onClose}
                 aria-label="닫기"
-                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/8 hover:text-white"
+                className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/8 hover:text-white"
             >
                 <X size={17} />
             </button>

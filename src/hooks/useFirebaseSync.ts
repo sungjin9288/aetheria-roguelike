@@ -8,7 +8,6 @@ import {
     limit,
     getDocs,
     setDoc,
-    addDoc,
     serverTimestamp
 } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
@@ -32,6 +31,7 @@ import { importCloudRecordAuthority } from '../platform/cloudSaveAuthority';
 import { trackRuntimeProductEvent } from '../platform/productEventCoordinator';
 import { normalizeProductEventJob, type ProductEventName } from '../platform/productEvents';
 import { resolveOfflineBootstrapResult } from '../platform/persistenceTelemetry';
+import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 import {
     resolveCloudBootstrapAuthority,
     type GameSaveRecord,
@@ -500,7 +500,6 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
                 // 세션 종료 후에는 마지막 저장 시각에 고정된다.
                 const playerPayload = {
                     ...player,
-                    archivedHistory: [],
                     stats: { ...player.stats, lastSeenAt: Date.now() },
                 };
                 const payload: Record<string, any> = {
@@ -516,11 +515,6 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
                     savedAt: localRecord?.savedAt ?? Date.now(),
                     lastActive: serverTimestamp()
                 };
-
-                if (player.archivedHistory && player.archivedHistory.length > 0) {
-                    const historyCol = collection(userDocRef, 'history');
-                    await Promise.all(player.archivedHistory.map((h: any) => addDoc(historyCol, h)));
-                }
 
                 await setDoc(userDocRef, payload, { merge: true });
 
@@ -558,6 +552,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
 
     // --- Public Grave Upload on Death ---
     useEffect(() => {
+        if (!PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion) return;
         if (mockMode || !uid || !hasFirebaseConfig) return;
         if (gameState !== 'dead') return;
         const graveEntries = normalizeGraves(grave);

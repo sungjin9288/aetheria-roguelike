@@ -1,44 +1,84 @@
-import { useEffect, useState } from 'react';
-import { motion as Motion } from 'framer-motion';
+import {
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
+import { motion as Motion, useReducedMotion } from 'framer-motion';
 import { Star } from 'lucide-react';
+import { usePlatformBackHandler } from '../platform/platformBackRegistry';
+import {
+    ENDING_LINES,
+    TRUE_ENDING_STARS,
+    getNextTrueEndingTimedStep,
+    resolveTrueEndingBackAction,
+    type TrueEndingRevealState,
+} from '../utils/trueEndingPresentation';
 import type { Player } from '../types/index.js';
 
 interface TrueEndingScreenProps {
     player: Player;
-    actions?: any;
+    actions?: {
+        confirmAscension?: () => void;
+    };
 }
 
-const STARS = Array.from({ length: 60 }, () => ({
-    w: Math.random() * 2 + 1,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    dur: Math.random() * 3 + 2,
-    delay: Math.random() * 3,
-}));
-
-const ENDING_LINES: any = [
-    '오랜 싸움이 끝났습니다.',
-    '원시의 신이 쓰러지며, 세계를 짓누르던 어둠이 서서히 걷힙니다.',
-    '당신의 발자국은 이 땅에 영원히 새겨질 것입니다.',
-    '수많은 죽음과 부활, 그리고 끝없는 싸움 끝에 — 마침내, 진정한 평화.',
-    '이것이 영웅의 이야기입니다.',
-];
-
 const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
-    const [lineIndex, setLineIndex] = useState(0);
-    const [showStats, setShowStats] = useState(false);
-    const [showButton, setShowButton] = useState(false);
+    const prefersReducedMotion = useReducedMotion() === true;
+    const [revealState, setRevealState] = useState<TrueEndingRevealState>(
+        prefersReducedMotion ? 'complete' : 'narrative',
+    );
+    const [lineIndex, setLineIndex] = useState(
+        prefersReducedMotion ? ENDING_LINES.length : 0,
+    );
+    const [confirmationAccepted, setConfirmationAccepted] = useState(false);
+    const revealCompleteRef = useRef(prefersReducedMotion);
+    const confirmationAcceptedRef = useRef(false);
+    const revealTimerRef = useRef<number | null>(null);
+
+    const clearRevealTimer = useCallback(() => {
+        if (revealTimerRef.current === null) return;
+        window.clearTimeout(revealTimerRef.current);
+        revealTimerRef.current = null;
+    }, []);
+
+    const revealAll = useCallback(() => {
+        if (revealCompleteRef.current) return;
+        revealCompleteRef.current = true;
+        clearRevealTimer();
+        setLineIndex(ENDING_LINES.length);
+        setRevealState('complete');
+    }, [clearRevealTimer]);
 
     useEffect(() => {
-        if (lineIndex < ENDING_LINES.length) {
-            const t = setTimeout(() => setLineIndex((i: any) => i + 1), 1800);
-            return () => clearTimeout(t);
-        } else {
-            const t1 = setTimeout(() => setShowStats(true), 600);
-            const t2 = setTimeout(() => setShowButton(true), 1800);
-            return () => { clearTimeout(t1); clearTimeout(t2); };
-        }
-    }, [lineIndex]);
+        if (prefersReducedMotion) revealAll();
+    }, [prefersReducedMotion, revealAll]);
+
+    useEffect(() => {
+        if (revealState === 'complete') return undefined;
+        const step = getNextTrueEndingTimedStep(lineIndex);
+        revealTimerRef.current = window.setTimeout(() => {
+            revealTimerRef.current = null;
+            setLineIndex(step.nextLineIndex);
+            if (step.revealState === 'complete') {
+                revealCompleteRef.current = true;
+                setRevealState('complete');
+            }
+        }, step.delayMs);
+        return clearRevealTimer;
+    }, [clearRevealTimer, lineIndex, revealState]);
+
+    usePlatformBackHandler(true, () => {
+        if (resolveTrueEndingBackAction(revealState) === 'reveal_all') revealAll();
+        return true;
+    }, 500);
+
+    const confirmNewGamePlus = useCallback(() => {
+        if (confirmationAcceptedRef.current) return;
+        confirmationAcceptedRef.current = true;
+        setConfirmationAccepted(true);
+        actions?.confirmAscension?.();
+    }, [actions]);
 
     const stats = [
         { label: '총 처치', value: (player?.stats?.kills || 0).toLocaleString() },
@@ -50,84 +90,113 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
     ];
 
     return (
-        <div data-testid="true-ending-screen" className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black px-4 py-[max(var(--aether-safe-area-top),1rem)] pb-[max(var(--aether-safe-area-bottom),1rem)]">
-            {/* Star field background */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {STARS.map((s: any, i: any) => (
+        <div
+            data-testid="true-ending-screen"
+            data-reveal-state={revealState}
+            className="fixed inset-0 z-50 h-[100dvh] overflow-x-hidden overflow-y-auto bg-black px-4 pt-[max(var(--aether-safe-area-top),1rem)] pb-[max(var(--aether-safe-area-bottom),1rem)]"
+        >
+            <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+                {TRUE_ENDING_STARS.map((star) => (
                     <Motion.div
-                        key={i}
+                        key={`${star.top}-${star.left}`}
                         className="absolute rounded-full bg-white"
-                        style={{ width: s.w, height: s.w, top: s.top, left: s.left }}
-                        animate={{ opacity: [0.2, 1, 0.2] }}
-                        transition={{ duration: s.dur, repeat: Infinity, delay: s.delay }}
+                        style={{ width: star.w, height: star.w, top: star.top, left: star.left }}
+                        animate={prefersReducedMotion ? { opacity: 0.45 } : { opacity: [0.2, 1, 0.2] }}
+                        transition={prefersReducedMotion
+                            ? { duration: 0 }
+                            : { duration: star.dur, repeat: Infinity, delay: star.delay }}
                     />
                 ))}
             </div>
 
-            {/* Title */}
-            <Motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.5 }}
-                className="mb-10 flex flex-col items-center gap-3"
-            >
-                <Star size={28} className="text-[#d5b180]" />
-                <h1 className="font-fira text-[13px] tracking-[0.4em] uppercase text-[#d5b180]">True Ending</h1>
-                <p className="text-[11px] text-slate-400 font-fira tracking-widest">{player?.name || '영웅'} — Lv.{player?.level || 1} {player?.job || '모험가'}</p>
-            </Motion.div>
+            <div className="relative z-10 mx-auto flex min-h-full w-full max-w-lg min-w-0 flex-col">
+                <div className="flex min-h-[44px] w-full justify-end">
+                    {revealState === 'narrative' && (
+                        <button
+                            type="button"
+                            data-testid="true-ending-skip"
+                            onClick={revealAll}
+                            className="min-h-[44px] rounded-lg border border-white/14 bg-black/45 px-4 text-[12px] font-readable font-bold text-slate-200 transition-colors hover:border-[#d5b180]/40 hover:text-[#f4e6c8]"
+                        >
+                            이야기 건너뛰기
+                        </button>
+                    )}
+                </div>
 
-            {/* Narrative lines */}
-            <div className="w-full max-w-md px-6 mb-10 space-y-4 min-h-[140px]">
-                {ENDING_LINES.slice(0, lineIndex).map((line: any, i: any) => (
-                    <Motion.p
-                        key={i}
-                        initial={{ opacity: 0, y: 8 }}
+                <main className="flex min-w-0 flex-1 flex-col items-center justify-center py-5 text-center">
+                    <Motion.div
+                        initial={prefersReducedMotion ? false : { opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className={`text-center font-fira text-[11px] leading-relaxed ${i === lineIndex - 1 ? 'text-[#f4e6c8]' : 'text-slate-400'}`}
+                        transition={{ duration: prefersReducedMotion ? 0 : 1.5 }}
+                        className="mb-7 flex min-w-0 flex-col items-center gap-3"
                     >
-                        {line}
-                    </Motion.p>
-                ))}
-            </div>
+                        <Star size={28} className="text-[#d5b180]" />
+                        <h1 className="font-fira text-[14px] uppercase tracking-[0.32em] text-[#d5b180]">True Ending</h1>
+                        <p className="break-words text-[12px] font-fira tracking-wider text-slate-300">
+                            {player?.name || '영웅'} — Lv.{player?.level || 1} {player?.job || '모험가'}
+                        </p>
+                    </Motion.div>
 
-            {/* Stats */}
-            {showStats && (
-                <Motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1 }}
-                    className="w-full max-w-sm px-6 mb-10"
-                >
-                    <div className="rounded-[1.2rem] border border-[#d5b180]/20 bg-[#d5b180]/5 p-4 grid grid-cols-3 gap-3">
-                        {stats.map(({ label, value }: any) => (
-                            <div key={label} className="flex flex-col items-center gap-1">
-                                <span className="text-[16px] font-bold text-[#f4e6c8] font-fira">{value}</span>
-                                <span className="text-[10px] text-slate-500 font-fira uppercase tracking-wider">{label}</span>
-                            </div>
+                    <div
+                        data-testid="true-ending-narrative"
+                        aria-live="polite"
+                        className="mb-7 min-h-[140px] w-full min-w-0 max-w-md space-y-4 px-2 sm:px-6"
+                    >
+                        {ENDING_LINES.slice(0, lineIndex).map((line, index) => (
+                            <Motion.p
+                                key={line}
+                                initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: prefersReducedMotion ? 0 : 0.8 }}
+                                className={`break-words text-center font-fira text-[12px] leading-relaxed ${index === lineIndex - 1 ? 'text-[#f4e6c8]' : 'text-slate-300'}`}
+                            >
+                                {line}
+                            </Motion.p>
                         ))}
                     </div>
-                </Motion.div>
-            )}
 
-            {/* New Game+ button */}
-            {showButton && (
-                <Motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="flex flex-col items-center gap-3"
-                >
-                    <button
-                        data-testid="true-ending-confirm"
-                        onClick={() => actions?.confirmAscension?.()}
-                        className="px-8 py-3 rounded-[1.2rem] border border-[#d5b180]/40 bg-[#d5b180]/12 text-[#d5b180] font-fira text-[10px] uppercase tracking-[0.3em] hover:bg-[#d5b180]/20 hover:border-[#d5b180]/60 transition-all"
-                    >
-                        New Game+
-                    </button>
-                    <p className="text-[10px] text-slate-600 font-fira">프레스티지 보너스를 유지한 채로 처음부터</p>
-                </Motion.div>
-            )}
+                    {revealState === 'complete' && (
+                        <Motion.div
+                            data-testid="true-ending-stats"
+                            initial={prefersReducedMotion ? false : { opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: prefersReducedMotion ? 0 : 0.6 }}
+                            className="mb-7 w-full min-w-0 max-w-sm px-1 sm:px-6"
+                        >
+                            <div className="grid grid-cols-2 gap-3 rounded-[1.2rem] border border-[#d5b180]/20 bg-[#d5b180]/5 p-4 sm:grid-cols-3">
+                                {stats.map(({ label, value }) => (
+                                    <div key={label} className="flex min-w-0 flex-col items-center gap-1">
+                                        <span className="font-fira text-[16px] font-bold text-[#f4e6c8]">{value}</span>
+                                        <span className="break-words text-[11px] font-fira uppercase tracking-wider text-slate-400">{label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </Motion.div>
+                    )}
+
+                    {revealState === 'complete' && (
+                        <Motion.div
+                            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: prefersReducedMotion ? 0 : 0.6 }}
+                            className="flex min-w-0 flex-col items-center gap-3"
+                        >
+                            <button
+                                type="button"
+                                data-testid="true-ending-confirm"
+                                onClick={confirmNewGamePlus}
+                                disabled={confirmationAccepted}
+                                className="min-h-[44px] rounded-[1.2rem] border border-[#d5b180]/40 bg-[#d5b180]/12 px-8 py-3 font-fira text-[12px] uppercase tracking-[0.24em] text-[#d5b180] transition-all hover:border-[#d5b180]/60 hover:bg-[#d5b180]/20 disabled:cursor-wait disabled:opacity-60"
+                            >
+                                {confirmationAccepted ? '계승 중…' : 'New Game+'}
+                            </button>
+                            <p className="break-words text-[11px] font-readable text-slate-400">
+                                영구 성장과 기록을 계승해 다음 여정을 시작합니다.
+                            </p>
+                        </Motion.div>
+                    )}
+                </main>
+            </div>
         </div>
     );
 };

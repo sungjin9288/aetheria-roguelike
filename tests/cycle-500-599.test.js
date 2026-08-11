@@ -3497,13 +3497,10 @@ import { readFile, readdir } from 'node:fs/promises';
           'Dashboard onReturnToLog default null 제거');
   });
 
-  test('cycle 572: onClearInventorySpotlight default 보존 (reachable)', async () => {
+  test('release core: dead inventory spotlight props are absent', async () => {
       const source = await readSrc('src/components/Dashboard.tsx');
-      const fnIdx = source.indexOf('const Dashboard = ');
-      const fnEnd = source.indexOf('=>', fnIdx);
-      const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(/onClearInventorySpotlight\s*=\s*null/.test(sig),
-          'Dashboard onClearInventorySpotlight default null 보존 (MobileGameLayout 미전달이라 reachable)');
+      assert.ok(!/inventorySpotlight|onClearInventorySpotlight/.test(source),
+          'always-null spotlight cascade 제거');
   });
 
   test('slice 37: MobileGameLayout은 단일 Dashboard 화면 계약만 전달한다', async () => {
@@ -3576,16 +3573,19 @@ import { readFile, readdir } from 'node:fs/promises';
           'SmartInventory onClearSpotlight default null 제거');
   });
 
-  test('cycle 574: 정합성 가드 — Dashboard callsite 보존', async () => {
+  test('release core: Dashboard passes only live SmartInventory props', async () => {
       const source = await readSrc('src/components/Dashboard.tsx');
-      assert.ok(/<SmartInventory[\s\S]*?quickSlots=\{quickSlots\}[\s\S]*?spotlight=\{inventorySpotlight\}[\s\S]*?onClearSpotlight=\{onClearInventorySpotlight\}/.test(source),
-          'Dashboard <SmartInventory> 6-prop callsite 보존');
+      const start = source.indexOf('<SmartInventory');
+      const end = source.indexOf('/>', start);
+      const callsite = source.slice(start, end);
+      assert.ok(/quickSlots=\{quickSlots\}/.test(callsite), 'quickSlots live prop 보존');
+      assert.ok(!/spotlight|onClearSpotlight/.test(callsite), 'dead spotlight props 제거');
   });
 
-  test('cycle 574: body spotlight 처리 보존', async () => {
+  test('release core: SmartInventory dead spotlight body is absent', async () => {
       const source = await readSrc('src/components/SmartInventory.tsx');
-      assert.ok(/spotlight\?\.names \|\| \[\]/.test(source),
-          'spotlight?.names || [] defensive guard 보존');
+      assert.ok(!/\bspotlight\b|onClearSpotlight/.test(source),
+          'always-null spotlight body 제거');
   });
 
   test('cycle 574: cycle 502-573 회귀 가드 — default 청소 시리즈 보존', async () => {

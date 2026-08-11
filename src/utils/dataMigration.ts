@@ -9,10 +9,35 @@ import { normalizeMilestoneStoryState } from './milestoneStory.js';
 import { normalizeCurrentRunProgress } from './runProgress.js';
 import { normalizeClassJourneyLedger } from './classJourney.js';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward.js';
+import { BALANCE } from '../data/constants.js';
+import type { EndgameProgress } from '../types/player.js';
 
 // gameUtils.ts에서 분리 (저장 데이터 마이그레이션) — 행동 보존 리팩토링.
 //   순환 의존을 피하려 toArray(1줄 헬퍼)는 인라인.
 const toArray = (v: any) => (Array.isArray(v) ? v : []);
+
+const ENDGAME_RECEIPT_KEY = /^[A-Za-z0-9:_-]{1,160}$/;
+
+export const normalizeEndgameProgress = (value: unknown): EndgameProgress => {
+    const candidate = value && typeof value === 'object' && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : {};
+    const rawShards = Number(candidate.primalShards);
+    const requiredShards = Math.max(1, Number(BALANCE.PRIMAL_SHARD_REQUIRED) || 3);
+    const receipt = typeof candidate.lastEndgameReceiptKey === 'string'
+        && ENDGAME_RECEIPT_KEY.test(candidate.lastEndgameReceiptKey)
+        ? candidate.lastEndgameReceiptKey
+        : null;
+    return {
+        version: 1,
+        primalShards: Number.isSafeInteger(rawShards) && rawShards >= 0
+            ? Math.min(requiredShards, rawShards)
+            : 0,
+        legacyInventoryMigrated: candidate.legacyInventoryMigrated === true,
+        lastEndgameReceiptKey: receipt,
+        trueEndingSeen: candidate.trueEndingSeen === true,
+    };
+};
 
 export const migrateData = (rawData: any) => {
     if (!rawData) return null;
@@ -31,7 +56,6 @@ export const migrateData = (rawData: any) => {
         target.mp = target.mp ?? 50;
         target.maxMp = target.maxMp ?? 50;
         target.history = target.history || [];
-        target.archivedHistory = target.archivedHistory || []; // Ensure archivedHistory exists
 
         // New stats for v3.1
         target.stats = target.stats || { kills: 0, total_gold: 0, deaths: 0 };
@@ -84,6 +108,19 @@ export const migrateData = (rawData: any) => {
     //   getMirrorEffects가 항상 객체를 참조할 수 있도록 {}로 보강. 기존 레벨은 보존.
     target.meta.mirror = target.meta.mirror || {};
     target.meta.storyMilestones = normalizeMilestoneStoryState(target.meta.storyMilestones);
+    const priorEndgame = normalizeEndgameProgress(target.meta.endgame);
+    const legacyInventoryMigrated = priorEndgame.legacyInventoryMigrated;
+    const inventory = toArray(target.inv);
+    const legacyShardCount = legacyInventoryMigrated
+        ? 0
+        : inventory.filter((item: any) => item?.name === '원시의 파편').length;
+    const requiredShards = Math.max(1, Number(BALANCE.PRIMAL_SHARD_REQUIRED) || 3);
+    target.meta.endgame = {
+        ...priorEndgame,
+        primalShards: Math.min(requiredShards, priorEndgame.primalShards + legacyShardCount),
+        legacyInventoryMigrated: true,
+    };
+    target.inv = inventory.filter((item: any) => item?.name !== '원시의 파편');
     target.settings = {
         ...(target.settings || {}),
         readabilityMode: target.settings?.readabilityMode === 'high' ? 'high' : 'standard',

@@ -9,6 +9,11 @@ export type UseCombatItemPayload = {
     now: number;
 };
 
+export type AscendPayload = {
+    expectedPrestigeRank: number;
+    sourceReceiptKey: string | null;
+};
+
 export const AT = Object.freeze({
     // Boot / Auth
     SET_BOOT_STAGE: 'SET_BOOT_STAGE',
@@ -92,9 +97,6 @@ export const AT = Object.freeze({
 
     // v4.3 — Grave PvP
     INVADE_GRAVE: 'INVADE_GRAVE',
-
-    // v5.0 — True Ending
-    TRIGGER_TRUE_ENDING: 'TRIGGER_TRUE_ENDING',
 
     // v5.0 — 내러티브 이벤트 체인
     UPDATE_EVENT_CHAIN: 'UPDATE_EVENT_CHAIN',

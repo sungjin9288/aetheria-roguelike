@@ -3,6 +3,7 @@ import { GS } from '../gameStates';
 import { resolveCombatItemTurn } from '../../systems/combatItemTurn';
 import { createSeededRandom } from '../../systems/combatItemTurn';
 import { resolveCombatActionTurn } from '../../systems/combatActionTurn';
+import { resolveEndgameVictory } from '../../systems/endgameSettlement';
 import { appendGrave } from '../../utils/graveUtils.js';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { handleVictoryOutcome } from '../../hooks/combatActions/combatVictory';
@@ -41,6 +42,8 @@ const settleVictory = (
         random,
     }: any,
 ): GameState => {
+    const receiptKey = `${nextTurn}:${now}:${seed}`;
+    if (state.player.meta?.endgame?.lastEndgameReceiptKey === receiptKey) return state;
     let logIndex = 0;
     let draft: GameState = {
         ...state,
@@ -97,10 +100,6 @@ const settleVictory = (
             draft = { ...draft, postCombatResult: nestedAction.payload };
             return;
         }
-        if (nestedAction.type === 'TRIGGER_TRUE_ENDING') {
-            draft = { ...draft, gameState: 'true_ending', syncStatus: 'syncing' };
-            return;
-        }
         if (nestedAction.type === 'UPDATE_DAILY_PROTOCOL') {
             draft = protocolActionMap.UPDATE_DAILY_PROTOCOL(draft, nestedAction);
             return;
@@ -138,10 +137,30 @@ const settleVictory = (
         now: () => now,
     });
 
+    const endgameResult = resolveEndgameVictory({
+        player: draft.player,
+        deadEnemy,
+        receiptKey,
+        rng: random,
+        now,
+    });
+    if (endgameResult.outcome !== 'none' && endgameResult.outcome !== 'replay') {
+        const endgamePlayer = trackExpeditionVitals(endgameResult.player);
+        draft = {
+            ...draft,
+            player: endgamePlayer,
+            enemy: endgameResult.enemy,
+            gameState: endgameResult.gameState,
+            quickSlots: sanitizeQuickSlots(draft.quickSlots, endgamePlayer.inv),
+            syncStatus: 'syncing',
+        };
+        endgameResult.logs.forEach((entry) => appendLog(entry.type, entry.text));
+    }
+
     return {
         ...draft,
         combatReceipt: {
-            key: `${nextTurn}:${now}:${seed}`,
+            key: receiptKey,
             kind: 'victory',
             stories: storyEvents,
         },

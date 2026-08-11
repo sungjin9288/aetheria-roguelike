@@ -238,7 +238,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             summary: { name: player.name, level: player.level, job: player.job, gold: player.gold },
             stats,
             equipment: player.equip,
-            history: [...(player.archivedHistory || []), ...(player.history || [])],
+            history: [...(player.history || [])],
         });
         setNotice({ type: 'success', text: '플레이 기록을 저장했습니다.' });
     }, [player, stats]);

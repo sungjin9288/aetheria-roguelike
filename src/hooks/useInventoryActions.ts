@@ -9,6 +9,7 @@ import { createRewardActions } from './useInventoryActions.rewards';
 import { createEquipmentActions } from './useInventoryActions.equipment';
 import { createEconomyActions } from './useInventoryActions.economy';
 import { createPremiumActions } from './useInventoryActions.premium';
+import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 
 /**
  * createInventoryActions — 인벤토리/경제 액션 오케스트레이터.
@@ -61,7 +62,7 @@ export const createInventoryActions = ({
             addLog('system', MSG.SKILL_BRANCH_CHOSEN(skillName, branch.label || '선택한 성장'));
         },
 
-        invadeGrave: (targetGrave: any) => {
+        ...(PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion ? { invadeGrave: (targetGrave: any) => {
             const today = new Date().toDateString();
             const lastDate = player.stats?.lastInvadeDate;
             const count = lastDate === today ? (player.stats?.dailyInvadeCount || 0) : 0;
@@ -82,7 +83,7 @@ export const createInventoryActions = ({
             } else {
                 addLog('warn', MSG.INVADE_FAIL(targetGrave.playerName || '무명 용사'));
             }
-        },
+        }} : {}),
 
     });
 };

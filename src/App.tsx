@@ -30,6 +30,7 @@ const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'crystal-exchange'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'system-settings'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'progression-acceptance'
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'true-ending-journey'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'toss-first-five';
 const useRuntimeGameTestApi = TEST_API_BUILD ? useGameTestApi : () => undefined;
 
@@ -37,7 +38,6 @@ const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, G
 
 function App() {
     const engine = useGameEngine();
-    const [inventorySpotlight] = useState<any>(null);
     const [premiumShopOpen, setPremiumShopOpen] = useState(
         import.meta.env.VITE_DEVICE_QA_SCENARIO === 'crystal-exchange',
     );
@@ -57,9 +57,6 @@ function App() {
     const fullStatsRef = useRef(fullStats);
     /* eslint-disable-next-line react-hooks/refs */
     fullStatsRef.current = fullStats;
-    const inventorySpotlightRef = useRef(inventorySpotlight);
-    /* eslint-disable-next-line react-hooks/refs */
-    inventorySpotlightRef.current = inventorySpotlight;
     const premiumShopOpenRef = useRef(premiumShopOpen);
     /* eslint-disable-next-line react-hooks/refs */
     premiumShopOpenRef.current = premiumShopOpen;
@@ -67,7 +64,7 @@ function App() {
     /* eslint-disable-next-line react-hooks/refs */
     mirrorPanelOpenRef.current = mirrorPanelOpen;
     const [platformBackRegistry] = useState(createPlatformBackRegistry);
-    useRuntimeGameTestApi(engineRef, fullStatsRef, inventorySpotlightRef);
+    useRuntimeGameTestApi(engineRef, fullStatsRef, platformBackRegistry);
 
     useEffect(() => bindLifecycleBridge({
         environment: getRuntimeEnvironment(),
@@ -197,7 +194,6 @@ function App() {
             fullStats={fullStats}
             isPanelFocusState={isPanelFocusState}
             mobileArchiveDockVisible={mobileArchiveDockVisible}
-            inventorySpotlight={inventorySpotlight}
             premiumShopOpen={premiumShopOpen}
             setPremiumShopOpen={setPremiumShopOpen}
             mirrorPanelOpen={mirrorPanelOpen}

@@ -261,6 +261,7 @@ test('④ ASCEND 시에도 mirrorReviveUsed 플래그는 새 런 fresh player �
     const actionMap = makeProgressionActionMap(INITIAL_STATE);
     const state = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...INITIAL_STATE.player,
             mirrorReviveUsed: true,
@@ -268,7 +269,9 @@ test('④ ASCEND 시에도 mirrorReviveUsed 플래그는 새 런 fresh player �
             stats: { ...INITIAL_STATE.player.stats },
         },
     };
-    const next = actionMap.ASCEND(state, { payload: { meta: { ...INITIAL_STATE.player.meta, mirror: { revive: 1 } }, newTitle: '테스트칭호' } });
+    const next = actionMap.ASCEND(state, {
+        payload: { expectedPrestigeRank: 0, sourceReceiptKey: null },
+    });
     assert.equal(next.player.mirrorReviveUsed, undefined, 'ASCEND 후 mirrorReviveUsed 리셋');
     assert.equal(next.player.meta.mirror.revive, 1, 'mirror 레벨(영구 자산)은 보존');
 });

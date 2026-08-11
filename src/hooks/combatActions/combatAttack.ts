@@ -2,6 +2,20 @@ import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { BALANCE } from '../../data/constants';
+import { resolveCombatActionSeed } from '../../utils/combatActionSeed';
+
+const takeHarnessCombatSeed = (): number | undefined => {
+    if (import.meta.env?.VITE_ENABLE_TEST_API !== '1' || typeof document === 'undefined') {
+        return undefined;
+    }
+    const raw = document.documentElement.dataset.aetheriaCombatSeed;
+    delete document.documentElement.dataset.aetheriaCombatSeed;
+    if (raw === undefined || !/^\d{1,10}$/.test(raw)) return undefined;
+    const seed = Number(raw);
+    return Number.isSafeInteger(seed) && seed >= 0 && seed <= 0xffffffff
+        ? seed
+        : undefined;
+};
 
 export const createCombatAttackActions = (deps: any, _shared: any, pendingControl: any) => {
     const {
@@ -35,7 +49,7 @@ export const createCombatAttackActions = (deps: any, _shared: any, pendingContro
                 payload: {
                     kind,
                     expectedTurn: combatTurn,
-                    seed: Math.floor(Math.random() * 4294967296),
+                    seed: resolveCombatActionSeed(Math.random, takeHarnessCombatSeed()),
                     now: Date.now(),
                 },
             });

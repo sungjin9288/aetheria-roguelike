@@ -11,6 +11,7 @@ import {
     CRYSTAL_EXCHANGE_DEVICE_QA_SNAPSHOT_KEY,
     SYSTEM_SETTINGS_DEVICE_QA_SNAPSHOT_KEY,
     PROGRESSION_ACCEPTANCE_DEVICE_QA_SNAPSHOT_KEY,
+    TRUE_ENDING_JOURNEY_DEVICE_QA_SNAPSHOT_KEY,
     clearDeviceQaSnapshot,
     clearLocalGameSnapshot,
     readDeviceQaSnapshot,
@@ -200,6 +201,36 @@ test('progression acceptance QA keeps rewards and growth choices away from produ
     clearDeviceQaSnapshot(storage, 'progression-acceptance');
     assert.deepEqual(readLocalGameSnapshot(storage), production);
     assert.equal(readDeviceQaSnapshot(storage, 'progression-acceptance'), null);
+});
+
+test('true ending journey QA persists its combat-to-New Game+ checkpoint in an isolated namespace', () => {
+    const storage = makeStorage();
+    const production = { player: { name: '루비아', level: 31 }, gameState: 'idle' };
+    const trueEndingJourney = {
+        player: {
+            name: '종언 검증',
+            meta: {
+                prestigeRank: 3,
+                endgame: { version: 1, primalShards: 2, trueEndingSeen: false },
+            },
+        },
+        gameState: 'combat',
+        enemy: { name: '마왕', baseName: '마왕', hp: 1 },
+    };
+
+    writeLocalGameSnapshot(production, storage);
+    writeDeviceQaSnapshot(trueEndingJourney, storage, 'true-ending-journey');
+
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.deepEqual(
+        readDeviceQaSnapshot(storage, 'true-ending-journey'),
+        trueEndingJourney,
+    );
+    assert.ok(storage.values.has(TRUE_ENDING_JOURNEY_DEVICE_QA_SNAPSHOT_KEY));
+
+    clearDeviceQaSnapshot(storage, 'true-ending-journey');
+    assert.deepEqual(readLocalGameSnapshot(storage), production);
+    assert.equal(readDeviceQaSnapshot(storage, 'true-ending-journey'), null);
 });
 
 test('firebase sync restores local data only on offline fallback and mirrors named runs', async () => {

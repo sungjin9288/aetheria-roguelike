@@ -1,80 +1,11 @@
 import { DB } from '../../data/db';
 import { BALANCE, CONSTANTS } from '../../data/constants';
 import { AT } from '../../reducers/actionTypes';
-import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { makeItem } from '../../utils/gameUtils';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
-
-/**
- * 마왕 처치 후처리: 파편 드랍 / 진 보스 진입 / 일반 환생
- * @returns {boolean} true이면 호출자가 즉시 return해야 함
- */
-export const handleDemonKingSlain = (
-    updatedPlayer: any,
-    dispatch: any,
-    addLog: any,
-    rng: () => number = Math.random,
-    now: () => number = Date.now,
-) => {
-    const prestigeRank = updatedPlayer.meta?.prestigeRank || 0;
-    const shardCount = (updatedPlayer.inv || []).filter((i: any) => i?.name === '원시의 파편').length;
-
-    // cycle 137: PRIMAL_SHARD_DROP_CHANCE는 BALANCE 객체에 있는데 기존엔 CONSTANTS의
-    // 동일명 키(undefined)를 참조해 Math.random() < undefined가 항상 false였음
-    // → 진엔딩 unlock 경로의 shard가 절대 드랍 안 되던 잠복 버그 수정.
-    // 또한 hardcoded 3 → BALANCE.PRIMAL_SHARD_REQUIRED로 교체 (DRY).
-    const SHARD_REQ = BALANCE.PRIMAL_SHARD_REQUIRED || 3;
-    if (prestigeRank >= 1 && shardCount < SHARD_REQ && rng() < BALANCE.PRIMAL_SHARD_DROP_CHANCE) {
-        const shardItem = makeItem(
-            { name: '원시의 파편', type: 'key', price: 0, tier: 5, desc: '원시의 신의 기억이 담긴 파편.' },
-            rng,
-            now,
-        );
-        dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
-        addLog('event', MSG.PRIMAL_SHARD_DROP(shardCount + 1));
-    }
-
-    const currentShardCount = (updatedPlayer.inv || []).filter((i: any) => i?.name === '원시의 파편').length;
-    if (prestigeRank >= 3 && currentShardCount >= SHARD_REQ) {
-        addLog('critical', MSG.TRUE_BOSS_UNLOCK);
-        let removed = 0;
-        const newInv = (updatedPlayer.inv || []).filter((i: any) => {
-            if (i?.name === '원시의 파편' && removed < 3) { removed++; return false; }
-            return true;
-        });
-        const trueBossData = DB.MONSTERS?.['원시의 신'];
-        if (trueBossData) {
-            const trueBoss: Record<string, any> = {
-                name: '원시의 신', baseName: '원시의 신',
-                hp: Math.floor(8000 * (trueBossData.hpMult || 2.2)),
-                maxHp: Math.floor(8000 * (trueBossData.hpMult || 2.2)),
-                atk: Math.floor(280 * (trueBossData.atkMult || 1.8)),
-                def: 120, level: 70, isBoss: true,
-                weakness: '빛', resistance: '어둠',
-                expMult: trueBossData.expMult || 5.0,
-                goldMult: trueBossData.goldMult || 5.0,
-                dropMod: trueBossData.dropMod || 5.0,
-                phase2: trueBossData.phase2, phase3: trueBossData.phase3,
-                exp: 5000, gold: 9999,
-                pattern: { guardChance: 0.05, heavyChance: 0.4 },
-            };
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: newInv }) });
-            dispatch({ type: AT.SET_ENEMY, payload: trueBoss });
-            dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
-            addLog('critical', MSG.TRUE_BOSS_APPEAR);
-        }
-        return true;
-    }
-
-    if (prestigeRank >= 1 && shardCount < SHARD_REQ) {
-        addLog('info', MSG.PRIMAL_SHARD_HINT(Math.min(shardCount + 1, SHARD_REQ)));
-    }
-    dispatch({ type: AT.SET_GAME_STATE, payload: GS.ASCENSION });
-    addLog('system', MSG.DEMON_KING_SLAIN_ASCEND);
-    return true;
-};
+export { resolveEndgameVictory } from '../../systems/endgameSettlement';
 
 /**
  * 무한 심연 층 진행. 현재 위치가 심연 맵이 아니면 player를 그대로 반환.

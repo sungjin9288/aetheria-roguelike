@@ -1,3 +1,30 @@
+Checkpoint (2026-08-11: release-complete core repository implementation and full gate):
+- Apps in Toss setup and publication remain on HOLD while the game core is completed first. A shared permanent-player-state authority now preserves class journey, accessibility/detail settings, the canonical endgame ledger, expedition sequence, and return-supply receipts across defeat, manual reset, and ascension while run-only state resets.
+- Migrated legacy primal shards into a permanent bounded ledger and moved Demon King shard acquisition, final-shard unlock, true-boss spawn/consume, and receipt replay into the reducer-owned combat transaction. The natural True Ending route now works without keeping shard items in run inventory.
+- Kept own-grave recovery, disabled the unsafe client-only public-grave invasion behind a production-false capability, and closed True Ending/New Game+ mobile behavior with immediate skip, reduced motion, safe-area scrolling, deterministic presentation, back consumption, 44px actions, duplicate-click protection, and reload.
+- Removed only behavior-proven dead `inventorySpotlight` and `archivedHistory` runtime plumbing. Added a fail-closed bounded-encounter schema/eligibility/receipt foundation and observation-bound region selector, but left production data empty and disabled because no final-candidate human observations exist.
+- Exercised the production UI journey from fresh start through move, story event, seeded production explore/combat, safe return, equipment decision, job change, and skill branch. Exercised final shard through true boss, True Ending, New Game+, and reload through real combat/reducer actions.
+
+Verification:
+- Focused Plan A-C integration -> `1276/1276` pass; combined release-complete/True Ending/grave/ascension E2E -> `11/11` pass.
+- Final-review regressions -> runtime-mode production boundary `6/6`; exact Demon King and combat outcome dependencies `197/197` pass.
+- Observation evidence RED→GREEN -> schema-v2 selector/runbook requires five complete candidate-bound human journeys, unique attachment hashes, save/background restore, mobile back results, contiguous accepted actions, bidirectional issue links, and P0 0/blocking P1 0. Focused observation/encounter tests `22/22`; the pending summary exits `1` and writes no selection.
+- `npm run verify` -> type-check, lint, unit `3946/3946`, build guard pass.
+- `npm run verify:full` -> repository gate, desktop/mobile smoke, E2E `51/51 + 48/48` pass. Desktop smoke retained the existing post-assertion `browser.close timeout` best-effort shutdown log; the mobile smoke and both E2E shards passed.
+- `AETHERIA_RUN_PERF=1 bash scripts/local-playtest.sh` -> fresh QA build, desktop/mobile smoke and performance guards pass. Desktop intro/start/first-action/market measured `398.3/100.6/25.4/42.6 ms`; mobile measured `414.6/129.7/6.8/67.8 ms`.
+- `npm run art:verify` -> character `18`, equipment `229`, family `22`, signature overlay `25`; every error array empty.
+- `npm run mobile:doctor`, `npm run cap:sync`, `npm run android:debug`, `npm run ios:build:device`, and `git diff --check` -> pass. Android recovered an initial shared Gradle-cache metadata failure through the repository clean-cache retry.
+- Latest Android debug APK: `214642610` bytes, SHA-256 `4c20b80200f88cafcae560c254c8903766a358bf81dc37f72fb8093c2555d46f`. Unsigned iOS `.app` aggregate: `1804` files / `218762955` bytes, SHA-256 `e337d06c0402f2f5912ed2e80952269ee9fc9b82f6b1b6a13b14259b64f55196`. Tracked Android/iOS drift is zero.
+- The paired iPhone is currently USB-available, but `npm run ios:archive:fresh-qa` stopped before archive creation with Xcode exit `65` (`No Accounts`; no profile for `com.aetheria.roguelike.freshqa`). No stale archive is counted. No Android device is attached.
+- The updated explicit-path temporary-index rehearsal selected exactly `90` release-complete paths, contained `0` `build/android/ios/historical Toss` paths, and passed cached diff check. The real repository index remains empty.
+
+Boundary and next action:
+- The working tree is uncommitted and is not a final candidate. `observation-summary.json` has no candidate binding or human rows; the region selector exits 1 and writes no `region-selection.json`.
+- Therefore no regions or encounter families were guessed, the encounter pack remains false/empty, and prior Toss artifacts are superseded audit-only evidence. No Toss console, Sandbox, upload, review, publication, ad activation, signing, staging, commit, or push action was performed.
+- After explicit cohesive commit approval: bind candidate packages, collect at least five fresh human observations with P0 0/blocking P1 0, then select exactly two regions and author four bounded encounter families before repeating full gates.
+
+Original prompt: 설계 승인
+
 Done (2026-08-09: Task 4 independent-review integrity fixes):
 - Bound every generated six-identity batch to the authoritative catalog hash and the complete seven-field equipment-row hash. The processor now requires the dumped catalog and rejects catalog, cohort, family, Tier, element, or manifest-derived runtime-path drift before any write.
 - Restricted source sheets to true RGBA `600x400` fixed 3x2 input with transparent and opaque pixels, non-degenerate icon bounds, and transparent cell padding.

@@ -16,7 +16,6 @@ const DashboardFallback = () => (
 const MobileGameLayout = ({
     engine, fullStats,
     isPanelFocusState, mobileArchiveDockVisible,
-    inventorySpotlight,
     handleQuickSlotUse,
     damageFlash, healFlash,
     mobileConsoleMode,
@@ -54,7 +53,6 @@ const MobileGameLayout = ({
                             actions={engine.actions}
                             stats={fullStats}
                             quickSlots={engine.quickSlots}
-                            inventorySpotlight={inventorySpotlight}
                             runtime={{
                                 syncStatus: engine.syncStatus,
                                 gameState: engine.gameState,
