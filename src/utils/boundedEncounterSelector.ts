@@ -7,6 +7,9 @@ import type {
     BoundedEncounterContext,
 } from '../types/encounter.js';
 import type { Player } from '../types/player.js';
+import { grantGold } from './gameUtils.js';
+import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
+import { calculateFullStats } from './statsCalculator.js';
 
 const SAFE_ID = /^[a-z0-9][a-z0-9._:-]{0,127}$/;
 const HP_BANDS = new Set(['critical', 'strained', 'healthy']);
@@ -146,6 +149,9 @@ export const validateBoundedEncounterPack = (
         if (regional.length !== 2 || new Set(regional.map((encounter) => encounter.family)).size !== 2) {
             errors.push(`REGION_FAMILY_COUNT_INVALID:${region}`);
         }
+        if (!regional.some((encounter) => Object.keys(encounter.eligibility || {}).length === 0)) {
+            errors.push(`REGION_UNCONDITIONAL_ENCOUNTER_MISSING:${region}`);
+        }
     }
     if (encounters.some((encounter) => !selectedRegions.includes(encounter.region))) {
         errors.push('UNSELECTED_REGION_ENCOUNTER');
@@ -171,6 +177,23 @@ const hpBandFor = (hp: number, maxHp: number) => {
     if (ratio <= 0.3) return 'critical';
     if (ratio <= 0.65) return 'strained';
     return 'healthy';
+};
+
+const effectiveVitalsFor = (player: Player) => {
+    const storedMaxHp = Number(player?.maxHp);
+    const storedMaxMp = Number(player?.maxMp);
+    const fallback = Number.isFinite(storedMaxHp) && storedMaxHp > 0
+        && Number.isFinite(storedMaxMp) && storedMaxMp >= 0
+        ? { maxHp: storedMaxHp, maxMp: storedMaxMp }
+        : null;
+    try {
+        const stats = calculateFullStats(player);
+        if (!stats || !Number.isFinite(stats.maxHp) || stats.maxHp <= 0
+            || !Number.isFinite(stats.maxMp) || stats.maxMp < 0) return null;
+        return { maxHp: Number(stats.maxHp), maxMp: Number(stats.maxMp) };
+    } catch {
+        return fallback;
+    }
 };
 
 export const isBoundedEncounterEligible = (
@@ -210,16 +233,61 @@ export const isBoundedEncounterEligible = (
 export const selectBoundedEncounter = (
     encounters: readonly BoundedEncounter[],
     context: BoundedEncounterContext,
-    rng: () => number,
+    receiptOrRng: { expeditionId: string; occurrenceSequence: number } | (() => number),
+    maybeRng?: () => number,
 ) => {
+    const receipt = typeof receiptOrRng === 'function' ? undefined : receiptOrRng;
+    const rng = typeof receiptOrRng === 'function' ? receiptOrRng : maybeRng;
     if (!Array.isArray(encounters) || typeof rng !== 'function') return null;
     const eligible = encounters
-        .filter((encounter) => isBoundedEncounterEligible(encounter, context))
+        .filter((encounter) => isBoundedEncounterEligible(encounter, context, receipt))
         .sort((left, right) => left.id.localeCompare(right.id));
     if (eligible.length === 0) return null;
     const roll = rng();
     if (!Number.isFinite(roll) || roll < 0 || roll >= 1) return null;
     return eligible[Math.floor(roll * eligible.length)] || null;
+};
+
+const jobLineageFor = (job: string) => {
+    if (!Object.hasOwn(DB.CLASSES, job)) return [];
+    const queue: Array<{ job: string; path: string[] }> = [{ job: '모험가', path: ['모험가'] }];
+    const visited = new Set<string>();
+    while (queue.length > 0) {
+        const current = queue.shift();
+        if (!current || visited.has(current.job)) continue;
+        visited.add(current.job);
+        if (current.job === job) return current.path;
+        const classDef = DB.CLASSES[current.job];
+        for (const next of Array.isArray(classDef?.next) ? classDef.next : []) {
+            if (typeof next === 'string') queue.push({ job: next, path: [...current.path, next] });
+        }
+    }
+    return [];
+};
+
+export const buildBoundedEncounterContext = (player: Player, region: string): BoundedEncounterContext | null => {
+    const effectiveVitals = effectiveVitalsFor(player);
+    if (!effectiveVitals) return null;
+    const journey = isPlainObject((player as any)?.classJourney) ? (player as any).classJourney : {};
+    const byJob = isPlainObject(journey.byJob) ? journey.byJob : {};
+    const bossNames = Object.values(byJob).flatMap((entry: any) => (
+        isPlainObject(entry) && Array.isArray(entry.bossNames) ? entry.bossNames : []
+    )).filter((name): name is string => typeof name === 'string');
+    const progress = isPlainObject((player as any)?.eventChainProgress) ? (player as any).eventChainProgress : {};
+    if (progress.boundedEncounterReceipts !== undefined
+        && !isPlainObject(progress.boundedEncounterReceipts)) return null;
+    const receipts = isPlainObject(progress.boundedEncounterReceipts)
+        ? Object.keys(progress.boundedEncounterReceipts)
+        : [];
+    return {
+        region,
+        jobLineage: jobLineageFor(String((player as any)?.job || '')),
+        hp: Number((player as any)?.hp || 0),
+        maxHp: effectiveVitals.maxHp,
+        signatureNames: getDiscoveredSignatureNames(player),
+        bossNames: [...new Set(bossNames)],
+        receiptKeys: receipts,
+    };
 };
 
 const settlementFailure = (player: Player, reason: string, receiptKey: string | null = null) => ({
@@ -277,15 +345,17 @@ export const applyBoundedEncounterChoice = (
         }
     }
 
-    const maxHp = Number.isFinite(player.maxHp) && Number(player.maxHp) > 0 ? Number(player.maxHp) : hp;
-    const maxMp = Number.isFinite(player.maxMp) && Number(player.maxMp) >= 0 ? Number(player.maxMp) : mp;
+    const effectiveVitals = effectiveVitalsFor(player);
+    if (!effectiveVitals) return settlementFailure(player, 'invalid_player_vitals', receiptKey);
+    const { maxHp, maxMp } = effectiveVitals;
     const outcome = choice.outcome;
     let nextPlayer: Player = {
         ...player,
         hp: Math.min(maxHp, hp - (cost.hp || 0) + (outcome.hp || 0)),
         mp: Math.min(maxMp, mp - (cost.mp || 0) + (outcome.mp || 0)),
-        gold: gold - (cost.gold || 0) + (outcome.gold || 0),
+        gold: gold - (cost.gold || 0),
     };
+    nextPlayer = grantGold(nextPlayer, outcome.gold || 0);
     if (outcome.item) {
         const item = canonicalItemNames.has(outcome.item)
             ? ['weapons', 'armors', 'consumables', 'materials']

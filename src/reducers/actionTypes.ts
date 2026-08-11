@@ -14,6 +14,13 @@ export type AscendPayload = {
     sourceReceiptKey: string | null;
 };
 
+export interface ResolveBoundedEncounterChoicePayload {
+    encounterId: string;
+    choiceId: string;
+    expeditionId: string;
+    occurrenceSequence: number;
+}
+
 export const AT = Object.freeze({
     // Boot / Auth
     SET_BOOT_STAGE: 'SET_BOOT_STAGE',
@@ -66,6 +73,7 @@ export const AT = Object.freeze({
     PURCHASE_PREMIUM_OFFER: 'PURCHASE_PREMIUM_OFFER',
     USE_COMBAT_ITEM: 'USE_COMBAT_ITEM',
     RESOLVE_COMBAT_ACTION: 'RESOLVE_COMBAT_ACTION',
+    RESOLVE_BOUNDED_ENCOUNTER_CHOICE: 'RESOLVE_BOUNDED_ENCOUNTER_CHOICE',
 
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',

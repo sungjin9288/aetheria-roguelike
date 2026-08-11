@@ -54,3 +54,18 @@ export interface BoundedEncounterContext {
     bossNames: string[];
     receiptKeys: string[];
 }
+
+export interface BoundedEncounterEvent {
+    isBoundedEncounter: true;
+    boundedEncounterId: string;
+    boundedOccurrenceSequence: number;
+    title: string;
+    desc: string;
+    choices: string[];
+    outcomes: Array<{
+        choiceIndex: number;
+        choiceId: string;
+        tradeoff: string;
+        tone: 'reward' | 'danger' | 'story';
+    }>;
+}

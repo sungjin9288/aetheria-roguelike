@@ -4,12 +4,16 @@ import assert from 'node:assert/strict';
 import { BOUNDED_ENCOUNTERS, BOUNDED_ENCOUNTER_PACK_ENABLED } from '../src/data/boundedEncounters.ts';
 import {
     applyBoundedEncounterChoice,
+    buildBoundedEncounterContext,
     buildBoundedEncounterReceiptKey,
     isBoundedEncounterEligible,
     selectBoundedEncounter,
     validateBoundedEncounterPack,
 } from '../src/utils/boundedEncounterSelector.ts';
 import { createDomainRandom } from '../src/utils/seededRandom.ts';
+import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
+import { RELICS } from '../src/data/relics.ts';
+import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 
 const choice = (id, overrides = {}) => ({
     id,
@@ -41,13 +45,13 @@ const encounter = (id, region, family, overrides = {}) => ({
 
 const validPack = () => ([
     encounter('forest-lineage', '고요한 숲', 'old-pillars', {
-        eligibility: { lineage: ['전사'], hpBand: 'healthy' },
+        eligibility: {},
     }),
     encounter('forest-signature', '고요한 숲', 'moon-trail', {
         eligibility: { requiresSignature: true },
     }),
     encounter('plain-boss', '서쪽 평원', 'broken-banner', {
-        eligibility: { previousBoss: '고대 호수의 수호신' },
+        eligibility: {},
     }),
     encounter('plain-strained', '서쪽 평원', 'dust-well', {
         eligibility: { hpBand: 'strained' },
@@ -65,9 +69,11 @@ const context = (overrides = {}) => ({
     ...overrides,
 });
 
-test('production encounter pack remains disabled until observed regions are bound', () => {
-    assert.equal(BOUNDED_ENCOUNTER_PACK_ENABLED, false);
-    assert.deepEqual(BOUNDED_ENCOUNTERS, []);
+test('production encounter pack contains exactly the approved early-region families', () => {
+    assert.equal(BOUNDED_ENCOUNTER_PACK_ENABLED, true);
+    assert.equal(BOUNDED_ENCOUNTERS.length, 4);
+    assert.deepEqual([...new Set(BOUNDED_ENCOUNTERS.map((entry) => entry.region))], ['고요한 숲', '서쪽 평원']);
+    assert.deepEqual(validateBoundedEncounterPack(BOUNDED_ENCOUNTERS, ['고요한 숲', '서쪽 평원']), { ok: true, errors: [] });
 });
 
 test('pack validator requires exactly two canonical families per selected region', () => {
@@ -80,6 +86,15 @@ test('pack validator requires exactly two canonical families per selected region
     const result = validateBoundedEncounterPack(missing, ['고요한 숲', '서쪽 평원']);
     assert.equal(result.ok, false);
     assert.ok(result.errors.includes('REGION_FAMILY_COUNT_INVALID:서쪽 평원'));
+});
+
+test('pack validator requires an unconditional family in every selected region', () => {
+    const invalid = BOUNDED_ENCOUNTERS.map((entry) => (
+        entry.region === '고요한 숲' ? { ...entry, eligibility: { hpBand: 'healthy' } } : entry
+    ));
+    const result = validateBoundedEncounterPack(invalid, ['고요한 숲', '서쪽 평원']);
+    assert.equal(result.ok, false);
+    assert.ok(result.errors.includes('REGION_UNCONDITIONAL_ENCOUNTER_MISSING:고요한 숲'));
 });
 
 test('malformed copy, costs and catalog references fail closed', () => {
@@ -107,7 +122,8 @@ test('malformed copy, costs and catalog references fail closed', () => {
 });
 
 test('eligibility covers region, lineage, HP band, signature, boss and replay receipt', () => {
-    const [lineage, signature] = validPack();
+    const [baseLineage, signature] = validPack();
+    const lineage = { ...baseLineage, eligibility: { lineage: ['전사'], hpBand: 'healthy' } };
     assert.equal(isBoundedEncounterEligible(lineage, context()), true);
     assert.equal(isBoundedEncounterEligible(lineage, context({ region: '서쪽 평원' })), false);
     assert.equal(isBoundedEncounterEligible(lineage, context({ jobLineage: ['모험가'] })), false);
@@ -120,7 +136,7 @@ test('eligibility covers region, lineage, HP band, signature, boss and replay re
         occurrenceSequence: 1,
     }), false);
 
-    const bossEncounter = validPack()[2];
+    const bossEncounter = { ...validPack()[2], eligibility: { previousBoss: '고대 호수의 수호신' } };
     assert.equal(isBoundedEncounterEligible(bossEncounter, context({ region: '서쪽 평원' })), true);
     assert.equal(isBoundedEncounterEligible(
         bossEncounter,
@@ -204,4 +220,43 @@ test('unknown or malformed encounter data is never eligible or applied', () => {
     assert.equal(result.applied, false);
     assert.equal(result.reason, 'invalid_encounter');
     assert.strictEqual(result.player, player);
+});
+
+test('malformed persisted receipt ledger suppresses bounded selection instead of trapping settlement', () => {
+    const player = {
+        job: '모험가',
+        hp: 100,
+        maxHp: 100,
+        inv: [],
+        equip: {},
+        eventChainProgress: { boundedEncounterReceipts: [] },
+    };
+    assert.equal(buildBoundedEncounterContext(player, '고요한 숲'), null);
+});
+
+test('HP eligibility and healing use the effective combat maximum', () => {
+    const titanBelt = RELICS.find((entry) => entry.id === 'titan_belt');
+    const player = {
+        ...structuredClone(INITIAL_STATE.player),
+        hp: 70,
+        maxHp: 100,
+        relics: [titanBelt],
+    };
+    const effectiveMaxHp = calculateFullStats(player).maxHp;
+    const built = buildBoundedEncounterContext(player, '고요한 숲');
+    assert.equal(built?.maxHp, effectiveMaxHp);
+
+    const strained = encounter('effective-hp', '고요한 숲', 'effective-hp', {
+        eligibility: { hpBand: 'strained' },
+        choices: [
+            choice('heal', { cost: {}, outcome: { hp: effectiveMaxHp, result: '회복합니다.' } }),
+            choice('leave'),
+        ],
+    });
+    assert.equal(isBoundedEncounterEligible(strained, built), true);
+    const healed = applyBoundedEncounterChoice(player, strained, 'heal', {
+        expeditionId: 'expedition-effective-hp', occurrenceSequence: 1,
+    });
+    assert.equal(healed.applied, true);
+    assert.equal(healed.player.hp, effectiveMaxHp);
 });

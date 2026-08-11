@@ -20,6 +20,21 @@ export const createEventActions = (deps: any, shared: any) => {
         handleEventChoice: (idx: any) => {
             if (!currentEvent) return;
 
+            if (currentEvent.isBoundedEncounter) {
+                const outcome = toArray(currentEvent.outcomes)[idx];
+                if (!outcome) return;
+                dispatch({
+                    type: AT.RESOLVE_BOUNDED_ENCOUNTER_CHOICE,
+                    payload: {
+                        encounterId: currentEvent.boundedEncounterId,
+                        choiceId: outcome.choiceId,
+                        expeditionId: player.activeExpedition?.id,
+                        occurrenceSequence: currentEvent.boundedOccurrenceSequence,
+                    },
+                });
+                return;
+            }
+
             // 스카우팅 카드 처리 — 같은 탐험 턴 안에서 즉시 해소 (탐험의 나머지 롤 파이프 재호출).
             if (currentEvent.isScout) {
                 handleScoutChoice(idx, currentEvent, { ...deps, rng }, shared);

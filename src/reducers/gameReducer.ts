@@ -9,6 +9,7 @@ import type { Player } from '../types';
 import { createCurrentRunProgress } from '../utils/runProgress';
 import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
+import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
 
 /**
  * Game state shape — cycle 60 phase D — Player 도메인 타입 적용.
@@ -115,7 +116,7 @@ export const INITIAL_STATE: GameState = {
     leaderboard: [],
     liveConfig: {
         eventMultiplier: 1,
-        progressionProfile: { id: 'baseline', version: 1 },
+        progressionProfile: { id: 'exploration-rhythm', version: 2 },
         announcement: '',
         seasonEvent: null,
     },
@@ -152,6 +153,7 @@ const ACTION_MAP: ActionMap = {
     ...makeProgressionActionMap(INITIAL_STATE),
     ...makeFeatureActionMap(INITIAL_STATE.player),
     ...returnSupplyRewardActionMap,
+    ...boundedEncounterActionMap,
 };
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
