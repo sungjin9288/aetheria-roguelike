@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "candidateId": null,
-  "sourceTreeSha256": null,
+  "candidateId": "release-core-3a2407a0c961",
+  "sourceTreeSha256": "06adf4948a68eaa6f17bd164fb0e5c29348e9c33b92a4d8b3bde8c2d2f739b84",
   "requiredFreshHumanObservations": 5,
   "observations": [],
   "issues": [],

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
 import { RELICS } from '../data/relics';
+import type { Relic } from '../types/relic';
 import { GS } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
 import { INITIAL_STATE } from '../reducers/gameReducer';
@@ -27,6 +28,7 @@ import { buildBoundedEncounterEvent } from '../utils/boundedEncounterEvent';
 import { startExpedition } from '../utils/expeditionLedger';
 import { EXPLORATION_RHYTHM_PROFILE } from '../data/progressionProfiles';
 import { advanceExploreState } from '../utils/explorationPacing';
+import { getAdditiveNumericRelicValue } from '../utils/relicEffectValues';
 
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
 
@@ -1407,6 +1409,89 @@ export const useGameTestApi = (
                         { id: 'test_relic_violet', name: '균열의 서판', desc: '기술 피해 18% 증가', rarity: 'rare', effect: 'skill_mult' },
                     ],
                 });
+            },
+            injectUndyingRelicChoice: () => {
+                const choices = ['undying', 'blood_pact', 'twin_blades']
+                    .map((id) => RELICS.find((relic) => relic.id === id));
+                if (choices.some((relic) => !relic)) return;
+                engineRef.current.dispatch({
+                    type: AT.SET_PENDING_RELICS,
+                    payload: choices,
+                });
+            },
+            getCanonicalUndyingRelicChoiceSnapshot: () => {
+                const er = engineRef.current;
+                return {
+                    pendingIds: Array.isArray(er.pendingRelics)
+                        ? er.pendingRelics.map((relic: Relic) => relic.id)
+                        : [],
+                    ownedRelicCount: (er.player.relics || []).length,
+                    ownedUndyingCount: (er.player.relics || [])
+                        .filter((relic: Relic) => relic.id === 'undying').length,
+                };
+            },
+            injectFreeSkillRelicChoice: () => {
+                const choices = ['spell_echo', 'time_ring', 'mana_crystal']
+                    .map((id) => RELICS.find((relic) => relic.id === id));
+                if (choices.some((relic) => !relic)) return;
+                engineRef.current.dispatch({
+                    type: AT.SET_PENDING_RELICS,
+                    payload: choices,
+                });
+            },
+            getCanonicalFreeSkillRelicChoiceSnapshot: () => {
+                const er = engineRef.current;
+                return {
+                    pendingIds: Array.isArray(er.pendingRelics)
+                        ? er.pendingRelics.map((relic: Relic) => relic.id)
+                        : [],
+                    ownedRelicCount: (er.player.relics || []).length,
+                    ownedSpellEchoCount: (er.player.relics || [])
+                        .filter((relic: Relic) => relic.id === 'spell_echo').length,
+                };
+            },
+            injectEventChanceRelicChoice: () => {
+                const choices = ['ancient_map', 'wanderer_charm', 'mana_crystal']
+                    .map((id) => RELICS.find((relic) => relic.id === id));
+                if (choices.some((relic) => !relic)) return false;
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { relics: [] },
+                });
+                er.dispatch({
+                    type: AT.SET_PENDING_RELICS,
+                    payload: choices,
+                });
+                return true;
+            },
+            injectStackedEventChanceRelicChoice: () => {
+                const er = engineRef.current;
+                const hasWandererCharm = (er.player.relics || [])
+                    .some((relic: Relic) => relic.id === 'wanderer_charm');
+                const choices = ['ancient_map', 'mana_crystal', 'stone_skin']
+                    .map((id) => RELICS.find((relic) => relic.id === id));
+                if (!hasWandererCharm || choices.some((relic) => !relic)) return false;
+                er.dispatch({
+                    type: AT.SET_PENDING_RELICS,
+                    payload: choices,
+                });
+                return true;
+            },
+            getCanonicalEventChanceRelicChoiceSnapshot: () => {
+                const er = engineRef.current;
+                const relics = er.player.relics || [];
+                return {
+                    pendingIds: Array.isArray(er.pendingRelics)
+                        ? er.pendingRelics.map((relic: Relic) => relic.id)
+                        : [],
+                    ownedRelicCount: relics.length,
+                    ownedAncientMapCount: relics
+                        .filter((relic: Relic) => relic.id === 'ancient_map').length,
+                    ownedWandererCharmCount: relics
+                        .filter((relic: Relic) => relic.id === 'wanderer_charm').length,
+                    eventChanceBonus: getAdditiveNumericRelicValue(relics, 'event_chance'),
+                };
             },
             injectRunSummary: () => {
                 const er = engineRef.current;

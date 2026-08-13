@@ -4,6 +4,7 @@ import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
 import { BALANCE } from '../data/constants.js';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
+import { withCanonicalEquipmentBaseIdentity } from '../utils/equipmentBaseIdentity.js';
 import { MSG } from '../data/messages.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
@@ -60,7 +61,7 @@ export const processLoot = (
         const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === rareTier);
         if (pool.length > 0) {
             const picked = pool[Math.floor(random() * pool.length)];
-            const baseItem = { ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+            const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
             const newItem = applyItemPrefix(baseItem, random);
             items.push(newItem);
             logs.push({ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name) });
@@ -89,7 +90,7 @@ export const processLoot = (
                 if (!itemData) return;
                 const qty = entry.qty ? (entry.qty[0] + Math.floor(random() * (entry.qty[1] - entry.qty[0] + 1))) : 1;
                 for (let q = 0; q < qty; q++) {
-                    const baseItem = { ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                    const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                     const newItem = applyItemPrefix(baseItem, random);
                     items.push(newItem);
                     logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
@@ -120,7 +121,7 @@ export const processLoot = (
                 const itemData = allItems.find((i: any) => i.name === itemName);
                 if (!itemData) return;
 
-                const baseItem = { ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                 const newItem = applyItemPrefix(baseItem, random);
                 items.push(newItem);
                 logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
@@ -140,7 +141,7 @@ export const processLoot = (
             const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
                 const picked = tierPool[Math.floor(random() * tierPool.length)];
-                const baseItem = { ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                 const newItem = applyItemPrefix(baseItem, random);
                 items.push(newItem);
                 logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });

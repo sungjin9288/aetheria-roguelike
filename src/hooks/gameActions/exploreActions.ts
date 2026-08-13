@@ -20,6 +20,7 @@ import { resolveExploreActionRandom } from '../../utils/exploreActionSeed';
 import { BOUNDED_ENCOUNTER_PACK_ENABLED, BOUNDED_ENCOUNTERS } from '../../data/boundedEncounters';
 import { buildBoundedEncounterContext, selectBoundedEncounter } from '../../utils/boundedEncounterSelector';
 import { buildBoundedEncounterEvent } from '../../utils/boundedEncounterEvent';
+import { getAdditiveNumericRelicValue } from '../../utils/relicEffectValues';
 
 const takeHarnessExploreSeed = (): number | undefined => {
     if (import.meta.env?.VITE_ENABLE_TEST_API !== '1' || typeof document === 'undefined') {
@@ -44,9 +45,7 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
     const { player, uid, dispatch, addLog, addStoryLog, getFullStats } = deps;
     const rng = typeof deps.rng === 'function' ? deps.rng : Math.random;
     const playerRelics = player.relics || [];
-    const eventChanceBonus = playerRelics.reduce((acc: any, relic: any) => (
-        relic.effect === 'event_chance' ? acc + relic.val : acc
-    ), 0);
+    const eventChanceBonus = getAdditiveNumericRelicValue(playerRelics, 'event_chance');
     const pacingProfile = getMapPacingProfile(mapData);
     const effectiveEventChance = getNarrativeEventChance(
         mapData.eventChance || 0,

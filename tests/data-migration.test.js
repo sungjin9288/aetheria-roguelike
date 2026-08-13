@@ -286,6 +286,73 @@ test('migrateData: discoveryChains이 배열이 아닌 경우 → 빈 배열 fal
     assert.deepEqual(migrated.player.stats.discoveryChains, []);
 });
 
+test('equipment economy migration corrects only resolved equipment prices and remains idempotent', () => {
+    const prefixedWeapon = {
+        id: 'legacy-prefixed-weapon',
+        name: '고대의 차원절단자',
+        type: 'weapon',
+        prefixed: true,
+        prefixName: '고대의',
+        price: 6250,
+        val: 130,
+        enhance: 3,
+        desc: '보존해야 하는 설명',
+        desc_stat: 'ATK+130 | 고대의',
+        extension: { receipt: 'legacy-1' },
+    };
+    const unresolvedWeapon = {
+        id: 'legacy-unresolved-weapon',
+        name: '알 수 없는 오래된 검',
+        type: 'weapon',
+        prefixed: true,
+        prefixName: '오래된',
+        price: 777,
+        val: 42,
+        enhance: 2,
+        extension: { keep: true },
+    };
+    const consumable = { id: 'legacy-consumable', name: '회복 물약', type: 'hp', val: 30, price: 20, extension: 'keep' };
+    const material = { id: 'legacy-material', name: '철광석', type: 'material', val: 1, price: 5, extension: 'keep' };
+    const input = {
+        version: 5,
+        player: {
+            name: '경제 마이그레이션',
+            stats: {},
+            inv: [prefixedWeapon, unresolvedWeapon, consumable, material],
+            equip: {
+                weapon: { ...prefixedWeapon, id: 'slot-weapon' },
+                armor: {
+                    id: 'slot-armor', name: '암영 망토', type: 'armor', price: 900,
+                    val: 35, enhance: 4, extension: { source: 'slot' },
+                },
+                offhand: {
+                    id: 'slot-offhand', name: '목재 방패', type: 'shield', price: 90,
+                    val: 7, enhance: 1, extension: { source: 'slot' },
+                },
+            },
+        },
+    };
+
+    const migrated = migrateData(input);
+    const [migratedPrefixed, migratedUnresolved, migratedConsumable, migratedMaterial] = migrated.player.inv;
+
+    assert.equal(migratedPrefixed.baseItemName, '차원절단자');
+    assert.equal(migratedPrefixed.price, 55000);
+    assert.equal(migratedPrefixed.id, prefixedWeapon.id);
+    assert.equal(migratedPrefixed.enhance, prefixedWeapon.enhance);
+    assert.deepEqual(migratedPrefixed.extension, prefixedWeapon.extension);
+    assert.deepEqual(migratedUnresolved, unresolvedWeapon);
+    assert.deepEqual(migratedConsumable, { ...consumable, enhance: 0 });
+    assert.deepEqual(migratedMaterial, { ...material, enhance: 0 });
+    assert.equal(migrated.player.equip.weapon.price, 55000);
+    assert.equal(migrated.player.equip.weapon.baseItemName, '차원절단자');
+    assert.equal(migrated.player.equip.armor.price, 4000);
+    assert.equal(migrated.player.equip.armor.baseItemName, '암영 망토');
+    assert.equal(migrated.player.equip.offhand.baseItemName, '목재 방패');
+    assert.equal(migrated.player.equip.offhand.price, 90);
+    assert.deepEqual(migrateData(migrated), migrated);
+});
+
 // ─── 원본: tests/cycle-131-save-migrate-ascend-flow.test.js ───
 /**
  * cycle 131: save → migrate → ASCEND 통합 흐름 회귀 가드.

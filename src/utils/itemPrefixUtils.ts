@@ -2,6 +2,7 @@ import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { getItemStatText } from './equipmentUtils';
 import type { Item } from '../types/index.js';
+import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 
 const normalizeItemType = (type: any) => {
     if (type === 'shield') return 'armor';
@@ -59,7 +60,8 @@ const applyPrefixStats = (item: Item, prefix: any) => {
 
 export const applyItemPrefix = (item: any, rng?: () => number): any => {
     const random = typeof rng === 'function' ? rng : Math.random;
-    if (!item || item.prefixed) return item;
+    if (!item) return item;
+    if (item.prefixed) return withCanonicalEquipmentBaseIdentity(item);
 
     if (random() >= BALANCE.ITEM_PREFIX_CHANCE) return item;
 
@@ -67,7 +69,7 @@ export const applyItemPrefix = (item: any, rng?: () => number): any => {
     if (!candidates.length) return item;
 
     const prefix = candidates[Math.floor(random() * candidates.length)];
-    const withStats = applyPrefixStats(item, prefix);
+    const withStats = applyPrefixStats(withCanonicalEquipmentBaseIdentity(item), prefix);
     const normalizedType = normalizeItemType(withStats.type);
     const statText = formatStatText(withStats, normalizedType);
 

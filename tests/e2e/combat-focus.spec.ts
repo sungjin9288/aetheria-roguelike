@@ -3,6 +3,7 @@ import { startE2ERun } from './testHelpers';
 
 test.describe('Combat focus mode', () => {
     test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
         await startE2ERun(page);
         const seeded = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false));
         expect(seeded).toBe(true);
@@ -22,6 +23,14 @@ test.describe('Combat focus mode', () => {
 
         const viewport = page.viewportSize();
         expect(viewport).not.toBeNull();
+        const terminal = page.getByTestId('terminal-panel');
+        const terminalBox = await terminal.boundingBox();
+        const attackBox = await page.getByTestId('combat-action-attack').boundingBox();
+        expect(terminalBox).not.toBeNull();
+        expect(attackBox).not.toBeNull();
+        expect(terminalBox!.y + terminalBox!.height).toBeLessThanOrEqual(attackBox!.y + 1);
+        expect(terminalBox!.x).toBeGreaterThanOrEqual(0);
+        expect(terminalBox!.x + terminalBox!.width).toBeLessThanOrEqual(viewport!.width + 1);
         for (const key of ['attack', 'skill', 'item', 'escape']) {
             const action = page.getByTestId(`combat-action-${key}`);
             await expect(action).toBeVisible();
@@ -29,6 +38,8 @@ test.describe('Combat focus mode', () => {
             expect(box).not.toBeNull();
             expect(box!.height).toBeGreaterThanOrEqual(44);
             expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height + 1);
+            expect(box!.x).toBeGreaterThanOrEqual(0);
+            expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1);
         }
         await page.screenshot({ path: 'playtest-artifacts/monster-region-art/combat-forest.png' });
     });

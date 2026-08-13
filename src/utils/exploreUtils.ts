@@ -15,6 +15,7 @@ import { GS } from '../reducers/gameStates.js';
 import { MSG } from '../data/messages.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { findItemByName } from './gameUtils.js';
+import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { applyDynamicDifficulty } from '../systems/DifficultyManager';
 import { CombatEngine } from '../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../data/progressionProfiles';
@@ -589,7 +590,10 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
                     // 만 사용해 확장된 인벤(25칸)에서도 20칸 기준으로 reward skip 가능했음.
                     const invCap = (updated.maxInv as number) || (BALANCE.INV_MAX_SIZE || 20);
                     if (itemData && (updated.inv || []).length < invCap) {
-                        updated.inv = [...(updated.inv || []), { ...itemData, id: `disc_${Date.now()}` }];
+                        updated.inv = [...(updated.inv || []), withCanonicalEquipmentBaseIdentity({
+                            ...itemData,
+                            id: `disc_${Date.now()}`,
+                        })];
                     }
                 }
                 updated.stats = {

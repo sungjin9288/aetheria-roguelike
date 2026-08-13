@@ -75,6 +75,24 @@ export interface ExplorationRhythmComparison {
     blockers: string[];
 }
 
+export interface EventChanceBonusRhythmComparison {
+    schemaVersion: 1;
+    classification: 'controlled-event-chance-bonus';
+    actualPlayClaim: false;
+    seeds: number[];
+    opportunitiesPerSeed: 4096;
+    eventChanceBonus: { predecessor: number; candidate: number };
+    predecessor: ExplorationRhythmAggregate;
+    candidate: ExplorationRhythmAggregate;
+    gates: {
+        generalNarrativeReduced: boolean;
+        expLootInvariant: boolean;
+        globalProgressionProfileInvariant: boolean;
+        mandatoryStoryInvariant: boolean;
+        bossChallengeInvariant: boolean;
+    };
+}
+
 type Outcome = 'campfire' | 'scout' | 'generalNarrative' | 'combat' | 'anomaly' | 'relic' | 'nothing';
 
 const OPPORTUNITIES_PER_SEED = 4_096;
@@ -121,7 +139,11 @@ interface SeedRhythmResult {
     gaps: number[];
 }
 
-const simulateSeed = (seed: number, policy: ExplorationRhythmPolicy) => {
+const simulateSeed = (
+    seed: number,
+    policy: ExplorationRhythmPolicy,
+    eventChanceBonus = 0,
+) => {
     const outcomes: Outcome[] = [];
     const gaps: number[] = [];
     let lastOptionalAt = 0;
@@ -146,7 +168,7 @@ const simulateSeed = (seed: number, policy: ExplorationRhythmPolicy) => {
         } else {
             const narrativeChance = getNarrativeEventChance(
                 map.eventChance || 0,
-                0,
+                eventChanceBonus,
                 { exploreState },
                 map,
                 policy.eventMultiplier,
@@ -191,6 +213,13 @@ const simulateSeed = (seed: number, policy: ExplorationRhythmPolicy) => {
         player.stats = { exploreState };
     }
     return { aggregate: aggregate(outcomes, gaps), gaps } satisfies SeedRhythmResult;
+};
+
+const validateEventChanceBonus = (value: number) => {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+        throw new Error('INVALID_EVENT_CHANCE_BONUS');
+    }
+    return value;
 };
 
 const validateSeeds = (seeds: readonly number[]) => {
@@ -254,5 +283,47 @@ export const compareExplorationRhythm = (
                 && EXPLORATION_RHYTHM_PROFILE.lootMultiplier === BASELINE_PROGRESSION_PROFILE.lootMultiplier,
         },
         blockers: [],
+    };
+};
+
+export const compareEventChanceBonusRhythm = (
+    seeds: readonly number[],
+    predecessorBonus: number,
+    candidateBonus: number,
+): Readonly<EventChanceBonusRhythmComparison> => {
+    const canonicalSeeds = validateSeeds(seeds);
+    const predecessor = validateEventChanceBonus(predecessorBonus);
+    const candidate = validateEventChanceBonus(candidateBonus);
+    const predecessorRuns = canonicalSeeds.map((seed) => (
+        simulateSeed(seed, CANDIDATE_EXPLORATION_RHYTHM, predecessor)
+    ));
+    const candidateRuns = canonicalSeeds.map((seed) => (
+        simulateSeed(seed, CANDIDATE_EXPLORATION_RHYTHM, candidate)
+    ));
+    const predecessorAggregate = sumAggregates(predecessorRuns);
+    const candidateAggregate = sumAggregates(candidateRuns);
+    const profileInvariant = EXPLORATION_RHYTHM_PROFILE.expMultiplier === BASELINE_PROGRESSION_PROFILE.expMultiplier
+        && EXPLORATION_RHYTHM_PROFILE.lootMultiplier === BASELINE_PROGRESSION_PROFILE.lootMultiplier;
+    const mandatoryStoryInvariant = predecessorAggregate.mandatoryStory.classification
+        === candidateAggregate.mandatoryStory.classification;
+    const bossChallengeInvariant = predecessorAggregate.bossChallenge.classification
+        === candidateAggregate.bossChallenge.classification;
+
+    return {
+        schemaVersion: 1,
+        classification: 'controlled-event-chance-bonus',
+        actualPlayClaim: false,
+        seeds: canonicalSeeds,
+        opportunitiesPerSeed: OPPORTUNITIES_PER_SEED,
+        eventChanceBonus: { predecessor, candidate },
+        predecessor: predecessorAggregate,
+        candidate: candidateAggregate,
+        gates: {
+            generalNarrativeReduced: candidateAggregate.generalNarrative < predecessorAggregate.generalNarrative,
+            expLootInvariant: profileInvariant,
+            globalProgressionProfileInvariant: profileInvariant,
+            mandatoryStoryInvariant,
+            bossChallengeInvariant,
+        },
     };
 };

@@ -9,6 +9,7 @@ import { normalizeMilestoneStoryState } from './milestoneStory.js';
 import { normalizeCurrentRunProgress } from './runProgress.js';
 import { normalizeClassJourneyLedger } from './classJourney.js';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward.js';
+import { migrateEquipmentInstancePrice } from './equipmentBaseIdentity.js';
 import { BALANCE } from '../data/constants.js';
 import type { EndgameProgress } from '../types/player.js';
 
@@ -267,7 +268,8 @@ export const migrateData = (rawData: any) => {
     // cycle 386: dailyInvadeCount / lastInvadeDate fallback 제거 (cycle 373-385 동일 lens) —
     //   모든 consumer가 이미 `|| 0` fallback 또는 strict equal 비교 (`=== today`)로
     //   undefined / null 안전 처리.
-    // 인벤 아이템에 enhance 기본값 보장
+    // 기존 저장 계약대로 모든 아이템 인스턴스에 enhance 기본값을 보장한다.
+    // 뒤의 경제 마이그레이션은 canonical 장비의 baseItemName / price만 바꾼다.
     if (Array.isArray(target.inv)) {
         target.inv = target.inv.map((item: any) => item ? { ...item, enhance: item.enhance || 0 } : item);
     }
@@ -290,25 +292,16 @@ export const migrateData = (rawData: any) => {
     // cycle 385: discoveryChains 정규화 중복 제거 — 동일 코드가 line 440(cycle 120 영역)에
     //   이미 존재. 두 번째는 noop이라 redundant.
 
-    // 접두사 마이그레이션 — prefixed 플래그가 있지만 prefixName 누락된 아이템 보강
-    const fixPrefixedItem = (item: any) => {
-        if (!item || !item.prefixed) return item;
-        if (!item.prefixName && item.name) {
-            // 이름에서 접두사 추출 시도 (첫 번째 공백 기준)
-            const parts = item.name.split(' ');
-            if (parts.length > 1) {
-                item.prefixName = parts[0];
-            }
-        }
-        return item;
-    };
+    // 장비 경제 마이그레이션은 exact canonical identity가 있는 인스턴스의
+    // baseItemName / price만 고친다. 알 수 없는 legacy 이름·접두사·확장 필드는
+    // 추측하거나 삭제하지 않고 그대로 보존한다.
     if (Array.isArray(target.inv)) {
-        target.inv = target.inv.map(fixPrefixedItem);
+        target.inv = target.inv.map(migrateEquipmentInstancePrice);
     }
     if (target.equip) {
-        target.equip.weapon = fixPrefixedItem(target.equip.weapon);
-        target.equip.armor = fixPrefixedItem(target.equip.armor);
-        target.equip.offhand = fixPrefixedItem(target.equip.offhand);
+        target.equip.weapon = migrateEquipmentInstancePrice(target.equip.weapon);
+        target.equip.armor = migrateEquipmentInstancePrice(target.equip.armor);
+        target.equip.offhand = migrateEquipmentInstancePrice(target.equip.offhand);
     }
 
     return savedData;
