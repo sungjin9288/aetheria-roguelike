@@ -1,0 +1,55 @@
+{
+  "hashAlgorithm": "sha256",
+  "reportHash": "16a7bcc710465bca277877e695145eb06c5a8b58af90b0a69894632c9809efa9",
+  "authorityHashes": {
+    "catalog": "4f6c04d60f1fbf8cf06324e18b686c79717af4ea73935b3eb22e708696dba731",
+    "combatActions": "4b465ef5d774e6c16a457eaa466413c371df5af0dc079b1536d1d72613122b04",
+    "combatOutcome": "a0f600bee0505624e0e1766991c119aabe40bdc97172b9dc17eaecf4e02786ff"
+  },
+  "report": {
+    "schemaVersion": 1,
+    "classification": "controlled-relic-gold-multiplier",
+    "actualPlayClaim": false,
+    "policy": {
+      "effect": "gold_mult",
+      "stacking": "strongest-only",
+      "goldMagnetValue": 0.3,
+      "merchantSealValue": 0.6,
+      "bothOrdersValue": [
+        0.6,
+        0.6
+      ],
+      "activeRunSnapshot": "preserved"
+    },
+    "catalog": {
+      "goldMagnet": {
+        "rarity": "common",
+        "desc": "골드 획득 30% 증가",
+        "value": 0.3
+      },
+      "merchantSeal": {
+        "rarity": "rare",
+        "desc": "골드 획득 60% 증가 (공허의 왕좌 다음 등급)",
+        "value": 0.6
+      }
+    },
+    "reward": {
+      "enemyGold": 101,
+      "strongestValue": 0.6,
+      "bothOrdersGold": [
+        161,
+        161
+      ],
+      "rounding": "Math.floor"
+    },
+    "malformedCases": {
+      "undefined": "INVALID_RELIC_EFFECT_VALUE",
+      "string": "INVALID_RELIC_EFFECT_VALUE",
+      "nan": "INVALID_RELIC_EFFECT_VALUE",
+      "infinity": "INVALID_RELIC_EFFECT_VALUE",
+      "negative": "INVALID_RELIC_EFFECT_VALUE",
+      "overflow": "INVALID_RELIC_EFFECT_VALUE"
+    },
+    "errors": []
+  }
+}

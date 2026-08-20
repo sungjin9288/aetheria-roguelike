@@ -175,10 +175,10 @@ export const EVENT_CHAINS: any = [
                 loc: '어둠의 동굴',
                 event: {
                     title: '암시장 접선',
-                    desc: '동굴 깊은 곳에서 복면을 쓴 상인을 만났습니다. "표식을 알고 왔다면... 특별한 물건이 있소. 하지만 공짜는 없지." 그는 희귀 유물을 2000G에 제시합니다.',
-                    choices: ['거래한다 (2000G)', '거절하고 정보만 얻는다'],
+                    desc: '동굴 깊은 곳에서 복면을 쓴 상인을 만났습니다. "표식을 알고 왔다면... 상인의 인장을 넘기겠소. 하지만 공짜는 없지." 그는 희귀 유물 상인의 인장을 2000G에 제시합니다.',
+                    choices: ['상인의 인장을 산다 (2000G)', '거절하고 정보만 얻는다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '거래를 완료했습니다. 그림자 길드와 신뢰가 쌓였습니다.', reward: { type: 'gold', amount: -2000 } },
+                        { type: 'chain_advance', log: '거래를 완료해 희귀 유물 상인의 인장을 얻었습니다. 그림자 길드와 신뢰가 쌓였습니다.', reward: { type: 'gold', amount: -2000, relicId: 'merchant_seal' } },
                         { type: 'chain_advance', log: '정보를 얻었습니다. 더 큰 거래가 기다립니다.', reward: null },
                     ],
                 },
@@ -585,7 +585,7 @@ export const EVENT_CHAINS: any = [
                     choices: ['사령관의 영혼과 함께 싸운다', '영혼에게 안식을 권한다'],
                     outcomes: [
                         { type: 'chain_advance', log: '사령관의 영혼이 당신과 동행합니다. 그의 마지막 의지가 전설 유물로 응결됩니다.', reward: { type: 'relic' } },
-                        { type: 'chain_advance', log: '사령관에게 안식을 권했습니다. 영혼이 미소 지으며 사라지고, 그의 갑옷이 당신에게 남겨집니다.', reward: { type: 'item', name: '기사의 흉갑' } },
+                        { type: 'chain_advance', log: '사령관에게 안식을 권했습니다. 영혼이 남긴 수호의 의지가 스며들어 방어력과 생명이 영구히 강해집니다.', reward: { type: 'stat_bonus', def: 12, hp: 100 } },
                     ],
                 },
             },

@@ -75,6 +75,38 @@ test('a replayed consumable action is an exact no-op after the item is consumed'
     assert.equal(replayed, consumed);
 });
 
+test('noncombat rejects noPotion buffs and malformed consumables without any reducer mutation', () => {
+    const buff = { id: 'blocked-buff', name: '분노의 물약', type: 'buff', effect: 'atk_up', val: 1.3, turn: 3 };
+    const malformed = { id: 'bad-cure', name: '오염 치료약', type: 'cure', effect: 'bleed' };
+    for (const item of [buff, malformed]) {
+        const state = makeState(makePlayer({
+            inv: [item],
+            challengeModifiers: item === buff ? ['noPotion'] : [],
+        }), { quickSlots: [item, null, null] });
+        const rejected = equipmentActionMap.USE_INVENTORY_ITEM(state, {
+            type: AT.USE_INVENTORY_ITEM,
+            payload: { itemId: item.id },
+        });
+        assert.equal(rejected, state);
+    }
+});
+
+test('noncombat removes only the selected duplicate-id consumable instance', () => {
+    const first = { id: 'duplicate-potion', name: '첫 물약', type: 'hp', val: 30 };
+    const second = { ...first, name: '둘째 물약' };
+    const state = makeState(makePlayer({ hp: 1, inv: [first, second] }), {
+        quickSlots: [first, null, null],
+    });
+
+    const consumed = equipmentActionMap.USE_INVENTORY_ITEM(state, {
+        type: AT.USE_INVENTORY_ITEM,
+        payload: { itemId: first.id },
+    });
+
+    assert.deepEqual(consumed.player.inv, [second]);
+    assert.equal(consumed.quickSlots[0], null);
+});
+
 test('a two-hand swap is rejected when returned equipment would overflow the bag', () => {
     const twoHand = { id: 'greatsword', name: '거인의 대검', type: 'weapon', hands: 2, val: 30 };
     const filler = { id: 'filler', name: '돌조각', type: 'mat' };
@@ -213,4 +245,23 @@ test('equipment hooks send identity and entropy without replacing player snapsho
     assert.equal('success' in dispatched[1].payload, false);
     assert.equal('goldCost' in dispatched[1].payload, false);
     assert.equal(dispatched.some((action) => action.type === AT.SET_PLAYER), false);
+});
+
+test('inventory hook previews rejected consumables and emits one stable reason without dispatch', () => {
+    const dispatched = [];
+    const logs = [];
+    const potion = { id: 'full-potion', name: '회복 물약', type: 'hp', val: 30 };
+    const actions = createInventoryActions({
+        player: makePlayer({ hp: 999_999, inv: [potion] }),
+        gameState: 'idle',
+        dispatch: (action) => dispatched.push(action),
+        addLog: (type, text) => logs.push({ type, text }),
+        addStoryLog: () => {},
+        getFullStats: () => ({}),
+    });
+
+    actions.useItem(potion);
+
+    assert.deepEqual(dispatched, []);
+    assert.deepEqual(logs, [{ type: 'warn', text: '생명이 이미 가득합니다.' }]);
 });

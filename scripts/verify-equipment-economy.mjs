@@ -70,7 +70,7 @@ const buildEvidence = () => {
 
     const predecessorDigest = hashJson(report.predecessorCanonicalRows);
     const candidateDigest = hashJson(report.candidateCanonicalRows);
-    const priceRemovedInvariantDigest = hashJson(priceRemovedRows(report.candidateCanonicalRows));
+    const priceRemovedInvariantDigest = hashJson(priceRemovedRows(report.predecessorCanonicalRows));
     if (predecessorDigest !== EQUIPMENT_ECONOMY_PREDECESSOR_DIGEST) {
         throw new Error(`predecessor digest mismatch: ${predecessorDigest}`);
     }

@@ -5,6 +5,7 @@ import { BOSS_BRIEFS } from '../data/monsters.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getMirrorEffects } from './mirrorUpgrades';
 import { getPacedCombatExp } from '../utils/progressionPacing.js';
+import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
 import type { Player, Monster } from '../types/index.js';
 import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
 
@@ -93,7 +94,7 @@ export const outcomeMethods: any = {
         // 유물 + 패시브 스킬: EXP/골드 배율 (cycle 265: liveConfig 곱셈 합류)
         const expMult = (1 + (relics.find((r: any) => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0))
             * eventMult * seasonXpMult;
-        const goldMult = (1 + (relics.find((r: any) => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0))
+        const goldMult = (1 + getStrongestNumericRelicValue(relics, 'gold_mult') + (passiveBonus.goldMult || 0))
             * seasonGoldMult;
         // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배, rank≥7 풀 스택 4개 → 2.0배)
         const challengeMods = p.challengeModifiers || [];
@@ -120,9 +121,17 @@ export const outcomeMethods: any = {
         );
         const expGained = getPacedCombatExp(p, rawExpGained);
         const noGold = p.challengeModifiers?.includes('noGold');
-        const goldGained = Math.floor((enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty * (noGold ? 0.5 : 1) * challengeRewardMult * eliteRewardMult);
+        const rawGoldGained = (enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty
+            * (noGold ? 0.5 : 1) * challengeRewardMult * eliteRewardMult;
+        if (!Number.isFinite(rawGoldGained)) throw new Error('INVALID_RELIC_EFFECT_VALUE');
+        const goldGained = Math.floor(rawGoldGained);
+        const currentGold = Number.isFinite(p.gold) ? p.gold : 0;
+        const nextGold = currentGold + goldGained;
+        if (!Number.isFinite(nextGold) || (goldGained > 0 && nextGold <= currentGold)) {
+            throw new Error('INVALID_RELIC_EFFECT_VALUE');
+        }
 
-        p.gold += goldGained;
+        p.gold = nextGold;
 
         const isDemonKingSlain = baseName === '마왕';
         const prevStats = p.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 };

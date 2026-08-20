@@ -6,6 +6,8 @@ import { economyActionMap } from './economyHandlers';
 import { equipmentActionMap } from './equipmentHandlers';
 import { premiumActionMap } from './premiumHandlers';
 import { makeCombatActionMap } from './combatHandlers';
+import { chainEventActionMap } from './chainEventHandlers';
+import { fallbackEventActionMap } from './fallbackEventHandlers';
 
 export const makeFeatureActionMap = (initialPlayer: any) => ({
     ...protocolActionMap,
@@ -15,5 +17,7 @@ export const makeFeatureActionMap = (initialPlayer: any) => ({
     ...equipmentActionMap,
     ...premiumActionMap,
     ...makeCombatActionMap(initialPlayer),
+    ...chainEventActionMap,
+    ...fallbackEventActionMap,
     ...multiplayerActionMap,
 });

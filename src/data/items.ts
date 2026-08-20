@@ -72,11 +72,11 @@ export const ITEMS: ItemDatabase = {
         // 확장 무기
         { name: '기계식 레이피어', type: 'weapon', val: 46, tier: 3, price: 1450, jobs: ['도적', '레인저', '모험가'], desc: '정교한 기계식 검.', desc_stat: 'ATK+46' },
         { name: '유성 완드', type: 'weapon', val: 49, tier: 3, price: 1500, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '별빛이 응축된 완드.', desc_stat: 'ATK+49(빛)' },
-        { name: '폭풍 스태프', type: 'weapon', hands: 2, val: 56, tier: 3, price: 1620, elem: '빛', jobs: ['마법사', '아크메이지'], desc: '번개를 부르는 장지팡이.', desc_stat: 'ATK+56(빛) / 2H' },
+        { name: '폭풍 스태프', type: 'weapon', hands: 2, val: 56, tier: 3, price: 1620, elem: '빛', mpBonus: 10, jobs: ['마법사', '아크메이지'], desc: '번개를 부르는 장지팡이.', desc_stat: 'ATK+56(빛) / MP+10 / 2H' },
         { name: '청해 단검', type: 'weapon', val: 90, tier: 4, price: 5900, elem: '냉기', jobs: ['도적', '어쌔신'], desc: '심해의 냉기가 깃든 단검.', desc_stat: 'ATK+90(냉)' },
         { name: '심연 파쇄창', type: 'weapon', hands: 2, val: 102, tier: 4, price: 7200, elem: '어둠', jobs: ['전사', '나이트', '버서커'], desc: '심연을 찢는 중창.', desc_stat: 'ATK+102(암) / 2H' },
         { name: '에테르 세이버', type: 'weapon', val: 205, tier: 5, price: 31500, elem: '빛', jobs: ['전사', '나이트', '모험가'], desc: '차원 에너지로 단련된 검.', desc_stat: 'ATK+205(빛)' },
-        { name: '성운 지팡이', type: 'weapon', hands: 2, val: 195, tier: 5, price: 30500, elem: '빛', jobs: ['아크메이지', '흑마법사'], desc: '별무리의 공명을 담은 지팡이.', desc_stat: 'ATK+195(빛) / 2H' },
+        { name: '성운 지팡이', type: 'weapon', hands: 2, val: 195, tier: 5, price: 30500, elem: '빛', mpBonus: 20, jobs: ['아크메이지', '흑마법사'], desc: '별무리의 공명을 담은 지팡이.', desc_stat: 'ATK+195(빛) / MP+20 / 2H' },
         // 확장 Tier 4 무기 — Lv45+ (5개)
         { name: '에테르 검', type: 'weapon', val: 85, tier: 4, price: 5500, elem: '에테르', jobs: ['전사', '나이트', '모험가'], desc: '에테르 에너지가 응축된 검.', desc_stat: 'ATK+85(에)' },
         { name: '폭풍의 창', type: 'weapon', hands: 2, val: 90, tier: 4, price: 6000, elem: '바람', jobs: ['전사', '나이트', '버서커'], desc: '폭풍을 가르는 창.', desc_stat: 'ATK+90(풍) / 2H' },
@@ -115,7 +115,7 @@ export const ITEMS: ItemDatabase = {
         // T3 추가 (+3)
         { name: '빙결 장궁', type: 'weapon', hands: 2, val: 54, tier: 3, price: 1480, elem: '냉기', jobs: ['레인저'], desc: '얼음 정령의 가호를 받은 활.', desc_stat: 'ATK+54(냉) / 2H' },
         { name: '어둠의 팔치온', type: 'weapon', val: 53, tier: 3, price: 1400, elem: '어둠', jobs: ['전사', '버서커'], desc: '어둠이 서린 곡도.', desc_stat: 'ATK+53(암)' },
-        { name: '독아 채찍', type: 'weapon', val: 47, tier: 3, price: 1250, elem: '자연', jobs: ['어쌔신'], desc: '독이 배인 가시 채찍.', desc_stat: 'ATK+47(독)' },
+        { name: '독아 채찍', type: 'weapon', val: 47, tier: 3, price: 1250, elem: '자연', crit: 0.09, jobs: ['어쌔신'], desc: '독이 배인 가시 채찍.', desc_stat: 'ATK+47(독) / CRIT+9%' },
         // T4 추가 (+3)
         { name: '천공의 활', type: 'weapon', hands: 2, val: 88, tier: 4, price: 5800, elem: '빛', jobs: ['레인저'], desc: '천공 정원에서 발견된 활.', desc_stat: 'ATK+88(빛) / 2H' },
         { name: '심해의 창', type: 'weapon', hands: 2, val: 95, tier: 4, price: 6200, elem: '냉기', jobs: ['전사', '나이트'], desc: '심해의 압력을 담은 창.', desc_stat: 'ATK+95(냉) / 2H' },
@@ -178,7 +178,7 @@ export const ITEMS: ItemDatabase = {
         { name: '룬 마도서', type: 'shield', subtype: 'focus', val: 4, mp: 20, crit: 0.04, tier: 2, price: 360, jobs: ['마법사', '아크메이지', '흑마법사'], desc: '룬이 각인된 마도서.', desc_stat: 'DEF+4 / MP+20 / CRIT+4%' },
         { name: '화염 방어복', type: 'armor', val: 14, tier: 2, price: 380, elem: '화염', jobs: ['전사', '나이트', '버서커'], desc: '불에 강한 갑옷.', desc_stat: 'DEF+14(화저항)' },
         { name: '냉기 방어복', type: 'armor', val: 14, tier: 2, price: 380, elem: '냉기', jobs: ['전사', '나이트', '버서커'], desc: '추위에 강한 갑옷.', desc_stat: 'DEF+14(냉저항)' },
-        { name: '레인저 외투', type: 'armor', val: 13, tier: 2, price: 290, jobs: ['레인저'], desc: '숲에서 입는 외투.', desc_stat: 'DEF+13' },
+        { name: '레인저 외투', type: 'armor', val: 13, tier: 2, price: 290, evasion: 0.03, jobs: ['레인저'], desc: '숲에서 입는 외투.', desc_stat: 'DEF+13 / 회피+3%' },
         { name: '암흑 로브', type: 'armor', val: 13, tier: 2, price: 350, elem: '어둠', jobs: ['마법사', '흑마법사', '무당', '대마법사'], desc: '어둠이 깃든 로브.', desc_stat: 'DEF+13(암)' },
         { name: '축복받은 갑옷', type: 'armor', val: 16, tier: 2, price: 400, elem: '빛', jobs: ['전사', '나이트', '팔라딘', '드래곤 나이트', '성직자'], desc: '신성한 가호.', desc_stat: 'DEF+16(빛)' },
         // Tier 3 - 상급 (10개)

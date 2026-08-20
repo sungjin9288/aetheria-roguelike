@@ -66,6 +66,19 @@ test.describe('Combat focus mode', () => {
     });
 
     test('전투 소모품 연속 입력은 한 번의 아이템 턴만 확정한다', async ({ page }) => {
+        const before = await page.evaluate(() => {
+            const rendered = JSON.parse(window.render_game_to_text?.() || '{}');
+            const testApi = window.__AETHERIA_TEST_API__;
+            return {
+                hp: rendered.player?.hp,
+                maxHp: rendered.player?.maxHp,
+                itemCount: testApi?.getAscensionSnapshot?.().inventoryIds
+                    .filter((id: string) => id === 'smoke-combat-heal').length,
+            };
+        });
+        expect(before.hp).toBeLessThan(before.maxHp);
+        expect(before.itemCount).toBe(1);
+
         await page.getByTestId('combat-action-item').click();
         const potion = page.getByTestId('combat-consumable-smoke-combat-heal');
         await expect(potion).toBeVisible();
@@ -77,9 +90,28 @@ test.describe('Combat focus mode', () => {
 
         await expect(potion).toBeHidden();
         await expect.poll(async () => {
-            const snapshot = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
-            return snapshot.logTail.filter((log: { text: string }) => log.text.includes('회복 물약')).length;
-        }).toBe(1);
+            return page.evaluate(() => {
+                const rendered = JSON.parse(window.render_game_to_text?.() || '{}');
+                const testApi = window.__AETHERIA_TEST_API__;
+                return {
+                    gameState: rendered.gameState,
+                    itemCount: testApi?.getAscensionSnapshot?.().inventoryIds
+                        .filter((id: string) => id === 'smoke-combat-heal').length,
+                    successLogCount: rendered.logTail.filter((log: { type: string; text: string }) => (
+                        log.type === 'success' && log.text === '회복 물약 사용.'
+                    )).length,
+                    enemyTurnLogCount: rendered.logTail.filter((log: { type: string; text: string }) => (
+                        ['warning', 'critical'].includes(log.type)
+                        && log.text.includes('정예 숲의 정령')
+                    )).length,
+                };
+            });
+        }).toEqual({
+            gameState: 'combat',
+            itemCount: 0,
+            successLogCount: 1,
+            enemyTurnLogCount: 1,
+        });
         await expect(page.getByTestId('combat-focus-panel')).toBeVisible();
     });
 

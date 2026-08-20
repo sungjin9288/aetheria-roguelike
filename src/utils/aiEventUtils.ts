@@ -1,4 +1,9 @@
 import { BALANCE } from '../data/constants.js';
+import {
+    getStructuredFallbackPoolEvent,
+    getStructuredFallbackTransaction,
+} from '../data/structuredFallbackEvents.js';
+import { findItemByName } from './gameUtils.js';
 
 const RECENT_HISTORY_LIMIT = 6;
 const RECENT_EVENT_LIMIT = 8;
@@ -230,6 +235,8 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
             if (!outcome || typeof outcome !== 'object') return;
             const choiceIndex = clamp(toInt(outcome.choiceIndex, idx), 0, Math.max(0, choices.length - 1));
             if (!choices[choiceIndex] || normalized.has(choiceIndex)) return;
+            const itemName = normalizeText(outcome.item);
+            if (itemName && !findItemByName(itemName)) return;
 
             normalized.set(choiceIndex, {
                 choiceIndex,
@@ -238,7 +245,7 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
                 exp: toInt(outcome.exp, 0),
                 hp: toInt(outcome.hp, 0),
                 mp: toInt(outcome.mp, 0),
-                ...(normalizeText(outcome.item) ? { item: normalizeText(outcome.item) } : {}),
+                ...(itemName ? { item: itemName } : {}),
             });
         });
     }
@@ -263,6 +270,17 @@ export const buildEventPackage = (payload: any, context: any) => {
     const raw = payload?.data || payload;
     if (!raw || typeof raw !== 'object') return null;
 
+    const {
+        source: _untrustedSource,
+        fallbackTransactionId: _untrustedFallbackTransactionId,
+        transactionId: _untrustedTransactionId,
+        cost: _untrustedCost,
+        payout: _untrustedPayout,
+        grossGold: _untrustedGrossGold,
+        netGold: _untrustedNetGold,
+        ...safeRaw
+    } = raw;
+
     const desc = normalizeText(raw.desc || raw.text || raw.event || raw.message);
     if (!desc) return null;
 
@@ -276,8 +294,8 @@ export const buildEventPackage = (payload: any, context: any) => {
     if (choices.length < 2) return null;
 
     return {
-        ...raw,
-        source: raw.source || context.source || 'ai',
+        ...safeRaw,
+        source: context.source || 'ai',
         desc,
         choices,
         outcomes: normalizeOutcomes(raw.outcomes, choices, { ...context, desc })
@@ -440,23 +458,9 @@ const FALLBACK_EVENT_POOL: any = {
     // ── 구조화 보상 이벤트 (NPC 조우 · 도박 · 퍼즐) ─────────────────────────
     structured: [
         // NPC: 부상당한 행상인
-        {
-            desc: '부상당한 행상인이 쓰러져 있습니다. "제발... 물약 하나만..."',
-            choices: ['물약을 건넨다', '그냥 지나친다'],
-            outcomes: [
-                { choiceIndex: 0, gold: 200, log: '행상인이 감사하며 숨겨두었던 금화를 건네준다. (+200G)' },
-                { choiceIndex: 1, log: '차갑게 외면하며 발걸음을 옮긴다.' },
-            ],
-        },
+        getStructuredFallbackPoolEvent('fallback:wounded-merchant:v1'),
         // 도박: 수상한 상인의 내기
-        {
-            desc: '수상한 상인이 "골드 500을 걸면 두 배로 돌려드리죠"라고 속삭입니다.',
-            choices: ['내기 수락 (500G)', '거절한다'],
-            outcomes: [
-                { choiceIndex: 0, gold: 500, log: '운이 좋았다! 1000G를 손에 쥐었다. (+500G)' },
-                { choiceIndex: 1, log: '상인이 실망한 듯 사라진다.' },
-            ],
-        },
+        getStructuredFallbackPoolEvent('fallback:suspicious-merchant-wager:v1'),
         // 퍼즐: 고대 석판 수수께끼
         {
             desc: '"하나는 둘이 되고, 둘은 하나가 된다." 석판에 새겨진 문구 앞에 세 개의 보석 홈이 있습니다.',
@@ -480,14 +484,7 @@ const FALLBACK_EVENT_POOL: any = {
         // 관대함 하향 (2026-07 밸런스 감사): 구조화 이벤트 풀 전수 스캔 결과 gold 상위
         //   ~10% 이상치(1000G, 풀 내 최댓값) — BALANCE.STRUCTURED_EVENT_GOLD_CAP(720)으로
         //   -28% 하향. 손실 분기(거절)는 무변경 — 위험-보상 대칭 유지.
-        {
-            desc: '가면을 쓴 광대가 "운명의 주사위 한 번, 만 골드를 걸어보시겠소?"라고 묻습니다.',
-            choices: ['주사위를 굴린다 (720G)', '거절한다'],
-            outcomes: [
-                { choiceIndex: 0, gold: BALANCE.STRUCTURED_EVENT_GOLD_CAP, log: '운이 따랐다! 두 배의 골드가 돌아왔다. (+720G)' },
-                { choiceIndex: 1, log: '광대가 씩 웃으며 사라진다.' },
-            ],
-        },
+        getStructuredFallbackPoolEvent('fallback:destiny-dice-wager:v1'),
         // NPC: 상처 입은 전사 구호
         {
             desc: '쓰러진 전사가 숨을 고르며 "제 배낭을... 지켜주시오"라고 말합니다.',
@@ -566,8 +563,12 @@ export const pickFallbackEvent = (loc: string, history: any[], context: any, rng
         ? withoutImmediateRepeat
         : (filteredPool.length > 0 ? filteredPool : pool);
     const picked = candidates[Math.floor(rng() * candidates.length)];
-    return buildEventPackage(
+    const packaged = buildEventPackage(
         { ...picked, source: 'fallback' },
         { ...context, location: loc, source: 'fallback' }
     );
+    const transaction = getStructuredFallbackTransaction(picked?.fallbackTransactionId);
+    return packaged && transaction
+        ? { ...packaged, fallbackTransactionId: transaction.id }
+        : packaged;
 };

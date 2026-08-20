@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "226808f23a3f8882b14d0ad9184819be1b30747f06b575119b64decc13dd020d",
+  "reportHash": "c5c425d0a6554373dddd1c3bdce621b26225f84246101ead6d4cb57bfde719a8",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -406,8 +406,7 @@
           "blood_oath_ring"
         ],
         "runtimeOwners": [
-          "src/systems/CombatEngine.ts",
-          "src/utils/statsCalculator.ts"
+          "src/utils/hpDrainAtkRelic.ts"
         ]
       },
       {

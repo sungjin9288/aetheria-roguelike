@@ -388,7 +388,9 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const HERE = path.dirname(fileURLToPath(import.meta.url));
       const ROOT = path.join(HERE, '..');
       const calcSrc = await readFile(path.join(ROOT, 'src/utils/statsCalculator.ts'), 'utf8');
-      assert.match(calcSrc, /'hp_drain_atk'/);
+      const hpDrainResolverSrc = await readFile(path.join(ROOT, 'src/utils/hpDrainAtkRelic.ts'), 'utf8');
+      assert.match(hpDrainResolverSrc, /'hp_drain_atk'/);
+      assert.match(calcSrc, /resolveHpDrainAtkRelic/);
       assert.match(calcSrc, /'first_turn_evade'/);
   });
 }
@@ -998,7 +1000,10 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test("hp_drain_atk (혈맹의 반지): hpCost 0.03 — 매 턴 maxHp 3% 소모", () => {
       const player = fakePlayer({
-          relics: [{ effect: 'hp_drain_atk', val: { hpCost: 0.03, atkBonus: 0.35 } }],
+          relics: [{
+              id: 'blood_oath_ring', name: '혈맹의 반지',
+              effect: 'hp_drain_atk', val: { hpCost: 0.03, atkBonus: 0.35 },
+          }],
       });
       const result = CombatEngine.tickCombatState(player);
       // 1000 * 0.03 = 30 HP cost. 500 → 470.
@@ -1011,8 +1016,11 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       // hell_reaper 시너지 require: 심연의 계약 + 영혼 흡수
       const player = fakePlayer({
           relics: [
-              { name: '심연의 계약', effect: 'hp_drain_atk', val: { hpCost: 0.05, atkBonus: 0.6 } },
-              { name: '영혼 흡수', effect: 'skill_lifesteal', val: 0.1 },
+              {
+                  id: 'abyssal_contract', name: '심연의 계약',
+                  effect: 'hp_drain_atk', val: { hpCost: 0.05, atkBonus: 0.6 },
+              },
+              { id: 'soul_drain', name: '영혼 흡수', effect: 'skill_lifesteal', val: 0.1 },
           ],
       });
       const result = CombatEngine.tickCombatState(player);
@@ -1026,7 +1034,10 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
   test("hp_drain_atk: HP 1 미만으로 떨어지지 않음 (사망 방지 가드)", () => {
       const player = fakePlayer({
           hp: 5, maxHp: 1000,
-          relics: [{ effect: 'hp_drain_atk', val: { hpCost: 0.03, atkBonus: 0.35 } }],
+          relics: [{
+              id: 'blood_oath_ring', name: '혈맹의 반지',
+              effect: 'hp_drain_atk', val: { hpCost: 0.03, atkBonus: 0.35 },
+          }],
       });
       const result = CombatEngine.tickCombatState(player);
       // hp 5에서 30 차감 → 0이 되어야 하지만 max(1, ...)로 1 보장.

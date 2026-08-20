@@ -9,6 +9,21 @@ import { MSG } from '../data/messages.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getProgressionLootMultiplier } from '../data/progressionProfiles.js';
+import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
+
+const calculateCappedLootChance = (...factors: unknown[]) => {
+    let chance = 1;
+
+    for (const factor of factors) {
+        if (typeof factor !== 'number' || !Number.isFinite(factor) || factor < 0) {
+            throw new Error('INVALID_LOOT_DROP_CHANCE');
+        }
+        chance *= factor;
+        if (!Number.isFinite(chance)) throw new Error('INVALID_LOOT_DROP_CHANCE');
+    }
+
+    return Math.min(1, chance);
+};
 
 /**
  * 적의 기본 이름을 해석합니다 (접두사 제거).
@@ -45,10 +60,29 @@ export const processLoot = (
     const logs: any[] = [];
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
-    const dropRateMult = 1 + (relics.find((relic: any) => relic.effect === 'drop_rate')?.val || 0);
+    const dropRateMult = 1 + getStrongestNumericRelicValue(relics, 'drop_rate');
     const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic: any) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
     const progressionLootMult = getProgressionLootMultiplier(player);
+    const enemyDropMult = enemy.dropMod || 1.0;
+    const enrichedList = DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string];
+    const lootList = LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string];
+    const inferredLevel = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
+
+    if (!Number.isFinite(dropRateMult)) throw new Error('INVALID_LOOT_DROP_CHANCE');
+    if (enrichedList) {
+        enrichedList.forEach((entry: any) => {
+            const entryPityMult = SIGNATURE_ITEM_REGISTRY[entry.item] ? pityMult : 1;
+            calculateCappedLootChance(entry.rate, enemyDropMult, dropRateMult, bossDropMult, progressionLootMult, entryPityMult);
+        });
+    }
+    if (lootList && lootList.length > 0) {
+        calculateCappedLootChance(BALANCE.DROP_CHANCE, enemyDropMult, dropRateMult, bossDropMult, progressionLootMult);
+    }
+    if (inferredLevel >= BALANCE.LOOT_BONUS_MIN_LEVEL) {
+        const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
+        calculateCappedLootChance(bonusChance, dropRateMult, bossDropMult, progressionLootMult);
+    }
 
     const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
 
@@ -70,20 +104,18 @@ export const processLoot = (
     }
 
     // 강화 드롭 테이블 우선 참조
-    const enrichedList = DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string];
     if (enrichedList) {
         enrichedList.forEach((entry: any) => {
             // Signature 아이템에만 pity 배율 적용 (일반 아이템 드롭률은 변동 없음)
             const isSignature = Boolean(SIGNATURE_ITEM_REGISTRY[entry.item]);
             const entryPityMult = isSignature ? pityMult : 1;
-            const chance = Math.min(
-                1,
-                entry.rate
-                    * (enemy.dropMod || 1.0)
-                    * dropRateMult
-                    * bossDropMult
-                    * progressionLootMult
-                    * entryPityMult,
+            const chance = calculateCappedLootChance(
+                entry.rate,
+                enemyDropMult,
+                dropRateMult,
+                bossDropMult,
+                progressionLootMult,
+                entryPityMult,
             );
             if (random() < chance) {
                 const itemData = allItems.find((i: any) => i.name === entry.item);
@@ -106,16 +138,14 @@ export const processLoot = (
     // 레거시 LOOT_TABLE 폴백 (없으면 보너스 드랍만 시도)
     // cycle 171: 기존에는 lootList 없으면 early return으로 보너스 드랍 로직까지 차단됐음.
     //   non-boss 104종(drop/loot 둘 다 없음)이 고레벨이어도 빈손 회귀 fix.
-    const lootList = LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string];
     if (lootList && lootList.length > 0) {
         lootList.forEach((itemName: any) => {
-            const chance = Math.min(
-                1,
-                BALANCE.DROP_CHANCE
-                    * (enemy.dropMod || 1.0)
-                    * dropRateMult
-                    * bossDropMult
-                    * progressionLootMult,
+            const chance = calculateCappedLootChance(
+                BALANCE.DROP_CHANCE,
+                enemyDropMult,
+                dropRateMult,
+                bossDropMult,
+                progressionLootMult,
             );
             if (random() < chance) {
                 const itemData = allItems.find((i: any) => i.name === itemName);
@@ -133,11 +163,10 @@ export const processLoot = (
     }
 
     // 고레벨 몬스터 보너스 장비 드랍 (exp 기반 레벨 추정)
-    const inferredLevel = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
     if (inferredLevel >= BALANCE.LOOT_BONUS_MIN_LEVEL) {
         const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
-        if (random() < Math.min(1, bonusChance * dropRateMult * bossDropMult * progressionLootMult)) {
+        if (random() < calculateCappedLootChance(bonusChance, dropRateMult, bossDropMult, progressionLootMult)) {
             const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
                 const picked = tierPool[Math.floor(random() * tierPool.length)];

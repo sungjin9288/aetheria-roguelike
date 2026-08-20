@@ -1,0 +1,277 @@
+{
+  "hashAlgorithm": "sha256",
+  "reportHash": "b123dee8e47f7b405584470bc03087f6e81fbbb98aecfd0ee1bb10068068a204",
+  "sourceHashes": {
+    "src/data/relics.ts": "4f6c04d60f1fbf8cf06324e18b686c79717af4ea73935b3eb22e708696dba731",
+    "src/systems/CombatEngine.actions.ts": "4b465ef5d774e6c16a457eaa466413c371df5af0dc079b1536d1d72613122b04",
+    "src/systems/relicDotMultiplierAudit.ts": "8f98a4788ed3df33d0de1cd0dbda8b065f7b4b0f82dfca197f9714f3b6a5ae6c",
+    "src/utils/dataMigration.ts": "77bbacdd6242a4e7f0dff7748fc3b75a9c8a5f3f9ee08d842c7ce1dfea594a7d",
+    "src/reducers/handlers/combatHandlers.ts": "357ffcc5b2de8ce64ebd6659958a5c35e77a4aef1db4d024c532563d93d1685a",
+    "tests/relic-dot-multiplier-coherence.test.js": "8cd65cfa561bb915d9e9b878b7b01b7f75e576b0748ea3ffce423c54d50ed807",
+    "scripts/verify-relic-dot-multiplier.mjs": "55ddc162ca69d4e999b0d01f708543e3f3556bdb61f0488e14d65dc6a8a0d02e",
+    "docs/superpowers/plans/2026-08-17-aetheria-relic-dot-multiplier-plan.md": "25530503725c3ebf739a9e4a70ff3c2fcf9affb8959d6a7429789a9818dd19e9"
+  },
+  "report": {
+    "schemaVersion": 1,
+    "catalog": [
+      {
+        "id": "death_mark",
+        "name": "죽음의 낙인",
+        "rarity": "rare",
+        "desc": "독과 화상으로 주는 피해가 3배로 증가",
+        "effect": "dot_mult",
+        "val": 3
+      },
+      {
+        "id": "curse_crystal",
+        "name": "저주의 결정",
+        "rarity": "rare",
+        "desc": "상태 이상 피해 50% 증가",
+        "effect": "dot_mult",
+        "val": 1.5
+      }
+    ],
+    "policy": {
+      "selector": "getStrongestNumericRelicValue",
+      "none": 0,
+      "deathMark": 3,
+      "curseCrystal": 1.5,
+      "bothOrders": [
+        3,
+        3
+      ]
+    },
+    "production": {
+      "status": [
+        {
+          "name": "no_relic_zero_def",
+          "mp": 90,
+          "enemyHp": 90,
+          "enemyDots": [
+            "burn"
+          ],
+          "cooldown": 1,
+          "isCrit": false,
+          "rngDraws": 3,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 10 피해! (90/100)",
+            "[화상 시험] dot-target에게 [화상] 부여!",
+            "[burn] 추가 피해 +1"
+          ]
+        },
+        {
+          "name": "none",
+          "mp": 90,
+          "enemyHp": 94,
+          "enemyDots": [
+            "burn"
+          ],
+          "cooldown": 1,
+          "isCrit": false,
+          "rngDraws": 3,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 6 피해! (94/100)",
+            "[화상 시험] dot-target에게 [화상] 부여!",
+            "[burn] 추가 피해 +1"
+          ]
+        },
+        {
+          "name": "death_mark",
+          "mp": 90,
+          "enemyHp": 91,
+          "enemyDots": [
+            "burn"
+          ],
+          "cooldown": 1,
+          "isCrit": false,
+          "rngDraws": 3,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 9 피해! (91/100)",
+            "[화상 시험] dot-target에게 [화상] 부여!",
+            "[burn] 추가 피해 +5",
+            "[죽음의 낙인] 지속 피해가 증폭됩니다!"
+          ]
+        },
+        {
+          "name": "curse_crystal",
+          "mp": 90,
+          "enemyHp": 93,
+          "enemyDots": [
+            "burn"
+          ],
+          "cooldown": 1,
+          "isCrit": false,
+          "rngDraws": 3,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 7 피해! (93/100)",
+            "[화상 시험] dot-target에게 [화상] 부여!",
+            "[burn] 추가 피해 +2",
+            "[죽음의 낙인] 지속 피해가 증폭됩니다!"
+          ]
+        },
+        {
+          "name": "death_then_curse",
+          "mp": 90,
+          "enemyHp": 91,
+          "enemyDots": [
+            "burn"
+          ],
+          "cooldown": 1,
+          "isCrit": false,
+          "rngDraws": 3,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 9 피해! (91/100)",
+            "[화상 시험] dot-target에게 [화상] 부여!",
+            "[burn] 추가 피해 +5",
+            "[죽음의 낙인] 지속 피해가 증폭됩니다!"
+          ]
+        },
+        {
+          "name": "curse_then_death",
+          "mp": 90,
+          "enemyHp": 91,
+          "enemyDots": [
+            "burn"
+          ],
+          "cooldown": 1,
+          "isCrit": false,
+          "rngDraws": 3,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 9 피해! (91/100)",
+            "[화상 시험] dot-target에게 [화상] 부여!",
+            "[burn] 추가 피해 +5",
+            "[죽음의 낙인] 지속 피해가 증폭됩니다!"
+          ]
+        }
+      ],
+      "nonStatus": [
+        {
+          "name": "none",
+          "mp": 90,
+          "enemyHp": 94,
+          "enemyDots": [],
+          "cooldown": 1,
+          "isCrit": false,
+          "rngDraws": 2,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 6 피해! (94/100)"
+          ]
+        },
+        {
+          "name": "both",
+          "mp": 90,
+          "enemyHp": 94,
+          "enemyDots": [],
+          "cooldown": 1,
+          "isCrit": false,
+          "rngDraws": 2,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 6 피해! (94/100)"
+          ]
+        }
+      ],
+      "critical": [
+        {
+          "name": "death_then_curse",
+          "mp": 90,
+          "enemyHp": 82,
+          "enemyDots": [
+            "burn"
+          ],
+          "cooldown": 1,
+          "isCrit": true,
+          "rngDraws": 3,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 18 피해! (82/100) [치명타]",
+            "[화상 시험] dot-target에게 [화상] 부여!",
+            "[burn] 추가 피해 +10",
+            "[죽음의 낙인] 지속 피해가 증폭됩니다!"
+          ]
+        },
+        {
+          "name": "curse_then_death",
+          "mp": 90,
+          "enemyHp": 82,
+          "enemyDots": [
+            "burn"
+          ],
+          "cooldown": 1,
+          "isCrit": true,
+          "rngDraws": 3,
+          "logTexts": [
+            "[화상 시험]: dot-target에게 18 피해! (82/100) [치명타]",
+            "[화상 시험] dot-target에게 [화상] 부여!",
+            "[burn] 추가 피해 +10",
+            "[죽음의 낙인] 지속 피해가 증폭됩니다!"
+          ]
+        }
+      ]
+    },
+    "malformed": [
+      {
+        "name": "missing",
+        "error": "INVALID_RELIC_EFFECT_VALUE:malformed-missing",
+        "rngDraws": 0,
+        "inputUnchanged": true
+      },
+      {
+        "name": "string",
+        "error": "INVALID_RELIC_EFFECT_VALUE:malformed-string",
+        "rngDraws": 0,
+        "inputUnchanged": true
+      },
+      {
+        "name": "nan",
+        "error": "INVALID_RELIC_EFFECT_VALUE:malformed-nan",
+        "rngDraws": 0,
+        "inputUnchanged": true
+      },
+      {
+        "name": "infinity",
+        "error": "INVALID_RELIC_EFFECT_VALUE:malformed-infinity",
+        "rngDraws": 0,
+        "inputUnchanged": true
+      },
+      {
+        "name": "negative",
+        "error": "INVALID_RELIC_EFFECT_VALUE:malformed-negative",
+        "rngDraws": 0,
+        "inputUnchanged": true
+      }
+    ],
+    "migration": {
+      "snapshots": [
+        {
+          "id": "death_mark",
+          "name": "죽음의 낙인",
+          "rarity": "rare",
+          "desc": "active-run death_mark description",
+          "effect": "dot_mult",
+          "val": 2.75
+        },
+        {
+          "id": "curse_crystal",
+          "name": "저주의 결정",
+          "rarity": "rare",
+          "desc": "active-run curse_crystal description",
+          "effect": "dot_mult",
+          "val": 1.25
+        }
+      ],
+      "firstReloadPreserved": true,
+      "secondReloadPreserved": true
+    },
+    "replay": {
+      "receiptKey": "1:1700000000000:20260817",
+      "settledOnce": true,
+      "replayIsSameObject": true,
+      "mp": 180,
+      "enemyHp": 188,
+      "enemyDots": [
+        "burn"
+      ],
+      "logCount": 6
+    },
+    "errors": []
+  }
+}

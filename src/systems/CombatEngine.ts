@@ -17,6 +17,7 @@ import { enemyAIMethods } from './CombatEngine.enemyAI.js';
 import { queueMilestoneStoryBeat } from '../utils/milestoneStory.js';
 import { pickPermanentPlayerState } from '../utils/permanentProgress.js';
 import { createCurrentRunProgress } from '../utils/runProgress.js';
+import { resolveHpDrainAtkRelic } from '../utils/hpDrainAtkRelic.js';
 
 /**
  * CombatEngine - Pure functions for combat calculations
@@ -107,9 +108,10 @@ export const CombatEngine = {
     ...statusMethods,
 
     tickCombatState(player: Player) {
+        const relics = player.relics || [];
+        const hpDrainAtkRelic = resolveHpDrainAtkRelic(relics);
         const logs: any[] = [];
         const updated: any = { ...player };
-        const relics = updated.relics || [];
         const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const nextCooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
 
@@ -198,24 +200,22 @@ export const CombatEngine = {
             }
         }
 
-        // cycle 161: 'hp_drain_atk' 유물 (혈맹의 반지 / 심연의 계약) — val.hpCost 매 턴 HP 소모.
-        //   cycle 150에서 atkBonus만 적용했고 hpCost는 별도 사이클로 미뤘던 잔존.
-        //   hell_reaper 시너지 보유 시 hpCostReduction으로 부담 경감 (cycle 156 시너지 정합).
-        const drainRelic = relics.find((r: any) => r.effect === 'hp_drain_atk');
-        if (drainRelic && (updated.hp || 0) > 1) {
-            let cost = (drainRelic.val?.hpCost || 0);
-            const hellReaperSynRegen = getActiveRelicSynergies(relics).find((s: any) =>
-                s.bonus.effect === 'hell_reaper' || s.bonus.hpCostReduction);
-            if (hellReaperSynRegen) {
-                const reducedCost = hellReaperSynRegen.bonus.hpCostReduction;
-                if (typeof reducedCost === 'number' && reducedCost >= 0 && reducedCost < cost) {
-                    cost = reducedCost; // hell_reaper가 cost를 0.02로 직접 대체
-                }
+        if (hpDrainAtkRelic && (updated.hp || 0) > 1) {
+            let cost = hpDrainAtkRelic.hpCost;
+            let label = hpDrainAtkRelic.label;
+            const hellReaperSyn = hpDrainAtkRelic.id === 'abyssal_contract'
+                ? getActiveRelicSynergies(relics).find((synergy: any) => (
+                    synergy.bonus.effect === 'hell_reaper'
+                ))
+                : undefined;
+            const reducedCost = hellReaperSyn?.bonus.hpCostReduction;
+            if (typeof reducedCost === 'number' && Number.isFinite(reducedCost) && reducedCost >= 0) {
+                cost = reducedCost;
+                label = '지옥의 수확자';
             }
             if (cost > 0) {
                 const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * cost));
                 updated.hp = Math.max(1, (updated.hp || 1) - dmg);
-                const label = hellReaperSynRegen ? '지옥의 수확자' : '혈맹의 반지';
                 logs.push({ type: 'warning', text: `[${label}] HP 대가 -${dmg}` });
             }
         }

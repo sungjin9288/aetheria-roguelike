@@ -11,7 +11,7 @@ import { getShopCatalog } from '../utils/shopRotation.js';
 // These are SHA-256 values over the stable JSON projections below. Hashing is
 // deliberately performed only by the strict Node CLI via node:crypto.
 export const EQUIPMENT_ECONOMY_PREDECESSOR_DIGEST = '25eac085e5b5f48f44632346fe8b767b50d36b8665166175b3b8fc2fcaf72119';
-export const EQUIPMENT_ECONOMY_CANDIDATE_DIGEST = 'ed3ddcd7edca17824295e7c53c6a81cb2fefe31e8f8d80e44114829a4106679d';
+export const EQUIPMENT_ECONOMY_CANDIDATE_DIGEST = '6e3fb6effec3b88a95849a2cfbb74502f21accf777a24597129068625ec5af8f';
 export const EQUIPMENT_ECONOMY_PRICE_REMOVED_INVARIANT = '9a4bfd472a7ad47c990a00fcf9d949f0c2bab11905d5eb9dd2800170bd2df644';
 
 export const APPROVED_EQUIPMENT_PRICE_CORRECTIONS = Object.freeze([
@@ -37,7 +37,35 @@ export const APPROVED_EQUIPMENT_PRICE_CORRECTIONS = Object.freeze([
     { type: 'armor', name: '용비늘 갑주', predecessorPrice: 4000, candidatePrice: 16500 },
 ] as const);
 
+export const APPROVED_EQUIPMENT_SIDEGRADE_CORRECTIONS = Object.freeze([
+    {
+        type: 'armor',
+        name: '레인저 외투',
+        predecessor: { desc_stat: 'DEF+13' },
+        candidate: { evasion: 0.03, desc_stat: 'DEF+13 / 회피+3%' },
+    },
+    {
+        type: 'weapon',
+        name: '독아 채찍',
+        predecessor: { desc_stat: 'ATK+47(독)' },
+        candidate: { crit: 0.09, desc_stat: 'ATK+47(독) / CRIT+9%' },
+    },
+    {
+        type: 'weapon',
+        name: '성운 지팡이',
+        predecessor: { desc_stat: 'ATK+195(빛) / 2H' },
+        candidate: { mpBonus: 20, desc_stat: 'ATK+195(빛) / MP+20 / 2H' },
+    },
+    {
+        type: 'weapon',
+        name: '폭풍 스태프',
+        predecessor: { desc_stat: 'ATK+56(빛) / 2H' },
+        candidate: { mpBonus: 10, desc_stat: 'ATK+56(빛) / MP+10 / 2H' },
+    },
+] as const);
+
 type PriceCorrection = typeof APPROVED_EQUIPMENT_PRICE_CORRECTIONS[number];
+type SidegradeCorrection = typeof APPROVED_EQUIPMENT_SIDEGRADE_CORRECTIONS[number];
 type AuditOptions = {
     rows?: readonly any[];
     artEntries?: Record<string, unknown>;
@@ -70,6 +98,10 @@ const sortRows = (rows: readonly any[]) => [...rows]
 const correctionByIdentity = new Map<string, PriceCorrection>(
     APPROVED_EQUIPMENT_PRICE_CORRECTIONS.map((row) => [getEquipmentIdentityKey(row.type, row.name), row]),
 );
+const sidegradeCorrectionByIdentity = new Map<string, SidegradeCorrection>(
+    APPROVED_EQUIPMENT_SIDEGRADE_CORRECTIONS.map((row) => [getEquipmentIdentityKey(row.type, row.name), row]),
+);
+const SIDEGRADE_SECONDARY_FIELDS = ['crit', 'mp', 'mpBonus', 'hp', 'hpBonus', 'evasion'];
 
 const finiteNumbers = (values: readonly unknown[]) => values
     .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
@@ -245,14 +277,44 @@ export const buildEquipmentEconomyReport = (options: AuditOptions = {}) => {
     const errors = collectValidationErrors(options);
     const candidateCanonicalRows = sortRows(suppliedRows);
     const predecessorCanonicalRows = candidateCanonicalRows.map((row) => {
+        const sidegrade = sidegradeCorrectionByIdentity.get(getEquipmentIdentityKey(row.type, row.name));
         const correction = correctionByIdentity.get(getEquipmentIdentityKey(row.type, row.name));
-        return correction ? stableCanonicalize({ ...row, price: correction.predecessorPrice }) : row;
+        const predecessor = sidegrade
+            ? (() => {
+                const restored = { ...row };
+                for (const field of Object.keys(sidegrade.candidate)) delete restored[field];
+                return { ...restored, ...sidegrade.predecessor };
+            })()
+            : row;
+        return correction ? stableCanonicalize({ ...predecessor, price: correction.predecessorPrice }) : predecessor;
     });
     const shopIdentities = getShopIdentitySet(shopRows);
     const rows = candidateCanonicalRows.map((row) => rowReport(row, shopIdentities, artEntries, signatures));
 
     const priceCorrections: PriceCorrection[] = [];
+    const sidegradeCorrections: SidegradeCorrection[] = [];
     const declaredKeys = new Set(correctionByIdentity.keys());
+    for (const correction of APPROVED_EQUIPMENT_SIDEGRADE_CORRECTIONS) {
+        const candidate = candidateCanonicalRows.find((row) => (
+            getEquipmentIdentityKey(row.type, row.name) === getEquipmentIdentityKey(correction.type, correction.name)
+        ));
+        if (!candidate) {
+            errors.push(`missing declared sidegrade correction ${correction.type}:${correction.name}`);
+            continue;
+        }
+        const candidateProjection = correction.candidate as Record<string, unknown>;
+        const expectedCandidateFields = Object.keys(candidateProjection).sort();
+        const candidateMatches = expectedCandidateFields.every((field) => (
+            Object.hasOwn(candidate, field) && candidate[field] === candidateProjection[field]
+        ));
+        if (!candidateMatches) errors.push(`sidegrade candidate mismatch for ${correction.type}\0${correction.name}`);
+        const expectedSecondaryFields = expectedCandidateFields.filter((field) => field !== 'desc_stat').sort();
+        const actualSecondaryFields = SIDEGRADE_SECONDARY_FIELDS.filter((field) => candidate[field] !== undefined).sort();
+        if (JSON.stringify(actualSecondaryFields) !== JSON.stringify(expectedSecondaryFields)) {
+            errors.push(`unexpected sidegrade secondary fields for ${correction.type}\0${correction.name}`);
+        }
+        sidegradeCorrections.push(correction);
+    }
     for (const correction of APPROVED_EQUIPMENT_PRICE_CORRECTIONS) {
         const candidate = candidateCanonicalRows.find((row) => (
             getEquipmentIdentityKey(row.type, row.name) === getEquipmentIdentityKey(correction.type, correction.name)
@@ -309,6 +371,7 @@ export const buildEquipmentEconomyReport = (options: AuditOptions = {}) => {
     for (const row of undeclaredDiscontinuities) errors.push(`undeclared price-scale discontinuity ${row.type}:${row.name}`);
     for (const row of candidateDiscontinuities) errors.push(`candidate price-scale discontinuity ${row.type}:${row.name}`);
     if (priceCorrections.length !== 20) errors.push(`expected 20 price corrections, received ${priceCorrections.length}`);
+    if (sidegradeCorrections.length !== 4) errors.push(`expected 4 sidegrade corrections, received ${sidegradeCorrections.length}`);
 
     return stableCanonicalize({
         schemaVersion: 2,
@@ -326,6 +389,7 @@ export const buildEquipmentEconomyReport = (options: AuditOptions = {}) => {
         predecessorCanonicalRows,
         candidateCanonicalRows,
         priceCorrections: [...priceCorrections].sort(compareIdentity),
+        sidegradeCorrections: [...sidegradeCorrections].sort(compareIdentity),
         predecessorDiscontinuities,
         candidateDiscontinuities,
         identityResolutions,

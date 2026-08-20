@@ -1,0 +1,167 @@
+{
+  "hashAlgorithm": "sha256",
+  "reportHash": "7560ce01d64893c90909793047a53e1aaa0631597b5b2b3f7bb8464c75e05793",
+  "authorityHashes": {
+    "catalog": "4f6c04d60f1fbf8cf06324e18b686c79717af4ea73935b3eb22e708696dba731",
+    "resolver": "ba35a0034ce377bea81449f44d44acfa83e5511a2eb2324cbd88d04ede657d0e",
+    "statsCalculator": "d11ec9190ea393231fbf0e712a3e15b9a234eb50a2acb1347ba8b05bacbb71bd",
+    "combatEngine": "982f5f1eccd0803bcaf388feddb20d5aaf4127d491a033a6e7e0f604b8982fdc",
+    "audit": "71f1c37a63a2155cfcd4ebf8cdd5fc9b146c897af3adf11f062279f06b071ceb",
+    "verifier": "e69920bf3143b989052fd8278ec8006d79412a8e3c58222f7c66cf22a5afbb0a",
+    "focusedTest": "593d3a13864be14065980bd4d7f0ff7a6c6034ed6aec415b1e6cbc0cf75f4003",
+    "plan": "281c446f0f5b283c35474dd26b65c743eec076b3bb8bc51a2143f4476876bffc"
+  },
+  "report": {
+    "schemaVersion": 1,
+    "predecessorRed": {
+      "bothRelicAttackBonusAdded": 0.95,
+      "firstMatchHpCosts": [
+        0.03,
+        0.05
+      ],
+      "abyssalSettlementLabel": "혈맹의 반지"
+    },
+    "catalog": {
+      "bloodOathRing": {
+        "id": "blood_oath_ring",
+        "label": "혈맹의 반지",
+        "atkBonus": 0.35,
+        "hpCost": 0.03
+      },
+      "abyssalContract": {
+        "id": "abyssal_contract",
+        "label": "심연의 계약",
+        "atkBonus": 0.6,
+        "hpCost": 0.05
+      }
+    },
+    "policy": {
+      "selection": "greatest-atk-bonus",
+      "tieBreak": "stable-selected-snapshot",
+      "selectedPairNeverSeparatesCostOrLabel": true,
+      "noRelic": null,
+      "singleBloodOathRing": {
+        "id": "blood_oath_ring",
+        "label": "혈맹의 반지",
+        "atkBonus": 0.35,
+        "hpCost": 0.03
+      },
+      "singleAbyssalContract": {
+        "id": "abyssal_contract",
+        "label": "심연의 계약",
+        "atkBonus": 0.6,
+        "hpCost": 0.05
+      },
+      "bothOrders": [
+        {
+          "id": "abyssal_contract",
+          "label": "심연의 계약",
+          "atkBonus": 0.6,
+          "hpCost": 0.05
+        },
+        {
+          "id": "abyssal_contract",
+          "label": "심연의 계약",
+          "atkBonus": 0.6,
+          "hpCost": 0.05
+        }
+      ],
+      "equalAttackTieOrders": [
+        {
+          "id": "alpha",
+          "label": "알파",
+          "atkBonus": 0.6,
+          "hpCost": 0.02
+        },
+        {
+          "id": "alpha",
+          "label": "알파",
+          "atkBonus": 0.6,
+          "hpCost": 0.02
+        }
+      ]
+    },
+    "production": {
+      "attack": {
+        "noRelic": 1198,
+        "bloodOathRing": 1617,
+        "abyssalContract": 1916,
+        "bothOrders": [
+          1916,
+          1916
+        ]
+      },
+      "normalTurn": {
+        "bloodOathRing": {
+          "hp": 970,
+          "label": "혈맹의 반지"
+        },
+        "abyssalContract": {
+          "hp": 950,
+          "label": "심연의 계약"
+        },
+        "bothOrders": [
+          {
+            "hp": 950,
+            "label": "심연의 계약"
+          },
+          {
+            "hp": 950,
+            "label": "심연의 계약"
+          }
+        ]
+      },
+      "hellReaper": {
+        "bothOrders": [
+          {
+            "hp": 980,
+            "label": "지옥의 수확자"
+          },
+          {
+            "hp": 980,
+            "label": "지옥의 수확자"
+          }
+        ]
+      },
+      "hpBoundedAtOne": true
+    },
+    "safeguards": {
+      "malformedCasesRejected": [
+        "infinite-atkBonus",
+        "infinite-hpCost",
+        "missing-atkBonus",
+        "missing-hpCost",
+        "missing-val",
+        "nan-atkBonus",
+        "nan-hpCost",
+        "negative-atkBonus",
+        "negative-hpCost",
+        "non-object-val",
+        "string-atkBonus",
+        "string-hpCost"
+      ],
+      "migrationPreservesSnapshotBytes": true,
+      "reducerReplayContract": "object-identity-no-op",
+      "sourcePolicy": {
+        "resolverUsedByStats": true,
+        "resolverUsedBeforeTickMutation": true,
+        "directHpDrainSelectorAbsent": true
+      }
+    },
+    "receipt": {
+      "sourceHead": "a664123fa60a24ce8037b108066ac3df071dfa1d",
+      "dirtyFingerprint": "git-status-v2:5b5cfd828b269441c28b826bee65ecf21f5aa8ece84f64c0f4f848ef126212e5",
+      "changedPaths": [
+        "docs/evidence/qa/release-complete-core/relic-hp-drain-atk.json",
+        "docs/superpowers/plans/2026-08-17-aetheria-relic-hp-drain-atk-plan.md",
+        "scripts/verify-relic-hp-drain-atk.mjs",
+        "src/systems/CombatEngine.ts",
+        "src/systems/relicHpDrainAtkAudit.ts",
+        "src/utils/hpDrainAtkRelic.ts",
+        "src/utils/statsCalculator.ts",
+        "tests/relic-hp-drain-atk-coherence.test.js"
+      ]
+    },
+    "errors": []
+  }
+}

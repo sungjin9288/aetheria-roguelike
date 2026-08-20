@@ -1,3 +1,6 @@
+import { getStructuredFallbackTransaction } from '../data/structuredFallbackEvents';
+import { RELICS } from '../data/relics';
+
 export type EventChoiceTone = 'reward' | 'recovery' | 'danger' | 'story' | 'unknown';
 
 export interface EventChoicePreview {
@@ -72,6 +75,12 @@ const scoutPreview: Record<string, EventChoicePreview> = {
 
 const getChainPreview = (outcome: any): EventChoicePreview => {
     const rewardType = outcome?.reward?.type;
+    const rewardAmount = Number(outcome?.reward?.amount);
+    if (rewardType === 'gold' && Number.isFinite(rewardAmount) && rewardAmount < 0) {
+        const rewardRelic = RELICS.find((relic) => relic.id === outcome?.reward?.relicId);
+        const relicText = rewardRelic ? ` · ${rewardRelic.name} 획득` : '';
+        return { text: `이야기 진행 · 골드 ${Math.abs(rewardAmount)} 소모${relicText}`, tone: 'danger' };
+    }
     const rewardText: Record<string, string> = {
         gold: '이야기 진행 · 골드 보상',
         item: '이야기 진행 · 장비 보상',
@@ -113,6 +122,12 @@ const getBoundedPreview = (outcome: any): EventChoicePreview => {
 
 export const getEventChoicePreview = (event: any, choiceIndex: number): EventChoicePreview => {
     const outcome = findOutcome(event, choiceIndex);
+    const fallbackTransaction = event?.source === 'fallback'
+        ? getStructuredFallbackTransaction(event?.fallbackTransactionId)
+        : null;
+    if (fallbackTransaction?.choiceIndex === choiceIndex) {
+        return { text: fallbackTransaction.preview, tone: 'danger' };
+    }
     if (event?.isCampfire) return formatCampfirePreview(outcome);
     if (event?.isScout) return scoutPreview[outcome?.scoutEffect] || scoutPreview.unknown;
     if (event?.isBossGaugeChallenge) {

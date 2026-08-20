@@ -241,6 +241,10 @@ export const actionMethods: any = {
         if (!skill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
+        const relics = stats.relics || [];
+        const resolvedDotMult = getStrongestNumericRelicValue(relics, 'dot_mult');
+        const hasDotMultRelic = relics.some((relic: any) => relic.effect === 'dot_mult');
+        const dotMult = hasDotMultRelic ? resolvedDotMult : 1;
 
         // cycle 107: freeze/stun 상태이상 턴 스킵 — attack()와 동일 처리.
         // 스킬 발동 자체가 막히고 MP는 소비되지 않음.
@@ -295,7 +299,6 @@ export const actionMethods: any = {
             }
         }
 
-        const relics = stats.relics || [];
         const mpCost = skill.mp || BALANCE.SKILL_MP_COST;
         const loadout = player.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const cooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
@@ -382,8 +385,6 @@ export const actionMethods: any = {
             }
         }
 
-        const dotRelic = relics.find((relic: any) => relic.effect === 'dot_mult');
-        const dotMult = dotRelic ? dotRelic.val : 1;
         const extraDamage = ['burn', 'poison', 'bleed'].includes(skill.effect)
             ? Math.floor(damage * 0.2 * dotMult)
             : 0;
@@ -634,7 +635,7 @@ export const actionMethods: any = {
             if (healAmt > 0) logs.push({ type: 'heal', text: `[영혼 흡수] +${healAmt} HP` });
         }
         if (smRelic && smRelic.val > 0) logs.push({ type: 'event', text: `[정신 연소] 스킬 피해 강화!` });
-        if (dotRelic && extraDamage > 0) logs.push({ type: 'event', text: '[죽음의 낙인] 지속 피해가 증폭됩니다!' });
+        if (hasDotMultRelic && extraDamage > 0) logs.push({ type: 'event', text: '[죽음의 낙인] 지속 피해가 증폭됩니다!' });
 
         // cycle 159: entropy_tick / entropy_brand — 매 N턴 적 maxHp 비율 고정 피해 (스킬 사용 턴에도 적용).
         const entropyResult = this.applyEntropyTick(updatedPlayer, updatedEnemy, stats.activeSynergies || []);

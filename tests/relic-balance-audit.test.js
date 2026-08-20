@@ -147,6 +147,10 @@ test('canonical relic balance report is deterministic, complete, and owner-quote
             );
         }
     }
+    assert.deepEqual(
+        report.effects.find(({ effect }) => effect === 'hp_drain_atk')?.runtimeOwners,
+        ['src/utils/hpDrainAtkRelic.ts'],
+    );
     assert.equal(typeof canonicalizeRelicBalanceReport(report), 'object');
     assert.deepEqual(report, canonicalizeRelicBalanceReport(report));
     assert.deepEqual(report, buildReport());

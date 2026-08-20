@@ -21,6 +21,17 @@ export interface ResolveBoundedEncounterChoicePayload {
     occurrenceSequence: number;
 }
 
+export interface ResolveChainGoldChoicePayload {
+    chainId: string;
+    step: number;
+    choiceIndex: number;
+}
+
+export interface ResolveFallbackEventTransactionPayload {
+    transactionId: string;
+    choiceIndex: number;
+}
+
 export const AT = Object.freeze({
     // Boot / Auth
     SET_BOOT_STAGE: 'SET_BOOT_STAGE',
@@ -74,6 +85,8 @@ export const AT = Object.freeze({
     USE_COMBAT_ITEM: 'USE_COMBAT_ITEM',
     RESOLVE_COMBAT_ACTION: 'RESOLVE_COMBAT_ACTION',
     RESOLVE_BOUNDED_ENCOUNTER_CHOICE: 'RESOLVE_BOUNDED_ENCOUNTER_CHOICE',
+    RESOLVE_CHAIN_GOLD_CHOICE: 'RESOLVE_CHAIN_GOLD_CHOICE',
+    RESOLVE_FALLBACK_EVENT_TRANSACTION: 'RESOLVE_FALLBACK_EVENT_TRANSACTION',
 
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',

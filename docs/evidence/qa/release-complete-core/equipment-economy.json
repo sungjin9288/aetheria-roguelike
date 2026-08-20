@@ -2,9 +2,9 @@
   "hashAlgorithm": "sha256",
   "hashes": {
     "predecessorDigest": "25eac085e5b5f48f44632346fe8b767b50d36b8665166175b3b8fc2fcaf72119",
-    "candidateDigest": "ed3ddcd7edca17824295e7c53c6a81cb2fefe31e8f8d80e44114829a4106679d",
+    "candidateDigest": "6e3fb6effec3b88a95849a2cfbb74502f21accf777a24597129068625ec5af8f",
     "priceRemovedInvariantDigest": "9a4bfd472a7ad47c990a00fcf9d949f0c2bab11905d5eb9dd2800170bd2df644",
-    "reportDigest": "b59654c6f7904876abd36fd0921e09f802347360cacbda8d2e3331af5457513e"
+    "reportDigest": "33558b95856f4a357940d165256b4587d2a66a9176ff2fa4b68f4649276a9f93"
   },
   "report": {
     "candidateCanonicalRows": [
@@ -318,7 +318,8 @@
       },
       {
         "desc": "숲에서 입는 외투.",
-        "desc_stat": "DEF+13",
+        "desc_stat": "DEF+13 / 회피+3%",
+        "evasion": 0.03,
         "jobs": [
           "레인저"
         ],
@@ -1939,8 +1940,9 @@
         "val": 48
       },
       {
+        "crit": 0.09,
         "desc": "독이 배인 가시 채찍.",
-        "desc_stat": "ATK+47(독)",
+        "desc_stat": "ATK+47(독) / CRIT+9%",
         "elem": "자연",
         "jobs": [
           "어쌔신"
@@ -2416,13 +2418,14 @@
       },
       {
         "desc": "별무리의 공명을 담은 지팡이.",
-        "desc_stat": "ATK+195(빛) / 2H",
+        "desc_stat": "ATK+195(빛) / MP+20 / 2H",
         "elem": "빛",
         "hands": 2,
         "jobs": [
           "아크메이지",
           "흑마법사"
         ],
+        "mpBonus": 20,
         "name": "성운 지팡이",
         "price": 30500,
         "tier": 5,
@@ -3195,13 +3198,14 @@
       },
       {
         "desc": "번개를 부르는 장지팡이.",
-        "desc_stat": "ATK+56(빛) / 2H",
+        "desc_stat": "ATK+56(빛) / MP+10 / 2H",
         "elem": "빛",
         "hands": 2,
         "jobs": [
           "마법사",
           "아크메이지"
         ],
+        "mpBonus": 10,
         "name": "폭풍 스태프",
         "price": 1620,
         "tier": 3,
@@ -8234,7 +8238,8 @@
           "value": 13
         },
         "secondaryStats": {
-          "desc_stat": "DEF+13"
+          "desc_stat": "DEF+13 / 회피+3%",
+          "evasion": 0.03
         },
         "shopReachability": true,
         "signature": {
@@ -11751,7 +11756,8 @@
           "value": 47
         },
         "secondaryStats": {
-          "desc_stat": "ATK+47(독)",
+          "crit": 0.09,
+          "desc_stat": "ATK+47(독) / CRIT+9%",
           "elem": "자연"
         },
         "shopReachability": true,
@@ -12753,8 +12759,9 @@
           "value": 195
         },
         "secondaryStats": {
-          "desc_stat": "ATK+195(빛) / 2H",
-          "elem": "빛"
+          "desc_stat": "ATK+195(빛) / MP+20 / 2H",
+          "elem": "빛",
+          "mpBonus": 20
         },
         "shopReachability": true,
         "signature": {
@@ -14405,8 +14412,9 @@
           "value": 56
         },
         "secondaryStats": {
-          "desc_stat": "ATK+56(빛) / 2H",
-          "elem": "빛"
+          "desc_stat": "ATK+56(빛) / MP+10 / 2H",
+          "elem": "빛",
+          "mpBonus": 10
         },
         "shopReachability": true,
         "signature": {
@@ -14698,6 +14706,52 @@
       }
     ],
     "schemaVersion": 2,
+    "sidegradeCorrections": [
+      {
+        "candidate": {
+          "desc_stat": "DEF+13 / 회피+3%",
+          "evasion": 0.03
+        },
+        "name": "레인저 외투",
+        "predecessor": {
+          "desc_stat": "DEF+13"
+        },
+        "type": "armor"
+      },
+      {
+        "candidate": {
+          "crit": 0.09,
+          "desc_stat": "ATK+47(독) / CRIT+9%"
+        },
+        "name": "독아 채찍",
+        "predecessor": {
+          "desc_stat": "ATK+47(독)"
+        },
+        "type": "weapon"
+      },
+      {
+        "candidate": {
+          "desc_stat": "ATK+195(빛) / MP+20 / 2H",
+          "mpBonus": 20
+        },
+        "name": "성운 지팡이",
+        "predecessor": {
+          "desc_stat": "ATK+195(빛) / 2H"
+        },
+        "type": "weapon"
+      },
+      {
+        "candidate": {
+          "desc_stat": "ATK+56(빛) / MP+10 / 2H",
+          "mpBonus": 10
+        },
+        "name": "폭풍 스태프",
+        "predecessor": {
+          "desc_stat": "ATK+56(빛) / 2H"
+        },
+        "type": "weapon"
+      }
+    ],
     "sort": "UTF-16 code-unit type\\0name"
   }
 }

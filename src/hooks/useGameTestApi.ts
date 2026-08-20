@@ -29,6 +29,7 @@ import { startExpedition } from '../utils/expeditionLedger';
 import { EXPLORATION_RHYTHM_PROFILE } from '../data/progressionProfiles';
 import { advanceExploreState } from '../utils/explorationPacing';
 import { getAdditiveNumericRelicValue } from '../utils/relicEffectValues';
+import { getStructuredFallbackPoolEvent } from '../data/structuredFallbackEvents';
 
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
 
@@ -1282,15 +1283,20 @@ export const useGameTestApi = (
                 const inv = (er.player.inv || []).some((item: any) => item.id === testPotion.id)
                     ? er.player.inv
                     : [...(er.player.inv || []), testPotion];
+                const scenarioPatch = {
+                    loc: isBoss ? '신성한 호수' : '고요한 숲',
+                    level: isBoss ? 35 : er.player.level,
+                    mp: Math.max(10, er.player.mp || 0),
+                    inv,
+                };
+                const scenarioPlayer = { ...er.player, ...scenarioPatch };
+                const effectiveMaxHp = calculateFullStats(scenarioPlayer)!.maxHp;
 
                 er.dispatch({
                     type: AT.SET_PLAYER,
                     payload: {
-                        loc: isBoss ? '신성한 호수' : '고요한 숲',
-                        level: isBoss ? 35 : er.player.level,
-                        hp: Math.max(1, er.player.hp || 1),
-                        mp: Math.max(10, er.player.mp || 0),
-                        inv,
+                        ...scenarioPatch,
+                        hp: Math.max(1, effectiveMaxHp - 1),
                     },
                 });
                 er.dispatch({
@@ -1450,6 +1456,72 @@ export const useGameTestApi = (
                         .filter((relic: Relic) => relic.id === 'spell_echo').length,
                 };
             },
+            injectGoldMultiplierCombat: (order: any) => {
+                if (order !== 'gold-magnet-first' && order !== 'merchant-seal-first') return false;
+                const goldMagnet = RELICS.find((relic) => relic.id === 'gold_magnet');
+                const merchantSeal = RELICS.find((relic) => relic.id === 'merchant_seal');
+                if (!goldMagnet || !merchantSeal) return false;
+                const relics = order === 'gold-magnet-first'
+                    ? [goldMagnet, merchantSeal]
+                    : [merchantSeal, goldMagnet];
+                const er = engineRef.current;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        name: '골드 정산 검증자',
+                        hp: 100,
+                        maxHp: 100,
+                        mp: 50,
+                        maxMp: 50,
+                        atk: 200,
+                        def: 20,
+                        gold: 0,
+                        relics,
+                        stats: {
+                            ...(er.player.stats || {}),
+                            kills: 0,
+                            total_gold: 0,
+                            bossKills: 0,
+                            killRegistry: {},
+                        },
+                    },
+                });
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: {
+                        name: '골드 정책 허수아비',
+                        baseName: '골드 정책 허수아비',
+                        level: 1,
+                        hp: 1,
+                        maxHp: 1,
+                        atk: 1,
+                        def: 0,
+                        exp: 0,
+                        gold: 101,
+                        pattern: { guardChance: 0, heavyChance: 0 },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
+            getGoldMultiplierCombatSnapshot: () => {
+                const er = engineRef.current;
+                const relics = er.player.relics || [];
+                return {
+                    gameState: er.gameState,
+                    enemy: er.enemy ? {
+                        name: er.enemy.name,
+                        hp: er.enemy.hp,
+                        gold: er.enemy.gold,
+                    } : null,
+                    gold: er.player.gold || 0,
+                    totalGold: er.player.stats?.total_gold || 0,
+                    kills: er.player.stats?.kills || 0,
+                    relicOrder: relics
+                        .filter((relic: Relic) => relic.effect === 'gold_mult')
+                        .map((relic: Relic) => relic.id),
+                };
+            },
             injectEventChanceRelicChoice: () => {
                 const choices = ['ancient_map', 'wanderer_charm', 'mana_crystal']
                     .map((id) => RELICS.find((relic) => relic.id === id));
@@ -1512,6 +1584,27 @@ export const useGameTestApi = (
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+            },
+            seedFallbackWagerScenario: (mode: unknown) => {
+                if (mode !== 'insufficient' && mode !== 'boundary') return false;
+                const er = engineRef.current;
+                const transactionId = 'fallback:suspicious-merchant-wager:v1';
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (player: any) => ({
+                        ...player,
+                        gold: mode === 'boundary' ? 500 : 499,
+                    }),
+                });
+                er.dispatch({
+                    type: AT.SET_EVENT,
+                    payload: {
+                        ...getStructuredFallbackPoolEvent(transactionId),
+                        source: 'fallback',
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+                return true;
             },
             seedBoundedEncounterScenario: (region: any, encounterId: any) => {
                 const er = engineRef.current;

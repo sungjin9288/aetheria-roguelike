@@ -50,6 +50,7 @@ export const RELIC_RUNTIME_OWNER_PATHS = Object.freeze([
     'src/systems/CombatEngine.outcome.ts',
     'src/systems/CombatEngine.ts',
     'src/utils/gameUtils.ts',
+    'src/utils/hpDrainAtkRelic.ts',
     'src/utils/statsCalculator.ts',
     'src/utils/exploreUtils.ts',
     'src/hooks/gameActions/exploreActions.ts',

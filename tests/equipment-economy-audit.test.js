@@ -7,8 +7,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+    APPROVED_EQUIPMENT_SIDEGRADE_CORRECTIONS,
     APPROVED_EQUIPMENT_PRICE_CORRECTIONS,
     buildEquipmentEconomyReport,
+    EQUIPMENT_ECONOMY_CANDIDATE_DIGEST,
     EQUIPMENT_ECONOMY_PREDECESSOR_DIGEST,
     EQUIPMENT_ECONOMY_PRICE_REMOVED_INVARIANT,
 } from '../src/systems/equipmentEconomyAudit.js';
@@ -43,6 +45,59 @@ test('equipment economy report is deterministic, complete, and has only the 20 a
         first.predecessorDiscontinuities.map((row) => `${row.type}\0${row.name}`),
         first.priceCorrections.map((row) => `${row.type}\0${row.name}`),
     );
+});
+
+test('economy restores the exact four pre-sidegrade rows while retaining their candidate identities', () => {
+    const report = buildEquipmentEconomyReport();
+    assert.equal(report.sidegradeCorrections.length, 4);
+    assert.deepEqual(report.sidegradeCorrections, [...APPROVED_EQUIPMENT_SIDEGRADE_CORRECTIONS].sort((a, b) => (
+        `${a.type}\0${a.name}`.localeCompare(`${b.type}\0${b.name}`)
+    )));
+    assert.equal(report.priceCorrections.length, 20);
+
+    for (const correction of report.sidegradeCorrections) {
+        const identity = `${correction.type}\0${correction.name}`;
+        const predecessor = report.predecessorCanonicalRows.find((row) => `${row.type}\0${row.name}` === identity);
+        const candidate = report.candidateCanonicalRows.find((row) => `${row.type}\0${row.name}` === identity);
+        assert.ok(predecessor, `missing predecessor ${identity}`);
+        assert.ok(candidate, `missing candidate ${identity}`);
+        assert.deepEqual(
+            Object.fromEntries(Object.keys(correction.predecessor).map((key) => [key, predecessor[key]])),
+            correction.predecessor,
+        );
+        assert.deepEqual(
+            Object.fromEntries(Object.keys(correction.candidate).map((key) => [key, candidate[key]])),
+            correction.candidate,
+        );
+        for (const field of Object.keys(correction.candidate).filter((key) => key !== 'desc_stat')) {
+            assert.equal(Object.hasOwn(predecessor, field), false, `${identity} predecessor retains ${field}`);
+        }
+    }
+
+    assert.equal(EQUIPMENT_ECONOMY_PREDECESSOR_DIGEST, '25eac085e5b5f48f44632346fe8b767b50d36b8665166175b3b8fc2fcaf72119');
+    assert.equal(EQUIPMENT_ECONOMY_PRICE_REMOVED_INVARIANT, '9a4bfd472a7ad47c990a00fcf9d949f0c2bab11905d5eb9dd2800170bd2df644');
+    assert.equal(EQUIPMENT_ECONOMY_CANDIDATE_DIGEST, '6e3fb6effec3b88a95849a2cfbb74502f21accf777a24597129068625ec5af8f');
+});
+
+test('economy fails closed for fifth-stat, wrong-value, and wrong-copy sidegrade drift', () => {
+    const mutate = (name, change) => CANONICAL_EQUIPMENT.map((row) => (
+        row.name === name ? change({ ...row }) : row
+    ));
+
+    const fifthStat = buildEquipmentEconomyReport({
+        rows: mutate('레인저 외투', (row) => ({ ...row, crit: 0.01 })),
+    });
+    assert.ok(fifthStat.errors.includes('unexpected sidegrade secondary fields for armor\0레인저 외투'));
+
+    const wrongValue = buildEquipmentEconomyReport({
+        rows: mutate('독아 채찍', (row) => ({ ...row, crit: 0.08 })),
+    });
+    assert.ok(wrongValue.errors.includes('sidegrade candidate mismatch for weapon\0독아 채찍'));
+
+    const wrongCopy = buildEquipmentEconomyReport({
+        rows: mutate('성운 지팡이', (row) => ({ ...row, desc_stat: 'ATK+195(빛) / MP+19 / 2H' })),
+    });
+    assert.ok(wrongCopy.errors.includes('sidegrade candidate mismatch for weapon\0성운 지팡이'));
 });
 
 test('every canonical row exposes route, identity, stat, hand, and signature metadata', () => {
@@ -132,7 +187,7 @@ test('strict verifier uses node crypto evidence hashes and compares exact bytes 
     const before = await readFile(evidencePath, 'utf8');
     const parsed = JSON.parse(before);
     assert.equal(parsed.hashAlgorithm, 'sha256');
-    assert.equal(parsed.hashes.candidateDigest, 'ed3ddcd7edca17824295e7c53c6a81cb2fefe31e8f8d80e44114829a4106679d');
+    assert.equal(parsed.hashes.candidateDigest, EQUIPMENT_ECONOMY_CANDIDATE_DIGEST);
     assert.equal(parsed.hashes.predecessorDigest, EQUIPMENT_ECONOMY_PREDECESSOR_DIGEST);
     assert.equal(parsed.hashes.priceRemovedInvariantDigest, EQUIPMENT_ECONOMY_PRICE_REMOVED_INVARIANT);
 

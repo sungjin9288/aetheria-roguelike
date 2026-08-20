@@ -48,6 +48,44 @@ test('buildEventPackage dedupes choices and fills missing outcomes procedurally'
     assert.ok(Number.isInteger(packaged.outcomes[1].gold));
 });
 
+test('buildEventPackage replaces an unknown AI item promise with a safe procedural outcome', () => {
+    const packaged = buildEventPackage({
+        desc: '낯선 상자가 열립니다.',
+        choices: ['상자를 연다', '그대로 둔다'],
+        outcomes: [{
+            choiceIndex: 0,
+            item: '존재하지 않는 전설검',
+            log: '존재하지 않는 전설검을 얻었습니다.',
+        }],
+    }, {
+        location: '잊혀진 폐허',
+        playerSnapshot: { level: 9, maxHp: 180, maxMp: 90 },
+        mapSnapshot: { level: 5 },
+    });
+
+    assert.equal(packaged.outcomes[0].item, undefined);
+    assert.doesNotMatch(packaged.outcomes[0].log, /존재하지 않는 전설검/);
+});
+
+test('buildEventPackage preserves an exact canonical item reward', () => {
+    const packaged = buildEventPackage({
+        desc: '여행자의 가방을 발견했습니다.',
+        choices: ['가방을 연다', '그대로 둔다'],
+        outcomes: [{
+            choiceIndex: 0,
+            item: '하급 체력 물약',
+            log: '하급 체력 물약을 얻었습니다.',
+        }],
+    }, {
+        location: '고요한 숲',
+        playerSnapshot: { level: 3, maxHp: 150, maxMp: 60 },
+        mapSnapshot: { level: 1 },
+    });
+
+    assert.equal(packaged.outcomes[0].item, '하급 체력 물약');
+    assert.match(packaged.outcomes[0].log, /하급 체력 물약/);
+});
+
 test('pickFallbackEvent avoids immediately repeating recent event descriptions', () => {
     const history = [
         { event: '벽면에서 고대 문자가 빛나기 시작합니다.' },

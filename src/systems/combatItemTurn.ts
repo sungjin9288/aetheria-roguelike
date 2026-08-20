@@ -1,15 +1,16 @@
 import { MSG } from '../data/messages';
 import { CombatEngine } from './CombatEngine';
-import { buildRunSummary, toArray } from '../utils/gameUtils';
+import { buildRunSummary } from '../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from './DifficultyManager';
 import { calculateFullStats } from '../utils/statsCalculator';
 import type { Item, Monster, Player } from '../types/index.js';
 import { createSeededRandom } from '../utils/seededRandom.js';
+import { resolveConsumableEffect } from './consumableEffect';
 
 export { createSeededRandom } from '../utils/seededRandom.js';
 
 export type CombatItemTurnResult = {
-    kind: 'continue' | 'victory' | 'defeat';
+    kind: 'continue' | 'victory' | 'defeat' | 'rejected';
     player: Player;
     enemy: Monster | null;
     logs: Array<{ type: string; text: string }>;
@@ -17,54 +18,6 @@ export type CombatItemTurnResult = {
     runSummary?: any;
     graveData?: any;
     victoryStats?: any;
-};
-
-const consumeItem = (player: Player, item: Item, stats: any) => {
-    const inventory = (player.inv || []).filter((entry: any) => entry.id !== item.id);
-    const itemName = item.name || '소모품';
-    if (item.type === 'hp') {
-        return {
-            player: {
-                ...player,
-                hp: Math.min(stats.maxHp, (player.hp || 0) + (item.val || 0)),
-                inv: inventory,
-            },
-            log: { type: 'success', text: MSG.ITEM_USE_SIMPLE(itemName) },
-        };
-    }
-    if (item.type === 'mp') {
-        return {
-            player: {
-                ...player,
-                mp: Math.min(stats.maxMp, (player.mp || 0) + (item.val || 0)),
-                inv: inventory,
-            },
-            log: { type: 'success', text: MSG.ITEM_USE_SIMPLE(itemName) },
-        };
-    }
-    if (item.type === 'cure') {
-        return {
-            player: {
-                ...player,
-                status: toArray(player.status).filter((status: any) => status !== item.effect),
-                inv: inventory,
-            },
-            log: { type: 'success', text: MSG.ITEM_USE_CURE(itemName) },
-        };
-    }
-    return {
-        player: {
-            ...player,
-            tempBuff: {
-                atk: item.effect === 'atk_up' || item.effect === 'all_up' ? (item.val || 1.3) - 1 : 0,
-                def: item.effect === 'def_up' || item.effect === 'all_up' ? (item.val || 1.3) - 1 : 0,
-                turn: item.turn || 3,
-                name: itemName,
-            },
-            inv: inventory,
-        },
-        log: { type: 'success', text: MSG.ITEM_USE_BUFF(itemName) },
-    };
 };
 
 export const resolveCombatItemTurn = ({
@@ -85,8 +38,16 @@ export const resolveCombatItemTurn = ({
     rng?: () => number;
 }): CombatItemTurnResult => {
     const random = rng || createSeededRandom(seed);
-    const itemStats = calculateFullStats(player);
-    const consumed = consumeItem(player, item, itemStats);
+    const consumed = resolveConsumableEffect({ player, item });
+    if (!consumed.ok) {
+        return {
+            kind: 'rejected',
+            player,
+            enemy,
+            logs: [],
+            visualEffect: null,
+        };
+    }
     const turnTick = CombatEngine.tickCombatState(consumed.player);
     const playerForEnemyTurn = turnTick.updatedPlayer;
     const counterStats = calculateFullStats(playerForEnemyTurn);

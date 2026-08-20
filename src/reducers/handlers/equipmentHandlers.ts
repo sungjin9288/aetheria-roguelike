@@ -8,8 +8,8 @@ import {
 } from '../../utils/equipmentUtils';
 import { canEquip } from '../../utils/equipmentValidation';
 import { consumeInventoryItemByName, getEnhancePreview } from '../../utils/enhancementUtils';
-import { makeItem, toArray } from '../../utils/gameUtils';
-import { calculateFullStats } from '../../utils/statsCalculator';
+import { makeItem } from '../../utils/gameUtils';
+import { resolveConsumableEffect, sanitizeConsumedQuickSlots } from '../../systems/consumableEffect';
 import type { GameAction, GameState } from '../gameReducer';
 import {
     addNewTitles,
@@ -121,50 +121,13 @@ const equipInventoryItem = (state: GameState, item: any): GameState => {
 };
 
 const consumeInventoryItem = (state: GameState, item: any): GameState => {
-    if (
-        state.player.challengeModifiers?.includes('noPotion')
-        && ['hp', 'mp', 'cure'].includes(item.type)
-    ) {
-        return rejectEquipmentTransaction(state, 'warn', MSG.CHALLENGE_NO_CONSUMABLE);
-    }
-
-    const inventory = (state.player.inv || []).filter((entry: any) => entry.id !== item.id);
-    if (item.type === 'hp') {
-        const stats = calculateFullStats(state.player);
-        return completeEquipmentTransaction(state, {
-            ...state.player,
-            hp: Math.min(stats?.maxHp ?? state.player.maxHp ?? 1, (state.player.hp || 0) + (item.val || 0)),
-            inv: inventory,
-        }, [{ type: 'success', text: MSG.ITEM_USE_SIMPLE(item.name) }]);
-    }
-    if (item.type === 'mp') {
-        const stats = calculateFullStats(state.player);
-        return completeEquipmentTransaction(state, {
-            ...state.player,
-            mp: Math.min(stats?.maxMp ?? state.player.maxMp ?? 1, (state.player.mp || 0) + (item.val || 0)),
-            inv: inventory,
-        }, [{ type: 'success', text: MSG.ITEM_USE_SIMPLE(item.name) }]);
-    }
-    if (item.type === 'cure') {
-        return completeEquipmentTransaction(state, {
-            ...state.player,
-            status: toArray(state.player.status).filter((status: any) => status !== item.effect),
-            inv: inventory,
-        }, [{ type: 'success', text: MSG.ITEM_USE_CURE(item.name) }]);
-    }
-    if (item.type === 'buff') {
-        return completeEquipmentTransaction(state, {
-            ...state.player,
-            tempBuff: {
-                atk: item.effect === 'atk_up' || item.effect === 'all_up' ? (item.val || 1.3) - 1 : 0,
-                def: item.effect === 'def_up' || item.effect === 'all_up' ? (item.val || 1.3) - 1 : 0,
-                turn: item.turn || 3,
-                name: item.name,
-            },
-            inv: inventory,
-        }, [{ type: 'success', text: MSG.ITEM_USE_BUFF(item.name) }]);
-    }
-    return state;
+    const result = resolveConsumableEffect({ player: state.player, item });
+    if (!result.ok) return state;
+    const completed = completeEquipmentTransaction(state, result.player, [result.log]);
+    return {
+        ...completed,
+        quickSlots: sanitizeConsumedQuickSlots(state.quickSlots, item, completed.player.inv || []),
+    };
 };
 
 const useInventoryItem = (state: GameState, action: GameAction): GameState => {

@@ -9,15 +9,15 @@ Status vocabulary is deliberately narrow:
 - `external blocker`: the named evidence cannot be produced inside the repository.
 
 The current branch is `codex/release-complete-core`. Historical observation candidate
-`release-core-3a2407a0c961` remains bound to commit `3a2407a`, but later uncommitted
-relic balance and combat-follow-up bytes supersede it. There is no current immutable
-candidate, and no previous human session is counted for these bytes. All prior Toss
+`release-core-3a2407a0c961` remains bound to commit `3a2407a`, but the cohesive HEAD
+containing this matrix supersedes it as the current immutable candidate. No previous
+human session is counted for this candidate. All prior Toss
 candidate and deployment evidence is superseded and remains audit-only. The latest
-repository-owned gate below was executed on 2026-08-13 KST.
+repository-owned gate below was executed on 2026-08-20 KST.
 
 | Requirement | Current state | Direct evidence | Remaining gate |
 | --- | --- | --- | --- |
-| Fresh creation and first action | browser verified; historical candidate only | `tests/e2e/release-complete-core.spec.ts`, full smoke | create a new immutable candidate before fresh human observation |
+| Fresh creation and first action | browser verified; immutable candidate ready | `tests/e2e/release-complete-core.spec.ts`, full smoke | fresh human candidate observation |
 | First move, explore, combat and safe return | browser verified | production UI journey E2E, full smoke | fresh human candidate observation |
 | Equipment decision and level-5 job change | browser verified | `tests/e2e/release-complete-core.spec.ts` | fresh human candidate observation |
 | Skill branch and Class Journey | browser verified | production UI journey E2E and class-journey contracts | fresh human candidate observation |
@@ -41,28 +41,35 @@ repository-owned gate below was executed on 2026-08-13 KST.
 | Four bounded encounter families | implemented/browser verified | four catalog entries, rendered choice/settlement/replay E2E at 375/390/430 widths | candidate-bound human observation |
 | Content reachability | verified | report SHA `a6626375...b4f0e8`; checkpoints `1/5/5/6/13/18/18`, job snapshots `18` | use live funnel before further expansion |
 | Exploration rhythm | verified | report SHA `7d903b82...72bfe2`; predecessor p10/p50/p90 `1/2/6`, candidate `2/4/9` | five human sessions before tuning acceptance |
-| Relic rarity and effect coherence | implemented/browser verified | Undying audit `226808f2...20d`; free-skill audit `ddf2e9a1...dffd`; event-chance audit `424909de...4597`; focused `257/257`; 390×844 reducer/UI proof | cohesive commit and new candidate before human observation |
-| Equipment identity, save migration and T4/T5 economy | implemented/browser verified | 229/229 canonical identities; 20 price-only changes; report `b59654c6...513e`; focused `112/112`; 390×844 legacy-save purchase E2E | cohesive commit and new candidate before human observation |
-| Repository gate | verified on uncommitted implementation bytes | unit `4030/4030`; E2E `53/53 + 53/53`; desktop/mobile smoke; art errors 0; clean lint/type/build; Android debug and unsigned iOS device build | cohesive commit and five fresh human observations |
+| Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
+| Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; combat evidence `cdfab6b2...fcdc` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
+| Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; 100-row report `f253158f...86f6`; focused event `80/80`; 390×844 combined browser `7/7` | human candidate observation |
+| Repository gate | verified on current cohesive candidate bytes | type/lint/unit `4156/4156`/build guard; desktop/mobile smoke; E2E `55/55 + 54/54`; combat/economy/relic/content/pacing/art/event verifiers GREEN; `cap:sync`, Android debug and unsigned iOS build GREEN; tracked native drift 0 | five fresh human observations |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
 
 ## Current artifacts
 
-- Android debug APK: `214645615` bytes, SHA-256
-  `7906a00b37d1ccf5633cd0dc1326496d50a5553724ba818fbb41671beea14fc8`.
+- Android debug APK: `214644297` bytes, SHA-256
+  `de5e6cf760d3f6f7ceae835acf3a788a2531f8250b5ffc80fecc200d64fa59f4`.
 - Unsigned iOS arm64 executable: `102376` bytes, SHA-256
   `6372d559d57e897c21f87244863be80a792e7db279c8d9e1deef6ec53306292f`.
 - Content-pacing screenshots: `375x667 ef35a0f3...8a1de9`,
   `390x844 f4dd4663...7e8dc6`, `430x932 e765e669...3a41f`.
 - Relic event-chance 390×844 screenshot: SHA-256
   `1de1ac8a00abf8b4cd1be5efcf7318787663f1c39c8584f19dbd3dfd4bb7f6d0`.
+- Relic gold-multiplier 390×844 screenshot: SHA-256
+  `335061d7391fbd6935df914bf102f71cc4ee4ab55143240721f528548055af7e`.
+- Relic dot-multiplier evidence JSON: SHA-256
+  `5664a5ec0a9d11adae9f720b14bdf4ff4942a63363e85f4cca4eea6ba2e55e67`.
+- Relic HP-drain evidence JSON: SHA-256
+  `5b28e1eb312ec039265679d843109bcabd4b53977188809d0477dd0d026044df`.
 - True Ending/New Game+ 390×844 screenshot: SHA-256
   `0aec6b148d9ce09f11ed0ac3f1cebed9feb0eebc1035c755789f79971e6aabeb`.
 - Own-grave recovery 390×844 screenshot: SHA-256
   `f7c0aeba9789c044c87e664ddfd6b43bb8932d1c8b60981eec5c91552bbe4084`.
 - These artifacts are local package/browser evidence, not signed release or physical-device evidence.
-- No physical-device observation was performed for the uncommitted balance bytes.
+- No physical-device observation was performed for the current candidate.
   Apple Distribution identity, Android release signing and matching install/profile
   inputs remain external gates.
 
