@@ -9,6 +9,29 @@ export type UseCombatItemPayload = {
     now: number;
 };
 
+export type AscendPayload = {
+    expectedPrestigeRank: number;
+    sourceReceiptKey: string | null;
+};
+
+export interface ResolveBoundedEncounterChoicePayload {
+    encounterId: string;
+    choiceId: string;
+    expeditionId: string;
+    occurrenceSequence: number;
+}
+
+export interface ResolveChainGoldChoicePayload {
+    chainId: string;
+    step: number;
+    choiceIndex: number;
+}
+
+export interface ResolveFallbackEventTransactionPayload {
+    transactionId: string;
+    choiceIndex: number;
+}
+
 export const AT = Object.freeze({
     // Boot / Auth
     SET_BOOT_STAGE: 'SET_BOOT_STAGE',
@@ -61,6 +84,9 @@ export const AT = Object.freeze({
     PURCHASE_PREMIUM_OFFER: 'PURCHASE_PREMIUM_OFFER',
     USE_COMBAT_ITEM: 'USE_COMBAT_ITEM',
     RESOLVE_COMBAT_ACTION: 'RESOLVE_COMBAT_ACTION',
+    RESOLVE_BOUNDED_ENCOUNTER_CHOICE: 'RESOLVE_BOUNDED_ENCOUNTER_CHOICE',
+    RESOLVE_CHAIN_GOLD_CHOICE: 'RESOLVE_CHAIN_GOLD_CHOICE',
+    RESOLVE_FALLBACK_EVENT_TRANSACTION: 'RESOLVE_FALLBACK_EVENT_TRANSACTION',
 
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',
@@ -92,9 +118,6 @@ export const AT = Object.freeze({
 
     // v4.3 — Grave PvP
     INVADE_GRAVE: 'INVADE_GRAVE',
-
-    // v5.0 — True Ending
-    TRIGGER_TRUE_ENDING: 'TRIGGER_TRUE_ENDING',
 
     // v5.0 — 내러티브 이벤트 체인
     UPDATE_EVENT_CHAIN: 'UPDATE_EVENT_CHAIN',

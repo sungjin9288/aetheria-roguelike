@@ -6,6 +6,9 @@ import path from 'node:path';
 import { buildCampfireEvent } from '../src/utils/campfireEvent.js';
 import { buildScoutEvent } from '../src/utils/scoutEvents.js';
 import { buildBossChallengeEvent } from '../src/utils/bossGauge.js';
+import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.js';
+import { buildBoundedEncounterEvent } from '../src/utils/boundedEncounterEvent.js';
+import { EVENT_CHAINS } from '../src/data/eventChains.js';
 import {
     formatEventText,
     getEventChoicePreview,
@@ -70,6 +73,19 @@ test('known campfire, scout, and boss rules are explained before commitment', ()
     assert.deepEqual(getEventChoicePreview(boss, 1), { text: '이번에는 물러남 · 다음 탐험에 다시 선택', tone: 'unknown' });
 });
 
+test('bounded events show their region-incident title and exact canonical trade-offs', () => {
+    const event = buildBoundedEncounterEvent(BOUNDED_ENCOUNTERS[0], 7);
+    assert.deepEqual(getEventPanelCopy(event), { title: '돌기둥의 속삭임', kind: '지역 사건' });
+    assert.deepEqual(getEventChoicePreview(event, 0), {
+        text: '기력 10을 들여 다음 전투의 방어를 단단히 합니다.',
+        tone: 'story',
+    });
+    assert.deepEqual(getEventChoicePreview(event, 1), {
+        text: '생명 8을 감수하고 골드 60을 바로 챙깁니다.',
+        tone: 'danger',
+    });
+});
+
 test('story-chain previews describe progression and reward type without exposing outcome prose', () => {
     const chainEvent = {
         _chainId: 'dragon_legacy',
@@ -82,6 +98,27 @@ test('story-chain previews describe progression and reward type without exposing
 
     assert.deepEqual(getEventChoicePreview(chainEvent, 0), { text: '이야기 진행 · 유물 보상', tone: 'reward' });
     assert.deepEqual(getEventChoicePreview(chainEvent, 1), { text: '이야기의 흐름이 달라질 수 있음', tone: 'danger' });
+});
+
+test('story-chain gold costs are exact danger previews while positive gold remains a reward', () => {
+    const eventFor = (chainId, step) => {
+        const chain = EVENT_CHAINS.find((candidate) => candidate.id === chainId);
+        const stepData = chain.steps.find((candidate) => candidate.step === step);
+        return { ...stepData.event, _chainId: chainId, _chainStep: step };
+    };
+
+    assert.deepEqual(getEventChoicePreview(eventFor('last_hero', 0), 0), {
+        text: '이야기 진행 · 골드 300 소모',
+        tone: 'danger',
+    });
+    assert.deepEqual(getEventChoicePreview(eventFor('shadow_guild', 1), 0), {
+        text: '이야기 진행 · 골드 2000 소모 · 상인의 인장 획득',
+        tone: 'danger',
+    });
+    assert.deepEqual(getEventChoicePreview(eventFor('shadow_guild', 2), 1), {
+        text: '이야기 진행 · 골드 보상',
+        tone: 'reward',
+    });
 });
 
 test('event screen and result log keep the same natural player vocabulary', async () => {

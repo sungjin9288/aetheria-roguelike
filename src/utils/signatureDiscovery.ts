@@ -30,6 +30,10 @@ export const countDiscoveredSignatures = (player: Player) => (
     SIGNATURE_NAMES.filter((name) => isSignatureDiscovered(name, player)).length
 );
 
+export const getDiscoveredSignatureNames = (player: Player): string[] => (
+    SIGNATURE_NAMES.filter((name) => isSignatureDiscovered(name, player))
+);
+
 export const countCompletedSignatureSets = (player: Player) => (
     SIGNATURE_SETS.filter((setDefinition) => {
         const members = setDefinition?.members || [];

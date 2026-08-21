@@ -5,7 +5,7 @@ import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { AI_SERVICE } from '../../services/aiService';
 import { toArray } from '../../utils/gameUtils';
 import { runQuietRollAndCombat } from '../../utils/exploreUtils';
-import { getMapPacingProfile, getNarrativeEventChance } from '../../utils/explorationPacing';
+import { canOfferOptionalExploreDecision, getMapPacingProfile, getNarrativeEventChance } from '../../utils/explorationPacing';
 import { getRunBuildProfile } from '../../utils/runProfileUtils';
 import { enrichSnapshotWithDifficulty } from '../../systems/DifficultyManager';
 import { AT } from '../../reducers/actionTypes';
@@ -16,6 +16,24 @@ import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent } from '../../utils/scoutEvents';
 import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
+import { resolveExploreActionRandom } from '../../utils/exploreActionSeed';
+import { BOUNDED_ENCOUNTER_PACK_ENABLED, BOUNDED_ENCOUNTERS } from '../../data/boundedEncounters';
+import { buildBoundedEncounterContext, selectBoundedEncounter } from '../../utils/boundedEncounterSelector';
+import { buildBoundedEncounterEvent } from '../../utils/boundedEncounterEvent';
+import { getAdditiveNumericRelicValue } from '../../utils/relicEffectValues';
+
+const takeHarnessExploreSeed = (): number | undefined => {
+    if (import.meta.env?.VITE_ENABLE_TEST_API !== '1' || typeof document === 'undefined') {
+        return undefined;
+    }
+    const raw = document.documentElement.dataset.aetheriaExploreSeed;
+    delete document.documentElement.dataset.aetheriaExploreSeed;
+    if (raw === undefined || !/^\d{1,10}$/.test(raw)) return undefined;
+    const seed = Number(raw);
+    return Number.isSafeInteger(seed) && seed >= 0 && seed <= 0xffffffff
+        ? seed
+        : undefined;
+};
 
 /**
  * 캠프파이어/스카우팅 이후 AI 랜덤 이벤트 체크 (explore() 전용 — AI_SERVICE는 firebase에
@@ -23,13 +41,11 @@ import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
  * runQuietRollAndCombat(exploreUtils.ts)만 재사용한다 — firebase-free 단위 테스트 유지).
  * AI 이벤트가 발동하지 않으면 quiet 롤 이하 파이프(runQuietRollAndCombat)로 이어진다.
  */
-const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExploreOutcome }: any) => {
+const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExploreOutcome }: any, optionalDecisionAllowed: boolean) => {
     const { player, uid, dispatch, addLog, addStoryLog, getFullStats } = deps;
     const rng = typeof deps.rng === 'function' ? deps.rng : Math.random;
     const playerRelics = player.relics || [];
-    const eventChanceBonus = playerRelics.reduce((acc: any, relic: any) => (
-        relic.effect === 'event_chance' ? acc + relic.val : acc
-    ), 0);
+    const eventChanceBonus = getAdditiveNumericRelicValue(playerRelics, 'event_chance');
     const pacingProfile = getMapPacingProfile(mapData);
     const effectiveEventChance = getNarrativeEventChance(
         mapData.eventChance || 0,
@@ -39,8 +55,26 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
         getProgressionEventMultiplier(player),
     );
 
-    // AI 랜덤 이벤트 체크
-    if (rng() < effectiveEventChance) {
+    // AI 랜덤 이벤트 체크. 직전 선택 뒤 한 번의 일반 탐험이 없으면 optional roll을 소비하지 않는다.
+    if (optionalDecisionAllowed && rng() < effectiveEventChance) {
+        const occurrenceSequence = Math.max(1, Number(player.stats?.explores || 0) + 1);
+        const expeditionId = player.activeExpedition?.id;
+        const receipt = typeof expeditionId === 'string'
+            ? { expeditionId, occurrenceSequence }
+            : null;
+        const context = receipt ? buildBoundedEncounterContext(player, player.loc) : null;
+        const encounter = receipt && context && BOUNDED_ENCOUNTER_PACK_ENABLED
+            ? selectBoundedEncounter(BOUNDED_ENCOUNTERS, context, receipt, rng)
+            : null;
+
+        if (encounter) {
+            commitExploreOutcome('narrative_event', null, mapData);
+            dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+            dispatch({ type: AT.SET_EVENT, payload: buildBoundedEncounterEvent(encounter, occurrenceSequence) });
+            addLog('event', encounter.situation);
+            return;
+        }
+
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
         dispatch({ type: AT.SET_AI_THINKING, payload: true });
         try {
@@ -101,6 +135,8 @@ export const createExploreActions = (deps: any, shared: any) => {
             if (gameState !== GS.IDLE) return addLog('error', MSG.EXPLORE_BLOCKED);
             if (player.loc === CONSTANTS.START_LOCATION) return addLog('info', MSG.TOWN_PEACEFUL);
 
+            const actionRng = resolveExploreActionRandom(rng, takeHarnessExploreSeed());
+
             const mapData = DB.MAPS[player.loc];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
@@ -125,7 +161,11 @@ export const createExploreActions = (deps: any, shared: any) => {
             const campfireChance = BALANCE.CAMPFIRE_CHANCE
                 + getPrestigeUnlocks(player.meta?.prestigeRank).campfireChanceBonus
                 + getMirrorEffects(player.meta).campfireChanceBonus;
-            if (mapData.type === 'dungeon' && rng() < campfireChance) {
+            const optionalDecisionAllowed = canOfferOptionalExploreDecision(
+                player.stats,
+                player.activeExpedition,
+            );
+            if (optionalDecisionAllowed && mapData.type === 'dungeon' && actionRng() < campfireChance) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const campfireEvent = buildCampfireEvent(getFullStats());
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
@@ -154,16 +194,16 @@ export const createExploreActions = (deps: any, shared: any) => {
             // 탐험 스카우팅 (2026-07 감사 (b)): "정보 없는 단일 버튼 탐험" 갭 대응 — 던전(비안전지대)
             //   탐험 시 낮은 확률로 사전 정찰 카드 2~3장을 제시한다. 체인 > 캠프파이어 > 보스 도전 선택 >
             //   스카우팅 > 나머지 롤(AI 이벤트/quiet/전투) 순 우선순위. 선택은 eventActions.ts가 같은 턴에 해소.
-            if (shouldTriggerScout(mapData, rng)) {
+            if (optionalDecisionAllowed && shouldTriggerScout(mapData, actionRng)) {
                 commitExploreOutcome('narrative_event', null, mapData);
-                const scoutEvent = buildScoutEvent(player, mapData, rng);
+                const scoutEvent = buildScoutEvent(player, mapData, actionRng);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: scoutEvent });
                 addLog('event', scoutEvent.desc);
                 return;
             }
 
-            await runExplorePostDecisionRoll(mapData, deps, shared);
+            await runExplorePostDecisionRoll(mapData, { ...deps, rng: actionRng }, shared, optionalDecisionAllowed);
         },
     };
 };

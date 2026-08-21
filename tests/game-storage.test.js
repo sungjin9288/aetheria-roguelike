@@ -479,13 +479,37 @@ test('deferred journal repair restores the newest generation after a late slot c
 test('late-success Toss repairs settle once without an autonomous retry loop', async () => {
     const browserBackend = makeAsyncStorage();
     const tossValues = new Map();
-    let setItemCalls = 0;
+    const tossSetItemCalls = [];
+    let firstPendingPair;
+    let releaseFirstWrite;
+    let firstWritePending = false;
+    let finalBrowserPairs;
+    let resolveConvergence;
+    const tossConverged = new Promise((resolve) => { resolveConvergence = resolve; });
+    const resolveIfConverged = () => {
+        if (
+            finalBrowserPairs
+            && tossValues.size === finalBrowserPairs.length
+            && finalBrowserPairs.every(([key, value]) => tossValues.get(key) === value)
+        ) resolveConvergence();
+    };
     const tossBackend = {
         async getItem(key) { return tossValues.get(key) ?? null; },
         async setItem(key, value) {
-            setItemCalls += 1;
-            await new Promise((resolve) => setTimeout(resolve, 20));
+            tossSetItemCalls.push([key, value]);
+            if (tossSetItemCalls.length === 1) {
+                firstPendingPair = [key, value];
+                firstWritePending = true;
+                await new Promise((resolve) => { releaseFirstWrite = () => {
+                    tossValues.set(key, value);
+                    resolveIfConverged();
+                    resolve();
+                }; });
+                firstWritePending = false;
+                return;
+            }
             tossValues.set(key, value);
+            resolveIfConverged();
         },
         async removeItem(key) { tossValues.delete(key); },
     };
@@ -497,18 +521,39 @@ test('late-success Toss repairs settle once without an autonomous retry loop', a
         operationTimeoutMs: 5,
     });
 
-    await storage.importRecord({
+    const imported = await storage.importRecord({
         saveVersion: 1,
         revision: 8,
         savedAt: 8_000,
         payload: makeSnapshot('remote'),
     });
-    await new Promise((resolve) => setTimeout(resolve, 80));
-    const settledCallCount = setItemCalls;
-    await new Promise((resolve) => setTimeout(resolve, 80));
+    assert.equal(imported.payload.player.name, 'remote');
+    assert.equal(firstWritePending, true);
+    assert.equal(tossSetItemCalls.length, 1);
+    assert.equal(tossValues.size, 0);
 
-    assert.equal(setItemCalls, settledCallCount);
-    assert.ok(settledCallCount > 0);
+    finalBrowserPairs = [...browserBackend.values.entries()]
+        .filter(([key]) => key.includes('storage-journal'));
+    assert.ok(finalBrowserPairs.length > 0);
+
+    releaseFirstWrite();
+    await tossConverged;
+    const convergedCallCount = tossSetItemCalls.length;
+    await new Promise((resolve) => setImmediate(resolve));
+
+    const actualPairCounts = new Map();
+    for (const pair of tossSetItemCalls) {
+        const id = JSON.stringify(pair);
+        actualPairCounts.set(id, (actualPairCounts.get(id) ?? 0) + 1);
+    }
+    const expectedPairIds = new Set(
+        [firstPendingPair, ...finalBrowserPairs].map((pair) => JSON.stringify(pair)),
+    );
+
+    assert.equal(firstWritePending, false);
+    assert.equal(tossSetItemCalls.length, convergedCallCount);
+    assert.deepEqual(new Set(actualPairCounts.keys()), expectedPairIds);
+    assert.ok([...actualPairCounts.values()].every((count) => count === 1));
 });
 
 test('importRecord preserves remote revision authority before the next local save', async () => {

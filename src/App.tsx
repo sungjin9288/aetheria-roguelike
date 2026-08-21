@@ -1,4 +1,4 @@
-import { useState, useRef, lazy, Suspense, useEffect } from 'react';
+import { useState, useRef, lazy, Suspense, useCallback, useEffect } from 'react';
 import { MotionConfig } from 'framer-motion';
 
 import { GS } from './reducers/gameStates';
@@ -30,6 +30,7 @@ const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'crystal-exchange'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'system-settings'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'progression-acceptance'
+    || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'true-ending-journey'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'toss-first-five';
 const useRuntimeGameTestApi = TEST_API_BUILD ? useGameTestApi : () => undefined;
 
@@ -37,7 +38,6 @@ const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, G
 
 function App() {
     const engine = useGameEngine();
-    const [inventorySpotlight] = useState<any>(null);
     const [premiumShopOpen, setPremiumShopOpen] = useState(
         import.meta.env.VITE_DEVICE_QA_SCENARIO === 'crystal-exchange',
     );
@@ -57,9 +57,6 @@ function App() {
     const fullStatsRef = useRef(fullStats);
     /* eslint-disable-next-line react-hooks/refs */
     fullStatsRef.current = fullStats;
-    const inventorySpotlightRef = useRef(inventorySpotlight);
-    /* eslint-disable-next-line react-hooks/refs */
-    inventorySpotlightRef.current = inventorySpotlight;
     const premiumShopOpenRef = useRef(premiumShopOpen);
     /* eslint-disable-next-line react-hooks/refs */
     premiumShopOpenRef.current = premiumShopOpen;
@@ -67,7 +64,45 @@ function App() {
     /* eslint-disable-next-line react-hooks/refs */
     mirrorPanelOpenRef.current = mirrorPanelOpen;
     const [platformBackRegistry] = useState(createPlatformBackRegistry);
-    useRuntimeGameTestApi(engineRef, fullStatsRef, inventorySpotlightRef);
+
+    const handlePlatformBack = useCallback(() => {
+        if (platformBackRegistry.handleBack()) return true;
+        const currentEngine = engineRef.current;
+        const summary = currentEngine.player?.lastExpeditionSummary;
+        const action = resolvePlatformBackAction({
+            premiumShopOpen: premiumShopOpenRef.current,
+            mirrorPanelOpen: mirrorPanelOpenRef.current,
+            expeditionDebriefOpen: Boolean(
+                summary && (currentEngine.expeditionDebriefOpen || !summary.reviewedAt),
+            ),
+            postCombatOpen: Boolean(currentEngine.postCombatResult),
+            gameState: currentEngine.gameState,
+        });
+        switch (action) {
+            case 'close-premium':
+                setPremiumShopOpen(false);
+                return true;
+            case 'close-mirror':
+                setMirrorPanelOpen(false);
+                return true;
+            case 'close-debrief':
+                currentEngine.actions.closeExpeditionDebrief?.();
+                return true;
+            case 'close-post-combat':
+                currentEngine.actions.clearPostCombat?.();
+                return true;
+            case 'dismiss-event':
+                currentEngine.actions.dismissEvent?.();
+                return true;
+            case 'close-focus-panel':
+                currentEngine.actions.setGameState?.(GS.IDLE);
+                return true;
+            case 'close-app':
+                return false;
+        }
+    }, [platformBackRegistry]);
+
+    useRuntimeGameTestApi(engineRef, fullStatsRef, handlePlatformBack);
 
     useEffect(() => bindLifecycleBridge({
         environment: getRuntimeEnvironment(),
@@ -75,45 +110,10 @@ function App() {
             onBackground: () => {
                 void engineRef.current.flushLocalSave();
             },
-            onBack: () => {
-                if (platformBackRegistry.handleBack()) return true;
-                const currentEngine = engineRef.current;
-                const summary = currentEngine.player?.lastExpeditionSummary;
-                const action = resolvePlatformBackAction({
-                    premiumShopOpen: premiumShopOpenRef.current,
-                    mirrorPanelOpen: mirrorPanelOpenRef.current,
-                    expeditionDebriefOpen: Boolean(
-                        summary && (currentEngine.expeditionDebriefOpen || !summary.reviewedAt),
-                    ),
-                    postCombatOpen: Boolean(currentEngine.postCombatResult),
-                    gameState: currentEngine.gameState,
-                });
-                switch (action) {
-                    case 'close-premium':
-                        setPremiumShopOpen(false);
-                        return true;
-                    case 'close-mirror':
-                        setMirrorPanelOpen(false);
-                        return true;
-                    case 'close-debrief':
-                        currentEngine.actions.closeExpeditionDebrief?.();
-                        return true;
-                    case 'close-post-combat':
-                        currentEngine.actions.clearPostCombat?.();
-                        return true;
-                    case 'dismiss-event':
-                        currentEngine.actions.dismissEvent?.();
-                        return true;
-                    case 'close-focus-panel':
-                        currentEngine.actions.setGameState?.(GS.IDLE);
-                        return true;
-                    case 'close-app':
-                        return false;
-                }
-            },
+            onBack: handlePlatformBack,
             onError: (error) => console.warn('Platform lifecycle bridge unavailable', error),
         },
-    }), [platformBackRegistry]);
+    }), [handlePlatformBack]);
 
     // Performance marks
     useEffect(() => {
@@ -197,7 +197,6 @@ function App() {
             fullStats={fullStats}
             isPanelFocusState={isPanelFocusState}
             mobileArchiveDockVisible={mobileArchiveDockVisible}
-            inventorySpotlight={inventorySpotlight}
             premiumShopOpen={premiumShopOpen}
             setPremiumShopOpen={setPremiumShopOpen}
             mirrorPanelOpen={mirrorPanelOpen}

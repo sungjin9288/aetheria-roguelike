@@ -6,6 +6,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { processLoot } from '../src/systems/CombatEngine.loot.ts';
+import { DROP_TABLES } from '../src/data/dropTables.ts';
+import { getStrongestNumericRelicValue } from '../src/systems/CombatEngine.actions.ts';
 
 // ── resolveEnemyBaseName 미러 ───────────────────────────────────────────────
 
@@ -198,25 +201,46 @@ test('calcQty: qty=[2,5] → 2~5 범위', () => {
 
 // ── 유물 드랍률 배율 계산 테스트 ────────────────────────────────────────────
 
-/**
- * 유물 기반 드랍률 배율 계산 미러
- */
-function calcDropRateMult(relics) {
-    return 1 + (relics.find((relic) => relic.effect === 'drop_rate')?.val || 0);
-}
-
 function calcBossDropMult(relics, isBoss) {
     if (!isBoss) return 1;
     return 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0);
 }
 
-test('calcDropRateMult: 유물 없음 → 1', () => {
-    assert.equal(calcDropRateMult([]), 1);
+const luckyCoin = {
+    id: 'lucky_coin',
+    effect: 'drop_rate',
+    val: 0.5,
+};
+
+const fortuneRelic = {
+    id: 'fortune_relic',
+    effect: 'drop_rate',
+    val: 1.0,
+};
+
+test('production processLoot resolves drop_rate independently of relic inventory order', () => {
+    const enemy = { name: '__drop_rate_controlled_enriched__', dropMod: 1 };
+    DROP_TABLES[enemy.name] = [{ item: '슬라임 젤리', rate: 0.4 }];
+    try {
+        const roll = () => 0.7;
+        const firstWeak = processLoot(enemy, { relics: [luckyCoin, fortuneRelic] }, 1, roll, () => 1);
+        const firstStrong = processLoot(enemy, { relics: [fortuneRelic, luckyCoin] }, 1, roll, () => 1);
+
+        assert.equal(firstStrong.items.length, 1);
+        assert.equal(firstWeak.items.length, firstStrong.items.length);
+        assert.deepEqual(firstWeak, firstStrong);
+    } finally {
+        delete DROP_TABLES[enemy.name];
+    }
 });
 
-test('calcDropRateMult: drop_rate 유물 → 1 + val', () => {
-    const relics = [{ effect: 'drop_rate', val: 0.3 }];
-    assert.ok(Math.abs(calcDropRateMult(relics) - 1.3) < 0.001);
+test('drop_rate: shared strongest selector has no matching relic → 0', () => {
+    assert.equal(getStrongestNumericRelicValue([], 'drop_rate'), 0);
+});
+
+test('drop_rate: shared strongest selector chooses the greater matching value', () => {
+    assert.equal(getStrongestNumericRelicValue([luckyCoin, fortuneRelic], 'drop_rate'), 1);
+    assert.equal(getStrongestNumericRelicValue([fortuneRelic, luckyCoin], 'drop_rate'), 1);
 });
 
 test('calcBossDropMult: 보스 아님 → 1', () => {

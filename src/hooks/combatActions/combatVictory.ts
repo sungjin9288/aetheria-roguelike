@@ -9,7 +9,7 @@ import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../uti
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { SEASON_XP } from '../../data/seasonPass';
 import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, buildPassiveBonusWithScout } from './_helpers';
-import { applyAbyssFloorAdvance, handleDemonKingSlain } from './combatBossHandlers';
+import { applyAbyssFloorAdvance } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
@@ -229,21 +229,6 @@ export const handleVictoryOutcome = ({
     emitUnlockedTitles(updatedPlayer);
 
     if (extendedChecks) {
-        if (victoryResult.isDemonKingSlain) {
-            handleDemonKingSlain(updatedPlayer, dispatch, addLog, random, currentTime);
-            return { earlyReturn: true };
-        }
-        if (deadEnemy.baseName === '원시의 신' || deadEnemy.name?.includes('원시의 신') || deadEnemy.name?.includes('원초적 혼돈')) {
-            const heartItem = makeItem(
-                { name: '원시의 심장', type: 'key', price: 0, tier: 6, desc: '원시의 신의 심장.' },
-                random,
-                currentTime,
-            );
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
-            dispatch({ type: AT.TRIGGER_TRUE_ENDING });
-            addLog('critical', MSG.TRUE_GOD_SLAIN);
-            return { earlyReturn: true };
-        }
         if (deadEnemy.baseName === '공허의 신' || deadEnemy.name?.includes('공허의 신') || deadEnemy.name?.includes('절대 공허')) {
             const voidCore = makeItem(
                 { name: '공허의 핵심', type: 'key', price: 0, tier: 6, desc: '심연 100층을 정복한 자에게만 허락된 공허의 본질. 세상의 어떤 힘도 이것을 무너뜨릴 수 없다.' },

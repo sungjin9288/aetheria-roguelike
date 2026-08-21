@@ -92,6 +92,14 @@ interface TempBuff {
     name?: string | null;
 }
 
+export interface EndgameProgress {
+    version: 1;
+    primalShards: number;
+    legacyInventoryMigrated: boolean;
+    lastEndgameReceiptKey: string | null;
+    trueEndingSeen: boolean;
+}
+
 interface PlayerMeta {
     essence?: number;
     rank?: number;
@@ -107,6 +115,7 @@ interface PlayerMeta {
         seen?: string[];
         pending?: string[];
     };
+    endgame?: EndgameProgress;
 }
 
 interface CombatFlags {
@@ -285,7 +294,6 @@ export interface Player {
     combatFlags?: CombatFlags;
     killStreak?: number;
     history?: any[];
-    archivedHistory?: any[];
     eventChainProgress?: Record<string, any>;
     activeExpedition?: ExpeditionSnapshot | null;
     lastExpeditionSummary?: ExpeditionSummary | null;

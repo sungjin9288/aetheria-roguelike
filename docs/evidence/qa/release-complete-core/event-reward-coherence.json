@@ -1,0 +1,1055 @@
+{
+  "hashAlgorithm": "sha256",
+  "reportHash": "f253158f35d6f37f4d8781350f0f6b218b4024cfcf1b5df24228014140cf86f6",
+  "report": {
+    "schemaVersion": 1,
+    "catalog": {
+      "chainCount": 13,
+      "chainStepCount": 39,
+      "chainOutcomeCount": 84,
+      "boundedEncounterCount": 4,
+      "boundedChoiceCount": 8,
+      "fallbackTransactionCount": 3,
+      "campfireChoiceCount": 2,
+      "scoutChoiceCount": 3
+    },
+    "frequency": {
+      "scoutChance": 0.15,
+      "campfireChance": 0.08,
+      "eventMultiplier": 0.8,
+      "minimumNarrativeGap": 1
+    },
+    "rows": [
+      {
+        "id": "bounded:forest-mutated-trail:clear-thorns",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고요한 숲",
+        "rewardType": "item",
+        "itemName": "강화 재료"
+      },
+      {
+        "id": "bounded:forest-mutated-trail:soothe-spirit",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고요한 숲",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:forest-old-pillars:lift-stone",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고요한 숲",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:forest-old-pillars:read-runes",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고요한 숲",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:plain-bandit-banner:follow-cache-map",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "서쪽 평원",
+        "rewardType": "item",
+        "itemName": "강화 재료"
+      },
+      {
+        "id": "bounded:plain-bandit-banner:read-formation",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "서쪽 평원",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:plain-supply-cart:repair-cart",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "서쪽 평원",
+        "rewardType": "item",
+        "itemName": "하급 체력 물약"
+      },
+      {
+        "id": "bounded:plain-supply-cart:search-cart",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "서쪽 평원",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "campfire:0",
+        "occurrenceClass": "campfire",
+        "rewardType": "recovery"
+      },
+      {
+        "id": "campfire:1",
+        "occurrenceClass": "campfire",
+        "rewardType": "buff"
+      },
+      {
+        "id": "chain:abyss_signal:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:abyss_signal:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:abyss_signal:0:2",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:abyss_signal:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:abyss_signal:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:abyss_signal:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:abyss_signal:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:ancient_prophecy:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "어둠의 동굴",
+        "mapLevel": 10,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:ancient_prophecy:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "어둠의 동굴",
+        "mapLevel": 10,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:ancient_prophecy:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 마법 탑",
+        "mapLevel": 25,
+        "outcomeType": "chain_advance",
+        "rewardType": "info",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:ancient_prophecy:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 마법 탑",
+        "mapLevel": 25,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:ancient_prophecy:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:ancient_prophecy:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:divine_apostle_trial:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 신전 도시",
+        "mapLevel": 50,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:divine_apostle_trial:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 신전 도시",
+        "mapLevel": 50,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:divine_apostle_trial:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "차원의 균열 전초기지",
+        "mapLevel": 62,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:divine_apostle_trial:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "차원의 균열 전초기지",
+        "mapLevel": 62,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:divine_apostle_trial:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "item",
+        "itemName": "성스러운 창",
+        "itemTier": 5,
+        "relicId": null
+      },
+      {
+        "id": "chain:divine_apostle_trial:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:dragon_legacy:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "화염의 협곡",
+        "mapLevel": 15,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:dragon_legacy:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "화염의 협곡",
+        "mapLevel": 15,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:dragon_legacy:0:2",
+        "occurrenceClass": "one-time-chain",
+        "location": "화염의 협곡",
+        "mapLevel": 15,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:dragon_legacy:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "천공 정원",
+        "mapLevel": 40,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:dragon_legacy:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "천공 정원",
+        "mapLevel": 40,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:dragon_legacy:1:2",
+        "occurrenceClass": "one-time-chain",
+        "location": "천공 정원",
+        "mapLevel": 40,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:dragon_legacy:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:dragon_legacy:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_commander:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "잊혀진 폐허",
+        "mapLevel": 5,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_commander:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "잊혀진 폐허",
+        "mapLevel": 5,
+        "outcomeType": "chain_advance_fail",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_commander:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "몰락한 전초기지",
+        "mapLevel": 18,
+        "outcomeType": "chain_advance",
+        "rewardType": "combat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_commander:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "몰락한 전초기지",
+        "mapLevel": 18,
+        "outcomeType": "chain_advance_fail",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_commander:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "마왕성",
+        "mapLevel": 48,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_commander:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "마왕성",
+        "mapLevel": 48,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_god:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 마법 탑",
+        "mapLevel": 25,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_god:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 마법 탑",
+        "mapLevel": 25,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_god:0:2",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 마법 탑",
+        "mapLevel": 25,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_god:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_god:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance_fail",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_god:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:forgotten_god:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "혼돈의 심연",
+        "mapLevel": "infinite",
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:last_hero:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "서쪽 평원",
+        "mapLevel": 3,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:last_hero:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "서쪽 평원",
+        "mapLevel": 3,
+        "outcomeType": "chain_advance_fail",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:last_hero:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "화염의 협곡",
+        "mapLevel": 15,
+        "outcomeType": "chain_advance",
+        "rewardType": "item",
+        "itemName": "심판자의 검",
+        "itemTier": 4,
+        "relicId": null
+      },
+      {
+        "id": "chain:last_hero:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "화염의 협곡",
+        "mapLevel": 15,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:last_hero:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "암흑 성",
+        "mapLevel": 35,
+        "outcomeType": "chain_advance",
+        "rewardType": "combat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:last_hero:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "암흑 성",
+        "mapLevel": 35,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:lost_wizard:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "고요한 숲",
+        "mapLevel": 1,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:lost_wizard:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "고요한 숲",
+        "mapLevel": 1,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:lost_wizard:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "수정 동굴",
+        "mapLevel": 12,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:lost_wizard:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "수정 동굴",
+        "mapLevel": 12,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:lost_wizard:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "천공 정원",
+        "mapLevel": 40,
+        "outcomeType": "chain_advance",
+        "rewardType": "legendary_item",
+        "itemName": "천벌의 지팡이",
+        "itemTier": 5,
+        "relicId": null
+      },
+      {
+        "id": "chain:lost_wizard:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "천공 정원",
+        "mapLevel": 40,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:machine_uprising:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "기계 폐도",
+        "mapLevel": 28,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:machine_uprising:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "기계 폐도",
+        "mapLevel": 28,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:machine_uprising:0:2",
+        "occurrenceClass": "one-time-chain",
+        "location": "기계 폐도",
+        "mapLevel": 28,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:machine_uprising:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "몰락한 전초기지",
+        "mapLevel": 18,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:machine_uprising:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "몰락한 전초기지",
+        "mapLevel": 18,
+        "outcomeType": "chain_advance_fail",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:machine_uprising:1:2",
+        "occurrenceClass": "one-time-chain",
+        "location": "몰락한 전초기지",
+        "mapLevel": 18,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:machine_uprising:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "북부 요새",
+        "mapLevel": 32,
+        "outcomeType": "chain_advance",
+        "rewardType": "item",
+        "itemName": "천상의갑주",
+        "itemTier": 5,
+        "relicId": null
+      },
+      {
+        "id": "chain:machine_uprising:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "북부 요새",
+        "mapLevel": 32,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:rift_secret:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "차원의 균열 전초기지",
+        "mapLevel": 62,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:rift_secret:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "차원의 균열 전초기지",
+        "mapLevel": 62,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:rift_secret:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "붕괴된 마법 요새",
+        "mapLevel": 62,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:rift_secret:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "붕괴된 마법 요새",
+        "mapLevel": 62,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:rift_secret:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "item",
+        "itemName": "균열 차단 방패",
+        "itemTier": 4,
+        "relicId": null
+      },
+      {
+        "id": "chain:rift_secret:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:shadow_guild:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "잊혀진 폐허",
+        "mapLevel": 5,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:shadow_guild:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "잊혀진 폐허",
+        "mapLevel": 5,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:shadow_guild:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "어둠의 동굴",
+        "mapLevel": 10,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": "merchant_seal"
+      },
+      {
+        "id": "chain:shadow_guild:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "어둠의 동굴",
+        "mapLevel": 10,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:shadow_guild:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "마왕성",
+        "mapLevel": 48,
+        "outcomeType": "chain_advance",
+        "rewardType": "item",
+        "itemName": "그림자 절단기",
+        "itemTier": 5,
+        "relicId": null
+      },
+      {
+        "id": "chain:shadow_guild:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "마왕성",
+        "mapLevel": 48,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:water_apostle:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "호수의 신전",
+        "mapLevel": 5,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:water_apostle:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "호수의 신전",
+        "mapLevel": 5,
+        "outcomeType": "chain_advance_fail",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:water_apostle:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "사막 오아시스",
+        "mapLevel": 23,
+        "outcomeType": "chain_advance",
+        "rewardType": "combat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:water_apostle:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "사막 오아시스",
+        "mapLevel": 23,
+        "outcomeType": "chain_advance_fail",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:water_apostle:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "피라미드",
+        "mapLevel": 20,
+        "outcomeType": "chain_advance",
+        "rewardType": "item",
+        "itemName": "엘릭서",
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:water_apostle:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "피라미드",
+        "mapLevel": 20,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:world_tree_corruption:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "세계수 숲",
+        "mapLevel": 38,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:world_tree_corruption:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "세계수 숲",
+        "mapLevel": 38,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:world_tree_corruption:1:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 신전 도시",
+        "mapLevel": 50,
+        "outcomeType": "chain_advance",
+        "rewardType": "gold",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:world_tree_corruption:1:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "고대 신전 도시",
+        "mapLevel": 50,
+        "outcomeType": "chain_advance",
+        "rewardType": "stat_bonus",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:world_tree_corruption:2:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "item",
+        "itemName": "세계수의 지팡이",
+        "itemTier": 5,
+        "relicId": null
+      },
+      {
+        "id": "chain:world_tree_corruption:2:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "에테르 관문",
+        "mapLevel": 68,
+        "outcomeType": "chain_advance",
+        "rewardType": "relic",
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "fallback:fallback:destiny-dice-wager:v1",
+        "occurrenceClass": "repeatable-fallback",
+        "costType": "gold",
+        "costAmount": 720,
+        "grossGold": 1440,
+        "netGold": 720
+      },
+      {
+        "id": "fallback:fallback:suspicious-merchant-wager:v1",
+        "occurrenceClass": "repeatable-fallback",
+        "costType": "gold",
+        "costAmount": 500,
+        "grossGold": 1000,
+        "netGold": 500
+      },
+      {
+        "id": "fallback:fallback:wounded-merchant:v1",
+        "occurrenceClass": "repeatable-fallback",
+        "costType": "hp-recovery-consumable",
+        "costAmount": 1,
+        "grossGold": 200,
+        "netGold": 200
+      },
+      {
+        "id": "scout:0",
+        "occurrenceClass": "scout",
+        "rewardType": "combat"
+      },
+      {
+        "id": "scout:1",
+        "occurrenceClass": "scout",
+        "rewardType": "anomaly"
+      },
+      {
+        "id": "scout:2",
+        "occurrenceClass": "scout",
+        "rewardType": "unknown"
+      }
+    ],
+    "errors": []
+  }
+}

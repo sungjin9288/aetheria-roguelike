@@ -1,0 +1,160 @@
+{
+  "hashAlgorithm": "sha256",
+  "reportHash": "7d903b8219911946378703421f4c6cf6f90c9e524d2a6abdb2066eab4072bfe2",
+  "progressionEvidence": {
+    "candidateProfile": {
+      "id": "exploration-rhythm",
+      "version": 2,
+      "expMultiplier": 1,
+      "lootMultiplier": 1,
+      "eventMultiplier": 0.8
+    },
+    "focused": {
+      "seedStart": 20260810,
+      "seedCount": 64,
+      "reportHash": "d2b94b4690d915632308a4219750b9ed0312fb1da87cdb191d74a6adb6c023df"
+    },
+    "full": {
+      "seedStart": 20260810,
+      "seedCount": 1000,
+      "reportHash": "059eaeac9cc97c388caf83e83a13f9438bb5b03ee6f7afc264796bbf58c424ff"
+    }
+  },
+  "report": {
+    "schemaVersion": 1,
+    "classification": "rank0-no-mirror-proxy",
+    "actualPlayClaim": false,
+    "seeds": [
+      20260810,
+      20260811,
+      20260812,
+      20260813,
+      20260814,
+      20260815,
+      20260816,
+      20260817,
+      20260818,
+      20260819,
+      20260820,
+      20260821,
+      20260822,
+      20260823,
+      20260824,
+      20260825,
+      20260826,
+      20260827,
+      20260828,
+      20260829,
+      20260830,
+      20260831,
+      20260832,
+      20260833,
+      20260834,
+      20260835,
+      20260836,
+      20260837,
+      20260838,
+      20260839,
+      20260840,
+      20260841,
+      20260842,
+      20260843,
+      20260844,
+      20260845,
+      20260846,
+      20260847,
+      20260848,
+      20260849,
+      20260850,
+      20260851,
+      20260852,
+      20260853,
+      20260854,
+      20260855,
+      20260856,
+      20260857,
+      20260858,
+      20260859,
+      20260860,
+      20260861,
+      20260862,
+      20260863,
+      20260864,
+      20260865,
+      20260866,
+      20260867,
+      20260868,
+      20260869,
+      20260870,
+      20260871,
+      20260872,
+      20260873
+    ],
+    "opportunitiesPerSeed": 4096,
+    "predecessor": {
+      "campfire": 19700,
+      "scout": 60719,
+      "generalNarrative": 11869,
+      "boundedEncounter": {
+        "classification": "subset-of-general-narrative",
+        "countAuthority": "production-integration"
+      },
+      "combat": 143321,
+      "discovery": 3846,
+      "discoveryBreakdown": {
+        "anomaly": 3526,
+        "relic": 320
+      },
+      "nothing": 22689,
+      "optionalDecisionCount": 92288,
+      "optionalBackToBackCount": 31948,
+      "optionalGap": {
+        "p10": 1,
+        "p50": 2,
+        "p90": 6
+      },
+      "mandatoryStory": {
+        "classification": "correctness-only"
+      },
+      "bossChallenge": {
+        "classification": "correctness-only"
+      }
+    },
+    "candidate": {
+      "campfire": 15327,
+      "scout": 28509,
+      "generalNarrative": 11250,
+      "boundedEncounter": {
+        "classification": "subset-of-general-narrative",
+        "countAuthority": "production-integration"
+      },
+      "combat": 174310,
+      "discovery": 5070,
+      "discoveryBreakdown": {
+        "anomaly": 4750,
+        "relic": 320
+      },
+      "nothing": 27678,
+      "optionalDecisionCount": 55086,
+      "optionalBackToBackCount": 0,
+      "optionalGap": {
+        "p10": 2,
+        "p50": 4,
+        "p90": 9
+      },
+      "mandatoryStory": {
+        "classification": "correctness-only"
+      },
+      "bossChallenge": {
+        "classification": "correctness-only"
+      }
+    },
+    "gates": {
+      "noOptionalBackToBack": true,
+      "candidateMedianGapInRange": true,
+      "eventDirectionMatched": true,
+      "expLootInvariant": true
+    },
+    "blockers": []
+  }
+}

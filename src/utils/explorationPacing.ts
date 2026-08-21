@@ -29,6 +29,21 @@ const getExploreState = (stats: any) => {
     };
 };
 
+export const canOfferOptionalExploreDecision = (
+    stats: any,
+    activeExpedition?: { explores?: unknown } | null,
+): boolean => {
+    if (getExploreState(stats).sinceNarrativeEvent < 1) return false;
+    if (activeExpedition === undefined) return true;
+    if (!activeExpedition) return false;
+
+    const explores = Number(stats?.explores);
+    const startedWithExplores = Number(activeExpedition.explores);
+    return Number.isFinite(explores)
+        && Number.isFinite(startedWithExplores)
+        && explores > startedWithExplores;
+};
+
 // cycle 599: mapData default {} 제거 — 4 callsite (3 internal + 1
 //   exploreActions production) 모두 mapData 명시 전달이라 default 도달 불가.
 //   body의 !mapData guard가 undefined/null 안전 처리. cycle 600 milestone

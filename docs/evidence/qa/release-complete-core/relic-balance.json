@@ -1,0 +1,800 @@
+{
+  "hashAlgorithm": "sha256",
+  "reportHash": "c5c425d0a6554373dddd1c3bdce621b26225f84246101ead6d4cb57bfde719a8",
+  "report": {
+    "schemaVersion": 1,
+    "catalog": {
+      "relicCount": 67,
+      "uniqueIdCount": 67,
+      "uniqueNameCount": 67,
+      "effectCount": 61,
+      "synergyCount": 20,
+      "rarityCounts": {
+        "common": 7,
+        "uncommon": 10,
+        "rare": 17,
+        "epic": 17,
+        "legendary": 16
+      }
+    },
+    "effects": [
+      {
+        "effect": "abyss_atk_scale",
+        "category": "abyss-only",
+        "relicIds": [
+          "abyss_resonance"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "abyss_crit_scale",
+        "category": "abyss-only",
+        "relicIds": [
+          "void_crystal"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "abyss_floor_power",
+        "category": "abyss-only",
+        "relicIds": [
+          "abyssal_dominion"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "ancient_power",
+        "category": "baseline-stat",
+        "relicIds": [
+          "ancient_fury"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "armor_pen",
+        "category": "baseline-stat",
+        "relicIds": [
+          "phantom_blade"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts",
+          "src/systems/CombatEngine.ts"
+        ]
+      },
+      {
+        "effect": "battle_start_atk",
+        "category": "baseline-stat",
+        "relicIds": [
+          "phantom_core"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "battle_start_buff",
+        "category": "conditional-combat",
+        "relicIds": [
+          "war_drum"
+        ],
+        "runtimeOwners": [
+          "src/utils/exploreUtils.ts"
+        ]
+      },
+      {
+        "effect": "battle_start_heal",
+        "category": "conditional-combat",
+        "relicIds": [
+          "regen_core"
+        ],
+        "runtimeOwners": [
+          "src/utils/exploreUtils.ts"
+        ]
+      },
+      {
+        "effect": "boss_hunter",
+        "category": "exploration-pacing",
+        "relicIds": [
+          "void_eye"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.loot.ts",
+          "src/utils/exploreUtils.ts"
+        ]
+      },
+      {
+        "effect": "cd_minus",
+        "category": "conditional-combat",
+        "relicIds": [
+          "time_shard"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.ts"
+        ]
+      },
+      {
+        "effect": "chaos_buff",
+        "category": "conditional-combat",
+        "relicIds": [
+          "chaos_gem"
+        ],
+        "runtimeOwners": [
+          "src/utils/exploreUtils.ts"
+        ]
+      },
+      {
+        "effect": "chaos_relic",
+        "category": "exploration-pacing",
+        "relicIds": [
+          "chaos_heart"
+        ],
+        "runtimeOwners": [
+          "src/utils/exploreUtils.ts"
+        ]
+      },
+      {
+        "effect": "combo_stack",
+        "category": "combat-scaling",
+        "relicIds": [
+          "combo_ring"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "cooldown_reduce",
+        "category": "conditional-combat",
+        "relicIds": [
+          "time_lord_crown"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "crit_block",
+        "category": "conditional-combat",
+        "relicIds": [
+          "iron_will"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.enemyAI.ts"
+        ]
+      },
+      {
+        "effect": "crit_dmg",
+        "category": "baseline-stat",
+        "relicIds": [
+          "dragon_claw"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "crit_mp_regen",
+        "category": "conditional-combat",
+        "relicIds": [
+          "bloodthirst"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.relics.ts"
+        ]
+      },
+      {
+        "effect": "cursed_power",
+        "category": "conditional-combat",
+        "relicIds": [
+          "cursed_ring"
+        ],
+        "runtimeOwners": [
+          "src/utils/exploreUtils.ts",
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "death_save",
+        "category": "failure-rule",
+        "relicIds": [
+          "undying"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.relics.ts"
+        ]
+      },
+      {
+        "effect": "devour_hp",
+        "category": "run-scaling",
+        "relicIds": [
+          "world_eater"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.outcome.ts"
+        ]
+      },
+      {
+        "effect": "dot_mult",
+        "category": "conditional-combat",
+        "relicIds": [
+          "curse_crystal",
+          "death_mark"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "double_strike",
+        "category": "conditional-combat",
+        "relicIds": [
+          "twin_blades"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "drop_rate",
+        "category": "resource-economy",
+        "relicIds": [
+          "fortune_relic",
+          "lucky_coin"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.loot.ts"
+        ]
+      },
+      {
+        "effect": "dual_crit",
+        "category": "baseline-stat",
+        "relicIds": [
+          "twin_blade"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "echo_atk",
+        "category": "conditional-combat",
+        "relicIds": [
+          "void_echo"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "elem_boost",
+        "category": "baseline-stat",
+        "relicIds": [
+          "prism_core"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.ts"
+        ]
+      },
+      {
+        "effect": "entropy_tick",
+        "category": "combat-scaling",
+        "relicIds": [
+          "entropy_engine"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.relics.ts",
+          "src/utils/exploreUtils.ts"
+        ]
+      },
+      {
+        "effect": "event_chance",
+        "category": "exploration-pacing",
+        "relicIds": [
+          "ancient_map",
+          "wanderer_charm"
+        ],
+        "runtimeOwners": [
+          "src/hooks/gameActions/exploreActions.ts"
+        ]
+      },
+      {
+        "effect": "execute_atk",
+        "category": "conditional-combat",
+        "relicIds": [
+          "prophecy_stone"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "execute_bonus",
+        "category": "conditional-combat",
+        "relicIds": [
+          "executioner"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "exp_mult",
+        "category": "resource-economy",
+        "relicIds": [
+          "exp_amplifier"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.outcome.ts"
+        ]
+      },
+      {
+        "effect": "first_turn_evade",
+        "category": "conditional-combat",
+        "relicIds": [
+          "shadow_cloak"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "fortress",
+        "category": "baseline-stat",
+        "relicIds": [
+          "fortress"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "free_skill",
+        "category": "conditional-combat",
+        "relicIds": [
+          "spell_echo",
+          "time_ring"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "genesis",
+        "category": "baseline-stat",
+        "relicIds": [
+          "genesis_core"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.ts",
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "glass_cannon",
+        "category": "baseline-stat",
+        "relicIds": [
+          "void_shard"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "gold_mult",
+        "category": "resource-economy",
+        "relicIds": [
+          "gold_magnet",
+          "merchant_seal"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.outcome.ts"
+        ]
+      },
+      {
+        "effect": "hp_drain_atk",
+        "category": "conditional-combat",
+        "relicIds": [
+          "abyssal_contract",
+          "blood_oath_ring"
+        ],
+        "runtimeOwners": [
+          "src/utils/hpDrainAtkRelic.ts"
+        ]
+      },
+      {
+        "effect": "kill_bonus",
+        "category": "resource-economy",
+        "relicIds": [
+          "soul_lantern"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.outcome.ts"
+        ]
+      },
+      {
+        "effect": "kill_stack",
+        "category": "run-scaling",
+        "relicIds": [
+          "soul_collector"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "kill_stack_atk",
+        "category": "combat-scaling",
+        "relicIds": [
+          "void_monarch"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.outcome.ts",
+          "src/utils/exploreUtils.ts",
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "low_hp_atk",
+        "category": "conditional-combat",
+        "relicIds": [
+          "berserker"
+        ],
+        "runtimeOwners": [
+          "src/utils/gameUtils.ts",
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "low_hp_dmg",
+        "category": "conditional-combat",
+        "relicIds": [
+          "blood_moon"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "mp_mult",
+        "category": "baseline-stat",
+        "relicIds": [
+          "mana_crystal"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.ts",
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "mp_regen_turn",
+        "category": "conditional-combat",
+        "relicIds": [
+          "arcane_surge"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.ts"
+        ]
+      },
+      {
+        "effect": "mp_restore_battle",
+        "category": "conditional-combat",
+        "relicIds": [
+          "star_core"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.outcome.ts"
+        ]
+      },
+      {
+        "effect": "omega",
+        "category": "baseline-stat",
+        "relicIds": [
+          "omega_core"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.ts",
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "on_hit_freeze",
+        "category": "conditional-combat",
+        "relicIds": [
+          "frost_anchor"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "on_kill_heal",
+        "category": "conditional-combat",
+        "relicIds": [
+          "blood_pact"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.outcome.ts"
+        ]
+      },
+      {
+        "effect": "phoenix_revive",
+        "category": "failure-rule",
+        "relicIds": [
+          "phoenix_feather"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.relics.ts",
+          "src/utils/exploreUtils.ts"
+        ]
+      },
+      {
+        "effect": "reflect",
+        "category": "conditional-combat",
+        "relicIds": [
+          "thorns"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.enemyAI.ts"
+        ]
+      },
+      {
+        "effect": "reflect_crit",
+        "category": "baseline-stat",
+        "relicIds": [
+          "mirror_of_fate"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "regen",
+        "category": "conditional-combat",
+        "relicIds": [
+          "earth_heart"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.ts"
+        ]
+      },
+      {
+        "effect": "skill_lifesteal",
+        "category": "conditional-combat",
+        "relicIds": [
+          "soul_drain"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "skill_mult",
+        "category": "baseline-stat",
+        "relicIds": [
+          "mind_burn"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "spell_stack",
+        "category": "combat-scaling",
+        "relicIds": [
+          "spell_weaver"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts"
+        ]
+      },
+      {
+        "effect": "status_resist",
+        "category": "conditional-combat",
+        "relicIds": [
+          "ancient_seal"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.enemyAI.ts"
+        ]
+      },
+      {
+        "effect": "stone_skin",
+        "category": "baseline-stat",
+        "relicIds": [
+          "stone_skin"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "titan",
+        "category": "baseline-stat",
+        "relicIds": [
+          "titan_belt"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.enemyAI.ts",
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "triple_up",
+        "category": "baseline-stat",
+        "relicIds": [
+          "rune_crown"
+        ],
+        "runtimeOwners": [
+          "src/utils/statsCalculator.ts"
+        ]
+      },
+      {
+        "effect": "void_heart",
+        "category": "failure-rule",
+        "relicIds": [
+          "void_heart"
+        ],
+        "runtimeOwners": [
+          "src/systems/CombatEngine.actions.ts",
+          "src/systems/CombatEngine.relics.ts"
+        ]
+      }
+    ],
+    "synergies": [
+      {
+        "label": "공허의 용",
+        "requiredRelicNames": [
+          "드래곤 발톱",
+          "허공의 왕좌"
+        ]
+      },
+      {
+        "label": "난공불락",
+        "requiredRelicNames": [
+          "강철 의지",
+          "난공불락"
+        ]
+      },
+      {
+        "label": "무한 포식",
+        "requiredRelicNames": [
+          "광전사의 분노",
+          "세계 포식자"
+        ]
+      },
+      {
+        "label": "불멸의 전사",
+        "requiredRelicNames": [
+          "불사조의 깃털",
+          "피의 서약"
+        ]
+      },
+      {
+        "label": "비전 특이점",
+        "requiredRelicNames": [
+          "마나 수정",
+          "정신 연소",
+          "주문 메아리"
+        ]
+      },
+      {
+        "label": "비전 파동",
+        "requiredRelicNames": [
+          "마나 수정",
+          "주문 메아리"
+        ]
+      },
+      {
+        "label": "시간 지배자",
+        "requiredRelicNames": [
+          "시간의 파편",
+          "시공의 반지"
+        ]
+      },
+      {
+        "label": "시간의 지배자 (강화)",
+        "requiredRelicNames": [
+          "시간 군주의 왕관",
+          "시간의 파편"
+        ]
+      },
+      {
+        "label": "엔트로피 낙인",
+        "requiredRelicNames": [
+          "엔트로피 엔진",
+          "죽음의 낙인"
+        ]
+      },
+      {
+        "label": "엔트로피의 신",
+        "requiredRelicNames": [
+          "엔트로피 엔진",
+          "죽음의 낙인",
+          "혼돈의 보석"
+        ]
+      },
+      {
+        "label": "영원의 생명",
+        "requiredRelicNames": [
+          "재생 코어",
+          "창세의 핵"
+        ]
+      },
+      {
+        "label": "영원의 요새",
+        "requiredRelicNames": [
+          "난공불락",
+          "대지의 심장",
+          "암석 피부"
+        ]
+      },
+      {
+        "label": "원초의 분노",
+        "requiredRelicNames": [
+          "고대의 분노",
+          "광전사의 분노",
+          "드래곤 발톱"
+        ]
+      },
+      {
+        "label": "절대 반사",
+        "requiredRelicNames": [
+          "가시 갑옷",
+          "운명의 거울"
+        ]
+      },
+      {
+        "label": "절대 불사",
+        "requiredRelicNames": [
+          "불사의 의지",
+          "불사조의 깃털"
+        ]
+      },
+      {
+        "label": "절멸자",
+        "requiredRelicNames": [
+          "처형자의 날",
+          "허공의 왕좌"
+        ]
+      },
+      {
+        "label": "죽음의 예언자",
+        "requiredRelicNames": [
+          "저주의 결정",
+          "죽음의 낙인"
+        ]
+      },
+      {
+        "label": "지옥의 수확자",
+        "requiredRelicNames": [
+          "심연의 계약",
+          "영혼 흡수"
+        ]
+      },
+      {
+        "label": "혈맹 불사",
+        "requiredRelicNames": [
+          "영혼 흡수",
+          "피의 서약",
+          "허공의 심장"
+        ]
+      },
+      {
+        "label": "흡혈 군주",
+        "requiredRelicNames": [
+          "영혼 흡수",
+          "피의 서약"
+        ]
+      }
+    ],
+    "errors": []
+  }
+}

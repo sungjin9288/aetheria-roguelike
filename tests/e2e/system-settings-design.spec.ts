@@ -94,7 +94,7 @@ test.describe('System settings design', () => {
 
         const reset = page.getByTestId('system-reset-section');
         await reset.scrollIntoViewIfNeeded();
-        await expect(reset).toContainText('현재 모험을 지우고 처음부터 시작합니다.');
+        await expect(reset).toContainText('이번 회차만 정리하고 영구 성장과 기록은 보존합니다.');
         await expect(page.getByTestId('menu-reset')).toBeVisible();
     });
 });

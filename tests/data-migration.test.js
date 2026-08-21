@@ -286,6 +286,73 @@ test('migrateData: discoveryChains이 배열이 아닌 경우 → 빈 배열 fal
     assert.deepEqual(migrated.player.stats.discoveryChains, []);
 });
 
+test('equipment economy migration corrects only resolved equipment prices and remains idempotent', () => {
+    const prefixedWeapon = {
+        id: 'legacy-prefixed-weapon',
+        name: '고대의 차원절단자',
+        type: 'weapon',
+        prefixed: true,
+        prefixName: '고대의',
+        price: 6250,
+        val: 130,
+        enhance: 3,
+        desc: '보존해야 하는 설명',
+        desc_stat: 'ATK+130 | 고대의',
+        extension: { receipt: 'legacy-1' },
+    };
+    const unresolvedWeapon = {
+        id: 'legacy-unresolved-weapon',
+        name: '알 수 없는 오래된 검',
+        type: 'weapon',
+        prefixed: true,
+        prefixName: '오래된',
+        price: 777,
+        val: 42,
+        enhance: 2,
+        extension: { keep: true },
+    };
+    const consumable = { id: 'legacy-consumable', name: '회복 물약', type: 'hp', val: 30, price: 20, extension: 'keep' };
+    const material = { id: 'legacy-material', name: '철광석', type: 'material', val: 1, price: 5, extension: 'keep' };
+    const input = {
+        version: 5,
+        player: {
+            name: '경제 마이그레이션',
+            stats: {},
+            inv: [prefixedWeapon, unresolvedWeapon, consumable, material],
+            equip: {
+                weapon: { ...prefixedWeapon, id: 'slot-weapon' },
+                armor: {
+                    id: 'slot-armor', name: '암영 망토', type: 'armor', price: 900,
+                    val: 35, enhance: 4, extension: { source: 'slot' },
+                },
+                offhand: {
+                    id: 'slot-offhand', name: '목재 방패', type: 'shield', price: 90,
+                    val: 7, enhance: 1, extension: { source: 'slot' },
+                },
+            },
+        },
+    };
+
+    const migrated = migrateData(input);
+    const [migratedPrefixed, migratedUnresolved, migratedConsumable, migratedMaterial] = migrated.player.inv;
+
+    assert.equal(migratedPrefixed.baseItemName, '차원절단자');
+    assert.equal(migratedPrefixed.price, 55000);
+    assert.equal(migratedPrefixed.id, prefixedWeapon.id);
+    assert.equal(migratedPrefixed.enhance, prefixedWeapon.enhance);
+    assert.deepEqual(migratedPrefixed.extension, prefixedWeapon.extension);
+    assert.deepEqual(migratedUnresolved, unresolvedWeapon);
+    assert.deepEqual(migratedConsumable, { ...consumable, enhance: 0 });
+    assert.deepEqual(migratedMaterial, { ...material, enhance: 0 });
+    assert.equal(migrated.player.equip.weapon.price, 55000);
+    assert.equal(migrated.player.equip.weapon.baseItemName, '차원절단자');
+    assert.equal(migrated.player.equip.armor.price, 4000);
+    assert.equal(migrated.player.equip.armor.baseItemName, '암영 망토');
+    assert.equal(migrated.player.equip.offhand.baseItemName, '목재 방패');
+    assert.equal(migrated.player.equip.offhand.price, 90);
+    assert.deepEqual(migrateData(migrated), migrated);
+});
+
 // ─── 원본: tests/cycle-131-save-migrate-ascend-flow.test.js ───
 /**
  * cycle 131: save → migrate → ASCEND 통합 흐름 회귀 가드.
@@ -338,6 +405,7 @@ test('legacy save → migrate → 진행 → ASCEND 후 카운터 보존', () =>
     // 3. 게임 진행 시뮬레이션 — 카운터 누적
     const inProgressState = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...migrated.player,
             stats: {
@@ -354,8 +422,8 @@ test('legacy save → migrate → 진행 → ASCEND 후 카운터 보존', () =>
     const afterAscend = gameReducer(inProgressState, {
         type: AT.ASCEND,
         payload: {
-            meta: { ...inProgressState.player.meta, prestigeRank: 1 },
-            newTitle: 'reborn',
+            expectedPrestigeRank: 0,
+            sourceReceiptKey: inProgressState.player.meta?.endgame?.lastEndgameReceiptKey ?? null,
         },
     });
 
@@ -366,7 +434,7 @@ test('legacy save → migrate → 진행 → ASCEND 후 카운터 보존', () =>
     assert.deepEqual(afterAscend.player.stats.discoveryChains, ['fire_convergence']);
     // 기존 보존 카운터도 정상
     assert.equal(afterAscend.player.stats.kills, 500);
-    assert.equal(afterAscend.player.stats.demonKingSlain, 1, 'demonKingSlain 증분');
+    assert.equal(afterAscend.player.stats.demonKingSlain, 0, 'accepted demonKingSlain 보존');
 });
 
 test('신규 플레이어: INITIAL_STATE → 진행 → ASCEND', () => {
@@ -380,6 +448,7 @@ test('신규 플레이어: INITIAL_STATE → 진행 → ASCEND', () => {
     // 진행 후 ASCEND
     const inProgressState = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...INITIAL_STATE.player,
             level: 50,
@@ -395,7 +464,7 @@ test('신규 플레이어: INITIAL_STATE → 진행 → ASCEND', () => {
 
     const afterAscend = gameReducer(inProgressState, {
         type: AT.ASCEND,
-        payload: { meta: { prestigeRank: 1 }, newTitle: 'reborn' },
+        payload: { expectedPrestigeRank: 0, sourceReceiptKey: null },
     });
 
     assert.equal(afterAscend.player.stats.escapes, 7);
@@ -403,9 +472,10 @@ test('신규 플레이어: INITIAL_STATE → 진행 → ASCEND', () => {
     assert.deepEqual(afterAscend.player.stats.discoveryChains, ['fire_convergence', 'frozen_truth']);
 });
 
-test('연속 ASCEND: 두 번 환생해도 카운터 보존 (regression — preserve 자체 회귀 방지)', () => {
+test('연속 ASCEND: 두 번 환생해도 accepted 처치 카운터만 보존', () => {
     let state = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...INITIAL_STATE.player,
             level: 50,
@@ -414,6 +484,7 @@ test('연속 ASCEND: 두 번 환생해도 카운터 보존 (regression — prese
                 escapes: 10,
                 maxKillStreak: 30,
                 discoveryChains: ['fire_convergence'],
+                demonKingSlain: 3,
             },
         },
     };
@@ -421,19 +492,19 @@ test('연속 ASCEND: 두 번 환생해도 카운터 보존 (regression — prese
     // 첫 번째 ASCEND
     state = gameReducer(state, {
         type: AT.ASCEND,
-        payload: { meta: { prestigeRank: 1 }, newTitle: 'reborn' },
+        payload: { expectedPrestigeRank: 0, sourceReceiptKey: null },
     });
     assert.equal(state.player.stats.escapes, 10);
     assert.equal(state.player.stats.maxKillStreak, 30);
 
     // 두 번째 ASCEND (변화 없이 바로 환생)
-    state = gameReducer(state, {
+    state = gameReducer({ ...state, gameState: 'ascension' }, {
         type: AT.ASCEND,
-        payload: { meta: { prestigeRank: 2 }, newTitle: 'transcendent' },
+        payload: { expectedPrestigeRank: 1, sourceReceiptKey: null },
     });
     assert.equal(state.player.stats.escapes, 10, '연속 환생 후에도 보존');
     assert.equal(state.player.stats.maxKillStreak, 30);
-    assert.equal(state.player.stats.demonKingSlain, 2, '연속 환생마다 +1');
+    assert.equal(state.player.stats.demonKingSlain, 3, '환생 자체는 처치 횟수를 늘리지 않음');
 });
 
 // ─── 원본: tests/cycle-189-migrate-premium-asset-default.test.js ───

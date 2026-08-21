@@ -2,7 +2,7 @@ import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { DB } from '../../data/db';
-import { toArray, grantGold } from '../../utils/gameUtils';
+import { toArray, grantGold, findItemByName } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
@@ -11,6 +11,10 @@ import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollA
 import { BALANCE } from '../../data/constants';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
+import {
+    STRUCTURED_FALLBACK_TRANSACTIONS,
+    getStructuredFallbackTransaction,
+} from '../../data/structuredFallbackEvents';
 
 export const createEventActions = (deps: any, shared: any) => {
     const { emitUnlockedTitles } = shared;
@@ -19,6 +23,21 @@ export const createEventActions = (deps: any, shared: any) => {
     return {
         handleEventChoice: (idx: any) => {
             if (!currentEvent) return;
+
+            if (currentEvent.isBoundedEncounter) {
+                const outcome = toArray(currentEvent.outcomes)[idx];
+                if (!outcome) return;
+                dispatch({
+                    type: AT.RESOLVE_BOUNDED_ENCOUNTER_CHOICE,
+                    payload: {
+                        encounterId: currentEvent.boundedEncounterId,
+                        choiceId: outcome.choiceId,
+                        expeditionId: player.activeExpedition?.id,
+                        occurrenceSequence: currentEvent.boundedOccurrenceSequence,
+                    },
+                });
+                return;
+            }
 
             // 스카우팅 카드 처리 — 같은 탐험 턴 안에서 즉시 해소 (탐험의 나머지 롤 파이프 재호출).
             if (currentEvent.isScout) {
@@ -36,6 +55,40 @@ export const createEventActions = (deps: any, shared: any) => {
             const selectedOutcome = isChainEvent
                 ? (toArray(currentEvent.outcomes)[idx] || null)
                 : (toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null);
+            const reservedFallback = currentEvent.source === 'fallback'
+                ? STRUCTURED_FALLBACK_TRANSACTIONS.find((entry) => entry.event.desc === currentEvent.desc) || null
+                : null;
+            if (reservedFallback) {
+                const transaction = getStructuredFallbackTransaction(currentEvent.fallbackTransactionId);
+                if (!transaction || transaction.id !== reservedFallback.id) return;
+                if (idx === transaction.choiceIndex) {
+                    dispatch({
+                        type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION,
+                        payload: {
+                            transactionId: transaction.id,
+                            choiceIndex: idx,
+                        },
+                    });
+                    return;
+                }
+            }
+            if (isChainEvent
+                && selectedOutcome?.reward?.type === 'gold'
+                && selectedOutcome.reward.amount < 0) {
+                dispatch({
+                    type: AT.RESOLVE_CHAIN_GOLD_CHOICE,
+                    payload: {
+                        chainId: currentEvent._chainId,
+                        step: currentEvent._chainStep,
+                        choiceIndex: idx,
+                    },
+                });
+                return;
+            }
+            if (selectedOutcome?.item && !findItemByName(selectedOutcome.item)) {
+                addLog('error', MSG.EVENT_REWARD_UNAVAILABLE);
+                return;
+            }
             const roll = rng();
             let updatedPlayer = player;
             const fullStats = getFullStats();
@@ -105,9 +158,12 @@ export const createEventActions = (deps: any, shared: any) => {
                     }
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
-                if (outcome.type === 'chain_advance' || outcome.type === 'chain_advance_fail') {
+                if (outcome.type === 'chain_advance') {
                     const nextStep = (currentEvent._chainStep ?? 0) + 1;
                     dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId: currentEvent._chainId, step: nextStep } });
+                }
+                if (outcome.type === 'chain_advance_fail') {
+                    dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId: currentEvent._chainId, step: 'failed' } });
                 }
                 dispatch({ type: AT.SET_EVENT, payload: null });
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });

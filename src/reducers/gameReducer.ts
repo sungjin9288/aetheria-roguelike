@@ -9,6 +9,7 @@ import type { Player } from '../types';
 import { createCurrentRunProgress } from '../utils/runProgress';
 import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
+import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
 
 /**
  * Game state shape — cycle 60 phase D — Player 도메인 타입 적용.
@@ -80,11 +81,18 @@ export const INITIAL_STATE: GameState = {
             prestigeRank: 0,
             mirror: {},
             storyMilestones: { seen: [], pending: [] },
+            endgame: {
+                version: 1,
+                primalShards: 0,
+                legacyInventoryMigrated: true,
+                lastEndgameReceiptKey: null,
+                trueEndingSeen: false,
+            },
         },
         relics: [], titles: [], activeTitle: null,
         combatFlags: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false },
         killStreak: 0,
-        history: [], archivedHistory: [],
+        history: [],
         eventChainProgress: {},
         activeExpedition: null,
         lastExpeditionSummary: null,
@@ -108,7 +116,7 @@ export const INITIAL_STATE: GameState = {
     leaderboard: [],
     liveConfig: {
         eventMultiplier: 1,
-        progressionProfile: { id: 'baseline', version: 1 },
+        progressionProfile: { id: 'exploration-rhythm', version: 2 },
         announcement: '',
         seasonEvent: null,
     },
@@ -145,6 +153,7 @@ const ACTION_MAP: ActionMap = {
     ...makeProgressionActionMap(INITIAL_STATE),
     ...makeFeatureActionMap(INITIAL_STATE.player),
     ...returnSupplyRewardActionMap,
+    ...boundedEncounterActionMap,
 };
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {

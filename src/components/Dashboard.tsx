@@ -22,6 +22,7 @@ import ArchiveTabButton from './ArchiveTabButton';
 import EquipmentPanel from './EquipmentPanel';
 import SignalBadge from './SignalBadge';
 import SmartInventory from './SmartInventory';
+import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 
 const AchievementPanel = lazy(() => import('./AchievementPanel'));
 const BuildAdvicePanel = lazy(() => import('./BuildAdvicePanel'));
@@ -49,8 +50,6 @@ interface DashboardProps {
     stats?: any;
     quickSlots?: any[];
     runtime?: any;
-    inventorySpotlight?: any;
-    onClearInventorySpotlight?: any;
     onReturnToLog?: any;
 }
 
@@ -77,14 +76,11 @@ const Dashboard = ({
     stats,
     quickSlots,
     runtime,
-    inventorySpotlight,
-    onClearInventorySpotlight = null,
     onReturnToLog,
 }: DashboardProps) => {
     const [confirmMenuReset, setConfirmMenuReset] = useState(false);
     const archiveRailRef = useRef<HTMLDivElement>(null);
     const isInSafeZone = DB.MAPS[player?.loc as string]?.type === 'safe';
-    const hasInventorySpotlight = Boolean(inventorySpotlight?.token) && sideTab === 'inventory';
     const hasCompletableQuest = (player?.quests || []).some((quest: any) => quest.done && !quest.claimed);
     const activeTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
     const ActiveTabIcon = activeTab.icon;
@@ -124,8 +120,6 @@ const Dashboard = ({
                     actions={actions}
                     quickSlots={quickSlots}
                     onAssignQuickSlot={(index: any, item: any) => actions.setQuickSlot?.(index, item)}
-                    spotlight={inventorySpotlight}
-                    onClearSpotlight={onClearInventorySpotlight}
                 />
             )}
 
@@ -188,6 +182,7 @@ const Dashboard = ({
                         player={player}
                         grave={grave}
                         actions={actions}
+                        capabilities={PRODUCTION_GAME_CAPABILITIES}
                         onOpenMap={() => selectTab('map')}
                     />
                 </Suspense>
@@ -215,13 +210,11 @@ const Dashboard = ({
                         <div className="text-[10px] font-readable text-slate-400/70">모험 기록</div>
                         <div className="mt-0.5 flex items-center gap-2">
                             <h2 className="truncate text-[15px] font-readable font-bold text-white/92">
-                                {hasInventorySpotlight
-                                    ? (inventorySpotlight?.title || MSG.UI_LOOT_REVIEW)
-                                    : activeTab.label}
+                                {activeTab.label}
                             </h2>
-                            {(hasInventorySpotlight || hasCompletableQuest) && (
+                            {hasCompletableQuest && (
                                 <SignalBadge tone="spotlight" size="sm">
-                                    {hasInventorySpotlight ? MSG.UI_NOTABLE : MSG.UI_REFRESH}
+                                    {MSG.UI_REFRESH}
                                 </SignalBadge>
                             )}
                         </div>
@@ -261,23 +254,6 @@ const Dashboard = ({
                 ))}
             </nav>
 
-            {hasInventorySpotlight && (
-                <div
-                    data-testid="inventory-spotlight"
-                    className="mt-2 shrink-0 border-b border-[#d5b180]/18 px-1 pb-2"
-                >
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-readable text-[#f6e7c8]/78">
-                            {inventorySpotlight?.title || MSG.UI_LOOT_FOCUS}
-                        </span>
-                        <SignalBadge tone="spotlight" size="sm">{MSG.UI_REVIEW}</SignalBadge>
-                    </div>
-                    <p className="mt-1 text-[11px] font-readable leading-snug text-slate-300/80">
-                        {inventorySpotlight?.detail || MSG.UI_LOOT_FOCUS_HINT}
-                    </p>
-                </div>
-            )}
-
             <div
                 data-testid="mobile-archive-console-content"
                 className="custom-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto"
@@ -291,9 +267,9 @@ const Dashboard = ({
                     >
                         <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                                <h3 className="text-[12px] font-readable font-bold text-rose-100/88">진행 초기화</h3>
+                                <h3 className="text-[12px] font-readable font-bold text-rose-100/88">현재 여정 다시 시작</h3>
                                 <p className="mt-1 text-[11px] font-readable text-slate-400/78">
-                                    현재 모험을 지우고 처음부터 시작합니다.
+                                    이번 회차만 정리하고 영구 성장과 기록은 보존합니다.
                                 </p>
                             </div>
                             <button
@@ -301,17 +277,20 @@ const Dashboard = ({
                                 data-testid="menu-reset"
                                 onClick={() => setConfirmMenuReset(true)}
                                 className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-[0.65rem] border border-rose-300/18 bg-rose-950/28 px-3 py-1.5 text-[11px] font-readable text-rose-100/84 transition-colors hover:border-rose-200/28 hover:bg-rose-900/34"
-                                title="진행 초기화"
+                                title="현재 여정 다시 시작"
                             >
                                 <RotateCcw size={13} />
-                                <span>초기화</span>
+                                <span>다시 시작</span>
                             </button>
                         </div>
 
                         {confirmMenuReset && (
                             <div className="mt-2 border-t border-rose-300/12 pt-2">
-                                <p className="text-[11px] font-readable text-rose-100/82">
-                                    지금까지의 진행 상황을 정말 지울까요?
+                                <p data-testid="menu-reset-loss" className="text-[11px] font-readable leading-relaxed text-rose-100/82">
+                                    새로 시작: 레벨 · 장비와 가방 · 유물 · 임무 · 현재 원정
+                                </p>
+                                <p data-testid="menu-reset-preserved" className="mt-1 text-[11px] font-readable leading-relaxed text-emerald-100/82">
+                                    그대로 보존: 영구 성장 · 직업 여정 · 설정 · 도감과 누적 기록
                                 </p>
                                 <div className="mt-2 grid grid-cols-2 gap-2">
                                     <button
@@ -324,7 +303,7 @@ const Dashboard = ({
                                         className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-rose-300/20 bg-rose-950/48 px-2 py-2 text-[11px] font-readable text-rose-100/88 transition-colors hover:border-rose-200/30 hover:bg-rose-900/54"
                                     >
                                         <RotateCcw size={13} />
-                                        <span>초기화</span>
+                                        <span>현재 여정 다시 시작</span>
                                     </button>
                                     <button
                                         type="button"

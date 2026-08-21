@@ -32,10 +32,16 @@ test('slice 33: PhaseBanner — phase null이면 미렌더, phase3 강조 분기
 test('slice 33: GameRoot — phase 플립 감지 + 배너 렌더', async () => {
     const src = await readSrc('src/components/app/GameRoot.tsx');
     assert.ok(/import PhaseBanner/.test(src), 'PhaseBanner import');
-    assert.ok(/<PhaseBanner phase=\{phaseBanner\}/.test(src), '배너 렌더');
+    assert.ok(/const visiblePhaseBanner = engine\.enemy && phaseBanner/.test(src),
+        'live enemy와 저장된 배너를 함께 확인');
+    assert.ok(/engine\.enemy\.phase2Triggered/.test(src)
+        && /engine\.enemy\.phase3Triggered/.test(src), 'live phase flag authority를 확인');
+    assert.ok(/<PhaseBanner phase=\{visiblePhaseBanner\}/.test(src), '배너 렌더');
     assert.ok(/phase2Triggered/.test(src) && /phase3Triggered/.test(src), '두 페이즈 플래그 watch');
     assert.ok(/p3 && !prev\.p3/.test(src) && /p2 && !prev\.p2/.test(src),
         'false→true 플립만 트리거');
+    assert.doesNotMatch(src, /if \(!e\) \{[\s\S]{0,180}setPhaseBanner\(null\)/,
+        'enemy 소멸 effect는 동기 state update를 만들지 않는다');
     assert.ok(/setTimeout\([\s\S]{0,80}setPhaseBanner\(null\)[\s\S]{0,12}2000\)/.test(src),
         '~2s 자동 해제');
     assert.ok(/\}, \[engine\.enemy\]\);\s*useEffect\(\(\) => \{\s*if \(!phaseBanner\)/.test(src),

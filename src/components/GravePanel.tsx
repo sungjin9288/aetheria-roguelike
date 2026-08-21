@@ -15,6 +15,10 @@ import { db, hasFirebaseConfig } from '../firebase';
 import { APP_ID, BALANCE } from '../data/constants';
 import { isSignatureItem } from '../data/signatureItems.js';
 import { calcInvasionChance, getGraveRecoveryGroups } from '../utils/graveUtils';
+import {
+    PRODUCTION_GAME_CAPABILITIES,
+    type GameCapabilities,
+} from '../platform/gameCapabilities';
 import type { Player } from '../types/index.js';
 
 const GRAVES_LIMIT = 10;
@@ -24,9 +28,16 @@ interface GravePanelProps {
     grave?: any;
     actions?: any;
     onOpenMap?: () => void;
+    capabilities?: Readonly<GameCapabilities>;
 }
 
-const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
+const GravePanel = ({
+    player,
+    grave,
+    actions,
+    onOpenMap,
+    capabilities = PRODUCTION_GAME_CAPABILITIES,
+}: GravePanelProps) => {
     const [view, setView] = useState<'mine' | 'public'>('mine');
     const [publicGraves, setPublicGraves] = useState<any[]>([]);
     const [publicLoaded, setPublicLoaded] = useState(false);
@@ -43,7 +54,7 @@ const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
     const remainingInvades = Math.max(0, BALANCE.DAILY_INVADE_LIMIT - usedCount);
 
     const fetchGraves = async () => {
-        if (!hasFirebaseConfig || loading) return;
+        if (!capabilities.publicGraveInvasion || !hasFirebaseConfig || loading) return;
         setLoading(true);
         try {
             const gravesCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'graves');
@@ -65,12 +76,13 @@ const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
     };
 
     const selectView = (nextView: 'mine' | 'public') => {
+        if (nextView === 'public' && !capabilities.publicGraveInvasion) return;
         setView(nextView);
         if (nextView === 'public' && !publicLoaded) void fetchGraves();
     };
 
     const handleInvade = async (targetGrave: any) => {
-        if (remainingInvades <= 0) return;
+        if (!capabilities.publicGraveInvasion || remainingInvades <= 0) return;
         setInvadingUid(targetGrave.uid);
         await actions?.invadeGrave?.(targetGrave);
         setPublicGraves((current: any[]) => current.filter((entry: any) => entry.uid !== targetGrave.uid));
@@ -89,7 +101,7 @@ const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
             <div
                 role="tablist"
                 aria-label="무덤 기록"
-                className="grid grid-cols-2 gap-1 rounded-lg border border-white/8 bg-black/20 p-1"
+                className={`grid gap-1 rounded-lg border border-white/8 bg-black/20 p-1 ${capabilities.publicGraveInvasion ? 'grid-cols-2' : 'grid-cols-1'}`}
             >
                 <button
                     type="button"
@@ -104,19 +116,21 @@ const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
                 >
                     내 유해 {recoveryGroups.length > 0 ? recoveryGroups.length : ''}
                 </button>
-                <button
-                    type="button"
-                    role="tab"
-                    aria-selected={view === 'public'}
-                    data-testid="grave-view-public"
-                    onClick={() => selectView('public')}
-                    className={`min-h-[44px] rounded-md px-3 text-[12px] font-readable font-bold transition-colors ${view === 'public'
-                        ? 'bg-[#7dd4d8]/12 text-[#dff7f5]'
-                        : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
-                    }`}
-                >
-                    다른 모험가
-                </button>
+                {capabilities.publicGraveInvasion && (
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={view === 'public'}
+                        data-testid="grave-view-public"
+                        onClick={() => selectView('public')}
+                        className={`min-h-[44px] rounded-md px-3 text-[12px] font-readable font-bold transition-colors ${view === 'public'
+                            ? 'bg-[#7dd4d8]/12 text-[#dff7f5]'
+                            : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
+                        }`}
+                    >
+                        다른 모험가
+                    </button>
+                )}
             </div>
 
             {view === 'mine' && (
@@ -220,7 +234,7 @@ const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
                 </section>
             )}
 
-            {view === 'public' && (
+            {capabilities.publicGraveInvasion && (
                 <section data-testid="grave-public-view" className="space-y-2">
                     <div className="flex min-h-[44px] items-center justify-between gap-3 border-b border-white/8 pb-2">
                         <div className="min-w-0">

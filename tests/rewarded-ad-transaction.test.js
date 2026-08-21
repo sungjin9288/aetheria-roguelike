@@ -203,9 +203,12 @@ test('reset and ascension preserve reward receipts and monotonic expedition sequ
     assert.equal(reset.player.returnSupplyRewards.receipts['expedition-1-1'].status, 'delivered');
     assert.equal(reset.player.inv.filter((item) => item.id === 'return-supply:expedition-1-1').length, 1);
 
-    const ascended = gameReducer(pending, {
+    const ascended = gameReducer({ ...pending, gameState: 'ascension' }, {
         type: AT.ASCEND,
-        payload: { meta: pending.player.meta, newTitle: '테스트 칭호' },
+        payload: {
+            expectedPrestigeRank: pending.player.meta?.prestigeRank || 0,
+            sourceReceiptKey: pending.player.meta?.endgame?.lastEndgameReceiptKey ?? null,
+        },
     });
     assert.equal(ascended.player.expeditionSequence, 42);
     assert.equal(ascended.player.returnSupplyRewards.receipts['expedition-1-1'].status, 'delivered');

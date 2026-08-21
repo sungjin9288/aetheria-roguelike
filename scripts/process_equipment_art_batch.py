@@ -100,6 +100,21 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def has_same_rgba_pixels(payload: bytes, path: Path) -> bool:
+    try:
+        with Image.open(io.BytesIO(payload)) as generated, Image.open(path) as published:
+            generated.load()
+            published.load()
+            return (
+                generated.mode == "RGBA"
+                and published.mode == "RGBA"
+                and generated.size == published.size == (CANVAS, CANVAS)
+                and generated.tobytes() == published.tobytes()
+            )
+    except OSError:
+        return False
+
+
 def canonical_json_bytes(value: object, *, sort_keys: bool = False) -> bytes:
     return (
         json.dumps(
@@ -653,12 +668,42 @@ def prepare_next_provenance(
         None,
     )
     if existing is not None:
-        existing_projection = {key: value for key, value in existing.items() if key != "sourceSheet"}
-        record_projection = {key: value for key, value in record.items() if key != "sourceSheet"}
-        if existing.get("replayKey") != record["replayKey"] or existing_projection != record_projection:
+        existing_projection = {
+            key: value
+            for key, value in existing.items()
+            if key not in {"sourceSheet", "exports"}
+        }
+        record_projection = {
+            key: value
+            for key, value in record.items()
+            if key not in {"sourceSheet", "exports"}
+        }
+        existing_exports = existing["exports"]
+        record_exports = record["exports"]
+        existing_export_metadata = [
+            {key: value for key, value in entry.items() if key != "exportSha256"}
+            for entry in existing_exports
+        ]
+        record_export_metadata = [
+            {key: value for key, value in entry.items() if key != "exportSha256"}
+            for entry in record_exports
+        ]
+        if (
+            existing.get("replayKey") != record["replayKey"]
+            or existing_projection != record_projection
+            or existing_export_metadata != record_export_metadata
+        ):
             raise ValueError(f"Conflicting batchId in provenance ledger: {record['batchId']}")
-        for _identity, destination, _payload, export_sha256 in outputs:
-            if not destination.is_file() or sha256_file(destination) != export_sha256:
+        for (_identity, destination, payload, _export_sha256), existing_export in zip(
+            outputs,
+            existing_exports,
+            strict=True,
+        ):
+            if (
+                not destination.is_file()
+                or sha256_file(destination) != existing_export["exportSha256"]
+                or not has_same_rgba_pixels(payload, destination)
+            ):
                 raise ValueError(f"Exact replay output does not match provenance: {destination}")
         return True, None
 

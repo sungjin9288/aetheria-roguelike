@@ -1,8 +1,10 @@
 import { BALANCE } from '../../data/constants';
 import { GS } from '../gameStates';
 import { resolveCombatItemTurn } from '../../systems/combatItemTurn';
+import { sanitizeConsumedQuickSlots } from '../../systems/consumableEffect';
 import { createSeededRandom } from '../../systems/combatItemTurn';
 import { resolveCombatActionTurn } from '../../systems/combatActionTurn';
+import { resolveEndgameVictory } from '../../systems/endgameSettlement';
 import { appendGrave } from '../../utils/graveUtils.js';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { handleVictoryOutcome } from '../../hooks/combatActions/combatVictory';
@@ -41,6 +43,8 @@ const settleVictory = (
         random,
     }: any,
 ): GameState => {
+    const receiptKey = `${nextTurn}:${now}:${seed}`;
+    if (state.player.meta?.endgame?.lastEndgameReceiptKey === receiptKey) return state;
     let logIndex = 0;
     let draft: GameState = {
         ...state,
@@ -97,10 +101,6 @@ const settleVictory = (
             draft = { ...draft, postCombatResult: nestedAction.payload };
             return;
         }
-        if (nestedAction.type === 'TRIGGER_TRUE_ENDING') {
-            draft = { ...draft, gameState: 'true_ending', syncStatus: 'syncing' };
-            return;
-        }
         if (nestedAction.type === 'UPDATE_DAILY_PROTOCOL') {
             draft = protocolActionMap.UPDATE_DAILY_PROTOCOL(draft, nestedAction);
             return;
@@ -138,10 +138,30 @@ const settleVictory = (
         now: () => now,
     });
 
+    const endgameResult = resolveEndgameVictory({
+        player: draft.player,
+        deadEnemy,
+        receiptKey,
+        rng: random,
+        now,
+    });
+    if (endgameResult.outcome !== 'none' && endgameResult.outcome !== 'replay') {
+        const endgamePlayer = trackExpeditionVitals(endgameResult.player);
+        draft = {
+            ...draft,
+            player: endgamePlayer,
+            enemy: endgameResult.enemy,
+            gameState: endgameResult.gameState,
+            quickSlots: sanitizeQuickSlots(draft.quickSlots, endgamePlayer.inv),
+            syncStatus: 'syncing',
+        };
+        endgameResult.logs.forEach((entry) => appendLog(entry.type, entry.text));
+    }
+
     return {
         ...draft,
         combatReceipt: {
-            key: `${nextTurn}:${now}:${seed}`,
+            key: receiptKey,
             kind: 'victory',
             stories: storyEvents,
         },
@@ -171,7 +191,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
         });
         const nextTurn = (state.combatTurn || 0) + 1;
         if (result.kind === 'victory') {
-            return settleVictory(state, {
+            const settled = settleVictory(state, {
                 player: result.player,
                 deadEnemy: result.deadEnemy || state.enemy,
                 stats: result.victoryStats,
@@ -183,6 +203,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
                 nextTurn,
                 random,
             });
+            return settled;
         }
 
         const logs = [...result.logs];
@@ -227,7 +248,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
         if (!itemId || !Number.isFinite(seed) || !Number.isFinite(now)) return state;
 
         const item = (state.player.inv || []).find((entry: any) => entry.id === itemId);
-        if (!item || typeof item.type !== 'string' || !['hp', 'mp', 'cure', 'buff'].includes(item.type)) return state;
+        if (!item) return state;
 
         const random = createSeededRandom(seed);
         const result = resolveCombatItemTurn({
@@ -239,10 +260,11 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
             now,
             rng: random,
         });
+        if (result.kind === 'rejected') return state;
         const logs = [...result.logs];
         const nextTurn = (state.combatTurn || 0) + 1;
         if (result.kind === 'victory') {
-            return settleVictory(state, {
+            const settled = settleVictory(state, {
                 player: result.player,
                 deadEnemy: state.enemy,
                 stats: result.victoryStats,
@@ -254,6 +276,10 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
                 nextTurn,
                 random,
             });
+            return {
+                ...settled,
+                quickSlots: sanitizeConsumedQuickSlots(state.quickSlots, item, settled.player.inv || []),
+            };
         }
         const player = result.kind === 'defeat'
             ? addNewTitles(result.player, logs)
@@ -271,7 +297,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
                 : state.grave,
             runSummary: result.kind === 'defeat' ? result.runSummary : state.runSummary,
             logs: appendCombatLogs(state.logs, logs, now, seed),
-            quickSlots: sanitizeQuickSlots(state.quickSlots, player.inv),
+            quickSlots: sanitizeConsumedQuickSlots(state.quickSlots, item, player.inv || []),
             visualEffect: result.visualEffect,
             combatTurn: nextTurn,
             combatReceipt: {

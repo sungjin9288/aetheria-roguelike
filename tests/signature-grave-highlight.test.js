@@ -5,11 +5,12 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 /**
- * Signature 묘비 하이라이트 — "invade" 경제에 bounty signal 부여.
+ * Dormant public-grave characterization.
  *
  * 다른 플레이어가 전설 각인을 장착한 채 사망하면 그 묘비는 이례적인 먹잇감이다.
  * GravePanel이 이 사실을 숨기면 invader 입장에서 매력적인 위험 대비 보상 판단이
- * 불가능해진다. 카드/아이템 칩 수준에서 gold 톤을 노출한다.
+ * 불가능해진다. 이 UI는 server-authoritative claim이 생기기 전까지 production capability로
+ * 숨겨져 있으며, 아래 계약은 향후 별도 승인 시 사용할 bounded presentation만 보존한다.
  *
  * 계약:
  *   1. GravePanel이 isSignatureItem을 import

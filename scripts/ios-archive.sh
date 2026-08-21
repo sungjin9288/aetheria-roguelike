@@ -36,7 +36,17 @@ if [[ -n "$EXPORT_OPTIONS_PLIST" ]]; then
     exit 1
   fi
 
-  export_destination="$(/usr/libexec/PlistBuddy -c 'Print :destination' "$EXPORT_OPTIONS_PLIST" 2>/dev/null || true)"
+  export_destination="$(python3 - "$EXPORT_OPTIONS_PLIST" <<'PY'
+import plistlib
+import sys
+
+with open(sys.argv[1], "rb") as stream:
+    destination = plistlib.load(stream).get("destination", "")
+if not isinstance(destination, str):
+    raise SystemExit("iOS export destination must be a string")
+print(destination)
+PY
+)"
   if [[ "$export_destination" == "upload" ]] && ! enabled "$ALLOW_UPLOAD"; then
     printf '%s\n' \
       'The selected iOS export options request an App Store Connect upload.' \

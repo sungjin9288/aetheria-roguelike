@@ -1,0 +1,258 @@
+{
+  "hashAlgorithm": "sha256",
+  "reportHash": "2ddf68f9dbcc2b942d4ae5429bf89dc92af5abaaaa92a702774ecde058899e60",
+  "report": {
+    "schemaVersion": 1,
+    "policy": {
+      "effect": "drop_rate",
+      "resolution": "strongest-finite-non-negative",
+      "multiplierFormula": "1 + strongest value"
+    },
+    "catalog": {
+      "luckyCoin": {
+        "id": "lucky_coin",
+        "name": "행운의 동전",
+        "rarity": "uncommon",
+        "desc": "아이템 획득 확률 50% 증가",
+        "effect": "drop_rate",
+        "val": 0.5
+      },
+      "fortuneRelic": {
+        "id": "fortune_relic",
+        "name": "운명의 결정",
+        "rarity": "rare",
+        "desc": "아이템 획득 확률 100% 증가 (행운의 동전 강화형)",
+        "effect": "drop_rate",
+        "val": 1
+      }
+    },
+    "pathVectors": [
+      {
+        "path": "enriched",
+        "enemy": "슬라임",
+        "rolls": [
+          0.9
+        ],
+        "expectedItemCount": 3,
+        "expectedRngCalls": 9,
+        "orders": [
+          {
+            "relicIds": [
+              "lucky_coin",
+              "fortune_relic"
+            ],
+            "multiplier": 2,
+            "itemNames": [
+              "슬라임 젤리",
+              "슬라임 젤리",
+              "슬라임 젤리"
+            ],
+            "logTypes": [
+              "success",
+              "success",
+              "success"
+            ],
+            "rngCalls": 9
+          },
+          {
+            "relicIds": [
+              "fortune_relic",
+              "lucky_coin"
+            ],
+            "multiplier": 2,
+            "itemNames": [
+              "슬라임 젤리",
+              "슬라임 젤리",
+              "슬라임 젤리"
+            ],
+            "logTypes": [
+              "success",
+              "success",
+              "success"
+            ],
+            "rngCalls": 9
+          }
+        ]
+      },
+      {
+        "path": "legacy",
+        "enemy": "물의 정령",
+        "rolls": [
+          0.7
+        ],
+        "expectedItemCount": 2,
+        "expectedRngCalls": 6,
+        "orders": [
+          {
+            "relicIds": [
+              "lucky_coin",
+              "fortune_relic"
+            ],
+            "multiplier": 2,
+            "itemNames": [
+              "마나 결정",
+              "중급 마나 물약"
+            ],
+            "logTypes": [
+              "success",
+              "success"
+            ],
+            "rngCalls": 6
+          },
+          {
+            "relicIds": [
+              "fortune_relic",
+              "lucky_coin"
+            ],
+            "multiplier": 2,
+            "itemNames": [
+              "마나 결정",
+              "중급 마나 물약"
+            ],
+            "logTypes": [
+              "success",
+              "success"
+            ],
+            "rngCalls": 6
+          }
+        ]
+      },
+      {
+        "path": "high-level-bonus",
+        "enemy": "__drop_rate_high_level_bonus__",
+        "rolls": [
+          0.1,
+          0.99
+        ],
+        "expectedItemCount": 1,
+        "expectedRngCalls": 4,
+        "orders": [
+          {
+            "relicIds": [
+              "lucky_coin",
+              "fortune_relic"
+            ],
+            "multiplier": 2,
+            "itemNames": [
+              "빙화 경갑"
+            ],
+            "logTypes": [
+              "success"
+            ],
+            "rngCalls": 4
+          },
+          {
+            "relicIds": [
+              "fortune_relic",
+              "lucky_coin"
+            ],
+            "multiplier": 2,
+            "itemNames": [
+              "빙화 경갑"
+            ],
+            "logTypes": [
+              "success"
+            ],
+            "rngCalls": 4
+          }
+        ]
+      }
+    ],
+    "malformedCases": [
+      {
+        "label": "missing",
+        "error": "INVALID_RELIC_EFFECT_VALUE",
+        "rngCalls": 0
+      },
+      {
+        "label": "string",
+        "error": "INVALID_RELIC_EFFECT_VALUE",
+        "rngCalls": 0
+      },
+      {
+        "label": "nan",
+        "error": "INVALID_RELIC_EFFECT_VALUE",
+        "rngCalls": 0
+      },
+      {
+        "label": "infinity",
+        "error": "INVALID_RELIC_EFFECT_VALUE",
+        "rngCalls": 0
+      },
+      {
+        "label": "negative",
+        "error": "INVALID_RELIC_EFFECT_VALUE",
+        "rngCalls": 0
+      },
+      {
+        "label": "unsafe-chance-arithmetic",
+        "error": "INVALID_LOOT_DROP_CHANCE",
+        "rngCalls": 0
+      }
+    ],
+    "prestigeInvariant": {
+      "itemCount": 1,
+      "logTypes": [
+        "event"
+      ],
+      "rngCalls": 4
+    },
+    "legacySnapshot": {
+      "preserved": true,
+      "relics": [
+        {
+          "id": "lucky_coin",
+          "desc": "아이템 획득 확률 50% 증가",
+          "val": 0.5
+        },
+        {
+          "id": "fortune_relic",
+          "desc": "아이템 획득 확률 100% 증가 (행운의 동전 강화형)",
+          "val": 1
+        }
+      ]
+    },
+    "reducerReplay": {
+      "contract": "same action receipt returns the existing state object"
+    },
+    "errors": []
+  },
+  "sourceSnapshot": {
+    "hashAlgorithm": "sha256",
+    "files": [
+      {
+        "path": "docs/superpowers/plans/2026-08-17-aetheria-relic-drop-rate-plan.md",
+        "sha256": "502f36ad033c6b980241934e888f4db4c5b7cc7491b19e10561025e177b4aec9"
+      },
+      {
+        "path": "scripts/verify-relic-drop-rate.mjs",
+        "sha256": "928a93228ae4c9a7153774a16c663170b331db355e9f7e52ea61f3a592ac5c1f"
+      },
+      {
+        "path": "src/systems/CombatEngine.loot.ts",
+        "sha256": "d19b252cfc1fb722d852f310fc67900324d0333ea3409b568cee89790290883d"
+      },
+      {
+        "path": "src/systems/relicDropRateAudit.ts",
+        "sha256": "2b7750261028594d419e84df7603b3070c7dc33566544a0951e506f9807dca4f"
+      },
+      {
+        "path": "tests/combat-engine-loot.test.js",
+        "sha256": "7aac29e63b44b8c8913dbd3541fee5950c84c8c77f9b579d2d89f6cd02dd8733"
+      },
+      {
+        "path": "tests/relic-drop-rate-coherence.test.js",
+        "sha256": "646a4b8137b309471f3a6c2c1bba6fd904202a895f917a7fc13b37fde0ee10c4"
+      }
+    ],
+    "changedPaths": [
+      "docs/evidence/qa/release-complete-core/relic-drop-rate.json",
+      "docs/superpowers/plans/2026-08-17-aetheria-relic-drop-rate-plan.md",
+      "scripts/verify-relic-drop-rate.mjs",
+      "src/systems/CombatEngine.loot.ts",
+      "src/systems/relicDropRateAudit.ts",
+      "tests/combat-engine-loot.test.js",
+      "tests/relic-drop-rate-coherence.test.js"
+    ]
+  }
+}

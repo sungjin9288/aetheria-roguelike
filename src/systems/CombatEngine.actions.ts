@@ -1,7 +1,24 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
-import type { Monster, Player } from '../types/index.js';
+import type { Monster, Player, Relic } from '../types/index.js';
+
+export function getStrongestNumericRelicValue(
+    relics: readonly Relic[],
+    effect: string,
+): number {
+    let strongest = 0;
+
+    for (const relic of relics) {
+        if (relic.effect !== effect) continue;
+        if (typeof relic.val !== 'number' || !Number.isFinite(relic.val) || relic.val < 0) {
+            throw new Error(`INVALID_RELIC_EFFECT_VALUE:${relic.id || effect}`);
+        }
+        strongest = Math.max(strongest, relic.val);
+    }
+
+    return strongest;
+}
 
 /**
  * CombatEngine 플레이어 행동 메서드 (attack / performSkill) — mixin으로 CombatEngine에 spread.
@@ -224,6 +241,10 @@ export const actionMethods: any = {
         if (!skill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
+        const relics = stats.relics || [];
+        const resolvedDotMult = getStrongestNumericRelicValue(relics, 'dot_mult');
+        const hasDotMultRelic = relics.some((relic: any) => relic.effect === 'dot_mult');
+        const dotMult = hasDotMultRelic ? resolvedDotMult : 1;
 
         // cycle 107: freeze/stun 상태이상 턴 스킵 — attack()와 동일 처리.
         // 스킬 발동 자체가 막히고 MP는 소비되지 않음.
@@ -278,7 +299,6 @@ export const actionMethods: any = {
             }
         }
 
-        const relics = stats.relics || [];
         const mpCost = skill.mp || BALANCE.SKILL_MP_COST;
         const loadout = player.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const cooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
@@ -308,12 +328,12 @@ export const actionMethods: any = {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
         }
 
-        // 유물: 주문 메아리 (free_skill) — 15% 확률 MP 무료.
-        const freeSkillRelic = relics.find((r: any) => r.effect === 'free_skill');
+        const baseFreeSkillChance = getStrongestNumericRelicValue(relics, 'free_skill');
+        const hasFreeSkillRelic = baseFreeSkillChance > 0;
         // cycle 155: 시너지 'arcane_singularity' — bonus.freeSkillChance 35% 추가. 유물과 합산.
         const arcaneSingSyn = (stats.activeSynergies || []).find((s: any) =>
             s.bonus.effect === 'arcane_singularity' || s.bonus.freeSkillChance);
-        const freeChance = (freeSkillRelic?.val || 0) + (arcaneSingSyn?.bonus.freeSkillChance || 0);
+        const freeChance = baseFreeSkillChance + (arcaneSingSyn?.bonus.freeSkillChance || 0);
         // cycle 163: 'cooldown_reduce' (시간 군주의 왕관) — val.firstFree=true면 전투 첫 스킬 MP 무소비.
         //   cycle 151에서 cdReduction만 적용 → firstFree 보조 메커니즘 추가.
         const playerFlags: any = (player as any).combatFlags || {};
@@ -365,8 +385,6 @@ export const actionMethods: any = {
             }
         }
 
-        const dotRelic = relics.find((relic: any) => relic.effect === 'dot_mult');
-        const dotMult = dotRelic ? dotRelic.val : 1;
         const extraDamage = ['burn', 'poison', 'bleed'].includes(skill.effect)
             ? Math.floor(damage * 0.2 * dotMult)
             : 0;
@@ -611,13 +629,13 @@ export const actionMethods: any = {
             logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(skill.name, updatedPlayer.tempBuff.turn) });
         }
         if (actualMpCost === 0 && firstFreeAvailable) logs.push({ type: 'event', text: `[시간 군주의 왕관] 첫 스킬 MP 무소비!` });
-        else if (actualMpCost === 0 && freeSkillRelic) logs.push({ type: 'event', text: `[주문 메아리] MP 소모 없음!` });
+        else if (actualMpCost === 0 && hasFreeSkillRelic) logs.push({ type: 'event', text: `[주문 메아리] MP 소모 없음!` });
         if (slRelic) {
             const healAmt = Math.floor(totalDamage * slRelic.val);
             if (healAmt > 0) logs.push({ type: 'heal', text: `[영혼 흡수] +${healAmt} HP` });
         }
         if (smRelic && smRelic.val > 0) logs.push({ type: 'event', text: `[정신 연소] 스킬 피해 강화!` });
-        if (dotRelic && extraDamage > 0) logs.push({ type: 'event', text: '[죽음의 낙인] 지속 피해가 증폭됩니다!' });
+        if (hasDotMultRelic && extraDamage > 0) logs.push({ type: 'event', text: '[죽음의 낙인] 지속 피해가 증폭됩니다!' });
 
         // cycle 159: entropy_tick / entropy_brand — 매 N턴 적 maxHp 비율 고정 피해 (스킬 사용 턴에도 적용).
         const entropyResult = this.applyEntropyTick(updatedPlayer, updatedEnemy, stats.activeSynergies || []);

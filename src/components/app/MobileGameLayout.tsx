@@ -16,7 +16,6 @@ const DashboardFallback = () => (
 const MobileGameLayout = ({
     engine, fullStats,
     isPanelFocusState, mobileArchiveDockVisible,
-    inventorySpotlight,
     handleQuickSlotUse,
     damageFlash, healFlash,
     mobileConsoleMode,
@@ -54,7 +53,6 @@ const MobileGameLayout = ({
                             actions={engine.actions}
                             stats={fullStats}
                             quickSlots={engine.quickSlots}
-                            inventorySpotlight={inventorySpotlight}
                             runtime={{
                                 syncStatus: engine.syncStatus,
                                 gameState: engine.gameState,
@@ -67,7 +65,7 @@ const MobileGameLayout = ({
                         />
                     </Suspense>
                 ) : (
-                    <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-2 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px]'}`}>
+                    <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px]'}`}>
                         <TerminalView
                             logs={engine.logs}
                             gameState={engine.gameState}
@@ -97,7 +95,7 @@ const MobileGameLayout = ({
                     onOpenArchiveConsole={openArchiveConsole}
                 />
             ) : !showArchiveConsole ? (
-                <div className={isCombat ? 'order-1 shrink-0' : 'shrink-0'}>
+                <div className={isCombat ? 'order-2 shrink-0' : 'shrink-0'}>
                     <ControlPanel
                         gameState={engine.gameState}
                         player={engine.player}

@@ -214,6 +214,8 @@ test('comparison CLI emits a deterministic SHA-256 envelope and rejects unsafe f
         '--import', 'tsx', scriptPath,
         '--axis', 'exp',
         '--multiplier', '1.2',
+        '--candidate-id', 'baseline-exp-candidate',
+        '--candidate-version', '2',
         '--seed-start', '20260810',
         '--seed-count', '2',
     ];
@@ -235,6 +237,8 @@ test('comparison CLI emits a deterministic SHA-256 envelope and rejects unsafe f
         '--import', 'tsx', scriptPath,
         '--axis', 'exp',
         '--multiplier', '2',
+        '--candidate-id', 'baseline-exp-candidate',
+        '--candidate-version', '2',
         '--seed-count', '2',
     ], { cwd: repoRoot, encoding: 'utf8' });
     assert.equal(unsafe.status, 1);
@@ -245,6 +249,8 @@ test('comparison CLI emits a deterministic SHA-256 envelope and rejects unsafe f
         '--import', 'tsx', scriptPath,
         '--axis', 'exp',
         '--multiplier', '1.2',
+        '--candidate-id', 'baseline-exp-candidate',
+        '--candidate-version', '2',
         '--seed-start', String(0xffffffff),
         '--seed-count', '2',
     ], { cwd: repoRoot, encoding: 'utf8' });

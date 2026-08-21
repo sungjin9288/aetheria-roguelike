@@ -1,6 +1,7 @@
 import { AT, type UseCombatItemPayload } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
+import { resolveConsumableEffect } from '../../systems/consumableEffect';
 import type { Item } from '../../types/index.js';
 
 export const createCombatItemActions = (deps: any, _shared: any, pendingControl: any) => {
@@ -31,6 +32,11 @@ export const createCombatItemActions = (deps: any, _shared: any, pendingControl:
             }
             if (!['hp', 'mp', 'cure', 'buff'].includes(inventoryItem.type)) {
                 addLog('error', MSG.COMBAT_CONSUMABLE_ONLY);
+                return;
+            }
+            const preview = resolveConsumableEffect({ player, item: inventoryItem });
+            if (!preview.ok) {
+                addLog('warn', preview.message);
                 return;
             }
             const accepted = claimCombatItem

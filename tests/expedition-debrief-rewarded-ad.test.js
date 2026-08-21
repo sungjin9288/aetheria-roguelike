@@ -13,6 +13,16 @@ test('expedition debrief keeps rewarded supply secondary and never disables the 
     assert.match(source, /break-words/);
 });
 
+test('expedition debrief height subtracts both safe-area paddings from the mobile viewport', async () => {
+    const source = await readFile(new URL('../src/components/ExpeditionDebriefCard.tsx', import.meta.url), 'utf8');
+    assert.match(
+        source,
+        /maxHeight:\s*'calc\(100dvh - max\(var\(--aether-safe-area-top\), 0\.5rem\) - max\(var\(--aether-safe-area-bottom\), 0\.5rem\)\)'/,
+    );
+    assert.doesNotMatch(source, /initial=\{\{ opacity: 0, y: [1-9]/);
+    assert.doesNotMatch(source, /initial=\{\{ opacity: 0, scale: 0\./);
+});
+
 test('rewarded ad hook is long-lived in GameRoot and dispatches only the receipt identity', async () => {
     const root = await readFile(new URL('../src/components/app/GameRoot.tsx', import.meta.url), 'utf8');
     const hook = await readFile(new URL('../src/hooks/useReturnSupplyRewardedAd.ts', import.meta.url), 'utf8');

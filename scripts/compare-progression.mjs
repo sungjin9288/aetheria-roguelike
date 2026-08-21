@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { BASELINE_PROGRESSION_PROFILE } from '../src/data/progressionProfiles.ts';
+import { BASELINE_PROGRESSION_PROFILE, EXPLORATION_RHYTHM_PROFILE } from '../src/data/progressionProfiles.ts';
 import {
     ProgressionSimulationError,
     simulateProgressionComparison,
@@ -31,6 +31,8 @@ const parseArgs = (args) => {
         seedStart: 20_260_810,
         seedCount: 64,
         maxSteps: undefined,
+        candidateId: undefined,
+        candidateVersion: undefined,
     };
 
     for (let index = 0; index < args.length; index += 1) {
@@ -52,6 +54,13 @@ const parseArgs = (args) => {
         } else if (flag === '--max-steps') {
             parsed.maxSteps = parseInteger(flag, value);
             index += 1;
+        } else if (flag === '--candidate-id') {
+            if (typeof value !== 'string' || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(value)) throw new Error('INVALID_PROFILE_ID: --candidate-id is unsafe');
+            parsed.candidateId = value;
+            index += 1;
+        } else if (flag === '--candidate-version') {
+            parsed.candidateVersion = parseInteger(flag, value);
+            index += 1;
         } else {
             throw new Error(`Unknown argument: ${flag}`);
         }
@@ -59,6 +68,8 @@ const parseArgs = (args) => {
 
     if (!parsed.axis) throw new Error('--axis is required');
     if (parsed.multiplier === undefined) throw new Error('--multiplier is required');
+    if (!parsed.candidateId || parsed.candidateVersion === undefined) throw new Error('INVALID_PROFILE_IDENTITY: --candidate-id and --candidate-version are required');
+    if (parsed.candidateVersion !== BASELINE_PROGRESSION_PROFILE.version + 1) throw new Error('INVALID_PROFILE_VERSION: candidate version must be predecessor + 1');
     if (parsed.seedCount < 2 || parsed.seedCount > 1_000) {
         throw new Error('--seed-count must be between 2 and 1000');
     }
@@ -70,12 +81,20 @@ try {
     const options = parseArgs(process.argv.slice(2));
     const seeds = Array.from({ length: options.seedCount }, (_, index) => options.seedStart + index);
     const multiplierKey = `${options.axis}Multiplier`;
-    const candidateProfile = {
-        ...BASELINE_PROGRESSION_PROFILE,
-        id: `baseline-${options.axis}-candidate`,
-        version: BASELINE_PROGRESSION_PROFILE.version + 1,
-        [multiplierKey]: options.multiplier,
-    };
+    const candidateProfile = options.candidateId === EXPLORATION_RHYTHM_PROFILE.id
+        ? (() => {
+            if (options.axis !== 'event' || options.multiplier !== EXPLORATION_RHYTHM_PROFILE.eventMultiplier
+                || options.candidateVersion !== EXPLORATION_RHYTHM_PROFILE.version) {
+                throw new Error('INVALID_PROFILE_IDENTITY: exploration-rhythm@2 is the event-axis 0.8 candidate');
+            }
+            return EXPLORATION_RHYTHM_PROFILE;
+        })()
+        : {
+            ...BASELINE_PROGRESSION_PROFILE,
+            id: options.candidateId,
+            version: options.candidateVersion,
+            [multiplierKey]: options.multiplier,
+        };
     const report = simulateProgressionComparison({
         seeds,
         predecessorProfile: BASELINE_PROGRESSION_PROFILE,
