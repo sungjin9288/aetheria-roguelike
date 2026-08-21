@@ -77,8 +77,8 @@ const ExpeditionDebriefCard = ({
         >
             <div className="aether-overlay" />
             <Motion.section
-                initial={{ opacity: 0, y: 24, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 data-testid="expedition-debrief-card"
                 aria-label="원정 귀환 기록"
