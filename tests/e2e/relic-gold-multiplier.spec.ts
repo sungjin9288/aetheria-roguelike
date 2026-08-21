@@ -99,20 +99,41 @@ test('390x844 production reducer settles both gold_mult inventory orders identic
     await expect(page.getByTestId('damage-number')).toHaveCount(0);
     await expect(page.locator('[data-log-type="loading"]')).toHaveCount(0);
 
-    const logReview = await page.getByTestId('terminal-panel').evaluate((panel) => {
+    const terminal = page.getByTestId('terminal-panel');
+    const logReview = await terminal.evaluate((panel) => {
         const viewport = panel.querySelector<HTMLElement>('.custom-scrollbar');
         if (!viewport) throw new Error('COMBAT_LOG_VIEWPORT_MISSING');
-        viewport.scrollTo({ top: 0, behavior: 'auto' });
         const bounds = viewport.getBoundingClientRect();
-        const clippedRows = [...viewport.querySelectorAll<HTMLElement>('.aether-log-row')]
-            .filter((row) => {
+        const rows = [...viewport.querySelectorAll<HTMLElement>('.aether-log-row')];
+        return {
+            rowCount: rows.length,
+            horizontallyClippedRows: rows.filter((row) => {
                 const rowBounds = row.getBoundingClientRect();
-                return rowBounds.top < bounds.bottom && rowBounds.bottom > bounds.top
-                    && (rowBounds.top < bounds.top || rowBounds.bottom > bounds.bottom);
-            });
-        return { clippedRowCount: clippedRows.length };
+                return rowBounds.left < bounds.left - 1 || rowBounds.right > bounds.right + 1;
+            }).length,
+            oversizedRows: rows.filter((row) => row.getBoundingClientRect().height > bounds.height + 1).length,
+        };
     });
-    expect(logReview.clippedRowCount).toBe(0);
+    expect(logReview.rowCount).toBeGreaterThan(0);
+    expect(logReview.horizontallyClippedRows).toBe(0);
+    expect(logReview.oversizedRows).toBe(0);
+
+    const lastLogRow = terminal.locator('.aether-log-row').last();
+    await lastLogRow.scrollIntoViewIfNeeded();
+    const lastRowReachability = await lastLogRow.evaluate((row) => {
+        const viewport = row.closest<HTMLElement>('.custom-scrollbar');
+        if (!viewport) throw new Error('COMBAT_LOG_VIEWPORT_MISSING');
+        const bounds = viewport.getBoundingClientRect();
+        const rowBounds = row.getBoundingClientRect();
+        return {
+            top: rowBounds.top,
+            bottom: rowBounds.bottom,
+            viewportTop: bounds.top,
+            viewportBottom: bounds.bottom,
+        };
+    });
+    expect(lastRowReachability.top).toBeGreaterThanOrEqual(lastRowReachability.viewportTop - 1);
+    expect(lastRowReachability.bottom).toBeLessThanOrEqual(lastRowReachability.viewportBottom + 1);
 
     await page.screenshot({
         path: 'docs/evidence/qa/release-complete-core/screenshots/relic-gold-multiplier-390x844.png',

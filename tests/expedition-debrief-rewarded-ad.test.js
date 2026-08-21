@@ -20,6 +20,7 @@ test('expedition debrief height subtracts both safe-area paddings from the mobil
         /maxHeight:\s*'calc\(100dvh - max\(var\(--aether-safe-area-top\), 0\.5rem\) - max\(var\(--aether-safe-area-bottom\), 0\.5rem\)\)'/,
     );
     assert.doesNotMatch(source, /initial=\{\{ opacity: 0, y: [1-9]/);
+    assert.doesNotMatch(source, /initial=\{\{ opacity: 0, scale: 0\./);
 });
 
 test('rewarded ad hook is long-lived in GameRoot and dispatches only the receipt identity', async () => {
