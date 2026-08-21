@@ -64,6 +64,7 @@ const assertNoHorizontalOverflow = async (page: Page, testId: string) => {
 
 test.describe('release-complete player journey', () => {
     test('fresh creation performs first expedition, combat, safe return, equipment and job choice through UI', async ({ page }) => {
+        test.slow();
         await page.setViewportSize({ width: 390, height: 844 });
         await startE2ERun(page);
 

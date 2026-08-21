@@ -107,15 +107,14 @@ test('390x844 production reducer settles both gold_mult inventory orders identic
         const rows = [...viewport.querySelectorAll<HTMLElement>('.aether-log-row')];
         return {
             rowCount: rows.length,
-            horizontallyClippedRows: rows.filter((row) => {
-                const rowBounds = row.getBoundingClientRect();
-                return rowBounds.left < bounds.left - 1 || rowBounds.right > bounds.right + 1;
-            }).length,
+            viewportOverflow: viewport.scrollWidth - viewport.clientWidth,
+            horizontallyOverflowingRows: rows.filter((row) => row.scrollWidth > row.clientWidth + 1).length,
             oversizedRows: rows.filter((row) => row.getBoundingClientRect().height > bounds.height + 1).length,
         };
     });
     expect(logReview.rowCount).toBeGreaterThan(0);
-    expect(logReview.horizontallyClippedRows).toBe(0);
+    expect(logReview.viewportOverflow).toBeLessThanOrEqual(1);
+    expect(logReview.horizontallyOverflowingRows).toBe(0);
     expect(logReview.oversizedRows).toBe(0);
 
     const lastLogRow = terminal.locator('.aether-log-row').last();
