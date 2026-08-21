@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -79,6 +79,72 @@ test('signature source reconstruction accepts identical RGBA pixels with differe
         const [entry] = JSON.parse(result.stdout);
         assert.equal(entry.itemExportSha256, await hashFile(reencodedItem));
         assert.equal(entry.overlayExportSha256, await hashFile(reencodedOverlay));
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('finalized equipment replay accepts platform-different PNG encoding without rewriting provenance', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-replay-pixels-'));
+    const publicRoot = join(directory, 'public');
+    const catalogPath = join(directory, 'catalog.json');
+    const declarationPath = join(directory, 'source-declaration.json');
+    const provenancePath = join(directory, 'provenance.json');
+    const batchPath = 'scripts/art_sources/equipment/v2/armor/batches/armor-boots-01.json';
+    const sourcePath = 'scripts/art_sources/equipment/v2/armor/armor-boots-01.png';
+    try {
+        const dump = spawnSync(process.execPath, [
+            '--import', 'tsx', 'scripts/dump-equipment-catalog.mjs', '--output', catalogPath,
+        ], { cwd: ROOT, encoding: 'utf8' });
+        assert.equal(dump.status, 0, dump.stderr);
+
+        const batch = JSON.parse(await readFile(resolve(ROOT, batchPath), 'utf8'));
+        const canonicalProvenance = JSON.parse(await readFile(
+            resolve(ROOT, 'docs/evidence/art/equipment-armor-provenance.json'),
+            'utf8',
+        ));
+        const record = canonicalProvenance.batches.find(({ batchId }) => batchId === batch.batchId);
+        assert.ok(record);
+
+        for (const entry of record.exports) {
+            const canonicalRuntime = resolve(ROOT, `public${entry.runtimePath}`);
+            const reencodedRuntime = resolve(publicRoot, entry.runtimePath.slice(1));
+            await reencodePng(canonicalRuntime, reencodedRuntime);
+            entry.exportSha256 = await hashFile(reencodedRuntime);
+        }
+
+        await Promise.all([
+            writeFile(declarationPath, `${JSON.stringify({
+                batchId: batch.batchId,
+                identityNames: batch.identityNames,
+            })}\n`),
+            writeFile(provenancePath, `${JSON.stringify(canonicalProvenance, null, 2)}\n`),
+        ]);
+        const provenanceBefore = await readFile(provenancePath);
+        const runtimeBefore = await Promise.all(record.exports.map(({ runtimePath }) => (
+            readFile(resolve(publicRoot, runtimePath.slice(1)))
+        )));
+
+        const replay = spawnSync('python3', [
+            'scripts/process_equipment_art_batch.py',
+            '--batch', batchPath,
+            '--catalog', catalogPath,
+            '--source-sheet', sourcePath,
+            '--source-declaration', declarationPath,
+            '--public-root', publicRoot,
+            '--equipment-manifest', 'src/data/equipmentArtManifest.json',
+            '--provenance', provenancePath,
+        ], { cwd: ROOT, encoding: 'utf8' });
+
+        assert.equal(replay.status, 0, replay.stderr);
+        assert.match(replay.stdout, /replay no-op/i);
+        assert.deepEqual(await readFile(provenancePath), provenanceBefore);
+        assert.deepEqual(
+            await Promise.all(record.exports.map(({ runtimePath }) => (
+                readFile(resolve(publicRoot, runtimePath.slice(1)))
+            ))),
+            runtimeBefore,
+        );
     } finally {
         await rm(directory, { recursive: true, force: true });
     }
