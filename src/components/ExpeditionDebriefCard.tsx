@@ -82,7 +82,10 @@ const ExpeditionDebriefCard = ({
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 data-testid="expedition-debrief-card"
                 aria-label="원정 귀환 기록"
-                className="panel-noise aether-surface-strong relative z-10 flex max-h-full w-full max-w-[25rem] flex-col overflow-hidden rounded-[1.5rem] shadow-[0_32px_90px_rgba(1,6,14,0.68)]"
+                style={{
+                    maxHeight: 'calc(100dvh - max(var(--aether-safe-area-top), 0.5rem) - max(var(--aether-safe-area-bottom), 0.5rem))',
+                }}
+                className="panel-noise aether-surface-strong relative z-10 flex w-full max-w-[25rem] flex-col overflow-hidden rounded-[1.5rem] shadow-[0_32px_90px_rgba(1,6,14,0.68)]"
             >
                 <header className="relative border-b border-white/8 px-5 pb-4 pt-5">
                     <button
