@@ -42,6 +42,9 @@ test('automatic provisioning is applied to both archive and export commands', as
     assert.match(archiveScript, /archive_cmd\+=\(-allowProvisioningUpdates\)/);
     assert.match(archiveScript, /export_cmd\+=\(-allowProvisioningUpdates\)/);
     assert.match(archiveScript, /export_destination.*upload/);
+    assert.match(archiveScript, /python3/);
+    assert.match(archiveScript, /plistlib/);
+    assert.doesNotMatch(archiveScript, /\/usr\/libexec\/PlistBuddy/);
     assert.match(doctorScript, /iOS local distribution signing/);
     assert.match(doctorScript, /iOS local App Store export profile/);
 });

@@ -55,13 +55,14 @@ const replayKey = (record) => hash(JSON.stringify({
     identityNames: record.identityNames,
 }));
 
-const inspectSources = async ({ repoRoot, batchPath, itemSource, overlaySource }) => {
+const inspectSources = async ({ repoRoot, batchPath, itemSource, overlaySource, publicRoot }) => {
     try {
         const { stdout } = await execFileAsync('python3', [
             resolve(repoRoot, 'scripts/inspect_signature_source_pair.py'),
             '--batch', batchPath,
             '--item-source-sheet', itemSource,
             '--overlay-source-sheet', overlaySource,
+            '--public-root', publicRoot,
         ], { maxBuffer: 1024 * 1024 });
         const result = JSON.parse(stdout);
         if (!Array.isArray(result)) throw new Error('invalid inspector result');
@@ -207,7 +208,7 @@ export const validateSignatureArtEvidence = async ({
         if (hash(itemBytes) !== record.itemSourceSheetSha256 || hash(overlayBytes) !== record.overlaySourceSheetSha256) {
             throw new Error(`Signature source hash mismatch: ${record.batchId}`);
         }
-        const reconstructed = await inspectSources({ repoRoot, batchPath, itemSource, overlaySource });
+        const reconstructed = await inspectSources({ repoRoot, batchPath, itemSource, overlaySource, publicRoot });
         if (reconstructed.length !== record.identityNames.length) throw new Error(`Signature source reconstruction count mismatch: ${record.batchId}`);
 
         for (const [index, name] of record.identityNames.entries()) {
