@@ -5,6 +5,20 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 const EVIDENCE_PATH = 'docs/evidence/qa/release-complete-core/equipment-combat-power.json';
+const SOURCE_SNAPSHOT_PATHS = Object.freeze([
+    'scripts/verify-equipment-combat-power.mjs',
+    'tests/equipment-combat-power-audit.test.js',
+    'src/systems/equipmentCombatPowerAudit.ts',
+    'src/data/classes.ts',
+    'src/data/constants.ts',
+    'src/data/signatureRegistry.json',
+    'src/data/signatureSets.json',
+    'src/hooks/gameActions/_shared.ts',
+    'src/utils/statsCalculator.ts',
+    'src/utils/equipmentUtils.ts',
+    'src/systems/CombatEngine.enemyAI.ts',
+    'src/utils/signatureSetBonus.ts',
+].sort());
 const SOURCE_PATHS = Object.freeze({
     audit: 'src/systems/equipmentCombatPowerAudit.ts',
     classes: 'src/data/classes.ts',
@@ -77,13 +91,13 @@ const assertNoSymlinkPath = async (relativePath, allowMissingLeaf) => {
 
 const sourceHash = async (relativePath) => hash(await readFile(path.join(ROOT, relativePath)));
 
-const sourceSnapshot = () => {
-    try {
-        return { head: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim() };
-    } catch {
-        return { head: null };
-    }
-};
+const sourceSnapshot = async () => ({
+    hashAlgorithm: 'sha256',
+    files: await Promise.all(SOURCE_SNAPSHOT_PATHS.map(async (relativePath) => ({
+        path: relativePath,
+        sha256: await sourceHash(relativePath),
+    }))),
+});
 
 const buildEvidence = async () => {
     const report = buildReport();
@@ -130,9 +144,9 @@ const buildEvidence = async () => {
         dominancePairsHash: hashJson(report.dominancePairs),
     };
     return stableCanonicalize({
-        schemaVersion: 2,
+        schemaVersion: 3,
         policyVersion: report.policyVersion,
-        sourceSnapshot: sourceSnapshot(),
+        sourceSnapshot: await sourceSnapshot(),
         authority,
         reportHash: hashJson(report),
         rowsHash: hashJson(report.rows),

@@ -83,12 +83,12 @@ only and cannot be reused for the current candidate.
 
 - Equipment combat/economy/progression focused integration: `44/44` — pass.
 - `npm run equipment:combat-power:verify`: evidence SHA-256
-  `cdfab6b20b994fd25f9a1b133213abeac813d0362a11ee1e42a6aa602be3fcdc`;
+  `786c48988ce7d56060bc21bb1de1ac483a597c79150cd363adeaa0e6320ed6bb`;
   defect/pair/replan `0/0/0`, `requiresReplan=false` — pass.
 - `npm run equipment:economy:verify`: evidence SHA-256
   `80a209eed4b024cc76d6b382ed5b5355b62e4480e6a19bdd4c7d3fae5cbdc61c`;
   report digest `33558b95856f4a357940d165256b4587d2a66a9176ff2fa4b68f4649276a9f93` — pass.
-- Current `npm run verify:full`: type-check, warning-free lint, unit `4156/4156`,
+- Current `npm run verify:full`: type-check, warning-free lint, unit `4164/4164`,
   build guard, desktop/mobile smoke and E2E `55/55 + 54/54` — pass.
 - Current `npm run mobile:doctor` and `npm run cap:sync`: pass; tracked Android/iOS
   drift is zero. Distribution signing inputs remain external blockers.

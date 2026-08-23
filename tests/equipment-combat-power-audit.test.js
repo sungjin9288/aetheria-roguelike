@@ -1,6 +1,7 @@
+import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -18,6 +19,22 @@ import {
 const EVIDENCE_PATH = 'docs/evidence/qa/release-complete-core/equipment-combat-power.json';
 const CLI_PATH = 'scripts/verify-equipment-combat-power.mjs';
 const EXPECTED_DOMINANCE_PAIRS = [];
+const SOURCE_SNAPSHOT_PATHS = Object.freeze([
+    CLI_PATH,
+    'tests/equipment-combat-power-audit.test.js',
+    'src/systems/equipmentCombatPowerAudit.ts',
+    'src/data/classes.ts',
+    'src/data/constants.ts',
+    'src/data/signatureRegistry.json',
+    'src/data/signatureSets.json',
+    'src/hooks/gameActions/_shared.ts',
+    'src/utils/statsCalculator.ts',
+    'src/utils/equipmentUtils.ts',
+    'src/systems/CombatEngine.enemyAI.ts',
+    'src/utils/signatureSetBonus.ts',
+].sort());
+
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 const cloneRows = () => CANONICAL_EQUIPMENT.map((row) => ({ ...row, jobs: [...row.jobs] }));
 
@@ -50,10 +67,13 @@ const projectionFor = (row, job) => {
     };
 };
 
-const cli = (...args) => spawnSync(process.execPath, [CLI_PATH, ...args], {
+const cliWithEnv = (env, ...args) => spawnSync(process.execPath, [CLI_PATH, ...args], {
     encoding: 'utf8',
     cwd: process.cwd(),
+    env: { ...process.env, ...env },
 });
+
+const cli = (...args) => cliWithEnv({}, ...args);
 
 test('projects the complete canonical catalog through production owners deterministically', () => {
     const report = buildEquipmentCombatPowerReport();
@@ -300,6 +320,60 @@ test('every live outlier has one stable classification and every other row stays
     assert.deepEqual(report.replanCohorts, []);
 });
 
+test('binds exact source bytes in a sorted, unique, evidence-independent snapshot', async () => {
+    assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
+    const envelope = JSON.parse(await readFile(EVIDENCE_PATH, 'utf8'));
+
+    assert.equal(envelope.schemaVersion, 3);
+    assert.equal(envelope.report.schemaVersion, 2);
+    assert.equal(envelope.policyVersion, 'equipment-combat-power-audit@2');
+    assert.equal(envelope.report.policyVersion, 'equipment-combat-power-audit@2');
+    assert.equal(envelope.reportHash, '3c9d79593d161f11a1e94fe8663f5d2a3fd54fc3d9f291a9228ff856896b682a');
+    assert.equal(envelope.rowsHash, '01c99d3cd4dcd35b821b950577bb54d71ed0f0916a4e2d47379eb332f9ec0c40');
+    assert.deepEqual(envelope.classificationCounts, {
+        'combat-power-defect': 0,
+        'in-corridor': 154,
+        intentional: 16,
+        'price-only-defect': 9,
+        'specialized-sidegrade': 50,
+    });
+    assert.equal(envelope.requiresReplan, false);
+    assert.deepEqual(Object.keys(envelope.sourceSnapshot).sort(), ['files', 'hashAlgorithm']);
+    assert.equal(envelope.sourceSnapshot.hashAlgorithm, 'sha256');
+
+    const expectedFiles = await Promise.all(SOURCE_SNAPSHOT_PATHS.map(async (relativePath) => ({
+        path: relativePath,
+        sha256: sha256(await readFile(relativePath)),
+    })));
+    assert.deepEqual(envelope.sourceSnapshot.files, expectedFiles);
+    assert.equal(new Set(envelope.sourceSnapshot.files.map((file) => file.path)).size, SOURCE_SNAPSHOT_PATHS.length);
+    assert.equal(envelope.sourceSnapshot.files.some((file) => file.path === EVIDENCE_PATH), false);
+    assert.equal(Object.hasOwn(envelope.sourceSnapshot, 'head'), false);
+});
+
+test('unrelated Git HEAD changes do not alter evidence bytes or verification result', async () => {
+    assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
+    const baseline = await readFile(EVIDENCE_PATH, 'utf8');
+    const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'aetheria-equipment-fake-git-'));
+    const fakeGitPath = path.join(temporaryDirectory, 'git');
+    try {
+        await writeFile(fakeGitPath, '#!/bin/sh\nprintf "%s\\n" "$FAKE_GIT_HEAD"\n');
+        await chmod(fakeGitPath, 0o755);
+        for (const fakeHead of ['1111111111111111111111111111111111111111', '2222222222222222222222222222222222222222']) {
+            const env = { PATH: `${temporaryDirectory}:${process.env.PATH ?? ''}`, FAKE_GIT_HEAD: fakeHead };
+            const verify = cliWithEnv(env, '--verify', EVIDENCE_PATH);
+            assert.equal(verify.status, 0, verify.stderr);
+            assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), baseline);
+            const write = cliWithEnv(env, '--write', EVIDENCE_PATH);
+            assert.equal(write.status, 0, write.stderr);
+            assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), baseline);
+        }
+    } finally {
+        await writeFile(EVIDENCE_PATH, baseline);
+        await rm(temporaryDirectory, { recursive: true, force: true });
+    }
+});
+
 test('writes and strictly verifies tamper-evident exact-byte evidence', async () => {
     for (const args of [
         [], ['--write'], ['--verify'], ['--write', EVIDENCE_PATH, 'extra'],
@@ -317,8 +391,9 @@ test('writes and strictly verifies tamper-evident exact-byte evidence', async ()
     assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), bytes);
 
     const envelope = JSON.parse(bytes);
-    assert.equal(envelope.schemaVersion, 2);
+    assert.equal(envelope.schemaVersion, 3);
     assert.equal(envelope.policyVersion, 'equipment-combat-power-audit@2');
+    assert.equal(envelope.report.schemaVersion, 2);
     assert.equal(envelope.report.rows.length, 229);
     assert.deepEqual(envelope.classificationCounts, envelope.report.classificationCounts);
     assert.deepEqual(envelope.combatPowerDefects, envelope.report.combatPowerDefects);
@@ -338,6 +413,13 @@ test('writes and strictly verifies tamper-evident exact-byte evidence', async ()
     ]);
 
     const tamper = [
+        (value) => { value.schemaVersion = 2; },
+        (value) => { value.sourceSnapshot.hashAlgorithm = 'sha512'; },
+        (value) => { value.sourceSnapshot.files[0].sha256 = '0'.repeat(64); },
+        (value) => { value.sourceSnapshot.files[0].path = 'src/not-bound.ts'; },
+        (value) => { value.sourceSnapshot.files.reverse(); },
+        (value) => { value.sourceSnapshot.files.push({ ...value.sourceSnapshot.files[0] }); },
+        (value) => { value.sourceSnapshot.head = 'deadbeef'; },
         (value) => { value.authority.catalogHash = '0'.repeat(64); },
         (value) => { value.authority.signatureRegistryHash = '1'.repeat(64); },
         (value) => { value.authority.signatureSetHash = '2'.repeat(64); },

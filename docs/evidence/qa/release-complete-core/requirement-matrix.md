@@ -42,24 +42,26 @@ repository-owned gate below was executed on 2026-08-20 KST.
 | Content reachability | verified | report SHA `a6626375...b4f0e8`; checkpoints `1/5/5/6/13/18/18`, job snapshots `18` | use live funnel before further expansion |
 | Exploration rhythm | verified | report SHA `7d903b82...72bfe2`; predecessor p10/p50/p90 `1/2/6`, candidate `2/4/9` | five human sessions before tuning acceptance |
 | Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
-| Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; combat evidence `cdfab6b2...fcdc` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
+| Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; current v3 combat evidence `786c4898...e6bb` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
 | Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; 100-row report `f253158f...86f6`; focused event `80/80`; 390×844 combined browser `7/7` | human candidate observation |
-| Repository gate | verified on current cohesive candidate bytes | type/lint/unit `4156/4156`/build guard; desktop/mobile smoke; E2E `55/55 + 54/54`; combat/economy/relic/content/pacing/art/event verifiers GREEN; `cap:sync`, Android debug and unsigned iOS build GREEN; tracked native drift 0 | five fresh human observations |
+| Repository gate | verified on current working-tree candidate bytes | type/lint/unit `4164/4164`/build guard; desktop/mobile smoke; E2E `55/55 + 54/54`; combat/economy/relic/content/pacing/art/event verifiers GREEN; `cap:sync`, Android debug and unsigned iOS build GREEN; tracked native drift 0 | cohesive commit and post-commit verification, then five fresh human observations |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
 
 ## Current artifacts
 
-- Android debug APK: `214644297` bytes, SHA-256
-  `de5e6cf760d3f6f7ceae835acf3a788a2531f8250b5ffc80fecc200d64fa59f4`.
+- Android debug APK: `214644300` bytes, SHA-256
+  `de3ac741d33a7cd3e5ca29002cf54e9240d48b471caa2aeae65cfe16db897436`.
 - Unsigned iOS arm64 executable: `102376` bytes, SHA-256
   `6372d559d57e897c21f87244863be80a792e7db279c8d9e1deef6ec53306292f`.
-- Content-pacing screenshots: `375x667 ef35a0f3...8a1de9`,
-  `390x844 f4dd4663...7e8dc6`, `430x932 e765e669...3a41f`.
+- Content-pacing screenshots: `375x667 e525be7a...31b2f9`,
+  `390x844 e8b26827...b0cbc7`, `430x932 eac835d2...663943`.
+- Equipment-economy 390×844 screenshot: SHA-256
+  `3b73b798b246224c2e6cee07d3b07c425750a775d8e86e2bc9e3ee7ad0c0279c`.
 - Relic event-chance 390×844 screenshot: SHA-256
-  `1de1ac8a00abf8b4cd1be5efcf7318787663f1c39c8584f19dbd3dfd4bb7f6d0`.
+  `a9073a1eb9fdc9652f18e812bf1f119c46dfe308384918c165f32f6273592e31`.
 - Relic gold-multiplier 390×844 screenshot: SHA-256
-  `335061d7391fbd6935df914bf102f71cc4ee4ab55143240721f528548055af7e`.
+  `5fa54793454a5e5333bf64ee82fd90b3ea7841b0252d113f479d17e9cca39b0e`.
 - Relic dot-multiplier evidence JSON: SHA-256
   `5664a5ec0a9d11adae9f720b14bdf4ff4942a63363e85f4cca4eea6ba2e55e67`.
 - Relic HP-drain evidence JSON: SHA-256
