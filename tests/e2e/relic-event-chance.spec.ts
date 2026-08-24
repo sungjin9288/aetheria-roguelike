@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { releaseEvidenceScreenshot } from './releaseEvidenceScreenshot';
 import { startE2ERun } from './testHelpers';
 
-test('390x844 event-chance relic curve is readable and stacks through the real reducer', async ({ page }) => {
+test('390x844 event-chance relic curve is readable and stacks through the real reducer', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await startE2ERun(page);
 
@@ -105,8 +106,7 @@ test('390x844 event-chance relic curve is readable and stacks through the real r
         window.__AETHERIA_TEST_API__?.injectEventChanceRelicChoice?.()
     ))).toBe(true);
     await expect(panel).toBeVisible();
-    await page.screenshot({
-        path: 'docs/evidence/qa/release-complete-core/screenshots/relic-event-chance-390x844.png',
+    await releaseEvidenceScreenshot(page, testInfo, 'relic-event-chance-390x844.png', {
         fullPage: true,
     });
 });

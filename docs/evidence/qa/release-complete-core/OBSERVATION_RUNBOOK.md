@@ -4,23 +4,53 @@ This runbook starts only after the cohesive release-complete commit is approved 
 created. It does not authorize a Toss upload, review request, publication, ad
 activation, signing operation or Store action.
 
+The root `observation-summary.json` is historical audit evidence and must never be
+reused or automatically repointed for a new candidate. The root
+`region-selection.json` is not a valid output location. New evidence always uses the
+candidate-specific paths under `candidates/${candidate_id}/` below.
+
 ## 1. Bind one immutable candidate
 
 Use the exact committed source. The working tree must be clean except for explicitly
-excluded audit-only evidence.
+excluded audit-only evidence. Keep the source candidate commit separate from any
+later audit-evidence commit: the former defines the playable bytes, while the latter
+may record the evidence lifecycle without changing that source identity.
 
 ```bash
-candidate_commit="$(git rev-parse HEAD)"
-candidate_id="release-core-$(git rev-parse --short=12 HEAD)"
-git archive --format=tar HEAD | shasum -a 256
+source_candidate_commit="$(git rev-parse HEAD)"
+candidate_id="release-core-$(git rev-parse --short=12 "$source_candidate_commit")"
+candidate_root="docs/evidence/qa/release-complete-core/candidates/${candidate_id}"
+observation_summary="$candidate_root/observation-summary.json"
+region_selection="$candidate_root/region-selection.json"
+archive_sha_1="$(git archive --format=tar "$source_candidate_commit" | shasum -a 256 | awk '{print $1}')"
+archive_sha_2="$(git archive --format=tar "$source_candidate_commit" | shasum -a 256 | awk '{print $1}')"
+test "$archive_sha_1" = "$archive_sha_2"
+printf 'candidate_id=%s\nsourceTreeSha256=%s\n' "$candidate_id" "$archive_sha_1"
 ```
 
-Record the full 64-character archive SHA-256 as `sourceTreeSha256`. Every observation
+Record the full 64-character archive SHA-256 as `sourceTreeSha256`. The candidate ID
+is always `release-core-<HEAD12>` from the source candidate commit. Every observation
 and action row must repeat the same `candidateId` and `sourceTreeSha256`. Any source or
-artifact change invalidates the observation set and requires a new candidate.
+artifact change invalidates the observation set and requires a new candidate. Re-run
+the archive command after the source commit and compare both outputs before accepting
+the candidate seal.
+
+At candidate-seal time, prepare the candidate-specific directory before creating an
+empty summary or selection record. This command is documented for that later step and
+is not executed during this planning checkpoint:
+
+```bash
+mkdir -p "$candidate_root"
+```
+
+An empty `0/5` candidate summary is Goal-owned, untracked audit evidence. Do not
+commit it. It is useful for proving that the selector is still gated, but it does not
+advance the human-observation count.
 
 Do not use a QA/test-marker build for human evidence. Bind any screenshot or bounded
 observer note through its SHA-256 only; keep the raw attachment outside the repository.
+Automation, smoke, Playwright and test-harness sessions never increase the human
+`0/5` count.
 
 ## 2. Collect five genuinely fresh human sessions
 
@@ -119,11 +149,13 @@ contiguous action rows.
 
 ```bash
 node scripts/select-bounded-encounter-regions.mjs \
-  --input docs/evidence/qa/release-complete-core/observation-summary.json \
-  --output docs/evidence/qa/release-complete-core/region-selection.json
+  --input "$observation_summary" \
+  --output "$region_selection"
 ```
 
-Expected before completion: nonzero exit and no output. Expected after completion:
-schema v2 evidence with exactly two selected regions, input digest, per-region counts,
-surface counts and issue counts. The output is write-once; never overwrite or hand-edit
-it. Only then may the four bounded encounter families be authored.
+Before five complete fresh human observations, the selector must stop with
+`INSUFFICIENT_FRESH_OBSERVATIONS`, exit nonzero and leave `region_selection` absent.
+It must never write the root `region-selection.json`. After completion, the candidate-
+specific output is write-once schema-v2 evidence with exactly two selected regions,
+input digest, per-region counts, surface counts and issue counts. Never overwrite or
+hand-edit it. Only then may the four bounded encounter families be authored.

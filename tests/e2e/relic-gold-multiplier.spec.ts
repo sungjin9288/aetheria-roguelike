@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { releaseEvidenceScreenshot } from './releaseEvidenceScreenshot';
 import { startE2ERun } from './testHelpers';
 
 type GoldMultiplierOrder = 'gold-magnet-first' | 'merchant-seal-first';
@@ -41,7 +42,7 @@ const settleOrder = async (page: any, order: GoldMultiplierOrder, seed: number) 
     return after;
 };
 
-test('390x844 production reducer settles both gold_mult inventory orders identically without clipping or duplicate settlement', async ({ page }) => {
+test('390x844 production reducer settles both gold_mult inventory orders identically without clipping or duplicate settlement', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await startE2ERun(page);
 
@@ -134,8 +135,7 @@ test('390x844 production reducer settles both gold_mult inventory orders identic
     expect(lastRowReachability.top).toBeGreaterThanOrEqual(lastRowReachability.viewportTop - 1);
     expect(lastRowReachability.bottom).toBeLessThanOrEqual(lastRowReachability.viewportBottom + 1);
 
-    await page.screenshot({
-        path: 'docs/evidence/qa/release-complete-core/screenshots/relic-gold-multiplier-390x844.png',
+    await releaseEvidenceScreenshot(page, testInfo, 'relic-gold-multiplier-390x844.png', {
         fullPage: true,
     });
 });

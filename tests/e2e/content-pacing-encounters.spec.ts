@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { releaseEvidenceScreenshot } from './releaseEvidenceScreenshot';
 import { startE2ERun } from './testHelpers';
 
 const viewports = [
@@ -8,7 +9,7 @@ const viewports = [
 ] as const;
 
 for (const viewport of viewports) {
-    test(`bounded encounter remains readable at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    test(`bounded encounter remains readable at ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
         test.setTimeout(60_000);
         await page.setViewportSize(viewport);
         await startE2ERun(page);
@@ -85,8 +86,7 @@ for (const viewport of viewports) {
         ));
         await expect(panel).toBeVisible({ timeout: 8_000 });
         await expect(page.getByTestId('damage-number')).toBeHidden({ timeout: 4_000 });
-        await page.screenshot({
-            path: `docs/evidence/qa/release-complete-core/screenshots/content-pacing-${viewport.width}x${viewport.height}.png`,
+        await releaseEvidenceScreenshot(page, testInfo, `content-pacing-${viewport.width}x${viewport.height}.png`, {
             fullPage: false,
         });
     });

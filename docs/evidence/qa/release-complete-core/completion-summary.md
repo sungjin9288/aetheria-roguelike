@@ -1,11 +1,69 @@
 # Release-complete core completion summary
 
-Date: 2026-08-20 KST
+Date: 2026-08-24 KST
 
 Status: content pacing, bounded encounters, relic balance, equipment economy,
 equipment combat-power sidegrades, consumable authority and event reward transactions
-are locally verified and grouped into the cohesive HEAD that contains this summary.
+are locally verified in the current checkpoint slice. The exact immutable source
+candidate identity is assigned only after the cohesive commit and archive seal.
 Fresh-human acceptance, push and external release gates remain HOLD.
+
+## E2E release-evidence output isolation checkpoint (2026-08-24)
+
+This current checkpoint slice covers the four release-evidence Playwright specs and
+their shared typed helper. Ordinary, focused and
+full runs write through `testInfo.outputPath(filename)`, while only the exact
+`AETHERIA_REFRESH_RELEASE_EVIDENCE=1` opt-in uses the tracked release-evidence
+directory. Existing filenames and `fullPage` settings are unchanged. The
+explicit `qa:evidence:refresh` script is present but was not executed. Its source
+candidate identity is not yet sealed; the root historical summary is not repointed.
+
+- TDD RED: `node --import tsx --test tests/e2e-evidence-output.test.js` failed
+  with the expected missing-helper `ERR_MODULE_NOT_FOUND` before the helper was
+  created.
+- TDD GREEN: the same contract test passes `4/4`, covering default routing,
+  exact opt-in routing, non-exact environment values, and unsafe filename
+  rejection.
+- Focused ordinary Playwright: the four requested specs on
+  `chromium-mobile --workers=1` pass `6/6` and produce six PNGs under
+  `test-results/` (three content-pacing viewports plus equipment economy,
+  relic event chance and relic gold multiplier).
+- The six tracked release PNGs remain byte-identical: content-pacing
+  `375x667 e525be7a94f646a37c1fcd54c32b024fc2e2ac11848c5f1b1cf50f199031b2f9`,
+  `390x844 e8b268274c35be041b33e9b0bf967aa7ff57bbbd7787097cc6f48c4c4db0cbc7`,
+  `430x932 eac835d263e832c9c6be7dce9a78168bb06f95d1d5559c09f9c87e9f23663943`;
+  equipment-economy
+  `3b73b798b246224c2e6cee07d3b07c425750a775d8e86e2bc9e3ee7ad0c0279c`;
+  relic-event-chance
+  `a9073a1eb9fdc9652f18e812bf1f119c46dfe308384918c165f32f6273592e31`;
+  relic-gold-multiplier
+  `5fa54793454a5e5333bf64ee82fd90b3ea7841b0252d113f479d17e9cca39b0e`.
+- `npm run verify:full` passes type-check, lint, unit `4168/4168`, build guard,
+  desktop/mobile smoke, E2E shard 1 `55/55` and shard 2 `54/54`, with final
+  marker `VERIFY_FULL_TRACKED_SCREENSHOTS_UNCHANGED`.
+- `npm run art:verify` passes for 18 character, 229 equipment, 22 families and
+  25 signature overlays; catalog SHA-256 is
+  `c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0`.
+- `npm run mobile:doctor` passes toolchain diagnostics. Local iOS distribution
+  signing and Android release signing remain environmental release blockers.
+- `npm run cap:sync` passes with tracked `android/ios` source bytes identical
+  before and after. `npm run android:debug` passes with
+  `android/app/build/outputs/apk/debug/app-debug.apk` at `214644300` bytes,
+  SHA-256 `de3ac741d33a7cd3e5ca29002cf54e9240d48b471caa2aeae65cfe16db897436`.
+- `npm run ios:build:device` passes with `CODE_SIGNING_ALLOWED=NO`; executable
+  `/tmp/aetheria-ios-device-build/Build/Products/Release-iphoneos/App.app/App`
+  is `102376` bytes, SHA-256
+  `6372d559d57e897c21f87244863be80a792e7db279c8d9e1deef6ec53306292f`.
+- `git diff --check` passes. User-owned untracked Toss evidence remains intact
+  with aggregate SHA-256
+  `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+
+This section records a pre-commit evidence capture. Commit status and any post-commit
+results are authoritative from Git history and the subsequent candidate-specific seal.
+The next evidence binding uses
+`docs/evidence/qa/release-complete-core/candidates/${candidate_id}/` and keeps the
+root historical summary unchanged. Push, signing, publish and evidence refresh remain
+unperformed.
 
 Historical implementation commits are `ea28b09` (deterministic audits), `f10f66a`
 (pacing and settlement), `ca9e1d0` (mobile surface evidence), followed by ledger
@@ -79,7 +137,7 @@ only and cannot be reused for the current candidate.
     downstream steps, costs cannot make gold negative, relic/item promises are canonical
     and capacity-aware, and the 100-row reward audit has zero errors.
 
-## Verification on current cohesive candidate bytes
+## Verification on current checkpoint bytes
 
 - Equipment combat/economy/progression focused integration: `44/44` — pass.
 - `npm run equipment:combat-power:verify`: evidence SHA-256
@@ -88,7 +146,7 @@ only and cannot be reused for the current candidate.
 - `npm run equipment:economy:verify`: evidence SHA-256
   `80a209eed4b024cc76d6b382ed5b5355b62e4480e6a19bdd4c7d3fae5cbdc61c`;
   report digest `33558b95856f4a357940d165256b4587d2a66a9176ff2fa4b68f4649276a9f93` — pass.
-- Current `npm run verify:full`: type-check, warning-free lint, unit `4164/4164`,
+- Latest `npm run verify:full`: type-check, warning-free lint, unit `4168/4168`,
   build guard, desktop/mobile smoke and E2E `55/55 + 54/54` — pass.
 - Current `npm run mobile:doctor` and `npm run cap:sync`: pass; tracked Android/iOS
   drift is zero. Distribution signing inputs remain external blockers.
@@ -178,8 +236,9 @@ only and cannot be reused for the current candidate.
 ## Explicit blockers and next gate
 
 - The earlier `1/5` browser observation belongs to superseded commit `f9d463a`.
-  `observation-summary.json` remains bound to later historical candidate `3a2407a` at
-  `0/5`; neither record counts for the current cohesive candidate.
+  The root `observation-summary.json` remains bound to later historical candidate
+  `3a2407a` at `0/5`; neither record counts for the next candidate. Candidate-specific
+  evidence is absent until the post-commit seal.
 - Schema v2 now requires five complete candidate-bound human journeys, unique attachment
   hashes, accepted actions, save/background restore, mobile back results, bidirectional
   issue links and zero P0/blocking P1 before it can write a selection.
@@ -196,7 +255,7 @@ only and cannot be reused for the current candidate.
   the supported dispatch-less reconciliation path as `failed / goal-owner-closeout`.
   The external completed worker was not adopted, `dispatchId` stayed null, and the
   repository lease is now `released`. This historical closeout proves orchestration
-  ownership; the cohesive HEAD containing this summary is the immutable candidate.
+  ownership; it does not assign the next candidate identity.
 - Native Goal `goal_1373325f-d8cd-4aee-9293-5fbf732a5248` passed worker and canonical
   verification and synced exactly the seven bounded `drop_rate` paths. Shared package,
   cross-surface evidence and ledger updates are included in this same cohesive candidate.
@@ -207,9 +266,10 @@ only and cannot be reused for the current candidate.
   base-audit evidence and ledger updates remain Goal-owner changes in this bundle.
 
 The repository-owned consumable/event closure and final web/mobile/native regression
-gates are complete. The cohesive HEAD containing this summary excludes build, native
-generated output and Toss evidence and is the immutable candidate for five fresh human
-journeys. Push, signing and release remain separate approval boundaries.
+gates are complete for this checkpoint. The exact next gate is the 12-path cohesive
+commit, post-commit full/native proof, candidate-specific archive/evidence seal and
+then five fresh human journeys. Push, signing and release remain separate approval
+boundaries.
 
 ## Cohesive commit boundary
 
@@ -218,6 +278,9 @@ journeys. Push, signing and release remain separate approval boundaries.
 - Exclude `build/`, native generated outputs, credentials, and the historical untracked
   `docs/evidence/toss/releases/` tree. That Toss tree is superseded audit-only material,
   not evidence for this candidate.
-- `observation-summary.json` remains historical evidence for `3a2407a`; do not repoint
-  it with automated sessions. A new binding must use the cohesive HEAD that contains
-  this summary and five fresh human observations.
+- The root `observation-summary.json` remains historical evidence for `3a2407a`; do not
+  repoint it with automated sessions. A new binding must use
+  `candidates/${candidate_id}/observation-summary.json` and
+  `candidates/${candidate_id}/region-selection.json` after the source candidate
+  commit and archive seal. An empty `0/5` summary remains Goal-owned untracked audit
+  evidence and is not committed.

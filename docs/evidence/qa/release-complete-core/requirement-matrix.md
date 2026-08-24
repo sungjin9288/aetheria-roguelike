@@ -9,15 +9,21 @@ Status vocabulary is deliberately narrow:
 - `external blocker`: the named evidence cannot be produced inside the repository.
 
 The current branch is `codex/release-complete-core`. Historical observation candidate
-`release-core-3a2407a0c961` remains bound to commit `3a2407a`, but the cohesive HEAD
-containing this matrix supersedes it as the current immutable candidate. No previous
-human session is counted for this candidate. All prior Toss
-candidate and deployment evidence is superseded and remains audit-only. The latest
-repository-owned gate below was executed on 2026-08-20 KST.
+`release-core-3a2407a0c961` remains bound to commit `3a2407a`; its root summary is
+historical and is not repointed. The current working-tree checkpoint has no immutable
+candidate identity until the exact post-commit archive seal is recorded. No previous
+human session is counted for the next candidate. All prior Toss candidate and
+deployment evidence is superseded and remains audit-only. The latest repository-owned
+gate below was executed on 2026-08-24 KST.
+
+The next gate is ordered: exact 12-path cohesive commit, post-commit full/native
+verification, candidate-specific archive and evidence seal, then five fresh human
+observations. Candidate-specific `observation-summary.json` and `region-selection.json`
+do not yet exist; the root `region-selection.json` remains absent by policy.
 
 | Requirement | Current state | Direct evidence | Remaining gate |
 | --- | --- | --- | --- |
-| Fresh creation and first action | browser verified; immutable candidate ready | `tests/e2e/release-complete-core.spec.ts`, full smoke | fresh human candidate observation |
+| Fresh creation and first action | browser verified; candidate seal pending | `tests/e2e/release-complete-core.spec.ts`, full smoke | exact post-commit candidate seal, then fresh human observation |
 | First move, explore, combat and safe return | browser verified | production UI journey E2E, full smoke | fresh human candidate observation |
 | Equipment decision and level-5 job change | browser verified | `tests/e2e/release-complete-core.spec.ts` | fresh human candidate observation |
 | Skill branch and Class Journey | browser verified | production UI journey E2E and class-journey contracts | fresh human candidate observation |
@@ -44,7 +50,7 @@ repository-owned gate below was executed on 2026-08-20 KST.
 | Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
 | Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; current v3 combat evidence `786c4898...e6bb` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
 | Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; 100-row report `f253158f...86f6`; focused event `80/80`; 390×844 combined browser `7/7` | human candidate observation |
-| Repository gate | verified on current working-tree candidate bytes | type/lint/unit `4164/4164`/build guard; desktop/mobile smoke; E2E `55/55 + 54/54`; combat/economy/relic/content/pacing/art/event verifiers GREEN; `cap:sync`, Android debug and unsigned iOS build GREEN; tracked native drift 0 | cohesive commit and post-commit verification, then five fresh human observations |
+| Repository gate | verified on 2026-08-24 working-tree checkpoint | `npm run verify:full`: type-check/lint/unit `4168/4168`/build guard, desktop/mobile smoke, E2E `55/55 + 54/54`, final marker `VERIFY_FULL_TRACKED_SCREENSHOTS_UNCHANGED`; `npm run art:verify`: `18/229/22/25`, catalog SHA `c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0`; `mobile:doctor`, `cap:sync`, Android debug and unsigned iOS device build pass; tracked native bytes unchanged | exact 12-path cohesive commit, post-commit proof, candidate-specific seal, then five fresh human observations |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
 
@@ -62,6 +68,9 @@ repository-owned gate below was executed on 2026-08-20 KST.
   `a9073a1eb9fdc9652f18e812bf1f119c46dfe308384918c165f32f6273592e31`.
 - Relic gold-multiplier 390×844 screenshot: SHA-256
   `5fa54793454a5e5333bf64ee82fd90b3ea7841b0252d113f479d17e9cca39b0e`.
+- Art catalog: 18 character, 229 equipment, 22 family and 25 signature-overlay
+  surfaces; catalog SHA-256
+  `c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0`.
 - Relic dot-multiplier evidence JSON: SHA-256
   `5664a5ec0a9d11adae9f720b14bdf4ff4942a63363e85f4cca4eea6ba2e55e67`.
 - Relic HP-drain evidence JSON: SHA-256
@@ -85,8 +94,11 @@ repository-owned gate below was executed on 2026-08-20 KST.
 - A source or artifact change invalidates prior region counts and physical observations.
 - `implemented`, `browser verified`, `native packaged`, `physical observed`, and
   `Toss resume eligible` are independent claims.
-- `region-selection.json` is intentionally absent. The summary bound to `3a2407a`
-  contains `0/5` observations and is historical after the relic changes. The earlier
-  `1/5` record for `f9d463a` is also historical. A new immutable candidate must be
-  created before five fresh observations can begin; no selector output is written
-  before that gate.
+- The root `region-selection.json` is intentionally absent. The root summary bound to
+  `3a2407a` contains `0/5` observations and is historical after the relic changes;
+  the earlier `1/5` record for `f9d463a` is also historical. A new candidate must use
+  `candidates/${candidate_id}/observation-summary.json` and
+  `candidates/${candidate_id}/region-selection.json`. The candidate-specific region
+  selection is currently absent, and no selector output is written before five fresh
+  observations pass. An empty `0/5` candidate summary remains untracked Goal-owned
+  audit evidence and is never committed.

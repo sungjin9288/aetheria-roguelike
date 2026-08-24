@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import { releaseEvidenceScreenshot } from './releaseEvidenceScreenshot';
 
 const DEVICE_QA_SNAPSHOT_KEY = 'aetheria.device-qa.item-investment.snapshot.v1';
-const SCREENSHOT_PATH = 'docs/evidence/qa/release-complete-core/screenshots/equipment-economy-390x844.png';
+const SCREENSHOT_FILENAME = 'equipment-economy-390x844.png';
 
 const legacyItem = (item: Record<string, unknown>, id: string) => ({ ...item, id, enhance: 0 });
 
@@ -102,7 +103,7 @@ const readDeviceQaSnapshot = (page: Page) => (
 );
 
 test.describe('Equipment economy at 390x844', () => {
-    test('migrates the device-QA legacy snapshot and purchases the corrected T4 stock offer once', async ({ page }) => {
+    test('migrates the device-QA legacy snapshot and purchases the corrected T4 stock offer once', async ({ page }, testInfo) => {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.addInitScript(({ key, snapshot }) => {
             localStorage.setItem(key, JSON.stringify(snapshot));
@@ -179,6 +180,6 @@ test.describe('Equipment economy at 390x844', () => {
         expect(after.player.inv).toHaveLength(before.player.inv.length + 1);
         expect(after.player.inv.filter((item: { name: string }) => item.name === '에테르 검')).toHaveLength(2);
 
-        await page.screenshot({ path: SCREENSHOT_PATH, fullPage: false });
+        await releaseEvidenceScreenshot(page, testInfo, SCREENSHOT_FILENAME, { fullPage: false });
     });
 });
