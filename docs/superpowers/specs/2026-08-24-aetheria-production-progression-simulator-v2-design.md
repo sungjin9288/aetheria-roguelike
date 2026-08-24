@@ -256,6 +256,18 @@ combat score나 ATK/DEF 합산 점수를 새로 만들지 않는다. v2는 p10/p
 
 ## 8. Loot and Pity Diagnostic
 
+### Prerequisite dependency
+
+Combat victory at base checkpoint `c129c2a` appends rolled loot without enforcing `maxInv`, while
+shop, return-supply and other reward paths enforce inventory capacity. `capacityBlockedDrops` must
+therefore not be simulated or reported as available until
+`docs/superpowers/specs/2026-08-24-aetheria-combat-loot-capacity-settlement-design.md` is implemented,
+verified and committed. The v2 implementation plan is written against that corrected production
+authority and refreshes its base HEAD and source manifest afterward.
+
+Simulator-side capacity post-processing, a constant zero metric and test-side loot reconstruction are
+all forbidden because they would hide the production defect.
+
 “무보상”은 모든 kill이 주는 EXP/gold를 포함하면 항상 false가 되므로 다음 세 streak로
 정확히 분리한다.
 
