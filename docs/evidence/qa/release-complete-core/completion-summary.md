@@ -4,8 +4,11 @@ Date: 2026-08-24 KST
 
 Status: content pacing, bounded encounters, relic balance, equipment economy,
 equipment combat-power sidegrades, consumable authority and event reward transactions
-are locally verified in the current checkpoint slice. The exact immutable source
-candidate identity is assigned only after the cohesive commit and archive seal.
+are locally verified in the current checkpoint slice. The implementation checkpoint is
+committed in `0fde5f52e8b13b011857dec38449a906fe672bf4`, and its post-commit full/native
+verification is complete. This docs-only reconciliation assigns no candidate identity;
+the reconciled current HEAD still requires a candidate-specific archive and evidence
+seal.
 Fresh-human acceptance, push and external release gates remain HOLD.
 
 ## E2E release-evidence output isolation checkpoint (2026-08-24)
@@ -15,8 +18,10 @@ their shared typed helper. Ordinary, focused and
 full runs write through `testInfo.outputPath(filename)`, while only the exact
 `AETHERIA_REFRESH_RELEASE_EVIDENCE=1` opt-in uses the tracked release-evidence
 directory. Existing filenames and `fullPage` settings are unchanged. The
-explicit `qa:evidence:refresh` script is present but was not executed. Its source
-candidate identity is not yet sealed; the root historical summary is not repointed.
+explicit `qa:evidence:refresh` script is present but was not executed. The implementation
+checkpoint is committed in `0fde5f52e8b13b011857dec38449a906fe672bf4`, and its post-commit
+proof is complete. This docs-only reconciliation assigns no candidate identity; the root
+historical summary is not repointed.
 
 - TDD RED: `node --import tsx --test tests/e2e-evidence-output.test.js` failed
   with the expected missing-helper `ERR_MODULE_NOT_FOUND` before the helper was
@@ -58,12 +63,12 @@ candidate identity is not yet sealed; the root historical summary is not repoint
   with aggregate SHA-256
   `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
 
-This section records a pre-commit evidence capture. Commit status and any post-commit
-results are authoritative from Git history and the subsequent candidate-specific seal.
-The next evidence binding uses
-`docs/evidence/qa/release-complete-core/candidates/${candidate_id}/` and keeps the
-root historical summary unchanged. Push, signing, publish and evidence refresh remain
-unperformed.
+This section originated as a pre-commit evidence capture. The implementation checkpoint
+is committed in `0fde5f52e8b13b011857dec38449a906fe672bf4`, and its post-commit proof is
+complete. This docs-only reconciliation assigns no candidate identity. The next evidence
+binding uses `docs/evidence/qa/release-complete-core/candidates/${candidate_id}/` for the
+reconciled current HEAD and keeps the root historical summary unchanged. Push, signing,
+publish and evidence refresh remain unperformed.
 
 Historical implementation commits are `ea28b09` (deterministic audits), `f10f66a`
 (pacing and settlement), `ca9e1d0` (mobile surface evidence), followed by ledger
@@ -238,7 +243,7 @@ only and cannot be reused for the current candidate.
 - The earlier `1/5` browser observation belongs to superseded commit `f9d463a`.
   The root `observation-summary.json` remains bound to later historical candidate
   `3a2407a` at `0/5`; neither record counts for the next candidate. Candidate-specific
-  evidence is absent until the post-commit seal.
+  evidence is absent until the reconciled-HEAD candidate-specific seal.
 - Schema v2 now requires five complete candidate-bound human journeys, unique attachment
   hashes, accepted actions, save/background restore, mobile back results, bidirectional
   issue links and zero P0/blocking P1 before it can write a selection.
@@ -266,10 +271,11 @@ only and cannot be reused for the current candidate.
   base-audit evidence and ledger updates remain Goal-owner changes in this bundle.
 
 The repository-owned consumable/event closure and final web/mobile/native regression
-gates are complete for this checkpoint. The exact next gate is the 12-path cohesive
-commit, post-commit full/native proof, candidate-specific archive/evidence seal and
-then five fresh human journeys. Push, signing and release remain separate approval
-boundaries.
+gates are complete for predecessor checkpoint `0fde5f52e8b13b011857dec38449a906fe672bf4`,
+and its post-commit full/native proof is complete. This docs-only reconciliation assigns
+no candidate identity. The next gate is the candidate-specific archive and evidence seal
+of the reconciled current HEAD, then five fresh human journeys. Push, signing and release
+remain separate approval boundaries.
 
 ## Cohesive commit boundary
 

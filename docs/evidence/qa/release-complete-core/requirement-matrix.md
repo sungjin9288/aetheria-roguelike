@@ -10,20 +10,22 @@ Status vocabulary is deliberately narrow:
 
 The current branch is `codex/release-complete-core`. Historical observation candidate
 `release-core-3a2407a0c961` remains bound to commit `3a2407a`; its root summary is
-historical and is not repointed. The current working-tree checkpoint has no immutable
-candidate identity until the exact post-commit archive seal is recorded. No previous
-human session is counted for the next candidate. All prior Toss candidate and
-deployment evidence is superseded and remains audit-only. The latest repository-owned
-gate below was executed on 2026-08-24 KST.
+historical and is not repointed. The implementation checkpoint is committed in
+`0fde5f52e8b13b011857dec38449a906fe672bf4`, and its post-commit full/native
+verification is complete. This docs-only reconciliation assigns no candidate identity;
+the reconciled current HEAD still requires a candidate-specific archive and evidence
+seal. No previous human session is counted for the next candidate. All prior Toss
+candidate and deployment evidence is superseded and remains audit-only. The latest
+repository-owned gate below was executed on 2026-08-24 KST.
 
-The next gate is ordered: exact 12-path cohesive commit, post-commit full/native
-verification, candidate-specific archive and evidence seal, then five fresh human
-observations. Candidate-specific `observation-summary.json` and `region-selection.json`
-do not yet exist; the root `region-selection.json` remains absent by policy.
+The next gate is ordered: candidate-specific archive and evidence seal of the reconciled
+current HEAD, then five fresh human observations. Candidate-specific
+`observation-summary.json` and `region-selection.json` do not yet exist; the root
+`region-selection.json` remains absent by policy.
 
 | Requirement | Current state | Direct evidence | Remaining gate |
 | --- | --- | --- | --- |
-| Fresh creation and first action | browser verified; candidate seal pending | `tests/e2e/release-complete-core.spec.ts`, full smoke | exact post-commit candidate seal, then fresh human observation |
+| Fresh creation and first action | browser verified; candidate seal pending | `tests/e2e/release-complete-core.spec.ts`, full smoke | reconciled-HEAD candidate-specific seal, then fresh human observation |
 | First move, explore, combat and safe return | browser verified | production UI journey E2E, full smoke | fresh human candidate observation |
 | Equipment decision and level-5 job change | browser verified | `tests/e2e/release-complete-core.spec.ts` | fresh human candidate observation |
 | Skill branch and Class Journey | browser verified | production UI journey E2E and class-journey contracts | fresh human candidate observation |
@@ -50,7 +52,7 @@ do not yet exist; the root `region-selection.json` remains absent by policy.
 | Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
 | Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; current v3 combat evidence `786c4898...e6bb` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
 | Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; 100-row report `f253158f...86f6`; focused event `80/80`; 390×844 combined browser `7/7` | human candidate observation |
-| Repository gate | verified on 2026-08-24 working-tree checkpoint | `npm run verify:full`: type-check/lint/unit `4168/4168`/build guard, desktop/mobile smoke, E2E `55/55 + 54/54`, final marker `VERIFY_FULL_TRACKED_SCREENSHOTS_UNCHANGED`; `npm run art:verify`: `18/229/22/25`, catalog SHA `c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0`; `mobile:doctor`, `cap:sync`, Android debug and unsigned iOS device build pass; tracked native bytes unchanged | exact 12-path cohesive commit, post-commit proof, candidate-specific seal, then five fresh human observations |
+| Repository gate | verified on 2026-08-24 after predecessor commit `0fde5f52e8b13b011857dec38449a906fe672bf4`; post-commit full/native proof is complete | `npm run verify:full`: type-check/lint/unit `4168/4168`/build guard, desktop/mobile smoke, E2E `55/55 + 54/54`, final marker `VERIFY_FULL_TRACKED_SCREENSHOTS_UNCHANGED`; `npm run art:verify`: `18/229/22/25`, catalog SHA `c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0`; `mobile:doctor`, `cap:sync`, Android debug and unsigned iOS device build pass; tracked native bytes unchanged | candidate-specific archive/evidence seal of reconciled HEAD, then five fresh human observations |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
 
