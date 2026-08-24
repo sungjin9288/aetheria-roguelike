@@ -1,4 +1,4 @@
-import type { Monster, Player } from '../types/index.js';
+import type { Item, Monster, Player } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
@@ -10,6 +10,14 @@ import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getProgressionLootMultiplier } from '../data/progressionProfiles.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
+
+export type LootLog = { type: string; text: string };
+export type LootCandidate = { item: Item; logs: LootLog[] };
+export type LootResult = {
+    candidates: LootCandidate[];
+    items: Item[];
+    logs: LootLog[];
+};
 
 const calculateCappedLootChance = (...factors: unknown[]) => {
     let chance = 1;
@@ -45,7 +53,7 @@ export const resolveEnemyBaseName = (enemy: Monster) => {
  * @param {Object} enemy
  * @param {Object|null} player
  * @param {number} [signaturePityMult=1.0] - signature 드롭에만 적용되는 pity 배율
- * @returns {{ items: Object[], logs: Object[] }}
+ * @returns {LootResult}
  */
 export const processLoot = (
     enemy: Monster,
@@ -53,11 +61,13 @@ export const processLoot = (
     signaturePityMult: any,
     rng?: () => number,
     now?: () => number,
-) => {
+): LootResult => {
     const random = typeof rng === 'function' ? rng : Math.random;
     const currentTime = typeof now === 'function' ? now : Date.now;
-    const items: any[] = [];
-    const logs: any[] = [];
+    const candidates: LootCandidate[] = [];
+    const appendCandidate = (item: Item, candidateLogs: LootLog[]) => {
+        candidates.push({ item, logs: candidateLogs });
+    };
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
     const dropRateMult = 1 + getStrongestNumericRelicValue(relics, 'drop_rate');
@@ -97,9 +107,9 @@ export const processLoot = (
             const picked = pool[Math.floor(random() * pool.length)];
             const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
             const newItem = applyItemPrefix(baseItem, random);
-            items.push(newItem);
-            logs.push({ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name) });
-            if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+            const candidateLogs: LootLog[] = [{ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name) }];
+            if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+            appendCandidate(newItem, candidateLogs);
         }
     }
 
@@ -124,15 +134,17 @@ export const processLoot = (
                 for (let q = 0; q < qty; q++) {
                     const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                     const newItem = applyItemPrefix(baseItem, random);
-                    items.push(newItem);
-                    logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
+                    const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
                     if (newItem.prefixed) {
-                        logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                        candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
                     }
+                    appendCandidate(newItem, candidateLogs);
                 }
             }
         });
-        return { items, logs };
+        const items = candidates.map(({ item }) => item);
+        const logs = candidates.flatMap(({ logs: candidateLogs }) => candidateLogs);
+        return { candidates, items, logs };
     }
 
     // 레거시 LOOT_TABLE 폴백 (없으면 보너스 드랍만 시도)
@@ -153,11 +165,11 @@ export const processLoot = (
 
                 const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                 const newItem = applyItemPrefix(baseItem, random);
-                items.push(newItem);
-                logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
+                const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
                 if (newItem.prefixed) {
-                    logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                    candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
                 }
+                appendCandidate(newItem, candidateLogs);
             }
         });
     }
@@ -172,12 +184,14 @@ export const processLoot = (
                 const picked = tierPool[Math.floor(random() * tierPool.length)];
                 const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                 const newItem = applyItemPrefix(baseItem, random);
-                items.push(newItem);
-                logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
-                if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
+                if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                appendCandidate(newItem, candidateLogs);
             }
         }
     }
 
-    return { items, logs };
+    const items = candidates.map(({ item }) => item);
+    const logs = candidates.flatMap(({ logs: candidateLogs }) => candidateLogs);
+    return { candidates, items, logs };
 };

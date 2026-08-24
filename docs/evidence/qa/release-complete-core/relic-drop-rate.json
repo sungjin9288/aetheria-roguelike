@@ -230,7 +230,7 @@
       },
       {
         "path": "src/systems/CombatEngine.loot.ts",
-        "sha256": "d19b252cfc1fb722d852f310fc67900324d0333ea3409b568cee89790290883d"
+        "sha256": "10fe7c4e995a4aa7ed2b2f97f1ecbbad2d5070b41ecb6e33edbad3dcaebcaee7"
       },
       {
         "path": "src/systems/relicDropRateAudit.ts",
@@ -238,7 +238,7 @@
       },
       {
         "path": "tests/combat-engine-loot.test.js",
-        "sha256": "7aac29e63b44b8c8913dbd3541fee5950c84c8c77f9b579d2d89f6cd02dd8733"
+        "sha256": "619d9b59198772f38cf9ac2fee2ef227bf5ea56f7616a27a0a90ffddc313e041"
       },
       {
         "path": "tests/relic-drop-rate-coherence.test.js",

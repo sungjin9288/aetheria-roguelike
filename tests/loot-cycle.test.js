@@ -270,7 +270,7 @@ import { readFile } from 'node:fs/promises';
    *     };
    * - 호출 사이트 (1 callsite, hooks/combatActions/combatVictory.ts):
    *     · combatVictory.ts:213 — getLootUpgradeHint(updatedPlayer.equip,
-   *       lootResult.items)
+   *       admittedItems)
    *     · 다른 파일 import 0건.
    * - 결과: equip / lootItems 항상 명시 전달. 두 default 모두 도달 불가.
    *
@@ -307,8 +307,8 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 534: 정합성 가드 — 1 callsite 보존', async () => {
       const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
-      assert.ok(/getLootUpgradeHint\(updatedPlayer\.equip,\s*lootResult\.items\)/.test(source),
-          'getLootUpgradeHint(updatedPlayer.equip, lootResult.items) callsite 보존');
+      assert.ok(/getLootUpgradeHint\(updatedPlayer\.equip,\s*admittedItems\)/.test(source),
+          'getLootUpgradeHint(updatedPlayer.equip, admittedItems) callsite 보존');
   });
 
   test('cycle 534: body defensive guard 보존', async () => {
@@ -424,7 +424,7 @@ import { readFile } from 'node:fs/promises';
    *     export const getTraitLootHint = (items: any[] = [], traitProfile: any,
    *         player: Player | null = null) => {...};
    * - 호출 사이트 (3 callers):
-   *     · combatVictory.ts:217 — getTraitLootHint(lootResult.items, traitProfile,
+   *     · combatVictory.ts:217 — getTraitLootHint(admittedItems, traitProfile,
    *       updatedPlayer)
    *     · run-profile-utils.test.js:212 — getTraitLootHint(loot, trait, player)
    *     · cycle-354 test:64 — getTraitLootHint(loot, trait, player)
@@ -461,8 +461,8 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 602: 정합성 가드 — 3 callsite 보존', async () => {
       const cv = await readSrc('src/hooks/combatActions/combatVictory.ts');
-      assert.ok(/getTraitLootHint\(lootResult\.items,\s*traitProfile,\s*updatedPlayer\)/.test(cv),
-          'combatVictory getTraitLootHint callsite 보존');
+      assert.ok(/getTraitLootHint\(admittedItems,\s*traitProfile,\s*updatedPlayer\)/.test(cv),
+          'combatVictory admittedItems getTraitLootHint callsite 보존');
 
       const test1 = await readSrc('tests/run-profile-utils.test.js');
       assert.ok(/getTraitLootHint\(loot,\s*trait,\s*player\)/.test(test1),

@@ -15,6 +15,7 @@ import { isSignatureItem } from '../../data/signatureItems.js';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 import { appendExpeditionBoss } from '../../utils/expeditionLedger';
+import { admitCombatLoot } from '../../systems/combatLootCapacity';
 
 /**
  * 전투 승리 공통 후처리.
@@ -78,19 +79,27 @@ export const handleVictoryOutcome = ({
         random,
         currentTime,
     );
-    lootResult.logs.forEach((log: any) => addLog(log.type, log.text));
+    const lootAdmission = admitCombatLoot(updatedPlayer, lootResult.candidates);
+    const admittedCandidates = lootAdmission.admitted;
+    const blockedCandidates = lootAdmission.blocked;
+    const admittedItems = admittedCandidates.map(({ item }) => item);
+    const admittedLogs = admittedCandidates.flatMap(({ logs }) => logs);
+    admittedLogs.forEach((log: any) => addLog(log.type, log.text));
+    if (blockedCandidates.length > 0) {
+        addLog('warn', MSG.COMBAT_LOOT_CAPACITY_BLOCKED(blockedCandidates.length));
+    }
     // cycle 193: 신규 codex 등록 수 추적 — SEASON_XP.codexDiscover dispatch용.
     const codexBefore = countNewCodexEntries(updatedPlayer);
-    if (lootResult.items.length > 0) {
-        updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
-        updatedPlayer = registerLootToCodex(updatedPlayer, lootResult.items);
+    if (admittedItems.length > 0) {
+        updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...admittedItems] };
+        updatedPlayer = registerLootToCodex(updatedPlayer, admittedItems);
     }
 
     // signature pity bookkeeping:
     //  - signature 하나라도 드롭 → pity = 0
     //  - 보스 토벌 + signature 미획득 → pity += 1
     //  - 일반 몹은 pity 영향 없음
-    const signatureDropped = lootResult.items.some((it: any) => isSignatureItem(it));
+    const signatureDropped = admittedItems.some((it: any) => isSignatureItem(it));
     const prevPity = updatedPlayer.stats?.signaturePity || 0;
     if (signatureDropped) {
         if (prevPity > 0) {
@@ -115,9 +124,7 @@ export const handleVictoryOutcome = ({
     //   key 정의됐으나 dispatch 0건이던 dead config. loot/monster 모두 포함.
     const codexAfter = countNewCodexEntries(updatedPlayer);
     const newCodexCount = codexAfter - codexBefore;
-    if (newCodexCount > 0) {
-        dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.codexDiscover * newCodexCount });
-    }
+    const codexDiscoverXp = newCodexCount > 0 ? SEASON_XP.codexDiscover * newCodexCount : 0;
 
     // milestone (attack/skill 직접 승리에만)
     if (extendedChecks) {
@@ -173,6 +180,9 @@ export const handleVictoryOutcome = ({
     };
 
     dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
+    if (codexDiscoverXp > 0) {
+        dispatch({ type: AT.ADD_SEASON_XP, payload: codexDiscoverXp });
+    }
     dispatch({
         type: AT.UPDATE_DAILY_PROTOCOL,
         payload: {
@@ -248,10 +258,10 @@ export const handleVictoryOutcome = ({
         addStoryLog('victory', { name: deadEnemy.name });
     }
 
-    const droppedItems = lootResult.items.map((i: any) => i.name);
+    const droppedItems = admittedItems.map((i: any) => i.name);
     const traitProfile = getTraitProfile(updatedPlayer, victoryStats);
-    const upgradeHint = getLootUpgradeHint(updatedPlayer.equip, lootResult.items);
-    const traitHint = getTraitLootHint(lootResult.items, traitProfile, updatedPlayer);
+    const upgradeHint = getLootUpgradeHint(updatedPlayer.equip, admittedItems);
+    const traitHint = getTraitLootHint(admittedItems, traitProfile, updatedPlayer);
     addCombatDigestLogs({
         addLog, enemyName: deadEnemy.name, victoryResult, droppedItems,
         upgradeHint, traitHint,

@@ -8,7 +8,56 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { processLoot } from '../src/systems/CombatEngine.loot.ts';
 import { DROP_TABLES } from '../src/data/dropTables.ts';
+import { LOOT_TABLE } from '../src/data/loot.ts';
+import { MSG } from '../src/data/messages.ts';
 import { getStrongestNumericRelicValue } from '../src/systems/CombatEngine.actions.ts';
+
+function controlledRandom(rolls) {
+    let calls = 0;
+    const random = () => {
+        if (calls >= rolls.length) {
+            throw new Error(`controlled RNG exhausted at call ${calls}`);
+        }
+        const roll = rolls[calls];
+        calls += 1;
+        return roll;
+    };
+    Object.defineProperty(random, 'calls', { get: () => calls });
+    return random;
+}
+
+function withTemporaryTableEntry(table, key, value, run) {
+    const previous = table[key];
+    table[key] = value;
+    try {
+        return run();
+    } finally {
+        if (previous === undefined) delete table[key];
+        else table[key] = previous;
+    }
+}
+
+function assertLootCandidateContract(result) {
+    assert.deepEqual(result.items, result.candidates.map(({ item }) => item));
+    assert.deepEqual(result.logs, result.candidates.flatMap(({ logs }) => logs));
+    assert.equal(result.candidates.length, result.items.length);
+    assert.ok(result.candidates.every(({ item, logs }) => item && Array.isArray(logs)));
+}
+
+function runLootFixtureTwice(enemy, player, rolls, expectedCalls) {
+    const baselineRng = controlledRandom(rolls);
+    const baseline = processLoot(enemy, player, 1, baselineRng, () => 1_700_000_000_000);
+    const replayRng = controlledRandom(rolls);
+    const result = processLoot(enemy, player, 1, replayRng, () => 1_700_000_000_000);
+
+    assert.deepEqual(result, baseline);
+    assert.deepEqual(result.items, baseline.items);
+    assert.deepEqual(result.logs, baseline.logs);
+    assert.equal(baselineRng.calls, expectedCalls);
+    assert.equal(replayRng.calls, baselineRng.calls);
+    assertLootCandidateContract(result);
+    return result;
+}
 
 // ── resolveEnemyBaseName 미러 ───────────────────────────────────────────────
 
@@ -197,6 +246,82 @@ test('calcQty: qty=[2,5] → 2~5 범위', () => {
     }
     // 200회면 2,3,4,5 모두 나와야 함
     assert.ok(results.size >= 3, `다양한 수량이 나와야 합니다 (${results.size}종)`);
+});
+
+// ── per-item loot provenance contract ──────────────────────────────────────
+
+test('processLoot candidate provenance: enriched drops keep each item\'s logs', () => {
+    const enemy = { name: '__loot_provenance_enriched__', dropMod: 1 };
+    const rolls = [0, 0.25, 0, 0, 0, 0.5, 0.99];
+
+    withTemporaryTableEntry(DROP_TABLES, enemy.name, [
+        { item: '용살자의창', rate: 1 },
+        { item: '대마법사로브', rate: 1 },
+    ], () => {
+        const result = runLootFixtureTwice(enemy, null, rolls, 7);
+        const [prefixed, plain] = result.candidates;
+
+        assert.equal(prefixed.item.prefixed, true);
+        assert.deepEqual(prefixed.logs, [
+            { type: 'success', text: MSG.LOOT_GET(prefixed.item.name) },
+            { type: 'event', text: MSG.LOOT_PREFIX(prefixed.item.prefixName) },
+        ]);
+        assert.deepEqual(plain.logs, [
+            { type: 'success', text: MSG.LOOT_GET(plain.item.name) },
+        ]);
+    });
+});
+
+test('processLoot candidate provenance: legacy drops keep each item\'s logs', () => {
+    const enemy = { name: '__loot_provenance_legacy__', dropMod: 1 };
+    const rolls = [0, 0.25, 0, 0, 0, 0.5, 0.99];
+
+    withTemporaryTableEntry(LOOT_TABLE, enemy.name, [
+        '용살자의창',
+        '대마법사로브',
+    ], () => {
+        const result = runLootFixtureTwice(enemy, null, rolls, 7);
+        const [prefixed, plain] = result.candidates;
+
+        assert.equal(prefixed.item.prefixed, true);
+        assert.deepEqual(prefixed.logs, [
+            { type: 'success', text: MSG.LOOT_GET(prefixed.item.name) },
+            { type: 'event', text: MSG.LOOT_PREFIX(prefixed.item.prefixName) },
+        ]);
+        assert.deepEqual(plain.logs, [
+            { type: 'success', text: MSG.LOOT_GET(plain.item.name) },
+        ]);
+    });
+});
+
+test('processLoot candidate provenance: high-level bonus keeps its item log', () => {
+    const enemy = { name: '__loot_provenance_high_level__', exp: 160, dropMod: 1 };
+    const result = runLootFixtureTwice(enemy, null, [0, 0.25, 0.5, 0.99], 4);
+    const [candidate] = result.candidates;
+
+    assert.deepEqual(candidate.logs, [
+        { type: 'success', text: MSG.LOOT_GET(candidate.item.name) },
+    ]);
+});
+
+test('processLoot candidate provenance: prestige drop keeps rare-drop log separate', () => {
+    const enemy = { name: '__loot_provenance_prestige__', isBoss: true, dropMod: 1 };
+    const player = { meta: { prestigeRank: 3 } };
+    const rolls = [0, 0.25, 0.99, 0, 0.5, 0.99];
+
+    withTemporaryTableEntry(DROP_TABLES, enemy.name, [
+        { item: '슬라임 젤리', rate: 1 },
+    ], () => {
+        const result = runLootFixtureTwice(enemy, player, rolls, 6);
+        const [prestige, normal] = result.candidates;
+
+        assert.deepEqual(prestige.logs, [
+            { type: 'event', text: MSG.PRESTIGE_RARE_DROP(prestige.item.name) },
+        ]);
+        assert.deepEqual(normal.logs, [
+            { type: 'success', text: MSG.LOOT_GET(normal.item.name) },
+        ]);
+    });
 });
 
 // ── 유물 드랍률 배율 계산 테스트 ────────────────────────────────────────────

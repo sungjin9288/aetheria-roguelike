@@ -64,6 +64,7 @@ export const MSG = {
     LOOT_PREFIX: (name: string) => `접두사 부여: [${name}]`,
     PRESTIGE_RARE_DROP: (name: string) => `✦ [심연의 메아리] 보스가 희귀 장비를 떨어뜨렸습니다: ${name}`,
     SIGNATURE_DISCOVERED: (name: string) => `✦ 전설 각인 ─ ${name} 획득!`,
+    COMBAT_LOOT_CAPACITY_BLOCKED: (count: number) => `가방이 가득해 전리품 ${count}개를 챙기지 못했습니다.`,
     SIGNATURE_SELL_BLOCKED: (name: string | undefined) => `[${name}]은(는) 전설 각인 아이템이라 판매할 수 없습니다.`,
     SIGNATURE_SYNTH_BLOCKED: (name: string) => `[${name}]은(는) 전설 각인 아이템이라 합성 재료로 사용할 수 없습니다.`,
     SIGNATURE_BOSS_HINT: (bossName: string, count: number, topName: string, topPct: number | string) => (

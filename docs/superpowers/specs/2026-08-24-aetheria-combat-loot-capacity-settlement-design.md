@@ -1,7 +1,7 @@
 # Aetheria Combat Loot Capacity Settlement Design
 
 Date: 2026-08-24 KST
-Status: approved direction, implementation pending written-spec review
+Status: implementation verified on unstaged bytes; cohesive commit pending approval
 Base checkpoint: `c129c2a41f1cb8287cc44cba487d4e719b16f20c`
 
 ## 1. Outcome
@@ -153,7 +153,8 @@ Candidate는 두 stable group으로 나눈다.
 
 두 그룹 안에서는 원래 index를 유지한다. Signature group 뒤에 normal group을 이어 붙인
 순서에서 `available`개를 admitted로, 나머지를 blocked로 둔다. Candidate를 clone,
-reroll, mutate하지 않는다. Input candidate가 없으면 frozen empty result를 돌려준다.
+reroll, mutate하지 않는다. Input candidate가 없으면 새 empty admitted/blocked 배열을 가진
+result를 돌려준다.
 
 ### 5.3 Victory settlement
 
@@ -226,6 +227,7 @@ Expected implementation paths:
 - Modify: `src/data/messages.ts`
 - Create: `tests/combat-loot-capacity-authority.test.js`
 - Modify: `tests/combat-engine-loot.test.js`
+- Modify: `tests/loot-cycle.test.js`
 - Modify only when an existing convergence assertion needs extension:
   `tests/combat-action-transaction-authority.test.js`
 - Modify only when an existing DOT/item assertion needs extension:
@@ -288,7 +290,7 @@ code starts only after the covering RED output is recorded.
 Focused:
 
 ```bash
-node --import tsx --test tests/combat-loot-capacity-authority.test.js tests/combat-engine-loot.test.js tests/combat-action-transaction-authority.test.js tests/combat-item-transaction-authority.test.js
+node --import tsx --test tests/loot-cycle.test.js tests/combat-loot-capacity-authority.test.js tests/combat-engine-loot.test.js tests/combat-action-transaction-authority.test.js tests/combat-item-transaction-authority.test.js
 npx tsc --noEmit
 npm run lint
 git diff --check
@@ -298,9 +300,16 @@ Cross-surface:
 
 ```bash
 npm run relic:drop-rate:verify
+npm run relic:event-chance:verify
 npm run event-reward:verify
 npm run progression:simulate -- --seed 20260824
-npm run progression:compare -- --seed-start 20260824 --seed-count 1000
+npm run progression:compare -- \
+  --axis loot \
+  --multiplier 1.2 \
+  --candidate-id combat-loot-capacity-audit \
+  --candidate-version 2 \
+  --seed-start 20260824 \
+  --seed-count 1000
 npm run verify
 npm run verify:full
 npm run art:verify
@@ -308,6 +317,11 @@ npm run mobile:doctor
 npm run cap:sync
 git status --short -- android ios
 ```
+
+The comparison candidate is ephemeral and unregistered. Its report must remain
+`classification: report-only` with `activationReady:false`; the only expected blockers are
+`production_funnel_evidence_missing` and `full_combat_model_unavailable`. It does not activate or
+persist a gameplay profile.
 
 No new screenshot is required because the blocked state uses the existing combat log surface and no
 layout is added. A focused 390×844 browser assertion is required only if the implementation changes
