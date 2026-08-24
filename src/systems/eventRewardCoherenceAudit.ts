@@ -246,8 +246,8 @@ export const buildEventRewardCoherenceReport = ({
     if (chainList.length !== 13) errors.add('CHAIN_COUNT_MISMATCH');
     if (chainStepCount !== 39) errors.add('CHAIN_STEP_COUNT_MISMATCH');
     if (chainOutcomeCount !== 84) errors.add('CHAIN_OUTCOME_COUNT_MISMATCH');
-    if (boundedList.length !== 4) errors.add('BOUNDED_COUNT_MISMATCH');
-    if (boundedChoiceCount !== 8) errors.add('BOUNDED_CHOICE_COUNT_MISMATCH');
+    if (boundedList.length !== 6) errors.add('BOUNDED_COUNT_MISMATCH');
+    if (boundedChoiceCount !== 12) errors.add('BOUNDED_CHOICE_COUNT_MISMATCH');
     if (fallbackList.length !== 3) errors.add('FALLBACK_COUNT_MISMATCH');
     if (campfireEvent?.choices?.length !== 2) errors.add('CAMPFIRE_CHOICE_COUNT_MISMATCH');
     if (scoutEvent?.choices?.length !== 3) errors.add('SCOUT_CHOICE_COUNT_MISMATCH');

@@ -8,13 +8,12 @@ Status vocabulary is deliberately narrow:
 - `physical observed`: a human observed the exact candidate on a physical device.
 - `external blocker`: the named evidence cannot be produced inside the repository.
 
-The current branch is `codex/release-complete-core`. Historical observation candidate
-`release-core-3a2407a0c961` remains bound to commit `3a2407a`; its root summary is
-historical and is not repointed. The implementation checkpoint is committed in
-`0fde5f52e8b13b011857dec38449a906fe672bf4`, and its post-commit full/native
-verification is complete. This docs-only reconciliation assigns no candidate identity;
-the reconciled current HEAD still requires a candidate-specific archive and evidence
-seal. No previous human session is counted for the next candidate. All prior Toss
+The current branch is `codex/release-complete-core`. Historical observation candidates
+`release-core-3a2407a0c961` and `release-core-1eb890a1dda4` remain bound to their exact
+source checkpoints; the latter stays `0/5` with summary SHA `9239c156...a71`. The
+current six-family encounter-depth slice is verified on its cohesive source checkpoint,
+but has no observation-candidate identity before the separate archive/evidence seal. No
+previous human session is counted for the next candidate. All prior Toss
 candidate and deployment evidence is superseded and remains audit-only. The latest
 repository-owned gate below was executed on 2026-08-24 KST.
 
@@ -46,24 +45,26 @@ current HEAD, then five fresh human observations. Candidate-specific
 | 430×932 geometry | browser verified | skip/CTA True Ending E2E | physical-device observation |
 | Bounded encounter region selection | implemented for the approved early slice | `고요한 숲`, `서쪽 평원`; schema-v2 selector/runbook and `tests/encounter-region-selection.test.js` | five final-candidate complete human observations before tuning acceptance |
 | Bounded encounter schema, eligibility and receipt settlement | implemented/browser verified | canonical catalog binding, eligibility, effective-HP settlement, receipt replay tests | candidate-bound human observation |
-| Four bounded encounter families | implemented/browser verified | four catalog entries, rendered choice/settlement/replay E2E at 375/390/430 widths | candidate-bound human observation |
+| Six bounded encounter families | implemented/browser verified | existing four plus independent Codex-signature and previous-boss families; rendered choice/settlement/replay E2E at 375/390/430 widths and two new 390×844 captures | candidate-bound human observation |
 | Content reachability | verified | report SHA `a6626375...b4f0e8`; checkpoints `1/5/5/6/13/18/18`, job snapshots `18` | use live funnel before further expansion |
 | Exploration rhythm | verified | report SHA `7d903b82...72bfe2`; predecessor p10/p50/p90 `1/2/6`, candidate `2/4/9` | five human sessions before tuning acceptance |
 | Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
 | Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; current v3 combat evidence `786c4898...e6bb` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
-| Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; 100-row report `f253158f...86f6`; focused event `80/80`; 390×844 combined browser `7/7` | human candidate observation |
-| Repository gate | verified on 2026-08-24 after predecessor commit `0fde5f52e8b13b011857dec38449a906fe672bf4`; post-commit full/native proof is complete | `npm run verify:full`: type-check/lint/unit `4168/4168`/build guard, desktop/mobile smoke, E2E `55/55 + 54/54`, final marker `VERIFY_FULL_TRACKED_SCREENSHOTS_UNCHANGED`; `npm run art:verify`: `18/229/22/25`, catalog SHA `c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0`; `mobile:doctor`, `cap:sync`, Android debug and unsigned iOS device build pass; tracked native bytes unchanged | candidate-specific archive/evidence seal of reconciled HEAD, then five fresh human observations |
+| Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; bounded `6/12`, total 104-row report `b3d69916...41ec`, evidence `657d7999...51b`; focused encounter/event `61/61` | human candidate observation |
+| Repository gate | verified on current cohesive source bytes (2026-08-24) | `npm run verify:full`: type-check/lint/unit `4174/4174`/build guard, desktop/mobile smoke, E2E `57/57 + 54/54`; content `a6626375...b4f0e8`, pacing `7d903b82...72bfe2`, art `18/229/22/25`, event `b3d69916...41ec`; `mobile:doctor`, `cap:sync`, Android debug and unsigned iOS device build pass; tracked native bytes unchanged | post-commit focused verification, then candidate-specific archive/evidence seal and five fresh human observations |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
 
 ## Current artifacts
 
-- Android debug APK: `214644300` bytes, SHA-256
-  `de3ac741d33a7cd3e5ca29002cf54e9240d48b471caa2aeae65cfe16db897436`.
+- Android debug APK: `214644299` bytes, SHA-256
+  `672518c64d2fcc303c8629052068133b59e57c412d9b2ac0550a883de2c0f283`.
 - Unsigned iOS arm64 executable: `102376` bytes, SHA-256
   `6372d559d57e897c21f87244863be80a792e7db279c8d9e1deef6ec53306292f`.
 - Content-pacing screenshots: `375x667 e525be7a...31b2f9`,
   `390x844 e8b26827...b0cbc7`, `430x932 eac835d2...663943`.
+- Encounter-depth 390×844 screenshots: signature `4665b12f...b4e`, previous boss
+  `f74fb2a3...0117`.
 - Equipment-economy 390×844 screenshot: SHA-256
   `3b73b798b246224c2e6cee07d3b07c425750a775d8e86e2bc9e3ee7ad0c0279c`.
 - Relic event-chance 390×844 screenshot: SHA-256

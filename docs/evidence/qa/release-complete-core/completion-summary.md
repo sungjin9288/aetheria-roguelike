@@ -2,14 +2,42 @@
 
 Date: 2026-08-24 KST
 
-Status: content pacing, bounded encounters, relic balance, equipment economy,
+Status: content pacing, six-family bounded encounters, relic balance, equipment economy,
 equipment combat-power sidegrades, consumable authority and event reward transactions
-are locally verified in the current checkpoint slice. The implementation checkpoint is
-committed in `0fde5f52e8b13b011857dec38449a906fe672bf4`, and its post-commit full/native
-verification is complete. This docs-only reconciliation assigns no candidate identity;
-the reconciled current HEAD still requires a candidate-specific archive and evidence
-seal.
+are locally verified. The current encounter-depth slice has no observation-candidate
+identity; the next candidate-specific archive/evidence seal follows its explicitly
+approved cohesive source checkpoint.
 Fresh-human acceptance, push and external release gates remain HOLD.
+
+## Bounded encounter context-depth checkpoint (2026-08-24)
+
+- Preserved the existing four families and general narrative occurrence authority while
+  adding `각인의 메아리` for real Codex signature discovery and `메마른 수로의 잔향`
+  for the Class Journey record of `고대 호수의 수호신`. Each selected region now owns
+  exactly three families and production uses all four approved context axes: lineage,
+  effective HP, discovered signature and previous boss.
+- Existing deterministic selection and reducer-owned receipt settlement remain the only
+  authority. Replay, stale/forged/tampered payloads, insufficient resources, lethal HP
+  costs and full inventory fail without mutation. No save schema or dependency changed.
+- TDD RED was `17 tests / 5 expected failures`; focused GREEN is `61/61`. Event-reward
+  evidence is bounded `6/12`, total `104 rows`, errors `0`, report SHA-256
+  `b3d69916e81a99416ecfb9e953a36b8fd4829f76d256ee278a406f13d9af41ec`, file SHA-256
+  `657d799974d9582da3870c766659a593a74efe12360426fe1efca505ce0b651b`.
+- Ordinary Chromium mobile passed `5/5`; explicit evidence refresh passed only the two
+  new tests `2/2`. Original-resolution visual inspection passed for signature
+  `4665b12f...b4e` and previous-boss `f74fb2a3...0117` captures at 390×844.
+- The same 1,000-seed progression comparison retained report SHA-256
+  `059eaeac9cc97c388caf83e83a13f9438bb5b03ee6f7afc264796bbf58c424ff`,
+  proving event occurrence, EXP and loot profile invariants.
+- `npm run verify:full` passed unit `4174/4174`, build guard, desktop/mobile smoke and
+  E2E `57/57 + 54/54`. Content, pacing, art and event verifiers passed. `mobile:doctor`,
+  `cap:sync`, Android debug and unsigned iOS device build passed with zero tracked native
+  drift. APK is `214644299` bytes/SHA `672518c6...f283`; the iOS executable is
+  `102376` bytes/SHA `6372d559...6292f`.
+- Historical `release-core-1eb890a1dda4` remains `0/5` with summary SHA
+  `9239c156...a71`; Toss evidence aggregate remains `05cc9de7...bbbd`. This section
+  belongs to the approved cohesive source checkpoint; no push, signing or publication
+  action was performed.
 
 ## E2E release-evidence output isolation checkpoint (2026-08-24)
 
@@ -91,8 +119,9 @@ only and cannot be reused for the current candidate.
    production because it lacks a server-authoritative atomic claim.
 5. Reset/ascension copy now distinguishes run loss from permanent preservation.
    Proven dead `inventorySpotlight` and `archivedHistory` runtime plumbing was removed.
-6. The approved early-region slice is active in `고요한 숲` and `서쪽 평원`: four
-   bounded encounters settle costs and rewards through an atomic receipt transaction.
+6. The approved early-region slice is active in `고요한 숲` and `서쪽 평원`: six
+   bounded encounters use lineage, effective HP, signature and previous-boss context,
+   then settle costs and rewards through an atomic receipt transaction.
 7. A real-surface browser journey covers fresh play through skill branch, and a second
    route covers the final shard through New Game+ and reload.
 8. Final review hardened the production boundary so both explore and combat seed
@@ -140,7 +169,7 @@ only and cannot be reused for the current candidate.
 18. Event rewards use explicit transactions instead of presentation promises. Three
     fallback wagers settle exact costs and net rewards once, failed chains cannot unlock
     downstream steps, costs cannot make gold negative, relic/item promises are canonical
-    and capacity-aware, and the 100-row reward audit has zero errors.
+    and capacity-aware, and the current 104-row reward audit has zero errors.
 
 ## Verification on current checkpoint bytes
 
@@ -151,15 +180,15 @@ only and cannot be reused for the current candidate.
 - `npm run equipment:economy:verify`: evidence SHA-256
   `80a209eed4b024cc76d6b382ed5b5355b62e4480e6a19bdd4c7d3fae5cbdc61c`;
   report digest `33558b95856f4a357940d165256b4587d2a66a9176ff2fa4b68f4649276a9f93` — pass.
-- Latest `npm run verify:full`: type-check, warning-free lint, unit `4168/4168`,
-  build guard, desktop/mobile smoke and E2E `55/55 + 54/54` — pass.
+- Latest `npm run verify:full`: type-check, warning-free lint, unit `4174/4174`,
+  build guard, desktop/mobile smoke and E2E `57/57 + 54/54` — pass.
 - Current `npm run mobile:doctor` and `npm run cap:sync`: pass; tracked Android/iOS
   drift is zero. Distribution signing inputs remain external blockers.
 - Focused combat/consumable/fallback browser journeys at 390x844: `7/7` — pass.
 - Focused event reward and settlement suite: `80/80` — pass.
-- `npm run event-reward:verify`: 100 rows, 0 errors, report SHA-256
-  `f253158f35d6f37f4d8781350f0f6b218b4024cfcf1b5df24228014140cf86f6`;
-  evidence SHA-256 `c1d4c9a80f6ac11dd74663986408c8bd6ab2eaa34de557e75428469959ba1cc0` — pass.
+- `npm run event-reward:verify`: 104 rows, 0 errors, report SHA-256
+  `b3d69916e81a99416ecfb9e953a36b8fd4829f76d256ee278a406f13d9af41ec`;
+  evidence SHA-256 `657d799974d9582da3870c766659a593a74efe12360426fe1efca505ce0b651b` — pass.
 
 - Focused Plan A-C integration: `1276/1276`.
 - Final-review affected regressions: runtime boundary `6/6`; endgame and combat
@@ -219,14 +248,16 @@ only and cannot be reused for the current candidate.
 
 ## Local package evidence
 
-- Android debug APK: `214644297` bytes, SHA-256
-  `de5e6cf760d3f6f7ceae835acf3a788a2531f8250b5ffc80fecc200d64fa59f4`.
+- Android debug APK: `214644299` bytes, SHA-256
+  `672518c64d2fcc303c8629052068133b59e57c412d9b2ac0550a883de2c0f283`.
 - Unsigned iOS executable: `102376` bytes, SHA-256
   `6372d559d57e897c21f87244863be80a792e7db279c8d9e1deef6ec53306292f`.
 - Current bounded-encounter browser captures:
-  `375x667 ef35a0f3...8a1de9`, `390x844 f4dd4663...7e8dc6`,
-  `430x932 e765e669...3a41f`. These bind the final local E2E run, not a claim of
+  `375x667 e525be7a...31b2f9`, `390x844 e8b26827...b0cbc7`,
+  `430x932 eac835d2...663943`. These bind the final local E2E run, not a claim of
   byte-stable browser rasterization.
+- New context-depth 390×844 captures: signature `4665b12f...b4e`, previous boss
+  `f74fb2a3...0117`.
 - Relic event-chance 390×844 capture: SHA-256
   `1de1ac8a00abf8b4cd1be5efcf7318787663f1c39c8584f19dbd3dfd4bb7f6d0`.
 - Equipment economy 390×844 capture: SHA-256
@@ -247,7 +278,7 @@ only and cannot be reused for the current candidate.
 - Schema v2 now requires five complete candidate-bound human journeys, unique attachment
   hashes, accepted actions, save/background restore, mobile back results, bidirectional
   issue links and zero P0/blocking P1 before it can write a selection.
-- The approved two-region/four-family content exists locally, but push and tuning
+- The approved two-region/six-family content exists locally, but push and tuning
   acceptance remain blocked until five fresh, candidate-bound journeys pass with P0 0
   and blocking P1 0.
 - No physical-device observation was performed for this candidate. Apple

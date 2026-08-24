@@ -8,7 +8,11 @@ import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.js';
 import { createExploreActions } from '../src/hooks/gameActions/exploreActions.js';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.js';
 import { buildBoundedEncounterEvent } from '../src/utils/boundedEncounterEvent.js';
-import { selectBoundedEncounter } from '../src/utils/boundedEncounterSelector.js';
+import {
+    applyBoundedEncounterChoice,
+    buildBoundedEncounterContext,
+    selectBoundedEncounter,
+} from '../src/utils/boundedEncounterSelector.js';
 
 const clone = (value) => structuredClone(value);
 
@@ -45,6 +49,18 @@ const resolve = (state, choiceId = 'lift-stone', extra = {}) => gameReducer(stat
         ...extra,
     },
 });
+
+const encounterById = (id) => BOUNDED_ENCOUNTERS.find((entry) => entry.id === id);
+
+const stateForEncounter = (encounter, overrides = {}) => {
+    const player = activePlayer({ loc: encounter.region, ...overrides });
+    return {
+        ...clone(INITIAL_STATE),
+        player,
+        gameState: GS.EVENT,
+        currentEvent: buildBoundedEncounterEvent(encounter, player.stats.explores),
+    };
+};
 
 test('accepted general narrative roll selects a bounded encounter before AI generation', async () => {
     const dispatches = [];
@@ -85,13 +101,61 @@ test('accepted general narrative roll selects a bounded encounter before AI gene
 });
 
 test('bounded event shape exposes canonical trade-offs but not settlement fields', () => {
-    const event = buildBoundedEncounterEvent(BOUNDED_ENCOUNTERS[2], 7);
+    const event = buildBoundedEncounterEvent(BOUNDED_ENCOUNTERS[3], 7);
     assert.deepEqual(event.choices, ['수레를 고쳐 보급을 챙긴다', '수레를 빠르게 뒤진다']);
     assert.deepEqual(event.outcomes, [
         { choiceIndex: 0, choiceId: 'repair-cart', tradeoff: '안정적으로 골드 40과 하급 체력 물약 1개를 얻습니다.', tone: 'reward' },
         { choiceIndex: 1, choiceId: 'search-cart', tradeoff: '생명 8을 감수하고 골드 80을 즉시 가져갑니다.', tone: 'danger' },
     ]);
     assert.equal(Object.hasOwn(event.outcomes[0], 'gold'), false);
+});
+
+test('real signature codex and class journey boss history unlock independent production encounters', () => {
+    const signaturePlayer = activePlayer({
+        stats: {
+            ...activePlayer().stats,
+            codex: {
+                ...activePlayer().stats.codex,
+                weapons: { ...activePlayer().stats.codex.weapons, '성검 에테르니아': true },
+            },
+        },
+        classJourney: {
+            version: 1,
+            sequence: 1,
+            byJob: { 전사: { bossNames: [] } },
+        },
+    });
+    const signatureContext = buildBoundedEncounterContext(signaturePlayer, '고요한 숲');
+    assert.ok(signatureContext?.signatureNames.includes('성검 에테르니아'));
+    assert.equal(
+        selectBoundedEncounter(
+            BOUNDED_ENCOUNTERS,
+            signatureContext,
+            { expeditionId: 'expedition-signature', occurrenceSequence: 1 },
+            () => 0,
+        )?.id,
+        'forest-engraved-echo',
+    );
+
+    const bossPlayer = activePlayer({
+        loc: '서쪽 평원',
+        classJourney: {
+            version: 1,
+            sequence: 1,
+            byJob: { 전사: { bossNames: ['고대 호수의 수호신'] } },
+        },
+    });
+    const bossContext = buildBoundedEncounterContext(bossPlayer, '서쪽 평원');
+    assert.ok(bossContext?.bossNames.includes('고대 호수의 수호신'));
+    assert.equal(
+        selectBoundedEncounter(
+            BOUNDED_ENCOUNTERS,
+            bossContext,
+            { expeditionId: 'expedition-boss', occurrenceSequence: 1 },
+            () => 0,
+        )?.id,
+        'plain-guardian-waterway',
+    );
 });
 
 test('empty or ineligible pack falls through without an extra selection RNG draw', () => {
@@ -110,6 +174,106 @@ test('empty or ineligible pack falls through without an extra selection RNG draw
         return 0;
     }), null);
     assert.equal(draws, 0);
+
+    const allReceipts = BOUNDED_ENCOUNTERS
+        .filter((entry) => entry.region === '고요한 숲')
+        .map((entry) => `expedition-test-1:${entry.id}:1`);
+    assert.equal(selectBoundedEncounter(
+        BOUNDED_ENCOUNTERS,
+        { ...context, receiptKeys: allReceipts },
+        { expeditionId: 'expedition-test-1', occurrenceSequence: 1 },
+        () => {
+            draws += 1;
+            return 0;
+        },
+    ), null);
+    assert.equal(draws, 0);
+});
+
+test('new bounded choices settle their canonical rewards atomically and replay is a no-op', () => {
+    const engraved = encounterById('forest-engraved-echo');
+    const aligned = applyBoundedEncounterChoice(
+        { hp: 100, maxHp: 120, mp: 30, maxMp: 60, gold: 10, inv: [] },
+        engraved,
+        'align-engraving',
+        { expeditionId: 'expedition-signature', occurrenceSequence: 1 },
+    );
+    assert.equal(aligned.applied, true);
+    assert.equal(aligned.player.mp, 20);
+    assert.deepEqual(aligned.player.tempBuff, { name: '각인의 공명', atk: 0.10, def: 0.10, turn: 3 });
+
+    const gathered = applyBoundedEncounterChoice(
+        { hp: 100, maxHp: 120, mp: 30, maxMp: 60, gold: 10, inv: [] },
+        engraved,
+        'gather-engraving-shards',
+        { expeditionId: 'expedition-signature', occurrenceSequence: 1 },
+    );
+    assert.equal(gathered.applied, true);
+    assert.equal(gathered.player.hp, 92);
+    assert.equal(gathered.player.inv.at(-1).name, '강화 재료');
+
+    const waterway = encounterById('plain-guardian-waterway');
+    const awakened = applyBoundedEncounterChoice(
+        { hp: 80, maxHp: 120, mp: 30, maxMp: 60, gold: 10, inv: [] },
+        waterway,
+        'awaken-water-memory',
+        { expeditionId: 'expedition-boss', occurrenceSequence: 1 },
+    );
+    assert.equal(awakened.applied, true);
+    assert.equal(awakened.player.hp, 98);
+    assert.equal(awakened.player.mp, 20);
+
+    const cleared = applyBoundedEncounterChoice(
+        { hp: 80, maxHp: 120, mp: 30, maxMp: 60, gold: 10, inv: [] },
+        waterway,
+        'clear-channel-silt',
+        { expeditionId: 'expedition-boss', occurrenceSequence: 1 },
+    );
+    assert.equal(cleared.applied, true);
+    assert.equal(cleared.player.hp, 72);
+    assert.equal(cleared.player.gold, 80);
+
+    const replay = applyBoundedEncounterChoice(
+        aligned.player,
+        engraved,
+        'align-engraving',
+        { expeditionId: 'expedition-signature', occurrenceSequence: 1 },
+    );
+    assert.equal(replay.applied, false);
+    assert.equal(replay.reason, 'already_applied');
+});
+
+test('new bounded reducer routes preserve stale, forged, tampered, resource, and inventory failure contracts', () => {
+    const engraved = encounterById('forest-engraved-echo');
+    const state = stateForEncounter(engraved, {
+        mp: 40,
+        stats: {
+            ...activePlayer().stats,
+            codex: {
+                ...activePlayer().stats.codex,
+                weapons: { ...activePlayer().stats.codex.weapons, '성검 에테르니아': true },
+            },
+        },
+    });
+    assert.strictEqual(resolve(state, 'align-engraving', { encounterId: 'plain-guardian-waterway' }), state);
+    assert.strictEqual(resolve(state, 'align-engraving', { expeditionId: 'forged-expedition' }), state);
+    assert.strictEqual(resolve(state, 'align-engraving', { occurrenceSequence: 99 }), state);
+    const tampered = {
+        ...state,
+        currentEvent: {
+            ...state.currentEvent,
+            outcomes: [state.currentEvent.outcomes[1], state.currentEvent.outcomes[0]],
+        },
+    };
+    assert.strictEqual(resolve(tampered, 'align-engraving'), tampered);
+    const lowMp = stateForEncounter(engraved, { mp: 0 });
+    assert.strictEqual(resolve(lowMp, 'align-engraving'), lowMp);
+
+    const full = stateForEncounter(engraved, {
+        maxInv: 1,
+        inv: [{ id: 'only', name: '하급 체력 물약' }],
+    });
+    assert.strictEqual(resolve(full, 'gather-engraving-shards'), full);
 });
 
 test('bounded hook dispatches only the reducer settlement action', () => {

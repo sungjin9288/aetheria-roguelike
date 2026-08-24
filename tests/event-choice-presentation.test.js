@@ -86,6 +86,32 @@ test('bounded events show their region-incident title and exact canonical trade-
     });
 });
 
+test('new signature and boss-history encounters keep canonical presentation copy and tones', () => {
+    const signature = BOUNDED_ENCOUNTERS.find((entry) => entry.id === 'forest-engraved-echo');
+    const signatureEvent = buildBoundedEncounterEvent(signature, 7);
+    assert.deepEqual(getEventPanelCopy(signatureEvent), { title: '각인의 메아리', kind: '지역 사건' });
+    assert.deepEqual(getEventChoicePreview(signatureEvent, 0), {
+        text: '기력 10을 들여 다음 전투의 공격과 방어를 함께 다듬습니다.',
+        tone: 'story',
+    });
+    assert.deepEqual(getEventChoicePreview(signatureEvent, 1), {
+        text: '생명 8을 감수하고 강화 재료 1개를 확보합니다.',
+        tone: 'danger',
+    });
+
+    const waterway = BOUNDED_ENCOUNTERS.find((entry) => entry.id === 'plain-guardian-waterway');
+    const waterwayEvent = buildBoundedEncounterEvent(waterway, 7);
+    assert.deepEqual(getEventPanelCopy(waterwayEvent), { title: '메마른 수로의 잔향', kind: '지역 사건' });
+    assert.deepEqual(getEventChoicePreview(waterwayEvent, 0), {
+        text: '기력 10을 들여 생명 18을 회복합니다.',
+        tone: 'story',
+    });
+    assert.deepEqual(getEventChoicePreview(waterwayEvent, 1), {
+        text: '생명 8을 감수하고 골드 70을 찾아냅니다.',
+        tone: 'danger',
+    });
+});
+
 test('story-chain previews describe progression and reward type without exposing outcome prose', () => {
     const chainEvent = {
         _chainId: 'dragon_legacy',

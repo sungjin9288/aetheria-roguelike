@@ -25,6 +25,10 @@ import { createDailyProtocol, getProtocolDayKey, getProtocolWeekKey } from '../u
 import { buildClassVitals } from './gameActions/_shared';
 import { BOUNDED_ENCOUNTERS } from '../data/boundedEncounters';
 import { buildBoundedEncounterEvent } from '../utils/boundedEncounterEvent';
+import {
+    buildBoundedEncounterContext,
+    isBoundedEncounterEligible,
+} from '../utils/boundedEncounterSelector';
 import { startExpedition } from '../utils/expeditionLedger';
 import { EXPLORATION_RHYTHM_PROFILE } from '../data/progressionProfiles';
 import { advanceExploreState } from '../utils/explorationPacing';
@@ -1613,13 +1617,24 @@ export const useGameTestApi = (
                 ));
                 if (!encounter) return false;
                 const basePlayer = structuredClone(INITIAL_STATE.player);
-                const classJourney = classJourneyScenario();
+                const classJourney = encounter.eligibility.previousBoss
+                    ? classJourneyScenario()
+                    : basePlayer.classJourney;
+                const codex = encounter.eligibility.requiresSignature
+                    ? {
+                        ...(basePlayer.stats?.codex || {}),
+                        weapons: {
+                            ...(basePlayer.stats?.codex?.weapons || {}),
+                            '성검 에테르니아': true,
+                        },
+                    }
+                    : basePlayer.stats?.codex;
                 const seededPlayer: any = {
                     ...basePlayer,
                     name: '지역 사건 검증',
-                    job: encounter.id === 'plain-bandit-banner' ? '전사' : '모험가',
+                    job: encounter.eligibility.lineage?.[0] || '모험가',
                     loc: region,
-                    hp: encounter.id === 'forest-mutated-trail' ? 80 : 120,
+                    hp: encounter.eligibility.hpBand === 'strained' ? 80 : 120,
                     maxHp: 150,
                     mp: 40,
                     maxMp: 60,
@@ -1627,6 +1642,7 @@ export const useGameTestApi = (
                         ...(basePlayer.stats || {}),
                         explores: 0,
                         exploreState: { ...(basePlayer.stats?.exploreState || {}), sinceNarrativeEvent: 0 },
+                        codex,
                     },
                     eventChainProgress: { lost_wizard: 99 },
                     classJourney,
@@ -1651,6 +1667,14 @@ export const useGameTestApi = (
                         ),
                     },
                 };
+                const expeditionId = eventPlayer.activeExpedition?.id;
+                const eligibilityContext = buildBoundedEncounterContext(eventPlayer, region);
+                if (typeof expeditionId !== 'string'
+                    || !eligibilityContext
+                    || !isBoundedEncounterEligible(encounter, eligibilityContext, {
+                    expeditionId,
+                    occurrenceSequence,
+                })) return false;
                 er.dispatch({ type: AT.SET_PLAYER, payload: eventPlayer });
                 er.dispatch({ type: AT.SET_EVENT, payload: buildBoundedEncounterEvent(encounter, occurrenceSequence) });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });

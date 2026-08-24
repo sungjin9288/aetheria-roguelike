@@ -146,7 +146,7 @@ export const validateBoundedEncounterPack = (
     }
     for (const region of selectedRegions) {
         const regional = encounters.filter((encounter) => encounter.region === region);
-        if (regional.length !== 2 || new Set(regional.map((encounter) => encounter.family)).size !== 2) {
+        if (regional.length !== 3 || new Set(regional.map((encounter) => encounter.family)).size !== 3) {
             errors.push(`REGION_FAMILY_COUNT_INVALID:${region}`);
         }
         if (!regional.some((encounter) => Object.keys(encounter.eligibility || {}).length === 0)) {

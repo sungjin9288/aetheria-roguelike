@@ -55,6 +55,36 @@ export const BOUNDED_ENCOUNTERS: readonly BoundedEncounter[] = Object.freeze([
         ],
     },
     {
+        id: 'forest-engraved-echo',
+        version: 1,
+        region: '고요한 숲',
+        family: '각인의 메아리',
+        situation: '한 번 발견한 고유 장비의 각인이 고요한 숲의 오래된 문양에 반응합니다. 공명을 받아들일지, 흩어진 조각을 거둘지 선택해야 합니다.',
+        eligibility: { requiresSignature: true },
+        choices: [
+            {
+                id: 'align-engraving',
+                label: '문양과 각인을 맞춘다',
+                tradeoff: '기력 10을 들여 다음 전투의 공격과 방어를 함께 다듬습니다.',
+                cost: { mp: 10 },
+                outcome: {
+                    result: '각인의 공명이 이어져 다음 전투의 공격과 방어가 함께 강해집니다.',
+                    buff: { name: '각인의 공명', atk: 0.10, def: 0.10, turn: 3 },
+                },
+            },
+            {
+                id: 'gather-engraving-shards',
+                label: '흩어진 각인 조각을 거둔다',
+                tradeoff: '생명 8을 감수하고 강화 재료 1개를 확보합니다.',
+                cost: { hp: 8 },
+                outcome: {
+                    item: '강화 재료',
+                    result: '흩어진 문양 조각을 다듬어 강화 재료 1개를 챙겼습니다.',
+                },
+            },
+        ],
+    },
+    {
         id: 'plain-supply-cart',
         version: 1,
         region: '서쪽 평원',
@@ -107,6 +137,36 @@ export const BOUNDED_ENCOUNTERS: readonly BoundedEncounter[] = Object.freeze([
                 tradeoff: '생명 8을 감수하고 강화 재료 1개를 확보합니다.',
                 cost: { hp: 8 },
                 outcome: { item: '강화 재료', result: '숨겨진 보관처에서 강화 재료 1개를 찾았습니다.' },
+            },
+        ],
+    },
+    {
+        id: 'plain-guardian-waterway',
+        version: 1,
+        region: '서쪽 평원',
+        family: '메마른 수로의 잔향',
+        situation: '고대 호수의 수호신을 넘어선 기억에 메마른 평원의 수로가 잠시 물빛으로 흔들립니다. 남은 힘을 깨울지, 퇴적층을 걷어 낼지 선택해야 합니다.',
+        eligibility: { previousBoss: '고대 호수의 수호신' },
+        choices: [
+            {
+                id: 'awaken-water-memory',
+                label: '수로의 물빛을 깨운다',
+                tradeoff: '기력 10을 들여 생명 18을 회복합니다.',
+                cost: { mp: 10 },
+                outcome: {
+                    hp: 18,
+                    result: '수호신의 잔향이 상처를 감싸 생명 18을 회복했습니다.',
+                },
+            },
+            {
+                id: 'clear-channel-silt',
+                label: '굳은 퇴적층을 걷어 낸다',
+                tradeoff: '생명 8을 감수하고 골드 70을 찾아냅니다.',
+                cost: { hp: 8 },
+                outcome: {
+                    gold: 70,
+                    result: '메마른 수로 아래에서 골드 70을 찾아냈습니다.',
+                },
             },
         ],
     },
