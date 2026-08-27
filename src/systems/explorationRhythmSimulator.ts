@@ -93,9 +93,9 @@ export interface EventChanceBonusRhythmComparison {
     };
 }
 
-type Outcome = 'campfire' | 'scout' | 'generalNarrative' | 'combat' | 'anomaly' | 'relic' | 'nothing';
+export type ExplorationRhythmOutcome = 'campfire' | 'scout' | 'generalNarrative' | 'combat' | 'anomaly' | 'relic' | 'nothing';
 
-const OPPORTUNITIES_PER_SEED = 4_096;
+export const EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED = 4_096;
 const NON_SAFE_MAPS = Object.entries(DB.MAPS)
     .filter(([, map]) => map.type !== 'safe')
     .sort(([left], [right]) => left.localeCompare(right));
@@ -106,7 +106,7 @@ const percentile = (values: number[], ratio: number) => {
     return sorted[Math.max(0, Math.min(sorted.length - 1, Math.ceil(sorted.length * ratio) - 1))];
 };
 
-const aggregate = (outcomes: Outcome[], gaps: number[]): ExplorationRhythmAggregate => ({
+const aggregate = (outcomes: ExplorationRhythmOutcome[], gaps: number[]): ExplorationRhythmAggregate => ({
     campfire: outcomes.filter((outcome) => outcome === 'campfire').length,
     scout: outcomes.filter((outcome) => outcome === 'scout').length,
     generalNarrative: outcomes.filter((outcome) => outcome === 'generalNarrative').length,
@@ -139,12 +139,66 @@ interface SeedRhythmResult {
     gaps: number[];
 }
 
+export const resolveExplorationRhythmOutcomeStep = ({
+    map,
+    player,
+    exploreState,
+    policy,
+    eventChanceBonus,
+    relicLimit,
+    rng,
+}: {
+    map: any;
+    player: any;
+    exploreState: Record<string, any>;
+    policy: ExplorationRhythmPolicy;
+    eventChanceBonus: number;
+    relicLimit: number;
+    rng: () => number;
+}): ExplorationRhythmOutcome => {
+    const optionalAllowed = policy.minimumOrdinaryGap === 0
+        || exploreState.sinceNarrativeEvent >= policy.minimumOrdinaryGap;
+
+    if (optionalAllowed && map.type === 'dungeon' && rng() < policy.campfireChance) {
+        return 'campfire';
+    }
+    if (optionalAllowed && rng() < policy.scoutChance) {
+        return 'scout';
+    }
+
+    const narrativeChance = getNarrativeEventChance(
+        map.eventChance || 0,
+        eventChanceBonus,
+        { exploreState },
+        map,
+        policy.eventMultiplier,
+    );
+    if (optionalAllowed && rng() < narrativeChance) {
+        return 'generalNarrative';
+    }
+
+    const discoveryOdds = getDiscoveryOdds(player, map);
+    if (rng() < discoveryOdds.quietChance) {
+        if (rng() < discoveryOdds.anomalyChance) return 'anomaly';
+        if (player.relics.length < relicLimit && rng() < discoveryOdds.relicChance) return 'relic';
+        return 'nothing';
+    }
+
+    const firstRelicPity = player.relics.length === 0
+        && exploreState.sinceRelic >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
+    if (player.relics.length < relicLimit
+        && (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
+        return 'relic';
+    }
+    return 'combat';
+};
+
 const simulateSeed = (
     seed: number,
     policy: ExplorationRhythmPolicy,
     eventChanceBonus = 0,
 ) => {
-    const outcomes: Outcome[] = [];
+    const outcomes: ExplorationRhythmOutcome[] = [];
     const gaps: number[] = [];
     let lastOptionalAt = 0;
     let exploreState = { sinceNarrativeEvent: 0, sinceDiscovery: 0, sinceRelic: 0, quietStreak: 0, lastOutcome: 'start' };
@@ -155,47 +209,20 @@ const simulateSeed = (
     } as any;
     const relicLimit = getPrestigeUnlocks(0).maxRelics;
 
-    for (let index = 0; index < OPPORTUNITIES_PER_SEED; index += 1) {
+    for (let index = 0; index < EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED; index += 1) {
         const [, map] = NON_SAFE_MAPS[index % NON_SAFE_MAPS.length];
         const rng = createDomainRandom(seed, 'exploration-rhythm', policy.id, policy.version, index);
-        const optionalAllowed = policy.minimumOrdinaryGap === 0 || exploreState.sinceNarrativeEvent >= policy.minimumOrdinaryGap;
-        let outcome: Outcome = 'combat';
-
-        if (optionalAllowed && map.type === 'dungeon' && rng() < policy.campfireChance) {
-            outcome = 'campfire';
-        } else if (optionalAllowed && rng() < policy.scoutChance) {
-            outcome = 'scout';
-        } else {
-            const narrativeChance = getNarrativeEventChance(
-                map.eventChance || 0,
-                eventChanceBonus,
-                { exploreState },
-                map,
-                policy.eventMultiplier,
-            );
-            if (optionalAllowed && rng() < narrativeChance) {
-                outcome = 'generalNarrative';
-            } else {
-                const discoveryOdds = getDiscoveryOdds(player, map);
-                if (rng() < discoveryOdds.quietChance) {
-                    if (rng() < discoveryOdds.anomalyChance) {
-                        outcome = 'anomaly';
-                    } else if (player.relics.length < relicLimit && rng() < discoveryOdds.relicChance) {
-                        outcome = 'relic';
-                        player.relics.push({ id: `rhythm-relic-${player.relics.length + 1}` });
-                    } else {
-                        outcome = 'nothing';
-                    }
-                } else {
-                    const firstRelicPity = player.relics.length === 0
-                        && exploreState.sinceRelic >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
-                    if (player.relics.length < relicLimit
-                        && (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
-                        outcome = 'relic';
-                        player.relics.push({ id: `rhythm-relic-${player.relics.length + 1}` });
-                    }
-                }
-            }
+        const outcome = resolveExplorationRhythmOutcomeStep({
+            map,
+            player,
+            exploreState,
+            policy,
+            eventChanceBonus,
+            relicLimit,
+            rng,
+        });
+        if (outcome === 'relic') {
+            player.relics.push({ id: `rhythm-relic-${player.relics.length + 1}` });
         }
 
         outcomes.push(outcome);
@@ -271,7 +298,7 @@ export const compareExplorationRhythm = (
         classification: 'rank0-no-mirror-proxy',
         actualPlayClaim: false,
         seeds: canonicalSeeds,
-        opportunitiesPerSeed: OPPORTUNITIES_PER_SEED,
+        opportunitiesPerSeed: EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED,
         predecessor,
         candidate,
         gates: {
@@ -314,7 +341,7 @@ export const compareEventChanceBonusRhythm = (
         classification: 'controlled-event-chance-bonus',
         actualPlayClaim: false,
         seeds: canonicalSeeds,
-        opportunitiesPerSeed: OPPORTUNITIES_PER_SEED,
+        opportunitiesPerSeed: EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED,
         eventChanceBonus: { predecessor, candidate },
         predecessor: predecessorAggregate,
         candidate: candidateAggregate,

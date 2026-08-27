@@ -156,6 +156,12 @@ const assertSingleVictoryReceipt = (state, { hasVictoryStory = false } = {}) => 
     }
 };
 
+const assertLootSettlement = (state, expected) => {
+    assert.deepEqual(state.combatReceipt?.lootSettlement, expected);
+    assert.equal(Object.hasOwn(state.combatReceipt?.lootSettlement || {}, 'blockedItemIds'), false);
+    assert.equal(Object.hasOwn(state.combatReceipt?.lootSettlement || {}, 'blockedItems'), false);
+};
+
 test('admits signatures first and reports stable capacity accounting', () => {
     const normalA = makeCandidate(NORMAL_A, 'normal-a');
     const signature = makeCandidate(SIGNATURE, 'signature');
@@ -325,6 +331,17 @@ test('settles only the signature candidate when one inventory slot remains', () 
         SEASON_XP.kill + (SEASON_XP.codexDiscover * 2),
     );
     assertSingleVictoryReceipt(won, { hasVictoryStory: true });
+    const admittedSignature = won.player.inv.find(({ name }) => name === SIGNATURE);
+    assertLootSettlement(won, {
+        rolledCount: 2,
+        admittedCount: 1,
+        blockedCount: 1,
+        admittedItemIds: [admittedSignature.id],
+        admittedSignatureCount: 1,
+        blockedSignatureCount: 0,
+        pityBefore: 0,
+        pityAfter: 0,
+    });
     const replayed = resolveAttackVictory(won, 1);
     assert.equal(replayed, won);
 });
@@ -348,6 +365,17 @@ test('skill victory uses capacity settlement once and replays as an exact no-op'
     assert.ok(!won.player.inv.some(({ name }) => name === BLOCKED_NORMAL));
     assert.equal(won.logs.filter(({ text }) => text === capacityBlockedMessage(1)).length, 1);
     assertSingleVictoryReceipt(won, { hasVictoryStory: true });
+    const admittedSignature = won.player.inv.find(({ name }) => name === SIGNATURE);
+    assertLootSettlement(won, {
+        rolledCount: 2,
+        admittedCount: 1,
+        blockedCount: 1,
+        admittedItemIds: [admittedSignature.id],
+        admittedSignatureCount: 1,
+        blockedSignatureCount: 0,
+        pityBefore: 0,
+        pityAfter: 0,
+    });
 
     const replayed = resolveCombatActionVictory(won, 'skill', 2, 1_700_000_000_002);
     assert.equal(replayed, won);
@@ -455,6 +483,16 @@ test('a full boss inventory blocks its signature and increments pity once', () =
         SEASON_XP.bossKill + SEASON_XP.codexDiscover,
     );
     assertSingleVictoryReceipt(won);
+    assertLootSettlement(won, {
+        rolledCount: 1,
+        admittedCount: 0,
+        blockedCount: 1,
+        admittedItemIds: [],
+        admittedSignatureCount: 0,
+        blockedSignatureCount: 1,
+        pityBefore: 4,
+        pityAfter: 5,
+    });
     const replayed = resolveAttackVictory(won, 1);
     assert.equal(replayed, won);
 });
@@ -478,6 +516,17 @@ test('a one-slot boss admission resets pity only after the signature is acquired
     assert.equal(won.player.stats.codex.weapons[SIGNATURE]?.discovered, true);
     assert.ok(won.logs.some(({ text }) => text.includes(SIGNATURE)));
     assert.equal(won.logs.filter(({ text }) => text === capacityBlockedMessage(1)).length, 0);
+    const admittedSignature = won.player.inv.find(({ name }) => name === SIGNATURE);
+    assertLootSettlement(won, {
+        rolledCount: 1,
+        admittedCount: 1,
+        blockedCount: 0,
+        admittedItemIds: [admittedSignature.id],
+        admittedSignatureCount: 1,
+        blockedSignatureCount: 0,
+        pityBefore: 4,
+        pityAfter: 0,
+    });
 });
 
 test('a full normal-monster inventory leaves blocked signature pity unchanged', () => {
@@ -498,6 +547,16 @@ test('a full normal-monster inventory leaves blocked signature pity unchanged', 
     assert.ok(!won.logs.some(({ text }) => text.includes(SIGNATURE)));
     assert.equal(won.player.stats.codex.weapons[SIGNATURE], undefined);
     assert.equal(won.logs.filter(({ text }) => text === capacityBlockedMessage(1)).length, 1);
+    assertLootSettlement(won, {
+        rolledCount: 1,
+        admittedCount: 0,
+        blockedCount: 1,
+        admittedItemIds: [],
+        admittedSignatureCount: 0,
+        blockedSignatureCount: 1,
+        pityBefore: 4,
+        pityAfter: 4,
+    });
 });
 
 test('attack-turn DOT victory uses the same capacity settlement and replay receipt', () => {
@@ -523,6 +582,17 @@ test('attack-turn DOT victory uses the same capacity settlement and replay recei
     assert.ok(!won.player.inv.some(({ name }) => name === BLOCKED_NORMAL));
     assert.equal(won.logs.filter(({ text }) => text === capacityBlockedMessage(1)).length, 1);
     assertSingleVictoryReceipt(won);
+    const admittedSignature = won.player.inv.find(({ name }) => name === SIGNATURE);
+    assertLootSettlement(won, {
+        rolledCount: 2,
+        admittedCount: 1,
+        blockedCount: 1,
+        admittedItemIds: [admittedSignature.id],
+        admittedSignatureCount: 1,
+        blockedSignatureCount: 0,
+        pityBefore: 0,
+        pityAfter: 0,
+    });
 
     const replayed = resolveAttackVictory(won, 3, 1_700_000_000_003);
     assert.equal(replayed, won);
@@ -568,6 +638,17 @@ test('combat-item DOT victory settles only post-consumption capacity and replays
     assert.ok(!won.player.inv.some(({ name }) => name === BLOCKED_NORMAL));
     assert.equal(won.logs.filter(({ text }) => text === capacityBlockedMessage(1)).length, 1);
     assertSingleVictoryReceipt(won);
+    const admittedSignature = won.player.inv.find(({ name }) => name === SIGNATURE);
+    assertLootSettlement(won, {
+        rolledCount: 2,
+        admittedCount: 1,
+        blockedCount: 1,
+        admittedItemIds: [admittedSignature.id],
+        admittedSignatureCount: 1,
+        blockedSignatureCount: 0,
+        pityBefore: 0,
+        pityAfter: 0,
+    });
 
     const replayed = actionMap.USE_COMBAT_ITEM(won, action);
     assert.equal(replayed, won);
@@ -627,4 +708,41 @@ test('stale expected turn preserves inventory, pity, Codex, logs and RNG-observa
         enemy: stale.enemy,
         lastEndgameReceiptKey: stale.player.meta?.endgame?.lastEndgameReceiptKey,
     }, before.rngObservable);
+});
+
+test('non-victory combat receipts never expose loot settlement data', () => {
+    const base = makeCombatState({
+        enemyName: TRAINING_NORMAL,
+        inv: [],
+        maxInv: 20,
+        playerPatch: { atk: 0, hp: 10_000, maxHp: 10_000, mp: 0 },
+    });
+    const durableEnemy = {
+        ...base.enemy,
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        atk: 0,
+        def: 1_000_000,
+        pattern: { guardChance: 0, heavyChance: 0 },
+    };
+    const continueState = resolveCombatActionVictory({ ...base, enemy: durableEnemy }, 'attack', 31);
+    const rejectedState = resolveCombatActionVictory({ ...base, enemy: durableEnemy }, 'skill', 32);
+    const defeatState = resolveCombatActionVictory({
+        ...base,
+        player: { ...base.player, hp: 1, maxHp: 1, def: 0 },
+        enemy: { ...durableEnemy, atk: 1_000_000 },
+    }, 'attack', 33);
+    let escapeState = null;
+    for (let seed = 1; seed <= 100 && escapeState === null; seed += 1) {
+        const candidate = resolveCombatActionVictory({ ...base, enemy: durableEnemy }, 'escape', seed);
+        if (candidate.combatReceipt?.kind === 'escape') escapeState = candidate;
+    }
+
+    assert.equal(continueState.combatReceipt?.kind, 'continue');
+    assert.equal(rejectedState.combatReceipt?.kind, 'rejected');
+    assert.equal(defeatState.combatReceipt?.kind, 'defeat');
+    assert.ok(escapeState);
+    for (const state of [continueState, rejectedState, defeatState, escapeState]) {
+        assert.equal(Object.hasOwn(state.combatReceipt || {}, 'lootSettlement'), false);
+    }
 });

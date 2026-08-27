@@ -20,6 +20,10 @@ import { createDomainRandom, deriveSeed } from '../utils/seededRandom.js';
 import { calculateFullStats } from '../utils/statsCalculator.js';
 import { CombatEngine } from './CombatEngine.js';
 import { processLoot } from './CombatEngine.loot.js';
+import {
+    runProgressionDiagnosticCohorts,
+    type ProgressionDiagnosticOptions,
+} from './progressionDiagnostic.js';
 
 export const PROGRESSION_CHECKPOINT_LEVELS = Object.freeze([2, 5, 10, 20, 45, 60, 75]);
 
@@ -1041,5 +1045,79 @@ export const simulateProgressionComparison = (options: ProgressionComparisonOpti
             fullCombatModel: false,
         },
         blockers,
+    });
+};
+
+const validateDiagnosticSeeds = (
+    name: 'focusedSeeds' | 'comparisonSeeds',
+    values: readonly number[],
+    minimum: number,
+) => {
+    if (!Array.isArray(values)
+        || values.length < minimum
+        || values.length > 1_000
+        || values.some((value) => !Number.isInteger(value) || value < 0 || value >= 2 ** 32)
+        || new Set(values).size !== values.length) {
+        throw new Error(`${name} must contain ${minimum === 1 ? '' : `${minimum} to 1000 `}unique uint32 integers`);
+    }
+    return [...values].sort((left, right) => left - right);
+};
+
+const numericDistribution = (values: number[]) => {
+    const sorted = [...values].sort((left, right) => left - right);
+    const at = (ratio: number) => sorted[Math.max(0, Math.min(sorted.length - 1, Math.ceil(sorted.length * ratio) - 1))];
+    return { p10: at(0.1), p50: at(0.5), p90: at(0.9) };
+};
+
+export const buildProgressionDiagnostic = (options: ProgressionDiagnosticOptions) => {
+    const focusedSeeds = validateDiagnosticSeeds('focusedSeeds', options.focusedSeeds, 1);
+    const comparisonSeeds = validateDiagnosticSeeds('comparisonSeeds', options.comparisonSeeds, 2);
+    const maxCombatTurns = options.maxCombatTurns ?? COMBAT_PROXY_MAX_TURNS;
+    if (!Number.isSafeInteger(maxCombatTurns) || maxCombatTurns < 1 || maxCombatTurns > COMBAT_PROXY_MAX_TURNS) {
+        throw new Error(`maxCombatTurns must be a safe integer between 1 and ${COMBAT_PROXY_MAX_TURNS}`);
+    }
+
+    const progressionRuns = comparisonSeeds.map((seed) => simulateProgression({ seed }));
+    const rewardProgression = {
+        authority: 'simulateProgression schema-v1 production reward settlement',
+        checkpoints: PROGRESSION_CHECKPOINT_LEVELS.map((targetLevel, index) => ({
+            targetLevel,
+            modeledActions: numericDistribution(
+                progressionRuns.map((run) => run.checkpoints[index].modeledActions),
+            ),
+        })),
+    };
+    const cohorts = runProgressionDiagnosticCohorts(focusedSeeds, comparisonSeeds, maxCombatTurns);
+
+    return deepFreeze({
+        schemaVersion: 2,
+        classification: 'diagnostic-production-path',
+        actualPlayClaim: false,
+        activationReady: false,
+        seeds: { focused: focusedSeeds, comparison: comparisonSeeds },
+        rewardProgression,
+        combat: cohorts.combat,
+        loot: cohorts.loot,
+        exploration: cohorts.exploration,
+        unavailableMetrics: [
+            'actual_expedition_count',
+            'actual_play_time',
+            'mandatory_story_frequency',
+            'production_ai_event_frequency',
+            'retention',
+        ],
+        reviewCohorts: [
+            'reward-progression',
+            'combat',
+            'loot-and-pity',
+            'capacity-pressure',
+            'exploration-proxy',
+        ],
+        hardErrors: cohorts.hardErrors,
+        limitations: [
+            'Diagnostic output is deterministic model evidence, not an actual-play or retention claim.',
+            'Balance activation remains manual and requires matching fresh-session observation.',
+            'Actual expedition count, elapsed play time, mandatory story, AI event, and retention metrics remain unavailable.',
+        ],
     });
 };

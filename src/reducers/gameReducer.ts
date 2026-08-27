@@ -46,9 +46,21 @@ export interface GameState {
         key: string;
         kind: 'continue' | 'victory' | 'defeat' | 'escape' | 'rejected';
         stories: Array<{ type: string; data: any }>;
+        lootSettlement?: LootSettlementReceipt;
     } | null;
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,
     //   UI read 0건. INVADE_GRAVE 핸들러의 filter도 항상 [] 입력 → no-op.
+}
+
+export interface LootSettlementReceipt {
+    rolledCount: number;
+    admittedCount: number;
+    blockedCount: number;
+    admittedItemIds: string[];
+    admittedSignatureCount: number;
+    blockedSignatureCount: number;
+    pityBefore: number;
+    pityAfter: number;
 }
 
 // --- INITIAL STATE ---

@@ -16,6 +16,7 @@ import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 import { appendExpeditionBoss } from '../../utils/expeditionLedger';
 import { admitCombatLoot } from '../../systems/combatLootCapacity';
+import type { LootSettlementReceipt } from '../../reducers/gameReducer';
 
 /**
  * 전투 승리 공통 후처리.
@@ -99,7 +100,9 @@ export const handleVictoryOutcome = ({
     //  - signature 하나라도 드롭 → pity = 0
     //  - 보스 토벌 + signature 미획득 → pity += 1
     //  - 일반 몹은 pity 영향 없음
-    const signatureDropped = admittedItems.some((it: any) => isSignatureItem(it));
+    const admittedSignatureCount = admittedItems.filter((item: any) => isSignatureItem(item)).length;
+    const blockedSignatureCount = blockedCandidates.filter(({ item }: any) => isSignatureItem(item)).length;
+    const signatureDropped = admittedSignatureCount > 0;
     const prevPity = updatedPlayer.stats?.signaturePity || 0;
     if (signatureDropped) {
         if (prevPity > 0) {
@@ -114,6 +117,18 @@ export const handleVictoryOutcome = ({
             stats: { ...updatedPlayer.stats, signaturePity: prevPity + 1 },
         };
     }
+    const lootSettlement: LootSettlementReceipt = {
+        rolledCount: lootResult.candidates.length,
+        admittedCount: admittedItems.length,
+        blockedCount: blockedCandidates.length,
+        admittedItemIds: admittedItems.flatMap((item: any) => (
+            typeof item.id === 'string' ? [item.id] : []
+        )),
+        admittedSignatureCount,
+        blockedSignatureCount,
+        pityBefore: prevPity,
+        pityAfter: updatedPlayer.stats?.signaturePity || 0,
+    };
 
     // codex
     const baseName = CombatEngine.resolveEnemyBaseName(deadEnemy);
@@ -253,7 +268,7 @@ export const handleVictoryOutcome = ({
                 stats: { ...(p.stats || {}), abyssRecord: Math.max(p.stats?.abyssRecord || 0, p.stats?.abyssFloor || 100) },
             })});
             addLog('critical', MSG.VOID_GOD_SLAIN);
-            return { earlyReturn: false };
+            return { earlyReturn: false, lootSettlement };
         }
         addStoryLog('victory', { name: deadEnemy.name });
     }
@@ -273,5 +288,5 @@ export const handleVictoryOutcome = ({
     // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
     applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });
 
-    return { earlyReturn: false };
+    return { earlyReturn: false, lootSettlement };
 };

@@ -124,7 +124,7 @@ const settleVictory = (
         titleLogs.forEach((entry) => appendLog(entry.type, entry.text));
     };
 
-    handleVictoryOutcome({
+    const victoryOutcome = handleVictoryOutcome({
         playerAfterCombat: player,
         deadEnemy,
         stats,
@@ -164,6 +164,7 @@ const settleVictory = (
             key: receiptKey,
             kind: 'victory',
             stories: storyEvents,
+            lootSettlement: victoryOutcome.lootSettlement,
         },
     };
 };

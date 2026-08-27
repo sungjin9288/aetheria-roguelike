@@ -29,6 +29,15 @@ const getExploreState = (stats: any) => {
     };
 };
 
+export const getExplorationPitySteps = (stats: any) => {
+    const exploreState = getExploreState(stats);
+    return {
+        narrative: Math.max(0, exploreState.sinceNarrativeEvent - 2),
+        discovery: Math.max(0, exploreState.sinceDiscovery - 2),
+        relic: Math.max(0, exploreState.sinceRelic - 2),
+    };
+};
+
 export const canOfferOptionalExploreDecision = (
     stats: any,
     activeExpedition?: { explores?: unknown } | null,
@@ -117,7 +126,6 @@ export const getNarrativeEventChance = (
     mapData: GameMap | null,
     progressionMultiplier?: number,
 ) => {
-    const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const configuredMultiplier = Number.isFinite(progressionMultiplier) && Number(progressionMultiplier) > 0
         ? Number(progressionMultiplier)
@@ -130,7 +138,7 @@ export const getNarrativeEventChance = (
             * (1 + bonusMultiplier)
             * configuredMultiplier,
     );
-    const pitySteps = Math.max(0, exploreState.sinceNarrativeEvent - 2);
+    const pitySteps = getExplorationPitySteps(stats).narrative;
     const pity = pitySteps * BALANCE.SPECIAL_EVENT_PITY_PER_EXPLORE;
     return clamp(base + pity, 0, BALANCE.SPECIAL_EVENT_MAX_CHANCE);
 };
@@ -150,8 +158,9 @@ export const getQuietExplorationChance = (stats: any, mapData: GameMap | null) =
 export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undefined) => {
     const exploreState = getExploreState(player?.stats);
     const profile = getMapPacingProfile(mapData);
-    const pitySinceDiscovery = Math.max(0, exploreState.sinceDiscovery - 2);
-    const pitySinceRelic = Math.max(0, exploreState.sinceRelic - 2);
+    const pitySteps = getExplorationPitySteps(player?.stats);
+    const pitySinceDiscovery = pitySteps.discovery;
+    const pitySinceRelic = pitySteps.relic;
     // feat/prestige-rank-ladder: rank≥6 "잔향의 나침반" — 유물 발견 pity 누적 가속 ×1.5.
     //   기본 확률(RELIC_FIND_CHANCE)은 불변, pity 누적분에만 곱해 신규 플레이어(rank0) 곡선 보존.
     const relicPityMult = getPrestigeUnlocks(player?.meta?.prestigeRank).relicPityMult;
