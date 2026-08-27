@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "b3d69916e81a99416ecfb9e953a36b8fd4829f76d256ee278a406f13d9af41ec",
+  "reportHash": "aeadced78ca1c74a7654b3ddb410ba78797e9c186990a43dba866a32ab66dc79",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -16,8 +16,8 @@
     "frequency": {
       "scoutChance": 0.15,
       "campfireChance": 0.08,
-      "eventMultiplier": 0.8,
-      "minimumNarrativeGap": 1
+      "eventMultiplier": 0.64,
+      "minimumNarrativeGap": 2
     },
     "rows": [
       {

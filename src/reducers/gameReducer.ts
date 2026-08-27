@@ -128,7 +128,7 @@ export const INITIAL_STATE: GameState = {
     leaderboard: [],
     liveConfig: {
         eventMultiplier: 1,
-        progressionProfile: { id: 'exploration-rhythm', version: 2 },
+        progressionProfile: { id: 'exploration-rhythm', version: 3 },
         announcement: '',
         seasonEvent: null,
     },

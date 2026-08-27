@@ -1,29 +1,30 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "7d903b8219911946378703421f4c6cf6f90c9e524d2a6abdb2066eab4072bfe2",
+  "reportHash": "0818fb7afb6b88a628076791a1ba255981df40a9b1310a4aeb3d527e8fb8424e",
   "progressionEvidence": {
     "candidateProfile": {
       "id": "exploration-rhythm",
-      "version": 2,
+      "version": 3,
       "expMultiplier": 1,
       "lootMultiplier": 1,
-      "eventMultiplier": 0.8
+      "eventMultiplier": 0.64
     },
     "focused": {
       "seedStart": 20260810,
       "seedCount": 64,
-      "reportHash": "d2b94b4690d915632308a4219750b9ed0312fb1da87cdb191d74a6adb6c023df"
+      "reportHash": "98d677865f90a4023b907eff5a6b28173498bead91859eef89300ea9541a4e39"
     },
     "full": {
       "seedStart": 20260810,
       "seedCount": 1000,
-      "reportHash": "059eaeac9cc97c388caf83e83a13f9438bb5b03ee6f7afc264796bbf58c424ff"
+      "reportHash": "c71cff180b29e3769b2f8fe1b112ec00bc5c630175476efc8ea0602622c9445b"
     }
   },
   "report": {
-    "schemaVersion": 1,
-    "classification": "rank0-no-mirror-proxy",
+    "schemaVersion": 2,
+    "classification": "registered-v2-to-v3-event-only",
     "actualPlayClaim": false,
+    "comparisonMethod": "independent-policy-stream-monte-carlo",
     "seeds": [
       20260810,
       20260811,
@@ -91,36 +92,15 @@
       20260873
     ],
     "opportunitiesPerSeed": 4096,
-    "predecessor": {
-      "campfire": 19700,
-      "scout": 60719,
-      "generalNarrative": 11869,
-      "boundedEncounter": {
-        "classification": "subset-of-general-narrative",
-        "countAuthority": "production-integration"
-      },
-      "combat": 143321,
-      "discovery": 3846,
-      "discoveryBreakdown": {
-        "anomaly": 3526,
-        "relic": 320
-      },
-      "nothing": 22689,
-      "optionalDecisionCount": 92288,
-      "optionalBackToBackCount": 31948,
-      "optionalGap": {
-        "p10": 1,
-        "p50": 2,
-        "p90": 6
-      },
-      "mandatoryStory": {
-        "classification": "correctness-only"
-      },
-      "bossChallenge": {
-        "classification": "correctness-only"
-      }
+    "predecessorPolicy": {
+      "id": "exploration-rhythm",
+      "version": 2
     },
-    "candidate": {
+    "candidatePolicy": {
+      "id": "exploration-rhythm",
+      "version": 3
+    },
+    "predecessor": {
       "campfire": 15327,
       "scout": 28509,
       "generalNarrative": 11250,
@@ -147,10 +127,43 @@
       },
       "bossChallenge": {
         "classification": "correctness-only"
-      }
+      },
+      "optionalDecisionDensity": 0.21013641357421875
+    },
+    "candidate": {
+      "campfire": 12744,
+      "scout": 23666,
+      "generalNarrative": 9392,
+      "boundedEncounter": {
+        "classification": "subset-of-general-narrative",
+        "countAuthority": "production-integration"
+      },
+      "combat": 182612,
+      "discovery": 5366,
+      "discoveryBreakdown": {
+        "anomaly": 5046,
+        "relic": 320
+      },
+      "nothing": 28364,
+      "optionalDecisionCount": 45802,
+      "optionalBackToBackCount": 0,
+      "optionalGap": {
+        "p10": 3,
+        "p50": 5,
+        "p90": 10
+      },
+      "mandatoryStory": {
+        "classification": "correctness-only"
+      },
+      "bossChallenge": {
+        "classification": "correctness-only"
+      },
+      "optionalDecisionDensity": 0.17472076416015625
     },
     "gates": {
+      "eventOnly": true,
       "noOptionalBackToBack": true,
+      "candidateDensityInRange": true,
       "candidateMedianGapInRange": true,
       "eventDirectionMatched": true,
       "expLootInvariant": true

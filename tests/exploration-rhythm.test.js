@@ -8,7 +8,9 @@ import { fileURLToPath } from 'node:url';
 import {
     BASELINE_EXPLORATION_RHYTHM,
     CANDIDATE_EXPLORATION_RHYTHM,
+    ACTIVE_EXPLORATION_RHYTHM,
     compareExplorationRhythm,
+    compareExplorationRhythmV3,
 } from '../src/systems/explorationRhythmSimulator.ts';
 import { canOfferOptionalExploreDecision } from '../src/utils/explorationPacing.ts';
 
@@ -64,6 +66,78 @@ test('fixed seed comparison proves optional spacing and target direction', () =>
     assert.equal(report.candidate.discovery, report.candidate.discoveryBreakdown.anomaly + 20);
 });
 
+test('registered v2 predecessor to active v3 keeps event-only invariants and target rhythm', () => {
+    assert.deepEqual(ACTIVE_EXPLORATION_RHYTHM, {
+        id: 'exploration-rhythm',
+        version: 3,
+        campfireChance: 0.08,
+        scoutChance: 0.15,
+        eventMultiplier: 0.64,
+        minimumOrdinaryGap: 2,
+    });
+    const report = compareExplorationRhythmV3(
+        Array.from({ length: 64 }, (_, index) => 20_260_824 + index),
+    );
+    assert.deepEqual(report.predecessorPolicy, {
+        id: 'exploration-rhythm',
+        version: 2,
+    });
+    assert.deepEqual(report.candidatePolicy, {
+        id: 'exploration-rhythm',
+        version: 3,
+    });
+    assert.equal(report.comparisonMethod, 'independent-policy-stream-monte-carlo');
+    assert.equal(report.gates.eventOnly, true);
+    assert.equal(report.gates.noOptionalBackToBack, true);
+    assert.equal(report.gates.candidateDensityInRange, true);
+    assert.equal(report.gates.candidateMedianGapInRange, true);
+    assert.ok(report.candidate.optionalGap.p50 >= 5);
+    assert.ok(report.candidate.optionalGap.p50 <= 7);
+    assert.ok(report.candidate.optionalDecisionDensity >= 0.15);
+    assert.ok(report.candidate.optionalDecisionDensity <= 0.18);
+    assert.ok(report.candidate.generalNarrative < report.predecessor.generalNarrative);
+});
+
+test('v3 rhythm evidence derives its gap from the registered profile authority', () => {
+    const simulatorSource = readFileSync(path.join(
+        ROOT,
+        'src/systems/explorationRhythmSimulator.ts',
+    ), 'utf8');
+    const eventVerifierSource = readFileSync(path.join(
+        ROOT,
+        'scripts/verify-event-reward-coherence.mjs',
+    ), 'utf8');
+
+    assert.match(
+        simulatorSource,
+        /minimumOrdinaryGap:\s*getProgressionMinimumOrdinaryGap\(EXPLORATION_RHYTHM_V3_PROFILE\)/,
+    );
+    assert.match(
+        eventVerifierSource,
+        /minimumNarrativeGap:\s*getProgressionMinimumOrdinaryGap\(EXPLORATION_RHYTHM_V3_PROFILE\)/,
+    );
+});
+
+test('v3 optional gate requires two ordinary explorations without consuming the decision path early', () => {
+    const v3 = { explores: 10, progressionProfile: { id: 'exploration-rhythm', version: 3 } };
+    assert.equal(canOfferOptionalExploreDecision({
+        explores: 10,
+        exploreState: { sinceNarrativeEvent: 1 },
+    }, v3), false);
+    assert.equal(canOfferOptionalExploreDecision({
+        explores: 11,
+        exploreState: { sinceNarrativeEvent: 1 },
+    }, v3), false);
+    assert.equal(canOfferOptionalExploreDecision({
+        explores: 12,
+        exploreState: { sinceNarrativeEvent: 2 },
+    }, v3), true);
+    assert.equal(canOfferOptionalExploreDecision({
+        explores: 11,
+        exploreState: { sinceNarrativeEvent: 1 },
+    }, { explores: 10, progressionProfile: { id: 'exploration-rhythm', version: 2 } }), true);
+});
+
 test('invalid seeds and duplicate seeds fail closed', () => {
     assert.throws(() => compareExplorationRhythm([1]), /at least|seeds/i);
     assert.throws(() => compareExplorationRhythm([1, 1]), /unique|seeds/i);
@@ -111,10 +185,10 @@ test('tracked rhythm evidence binds the candidate to 64 and 1000 seed progressio
     ), 'utf8'));
     assert.deepEqual(evidence.progressionEvidence.candidateProfile, {
         id: 'exploration-rhythm',
-        version: 2,
+        version: 3,
         expMultiplier: 1,
         lootMultiplier: 1,
-        eventMultiplier: 0.8,
+        eventMultiplier: 0.64,
     });
     assert.equal(evidence.progressionEvidence.focused.seedCount, 64);
     assert.equal(evidence.progressionEvidence.full.seedCount, 1000);

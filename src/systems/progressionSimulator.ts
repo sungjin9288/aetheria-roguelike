@@ -2,6 +2,8 @@ import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import {
     BASELINE_PROGRESSION_PROFILE,
+    EXPLORATION_RHYTHM_PROFILE,
+    EXPLORATION_RHYTHM_V3_PROFILE,
     normalizeProgressionProfile,
     scaleProgressionExpReward,
     validateProgressionProfileTransition,
@@ -331,6 +333,22 @@ const isBaselineProfile = (profile: ProgressionProfile) => (
     && profile.expMultiplier === BASELINE_PROGRESSION_PROFILE.expMultiplier
     && profile.lootMultiplier === BASELINE_PROGRESSION_PROFILE.lootMultiplier
     && profile.eventMultiplier === BASELINE_PROGRESSION_PROFILE.eventMultiplier
+);
+
+const isExactProfile = (profile: ProgressionProfile, expected: ProgressionProfile) => (
+    profile.id === expected.id
+    && profile.version === expected.version
+    && profile.expMultiplier === expected.expMultiplier
+    && profile.lootMultiplier === expected.lootMultiplier
+    && profile.eventMultiplier === expected.eventMultiplier
+);
+
+const isRegisteredExplorationRhythmV2 = (profile: ProgressionProfile) => (
+    isExactProfile(profile, EXPLORATION_RHYTHM_PROFILE)
+);
+
+const isRegisteredExplorationRhythmV3 = (profile: ProgressionProfile) => (
+    isExactProfile(profile, EXPLORATION_RHYTHM_V3_PROFILE)
 );
 
 const resolveSimulationProfile = (options: ProgressionSimulationOptions) => {
@@ -889,10 +907,13 @@ const targetMetricDirection = (
 export const simulateProgressionComparison = (options: ProgressionComparisonOptions) => {
     const seeds = canonicalComparisonSeeds(options.seeds);
     const predecessorProfile = normalizeProgressionProfile(options.predecessorProfile);
-    if (!predecessorProfile || !isBaselineProfile(predecessorProfile)) {
+    if (!predecessorProfile || (
+        !isBaselineProfile(predecessorProfile)
+        && !isRegisteredExplorationRhythmV2(predecessorProfile)
+    )) {
         throw new ProgressionSimulationError(
             'UNSUPPORTED_PREDECESSOR_PROFILE',
-            'the current comparison foundation supports the registered baseline predecessor only',
+            'UNSUPPORTED_PREDECESSOR_PROFILE: the comparison supports the registered baseline or exploration-rhythm v2 predecessor only',
         );
     }
 
@@ -901,6 +922,13 @@ export const simulateProgressionComparison = (options: ProgressionComparisonOpti
         throw new ProgressionSimulationError(
             'INVALID_PROFILE',
             'candidate profile must satisfy the progression profile contract',
+        );
+    }
+    if (isRegisteredExplorationRhythmV2(predecessorProfile)
+        && (!isRegisteredExplorationRhythmV3(candidateProfile) || options.declaredAxis !== 'event')) {
+        throw new ProgressionSimulationError(
+            'UNSUPPORTED_PREDECESSOR_PROFILE',
+            'registered v2 predecessor accepts only the registered v3 event candidate',
         );
     }
     const transition = validateProgressionProfileTransition(
@@ -919,6 +947,9 @@ export const simulateProgressionComparison = (options: ProgressionComparisonOpti
         seed,
         maxSteps: options.maxSteps,
         profile: predecessorProfile,
+        ...(isRegisteredExplorationRhythmV2(predecessorProfile)
+            ? { predecessorProfile: BASELINE_PROGRESSION_PROFILE, declaredAxis: 'event' as const }
+            : {}),
     }, false));
     const candidateRuns = seeds.map((seed) => runProgressionSimulation({
         seed,
@@ -1000,6 +1031,9 @@ export const simulateProgressionComparison = (options: ProgressionComparisonOpti
         'production_funnel_evidence_missing',
         'full_combat_model_unavailable',
     ];
+    const predecessorLimitation = isBaselineProfile(predecessorProfile)
+        ? 'The current comparison predecessor is the registered baseline profile.'
+        : 'The current comparison predecessor is the registered exploration-rhythm v2 profile.';
 
     return deepFreeze({
         schemaVersion: 1,
@@ -1012,7 +1046,7 @@ export const simulateProgressionComparison = (options: ProgressionComparisonOpti
         limitations: [
             'This comparison uses modeled reward settlements and deterministic proxies, not observed player behavior.',
             'Candidate activation requires matching production funnel evidence and a full combat-turn model.',
-            'The current comparison predecessor is the registered baseline profile only.',
+            predecessorLimitation,
         ],
         unavailableMetrics: [
             'actual_play_time',

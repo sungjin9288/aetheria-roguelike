@@ -5,7 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
-import { BASELINE_PROGRESSION_PROFILE } from '../src/data/progressionProfiles.ts';
+import {
+    BASELINE_PROGRESSION_PROFILE,
+    EXPLORATION_RHYTHM_PROFILE,
+    EXPLORATION_RHYTHM_V3_PROFILE,
+} from '../src/data/progressionProfiles.ts';
 import { DB } from '../src/data/db.ts';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
@@ -86,6 +90,21 @@ test('event-axis candidate changes seeded narrative occurrences without changing
     assert.equal(boosted.totalModeledActions, baseline.totalModeledActions);
     assert.equal(boosted.totalModeledSeconds, baseline.totalModeledSeconds);
     assert.deepEqual(boosted.final, baseline.final);
+});
+
+test('v3 event candidate keeps EXP and loot multipliers unchanged from its registered v2 predecessor', () => {
+    const baseline = simulateProgression({ seed: 20_260_824 });
+    const v3 = simulateProgression({
+        seed: 20_260_824,
+        profile: EXPLORATION_RHYTHM_V3_PROFILE,
+        predecessorProfile: EXPLORATION_RHYTHM_PROFILE,
+        declaredAxis: 'event',
+    });
+    assert.deepEqual(v3.progressionProfile, EXPLORATION_RHYTHM_V3_PROFILE);
+    assert.equal(v3.progressionProfile.expMultiplier, 1);
+    assert.equal(v3.progressionProfile.lootMultiplier, 1);
+    assert.equal(v3.totalModeledActions, baseline.totalModeledActions);
+    assert.deepEqual(v3.final, baseline.final);
 });
 
 test('fixed-seed report and CLI SHA-256 envelope are byte-deterministic', () => {

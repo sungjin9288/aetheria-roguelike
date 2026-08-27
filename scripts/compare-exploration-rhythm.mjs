@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { compareExplorationRhythm } from '../src/systems/explorationRhythmSimulator.ts';
+import { compareExplorationRhythmV3 } from '../src/systems/explorationRhythmSimulator.ts';
 import { simulateProgressionComparison } from '../src/systems/progressionSimulator.ts';
 import {
-    BASELINE_PROGRESSION_PROFILE,
     EXPLORATION_RHYTHM_PROFILE,
+    EXPLORATION_RHYTHM_V3_PROFILE,
 } from '../src/data/progressionProfiles.ts';
 
 const ROOT = process.cwd();
@@ -51,8 +51,8 @@ const progressionEvidenceFor = (seedStart, seedCount) => {
     const seeds = Array.from({ length: seedCount }, (_, index) => seedStart + index);
     const report = simulateProgressionComparison({
         seeds,
-        predecessorProfile: BASELINE_PROGRESSION_PROFILE,
-        candidateProfile: EXPLORATION_RHYTHM_PROFILE,
+        predecessorProfile: EXPLORATION_RHYTHM_PROFILE,
+        candidateProfile: EXPLORATION_RHYTHM_V3_PROFILE,
         declaredAxis: 'event',
     });
     const expectedBlockers = ['production_funnel_evidence_missing', 'full_combat_model_unavailable'];
@@ -75,11 +75,11 @@ const main = async () => {
     const { seedStart, seedCount, target } = parseArgs(process.argv.slice(2));
     if (seedCount < 2 || seedCount > 1_000 || seedStart > 0xffffffff || seedStart + seedCount - 1 > 0xffffffff) throw new Error('seed range must remain within 2 to 1000 uint32 seeds');
     const seeds = Array.from({ length: seedCount }, (_, index) => seedStart + index);
-    const report = compareExplorationRhythm(seeds);
+    const report = compareExplorationRhythmV3(seeds);
     if (!Object.values(report.gates).every(Boolean) || report.blockers.length > 0) throw new Error('exploration rhythm gates did not pass');
     const reportHash = createHash('sha256').update(JSON.stringify(report)).digest('hex');
     const progressionEvidence = {
-        candidateProfile: EXPLORATION_RHYTHM_PROFILE,
+        candidateProfile: EXPLORATION_RHYTHM_V3_PROFILE,
         focused: progressionEvidenceFor(20_260_810, 64),
         full: progressionEvidenceFor(20_260_810, 1_000),
     };

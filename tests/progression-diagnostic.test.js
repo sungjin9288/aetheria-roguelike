@@ -125,6 +125,7 @@ test('exploration cohort reuses the production outcome step and reports optional
 
     assert.equal(exploration.classification, 'production-outcome-step-proxy');
     assert.equal(exploration.authority, 'resolveExplorationRhythmOutcomeStep');
+    assert.deepEqual(exploration.policy, { id: 'exploration-rhythm', version: 3 });
     assert.equal(exploration.opportunities, opportunities);
     assert.equal(Object.values(exploration.outcomes).reduce((sum, count) => sum + count, 0), opportunities);
     assert.equal(
@@ -151,6 +152,16 @@ test('exploration cohort reuses the production outcome step and reports optional
     assert.ok(exploration.pity.narrativeActivations > 0);
     assert.ok(exploration.pity.discoveryActivations > 0);
     assert.ok(exploration.pity.relicActivations > 0);
+});
+
+test('diagnostic v3 rhythm is activation-blocked but inside the approved observation target', () => {
+    const report = buildProgressionDiagnostic(options);
+    assert.equal(report.activationReady, false);
+    assert.equal(report.actualPlayClaim, false);
+    assert.ok(report.exploration.optionalDecisions.density >= 0.15);
+    assert.ok(report.exploration.optionalDecisions.density <= 0.18);
+    assert.ok(report.exploration.optionalDecisions.gap.p50 >= 5);
+    assert.ok(report.exploration.optionalDecisions.gap.p50 <= 7);
 });
 
 test('invalid seeds and combat limits fail closed', () => {

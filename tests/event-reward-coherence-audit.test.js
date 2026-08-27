@@ -10,7 +10,7 @@ import { EVENT_CHAINS } from '../src/data/eventChains.js';
 import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.js';
 import { RELICS } from '../src/data/relics.js';
 import { STRUCTURED_FALLBACK_TRANSACTIONS } from '../src/data/structuredFallbackEvents.js';
-import { EXPLORATION_RHYTHM_PROFILE } from '../src/data/progressionProfiles.js';
+import { EXPLORATION_RHYTHM_V3_PROFILE } from '../src/data/progressionProfiles.js';
 import { buildCampfireEvent } from '../src/utils/campfireEvent.js';
 import { buildScoutEvent } from '../src/utils/scoutEvents.js';
 import { buildEventRewardCoherenceReport } from '../src/systems/eventRewardCoherenceAudit.js';
@@ -31,8 +31,8 @@ const buildReport = (overrides = {}) => buildEventRewardCoherenceReport({
     frequency: {
         scoutChance: BALANCE.SCOUT_CHANCE,
         campfireChance: BALANCE.CAMPFIRE_CHANCE,
-        eventMultiplier: EXPLORATION_RHYTHM_PROFILE.eventMultiplier,
-        minimumNarrativeGap: 1,
+        eventMultiplier: EXPLORATION_RHYTHM_V3_PROFILE.eventMultiplier,
+        minimumNarrativeGap: 2,
     },
     ...overrides,
 });
@@ -52,8 +52,8 @@ test('event reward audit covers every canonical occurrence class without defects
     assert.deepEqual(report.frequency, {
         scoutChance: 0.15,
         campfireChance: 0.08,
-        eventMultiplier: 0.8,
-        minimumNarrativeGap: 1,
+        eventMultiplier: 0.64,
+        minimumNarrativeGap: 2,
     });
     assert.equal(report.rows.length, 104);
     assert.deepEqual(report.errors, []);

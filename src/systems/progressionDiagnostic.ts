@@ -13,7 +13,7 @@ import { createDomainRandom, deriveSeed } from '../utils/seededRandom.js';
 import { SIGNATURE_PITY } from '../utils/signaturePity.js';
 import { CombatEngine } from './CombatEngine.js';
 import {
-    CANDIDATE_EXPLORATION_RHYTHM,
+    ACTIVE_EXPLORATION_RHYTHM,
     EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED,
     resolveExplorationRhythmOutcomeStep,
     type ExplorationRhythmOutcome,
@@ -759,8 +759,8 @@ const buildExplorationDiagnostic = (
                 seed,
                 'progression-diagnostic-v2',
                 'exploration',
-                CANDIDATE_EXPLORATION_RHYTHM.id,
-                CANDIDATE_EXPLORATION_RHYTHM.version,
+                ACTIVE_EXPLORATION_RHYTHM.id,
+                ACTIVE_EXPLORATION_RHYTHM.version,
                 index,
             );
             const firstRelicPityReady = player.relics.length === 0
@@ -773,7 +773,7 @@ const buildExplorationDiagnostic = (
                 map,
                 player,
                 exploreState,
-                policy: CANDIDATE_EXPLORATION_RHYTHM,
+                policy: ACTIVE_EXPLORATION_RHYTHM,
                 eventChanceBonus: 0,
                 relicLimit,
                 rng,
@@ -843,8 +843,8 @@ const buildExplorationDiagnostic = (
         classification: 'production-outcome-step-proxy',
         authority: 'resolveExplorationRhythmOutcomeStep',
         policy: {
-            id: CANDIDATE_EXPLORATION_RHYTHM.id,
-            version: CANDIDATE_EXPLORATION_RHYTHM.version,
+            id: ACTIVE_EXPLORATION_RHYTHM.id,
+            version: ACTIVE_EXPLORATION_RHYTHM.version,
         },
         opportunitiesPerSeed: EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED,
         opportunities,

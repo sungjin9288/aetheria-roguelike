@@ -3,6 +3,8 @@ import { DB } from '../data/db.js';
 import {
     BASELINE_PROGRESSION_PROFILE,
     EXPLORATION_RHYTHM_PROFILE,
+    EXPLORATION_RHYTHM_V3_PROFILE,
+    getProgressionMinimumOrdinaryGap,
 } from '../data/progressionProfiles.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks.js';
 import { createDomainRandom } from '../utils/seededRandom.js';
@@ -14,11 +16,11 @@ import {
 
 export interface ExplorationRhythmPolicy {
     id: 'baseline' | 'exploration-rhythm';
-    version: 1 | 2;
+    version: 1 | 2 | 3;
     campfireChance: number;
     scoutChance: number;
     eventMultiplier: number;
-    minimumOrdinaryGap: 0 | 1;
+    minimumOrdinaryGap: 0 | 1 | 2;
 }
 
 export const BASELINE_EXPLORATION_RHYTHM: Readonly<ExplorationRhythmPolicy> = Object.freeze({
@@ -38,6 +40,17 @@ export const CANDIDATE_EXPLORATION_RHYTHM: Readonly<ExplorationRhythmPolicy> = O
     eventMultiplier: 0.8,
     minimumOrdinaryGap: 1,
 });
+
+export const ACTIVE_EXPLORATION_RHYTHM: Readonly<ExplorationRhythmPolicy> = Object.freeze({
+    id: 'exploration-rhythm',
+    version: 3,
+    campfireChance: 0.08,
+    scoutChance: 0.15,
+    eventMultiplier: EXPLORATION_RHYTHM_V3_PROFILE.eventMultiplier,
+    minimumOrdinaryGap: getProgressionMinimumOrdinaryGap(EXPLORATION_RHYTHM_V3_PROFILE),
+});
+
+export const CANDIDATE_EXPLORATION_RHYTHM_V3 = ACTIVE_EXPLORATION_RHYTHM;
 
 export interface ExplorationRhythmAggregate {
     campfire: number;
@@ -104,6 +117,13 @@ const percentile = (values: number[], ratio: number) => {
     if (values.length === 0) return 0;
     const sorted = [...values].sort((left, right) => left - right);
     return sorted[Math.max(0, Math.min(sorted.length - 1, Math.ceil(sorted.length * ratio) - 1))];
+};
+
+const deepFreeze = <T>(value: T, seen = new WeakSet<object>()): Readonly<T> => {
+    if (value === null || typeof value !== 'object' || seen.has(value as object)) return value;
+    seen.add(value as object);
+    for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child, seen);
+    return Object.freeze(value);
 };
 
 const aggregate = (outcomes: ExplorationRhythmOutcome[], gaps: number[]): ExplorationRhythmAggregate => ({
@@ -312,6 +332,78 @@ export const compareExplorationRhythm = (
         blockers: [],
     };
 };
+
+export interface ExplorationRhythmV3Comparison {
+    schemaVersion: 2;
+    classification: 'registered-v2-to-v3-event-only';
+    actualPlayClaim: false;
+    comparisonMethod: 'independent-policy-stream-monte-carlo';
+    seeds: number[];
+    opportunitiesPerSeed: 4096;
+    predecessorPolicy: { id: 'exploration-rhythm'; version: 2 };
+    candidatePolicy: { id: 'exploration-rhythm'; version: 3 };
+    predecessor: ExplorationRhythmAggregate & { optionalDecisionDensity: number };
+    candidate: ExplorationRhythmAggregate & { optionalDecisionDensity: number };
+    gates: {
+        eventOnly: boolean;
+        noOptionalBackToBack: boolean;
+        candidateDensityInRange: boolean;
+        candidateMedianGapInRange: boolean;
+        eventDirectionMatched: boolean;
+        expLootInvariant: boolean;
+    };
+    blockers: string[];
+}
+
+export const compareExplorationRhythmV3 = (
+    seeds: readonly number[],
+): Readonly<ExplorationRhythmV3Comparison> => {
+    const canonicalSeeds = validateSeeds(seeds);
+    const predecessor = sumAggregates(canonicalSeeds.map((seed) => (
+        simulateSeed(seed, CANDIDATE_EXPLORATION_RHYTHM)
+    )));
+    const candidate = sumAggregates(canonicalSeeds.map((seed) => (
+        simulateSeed(seed, ACTIVE_EXPLORATION_RHYTHM)
+    )));
+    const withDensity = (aggregate: ExplorationRhythmAggregate) => ({
+        ...aggregate,
+        optionalDecisionDensity: aggregate.optionalDecisionCount
+            / (canonicalSeeds.length * EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED),
+    });
+    const predecessorWithDensity = withDensity(predecessor);
+    const candidateWithDensity = withDensity(candidate);
+    const gates = {
+        eventOnly: EXPLORATION_RHYTHM_PROFILE.expMultiplier === EXPLORATION_RHYTHM_V3_PROFILE.expMultiplier
+            && EXPLORATION_RHYTHM_PROFILE.lootMultiplier === EXPLORATION_RHYTHM_V3_PROFILE.lootMultiplier,
+        noOptionalBackToBack: candidate.optionalBackToBackCount === 0,
+        candidateDensityInRange: candidateWithDensity.optionalDecisionDensity >= 0.15
+            && candidateWithDensity.optionalDecisionDensity <= 0.18,
+        candidateMedianGapInRange: candidateWithDensity.optionalGap.p50 >= 5
+            && candidateWithDensity.optionalGap.p50 <= 7,
+        eventDirectionMatched: candidate.generalNarrative < predecessor.generalNarrative,
+        expLootInvariant: EXPLORATION_RHYTHM_PROFILE.expMultiplier === EXPLORATION_RHYTHM_V3_PROFILE.expMultiplier
+            && EXPLORATION_RHYTHM_PROFILE.lootMultiplier === EXPLORATION_RHYTHM_V3_PROFILE.lootMultiplier,
+    } as const;
+    const blockers = Object.entries(gates)
+        .filter(([, passed]) => !passed)
+        .map(([gate]) => `${gate}_failed`);
+    return deepFreeze({
+        schemaVersion: 2,
+        classification: 'registered-v2-to-v3-event-only',
+        actualPlayClaim: false,
+        comparisonMethod: 'independent-policy-stream-monte-carlo',
+        seeds: canonicalSeeds,
+        opportunitiesPerSeed: EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED,
+        predecessorPolicy: { id: 'exploration-rhythm', version: 2 },
+        candidatePolicy: { id: 'exploration-rhythm', version: 3 },
+        predecessor: predecessorWithDensity,
+        candidate: candidateWithDensity,
+        gates,
+        blockers,
+    });
+};
+
+export const compareRegisteredExplorationRhythm = compareExplorationRhythmV3;
 
 export const compareEventChanceBonusRhythm = (
     seeds: readonly number[],

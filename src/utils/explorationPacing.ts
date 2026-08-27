@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import { getProgressionMinimumOrdinaryGap } from '../data/progressionProfiles.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../systems/mirrorUpgrades';
 import type { GameMap, Player } from "../types/index.js";
@@ -42,7 +43,8 @@ export const canOfferOptionalExploreDecision = (
     stats: any,
     activeExpedition?: { explores?: unknown } | null,
 ): boolean => {
-    if (getExploreState(stats).sinceNarrativeEvent < 1) return false;
+    const minimumGap = getProgressionMinimumOrdinaryGap(activeExpedition);
+    if (getExploreState(stats).sinceNarrativeEvent < minimumGap) return false;
     if (activeExpedition === undefined) return true;
     if (!activeExpedition) return false;
 

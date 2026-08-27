@@ -5,6 +5,8 @@ import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import {
     BASELINE_PROGRESSION_PROFILE,
     EXPLORATION_RHYTHM_PROFILE,
+    EXPLORATION_RHYTHM_V3_PROFILE,
+    getProgressionMinimumOrdinaryGap,
     resolveProgressionProfile,
     scaleProgressionExpReward,
     validateProgressionProfileTransition,
@@ -34,7 +36,7 @@ test('baseline profile is immutable and invalid remote refs fail closed', () => 
     assert.equal(Object.isFrozen(BASELINE_PROGRESSION_PROFILE), true);
     assert.strictEqual(resolveProgressionProfile({ id: 'missing', version: 99 }), BASELINE_PROGRESSION_PROFILE);
     assert.strictEqual(resolveProgressionProfile({ id: '__proto__', version: 1 }), BASELINE_PROGRESSION_PROFILE);
-    assert.deepEqual(INITIAL_STATE.liveConfig.progressionProfile, { id: 'exploration-rhythm', version: 2 });
+    assert.deepEqual(INITIAL_STATE.liveConfig.progressionProfile, { id: 'exploration-rhythm', version: 3 });
     assert.equal(INITIAL_STATE.liveConfig.eventMultiplier, 1);
     assert.equal(scaleProgressionExpReward(INITIAL_STATE.player, 101), 101);
 });
@@ -50,6 +52,29 @@ test('candidate profile changes only event axis and remains immutable in the reg
         'event',
     ), { ok: true, changedAxis: 'event' });
     assert.strictEqual(resolveProgressionProfile({ id: 'exploration-rhythm', version: 2 }), EXPLORATION_RHYTHM_PROFILE);
+});
+
+test('active event-only v3 profile is registered, bounded, and keeps v2 rollback available', () => {
+    assert.deepEqual(EXPLORATION_RHYTHM_V3_PROFILE, {
+        id: 'exploration-rhythm',
+        version: 3,
+        expMultiplier: 1,
+        lootMultiplier: 1,
+        eventMultiplier: 0.64,
+    });
+    assert.equal(Object.isFrozen(EXPLORATION_RHYTHM_V3_PROFILE), true);
+    assert.strictEqual(
+        resolveProgressionProfile({ id: 'exploration-rhythm', version: 3 }),
+        EXPLORATION_RHYTHM_V3_PROFILE,
+    );
+    assert.deepEqual(validateProgressionProfileTransition(
+        EXPLORATION_RHYTHM_PROFILE,
+        EXPLORATION_RHYTHM_V3_PROFILE,
+        'event',
+    ), { ok: true, changedAxis: 'event' });
+    assert.equal(getProgressionMinimumOrdinaryGap(EXPLORATION_RHYTHM_PROFILE), 1);
+    assert.equal(getProgressionMinimumOrdinaryGap(EXPLORATION_RHYTHM_V3_PROFILE), 2);
+    assert.equal(getProgressionMinimumOrdinaryGap({ id: 'future', version: 99 }), 1);
 });
 
 test('release transition allows one bounded axis and rejects zero or multiple axes', () => {

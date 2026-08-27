@@ -46,7 +46,10 @@ const buildEvidence = async () => {
     const { BOUNDED_ENCOUNTERS } = await import('../src/data/boundedEncounters.ts');
     const { RELICS } = await import('../src/data/relics.ts');
     const { STRUCTURED_FALLBACK_TRANSACTIONS } = await import('../src/data/structuredFallbackEvents.ts');
-    const { EXPLORATION_RHYTHM_PROFILE } = await import('../src/data/progressionProfiles.ts');
+    const {
+        EXPLORATION_RHYTHM_V3_PROFILE,
+        getProgressionMinimumOrdinaryGap,
+    } = await import('../src/data/progressionProfiles.ts');
     const { buildCampfireEvent } = await import('../src/utils/campfireEvent.ts');
     const { buildScoutEvent } = await import('../src/utils/scoutEvents.ts');
     const {
@@ -66,8 +69,8 @@ const buildEvidence = async () => {
         frequency: {
             scoutChance: BALANCE.SCOUT_CHANCE,
             campfireChance: BALANCE.CAMPFIRE_CHANCE,
-            eventMultiplier: EXPLORATION_RHYTHM_PROFILE.eventMultiplier,
-            minimumNarrativeGap: 1,
+            eventMultiplier: EXPLORATION_RHYTHM_V3_PROFILE.eventMultiplier,
+            minimumNarrativeGap: getProgressionMinimumOrdinaryGap(EXPLORATION_RHYTHM_V3_PROFILE),
         },
     }));
     if (report.errors.length > 0) throw new Error(`EVENT_REWARD_ERRORS:${report.errors.join('|')}`);
