@@ -3276,3 +3276,26 @@ Verification:
 Notes:
 - Native debug/archive builds were not rerun because this pass touched web UI/readability and Capacitor web asset sync, not native signing or packaging logic.
 - Current environment blocker remains Android release signing input absence (`android/key.properties` or `AETHERIA_ANDROID_KEYSTORE_*`) plus real-device manual QA availability.
+Checkpoint (2026-08-31: Natural Exploration Rhythm canonical mock-runtime isolation closeout):
+- Replaced the worker draft with an honest schema v2 serializer that separates the immutable production `sourceContract` from `surfaceObservation`. The report is fixed to `automated-real-surface-report-only`, `actualPlayClaim:false`, and `humanObserved:false`; caller metadata, timestamps, paths, elapsed values, subpixel coordinates and claim overrides cannot alter serialized bytes.
+- The source contract records `exploration-rhythm@3` (`EXP/loot/event = 1/1/0.64`), minimum ordinary gap `2`, the `lost_wizard` visible title `마법의 흔적`, and the bounded `forest-old-pillars` situation/choice labels from production. The surface contract records two independent iPhone 12 contexts at 390×844/DPR3/touch, visible seeds `112596`, `8`, `37`, outcomes `mandatory_story`, `combat`, `nothing`, `bounded_encounter`, and derives ordinary gap `2` from the visible sequence. It does not claim internal counters, render state, expedition identifiers, or hidden reducer access.
+- The Playwright journey uses only the existing `armNextExploreSeed` seam and visible UI actions. It captures two reports and two screenshots under `testInfo.outputPath`; the JSON files are byte-identical at SHA-256 `4eb40893b83c22439e83ca2e545b5de2b13cb8b56eb088076e15cc835d14dbc6` (2,854 bytes each). All 18 required gates are true and page/console/response/request error arrays are empty.
+- Canonical verification exposed an environment-specific RED: the ignored `.env` enables `VITE_USE_AI_PROXY`, so the E2E combat path attempted two `/api/ai-proxy` POSTs and Vite preview returned 404. `generateEvent()` and `generateStory()` now use deterministic fallback for the whole `isMockRuntime` boundary, while normal web/Capacitor/Toss proxy behavior remains unchanged. The real-surface collector records every non-favicon console/response/request failure and independently forbids AI proxy requests, with a static anti-masking guard.
+
+Verification:
+- Natural Exploration, AI fallback and coupled progression regression suite: `134/134` PASS
+- Focused Playwright: `1/1` PASS (`chromium-mobile`, one worker, two fresh iPhone 12 journeys)
+- `npm run progression:diagnostic:verify`: PASS, evidence SHA-256 `42feafbfc70b6f97cdbd64ee9fe7c42485385bf14181d18abc72e72c78bae030`; report, reportHash, seed policy and v1 baseline are unchanged, and only the `src/services/aiService.ts` source-manifest entry changed
+- `npm run pacing:verify`: PASS, existing pacing evidence hash `0818fb7...8424`
+- `npm run content:verify`: PASS, report hash `a6626375...f0e8`
+- `npm run verify`: PASS, type-check/lint/unit `4219/4219`/build guard
+- `npm run verify:full`: PASS, desktop/mobile smoke and E2E `57/57 + 55/55`
+- `npm run art:verify`: PASS (`18/229/22/25`, catalog `c15c4e6...3ad0`)
+- `npm run event-reward:verify`: PASS (`104` rows, errors `0`)
+- `npm run mobile:doctor` and `npm run cap:sync`: PASS; native tracked status is clean
+- Post-review current-byte `npm run verify`: PASS, type-check/lint/unit `4219/4219`/build guard. A manual focused Playwright invocation against a production build failed closed because the test API was absent; the repository-configured `VITE_ENABLE_TEST_API=1` webServer rerun passed `1/1` with unchanged report bytes.
+- Sol xhigh read-only re-audit after removing two unused serializer validators: Critical `0`, Important `0`, Minor `0`
+
+Scope and gates:
+- The cohesive dirty set is `src/services/aiService.ts`, `tests/ai-service.test.js`, `tests/cycle-600-699.test.js`, `tests/e2e/naturalExplorationReport.ts`, `tests/e2e/natural-exploration-rhythm.spec.ts`, `tests/natural-exploration-observation.test.js`, `docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json`, `tasks/todo.md`, and `progress.md`. `package.json` and `src/hooks/useGameTestApi.ts` remain byte-identical to HEAD.
+- Gameplay numerics, progression profile, save schema, production UI and native source are unchanged. Historical candidate/Toss aggregates remain protected. The automated browser evidence and mock-runtime fix are grouped into the approved exact 9-path cohesive checkpoint. Human observation, physical-device acceptance, signing, push and publish remain separate gates.

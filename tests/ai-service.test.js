@@ -186,6 +186,39 @@ test('generateStory: isSmokeRuntime()이 true면 fetch 없이 getFallback 내러
     });
 });
 
+test('generateEvent: e2e mock runtime이면 proxy 설정과 무관하게 fetch 없이 fallback을 반환한다', async () => {
+    let fetchCalled = false;
+    await withGlobalStub({
+        window: { location: { search: '?e2e=1' } },
+        localStorage: makeLocalStorageStub(),
+        fetch: async () => {
+            fetchCalled = true;
+            return { ok: true, json: async () => ({}) };
+        },
+    }, async () => {
+        const event = await AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext);
+        assert.ok(event);
+        assert.equal(event.source, 'fallback');
+        assert.equal(fetchCalled, false);
+    });
+});
+
+test('generateStory: e2e mock runtime이면 proxy 설정과 무관하게 fetch 없이 fallback을 반환한다', async () => {
+    let fetchCalled = false;
+    await withGlobalStub({
+        window: { location: { search: '?e2e=1' } },
+        localStorage: makeLocalStorageStub(),
+        fetch: async () => {
+            fetchCalled = true;
+            return { ok: true, json: async () => ({ success: true, data: { narrative: 'AI 내러티브' } }) };
+        },
+    }, async () => {
+        const story = await AI_SERVICE.generateStory('victory', { name: '고블린' }, 'test-uid');
+        assert.equal(story, AI_SERVICE.getFallback('victory', { name: '고블린' }));
+        assert.equal(fetchCalled, false);
+    });
+});
+
 test('generateStory: fetch 성공 + narrative 응답 → AI 내러티브 문자열을 반환한다', async () => {
     await withGlobalStub({
         localStorage: makeLocalStorageStub(),

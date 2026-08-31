@@ -271,7 +271,7 @@ import { readFile } from 'node:fs/promises';
    * - history default [] 제거.
    * - uid default 'anonymous' 제거.
    * - context default {} 제거.
-   * - body의 isSmokeRuntime / pickFallbackEvent 호출 보존.
+   * - body의 isMockRuntime / pickFallbackEvent 호출 보존.
    *
    * 회귀 가드:
    * - 1 production callsite (exploreActions) 동작 그대로.
@@ -301,9 +301,9 @@ import { readFile } from 'node:fs/promises';
           'exploreActions AI_SERVICE.generateEvent 4-arg callsite 보존');
   });
 
-  test('cycle 606: body isSmokeRuntime / pickFallbackEvent 보존', async () => {
+  test('cycle 606: body isMockRuntime / pickFallbackEvent 보존', async () => {
       const source = await readSrc('src/services/aiService.ts');
-      assert.ok(/if \(isSmokeRuntime\(\)\)/.test(source), 'isSmokeRuntime 가드 보존');
+      assert.ok(/if \(isMockRuntime\(\)\)/.test(source), 'isMockRuntime 가드 보존');
       assert.ok(/return pickFallbackEvent\(loc,\s*history,\s*context\)/.test(source),
           'pickFallbackEvent(loc, history, context) 호출 보존');
   });

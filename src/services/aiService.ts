@@ -3,7 +3,7 @@ import { CONSTANTS } from '../data/constants';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 import { LatencyTracker } from '../systems/LatencyTracker';
 import { buildEventPackage, getRecentEventSet, pickFallbackEvent, summarizeHistory } from '../utils/aiEventUtils';
-import { isSmokeRuntime } from '../utils/runtimeMode';
+import { isMockRuntime } from '../utils/runtimeMode';
 
 /**
  * AI_SERVICE 내부 공용 프록시 호출 헬퍼 (DRY 적용)
@@ -73,7 +73,7 @@ export const AI_SERVICE = {
             if (typeof rng === 'function') return pickFallbackEvent(loc, history, context, rng);
             return pickFallbackEvent(loc, history, context);
         };
-        if (isSmokeRuntime()) {
+        if (isMockRuntime()) {
             return pickEventFallback();
         }
 
@@ -117,7 +117,7 @@ export const AI_SERVICE = {
     },
 
     generateStory: async (type: any, data: any, uid: any) => {
-        if (isSmokeRuntime()) {
+        if (isMockRuntime()) {
             return AI_SERVICE.getFallback(type, data);
         }
 
