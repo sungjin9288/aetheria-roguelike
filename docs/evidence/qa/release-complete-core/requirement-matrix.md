@@ -11,11 +11,11 @@ Status vocabulary is deliberately narrow:
 The current branch is `codex/release-complete-core`. Historical observation candidates
 `release-core-3a2407a0c961` and `release-core-1eb890a1dda4` remain bound to their exact
 source checkpoints; the latter stays `0/5` with summary SHA `9239c156...a71`. The
-current six-family encounter-depth slice is verified on its cohesive source checkpoint,
+current Class Journey discovery slice is verified on its cohesive source bytes,
 but has no observation-candidate identity before the separate archive/evidence seal. No
 previous human session is counted for the next candidate. All prior Toss
 candidate and deployment evidence is superseded and remains audit-only. The latest
-repository-owned gate below was executed on 2026-08-24 KST.
+repository-owned gate below was executed on 2026-08-31 KST.
 
 The next gate is ordered: candidate-specific archive and evidence seal of the reconciled
 current HEAD, then five fresh human observations. Candidate-specific
@@ -28,6 +28,7 @@ current HEAD, then five fresh human observations. Candidate-specific
 | First move, explore, combat and safe return | browser verified | production UI journey E2E, full smoke | fresh human candidate observation |
 | Equipment decision and level-5 job change | browser verified | `tests/e2e/release-complete-core.spec.ts` | fresh human candidate observation |
 | Skill branch and Class Journey | browser verified | production UI journey E2E and class-journey contracts | fresh human candidate observation |
+| Class Journey encounter discovery | implemented/browser verified; full gate and independent review verified; cohesive local commit approved | accepted receipt -> safe return projection; v1->v2 additive migration; focused `131/131`; storage/New Game+ v1->v2 preservation `15/15`; production movement/debrief mobile E2E `10/10`; True Ending migration E2E `3/3`; full unit `4241/4241`; full E2E `59/59 + 55/55`; deterministic progression evidence `7b61327b...d379` with unchanged report/v1/seed semantics; Sol ultra Critical/Important/Minor `0/0/0` | post-commit verification before candidate seal |
 | Death preserves permanent progress | implemented | `tests/permanent-progress.test.js`, `tests/permanent-progress-copy.test.js` | physical-device observation |
 | Manual reset preserves permanent progress | implemented/browser verified | permanent-state tests and reset UI contracts | physical-device observation |
 | Ascension preserves permanent progress | browser verified | permanent-state tests, release-complete E2E | physical-device observation |
@@ -53,9 +54,36 @@ current HEAD, then five fresh human observations. Candidate-specific
 | Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
 | Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; current v3 combat evidence `786c4898...e6bb` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
 | Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; bounded `8/16`, total 108-row report `0680a3f1...8084`; focused encounter/event `51/51` | human candidate observation |
-| Repository gate | verified on current cohesive source bytes (2026-08-31) | `npm run verify:full`: type-check/lint/unit `4222/4222`/build guard, desktop/mobile smoke, E2E `58/58 + 55/55`; content `a6626375...b4f0e8`, pacing `0818fb7a...424e`, art `18/229/22/25`, event `0680a3f1...8084`; `mobile:doctor`, `cap:sync`, tracked native bytes unchanged | post-commit focused verification, then candidate-specific archive/evidence seal and five fresh human observations |
+| Repository gate | verified on current cohesive source bytes (2026-08-31) | `npm run verify:full`: type-check/lint/unit `4241/4241`/build guard, desktop/mobile smoke, E2E `59/59 + 55/55`; progression `7b61327b...d379`, content `a6626375...b4f0e8`, pacing `0818fb7a...424e`, art `18/229/22/25`, event `0680a3f1...8084`; `mobile:doctor`, `cap:sync`, tracked native bytes unchanged | approved cohesive local commit, post-commit focused verification, then candidate-specific archive/evidence seal and five fresh human observations |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
+
+## Class Journey encounter discovery checkpoint (2026-08-31)
+
+- `finishExpedition()` is the sole permanent settlement boundary: it projects exact
+  accepted receipts for the active expedition once, writes the same canonical array to
+  the summary and snapshotted job, and leaves defeat, abandonment, rejected input,
+  malformed/foreign receipts and replay without new discovery or sequence.
+- Class Journey v1 saves normalize to nested schema v2 with an empty additive list.
+  Same-choice identity is stored once, different choices remain distinct, duplicate job
+  records merge in first-discovery order, and defeat/reset/ascension preserve the data.
+- The current 390x844 production movement flow renders one optional Korean discovery
+  line, reopens it from town without duplication, keeps the primary action reachable and
+  has no horizontal overflow. Raw receipt keys and encounter identities are excluded
+  from the general render projection.
+- Current evidence is focused `131/131`, mobile E2E `10/10`, type-check/lint/content/
+  pacing/event-reward PASS and Progression evidence SHA-256 `7b61327b...d379`.
+  `reportHash=ff04ac3d...68c2`, v1 baseline `d39dce20...a17c`, focused/comparison
+  seeds `64/1000`, `actualPlayClaim:false`, `activationReady:false` and zero hard errors
+  are unchanged. The final clean repository gate passed unit `4241/4241`, desktop/mobile
+  smoke and E2E `59/59 + 55/55`; independent Sol ultra review passed with
+  Critical/Important/Minor `0/0/0`.
+- The initial full unit pass found one stale v1 exact-object expectation in the
+  production storage/New Game+ test. The bounded Sol re-plan added that coupled test
+  path, now GREEN `15/15`. The next full browser gate reached `113/114` and exposed the
+  same stale raw-v1 comparison in the True Ending E2E; its three viewport paths are now
+  GREEN `3/3`, and the current implementation boundary is exact 20 paths with sorted
+  path-list SHA-256 `741bbc569fa66ba61aabb15dc864616ea806ab5508ac54a6886f71e638d65add`.
 
 ## Combat Loot Capacity Settlement checkpoint (2026-08-24)
 

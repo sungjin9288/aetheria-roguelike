@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { releaseEvidenceScreenshot } from './releaseEvidenceScreenshot';
 import { startE2ERun } from './testHelpers';
 
@@ -7,6 +7,10 @@ const viewports = [
     { width: 390, height: 844 },
     { width: 430, height: 932 },
 ] as const;
+
+const getBoundedEncounterReceiptKeys = (page: Page) => page.evaluate(() => (
+    window.__AETHERIA_TEST_API__?.getBoundedEncounterReceiptKeys?.() || []
+));
 
 for (const viewport of viewports) {
     test(`bounded encounter remains readable at ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
@@ -50,7 +54,8 @@ for (const viewport of viewports) {
         expect(settled.gameState).toBe('idle');
         expect(settled.player.hp).toBe(before.player.hp - 8);
         expect(settled.player.gold).toBe(before.player.gold + 60);
-        expect(settled.player.boundedEncounterReceiptKeys).toEqual([
+        const settledReceiptKeys = await getBoundedEncounterReceiptKeys(page);
+        expect(settledReceiptKeys).toEqual([
             `${before.player.activeExpeditionId}:forest-old-pillars:1`,
         ]);
         expect(settled.logTail.filter((entry: { text: string }) => (
@@ -68,7 +73,7 @@ for (const viewport of viewports) {
         const replayed = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
         expect(replayed.player.hp).toBe(settled.player.hp);
         expect(replayed.player.gold).toBe(settled.player.gold);
-        expect(replayed.player.boundedEncounterReceiptKeys).toEqual(settled.player.boundedEncounterReceiptKeys);
+        expect(await getBoundedEncounterReceiptKeys(page)).toEqual(settledReceiptKeys);
         expect(replayed.logTail).toEqual(settled.logTail);
 
         await page.evaluate(() => (
@@ -133,7 +138,7 @@ test('signature-gated bounded encounter remains readable at 390x844', async ({ p
     await expect(panel).toBeHidden({ timeout: 8_000 });
     const settled = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
     expect(settled.player.mp).toBe(before.player.mp - 10);
-    expect(settled.player.boundedEncounterReceiptKeys).toEqual([
+    expect(await getBoundedEncounterReceiptKeys(page)).toEqual([
         `${before.player.activeExpeditionId}:forest-engraved-echo:1`,
     ]);
     expect(settled.logTail.filter((entry: { text: string }) => (
@@ -193,7 +198,7 @@ test('previous-boss bounded encounter remains readable at 390x844', async ({ pag
     const settled = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
     expect(settled.player.hp).toBe(before.player.hp - 8);
     expect(settled.player.gold).toBe(before.player.gold + 70);
-    expect(settled.player.boundedEncounterReceiptKeys).toEqual([
+    expect(await getBoundedEncounterReceiptKeys(page)).toEqual([
         `${before.player.activeExpeditionId}:plain-guardian-waterway:1`,
     ]);
     expect(settled.logTail.filter((entry: { text: string }) => (
@@ -234,7 +239,7 @@ test('canonical equipment builds unlock their regional encounter without persist
     await expect(panel).toBeHidden({ timeout: 8_000 });
     const forestSettled = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
     expect(forestSettled.player.mp).toBe(forestBefore.player.mp - 10);
-    expect(forestSettled.player.boundedEncounterReceiptKeys).toEqual([
+    expect(await getBoundedEncounterReceiptKeys(page)).toEqual([
         `${forestBefore.player.activeExpeditionId}:forest-root-resonance:1`,
     ]);
 
@@ -254,7 +259,7 @@ test('canonical equipment builds unlock their regional encounter without persist
     const plainSettled = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
     expect(plainSettled.player.hp).toBe(plainBefore.player.hp - 8);
     expect(plainSettled.player.gold).toBe(plainBefore.player.gold + 70);
-    expect(plainSettled.player.boundedEncounterReceiptKeys).toEqual([
+    expect(await getBoundedEncounterReceiptKeys(page)).toEqual([
         `${plainBefore.player.activeExpeditionId}:plain-windpath-stance:1`,
     ]);
     expect(JSON.stringify(plainSettled)).not.toContain('buildTags');

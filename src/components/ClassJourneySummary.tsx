@@ -68,6 +68,9 @@ const ClassJourneySummary = ({
         : last(record.signatureItems);
     const equipment = isRepresentativeSummary ? last(latestSummary.equipmentNames) : null;
     const buildDiscovery = signature || equipment;
+    const encounterDiscovery = isRepresentativeSummary
+        ? last(latestSummary.encounterDiscoveries) || last(record.encounterDiscoveries)
+        : last(record.encounterDiscoveries);
     const nextDiscovery = record.skillBranches.length === 0
         ? '새로운 전투 분기'
         : record.signatureItems.length === 0
@@ -76,7 +79,9 @@ const ClassJourneySummary = ({
                 ? '처음 만나는 보스'
                 : record.regions.length === 0
                     ? '새로운 지역'
-                    : '새로운 지역의 보스';
+                    : record.encounterDiscoveries.length === 0
+                        ? '지역 사건의 선택'
+                        : '새로운 지역의 보스';
 
     return (
         <section
@@ -93,6 +98,14 @@ const ClassJourneySummary = ({
                 <p data-testid="class-journey-build" className="aether-type-body break-words">
                     전투 방식 · {discoveredBranch || '분기 미발견'}{buildDiscovery ? ` · ${buildDiscovery}` : ''}
                 </p>
+                {encounterDiscovery && (
+                    <p
+                        data-testid="class-journey-encounter"
+                        className="aether-type-body break-words text-slate-300"
+                    >
+                        사건의 흔적 · {encounterDiscovery.family} · {encounterDiscovery.choiceLabel}
+                    </p>
+                )}
                 <p data-testid="class-journey-next" className="aether-type-meta text-slate-400">
                     다음 기록 · {nextDiscovery}
                 </p>

@@ -6,7 +6,7 @@ import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 
 const buildClassJourney = () => ({
-    version: 1,
+    version: 2,
     sequence: 7,
     byJob: {
         전사: {
@@ -15,6 +15,13 @@ const buildClassJourney = () => ({
             signatureItems: ['성검 에테르니아'],
             bossNames: ['고대 호수의 수호신'],
             regions: ['고요한 숲', '신성한 호수'],
+            encounterDiscoveries: [{
+                encounterId: 'forest-root-resonance',
+                encounterVersion: 1,
+                choiceId: 'anchor-root-ward',
+                family: '뿌리 아래 공명 결계',
+                choiceLabel: '결계의 흐름을 이어 둔다',
+            }],
             representativeExpeditionId: 'expedition-permanent-7',
             lastPlayedAt: 7_000,
         },

@@ -1,4 +1,5 @@
 import type {
+    ClassJourneyEncounterDiscovery,
     ClassJourneyLedger,
     ClassJourneyRecord,
     Player,
@@ -11,10 +12,51 @@ interface ClassJourneyExpeditionInput {
     signatureItems?: string[];
     bossNames?: string[];
     regions?: string[];
+    encounterDiscoveries?: ClassJourneyEncounterDiscovery[];
     endedAt?: number | null;
 }
 
 const RESERVED_JOB_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+const SAFE_DISCOVERY_ID = /^[a-z0-9][a-z0-9._:-]{0,127}$/;
+
+const discoveryIdentity = ({
+    encounterId,
+    encounterVersion,
+    choiceId,
+}: ClassJourneyEncounterDiscovery) => `${encounterId}\u0000${encounterVersion}\u0000${choiceId}`;
+
+export const normalizeClassJourneyEncounterDiscoveries = (
+    value: unknown,
+): ClassJourneyEncounterDiscovery[] => {
+    if (!Array.isArray(value)) return [];
+    const seen = new Set<string>();
+    return value.flatMap((entry) => {
+        if (!entry
+            || typeof entry !== 'object'
+            || Array.isArray(entry)
+            || Object.getPrototypeOf(entry) !== Object.prototype) return [];
+        const candidate = entry as Record<string, unknown>;
+        const encounterId = typeof candidate.encounterId === 'string' ? candidate.encounterId : '';
+        const choiceId = typeof candidate.choiceId === 'string' ? candidate.choiceId : '';
+        const encounterVersion = candidate.encounterVersion;
+        const family = typeof candidate.family === 'string' ? candidate.family.trim() : '';
+        const choiceLabel = typeof candidate.choiceLabel === 'string'
+            ? candidate.choiceLabel.trim()
+            : '';
+        if (!SAFE_DISCOVERY_ID.test(encounterId)
+            || !SAFE_DISCOVERY_ID.test(choiceId)
+            || typeof encounterVersion !== 'number'
+            || !Number.isSafeInteger(encounterVersion)
+            || encounterVersion < 1
+            || !family
+            || !choiceLabel) return [];
+        const discovery = { encounterId, encounterVersion, choiceId, family, choiceLabel };
+        const identity = discoveryIdentity(discovery);
+        if (seen.has(identity)) return [];
+        seen.add(identity);
+        return [discovery];
+    });
+};
 
 const jobName = (value: unknown) => {
     const name = typeof value === 'string' ? value.trim() : '';
@@ -34,12 +76,29 @@ const appendFirstDiscoveries = (current: string[], additions: unknown) => [
     ...uniqueNames(additions).filter((entry) => !current.includes(entry)),
 ];
 
+const appendFirstEncounterDiscoveries = (
+    current: ClassJourneyEncounterDiscovery[],
+    additions: unknown,
+) => {
+    const seen = new Set(current.map(discoveryIdentity));
+    return [
+        ...current,
+        ...normalizeClassJourneyEncounterDiscoveries(additions).filter((discovery) => {
+            const identity = discoveryIdentity(discovery);
+            if (seen.has(identity)) return false;
+            seen.add(identity);
+            return true;
+        }),
+    ];
+};
+
 const emptyClassJourneyRecord = (): ClassJourneyRecord => ({
     expeditionIds: [],
     skillBranches: [],
     signatureItems: [],
     bossNames: [],
     regions: [],
+    encounterDiscoveries: [],
     representativeExpeditionId: null,
     lastPlayedAt: null,
 });
@@ -62,6 +121,9 @@ const normalizeRecord = (value: unknown): ClassJourneyRecord => {
         signatureItems: uniqueNames(candidate.signatureItems),
         bossNames: uniqueNames(candidate.bossNames),
         regions: uniqueNames(candidate.regions),
+        encounterDiscoveries: normalizeClassJourneyEncounterDiscoveries(
+            candidate.encounterDiscoveries,
+        ),
         representativeExpeditionId,
         lastPlayedAt: Number.isFinite(playedAt) && playedAt >= 0 ? playedAt : null,
     };
@@ -95,6 +157,10 @@ export const normalizeClassJourneyLedger = (value: unknown): ClassJourneyLedger 
             signatureItems: appendFirstDiscoveries(current.signatureItems, record.signatureItems),
             bossNames: appendFirstDiscoveries(current.bossNames, record.bossNames),
             regions: appendFirstDiscoveries(current.regions, record.regions),
+            encounterDiscoveries: appendFirstEncounterDiscoveries(
+                current.encounterDiscoveries,
+                record.encounterDiscoveries,
+            ),
             representativeExpeditionId: recordIsLatest
                 ? record.representativeExpeditionId
                 : current.representativeExpeditionId || record.representativeExpeditionId,
@@ -121,7 +187,7 @@ export const normalizeClassJourneyLedger = (value: unknown): ClassJourneyLedger 
     );
     const savedSequence = Number(candidate.sequence);
     return {
-        version: 1,
+        version: 2,
         sequence: Math.max(
             expeditionCount,
             Number.isInteger(savedSequence) && savedSequence >= 0 ? savedSequence : 0,
@@ -153,6 +219,10 @@ export const recordClassJourneyExpedition = (
         signatureItems: appendFirstDiscoveries(current.signatureItems, input.signatureItems),
         bossNames: appendFirstDiscoveries(current.bossNames, input.bossNames),
         regions: appendFirstDiscoveries(current.regions, input.regions),
+        encounterDiscoveries: appendFirstEncounterDiscoveries(
+            current.encounterDiscoveries,
+            input.encounterDiscoveries,
+        ),
         representativeExpeditionId: expeditionId,
         lastPlayedAt: Number.isFinite(endedAt) && endedAt >= 0 ? endedAt : current.lastPlayedAt,
     };
@@ -160,7 +230,7 @@ export const recordClassJourneyExpedition = (
     return {
         ...player,
         classJourney: {
-            version: 1,
+            version: 2,
             sequence: ledger.sequence + 1,
             byJob: { ...ledger.byJob, [job]: nextRecord },
         },

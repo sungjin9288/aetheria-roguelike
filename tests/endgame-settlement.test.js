@@ -400,7 +400,7 @@ test('production GameStorage preserves endgame, journey, and settings through re
     const backend = makeAsyncStorage();
     let now = 10_000;
     const storage = createGameStorage({ backend, now: () => now, saveVersion: 5 });
-    const classJourney = {
+    const legacyClassJourney = {
         version: 1,
         sequence: 1,
         byJob: {
@@ -415,13 +415,23 @@ test('production GameStorage preserves endgame, journey, and settings through re
             },
         },
     };
+    const classJourney = {
+        version: 2,
+        sequence: 1,
+        byJob: {
+            전사: {
+                ...legacyClassJourney.byJob.전사,
+                encounterDiscoveries: [],
+            },
+        },
+    };
     const checkpoint = {
         ...structuredClone(INITIAL_STATE),
         version: 5,
         player: {
             ...playerWithEndgame(2),
             settings: { readabilityMode: 'high', equipmentDetailMode: 'full' },
-            classJourney,
+            classJourney: legacyClassJourney,
         },
         gameState: 'combat',
         enemy: structuredClone(demonKing),

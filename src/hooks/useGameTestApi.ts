@@ -219,8 +219,16 @@ export const useGameTestApi = (
             },
         };
 
+        const encounterDiscoveryScenario = {
+            encounterId: 'forest-root-resonance',
+            encounterVersion: 1,
+            choiceId: 'anchor-root-ward',
+            family: '뿌리 아래 공명 결계',
+            choiceLabel: '결계의 흐름을 이어 둔다',
+        };
+
         const classJourneyScenario = (lastPlayedAt = Date.now()) => ({
-            version: 1,
+            version: 2,
             sequence: 7,
             byJob: {
                 '전사': {
@@ -229,6 +237,7 @@ export const useGameTestApi = (
                     signatureItems: ['성검 에테르니아'],
                     bossNames: ['고대 호수의 수호신'],
                     regions: ['고요한 숲', '신성한 호수'],
+                    encounterDiscoveries: [encounterDiscoveryScenario],
                     representativeExpeditionId: 'smoke-expedition-debrief',
                     lastPlayedAt,
                 },
@@ -327,9 +336,6 @@ export const useGameTestApi = (
                     classJourneySequence: e.player.classJourney?.sequence || 0,
                     activeExpeditionId: e.player.activeExpedition?.id || '',
                     lastExpeditionSummaryId: e.player.lastExpeditionSummary?.id || '',
-                    boundedEncounterReceiptKeys: Object.keys(
-                        e.player.eventChainProgress?.boundedEncounterReceipts || {},
-                    ),
                     loc: e.player.loc,
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
@@ -351,8 +357,6 @@ export const useGameTestApi = (
                     ? {
                         desc: safeText(e.currentEvent.desc, ''),
                         choices: safeList(e.currentEvent.choices, '[choice]'),
-                        boundedEncounterId: e.currentEvent.boundedEncounterId || '',
-                        boundedOccurrenceSequence: e.currentEvent.boundedOccurrenceSequence || 0,
                     }
                     : null,
                 pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((r: any) => r.name) : null,
@@ -1165,6 +1169,7 @@ export const useGameTestApi = (
                             equipmentNames: ['성검 에테르니아', '기사의 흉갑'],
                             bossNames: ['고대 호수의 수호신'],
                             signatureItems: ['성검 에테르니아'],
+                            encounterDiscoveries: [encounterDiscoveryScenario],
                         },
                     },
                 });
@@ -1711,6 +1716,9 @@ export const useGameTestApi = (
                     payload: { encounterId, choiceId, expeditionId, occurrenceSequence },
                 });
             },
+            getBoundedEncounterReceiptKeys: () => Object.keys(
+                engineRef.current.player.eventChainProgress?.boundedEncounterReceipts || {},
+            ),
             showReturnBriefingScenario: () => {
                 const er = engineRef.current;
                 const now = new Date();

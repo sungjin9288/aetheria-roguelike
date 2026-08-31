@@ -9,6 +9,51 @@ identity; the next candidate-specific archive/evidence seal follows its explicit
 approved cohesive source checkpoint.
 Fresh-human acceptance, push and external release gates remain HOLD.
 
+## Class Journey encounter discovery checkpoint (2026-08-31)
+
+- An accepted bounded-encounter receipt is now projected once at safe return into
+  canonical discovery copy. The same ordered array reaches the expedition summary and
+  the snapshotted job's Class Journey record; same-choice occurrences dedupe while
+  different choices remain distinct. Rejected, malformed, foreign, defeated,
+  abandoned and replayed paths add no permanent discovery or sequence.
+- The nested Class Journey ledger migrates additively from v1 to v2. Defeat, manual
+  reset and ascension preserve the new record, while the top-level save version,
+  gameplay EXP, loot, pity, event frequency, enemy HP and progression profiles remain
+  unchanged.
+- The existing debrief/job surface renders one optional canonical Korean discovery
+  line. A real 390x844 Chromium journey used production choice settlement and normal
+  movement to return home, reopen the debrief and prove one record with no horizontal
+  overflow. Raw encounter IDs and receipt keys are absent from `render_game_to_text`;
+  receipt replay assertions use a narrow read-only test API.
+- Focused discovery/migration/reset integration passes `131/131`; bounded encounter and
+  debrief mobile E2E passes `10/10`; type-check, lint, content, pacing and event-reward
+  verifiers pass. Progression evidence SHA-256 is
+  `7b61327b17bbcf55d741ab8a17b162551928c2e64985a544bfa1493e5d17d379`;
+  report hash `ff04ac3d...68c2`, v1 baseline `d39dce20...a17c`, 64/1,000 seed
+  policy, `actualPlayClaim:false`, `activationReady:false` and `hardErrors:[]` remain
+  unchanged. Only the six changed/new `src/**` manifest rows advanced.
+- Current-byte repository verification is GREEN. `npm run verify` and the final clean
+  `npm run verify:full` passed type-check, warning-free lint, unit `4241/4241`, build
+  guard, desktop/mobile smoke and E2E `59/59 + 55/55`. Art verification passed
+  `18/229/22/25`; `mobile:doctor` and `cap:sync` passed with tracked Android/iOS drift
+  0. Independent Sol ultra review passed with Critical/Important/Minor `0/0/0` and
+  accepted the two fixture-only path additions as a bounded re-plan with no production
+  boundary expansion. The user approved one exact 20-path cohesive local implementation
+  commit. Human observation, physical-device acceptance, candidate seal, signing, push
+  and publication remain separate and have not been performed.
+- The first repository-wide unit run correctly exposed one stale v1 exact-object
+  expectation in the production storage/New Game+ regression. A bounded Sol re-plan
+  added `tests/endgame-settlement.test.js`; its v1-save to v2-preservation path now
+  passes `15/15`. The next full browser gate reached E2E `113/114` and exposed the same
+  stale raw-v1 comparison in `tests/e2e/true-ending-new-game-plus.spec.ts`; its three
+  viewport paths now pass `3/3`, expanding the implementation boundary to exactly 20
+  paths. The final clean repository gate is GREEN; the sorted path-list SHA-256 is
+  `741bbc569fa66ba61aabb15dc864616ea806ab5508ac54a6886f71e638d65add`.
+- Deterministic progression/content/pacing/event evidence verifies at
+  `7b61327b...d379`, `a6626375...b4f0e8`, `0818fb7a...424e` and
+  `0680a3f1...8084`. Protected candidate/Toss aggregates remain
+  `f14235c7...1b9` and `05cc9de7...bbbd`.
+
 ## Build-reactive early-region encounter checkpoint (2026-08-31)
 
 - Expanded the verified `고요한 숲` and `서쪽 평원` pack from six to eight encounters

@@ -40,6 +40,13 @@ test('legacy save의 장비·보상·원정 identity를 보존하며 직업 여�
                 newItems: ['라그나로크'],
                 signatureItems: ['라그나로크'],
                 job: '전사',
+                encounterDiscoveries: [{
+                    encounterId: 'forest-root-resonance',
+                    encounterVersion: 1,
+                    choiceId: 'anchor-root-ward',
+                    family: ' 뿌리 아래 공명 결계 ',
+                    choiceLabel: ' 결계의 흐름을 이어 둔다 ',
+                }],
             },
             classJourney: {
                 version: 9,
@@ -64,8 +71,15 @@ test('legacy save의 장비·보상·원정 identity를 보존하며 직업 여�
     assert.equal(migrated.player.equip.armor.name, '가죽 갑옷');
     assert.equal(migrated.player.lastExpeditionSummary.id, 'expedition-1000');
     assert.deepEqual(migrated.player.lastExpeditionSummary.newItems, ['라그나로크']);
+    assert.deepEqual(migrated.player.lastExpeditionSummary.encounterDiscoveries, [{
+        encounterId: 'forest-root-resonance',
+        encounterVersion: 1,
+        choiceId: 'anchor-root-ward',
+        family: '뿌리 아래 공명 결계',
+        choiceLabel: '결계의 흐름을 이어 둔다',
+    }]);
     assert.deepEqual(migrated.player.classJourney, {
-        version: 1,
+        version: 2,
         sequence: 1,
         byJob: {
             '전사': {
@@ -74,6 +88,7 @@ test('legacy save의 장비·보상·원정 identity를 보존하며 직업 여�
                 signatureItems: ['라그나로크'],
                 bossNames: ['숲의 군주'],
                 regions: ['고요한 숲'],
+                encounterDiscoveries: [],
                 representativeExpeditionId: 'expedition-1000',
                 lastPlayedAt: null,
             },

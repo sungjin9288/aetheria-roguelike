@@ -2,9 +2,34 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+    normalizeClassJourneyEncounterDiscoveries,
     normalizeClassJourneyLedger,
     recordClassJourneyExpedition,
 } from '../src/utils/classJourney.js';
+
+const rootContinue = {
+    encounterId: 'forest-root-resonance',
+    encounterVersion: 1,
+    choiceId: 'anchor-root-ward',
+    family: '뿌리 아래 공명 결계',
+    choiceLabel: '결계의 흐름을 이어 둔다',
+};
+
+const rootCrystal = {
+    encounterId: 'forest-root-resonance',
+    encounterVersion: 1,
+    choiceId: 'gather-root-crystal',
+    family: '뿌리 아래 공명 결계',
+    choiceLabel: '굳은 결정 조각을 거둔다',
+};
+
+const oldPillars = {
+    encounterId: 'forest-old-pillars',
+    encounterVersion: 1,
+    choiceId: 'read-runes',
+    family: '돌기둥의 속삭임',
+    choiceLabel: '돌기둥의 문장을 읽는다',
+};
 
 const firstExpedition = {
     job: '전사',
@@ -20,7 +45,7 @@ test('첫 원정은 해당 직업의 여정을 만들고 sequence를 한 번 올
     const player = { job: '전사' };
     const recorded = recordClassJourneyExpedition(player, firstExpedition);
 
-    assert.equal(recorded.classJourney.version, 1);
+    assert.equal(recorded.classJourney.version, 2);
     assert.equal(recorded.classJourney.sequence, 1);
     assert.deepEqual(recorded.classJourney.byJob['전사'], {
         expeditionIds: ['expedition-1000'],
@@ -28,6 +53,7 @@ test('첫 원정은 해당 직업의 여정을 만들고 sequence를 한 번 올
         signatureItems: ['라그나로크'],
         bossNames: ['숲의 군주'],
         regions: ['고요한 숲'],
+        encounterDiscoveries: [],
         representativeExpeditionId: 'expedition-1000',
         lastPlayedAt: 2_000,
     });
@@ -105,7 +131,7 @@ test('손상된 구세이브는 유효한 발견을 잃지 않고 정규화한�
     });
 
     assert.deepEqual(normalized, {
-        version: 1,
+        version: 2,
         sequence: 1,
         byJob: {
             '전사': {
@@ -114,6 +140,7 @@ test('손상된 구세이브는 유효한 발견을 잃지 않고 정규화한�
                 signatureItems: [],
                 bossNames: ['숲의 군주'],
                 regions: ['고요한 숲'],
+                encounterDiscoveries: [],
                 representativeExpeditionId: 'expedition-1000',
                 lastPlayedAt: null,
             },
@@ -263,7 +290,7 @@ test('prototype special key는 손상 저장과 신규 기록 모두 안전하�
         job: '__proto__',
     });
 
-    assert.deepEqual(normalized, { version: 1, sequence: 1, byJob: {} });
+    assert.deepEqual(normalized, { version: 2, sequence: 1, byJob: {} });
     assert.deepEqual(recorded, {});
 });
 
@@ -285,4 +312,126 @@ test('유효한 높은 sequence는 정규화와 다음 원정에서도 단조 �
 
     assert.equal(normalized.sequence, 42);
     assert.equal(recorded.classJourney.sequence, 43);
+});
+
+test('사건 발견 normalizer는 유효한 copy를 정리하고 identity의 첫 기록만 보존한다', () => {
+    assert.deepEqual(normalizeClassJourneyEncounterDiscoveries([
+        {
+            ...rootContinue,
+            family: ' 뿌리 아래 공명 결계 ',
+            choiceLabel: ' 결계의 흐름을 이어 둔다 ',
+        },
+        { ...rootContinue, family: '중복 copy', choiceLabel: '중복 선택' },
+        rootCrystal,
+    ]), [rootContinue, rootCrystal]);
+});
+
+test('사건 발견 normalizer는 잘못된 ID, version, copy와 비평범 객체를 버린다', () => {
+    const inherited = Object.create({ encounterId: 'forest-old-pillars' });
+    Object.assign(inherited, oldPillars);
+    const overlongId = `a${'b'.repeat(128)}`;
+    const invalid = [
+        null,
+        [],
+        inherited,
+        { ...oldPillars, encounterId: ' Forest-old-pillars' },
+        { ...oldPillars, encounterId: 'FOREST-OLD-PILLARS' },
+        { ...oldPillars, encounterId: overlongId },
+        { ...oldPillars, choiceId: 'bad choice' },
+        { ...oldPillars, encounterVersion: 0 },
+        { ...oldPillars, encounterVersion: 1.5 },
+        { ...oldPillars, encounterVersion: Number.MAX_SAFE_INTEGER + 1 },
+        { ...oldPillars, encounterVersion: '1' },
+        { ...oldPillars, family: '  ' },
+        { ...oldPillars, choiceLabel: '' },
+        oldPillars,
+    ];
+
+    assert.deepEqual(normalizeClassJourneyEncounterDiscoveries(invalid), [oldPillars]);
+});
+
+test('v1 직업 기록은 v2의 빈 사건 발견 목록으로 additive migration된다', () => {
+    const normalized = normalizeClassJourneyLedger({
+        version: 1,
+        sequence: 1,
+        byJob: {
+            '전사': {
+                expeditionIds: ['expedition-1000'],
+                regions: ['고요한 숲'],
+            },
+        },
+    });
+
+    assert.equal(normalized.version, 2);
+    assert.deepEqual(normalized.byJob['전사'].encounterDiscoveries, []);
+});
+
+test('한 귀환의 여러 사건 발견은 sequence를 한 번만 올리고 identity별로 저장한다', () => {
+    const recorded = recordClassJourneyExpedition({ job: '전사' }, {
+        ...firstExpedition,
+        encounterDiscoveries: [rootContinue, rootContinue, rootCrystal],
+    });
+
+    assert.equal(recorded.classJourney.sequence, 1);
+    assert.deepEqual(recorded.classJourney.byJob['전사'].encounterDiscoveries, [
+        rootContinue,
+        rootCrystal,
+    ]);
+});
+
+test('같은 원정 replay의 추가 사건 발견은 exact player no-op이다', () => {
+    const recorded = recordClassJourneyExpedition({ job: '전사' }, {
+        ...firstExpedition,
+        encounterDiscoveries: [rootContinue],
+    });
+    const replayed = recordClassJourneyExpedition(recorded, {
+        ...firstExpedition,
+        encounterDiscoveries: [rootContinue, rootCrystal],
+    });
+
+    assert.equal(replayed, recorded);
+    assert.equal(replayed.classJourney, recorded.classJourney);
+    assert.deepEqual(replayed.classJourney.byJob['전사'].encounterDiscoveries, [rootContinue]);
+});
+
+test('같은 사건 발견은 서로 다른 직업 여정에 독립적으로 남는다', () => {
+    const warrior = recordClassJourneyExpedition({}, {
+        ...firstExpedition,
+        encounterDiscoveries: [rootContinue],
+    });
+    const mage = recordClassJourneyExpedition(warrior, {
+        ...firstExpedition,
+        job: '마법사',
+        expeditionId: 'expedition-2000',
+        encounterDiscoveries: [rootContinue],
+    });
+
+    assert.deepEqual(mage.classJourney.byJob['전사'].encounterDiscoveries, [rootContinue]);
+    assert.deepEqual(mage.classJourney.byJob['마법사'].encounterDiscoveries, [rootContinue]);
+});
+
+test('중복 직업 기록은 사건 발견의 첫 copy와 첫 발견 순서를 보존해 합친다', () => {
+    const normalized = normalizeClassJourneyLedger({
+        version: 2,
+        sequence: 2,
+        byJob: {
+            '전사': {
+                expeditionIds: ['expedition-1000'],
+                encounterDiscoveries: [rootContinue, rootCrystal],
+            },
+            ' 전사 ': {
+                expeditionIds: ['expedition-2000'],
+                encounterDiscoveries: [
+                    { ...rootCrystal, family: '뒤늦게 바뀐 copy' },
+                    oldPillars,
+                ],
+            },
+        },
+    });
+
+    assert.deepEqual(normalized.byJob['전사'].encounterDiscoveries, [
+        rootContinue,
+        rootCrystal,
+        oldPillars,
+    ]);
 });

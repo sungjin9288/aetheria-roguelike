@@ -142,6 +142,15 @@ test.describe('True Ending → New Game+ production journey', () => {
         await page.setViewportSize(viewport);
         await bootTrueEndingJourney(page);
         const initial = await snapshot(page);
+        const migratedClassJourney = {
+            ...initial.classJourney,
+            version: 2,
+            byJob: Object.fromEntries(Object.entries(initial.classJourney.byJob).map(([job, record]) => [
+                job,
+                { ...(record as object), encounterDiscoveries: [] },
+            ])),
+        };
+        expect(initial.classJourney.version).toBe(1);
 
         await defeatDemonKing(page);
         await flushJourney(page);
@@ -150,7 +159,7 @@ test.describe('True Ending → New Game+ production journey', () => {
         await expect.poll(async () => (await snapshot(page))?.enemy?.baseName).toBe('원시의 신');
         const reloadedBoss = await snapshot(page);
         expect(reloadedBoss.primalShards).toBe(0);
-        expect(reloadedBoss.classJourney).toEqual(initial.classJourney);
+        expect(reloadedBoss.classJourney).toEqual(migratedClassJourney);
         expect(reloadedBoss.settings).toEqual(initial.settings);
 
         await defeatTrueBoss(page);
@@ -162,7 +171,7 @@ test.describe('True Ending → New Game+ production journey', () => {
         expect(restoredEnding.endgameReceiptKey).toBe(endingBeforeReload.endgameReceiptKey);
         expect(restoredEnding.heartIds).toEqual(endingBeforeReload.heartIds);
         expect(restoredEnding.heartCount).toBe(1);
-        expect(restoredEnding.classJourney).toEqual(initial.classJourney);
+        expect(restoredEnding.classJourney).toEqual(migratedClassJourney);
         expect(restoredEnding.settings).toEqual(initial.settings);
 
         const backHandled = await page.evaluate(() => (
@@ -186,7 +195,7 @@ test.describe('True Ending → New Game+ production journey', () => {
         expect(ascended.trueEndingSeen).toBe(true);
         expect(ascended.heartCount).toBe(0);
         expect(ascended.endgameReceiptKey).toBe(endingBeforeReload.endgameReceiptKey);
-        expect(ascended.classJourney).toEqual(initial.classJourney);
+        expect(ascended.classJourney).toEqual(migratedClassJourney);
         expect(ascended.settings).toEqual(initial.settings);
         expect(ascended.titles.filter((title: string) => title === ascended.activeTitle)).toHaveLength(1);
 
@@ -197,7 +206,7 @@ test.describe('True Ending → New Game+ production journey', () => {
         expect(finalReload.prestigeRank).toBe(4);
         expect(finalReload.heartCount).toBe(0);
         expect(finalReload.endgameReceiptKey).toBe(endingBeforeReload.endgameReceiptKey);
-        expect(finalReload.classJourney).toEqual(initial.classJourney);
+        expect(finalReload.classJourney).toEqual(migratedClassJourney);
         expect(finalReload.settings).toEqual(initial.settings);
         await assertProductionSavesUntouched(page);
 

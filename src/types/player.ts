@@ -163,18 +163,27 @@ export interface ExpeditionQuestCheckpoint {
     goal: number;
 }
 
+export interface ClassJourneyEncounterDiscovery {
+    encounterId: string;
+    encounterVersion: number;
+    choiceId: string;
+    family: string;
+    choiceLabel: string;
+}
+
 export interface ClassJourneyRecord {
     expeditionIds: string[];
     skillBranches: string[];
     signatureItems: string[];
     bossNames: string[];
     regions: string[];
+    encounterDiscoveries: ClassJourneyEncounterDiscovery[];
     representativeExpeditionId: string | null;
     lastPlayedAt: number | null;
 }
 
 export interface ClassJourneyLedger {
-    version: 1;
+    version: 2;
     sequence: number;
     byJob: Record<string, ClassJourneyRecord>;
 }
@@ -235,6 +244,7 @@ export interface ExpeditionSummary {
     equipmentNames?: string[];
     bossNames?: string[];
     signatureItems?: string[];
+    encounterDiscoveries: ClassJourneyEncounterDiscovery[];
     progressionProfile: ProgressionProfile;
 }
 
