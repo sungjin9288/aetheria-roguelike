@@ -38,6 +38,7 @@ export interface BoundedEncounter {
     situation: string;
     eligibility: {
         lineage?: string[];
+        anyBuildTags?: string[];
         hpBand?: BoundedEncounterHpBand;
         requiresSignature?: boolean;
         previousBoss?: string;
@@ -52,6 +53,7 @@ export interface BoundedEncounterContext {
     maxHp: number;
     signatureNames: string[];
     bossNames: string[];
+    buildTags: string[];
     receiptKeys: string[];
 }
 

@@ -1,14 +1,14 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "aeadced78ca1c74a7654b3ddb410ba78797e9c186990a43dba866a32ab66dc79",
+  "reportHash": "0680a3f17affcd6e9301ab039f5810bb178eae598cd4ad78dcfd7e81547a8084",
   "report": {
     "schemaVersion": 1,
     "catalog": {
       "chainCount": 13,
       "chainStepCount": 39,
       "chainOutcomeCount": 84,
-      "boundedEncounterCount": 6,
-      "boundedChoiceCount": 12,
+      "boundedEncounterCount": 8,
+      "boundedChoiceCount": 16,
       "fallbackTransactionCount": 3,
       "campfireChoiceCount": 2,
       "scoutChoiceCount": 3
@@ -63,6 +63,20 @@
         "itemName": null
       },
       {
+        "id": "bounded:forest-root-resonance:anchor-root-ward",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고요한 숲",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:forest-root-resonance:gather-root-crystal",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고요한 숲",
+        "rewardType": "item",
+        "itemName": "강화 재료"
+      },
+      {
         "id": "bounded:plain-bandit-banner:follow-cache-map",
         "occurrenceClass": "repeatable-bounded",
         "location": "서쪽 평원",
@@ -99,6 +113,20 @@
       },
       {
         "id": "bounded:plain-supply-cart:search-cart",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "서쪽 평원",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:plain-windpath-stance:channel-wind-strike",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "서쪽 평원",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:plain-windpath-stance:follow-wind-cache",
         "occurrenceClass": "repeatable-bounded",
         "location": "서쪽 평원",
         "rewardType": "gold",

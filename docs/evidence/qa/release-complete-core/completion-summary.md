@@ -1,13 +1,45 @@
 # Release-complete core completion summary
 
-Date: 2026-08-24 KST
+Date: 2026-08-31 KST
 
-Status: content pacing, six-family bounded encounters, relic balance, equipment economy,
+Status: content pacing, eight-family bounded encounters, relic balance, equipment economy,
 equipment combat-power sidegrades, consumable authority and event reward transactions
 are locally verified. The current encounter-depth slice has no observation-candidate
 identity; the next candidate-specific archive/evidence seal follows its explicitly
 approved cohesive source checkpoint.
 Fresh-human acceptance, push and external release gates remain HOLD.
+
+## Build-reactive early-region encounter checkpoint (2026-08-31)
+
+- Expanded the verified `고요한 숲` and `서쪽 평원` pack from six to eight encounters
+  without changing exploration occurrence frequency. `뿌리 아래 공명 결계` responds
+  to canonical `arcane|fortress` build tags and `바람길의 전투 흔적` responds to
+  `crusher|dual`; each also requires a real warrior, mage or rogue lineage.
+- Build eligibility is transient and fail-closed. It derives only from
+  `calculateFullStats(player).buildProfile.tags[].id`, filters through the four-tag
+  allowlist and never falls back to the class profile identity. Build tags are absent
+  from save data, event payloads, render-state output and ProductEventSink data.
+- Existing deterministic selection, reducer-owned cost/reward settlement and replay
+  receipts remain authoritative. EXP, loot, pity, enemy HP, exploration profile,
+  save schema, production UI and native source are unchanged.
+- TDD RED covered the eight-family pack, invalid build tags, OR-within/AND-across
+  eligibility, class-fallback rejection, real equipment/relic derivation, browser
+  fixture and evidence drift. Focused integration passed `51/51`; the 390x844
+  build-reactive browser flow passed `1/1` with readable choices, atomic settlement,
+  no horizontal overflow and no rendered `buildTags`.
+- Event-reward evidence now covers bounded `8/16` and total `108` rows with zero
+  errors; report SHA-256 is
+  `0680a3f17affcd6e9301ab039f5810bb178eae598cd4ad78dcfd7e81547a8084`.
+  Progression diagnostic report, report object, v1 baseline and seed-policy hashes are
+  unchanged; only the deterministic source envelope advanced.
+- `npm run verify` and `npm run verify:full` passed type-check, warning-free lint,
+  unit `4222/4222`, build guard, desktop/mobile smoke and E2E `58/58 + 55/55`.
+  Content, pacing, art (`18/229/22/25`), event-reward and progression-diagnostic
+  verifiers passed. `mobile:doctor` and `cap:sync` passed with tracked Android/iOS
+  drift 0. Protected candidate/Toss aggregates remain
+  `f14235c7...50691`/`05cc9de7...bbbd`.
+- This checkpoint is uncommitted. Human observation, physical-device acceptance,
+  candidate seal, distribution signing, push and publication remain separate gates.
 
 ## Combat Loot Capacity Settlement checkpoint (2026-08-24)
 

@@ -1629,10 +1629,29 @@ export const useGameTestApi = (
                         },
                     }
                     : basePlayer.stats?.codex;
+                const buildFixture = encounter.id === 'forest-root-resonance'
+                    ? {
+                        job: '전사',
+                        equip: {
+                            weapon: DB.ITEMS.weapons.find((item: any) => item.name === '롱소드'),
+                            armor: null,
+                            offhand: DB.ITEMS.armors.find((item: any) => item.name === '목재 방패'),
+                        },
+                    }
+                    : encounter.id === 'plain-windpath-stance'
+                        ? {
+                            job: '전사',
+                            equip: {
+                                weapon: DB.ITEMS.weapons.find((item: any) => item.name === '양손검'),
+                                armor: null,
+                                offhand: null,
+                            },
+                        }
+                        : null;
                 const seededPlayer: any = {
                     ...basePlayer,
                     name: '지역 사건 검증',
-                    job: encounter.eligibility.lineage?.[0] || '모험가',
+                    job: buildFixture?.job || encounter.eligibility.lineage?.[0] || '모험가',
                     loc: region,
                     hp: encounter.eligibility.hpBand === 'strained' ? 80 : 120,
                     maxHp: 150,
@@ -1646,6 +1665,7 @@ export const useGameTestApi = (
                     },
                     eventChainProgress: { lost_wizard: 99 },
                     classJourney,
+                    equip: buildFixture?.equip || basePlayer.equip,
                     activeExpedition: null,
                 };
                 const expeditionPlayer = startExpedition(

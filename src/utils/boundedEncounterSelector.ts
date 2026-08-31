@@ -13,6 +13,7 @@ import { calculateFullStats } from './statsCalculator.js';
 
 const SAFE_ID = /^[a-z0-9][a-z0-9._:-]{0,127}$/;
 const HP_BANDS = new Set(['critical', 'strained', 'healthy']);
+const BOUNDED_BUILD_TAGS = new Set(['arcane', 'fortress', 'crusher', 'dual']);
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> => (
     value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -97,6 +98,15 @@ const validateEncounter = (encounter: unknown) => {
                 || !eligibility.lineage.every((job) => isCopy(job) && Object.hasOwn(DB.CLASSES, job)))) {
             errors.push(`ENCOUNTER_LINEAGE_INVALID:${id}`);
         }
+        if (eligibility.anyBuildTags !== undefined
+            && (!Array.isArray(eligibility.anyBuildTags)
+                || eligibility.anyBuildTags.length === 0
+                || new Set(eligibility.anyBuildTags).size !== eligibility.anyBuildTags.length
+                || !eligibility.anyBuildTags.every((tag) => (
+                    typeof tag === 'string' && BOUNDED_BUILD_TAGS.has(tag)
+                )))) {
+            errors.push(`ENCOUNTER_BUILD_TAGS_INVALID:${id}`);
+        }
         if (eligibility.hpBand !== undefined && !HP_BANDS.has(String(eligibility.hpBand))) {
             errors.push(`ENCOUNTER_HP_BAND_INVALID:${id}`);
         }
@@ -146,7 +156,7 @@ export const validateBoundedEncounterPack = (
     }
     for (const region of selectedRegions) {
         const regional = encounters.filter((encounter) => encounter.region === region);
-        if (regional.length !== 3 || new Set(regional.map((encounter) => encounter.family)).size !== 3) {
+        if (regional.length !== 4 || new Set(regional.map((encounter) => encounter.family)).size !== 4) {
             errors.push(`REGION_FAMILY_COUNT_INVALID:${region}`);
         }
         if (!regional.some((encounter) => Object.keys(encounter.eligibility || {}).length === 0)) {
@@ -179,18 +189,30 @@ const hpBandFor = (hp: number, maxHp: number) => {
     return 'healthy';
 };
 
+const canonicalBuildTags = (tags: unknown) => (
+    Array.isArray(tags)
+        ? [...new Set(tags.filter((tag): tag is string => (
+            typeof tag === 'string' && BOUNDED_BUILD_TAGS.has(tag)
+        )))].sort()
+        : []
+);
+
 const effectiveVitalsFor = (player: Player) => {
     const storedMaxHp = Number(player?.maxHp);
     const storedMaxMp = Number(player?.maxMp);
     const fallback = Number.isFinite(storedMaxHp) && storedMaxHp > 0
         && Number.isFinite(storedMaxMp) && storedMaxMp >= 0
-        ? { maxHp: storedMaxHp, maxMp: storedMaxMp }
+        ? { maxHp: storedMaxHp, maxMp: storedMaxMp, buildTags: [] as string[] }
         : null;
     try {
         const stats = calculateFullStats(player);
         if (!stats || !Number.isFinite(stats.maxHp) || stats.maxHp <= 0
             || !Number.isFinite(stats.maxMp) || stats.maxMp < 0) return null;
-        return { maxHp: Number(stats.maxHp), maxMp: Number(stats.maxMp) };
+        return {
+            maxHp: Number(stats.maxHp),
+            maxMp: Number(stats.maxMp),
+            buildTags: canonicalBuildTags(stats.buildProfile?.tags?.map((tag: any) => tag?.id)),
+        };
     } catch {
         return fallback;
     }
@@ -206,6 +228,7 @@ export const isBoundedEncounterEligible = (
         || !Array.isArray(context.jobLineage)
         || !Array.isArray(context.signatureNames)
         || !Array.isArray(context.bossNames)
+        || !Array.isArray(context.buildTags)
         || !Array.isArray(context.receiptKeys)) return false;
     if (receipt) {
         let receiptKey: string;
@@ -223,6 +246,8 @@ export const isBoundedEncounterEligible = (
     const eligibility = encounter.eligibility;
     if (eligibility.lineage
         && !eligibility.lineage.some((job) => context.jobLineage.includes(job))) return false;
+    if (eligibility.anyBuildTags
+        && !eligibility.anyBuildTags.some((tag) => canonicalBuildTags(context.buildTags).includes(tag))) return false;
     if (eligibility.hpBand && hpBandFor(context.hp, context.maxHp) !== eligibility.hpBand) return false;
     if (eligibility.requiresSignature
         && !context.signatureNames.some((name) => Object.hasOwn(SIGNATURE_ITEM_REGISTRY, name))) return false;
@@ -286,6 +311,7 @@ export const buildBoundedEncounterContext = (player: Player, region: string): Bo
         maxHp: effectiveVitals.maxHp,
         signatureNames: getDiscoveredSignatureNames(player),
         bossNames: [...new Set(bossNames)],
+        buildTags: effectiveVitals.buildTags,
         receiptKeys: receipts,
     };
 };

@@ -85,6 +85,39 @@ export const BOUNDED_ENCOUNTERS: readonly BoundedEncounter[] = Object.freeze([
         ],
     },
     {
+        id: 'forest-root-resonance',
+        version: 1,
+        region: '고요한 숲',
+        family: '뿌리 아래 공명 결계',
+        situation: '현재 갖춘 장비와 유물의 공명이 고요한 숲의 굵은 뿌리 아래 잠든 결계를 깨웁니다. 결계를 이어 다음 전투를 준비할지, 굳은 결정 조각을 거둘지 선택해야 합니다.',
+        eligibility: {
+            lineage: ['전사', '마법사', '도적'],
+            anyBuildTags: ['arcane', 'fortress'],
+        },
+        choices: [
+            {
+                id: 'anchor-root-ward',
+                label: '결계의 흐름을 이어 둔다',
+                tradeoff: '기력 10을 들여 다음 전투의 방어를 단단히 합니다.',
+                cost: { mp: 10 },
+                outcome: {
+                    result: '뿌리의 결계가 이어져 다음 전투의 방어가 단단해집니다.',
+                    buff: { name: '뿌리의 결계', def: 0.2, turn: 3 },
+                },
+            },
+            {
+                id: 'gather-root-crystal',
+                label: '굳은 결정 조각을 거둔다',
+                tradeoff: '생명 8을 감수하고 강화 재료 1개를 확보합니다.',
+                cost: { hp: 8 },
+                outcome: {
+                    item: '강화 재료',
+                    result: '뿌리 사이의 결정을 다듬어 강화 재료 1개를 챙겼습니다.',
+                },
+            },
+        ],
+    },
+    {
         id: 'plain-supply-cart',
         version: 1,
         region: '서쪽 평원',
@@ -166,6 +199,39 @@ export const BOUNDED_ENCOUNTERS: readonly BoundedEncounter[] = Object.freeze([
                 outcome: {
                     gold: 70,
                     result: '메마른 수로 아래에서 골드 70을 찾아냈습니다.',
+                },
+            },
+        ],
+    },
+    {
+        id: 'plain-windpath-stance',
+        version: 1,
+        region: '서쪽 평원',
+        family: '바람길의 전투 흔적',
+        situation: '지금 다듬은 전투 방식이 서쪽 평원을 가로지르는 끊긴 바람길과 맞물립니다. 흐름을 공격에 실을지, 흔적이 가리킨 보관처를 찾을지 선택해야 합니다.',
+        eligibility: {
+            lineage: ['전사', '마법사', '도적'],
+            anyBuildTags: ['crusher', 'dual'],
+        },
+        choices: [
+            {
+                id: 'channel-wind-strike',
+                label: '바람의 흐름을 공격에 싣는다',
+                tradeoff: '기력 8을 들여 다음 전투의 공격을 끌어올립니다.',
+                cost: { mp: 8 },
+                outcome: {
+                    result: '바람길의 흐름을 읽어 다음 전투의 공격이 강해집니다.',
+                    buff: { name: '바람길의 태세', atk: 0.18, turn: 3 },
+                },
+            },
+            {
+                id: 'follow-wind-cache',
+                label: '흔적이 가리킨 보관처를 찾는다',
+                tradeoff: '생명 8을 감수하고 골드 70을 찾아냅니다.',
+                cost: { hp: 8 },
+                outcome: {
+                    gold: 70,
+                    result: '바람길 끝의 보관처에서 골드 70을 찾아냈습니다.',
                 },
             },
         ],

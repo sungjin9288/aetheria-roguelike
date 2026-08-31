@@ -13,6 +13,7 @@ import {
 import { createDomainRandom } from '../src/utils/seededRandom.ts';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { RELICS } from '../src/data/relics.ts';
+import { DB } from '../src/data/db.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 
 const choice = (id, overrides = {}) => ({
@@ -53,6 +54,12 @@ const validPack = () => ([
     encounter('forest-engraved-echo', '고요한 숲', 'engraved-echo', {
         eligibility: { requiresSignature: true },
     }),
+    encounter('forest-root-resonance', '고요한 숲', 'root-resonance', {
+        eligibility: {
+            lineage: ['전사', '마법사', '도적'],
+            anyBuildTags: ['arcane', 'fortress'],
+        },
+    }),
     encounter('plain-boss', '서쪽 평원', 'broken-banner', {
         eligibility: {},
     }),
@@ -61,6 +68,12 @@ const validPack = () => ([
     }),
     encounter('plain-guardian-waterway', '서쪽 평원', 'guardian-waterway', {
         eligibility: { previousBoss: '고대 호수의 수호신' },
+    }),
+    encounter('plain-windpath-stance', '서쪽 평원', 'windpath-stance', {
+        eligibility: {
+            lineage: ['전사', '마법사', '도적'],
+            anyBuildTags: ['crusher', 'dual'],
+        },
     }),
 ]);
 
@@ -71,20 +84,21 @@ const context = (overrides = {}) => ({
     maxHp: 100,
     signatureNames: ['성검 에테르니아'],
     bossNames: ['고대 호수의 수호신'],
+    buildTags: [],
     receiptKeys: [],
     ...overrides,
 });
 
-test('production encounter pack contains exactly the approved early-region families', () => {
+test('production encounter pack contains exactly the approved build-reactive early-region families', () => {
     assert.equal(BOUNDED_ENCOUNTER_PACK_ENABLED, true);
-    assert.equal(BOUNDED_ENCOUNTERS.length, 6);
+    assert.equal(BOUNDED_ENCOUNTERS.length, 8);
     assert.deepEqual([...new Set(BOUNDED_ENCOUNTERS.map((entry) => entry.region))], ['고요한 숲', '서쪽 평원']);
     assert.deepEqual(
         BOUNDED_ENCOUNTERS.reduce((counts, entry) => ({
             ...counts,
             [entry.region]: (counts[entry.region] || 0) + 1,
         }), {}),
-        { '고요한 숲': 3, '서쪽 평원': 3 },
+        { '고요한 숲': 4, '서쪽 평원': 4 },
     );
     assert.deepEqual(
         BOUNDED_ENCOUNTERS.map((entry) => entry.id),
@@ -92,14 +106,16 @@ test('production encounter pack contains exactly the approved early-region famil
             'forest-old-pillars',
             'forest-mutated-trail',
             'forest-engraved-echo',
+            'forest-root-resonance',
             'plain-supply-cart',
             'plain-bandit-banner',
             'plain-guardian-waterway',
+            'plain-windpath-stance',
         ],
     );
     assert.deepEqual(
         [...new Set(BOUNDED_ENCOUNTERS.flatMap((entry) => Object.keys(entry.eligibility)))].sort(),
-        ['hpBand', 'lineage', 'previousBoss', 'requiresSignature'],
+        ['anyBuildTags', 'hpBand', 'lineage', 'previousBoss', 'requiresSignature'],
     );
     assert.deepEqual(validateBoundedEncounterPack(BOUNDED_ENCOUNTERS, ['고요한 숲', '서쪽 평원']), { ok: true, errors: [] });
 });
@@ -170,16 +186,29 @@ test('production pack keeps the approved signature and previous-boss encounter c
     });
 });
 
-test('pack validator requires exactly three canonical families per selected region', () => {
+test('pack validator requires exactly four canonical families per selected region', () => {
     assert.deepEqual(
         validateBoundedEncounterPack(validPack(), ['고요한 숲', '서쪽 평원']),
         { ok: true, errors: [] },
     );
 
-    const missing = validPack().slice(0, 5);
+    const missing = validPack().filter((entry) => entry.id !== 'plain-windpath-stance');
     const result = validateBoundedEncounterPack(missing, ['고요한 숲', '서쪽 평원']);
     assert.equal(result.ok, false);
     assert.ok(result.errors.includes('REGION_FAMILY_COUNT_INVALID:서쪽 평원'));
+});
+
+test('pack validator rejects empty, duplicate, and unknown build tags', () => {
+    for (const anyBuildTags of [[], ['arcane', 'arcane'], ['arcane', 'unknown']]) {
+        const invalid = validPack();
+        invalid[3] = {
+            ...invalid[3],
+            eligibility: { ...invalid[3].eligibility, anyBuildTags },
+        };
+        const result = validateBoundedEncounterPack(invalid, ['고요한 숲', '서쪽 평원']);
+        assert.equal(result.ok, false);
+        assert.ok(result.errors.includes('ENCOUNTER_BUILD_TAGS_INVALID:forest-root-resonance'));
+    }
 });
 
 test('pack validator requires an unconditional family in every selected region', () => {
@@ -236,6 +265,64 @@ test('eligibility covers region, lineage, HP band, signature, boss and replay re
         bossEncounter,
         context({ region: '서쪽 평원', bossNames: [] }),
     ), false);
+});
+
+test('build eligibility is OR within build tags and AND across lineage', () => {
+    const forestBuild = validPack().find((entry) => entry.id === 'forest-root-resonance');
+    assert.equal(isBoundedEncounterEligible(forestBuild, context({
+        jobLineage: ['모험가', '전사'],
+        buildTags: ['arcane'],
+    })), true);
+    assert.equal(isBoundedEncounterEligible(forestBuild, context({
+        jobLineage: ['모험가', '전사'],
+        buildTags: ['fortress'],
+    })), true);
+    assert.equal(isBoundedEncounterEligible(forestBuild, context({
+        jobLineage: ['모험가', '전사'],
+        buildTags: ['crusher'],
+    })), false);
+    assert.equal(isBoundedEncounterEligible(forestBuild, context({
+        jobLineage: ['모험가'],
+        buildTags: ['arcane', 'fortress'],
+    })), false);
+});
+
+test('bounded context derives only canonical ranked build tags, never class fallback identity', () => {
+    const findItem = (name) => [
+        ...DB.ITEMS.weapons,
+        ...DB.ITEMS.armors,
+    ].find((entry) => entry.name === name);
+    const relic = (effect) => RELICS.find((entry) => entry.effect === effect);
+    const buildPlayer = (overrides = {}) => ({
+        ...structuredClone(INITIAL_STATE.player),
+        hp: 120,
+        maxHp: 150,
+        mp: 40,
+        maxMp: 60,
+        ...overrides,
+    });
+
+    const fallbackOnly = buildPlayer({
+        job: '나이트',
+        equip: { weapon: null, armor: null, offhand: null },
+    });
+    assert.equal(calculateFullStats(fallbackOnly).buildProfile.primary.id, 'fortress');
+    assert.deepEqual(buildBoundedEncounterContext(fallbackOnly, '고요한 숲')?.buildTags, []);
+
+    const equipped = buildPlayer({
+        job: '도적',
+        equip: {
+            weapon: findItem('녹슨 단검'),
+            armor: null,
+            offhand: findItem('투척용 단검'),
+        },
+        relics: ['execute_bonus', 'armor_pen', 'event_chance', 'gold_mult'].map(relic),
+    });
+    assert.deepEqual(
+        calculateFullStats(equipped).buildProfile.tags.map((entry) => entry.id),
+        ['dual', 'crusher', 'explorer'],
+    );
+    assert.deepEqual(buildBoundedEncounterContext(equipped, '서쪽 평원')?.buildTags, ['crusher', 'dual']);
 });
 
 test('production selection includes each context-gated encounter only when its axis is satisfied', () => {

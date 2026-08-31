@@ -101,7 +101,8 @@ test('accepted general narrative roll selects a bounded encounter before AI gene
 });
 
 test('bounded event shape exposes canonical trade-offs but not settlement fields', () => {
-    const event = buildBoundedEncounterEvent(BOUNDED_ENCOUNTERS[3], 7);
+    const encounter = BOUNDED_ENCOUNTERS.find((entry) => entry.id === 'plain-supply-cart');
+    const event = buildBoundedEncounterEvent(encounter, 7);
     assert.deepEqual(event.choices, ['수레를 고쳐 보급을 챙긴다', '수레를 빠르게 뒤진다']);
     assert.deepEqual(event.outcomes, [
         { choiceIndex: 0, choiceId: 'repair-cart', tradeoff: '안정적으로 골드 40과 하급 체력 물약 1개를 얻습니다.', tone: 'reward' },

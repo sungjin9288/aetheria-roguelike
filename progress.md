@@ -3299,3 +3299,18 @@ Verification:
 Scope and gates:
 - The cohesive dirty set is `src/services/aiService.ts`, `tests/ai-service.test.js`, `tests/cycle-600-699.test.js`, `tests/e2e/naturalExplorationReport.ts`, `tests/e2e/natural-exploration-rhythm.spec.ts`, `tests/natural-exploration-observation.test.js`, `docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json`, `tasks/todo.md`, and `progress.md`. `package.json` and `src/hooks/useGameTestApi.ts` remain byte-identical to HEAD.
 - Gameplay numerics, progression profile, save schema, production UI and native source are unchanged. Historical candidate/Toss aggregates remain protected. The automated browser evidence and mock-runtime fix are grouped into the approved exact 9-path cohesive checkpoint. Human observation, physical-device acceptance, signing, push and publish remain separate gates.
+
+Checkpoint (2026-08-31: build-reactive early-region encounters, verified closeout):
+- Expanded the verified `고요한 숲 + 서쪽 평원` bounded pack from 6 to 8 encounters without changing exploration occurrence frequency. `forest-root-resonance` responds to canonical `arcane|fortress` build tags and `plain-windpath-stance` responds to `crusher|dual`, while both also require a real warrior, mage, or rogue lineage.
+- Added transient `anyBuildTags` eligibility derived only from `calculateFullStats(player).buildProfile.tags[].id`. Class fallback identity, unknown tags, persistence, event payloads, save data, profile numerics, reducer settlement and production UI remain outside the contract.
+- Refreshed event-reward evidence to 108 rows and the Progression Diagnostic v2 source envelope. Progression `reportHash`, inner report object, v1 baseline and seed policy hashes remain unchanged.
+
+Focused verification:
+- TDD RED observed for the 8-family pack, build-tag validation/eligibility/context, mobile test fixture and evidence mismatch; the corresponding GREEN checks now pass.
+- Bounded encounter, integration, presentation, reward-audit and exploration-rhythm suite: `51/51` PASS.
+- Focused 390×844 Playwright build-reactive encounter flow: `1/1` PASS; screenshot inspected at `test-results/content-pacing-encounters--249cb-thout-persisting-build-tags-chromium-mobile/content-depth-build-forest-390x844.png` with both choices readable and no horizontal overflow.
+- `npx tsc --noEmit`, `npm run lint`, `npm run event-reward:verify`, `npm run progression:diagnostic:verify` and `git diff --check`: PASS.
+- `npm run verify` and `npm run verify:full` passed unit `4222/4222`, build guard, desktop/mobile smoke and E2E `58/58 + 55/55`. Content, pacing, art (`18/229/22/25`), event-reward and progression-diagnostic verifiers passed.
+- `npm run mobile:doctor` and `npm run cap:sync` passed with tracked Android/iOS drift 0. Apple Distribution identity and Android release signing inputs remain external environment blockers.
+- Protected candidate/Toss aggregate hashes remain `f14235c7e630d54e9568b151f34fda66e54de63f564e865f3f1ad9bfdbc50691` and `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- Sol ultra current-byte audit found no open Critical, Important or Minor finding. The 15 tracked paths remain one uncommitted cohesive checkpoint; human observation, physical-device acceptance, candidate seal, commit, push, signing and publication remain separate gates.
