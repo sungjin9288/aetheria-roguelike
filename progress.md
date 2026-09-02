@@ -3365,3 +3365,12 @@ Verification:
 Scope and remaining gates:
 - Gameplay numerics, save schema, production UI and native source are unchanged. No native debug/archive artifact, human observation, commit, push, deployment, signing or publication was produced.
 - Local Pages runtime and Firestore emulator proof are closed. Next gates are a production-equivalent Cloudflare candidate deployment, deployed Firestore rules confirmation, five fresh candidate-bound human sessions and physical background/foreground coverage.
+
+Checkpoint (2026-09-03: human-observation host preflight exact local commit):
+- Committed the approved exact seven-path checkpoint as `6d604ed6fb0fb5eae22c662d34a371d06872a7ea`. Its sorted path set SHA-256 is `d374d11618ab7abc7194ebf31f5c928157460ac7d6fe5ed324d2590c09f81a7b`, and its seven-file committed-content aggregate is `bf25c9ca169cf3ac65871ed80422675f2e885596fe01ec664c3dc7cfc494deb2`. This checkpoint supersedes only the earlier no-commit statement above; gameplay, save, UI and native boundaries remain unchanged.
+- Fresh post-commit verification passed: host readiness `5/5`, progression diagnostic evidence `4c58fcba732d1f3aa60561d37aa09592ffeda1c8a84b0f5ac410e858cdfef27a`, and `npm run verify` with type-check, lint, unit `4258/4258` and build guard. The exact two-ledger reconciliation also passes `git diff --check`, has an empty index and keeps Android/iOS tracked drift at 0.
+- Protected candidate/Toss aggregates remain `2b909aba736111aba0f6f0a67d2cebd316fd4278762e49f4d3023198a4f8d910` and `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`. Human observation remains `0/5`; no native build/archive, push, candidate seal, deployment, signing or publication was performed.
+- This post-commit reconciliation changes only `tasks/todo.md` and `progress.md` and remains uncommitted pending a separate exact two-path docs-only approval.
+
+Checkpoint (2026-09-03: exact two-ledger reconciliation transition):
+- Approval was received for the exact `tasks/todo.md` and `progress.md` docs-only checkpoint. This entry supersedes the approval-pending statement immediately above; the resulting local Git commit is the reconciliation source identity. No gameplay, evidence, native, candidate or deployment path is part of this transition, and push, candidate seal, deployment, signing and publication remain separate approval boundaries.
