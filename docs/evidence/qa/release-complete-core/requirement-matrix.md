@@ -11,30 +11,27 @@ Status vocabulary is deliberately narrow:
 The current branch is `codex/release-complete-core`. Historical observation candidates
 `release-core-3a2407a0c961` and `release-core-1eb890a1dda4` remain bound to their exact
 source checkpoints; the latter stays `0/5` with summary SHA `9239c156...a71`. The
-latest sealed Class Journey predecessor is bound to `release-core-004999465279` with
-archive SHA-256 `076268b4d435ec7a77abb8cdfdd22984719f8e9ee888875e9e192d3d8997c684`.
-Its candidate-specific schema-v2 summary SHA-256 is `526c1224...320e` and remains
-`0/5`; no previous or automated
-session is counted. The current verified Scout/quota source correction is uncommitted
-and therefore has no candidate identity. All prior Toss
+current source commit `79df84f6efb75c59b96bffa83efd7a2b6e8938ab` is bound to
+`release-core-79df84f6efb7` with archive SHA-256
+`e6ffa9efc7f5aed354ee1aa98aed4b07f2226a7a8ebd752cbf2b2ab7c14c9064`.
+Its candidate-specific schema-v2 summary SHA-256 is `395ff276...c7c0` and remains
+`0/5`; no previous, automated or agent-driven session is counted. All prior Toss
 candidate and deployment evidence is superseded and remains audit-only. The latest
 repository-owned gate below was executed on 2026-09-02 KST.
 
-The next gate is a separately approved cohesive source commit, post-commit verification
-and a fresh archive/candidate seal. Five genuinely fresh human observations may begin
-only against that new candidate. The historical candidate-specific
-`observation-summary.json` exists and `region-selection.json` remains absent; the root
-`region-selection.json` remains absent by policy. Selector regression is `14/14`, and
-the historical sealed `0/5` input fails closed with `INSUFFICIENT_FRESH_OBSERVATIONS`
-without writing selection evidence.
+The next gate is five genuinely fresh human observations bound to this exact candidate.
+Its candidate-specific `observation-summary.json` exists and `region-selection.json`
+remains absent; the root `region-selection.json` remains absent by policy. Selector
+regression is `14/14`, and direct execution against the sealed `0/5` input fails closed
+with `INSUFFICIENT_FRESH_OBSERVATIONS` without writing selection evidence.
 
 | Requirement | Current state | Direct evidence | Remaining gate |
 | --- | --- | --- | --- |
-| Fresh creation and first action | browser verified; latest sealed predecessor remains human `0/5` | `release-core-004999465279`, archive SHA `076268b4...c684`, `tests/e2e/release-complete-core.spec.ts`, full smoke | commit and seal the current source, then five fresh human observations |
-| First move, explore, combat and safe return | implemented/browser verified; Scout one-input/one-settlement fixed | focused Scout/generosity/quota `48/48`; current full unit `4253/4253`; E2E `59/59 + 55/55`; direct 390×844 Explore count `21 + 4 = 25`, width/scroll-width `390/390` | cohesive commit, new candidate seal, then fresh human observation |
+| Fresh creation and first action | browser verified; current candidate sealed at human `0/5` | `release-core-79df84f6efb7`, archive SHA `e6ffa9ef...c9064`, `tests/e2e/release-complete-core.spec.ts`, full smoke | five fresh human candidate observations |
+| First move, explore, combat and safe return | implemented/browser verified; Scout one-input/one-settlement fixed and sealed | focused Scout/generosity/quota `48/48`; current full unit `4253/4253`; E2E `59/59 + 55/55`; direct 390×844 Explore count `21 + 4 = 25`, width/scroll-width `390/390` | fresh human candidate observation |
 | Equipment decision and level-5 job change | browser verified | `tests/e2e/release-complete-core.spec.ts` | fresh human candidate observation |
 | Skill branch and Class Journey | browser verified | production UI journey E2E and class-journey contracts | fresh human candidate observation |
-| Class Journey encounter discovery | implemented/browser verified; Scout accounting regression closed on current bytes | accepted receipt -> safe return projection; v1->v2 additive migration; Class Journey focused `131/131`; Scout/quota focused `48/48`; current full unit `4253/4253`; full E2E `59/59 + 55/55`; progression evidence `8ba9cdbd...9046` with unchanged report/v1/seed semantics | cohesive commit and new candidate seal, then five fresh human observations |
+| Class Journey encounter discovery | implemented/browser verified; Scout accounting regression closed and candidate sealed | accepted receipt -> safe return projection; v1->v2 additive migration; Class Journey focused `131/131`; Scout/quota focused `48/48`; current full unit `4253/4253`; full E2E `59/59 + 55/55`; progression evidence `8ba9cdbd...9046` with unchanged report/v1/seed semantics; candidate `release-core-79df84f6efb7` | five fresh human observations |
 | Death preserves permanent progress | implemented | `tests/permanent-progress.test.js`, `tests/permanent-progress-copy.test.js` | physical-device observation |
 | Manual reset preserves permanent progress | implemented/browser verified | permanent-state tests and reset UI contracts | physical-device observation |
 | Ascension preserves permanent progress | browser verified | permanent-state tests, release-complete E2E | physical-device observation |
@@ -60,7 +57,7 @@ without writing selection evidence.
 | Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
 | Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; current v3 combat evidence `786c4898...e6bb` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
 | Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; bounded `8/16`, total 108-row report `0680a3f1...8084`; focused encounter/event `51/51` | human candidate observation |
-| Repository gate | verified on current uncommitted source bytes (2026-09-02) | `npm run verify:full`: type-check/lint/unit `4253/4253`/build guard, desktop/mobile smoke, E2E `59/59 + 55/55`; progression `8ba9cdbd...9046`, content `a6626375...b4f0e8`, pacing `0818fb7a...424e`, art `18/229/22/25`, event `0680a3f1...8084`; `mobile:doctor`, `cap:sync`, tracked native drift 0 | separately approved cohesive commit, post-commit verification, then new archive/candidate seal and five fresh human observations |
+| Repository gate | committed, post-commit verified and candidate sealed (2026-09-02) | source `79df84f6efb7`; post-commit type-check/lint/unit `4253/4253`/build guard; current-byte `verify:full` desktop/mobile smoke and E2E `59/59 + 55/55`; progression `8ba9cdbd...9046`, content `a6626375...b4f0e8`, pacing `0818fb7a...424e`, art `18/229/22/25`, event `0680a3f1...8084`; `mobile:doctor`, `cap:sync`, tracked native drift 0; candidate `release-core-79df84f6efb7` | five fresh human observations, then physical/signing gates |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
 

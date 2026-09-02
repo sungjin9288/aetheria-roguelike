@@ -4,10 +4,30 @@ Date: 2026-09-02 KST
 
 Status: content pacing, eight-family bounded encounters, relic balance, equipment economy,
 equipment combat-power sidegrades, consumable authority and event reward transactions
-are locally verified. Candidate `release-core-004999465279` remains a historical sealed
-Class Journey checkpoint at `0/5`; the current Scout/quota source correction is verified
-but uncommitted and has no candidate identity. Cohesive commit, fresh archive seal,
-fresh-human acceptance, push and external release gates remain HOLD.
+are locally verified. Source commit `79df84f6efb75c59b96bffa83efd7a2b6e8938ab`
+is sealed as candidate `release-core-79df84f6efb7` at `0/5` fresh human observations.
+Fresh-human acceptance, Firebase deployed-rule proof, push and external release gates
+remain HOLD.
+
+## Scout/quota observation candidate seal (2026-09-02)
+
+- Source commit `79df84f6efb75c59b96bffa83efd7a2b6e8938ab` is bound to
+  `release-core-79df84f6efb7`; two independent Git archive passes matched at SHA-256
+  `e6ffa9efc7f5aed354ee1aa98aed4b07f2226a7a8ebd752cbf2b2ab7c14c9064`.
+- The candidate-specific schema-v2 summary contains no observations, issues or actions.
+  Its SHA-256 is
+  `395ff276ba0b3d0b33f6a382e810ffae5205385e17695e2f9d9d3bf9437ec7c0`.
+  The candidate evidence aggregate advances from `ccbff795...0ea58` to
+  `2b909aba...d910` solely through this new summary; historical Toss evidence remains
+  `05cc9de7...bbbd`.
+- Region-selector regression passed `14/14`. Direct execution against the empty summary
+  returned exit `1` with `INSUFFICIENT_FRESH_OBSERVATIONS` and left both candidate and
+  root `region-selection.json` absent. Automated and agent QA do not advance the human
+  `0/5` count.
+- Five genuinely fresh sessions bound to this exact candidate are next. Physical-device
+  acceptance, Firebase emulator/deployed-rule validation, signing, push and publication
+  remain separate gates. The empty summary remains untracked audit evidence; this audit
+  record does not change the sealed source identity.
 
 ## Scout settlement and quota contract checkpoint (2026-09-02)
 
@@ -35,10 +55,9 @@ fresh-human acceptance, push and external release gates remain HOLD.
   width/scroll-width `390/390` with no horizontal overflow. This is agent QA, not a
   human candidate observation, and no tracked screenshot was refreshed.
 - This section supersedes only the unresolved defect status in the historical
-  2026-08-31 QA record below. The current source/test/evidence/ledger bytes are
-  uncommitted and not bound to the historical sealed candidate. A separately approved
-  cohesive commit, post-commit verification and fresh archive/candidate seal must occur
-  before five new human sessions. No commit, push, signing or publication was performed.
+  2026-08-31 QA record below. Its exact source/test/evidence/ledger bytes were committed
+  as `79df84f6efb75c59b96bffa83efd7a2b6e8938ab`; the candidate seal immediately above
+  now binds that source at human `0/5`. No push, signing or publication was performed.
 
 ## Agent-driven direct browser QA (2026-08-31)
 
@@ -426,10 +445,9 @@ only and cannot be reused for the current candidate.
 
 ## Explicit blockers and next gate
 
-- The Scout/quota correction is verified on current working-tree bytes but remains
-  uncommitted and has no candidate identity. The immediate gate is a separately approved
-  cohesive commit, post-commit verification and fresh archive/evidence seal; only that
-  newly sealed candidate may collect the next five human observations.
+- The Scout/quota correction is committed and sealed as `release-core-79df84f6efb7`.
+  The immediate gate is five complete fresh human observations bound to its exact
+  candidate ID and source archive hash; no previous or automated observation counts.
 - The earlier `1/5` browser observation belongs to superseded commit `f9d463a`.
   The root `observation-summary.json` remains bound to later historical candidate
   `3a2407a` at `0/5`; neither record counts for the next candidate. Candidate-specific
@@ -463,10 +481,9 @@ only and cannot be reused for the current candidate.
 The repository-owned consumable/event closure and final web/mobile/native regression
 gates are complete for predecessor checkpoint `0fde5f52e8b13b011857dec38449a906fe672bf4`,
 and its post-commit full/native proof is complete. The current Scout/quota source slice
-also passes its local gates but assigns no candidate identity while uncommitted. Its next
-gate is cohesive commit approval, post-commit proof and a new candidate-specific archive
-and evidence seal, then five fresh human journeys. Push, signing and release remain
-separate approval boundaries.
+is committed as `79df84f6efb75c59b96bffa83efd7a2b6e8938ab` and bound to
+`release-core-79df84f6efb7`. Its next gate is five fresh human journeys. Push, signing
+and release remain separate approval boundaries.
 
 ## Cohesive commit boundary
 
