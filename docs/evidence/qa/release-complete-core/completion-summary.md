@@ -1,13 +1,82 @@
 # Release-complete core completion summary
 
-Date: 2026-08-31 KST
+Date: 2026-09-02 KST
 
 Status: content pacing, eight-family bounded encounters, relic balance, equipment economy,
 equipment combat-power sidegrades, consumable authority and event reward transactions
-are locally verified. The current encounter-depth slice has no observation-candidate
-identity; the next candidate-specific archive/evidence seal follows its explicitly
-approved cohesive source checkpoint.
-Fresh-human acceptance, push and external release gates remain HOLD.
+are locally verified. Candidate `release-core-004999465279` remains a historical sealed
+Class Journey checkpoint at `0/5`; the current Scout/quota source correction is verified
+but uncommitted and has no candidate identity. Cohesive commit, fresh archive seal,
+fresh-human acceptance, push and external release gates remain HOLD.
+
+## Scout settlement and quota contract checkpoint (2026-09-02)
+
+- Scout card opening is the sole exploration-count settlement. Combat, anomaly and quiet
+  choices preserve their production transforms without calling `commitExploreOutcome()`
+  again; the quiet choice also returns to `IDLE` before its existing quiet-roll/combat
+  continuation. Focused TDD reproduced the stale quiet state, then passed `48/48`.
+- The anonymous quota snapshot now writes only
+  `artifacts/aetheria-rpg/users/{uid}/quota/daily-ai`. The client uses
+  `serverTimestamp()` and merge semantics while local state remains authoritative and
+  cloud failure remains non-blocking. Firestore rules restrict the path to its owner,
+  exact bounded fields, limit `50`, request-time `updatedAt`, monotonic same-day `used`
+  and zero usage on date rollover; reads, deletes and broader writes remain denied.
+  Runtime/static contract tests passed, but Firebase emulator and deployed-rule proof
+  were unavailable and are not claimed.
+- `npm run verify` and `npm run verify:full` passed type-check, lint, unit `4253/4253`,
+  build guard, desktop/mobile smoke and E2E `59/59 + 55/55`. Content, pacing,
+  event-reward, progression/relic-event evidence, art `18/229/22/25`,
+  `mobile:doctor`, `cap:sync` and tracked-native drift `0` also passed. Progression
+  evidence SHA-256 is
+  `8ba9cdbde1b6cdfddacfbbb150583cfb1c299d318938f7ad58e2efe1be109046`;
+  report, v1 baseline and seed semantics are unchanged.
+- Direct 390×844 rendered play began at `탐험 횟수 21`, used four visible Explore
+  inputs including a real Scout selection, and ended at exactly `25`. The page measured
+  width/scroll-width `390/390` with no horizontal overflow. This is agent QA, not a
+  human candidate observation, and no tracked screenshot was refreshed.
+- This section supersedes only the unresolved defect status in the historical
+  2026-08-31 QA record below. The current source/test/evidence/ledger bytes are
+  uncommitted and not bound to the historical sealed candidate. A separately approved
+  cohesive commit, post-commit verification and fresh archive/candidate seal must occur
+  before five new human sessions. No commit, push, signing or publication was performed.
+
+## Agent-driven direct browser QA (2026-08-31)
+
+- The sealed production surface at `127.0.0.1:4292` passed direct agent control from
+  fresh character creation through move, exploration choices, seven completed combats,
+  attack/skill/combat-potion actions, failed then successful escape, three safe returns,
+  mission reward, rest, reload restore and 390x844 debrief inspection.
+- A separate isolated test-harness build passed the exact Class Journey bounded choice ->
+  normal movement -> safe return -> reopen journey `1/1`; the complete debrief file passed
+  `4/4`, and focused Class Journey/expedition/scout/selector unit coverage passed `73/73`.
+- Direct play found an explore-accounting defect: eight Explore button inputs were shown
+  as nine after one scout turn. The scout opening and its selected settlement both call
+  `commitExploreOutcome()`. The current scout tests do not assert one input equals one
+  exploration count.
+- Browser console also exposed a denied `user_quotas/{uid}` write. The client writes that
+  top-level collection, while current Firestore rules allow only
+  `artifacts/aetheria-rpg/**`; local save/play continued, but cross-device quota sync did
+  not.
+- This is agent-driven evidence only and does not increment the human gate. The sealed
+  candidate remains `0/5`. The in-app browser remained `visible`, so this run makes no
+  direct background/foreground claim. No source correction, candidate evidence row,
+  commit, push, signing or publication was performed.
+
+## Class Journey observation candidate seal (2026-08-31)
+
+- Source commit `0049994652796ac4c5d2860cc7096344dd3da9b8` is bound to
+  `release-core-004999465279`; two independent Git archive passes matched at SHA-256
+  `076268b4d435ec7a77abb8cdfdd22984719f8e9ee888875e9e192d3d8997c684`.
+- The candidate-specific schema-v2 summary contains no observations, issues or actions.
+  Its SHA-256 is `526c1224ba4e0f55eccf9150fd38300e835ab342423cc566b92321d9c126320e`.
+  Historical root/candidate evidence is preserved and was not repointed; the candidate
+  aggregate advances to `ccbff795...0ea58` solely because of this summary, while Toss
+  evidence remains `05cc9de7...bbbd`.
+- Region-selector regression passed `14/14`. Direct candidate selection returned exit 1
+  with `INSUFFICIENT_FRESH_OBSERVATIONS` and left `region-selection.json` absent.
+  Automation does not advance the human `0/5` count.
+- Five genuinely fresh candidate-bound human sessions are next. Physical-device
+  acceptance, signing, push and publication remain separate gates.
 
 ## Class Journey encounter discovery checkpoint (2026-08-31)
 
@@ -39,8 +108,8 @@ Fresh-human acceptance, push and external release gates remain HOLD.
   0. Independent Sol ultra review passed with Critical/Important/Minor `0/0/0` and
   accepted the two fixture-only path additions as a bounded re-plan with no production
   boundary expansion. The user approved one exact 20-path cohesive local implementation
-  commit. Human observation, physical-device acceptance, candidate seal, signing, push
-  and publication remain separate and have not been performed.
+  commit. Its later candidate seal is recorded above; human observation, physical-device
+  acceptance, signing, push and publication remain separate and have not been performed.
 - The first repository-wide unit run correctly exposed one stale v1 exact-object
   expectation in the production storage/New Game+ regression. A bounded Sol re-plan
   added `tests/endgame-settlement.test.js`; its v1-save to v2-preservation path now
@@ -357,6 +426,10 @@ only and cannot be reused for the current candidate.
 
 ## Explicit blockers and next gate
 
+- The Scout/quota correction is verified on current working-tree bytes but remains
+  uncommitted and has no candidate identity. The immediate gate is a separately approved
+  cohesive commit, post-commit verification and fresh archive/evidence seal; only that
+  newly sealed candidate may collect the next five human observations.
 - The earlier `1/5` browser observation belongs to superseded commit `f9d463a`.
   The root `observation-summary.json` remains bound to later historical candidate
   `3a2407a` at `0/5`; neither record counts for the next candidate. Candidate-specific
@@ -389,10 +462,11 @@ only and cannot be reused for the current candidate.
 
 The repository-owned consumable/event closure and final web/mobile/native regression
 gates are complete for predecessor checkpoint `0fde5f52e8b13b011857dec38449a906fe672bf4`,
-and its post-commit full/native proof is complete. This docs-only reconciliation assigns
-no candidate identity. The next gate is the candidate-specific archive and evidence seal
-of the reconciled current HEAD, then five fresh human journeys. Push, signing and release
-remain separate approval boundaries.
+and its post-commit full/native proof is complete. The current Scout/quota source slice
+also passes its local gates but assigns no candidate identity while uncommitted. Its next
+gate is cohesive commit approval, post-commit proof and a new candidate-specific archive
+and evidence seal, then five fresh human journeys. Push, signing and release remain
+separate approval boundaries.
 
 ## Cohesive commit boundary
 
