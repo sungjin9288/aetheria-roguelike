@@ -52,7 +52,36 @@ observer note through its SHA-256 only; keep the raw attachment outside the repo
 Automation, smoke, Playwright and test-harness sessions never increase the human
 `0/5` count.
 
-## 2. Collect five genuinely fresh human sessions
+## 2. Prove the observation host is production-equivalent
+
+Do not count a session that runs production client bytes against an incomplete static
+host. In particular, `vite preview` serves the SPA but does not serve the Cloudflare
+Pages Functions under `functions/api/`. When a candidate build has
+`VITE_USE_AI_PROXY=true`, verify the exact candidate deployment before opening the
+first human session:
+
+```bash
+npm run observation:host:verify -- --url https://<candidate-deployment-host>
+```
+
+The verifier requires all three externally visible contracts:
+
+- the root document is HTTP 200 HTML;
+- `OPTIONS /api/ai-proxy` is HTTP 200 and allows `POST`;
+- an unauthenticated `POST /api/ai-proxy` is HTTP 401 JSON.
+
+`AI_PROXY_ROUTE_MISSING` means the SPA is being served without its serverless route.
+`AI_PROXY_ORIGIN_REJECTED` means the route exists but its `ALLOWED_ORIGINS` deployment
+configuration does not admit the candidate origin. Neither host may be used for human
+evidence. Do not hide these failures by allowing broad 404 responses or by changing
+production AI behavior to accommodate a local static server.
+
+This preflight proves route and origin wiring only. It does not claim a successful AI
+provider call, deployed Firestore rules, Firebase emulator coverage, signing or
+publication. The quota snapshot remains local-authoritative and non-blocking; its
+deployed-rule validation is a separate external gate.
+
+## 3. Collect five genuinely fresh human sessions
 
 Each `observationId` is an opaque `obs_` plus 32 lowercase hexadecimal characters.
 Never derive it from a nickname, user key, email, device serial or session token.
@@ -73,7 +102,7 @@ Every session must satisfy all of the following:
 Action sequences start at `1` for each observation and remain contiguous. Safe-region
 and rejected actions may be recorded but never contribute to region ranking.
 
-## 3. Record issue metadata without private prose
+## 4. Record issue metadata without private prose
 
 Issue IDs use `issue_` plus 32 lowercase hexadecimal characters. The tracked summary
 stores only:
@@ -91,7 +120,7 @@ Any P0 or blocking P1 invalidates the candidate for region activation. Fix it on
 candidate and restart the five-session set. Nonblocking P1 and P2 rows may remain and
 are counted in the generated selection evidence.
 
-## 4. Example shape
+## 5. Example shape
 
 ```json
 {
@@ -145,7 +174,7 @@ are counted in the generated selection evidence.
 The real summary needs at least five complete observation objects and corresponding
 contiguous action rows.
 
-## 5. Generate selection only after the gate passes
+## 6. Generate selection only after the gate passes
 
 ```bash
 node scripts/select-bounded-encounter-regions.mjs \
