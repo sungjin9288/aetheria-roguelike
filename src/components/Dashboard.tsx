@@ -80,6 +80,9 @@ const Dashboard = ({
 }: DashboardProps) => {
     const [confirmMenuReset, setConfirmMenuReset] = useState(false);
     const archiveRailRef = useRef<HTMLDivElement>(null);
+    const resetTriggerRef = useRef<HTMLButtonElement>(null);
+    const resetConfirmationRef = useRef<HTMLDivElement>(null);
+    const resetConfirmButtonRef = useRef<HTMLButtonElement>(null);
     const isInSafeZone = DB.MAPS[player?.loc as string]?.type === 'safe';
     const hasCompletableQuest = (player?.quests || []).some((quest: any) => quest.done && !quest.claimed);
     const activeTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
@@ -111,6 +114,17 @@ const Dashboard = ({
         const selectedCenter = selectedTab.offsetLeft + (selectedTab.offsetWidth / 2);
         rail.scrollLeft = Math.max(0, selectedCenter - (rail.clientWidth / 2));
     }, [sideTab]);
+
+    useEffect(() => {
+        if (!confirmMenuReset) return;
+        resetConfirmationRef.current?.scrollIntoView({ block: 'nearest' });
+        resetConfirmButtonRef.current?.focus({ preventScroll: true });
+    }, [confirmMenuReset]);
+
+    const cancelMenuReset = () => {
+        setConfirmMenuReset(false);
+        window.requestAnimationFrame(() => resetTriggerRef.current?.focus());
+    };
 
     const renderTabContent = () => (
         <div key={typeof sideTab === 'string' ? sideTab : 'inventory'} className="space-y-2 pr-1">
@@ -273,9 +287,12 @@ const Dashboard = ({
                                 </p>
                             </div>
                             <button
+                                ref={resetTriggerRef}
                                 type="button"
                                 data-testid="menu-reset"
-                                onClick={() => setConfirmMenuReset(true)}
+                                aria-expanded={confirmMenuReset}
+                                aria-controls="menu-reset-confirmation"
+                                onClick={() => setConfirmMenuReset((open) => !open)}
                                 className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-[0.65rem] border border-rose-300/18 bg-rose-950/28 px-3 py-1.5 text-[11px] font-readable text-rose-100/84 transition-colors hover:border-rose-200/28 hover:bg-rose-900/34"
                                 title="현재 여정 다시 시작"
                             >
@@ -285,7 +302,17 @@ const Dashboard = ({
                         </div>
 
                         {confirmMenuReset && (
-                            <div className="mt-2 border-t border-rose-300/12 pt-2">
+                            <div
+                                ref={resetConfirmationRef}
+                                id="menu-reset-confirmation"
+                                data-testid="menu-reset-confirmation"
+                                role="alertdialog"
+                                aria-labelledby="menu-reset-confirm-title"
+                                className="mt-2 rounded-[0.75rem] border border-rose-300/22 bg-rose-950/32 p-2.5"
+                            >
+                                <h4 id="menu-reset-confirm-title" className="text-[12px] font-readable font-bold text-rose-50">
+                                    새 여정을 시작할까요?
+                                </h4>
                                 <p data-testid="menu-reset-loss" className="text-[11px] font-readable leading-relaxed text-rose-100/82">
                                     새로 시작: 레벨 · 장비와 가방 · 유물 · 임무 · 현재 원정
                                 </p>
@@ -294,6 +321,7 @@ const Dashboard = ({
                                 </p>
                                 <div className="mt-2 grid grid-cols-2 gap-2">
                                     <button
+                                        ref={resetConfirmButtonRef}
                                         type="button"
                                         data-testid="menu-reset-confirm"
                                         onClick={() => {
@@ -308,7 +336,7 @@ const Dashboard = ({
                                     <button
                                         type="button"
                                         data-testid="menu-reset-cancel"
-                                        onClick={() => setConfirmMenuReset(false)}
+                                        onClick={cancelMenuReset}
                                         className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-white/8 bg-black/20 px-2 py-2 text-[11px] font-readable text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
                                     >
                                         <X size={13} />

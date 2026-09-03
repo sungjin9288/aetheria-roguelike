@@ -2443,8 +2443,12 @@ import { readFile, readdir } from 'node:fs/promises';
           'confirmMenuReset state 정의 보존');
       assert.ok(/sideTab === 'system'/.test(source), '설정 탭 조건 보존');
       assert.ok(/data-testid="system-reset-section"/.test(source), '설정 초기화 구역 보존');
-      const directCaller = source.match(/onClick={\(\) => setConfirmMenuReset\(true\)}/);
-      assert.ok(directCaller, '초기화 확인 caller 보존');
+      assert.ok(/setConfirmMenuReset\(\(open\) => !open\)/.test(source),
+          '초기화 확인 toggle caller 보존');
+      assert.ok(/aria-expanded={confirmMenuReset}/.test(source),
+          '초기화 확인 상태 공개');
+      assert.ok(/data-testid="menu-reset-confirmation"[\s\S]*role="alertdialog"/.test(source),
+          '초기화 확인 영역 노출');
   });
 
   test('cycle 443 회귀 가드: getRunBuildProfile primary.score 0건', async () => {
