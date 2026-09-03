@@ -1,13 +1,111 @@
 # Release-complete core completion summary
 
-Date: 2026-09-02 KST
+Date: 2026-09-03 KST
 
 Status: content pacing, eight-family bounded encounters, relic balance, equipment economy,
 equipment combat-power sidegrades, consumable authority and event reward transactions
-are locally verified. Source commit `79df84f6efb75c59b96bffa83efd7a2b6e8938ab`
-is sealed as candidate `release-core-79df84f6efb7` at `0/5` fresh human observations.
-Fresh-human acceptance, Firebase deployed-rule proof, push and external release gates
-remain HOLD.
+are locally verified. Source commit `6e7db48d536d4de872fae1bb1038baa69ee9c0a3`
+remains historically bound to candidate `release-core-6e7db48d536d` at `1/5`, but that
+candidate is now blocked by a P1 restart-confirmation discoverability issue and must not
+collect further observations. Its Cloudflare Pages preview remains deployed and host-verified.
+Firebase Spark rules and the two Firebase auth bindings are live; Gemini remains deliberately
+unconfigured. The fix is committed and post-commit verified but remains undeployed. A replacement
+candidate must restart fresh-human acceptance at `0/5`; push and external release gates remain HOLD.
+
+## Restart confirmation reachability fix (2026-09-03)
+
+- The deployed 390x844 candidate reproduced the report: the first `다시 시작` control only
+  revealed a second confirmation below the current viewport, retained focus on the trigger and
+  gave no immediate state-change feedback. The reset reducer itself remained correct; the defect
+  was confirmation discoverability and mobile reachability, not save deletion or reset authority.
+- The settings trigger now exposes `aria-expanded`/`aria-controls`, scrolls a labelled
+  `alertdialog` confirmation into the nearest visible area and moves focus to the destructive
+  confirmation. Cancel closes the panel and restores focus to the trigger. The permanent-progress
+  reset contract and existing player-facing `다시 시작` wording remain unchanged.
+- TDD covered the real mobile flow: the first RED lacked the expanded-state contract; the second
+  RED proved the smoothly revealed panel could remain below the archive viewport. The final
+  390x844 E2E verifies the whole confirmation, focus transfer, destructive confirmation and fresh
+  Intro transition. Focused reset/language coverage passed `27/27`; system-settings E2E passed
+  `5/5`.
+- `npm run verify:full` passed type-check, lint, unit `4258/4258`, build guard, desktop/mobile
+  smoke and E2E `59/59 + 56/56`. Progression Diagnostic v2 evidence was refreshed only for the
+  `src/components/Dashboard.tsx` source-manifest entry and verifies at SHA-256
+  `9b8b143e53e9112a6ea0fe479d270f1fb4c04a14c4d1da1b2f23122baa2137d0`; its report hash remains
+  `ff04ac3dc0cb2dd57ac08fb863a6aabf1ca64bd2be50d0b2c4e3d1c6183f68c2`. Art `18/229/22/25`,
+  event-reward `108` rows/zero errors, `mobile:doctor`, `cap:sync` and tracked Android/iOS drift
+  `0` also passed.
+- Candidate observation `obs_751f2799cf13d9d331c680a132006a49` now links blocking P1 issue
+  `issue_a44324958fd5d8c28ffcf38f20321b49` without adding a human session. The candidate summary
+  SHA-256 is `c012ddaa526ea13388cee19272c52282e7a691846d4ff436898a9c8f029ac0ed`; the protected candidate
+  aggregate is `c432d89698e9103f52b408d185208383afb829ee88fd8c9f60af87912e2351ac` and the Toss aggregate
+  remains `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- The exact four-path fix is committed locally as
+  `e15cdab58f7cf1560b8d44bdc3e0bd354ea32674`. Post-commit focused regression passed `292/292`,
+  system-settings E2E passed `5/5`, and `npm run verify` again passed type-check, lint, unit
+  `4258/4258` and build guard.
+- Selector regression passed `14/14`; direct execution remains fail-closed with exit `1` and
+  `INSUFFICIENT_FRESH_OBSERVATIONS`, and writes no `region-selection.json`. The historical `1/5`
+  attestation is retained for audit only. No screenshot, native build/archive, push, deployment,
+  signing or publication was produced by this fix.
+
+## Human-observation host candidate seal history (2026-09-03)
+
+- Source commit `6e7db48d536d4de872fae1bb1038baa69ee9c0a3` is bound to
+  `release-core-6e7db48d536d`; two independent Git archive passes matched at SHA-256
+  `07fca8ce44477839bb22d22ae0ddef053648890faf9d0ffff78410a76c4f2d3d`.
+- At initial acceptance, the candidate-specific schema-v2 summary contained one accepted browser
+  observation, no issues and one accepted `고요한 숲` move action, so the human gate reached
+  `1/5`. Its then-current SHA-256 was
+  `548ea48e6a7794b00f036689b3a579d6194c013a4cf77c527366b0d39783f177`.
+  The protected candidate aggregate advances from the empty-summary state
+  `808fef51f951bcd5404733014440e3990236eca85b9f7bc7826df1c5a377f68b` to
+  `129c2b0aec2ac2734402725a69fd0592e10266084d97e057395a269c3bed9221`
+  solely through this audit-only summary update; historical Toss evidence remains
+  `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- Region-selector regression passed `14/14`. Direct execution against the empty summary
+  returned exit `1` with `INSUFFICIENT_FRESH_OBSERVATIONS` and left candidate/root
+  `region-selection.json` absent.
+- Current-HEAD `verify:full` passed type-check, lint, unit `4258/4258`, build guard,
+  desktop/mobile smoke and E2E `59/59 + 55/55`. Progression diagnostic evidence reproduced
+  `4c58fcba732d1f3aa60561d37aa09592ffeda1c8a84b0f5ac410e858cdfef27a`; art verification
+  passed `18/229/22/25`; `mobile:doctor` and `cap:sync` passed with tracked Android/iOS
+  drift `0`.
+- Cloudflare OAuth authentication succeeded. The exact `aetheria-roguelike` Pages project was
+  created with production branch `main`; no production deployment was made. The 1,782-file
+  production build has sorted manifest aggregate
+  `89a2e309f316e8574117ca3d527e77d300a2b6e27463054185af7685e02bc44e`.
+- Wrangler first compiled the Functions bundle and created Preview deployment
+  `e814491c-4180-4663-83ff-876bda1af5b6` for branch
+  `release-core-6e7db48d536d` and source `6e7db48`. Its immutable host is
+  `https://e814491c.aetheria-roguelike.pages.dev`; candidate alias is
+  `https://release-core-6e7db48d536d.aetheria-roguelike.pages.dev`.
+  `observation:host:verify` passed on both URLs with root `200 HTML`, AI proxy OPTIONS
+  `200` allowing POST and unauthenticated POST `401 JSON`.
+- Fresh deployed-surface Playwright at 390×844 passed character creation, first departure,
+  one real event choice, safe return and reload restore with viewport/document width
+  `390/390` and console errors `0`. This remains agent QA and does not advance human `0/5`.
+- Firebase Console identified project `aetheria-rpg-90a2f` as Spark `무료($0/월)`.
+  Firebase CLI `15.28.2` compiled, uploaded and released the tracked `firestore.rules` to
+  Cloud Firestore. A fresh anonymous 390×844 session then produced zero warnings, successful
+  Firestore write-channel responses, no horizontal overflow and a reload-safe restored player,
+  closing the previously observed quota-permission denial on the deployed surface.
+- Cloudflare Pages now stores only `FIREBASE_WEB_API_KEY` and `FIREBASE_PROJECT_ID` as
+  `secret_text` in both Preview and Production configuration. Because Pages configuration is
+  not retroactive, the unchanged 1,782-file build and source were redeployed as Preview
+  `f548116b-5f9f-4ef8-a81e-c28d3f6365bf`; its immutable host is
+  `https://f548116b.aetheria-roguelike.pages.dev`, and the existing candidate alias now resolves
+  to it. Host verification passed on both URLs. A valid anonymous Firebase token reached the
+  proxy's request-body validation and returned expected `400 Invalid request body`, replacing
+  the pre-redeploy `500 Auth provider is not configured` result and proving the auth binding.
+- `GEMINI_API_KEY` remains absent. The current proxy still targets retired
+  `gemini-1.5-flash`, so no AI-provider success or zero-cost provider claim is made. No tracked
+  screenshot, native build/archive, commit, push, signing or production publication was
+  performed. The first human explicitly attested that the fresh-state, first-action,
+  combat, safe-return, reload and background/foreground checklist passed without issue.
+  Its privacy-safe attachment is stored outside the repository at SHA-256
+  `c63dec8671dc8648c2f14d0f8c1589493a8f5addf4d1276e0c2b5178aee4b911`; timing fields use
+  the attested `<=10000ms` upper bound rather than invented measurements. Human evidence reached
+  `1/5` before the blocking invalidation recorded above.
 
 ## Scout/quota observation candidate seal (2026-09-02)
 
