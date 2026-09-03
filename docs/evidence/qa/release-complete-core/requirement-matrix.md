@@ -10,39 +10,40 @@ Status vocabulary is deliberately narrow:
 
 The current branch is `codex/release-complete-core`. Historical observation candidates,
 including `release-core-79df84f6efb7`, remain bound to their exact source checkpoints and
-stay audit-only. The latest historical candidate source commit
+stay audit-only. Historical candidate source commit
 `6e7db48d536d4de872fae1bb1038baa69ee9c0a3` is bound to
 `release-core-6e7db48d536d` with archive SHA-256
 `07fca8ce44477839bb22d22ae0ddef053648890faf9d0ffff78410a76c4f2d3d`.
 Its candidate-specific schema-v2 summary now records blocking restart issue
 `issue_a44324958fd5d8c28ffcf38f20321b49` without adding a human session. The summary SHA-256 is
 `c012ddaa...c0ed`; the historical count remains `1/5`, but the candidate is invalid for further
-observation. The protected candidate aggregate is `c432d896...51ac`, while historical Toss
-evidence remains `05cc9de7...bbbd`. The latest repository-owned gate below was executed on
+observation. Its then-current protected candidate aggregate was `c432d896...51ac`, while historical
+Toss evidence remains `05cc9de7...bbbd`. The latest repository-owned gate below was executed on
 2026-09-03 KST.
 
-Cloudflare Pages Preview deployment `f548116b-5f9f-4ef8-a81e-c28d3f6365bf` is bound to
-branch `release-core-6e7db48d536d` and source `6e7db48`; both its immutable URL and candidate
-alias pass the production-host verifier. Firebase Spark rules and the two required Firebase
-auth bindings are deployed; Gemini remains disabled. The deployed candidate must not collect
-additional observations. The verified restart fix is committed as
-`e15cdab58f7cf1560b8d44bdc3e0bd354ea32674`; a replacement candidate begins at `0/5` after
-separate deployment approval.
-Candidate-specific
-`observation-summary.json` exists and `region-selection.json` remains absent; the root
-`region-selection.json` remains absent by policy. Selector regression is `14/14`, and
-direct execution against the blocked `1/5` input fails closed with
-`INSUFFICIENT_FRESH_OBSERVATIONS` without writing selection evidence.
+The verified restart fix and ledger reconciliation are included in source commit
+`0d456fbe81f9bda96891274721651c046ca64c2c`, bound to replacement candidate
+`release-core-0d456fbe81f9` with archive SHA-256 `9ffe857d...92be`. Its schema-v2 summary now
+contains six accepted browser observations and no issues, hashes to `7cd506ac...48d0`, and
+completes required human `5/5` plus one supplemental second-region session; the protected candidate
+aggregate is `832249a8...afd1`. Preview
+deployment `b8de235a-2639-4c88-8e18-62cc1aa9ddc1` and its
+candidate alias pass the production-host verifier. Direct 390×844 agent QA verified confirmation
+reachability, focus/cancel/reopen behavior and final reset to Intro with width `390/390` and no
+console warning/error. Firebase Spark rules and the two required Firebase auth bindings remain
+deployed; Gemini remains disabled. Selector regression is `14/14`; candidate-specific
+`region-selection.json` is enabled with `고요한 숲 5`, `서쪽 평원 1`, while the historical root
+selection remains absent.
 
 | Requirement | Current state | Direct evidence | Remaining gate |
 | --- | --- | --- | --- |
-| Fresh creation and first action | deployed-browser verified; candidate blocked at historical human `1/5` | `release-core-6e7db48d536d`, archive SHA `07fca8ce...d3d`, Pages deployment `f548116b...65bf`, first attestation `c63dec86...b911`, blocking restart issue `issue_a443...1b49` | replacement candidate seal/deploy, then five new human observations |
-| First move, explore, combat and safe return | implemented/deployed-browser verified; current candidate blocked by restart confirmation defect | focused Scout/generosity/quota `48/48`; current full unit `4258/4258`; deployed 390×844 journey evidence remains historical | replacement candidate seal/deploy, then five new human observations |
+| Fresh creation and first action | replacement Preview deployed/browser verified; required human `5/5` plus supplemental session | `release-core-0d456fbe81f9`, archive SHA `9ffe857d...92be`, Pages Preview `b8de235a...ddc1`, six unique browser observations through `obs_487f...c7cd`; historical `1/5` candidate remains blocked | physical-device observation |
+| First move, explore, combat and safe return | implemented/deployed-browser verified; required human `5/5` plus supplemental session | focused Scout/generosity/quota `48/48`; current full unit `4258/4258`; replacement host contracts PASS; six accepted browser checklist observations | physical-device observation |
 | Equipment decision and level-5 job change | browser verified | `tests/e2e/release-complete-core.spec.ts` | fresh human candidate observation |
 | Skill branch and Class Journey | browser verified | production UI journey E2E and class-journey contracts | fresh human candidate observation |
-| Class Journey encounter discovery | implemented/browser verified; prior candidate evidence retained but blocked | accepted receipt -> safe return projection; v1->v2 additive migration; Class Journey focused `131/131`; Scout/quota focused `48/48`; current full unit `4258/4258`; replacement-bound human count not started | five observations on the replacement candidate |
+| Class Journey encounter discovery | implemented/browser verified; candidate region selection enabled | accepted receipt -> safe return projection; v1->v2 additive migration; Class Journey focused `131/131`; six candidate observations with selected regions `고요한 숲`, `서쪽 평원` | physical-device observation |
 | Death preserves permanent progress | implemented | `tests/permanent-progress.test.js`, `tests/permanent-progress-copy.test.js` | physical-device observation |
-| Manual reset preserves permanent progress | fix committed/browser verified; deployed candidate blocked | commit `e15cdab58f7c`; reducer preservation tests; focused reset/language `27/27`; post-commit regression `292/292`; settings E2E `5/5`; full E2E `59/59 + 56/56`; 390×844 confirmation visibility/focus and Intro transition | replacement candidate deploy, then physical-device observation |
+| Manual reset preserves permanent progress | fix committed and replacement Preview browser verified | source `0d456fbe81f9`; reducer preservation tests; focused reset/language `27/27`; post-commit regression `292/292`; settings E2E `5/5`; full E2E `59/59 + 56/56`; deployed 390×844 confirmation/focus/cancel/reopen/Intro transition | human and physical-device observation |
 | Ascension preserves permanent progress | browser verified | permanent-state tests, release-complete E2E | physical-device observation |
 | Save migration and reload preserve permanent state | implemented/browser verified; scoped quota snapshot contract deployed | migration/storage suites, endgame reload E2E, direct sealed-production reload; exact self-only quota runtime/rules regression; emulator `12/12`; deployed Spark rule with clean anonymous write/reload | physical iOS/Android observation |
 | Demon King shard settlement is atomic and idempotent | implemented/browser verified | `tests/endgame-settlement.test.js`, exact-name regression, endgame E2E | physical-device observation |
@@ -56,17 +57,17 @@ direct execution against the blocked `1/5` input fails closed with
 | 375×667 geometry | browser verified | reduced-motion True Ending E2E | physical-device observation |
 | 390×844 geometry | browser verified | journey/True Ending/grave E2E; tracked screenshots below | physical-device observation |
 | 430×932 geometry | browser verified | skip/CTA True Ending E2E | physical-device observation |
-| Bounded encounter region selection | implemented for the approved early slice | `고요한 숲`, `서쪽 평원`; schema-v2 selector/runbook and `tests/encounter-region-selection.test.js` | five final-candidate complete human observations before tuning acceptance |
+| Bounded encounter region selection | candidate-specific selection enabled | six complete candidate-bound observations; accepted actions `고요한 숲 5`, `서쪽 평원 1`; selection SHA `72b983aa...a24c`, selector `14/14` | use as the bounded tuning authority; root historical selection remains absent |
 | Bounded encounter schema, eligibility and receipt settlement | implemented/browser verified | canonical catalog binding, eligibility, effective-HP settlement, receipt replay tests | candidate-bound human observation |
 | Eight bounded encounter families | implemented/browser verified | existing four plus Codex-signature, previous-boss and two canonical build-reactive families; rendered choice/settlement/replay E2E at 375/390/430 widths and 390×844 build flow | candidate-bound human observation |
-| Combat Loot Capacity Settlement | implemented and full-gate verified | Task 1–4 focused receipts below; stale static guard RED `24/26` then GREEN `26/26`; final complete focused gate `123/123`; `verify` and `verify:full` unit `4195/4195`, desktop/mobile smoke, E2E `57/57 + 54/54`; art `18/229/22/25`; `mobile:doctor`, `cap:sync`, tracked native drift 0; report-only 1000-seed loot comparison `ab96cc4a...a9ad` | separate cohesive commit approval and post-commit verification before candidate-specific archive/evidence seal |
-| Progression Simulator v2 capacity prerequisite | blocked | production `admitCombatLoot()` is the sole admitted/blocked settlement authority; simulator-side `capacityBlockedDrops` remains disabled | commit and post-commit verification of this prerequisite |
+| Combat Loot Capacity Settlement | implemented, committed and post-commit verified | commit `95ecf132d02d0eb770007aec71f2bf3136dd5f70`; production `admitCombatLoot()` remains the sole admitted/blocked settlement authority; final focused gate `123/123`; full repository/mobile gates and tracked native drift 0 passed at the checkpoint | consumed diagnostically by the committed Progression Simulator v2; physical-device observation remains separate |
+| Progression Simulator v2 | implemented, committed and deterministic evidence verified | commit `e6d1f8a767777d901b1f7c771f218a25ecd2bdd6`; exact `4,608` combat encounters, `36,864` general kills, `20,480` signature attempts and 1,000-seed exploration comparison; current evidence SHA `9b8b143e...37d0`, report SHA `ff04ac3d...68c2`, `hardErrors:[]` | diagnostic only: `activationReady:false`, `actualPlayClaim:false`; actual play time, expedition count, AI/story frequency and retention remain unavailable |
 | Content reachability | verified | report SHA `a6626375...b4f0e8`; checkpoints `1/5/5/6/13/18/18`, job snapshots `18` | use live funnel before further expansion |
-| Exploration rhythm | verified | report SHA `7d903b82...72bfe2`; predecessor p10/p50/p90 `1/2/6`, candidate `2/4/9` | five human sessions before tuning acceptance |
+| Exploration rhythm | verified; human and two-region evidence complete | report SHA `7d903b82...72bfe2`; predecessor p10/p50/p90 `1/2/6`, candidate `2/4/9`; required human `5/5` plus supplemental `서쪽 평원` action | retain current profile unless simulator and observation identify the same issue |
 | Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
 | Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; current v3 combat evidence `786c4898...e6bb` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
 | Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; bounded `8/16`, total 108-row report `0680a3f1...8084`; focused encounter/event `51/51` | human candidate observation |
-| Repository gate | restart fix committed and post-commit verified; candidate replacement pending (2026-09-03) | commit `e15cdab58f7c`; post-commit type-check/lint/unit `4258/4258`/build guard and settings E2E `5/5`; pre-commit `verify:full` desktop/mobile smoke and E2E `59/59 + 56/56`; progression evidence `9b8b143e...137d` with report hash unchanged; art `18/229/22/25`; event reward 108/zero errors; `mobile:doctor`, `cap:sync`, tracked native drift 0 | replacement candidate seal/deploy, five new observations and physical/signing gates |
+| Repository gate | replacement candidate sealed, Preview deployed, direct mobile restart verified, human threshold and region selection complete (2026-09-03) | source `0d456fbe81f9`; archive `9ffe857d...92be`; build manifest `c4ef7841...2ae0`; Preview `b8de235a...ddc1`; host verifier PASS; six observations/zero issues; candidate selection `72b983aa...a24c`; prior full gate unit `4258/4258`, E2E `59/59 + 56/56`; tracked native drift 0 | physical and signing gates; separate release approval |
 | Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
 | Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
 

@@ -4,13 +4,174 @@ Date: 2026-09-03 KST
 
 Status: content pacing, eight-family bounded encounters, relic balance, equipment economy,
 equipment combat-power sidegrades, consumable authority and event reward transactions
-are locally verified. Source commit `6e7db48d536d4de872fae1bb1038baa69ee9c0a3`
-remains historically bound to candidate `release-core-6e7db48d536d` at `1/5`, but that
-candidate is now blocked by a P1 restart-confirmation discoverability issue and must not
-collect further observations. Its Cloudflare Pages preview remains deployed and host-verified.
-Firebase Spark rules and the two Firebase auth bindings are live; Gemini remains deliberately
-unconfigured. The fix is committed and post-commit verified but remains undeployed. A replacement
-candidate must restart fresh-human acceptance at `0/5`; push and external release gates remain HOLD.
+are locally verified. Historical candidate `release-core-6e7db48d536d` remains blocked at
+audit-only `1/5` by its P1 restart-confirmation issue. The fix is included in source commit
+`0d456fbe81f9bda96891274721651c046ca64c2c`, now bound to replacement candidate
+`release-core-0d456fbe81f9` and deployed as a Cloudflare Pages Preview. Host contracts and the
+complete 390×844 restart path are agent-verified; fresh-human acceptance began at `0/5` and is
+complete at `5/5`; one supplemental fresh session supplied the second observed non-safe region.
+Firebase Spark rules and the two Firebase auth bindings remain live; Gemini remains deliberately
+unconfigured. Production deployment, push and external release gates remain HOLD.
+
+Five required replacement-candidate human sessions and one supplemental second-region session are
+accepted without issue. Candidate-specific bounded-region selection is now enabled for
+`고요한 숲` and `서쪽 평원`; the historical root selection remains absent.
+
+## Supplemental second-region observation and selection (2026-09-03)
+
+- After human acceptance reached `5/5`, a sixth fresh Chrome Incognito session followed the
+  explicit Lv3 route through `고요한 숲`, safe return, accepted `서쪽 평원` movement,
+  exploration/combat, another safe return, reload/background restore and restart cancel. The user
+  reported no issue. The evidence window is `2026-09-03T04:09:26.772Z` to
+  `2026-09-03T04:12:24.742Z`.
+- Browser observation `obs_487f552b94533b0fef579cf84583c7cd` records one accepted
+  `서쪽 평원` move and no issues. Its unique privacy-safe external attachment hashes to
+  `1c5f55f116a2ff5c832d4e4f425729544b747237000b902e045b05f80016daf9`.
+- Candidate summary now contains six complete browser observations, six actions and zero issues;
+  its SHA-256 is `7cd506acdb8a7c58521b7a9825bb20afc81a2b5cafe37774e70913e5b8ef48d0`.
+  The protected candidate aggregate is
+  `832249a806c1d00ccc114955e4e49edd70d2a03889ca6df70c339a91505aafd1`.
+- Selector regression passed `14/14`. The write-once candidate selection is `enabled:true`, selects
+  `고요한 숲`, `서쪽 평원` from accepted-action counts `5`, `1`, and binds observation digest
+  `d9fb3a2305021ffbfca67da77314ba98b441c5376130d66963c10ad26a6629bd`.
+  Selection SHA-256 is `72b983aa8839b3d05cb92279121a8127f5e3ec77e2840966dfe6b8b8637fa24c`;
+  root `region-selection.json` remains absent.
+- Historical blocked-candidate summary remains `c012ddaa...c0ed`, and historical Toss evidence
+  remains `05cc9de7...bbbd`. No paid API call, gameplay/balance/source change, native artifact,
+  commit, push, signing or publication occurred.
+
+## Fifth replacement-candidate human observation (2026-09-03)
+
+- Session five used a newly opened Chrome Incognito Window, preserving prior browser sessions and
+  presenting the immutable Preview at a confirmed fresh Intro. The user attested the same
+  <=10-second first-screen/action, move/explore, combat, safe-return, reload,
+  background/foreground and restart-confirmation/cancel checklist without issue. The evidence
+  window is `2026-09-03T03:52:15.245Z` to `2026-09-03T03:54:16.628Z`.
+- Browser observation `obs_a798d7c03d4cbcca8949652dbea48ed0` records one accepted
+  `고요한 숲` move and no issues. Its unique privacy-safe external attachment hashes to
+  `23007de22de675694d933fff11d4124cc6aae9c4d4399a50da6f9aea9fac2bfb`.
+- Candidate summary SHA-256 is now
+  `83350945a59d383e406176ce9347b14f1e3a6fa1ae0f22b08a0d689a3ccf7704`; the protected candidate
+  aggregate is `d063765de3511f0768ab05cc7e2b256cc441123ba610e24a9276584e6be5e2e6`.
+  Historical Toss evidence remains
+  `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- Selector regression passed `14/14`. Direct selection validates all five complete rows but exits
+  `1` with `INSUFFICIENT_OBSERVED_REGIONS`; candidate/root `region-selection.json` remain absent.
+  Human evidence is complete at `5/5`, while a second observed non-safe region is still required.
+- No paid API call, gameplay/source change, native artifact, commit, push, signing or publication
+  occurred.
+
+## Fourth replacement-candidate human observation (2026-09-03)
+
+- Session four used a newly opened Safari Private Window, preserving prior browser sessions and
+  presenting the immutable Preview at a confirmed fresh Intro. The user attested the same
+  <=10-second first-screen/action, move/explore, combat, safe-return, reload,
+  background/foreground and restart-confirmation/cancel checklist without issue. The evidence
+  window is `2026-09-03T03:41:53.000Z` to `2026-09-03T03:45:21.000Z`.
+- Browser observation `obs_cc5e83aa6bda96020b7b1af11397d96f` records one accepted
+  `고요한 숲` move and no issues. Its unique privacy-safe external attachment hashes to
+  `15418222b9e0051950b1cfb70900ab8e22f615915c10cde7777df177180fe9a6`.
+- Candidate summary SHA-256 is now
+  `57af655f60b9ff4385a80c3b9f4e2f4153b4454c5beacfdd4f92060c8794cfaa`; the protected candidate
+  aggregate is `85317181b664f19c8f38a480ef323cc17d2e2f8254c96f675f8c91792b4f627d`.
+  Historical Toss evidence remains
+  `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- Selector regression passed `14/14`. Direct selection validates all four rows but exits `1`
+  with `INSUFFICIENT_FRESH_OBSERVATIONS`; candidate/root `region-selection.json` remain absent.
+  Human evidence is `4/5`, with one final fresh session required.
+- No paid API call, gameplay/source change, native artifact, commit, push, signing or publication
+  occurred.
+
+## Third replacement-candidate human observation (2026-09-03)
+
+- Session three began after the immutable Preview was opened in a visible in-app browser tab and
+  its fresh Intro was confirmed. The user attested the same <=10-second first-screen/action,
+  move/explore, combat, safe-return, reload, background/foreground and restart-confirmation/cancel
+  checklist without issue. The evidence window is `2026-09-03T02:19:33.000Z` to
+  `2026-09-03T03:33:20.000Z`.
+- Browser observation `obs_2da26fbb98955a2d442aeaf19e46f412` records one accepted
+  `고요한 숲` move and no issues. Its unique privacy-safe external attachment hashes to
+  `bb04192672f55ddd0486befaa316a15705f41a358c68c5dbdf7138139f3a1147`.
+- Candidate summary SHA-256 is now
+  `de35d38dcd799fe214a59cb54d7dd94f68d011768340a74882c867a0e78c82a6`; the protected candidate
+  aggregate is `fc3d597ccba9ab5ede46aabf441c8563059210989213fd4d3305d6a56999a496`.
+  Historical Toss evidence remains
+  `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- Selector regression passed `14/14`. Direct selection validates all three rows but exits `1`
+  with `INSUFFICIENT_FRESH_OBSERVATIONS`; candidate/root `region-selection.json` remain absent.
+  Human evidence is `3/5`, with two additional fresh sessions required.
+- No paid API call, gameplay/source change, native artifact, commit, push, signing or publication
+  occurred.
+
+## Second replacement-candidate human observation (2026-09-03)
+
+- Session two used the deployment's immutable origin, preserving session one's alias-origin save
+  while providing a separate fresh state. The user attested the same <=10-second first-screen/action,
+  move/explore, combat, safe-return, reload, background/foreground and restart-confirmation/cancel
+  checklist without issue. The evidence window is `2026-09-03T02:04:36.000Z` to
+  `2026-09-03T02:09:09.000Z`.
+- Browser observation `obs_6093ff20dc3378f2b6138b4da1894224` records one accepted
+  `고요한 숲` move and no issues. Its unique privacy-safe external attachment hashes to
+  `deab8ee74bb85ff4ecfc147f01c972f7c01fe4dcd999d062f6c4887d0629c6cd`.
+- Candidate summary SHA-256 is now
+  `bbf8528bbc34bc645bb64e1042692b3f5571dde30176d1fe6fa4208f8655994d`; the protected candidate
+  aggregate is `ec30ec9a49fa0e995b0b1c5a217fc89854ce8c8a8c74725ff0425f3f6f726c1c`.
+  Historical Toss evidence remains
+  `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- Selector regression passed `14/14`. Direct selection validates both rows but exits `1` with
+  `INSUFFICIENT_FRESH_OBSERVATIONS`; candidate/root `region-selection.json` remain absent.
+  Human evidence is `2/5`, with three additional fresh sessions required.
+- No paid API call, gameplay/source change, native artifact, commit, push, signing or publication
+  occurred.
+
+## First replacement-candidate human observation (2026-09-03)
+
+- The user attested the exact fresh-character, <=10-second first-screen/action, move/explore,
+  combat, safe-return, reload, background/foreground and restart-confirmation/cancel checklist
+  without issue. The evidence window is `2026-09-03T01:50:20.000Z` to
+  `2026-09-03T01:57:49.000Z`; conservative `10000` ms upper bounds are recorded instead of
+  invented timing precision.
+- Browser observation `obs_bafa462283976ac4a30e133c274c4f3a` records one accepted
+  `고요한 숲` move and no issues. Its privacy-safe external attachment contains no personal or
+  gameplay payload and hashes to
+  `68c41d5bce67e814db77ab68809868adccf0c0a28cdccebe443063d403112e42`.
+- Candidate summary SHA-256 is now
+  `e3f48dc327e0e30e9cab9fddf8299ee291121db631e545b58914012429410fd1`; the protected candidate
+  aggregate is `4ceee9d55006405ecb9768294741a3d1dcfee73121d9e0ae402edec4603caa27`.
+  Historical Toss evidence remains
+  `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- Selector regression passed `14/14`. Direct selection accepts the row but exits `1` with
+  `INSUFFICIENT_FRESH_OBSERVATIONS`; candidate/root `region-selection.json` remain absent.
+  Human evidence is `1/5`, with four additional fresh sessions required.
+- No paid API call, gameplay/source change, native artifact, commit, push, signing or publication
+  occurred.
+
+## Replacement observation candidate and restart acceptance (2026-09-03)
+
+- Source commit `0d456fbe81f9bda96891274721651c046ca64c2c` is bound to
+  `release-core-0d456fbe81f9`; two independent Git archives matched at SHA-256
+  `9ffe857d89a7c35c2ee4993567ef52aa6e8ed7960d32d88e6a763e0638cb92be`.
+- The candidate-specific schema-v2 summary has empty observations, issues and actions, remains
+  human `0/5`, and hashes to
+  `94f6a3ce306674244fd0911e9bca59978ad4ac9960863d6d1bd4e6da60350629`. The protected candidate
+  aggregate is `d6ef371c9ea6d652559f2f1f50ce117ad572c182718fef98d6869bdab57a18ae`; Toss evidence remains
+  `05cc9de783f13df18b8ca50f46a4b32af54e914a635e99cf9e53b354c6a0bbbd`.
+- Selector regression passed `14/14`. Direct candidate selection returned exit `1` with
+  `INSUFFICIENT_FRESH_OBSERVATIONS`, and candidate/root `region-selection.json` remain absent.
+- The committed source produced a 1,782-file build whose sorted manifest aggregate is
+  `c4ef784101c3d254a363153f51a73d3a49d23f09a4e9614f4086642bcbd72ae0`. Cloudflare Pages Preview
+  deployment `b8de235a-2639-4c88-8e18-62cc1aa9ddc1` is attached to branch
+  `release-core-0d456fbe81f9` and source `0d456fb`; its immutable URL is
+  `https://b8de235a.aetheria-roguelike.pages.dev`, and its stable candidate alias is
+  `https://release-core-0d456fbe81f9.aetheria-roguelike.pages.dev`. Both hosts pass root
+  `200 HTML`, AI proxy OPTIONS `200` with POST and unauthenticated AI proxy POST `401 JSON`.
+- Direct agent QA at exact viewport `390×844` verified disclosure state, a fully visible
+  confirmation (`top 693.4`, `bottom 825.2`), final-button focus, cancel and trigger-focus restore,
+  reopen, destructive confirmation and fresh Intro. Viewport/document width stayed `390/390`, and
+  console warning/error count was `0`. This is agent QA and does not advance the human count.
+- No Production deployment, paid AI invocation, tracked screenshot, native build/archive, push,
+  signing or publication occurred. Five genuinely fresh human sessions on this exact candidate
+  remain before bounded-region selection can be generated.
 
 ## Restart confirmation reachability fix (2026-09-03)
 
