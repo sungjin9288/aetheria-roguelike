@@ -1,5 +1,11 @@
 import { sanitizeQuickSlots } from './helpers';
 import type { GameState, GameAction } from '../gameReducer';
+import { MSG } from '../../data/messages';
+
+const getBootstrapLogs = (state: GameState, playerName: string) => {
+    if (state.logs.length > 0 || !playerName.trim()) return state.logs;
+    return [{ id: 'bootstrap-restore', type: 'system', text: MSG.SYNC_SAVE_RESTORED }];
+};
 
 export const bootstrapActionMap = {
     SET_BOOT_STAGE: (state: GameState, action: GameAction) =>
@@ -18,6 +24,7 @@ export const bootstrapActionMap = {
             grave: action.payload.grave || null,
             currentEvent: action.payload.currentEvent || null,
             quickSlots: sanitizeQuickSlots(action.payload.quickSlots, loadedPlayer.inv),
+            logs: getBootstrapLogs(state, loadedPlayer.name),
             bootStage: 'ready',
             syncStatus: 'synced',
             lastLoadedTimestamp: action.payload.lastActive?.toMillis

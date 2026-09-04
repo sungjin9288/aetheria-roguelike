@@ -415,6 +415,7 @@ export const MSG = {
 
     // --- Firebase 동기화 ---
     SYNC_SERVER_LOADED: '서버 데이터와 동기화되었습니다.',
+    SYNC_SAVE_RESTORED: '저장된 모험을 불러왔습니다.',
     SYNC_AUTH_TIMEOUT: '인증 지연으로 오프라인 모드로 시작했습니다.',
     SYNC_NO_CONFIG: '클라우드 설정을 찾을 수 없어 오프라인 모드로 시작했습니다.',
     SYNC_AUTH_FAIL: '클라우드 인증 실패로 오프라인 모드로 시작했습니다.',
