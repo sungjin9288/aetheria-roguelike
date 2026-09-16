@@ -64,7 +64,7 @@ export const calcPerformanceScore = (player: Player) => {
 //   (성공 처벌). 재설계 원칙: 상향(승리)은 난이도를 거의 안 올리는 대신 보상을 키워
 //   숙련을 *보상*하고, 하향(고전)은 적을 약화하는 안전망을 그대로 유지(리텐션).
 //   더 큰 도전을 원하면 프레스티지(PR #5)·심층 지역으로 가는 opt-in 축이 담당한다.
-const DIFF_TABLE: any = [
+const DIFF_TABLE = [
     // { minScore, label, hpMult, atkMult, goldMult, expMult }
     // ── 상향: 적 강화 완만(성공 처벌 완화) + 보상 강화(숙련 보상) ──
     { minScore: 0.85, label: '압도',   hpMult: 1.05, atkMult: 1.05, goldMult: 1.4,  expMult: 1.4  },

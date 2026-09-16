@@ -3,7 +3,7 @@
  * 각 카테고리별 발견 수에 따른 보상 + 프리미엄 재화
  */
 // cycle 286: export 제거 — getCodexProgress 내부에서만 사용. private const로 downgrade.
-const CODEX_MILESTONES: any = {
+const CODEX_MILESTONES = {
     weapons: [
         { count: 5,  reward: { atk: 2 }, label: '무기 수집가 I' },
         { count: 15, reward: { atk: 4, premiumCurrency: 5 }, label: '무기 수집가 II' },
@@ -55,8 +55,8 @@ const CODEX_MILESTONES: any = {
 //   (data/ 디렉토리 진입).
 export const getCodexProgress = (codex: any, claimed: any) => {
     const claimedSet = new Set(claimed);
-    const milestones: any[] = [];
-    const unclaimed: any[] = [];
+    const milestones = [];
+    const unclaimed = [];
 
     for (const [category, milestoneList] of Object.entries(CODEX_MILESTONES) as Array<[string, any[]]>) {
         const catEntries = codex[category] || {};

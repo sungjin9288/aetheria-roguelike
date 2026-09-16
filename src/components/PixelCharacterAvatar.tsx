@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getAvatarSpriteCandidates } from '../utils/avatarSpriteCandidates';
 
-const SIZE_MAP: any = {
+const SIZE_MAP: Record<string, { frame: string; inner: string; badge: string }> = {
     sm: {
         frame: 'h-[4.6rem] w-[4.6rem] rounded-[1.25rem] p-1.5',
         inner: 'rounded-[0.95rem]',
@@ -20,7 +20,7 @@ const SIZE_MAP: any = {
     },
 };
 
-const FRAME_TONE_CLASS: any = {
+const FRAME_TONE_CLASS: Record<string, string> = {
     화염: 'border-orange-300/28 bg-[radial-gradient(circle_at_76%_16%,rgba(251,146,60,0.26),transparent_26%),linear-gradient(180deg,rgba(35,20,12,0.98)_0%,rgba(8,8,8,1)_100%)]',
     냉기: 'border-cyan-300/24 bg-[radial-gradient(circle_at_76%_16%,rgba(103,232,249,0.22),transparent_28%),linear-gradient(180deg,rgba(14,22,34,0.98)_0%,rgba(7,10,16,1)_100%)]',
     어둠: 'border-violet-300/26 bg-[radial-gradient(circle_at_76%_16%,rgba(167,139,250,0.24),transparent_28%),linear-gradient(180deg,rgba(23,17,36,0.98)_0%,rgba(7,7,16,1)_100%)]',

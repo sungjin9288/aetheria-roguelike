@@ -151,7 +151,7 @@ export const actionMethods: any = {
         const newEnemyHp = (enemy.hp ?? 0) - finalDamage;
         // slice 19: 치명타/약점/저항/연격을 본문 태그로 통합 — 기존엔 같은 정보가
         //   별도 로그 4건으로 중복 출력되어 한 턴 로그 burst의 주범이었음.
-        const tags: any[] = [];
+        const tags = [];
         if (isCrit) tags.push('치명타');
         if (enemy.guarding) tags.push('방어 격파');
         if (elementMultiplier > 1) tags.push('속성 약점');
@@ -477,7 +477,7 @@ export const actionMethods: any = {
         }
 
         if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(skill.effect)) {
-            const buff: any = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
+            const buff: { atk: number; def: number; turn: any; name: any; counterChance?: number } = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
             if (skill.effect === 'atk_up') buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'def_up') buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'all_up') {

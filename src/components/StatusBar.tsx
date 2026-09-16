@@ -5,7 +5,7 @@ import { useHitFlash } from '../hooks/useHitFlash';
 import { getExpeditionHudChips } from '../utils/expeditionHud';
 import type { Player, Monster } from '../types/index.js';
 
-const METER_THEME: any = {
+const METER_THEME: Record<string, { border: string; fill: string; label: string }> = {
   hp: {
     border: 'border-rose-300/24',
     fill: 'bg-gradient-to-r from-rose-400/55 to-rose-300',

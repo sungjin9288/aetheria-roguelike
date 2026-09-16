@@ -213,7 +213,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // slice 19: HP 곡선 120+30L → BALANCE.MONSTER_HP_BASE(70)+L×32 — 초반 전투
     //   템포 가속 (Lv1 -32%, Lv50 +3%). 골드 base 10 → 16 (초반 휴식 경제).
     //   ATK/EXP 곡선은 불변 (quest pacing 가드 보존).
-    const mStats: any = {
+    const mStats: { [key: string]: any; name: string; hp: number; maxHp: number; atk: number; def: number; exp: number; gold: number } = {
         name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
         baseName,
         level,
@@ -336,7 +336,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
 export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog, rng = Math.random }: any) => {
-    const combatStartPlayer: any = {
+    const combatStartPlayer = {
         ...player,
         combatFlags: {
             comboCount: 0,
@@ -565,7 +565,7 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
         if (!chain.locations.every((l: any) => visited.has(l))) return;
 
         // 체인 달성!
-        const rewardParts: any[] = [];
+        const rewardParts = [];
         if (chain.reward.gold) rewardParts.push(`${chain.reward.gold}G`);
         if (chain.reward.exp) rewardParts.push(`${chain.reward.exp} EXP`);
         if (chain.reward.item) rewardParts.push(chain.reward.item);
@@ -616,7 +616,7 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
 // slice 23: 초반(맵 Lv≤10) 5지역 첫 방문 EXP 절반 — 레벨 간격 감속 (학습
 //   구간 확보). 골드는 유지 (휴식/상점 경제 불변). 중후반 지역은 nextExp가
 //   충분히 커서 그대로.
-const FIRST_VISIT_REWARDS: any = {
+const FIRST_VISIT_REWARDS: Record<string, { gold: number; exp: number; msg: string }> = {
     '고요한 숲':    { gold: 100,  exp: 25,  msg: '고요한 숲에 처음 발을 들였습니다. 골드 100 · 경험 25' },
     '서쪽 평원':   { gold: 150,  exp: 30,  msg: '서쪽 평원에 처음 도착했습니다. 골드 150 · 경험 30' },
     '호수의 신전': { gold: 200,  exp: 50,  msg: '호수의 신전을 처음 발견했습니다. 골드 200 · 경험 50' },

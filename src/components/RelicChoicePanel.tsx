@@ -22,7 +22,7 @@ interface RelicChoicePanelProps {
  * 유물 시너지 점수 계산 (0~100)
  * 현재 보유 유물과 새 유물의 effect 조합을 분석합니다.
  */
-const SYNERGY_MAP: any = {
+const SYNERGY_MAP: Record<string, string[]> = {
     // 공격 콤보
     double_strike: ['execute_bonus', 'combo_stack', 'armor_pen', 'ancient_power'],
     execute_bonus: ['double_strike', 'low_hp_atk', 'combo_stack'],
@@ -93,7 +93,7 @@ const getRelicSynergyScore = (newRelic: any, ownedRelics: any): any => {
     return { score, label, synergies: synergyNames, nearLegendary: nearLegendarySyn?.label || null };
 };
 
-const RARITY_CARD: any = {
+const RARITY_CARD: Record<string, string> = {
     common:    'border-white/10 bg-black/18 hover:border-white/16 hover:bg-white/[0.045]',
     uncommon:  'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 hover:border-[#7dd4d8]/28 hover:bg-[#7dd4d8]/14',
     rare:      'border-[#9a8ac0]/24 bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/32 hover:bg-[#9a8ac0]/14',
@@ -101,7 +101,7 @@ const RARITY_CARD: any = {
     legendary: 'border-rose-300/22 bg-rose-400/10 hover:border-rose-300/30 hover:bg-rose-400/14',
 };
 
-const RARITY_BADGE_TONE: any = {
+const RARITY_BADGE_TONE: Record<string, string> = {
     common: 'neutral',
     uncommon: 'recommended',
     rare: 'resonance',

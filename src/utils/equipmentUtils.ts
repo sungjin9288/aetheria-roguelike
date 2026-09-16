@@ -3,10 +3,10 @@ import type { EquipSlots, Item } from '../types/index.js';
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 
-const MAGIC_WEAPON_KEYWORDS: any = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
-const RANGED_WEAPON_KEYWORDS: any = ['활', '석궁'];
+const MAGIC_WEAPON_KEYWORDS = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
+const RANGED_WEAPON_KEYWORDS = ['활', '석궁'];
 
-const WEAPON_SKILL_BY_ELEM: any = {
+const WEAPON_SKILL_BY_ELEM: Record<string, { name: string; effect: string | null; mp: number; mult: number; cooldown: number }> = {
     화염: { name: '이그니스 버스트', effect: 'burn', mp: 28, mult: 2.9, cooldown: 2 },
     냉기: { name: '프로스트 노바', effect: 'freeze', mp: 30, mult: 2.8, cooldown: 2 },
     어둠: { name: '섀도우 피어스', effect: 'curse', mp: 30, mult: 3.0, cooldown: 2 },
@@ -454,7 +454,7 @@ export const isRangedWeapon = (weapon: any) => {
 };
 
 export const getEquippedWeapons = (equip: EquipSlots) => {
-    const list: any[] = [];
+    const list = [];
     if (isWeapon(equip.weapon)) list.push({ slot: 'main', weapon: equip.weapon });
     if (isWeapon(equip.offhand)) list.push({ slot: 'offhand', weapon: equip.offhand });
     return list;

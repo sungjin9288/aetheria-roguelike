@@ -9,13 +9,13 @@ import type { Item } from '../types/index.js';
  * 같은 type + 같은 tier 장비 3개 → 상위 tier 장비 1개
  */
 
-const SYNTH_TYPES: any = ['weapon', 'armor', 'shield'];
+const SYNTH_TYPES = ['weapon', 'armor', 'shield'];
 
 /**
  * 합성 가능한 아이템인지 확인
  */
 export const isSynthesizable = (item: Item | null | undefined) =>
-    Boolean(item && SYNTH_TYPES.includes(item.type) && (item.tier ?? 0) >= 1 && (item.tier ?? 0) <= 5);
+    Boolean(item && item.type && SYNTH_TYPES.includes(item.type) && (item.tier ?? 0) >= 1 && (item.tier ?? 0) <= 5);
 
 /**
  * 주어진 type + tier 조합의 상위 tier 결과 후보 목록

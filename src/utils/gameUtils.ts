@@ -65,7 +65,7 @@ export const getPassiveSkillBonuses = (player: Player) => {
 };
 
 /** 티어 → 등급 자동 매핑 */
-const TIER_TO_RARITY: any = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary', 6: 'legendary' };
+const TIER_TO_RARITY: Record<number, string> = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary', 6: 'legendary' };
 
 /** 아이템 등급 반환 (명시적 rarity 우선, 없으면 tier 기반 자동 매핑) */
 export const getItemRarity = (item: Item | null | undefined) => item?.rarity || TIER_TO_RARITY[item?.tier ?? 0] || 'common';
@@ -101,7 +101,7 @@ export const findItemByName = (name: string | undefined) => getAllItems().find((
 // cycle 556: reward default {} 제거 — 3 callers (QuestBoardPanel/QuestTab/
 //   AchievementPanel) 모두 reward 명시 전달이라 default 도달 불가.
 export const formatRewardParts = (reward: any) => {
-    const parts: any[] = [];
+    const parts = [];
     if (reward.exp) parts.push(`경험 ${reward.exp}`);
     if (reward.gold) parts.push(`골드 ${reward.gold}`);
     if (reward.item) parts.push(reward.item);
@@ -267,7 +267,7 @@ export const isAchievementUnlocked = (achievement: Achievement, player: Player) 
 
 // Milestone Utility
 export const checkMilestones = (killRegistry: any, lastKillName: any) => {
-    const rewards: any[] = [];
+    const rewards = [];
     const count = killRegistry[lastKillName] || 0;
 
     // 1. Monster Count Milestones

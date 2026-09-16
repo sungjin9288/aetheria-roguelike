@@ -19,7 +19,7 @@ interface CombatPanelProps {
 // cycle 416: tag / detail 출력 dead 정리 — render는 icon/key/className/
 //   mobileLabel/label만 read. tag (Burst/Core/Loadout/Exit) + detail (한국어 설명)
 //   src/, tests/ read 0건이라 dead.
-const ACTION_BUTTONS: any = [
+const ACTION_BUTTONS = [
   {
     key: 'attack',
     label: '공격',

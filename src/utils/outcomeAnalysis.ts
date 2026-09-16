@@ -19,7 +19,7 @@ export const getPostCombatAnalysis = (result: any) => {
     else if (hpRatio <= 0.4) grade = '아슬아슬 승리';
     else if (hpRatio <= 0.7) grade = '안정 승리';
 
-    const notes: any[] = [];
+    const notes = [];
     if (enemyTier === 'BOSS') notes.push(`${enemyName} 보스전을 돌파했습니다.`);
     else if (enemyTier === 'ELITE') notes.push(`${enemyName} 정예 교전을 정리했습니다.`);
     else notes.push(`${enemyName} 전투를 정리했습니다.`);
@@ -41,7 +41,7 @@ export const getPostCombatAnalysis = (result: any) => {
     else if ((result.items?.length || 0) >= 2) rewardMood = '풍성한 전리품';
     else if (hpRatio <= 0.35) rewardMood = '위험한 승리';
 
-    const rewardHighlights: any[] = [];
+    const rewardHighlights = [];
     if (result.leveledUp) rewardHighlights.push('레벨 상승');
     if (enemyTier === 'BOSS') rewardHighlights.push('보스 격파');
     else if (enemyTier === 'ELITE') rewardHighlights.push('정예 격파');
@@ -159,12 +159,12 @@ export const getRunSummaryAnalysis = (summary: any) => {
                 ? '성장 방향을 잡은 모험'
                 : '초반 안정화가 필요한 모험';
 
-    const notes: any[] = [];
+    const notes = [];
     if (summary.primaryBuild) notes.push(`성장 방향: ${summary.primaryBuild}`);
     if (summary.difficultyLabel) notes.push(`모험 난이도: ${summary.difficultyLabel}`);
     if (Number.isFinite(summary.recentWinRate)) notes.push(`최근 승률: ${summary.recentWinRate}%`);
 
-    const focus: any[] = [];
+    const focus = [];
     if ((summary.relicsFound || 0) <= 1) focus.push('얻은 유물이 적었습니다. 탐험 중 새로운 사건을 더 찾아보세요.');
     if ((summary.bossKills || 0) === 0 && (summary.level || 0) >= 12) focus.push('보스에 들어가기 전 방어 장비와 회복 수단을 더 준비하면 한 단계 더 올라갈 수 있습니다.');
     if ((summary.kills || 0) < 30) focus.push('초반 교전 수가 적었습니다. 첫 두 지역을 더 살펴 성장 기회를 확보하세요.');

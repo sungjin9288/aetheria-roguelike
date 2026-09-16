@@ -54,7 +54,7 @@ interface DashboardProps {
     onReturnToLog?: any;
 }
 
-const TAB_ITEMS: any[] = [
+const TAB_ITEMS = [
     { id: 'equipment', icon: Shield, label: '장비' },
     { id: 'inventory', icon: Package, label: '가방' },
     { id: 'quest', icon: Scroll, label: '임무' },

@@ -42,7 +42,7 @@ const StatDiff = ({ val, label, suffix }: any) => {
 /**
  * SmartInventory — 인벤토리 스마트 필터 + 장비 비교 (시나리오 2)
  */
-const FILTERS: any = [
+const FILTERS = [
     { id: 'all', label: MSG.INV_FILTER_ALL },
     { id: 'weapon', label: MSG.INV_FILTER_WEAPON },
     { id: 'armor', label: MSG.INV_FILTER_ARMOR },
@@ -51,7 +51,7 @@ const FILTERS: any = [
     { id: 'material', label: MSG.INV_FILTER_MATERIAL },
 ];
 
-const ITEM_TYPE_TO_FILTER: any = {
+const ITEM_TYPE_TO_FILTER: Record<string, string> = {
     weapon: 'weapon',
     armor: 'armor',
     shield: 'shield',
@@ -63,7 +63,7 @@ const ITEM_TYPE_TO_FILTER: any = {
 };
 
 const getItemTags = (item: any) => {
-    const tags: any[] = [];
+    const tags = [];
     if (isWeapon(item) || item?.type === 'shield') tags.push(getWeaponStyleLabel(item));
     return tags;
 };

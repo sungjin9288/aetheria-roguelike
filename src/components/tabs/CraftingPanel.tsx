@@ -11,7 +11,7 @@ import FocusPanelHeader from '../FocusPanelHeader';
 import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
 
-const TYPE_LABEL: any = { weapon: '무기', armor: '방어구', shield: '방패' };
+const TYPE_LABEL: Record<string, string> = { weapon: '무기', armor: '방어구', shield: '방패' };
 
 /** 제작법과 장비 합성을 한 흐름에서 다룬다. */
 // cycle 403: `mobileFocused?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.

@@ -40,8 +40,8 @@ export const processLoot = (
 ) => {
     const random = typeof rng === 'function' ? rng : Math.random;
     const currentTime = typeof now === 'function' ? now : Date.now;
-    const items: any[] = [];
-    const logs: any[] = [];
+    const items = [];
+    const logs = [];
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
     const dropRateMult = 1 + (relics.find((relic: any) => relic.effect === 'drop_rate')?.val || 0);

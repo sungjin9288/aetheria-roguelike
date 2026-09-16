@@ -105,8 +105,8 @@ export const CombatEngine = {
     ...statusMethods,
 
     tickCombatState(player: Player) {
-        const logs: any[] = [];
-        const updated: any = { ...player };
+        const logs = [];
+        const updated = { ...player };
         const relics = updated.relics || [];
         const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const nextCooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
@@ -261,7 +261,7 @@ export const CombatEngine = {
             ? buildGraveData(player, rng, now)
             : buildGraveData(player, Math.random, Date.now);
 
-        const starterState: any = { ...INITIAL_PLAYER };
+        const starterState = { ...INITIAL_PLAYER };
         const meta = { ...this.DEFAULT_META, ...(player.meta || {}) };
         const prevStats = player.stats || starterState.stats || {};
 
@@ -321,7 +321,7 @@ export const CombatEngine = {
             starterState.weeklyProtocol = (player as any).weeklyProtocol;
         }
 
-        const defeatLogs: any[] = [{ type: 'error', text: MSG.DEFEAT }];
+        const defeatLogs = [{ type: 'error', text: MSG.DEFEAT }];
         if (isFirstDeath) {
             defeatLogs.push({ type: 'system', text: MSG.FIRST_DEATH_META(BALANCE.FIRST_DEATH_BONUS_ATK, BALANCE.FIRST_DEATH_BONUS_HP) });
         }

@@ -16,7 +16,7 @@ import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
 export const outcomeMethods: any = {
     applyExpGain(player: Player, expGained: any) {
         const p: any = { ...player, exp: (player.exp || 0) + expGained };
-        const logs: any[] = [];
+        const logs = [];
         let levelUps = 0;
         let visualEffect = null;
 

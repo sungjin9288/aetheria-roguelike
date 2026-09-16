@@ -8,9 +8,9 @@ import {
     placementToTransform,
 } from './anchorPoints.js';
 
-const HOLY_PREVIEW_PATTERNS: any = ['성', '천', '심판', '성광', '이지스', '기사'];
-const SHADOW_PREVIEW_PATTERNS: any = ['암흑', '어둠', '심연', '공허', '그림자'];
-const NATURE_PREVIEW_PATTERNS: any = ['엘프', '숲', '사냥', '레인저', '자연'];
+const HOLY_PREVIEW_PATTERNS = ['성', '천', '심판', '성광', '이지스', '기사'];
+const SHADOW_PREVIEW_PATTERNS = ['암흑', '어둠', '심연', '공허', '그림자'];
+const NATURE_PREVIEW_PATTERNS = ['엘프', '숲', '사냥', '레인저', '자연'];
 const HEAVY_WEAPON_STYLES = new Set(['greatsword', 'greataxe', 'axe', 'hammer', 'mace', 'spear', 'lance', 'scythe']);
 const DAGGER_WEAPON_STYLES = new Set(['dagger', 'fang-dagger', 'throwing-blade', 'twinblade']);
 const FOCUS_OFFHAND_STYLES = new Set(['grimoire', 'tome', 'tablet', 'scroll', 'book']);

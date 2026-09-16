@@ -91,10 +91,10 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     const shield = isShield(offhand) && !isFocusOffhand(offhand);
     const focus = isFocusOffhand(offhand);
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
-    const tags: any[] = [];
+    const tags = [];
 
     if (twoHand || relicEffects.has('execute_bonus') || relicEffects.has('armor_pen')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (twoHand) { score += 4; reasons.push('양손 무기'); }
         if (relicEffects.has('execute_bonus')) { score += 2; reasons.push('처형 보정'); }
@@ -105,7 +105,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (dualWield || relicEffects.has('combo_stack') || relicEffects.has('double_strike')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (dualWield) { score += 4; reasons.push('쌍수 무기'); }
         if (relicEffects.has('combo_stack')) { score += 2; reasons.push('연격 스택'); }
@@ -115,7 +115,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (shield || relicEffects.has('reflect') || relicEffects.has('stone_skin') || relicEffects.has('fortress')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (shield) { score += 4; reasons.push('방패 운용'); }
         if (relicEffects.has('reflect')) { score += 2; reasons.push('반사 피해'); }
@@ -126,7 +126,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (stats?.isMagic || focus || isMagicWeapon(mainWeapon) || isMagicWeapon(offhand)) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (stats?.isMagic) { score += 2; reasons.push('마법 공격'); }
         if (focus) { score += 3; reasons.push('주문서/마도서'); }
@@ -139,7 +139,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (relicEffects.has('event_chance') || relicEffects.has('drop_rate') || relicEffects.has('gold_mult') || relicEffects.has('exp_mult') || relicEffects.has('boss_hunter')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (relicEffects.has('event_chance')) { score += 2; reasons.push('이벤트 증가'); }
         if (relicEffects.has('drop_rate')) { score += 2; reasons.push('드롭 증가'); }
@@ -150,7 +150,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (relicEffects.has('glass_cannon') || relicEffects.has('cursed_power') || relicEffects.has('low_hp_atk') || hpRatio < 0.45) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (relicEffects.has('glass_cannon')) { score += 2; reasons.push('유리 대포'); }
         if (relicEffects.has('cursed_power')) { score += 2; reasons.push('체력 대가 화력'); }
@@ -161,7 +161,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (relicEffects.has('dot_mult') || (mainWeapon?.elem && mainWeapon.elem !== '물리')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (relicEffects.has('dot_mult')) { score += 3; reasons.push('지속 피해 증폭'); }
         if (mainWeapon?.elem && mainWeapon.elem !== '물리') { score += 2; reasons.push(`${mainWeapon.elem} 속성 무기`); }
@@ -284,7 +284,7 @@ export const getTraitSkill = (player: Player, stats: any) => getTraitProfile(pla
 
 export const getTraitPassiveParts = (traitProfile: any) => {
     const bonus = traitProfile?.bonus || {};
-    const parts: any[] = [];
+    const parts = [];
     if ((bonus.atkMult || 1) > 1) parts.push(`공격력 +${toPercent((bonus.atkMult || 1) - 1)}`);
     if ((bonus.defMult || 1) > 1) parts.push(`방어력 +${toPercent((bonus.defMult || 1) - 1)}`);
     if ((bonus.critBonus || 0) > 0) parts.push(`치명타 +${toPercent(bonus.critBonus || 0)}`);
@@ -298,7 +298,7 @@ export const getTraitItemResonance = (item: Item | null | undefined, traitProfil
     if (!item) return { score: 0, label: null, summary: null };
 
     const traitId = traitProfile?.id || 'balanced';
-    const reasons: any[] = [];
+    const reasons: string[] = [];
     let score = 0;
 
     switch (traitId) {
@@ -406,7 +406,7 @@ export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
     ].filter(Boolean));
 
     let score = 0;
-    const reasons: any[] = [];
+    const reasons = [];
 
     if (quest.buildTag && buildTags.has(quest.buildTag)) {
         score += 6;

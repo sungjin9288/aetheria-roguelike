@@ -7,7 +7,7 @@ import { BALANCE } from './constants';
 // cycle 393: category / repeatable 출력 dead 정리 — PremiumShop 컴포넌트는
 //   entry spread 후 id/name/desc/cost/onBuy/detail만 read. category 분기 0건,
 //   repeatable read 0건이라 dead. 7 entry × 2 + 4 entry × 1 = 18 lines 정리.
-export const PREMIUM_SHOP: any = {
+export const PREMIUM_SHOP = {
     /** 인벤토리 확장 */
     invExpand: {
         id: 'inv_expand',

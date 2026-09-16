@@ -116,7 +116,7 @@ export const relicEffectMethods: any = {
             }
         }
 
-        const updatedPlayer: any = { ...player, hp: nextHp, combatFlags: flags };
+        const updatedPlayer: Player = { ...player, hp: nextHp, combatFlags: flags };
         if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
         // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
         if (flags.reviveTokenUsed) {
@@ -154,11 +154,11 @@ export const relicEffectMethods: any = {
     //   default 도달 불가. 청소 메가 시리즈 42번째 (cycle 502-546).
     applyEntropyTick(player: Player, enemy: Monster, activeSynergies: any[]) {
         const relics = (player as any)?.relics || [];
-        const flags: any = { ...((player as any).combatFlags || {}) };
+        const flags = { ...((player as any).combatFlags || {}) };
         const turnCount = (flags.turnCount || 0) + 1;
         flags.turnCount = turnCount;
 
-        const updatedPlayer: any = { ...player, combatFlags: flags };
+        const updatedPlayer = { ...player, combatFlags: flags };
         let updatedEnemy: any = enemy;
         const logs: any[] = [];
 

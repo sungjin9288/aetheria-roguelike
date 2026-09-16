@@ -7,7 +7,8 @@ import { getUnmetQuestPrerequisite } from './questPrerequisites.js';
 
 // cycle 356: OPERATION_META 5 lane에서 summary 필드 제거 — QuestBoardPanel은
 //   entry.meta.label / .emphasis만 read. summary 외부 read 0건이던 dead config.
-const OPERATION_META: any = {
+type OperationMetaEntry = { label: string; emphasis: string };
+const OPERATION_META: Record<string, OperationMetaEntry> = {
     story: {
         label: '이야기 임무',
         emphasis: '이야기 진행',
@@ -30,12 +31,12 @@ const OPERATION_META: any = {
     },
 };
 
-const FEATURED_LANE_ORDER: any = ['story', 'build', 'growth', 'boss', 'hunt'];
+const FEATURED_LANE_ORDER = ['story', 'build', 'growth', 'boss', 'hunt'];
 const RUN_PLAN_LOW_HP_RATIO = 0.5;
 const OPERATION_BRIEF_LOW_HP_RATIO = 0.45;
 const OPERATION_BRIEF_BOSS_HP_RATIO = 0.75;
 const OPERATION_BRIEF_INVENTORY_BUFFER = 2;
-const RUN_PLAN_PREP_BY_LANE: any = {
+const RUN_PLAN_PREP_BY_LANE: Record<string, string> = {
     story: '휴식 후 출발',
     build: '장비 조합 점검',
     growth: '보급과 성장 확인',
@@ -387,7 +388,7 @@ export const getQuestBoardRecommendations = (player: Player, maps: any = MAPS, q
             return exposed;
         });
 
-    const featured: any[] = [];
+    const featured = [];
     const usedIds = new Set();
     FEATURED_LANE_ORDER.forEach((lane: any) => {
         const match = scoredAvailable.find((entry: any) => entry.lane === lane && !usedIds.has(entry.quest.id));

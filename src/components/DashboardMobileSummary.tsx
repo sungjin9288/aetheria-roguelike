@@ -22,7 +22,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
 
     const statusPills = useMemo(() => {
         if (!player) return [];
-        const pills: any[] = [];
+        const pills = [];
         const activeQuests = player.quests?.filter((q: any) => !q.done)?.length || 0;
         const completedQuests = player.quests?.filter((q: any) => q.done)?.length || 0;
         if (activeQuests > 0 || completedQuests > 0) {

@@ -5,7 +5,7 @@
  * 티어별 색상: T0 slate, T1 cyber-blue, T2 cyber-purple, T3 legendary-gold
  */
 
-const CLASS_PATHS: any = {
+const CLASS_PATHS: Record<string, string> = {
     // Tier 0
     '모험가': 'M12 2l2 4h4l-3 3 1 5-4-3-4 3 1-5-3-3h4l2-4ZM12 14v7M8 21h8',
     // Tier 1
@@ -30,7 +30,7 @@ const CLASS_PATHS: any = {
     '사냥의 군주': 'M4 20l8-8 8 8M12 4v8M8 6l4-4 4 4M3 12h4M17 12h4M7 17l2-2M15 17l2-2',
 };
 
-const TIER_COLORS: any = {
+const TIER_COLORS: Record<number, string> = {
     0: '#9ca3af',   // slate
     1: '#00ccff',   // cyber-blue
     2: '#bc13fe',   // cyber-purple

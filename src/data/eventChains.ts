@@ -8,7 +8,7 @@
  * 0 = 미시작, 1 = 1단계 완료, 2 = 2단계 완료, 3 = 완료
  */
 
-export const EVENT_CHAINS: any = [
+export const EVENT_CHAINS = [
     {
         id: 'ancient_prophecy',
         label: '고대의 예언',

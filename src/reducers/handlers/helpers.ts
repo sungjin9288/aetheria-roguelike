@@ -94,7 +94,7 @@ export const resolveDailyProtocolProgress = (
     let relicShardGain = 0;
     let completedCount = 0;
     let newShards = dp.relicShards || 0;
-    const itemRewards: any[] = [];
+    const itemRewards: string[] = [];
 
     const updatedMissions = dp.missions.map((mission: any) => {
         if (mission.type !== type || mission.done) return mission;

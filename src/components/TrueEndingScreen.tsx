@@ -16,7 +16,7 @@ const STARS = Array.from({ length: 60 }, () => ({
     delay: Math.random() * 3,
 }));
 
-const ENDING_LINES: any = [
+const ENDING_LINES = [
     '오랜 싸움이 끝났습니다.',
     '원시의 신이 쓰러지며, 세계를 짓누르던 어둠이 서서히 걷힙니다.',
     '당신의 발자국은 이 땅에 영원히 새겨질 것입니다.',

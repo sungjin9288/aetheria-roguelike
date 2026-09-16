@@ -5,7 +5,7 @@ import { getItemRarity } from '../../utils/gameUtils';
 import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
 
-const RARITY_FRAME: any = {
+const RARITY_FRAME: Record<string, { border: string; glow: string; corner: boolean }> = {
     common: { border: '#9ca3af', glow: 'none', corner: false },
     uncommon: { border: '#22c55e', glow: 'none', corner: true },
     rare: { border: '#3b82f6', glow: '0 0 8px rgba(59,130,246,0.3)', corner: true },
@@ -13,7 +13,7 @@ const RARITY_FRAME: any = {
     legendary: { border: '#f59e0b', glow: '0 0 16px rgba(245,158,11,0.4)', corner: true },
 };
 
-const RARITY_TONE: any = {
+const RARITY_TONE: Record<string, string> = {
     common: 'neutral',
     uncommon: 'success',
     rare: 'recommended',

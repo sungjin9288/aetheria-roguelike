@@ -25,7 +25,7 @@ const CODEX_BUCKET_BY_TYPE: any = Object.freeze({
 //   (cycle 608-613에 이은 6번째 적용). caller에 || [] defensive guard 명시
 //   추가 후 default unreachable.
 const getSignatureItemNames = (inv: any) => {
-    const names: any[] = [];
+    const names = [];
     for (const entry of inv) {
         if (entry && hasDedicatedSignatureArt(entry)) {
             names.push(entry.name);

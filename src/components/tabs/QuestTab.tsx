@@ -62,7 +62,7 @@ const QuestRewardChips = ({ reward, accent }: any) => {
  * QuestTab — Dashboard의 quest 탭 콘텐츠 (#4 분리)
  * props: player, actions, isInSafeZone
  */
-const DAILY_TYPE_LABEL: any = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
+const DAILY_TYPE_LABEL: Record<string, string> = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
 
 const getDailyRewardLabel = (reward: any) => {
     if (reward?.essence) return `에센스 +${reward.essence}`;

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { Player } from '../types/index.js';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
 import { RELICS } from '../data/relics';
@@ -385,7 +386,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
             signatureNames: ['성검 에테르니아'],
         };
 
-        const testApi: any = {
+        const testApi = {
             getInvestmentSnapshot: () => {
                 const player = engineRef.current.player;
                 return {
@@ -1184,7 +1185,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                 const scenario = avatarScenarioMap[preset];
                 if (!scenario) return false;
 
-                const payload: any = {
+                const payload: Partial<Player> = {
                     name: scenario.name,
                     job: scenario.job,
                     level: scenario.level,

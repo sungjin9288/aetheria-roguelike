@@ -89,7 +89,7 @@ const getPoolKeyByLocation = (loc: string) => {
     return keyByKeyword?.key || 'default';
 };
 
-const FALLBACK_CHOICE_SETS: any = {
+const FALLBACK_CHOICE_SETS: Record<string, string[]> = {
     default: ['조사한다', '경계한다', '지나친다'],
     forest: ['살펴본다', '경계한다', '돌아선다'],
     ruins: ['해독한다', '조심히 접근한다', '지나친다'],
@@ -105,7 +105,7 @@ const FALLBACK_CHOICE_SETS: any = {
     gate: ['동조한다', '봉인한다', '후퇴한다'],
 };
 
-const ITEM_REWARD_BY_POOL: any = {
+const ITEM_REWARD_BY_POOL: Record<string, string[]> = {
     default: ['하급 체력 물약', '하급 마나 물약'],
     forest: ['하급 체력 물약', '해독제'],
     ruins: ['중급 체력 물약', '저주해제 주문서'],
@@ -121,9 +121,9 @@ const ITEM_REWARD_BY_POOL: any = {
     gate: ['영웅의 물약', '상급 마나 물약'],
 };
 
-const SAFE_KEYWORDS: any = ['관찰', '해독', '조심', '우회', '분석', '기록', '표식', '표시', '점검', '봉인', '확인', '읽', '해제', '가림막', '거리 유지', '은폐', '경계'];
-const RETREAT_KEYWORDS: any = ['돌아', '되돌아', '후퇴', '철수', '포기', '무시', '지나친', '대기', '기다린다', '눈을 감는다', '도망'];
-const RISKY_KEYWORDS: any = ['만진다', '달린다', '강제로', '뛰어내', '기습', '정면 돌파', '직접 진입', '접촉', '전투 준비', '파괴', '돌파', '재가동', '강제 해제', '연다', '추적', '공명 강화'];
+const SAFE_KEYWORDS = ['관찰', '해독', '조심', '우회', '분석', '기록', '표식', '표시', '점검', '봉인', '확인', '읽', '해제', '가림막', '거리 유지', '은폐', '경계'];
+const RETREAT_KEYWORDS = ['돌아', '되돌아', '후퇴', '철수', '포기', '무시', '지나친', '대기', '기다린다', '눈을 감는다', '도망'];
+const RISKY_KEYWORDS = ['만진다', '달린다', '강제로', '뛰어내', '기습', '정면 돌파', '직접 진입', '접촉', '전투 준비', '파괴', '돌파', '재가동', '강제 해제', '연다', '추적', '공명 강화'];
 
 // cycle 525: choiceText default '' 제거 — 1 internal callsite (line 131
 //   classifyChoice(choice)) + 4 test callsite 모두 string 명시이라 default
@@ -288,7 +288,7 @@ export const buildEventPackage = (payload: any, context: any) => {
 //   `if (player.loc === START_LOCATION) return` 조기 반환, AI_SERVICE.generateEvent
 //   진입 자체 차단. type='safe' / eventChance=0인 안전지대라 게임 디자인상 explore
 //   루프 비대상. 12 fallback events 모두 unreachable dead config.
-const FALLBACK_EVENT_POOL: any = {
+const FALLBACK_EVENT_POOL: Record<string, any[]> = {
     forest: [
         { desc: '나무 사이로 신비로운 빛이 흘러나옵니다.', choices: ['따라간다', '멀리서 관찰한다', '돌아선다'] },
         { desc: '오래된 석상이 덩굴에 감겨 있습니다.', choices: ['살펴본다', '정화한다', '지나친다'] },

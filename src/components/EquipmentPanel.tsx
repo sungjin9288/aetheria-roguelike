@@ -24,7 +24,7 @@ interface EquipmentPanelProps {
 }
 
 // cycle 417: icon 출력 dead 정리 — slot.icon read 0건. render는 key/label만 사용.
-const SLOT_CONFIG: any = [
+const SLOT_CONFIG = [
     { key: 'weapon', label: '주무기' },
     { key: 'armor', label: '방어구' },
     { key: 'offhand', label: '보조 장비' },

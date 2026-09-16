@@ -3,7 +3,7 @@ import { getMonsterVisual } from '../../utils/monsterVisuals';
 
 /** 발견한 주요 몬스터는 고유 art를, 나머지는 계열 silhouette을 사용한다. */
 
-const SILHOUETTE_PATHS: any = {
+const SILHOUETTE_PATHS = {
     // 기본 (슬라임류)
     slime: 'M6 16c0 2 2.7 4 6 4s6-2 6-4c0-3-1-6-2-8s-2-4-4-4-3 2-4 4-2 5-2 8Z',
     // 짐승형

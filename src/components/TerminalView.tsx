@@ -6,7 +6,7 @@ import type { Player } from '../types/index.js';
 import { GS } from '../reducers/gameStates';
 import { getLocationVisual } from '../utils/locationVisuals';
 
-const LOG_STYLES: any = {
+const LOG_STYLES: Record<string, { text: string; bg: string; icon: any }> = {
     combat: {
         text: 'text-rose-100 font-semibold',
         bg: 'border-l-2 border-rose-300/50 bg-rose-500/8',
@@ -59,8 +59,8 @@ const LOG_STYLES: any = {
     },
 };
 
-const DEFAULT_STYLE: any = { text: 'text-slate-300', bg: 'transparent', icon: null };
-const MOBILE_LOG_BADGES: any = {
+const DEFAULT_STYLE = { text: 'text-slate-300', bg: 'transparent', icon: null };
+const MOBILE_LOG_BADGES: Record<string, { label: string; className: string }> = {
     combat: { label: '전투', className: 'border-rose-300/24 bg-rose-400/10 text-rose-100/84' },
     critical: { label: '치명타', className: 'border-red-300/28 bg-red-500/12 text-red-100/88' },
     story: { label: '이야기', className: 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]/84' },

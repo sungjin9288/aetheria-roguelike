@@ -5,7 +5,7 @@ import { getEquipmentArtProfile } from './equipmentArt.js';
 // cycle 342: getItemIconAssetKey import 제거 — iconKey 출력 필드 cleanup 후 cascade dead.
 import { getArmorStyleFromItem, getAvatarLoadoutStyle, getOffhandVisualKey, getWeaponVisualKey } from './itemVisuals.js';
 
-const DEFAULT_JOB_STYLE: any = {
+const DEFAULT_JOB_STYLE = {
     hairColor: '#7a4f3d',
     outfitColor: '#5b7dd8',
     accentColor: '#f6e7c8',
@@ -13,7 +13,7 @@ const DEFAULT_JOB_STYLE: any = {
     accessoryStyle: 'ribbon',
 };
 
-const JOB_STYLE_MAP: any = {
+const JOB_STYLE_MAP: Record<string, { hairColor: string; outfitColor: string; accentColor: string; armorStyle: string; accessoryStyle: string }> = {
     모험가: { hairColor: '#7a4f3d', outfitColor: '#5b7dd8', accentColor: '#f6e7c8', armorStyle: 'coat', accessoryStyle: 'ribbon' },
     전사: { hairColor: '#4d3c2f', outfitColor: '#6b7280', accentColor: '#d5b180', armorStyle: 'plate', accessoryStyle: 'plume' },
     나이트: { hairColor: '#5a4638', outfitColor: '#64748b', accentColor: '#f6e7c8', armorStyle: 'plate', accessoryStyle: 'crest' },
@@ -33,7 +33,7 @@ const JOB_STYLE_MAP: any = {
 // cycle 448: '물리' 엔트리 제거 — items.ts elem 값에 '물리' 0건 (실제 elem은
 //   화염/냉기/대지/바람/빛/어둠/에테르/자연 8 종). lookup 절대 hit 안 됨.
 //   바람/에테르는 fallback path 활성 (원래 그랬음).
-const ELEMENT_COLOR_MAP: any = {
+const ELEMENT_COLOR_MAP: Record<string, string> = {
     화염: '#fb923c',
     냉기: '#67e8f9',
     어둠: '#a78bfa',

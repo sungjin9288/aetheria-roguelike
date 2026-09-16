@@ -4,7 +4,7 @@
  * viewBox="0 0 24 24", stroke-based
  */
 
-const TYPE_PATHS: any = {
+const TYPE_PATHS: Record<string, string> = {
     // 원소
     '물리': 'M7 2l3 7H4l6 5-2 8 4-6 4 6-2-8 6-5h-6l3-7',
     '화염': 'M12 22c-4 0-7-3-7-7 0-3 2-5 4-8l3-4 3 4c2 3 4 5 4 8 0 4-3 7-7 7ZM10 16a2 2 0 104 0',
@@ -20,7 +20,7 @@ const TYPE_PATHS: any = {
     //   ('썬더볼트' 등도 빛 type으로 정의). monsters.ts weakness/resistance도 0건.
 };
 
-const TYPE_COLORS: any = {
+const TYPE_COLORS: Record<string, string> = {
     '물리': '#e2e8f0',
     '화염': '#f97316',
     '냉기': '#22d3ee',

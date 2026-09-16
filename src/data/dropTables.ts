@@ -4,7 +4,7 @@
  * rate: 개별 드롭 확률 (0~1), qty: [min, max] 수량 범위 (생략 시 1개)
  * 기존 LOOT_TABLE보다 우선 참조됨.
  */
-export const DROP_TABLES: any = {
+export const DROP_TABLES: Record<string, Array<{ item: string; rate: number; qty?: number[] }>> = {
     // ── 숲 지역 ──
     '슬라임': [
         { item: '슬라임 젤리', rate: 0.55, qty: [1, 3] },

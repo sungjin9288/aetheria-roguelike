@@ -1,7 +1,7 @@
 import { getRelicDisplayName } from './relicPresentation';
 import { getRelicBuildFit } from './relicBuildFit';
 
-const RARITY_SCORE: any = {
+const RARITY_SCORE: Record<string, number> = {
     common: 0,
     uncommon: 12,
     rare: 24,
@@ -9,7 +9,7 @@ const RARITY_SCORE: any = {
     legendary: 52,
 };
 
-const EFFECT_BUILD_LABEL: any = {
+const EFFECT_BUILD_LABEL: Record<string, string> = {
     double_strike: '연속 공격',
     execute_bonus: '마무리 공격',
     combo_stack: '연속 공격 강화',

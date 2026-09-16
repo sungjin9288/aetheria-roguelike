@@ -667,7 +667,7 @@ export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: an
     const needed = Math.min(count, remaining.length);
     if (needed === 0) return [];
 
-    const result: any[] = [];
+    const result = [];
     const pityCandidates = findSynergyPityCandidates(remaining, options?.owned as any[]);
 
     if (pityCandidates.length > 0) {
