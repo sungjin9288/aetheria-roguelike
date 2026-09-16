@@ -1,7 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
-import type { Monster, Player } from '../types/index.js';
+import type { FullStats, Monster, Player } from '../types/index.js';
 
 /**
  * CombatEngine 적 행동/예측 메서드 (enemyAttack / attemptEscape / predictEnemyNextAction)
@@ -9,7 +9,7 @@ import type { Monster, Player } from '../types/index.js';
  * this 교차호출(tickEnemyStatus / applyFatalProtection)은 호출 시점 바인딩 → 객체 any.
  */
 export const enemyAIMethods: any = {
-    enemyAttack(player: Player, enemy: Monster, stats: any, rng?: () => number) {
+    enemyAttack(player: Player, enemy: Monster, stats: FullStats, rng?: () => number) {
         const random = typeof rng === 'function' ? rng : Math.random;
         let updatedEnemy = { ...enemy };
         let updatedPlayer: any = { ...player };
@@ -23,7 +23,7 @@ export const enemyAIMethods: any = {
         const curseAmpMult = curseAmpPassive ? (curseAmpPassive.val || 1) : 1;
         // cycle 153: 시너지 'death_oracle' — dotMult DoT 피해 증폭.
         const activeSynergies = stats.activeSynergies || [];
-        const synergyDotMult = activeSynergies.reduce((acc: any, syn: any) =>
+        const synergyDotMult = activeSynergies.reduce((acc: number, syn) =>
             (syn.bonus.effect === 'death_oracle' ? acc + (syn.bonus.dotMult || 0)
                 : syn.bonus.dotMult ? acc + syn.bonus.dotMult
                 : acc),
@@ -80,7 +80,7 @@ export const enemyAIMethods: any = {
                     };
                     logs.push({ type: 'critical', text: `💀 ${p3.log}` });
                     if (p3.statusEffect) {
-                        const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
+                        const resistRelic = relics.find((r) => r.effect === 'status_resist');
                         const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
                         const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
                         if (!currentStatus.includes(p3.statusEffect) && random() >= resistChance) {
@@ -109,7 +109,7 @@ export const enemyAIMethods: any = {
                     };
                     logs.push({ type: 'warning', text: `⚡ ${p2.log}` });
                     if (p2.statusEffect) {
-                        const resistRelic2 = relics.find((r: any) => r.effect === 'status_resist');
+                        const resistRelic2 = relics.find((r) => r.effect === 'status_resist');
                         const resistChance2 = resistRelic2 ? (resistRelic2.val || 0) : 0;
                         const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
                         if (!currentStatus.includes(p2.statusEffect) && random() >= resistChance2) {
@@ -153,7 +153,7 @@ export const enemyAIMethods: any = {
 
         const heavy = roll < pattern.guardChance + pattern.heavyChance;
         let mult = heavy ? 1.4 : 1;
-        const critBlockRelic = relics.find((relic: any) => relic.effect === 'crit_block');
+        const critBlockRelic = relics.find((relic) => relic.effect === 'crit_block');
         if (heavy && critBlockRelic && random() < critBlockRelic.val) {
             mult = 1;
             logs.push({ type: 'event', text: '[강철 의지] 강타를 흘려냈습니다!' });
@@ -161,9 +161,9 @@ export const enemyAIMethods: any = {
         const heavyResolved = heavy && mult > 1;
 
         // 유물: 가시 갑옷 (reflect) — 피격 시 적에게 반사
-        const reflectRelic = relics.find((r: any) => r.effect === 'reflect');
+        const reflectRelic = relics.find((r) => r.effect === 'reflect');
         // cycle 156: 시너지 'absolute_reflect' — 반사율 50%, 스턴 25% 확률. effect-name primary + bonus.reflect fallback.
-        const absoluteReflectSyn = activeSynergies.find((s: any) =>
+        const absoluteReflectSyn = activeSynergies.find((s) =>
             s.bonus.effect === 'absolute_reflect' || s.bonus.reflect);
         const reflectMult = absoluteReflectSyn ? (absoluteReflectSyn.bonus.reflect || 0.3) : (reflectRelic ? reflectRelic.val : 0);
         const reflectDmg = (reflectRelic || absoluteReflectSyn) ? Math.floor(stats.def * reflectMult) : 0;
@@ -205,7 +205,7 @@ export const enemyAIMethods: any = {
         //   cycle 149에서 hp 보너스만 적용했고 critReduce는 별도 사이클로 미뤘던 잔존.
         //   heavyResolved (heavy attack — boss/enemy의 강타) 상황을 enemy crit으로 해석.
         if (heavyResolved) {
-            const titanRelic = relics.find((r: any) => r.effect === 'titan');
+            const titanRelic = relics.find((r) => r.effect === 'titan');
             const reduce = titanRelic?.val?.critReduce || 0;
             if (reduce > 0) {
                 const before = enemyDmg;
@@ -218,7 +218,7 @@ export const enemyAIMethods: any = {
         // 몬스터 공격 시 상태이상 부여 (pattern.statusEffect + pattern.statusChance 지원)
         if (heavy && updatedEnemy.pattern?.statusEffect && random() < (updatedEnemy.pattern.statusChance || 0.25)) {
             const sEff = updatedEnemy.pattern.statusEffect;
-            const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
+            const resistRelic = relics.find((r) => r.effect === 'status_resist');
             const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
             const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
             if (!currentStatus.includes(sEff) && random() >= resistChance) {
@@ -238,7 +238,7 @@ export const enemyAIMethods: any = {
         //   status_resist relic 확률로 저항.
         const enemyStatusOnHit = (updatedEnemy as any).statusOnHit;
         if (heavyResolved && enemyStatusOnHit && !protectedResult.isDead) {
-            const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
+            const resistRelic = relics.find((r) => r.effect === 'status_resist');
             const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
             const currentStatus = Array.isArray(protectedResult.updatedPlayer.status) ? protectedResult.updatedPlayer.status : [];
             // A1 (2026-09 감사 G1) 밸런스 가드: spawnEnemy가 statusOnHit을 전파하기 전에는
@@ -296,7 +296,7 @@ export const enemyAIMethods: any = {
         };
     },
 
-    attemptEscape(enemy: Monster, stats: any, rng?: () => number) {
+    attemptEscape(enemy: Monster, stats: FullStats, rng?: () => number) {
         const random = typeof rng === 'function' ? rng : Math.random;
         const success = random() > BALANCE.ESCAPE_CHANCE;
         if (success) {

@@ -30,7 +30,7 @@ import JobChangePanel from './tabs/JobChangePanel';
 import QuestBoardPanel from './tabs/QuestBoardPanel';
 import CraftingPanel from './tabs/CraftingPanel';
 import { ACTION_KIND_TO_BUTTON } from './controlPanelConfig';
-import type { Player, Monster } from '../types/index.js';
+import type { FullStats, Player, Monster } from '../types/index.js';
 import { getTownActionPresentation } from '../utils/townActionPresentation';
 import { getExpeditionFocusRouteTargets, MAX_EXPEDITION_FOCUS_QUESTS } from '../utils/expeditionMissionFocus';
 import { getScoutAvailability } from '../utils/scoutEvents';
@@ -46,7 +46,7 @@ interface ControlPanelProps {
   grave?: any;
   isAiThinking?: boolean;
   currentEvent?: any;
-  stats?: any;
+  stats?: FullStats | null;
   onOpenArchiveConsole?: any;
 }
 

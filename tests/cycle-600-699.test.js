@@ -1068,7 +1068,8 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/systems/DifficultyManager.ts');
       assert.ok(!/countLowHpWins = \(stats:\s*any,\s*threshold:\s*any\s*=\s*0\.2\)/.test(source),
           'countLowHpWins threshold default 0.2 제거');
-      assert.ok(/countLowHpWins = \(stats:\s*any,\s*threshold:\s*any\)/.test(source),
+      // B2(2026-09): stats는 Player['stats'], threshold는 number로 타입화 — 의도(파라미터 보존 + default 없음)는 동일.
+      assert.ok(/countLowHpWins = \(stats: Player\['stats'\],\s*threshold:\s*number\)/.test(source),
           'countLowHpWins threshold 파라미터 보존 (default 없이)');
   });
 
@@ -1522,7 +1523,8 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/utils/runProfile.ts');
       assert.ok(!/getTraitItemResonance = \([^)]*player:\s*Player\s*\|\s*null\s*=\s*null\)/.test(source),
           'getTraitItemResonance player default null 제거');
-      assert.ok(/getTraitItemResonance = \(item:[^)]+,\s*traitProfile:\s*any,\s*player:\s*Player\s*\|\s*null\)/.test(source),
+      // B2(2026-09): traitProfile이 TraitProfile 타입으로 바뀌었다 — player 파라미터 보존 의도는 동일.
+      assert.ok(/getTraitItemResonance = \(item:[^)]+,\s*traitProfile:[^,]+,\s*player:\s*Player\s*\|\s*null\)/.test(source),
           'getTraitItemResonance player 파라미터 보존 (default 없이)');
   });
 

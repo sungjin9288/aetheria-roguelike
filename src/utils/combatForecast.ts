@@ -1,4 +1,4 @@
-import type { Monster, Player } from '../types/index.js';
+import type { FullStats, Monster, Player } from '../types/index.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
 
 type ForecastTone = 'pressure' | 'advantage' | 'reward' | 'steady';
@@ -13,7 +13,7 @@ export interface CombatForecast {
 interface CombatForecastInput {
     player: Player;
     enemy?: Monster | null;
-    stats?: any;
+    stats?: FullStats | null;
     selectedSkill?: any;
     skillCooldown?: number;
     enemyTelegraph?: any;

@@ -17,7 +17,7 @@ import {
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
-import type { Player } from '../types/index.js';
+import type { FullStats, Player } from '../types/index.js';
 import ArchiveTabButton from './ArchiveTabButton';
 import EquipmentPanel from './EquipmentPanel';
 import SignalBadge from './SignalBadge';
@@ -46,7 +46,7 @@ interface DashboardProps {
     sideTab?: string;
     setSideTab?: (tab: string) => void;
     actions?: any;
-    stats?: any;
+    stats?: FullStats | null;
     quickSlots?: any[];
     runtime?: any;
     inventorySpotlight?: any;

@@ -8,13 +8,13 @@ import { getRunBuildProfile } from '../utils/runProfile';
 import { getRecommendedRelicsForBuild } from '../utils/relicBuildFit';
 import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
 import RelicIcon from './icons/RelicIcon';
-import type { Player } from '../types/index.js';
+import type { FullStats, Player } from '../types/index.js';
 
 // cycle 478: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 19 ternary 가지 정리 (cycle 472-477 paired).
 interface BuildAdvicePanelProps {
     player?: Player | null;
-    stats?: any;
+    stats?: FullStats | null;
 }
 
 /**

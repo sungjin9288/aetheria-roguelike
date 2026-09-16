@@ -3793,7 +3793,8 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 396 회귀 가드: StatsPanel syn.label fix 보존', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
-      const blockStart = source.indexOf('stats.activeSynergies.map');
+      // B2(2026-09): stats prop이 FullStats | null 로 타입화되면서 non-null 단언이 붙었다(런타임 동일).
+      const blockStart = source.indexOf('stats!.activeSynergies.map');
       const blockEnd = source.indexOf('))}', blockStart);
       const block = source.slice(blockStart, blockEnd);
       assert.ok(!/syn\.name/.test(block),

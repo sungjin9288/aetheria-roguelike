@@ -3,7 +3,7 @@ import { CombatEngine } from './CombatEngine';
 import { buildRunSummary, toArray } from '../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from './DifficultyManager';
 import { calculateFullStats } from '../utils/statsCalculator';
-import type { Item, Monster, Player } from '../types/index.js';
+import type { FullStats, Item, Monster, Player } from '../types/index.js';
 import { createSeededRandom } from '../utils/seededRandom.js';
 
 export { createSeededRandom } from '../utils/seededRandom.js';
@@ -19,7 +19,7 @@ export type CombatItemTurnResult = {
     victoryStats?: any;
 };
 
-const consumeItem = (player: Player, item: Item, stats: any) => {
+const consumeItem = (player: Player, item: Item, stats: FullStats) => {
     const inventory = (player.inv || []).filter((entry: any) => entry.id !== item.id);
     const itemName = item.name || '소모품';
     if (item.type === 'hp') {
@@ -85,7 +85,7 @@ export const resolveCombatItemTurn = ({
     rng?: () => number;
 }): CombatItemTurnResult => {
     const random = rng || createSeededRandom(seed);
-    const itemStats = calculateFullStats(player);
+    const itemStats = calculateFullStats(player)!;
     const consumed = consumeItem(player, item, itemStats);
     const turnTick = CombatEngine.tickCombatState(consumed.player);
     const playerForEnemyTurn = turnTick.updatedPlayer;

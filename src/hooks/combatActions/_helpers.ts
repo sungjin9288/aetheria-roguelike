@@ -4,7 +4,7 @@ import { MSG } from '../../data/messages';
 import { AT } from '../../reducers/actionTypes';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
-import type { Item, Player } from '../../types/index.js';
+import type { FullStats, Item, Player } from '../../types/index.js';
 
 /**
  * 현재 선택된 스킬 반환. 없으면 null.
@@ -98,7 +98,7 @@ export const addCombatDigestLogs = ({
  * CombatEngine.handleVictory가 받는 passiveBonus 스키마(goldMult/expMult)에 합산한다 —
  * CombatEngine 시그니처는 그대로 유지(신규 파라미터 없음). 순수 함수.
  */
-export const buildPassiveBonusWithScout = (stats: any, deadEnemy: any) => {
+export const buildPassiveBonusWithScout = (stats: FullStats, deadEnemy: any) => {
     const scoutRewardBonus = deadEnemy?.scoutRewardBonus || 0;
     return {
         goldMult: (stats?.passiveGoldMult || 0) + scoutRewardBonus,

@@ -1,6 +1,6 @@
 // cycle 321: unused LOOT_TABLE / DROP_TABLES imports 제거 — 두 데이터는 CombatEngine.loot.ts에서만 사용.
 //   CombatEngine.ts 본체는 _processLoot / _resolveEnemyBaseName re-export로 충분.
-import type { Monster, Player, Relic } from '../types/index.js';
+import type { FullStats, Monster, Player, Relic } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
@@ -50,7 +50,7 @@ export const CombatEngine = {
     //   모두 object literal 명시 전달이라 default 도달 불가. destructuring
     //   내부 default(mult/guarding/elementMultiplier/critChance)는 별개 보존.
     //   util/component/hook/system default 청소 메가 시리즈 33번째.
-    calculateDamage(stats: any, options: any) {
+    calculateDamage(stats: FullStats, options: any) {
         const {
             mult = 1,
             guarding = false,

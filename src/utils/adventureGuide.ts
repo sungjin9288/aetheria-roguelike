@@ -1,5 +1,5 @@
 import { BALANCE } from '../data/constants.js';
-import type { GameMap, Player } from "../types/index.js";
+import type { FullStats, GameMap, Player } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
@@ -260,7 +260,7 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
 // cycle 579: maps default {} 제거 — 2 production caller (MapNavigator:66,
 //   ControlPanel:58) + 8+ test caller 모두 maps 명시 (DB.MAPS / MAPS / object
 //   literal)이라 default 도달 불가. 청소 메가 시리즈 71번째.
-export const getMoveRecommendations = (player: Player, stats: any, currentMap: GameMap | null | undefined, maps: Record<string, GameMap>) => {
+export const getMoveRecommendations = (player: Player, stats: Partial<FullStats> | null | undefined, currentMap: GameMap | null | undefined, maps: Record<string, GameMap>) => {
     if (!currentMap?.exits?.length) return [];
 
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
@@ -390,7 +390,7 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
 
 export const getExpeditionPreparation = (
     player: Player,
-    stats: any,
+    stats: Partial<FullStats> | null | undefined,
     currentMap: GameMap | null | undefined,
     maps: Record<string, GameMap>,
 ) => {
@@ -459,7 +459,7 @@ export const getExpeditionPreparation = (
 // cycle 509: runtimeState default 제거 — 1 callsite (ControlPanel:57) 항상
 //   gameState 명시 전달이라 default 도달 불가. util default 청소 메가 시리즈
 //   8번째 (cycle 502-508).
-export const getAdventureGuidance = (player: Player, stats: any, mapData: any, runtimeState: any) => {
+export const getAdventureGuidance = (player: Player, stats: Partial<FullStats> | null | undefined, mapData: any, runtimeState: any) => {
     const safe = mapData?.type === 'safe';
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     // cycle 332: mpRatio 제거 — secondaryAction 'MP도 회복' 분기 외 read 0건이라 dead.

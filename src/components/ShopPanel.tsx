@@ -8,7 +8,7 @@ import { getDailyDeals, getShopMaxTier, getWeeklySpecial } from '../utils/shopRo
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
-import type { Player } from '../types/index.js';
+import type { FullStats, Player } from '../types/index.js';
 
 // cycle 488: 모바일 포커스 prop 인터페이스 제거 — cycle 486 paired completion
 //   (ControlPanel cascade로 caller 0건이라 항상 truthy 전달이었음).
@@ -17,7 +17,7 @@ interface ShopPanelProps {
     actions?: any;
     shopItems?: any[];
     setGameState?: (state: string) => void;
-    stats?: any;
+    stats?: FullStats | null;
     onOpenArchiveConsole?: any;
 }
 

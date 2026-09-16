@@ -1966,7 +1966,8 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 537: calculateDamage signature에서 options default 0건', async () => {
       const source = await readSrc('src/systems/CombatEngine.ts');
-      const fnIdx = source.indexOf('calculateDamage(stats: any');
+      // B2(2026-09): stats 파라미터가 FullStats로 타입화되면서 앵커 문자열 갱신.
+      const fnIdx = source.indexOf('calculateDamage(stats: FullStats');
       const fnEnd = source.indexOf(')', fnIdx) + 1;
       const sig = source.slice(fnIdx, fnEnd);
       assert.ok(!/options:\s*any\s*=\s*\{\}/.test(sig),

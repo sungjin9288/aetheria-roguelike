@@ -17,6 +17,7 @@ import {
     Wrench,
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
+import type { FullStats } from '../../types/index.js';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { APP_ID, CONSTANTS, RARITY_CLASSES } from '../../data/constants';
@@ -88,7 +89,7 @@ const SettingsDisclosure = ({ testId, icon: Icon, title, summary, children }: an
 interface SystemTabProps {
     player?: any;
     actions?: any;
-    stats?: any;
+    stats?: FullStats | null;
     runtime?: any;
 }
 

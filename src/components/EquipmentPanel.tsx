@@ -13,13 +13,13 @@ import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import ItemIcon from './icons/ItemIcon';
 import EnhanceDecisionCard from './EnhanceDecisionCard';
-import type { Player } from '../types/index.js';
+import type { FullStats, Player } from '../types/index.js';
 
 // cycle 474: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 5 ternary 가지까지 정리 (cycle 472-473 paired).
 interface EquipmentPanelProps {
     player: Player;
-    stats?: any;
+    stats?: FullStats | null;
     actions?: any;
 }
 
@@ -206,10 +206,10 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     <div className="flex flex-wrap items-center gap-1.5 font-bold">
                                         <span className="tracking-[0.18em]" aria-hidden="true">{dots}</span>
                                         <span>{aff.label || `${player?.job} 세트`} ({matchCount}/3)</span>
-                                        {showDetails && aff.bonus?.atkMult > 1 && <span className="text-white/82">공격력 +{Math.round((aff.bonus.atkMult - 1) * 100)}%</span>}
-                                        {showDetails && aff.bonus?.defMult > 1 && <span className="text-white/82">방어력 +{Math.round((aff.bonus.defMult - 1) * 100)}%</span>}
-                                        {showDetails && aff.bonus?.hpBonus > 0 && <span className="text-white/82">생명 +{Math.round(aff.bonus.hpBonus * 100)}%</span>}
-                                        {showDetails && aff.bonus?.mpBonus > 0 && <span className="text-white/82">기력 +{Math.round(aff.bonus.mpBonus * 100)}%</span>}
+                                        {showDetails && (aff.bonus?.atkMult || 0) > 1 && <span className="text-white/82">공격력 +{Math.round(((aff.bonus.atkMult || 0) - 1) * 100)}%</span>}
+                                        {showDetails && (aff.bonus?.defMult || 0) > 1 && <span className="text-white/82">방어력 +{Math.round(((aff.bonus.defMult || 0) - 1) * 100)}%</span>}
+                                        {showDetails && (aff.bonus?.hpBonus || 0) > 0 && <span className="text-white/82">생명 +{Math.round((aff.bonus.hpBonus || 0) * 100)}%</span>}
+                                        {showDetails && (aff.bonus?.mpBonus || 0) > 0 && <span className="text-white/82">기력 +{Math.round((aff.bonus.mpBonus || 0) * 100)}%</span>}
                                     </div>
                                     <div className="mt-1 text-white/70 font-normal leading-snug" style={{ color: 'rgba(255,255,255,0.66)' }}>
                                         {nextHint}

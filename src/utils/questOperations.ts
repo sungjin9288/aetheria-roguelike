@@ -5,6 +5,7 @@ import type { GameMap } from '../types/map.js';
 import { MAPS } from '../data/maps.js';
 import { BALANCE } from '../data/constants.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
+import type { TraitProfile } from './runProfile.js';
 import { getUnmetQuestPrerequisite } from './questPrerequisites.js';
 
 // cycle 356: OPERATION_META 5 lane에서 summary 필드 제거 — QuestBoardPanel은
@@ -297,7 +298,7 @@ const getOperationBrief = (quest: Quest, player: Player, lane: any, resonance: a
     };
 };
 
-const enrichActiveQuestEntry = (entry: any, player: Player, traitProfile: any, maps: Record<string, GameMap>) => {
+const enrichActiveQuestEntry = (entry: any, player: Player, traitProfile: TraitProfile | null | undefined, maps: Record<string, GameMap>) => {
     const resonance = getTraitQuestResonance(entry.quest, traitProfile);
     const lane = entry.isBounty ? 'hunt' : getQuestLane(entry.quest, resonance, maps);
     const targetMaps = getQuestTargetMaps(entry.quest, maps);
@@ -313,7 +314,7 @@ const enrichActiveQuestEntry = (entry: any, player: Player, traitProfile: any, m
     };
 };
 
-const scoreQuest = (quest: Quest, player: Player, traitProfile: any, activeEntries: any, maps: Record<string, GameMap>) => {
+const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | null | undefined, activeEntries: any, maps: Record<string, GameMap>) => {
     const resonance = getTraitQuestResonance(quest, traitProfile);
     const lane = getQuestLane(quest, resonance, maps);
     const playerLevel = player?.level || 1;

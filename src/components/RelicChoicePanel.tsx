@@ -9,13 +9,13 @@ import { getRunBuildProfile } from '../utils/runProfile';
 import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
 import RelicIcon from './icons/RelicIcon';
 import SignalBadge from './SignalBadge';
-import type { Player, Relic } from '../types/index.js';
+import type { FullStats, Player, Relic } from '../types/index.js';
 
 interface RelicChoicePanelProps {
     pendingRelics?: Relic[] | null;
     dispatch: (action: any) => void;
     player?: Player | null;
-    stats?: any;
+    stats?: FullStats | null;
 }
 
 /**

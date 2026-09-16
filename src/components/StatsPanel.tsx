@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Activity, BarChart3, ChevronDown, Coins, Compass, Flame, FlaskConical, Footprints, Hammer, Heart, Link2, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
-import type { Player } from '../types/index.js';
+import type { FullStats, Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import { formatRelicText } from '../utils/relicPresentation';
 import SignalBadge from './SignalBadge';
@@ -10,7 +10,7 @@ import SignalBadge from './SignalBadge';
 //   제거 후 caller 0건. cascade로 토글 상태 / 가지 ternary / 토글 버튼 일괄 정리.
 interface StatsPanelProps {
     player?: Player | null;
-    stats?: any;
+    stats?: FullStats | null;
 }
 
 /**
@@ -124,10 +124,10 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                         <Sparkles size={14} className="shrink-0 text-[#f6e7a2]" />
                         <div className="min-w-0">
                             <div className="text-[11px] font-readable text-slate-400">현재 성장</div>
-                            <div className={`truncate text-[14px] font-readable font-bold ${trait.accent}`}>{trait.name}</div>
+                            <div className={`truncate text-[14px] font-readable font-bold ${trait!.accent}`}>{trait!.name}</div>
                         </div>
                     </div>
-                    <SignalBadge tone="resonance" size="sm">{trait.title}</SignalBadge>
+                    <SignalBadge tone="resonance" size="sm">{trait!.title}</SignalBadge>
                 </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
@@ -136,7 +136,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                             <Zap size={11} /> 전용 기술
                         </div>
                         <div className="mt-1 text-xs font-readable font-bold text-emerald-100">
-                            {trait.skill?.name || '없음'}
+                            {trait!.skill?.name || '없음'}
                         </div>
                     </div>
                     <div className="aether-panel-muted rounded-lg px-3 py-2.5">
@@ -144,20 +144,20 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                             <Shield size={11} /> 패시브
                         </div>
                         <div className="mt-1 text-xs font-readable font-bold text-slate-100/90">
-                            {passiveParts.length > 0 ? passiveParts.join(' / ') : trait.passiveLabel}
+                            {passiveParts.length > 0 ? passiveParts.join(' / ') : trait!.passiveLabel}
                         </div>
                     </div>
                 </div>
 
-                <p className="mt-3 text-xs font-readable leading-relaxed text-slate-300/82">{trait.desc}</p>
+                <p className="mt-3 text-xs font-readable leading-relaxed text-slate-300/82">{trait!.desc}</p>
                 <div className="mt-3 grid gap-2 border-t border-white/8 pt-3 text-[11px] font-readable">
                     <div className="flex items-start gap-2">
                         <span className="w-14 shrink-0 text-[#d5b180]">다음 성장</span>
-                        <span className="text-slate-200/84">{trait.rewardFocus}</span>
+                        <span className="text-slate-200/84">{trait!.rewardFocus}</span>
                     </div>
                     <div className="flex items-start gap-2">
                         <span className="w-14 shrink-0 text-[#8fd6cf]">추천 임무</span>
-                        <span className="text-slate-200/84">{trait.questFocus}</span>
+                        <span className="text-slate-200/84">{trait!.questFocus}</span>
                     </div>
                 </div>
             </section>
@@ -245,13 +245,13 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                 </div>
             )}
 
-            {stats?.activeSynergies?.length > 0 && (
+            {(stats?.activeSynergies?.length ?? 0) > 0 && (
                 <section data-testid="stats-active-synergies" className="border-y border-fuchsia-300/14 py-3">
                     <div className="mb-2 flex items-center gap-1.5 text-xs font-readable font-bold text-fuchsia-100/90">
                         <Sparkles size={12} /> 활성 유물 조합
                     </div>
                     <div className="space-y-2">
-                        {stats.activeSynergies.map((syn: any) => (
+                        {stats!.activeSynergies.map((syn) => (
                             <div key={syn.label} className="flex items-start justify-between gap-3 rounded-lg bg-fuchsia-900/10 px-3 py-2">
                                 <span className="shrink-0 text-[11px] font-readable font-bold text-fuchsia-200/90">{syn.label}</span>
                                 <span className="text-right text-[11px] font-readable leading-relaxed text-fuchsia-100/70">{formatRelicText(syn.desc)}</span>

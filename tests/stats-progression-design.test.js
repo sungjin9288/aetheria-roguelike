@@ -42,7 +42,8 @@ test('상태 화면의 작은 문구와 영문식 장식 표기를 제거한다'
     assert.match(source, /activeSignatureSet\.defMult/);
     assert.match(source, /activeSignatureSet\.hpMult/);
     assert.match(source, /activeSet\.prefix/);
-    assert.match(source, /stats\.activeSynergies\.map/);
+    // B2(2026-09): `stats!.activeSynergies.map` 도 허용 — non-null 단언은 타입 전용.
+    assert.match(source, /stats!?\.activeSynergies\.map/);
     assert.match(source, /syn\.label/);
     assert.match(source, /syn\.desc/);
 });

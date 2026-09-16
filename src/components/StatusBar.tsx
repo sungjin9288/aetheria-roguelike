@@ -3,7 +3,7 @@ import SignalBadge from './SignalBadge';
 import MonsterIcon from './icons/MonsterIcon';
 import { useHitFlash } from '../hooks/useHitFlash';
 import { getExpeditionHudChips } from '../utils/expeditionHud';
-import type { Player, Monster } from '../types/index.js';
+import type { FullStats, Player, Monster } from '../types/index.js';
 
 const METER_THEME: Record<string, { border: string; fill: string; label: string }> = {
   hp: {
@@ -135,7 +135,7 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
 //   0건이라 보간 결과 ''만 추가되는 unreachable. cycle 463/465/466/493 lens 회귀.
 interface StatusBarProps {
   player?: Player | null;
-  stats?: any;
+  stats?: FullStats | null;
   enemy?: Monster | null;
   enemyHitCrit?: boolean;
   onCrystalClick?: (() => void) | null;

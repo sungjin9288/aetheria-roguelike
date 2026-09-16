@@ -154,27 +154,30 @@ export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any)
 // cycle 435: timestamp 출력 dead 필드 제거 — battle record consumers
 //   (calcPerformanceScore / countLowHpWins / gameUtils recentWinRate)는 result /
 //   hpRatio만 read. cycle 333-356 시리즈 회귀.
-export const makeBattleRecord = (result: any, hpRatio: any) => ({
+export const makeBattleRecord = (result: string, hpRatio: number) => ({
     result,
     hpRatio: Math.max(0, Math.min(1, hpRatio)),
 });
+
+/** `player.stats.recentBattles` 한 칸. */
+export type BattleRecord = ReturnType<typeof makeBattleRecord>;
 
 /**
  * player.stats.recentBattles를 새 전투 결과로 업데이트합니다.
  * 최대 50개까지 보관합니다.
  */
-export const pushBattleRecord = (stats: any, record: any) => {
-    const prev = stats?.recentBattles || [];
+export const pushBattleRecord = (stats: Player['stats'], record: BattleRecord) => {
+    const prev: BattleRecord[] = stats?.recentBattles || [];
     return {
         ...stats,
         recentBattles: [...prev, record].slice(-50),
     };
 };
 
-export const countLowHpWins = (stats: any, threshold: any) => {
-    const recentBattles = stats?.recentBattles || [];
+export const countLowHpWins = (stats: Player['stats'], threshold: number) => {
+    const recentBattles: BattleRecord[] = stats?.recentBattles || [];
     if (recentBattles.length > 0) {
-        return recentBattles.filter((battle: any) => (
+        return recentBattles.filter((battle) => (
             battle?.result === 'win'
             && Number.isFinite(battle?.hpRatio)
             && battle.hpRatio <= threshold

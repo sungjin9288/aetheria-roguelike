@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowRight, Check, Compass, LockKeyhole, Route, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
-import type { GameMap } from '../types/index.js';
+import type { FullStats, GameMap } from '../types/index.js';
 import { getMoveRecommendations } from '../utils/adventureGuide';
 import { getGravesAtLoc } from '../utils/graveUtils';
 import { getExitBadges } from '../utils/mapBadges';
@@ -28,7 +28,7 @@ interface MapEntry extends GameMap {
 interface MapNavigatorProps {
     player: any;
     grave: any;
-    stats: any;
+    stats: FullStats | null | undefined;
     actions?: any;
 }
 
