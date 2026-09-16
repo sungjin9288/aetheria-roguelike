@@ -1,9 +1,10 @@
 import { BALANCE } from '../data/constants.js';
-import type { Monster } from '../types/index.js';
+import { MSG } from '../data/messages.js';
+import type { Monster, Player } from '../types/index.js';
 
 /**
  * CombatEngine 상태이상 메서드 — mixin으로 CombatEngine에 spread.
- * CombatEngine.ts 분리(행동 보존). 순수(BALANCE만 의존, this 미사용).
+ * CombatEngine.ts 분리(행동 보존). 순수(BALANCE / MSG만 의존, this 미사용).
  */
 export const statusMethods = {
     applyStatusEffectToEnemy(enemy: Monster, effect: any) {
@@ -32,6 +33,44 @@ export const statusMethods = {
             default:
                 return enemy;
         }
+    },
+
+    /**
+     * 플레이어 상태이상의 남은 턴을 처리합니다. tickCombatState가 DoT 적용 직후 호출.
+     *
+     * H1 (Wave 3 감사): 적 상태이상은 tickEnemyStatus에서 `*Turns` 필드를 감소시켜 만료하는데
+     * 플레이어 status(문자열 배열)에는 대응 경로가 없어 한 번 부여되면 전투가 끝날 때까지
+     * 유지됐다. 같은 모델을 플레이어에 적용한다 — 남은 턴은 적과 마찬가지로 개체(player)에
+     * `statusTurns`(상태 → 남은 턴)로 보관하고, status 배열 자체는 기존 표기(문자열)를 유지해
+     * UI/세이브/AI 컨텍스트 계약을 바꾸지 않는다.
+     *
+     * - 남은 턴이 없는 항목(구세이브, 또는 부여 시점에 기록하지 않은 경로)은 첫 틱에서
+     *   BALANCE.PLAYER_STATUS_DURATION_TURNS를 기본값으로 받는다.
+     * - status 배열에 없는 키는 결과에서 제거되므로 해독제/정화/휴식으로 즉시 해제된 상태가
+     *   잔여 턴을 남기지 않는다(해제 경로는 종전 그대로 status만 비우면 된다).
+     */
+    tickPlayerStatusDurations(player: Player, logs: any[]) {
+        const statusList = Array.isArray(player.status) ? player.status : [];
+        const prevTurns: Record<string, number> = player.statusTurns || {};
+        const status: any[] = [];
+        const statusTurns: Record<string, number> = {};
+
+        statusList.forEach((entry: any) => {
+            const key = String(entry);
+            const stored = prevTurns[key];
+            const current = typeof stored === 'number' && Number.isFinite(stored) && stored > 0
+                ? stored
+                : BALANCE.PLAYER_STATUS_DURATION_TURNS;
+            const remaining = current - 1;
+            if (remaining > 0) {
+                status.push(entry);
+                statusTurns[key] = remaining;
+            } else {
+                logs.push({ type: 'info', text: MSG.PLAYER_STATUS_EXPIRED(key) });
+            }
+        });
+
+        return { status, statusTurns, logs };
     },
 
     /**

@@ -354,6 +354,8 @@ export interface Player {
     challengeModifiers?: string[];
     tempBuff?: TempBuff;
     status?: any[];
+    /** H1: 상태이상별 남은 턴 (status 배열과 짝 — CombatEngine.tickPlayerStatusDurations 소유) */
+    statusTurns?: Record<string, number>;
     skillLoadout?: SkillLoadout;
     settings?: PlayerSettings;
     meta?: PlayerMeta;

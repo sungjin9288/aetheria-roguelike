@@ -146,6 +146,12 @@ export const CombatEngine = {
             logs.push({ type: 'warning', text: MSG.STATUS_DOT(s, dmg) });
         });
 
+        // H1 (Wave 3 감사): 상태이상 만료 — 적(tickEnemyStatus)과 같은 턴 감소 모델을
+        // 플레이어에도 적용한다. DoT를 적용한 뒤 남은 턴을 1 줄이고 0이면 해제한다.
+        const statusTick = this.tickPlayerStatusDurations(updated, logs);
+        updated.status = statusTick.status;
+        updated.statusTurns = statusTick.statusTurns;
+
         const mpRegenRelic = relics.find((relic: any) => relic.effect === 'mp_regen_turn');
         if (mpRegenRelic) {
             const nextMp = Math.min(this.getEffectiveMaxMp(updated, relics), (updated.mp || 0) + mpRegenRelic.val);

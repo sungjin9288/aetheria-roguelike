@@ -532,10 +532,20 @@ export const BALANCE: BalanceConfig = {
     //   "강타 적중 = 100% 상태이상"으로 두면 초반 정예 조우가 계약을 넘어선다.
     //   Lv1 정예 거미떼 500회 시뮬(tests/early-elite-spawn) 시작 물약 2개 소진:
     //     전파 전 13/500 · 전파 후 무조건 발동 73/500 · 0.35 → 44 · 0.15 → 28 · 0.08 → 22.
-    //   플레이어 status는 전투 중 만료되지 않아(tickCombatState) 한 번 부여되면 전투 끝까지
-    //   maxHp 4%/턴이 누적되므로, 짧은 초반 전투는 거의 영향을 받지 않고 긴 보스전에서는
-    //   누적 확률로 확실히 발동하는 값으로 둔다.
-    MONSTER_STATUS_ON_HIT_CHANCE: 0.08,
+    //   H1 (Wave 3): PLAYER_STATUS_DURATION_TURNS 도입으로 플레이어 status가 만료되면서
+    //   "한 번 중독 = 전투 끝까지 4%/턴" 구조가 해소됐다. 같은 시뮬 재측정(만료 3턴 기준,
+    //   물약 2개 소진 / 500회 — 괄호는 만료 없던 종전 값):
+    //     0.08 → 18(4.4% → 3.6%) · 0.15 → 24(5.6% → 4.8%) · 0.20 → 27(5.4%) · 0.25 → 29(6.6% → 5.8%).
+    //   ≤5% 계약을 지키는 최대 구간은 0.15~0.18(0.18은 정확히 25/500 = 5.0%로 여유 0)이므로
+    //   여유를 남겨 0.15로 올린다 — 만료 도입으로 종전 0.08의 두 배 가까운 발동률을 감당한다.
+    MONSTER_STATUS_ON_HIT_CHANCE: 0.15,
+
+    // H1 (Wave 3 감사) — 플레이어 상태이상 지속 턴. 적 상태이상(blindTurns/fearTurns/
+    //   cursedTurns/tauntTurns)은 tickEnemyStatus에서 감소·만료하는데 플레이어 status만
+    //   만료 경로가 없어 한 번 부여되면 전투 끝까지 유지됐다(중독 = maxHp 4%/턴 영구).
+    //   같은 모델을 플레이어에 적용해 CombatEngine.tickCombatState에서 매 플레이어 턴
+    //   1씩 감소시키고 0에서 해제한다. 해독제/정화/휴식은 종전대로 즉시 해제.
+    PLAYER_STATUS_DURATION_TURNS: 3,
 
     // A2 (2026-09 감사 G4) — 경제/인벤 임계값 단일화.
     //   기존엔 ShopPanel(판매 목록) / economyHandlers(개별 판매·재료 일괄 판매) 3곳에

@@ -111,6 +111,16 @@ export const MSG = {
         return `[${label}] 상태이상 피해 ${dmg}`;
     },
 
+    // H1 (Wave 3 감사): 플레이어 상태이상 만료 안내 — BALANCE.PLAYER_STATUS_DURATION_TURNS
+    // 턴이 지나 CombatEngine.tickCombatState가 상태를 해제할 때의 로그.
+    PLAYER_STATUS_EXPIRED: (effect: string) => {
+        const labels: Record<string, string> = {
+            poison: '중독', burn: '화상', bleed: '출혈', freeze: '빙결',
+            stun: '기절', curse: '저주', blind: '실명', fear: '공포',
+        };
+        return `[${labels[effect] || effect}] 효과가 사라졌습니다.`;
+    },
+
     // cycle 116: 데드 마일스톤 / 도감 메시지 키 제거 — MILESTONE_KILLS_*, MILESTONE_BOSS_*,
     // CODEX_DISCOVER/MILESTONE 등은 active 컴포넌트에서 inline 메시지로 대체되어 0건 사용.
 
