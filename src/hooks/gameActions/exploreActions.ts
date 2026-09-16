@@ -13,8 +13,8 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
-import { shouldTriggerScout, buildScoutEvent } from '../../utils/scoutEvents';
-import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
+import { shouldTriggerScout, buildScoutEvent, getScoutAvailability, consumeScoutCharge } from '../../utils/scoutEvents';
+import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent, advanceBossGauge } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
 
 /**
@@ -164,6 +164,48 @@ export const createExploreActions = (deps: any, shared: any) => {
             }
 
             await runExplorePostDecisionRoll(mapData, deps, shared);
+        },
+
+        /**
+         * 2026-09 D1 — 플레이어가 직접 부르는 정찰.
+         *  - 안전지대/마을과 전투·이벤트 중에는 제공하지 않는다 (getScoutAvailability 단일 판정).
+         *  - 비용: 골드(지역 레벨에 따라 완만 상승) 또는 에테르 거울 scout_charges 무료 횟수.
+         *  - 정찰하는 동안에도 시간은 흐른다 — 보스 접근 게이지를 1칸 올린다(advanceBossGauge 재사용).
+         *  - 카드 자체와 선택 해소는 랜덤 발동과 완전히 같은 경로(buildScoutEvent →
+         *    eventActions.handleScoutChoice)를 탄다 — 신규 스폰/해소 로직 없음.
+         */
+        scout: () => {
+            const mapData = DB.MAPS[player.loc];
+            const availability = getScoutAvailability(player, mapData, gameState === GS.IDLE);
+            if (!availability.available) return addLog('error', availability.reason || MSG.SCOUT_BUSY);
+
+            dispatch({
+                type: AT.SET_PLAYER,
+                payload: (p: any) => {
+                    const chargedStats = availability.isFree ? consumeScoutCharge(p) : (p.stats || {});
+                    const withGauge = advanceBossGauge({ ...p, stats: chargedStats }, mapData);
+                    return {
+                        ...p,
+                        gold: Math.max(0, (p.gold || 0) - availability.cost),
+                        stats: withGauge,
+                    };
+                },
+            });
+
+            addLog(
+                'system',
+                availability.isFree
+                    ? MSG.SCOUT_FREE_LOG(Math.max(0, availability.remainingFree - 1))
+                    : MSG.SCOUT_PAID_LOG(availability.cost),
+            );
+
+            // 게이지가 실제로 오르는 지역에서만 "시간이 흐른다"는 대가를 함께 알린다 (lessons R26).
+            if (isAreaBossUndefeated(mapData, player)) addLog('info', MSG.SCOUT_TIME_PASSES);
+
+            const scoutEvent = buildScoutEvent(player, mapData, rng);
+            dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+            dispatch({ type: AT.SET_EVENT, payload: scoutEvent });
+            addLog('event', scoutEvent.desc);
         },
     };
 };

@@ -52,6 +52,7 @@ test('효과 문구와 전체 진행도는 플레이어가 읽는 표현으로 �
     assert.equal(getMirrorEffectLabel('rest_discount', 2), '휴식 비용 -40%');
     assert.equal(getMirrorEffectLabel('revive', 1), '치명상 1회 방어 · 생명 30% 회복');
     const totalLevels = MIRROR_NODES.reduce((sum, node) => sum + node.maxLevel, 0);
+    assert.equal(getMirrorEffectLabel('scout_charges', 2), '원정마다 무료 정찰 2회');
     assert.deepEqual(getMirrorCompletion({ start_gold: 2, revive: 1 }), { completed: 3, total: totalLevels });
 });
 

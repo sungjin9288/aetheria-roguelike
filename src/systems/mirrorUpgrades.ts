@@ -15,6 +15,8 @@ export interface MirrorEffects {
     reviveEnabled: boolean;
     reviveHpRatio: number;
     essenceFlowMult: number;
+    /** 2026-09 D1 — 원정마다 골드 없이 쓸 수 있는 정찰 횟수 (scout_charges 노드). */
+    freeScoutCharges: number;
 }
 
 export type MirrorLevels = Record<string, number>;
@@ -36,6 +38,7 @@ export const getMirrorEffects = (meta: { mirror?: MirrorLevels } | undefined | n
     const restDiscountLv = getLevel(mirror, 'rest_discount');
     const reviveLv = getLevel(mirror, 'revive');
     const essenceFlowLv = getLevel(mirror, 'essence_flow');
+    const scoutChargesLv = getLevel(mirror, 'scout_charges');
 
     return {
         startGoldBonus: startGoldLv * MIRROR_EFFECT_VALUES.START_GOLD_PER_LEVEL,
@@ -48,6 +51,7 @@ export const getMirrorEffects = (meta: { mirror?: MirrorLevels } | undefined | n
         //   기존 의미(치명상 1회 방어)는 그대로, 회복 비율만 확장한다.
         reviveHpRatio: Math.min(1, Math.max(1, reviveLv) * MIRROR_EFFECT_VALUES.REVIVE_HP_RATIO),
         essenceFlowMult: 1 + essenceFlowLv * MIRROR_EFFECT_VALUES.ESSENCE_FLOW_BONUS_PER_LEVEL,
+        freeScoutCharges: scoutChargesLv * MIRROR_EFFECT_VALUES.FREE_SCOUT_PER_LEVEL,
     };
 };
 

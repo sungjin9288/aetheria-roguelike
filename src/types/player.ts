@@ -55,6 +55,10 @@ interface PlayerStats {
     lastSeenAt?: number | null;
     /** 혼돈의 심연 일일 첫 다이브 — 오늘 날짜 문자열과 사용 여부. */
     abyssDailyDive?: AbyssDailyDive | null;
+    /** 2026-09 D1 — 원정 단위 무료 정찰 사용 기록. expeditionId가 바뀌면 자동으로 다시 채워진다. */
+    scoutCharges?: { expeditionId: string; used: number };
+    /** 2026-09 D2 — "밀어붙인다" 직후 다음 탐험 1회의 모닥불 분기를 차단한다. */
+    nextExploreCampfireBlocked?: boolean;
     [key: string]: any;
 }
 

@@ -463,4 +463,26 @@ export const MSG = {
     // --- 에테르 거울 진입 (2026-09 · 승천 화면 CTA) ---
     MIRROR_CTA_LABEL: '에테르 거울 열기',
     MIRROR_CTA_HINT: (essence: number) => `계승 정수 ${essence}로 영구 성장을 새길 수 있습니다.`,
+    // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
+    SCOUT_ACTION_LABEL: '정찰',
+    SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
+    SCOUT_ACTION_FREE_LABEL: (remaining: number) => `무료 ${remaining}회 남음`,
+    SCOUT_ACTION_HINT: '앞길을 미리 살펴 다음 한 걸음을 고릅니다.',
+    SCOUT_SAFE_ONLY: '안전지대에서는 정찰할 곳이 없습니다.',
+    SCOUT_BUSY: '지금은 정찰할 수 없습니다.',
+    SCOUT_GOLD_INSUFFICIENT: (cost: number) => `정찰에는 골드 ${cost.toLocaleString('ko-KR')}이 필요합니다.`,
+    SCOUT_PAID_LOG: (cost: number) => `골드 ${cost.toLocaleString('ko-KR')}을 들여 앞길을 정찰합니다.`,
+    SCOUT_FREE_LOG: (remaining: number) => `거울의 눈으로 앞길을 정찰합니다. 남은 무료 정찰 ${remaining}회`,
+    SCOUT_TIME_PASSES: '정찰하는 동안에도 시간은 흐릅니다.',
+
+    // --- 2026-09 D2: 전투 후 밀어붙이기 / 숨 고르기 ---
+    POST_COMBAT_CHOICE_TITLE: '다음 한 걸음',
+    POST_COMBAT_PUSH_CHOICE: '밀어붙인다',
+    POST_COMBAT_PUSH_BUFF_NAME: '맹공의 기세',
+    POST_COMBAT_BREATHER_CHOICE: '숨을 고른다',
+    POST_COMBAT_PUSH_DETAIL: (pct: number, turns: number) => `다음 전투 ${turns}턴 공격력 +${pct}% · 보스가 더 빨리 다가옵니다`,
+    POST_COMBAT_BREATHER_DETAIL: (pct: number) => `생명 ${pct}% 회복 · 연속 처치가 끊깁니다`,
+    POST_COMBAT_PUSH_LOG: (pct: number, turns: number) => `숨 돌릴 틈 없이 밀어붙입니다. 다음 전투 ${turns}턴 동안 공격력 +${pct}%.`,
+    POST_COMBAT_PUSH_GAUGE_LOG: '거칠어진 발소리를 따라 보스의 기척이 한 걸음 가까워집니다.',
+    POST_COMBAT_BREATHER_LOG: (health: number) => `자리를 잡고 숨을 고릅니다. 생명 +${health} 회복, 연속 처치는 여기서 끊깁니다.`,
 };

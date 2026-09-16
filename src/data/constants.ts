@@ -108,6 +108,17 @@ export interface BalanceConfig {
     ABYSS_DAILY_DIVE_MULT: number;
     ABYSS_DAILY_DIVE_COMBAT_COUNT: number;
     ERROR_REPORT_RING_SIZE: number;
+    SCOUT_GOLD_COST: number;
+    SCOUT_GOLD_COST_PER_MAP_LEVEL: number;
+    SCOUT_ELITE_PITY_THRESHOLD: number;
+    SCOUT_ELITE_PITY_PER_STEP: number;
+    SCOUT_ELITE_MAX_CARD_CHANCE: number;
+    SCOUT_LOW_HP_RATIO: number;
+    SCOUT_LOW_HP_ELITE_MULT: number;
+    MIRROR_FREE_SCOUT_PER_LEVEL: number;
+    POST_COMBAT_PUSH_ATK_BONUS: number;
+    POST_COMBAT_PUSH_TURNS: number;
+    POST_COMBAT_BREATHER_HEAL_RATIO: number;
 }
 
 export const BALANCE: BalanceConfig = {
@@ -541,6 +552,26 @@ export const BALANCE: BalanceConfig = {
     ESSENCE_RANK_ATK: 1,         // rank 1단계당 영구 공격력
     ESSENCE_RANK_HP: 5,          // rank 1단계당 영구 최대 생명
     ESSENCE_RANK_MP: 3,          // rank 1단계당 영구 최대 기력
+    // 2026-09 D1 — 플레이어가 직접 부르는 정찰(스카우팅). 기존 25% 랜덤 발동은 그대로 두고,
+    //   "골드를 내고 앞길을 미리 본다"는 능동 선택지를 추가한다. 비용은 지역 레벨에 따라
+    //   완만하게 오른다(초반 마을 근처에서 부담이 되지 않도록 기본값을 낮게 유지).
+    SCOUT_GOLD_COST: 30,                // 정찰 기본 비용 (골드)
+    SCOUT_GOLD_COST_PER_MAP_LEVEL: 2,   // 지역 레벨 1당 추가 비용 (Lv20 지역 = 30 + 40 = 70)
+    // 정예 카드 등장 편향 — 유물이 오래 안 나왔을수록(sinceRelic pity) 올리고,
+    //   생명이 낮을 때는 내린다. 기본값(SCOUT_ELITE_CARD_CHANCE)은 그대로 두고 가감만 한다.
+    SCOUT_ELITE_PITY_THRESHOLD: 3,      // 이 횟수를 넘긴 유물 미발견분부터 가산 시작
+    SCOUT_ELITE_PITY_PER_STEP: 0.05,    // 초과 1회당 정예 카드 확률 +5%p
+    SCOUT_ELITE_MAX_CARD_CHANCE: 0.45,  // 정예 카드 확률 상한
+    SCOUT_LOW_HP_RATIO: 0.4,            // 생명이 이 비율 이하이면 위험 카드 편향을 낮춘다
+    SCOUT_LOW_HP_ELITE_MULT: 0.35,      // 저생명 시 정예 카드 확률 배율
+    MIRROR_FREE_SCOUT_PER_LEVEL: 1,     // scout_charges 노드 레벨당 원정 무료 정찰 +1회
+
+    // 2026-09 D2 — 전투 후 "밀어붙인다 / 숨을 고른다" 2선택.
+    //   밀어붙인다: 다음 전투 공격력 버프 + 보스 접근 게이지 1칸 추가 + 다음 탐험 모닥불 차단.
+    //   숨을 고른다: 최대 생명의 일부 회복 + 연속 처치 초기화(게이지는 그대로).
+    POST_COMBAT_PUSH_ATK_BONUS: 0.25,   // 밀어붙이기 공격력 +25%
+    POST_COMBAT_PUSH_TURNS: 6,          // 버프 지속 턴 (다음 전투 1회를 대체로 커버 — 모닥불 단련과 동일 방식)
+    POST_COMBAT_BREATHER_HEAL_RATIO: 0.18, // 숨 고르기 회복량 = 최대 생명 × 18%
 };
 
 Object.freeze(CONSTANTS);

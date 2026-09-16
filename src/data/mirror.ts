@@ -6,9 +6,9 @@
  *   있는 죽은 통화였다. Hades의 "거울"(통화를 모아 선택적으로 영구 투자)을 이식해
  *   "한 판 더"의 명분을 만든다.
  *
- * 설계 원칙: 신규 메커닉 최소 — 7개 노드 모두 기존 시스템 파라미터의 "노드화"
+ * 설계 원칙: 신규 메커닉 최소 — 8개 노드 모두 기존 시스템 파라미터의 "노드화"
  *   (시작 골드 / 시작 부트 선택지 / 캠프파이어 확률 / 유물 pity / 휴식 비용 /
- *   부활 / 에센스 획득). 단일 진실 원천은 systems/mirrorUpgrades.ts의
+ *   부활 / 에센스 획득 / 무료 정찰 횟수). 단일 진실 원천은 systems/mirrorUpgrades.ts의
  *   getMirrorEffects(meta) — getPrestigeUnlocks 패턴을 그대로 모방한다.
  *
  * 저장: player.meta.mirror = { [nodeId]: level } — 레벨 0(또는 키 없음)은 미구매.
@@ -87,6 +87,15 @@ export const MIRROR_NODES: MirrorNodeDef[] = [
         maxLevel: 5,
         costs: [150, 300, 600, 1200, 2400], // 4,650
     },
+    // 2026-09 D1 — 플레이어 호출 정찰의 영구 보상. 원정마다 무료 정찰 횟수를 주며,
+    //   사용 기록은 원정 id 기준이라 새 원정이 시작되면 자동으로 다시 채워진다.
+    {
+        id: 'scout_charges',
+        name: '앞길을 읽는 눈',
+        desc: '원정마다 골드 없이 정찰할 기회를 얻습니다.',
+        maxLevel: 2,
+        costs: [140, 280],
+    },
 ];
 
 /** 트리 전체를 완주하는 데 드는 계승 정수 총액 (2026-09 기준 14,150). */
@@ -105,6 +114,7 @@ export const MIRROR_EFFECT_VALUES = {
     REST_DISCOUNT_PER_LEVEL: BALANCE.MIRROR_REST_DISCOUNT_PER_LEVEL,
     ESSENCE_FLOW_BONUS_PER_LEVEL: BALANCE.MIRROR_ESSENCE_FLOW_BONUS_PER_LEVEL,
     REVIVE_HP_RATIO: BALANCE.MIRROR_REVIVE_HP_RATIO,
+    FREE_SCOUT_PER_LEVEL: BALANCE.MIRROR_FREE_SCOUT_PER_LEVEL,
 };
 
 export const getMirrorNode = (nodeId: string): MirrorNodeDef | undefined =>

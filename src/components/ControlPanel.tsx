@@ -12,6 +12,7 @@ import {
   Ghost,
   History,
   ScrollText,
+  Binoculars,
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
@@ -32,6 +33,8 @@ import { ACTION_KIND_TO_BUTTON } from './controlPanelConfig';
 import type { Player, Monster } from '../types/index.js';
 import { getTownActionPresentation } from '../utils/townActionPresentation';
 import { getExpeditionFocusRouteTargets, MAX_EXPEDITION_FOCUS_QUESTS } from '../utils/expeditionMissionFocus';
+import { getScoutAvailability } from '../utils/scoutEvents';
+import { MSG } from '../data/messages';
 
 interface ControlPanelProps {
   gameState?: string;
@@ -353,6 +356,9 @@ const ControlPanel = ({
   });
   const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind as any] || null;
   const isSafeZone = mapData.type === 'safe';
+  // 2026-09 D1 — 정찰 버튼. exploreActions.scout()과 같은 순수 판정(getScoutAvailability)을
+  //   써서 라벨에 적힌 비용과 실제 차감, 비활성 사유가 어긋나지 않게 한다 (lessons R33).
+  const scoutAvailability = getScoutAvailability(player, mapData, gameState === GS.IDLE);
   const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
   const townPresentation = getTownActionPresentation({
     player,
@@ -754,10 +760,35 @@ const ControlPanel = ({
               )}
             </>
           ) : (
-            <div className={actionGridClass}>
-              {coreButtons.map((button: any) => renderActionButton(button, '', {}))}
-              {auxiliaryButtons.map((button: any) => renderActionButton(button, '', {}))}
-            </div>
+            <>
+              <div className={actionGridClass}>
+                {coreButtons.map((button: any) => renderActionButton(button, '', {}))}
+                {auxiliaryButtons.map((button: any) => renderActionButton(button, '', {}))}
+              </div>
+              <button
+                type="button"
+                data-testid="control-scout"
+                disabled={!scoutAvailability.available || !actions?.scout}
+                title={scoutAvailability.reason || MSG.SCOUT_ACTION_HINT}
+                onClick={() => actions?.scout?.()}
+                className="flex min-h-[44px] w-full items-center gap-2 rounded-[0.85rem] border border-[#9a8ac0]/22 bg-black/18 px-3 py-2 text-left transition-colors hover:bg-[#9a8ac0]/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Binoculars size={14} className="shrink-0 text-[#ece5ff]" />
+                <span className="aether-type-body font-readable font-bold text-[#ece5ff]">
+                  {MSG.SCOUT_ACTION_LABEL}
+                </span>
+                <span
+                  data-testid="control-scout-cost"
+                  className="aether-type-meta ml-auto min-w-0 truncate font-readable text-slate-300/82"
+                >
+                  {scoutAvailability.available
+                    ? (scoutAvailability.isFree
+                      ? MSG.SCOUT_ACTION_FREE_LABEL(scoutAvailability.remainingFree)
+                      : MSG.SCOUT_ACTION_COST_LABEL(scoutAvailability.cost))
+                    : scoutAvailability.reason}
+                </span>
+              </button>
+            </>
           )}
         </div>
       )}
