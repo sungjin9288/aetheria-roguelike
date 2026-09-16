@@ -3,10 +3,6 @@ import {
     onSnapshot,
     doc,
     collection,
-    query,
-    orderBy,
-    limit,
-    getDocs,
     setDoc,
     addDoc,
     serverTimestamp
@@ -36,6 +32,7 @@ import {
     resolveCloudBootstrapAuthority,
     type GameSaveRecord,
 } from '../platform/gameStorage';
+import { useLiveConfigAndLeaderboard } from './useLiveConfigAndLeaderboard';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
 const AUTH_TIMEOUT_MS = 8000;
@@ -256,36 +253,8 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
         lastLoadedTimestampRef.current = state.lastLoadedTimestamp;
     }, [state.lastLoadedTimestamp]);
 
-    // --- Config & Leaderboard ---
-    useEffect(() => {
-        if (mockMode) return undefined;
-        if (bootStage !== 'config') return;
-
-        const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
-        const unsubConfig = onSnapshot(configDocRef, (snap: any) => {
-            if (snap.exists() && snap.data().config) {
-                dispatch({ type: AT.SET_LIVE_CONFIG, payload: snap.data().config });
-            }
-        }, (e: any) => {
-            console.warn('Live config subscribe failed', e);
-        });
-
-        const fetchLeaderboard = async () => {
-            try {
-                const lbRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard');
-                const q = query(lbRef, orderBy('totalKills', 'desc'), limit(50));
-                const snap = await getDocs(q);
-                const data = snap.docs.map((d: any) => d.data());
-                dispatch({ type: AT.SET_LEADERBOARD, payload: data });
-            } catch (e) {
-                console.warn('Leaderboard fetch failed', e);
-            }
-        };
-
-        fetchLeaderboard();
-        dispatch({ type: AT.SET_BOOT_STAGE, payload: 'data' });
-        return () => unsubConfig();
-    }, [bootStage, dispatch, mockMode]);
+    // --- Config & Leaderboard (세이브/로드와 무관 — 전용 훅으로 분리) ---
+    useLiveConfigAndLeaderboard({ bootStage, dispatch, mockMode });
 
     // --- User Data Listener ---
     useEffect(() => {
