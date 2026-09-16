@@ -72,7 +72,7 @@ export const relicEffectMethods: any = {
                     // cycle 186: 'reviveTokens' (PremiumShop revive) — HP 0 도달 시 token 1개 소비해 즉시 부활.
                     //   spec: 'HP/MP 50% 회복 후 즉시 부활'. token 음수 가드.
                     //   기존엔 token 구매되지만 소비 로직 없어 dead purchase 회귀.
-                    const reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0);
+                    const reviveTokens = Math.max(0, Number(player.reviveTokens) || 0);
                     if (reviveTokens > 0) {
                         nextHp = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * 0.5);
                         // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
@@ -105,7 +105,7 @@ export const relicEffectMethods: any = {
                         //   플래그는 handleDefeat(새 런 시작)/ASCEND에서 자연 리셋(freshPlayer가
                         //   INITIAL_STATE.player 기반이라 별도 처리 불필요).
                         const mirrorEffects = getMirrorEffects((player as any).meta);
-                        if (mirrorEffects.reviveEnabled && !(player as any).mirrorReviveUsed) {
+                        if (mirrorEffects.reviveEnabled && !player.mirrorReviveUsed) {
                             nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * mirrorEffects.reviveHpRatio));
                             flags.mirrorReviveUsed = true;
                             logs.push({ type: 'event', text: MSG.MIRROR_REVIVE });
@@ -120,7 +120,7 @@ export const relicEffectMethods: any = {
         if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
         // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
         if (flags.reviveTokenUsed) {
-            updatedPlayer.reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0) - 1;
+            updatedPlayer.reviveTokens = Math.max(0, Number(player.reviveTokens) || 0) - 1;
             updatedPlayer.mp = Math.min(player.maxMp || 50, Math.floor((player.maxMp || 50) * 0.5));
         }
         // 2026-07 — 에테르 거울: mirrorReviveUsed는 player 최상위 필드(combatFlags 아님) —

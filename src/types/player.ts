@@ -323,8 +323,8 @@ export interface ReturnSupplyRewardLedger {
  * 모든 필드를 optional로 두는 게 호환성 좋음. 점진 적용 — 향후 부분 인터페이스
  * (PlayerCore, PlayerCombat 등) 분화 가능.
  *
- * 또한 PlayerStats / 기타 sub-shape도 자주 ad-hoc 필드 추가 (e.g. relicShards,
- * areaBossDefeated 등) 가능하도록 [key: string]: any 인덱스 시그니처 포함.
+ * 2026-09 B3 stage 3: `[key: string]: any` 제거. 이제 `player.anyTypo`가 컴파일
+ * 에러다. 새 최상위 필드를 쓰려면 여기에 선언을 함께 넣어야 한다.
  */
 export interface Player {
     name?: string;
@@ -373,5 +373,10 @@ export interface Player {
     // cycle 282: signaturePity top-level 필드 제거 — top-level access 0건.
     //   active dispatch는 player.stats.signaturePity (nested, number 형식).
     maxInv?: number;
-    [key: string]: any;
+    /** cycle 186: PremiumShop 부활 토큰 보유 수 — 환생에도 보존되는 영구 자산. */
+    reviveTokens?: number;
+    /** 2026-07 에테르 거울 revive를 이 런에서 이미 썼는지. 새 런 시작 시 자연 리셋. */
+    mirrorReviveUsed?: boolean;
+    /** 다음 적 공격 1회 회피 예약 — enemyAttack이 소비하며 즉시 해제. */
+    nextHitEvaded?: boolean;
 }

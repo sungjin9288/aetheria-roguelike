@@ -306,7 +306,7 @@ export const CombatEngine = {
         starterState.titles = Array.isArray(player.titles) ? [...player.titles] : [];
         starterState.activeTitle = player.activeTitle || null;
         starterState.premiumCurrency = Math.max(0, Number((player as any).premiumCurrency) || 0);
-        starterState.reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0);
+        starterState.reviveTokens = Math.max(0, Number(player.reviveTokens) || 0);
         if ((player as any).maxInv !== undefined) {
             starterState.maxInv = Math.max(20, Number((player as any).maxInv) || 20);
         }

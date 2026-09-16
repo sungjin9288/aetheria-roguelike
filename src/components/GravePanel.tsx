@@ -52,7 +52,11 @@ const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
             const fetched: any[] = [];
             snapshot.forEach((document: any) => {
                 const data = document.data();
-                if (data.uid !== player?.uid) fetched.push({ ...data, uid: document.id });
+                // B3-TODO(2026-09): player.uid는 어디에서도 세팅되지 않는다 — 세션 uid는
+                //   engine state.uid에만 있다. 따라서 이 '내 묘비 제외' 필터는 항상 통과하고
+                //   공개 목록에 자기 묘비가 섞인다. 고치려면 GravePanel에 uid prop을 넘기는
+                //   런타임 수정이 필요하므로, 여기서는 기존 동작을 그대로 보존한다.
+                if (data.uid !== (player as { uid?: string } | undefined)?.uid) fetched.push({ ...data, uid: document.id });
             });
             setPublicGraves(fetched);
             setPublicLoaded(true);
