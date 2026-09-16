@@ -448,4 +448,11 @@ export const MSG = {
     ERROR_REPORT_EMPTY: '저장된 오류 리포트가 없습니다.',
     ERROR_REPORT_CLEAR_BUTTON: '오류 리포트 지우기',
     ERROR_REPORT_CLEARED: '오류 리포트를 지웠습니다.',
+    // --- 장비 비교 델타 라벨 (A2 · 2026-09 감사 G4) ---
+    // ShopPanel(getComparisonMeta) / combatActions(_helpers.getLootUpgradeHint)가
+    // 각자 한국어 라벨을 하드코딩하고 있어 표기 드리프트가 가능했다. 단일 원천.
+    EQUIP_DELTA_LABEL: { atk: '공격력', def: '방어력', crit: '치명타', mp: '기력' } as Record<string, string>,
+    EQUIP_DELTA_NONE: '현재 장비와 동일한 효율',
+    EQUIP_DELTA_NONE_COMPACT: '변화 없음',
+    EQUIP_DELTA_OFFHAND_RELEASED: '보조손 해제',
 };

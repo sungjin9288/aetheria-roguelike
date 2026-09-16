@@ -524,6 +524,13 @@ export const BALANCE: BalanceConfig = {
     //   maxHp 4%/턴이 누적되므로, 짧은 초반 전투는 거의 영향을 받지 않고 긴 보스전에서는
     //   누적 확률로 확실히 발동하는 값으로 둔다.
     MONSTER_STATUS_ON_HIT_CHANCE: 0.08,
+
+    // A2 (2026-09 감사 G4) — 경제/인벤 임계값 단일화.
+    //   기존엔 ShopPanel(판매 목록) / economyHandlers(개별 판매·재료 일괄 판매) 3곳에
+    //   `Math.floor((item.price || 0) * 0.5)`이 inline 되어 있었고, 재료 "잡템" 임계
+    //   `<= 30`은 SmartInventory와 economyHandlers에 각각 하드코딩되어 있었다.
+    SELL_PRICE_RATIO: 0.5,                 // 아이템 판매가 = price × 이 비율 (내림)
+    INVENTORY_JUNK_MATERIAL_PRICE_MAX: 30, // 일괄 판매 대상으로 간주하는 재료 최대 가격
 };
 
 Object.freeze(CONSTANTS);

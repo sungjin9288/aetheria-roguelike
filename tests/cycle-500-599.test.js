@@ -2172,35 +2172,47 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 542: signedDelta signature에서 value default 0건', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      const fnIdx = source.indexOf('const signedDelta');
+  // A2 (2026-09 감사 G4): ShopPanel의 signedDelta / formatPercent는
+  //   equipmentUtils.formatEquipmentDelta 한 곳으로 이동했다(상점·루팅·인벤 3표면
+  //   공용). cycle 542/621이 지키려던 의도 — "부호 + 값 + 접미사를 만드는 헬퍼에
+  //   도달 불가한 default가 없고, 호출부가 인자를 명시한다" — 를 새 위치에서 그대로 검증한다.
+  test('cycle 542 (A2 이관): 델타 포맷 헬퍼 signature에 default 0건', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      const fnIdx = source.indexOf('export const formatEquipmentDelta');
+      assert.ok(fnIdx >= 0, 'formatEquipmentDelta가 equipmentUtils의 단일 원천');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(!/value:\s*any\s*=\s*0/.test(sig),
-          'signedDelta value default 0 제거');
+      assert.ok(!/=\s*0/.test(sig), 'value default 0 없음');
+      assert.ok(!/=\s*''/.test(sig), "suffix default '' 없음");
   });
 
-  test('cycle 542: suffix 파라미터 보존 (cycle 621 explicit elimination)', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      const fnIdx = source.indexOf('const signedDelta');
+  test('cycle 542 (A2 이관): 두 파라미터 모두 보존', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      const fnIdx = source.indexOf('export const formatEquipmentDelta');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(/suffix:\s*any\)/.test(sig),
-          'signedDelta suffix 파라미터 보존 (cycle 621에서 default 제거됨)');
+      assert.ok(/key:\s*EquipmentDeltaKey/.test(sig), 'key 파라미터 보존');
+      assert.ok(/value:\s*number/.test(sig), 'value 파라미터 보존');
   });
 
-  test('cycle 542: 정합성 가드 — 3 internal callsite 보존', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/signedDelta\(atkDelta,\s*''\)/.test(source), 'ATK callsite 보존');
-      assert.ok(/signedDelta\(defDelta,\s*''\)/.test(source), 'DEF callsite 보존');
-      assert.ok(/signedDelta\(mpDelta,\s*''\)/.test(source), 'MP callsite 보존');
+  test('cycle 542 (A2 이관): 정합성 가드 — 델타 조각 생성 callsite 보존', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(/formatEquipmentDelta\(key,\s*decision\.diff\[key\]\)/.test(source),
+          'getEquipmentComparison segment callsite 보존');
+      assert.ok(/formatEquipmentDelta\(primaryKey,\s*value\)/.test(source),
+          'getPrimaryEquipmentDelta callsite 보존');
+      // 상점/루팅 두 표면이 자체 계산 대신 공용 비교에 위임하는지 (G4 중복 제거의 핵심)
+      const shop = await readSrc('src/components/ShopPanel.tsx');
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(shop), 'ShopPanel 위임 보존');
+      assert.ok(!/const signedDelta/.test(shop), 'ShopPanel 자체 델타 포맷 재도입 금지');
+      const helpers = await readSrc('src/hooks/combatActions/_helpers.ts');
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(helpers), '_helpers 위임 보존');
   });
 
-  test('cycle 542: body template literal 보존', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/`\$\{value >= 0 \? '\+' : ''\}\$\{value\}\$\{suffix\}`/.test(source),
-          'template literal `${sign}${value}${suffix}` 보존');
+  test('cycle 542 (A2 이관): body template literal 보존', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(/\$\{value > 0 \? '\+' : ''\}\$\{value\}\$\{EQUIP_DELTA_SUFFIX\[key\]\}/.test(source),
+          'template literal `${label} ${sign}${value}${suffix}` 보존');
   });
 
   test('cycle 542: cycle 502-541 회귀 가드 — default 청소 시리즈 보존', async () => {

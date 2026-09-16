@@ -937,22 +937,22 @@ import { readFile } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test("cycle 621: signedDelta signature에서 suffix default '' 0건", async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(!/const signedDelta = \([^)]*suffix:\s*any\s*=\s*''\)/.test(source),
-          "signedDelta suffix default '' 제거");
-      assert.ok(/const signedDelta = \(value: any, suffix: any\)/.test(source),
-          'signedDelta suffix 파라미터 보존 (default 없이)');
+  // A2 (2026-09 감사 G4): signedDelta는 equipmentUtils.formatEquipmentDelta로 이관.
+  //   cycle 621의 의도(접미사 default 제거 + 호출부 명시)를 새 위치에서 검증한다.
+  test("cycle 621 (A2 이관): 델타 포맷 헬퍼 signature에 default '' 0건", async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(!/const signedDelta/.test(await readSrc('src/components/ShopPanel.tsx')),
+          'ShopPanel 자체 signedDelta 재도입 금지 (공용 헬퍼로 이관)');
+      assert.ok(/export const formatEquipmentDelta = \(key: EquipmentDeltaKey, value: number\)/.test(source),
+          'formatEquipmentDelta 두 파라미터 모두 default 없이 보존');
   });
 
-  test("cycle 621: 3 callsite suffix '' 명시 추가", async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/signedDelta\(atkDelta,\s*''\)/.test(source),
-          "atkDelta caller suffix '' 명시");
-      assert.ok(/signedDelta\(defDelta,\s*''\)/.test(source),
-          "defDelta caller suffix '' 명시");
-      assert.ok(/signedDelta\(mpDelta,\s*''\)/.test(source),
-          "mpDelta caller suffix '' 명시");
+  test('cycle 621 (A2 이관): 접미사는 단일 맵에서만 결정된다', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(/EQUIP_DELTA_SUFFIX: Record<EquipmentDeltaKey, string> = \{ atk: '', def: '', crit: '%', mp: '' \}/.test(source),
+          '접미사 맵(atk/def/mp는 없음, crit은 %) 보존');
+      assert.ok(/EQUIP_DELTA_ORDER: EquipmentDeltaKey\[\] = \['atk', 'def', 'crit', 'mp'\]/.test(source),
+          '표시 순서 atk → def → crit → mp 보존');
   });
 
   test('cycle 621: cycle 502-620 회귀 가드 — default 청소 시리즈 보존', async () => {

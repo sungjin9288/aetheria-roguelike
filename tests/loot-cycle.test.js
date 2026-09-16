@@ -307,16 +307,21 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 534: 정합성 가드 — 1 callsite 보존', async () => {
       const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
-      assert.ok(/getLootUpgradeHint\(updatedPlayer\.equip,\s*lootResult\.items\)/.test(source),
-          'getLootUpgradeHint(updatedPlayer.equip, lootResult.items) callsite 보존');
+      // A2 (2026-09 감사 G4): 첫 인자가 equip → player로 바뀌었다 (강화/직업 판정에 player 필요).
+      //   "1 callsite가 두 인자를 명시 전달한다"는 의도는 동일.
+      assert.ok(/getLootUpgradeHint\(updatedPlayer,\s*lootResult\.items\)/.test(source),
+          'getLootUpgradeHint(updatedPlayer, lootResult.items) callsite 보존');
   });
 
   test('cycle 534: body defensive guard 보존', async () => {
       const source = await readSrc('src/hooks/combatActions/_helpers.ts');
       assert.ok(/\(lootItems \|\| \[\]\)\.filter/.test(source),
           '(lootItems || []) defensive guard 보존');
-      assert.ok(/getEquipmentProfile\(equip\)/.test(source),
-          'getEquipmentProfile(equip) 호출 보존');
+      // A2: 델타 계산은 equipmentUtils.getEquipmentComparison에 위임 (강화 반영 단일 원천).
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(source),
+          'getEquipmentComparison(player, item) 위임 보존');
+      assert.ok(!/critDelta \* 2/.test(source),
+          '점수식 inline 복제 재도입 금지 (BALANCE 가중치 이중 관리 방지)');
       assert.ok(/let bestScore = -Infinity/.test(source),
           'cycle 352 bestScore internal 변수 보존');
   });

@@ -1074,9 +1074,12 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 633: 4 production path의 명시 인자 보존', async () => {
+      // A2 (2026-09 감사 G4): ShopPanel / _helpers는 더 이상 getNextEquipmentState를
+      //   직접 호출하지 않는다 — equipmentUtils.getEquipmentComparison(내부에서 명시
+      //   인자로 호출)에 위임. "명시 인자 전달" 의도는 위임 경로에서 그대로 검증한다.
       const sp = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(sp),
-          'ShopPanel callsite 보존');
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(sp),
+          'ShopPanel 공용 장비 비교 path 보존');
       const si = await readSrc('src/components/SmartInventory.tsx');
       assert.ok(/getEquipmentDecision\(player,\s*item\)/.test(si),
           'SmartInventory 공용 장비 판단 path 보존');
@@ -1084,8 +1087,8 @@ import { readFile } from 'node:fs/promises';
       assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(eu),
           '공용 장비 판단 내부 explicit callsite 보존');
       const ch = await readSrc('src/hooks/combatActions/_helpers.ts');
-      assert.ok(/getNextEquipmentState\(equip,\s*item\)/.test(ch),
-          '_helpers callsite 보존');
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(ch),
+          '_helpers 공용 장비 비교 path 보존');
       const handler = await readSrc('src/reducers/handlers/equipmentHandlers.ts');
       assert.ok(/getNextEquipmentState\(currentEquip,\s*item\)/.test(handler),
           'equipment reducer callsite 보존');

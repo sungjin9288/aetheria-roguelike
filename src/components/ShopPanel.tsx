@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
 import { DB } from '../data/db';
-import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentProfile, getEquipmentScore, getItemStatText, getNextEquipmentState, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { MSG } from '../data/messages';
+import { getEquipmentComparison, getEquipmentDecision, getEquipmentDisclosure, getItemStatText, getSellPrice, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { getDailyDeals, getShopMaxTier, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
@@ -22,18 +23,6 @@ interface ShopPanelProps {
 
 const isEquipmentItem = (item: any) => ['weapon', 'armor', 'shield'].includes(item?.type);
 
-// cycle 542: value default 0 제거 (partial cleanup) — 3 callsite 모두
-//   1 arg 명시 전달이라 value default 도달 불가.
-// cycle 621: suffix default '' explicit default-elimination — 3 callsite
-//   suffix '' 명시 추가하여 default 도달 불가로 변환 후 제거. explicit
-//   default-elimination pattern 12번째 적용.
-const signedDelta = (value: any, suffix: any) => `${value >= 0 ? '+' : ''}${value}${suffix}`;
-
-// cycle 531: value default 0 제거 — 1 callsite (line 60 formatPercent
-//   (critDelta)) value 명시 (Math.round 결과)이라 default 도달 불가. cycle
-//   502-529 default 청소 메가 시리즈 27번째 batch.
-const formatPercent = (value: any) => `${value >= 0 ? '+' : ''}${value}%`;
-
 const getItemTags = (item: any) => {
     const tags: any[] = [];
     if (isWeapon(item)) tags.push(getWeaponStyleLabel(item));
@@ -42,30 +31,21 @@ const getItemTags = (item: any) => {
 
 // cycle 531: equip default {} 제거 — 2 callsite (line 295/370 getComparisonMeta
 //   (item, player.equip)) equip 명시 전달이라 default 도달 불가.
-const getComparisonMeta = (item: any, equip: any) => {
+// A2 (2026-09 감사 G4): 장비 비교 델타를 자체 계산하던 로직 제거 →
+//   equipmentUtils.getEquipmentComparison(= getEquipmentDecision 기반, 강화 +N 반영)에 위임.
+//   기존 계산은 강화 보너스를 무시해 강화 장비 착용 시 업그레이드 폭을 과대 표시했다.
+//   표시 형식(라벨 · 순서 · ' / ' 구분자)은 동일하게 유지 — 라벨 원천만 MSG로 이동.
+const getComparisonMeta = (item: any, player: any) => {
     if (!item) return null;
-    const currentProfile = getEquipmentProfile(equip);
-    const nextEquip = getNextEquipmentState(equip, item);
-    const nextProfile = getEquipmentProfile(nextEquip);
-    const atkDelta = (nextProfile.mainAttack + nextProfile.offhandAttack) - (currentProfile.mainAttack + currentProfile.offhandAttack);
-    const defDelta = ((nextEquip.armor?.val || 0) + nextProfile.shieldDef) - ((equip.armor?.val || 0) + currentProfile.shieldDef);
-    const critDelta = Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100);
-    const mpDelta = nextProfile.mpBonus - currentProfile.mpBonus;
 
     if (item.type === 'armor' || item.type === 'shield' || item.type === 'weapon') {
-        const deltas: any[] = [];
-        if (atkDelta !== 0) deltas.push(`공격력 ${signedDelta(atkDelta, '')}`);
-        if (defDelta !== 0) deltas.push(`방어력 ${signedDelta(defDelta, '')}`);
-        if (critDelta !== 0) deltas.push(`치명타 ${formatPercent(critDelta)}`);
-        if (mpDelta !== 0) deltas.push(`기력 ${signedDelta(mpDelta, '')}`);
-        if (!deltas.length) deltas.push('현재 장비와 동일한 효율');
-
-        const score = getEquipmentScore({ atk: atkDelta, def: defDelta, crit: critDelta, mp: mpDelta });
-        const replacedOffhand = item.type === 'weapon' && isTwoHandWeapon(item) && equip.offhand;
+        const comparison = getEquipmentComparison(player, item);
+        if (!comparison) return null;
+        const replacedOffhand = item.type === 'weapon' && isTwoHandWeapon(item) && player?.equip?.offhand;
 
         return {
-            text: `${deltas.join(' / ')}${replacedOffhand ? ' / 보조손 해제' : ''}`,
-            tone: score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral',
+            text: `${comparison.summaryText}${replacedOffhand ? ` / ${MSG.EQUIP_DELTA_OFFHAND_RELEASED}` : ''}`,
+            tone: comparison.score > 0 ? 'positive' : comparison.score < 0 ? 'negative' : 'neutral',
         };
     }
 
@@ -95,7 +75,7 @@ const getBuyBlockReason = ({ canStore, affordable, equipable, item }: any) => {
 const getCompactText = (value: any) => value.replaceAll(' / ', ' · ');
 
 const getCompactComparisonText = (comparison: any) => (
-    getCompactText(comparison?.text || '').replace('현재 장비와 동일한 효율', '변화 없음')
+    getCompactText(comparison?.text || '').replace(MSG.EQUIP_DELTA_NONE, MSG.EQUIP_DELTA_NONE_COMPACT)
 );
 
 const getCompactItemSummary = (item: any) => {
@@ -352,7 +332,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     buyItems.length > 0 ? (
                         visibleBuyItems.map(({ item, affordable, equipable, inventoryHasRoom: canStore }: any) => {
                             const canBuy = affordable && equipable && canStore;
-                            const comparison = getComparisonMeta(item, player.equip);
+                            const comparison = getComparisonMeta(item, player);
                             const typeTag = getItemTags(item)[0];
                             const summary = getCompactItemSummary(item);
                             const comparisonText = getCompactComparisonText(comparison);
@@ -432,8 +412,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     sellItems.length > 0 ? (
                         sellItems.map((item: any) => {
                             const isConfirming = sellConfirmId === item.id;
-                            const sellPrice = Math.floor((item.price || 0) * 0.5);
-                            const comparison = getComparisonMeta(item, player.equip);
+                            const sellPrice = getSellPrice(item);
+                            const comparison = getComparisonMeta(item, player);
                             const summary = getCompactItemSummary(item);
                             const comparisonText = comparison ? getCompactText(comparison.text) : '';
                             const isSignatureLocked = isSignatureItem(item);

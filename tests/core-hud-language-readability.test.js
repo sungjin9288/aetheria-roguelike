@@ -84,13 +84,19 @@ test('growth and boss transition banners use the same player language', async ()
 });
 
 test('post-combat equipment hint names the changed stats', async () => {
+    // A2 (2026-09 감사 G4): 델타 라벨은 MSG.EQUIP_DELTA_LABEL 단일 원천으로,
+    //   포맷은 equipmentUtils.formatEquipmentDelta로 이관됐다. "전투 후 힌트가
+    //   바뀐 능력치를 한국어로 이름 붙여 말한다"는 의도는 그대로 검증한다.
     const source = await readSrc('src/hooks/combatActions/_helpers.ts');
+    const messages = await readSrc('src/data/messages.ts');
+    const equipmentUtils = await readSrc('src/utils/equipmentUtils.ts');
     const testApi = await readSrc('src/hooks/useGameTestApi.ts');
 
-    assert.match(source, /공격력 \+\$\{atkDelta\}/);
-    assert.match(source, /방어력 \+\$\{defDelta\}/);
-    assert.match(source, /치명타 \+\$\{critDelta\}%/);
-    assert.match(source, /기력 \+\$\{mpDelta\}/);
+    assert.match(source, /getEquipmentComparison\(player, item\)/);
+    assert.match(source, /comparison\.upgradeText/);
+    assert.match(messages, /EQUIP_DELTA_LABEL: \{ atk: '공격력', def: '방어력', crit: '치명타', mp: '기력' \}/);
+    assert.match(equipmentUtils, /\$\{MSG\.EQUIP_DELTA_LABEL\[key\]\} \$\{value > 0 \? '\+' : ''\}\$\{value\}\$\{EQUIP_DELTA_SUFFIX\[key\]\}/);
+    assert.match(equipmentUtils, /crit: '%'/);
     assert.match(testApi, /공격력 \+4 \/ 방어력 \+1/);
 });
 

@@ -1,5 +1,5 @@
 import { getJobSkills } from '../../utils/gameUtils';
-import { getEquipmentProfile, getNextEquipmentState } from '../../utils/equipmentUtils';
+import { getEquipmentComparison } from '../../utils/equipmentUtils';
 import { MSG } from '../../data/messages';
 import { AT } from '../../reducers/actionTypes';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
@@ -24,41 +24,30 @@ export const getSelectedSkill = (player: Player) => {
  * 루트 아이템 중 장비 업그레이드 힌트 계산. 없으면 null.
  */
 // cycle 534: equip / lootItems defaults 제거 — 1 callsite (combatVictory
-//   :213) getLootUpgradeHint(updatedPlayer.equip, lootResult.items) 명시
-//   전달이라 두 default 모두 도달 불가. body의 (lootItems || []) defensive
-//   guard는 별개 보존. util/component/hook default 청소 메가 시리즈 30번째
-//   batch (cycle 502-533).
-export const getLootUpgradeHint = (equip: any, lootItems: Item[]): any => {
+//   :213) 명시 전달이라 두 default 모두 도달 불가. body의 (lootItems || [])
+//   defensive guard는 별개 보존. util/component/hook default 청소 메가 시리즈
+//   30번째 batch (cycle 502-533).
+// A2 (2026-09 감사 G4): 델타/점수/라벨을 자체 계산하던 로직 제거 →
+//   equipmentUtils.getEquipmentComparison(= getEquipmentDecision 기반)에 위임.
+//   기존 계산은 (a) 강화 +N 보너스를 무시했고 (b) 점수식
+//   `atk + def + crit*2 + floor(mp/5)`를 inline 복제해 constants.ts의 장비 점수
+//   가중치(EQUIP_SCORE_CRIT_WEIGHT / EQUIP_SCORE_MP_DIVISOR)와 이중 관리 상태였다. 이제 상점/인벤/루팅 3표면이 동일한 델타를 보고한다.
+//   첫 인자가 equip에서 player로 바뀐 이유: 강화·직업 제한 판정에 player가 필요.
+export const getLootUpgradeHint = (player: any, lootItems: Item[]): any => {
     const equipmentDrops = (lootItems || []).filter((item: any) => ['weapon', 'armor', 'shield'].includes(item?.type));
     if (!equipmentDrops.length) return null;
-
-    const currentProfile = getEquipmentProfile(equip);
-    const currentAtk = currentProfile.mainAttack + currentProfile.offhandAttack;
-    const currentDef = (equip.armor?.val || 0) + currentProfile.shieldDef;
 
     // cycle 352: bestHint score 출력 dead 정리 — name / summary만 외부 read.
     //   score는 함수 내부 비교용으로만 사용 → 외부 노출 strip.
     let bestHint: any = null;
     let bestScore = -Infinity;
     equipmentDrops.forEach((item: any) => {
-        const nextEquip = getNextEquipmentState(equip, item);
-        const nextProfile = getEquipmentProfile(nextEquip);
-        const nextAtk = nextProfile.mainAttack + nextProfile.offhandAttack;
-        const nextDef = (nextEquip.armor?.val || 0) + nextProfile.shieldDef;
-        const critDelta = Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100);
-        const mpDelta = nextProfile.mpBonus - currentProfile.mpBonus;
-        const atkDelta = nextAtk - currentAtk;
-        const defDelta = nextDef - currentDef;
-        const score = atkDelta + defDelta + (critDelta * 2) + Math.floor(mpDelta / 5);
-        if (score <= 0) return;
-        if (score <= bestScore) return;
-        const summaryParts: any[] = [];
-        if (atkDelta > 0) summaryParts.push(`공격력 +${atkDelta}`);
-        if (defDelta > 0) summaryParts.push(`방어력 +${defDelta}`);
-        if (critDelta > 0) summaryParts.push(`치명타 +${critDelta}%`);
-        if (mpDelta > 0) summaryParts.push(`기력 +${mpDelta}`);
-        bestHint = { name: item.name, summary: summaryParts.join(' / ') || MSG.COMBAT_DIGEST_DEFAULT_SUMMARY };
-        bestScore = score;
+        const comparison = getEquipmentComparison(player, item);
+        if (!comparison) return;
+        if (comparison.score <= 0) return;
+        if (comparison.score <= bestScore) return;
+        bestHint = { name: item.name, summary: comparison.upgradeText || MSG.COMBAT_DIGEST_DEFAULT_SUMMARY };
+        bestScore = comparison.score;
     });
     return bestHint;
 };

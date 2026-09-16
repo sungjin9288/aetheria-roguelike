@@ -265,7 +265,7 @@ export const handleVictoryOutcome = ({
 
     const droppedItems = lootResult.items.map((i: any) => i.name);
     const traitProfile = getTraitProfile(updatedPlayer, victoryStats);
-    const upgradeHint = getLootUpgradeHint(updatedPlayer.equip, lootResult.items);
+    const upgradeHint = getLootUpgradeHint(updatedPlayer, lootResult.items);
     const traitHint = getTraitLootHint(lootResult.items, traitProfile, updatedPlayer);
     addCombatDigestLogs({
         addLog, enemyName: deadEnemy.name, victoryResult, droppedItems,

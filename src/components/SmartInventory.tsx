@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle, ListTree } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
-import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentIdentity, getItemStatText, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentIdentity, getItemStatText, getWeaponStyleLabel, isWeapon, pickBestEquippable } from '../utils/equipmentUtils';
 import { getEnhanceAvailability, getEnhancePreview, type EnhanceItemSlot } from '../utils/enhancementUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
@@ -61,7 +61,6 @@ const ITEM_TYPE_TO_FILTER: any = {
     cure: 'hp',
     mat: 'material',
 };
-const canEquipItem = (item: any, job: any) => !Array.isArray(item.jobs) || item.jobs.includes(job);
 
 const getItemTags = (item: any) => {
     const tags: any[] = [];
@@ -112,24 +111,11 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
         });
     }, [grouped, activeFilter]);
 
-    // 추천 장착 계산 (최고 val 기준)
-    const getEquipPreview = useCallback((item: any) => {
-        const decision = getEquipmentDecision(player, item);
-        return decision ? { ...decision.diff, score: decision.score } : { atk: 0, def: 0, crit: 0, mp: 0, score: 0 };
-    }, [player]);
-
-    const bestWeapon = useMemo(() =>
-        (player.inv || [])
-            .filter((i: any) => i.type === 'weapon' && canEquipItem(i, player.job))
-            .sort((a: any, b: any) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
-        [player.inv, player.job, getEquipPreview]
-    );
-    const bestArmor = useMemo(() =>
-        (player.inv || [])
-            .filter((i: any) => i.type === 'armor' && canEquipItem(i, player.job))
-            .sort((a: any, b: any) => (b.val || 0) - (a.val || 0))[0],
-        [player.inv, player.job]
-    );
+    // A2 (2026-09 감사 G4): bestWeapon은 getEquipPreview 점수, bestArmor는 raw val이라
+    //   두 슬롯의 "최적" 정책이 서로 달랐다(방어구는 강화·직업 제한을 무시).
+    //   pickBestEquippable이 두 슬롯 모두 getEquipmentDecision 점수(강화 반영)로 통일한다.
+    const bestWeapon = useMemo(() => pickBestEquippable(player, 'weapon'), [player]);
+    const bestArmor = useMemo(() => pickBestEquippable(player, 'armor'), [player]);
 
     const isEquipUpgrade = useCallback((item: any) => {
         const decision = getEquipmentDecision(player, item);
@@ -152,7 +138,8 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, spotli
     // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
     const isInvNearFull = (player.inv || []).length >= BALANCE.INV_FULL_THRESHOLD;
     const sellableMatCount = useMemo(() =>
-        (player.inv || []).filter((i: any) => i.type === 'mat' && (i.price || 0) <= 30).length,
+        (player.inv || []).filter((i: any) => i.type === 'mat'
+            && (i.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX).length,
         [player.inv]
     );
 
