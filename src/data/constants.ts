@@ -514,6 +514,16 @@ export const BALANCE: BalanceConfig = {
 
     // E1 — 런타임 에러 리포트 로컬 링버퍼
     ERROR_REPORT_RING_SIZE: 20,         // localStorage에 보관하는 최근 에러 리포트 최대 개수
+    // A1 (2026-09 감사 G1) — 몬스터 statusOnHit 발동 확률 (강타 적중 시).
+    //   spawnEnemy가 프로파일의 statusOnHit을 전파하기 전까지 CombatEngine.enemyAI의
+    //   해당 분기는 런타임에서 한 번도 실행된 적이 없었다(필드 사장). 전파를 복구하면서
+    //   "강타 적중 = 100% 상태이상"으로 두면 초반 정예 조우가 계약을 넘어선다.
+    //   Lv1 정예 거미떼 500회 시뮬(tests/early-elite-spawn) 시작 물약 2개 소진:
+    //     전파 전 13/500 · 전파 후 무조건 발동 73/500 · 0.35 → 44 · 0.15 → 28 · 0.08 → 22.
+    //   플레이어 status는 전투 중 만료되지 않아(tickCombatState) 한 번 부여되면 전투 끝까지
+    //   maxHp 4%/턴이 누적되므로, 짧은 초반 전투는 거의 영향을 받지 않고 긴 보스전에서는
+    //   누적 확률로 확실히 발동하는 값으로 둔다.
+    MONSTER_STATUS_ON_HIT_CHANCE: 0.08,
 };
 
 Object.freeze(CONSTANTS);

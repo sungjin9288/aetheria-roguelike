@@ -1584,7 +1584,9 @@ import { readFile } from 'node:fs/promises';
       };
       const stats = { atk: 100, def: 50, relics: [], activeSynergies: [], critChance: 0 };
 
-      const result = CombatEngine.enemyAttack(player, enemy, stats);
+      // A1 (2026-09): statusOnHit 발동이 BALANCE.MONSTER_STATUS_ON_HIT_CHANCE로 게이팅되어
+      //   rng를 0으로 고정해야 결정론적이다. 회귀 가드의 의도(강타 + statusOnHit → poison)는 동일.
+      const result = CombatEngine.enemyAttack(player, enemy, stats, () => 0);
       assert.ok((result.updatedPlayer.status || []).includes('poison'), 'cycle 227 statusOnHit 보존');
   });
 }

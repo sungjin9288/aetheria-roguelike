@@ -24,6 +24,11 @@ export interface MonsterBase {
     /** 엘리트 prefix 여부. */
     isElite?: boolean;
     dropMod?: number;
+    /**
+     * 강타(heavy hit) 적중 시 플레이어에게 부여하는 상태이상 키.
+     * 소비처: CombatEngine.enemyAI.ts:239, utils/combatForecast.ts:74.
+     */
+    statusOnHit?: string;
     // cycle 283: elem / dropTable / prefix / signatureDrops 4 dead 필드 제거 — runtime access 0건.
     //   prefix는 mStats.name 직접 string 합치기, signatureDrops는 local variable 사용.
     /** 동적으로 추가되는 임의 필드 (런타임 확장 호환). */

@@ -3,6 +3,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { MONSTERS } from '../src/data/monsters.js';
+import { BALANCE } from '../src/data/constants.js';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 
@@ -437,6 +438,9 @@ import { readFile } from 'node:fs/promises';
   test('cycle 227: heavy hit + statusOnHit인 적이 player에 status 부여', () => {
       // 강제로 heavy hit 발생 시키기 위해 mock 필요. enemyAttack 분기 검증을 위해
       // pattern.heavyChance = 1로 설정 (100% heavy).
+      // A1 (2026-09): statusOnHit 발동이 BALANCE.MONSTER_STATUS_ON_HIT_CHANCE로 게이팅되므로
+      //   rng를 0으로 고정해 "게이트 통과 + 저항 실패" 경로를 결정론적으로 만든다.
+      //   검증 의도(강타 + statusOnHit → status 부여)는 그대로.
       const player = {
           name: 'Test', job: '전사', level: 10,
           hp: 1000, maxHp: 1000, mp: 50, maxMp: 100,
@@ -456,11 +460,44 @@ import { readFile } from 'node:fs/promises';
       };
       const stats = { atk: 100, def: 50, relics: [], activeSynergies: [], critChance: 0 };
 
-      const result = CombatEngine.enemyAttack(player, enemy, stats);
-      // heavy hit + statusOnHit → 100% poison 부여
+      const result = CombatEngine.enemyAttack(player, enemy, stats, () => 0);
+      // heavy hit + statusOnHit + 게이트 통과 → poison 부여
       const playerStatus = result.updatedPlayer.status || [];
       assert.ok(playerStatus.includes('poison'),
           `slime의 statusOnHit poison이 heavy hit 시 부여되어야 함 (실제 status: ${JSON.stringify(playerStatus)})`);
+  });
+
+  test('A1 (2026-09): statusOnHit 발동은 BALANCE.MONSTER_STATUS_ON_HIT_CHANCE로 게이팅된다', () => {
+      // spawnEnemy가 statusOnHit을 전파하게 되면서(A1) 이 분기가 처음으로 런타임에 도달한다.
+      // "강타 = 100% 상태이상"은 초반 정예 조우 계약(tests/early-elite-spawn)을 깨므로
+      // 확률 게이트가 존재해야 한다. 게이트 롤이 실패하면 status는 부여되지 않는다.
+      const player = {
+          name: 'Test', job: '전사', level: 10,
+          hp: 1000, maxHp: 1000, mp: 50, maxMp: 100,
+          atk: 20, def: 5,
+          equip: { weapon: null, armor: null, offhand: null },
+          relics: [], skillChoices: {}, titles: [], combatFlags: {}, status: [],
+      };
+      const enemy = {
+          name: '슬라임', baseName: '슬라임',
+          hp: 100, maxHp: 100, atk: 50, def: 5,
+          statusOnHit: 'poison',
+          pattern: { guardChance: 0.0, heavyChance: 1.0 },
+      };
+      const stats = { atk: 100, def: 50, relics: [], activeSynergies: [], critChance: 0 };
+
+      assert.ok(BALANCE.MONSTER_STATUS_ON_HIT_CHANCE > 0 && BALANCE.MONSTER_STATUS_ON_HIT_CHANCE < 1,
+          'statusOnHit 게이트 확률은 (0, 1) 구간이어야 함');
+
+      // 게이트 롤 실패 (rng = 0.99 > chance) → status 미부여, 그 외 분기(강타)는 그대로
+      const blocked = CombatEngine.enemyAttack(player, enemy, stats, () => 0.99);
+      assert.deepEqual(blocked.updatedPlayer.status || [], [],
+          '게이트 롤 실패 시 statusOnHit 미부여');
+
+      // 게이트 롤 성공 (rng = 0) → status 부여
+      const applied = CombatEngine.enemyAttack(player, enemy, stats, () => 0);
+      assert.ok((applied.updatedPlayer.status || []).includes('poison'),
+          '게이트 롤 성공 시 statusOnHit 부여');
   });
 
   test('cycle 227: statusOnHit 미정의 monster는 status 부여 안 함', () => {

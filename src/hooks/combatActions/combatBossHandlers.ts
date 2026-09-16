@@ -57,6 +57,7 @@ export const handleDemonKingSlain = (
                 goldMult: trueBossData.goldMult || 5.0,
                 dropMod: trueBossData.dropMod || 5.0,
                 phase2: trueBossData.phase2, phase3: trueBossData.phase3,
+                statusOnHit: trueBossData.statusOnHit,
                 exp: 5000, gold: 9999,
                 pattern: { guardChance: 0.05, heavyChance: 0.4 },
             };

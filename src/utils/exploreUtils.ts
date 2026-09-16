@@ -244,6 +244,12 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         if (profile.resistance) mStats.resistance = profile.resistance;
         if (profile.pattern)  mStats.pattern = { ...mStats.pattern, ...profile.pattern };
         if (profile.phase2)   mStats.phase2 = profile.phase2;
+        // A1 (2026-09 감사 G1): statusOnHit / phase3 전파 누락 복구.
+        //   리더는 이미 존재했으나(enemyAI.ts:66 phase3, :239 statusOnHit) spawnEnemy가
+        //   프로파일에서 복사하지 않아 27몬스터의 상태이상 정체성과 보스 3페이즈가
+        //   영구 미발동 상태였다.
+        if (profile.statusOnHit) mStats.statusOnHit = profile.statusOnHit;
+        if (profile.phase3)   mStats.phase3 = profile.phase3;
     }
 
     mStats.isBoss = Boolean(
@@ -493,6 +499,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
                 resistance: bossProfile?.resistance,
                 phase2: bossProfile?.phase2,
                 phase3: bossProfile?.phase3,
+                statusOnHit: bossProfile?.statusOnHit,
             };
             addLog('critical', MSG.ABYSS_BOSS_APPEAR(bossName));
         } else if (floor % 5 === 0) {

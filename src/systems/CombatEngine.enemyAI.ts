@@ -241,7 +241,14 @@ export const enemyAIMethods: any = {
             const resistRelic = relics.find((r: any) => r.effect === 'status_resist');
             const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
             const currentStatus = Array.isArray(protectedResult.updatedPlayer.status) ? protectedResult.updatedPlayer.status : [];
-            if (!currentStatus.includes(enemyStatusOnHit)) {
+            // A1 (2026-09 감사 G1) 밸런스 가드: spawnEnemy가 statusOnHit을 전파하기 전에는
+            //   이 분기가 런타임에서 한 번도 실행되지 않았다(=프로파일 필드가 사장). 전파를
+            //   복구하면서 "강타 적중 = 100% 상태이상"이 되면 초반 정예 조우가 과도해진다
+            //   (측정: Lv1 정예 거미떼 500회 시뮬에서 시작 물약 2개 소진 13/500 → 73/500).
+            //   플레이어 status는 전투 중 만료되지 않으므로(tickCombatState) 한 번 부여되면
+            //   전투 끝까지 maxHp 4%/턴이 누적된다. → BALANCE.MONSTER_STATUS_ON_HIT_CHANCE로
+            //   발동 확률을 게이팅한다. 저항 유물(status_resist)은 발동 이후 단계 그대로.
+            if (!currentStatus.includes(enemyStatusOnHit) && random() < BALANCE.MONSTER_STATUS_ON_HIT_CHANCE) {
                 if (random() >= resistChance) {
                     const statusLabels: Record<string, string> = {
                         poison: '독', burn: '화상', freeze: '빙결', curse: '저주',
