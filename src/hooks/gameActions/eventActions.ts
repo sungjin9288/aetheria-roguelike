@@ -4,7 +4,7 @@ import { MSG } from '../../data/messages';
 import { DB } from '../../data/db';
 import { toArray, grantGold } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
-import { pickWeightedRelics } from '../../data/relics';
+import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from '../../utils/exploreUtils';
@@ -70,7 +70,14 @@ export const createEventActions = (deps: any, shared: any) => {
                         }
                     }
                     if (rwd.type === 'relic') {
-                        const pickedRelics = pickWeightedRelics(updatedPlayer.relics || [], 1, { rng });
+                        // 2026-09 감사 G8: pool은 "아직 보유하지 않은 유물"이어야 하고,
+                        //   owned를 넘겨야 시너지 소프트 pity가 체인 보상에도 적용된다.
+                        //   (기존에는 보유 유물 자체를 pool로 넘겨 중복만 뽑히고 pity도 미적용)
+                        const ownedRelics = updatedPlayer.relics || [];
+                        const availableRelics = RELICS.filter(
+                            (r: any) => !ownedRelics.some((pr: any) => pr.id === r.id),
+                        );
+                        const pickedRelics = pickWeightedRelics(availableRelics, 1, { owned: ownedRelics, rng });
                         if (pickedRelics.length > 0) {
                             updatedPlayer = { ...updatedPlayer, relics: [...(updatedPlayer.relics || []), pickedRelics[0]] };
                             addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name));

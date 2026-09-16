@@ -408,12 +408,16 @@ export const RELICS: Relic[] = [
 
 /** 희귀도별 가중치 (가중 추첨) */
 // cycle 285: export 제거 — pickWeightedRelics 내부에서만 사용. private const로 downgrade.
+// 2026-09 감사 G8: 구 곡선(50/30/15/4/1)에서는 epic 16종 + legendary 16종, 즉 저작된
+//   유물의 48%가 전체 가중치의 7.9%밖에 차지하지 못해 시너지 20개 중 12개가 사실상
+//   도달 불가였다. 꼬리를 평탄화해 epic+legendary 합계를 17.3%까지 끌어올린다
+//   (실측 분포는 tests/relics.test.js가 살아있는 RELICS 배열로 계산해 고정).
 const RELIC_WEIGHTS: Record<string, any> = Object.freeze({
-    common: 50,
+    common: 40,
     uncommon: 30,
-    rare: 15,
-    epic: 4,
-    legendary: 1,
+    rare: 18,
+    epic: 9,
+    legendary: 3,
 });
 
 /**
@@ -604,25 +608,45 @@ const drawOneWeighted = (remaining: any[], random: () => number) => {
 };
 
 /**
- * owned(보유 유물) 기준 "정확히 1개만 더 모으면 완성"되는 RELIC_SYNERGIES의
- * 잔여 유물 중, pool에 실제로 존재하는(=아직 보유하지 않은) 후보 목록을 반환.
+ * owned(보유 유물) 기준 "거의 완성된" RELIC_SYNERGIES의 잔여 유물 중, pool에 실제로
+ * 존재하는(=아직 보유하지 않은) 후보 목록을 반환.
+ *
+ * - 1순위: 정확히 1개만 더 모으면 완성되는 시너지의 잔여 유물.
+ * - 2순위 (2026-09 감사 G8): 3피스 시너지에서 이미 1개를 보유하고 2개가 부족한 경우의
+ *   잔여 유물 전부. 3피스 세트 5종은 "1개 부족" 상태에 도달하는 것 자체가 어려워
+ *   구 로직에서는 pity가 사실상 발동하지 않았다. 중간 단계를 받쳐준다.
  * - 이미 완성된 시너지(모든 requires 보유)는 후보를 만들지 않는다.
- * - 2개 이상 부족한 시너지도 제외 (정확히 1개 부족일 때만 "소프트 pity" 대상).
+ * - 1순위 후보가 하나라도 있으면 2순위는 쓰지 않는다 (완성에 가까운 쪽 우선).
  * - 결과는 relic id 기준 중복 제거.
  */
 const findSynergyPityCandidates = (pool: any[], owned: any[]) => {
     if (!owned || owned.length === 0) return [];
     const ownedNames = new Set(owned.map((r: any) => r.name));
     const poolByName = new Map(pool.map((r: any) => [r.name, r]));
-    const candidates = new Map<string, any>();
+    const nearCandidates = new Map<string, any>();
+    const partialCandidates = new Map<string, any>();
 
     for (const syn of RELIC_SYNERGIES) {
         const missingNames = syn.requires.filter((name: string) => !ownedNames.has(name));
-        if (missingNames.length !== 1) continue; // 이미 완성됐거나 2개 이상 부족
-        const missingRelic = poolByName.get(missingNames[0]);
-        if (missingRelic) candidates.set(missingRelic.id, missingRelic);
+        if (missingNames.length === 0) continue; // 이미 완성됨
+        const ownedCount = syn.requires.length - missingNames.length;
+
+        if (missingNames.length === 1) {
+            const missingRelic = poolByName.get(missingNames[0]);
+            if (missingRelic) nearCandidates.set(missingRelic.id, missingRelic);
+            continue;
+        }
+        // 3피스 이상 세트에서 1개 이상 보유 + 2개 부족 → 부족분 전체를 2순위 후보로.
+        if (syn.requires.length >= 3 && ownedCount >= 1 && missingNames.length === 2) {
+            for (const name of missingNames) {
+                const missingRelic = poolByName.get(name);
+                if (missingRelic) partialCandidates.set(missingRelic.id, missingRelic);
+            }
+        }
     }
-    return Array.from(candidates.values());
+
+    if (nearCandidates.size > 0) return Array.from(nearCandidates.values());
+    return Array.from(partialCandidates.values());
 };
 
 // cycle 597: count default 3 제거 — 4 production caller (exploreUtils/

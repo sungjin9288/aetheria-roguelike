@@ -7,7 +7,7 @@ import { ACHIEVEMENTS } from '../src/data/quests.js';
 import { BALANCE } from '../src/data/constants.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { DB } from '../src/data/db.js';
-import { RELICS } from '../src/data/relics.js';
+import { RELICS, pickWeightedRelics } from '../src/data/relics.js';
 import { applyBattleStartRelics } from '../src/utils/exploreUtils.js';
 import { resolveDailyProtocolProgress } from '../src/reducers/handlers/helpers.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
@@ -1938,8 +1938,13 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           'exploreUtils pickWeightedRelics 명시 count 전달 보존 (owned 옵션 인자 허용)');
 
       const ev = await readSrc('src/hooks/gameActions/eventActions.ts');
-      assert.ok(/pickWeightedRelics\(updatedPlayer\.relics \|\| \[\],\s*1,\s*\{\s*rng\s*\}\)/.test(ev),
-          'eventActions pickWeightedRelics(..., 1, { rng }) deterministic seam 보존');
+      // 2026-09 감사 G8: 체인 유물 보상의 pool을 "보유 유물"에서 "미보유 유물"로 고치고
+      //   owned를 전달해 시너지 소프트 pity를 배선했다. 가드 의도(count 명시 전달 +
+      //   deterministic rng seam)는 그대로 유지하고 인자 형태만 새 구조에 맞춘다.
+      assert.ok(/pickWeightedRelics\(availableRelics,\s*1,\s*\{[^}]*rng[^}]*\}\)/.test(ev),
+          'eventActions pickWeightedRelics(availableRelics, 1, { ..., rng }) 명시 count + rng seam 보존');
+      assert.ok(/pickWeightedRelics\(availableRelics,\s*1,\s*\{[^}]*owned:\s*ownedRelics[^}]*\}\)/.test(ev),
+          'eventActions 체인 유물 보상에도 시너지 pity(owned) 배선');
   });
 
   test('cycle 597: cycle 502-596 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -1997,5 +2002,85 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const ids = RELICS.map((r) => r.id);
       const set = new Set(ids);
       assert.equal(ids.length, set.size, 'all relic ids should be unique');
+  });
+}
+
+
+// ─── 2026-09 감사 G8: 희귀도 곡선 평탄화 ───
+{
+  /**
+   * 구 곡선 50/30/15/4/1은 RELICS 인구조사(common 7 / uncommon 11 / rare 17 /
+   * epic 16 / legendary 16)와 곱해지면 epic+legendary 32종(전체의 48%)이 전체
+   * 가중치의 7.9%밖에 못 가져갔다. 시너지 20개 중 12개가 legendary 의존이라
+   * 저작된 콘텐츠 상당수가 사실상 도달 불가였다.
+   *
+   * 아래 테스트는 하드코딩한 기대값이 아니라 살아있는 RELICS 배열과 실제 추첨
+   * 가중치로 분포를 계산한다 — 유물이 추가/삭제돼도 계약이 유지된다.
+   */
+  const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
+  // pickWeightedRelics의 추첨 가중치를 소스에서 그대로 읽어 census와 곱한다
+  // (RELIC_WEIGHTS는 private const라 import 불가 — 단일 원천을 소스에서 확인).
+  const readWeights = async () => {
+      const source = await readSrc('src/data/relics.ts');
+      const block = source.slice(source.indexOf('const RELIC_WEIGHTS'));
+      const body = block.slice(0, block.indexOf('});'));
+      const weights = {};
+      for (const rarity of RARITIES) {
+          const match = new RegExp(`${rarity}:\\s*(\\d+)`).exec(body);
+          assert.ok(match, `${rarity} 가중치 정의 존재`);
+          weights[rarity] = Number(match[1]);
+      }
+      return weights;
+  };
+
+  const censusByRarity = () => RELICS.reduce((acc, relic) => {
+      acc[relic.rarity] = (acc[relic.rarity] || 0) + 1;
+      return acc;
+  }, {});
+
+  test('G8: epic+legendary가 전체 추첨 가중치의 15% 이상을 차지한다', async () => {
+      const weights = await readWeights();
+      const census = censusByRarity();
+      const total = RARITIES.reduce((sum, r) => sum + (census[r] || 0) * weights[r], 0);
+      const tailShare = (census.epic * weights.epic + census.legendary * weights.legendary) / total;
+
+      assert.ok(tailShare >= 0.15, `epic+legendary 점유율 ${(tailShare * 100).toFixed(2)}% >= 15%`);
+      // 반대로 꼬리가 몸통을 잡아먹어도 안 된다 (희귀도가 의미를 잃음).
+      assert.ok(tailShare <= 0.30, `epic+legendary 점유율 ${(tailShare * 100).toFixed(2)}% <= 30%`);
+  });
+
+  test('G8: 희귀도 서열은 유지된다 — 등급이 높을수록 개별 가중치가 낮다', async () => {
+      const weights = await readWeights();
+      for (let i = 1; i < RARITIES.length; i += 1) {
+          assert.ok(
+              weights[RARITIES[i]] < weights[RARITIES[i - 1]],
+              `${RARITIES[i]} 가중치 < ${RARITIES[i - 1]} 가중치`,
+          );
+      }
+  });
+
+  test('G8: 평탄화 후에도 legendary 한 종이 common 한 종보다 드물다 (실측 추첨)', () => {
+      // 대량 표본으로 실제 pickWeightedRelics 분포를 확인 (결정적 rng 시퀀스 대신
+      // 고정 시드 LCG — 환경 무관 재현).
+      let seed = 987654321;
+      const rng = () => {
+          seed = (seed * 1103515245 + 12345) % 2147483648;
+          return seed / 2147483648;
+      };
+      const counts = { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0 };
+      for (let i = 0; i < 4000; i += 1) {
+          const [picked] = pickWeightedRelics(RELICS, 1, { rng });
+          counts[picked.rarity] += 1;
+      }
+      const census = censusByRarity();
+      const perRelic = (rarity) => counts[rarity] / census[rarity];
+
+      assert.ok(perRelic('legendary') < perRelic('common'), 'legendary 종당 출현율 < common 종당 출현율');
+      assert.ok(counts.epic + counts.legendary > 0, '꼬리 등급이 실제로 뽑힌다');
+      assert.ok(
+          (counts.epic + counts.legendary) / 4000 > 0.10,
+          `epic+legendary 실측 출현율 ${((counts.epic + counts.legendary) / 40).toFixed(1)}% > 10%`,
+      );
   });
 }
