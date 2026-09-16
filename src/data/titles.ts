@@ -446,8 +446,10 @@ export const TITLES = Object.freeze([
     },
 ]);
 
-// 희귀도 등급 → 표시 색상(Tailwind 클래스). 단일 출처는 constants.js.
-export { RARITY_CLASSES as RARITY_COLORS } from './constants.js';
+// A3 (2026-09 감사 G6): 희귀도 색상 별칭 re-export 제거.
+//   Tailwind 클래스 맵을 hex 맵과 같은 이름으로 재수출해 호출부가 어느 쪽을
+//   쓰는지 알 수 없는 함정이었다. 소비처는 constants.ts의 Tailwind 맵을 직접
+//   import한다 (hex는 BALANCE 쪽 동명 키).
 
 export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
     first_blood:      { atk: 1, label: 'ATK +1' },

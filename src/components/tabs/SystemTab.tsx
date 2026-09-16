@@ -19,11 +19,10 @@ import {
 import { motion as Motion } from 'framer-motion';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { APP_ID, CONSTANTS } from '../../data/constants';
+import { APP_ID, CONSTANTS, RARITY_CLASSES } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { exportToJson } from '../../utils/fileUtils';
 import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/gameUtils';
-import { RARITY_COLORS } from '../../data/titles';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
 import { clearErrorReports, readErrorReports } from '../../platform/localErrorReportStore';
@@ -533,7 +532,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                 <div key={relic.id} className="flex items-center gap-2.5 border-b border-white/6 px-1 pb-2 last:border-b-0 last:pb-0">
                                     <RelicIcon relic={relic} size={42} />
                                     <div className="min-w-0 flex-1">
-                                        <div className={`font-readable text-xs font-bold ${RARITY_COLORS[relic.rarity] || 'text-slate-200'}`}>
+                                        <div className={`font-readable text-xs font-bold ${RARITY_CLASSES[relic.rarity] || 'text-slate-200'}`}>
                                             {getRelicDisplayName(relic.name)}
                                         </div>
                                         <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">{formatRelicText(relic.desc)}</p>

@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { RARITY_CLASSES } from '../data/constants';
+import { MSG } from '../data/messages';
 import { RELICS } from '../data/relics';
 import { TRAIT_DEFINITIONS } from '../data/traits';
 import { getRunBuildProfile } from '../utils/runProfile';
@@ -14,18 +16,6 @@ interface BuildAdvicePanelProps {
     player?: Player | null;
     stats?: any;
 }
-
-const RARITY_COLOR: any = {
-    common:    'text-slate-400',
-    uncommon:  'text-cyan-400',
-    rare:      'text-purple-400',
-    epic:      'text-yellow-400',
-    legendary: 'text-red-400',
-};
-
-const RARITY_LABEL: any = {
-    common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설',
-};
 
 /**
  * 현재 성장 방향에 맞는 유물과 기술을 추천합니다.
@@ -97,8 +87,8 @@ const BuildAdvicePanel = ({ player, stats }: BuildAdvicePanelProps) => {
                                         <RelicIcon relic={relic} size={42} />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className={`text-xs font-bold ${RARITY_COLOR[relic.rarity] || 'text-slate-300'}`}>{getRelicDisplayName(relic.name)}</span>
-                                                <span className={`shrink-0 text-[9px] font-fira ${RARITY_COLOR[relic.rarity] || 'text-slate-400'}`}>{RARITY_LABEL[relic.rarity]}</span>
+                                                <span className={`text-xs font-bold ${RARITY_CLASSES[relic.rarity] || 'text-slate-300'}`}>{getRelicDisplayName(relic.name)}</span>
+                                                <span className={`shrink-0 text-[9px] font-fira ${RARITY_CLASSES[relic.rarity] || 'text-slate-400'}`}>{MSG.RARITY_LABEL[relic.rarity]}</span>
                                             </div>
                                             <div className="mt-0.5 text-[10px] text-slate-400/72">{formatRelicText(relic.desc)}</div>
                                         </div>
