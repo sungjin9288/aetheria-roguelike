@@ -24,9 +24,11 @@
 | Node.js | — | >=18.0.0 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
-> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` ~1,535건,
-> `as any` ~107곳 잔존 (2026-07 실측). `BALANCE`/`CONSTANTS`는 1차 인터페이스 적용(인덱스 시그니처 절충),
-> `MSG`/`DB`/데이터 export(`ITEMS`/`MONSTERS`/`RELICS`/`CLASSES`)는 타입화 예정.
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` ~1,256건,
+> `as any` ~77곳 잔존 (2026-09 실측). `Player`/`PlayerStats`/`PlayerMeta`/`CombatFlags`는 인덱스 시그니처를 제거해
+> `player.오타`가 컴파일 에러가 된다. `FullStats`(`statsCalculator.ts`)가 전투 수식의 표준 stats 타입.
+> 잔여 인덱스 시그니처 23개는 `types/{relic,item,monster,map,quest,class}.ts` — 다음 타입 슬라이스 대상.
+> hook/handler의 `p: any` 로컬은 아직 많으니 새 코드는 `Player`/`FullStats`를 명시할 것.
 
 ---
 
@@ -103,7 +105,7 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 208 파일 / ~3,800 케이스)
+tests/                # 단위 테스트 (Node.js built-in test, 217 파일 / ~3,900 케이스)
                       #   + e2e/ (Playwright 31 스펙, iPhone 12 뷰포트) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 android/ ios/         # Capacitor 네이티브 프로젝트
@@ -219,7 +221,7 @@ useGameEngine (useReducer)
 - **일일 한도**: 50회 (TokenQuotaManager)
 
 ### 저장 데이터 버전 관리
-- `CONSTANTS.DATA_VERSION = 5.0`
+- `CONSTANTS.DATA_VERSION = 5.1` (5.1: `meta.essenceLifetime` 역산 backfill — `dataMigration.ts`)
 - save 구조 변경 시: 버전 bump → `gameUtils.migrateData()` 업데이트 필수
 
 ---
