@@ -455,6 +455,11 @@ export const MSG = {
     EQUIP_DELTA_NONE: '현재 장비와 동일한 효율',
     EQUIP_DELTA_NONE_COMPACT: '변화 없음',
     EQUIP_DELTA_OFFHAND_RELEASED: '보조손 해제',
+    // --- 상시 HUD 원정 신호 (2026-09 · 보스 접근 게이지 / 심연 데일리 다이브) ---
+    HUD_BOSS_GAUGE: (ticks: number, total: number) => `보스 접근 ${ticks}/${total}`,
+    HUD_BOSS_GAUGE_FULL: (bossName: string) => `${bossName} 조우 임박`,
+    HUD_ABYSS_DAILY_DIVE: (remaining: number, mult: number) => `오늘의 다이브 ${remaining}전투 ${mult}배`,
+
     // --- 에테르 거울 진입 (2026-09 · 승천 화면 CTA) ---
     MIRROR_CTA_LABEL: '에테르 거울 열기',
     MIRROR_CTA_HINT: (essence: number) => `계승 정수 ${essence}로 영구 성장을 새길 수 있습니다.`,

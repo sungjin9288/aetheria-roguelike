@@ -166,6 +166,15 @@ for (const viewport of VIEWPORTS) {
             await expectTouchTarget(page.getByTestId('map-move-selected'));
             expect(await columnCount(page.getByTestId('map-route-forecast'))).toBe(viewport.width <= 390 ? 2 : 4);
             await expectRouteBranchesWithinMap(map);
+            // 2026-09 G10: 목적지 배지를 선택 카드만이 아니라 전체 경로 목록의 모든 행에서
+            //   읽을 수 있어야 한다. 좁은 화면에서도 가로 넘침 없이 들어가는지 확인한다.
+            await page.getByTestId('map-world-list-toggle').click();
+            const rowBadges = map.getByTestId('map-row-badges');
+            if (await rowBadges.count() > 0) {
+                await expect(rowBadges.first()).toBeVisible({ timeout: 4_000 });
+                await expectNoHorizontalOverflow(page, rowBadges.first());
+            }
+            await page.getByTestId('map-world-list-toggle').click();
             if (viewport.width === 390) {
                 await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/map-390x844.png' });
             }
