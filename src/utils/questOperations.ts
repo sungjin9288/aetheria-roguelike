@@ -364,9 +364,11 @@ export const getQuestBoardRecommendations = (player: Player, maps: Record<string
     const activeEntries = getActiveQuestEntries(player)
         .map((entry: any) => enrichActiveQuestEntry(entry, player, traitProfile, maps));
     const activeRegularQuestIds = new Set(activeEntries.filter((entry: any) => !entry.isBounty).map((entry: any) => entry.id));
-    const claimedRegularQuestIds = new Set(
-        Array.isArray((player?.stats as any)?.claimedQuestIds)
-            ? (player.stats as any).claimedQuestIds
+    // Quest['id']로 명시 — quest.id가 optional(string | number | undefined)이라
+    //   Set<string | number>로 추론되면 has(quest.id) 호출이 막힌다.
+    const claimedRegularQuestIds = new Set<Quest['id']>(
+        Array.isArray(player?.stats?.claimedQuestIds)
+            ? player.stats.claimedQuestIds
             : [],
     );
     const claimedQuestIds = [...claimedRegularQuestIds];

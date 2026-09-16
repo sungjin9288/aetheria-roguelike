@@ -24,7 +24,7 @@ const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
  * player.stats.recentBattles: Array<{ result: 'win'|'death'|'escape', hpRatio: number }>
  */
 export const calcPerformanceScore = (player: Player) => {
-    const battles = ((player.stats as any)?.recentBattles || []).slice(-WINDOW);
+    const battles = (player.stats?.recentBattles || []).slice(-WINDOW);
     if (battles.length < 5) return 0.5; // 데이터 부족 → 중립
 
     const wins    = battles.filter((b: any) => b.result === 'win').length;
@@ -86,7 +86,7 @@ export const getDifficultyMults = (score: any) => {
 
 const applyBeginnerGrace = (diff: any, player: Player) => {
     const level = Number(player?.level || 1);
-    const recentBattleCount = ((player?.stats as any)?.recentBattles || []).length;
+    const recentBattleCount = (player?.stats?.recentBattles || []).length;
     if (level > BALANCE.BEGINNER_GRACE_MAX_LEVEL || recentBattleCount >= BALANCE.BEGINNER_GRACE_BATTLES) {
         return diff;
     }

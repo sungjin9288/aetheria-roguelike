@@ -257,7 +257,10 @@ export const getAchievementCurrentValue = (achievement: Achievement, player: Pla
     if (target === 'discoveryChains') return Array.isArray(stats?.discoveryChains) ? stats.discoveryChains.length : 0;
     if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
-    return stats?.[target ?? ''] || 0;
+    // B3-TODO(2026-09): achievement.target은 data-driven 문자열이라 PlayerStats 키로
+    //   좁히려면 quests.ts ACHIEVEMENTS의 target 리터럴 유니온화가 선행돼야 한다.
+    //   그때까지 이 한 곳만 동적 인덱스 캐스트를 유지한다(런타임 동작 동일).
+    return (stats as Record<string, any>)[target ?? ''] || 0;
 };
 
 /** 업적 달성 여부 */
@@ -322,7 +325,7 @@ export const checkTitles = (player: Player) => {
         //   영구 복구 불가하던 회귀. stats.claimedQuestIds 영구 ledger와 매칭. cycle 199 / 201
         //   동일 lens. val = quest id (152/153/154/201/202).
         if (type === 'questReward') {
-            const claimedIds = (player.stats as any)?.claimedQuestIds;
+            const claimedIds = player.stats?.claimedQuestIds;
             return Array.isArray(claimedIds) && claimedIds.includes(val);
         }
         // cycle 262: 'cosmetic' cond.type — cycle 185 cosmetic 4종 ('별을 보는 자' 등) 정식
@@ -330,8 +333,8 @@ export const checkTitles = (player: Player) => {
         //   없어 player.titles 손실 시 premium 구매 자산 silent loss. cycle 199/201/260 동일 lens.
         //   매핑: PREMIUM_SHOP.cosmeticTitles[i].name === title.id (Korean) ↔ i.id (영문) ↔ stats.cosmeticTitles 영문 ID.
         if (type === 'cosmetic') {
-            const ownedEnglishIds = Array.isArray((player.stats as any)?.cosmeticTitles)
-                ? (player.stats as any).cosmeticTitles
+            const ownedEnglishIds = Array.isArray(player.stats?.cosmeticTitles)
+                ? player.stats.cosmeticTitles
                 : [];
             if (ownedEnglishIds.length === 0) return false;
             const cosmeticDef = (PREMIUM_SHOP as any)?.cosmeticTitles?.find(
@@ -345,13 +348,13 @@ export const checkTitles = (player: Player) => {
         if (type === 'crafts')         return (player.stats?.crafts        || 0) >= val;
         // cycle 85: 합성(synthesis) 카운터 — alchemist 칭호용. cycle 82에서 INITIAL_STATE에
         // syntheses:0 declarative하게 추가했고, achievement target='synths'와 동일한 필드를 읽음.
-        if (type === 'synths')         return ((player.stats as any)?.syntheses || 0) >= val;
+        if (type === 'synths')         return (player.stats?.syntheses || 0) >= val;
         // cycle 95: 최대 연속 처치 — berserker 칭호용. combatVictory에서 max-ever를 누적.
-        if (type === 'maxKillStreak') return ((player.stats as any)?.maxKillStreak || 0) >= val;
+        if (type === 'maxKillStreak') return (player.stats?.maxKillStreak || 0) >= val;
         // cycle 103: 발견 체인 — chain_master 칭호용. exploreUtils.checkDiscoveryChains에서
         // stats.discoveryChains 배열에 완료 ID push. cycle 102 achievement target과 동일 source.
         if (type === 'discoveryChains') {
-            const chains = (player.stats as any)?.discoveryChains;
+            const chains = player.stats?.discoveryChains;
             return Array.isArray(chains) && chains.length >= val;
         }
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;

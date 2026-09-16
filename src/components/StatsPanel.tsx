@@ -88,19 +88,19 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
         { label: '발견 지역', value: (player?.stats?.visitedMaps || []).length, icon: Sparkles, color: 'text-fuchsia-300' },
         { label: '휴식 횟수', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
         // cycle 80: ESCAPES — cycle 74-78에서 통합한 도주 카운터를 stats panel에도 노출.
-        { label: '도주 횟수', value: (player?.stats as any)?.escapes || 0, icon: Footprints, color: 'text-sky-300' },
+        { label: '도주 횟수', value: player?.stats?.escapes || 0, icon: Footprints, color: 'text-sky-300' },
         // cycle 82: CRAFTS / SYNTHESES — 제작/합성 누적도 stats panel에 노출.
         // crafts는 INITIAL_STATE에 있었으나 syntheses는 누락되어 같이 선언적 추가.
         // achievement 'synths'(target='synths' → stats.syntheses) 3종이 cycle 30+부터
         // 존재하던 갭을 가시화로 닫음. orange/amber 톤으로 제작 계열 묶음.
         { label: '제작 횟수', value: player?.stats?.crafts || 0, icon: Hammer, color: 'text-orange-300' },
-        { label: '합성 횟수', value: (player?.stats as any)?.syntheses || 0, icon: FlaskConical, color: 'text-amber-300' },
+        { label: '합성 횟수', value: player?.stats?.syntheses || 0, icon: FlaskConical, color: 'text-amber-300' },
         // cycle 96: MAX STREAK — cycle 95에서 추가한 stats.maxKillStreak를 stats panel에도
         // 노출. killStreak 시스템 톤(red)과 매치. berserker 칭호 진행도 시각화.
-        { label: '최대 연속 처치', value: (player?.stats as any)?.maxKillStreak || 0, icon: Flame, color: 'text-red-400' },
+        { label: '최대 연속 처치', value: player?.stats?.maxKillStreak || 0, icon: Flame, color: 'text-red-400' },
         // cycle 104: CHAINS — cycle 102/103 ach_chain_*/chain_master 칭호 진행도 가시화.
         // chain_master 칭호 톤(indigo)과 매치. exploreUtils.checkDiscoveryChains에서 누적.
-        { label: '완료한 발견 여정', value: ((player?.stats as any)?.discoveryChains || []).length, icon: Link2, color: 'text-indigo-300' },
+        { label: '완료한 발견 여정', value: (player?.stats?.discoveryChains || []).length, icon: Link2, color: 'text-indigo-300' },
     ];
     const coreRecordLabels = new Set(['레벨', '총 처치', '보스 처치', '최대 연속 처치']);
     const coreRecordEntries = statEntries.filter((entry) => coreRecordLabels.has(entry.label));
