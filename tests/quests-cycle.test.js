@@ -1428,9 +1428,9 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       const fnIdx = source.indexOf('export const getQuestBoardRecommendations');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(/maps:\s*any\s*=\s*MAPS/.test(sig),
+      assert.ok(/maps:\s*Record<string,\s*GameMap>\s*=\s*MAPS/.test(sig),
           'getQuestBoardRecommendations maps default MAPS 보존 (entry-point reachable)');
-      assert.ok(/questCatalog:\s*any\s*=\s*QUESTS/.test(sig),
+      assert.ok(/questCatalog:\s*Quest\[\]\s*=\s*QUESTS/.test(sig),
           'getQuestBoardRecommendations questCatalog default QUESTS 보존');
   });
 

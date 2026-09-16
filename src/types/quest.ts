@@ -34,6 +34,8 @@ export interface Quest {
     location?: string;
     prerequisiteQuestId?: number | string;
     type?: QuestType;
+    /** 빌드 지향 퀘스트의 성향 태그 (questOperations.ts getQuestLane/scoreQuest에서 참조). */
+    buildTag?: string;
     [key: string]: any;
 }
 
